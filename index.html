@@ -319,40 +319,12 @@
                     </div>
                     <button type="submit" class="w-full py-3 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition">Anmelden</button>
                 </form>
-                <!-- Demo Quick-Login -->
-                <div class="mt-5 pt-4 border-t border-gray-100">
-                    <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Demo-Accounts (Schnellwahl)</p>
-                    <div class="grid grid-cols-1 gap-1.5">
-                        <button onclick="quickLogin('max@vitbikes-grafrath.de')" class="text-left px-3 py-2 rounded-lg bg-gray-50 hover:bg-orange-50 border border-gray-100 hover:border-orange-200 transition text-xs group">
-                            <span class="font-semibold text-gray-700 group-hover:text-vit-orange">Max Mustermann</span>
-                            <span class="text-gray-400 ml-1">— Geschäftsleitung</span>
-                        </button>
-                        <button onclick="quickLogin('sandra@vitbikes-grafrath.de')" class="text-left px-3 py-2 rounded-lg bg-gray-50 hover:bg-orange-50 border border-gray-100 hover:border-orange-200 transition text-xs group">
-                            <span class="font-semibold text-gray-700 group-hover:text-vit-orange">Sandra Engelmann</span>
-                            <span class="text-gray-400 ml-1">— Inhaber + Buchhaltung</span>
-                        </button>
-                        <button onclick="quickLogin('verkauf@vitbikes-grafrath.de')" class="text-left px-3 py-2 rounded-lg bg-gray-50 hover:bg-orange-50 border border-gray-100 hover:border-orange-200 transition text-xs group">
-                            <span class="font-semibold text-gray-700 group-hover:text-vit-orange">Tom Berater</span>
-                            <span class="text-gray-400 ml-1">— Verkauf</span>
-                        </button>
-                        <button onclick="quickLogin('werkstatt@vitbikes-grafrath.de')" class="text-left px-3 py-2 rounded-lg bg-gray-50 hover:bg-orange-50 border border-gray-100 hover:border-orange-200 transition text-xs group">
-                            <span class="font-semibold text-gray-700 group-hover:text-vit-orange">Felix Schrauber</span>
-                            <span class="text-gray-400 ml-1">— Werkstatt</span>
-                        </button>
-                        <button onclick="quickLogin('anna@vitbikes-grafrath.de')" class="text-left px-3 py-2 rounded-lg bg-gray-50 hover:bg-orange-50 border border-gray-100 hover:border-orange-200 transition text-xs group">
-                            <span class="font-semibold text-gray-700 group-hover:text-vit-orange">Anna Allround</span>
-                            <span class="text-gray-400 ml-1">— Verkäufer + Mechaniker</span>
-                        </button>
-                        <button onclick="quickLogin('buchhaltung@vitbikes-grafrath.de')" class="text-left px-3 py-2 rounded-lg bg-gray-50 hover:bg-orange-50 border border-gray-100 hover:border-orange-200 transition text-xs group">
-                            <span class="font-semibold text-gray-700 group-hover:text-vit-orange">Petra Zahlen</span>
-                            <span class="text-gray-400 ml-1">— Buchhaltung</span>
-                        </button>
-                        <button onclick="quickLogin('hq@vitbikes.de')" class="text-left px-3 py-2 rounded-lg bg-gray-50 hover:bg-orange-50 border border-gray-100 hover:border-orange-200 transition text-xs group">
-                            <span class="font-semibold text-gray-700 group-hover:text-vit-orange">Lisa Zentrale</span>
-                            <span class="text-gray-400 ml-1">— HQ-Ebene</span>
-                        </button>
-                    </div>
+                <!-- Registration Link -->
+                <div class="mt-5 pt-4 border-t border-gray-100 text-center">
+                    <p class="text-sm text-gray-500 mb-3">Noch kein Konto?</p>
+                    <button onclick="showRegistration()" class="w-full py-2.5 bg-gray-100 text-gray-700 rounded-lg font-semibold text-sm hover:bg-gray-200 transition">Registrieren</button>
                 </div>
+                
             </div>
             <p class="text-center text-xs text-gray-400 mt-6">&copy; 2026 vit:bikes GmbH · Partner Portal v6.0</p>
         </div>
@@ -5644,6 +5616,109 @@
             document.getElementById('loginPassword').focus();
         }
 
+        // === REGISTRATION ===
+        function showRegistration() {
+            var loginForm = document.querySelector('#loginScreen form');
+            var regLink = loginForm.parentElement.querySelector('.border-t');
+            
+            var html = '<div id="regOverlay" onclick="hideRegistration()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
+            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:28px;width:440px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">Registrieren</h3><button onclick="hideRegistration()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
+            html += '<p class="text-sm text-gray-500 mb-4">Nach der Registrierung muss dein Account vom HQ freigeschaltet werden.</p>';
+            html += '<div class="space-y-3 mb-5">';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Vor- und Nachname *</label><input id="regName" type="text" class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="Max Mustermann"></div>';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">E-Mail *</label><input id="regEmail" type="email" class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="name@vitbikes-standort.de"></div>';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Passwort * (min. 6 Zeichen)</label><input id="regPassword" type="password" class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"></div>';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Standort *</label><select id="regStandort" class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"><option value="">Wird geladen...</option></select></div>';
+            html += '</div>';
+            html += '<div id="regError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mb-3"></div>';
+            html += '<div id="regSuccess" style="display:none" class="bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg p-3 mb-3"></div>';
+            html += '<button id="regSubmitBtn" onclick="submitRegistration()" class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition">Registrieren</button>';
+            html += '<button onclick="hideRegistration()" class="w-full py-2.5 mt-2 bg-gray-100 text-gray-600 rounded-lg font-semibold text-sm hover:bg-gray-200">Zurück zum Login</button>';
+            html += '</div></div>';
+            
+            var c = document.createElement('div');
+            c.id = 'regContainer';
+            c.innerHTML = html;
+            document.body.appendChild(c);
+            
+            // Load standorte into dropdown
+            setTimeout(async function(){
+                try {
+                    var stdResp = await sb.from('standorte').select('id,name').order('name');
+                    var sel = document.getElementById('regStandort');
+                    if(sel && stdResp.data) {
+                        sel.innerHTML = '<option value="">— Standort wählen —</option>';
+                        stdResp.data.forEach(function(s){ sel.innerHTML += '<option value="'+s.id+'">'+s.name+'</option>'; });
+                    }
+                } catch(e){ console.error(e); }
+            }, 100);
+        }
+
+        function hideRegistration() {
+            var c = document.getElementById('regContainer');
+            if(c) c.remove();
+        }
+
+        async function submitRegistration() {
+            var name = (document.getElementById('regName')||{}).value||'';
+            var email = (document.getElementById('regEmail')||{}).value||'';
+            var pw = (document.getElementById('regPassword')||{}).value||'';
+            var standortId = (document.getElementById('regStandort')||{}).value||'';
+            var errEl = document.getElementById('regError');
+            var sucEl = document.getElementById('regSuccess');
+            var btn = document.getElementById('regSubmitBtn');
+            
+            if(errEl) errEl.style.display = 'none';
+            if(sucEl) sucEl.style.display = 'none';
+            
+            if(!name.trim() || !email.trim() || !pw) {
+                if(errEl) { errEl.textContent = 'Bitte alle Pflichtfelder ausfüllen.'; errEl.style.display = 'block'; }
+                return;
+            }
+            if(pw.length < 6) {
+                if(errEl) { errEl.textContent = 'Passwort muss mindestens 6 Zeichen haben.'; errEl.style.display = 'block'; }
+                return;
+            }
+            if(!standortId) {
+                if(errEl) { errEl.textContent = 'Bitte einen Standort wählen.'; errEl.style.display = 'block'; }
+                return;
+            }
+            
+            if(btn) { btn.disabled = true; btn.textContent = 'Wird registriert...'; }
+            
+            try {
+                // 1. Auth-User erstellen
+                var authResp = await sb.auth.signUp({ email: email.trim().toLowerCase(), password: pw });
+                if(authResp.error) throw authResp.error;
+                var newUserId = authResp.data.user.id;
+                
+                // 2. Users-Tabelle: Status = onboarding (wartet auf Freigabe)
+                var userResp = await sb.from('users').insert({
+                    id: newUserId,
+                    email: email.trim().toLowerCase(),
+                    name: name.trim(),
+                    standort_id: standortId,
+                    status: 'onboarding'
+                });
+                if(userResp.error) throw userResp.error;
+                
+                // 3. Sofort ausloggen (signUp loggt automatisch ein)
+                await sb.auth.signOut();
+                
+                if(sucEl) {
+                    sucEl.innerHTML = '\u2705 <strong>Registrierung erfolgreich!</strong><br>Dein Account wartet auf Freigabe durch das HQ. Du wirst per E-Mail benachrichtigt.';
+                    sucEl.style.display = 'block';
+                }
+                if(btn) { btn.style.display = 'none'; }
+            } catch(err) {
+                // Auch ausloggen falls teilweise erfolgreich
+                try { await sb.auth.signOut(); } catch(e){}
+                if(errEl) { errEl.textContent = 'Fehler: ' + (err.message||err); errEl.style.display = 'block'; }
+                if(btn) { btn.disabled = false; btn.textContent = 'Registrieren'; }
+            }
+        }
+
         async function handleLogin(event) {
             if(event) event.preventDefault();
             var email = (document.getElementById('loginEmail')||{}).value||'';
@@ -5659,6 +5734,18 @@
                 var resp = await sb.auth.signInWithPassword({ email: email, password: pw });
                 if(resp.error) throw resp.error;
                 sbUser = resp.data.user;
+                
+                // Status-Check: Ist der User freigeschaltet?
+                var profileResp = await sb.from('users').select('status').eq('id', sbUser.id).single();
+                if(profileResp.data && profileResp.data.status === 'onboarding') {
+                    await sb.auth.signOut();
+                    throw { message: 'Dein Account wartet noch auf Freigabe durch das HQ. Bitte hab etwas Geduld.' };
+                }
+                if(profileResp.data && profileResp.data.status === 'offboarding') {
+                    await sb.auth.signOut();
+                    throw { message: 'Dein Account wurde deaktiviert. Bitte wende dich an das HQ.' };
+                }
+                
                 await loadUserProfile(sbUser.id);
                 await loadModulStatus();
                 enterApp();
@@ -5747,7 +5834,7 @@
                 'verkauf': 'Verkauf',
                 'werkstatt': 'Werkstatt',
                 'buchhaltung': 'Buchhaltung',
-                'hq': 'HQ-Mitarbeiter'
+                'hq': 'HQ'
             };
 
             // Rollen-Anzeige zusammenbauen
@@ -9594,8 +9681,8 @@
             return s;
         }
         function rolleBadge(r) {
-            var colors = {'inhaber':'bg-vit-orange text-white','verkauf':'bg-blue-100 text-blue-700','werkstatt':'bg-gray-200 text-gray-700','buchhaltung':'bg-purple-100 text-purple-700'};
-            var labels = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
+            var colors = {'inhaber':'bg-vit-orange text-white','verkauf':'bg-blue-100 text-blue-700','werkstatt':'bg-gray-200 text-gray-700','buchhaltung':'bg-purple-100 text-purple-700','hq':'bg-red-100 text-red-700'};
+            var labels = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung','hq':'HQ'};
             return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold '+(colors[r]||'bg-gray-100 text-gray-600')+'">'+(labels[r]||r)+'</span>';
         }
         function rollenBadges(rollen) {
@@ -9639,54 +9726,143 @@
             } catch(err) { console.error('Standorte:', err); body.innerHTML='<tr><td colspan="8" class="text-center py-4 text-red-400">Fehler: '+err.message+'</td></tr>'; }
         }
 
-        function renderKzMitarbeiter() {
-            var stdFilter=(document.getElementById('kzMaStandortFilter')||{}).value||'all';
-            var list = kzMitarbeiter.filter(function(m){
-                if(currentKzMaFilter!=='all' && m.status!==currentKzMaFilter) return false;
-                if(stdFilter!=='all' && m.standort!==stdFilter) return false;
-                return true;
-            });
+        async function renderKzMitarbeiter() {
             var body=document.getElementById('kzMaBody');
             if(!body)return;
-            var h='';
-            list.forEach(function(m,idx){
-                var origIdx = kzMitarbeiter.indexOf(m);
-                var onbBar = m.status==='onboarding' ?
-                    '<div class="flex items-center space-x-2"><div class="w-16 bg-gray-200 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full" style="width:'+m.onbProgress+'%"></div></div><span class="text-[10px] text-gray-500">'+m.onbProgress+'%</span></div>' :
-                    (m.status==='aktiv' ? '<span class="text-[10px] text-green-600">✅ Abgeschlossen</span>' : '<span class="text-[10px] text-red-500">—</span>');
-                h+='<tr class="border-t border-gray-100 hover:bg-gray-50">';
-                h+='<td class="px-4 py-3"><div class="flex items-center space-x-2"><img src="https://ui-avatars.com/api/?name='+encodeURIComponent(m.name)+'&background=EF7D00&color=fff&size=28" class="w-7 h-7 rounded-full"><div><span class="font-semibold text-gray-800">'+m.name+'</span><p class="text-[10px] text-gray-400">'+m.email+'</p></div></div></td>';
-                h+='<td class="px-4 py-3 text-gray-600 text-xs">'+m.standort+'</td>';
-                h+='<td class="px-4 py-3 text-center">'+rollenBadges(m.rollen)+'</td>';
-                h+='<td class="px-4 py-3 text-center">'+statusBadge(m.status)+'</td>';
-                h+='<td class="px-4 py-3 text-center text-gray-500 text-xs">'+m.eintritt+'</td>';
-                h+='<td class="px-4 py-3 text-center">'+onbBar+'</td>';
-                h+='<td class="px-4 py-3 text-center"><button class="text-xs text-vit-orange hover:underline font-semibold" onclick="openRollenModal('+origIdx+')">Rollen ✏️</button></td>';
-                h+='</tr>';
+            try {
+                var resp = await sb.from('users').select('*, standorte(name), user_rollen(rollen(name,label))').order('name');
+                if(resp.error) throw resp.error;
+                var users = resp.data || [];
+                var stdFilter=(document.getElementById('kzMaStandortFilter')||{}).value||'all';
+                var filter = currentKzMaFilter || 'all';
+                var list = users.filter(function(u){
+                    var st = u.status || 'aktiv';
+                    if(filter!=='all' && st!==filter) return false;
+                    var stdName = u.standorte ? u.standorte.name : 'HQ';
+                    if(stdFilter!=='all' && stdName!==stdFilter) return false;
+                    return true;
+                });
+                var h='';
+                list.forEach(function(u){
+                    var stdName = u.standorte ? u.standorte.name : 'HQ';
+                    var rollen = (u.user_rollen||[]).map(function(ur){ return ur.rollen ? ur.rollen.name : ''; }).filter(Boolean);
+                    var st = u.status || 'aktiv';
+                    var d = u.created_at ? new Date(u.created_at) : new Date();
+                    var eintritt = String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+                    // Action button: Freigeben for onboarding, Details for others
+                    var actionBtn = '';
+                    if(st === 'onboarding' && rollen.length === 0) {
+                        actionBtn = '<button class="text-xs px-3 py-1 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600" onclick="approveUser(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')">Freigeben</button>';
+                    } else {
+                        actionBtn = '<button class="text-xs text-vit-orange hover:underline font-semibold" onclick="alert(\''+u.name.replace(/'/g,"\\'")+'\\n'+u.email+'\')">Details</button>';
+                    }
+                    h+='<tr class="border-t border-gray-100 hover:bg-gray-50'+(st==='onboarding' && rollen.length===0 ? ' bg-yellow-50':'')+'">';
+                    h+='<td class="px-4 py-3"><div class="flex items-center space-x-2"><img src="https://ui-avatars.com/api/?name='+encodeURIComponent(u.name)+'&background=EF7D00&color=fff&size=28" class="w-7 h-7 rounded-full"><div><span class="font-semibold text-gray-800">'+u.name+'</span><p class="text-[10px] text-gray-400">'+u.email+'</p></div></div></td>';
+                    h+='<td class="px-4 py-3 text-gray-600 text-xs">'+stdName+'</td>';
+                    h+='<td class="px-4 py-3 text-center">'+(rollen.length > 0 ? rollenBadges(rollen) : '<span class="text-xs text-yellow-600 font-semibold">Wartet auf Freigabe</span>')+'</td>';
+                    h+='<td class="px-4 py-3 text-center">'+statusBadge(st)+'</td>';
+                    h+='<td class="px-4 py-3 text-center text-gray-500 text-xs">'+eintritt+'</td>';
+                    h+='<td class="px-4 py-3 text-center"><span class="text-xs text-gray-400">'+(u.user_rollen||[]).map(function(ur){return ur.rollen?ur.rollen.label:'';}).filter(Boolean).join(', ')+'</span></td>';
+                    h+='<td class="px-4 py-3 text-center">'+actionBtn+'</td>';
+                    h+='</tr>';
+                });
+                if(list.length===0) h='<tr><td colspan="7" class="text-center py-8 text-gray-400">Keine Mitarbeiter gefunden.</td></tr>';
+                body.innerHTML=h;
+                var ge=document.getElementById('kzMaGesamt');if(ge)ge.textContent=users.length;
+                var ak=document.getElementById('kzMaAktiv');if(ak)ak.textContent=users.filter(function(u){return (u.status||'aktiv')==='aktiv';}).length;
+                var onbCount = users.filter(function(u){return u.status==='onboarding';}).length;
+                var ob=document.getElementById('kzMaOnb');if(ob)ob.textContent=onbCount;
+                var of2=document.getElementById('kzMaOff');if(of2)of2.textContent=users.filter(function(u){return u.status==='offboarding';}).length;
+                var ro=document.getElementById('kzRollen');if(ro)ro.textContent='4';
+                // Standort dropdown
+                var sel=document.getElementById('kzMaStandortFilter');
+                if(sel && sel.options.length<=1){
+                    var standorte=[];
+                    users.forEach(function(u){ var sn=u.standorte?u.standorte.name:'HQ'; if(standorte.indexOf(sn)===-1)standorte.push(sn); });
+                    standorte.sort().forEach(function(s){sel.innerHTML+='<option value="'+s+'">'+s+'</option>';});
+                }
+            } catch(err) { console.error('Mitarbeiter:', err); body.innerHTML='<tr><td colspan="7" class="text-center py-4 text-red-400">Fehler: '+err.message+'</td></tr>'; }
+        }
+
+        // === USER FREIGABE ===
+        async function approveUser(userId, userName) {
+            var allRollen = ['hq','inhaber','verkauf','werkstatt','buchhaltung'];
+            var labels = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
+            
+            var html = '<div id="approveOverlay" onclick="closeApproveModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
+            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:420px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">User freigeben</h3><button onclick="closeApproveModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
+            html += '<p class="text-sm text-gray-600 mb-4"><strong>'+userName+'</strong> hat sich registriert und wartet auf Freigabe.</p>';
+            html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Rollen zuweisen</p>';
+            var colors = {'hq':'border-red-300 bg-red-50','inhaber':'border-orange-300 bg-orange-50','verkauf':'border-blue-300 bg-blue-50','werkstatt':'border-gray-300 bg-gray-50','buchhaltung':'border-purple-300 bg-purple-50'};
+            allRollen.forEach(function(r){
+                html += '<label class="flex items-center space-x-3 p-2.5 rounded-lg border '+colors[r]+' mb-2 cursor-pointer hover:shadow-sm transition">';
+                html += '<input type="checkbox" id="approveRole_'+r+'" class="rounded" style="accent-color:#EF7D00;">';
+                html += '<span class="text-sm font-semibold text-gray-800">'+labels[r]+'</span>';
+                html += '</label>';
             });
-            body.innerHTML=h;
+            html += '<div class="flex space-x-3 mt-4">';
+            html += '<button onclick="confirmApprove(\''+userId+'\')" class="flex-1 py-2.5 bg-green-500 text-white rounded-lg font-semibold text-sm hover:bg-green-600">\u2705 Freigeben</button>';
+            html += '<button onclick="rejectUser(\''+userId+'\')" class="flex-1 py-2.5 bg-red-100 text-red-600 rounded-lg font-semibold text-sm hover:bg-red-200">\u274c Ablehnen</button>';
+            html += '</div>';
+            html += '</div></div>';
+            
+            var c = document.createElement('div');
+            c.id = 'approveContainer';
+            c.innerHTML = html;
+            document.body.appendChild(c);
+        }
 
-            // Update KPIs
-            var ge=document.getElementById('kzMaGesamt');if(ge)ge.textContent=kzMitarbeiter.length;
-            var ak=document.getElementById('kzMaAktiv');if(ak)ak.textContent=kzMitarbeiter.filter(function(m){return m.status==='aktiv';}).length;
-            var ob=document.getElementById('kzMaOnb');if(ob)ob.textContent=kzMitarbeiter.filter(function(m){return m.status==='onboarding';}).length;
-            var of2=document.getElementById('kzMaOff');if(of2)of2.textContent=kzMitarbeiter.filter(function(m){return m.status==='offboarding';}).length;
-            var ro=document.getElementById('kzRollen');if(ro)ro.textContent='4';
+        function closeApproveModal() {
+            var c = document.getElementById('approveContainer');
+            if(c) c.remove();
+        }
 
-            // Populate standort filter dropdown
-            var sel=document.getElementById('kzMaStandortFilter');
-            if(sel && sel.options.length<=1){
-                var standorte=[];
-                kzMitarbeiter.forEach(function(m){if(standorte.indexOf(m.standort)===-1)standorte.push(m.standort);});
-                standorte.sort().forEach(function(s){sel.innerHTML+='<option value="'+s+'">'+s+'</option>';});
+        async function confirmApprove(userId) {
+            var allRollen = ['hq','inhaber','verkauf','werkstatt','buchhaltung'];
+            var selected = [];
+            allRollen.forEach(function(r){
+                var chk = document.getElementById('approveRole_'+r);
+                if(chk && chk.checked) selected.push(r);
+            });
+            if(selected.length === 0) { alert('Bitte mindestens eine Rolle zuweisen.'); return; }
+            
+            try {
+                // 1. Status auf aktiv setzen
+                var upd = await sb.from('users').update({status: 'aktiv'}).eq('id', userId);
+                if(upd.error) throw upd.error;
+                
+                // 2. Rollen zuweisen
+                for(var i=0; i<selected.length; i++) {
+                    var rolleResp = await sb.from('rollen').select('id').eq('name', selected[i]).single();
+                    if(rolleResp.data) {
+                        await sb.from('user_rollen').insert({user_id: userId, rolle_id: rolleResp.data.id});
+                    }
+                }
+                
+                closeApproveModal();
+                alert('\u2705 User freigeschaltet! Der Mitarbeiter kann sich jetzt einloggen.');
+                renderKzMitarbeiter();
+            } catch(err) {
+                alert('Fehler: ' + err.message);
             }
+        }
+
+        async function rejectUser(userId) {
+            if(!confirm('User wirklich ablehnen? Der Account wird deaktiviert.')) return;
+            try {
+                await sb.from('users').update({status: 'offboarding'}).eq('id', userId);
+                closeApproveModal();
+                alert('User abgelehnt.');
+                renderKzMitarbeiter();
+            } catch(err) { alert('Fehler: ' + err.message); }
         }
 
         // === ROLLEN-MODAL ===
         function openRollenModal(maIdx) {
             var m = kzMitarbeiter[maIdx];
             if(!m) return;
-            var allRollen = ['inhaber','verkauf','werkstatt','buchhaltung'];
+            var allRollen = ['hq','inhaber','verkauf','werkstatt','buchhaltung'];
             var labels = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
             var desc = {'inhaber':'Vollzugriff auf alle Module, Dashboards, Shop, Onboarding','verkauf':'Verkauf, Marketing, Wissen, Support, Ideenboard','werkstatt':'Einkauf, Wissen, Support, Ideenboard','buchhaltung':'Allgemein, Verkauf, Einkauf, Controlling, Aktenschrank'};
 
@@ -9697,7 +9873,7 @@
             html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Rollen zuweisen (Mehrfachauswahl)</p>';
             allRollen.forEach(function(r){
                 var checked = m.rollen.indexOf(r)>=0 ? 'checked' : '';
-                var colors = {'inhaber':'border-orange-300 bg-orange-50','verkauf':'border-blue-300 bg-blue-50','werkstatt':'border-gray-300 bg-gray-50','buchhaltung':'border-purple-300 bg-purple-50'};
+                var colors = {'hq':'border-red-300 bg-red-50','inhaber':'border-orange-300 bg-orange-50','verkauf':'border-blue-300 bg-blue-50','werkstatt':'border-gray-300 bg-gray-50','buchhaltung':'border-purple-300 bg-purple-50'};
                 html += '<label class="flex items-start space-x-3 p-3 rounded-lg border '+colors[r]+' mb-2 cursor-pointer hover:shadow-sm transition">';
                 html += '<input type="checkbox" id="roleChk_'+r+'" '+checked+' class="mt-1 rounded" style="accent-color:#EF7D00;">';
                 html += '<div><p class="font-semibold text-sm text-gray-800">'+labels[r]+'</p><p class="text-[11px] text-gray-500">'+desc[r]+'</p></div>';
@@ -9717,7 +9893,7 @@
             if(c) c.remove();
         }
         function saveRollen(maIdx) {
-            var allRollen = ['inhaber','verkauf','werkstatt','buchhaltung'];
+            var allRollen = ['hq','inhaber','verkauf','werkstatt','buchhaltung'];
             var selected = [];
             allRollen.forEach(function(r){
                 var chk = document.getElementById('roleChk_'+r);
@@ -9801,7 +9977,7 @@
 
         // Neuer Mitarbeiter Modal
         function openNeuerMaModal() {
-            var allRollen = ['inhaber','verkauf','werkstatt','buchhaltung'];
+            var allRollen = ['hq','inhaber','verkauf','werkstatt','buchhaltung'];
             var labels = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
 
             var html = '<div id="neuerMaOverlay" onclick="closeNeuerMaModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
@@ -9827,7 +10003,7 @@
             }, 100);
 
             html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Rollen zuweisen (Mehrfachauswahl)</p>';
-            var colors = {'inhaber':'border-orange-300 bg-orange-50','verkauf':'border-blue-300 bg-blue-50','werkstatt':'border-gray-300 bg-gray-50','buchhaltung':'border-purple-300 bg-purple-50'};
+            var colors = {'hq':'border-red-300 bg-red-50','inhaber':'border-orange-300 bg-orange-50','verkauf':'border-blue-300 bg-blue-50','werkstatt':'border-gray-300 bg-gray-50','buchhaltung':'border-purple-300 bg-purple-50'};
             allRollen.forEach(function(r){
                 html += '<label class="flex items-center space-x-3 p-2.5 rounded-lg border '+colors[r]+' mb-2 cursor-pointer hover:shadow-sm transition">';
                 html += '<input type="checkbox" id="newMaRole_'+r+'" class="rounded" style="accent-color:#EF7D00;">';
@@ -9855,7 +10031,7 @@
             var email = (document.getElementById('newMaEmail')||{}).value||'';
             if(!name.trim() || !email.trim()) { alert('Bitte Name und E-Mail ausfüllen.'); return; }
 
-            var allRollen = ['inhaber','verkauf','werkstatt','buchhaltung'];
+            var allRollen = ['hq','inhaber','verkauf','werkstatt','buchhaltung'];
             var selected = [];
             allRollen.forEach(function(r){
                 var chk = document.getElementById('newMaRole_'+r);
