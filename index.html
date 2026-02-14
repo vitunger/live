@@ -5301,10 +5301,17 @@
                     <h1 class="h1-headline text-gray-800 mb-2">💡 IDEENBOARD – NETZWERK</h1>
                     <p class="text-sm text-gray-500 mb-6">Alle Ideen und Vorschlaege der Partner einsehen und bewerten.</p>
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-vit-orange">23</div><div class="text-xs text-gray-500">Eingereichte Ideen</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-yellow-500">8</div><div class="text-xs text-gray-500">In Pruefung</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600">12</div><div class="text-xs text-gray-500">Umgesetzt</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-red-400">3</div><div class="text-xs text-gray-500">Abgelehnt</div></div>
+                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-vit-orange" id="hqIdeenTotal">0</div><div class="text-xs text-gray-500">Eingereichte Ideen</div></div>
+                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-yellow-500" id="hqIdeenPruefung">0</div><div class="text-xs text-gray-500">In Prüfung</div></div>
+                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600" id="hqIdeenUmgesetzt">0</div><div class="text-xs text-gray-500">Umgesetzt</div></div>
+                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-red-400" id="hqIdeenAbgelehnt">0</div><div class="text-xs text-gray-500">Abgelehnt</div></div>
+                    </div>
+                    <div class="flex space-x-2 mb-4">
+                        <button onclick="filterHqIdeen('all')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white" data-hif="all">Alle</button>
+                        <button onclick="filterHqIdeen('neu')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="neu">Neu</button>
+                        <button onclick="filterHqIdeen('wird_geprueft')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="wird_geprueft">Wird geprüft</button>
+                        <button onclick="filterHqIdeen('umgesetzt')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="umgesetzt">Umgesetzt</button>
+                        <button onclick="filterHqIdeen('abgelehnt')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="abgelehnt">Abgelehnt</button>
                     </div>
                     <div class="vit-card p-6">
                         <h2 class="text-lg font-semibold text-gray-800 mb-4">📋 Eingereichte Ideen aller Partner</h2>
@@ -5781,6 +5788,45 @@
             document.getElementById('mainApp').style.display = 'block';
             try { updateUIForRole(); updatePremiumFeatures(); } catch(e) { console.warn(e); }
             if(currentRole === 'hq') { switchViewMode('hq'); } else { showView('home'); }
+            // Check for pending approvals (HQ + GF only)
+            checkPendingApprovals();
+        }
+
+        async function checkPendingApprovals() {
+            var isHQ = currentRoles.indexOf('hq') >= 0 || (sbProfile && sbProfile.is_hq);
+            var isGF = currentRoles.indexOf('inhaber') >= 0;
+            if(!isHQ && !isGF) return;
+            try {
+                var query = sb.from('users').select('id,name,email,created_at').eq('status','onboarding');
+                // GF: nur eigener Standort
+                if(!isHQ && sbStandort) query = query.eq('standort_id', sbStandort.id);
+                // Nur User ohne Rollen (= noch nicht freigegebene)
+                var resp = await query;
+                if(resp.error || !resp.data) return;
+                // Filter: nur User die wirklich keine Rollen haben
+                var pendingUsers = [];
+                for(var i=0; i<resp.data.length; i++) {
+                    var rResp = await sb.from('user_rollen').select('id').eq('user_id', resp.data[i].id);
+                    if(!rResp.data || rResp.data.length === 0) pendingUsers.push(resp.data[i]);
+                }
+                if(pendingUsers.length === 0) return;
+                // Show notification banner
+                var existing = document.getElementById('approvalBanner');
+                if(existing) existing.remove();
+                var names = pendingUsers.map(function(u){return u.name;}).join(', ');
+                var banner = document.createElement('div');
+                banner.id = 'approvalBanner';
+                banner.innerHTML = '<div style="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:9000;max-width:600px;width:90%;" class="bg-yellow-50 border border-yellow-300 rounded-xl shadow-lg px-5 py-3 flex items-center justify-between">'
+                    + '<div class="flex items-center space-x-3">'
+                    + '<span class="text-2xl">\u26a0\ufe0f</span>'
+                    + '<div><p class="text-sm font-semibold text-yellow-800">' + pendingUsers.length + ' neue' + (pendingUsers.length===1?'r Mitarbeiter':' Mitarbeiter') + ' wartet auf Freigabe</p>'
+                    + '<p class="text-xs text-yellow-600">' + names + '</p></div></div>'
+                    + '<div class="flex items-center space-x-2">'
+                    + '<button onclick="showView(\'kzMitarbeiter\');document.getElementById(\'approvalBanner\').remove();" class="px-3 py-1.5 bg-vit-orange text-white text-xs font-semibold rounded-lg hover:opacity-90">Jetzt freigeben</button>'
+                    + '<button onclick="document.getElementById(\'approvalBanner\').remove();" class="text-yellow-400 hover:text-yellow-600 text-lg">\u2715</button>'
+                    + '</div></div>';
+                document.body.appendChild(banner);
+            } catch(err) { console.warn('Approval check:', err); }
         }
 
         async function loadPipelineFromSupabase() {
@@ -8104,13 +8150,29 @@
 
         async function voteIdee(id) {
             try {
-                await sb.from('ideen_votes').insert({idee_id:id, user_id:sbUser.id});
-                await sb.rpc('increment_votes', {idee_id_param:id}).catch(function(){});
-                // Simple increment fallback
-                var resp = await sb.from('ideen').select('votes').eq('id',id).single();
-                if(resp.data) await sb.from('ideen').update({votes:(resp.data.votes||0)+1}).eq('id',id);
+                // Check if it's own idea
+                var ideeResp = await sb.from('ideen').select('user_id,votes').eq('id',id).single();
+                if(ideeResp.data && ideeResp.data.user_id === sbUser.id) {
+                    alert('Du kannst deine eigene Idee nicht bewerten.');
+                    return;
+                }
+                // Check if already voted
+                var checkResp = await sb.from('ideen_votes').select('id').eq('idee_id',id).eq('user_id',sbUser.id);
+                if(checkResp.data && checkResp.data.length > 0) {
+                    alert('Du hast bereits für diese Idee gestimmt!');
+                    return;
+                }
+                // Insert vote
+                var voteResp = await sb.from('ideen_votes').insert({idee_id:id, user_id:sbUser.id});
+                if(voteResp.error) throw voteResp.error;
+                // Increment votes count
+                var newVotes = (ideeResp.data.votes||0) + 1;
+                await sb.from('ideen').update({votes: newVotes}).eq('id',id);
                 renderIdeen('all');
-            } catch(err) { if(err.code==='23505') alert('Du hast bereits abgestimmt!'); else console.error('Vote:', err); }
+            } catch(err) { 
+                if(err.code==='23505') alert('Du hast bereits für diese Idee gestimmt!');
+                else { console.error('Vote:', err); alert('Fehler: '+(err.message||err)); }
+            }
         }
 
         async function submitIdee() {
@@ -9595,27 +9657,62 @@
             }
         }
 
-        // === HQ IDEENBOARD ===
-        var hqIdeenData = [
-            {titel:'Gemeinsamer Einkaufspool fuer Zubehoer',standort:'Hamburg',stimmen:14,status:'in Pruefung',datum:'10.02.2026'},
-            {titel:'Partner-Treffen alle 3 Monate',standort:'Grafrath',stimmen:21,status:'umgesetzt',datum:'08.02.2026'},
-            {titel:'Einheitliches CRM-System',standort:'Weilheim',stimmen:18,status:'in Pruefung',datum:'05.02.2026'},
-            {titel:'Video-Tutorials fuer Werkstatt',standort:'Karlsdorf',stimmen:9,status:'in Pruefung',datum:'03.02.2026'},
-            {titel:'Black Friday Netzwerk-Aktion',standort:'Hamburg',stimmen:25,status:'umgesetzt',datum:'01.02.2026'},
-            {titel:'Kundenbindungs-App',standort:'Grafrath',stimmen:7,status:'in Pruefung',datum:'28.01.2026'},
-            {titel:'Gemeinsame Google-Ads Kampagne',standort:'Weilheim',stimmen:16,status:'umgesetzt',datum:'25.01.2026'},
-            {titel:'Leih-Rad Programm zwischen Standorten',standort:'Karlsdorf',stimmen:4,status:'abgelehnt',datum:'20.01.2026'}
-        ];
-        function renderHqIdeen(){
+        // === HQ IDEENBOARD (Supabase) ===
+        async function renderHqIdeen(filter){
             var el=document.getElementById('hqIdeenList');
             if(!el) return;
-            var statusC={'in Pruefung':'bg-yellow-100 text-yellow-700','umgesetzt':'bg-green-100 text-green-700','abgelehnt':'bg-red-100 text-red-700'};
-            var h='';
-            hqIdeenData.sort(function(a,b){return b.stimmen-a.stimmen;}).forEach(function(idee){
-                h+='<div class="p-4 bg-gray-50 rounded-lg"><div class="flex items-center justify-between mb-2"><div class="flex items-center space-x-3"><span class="text-lg font-bold text-vit-orange">👍 '+idee.stimmen+'</span><span class="text-xs px-2 py-0.5 rounded-full font-semibold '+(statusC[idee.status]||'')+'">'+idee.status+'</span></div><span class="text-xs text-gray-400">'+idee.datum+'</span></div><p class="text-sm font-semibold text-gray-800">'+idee.titel+'</p><p class="text-xs text-gray-500 mt-1">💡 Eingereicht von: '+idee.standort+'</p></div>';
-            });
-            el.innerHTML=h;
+            try {
+                var query = sb.from('ideen').select('*, users(name), standorte(name)').order('votes', {ascending:false});
+                if(filter && filter!=='all') query = query.eq('status', filter);
+                var resp = await query;
+                if(resp.error) throw resp.error;
+                var ideas = resp.data || [];
+                var allResp = await sb.from('ideen').select('status');
+                var all = allResp.data || [];
+                var t=document.getElementById('hqIdeenTotal');if(t)t.textContent=all.length;
+                var p=document.getElementById('hqIdeenPruefung');if(p)p.textContent=all.filter(function(i){return i.status==='wird_geprueft'||i.status==='diskussion';}).length;
+                var u=document.getElementById('hqIdeenUmgesetzt');if(u)u.textContent=all.filter(function(i){return i.status==='umgesetzt';}).length;
+                var a=document.getElementById('hqIdeenAbgelehnt');if(a)a.textContent=all.filter(function(i){return i.status==='abgelehnt';}).length;
+                var statusC={neu:'bg-blue-100 text-blue-700',diskussion:'bg-yellow-100 text-yellow-700',wird_geprueft:'bg-yellow-100 text-yellow-700',geplant:'bg-purple-100 text-purple-700',umgesetzt:'bg-green-100 text-green-700',abgelehnt:'bg-red-100 text-red-700'};
+                var statusL={neu:'Neu',diskussion:'In Diskussion',wird_geprueft:'Wird gepr\u00fcft',geplant:'Geplant',umgesetzt:'Umgesetzt',abgelehnt:'Abgelehnt'};
+                var h='';
+                ideas.forEach(function(idee){
+                    var standortName = idee.standorte ? idee.standorte.name : 'HQ';
+                    var authorName = idee.users ? idee.users.name : 'Unbekannt';
+                    var d = idee.created_at ? new Date(idee.created_at).toLocaleDateString('de-DE') : '';
+                    h+='<div class="p-4 bg-gray-50 rounded-lg">';
+                    h+='<div class="flex items-center justify-between mb-2">';
+                    h+='<div class="flex items-center space-x-3">';
+                    h+='<span class="text-lg font-bold text-vit-orange">\ud83d\udc4d '+(idee.votes||0)+'</span>';
+                    h+='<span class="text-xs px-2 py-0.5 rounded-full font-semibold '+(statusC[idee.status]||'bg-gray-100 text-gray-600')+'">'+(statusL[idee.status]||idee.status)+'</span>';
+                    h+='<select onchange="updateIdeeStatus(\''+idee.id+'\',this.value)" class="text-xs border border-gray-200 rounded px-1 py-0.5">';
+                    ['neu','wird_geprueft','geplant','umgesetzt','abgelehnt'].forEach(function(s){
+                        h+='<option value="'+s+'"'+(idee.status===s?' selected':'')+'>'+(statusL[s]||s)+'</option>';
+                    });
+                    h+='</select></div>';
+                    h+='<span class="text-xs text-gray-400">'+d+'</span></div>';
+                    h+='<p class="text-sm font-semibold text-gray-800">'+idee.titel+'</p>';
+                    if(idee.beschreibung) h+='<p class="text-xs text-gray-600 mt-1">'+idee.beschreibung+'</p>';
+                    h+='<p class="text-xs text-gray-400 mt-1">\ud83d\udca1 '+authorName+' \u00b7 \ud83d\udccd '+standortName+'</p>';
+                    h+='</div>';
+                });
+                if(ideas.length===0) h='<div class="text-center py-4 text-gray-400">Noch keine Ideen eingereicht.</div>';
+                el.innerHTML=h;
+            } catch(err) { console.error('HQ Ideen:', err); }
         }
+        function filterHqIdeen(filter) {
+            document.querySelectorAll('.hq-ideen-filter').forEach(function(b){b.className='hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600';});
+            var btn=document.querySelector('.hq-ideen-filter[data-hif="'+filter+'"]');
+            if(btn) btn.className='hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white';
+            renderHqIdeen(filter);
+        }
+        async function updateIdeeStatus(ideeId, newStatus) {
+            try {
+                await sb.from('ideen').update({status: newStatus}).eq('id', ideeId);
+                renderHqIdeen('all');
+            } catch(err) { alert('Fehler: '+err.message); }
+        }
+
 
         // === HQ SHOP-VERWALTUNG ===
         var hqShopOrders = [
