@@ -9754,7 +9754,9 @@
                     if(st === 'onboarding' && rollen.length === 0) {
                         actionBtn = '<button class="text-xs px-3 py-1 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600" onclick="approveUser(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')">Freigeben</button>';
                     } else {
-                        actionBtn = '<button class="text-xs text-vit-orange hover:underline font-semibold" onclick="openEditMaModal(\''+u.id+'\')">Bearbeiten ✏️</button>';
+                        actionBtn = '<button class="text-xs text-vit-orange hover:underline font-semibold" onclick="openEditMaModal(\''+u.id+'\')">✏️</button>'
+                    +' <button class="text-xs text-blue-500 hover:text-blue-700 hover:underline font-semibold ml-1" onclick="loginAs(\''+u.email+'\',\''+u.name.replace(/'/g,"\\'")+'\')">🔑</button>'
+                    +' <button class="text-xs text-red-400 hover:text-red-600 hover:underline font-semibold ml-1" onclick="deleteMa(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')">🗑️</button>';
                     }
                     h+='<tr class="border-t border-gray-100 hover:bg-gray-50'+(st==='onboarding' && rollen.length===0 ? ' bg-yellow-50':'')+'">';
                     h+='<td class="px-4 py-3"><div class="flex items-center space-x-2"><img src="https://ui-avatars.com/api/?name='+encodeURIComponent(u.name)+'&background=EF7D00&color=fff&size=28" class="w-7 h-7 rounded-full"><div><span class="font-semibold text-gray-800">'+u.name+'</span><p class="text-[10px] text-gray-400">'+u.email+'</p></div></div></td>';
@@ -10163,6 +10165,44 @@
             }
         }
 
+
+        // === ALS USER ANMELDEN ===
+        async function loginAs(email, userName) {
+            if(!confirm('Als "'+userName+'" ('+email+') anmelden?\n\nDu wirst ausgeloggt und als dieser User neu eingeloggt.')) return;
+            try {
+                await sb.auth.signOut();
+                // Prompt for password
+                var pw = prompt('Passwort für '+email+':');
+                if(!pw) { location.reload(); return; }
+                var resp = await sb.auth.signInWithPassword({ email: email, password: pw });
+                if(resp.error) throw resp.error;
+                sbUser = resp.data.user;
+                await loadUserProfile(sbUser.id);
+                await loadModulStatus();
+                enterApp();
+                await loadPipelineFromSupabase();
+            } catch(err) {
+                alert('Login fehlgeschlagen: '+(err.message||err)+'\n\nSeite wird neu geladen.');
+                location.reload();
+            }
+        }
+
+        // === MITARBEITER LÖSCHEN ===
+        async function deleteMa(userId, userName) {
+            if(!confirm('Mitarbeiter "'+userName+'" wirklich löschen?\n\nDies löscht den Account komplett (Auth + Profil + Rollen).')) return;
+            try {
+                // 1. Rollen löschen
+                await sb.from('user_rollen').delete().eq('user_id', userId);
+                // 2. User-Profil löschen
+                await sb.from('users').delete().eq('id', userId);
+                // 3. Auth-User löschen (via Server-Funktion)
+                await sb.rpc('delete_auth_user', { p_user_id: userId });
+                alert('\u2705 '+userName+' wurde gelöscht.');
+                renderKzMitarbeiter();
+            } catch(err) {
+                alert('Fehler: '+(err.message||err));
+            }
+        }
 
         // === NEUER STANDORT MODAL ===
         function openNeuerStandortModal() {
