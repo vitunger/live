@@ -6428,51 +6428,63 @@
             filterInbox('sent');
         }
 
-        function renderAnnouncements() {
-            var html = '';
-            announcements.forEach(function(a) {
-                var allRead = a.readBy >= a.totalPartners;
-                html += '<div class="vit-card p-6 ' + (a.important ? 'border-l-4 border-vit-orange' : '') + '">';
-                html += '<div class="flex items-start justify-between mb-3">';
-                html += '<div class="flex items-center space-x-3">';
-                html += '<span class="text-2xl">' + a.icon + '</span>';
-                html += '<div><span class="text-xs font-semibold rounded px-2 py-0.5 bg-gray-100 text-gray-600">' + a.category + '</span>';
-                if(a.important) html += ' <span class="text-xs font-semibold rounded px-2 py-0.5 bg-red-100 text-red-600">Wichtig</span>';
-                html += '<h3 class="font-bold text-gray-800 mt-1">' + a.title + '</h3></div></div>';
-                html += '<span class="text-xs text-gray-400 flex-shrink-0">' + a.date + '</span></div>';
-                html += '<p class="text-sm text-gray-600 mb-3">' + a.body + '</p>';
-                html += '<div class="flex items-center justify-between">';
-                html += '<div class="flex items-center space-x-4 text-xs text-gray-400">';
-                html += '<span>Gelesen: ' + a.readBy + '/' + a.totalPartners + ' Partner</span>';
-                html += '<div class="w-24 bg-gray-200 rounded-full h-1.5"><div class="bg-green-500 h-1.5 rounded-full" style="width:' + Math.round(a.readBy/a.totalPartners*100) + '%"></div></div>';
-                html += '</div>';
-                html += '<button class="text-xs text-vit-orange font-semibold hover:underline">Als gelesen markieren</button>';
-                html += '</div></div>';
-            });
-            document.getElementById('announceList').innerHTML = html;
+        async function renderAnnouncements() {
+            var container = document.getElementById('announceList');
+            if(!container) return;
+            try {
+                var resp = await sb.from('ankuendigungen').select('*, users(name)').order('created_at', {ascending:false});
+                if(resp.error) throw resp.error;
+                var anns = resp.data || [];
+                var html = '';
+                var icons = {news:'📢',event:'📅',schulung:'🎓',marketing:'📣',sortiment:'🚲',preise:'💰',it:'💻'};
+                anns.forEach(function(a) {
+                    var d = new Date(a.created_at);
+                    var dateStr = d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+                    html += '<div class="vit-card p-5 ' + (a.wichtig ? 'border-l-4 border-vit-orange' : '') + '">';
+                    html += '<div class="flex items-start space-x-4">';
+                    html += '<div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">' + (icons[a.kategorie]||'📢') + '</div>';
+                    html += '<div class="flex-1">';
+                    html += '<div class="flex items-center space-x-2 mb-1">';
+                    if(a.wichtig) html += '<span class="text-xs font-bold bg-red-100 text-red-600 rounded px-2 py-0.5">Wichtig</span>';
+                    html += '<span class="text-xs text-gray-400">' + dateStr + '</span></div>';
+                    html += '<h3 class="font-bold text-gray-800 mb-2">' + a.titel + '</h3>';
+                    html += '<p class="text-sm text-gray-600">' + a.inhalt + '</p>';
+                    html += '</div></div></div>';
+                });
+                if(anns.length===0) html = '<div class="text-center py-8 text-gray-400">Keine Ankündigungen.</div>';
+                container.innerHTML = html;
+            } catch(err) { console.error('Ankündigungen:', err); }
         }
 
-        function renderBrett(cat) {
-            var posts = cat === 'all' ? brettPosts : brettPosts.filter(function(p){return p.cat===cat;});
-            var catBadges = {suche:'bg-red-100 text-red-700 🔍',biete:'bg-green-100 text-green-700 📦',frage:'bg-blue-100 text-blue-700 ❓',tipp:'bg-yellow-100 text-yellow-700 💡'};
-            var catLabels = {suche:'Gesucht',biete:'Biete',frage:'Frage',tipp:'Tipp'};
-            var html = '';
-            posts.forEach(function(p) {
-                var badge = catBadges[p.cat] || '';
-                var parts = badge.split(' ');
-                html += '<div class="vit-card p-5 hover:shadow-md transition ' + (p.urgent ? 'border-l-4 border-red-400 bg-red-50' : '') + '">';
-                html += '<div class="flex items-center space-x-2 mb-2">';
-                html += '<span class="text-xs font-semibold rounded px-2 py-0.5 ' + parts[0] + ' ' + parts[1] + '">' + (catLabels[p.cat]||'') + '</span>';
-                if(p.urgent) html += '<span class="text-xs font-bold text-red-600">⚡ Dringend</span>';
-                html += '<span class="text-xs text-gray-400 ml-auto">' + p.date + '</span></div>';
-                html += '<h3 class="font-bold text-gray-800 mb-1">' + p.title + '</h3>';
-                html += '<p class="text-sm text-gray-600 mb-3">' + p.body + '</p>';
-                html += '<div class="flex items-center justify-between">';
-                html += '<div class="flex items-center space-x-2"><div class="w-6 h-6 ' + p.color + ' rounded-full flex items-center justify-center text-white text-xs font-bold">' + p.avatar.charAt(0) + '</div>';
-                html += '<span class="text-xs font-semibold text-gray-600">' + p.author + '</span></div>';
-                html += '<span class="text-xs text-gray-400">💬 ' + p.replies + '</span></div></div>';
-            });
-            document.getElementById('brettPosts').innerHTML = html;
+        async function renderBrett(cat) {
+            var container = document.getElementById('brettPosts');
+            if(!container) return;
+            try {
+                var query = sb.from('brett_eintraege').select('*, users(name)').eq('aktiv', true).order('created_at', {ascending:false});
+                if(cat && cat !== 'all') query = query.eq('kategorie', cat);
+                var resp = await query;
+                if(resp.error) throw resp.error;
+                var posts = resp.data || [];
+                var html = '';
+                var catColors = {suche:'bg-red-100 text-red-700 border-red-200',biete:'bg-green-100 text-green-700 border-green-200',frage:'bg-blue-100 text-blue-700 border-blue-200',tipp:'bg-yellow-100 text-yellow-700 border-yellow-200',allgemein:'bg-gray-100 text-gray-700 border-gray-200'};
+                var catLabels = {suche:'🔍 Gesucht',biete:'🏷️ Biete',frage:'❓ Frage',tipp:'💡 Tipp',allgemein:'📌 Allgemein'};
+                posts.forEach(function(p) {
+                    var authorName = p.users ? p.users.name : 'Unbekannt';
+                    var initials = authorName.split(' ').map(function(n){return n[0]}).join('').substring(0,2);
+                    var colors = ['bg-green-500','bg-blue-500','bg-purple-500','bg-red-500','bg-pink-500','bg-cyan-500'];
+                    var ci = authorName.split('').reduce(function(a,c){return a+c.charCodeAt(0)},0) % colors.length;
+                    var d = new Date(p.created_at);
+                    html += '<div class="vit-card p-5 hover:shadow-md transition">';
+                    html += '<div class="flex items-center space-x-2 mb-2"><span class="text-xs font-bold rounded-full px-2.5 py-1 border ' + (catColors[p.kategorie]||catColors.allgemein) + '">' + (catLabels[p.kategorie]||p.kategorie) + '</span></div>';
+                    html += '<h3 class="font-bold text-gray-800 mb-1">' + p.titel + '</h3>';
+                    html += '<p class="text-sm text-gray-600 mb-3">' + (p.beschreibung||'') + '</p>';
+                    html += '<div class="flex items-center space-x-3 text-xs text-gray-400">';
+                    html += '<div class="flex items-center space-x-1"><div class="w-5 h-5 ' + colors[ci] + ' rounded-full flex items-center justify-center text-white text-[10px] font-bold">' + initials + '</div><span>' + authorName + '</span></div>';
+                    html += '<span>' + d.toLocaleDateString('de-DE') + '</span></div></div>';
+                });
+                if(posts.length===0) html = '<div class="col-span-2 text-center py-8 text-gray-400">Keine Einträge.</div>';
+                container.innerHTML = html;
+            } catch(err) { console.error('Brett:', err); }
         }
 
         function filterBrett(cat) {
@@ -6482,29 +6494,30 @@
             renderBrett(cat);
         }
 
-        function renderTermine() {
-            var html = '';
-            termine.forEach(function(t) {
-                var typeIcons = {deadline:'🔴',schulung:'🎓',meeting:'📞',event:'🎉'};
-                var typeLabels = {deadline:'Deadline',schulung:'Schulung',meeting:'Meeting',event:'Event'};
-                var isToday = t.date === '14.02.2026';
-                html += '<div class="vit-card p-5 flex items-start space-x-4 ' + (isToday ? 'border-l-4 border-vit-orange bg-orange-50' : '') + '">';
-                html += '<div class="text-center flex-shrink-0 w-14">';
-                var parts = t.date.split('.');
-                var months = ['','Jan','Feb','Mrz','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
-                html += '<p class="text-2xl font-bold text-gray-800">' + parseInt(parts[0]) + '</p>';
-                html += '<p class="text-xs text-gray-500 uppercase">' + months[parseInt(parts[1])] + '</p></div>';
-                html += '<div class="flex-1">';
-                html += '<div class="flex items-center space-x-2 mb-1">';
-                html += '<span class="text-xs font-semibold rounded px-2 py-0.5 ' + t.color.replace('bg-','bg-').replace('-500','-100') + ' ' + t.color.replace('bg-','text-').replace('-500','-700') + '">' + (typeIcons[t.type]||'') + ' ' + (typeLabels[t.type]||'') + '</span>';
-                html += '<span class="text-xs text-gray-400">' + t.time + '</span>';
-                if(isToday) html += '<span class="text-xs font-bold text-vit-orange">HEUTE</span>';
-                html += '</div>';
-                html += '<h3 class="font-bold text-gray-800">' + t.title + '</h3>';
-                html += '<p class="text-sm text-gray-500 mt-0.5">' + t.desc + '</p>';
-                html += '</div></div>';
-            });
-            document.getElementById('termineList').innerHTML = html;
+        async function renderTermine() {
+            var container = document.getElementById('termineList');
+            if(!container) return;
+            try {
+                var resp = await sb.from('termine').select('*').gte('start_zeit', new Date().toISOString().split('T')[0]).order('start_zeit', {ascending:true}).limit(15);
+                if(resp.error) throw resp.error;
+                var terms = resp.data || [];
+                var html = '';
+                var typeLabels = {termin:'📋',meeting:'👥',schulung:'🎓',event:'🎉',deadline:'⏰',probefahrt:'🚲'};
+                terms.forEach(function(t) {
+                    var d = new Date(t.start_zeit);
+                    var dateStr = d.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'});
+                    var timeStr = t.ganztaegig ? 'Ganztägig' : d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+                    if(t.end_zeit) { var e=new Date(t.end_zeit); timeStr += ' – '+e.getHours()+':'+String(e.getMinutes()).padStart(2,'0'); }
+                    html += '<div class="vit-card p-4 flex items-start space-x-4 hover:shadow-md transition">';
+                    html += '<div class="text-center flex-shrink-0 w-14"><div class="text-2xl">' + (typeLabels[t.typ]||'📋') + '</div><div class="text-xs font-bold text-gray-500 mt-1">' + dateStr + '</div></div>';
+                    html += '<div class="flex-1"><h4 class="font-bold text-gray-800 text-sm">' + t.titel + '</h4>';
+                    html += '<p class="text-xs text-gray-500 mt-0.5">' + timeStr + (t.ort ? ' · ' + t.ort : '') + '</p>';
+                    if(t.beschreibung) html += '<p class="text-xs text-gray-400 mt-1">' + t.beschreibung + '</p>';
+                    html += '</div></div>';
+                });
+                if(terms.length===0) html = '<div class="text-center py-8 text-gray-400">Keine anstehenden Termine.</div>';
+                container.innerHTML = html;
+            } catch(err) { console.error('Termine:', err); }
         }
 
         function showKommTab(tabName) {
@@ -7679,15 +7692,59 @@
         showVerkaufTab = function(t) { origShowVerkaufTab(t); if(t==='vkWissen') renderWissenTab('verkauf','vkTabVkWissen'); };
 
         // === SUPPORT MODULE ===
-        var supportTickets = [
-            {id:'GR-2026-007',betreff:'Kassensystem zeigt Fehlermeldung beim Tagesabschluss',kat:'IT / Systeme',prio:'hoch',status:'offen',erstellt:'13.02.2026',aktualisiert:'14.02.2026 09:30',bearbeiter:null,antworten:0},
-            {id:'GR-2026-006',betreff:'Kalkhoff B2B-Portal: Login funktioniert nicht mehr',kat:'IT / Systeme',prio:'mittel',status:'bearbeitung',erstellt:'12.02.2026',aktualisiert:'13.02.2026 16:45',bearbeiter:'Tim Schaefer',antworten:2},
-            {id:'GR-2026-005',betreff:'BWA Januar 2026: Werbekosten-Position pruefen (321% ueber Plan)',kat:'Buchhaltung / BWA',prio:'mittel',status:'offen',erstellt:'11.02.2026',aktualisiert:'12.02.2026 10:00',bearbeiter:null,antworten:1},
-            {id:'GR-2026-004',betreff:'Haibike Blockorder: Konditionen-Bestaetigung ausständig',kat:'Einkauf / Lieferanten',prio:'hoch',status:'bearbeitung',erstellt:'08.02.2026',aktualisiert:'12.02.2026 14:20',bearbeiter:'Florian Meier',antworten:4},
-            {id:'GR-2026-003',betreff:'Google Ads: Kampagne "Fruehling 2026" nicht aktiv',kat:'Marketing / Ads',prio:'niedrig',status:'geloest',erstellt:'05.02.2026',aktualisiert:'07.02.2026 11:15',bearbeiter:'Michael Stenzel',antworten:3},
-            {id:'GR-2026-002',betreff:'Shimano Steps Diagnose-Tool: Lizenz abgelaufen',kat:'Werkstatt / Technik',prio:'mittel',status:'geloest',erstellt:'01.02.2026',aktualisiert:'03.02.2026 09:00',bearbeiter:'Tim Schaefer',antworten:2},
-            {id:'GR-2026-001',betreff:'Etermin-Buchungsseite: Falsches Logo angezeigt',kat:'IT / Systeme',prio:'niedrig',status:'geloest',erstellt:'22.01.2026',aktualisiert:'24.01.2026 16:30',bearbeiter:'Tim Schaefer',antworten:1}
-        ];
+        async function renderTickets(filter) {
+            var container = document.getElementById('ticketList');
+            if(!container) return;
+            try {
+                var query = sb.from('support_tickets').select('*, users(name)').order('created_at', {ascending:false});
+                if(filter==='offen') query = query.in('status', ['offen','in_bearbeitung']);
+                if(filter==='geloest') query = query.eq('status', 'geloest');
+                var resp = await query;
+                if(resp.error) throw resp.error;
+                var tickets = resp.data || [];
+                var html = '';
+                var statusColors = {offen:'bg-yellow-100 text-yellow-700',in_bearbeitung:'bg-blue-100 text-blue-700',warten:'bg-gray-100 text-gray-700',geloest:'bg-green-100 text-green-700'};
+                var statusLabels = {offen:'Offen',in_bearbeitung:'In Bearbeitung',warten:'Wartend',geloest:'Gelöst'};
+                var prioIcons = {dringend:'🔴',hoch:'🟠',mittel:'🟡',niedrig:'⚪'};
+                tickets.forEach(function(t) {
+                    var d = new Date(t.created_at);
+                    html += '<div class="vit-card p-4 hover:shadow-md transition">';
+                    html += '<div class="flex items-start justify-between">';
+                    html += '<div class="flex-1"><div class="flex items-center space-x-2 mb-1">';
+                    html += '<span class="text-xs font-semibold rounded px-2 py-0.5 ' + (statusColors[t.status]||'') + '">' + (statusLabels[t.status]||t.status) + '</span>';
+                    html += '<span>' + (prioIcons[t.prioritaet]||'') + '</span>';
+                    html += '<span class="text-xs text-gray-400">#' + t.id.substring(0,8) + '</span></div>';
+                    html += '<h4 class="font-bold text-gray-800 text-sm">' + t.titel + '</h4>';
+                    html += '<p class="text-xs text-gray-500 mt-1">' + t.beschreibung.substring(0,120) + '</p>';
+                    html += '<div class="flex items-center space-x-3 mt-2 text-xs text-gray-400">';
+                    html += '<span>' + d.toLocaleDateString('de-DE') + '</span>';
+                    html += '<span>' + (t.kategorie||'') + '</span>';
+                    html += '</div></div></div></div>';
+                });
+                if(tickets.length===0) html = '<div class="text-center py-8 text-gray-400">Keine Tickets.</div>';
+                container.innerHTML = html;
+            } catch(err) { console.error('Support:', err); }
+        }
+
+        function filterTickets(filter) {
+            document.querySelectorAll('.ticket-filter').forEach(function(b){b.className='ticket-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600';});
+            var btn=document.querySelector('.ticket-filter[data-f="'+filter+'"]');
+            if(btn) btn.className='ticket-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white';
+            renderTickets(filter);
+        }
+
+        async function sendTicket() {
+            var title = document.getElementById('ticketTitle');
+            var desc = document.getElementById('ticketDesc');
+            var cat = document.getElementById('ticketCat');
+            if(!title || !title.value.trim()) return;
+            try {
+                await sb.from('support_tickets').insert({standort_id: sbStandort?sbStandort.id:null, erstellt_von:sbUser.id, titel:title.value.trim(), beschreibung:(desc?desc.value:''), kategorie:(cat?cat.value:'allgemein'), prioritaet:'mittel'});
+                if(title) title.value=''; if(desc) desc.value='';
+                var form=document.getElementById('newTicketForm'); if(form) form.classList.add('hidden');
+                renderTickets('all');
+            } catch(err) { alert('Fehler: '+err.message); }
+        }
 
         var zentraleKontakte = [
             {name:'Sascha Matthies',rolle:'Geschaeftsfuehrung',bereich:'GF',tel:'+49 170 1234567',email:'sascha@vitbikes.de',verfuegbar:true,zeiten:'Mo-Fr 9-18 Uhr',schwerpunkt:'Strategie, Partnerschaften, Finanzen'},
@@ -7809,119 +7866,63 @@
         };
 
         // === IDEENBOARD ===
-        var ideen = [
-            {id:1,titel:'Lagerbestand-Modul im Portal',kat:'Portal / Funktionen',typ:'🚀 Neue Funktion',status:'geplant',autor:'Sandra Engelmann',standort:'Grafrath',datum:'12.02.2026',votes:14,kommentare:6,desc:'Aktueller Lagerbestand pro Marke/Kategorie direkt im Portal einsehbar, mit Ampel fuer niedrige Bestaende und Nachbestell-Vorschlaegen.'},
-            {id:2,titel:'Etermin-Integration: Termine im Verkauf-Tab anzeigen',kat:'Portal / Funktionen',typ:'🔧 Verbesserung',status:'diskussion',autor:'Thomas Engelmann',standort:'Grafrath',datum:'10.02.2026',votes:11,kommentare:8,desc:'Gebuchte Etermin-Termine direkt in der Verkauf-Wochenansicht anzeigen, damit Verkaeufer ihre Beratungstermine sehen.'},
-            {id:3,titel:'SharePoint-Anbindung fuer Aktenschrank',kat:'Portal / Funktionen',typ:'🚀 Neue Funktion',status:'neu',autor:'Sandra Engelmann',standort:'Grafrath',datum:'14.02.2026',votes:7,kommentare:2,desc:'Dokumente direkt aus SharePoint laden statt manuell hochladen. Automatische Synchronisation.'},
-            {id:4,titel:'Vororder-Modul mit Bedarfsplanung',kat:'Einkauf / Sortiment',typ:'🚀 Neue Funktion',status:'geplant',autor:'Florian Meier',standort:'Zentrale',datum:'08.02.2026',votes:19,kommentare:12,desc:'Vororder-Planung mit Vorjahresvergleich, Saison-Prognose und direkter Bestellmoeglichkeit an Lieferanten.'},
-            {id:5,titel:'Kasse: Leasing-Abwicklung vereinfachen',kat:'Warenwirtschaft / Kasse',typ:'🔧 Verbesserung',status:'diskussion',autor:'Dirk Wagner',standort:'Grafrath',datum:'06.02.2026',votes:16,kommentare:9,desc:'JobRad/Bikeleasing direkt an der Kasse abwickeln statt separater Prozess. QR-Code scannen, Vertrag wird automatisch angelegt.'},
-            {id:6,titel:'Push-Benachrichtigungen bei neuen Leads',kat:'Marketing / Werbung',typ:'🔧 Verbesserung',status:'neu',autor:'Michael Stenzel',standort:'Zentrale',datum:'11.02.2026',votes:8,kommentare:3,desc:'Sofortige Benachrichtigung auf dem Handy wenn ein neuer Lead ueber Meta/Google reinkommt. Schnellere Reaktionszeit = bessere Conversion.'},
-            {id:7,titel:'Werkstatt-Terminbuch digital',kat:'Werkstatt / Service',typ:'🚀 Neue Funktion',status:'neu',autor:'Max Huber',standort:'Grafrath',datum:'09.02.2026',votes:13,kommentare:5,desc:'Digitales Werkstatt-Terminbuch mit Auftragsstatus, Ersatzteil-Bestellung und Kunden-Benachrichtigung wenn Rad fertig ist.'},
-            {id:8,titel:'Benchmark: Anonymer Vergleich mit anderen Standorten',kat:'Portal / Funktionen',typ:'🔧 Verbesserung',status:'geplant',autor:'Sascha Matthies',standort:'Zentrale',datum:'03.02.2026',votes:21,kommentare:7,desc:'Eigene KPIs (Rohertrag, Umsatz, Conversion) anonymisiert mit dem Netzwerk-Durchschnitt vergleichen. Motivation durch Transparenz.'},
-            {id:9,titel:'Probefahrt-Protokoll digitalisieren',kat:'Verkauf / Beratung',typ:'🔧 Verbesserung',status:'neu',autor:'Sandra Engelmann',standort:'Grafrath',datum:'13.02.2026',votes:5,kommentare:1,desc:'Statt Papier: Kunde unterschreibt auf dem Tablet, Protokoll wird automatisch gespeichert und dem Lead zugeordnet.'},
-            {id:10,titel:'Dark Mode fuer das Portal',kat:'Portal / Funktionen',typ:'💬 Allgemeiner Vorschlag',status:'umgesetzt',autor:'Tim Schaefer',standort:'Zentrale',datum:'15.01.2026',votes:9,kommentare:4,desc:'Augenfreundliche dunkle Variante fuer die Abendstunden. Toggle in den Einstellungen.'},
-            {id:11,titel:'Netzwerk-Chat: Direktnachrichten zwischen Standorten',kat:'Kommunikation / Zusammenarbeit',typ:'🚀 Neue Funktion',status:'umgesetzt',autor:'Laura Hofmann',standort:'Zentrale',datum:'10.01.2026',votes:17,kommentare:11,desc:'Direkter Austausch zwischen Standorten ohne Umweg ueber die Zentrale. Bereits im Kommunikation-Modul live.'},
-            {id:12,titel:'Automatische Bestell-Vorschlaege basierend auf Verkaufsdaten',kat:'Einkauf / Sortiment',typ:'🚀 Neue Funktion',status:'umgesetzt',autor:'Florian Meier',standort:'Zentrale',datum:'05.01.2026',votes:23,kommentare:15,desc:'System schlaegt automatisch Nachbestellungen vor wenn Modelle gut laufen und Bestand niedrig ist. Bereits in der Auswertung integriert.'}
-        ];
-
-        function renderIdeen(filter) {
-            var list = document.getElementById('ideenList');
-            if(!list) return;
-            var filtered = filter==='all' ? ideen : ideen.filter(function(i){ return i.status===filter; });
-            // Sort by votes descending
-            filtered.sort(function(a,b){ return b.votes - a.votes; });
-
-            var statusMap = {
-                neu:{label:'Neu',color:'bg-blue-100 text-blue-700',icon:'🆕'},
-                diskussion:{label:'In Diskussion',color:'bg-yellow-100 text-yellow-700',icon:'💬'},
-                geplant:{label:'Geplant',color:'bg-purple-100 text-purple-700',icon:'📋'},
-                umgesetzt:{label:'Umgesetzt',color:'bg-green-100 text-green-700',icon:'✅'}
-            };
-
-            var h = '';
-            filtered.forEach(function(idee) {
-                var s = statusMap[idee.status]||statusMap.neu;
-                h += '<div class="vit-card p-5 hover:shadow-md transition '+(idee.status==='umgesetzt'?'opacity-70 border-l-4 border-green-400':'')+'">';
-                h += '<div class="flex items-start space-x-4">';
-
-                // Upvote
-                h += '<div class="flex flex-col items-center space-y-1 pt-1">';
-                h += '<button onclick="upvoteIdee('+idee.id+')" class="w-10 h-10 rounded-lg border-2 border-gray-200 hover:border-vit-orange hover:bg-orange-50 flex items-center justify-center transition group">';
-                h += '<svg class="w-4 h-4 text-gray-400 group-hover:text-vit-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>';
-                h += '</button>';
-                h += '<span class="text-sm font-bold text-gray-700" id="votes-'+idee.id+'">'+idee.votes+'</span>';
-                h += '</div>';
-
-                // Content
-                h += '<div class="flex-1">';
-                h += '<div class="flex items-center flex-wrap gap-2 mb-1">';
-                h += '<span class="'+s.color+' text-[10px] px-2 py-0.5 rounded-full font-bold">'+s.icon+' '+s.label+'</span>';
-                h += '<span class="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">'+idee.kat+'</span>';
-                h += '<span class="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-400 rounded-full">'+idee.typ+'</span>';
-                h += '</div>';
-                h += '<h3 class="font-semibold text-gray-800 text-sm mb-1">'+idee.titel+'</h3>';
-                h += '<p class="text-xs text-gray-500 mb-2">'+idee.desc+'</p>';
-                h += '<div class="flex items-center space-x-4 text-xs text-gray-400">';
-                h += '<span>👤 '+idee.autor+' ('+idee.standort+')</span>';
-                h += '<span>📅 '+idee.datum+'</span>';
-                h += '<span>💬 '+idee.kommentare+' Kommentare</span>';
-                h += '</div>';
-                h += '</div>';
-
-                h += '</div>';
-                h += '</div>';
-            });
-            if(filtered.length===0) h = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-2">💡</p><p class="text-sm">Keine Ideen in dieser Kategorie</p></div>';
-            list.innerHTML = h;
-
-            // Update stats
-            var el;
-            el = document.getElementById('ideenTotal'); if(el) el.textContent = ideen.length;
-            el = document.getElementById('ideenNeu'); if(el) el.textContent = ideen.filter(function(i){return i.status==='neu';}).length;
-            el = document.getElementById('ideenGeplant'); if(el) el.textContent = ideen.filter(function(i){return i.status==='geplant';}).length;
-            el = document.getElementById('ideenUmgesetzt'); if(el) el.textContent = ideen.filter(function(i){return i.status==='umgesetzt';}).length;
+        async function renderIdeen(filter) {
+            var container = document.getElementById('ideenList');
+            if(!container) return;
+            try {
+                var query = sb.from('ideen').select('*, users(name)').order('votes', {ascending:false});
+                if(filter && filter!=='all') query = query.eq('status', filter);
+                var resp = await query;
+                if(resp.error) throw resp.error;
+                var ideas = resp.data || [];
+                var html = '';
+                var statusColors = {neu:'bg-blue-100 text-blue-700',wird_geprueft:'bg-yellow-100 text-yellow-700',umgesetzt:'bg-green-100 text-green-700',abgelehnt:'bg-red-100 text-red-700'};
+                var statusLabels = {neu:'Neu',wird_geprueft:'Wird geprüft',umgesetzt:'Umgesetzt',abgelehnt:'Abgelehnt'};
+                ideas.forEach(function(i) {
+                    var authorName = i.users ? i.users.name : 'Unbekannt';
+                    html += '<div class="vit-card p-5 hover:shadow-md transition">';
+                    html += '<div class="flex items-start space-x-4">';
+                    html += '<div class="text-center flex-shrink-0"><button onclick="voteIdee(\x27'+i.id+'\x27)" class="w-12 h-12 rounded-xl bg-gray-100 hover:bg-vit-orange hover:text-white flex items-center justify-center text-lg font-bold text-gray-600 transition">▲</button><span class="text-sm font-bold text-gray-800 block mt-1">' + (i.votes||0) + '</span></div>';
+                    html += '<div class="flex-1">';
+                    html += '<div class="flex items-center space-x-2 mb-1"><span class="text-xs font-semibold rounded px-2 py-0.5 ' + (statusColors[i.status]||'') + '">' + (statusLabels[i.status]||i.status) + '</span></div>';
+                    html += '<h3 class="font-bold text-gray-800 mb-1">' + i.titel + '</h3>';
+                    if(i.beschreibung) html += '<p class="text-sm text-gray-600 mb-2">' + i.beschreibung + '</p>';
+                    html += '<span class="text-xs text-gray-400">' + authorName + '</span>';
+                    html += '</div></div></div>';
+                });
+                if(ideas.length===0) html = '<div class="text-center py-8 text-gray-400">Keine Ideen.</div>';
+                container.innerHTML = html;
+            } catch(err) { console.error('Ideen:', err); }
         }
 
-        var currentIdeeFilter = 'all';
         function filterIdeen(filter) {
-            currentIdeeFilter = filter;
-            document.querySelectorAll('.idee-filter-btn').forEach(function(b){
-                b.className='idee-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600';
-            });
-            var btn = document.querySelector('.idee-filter-btn[data-if="'+filter+'"]');
-            if(btn) btn.className='idee-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white';
+            document.querySelectorAll('.ideen-filter').forEach(function(b){b.className='ideen-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600';});
+            var btn=document.querySelector('.ideen-filter[data-f="'+filter+'"]');
+            if(btn) btn.className='ideen-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white';
             renderIdeen(filter);
         }
 
-        function upvoteIdee(id) {
-            ideen.forEach(function(i){ if(i.id===id) i.votes++; });
-            renderIdeen(currentIdeeFilter);
+        async function voteIdee(id) {
+            try {
+                await sb.from('ideen_votes').insert({idee_id:id, user_id:sbUser.id});
+                await sb.rpc('increment_votes', {idee_id_param:id}).catch(function(){});
+                // Simple increment fallback
+                var resp = await sb.from('ideen').select('votes').eq('id',id).single();
+                if(resp.data) await sb.from('ideen').update({votes:(resp.data.votes||0)+1}).eq('id',id);
+                renderIdeen('all');
+            } catch(err) { if(err.code==='23505') alert('Du hast bereits abgestimmt!'); else console.error('Vote:', err); }
         }
 
-        function submitIdee() {
-            var titel = document.getElementById('ideeTitel').value;
-            var kat = document.getElementById('ideeKat').value;
-            var typ = document.getElementById('ideeTyp').value;
-            var desc = document.getElementById('ideeBeschreibung').value;
-            if(!titel || !kat) { alert('Bitte Titel und Bereich angeben.'); return; }
-            ideen.unshift({
-                id: ideen.length+1,
-                titel: titel,
-                kat: kat,
-                typ: typ||'💬 Allgemeiner Vorschlag',
-                status: 'neu',
-                autor: 'Sandra Engelmann',
-                standort: 'Grafrath',
-                datum: '14.02.2026',
-                votes: 1,
-                kommentare: 0,
-                desc: desc||'Keine Beschreibung angegeben.'
-            });
-            document.getElementById('ideeTitel').value='';
-            document.getElementById('ideeBeschreibung').value='';
-            document.getElementById('ideeCreate').classList.add('hidden');
-            filterIdeen('all');
-            alert('Deine Idee wurde eingereicht! 🎉');
+        async function submitIdee() {
+            var titleEl = document.getElementById('ideeTitle');
+            var descEl = document.getElementById('ideeDesc');
+            if(!titleEl || !titleEl.value.trim()) return;
+            try {
+                await sb.from('ideen').insert({user_id:sbUser.id, standort_id:sbStandort?sbStandort.id:null, titel:titleEl.value.trim(), beschreibung:descEl?descEl.value:'', status:'neu'});
+                if(titleEl) titleEl.value=''; if(descEl) descEl.value='';
+                var form=document.getElementById('newIdeeForm'); if(form) form.classList.add('hidden');
+                renderIdeen('all');
+            } catch(err) { alert('Fehler: '+err.message); }
         }
 
         // === HQ STANDORT-DATEN (Netzwerk-weite Kennzahlen) ===
@@ -8880,7 +8881,7 @@
             list.forEach(function(td){
                 var isOver=!td.done && td.date<today;
                 h+='<div class="vit-card p-3 flex items-center space-x-3 '+(td.done?'opacity-50':'')+'">';
-                h+='<button onclick="toggleTodo('+td.id+')" class="flex-shrink-0 w-6 h-6 rounded-full border-2 '+(td.done?'bg-green-500 border-green-500':'border-gray-300 hover:border-vit-orange')+' flex items-center justify-center">';
+                    html += '<button onclick="toggleTodo(\x27'+t.id+'\x27)" class="mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ' + (isErledigt ? 'border-green-500 bg-green-500 text-white' : 'border-gray-300 hover:border-vit-orange') + '"><span class="text-xs">' + (isErledigt ? '✓' : '') + '</span></button>';
                 if(td.done) h+='<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>';
                 h+='</button>';
                 h+='<div class="flex-1 min-w-0">';
@@ -10088,67 +10089,71 @@
         };
 
         // ========== WERBEMITTEL-SHOP ==========
-        var shopProducts = [
-            {id:1,name:'Visitenkarten (500 Stk.)',kat:'print',preis:49.90,img:'📇',desc:'Premium-Visitenkarten mit individuellem Standort-Aufdruck, 350g Bilderdruckkarton, beidseitig bedruckt.'},
-            {id:2,name:'Flyer DIN A5 (1000 Stk.)',kat:'print',preis:89.00,img:'📄',desc:'Saisonale Angebotsflyer im vit:bikes Design. Individuell mit euren Angeboten.'},
-            {id:3,name:'Plakate A1 (10 Stk.)',kat:'print',preis:65.00,img:'🖼️',desc:'Grossformat-Plakate fuer Schaufenster und Ausstellungsflaeche. Wetterfest.'},
-            {id:4,name:'Preisschilder-Set (50 Stk.)',kat:'print',preis:29.90,img:'🏷️',desc:'Einheitliche Preisschilder im vit:bikes CI mit Platz fuer Modell, Preis und Features.'},
-            {id:5,name:'Polo-Shirt (Mitarbeiter)',kat:'textil',preis:34.90,img:'👕',desc:'Hochwertiges Polo mit gesticktem vit:bikes Logo. Farben: Schwarz, Orange, Weiss. Groessen: S-3XL.'},
-            {id:6,name:'Softshell-Jacke',kat:'textil',preis:79.90,img:'🧥',desc:'Wind- und wasserabweisende Softshell-Jacke mit vit:bikes Branding. Ideal fuer Probefahrten.'},
-            {id:7,name:'Schuerze Werkstatt',kat:'textil',preis:24.90,img:'👨‍🔧',desc:'Robuste Werkstattschuerze mit vit:bikes Logo und Werkzeugtaschen.'},
-            {id:8,name:'Cap / Muetze',kat:'textil',preis:14.90,img:'🧢',desc:'Bestickte Cap im vit:bikes Design. One-Size, verstellbar.'},
-            {id:9,name:'Roll-Up Banner (85x200cm)',kat:'display',preis:119.00,img:'🪧',desc:'Mobiles Roll-Up Display fuer Events, Messen und Schaufenster. Inkl. Tragetasche.'},
-            {id:10,name:'Theken-Aufsteller A4',kat:'display',preis:18.90,img:'📐',desc:'Acryl-Aufsteller fuer Kassenbereich. Inkl. 3 wechselbare Einleger.'},
-            {id:11,name:'Schaufenster-Folie (qm)',kat:'display',preis:45.00,img:'🪟',desc:'Bedruckte Fensterfolie im vit:bikes Design. Individuelle Masse moeglich.'},
-            {id:12,name:'Kundenstopper A1',kat:'display',preis:149.00,img:'🚧',desc:'Wetterfester Alu-Kundenstopper fuer den Eingangsbereich. Doppelseitig.'},
-            {id:13,name:'Social Media Templates',kat:'digital',preis:0.00,img:'📱',desc:'Canva-Vorlagen fuer Instagram, Facebook & Google Posts. 20+ Templates im vit:bikes CI.'},
-            {id:14,name:'E-Mail Signaturen-Set',kat:'digital',preis:0.00,img:'✉️',desc:'Professionelle HTML-E-Mail Signaturen fuer alle Mitarbeiter. Einfach einzurichten.'},
-            {id:15,name:'Fahrzeugbeschriftung (Set)',kat:'digital',preis:289.00,img:'🚐',desc:'Komplette Fahrzeugbeschriftung inkl. Design und Druckdateien. Montage separat.'},
-            {id:16,name:'Trinkflasche (mit Logo)',kat:'give',preis:8.90,img:'🍶',desc:'BPA-freie Sport-Trinkflasche 750ml mit vit:bikes Aufdruck. Min. 25 Stueck.'},
-            {id:17,name:'Sattelbezug (mit Logo)',kat:'give',preis:3.90,img:'🚲',desc:'Wasserdichter Sattelueberzug mit vit:bikes Branding. Min. 50 Stueck.'},
-            {id:18,name:'Schluesselband',kat:'give',preis:2.50,img:'🔑',desc:'Lanyard mit Karabiner und vit:bikes Druck. Ideal fuer Probefahrt-Schluessel. Min. 50 Stk.'},
-            {id:19,name:'Reflektor-Klemmband',kat:'give',preis:1.90,img:'💡',desc:'Reflektierendes Schnapp-Armband mit vit:bikes Logo. Sicherheits-Giveaway. Min. 100 Stk.'},
-            {id:20,name:'Einkaufswagen-Chip',kat:'give',preis:1.20,img:'🪙',desc:'Metall-Chip mit vit:bikes Logo in Schluesselanhaenger-Halterung. Min. 100 Stk.'}
-        ];
         var shopCart = [];
-        var shopCurrentFilter = 'all';
 
-        function renderShop() {
-            var items = shopCurrentFilter==='all' ? shopProducts : shopProducts.filter(function(p){return p.kat===shopCurrentFilter;});
-            var el = document.getElementById('shopGrid');
-            if(!el) return;
-            var h = '';
-            items.forEach(function(p) {
-                var inCart = shopCart.find(function(c){return c.id===p.id;});
-                var qty = inCart ? inCart.qty : 0;
-                h += '<div class="vit-card overflow-hidden hover:shadow-lg transition group">';
-                h += '<div class="h-32 bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center text-5xl group-hover:scale-110 transition-transform">'+p.img+'</div>';
-                h += '<div class="p-4">';
-                h += '<h3 class="font-bold text-sm text-gray-800 mb-1">'+p.name+'</h3>';
-                h += '<p class="text-xs text-gray-500 mb-3 line-clamp-2" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">'+p.desc+'</p>';
-                h += '<div class="flex items-center justify-between">';
-                h += '<span class="font-bold text-vit-orange">'+(p.preis===0?'Kostenlos':p.preis.toFixed(2).replace('.',',')+' €')+'</span>';
-                if(qty > 0) {
-                    h += '<div class="flex items-center space-x-2"><button onclick="updateShopCart('+p.id+',-1)" class="w-7 h-7 bg-gray-200 rounded-full text-sm font-bold hover:bg-gray-300">−</button><span class="text-sm font-bold w-6 text-center">'+qty+'</span><button onclick="updateShopCart('+p.id+',1)" class="w-7 h-7 bg-vit-orange text-white rounded-full text-sm font-bold hover:opacity-80">+</button></div>';
-                } else {
-                    h += '<button onclick="updateShopCart('+p.id+',1)" class="bg-vit-orange text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90">+ Warenkorb</button>';
-                }
-                h += '</div></div></div>';
-            });
-            el.innerHTML = h;
-            renderShopCart();
+        async function renderShop() {
+            var container = document.getElementById('shopGrid');
+            if(!container) return;
+            try {
+                var resp = await sb.from('shop_produkte').select('*').eq('verfuegbar', true).order('kategorie');
+                if(resp.error) throw resp.error;
+                var products = resp.data || [];
+                var html = '';
+                products.forEach(function(p) {
+                    var inCart = shopCart.find(function(c){return c.id===p.id});
+                    html += '<div class="vit-card p-5 hover:shadow-md transition">';
+                    html += '<div class="w-full h-32 bg-gray-100 rounded-lg mb-3 flex items-center justify-center text-4xl">🛍️</div>';
+                    html += '<span class="text-xs font-semibold text-vit-orange uppercase">' + (p.kategorie||'') + '</span>';
+                    html += '<h3 class="font-bold text-gray-800 text-sm mt-1">' + p.name + '</h3>';
+                    if(p.beschreibung) html += '<p class="text-xs text-gray-500 mt-1">' + p.beschreibung + '</p>';
+                    html += '<div class="flex items-center justify-between mt-3">';
+                    html += '<span class="font-bold text-gray-800">' + (p.preis > 0 ? p.preis.toFixed(2) + ' \u20ac' : 'Kostenlos') + '</span>';
+                    html += '<button onclick="addToCart(\x27'+p.id+'\x27,\x27'+(p.name||'').replace(/\x27/g,'')+'\x27,'+p.preis+')" class="px-3 py-1.5 text-xs font-semibold rounded-lg ' + (inCart ? 'bg-green-500 text-white' : 'bg-vit-orange text-white hover:opacity-90') + '">' + (inCart ? '\u2713 Im Warenkorb' : '+ Bestellen') + '</button>';
+                    html += '</div></div>';
+                });
+                if(products.length===0) html = '<div class="col-span-3 text-center py-8 text-gray-400">Keine Produkte.</div>';
+                container.innerHTML = html;
+                renderShopCart();
+            } catch(err) { console.error('Shop:', err); }
         }
 
-        function updateShopCart(id, delta) {
-            var item = shopCart.find(function(c){return c.id===id;});
-            if(item) {
-                item.qty += delta;
-                if(item.qty <= 0) shopCart = shopCart.filter(function(c){return c.id!==id;});
-            } else if(delta > 0) {
-                var p = shopProducts.find(function(pr){return pr.id===id;});
-                if(p) shopCart.push({id:id, name:p.name, preis:p.preis, qty:1});
-            }
+        function addToCart(id, name, preis) {
+            var existing = shopCart.find(function(c){return c.id===id});
+            if(existing) { existing.menge++; } else { shopCart.push({id:id, name:name, preis:preis, menge:1}); }
             renderShop();
+        }
+
+        function renderShopCart() {
+            var container = document.getElementById('shopCartItems');
+            if(!container) return;
+            if(shopCart.length===0) { container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">Warenkorb leer</p>'; return; }
+            var html = ''; var total = 0;
+            shopCart.forEach(function(c) { total += c.preis * c.menge; html += '<div class="flex justify-between py-2 border-b border-gray-100"><span class="text-sm">' + c.name + ' x' + c.menge + '</span><span class="font-bold text-sm">' + (c.preis*c.menge).toFixed(2) + ' \u20ac</span></div>'; });
+            html += '<div class="flex justify-between pt-3 font-bold"><span>Gesamt</span><span>' + total.toFixed(2) + ' \u20ac</span></div>';
+            container.innerHTML = html;
+            var totalEl = document.getElementById('shopCartTotal'); if(totalEl) totalEl.textContent = total.toFixed(2);
+            var countEl = document.getElementById('shopCartCount'); if(countEl) countEl.textContent = shopCart.length;
+        }
+
+        function filterShop(kat) {
+            document.querySelectorAll('.shop-filter-btn').forEach(function(b){b.className='shop-filter-btn text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600';});
+            var btn=document.querySelector('.shop-filter-btn[data-sf="'+kat+'"]');
+            if(btn) btn.className='shop-filter-btn text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white';
+            renderShop();
+        }
+
+        async function submitShopOrder() {
+            if(shopCart.length===0 || !sbUser) return;
+            try {
+                var total = shopCart.reduce(function(a,c){return a+c.preis*c.menge},0);
+                var orderResp = await sb.from('shop_bestellungen').insert({standort_id:sbStandort?sbStandort.id:null, user_id:sbUser.id, gesamt_preis:total}).select().single();
+                if(orderResp.error) throw orderResp.error;
+                var positionen = shopCart.map(function(c){ return {bestellung_id:orderResp.data.id, produkt_id:c.id, menge:c.menge, einzelpreis:c.preis}; });
+                await sb.from('shop_positionen').insert(positionen);
+                shopCart = [];
+                alert('Bestellung erfolgreich! \ud83c\udf89');
+                renderShop();
+            } catch(err) { alert('Fehler: '+err.message); }
         }
 
         function renderShopCart() {
