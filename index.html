@@ -325,7 +325,7 @@
                     <div class="grid grid-cols-1 gap-1.5">
                         <button onclick="quickLogin('max@vitbikes-grafrath.de')" class="text-left px-3 py-2 rounded-lg bg-gray-50 hover:bg-orange-50 border border-gray-100 hover:border-orange-200 transition text-xs group">
                             <span class="font-semibold text-gray-700 group-hover:text-vit-orange">Max Mustermann</span>
-                            <span class="text-gray-400 ml-1">— Inhaber/GF</span>
+                            <span class="text-gray-400 ml-1">— Geschäftsleitung</span>
                         </button>
                         <button onclick="quickLogin('sandra@vitbikes-grafrath.de')" class="text-left px-3 py-2 rounded-lg bg-gray-50 hover:bg-orange-50 border border-gray-100 hover:border-orange-200 transition text-xs group">
                             <span class="font-semibold text-gray-700 group-hover:text-vit-orange">Sandra Engelmann</span>
@@ -333,11 +333,11 @@
                         </button>
                         <button onclick="quickLogin('verkauf@vitbikes-grafrath.de')" class="text-left px-3 py-2 rounded-lg bg-gray-50 hover:bg-orange-50 border border-gray-100 hover:border-orange-200 transition text-xs group">
                             <span class="font-semibold text-gray-700 group-hover:text-vit-orange">Tom Berater</span>
-                            <span class="text-gray-400 ml-1">— Verkäufer</span>
+                            <span class="text-gray-400 ml-1">— Verkauf</span>
                         </button>
                         <button onclick="quickLogin('werkstatt@vitbikes-grafrath.de')" class="text-left px-3 py-2 rounded-lg bg-gray-50 hover:bg-orange-50 border border-gray-100 hover:border-orange-200 transition text-xs group">
                             <span class="font-semibold text-gray-700 group-hover:text-vit-orange">Felix Schrauber</span>
-                            <span class="text-gray-400 ml-1">— Mechaniker</span>
+                            <span class="text-gray-400 ml-1">— Werkstatt</span>
                         </button>
                         <button onclick="quickLogin('anna@vitbikes-grafrath.de')" class="text-left px-3 py-2 rounded-lg bg-gray-50 hover:bg-orange-50 border border-gray-100 hover:border-orange-200 transition text-xs group">
                             <span class="font-semibold text-gray-700 group-hover:text-vit-orange">Anna Allround</span>
@@ -531,6 +531,10 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                             <span>Werbemittel-Shop</span>
                         </button>
+                        <button onclick="showView('aktenschrank')" data-module="aktenschrank" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                            <span>Aktenschrank</span>
+                        </button>
                         </div>
 
                         <div id="onboardingNavSection">
@@ -541,7 +545,7 @@
                         </button>
                         </div>
 
-                        <!-- Mitarbeiter - nur Inhaber/GF -->
+                        <!-- Mitarbeiter - nur Geschäftsleitung -->
                         <div id="mitarbeiterNavSection">
                         <button onclick="showView('mitarbeiter')" data-module="mitarbeiter" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
@@ -5448,9 +5452,9 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="px-4 py-3 text-left font-semibold text-gray-600 min-w-[180px]">Modul</th>
-                                        <th class="px-4 py-3 text-center font-semibold text-orange-600 min-w-[100px]">Inhaber/GF</th>
-                                        <th class="px-4 py-3 text-center font-semibold text-blue-600 min-w-[100px]">Verkäufer</th>
-                                        <th class="px-4 py-3 text-center font-semibold text-gray-600 min-w-[100px]">Mechaniker</th>
+                                        <th class="px-4 py-3 text-center font-semibold text-orange-600 min-w-[100px]">Geschäftsleitung</th>
+                                        <th class="px-4 py-3 text-center font-semibold text-blue-600 min-w-[100px]">Verkauf</th>
+                                        <th class="px-4 py-3 text-center font-semibold text-gray-600 min-w-[100px]">Werkstatt</th>
                                         <th class="px-4 py-3 text-center font-semibold text-purple-600 min-w-[100px]">Buchhaltung</th>
                                     </tr>
                                 </thead>
