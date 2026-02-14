@@ -431,6 +431,14 @@
             <!-- Sidebar -->
             <aside id="sidebarNav" class="sidebar w-64 text-white overflow-y-auto flex-shrink-0">
                 <div class="p-4 pt-5">
+                        <!-- HQ/Standort Toggle (nur für Inhaber sichtbar) -->
+                        <div id="hqToggleSection" class="mb-4 hidden">
+                            <div class="bg-white/10 rounded-lg p-1 flex space-x-1">
+                                <button id="btnModeStandort" onclick="switchViewMode('partner')" class="flex-1 py-2 px-3 rounded-md text-xs font-bold transition bg-white text-gray-800">📍 Standort</button>
+                                <button id="btnModeHQ" onclick="switchViewMode('hq')" class="flex-1 py-2 px-3 rounded-md text-xs font-bold transition text-white/60 hover:text-white">🏢 HQ</button>
+                            </div>
+                        </div>
+
                         <!-- Partner-level quick access (hidden in HQ mode) -->
                         <div id="partnerQuickNav">
                         <!-- Startseite -->
@@ -5456,9 +5464,9 @@
                         <div class="vit-card p-5">
                             <h3 class="font-bold text-gray-800 mb-3">📋 Rollen-Beschreibungen</h3>
                             <div class="space-y-3">
-                                <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-vit-orange text-white mt-0.5">Inhaber/GF</span><p class="text-xs text-gray-600">Vollzugriff auf alle Standort-Module inkl. Dashboards, Shop, Onboarding und Controlling.</p></div>
-                                <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700 mt-0.5">Verkäufer</span><p class="text-xs text-gray-600">Zugang zu Verkauf, Marketing und allgemeinen Tools. Fokus auf Kundenberatung und Vertrieb.</p></div>
-                                <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-gray-200 text-gray-700 mt-0.5">Mechaniker</span><p class="text-xs text-gray-600">Zugang zu Einkauf und allgemeinen Tools. Fokus auf Werkstatt, Teile und Service.</p></div>
+                                <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-vit-orange text-white mt-0.5">Geschäftsleitung</span><p class="text-xs text-gray-600">Vollzugriff auf alle Standort-Module inkl. Dashboards, Shop, Onboarding und Controlling.</p></div>
+                                <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700 mt-0.5">Verkauf</span><p class="text-xs text-gray-600">Zugang zu Verkauf, Marketing und allgemeinen Tools. Fokus auf Kundenberatung und Vertrieb.</p></div>
+                                <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-gray-200 text-gray-700 mt-0.5">Werkstatt</span><p class="text-xs text-gray-600">Zugang zu Einkauf und allgemeinen Tools. Fokus auf Werkstatt, Teile und Service.</p></div>
                                 <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-purple-100 text-purple-700 mt-0.5">Buchhaltung</span><p class="text-xs text-gray-600">Zugang zu Allgemein, Verkauf, Einkauf, Controlling und Aktenschrank. Finanz- und Dokumentenfokus.</p></div>
                             </div>
                         </div>
@@ -5571,14 +5579,14 @@
 
         // Handle Login - Role & Location from email
         // === RECHTEMANAGEMENT ===
-        // Rollen: inhaber, verkaeufer, mechaniker, buchhaltung (Standort-Ebene) + hq (HQ-Ebene)
+        // Rollen: inhaber, verkauf, werkstatt, buchhaltung (Standort-Ebene) + hq (HQ-Ebene)
         // Jeder Mitarbeiter kann MEHRERE Rollen haben
         var userAccounts = {
             'max@vitbikes-grafrath.de': {roles:['inhaber'],location:'grafrath',name:'Max Mustermann'},
             'sandra@vitbikes-grafrath.de': {roles:['inhaber','buchhaltung'],location:'grafrath',name:'Sandra Engelmann'},
-            'verkauf@vitbikes-grafrath.de': {roles:['verkaeufer'],location:'grafrath',name:'Tom Berater'},
-            'werkstatt@vitbikes-grafrath.de': {roles:['mechaniker'],location:'grafrath',name:'Felix Schrauber'},
-            'anna@vitbikes-grafrath.de': {roles:['verkaeufer','mechaniker'],location:'grafrath',name:'Anna Allround'},
+            'verkauf@vitbikes-grafrath.de': {roles:['verkauf'],location:'grafrath',name:'Tom Berater'},
+            'werkstatt@vitbikes-grafrath.de': {roles:['werkstatt'],location:'grafrath',name:'Felix Schrauber'},
+            'anna@vitbikes-grafrath.de': {roles:['verkauf','werkstatt'],location:'grafrath',name:'Anna Allround'},
             'buchhaltung@vitbikes-grafrath.de': {roles:['buchhaltung'],location:'grafrath',name:'Petra Zahlen'},
             'hq@vitbikes.de': {roles:['hq'],location:'hq',name:'Lisa Zentrale'},
             'admin@vitbikes.de': {roles:['hq'],location:'hq',name:'Michael Stenzel'}
@@ -5593,9 +5601,9 @@
             'kommunikation':  ['alle'],
             'dashboards':     ['inhaber'],
             'allgemein':      ['inhaber','buchhaltung'],
-            'verkauf':        ['inhaber','verkaeufer','buchhaltung'],
-            'einkauf':        ['inhaber','mechaniker','buchhaltung'],
-            'marketing':      ['inhaber','verkaeufer'],
+            'verkauf':        ['inhaber','verkauf','buchhaltung'],
+            'einkauf':        ['inhaber','werkstatt','buchhaltung'],
+            'marketing':      ['inhaber','verkauf'],
             'controlling':    ['inhaber','buchhaltung'],
             'wissen':         ['alle'],
             'support':        ['alle'],
@@ -5667,7 +5675,7 @@
             sbRollen = (resp2.data || []).map(function(ur) { return ur.rollen; });
             var roleNames = sbRollen.map(function(r) { return r.name; });
             currentRoles = roleNames.length > 0 ? roleNames : ['inhaber'];
-            currentRole = currentRoles.indexOf('hq') >= 0 ? 'hq' : currentRoles[0];
+            currentRole = (currentRoles.indexOf('hq') >= 0 || currentRoles.indexOf('hq_admin') >= 0 || currentRoles.indexOf('inhaber') >= 0) ? currentRoles[0] : currentRoles[0];
             currentLocation = sbStandort ? sbStandort.slug : 'grafrath';
             isPremium = sbStandort ? sbStandort.is_premium : false;
         }
@@ -5731,9 +5739,9 @@
         function updateUIForRole() {
             // Rollen-Texte
             var roleLabels = {
-                'inhaber': 'Inhaber/GF',
-                'verkaeufer': 'Verkäufer',
-                'mechaniker': 'Mechaniker',
+                'inhaber': 'Geschäftsleitung',
+                'verkauf': 'Verkauf',
+                'werkstatt': 'Werkstatt',
                 'buchhaltung': 'Buchhaltung',
                 'hq': 'HQ-Mitarbeiter'
             };
@@ -5772,6 +5780,14 @@
             var isHQ = currentRole === 'hq';
             var isInhaber = hasRole('inhaber');
 
+            // HQ Toggle anzeigen für Inhaber
+            var hqToggle = document.getElementById('hqToggleSection');
+            if(hqToggle) hqToggle.classList.toggle('hidden', !isInhaber);
+            var btnStandort = document.getElementById('btnModeStandort');
+            var btnHQ = document.getElementById('btnModeHQ');
+            if(btnStandort) btnStandort.className = 'flex-1 py-2 px-3 rounded-md text-xs font-bold transition ' + (isHQ ? 'text-white/60 hover:text-white' : 'bg-white text-gray-800');
+            if(btnHQ) btnHQ.className = 'flex-1 py-2 px-3 rounded-md text-xs font-bold transition ' + (isHQ ? 'bg-white text-gray-800' : 'text-white/60 hover:text-white');
+
             // === SIDEBAR VISIBILITY ===
             // Partner QuickNav (Startseite, Kalender, Aufgaben, Kommunikation) - alle Standort-Rollen
             var partnerQuickNav = document.getElementById('partnerQuickNav');
@@ -5788,9 +5804,9 @@
             // Einzelne Fachbereich-Buttons per Rolle steuern
             var sidebarViews = {
                 'allgemein': ['inhaber','buchhaltung'],
-                'verkauf': ['inhaber','verkaeufer','buchhaltung'],
-                'einkauf': ['inhaber','mechaniker','buchhaltung'],
-                'marketing': ['inhaber','verkaeufer'],
+                'verkauf': ['inhaber','verkauf','buchhaltung'],
+                'einkauf': ['inhaber','werkstatt','buchhaltung'],
+                'marketing': ['inhaber','verkauf'],
                 'controlling': ['inhaber','buchhaltung']
             };
             Object.keys(sidebarViews).forEach(function(viewName){
@@ -8504,17 +8520,17 @@
 
             if(isHQ) {
                 currentRole = 'hq';
-                currentRoles = ['hq'];
+                // Keep original roles but add hq
+                if(currentRoles.indexOf('hq') < 0) currentRoles.push('hq');
             } else {
-                if(currentRoles.indexOf('hq')>=0) {
-                    currentRole = 'inhaber';
-                    currentRoles = ['inhaber'];
-                } else {
-                    currentRole = currentRoles[0];
-                }
+                // Remove hq from roles, restore original
+                currentRoles = currentRoles.filter(function(r){ return r !== 'hq'; });
+                if(currentRoles.length === 0) currentRoles = ['inhaber'];
+                currentRole = currentRoles[0];
             }
 
             try { updateUIForRole(); } catch(e) { console.warn(e); }
+            try { applyModulStatus(); } catch(e) { console.warn(e); }
 
             if(isHQ) {
                 showView('hqCockpit');
@@ -9555,35 +9571,35 @@
             // Grafrath
             {name:'Max Mustermann',standort:'Grafrath',rollen:['inhaber'],status:'aktiv',eintritt:'03/2021',onbProgress:100,email:'max@vitbikes-grafrath.de'},
             {name:'Sandra Engelmann',standort:'Grafrath',rollen:['inhaber','buchhaltung'],status:'aktiv',eintritt:'03/2021',onbProgress:100,email:'sandra@vitbikes-grafrath.de'},
-            {name:'Tom Berater',standort:'Grafrath',rollen:['verkaeufer'],status:'aktiv',eintritt:'06/2021',onbProgress:100,email:'verkauf@vitbikes-grafrath.de'},
-            {name:'Felix Schrauber',standort:'Grafrath',rollen:['mechaniker'],status:'aktiv',eintritt:'01/2022',onbProgress:100,email:'werkstatt@vitbikes-grafrath.de'},
-            {name:'Anna Allround',standort:'Grafrath',rollen:['verkaeufer','mechaniker'],status:'aktiv',eintritt:'05/2023',onbProgress:100,email:'anna@vitbikes-grafrath.de'},
+            {name:'Tom Berater',standort:'Grafrath',rollen:['verkauf'],status:'aktiv',eintritt:'06/2021',onbProgress:100,email:'verkauf@vitbikes-grafrath.de'},
+            {name:'Felix Schrauber',standort:'Grafrath',rollen:['werkstatt'],status:'aktiv',eintritt:'01/2022',onbProgress:100,email:'werkstatt@vitbikes-grafrath.de'},
+            {name:'Anna Allround',standort:'Grafrath',rollen:['verkauf','werkstatt'],status:'aktiv',eintritt:'05/2023',onbProgress:100,email:'anna@vitbikes-grafrath.de'},
             {name:'Petra Zahlen',standort:'Grafrath',rollen:['buchhaltung'],status:'aktiv',eintritt:'09/2022',onbProgress:100,email:'buchhaltung@vitbikes-grafrath.de'},
-            {name:'Sophie Klein',standort:'Grafrath',rollen:['verkaeufer'],status:'onboarding',eintritt:'02/2026',onbProgress:45,email:'s.klein@vitbikes.de'},
+            {name:'Sophie Klein',standort:'Grafrath',rollen:['verkauf'],status:'onboarding',eintritt:'02/2026',onbProgress:45,email:'s.klein@vitbikes.de'},
             // Hamburg
             {name:'Peter Hansen',standort:'Hamburg',rollen:['inhaber'],status:'aktiv',eintritt:'06/2022',onbProgress:100,email:'p.hansen@vitbikes.de'},
-            {name:'Miriam Deichmann',standort:'Hamburg',rollen:['inhaber','verkaeufer'],status:'aktiv',eintritt:'06/2022',onbProgress:100,email:'m.deichmann@vitbikes.de'},
-            {name:'Kai Petersen',standort:'Hamburg',rollen:['verkaeufer'],status:'aktiv',eintritt:'09/2022',onbProgress:100,email:'k.petersen@vitbikes.de'},
-            {name:'Nina Brandt',standort:'Hamburg',rollen:['mechaniker'],status:'aktiv',eintritt:'01/2023',onbProgress:100,email:'n.brandt@vitbikes.de'},
-            {name:'Felix Meyer',standort:'Hamburg',rollen:['verkaeufer','mechaniker'],status:'aktiv',eintritt:'08/2023',onbProgress:100,email:'f.meyer@vitbikes.de'},
+            {name:'Miriam Deichmann',standort:'Hamburg',rollen:['inhaber','verkauf'],status:'aktiv',eintritt:'06/2022',onbProgress:100,email:'m.deichmann@vitbikes.de'},
+            {name:'Kai Petersen',standort:'Hamburg',rollen:['verkauf'],status:'aktiv',eintritt:'09/2022',onbProgress:100,email:'k.petersen@vitbikes.de'},
+            {name:'Nina Brandt',standort:'Hamburg',rollen:['werkstatt'],status:'aktiv',eintritt:'01/2023',onbProgress:100,email:'n.brandt@vitbikes.de'},
+            {name:'Felix Meyer',standort:'Hamburg',rollen:['verkauf','werkstatt'],status:'aktiv',eintritt:'08/2023',onbProgress:100,email:'f.meyer@vitbikes.de'},
             // Weilheim
             {name:'Anna Berger',standort:'Weilheim',rollen:['inhaber'],status:'aktiv',eintritt:'01/2020',onbProgress:100,email:'a.berger@vitbikes.de'},
-            {name:'Jonas Huber',standort:'Weilheim',rollen:['verkaeufer'],status:'aktiv',eintritt:'03/2020',onbProgress:100,email:'j.huber@vitbikes.de'},
-            {name:'Lea Bauer',standort:'Weilheim',rollen:['mechaniker'],status:'aktiv',eintritt:'11/2021',onbProgress:100,email:'l.bauer@vitbikes.de'},
+            {name:'Jonas Huber',standort:'Weilheim',rollen:['verkauf'],status:'aktiv',eintritt:'03/2020',onbProgress:100,email:'j.huber@vitbikes.de'},
+            {name:'Lea Bauer',standort:'Weilheim',rollen:['werkstatt'],status:'aktiv',eintritt:'11/2021',onbProgress:100,email:'l.bauer@vitbikes.de'},
             {name:'Marie Fischer',standort:'Weilheim',rollen:['buchhaltung'],status:'aktiv',eintritt:'06/2021',onbProgress:100,email:'m.fischer@vitbikes.de'},
             // Berlin
             {name:'Jan Schulze',standort:'Berlin',rollen:['inhaber'],status:'aktiv',eintritt:'11/2022',onbProgress:100,email:'j.schulze@vitbikes.de'},
             {name:'Amelie Friedrich',standort:'Berlin',rollen:['inhaber','buchhaltung'],status:'aktiv',eintritt:'11/2022',onbProgress:100,email:'a.friedrich@vitbikes.de'},
-            {name:'Tom Richter',standort:'Berlin',rollen:['verkaeufer'],status:'aktiv',eintritt:'02/2023',onbProgress:100,email:'t.richter@vitbikes.de'},
-            {name:'Lena Weiß',standort:'Berlin',rollen:['verkaeufer'],status:'onboarding',eintritt:'01/2026',onbProgress:60,email:'l.weiss@vitbikes.de'},
-            {name:'Moritz Scholz',standort:'Berlin',rollen:['mechaniker'],status:'aktiv',eintritt:'05/2023',onbProgress:100,email:'m.scholz@vitbikes.de'},
+            {name:'Tom Richter',standort:'Berlin',rollen:['verkauf'],status:'aktiv',eintritt:'02/2023',onbProgress:100,email:'t.richter@vitbikes.de'},
+            {name:'Lena Weiß',standort:'Berlin',rollen:['verkauf'],status:'onboarding',eintritt:'01/2026',onbProgress:60,email:'l.weiss@vitbikes.de'},
+            {name:'Moritz Scholz',standort:'Berlin',rollen:['werkstatt'],status:'aktiv',eintritt:'05/2023',onbProgress:100,email:'m.scholz@vitbikes.de'},
             // Darmstadt (Onboarding)
             {name:'Tobias Lang',standort:'Darmstadt',rollen:['inhaber'],status:'onboarding',eintritt:'01/2026',onbProgress:35,email:'t.lang@vitbikes.de'},
-            {name:'Sarah König',standort:'Darmstadt',rollen:['verkaeufer'],status:'onboarding',eintritt:'02/2026',onbProgress:15,email:'s.koenig@vitbikes.de'},
-            {name:'David Böhm',standort:'Darmstadt',rollen:['mechaniker'],status:'onboarding',eintritt:'02/2026',onbProgress:10,email:'d.boehm@vitbikes.de'},
+            {name:'Sarah König',standort:'Darmstadt',rollen:['verkauf'],status:'onboarding',eintritt:'02/2026',onbProgress:15,email:'s.koenig@vitbikes.de'},
+            {name:'David Böhm',standort:'Darmstadt',rollen:['werkstatt'],status:'onboarding',eintritt:'02/2026',onbProgress:10,email:'d.boehm@vitbikes.de'},
             // Hanau (Offboarding)
             {name:'Michael Vogel',standort:'Hanau',rollen:['inhaber'],status:'offboarding',eintritt:'03/2022',onbProgress:100,email:'m.vogel@vitbikes.de'},
-            {name:'Carla Jansen',standort:'Hanau',rollen:['verkaeufer'],status:'offboarding',eintritt:'07/2022',onbProgress:100,email:'c.jansen@vitbikes.de'}
+            {name:'Carla Jansen',standort:'Hanau',rollen:['verkauf'],status:'offboarding',eintritt:'07/2022',onbProgress:100,email:'c.jansen@vitbikes.de'}
         ];
 
         var currentKzStdFilter = 'all';
@@ -9629,8 +9645,8 @@
             return s;
         }
         function rolleBadge(r) {
-            var colors = {'inhaber':'bg-vit-orange text-white','verkaeufer':'bg-blue-100 text-blue-700','mechaniker':'bg-gray-200 text-gray-700','buchhaltung':'bg-purple-100 text-purple-700'};
-            var labels = {'inhaber':'Inhaber/GF','verkaeufer':'Verkäufer','mechaniker':'Mechaniker','buchhaltung':'Buchhaltung'};
+            var colors = {'inhaber':'bg-vit-orange text-white','verkauf':'bg-blue-100 text-blue-700','werkstatt':'bg-gray-200 text-gray-700','buchhaltung':'bg-purple-100 text-purple-700'};
+            var labels = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
             return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold '+(colors[r]||'bg-gray-100 text-gray-600')+'">'+(labels[r]||r)+'</span>';
         }
         function rollenBadges(rollen) {
@@ -9706,9 +9722,9 @@
         function openRollenModal(maIdx) {
             var m = kzMitarbeiter[maIdx];
             if(!m) return;
-            var allRollen = ['inhaber','verkaeufer','mechaniker','buchhaltung'];
-            var labels = {'inhaber':'Inhaber/GF','verkaeufer':'Verkäufer','mechaniker':'Mechaniker','buchhaltung':'Buchhaltung'};
-            var desc = {'inhaber':'Vollzugriff auf alle Module, Dashboards, Shop, Onboarding','verkaeufer':'Verkauf, Marketing, Wissen, Support, Ideenboard','mechaniker':'Einkauf, Wissen, Support, Ideenboard','buchhaltung':'Allgemein, Verkauf, Einkauf, Controlling, Aktenschrank'};
+            var allRollen = ['inhaber','verkauf','werkstatt','buchhaltung'];
+            var labels = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
+            var desc = {'inhaber':'Vollzugriff auf alle Module, Dashboards, Shop, Onboarding','verkauf':'Verkauf, Marketing, Wissen, Support, Ideenboard','werkstatt':'Einkauf, Wissen, Support, Ideenboard','buchhaltung':'Allgemein, Verkauf, Einkauf, Controlling, Aktenschrank'};
 
             var html = '<div id="rollenModalOverlay" onclick="closeRollenModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
             html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:420px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
@@ -9717,7 +9733,7 @@
             html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Rollen zuweisen (Mehrfachauswahl)</p>';
             allRollen.forEach(function(r){
                 var checked = m.rollen.indexOf(r)>=0 ? 'checked' : '';
-                var colors = {'inhaber':'border-orange-300 bg-orange-50','verkaeufer':'border-blue-300 bg-blue-50','mechaniker':'border-gray-300 bg-gray-50','buchhaltung':'border-purple-300 bg-purple-50'};
+                var colors = {'inhaber':'border-orange-300 bg-orange-50','verkauf':'border-blue-300 bg-blue-50','werkstatt':'border-gray-300 bg-gray-50','buchhaltung':'border-purple-300 bg-purple-50'};
                 html += '<label class="flex items-start space-x-3 p-3 rounded-lg border '+colors[r]+' mb-2 cursor-pointer hover:shadow-sm transition">';
                 html += '<input type="checkbox" id="roleChk_'+r+'" '+checked+' class="mt-1 rounded" style="accent-color:#EF7D00;">';
                 html += '<div><p class="font-semibold text-sm text-gray-800">'+labels[r]+'</p><p class="text-[11px] text-gray-500">'+desc[r]+'</p></div>';
@@ -9737,7 +9753,7 @@
             if(c) c.remove();
         }
         function saveRollen(maIdx) {
-            var allRollen = ['inhaber','verkaeufer','mechaniker','buchhaltung'];
+            var allRollen = ['inhaber','verkauf','werkstatt','buchhaltung'];
             var selected = [];
             allRollen.forEach(function(r){
                 var chk = document.getElementById('roleChk_'+r);
@@ -9748,7 +9764,7 @@
             closeRollenModal();
             renderKzMitarbeiter();
 
-            var labels = {'inhaber':'Inhaber/GF','verkaeufer':'Verkäufer','mechaniker':'Mechaniker','buchhaltung':'Buchhaltung'};
+            var labels = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
             var names = selected.map(function(r){return labels[r];}).join(', ');
             alert('✅ Rollen für '+kzMitarbeiter[maIdx].name+' gespeichert:\n'+names);
         }
@@ -9821,8 +9837,8 @@
 
         // Neuer Mitarbeiter Modal
         function openNeuerMaModal() {
-            var allRollen = ['inhaber','verkaeufer','mechaniker','buchhaltung'];
-            var labels = {'inhaber':'Inhaber/GF','verkaeufer':'Verkäufer','mechaniker':'Mechaniker','buchhaltung':'Buchhaltung'};
+            var allRollen = ['inhaber','verkauf','werkstatt','buchhaltung'];
+            var labels = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
 
             var html = '<div id="neuerMaOverlay" onclick="closeNeuerMaModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
             html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:460px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
@@ -9834,7 +9850,7 @@
             html += '</div>';
 
             html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Rollen zuweisen (Mehrfachauswahl)</p>';
-            var colors = {'inhaber':'border-orange-300 bg-orange-50','verkaeufer':'border-blue-300 bg-blue-50','mechaniker':'border-gray-300 bg-gray-50','buchhaltung':'border-purple-300 bg-purple-50'};
+            var colors = {'inhaber':'border-orange-300 bg-orange-50','verkauf':'border-blue-300 bg-blue-50','werkstatt':'border-gray-300 bg-gray-50','buchhaltung':'border-purple-300 bg-purple-50'};
             allRollen.forEach(function(r){
                 html += '<label class="flex items-center space-x-3 p-2.5 rounded-lg border '+colors[r]+' mb-2 cursor-pointer hover:shadow-sm transition">';
                 html += '<input type="checkbox" id="newMaRole_'+r+'" class="rounded" style="accent-color:#EF7D00;">';
@@ -9862,7 +9878,7 @@
             var email = (document.getElementById('newMaEmail')||{}).value||'';
             if(!name.trim() || !email.trim()) { alert('Bitte Name und E-Mail ausfüllen.'); return; }
 
-            var allRollen = ['inhaber','verkaeufer','mechaniker','buchhaltung'];
+            var allRollen = ['inhaber','verkauf','werkstatt','buchhaltung'];
             var selected = [];
             allRollen.forEach(function(r){
                 var chk = document.getElementById('newMaRole_'+r);
@@ -9886,7 +9902,7 @@
             closeNeuerMaModal();
             renderPartnerMitarbeiter();
 
-            var rollenLabels = {'inhaber':'Inhaber/GF','verkaeufer':'Verkäufer','mechaniker':'Mechaniker','buchhaltung':'Buchhaltung'};
+            var rollenLabels = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
             var rollenStr = selected.map(function(r){return rollenLabels[r];}).join(', ');
             alert('✅ Mitarbeiter angelegt:\n'+name.trim()+'\nRollen: '+rollenStr+'\nStatus: Onboarding');
         }
@@ -9978,7 +9994,7 @@
                 {key:'shop',label:'Werbemittel-Shop',icon:'🛍️',core:false},
                 {key:'onboarding',label:'Onboarding',icon:'🎯',core:false}
             ];
-            var rollen = ['inhaber','verkaeufer','mechaniker','buchhaltung'];
+            var rollen = ['inhaber','verkauf','werkstatt','buchhaltung'];
 
             var body = document.getElementById('rechteMatrixBody');
             if(!body) return;
@@ -10013,7 +10029,7 @@
 
             // If currently 'alle', convert to explicit list minus this role
             if(perms.indexOf('alle')>=0) {
-                rolePermissions[modKey] = ['inhaber','verkaeufer','mechaniker','buchhaltung'].filter(function(r){return r!==rolle;});
+                rolePermissions[modKey] = ['inhaber','verkauf','werkstatt','buchhaltung'].filter(function(r){return r!==rolle;});
                 renderHqEinstellungen();
                 return;
             }
@@ -10065,7 +10081,7 @@
                 filter_all:'Alle', filter_new:'🆕 Neu für dich', filter_done:'✅ Erledigt',
                 search_topic:'Thema suchen...',
                 // Role
-                role_seller:'Verkäufer',
+                role_seller:'Verkauf',
                 // Buttons & Labels
                 btn_shoot:'📤 Drehen', btn_upload_now:'📤 Dieses Thema jetzt drehen & hochladen',
                 btn_submit:'🚀 Video einreichen', btn_to_channel:'Zum Kanal →',
