@@ -8065,24 +8065,34 @@
                 var resp = await query;
                 if(resp.error) throw resp.error;
                 var ideas = resp.data || [];
+                // KPIs (immer alle zählen)
+                var allResp = await sb.from('ideen').select('status');
+                var allIdeas = allResp.data || [];
+                var ge=document.getElementById('ideenTotal');if(ge)ge.textContent=allIdeas.length;
+                var ne=document.getElementById('ideenNeu');if(ne)ne.textContent=allIdeas.filter(function(i){return i.status==='neu';}).length;
+                var gp=document.getElementById('ideenGeplant');if(gp)gp.textContent=allIdeas.filter(function(i){return i.status==='wird_geprueft'||i.status==='geplant'||i.status==='diskussion';}).length;
+                var um=document.getElementById('ideenUmgesetzt');if(um)um.textContent=allIdeas.filter(function(i){return i.status==='umgesetzt';}).length;
+
                 var html = '';
-                var statusColors = {neu:'bg-blue-100 text-blue-700',wird_geprueft:'bg-yellow-100 text-yellow-700',umgesetzt:'bg-green-100 text-green-700',abgelehnt:'bg-red-100 text-red-700'};
-                var statusLabels = {neu:'Neu',wird_geprueft:'Wird geprüft',umgesetzt:'Umgesetzt',abgelehnt:'Abgelehnt'};
+                var statusColors = {neu:'bg-blue-100 text-blue-700',diskussion:'bg-yellow-100 text-yellow-700',wird_geprueft:'bg-yellow-100 text-yellow-700',geplant:'bg-purple-100 text-purple-700',umgesetzt:'bg-green-100 text-green-700',abgelehnt:'bg-red-100 text-red-700'};
+                var statusLabels = {neu:'Neu',diskussion:'In Diskussion',wird_geprueft:'Wird geprüft',geplant:'Geplant',umgesetzt:'Umgesetzt',abgelehnt:'Abgelehnt'};
                 ideas.forEach(function(i) {
                     var authorName = i.users ? i.users.name : 'Unbekannt';
+                    var d = i.created_at ? new Date(i.created_at) : new Date();
+                    var datum = d.toLocaleDateString('de-DE');
                     html += '<div class="vit-card p-5 hover:shadow-md transition">';
                     html += '<div class="flex items-start space-x-4">';
-                    html += '<div class="text-center flex-shrink-0"><button onclick="voteIdee(\x27'+i.id+'\x27)" class="w-12 h-12 rounded-xl bg-gray-100 hover:bg-vit-orange hover:text-white flex items-center justify-center text-lg font-bold text-gray-600 transition">▲</button><span class="text-sm font-bold text-gray-800 block mt-1">' + (i.votes||0) + '</span></div>';
+                    html += '<div class="text-center flex-shrink-0"><button onclick="voteIdee(\''+i.id+'\')" class="w-12 h-12 rounded-xl bg-gray-100 hover:bg-vit-orange hover:text-white flex items-center justify-center text-lg font-bold text-gray-600 transition">\u25b2</button><span class="text-sm font-bold text-gray-800 block mt-1">' + (i.votes||0) + '</span></div>';
                     html += '<div class="flex-1">';
-                    html += '<div class="flex items-center space-x-2 mb-1"><span class="text-xs font-semibold rounded px-2 py-0.5 ' + (statusColors[i.status]||'') + '">' + (statusLabels[i.status]||i.status) + '</span></div>';
+                    html += '<div class="flex items-center space-x-2 mb-1"><span class="text-xs font-semibold rounded px-2 py-0.5 ' + (statusColors[i.status]||'bg-gray-100 text-gray-600') + '">' + (statusLabels[i.status]||i.status) + '</span></div>';
                     html += '<h3 class="font-bold text-gray-800 mb-1">' + i.titel + '</h3>';
                     if(i.beschreibung) html += '<p class="text-sm text-gray-600 mb-2">' + i.beschreibung + '</p>';
-                    html += '<span class="text-xs text-gray-400">' + authorName + '</span>';
+                    html += '<span class="text-xs text-gray-400">' + authorName + ' \u00b7 ' + datum + '</span>';
                     html += '</div></div></div>';
                 });
-                if(ideas.length===0) html = '<div class="text-center py-8 text-gray-400">Keine Ideen.</div>';
+                if(ideas.length===0) html = '<div class="text-center py-8 text-gray-400">Noch keine Ideen – sei der Erste! \ud83d\udca1</div>';
                 container.innerHTML = html;
-            } catch(err) { console.error('Ideen:', err); }
+            } catch(err) { console.error('Ideen:', err); container.innerHTML='<div class="text-center py-4 text-red-400">Fehler: '+err.message+'</div>'; }
         }
 
         function filterIdeen(filter) {
@@ -8104,13 +8114,29 @@
         }
 
         async function submitIdee() {
-            var titleEl = document.getElementById('ideeTitle');
-            var descEl = document.getElementById('ideeDesc');
-            if(!titleEl || !titleEl.value.trim()) return;
+            var titelEl = document.getElementById('ideeTitel');
+            var beschEl = document.getElementById('ideeBeschreibung');
+            var katEl = document.getElementById('ideeKat');
+            var typEl = document.getElementById('ideeTyp');
+            if(!titelEl || !titelEl.value.trim()) { alert('Bitte einen Titel eingeben.'); return; }
             try {
-                await sb.from('ideen').insert({user_id:sbUser.id, standort_id:sbStandort?sbStandort.id:null, titel:titleEl.value.trim(), beschreibung:descEl?descEl.value:'', status:'neu'});
-                if(titleEl) titleEl.value=''; if(descEl) descEl.value='';
-                var form=document.getElementById('newIdeeForm'); if(form) form.classList.add('hidden');
+                var kategorie = katEl ? katEl.value : '';
+                var typ = typEl ? typEl.value : '';
+                var beschreibung = (beschEl ? beschEl.value : '');
+                if(kategorie) beschreibung = '[' + kategorie + '] ' + (typ ? typ + ' – ' : '') + beschreibung;
+                await sb.from('ideen').insert({
+                    user_id: sbUser.id,
+                    standort_id: sbStandort ? sbStandort.id : null,
+                    titel: titelEl.value.trim(),
+                    beschreibung: beschreibung,
+                    status: 'neu',
+                    votes: 0
+                });
+                if(titelEl) titelEl.value='';
+                if(beschEl) beschEl.value='';
+                if(katEl) katEl.selectedIndex=0;
+                if(typEl) typEl.selectedIndex=0;
+                document.getElementById('ideeCreate').classList.add('hidden');
                 renderIdeen('all');
             } catch(err) { alert('Fehler: '+err.message); }
         }
