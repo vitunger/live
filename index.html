@@ -6557,31 +6557,63 @@
             {author:'Sandra',avatar:'S',color:'bg-blue-500',time:'14:20',text:'Zweiter Termin war leider nix – wollte nur Preise vergleichen und kauft wahrscheinlich online. Dritter kommt um 15 Uhr.'},
         ];
 
-        function renderForumPosts(cat) {
-            var posts = cat === 'all' ? forumPosts : forumPosts.filter(function(p){return p.cat === cat;});
-            var html = '';
-            posts.forEach(function(p) {
-                var catColors = {zentrale:'bg-vit-orange text-white',verkauf:'bg-blue-100 text-blue-700',werkstatt:'bg-green-100 text-green-700',allgemein:'bg-gray-100 text-gray-700',einkauf:'bg-cyan-100 text-cyan-700'};
-                var catLabels = {zentrale:'Zentrale',verkauf:'Verkauf',werkstatt:'Werkstatt',allgemein:'Allgemein',einkauf:'Einkauf'};
-                html += '<div class="vit-card p-5 hover:shadow-md transition ' + (p.pinned ? 'border-l-4 border-vit-orange' : '') + '">';
-                html += '<div class="flex items-start space-x-4">';
-                html += '<div class="w-10 h-10 ' + p.avatarColor + ' rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">' + p.avatar + '</div>';
-                html += '<div class="flex-1 min-w-0">';
-                html += '<div class="flex items-center space-x-2 mb-1">';
-                if(p.pinned) html += '<span class="text-xs font-bold bg-yellow-100 text-yellow-700 rounded px-1.5 py-0.5">📌 Angepinnt</span>';
-                html += '<span class="text-xs font-semibold rounded px-2 py-0.5 ' + (catColors[p.cat]||'') + '">' + (catLabels[p.cat]||'') + '</span>';
-                html += '</div>';
-                html += '<h3 class="font-bold text-gray-800 mb-1 hover:text-vit-orange cursor-pointer">' + p.title + '</h3>';
-                html += '<p class="text-sm text-gray-600 mb-2 line-clamp-2">' + p.body + '</p>';
-                html += '<div class="flex items-center space-x-4 text-xs text-gray-400">';
-                html += '<span class="font-semibold text-gray-600">' + p.author + '</span>';
-                html += '<span>' + p.date + '</span>';
-                html += '<span>💬 ' + p.replies + ' Antworten</span>';
-                html += '<span>👁 ' + p.views + ' Views</span>';
-                html += '<span class="text-vit-orange font-semibold">Letzte: ' + p.lastReply + '</span>';
-                html += '</div></div></div></div>';
-            });
-            document.getElementById('forumPosts').innerHTML = html;
+        async function renderForumPosts(cat) {
+            var container = document.getElementById('forumPosts');
+            if(!container) return;
+            container.innerHTML = '<div class="text-center py-4"><span class="text-gray-400 text-sm">Beiträge werden geladen...</span></div>';
+
+            try {
+                var query = sb.from('forum_beitraege').select('*, users(name)').order('gepinnt', { ascending: false }).order('created_at', { ascending: false });
+                if(cat && cat !== 'all') query = query.eq('kategorie', cat);
+
+                var resp = await query;
+                if(resp.error) throw resp.error;
+
+                var posts = resp.data || [];
+                var html = '';
+
+                if(posts.length === 0) {
+                    html = '<div class="text-center py-8"><span class="text-gray-400 text-sm">Keine Beiträge gefunden.</span></div>';
+                }
+
+                var catColors = {news:'bg-vit-orange text-white',frage:'bg-blue-100 text-blue-700',tipp:'bg-green-100 text-green-700',allgemein:'bg-gray-100 text-gray-700'};
+                var catLabels = {news:'News',frage:'Frage',tipp:'Tipp',allgemein:'Allgemein'};
+
+                for(var i = 0; i < posts.length; i++) {
+                    var p = posts[i];
+                    var authorName = p.users ? p.users.name : 'Unbekannt';
+                    var initials = authorName.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
+                    var colors = ['bg-blue-500','bg-green-600','bg-purple-500','bg-cyan-600','bg-pink-500','bg-red-500'];
+                    var colorIdx = authorName.split('').reduce(function(a,c){return a+c.charCodeAt(0);},0) % colors.length;
+                    var d = new Date(p.created_at);
+                    var dateStr = d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}) + ' · ' + d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+
+                    // Kommentare zählen
+                    var commResp = await sb.from('forum_kommentare').select('id', { count: 'exact', head: true }).eq('beitrag_id', p.id);
+                    var replyCount = commResp.count || 0;
+
+                    html += '<div class="vit-card p-5 hover:shadow-md transition ' + (p.gepinnt ? 'border-l-4 border-vit-orange' : '') + '">';
+                    html += '<div class="flex items-start space-x-4">';
+                    html += '<div class="w-10 h-10 ' + (p.gepinnt ? 'bg-vit-orange' : colors[colorIdx]) + ' rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">' + initials + '</div>';
+                    html += '<div class="flex-1 min-w-0">';
+                    html += '<div class="flex items-center space-x-2 mb-1">';
+                    if(p.gepinnt) html += '<span class="text-xs font-bold bg-yellow-100 text-yellow-700 rounded px-1.5 py-0.5">📌 Angepinnt</span>';
+                    html += '<span class="text-xs font-semibold rounded px-2 py-0.5 ' + (catColors[p.kategorie]||catColors.allgemein) + '">' + (catLabels[p.kategorie]||p.kategorie) + '</span>';
+                    html += '</div>';
+                    html += '<h3 class="font-bold text-gray-800 mb-1 hover:text-vit-orange cursor-pointer">' + p.titel + '</h3>';
+                    html += '<p class="text-sm text-gray-600 mb-2 line-clamp-2">' + p.inhalt + '</p>';
+                    html += '<div class="flex items-center space-x-4 text-xs text-gray-400">';
+                    html += '<span class="font-semibold text-gray-600">' + authorName + '</span>';
+                    html += '<span>' + dateStr + '</span>';
+                    html += '<span>💬 ' + replyCount + ' Antworten</span>';
+                    html += '</div></div></div></div>';
+                }
+
+                container.innerHTML = html;
+            } catch(err) {
+                console.error('Forum laden:', err);
+                container.innerHTML = '<div class="text-center py-4"><span class="text-red-400 text-sm">Fehler: ' + err.message + '</span></div>';
+            }
         }
 
         function filterForum(cat) {
@@ -6593,30 +6625,195 @@
             renderForumPosts(cat);
         }
 
-        function renderChannelMessages() {
-            var html = '';
-            var lastDate = '';
-            html += '<div class="text-center"><span class="text-xs bg-gray-100 text-gray-500 px-3 py-1 rounded-full">Heute · 14. Februar 2026</span></div>';
-            channelMessages.forEach(function(m) {
-                var isMe = m.author === 'Sandra';
-                html += '<div class="flex items-start space-x-3 ' + (isMe ? '' : '') + '">';
-                html += '<div class="w-8 h-8 ' + m.color + ' rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">' + m.avatar + '</div>';
-                html += '<div class="flex-1"><div class="flex items-baseline space-x-2"><span class="font-semibold text-gray-800 text-sm">' + m.author + '</span><span class="text-xs text-gray-400">' + m.time + '</span></div>';
-                html += '<p class="text-sm text-gray-700 mt-0.5">' + m.text + '</p></div></div>';
-            });
-            document.getElementById('channelMessages').innerHTML = html;
-            var el = document.getElementById('channelMessages');
-            el.scrollTop = el.scrollHeight;
+        var sbKanalId = null; // aktiver Kanal
+        var sbKanaele = []; // geladene Kanäle
+        var realtimeSubscription = null;
+
+        async function loadKanaele() {
+            try {
+                var resp = await sb.from('chat_kanaele').select('*').order('created_at');
+                if(resp.error) throw resp.error;
+                sbKanaele = resp.data || [];
+            } catch(err) { console.error('Kanäle laden:', err); }
         }
 
-        function sendChannelMsg() {
+        async function renderChannelMessages() {
+            var container = document.getElementById('channelMessages');
+            if(!container) return;
+            container.innerHTML = '<div class="text-center py-8"><span class="text-gray-400 text-sm">Nachrichten werden geladen...</span></div>';
+
+            try {
+                // Kanäle laden falls noch nicht geschehen
+                if(sbKanaele.length === 0) await loadKanaele();
+
+                // Ersten Standort-Kanal wählen (Team-Chat)
+                if(!sbKanalId && sbKanaele.length > 0) {
+                    var teamKanal = sbKanaele.find(function(k) { return k.standort_id !== null; });
+                    sbKanalId = teamKanal ? teamKanal.id : sbKanaele[0].id;
+                }
+
+                if(!sbKanalId) {
+                    container.innerHTML = '<div class="text-center py-8"><span class="text-gray-400 text-sm">Kein Chat-Kanal verfügbar.</span></div>';
+                    return;
+                }
+
+                // Header aktualisieren
+                var aktKanal = sbKanaele.find(function(k) { return k.id === sbKanalId; });
+                var headerTitle = container.closest('.komm-tab-content').querySelector('h3.font-bold');
+                if(headerTitle && aktKanal) headerTitle.textContent = aktKanal.name;
+
+                // Kanal-Tabs rendern
+                renderKanalTabs();
+
+                // Nachrichten laden mit User-Daten
+                var resp = await sb.from('chat_nachrichten')
+                    .select('*, users(name)')
+                    .eq('kanal_id', sbKanalId)
+                    .order('created_at', { ascending: true });
+                if(resp.error) throw resp.error;
+
+                var messages = resp.data || [];
+                var html = '';
+                var lastDateStr = '';
+
+                messages.forEach(function(m) {
+                    var d = new Date(m.created_at);
+                    var dateStr = d.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                    if(dateStr !== lastDateStr) {
+                        html += '<div class="text-center my-3"><span class="text-xs bg-gray-100 text-gray-500 px-3 py-1 rounded-full">' + dateStr + '</span></div>';
+                        lastDateStr = dateStr;
+                    }
+                    var authorName = m.users ? m.users.name : 'Unbekannt';
+                    var initials = authorName.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
+                    var isMe = m.user_id === (sbUser ? sbUser.id : null);
+                    var colors = ['bg-blue-500','bg-green-500','bg-purple-500','bg-orange-500','bg-cyan-500','bg-pink-500','bg-red-500'];
+                    var colorIdx = authorName.split('').reduce(function(a,c){return a+c.charCodeAt(0);},0) % colors.length;
+                    var time = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+
+                    html += '<div class="flex items-start space-x-3">';
+                    html += '<div class="w-8 h-8 ' + (isMe ? 'bg-vit-orange' : colors[colorIdx]) + ' rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">' + initials + '</div>';
+                    html += '<div class="flex-1"><div class="flex items-baseline space-x-2"><span class="font-semibold text-gray-800 text-sm">' + authorName + '</span><span class="text-xs text-gray-400">' + time + '</span></div>';
+                    html += '<p class="text-sm text-gray-700 mt-0.5">' + m.nachricht.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p></div></div>';
+                });
+
+                if(messages.length === 0) {
+                    html = '<div class="text-center py-8"><span class="text-gray-400 text-sm">Noch keine Nachrichten. Schreib die erste! 👋</span></div>';
+                }
+
+                container.innerHTML = html;
+                container.scrollTop = container.scrollHeight;
+
+                // Realtime subscription starten
+                subscribeToChannel();
+
+            } catch(err) {
+                console.error('Chat laden:', err);
+                container.innerHTML = '<div class="text-center py-8"><span class="text-red-400 text-sm">Fehler beim Laden: ' + err.message + '</span></div>';
+            }
+        }
+
+        function renderKanalTabs() {
+            // Kanal-Wechsel Buttons über dem Chat einfügen
+            var channelTab = document.getElementById('kommTabChannel');
+            var existing = document.getElementById('kanalTabsBar');
+            if(existing) existing.remove();
+            if(!channelTab || sbKanaele.length <= 1) return;
+
+            var tabsHtml = '<div id="kanalTabsBar" class="flex space-x-2 mb-3">';
+            sbKanaele.forEach(function(k) {
+                var active = k.id === sbKanalId;
+                tabsHtml += '<button onclick="switchKanal(\'' + k.id + '\')" class="px-3 py-1.5 rounded-full text-xs font-semibold ' +
+                    (active ? 'bg-vit-orange text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + '">' +
+                    (k.standort_id ? '# ' : '🌐 ') + k.name + '</button>';
+            });
+            tabsHtml += '</div>';
+
+            var headerCard = channelTab.querySelector('.vit-card.p-4.mb-4');
+            if(headerCard) headerCard.insertAdjacentHTML('afterend', tabsHtml);
+        }
+
+        async function switchKanal(kanalId) {
+            sbKanalId = kanalId;
+            if(realtimeSubscription) {
+                sb.removeChannel(realtimeSubscription);
+                realtimeSubscription = null;
+            }
+            await renderChannelMessages();
+        }
+
+        function subscribeToChannel() {
+            if(realtimeSubscription) {
+                sb.removeChannel(realtimeSubscription);
+            }
+            realtimeSubscription = sb.channel('chat-' + sbKanalId)
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'chat_nachrichten',
+                    filter: 'kanal_id=eq.' + sbKanalId
+                }, async function(payload) {
+                    // Neue Nachricht eingetroffen – Autor laden
+                    var msg = payload.new;
+                    if(msg.user_id === (sbUser ? sbUser.id : null)) return; // eigene schon gerendert
+                    var resp = await sb.from('users').select('name').eq('id', msg.user_id).single();
+                    var authorName = resp.data ? resp.data.name : 'Unbekannt';
+                    var initials = authorName.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
+                    var colors = ['bg-blue-500','bg-green-500','bg-purple-500','bg-orange-500','bg-cyan-500','bg-pink-500','bg-red-500'];
+                    var colorIdx = authorName.split('').reduce(function(a,c){return a+c.charCodeAt(0);},0) % colors.length;
+                    var d = new Date(msg.created_at);
+                    var time = d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
+
+                    var container = document.getElementById('channelMessages');
+                    if(!container) return;
+                    var msgHtml = '<div class="flex items-start space-x-3">';
+                    msgHtml += '<div class="w-8 h-8 ' + colors[colorIdx] + ' rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">' + initials + '</div>';
+                    msgHtml += '<div class="flex-1"><div class="flex items-baseline space-x-2"><span class="font-semibold text-gray-800 text-sm">' + authorName + '</span><span class="text-xs text-gray-400">' + time + '</span></div>';
+                    msgHtml += '<p class="text-sm text-gray-700 mt-0.5">' + msg.nachricht.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p></div></div>';
+                    container.insertAdjacentHTML('beforeend', msgHtml);
+                    container.scrollTop = container.scrollHeight;
+                })
+                .subscribe();
+        }
+
+        async function sendChannelMsg() {
             var input = document.getElementById('channelInput');
             var text = input.value.trim();
-            if(!text) return;
-            var now = new Date();
-            channelMessages.push({author:'Sandra',avatar:'S',color:'bg-blue-500',time:now.getHours()+':'+String(now.getMinutes()).padStart(2,'0'),text:text});
+            if(!text || !sbUser || !sbKanalId) return;
+
             input.value = '';
-            renderChannelMessages();
+            input.disabled = true;
+
+            try {
+                var resp = await sb.from('chat_nachrichten').insert({
+                    kanal_id: sbKanalId,
+                    user_id: sbUser.id,
+                    nachricht: text
+                });
+                if(resp.error) throw resp.error;
+
+                // Sofort lokal rendern (optimistic UI)
+                var container = document.getElementById('channelMessages');
+                var emptyMsg = container.querySelector('.text-center.py-8');
+                if(emptyMsg) emptyMsg.remove();
+
+                var d = new Date();
+                var time = d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
+                var authorName = sbProfile ? sbProfile.name : 'Ich';
+                var initials = authorName.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
+
+                var msgHtml = '<div class="flex items-start space-x-3">';
+                msgHtml += '<div class="w-8 h-8 bg-vit-orange rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">' + initials + '</div>';
+                msgHtml += '<div class="flex-1"><div class="flex items-baseline space-x-2"><span class="font-semibold text-gray-800 text-sm">' + authorName + '</span><span class="text-xs text-gray-400">' + time + '</span></div>';
+                msgHtml += '<p class="text-sm text-gray-700 mt-0.5">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p></div></div>';
+                container.insertAdjacentHTML('beforeend', msgHtml);
+                container.scrollTop = container.scrollHeight;
+            } catch(err) {
+                alert('Senden fehlgeschlagen: ' + err.message);
+                input.value = text;
+            } finally {
+                input.disabled = false;
+                input.focus();
+            }
         }
 
         // === AKTENSCHRANK ===
