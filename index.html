@@ -5035,12 +5035,12 @@
                                     <thead class="bg-gray-50">
                                         <tr>
                                             <th class="px-4 py-3 text-left font-semibold text-gray-600">Standort</th>
-                                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Inhaber</th>
-                                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Region</th>
+                                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Adresse</th>
+                                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Typ</th>
                                             <th class="px-4 py-3 text-center font-semibold text-gray-600">Status</th>
                                             <th class="px-4 py-3 text-center font-semibold text-gray-600">Mitarbeiter</th>
                                             <th class="px-4 py-3 text-center font-semibold text-gray-600">Beitritt</th>
-                                            <th class="px-4 py-3 text-center font-semibold text-gray-600">Vertrag bis</th>
+                                            <th class="px-4 py-3 text-center font-semibold text-gray-600">Telefon</th>
                                             <th class="px-4 py-3 text-center font-semibold text-gray-600">Aktion</th>
                                         </tr>
                                     </thead>
@@ -9547,64 +9547,9 @@
             n.value='';p.value='';document.getElementById('hqShopDesc').value='';
             renderHqShop();
         }
-        var kzStandorte = [
-            {name:'Grafrath',inhaber:'Max Mustermann',region:'Süd',status:'aktiv',ma:4,beitritt:'03/2021',vertrag:'03/2031',email:'grafrath@vitbikes.de',tel:'+49 8144 123456',flaeche:'180 m²'},
-            {name:'Hamburg',inhaber:'Peter Hansen',region:'Nord',status:'aktiv',ma:5,beitritt:'06/2022',vertrag:'06/2032',email:'hamburg@vitbikes.de',tel:'+49 40 987654',flaeche:'220 m²'},
-            {name:'Weilheim',inhaber:'Anna Berger',region:'Süd',status:'aktiv',ma:3,beitritt:'01/2020',vertrag:'01/2030',email:'weilheim@vitbikes.de',tel:'+49 881 456789',flaeche:'150 m²'},
-            {name:'Karlsdorf-Neuth.',inhaber:'Thomas Klein',region:'Süd',status:'aktiv',ma:4,beitritt:'09/2021',vertrag:'09/2031',email:'karlsdorf@vitbikes.de',tel:'+49 7251 321654',flaeche:'200 m²'},
-            {name:'Pfaffenhofen',inhaber:'Maria Weber',region:'Süd',status:'aktiv',ma:3,beitritt:'04/2022',vertrag:'04/2032',email:'pfaffenhofen@vitbikes.de',tel:'+49 8441 789012',flaeche:'160 m²'},
-            {name:'Berlin',inhaber:'Jan Schulze',region:'Ost',status:'aktiv',ma:5,beitritt:'11/2022',vertrag:'11/2032',email:'berlin@vitbikes.de',tel:'+49 30 555666',flaeche:'250 m²'},
-            {name:'Witten',inhaber:'Frank Becker',region:'West',status:'aktiv',ma:3,beitritt:'02/2023',vertrag:'02/2033',email:'witten@vitbikes.de',tel:'+49 2302 111222',flaeche:'170 m²'},
-            {name:'Reutlingen',inhaber:'Sabine Hoffmann',region:'Süd',status:'aktiv',ma:3,beitritt:'05/2021',vertrag:'05/2031',email:'reutlingen@vitbikes.de',tel:'+49 7121 333444',flaeche:'190 m²'},
-            {name:'Limburg',inhaber:'Klaus Fischer',region:'West',status:'aktiv',ma:2,beitritt:'08/2023',vertrag:'08/2033',email:'limburg@vitbikes.de',tel:'+49 6431 555777',flaeche:'140 m²'},
-            {name:'Wachtendonk',inhaber:'Sandra Maier',region:'West',status:'aktiv',ma:2,beitritt:'03/2023',vertrag:'03/2033',email:'wachtendonk@vitbikes.de',tel:'+49 2836 222333',flaeche:'130 m²'},
-            {name:'Holzkirchen',inhaber:'Robert Braun',region:'Süd',status:'aktiv',ma:3,beitritt:'07/2022',vertrag:'07/2032',email:'holzkirchen@vitbikes.de',tel:'+49 8024 444555',flaeche:'175 m²'},
-            {name:'Teisendorf',inhaber:'Monika Schwarz',region:'Süd',status:'aktiv',ma:2,beitritt:'10/2023',vertrag:'10/2033',email:'teisendorf@vitbikes.de',tel:'+49 8666 666777',flaeche:'120 m²'},
-            {name:'Garching a.d. Alz',inhaber:'Uwe Richter',region:'Süd',status:'aktiv',ma:2,beitritt:'01/2024',vertrag:'01/2034',email:'garching@vitbikes.de',tel:'+49 8634 888999',flaeche:'110 m²'},
-            {name:'Zell',inhaber:'Petra Wolf',region:'Süd',status:'aktiv',ma:2,beitritt:'04/2023',vertrag:'04/2033',email:'zell@vitbikes.de',tel:'+49 6542 111333',flaeche:'115 m²'},
-            {name:'Rottweil',inhaber:'Stefan Neumann',region:'Süd',status:'aktiv',ma:3,beitritt:'06/2023',vertrag:'06/2033',email:'rottweil@vitbikes.de',tel:'+49 741 222444',flaeche:'165 m²'},
-            {name:'Münster',inhaber:'Lisa Zimmermann',region:'West',status:'aktiv',ma:3,beitritt:'09/2023',vertrag:'09/2033',email:'muenster@vitbikes.de',tel:'+49 251 333555',flaeche:'195 m²'},
-            {name:'Wesel',inhaber:'Dirk Hartmann',region:'West',status:'aktiv',ma:2,beitritt:'11/2023',vertrag:'11/2033',email:'wesel@vitbikes.de',tel:'+49 281 444666',flaeche:'125 m²'},
-            {name:'Warendorf',inhaber:'Karin Schröder',region:'West',status:'aktiv',ma:2,beitritt:'01/2024',vertrag:'01/2034',email:'warendorf@vitbikes.de',tel:'+49 2581 555777',flaeche:'135 m²'},
-            {name:'Darmstadt',inhaber:'Tobias Lang',region:'West',status:'onboarding',ma:3,beitritt:'01/2026',vertrag:'01/2036',email:'darmstadt@vitbikes.de',tel:'+49 6151 666888',flaeche:'210 m²'},
-            {name:'Lohmar',inhaber:'Christine Krüger',region:'West',status:'onboarding',ma:2,beitritt:'02/2026',vertrag:'02/2036',email:'lohmar@vitbikes.de',tel:'+49 2246 777999',flaeche:'145 m²'},
-            {name:'Hanau',inhaber:'Michael Vogel',region:'West',status:'offboarding',ma:1,beitritt:'03/2022',vertrag:'06/2026',email:'hanau@vitbikes.de',tel:'+49 6181 888000',flaeche:'155 m²'}
-        ];
+        var kzStandorte = []; // loaded from Supabase
 
-        var kzMitarbeiter = [
-            // Grafrath
-            {name:'Max Mustermann',standort:'Grafrath',rollen:['inhaber'],status:'aktiv',eintritt:'03/2021',onbProgress:100,email:'max@vitbikes-grafrath.de'},
-            {name:'Sandra Engelmann',standort:'Grafrath',rollen:['inhaber','buchhaltung'],status:'aktiv',eintritt:'03/2021',onbProgress:100,email:'sandra@vitbikes-grafrath.de'},
-            {name:'Tom Berater',standort:'Grafrath',rollen:['verkauf'],status:'aktiv',eintritt:'06/2021',onbProgress:100,email:'verkauf@vitbikes-grafrath.de'},
-            {name:'Felix Schrauber',standort:'Grafrath',rollen:['werkstatt'],status:'aktiv',eintritt:'01/2022',onbProgress:100,email:'werkstatt@vitbikes-grafrath.de'},
-            {name:'Anna Allround',standort:'Grafrath',rollen:['verkauf','werkstatt'],status:'aktiv',eintritt:'05/2023',onbProgress:100,email:'anna@vitbikes-grafrath.de'},
-            {name:'Petra Zahlen',standort:'Grafrath',rollen:['buchhaltung'],status:'aktiv',eintritt:'09/2022',onbProgress:100,email:'buchhaltung@vitbikes-grafrath.de'},
-            {name:'Sophie Klein',standort:'Grafrath',rollen:['verkauf'],status:'onboarding',eintritt:'02/2026',onbProgress:45,email:'s.klein@vitbikes.de'},
-            // Hamburg
-            {name:'Peter Hansen',standort:'Hamburg',rollen:['inhaber'],status:'aktiv',eintritt:'06/2022',onbProgress:100,email:'p.hansen@vitbikes.de'},
-            {name:'Miriam Deichmann',standort:'Hamburg',rollen:['inhaber','verkauf'],status:'aktiv',eintritt:'06/2022',onbProgress:100,email:'m.deichmann@vitbikes.de'},
-            {name:'Kai Petersen',standort:'Hamburg',rollen:['verkauf'],status:'aktiv',eintritt:'09/2022',onbProgress:100,email:'k.petersen@vitbikes.de'},
-            {name:'Nina Brandt',standort:'Hamburg',rollen:['werkstatt'],status:'aktiv',eintritt:'01/2023',onbProgress:100,email:'n.brandt@vitbikes.de'},
-            {name:'Felix Meyer',standort:'Hamburg',rollen:['verkauf','werkstatt'],status:'aktiv',eintritt:'08/2023',onbProgress:100,email:'f.meyer@vitbikes.de'},
-            // Weilheim
-            {name:'Anna Berger',standort:'Weilheim',rollen:['inhaber'],status:'aktiv',eintritt:'01/2020',onbProgress:100,email:'a.berger@vitbikes.de'},
-            {name:'Jonas Huber',standort:'Weilheim',rollen:['verkauf'],status:'aktiv',eintritt:'03/2020',onbProgress:100,email:'j.huber@vitbikes.de'},
-            {name:'Lea Bauer',standort:'Weilheim',rollen:['werkstatt'],status:'aktiv',eintritt:'11/2021',onbProgress:100,email:'l.bauer@vitbikes.de'},
-            {name:'Marie Fischer',standort:'Weilheim',rollen:['buchhaltung'],status:'aktiv',eintritt:'06/2021',onbProgress:100,email:'m.fischer@vitbikes.de'},
-            // Berlin
-            {name:'Jan Schulze',standort:'Berlin',rollen:['inhaber'],status:'aktiv',eintritt:'11/2022',onbProgress:100,email:'j.schulze@vitbikes.de'},
-            {name:'Amelie Friedrich',standort:'Berlin',rollen:['inhaber','buchhaltung'],status:'aktiv',eintritt:'11/2022',onbProgress:100,email:'a.friedrich@vitbikes.de'},
-            {name:'Tom Richter',standort:'Berlin',rollen:['verkauf'],status:'aktiv',eintritt:'02/2023',onbProgress:100,email:'t.richter@vitbikes.de'},
-            {name:'Lena Weiß',standort:'Berlin',rollen:['verkauf'],status:'onboarding',eintritt:'01/2026',onbProgress:60,email:'l.weiss@vitbikes.de'},
-            {name:'Moritz Scholz',standort:'Berlin',rollen:['werkstatt'],status:'aktiv',eintritt:'05/2023',onbProgress:100,email:'m.scholz@vitbikes.de'},
-            // Darmstadt (Onboarding)
-            {name:'Tobias Lang',standort:'Darmstadt',rollen:['inhaber'],status:'onboarding',eintritt:'01/2026',onbProgress:35,email:'t.lang@vitbikes.de'},
-            {name:'Sarah König',standort:'Darmstadt',rollen:['verkauf'],status:'onboarding',eintritt:'02/2026',onbProgress:15,email:'s.koenig@vitbikes.de'},
-            {name:'David Böhm',standort:'Darmstadt',rollen:['werkstatt'],status:'onboarding',eintritt:'02/2026',onbProgress:10,email:'d.boehm@vitbikes.de'},
-            // Hanau (Offboarding)
-            {name:'Michael Vogel',standort:'Hanau',rollen:['inhaber'],status:'offboarding',eintritt:'03/2022',onbProgress:100,email:'m.vogel@vitbikes.de'},
-            {name:'Carla Jansen',standort:'Hanau',rollen:['verkauf'],status:'offboarding',eintritt:'07/2022',onbProgress:100,email:'c.jansen@vitbikes.de'}
-        ];
+        var kzMitarbeiter = []; // loaded from Supabase
 
         var currentKzStdFilter = 'all';
         var currentKzMaFilter = 'all';
@@ -9657,26 +9602,41 @@
             return rollen.map(function(r){ return rolleBadge(r); }).join(' ');
         }
 
-        function renderKzStandorte() {
-            var list = kzStandorte.filter(function(s){
-                return currentKzStdFilter==='all' || s.status===currentKzStdFilter;
-            });
+        async function renderKzStandorte() {
             var body=document.getElementById('kzStandorteBody');
             if(!body)return;
-            var h='';
-            list.forEach(function(s){
-                h+='<tr class="border-t border-gray-100 hover:bg-gray-50">';
-                h+='<td class="px-4 py-3 font-semibold text-gray-800">'+s.name+'</td>';
-                h+='<td class="px-4 py-3 text-gray-600">'+s.inhaber+'</td>';
-                h+='<td class="px-4 py-3"><span class="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600">'+s.region+'</span></td>';
-                h+='<td class="px-4 py-3 text-center">'+statusBadge(s.status)+'</td>';
-                h+='<td class="px-4 py-3 text-center font-semibold">'+s.ma+'</td>';
-                h+='<td class="px-4 py-3 text-center text-gray-500 text-xs">'+s.beitritt+'</td>';
-                h+='<td class="px-4 py-3 text-center text-xs '+(s.status==='offboarding'?'text-red-500 font-semibold':'text-gray-500')+'">'+s.vertrag+'</td>';
-                h+='<td class="px-4 py-3 text-center"><button class="text-xs text-vit-orange hover:underline font-semibold" onclick="alert(\'Standort-Details: '+s.name+' (Demo)\')">Details →</button></td>';
-                h+='</tr>';
-            });
-            body.innerHTML=h;
+            try {
+                var resp = await sb.from('standorte').select('*').order('name');
+                if(resp.error) throw resp.error;
+                var standorte = resp.data || [];
+                var countResp = await sb.from('users').select('standort_id');
+                var userCounts = {};
+                (countResp.data||[]).forEach(function(u){ if(u.standort_id) userCounts[u.standort_id] = (userCounts[u.standort_id]||0)+1; });
+                var filter = currentKzStdFilter || 'all';
+                var h='';
+                standorte.forEach(function(s){
+                    var st = s.status || 'aktiv';
+                    if(filter!=='all' && st!==filter) return;
+                    var d = s.created_at ? new Date(s.created_at) : new Date();
+                    var beitritt = String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+                    h+='<tr class="border-t border-gray-100 hover:bg-gray-50">';
+                    h+='<td class="px-4 py-3 font-semibold text-gray-800">'+s.name+'</td>';
+                    h+='<td class="px-4 py-3 text-gray-600">'+(s.adresse||s.region||'')+'</td>';
+                    h+='<td class="px-4 py-3"><span class="text-xs px-2 py-0.5 rounded '+(s.is_premium?'bg-vit-orange text-white':'bg-gray-100 text-gray-600')+'">'+(s.is_premium?'Premium':'Standard')+'</span></td>';
+                    h+='<td class="px-4 py-3 text-center">'+statusBadge(st)+'</td>';
+                    h+='<td class="px-4 py-3 text-center font-semibold">'+(userCounts[s.id]||0)+'</td>';
+                    h+='<td class="px-4 py-3 text-center text-gray-500 text-xs">'+beitritt+'</td>';
+                    h+='<td class="px-4 py-3 text-center text-xs text-gray-500">'+(s.telefon||'—')+'</td>';
+                    h+='<td class="px-4 py-3 text-center"><button class="text-xs text-vit-orange hover:underline font-semibold" onclick="alert(\''+s.name+'\\nAdresse: '+(s.adresse||'–')+'\\nTelefon: '+(s.telefon||'–')+'\\nSlug: '+s.slug+'\')">Details →</button></td>';
+                    h+='</tr>';
+                });
+                if(standorte.length===0) h='<tr><td colspan="8" class="text-center py-8 text-gray-400">Keine Standorte.</td></tr>';
+                body.innerHTML=h;
+                var ge=document.getElementById('kzStandorteGesamt');if(ge)ge.textContent=standorte.length;
+                var ak=document.getElementById('kzStandorteAktiv');if(ak)ak.textContent=standorte.filter(function(s){return (s.status||'aktiv')==='aktiv';}).length;
+                var ob=document.getElementById('kzStandorteOnb');if(ob)ob.textContent=standorte.filter(function(s){return s.status==='onboarding';}).length;
+                var of2=document.getElementById('kzStandorteOff');if(of2)of2.textContent=standorte.filter(function(s){return s.status==='offboarding';}).length;
+            } catch(err) { console.error('Standorte:', err); body.innerHTML='<tr><td colspan="8" class="text-center py-4 text-red-400">Fehler: '+err.message+'</td></tr>'; }
         }
 
         function renderKzMitarbeiter() {
