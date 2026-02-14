@@ -5693,13 +5693,13 @@
                 if(authResp.error) throw authResp.error;
                 var newUserId = authResp.data.user.id;
                 
-                // 2. Users-Tabelle: Status = onboarding (wartet auf Freigabe)
-                var userResp = await sb.from('users').insert({
-                    id: newUserId,
-                    email: email.trim().toLowerCase(),
-                    name: name.trim(),
-                    standort_id: standortId,
-                    status: 'onboarding'
+                // 2. Users-Tabelle via SECURITY DEFINER Funktion
+                var userResp = await sb.rpc('create_user_profile', {
+                    user_id: newUserId,
+                    user_email: email.trim().toLowerCase(),
+                    user_name: name.trim(),
+                    user_standort_id: standortId,
+                    user_status: 'onboarding'
                 });
                 if(userResp.error) throw userResp.error;
                 
