@@ -2846,19 +2846,19 @@
                     <!-- Ideen-Statistik -->
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                         <div class="vit-card p-4 text-center">
-                            <p class="text-2xl font-bold text-gray-800" id="ideenTotal">12</p>
+                            <p class="text-2xl font-bold text-gray-800" id="ideenTotal">0</p>
                             <p class="text-xs text-gray-500">Ideen gesamt</p>
                         </div>
                         <div class="vit-card p-4 text-center">
-                            <p class="text-2xl font-bold text-blue-600" id="ideenNeu">4</p>
+                            <p class="text-2xl font-bold text-blue-600" id="ideenNeu">0</p>
                             <p class="text-xs text-gray-500">Neue Ideen</p>
                         </div>
                         <div class="vit-card p-4 text-center">
-                            <p class="text-2xl font-bold text-yellow-600" id="ideenGeplant">3</p>
+                            <p class="text-2xl font-bold text-yellow-600" id="ideenGeplant">0</p>
                             <p class="text-xs text-gray-500">Geplant</p>
                         </div>
                         <div class="vit-card p-4 text-center">
-                            <p class="text-2xl font-bold text-green-600" id="ideenUmgesetzt">3</p>
+                            <p class="text-2xl font-bold text-green-600" id="ideenUmgesetzt">0</p>
                             <p class="text-xs text-gray-500">Umgesetzt</p>
                         </div>
                     </div>
@@ -8120,18 +8120,17 @@
             var typEl = document.getElementById('ideeTyp');
             if(!titelEl || !titelEl.value.trim()) { alert('Bitte einen Titel eingeben.'); return; }
             try {
-                var kategorie = katEl ? katEl.value : '';
-                var typ = typEl ? typEl.value : '';
-                var beschreibung = (beschEl ? beschEl.value : '');
-                if(kategorie) beschreibung = '[' + kategorie + '] ' + (typ ? typ + ' – ' : '') + beschreibung;
-                await sb.from('ideen').insert({
+                var insertData = {
                     user_id: sbUser.id,
                     standort_id: sbStandort ? sbStandort.id : null,
                     titel: titelEl.value.trim(),
-                    beschreibung: beschreibung,
+                    beschreibung: beschEl ? beschEl.value.trim() : '',
+                    kategorie: katEl ? katEl.value : null,
                     status: 'neu',
                     votes: 0
-                });
+                };
+                var resp = await sb.from('ideen').insert(insertData);
+                if(resp.error) throw resp.error;
                 if(titelEl) titelEl.value='';
                 if(beschEl) beschEl.value='';
                 if(katEl) katEl.selectedIndex=0;
