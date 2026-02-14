@@ -9832,12 +9832,9 @@
                 var upd = await sb.from('users').update({status: 'aktiv'}).eq('id', userId);
                 if(upd.error) throw upd.error;
                 
-                // 2. Rollen zuweisen
+                // 2. Rollen zuweisen via SECURITY DEFINER
                 for(var i=0; i<selected.length; i++) {
-                    var rolleResp = await sb.from('rollen').select('id').eq('name', selected[i]).single();
-                    if(rolleResp.data) {
-                        await sb.from('user_rollen').insert({user_id: userId, rolle_id: rolleResp.data.id});
-                    }
+                    await sb.rpc('assign_user_role', { p_user_id: userId, p_rolle_name: selected[i] });
                 }
                 
                 closeApproveModal();
