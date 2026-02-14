@@ -5840,22 +5840,19 @@
             // Rollen-Anzeige zusammenbauen
             var roleDisplay = currentRoles.map(function(r){ return roleLabels[r]||r; }).join(', ');
 
-            // Location name
-            var locationName = 'Standort';
-            if (currentLocation && locations[currentLocation]) {
-                locationName = locations[currentLocation].name;
-            }
+            // Location name from Supabase
+            var locationName = sbStandort ? sbStandort.name : 'Standort';
             
             var userRoleText = document.getElementById('userRoleText');
             var locationDisplay = document.getElementById('locationDisplay');
             var locationDisplayMobile = document.getElementById('locationDisplayMobile');
             var userRoleDisplay = document.getElementById('userRoleDisplay');
             
-            var displayLocation = isHQ ? '🏢 HQ – Netzwerk' : '📍 ' + locationName;
+            var displayLocation = isHQ ? '🏢 HQ – Netzwerk' : locationName;
             if (userRoleText) userRoleText.textContent = roleDisplay;
             if (locationDisplay) locationDisplay.textContent = displayLocation;
             if (locationDisplayMobile) locationDisplayMobile.textContent = displayLocation;
-            if (userRoleDisplay) userRoleDisplay.textContent = roleDisplay;
+            if (userRoleDisplay) userRoleDisplay.textContent = 'Partnerportal';
 
             // Premium Badge
             var premiumBadge = document.getElementById('premiumBadge');
@@ -9931,62 +9928,80 @@
             renderPartnerMitarbeiter();
         }
 
-        function renderPartnerMitarbeiter() {
-            var list = getPartnerMitarbeiter().filter(function(m){
-                if(currentPartnerMaFilter!=='all' && m.status!==currentPartnerMaFilter) return false;
-                return true;
-            });
-            var allLocal = getPartnerMitarbeiter();
-
-            // KPIs
-            var ge=document.getElementById('pMaGesamt');if(ge)ge.textContent=allLocal.length;
-            var ak=document.getElementById('pMaAktiv');if(ak)ak.textContent=allLocal.filter(function(m){return m.status==='aktiv';}).length;
-            var ob=document.getElementById('pMaOnb');if(ob)ob.textContent=allLocal.filter(function(m){return m.status==='onboarding';}).length;
-
+        async function renderPartnerMitarbeiter() {
             var body=document.getElementById('partnerMaBody');
             if(!body) return;
-            var h='';
-            list.forEach(function(m){
-                var origIdx = kzMitarbeiter.indexOf(m);
-                h+='<tr class="border-t border-gray-100 hover:bg-gray-50">';
-                h+='<td class="px-4 py-3"><div class="flex items-center space-x-2"><img src="https://ui-avatars.com/api/?name='+encodeURIComponent(m.name)+'&background=EF7D00&color=fff&size=28" class="w-7 h-7 rounded-full"><span class="font-semibold text-gray-800">'+m.name+'</span></div></td>';
-                h+='<td class="px-4 py-3 text-gray-500 text-xs">'+m.email+'</td>';
-                h+='<td class="px-4 py-3 text-center">'+rollenBadges(m.rollen)+'</td>';
-                h+='<td class="px-4 py-3 text-center">'+statusBadge(m.status)+'</td>';
-                h+='<td class="px-4 py-3 text-center text-gray-500 text-xs">'+m.eintritt+'</td>';
-                h+='<td class="px-4 py-3 text-center"><div class="flex justify-center space-x-2">';
-                h+='<button class="text-xs text-vit-orange hover:underline font-semibold" onclick="openRollenModal('+origIdx+')">Rollen ✏️</button>';
-                h+='<button class="text-xs text-red-400 hover:underline font-semibold" onclick="deactivateMa('+origIdx+')">Deaktivieren</button>';
-                h+='</div></td>';
-                h+='</tr>';
-            });
-            if(list.length===0) {
-                h='<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Keine Mitarbeiter gefunden.</td></tr>';
-            }
-            body.innerHTML=h;
+            try {
+                // Nur Mitarbeiter des eigenen Standorts laden
+                var query = sb.from('users').select('*, standorte(name), user_rollen(rollen(name,label))').order('name');
+                if(sbStandort && sbStandort.id) {
+                    query = query.eq('standort_id', sbStandort.id);
+                }
+                var resp = await query;
+                if(resp.error) throw resp.error;
+                var users = resp.data || [];
+                var filter = currentPartnerMaFilter || 'all';
+                var list = users.filter(function(u){
+                    var st = u.status || 'aktiv';
+                    if(filter!=='all' && st!==filter) return false;
+                    return true;
+                });
+                // KPIs
+                var ge=document.getElementById('pMaGesamt');if(ge)ge.textContent=users.length;
+                var ak=document.getElementById('pMaAktiv');if(ak)ak.textContent=users.filter(function(u){return (u.status||'aktiv')==='aktiv';}).length;
+                var ob=document.getElementById('pMaOnb');if(ob)ob.textContent=users.filter(function(u){return u.status==='onboarding';}).length;
+                var h='';
+                list.forEach(function(u){
+                    var rollen = (u.user_rollen||[]).map(function(ur){return ur.rollen?ur.rollen.name:'';}).filter(Boolean);
+                    var st = u.status || 'aktiv';
+                    var d = u.created_at ? new Date(u.created_at) : new Date();
+                    var eintritt = String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+                    h+='<tr class="border-t border-gray-100 hover:bg-gray-50">';
+                    h+='<td class="px-4 py-3"><div class="flex items-center space-x-2"><img src="https://ui-avatars.com/api/?name='+encodeURIComponent(u.name)+'&background=EF7D00&color=fff&size=28" class="w-7 h-7 rounded-full"><span class="font-semibold text-gray-800">'+u.name+'</span></div></td>';
+                    h+='<td class="px-4 py-3 text-gray-500 text-xs">'+u.email+'</td>';
+                    h+='<td class="px-4 py-3 text-center">'+rollenBadges(rollen)+'</td>';
+                    h+='<td class="px-4 py-3 text-center">'+statusBadge(st)+'</td>';
+                    h+='<td class="px-4 py-3 text-center text-gray-500 text-xs">'+eintritt+'</td>';
+                    h+='<td class="px-4 py-3 text-center"><div class="flex justify-center space-x-2">';
+                    h+='<button class="text-xs text-vit-orange hover:underline font-semibold" onclick="openEditMaModal(\''+u.id+'\')">✏️</button>';
+                    h+='<button class="text-xs text-red-400 hover:underline font-semibold" onclick="deleteMa(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')">🗑️</button>';
+                    h+='</div></td>';
+                    h+='</tr>';
+                });
+                if(list.length===0) h='<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Keine Mitarbeiter gefunden.</td></tr>';
+                body.innerHTML=h;
+            } catch(err) { console.error('Partner-MA:', err); body.innerHTML='<tr><td colspan="6" class="text-center py-4 text-red-400">Fehler: '+err.message+'</td></tr>'; }
         }
 
         function deactivateMa(idx) {
-            var m=kzMitarbeiter[idx];
-            if(!m) return;
-            if(!confirm('Mitarbeiter "'+m.name+'" wirklich deaktivieren?')) return;
-            m.status='offboarding';
-            renderPartnerMitarbeiter();
+            // Deprecated - use openEditMaModal instead
         }
 
         // Neuer Mitarbeiter Modal
         function openNeuerMaModal() {
-            var allRollen = ['hq','inhaber','verkauf','werkstatt','buchhaltung'];
+            var isHQ = currentRoles.indexOf('hq') >= 0 || (sbProfile && sbProfile.is_hq);
+            var isGF = currentRoles.indexOf('inhaber') >= 0;
+            
+            // GF darf nur Standort-Rollen vergeben, kein HQ/GF
+            var allRollen = isHQ ? ['hq','inhaber','verkauf','werkstatt','buchhaltung'] : ['verkauf','werkstatt','buchhaltung'];
             var labels = {'hq':'HQ','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
 
             var html = '<div id="neuerMaOverlay" onclick="closeNeuerMaModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
             html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:460px;max-width:90vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
             html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">Neuen Mitarbeiter anlegen</h3><button onclick="closeNeuerMaModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
+            if(!isHQ) { html += '<p class="text-xs text-blue-600 bg-blue-50 rounded-lg p-2 mb-3">\ud83d\udccd Mitarbeiter wird deinem Standort zugeordnet.</p>'; }
             html += '<div class="space-y-3 mb-4">';
             html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Name *</label><input id="newMaName" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="Vor- und Nachname"></div>';
             html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">E-Mail *</label><input id="newMaEmail" type="email" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="name@vitbikes-standort.de"></div>';
             html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Passwort * (min. 6 Zeichen)</label><input id="newMaPassword" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="VitBikes2026!"></div>';
-            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Standort</label><select id="newMaStandort" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="">Wird geladen...</option></select></div>';
+            if(isHQ) {
+                html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Standort</label><select id="newMaStandort" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="">Wird geladen...</option></select></div>';
+            } else {
+                // GF: Standort ist fix der eigene
+                var stdName = sbStandort ? sbStandort.name : 'Dein Standort';
+                var stdId = sbStandort ? sbStandort.id : '';
+                html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Standort</label><input type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500" value="'+stdName+'" disabled><input type="hidden" id="newMaStandort" value="'+stdId+'"></div>';
+            }
             html += '</div>';
             html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Rollen zuweisen</p>';
             var colors = {'hq':'border-red-300 bg-red-50','inhaber':'border-orange-300 bg-orange-50','verkauf':'border-blue-300 bg-blue-50','werkstatt':'border-gray-300 bg-gray-50','buchhaltung':'border-purple-300 bg-purple-50'};
@@ -10000,16 +10015,18 @@
             html += '<button onclick="closeNeuerMaModal()" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-semibold text-sm hover:bg-gray-200">Abbrechen</button></div>';
             html += '</div></div>';
             var c = document.createElement('div'); c.id = 'neuerMaContainer'; c.innerHTML = html; document.body.appendChild(c);
-            setTimeout(async function(){
-                try {
-                    var stdResp = await sb.from('standorte').select('id,name').order('name');
-                    var sel = document.getElementById('newMaStandort');
-                    if(sel && stdResp.data) {
-                        sel.innerHTML = '<option value="hq">HQ (kein Standort)</option>';
-                        stdResp.data.forEach(function(s){ sel.innerHTML += '<option value="'+s.id+'">'+s.name+'</option>'; });
-                    }
-                } catch(e){ console.error(e); }
-            }, 100);
+            if(isHQ) {
+                setTimeout(async function(){
+                    try {
+                        var stdResp = await sb.from('standorte').select('id,name').order('name');
+                        var sel = document.getElementById('newMaStandort');
+                        if(sel && stdResp.data) {
+                            sel.innerHTML = '<option value="hq">HQ (kein Standort)</option>';
+                            stdResp.data.forEach(function(s){ sel.innerHTML += '<option value="'+s.id+'">'+s.name+'</option>'; });
+                        }
+                    } catch(e){ console.error(e); }
+                }, 100);
+            }
         }
 
         function closeNeuerMaModal() { var c = document.getElementById('neuerMaContainer'); if(c) c.remove(); }
