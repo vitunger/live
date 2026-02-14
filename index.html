@@ -9754,7 +9754,7 @@
                     if(st === 'onboarding' && rollen.length === 0) {
                         actionBtn = '<button class="text-xs px-3 py-1 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600" onclick="approveUser(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')">Freigeben</button>';
                     } else {
-                        actionBtn = '<button class="text-xs text-vit-orange hover:underline font-semibold" onclick="alert(\''+u.name.replace(/'/g,"\\'")+'\\n'+u.email+'\')">Details</button>';
+                        actionBtn = '<button class="text-xs text-vit-orange hover:underline font-semibold" onclick="openEditMaModal(\''+u.id+'\')">Bearbeiten ✏️</button>';
                     }
                     h+='<tr class="border-t border-gray-100 hover:bg-gray-50'+(st==='onboarding' && rollen.length===0 ? ' bg-yellow-50':'')+'">';
                     h+='<td class="px-4 py-3"><div class="flex items-center space-x-2"><img src="https://ui-avatars.com/api/?name='+encodeURIComponent(u.name)+'&background=EF7D00&color=fff&size=28" class="w-7 h-7 rounded-full"><div><span class="font-semibold text-gray-800">'+u.name+'</span><p class="text-[10px] text-gray-400">'+u.email+'</p></div></div></td>';
@@ -9787,7 +9787,7 @@
         // === USER FREIGABE ===
         async function approveUser(userId, userName) {
             var allRollen = ['hq','inhaber','verkauf','werkstatt','buchhaltung'];
-            var labels = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
+            var labels = {'hq':'HQ','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
             
             var html = '<div id="approveOverlay" onclick="closeApproveModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
             html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:420px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
@@ -9860,7 +9860,7 @@
             var m = kzMitarbeiter[maIdx];
             if(!m) return;
             var allRollen = ['hq','inhaber','verkauf','werkstatt','buchhaltung'];
-            var labels = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
+            var labels = {'hq':'HQ','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
             var desc = {'inhaber':'Vollzugriff auf alle Module, Dashboards, Shop, Onboarding','verkauf':'Verkauf, Marketing, Wissen, Support, Ideenboard','werkstatt':'Einkauf, Wissen, Support, Ideenboard','buchhaltung':'Allgemein, Verkauf, Einkauf, Controlling, Aktenschrank'};
 
             var html = '<div id="rollenModalOverlay" onclick="closeRollenModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
@@ -9901,7 +9901,7 @@
             closeRollenModal();
             renderKzMitarbeiter();
 
-            var labels = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
+            var labels = {'hq':'HQ','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
             var names = selected.map(function(r){return labels[r];}).join(', ');
             alert('✅ Rollen für '+kzMitarbeiter[maIdx].name+' gespeichert:\n'+names);
         }
@@ -9975,19 +9975,29 @@
         // Neuer Mitarbeiter Modal
         function openNeuerMaModal() {
             var allRollen = ['hq','inhaber','verkauf','werkstatt','buchhaltung'];
-            var labels = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
+            var labels = {'hq':'HQ','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
 
             var html = '<div id="neuerMaOverlay" onclick="closeNeuerMaModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:460px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
-            html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">Neuen Mitarbeiter anlegen</h3><button onclick="closeNeuerMaModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div>';
-
-            html += '<div class="space-y-3 mb-5">';
+            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:460px;max-width:90vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">Neuen Mitarbeiter anlegen</h3><button onclick="closeNeuerMaModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
+            html += '<div class="space-y-3 mb-4">';
             html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Name *</label><input id="newMaName" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="Vor- und Nachname"></div>';
             html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">E-Mail *</label><input id="newMaEmail" type="email" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="name@vitbikes-standort.de"></div>';
-            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Passwort *</label><input id="newMaPassword" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="Mindestens 6 Zeichen" value="VitBikes2026!"></div>';
-            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Standort *</label><select id="newMaStandort" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"><option value="">Wird geladen...</option></select></div>';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Passwort * (min. 6 Zeichen)</label><input id="newMaPassword" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="VitBikes2026!"></div>';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Standort</label><select id="newMaStandort" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="">Wird geladen...</option></select></div>';
             html += '</div>';
-            // Load standorte into dropdown after rendering
+            html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Rollen zuweisen</p>';
+            var colors = {'hq':'border-red-300 bg-red-50','inhaber':'border-orange-300 bg-orange-50','verkauf':'border-blue-300 bg-blue-50','werkstatt':'border-gray-300 bg-gray-50','buchhaltung':'border-purple-300 bg-purple-50'};
+            allRollen.forEach(function(r){
+                html += '<label class="flex items-center space-x-3 p-2 rounded-lg border '+colors[r]+' mb-1.5 cursor-pointer hover:shadow-sm transition">';
+                html += '<input type="checkbox" id="newMaRole_'+r+'" class="rounded" style="accent-color:#EF7D00;">';
+                html += '<span class="text-sm font-semibold text-gray-800">'+labels[r]+'</span></label>';
+            });
+            html += '<div id="newMaError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mt-3"></div>';
+            html += '<div class="flex space-x-3 mt-4"><button id="newMaSaveBtn" onclick="saveNeuerMa()" class="flex-1 py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Anlegen</button>';
+            html += '<button onclick="closeNeuerMaModal()" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-semibold text-sm hover:bg-gray-200">Abbrechen</button></div>';
+            html += '</div></div>';
+            var c = document.createElement('div'); c.id = 'neuerMaContainer'; c.innerHTML = html; document.body.appendChild(c);
             setTimeout(async function(){
                 try {
                     var stdResp = await sb.from('standorte').select('id,name').order('name');
@@ -9996,65 +10006,161 @@
                         sel.innerHTML = '<option value="hq">HQ (kein Standort)</option>';
                         stdResp.data.forEach(function(s){ sel.innerHTML += '<option value="'+s.id+'">'+s.name+'</option>'; });
                     }
-                } catch(e){}
+                } catch(e){ console.error(e); }
             }, 100);
-
-            html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Rollen zuweisen (Mehrfachauswahl)</p>';
-            var colors = {'hq':'border-red-300 bg-red-50','inhaber':'border-orange-300 bg-orange-50','verkauf':'border-blue-300 bg-blue-50','werkstatt':'border-gray-300 bg-gray-50','buchhaltung':'border-purple-300 bg-purple-50'};
-            allRollen.forEach(function(r){
-                html += '<label class="flex items-center space-x-3 p-2.5 rounded-lg border '+colors[r]+' mb-2 cursor-pointer hover:shadow-sm transition">';
-                html += '<input type="checkbox" id="newMaRole_'+r+'" class="rounded" style="accent-color:#EF7D00;">';
-                html += '<span class="text-sm font-semibold text-gray-800">'+labels[r]+'</span>';
-                html += '</label>';
-            });
-
-            html += '<div class="flex space-x-3 mt-5"><button onclick="saveNeuerMa()" class="flex-1 py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Anlegen</button>';
-            html += '<button onclick="closeNeuerMaModal()" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-semibold text-sm hover:bg-gray-200">Abbrechen</button></div>';
-            html += '</div></div>';
-
-            var c = document.createElement('div');
-            c.id = 'neuerMaContainer';
-            c.innerHTML = html;
-            document.body.appendChild(c);
         }
 
-        function closeNeuerMaModal() {
-            var c = document.getElementById('neuerMaContainer');
-            if(c) c.remove();
-        }
+        function closeNeuerMaModal() { var c = document.getElementById('neuerMaContainer'); if(c) c.remove(); }
 
-        function saveNeuerMa() {
+        async function saveNeuerMa() {
             var name = (document.getElementById('newMaName')||{}).value||'';
             var email = (document.getElementById('newMaEmail')||{}).value||'';
-            if(!name.trim() || !email.trim()) { alert('Bitte Name und E-Mail ausfüllen.'); return; }
+            var pw = (document.getElementById('newMaPassword')||{}).value||'';
+            var stdSel = document.getElementById('newMaStandort');
+            var standortId = stdSel ? stdSel.value : null;
+            var errEl = document.getElementById('newMaError');
+            if(errEl) errEl.style.display = 'none';
+
+            if(!name.trim() || !email.trim()) { if(errEl){errEl.textContent='Bitte Name und E-Mail ausfüllen.';errEl.style.display='block';} return; }
+            if(!pw || pw.length < 6) { if(errEl){errEl.textContent='Passwort muss mindestens 6 Zeichen haben.';errEl.style.display='block';} return; }
 
             var allRollen = ['hq','inhaber','verkauf','werkstatt','buchhaltung'];
             var selected = [];
-            allRollen.forEach(function(r){
-                var chk = document.getElementById('newMaRole_'+r);
-                if(chk && chk.checked) selected.push(r);
-            });
-            if(selected.length===0) { alert('Bitte mindestens eine Rolle zuweisen.'); return; }
+            allRollen.forEach(function(r){ var chk = document.getElementById('newMaRole_'+r); if(chk && chk.checked) selected.push(r); });
+            if(selected.length===0) { if(errEl){errEl.textContent='Bitte mindestens eine Rolle zuweisen.';errEl.style.display='block';} return; }
 
-            var now = new Date();
-            var monat = ('0'+(now.getMonth()+1)).slice(-2)+'/'+now.getFullYear();
+            var btn = document.getElementById('newMaSaveBtn');
+            if(btn) { btn.disabled=true; btn.textContent='Wird angelegt...'; }
 
-            kzMitarbeiter.push({
-                name: name.trim(),
-                standort: getStandortName(),
-                rollen: selected,
-                status: 'onboarding',
-                eintritt: monat,
-                onbProgress: 0,
-                email: email.trim().toLowerCase()
-            });
+            try {
+                var resp = await sb.rpc('create_full_user', {
+                    p_email: email.trim().toLowerCase(),
+                    p_password: pw,
+                    p_name: name.trim(),
+                    p_standort_id: standortId && standortId!=='hq' ? standortId : null,
+                    p_rollen: selected,
+                    p_status: 'aktiv'
+                });
+                if(resp.error) throw resp.error;
 
-            closeNeuerMaModal();
-            renderPartnerMitarbeiter();
+                closeNeuerMaModal();
+                var rollenLabels = {'hq':'HQ','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
+                alert('\u2705 Mitarbeiter angelegt!\n'+name.trim()+'\nRollen: '+selected.map(function(r){return rollenLabels[r]||r;}).join(', '));
+                renderKzMitarbeiter();
+            } catch(err) {
+                if(errEl){errEl.textContent='Fehler: '+(err.message||err);errEl.style.display='block';}
+                if(btn) { btn.disabled=false; btn.textContent='Anlegen'; }
+            }
+        }
 
-            var rollenLabels = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
-            var rollenStr = selected.map(function(r){return rollenLabels[r];}).join(', ');
-            alert('✅ Mitarbeiter angelegt:\n'+name.trim()+'\nRollen: '+rollenStr+'\nStatus: Onboarding');
+        // === MITARBEITER BEARBEITEN ===
+        async function openEditMaModal(userId) {
+            try {
+                var resp = await sb.from('users').select('*, standorte(name), user_rollen(rollen(name,label))').eq('id', userId).single();
+                if(resp.error) throw resp.error;
+                var u = resp.data;
+                var userRollen = (u.user_rollen||[]).map(function(ur){return ur.rollen?ur.rollen.name:'';}).filter(Boolean);
+
+                var allRollen = ['hq','inhaber','verkauf','werkstatt','buchhaltung'];
+                var labels = {'hq':'HQ','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
+                var colors = {'hq':'border-red-300 bg-red-50','inhaber':'border-orange-300 bg-orange-50','verkauf':'border-blue-300 bg-blue-50','werkstatt':'border-gray-300 bg-gray-50','buchhaltung':'border-purple-300 bg-purple-50'};
+
+                var html = '<div id="editMaOverlay" onclick="closeEditMaModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
+                html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:460px;max-width:90vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+                html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">Mitarbeiter bearbeiten</h3><button onclick="closeEditMaModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
+                html += '<div class="space-y-3 mb-4">';
+                html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Name</label><input id="editMaName" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+u.name+'"></div>';
+                html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">E-Mail</label><input id="editMaEmail" type="email" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+u.email+'"></div>';
+                html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Neues Passwort (leer lassen = unverändert)</label><input id="editMaPassword" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Neues Passwort eingeben..."></div>';
+                html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Standort</label><select id="editMaStandort" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="">Wird geladen...</option></select></div>';
+                html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Status</label><select id="editMaStatus" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">';
+                html += '<option value="aktiv"'+(u.status==='aktiv'?' selected':'')+'>Aktiv</option>';
+                html += '<option value="onboarding"'+(u.status==='onboarding'?' selected':'')+'>Onboarding</option>';
+                html += '<option value="offboarding"'+(u.status==='offboarding'?' selected':'')+'>Offboarding</option>';
+                html += '</select></div>';
+                html += '</div>';
+                html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Rollen</p>';
+                allRollen.forEach(function(r){
+                    var checked = userRollen.indexOf(r) >= 0 ? ' checked' : '';
+                    html += '<label class="flex items-center space-x-3 p-2 rounded-lg border '+colors[r]+' mb-1.5 cursor-pointer hover:shadow-sm transition">';
+                    html += '<input type="checkbox" id="editMaRole_'+r+'" class="rounded" style="accent-color:#EF7D00;"'+checked+'>';
+                    html += '<span class="text-sm font-semibold text-gray-800">'+labels[r]+'</span></label>';
+                });
+                html += '<div id="editMaError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mt-3"></div>';
+                html += '<div class="flex space-x-3 mt-4">';
+                html += '<button id="editMaSaveBtn" onclick="saveEditMa(\''+userId+'\')" class="flex-1 py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Speichern</button>';
+                html += '<button onclick="closeEditMaModal()" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-semibold text-sm hover:bg-gray-200">Abbrechen</button>';
+                html += '</div></div></div>';
+
+                var c = document.createElement('div'); c.id = 'editMaContainer'; c.innerHTML = html; document.body.appendChild(c);
+
+                // Load standorte dropdown
+                setTimeout(async function(){
+                    try {
+                        var stdResp = await sb.from('standorte').select('id,name').order('name');
+                        var sel = document.getElementById('editMaStandort');
+                        if(sel && stdResp.data) {
+                            sel.innerHTML = '<option value="hq">HQ (kein Standort)</option>';
+                            stdResp.data.forEach(function(s){
+                                var selected = (u.standort_id === s.id) ? ' selected' : '';
+                                sel.innerHTML += '<option value="'+s.id+'"'+selected+'>'+s.name+'</option>';
+                            });
+                        }
+                    } catch(e){}
+                }, 100);
+            } catch(err) { alert('Fehler: '+err.message); }
+        }
+
+        function closeEditMaModal() { var c = document.getElementById('editMaContainer'); if(c) c.remove(); }
+
+        async function saveEditMa(userId) {
+            var name = (document.getElementById('editMaName')||{}).value||'';
+            var email = (document.getElementById('editMaEmail')||{}).value||'';
+            var pw = (document.getElementById('editMaPassword')||{}).value||'';
+            var standortId = (document.getElementById('editMaStandort')||{}).value||'';
+            var status = (document.getElementById('editMaStatus')||{}).value||'aktiv';
+            var errEl = document.getElementById('editMaError');
+            if(errEl) errEl.style.display = 'none';
+
+            if(!name.trim() || !email.trim()) { if(errEl){errEl.textContent='Name und E-Mail sind Pflicht.';errEl.style.display='block';} return; }
+
+            var allRollen = ['hq','inhaber','verkauf','werkstatt','buchhaltung'];
+            var selected = [];
+            allRollen.forEach(function(r){ var chk = document.getElementById('editMaRole_'+r); if(chk && chk.checked) selected.push(r); });
+            if(selected.length===0) { if(errEl){errEl.textContent='Mindestens eine Rolle nötig.';errEl.style.display='block';} return; }
+
+            var btn = document.getElementById('editMaSaveBtn');
+            if(btn) { btn.disabled=true; btn.textContent='Wird gespeichert...'; }
+
+            try {
+                // 1. Users-Tabelle updaten
+                var upd = await sb.from('users').update({
+                    name: name.trim(),
+                    email: email.trim().toLowerCase(),
+                    standort_id: standortId && standortId!=='hq' ? standortId : null,
+                    status: status
+                }).eq('id', userId);
+                if(upd.error) throw upd.error;
+
+                // 2. Passwort ändern (via Server-Funktion)
+                if(pw && pw.length >= 6) {
+                    var pwResp = await sb.rpc('update_user_password', { p_user_id: userId, p_new_password: pw });
+                    if(pwResp && pwResp.error) console.warn('Passwort-Update:', pwResp.error.message);
+                }
+
+                // 3. Rollen: alte löschen, neue setzen
+                await sb.from('user_rollen').delete().eq('user_id', userId);
+                for(var i=0; i<selected.length; i++) {
+                    await sb.rpc('assign_user_role', { p_user_id: userId, p_rolle_name: selected[i] });
+                }
+
+                closeEditMaModal();
+                alert('\u2705 Mitarbeiter aktualisiert!');
+                renderKzMitarbeiter();
+            } catch(err) {
+                if(errEl){errEl.textContent='Fehler: '+(err.message||err);errEl.style.display='block';}
+                if(btn) { btn.disabled=false; btn.textContent='Speichern'; }
+            }
         }
 
 
