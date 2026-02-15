@@ -11390,12 +11390,14 @@
             var today = new Date();
             var todayStr = today.toISOString().slice(0,10);
 
-            // Welche BWA-Monate fehlen? Prüfe die letzten 3 Monate
+            // Welche BWA-Monate fehlen? Prüfe die letzten 3 Monate (aber frühestens ab Jan 2026)
             var missingMonths = [];
             for(var offset = 1; offset <= 3; offset++) {
                 var checkDate = new Date(today.getFullYear(), today.getMonth() - offset, 1);
                 var bwaMonat = checkDate.getMonth() + 1; // 1-12
                 var bwaJahr = checkDate.getFullYear();
+                // Nicht vor Januar 2026 prüfen (System-Start)
+                if(bwaJahr < 2026) continue;
                 // Deadline = 15. des Folgemonats
                 var deadlineDate = new Date(bwaJahr, bwaMonat, 15); // bwaMonat ist 0-indexed+1 = nächster Monat
                 // Nur relevant wenn wir nach dem 1. des Folgemonats sind
