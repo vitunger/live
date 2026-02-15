@@ -13515,6 +13515,9 @@
         }
 
         function renderKommandozentrale() {
+            renderKzStandorte();
+            renderKzMitarbeiter();
+        }
 
         // ============================================
         // DEV-STATUS MODULE
@@ -13771,10 +13774,6 @@
         // END DEV-STATUS MODULE
         // ============================================
 
-        function renderKommandozentrale() {
-            renderKzStandorte();
-            renderKzMitarbeiter();
-        }
         var currentLang = 'de';
         var i18n = {
             de: {
