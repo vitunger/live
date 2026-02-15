@@ -7644,14 +7644,14 @@
                         {label:'Wareneinsatz', ist:b.wareneinsatz, plan:b.plan_wareneinsatz, bold:true, bg:'bg-gray-50'},
                         {label:'Rohertrag', ist:b.rohertrag, plan:b.plan_rohertrag, bold:true, bg:'bg-blue-50', highlight:'text-blue-800'},
                         {label:'Personalkosten', ist:b.personalkosten, plan:b.plan_personalkosten, bold:true},
-                        {label:'Raumkosten', ist:b.raumkosten, plan:b.plan_raumkosten, bold:true},
-                        {label:'Werbe-/Reisekosten', ist:b.werbekosten, plan:b.plan_werbekosten, bold:true},
+                        {label:'Miete / Raumkosten', ist:b.miete, plan:b.plan_raumkosten, bold:true},
+                        {label:'Werbung / Marketing', ist:b.werbung_marketing, plan:b.plan_werbekosten, bold:true},
                         {label:'Kosten Warenabgabe', ist:b.kosten_warenabgabe, bold:true},
                         {label:'Abschreibungen', ist:b.abschreibungen, bold:true},
                         {label:'Sonstige Kosten', ist:b.sonstige_kosten, bold:true},
                         {label:'Gesamtkosten', ist:b.gesamtkosten, plan:b.plan_gesamtkosten, bold:true, bg:'bg-gray-50', separator:true},
                         {label:'Betriebsergebnis', ist:b.betriebsergebnis, bold:true},
-                        {label:'Zinsaufwand', ist:b.zinsaufwand, bold:true},
+                        {label:'Zinsen', ist:b.zinsen, bold:true},
                         {label:'Ergebnis vor Steuern', ist:b.ergebnis_vor_steuern, plan:b.plan_ergebnis, bold:true, bg:parseFloat(b.ergebnis_vor_steuern)>=0?'bg-green-50':'bg-red-50', highlight:parseFloat(b.ergebnis_vor_steuern)>=0?'text-green-800':'text-red-800', separator:true, big:true}
                     ];
                     // Restore default header
@@ -8072,17 +8072,21 @@
             try {
                 var stdId = sbProfile ? sbProfile.standort_id : null;
 
-                // Upload file if selected
+                // Upload file if selected (optional - ignore errors)
                 var fileUrl = null;
                 var fileName = null;
                 var fileInput = document.getElementById('bwaFileInput');
                 if(fileInput && fileInput.files && fileInput.files[0]) {
                     var file = fileInput.files[0];
                     fileName = file.name;
-                    var path = (stdId||'hq')+'/'+year+'/'+month+'_'+file.name;
-                    var upResp = await sb.storage.from('bwa-dateien').upload(path, file, {upsert:true});
-                    if(upResp.error) console.warn('File upload error:', upResp.error);
-                    else fileUrl = path;
+                    try {
+                        var path = (stdId||'hq')+'/'+year+'/'+month+'_'+file.name;
+                        var upResp = await sb.storage.from('bwa-dateien').upload(path, file, {upsert:true});
+                        if(upResp.error) console.warn('File upload skipped:', upResp.error.message);
+                        else fileUrl = path;
+                    } catch(uploadErr) {
+                        console.warn('File upload skipped:', uploadErr.message || uploadErr);
+                    }
                 }
 
                 var data = {
@@ -8097,14 +8101,14 @@
                     wareneinsatz: wareneinsatz,
                     rohertrag: rohertrag,
                     personalkosten: personal,
-                    raumkosten: raum,
-                    werbekosten: werbe,
+                    miete: raum,
+                    werbung_marketing: werbe,
                     kosten_warenabgabe: warenabgabe,
                     abschreibungen: abschreibung,
                     sonstige_kosten: sonstige,
                     gesamtkosten: gesamtkosten,
                     betriebsergebnis: betriebsergebnis,
-                    zinsaufwand: zins,
+                    zinsen: zins,
                     ergebnis_vor_steuern: ergebnis,
                     plan_umsatz: v('bwaF_planUmsatz'),
                     plan_wareneinsatz: v('bwaF_planWareneinsatz'),
@@ -8118,7 +8122,8 @@
                     hochgeladen_von: sbUser ? sbUser.id : null,
                     updated_at: new Date().toISOString()
                 };
-                if(fileUrl) { data.datei_url = fileUrl; data.datei_name = fileName; }
+                if(fileUrl) { data.datei_url = fileUrl; }
+                if(fileName) { data.datei_name = fileName; }
 
                 var resp = await sb.from('bwa_daten').upsert(data, {onConflict:'standort_id,monat,jahr'}).select();
                 if(resp.error) throw resp.error;
