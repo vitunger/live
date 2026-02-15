@@ -7813,7 +7813,7 @@
         function parsePBwa(sheet){var rows=[];var range=XLSX.utils.decode_range(sheet['!ref']);var si=0;for(var r=4;r<=range.e.r;r++){var gruppe=gcv(sheet,r+1,2);var kontoNr=gcv(sheet,r+1,3);var konto=gcv(sheet,r+1,4);var aktBwa=gcv(sheet,r+1,5);var ytd=gcv(sheet,r+1,6);var ds=gcv(sheet,r+1,7);var hr=gcv(sheet,r+1,8);if(!kontoNr&&!konto)continue;var bez=normBez(konto||'');if(!bez)continue;var pw={};var mn=['jan','feb','mrz','apr','mai','jun','jul','aug','sep','okt','nov','dez'];var sm=0;for(var c=0;c<12;c++){var val=toNum(gcv(sheet,r+1,10+c));pw[mn[c]]=val||0;sm+=(val||0);}rows.push({kontengruppe:normBez(gruppe||''),konto:kontoNr?String(kontoNr):null,bezeichnung:bez,vorjahr_aktuell:toNum(aktBwa),vorjahr_ytd:toNum(ytd),vorjahr_durchschnitt:toNum(ds),vorjahr_hochrechnung:toNum(hr),jan:pw.jan,feb:pw.feb,mrz:pw.mrz,apr:pw.apr,mai:pw.mai,jun:pw.jun,jul:pw.jul,aug:pw.aug,sep:pw.sep,okt:pw.okt,nov:pw.nov,dez:pw.dez,summe:Math.round(sm*100)/100,sortierung:si++});}return rows;}
         function parsePUms(sheet){var rows=[];var range=XLSX.utils.decode_range(sheet['!ref']);var si=0;var mn=['jan','feb','mrz','apr','mai','jun','jul','aug','sep','okt','nov','dez'];for(var r=4;r<=range.e.r;r++){var marke=gcv(sheet,r+1,3);if(!marke||typeof marke!=='string'||marke==='0')continue;marke=normBez(marke);if(marke.toLowerCase().includes('planung')||marke.toLowerCase().includes('gesamt'))continue;var mw={};var sm=0;for(var c=0;c<12;c++){var val=toNum(gcv(sheet,r+1,4+c));mw[mn[c]]=val||0;sm+=(val||0);}if(sm===0)continue;rows.push({marke:marke,kategorie:'Fahrräder',jan:mw.jan,feb:mw.feb,mrz:mw.mrz,apr:mw.apr,mai:mw.mai,jun:mw.jun,jul:mw.jul,aug:mw.aug,sep:mw.sep,okt:mw.okt,nov:mw.nov,dez:mw.dez,summe:sm,sortierung:si++});}return rows;}
         function parsePPers(sheet){var rows=[];var range=XLSX.utils.decode_range(sheet['!ref']);for(var r=3;r<=range.e.r;r++){var nn=gcv(sheet,r+1,1);var vn=gcv(sheet,r+1,2);if(!nn||typeof nn!=='string')continue;if(nn.includes('Gesamt')||nn.includes('AB Zeile')||nn.includes('Nachname'))continue;var td=function(v){if(!v)return null;if(v instanceof Date)return v.toISOString().split('T')[0];return null;};rows.push({nachname:normBez(nn),vorname:normBez(vn||''),status:gcv(sheet,r+1,3)||'',standort_name:gcv(sheet,r+1,4)||'',abteilung:gcv(sheet,r+1,5)||'',position:gcv(sheet,r+1,7)||'',wochenarbeitszeit:toNum(gcv(sheet,r+1,8)),stundenlohn:toNum(gcv(sheet,r+1,9)),anstelldatum:td(gcv(sheet,r+1,10)),austrittsdatum:td(gcv(sheet,r+1,11)),fixgehalt:toNum(gcv(sheet,r+1,12)),gehalt_neu_1:toNum(gcv(sheet,r+1,13)),gehalt_neu_1_ab:td(gcv(sheet,r+1,14)),gehalt_neu_2:toNum(gcv(sheet,r+1,15)),gehalt_neu_2_ab:td(gcv(sheet,r+1,16))});}return rows;}
-        function parseFile(file,callback){var filename=file.name;var meta=extractMJ(filename);meta.dateiname=filename;var reader=new FileReader();if(filename.toLowerCase().endsWith('.csv')){reader.onload=function(e){var text=e.target.result;var header=text.split('\n')[0]||'';meta.format=header.includes('Bezeichnung')&&header.includes('EUR')?'csv_jahresuebersicht':'csv_unbekannt';meta.typ='jahr';var result={meta:meta,bwa_daten:[],bwa_jahr_daten:[],plan_bwa:[],plan_umsaetze:[],plan_personal:[]};if(meta.format==='csv_jahresuebersicht')result.bwa_jahr_daten=parseCsvJ(text,meta);callback(null,result);};reader.readAsText(file,'utf-8');}else{reader.onload=function(e){try{var wb=XLSX.read(e.target.result,{type:'array',cellDates:true});var sn=wb.SheetNames[0];var ws=wb.Sheets[sn];var det=detectFmt(ws,filename);meta.format=det.format;meta.typ=det.typ;var result={meta:meta,bwa_daten:[],bwa_jahr_daten:[],plan_bwa:[],plan_umsaetze:[],plan_personal:[]};if(meta.format==='planung'){wb.SheetNames.forEach(function(s){var w=wb.Sheets[s];var sl=s.toLowerCase();if(sl.includes('bwa'))result.plan_bwa=parsePBwa(w);else if(sl.includes('umsätze')||sl.includes('umsaetze'))result.plan_umsaetze=parsePUms(w);else if(sl.includes('personal'))result.plan_personal=parsePPers(w);});meta.typ='plan';callback(null,result);return;}switch(meta.format){case 'datev_wertenachweis':result.bwa_daten=parseDWN(ws,meta,1);break;case 'datev_wertenachweis_offset':result.bwa_daten=parseDWN(ws,meta,3);break;case 'kompakt':case 'kompakt_datum':result.bwa_daten=parseKompakt(ws,meta);if(meta.format==='kompakt_datum'){var b1=ws['B1']?ws['B1'].v:null;if(b1 instanceof Date){if(!meta.monat)meta.monat=b1.getMonth()+1;if(!meta.jahr)meta.jahr=b1.getFullYear();}else if(typeof b1==='number'&&b1>40000){var dt=new Date((b1-25569)*86400000);if(!meta.monat)meta.monat=dt.getMonth()+1;if(!meta.jahr)meta.jahr=dt.getFullYear();}}break;case 'datev_erfolgsrechnung':result.bwa_daten=parseDER(ws,meta);break;case 'datev_vorjahresvergleich':result.bwa_daten=parseDVJ(ws,meta);break;case 'kompakt_jahr':case 'kompakt_jahr_datum':case 'datev_jahresuebersicht':var sr=0;for(var r=0;r<5;r++){var v=gcv(ws,r+1,1);if(v&&String(v).toLowerCase().includes('umsatzerlöse')){sr=r;break;}if(v&&String(v).toLowerCase().includes('bezeichnung')){sr=r+1;break;}}result.bwa_jahr_daten=parseJU(ws,meta,sr);break;default:result.bwa_daten=parseKompakt(ws,meta);}callback(null,result);}catch(err){callback(err,null);}};reader.readAsArrayBuffer(file);}};return{parseFile:parseFile,extractMonatJahr:extractMJ,BWA_ZEILEN:BWA_ZEILEN,KOMPAKT_MAP:KOMPAKT_MAP};})();
+        function parseFile(file,callback){var filename=file.name;var meta=extractMJ(filename);meta.dateiname=filename;var reader=new FileReader();if(filename.toLowerCase().endsWith('.csv')){reader.onload=function(e){var text=e.target.result;var header=text.split('\n')[0]||'';meta.format=header.includes('Bezeichnung')&&header.includes('EUR')?'csv_jahresuebersicht':'csv_unbekannt';meta.typ='jahr';var result={meta:meta,bwa_daten:[],bwa_jahr_daten:[],plan_bwa:[],plan_umsaetze:[],plan_personal:[]};if(meta.format==='csv_jahresuebersicht')result.bwa_jahr_daten=parseCsvJ(text,meta);callback(null,result);};reader.readAsText(file,'utf-8');}else{reader.onload=function(e){try{var wb=XLSX.read(e.target.result,{type:'array',cellDates:true});var sn=wb.SheetNames[0];var ws=wb.Sheets[sn];try{var rawJson=XLSX.utils.sheet_to_json(ws,{header:'A',defval:null,raw:true});window._bwaRawSheetData=rawJson;}catch(rErr){window._bwaRawSheetData=[];}var det=detectFmt(ws,filename);meta.format=det.format;meta.typ=det.typ;var result={meta:meta,bwa_daten:[],bwa_jahr_daten:[],plan_bwa:[],plan_umsaetze:[],plan_personal:[]};if(meta.format==='planung'){wb.SheetNames.forEach(function(s){var w=wb.Sheets[s];var sl=s.toLowerCase();if(sl.includes('bwa'))result.plan_bwa=parsePBwa(w);else if(sl.includes('umsätze')||sl.includes('umsaetze'))result.plan_umsaetze=parsePUms(w);else if(sl.includes('personal'))result.plan_personal=parsePPers(w);});meta.typ='plan';callback(null,result);return;}switch(meta.format){case 'datev_wertenachweis':result.bwa_daten=parseDWN(ws,meta,1);break;case 'datev_wertenachweis_offset':result.bwa_daten=parseDWN(ws,meta,3);break;case 'kompakt':case 'kompakt_datum':result.bwa_daten=parseKompakt(ws,meta);if(meta.format==='kompakt_datum'){var b1=ws['B1']?ws['B1'].v:null;if(b1 instanceof Date){if(!meta.monat)meta.monat=b1.getMonth()+1;if(!meta.jahr)meta.jahr=b1.getFullYear();}else if(typeof b1==='number'&&b1>40000){var dt=new Date((b1-25569)*86400000);if(!meta.monat)meta.monat=dt.getMonth()+1;if(!meta.jahr)meta.jahr=dt.getFullYear();}}break;case 'datev_erfolgsrechnung':result.bwa_daten=parseDER(ws,meta);break;case 'datev_vorjahresvergleich':result.bwa_daten=parseDVJ(ws,meta);break;case 'kompakt_jahr':case 'kompakt_jahr_datum':case 'datev_jahresuebersicht':var sr=0;for(var r=0;r<5;r++){var v=gcv(ws,r+1,1);if(v&&String(v).toLowerCase().includes('umsatzerlöse')){sr=r;break;}if(v&&String(v).toLowerCase().includes('bezeichnung')){sr=r+1;break;}}result.bwa_jahr_daten=parseJU(ws,meta,sr);break;default:result.bwa_daten=parseKompakt(ws,meta);}callback(null,result);}catch(err){callback(err,null);}};reader.readAsArrayBuffer(file);}};return{parseFile:parseFile,extractMonatJahr:extractMJ,BWA_ZEILEN:BWA_ZEILEN,KOMPAKT_MAP:KOMPAKT_MAP};})();
 
         // =============================================
         // BWA SUPABASE FUNCTIONS
@@ -8129,6 +8129,131 @@
             if(btn) btn.disabled = !(input.files && input.files.length > 0);
         }
 
+        // =====================================================================
+        // BWA PLAUSIBILITÄTS-CHECK – Selbstständige Validierung mit Eskalation
+        // =====================================================================
+        // Level: ok → alles plausibel, warning → verdächtig aber speicherbar, critical → blockiert
+        // Eskalation: Wenn critical → User muss manuell bestätigen oder Werte korrigieren
+        function validateParsedBwa(parsed, meta, matchedRows) {
+            var issues = [];
+            var u = parsed.umsatzerloese;
+            var w = parsed.wareneinsatz;
+            var r = parsed.rohertrag;
+            var gk = parsed.gesamtkosten;
+            var be = parsed.betriebsergebnis;
+            var ev = parsed.ergebnis_vor_steuern;
+            var pk = parsed.personalkosten;
+
+            // === CRITICAL CHECKS (blockieren das Speichern) ===
+
+            // 1. Umsatz = 0 aber andere Werte vorhanden → falsches Spalten-Mapping
+            if((u === 0 || u === undefined) && matchedRows && matchedRows.length > 5) {
+                issues.push({severity:'error', code:'UMSATZ_NULL', message:'Umsatzerlöse = 0 €, obwohl ' + matchedRows.length + ' Werte erkannt wurden. Möglicherweise wurde die falsche Spalte gelesen.'});
+            }
+
+            // 2. Rohertrag > Umsatz (mathematisch unmöglich bei positiven Wareneinsatz)
+            if(u !== undefined && u > 0 && r !== undefined && r > u * 1.05) {
+                issues.push({severity:'error', code:'ROHERTRAG_GT_UMSATZ', message:'Rohertrag (' + Math.round(r).toLocaleString('de-DE') + ' €) ist größer als Umsatz (' + Math.round(u).toLocaleString('de-DE') + ' €). Das ist rechnerisch nicht möglich.'});
+            }
+
+            // 3. Werte sehen nach Prozentzahlen aus (typisch: alle < 200)
+            var allSmall = (u !== undefined && Math.abs(u) < 200) && (r !== undefined && Math.abs(r) < 200) && (matchedRows && matchedRows.length > 5);
+            if(allSmall && u !== 0) {
+                issues.push({severity:'error', code:'PROZENT_STATT_EURO', message:'Alle Werte sind sehr klein (< 200). Möglicherweise wurden Prozentwerte statt Euro-Beträge gelesen.'});
+            }
+
+            // 4. Wareneinsatz positiv (sollte negativ sein in BWA)
+            if(w !== undefined && w > 1000) {
+                issues.push({severity:'error', code:'WARENEINSATZ_POSITIV', message:'Wareneinsatz ist positiv (' + Math.round(w).toLocaleString('de-DE') + ' €). In der BWA sollte er negativ sein (= Aufwand). Möglicherweise Vorzeichenfehler.'});
+            }
+
+            // === WARNING CHECKS (speicherbar, aber Hinweis) ===
+
+            // 5. Rohertragsmarge ungewöhnlich
+            if(u !== undefined && u > 0 && r !== undefined) {
+                var marge = (r / u) * 100;
+                if(marge < 15) {
+                    issues.push({severity:'warning', code:'MARGE_NIEDRIG', message:'Rohertragsmarge nur ' + marge.toFixed(1) + '%. Branchenüblich für Fahrrad: 30-50%. Bitte prüfen.'});
+                }
+                if(marge > 70) {
+                    issues.push({severity:'warning', code:'MARGE_HOCH', message:'Rohertragsmarge ' + marge.toFixed(1) + '%. Ungewöhnlich hoch für Fahrradhandel. Bitte prüfen.'});
+                }
+            }
+
+            // 6. Personalkosten = 0 (ungewöhnlich)
+            if(u !== undefined && u > 5000 && (pk === 0 || pk === undefined)) {
+                issues.push({severity:'warning', code:'PERSONAL_NULL', message:'Personalkosten = 0 €. Ungewöhnlich bei aktivem Geschäftsbetrieb.'});
+            }
+
+            // 7. Gesamtkosten = 0 aber Umsatz vorhanden
+            if(u !== undefined && u > 5000 && (gk === 0 || gk === undefined)) {
+                issues.push({severity:'warning', code:'KOSTEN_NULL', message:'Gesamtkosten = 0 €. Bitte prüfen ob alle Kostenarten erfasst wurden.'});
+            }
+
+            // 8. Ergebnis > Umsatz (unplausibel)
+            if(u !== undefined && u > 0 && ev !== undefined && Math.abs(ev) > u) {
+                issues.push({severity:'warning', code:'ERGEBNIS_GT_UMSATZ', message:'Ergebnis (' + Math.round(ev).toLocaleString('de-DE') + ' €) ist betragsmäßig größer als Umsatz. Bitte prüfen.'});
+            }
+
+            // 9. Format-Warnung bei unbekanntem Format
+            if(meta.format === 'unbekannt') {
+                issues.push({severity:'warning', code:'FORMAT_UNBEKANNT', message:'Dateiformat konnte nicht erkannt werden. Werte könnten falsch zugeordnet sein.'});
+            }
+
+            // 10. Monat/Jahr nicht erkannt
+            if(!meta.monat || !meta.jahr) {
+                issues.push({severity:'warning', code:'PERIODE_FEHLT', message:'Monat und/oder Jahr konnten nicht automatisch erkannt werden. Bitte manuell überprüfen.'});
+            }
+
+            // === CROSS-CHECK: Rohertrag = Umsatz + Wareneinsatz? ===
+            if(u !== undefined && w !== undefined && r !== undefined) {
+                var expected = u + w;
+                var diff = Math.abs(r - expected);
+                if(diff > 1 && diff > Math.abs(u) * 0.01) {
+                    issues.push({severity:'warning', code:'ROHERTRAG_DIFFERENZ', message:'Rohertrag (' + Math.round(r).toLocaleString('de-DE') + ' €) ≠ Umsatz + Wareneinsatz (' + Math.round(expected).toLocaleString('de-DE') + ' €). Differenz: ' + Math.round(diff).toLocaleString('de-DE') + ' €'});
+                }
+            }
+
+            // Determine level
+            var hasError = issues.some(function(i) { return i.severity === 'error'; });
+            var hasWarning = issues.some(function(i) { return i.severity === 'warning'; });
+            var level = hasError ? 'critical' : (hasWarning ? 'warning' : 'ok');
+
+            console.log('[BWA Validation]', level, issues.length + ' issues:', issues.map(function(i){return i.code;}).join(', '));
+            return { level: level, issues: issues };
+        }
+
+        // Render escalation UI for failed parsing
+        function renderBwaEscalation(level, meta, matchedRows, validation) {
+            var html = '';
+            if(level === 'critical' && (!matchedRows || matchedRows.length === 0)) {
+                // Total failure - no values recognized
+                html += '<div class="bg-red-50 border-2 border-red-300 rounded-lg p-4">';
+                html += '<p class="text-sm font-bold text-red-800 mb-2">🚨 Automatische Erkennung fehlgeschlagen</p>';
+                html += '<p class="text-xs text-red-700 mb-2">Format erkannt: <code>' + meta.format + '</code>, aber keine Werte konnten zugeordnet werden.</p>';
+                html += '<div class="bg-white rounded p-3 mb-3">';
+                html += '<p class="text-xs font-semibold text-gray-700 mb-1">Was tun?</p>';
+                html += '<ol class="text-xs text-gray-600 space-y-1 list-decimal pl-4">';
+                html += '<li>Prüfe ob die Datei eine gültige BWA ist (Excel mit Positionen wie Umsatzerlöse, Rohertrag etc.)</li>';
+                html += '<li>Gib die Werte unten <strong>manuell ein</strong> – die Formularfelder sind weiterhin aktiv</li>';
+                html += '<li>Falls das Format neu ist: Melde es dem HQ, damit der Parser erweitert werden kann</li>';
+                html += '</ol></div>';
+                html += '<details class="mt-2"><summary class="text-[10px] text-red-400 cursor-pointer">Technische Details für Support</summary>';
+                html += '<div class="mt-1 bg-red-100 rounded p-2 text-[10px] text-red-700 font-mono">';
+                html += 'Dateiname: ' + (meta.dateiname || '-') + '<br>';
+                html += 'Format: ' + meta.format + '<br>';
+                html += 'Typ: ' + (meta.typ || '-') + '<br>';
+                html += 'Monat: ' + (meta.monat || 'nicht erkannt') + '<br>';
+                html += 'Jahr: ' + (meta.jahr || 'nicht erkannt') + '<br>';
+                if(validation && validation.issues.length > 0) {
+                    html += 'Issues: ' + validation.issues.map(function(i){return i.code;}).join(', ');
+                }
+                html += '</div></details>';
+                html += '</div>';
+            }
+            return html;
+        }
+
         async function parseBwaWithAI() {
             var fileInput = document.getElementById('bwaFileInput');
             if(!fileInput || !fileInput.files || !fileInput.files[0]) return;
@@ -8313,20 +8438,31 @@
                     parsed.ergebnis_vor_steuern = parsed.betriebsergebnis + (parsed.zinsaufwand||0);
                 }
 
+                // ============================================================
+                // BWA VALIDIERUNG – Plausibilitäts-Check mit Eskalation
+                // ============================================================
+                var validation = validateParsedBwa(parsed, meta, matchedRows);
+                
                 statusEl.querySelector('.animate-spin').style.display = 'none';
 
                 if(matchedRows.length === 0) {
                     statusText.textContent = '⚠️ Keine BWA-Felder erkannt (Format: ' + meta.format + ')';
-                    resultEl.innerHTML = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-700">'
-                        + '<p class="font-semibold mb-1">Format erkannt: <code>' + meta.format + '</code></p>'
-                        + '<p>Aber keine Werte konnten zugeordnet werden. Bitte manuell eingeben.</p></div>';
+                    resultEl.innerHTML = renderBwaEscalation('critical', meta, [], validation);
                     resultEl.classList.remove('hidden');
                     if(parseBtn) parseBtn.disabled = false;
+                    window._lastParsedSummary = null; // Block saving
                     return;
                 }
 
+                // Show validation result in status
                 var periodInfo = meta.monat && meta.jahr ? ' (' + monatNamen[meta.monat] + ' ' + meta.jahr + ')' : '';
-                statusText.textContent = '✅ ' + matchedRows.length + ' Werte erkannt!' + periodInfo + ' [' + meta.format + ']';
+                if(validation.level === 'ok') {
+                    statusText.textContent = '✅ ' + matchedRows.length + ' Werte erkannt!' + periodInfo + ' [' + meta.format + ']';
+                } else if(validation.level === 'warning') {
+                    statusText.textContent = '⚠️ ' + matchedRows.length + ' Werte erkannt – Plausibilitätsprobleme!' + periodInfo;
+                } else {
+                    statusText.textContent = '🚨 ' + matchedRows.length + ' Werte erkannt – DATEN UNPLAUSIBEL!' + periodInfo;
+                }
 
                 // Fill form fields
                 var fieldMap = {
@@ -8359,14 +8495,35 @@
                     }
                 });
 
-                // Show results
+                // Show results with validation
                 var umsatz = parsed.umsatzerloese || 0;
                 var rohertrag = parsed.rohertrag || 0;
                 var rohertragPct = umsatz ? ((rohertrag / umsatz) * 100).toFixed(1) : 0;
                 var ergebnis = parsed.ergebnis_vor_steuern || parsed.betriebsergebnis || 0;
                 
-                resultEl.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-lg p-3">'
-                    + '<p class="text-xs font-semibold text-green-700 mb-2">✅ ' + filledCount + ' Werte erkannt · Format: <code>' + meta.format + '</code></p>'
+                var validationHtml = '';
+                if(validation.level !== 'ok') {
+                    var vBg = validation.level === 'warning' ? 'bg-yellow-50 border-yellow-300' : 'bg-red-50 border-red-300';
+                    var vIcon = validation.level === 'warning' ? '⚠️' : '🚨';
+                    var vColor = validation.level === 'warning' ? 'text-yellow-800' : 'text-red-800';
+                    validationHtml = '<div class="' + vBg + ' border rounded-lg p-3 mb-2">';
+                    validationHtml += '<p class="text-xs font-bold ' + vColor + ' mb-1">' + vIcon + ' Plausibilitäts-Check</p>';
+                    validation.issues.forEach(function(issue) {
+                        var iIcon = issue.severity === 'error' ? '❌' : '⚡';
+                        validationHtml += '<p class="text-[11px] ' + vColor + '">' + iIcon + ' ' + issue.message + '</p>';
+                    });
+                    if(validation.level === 'critical') {
+                        validationHtml += '<p class="text-[11px] font-semibold text-red-700 mt-2">→ Speichern blockiert. Bitte Datei prüfen oder Werte manuell korrigieren.</p>';
+                        validationHtml += '<button onclick="window._bwaForceOverride=true;document.getElementById(\'bwaSaveBtn\').disabled=false;this.parentElement.style.opacity=0.5;this.textContent=\'Override aktiv\';this.disabled=true;" class="mt-2 px-3 py-1 bg-red-100 text-red-700 text-[10px] font-semibold rounded hover:bg-red-200">🔓 Trotzdem speichern (auf eigenes Risiko)</button>';
+                    }
+                    validationHtml += '</div>';
+                }
+
+                resultEl.innerHTML = validationHtml
+                    + '<div class="' + (validation.level === 'ok' ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200') + ' border rounded-lg p-3">'
+                    + '<p class="text-xs font-semibold ' + (validation.level === 'ok' ? 'text-green-700' : 'text-gray-700') + ' mb-2">'
+                    + (validation.level === 'ok' ? '✅' : '📊') + ' ' + filledCount + ' Werte erkannt · Format: <code>' + meta.format + '</code>'
+                    + (validation.level === 'ok' ? ' · <span class="text-green-600">Plausibel ✓</span>' : '') + '</p>'
                     + '<div class="grid grid-cols-3 gap-2 text-xs">'
                     + '<div><span class="text-gray-500">Umsatz:</span><br><strong>' + umsatz.toLocaleString('de-DE') + ' €</strong></div>'
                     + '<div><span class="text-gray-500">Rohertrag:</span><br><strong>' + rohertragPct + '%</strong></div>'
@@ -8376,7 +8533,6 @@
                     + '<div class="mt-1 space-y-0.5 max-h-40 overflow-y-auto">' + matchedRows.map(function(m) { 
                         return '<div class="text-[10px] text-gray-500"><span class="text-gray-700">"' + m.label + '"</span> → <strong>' + m.key + '</strong> = ' + (typeof m.value === 'number' ? m.value.toLocaleString('de-DE') : m.value) + '</div>'; 
                     }).join('') + '</div></details>'
-                    + '<p class="text-[10px] text-gray-400 mt-2">⚠️ Bitte prüfe die Werte vor dem Speichern.</p>'
                     + '</div>';
                 resultEl.classList.remove('hidden');
                 
@@ -8384,11 +8540,241 @@
                 window._lastParsedDetails = daten && daten.length > 0 ? daten : [];
                 window._lastParsedFormat = meta.format;
                 window._lastParsedSummary = parsed;
+                window._lastValidation = validation;
+                window._bwaForceOverride = false;
+                
+                // === SELF-HEALING: Bei critical → KI-Retry-Loop starten ===
+                if(validation.level === 'critical') {
+                    var saveBtn = document.getElementById('bwaSaveBtn');
+                    if(saveBtn) { saveBtn.disabled = true; saveBtn.title = 'KI-Analyse läuft...'; }
+                    
+                    // Rohdaten für KI vorbereiten
+                    var rawData = window._bwaRawSheetData; // set during XLSX parse
+                    if(rawData && rawData.length > 0) {
+                        bwaAiRetryLoop(rawData, meta, validation, parsed, statusText, resultEl, parseBtn);
+                        return; // UI wird vom retry loop aktualisiert
+                    }
+                }
                 
                 if(parseBtn) parseBtn.disabled = false;
             });
         }
 
+        // =====================================================================
+        // BWA SELF-HEALING – KI-gestützte Datenextraktion mit Retry-Loop
+        // =====================================================================
+        // Wenn der regelbasierte Parser versagt, analysiert Claude die Rohdaten.
+        // Max 5 Versuche. Danach → HQ-Ticket.
+        
+        async function bwaAiRetryLoop(rawData, meta, initialValidation, initialParsed, statusText, resultEl, parseBtn) {
+            var MAX_RETRIES = 3;
+            var attempt = 0;
+            var lastValidation = initialValidation;
+            var lastParsed = initialParsed;
+            
+            // Prepare compact raw data (max 80 rows to stay within token limits)
+            var compactRaw = rawData.slice(0, 80).map(function(row, idx) {
+                var cells = {};
+                Object.keys(row).forEach(function(k) {
+                    if(row[k] !== null && row[k] !== undefined && row[k] !== '') cells[k] = row[k];
+                });
+                return cells;
+            }).filter(function(r) { return Object.keys(r).length > 0; });
+            
+            var issueDesc = lastValidation.issues.map(function(i) { return i.code + ': ' + i.message; }).join('\n');
+            
+            statusText.textContent = '🤖 KI-Analyse gestartet (Versuch 1/' + MAX_RETRIES + ')...';
+            
+            while(attempt < MAX_RETRIES) {
+                attempt++;
+                statusText.textContent = '🤖 KI analysiert Rohdaten (Versuch ' + attempt + '/' + MAX_RETRIES + ')...';
+                
+                try {
+                    var aiResult = await callBwaAiExtraction(compactRaw, meta, issueDesc, attempt);
+                    
+                    if(aiResult && aiResult.umsatzerloese !== undefined) {
+                        // Validate AI result
+                        var aiValidation = validateParsedBwa(aiResult, meta, []);
+                        
+                        if(aiValidation.level === 'ok' || aiValidation.level === 'warning') {
+                            // SUCCESS! Fill form with AI-extracted values
+                            statusText.textContent = '✅ KI hat plausible Werte extrahiert! (Versuch ' + attempt + ')';
+                            applyAiResultToForm(aiResult);
+                            window._lastParsedSummary = aiResult;
+                            window._lastValidation = aiValidation;
+                            
+                            renderBwaAiSuccess(resultEl, aiResult, aiValidation, attempt, meta);
+                            
+                            var saveBtn = document.getElementById('bwaSaveBtn');
+                            if(saveBtn) { saveBtn.disabled = false; saveBtn.title = ''; }
+                            if(parseBtn) parseBtn.disabled = false;
+                            return; // Done!
+                        } else {
+                            // AI result also failed validation
+                            issueDesc = aiValidation.issues.map(function(i) { return i.code + ': ' + i.message; }).join('\n');
+                            lastValidation = aiValidation;
+                            lastParsed = aiResult;
+                            console.warn('[BWA AI] Versuch ' + attempt + ' fehlgeschlagen, issues:', aiValidation.issues.map(function(i){return i.code;}).join(', '));
+                        }
+                    } else {
+                        console.warn('[BWA AI] Versuch ' + attempt + ': Keine gültigen Daten von KI erhalten');
+                        issueDesc += '\nKI-Versuch ' + attempt + ' lieferte keine verwertbaren Daten.';
+                    }
+                } catch(aiErr) {
+                    console.error('[BWA AI] Versuch ' + attempt + ' Error:', aiErr);
+                    issueDesc += '\nKI-Fehler: ' + (aiErr.message || 'Unbekannt');
+                }
+            }
+            
+            // All retries failed → User must enter manually
+            statusText.textContent = '⚠️ Bitte Werte manuell eingeben';
+            renderBwaEscalationFinal(resultEl, meta, lastValidation, MAX_RETRIES);
+            
+            // Allow manual entry
+            var saveBtn = document.getElementById('bwaSaveBtn');
+            if(saveBtn) { saveBtn.disabled = false; saveBtn.title = 'Manuelle Eingabe möglich'; }
+            if(parseBtn) parseBtn.disabled = false;
+        }
+        
+        // Call Claude API to extract BWA values from raw sheet data
+        async function callBwaAiExtraction(rawRows, meta, errorContext, attempt) {
+            var systemPrompt = 'Du bist ein BWA-Datenexperte. Du bekommst Rohdaten aus einer Excel-BWA-Datei als JSON.\n'
+                + 'Extrahiere die monatlichen BWA-Kennzahlen und gib NUR ein JSON-Objekt zurück.\n'
+                + 'Alle Werte in Euro. Kosten/Aufwand als NEGATIVE Zahlen.\n'
+                + 'WICHTIG: Unterscheide zwischen Monatswerten und kumulierten Jahreswerten. Wir brauchen die MONATSWERTE.\n'
+                + 'Antworte NUR mit dem JSON, keine Erklärung, keine Markdown-Backticks.';
+            
+            var userPrompt = 'BWA-Datei: ' + (meta.dateiname || 'unbekannt') + '\n'
+                + 'Erkanntes Format: ' + meta.format + '\n'
+                + 'Erwarteter Monat: ' + (meta.monat ? monatNamen[meta.monat] : '?') + ' ' + (meta.jahr || '?') + '\n\n';
+            
+            if(errorContext) {
+                userPrompt += 'BISHERIGE PROBLEME:\n' + errorContext + '\n\n';
+            }
+            
+            if(attempt > 1) {
+                userPrompt += 'Dies ist Versuch ' + attempt + '. Der vorherige Versuch hat nicht plausible Werte geliefert. '
+                    + 'Bitte analysiere die Spaltenstruktur besonders sorgfältig. '
+                    + 'Achte auf: Welche Spalte enthält Monatswerte vs. kumulierte Werte vs. Prozentwerte?\n\n';
+            }
+            
+            userPrompt += 'ROHDATEN (Zeilen mit Spalten A,B,C,... als JSON):\n' + JSON.stringify(rawRows, null, 0) + '\n\n'
+                + 'Extrahiere folgende Felder als JSON-Objekt:\n'
+                + '{"umsatzerloese": number, "wareneinsatz": number (negativ!), "rohertrag": number, '
+                + '"personalkosten": number (negativ), "raumkosten": number (negativ), "werbekosten": number (negativ), '
+                + '"kosten_warenabgabe": number (negativ), "abschreibungen": number (negativ), '
+                + '"sonstige_kosten": number (negativ), "gesamtkosten": number (negativ), '
+                + '"betriebsergebnis": number, "zinsaufwand": number (negativ), "ergebnis_vor_steuern": number, '
+                + '"fahrzeugkosten": number (negativ), "versicherungen": number (negativ), "instandhaltung": number (negativ)}';
+            
+            var response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: 'claude-sonnet-4-20250514',
+                    max_tokens: 1000,
+                    system: systemPrompt,
+                    messages: [{ role: 'user', content: userPrompt }]
+                })
+            });
+            
+            var data = await response.json();
+            var text = (data.content || []).map(function(b) { return b.text || ''; }).join('');
+            
+            // Parse JSON from response (strip any markdown fences)
+            text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+            console.log('[BWA AI] Raw response:', text.substring(0, 300));
+            
+            var result = JSON.parse(text);
+            return result;
+        }
+        
+        // Apply AI-extracted values to form fields
+        function applyAiResultToForm(aiResult) {
+            var fieldMap = {
+                umsatzerloese: 'bwaF_umsatz', wareneinsatz: 'bwaF_wareneinsatz',
+                personalkosten: 'bwaF_personal', raumkosten: 'bwaF_raum',
+                werbekosten: 'bwaF_werbe', kosten_warenabgabe: 'bwaF_warenabgabe',
+                abschreibungen: 'bwaF_abschreibung', sonstige_kosten: 'bwaF_sonstige',
+                zinsaufwand: 'bwaF_zins'
+            };
+            Object.keys(fieldMap).forEach(function(key) {
+                var val = aiResult[key];
+                if(val !== undefined && val !== null) {
+                    var el = document.getElementById(fieldMap[key]);
+                    if(el) {
+                        el.value = Math.round(val * 100) / 100;
+                        el.style.borderColor = '#8b5cf6';
+                        el.style.backgroundColor = '#f5f3ff';
+                    }
+                }
+            });
+        }
+        
+        // Render success UI after AI extraction
+        function renderBwaAiSuccess(resultEl, aiResult, validation, attempt, meta) {
+            var u = aiResult.umsatzerloese || 0;
+            var r = aiResult.rohertrag || 0;
+            var e = aiResult.ergebnis_vor_steuern || 0;
+            var marge = u ? ((r / u) * 100).toFixed(1) : 0;
+            
+            var warnHtml = '';
+            if(validation.level === 'warning') {
+                warnHtml = '<div class="bg-yellow-50 border border-yellow-200 rounded p-2 mb-2">';
+                validation.issues.forEach(function(i) {
+                    warnHtml += '<p class="text-[10px] text-yellow-700">⚡ ' + i.message + '</p>';
+                });
+                warnHtml += '</div>';
+            }
+            
+            resultEl.innerHTML = '<div class="bg-purple-50 border-2 border-purple-300 rounded-lg p-3">'
+                + '<p class="text-xs font-bold text-purple-800 mb-2">🤖 KI-Extraktion erfolgreich (Versuch ' + attempt + ')</p>'
+                + '<p class="text-[10px] text-purple-600 mb-2">Claude hat die Rohdaten analysiert und plausible Werte extrahiert.</p>'
+                + warnHtml
+                + '<div class="grid grid-cols-4 gap-2 text-xs">'
+                + '<div class="bg-white rounded p-2 text-center"><span class="text-gray-500 text-[10px]">Umsatz</span><br><strong>' + u.toLocaleString('de-DE') + ' €</strong></div>'
+                + '<div class="bg-white rounded p-2 text-center"><span class="text-gray-500 text-[10px]">Rohertrag</span><br><strong>' + marge + '%</strong></div>'
+                + '<div class="bg-white rounded p-2 text-center"><span class="text-gray-500 text-[10px]">Gesamtkosten</span><br><strong>' + (aiResult.gesamtkosten || 0).toLocaleString('de-DE') + ' €</strong></div>'
+                + '<div class="bg-white rounded p-2 text-center"><span class="text-gray-500 text-[10px]">Ergebnis</span><br><strong class="' + (e >= 0 ? 'text-green-600' : 'text-red-600') + '">' + e.toLocaleString('de-DE') + ' €</strong></div>'
+                + '</div>'
+                + '<p class="text-[10px] text-purple-400 mt-2">Format: ' + meta.format + ' · Felder sind lila markiert (🤖 = KI-extrahiert). Bitte vor dem Speichern prüfen.</p>'
+                + '</div>';
+            resultEl.classList.remove('hidden');
+        }
+        
+        // Render final escalation after all retries failed - USER must enter data manually
+        function renderBwaEscalationFinal(resultEl, meta, validation, attempts) {
+            var html = '<div class="bg-amber-50 border-2 border-amber-400 rounded-lg p-4">';
+            html += '<p class="text-sm font-bold text-amber-800 mb-2">⚠️ Automatische Erkennung nicht möglich</p>';
+            html += '<p class="text-xs text-amber-700 mb-3">Nach ' + attempts + ' KI-Versuchen konnten keine plausiblen Werte extrahiert werden. Das kann an einem ungewöhnlichen Format deiner BWA liegen.</p>';
+            
+            html += '<div class="bg-white rounded-lg p-3 mb-3 border border-amber-200">';
+            html += '<p class="text-xs font-bold text-gray-800 mb-2">👇 Bitte trage die Werte manuell ein:</p>';
+            html += '<ol class="text-xs text-gray-600 space-y-1.5 list-decimal pl-4">';
+            html += '<li>Öffne deine BWA-Datei in Excel</li>';
+            html += '<li>Übertrage die <strong>Monatswerte</strong> in die Felder unten (Umsatz, Wareneinsatz, Personalkosten, ...)</li>';
+            html += '<li>Klicke auf <strong>"BWA speichern"</strong></li>';
+            html += '</ol></div>';
+            
+            html += '<div class="bg-blue-50 rounded p-2 mb-2">';
+            html += '<p class="text-[11px] text-blue-700">💡 <strong>Tipp:</strong> Achte darauf, dass Kosten als <strong>negative Zahlen</strong> eingetragen werden (z.B. Wareneinsatz: -85000)</p>';
+            html += '</div>';
+            
+            if(validation && validation.issues.length > 0) {
+                html += '<details><summary class="text-[10px] text-amber-500 cursor-pointer">Technische Details für Support (' + validation.issues.length + ' Issues)</summary>';
+                html += '<div class="mt-1 bg-amber-100 rounded p-2 text-[10px] text-amber-800 font-mono">';
+                html += 'Datei: ' + (meta.dateiname || '-') + '<br>';
+                html += 'Format: ' + meta.format + '<br>';
+                html += 'KI-Versuche: ' + attempts + '<br>';
+                validation.issues.forEach(function(i) { html += i.code + ': ' + i.message + '<br>'; });
+                html += '</div></details>';
+            }
+            html += '</div>';
+            
+            resultEl.innerHTML = html;
+            resultEl.classList.remove('hidden');
+        }
+        
         function closeBwaUploadModal() { var c = document.getElementById('bwaUploadContainer'); if(c) c.remove(); }
 
         async function saveBwaData() {
@@ -8421,6 +8807,20 @@
 
             if(!umsatz && !wareneinsatz) { if(errEl){errEl.textContent='Bitte mindestens Umsatz oder Wareneinsatz eingeben.';errEl.style.display='block';} return; }
             if(umsatz === 0 && !window._lastParsedSummary) { if(errEl){errEl.textContent='Bitte zuerst eine BWA-Datei hochladen und analysieren lassen.';errEl.style.display='block';} return; }
+
+            // Plausibilitäts-Check vor dem Speichern
+            var saveValidation = window._lastValidation;
+            if(saveValidation && saveValidation.level === 'critical' && !window._bwaForceOverride) {
+                if(errEl){errEl.textContent='⚠️ Plausibilitäts-Check fehlgeschlagen: ' + saveValidation.issues.map(function(i){return i.message;}).join('; ');errEl.style.display='block';}
+                return;
+            }
+            // Quick sanity check even without prior validation
+            if(umsatz > 0 && rohertrag > umsatz * 1.5) {
+                if(!confirm('⚠️ Rohertrag (' + eur(rohertrag) + '€) ist deutlich höher als Umsatz (' + eur(umsatz) + '€). Das ist ungewöhnlich.\n\nTrotzdem speichern?')) return;
+            }
+            if(umsatz > 0 && Math.abs(ergebnis) > umsatz * 2) {
+                if(!confirm('⚠️ Ergebnis (' + eur(ergebnis) + '€) ist extrem hoch im Verhältnis zum Umsatz (' + eur(umsatz) + '€).\n\nTrotzdem speichern?')) return;
+            }
 
             if(btn) { btn.disabled=true; btn.textContent='Wird gespeichert...'; }
             try {
@@ -8525,6 +8925,8 @@
                 window._lastParsedDetails = null;
                 window._lastParsedFormat = null;
                 window._lastParsedSummary = null;
+                window._lastValidation = null;
+                window._bwaForceOverride = false;
 
                 closeBwaUploadModal();
                 await loadBwaList();
