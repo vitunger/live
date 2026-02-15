@@ -5528,14 +5528,40 @@
             demoDataSeeded = true;
             console.log('[DEMO] Seeding demo data...');
 
-            // 1. BWA Demo Data
+            // === HQ STANDORTE (drives Cockpit, Finanzen, Marketing, Standorte views) ===
+            var demoStandorte = [
+                {name:'vit:bikes Grafrath', inhaber:'Markus Keller', region:'süd', umsatzPlan:128000, umsatzIst:142500, rohertrag:38.2, leadPerf:111, leads:48, cpt:127, budget:2400, vororderStatus:'confirmed', vororderBikes:85, rabattQuote:3.8, verkauftKW:6, beratungenKW:14, offeneTickets:1, strategieStatus:'done', bwaAuffaellig:null},
+                {name:'vit:bikes Hamburg', inhaber:'Thomas Berger', region:'nord', umsatzPlan:185000, umsatzIst:167800, rohertrag:36.4, leadPerf:91, leads:62, cpt:142, budget:3200, vororderStatus:'confirmed', vororderBikes:120, rabattQuote:4.2, verkauftKW:8, beratungenKW:18, offeneTickets:2, strategieStatus:'done', bwaAuffaellig:null},
+                {name:'vit:bikes Berlin-Brandenburg', inhaber:'Patrick Henkel', region:'ost', umsatzPlan:156000, umsatzIst:138200, rohertrag:37.1, leadPerf:89, leads:54, cpt:155, budget:2800, vororderStatus:'confirmed', vororderBikes:95, rabattQuote:4.5, verkauftKW:5, beratungenKW:12, offeneTickets:1, strategieStatus:'done', bwaAuffaellig:null},
+                {name:'vit:bikes München Ost', inhaber:'Stefan Lang', region:'süd', umsatzPlan:210000, umsatzIst:228400, rohertrag:40.1, leadPerf:109, leads:78, cpt:118, budget:4000, vororderStatus:'confirmed', vororderBikes:145, rabattQuote:2.9, verkauftKW:11, beratungenKW:22, offeneTickets:0, strategieStatus:'done', bwaAuffaellig:null},
+                {name:'vit:bikes Erding', inhaber:'Michael Huber', region:'süd', umsatzPlan:95000, umsatzIst:88700, rohertrag:35.8, leadPerf:93, leads:32, cpt:165, budget:1800, vororderStatus:'pending', vororderBikes:55, rabattQuote:5.1, verkauftKW:4, beratungenKW:9, offeneTickets:1, strategieStatus:'partial', bwaAuffaellig:null},
+                {name:'vit:bikes Holzkirchen', inhaber:'Anna Maier', region:'süd', umsatzPlan:82000, umsatzIst:91200, rohertrag:39.5, leadPerf:111, leads:28, cpt:132, budget:1600, vororderStatus:'confirmed', vororderBikes:48, rabattQuote:3.2, verkauftKW:5, beratungenKW:11, offeneTickets:0, strategieStatus:'done', bwaAuffaellig:null},
+                {name:'vit:bikes Dessau', inhaber:'Frank Richter', region:'ost', umsatzPlan:68000, umsatzIst:52100, rohertrag:33.2, leadPerf:77, leads:18, cpt:198, budget:1200, vororderStatus:'pending', vororderBikes:35, rabattQuote:6.1, verkauftKW:2, beratungenKW:6, offeneTickets:3, strategieStatus:'pending', bwaAuffaellig:'Rohertrag unter 34%'},
+                {name:'vit:bikes Flensburg', inhaber:'Kai Hansen', region:'nord', umsatzPlan:74000, umsatzIst:68900, rohertrag:37.8, leadPerf:93, leads:24, cpt:148, budget:1400, vororderStatus:'confirmed', vororderBikes:42, rabattQuote:4.0, verkauftKW:3, beratungenKW:8, offeneTickets:1, strategieStatus:'done', bwaAuffaellig:null},
+                {name:'vit:bikes Ellerhoop', inhaber:'Jan Peters', region:'nord', umsatzPlan:58000, umsatzIst:61300, rohertrag:38.9, leadPerf:106, leads:21, cpt:125, budget:1100, vororderStatus:'confirmed', vororderBikes:38, rabattQuote:3.5, verkauftKW:3, beratungenKW:7, offeneTickets:0, strategieStatus:'done', bwaAuffaellig:null},
+                {name:'vit:bikes Gummersbach', inhaber:'Dirk Scholz', region:'west', umsatzPlan:72000, umsatzIst:58400, rohertrag:34.6, leadPerf:81, leads:22, cpt:175, budget:1300, vororderStatus:'pending', vororderBikes:40, rabattQuote:5.4, verkauftKW:3, beratungenKW:8, offeneTickets:2, strategieStatus:'partial', bwaAuffaellig:null},
+                {name:'vit:bikes Hanau', inhaber:'Sabine Wolf', region:'mitte', umsatzPlan:88000, umsatzIst:84600, rohertrag:37.3, leadPerf:96, leads:30, cpt:141, budget:1700, vororderStatus:'confirmed', vororderBikes:52, rabattQuote:4.1, verkauftKW:4, beratungenKW:10, offeneTickets:1, strategieStatus:'done', bwaAuffaellig:null},
+                {name:'vit:bikes Hann Münden', inhaber:'Ralf Braun', region:'mitte', umsatzPlan:52000, umsatzIst:39800, rohertrag:32.1, leadPerf:77, leads:14, cpt:210, budget:900, vororderStatus:'open', vororderBikes:28, rabattQuote:6.8, verkauftKW:1, beratungenKW:5, offeneTickets:2, strategieStatus:'pending', bwaAuffaellig:'Rohertrag unter 34%, Umsatz 77% unter Plan'},
+                {name:'vit:bikes Kalkar', inhaber:'Petra Engel', region:'west', umsatzPlan:45000, umsatzIst:47200, rohertrag:39.2, leadPerf:105, leads:16, cpt:130, budget:800, vororderStatus:'confirmed', vororderBikes:25, rabattQuote:3.0, verkauftKW:2, beratungenKW:5, offeneTickets:0, strategieStatus:'done', bwaAuffaellig:null},
+                {name:'vit:bikes Karlsdorf-Neuthard', inhaber:'Jens Fischer', region:'süd', umsatzPlan:64000, umsatzIst:71800, rohertrag:38.7, leadPerf:112, leads:25, cpt:122, budget:1200, vororderStatus:'confirmed', vororderBikes:38, rabattQuote:3.4, verkauftKW:4, beratungenKW:9, offeneTickets:0, strategieStatus:'done', bwaAuffaellig:null},
+                {name:'vit:bikes München West', inhaber:'Lisa Hartmann', region:'süd', umsatzPlan:175000, umsatzIst:192600, rohertrag:39.8, leadPerf:110, leads:68, cpt:115, budget:3500, vororderStatus:'confirmed', vororderBikes:130, rabattQuote:3.1, verkauftKW:9, beratungenKW:20, offeneTickets:1, strategieStatus:'done', bwaAuffaellig:null},
+                {name:'vit:bikes Münster', inhaber:'Wolfgang Krause', region:'west', umsatzPlan:98000, umsatzIst:87500, rohertrag:36.9, leadPerf:89, leads:35, cpt:152, budget:1900, vororderStatus:'confirmed', vororderBikes:58, rabattQuote:4.3, verkauftKW:5, beratungenKW:11, offeneTickets:1, strategieStatus:'partial', bwaAuffaellig:null},
+                {name:'vit:bikes Garching an der Alz', inhaber:'Hans Wimmer', region:'süd', umsatzPlan:55000, umsatzIst:62100, rohertrag:40.5, leadPerf:113, leads:20, cpt:118, budget:1000, vororderStatus:'confirmed', vororderBikes:32, rabattQuote:2.8, verkauftKW:3, beratungenKW:7, offeneTickets:0, strategieStatus:'done', bwaAuffaellig:null},
+                {name:'vit:bikes Limburg', inhaber:'Claudia Bauer', region:'mitte', umsatzPlan:62000, umsatzIst:54800, rohertrag:35.4, leadPerf:88, leads:19, cpt:168, budget:1100, vororderStatus:'pending', vororderBikes:34, rabattQuote:5.2, verkauftKW:2, beratungenKW:6, offeneTickets:1, strategieStatus:'pending', bwaAuffaellig:null},
+                {name:'vit:bikes Lohmar', inhaber:'Martin Schulte', region:'west', umsatzPlan:48000, umsatzIst:44200, rohertrag:37.6, leadPerf:92, leads:15, cpt:145, budget:850, vororderStatus:'confirmed', vororderBikes:28, rabattQuote:3.9, verkauftKW:2, beratungenKW:5, offeneTickets:0, strategieStatus:'done', bwaAuffaellig:null},
+                {name:'vit:bikes Lasten & Spezial', inhaber:'Bernd Otto', region:'nord', umsatzPlan:42000, umsatzIst:38600, rohertrag:41.2, leadPerf:92, leads:12, cpt:195, budget:750, vororderStatus:'confirmed', vororderBikes:18, rabattQuote:2.5, verkauftKW:1, beratungenKW:4, offeneTickets:0, strategieStatus:'done', bwaAuffaellig:null}
+            ];
+            // Add id field
+            demoStandorte.forEach(function(s,i){ s.id = 'demo-std-'+i; });
+            hqStandorte = demoStandorte;
+
+            // === STANDORT-VIEW BWA DATA ===
             bwaCache = [
                 {id:'demo-bwa-1', monat:1, jahr:2026, umsatzerloese:54938, wareneinsatz:-33580, rohertrag:21358, personalkosten:-13485, raumkosten:-4150, werbekosten:-2039, abschreibungen:-1567, sonstige_kosten:-61, gesamtkosten:-25342, betriebsergebnis:-3935, zinsaufwand:-550, ergebnis_vor_steuern:-4485, created_at:'2026-02-05', davon_fahrraeder:47380, davon_teile:6052, davon_service:3534, davon_skonti:-2028},
                 {id:'demo-bwa-2', monat:12, jahr:2025, umsatzerloese:42100, wareneinsatz:-26300, rohertrag:15800, personalkosten:-12800, raumkosten:-4150, werbekosten:-1200, abschreibungen:-1567, sonstige_kosten:-420, gesamtkosten:-22837, betriebsergebnis:-5237, zinsaufwand:-580, ergebnis_vor_steuern:-5817, created_at:'2026-01-10'}
             ];
-            if(typeof renderBwaList === 'function') renderBwaList();
 
-            // 2. Pipeline Demo Data
+            // === PIPELINE (Sales Kanban) ===
             verkaufData.pipeline = [
                 {id:1, name:'Thomas Meier', type:'E-MTB', budget:'4.500 €', stage:'termin', date:'14.02.2026', source:'Website', priority:'hoch', notes:'Probefahrt am Sa'},
                 {id:2, name:'Anna Schmidt', type:'City E-Bike', budget:'2.800 €', stage:'angebot', date:'12.02.2026', source:'Laden', priority:'mittel', notes:'Kalkhoff Entice'},
@@ -5546,23 +5572,20 @@
                 {id:7, name:'Klaus Richter', type:'E-Cargo', budget:'5.500 €', stage:'termin', date:'15.02.2026', source:'Messe', priority:'hoch', notes:'Riese & Müller'},
                 {id:8, name:'Maria Fischer', type:'E-MTB', budget:'4.000 €', stage:'lead', date:'14.02.2026', source:'Instagram', priority:'mittel', notes:'Haibike AllMtn'}
             ];
-            if(typeof renderKanban === 'function') renderKanban();
 
-            // 3. Verkauf Tracking Demo
-            if(typeof verkaufData !== 'undefined') {
-                verkaufData.mitarbeiter = [
-                    {name:'Sandra', plan_soll:10, gesamt_ist:6, verkauft:4, umsatz_kw:12400, umsatz_jahr:48200, vk_jahr:18, top_marke:'Kalkhoff', quote:67, avg_vk:2678},
-                    {name:'Thomas', plan_soll:8, gesamt_ist:5, verkauft:3, umsatz_kw:9800, umsatz_jahr:38500, vk_jahr:14, top_marke:'Orbea', quote:60, avg_vk:2750},
-                    {name:'Dirk', plan_soll:15, gesamt_ist:9, verkauft:6, umsatz_kw:18200, umsatz_jahr:72600, vk_jahr:26, top_marke:'Haibike', quote:67, avg_vk:2792},
-                    {name:'Max', plan_soll:5, gesamt_ist:3, verkauft:2, umsatz_kw:5600, umsatz_jahr:15800, vk_jahr:6, top_marke:'Simplon', quote:67, avg_vk:2633}
-                ];
-                verkaufData.monatsuebersicht = [
-                    {monat:'Januar',plan:57025,ist:57025,termine_soll:24,termine_ist:22,verkauft:18,quote:82,avg:3168},
-                    {monat:'Februar',plan:77734,ist:46000,termine_soll:32,termine_ist:23,verkauft:15,quote:65,avg:3067}
-                ];
-            }
+            // === VERKAUF TRACKING ===
+            verkaufData.mitarbeiter = [
+                {name:'Sandra', plan_soll:10, gesamt_ist:6, verkauft:4, umsatz_kw:12400, umsatz_jahr:48200, vk_jahr:18, top_marke:'Kalkhoff', quote:67, avg_vk:2678},
+                {name:'Thomas', plan_soll:8, gesamt_ist:5, verkauft:3, umsatz_kw:9800, umsatz_jahr:38500, vk_jahr:14, top_marke:'Orbea', quote:60, avg_vk:2750},
+                {name:'Dirk', plan_soll:15, gesamt_ist:9, verkauft:6, umsatz_kw:18200, umsatz_jahr:72600, vk_jahr:26, top_marke:'Haibike', quote:67, avg_vk:2792},
+                {name:'Max', plan_soll:5, gesamt_ist:3, verkauft:2, umsatz_kw:5600, umsatz_jahr:15800, vk_jahr:6, top_marke:'Simplon', quote:67, avg_vk:2633}
+            ];
+            verkaufData.monatsuebersicht = [
+                {monat:'Januar',plan:57025,ist:57025,termine_soll:24,termine_ist:22,verkauft:18,quote:82,avg:3168},
+                {monat:'Februar',plan:77734,ist:46000,termine_soll:32,termine_ist:23,verkauft:15,quote:65,avg:3067}
+            ];
 
-            // 4. Todos Demo
+            // === TODOS ===
             if(typeof todosData !== 'undefined' && Array.isArray(todosData)) {
                 todosData.push(
                     {id:'demo-t1', text:'Schaufenster Frühlingsdeko aufbauen', done:false, prio:'hoch', due:'2026-02-20', assignee:'Sandra'},
@@ -5572,7 +5595,7 @@
                 );
             }
 
-            // 5. Tickets Demo
+            // === TICKETS ===
             if(typeof ticketData !== 'undefined' && Array.isArray(ticketData)) {
                 ticketData.push(
                     {id:'demo-tk1', subject:'POS-System stürzt bei Ratenzahlung ab', status:'offen', prio:'hoch', erstellt:'2026-02-13', kat:'IT/Software'},
@@ -5581,7 +5604,7 @@
                 );
             }
 
-            // 6. Announcements Demo
+            // === ANNOUNCEMENTS ===
             if(typeof announcementsData !== 'undefined' && Array.isArray(announcementsData)) {
                 announcementsData.unshift(
                     {id:'demo-a1', title:'🆕 Neue Shimano EP801 Serie ab sofort verfügbar', content:'Die EP801 Motoren können ab sofort bestellt werden. Bitte aktualisiert eure Ausstellungsmodelle bis Ende Februar.', date:'2026-02-14', type:'produkt', wichtig:true},
@@ -5589,7 +5612,7 @@
                 );
             }
 
-            // 7. Kalender Demo Termine
+            // === KALENDER ===
             if(typeof kalTermine !== 'undefined' && Array.isArray(kalTermine)) {
                 kalTermine.push(
                     {id:'demo-k1', title:'Probefahrt Hr. Meier (E-MTB)', date:'2026-02-17', time:'10:00', endTime:'11:00', type:'termin', user:'Sandra', ort:'Laden'},
@@ -5600,7 +5623,16 @@
                 );
             }
 
-            // 8. Ideenboard Demo
+            // === HQ KALENDER TERMINE ===
+            hqKalTermine = [
+                {id:'demo-hk1', title:'Netzwerk-Meeting Q1', date:'2026-03-05', time:'10:00', type:'meeting', target:'alle', pflicht:true},
+                {id:'demo-hk2', title:'Shimano EP801 Webinar', date:'2026-02-24', time:'14:00', type:'schulung', target:'verkauf', pflicht:false},
+                {id:'demo-hk3', title:'BWA Deadline Januar', date:'2026-02-20', time:'23:59', type:'deadline', target:'buchhaltung', pflicht:true},
+                {id:'demo-hk4', title:'Orbea Launch Event München', date:'2026-03-12', time:'18:00', type:'event', target:'alle', pflicht:false},
+                {id:'demo-hk5', title:'Bosch Smart System Schulung', date:'2026-02-25', time:'09:00', type:'schulung', target:'werkstatt', pflicht:true}
+            ];
+
+            // === IDEENBOARD ===
             if(typeof ideenData !== 'undefined' && Array.isArray(ideenData) && ideenData.length === 0) {
                 ideenData.push(
                     {id:'demo-i1', title:'Leasing-Rechner auf Website einbauen', desc:'Kunden können direkt auf unserer Website die Leasingrate berechnen.', autor:'Sandra (Grafrath)', votes:8, status:'offen', date:'2026-02-01'},
@@ -5608,7 +5640,15 @@
                 );
             }
 
-            console.log('[DEMO] Demo data seeded ✅');
+            // === RE-RENDER ALL HQ VIEWS ===
+            try { renderHqCockpit(); } catch(e) { console.warn('[DEMO] cockpit render:', e); }
+            try { renderHqStandorte(); } catch(e) { console.warn('[DEMO] standorte render:', e); }
+            try { renderHqFinanzen(); } catch(e) { console.warn('[DEMO] finanzen render:', e); }
+            try { renderHqMarketing(); } catch(e) { console.warn('[DEMO] marketing render:', e); }
+            try { if(typeof renderBwaList === 'function') renderBwaList(); } catch(e) {}
+            try { if(typeof renderKanban === 'function') renderKanban(); } catch(e) {}
+
+            console.log('[DEMO] Demo data seeded ✅ (' + hqStandorte.length + ' Standorte)');
         }
 
         function clearDemoData() {
@@ -5617,10 +5657,14 @@
             removeDemoBanner();
             console.log('[DEMO] Clearing demo data...');
 
+            // Clear HQ Standorte → triggers empty state on re-render
+            hqStandorte = [];
+            hqKalTermine = [];
+
             // Clear BWA demo data
             if(typeof bwaCache !== 'undefined') bwaCache = bwaCache.filter(function(b){ return !String(b.id).startsWith('demo-'); });
             // Clear Pipeline demo data
-            if(typeof verkaufData !== 'undefined') { verkaufData.pipeline = []; }
+            if(typeof verkaufData !== 'undefined') { verkaufData.pipeline = []; verkaufData.mitarbeiter = []; verkaufData.monatsuebersicht = []; }
             // Clear Todos demo data  
             if(typeof todosData !== 'undefined' && Array.isArray(todosData)) todosData = todosData.filter(function(t){ return !String(t.id).startsWith('demo-'); });
             // Clear Tickets demo
@@ -5631,6 +5675,9 @@
             if(typeof kalTermine !== 'undefined' && Array.isArray(kalTermine)) kalTermine = kalTermine.filter(function(k){ return !String(k.id).startsWith('demo-'); });
             // Clear Ideen demo
             if(typeof ideenData !== 'undefined' && Array.isArray(ideenData)) ideenData = ideenData.filter(function(i){ return !String(i.id).startsWith('demo-'); });
+
+            // Re-render HQ views with real (empty) data
+            try { loadHqStandorte().then(function(){ renderHqCockpit(); renderHqStandorte(); renderHqFinanzen(); renderHqMarketing(); }); } catch(e) {}
 
             console.log('[DEMO] Demo data cleared ✅');
         }
@@ -9599,6 +9646,8 @@
         var hqStandorte = [];
 
         async function loadHqStandorte() {
+            // In demo mode, hqStandorte is already filled by seedDemoData
+            if(isDemoMode && hqStandorte.length > 0) return;
             try {
                 // Load standorte with their BWA and ticket data
                 var sResp = await sb.from('standorte').select('*').order('name');
