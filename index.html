@@ -7813,7 +7813,142 @@
         function parsePBwa(sheet){var rows=[];var range=XLSX.utils.decode_range(sheet['!ref']);var si=0;for(var r=4;r<=range.e.r;r++){var gruppe=gcv(sheet,r+1,2);var kontoNr=gcv(sheet,r+1,3);var konto=gcv(sheet,r+1,4);var aktBwa=gcv(sheet,r+1,5);var ytd=gcv(sheet,r+1,6);var ds=gcv(sheet,r+1,7);var hr=gcv(sheet,r+1,8);if(!kontoNr&&!konto)continue;var bez=normBez(konto||'');if(!bez)continue;var pw={};var mn=['jan','feb','mrz','apr','mai','jun','jul','aug','sep','okt','nov','dez'];var sm=0;for(var c=0;c<12;c++){var val=toNum(gcv(sheet,r+1,10+c));pw[mn[c]]=val||0;sm+=(val||0);}rows.push({kontengruppe:normBez(gruppe||''),konto:kontoNr?String(kontoNr):null,bezeichnung:bez,vorjahr_aktuell:toNum(aktBwa),vorjahr_ytd:toNum(ytd),vorjahr_durchschnitt:toNum(ds),vorjahr_hochrechnung:toNum(hr),jan:pw.jan,feb:pw.feb,mrz:pw.mrz,apr:pw.apr,mai:pw.mai,jun:pw.jun,jul:pw.jul,aug:pw.aug,sep:pw.sep,okt:pw.okt,nov:pw.nov,dez:pw.dez,summe:Math.round(sm*100)/100,sortierung:si++});}return rows;}
         function parsePUms(sheet){var rows=[];var range=XLSX.utils.decode_range(sheet['!ref']);var si=0;var mn=['jan','feb','mrz','apr','mai','jun','jul','aug','sep','okt','nov','dez'];for(var r=4;r<=range.e.r;r++){var marke=gcv(sheet,r+1,3);if(!marke||typeof marke!=='string'||marke==='0')continue;marke=normBez(marke);if(marke.toLowerCase().includes('planung')||marke.toLowerCase().includes('gesamt'))continue;var mw={};var sm=0;for(var c=0;c<12;c++){var val=toNum(gcv(sheet,r+1,4+c));mw[mn[c]]=val||0;sm+=(val||0);}if(sm===0)continue;rows.push({marke:marke,kategorie:'Fahrräder',jan:mw.jan,feb:mw.feb,mrz:mw.mrz,apr:mw.apr,mai:mw.mai,jun:mw.jun,jul:mw.jul,aug:mw.aug,sep:mw.sep,okt:mw.okt,nov:mw.nov,dez:mw.dez,summe:sm,sortierung:si++});}return rows;}
         function parsePPers(sheet){var rows=[];var range=XLSX.utils.decode_range(sheet['!ref']);for(var r=3;r<=range.e.r;r++){var nn=gcv(sheet,r+1,1);var vn=gcv(sheet,r+1,2);if(!nn||typeof nn!=='string')continue;if(nn.includes('Gesamt')||nn.includes('AB Zeile')||nn.includes('Nachname'))continue;var td=function(v){if(!v)return null;if(v instanceof Date)return v.toISOString().split('T')[0];return null;};rows.push({nachname:normBez(nn),vorname:normBez(vn||''),status:gcv(sheet,r+1,3)||'',standort_name:gcv(sheet,r+1,4)||'',abteilung:gcv(sheet,r+1,5)||'',position:gcv(sheet,r+1,7)||'',wochenarbeitszeit:toNum(gcv(sheet,r+1,8)),stundenlohn:toNum(gcv(sheet,r+1,9)),anstelldatum:td(gcv(sheet,r+1,10)),austrittsdatum:td(gcv(sheet,r+1,11)),fixgehalt:toNum(gcv(sheet,r+1,12)),gehalt_neu_1:toNum(gcv(sheet,r+1,13)),gehalt_neu_1_ab:td(gcv(sheet,r+1,14)),gehalt_neu_2:toNum(gcv(sheet,r+1,15)),gehalt_neu_2_ab:td(gcv(sheet,r+1,16))});}return rows;}
-        function parseFile(file,callback){var filename=file.name;var meta=extractMJ(filename);meta.dateiname=filename;var reader=new FileReader();if(filename.toLowerCase().endsWith('.csv')){reader.onload=function(e){var text=e.target.result;var header=text.split('\n')[0]||'';meta.format=header.includes('Bezeichnung')&&header.includes('EUR')?'csv_jahresuebersicht':'csv_unbekannt';meta.typ='jahr';var result={meta:meta,bwa_daten:[],bwa_jahr_daten:[],plan_bwa:[],plan_umsaetze:[],plan_personal:[]};if(meta.format==='csv_jahresuebersicht')result.bwa_jahr_daten=parseCsvJ(text,meta);callback(null,result);};reader.readAsText(file,'utf-8');}else{reader.onload=function(e){try{var wb=XLSX.read(e.target.result,{type:'array',cellDates:true});var sn=wb.SheetNames[0];var ws=wb.Sheets[sn];try{var rawJson=XLSX.utils.sheet_to_json(ws,{header:'A',defval:null,raw:true});window._bwaRawSheetData=rawJson;}catch(rErr){window._bwaRawSheetData=[];}var det=detectFmt(ws,filename);meta.format=det.format;meta.typ=det.typ;var result={meta:meta,bwa_daten:[],bwa_jahr_daten:[],plan_bwa:[],plan_umsaetze:[],plan_personal:[]};if(meta.format==='planung'){wb.SheetNames.forEach(function(s){var w=wb.Sheets[s];var sl=s.toLowerCase();if(sl.includes('bwa'))result.plan_bwa=parsePBwa(w);else if(sl.includes('umsätze')||sl.includes('umsaetze'))result.plan_umsaetze=parsePUms(w);else if(sl.includes('personal'))result.plan_personal=parsePPers(w);});meta.typ='plan';callback(null,result);return;}switch(meta.format){case 'datev_wertenachweis':result.bwa_daten=parseDWN(ws,meta,1);break;case 'datev_wertenachweis_offset':result.bwa_daten=parseDWN(ws,meta,3);break;case 'kompakt':case 'kompakt_datum':result.bwa_daten=parseKompakt(ws,meta);if(meta.format==='kompakt_datum'){var b1=ws['B1']?ws['B1'].v:null;if(b1 instanceof Date){if(!meta.monat)meta.monat=b1.getMonth()+1;if(!meta.jahr)meta.jahr=b1.getFullYear();}else if(typeof b1==='number'&&b1>40000){var dt=new Date((b1-25569)*86400000);if(!meta.monat)meta.monat=dt.getMonth()+1;if(!meta.jahr)meta.jahr=dt.getFullYear();}}break;case 'datev_erfolgsrechnung':result.bwa_daten=parseDER(ws,meta);break;case 'datev_vorjahresvergleich':result.bwa_daten=parseDVJ(ws,meta);break;case 'kompakt_jahr':case 'kompakt_jahr_datum':case 'datev_jahresuebersicht':var sr=0;for(var r=0;r<5;r++){var v=gcv(ws,r+1,1);if(v&&String(v).toLowerCase().includes('umsatzerlöse')){sr=r;break;}if(v&&String(v).toLowerCase().includes('bezeichnung')){sr=r+1;break;}}result.bwa_jahr_daten=parseJU(ws,meta,sr);break;default:result.bwa_daten=parseKompakt(ws,meta);}callback(null,result);}catch(err){callback(err,null);}};reader.readAsArrayBuffer(file);}};return{parseFile:parseFile,extractMonatJahr:extractMJ,BWA_ZEILEN:BWA_ZEILEN,KOMPAKT_MAP:KOMPAKT_MAP};})();
+        // SuSa Parser: Convert Summen- und Saldenliste to BWA using SKR03/04 account mapping
+        function parseSuSa(sheet, meta) {
+            var range = XLSX.utils.decode_range(sheet['!ref']);
+            var rows = [];
+            // Detect column layout: find header row with 'Konto', 'Beschriftung', 'Soll', 'Haben'
+            var hRow = -1, colKonto = -1, colBeschr = -1, colSollM = -1, colHabenM = -1, colSollK = -1, colHabenK = -1;
+            for (var hr = 0; hr < Math.min(5, range.e.r + 1); hr++) {
+                for (var hc = 0; hc <= range.e.c; hc++) {
+                    var hv = String(gcv(sheet, hr + 1, hc + 1) || '').toLowerCase();
+                    if (hv.includes('konto') && !hv.includes('kontokorrent') && colKonto < 0) colKonto = hc + 1;
+                    if ((hv.includes('beschriftung') || hv.includes('bezeichnung')) && colBeschr < 0) colBeschr = hc + 1;
+                }
+                if (colKonto >= 0 && colBeschr >= 0) { hRow = hr; break; }
+            }
+            if (hRow < 0) { console.log('[SuSa] Header not found'); return []; }
+
+            // Find month columns: look for 'Sep 2025\nSoll' pattern or 'Soll'/'Haben' in header
+            // The SuSa has: EB-Wert, S, H, Saldo, S, H, [Month] Soll, [Month] Haben, kum. Soll, kum. Haben
+            for (var hc2 = 0; hc2 <= range.e.c; hc2++) {
+                var hv2 = String(gcv(sheet, hRow + 1, hc2 + 1) || '');
+                var hv2l = hv2.toLowerCase();
+                // Find month-specific Soll column (contains month name + Soll)
+                if (hv2l.includes('soll') && !hv2l.includes('kum') && colSollM < 0) {
+                    // Check if this is after the EB/Saldo columns (position > 6)
+                    if (hc2 >= 6) { colSollM = hc2 + 1; }
+                }
+                if (hv2l.includes('haben') && !hv2l.includes('kum') && colHabenM < 0) {
+                    if (hc2 >= 6) { colHabenM = hc2 + 1; }
+                }
+                if (hv2l.includes('kum') && hv2l.includes('soll') && colSollK < 0) colSollK = hc2 + 1;
+                if (hv2l.includes('kum') && hv2l.includes('haben') && colHabenK < 0) colHabenK = hc2 + 1;
+                // Detect month from header text like "Sep 2025 \nSoll"
+                var mMatch = hv2.match(/(Jan|Feb|Mrz|Mär|Apr|Mai|Jun|Jul|Aug|Sep|Okt|Nov|Dez)\w*\s*(20\d{2})/i);
+                if (mMatch) {
+                    var mNames = {'jan':1,'feb':2,'mrz':3,'mär':3,'apr':4,'mai':5,'jun':6,'jul':7,'aug':8,'sep':9,'okt':10,'nov':11,'dez':12};
+                    var mKey = mMatch[1].substring(0, 3).toLowerCase();
+                    if (!meta.monat && mNames[mKey]) meta.monat = mNames[mKey];
+                    if (!meta.jahr) meta.jahr = parseInt(mMatch[2]);
+                }
+            }
+            // Fallback column detection if above didn't work
+            if (colSollM < 0) colSollM = 9;
+            if (colHabenM < 0) colHabenM = 10;
+            if (colSollK < 0) colSollK = 11;
+            if (colHabenK < 0) colHabenK = 12;
+
+            console.log('[SuSa] Header row ' + hRow + ', Konto col ' + colKonto + ', Beschr col ' + colBeschr + 
+                ', Soll/Haben M: ' + colSollM + '/' + colHabenM + ', K: ' + colSollK + '/' + colHabenK);
+
+            // Read all accounts
+            var accounts = {};
+            for (var r = hRow + 1; r <= range.e.r; r++) {
+                var konto = gcv(sheet, r + 1, colKonto);
+                if (!konto || typeof konto !== 'number') continue;
+                var k = Math.floor(konto);
+                if (k < 4000 || k >= 9000) continue; // Only revenue/expense accounts
+                var sollM = toNum(gcv(sheet, r + 1, colSollM)) || 0;
+                var habenM = toNum(gcv(sheet, r + 1, colHabenM)) || 0;
+                var sollK = toNum(gcv(sheet, r + 1, colSollK)) || 0;
+                var habenK = toNum(gcv(sheet, r + 1, colHabenK)) || 0;
+                accounts[k] = { sM: sollM, hM: habenM, sK: sollK, hK: habenK, 
+                    beschr: String(gcv(sheet, r + 1, colBeschr) || '') };
+            }
+            console.log('[SuSa] Found ' + Object.keys(accounts).length + ' accounts (4000-8999)');
+
+            // SKR03 account ranges → BWA positions
+            // Revenue accounts (4xxx): net = Haben - Soll (positive = revenue)
+            // Expense accounts (5xxx-7xxx): net = Soll - Haben (positive = cost)
+            function sumRange(from, to, isRevenue) {
+                var m = 0, k = 0;
+                Object.keys(accounts).forEach(function(kStr) {
+                    var kn = parseInt(kStr);
+                    if (kn >= from && kn < to) {
+                        if (isRevenue) { m += accounts[kn].hM - accounts[kn].sM; k += accounts[kn].hK - accounts[kn].sK; }
+                        else { m += accounts[kn].sM - accounts[kn].hM; k += accounts[kn].sK - accounts[kn].hK; }
+                    }
+                });
+                return { m: Math.round(m * 100) / 100, k: Math.round(k * 100) / 100 };
+            }
+
+            var umsatz = sumRange(4000, 5000, true);
+            var we = sumRange(5000, 5880, false); // Wareneinsatz without Bestandsveränderung
+            var bestV = sumRange(5880, 5900, true); // Bestandsveränderung (positive = increase)
+            var skonti = sumRange(5700, 5800, true); // Erhaltene Skonti (reduces cost)
+            var personal = sumRange(6000, 6200, false);
+            var raum = sumRange(6300, 6350, false);
+            var vers = sumRange(6400, 6500, false);
+            var fzg = sumRange(6500, 6600, false);
+            var werbung = sumRange(6600, 6700, false);
+            var warenabgabe = sumRange(6700, 6750, false);
+            var abschreibungen = sumRange(6900, 7000, false);
+            var reparaturen = sumRange(6460, 6480, false);
+            var sonstige_raw = sumRange(6200, 6300, false);
+            var sonstige_misc = sumRange(6750, 6900, false);
+            var zinsen = sumRange(7300, 7400, false);
+            var steuern = sumRange(7600, 7700, false);
+
+            var materialaufwand_m = we.m - skonti.m - bestV.m;
+            var materialaufwand_k = we.k - skonti.k - bestV.k;
+            var rohertrag_m = umsatz.m - materialaufwand_m;
+            var rohertrag_k = umsatz.k - materialaufwand_k;
+            var sonstige_m = sonstige_raw.m + sonstige_misc.m;
+            var sonstige_k = sonstige_raw.k + sonstige_misc.k;
+            var gesamtkosten_m = personal.m + raum.m + vers.m + fzg.m + werbung.m + warenabgabe.m + abschreibungen.m + reparaturen.m + sonstige_m;
+            var gesamtkosten_k = personal.k + raum.k + vers.k + fzg.k + werbung.k + warenabgabe.k + abschreibungen.k + reparaturen.k + sonstige_k;
+            var be_m = rohertrag_m - gesamtkosten_m;
+            var be_k = rohertrag_k - gesamtkosten_k;
+            var ergebnis_m = be_m - zinsen.m;
+            var ergebnis_k = be_k - zinsen.k;
+
+            var si = 0;
+            function addRow(zeile, gruppe, bez, wM, wK, summe) {
+                rows.push({ zeile: zeile, konto: null, kontengruppe: gruppe, bezeichnung: bez,
+                    wert: wM, wert_kumuliert: wK, ist_summenzeile: summe, ebene: summe ? 0 : 1, sortierung: si++ });
+            }
+            addRow(1020, 'Umsatzerlöse', 'Umsatzerlöse', umsatz.m, umsatz.k, true);
+            addRow(1060, 'Materialaufwand', 'Material-/Wareneinkauf Gesamt', -materialaufwand_m, -materialaufwand_k, true);
+            addRow(1080, 'Rohertrag', 'Rohertrag', rohertrag_m, rohertrag_k, true);
+            addRow(1140, 'Personalkosten', 'Personalkosten', -personal.m, -personal.k, true);
+            addRow(1160, 'Raumkosten', 'Raumkosten', -raum.m, -raum.k, true);
+            addRow(1175, 'Steuern/Versicherungen', 'Versicherungen/Beiträge', -vers.m, -vers.k, true);
+            addRow(1180, 'Fahrzeugkosten', 'Fahrzeugkosten (ohne Steuer)', -fzg.m, -fzg.k, true);
+            addRow(1190, 'Werbe-/Reisekosten', 'Werbe-/Reisekosten', -werbung.m, -werbung.k, true);
+            addRow(1200, 'Warenabgabekosten', 'Kosten Warenabgabe', -warenabgabe.m, -warenabgabe.k, true);
+            addRow(1210, 'Abschreibungen', 'Abschreibungen', -abschreibungen.m, -abschreibungen.k, true);
+            addRow(1220, 'Instandhaltung', 'Reparatur/Instandhaltung', -reparaturen.m, -reparaturen.k, true);
+            addRow(1240, 'Sonstige Kosten', 'Sonstige Kosten', -sonstige_m, -sonstige_k, true);
+            addRow(1250, 'Gesamtkosten', 'Gesamtkosten', -gesamtkosten_m, -gesamtkosten_k, true);
+            addRow(1270, 'Betriebsergebnis', 'Betriebsergebnis', be_m, be_k, true);
+            addRow(1280, 'Zinsen', 'Zinsaufwand', -zinsen.m, -zinsen.k, true);
+            addRow(1300, 'Ergebnis', 'Ergebnis vor Steuern', ergebnis_m, ergebnis_k, true);
+
+            console.log('[SuSa] BWA result: Umsatz=' + umsatz.m + ', Rohertrag=' + rohertrag_m + ', BE=' + be_m);
+            return rows;
+        }
+        function parseFile(file,callback){var filename=file.name;var meta=extractMJ(filename);meta.dateiname=filename;var reader=new FileReader();if(filename.toLowerCase().endsWith('.csv')){reader.onload=function(e){var text=e.target.result;var header=text.split('\n')[0]||'';meta.format=header.includes('Bezeichnung')&&header.includes('EUR')?'csv_jahresuebersicht':'csv_unbekannt';meta.typ='jahr';var result={meta:meta,bwa_daten:[],bwa_jahr_daten:[],plan_bwa:[],plan_umsaetze:[],plan_personal:[]};if(meta.format==='csv_jahresuebersicht')result.bwa_jahr_daten=parseCsvJ(text,meta);callback(null,result);};reader.readAsText(file,'utf-8');}else{reader.onload=function(e){try{var wb=XLSX.read(e.target.result,{type:'array',cellDates:true});var sn=wb.SheetNames[0];var ws=wb.Sheets[sn];try{var rawJson=XLSX.utils.sheet_to_json(ws,{header:'A',defval:null,raw:true});window._bwaRawSheetData=rawJson;}catch(rErr){window._bwaRawSheetData=[];}var det=detectFmt(ws,filename);meta.format=det.format;meta.typ=det.typ;var result={meta:meta,bwa_daten:[],bwa_jahr_daten:[],plan_bwa:[],plan_umsaetze:[],plan_personal:[]};if(meta.format==='planung'){wb.SheetNames.forEach(function(s){var w=wb.Sheets[s];var sl=s.toLowerCase();if(sl.includes('bwa'))result.plan_bwa=parsePBwa(w);else if(sl.includes('umsätze')||sl.includes('umsaetze'))result.plan_umsaetze=parsePUms(w);else if(sl.includes('personal'))result.plan_personal=parsePPers(w);});meta.typ='plan';callback(null,result);return;}switch(meta.format){case 'datev_wertenachweis':result.bwa_daten=parseDWN(ws,meta,1);break;case 'datev_wertenachweis_offset':result.bwa_daten=parseDWN(ws,meta,3);break;case 'kompakt':case 'kompakt_datum':result.bwa_daten=parseKompakt(ws,meta);if(meta.format==='kompakt_datum'){var b1=ws['B1']?ws['B1'].v:null;if(b1 instanceof Date){if(!meta.monat)meta.monat=b1.getMonth()+1;if(!meta.jahr)meta.jahr=b1.getFullYear();}else if(typeof b1==='number'&&b1>40000){var dt=new Date((b1-25569)*86400000);if(!meta.monat)meta.monat=dt.getMonth()+1;if(!meta.jahr)meta.jahr=dt.getFullYear();}}break;case 'datev_erfolgsrechnung':result.bwa_daten=parseDER(ws,meta);break;case 'datev_vorjahresvergleich':result.bwa_daten=parseDVJ(ws,meta);break;case 'susa':result.bwa_daten=parseSuSa(ws,meta);break;case 'kompakt_jahr':case 'kompakt_jahr_datum':case 'datev_jahresuebersicht':var sr=0;for(var r=0;r<5;r++){var v=gcv(ws,r+1,1);if(v&&String(v).toLowerCase().includes('umsatzerlöse')){sr=r;break;}if(v&&String(v).toLowerCase().includes('bezeichnung')){sr=r+1;break;}}result.bwa_jahr_daten=parseJU(ws,meta,sr);break;default:result.bwa_daten=parseKompakt(ws,meta);}callback(null,result);}catch(err){callback(err,null);}};reader.readAsArrayBuffer(file);}};return{parseFile:parseFile,extractMonatJahr:extractMJ,BWA_ZEILEN:BWA_ZEILEN,KOMPAKT_MAP:KOMPAKT_MAP};})();
 
         // =============================================
         // BWA SUPABASE FUNCTIONS
@@ -9268,54 +9403,74 @@
                 var planMonths = {};
                 var keyRows = {};
                 var keyPatterns = {
-                    umsatz: /umsatzerlöse\s*gesamt|^umsatzerlöse\s*$/i,
-                    wareneinsatz: /material.*wareneinkauf\s*gesamt|materialaufwand|^wareneinsatz$/i,
+                    umsatz: /umsatzerlöse\s*gesamt/i,
+                    wareneinsatz: /material.*wareneinkauf\s*gesamt|materialaufwand\s*gesamt/i,
                     rohertrag: /^rohertrag$/i,
-                    personalkosten: /personalkosten\s*gesamt|^personalkosten\s*$/i,
-                    raumkosten: /raumkosten\s*gesamt|^raumkosten\s*$/i,
+                    personalkosten: /personalkosten\s*gesamt/i,
+                    raumkosten: /raumkosten\s*gesamt/i,
                     versicherungen: /versicherungen.*beitr/i,
                     fahrzeugkosten: /fahrzeugkosten/i,
                     werbekosten: /werbe.*reise|marketing/i,
                     warenabgabe: /kosten\s*warenabgabe/i,
                     abschreibungen: /^abschreibung/i,
                     reparaturen: /reparatur.*instandhaltung/i,
-                    sonstige: /sonstige.*kosten/i,
+                    sonstige: /^sonstige\s*kosten$/i,
                     gesamtkosten: /^gesamtkosten$/i,
                     betriebsergebnis: /^betriebsergebnis$/i,
                     ergebnis: /vorsteuer.*ergebnis|ergebnis.*vor.*steuer/i,
-                    zins: /zinsaufwand\s*gesamt|^zinsaufwand$/i
+                    zins: /zinsaufwand\s*gesamt/i
+                };
+                // Fallback patterns for formats without "Gesamt" suffix (compact plans)
+                var fallbackPatterns = {
+                    umsatz: /^umsatzerlöse\s*$/i,
+                    wareneinsatz: /^materialaufwand\s*$|^wareneinsatz\s*$/i,
+                    personalkosten: /^personalkosten\s*$/i,
+                    raumkosten: /^raumkosten\s*$/i,
+                    sonstige: /sonstige.*kosten/i,
+                    zins: /^zinsaufwand\s*$/i
                 };
 
-                // Scan all rows for matching groups (prefer "Gesamt" summary rows)
+                function extractRowValues(rowIdx) {
+                    if(planFormat === 'monthly') {
+                        var vals = [];
+                        for(var em = 0; em < 12; em++) {
+                            var ev = rows[rowIdx][planStartCol + em];
+                            vals.push(typeof ev === 'number' ? ev : 0);
+                        }
+                        return { row: rowIdx, label: String(rows[rowIdx][gruppeCol] || '').trim(), values: vals };
+                    } else if(planFormat === 'yearly_total') {
+                        var yt = rows[rowIdx][yearlyTotalCol];
+                        yt = typeof yt === 'number' ? yt : 0;
+                        var v2 = [];
+                        if(seasonalPcts && seasonalPcts.length === 12) {
+                            for(var em2 = 0; em2 < 12; em2++) v2.push(yt * seasonalPcts[em2]);
+                        } else {
+                            for(var em3 = 0; em3 < 12; em3++) v2.push(yt / 12);
+                        }
+                        return { row: rowIdx, label: String(rows[rowIdx][gruppeCol] || '').trim(), values: v2, yearTotal: yt };
+                    }
+                }
+
+                // First pass: match "Gesamt" summary rows (preferred - most reliable)
                 var debugMatches = [];
                 for(var r = 4; r < rows.length; r++) {
                     var gruppe = String(rows[r][gruppeCol] || '').trim();
                     if(!gruppe) continue;
                     Object.keys(keyPatterns).forEach(function(key) {
                         if(keyPatterns[key].test(gruppe) && !keyRows[key]) {
-                            if(planFormat === 'monthly') {
-                                // Format A/B: Extract 12 monthly values from consecutive columns
-                                var vals = [];
-                                for(var m = 0; m < 12; m++) {
-                                    var v = rows[r][planStartCol + m];
-                                    vals.push(typeof v === 'number' ? v : 0);
-                                }
-                                keyRows[key] = { row: r, label: gruppe, values: vals };
-                                debugMatches.push(key + '→R' + r + ' "' + gruppe + '" Jan=' + vals[0]);
-                            } else if(planFormat === 'yearly_total') {
-                                // Format C: Single yearly total, distribute by seasonal %
-                                var yearTotal = rows[r][yearlyTotalCol];
-                                yearTotal = typeof yearTotal === 'number' ? yearTotal : 0;
-                                var vals2 = [];
-                                if(seasonalPcts && seasonalPcts.length === 12) {
-                                    for(var m2 = 0; m2 < 12; m2++) vals2.push(yearTotal * seasonalPcts[m2]);
-                                } else {
-                                    // Equal distribution if no seasonal data
-                                    for(var m3 = 0; m3 < 12; m3++) vals2.push(yearTotal / 12);
-                                }
-                                keyRows[key] = { row: r, label: gruppe, values: vals2, yearTotal: yearTotal };
-                                debugMatches.push(key + '→R' + r + ' total=' + yearTotal);
-                            }
+                            keyRows[key] = extractRowValues(r);
+                            debugMatches.push(key + '→R' + r + ' "' + gruppe + '" Jan=' + keyRows[key].values[0]);
+                        }
+                    });
+                }
+                // Second pass: fallback patterns for keys not yet found
+                for(var rf = 4; rf < rows.length; rf++) {
+                    var gruppef = String(rows[rf][gruppeCol] || '').trim();
+                    if(!gruppef) continue;
+                    Object.keys(fallbackPatterns).forEach(function(key) {
+                        if(fallbackPatterns[key].test(gruppef) && !keyRows[key]) {
+                            keyRows[key] = extractRowValues(rf);
+                            debugMatches.push(key + '(fb)→R' + rf + ' "' + gruppef + '" Jan=' + keyRows[key].values[0]);
                         }
                     });
                 }
@@ -9352,12 +9507,16 @@
                                 if(!gruppe2) continue;
                                 Object.keys(keyPatterns).forEach(function(key) {
                                     if(keyPatterns[key].test(gruppe2) && !keyRows[key]) {
-                                        var vals = [];
-                                        for(var m = 0; m < 12; m++) {
-                                            var vv = rows[r2][planStartCol + m];
-                                            vals.push(typeof vv === 'number' ? vv : 0);
-                                        }
-                                        keyRows[key] = { row: r2, label: gruppe2, values: vals };
+                                        keyRows[key] = extractRowValues(r2);
+                                    }
+                                });
+                            }
+                            for(var r2b = 4; r2b < rows.length; r2b++) {
+                                var gruppe2b = String(rows[r2b][gruppeCol] || '').trim();
+                                if(!gruppe2b) continue;
+                                Object.keys(fallbackPatterns).forEach(function(key) {
+                                    if(fallbackPatterns[key].test(gruppe2b) && !keyRows[key]) {
+                                        keyRows[key] = extractRowValues(r2b);
                                     }
                                 });
                             }
