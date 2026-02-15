@@ -12709,34 +12709,40 @@
                 var newUserId = signUpResp.data.user.id;
                 console.log('[CreateUser] Auth user created:', newUserId);
 
-                // Profil in users-Tabelle erstellen/aktualisieren
-                var profileData = {
-                    id: newUserId,
-                    email: email.trim().toLowerCase(),
+                // Kurz warten damit der DB-Trigger das Profil erstellen kann
+                await new Promise(function(resolve) { setTimeout(resolve, 1500); });
+
+                // Profil updaten (DB-Trigger hat es mit status='pending' erstellt)
+                var updateData = {
                     name: vorname.trim() + ' ' + nachname.trim(),
                     vorname: vorname.trim(),
                     nachname: nachname.trim(),
                     is_hq: isHqUser,
                     standort_id: isHqUser ? null : (standortId || null),
-                    status: 'aktiv',
-                    created_at: new Date().toISOString()
+                    status: 'aktiv'
                 };
 
-                var profileResp = await sb.from('users').upsert(profileData, {onConflict: 'id'}).select();
-                if(profileResp.error) {
-                    console.warn('[CreateUser] Profile upsert error:', profileResp.error);
-                    // Trotzdem weitermachen - DB-Trigger könnte das Profil schon erstellt haben
+                var profileResp = await sb.from('users').update(updateData).eq('id', newUserId).select();
+                console.log('[CreateUser] Profile update result:', profileResp.error ? profileResp.error.message : 'OK', profileResp.data);
+                
+                // Fallback: Wenn update fehlschlägt, versuche insert
+                if(profileResp.error || !profileResp.data || profileResp.data.length === 0) {
+                    console.log('[CreateUser] Update failed, trying insert...');
+                    var insertData = Object.assign({id: newUserId, email: email.trim().toLowerCase(), created_at: new Date().toISOString()}, updateData);
+                    var insResp = await sb.from('users').insert(insertData).select();
+                    console.log('[CreateUser] Profile insert result:', insResp.error ? insResp.error.message : 'OK');
                 }
-                console.log('[CreateUser] Profile created/updated');
 
                 // Rollen zuweisen
                 if(rollenIds.length > 0) {
+                    // Erst alte Rollen löschen (falls vorhanden)
+                    await sb.from('user_rollen').delete().eq('user_id', newUserId);
+                    
                     var rollenInserts = rollenIds.map(function(rid) {
                         return { user_id: newUserId, rollen_id: rid };
                     });
                     var rollenInsResp = await sb.from('user_rollen').insert(rollenInserts);
-                    if(rollenInsResp.error) console.warn('[CreateUser] Rollen insert error:', rollenInsResp.error);
-                    else console.log('[CreateUser] Rollen assigned:', selected);
+                    console.log('[CreateUser] Rollen insert result:', rollenInsResp.error ? rollenInsResp.error.message : 'OK (' + selected.join(', ') + ')');
                 }
 
                 // Passwort setzen (falls signUp ein confirmation-basiertes System nutzt)
