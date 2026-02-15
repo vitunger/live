@@ -267,6 +267,18 @@
             margin-left: 3px;
             vertical-align: middle;
         }
+        .demo-badge-tab {
+            background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+            color: white;
+            padding: 0px 5px;
+            border-radius: 6px;
+            font-size: 7px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-left: 3px;
+            vertical-align: middle;
+        }
         
         .locked-menu-item {
             opacity: 0.5;
@@ -5308,11 +5320,8 @@
                 if(btn.querySelector('.auto-beta-badge')) return;
                 var isDemo = BETA_TABS[tab]==='demo';
                 var badge = document.createElement('span');
-                badge.className = 'auto-beta-badge beta-badge-tab' + (isDemo ? ' demo-tab' : '');
+                badge.className = 'auto-beta-badge ' + (isDemo ? 'demo-badge-tab' : 'beta-badge-tab');
                 badge.textContent = isDemo ? 'DEMO' : 'BETA';
-                if(isDemo) {
-                    badge.style.background = 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)';
-                }
                 btn.appendChild(badge);
             });
             Object.keys(BETA_MODULES).forEach(function(viewName) {
