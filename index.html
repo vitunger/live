@@ -9085,41 +9085,87 @@
                 var r3 = rows[2] || [];
                 var r4 = rows[3] || [];
 
-                // Strategy A+B: scan for column where R3 = planYear and R4 is a Date with Jan of that year
-                for(var c = 0; c < r4.length; c++) {
-                    var yr = r3[c];
-                    var hdr = r4[c];
-                    if(yr == planYear || (typeof yr === 'number' && yr == planYear)) {
-                        // Check R4 for Jan date or serial number  
-                        var isDateJan = hdr instanceof Date && hdr.getMonth() === 0 && hdr.getFullYear() == planYear;
-                        var isSerialJan = typeof hdr === 'number' && hdr > 40000;
-                        // Check if date string like "2026-01-01"
-                        var isDateStr = typeof hdr === 'string' && hdr.includes(planYear) && (hdr.includes('01-01') || hdr.includes('Jan'));
-                        if(isDateJan || isSerialJan || isDateStr) {
+                // Helper: extract year from any value (number, Date, string, serial)
+                function extractYear(v) {
+                    if(v === null || v === undefined) return 0;
+                    if(typeof v === 'number' && v >= 2020 && v <= 2035) return v;
+                    if(v instanceof Date) return v.getFullYear();
+                    if(typeof v === 'string') {
+                        var m = v.match(/(20\d{2})/);
+                        if(m) return parseInt(m[1]);
+                    }
+                    return 0;
+                }
+                // Helper: check if value represents January of a given year
+                function isJanOfYear(v, yr) {
+                    if(!v) return false;
+                    if(v instanceof Date) return v.getMonth() === 0 && v.getFullYear() == yr;
+                    if(typeof v === 'number' && v > 40000) {
+                        // Excel serial date: convert to JS date
+                        var d = new Date((v - 25569) * 86400000);
+                        return d.getMonth() === 0 && d.getFullYear() == yr;
+                    }
+                    if(typeof v === 'string') {
+                        return (v.includes(String(yr)) && (v.includes('01-01') || v.includes('Jan') || v.includes('jan')));
+                    }
+                    return false;
+                }
+
+                console.log('[Plan Parser] R3 sample:', JSON.stringify(r3.slice(0, 50).map(function(v,i) { return v !== null ? i+':'+typeof v+'='+v : null; }).filter(Boolean)));
+                console.log('[Plan Parser] R4 sample:', JSON.stringify(r4.slice(0, 50).map(function(v,i) { return v !== null ? i+':'+typeof v+'='+(v instanceof Date ? v.toISOString() : v) : null; }).filter(Boolean)));
+
+                // Strategy A+B: scan for column where R3 = planYear and R4 is Jan of that year
+                for(var c = 0; c < Math.max(r3.length, r4.length); c++) {
+                    var yr = extractYear(r3[c]);
+                    if(yr == planYear) {
+                        if(isJanOfYear(r4[c], planYear)) {
                             planStartCol = c;
                             planFormat = 'monthly';
-                            console.log('[Plan Parser] Format A/B: Found plan year ' + planYear + ' at col ' + c);
+                            console.log('[Plan Parser] Format A/B: R3 year + R4 date match at col ' + c);
                             break;
                         }
-                        // Also accept if R4 has 'Jan' text
-                        if(typeof hdr === 'string' && hdr.toLowerCase().startsWith('jan')) {
+                        // R3 has year but R4 doesn't look like a date - check if R4 has 'Jan' text
+                        var r4v = String(r4[c] || '').toLowerCase();
+                        if(r4v.startsWith('jan') || r4v.includes('januar')) {
                             planStartCol = c;
                             planFormat = 'monthly';
+                            console.log('[Plan Parser] Format A/B: R3 year + R4 Jan text at col ' + c);
                             break;
                         }
                     }
                 }
 
-                // Fallback: scan R4 for dates with planYear anywhere
+                // Fallback: scan R4 for dates with planYear anywhere (R3 might be empty)
                 if(planStartCol < 0) {
                     for(var c2 = 0; c2 < r4.length; c2++) {
-                        var h = r4[c2];
-                        if(h instanceof Date && h.getFullYear() == planYear && h.getMonth() === 0) {
+                        if(isJanOfYear(r4[c2], planYear)) {
                             planStartCol = c2;
                             planFormat = 'monthly';
-                            console.log('[Plan Parser] Fallback: found plan year via date header at col ' + c2);
+                            console.log('[Plan Parser] Fallback: R4 date match at col ' + c2);
                             break;
                         }
+                    }
+                }
+
+                // Fallback 2: scan ALL header rows (R1-R4) for year + any adjacent Jan indicator
+                if(planStartCol < 0) {
+                    for(var c2b = 0; c2b < Math.max(r1.length, r2.length, r3.length, r4.length); c2b++) {
+                        for(var ri = 0; ri < 4; ri++) {
+                            var rv = [r1, r2, r3, r4][ri][c2b];
+                            if(extractYear(rv) == planYear) {
+                                // Check neighboring header rows for Jan date
+                                for(var ri2 = 0; ri2 < 4; ri2++) {
+                                    if(isJanOfYear([r1, r2, r3, r4][ri2][c2b], planYear)) {
+                                        planStartCol = c2b;
+                                        planFormat = 'monthly';
+                                        console.log('[Plan Parser] Deep fallback: year in R' + (ri+1) + ' + date in R' + (ri2+1) + ' at col ' + c2b);
+                                        break;
+                                    }
+                                }
+                                if(planStartCol >= 0) break;
+                            }
+                        }
+                        if(planStartCol >= 0) break;
                     }
                 }
 
