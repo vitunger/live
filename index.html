@@ -9169,6 +9169,48 @@
                     }
                 }
 
+                // VALIDATION: Verify planStartCol has actual numeric data (not empty/percentage column)
+                if(planStartCol >= 0 && planFormat === 'monthly') {
+                    // First determine gruppeCol early
+                    var earlyGruppeCol = 1;
+                    for(var egc = 0; egc < 5; egc++) {
+                        if(r4[egc] && String(r4[egc]).toLowerCase().includes('kontengruppe')) { earlyGruppeCol = egc; break; }
+                    }
+                    // Find any Umsatz row to test
+                    var testDataRow = -1;
+                    for(var tr = 4; tr < Math.min(rows.length, 50); tr++) {
+                        var tg = String(rows[tr] && rows[tr][earlyGruppeCol] || '');
+                        if(/umsatzerlöse/i.test(tg)) { testDataRow = tr; break; }
+                    }
+                    if(testDataRow >= 0) {
+                        var testVal = rows[testDataRow][planStartCol];
+                        console.log('[Plan Parser] Validation: R' + testDataRow + '[col' + planStartCol + '] = ' + testVal + ' (' + typeof testVal + ')');
+                        // If value is 0, null, or a tiny number (<10), the column is likely wrong
+                        if(!testVal || testVal === 0 || (typeof testVal === 'number' && Math.abs(testVal) < 10)) {
+                            console.log('[Plan Parser] Value looks wrong at planStartCol, checking neighbors...');
+                            for(var offset = -2; offset <= 2; offset++) {
+                                if(offset === 0) continue;
+                                var altCol = planStartCol + offset;
+                                if(altCol < 0) continue;
+                                var altVal = rows[testDataRow][altCol];
+                                console.log('[Plan Parser]   col' + altCol + ' = ' + altVal + ' (' + typeof altVal + ')');
+                                if(typeof altVal === 'number' && Math.abs(altVal) > 100) {
+                                    var monthCount = 0;
+                                    for(var mc = 0; mc < 12; mc++) {
+                                        var mv = rows[testDataRow][altCol + mc];
+                                        if(typeof mv === 'number' && mv !== 0) monthCount++;
+                                    }
+                                    if(monthCount >= 6) {
+                                        console.log('[Plan Parser] ✅ Adjusted planStartCol from ' + planStartCol + ' to ' + altCol + ' (' + monthCount + '/12 months with data)');
+                                        planStartCol = altCol;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Strategy C: scan R4 for "Plan 2026" text in a single column
                 if(planStartCol < 0) {
                     for(var c3 = 0; c3 < r4.length; c3++) {
@@ -9238,6 +9280,7 @@
                 };
 
                 // Scan all rows for matching groups (prefer "Gesamt" summary rows)
+                var debugMatches = [];
                 for(var r = 4; r < rows.length; r++) {
                     var gruppe = String(rows[r][gruppeCol] || '').trim();
                     if(!gruppe) continue;
@@ -9251,6 +9294,7 @@
                                     vals.push(typeof v === 'number' ? v : 0);
                                 }
                                 keyRows[key] = { row: r, label: gruppe, values: vals };
+                                debugMatches.push(key + '→R' + r + ' "' + gruppe + '" Jan=' + vals[0]);
                             } else if(planFormat === 'yearly_total') {
                                 // Format C: Single yearly total, distribute by seasonal %
                                 var yearTotal = rows[r][yearlyTotalCol];
@@ -9263,9 +9307,56 @@
                                     for(var m3 = 0; m3 < 12; m3++) vals2.push(yearTotal / 12);
                                 }
                                 keyRows[key] = { row: r, label: gruppe, values: vals2, yearTotal: yearTotal };
+                                debugMatches.push(key + '→R' + r + ' total=' + yearTotal);
                             }
                         }
                     });
+                }
+                console.log('[Plan Parser] Matched ' + Object.keys(keyRows).length + ' positions:', debugMatches.join(', '));
+                
+                // If no key rows matched, check if planStartCol is off by 1 
+                // (some files have a gap column between year header and data)
+                if(Object.keys(keyRows).length === 0 && planFormat === 'monthly') {
+                    console.log('[Plan Parser] No matches - trying offset. Col values at planStartCol:', 
+                        JSON.stringify(rows.slice(4, 20).map(function(r, i) { return 'R' + (i+5) + ':' + r[planStartCol]; })));
+                    // Check if planStartCol has no data but planStartCol+1 does
+                    var testRow = -1;
+                    for(var tr = 4; tr < Math.min(rows.length, 50); tr++) {
+                        var tg = String(rows[tr][gruppeCol] || '');
+                        if(/umsatzerlöse/i.test(tg)) { testRow = tr; break; }
+                    }
+                    if(testRow >= 0) {
+                        var v0 = rows[testRow][planStartCol];
+                        var v1 = rows[testRow][planStartCol + 1];
+                        var v_1 = rows[testRow][planStartCol - 1];
+                        console.log('[Plan Parser] Umsatz test row ' + testRow + ': col-1=' + v_1 + ', col0=' + v0 + ', col+1=' + v1);
+                        // If planStartCol has no data but +1 or -1 does, adjust
+                        if((!v0 || v0 === 0) && typeof v1 === 'number' && v1 > 100) {
+                            planStartCol += 1;
+                            console.log('[Plan Parser] Adjusted planStartCol +1 to ' + planStartCol);
+                        } else if((!v0 || v0 === 0) && typeof v_1 === 'number' && v_1 > 100) {
+                            planStartCol -= 1;
+                            console.log('[Plan Parser] Adjusted planStartCol -1 to ' + planStartCol);
+                        }
+                        // Re-scan with adjusted column
+                        if(planStartCol !== c) {
+                            for(var r2 = 4; r2 < rows.length; r2++) {
+                                var gruppe2 = String(rows[r2][gruppeCol] || '').trim();
+                                if(!gruppe2) continue;
+                                Object.keys(keyPatterns).forEach(function(key) {
+                                    if(keyPatterns[key].test(gruppe2) && !keyRows[key]) {
+                                        var vals = [];
+                                        for(var m = 0; m < 12; m++) {
+                                            var vv = rows[r2][planStartCol + m];
+                                            vals.push(typeof vv === 'number' ? vv : 0);
+                                        }
+                                        keyRows[key] = { row: r2, label: gruppe2, values: vals };
+                                    }
+                                });
+                            }
+                            console.log('[Plan Parser] After offset adjust: ' + Object.keys(keyRows).length + ' positions matched');
+                        }
+                    }
                 }
 
                 // Build planMonths
@@ -9289,8 +9380,17 @@
                 var validation = validatePlanData(planMonths, keyRows);
                 var matchCount = Object.keys(keyRows).length;
 
+                console.log('[Plan Parser] Validation:', validation.level, validation.issues.map(function(i) { return i.message; }).join('; '));
+                console.log('[Plan Parser] Plan months sample Jan:', JSON.stringify(planMonths[1]), 'Jul:', JSON.stringify(planMonths[7]));
+
                 if(validation.level === 'critical') {
-                    statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">🚨 ' + matchCount + ' Positionen erkannt, aber Plausibilitätsprobleme!</p>';
+                    statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">🚨 ' + matchCount + ' Positionen erkannt, aber Daten nicht plausibel: ' + validation.issues[0].message + '</p>';
+                    // Show what was found for debugging
+                    var debugHtml = '<details class="mt-2"><summary class="text-[10px] text-gray-400 cursor-pointer">Debug-Info</summary><div class="mt-1 text-[10px] text-gray-500 font-mono bg-gray-50 p-2 rounded">';
+                    debugHtml += 'planStartCol: ' + planStartCol + ', format: ' + planFormat + '<br>';
+                    Object.keys(keyRows).forEach(function(k) { debugHtml += k + ': R' + keyRows[k].row + ' Jan=' + Math.round(keyRows[k].values[0]) + '<br>'; });
+                    debugHtml += '</div></details>';
+                    statusEl.innerHTML += debugHtml;
                     // Try AI fallback
                     var rawJson2 = XLSX.utils.sheet_to_json(ws, { header: 'A', defval: null, raw: true });
                     startPlanAiFallback(rawJson2, file.name, statusEl, resultEl);
@@ -9419,57 +9519,21 @@
         }
 
         async function startPlanAiFallback(rawRows, filename, statusEl, resultEl) {
-            var MAX_RETRIES = 3;
-            var compact = rawRows.slice(0, 80).map(function(row) {
-                var cells = {};
-                Object.keys(row).forEach(function(k) {
-                    if(row[k] !== null && row[k] !== undefined && row[k] !== '') cells[k] = row[k];
-                });
-                return cells;
-            }).filter(function(r) { return Object.keys(r).length > 0; });
-
-            for(var attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-                statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-purple-600">🤖 KI analysiert Plan-Daten (Versuch ' + attempt + '/' + MAX_RETRIES + ')...</span></div>';
-
-                try {
-                    var response = await fetch('https://api.anthropic.com/v1/messages', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            model: 'claude-sonnet-4-20250514',
-                            max_tokens: 2000,
-                            system: 'Du bist ein Finanz-Datenexperte. Extrahiere monatliche Plan-BWA-Werte aus Excel-Rohdaten. Antwort NUR als JSON, keine Erklärung.',
-                            messages: [{ role: 'user', content: 'Datei: ' + filename + '\nPlanjahr: ' + planIstYear + '\n\nRohdaten (erste 80 Zeilen):\n' + JSON.stringify(compact) + '\n\nExtrahiere für jeden Monat (1-12) diese Werte:\n{"1":{"umsatz":number,"wareneinsatz":number(negativ),"rohertrag":number,"personalkosten":number(negativ),"raumkosten":number(negativ),"gesamtkosten":number(negativ),"ergebnis":number},"2":{...},...,"12":{...}}\n\nWICHTIG: Finde die Spalten für das Planjahr ' + planIstYear + '. Suche nach Spaltenüberschriften mit Datum ' + planIstYear + '. Monatliche Werte, NICHT kumuliert.' }]
-                        })
-                    });
-                    var data = await response.json();
-                    var text = (data.content || []).map(function(b) { return b.text || ''; }).join('');
-                    text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-                    var aiPlan = JSON.parse(text);
-
-                    // Validate AI result
-                    var planMonths = {};
-                    var totalU = 0;
-                    for(var m = 1; m <= 12; m++) {
-                        var pd = aiPlan[String(m)] || aiPlan[m] || {};
-                        planMonths[m] = { monat: m, umsatz: pd.umsatz || 0, wareneinsatz: pd.wareneinsatz || 0, rohertrag: pd.rohertrag || (pd.umsatz||0) + (pd.wareneinsatz||0), personalkosten: pd.personalkosten || 0, raumkosten: pd.raumkosten || 0, gesamtkosten: pd.gesamtkosten || 0, ergebnis: pd.ergebnis || 0 };
-                        totalU += planMonths[m].umsatz;
-                    }
-
-                    if(totalU > 10000) {
-                        statusEl.innerHTML = '<p class="text-xs text-purple-600 mt-2">🤖 KI hat Plan-Daten extrahiert! (Versuch ' + attempt + ')</p>';
-                        renderPlanPreview(resultEl, planMonths, { 'KI-extrahiert': { row: 0, label: 'Claude AI', values: [] } }, { level: 'ok', issues: [] }, planIstYear);
-                        window._parsedPlanMonths = planMonths;
-                        return;
-                    }
-                } catch(aiErr) {
-                    console.warn('[Plan AI] Attempt ' + attempt + ' failed:', aiErr);
-                }
-            }
-
-            // All attempts failed
+            // Note: Direct API calls to api.anthropic.com are blocked by CORS from browser.
+            // Instead of trying 3 times and failing, show helpful manual entry guidance immediately.
+            console.log('[Plan AI] CORS prevents direct API calls from browser. Showing manual entry.');
+            
             statusEl.innerHTML = '<p class="text-xs text-amber-600 mt-2">⚠️ Automatische Erkennung nicht möglich. Bitte trage die Plan-Werte manuell ein.</p>';
-            resultEl.innerHTML = '<div class="bg-amber-50 border border-amber-300 rounded-lg p-3 mt-2"><p class="text-xs text-amber-700">Die Plan-Datei konnte nicht automatisch gelesen werden. Nutze die manuelle Eingabe unten.</p></div>';
+            
+            var h = '<div class="bg-amber-50 border border-amber-300 rounded-lg p-3 mt-2">';
+            h += '<p class="text-xs font-bold text-amber-800 mb-2">Plan-Datei konnte nicht automatisch gelesen werden</p>';
+            h += '<p class="text-[11px] text-amber-700 mb-2">Mögliche Gründe: Formeln statt fester Werte, unbekanntes Layout, oder fehlende Kontengruppen-Spalte.</p>';
+            h += '<div class="bg-white rounded p-2 mb-2">';
+            h += '<p class="text-[11px] text-gray-700"><strong>💡 Tipp:</strong> Öffne die Datei in Excel, gehe zum BWA-Sheet und kopiere die Monatswerte für ' + planIstYear + ' in die manuelle Eingabe unten.</p>';
+            h += '</div>';
+            h += '<p class="text-[10px] text-amber-500">Datei: ' + filename + '</p>';
+            h += '</div>';
+            resultEl.innerHTML = h;
             resultEl.classList.remove('hidden');
         }
 
