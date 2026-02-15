@@ -9139,8 +9139,14 @@
             var h = '';
             h += '<div class="text-center py-8">';
             h += '<div class="max-w-lg mx-auto">';
+            // Year selector at top of upload screen
+            h += '<div class="flex items-center justify-center space-x-3 mb-6">';
+            h += '<h2 class="text-xl font-bold text-gray-800">Jahresplan '+planIstYear+' hochladen</h2>';
+            h += '<select onchange="planIstYear=parseInt(this.value);currentPlan=null;renderPlanIst()" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white">';
+            for(var yy=2027;yy>=2024;yy--) h += '<option value="'+yy+'"'+(yy===planIstYear?' selected':'')+'>'+yy+'</option>';
+            h += '</select>';
+            h += '</div>';
             h += '<div class="text-6xl mb-4">📋</div>';
-            h += '<h2 class="text-xl font-bold text-gray-800 mb-2">Jahresplan '+planIstYear+' hochladen</h2>';
             h += '<p class="text-sm text-gray-500 mb-6">Um den Plan/Ist-Vergleich nutzen zu können, lade zuerst deinen Jahresplan als Excel-Datei hoch. Das Portal liest die monatlichen Plan-Werte automatisch aus.</p>';
             h += '<div class="vit-card p-6 text-left">';
             h += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Schritt 1: Plan-Datei hochladen</p>';
@@ -9812,7 +9818,7 @@
             h += '<div class="flex items-center justify-between mb-4">';
             h += '<div class="flex items-center space-x-3"><h2 class="text-lg font-bold text-gray-800">Plan / Ist Vergleich</h2>';
             h += '<select id="planIstYearSel" onchange="planIstYear=parseInt(this.value);currentPlan=null;renderPlanIst()" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm">';
-            for(var yy=2026;yy>=2024;yy--) h += '<option value="'+yy+'"'+(yy===planIstYear?' selected':'')+'>'+yy+'</option>';
+            for(var yy=2027;yy>=2024;yy--) h += '<option value="'+yy+'"'+(yy===planIstYear?' selected':'')+'>'+yy+'</option>';
             h += '</select></div>';
             h += '<button onclick="currentPlan=null;renderPlanIst()" class="text-xs text-vit-orange font-semibold hover:underline">📄 Neuen Plan hochladen</button>';
             h += '</div>';
