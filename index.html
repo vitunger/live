@@ -9708,7 +9708,13 @@
         }
         async function updateIdeeStatus(ideeId, newStatus) {
             try {
-                await sb.from('ideen').update({status: newStatus}).eq('id', ideeId);
+                var resp = await sb.from('ideen').update({status: newStatus}).eq('id', ideeId).select();
+                if(resp.error) throw resp.error;
+                if(!resp.data || resp.data.length === 0) {
+                    alert('Status konnte nicht geändert werden – keine Berechtigung.');
+                    return;
+                }
+                showNotification('✅ Status geändert: ' + newStatus, 'success');
                 renderHqIdeen('all');
             } catch(err) { alert('Fehler: '+err.message); }
         }
