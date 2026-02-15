@@ -315,7 +315,7 @@
                     </div>
                     <div class="flex items-center justify-between">
                         <label class="flex items-center text-sm text-gray-600"><input type="checkbox" checked class="mr-2 rounded"> Angemeldet bleiben</label>
-                        <a href="#" onclick="alert('Passwort-Reset per E-Mail (Demo)')" class="text-sm text-vit-orange hover:underline">Passwort vergessen?</a>
+                        <a href="#" onclick="showPasswordReset()" class="text-sm text-vit-orange hover:underline">Passwort vergessen?</a>
                     </div>
                     <button type="submit" class="w-full py-3 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition">Anmelden</button>
                 </form>
@@ -1105,11 +1105,12 @@
                                 <button onclick="changeWeek(1)" class="p-2 rounded-lg border border-gray-300 hover:bg-gray-100">▶</button>
                             </div>
                             <div class="flex items-center space-x-3">
+                                <button onclick="openVerkaufEntryModal()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">+ Eintragen</button>
                                 <div class="text-right">
                                     <p class="text-xs text-gray-500">Monatsziel</p>
                                     <p class="font-bold text-gray-800">77.734 €</p>
                                 </div>
-                                <select id="weekSellerFilter" onchange="renderWeekView()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                <select id="weekSellerFilter" onchange="renderWeekViewFromDb()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
                                     <option value="all">Alle Verkaeufer</option>
                                     <option value="Sandra">Sandra</option>
                                     <option value="Thomas">Thomas</option>
@@ -1182,11 +1183,17 @@
                     <div id="vkTabAuswertung" class="vk-tab-content" style="display:none;">
                         <!-- Year KPIs -->
                         <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Jahresumsatz Plan</p><p class="text-2xl font-bold text-gray-800">1.167.689 €</p></div>
-                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Umsatz IST (YTD)</p><p class="text-2xl font-bold text-vit-orange">74.082 €</p></div>
-                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Verkaeufe gesamt</p><p class="text-2xl font-bold text-green-600">16</p></div>
-                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">VK-Quote YTD</p><p class="text-2xl font-bold text-blue-600">77%</p></div>
-                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Ø Verkaufspreis</p><p class="text-2xl font-bold text-purple-600">4.630 €</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Jahresumsatz Plan</p><p class="text-2xl font-bold text-gray-800" id="ausJahresPlan">—</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Umsatz IST (YTD)</p><p class="text-2xl font-bold text-vit-orange" id="ausUmsatzYTD">—</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Verkaeufe gesamt</p><p class="text-2xl font-bold text-green-600" id="ausVerkauft">0</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">VK-Quote YTD</p><p class="text-2xl font-bold text-blue-600" id="ausQuote">—</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Ø Verkaufspreis</p><p class="text-2xl font-bold text-purple-600" id="ausAvgPreis">—</p></div>
+                        </div>
+
+                        <!-- Umsatz-Verlauf Chart -->
+                        <div class="vit-card p-6 mb-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Umsatz-Verlauf 2026</h2>
+                            <div id="ausChartContainer" class="w-full" style="height:200px;position:relative;"></div>
                         </div>
 
                         <!-- Monthly Overview Table -->
@@ -1196,16 +1203,13 @@
                                 <table class="w-full text-sm">
                                     <thead><tr class="bg-gray-50">
                                         <th class="text-left py-2.5 px-3 font-semibold text-gray-600">Monat</th>
-                                        <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Umsatz Plan</th>
-                                        <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Umsatz Ist</th>
-                                        <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Differenz</th>
-                                        <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Termine Soll</th>
-                                        <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Termine Ist</th>
+                                        <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Beratungen</th>
                                         <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Verkauft</th>
                                         <th class="text-right py-2.5 px-3 font-semibold text-gray-600">VK-Quote</th>
+                                        <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Umsatz</th>
                                         <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Ø Preis</th>
                                     </tr></thead>
-                                    <tbody id="jahresTabelle"></tbody>
+                                    <tbody id="jahresTabelle"><tr><td colspan="6" class="text-center py-6 text-gray-400">Lade Daten...</td></tr></tbody>
                                 </table>
                             </div>
                         </div>
@@ -1213,31 +1217,8 @@
                         <!-- Top Sellers -->
                         <div class="vit-card p-6">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">Verkaeufer-Ranking 2026</h2>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div class="p-4 border-2 border-yellow-400 rounded-xl bg-yellow-50 text-center">
-                                    <p class="text-3xl mb-1">🥇</p>
-                                    <p class="font-bold text-gray-800">Sandra</p>
-                                    <p class="text-xl font-bold text-vit-orange">16.192 €</p>
-                                    <p class="text-xs text-gray-500">6 Verkaeufe · Quote: 100%</p>
-                                </div>
-                                <div class="p-4 border-2 border-gray-300 rounded-xl bg-gray-50 text-center">
-                                    <p class="text-3xl mb-1">🥈</p>
-                                    <p class="font-bold text-gray-800">Dirk</p>
-                                    <p class="text-xl font-bold text-vit-orange">36.629 €</p>
-                                    <p class="text-xs text-gray-500">6 Verkaeufe · Quote: 67%</p>
-                                </div>
-                                <div class="p-4 border-2 border-orange-300 rounded-xl bg-orange-50 text-center">
-                                    <p class="text-3xl mb-1">🥉</p>
-                                    <p class="font-bold text-gray-800">Thomas</p>
-                                    <p class="text-xl font-bold text-vit-orange">17.419 €</p>
-                                    <p class="text-xs text-gray-500">4 Verkaeufe · Quote: 80%</p>
-                                </div>
-                                <div class="p-4 border border-gray-200 rounded-xl text-center">
-                                    <p class="text-3xl mb-1">4</p>
-                                    <p class="font-bold text-gray-800">Max</p>
-                                    <p class="text-xl font-bold text-gray-500">3.813 €</p>
-                                    <p class="text-xs text-gray-500">0 Verkaeufe · Werkstatt</p>
-                                </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="ausRanking">
+                                <p class="text-sm text-gray-400 col-span-4 text-center py-4">Noch keine Daten erfasst.</p>
                             </div>
                         </div>
                     </div>
@@ -2054,58 +2035,10 @@
                                 <div class="vit-card p-6">
                                     <div class="flex items-center justify-between mb-4">
                                         <h2 class="text-lg font-semibold text-gray-800">BWA Ablage</h2>
-                                        <button onclick="document.getElementById('bwaUploadArea').classList.toggle('hidden')" class="px-3 py-1.5 bg-vit-orange text-white text-sm rounded-lg hover:opacity-90">+ Upload</button>
+                                        <button onclick="openBwaUploadModal()" class="px-3 py-1.5 bg-vit-orange text-white text-sm rounded-lg hover:opacity-90">+ Erfassen</button>
                                     </div>
-                                    <!-- Upload Area -->
-                                    <div id="bwaUploadArea" class="hidden mb-4 p-4 border-2 border-dashed border-vit-orange rounded-lg bg-orange-50">
-                                        <div class="text-center">
-                                            <p class="text-3xl mb-2">📤</p>
-                                            <p class="text-sm text-gray-600 mb-2">PDF hier ablegen oder</p>
-                                            <button onclick="alert('Upload-Simulation: BWA wurde hochgeladen!')" class="px-4 py-2 bg-vit-orange text-white text-sm rounded-lg hover:opacity-90">Datei auswaehlen</button>
-                                            <div class="mt-3 flex space-x-2">
-                                                <select class="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm">
-                                                    <option>Januar</option><option>Februar</option><option>Maerz</option><option>April</option><option>Mai</option><option>Juni</option><option>Juli</option><option>August</option><option>September</option><option>Oktober</option><option>November</option><option>Dezember</option>
-                                                </select>
-                                                <select class="px-2 py-1.5 border border-gray-300 rounded text-sm">
-                                                    <option>2026</option><option>2025</option><option>2024</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- 2026 -->
-                                    <div class="mb-4">
-                                        <button onclick="this.nextElementSibling.classList.toggle('hidden')" class="flex items-center justify-between w-full text-left p-2 bg-gray-100 rounded-lg hover:bg-gray-200">
-                                            <span class="font-semibold text-gray-700">📁 2026</span>
-                                            <span class="text-gray-400 text-xs">2 Dateien</span>
-                                        </button>
-                                        <div class="mt-2 space-y-1">
-                                            <button onclick="showBwaDetail('jan26')" class="bwa-file w-full flex items-center justify-between p-2.5 rounded-lg hover:bg-orange-50 text-left">
-                                                <div class="flex items-center space-x-3">
-                                                    <span class="text-red-500">📄</span>
-                                                    <div><p class="text-sm font-semibold text-gray-800">Januar 2026</p><p class="text-xs text-gray-500">Hochgeladen: 05.02.2026</p></div>
-                                                </div>
-                                                <span class="text-xs text-green-600">✓</span>
-                                            </button>
-                                            <button onclick="showBwaDetail('feb26')" class="bwa-file w-full flex items-center justify-between p-2.5 rounded-lg bg-orange-50 border border-vit-orange text-left">
-                                                <div class="flex items-center space-x-3">
-                                                    <span class="text-red-500">📄</span>
-                                                    <div><p class="text-sm font-semibold text-vit-orange">Januar 2026</p><p class="text-xs text-gray-500">Hochgeladen: 05.02.2026</p></div>
-                                                </div>
-                                                <span class="text-xs text-green-600">✓</span>
-                                            </button>
-                                            <div class="flex items-center p-2.5 text-gray-400"><span class="mr-3">📄</span><p class="text-sm">Maerz 2026 <span class="text-xs">(ausstehend)</span></p></div>
-                                        </div>
-                                    </div>
-                                    <!-- 2025 -->
-                                    <div>
-                                        <button onclick="this.nextElementSibling.classList.toggle('hidden')" class="flex items-center justify-between w-full text-left p-2 bg-gray-100 rounded-lg hover:bg-gray-200">
-                                            <span class="font-semibold text-gray-700">📁 2025</span>
-                                            <span class="text-gray-400 text-xs">12 Dateien</span>
-                                        </button>
-                                        <div class="hidden mt-2 space-y-1">
-                                            <button onclick="showBwaDetail('dez25')" class="bwa-file w-full flex items-center space-x-3 p-2.5 rounded-lg hover:bg-orange-50 text-left"><span class="text-red-500">📄</span><div><p class="text-sm font-semibold text-gray-800">Dezember 2025</p><p class="text-xs text-gray-500">08.01.2026</p></div></button>
-                                            <button onclick="showBwaDetail('nov25')" class="bwa-file w-full flex items-center space-x-3 p-2.5 rounded-lg hover:bg-orange-50 text-left"><span class="text-red-500">📄</span><div><p class="text-sm font-semibold text-gray-800">November 2025</p><p class="text-xs text-gray-500">06.12.2025</p></div></button>
-                                        </div>
+                                    <div id="bwaFileList" class="space-y-2">
+                                        <p class="text-sm text-gray-400 text-center py-4">Wird geladen...</p>
                                     </div>
                                 </div>
                             </div>
@@ -2113,43 +2046,30 @@
                             <div class="lg:col-span-2">
                                 <div class="vit-card p-6" id="bwaDisplay">
                                     <div class="flex items-center justify-between mb-4">
-                                        <h2 class="text-lg font-semibold text-gray-800" id="bwaTitle">BWA Januar 2026</h2>
+                                        <h2 class="text-lg font-semibold text-gray-800" id="bwaTitle">BWA auswaehlen</h2>
                                         <div class="flex space-x-2">
-                                            <button class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">📥 PDF</button>
-                                            <button class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">🖨 Drucken</button>
+                                            <button onclick="editSelectedBwa()" class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50" id="bwaEditBtn" style="display:none">✏️ Bearbeiten</button>
+                                            <button onclick="deleteBwa()" class="px-3 py-1.5 text-sm border border-red-300 text-red-500 rounded-lg hover:bg-red-50" id="bwaDeleteBtn" style="display:none">🗑️</button>
                                         </div>
                                     </div>
                                     <!-- KPI Summary -->
-                                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                                        <div class="p-4 bg-green-50 rounded-lg text-center"><p class="text-xs text-gray-500">Umsatz</p><p class="text-xl font-bold text-gray-800" id="bwaUmsatz">142.800 €</p><p class="text-xs text-green-600">+8% vs. VJ</p></div>
-                                        <div class="p-4 bg-blue-50 rounded-lg text-center"><p class="text-xs text-gray-500">Rohertrag</p><p class="text-xl font-bold text-gray-800" id="bwaRohertrag">52.400 €</p><p class="text-xs text-gray-500">Marge: 36.7%</p></div>
-                                        <div class="p-4 bg-orange-50 rounded-lg text-center"><p class="text-xs text-gray-500">Gesamtkosten</p><p class="text-xl font-bold text-gray-800" id="bwaKosten">44.200 €</p><p class="text-xs text-red-600">+3% vs. VJ</p></div>
-                                        <div class="p-4 bg-purple-50 rounded-lg text-center"><p class="text-xs text-gray-500">EBIT</p><p class="text-xl font-bold text-green-600" id="bwaEbit">8.200 €</p><p class="text-xs text-gray-500">Marge: 5.7%</p></div>
+                                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="bwaKpiGrid">
+                                        <div class="p-4 bg-green-50 rounded-lg text-center"><p class="text-xs text-gray-500">Umsatz</p><p class="text-xl font-bold text-gray-800" id="bwaKpiUmsatz">—</p><p class="text-xs text-gray-400" id="bwaKpiUmsatzVj">&nbsp;</p></div>
+                                        <div class="p-4 bg-blue-50 rounded-lg text-center"><p class="text-xs text-gray-500">Rohertrag</p><p class="text-xl font-bold text-gray-800" id="bwaKpiRohertrag">—</p><p class="text-xs text-gray-400" id="bwaKpiMarge">&nbsp;</p></div>
+                                        <div class="p-4 bg-orange-50 rounded-lg text-center"><p class="text-xs text-gray-500">Gesamtkosten</p><p class="text-xl font-bold text-gray-800" id="bwaKpiKosten">—</p><p class="text-xs text-gray-400" id="bwaKpiKostenVj">&nbsp;</p></div>
+                                        <div class="p-4 bg-purple-50 rounded-lg text-center"><p class="text-xs text-gray-500">Ergebnis</p><p class="text-xl font-bold text-gray-800" id="bwaKpiErgebnis">—</p><p class="text-xs text-gray-400" id="bwaKpiErgebnisMarge">&nbsp;</p></div>
                                     </div>
                                     <!-- BWA Table -->
                                     <div class="overflow-x-auto">
-                                        <table class="w-full text-sm">
-                                            <thead><tr class="bg-gray-50"><th class="text-left py-2 px-3 font-semibold text-gray-600">Position</th><th class="text-right py-2 px-3 font-semibold text-gray-600">Jan 2026</th><th class="text-right py-2 px-3 font-semibold text-gray-600">Plan</th><th class="text-right py-2 px-3 font-semibold text-gray-600">Abweichung</th><th class="text-right py-2 px-3 font-semibold text-gray-600">VJ 2025</th></tr></thead>
-                                            <tbody>
-                                                <tr class="border-b"><td class="py-2 px-3 font-semibold">Umsatzerloese</td><td class="text-right py-2 px-3">54.938</td><td class="text-right py-2 px-3 text-gray-400">30.770</td><td class="text-right py-2 px-3 text-green-600 font-semibold">+24.168</td><td class="text-right py-2 px-3 text-gray-400">40.187</td></tr>
-                                                <tr class="border-b"><td class="py-2 px-3 pl-6 text-gray-600">Fahrraeder 19%</td><td class="text-right py-2 px-3">47.380</td><td class="text-right py-2 px-3 text-gray-400">—</td><td class="text-right py-2 px-3">—</td><td class="text-right py-2 px-3 text-gray-400">—</td></tr>
-                                                <tr class="border-b"><td class="py-2 px-3 pl-6 text-gray-600">Teile &amp; Zubehoer</td><td class="text-right py-2 px-3">6.052</td><td class="text-right py-2 px-3 text-gray-400">—</td><td class="text-right py-2 px-3">—</td><td class="text-right py-2 px-3 text-gray-400">—</td></tr>
-                                                <tr class="border-b"><td class="py-2 px-3 pl-6 text-gray-600">Service / Reparatur</td><td class="text-right py-2 px-3">3.534</td><td class="text-right py-2 px-3 text-gray-400">—</td><td class="text-right py-2 px-3">—</td><td class="text-right py-2 px-3 text-gray-400">—</td></tr>
-                                                <tr class="border-b"><td class="py-2 px-3 pl-6 text-gray-600">Skonti</td><td class="text-right py-2 px-3 text-red-600">-2.028</td><td class="text-right py-2 px-3 text-gray-400">—</td><td class="text-right py-2 px-3">—</td><td class="text-right py-2 px-3 text-gray-400">—</td></tr>
-                                                <tr class="border-b bg-gray-50"><td class="py-2 px-3 font-semibold">Wareneinsatz</td><td class="text-right py-2 px-3 text-red-600">-33.580</td><td class="text-right py-2 px-3 text-gray-400">-18.645</td><td class="text-right py-2 px-3 text-red-600">-14.935</td><td class="text-right py-2 px-3 text-gray-400">-25.203</td></tr>
-                                                <tr class="border-b-2 border-gray-800 bg-blue-50"><td class="py-2.5 px-3 font-bold text-blue-800">Rohertrag</td><td class="text-right py-2.5 px-3 font-bold text-blue-800">21.357</td><td class="text-right py-2.5 px-3 font-bold">12.125</td><td class="text-right py-2.5 px-3 font-bold text-green-600">+9.232</td><td class="text-right py-2.5 px-3 text-gray-500 font-semibold">14.984</td></tr>
-                                                <tr class="border-b"><td class="py-2 px-3 font-semibold">Personalkosten</td><td class="text-right py-2 px-3 text-red-600">-13.485</td><td class="text-right py-2 px-3 text-gray-400">-12.202</td><td class="text-right py-2 px-3 text-red-600">-1.283</td><td class="text-right py-2 px-3 text-gray-400">-6.845</td></tr>
-                                                <tr class="border-b"><td class="py-2 px-3 font-semibold">Raumkosten</td><td class="text-right py-2 px-3 text-red-600">-4.150</td><td class="text-right py-2 px-3 text-gray-400">-4.195</td><td class="text-right py-2 px-3 text-green-600">+45</td><td class="text-right py-2 px-3 text-gray-400">-4.195</td></tr>
-                                                <tr class="border-b"><td class="py-2 px-3 font-semibold">Werbe-/Reisekosten</td><td class="text-right py-2 px-3 text-red-600">-2.039</td><td class="text-right py-2 px-3 text-gray-400">-635</td><td class="text-right py-2 px-3 text-red-600">-1.404</td><td class="text-right py-2 px-3 text-gray-400">-3.162</td></tr>
-                                                <tr class="border-b"><td class="py-2 px-3 font-semibold">Kosten Warenabgabe</td><td class="text-right py-2 px-3 text-red-600">-1.605</td><td class="text-right py-2 px-3 text-gray-400">-615</td><td class="text-right py-2 px-3 text-red-600">-990</td><td class="text-right py-2 px-3 text-gray-400">-804</td></tr>
-                                                <tr class="border-b"><td class="py-2 px-3 font-semibold">Abschreibungen</td><td class="text-right py-2 px-3 text-red-600">-1.567</td><td class="text-right py-2 px-3 text-gray-400">-1.522</td><td class="text-right py-2 px-3 text-red-600">-45</td><td class="text-right py-2 px-3 text-gray-400">-1.522</td></tr>
-                                                <tr class="border-b"><td class="py-2 px-3 font-semibold">Sonstige Kosten</td><td class="text-right py-2 px-3 text-red-600">-2.496</td><td class="text-right py-2 px-3 text-gray-400">-2.473</td><td class="text-right py-2 px-3 text-red-600">-23</td><td class="text-right py-2 px-3 text-gray-400">-2.473</td></tr>
-                                                <tr class="bg-gray-50 border-t-2"><td class="py-2.5 px-3 font-bold">Gesamtkosten</td><td class="text-right py-2.5 px-3 font-bold text-red-600">-25.342</td><td class="text-right py-2.5 px-3 font-bold text-gray-500">-21.067</td><td class="text-right py-2.5 px-3 font-bold text-red-600">-4.275</td><td class="text-right py-2.5 px-3 text-gray-500 font-semibold">-21.067</td></tr>
-                                                <tr class="border-b"><td class="py-2 px-3 font-semibold">Betriebsergebnis</td><td class="text-right py-2 px-3 font-bold text-red-600">-3.935</td><td class="text-right py-2 px-3 text-gray-400">-6.083</td><td class="text-right py-2 px-3 text-green-600 font-semibold">+2.148</td><td class="text-right py-2 px-3 text-gray-400">-6.083</td></tr>
-                                                <tr class="border-b"><td class="py-2 px-3 font-semibold">Zinsaufwand</td><td class="text-right py-2 px-3 text-red-600">-550</td><td class="text-right py-2 px-3 text-gray-400">-1.151</td><td class="text-right py-2 px-3 text-green-600">+601</td><td class="text-right py-2 px-3 text-gray-400">-1.151</td></tr>
-                                                <tr class="bg-red-50 border-t-2 border-gray-800"><td class="py-3 px-3 font-bold text-red-800 text-base">Ergebnis vor Steuern</td><td class="text-right py-3 px-3 font-bold text-red-800 text-base">-4.485</td><td class="text-right py-3 px-3 font-bold text-gray-500">-7.006</td><td class="text-right py-3 px-3 font-bold text-green-600 text-base">+2.521</td><td class="text-right py-3 px-3 text-gray-500 font-semibold">-7.006</td></tr>
-                                            </tbody>
+                                        <table class="w-full text-sm" id="bwaDetailTable">
+                                            <thead><tr class="bg-gray-50"><th class="text-left py-2 px-3 font-semibold text-gray-600">Position</th><th class="text-right py-2 px-3 font-semibold text-gray-600">IST</th><th class="text-right py-2 px-3 font-semibold text-gray-600">Plan</th><th class="text-right py-2 px-3 font-semibold text-gray-600">Abweichung</th><th class="text-right py-2 px-3 font-semibold text-gray-600">VJ</th></tr></thead>
+                                            <tbody id="bwaDetailBody"><tr><td colspan="5" class="text-center py-8 text-gray-400">Waehle links eine BWA aus oder erfasse neue Daten.</td></tr></tbody>
                                         </table>
+                                    </div>
+                                    <!-- 12-Monats-Verlauf -->
+                                    <div class="mt-6 pt-4 border-t border-gray-200" id="bwaTrendSection" style="display:none">
+                                        <h3 class="font-semibold text-gray-800 mb-3">📈 12-Monats-Verlauf</h3>
+                                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" id="bwaTrendCards"></div>
                                     </div>
                                 </div>
                             </div>
@@ -2742,29 +2662,29 @@
                         <div id="ticketCreate" class="hidden vit-card p-5 mb-4">
                             <h3 class="font-semibold text-gray-800 mb-3">Neues Support-Ticket erstellen</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                                <select class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                    <option value="">Kategorie waehlen...</option>
-                                    <option>IT / Systeme</option>
-                                    <option>Einkauf / Lieferanten</option>
-                                    <option>Marketing / Ads</option>
-                                    <option>Buchhaltung / BWA</option>
-                                    <option>Werkstatt / Technik</option>
-                                    <option>Sonstiges</option>
+                                <select id="ticketCatInput" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                    <option value="allgemein">Kategorie waehlen...</option>
+                                    <option value="it">IT / Systeme</option>
+                                    <option value="einkauf">Einkauf / Lieferanten</option>
+                                    <option value="marketing">Marketing / Ads</option>
+                                    <option value="buchhaltung">Buchhaltung / BWA</option>
+                                    <option value="werkstatt">Werkstatt / Technik</option>
+                                    <option value="sonstiges">Sonstiges</option>
                                 </select>
-                                <select class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                    <option value="">Prioritaet...</option>
-                                    <option>🔴 Hoch – Betrieb eingeschraenkt</option>
-                                    <option>🟡 Mittel – Wichtig, aber kein Stillstand</option>
-                                    <option>🟢 Niedrig – Frage / Wunsch</option>
+                                <select id="ticketPrioInput" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                    <option value="mittel">Prioritaet...</option>
+                                    <option value="dringend">🔴 Hoch – Betrieb eingeschraenkt</option>
+                                    <option value="mittel">🟡 Mittel – Wichtig, aber kein Stillstand</option>
+                                    <option value="niedrig">🟢 Niedrig – Frage / Wunsch</option>
                                 </select>
                             </div>
-                            <input type="text" placeholder="Betreff..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3">
-                            <textarea placeholder="Beschreibe dein Problem oder deine Frage moeglichst genau..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3" rows="4"></textarea>
+                            <input id="ticketTitelInput" type="text" placeholder="Betreff..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3">
+                            <textarea id="ticketBeschreibungInput" placeholder="Beschreibe dein Problem oder deine Frage moeglichst genau..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3" rows="4"></textarea>
                             <div class="flex items-center justify-between">
-                                <span class="text-xs text-gray-400">Wird an Zoho Desk uebermittelt</span>
+                                <span class="text-xs text-gray-400">Wird im Portal gespeichert</span>
                                 <div class="flex space-x-2">
                                     <button onclick="document.getElementById('ticketCreate').classList.add('hidden')" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Abbrechen</button>
-                                    <button onclick="document.getElementById('ticketCreate').classList.add('hidden');alert('Ticket #GR-2026-008 erstellt! Du erhaeltst eine Bestaetigung per E-Mail.')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Ticket erstellen</button>
+                                    <button onclick="submitTicketForm()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Ticket erstellen</button>
                                 </div>
                             </div>
                         </div>
@@ -2900,7 +2820,7 @@
                             <textarea placeholder="Nachricht..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3" rows="4"></textarea>
                             <div class="flex justify-end space-x-2">
                                 <button onclick="document.getElementById('inboxCompose').classList.add('hidden')" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Abbrechen</button>
-                                <button onclick="sendInboxMsg()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Senden</button>
+                                <button onclick="sendInboxMsg()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90"'>2019+t(2019ticket_comment_send2019)+2019</button>
                             </div>
                         </div>
 
@@ -2976,7 +2896,7 @@
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
                                 </button>
                                 <input type="text" id="channelInput" placeholder="Nachricht schreiben..." class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-vit-orange" onkeydown="if(event.key==='Enter')sendChannelMsg()">
-                                <button onclick="sendChannelMsg()" class="px-4 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Senden</button>
+                                <button onclick="sendChannelMsg()" class="px-4 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90"'>2019+t(2019ticket_comment_send2019)+2019</button>
                             </div>
                         </div>
                     </div>
@@ -4541,16 +4461,16 @@
                 <!-- ===== TODO VIEW ===== -->
                 <div id="todoView" class="view" style="display: none;">
                     <div class="flex items-center justify-between mb-6">
-                        <h1 class="h1-headline text-gray-800">AUFGABEN</h1>
+                        <h1 class="h1-headline text-gray-800" data-i18n="h_todos">AUFGABEN</h1>
                         <button class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90" onclick="document.getElementById('todoNewModal').classList.remove('hidden')">+ Neue Aufgabe</button>
                     </div>
 
                     <!-- KPI -->
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-gray-800" id="todoKpiOffen">5</p><p class="text-xs text-gray-500">Offen</p></div>
-                        <div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-vit-orange" id="todoKpiHeute">2</p><p class="text-xs text-gray-500">Fällig heute</p></div>
-                        <div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-red-500" id="todoKpiUeber">1</p><p class="text-xs text-gray-500">Überfällig</p></div>
-                        <div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-green-600" id="todoKpiDone">12</p><p class="text-xs text-gray-500">Erledigt (KW)</p></div>
+                        <div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-gray-800" id="todoKpiOffen">5</p><p class="text-xs text-gray-500" id="todoKpiOffenLabel" data-i18n="todo_open">Offen</p></div>
+                        <div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-vit-orange" id="todoKpiHeute">2</p><p class="text-xs text-gray-500" id="todoKpiHeuteLabel" data-i18n="todo_today">F&auml;llig heute</p></div>
+                        <div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-red-500" id="todoKpiUeber">1</p><p class="text-xs text-gray-500" id="todoKpiUeberLabel" data-i18n="todo_overdue">&Uuml;berf&auml;llig</p></div>
+                        <div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-green-600" id="todoKpiDone">12</p><p class="text-xs text-gray-500" id="todoKpiDoneLabel" data-i18n="todo_done">Erledigt (KW)</p></div>
                     </div>
 
                     <!-- Filter -->
@@ -5119,7 +5039,7 @@
                     <div id="kommandoTabDokumente" class="kommando-tab-content" style="display:none;">
                         <div class="flex items-center justify-between mb-4">
                             <p class="text-sm text-gray-500">Netzwerk-weite Dokumente: Richtlinien, Vorlagen, Schulungen, Vertraege.</p>
-                            <button class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90" onclick="alert('Dokument hochladen (Demo)')">+ Dokument hochladen</button>
+                            <button class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90" onclick="openDokUploadModal()">+ Dokument hochladen</button>
                         </div>
                         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4" id="hqDokKpis"></div>
                         <div class="flex space-x-2 mb-4">
@@ -5623,6 +5543,41 @@
             document.getElementById('loginPassword').focus();
         }
 
+        // === PASSWORD RESET ===
+        function showPasswordReset() {
+            var html = '<div id="pwResetOverlay" onclick="closePwReset()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
+            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:28px;width:420px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">Passwort zuruecksetzen</h3><button onclick="closePwReset()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
+            html += '<p class="text-sm text-gray-500 mb-4">Gib deine E-Mail-Adresse ein. Du erhaeltst einen Link zum Zuruecksetzen deines Passworts.</p>';
+            html += '<input id="pwResetEmail" type="email" class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm mb-3" placeholder="deine@email.de">';
+            html += '<div id="pwResetMsg" style="display:none" class="text-sm rounded-lg p-3 mb-3"></div>';
+            html += '<button id="pwResetBtn" onclick="submitPwReset()" class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Link senden</button>';
+            html += '<button onclick="closePwReset()" class="w-full py-2.5 mt-2 bg-gray-100 text-gray-600 rounded-lg font-semibold text-sm hover:bg-gray-200">Zurueck zum Login</button>';
+            html += '</div></div>';
+            var c = document.createElement('div'); c.id = 'pwResetContainer'; c.innerHTML = html; document.body.appendChild(c);
+        }
+        function closePwReset() { var c = document.getElementById('pwResetContainer'); if(c) c.remove(); }
+        async function submitPwReset() {
+            var email = (document.getElementById('pwResetEmail') || {}).value;
+            var msg = document.getElementById('pwResetMsg');
+            var btn = document.getElementById('pwResetBtn');
+            if (!email || !email.includes('@')) { msg.className = 'text-sm rounded-lg p-3 mb-3 bg-red-50 border border-red-200 text-red-600'; msg.textContent = 'Bitte gib eine gueltige E-Mail ein.'; msg.style.display = 'block'; return; }
+            btn.disabled = true; btn.textContent = 'Wird gesendet...';
+            try {
+                var resp = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+                if (resp.error) throw resp.error;
+                msg.className = 'text-sm rounded-lg p-3 mb-3 bg-green-50 border border-green-200 text-green-700';
+                msg.textContent = 'Falls ein Account mit dieser E-Mail existiert, wurde ein Reset-Link gesendet. Pruefe deinen Posteingang.';
+                msg.style.display = 'block';
+                btn.textContent = 'Gesendet \u2713'; btn.disabled = true;
+            } catch (e) {
+                msg.className = 'text-sm rounded-lg p-3 mb-3 bg-red-50 border border-red-200 text-red-600';
+                msg.textContent = 'Fehler: ' + e.message;
+                msg.style.display = 'block';
+                btn.disabled = false; btn.textContent = 'Link senden';
+            }
+        }
+
         // === REGISTRATION ===
         function showRegistration() {
             var loginForm = document.querySelector('#loginScreen form');
@@ -5790,6 +5745,8 @@
             if(currentRole === 'hq') { switchViewMode('hq'); } else { showView('home'); }
             // Check for pending approvals (HQ + GF only)
             checkPendingApprovals();
+            // Check BWA deadlines and create reminders
+            checkBwaDeadlines();
         }
 
         async function checkPendingApprovals() {
@@ -5860,6 +5817,17 @@
         }
 
         async function checkSession() {
+            // Detect password recovery from reset link
+            var hash = window.location.hash;
+            if (hash && hash.includes('type=recovery')) {
+                // Supabase will auto-set session from hash
+                var resp = await sb.auth.getSession();
+                if (resp.data.session) {
+                    sbUser = resp.data.session.user;
+                    showChangePasswordModal();
+                    return;
+                }
+            }
             var resp = await sb.auth.getSession();
             if(resp.data.session && resp.data.session.user) {
                 sbUser = resp.data.session.user;
@@ -5868,6 +5836,46 @@
                     await loadModulStatus();
                     enterApp();
                 } catch(e) { console.warn('Auto-login failed:', e); }
+            }
+        }
+
+        function showChangePasswordModal() {
+            var html = '<div id="changePwOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
+            html += '<div style="background:white;border-radius:16px;padding:28px;width:420px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">\uD83D\uDD12 '+t('pw_change_title')+'</h3></div>';
+            html += '<p class="text-sm text-gray-500 mb-4">'+t('pw_change_desc')+'</p>';
+            html += '<input id="newPw1" type="password" class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm mb-3" placeholder="'+t('pw_change_new')+'">';
+            html += '<input id="newPw2" type="password" class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm mb-3" placeholder="'+t('pw_change_repeat')+'">';
+            html += '<div id="changePwMsg" style="display:none" class="text-sm rounded-lg p-3 mb-3"></div>';
+            html += '<button id="changePwBtn" onclick="submitNewPassword()" class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">'+t('pw_change_save')+'</button>';
+            html += '</div></div>';
+            var c = document.createElement('div'); c.id = 'changePwContainer'; c.innerHTML = html; document.body.appendChild(c);
+        }
+
+        async function submitNewPassword() {
+            var pw1 = (document.getElementById('newPw1') || {}).value;
+            var pw2 = (document.getElementById('newPw2') || {}).value;
+            var msg = document.getElementById('changePwMsg');
+            var btn = document.getElementById('changePwBtn');
+            if (!pw1 || pw1.length < 6) { msg.className='text-sm rounded-lg p-3 mb-3 bg-red-50 border border-red-200 text-red-600'; msg.textContent='Mindestens 6 Zeichen.'; msg.style.display='block'; return; }
+            if (pw1 !== pw2) { msg.className='text-sm rounded-lg p-3 mb-3 bg-red-50 border border-red-200 text-red-600'; msg.textContent='Passwoerter stimmen nicht ueberein.'; msg.style.display='block'; return; }
+            btn.disabled = true; btn.textContent = 'Wird gespeichert...';
+            try {
+                var resp = await sb.auth.updateUser({ password: pw1 });
+                if (resp.error) throw resp.error;
+                msg.className='text-sm rounded-lg p-3 mb-3 bg-green-50 border border-green-200 text-green-700';
+                msg.textContent='Passwort erfolgreich geaendert! Du wirst weitergeleitet...';
+                msg.style.display='block';
+                // Clear hash and redirect
+                window.location.hash = '';
+                setTimeout(function() {
+                    var c = document.getElementById('changePwContainer'); if(c) c.remove();
+                    checkSession();
+                }, 1500);
+            } catch(e) {
+                msg.className='text-sm rounded-lg p-3 mb-3 bg-red-50 border border-red-200 text-red-600';
+                msg.textContent='Fehler: '+e.message; msg.style.display='block';
+                btn.disabled=false; btn.textContent='Passwort speichern';
             }
         }
 
@@ -6408,13 +6416,143 @@
             if(el) el.style.display='block';
             var btn=document.querySelector('.vk-tab-btn[data-tab="'+tabName+'"]');
             if(btn) btn.className='vk-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
-            if(tabName==='woche') renderWeekView();
+            if(tabName==='woche') loadWeekFromDb();
             if(tabName==='pipeline') renderPipeline();
             if(tabName==='auswertung') renderJahresTabelle();
         }
 
         function changeWeek(dir) {
-            alert('KW-Wechsel: Im echten Produkt werden hier die Daten der jeweiligen Woche geladen.');
+            if(!currentWeekStart) { currentWeekStart = getMonday(new Date()); }
+            var d = new Date(currentWeekStart);
+            d.setDate(d.getDate() + dir * 7);
+            currentWeekStart = d;
+            loadWeekFromDb();
+        }
+        function getMonday(d) { var day = d.getDay(); var diff = d.getDate() - day + (day === 0 ? -6 : 1); var m = new Date(d); m.setDate(diff); m.setHours(0,0,0,0); return m; }
+        function getKW(d) { var t = new Date(d.getFullYear(), 0, 1); var dn = ((d - t) / 86400000); return Math.ceil((dn + t.getDay() + 1) / 7); }
+        var currentWeekStart = null;
+        var weekDbData = null;
+
+        async function loadWeekFromDb() {
+            if(!currentWeekStart) currentWeekStart = getMonday(new Date());
+            var mon = currentWeekStart;
+            var sun = new Date(mon); sun.setDate(mon.getDate() + 5); // Mo-Sa
+            var monStr = mon.toISOString().slice(0,10);
+            var sunStr = sun.toISOString().slice(0,10);
+            // Update header
+            var kw = getKW(mon);
+            var fmt = function(d) { return d.getDate().toString().padStart(2,'0') + '.' + (d.getMonth()+1).toString().padStart(2,'0') + '.'; };
+            var titleEl = document.getElementById('weekTitle');
+            if(titleEl) titleEl.textContent = 'KW ' + kw + ' \u00B7 ' + fmt(mon) + ' - ' + fmt(sun) + sun.getFullYear();
+
+            try {
+                var stdId = sbProfile ? sbProfile.standort_id : null;
+                var query = sb.from('verkauf_tracking').select('*').gte('datum', monStr).lte('datum', sunStr).order('datum');
+                if(stdId && !sbProfile.is_hq) query = query.eq('standort_id', stdId);
+                var resp = await query;
+                if(resp.error) throw resp.error;
+                weekDbData = resp.data || [];
+            } catch(e) { weekDbData = []; console.warn('Week load error:', e); }
+            renderWeekViewFromDb();
+        }
+
+        function renderWeekViewFromDb() {
+            var data = weekDbData || [];
+            var dayNames = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+            var weekDays = ['Mo','Di','Mi','Do','Fr','Sa'];
+            // Group by seller
+            var sellerMap = {};
+            data.forEach(function(entry) {
+                var name = entry.verkaeufer_name;
+                if(!sellerMap[name]) sellerMap[name] = { name: name, plan_soll: 0, days: {} };
+                weekDays.forEach(function(d) { if(!sellerMap[name].days[d]) sellerMap[name].days[d] = {day:d,plan:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0}; });
+                var d = new Date(entry.datum);
+                var dayName = dayNames[d.getDay()];
+                if(sellerMap[name].days[dayName]) {
+                    var dd = sellerMap[name].days[dayName];
+                    dd.plan += (entry.plan_termine || 0);
+                    dd.geplant += (entry.geplant || 0);
+                    dd.spontan += (entry.spontan || 0);
+                    dd.online += (entry.online || 0);
+                    dd.ergo += (entry.ergo || 0);
+                    dd.verkauft += (entry.verkauft || 0);
+                    dd.uebergabe += (entry.uebergabe || 0);
+                    dd.umsatz += parseFloat(entry.umsatz) || 0;
+                }
+                sellerMap[name].plan_soll += (entry.plan_termine || 0);
+            });
+            var sellers = Object.values(sellerMap);
+            // Update filter dropdown dynamically
+            var filterEl = document.getElementById('weekSellerFilter');
+            if(filterEl) {
+                var curVal = filterEl.value;
+                var opts = '<option value="all">Alle Verkaeufer</option>';
+                sellers.forEach(function(s) { opts += '<option value="'+s.name+'"'+(s.name===curVal?' selected':'')+'>'+s.name+'</option>'; });
+                filterEl.innerHTML = opts;
+            }
+            var filter = filterEl ? filterEl.value : 'all';
+            var filtered = filter === 'all' ? sellers : sellers.filter(function(s){return s.name === filter;});
+
+            // KPIs
+            var totalPlan=0, totalGesamt=0, totalVerkauft=0, totalUmsatz=0;
+            filtered.forEach(function(s) {
+                totalPlan += s.plan_soll;
+                weekDays.forEach(function(dn) {
+                    var dd = s.days[dn];
+                    if(dd) { totalGesamt += dd.geplant+dd.spontan+dd.online+dd.ergo; totalVerkauft += dd.verkauft; totalUmsatz += dd.umsatz; }
+                });
+            });
+            var el;
+            el = document.getElementById('wkPlan'); if(el) el.textContent = totalPlan;
+            el = document.getElementById('wkGesamt'); if(el) el.textContent = totalGesamt;
+            el = document.getElementById('wkVerkauft'); if(el) el.textContent = totalVerkauft;
+            el = document.getElementById('wkUmsatz'); if(el) el.textContent = totalUmsatz.toLocaleString('de-DE') + ' \u20AC';
+            var quoteVal = totalGesamt > 0 ? Math.round((totalVerkauft/totalGesamt)*100) : 0;
+            el = document.getElementById('wkQuote');
+            if(el) { el.textContent = quoteVal + '%'; el.className = 'text-2xl font-bold ' + (quoteVal >= 70 ? 'text-green-600' : quoteVal >= 40 ? 'text-orange-600' : 'text-red-600'); }
+
+            // Seller tables
+            var container = document.getElementById('weekSellerTables');
+            if(!container) return;
+            if(filtered.length === 0) { container.innerHTML = '<div class="vit-card p-8 text-center text-gray-400"><p class="text-lg mb-2">'+t('sales_no_data')+'</p><p class="text-sm">'+t('sales_add_entry')+'</p></div>'; return; }
+            var html = '';
+            filtered.forEach(function(s) {
+                var sUmsatz=0, sGesamt=0, sVerkauft=0;
+                weekDays.forEach(function(dn) { var dd=s.days[dn]; if(dd) { sUmsatz+=dd.umsatz; sGesamt+=dd.geplant+dd.spontan+dd.online+dd.ergo; sVerkauft+=dd.verkauft; } });
+                var sQuote = sGesamt > 0 ? Math.round((sVerkauft/sGesamt)*100) : 0;
+                html += '<div class="vit-card overflow-hidden">';
+                html += '<div class="flex items-center justify-between p-4 bg-gray-50 border-b">';
+                html += '<div class="flex items-center space-x-3"><div class="w-8 h-8 bg-vit-orange rounded-full flex items-center justify-center text-white font-bold text-sm">'+s.name.charAt(0)+'</div>';
+                html += '<div><p class="font-semibold text-gray-800">'+s.name+'</p><p class="text-xs text-gray-500">Plan: '+s.plan_soll+' Termine</p></div></div>';
+                html += '<div class="flex space-x-4 text-center">';
+                html += '<div><p class="text-xs text-gray-500">Beratungen</p><p class="font-bold text-blue-600">'+sGesamt+'</p></div>';
+                html += '<div><p class="text-xs text-gray-500">Verkauft</p><p class="font-bold text-green-600">'+sVerkauft+'</p></div>';
+                html += '<div><p class="text-xs text-gray-500">Umsatz</p><p class="font-bold text-vit-orange">'+sUmsatz.toLocaleString('de-DE')+' \u20AC</p></div>';
+                html += '<div><p class="text-xs text-gray-500">Quote</p><p class="font-bold '+(sQuote>=70?'text-green-600':sQuote>=40?'text-orange-600':'text-red-600')+'">'+sQuote+'%</p></div>';
+                html += '</div></div>';
+                html += '<div class="overflow-x-auto"><table class="w-full text-sm">';
+                html += '<thead><tr class="bg-gray-50 text-xs"><th class="py-2 px-3 text-left text-gray-500">Tag</th><th class="py-2 px-3 text-center text-gray-500">Plan</th><th class="py-2 px-3 text-center text-blue-600">Geplant</th><th class="py-2 px-3 text-center text-purple-600">Spontan</th><th class="py-2 px-3 text-center text-cyan-600">Online</th><th class="py-2 px-3 text-center text-pink-600">Ergo</th><th class="py-2 px-3 text-center font-bold text-gray-700">Gesamt</th><th class="py-2 px-3 text-center text-green-600">Verkauft</th><th class="py-2 px-3 text-center text-gray-500">Uebergabe</th><th class="py-2 px-3 text-right text-vit-orange">Umsatz</th></tr></thead>';
+                html += '<tbody>';
+                weekDays.forEach(function(dn) {
+                    var dd = s.days[dn] || {plan:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0};
+                    var total = dd.geplant+dd.spontan+dd.online+dd.ergo;
+                    var hasData = dd.plan>0 || total>0 || dd.umsatz>0;
+                    html += '<tr class="border-b '+(hasData?'':'text-gray-300')+'">';
+                    html += '<td class="py-2 px-3 font-semibold">'+dn+'</td>';
+                    html += '<td class="py-2 px-3 text-center">'+(dd.plan||'-')+'</td>';
+                    html += '<td class="py-2 px-3 text-center text-blue-600">'+(dd.geplant||'-')+'</td>';
+                    html += '<td class="py-2 px-3 text-center text-purple-600">'+(dd.spontan||'-')+'</td>';
+                    html += '<td class="py-2 px-3 text-center text-cyan-600">'+(dd.online||'-')+'</td>';
+                    html += '<td class="py-2 px-3 text-center text-pink-600">'+(dd.ergo||'-')+'</td>';
+                    html += '<td class="py-2 px-3 text-center font-bold">'+(total||'-')+'</td>';
+                    html += '<td class="py-2 px-3 text-center text-green-600 font-bold">'+(dd.verkauft||'-')+'</td>';
+                    html += '<td class="py-2 px-3 text-center">'+(dd.uebergabe||'-')+'</td>';
+                    html += '<td class="py-2 px-3 text-right font-semibold '+(dd.umsatz>0?'text-vit-orange':'')+'">'+(dd.umsatz>0?dd.umsatz.toLocaleString('de-DE')+' \u20AC':'-')+'</td>';
+                    html += '</tr>';
+                });
+                html += '</tbody></table></div></div>';
+            });
+            container.innerHTML = html;
         }
 
         // === EINKAUF ===
@@ -6667,29 +6805,77 @@
         async function renderAnnouncements() {
             var container = document.getElementById('announceList');
             if(!container) return;
+            var isHQ = sbProfile && sbProfile.is_hq;
             try {
                 var resp = await sb.from('ankuendigungen').select('*, users(name)').order('created_at', {ascending:false});
                 if(resp.error) throw resp.error;
                 var anns = resp.data || [];
                 var html = '';
-                var icons = {news:'📢',event:'📅',schulung:'🎓',marketing:'📣',sortiment:'🚲',preise:'💰',it:'💻'};
+                var icons = {news:'\uD83D\uDCE2',event:'\uD83D\uDCC5',schulung:'\uD83C\uDF93',marketing:'\uD83D\uDCE3',sortiment:'\uD83D\uDEB2',preise:'\uD83D\uDCB0',it:'\uD83D\uDCBB'};
                 anns.forEach(function(a) {
                     var d = new Date(a.created_at);
                     var dateStr = d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
                     html += '<div class="vit-card p-5 ' + (a.wichtig ? 'border-l-4 border-vit-orange' : '') + '">';
                     html += '<div class="flex items-start space-x-4">';
-                    html += '<div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">' + (icons[a.kategorie]||'📢') + '</div>';
+                    html += '<div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">' + (icons[a.kategorie]||'\uD83D\uDCE2') + '</div>';
                     html += '<div class="flex-1">';
+                    html += '<div class="flex items-center justify-between">';
                     html += '<div class="flex items-center space-x-2 mb-1">';
                     if(a.wichtig) html += '<span class="text-xs font-bold bg-red-100 text-red-600 rounded px-2 py-0.5">Wichtig</span>';
-                    html += '<span class="text-xs text-gray-400">' + dateStr + '</span></div>';
+                    html += '<span class="text-xs text-gray-400">' + dateStr + '</span>';
+                    if(a.users&&a.users.name) html += '<span class="text-xs text-gray-400">\u00B7 '+a.users.name+'</span>';
+                    html += '</div>';
+                    if(isHQ) {
+                        html += '<div class="flex space-x-1">';
+                        html += '<button onclick="editAnkuendigung(\''+a.id+'\',\''+a.titel.replace(/'/g,"\\\'")+'\',\''+a.kategorie+'\','+a.wichtig+')" class="text-xs px-2 py-1 text-gray-400 hover:text-blue-600" title="Bearbeiten">\u270F\uFE0F</button>';
+                        html += '<button onclick="deleteAnkuendigung(\''+a.id+'\')" class="text-xs px-2 py-1 text-gray-400 hover:text-red-600" title="L\u00f6schen">\uD83D\uDDD1\uFE0F</button>';
+                        html += '</div>';
+                    }
+                    html += '</div>';
                     html += '<h3 class="font-bold text-gray-800 mb-2">' + a.titel + '</h3>';
                     html += '<p class="text-sm text-gray-600">' + a.inhalt + '</p>';
                     html += '</div></div></div>';
                 });
-                if(anns.length===0) html = '<div class="text-center py-8 text-gray-400">Keine Ankündigungen.</div>';
+                if(anns.length===0) html = '<div class="text-center py-8 text-gray-400">Keine Ank\u00fcndigungen.</div>';
                 container.innerHTML = html;
-            } catch(err) { console.error('Ankündigungen:', err); }
+            } catch(err) { console.error('Ank\u00fcndigungen:', err); }
+        }
+
+        async function deleteAnkuendigung(id) {
+            if(!confirm('Ankuendigung wirklich loeschen?')) return;
+            try {
+                var resp = await sb.from('ankuendigungen').delete().eq('id', id);
+                if(resp.error) throw resp.error;
+                renderAnnouncements();
+            } catch(err) { alert('Fehler: '+err.message); }
+        }
+
+        function editAnkuendigung(id, titel, kategorie, wichtig) {
+            openAnkuendigungModal();
+            // Prefill nach kurzem Timeout damit Modal da ist
+            setTimeout(function() {
+                var t = document.getElementById('ankTitel'); if(t) t.value = titel;
+                var k = document.getElementById('ankKat'); if(k) k.value = kategorie;
+                var w = document.getElementById('ankWichtig'); if(w) w.checked = wichtig;
+                // Change save button to update mode
+                var btn = document.getElementById('ankSaveBtn');
+                if(btn) { btn.textContent = 'Aktualisieren'; btn.onclick = function() { updateAnkuendigung(id); }; }
+            }, 100);
+        }
+
+        async function updateAnkuendigung(id) {
+            var titel = (document.getElementById('ankTitel')||{}).value;
+            var inhalt = (document.getElementById('ankInhalt')||{}).value;
+            var kategorie = (document.getElementById('ankKat')||{}).value || 'news';
+            var wichtig = (document.getElementById('ankWichtig')||{}).checked || false;
+            if(!titel||!titel.trim()||!inhalt||!inhalt.trim()) { alert('Bitte Titel und Inhalt ausfuellen.'); return; }
+            try {
+                var resp = await sb.from('ankuendigungen').update({titel:titel.trim(),inhalt:inhalt.trim(),kategorie:kategorie,wichtig:wichtig}).eq('id',id);
+                if(resp.error) throw resp.error;
+                closeAnkModal();
+                alert('\u2705 Ankuendigung aktualisiert!');
+                renderAnnouncements();
+            } catch(err) { alert('Fehler: '+err.message); }
         }
 
         async function renderBrett(cat) {
@@ -7151,6 +7337,50 @@
             return '<span class="font-mono text-xs font-bold px-2 py-1 rounded '+(colors[type]||'text-gray-500')+' bg-gray-100">'+type+'</span>';
         }
 
+        function openDokUploadModal() {
+            var html = '<div id="dokUpOverlay" onclick="closeDokUpModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
+            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:480px;max-width:95vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">\uD83D\uDCC4 Dokument hochladen</h3><button onclick="closeDokUpModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
+            html += '<div class="space-y-3 mb-4">';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Titel *</label><input id="dokUpTitel" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="z.B. Richtlinie Preisgestaltung"></div>';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Kategorie</label><select id="dokUpKat" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="richtlinie">Richtlinie</option><option value="vorlage">Vorlage</option><option value="schulung">Schulung</option><option value="vertrag">Vertrag</option><option value="sonstiges">Sonstiges</option></select></div>';
+            html += '<div class="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center"><p class="text-sm text-gray-500 mb-2">Datei auswaehlen</p><input type="file" id="dokUpFile" class="text-sm"></div>';
+            html += '</div>';
+            html += '<div id="dokUpError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mb-3"></div>';
+            html += '<button onclick="saveDokUpload()" id="dokUpBtn" class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Hochladen</button>';
+            html += '</div></div>';
+            var c = document.createElement('div'); c.id = 'dokUpContainer'; c.innerHTML = html; document.body.appendChild(c);
+        }
+        function closeDokUpModal() { var c = document.getElementById('dokUpContainer'); if(c) c.remove(); }
+        async function saveDokUpload() {
+            var titel = (document.getElementById('dokUpTitel')||{}).value;
+            var kat = (document.getElementById('dokUpKat')||{}).value||'sonstiges';
+            var fileInput = document.getElementById('dokUpFile');
+            var errEl = document.getElementById('dokUpError');
+            var btn = document.getElementById('dokUpBtn');
+            if(!titel||!titel.trim()) { if(errEl){errEl.textContent='Bitte Titel eingeben.';errEl.style.display='block';} return; }
+            if(!fileInput||!fileInput.files||!fileInput.files[0]) { if(errEl){errEl.textContent='Bitte Datei auswaehlen.';errEl.style.display='block';} return; }
+            if(btn){btn.disabled=true;btn.textContent='Wird hochgeladen...';}
+            try {
+                var file = fileInput.files[0];
+                var path = 'netzwerk/'+kat+'/'+Date.now()+'_'+file.name;
+                var upResp = await sb.storage.from('dokumente').upload(path, file, {upsert:true});
+                if(upResp.error) throw upResp.error;
+                var urlResp = sb.storage.from('dokumente').getPublicUrl(path);
+                await sb.from('netzwerk_dokumente').insert({
+                    titel:titel.trim(), kategorie:kat, datei_url:path, datei_name:file.name,
+                    datei_groesse:file.size, mime_type:file.type,
+                    erstellt_von:sbUser?sbUser.id:null
+                });
+                closeDokUpModal();
+                alert('\u2705 Dokument hochgeladen!');
+                loadNetzwerkDokumente();
+            } catch(err) {
+                if(errEl){errEl.textContent='Fehler: '+err.message;errEl.style.display='block';}
+                if(btn){btn.disabled=false;btn.textContent='Hochladen';}
+            }
+        }
+
         function openAktenFolder(folderId) {
             var files = aktenFiles[folderId] || [];
             document.getElementById('aktenFolderTitle').textContent = aktenFolderLabels[folderId] || folderId;
@@ -7182,9 +7412,8 @@
             });
         }
 
-        // Init verkauf on page load
-        renderWeekView();
-        renderJahresTabelle();
+        // Init verkauf - DB loading happens on tab switch after login
+        renderPipeline();
 
         // Check for existing Supabase session
         checkSession();
@@ -7203,18 +7432,673 @@
         }
 
         function showBwaDetail(id) {
-            // Highlight selected file
-            document.querySelectorAll('.bwa-file').forEach(function(f) {
-                f.classList.remove('bg-orange-50', 'border', 'border-vit-orange');
-            });
-            if (event && event.currentTarget) {
-                event.currentTarget.classList.add('bg-orange-50', 'border', 'border-vit-orange');
-            }
-            // Update title
-            var titles = { 'jan26': 'BWA Januar 2026', 'feb26': 'BWA Februar 2026', 'dez25': 'BWA Dezember 2025', 'nov25': 'BWA November 2025' };
-            var t = document.getElementById('bwaTitle');
-            if (t && titles[id]) t.textContent = titles[id];
+            // Legacy stub - now handled by showBwaFromDb
         }
+
+        // =============================================
+        // BWA SUPABASE FUNCTIONS
+        // =============================================
+        var bwaCache = [];
+        var selectedBwaId = null;
+
+        var monatNamen = ['','Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+        function eur(val) {
+            if(val===null||val===undefined) return '—';
+            var n = parseFloat(val);
+            return n.toLocaleString('de-DE', {minimumFractionDigits:0, maximumFractionDigits:0});
+        }
+        function eurColor(val) {
+            var n = parseFloat(val)||0;
+            return n >= 0 ? 'text-gray-800' : 'text-red-600';
+        }
+        function diffHtml(ist, plan) {
+            if(!plan) return '<td class="text-right py-2 px-3 text-gray-300">—</td>';
+            var d = parseFloat(ist) - parseFloat(plan);
+            var cl = d >= 0 ? 'text-green-600' : 'text-red-600';
+            var prefix = d >= 0 ? '+' : '';
+            return '<td class="text-right py-2 px-3 '+cl+' font-semibold">'+prefix+eur(d)+'</td>';
+        }
+
+        async function loadBwaList() {
+            var container = document.getElementById('bwaFileList');
+            if(!container) return;
+            try {
+                var stdId = sbProfile ? sbProfile.standort_id : null;
+                var query = sb.from('bwa_daten').select('id,monat,jahr,umsatzerloese,rohertrag,ergebnis_vor_steuern,datei_name,created_at').order('jahr', {ascending:false}).order('monat', {ascending:false});
+                if(stdId && !sbProfile.is_hq) query = query.eq('standort_id', stdId);
+                var resp = await query;
+                if(resp.error) throw resp.error;
+                bwaCache = resp.data || [];
+                if(bwaCache.length === 0) {
+                    container.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">Noch keine BWAs erfasst.</p>';
+                    return;
+                }
+                // Group by year
+                var years = {};
+                bwaCache.forEach(function(b) {
+                    if(!years[b.jahr]) years[b.jahr] = [];
+                    years[b.jahr].push(b);
+                });
+                var h = '';
+                Object.keys(years).sort(function(a,b){return b-a;}).forEach(function(yr) {
+                    var items = years[yr];
+                    h += '<div class="mb-3">';
+                    h += '<button onclick="this.nextElementSibling.classList.toggle(\'hidden\')" class="flex items-center justify-between w-full text-left p-2 bg-gray-100 rounded-lg hover:bg-gray-200">';
+                    h += '<span class="font-semibold text-gray-700">📁 '+yr+'</span>';
+                    h += '<span class="text-gray-400 text-xs">'+items.length+' BWA'+(items.length>1?'s':'')+'</span></button>';
+                    h += '<div class="mt-2 space-y-1">';
+                    items.forEach(function(b) {
+                        var isSelected = selectedBwaId === b.id;
+                        var ergClass = parseFloat(b.ergebnis_vor_steuern) >= 0 ? 'text-green-600' : 'text-red-500';
+                        h += '<button onclick="showBwaFromDb(\''+b.id+'\')" class="bwa-file-db w-full flex items-center justify-between p-2.5 rounded-lg hover:bg-orange-50 text-left'+(isSelected?' bg-orange-50 border border-vit-orange':'')+'">';
+                        h += '<div class="flex items-center space-x-3"><span class="text-red-500">📄</span>';
+                        h += '<div><p class="text-sm font-semibold '+(isSelected?'text-vit-orange':'text-gray-800')+'">'+monatNamen[b.monat]+' '+b.jahr+'</p>';
+                        h += '<p class="text-xs text-gray-500">Umsatz: '+eur(b.umsatzerloese)+' €</p></div></div>';
+                        h += '<span class="text-xs '+ergClass+'">'+eur(b.ergebnis_vor_steuern)+' €</span>';
+                        h += '</button>';
+                    });
+                    h += '</div></div>';
+                });
+                container.innerHTML = h;
+            } catch(err) { container.innerHTML = '<p class="text-sm text-red-400 text-center py-4">Fehler: '+err.message+'</p>'; }
+        }
+
+        async function showBwaFromDb(bwaId) {
+            selectedBwaId = bwaId;
+            try {
+                var resp = await sb.from('bwa_daten').select('*').eq('id', bwaId).single();
+                if(resp.error) throw resp.error;
+                var b = resp.data;
+                // Update title
+                document.getElementById('bwaTitle').textContent = 'BWA ' + monatNamen[b.monat] + ' ' + b.jahr;
+                document.getElementById('bwaEditBtn').style.display = '';
+                document.getElementById('bwaDeleteBtn').style.display = '';
+                // KPIs
+                var marge = parseFloat(b.umsatzerloese) > 0 ? ((parseFloat(b.rohertrag)/parseFloat(b.umsatzerloese))*100).toFixed(1) : 0;
+                var ergMarge = parseFloat(b.umsatzerloese) > 0 ? ((parseFloat(b.ergebnis_vor_steuern)/parseFloat(b.umsatzerloese))*100).toFixed(1) : 0;
+                document.getElementById('bwaKpiUmsatz').textContent = eur(b.umsatzerloese) + ' €';
+                document.getElementById('bwaKpiUmsatzVj').textContent = b.plan_umsatz ? 'Plan: '+eur(b.plan_umsatz)+' €' : '';
+                document.getElementById('bwaKpiRohertrag').textContent = eur(b.rohertrag) + ' €';
+                document.getElementById('bwaKpiMarge').textContent = 'Marge: '+marge+'%';
+                document.getElementById('bwaKpiKosten').textContent = eur(b.gesamtkosten) + ' €';
+                document.getElementById('bwaKpiKostenVj').textContent = b.plan_gesamtkosten ? 'Plan: '+eur(b.plan_gesamtkosten)+' €' : '';
+                var ergEl = document.getElementById('bwaKpiErgebnis');
+                ergEl.textContent = eur(b.ergebnis_vor_steuern) + ' €';
+                ergEl.className = 'text-xl font-bold ' + (parseFloat(b.ergebnis_vor_steuern) >= 0 ? 'text-green-600' : 'text-red-600');
+                document.getElementById('bwaKpiErgebnisMarge').textContent = 'Marge: '+ergMarge+'%';
+
+                // Detail table
+                var rows = [
+                    {label:'Umsatzerloese', ist:b.umsatzerloese, plan:b.plan_umsatz, bold:true},
+                    {label:'  Fahrraeder', ist:b.davon_fahrraeder, sub:true},
+                    {label:'  Teile & Zubehoer', ist:b.davon_teile, sub:true},
+                    {label:'  Service / Reparatur', ist:b.davon_service, sub:true},
+                    {label:'  Skonti', ist:b.davon_skonti, sub:true},
+                    {label:'Wareneinsatz', ist:b.wareneinsatz, plan:b.plan_wareneinsatz, bold:true, bg:'bg-gray-50'},
+                    {label:'Rohertrag', ist:b.rohertrag, plan:b.plan_rohertrag, bold:true, bg:'bg-blue-50', highlight:'text-blue-800'},
+                    {label:'Personalkosten', ist:b.personalkosten, plan:b.plan_personalkosten, bold:true},
+                    {label:'Raumkosten', ist:b.raumkosten, plan:b.plan_raumkosten, bold:true},
+                    {label:'Werbe-/Reisekosten', ist:b.werbekosten, plan:b.plan_werbekosten, bold:true},
+                    {label:'Kosten Warenabgabe', ist:b.kosten_warenabgabe, bold:true},
+                    {label:'Abschreibungen', ist:b.abschreibungen, bold:true},
+                    {label:'Sonstige Kosten', ist:b.sonstige_kosten, bold:true},
+                    {label:'Gesamtkosten', ist:b.gesamtkosten, plan:b.plan_gesamtkosten, bold:true, bg:'bg-gray-50', separator:true},
+                    {label:'Betriebsergebnis', ist:b.betriebsergebnis, bold:true},
+                    {label:'Zinsaufwand', ist:b.zinsaufwand, bold:true},
+                    {label:'Ergebnis vor Steuern', ist:b.ergebnis_vor_steuern, plan:b.plan_ergebnis, bold:true, bg:parseFloat(b.ergebnis_vor_steuern)>=0?'bg-green-50':'bg-red-50', highlight:parseFloat(b.ergebnis_vor_steuern)>=0?'text-green-800':'text-red-800', separator:true, big:true}
+                ];
+                var tbody = '';
+                rows.forEach(function(r) {
+                    var cls = (r.separator?'border-t-2 border-gray-800 ':'border-b ') + (r.bg||'');
+                    var tdCls = r.bold ? 'font-semibold' : '';
+                    var hlCls = r.highlight || '';
+                    var sz = r.big ? 'text-base' : '';
+                    var indent = r.sub ? 'pl-6 text-gray-600 text-xs' : '';
+                    tbody += '<tr class="'+cls+'">';
+                    tbody += '<td class="py-2 px-3 '+tdCls+' '+hlCls+' '+sz+' '+indent+'">'+r.label.trim()+'</td>';
+                    tbody += '<td class="text-right py-2 px-3 '+tdCls+' '+hlCls+' '+sz+' '+eurColor(r.ist)+'">'+eur(r.ist)+'</td>';
+                    tbody += '<td class="text-right py-2 px-3 text-gray-400">'+(r.plan?eur(r.plan):'—')+'</td>';
+                    tbody += diffHtml(r.ist, r.plan);
+                    tbody += '<td class="text-right py-2 px-3 text-gray-400">—</td>';
+                    tbody += '</tr>';
+                });
+                document.getElementById('bwaDetailBody').innerHTML = tbody;
+
+                // Load trend
+                loadBwaTrend(b.standort_id, b.jahr);
+                // Refresh file list highlight
+                loadBwaList();
+            } catch(err) { alert('Fehler: '+err.message); }
+        }
+
+        async function loadBwaTrend(stdId, jahr) {
+            var sec = document.getElementById('bwaTrendSection');
+            var cards = document.getElementById('bwaTrendCards');
+            if(!sec||!cards) return;
+            try {
+                var query = sb.from('bwa_daten').select('monat,umsatzerloese,rohertrag,gesamtkosten,ergebnis_vor_steuern').eq('jahr', jahr).order('monat');
+                if(stdId) query = query.eq('standort_id', stdId);
+                var resp = await query;
+                if(resp.error || !resp.data || resp.data.length < 2) { sec.style.display = 'none'; return; }
+                sec.style.display = '';
+                var data = resp.data;
+                var metrics = [
+                    {label:'Umsatz',key:'umsatzerloese',color:'#22C55E',bg:'bg-green-50'},
+                    {label:'Rohertrag',key:'rohertrag',color:'#3B82F6',bg:'bg-blue-50'},
+                    {label:'Ergebnis',key:'ergebnis_vor_steuern',color:'#EF7D00',bg:'bg-orange-50'},
+                    {label:'Gesamtkosten',key:'gesamtkosten',color:'#EF4444',bg:'bg-red-50'}
+                ];
+                var h = '';
+                metrics.forEach(function(m) {
+                    var vals = data.map(function(d){return parseFloat(d[m.key])||0;});
+                    var labels = data.map(function(d){return monatNamen[d.monat].substring(0,3);});
+                    var last = vals[vals.length-1];
+                    var prev = vals.length>1 ? vals[vals.length-2] : last;
+                    var change = prev!==0 ? Math.round((last-prev)/Math.abs(prev)*100) : 0;
+                    var totalYTD = vals.reduce(function(a,b){return a+b;},0);
+                    // Sparkline SVG
+                    var minV=Math.min.apply(null,vals); var maxV=Math.max.apply(null,vals); var range=maxV-minV||1;
+                    var sw=120; var sh=35;
+                    var pts = vals.map(function(v,i){return Math.round(i/(vals.length-1)*sw)+','+Math.round(sh-(v-minV)/range*sh);});
+                    // Fill area
+                    var areaPts = pts.join(' ')+' '+sw+','+sh+' 0,'+sh;
+                    h += '<div class="p-3 '+m.bg+' rounded-lg">';
+                    h += '<p class="text-xs text-gray-500 mb-1">'+m.label+'</p>';
+                    h += '<p class="text-lg font-bold text-gray-800">'+eur(last)+' \u20AC</p>';
+                    h += '<div class="flex items-center justify-between">';
+                    h += '<p class="text-xs '+(change>=0?'text-green-600':'text-red-600')+'">'+(change>=0?'\u2191':'\u2193')+' '+(change>=0?'+':'')+change+'%</p>';
+                    h += '<p class="text-xs text-gray-400">YTD: '+eur(totalYTD)+'</p>';
+                    h += '</div>';
+                    h += '<svg width="'+sw+'" height="'+(sh+2)+'" class="mt-1">';
+                    h += '<polygon points="'+areaPts+'" fill="'+m.color+'" fill-opacity="0.15"/>';
+                    h += '<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+m.color+'" stroke-width="2" stroke-linejoin="round"/>';
+                    // Last point dot
+                    var lastPt = pts[pts.length-1].split(',');
+                    h += '<circle cx="'+lastPt[0]+'" cy="'+lastPt[1]+'" r="3" fill="'+m.color+'"/>';
+                    h += '</svg>';
+                    h += '</div>';
+                });
+                cards.innerHTML = h;
+            } catch(e) { sec.style.display = 'none'; }
+        }
+
+        function openBwaUploadModal() {
+            var stdId = sbProfile ? sbProfile.standort_id : null;
+            var now = new Date();
+            var html = '<div id="bwaUploadOverlay" onclick="closeBwaUploadModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
+            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">📊 BWA erfassen</h3><button onclick="closeBwaUploadModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div>';
+            // Month/Year
+            html += '<div class="grid grid-cols-2 gap-3 mb-4">';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Monat</label><select id="bwaMonth" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">';
+            for(var m=1;m<=12;m++) html += '<option value="'+m+'"'+(m===(now.getMonth())?' selected':'')+'>'+monatNamen[m]+'</option>';
+            html += '</select></div>';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Jahr</label><select id="bwaYear" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">';
+            for(var y=2026;y>=2023;y--) html += '<option value="'+y+'">'+y+'</option>';
+            html += '</select></div></div>';
+            // PDF Upload
+            html += '<div class="mb-4 p-3 border-2 border-dashed border-gray-300 rounded-lg text-center">';
+            html += '<p class="text-xs text-gray-500 mb-1">📎 PDF anhängen (optional)</p>';
+            html += '<input type="file" id="bwaFileInput" accept=".pdf,.xlsx,.xls,.csv" class="text-xs">';
+            html += '</div>';
+            // Data entry
+            html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Kennzahlen eingeben</p>';
+            var fields = [
+                {id:'bwaF_umsatz',label:'Umsatzerloese',ph:'z.B. 54938'},
+                {id:'bwaF_fahrraeder',label:'davon Fahrraeder',ph:'',sub:true},
+                {id:'bwaF_teile',label:'davon Teile & Zubehoer',ph:'',sub:true},
+                {id:'bwaF_service',label:'davon Service',ph:'',sub:true},
+                {id:'bwaF_skonti',label:'davon Skonti (negativ)',ph:'z.B. -2028',sub:true},
+                {id:'bwaF_wareneinsatz',label:'Wareneinsatz (negativ)',ph:'z.B. -33580'},
+                {id:'bwaF_personal',label:'Personalkosten (negativ)',ph:'z.B. -13485'},
+                {id:'bwaF_raum',label:'Raumkosten (negativ)',ph:'z.B. -4150'},
+                {id:'bwaF_werbe',label:'Werbe-/Reisekosten',ph:''},
+                {id:'bwaF_warenabgabe',label:'Kosten Warenabgabe',ph:''},
+                {id:'bwaF_abschreibung',label:'Abschreibungen',ph:''},
+                {id:'bwaF_sonstige',label:'Sonstige Kosten',ph:''},
+                {id:'bwaF_zins',label:'Zinsaufwand',ph:''}
+            ];
+            html += '<div class="space-y-2 mb-4 max-h-60 overflow-y-auto">';
+            fields.forEach(function(f) {
+                html += '<div class="flex items-center space-x-2"><label class="'+(f.sub?'pl-4 ':'')+' text-xs text-gray-600 w-48 flex-shrink-0">'+f.label+'</label>';
+                html += '<input id="'+f.id+'" type="number" step="0.01" class="flex-1 px-2 py-1.5 border border-gray-200 rounded text-sm text-right" placeholder="'+f.ph+'"></div>';
+            });
+            html += '</div>';
+            // Plan values section
+            html += '<details class="mb-4"><summary class="text-xs font-semibold text-gray-500 cursor-pointer">Plan-Werte (optional)</summary>';
+            html += '<div class="space-y-2 mt-2">';
+            var planFields = [
+                {id:'bwaF_planUmsatz',label:'Plan Umsatz'},
+                {id:'bwaF_planWareneinsatz',label:'Plan Wareneinsatz'},
+                {id:'bwaF_planRohertrag',label:'Plan Rohertrag'},
+                {id:'bwaF_planPersonal',label:'Plan Personalkosten'},
+                {id:'bwaF_planRaum',label:'Plan Raumkosten'},
+                {id:'bwaF_planWerbe',label:'Plan Werbekosten'},
+                {id:'bwaF_planGesamt',label:'Plan Gesamtkosten'},
+                {id:'bwaF_planErgebnis',label:'Plan Ergebnis'}
+            ];
+            planFields.forEach(function(f) {
+                html += '<div class="flex items-center space-x-2"><label class="text-xs text-gray-600 w-48 flex-shrink-0">'+f.label+'</label>';
+                html += '<input id="'+f.id+'" type="number" step="0.01" class="flex-1 px-2 py-1.5 border border-gray-200 rounded text-sm text-right"></div>';
+            });
+            html += '</div></details>';
+            html += '<div id="bwaUploadError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mb-3"></div>';
+            html += '<button onclick="saveBwaData()" id="bwaSaveBtn" class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">BWA speichern</button>';
+            html += '</div></div>';
+            var c = document.createElement('div'); c.id = 'bwaUploadContainer'; c.innerHTML = html; document.body.appendChild(c);
+        }
+
+        function closeBwaUploadModal() { var c = document.getElementById('bwaUploadContainer'); if(c) c.remove(); }
+
+        async function saveBwaData() {
+            var month = parseInt(document.getElementById('bwaMonth').value);
+            var year = parseInt(document.getElementById('bwaYear').value);
+            var errEl = document.getElementById('bwaUploadError');
+            var btn = document.getElementById('bwaSaveBtn');
+            var v = function(id) { return parseFloat((document.getElementById(id)||{}).value) || 0; };
+
+            var umsatz = v('bwaF_umsatz');
+            var wareneinsatz = v('bwaF_wareneinsatz');
+            var rohertrag = umsatz + wareneinsatz; // wareneinsatz is negative
+            var personal = v('bwaF_personal');
+            var raum = v('bwaF_raum');
+            var werbe = v('bwaF_werbe');
+            var warenabgabe = v('bwaF_warenabgabe');
+            var abschreibung = v('bwaF_abschreibung');
+            var sonstige = v('bwaF_sonstige');
+            var gesamtkosten = personal + raum + werbe + warenabgabe + abschreibung + sonstige;
+            var betriebsergebnis = rohertrag + gesamtkosten;
+            var zins = v('bwaF_zins');
+            var ergebnis = betriebsergebnis + zins;
+
+            if(!umsatz && !wareneinsatz) { if(errEl){errEl.textContent='Bitte mindestens Umsatz oder Wareneinsatz eingeben.';errEl.style.display='block';} return; }
+
+            if(btn) { btn.disabled=true; btn.textContent='Wird gespeichert...'; }
+            try {
+                var stdId = sbProfile ? sbProfile.standort_id : null;
+
+                // Upload file if selected
+                var fileUrl = null;
+                var fileName = null;
+                var fileInput = document.getElementById('bwaFileInput');
+                if(fileInput && fileInput.files && fileInput.files[0]) {
+                    var file = fileInput.files[0];
+                    fileName = file.name;
+                    var path = (stdId||'hq')+'/'+year+'/'+month+'_'+file.name;
+                    var upResp = await sb.storage.from('bwa-dateien').upload(path, file, {upsert:true});
+                    if(upResp.error) console.warn('File upload error:', upResp.error);
+                    else fileUrl = path;
+                }
+
+                var data = {
+                    standort_id: stdId,
+                    monat: month,
+                    jahr: year,
+                    umsatzerloese: umsatz,
+                    davon_fahrraeder: v('bwaF_fahrraeder'),
+                    davon_teile: v('bwaF_teile'),
+                    davon_service: v('bwaF_service'),
+                    davon_skonti: v('bwaF_skonti'),
+                    wareneinsatz: wareneinsatz,
+                    rohertrag: rohertrag,
+                    personalkosten: personal,
+                    raumkosten: raum,
+                    werbekosten: werbe,
+                    kosten_warenabgabe: warenabgabe,
+                    abschreibungen: abschreibung,
+                    sonstige_kosten: sonstige,
+                    gesamtkosten: gesamtkosten,
+                    betriebsergebnis: betriebsergebnis,
+                    zinsaufwand: zins,
+                    ergebnis_vor_steuern: ergebnis,
+                    plan_umsatz: v('bwaF_planUmsatz'),
+                    plan_wareneinsatz: v('bwaF_planWareneinsatz'),
+                    plan_rohertrag: v('bwaF_planRohertrag'),
+                    plan_personalkosten: v('bwaF_planPersonal'),
+                    plan_raumkosten: v('bwaF_planRaum'),
+                    plan_werbekosten: v('bwaF_planWerbe'),
+                    plan_gesamtkosten: v('bwaF_planGesamt'),
+                    plan_ergebnis: v('bwaF_planErgebnis'),
+                    hochgeladen_von: sbUser ? sbUser.id : null,
+                    updated_at: new Date().toISOString()
+                };
+                if(fileUrl) { data.datei_url = fileUrl; data.datei_name = fileName; }
+
+                var resp = await sb.from('bwa_daten').upsert(data, {onConflict:'standort_id,monat,jahr'}).select();
+                if(resp.error) throw resp.error;
+
+                closeBwaUploadModal();
+                await loadBwaList();
+                if(resp.data && resp.data[0]) showBwaFromDb(resp.data[0].id);
+                alert('✅ BWA '+monatNamen[month]+' '+year+' gespeichert!');
+            } catch(err) {
+                if(errEl){errEl.textContent='Fehler: '+err.message;errEl.style.display='block';}
+                if(btn) { btn.disabled=false; btn.textContent='BWA speichern'; }
+            }
+        }
+
+        function editSelectedBwa() {
+            if(!selectedBwaId) return;
+            // Find in cache and open modal pre-filled
+            var b = bwaCache.find(function(x){return x.id===selectedBwaId;});
+            if(!b) { openBwaUploadModal(); return; }
+            openBwaUploadModal();
+            // Pre-fill after modal renders
+            setTimeout(async function(){
+                try {
+                    var resp = await sb.from('bwa_daten').select('*').eq('id', selectedBwaId).single();
+                    if(resp.error) return;
+                    var d = resp.data;
+                    document.getElementById('bwaMonth').value = d.monat;
+                    document.getElementById('bwaYear').value = d.jahr;
+                    var map = {
+                        'bwaF_umsatz':d.umsatzerloese,'bwaF_fahrraeder':d.davon_fahrraeder,'bwaF_teile':d.davon_teile,
+                        'bwaF_service':d.davon_service,'bwaF_skonti':d.davon_skonti,'bwaF_wareneinsatz':d.wareneinsatz,
+                        'bwaF_personal':d.personalkosten,'bwaF_raum':d.raumkosten,'bwaF_werbe':d.werbekosten,
+                        'bwaF_warenabgabe':d.kosten_warenabgabe,'bwaF_abschreibung':d.abschreibungen,'bwaF_sonstige':d.sonstige_kosten,
+                        'bwaF_zins':d.zinsaufwand,'bwaF_planUmsatz':d.plan_umsatz,'bwaF_planWareneinsatz':d.plan_wareneinsatz,
+                        'bwaF_planRohertrag':d.plan_rohertrag,'bwaF_planPersonal':d.plan_personalkosten,'bwaF_planRaum':d.plan_raumkosten,
+                        'bwaF_planWerbe':d.plan_werbekosten,'bwaF_planGesamt':d.plan_gesamtkosten,'bwaF_planErgebnis':d.plan_ergebnis
+                    };
+                    Object.keys(map).forEach(function(id) { var el = document.getElementById(id); if(el && map[id]) el.value = map[id]; });
+                } catch(e) {}
+            }, 200);
+        }
+
+        async function deleteBwa() {
+            if(!selectedBwaId) return;
+            if(!confirm('BWA wirklich loeschen?')) return;
+            try {
+                var resp = await sb.from('bwa_daten').delete().eq('id', selectedBwaId);
+                if(resp.error) throw resp.error;
+                selectedBwaId = null;
+                document.getElementById('bwaTitle').textContent = 'BWA auswaehlen';
+                document.getElementById('bwaDetailBody').innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-400">BWA geloescht.</td></tr>';
+                document.getElementById('bwaEditBtn').style.display = 'none';
+                document.getElementById('bwaDeleteBtn').style.display = 'none';
+                document.getElementById('bwaTrendSection').style.display = 'none';
+                document.getElementById('bwaKpiUmsatz').textContent = '—';
+                document.getElementById('bwaKpiRohertrag').textContent = '—';
+                document.getElementById('bwaKpiKosten').textContent = '—';
+                document.getElementById('bwaKpiErgebnis').textContent = '—';
+                loadBwaList();
+            } catch(err) { alert('Fehler: '+err.message); }
+        }
+
+        // =============================================
+        // VERKAUFSERFOLG TRACKING - SUPABASE
+        // =============================================
+        var vtCache = [];
+
+        async function loadVerkaufTracking() {
+            var stdId = sbProfile ? sbProfile.standort_id : null;
+            var now = new Date();
+            // Get Monday of current week
+            var day = now.getDay(); var diff = now.getDate() - day + (day===0?-6:1);
+            var monday = new Date(now); monday.setDate(diff); monday.setHours(0,0,0,0);
+            var sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+            var monStr = monday.toISOString().slice(0,10);
+            var sunStr = sunday.toISOString().slice(0,10);
+            try {
+                var query = sb.from('verkauf_tracking').select('*').gte('datum', monStr).lte('datum', sunStr).order('datum');
+                if(stdId && !sbProfile.is_hq) query = query.eq('standort_id', stdId);
+                var resp = await query;
+                if(resp.error) throw resp.error;
+                vtCache = resp.data || [];
+                renderVerkaufFromDb();
+            } catch(err) { console.error('VT load error:', err); }
+        }
+
+        function renderVerkaufFromDb() {
+            // Aggregate data by seller
+            var sellerMap = {};
+            vtCache.forEach(function(entry) {
+                var name = entry.verkaeufer_name;
+                if(!sellerMap[name]) sellerMap[name] = {name:name,total:0,verkauft:0,umsatz:0,daily:{}};
+                var s = sellerMap[name];
+                var d = new Date(entry.datum);
+                var dayNames = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+                var dayName = dayNames[d.getDay()];
+                s.daily[dayName] = entry;
+                var gesamt = (entry.geplant||0) + (entry.spontan||0) + (entry.online||0) + (entry.ergo||0);
+                s.total += gesamt;
+                s.verkauft += (entry.verkauft||0);
+                s.umsatz += parseFloat(entry.umsatz)||0;
+            });
+
+            // Update KPIs
+            var totalPlan=0,totalGesamt=0,totalVerkauft=0,totalUmsatz=0;
+            Object.values(sellerMap).forEach(function(s) {
+                totalGesamt += s.total;
+                totalVerkauft += s.verkauft;
+                totalUmsatz += s.umsatz;
+            });
+            var el;
+            el = document.getElementById('wkGesamt'); if(el) el.textContent = totalGesamt;
+            el = document.getElementById('wkVerkauft'); if(el) el.textContent = totalVerkauft;
+            el = document.getElementById('wkUmsatz'); if(el) el.textContent = totalUmsatz.toLocaleString('de-DE') + ' €';
+            var quoteVal = totalGesamt > 0 ? Math.round((totalVerkauft/totalGesamt)*100) : 0;
+            el = document.getElementById('wkQuote');
+            if(el) { el.textContent = quoteVal + '%'; el.className = 'text-2xl font-bold ' + (quoteVal >= 70 ? 'text-green-600' : quoteVal >= 40 ? 'text-orange-600' : 'text-red-600'); }
+        }
+
+        function openVerkaufEntryModal() {
+            var now = new Date();
+            var today = now.toISOString().slice(0,10);
+            var html = '<div id="vtEntryOverlay" onclick="closeVtModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
+            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">💰 Verkaufserfolg eintragen</h3><button onclick="closeVtModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div>';
+            html += '<div class="grid grid-cols-2 gap-3 mb-4">';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Datum</label><input id="vtDate" type="date" value="'+today+'" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"></div>';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Verkaeufer</label><input id="vtSeller" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Name" value="'+(sbProfile?sbProfile.name:'')+'"></div>';
+            html += '</div>';
+            html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Beratungen</p>';
+            html += '<div class="grid grid-cols-2 gap-3 mb-4">';
+            var vtFields = [
+                {id:'vtPlan',label:'Plan-Termine',ph:'0'},
+                {id:'vtGeplant',label:'Geplant',ph:'0'},
+                {id:'vtSpontan',label:'Spontan',ph:'0'},
+                {id:'vtOnline',label:'Online',ph:'0'},
+                {id:'vtErgo',label:'Ergo-Beratung',ph:'0'},
+                {id:'vtVerkauft',label:'Verkauft ✅',ph:'0'}
+            ];
+            vtFields.forEach(function(f) {
+                html += '<div><label class="block text-xs text-gray-600 mb-1">'+f.label+'</label>';
+                html += '<input id="'+f.id+'" type="number" min="0" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-center" placeholder="'+f.ph+'" value="0"></div>';
+            });
+            html += '</div>';
+            html += '<div class="grid grid-cols-2 gap-3 mb-4">';
+            html += '<div><label class="block text-xs text-gray-600 mb-1">Uebergaben</label><input id="vtUebergabe" type="number" min="0" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-center" value="0"></div>';
+            html += '<div><label class="block text-xs text-gray-600 mb-1">Umsatz (€)</label><input id="vtUmsatz" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-right" placeholder="0"></div>';
+            html += '</div>';
+            html += '<div class="mb-3"><label class="block text-xs text-gray-600 mb-1">Notizen</label><textarea id="vtNotizen" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" rows="2" placeholder="z.B. Kunde kommt naechste Woche wieder..."></textarea></div>';
+            html += '<div id="vtError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mb-3"></div>';
+            html += '<button onclick="saveVtEntry()" id="vtSaveBtn" class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Speichern</button>';
+            html += '</div></div>';
+            var c = document.createElement('div'); c.id = 'vtEntryContainer'; c.innerHTML = html; document.body.appendChild(c);
+        }
+
+        function closeVtModal() { var c = document.getElementById('vtEntryContainer'); if(c) c.remove(); }
+
+        // =============================================
+        // AUSWERTUNG TAB - Yearly Analysis from DB
+        // =============================================
+        async function loadAuswertung() {
+            try {
+                var stdId = sbProfile ? sbProfile.standort_id : null;
+                var year = new Date().getFullYear();
+                var startDate = year+'-01-01';
+                var endDate = year+'-12-31';
+                var query = sb.from('verkauf_tracking').select('*').gte('datum', startDate).lte('datum', endDate).order('datum');
+                if(stdId && !sbProfile.is_hq) query = query.eq('standort_id', stdId);
+                var resp = await query;
+                if(resp.error) throw resp.error;
+                var data = resp.data || [];
+                renderAuswertung(data, year);
+            } catch(e) { console.error('Auswertung load:', e); }
+        }
+
+        function renderAuswertung(data, year) {
+            var mn = ['','Jan','Feb','Mrz','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+            var mnFull = ['','Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+            var nowMonth = new Date().getMonth()+1;
+            // Aggregate by month
+            var months = {};
+            for(var m=1;m<=12;m++) months[m]={beratungen:0,verkauft:0,umsatz:0,plan:0};
+            var sellerMap = {};
+            data.forEach(function(d){
+                var dm = new Date(d.datum).getMonth()+1;
+                var ges = (d.geplant||0)+(d.spontan||0)+(d.online||0)+(d.ergo||0);
+                months[dm].beratungen += ges;
+                months[dm].verkauft += (d.verkauft||0);
+                months[dm].umsatz += parseFloat(d.umsatz)||0;
+                months[dm].plan += (d.plan_termine||0);
+                // Seller aggregation
+                var n = d.verkaeufer_name||'Unbekannt';
+                if(!sellerMap[n]) sellerMap[n]={name:n,umsatz:0,verkauft:0,beratungen:0};
+                sellerMap[n].umsatz += parseFloat(d.umsatz)||0;
+                sellerMap[n].verkauft += (d.verkauft||0);
+                sellerMap[n].beratungen += ges;
+            });
+            // Year totals
+            var totBer=0,totVk=0,totUms=0;
+            for(var m=1;m<=12;m++){totBer+=months[m].beratungen;totVk+=months[m].verkauft;totUms+=months[m].umsatz;}
+            var ytdQuote = totBer>0?Math.round(totVk/totBer*100):0;
+            var avgPreis = totVk>0?Math.round(totUms/totVk):0;
+            // Update KPIs
+            var el;
+            el=document.getElementById('ausUmsatzYTD'); if(el) el.textContent=eur(totUms)+' \u20AC';
+            el=document.getElementById('ausVerkauft'); if(el) el.textContent=totVk;
+            el=document.getElementById('ausQuote'); if(el) el.textContent=ytdQuote+'%';
+            el=document.getElementById('ausAvgPreis'); if(el) el.textContent=eur(avgPreis)+' \u20AC';
+
+            // SVG Chart
+            var chartEl = document.getElementById('ausChartContainer');
+            if(chartEl) {
+                var w=chartEl.offsetWidth||600; var h=180; var pad=40;
+                var vals=[]; for(var m=1;m<=12;m++) vals.push(months[m].umsatz);
+                var maxV=Math.max.apply(null,vals.concat([1]));
+                var barW=Math.floor((w-pad*2)/12)-8;
+                var svg='<svg width="'+w+'" height="'+(h+30)+'" style="display:block">';
+                // Grid lines
+                for(var g=0;g<=4;g++){
+                    var gy=pad+g*(h-pad)/4;
+                    var label=eur(Math.round(maxV*(4-g)/4));
+                    svg+='<line x1="'+pad+'" y1="'+gy+'" x2="'+(w-10)+'" y2="'+gy+'" stroke="#e5e7eb" stroke-width="1"/>';
+                    svg+='<text x="'+(pad-5)+'" y="'+(gy+4)+'" text-anchor="end" fill="#9ca3af" font-size="9">'+label+'</text>';
+                }
+                // Bars
+                for(var m=1;m<=12;m++){
+                    var x=pad+(m-1)*((w-pad*2)/12)+4;
+                    var val=vals[m-1];
+                    var barH=maxV>0?(val/maxV)*(h-pad):0;
+                    var color=m<=nowMonth?(val>0?'#EF7D00':'#D1D5DB'):'#E5E7EB';
+                    svg+='<rect x="'+x+'" y="'+(h-barH)+'" width="'+barW+'" height="'+Math.max(barH,1)+'" rx="3" fill="'+color+'"/>';
+                    if(val>0) svg+='<text x="'+(x+barW/2)+'" y="'+(h-barH-4)+'" text-anchor="middle" fill="#374151" font-size="9" font-weight="bold">'+eur(val)+'</text>';
+                    svg+='<text x="'+(x+barW/2)+'" y="'+(h+15)+'" text-anchor="middle" fill="#6B7280" font-size="10">'+mn[m]+'</text>';
+                }
+                svg+='</svg>';
+                chartEl.innerHTML=svg;
+            }
+
+            // Monthly table
+            var tbody=document.getElementById('jahresTabelle');
+            if(tbody){
+                var h='';
+                for(var m=1;m<=12;m++){
+                    var md=months[m];
+                    var q=md.beratungen>0?Math.round(md.verkauft/md.beratungen*100):0;
+                    var avg=md.verkauft>0?Math.round(md.umsatz/md.verkauft):0;
+                    var isCur=m===nowMonth; var isPast=m<nowMonth; var hasDat=md.beratungen>0||md.umsatz>0;
+                    var rc=isCur?'bg-blue-50 border-l-4 border-blue-400':hasDat?'':'text-gray-400';
+                    h+='<tr class="border-b '+rc+'">';
+                    h+='<td class="py-2.5 px-3 '+(isCur?'font-semibold':'')+'">'+mnFull[m]+'</td>';
+                    h+='<td class="text-right py-2.5 px-3 '+(md.beratungen>0?'text-blue-600 font-semibold':'')+'">'+( md.beratungen>0?md.beratungen:'\u2014')+'</td>';
+                    h+='<td class="text-right py-2.5 px-3 '+(md.verkauft>0?'text-green-600 font-bold':'')+'">'+( md.verkauft>0?md.verkauft:'\u2014')+'</td>';
+                    h+='<td class="text-right py-2.5 px-3 '+(q>=70?'text-green-600':q>=40?'text-orange-600':q>0?'text-red-600':'')+'">'+( q>0?q+'%':'\u2014')+'</td>';
+                    h+='<td class="text-right py-2.5 px-3 '+(md.umsatz>0?'font-bold text-vit-orange':'')+'">'+( md.umsatz>0?eur(md.umsatz)+' \u20AC':'\u2014')+'</td>';
+                    h+='<td class="text-right py-2.5 px-3">'+( avg>0?eur(avg)+' \u20AC':'\u2014')+'</td>';
+                    h+='</tr>';
+                }
+                h+='<tr class="bg-gray-100 border-t-2"><td class="py-3 px-3 font-bold">GESAMT '+year+'</td>';
+                h+='<td class="text-right py-3 px-3 font-bold text-blue-600">'+totBer+'</td>';
+                h+='<td class="text-right py-3 px-3 font-bold text-green-600">'+totVk+'</td>';
+                h+='<td class="text-right py-3 px-3 font-bold">'+ytdQuote+'%</td>';
+                h+='<td class="text-right py-3 px-3 font-bold text-vit-orange">'+eur(totUms)+' \u20AC</td>';
+                h+='<td class="text-right py-3 px-3 font-bold">'+eur(avgPreis)+' \u20AC</td></tr>';
+                tbody.innerHTML=h;
+            }
+
+            // Ranking
+            var sellers=Object.values(sellerMap).sort(function(a,b){return b.umsatz-a.umsatz;});
+            var rankEl=document.getElementById('ausRanking');
+            if(rankEl && sellers.length>0){
+                var medals=['\ud83e\udd47','\ud83e\udd48','\ud83e\udd49'];
+                var colors=['border-2 border-yellow-400 bg-yellow-50','border-2 border-gray-300 bg-gray-50','border-2 border-orange-300 bg-orange-50'];
+                var rh='';
+                sellers.slice(0,8).forEach(function(s,i){
+                    var cls=i<3?colors[i]:'border border-gray-200';
+                    var q=s.beratungen>0?Math.round(s.verkauft/s.beratungen*100):0;
+                    rh+='<div class="p-4 '+cls+' rounded-xl text-center">';
+                    rh+='<p class="text-3xl mb-1">'+(i<3?medals[i]:(i+1))+'</p>';
+                    rh+='<p class="font-bold text-gray-800">'+s.name+'</p>';
+                    rh+='<p class="text-xl font-bold text-vit-orange">'+eur(s.umsatz)+' \u20AC</p>';
+                    rh+='<p class="text-xs text-gray-500">'+s.verkauft+' Verkaeufe · Quote: '+q+'%</p>';
+                    rh+='</div>';
+                });
+                rankEl.innerHTML=rh;
+            } else if(rankEl) {
+                rankEl.innerHTML='<p class="text-sm text-gray-400 col-span-4 text-center py-4">Noch keine Verkaufsdaten erfasst. Nutze "+ Eintragen" in der Wochenansicht.</p>';
+            }
+        }
+
+        async function saveVtEntry() {
+            var datum = (document.getElementById('vtDate')||{}).value;
+            var seller = (document.getElementById('vtSeller')||{}).value;
+            var errEl = document.getElementById('vtError');
+            var btn = document.getElementById('vtSaveBtn');
+            if(!datum || !seller.trim()) { if(errEl){errEl.textContent='Bitte Datum und Verkaeufer eingeben.';errEl.style.display='block';} return; }
+            var vi = function(id) { return parseInt((document.getElementById(id)||{}).value) || 0; };
+            var vf = function(id) { return parseFloat((document.getElementById(id)||{}).value) || 0; };
+
+            if(btn) { btn.disabled=true; btn.textContent='Wird gespeichert...'; }
+            try {
+                var stdId = sbProfile ? sbProfile.standort_id : null;
+                var data = {
+                    standort_id: stdId,
+                    datum: datum,
+                    verkaeufer_name: seller.trim(),
+                    plan_termine: vi('vtPlan'),
+                    geplant: vi('vtGeplant'),
+                    spontan: vi('vtSpontan'),
+                    online: vi('vtOnline'),
+                    ergo: vi('vtErgo'),
+                    verkauft: vi('vtVerkauft'),
+                    uebergabe: vi('vtUebergabe'),
+                    umsatz: vf('vtUmsatz'),
+                    notizen: (document.getElementById('vtNotizen')||{}).value || null,
+                    erfasst_von: sbUser ? sbUser.id : null,
+                    updated_at: new Date().toISOString()
+                };
+                var resp = await sb.from('verkauf_tracking').upsert(data, {onConflict:'standort_id,datum,verkaeufer_name'}).select();
+                if(resp.error) throw resp.error;
+                closeVtModal();
+                alert('✅ Verkaufsdaten gespeichert!');
+                loadVerkaufTracking();
+                loadWeekFromDb();
+            } catch(err) {
+                if(errEl){errEl.textContent='Fehler: '+err.message;errEl.style.display='block';}
+                if(btn) { btn.disabled=false; btn.textContent='Speichern'; }
+            }
+        }
+
+        // Load BWA on controlling tab open
+        var origShowControllingTab = showControllingTab;
+        showControllingTab = function(t) {
+            origShowControllingTab(t);
+            if(t === 'bwa') loadBwaList();
+        };
 
         // === LEAD REPORTING DASHBOARD ===
         var leadData = {
@@ -7925,7 +8809,9 @@
         showControllingTab = function(t) { origShowControllingTab(t); if(t==='ctrlWissen') renderWissenTab('controlling','ctrlTabCtrlWissen'); };
 
         var origShowVerkaufTab = showVerkaufTab;
-        showVerkaufTab = function(t) { origShowVerkaufTab(t); if(t==='vkWissen') renderWissenTab('verkauf','vkTabVkWissen'); };
+        var ausLoaded = false;
+        var vtLoaded = false;
+        showVerkaufTab = function(t) { origShowVerkaufTab(t); if(t==='vkWissen') renderWissenTab('verkauf','vkTabVkWissen'); if(t==='auswertung' && !ausLoaded) { ausLoaded=true; loadAuswertung(); } if(t==='woche' && !vtLoaded) { vtLoaded=true; loadVerkaufTracking(); } };
 
         // === SUPPORT MODULE ===
         async function renderTickets(filter) {
@@ -7933,6 +8819,7 @@
             if(!container) return;
             try {
                 var query = sb.from('support_tickets').select('*, users(name)').order('created_at', {ascending:false});
+                if(sbProfile && sbProfile.standort_id && !sbProfile.is_hq) query = query.eq('standort_id', sbProfile.standort_id);
                 if(filter==='offen') query = query.in('status', ['offen','in_bearbeitung']);
                 if(filter==='geloest') query = query.eq('status', 'geloest');
                 var resp = await query;
@@ -7940,26 +8827,128 @@
                 var tickets = resp.data || [];
                 var html = '';
                 var statusColors = {offen:'bg-yellow-100 text-yellow-700',in_bearbeitung:'bg-blue-100 text-blue-700',warten:'bg-gray-100 text-gray-700',geloest:'bg-green-100 text-green-700'};
-                var statusLabels = {offen:'Offen',in_bearbeitung:'In Bearbeitung',warten:'Wartend',geloest:'Gelöst'};
-                var prioIcons = {dringend:'🔴',hoch:'🟠',mittel:'🟡',niedrig:'⚪'};
+                var statusLabels = {offen:'Offen',in_bearbeitung:'In Bearbeitung',warten:'Wartend',geloest:'Gel\u00f6st'};
+                var prioIcons = {dringend:'\uD83D\uDD34',hoch:'\uD83D\uDFE0',mittel:'\uD83D\uDFE1',niedrig:'\u26AA'};
                 tickets.forEach(function(t) {
                     var d = new Date(t.created_at);
-                    html += '<div class="vit-card p-4 hover:shadow-md transition">';
+                    var desc = (t.beschreibung||'').length > 120 ? t.beschreibung.substring(0,120)+'...' : (t.beschreibung||'');
+                    html += '<div class="vit-card p-4 hover:shadow-md transition cursor-pointer" onclick="openTicketDetail(\''+t.id+'\')">';
                     html += '<div class="flex items-start justify-between">';
                     html += '<div class="flex-1"><div class="flex items-center space-x-2 mb-1">';
                     html += '<span class="text-xs font-semibold rounded px-2 py-0.5 ' + (statusColors[t.status]||'') + '">' + (statusLabels[t.status]||t.status) + '</span>';
                     html += '<span>' + (prioIcons[t.prioritaet]||'') + '</span>';
                     html += '<span class="text-xs text-gray-400">#' + t.id.substring(0,8) + '</span></div>';
                     html += '<h4 class="font-bold text-gray-800 text-sm">' + t.titel + '</h4>';
-                    html += '<p class="text-xs text-gray-500 mt-1">' + t.beschreibung.substring(0,120) + '</p>';
+                    html += '<p class="text-xs text-gray-500 mt-1">' + desc + '</p>';
                     html += '<div class="flex items-center space-x-3 mt-2 text-xs text-gray-400">';
                     html += '<span>' + d.toLocaleDateString('de-DE') + '</span>';
                     html += '<span>' + (t.kategorie||'') + '</span>';
-                    html += '</div></div></div></div>';
+                    if(t.users && t.users.name) html += '<span>\uD83D\uDC64 '+t.users.name+'</span>';
+                    html += '</div></div>';
+                    html += '<span class="text-gray-300 text-lg ml-2">\u203A</span>';
+                    html += '</div></div>';
                 });
-                if(tickets.length===0) html = '<div class="text-center py-8 text-gray-400">Keine Tickets.</div>';
+                if(tickets.length===0) html = '<div class="text-center py-8 text-gray-400">Keine Tickets in dieser Kategorie.</div>';
                 container.innerHTML = html;
-            } catch(err) { console.error('Support:', err); }
+            } catch(err) { console.error('Support:', err); container.innerHTML='<div class="text-center py-8 text-red-400">Fehler beim Laden der Tickets.</div>'; }
+        }
+
+        async function openTicketDetail(ticketId) {
+            try {
+                var tResp = await sb.from('support_tickets').select('*, users(name)').eq('id', ticketId).single();
+                if(tResp.error) throw tResp.error;
+                var t = tResp.data;
+                var cResp = await sb.from('ticket_kommentare').select('*, users(name)').eq('ticket_id', ticketId).order('created_at', {ascending:true});
+                var kommentare = (cResp.data || []);
+
+                var statusLabels = {offen:'Offen',in_bearbeitung:'In Bearbeitung',warten:'Wartend',geloest:'Gel\u00f6st'};
+                var statusColors = {offen:'bg-yellow-100 text-yellow-700',in_bearbeitung:'bg-blue-100 text-blue-700',warten:'bg-gray-100 text-gray-700',geloest:'bg-green-100 text-green-700'};
+                var prioIcons = {dringend:'\uD83D\uDD34',hoch:'\uD83D\uDFE0',mittel:'\uD83D\uDFE1',niedrig:'\u26AA'};
+                var d = new Date(t.created_at);
+                var isHQ = sbProfile && sbProfile.is_hq;
+
+                var html = '<div id="ticketDetailOverlay" onclick="closeTicketDetail()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
+                html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:0;width:640px;max-width:95vw;max-height:90vh;overflow:hidden;box-shadow:0 25px 50px rgba(0,0,0,0.25);display:flex;flex-direction:column;">';
+
+                // Header
+                html += '<div class="p-5 border-b border-gray-100">';
+                html += '<div class="flex items-center justify-between mb-3">';
+                html += '<div class="flex items-center space-x-2"><span class="text-xs font-semibold rounded px-2 py-0.5 '+(statusColors[t.status]||'')+'">'+(statusLabels[t.status]||t.status)+'</span>';
+                html += '<span>'+(prioIcons[t.prioritaet]||'')+'</span>';
+                html += '<span class="text-xs text-gray-400">#'+t.id.substring(0,8)+'</span></div>';
+                html += '<button onclick="closeTicketDetail()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
+                html += '<h3 class="font-bold text-gray-800 text-lg">'+t.titel+'</h3>';
+                html += '<div class="flex items-center space-x-4 mt-2 text-xs text-gray-400">';
+                html += '<span>Erstellt: '+d.toLocaleDateString('de-DE')+' '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})+'</span>';
+                html += '<span>Kategorie: '+(t.kategorie||'')+'</span>';
+                if(t.users&&t.users.name) html += '<span>Von: '+t.users.name+'</span>';
+                html += '</div></div>';
+
+                // Body
+                html += '<div class="flex-1 overflow-y-auto p-5">';
+                html += '<div class="bg-gray-50 rounded-lg p-4 mb-4"><p class="text-sm text-gray-700 whitespace-pre-wrap">'+(t.beschreibung||'Keine Beschreibung.')+'</p></div>';
+
+                // Status change (HQ can change, user can close)
+                html += '<div class="mb-4 p-3 bg-blue-50 rounded-lg flex items-center justify-between">';
+                html += '<span class="text-xs font-semibold text-blue-700">'+t('ticket_change_status')+':</span>';
+                html += '<div class="flex space-x-1">';
+                if(isHQ) {
+                    ['offen','in_bearbeitung','warten','geloest'].forEach(function(st) {
+                        var active = t.status===st;
+                        html += '<button onclick="changeTicketStatus(\''+ticketId+'\',\''+st+'\')" class="text-xs px-2.5 py-1 rounded-full font-semibold '+(active?'bg-vit-orange text-white':'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100')+'">'+(statusLabels[st])+'</button>';
+                    });
+                } else {
+                    if(t.status!=='geloest') html += '<button onclick="changeTicketStatus(\''+ticketId+'\',\'geloest\')" class="text-xs px-3 py-1 rounded-full font-semibold bg-green-500 text-white hover:bg-green-600"'>'+t('ticket_mark_resolved')+'</button>';
+                    else html += '<span class="text-xs text-green-600 font-semibold">\u2705 Gel\u00f6st</span>';
+                }
+                html += '</div></div>';
+
+                // Kommentare
+                html += '<h4 class="font-semibold text-gray-700 text-sm mb-3">'+t('ticket_comments')+' ('+kommentare.length+')</h4>';
+                if(kommentare.length === 0) html += '<p class="text-sm text-gray-400 mb-4">Noch keine Kommentare.</p>';
+                kommentare.forEach(function(k) {
+                    var kd = new Date(k.created_at);
+                    var isOwn = sbUser && k.erstellt_von === sbUser.id;
+                    html += '<div class="mb-3 p-3 rounded-lg '+(isOwn?'bg-orange-50 border border-orange-100':'bg-gray-50 border border-gray-100')+'">';
+                    html += '<div class="flex items-center justify-between mb-1"><span class="text-xs font-bold text-gray-700">'+(k.users&&k.users.name?k.users.name:'Unbekannt')+'</span>';
+                    html += '<span class="text-[10px] text-gray-400">'+kd.toLocaleDateString('de-DE')+' '+kd.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})+'</span></div>';
+                    html += '<p class="text-sm text-gray-600 whitespace-pre-wrap">'+k.text+'</p></div>';
+                });
+
+                // Neuer Kommentar
+                html += '<div class="mt-3 flex space-x-2">';
+                html += '<textarea id="ticketKommentarInput" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none" rows="2" placeholder="'+t('ticket_comment_ph')+'"></textarea>';
+                html += '<button onclick="addTicketComment(\''+ticketId+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90 self-end"'>2019+t(2019ticket_comment_send2019)+2019</button>';
+                html += '</div>';
+
+                html += '</div></div></div>';
+                var c = document.createElement('div'); c.id = 'ticketDetailContainer'; c.innerHTML = html; document.body.appendChild(c);
+            } catch(err) { console.error('Ticket detail:', err); alert('Fehler beim Laden des Tickets.'); }
+        }
+
+        function closeTicketDetail() { var c = document.getElementById('ticketDetailContainer'); if(c) c.remove(); }
+
+        async function changeTicketStatus(ticketId, newStatus) {
+            try {
+                var resp = await sb.from('support_tickets').update({status:newStatus, updated_at:new Date().toISOString()}).eq('id',ticketId);
+                if(resp.error) throw resp.error;
+                closeTicketDetail();
+                await openTicketDetail(ticketId);
+                renderTickets('all');
+            } catch(err) { alert('Fehler: '+err.message); }
+        }
+
+        async function addTicketComment(ticketId) {
+            var input = document.getElementById('ticketKommentarInput');
+            if(!input || !input.value.trim()) return;
+            try {
+                var resp = await sb.from('ticket_kommentare').insert({
+                    ticket_id:ticketId, erstellt_von:sbUser?sbUser.id:null, text:input.value.trim()
+                });
+                if(resp.error) throw resp.error;
+                closeTicketDetail();
+                await openTicketDetail(ticketId);
+            } catch(err) { alert('Fehler: '+err.message); }
         }
 
         function filterTickets(filter) {
@@ -7980,6 +8969,28 @@
                 var form=document.getElementById('newTicketForm'); if(form) form.classList.add('hidden');
                 renderTickets('all');
             } catch(err) { alert('Fehler: '+err.message); }
+        }
+
+        async function submitTicketForm() {
+            var titel = (document.getElementById('ticketTitelInput')||{}).value;
+            var beschreibung = (document.getElementById('ticketBeschreibungInput')||{}).value;
+            var kategorie = (document.getElementById('ticketCatInput')||{}).value || 'allgemein';
+            var prioritaet = (document.getElementById('ticketPrioInput')||{}).value || 'mittel';
+            if(!titel || !titel.trim()) { alert('Bitte Betreff eingeben.'); return; }
+            try {
+                var stdId = sbProfile ? sbProfile.standort_id : null;
+                var resp = await sb.from('support_tickets').insert({
+                    standort_id: stdId, erstellt_von: sbUser ? sbUser.id : null,
+                    titel: titel.trim(), beschreibung: beschreibung || '',
+                    kategorie: kategorie, prioritaet: prioritaet, status: 'offen'
+                });
+                if(resp.error) throw resp.error;
+                document.getElementById('ticketCreate').classList.add('hidden');
+                document.getElementById('ticketTitelInput').value = '';
+                document.getElementById('ticketBeschreibungInput').value = '';
+                alert('\u2705 Ticket erstellt!');
+                renderTickets('all');
+            } catch(err) { alert('Fehler: ' + err.message); }
         }
 
         var zentraleKontakte = [
@@ -8003,54 +9014,6 @@
             if(btn) btn.className='sup-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
             if(tabName==='tickets') renderTickets('all');
             if(tabName==='kontakte') renderKontakte();
-        }
-
-        function renderTickets(filter) {
-            var list = document.getElementById('ticketList');
-            if(!list) return;
-            var filtered = filter==='all' ? supportTickets : supportTickets.filter(function(t){ return t.status===filter; });
-            var h = '';
-            filtered.forEach(function(t) {
-                var statusBadge = '', prioIcon = '', statusColor = '';
-                if(t.status==='offen') { statusBadge='Offen'; statusColor='bg-red-100 text-red-700'; }
-                else if(t.status==='bearbeitung') { statusBadge='In Bearbeitung'; statusColor='bg-yellow-100 text-yellow-700'; }
-                else { statusBadge='Geloest'; statusColor='bg-green-100 text-green-700'; }
-                if(t.prio==='hoch') prioIcon='🔴';
-                else if(t.prio==='mittel') prioIcon='🟡';
-                else prioIcon='🟢';
-
-                h += '<div class="vit-card p-4 hover:shadow-md transition '+(t.status==='geloest'?'opacity-60':'')+'">';
-                h += '<div class="flex items-start justify-between">';
-                h += '<div class="flex-1">';
-                h += '<div class="flex items-center space-x-2 mb-1">';
-                h += '<span class="text-xs font-mono text-gray-400">'+t.id+'</span>';
-                h += '<span class="'+statusColor+' text-[10px] px-2 py-0.5 rounded-full font-bold">'+statusBadge+'</span>';
-                h += '<span class="text-xs">'+prioIcon+'</span>';
-                h += '<span class="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">'+t.kat+'</span>';
-                h += '</div>';
-                h += '<p class="text-sm font-semibold text-gray-800">'+t.betreff+'</p>';
-                h += '<div class="flex items-center space-x-4 mt-2 text-xs text-gray-400">';
-                h += '<span>Erstellt: '+t.erstellt+'</span>';
-                h += '<span>Letzte Aktualisierung: '+t.aktualisiert+'</span>';
-                if(t.bearbeiter) h += '<span>👤 '+t.bearbeiter+'</span>';
-                h += '<span>💬 '+t.antworten+' Antworten</span>';
-                h += '</div>';
-                h += '</div>';
-                h += '<button class="px-3 py-1.5 text-xs font-semibold border border-gray-300 rounded-lg hover:bg-gray-50 whitespace-nowrap ml-3">Details →</button>';
-                h += '</div>';
-                h += '</div>';
-            });
-            if(filtered.length===0) h = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-2">✅</p><p class="text-sm">Keine Tickets in dieser Kategorie</p></div>';
-            list.innerHTML = h;
-        }
-
-        function filterTickets(filter) {
-            document.querySelectorAll('.ticket-filter-btn').forEach(function(b){
-                b.className='ticket-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600';
-            });
-            var btn = document.querySelector('.ticket-filter-btn[data-tf="'+filter+'"]');
-            if(btn) btn.className='ticket-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white';
-            renderTickets(filter);
         }
 
         function renderKontakte() {
@@ -8660,7 +9623,7 @@
             if(v==='mitarbeiter') renderPartnerMitarbeiter();
             if(v==='hqKommando') renderKommandozentrale();
             if(v==='kalender') renderKalender();
-            if(v==='todo') renderTodos();
+            if(v==='todo') loadTodos();
             if(v==='notifications') renderNotifications('all');
         };
 
@@ -9107,20 +10070,20 @@
             renderKalender();
         }
 
-        // === TODO DATA & LOGIC ===
-        var todos = [
-            {id:1,title:'Angebot fuer Hr. Mueller fertigstellen',date:'2026-02-14',prio:'hoch',kat:'verkauf',done:false},
-            {id:2,title:'Werkstatt-Auftrag #4521 abschliessen',date:'2026-02-14',prio:'normal',kat:'werkstatt',done:false},
-            {id:3,title:'Fruehjahrs-Deko im Laden aufbauen',date:'2026-02-13',prio:'niedrig',kat:'marketing',done:false},
-            {id:4,title:'Orbea-Bestellung Q2 vorbereiten',date:'2026-02-17',prio:'hoch',kat:'admin',done:false},
-            {id:5,title:'Local Hero Video drehen: Bremsbelaege',date:'2026-02-20',prio:'normal',kat:'marketing',done:false},
-            {id:6,title:'Kunden-Follow-up: Fr. Schmidt',date:'2026-02-10',prio:'hoch',kat:'verkauf',done:false},
-            {id:7,title:'Lieferung Shimano-Teile pruefen',date:'2026-02-12',prio:'normal',kat:'werkstatt',done:true},
-            {id:8,title:'BWA Januar mit Steuerberater besprechen',date:'2026-02-11',prio:'normal',kat:'admin',done:true},
-            {id:9,title:'Newsletter-Texte ans HQ senden',date:'2026-02-09',prio:'niedrig',kat:'marketing',done:true},
-            {id:10,title:'Teammeeting Protokoll schreiben',date:'2026-02-10',prio:'niedrig',kat:'admin',done:true}
-        ];
+        // === TODO DATA & LOGIC (DB-backed) ===
+        var todos = [];
         var currentTodoFilter='all';
+
+        async function loadTodos() {
+            try {
+                var query = sb.from('todos').select('*').order('prio_sort', {ascending:true}).order('faellig_am', {ascending:true});
+                if(sbProfile && sbProfile.standort_id && !sbProfile.is_hq) query = query.eq('standort_id', sbProfile.standort_id);
+                var resp = await query;
+                if(!resp.error) todos = resp.data || [];
+                else todos = [];
+            } catch(e) { console.warn('Todos load:', e); }
+            renderTodos();
+        }
 
         function filterTodos(f){
             currentTodoFilter=f;
@@ -9131,59 +10094,346 @@
         }
 
         function renderTodos(){
-            var today='2026-02-14';
-            var list=todos.filter(function(t){
-                if(currentTodoFilter==='all') return !t.done;
-                if(currentTodoFilter==='heute') return !t.done && t.date===today;
-                if(currentTodoFilter==='ueberfaellig') return !t.done && t.date<today;
-                if(currentTodoFilter==='done') return t.done;
+            var today=new Date().toISOString().slice(0,10);
+            var list=todos.filter(function(td){
+                if(currentTodoFilter==='all') return !td.erledigt;
+                if(currentTodoFilter==='heute') return !td.erledigt && td.faellig_am===today;
+                if(currentTodoFilter==='ueberfaellig') return !td.erledigt && td.faellig_am && td.faellig_am<today;
+                if(currentTodoFilter==='done') return td.erledigt;
                 return true;
             });
-            // Update KPIs
-            var offen=todos.filter(function(t){return !t.done;}).length;
-            var heute=todos.filter(function(t){return !t.done && t.date===today;}).length;
-            var ueber=todos.filter(function(t){return !t.done && t.date<today;}).length;
-            var done=todos.filter(function(t){return t.done;}).length;
+            var offen=todos.filter(function(td){return !td.erledigt;}).length;
+            var heute=todos.filter(function(td){return !td.erledigt && td.faellig_am===today;}).length;
+            var ueber=todos.filter(function(td){return !td.erledigt && td.faellig_am && td.faellig_am<today;}).length;
+            var done=todos.filter(function(td){return td.erledigt;}).length;
             var kO=document.getElementById('todoKpiOffen');if(kO)kO.textContent=offen;
             var kH=document.getElementById('todoKpiHeute');if(kH)kH.textContent=heute;
             var kU=document.getElementById('todoKpiUeber');if(kU)kU.textContent=ueber;
             var kD=document.getElementById('todoKpiDone');if(kD)kD.textContent=done;
+            // Update KPI labels
+            var lO=document.getElementById('todoKpiOffenLabel');if(lO)lO.textContent=t('todo_open');
+            var lH=document.getElementById('todoKpiHeuteLabel');if(lH)lH.textContent=t('todo_today');
+            var lU=document.getElementById('todoKpiUeberLabel');if(lU)lU.textContent=t('todo_overdue');
+            var lD=document.getElementById('todoKpiDoneLabel');if(lD)lD.textContent=t('todo_done');
             var badge=document.getElementById('todoSidebarBadge');if(badge)badge.textContent=offen;
 
             var el=document.getElementById('todoList');if(!el)return;
             var h='';
-            var prioIcons={hoch:'🔴',normal:'🟡',niedrig:'🟢'};
-            var katIcons={verkauf:'💰',werkstatt:'🔧',marketing:'📣',admin:'📋',sonstig:'📌'};
-            list.sort(function(a,b){var po={hoch:0,normal:1,niedrig:2};return (po[a.prio]||1)-(po[b.prio]||1);});
+            var prioIcons={hoch:'\uD83D\uDD34',dringend:'\uD83D\uDD34',normal:'\uD83D\uDFE1',niedrig:'\uD83D\uDFE2'};
+            var katIcons={verkauf:'\uD83D\uDCB0',werkstatt:'\uD83D\uDD27',marketing:'\uD83D\uDCE3',admin:'\uD83D\uDCCB',sonstig:'\uD83D\uDCCC'};
+            var katLabels={verkauf:t('cat_sales'),werkstatt:t('cat_workshop'),marketing:t('cat_marketing'),admin:t('cat_admin'),sonstig:t('cat_other')};
+            var prioSort={dringend:-1,hoch:0,normal:1,niedrig:2};
+            list.sort(function(a,b){return (prioSort[a.prio]||1)-(prioSort[b.prio]||1);});
             list.forEach(function(td){
-                var isOver=!td.done && td.date<today;
-                h+='<div class="vit-card p-3 flex items-center space-x-3 '+(td.done?'opacity-50':'')+'">';
-                    html += '<button onclick="toggleTodo(\x27'+t.id+'\x27)" class="mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ' + (isErledigt ? 'border-green-500 bg-green-500 text-white' : 'border-gray-300 hover:border-vit-orange') + '"><span class="text-xs">' + (isErledigt ? '✓' : '') + '</span></button>';
-                if(td.done) h+='<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>';
+                var isOver=!td.erledigt && td.faellig_am && td.faellig_am<today;
+                var isSystem = td.typ === 'system' || td.referenz_typ === 'bwa_erinnerung';
+                var isEscalated = td.eskalation_stufe && td.eskalation_stufe >= 2;
+                var fmtDate=td.faellig_am?td.faellig_am.slice(8)+'.'+td.faellig_am.slice(5,7)+'.':'';
+                var borderClass = isEscalated ? 'border-l-4 border-red-400' : (isSystem ? 'border-l-4 border-blue-300' : '');
+                h+='<div class="vit-card p-3 flex items-center space-x-3 '+(td.erledigt?'opacity-50':'')+' '+borderClass+'">';
+                h+='<button onclick="toggleTodo(\''+td.id+'\')" class="mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 '+(td.erledigt?'border-green-500 bg-green-500 text-white':'border-gray-300 hover:border-vit-orange')+'">';
+                if(td.erledigt) h+='<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>';
                 h+='</button>';
                 h+='<div class="flex-1 min-w-0">';
-                h+='<p class="font-semibold text-sm '+(td.done?'line-through text-gray-400':'text-gray-800')+'">'+td.title+'</p>';
-                h+='<p class="text-[10px] text-gray-500 mt-0.5">'+(katIcons[td.kat]||'')+' '+td.kat+' · Fällig: '+td.date.slice(8)+'.'+td.date.slice(5,7)+'.'+(isOver?' <span class="text-red-500 font-bold">ÜBERFÄLLIG</span>':'')+'</p>';
+                h+='<div class="flex items-center space-x-1.5">';
+                if(isSystem) h+='<span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-600 font-bold">\uD83E\uDD16 '+t('todo_system')+'</span>';
+                if(isEscalated) h+='<span class="text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-600 font-bold">\uD83D\uDD25 '+t('prio_urgent')+'</span>';
                 h+='</div>';
-                h+='<span class="text-xs">'+prioIcons[td.prio]+'</span>';
+                h+='<p class="font-semibold text-sm '+(td.erledigt?'line-through text-gray-400':'text-gray-800')+'">'+td.titel+'</p>';
+                h+='<p class="text-[10px] text-gray-500 mt-0.5">'+(katIcons[td.kategorie]||'')+' '+(katLabels[td.kategorie]||td.kategorie||'')+' \u00B7 '+t('todo_due')+': '+fmtDate+(isOver?' <span class="text-red-500 font-bold">'+t('todo_overdue')+'</span>':'')+'</p>';
+                if(td.beschreibung && !td.erledigt) h+='<p class="text-[10px] text-gray-400 mt-0.5 truncate">'+td.beschreibung.substring(0,80)+'</p>';
+                h+='</div>';
+                h+='<span class="text-xs">'+(prioIcons[td.prio]||'')+'</span>';
+                if(!isSystem) h+='<button onclick="editTodo(\''+td.id+'\')" class="text-gray-300 hover:text-blue-500 text-xs" title="'+t('todo_edit')+'">\u270F\uFE0F</button>';
+                h+='<button onclick="deleteTodo(\''+td.id+'\')" class="text-gray-300 hover:text-red-500 text-xs" title="'+t('todo_delete')+'">\u2715</button>';
                 h+='</div>';
             });
-            if(!list.length) h='<div class="text-center py-8 text-gray-400"><p class="text-3xl mb-2">✅</p><p class="text-sm">Keine Aufgaben</p></div>';
+            if(!list.length) h='<div class="text-center py-8 text-gray-400"><p class="text-3xl mb-2">\u2705</p><p class="text-sm">'+t('todo_no_tasks')+'</p></div>';
             el.innerHTML=h;
         }
 
-        function toggleTodo(id){
-            todos.forEach(function(t){if(t.id===id)t.done=!t.done;});
+        async function toggleTodo(id){
+            var td=todos.find(function(t){return t.id===id;});
+            if(!td) return;
+            td.erledigt=!td.erledigt;
+            try { await sb.from('todos').update({erledigt:td.erledigt, erledigt_am:td.erledigt?new Date().toISOString():null}).eq('id',id); } catch(e){}
             renderTodos();
         }
 
-        function addTodo(){
-            var title=document.getElementById('todoNewTitle').value;
-            if(!title){alert('Bitte Aufgabe eingeben.');return;}
-            todos.push({id:todos.length+1,title:title,date:document.getElementById('todoNewDate').value||'2026-02-14',prio:document.getElementById('todoNewPrio').value,kat:document.getElementById('todoNewKat').value,done:false});
+        async function deleteTodo(id){
+            try { await sb.from('todos').delete().eq('id',id); todos=todos.filter(function(t){return t.id!==id;}); } catch(e){}
+            renderTodos();
+        }
+
+        function editTodo(id) {
+            var td = todos.find(function(t){return t.id===id;});
+            if(!td) return;
+            var html = '<div id="todoEditOverlay" onclick="closeTodoEdit()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
+            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:440px;max-width:95vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">Aufgabe bearbeiten</h3><button onclick="closeTodoEdit()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
+            html += '<div class="space-y-3 mb-4">';
+            html += '<input id="todoEditTitle" type="text" value="'+td.titel.replace(/"/g,'&quot;')+'" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">';
+            html += '<div class="grid grid-cols-3 gap-2">';
+            html += '<input id="todoEditDate" type="date" value="'+(td.faellig_am||'')+'" class="px-3 py-2 border border-gray-200 rounded-lg text-sm">';
+            html += '<select id="todoEditPrio" class="px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="hoch"'+(td.prio==='hoch'?' selected':'')+'>Hoch</option><option value="normal"'+(td.prio==='normal'?' selected':'')+'>Normal</option><option value="niedrig"'+(td.prio==='niedrig'?' selected':'')+'>Niedrig</option></select>';
+            html += '<select id="todoEditKat" class="px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="verkauf"'+(td.kategorie==='verkauf'?' selected':'')+'>Verkauf</option><option value="werkstatt"'+(td.kategorie==='werkstatt'?' selected':'')+'>Werkstatt</option><option value="marketing"'+(td.kategorie==='marketing'?' selected':'')+'>Marketing</option><option value="admin"'+(td.kategorie==='admin'?' selected':'')+'>Admin</option><option value="sonstig"'+(td.kategorie==='sonstig'?' selected':'')+'>Sonstig</option></select>';
+            html += '</div></div>';
+            html += '<button onclick="saveTodoEdit(\''+id+'\')" class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Speichern</button>';
+            html += '</div></div>';
+            var c = document.createElement('div'); c.id = 'todoEditContainer'; c.innerHTML = html; document.body.appendChild(c);
+        }
+
+        function closeTodoEdit() { var c = document.getElementById('todoEditContainer'); if(c) c.remove(); }
+
+        async function saveTodoEdit(id) {
+            var titel = (document.getElementById('todoEditTitle')||{}).value;
+            var faellig = (document.getElementById('todoEditDate')||{}).value || null;
+            var prio = (document.getElementById('todoEditPrio')||{}).value || 'normal';
+            var kat = (document.getElementById('todoEditKat')||{}).value || 'sonstig';
+            var prioSortMap = {hoch:0,normal:1,niedrig:2};
+            if(!titel||!titel.trim()) return;
+            try {
+                var resp = await sb.from('todos').update({titel:titel.trim(),faellig_am:faellig,prio:prio,kategorie:kat,prio_sort:prioSortMap[prio]||1}).eq('id',id);
+                if(resp.error) throw resp.error;
+                var td = todos.find(function(t){return t.id===id;});
+                if(td) { td.titel=titel.trim(); td.faellig_am=faellig; td.prio=prio; td.kategorie=kat; td.prio_sort=prioSortMap[prio]||1; }
+                closeTodoEdit();
+                renderTodos();
+            } catch(e) { alert('Fehler: '+e.message); }
+        }
+
+        async function addTodo(){
+            var title=(document.getElementById('todoNewTitle')||{}).value;
+            if(!title||!title.trim()){alert('Bitte Aufgabe eingeben.');return;}
+            var faellig=(document.getElementById('todoNewDate')||{}).value||null;
+            var prio=(document.getElementById('todoNewPrio')||{}).value||'normal';
+            var kat=(document.getElementById('todoNewKat')||{}).value||'sonstig';
+            var prioSort={hoch:0,normal:1,niedrig:2};
+            try {
+                var resp = await sb.from('todos').insert({
+                    standort_id: sbProfile?sbProfile.standort_id:null,
+                    erstellt_von: sbUser?sbUser.id:null,
+                    titel: title.trim(), faellig_am: faellig, prio: prio, kategorie: kat,
+                    prio_sort: prioSort[prio]||1, erledigt: false
+                }).select();
+                if(resp.error) throw resp.error;
+                if(resp.data&&resp.data[0]) todos.unshift(resp.data[0]);
+            } catch(e) { console.error('Todo add:', e); }
             document.getElementById('todoNewModal').classList.add('hidden');
             document.getElementById('todoNewTitle').value='';
             renderTodos();
+        }
+
+        // =====================================================================
+        // BWA ERINNERUNGSLOGIK – Automatische Deadline-Todos mit Eskalation
+        // =====================================================================
+        // Deadline: BWA für Monat X muss bis zum 15. des Folgemonats (X+1) eingereicht sein.
+        // Eskalationsstufen:
+        //   Stufe 0: Ab dem 1. des Folgemonats → Todo „BWA einreichen" (prio: normal)
+        //   Stufe 1: Ab dem 8. des Folgemonats → Prio hochsetzen auf „hoch", Hinweistext
+        //   Stufe 2: Ab dem 13. des Folgemonats → Prio „dringend", Banner-Warnung
+        //   Stufe 3: Nach dem 15. → ÜBERFÄLLIG, E-Mail-Eskalation an HQ (Platzhalter)
+        // Jede Stufe: erinnerung_email_faellig = true → wird von externem Cronjob/Edge Function abgeholt
+
+        async function checkBwaDeadlines() {
+            // Nur für Inhaber/Buchhaltung relevant, nicht für HQ
+            var isInhaber = currentRoles.indexOf('inhaber') >= 0 || currentRoles.indexOf('buchhaltung') >= 0;
+            var isHQ = sbProfile && sbProfile.is_hq;
+            if(!isInhaber || isHQ) return;
+            if(!sbProfile || !sbProfile.standort_id) return;
+
+            var today = new Date();
+            var todayStr = today.toISOString().slice(0,10);
+
+            // Welche BWA-Monate fehlen? Prüfe die letzten 3 Monate
+            var missingMonths = [];
+            for(var offset = 1; offset <= 3; offset++) {
+                var checkDate = new Date(today.getFullYear(), today.getMonth() - offset, 1);
+                var bwaMonat = checkDate.getMonth() + 1; // 1-12
+                var bwaJahr = checkDate.getFullYear();
+                // Deadline = 15. des Folgemonats
+                var deadlineDate = new Date(bwaJahr, bwaMonat, 15); // bwaMonat ist 0-indexed+1 = nächster Monat
+                // Nur relevant wenn wir nach dem 1. des Folgemonats sind
+                var reminderStart = new Date(bwaJahr, bwaMonat, 1);
+                if(today >= reminderStart) {
+                    missingMonths.push({
+                        monat: bwaMonat === 0 ? 12 : bwaMonat,
+                        jahr: bwaMonat === 0 ? bwaJahr - 1 : bwaJahr,
+                        bwaMonat: checkDate.getMonth() + 1,
+                        bwaJahr: checkDate.getFullYear(),
+                        deadline: deadlineDate,
+                        deadlineStr: deadlineDate.toISOString().slice(0,10)
+                    });
+                }
+            }
+            if(missingMonths.length === 0) return;
+
+            // Prüfe welche BWAs bereits eingereicht sind
+            try {
+                var bwaResp = await sb.from('bwa_daten').select('monat,jahr').eq('standort_id', sbProfile.standort_id);
+                if(bwaResp.error) throw bwaResp.error;
+                var submitted = (bwaResp.data || []);
+                var submittedKeys = submitted.map(function(b) { return b.jahr + '-' + b.monat; });
+
+                // Prüfe welche Reminder-Todos bereits existieren
+                var todoResp = await sb.from('todos').select('id,titel,prio,eskalation_stufe,referenz_typ,referenz_id')
+                    .eq('standort_id', sbProfile.standort_id)
+                    .eq('referenz_typ', 'bwa_erinnerung')
+                    .eq('erledigt', false);
+                var existingTodos = (todoResp.data || []);
+                var existingKeys = existingTodos.map(function(t) { return t.referenz_id; });
+
+                var monatNamen = ['', 'Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+                var bwaRemindersCreated = 0;
+                var bwaEscalations = [];
+
+                for(var i = 0; i < missingMonths.length; i++) {
+                    var mm = missingMonths[i];
+                    var key = mm.bwaJahr + '-' + mm.bwaMonat;
+
+                    // Schon eingereicht? → Skip
+                    if(submittedKeys.indexOf(key) >= 0) {
+                        // Falls ein Todo dafür existiert, als erledigt markieren
+                        var doneTodo = existingTodos.find(function(t){ return t.referenz_id === key; });
+                        if(doneTodo) {
+                            await sb.from('todos').update({erledigt:true, erledigt_am:new Date().toISOString()}).eq('id', doneTodo.id);
+                        }
+                        continue;
+                    }
+
+                    // Eskalationsstufe berechnen
+                    var dayOfMonth = today.getDate();
+                    var monthDiff = (today.getFullYear() - mm.bwaJahr) * 12 + (today.getMonth() + 1 - mm.bwaMonat);
+                    var eskalation = 0;
+                    if(monthDiff >= 1) { // Wir sind im Folgemonat oder später
+                        if(dayOfMonth >= 16 || monthDiff > 1) eskalation = 3; // ÜBERFÄLLIG
+                        else if(dayOfMonth >= 13) eskalation = 2; // Dringend
+                        else if(dayOfMonth >= 8) eskalation = 1; // Hoch
+                        else eskalation = 0; // Normal
+                    }
+
+                    var prioMap = ['normal','hoch','hoch','dringend'];
+                    var prioSortMap = [1,0,0,0];
+                    var prio = prioMap[eskalation] || 'normal';
+                    var prioSort = prioSortMap[eskalation] || 1;
+                    var monatLabel = monatNamen[mm.bwaMonat] || ('Monat ' + mm.bwaMonat);
+                    var titel = t('bwa_reminder_title').replace('{monat}', monatLabel).replace('{jahr}', mm.bwaJahr);
+                    var beschreibung = t('bwa_reminder_desc')
+                        .replace('{monat}', monatLabel).replace('{jahr}', mm.bwaJahr)
+                        .replace('{deadline}', mm.deadline.toLocaleDateString('de-DE'));
+                    if(eskalation >= 2) beschreibung += '\n\n' + t('bwa_reminder_urgent');
+                    if(eskalation >= 3) beschreibung += '\n' + t('bwa_reminder_overdue');
+
+                    // Todo existiert schon? → Update Eskalation
+                    var existingTodo = existingTodos.find(function(t){ return t.referenz_id === key; });
+                    if(existingTodo) {
+                        if((existingTodo.eskalation_stufe || 0) < eskalation) {
+                            await sb.from('todos').update({
+                                prio: prio, prio_sort: prioSort,
+                                eskalation_stufe: eskalation,
+                                titel: titel, beschreibung: beschreibung,
+                                erinnerung_email_faellig: eskalation >= 2
+                            }).eq('id', existingTodo.id);
+                            if(eskalation >= 2) bwaEscalations.push(mm);
+                        }
+                    } else {
+                        // Neues Todo anlegen
+                        await sb.from('todos').insert({
+                            standort_id: sbProfile.standort_id,
+                            erstellt_von: null, // System-generiert
+                            titel: titel,
+                            beschreibung: beschreibung,
+                            faellig_am: mm.deadlineStr,
+                            prio: prio, prio_sort: prioSort,
+                            kategorie: 'admin',
+                            typ: 'system',
+                            referenz_typ: 'bwa_erinnerung',
+                            referenz_id: key,
+                            eskalation_stufe: eskalation,
+                            erinnerung_email_faellig: eskalation >= 1
+                        });
+                        bwaRemindersCreated++;
+                    }
+                }
+
+                // Banner anzeigen wenn überfällige BWAs vorhanden
+                if(bwaEscalations.length > 0 || missingMonths.some(function(m){ return submittedKeys.indexOf(m.bwaJahr+'-'+m.bwaMonat) < 0; })) {
+                    showBwaReminderBanner(missingMonths.filter(function(m){
+                        return submittedKeys.indexOf(m.bwaJahr+'-'+m.bwaMonat) < 0;
+                    }));
+                }
+
+            } catch(err) {
+                console.warn('BWA deadline check:', err);
+            }
+        }
+
+        function showBwaReminderBanner(missingBwas) {
+            if(!missingBwas || missingBwas.length === 0) return;
+            var existing = document.getElementById('bwaReminderBanner');
+            if(existing) existing.remove();
+
+            var today = new Date();
+            var monatNamen = ['','Jan','Feb','Mrz','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+            var worst = 0;
+            var labels = missingBwas.map(function(m) {
+                var dayOfMonth = today.getDate();
+                var monthDiff = (today.getFullYear() - m.bwaJahr) * 12 + (today.getMonth() + 1 - m.bwaMonat);
+                var esk = 0;
+                if(monthDiff >= 1) {
+                    if(dayOfMonth >= 16 || monthDiff > 1) esk = 3;
+                    else if(dayOfMonth >= 13) esk = 2;
+                    else if(dayOfMonth >= 8) esk = 1;
+                }
+                if(esk > worst) worst = esk;
+                return monatNamen[m.bwaMonat] + ' ' + m.bwaJahr;
+            });
+
+            var colors = ['bg-blue-50 border-blue-300 text-blue-800','bg-yellow-50 border-yellow-300 text-yellow-800','bg-orange-50 border-orange-400 text-orange-800','bg-red-50 border-red-400 text-red-800'];
+            var icons = ['\u2139\uFE0F','\u26A0\uFE0F','\uD83D\uDD25','\uD83D\uDEA8'];
+            var msgKeys = ['bwa_banner_info','bwa_banner_warn','bwa_banner_urgent','bwa_banner_overdue'];
+
+            var banner = document.createElement('div');
+            banner.id = 'bwaReminderBanner';
+            banner.innerHTML = '<div style="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:8999;max-width:640px;width:95%;" class="'+colors[worst]+' border rounded-xl shadow-lg px-5 py-3 flex items-center justify-between">'
+                + '<div class="flex items-center space-x-3">'
+                + '<span class="text-2xl">'+icons[worst]+'</span>'
+                + '<div><p class="text-sm font-semibold">'+t(msgKeys[worst])+'</p>'
+                + '<p class="text-xs opacity-75">' + t('bwa_banner_missing') + ': ' + labels.join(', ') + '</p></div></div>'
+                + '<div class="flex items-center space-x-2">'
+                + '<button onclick="showView(\'controlling\');document.getElementById(\'bwaReminderBanner\').remove();" class="px-3 py-1.5 bg-vit-orange text-white text-xs font-semibold rounded-lg hover:opacity-90">' + t('bwa_banner_btn') + '</button>'
+                + '<button onclick="document.getElementById(\'bwaReminderBanner\').remove();" class="text-gray-400 hover:text-gray-600">\u2715</button>'
+                + '</div></div>';
+            document.body.appendChild(banner);
+        }
+
+        // HQ: Übersicht fehlender BWAs aller Standorte
+        async function loadHqBwaStatus() {
+            if(!sbProfile || !sbProfile.is_hq) return;
+            try {
+                var today = new Date();
+                var prevMonth = today.getMonth(); // 0-11, 0=Jan → prev=Dec
+                var prevYear = prevMonth === 0 ? today.getFullYear() - 1 : today.getFullYear();
+                if(prevMonth === 0) prevMonth = 12; // Korrektur
+
+                // Alle Standorte laden
+                var stdResp = await sb.from('standorte').select('id,name');
+                if(stdResp.error) return;
+                var standorte = stdResp.data || [];
+
+                // Alle BWAs für den Vormonat
+                var bwaResp = await sb.from('bwa_daten').select('standort_id').eq('monat', prevMonth).eq('jahr', prevYear);
+                var submittedIds = (bwaResp.data||[]).map(function(b){return b.standort_id;});
+
+                var missing = standorte.filter(function(s){ return submittedIds.indexOf(s.id) < 0; });
+
+                // Todos mit überfälligen BWA-Erinnerungen
+                var eskResp = await sb.from('todos').select('standort_id,eskalation_stufe,erinnerung_email_faellig')
+                    .eq('referenz_typ','bwa_erinnerung').eq('erledigt',false).gte('eskalation_stufe',2);
+                var escalated = eskResp.data || [];
+
+                return { missing: missing, escalated: escalated, total: standorte.length, month: prevMonth, year: prevYear };
+            } catch(e) { console.warn('HQ BWA status:', e); return null; }
         }
 
         // === HQ KOMMUNIKATION ===
@@ -9209,6 +10459,46 @@
             if(btn)btn.className='hqkomm-tab-btn whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
             renderHqKomm();
         }
+        function openAnkuendigungModal() {
+            var html = '<div id="ankOverlay" onclick="closeAnkModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
+            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">\uD83D\uDCE2 Neue Ankuendigung</h3><button onclick="closeAnkModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
+            html += '<div class="space-y-3 mb-4">';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Titel *</label><input id="ankTitel" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="z.B. Neue Preisliste ab Maerz"></div>';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Kategorie</label><select id="ankKat" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="news">News</option><option value="event">Event</option><option value="schulung">Schulung</option><option value="marketing">Marketing</option><option value="sortiment">Sortiment</option><option value="preise">Preise</option><option value="it">IT</option></select></div>';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Inhalt *</label><textarea id="ankInhalt" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" rows="5" placeholder="Ankuendigungstext..."></textarea></div>';
+            html += '<label class="flex items-center space-x-2"><input id="ankWichtig" type="checkbox" class="rounded"><span class="text-sm text-gray-600">Als wichtig markieren</span></label>';
+            html += '</div>';
+            html += '<div id="ankError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mb-3"></div>';
+            html += '<button onclick="saveAnkuendigung()" id="ankSaveBtn" class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Veroeffentlichen</button>';
+            html += '</div></div>';
+            var c = document.createElement('div'); c.id = 'ankContainer'; c.innerHTML = html; document.body.appendChild(c);
+        }
+        function closeAnkModal() { var c = document.getElementById('ankContainer'); if(c) c.remove(); }
+        async function saveAnkuendigung() {
+            var titel = (document.getElementById('ankTitel')||{}).value;
+            var inhalt = (document.getElementById('ankInhalt')||{}).value;
+            var kategorie = (document.getElementById('ankKat')||{}).value || 'news';
+            var wichtig = (document.getElementById('ankWichtig')||{}).checked || false;
+            var errEl = document.getElementById('ankError');
+            if(!titel||!titel.trim()||!inhalt||!inhalt.trim()) { if(errEl){errEl.textContent='Bitte Titel und Inhalt ausfuellen.';errEl.style.display='block';} return; }
+            var btn = document.getElementById('ankSaveBtn');
+            if(btn) { btn.disabled=true; btn.textContent='Wird gespeichert...'; }
+            try {
+                var resp = await sb.from('ankuendigungen').insert({
+                    titel: titel.trim(), inhalt: inhalt.trim(), kategorie: kategorie,
+                    wichtig: wichtig, erstellt_von: sbUser ? sbUser.id : null
+                });
+                if(resp.error) throw resp.error;
+                closeAnkModal();
+                alert('\u2705 Ankuendigung veroeffentlicht!');
+                renderAnnouncements();
+            } catch(err) {
+                if(errEl){errEl.textContent='Fehler: '+err.message;errEl.style.display='block';}
+                if(btn){btn.disabled=false;btn.textContent='Veroeffentlichen';}
+            }
+        }
+
         function renderHqKomm(){
             var el=document.getElementById('hqKommContent');if(!el)return;
             var h='';
@@ -9331,29 +10621,92 @@
             if(btn)btn.className='hqdok-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white';
             renderHqDokumente();
         }
+
+        var netzDokCache = null;
+        async function loadNetzwerkDokumente() {
+            try {
+                var resp = await sb.from('netzwerk_dokumente').select('*, users(name)').order('created_at', {ascending:false});
+                if(resp.error) throw resp.error;
+                netzDokCache = resp.data || [];
+            } catch(e) { netzDokCache = []; console.warn('Dok load:', e); }
+            renderHqDokumente();
+        }
+
         function renderHqDokumente(){
-            var list=currentHqDokFilter==='all'?hqDokumente:hqDokumente.filter(function(d){return d.kat===currentHqDokFilter;});
+            // Wenn DB-Daten da sind, nutze die; sonst Fallback auf hardcoded
+            var allDoks = netzDokCache || hqDokumente || [];
+            var isFromDb = netzDokCache !== null && netzDokCache.length > 0;
+            var isHQ = sbProfile && sbProfile.is_hq;
+
+            var list = currentHqDokFilter==='all' ? allDoks : allDoks.filter(function(d){ return isFromDb ? d.kategorie===currentHqDokFilter : d.kat===currentHqDokFilter; });
+
             var kpi=document.getElementById('hqDokKpis');
-            if(kpi) kpi.innerHTML='<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-gray-800">'+hqDokumente.length+'</p><p class="text-xs text-gray-500">Dokumente</p></div>'
-                +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-blue-600">'+hqDokumente.filter(function(d){return d.kat==='richtlinie';}).length+'</p><p class="text-xs text-gray-500">Richtlinien</p></div>'
-                +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-green-600">'+hqDokumente.filter(function(d){return d.kat==='vorlage';}).length+'</p><p class="text-xs text-gray-500">Vorlagen</p></div>'
-                +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-purple-600">'+hqDokumente.filter(function(d){return d.kat==='schulung';}).length+'</p><p class="text-xs text-gray-500">Schulungen</p></div>';
+            var totalCount = allDoks.length;
+            var richtCount = allDoks.filter(function(d){return (isFromDb?d.kategorie:d.kat)==='richtlinie';}).length;
+            var vorlCount = allDoks.filter(function(d){return (isFromDb?d.kategorie:d.kat)==='vorlage';}).length;
+            var schulCount = allDoks.filter(function(d){return (isFromDb?d.kategorie:d.kat)==='schulung';}).length;
+            if(kpi) kpi.innerHTML='<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-gray-800">'+totalCount+'</p><p class="text-xs text-gray-500">Dokumente</p></div>'
+                +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-blue-600">'+richtCount+'</p><p class="text-xs text-gray-500">Richtlinien</p></div>'
+                +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-green-600">'+vorlCount+'</p><p class="text-xs text-gray-500">Vorlagen</p></div>'
+                +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-purple-600">'+schulCount+'</p><p class="text-xs text-gray-500">Schulungen</p></div>';
 
             var el=document.getElementById('hqDokList');if(!el)return;
             var h='';
-            var katIcons={richtlinie:'📋',vorlage:'📄',schulung:'🎓',vertrag:'📑'};
-            var typeColors={PDF:'bg-red-100 text-red-600',XLSX:'bg-green-100 text-green-700',DOCX:'bg-blue-100 text-blue-700',MP4:'bg-purple-100 text-purple-700'};
+            var katIcons={richtlinie:'\uD83D\uDCCB',vorlage:'\uD83D\uDCC4',schulung:'\uD83C\uDF93',vertrag:'\uD83D\uDCD1',sonstiges:'\uD83D\uDCC1'};
             list.forEach(function(d){
+                var kat = isFromDb ? d.kategorie : d.kat;
+                var name = isFromDb ? d.titel : d.name;
+                var dateStr = isFromDb ? new Date(d.created_at).toLocaleDateString('de-DE') : d.date;
+                var sizeStr = isFromDb ? formatFileSize(d.datei_groesse) : d.size;
+                var fileName = isFromDb ? (d.datei_name||'') : '';
+                var ext = fileName.split('.').pop().toUpperCase();
+                var typeColors={PDF:'bg-red-100 text-red-600',XLSX:'bg-green-100 text-green-700',DOCX:'bg-blue-100 text-blue-700',MP4:'bg-purple-100 text-purple-700',PNG:'bg-pink-100 text-pink-600',JPG:'bg-pink-100 text-pink-600'};
+
                 h+='<div class="vit-card p-3 flex items-center space-x-3">';
-                h+='<span class="text-2xl">'+(katIcons[d.kat]||'📁')+'</span>';
-                h+='<div class="flex-1 min-w-0"><p class="font-semibold text-sm text-gray-800 truncate">'+d.name+'</p>';
-                h+='<p class="text-[10px] text-gray-500">'+d.date+' · '+d.size+' · Ziel: '+d.target+'</p></div>';
-                h+='<span class="text-[10px] px-2 py-0.5 rounded-full font-bold '+(typeColors[d.type]||'bg-gray-100 text-gray-600')+'">'+d.type+'</span>';
-                h+='<span class="text-xs text-gray-400">'+d.downloads+'x ↓</span>';
-                h+='<button onclick="alert(\'Download: '+d.name+' (Demo)\')" class="text-xs px-3 py-1 bg-vit-orange text-white rounded-lg hover:opacity-90">↓</button>';
+                h+='<span class="text-2xl">'+(katIcons[kat]||'\uD83D\uDCC1')+'</span>';
+                h+='<div class="flex-1 min-w-0"><p class="font-semibold text-sm text-gray-800 truncate">'+name+'</p>';
+                h+='<p class="text-[10px] text-gray-500">'+dateStr+' \u00B7 '+sizeStr;
+                if(isFromDb && d.users && d.users.name) h+=' \u00B7 '+d.users.name;
+                h+='</p></div>';
+                if(ext) h+='<span class="text-[10px] px-2 py-0.5 rounded-full font-bold '+(typeColors[ext]||'bg-gray-100 text-gray-600')+'">'+ext+'</span>';
+                if(isFromDb) {
+                    h+='<button onclick="downloadDokument(\''+d.datei_url+'\')" class="text-xs px-3 py-1 bg-vit-orange text-white rounded-lg hover:opacity-90">\u2193</button>';
+                    if(isHQ) h+='<button onclick="deleteNetzwerkDok(\''+d.id+'\')" class="text-xs px-2 py-1 text-gray-300 hover:text-red-500">\u2715</button>';
+                } else {
+                    h+='<span class="text-xs text-gray-400">'+(d.downloads||0)+'x \u2193</span>';
+                    h+='<button onclick="alert(\'Download fuer '+name+' wird vorbereitet...\')" class="text-xs px-3 py-1 bg-vit-orange text-white rounded-lg hover:opacity-90">\u2193</button>';
+                }
                 h+='</div>';
             });
+            if(!list.length) h='<div class="text-center py-8 text-gray-400">Keine Dokumente in dieser Kategorie.</div>';
             el.innerHTML=h;
+        }
+
+        function formatFileSize(bytes) {
+            if(!bytes) return '—';
+            if(bytes < 1024) return bytes + ' B';
+            if(bytes < 1048576) return (bytes/1024).toFixed(1) + ' KB';
+            return (bytes/1048576).toFixed(1) + ' MB';
+        }
+
+        async function downloadDokument(path) {
+            try {
+                var resp = await sb.storage.from('dokumente').createSignedUrl(path, 3600);
+                if(resp.error) throw resp.error;
+                window.open(resp.data.signedUrl, '_blank');
+            } catch(err) { alert('Download-Fehler: '+err.message); }
+        }
+
+        async function deleteNetzwerkDok(id) {
+            if(!confirm('Dokument wirklich loeschen?')) return;
+            try {
+                var dokResp = await sb.from('netzwerk_dokumente').select('datei_url').eq('id',id).single();
+                if(dokResp.data && dokResp.data.datei_url) {
+                    await sb.storage.from('dokumente').remove([dokResp.data.datei_url]);
+                }
+                await sb.from('netzwerk_dokumente').delete().eq('id',id);
+                await loadNetzwerkDokumente();
+            } catch(err) { alert('Fehler: '+err.message); }
         }
 
         // === HQ KALENDER ===
@@ -9471,7 +10824,7 @@
                 h+='<div class="vit-card p-4 '+(isOver?'border-l-4 border-red-500':'')+'">';
                 h+='<div class="flex items-start justify-between mb-2"><div class="flex-1">';
                 h+='<div class="flex items-center space-x-2"><span>'+(prioIcons[t.prio]||'')+'</span><p class="font-bold text-sm text-gray-800">'+t.title+'</p></div>';
-                h+='<p class="text-[10px] text-gray-500 mt-0.5">'+t.kat+' · Deadline: '+t.deadline+' · Ziel: '+t.target+(isOver?' · <span class="text-red-500 font-bold">UEBERFAELLIG</span>':'')+'</p>';
+                h+='<p class="text-[10px] text-gray-500 mt-0.5">'+t.kat+' · Deadline: '+t.deadline+' · Ziel: '+t.target+(isOver?' · <span class="text-red-500 font-bold">'+t('todo_overdue')+'</span>':'')+'</p>';
                 h+='</div>';
                 h+='<span class="text-[10px] px-2 py-0.5 rounded-full font-bold '+(statusCls[t.status]||'')+'">'+(statusLabel[t.status]||t.status)+'</span></div>';
                 h+='<div class="flex items-center space-x-3"><div class="flex-1">';
@@ -9778,7 +11131,7 @@
             if(tab==='mitarbeiter') renderKzMitarbeiter();
             if(tab==='kommunikation') renderHqKomm();
             if(tab==='kampagnen') renderHqKampagnen();
-            if(tab==='dokumente') renderHqDokumente();
+            if(tab==='dokumente') loadNetzwerkDokumente();
             if(tab==='kalender') renderHqKalender();
             if(tab==='aufgaben') renderHqAufgaben();
         }
@@ -10645,9 +11998,79 @@
                 badge_10:'10 Videos', badge_25:'25 Videos', badge_50:'50 Videos',
                 badge_reached:'✅ Erreicht', badge_almost:'Noch 1!', badge_locked:'Gesperrt',
                 // Content themes
-                lbl_content_theme:'Content-Thema wählen',
+                lbl_content_theme:'Content-Thema w\u00e4hlen',
                 // Generic
-                optional:'(optional)'
+                optional:'(optional)',
+                // === BWA Erinnerungen ===
+                bwa_reminder_title:'BWA {monat} {jahr} einreichen',
+                bwa_reminder_desc:'Die BWA f\u00fcr {monat} {jahr} muss bis zum {deadline} eingereicht werden. Bitte im Bereich Controlling hochladen.',
+                bwa_reminder_urgent:'\u26A0\uFE0F DRINGEND: Die Deadline ist in wenigen Tagen!',
+                bwa_reminder_overdue:'\uD83D\uDEA8 \u00dcBERF\u00c4LLIG! Bitte umgehend einreichen. Das HQ wird benachrichtigt.',
+                bwa_banner_info:'BWA-Erinnerung: Bitte einreichen.',
+                bwa_banner_warn:'BWA-Erinnerung: Deadline naht!',
+                bwa_banner_urgent:'BWA dringend einreichen!',
+                bwa_banner_overdue:'BWA \u00fcberf\u00e4llig! HQ wird informiert.',
+                bwa_banner_missing:'Fehlend',
+                bwa_banner_btn:'Jetzt einreichen',
+                // === Todos ===
+                todo_open:'Offen', todo_today:'Heute', todo_overdue:'\u00dcberf\u00e4llig', todo_done:'Erledigt',
+                todo_no_tasks:'Keine Aufgaben', todo_add:'Aufgabe hinzuf\u00fcgen', todo_edit:'Bearbeiten',
+                todo_delete:'L\u00f6schen', todo_save:'Speichern', todo_cancel:'Abbrechen',
+                todo_title_ph:'Aufgabe eingeben...', todo_due:'F\u00e4llig', todo_prio:'Priorit\u00e4t',
+                todo_cat:'Kategorie', todo_system:'System-Aufgabe', todo_manual:'Manuell',
+                prio_high:'Hoch', prio_normal:'Normal', prio_low:'Niedrig', prio_urgent:'Dringend',
+                cat_sales:'Verkauf', cat_workshop:'Werkstatt', cat_marketing:'Marketing',
+                cat_admin:'Admin', cat_other:'Sonstig',
+                // === Tickets ===
+                ticket_new:'Neues Ticket', ticket_subject:'Betreff', ticket_desc:'Beschreibung',
+                ticket_category:'Kategorie', ticket_priority:'Priorit\u00e4t', ticket_create:'Ticket erstellen',
+                ticket_status_open:'Offen', ticket_status_progress:'In Bearbeitung',
+                ticket_status_waiting:'Wartend', ticket_status_resolved:'Gel\u00f6st',
+                ticket_comments:'Kommentare', ticket_comment_ph:'Kommentar schreiben...',
+                ticket_comment_send:'Senden', ticket_change_status:'Status \u00e4ndern',
+                ticket_mark_resolved:'Als gel\u00f6st markieren', ticket_no_tickets:'Keine Tickets',
+                // === Controlling / BWA ===
+                ctrl_bwa:'BWA', ctrl_trend:'Trend', ctrl_upload:'BWA hochladen',
+                ctrl_month:'Monat', ctrl_year:'Jahr', ctrl_revenue:'Umsatz',
+                ctrl_gross_profit:'Rohertrag', ctrl_costs:'Gesamtkosten', ctrl_result:'Ergebnis',
+                ctrl_select_bwa:'BWA ausw\u00e4hlen', ctrl_edit:'Bearbeiten', ctrl_delete:'L\u00f6schen',
+                // === Verkauf ===
+                sales_week:'Wochenansicht', sales_pipeline:'Pipeline', sales_analysis:'Auswertung',
+                sales_yearly:'Jahresplan', sales_plan:'Plan', sales_actual:'Ist',
+                sales_consultations:'Beratungen', sales_sold:'Verkauft', sales_revenue:'Umsatz',
+                sales_quote:'Quote', sales_all_sellers:'Alle Verk\u00e4ufer',
+                sales_no_data:'Keine Verkaufsdaten f\u00fcr diese Woche',
+                sales_add_entry:'Eintragen',
+                // === Kommunikation ===
+                comm_announcements:'Ank\u00fcndigungen', comm_board:'Schwarzes Brett',
+                comm_forum:'Forum', comm_chat:'Chat',
+                comm_new_announcement:'Neue Ank\u00fcndigung', comm_important:'Wichtig',
+                comm_edit:'Bearbeiten', comm_delete:'L\u00f6schen', comm_publish:'Ver\u00f6ffentlichen',
+                // === Dokumente ===
+                doc_upload:'Dokument hochladen', doc_title:'Titel', doc_category:'Kategorie',
+                doc_download:'Herunterladen', doc_delete:'L\u00f6schen', doc_select_file:'Datei ausw\u00e4hlen',
+                doc_guidelines:'Richtlinien', doc_templates:'Vorlagen', doc_trainings:'Schulungen',
+                doc_contracts:'Vertr\u00e4ge', doc_other:'Sonstiges',
+                // === Shop ===
+                shop_cart:'Warenkorb', shop_empty:'Warenkorb leer', shop_order:'Bestellen',
+                shop_total:'Gesamt', shop_per_piece:'pro St\u00fcck', shop_remove:'Entfernen',
+                // === Allgemein ===
+                btn_save:'Speichern', btn_cancel:'Abbrechen', btn_close:'Schlie\u00dfen',
+                btn_back:'Zur\u00fcck', btn_next:'Weiter', btn_confirm:'Best\u00e4tigen',
+                loading:'Wird geladen...', error:'Fehler', success:'Erfolg',
+                confirm_delete:'Wirklich l\u00f6schen?',
+                // === Login ===
+                login_title:'Partner Portal', login_email:'E-Mail', login_password:'Passwort',
+                login_submit:'Anmelden', login_forgot:'Passwort vergessen?',
+                login_reset_title:'Passwort zur\u00fccksetzen',
+                login_reset_desc:'Gib deine E-Mail ein. Du erh\u00e4ltst einen Link zum Zur\u00fccksetzen.',
+                login_reset_send:'Link senden', login_reset_sent:'E-Mail gesendet! Pr\u00fcfe deinen Posteingang.',
+                pw_change_title:'Neues Passwort setzen',
+                pw_change_desc:'Gib dein neues Passwort ein (mindestens 6 Zeichen).',
+                pw_change_new:'Neues Passwort', pw_change_repeat:'Passwort wiederholen',
+                pw_change_save:'Passwort speichern', pw_change_success:'Passwort erfolgreich ge\u00e4ndert!',
+                pw_change_mismatch:'Passw\u00f6rter stimmen nicht \u00fcberein.',
+                pw_change_min:'Mindestens 6 Zeichen.'
             },
             en: {
                 nav_home:'Home', nav_dashboards:'Dashboards', nav_mainmenu:'Main Menu',
@@ -10709,7 +12132,77 @@
                 badge_10:'10 Videos', badge_25:'25 Videos', badge_50:'50 Videos',
                 badge_reached:'✅ Achieved', badge_almost:'1 more!', badge_locked:'Locked',
                 lbl_content_theme:'Choose content topic',
-                optional:'(optional)'
+                optional:'(optional)',
+                // === BWA Reminders ===
+                bwa_reminder_title:'Submit BWA {monat} {jahr}',
+                bwa_reminder_desc:'The BWA for {monat} {jahr} must be submitted by {deadline}. Please upload in the Controlling section.',
+                bwa_reminder_urgent:'\u26A0\uFE0F URGENT: The deadline is in a few days!',
+                bwa_reminder_overdue:'\uD83D\uDEA8 OVERDUE! Please submit immediately. HQ will be notified.',
+                bwa_banner_info:'BWA reminder: Please submit.',
+                bwa_banner_warn:'BWA reminder: Deadline approaching!',
+                bwa_banner_urgent:'Submit BWA urgently!',
+                bwa_banner_overdue:'BWA overdue! HQ will be notified.',
+                bwa_banner_missing:'Missing',
+                bwa_banner_btn:'Submit now',
+                // === Todos ===
+                todo_open:'Open', todo_today:'Today', todo_overdue:'Overdue', todo_done:'Done',
+                todo_no_tasks:'No tasks', todo_add:'Add task', todo_edit:'Edit',
+                todo_delete:'Delete', todo_save:'Save', todo_cancel:'Cancel',
+                todo_title_ph:'Enter task...', todo_due:'Due', todo_prio:'Priority',
+                todo_cat:'Category', todo_system:'System task', todo_manual:'Manual',
+                prio_high:'High', prio_normal:'Normal', prio_low:'Low', prio_urgent:'Urgent',
+                cat_sales:'Sales', cat_workshop:'Workshop', cat_marketing:'Marketing',
+                cat_admin:'Admin', cat_other:'Other',
+                // === Tickets ===
+                ticket_new:'New ticket', ticket_subject:'Subject', ticket_desc:'Description',
+                ticket_category:'Category', ticket_priority:'Priority', ticket_create:'Create ticket',
+                ticket_status_open:'Open', ticket_status_progress:'In Progress',
+                ticket_status_waiting:'Waiting', ticket_status_resolved:'Resolved',
+                ticket_comments:'Comments', ticket_comment_ph:'Write a comment...',
+                ticket_comment_send:'Send', ticket_change_status:'Change status',
+                ticket_mark_resolved:'Mark as resolved', ticket_no_tickets:'No tickets',
+                // === Controlling / BWA ===
+                ctrl_bwa:'BWA', ctrl_trend:'Trend', ctrl_upload:'Upload BWA',
+                ctrl_month:'Month', ctrl_year:'Year', ctrl_revenue:'Revenue',
+                ctrl_gross_profit:'Gross profit', ctrl_costs:'Total costs', ctrl_result:'Result',
+                ctrl_select_bwa:'Select BWA', ctrl_edit:'Edit', ctrl_delete:'Delete',
+                // === Sales ===
+                sales_week:'Week view', sales_pipeline:'Pipeline', sales_analysis:'Analysis',
+                sales_yearly:'Annual plan', sales_plan:'Plan', sales_actual:'Actual',
+                sales_consultations:'Consultations', sales_sold:'Sold', sales_revenue:'Revenue',
+                sales_quote:'Rate', sales_all_sellers:'All sellers',
+                sales_no_data:'No sales data for this week',
+                sales_add_entry:'Add entry',
+                // === Communication ===
+                comm_announcements:'Announcements', comm_board:'Bulletin board',
+                comm_forum:'Forum', comm_chat:'Chat',
+                comm_new_announcement:'New announcement', comm_important:'Important',
+                comm_edit:'Edit', comm_delete:'Delete', comm_publish:'Publish',
+                // === Documents ===
+                doc_upload:'Upload document', doc_title:'Title', doc_category:'Category',
+                doc_download:'Download', doc_delete:'Delete', doc_select_file:'Select file',
+                doc_guidelines:'Guidelines', doc_templates:'Templates', doc_trainings:'Trainings',
+                doc_contracts:'Contracts', doc_other:'Other',
+                // === Shop ===
+                shop_cart:'Shopping cart', shop_empty:'Cart is empty', shop_order:'Order',
+                shop_total:'Total', shop_per_piece:'per piece', shop_remove:'Remove',
+                // === General ===
+                btn_save:'Save', btn_cancel:'Cancel', btn_close:'Close',
+                btn_back:'Back', btn_next:'Next', btn_confirm:'Confirm',
+                loading:'Loading...', error:'Error', success:'Success',
+                confirm_delete:'Really delete?',
+                // === Login ===
+                login_title:'Partner Portal', login_email:'Email', login_password:'Password',
+                login_submit:'Sign in', login_forgot:'Forgot password?',
+                login_reset_title:'Reset password',
+                login_reset_desc:'Enter your email. You will receive a link to reset your password.',
+                login_reset_send:'Send link', login_reset_sent:'Email sent! Check your inbox.',
+                pw_change_title:'Set new password',
+                pw_change_desc:'Enter your new password (at least 6 characters).',
+                pw_change_new:'New password', pw_change_repeat:'Repeat password',
+                pw_change_save:'Save password', pw_change_success:'Password changed successfully!',
+                pw_change_mismatch:'Passwords do not match.',
+                pw_change_min:'At least 6 characters.'
             },
             nl: {
                 nav_home:'Startpagina', nav_dashboards:'Dashboards', nav_mainmenu:'Hoofdmenu',
@@ -10721,6 +12214,10 @@
                 nav_hq_finance:'Financiën', nav_hq_actions:'Actie vereist', nav_hq_command:'Commandocentrum', nav_hq_comm:'Communicatie', nav_hq_campaigns:'Campagnes', nav_hq_docs:'Documenten', nav_hq_calendar:'Agenda', nav_hq_tasks:'Taken', nav_hq_analytics:'Portaalgebruik', nav_calendar:'Agenda', nav_todo:'Taken',
                 h_marketing:'MARKETING', h_sales:'VERKOOP', h_dashboards:'DASHBOARDS',
                 h_leadreporting:'LEAD RAPPORTAGE',
+                h_purchasing:'INKOOP', h_controlling:'CONTROLLING', h_filingcab:'DOCUMENTENARCHIEF',
+                h_support:'ONDERSTEUNING', h_ideaboard:'IDEE\u00cbNBORD', h_communication:'COMMUNICATIE',
+                h_forum:'FORUM', h_chat:'CHAT', h_calendar:'AGENDA', h_todos:'TAKEN', h_onboarding:'ONBOARDING',
+                nav_knowledge:'Kennis', nav_shop:'Promotieshop',
                 welcome:'Welkom terug, Max!',
                 dash_consultations:'Adviezen vandaag', dash_openoffers:'Openstaande offertes',
                 dash_opentickets:'Open tickets',
@@ -10771,7 +12268,77 @@
                 badge_10:'10 Videos', badge_25:'25 Videos', badge_50:'50 Videos',
                 badge_reached:'✅ Behaald', badge_almost:'Nog 1!', badge_locked:'Vergrendeld',
                 lbl_content_theme:'Content-onderwerp kiezen',
-                optional:'(optioneel)'
+                optional:'(optioneel)',
+                // === BWA Herinneringen ===
+                bwa_reminder_title:'BWA {monat} {jahr} indienen',
+                bwa_reminder_desc:'De BWA voor {monat} {jahr} moet voor {deadline} ingediend worden. Upload in het onderdeel Controlling.',
+                bwa_reminder_urgent:'\u26A0\uFE0F DRINGEND: De deadline is over een paar dagen!',
+                bwa_reminder_overdue:'\uD83D\uDEA8 TE LAAT! Dien zo snel mogelijk in. HQ wordt ge\u00efnformeerd.',
+                bwa_banner_info:'BWA-herinnering: Gelieve in te dienen.',
+                bwa_banner_warn:'BWA-herinnering: Deadline nadert!',
+                bwa_banner_urgent:'BWA dringend indienen!',
+                bwa_banner_overdue:'BWA te laat! HQ wordt ge\u00efnformeerd.',
+                bwa_banner_missing:'Ontbrekend',
+                bwa_banner_btn:'Nu indienen',
+                // === Taken ===
+                todo_open:'Open', todo_today:'Vandaag', todo_overdue:'Te laat', todo_done:'Afgerond',
+                todo_no_tasks:'Geen taken', todo_add:'Taak toevoegen', todo_edit:'Bewerken',
+                todo_delete:'Verwijderen', todo_save:'Opslaan', todo_cancel:'Annuleren',
+                todo_title_ph:'Taak invoeren...', todo_due:'Deadline', todo_prio:'Prioriteit',
+                todo_cat:'Categorie', todo_system:'Systeemtaak', todo_manual:'Handmatig',
+                prio_high:'Hoog', prio_normal:'Normaal', prio_low:'Laag', prio_urgent:'Dringend',
+                cat_sales:'Verkoop', cat_workshop:'Werkplaats', cat_marketing:'Marketing',
+                cat_admin:'Administratie', cat_other:'Overig',
+                // === Tickets ===
+                ticket_new:'Nieuw ticket', ticket_subject:'Onderwerp', ticket_desc:'Beschrijving',
+                ticket_category:'Categorie', ticket_priority:'Prioriteit', ticket_create:'Ticket aanmaken',
+                ticket_status_open:'Open', ticket_status_progress:'In behandeling',
+                ticket_status_waiting:'Wachtend', ticket_status_resolved:'Opgelost',
+                ticket_comments:'Reacties', ticket_comment_ph:'Reactie schrijven...',
+                ticket_comment_send:'Verzenden', ticket_change_status:'Status wijzigen',
+                ticket_mark_resolved:'Als opgelost markeren', ticket_no_tickets:'Geen tickets',
+                // === Controlling / BWA ===
+                ctrl_bwa:'BWA', ctrl_trend:'Trend', ctrl_upload:'BWA uploaden',
+                ctrl_month:'Maand', ctrl_year:'Jaar', ctrl_revenue:'Omzet',
+                ctrl_gross_profit:'Brutowinst', ctrl_costs:'Totale kosten', ctrl_result:'Resultaat',
+                ctrl_select_bwa:'BWA selecteren', ctrl_edit:'Bewerken', ctrl_delete:'Verwijderen',
+                // === Verkoop ===
+                sales_week:'Weekoverzicht', sales_pipeline:'Pipeline', sales_analysis:'Analyse',
+                sales_yearly:'Jaarplan', sales_plan:'Plan', sales_actual:'Werkelijk',
+                sales_consultations:'Adviezen', sales_sold:'Verkocht', sales_revenue:'Omzet',
+                sales_quote:'Percentage', sales_all_sellers:'Alle verkopers',
+                sales_no_data:'Geen verkoopgegevens voor deze week',
+                sales_add_entry:'Invoeren',
+                // === Communicatie ===
+                comm_announcements:'Aankondigingen', comm_board:'Prikbord',
+                comm_forum:'Forum', comm_chat:'Chat',
+                comm_new_announcement:'Nieuwe aankondiging', comm_important:'Belangrijk',
+                comm_edit:'Bewerken', comm_delete:'Verwijderen', comm_publish:'Publiceren',
+                // === Documenten ===
+                doc_upload:'Document uploaden', doc_title:'Titel', doc_category:'Categorie',
+                doc_download:'Downloaden', doc_delete:'Verwijderen', doc_select_file:'Bestand selecteren',
+                doc_guidelines:'Richtlijnen', doc_templates:'Sjablonen', doc_trainings:'Trainingen',
+                doc_contracts:'Contracten', doc_other:'Overig',
+                // === Shop ===
+                shop_cart:'Winkelwagen', shop_empty:'Winkelwagen leeg', shop_order:'Bestellen',
+                shop_total:'Totaal', shop_per_piece:'per stuk', shop_remove:'Verwijderen',
+                // === Algemeen ===
+                btn_save:'Opslaan', btn_cancel:'Annuleren', btn_close:'Sluiten',
+                btn_back:'Terug', btn_next:'Volgende', btn_confirm:'Bevestigen',
+                loading:'Wordt geladen...', error:'Fout', success:'Gelukt',
+                confirm_delete:'Echt verwijderen?',
+                // === Login ===
+                login_title:'Partner Portaal', login_email:'E-mail', login_password:'Wachtwoord',
+                login_submit:'Inloggen', login_forgot:'Wachtwoord vergeten?',
+                login_reset_title:'Wachtwoord resetten',
+                login_reset_desc:'Voer je e-mailadres in. Je ontvangt een link om je wachtwoord te resetten.',
+                login_reset_send:'Link verzenden', login_reset_sent:'E-mail verzonden! Controleer je inbox.',
+                pw_change_title:'Nieuw wachtwoord instellen',
+                pw_change_desc:'Voer je nieuwe wachtwoord in (minimaal 6 tekens).',
+                pw_change_new:'Nieuw wachtwoord', pw_change_repeat:'Wachtwoord herhalen',
+                pw_change_save:'Wachtwoord opslaan', pw_change_success:'Wachtwoord succesvol gewijzigd!',
+                pw_change_mismatch:'Wachtwoorden komen niet overeen.',
+                pw_change_min:'Minimaal 6 tekens.'
             }
         };
 
@@ -10813,13 +12380,31 @@
         function renderShopCart() {
             var container = document.getElementById('shopCartItems');
             if(!container) return;
-            if(shopCart.length===0) { container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">Warenkorb leer</p>'; return; }
-            var html = ''; var total = 0;
-            shopCart.forEach(function(c) { total += c.preis * c.menge; html += '<div class="flex justify-between py-2 border-b border-gray-100"><span class="text-sm">' + c.name + ' x' + c.menge + '</span><span class="font-bold text-sm">' + (c.preis*c.menge).toFixed(2) + ' \u20ac</span></div>'; });
-            html += '<div class="flex justify-between pt-3 font-bold"><span>Gesamt</span><span>' + total.toFixed(2) + ' \u20ac</span></div>';
+            if(shopCart.length===0) {
+                container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">Warenkorb leer</p>';
+                var totalEl = document.getElementById('shopCartTotal'); if(totalEl) totalEl.textContent = '0,00';
+                var countEl = document.getElementById('shopCartCount'); if(countEl) countEl.textContent = '0';
+                return;
+            }
+            var html = ''; var total = 0; var count = 0;
+            shopCart.forEach(function(c) {
+                total += c.preis * c.menge;
+                count += c.menge;
+                html += '<div class="flex items-center justify-between py-2 border-b border-gray-100">';
+                html += '<div class="flex-1 min-w-0"><span class="text-sm font-medium text-gray-800 truncate block">' + c.name + '</span>';
+                html += '<span class="text-xs text-gray-400">' + c.preis.toFixed(2) + ' \u20ac / St\u00fcck</span></div>';
+                html += '<div class="flex items-center space-x-2 ml-3">';
+                html += '<button onclick="updateShopCart(\x27'+c.id+'\x27,-1)" class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 text-sm font-bold">\u2212</button>';
+                html += '<span class="text-sm font-bold w-6 text-center">' + c.menge + '</span>';
+                html += '<button onclick="updateShopCart(\x27'+c.id+'\x27,1)" class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 text-sm font-bold">+</button>';
+                html += '<span class="text-sm font-bold text-gray-800 w-16 text-right">' + (c.preis*c.menge).toFixed(2) + ' \u20ac</span>';
+                html += '<button onclick="removeFromCart(\x27'+c.id+'\x27)" class="text-gray-300 hover:text-red-500 ml-1">\u2715</button>';
+                html += '</div></div>';
+            });
+            html += '<div class="flex justify-between pt-3 font-bold text-gray-800"><span>Gesamt</span><span>' + total.toFixed(2) + ' \u20ac</span></div>';
             container.innerHTML = html;
-            var totalEl = document.getElementById('shopCartTotal'); if(totalEl) totalEl.textContent = total.toFixed(2);
-            var countEl = document.getElementById('shopCartCount'); if(countEl) countEl.textContent = shopCart.length;
+            var totalEl = document.getElementById('shopCartTotal'); if(totalEl) totalEl.textContent = total.toFixed(2).replace('.',',');
+            var countEl = document.getElementById('shopCartCount'); if(countEl) countEl.textContent = count;
         }
 
         function filterShop(kat) {
@@ -10843,39 +12428,17 @@
             } catch(err) { alert('Fehler: '+err.message); }
         }
 
-        function renderShopCart() {
-            var el = document.getElementById('shopCartItems');
-            var countEl = document.getElementById('shopCartCount');
-            var totalEl = document.getElementById('shopCartTotal');
-            if(!el) return;
-            var h = '', total = 0, count = 0;
-            shopCart.forEach(function(c) {
-                total += c.preis * c.qty;
-                count += c.qty;
-                h += '<div class="flex items-center justify-between py-2 border-b border-gray-100"><div><span class="text-sm font-semibold">'+c.name+'</span><span class="text-xs text-gray-400 ml-2">x'+c.qty+'</span></div><div class="flex items-center space-x-3"><span class="text-sm font-bold">'+(c.preis*c.qty).toFixed(2).replace('.',',')+' €</span><button onclick="updateShopCart('+c.id+',-c.qty);shopCart=shopCart.filter(function(x){return x.id!=='+c.id+'});renderShop();" class="text-red-400 hover:text-red-600 text-xs">✕</button></div></div>';
-            });
-            if(!h) h = '<p class="text-sm text-gray-400 text-center py-4">Warenkorb ist leer</p>';
-            el.innerHTML = h;
-            if(countEl) countEl.textContent = count;
-            if(totalEl) totalEl.textContent = total.toFixed(2).replace('.',',');
-        }
-
-        function filterShop(kat) {
-            shopCurrentFilter = kat;
-            document.querySelectorAll('.shop-filter-btn').forEach(function(b){b.className='shop-filter-btn text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600';});
-            var btn = document.querySelector('.shop-filter-btn[data-sf="'+kat+'"]');
-            if(btn) btn.className='shop-filter-btn text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white';
+        function removeFromCart(id) {
+            shopCart = shopCart.filter(function(c){return c.id!==id;});
             renderShop();
         }
 
-        function submitShopOrder() {
-            if(!shopCart.length) { alert('Warenkorb ist leer!'); return; }
-            var nr = Math.floor(10000+Math.random()*90000);
-            document.getElementById('shopOrderNr').textContent = nr;
-            document.getElementById('shopOrderModal').classList.remove('hidden');
-            shopCart = [];
+        function updateShopCart(id, delta) {
+            var item = shopCart.find(function(c){return c.id===id;});
+            if(!item) return;
+            item.menge += delta;
+            if(item.menge <= 0) shopCart = shopCart.filter(function(c){return c.id!==id;});
             renderShop();
-            document.getElementById('shopCart').classList.add('hidden');
         }
 
         // ========== HQ DRILL-DOWN: Switch to Partner view for a specific location ==========
@@ -10932,6 +12495,10 @@
                 }
             });
             // Re-render ALL visible dynamic content
+            try { renderTodos(); } catch(e){}
+            try { renderTickets('all'); } catch(e){}
+            try { renderAnnouncements(); } catch(e){}
+            try { renderShopCart(); } catch(e){}
             var views = document.querySelectorAll('.view');
             views.forEach(function(v) {
                 if(v.style.display !== 'none') {
