@@ -330,6 +330,49 @@
         <p class="text-center text-xs text-gray-400 absolute bottom-4 left-0 right-0">&copy; 2026 vit:bikes GmbH &middot; Partner Portal v6.0</p>
     </div>
 
+    <!-- Pending-Screen: Warteseite nach Selbstregistrierung -->
+    <div id="pendingScreen" style="display:none" class="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div class="bg-white rounded-2xl shadow-lg p-10 max-w-md text-center">
+        <div class="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg class="w-10 h-10 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-3">Zugang wird gepr&uuml;ft</h2>
+        <p class="text-gray-500 mb-6">
+          Danke f&uuml;r deine Registrierung! Dein Zugang wird vom HQ-Team gepr&uuml;ft und freigeschaltet.
+          Du wirst benachrichtigt, sobald es soweit ist.
+        </p>
+        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+          <p class="text-sm text-gray-400">Eingeloggt als</p>
+          <p class="text-sm font-medium text-gray-700" id="pendingEmail"></p>
+        </div>
+        <button onclick="sb.auth.signOut().then(function(){ window.location.reload(); })" 
+                class="text-sm text-gray-400 hover:text-gray-600 transition cursor-pointer">
+          Abmelden
+        </button>
+      </div>
+    </div>
+
+    <!-- Gesperrt-Screen -->
+    <div id="blockedScreen" style="display:none" class="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div class="bg-white rounded-2xl shadow-lg p-10 max-w-md text-center">
+        <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636"/>
+          </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-3">Zugang gesperrt</h2>
+        <p class="text-gray-500 mb-6">
+          Dein Zugang wurde deaktiviert. Bitte wende dich an das HQ-Team.
+        </p>
+        <button onclick="sb.auth.signOut().then(function(){ window.location.reload(); })" 
+                class="text-sm text-gray-400 hover:text-gray-600 transition cursor-pointer">
+          Abmelden
+        </button>
+      </div>
+    </div>
+
     <!-- Main Application -->
     <div id="mainApp" style="display: none;">
         <!-- Top Navigation -->
@@ -5355,49 +5398,62 @@
                 if(errEl) { errEl.textContent = 'Bitte alle Pflichtfelder ausfüllen.'; errEl.style.display = 'block'; }
                 return;
             }
-            if(pw.length < 6) {
-                if(errEl) { errEl.textContent = 'Passwort muss mindestens 6 Zeichen haben.'; errEl.style.display = 'block'; }
-                return;
-            }
-            if(!standortId) {
-                if(errEl) { errEl.textContent = 'Bitte einen Standort wählen.'; errEl.style.display = 'block'; }
+            if(pw.length < 8) {
+                if(errEl) { errEl.textContent = 'Passwort muss mindestens 8 Zeichen haben.'; errEl.style.display = 'block'; }
                 return;
             }
             
             if(btn) { btn.disabled = true; btn.textContent = 'Wird registriert...'; }
             
+            // Vorname/Nachname aus dem Namen splitten
+            var nameParts = name.trim().split(' ');
+            var vorname = nameParts[0] || '';
+            var nachname = nameParts.slice(1).join(' ') || '';
+            
             try {
-                // 1. Auth-User erstellen (auto-confirm email)
+                // Auth-User erstellen via Standard signUp()
+                // Der DB-Trigger handle_new_auth_user() erstellt automatisch:
+                // - public.users Eintrag mit status='pending'
+                // - HQ-Todo Notification
+                // - Email-Queue Eintrag
                 var authResp = await sb.auth.signUp({ 
                     email: email.trim().toLowerCase(), 
                     password: pw,
-                    options: { data: { email_verified: true } }
+                    options: { 
+                        data: { 
+                            vorname: vorname,
+                            nachname: nachname
+                        } 
+                    }
                 });
                 if(authResp.error) throw authResp.error;
-                var newUserId = authResp.data.user.id;
+                var newUserId = authResp.data.user ? authResp.data.user.id : null;
                 
-                // 2. Users-Tabelle via SECURITY DEFINER Funktion
-                var userResp = await sb.rpc('create_user_profile', {
-                    user_id: newUserId,
-                    user_email: email.trim().toLowerCase(),
-                    user_name: name.trim(),
-                    user_standort_id: standortId,
-                    user_status: 'onboarding'
-                });
-                if(userResp.error) throw userResp.error;
+                // Optionalen Standort-Hinweis nachträglich setzen (hilft HQ bei Zuordnung)
+                if(standortId && newUserId) {
+                    // Kurz warten damit der Trigger den User in public.users erstellt hat
+                    await new Promise(function(resolve){ setTimeout(resolve, 1500); });
+                    try {
+                        await sb.from('users').update({ standort_id: standortId }).eq('id', newUserId);
+                    } catch(e) { console.warn('Standort-Hinweis konnte nicht gesetzt werden:', e); }
+                }
                 
-                // 3. Sofort ausloggen (signUp loggt automatisch ein)
+                // Sofort ausloggen (signUp loggt automatisch ein)
                 await sb.auth.signOut();
                 
                 if(sucEl) {
-                    sucEl.innerHTML = '\u2705 <strong>Registrierung erfolgreich!</strong><br>Dein Account wartet auf Freigabe durch das HQ. Du wirst per E-Mail benachrichtigt.';
+                    sucEl.innerHTML = '\u2705 <strong>Registrierung erfolgreich!</strong><br>Dein Account wartet auf Freigabe durch das HQ. Du wirst benachrichtigt, sobald dein Zugang freigeschaltet wurde.';
                     sucEl.style.display = 'block';
                 }
                 if(btn) { btn.style.display = 'none'; }
             } catch(err) {
                 // Auch ausloggen falls teilweise erfolgreich
                 try { await sb.auth.signOut(); } catch(e){}
-                if(errEl) { errEl.textContent = 'Fehler: ' + (err.message||err); errEl.style.display = 'block'; }
+                var msg = 'Fehler: ' + (err.message||err);
+                if(err.message && err.message.includes('already registered')) {
+                    msg = 'Diese E-Mail-Adresse ist bereits registriert. Bitte anmelden.';
+                }
+                if(errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
                 if(btn) { btn.disabled = false; btn.textContent = 'Registrieren'; }
             }
         }
@@ -5420,16 +5476,35 @@
                 sbUser = resp.data.user;
                 console.log('[Login] Auth OK, user:', sbUser.id);
                 
-                // Status-Check: Ist der User freigeschaltet?
+                // Status-Check: Was darf der User sehen?
                 var profileResp = await sb.from('users').select('status').eq('id', sbUser.id).single();
                 console.log('[Login] Profile status:', profileResp.data ? profileResp.data.status : 'no profile', profileResp.error ? profileResp.error.message : '');
-                if(profileResp.data && profileResp.data.status === 'onboarding') {
-                    await sb.auth.signOut();
-                    throw { message: 'Dein Account wartet noch auf Freigabe durch das HQ. Bitte hab etwas Geduld.' };
+                
+                if(profileResp.data && (profileResp.data.status === 'pending' || profileResp.data.status === 'onboarding')) {
+                    // Pending-Screen zeigen statt Fehlermeldung
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('pendingScreen').style.display = 'flex';
+                    var pendingEmailEl = document.getElementById('pendingEmail');
+                    if(pendingEmailEl) pendingEmailEl.textContent = email;
+                    if(loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Anmelden'; }
+                    return false;
                 }
-                if(profileResp.data && profileResp.data.status === 'offboarding') {
-                    await sb.auth.signOut();
-                    throw { message: 'Dein Account wurde deaktiviert. Bitte wende dich an das HQ.' };
+                if(profileResp.data && (profileResp.data.status === 'offboarding' || profileResp.data.status === 'gesperrt')) {
+                    // Gesperrt-Screen zeigen
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('blockedScreen').style.display = 'flex';
+                    if(loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Anmelden'; }
+                    return false;
+                }
+                
+                if(!profileResp.data) {
+                    // Kein Profil gefunden – wahrscheinlich Trigger-Problem, Pending zeigen
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('pendingScreen').style.display = 'flex';
+                    var pendingEmailEl2 = document.getElementById('pendingEmail');
+                    if(pendingEmailEl2) pendingEmailEl2.textContent = email;
+                    if(loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Anmelden'; }
+                    return false;
                 }
                 
                 console.log('[Login] Loading profile...');
@@ -5769,6 +5844,8 @@
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('mainApp').style.display = 'none';
             document.getElementById('homeView').style.display = 'none';
+            document.getElementById('pendingScreen').style.display = 'none';
+            document.getElementById('blockedScreen').style.display = 'none';
         }
 
         async function checkSession() {
@@ -5787,6 +5864,22 @@
             if(resp.data.session && resp.data.session.user) {
                 sbUser = resp.data.session.user;
                 try {
+                    // Status-Check vor dem App-Laden
+                    var profileResp = await sb.from('users').select('status').eq('id', sbUser.id).single();
+                    
+                    if(profileResp.data && (profileResp.data.status === 'pending' || profileResp.data.status === 'onboarding')) {
+                        document.getElementById('loginScreen').style.display = 'none';
+                        document.getElementById('pendingScreen').style.display = 'flex';
+                        var pe = document.getElementById('pendingEmail');
+                        if(pe) pe.textContent = sbUser.email || '';
+                        return;
+                    }
+                    if(profileResp.data && (profileResp.data.status === 'offboarding' || profileResp.data.status === 'gesperrt')) {
+                        document.getElementById('loginScreen').style.display = 'none';
+                        document.getElementById('blockedScreen').style.display = 'flex';
+                        return;
+                    }
+                    
                     await loadUserProfile(sbUser.id);
                     await loadModulStatus();
                     enterApp();
@@ -12273,7 +12366,7 @@
             if(errEl) errEl.style.display = 'none';
 
             if(!name.trim() || !email.trim()) { if(errEl){errEl.textContent='Bitte Name und E-Mail ausfüllen.';errEl.style.display='block';} return; }
-            if(!pw || pw.length < 6) { if(errEl){errEl.textContent='Passwort muss mindestens 6 Zeichen haben.';errEl.style.display='block';} return; }
+            if(!pw || pw.length < 8) { if(errEl){errEl.textContent='Passwort muss mindestens 8 Zeichen haben.';errEl.style.display='block';} return; }
 
             var allRollen = ['hq','inhaber','verkauf','werkstatt','buchhaltung'];
             var selected = [];
@@ -12283,25 +12376,48 @@
             var btn = document.getElementById('newMaSaveBtn');
             if(btn) { btn.disabled=true; btn.textContent='Wird angelegt...'; }
 
-            try {
-                var resp = await sb.rpc('create_full_user', {
-                    p_email: email.trim().toLowerCase(),
-                    p_password: pw,
-                    p_name: name.trim(),
-                    p_standort_id: standortId && standortId!=='hq' ? standortId : null,
-                    p_rollen: selected,
-                    p_status: 'aktiv'
-                });
-                if(resp.error) throw resp.error;
+            // Vorname/Nachname aus dem Namen splitten
+            var nameParts = name.trim().split(' ');
+            var vorname = nameParts[0] || '';
+            var nachname = nameParts.slice(1).join(' ') || '';
+            var isHqUser = selected.indexOf('hq') >= 0;
 
-                // Set is_hq flag if HQ role was selected
-                if(selected.indexOf('hq') >= 0 && resp.data) {
-                    await sb.from('users').update({is_hq: true, standort_id: null}).eq('email', email.trim().toLowerCase());
-                }
+            try {
+                // Rollen-IDs aus der DB holen
+                var rollenResp = await sb.from('rollen').select('id, name');
+                var rollenMap = {};
+                if(rollenResp.data) rollenResp.data.forEach(function(r){ rollenMap[r.name] = r.id; });
+                var rollenIds = selected.map(function(r){ return rollenMap[r]; }).filter(Boolean);
+
+                // Edge Function aufrufen statt create_full_user RPC
+                var session = await sb.auth.getSession();
+                if(!session.data.session) throw { message: 'Nicht eingeloggt' };
+
+                var response = await fetch(sb.supabaseUrl + '/functions/v1/create-user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + session.data.session.access_token,
+                        'apikey': sb.supabaseKey
+                    },
+                    body: JSON.stringify({
+                        email: email.trim().toLowerCase(),
+                        password: pw,
+                        vorname: vorname,
+                        nachname: nachname,
+                        is_hq: isHqUser,
+                        standort_id: standortId && standortId !== 'hq' ? standortId : null,
+                        rollen: rollenIds,
+                        status: 'aktiv'
+                    })
+                });
+
+                var result = await response.json();
+                if(!response.ok) throw { message: result.error || 'User-Erstellung fehlgeschlagen' };
 
                 closeNeuerMaModal();
                 var rollenLabels = {'hq':'HQ','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
-                alert('\u2705 Mitarbeiter angelegt!\n'+name.trim()+'\nRollen: '+selected.map(function(r){return rollenLabels[r]||r;}).join(', '));
+                alert('\u2705 Mitarbeiter angelegt!\n'+name.trim()+'\nRollen: '+selected.map(function(r){return rollenLabels[r]||r;}).join(', ')+'\n\nDer Mitarbeiter kann sich sofort mit seinem Passwort anmelden.');
                 renderKzMitarbeiter();
             } catch(err) {
                 if(errEl){errEl.textContent='Fehler: '+(err.message||err);errEl.style.display='block';}
