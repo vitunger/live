@@ -241,8 +241,34 @@
             display: inline-block;
             line-height: 14px;
         }
+        .demo-badge {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-size: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 4px;
+            vertical-align: middle;
+            display: inline-block;
+            line-height: 14px;
+        }
         .beta-badge-tab {
             background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 0px 5px;
+            border-radius: 6px;
+            font-size: 7px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-left: 3px;
+            vertical-align: middle;
+        }
+        .demo-badge-tab {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
             color: white;
             padding: 0px 5px;
             border-radius: 6px;
@@ -2081,8 +2107,9 @@
                     
                     <!-- Tab Navigation -->
                     <div class="mb-6 border-b border-gray-200">
-                        <nav class="-mb-px flex space-x-8">
-                            <button onclick="showControllingTab('bwa')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="bwa">BWAs</button>
+                        <nav class="-mb-px flex space-x-8 overflow-x-auto">
+                            <button onclick="showControllingTab('cockpit')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="cockpit">🎯 Cockpit</button>
+                            <button onclick="showControllingTab('bwa')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="bwa">BWAs</button>
                             <button onclick="showControllingTab('benchmark')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="benchmark">Benchmarks</button>
                             <button onclick="showControllingTab('planist')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="planist">Plan / Ist</button>
                             <button onclick="showControllingTab('liquiditaet')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="liquiditaet">Liquiditaet</button>
@@ -2090,8 +2117,13 @@
                         </nav>
                     </div>
 
+                    <!-- ===== TAB 0: COCKPIT ===== -->
+                    <div id="ctrlTabCockpit" class="ctrl-tab-content">
+                        <div id="cockpitContent"><p class="text-sm text-gray-400 text-center py-8">Wird geladen...</p></div>
+                    </div>
+
                     <!-- ===== TAB 1: BWAs ===== -->
-                    <div id="ctrlTabBwa" class="ctrl-tab-content">
+                    <div id="ctrlTabBwa" class="ctrl-tab-content" style="display:none;">
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <!-- Left: BWA Ablage -->
                             <div class="lg:col-span-1">
@@ -4346,7 +4378,7 @@
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 <button onclick="showView('marketing'); showMarketingTab('mktStrategie')" class="p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition text-center"><p class="text-2xl mb-1">📢</p><p class="text-xs font-semibold">Marketing-Strategie</p></button>
                                 <button onclick="showView('einkauf'); showEinkaufTab('ekStrategie')" class="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition text-center"><p class="text-2xl mb-1">🛒</p><p class="text-xs font-semibold">Einkaufsstrategie</p></button>
-                                <button onclick="showView('controlling'); showControllingTab('bwa')" class="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition text-center"><p class="text-2xl mb-1">📊</p><p class="text-xs font-semibold">BWA &amp; Controlling</p></button>
+                                <button onclick="showView('controlling'); showControllingTab('cockpit')" class="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition text-center"><p class="text-2xl mb-1">📊</p><p class="text-xs font-semibold">BWA &amp; Controlling</p></button>
                                 <button onclick="showView('aktenschrank')" class="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition text-center"><p class="text-2xl mb-1">📁</p><p class="text-xs font-semibold">Aktenschrank</p></button>
                             </div>
                         </div>
@@ -5284,15 +5316,15 @@
         };
         // Tabs that are beta (within otherwise-live modules)
         var BETA_TABS = {
-            'benchmark': true,    // Controlling: Benchmarks
-            'planist': true,      // Controlling: Plan/Ist
-            'liquiditaet': true,  // Controlling: Liquidität
-            'vkWissen': true,     // Verkauf: Wissen
-            'ekWissen': true,     // Einkauf: Wissen  
-            'ctrlWissen': true,   // Controlling: Wissen
-            'mktWissen': true,    // Marketing: Wissen
-            'kontakte': true,     // Support: Kontakte
-            'leadreporting': true // Dashboards: Reporting
+            'benchmark': 'demo',     // Controlling: Benchmarks (demo data)
+            'planist': 'beta',       // Controlling: Plan/Ist (real data, beta feature)
+            'liquiditaet': 'demo',   // Controlling: Liquidität (demo data)
+            'vkWissen': 'beta',      // Verkauf: Wissen
+            'ekWissen': 'beta',      // Einkauf: Wissen  
+            'ctrlWissen': 'beta',    // Controlling: Wissen
+            'mktWissen': 'beta',     // Marketing: Wissen
+            'kontakte': 'beta',      // Support: Kontakte
+            'leadreporting': 'demo'  // Dashboards: Reporting (demo data)
         };
 
         function applyBetaBadges() {
@@ -5305,40 +5337,44 @@
                 var m = onclick.match(/showView\('([^']+)'\)/);
                 if(!m) return;
                 var viewName = m[1];
-                if(!BETA_MODULES[viewName]) return;
-                // Don't duplicate
+                var modStatus = BETA_MODULES[viewName];
+                if(!modStatus) return;
                 if(btn.querySelector('.auto-beta-badge')) return;
                 var span = btn.querySelector('span[data-i18n], span:not(.auto-beta-badge):not(.modul-wip-badge)');
                 if(!span) return;
+                var isDemo = (modStatus === 'demo');
                 var badge = document.createElement('span');
-                badge.className = 'auto-beta-badge beta-badge';
-                badge.textContent = 'BETA';
+                badge.className = 'auto-beta-badge ' + (isDemo ? 'demo-badge' : 'beta-badge');
+                badge.textContent = isDemo ? 'DEMO' : 'BETA';
                 span.parentNode.insertBefore(badge, span.nextSibling);
             });
 
             // Tab buttons
             document.querySelectorAll('[data-tab]').forEach(function(btn) {
                 var tab = btn.getAttribute('data-tab');
-                if(!BETA_TABS[tab]) return;
+                var tabStatus = BETA_TABS[tab];
+                if(!tabStatus) return;
                 if(btn.querySelector('.auto-beta-badge')) return;
+                var isDemo = (tabStatus === 'demo');
                 var badge = document.createElement('span');
-                badge.className = 'auto-beta-badge beta-badge-tab';
-                badge.textContent = 'BETA';
+                badge.className = 'auto-beta-badge ' + (isDemo ? 'demo-badge-tab' : 'beta-badge-tab');
+                badge.textContent = isDemo ? 'DEMO' : 'BETA';
                 btn.appendChild(badge);
             });
 
-            // View headlines – add beta tag next to H1 inside beta views
+            // View headlines – add badge next to H1 inside beta/demo views
             Object.keys(BETA_MODULES).forEach(function(viewName) {
                 var viewEl = document.getElementById(viewName + 'View');
                 if(!viewEl) return;
                 var h1 = viewEl.querySelector('h1');
                 if(!h1 || h1.querySelector('.auto-beta-badge')) return;
+                var isDemo = (BETA_MODULES[viewName] === 'demo');
                 var badge = document.createElement('span');
-                badge.className = 'auto-beta-badge beta-badge';
+                badge.className = 'auto-beta-badge ' + (isDemo ? 'demo-badge' : 'beta-badge');
                 badge.style.fontSize = '10px';
                 badge.style.marginLeft = '8px';
                 badge.style.verticalAlign = 'middle';
-                badge.textContent = 'BETA';
+                badge.textContent = isDemo ? 'DEMO' : 'BETA';
                 h1.appendChild(badge);
             });
         }
@@ -10266,10 +10302,305 @@
         var origShowControllingTab = showControllingTab;
         showControllingTab = function(t) {
             origShowControllingTab(t);
+            if(t === 'cockpit') renderPerformanceCockpit();
             if(t === 'bwa') loadBwaList();
             if(t === 'planist') renderPlanIst();
             if(t === 'ctrlWissen') renderWissenTab('controlling','ctrlTabCtrlWissen');
         };
+
+        // === PERFORMANCE COCKPIT ===
+        async function renderPerformanceCockpit() {
+            var el = document.getElementById('cockpitContent');
+            if(!el) return;
+            el.innerHTML = '<p class="text-sm text-gray-400 text-center py-8">Lade Cockpit-Daten...</p>';
+
+            var stdId = sbProfile ? sbProfile.standort_id : null;
+            var stdName = sbProfile ? (sbProfile.standort_name || 'Standort') : 'Standort';
+            if(!stdId) { el.innerHTML = '<p class="text-sm text-red-500 text-center py-8">Kein Standort zugeordnet.</p>'; return; }
+
+            // Load current year BWAs
+            var currentYear = new Date().getFullYear();
+            var currentMonth = new Date().getMonth() + 1;
+            var bwas = [], plan = null, vjBwas = [];
+
+            try {
+                var bResp = await sb.from('bwa_daten').select('*').eq('standort_id', stdId).eq('jahr', currentYear).order('monat');
+                if(!bResp.error && bResp.data) bwas = bResp.data;
+            } catch(e) {}
+
+            // Load previous year BWAs for YoY
+            try {
+                var vjResp = await sb.from('bwa_daten').select('*').eq('standort_id', stdId).eq('jahr', currentYear - 1).order('monat');
+                if(!vjResp.error && vjResp.data) vjBwas = vjResp.data;
+            } catch(e) {}
+
+            // Load plan
+            try {
+                var pResp = await sb.from('jahresplaene').select('*').eq('standort_id', stdId).eq('jahr', currentYear).maybeSingle();
+                if(!pResp.error && pResp.data) plan = pResp.data;
+            } catch(e) {}
+
+            // Month selector (use latest BWA month, or current-1)
+            var latestMonth = 0;
+            bwas.forEach(function(b) { if(b.monat > latestMonth) latestMonth = b.monat; });
+            if(!latestMonth) latestMonth = Math.max(1, currentMonth - 1);
+
+            var bwa = null;
+            bwas.forEach(function(b) { if(b.monat === latestMonth) bwa = b; });
+
+            var vjBwa = null;
+            vjBwas.forEach(function(b) { if(b.monat === latestMonth) vjBwa = b; });
+
+            var planMonth = null;
+            if(plan && plan.plan_daten) {
+                planMonth = plan.plan_daten[String(latestMonth)] || plan.plan_daten[latestMonth] || null;
+            }
+
+            var mLabels = {1:'Januar',2:'Februar',3:'März',4:'April',5:'Mai',6:'Juni',7:'Juli',8:'August',9:'September',10:'Oktober',11:'November',12:'Dezember'};
+
+            // Helper functions
+            function fmtK(v) { if(v === null || v === undefined || isNaN(v)) return '—'; var abs = Math.abs(v); if(abs >= 1000) return (v/1000).toLocaleString('de-DE',{maximumFractionDigits:0}) + ' Tsd €'; return v.toLocaleString('de-DE',{maximumFractionDigits:0}) + ' €'; }
+            function fmtPct(v) { if(v === null || v === undefined || isNaN(v)) return '—'; return v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}) + '%'; }
+            function pn(v) { return parseFloat(v) || 0; }
+            function grayBox(label, val) { return '<div class="p-4 rounded-xl bg-gray-100 text-center opacity-50"><p class="text-[10px] text-gray-400 uppercase tracking-wider">' + label + '</p><p class="text-lg font-bold text-gray-300">' + (val||'—') + '</p></div>'; }
+            function kpiBox(label, val, color, sub) { return '<div class="p-4 rounded-xl bg-white border border-gray-200 text-center shadow-sm"><p class="text-[10px] text-gray-500 uppercase tracking-wider">' + label + '</p><p class="text-xl font-bold ' + (color||'text-gray-800') + '">' + val + '</p>' + (sub ? '<p class="text-[10px] ' + (sub.color||'text-gray-400') + '">' + sub.text + '</p>' : '') + '</div>'; }
+
+            // Extract values
+            var umsatz = bwa ? pn(bwa.umsatzerloese) : null;
+            var rohertrag = bwa ? pn(bwa.rohertrag) : null;
+            var gesamtkosten = bwa ? pn(bwa.gesamtkosten) : null;
+            var ebit = bwa ? pn(bwa.betriebsergebnis || bwa.ergebnis_vor_steuern) : null;
+            var personal = bwa ? pn(bwa.personalkosten) : null;
+            var raum = bwa ? pn(bwa.raumkosten) : null;
+            var werbe = bwa ? pn(bwa.werbe_reisekosten) : null;
+            var sonstige = bwa ? pn(bwa.sonstige_kosten) : null;
+            var abschreibungen = bwa ? pn(bwa.abschreibungen) : null;
+            var fahrzeug = bwa ? pn(bwa.fahrzeugkosten) : null;
+            var versicherungen = bwa ? pn(bwa.versicherungen_beitraege) : null;
+
+            var rohMarge = umsatz ? (rohertrag / umsatz * 100) : null;
+            var ebitMarge = umsatz ? (ebit / umsatz * 100) : null;
+            var kostenquote = umsatz ? (Math.abs(gesamtkosten) / umsatz * 100) : null;
+
+            // VJ comparison
+            var vjUmsatz = vjBwa ? pn(vjBwa.umsatzerloese) : null;
+            var umsatzYoY = (umsatz && vjUmsatz) ? (umsatz / vjUmsatz * 100) : null;
+
+            // Plan values
+            var planUmsatz = planMonth ? pn(planMonth.umsatz) : null;
+            var planRohertrag = planMonth ? pn(planMonth.rohertrag) : null;
+            var planEbit = planMonth ? pn(planMonth.betriebsergebnis || planMonth.ergebnis) : null;
+
+            // YTD calculations
+            var ytdUmsatz = 0, ytdVjUmsatz = 0;
+            bwas.forEach(function(b) { ytdUmsatz += pn(b.umsatzerloese); });
+            vjBwas.forEach(function(b) { if(b.monat <= latestMonth) ytdVjUmsatz += pn(b.umsatzerloese); });
+            var ytdUmsatzVjPct = ytdVjUmsatz ? (ytdUmsatz / ytdVjUmsatz * 100) : null;
+
+            var ytdKosten = 0, ytdVjKosten = 0;
+            bwas.forEach(function(b) { ytdKosten += Math.abs(pn(b.gesamtkosten)); });
+            vjBwas.forEach(function(b) { if(b.monat <= latestMonth) ytdVjKosten += Math.abs(pn(b.gesamtkosten)); });
+            var ytdKostenVjPct = ytdVjKosten ? (ytdKosten / ytdVjKosten * 100) : null;
+
+            var vjEbitMarge = (vjBwa && pn(vjBwa.umsatzerloese)) ? (pn(vjBwa.betriebsergebnis || vjBwa.ergebnis_vor_steuern) / pn(vjBwa.umsatzerloese) * 100) : null;
+            var ebitMargeDelta = (ebitMarge !== null && vjEbitMarge !== null) ? (ebitMarge - vjEbitMarge) : null;
+
+            // Marketing KPIs
+            var mktUmsatzPct = (umsatz && werbe) ? (Math.abs(werbe) / umsatz * 100) : null;
+            var mktKostenPct = (gesamtkosten && werbe) ? (Math.abs(werbe) / Math.abs(gesamtkosten) * 100) : null;
+
+            // Build HTML
+            var h = '';
+
+            // Header with month selector
+            h += '<div class="flex items-center justify-between mb-6">';
+            h += '<div class="flex items-center space-x-3">';
+            h += '<h2 class="text-lg font-bold text-vit-orange">Filial - Performance Cockpit</h2>';
+            h += '<span class="text-sm text-gray-500">' + stdName + ' | ' + currentYear + '</span>';
+            h += '</div>';
+            h += '<select id="cockpitMonthSel" onchange="cockpitMonth=parseInt(this.value);renderPerformanceCockpit()" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white">';
+            for(var mm = 1; mm <= 12; mm++) {
+                var hasBwa = false; bwas.forEach(function(b){ if(b.monat===mm) hasBwa=true; });
+                h += '<option value="'+mm+'"'+(mm===latestMonth?' selected':'')+(hasBwa?'':' disabled')+'>'+mLabels[mm]+(hasBwa?'':' (keine BWA)')+'</option>';
+            }
+            h += '</select>';
+            h += '</div>';
+
+            if(!bwa) {
+                h += '<div class="vit-card p-8 text-center"><div class="text-5xl mb-4">📊</div>';
+                h += '<p class="text-gray-500">Keine BWA-Daten für ' + mLabels[latestMonth] + ' ' + currentYear + ' vorhanden.</p>';
+                h += '<p class="text-sm text-gray-400 mt-2">Lade zuerst eine BWA hoch unter dem Tab "BWAs".</p></div>';
+                el.innerHTML = h; return;
+            }
+
+            // === ROW 1: KPI Cards (8 cards like the PDF) ===
+            h += '<div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">';
+            h += kpiBox('Umsatz', fmtK(umsatz), 'text-gray-800');
+            h += kpiBox('Rohertrag', fmtK(rohertrag), 'text-gray-800');
+            h += kpiBox('Rohertrag Marge %', fmtPct(rohMarge), rohMarge >= 35 ? 'text-green-600' : 'text-red-500');
+            h += kpiBox('Gesamtkosten', fmtK(gesamtkosten ? Math.abs(gesamtkosten) : null), 'text-gray-800');
+            h += kpiBox('EBIT', fmtK(ebit), ebit >= 0 ? 'text-gray-800' : 'text-red-500');
+            h += kpiBox('EBIT-Marge %', fmtPct(ebitMarge), ebitMarge >= 0 ? 'text-green-600' : 'text-red-500');
+            h += kpiBox('Kostenquote %', fmtPct(kostenquote), kostenquote <= 50 ? 'text-green-600' : 'text-vit-orange');
+            if(umsatzYoY !== null) { h += kpiBox('Umsatz YoY %', fmtPct(umsatzYoY), umsatzYoY >= 100 ? 'text-green-600' : 'text-red-500'); }
+            else { h += grayBox('Umsatz YoY %', 'Keine VJ-Daten'); }
+            h += '</div>';
+
+            // === ROW 2: Bar Charts (Umsatz vs Plan, Rohertrag vs Plan, EBIT vs Plan) + YTD KPIs ===
+            h += '<div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">';
+
+            // Bar chart helper (simple CSS bars)
+            function barChart(title, istVal, planVal, istLabel, planLabel, istColor, planColor) {
+                var maxV = Math.max(Math.abs(istVal||0), Math.abs(planVal||0)) || 1;
+                var istH = Math.abs(istVal||0)/maxV*100;
+                var planH = Math.abs(planVal||0)/maxV*100;
+                var s = '<div class="vit-card p-4 text-center"><p class="text-xs font-semibold text-gray-600 mb-3">' + title + '</p>';
+                s += '<div class="flex items-end justify-center space-x-4" style="height:120px">';
+                if(planVal !== null) {
+                    s += '<div class="flex flex-col items-center"><div style="height:'+planH+'%;min-height:4px" class="w-10 rounded-t '+planColor+'"></div><p class="text-[9px] mt-1 text-gray-500">'+planLabel+'</p></div>';
+                }
+                s += '<div class="flex flex-col items-center"><div style="height:'+istH+'%;min-height:4px" class="w-10 rounded-t '+istColor+'"></div><p class="text-[9px] mt-1 text-gray-500">'+istLabel+'</p></div>';
+                if(planVal === null) { s += '<div class="flex flex-col items-center opacity-30"><div style="height:30%;min-height:4px" class="w-10 rounded-t bg-gray-300"></div><p class="text-[9px] mt-1 text-gray-300">Plan</p></div>'; }
+                s += '</div>';
+                s += '<div class="mt-2 text-[10px] text-gray-400">' + fmtK(istVal) + (planVal !== null ? ' vs ' + fmtK(planVal) : '') + '</div>';
+                s += '</div>';
+                return s;
+            }
+
+            h += barChart('Umsatz vs Plan', umsatz, planUmsatz, 'Umsatz', 'Plan', 'bg-vit-orange', 'bg-gray-300');
+            h += barChart('Rohertrag vs Plan', rohertrag, planRohertrag, 'Rohertrag', 'Plan', 'bg-vit-orange', 'bg-gray-300');
+            h += barChart('EBIT vs Plan', ebit, planEbit, 'EBIT', 'Plan', ebit >= 0 ? 'bg-green-500' : 'bg-red-400', 'bg-gray-300');
+
+            // YTD vs VJ column
+            h += '<div class="vit-card p-4 space-y-4">';
+            if(ytdUmsatzVjPct !== null) {
+                h += '<div class="text-center"><p class="text-xs text-gray-500">Umsatz YTD vs VJ%</p>';
+                h += '<p class="text-2xl font-bold ' + (ytdUmsatzVjPct >= 100 ? 'text-green-600' : 'text-red-500') + '">↑ ' + fmtPct(ytdUmsatzVjPct) + '</p></div>';
+            } else { h += '<div class="text-center opacity-40"><p class="text-xs text-gray-400">Umsatz YTD vs VJ%</p><p class="text-lg text-gray-300">Keine VJ-Daten</p></div>'; }
+            if(ytdKostenVjPct !== null) {
+                h += '<div class="text-center"><p class="text-xs text-gray-500">Kosten YTD vs VJ%</p>';
+                h += '<p class="text-2xl font-bold ' + (ytdKostenVjPct <= 100 ? 'text-green-600' : 'text-red-500') + '">↑ ' + fmtPct(ytdKostenVjPct) + '</p></div>';
+            } else { h += '<div class="text-center opacity-40"><p class="text-xs text-gray-400">Kosten YTD vs VJ%</p><p class="text-lg text-gray-300">Keine VJ-Daten</p></div>'; }
+            if(ebitMargeDelta !== null) {
+                h += '<div class="text-center"><p class="text-xs text-gray-500">EBIT-Marge Δ (%-Pkt.)</p>';
+                h += '<p class="text-2xl font-bold ' + (ebitMargeDelta >= 0 ? 'text-green-600' : 'text-red-500') + '">' + (ebitMargeDelta >= 0 ? '+' : '') + ebitMargeDelta.toFixed(1) + ' pp</p></div>';
+            } else { h += '<div class="text-center opacity-40"><p class="text-xs text-gray-400">EBIT-Marge Δ</p><p class="text-lg text-gray-300">Keine VJ-Daten</p></div>'; }
+            h += '</div>';
+            h += '</div>';
+
+            // === ROW 3: Kostenstruktur + Kosten vs Plan + Benchmarks (grayed) ===
+            h += '<div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">';
+
+            // Kostenstruktur Pie (CSS only)
+            var totalK = Math.abs(personal||0) + Math.abs(raum||0) + Math.abs(werbe||0) + Math.abs(sonstige||0) + Math.abs(abschreibungen||0) + Math.abs(fahrzeug||0) + Math.abs(versicherungen||0);
+            var kostenItems = [
+                {name:'Personalkosten', val:Math.abs(personal||0), color:'#EF7D00'},
+                {name:'Raumkosten', val:Math.abs(raum||0), color:'#F59E0B'},
+                {name:'Werbe-/Reisekosten', val:Math.abs(werbe||0), color:'#10B981'},
+                {name:'Sonstige', val:Math.abs(sonstige||0)+Math.abs(abschreibungen||0)+Math.abs(fahrzeug||0)+Math.abs(versicherungen||0), color:'#6B7280'}
+            ];
+            h += '<div class="vit-card p-4"><p class="text-xs font-semibold text-gray-600 mb-3 text-center">Kostenstruktur (% der Gesamtkosten)</p>';
+            h += '<div class="flex items-center justify-center mb-3">';
+            // Simple horizontal stacked bar as pie alternative
+            h += '<div class="w-full h-8 rounded-full overflow-hidden flex">';
+            kostenItems.forEach(function(ki) {
+                var pct = totalK ? (ki.val / totalK * 100) : 0;
+                if(pct > 0) h += '<div style="width:'+pct+'%;background:'+ki.color+'" title="'+ki.name+': '+pct.toFixed(0)+'%"></div>';
+            });
+            h += '</div></div>';
+            h += '<div class="grid grid-cols-2 gap-1 text-[10px]">';
+            kostenItems.forEach(function(ki) {
+                var pct = totalK ? (ki.val / totalK * 100) : 0;
+                h += '<div class="flex items-center"><span class="w-2 h-2 rounded-full mr-1" style="background:'+ki.color+'"></span>' + ki.name + ' ' + pct.toFixed(0) + '%</div>';
+            });
+            h += '</div></div>';
+
+            // Kosten vs Plan Trend (horizontal bars per category)
+            h += '<div class="vit-card p-4"><p class="text-xs font-semibold text-gray-600 mb-3 text-center">Kosten vs Plan – Trend</p>';
+            var kostenKats = [
+                {name:'Personal', ist:Math.abs(personal||0), plan: planMonth ? Math.abs(pn(planMonth.personalkosten)) : null},
+                {name:'Raum', ist:Math.abs(raum||0), plan: planMonth ? Math.abs(pn(planMonth.raumkosten)) : null},
+                {name:'Werbe', ist:Math.abs(werbe||0), plan: planMonth ? Math.abs(pn(planMonth.werbekosten || planMonth.werbe_reisekosten)) : null},
+                {name:'Sonstige', ist:Math.abs(sonstige||0), plan: planMonth ? Math.abs(pn(planMonth.sonstige || planMonth.sonstige_kosten)) : null}
+            ];
+            var maxKat = 1;
+            kostenKats.forEach(function(kk) { if(kk.ist > maxKat) maxKat = kk.ist; if(kk.plan && kk.plan > maxKat) maxKat = kk.plan; });
+            h += '<div class="space-y-2">';
+            kostenKats.forEach(function(kk) {
+                var istPct = umsatz ? (kk.ist / umsatz * 100) : 0;
+                var planPct = (planUmsatz && kk.plan) ? (kk.plan / planUmsatz * 100) : null;
+                var barW = kk.ist / maxKat * 80;
+                h += '<div class="flex items-center text-[10px]"><span class="w-14 text-gray-500">' + kk.name + '</span>';
+                h += '<div class="flex-1 relative h-4">';
+                h += '<div class="absolute top-0 h-4 rounded bg-vit-orange" style="width:'+barW+'%"></div>';
+                if(planPct !== null) { var planBarW = (kk.plan / maxKat * 80); h += '<div class="absolute top-0 h-4 rounded bg-gray-300 opacity-50" style="width:'+planBarW+'%"></div>'; }
+                h += '</div>';
+                h += '<span class="w-10 text-right text-gray-600">' + istPct.toFixed(0) + '%</span>';
+                h += '</div>';
+            });
+            h += '</div>';
+            h += '<div class="mt-2 flex items-center justify-center space-x-3 text-[9px] text-gray-400"><span class="flex items-center"><span class="w-3 h-2 bg-vit-orange rounded mr-1"></span>Kosten Anteil am Umsatz %</span>';
+            h += '<span class="flex items-center"><span class="w-3 h-2 bg-gray-300 rounded mr-1"></span>Kosten Anteil am Plan-Umsatz %</span></div>';
+            h += '</div>';
+
+            // Benchmark cards (grayed out)
+            h += '<div class="vit-card p-4 opacity-40 bg-gray-50">';
+            h += '<p class="text-xs font-semibold text-gray-400 mb-3 text-center">Benchmarks vs. Netzwerk</p>';
+            h += '<div class="space-y-4 text-center">';
+            h += '<div><p class="text-[10px] text-gray-400">Abw. Rohertragsmarge zum Standort-Benchmark</p><p class="text-2xl font-bold text-gray-300">— pp</p></div>';
+            h += '<div><p class="text-[10px] text-gray-400">Benchmark vs. Umsatzklasse</p><p class="text-lg font-bold text-gray-300">—</p></div>';
+            h += '<div><p class="text-[10px] text-gray-400">Benchmark vs. Region</p><p class="text-lg font-bold text-gray-300">—</p></div>';
+            h += '<p class="text-[9px] text-gray-300 italic mt-2">Verfügbar sobald Netzwerk-Daten aggregiert werden</p>';
+            h += '</div></div>';
+
+            // Marketing KPIs
+            h += '<div class="vit-card p-4"><p class="text-xs font-semibold text-gray-600 mb-3 text-center">Marketingkosten</p>';
+            h += '<div class="space-y-3 text-center">';
+            h += '<div><p class="text-[10px] text-gray-500">Marketingkosten zu Umsatz (%)</p><p class="text-xl font-bold text-gray-800">' + (mktUmsatzPct !== null ? mktUmsatzPct.toFixed(0) + '%' : '—') + '</p></div>';
+            h += '<div><p class="text-[10px] text-gray-500">Anteil an Gesamtkosten (%)</p><p class="text-xl font-bold text-gray-800">' + (mktKostenPct !== null ? mktKostenPct.toFixed(0) + '%' : '—') + '</p></div>';
+            h += '<div><p class="text-[10px] text-gray-500">Marketingkosten Standort</p><p class="text-xl font-bold text-gray-800">' + fmtK(werbe ? Math.abs(werbe) : null) + '</p></div>';
+            h += '<div class="opacity-40"><p class="text-[10px] text-gray-400">Mkt. zu Umsatz Benchmark %</p><p class="text-lg text-gray-300">—</p></div>';
+            h += '</div></div>';
+
+            h += '</div>'; // end row 3
+
+            // === SECTION 2: Verkaufs- & Kundenverhalten (Coming Soon) ===
+            h += '<div class="vit-card p-8 mb-6 bg-gray-50 border-dashed border-2 border-gray-200">';
+            h += '<div class="text-center">';
+            h += '<p class="text-3xl mb-3">🛒</p>';
+            h += '<h3 class="text-lg font-bold text-gray-400 mb-2">Verkaufs- & Kundenverhalten Cockpit</h3>';
+            h += '<p class="text-sm text-gray-400 mb-4">Kundenanzahl, Neue vs. Wiederkehrende Kunden, Verkauf nach Marke/Typ, TOP Verkäufer, Zahlungsarten</p>';
+            h += '<span class="inline-block px-4 py-2 bg-gray-200 text-gray-500 rounded-full text-sm font-semibold">Coming Soon – POS-Anbindung erforderlich</span>';
+            h += '</div></div>';
+
+            // === SECTION 3: Verkaufs- & Marketing Cockpit (Coming Soon) ===
+            h += '<div class="vit-card p-8 mb-6 bg-gray-50 border-dashed border-2 border-gray-200">';
+            h += '<div class="text-center">';
+            h += '<p class="text-3xl mb-3">📈</p>';
+            h += '<h3 class="text-lg font-bold text-gray-400 mb-2">Verkaufs- & Marketing Cockpit</h3>';
+            h += '<p class="text-sm text-gray-400 mb-4">Fahrrad-/E-Bike-Verkauf nach Marke & Typ, Durchschnittspreise vs. Benchmark, Markenanteile</p>';
+
+            // Planerfüllung - this we CAN show
+            if(planUmsatz && umsatz) {
+                var planErf = (umsatz / planUmsatz * 100);
+                var umsatzDelta = umsatz - planUmsatz;
+                h += '<div class="bg-white rounded-xl p-4 inline-block mb-4 shadow-sm border">';
+                h += '<div class="grid grid-cols-4 gap-4 text-center">';
+                h += '<div><p class="text-[10px] text-gray-500">Planerfüllung Umsatz</p>';
+                h += '<div class="w-full bg-gray-200 rounded-full h-3 mt-1"><div class="h-3 rounded-full ' + (planErf >= 100 ? 'bg-green-500' : 'bg-vit-orange') + '" style="width:' + Math.min(planErf, 100) + '%"></div></div>';
+                h += '<p class="text-sm font-bold mt-1">' + planErf.toFixed(0) + '%</p></div>';
+                h += '<div><p class="text-[10px] text-gray-500">IST</p><p class="text-sm font-bold">' + umsatz.toLocaleString('de-DE',{maximumFractionDigits:2}) + ' €</p></div>';
+                h += '<div><p class="text-[10px] text-gray-500">PLAN</p><p class="text-sm font-bold">' + planUmsatz.toLocaleString('de-DE',{maximumFractionDigits:2}) + ' €</p></div>';
+                h += '<div><p class="text-[10px] text-gray-500">Umsatz Δ</p><p class="text-sm font-bold ' + (umsatzDelta >= 0 ? 'text-green-600' : 'text-red-500') + '">' + (umsatzDelta >= 0 ? '+' : '') + umsatzDelta.toLocaleString('de-DE',{maximumFractionDigits:2}) + ' €</p></div>';
+                h += '</div></div>';
+            }
+
+            h += '<span class="inline-block px-4 py-2 bg-gray-200 text-gray-500 rounded-full text-sm font-semibold">Coming Soon – POS-Anbindung erforderlich</span>';
+            h += '</div></div>';
+
+            el.innerHTML = h;
+        }
+        var cockpitMonth = 0; // 0 = auto-detect latest
 
         // === LEAD REPORTING DASHBOARD (computed from hqStandorte) ===
         function getLeadData() {
@@ -15713,7 +16044,7 @@
                 console.log('SUCCESS: Showed', viewId, '- offsetHeight:', viewEl.offsetHeight);
                 if(viewName === 'dashboards') initDashboardTabs();
                 if(viewName === 'hqModulStatus') renderModulStatus();
-                if(viewName === 'controlling') { try { loadBwaList(); } catch(e){} }
+                if(viewName === 'controlling') { try { renderPerformanceCockpit(); } catch(e){ console.warn('cockpit:', e); } }
                 if(viewName === 'support') { try { renderTickets(); } catch(e){} }
                 if(viewName === 'ideenboard') { try { renderIdeen(); } catch(e){} }
                 if(viewName === 'todo') { try { loadTodos(); } catch(e){} }
