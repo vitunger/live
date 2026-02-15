@@ -612,6 +612,12 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                             <span>Mitarbeiter</span>
                         </button>
+
+                        <hr class="border-gray-600 my-3">
+                        <button onclick="showView('devStatus')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                            <span>Dev-Status</span>
+                        </button>
                         </div>
 
                         <!-- HQ-specific items (hidden by default) -->
@@ -728,6 +734,11 @@
                             <button onclick="showView('hqEinstellungen')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                 <span>Einstellungen</span>
+                            </button>
+
+                            <button onclick="showView('devStatus')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                                <span>Dev-Status</span>
                             </button>
                         </div>
                     </nav>
@@ -1286,7 +1297,7 @@
                             <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Umsatz IST (YTD)</p><p class="text-2xl font-bold text-vit-orange" id="ausUmsatzYTD">—</p></div>
                             <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Verkaeufe gesamt</p><p class="text-2xl font-bold text-green-600" id="ausVerkauft">0</p></div>
                             <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">VK-Quote YTD</p><p class="text-2xl font-bold text-blue-600" id="ausQuote">—</p></div>
-                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Ã˜ Verkaufspreis</p><p class="text-2xl font-bold text-purple-600" id="ausAvgPreis">—</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Ø Verkaufspreis</p><p class="text-2xl font-bold text-purple-600" id="ausAvgPreis">—</p></div>
                         </div>
 
                         <!-- Umsatz-Verlauf Chart -->
@@ -1306,7 +1317,7 @@
                                         <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Verkauft</th>
                                         <th class="text-right py-2.5 px-3 font-semibold text-gray-600">VK-Quote</th>
                                         <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Umsatz</th>
-                                        <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Ã˜ Preis</th>
+                                        <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Ø Preis</th>
                                     </tr></thead>
                                     <tbody id="jahresTabelle"><tr><td colspan="6" class="text-center py-6 text-gray-400">Lade Daten...</td></tr></tbody>
                                 </table>
@@ -1988,7 +1999,7 @@
                         <!-- KPIs -->
                         <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
                             <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Einkaufsvolumen YTD</p><p class="text-2xl font-bold text-gray-800">33.580 €</p><p class="text-xs text-gray-400">Jan 2026</p></div>
-                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Ã˜ Rohertragsmarge</p><p class="text-2xl font-bold text-green-600">38.9%</p><p class="text-xs text-green-600">+1.6 Pp vs. VJ</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Ø Rohertragsmarge</p><p class="text-2xl font-bold text-green-600">38.9%</p><p class="text-xs text-green-600">+1.6 Pp vs. VJ</p></div>
                             <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Raeder auf Lager</p><p class="text-2xl font-bold text-gray-800">47</p><p class="text-xs text-gray-400">Lagerwert: 189.400 €</p></div>
                             <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Lagerumschlag</p><p class="text-2xl font-bold text-blue-600">4.2x</p><p class="text-xs text-green-600">Ziel: 4.0x</p></div>
                             <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Offene Bestellungen</p><p class="text-2xl font-bold text-vit-orange">12</p><p class="text-xs text-gray-400">Wert: 58.200 €</p></div>
@@ -2018,7 +2029,7 @@
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">Einkaufsvolumen nach Kategorie (Jan 2026)</h2>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-sm">
-                                    <thead><tr class="bg-gray-50"><th class="text-left py-2.5 px-3 font-semibold text-gray-600">Kategorie</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Einkauf</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Verkauf</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Marge</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Stueck</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Ã˜ EK/Stueck</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Anteil</th></tr></thead>
+                                    <thead><tr class="bg-gray-50"><th class="text-left py-2.5 px-3 font-semibold text-gray-600">Kategorie</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Einkauf</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Verkauf</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Marge</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Stueck</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Ø EK/Stueck</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Anteil</th></tr></thead>
                                     <tbody>
                                         <tr class="border-b"><td class="py-2.5 px-3 font-semibold">E-Bikes</td><td class="text-right py-2.5 px-3">24.821</td><td class="text-right py-2.5 px-3">47.380</td><td class="text-right py-2.5 px-3 text-green-600 font-semibold">47.6%</td><td class="text-right py-2.5 px-3">11</td><td class="text-right py-2.5 px-3">2.256</td><td class="text-right py-2.5 px-3 text-gray-500">73.9%</td></tr>
                                         <tr class="border-b"><td class="py-2.5 px-3 font-semibold">Teile &amp; Zubehoer</td><td class="text-right py-2.5 px-3">5.515</td><td class="text-right py-2.5 px-3">6.052</td><td class="text-right py-2.5 px-3 text-orange-600 font-semibold">8.9%</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3 text-gray-500">16.4%</td></tr>
@@ -2060,7 +2071,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                 <div class="p-4 bg-blue-50 rounded-lg text-center"><p class="text-xs text-gray-500">Bike-Bestand</p><p class="text-2xl font-bold text-blue-600">156</p><p class="text-xs text-gray-400">25 MTB · 131 Trekking/City</p></div>
                                 <div class="p-4 bg-green-50 rounded-lg text-center"><p class="text-xs text-gray-500">Gesamt-Umsatz (netto)</p><p class="text-2xl font-bold text-green-600">995.897 €</p><p class="text-xs text-gray-400">262 Bikes, ⌀ 4.508 € DB</p></div>
-                                <div class="p-4 bg-orange-50 rounded-lg text-center"><p class="text-xs text-gray-500">Ã˜ Nachlass</p><p class="text-2xl font-bold text-vit-orange">8,70%</p><p class="text-xs text-red-500">Ziel: unter 5%</p></div>
+                                <div class="p-4 bg-orange-50 rounded-lg text-center"><p class="text-xs text-gray-500">Ø Nachlass</p><p class="text-2xl font-bold text-vit-orange">8,70%</p><p class="text-xs text-red-500">Ziel: unter 5%</p></div>
                             </div>
                         </div>
 
@@ -2191,37 +2202,37 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 <div class="p-5 border border-gray-200 rounded-xl">
                                     <p class="text-sm text-gray-500 mb-1">Umsatz / m²</p>
-                                    <div class="flex items-end justify-between"><div><p class="text-2xl font-bold text-green-600">428 €</p><p class="text-xs text-gray-500">Dein Standort</p></div><div class="text-right"><p class="text-lg font-semibold text-gray-400">382 €</p><p class="text-xs text-gray-400">Netzwerk Ã¸</p></div></div>
+                                    <div class="flex items-end justify-between"><div><p class="text-2xl font-bold text-green-600">428 €</p><p class="text-xs text-gray-500">Dein Standort</p></div><div class="text-right"><p class="text-lg font-semibold text-gray-400">382 €</p><p class="text-xs text-gray-400">Netzwerk Ø</p></div></div>
                                     <div class="mt-3 bg-gray-200 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width:85%"></div></div>
                                     <p class="text-xs text-green-600 mt-1 font-semibold">+12% ueber Durchschnitt</p>
                                 </div>
                                 <div class="p-5 border border-gray-200 rounded-xl">
                                     <p class="text-sm text-gray-500 mb-1">Rohertragsmarge</p>
-                                    <div class="flex items-end justify-between"><div><p class="text-2xl font-bold text-green-600">36.7%</p><p class="text-xs text-gray-500">Dein Standort</p></div><div class="text-right"><p class="text-lg font-semibold text-gray-400">34.2%</p><p class="text-xs text-gray-400">Netzwerk Ã¸</p></div></div>
+                                    <div class="flex items-end justify-between"><div><p class="text-2xl font-bold text-green-600">36.7%</p><p class="text-xs text-gray-500">Dein Standort</p></div><div class="text-right"><p class="text-lg font-semibold text-gray-400">34.2%</p><p class="text-xs text-gray-400">Netzwerk Ø</p></div></div>
                                     <div class="mt-3 bg-gray-200 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width:78%"></div></div>
                                     <p class="text-xs text-green-600 mt-1 font-semibold">+2.5 Pp ueber Durchschnitt</p>
                                 </div>
                                 <div class="p-5 border border-gray-200 rounded-xl">
                                     <p class="text-sm text-gray-500 mb-1">Umsatz / Mitarbeiter</p>
-                                    <div class="flex items-end justify-between"><div><p class="text-2xl font-bold text-orange-500">28.560 €</p><p class="text-xs text-gray-500">Dein Standort</p></div><div class="text-right"><p class="text-lg font-semibold text-gray-400">30.100 €</p><p class="text-xs text-gray-400">Netzwerk Ã¸</p></div></div>
+                                    <div class="flex items-end justify-between"><div><p class="text-2xl font-bold text-orange-500">28.560 €</p><p class="text-xs text-gray-500">Dein Standort</p></div><div class="text-right"><p class="text-lg font-semibold text-gray-400">30.100 €</p><p class="text-xs text-gray-400">Netzwerk Ø</p></div></div>
                                     <div class="mt-3 bg-gray-200 rounded-full h-2.5"><div class="bg-orange-400 h-2.5 rounded-full" style="width:65%"></div></div>
                                     <p class="text-xs text-orange-600 mt-1 font-semibold">-5% unter Durchschnitt</p>
                                 </div>
                                 <div class="p-5 border border-gray-200 rounded-xl">
                                     <p class="text-sm text-gray-500 mb-1">Personalkostenquote</p>
-                                    <div class="flex items-end justify-between"><div><p class="text-2xl font-bold text-red-500">19.9%</p><p class="text-xs text-gray-500">Dein Standort</p></div><div class="text-right"><p class="text-lg font-semibold text-gray-400">18.5%</p><p class="text-xs text-gray-400">Netzwerk Ã¸</p></div></div>
+                                    <div class="flex items-end justify-between"><div><p class="text-2xl font-bold text-red-500">19.9%</p><p class="text-xs text-gray-500">Dein Standort</p></div><div class="text-right"><p class="text-lg font-semibold text-gray-400">18.5%</p><p class="text-xs text-gray-400">Netzwerk Ø</p></div></div>
                                     <div class="mt-3 bg-gray-200 rounded-full h-2.5"><div class="bg-red-400 h-2.5 rounded-full" style="width:72%"></div></div>
                                     <p class="text-xs text-red-600 mt-1 font-semibold">+1.4 Pp ueber Durchschnitt</p>
                                 </div>
                                 <div class="p-5 border border-gray-200 rounded-xl">
                                     <p class="text-sm text-gray-500 mb-1">Lagerumschlag</p>
-                                    <div class="flex items-end justify-between"><div><p class="text-2xl font-bold text-green-600">4.2x</p><p class="text-xs text-gray-500">Dein Standort</p></div><div class="text-right"><p class="text-lg font-semibold text-gray-400">3.8x</p><p class="text-xs text-gray-400">Netzwerk Ã¸</p></div></div>
+                                    <div class="flex items-end justify-between"><div><p class="text-2xl font-bold text-green-600">4.2x</p><p class="text-xs text-gray-500">Dein Standort</p></div><div class="text-right"><p class="text-lg font-semibold text-gray-400">3.8x</p><p class="text-xs text-gray-400">Netzwerk Ø</p></div></div>
                                     <div class="mt-3 bg-gray-200 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width:82%"></div></div>
                                     <p class="text-xs text-green-600 mt-1 font-semibold">+11% ueber Durchschnitt</p>
                                 </div>
                                 <div class="p-5 border border-gray-200 rounded-xl">
                                     <p class="text-sm text-gray-500 mb-1">Werkstatt-Auslastung</p>
-                                    <div class="flex items-end justify-between"><div><p class="text-2xl font-bold text-green-600">78%</p><p class="text-xs text-gray-500">Dein Standort</p></div><div class="text-right"><p class="text-lg font-semibold text-gray-400">72%</p><p class="text-xs text-gray-400">Netzwerk Ã¸</p></div></div>
+                                    <div class="flex items-end justify-between"><div><p class="text-2xl font-bold text-green-600">78%</p><p class="text-xs text-gray-500">Dein Standort</p></div><div class="text-right"><p class="text-lg font-semibold text-gray-400">72%</p><p class="text-xs text-gray-400">Netzwerk Ø</p></div></div>
                                     <div class="mt-3 bg-gray-200 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width:78%"></div></div>
                                     <p class="text-xs text-green-600 mt-1 font-semibold">+6 Pp ueber Durchschnitt</p>
                                 </div>
@@ -3536,7 +3547,7 @@
                         <div class="vit-card p-6">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-gray-500 text-sm">Ã˜ Zufriedenheit</p>
+                                    <p class="text-gray-500 text-sm">Ø Zufriedenheit</p>
                                     <p class="text-3xl font-bold text-gray-800 mt-2">4.6/5</p>
                                 </div>
                                 <div class="bg-green-100 p-3 rounded-full">
@@ -4437,7 +4448,7 @@
                                 <div class="p-3 bg-blue-50 rounded-lg text-center"><p class="text-xs text-gray-400">Bike-Bestand (09/25)</p><p class="text-lg font-bold text-blue-600">156</p></div>
                                 <div class="p-3 bg-green-50 rounded-lg text-center"><p class="text-xs text-gray-400">Zielmarken 2026</p><p class="text-lg font-bold text-green-600">6</p></div>
                                 <div class="p-3 bg-orange-50 rounded-lg text-center"><p class="text-xs text-gray-400">Vororder Kalkhoff</p><p class="text-lg font-bold text-vit-orange">80 Bikes</p></div>
-                                <div class="p-3 bg-red-50 rounded-lg text-center"><p class="text-xs text-gray-400">Ã˜ Nachlass</p><p class="text-lg font-bold text-red-600">8,7%</p><p class="text-xs text-red-400">Ziel: unter 5%</p></div>
+                                <div class="p-3 bg-red-50 rounded-lg text-center"><p class="text-xs text-gray-400">Ø Nachlass</p><p class="text-lg font-bold text-red-600">8,7%</p><p class="text-xs text-red-400">Ziel: unter 5%</p></div>
                             </div>
                             <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
                                 <div class="p-2 bg-green-50 rounded text-xs"><span class="font-semibold">Kalkhoff</span> – VO 80 Bikes</div>
@@ -5163,7 +5174,7 @@
                     <!-- Rechte-Matrix -->
                     <div class="vit-card overflow-hidden mb-6">
                         <div class="p-4 border-b bg-gray-50 flex items-center justify-between">
-                            <h2 class="font-bold text-gray-800">Rechte-Matrix: Module Ã— Rollen</h2>
+                            <h2 class="font-bold text-gray-800">Rechte-Matrix: Module × Rollen</h2>
                             <span class="text-xs text-gray-400">Klicken zum Aktivieren/Deaktivieren</span>
                         </div>
                         <div class="overflow-x-auto">
@@ -5205,6 +5216,29 @@
                     </div>
                     </div><!-- /settingsTabRechte -->
                 </div>
+
+                <!-- === DEV-STATUS VIEW === -->
+                <div id="devStatusView" class="view" style="display: none;">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h1 class="h1-headline text-gray-800">DEV-STATUS</h1>
+                            <p class="text-gray-500 text-sm">Entwicklungsstand aller Portal-Module · Stand: 16. Februar 2026</p>
+                        </div>
+                        <div class="flex items-center space-x-2" id="devStatusSummary"></div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 mb-6">
+                        <button onclick="filterDevStatus('alle')" class="ds-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white" data-f="alle">Alle</button>
+                        <button onclick="filterDevStatus('standort')" class="ds-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="standort">Standort-Module</button>
+                        <button onclick="filterDevStatus('hq')" class="ds-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="hq">HQ-Module</button>
+                        <button onclick="filterDevStatus('widgets')" class="ds-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="widgets">Dashboard-Widgets</button>
+                        <span class="text-gray-300">|</span>
+                        <button onclick="filterDevStatus('kiPrio')" class="ds-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="kiPrio">🤖 Priorität KI</button>
+                        <button onclick="filterDevStatus('hqPrio')" class="ds-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="hqPrio">👑 Prio HQ</button>
+                    </div>
+                    <div id="devStatusContent"></div>
+                    <div id="devStatusProgress" class="mt-6"></div>
+                </div>
+
     </div>
 
     <script>
@@ -9403,7 +9437,7 @@
             {q:'Wie melde ich einen IT-Fehler?', a:'Im Support-Bereich ein Ticket mit Kategorie "IT" erstellen. Screenshot beifuegen. Kritische Ausfaelle (Kasse, Internet): direkt IT-Hotline anrufen unter 089/123456-99.', cat:'allgemein'},
             {q:'Wie funktioniert der Skonto bei Kalkhoff?', a:'3% Skonto bei Zahlung innerhalb von 14 Tagen. Bei Vororder-Bikes gilt das Skonto ab Rechnungsdatum, nicht ab Lieferdatum. Achtung: Skonto verfaellt bei verspaeteter Zahlung komplett.', cat:'einkauf'},
             {q:'Kann ich eigene Social-Media-Posts machen?', a:'Ja, ausdruecklich erwuenscht! Bitte den vit:bikes CI-Guide beachten (Logo-Verwendung, Farben). Organische Posts werden vom Content-Team gerne auf den zentralen Kanaelen geteilt.', cat:'marketing'},
-            {q:'Wie interpretiere ich die Rohertragsmarge?', a:'Rohertrag = VK netto minus EK netto. Rohertragsmarge = Rohertrag / VK netto Ã— 100. Zielwert bei E-Bikes: 35-42%. Unter 30% sollte Ursachenanalyse erfolgen (zu viel Rabatt? falsche Modelle?).', cat:'controlling'}
+            {q:'Wie interpretiere ich die Rohertragsmarge?', a:'Rohertrag = VK netto minus EK netto. Rohertragsmarge = Rohertrag / VK netto × 100. Zielwert bei E-Bikes: 35-42%. Unter 30% sollte Ursachenanalyse erfolgen (zu viel Rabatt? falsche Modelle?).', cat:'controlling'}
         ];
         var faqFilterCat = 'all';
         function filterFaqCat(cat) {
@@ -10189,7 +10223,8 @@
                 hqStandorte = standorte.map(function(s) {
                     var sBwa = bwaData.filter(function(b) { return b.standort_id === s.id; });
                     var totalUmsatz = sBwa.reduce(function(a, b) { return a + (parseFloat(b.umsatzerloese) || 0); }, 0);
-                    var avgRohertrag = sBwa.length ? (sBwa.reduce(function(a, b) { return a + (parseFloat(b.rohertrag) || 0); }, 0) / sBwa.length) : 0;
+                    var totalRohertrag = sBwa.reduce(function(a, b) { return a + (parseFloat(b.rohertrag) || 0); }, 0);
+                    var avgRohertrag = totalUmsatz > 0 ? (totalRohertrag / totalUmsatz * 100) : 0;
                     var sTickets = tickets.filter(function(t) { return t.standort_id === s.id; }).length;
                     var sLeads = leads.filter(function(l) { return l.standort_id === s.id; });
                     var sVt = vtData.filter(function(v) { return v.standort_id === s.id; });
@@ -10250,7 +10285,7 @@
             // KPIs
             var el = document.getElementById('hqKpiCards');
             if(el) el.innerHTML = '<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Netzwerk-Umsatz YTD</p><p class="text-2xl font-bold text-gray-800">'+fmt(totalUmsatz)+' €</p><p class="text-xs '+(totalUmsatz>=totalPlan?'text-green-600':'text-red-500')+'">Plan: '+fmt(totalPlan)+' €</p></div>'
-                +'<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Ã˜ Rohertrag</p><p class="text-2xl font-bold text-gray-800">'+avgRohertrag+'%</p><p class="text-xs text-gray-500">Ziel: ≥ 38%</p></div>'
+                +'<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Ø Rohertrag</p><p class="text-2xl font-bold text-gray-800">'+avgRohertrag+'%</p><p class="text-xs text-gray-500">Ziel: ≥ 38%</p></div>'
                 +'<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Leads gesamt</p><p class="text-2xl font-bold text-gray-800">'+totalLeads+'</p><p class="text-xs text-gray-500">'+active.length+' aktive Standorte</p></div>'
                 +'<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Standorte kritisch</p><p class="text-2xl font-bold '+(kritisch>3?'text-red-600':'text-yellow-600')+'">'+kritisch+' / '+hqStandorte.length+'</p><p class="text-xs text-gray-500">Lead-Performance &lt; 50%</p></div>'
                 +'<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Offene Tickets</p><p class="text-2xl font-bold '+(tickets>10?'text-red-600':'text-gray-800')+'">'+tickets+'</p><p class="text-xs text-gray-500">Netzwerk-weit</p></div>';
@@ -10418,8 +10453,8 @@
 
             var kpi = document.getElementById('hqFinKpis');
             if(kpi) kpi.innerHTML = '<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Netzwerk-Umsatz</p><p class="text-2xl font-bold">'+fmt(totalU)+' €</p><p class="text-xs '+(totalU>=totalP?'text-green-500':'text-red-500')+'">Plan: '+fmt(totalP)+' €</p></div>'
-                +'<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Ã˜ Rohertrag</p><p class="text-2xl font-bold '+(avgRoh>=38?'text-green-600':'text-red-500')+'">'+avgRoh+'%</p></div>'
-                +'<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Ã˜ Rabattquote</p><p class="text-2xl font-bold '+(avgRab<=5?'text-green-600':'text-red-500')+'">'+avgRab+'%</p><p class="text-xs text-gray-500">Ziel: unter 5%</p></div>'
+                +'<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Ø Rohertrag</p><p class="text-2xl font-bold '+(avgRoh>=38?'text-green-600':'text-red-500')+'">'+avgRoh+'%</p></div>'
+                +'<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Ø Rabattquote</p><p class="text-2xl font-bold '+(avgRab<=5?'text-green-600':'text-red-500')+'">'+avgRab+'%</p><p class="text-xs text-gray-500">Ziel: unter 5%</p></div>'
                 +'<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">BWA-Auffaelligkeiten</p><p class="text-2xl font-bold text-red-600">'+hqStandorte.filter(function(s){return s.bwaAuffaellig;}).length+'</p></div>';
 
             // Table
@@ -10468,8 +10503,8 @@
             var kpi = document.getElementById('hqMktKpis');
             if(kpi) kpi.innerHTML = '<div class="vit-card p-4"><p class="text-xs text-gray-400">Leads gesamt</p><p class="text-xl font-bold">'+totalLeads+'</p></div>'
                 +'<div class="vit-card p-4"><p class="text-xs text-gray-400">Budget/Monat</p><p class="text-xl font-bold">'+fmt(totalBudget)+' €</p></div>'
-                +'<div class="vit-card p-4"><p class="text-xs text-gray-400">Ã˜ CPT</p><p class="text-xl font-bold">'+avgCpt+' €</p><p class="text-[10px] text-gray-400">Ziel: &lt;163 €</p></div>'
-                +'<div class="vit-card p-4"><p class="text-xs text-gray-400">Ã˜ Lead-Perf.</p><p class="text-xl font-bold '+perfColor(avgPerf)+'">'+avgPerf+'%</p></div>'
+                +'<div class="vit-card p-4"><p class="text-xs text-gray-400">Ø CPT</p><p class="text-xl font-bold">'+avgCpt+' €</p><p class="text-[10px] text-gray-400">Ziel: &lt;163 €</p></div>'
+                +'<div class="vit-card p-4"><p class="text-xs text-gray-400">Ø Lead-Perf.</p><p class="text-xl font-bold '+perfColor(avgPerf)+'">'+avgPerf+'%</p></div>'
                 +'<div class="vit-card p-4"><p class="text-xs text-gray-400">Strategie vereinbart</p><p class="text-xl font-bold">'+stratDone+' / '+hqStandorte.length+'</p></div>';
 
             // Lead Performance
@@ -10518,7 +10553,7 @@
             if(kpi) kpi.innerHTML = '<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Vororder Bikes gesamt</p><p class="text-2xl font-bold">'+totalVO+'</p></div>'
                 +'<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Vororder abgeschlossen</p><p class="text-2xl font-bold text-green-600">'+voDone+' / '+hqStandorte.length+'</p></div>'
                 +'<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Vororder offen</p><p class="text-2xl font-bold '+(voOpen>3?'text-red-600':'text-yellow-600')+'">'+voOpen+'</p></div>'
-                +'<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Ã˜ Rabattquote</p><p class="text-2xl font-bold '+(avgRab<=5?'text-green-600':'text-red-500')+'">'+avgRab+'%</p><p class="text-xs text-gray-500">Ziel: unter 5%</p></div>';
+                +'<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Ø Rabattquote</p><p class="text-2xl font-bold '+(avgRab<=5?'text-green-600':'text-red-500')+'">'+avgRab+'%</p><p class="text-xs text-gray-500">Ziel: unter 5%</p></div>';
 
             // Vororder
             var vo = document.getElementById('hqEkVororder');
@@ -10663,6 +10698,7 @@
             if(v==='hqIdeen') renderHqIdeen();
             if(v==='hqShop') renderHqShop();
             if(v==='hqEinstellungen') renderHqEinstellungen();
+            if(v==='devStatus') renderDevStatus('alle');
             if(v==='mitarbeiter') renderPartnerMitarbeiter();
             if(v==='hqKommando') renderKommandozentrale();
             if(v==='kalender') loadKalTermine();
@@ -11740,7 +11776,7 @@
                 +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-green-600">'+aktiv+'</p><p class="text-xs text-gray-500">Aktiv</p></div>'
                 +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-blue-600">'+geplant+'</p><p class="text-xs text-gray-500">Geplant</p></div>'
                 +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-gray-400">'+beendet+'</p><p class="text-xs text-gray-500">Beendet</p></div>'
-                +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-vit-orange">'+avgUmsetzung+'%</p><p class="text-xs text-gray-500">Ã˜ Umsetzung (aktiv)</p></div>';
+                +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-vit-orange">'+avgUmsetzung+'%</p><p class="text-xs text-gray-500">Ø Umsetzung (aktiv)</p></div>';
 
             var el=document.getElementById('hqKampList');if(!el)return;
             var h='';
@@ -12004,7 +12040,7 @@
                 +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-red-500">'+offen+'</p><p class="text-xs text-gray-500">Offen</p></div>'
                 +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-blue-600">'+inprog+'</p><p class="text-xs text-gray-500">In Arbeit</p></div>'
                 +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-green-600">'+done+'</p><p class="text-xs text-gray-500">Erledigt</p></div>'
-                +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-vit-orange">'+avgCompl+'%</p><p class="text-xs text-gray-500">Ã˜ Umsetzung</p></div>';
+                +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-vit-orange">'+avgCompl+'%</p><p class="text-xs text-gray-500">Ø Umsetzung</p></div>';
 
             var el=document.getElementById('hqTaskList');if(!el)return;
             var h='';
@@ -12089,10 +12125,10 @@
             var avgModules=Math.round(portalNutzung.reduce(function(a,p){return a+p.moduleUsed;},0)/portalNutzung.length*10)/10;
 
             var kpi=document.getElementById('hqAuswKpis');
-            if(kpi) kpi.innerHTML='<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-gray-800">'+avgScore+'</p><p class="text-xs text-gray-500">Ã˜ Nutzungs-Score</p></div>'
-                +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-blue-600">'+avgLogins+'</p><p class="text-xs text-gray-500">Ã˜ Logins/Monat</p></div>'
+            if(kpi) kpi.innerHTML='<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-gray-800">'+avgScore+'</p><p class="text-xs text-gray-500">Ø Nutzungs-Score</p></div>'
+                +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-blue-600">'+avgLogins+'</p><p class="text-xs text-gray-500">Ø Logins/Monat</p></div>'
                 +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold '+(bwaCount>=15?'text-green-600':'text-yellow-600')+'">'+bwaCount+'/21</p><p class="text-xs text-gray-500">BWA hochgeladen</p></div>'
-                +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-vit-orange">'+avgModules+'</p><p class="text-xs text-gray-500">Ã˜ Module genutzt</p></div>'
+                +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-vit-orange">'+avgModules+'</p><p class="text-xs text-gray-500">Ø Module genutzt</p></div>'
                 +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold '+(inactive>3?'text-red-500':'text-gray-500')+'">'+inactive+'</p><p class="text-xs text-gray-500">Inaktive Standorte</p></div>';
 
             // Top 5
@@ -13477,6 +13513,263 @@
             // Also update sidebar immediately if user is logged in
             try { updateUIForRole(); } catch(e){}
         }
+
+        function renderKommandozentrale() {
+
+        // ============================================
+        // DEV-STATUS MODULE
+        // ============================================
+        var DEV_MODULES = [
+            // Standort-Module
+            {id:'home',name:'Startseite/Dashboard',cat:'standort',status:'teilweise',icon:'🏠',desc:'Dashboard funktional, 10 Widgets statisch (DEMO)',kiPrio:2,aufwand:'8-16h',grund:'Widgets mit echten DB-Daten versorgen bringt sofort sichtbaren Mehrwert für alle User'},
+            {id:'kalender',name:'Kalender',cat:'standort',status:'funktional',icon:'📅',desc:'CRUD Termine, Monats-/Wochenansicht, DB-Anbindung',kiPrio:0,aufwand:'-',grund:'Voll funktional'},
+            {id:'todo',name:'Aufgaben',cat:'standort',status:'funktional',icon:'✅',desc:'Erstellen, bearbeiten, abhaken, Prioritäten, Filter',kiPrio:0,aufwand:'-',grund:'Voll funktional'},
+            {id:'kommunikation',name:'Kommunikation',cat:'standort',status:'funktional',icon:'💬',desc:'Inbox, Ankündigungen, Forum, Chat-Channels, Brett',kiPrio:0,aufwand:'-',grund:'Voll funktional'},
+            {id:'dashboards',name:'Dashboards',cat:'standort',status:'demo',icon:'📊',desc:'Finanzen/Lead-Reporting/Team Tabs – nur Demodaten',kiPrio:5,aufwand:'8-16h',grund:'Echte Charts mit DB-Daten aus BWA + Verkauf'},
+            {id:'allgemein',name:'Allgemein',cat:'standort',status:'demo',icon:'🏢',desc:'Übersicht, Strategie, Wissen – statisch',kiPrio:8,aufwand:'4-8h',grund:'Niedrige Prio, Content muss vom HQ kommen'},
+            {id:'verkauf',name:'Verkauf',cat:'standort',status:'teilweise',icon:'📈',desc:'Wochenansicht (DB), Pipeline/Kanban (DB), Auswertung',kiPrio:3,aufwand:'4-8h',grund:'Auswertungs-Tab mit echten Daten aus verkauf_tracking'},
+            {id:'einkauf',name:'Einkauf',cat:'standort',status:'demo',icon:'🛒',desc:'Lieferanten, Auswertung, Strategie – nur statisch',kiPrio:6,aufwand:'8-16h',grund:'Braucht eigene DB-Tabellen für Lieferanten'},
+            {id:'marketing',name:'Marketing',cat:'standort',status:'demo',icon:'📣',desc:'Kampagnen, Social, Content – nur UI',kiPrio:7,aufwand:'8-16h',grund:'Braucht Kampagnen-DB-Tabelle + HQ-Steuerung'},
+            {id:'controlling',name:'Controlling',cat:'standort',status:'funktional',icon:'📊',desc:'BWA Parser (8 Formate), Performance, Plan/Ist',kiPrio:0,aufwand:'-',grund:'Kern-Feature, voll funktional'},
+            {id:'wissen',name:'Wissen',cat:'standort',status:'demo',icon:'📚',desc:'Wissensdatenbank – statische Inhalte',kiPrio:9,aufwand:'4-8h',grund:'Content muss vom HQ gepflegt werden'},
+            {id:'support',name:'Support',cat:'standort',status:'funktional',icon:'🎫',desc:'Tickets erstellen und verfolgen (DB)',kiPrio:0,aufwand:'-',grund:'Voll funktional'},
+            {id:'ideenboard',name:'Ideenboard',cat:'standort',status:'funktional',icon:'💡',desc:'Ideen einreichen, voten, Status (DB)',kiPrio:0,aufwand:'-',grund:'Voll funktional'},
+            {id:'shop',name:'Werbemittel-Shop',cat:'standort',status:'teilweise',icon:'🛍️',desc:'Produkte, Warenkorb (DB) – Bestellprozess unvollständig',kiPrio:4,aufwand:'4-8h',grund:'Bestellbestätigung + E-Mail-Benachrichtigung'},
+            {id:'aktenschrank',name:'Aktenschrank',cat:'standort',status:'funktional',icon:'📁',desc:'Upload, Kategorien, Suche (DB + Storage)',kiPrio:0,aufwand:'-',grund:'Voll funktional'},
+            {id:'mitarbeiter',name:'Mitarbeiter',cat:'standort',status:'funktional',icon:'👥',desc:'Anlegen, Rollen, Approval, Passwort-Reset (DB)',kiPrio:0,aufwand:'-',grund:'Voll funktional'},
+            {id:'onboarding',name:'Onboarding',cat:'standort',status:'demo',icon:'🎯',desc:'Checklisten – statisch, keine echte Asana-API',kiPrio:10,aufwand:'4-8h',grund:'Niedrigste Prio, Asana-Integration nice-to-have'},
+            // HQ-Module
+            {id:'hqCockpit',name:'HQ Netzwerk-Cockpit',cat:'hq',status:'teilweise',icon:'🌐',desc:'Gesamtübersicht – teilweise DB, teilweise berechnet',kiPrio:3,aufwand:'8-16h',grund:'Echte Aggregationen aus allen Standort-Daten'},
+            {id:'hqKommando',name:'HQ Kommandozentrale',cat:'hq',status:'teilweise',icon:'🎮',desc:'Standorte, Mitarbeiter, Kampagnen, Kommunikation, Aufgaben, Kalender, Dokumente',kiPrio:4,aufwand:'8-16h',grund:'Zentrale Steuerung – Kern für HQ-User'},
+            {id:'hqAktionen',name:'HQ Handlungsbedarf',cat:'hq',status:'teilweise',icon:'⚡',desc:'Auto-Erkennung: Fehlende BWAs, Probleme, offene Tickets',kiPrio:1,aufwand:'4-8h',grund:'Höchste HQ-Prio: Proaktive Alerts sparen Zeit'},
+            {id:'hqStandorte',name:'HQ Standorte',cat:'hq',status:'funktional',icon:'📍',desc:'Alle Standorte mit Status, Users, Filter',kiPrio:0,aufwand:'-',grund:'Voll funktional'},
+            {id:'hqFinanzen',name:'HQ Finanzen',cat:'hq',status:'funktional',icon:'💰',desc:'Netzwerk-BWA-Übersicht, Standort-Vergleiche',kiPrio:0,aufwand:'-',grund:'Voll funktional'},
+            {id:'hqMarketing',name:'HQ Marketing',cat:'hq',status:'demo',icon:'📢',desc:'UI vorhanden, keine DB',kiPrio:6,aufwand:'8-16h',grund:'Braucht Kampagnen-Verwaltung + Standort-Zuweisung'},
+            {id:'hqEinkauf',name:'HQ Einkauf',cat:'hq',status:'demo',icon:'🛒',desc:'UI vorhanden, keine DB',kiPrio:7,aufwand:'8-16h',grund:'Netzwerk-Einkauf braucht Rahmenvertrag-DB'},
+            {id:'hqVerkauf',name:'HQ Verkauf',cat:'hq',status:'demo',icon:'📈',desc:'UI vorhanden, keine DB',kiPrio:8,aufwand:'8-16h',grund:'Netzwerk-Verkaufsaggregation aus verkauf_tracking'},
+            {id:'hqAuswertung',name:'HQ Auswertung',cat:'hq',status:'demo',icon:'📊',desc:'Tab-Struktur, keine Inhalte',kiPrio:9,aufwand:'16-24h',grund:'Umfangreich – braucht Analytics-Engine'},
+            {id:'hqWissen',name:'HQ Wissen',cat:'hq',status:'demo',icon:'📚',desc:'Artikel-Verwaltung ohne Bearbeitung',kiPrio:10,aufwand:'8-16h',grund:'Content-Management für Netzwerk'},
+            {id:'hqSupport',name:'HQ Support',cat:'hq',status:'funktional',icon:'🎯',desc:'Alle Tickets einsehen und beantworten',kiPrio:0,aufwand:'-',grund:'Voll funktional'},
+            {id:'hqIdeen',name:'HQ Ideenboard',cat:'hq',status:'funktional',icon:'💡',desc:'Alle Ideen verwalten, Status ändern',kiPrio:0,aufwand:'-',grund:'Voll funktional'},
+            {id:'hqShop',name:'HQ Shop',cat:'hq',status:'demo',icon:'🛍️',desc:'Produkt-Verwaltung UI, keine echte DB',kiPrio:5,aufwand:'8-16h',grund:'Shop-Verwaltung + Bestell-Management'},
+            {id:'hqEinstellungen',name:'HQ Einstellungen',cat:'hq',status:'funktional',icon:'⚙️',desc:'Modul-Status, Rollen, Rechte-Matrix',kiPrio:0,aufwand:'-',grund:'Voll funktional'},
+            // Dashboard-Widgets
+            {id:'w_pipeline',name:'Widget: Meine Pipeline',cat:'widgets',status:'demo',icon:'📈',desc:'Statische Zahlen (23 Leads, 8 Termine, 5 Angebote)',kiPrio:1,aufwand:'2-4h',grund:'Einfach: COUNT aus leads-Tabelle + termine'},
+            {id:'w_verkaufserfolg',name:'Widget: Verkaufserfolg',cat:'widgets',status:'demo',icon:'💰',desc:'Statisch KW7, 42%',kiPrio:2,aufwand:'2-4h',grund:'Aus verkauf_tracking berechnen'},
+            {id:'w_termine',name:'Widget: Termine Heute',cat:'widgets',status:'demo',icon:'📅',desc:'Statische Namen (Schmidt, Müller, Weber)',kiPrio:1,aufwand:'1-2h',grund:'Einfach: SELECT aus termine WHERE datum = today'},
+            {id:'w_aufgaben',name:'Widget: Offene Aufgaben',cat:'widgets',status:'demo',icon:'✅',desc:'Statische Aufgaben',kiPrio:1,aufwand:'1-2h',grund:'Einfach: SELECT aus todos WHERE completed = false'},
+            {id:'w_kampagnen',name:'Widget: Aktive Kampagnen',cat:'widgets',status:'demo',icon:'📢',desc:'Statisch (Frühjahrs-Aktion, E-Bike Wochen)',kiPrio:7,aufwand:'4-8h',grund:'Braucht erst Kampagnen-DB-Tabelle'},
+            {id:'w_team',name:'Widget: Top Verkäufer',cat:'widgets',status:'demo',icon:'🏆',desc:'Statisch (Sarah, Michael, Benny)',kiPrio:3,aufwand:'2-4h',grund:'Aus verkauf_tracking pro Mitarbeiter aggregieren'},
+            {id:'w_controlling',name:'Widget: Budget-Status',cat:'widgets',status:'demo',icon:'📊',desc:'Statische Prozente (75%, 92%, 58%)',kiPrio:4,aufwand:'4-8h',grund:'Plan/Ist-Vergleich aus BWA-Daten + Plan'},
+            {id:'w_support',name:'Widget: Support Tickets',cat:'widgets',status:'demo',icon:'🎯',desc:'Statisch (2 offene Tickets)',kiPrio:2,aufwand:'1-2h',grund:'Einfach: COUNT aus support_tickets WHERE status = offen'},
+            {id:'w_wissen',name:'Widget: Neue Inhalte',cat:'widgets',status:'demo',icon:'📚',desc:'Statisch (Schulung, Produktinfo)',kiPrio:8,aufwand:'4-8h',grund:'Braucht Content-Management-System'},
+            {id:'w_nachrichten',name:'Widget: Nachrichten HQ',cat:'widgets',status:'demo',icon:'📬',desc:'Statisch (Kampagne live, neue Schulung)',kiPrio:3,aufwand:'1-2h',grund:'Einfach: Letzte ankuendigungen anzeigen'}
+        ];
+
+        var devStatusHqPrio = null; // null = use kiPrio, array = custom order
+
+        function getStatusBadge(s) {
+            var map = {
+                'funktional': {bg:'bg-green-100 text-green-800', dot:'🟢', label:'Funktional'},
+                'teilweise': {bg:'bg-yellow-100 text-yellow-800', dot:'🟡', label:'Teilweise'},
+                'demo': {bg:'bg-orange-100 text-orange-800', dot:'🟠', label:'Nur Demo'},
+                'stub': {bg:'bg-red-100 text-red-800', dot:'🔴', label:'Stub'}
+            };
+            return map[s] || map['stub'];
+        }
+
+        function renderDevStatus(filter) {
+            filter = filter || 'alle';
+            var container = document.getElementById('devStatusContent');
+            if(!container) return;
+
+            var mods = DEV_MODULES.slice();
+
+            // Filter
+            if(filter === 'standort') mods = mods.filter(function(m){return m.cat==='standort';});
+            if(filter === 'hq') mods = mods.filter(function(m){return m.cat==='hq';});
+            if(filter === 'widgets') mods = mods.filter(function(m){return m.cat==='widgets';});
+
+            if(filter === 'kiPrio') {
+                // Only non-funktional, sorted by kiPrio ascending
+                mods = mods.filter(function(m){return m.status !== 'funktional';});
+                mods.sort(function(a,b){return a.kiPrio - b.kiPrio;});
+                container.innerHTML = renderPrioTable(mods, 'ki');
+                renderDevProgressBar();
+                return;
+            }
+
+            if(filter === 'hqPrio') {
+                mods = mods.filter(function(m){return m.status !== 'funktional';});
+                if(devStatusHqPrio) {
+                    var order = devStatusHqPrio;
+                    mods.sort(function(a,b){ return (order.indexOf(a.id)===-1?999:order.indexOf(a.id)) - (order.indexOf(b.id)===-1?999:order.indexOf(b.id)); });
+                } else {
+                    mods.sort(function(a,b){return a.kiPrio - b.kiPrio;});
+                }
+                container.innerHTML = renderPrioTable(mods, 'hq');
+                initDragSort();
+                renderDevProgressBar();
+                return;
+            }
+
+            // Group by category
+            var groups = {};
+            mods.forEach(function(m) {
+                var cat = m.cat;
+                if(!groups[cat]) groups[cat] = [];
+                groups[cat].push(m);
+            });
+
+            var catLabels = {standort:'Standort-Module', hq:'HQ-Module', widgets:'Dashboard-Widgets'};
+            var html = '';
+            ['standort','hq','widgets'].forEach(function(cat) {
+                if(!groups[cat]) return;
+                html += '<div class="mb-8"><h2 class="text-lg font-bold text-gray-800 mb-3">' + (catLabels[cat]||cat) + ' <span class="text-sm font-normal text-gray-400">(' + groups[cat].length + ')</span></h2>';
+                html += '<div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead><tr class="bg-gray-50 text-left"><th class="px-4 py-2.5 font-semibold text-gray-600 w-8"></th><th class="px-4 py-2.5 font-semibold text-gray-600">Modul</th><th class="px-4 py-2.5 font-semibold text-gray-600 w-32">Status</th><th class="px-4 py-2.5 font-semibold text-gray-600">Details</th></tr></thead><tbody>';
+                groups[cat].forEach(function(m, i) {
+                    var sb = getStatusBadge(m.status);
+                    var rowBg = i%2===0 ? 'bg-white' : 'bg-gray-50';
+                    html += '<tr class="'+rowBg+' border-t border-gray-100">';
+                    html += '<td class="px-4 py-3 text-center">' + m.icon + '</td>';
+                    html += '<td class="px-4 py-3 font-semibold text-gray-800 cursor-pointer hover:text-vit-orange" onclick="try{showView(\''+m.id+'\')}catch(e){}">' + m.name + '</td>';
+                    html += '<td class="px-4 py-3"><span class="inline-flex items-center text-xs px-2 py-1 rounded-full font-semibold '+sb.bg+'">' + sb.dot + ' ' + sb.label + '</span></td>';
+                    html += '<td class="px-4 py-3 text-gray-600 text-xs">' + m.desc + '</td>';
+                    html += '</tr>';
+                });
+                html += '</tbody></table></div></div>';
+            });
+            container.innerHTML = html;
+            renderDevProgressBar();
+        }
+
+        function renderPrioTable(mods, mode) {
+            var html = '<div class="vit-card overflow-hidden"><table class="w-full text-sm" id="devPrioTable"><thead><tr class="bg-gray-50 text-left">';
+            if(mode==='hq') html += '<th class="px-3 py-2.5 font-semibold text-gray-600 w-8">↕</th>';
+            html += '<th class="px-3 py-2.5 font-semibold text-gray-600 w-10">#</th><th class="px-3 py-2.5 font-semibold text-gray-600 w-8"></th><th class="px-3 py-2.5 font-semibold text-gray-600">Modul</th><th class="px-3 py-2.5 font-semibold text-gray-600 w-24">Status</th><th class="px-3 py-2.5 font-semibold text-gray-600 w-20">Aufwand</th><th class="px-3 py-2.5 font-semibold text-gray-600">Begründung</th>';
+            html += '</tr></thead><tbody>';
+            mods.forEach(function(m, i) {
+                var sb = getStatusBadge(m.status);
+                var rowBg = i%2===0 ? 'bg-white' : 'bg-gray-50';
+                html += '<tr class="'+rowBg+' border-t border-gray-100 ds-drag-row" data-modid="'+m.id+'" draggable="'+(mode==='hq'?'true':'false')+'">';
+                if(mode==='hq') html += '<td class="px-3 py-3 text-center cursor-grab text-gray-400 hover:text-gray-600">⠿</td>';
+                html += '<td class="px-3 py-3 text-center font-bold text-gray-400">' + (i+1) + '</td>';
+                html += '<td class="px-3 py-3 text-center">' + m.icon + '</td>';
+                html += '<td class="px-3 py-3"><span class="font-semibold text-gray-800">' + m.name + '</span><br><span class="text-xs text-gray-400">' + ({standort:'Standort',hq:'HQ',widgets:'Widget'}[m.cat]) + '</span></td>';
+                html += '<td class="px-3 py-3"><span class="inline-flex items-center text-xs px-2 py-0.5 rounded-full font-semibold '+sb.bg+'">' + sb.dot + ' ' + sb.label + '</span></td>';
+                html += '<td class="px-3 py-3 text-xs font-semibold text-gray-700">' + m.aufwand + '</td>';
+                html += '<td class="px-3 py-3 text-xs text-gray-600">' + m.grund + '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+            if(mode==='hq') {
+                html += '<div class="mt-3 flex items-center justify-between"><p class="text-xs text-gray-400">Ziehe die Zeilen per Drag &amp; Drop in deine gewünschte Reihenfolge.</p>';
+                html += '<button onclick="saveHqPrio()" class="px-4 py-2 bg-vit-orange text-white text-sm font-semibold rounded-lg hover:bg-orange-600">💾 Reihenfolge speichern</button></div>';
+            }
+            return html;
+        }
+
+        function renderDevProgressBar() {
+            var el = document.getElementById('devStatusProgress');
+            var sum = document.getElementById('devStatusSummary');
+            if(!el) return;
+            var counts = {funktional:0, teilweise:0, demo:0, stub:0};
+            DEV_MODULES.forEach(function(m) { counts[m.status] = (counts[m.status]||0) + 1; });
+            var total = DEV_MODULES.length;
+            var pF = Math.round(counts.funktional/total*100);
+            var pT = Math.round(counts.teilweise/total*100);
+            var pD = Math.round(counts.demo/total*100);
+            var pS = Math.round(counts.stub/total*100);
+
+            el.innerHTML = '<div class="vit-card p-4"><h3 class="text-sm font-bold text-gray-700 mb-3">Gesamtfortschritt</h3>' +
+                '<div class="w-full h-6 bg-gray-200 rounded-full overflow-hidden flex">' +
+                '<div class="bg-green-500 h-full" style="width:'+pF+'%"></div>' +
+                '<div class="bg-yellow-400 h-full" style="width:'+pT+'%"></div>' +
+                '<div class="bg-orange-400 h-full" style="width:'+pD+'%"></div>' +
+                '<div class="bg-red-400 h-full" style="width:'+pS+'%"></div>' +
+                '</div>' +
+                '<div class="flex justify-between mt-2 text-xs text-gray-600">' +
+                '<span>🟢 Funktional: '+counts.funktional+'</span>' +
+                '<span>🟡 Teilweise: '+counts.teilweise+'</span>' +
+                '<span>🟠 Demo: '+counts.demo+'</span>' +
+                '<span>🔴 Stub: '+counts.stub+'</span>' +
+                '<span class="font-bold">Gesamt: '+total+'</span>' +
+                '</div></div>';
+
+            if(sum) {
+                sum.innerHTML = '<span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800 font-semibold">🟢 '+counts.funktional+'</span>' +
+                    '<span class="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 font-semibold">🟡 '+counts.teilweise+'</span>' +
+                    '<span class="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-800 font-semibold">🟠 '+counts.demo+'</span>';
+            }
+        }
+
+        function filterDevStatus(f) {
+            document.querySelectorAll('.ds-filter').forEach(function(btn) {
+                if(btn.getAttribute('data-f') === f) {
+                    btn.className = 'ds-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white';
+                } else {
+                    btn.className = 'ds-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600';
+                }
+            });
+            renderDevStatus(f);
+        }
+
+        function initDragSort() {
+            var tbody = document.querySelector('#devPrioTable tbody');
+            if(!tbody) return;
+            var dragRow = null;
+            tbody.querySelectorAll('.ds-drag-row').forEach(function(row) {
+                row.addEventListener('dragstart', function(e) {
+                    dragRow = this;
+                    this.style.opacity = '0.4';
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                row.addEventListener('dragend', function() {
+                    this.style.opacity = '1';
+                    dragRow = null;
+                    tbody.querySelectorAll('.ds-drag-row').forEach(function(r){ r.style.borderTop=''; });
+                });
+                row.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    this.style.borderTop = '3px solid #EF7D00';
+                });
+                row.addEventListener('dragleave', function() {
+                    this.style.borderTop = '';
+                });
+                row.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.style.borderTop = '';
+                    if(dragRow && dragRow !== this) {
+                        tbody.insertBefore(dragRow, this);
+                        // Update row numbers
+                        tbody.querySelectorAll('.ds-drag-row').forEach(function(r, idx) {
+                            r.children[1].textContent = idx + 1;
+                            r.className = r.className.replace(/bg-(white|gray-50)/g, '') + (idx%2===0 ? ' bg-white' : ' bg-gray-50');
+                        });
+                    }
+                });
+            });
+        }
+
+        function saveHqPrio() {
+            var rows = document.querySelectorAll('#devPrioTable .ds-drag-row');
+            var order = [];
+            rows.forEach(function(r){ order.push(r.getAttribute('data-modid')); });
+            devStatusHqPrio = order;
+            try { localStorage.setItem('vitbikes_hq_prio', JSON.stringify(order)); } catch(e){}
+            alert('✅ HQ-Priorisierung gespeichert! (' + order.length + ' Module)');
+        }
+
+        // Load saved HQ prio on init
+        try {
+            var saved = localStorage.getItem('vitbikes_hq_prio');
+            if(saved) devStatusHqPrio = JSON.parse(saved);
+        } catch(e){}
+
+        // ============================================
+        // END DEV-STATUS MODULE
+        // ============================================
 
         function renderKommandozentrale() {
             renderKzStandorte();
