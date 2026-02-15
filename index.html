@@ -312,7 +312,6 @@
                         <input type="password" id="loginPassword" class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="••••••••" required>
                     </div>
                     <div id="loginError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mb-2"></div>
-                    </div>
                     <div class="flex items-center justify-between">
                         <label class="flex items-center text-sm text-gray-600"><input type="checkbox" checked class="mr-2 rounded"> Angemeldet bleiben</label>
                         <a href="#" onclick="showPasswordReset()" class="text-sm text-vit-orange hover:underline">Passwort vergessen?</a>
@@ -5682,23 +5681,26 @@
         }
 
         async function handleLogin(event) {
-            if(event) event.preventDefault();
+            if(event) { event.preventDefault(); event.stopPropagation(); }
             var email = (document.getElementById('loginEmail')||{}).value||'';
             var pw = (document.getElementById('loginPassword')||{}).value||'';
-            if(!email || !pw) { alert('Bitte E-Mail und Passwort eingeben.'); return; }
+            if(!email || !pw) { alert('Bitte E-Mail und Passwort eingeben.'); return false; }
 
-            var loginBtn = document.querySelector('#loginScreen form button');
+            var loginBtn = document.querySelector('#loginScreen form button[type="submit"]');
             if(loginBtn) { loginBtn.disabled = true; loginBtn.textContent = 'Anmelden...'; }
             var errEl = document.getElementById('loginError');
             if(errEl) errEl.style.display = 'none';
 
             try {
+                console.log('[Login] Signing in...');
                 var resp = await sb.auth.signInWithPassword({ email: email, password: pw });
                 if(resp.error) throw resp.error;
                 sbUser = resp.data.user;
+                console.log('[Login] Auth OK, user:', sbUser.id);
                 
                 // Status-Check: Ist der User freigeschaltet?
                 var profileResp = await sb.from('users').select('status').eq('id', sbUser.id).single();
+                console.log('[Login] Profile status:', profileResp.data ? profileResp.data.status : 'no profile', profileResp.error ? profileResp.error.message : '');
                 if(profileResp.data && profileResp.data.status === 'onboarding') {
                     await sb.auth.signOut();
                     throw { message: 'Dein Account wartet noch auf Freigabe durch das HQ. Bitte hab etwas Geduld.' };
@@ -5708,25 +5710,32 @@
                     throw { message: 'Dein Account wurde deaktiviert. Bitte wende dich an das HQ.' };
                 }
                 
+                console.log('[Login] Loading profile...');
                 await loadUserProfile(sbUser.id);
+                console.log('[Login] Profile loaded, roles:', currentRoles);
                 await loadModulStatus();
+                console.log('[Login] Entering app...');
                 enterApp();
-                await loadPipelineFromSupabase();
+                try { await loadPipelineFromSupabase(); } catch(e) { console.warn('[Login] Pipeline load optional:', e); }
             } catch(err) {
+                console.error('[Login] ERROR:', err);
                 if(errEl) { errEl.textContent = err.message || 'Login fehlgeschlagen'; errEl.style.display = 'block'; }
                 else alert('Login fehlgeschlagen: ' + (err.message||err));
             } finally {
                 if(loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Anmelden'; }
             }
+            return false;
         }
 
         async function loadUserProfile(userId) {
             var resp1 = await sb.from('users').select('*, standorte(*)').eq('id', userId).single();
+            if(resp1.error) { console.error('[Profile] Error:', resp1.error.message); throw resp1.error; }
             sbProfile = resp1.data;
             sbStandort = sbProfile ? sbProfile.standorte : null;
             var resp2 = await sb.from('user_rollen').select('rollen(name, label)').eq('user_id', userId);
+            if(resp2.error) { console.error('[Roles] Error:', resp2.error.message); }
             sbRollen = (resp2.data || []).map(function(ur) { return ur.rollen; });
-            var roleNames = sbRollen.map(function(r) { return r.name; });
+            var roleNames = sbRollen.map(function(r) { return r ? r.name : ''; }).filter(Boolean);
             currentRoles = roleNames.length > 0 ? roleNames : ['inhaber'];
             currentRole = (currentRoles.indexOf('hq') >= 0 || currentRoles.indexOf('hq_admin') >= 0 || currentRoles.indexOf('inhaber') >= 0) ? currentRoles[0] : currentRoles[0];
             currentLocation = sbStandort ? sbStandort.slug : 'grafrath';
@@ -8898,7 +8907,7 @@
                         html += '<button onclick="changeTicketStatus(\''+ticketId+'\',\''+st+'\')" class="text-xs px-2.5 py-1 rounded-full font-semibold '+(active?'bg-vit-orange text-white':'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100')+'">'+(statusLabels[st])+'</button>';
                     });
                 } else {
-                    if(t.status!=='geloest') html += '<button onclick="changeTicketStatus(\''+ticketId+'\',\'geloest\')" class="text-xs px-3 py-1 rounded-full font-semibold bg-green-500 text-white hover:bg-green-600"'>'+t('ticket_mark_resolved')+'</button>';
+                    if(t.status!=='geloest') html += '<button onclick="changeTicketStatus(\''+ticketId+'\',\'geloest\')" class="text-xs px-3 py-1 rounded-full font-semibold bg-green-500 text-white hover:bg-green-600">'+t('ticket_mark_resolved')+'</button>';
                     else html += '<span class="text-xs text-green-600 font-semibold">\u2705 Gel\u00f6st</span>';
                 }
                 html += '</div></div>';
