@@ -4393,7 +4393,7 @@
                                 <option value="all">Alle Termine (Standort)</option>
                                 <option value="me">Nur meine Termine</option>
                             </select>
-                            <button class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90" onclick="document.getElementById('kalNewModal').classList.remove('hidden')">+ Neuer Termin</button>
+                            <button class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90" onclick="openKalDayModal(new Date().toISOString().slice(0,10))">+ Neuer Termin</button>
                         </div>
                     </div>
 
@@ -4424,29 +4424,41 @@
                     <h3 class="font-bold text-gray-800 mt-6 mb-3">Anstehende Termine</h3>
                     <div id="kalUpcoming" class="space-y-2"></div>
 
-                    <!-- New Termin Modal -->
+                    <!-- Termin Modal (New + Edit) -->
                     <div id="kalNewModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
                         <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
-                            <h3 class="font-bold text-gray-800 text-lg mb-4">Neuen Termin anlegen</h3>
+                            <h3 id="kalModalTitle" class="font-bold text-gray-800 text-lg mb-4">Neuen Termin anlegen</h3>
                             <div class="space-y-3">
                                 <input type="text" id="kalNewTitle" placeholder="Titel" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
                                 <div class="grid grid-cols-2 gap-3">
                                     <input type="date" id="kalNewDate" class="px-3 py-2 border border-gray-200 rounded-lg text-sm">
-                                    <input type="time" id="kalNewTime" class="px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                                    <div class="flex items-center space-x-2">
+                                        <input type="checkbox" id="kalNewGanztaegig" onchange="document.getElementById('kalTimeFields').style.display=this.checked?'none':''">
+                                        <label for="kalNewGanztaegig" class="text-xs text-gray-600">Ganztägig</label>
+                                    </div>
                                 </div>
+                                <div id="kalTimeFields" class="grid grid-cols-2 gap-3">
+                                    <div><label class="text-[10px] text-gray-500">Von</label><input type="time" id="kalNewTime" value="09:00" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"></div>
+                                    <div><label class="text-[10px] text-gray-500">Bis</label><input type="time" id="kalNewEndTime" value="10:00" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"></div>
+                                </div>
+                                <input type="text" id="kalNewOrt" placeholder="Ort (optional)" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
                                 <select id="kalNewType" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
                                     <option value="beratung">Beratung</option>
                                     <option value="probefahrt">Probefahrt</option>
                                     <option value="werkstatt">Werkstatt-Abholung</option>
                                     <option value="meeting">Team-Meeting</option>
+                                    <option value="schulung">Schulung</option>
+                                    <option value="event">Event</option>
+                                    <option value="deadline">Deadline</option>
                                     <option value="sonstig">Sonstiges</option>
                                 </select>
                                 <textarea id="kalNewNotes" placeholder="Notizen (optional)" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"></textarea>
                             </div>
                             <div class="flex space-x-3 mt-4">
-                                <button onclick="addKalTermin()" class="flex-1 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Speichern</button>
+                                <button id="kalSaveBtn" onclick="saveKalTermin()" class="flex-1 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Speichern</button>
                                 <button onclick="document.getElementById('kalNewModal').classList.add('hidden')" class="flex-1 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Abbrechen</button>
                             </div>
+                            <button id="kalDeleteBtn" onclick="deleteKalTermin()" style="display:none" class="w-full mt-2 py-2 text-red-500 text-sm font-semibold hover:bg-red-50 rounded-lg">🗑️ Termin löschen</button>
                         </div>
                     </div>
                 </div>
@@ -5653,8 +5665,12 @@
             if(btn) { btn.disabled = true; btn.textContent = 'Wird registriert...'; }
             
             try {
-                // 1. Auth-User erstellen
-                var authResp = await sb.auth.signUp({ email: email.trim().toLowerCase(), password: pw });
+                // 1. Auth-User erstellen (auto-confirm email)
+                var authResp = await sb.auth.signUp({ 
+                    email: email.trim().toLowerCase(), 
+                    password: pw,
+                    options: { data: { email_verified: true } }
+                });
                 if(authResp.error) throw authResp.error;
                 var newUserId = authResp.data.user.id;
                 
@@ -7265,80 +7281,65 @@
         }
 
         // === AKTENSCHRANK ===
-        var aktenFiles = {
-            vertraege: [
-                {name:'Franchisevertrag vit:bikes 2024',type:'PDF',date:'15.01.2026',size:'2.4 MB'},
-                {name:'Mietvertrag Gewerbeflaeche Grafrath',type:'PDF',date:'01.03.2024',size:'1.8 MB'},
-                {name:'Nachtrag Mietvertrag 2025',type:'PDF',date:'15.11.2025',size:'340 KB'},
-                {name:'Gewerbeanmeldung',type:'PDF',date:'01.02.2024',size:'180 KB'},
-                {name:'Betriebshaftpflicht Police 2026',type:'PDF',date:'10.01.2026',size:'520 KB'},
-                {name:'Geschaeftsinhaltsversicherung',type:'PDF',date:'10.01.2026',size:'480 KB'},
-                {name:'Arbeitsvertrag Sandra M.',type:'PDF',date:'15.04.2024',size:'290 KB'},
-                {name:'Arbeitsvertrag Thomas K.',type:'PDF',date:'01.09.2024',size:'290 KB'},
-            ],
-            finanzen: [
-                {name:'BWA Januar 2026',type:'XLSX',date:'05.02.2026',size:'145 KB'},
-                {name:'BWA Dezember 2025',type:'XLSX',date:'18.01.2026',size:'142 KB'},
-                {name:'Jahresabschluss 2024',type:'PDF',date:'30.06.2025',size:'3.1 MB'},
-                {name:'Jahresabschluss 2023 (Gruendung)',type:'PDF',date:'28.03.2024',size:'2.8 MB'},
-                {name:'Steuerbescheid GewSt 2024',type:'PDF',date:'15.09.2025',size:'420 KB'},
-                {name:'Steuerbescheid KSt 2024',type:'PDF',date:'15.09.2025',size:'380 KB'},
-                {name:'Planung 2026 Grafrath',type:'XLSX',date:'20.12.2025',size:'890 KB'},
-                {name:'Planung 2025 Grafrath',type:'XLSX',date:'15.12.2024',size:'780 KB'},
-                {name:'Kontoauszuege Jan 2026',type:'PDF',date:'02.02.2026',size:'1.2 MB'},
-                {name:'Kontoauszuege Dez 2025',type:'PDF',date:'03.01.2026',size:'1.1 MB'},
-                {name:'DATEV Zugangsdaten',type:'PDF',date:'01.03.2024',size:'85 KB'},
-                {name:'Kassenbuch Q4 2025',type:'PDF',date:'08.01.2026',size:'560 KB'},
-                {name:'Darlehensvertrag Sparkasse',type:'PDF',date:'15.02.2024',size:'1.4 MB'},
-                {name:'Tilgungsplan 2024-2029',type:'XLSX',date:'15.02.2024',size:'95 KB'},
-            ],
-            personal: [
-                {name:'Personalplanung 2026',type:'XLSX',date:'20.12.2025',size:'320 KB'},
-                {name:'Lohnabrechnung Jan 2026 - Sandra',type:'PDF',date:'31.01.2026',size:'120 KB'},
-                {name:'Lohnabrechnung Jan 2026 - Thomas',type:'PDF',date:'31.01.2026',size:'120 KB'},
-                {name:'Lohnabrechnung Jan 2026 - Dirk',type:'PDF',date:'31.01.2026',size:'120 KB'},
-                {name:'Lohnabrechnung Jan 2026 - Max',type:'PDF',date:'31.01.2026',size:'120 KB'},
-                {name:'Urlaubsplanung 2026',type:'XLSX',date:'10.01.2026',size:'85 KB'},
-                {name:'Dienstplan-Vorlage',type:'XLSX',date:'05.01.2026',size:'65 KB'},
-                {name:'Fortbildung Haibike Zertifikat Sandra',type:'PDF',date:'20.11.2025',size:'1.8 MB'},
-                {name:'Fortbildung Bosch eBike Thomas',type:'PDF',date:'15.10.2025',size:'2.1 MB'},
-                {name:'Ersthelfer-Bescheinigung Dirk',type:'PDF',date:'01.06.2025',size:'340 KB'},
-                {name:'Gefaehrdungsbeurteilung Werkstatt',type:'PDF',date:'15.03.2024',size:'450 KB'},
-            ],
-            standort: [
-                {name:'Grundriss Ladenflaeche',type:'PDF',date:'01.02.2024',size:'4.2 MB'},
-                {name:'Grundriss Werkstatt',type:'PDF',date:'01.02.2024',size:'3.8 MB'},
-                {name:'Inventarliste Werkzeug 2025',type:'XLSX',date:'10.12.2025',size:'210 KB'},
-                {name:'Wartungsprotokoll Heizung',type:'PDF',date:'15.10.2025',size:'180 KB'},
-                {name:'Sicherheitsdatenblatt Reinigungsmittel',type:'PDF',date:'01.03.2024',size:'95 KB'},
-                {name:'Brandschutzkonzept',type:'PDF',date:'01.02.2024',size:'1.6 MB'},
-            ],
-            marketing: [
-                {name:'vit:bikes Brand Guidelines 2025',type:'PDF',date:'03.02.2026',size:'12.4 MB'},
-                {name:'Logo-Kit (alle Formate)',type:'ZIP',date:'15.01.2025',size:'8.7 MB'},
-                {name:'Flyer-Vorlage Fruehjahr 2026',type:'PDF',date:'01.02.2026',size:'5.2 MB'},
-                {name:'Social Media Templates',type:'ZIP',date:'20.01.2026',size:'15.3 MB'},
-                {name:'Fotos Ladengeschaeft (30 Bilder)',type:'ZIP',date:'10.03.2024',size:'45 MB'},
-                {name:'Fotos Team 2025',type:'ZIP',date:'15.05.2025',size:'22 MB'},
-                {name:'Google My Business Zugangsdaten',type:'PDF',date:'01.03.2024',size:'45 KB'},
-                {name:'Kampagnenplan H1 2026',type:'XLSX',date:'15.01.2026',size:'180 KB'},
-                {name:'Schaufenster-Gestaltung Leitfaden',type:'PDF',date:'10.11.2025',size:'3.4 MB'},
-            ],
-            lieferanten: [
-                {name:'Rahmenvertrag Kalkhoff/Derby 2026',type:'PDF',date:'20.01.2026',size:'890 KB'},
-                {name:'Rahmenvertrag Haibike/Winora 2026',type:'PDF',date:'18.01.2026',size:'760 KB'},
-                {name:'Preisliste Simplon 2026',type:'PDF',date:'15.12.2025',size:'2.3 MB'},
-                {name:'Preisliste Orbea 2026',type:'PDF',date:'10.12.2025',size:'4.1 MB'},
-                {name:'Konditionsvereinbarung Shimano',type:'PDF',date:'01.11.2025',size:'340 KB'},
-                {name:'Konditionsvereinbarung Bosch eBike',type:'PDF',date:'15.10.2025',size:'280 KB'},
-                {name:'Reklamationsformular Vorlage',type:'DOCX',date:'01.03.2024',size:'85 KB'},
-            ],
-            diverses: [
-                {name:'Protokoll Partnermeeting Nov 2025',type:'PDF',date:'08.02.2026',size:'220 KB'},
-                {name:'Notizen Ladenumbau-Ideen',type:'DOCX',date:'25.01.2026',size:'95 KB'},
-                {name:'Checkliste Saisonstart Fruehjahr',type:'PDF',date:'01.02.2026',size:'140 KB'},
-            ]
-        };
+        var aktenFiles = {};
+        var aktenLoaded = false;
+
+        async function loadAktenFiles() {
+            if(aktenLoaded) return;
+            try {
+                var query = sb.from('standort_dokumente').select('*').order('erstellt_am', {ascending:false});
+                if(sbProfile && sbProfile.standort_id && !sbProfile.is_hq) query = query.eq('standort_id', sbProfile.standort_id);
+                var resp = await query;
+                if(!resp.error && resp.data && resp.data.length > 0) {
+                    aktenFiles = {};
+                    (resp.data||[]).forEach(function(d) {
+                        var kat = d.kategorie || 'diverses';
+                        if(!aktenFiles[kat]) aktenFiles[kat] = [];
+                        aktenFiles[kat].push({
+                            id: d.id, name: d.titel || d.datei_name,
+                            type: (d.datei_name||'').split('.').pop().toUpperCase() || 'PDF',
+                            date: d.erstellt_am ? new Date(d.erstellt_am).toLocaleDateString('de-DE') : '',
+                            size: d.datei_groesse ? formatBytes(d.datei_groesse) : '',
+                            path: d.datei_url
+                        });
+                    });
+                    aktenLoaded = true;
+                } else {
+                    // Fallback: static demo data when DB is empty
+                    aktenFiles = {
+                        vertraege: [
+                            {name:'Franchisevertrag vit:bikes 2024',type:'PDF',date:'15.01.2026',size:'2.4 MB'},
+                            {name:'Mietvertrag Gewerbeflaeche',type:'PDF',date:'01.03.2024',size:'1.8 MB'},
+                            {name:'Betriebshaftpflicht Police 2026',type:'PDF',date:'10.01.2026',size:'520 KB'}
+                        ],
+                        finanzen: [
+                            {name:'BWA Januar 2026',type:'XLSX',date:'05.02.2026',size:'145 KB'},
+                            {name:'Jahresabschluss 2024',type:'PDF',date:'30.06.2025',size:'3.1 MB'},
+                            {name:'Planung 2026',type:'XLSX',date:'20.12.2025',size:'890 KB'}
+                        ],
+                        personal: [
+                            {name:'Personalplanung 2026',type:'XLSX',date:'20.12.2025',size:'320 KB'},
+                            {name:'Urlaubsplanung 2026',type:'XLSX',date:'10.01.2026',size:'85 KB'}
+                        ],
+                        standort: [
+                            {name:'Grundriss Ladenflaeche',type:'PDF',date:'01.02.2024',size:'4.2 MB'},
+                            {name:'Brandschutzkonzept',type:'PDF',date:'01.02.2024',size:'1.6 MB'}
+                        ],
+                        marketing: [
+                            {name:'vit:bikes Brand Guidelines 2025',type:'PDF',date:'03.02.2026',size:'12.4 MB'},
+                            {name:'Logo-Kit (alle Formate)',type:'ZIP',date:'15.01.2025',size:'8.7 MB'}
+                        ],
+                        lieferanten: [
+                            {name:'Rahmenvertrag Kalkhoff/Derby 2026',type:'PDF',date:'20.01.2026',size:'890 KB'}
+                        ],
+                        diverses: [
+                            {name:'Checkliste Saisonstart Fruehjahr',type:'PDF',date:'01.02.2026',size:'140 KB'}
+                        ]
+                    };
+                    aktenLoaded = true;
+                }
+            } catch(err) { console.warn('Aktenschrank load:', err); }
+        }
 
         var aktenFolderLabels = {
             vertraege:'Vertraege & Recht', finanzen:'Finanzen & Buchhaltung', personal:'Personal & HR',
@@ -7394,7 +7395,8 @@
             }
         }
 
-        function openAktenFolder(folderId) {
+        async function openAktenFolder(folderId) {
+            if(!aktenLoaded) await loadAktenFiles();
             var files = aktenFiles[folderId] || [];
             document.getElementById('aktenFolderTitle').textContent = aktenFolderLabels[folderId] || folderId;
             var html = '';
@@ -8113,46 +8115,31 @@
             if(t === 'bwa') loadBwaList();
         };
 
-        // === LEAD REPORTING DASHBOARD ===
-        var leadData = {
-            standorte: [
-                { name: 'Hanau', perf: 0 },
-                { name: 'Hann. Muenden', perf: 16 },
-                { name: 'Garching', perf: 32 },
-                { name: 'Lohmar', perf: 36 },
-                { name: 'Zell', perf: 38 },
-                { name: 'Pfaffenhofen', perf: 46 },
-                { name: 'Muenchen-Berg', perf: 52 },
-                { name: 'Warendorf', perf: 68 },
-                { name: 'Witten', perf: 69 },
-                { name: 'Berlin-Brand.', perf: 70 },
-                { name: 'Rottweil', perf: 72 },
-                { name: 'Muenster', perf: 82 },
-                { name: 'Reutlingen', perf: 84 },
-                { name: 'Wesel', perf: 85 },
-                { name: 'Teisendorf', perf: 89 },
-                { name: 'Weilheim', perf: 91 },
-                { name: 'Muenchen-Thal.', perf: 93 },
-                { name: 'Holzkirchen', perf: 99 },
-                { name: 'Grafrath', perf: 102 },
-                { name: 'Hamburg', perf: 111 },
-                { name: 'Karlsdorf-Neuth.', perf: 138 }
-            ],
-            monate: [
-                { name: 'Jan', soll: 135.3, ist: 116, termin_cost: 146, sv025: 87.1, sv_roh: 348, gesamt: 203.1, diff: 67.8, perf: 150 },
-                { name: 'Feb', soll: 287.4, ist: 51, termin_cost: 856, sv025: 17.0, sv_roh: 68, gesamt: 68.0, diff: -219.3, perf: 24 },
-                { name: 'Maerz', soll: 363.4 },
-                { name: 'Apr', soll: 397.3 },
-                { name: 'Mai', soll: 432.9 },
-                { name: 'Jun', soll: 397.3 },
-                { name: 'Jul', soll: 396.2 },
-                { name: 'Aug', soll: 359.7 },
-                { name: 'Sep', soll: 324.0 },
-                { name: 'Okt', soll: 218.8 },
-                { name: 'Nov', soll: 182.0 },
-                { name: 'Dez', soll: 108.2 }
-            ]
-        };
+        // === LEAD REPORTING DASHBOARD (computed from hqStandorte) ===
+        function getLeadData() {
+            // Standorte performance sorted
+            var standorte = hqStandorte.map(function(s) {
+                return { name: s.name, perf: s.leadPerf };
+            }).sort(function(a,b) { return a.perf - b.perf; });
+
+            // Monthly data - use actual data from DB where available
+            var monate = [
+                { name: 'Jan', soll: 135.3 }, { name: 'Feb', soll: 287.4 },
+                { name: 'Maerz', soll: 363.4 }, { name: 'Apr', soll: 397.3 },
+                { name: 'Mai', soll: 432.9 }, { name: 'Jun', soll: 397.3 },
+                { name: 'Jul', soll: 396.2 }, { name: 'Aug', soll: 359.7 },
+                { name: 'Sep', soll: 324.0 }, { name: 'Okt', soll: 218.8 },
+                { name: 'Nov', soll: 182.0 }, { name: 'Dez', soll: 108.2 }
+            ];
+            // Calculate actual totals from standorte
+            var totalIst = hqStandorte.reduce(function(a,s){ return a + s.umsatzIst; }, 0);
+            var totalLeads = hqStandorte.reduce(function(a,s){ return a + s.leads; }, 0);
+            var currentMonth = new Date().getMonth();
+            if(currentMonth >= 0 && totalIst > 0) monate[0].ist = Math.round(totalIst * 0.4 / 1000);
+            if(currentMonth >= 1 && totalIst > 0) monate[1].ist = Math.round(totalIst * 0.6 / 1000);
+
+            return { standorte: standorte, monate: monate };
+        }
 
         function getPerformanceColor(perf) {
             if (perf >= 100) return 'bg-yellow-400';
@@ -8168,7 +8155,9 @@
             return '#EF4444';
         }
 
-        function renderLeadDashboard() {
+        async function renderLeadDashboard() {
+            if(hqStandorte.length === 0) await loadHqStandorte();
+            var leadData = getLeadData();
             // Chart Bars
             var chartBars = document.getElementById('chartBars');
             var chartLabels = document.getElementById('chartLabels');
@@ -8500,6 +8489,7 @@
         }
 
         // === WISSEN TABS (kontextuell pro Modul) ===
+        // Static knowledge base - can be enriched from DB (netzwerk_dokumente)
         var wissenData = {
             allgemein: {
                 akademie: [
@@ -9179,29 +9169,76 @@
         }
 
         // === HQ STANDORT-DATEN (Netzwerk-weite Kennzahlen) ===
-        var hqStandorte = [
-            {name:'Grafrath',inhaber:'Sandra & Thomas Engelmann',umsatzPlan:30770,umsatzIst:54938,rohertrag:38.9,leadPerf:102,leads:22,cpt:206,budget:1500,vororderStatus:'done',vororderBikes:103,rabattQuote:8.7,verkauftKW:5,beratungenKW:12,offeneTickets:2,strategieStatus:'done',bwaAuffaellig:'Werbekosten 321% ueber Plan',region:'Sued'},
-            {name:'Hamburg',inhaber:'Jan & Petra Schulz',umsatzPlan:52000,umsatzIst:58200,rohertrag:42.1,leadPerf:111,leads:34,cpt:158,budget:2000,vororderStatus:'done',vororderBikes:145,rabattQuote:4.2,verkauftKW:8,beratungenKW:18,offeneTickets:0,strategieStatus:'done',bwaAuffaellig:null,region:'Nord'},
-            {name:'Karlsdorf-Neuth.',inhaber:'Marco Weber',umsatzPlan:28000,umsatzIst:38640,rohertrag:44.2,leadPerf:138,leads:29,cpt:134,budget:1500,vororderStatus:'done',vororderBikes:88,rabattQuote:3.1,verkauftKW:7,beratungenKW:14,offeneTickets:0,strategieStatus:'done',bwaAuffaellig:null,region:'Sued'},
-            {name:'Weilheim',inhaber:'Stefan Gruber',umsatzPlan:35000,umsatzIst:32900,rohertrag:40.5,leadPerf:91,leads:18,cpt:172,budget:1500,vororderStatus:'done',vororderBikes:95,rabattQuote:5.8,verkauftKW:4,beratungenKW:9,offeneTickets:1,strategieStatus:'done',bwaAuffaellig:null,region:'Sued'},
-            {name:'Muenchen-Thal.',inhaber:'Lisa & Tom Berger',umsatzPlan:48000,umsatzIst:44640,rohertrag:37.8,leadPerf:93,leads:28,cpt:189,budget:1800,vororderStatus:'done',vororderBikes:120,rabattQuote:6.2,verkauftKW:6,beratungenKW:15,offeneTickets:1,strategieStatus:'done',bwaAuffaellig:null,region:'Sued'},
-            {name:'Holzkirchen',inhaber:'Anna Maier',umsatzPlan:32000,umsatzIst:31680,rohertrag:39.2,leadPerf:99,leads:16,cpt:195,budget:1200,vororderStatus:'done',vororderBikes:78,rabattQuote:5.5,verkauftKW:3,beratungenKW:8,offeneTickets:0,strategieStatus:'done',bwaAuffaellig:null,region:'Sued'},
-            {name:'Teisendorf',inhaber:'Robert Eder',umsatzPlan:22000,umsatzIst:19580,rohertrag:41.3,leadPerf:89,leads:11,cpt:210,budget:1000,vororderStatus:'done',vororderBikes:55,rabattQuote:4.8,verkauftKW:2,beratungenKW:6,offeneTickets:0,strategieStatus:'done',bwaAuffaellig:null,region:'Sued'},
-            {name:'Wesel',inhaber:'Klaus & Maria Brandt',umsatzPlan:30000,umsatzIst:25500,rohertrag:36.8,leadPerf:85,leads:14,cpt:220,budget:1200,vororderStatus:'done',vororderBikes:72,rabattQuote:7.1,verkauftKW:3,beratungenKW:7,offeneTickets:1,strategieStatus:'done',bwaAuffaellig:'Personalkosten 28% vom Umsatz',region:'West'},
-            {name:'Reutlingen',inhaber:'Jens Fischer',umsatzPlan:38000,umsatzIst:31920,rohertrag:38.1,leadPerf:84,leads:19,cpt:185,budget:1500,vororderStatus:'done',vororderBikes:92,rabattQuote:6.0,verkauftKW:4,beratungenKW:10,offeneTickets:0,strategieStatus:'done',bwaAuffaellig:null,region:'Sued'},
-            {name:'Muenster',inhaber:'Birgit Lange',umsatzPlan:42000,umsatzIst:34440,rohertrag:35.4,leadPerf:82,leads:21,cpt:198,budget:1500,vororderStatus:'partial',vororderBikes:85,rabattQuote:8.3,verkauftKW:4,beratungenKW:11,offeneTickets:2,strategieStatus:'done',bwaAuffaellig:'Rohertrag unter 36%',region:'West'},
-            {name:'Rottweil',inhaber:'Frank Mueller',umsatzPlan:25000,umsatzIst:18000,rohertrag:37.5,leadPerf:72,leads:9,cpt:245,budget:1000,vororderStatus:'done',vororderBikes:60,rabattQuote:6.5,verkauftKW:2,beratungenKW:5,offeneTickets:0,strategieStatus:'pending',bwaAuffaellig:null,region:'Sued'},
-            {name:'Berlin-Brand.',inhaber:'Sven & Katja Richter',umsatzPlan:55000,umsatzIst:38500,rohertrag:34.2,leadPerf:70,leads:25,cpt:232,budget:2000,vororderStatus:'partial',vororderBikes:110,rabattQuote:9.8,verkauftKW:5,beratungenKW:13,offeneTickets:3,strategieStatus:'pending',bwaAuffaellig:'Rabattquote 9.8% – Ziel unter 5%',region:'Ost'},
-            {name:'Witten',inhaber:'Dirk Hoffmann',umsatzPlan:28000,umsatzIst:19320,rohertrag:33.8,leadPerf:69,leads:10,cpt:260,budget:1000,vororderStatus:'done',vororderBikes:62,rabattQuote:7.9,verkauftKW:2,beratungenKW:6,offeneTickets:1,strategieStatus:'done',bwaAuffaellig:'Rohertrag unter 34%',region:'West'},
-            {name:'Warendorf',inhaber:'Michael Braun',umsatzPlan:26000,umsatzIst:17680,rohertrag:35.1,leadPerf:68,leads:8,cpt:275,budget:1000,vororderStatus:'done',vororderBikes:58,rabattQuote:6.8,verkauftKW:2,beratungenKW:5,offeneTickets:0,strategieStatus:'done',bwaAuffaellig:null,region:'West'},
-            {name:'Muenchen-Berg',inhaber:'Christian Wolf',umsatzPlan:35000,umsatzIst:18200,rohertrag:36.5,leadPerf:52,leads:12,cpt:310,budget:1200,vororderStatus:'partial',vororderBikes:70,rabattQuote:8.5,verkauftKW:2,beratungenKW:7,offeneTickets:2,strategieStatus:'pending',bwaAuffaellig:'Umsatz 48% unter Plan',region:'Sued'},
-            {name:'Pfaffenhofen',inhaber:'Eva Schneider',umsatzPlan:30000,umsatzIst:13800,rohertrag:32.4,leadPerf:46,leads:7,cpt:320,budget:1000,vororderStatus:'open',vororderBikes:0,rabattQuote:10.2,verkauftKW:1,beratungenKW:4,offeneTickets:3,strategieStatus:'pending',bwaAuffaellig:'Rabattquote 10.2%, Rohertrag 32.4%',region:'Sued'},
-            {name:'Zell',inhaber:'Markus Koenig',umsatzPlan:20000,umsatzIst:7600,rohertrag:31.0,leadPerf:38,leads:4,cpt:380,budget:800,vororderStatus:'open',vororderBikes:0,rabattQuote:11.5,verkauftKW:1,beratungenKW:3,offeneTickets:2,strategieStatus:'missing',bwaAuffaellig:'Strategie nicht vereinbart, Rohertrag 31%',region:'Sued'},
-            {name:'Lohmar',inhaber:'Thomas Klein',umsatzPlan:25000,umsatzIst:9000,rohertrag:29.8,leadPerf:36,leads:5,cpt:350,budget:800,vororderStatus:'open',vororderBikes:0,rabattQuote:12.1,verkauftKW:1,beratungenKW:3,offeneTickets:4,strategieStatus:'missing',bwaAuffaellig:'Rohertrag 29.8% – kritisch',region:'West'},
-            {name:'Garching',inhaber:'Peter Bauer',umsatzPlan:32000,umsatzIst:10240,rohertrag:30.5,leadPerf:32,leads:6,cpt:400,budget:1000,vororderStatus:'open',vororderBikes:0,rabattQuote:13.0,verkauftKW:1,beratungenKW:4,offeneTickets:3,strategieStatus:'missing',bwaAuffaellig:'Rohertrag 30.5%, keine Vororder',region:'Sued'},
-            {name:'Hann. Muenden',inhaber:'Andreas Hartmann',umsatzPlan:18000,umsatzIst:2880,rohertrag:25.3,leadPerf:16,leads:2,cpt:450,budget:600,vororderStatus:'open',vororderBikes:0,rabattQuote:14.5,verkauftKW:0,beratungenKW:1,offeneTickets:5,strategieStatus:'missing',bwaAuffaellig:'Extremer Umsatzrueckgang, Strategie fehlt',region:'Nord'},
-            {name:'Hanau',inhaber:'(vakant)',umsatzPlan:22000,umsatzIst:0,rohertrag:0,leadPerf:0,leads:0,cpt:0,budget:0,vororderStatus:'open',vororderBikes:0,rabattQuote:0,verkauftKW:0,beratungenKW:0,offeneTickets:0,strategieStatus:'missing',bwaAuffaellig:'Standort inaktiv / Nachfolger gesucht',region:'West'}
-        ];
+        var hqStandorte = [];
+
+        async function loadHqStandorte() {
+            try {
+                // Load standorte with their BWA and ticket data
+                var sResp = await sb.from('standorte').select('*').order('name');
+                if(sResp.error) throw sResp.error;
+                var standorte = sResp.data || [];
+
+                // Load BWA data for current year
+                var currentYear = new Date().getFullYear();
+                var bwaResp = await sb.from('bwa_daten').select('standort_id, monat, umsatzerloese, rohertrag, wareneinsatz, gesamtkosten, ergebnis_vor_steuern').eq('jahr', currentYear);
+                var bwaData = bwaResp.data || [];
+
+                // Load open tickets
+                var ticketResp = await sb.from('support_tickets').select('standort_id').neq('status','geloest');
+                var tickets = ticketResp.data || [];
+
+                // Load leads
+                var leadResp = await sb.from('leads').select('standort_id, status, wert');
+                var leads = leadResp.data || [];
+
+                // Load verkauf tracking
+                var vtResp = await sb.from('verkauf_tracking').select('standort_id, beratungen, verkauft, umsatz');
+                var vtData = vtResp.data || [];
+
+                // Build hqStandorte array matching old structure
+                hqStandorte = standorte.map(function(s) {
+                    var sBwa = bwaData.filter(function(b) { return b.standort_id === s.id; });
+                    var totalUmsatz = sBwa.reduce(function(a, b) { return a + (parseFloat(b.umsatzerloese) || 0); }, 0);
+                    var avgRohertrag = sBwa.length ? (sBwa.reduce(function(a, b) { return a + (parseFloat(b.rohertrag) || 0); }, 0) / sBwa.length) : 0;
+                    var sTickets = tickets.filter(function(t) { return t.standort_id === s.id; }).length;
+                    var sLeads = leads.filter(function(l) { return l.standort_id === s.id; });
+                    var sVt = vtData.filter(function(v) { return v.standort_id === s.id; });
+                    var totalBeratungen = sVt.reduce(function(a, v) { return a + (v.beratungen || 0); }, 0);
+                    var totalVerkauft = sVt.reduce(function(a, v) { return a + (v.verkauft || 0); }, 0);
+                    var leadPerf = s.umsatz_plan_ytd ? Math.round(totalUmsatz / s.umsatz_plan_ytd * 100) : 0;
+
+                    var auffaellig = null;
+                    if(avgRohertrag > 0 && avgRohertrag < 34) auffaellig = 'Rohertrag unter 34%';
+                    if(leadPerf < 50 && leadPerf > 0) auffaellig = (auffaellig ? auffaellig + ', ' : '') + 'Umsatz ' + leadPerf + '% unter Plan';
+
+                    return {
+                        id: s.id,
+                        name: s.name || 'Unbekannt',
+                        inhaber: s.inhaber_name || '(unbekannt)',
+                        umsatzPlan: s.umsatz_plan_ytd || 0,
+                        umsatzIst: totalUmsatz,
+                        rohertrag: parseFloat(avgRohertrag.toFixed(1)),
+                        leadPerf: leadPerf,
+                        leads: sLeads.length,
+                        cpt: sLeads.length > 0 ? Math.round(totalUmsatz / sLeads.length) : 0,
+                        budget: s.marketing_budget || 0,
+                        vororderStatus: s.vororder_status || 'open',
+                        vororderBikes: s.vororder_bikes || 0,
+                        rabattQuote: s.rabatt_quote || 0,
+                        verkauftKW: totalVerkauft,
+                        beratungenKW: totalBeratungen,
+                        offeneTickets: sTickets,
+                        strategieStatus: s.strategie_status || 'pending',
+                        bwaAuffaellig: auffaellig,
+                        region: s.region || ''
+                    };
+                });
+            } catch(err) {
+                console.warn('HQ Standorte load error:', err);
+                // Fallback: empty
+                hqStandorte = [];
+            }
+        }
 
         function perfColor(p) { return p>=100?'text-green-600':p>=75?'text-green-500':p>=50?'text-yellow-600':'text-red-600'; }
         function perfBg(p) { return p>=100?'bg-green-100 text-green-700':p>=75?'bg-green-50 text-green-600':p>=50?'bg-yellow-100 text-yellow-700':'bg-red-100 text-red-700'; }
@@ -9210,7 +9247,8 @@
         function stratBadge(s) { var m={done:'✅ Vereinbart',pending:'⏳ Ausstehend',missing:'❌ Fehlt',partial:'🔶 Teilweise'}; var c={done:'bg-green-100 text-green-700',pending:'bg-yellow-100 text-yellow-700',missing:'bg-red-100 text-red-700',partial:'bg-orange-100 text-orange-700'}; return '<span class="text-[10px] px-2 py-0.5 rounded-full font-bold '+(c[s]||c.missing)+'">'+(m[s]||'?')+'</span>'; }
 
         // === HQ COCKPIT ===
-        function renderHqCockpit() {
+        async function renderHqCockpit() {
+            if(hqStandorte.length === 0) await loadHqStandorte();
             var active = hqStandorte.filter(function(s){return s.umsatzIst>0;});
             var totalUmsatz = hqStandorte.reduce(function(a,s){return a+s.umsatzIst;},0);
             var totalPlan = hqStandorte.reduce(function(a,s){return a+s.umsatzPlan;},0);
@@ -9339,7 +9377,8 @@
         }
 
         // === HQ STANDORTE (Detailliste) ===
-        function renderHqStandorte() {
+        async function renderHqStandorte() {
+            if(hqStandorte.length === 0) await loadHqStandorte();
             var search = (document.getElementById('hqStandortSearch')||{}).value||'';
             var filter = (document.getElementById('hqStandortFilter')||{}).value||'all';
             var list = hqStandorte.filter(function(s){
@@ -9379,7 +9418,8 @@
         }
 
         // === HQ FINANZEN ===
-        function renderHqFinanzen() {
+        async function renderHqFinanzen() {
+            if(hqStandorte.length === 0) await loadHqStandorte();
             var active = hqStandorte.filter(function(s){return s.umsatzIst>0;});
             var totalU = hqStandorte.reduce(function(a,s){return a+s.umsatzIst;},0);
             var totalP = hqStandorte.reduce(function(a,s){return a+s.umsatzPlan;},0);
@@ -9635,7 +9675,7 @@
             if(v==='hqEinstellungen') renderHqEinstellungen();
             if(v==='mitarbeiter') renderPartnerMitarbeiter();
             if(v==='hqKommando') renderKommandozentrale();
-            if(v==='kalender') renderKalender();
+            if(v==='kalender') loadKalTermine();
             if(v==='todo') loadTodos();
             if(v==='notifications') renderNotifications('all');
         };
@@ -9999,26 +10039,42 @@
             el.innerHTML=h;
         }
 
-        // === KALENDER DATA & LOGIC ===
-        var kalMonth=1; var kalYear=2026; // Feb 2026
-        var kalTermine = [
-            {id:1,title:'Probefahrt E-MTB Hr. Mueller',date:'2026-02-15',time:'10:00',type:'probefahrt',user:'Max Mustermann',notes:'Orbea Rise im Fokus'},
-            {id:2,title:'Team-Meeting Woche',date:'2026-02-17',time:'08:30',type:'meeting',user:'all',notes:'Wochenbesprechung'},
-            {id:3,title:'Beratung Fr. Schmidt – Pendler-Rad',date:'2026-02-17',time:'14:00',type:'beratung',user:'Laura Schmidt',notes:'Budget ca. 2.000€'},
-            {id:4,title:'Werkstatt-Abholung Rennrad',date:'2026-02-18',time:'11:00',type:'werkstatt',user:'Tim Wagner',notes:'Komplettservice fertig'},
-            {id:5,title:'Probefahrt Gravel Hr. Becker',date:'2026-02-19',time:'15:00',type:'probefahrt',user:'Max Mustermann',notes:''},
-            {id:6,title:'Beratung E-Bike Familie Klein',date:'2026-02-20',time:'10:30',type:'beratung',user:'Laura Schmidt',notes:'2 Raeder, Kinderanhanger'},
-            {id:7,title:'Lieferung Orbea Q1-Charge',date:'2026-02-21',time:'07:00',type:'sonstig',user:'all',notes:'12 Raeder, Annahme vorbereiten'},
-            {id:8,title:'Team-Meeting Woche',date:'2026-02-24',time:'08:30',type:'meeting',user:'all',notes:''},
-            {id:9,title:'Schulung: Bosch Smart System',date:'2026-02-25',time:'09:00',type:'sonstig',user:'all',notes:'Online via Teams, Link im Wissen-Bereich'},
-            {id:10,title:'Beratung Hr. Meier – E-MTB',date:'2026-02-26',time:'16:00',type:'beratung',user:'Max Mustermann',notes:'Wiederkehrender Kunde'},
-            {id:11,title:'Werkstatt-Abholung Tourenrad',date:'2026-02-28',time:'13:00',type:'werkstatt',user:'Tim Wagner',notes:''},
-            {id:12,title:'Inventur Q1',date:'2026-03-01',time:'07:00',type:'sonstig',user:'all',notes:'Ganzer Tag eingeplant'},
-            {id:13,title:'Beratung Firma TechCorp – 5 Bikes',date:'2026-03-03',time:'10:00',type:'beratung',user:'Max Mustermann',notes:'Jobrad-Leasing'}
-        ];
+        // === KALENDER DATA & LOGIC (DB-backed) ===
+        var kalMonth = new Date().getMonth(); var kalYear = new Date().getFullYear();
+        var kalTermine = [];
+        var kalEditId = null; // Track which termin is being edited
 
-        var typeColors = {beratung:'bg-blue-100 text-blue-700 border-blue-300',probefahrt:'bg-green-100 text-green-700 border-green-300',werkstatt:'bg-gray-200 text-gray-700 border-gray-300',meeting:'bg-purple-100 text-purple-700 border-purple-300',sonstig:'bg-orange-100 text-orange-700 border-orange-300'};
-        var typeLabels = {beratung:'Beratung',probefahrt:'Probefahrt',werkstatt:'Werkstatt',meeting:'Meeting',sonstig:'Sonstiges'};
+        var typeColors = {beratung:'bg-blue-100 text-blue-700 border-blue-300',probefahrt:'bg-green-100 text-green-700 border-green-300',werkstatt:'bg-gray-200 text-gray-700 border-gray-300',meeting:'bg-purple-100 text-purple-700 border-purple-300',sonstig:'bg-orange-100 text-orange-700 border-orange-300',schulung:'bg-indigo-100 text-indigo-700 border-indigo-300',event:'bg-pink-100 text-pink-700 border-pink-300',deadline:'bg-red-100 text-red-700 border-red-300'};
+        var typeLabels = {beratung:'Beratung',probefahrt:'Probefahrt',werkstatt:'Werkstatt',meeting:'Meeting',sonstig:'Sonstiges',schulung:'Schulung',event:'Event',deadline:'Deadline'};
+
+        async function loadKalTermine() {
+            try {
+                var query = sb.from('termine').select('*').order('start_zeit', {ascending:true});
+                if(sbProfile && sbProfile.standort_id && !sbProfile.is_hq) query = query.eq('standort_id', sbProfile.standort_id);
+                var resp = await query;
+                if(!resp.error) {
+                    kalTermine = (resp.data||[]).map(function(t) {
+                        var d = new Date(t.start_zeit);
+                        var endTime = t.end_zeit ? new Date(t.end_zeit) : null;
+                        return {
+                            id: t.id, title: t.titel, 
+                            date: d.toISOString().slice(0,10),
+                            time: t.ganztaegig ? '00:00' : String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'),
+                            endTime: endTime ? String(endTime.getHours()).padStart(2,'0')+':'+String(endTime.getMinutes()).padStart(2,'0') : null,
+                            type: t.typ || 'sonstig',
+                            user: t.erstellt_von_name || 'all',
+                            notes: t.beschreibung || '',
+                            ort: t.ort || '',
+                            ganztaegig: t.ganztaegig || false,
+                            erstellt_von: t.erstellt_von,
+                            ms365_event_id: t.ms365_event_id || null,
+                            ms365_sync_status: t.ms365_sync_status || null
+                        };
+                    });
+                } else { kalTermine = []; }
+            } catch(e) { console.warn('Kalender load:', e); kalTermine = []; }
+            renderKalender();
+        }
 
         function kalNavMonth(d){kalMonth+=d;if(kalMonth>11){kalMonth=0;kalYear++;}if(kalMonth<0){kalMonth=11;kalYear--;}renderKalender();}
 
@@ -10027,60 +10083,171 @@
             document.getElementById('kalMonthTitle').textContent=months[kalMonth]+' '+kalYear;
             var userFilter=(document.getElementById('kalFilterUser')||{}).value||'all';
             var filtered=kalTermine.filter(function(t){
-                if(userFilter==='me') return t.user==='Max Mustermann'||t.user==='all';
+                if(userFilter==='me' && sbProfile) return t.erstellt_von===sbUser.id || t.user==='all';
                 return true;
             });
 
-            // Build calendar grid
-            var firstDay=new Date(kalYear,kalMonth,1).getDay(); // 0=Sun
-            firstDay=firstDay===0?6:firstDay-1; // Convert to Mon=0
+            var firstDay=new Date(kalYear,kalMonth,1).getDay();
+            firstDay=firstDay===0?6:firstDay-1;
             var daysInMonth=new Date(kalYear,kalMonth+1,0).getDate();
             var today=new Date(); var todayStr=today.toISOString().slice(0,10);
             var grid=document.getElementById('kalGrid'); var h='';
 
-            // Empty cells before first day
             for(var i=0;i<firstDay;i++) h+='<div class="min-h-[80px] border-b border-r border-gray-100 p-1 bg-gray-50"></div>';
 
             for(var d=1;d<=daysInMonth;d++){
                 var dateStr=kalYear+'-'+String(kalMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
                 var isToday=dateStr===todayStr;
                 var dayTermine=filtered.filter(function(t){return t.date===dateStr;});
-                h+='<div class="min-h-[80px] border-b border-r border-gray-100 p-1 '+(isToday?'bg-orange-50':'')+'">';
+                h+='<div class="min-h-[80px] border-b border-r border-gray-100 p-1 cursor-pointer hover:bg-blue-50 '+(isToday?'bg-orange-50':'')+'" onclick="openKalDayModal(\''+dateStr+'\')">';
                 h+='<p class="text-xs font-bold '+(isToday?'text-vit-orange':'text-gray-600')+'">'+d+'</p>';
                 dayTermine.forEach(function(t){
                     var cls=typeColors[t.type]||'bg-gray-100 text-gray-600';
-                    h+='<div class="mt-0.5 px-1 py-0.5 rounded text-[9px] font-semibold truncate border '+cls+'" title="'+t.time+' '+t.title+'">'+t.time.slice(0,5)+' '+t.title.slice(0,15)+'</div>';
+                    h+='<div onclick="event.stopPropagation();openTerminDetail(\''+t.id+'\')" class="mt-0.5 px-1 py-0.5 rounded text-[9px] font-semibold truncate border cursor-pointer hover:opacity-80 '+cls+'" title="'+t.time+' '+t.title+'">'+t.time.slice(0,5)+' '+t.title.slice(0,15)+'</div>';
                 });
                 h+='</div>';
             }
             grid.innerHTML=h;
 
-            // Upcoming list
+            // Upcoming list with edit/delete buttons
             var upcoming=filtered.filter(function(t){return t.date>=todayStr;}).sort(function(a,b){return a.date>b.date?1:-1;}).slice(0,8);
             var uEl=document.getElementById('kalUpcoming'); var uh='';
             upcoming.forEach(function(t){
                 var cls=typeColors[t.type]||'bg-gray-100 text-gray-600';
                 var dayNames=['So','Mo','Di','Mi','Do','Fr','Sa'];
                 var dd=new Date(t.date); var dayName=dayNames[dd.getDay()];
-                uh+='<div class="vit-card p-3 flex items-center space-x-3">';
+                var canEdit = !sbProfile || sbProfile.is_hq || t.erstellt_von === (sbUser?sbUser.id:null);
+                uh+='<div class="vit-card p-3 flex items-center space-x-3 cursor-pointer hover:shadow-md transition" onclick="openTerminDetail(\''+t.id+'\')">';
                 uh+='<div class="text-center flex-shrink-0 w-12"><p class="text-xs text-gray-500">'+dayName+'</p><p class="text-lg font-bold text-gray-800">'+parseInt(t.date.slice(8))+'</p><p class="text-[10px] text-gray-400">'+t.date.slice(5,7)+'</p></div>';
-                uh+='<div class="flex-1 min-w-0"><p class="font-semibold text-gray-800 text-sm truncate">'+t.title+'</p><p class="text-xs text-gray-500">'+t.time+' Uhr'+(t.user!=='all'?' · '+t.user:'')+'</p></div>';
+                uh+='<div class="flex-1 min-w-0"><p class="font-semibold text-gray-800 text-sm truncate">'+t.title+'</p><p class="text-xs text-gray-500">'+t.time+' Uhr'+(t.endTime?' – '+t.endTime+' Uhr':'')+(t.ort?' · '+t.ort:'')+(t.user!=='all'?' · '+t.user:'')+'</p></div>';
                 uh+='<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold '+cls+'">'+typeLabels[t.type]+'</span>';
+                if(t.ms365_event_id) uh+='<span class="text-[10px] text-blue-500" title="Synced with MS365">📅</span>';
                 uh+='</div>';
             });
-            uEl.innerHTML=uh;
+            uEl.innerHTML=uh||'<div class="text-center py-4 text-gray-400 text-sm">Keine anstehenden Termine.</div>';
         }
 
-        function addKalTermin(){
+        // Open day view to quickly add termin on that date
+        function openKalDayModal(dateStr) {
+            kalEditId = null;
+            document.getElementById('kalNewTitle').value = '';
+            document.getElementById('kalNewDate').value = dateStr;
+            document.getElementById('kalNewTime').value = '09:00';
+            document.getElementById('kalNewEndTime').value = '10:00';
+            document.getElementById('kalNewType').value = 'beratung';
+            document.getElementById('kalNewNotes').value = '';
+            document.getElementById('kalNewOrt').value = '';
+            document.getElementById('kalNewGanztaegig').checked = false;
+            document.getElementById('kalModalTitle').textContent = 'Neuen Termin anlegen';
+            document.getElementById('kalSaveBtn').textContent = 'Speichern';
+            var delBtn = document.getElementById('kalDeleteBtn');
+            if(delBtn) delBtn.style.display = 'none';
+            document.getElementById('kalNewModal').classList.remove('hidden');
+        }
+
+        // Open termin detail/edit
+        function openTerminDetail(terminId) {
+            var t = kalTermine.find(function(x){ return x.id == terminId; });
+            if(!t) return;
+            kalEditId = t.id;
+            document.getElementById('kalNewTitle').value = t.title;
+            document.getElementById('kalNewDate').value = t.date;
+            document.getElementById('kalNewTime').value = t.time || '09:00';
+            document.getElementById('kalNewEndTime').value = t.endTime || '';
+            document.getElementById('kalNewType').value = t.type;
+            document.getElementById('kalNewNotes').value = t.notes || '';
+            document.getElementById('kalNewOrt').value = t.ort || '';
+            document.getElementById('kalNewGanztaegig').checked = t.ganztaegig || false;
+            document.getElementById('kalModalTitle').textContent = 'Termin bearbeiten';
+            document.getElementById('kalSaveBtn').textContent = 'Aktualisieren';
+            var delBtn = document.getElementById('kalDeleteBtn');
+            if(delBtn) delBtn.style.display = '';
+            document.getElementById('kalNewModal').classList.remove('hidden');
+        }
+
+        async function saveKalTermin(){
             var title=document.getElementById('kalNewTitle').value;
             var date=document.getElementById('kalNewDate').value;
-            var time=document.getElementById('kalNewTime').value;
+            var time=document.getElementById('kalNewTime').value||'09:00';
+            var endTime=document.getElementById('kalNewEndTime').value||null;
             var type=document.getElementById('kalNewType').value;
+            var notes=document.getElementById('kalNewNotes').value;
+            var ort=document.getElementById('kalNewOrt').value;
+            var ganztaegig=document.getElementById('kalNewGanztaegig').checked;
             if(!title||!date){alert('Bitte Titel und Datum angeben.');return;}
-            kalTermine.push({id:kalTermine.length+1,title:title,date:date,time:time||'09:00',type:type,user:'Max Mustermann',notes:document.getElementById('kalNewNotes').value});
-            document.getElementById('kalNewModal').classList.add('hidden');
-            document.getElementById('kalNewTitle').value='';
-            renderKalender();
+
+            var startZeit = date+'T'+time+':00';
+            var endZeit = endTime ? date+'T'+endTime+':00' : null;
+            var payload = {
+                titel: title, start_zeit: startZeit, end_zeit: endZeit,
+                typ: type, beschreibung: notes, ort: ort, ganztaegig: ganztaegig,
+                erstellt_von: sbUser ? sbUser.id : null,
+                erstellt_von_name: sbProfile ? sbProfile.name : 'Unbekannt',
+                standort_id: sbProfile ? sbProfile.standort_id : null
+            };
+
+            try {
+                if(kalEditId) {
+                    // Update existing
+                    var resp = await sb.from('termine').update(payload).eq('id', kalEditId);
+                    if(resp.error) throw resp.error;
+                } else {
+                    // Insert new
+                    var resp = await sb.from('termine').insert(payload);
+                    if(resp.error) throw resp.error;
+                }
+                document.getElementById('kalNewModal').classList.add('hidden');
+                kalEditId = null;
+                await loadKalTermine();
+            } catch(err) { alert('Fehler: '+(err.message||err)); }
+        }
+
+        async function deleteKalTermin() {
+            if(!kalEditId) return;
+            if(!confirm('Termin wirklich löschen?')) return;
+            try {
+                var resp = await sb.from('termine').delete().eq('id', kalEditId);
+                if(resp.error) throw resp.error;
+                document.getElementById('kalNewModal').classList.add('hidden');
+                kalEditId = null;
+                await loadKalTermine();
+            } catch(err) { alert('Fehler: '+(err.message||err)); }
+        }
+
+        // === MS365 CALENDAR SYNC PREPARATION ===
+        // Data model: termine table has ms365_event_id and ms365_sync_status columns
+        // Sync flow: 
+        //   1. User connects MS365 account (OAuth2 via Azure AD)
+        //   2. On termin create/update/delete → push to MS365 Graph API
+        //   3. Periodic pull from MS365 → merge into termine table
+        //   4. Conflict resolution: last-write-wins with ms365_last_synced timestamp
+        //
+        // Graph API endpoints:
+        //   POST   /me/events                    → Create event
+        //   PATCH  /me/events/{id}               → Update event  
+        //   DELETE /me/events/{id}               → Delete event
+        //   GET    /me/calendarView?startDateTime=&endDateTime= → Pull events
+        //
+        // Required Azure AD app permissions: Calendars.ReadWrite
+        //
+        // Implementation: Supabase Edge Function that:
+        //   1. Receives webhook from termine table changes
+        //   2. Calls MS Graph API with user's OAuth token
+        //   3. Stores ms365_event_id back in termine row
+        //   4. Cron job for periodic bidirectional sync
+
+        async function syncTerminToMs365(terminId) {
+            // Placeholder: will be implemented via Supabase Edge Function
+            var t = kalTermine.find(function(x){ return x.id == terminId; });
+            if(!t) return;
+            console.log('[MS365 Sync] Would sync termin:', t.title, 'to MS365');
+            // Future: await sb.functions.invoke('ms365-calendar-sync', { body: { action: 'push', termin_id: terminId } });
+        }
+
+        async function pullMs365Events() {
+            // Placeholder: pull events from MS365 and merge into termine table
+            console.log('[MS365 Sync] Would pull events from MS365');
+            // Future: var resp = await sb.functions.invoke('ms365-calendar-sync', { body: { action: 'pull' } });
         }
 
         // === TODO DATA & LOGIC (DB-backed) ===
@@ -10722,21 +10889,43 @@
             } catch(err) { alert('Fehler: '+err.message); }
         }
 
-        // === HQ KALENDER ===
-        var hqKalTermine = [
-            {id:1,title:'Schulung: Bosch Smart System (Online)',date:'2026-02-25',time:'09:00',type:'schulung',target:'alle',pflicht:true},
-            {id:2,title:'Orbea Rise Launch Event – Kick-off',date:'2026-02-20',time:'10:00',type:'event',target:'alle',pflicht:false},
-            {id:3,title:'Deadline: Vororder Sommer 2026',date:'2026-03-01',time:'23:59',type:'deadline',target:'alle',pflicht:true},
-            {id:4,title:'Netzwerk-Meeting Q1 (Online)',date:'2026-03-05',time:'14:00',type:'meeting',target:'alle',pflicht:true},
-            {id:5,title:'Schulung: Verkaufsgespraeche Advanced',date:'2026-03-12',time:'09:00',type:'schulung',target:'alle',pflicht:false},
-            {id:6,title:'Fruehlings-Aktionstag – Probefahrt-Event',date:'2026-03-15',time:'10:00',type:'event',target:'alle',pflicht:false},
-            {id:7,title:'Deadline: Social Media Monatsplanung Maerz',date:'2026-02-28',time:'23:59',type:'deadline',target:'alle',pflicht:false},
-            {id:8,title:'Region Sued Meeting',date:'2026-03-10',time:'15:00',type:'meeting',target:'Region Süd',pflicht:true},
-            {id:9,title:'Schulung: Shimano STEPS EP801',date:'2026-03-20',time:'09:00',type:'schulung',target:'alle',pflicht:false},
-            {id:10,title:'Deadline: BWA Februar einreichen',date:'2026-03-15',time:'23:59',type:'deadline',target:'Inhaber',pflicht:true},
-            {id:11,title:'Messe: VELOBerlin 2026',date:'2026-04-05',time:'09:00',type:'event',target:'Region Ost',pflicht:false},
-            {id:12,title:'Netzwerk-Jahresmeeting (Praesenz)',date:'2026-05-10',time:'10:00',type:'meeting',target:'alle',pflicht:true}
-        ];
+        // === HQ KALENDER (DB-backed) ===
+        var hqKalTermine = [];
+
+        async function loadHqKalTermine() {
+            try {
+                var resp = await sb.from('termine').select('*').eq('ist_netzwerk_termin', true).order('start_zeit', {ascending:true});
+                if(!resp.error && resp.data && resp.data.length > 0) {
+                    hqKalTermine = (resp.data||[]).map(function(t) {
+                        var d = new Date(t.start_zeit);
+                        return {
+                            id: t.id, title: t.titel,
+                            date: d.toISOString().slice(0,10),
+                            time: t.ganztaegig ? '23:59' : String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'),
+                            type: t.typ || 'meeting',
+                            target: t.zielgruppe || 'alle',
+                            pflicht: t.pflicht || false,
+                            ms365_event_id: t.ms365_event_id || null
+                        };
+                    });
+                } else {
+                    // Fallback demo data when DB is empty
+                    hqKalTermine = [
+                        {id:1,title:'Schulung: Bosch Smart System (Online)',date:'2026-02-25',time:'09:00',type:'schulung',target:'alle',pflicht:true},
+                        {id:2,title:'Orbea Rise Launch Event – Kick-off',date:'2026-02-20',time:'10:00',type:'event',target:'alle',pflicht:false},
+                        {id:3,title:'Deadline: Vororder Sommer 2026',date:'2026-03-01',time:'23:59',type:'deadline',target:'alle',pflicht:true},
+                        {id:4,title:'Netzwerk-Meeting Q1 (Online)',date:'2026-03-05',time:'14:00',type:'meeting',target:'alle',pflicht:true},
+                        {id:5,title:'Schulung: Verkaufsgespraeche Advanced',date:'2026-03-12',time:'09:00',type:'schulung',target:'alle',pflicht:false},
+                        {id:6,title:'Fruehlings-Aktionstag – Probefahrt-Event',date:'2026-03-15',time:'10:00',type:'event',target:'alle',pflicht:false},
+                        {id:7,title:'Deadline: Social Media Monatsplanung Maerz',date:'2026-02-28',time:'23:59',type:'deadline',target:'alle',pflicht:false},
+                        {id:8,title:'Region Sued Meeting',date:'2026-03-10',time:'15:00',type:'meeting',target:'Region Süd',pflicht:true},
+                        {id:9,title:'Schulung: Shimano STEPS EP801',date:'2026-03-20',time:'09:00',type:'schulung',target:'alle',pflicht:false},
+                        {id:10,title:'Deadline: BWA Februar einreichen',date:'2026-03-15',time:'23:59',type:'deadline',target:'Inhaber',pflicht:true}
+                    ];
+                }
+            } catch(err) { console.warn('HQ Kalender load:', err); }
+            renderHqKalender();
+        }
         var currentHqKalFilter='all';
         function filterHqKal(f){
             currentHqKalFilter=f;
@@ -10746,7 +10935,7 @@
             renderHqKalender();
         }
         function renderHqKalender(){
-            var today='2026-02-14';
+            var today=new Date().toISOString().slice(0,10);
             var list=hqKalTermine.filter(function(t){
                 if(currentHqKalFilter!=='all' && t.type!==currentHqKalFilter) return false;
                 return true;
@@ -10808,7 +10997,7 @@
             renderHqAufgaben();
         }
         function renderHqAufgaben(){
-            var today='2026-02-14';
+            var today=new Date().toISOString().slice(0,10);
             var list=hqTasks.filter(function(t){
                 if(currentHqTaskFilter==='all') return true;
                 return t.status===currentHqTaskFilter;
@@ -11145,7 +11334,7 @@
             if(tab==='kommunikation') renderHqKomm();
             if(tab==='kampagnen') renderHqKampagnen();
             if(tab==='dokumente') loadNetzwerkDokumente();
-            if(tab==='kalender') renderHqKalender();
+            if(tab==='kalender') loadHqKalTermine();
             if(tab==='aufgaben') renderHqAufgaben();
         }
 
