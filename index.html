@@ -402,13 +402,8 @@
             <!-- Sidebar -->
             <aside id="sidebarNav" class="sidebar w-64 text-white overflow-y-auto flex-shrink-0">
                 <div class="p-4 pt-5">
-                        <!-- HQ/Standort Toggle (nur für Inhaber sichtbar) -->
-                        <div id="hqToggleSection" class="mb-4 hidden">
-                            <div class="bg-white/10 rounded-lg p-1 flex space-x-1">
-                                <button id="btnModeStandort" onclick="switchViewMode('partner')" class="flex-1 py-2 px-3 rounded-md text-xs font-bold transition bg-white text-gray-800">📍 Standort</button>
-                                <button id="btnModeHQ" onclick="switchViewMode('hq')" class="flex-1 py-2 px-3 rounded-md text-xs font-bold transition text-white/60 hover:text-white">🏢 HQ</button>
-                            </div>
-                        </div>
+                        <!-- HQ/Standort Toggle entfernt - Umschaltung erfolgt automatisch per Rolle -->
+                        <div id="hqToggleSection" class="hidden"></div>
 
                         <!-- Partner-level quick access (hidden in HQ mode) -->
                         <div id="partnerQuickNav">
@@ -484,7 +479,6 @@
                         <!-- Tools - alle Standort-Rollen -->
                         <div id="partnerToolsNav">
                         <hr class="border-gray-600 my-3">
-                        <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider px-3 mb-1">Tools</p>
 
                         <button onclick="showView('wissen')" data-module="wissen" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
@@ -5415,18 +5409,14 @@
             document.querySelectorAll('[data-module]').forEach(function(btn) {
                 var key = btn.getAttribute('data-module');
                 var status = sbModulStatus[key] || 'aktiv';
-                var parentSection = btn.closest('div[id]');
 
                 if(status === 'deaktiviert') {
-                    // Komplett verstecken
                     btn.style.display = 'none';
                 } else if(status === 'in_bearbeitung') {
-                    // Sichtbar aber ausgegraut
                     btn.style.display = '';
                     btn.style.opacity = '0.4';
                     btn.style.pointerEvents = 'none';
                     btn.style.cursor = 'not-allowed';
-                    // Badge hinzufügen wenn nicht schon vorhanden
                     if(!btn.querySelector('.modul-wip-badge')) {
                         var badge = document.createElement('span');
                         badge.className = 'modul-wip-badge ml-auto text-[9px] bg-yellow-500 text-white rounded px-1 py-0.5 font-bold';
@@ -5434,7 +5424,6 @@
                         btn.appendChild(badge);
                     }
                 } else {
-                    // Aktiv - normal anzeigen
                     btn.style.display = '';
                     btn.style.opacity = '';
                     btn.style.pointerEvents = '';
@@ -5442,6 +5431,21 @@
                     var oldBadge = btn.querySelector('.modul-wip-badge');
                     if(oldBadge) oldBadge.remove();
                 }
+            });
+
+            // Wissen-Tabs in Fachbereichen ausblenden wenn Modul deaktiviert
+            var wissenStatus = sbModulStatus['wissen'] || 'aktiv';
+            var wissenDisabled = wissenStatus === 'deaktiviert';
+            var wissenTabSelectors = [
+                'button[data-tab="vkWissen"]', '#vkTabVkWissen',
+                'button[data-tab="mktWissen"]', '#marketingTabMktWissen',
+                'button[data-tab="ekWissen"]', '#ekTabEkWissen',
+                'button[data-tab="ctrlWissen"]', '#ctrlTabCtrlWissen',
+                'button[data-tab="wissen"]', '#allgTabWissen'
+            ];
+            wissenTabSelectors.forEach(function(sel) {
+                var el = document.querySelector(sel);
+                if(el) el.style.display = wissenDisabled ? 'none' : '';
             });
         }
 
