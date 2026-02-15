@@ -288,6 +288,7 @@
         }
     </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body class="bg-gray-50">
 
@@ -7729,62 +7730,130 @@
             statusEl.classList.remove('hidden');
             resultEl.classList.add('hidden');
             if(parseBtn) parseBtn.disabled = true;
-            statusText.textContent = 'Datei wird gelesen...';
+
+            var isExcel = file.name.match(/\.(xlsx|xls|csv)$/i);
+            var isPdf = file.name.match(/\.pdf$/i);
+
+            if(isPdf) {
+                statusEl.querySelector('.animate-spin').style.display = 'none';
+                statusText.textContent = 'ℹ️ PDF erkannt – bitte Werte manuell eingeben';
+                resultEl.innerHTML = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-700">'
+                    + '<p class="font-semibold mb-1">PDF-Erkennung kommt bald</p>'
+                    + '<p>Aktuell werden nur Excel-Dateien (.xlsx/.xls/.csv) automatisch ausgelesen. Die PDF wird trotzdem mit hochgeladen.</p></div>';
+                resultEl.classList.remove('hidden');
+                if(parseBtn) parseBtn.disabled = false;
+                return;
+            }
+
+            if(!isExcel) {
+                statusText.textContent = '❌ Nicht unterstütztes Format';
+                statusEl.querySelector('.animate-spin').style.display = 'none';
+                if(parseBtn) parseBtn.disabled = false;
+                return;
+            }
+
+            statusText.textContent = '📊 Excel wird analysiert...';
 
             try {
-                // Read file as base64
-                var base64 = await new Promise(function(resolve, reject) {
-                    var reader = new FileReader();
-                    reader.onload = function() { resolve(reader.result.split(',')[1]); };
-                    reader.onerror = function() { reject(new Error('Datei konnte nicht gelesen werden')); };
-                    reader.readAsDataURL(file);
+                // Read file with SheetJS
+                var arrayBuf = await file.arrayBuffer();
+                var workbook = XLSX.read(arrayBuf, { type: 'array' });
+                
+                // Find BWA sheet or use first
+                var sheetName = workbook.SheetNames.find(function(n) {
+                    return n.toLowerCase().indexOf('bwa') >= 0 || n.toLowerCase().indexOf('auswertung') >= 0;
+                }) || workbook.SheetNames[0];
+                
+                var sheet = workbook.Sheets[sheetName];
+                var rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+                statusText.textContent = '🔍 Kennzahlen werden extrahiert...';
+
+                // Search patterns for BWA fields (German accounting terms)
+                var patterns = {
+                    umsatzerloese: /umsatz|erlöse|erloese|gesamterlöse|gesamterloese|betriebsertrag|umsatzerl/i,
+                    davon_fahrraeder: /fahrr[äa]der|bikes|r[äa]der/i,
+                    davon_teile: /teile|zubeh[öo]r|parts/i,
+                    davon_service: /service|werkstatt|dienstleist/i,
+                    davon_skonti: /skont/i,
+                    wareneinsatz: /wareneinsatz|materialaufwand|material|waren/i,
+                    personalkosten: /personal|l[öo]hne|geh[äa]lter|lohn/i,
+                    raumkosten: /raum|miete|pacht|mietaufwand/i,
+                    werbekosten: /werbe|marketing|reise|werbung|reklame/i,
+                    kosten_warenabgabe: /warenabgabe|versand|fracht|logistik/i,
+                    abschreibungen: /abschreib|afa|abnutzung/i,
+                    sonstige_kosten: /sonstig|[üu]brig|andere.*kosten/i,
+                    zinsaufwand: /zins|finanz|kredit.*kosten/i,
+                    rohertrag: /rohertrag|bruttoergebnis|bruttomarge|rohergebnis|db\s*1|deckungsbeitrag/i,
+                    betriebsergebnis: /betriebsergebnis|ebit|operativ/i,
+                    ergebnis_vor_steuern: /ergebnis.*steuer|ebt|vorl[äa]ufig.*ergebnis|jahres[üu]berschu/i,
+                    gesamtkosten: /gesamtkosten|summe.*kosten|betriebsaufwand/i,
+                    plan_umsatz: /plan.*umsatz|soll.*umsatz|budget.*umsatz/i,
+                    plan_rohertrag: /plan.*rohertrag|soll.*rohertrag/i,
+                    plan_ergebnis: /plan.*ergebnis|soll.*ergebnis|budget.*ergebnis/i
+                };
+
+                var parsed = {};
+                var matchedRows = [];
+
+                // Strategy: scan each row, match label in col A/B, take numeric value from col C/D/E
+                rows.forEach(function(row, rowIdx) {
+                    if(!row || row.length < 2) return;
+                    
+                    // Find the label text (usually in first 2 columns)
+                    var labelText = '';
+                    var valueCol = -1;
+                    for(var c = 0; c < Math.min(row.length, 3); c++) {
+                        var cellVal = String(row[c] || '').trim();
+                        if(cellVal.length > 2 && isNaN(cellVal.replace(/[.,\-\s€%]/g, ''))) {
+                            labelText = cellVal;
+                        }
+                    }
+                    if(!labelText) return;
+
+                    // Find numeric value (scan remaining columns, pick first non-zero number)
+                    var numVal = null;
+                    for(var c2 = 1; c2 < row.length; c2++) {
+                        var raw = row[c2];
+                        if(raw === '' || raw === null || raw === undefined) continue;
+                        var num = typeof raw === 'number' ? raw : parseFloat(String(raw).replace(/\./g,'').replace(',','.').replace(/[€%\s]/g,''));
+                        if(!isNaN(num) && num !== 0) { numVal = num; break; }
+                    }
+                    if(numVal === null) return;
+
+                    // Match against patterns
+                    Object.keys(patterns).forEach(function(key) {
+                        if(parsed[key] !== undefined) return; // Already matched
+                        if(patterns[key].test(labelText)) {
+                            parsed[key] = Math.round(numVal * 100) / 100;
+                            matchedRows.push({ key: key, label: labelText, value: numVal, row: rowIdx });
+                        }
+                    });
                 });
 
-                statusText.textContent = '🤖 KI analysiert BWA-Daten...';
+                // If wareneinsatz is positive, make it negative (it's a cost)
+                if(parsed.wareneinsatz && parsed.wareneinsatz > 0) parsed.wareneinsatz = -parsed.wareneinsatz;
+                if(parsed.personalkosten && parsed.personalkosten > 0) parsed.personalkosten = -parsed.personalkosten;
+                if(parsed.raumkosten && parsed.raumkosten > 0) parsed.raumkosten = -parsed.raumkosten;
 
-                var isExcel = file.name.match(/\.(xlsx|xls|csv)$/i);
-                var isPdf = file.name.match(/\.pdf$/i);
-
-                // Build API request with file
-                var userContent = [];
-                if(isPdf) {
-                    userContent.push({
-                        type: 'document',
-                        source: { type: 'base64', media_type: 'application/pdf', data: base64 }
-                    });
-                } else if(isExcel) {
-                    // For Excel, we send as document with appropriate mime type
-                    var mimeType = file.name.match(/\.csv$/i) ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-                    userContent.push({
-                        type: 'document',
-                        source: { type: 'base64', media_type: mimeType, data: base64 }
-                    });
+                // Calculate rohertrag if not found
+                if(!parsed.rohertrag && parsed.umsatzerloese && parsed.wareneinsatz) {
+                    parsed.rohertrag = parsed.umsatzerloese + parsed.wareneinsatz;
                 }
 
-                userContent.push({
-                    type: 'text',
-                    text: 'Analysiere diese BWA (Betriebswirtschaftliche Auswertung) und extrahiere alle Kennzahlen. Antworte NUR mit einem JSON-Objekt im folgenden Format, ohne Markdown oder andere Zeichen:\n\n{"umsatzerloese": 0, "davon_fahrraeder": 0, "davon_teile": 0, "davon_service": 0, "davon_skonti": 0, "wareneinsatz": 0, "personalkosten": 0, "raumkosten": 0, "werbekosten": 0, "kosten_warenabgabe": 0, "abschreibungen": 0, "sonstige_kosten": 0, "zinsaufwand": 0, "plan_umsatz": 0, "plan_wareneinsatz": 0, "plan_rohertrag": 0, "plan_personalkosten": 0, "plan_raumkosten": 0, "plan_werbekosten": 0, "plan_gesamtkosten": 0, "plan_ergebnis": 0}\n\nWichtige Regeln:\n- Kostenposten als NEGATIVE Zahlen (z.B. Wareneinsatz = -33580)\n- Umsatzerloese als POSITIVE Zahl\n- Nur Zahlen, keine Waehrungszeichen\n- Wenn ein Wert nicht vorhanden ist, setze 0\n- Suche nach: Erlöse, Umsatz, Wareneinsatz, Materialaufwand, Personalkosten, Raumkosten, Miete, Werbung, Abschreibungen, AfA, sonstige Kosten, Zinsen\n- Wenn Plan-Werte vorhanden sind, extrahiere diese auch'
-                });
-
-                var resp = await fetch('https://api.anthropic.com/v1/messages', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: 'claude-sonnet-4-20250514',
-                        max_tokens: 1000,
-                        messages: [{ role: 'user', content: userContent }]
-                    })
-                });
-
-                var data = await resp.json();
-                var responseText = data.content.map(function(c) { return c.text || ''; }).join('');
-                
-                // Parse JSON from response
-                var cleanJson = responseText.replace(/```json|```/g, '').trim();
-                var parsed = JSON.parse(cleanJson);
-
-                statusText.textContent = '✅ Werte erfolgreich extrahiert!';
                 statusEl.querySelector('.animate-spin').style.display = 'none';
+
+                if(matchedRows.length === 0) {
+                    statusText.textContent = '⚠️ Keine BWA-Felder erkannt';
+                    resultEl.innerHTML = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-700">'
+                        + '<p class="font-semibold mb-1">Automatische Erkennung konnte keine Werte finden</p>'
+                        + '<p>Das Excel-Format wird nicht erkannt. Bitte Werte manuell eingeben. Gefundene Spalten: ' + rows[0].join(', ').substring(0, 100) + '</p></div>';
+                    resultEl.classList.remove('hidden');
+                    if(parseBtn) parseBtn.disabled = false;
+                    return;
+                }
+
+                statusText.textContent = '✅ ' + matchedRows.length + ' Werte erkannt!';
 
                 // Fill form fields
                 var fieldMap = {
@@ -7814,34 +7883,37 @@
                 var filledCount = 0;
                 Object.keys(fieldMap).forEach(function(key) {
                     var val = parsed[key];
-                    if(val && val !== 0) {
+                    if(val !== undefined && val !== 0) {
                         var el = document.getElementById(fieldMap[key]);
                         if(el) { el.value = val; el.style.borderColor = '#f97316'; el.style.backgroundColor = '#fff7ed'; filledCount++; }
                     }
                 });
 
-                // Show summary
-                var rohertrag = (parsed.umsatzerloese || 0) + (parsed.wareneinsatz || 0);
+                // Show results
+                var rohertrag = parsed.rohertrag || ((parsed.umsatzerloese||0) + (parsed.wareneinsatz||0));
                 var rohertragPct = parsed.umsatzerloese ? ((rohertrag / parsed.umsatzerloese) * 100).toFixed(1) : 0;
+                var ergebnis = parsed.betriebsergebnis || (rohertrag + (parsed.personalkosten||0) + (parsed.raumkosten||0) + (parsed.sonstige_kosten||0) + (parsed.abschreibungen||0));
+                
                 resultEl.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-lg p-3">'
-                    + '<p class="text-xs font-semibold text-green-700 mb-1">✅ ' + filledCount + ' Werte extrahiert</p>'
+                    + '<p class="text-xs font-semibold text-green-700 mb-2">✅ ' + filledCount + ' Werte aus "' + sheetName + '" extrahiert</p>'
                     + '<div class="grid grid-cols-3 gap-2 text-xs">'
-                    + '<div><span class="text-gray-500">Umsatz:</span> <strong>' + (parsed.umsatzerloese||0).toLocaleString('de-DE') + ' €</strong></div>'
-                    + '<div><span class="text-gray-500">Rohertrag:</span> <strong>' + rohertragPct + '%</strong></div>'
-                    + '<div><span class="text-gray-500">Ergebnis:</span> <strong class="' + ((rohertrag + (parsed.personalkosten||0) + (parsed.raumkosten||0)) >= 0 ? 'text-green-600' : 'text-red-600') + '">' + (rohertrag + (parsed.personalkosten||0) + (parsed.raumkosten||0) + (parsed.sonstige_kosten||0)).toLocaleString('de-DE') + ' €</strong></div>'
+                    + '<div><span class="text-gray-500">Umsatz:</span><br><strong>' + (parsed.umsatzerloese||0).toLocaleString('de-DE') + ' €</strong></div>'
+                    + '<div><span class="text-gray-500">Rohertrag:</span><br><strong>' + rohertragPct + '%</strong></div>'
+                    + '<div><span class="text-gray-500">Ergebnis:</span><br><strong class="' + (ergebnis >= 0 ? 'text-green-600' : 'text-red-600') + '">' + ergebnis.toLocaleString('de-DE') + ' €</strong></div>'
                     + '</div>'
-                    + '<p class="text-[10px] text-gray-400 mt-1">Bitte prüfe die Werte vor dem Speichern.</p>'
+                    + '<details class="mt-2"><summary class="text-[10px] text-gray-400 cursor-pointer">Erkannte Zuordnungen anzeigen</summary>'
+                    + '<div class="mt-1 space-y-0.5">' + matchedRows.map(function(m) { return '<div class="text-[10px] text-gray-500">Zeile '+(m.row+1)+': <span class="text-gray-700">"'+m.label+'"</span> → <strong>'+m.key+'</strong> = '+m.value.toLocaleString('de-DE')+'</div>'; }).join('') + '</div></details>'
+                    + '<p class="text-[10px] text-gray-400 mt-2">⚠️ Bitte prüfe die Werte vor dem Speichern.</p>'
                     + '</div>';
                 resultEl.classList.remove('hidden');
 
             } catch(err) {
-                console.error('BWA AI Parse error:', err);
-                statusText.textContent = '❌ Fehler: ' + (err.message||'Unbekannt');
+                console.error('BWA Parse error:', err);
                 statusEl.querySelector('.animate-spin').style.display = 'none';
+                statusText.textContent = '❌ Fehler: ' + (err.message||'Unbekannt');
                 resultEl.innerHTML = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-700">'
                     + '<p class="font-semibold mb-1">Automatische Erkennung fehlgeschlagen</p>'
-                    + '<p>Bitte die Werte manuell eingeben. Die Datei wird trotzdem gespeichert.</p>'
-                    + '</div>';
+                    + '<p>Bitte die Werte manuell eingeben. Die Datei wird trotzdem gespeichert.</p></div>';
                 resultEl.classList.remove('hidden');
             }
             if(parseBtn) parseBtn.disabled = false;
