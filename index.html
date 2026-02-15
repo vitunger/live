@@ -4045,6 +4045,7 @@
                         <div class="flex space-x-2">
                             <button onclick="filterPartnerMa('all')" class="p-ma-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white" data-pmf="all">Alle</button>
                             <button onclick="filterPartnerMa('aktiv')" class="p-ma-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-pmf="aktiv">🟢 Aktiv</button>
+                            <button onclick="filterPartnerMa('demo')" class="p-ma-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-pmf="demo">🔴 Demo</button>
                             <button onclick="filterPartnerMa('onboarding')" class="p-ma-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-pmf="onboarding">🔵 Onboarding</button>
                         </div>
                         <button class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90" onclick="openNeuerMaModal()">+ Neuer Mitarbeiter</button>
@@ -5473,10 +5474,165 @@
             document.getElementById('mainApp').style.display = 'block';
             try { updateUIForRole(); updatePremiumFeatures(); } catch(e) { console.warn(e); }
             if(currentRole === 'hq') { switchViewMode('hq'); } else { showView('home'); }
+            // Demo mode check
+            checkDemoMode();
             // Check for pending approvals (HQ + GF only)
             checkPendingApprovals();
             // Check BWA deadlines and create reminders
             checkBwaDeadlines();
+        }
+
+        // === DEMO MODE SYSTEM ===
+        var isDemoMode = false;
+        var demoDataSeeded = false;
+
+        function checkDemoMode() {
+            var oldDemo = isDemoMode;
+            isDemoMode = sbProfile && sbProfile.status === 'demo';
+            // Remove banner if it exists
+            var existing = document.getElementById('demoBanner');
+            if(existing) existing.remove();
+            if(isDemoMode) {
+                showDemoBanner();
+                if(!demoDataSeeded) seedDemoData();
+            } else if(oldDemo && demoDataSeeded) {
+                // Was demo, now switched away → clear demo data
+                clearDemoData();
+            }
+        }
+
+        function showDemoBanner() {
+            var banner = document.createElement('div');
+            banner.id = 'demoBanner';
+            banner.innerHTML = '<div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#DC2626;color:white;text-align:center;padding:6px 0;font-weight:700;font-size:13px;letter-spacing:2px;text-transform:uppercase;box-shadow:0 2px 8px rgba(220,38,38,0.4);">DEMOMODUS</div>';
+            document.body.appendChild(banner);
+            // Push nav and content down
+            var nav = document.querySelector('.topnav-desktop');
+            if(nav) nav.style.marginTop = '32px';
+            var mob = document.querySelector('.mobile-nav');
+            if(mob) mob.style.marginTop = '32px';
+            document.getElementById('mainApp').style.paddingTop = '32px';
+        }
+
+        function removeDemoBanner() {
+            var b = document.getElementById('demoBanner');
+            if(b) b.remove();
+            var nav = document.querySelector('.topnav-desktop');
+            if(nav) nav.style.marginTop = '0';
+            var mob = document.querySelector('.mobile-nav');
+            if(mob) mob.style.marginTop = '0';
+            document.getElementById('mainApp').style.paddingTop = '0';
+        }
+
+        function seedDemoData() {
+            demoDataSeeded = true;
+            console.log('[DEMO] Seeding demo data...');
+
+            // 1. BWA Demo Data
+            bwaCache = [
+                {id:'demo-bwa-1', monat:1, jahr:2026, umsatzerloese:54938, wareneinsatz:-33580, rohertrag:21358, personalkosten:-13485, raumkosten:-4150, werbekosten:-2039, abschreibungen:-1567, sonstige_kosten:-61, gesamtkosten:-25342, betriebsergebnis:-3935, zinsaufwand:-550, ergebnis_vor_steuern:-4485, created_at:'2026-02-05', davon_fahrraeder:47380, davon_teile:6052, davon_service:3534, davon_skonti:-2028},
+                {id:'demo-bwa-2', monat:12, jahr:2025, umsatzerloese:42100, wareneinsatz:-26300, rohertrag:15800, personalkosten:-12800, raumkosten:-4150, werbekosten:-1200, abschreibungen:-1567, sonstige_kosten:-420, gesamtkosten:-22837, betriebsergebnis:-5237, zinsaufwand:-580, ergebnis_vor_steuern:-5817, created_at:'2026-01-10'}
+            ];
+            if(typeof renderBwaList === 'function') renderBwaList();
+
+            // 2. Pipeline Demo Data
+            verkaufData.pipeline = [
+                {id:1, name:'Thomas Meier', type:'E-MTB', budget:'4.500 €', stage:'termin', date:'14.02.2026', source:'Website', priority:'hoch', notes:'Probefahrt am Sa'},
+                {id:2, name:'Anna Schmidt', type:'City E-Bike', budget:'2.800 €', stage:'angebot', date:'12.02.2026', source:'Laden', priority:'mittel', notes:'Kalkhoff Entice'},
+                {id:3, name:'Michael Weber', type:'Trekking', budget:'3.200 €', stage:'beratung', date:'10.02.2026', source:'Empfehlung', priority:'hoch', notes:'Orbea Gain'},
+                {id:4, name:'Lisa Braun', type:'E-Bike Leasing', budget:'5.000 €', stage:'lead', date:'13.02.2026', source:'Meta Ad', priority:'mittel', notes:'JobRad Anfrage'},
+                {id:5, name:'Peter Koch', type:'Rennrad', budget:'6.500 €', stage:'verkauft', date:'08.02.2026', source:'Google', priority:'niedrig', notes:'Orbea Orca'},
+                {id:6, name:'Sandra Huber', type:'Kinder-MTB', budget:'800 €', stage:'verloren', date:'05.02.2026', source:'Laden', priority:'niedrig', notes:'Online gekauft'},
+                {id:7, name:'Klaus Richter', type:'E-Cargo', budget:'5.500 €', stage:'termin', date:'15.02.2026', source:'Messe', priority:'hoch', notes:'Riese & Müller'},
+                {id:8, name:'Maria Fischer', type:'E-MTB', budget:'4.000 €', stage:'lead', date:'14.02.2026', source:'Instagram', priority:'mittel', notes:'Haibike AllMtn'}
+            ];
+            if(typeof renderKanban === 'function') renderKanban();
+
+            // 3. Verkauf Tracking Demo
+            if(typeof verkaufData !== 'undefined') {
+                verkaufData.mitarbeiter = [
+                    {name:'Sandra', plan_soll:10, gesamt_ist:6, verkauft:4, umsatz_kw:12400, umsatz_jahr:48200, vk_jahr:18, top_marke:'Kalkhoff', quote:67, avg_vk:2678},
+                    {name:'Thomas', plan_soll:8, gesamt_ist:5, verkauft:3, umsatz_kw:9800, umsatz_jahr:38500, vk_jahr:14, top_marke:'Orbea', quote:60, avg_vk:2750},
+                    {name:'Dirk', plan_soll:15, gesamt_ist:9, verkauft:6, umsatz_kw:18200, umsatz_jahr:72600, vk_jahr:26, top_marke:'Haibike', quote:67, avg_vk:2792},
+                    {name:'Max', plan_soll:5, gesamt_ist:3, verkauft:2, umsatz_kw:5600, umsatz_jahr:15800, vk_jahr:6, top_marke:'Simplon', quote:67, avg_vk:2633}
+                ];
+                verkaufData.monatsuebersicht = [
+                    {monat:'Januar',plan:57025,ist:57025,termine_soll:24,termine_ist:22,verkauft:18,quote:82,avg:3168},
+                    {monat:'Februar',plan:77734,ist:46000,termine_soll:32,termine_ist:23,verkauft:15,quote:65,avg:3067}
+                ];
+            }
+
+            // 4. Todos Demo
+            if(typeof todosData !== 'undefined' && Array.isArray(todosData)) {
+                todosData.push(
+                    {id:'demo-t1', text:'Schaufenster Frühlingsdeko aufbauen', done:false, prio:'hoch', due:'2026-02-20', assignee:'Sandra'},
+                    {id:'demo-t2', text:'Orbea Preisliste 2026 durchgehen', done:false, prio:'mittel', due:'2026-02-18', assignee:'Thomas'},
+                    {id:'demo-t3', text:'Bosch-Diagnose Software updaten', done:true, prio:'niedrig', due:'2026-02-14', assignee:'Dirk'},
+                    {id:'demo-t4', text:'Testival März planen – Location buchen', done:false, prio:'hoch', due:'2026-02-25', assignee:'Sandra'}
+                );
+            }
+
+            // 5. Tickets Demo
+            if(typeof ticketData !== 'undefined' && Array.isArray(ticketData)) {
+                ticketData.push(
+                    {id:'demo-tk1', subject:'POS-System stürzt bei Ratenzahlung ab', status:'offen', prio:'hoch', erstellt:'2026-02-13', kat:'IT/Software'},
+                    {id:'demo-tk2', subject:'Kalkhoff Entice – Rahmen Garantiefall', status:'in_bearbeitung', prio:'mittel', erstellt:'2026-02-10', kat:'Garantie'},
+                    {id:'demo-tk3', subject:'Marketing Budget Q2 Freigabe', status:'offen', prio:'niedrig', erstellt:'2026-02-12', kat:'Buchhaltung'}
+                );
+            }
+
+            // 6. Announcements Demo
+            if(typeof announcementsData !== 'undefined' && Array.isArray(announcementsData)) {
+                announcementsData.unshift(
+                    {id:'demo-a1', title:'🆕 Neue Shimano EP801 Serie ab sofort verfügbar', content:'Die EP801 Motoren können ab sofort bestellt werden. Bitte aktualisiert eure Ausstellungsmodelle bis Ende Februar.', date:'2026-02-14', type:'produkt', wichtig:true},
+                    {id:'demo-a2', title:'📅 Netzwerk-Meeting Q1 am 5. März', content:'Pflichttermin für alle Partner. Agenda: Saisonstart, neue Markenpartner, BWA-Auswertung Q4.', date:'2026-02-10', type:'termin', wichtig:false}
+                );
+            }
+
+            // 7. Kalender Demo Termine
+            if(typeof kalTermine !== 'undefined' && Array.isArray(kalTermine)) {
+                kalTermine.push(
+                    {id:'demo-k1', title:'Probefahrt Hr. Meier (E-MTB)', date:'2026-02-17', time:'10:00', endTime:'11:00', type:'termin', user:'Sandra', ort:'Laden'},
+                    {id:'demo-k2', title:'Bosch Diagnose Schulung', date:'2026-02-19', time:'09:00', endTime:'12:00', type:'schulung', user:'alle', ort:'Online'},
+                    {id:'demo-k3', title:'Werkstatt-Team Meeting', date:'2026-02-20', time:'08:00', endTime:'08:30', type:'meeting', user:'alle', ort:'Werkstatt'},
+                    {id:'demo-k4', title:'Frau Schmidt Leasing-Abholung', date:'2026-02-21', time:'14:00', endTime:'15:00', type:'termin', user:'Thomas', ort:'Laden'},
+                    {id:'demo-k5', title:'Orbea Launch Event Vorbereitung', date:'2026-02-22', time:'16:00', endTime:'17:00', type:'event', user:'Sandra', ort:'Laden'}
+                );
+            }
+
+            // 8. Ideenboard Demo
+            if(typeof ideenData !== 'undefined' && Array.isArray(ideenData) && ideenData.length === 0) {
+                ideenData.push(
+                    {id:'demo-i1', title:'Leasing-Rechner auf Website einbauen', desc:'Kunden können direkt auf unserer Website die Leasingrate berechnen.', autor:'Sandra (Grafrath)', votes:8, status:'offen', date:'2026-02-01'},
+                    {id:'demo-i2', title:'Gemeinsamer Einkauf von Werkstattmaterial', desc:'Über das Portal Sammelbestellungen für Verbrauchsmaterial koordinieren.', autor:'Thomas (Hamburg)', votes:12, status:'in_umsetzung', date:'2026-01-15'}
+                );
+            }
+
+            console.log('[DEMO] Demo data seeded ✅');
+        }
+
+        function clearDemoData() {
+            demoDataSeeded = false;
+            isDemoMode = false;
+            removeDemoBanner();
+            console.log('[DEMO] Clearing demo data...');
+
+            // Clear BWA demo data
+            if(typeof bwaCache !== 'undefined') bwaCache = bwaCache.filter(function(b){ return !String(b.id).startsWith('demo-'); });
+            // Clear Pipeline demo data
+            if(typeof verkaufData !== 'undefined') { verkaufData.pipeline = []; }
+            // Clear Todos demo data  
+            if(typeof todosData !== 'undefined' && Array.isArray(todosData)) todosData = todosData.filter(function(t){ return !String(t.id).startsWith('demo-'); });
+            // Clear Tickets demo
+            if(typeof ticketData !== 'undefined' && Array.isArray(ticketData)) ticketData = ticketData.filter(function(t){ return !String(t.id).startsWith('demo-'); });
+            // Clear Announcements demo
+            if(typeof announcementsData !== 'undefined' && Array.isArray(announcementsData)) announcementsData = announcementsData.filter(function(a){ return !String(a.id).startsWith('demo-'); });
+            // Clear Kalender demo
+            if(typeof kalTermine !== 'undefined' && Array.isArray(kalTermine)) kalTermine = kalTermine.filter(function(k){ return !String(k.id).startsWith('demo-'); });
+            // Clear Ideen demo
+            if(typeof ideenData !== 'undefined' && Array.isArray(ideenData)) ideenData = ideenData.filter(function(i){ return !String(i.id).startsWith('demo-'); });
+
+            console.log('[DEMO] Demo data cleared ✅');
         }
 
         async function checkPendingApprovals() {
@@ -11624,6 +11780,7 @@
 
         function statusBadge(s) {
             if(s==='aktiv') return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">🟢 Aktiv</span>';
+            if(s==='demo') return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-red-100 text-red-700 animate-pulse">🔴 Demo</span>';
             if(s==='onboarding') return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">🔵 Onboarding</span>';
             if(s==='offboarding') return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">🔴 Offboarding</span>';
             return s;
@@ -12045,6 +12202,7 @@
                 html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Standort</label><select id="editMaStandort" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="">Wird geladen...</option></select></div>';
                 html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Status</label><select id="editMaStatus" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">';
                 html += '<option value="aktiv"'+(u.status==='aktiv'?' selected':'')+'>Aktiv</option>';
+                html += '<option value="demo"'+(u.status==='demo'?' selected':'')+'>🔴 Demomodus</option>';
                 html += '<option value="onboarding"'+(u.status==='onboarding'?' selected':'')+'>Onboarding</option>';
                 html += '<option value="offboarding"'+(u.status==='offboarding'?' selected':'')+'>Offboarding</option>';
                 html += '</select></div>';
@@ -12127,6 +12285,14 @@
                 closeEditMaModal();
                 alert('\u2705 Mitarbeiter aktualisiert!');
                 renderKzMitarbeiter();
+                // If this user's status changed, re-check demo mode
+                if(sbProfile && userId === sbProfile.id) {
+                    sbProfile.status = status;
+                    checkDemoMode();
+                } else if(status === 'demo' || (sbProfile && sbProfile.status === 'demo')) {
+                    // If any user was set to/from demo while viewing as that user
+                    checkDemoMode();
+                }
             } catch(err) {
                 if(errEl){errEl.textContent='Fehler: '+(err.message||err);errEl.style.display='block';}
                 if(btn) { btn.disabled=false; btn.textContent='Speichern'; }
