@@ -12785,16 +12785,27 @@
                 }).eq('id', userId);
                 if(upd.error) throw upd.error;
 
-                // 2. Passwort ändern (via Server-Funktion)
+                // 2. Passwort ändern (via set_user_password)
                 if(pw && pw.length >= 6) {
-                    var pwResp = await sb.rpc('update_user_password', { p_user_id: userId, p_new_password: pw });
+                    var pwResp = await sb.rpc('set_user_password', { user_id: userId, new_password: pw });
                     if(pwResp && pwResp.error) console.warn('Passwort-Update:', pwResp.error.message);
                 }
 
                 // 3. Rollen: alte löschen, neue setzen
                 await sb.from('user_rollen').delete().eq('user_id', userId);
-                for(var i=0; i<selected.length; i++) {
-                    await sb.rpc('assign_user_role', { p_user_id: userId, p_rolle_name: selected[i] });
+                
+                // Rollen-IDs holen
+                var rollenResp = await sb.from('rollen').select('id, name');
+                var rollenMap = {};
+                if(rollenResp.data) rollenResp.data.forEach(function(r){ rollenMap[r.name] = r.id; });
+                
+                var rollenInserts = selected.map(function(roleName){
+                    return { user_id: userId, rolle_id: rollenMap[roleName] };
+                }).filter(function(ri){ return ri.rolle_id; });
+                
+                if(rollenInserts.length > 0) {
+                    var insResp = await sb.from('user_rollen').insert(rollenInserts);
+                    if(insResp.error) console.warn('Rollen-Zuweisung:', insResp.error.message);
                 }
 
                 closeEditMaModal();
@@ -12819,9 +12830,9 @@
         async function loginAs(userId, email, userName) {
             if(!confirm('Als "'+userName+'" anmelden?\n\nDu wirst als dieser User eingeloggt um die Rechte zu testen.')) return;
             try {
-                // 1. Temporäres Passwort setzen via Server-Funktion
+                // 1. Temporäres Passwort setzen
                 var tempPw = '_TempLogin_' + Date.now();
-                await sb.rpc('update_user_password', { p_user_id: userId, p_new_password: tempPw });
+                await sb.rpc('set_user_password', { user_id: userId, new_password: tempPw });
                 
                 // 2. Ausloggen
                 await sb.auth.signOut();
@@ -12833,7 +12844,7 @@
                 await loadUserProfile(sbUser.id);
                 await loadModulStatus();
                 enterApp();
-                await loadPipelineFromSupabase();
+                try { await loadPipelineFromSupabase(); } catch(e) {}
             } catch(err) {
                 alert('Login fehlgeschlagen: '+(err.message||err)+'\n\nSeite wird neu geladen.');
                 location.reload();
@@ -12848,12 +12859,18 @@
                 await sb.from('user_rollen').delete().eq('user_id', userId);
                 // 2. User-Profil löschen
                 await sb.from('users').delete().eq('id', userId);
-                // 3. Auth-User löschen (via Server-Funktion)
-                await sb.rpc('delete_auth_user', { p_user_id: userId });
+                // 3. Auth-User löschen (via DB-Funktion)
+                await sb.rpc('delete_auth_user', { target_user_id: userId });
                 alert('\u2705 '+userName+' wurde gelöscht.');
                 renderKzMitarbeiter();
             } catch(err) {
-                alert('Fehler: '+(err.message||err));
+                // Auch bei Fehler beim Auth-Löschen: Profil ist bereits weg
+                if(err.message && err.message.includes('delete_auth_user')) {
+                    alert('\u2705 '+userName+' Profil gelöscht.\n\u26a0\ufe0f Auth-User muss manuell im Supabase Dashboard entfernt werden.');
+                    renderKzMitarbeiter();
+                } else {
+                    alert('Fehler: '+(err.message||err));
+                }
             }
         }
 
