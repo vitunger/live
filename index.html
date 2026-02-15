@@ -9124,29 +9124,40 @@
                     var resp = await sb.from('jahresplaene').select('*').eq('jahr', planIstYear).eq('standort_id', stdId).maybeSingle();
                     if(!resp.error && resp.data) {
                         currentPlan = resp.data;
+                    } else {
+                        currentPlan = null;
                     }
                 }
-            } catch(e) { /* no plan yet or table does not exist */ }
+            } catch(e) { currentPlan = null; }
 
+            // Persistent year selector - always visible
+            var topH = '<div class="flex items-center justify-between mb-6">';
+            topH += '<div class="flex items-center space-x-3">';
+            topH += '<h2 class="text-lg font-bold text-gray-800">Plan / Ist</h2>';
+            topH += '<select id="planIstYearSel" onchange="planIstYear=parseInt(this.value);currentPlan=null;renderPlanIst()" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white">';
+            for(var yy=2027;yy>=2024;yy--) topH += '<option value="'+yy+'"'+(yy===planIstYear?' selected':'')+'>'+yy+'</option>';
+            topH += '</select></div>';
+            if(currentPlan && currentPlan.plan_daten) {
+                topH += '<button onclick="currentPlan=null;renderPlanUploadScreen(document.getElementById(\'planIstSubContent\'))" class="text-xs text-vit-orange font-semibold hover:underline">📄 Plan neu hochladen</button>';
+            }
+            topH += '</div>';
+            topH += '<div id="planIstSubContent"></div>';
+            el.innerHTML = topH;
+
+            var subEl = document.getElementById('planIstSubContent');
             if(!currentPlan || !currentPlan.plan_daten) {
-                renderPlanUploadScreen(el);
+                renderPlanUploadScreen(subEl);
             } else {
-                await renderPlanVergleich(el);
+                await renderPlanVergleich(subEl);
             }
         }
 
         function renderPlanUploadScreen(el) {
             var h = '';
-            h += '<div class="text-center py-8">';
+            h += '<div class="text-center py-6">';
             h += '<div class="max-w-lg mx-auto">';
-            // Year selector at top of upload screen
-            h += '<div class="flex items-center justify-center space-x-3 mb-6">';
-            h += '<h2 class="text-xl font-bold text-gray-800">Jahresplan '+planIstYear+' hochladen</h2>';
-            h += '<select onchange="planIstYear=parseInt(this.value);currentPlan=null;renderPlanIst()" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white">';
-            for(var yy=2027;yy>=2024;yy--) h += '<option value="'+yy+'"'+(yy===planIstYear?' selected':'')+'>'+yy+'</option>';
-            h += '</select>';
-            h += '</div>';
             h += '<div class="text-6xl mb-4">📋</div>';
+            h += '<p class="text-base font-semibold text-gray-700 mb-1">Kein Plan für '+planIstYear+' vorhanden</p>';
             h += '<p class="text-sm text-gray-500 mb-6">Um den Plan/Ist-Vergleich nutzen zu können, lade zuerst deinen Jahresplan als Excel-Datei hoch. Das Portal liest die monatlichen Plan-Werte automatisch aus.</p>';
             h += '<div class="vit-card p-6 text-left">';
             h += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Schritt 1: Plan-Datei hochladen</p>';
@@ -9814,14 +9825,7 @@
             }
 
             var h = '';
-            // Year selector + reupload button
-            h += '<div class="flex items-center justify-between mb-4">';
-            h += '<div class="flex items-center space-x-3"><h2 class="text-lg font-bold text-gray-800">Plan / Ist Vergleich</h2>';
-            h += '<select id="planIstYearSel" onchange="planIstYear=parseInt(this.value);currentPlan=null;renderPlanIst()" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm">';
-            for(var yy=2027;yy>=2024;yy--) h += '<option value="'+yy+'"'+(yy===planIstYear?' selected':'')+'>'+yy+'</option>';
-            h += '</select></div>';
-            h += '<button onclick="currentPlan=null;renderPlanIst()" class="text-xs text-vit-orange font-semibold hover:underline">📄 Neuen Plan hochladen</button>';
-            h += '</div>';
+            // KPIs (year selector is now in parent renderPlanIst)
 
             // KPIs
             var diffUmsatz = ytdIstUmsatz - ytdPlanUmsatz;
