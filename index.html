@@ -9097,13 +9097,20 @@
                     return 0;
                 }
                 // Helper: check if value represents January of a given year
+                // IMPORTANT: Use UTC methods to avoid timezone shifts!
+                // SheetJS stores dates as UTC, but local getMonth()/getFullYear() can shift
+                // e.g. 2026-01-01T00:00Z becomes 2026-01-01T01:00 CET = still Jan ✓
+                // but 2025-12-31T23:00Z (which is Jan 1 in Excel) becomes Jan 1 in CET!
                 function isJanOfYear(v, yr) {
                     if(!v) return false;
-                    if(v instanceof Date) return v.getMonth() === 0 && v.getFullYear() == yr;
+                    if(v instanceof Date) {
+                        // Use UTC to avoid timezone issues
+                        return v.getUTCMonth() === 0 && v.getUTCFullYear() == yr;
+                    }
                     if(typeof v === 'number' && v > 40000) {
-                        // Excel serial date: convert to JS date
+                        // Excel serial date: convert to JS date (UTC)
                         var d = new Date((v - 25569) * 86400000);
-                        return d.getMonth() === 0 && d.getFullYear() == yr;
+                        return d.getUTCMonth() === 0 && d.getUTCFullYear() == yr;
                     }
                     if(typeof v === 'string') {
                         return (v.includes(String(yr)) && (v.includes('01-01') || v.includes('Jan') || v.includes('jan')));
