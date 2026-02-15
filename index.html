@@ -8785,6 +8785,42 @@
             var v = function(id) { return parseFloat((document.getElementById(id)||{}).value) || 0; };
             var p = window._lastParsedSummary || {};
 
+            // === DUPLIKAT-CHECK: Existiert bereits eine BWA für diesen Monat? ===
+            if(!window._bwaDuplicateConfirmed) {
+                try {
+                    var stdId = sbProfile ? sbProfile.standort_id : null;
+                    var existing = await sb.from('bwa_daten').select('id,umsatzerloese,rohertrag,ergebnis_vor_steuern,updated_at').eq('standort_id', stdId).eq('monat', month).eq('jahr', year).maybeSingle();
+                    if(existing.data) {
+                        var exU = (existing.data.umsatzerloese || 0);
+                        var exR = (existing.data.rohertrag || 0);
+                        var exE = (existing.data.ergebnis_vor_steuern || 0);
+                        var exDate = existing.data.updated_at ? new Date(existing.data.updated_at).toLocaleDateString('de-DE') : '?';
+                        
+                        // Show inline confirmation instead of browser confirm()
+                        if(errEl) {
+                            errEl.innerHTML = '<div class="bg-amber-50 border border-amber-300 rounded-lg p-3">'
+                                + '<p class="text-xs font-bold text-amber-800 mb-1">⚠️ Für ' + monatNamen[month] + ' ' + year + ' existiert bereits eine BWA</p>'
+                                + '<div class="grid grid-cols-3 gap-2 text-[11px] text-amber-700 mb-2">'
+                                + '<div>Umsatz: <strong>' + exU.toLocaleString('de-DE') + ' €</strong></div>'
+                                + '<div>Rohertrag: <strong>' + exR.toLocaleString('de-DE') + ' €</strong></div>'
+                                + '<div>Ergebnis: <strong>' + exE.toLocaleString('de-DE') + ' €</strong></div>'
+                                + '</div>'
+                                + '<p class="text-[10px] text-amber-600 mb-2">Zuletzt aktualisiert: ' + exDate + '</p>'
+                                + '<div class="flex gap-2">'
+                                + '<button onclick="window._bwaDuplicateConfirmed=true;saveBwaData();" class="px-3 py-1.5 bg-amber-500 text-white text-xs font-semibold rounded hover:bg-amber-600">✅ Überschreiben</button>'
+                                + '<button onclick="document.getElementById(\'bwaUploadError\').style.display=\'none\';" class="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs font-semibold rounded hover:bg-gray-300">Abbrechen</button>'
+                                + '</div></div>';
+                            errEl.style.display = 'block';
+                        }
+                        return;
+                    }
+                } catch(dupErr) {
+                    console.warn('[BWA] Duplicate check failed:', dupErr.message);
+                    // Continue saving if check fails
+                }
+            }
+            window._bwaDuplicateConfirmed = false; // Reset for next save
+
             // Use parsed values if available, otherwise form fields
             // IMPORTANT: use !== undefined check because 0 is a valid value (|| would skip 0)
             var pv = function(key, formId) { return (p[key] !== undefined && p[key] !== null) ? p[key] : v(formId); };
