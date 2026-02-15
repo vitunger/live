@@ -338,6 +338,9 @@
         @media (max-width: 768px) {
             .h1-headline { font-size: 1.25rem !important; }
         }
+        /* Deal Flow Animations */
+        @keyframes pop{0%{opacity:0;transform:scale(.9) translateY(12px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+        @keyframes dfAppear{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
     </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
@@ -1243,51 +1246,52 @@
                         <div id="weekSellerTables" class="space-y-6"></div>
                     </div>
 
-                    <!-- ===== TAB 2: Pipeline ===== -->
+                    <!-- ===== TAB 2: Pipeline (Deal Flow) ===== -->
                     <div id="vkTabPipeline" class="vk-tab-content" style="display:none;">
+
                         <!-- Pipeline Header -->
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex items-center space-x-3">
-                                <select id="pipelineFilter" onchange="renderPipeline()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                    <option value="all">Alle Verkaeufer</option>
-                                    <option value="Sandra">Sandra</option>
-                                    <option value="Dirk">Dirk</option>
-                                    <option value="Thomas">Thomas</option>
-                                    <option value="Max">Max</option>
-                                </select>
+                        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+                            <div>
+                                <h2 class="text-xl font-extrabold text-gray-800" style="letter-spacing:-.02em">Deal Flow</h2>
+                                <div class="text-xs text-gray-400 font-semibold mt-0.5" id="dfStatusLine">Alles im Griff</div>
                             </div>
-                            <button onclick="showNewLeadModal()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm hover:opacity-90">+ Neuer Lead</button>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <select id="pipelineFilter" onchange="renderPipeline()" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+                                    <option value="all">Alle Verkaeufer</option>
+                                </select>
+                                <button onclick="dfToggleInsights()" class="px-3 py-2 rounded-lg border border-gray-200 bg-white text-xs font-semibold text-gray-500 hover:bg-blue-50 hover:text-blue-600" id="dfInsightsBtn">📊</button>
+                                <button onclick="dfShowAutoModal()" class="px-3 py-2 rounded-lg border border-gray-200 bg-white text-xs font-semibold text-gray-500 hover:bg-purple-50 hover:text-purple-600">⚡</button>
+                                <button onclick="dfShowAddModal()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-bold hover:opacity-90">+ Kontakt</button>
+                            </div>
                         </div>
 
-                        <!-- Kanban Board -->
-                        <div class="flex space-x-4 overflow-x-auto pb-4" id="kanbanBoard">
+                        <!-- Scoreboard KPIs -->
+                        <div class="grid grid-cols-2 lg:grid-cols-5 gap-2 mb-3" id="dfScoreboard"></div>
+
+                        <!-- Insights Panel (hidden by default) -->
+                        <div id="dfInsightsPanel" class="hidden mb-3">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                <div class="vit-card p-5" id="dfFunnelContainer"></div>
+                                <div class="vit-card p-5" id="dfBadgesContainer"></div>
+                            </div>
+                        </div>
+
+                        <!-- Kanban Board (Drag & Drop) -->
+                        <div class="flex gap-2 overflow-x-auto pb-3" id="kanbanBoard" style="min-height:320px">
                             <!-- Columns rendered by JS -->
                         </div>
 
-                        <!-- New Lead Modal -->
-                        <div id="newLeadModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                            <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h3 class="text-lg font-semibold">Neuer Lead</h3>
-                                    <button onclick="document.getElementById('newLeadModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
-                                </div>
-                                <div class="space-y-3">
-                                    <input id="leadName" type="text" placeholder="Kundenname" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                    <select id="leadType" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                        <option>E-Bike Trekking</option><option>E-Bike City</option><option>E-Bike MTB</option>
-                                        <option>E-Bike Cargo</option><option>Rennrad</option><option>MTB</option>
-                                        <option>Kinder</option><option>Zubehoer</option><option>Werkstatt</option>
-                                    </select>
-                                    <select id="leadSeller" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                        <option>Sandra</option><option>Thomas</option><option>Dirk</option><option>Max</option>
-                                    </select>
-                                    <input id="leadValue" type="number" placeholder="Geschaetzter Wert (€)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                    <textarea id="leadNotes" placeholder="Notizen..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" rows="2"></textarea>
-                                    <button onclick="addNewLead()" class="w-full bg-vit-orange text-white py-2 rounded-lg font-semibold hover:opacity-90">Lead anlegen</button>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- Drop Zones: Schrank der Hoffnung + Verloren -->
+                        <div id="dfDropZones" class="space-y-2 mt-1"></div>
+
                     </div>
+
+                    <!-- Deal Flow Modals (outside tab for z-index) -->
+                    <div id="dfAddModal" class="hidden fixed inset-0 z-50" style="background:rgba(0,0,0,.4);backdrop-filter:blur(8px)"></div>
+                    <div id="dfDetailModal" class="hidden fixed inset-0 z-50" style="background:rgba(0,0,0,.3);backdrop-filter:blur(5px)"></div>
+                    <div id="dfAutoModal" class="hidden fixed inset-0 z-50" style="background:rgba(0,0,0,.4);backdrop-filter:blur(8px)"></div>
+                    <div id="dfSalesFormModal" class="hidden fixed inset-0 z-[2000]" style="background:rgba(0,0,0,.5);backdrop-filter:blur(4px)"></div>
+                    <div id="dfToast" class="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] hidden" style="background:#1a202c;color:#fff;padding:10px 20px;border-radius:10px;font-weight:700;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,.15)"></div>
 
                     <!-- ===== TAB 3: Auswertung ===== -->
                     <div id="vkTabAuswertung" class="vk-tab-content" style="display:none;">
@@ -6414,17 +6418,862 @@
             ]
         };
 
+        // ═══════════════════════════════════════════════════════════════
+        // DEAL FLOW PIPELINE – Full Kanban with Drag & Drop, Detail Modal,
+        // Beratungsformular, Automations, Gamification
+        // ═══════════════════════════════════════════════════════════════
+
         var pipelineStages = [
-            {id:'lead',label:'Lead',color:'bg-gray-100 border-gray-300'},
-            {id:'termin',label:'Termin gebucht',color:'bg-blue-50 border-blue-300'},
-            {id:'beratung',label:'In Beratung',color:'bg-yellow-50 border-yellow-300'},
-            {id:'angebot',label:'Angebot',color:'bg-purple-50 border-purple-300'},
-            {id:'verkauft',label:'Verkauft',color:'bg-green-50 border-green-300'},
-            {id:'uebergabe',label:'Uebergabe',color:'bg-emerald-50 border-emerald-300'},
-            {id:'verloren',label:'Nicht gekauft',color:'bg-red-50 border-red-300'}
+            {id:'lead',label:'🎯 Leads',color:'#FF6B35',bg:'#FFF3ED',emoji:'🎣'},
+            {id:'angebot',label:'📝 Angebot',color:'#667EEA',bg:'#EBF4FF',emoji:'💌'},
+            {id:'schwebend',label:'⏳ Schwebend',color:'#F7C948',bg:'#FFFBEA',emoji:'🎈'},
+            {id:'verkauft',label:'🎉 Verkauft',color:'#38B2AC',bg:'#E6FFFA',emoji:'🏆'},
+            {id:'gold',label:'🗄️ Schrank d. Hoffnung',color:'#D69E2E',bg:'#FFFFF0',emoji:'✨'},
+            {id:'lost',label:'💀 Verloren',color:'#E53E3E',bg:'#FFF5F5',emoji:'😭'}
+        ];
+        var DF_PIPELINE = ['lead','angebot','schwebend','verkauft'];
+        var DF_AGING = {lead:3,angebot:5,schwebend:7};
+        var DF_AVATARS = ['👤','👩','👨','👩‍💼','👨‍💼','👩‍🎨','👨‍🔧','👩‍⚕️','👨‍🍳','👩‍💻','🧑‍🎓','👴'];
+        var DF_ACT_TYPES = [
+            {id:'call',label:'📞 Anruf',color:'#667EEA'},
+            {id:'email',label:'📧 E-Mail',color:'#38B2AC'},
+            {id:'meeting',label:'☕ Meeting',color:'#F7C948'},
+            {id:'note',label:'📝 Notiz',color:'#A0AEC0'},
+            {id:'whatsapp',label:'💬 WhatsApp',color:'#25D366'}
+        ];
+        var DF_SOURCES = ['Empfehlung','Google','Instagram','Facebook','Messe','Walk-In','Website','Flyer','TikTok','Andere'];
+        var DF_PAY_METHODS = [{id:'JobRad',icon:'🚲'},{id:'BLS',icon:'📋'},{id:'BusinessBike',icon:'🏢'},{id:'Finanzierung',icon:'🏦'},{id:'Leasing/Divers',icon:'📄'},{id:'Bar/EC',icon:'💶'}];
+        var DF_GOAL = 15000;
+        var DF_CELEB = ['🎉','🥳','🏆','💰','🔥','⭐','🎊','💎','👑','🚀'];
+        var DF_ACHIEVEMENTS = [
+            {id:'first_sale',label:'Erster Verkauf',icon:'🌟',desc:'Dein erster Deal',check:function(s){return s.sold>=1}},
+            {id:'streak3',label:'3er Streak',icon:'🔥',desc:'3x hintereinander',check:function(s){return s.streak>=3}},
+            {id:'10k',label:'10K Club',icon:'💰',desc:'€10k Umsatz',check:function(s){return s.rev>=10000}},
+            {id:'50k',label:'50K Club',icon:'💎',desc:'€50k Umsatz',check:function(s){return s.rev>=50000}},
+            {id:'machine',label:'Deal Machine',icon:'⚙️',desc:'10 Deals erstellt',check:function(s){return s.total>=10}},
+            {id:'active',label:'Aktiver Seller',icon:'🏃',desc:'20 Aktivitaeten',check:function(s){return s.acts>=20}}
         ];
 
+        var dfStreak = 0;
+        var dfUnlocked = [];
+        var dfNextId = 100;
+        var dfSelectedDeal = null;
+
+        var DF_RULES = [
+            {id:'r1',from:'lead',to:'angebot',action:'todo',text:'Angebot nachfassen',days:3,enabled:true},
+            {id:'r2',from:'angebot',to:'schwebend',action:'todo',text:'Nachfragen ob Entscheidung gefallen',days:5,enabled:true},
+            {id:'r3',from:'lead',to:'angebot',action:'activity',actType:'note',text:'Angebot wurde erstellt',enabled:true},
+            {id:'r4',from:'*',to:'verkauft',action:'todo',text:'Willkommens-Mail senden',days:0,enabled:true},
+            {id:'r5',from:'*',to:'gold',action:'todo',text:'In 30 Tagen erneut kontaktieren',days:30,enabled:true}
+        ];
+
+        // Re-map existing pipeline data to new stage IDs
+        var DF_STAGE_MAP = {lead:'lead',termin:'lead',beratung:'angebot',angebot:'angebot',verkauft:'verkauft',uebergabe:'verkauft',verloren:'lost'};
+
+        function dfNow(){return Date.now()}
+        function dfAgo(d){return dfNow()-d*864e5}
+        function dfFmt(v){return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v)}
+        function dfDSince(ts){return Math.floor((dfNow()-ts)/864e5)}
+        function dfTAgo(ts){var d=dfDSince(ts);return d===0?'Heute':d===1?'Gestern':'vor '+d+'d'}
+
+        function dfInitDemoDeals(){
+            var now = dfNow();
+            // Convert existing verkaufData.pipeline to new format
+            verkaufData.pipeline = verkaufData.pipeline.map(function(l,i){
+                return {
+                    id: l.id || i+1, name: l.name, value: l.value,
+                    stage: DF_STAGE_MAP[l.stage]||'lead',
+                    avatar: DF_AVATARS[i % DF_AVATARS.length],
+                    heat: Math.min(5, Math.max(1, Math.round(l.value/1500))),
+                    note: l.type || 'Neuer Kontakt',
+                    phone: '', email: '', seller: l.seller,
+                    source: '', sales: {},
+                    acts: [{type:'note',text:'Erstellt',time:dfAgo(i+1)}],
+                    todos: [],
+                    created: dfAgo(i+3), changed: dfAgo(i),
+                    sb_id: l.sb_id || null
+                };
+            });
+            dfNextId = Math.max(dfNextId, verkaufData.pipeline.length + 1);
+        }
+
+        function dfToast(msg){
+            var el = document.getElementById('dfToast');
+            if(!el)return;
+            el.textContent = msg;
+            el.classList.remove('hidden');
+            clearTimeout(el._to);
+            el._to = setTimeout(function(){el.classList.add('hidden')},2500);
+        }
+
+        // ── Scoreboard ──
+        function dfRenderScoreboard(){
+            var deals = dfGetFilteredDeals();
+            var sold = deals.filter(function(d){return d.stage==='verkauft'});
+            var tSold = sold.reduce(function(s,d){return s+d.value},0);
+            var pipe = deals.filter(function(d){return !(['verkauft','lost','gold'].indexOf(d.stage)>=0)}).reduce(function(s,d){return s+d.value},0);
+            var closed = deals.filter(function(d){return d.stage==='verkauft'||d.stage==='lost'});
+            var wr = closed.length ? Math.round(sold.length/closed.length*100) : 0;
+            var gp = Math.min(100,Math.round(tSold/DF_GOAL*100));
+            var el = document.getElementById('dfScoreboard');
+            if(!el)return;
+            el.innerHTML = '<div class="vit-card p-3 text-center"><p class="text-xs text-gray-400 font-semibold">Pipeline</p><p class="text-lg font-extrabold" style="color:#667EEA">'+dfFmt(pipe)+'</p></div>'
+                +'<div class="vit-card p-3 text-center"><p class="text-xs text-gray-400 font-semibold">Verkauft</p><p class="text-lg font-extrabold" style="color:#38B2AC">'+dfFmt(tSold)+'</p></div>'
+                +'<div class="vit-card p-3 text-center"><p class="text-xs text-gray-400 font-semibold">Win-Rate</p><p class="text-lg font-extrabold" style="color:#F7C948">'+wr+'%</p></div>'
+                +'<div class="vit-card p-3 text-center"><p class="text-xs text-gray-400 font-semibold">Streak</p><p class="text-lg font-extrabold" style="color:#FF6B35">'+dfStreak+'x</p></div>'
+                +'<div class="vit-card p-3"><div class="flex justify-between mb-1"><span class="text-xs text-gray-400 font-semibold">Monatsziel</span><span class="text-xs font-extrabold" style="color:'+(gp>=100?'#38B2AC':'#667EEA')+'">'+gp+'%</span></div>'
+                +'<div class="h-1.5 rounded-full bg-gray-100 overflow-hidden"><div class="h-full rounded-full" style="width:'+gp+'%;background:'+(gp>=100?'#38B2AC':'#667EEA')+';transition:width .6s"></div></div>'
+                +'<div class="flex justify-between mt-1"><span class="text-[10px] text-gray-300">'+dfFmt(tSold)+'</span><span class="text-[10px] text-gray-300">'+dfFmt(DF_GOAL)+'</span></div></div>';
+            // Status line
+            var aging = deals.filter(function(d){return !(['verkauft','lost','gold'].indexOf(d.stage)>=0) && dfDSince(d.changed)>=(DF_AGING[d.stage]||5)}).length;
+            var openT = deals.reduce(function(s,d){return s+(d.todos||[]).filter(function(t){return !t.done}).length},0);
+            var sl = document.getElementById('dfStatusLine');
+            if(sl){
+                var parts=[];
+                if(aging>0)parts.push('<span class="text-red-500">⚠ '+aging+' Follow-Up</span>');
+                if(openT>0)parts.push('<span class="text-blue-500">☑ '+openT+' Todos</span>');
+                sl.innerHTML = parts.length ? parts.join('  ') : 'Alles im Griff ✨';
+            }
+        }
+
+        function dfGetFilteredDeals(){
+            var filter = document.getElementById('pipelineFilter') ? document.getElementById('pipelineFilter').value : 'all';
+            if(filter==='all') return verkaufData.pipeline;
+            return verkaufData.pipeline.filter(function(d){return d.seller===filter});
+        }
+
+        // ── Kanban Rendering ──
+        function renderPipeline(){
+            dfRenderScoreboard();
+            var deals = dfGetFilteredDeals();
+            var board = document.getElementById('kanbanBoard');
+            if(!board) return;
+            var mainStages = pipelineStages.filter(function(s){return ['lost','gold'].indexOf(s.id)<0});
+            var html = '';
+
+            mainStages.forEach(function(stage){
+                var stageDeals = deals.filter(function(d){return d.stage===stage.id});
+                var tv = stageDeals.reduce(function(s,d){return s+d.value},0);
+
+                html += '<div class="flex-1 min-w-[200px] max-w-[300px] flex flex-col gap-1.5 rounded-xl p-2 transition-all" '
+                    +'ondragover="event.preventDefault();this.style.background=\''+stage.color+'08\';this.style.border=\'2px dashed '+stage.color+'\'" '
+                    +'ondragleave="this.style.background=\'transparent\';this.style.border=\'2px dashed transparent\'" '
+                    +'ondrop="event.preventDefault();this.style.background=\'transparent\';this.style.border=\'2px dashed transparent\';dfDropDeal(event,\''+stage.id+'\')" '
+                    +'style="border:2px dashed transparent">';
+
+                // Column header
+                html += '<div class="flex items-center justify-between px-1 py-1.5">'
+                    +'<div class="flex items-center gap-1.5">'
+                    +'<div class="w-2 h-2 rounded-full" style="background:'+stage.color+'"></div>'
+                    +'<span class="font-bold text-xs text-gray-700">'+stage.label+'</span>'
+                    +'<span class="text-[10px] font-semibold text-gray-400">'+stageDeals.length+'</span>'
+                    +'</div>'
+                    +'<span class="font-bold text-[11px]" style="color:'+stage.color+'">'+dfFmt(tv)+'</span>'
+                    +'</div>';
+
+                // Cards
+                stageDeals.forEach(function(deal){
+                    var d = dfDSince(deal.changed);
+                    var w = DF_AGING[deal.stage]||999;
+                    var aging = d>=w && ['verkauft','lost','gold'].indexOf(deal.stage)<0;
+                    var urgent = d>=w*2;
+                    var openT = (deal.todos||[]).filter(function(t){return !t.done}).length;
+                    var overdue = (deal.todos||[]).some(function(t){return !t.done && t.due < dfNow()});
+
+                    html += '<div draggable="true" ondragstart="event.dataTransfer.setData(\'id\','+deal.id+')" '
+                        +'onclick="dfShowDetail('+deal.id+')" '
+                        +'class="bg-white rounded-xl p-3 cursor-grab hover:shadow-md transition-all" '
+                        +'style="border-left:3px solid '+(aging?(urgent?'#E53E3E':'#ECC94B'):stage.color)+';box-shadow:0 1px 3px rgba(0,0,0,.04)">';
+
+                    // Card top row
+                    html += '<div class="flex items-center gap-2 mb-1.5">'
+                        +'<div class="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0" style="background:'+stage.bg+'">'+deal.avatar+'</div>'
+                        +'<div class="min-w-0 flex-1">'
+                        +'<div class="font-bold text-[13px] text-gray-800 truncate">'+deal.name+'</div>'
+                        +'<div class="text-[10px] text-gray-400 truncate">'+(deal.note||'')+'</div>'
+                        +'</div></div>';
+
+                    // Card bottom row
+                    html += '<div class="flex justify-between items-center">'
+                        +'<span class="font-extrabold text-sm" style="color:'+stage.color+'">'+dfFmt(deal.value)+'</span>'
+                        +'<div class="flex items-center gap-1">';
+
+                    // Seller badge
+                    if(deal.seller) html += '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">'+deal.seller.substring(0,2).toUpperCase()+'</span>';
+                    // Todo badge
+                    if(openT>0) html += '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded '+(overdue?'bg-red-100 text-red-600':'bg-blue-50 text-blue-500')+'">'+(overdue?'❗':'☑')+openT+'</span>';
+                    // Aging badge
+                    if(aging) html += '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded '+(urgent?'bg-red-100 text-red-600':'bg-yellow-100 text-yellow-700')+'">'+(urgent?'🚨':'⏰')+d+'d</span>';
+                    // Heat dots
+                    html += '<span class="flex gap-px">';
+                    for(var h=1;h<=5;h++) html += '<span class="w-1.5 h-1.5 rounded-full" style="background:'+(h<=deal.heat?(deal.heat>=4?'#FF6B35':deal.heat>=2?'#F7C948':'#CBD5E0'):'#EDF2F7')+'"></span>';
+                    html += '</span>';
+
+                    html += '</div></div></div>';
+                });
+
+                // Empty state
+                if(!stageDeals.length){
+                    html += '<div class="flex-1 flex items-center justify-center text-2xl opacity-20 min-h-[80px]">'+stage.emoji+'</div>';
+                }
+
+                html += '</div>';
+            });
+
+            board.innerHTML = html;
+
+            // Render drop zones
+            dfRenderDropZones(deals);
+
+            // Update seller filter options
+            dfUpdateSellerFilter();
+        }
+
+        function dfRenderDropZones(deals){
+            var dz = document.getElementById('dfDropZones');
+            if(!dz) return;
+            var html = '';
+
+            // Schrank der Hoffnung
+            var goldDeals = deals.filter(function(d){return d.stage==='gold'});
+            html += '<div class="rounded-xl p-3 transition-all" style="border:1.5px dashed #D69E2E50" '
+                +'ondragover="event.preventDefault();this.style.borderColor=\'#D69E2E\'" '
+                +'ondragleave="this.style.borderColor=\'#D69E2E50\'" '
+                +'ondrop="event.preventDefault();this.style.borderColor=\'#D69E2E50\';dfDropDeal(event,\'gold\')">'
+                +'<div class="text-xs font-bold text-yellow-700 mb-2">🗄️ Schrank der Hoffnung <span class="font-normal text-gray-400">– Wertvolle Kontakte, die noch reifen</span></div>'
+                +'<div class="flex gap-2 flex-wrap">';
+            goldDeals.forEach(function(d){
+                html += '<div draggable="true" ondragstart="event.dataTransfer.setData(\'id\','+d.id+')" onclick="dfShowDetail('+d.id+')" '
+                    +'class="bg-gray-50 rounded-lg px-3 py-1.5 text-xs font-semibold text-yellow-700 cursor-grab border border-yellow-200 flex items-center gap-1.5 hover:shadow">'
+                    +d.avatar+' '+d.name+' <span class="text-gray-400">'+dfFmt(d.value)+'</span></div>';
+            });
+            if(!goldDeals.length) html += '<span class="text-xs text-gray-300">Kontakte hierhin ziehen</span>';
+            html += '</div></div>';
+
+            // Verloren
+            var lostDeals = deals.filter(function(d){return d.stage==='lost'});
+            html += '<div class="rounded-xl p-3 transition-all" style="border:1.5px dashed #FEB2B250" '
+                +'ondragover="event.preventDefault();this.style.borderColor=\'#E53E3E\'" '
+                +'ondragleave="this.style.borderColor=\'#FEB2B250\'" '
+                +'ondrop="event.preventDefault();this.style.borderColor=\'#FEB2B250\';dfDropDeal(event,\'lost\')">'
+                +'<div class="text-xs font-bold text-red-500 mb-2">💀 Verloren <span class="font-normal text-gray-400">– Jederzeit wiederbelebbar</span></div>'
+                +'<div class="flex gap-2 flex-wrap">';
+            lostDeals.forEach(function(d){
+                html += '<div draggable="true" ondragstart="event.dataTransfer.setData(\'id\','+d.id+')" onclick="dfShowDetail('+d.id+')" '
+                    +'class="bg-gray-50 rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-400 cursor-grab border border-red-100 flex items-center gap-1.5 hover:shadow">'
+                    +d.avatar+' '+d.name+' <span class="text-gray-300">'+dfFmt(d.value)+'</span></div>';
+            });
+            if(!lostDeals.length) html += '<span class="text-xs text-gray-300">Kontakte hierhin ziehen</span>';
+            html += '</div></div>';
+
+            dz.innerHTML = html;
+        }
+
+        function dfUpdateSellerFilter(){
+            var sel = document.getElementById('pipelineFilter');
+            if(!sel) return;
+            var sellers = {};
+            verkaufData.pipeline.forEach(function(d){if(d.seller)sellers[d.seller]=true});
+            var cur = sel.value;
+            sel.innerHTML = '<option value="all">Alle Verkaeufer</option>';
+            Object.keys(sellers).sort().forEach(function(s){
+                sel.innerHTML += '<option value="'+s+'"'+(cur===s?' selected':'')+'>'+s+'</option>';
+            });
+        }
+
+        // ── Drag & Drop ──
+        function dfDropDeal(event, newStage){
+            var id = parseInt(event.dataTransfer.getData('id'));
+            var deal = verkaufData.pipeline.find(function(d){return d.id===id});
+            if(!deal || deal.stage === newStage) return;
+            var oldStage = deal.stage;
+            deal.stage = newStage;
+            deal.changed = dfNow();
+
+            // Apply automation rules
+            dfApplyRules(id, oldStage, newStage);
+
+            if(newStage==='verkauft'){dfStreak++;dfToast('🏆 '+deal.name+' verkauft! '+dfFmt(deal.value))}
+            else if(newStage==='lost'){dfStreak=0;dfToast('💀 '+deal.name+' verloren...')}
+            else if(newStage==='gold'){dfToast('🗄️ '+deal.name+' → Schrank der Hoffnung')}
+
+            // Persist to Supabase if connected
+            if(deal.sb_id && typeof sb !== 'undefined'){
+                var statusMap = {lead:'neu',angebot:'angebot',schwebend:'verhandlung',verkauft:'gewonnen',lost:'verloren',gold:'kontaktiert'};
+                sb.from('leads').update({status:statusMap[newStage]||'neu'}).eq('id',deal.sb_id).then(function(){});
+            }
+            renderPipeline();
+            dfCheckAchievements();
+        }
+
+        // ── Automation Rules ──
+        function dfApplyRules(dealId, fromStage, toStage){
+            var deal = verkaufData.pipeline.find(function(d){return d.id===dealId});
+            if(!deal) return;
+            var active = DF_RULES.filter(function(r){
+                return r.enabled && (r.from==='*' || r.from===fromStage) && r.to===toStage;
+            });
+            active.forEach(function(r,i){
+                if(r.action==='todo'){
+                    if(!deal.todos) deal.todos=[];
+                    deal.todos.unshift({text:r.text,due:dfNow()+(r.days||0)*864e5,done:false,id:'t'+Date.now()+Math.random()});
+                } else {
+                    if(!deal.acts) deal.acts=[];
+                    deal.acts.unshift({type:r.actType||'note',text:r.text,time:dfNow()});
+                }
+                setTimeout(function(){dfToast('⚡ Auto: '+(r.action==='todo'?'☑️':'📋')+' "'+r.text+'"')},300+i*600);
+            });
+        }
+
+        // ── Achievements ──
+        function dfCheckAchievements(){
+            var deals = verkaufData.pipeline;
+            var s = {
+                sold:deals.filter(function(d){return d.stage==='verkauft'}).length,
+                rev:deals.filter(function(d){return d.stage==='verkauft'}).reduce(function(a,d){return a+d.value},0),
+                streak:dfStreak,
+                total:deals.length,
+                acts:deals.reduce(function(a,d){return a+(d.acts||[]).length},0)
+            };
+            DF_ACHIEVEMENTS.forEach(function(a){
+                if(a.check(s) && dfUnlocked.indexOf(a.id)<0){
+                    dfUnlocked.push(a.id);
+                    setTimeout(function(){dfToast('🏅 '+a.icon+' '+a.label+'!')},500);
+                }
+            });
+        }
+
+        // ── Add Deal Modal ──
+        function dfShowAddModal(){
+            var el = document.getElementById('dfAddModal');
+            el.classList.remove('hidden');
+            el.innerHTML = '<div onclick="event.stopPropagation()" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-7 w-[420px] max-w-[92vw] max-h-[90vh] overflow-y-auto shadow-2xl" style="animation:pop .3s cubic-bezier(.34,1.56,.64,1)">'
+                +'<h2 class="text-xl font-extrabold mb-5">🚀 Neuer Kontakt</h2>'
+                +'<div class="space-y-3">'
+                +'<div><label class="text-xs font-bold text-gray-400 mb-1 block">Name *</label><input id="dfAddName" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm" placeholder="z.B. Anna Mueller" autofocus></div>'
+                +'<div class="grid grid-cols-2 gap-3">'
+                +'<div><label class="text-xs font-bold text-gray-400 mb-1 block">Wert (€) *</label><input id="dfAddValue" type="number" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm" placeholder="2500"></div>'
+                +'<div><label class="text-xs font-bold text-gray-400 mb-1 block">Verkaeufer</label><input id="dfAddSeller" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm" placeholder="'+(sbProfile?sbProfile.name.split(' ')[0]:'Name')+'"></div>'
+                +'</div>'
+                +'<div class="grid grid-cols-2 gap-3">'
+                +'<div><label class="text-xs font-bold text-gray-400 mb-1 block">Telefon</label><input id="dfAddPhone" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm" placeholder="0176 ..."></div>'
+                +'<div><label class="text-xs font-bold text-gray-400 mb-1 block">E-Mail</label><input id="dfAddEmail" type="email" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm" placeholder="anna@mail.de"></div>'
+                +'</div>'
+                +'<div><label class="text-xs font-bold text-gray-400 mb-1 block">Notiz</label><input id="dfAddNote" class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm" placeholder="Interesse an..."></div>'
+                +'<div><label class="text-xs font-bold text-gray-400 mb-1 block">Avatar</label>'
+                +'<div class="flex gap-1.5 flex-wrap" id="dfAvatarPicker">'+DF_AVATARS.map(function(a,i){return '<div onclick="document.querySelectorAll(\'#dfAvatarPicker>div\').forEach(function(x){x.style.border=\'2px solid #E2E8F0\';x.style.background=\'#fff\'});this.style.border=\'2px solid #667EEA\';this.style.background=\'#EBF4FF\';document.getElementById(\'dfAddModal\').dataset.avatar=\''+a+'\'" class="w-9 h-9 rounded-lg flex items-center justify-center text-lg cursor-pointer transition-all" style="border:2px solid '+(i===0?'#667EEA':'#E2E8F0')+';background:'+(i===0?'#EBF4FF':'#fff')+'">'+a+'</div>'}).join('')+'</div>'
+                +'</div>'
+                +'<div class="flex gap-3 mt-2">'
+                +'<button onclick="document.getElementById(\'dfAddModal\').classList.add(\'hidden\')" class="flex-1 py-2.5 rounded-xl border-2 border-gray-200 font-bold text-gray-500 text-sm">Abbrechen</button>'
+                +'<button onclick="dfAddDeal()" class="flex-[2] py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold text-sm shadow-lg hover:opacity-90">🚀 Hinzufuegen</button>'
+                +'</div>'
+                +'</div></div>';
+            el.dataset.avatar = DF_AVATARS[0];
+            el.onclick = function(){el.classList.add('hidden')};
+        }
+
+        function dfAddDeal(){
+            var name = document.getElementById('dfAddName').value.trim();
+            var value = parseInt(document.getElementById('dfAddValue').value) || 0;
+            if(!name || !value) return;
+            var deal = {
+                id: dfNextId++, name: name, value: value, stage: 'lead',
+                avatar: document.getElementById('dfAddModal').dataset.avatar || '👤',
+                heat: 3, note: document.getElementById('dfAddNote').value || 'Neuer Kontakt',
+                phone: document.getElementById('dfAddPhone').value || '',
+                email: document.getElementById('dfAddEmail').value || '',
+                seller: document.getElementById('dfAddSeller').value || (sbProfile?sbProfile.name.split(' ')[0]:''),
+                source: '', sales: {},
+                acts: [{type:'note',text:'Kontakt erstellt',time:dfNow()}],
+                todos: [],
+                created: dfNow(), changed: dfNow(), sb_id: null
+            };
+
+            // Also save to Supabase
+            if(typeof sb !== 'undefined' && sbProfile){
+                var nameParts = name.split(' ');
+                sb.from('leads').insert({
+                    standort_id: sbProfile.standort_id, erstellt_von: sbUser ? sbUser.id : null,
+                    vorname: nameParts[0], nachname: nameParts.slice(1).join(' '),
+                    interesse: deal.note, geschaetzter_wert: deal.value,
+                    telefon: deal.phone, email: deal.email,
+                    status: 'neu', quelle: 'walk_in', prioritaet: 'mittel'
+                }).then(function(resp){
+                    if(resp.data && resp.data[0]) deal.sb_id = resp.data[0].id;
+                });
+            }
+
+            verkaufData.pipeline.push(deal);
+            document.getElementById('dfAddModal').classList.add('hidden');
+            dfToast('🎯 '+name+' hinzugefuegt!');
+            renderPipeline();
+        }
+
+        // Alias for backward compat
+        function showNewLeadModal(){ dfShowAddModal(); }
+        function addNewLead(){ dfAddDeal(); }
+        function moveLead(id, newStage){
+            var deal = verkaufData.pipeline.find(function(d){return d.id===id});
+            if(deal){var old=deal.stage;deal.stage=newStage;deal.changed=dfNow();dfApplyRules(id,old,newStage);renderPipeline()}
+        }
+
+        // ── Detail Modal ──
+        function dfShowDetail(dealId){
+            var deal = verkaufData.pipeline.find(function(d){return d.id===dealId});
+            if(!deal) return;
+            dfSelectedDeal = deal;
+            var el = document.getElementById('dfDetailModal');
+            el.classList.remove('hidden');
+            el.onclick = function(){el.classList.add('hidden');dfSelectedDeal=null};
+            dfRenderDetail();
+        }
+
+        function dfRenderDetail(){
+            var deal = dfSelectedDeal;
+            if(!deal) return;
+            var el = document.getElementById('dfDetailModal');
+            var st = pipelineStages.find(function(s){return s.id===deal.stage});
+            if(!st) st = pipelineStages[0];
+            var openT = (deal.todos||[]).filter(function(t){return !t.done}).length;
+
+            var html = '<div onclick="event.stopPropagation()" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl w-[560px] max-w-[94vw] max-h-[88vh] flex flex-col shadow-2xl overflow-hidden" style="animation:pop .2s cubic-bezier(.34,1.56,.64,1)">';
+
+            // Header
+            html += '<div class="p-5 pb-3" style="background:linear-gradient(135deg,'+st.color+'08,'+st.color+'03)">'
+                +'<div class="flex gap-3 items-start">'
+                +'<div class="w-11 h-11 rounded-xl bg-white flex items-center justify-center text-xl flex-shrink-0 shadow-sm">'+deal.avatar+'</div>'
+                +'<div class="flex-1 min-w-0">'
+                +'<div class="font-extrabold text-base text-gray-800">'+deal.name+'</div>'
+                +'<div class="text-xs text-gray-500 mt-0.5">'+(deal.note||'')+'</div>'
+                +'</div>'
+                +'<div class="text-right flex-shrink-0">'
+                +'<div class="font-extrabold text-lg" style="color:'+st.color+'">'+dfFmt(deal.value)+'</div>'
+                +'<select onchange="dfChangeStage('+deal.id+',this.value)" class="mt-1 px-2 py-1 rounded-lg border-none text-[10px] font-bold cursor-pointer outline-none" style="color:'+st.color+';background:'+st.bg+'">'
+                +pipelineStages.map(function(s){return '<option value="'+s.id+'"'+(s.id===deal.stage?' selected':'')+'>'+s.label+'</option>'}).join('')
+                +'</select>'
+                +'</div></div>';
+
+            // Contact info row
+            html += '<div class="flex gap-1.5 mt-2.5 flex-wrap items-center text-xs text-gray-500">';
+            if(deal.phone) html += '<span class="bg-white rounded-md px-2 py-1 border border-gray-100">📞 '+deal.phone+'</span>';
+            if(deal.email) html += '<span class="bg-white rounded-md px-2 py-1 border border-gray-100">📧 '+deal.email+'</span>';
+            if(deal.seller) html += '<span class="bg-gray-100 rounded-md px-2 py-1 font-bold text-[10px]">'+deal.seller+'</span>';
+            html += '<span class="ml-auto text-[10px] text-gray-300">'+dfTAgo(deal.created)+'</span></div>';
+            html += '</div>';
+
+            // Tabs
+            html += '<div class="flex border-b border-gray-100 px-5">';
+            ['uebersicht','gespraech','log','todos'].forEach(function(tab,i){
+                var labels = ['Übersicht','Gespräch','Log','Todos'];
+                var n = tab==='log'?(deal.acts||[]).length : tab==='todos'?openT : 0;
+                html += '<div onclick="dfSelectedDeal._tab=\''+tab+'\';dfRenderDetail()" class="py-2.5 px-3 text-xs font-semibold cursor-pointer transition-all border-b-2 '
+                    +((deal._tab||'uebersicht')===tab?'border-blue-500 text-blue-500':'border-transparent text-gray-400 hover:text-gray-600')+'">'
+                    +labels[i]+(n>0?'<span class="ml-1 text-[9px] px-1.5 py-0.5 rounded-full '+((deal._tab||'uebersicht')===tab?'bg-blue-500 text-white':'bg-gray-100 text-gray-400')+'">'+n+'</span>':'')+'</div>';
+            });
+            html += '</div>';
+
+            // Content
+            html += '<div class="p-5 overflow-y-auto flex-1">';
+            var tab = deal._tab || 'uebersicht';
+
+            if(tab === 'uebersicht'){
+                // Quick summary
+                html += '<div class="bg-gray-50 rounded-xl p-4 mb-4">'
+                    +'<div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Beratung auf einen Blick</div>';
+                var salesFields = [{k:'nutzung',l:'🚲 Nutzung',ph:'Was macht der Kunde?'},{k:'ziel',l:'🎯 Ziel',ph:'Welches Ziel?'},{k:'budget',l:'💶 Budget',ph:'Budget?'},{k:'next',l:'👣 Nächster Schritt',ph:'Was vereinbart?'},{k:'einwaende',l:'⚠️ Einwände',ph:'Bedenken?'}];
+                salesFields.forEach(function(f){
+                    var val = (deal.sales||{})[f.k];
+                    html += '<div class="flex gap-2 items-start mb-1.5">'
+                        +'<span class="text-[11px] font-bold text-gray-500 min-w-[100px] pt-0.5">'+f.l+'</span>'
+                        +'<span class="text-xs '+(val?'text-gray-700 font-semibold':'text-gray-300')+'">'+(val||f.ph)+'</span></div>';
+                });
+                html += '</div>';
+
+                // Heat / Interest
+                html += '<div class="mb-4"><div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Interesse</div>'
+                    +'<div class="flex gap-1">';
+                for(var h=1;h<=5;h++){
+                    html += '<div onclick="dfSetHeat('+deal.id+','+h+')" class="w-9 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-all text-xs" style="background:'+(h<=deal.heat?(deal.heat>=4?'#FF6B3520':'#F7C94820'):'#FAFAFA')+';border:1.5px solid '+(h<=deal.heat?'transparent':'#F0F0F0')+'">'+(h<=deal.heat?'🔥':'')+'</div>';
+                }
+                html += '</div></div>';
+
+                // Source
+                html += '<div class="mb-4"><div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Quelle</div>'
+                    +'<div class="flex gap-1 flex-wrap">';
+                DF_SOURCES.forEach(function(src){
+                    html += '<div onclick="dfSetField('+deal.id+',\'source\',\''+src+'\')" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer transition-all '+(deal.source===src?'bg-blue-500 text-white':'bg-gray-50 text-gray-500 hover:bg-gray-100')+'">'+src+'</div>';
+                });
+                html += '</div></div>';
+
+                // Payment
+                html += '<div class="mb-4"><div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Bezahlart</div>'
+                    +'<div class="flex gap-1 flex-wrap">';
+                DF_PAY_METHODS.forEach(function(p){
+                    var on = (deal.sales||{}).payment===p.id;
+                    html += '<div onclick="dfSetSales('+deal.id+',\'payment\',\''+p.id+'\')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer transition-all '+(on?'bg-blue-500 text-white':'bg-gray-50 text-gray-500 hover:bg-gray-100')+'">'+p.icon+' '+p.id+'</div>';
+                });
+                html += '</div></div>';
+            }
+
+            if(tab === 'gespraech'){
+                var fields = [
+                    {k:'nutzung',l:'Nutzung',p:'Was machst du mit dem Fahrrad?'},
+                    {k:'ziel',l:'Ziel',p:'Welches Ziel verfolgst du?'},
+                    {k:'distanz',l:'Distanzen',p:'Welche Distanzen?'},
+                    {k:'haeufigkeit',l:'Haeufigkeit',p:'Wie oft pro Woche?'},
+                    {k:'erfahrung',l:'E-Bike Erfahrung',p:'Welche Erfahrungen?'},
+                    {k:'lagerung',l:'Lagerung',p:'Wo wird das Rad gelagert?'},
+                    {k:'wichtig',l:'Wichtig am Rad',p:'Was ist dir wichtig?'},
+                    {k:'budget',l:'Budget',p:'Was kann investiert werden?'},
+                    {k:'dreiPunkte',l:'3 Kaufkriterien',p:'3 Punkte damit du heute kaufst?'},
+                    {k:'einwaende',l:'Einwaende',p:'Bedenken des Kunden?'},
+                    {k:'next',l:'Naechster Schritt',p:'Was wurde vereinbart?'},
+                    {k:'gekauftesRad',l:'Gekauftes Rad',p:'Modell / Marke / Groesse'},
+                    {k:'notizen',l:'Sonstige Notizen',p:'Weitere Infos...'}
+                ];
+                fields.forEach(function(f){
+                    var val = (deal.sales||{})[f.k] || '';
+                    var isBig = f.k==='dreiPunkte'||f.k==='einwaende'||f.k==='notizen';
+                    html += '<div class="mb-2.5">'
+                        +'<div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">'+f.l+'</div>';
+                    if(isBig){
+                        html += '<textarea onchange="dfSetSales('+deal.id+',\''+f.k+'\',this.value)" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs outline-none focus:border-blue-400" rows="2" placeholder="'+f.p+'">'+val+'</textarea>';
+                    } else {
+                        html += '<input onchange="dfSetSales('+deal.id+',\''+f.k+'\',this.value)" value="'+val.replace(/"/g,'&quot;')+'" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs outline-none focus:border-blue-400" placeholder="'+f.p+'">';
+                    }
+                    html += '</div>';
+                });
+
+                // Ergo data
+                html += '<div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-4 mb-2">📐 Ergodaten</div>'
+                    +'<div class="grid grid-cols-3 gap-2">';
+                ['sattelhoehe','sattelversatz','abstandLenker','lenkerhoehe','sitzknochen','griffgroesse'].forEach(function(k){
+                    var labels={sattelhoehe:'Sattelhöhe',sattelversatz:'Sattelversatz',abstandLenker:'Sattel-Lenker',lenkerhoehe:'Lenkerhöhe',sitzknochen:'Sitzknochen',griffgroesse:'Griffgrösse'};
+                    html += '<div><div class="text-[9px] font-semibold text-gray-400 mb-0.5">'+labels[k]+'</div>'
+                        +'<input onchange="dfSetSales('+deal.id+',\''+k+'\',this.value)" value="'+((deal.sales||{})[k]||'')+'" class="w-full px-2 py-1 rounded-md border border-gray-200 text-[11px] font-mono outline-none focus:border-blue-400" placeholder="—"></div>';
+                });
+                html += '</div>';
+            }
+
+            if(tab === 'log'){
+                // Add activity
+                html += '<div class="flex gap-1.5 mb-2 flex-wrap">';
+                DF_ACT_TYPES.forEach(function(a){
+                    html += '<div onclick="document.getElementById(\'dfActType\').value=\''+a.id+'\';document.querySelectorAll(\'[data-act-btn]\').forEach(function(b){b.style.background=\'#FAFAFA\';b.style.color=\'#A0AEC0\'});this.style.background=\''+a.color+'15\';this.style.color=\''+a.color+'\'" data-act-btn class="px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer transition-all bg-gray-50 text-gray-400">'+a.label+'</div>';
+                });
+                html += '</div><input type="hidden" id="dfActType" value="call">';
+                html += '<div class="flex gap-1.5 mb-4">'
+                    +'<input id="dfActText" class="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-xs outline-none focus:border-blue-400" placeholder="Was wurde besprochen?" onkeydown="if(event.key===\'Enter\')dfAddAct('+deal.id+')">'
+                    +'<button onclick="dfAddAct('+deal.id+')" class="px-4 py-2 rounded-lg bg-blue-500 text-white font-bold text-xs">+</button>'
+                    +'</div>';
+
+                // Activity list
+                if(!(deal.acts||[]).length) html += '<div class="text-center text-gray-300 text-xs py-8">Noch keine Eintraege</div>';
+                (deal.acts||[]).forEach(function(a,i){
+                    var t = DF_ACT_TYPES.find(function(x){return x.id===a.type});
+                    html += '<div class="flex gap-2.5 py-2 '+(i<(deal.acts.length-1)?'border-b border-gray-50':'')+'">'
+                        +'<div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs flex-shrink-0" style="background:'+(t?t.color+'10':'#eee')+'">'+(t?t.label.split(' ')[0]:'📝')+'</div>'
+                        +'<div><div class="text-xs text-gray-700 font-semibold">'+a.text+'</div><div class="text-[10px] text-gray-400 mt-0.5">'+dfTAgo(a.time)+'</div></div></div>';
+                });
+            }
+
+            if(tab === 'todos'){
+                // Add todo
+                html += '<div class="flex gap-1.5 mb-4">'
+                    +'<input id="dfTodoText" class="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-xs outline-none focus:border-blue-400" placeholder="Neues Todo..." onkeydown="if(event.key===\'Enter\')dfAddTodo('+deal.id+')">'
+                    +'<select id="dfTodoDays" class="px-2 py-2 rounded-lg border border-gray-200 text-[11px] bg-white cursor-pointer outline-none"><option value="0">Heute</option><option value="1">Morgen</option><option value="3" selected>3d</option><option value="7">1W</option><option value="14">2W</option><option value="30">30d</option></select>'
+                    +'<button onclick="dfAddTodo('+deal.id+')" class="px-4 py-2 rounded-lg bg-blue-500 text-white font-bold text-xs">+</button>'
+                    +'</div>';
+
+                if(!(deal.todos||[]).length) html += '<div class="text-center text-gray-300 text-xs py-8">Alles erledigt ✨</div>';
+                var sorted = (deal.todos||[]).slice().sort(function(a,b){return (a.done?1:0)-(b.done?1:0) || a.due-b.due});
+                sorted.forEach(function(t){
+                    var ov = !t.done && t.due < dfNow();
+                    html += '<div onclick="dfToggleTodo('+deal.id+',\''+t.id+'\')" class="flex items-center gap-2.5 p-2.5 mb-1 rounded-lg cursor-pointer transition-all '+(t.done?'bg-gray-50':ov?'bg-red-50 border border-red-200':'bg-white border border-gray-100')+'">'
+                        +'<div class="w-4.5 h-4.5 rounded flex items-center justify-center flex-shrink-0" style="width:18px;height:18px;border-radius:5px;border:2px solid '+(t.done?'#38B2AC':ov?'#E53E3E':'#CBD5E0')+';background:'+(t.done?'#38B2AC':'transparent')+'">'+(t.done?'<span style="color:#fff;font-size:9px;font-weight:900">✓</span>':'')+'</div>'
+                        +'<div class="flex-1"><div class="text-xs font-semibold '+(t.done?'text-gray-400 line-through':'text-gray-700')+'">'+t.text+'</div>'
+                        +'<div class="text-[10px] '+(ov?'text-red-500':'text-gray-400')+'">'+(ov?'⚠️ Überfällig · ':'')+'Fällig '+dfTAgo(t.due)+'</div></div></div>';
+                });
+            }
+
+            html += '</div>';
+
+            // Footer
+            html += '<div class="p-3 px-5 border-t border-gray-100 flex justify-between items-center">'
+                +'<div class="flex gap-2">'
+                +'<button onclick="dfOpenSalesForm('+deal.id+')" class="px-3 py-2 rounded-lg border border-blue-400 text-blue-500 text-[11px] font-bold">📋 Beratung</button>'
+                +'<button onclick="dfPrintForm('+deal.id+')" class="px-3 py-2 rounded-lg border border-gray-300 text-gray-500 text-[11px] font-bold">🖨️ Drucken</button>'
+                +'</div>'
+                +'<button onclick="document.getElementById(\'dfDetailModal\').classList.add(\'hidden\');dfSelectedDeal=null" class="px-5 py-2 rounded-lg bg-gray-100 text-gray-500 text-xs font-bold">Schliessen</button>'
+                +'</div></div>';
+
+            el.innerHTML = html;
+        }
+
+        // ── Detail Helper Functions ──
+        function dfSetHeat(id,h){
+            var d=verkaufData.pipeline.find(function(x){return x.id===id});
+            if(d){d.heat=h;dfRenderDetail();renderPipeline()}
+        }
+        function dfSetField(id,f,v){
+            var d=verkaufData.pipeline.find(function(x){return x.id===id});
+            if(d){d[f]=d[f]===v?'':v;dfRenderDetail();renderPipeline()}
+        }
+        function dfSetSales(id,k,v){
+            var d=verkaufData.pipeline.find(function(x){return x.id===id});
+            if(d){if(!d.sales)d.sales={};d.sales[k]=d.sales[k]===v?'':v;dfRenderDetail()}
+        }
+        function dfChangeStage(id,newStage){
+            var d=verkaufData.pipeline.find(function(x){return x.id===id});
+            if(d && d.stage!==newStage){
+                var old=d.stage;d.stage=newStage;d.changed=dfNow();
+                dfApplyRules(id,old,newStage);
+                if(newStage==='verkauft'){dfStreak++;dfToast('🏆 '+d.name+' verkauft! '+dfFmt(d.value))}
+                else if(newStage==='lost'){dfStreak=0;dfToast('💀 '+d.name+' verloren...')}
+                dfRenderDetail();renderPipeline();dfCheckAchievements();
+            }
+        }
+        function dfAddAct(id){
+            var tx=document.getElementById('dfActText');
+            var type=document.getElementById('dfActType');
+            if(!tx||!tx.value.trim())return;
+            var d=verkaufData.pipeline.find(function(x){return x.id===id});
+            if(d){if(!d.acts)d.acts=[];d.acts.unshift({type:type.value,text:tx.value.trim(),time:dfNow()});tx.value='';dfRenderDetail()}
+        }
+        function dfAddTodo(id){
+            var tx=document.getElementById('dfTodoText');
+            var days=parseInt(document.getElementById('dfTodoDays').value)||0;
+            if(!tx||!tx.value.trim())return;
+            var d=verkaufData.pipeline.find(function(x){return x.id===id});
+            if(d){if(!d.todos)d.todos=[];d.todos.unshift({text:tx.value.trim(),due:dfNow()+days*864e5,done:false,id:'t'+Date.now()});tx.value='';dfRenderDetail();renderPipeline()}
+        }
+        function dfToggleTodo(dealId,todoId){
+            var d=verkaufData.pipeline.find(function(x){return x.id===dealId});
+            if(d&&d.todos){d.todos.forEach(function(t){if(t.id===todoId)t.done=!t.done});dfRenderDetail();renderPipeline()}
+        }
+
+        // ── Print Form ──
+        function dfPrintForm(id){
+            var d=verkaufData.pipeline.find(function(x){return x.id===id});
+            if(!d)return;
+            var w=window.open('','_blank','width=800,height=1100');
+            var payOpts=['JobRad','BLS','BusinessBike','Finanzierung','Leasing/Divers','Bar/EC'];
+            w.document.write('<html><head><title>Fahrradberatung – '+d.name+'</title><style>*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,sans-serif;color:#1a1a1a}body{padding:36px 44px;max-width:780px;margin:0 auto}.hdr{border-bottom:3px solid #f60;padding-bottom:10px;margin-bottom:16px}.hdr h1{font-size:20px;font-weight:700}.meta{display:flex;gap:24px;margin-bottom:14px;font-size:11px}.pill{padding:3px 12px;border:1.5px solid #ccc;border-radius:5px;font-size:10px;font-weight:600;display:inline-block;margin-right:4px}.sec{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#f60;margin:16px 0 8px;padding-bottom:3px;border-bottom:2px solid #f60}.f{margin-bottom:8px}.fl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#999;margin-bottom:1px}.fv{min-height:22px;border-bottom:1px solid #ccc;padding:2px 0;font-size:11px}.chk{display:flex;align-items:center;gap:7px;margin-bottom:4px;font-size:10px}.box{width:11px;height:11px;border:1.5px solid #888;border-radius:2px;display:inline-block}.ft{margin-top:24px;text-align:center;font-size:8px;color:#bbb;border-top:1px solid #eee;padding-top:6px}@media print{.np{display:none}}</style></head><body>'
+                +'<div class="hdr"><h1>FAHRRADBERATUNG</h1><div style="font-size:10px;color:#999;margin-top:2px">vit:bikes · '+new Date().toLocaleDateString('de-DE')+'</div></div>'
+                +'<div class="meta"><span><b>Kunde:</b> '+d.name+'</span><span><b>Datum:</b> ___________</span><span><b>Verkäufer:</b> '+(d.seller||'____')+'</span></div>'
+                +'<div>'+payOpts.map(function(p){return '<span class="pill">'+p+'</span>'}).join('')+'</div>'
+                +'<div class="sec">Bedarfsanalyse</div>'
+                +['Nutzung','Ziel','Distanzen','Häufigkeit','E-Bike Erfahrung','Lagerung','Aufladen','Wichtig am Rad','Budget','3 Kaufkriterien'].map(function(l){return '<div class="f"><div class="fl">'+l+'</div><div class="fv"></div></div>'}).join('')
+                +'<div class="sec">Ergodaten</div>'
+                +['Sattelhöhe','Sattelversatz','Sattel-Lenker','Lenkerhöhe','Sitzknochen','Griffgrösse'].map(function(l){return '<div class="f" style="display:inline-block;width:30%;margin-right:3%"><div class="fl">'+l+'</div><div class="fv"></div></div>'}).join('')
+                +'<div class="sec">Gekauftes Rad</div><div class="f"><div class="fv" style="min-height:28px"></div></div>'
+                +'<div class="sec">Nach dem Kauf</div>'
+                +['Zubehörteile bestellt','Fahrrad bestellt / lagernd','Kiste gepackt','Leasing-Anfrage gestellt','Finanzierung: Unterlagen kopiert','Wertgarantie'].map(function(l){return '<div class="chk"><span class="box"></span> '+l+'</div>'}).join('')
+                +'<div class="ft">vit:bikes · Fahrradberatung</div>'
+                +'<div class="np" style="text-align:center;margin-top:20px"><button onclick="window.print()" style="padding:12px 40px;font-size:14px;font-weight:700;cursor:pointer;border:none;background:#f60;color:#fff;border-radius:8px">Drucken</button></div>'
+                +'</body></html>');
+            w.document.close();
+        }
+
+        // ── Interactive Sales Form (quick inline version) ──
+        function dfOpenSalesForm(id){
+            dfSelectedDeal._tab = 'gespraech';
+            dfRenderDetail();
+        }
+
+        // ── Insights Toggle ──
+        function dfToggleInsights(){
+            var p = document.getElementById('dfInsightsPanel');
+            if(!p) return;
+            p.classList.toggle('hidden');
+            var btn = document.getElementById('dfInsightsBtn');
+            if(btn) btn.classList.toggle('bg-blue-50');
+            if(!p.classList.contains('hidden')) dfRenderInsights();
+        }
+
+        function dfRenderInsights(){
+            var deals = dfGetFilteredDeals();
+            // Funnel
+            var fc = document.getElementById('dfFunnelContainer');
+            if(fc){
+                var counts={};DF_PIPELINE.forEach(function(s){counts[s]=deals.filter(function(d){return d.stage===s}).length});
+                var funnel=DF_PIPELINE.map(function(sid,i){
+                    var st=pipelineStages.find(function(s){return s.id===sid});
+                    var cnt=counts[sid];for(var j=i+1;j<DF_PIPELINE.length;j++)cnt+=counts[DF_PIPELINE[j]];
+                    return {id:sid,label:st.label,color:st.color,count:cnt,cur:counts[sid]};
+                });
+                var mx=Math.max.apply(null,funnel.map(function(f){return f.count}).concat([1]));
+                var fhtml='<div class="font-extrabold text-sm text-gray-800 mb-3">📊 Conversion Funnel</div>';
+                funnel.forEach(function(item,i){
+                    var w=Math.max(15,item.count/mx*100);
+                    var prev=i>0?funnel[i-1].count:null;
+                    var cr=prev?Math.round(item.count/prev*100):null;
+                    fhtml+='<div class="flex items-center gap-2.5 mb-1.5">'
+                        +'<div class="w-24 text-right text-[11px] font-bold text-gray-500">'+item.label+'</div>'
+                        +'<div class="flex-1"><div class="h-7 rounded-lg flex items-center justify-center transition-all" style="width:'+w+'%;background:linear-gradient(90deg,'+item.color+','+item.color+'88);min-width:40px"><span class="text-xs font-extrabold text-white">'+item.cur+'</span></div></div>'
+                        +(cr!==null?'<div class="w-12 text-[11px] font-bold '+(cr>=50?'text-green-500':cr>=25?'text-yellow-500':'text-red-500')+'">'+cr+'%</div>':'')
+                        +'</div>';
+                });
+                fc.innerHTML=fhtml;
+            }
+
+            // Badges
+            var bc = document.getElementById('dfBadgesContainer');
+            if(bc){
+                var s={
+                    sold:deals.filter(function(d){return d.stage==='verkauft'}).length,
+                    rev:deals.filter(function(d){return d.stage==='verkauft'}).reduce(function(a,d){return a+d.value},0),
+                    streak:dfStreak,total:deals.length,
+                    acts:deals.reduce(function(a,d){return a+(d.acts||[]).length},0)
+                };
+                var bhtml='<div class="font-extrabold text-sm text-gray-800 mb-3">🏅 Achievements</div><div class="flex gap-2 flex-wrap">';
+                DF_ACHIEVEMENTS.forEach(function(a){
+                    var ok=a.check(s)||dfUnlocked.indexOf(a.id)>=0;
+                    bhtml+='<div class="flex items-center gap-1.5 px-3 py-2 rounded-xl '+(ok?'bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-300':'bg-gray-50 border-gray-200')+' border transition-all" style="opacity:'+(ok?1:.45)+'" title="'+a.desc+'">'
+                        +'<span class="text-lg">'+(ok?a.icon:'🔒')+'</span>'
+                        +'<div><div class="text-[11px] font-bold '+(ok?'text-yellow-700':'text-gray-400')+'">'+a.label+'</div><div class="text-[9px] '+(ok?'text-yellow-500':'text-gray-300')+' font-mono">'+a.desc+'</div></div></div>';
+                });
+                bhtml+='</div>';
+                bc.innerHTML=bhtml;
+            }
+        }
+
+        // ── Automations Modal ──
+        function dfShowAutoModal(){
+            var el=document.getElementById('dfAutoModal');
+            el.classList.remove('hidden');
+            el.onclick=function(){el.classList.add('hidden')};
+            dfRenderAutoModal();
+        }
+        function dfRenderAutoModal(){
+            var el=document.getElementById('dfAutoModal');
+            var allStages=[{id:'*',label:'Beliebig'}].concat(pipelineStages);
+            var html='<div onclick="event.stopPropagation()" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-7 w-[600px] max-w-[94vw] max-h-[90vh] overflow-y-auto shadow-2xl" style="animation:pop .3s cubic-bezier(.34,1.56,.64,1)">'
+                +'<h2 class="text-xl font-extrabold mb-1">⚡ Automationen</h2>'
+                +'<p class="text-xs text-gray-400 mb-4">Regeln werden automatisch ausgefuehrt wenn ein Deal verschoben wird.</p>';
+
+            // Existing rules
+            html+='<div class="space-y-2 mb-5">';
+            DF_RULES.forEach(function(r,i){
+                var fromSt=allStages.find(function(s){return s.id===r.from});
+                var toSt=pipelineStages.find(function(s){return s.id===r.to});
+                html+='<div class="flex items-center gap-2.5 p-3 rounded-xl border '+(r.enabled?'border-blue-100 bg-white':'border-gray-100 bg-gray-50 opacity-50')+' transition-all">'
+                    +'<div onclick="DF_RULES['+i+'].enabled=!DF_RULES['+i+'].enabled;dfRenderAutoModal()" class="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 cursor-pointer" style="border:2px solid '+(r.enabled?'#38B2AC':'#CBD5E0')+';background:'+(r.enabled?'#38B2AC':'transparent')+'">'+(r.enabled?'<span style="color:#fff;font-size:10px;font-weight:900">✓</span>':'')+'</div>'
+                    +'<div class="flex-1">'
+                    +'<div class="flex items-center gap-1 flex-wrap text-xs font-bold text-gray-700">'
+                    +'<span class="bg-blue-50 text-blue-500 px-1.5 py-0.5 rounded text-[10px]">'+(fromSt?fromSt.label:'?')+'</span>'
+                    +'<span class="text-gray-300">→</span>'
+                    +'<span class="px-1.5 py-0.5 rounded text-[10px]" style="background:'+(toSt?toSt.bg:'#eee')+';color:'+(toSt?toSt.color:'#666')+'">'+(toSt?toSt.label:'?')+'</span>'
+                    +'<span class="text-gray-300">dann</span>'
+                    +'<span class="px-1.5 py-0.5 rounded text-[10px] '+(r.action==='todo'?'bg-yellow-50 text-yellow-700':'bg-green-50 text-green-600')+'">'+(r.action==='todo'?'☑️ Todo':'📋 Aktivität')+'</span>'
+                    +'</div>'
+                    +'<div class="text-[11px] text-gray-500 font-mono mt-1">"'+r.text+'"'+(r.action==='todo'&&r.days!==undefined?' (in '+r.days+'d fällig)':'')+'</div>'
+                    +'</div>'
+                    +'<div onclick="DF_RULES.splice('+i+',1);dfRenderAutoModal()" class="w-6 h-6 rounded bg-red-50 text-red-500 flex items-center justify-center cursor-pointer text-xs font-extrabold flex-shrink-0">×</div>'
+                    +'</div>';
+            });
+            html+='</div>';
+
+            // Add new rule
+            html+='<div class="bg-gray-50 rounded-xl p-4 mb-5">'
+                +'<div class="text-xs font-bold text-gray-500 mb-2">➕ Neue Regel</div>'
+                +'<div class="flex gap-2 flex-wrap items-center mb-2">'
+                +'<span class="text-xs font-bold text-gray-500">Wenn</span>'
+                +'<select id="dfRuleFrom" class="px-2 py-1.5 rounded-lg border border-gray-200 text-xs bg-white">'+allStages.map(function(s){return '<option value="'+s.id+'">'+s.label+'</option>'}).join('')+'</select>'
+                +'<span class="text-xs font-bold text-gray-500">→</span>'
+                +'<select id="dfRuleTo" class="px-2 py-1.5 rounded-lg border border-gray-200 text-xs bg-white">'+pipelineStages.map(function(s){return '<option value="'+s.id+'">'+s.label+'</option>'}).join('')+'</select>'
+                +'</div>'
+                +'<div class="flex gap-2 flex-wrap items-center mb-2">'
+                +'<span class="text-xs font-bold text-gray-500">Dann</span>'
+                +'<select id="dfRuleAction" class="px-2 py-1.5 rounded-lg border border-gray-200 text-xs bg-white"><option value="todo">☑️ Todo</option><option value="activity">📋 Aktivitaet</option></select>'
+                +'<select id="dfRuleDays" class="px-2 py-1.5 rounded-lg border border-gray-200 text-xs bg-white"><option value="0">Heute</option><option value="1">1 Tag</option><option value="3" selected>3 Tage</option><option value="7">1 Woche</option><option value="30">30 Tage</option></select>'
+                +'</div>'
+                +'<div class="flex gap-2">'
+                +'<input id="dfRuleText" class="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-xs outline-none" placeholder="Text der Aktion...">'
+                +'<button onclick="dfAddRule()" class="px-4 py-2 rounded-lg bg-blue-500 text-white font-bold text-xs">+</button>'
+                +'</div></div>';
+
+            html+='<div class="flex gap-3">'
+                +'<button onclick="document.getElementById(\'dfAutoModal\').classList.add(\'hidden\')" class="flex-1 py-2.5 rounded-xl border-2 border-gray-200 font-bold text-gray-500 text-sm">Schliessen</button>'
+                +'</div></div>';
+
+            el.innerHTML=html;
+        }
+        function dfAddRule(){
+            var text=(document.getElementById('dfRuleText')||{}).value;
+            if(!text||!text.trim())return;
+            DF_RULES.push({
+                id:'r'+Date.now(),
+                from:document.getElementById('dfRuleFrom').value,
+                to:document.getElementById('dfRuleTo').value,
+                action:document.getElementById('dfRuleAction').value,
+                text:text.trim(),
+                days:parseInt(document.getElementById('dfRuleDays').value)||0,
+                actType:'note',
+                enabled:true
+            });
+            document.getElementById('dfRuleText').value='';
+            dfRenderAutoModal();
+        }
+
+        // Init pipeline on first load
+        try { dfInitDemoDeals(); } catch(e){ console.warn('dfInit:', e); }
+
         function renderWeekView() {
+            var filter = document.getElementById('weekSellerFilter').value;
+            var sellers = filter === 'all' ? verkaufData.sellers : verkaufData.sellers.filter(function(s){return s.name === filter;});
+            var totalPlan = 0, totalGesamt = 0, totalVerkauft = 0, totalUmsatz = 0;
+            sellers.forEach(function(s) {
+                totalPlan += s.plan_soll;
+                s.daily.forEach(function(d) { totalGesamt += d.gesamt; totalVerkauft += d.verkauft; totalUmsatz += d.umsatz; });
+            });
+            document.getElementById('wkPlan').textContent = totalPlan;
+            document.getElementById('wkGesamt').textContent = totalGesamt;
+            document.getElementById('wkVerkauft').textContent = totalVerkauft;
+            document.getElementById('wkUmsatz').textContent = totalUmsatz.toLocaleString('de-DE') + ' \u20AC';
+            var quoteVal = totalGesamt > 0 ? Math.round((totalVerkauft/totalGesamt)*100) : 0;
+            var quoteEl = document.getElementById('wkQuote');
+            quoteEl.textContent = quoteVal + '%';
+            quoteEl.className = 'text-2xl font-bold ' + (quoteVal >= 70 ? 'text-green-600' : quoteVal >= 40 ? 'text-orange-600' : 'text-red-600');
+            var container = document.getElementById('weekSellerTables');
+            var html = '';
+            sellers.forEach(function(s) {
+                var sUmsatz = 0, sGesamt = 0, sVerkauft = 0;
+                s.daily.forEach(function(d) { sUmsatz += d.umsatz; sGesamt += d.gesamt; sVerkauft += d.verkauft; });
+                var sQuote = sGesamt > 0 ? Math.round((sVerkauft/sGesamt)*100) : 0;
+                html += '<div class="vit-card overflow-hidden">';
+                html += '<div class="flex items-center justify-between p-4 bg-gray-50 border-b">';
+                html += '<div class="flex items-center space-x-3"><div class="w-8 h-8 bg-vit-orange rounded-full flex items-center justify-center text-white font-bold text-sm">' + s.name.charAt(0) + '</div>';
+                html += '<div><p class="font-semibold text-gray-800">' + s.name + '</p><p class="text-xs text-gray-500">Plan: ' + s.plan_soll + ' Termine</p></div></div>';
+                html += '<div class="flex space-x-4 text-center">';
+                html += '<div><p class="text-xs text-gray-500">Beratungen</p><p class="font-bold text-blue-600">' + sGesamt + '</p></div>';
+                html += '<div><p class="text-xs text-gray-500">Verkauft</p><p class="font-bold text-green-600">' + sVerkauft + '</p></div>';
+                html += '<div><p class="text-xs text-gray-500">Umsatz</p><p class="font-bold text-vit-orange">' + sUmsatz.toLocaleString('de-DE') + ' \u20AC</p></div>';
+                html += '<div><p class="text-xs text-gray-500">Quote</p><p class="font-bold ' + (sQuote >= 70 ? 'text-green-600' : sQuote >= 40 ? 'text-orange-600' : 'text-red-600') + '">' + sQuote + '%</p></div>';
+                html += '</div></div>';
+                html += '<div class="overflow-x-auto"><table class="w-full text-sm">';
+                html += '<thead><tr class="bg-gray-50 text-xs"><th class="py-2 px-3 text-left text-gray-500">Tag</th><th class="py-2 px-3 text-center text-gray-500">Plan</th><th class="py-2 px-3 text-center text-blue-600">Geplant</th><th class="py-2 px-3 text-center text-purple-600">Spontan</th><th class="py-2 px-3 text-center text-cyan-600">Online</th><th class="py-2 px-3 text-center text-pink-600">Ergo</th><th class="py-2 px-3 text-center font-bold text-gray-700">Gesamt</th><th class="py-2 px-3 text-center text-green-600">Verkauft</th><th class="py-2 px-3 text-center text-gray-500">Uebergabe</th><th class="py-2 px-3 text-right text-vit-orange">Umsatz</th></tr></thead>';
+                html += '<tbody>';
+                s.daily.forEach(function(d) {
+                    var total = d.geplant + d.spontan + d.online + d.ergo;
+                    var hasData = d.plan > 0 || total > 0 || d.umsatz > 0;
+                    html += '<tr class="border-b ' + (hasData ? '' : 'text-gray-300') + '">';
+                    html += '<td class="py-2 px-3 font-semibold">' + d.day + '</td>';
+                    html += '<td class="py-2 px-3 text-center">' + (d.plan || '-') + '</td>';
+                    html += '<td class="py-2 px-3 text-center text-blue-600">' + (d.geplant || '-') + '</td>';
+                    html += '<td class="py-2 px-3 text-center text-purple-600">' + (d.spontan || '-') + '</td>';
+                    html += '<td class="py-2 px-3 text-center text-cyan-600">' + (d.online || '-') + '</td>';
+                    html += '<td class="py-2 px-3 text-center text-pink-600">' + (d.ergo || '-') + '</td>';
+                    html += '<td class="py-2 px-3 text-center font-bold">' + (total || '-') + '</td>';
+                    html += '<td class="py-2 px-3 text-center text-green-600 font-bold">' + (d.verkauft || '-') + '</td>';
+                    html += '<td class="py-2 px-3 text-center">' + (d.uebergabe || '-') + '</td>';
+                    html += '<td class="py-2 px-3 text-right font-semibold ' + (d.umsatz > 0 ? 'text-vit-orange' : '') + '">' + (d.umsatz > 0 ? d.umsatz.toLocaleString('de-DE') + ' \u20AC' : '-') + '</td>';
+                    html += '</tr>';
+                });
+                html += '</tbody></table></div></div>';
+            });
+            container.innerHTML = html;
+        }
             var filter = document.getElementById('weekSellerFilter').value;
             var sellers = filter === 'all' ? verkaufData.sellers : verkaufData.sellers.filter(function(s){return s.name === filter;});
             
@@ -6491,100 +7340,7 @@
             container.innerHTML = html;
         }
 
-        function renderPipeline() {
-            var filter = document.getElementById('pipelineFilter').value;
-            var leads = filter === 'all' ? verkaufData.pipeline : verkaufData.pipeline.filter(function(l){return l.seller === filter;});
-            var board = document.getElementById('kanbanBoard');
-            var html = '';
-
-            pipelineStages.forEach(function(stage) {
-                var stageLeads = leads.filter(function(l){return l.stage === stage.id;});
-                var stageValue = 0;
-                stageLeads.forEach(function(l){stageValue += l.value;});
-
-                html += '<div class="min-w-[220px] flex-shrink-0">';
-                html += '<div class="mb-3 flex items-center justify-between">';
-                html += '<h3 class="font-semibold text-gray-700 text-sm">' + stage.label + '</h3>';
-                html += '<span class="text-xs font-bold bg-gray-200 text-gray-600 rounded-full px-2 py-0.5">' + stageLeads.length + '</span>';
-                html += '</div>';
-                html += '<div class="space-y-2 min-h-[100px] p-2 rounded-lg border-2 border-dashed ' + stage.color + '">';
-
-                stageLeads.forEach(function(lead) {
-                    html += '<div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition">';
-                    html += '<div class="flex items-center justify-between mb-1"><p class="font-semibold text-gray-800 text-sm">' + lead.name + '</p></div>';
-                    html += '<p class="text-xs text-gray-500">' + lead.type + '</p>';
-                    html += '<div class="flex items-center justify-between mt-2">';
-                    html += '<span class="text-xs text-gray-400">' + lead.seller + ' · ' + lead.date + '</span>';
-                    html += '<span class="text-sm font-bold text-vit-orange">' + lead.value.toLocaleString('de-DE') + ' \u20AC</span>';
-                    html += '</div>';
-                    // Stage move buttons
-                    var stageIdx = -1;
-                    for(var si=0;si<pipelineStages.length;si++){if(pipelineStages[si].id===lead.stage)stageIdx=si;}
-                    html += '<div class="flex space-x-1 mt-2">';
-                    if(stageIdx > 0) html += '<button onclick="moveLead('+lead.id+',\'' + pipelineStages[stageIdx-1].id + '\')" class="flex-1 text-xs py-1 bg-gray-100 rounded hover:bg-gray-200">&#9664;</button>';
-                    if(stageIdx < pipelineStages.length-1) html += '<button onclick="moveLead('+lead.id+',\'' + pipelineStages[stageIdx+1].id + '\')" class="flex-1 text-xs py-1 bg-gray-100 rounded hover:bg-gray-200">&#9654;</button>';
-                    html += '</div>';
-                    html += '</div>';
-                });
-
-                if(stageLeads.length > 0) {
-                    html += '<div class="text-center text-xs text-gray-400 mt-2 pt-2 border-t border-gray-200">' + stageValue.toLocaleString('de-DE') + ' \u20AC</div>';
-                }
-                html += '</div></div>';
-            });
-            board.innerHTML = html;
-        }
-
-        function moveLead(id, newStage) {
-            for(var i=0; i<verkaufData.pipeline.length; i++) {
-                if(verkaufData.pipeline[i].id === id) {
-                    verkaufData.pipeline[i].stage = newStage;
-                    break;
-                }
-            }
-            renderPipeline();
-        }
-
-        function showNewLeadModal() {
-            document.getElementById('newLeadModal').classList.remove('hidden');
-        }
-
-        async function addNewLead() {
-            var nameVal = document.getElementById('leadName').value || 'Neuer Kunde';
-            var type = document.getElementById('leadType').value;
-            var value = parseInt(document.getElementById('leadValue').value) || 3000;
-            var notes = document.getElementById('leadNotes') ? document.getElementById('leadNotes').value : '';
-
-            if(!sbUser) { alert('Nicht eingeloggt.'); return; }
-
-            var nameParts = nameVal.trim().split(' ');
-            var vorname = nameParts[0] || nameVal;
-            var nachname = nameParts.slice(1).join(' ') || '';
-
-            try {
-                var resp = await sb.from('leads').insert({
-                    standort_id: sbProfile.standort_id,
-                    erstellt_von: sbUser.id,
-                    vorname: vorname,
-                    nachname: nachname,
-                    interesse: type,
-                    geschaetzter_wert: value,
-                    notizen: notes,
-                    status: 'neu',
-                    quelle: 'walk_in',
-                    prioritaet: 'mittel'
-                });
-                if(resp.error) throw resp.error;
-
-                document.getElementById('newLeadModal').classList.add('hidden');
-                document.getElementById('leadName').value = '';
-                document.getElementById('leadValue').value = '';
-                if(document.getElementById('leadNotes')) document.getElementById('leadNotes').value = '';
-                await loadPipelineFromSupabase();
-            } catch(err) {
-                alert('Fehler: ' + err.message);
-            }
-        }
+        // Old pipeline functions removed - replaced by Deal Flow system above
 
         function renderJahresTabelle() {
             var tbody = document.getElementById('jahresTabelle');
