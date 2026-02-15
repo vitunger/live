@@ -646,8 +646,8 @@
                     <!-- Header mit Willkommen + Dashboard anpassen -->
                     <div class="flex items-center justify-between mb-6">
                         <div>
-                            <h1 class="h1-headline text-gray-800"><span data-i18n="welcome">Willkommen zurück, Max!</span> 👋</h1>
-                            <p class="text-gray-600">Heute ist Freitag, 14. Februar 2026</p>
+                            <h1 class="h1-headline text-gray-800"><span id="welcomeText" data-i18n="welcome">Willkommen zurück!</span> 👋</h1>
+                            <p class="text-gray-600" id="welcomeDate"></p>
                         </div>
                         <button onclick="toggleDashboardEdit()" class="flex items-center space-x-2 px-4 py-2 border-2 border-gray-300 rounded-lg hover:border-vit-orange hover:text-vit-orange transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4385,7 +4385,7 @@
                     <div class="flex items-center justify-between mb-6">
                         <div>
                             <h1 class="h1-headline text-gray-800">NETZWERK-COCKPIT 👋</h1>
-                            <p class="text-sm text-gray-500">Willkommen zurueck · Heute ist Samstag, 14. Februar 2026</p>
+                            <p class="text-sm text-gray-500" id="hqWelcomeDate">Willkommen zurueck</p>
                         </div>
                         <div class="flex items-center space-x-3">
                             <span class="text-xs text-gray-400">Stand: 14.02.2026</span>
@@ -5471,10 +5471,26 @@
 
         function enterApp() {
             var userName = sbProfile ? sbProfile.name : 'Benutzer';
+            var firstName = userName.split(' ')[0];
             var nameEl = document.querySelector('[data-user-name]');
             if(nameEl) nameEl.textContent = userName;
             var avatarEl = document.querySelector('.topnav-desktop img.rounded-full');
             if(avatarEl) avatarEl.src = 'https://ui-avatars.com/api/?name='+encodeURIComponent(userName)+'&background=EF7D00&color=fff';
+            // Dynamic welcome text
+            var welcomeEl = document.getElementById('welcomeText');
+            if(welcomeEl) {
+                var tpl = welcomeEl.textContent || 'Willkommen zurück, {name}!';
+                welcomeEl.textContent = tpl.replace('{name}', firstName).replace('Max', firstName);
+            }
+            // Dynamic date
+            var dateEl = document.getElementById('welcomeDate');
+            var now = new Date();
+            var days = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+            var months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+            var dateStr = 'Heute ist ' + days[now.getDay()] + ', ' + now.getDate() + '. ' + months[now.getMonth()] + ' ' + now.getFullYear();
+            if(dateEl) dateEl.textContent = dateStr;
+            var hqDateEl = document.getElementById('hqWelcomeDate');
+            if(hqDateEl) hqDateEl.textContent = 'Willkommen zurueck · ' + dateStr;
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             try { updateUIForRole(); updatePremiumFeatures(); } catch(e) { console.warn(e); }
@@ -12689,7 +12705,7 @@
                 // Headlines
                 h_marketing:'MARKETING', h_sales:'VERKAUF', h_dashboards:'DASHBOARDS',
                 h_leadreporting:'LEAD REPORTING',
-                welcome:'Willkommen zurück, Max!',
+                welcome:'Willkommen zurück, {name}!',
                 // Dashboard
                 dash_consultations:'Beratungen heute', dash_openoffers:'Offene Angebote',
                 dash_opentickets:'Tickets offen',
@@ -12834,7 +12850,7 @@
                 nav_hq_finance:'Finance', nav_hq_actions:'Action Required', nav_hq_command:'Command Center', nav_hq_comm:'Communication', nav_hq_campaigns:'Campaigns', nav_hq_docs:'Documents', nav_hq_calendar:'Calendar', nav_hq_tasks:'Tasks', nav_hq_analytics:'Portal Usage', nav_calendar:'Calendar', nav_todo:'Tasks',
                 h_marketing:'MARKETING', h_sales:'SALES', h_dashboards:'DASHBOARDS',
                 h_leadreporting:'LEAD REPORTING',
-                welcome:'Welcome back, Max!',
+                welcome:'Welcome back, {name}!',
                 dash_consultations:'Consultations today', dash_openoffers:'Open offers',
                 dash_opentickets:'Open tickets',
                 tab_campaigns:'Campaigns', tab_socialmedia:'Social Media',
@@ -12970,7 +12986,7 @@
                 h_support:'ONDERSTEUNING', h_ideaboard:'IDEE\u00cbNBORD', h_communication:'COMMUNICATIE',
                 h_forum:'FORUM', h_chat:'CHAT', h_calendar:'AGENDA', h_todos:'TAKEN', h_onboarding:'ONBOARDING',
                 nav_knowledge:'Kennis', nav_shop:'Promotieshop',
-                welcome:'Welkom terug, Max!',
+                welcome:'Welkom terug, {name}!',
                 dash_consultations:'Adviezen vandaag', dash_openoffers:'Openstaande offertes',
                 dash_opentickets:'Open tickets',
                 tab_campaigns:'Campagnes', tab_socialmedia:'Social Media',
