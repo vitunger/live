@@ -7845,6 +7845,7 @@
             if(!container) return;
             try {
                 var stdId = sbProfile ? sbProfile.standort_id : null;
+                console.log('[BWA] loadBwaList() stdId:', stdId, 'is_hq:', sbProfile ? sbProfile.is_hq : 'no profile');
                 var query = sb.from('bwa_daten').select('id,monat,jahr,umsatzerloese,rohertrag,ergebnis_vor_steuern,datei_name,created_at').order('jahr', {ascending:false}).order('monat', {ascending:false});
                 if(stdId && !sbProfile.is_hq) query = query.eq('standort_id', stdId);
                 var resp = await query;
@@ -8479,6 +8480,7 @@
                 if(fileName) { data.datei_name = fileName; }
 
                 var resp = await sb.from('bwa_daten').upsert(data, {onConflict:'standort_id,monat,jahr'}).select();
+                console.log('[BWA] upsert response:', resp);
                 if(resp.error) throw resp.error;
                 var bwaId = resp.data && resp.data[0] ? resp.data[0].id : null;
 
@@ -14650,6 +14652,14 @@
                 console.log('SUCCESS: Showed', viewId, '- offsetHeight:', viewEl.offsetHeight);
                 if(viewName === 'dashboards') initDashboardTabs();
                 if(viewName === 'hqModulStatus') renderModulStatus();
+                if(viewName === 'controlling') { try { loadBwaList(); } catch(e){} }
+                if(viewName === 'support') { try { renderTickets(); } catch(e){} }
+                if(viewName === 'ideenboard') { try { renderIdeen(); } catch(e){} }
+                if(viewName === 'todo') { try { loadTodos(); } catch(e){} }
+                if(viewName === 'kalender') { try { loadKalTermine().then(function(){renderKalender();}); } catch(e){} }
+                if(viewName === 'kommunikation') { try { renderBrett(); } catch(e){} }
+                if(viewName === 'aktenschrank') { try { loadAktenFiles(); } catch(e){} }
+                if(viewName === 'shop') { try { renderShop(); } catch(e){} }
             } else {
                 console.error('FAILED: View not found:', viewId);
             }
