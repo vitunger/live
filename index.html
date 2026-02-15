@@ -2116,316 +2116,16 @@
                         </div>
                     </div>
 
-                    <!-- ===== TAB 3: Plan / Ist ===== -->
-                    <!-- ===== TAB 3: Plan / Ist ===== -->
+                    <!-- ===== TAB 3: Plan / Ist (dynamisch) ===== -->
                     <div id="ctrlTabPlanist" class="ctrl-tab-content" style="display:none;">
-                        <!-- KPI Summary -->
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Umsatz Plan Jan</p><p class="text-2xl font-bold text-gray-800">30.770 €</p></div>
-                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Umsatz Ist Jan</p><p class="text-2xl font-bold text-green-600">54.938 €</p><p class="text-xs text-green-600">+79% vs. Plan</p></div>
-                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Ergebnis Plan</p><p class="text-2xl font-bold text-red-500">-7.006 €</p></div>
-                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Ergebnis Ist</p><p class="text-2xl font-bold text-red-500">-4.485 €</p><p class="text-xs text-green-600">+2.521 € besser</p></div>
-                        </div>
-
-                        <!-- Full BWA Plan vs Ist Table -->
-                        <div class="vit-card p-6 mb-6">
-                            <div class="flex items-center justify-between mb-4">
-                                <h2 class="text-lg font-semibold text-gray-800">Plan / Ist BWA – Januar 2026</h2>
-                                <select class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm">
-                                    <option selected>Januar 2026</option>
-                                    <option disabled>Februar 2026 (ausstehend)</option>
-                                </select>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-sm">
-                                    <thead>
-                                        <tr class="bg-gray-50">
-                                            <th class="text-left py-2.5 px-3 font-semibold text-gray-600 w-1/4">Position</th>
-                                            <th class="text-right py-2.5 px-3 font-semibold text-blue-600">Plan</th>
-                                            <th class="text-right py-2.5 px-3 font-semibold text-vit-orange">Ist (BWA)</th>
-                                            <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Abweichung</th>
-                                            <th class="text-right py-2.5 px-3 font-semibold text-gray-600">%</th>
-                                            <th class="text-right py-2.5 px-3 font-semibold text-gray-400">VJ 2025</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Umsatz Block -->
-                                        <tr class="border-b">
-                                            <td class="py-2.5 px-3 font-bold text-gray-800">Umsatzerloese</td>
-                                            <td class="text-right py-2.5 px-3 text-blue-600">30.770</td>
-                                            <td class="text-right py-2.5 px-3 font-bold text-vit-orange">54.938</td>
-                                            <td class="text-right py-2.5 px-3 text-green-600 font-semibold">+24.168</td>
-                                            <td class="text-right py-2.5 px-3 text-green-600">179%</td>
-                                            <td class="text-right py-2.5 px-3 text-gray-400">40.187</td>
-                                        </tr>
-                                        <tr class="border-b">
-                                            <td class="py-2 px-3 pl-6 text-gray-500 text-xs">davon Fahrraeder 19%</td>
-                                            <td class="text-right py-2 px-3 text-gray-400 text-xs">—</td>
-                                            <td class="text-right py-2 px-3 text-xs">47.380</td>
-                                            <td class="text-right py-2 px-3 text-xs text-gray-400">—</td>
-                                            <td class="text-right py-2 px-3 text-xs text-gray-400">—</td>
-                                            <td class="text-right py-2 px-3 text-gray-300 text-xs">—</td>
-                                        </tr>
-                                        <tr class="border-b">
-                                            <td class="py-2 px-3 pl-6 text-gray-500 text-xs">davon Teile &amp; Zubehoer</td>
-                                            <td class="text-right py-2 px-3 text-gray-400 text-xs">—</td>
-                                            <td class="text-right py-2 px-3 text-xs">6.052</td>
-                                            <td class="text-right py-2 px-3 text-xs text-gray-400">—</td>
-                                            <td class="text-right py-2 px-3 text-xs text-gray-400">—</td>
-                                            <td class="text-right py-2 px-3 text-gray-300 text-xs">—</td>
-                                        </tr>
-                                        <tr class="border-b">
-                                            <td class="py-2 px-3 pl-6 text-gray-500 text-xs">davon Service / Reparatur</td>
-                                            <td class="text-right py-2 px-3 text-gray-400 text-xs">—</td>
-                                            <td class="text-right py-2 px-3 text-xs">3.534</td>
-                                            <td class="text-right py-2 px-3 text-xs text-gray-400">—</td>
-                                            <td class="text-right py-2 px-3 text-xs text-gray-400">—</td>
-                                            <td class="text-right py-2 px-3 text-gray-300 text-xs">—</td>
-                                        </tr>
-                                        <tr class="border-b">
-                                            <td class="py-2 px-3 pl-6 text-gray-500 text-xs">davon Skonti</td>
-                                            <td class="text-right py-2 px-3 text-gray-400 text-xs">—</td>
-                                            <td class="text-right py-2 px-3 text-xs text-red-400">-2.028</td>
-                                            <td class="text-right py-2 px-3 text-xs text-gray-400">—</td>
-                                            <td class="text-right py-2 px-3 text-xs text-gray-400">—</td>
-                                            <td class="text-right py-2 px-3 text-gray-300 text-xs">—</td>
-                                        </tr>
-
-                                        <!-- Wareneinsatz -->
-                                        <tr class="border-b bg-gray-50">
-                                            <td class="py-2.5 px-3 font-bold text-gray-800">Material-/Wareneinsatz</td>
-                                            <td class="text-right py-2.5 px-3 text-blue-600">-18.645</td>
-                                            <td class="text-right py-2.5 px-3 font-bold text-red-600">-33.580</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600 font-semibold">-14.935</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">180%</td>
-                                            <td class="text-right py-2.5 px-3 text-gray-400">-25.203</td>
-                                        </tr>
-
-                                        <!-- Rohertrag -->
-                                        <tr class="border-b-2 border-gray-800 bg-blue-50">
-                                            <td class="py-3 px-3 font-bold text-blue-800 text-base">Rohertrag</td>
-                                            <td class="text-right py-3 px-3 font-bold text-blue-600">12.125</td>
-                                            <td class="text-right py-3 px-3 font-bold text-blue-800 text-base">21.357</td>
-                                            <td class="text-right py-3 px-3 text-green-600 font-bold">+9.232</td>
-                                            <td class="text-right py-3 px-3 text-green-600 font-bold">176%</td>
-                                            <td class="text-right py-3 px-3 text-gray-500 font-semibold">14.984</td>
-                                        </tr>
-                                        <tr class="border-b">
-                                            <td class="py-2 px-3 pl-6 text-gray-500 text-xs">Rohertragsmarge</td>
-                                            <td class="text-right py-2 px-3 text-blue-500 text-xs">39.4%</td>
-                                            <td class="text-right py-2 px-3 text-xs font-semibold">38.9%</td>
-                                            <td class="text-right py-2 px-3 text-xs text-red-500">-0.5 Pp</td>
-                                            <td class="text-right py-2 px-3 text-xs text-gray-400">—</td>
-                                            <td class="text-right py-2 px-3 text-gray-300 text-xs">37.3%</td>
-                                        </tr>
-
-                                        <!-- So. betr. Erlöse -->
-                                        <tr class="border-b">
-                                            <td class="py-2 px-3 text-gray-600">So. betr. Erloese</td>
-                                            <td class="text-right py-2 px-3 text-blue-500">0</td>
-                                            <td class="text-right py-2 px-3">50</td>
-                                            <td class="text-right py-2 px-3 text-green-600">+50</td>
-                                            <td class="text-right py-2 px-3 text-gray-400">—</td>
-                                            <td class="text-right py-2 px-3 text-gray-400">0</td>
-                                        </tr>
-
-                                        <!-- Kostenarten Header -->
-                                        <tr class="bg-gray-100"><td colspan="6" class="py-2 px-3 font-semibold text-gray-500 text-xs uppercase tracking-wider">Kostenarten</td></tr>
-
-                                        <!-- Personalkosten -->
-                                        <tr class="border-b">
-                                            <td class="py-2.5 px-3 font-semibold text-gray-800">Personalkosten</td>
-                                            <td class="text-right py-2.5 px-3 text-blue-600">-12.202</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">-13.485</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600 font-semibold">-1.283</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">111%</td>
-                                            <td class="text-right py-2.5 px-3 text-gray-400">-6.845</td>
-                                        </tr>
-                                        <tr class="border-b">
-                                            <td class="py-2 px-3 pl-6 text-gray-500 text-xs">davon Gehaelter</td>
-                                            <td class="text-right py-2 px-3 text-gray-400 text-xs">-5.474</td>
-                                            <td class="text-right py-2 px-3 text-xs">-6.234</td>
-                                            <td class="text-right py-2 px-3 text-xs text-red-500">-760</td>
-                                            <td class="text-right py-2 px-3 text-xs text-gray-400">—</td>
-                                            <td class="text-right py-2 px-3 text-gray-300 text-xs">—</td>
-                                        </tr>
-                                        <tr class="border-b">
-                                            <td class="py-2 px-3 pl-6 text-gray-500 text-xs">davon GF-Gehalt</td>
-                                            <td class="text-right py-2 px-3 text-gray-400 text-xs">-5.000</td>
-                                            <td class="text-right py-2 px-3 text-xs">-5.500</td>
-                                            <td class="text-right py-2 px-3 text-xs text-red-500">-500</td>
-                                            <td class="text-right py-2 px-3 text-xs text-gray-400">—</td>
-                                            <td class="text-right py-2 px-3 text-gray-300 text-xs">—</td>
-                                        </tr>
-                                        <tr class="border-b">
-                                            <td class="py-2 px-3 pl-6 text-gray-500 text-xs">davon Sozialaufwand</td>
-                                            <td class="text-right py-2 px-3 text-gray-400 text-xs">-1.204</td>
-                                            <td class="text-right py-2 px-3 text-xs">-1.606</td>
-                                            <td class="text-right py-2 px-3 text-xs text-red-500">-402</td>
-                                            <td class="text-right py-2 px-3 text-xs text-gray-400">—</td>
-                                            <td class="text-right py-2 px-3 text-gray-300 text-xs">—</td>
-                                        </tr>
-
-                                        <!-- Raumkosten -->
-                                        <tr class="border-b">
-                                            <td class="py-2.5 px-3 font-semibold text-gray-800">Raumkosten</td>
-                                            <td class="text-right py-2.5 px-3 text-blue-600">-4.195</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">-4.150</td>
-                                            <td class="text-right py-2.5 px-3 text-green-600">+45</td>
-                                            <td class="text-right py-2.5 px-3 text-green-600">99%</td>
-                                            <td class="text-right py-2.5 px-3 text-gray-400">-4.195</td>
-                                        </tr>
-
-                                        <!-- Versicherungen -->
-                                        <tr class="border-b">
-                                            <td class="py-2.5 px-3 font-semibold text-gray-800">Versicherungen / Beitraege</td>
-                                            <td class="text-right py-2.5 px-3 text-blue-600">-638</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">-657</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">-19</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">103%</td>
-                                            <td class="text-right py-2.5 px-3 text-gray-400">-340</td>
-                                        </tr>
-
-                                        <!-- Fahrzeugkosten -->
-                                        <tr class="border-b">
-                                            <td class="py-2.5 px-3 font-semibold text-gray-800">Fahrzeugkosten</td>
-                                            <td class="text-right py-2.5 px-3 text-blue-600">-401</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">-525</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">-124</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">131%</td>
-                                            <td class="text-right py-2.5 px-3 text-gray-400">-401</td>
-                                        </tr>
-
-                                        <!-- Werbe-/Reisekosten -->
-                                        <tr class="border-b">
-                                            <td class="py-2.5 px-3 font-semibold text-gray-800">Werbe- / Reisekosten</td>
-                                            <td class="text-right py-2.5 px-3 text-blue-600">-635</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">-2.039</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600 font-semibold">-1.404</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600 font-semibold">321%</td>
-                                            <td class="text-right py-2.5 px-3 text-gray-400">-3.162</td>
-                                        </tr>
-
-                                        <!-- Kosten Warenabgabe -->
-                                        <tr class="border-b">
-                                            <td class="py-2.5 px-3 font-semibold text-gray-800">Kosten Warenabgabe</td>
-                                            <td class="text-right py-2.5 px-3 text-blue-600">-615</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">-1.605</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600 font-semibold">-990</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">261%</td>
-                                            <td class="text-right py-2.5 px-3 text-gray-400">-804</td>
-                                        </tr>
-
-                                        <!-- Abschreibungen -->
-                                        <tr class="border-b">
-                                            <td class="py-2.5 px-3 font-semibold text-gray-800">Abschreibungen</td>
-                                            <td class="text-right py-2.5 px-3 text-blue-600">-1.522</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">-1.567</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">-45</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">103%</td>
-                                            <td class="text-right py-2.5 px-3 text-gray-400">-1.522</td>
-                                        </tr>
-
-                                        <!-- Reparatur/Instandhaltung -->
-                                        <tr class="border-b">
-                                            <td class="py-2.5 px-3 font-semibold text-gray-800">Reparatur / Instandhaltung</td>
-                                            <td class="text-right py-2.5 px-3 text-blue-600">0</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">-1.254</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600 font-semibold">-1.254</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">—</td>
-                                            <td class="text-right py-2.5 px-3 text-gray-400">-1.325</td>
-                                        </tr>
-
-                                        <!-- Sonstige Kosten -->
-                                        <tr class="border-b">
-                                            <td class="py-2.5 px-3 font-semibold text-gray-800">Sonstige Kosten</td>
-                                            <td class="text-right py-2.5 px-3 text-blue-600">-2.473</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">-61</td>
-                                            <td class="text-right py-2.5 px-3 text-green-600 font-semibold">+2.412</td>
-                                            <td class="text-right py-2.5 px-3 text-green-600">2%</td>
-                                            <td class="text-right py-2.5 px-3 text-gray-400">-2.473</td>
-                                        </tr>
-
-                                        <!-- Gesamtkosten -->
-                                        <tr class="bg-gray-100 border-t-2">
-                                            <td class="py-3 px-3 font-bold text-gray-800">Gesamtkosten</td>
-                                            <td class="text-right py-3 px-3 font-bold text-blue-600">-21.067</td>
-                                            <td class="text-right py-3 px-3 font-bold text-red-600">-25.342</td>
-                                            <td class="text-right py-3 px-3 text-red-600 font-bold">-4.275</td>
-                                            <td class="text-right py-3 px-3 text-red-600 font-bold">120%</td>
-                                            <td class="text-right py-3 px-3 text-gray-500 font-semibold">-21.067</td>
-                                        </tr>
-
-                                        <tr><td colspan="6" class="py-1"></td></tr>
-
-                                        <!-- Betriebsergebnis -->
-                                        <tr class="border-b-2 border-gray-600 bg-yellow-50">
-                                            <td class="py-3 px-3 font-bold text-gray-800 text-base">Betriebsergebnis</td>
-                                            <td class="text-right py-3 px-3 font-bold text-blue-600">-6.083</td>
-                                            <td class="text-right py-3 px-3 font-bold text-red-600 text-base">-3.935</td>
-                                            <td class="text-right py-3 px-3 text-green-600 font-bold">+2.148</td>
-                                            <td class="text-right py-3 px-3 text-green-600 font-bold">—</td>
-                                            <td class="text-right py-3 px-3 text-gray-500 font-semibold">-6.083</td>
-                                        </tr>
-
-                                        <!-- Zinsen -->
-                                        <tr class="border-b">
-                                            <td class="py-2.5 px-3 font-semibold text-gray-800">Zinsaufwand</td>
-                                            <td class="text-right py-2.5 px-3 text-blue-600">-1.151</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">-550</td>
-                                            <td class="text-right py-2.5 px-3 text-green-600">+601</td>
-                                            <td class="text-right py-2.5 px-3 text-green-600">48%</td>
-                                            <td class="text-right py-2.5 px-3 text-gray-400">-1.151</td>
-                                        </tr>
-                                        <tr class="border-b">
-                                            <td class="py-2.5 px-3 text-gray-600">Neutraler Ertrag</td>
-                                            <td class="text-right py-2.5 px-3 text-blue-600">+229</td>
-                                            <td class="text-right py-2.5 px-3">0</td>
-                                            <td class="text-right py-2.5 px-3 text-red-600">-229</td>
-                                            <td class="text-right py-2.5 px-3 text-gray-400">—</td>
-                                            <td class="text-right py-2.5 px-3 text-gray-400">+229</td>
-                                        </tr>
-
-                                        <!-- Vorsteuerergebnis -->
-                                        <tr class="bg-red-50 border-t-2 border-gray-800">
-                                            <td class="py-3 px-3 font-bold text-red-800 text-base">Ergebnis vor Steuern</td>
-                                            <td class="text-right py-3 px-3 font-bold text-blue-700">-7.006</td>
-                                            <td class="text-right py-3 px-3 font-bold text-red-800 text-base">-4.485</td>
-                                            <td class="text-right py-3 px-3 text-green-600 font-bold text-base">+2.521</td>
-                                            <td class="text-right py-3 px-3 text-green-600 font-bold">—</td>
-                                            <td class="text-right py-3 px-3 text-gray-500 font-semibold">-7.006</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- Monthly Umsatz Plan Overview -->
-                        <div class="vit-card p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Umsatz-Plan 2026 (monatlich)</h2>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-sm">
-                                    <thead><tr class="bg-gray-50"><th class="text-left py-2.5 px-3 font-semibold text-gray-600">Monat</th><th class="text-right py-2.5 px-3 font-semibold text-blue-600">Plan</th><th class="text-right py-2.5 px-3 font-semibold text-vit-orange">Ist</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Abweichung</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Erfuellung</th><th class="text-center py-2.5 px-3 font-semibold text-gray-600">Status</th></tr></thead>
-                                    <tbody>
-                                        <tr class="border-b bg-green-50 border-l-4 border-green-400"><td class="py-2.5 px-3 font-semibold">Januar</td><td class="text-right py-2.5 px-3 text-blue-600">30.770</td><td class="text-right py-2.5 px-3 font-bold text-vit-orange">54.938</td><td class="text-right py-2.5 px-3 text-green-600 font-semibold">+24.168</td><td class="text-right py-2.5 px-3 text-green-600 font-bold">179%</td><td class="text-center">🟢</td></tr>
-                                        <tr class="border-b text-gray-400"><td class="py-2.5 px-3">Februar</td><td class="text-right py-2.5 px-3">98.392</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-center">⏳</td></tr>
-                                        <tr class="border-b text-gray-400"><td class="py-2.5 px-3">Maerz</td><td class="text-right py-2.5 px-3">102.787</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-center">⏳</td></tr>
-                                        <tr class="border-b text-gray-400"><td class="py-2.5 px-3">April</td><td class="text-right py-2.5 px-3">144.138</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-center">⏳</td></tr>
-                                        <tr class="border-b text-gray-400"><td class="py-2.5 px-3">Mai</td><td class="text-right py-2.5 px-3">174.146</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-center">⏳</td></tr>
-                                        <tr class="border-b text-gray-400"><td class="py-2.5 px-3">Juni</td><td class="text-right py-2.5 px-3">136.055</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-center">⏳</td></tr>
-                                        <tr class="border-b text-gray-400"><td class="py-2.5 px-3">Juli</td><td class="text-right py-2.5 px-3">173.743</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-center">⏳</td></tr>
-                                        <tr class="border-b text-gray-400"><td class="py-2.5 px-3">August</td><td class="text-right py-2.5 px-3">57.120</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-center">⏳</td></tr>
-                                        <tr class="border-b text-gray-400"><td class="py-2.5 px-3">September</td><td class="text-right py-2.5 px-3">38.214</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-center">⏳</td></tr>
-                                        <tr class="border-b text-gray-400"><td class="py-2.5 px-3">Oktober</td><td class="text-right py-2.5 px-3">80.711</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-center">⏳</td></tr>
-                                        <tr class="border-b text-gray-400"><td class="py-2.5 px-3">November</td><td class="text-right py-2.5 px-3">41.252</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-center">⏳</td></tr>
-                                        <tr class="border-b text-gray-400"><td class="py-2.5 px-3">Dezember</td><td class="text-right py-2.5 px-3">25.110</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-center">⏳</td></tr>
-                                        <tr class="bg-gray-100 border-t-2"><td class="py-3 px-3 font-bold">GESAMT 2026</td><td class="text-right py-3 px-3 font-bold text-blue-600">1.102.438</td><td class="text-right py-3 px-3 font-bold text-vit-orange">54.938</td><td class="text-right py-3 px-3 font-bold text-green-600">+24.168</td><td class="text-right py-3 px-3 font-bold">5%</td><td class="text-center">📊</td></tr>
-                                    </tbody>
-                                </table>
+                        <div id="planIstContent">
+                            <!-- Filled dynamically by renderPlanIst() -->
+                            <div class="text-center py-12 text-gray-400">
+                                <div class="w-8 h-8 border-2 border-vit-orange border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                                <p class="text-sm">Lade Plan-Daten...</p>
                             </div>
                         </div>
                     </div>
-
 
                     <!-- ===== TAB 4: Liquiditaet ===== -->
                     <div id="ctrlTabLiquiditaet" class="ctrl-tab-content" style="display:none;">
@@ -8008,6 +7708,359 @@
             }
         }
 
+        // === PLAN / IST SYSTEM ===
+        var currentPlan = null; // { jahr, monate: [{monat, umsatz, wareneinsatz, personal, raum, werbe, abschreibung, sonstige, zins, ...}] }
+        var planIstYear = new Date().getFullYear();
+
+        async function renderPlanIst() {
+            var el = document.getElementById('planIstContent');
+            if(!el) return;
+
+            // Try load plan from DB
+            try {
+                var stdId = sbProfile ? sbProfile.standort_id : null;
+                var resp = await sb.from('jahresplaene').select('*').eq('jahr', planIstYear).eq('standort_id', stdId).single();
+                if(!resp.error && resp.data) {
+                    currentPlan = resp.data;
+                }
+            } catch(e) { /* no plan yet */ }
+
+            if(!currentPlan || !currentPlan.plan_daten) {
+                renderPlanUploadScreen(el);
+            } else {
+                await renderPlanVergleich(el);
+            }
+        }
+
+        function renderPlanUploadScreen(el) {
+            var h = '';
+            h += '<div class="text-center py-8">';
+            h += '<div class="max-w-lg mx-auto">';
+            h += '<div class="text-6xl mb-4">📋</div>';
+            h += '<h2 class="text-xl font-bold text-gray-800 mb-2">Jahresplan '+planIstYear+' hochladen</h2>';
+            h += '<p class="text-sm text-gray-500 mb-6">Um den Plan/Ist-Vergleich nutzen zu können, lade zuerst deinen Jahresplan als Excel-Datei hoch. Das Portal liest die monatlichen Plan-Werte automatisch aus.</p>';
+            h += '<div class="vit-card p-6 text-left">';
+            h += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Schritt 1: Plan-Datei hochladen</p>';
+            h += '<div class="p-4 border-2 border-dashed border-vit-orange/40 rounded-lg bg-orange-50/50 mb-4">';
+            h += '<p class="text-xs text-gray-500 mb-2">Erwartetes Format: Excel mit Monatszeilen und Spalten für Umsatz, Wareneinsatz, Personalkosten, etc.</p>';
+            h += '<input type="file" id="planFileInput" accept=".xlsx,.xls,.csv" class="text-xs" onchange="document.getElementById(\'planParseBtn\').disabled=!this.files.length">';
+            h += '</div>';
+            h += '<button id="planParseBtn" onclick="parsePlanFile()" disabled class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed mb-3">📊 Plan auslesen & speichern</button>';
+            h += '<div id="planParseStatus" class="hidden"></div>';
+            h += '<div id="planParseResult" class="hidden"></div>';
+            h += '</div>';
+            // Manual entry option
+            h += '<details class="vit-card p-6 text-left mt-4"><summary class="text-xs font-semibold text-gray-500 cursor-pointer">Alternativ: Plan manuell eingeben</summary>';
+            h += '<div class="mt-4 space-y-2">';
+            var mNamen = ['','Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+            for(var m=1;m<=12;m++) {
+                h += '<div class="flex items-center space-x-2"><label class="text-xs text-gray-600 w-24 flex-shrink-0">'+mNamen[m]+'</label>';
+                h += '<input id="planM_umsatz_'+m+'" type="number" placeholder="Umsatz" class="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs text-right">';
+                h += '<input id="planM_we_'+m+'" type="number" placeholder="Wareneins." class="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs text-right">';
+                h += '<input id="planM_pk_'+m+'" type="number" placeholder="Personal" class="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs text-right">';
+                h += '<input id="planM_rk_'+m+'" type="number" placeholder="Raum" class="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs text-right">';
+                h += '</div>';
+            }
+            h += '<button onclick="saveManualPlan()" class="w-full mt-3 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Plan speichern</button>';
+            h += '</div></details>';
+            h += '</div></div>';
+            el.innerHTML = h;
+        }
+
+        async function parsePlanFile() {
+            var fileInput = document.getElementById('planFileInput');
+            if(!fileInput || !fileInput.files[0]) return;
+            var file = fileInput.files[0];
+            var statusEl = document.getElementById('planParseStatus');
+            var resultEl = document.getElementById('planParseResult');
+            statusEl.classList.remove('hidden');
+            statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">Excel wird analysiert...</span></div>';
+
+            try {
+                var arrayBuf = await file.arrayBuffer();
+                var wb = XLSX.read(arrayBuf, { type: 'array' });
+                var sheet = wb.Sheets[wb.SheetNames[0]];
+                var rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+                var mNamen = {januar:1,jan:1,february:2,februar:2,feb:2,maerz:3,märz:3,mar:3,april:4,apr:4,mai:5,may:5,juni:6,jun:6,juli:7,jul:7,august:8,aug:8,september:9,sep:9,oktober:10,okt:10,oct:10,november:11,nov:11,dezember:12,dez:12,dec:12};
+                var planMonths = {};
+
+                // Strategy 1: Each row = one month
+                rows.forEach(function(row) {
+                    if(!row || row.length < 2) return;
+                    var label = String(row[0]||'').trim().toLowerCase().replace(/[^a-zäöü]/g,'');
+                    var monat = mNamen[label];
+                    if(!monat) return;
+                    // Take numeric values from remaining cols
+                    var nums = [];
+                    for(var c=1; c<row.length; c++) {
+                        var v = typeof row[c]==='number' ? row[c] : parseFloat(String(row[c]).replace(/\./g,'').replace(',','.').replace(/[€%\s]/g,''));
+                        if(!isNaN(v)) nums.push(v);
+                    }
+                    if(nums.length > 0) {
+                        planMonths[monat] = {
+                            monat: monat,
+                            umsatz: nums[0] || 0,
+                            wareneinsatz: nums.length > 1 ? nums[1] : 0,
+                            rohertrag: nums.length > 2 ? nums[2] : 0,
+                            personalkosten: nums.length > 3 ? nums[3] : 0,
+                            raumkosten: nums.length > 4 ? nums[4] : 0,
+                            werbekosten: nums.length > 5 ? nums[5] : 0,
+                            sonstige: nums.length > 6 ? nums[6] : 0,
+                            ergebnis: nums.length > 7 ? nums[7] : 0
+                        };
+                    }
+                });
+
+                // Strategy 2: If no months found, try columns = months
+                if(Object.keys(planMonths).length < 3) {
+                    planMonths = {};
+                    // Check if first row contains month names
+                    if(rows.length > 1) {
+                        var headerRow = rows[0];
+                        var monthCols = {};
+                        headerRow.forEach(function(cell, idx) {
+                            var label = String(cell||'').trim().toLowerCase().replace(/[^a-zäöü]/g,'');
+                            var monat = mNamen[label];
+                            if(monat) monthCols[idx] = monat;
+                        });
+                        if(Object.keys(monthCols).length >= 3) {
+                            // Find the "Umsatz" row
+                            var umsatzRow = rows.find(function(r) { return String(r[0]||'').match(/umsatz|erlöse|erloese/i); });
+                            Object.keys(monthCols).forEach(function(colIdx) {
+                                var m = monthCols[colIdx];
+                                var val = umsatzRow ? (typeof umsatzRow[colIdx]==='number' ? umsatzRow[colIdx] : parseFloat(String(umsatzRow[colIdx]||0).replace(/[.,\s€]/g,''))) : 0;
+                                planMonths[m] = { monat: m, umsatz: val || 0 };
+                            });
+                        }
+                    }
+                }
+
+                var count = Object.keys(planMonths).length;
+                if(count < 1) {
+                    statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Keine Monatsdaten erkannt. Bitte prüfe das Format deiner Excel-Datei.</p>';
+                    return;
+                }
+
+                statusEl.innerHTML = '<p class="text-xs text-green-600 mt-2">✅ '+count+' Monate erkannt!</p>';
+
+                // Show preview
+                var mLabels = ['','Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+                var ph = '<div class="bg-green-50 border border-green-200 rounded-lg p-3 mt-3">';
+                ph += '<p class="text-xs font-semibold text-green-700 mb-2">Erkannte Plan-Werte:</p>';
+                ph += '<div class="grid grid-cols-6 gap-1 text-[10px]">';
+                for(var mm=1;mm<=12;mm++) {
+                    var pd = planMonths[mm];
+                    ph += '<div class="text-center p-1 '+(pd?'bg-white rounded':'text-gray-300')+'"><div class="font-semibold">'+mLabels[mm]+'</div>';
+                    ph += '<div>'+(pd ? Math.round(pd.umsatz).toLocaleString('de-DE') : '—')+'</div></div>';
+                }
+                ph += '</div>';
+                ph += '<button onclick="saveParsedPlan()" class="w-full mt-3 py-2 bg-green-600 text-white rounded-lg text-xs font-semibold hover:opacity-90">✅ Plan für '+planIstYear+' speichern</button>';
+                ph += '</div>';
+                resultEl.innerHTML = ph;
+                resultEl.classList.remove('hidden');
+
+                // Store for saving
+                window._parsedPlanMonths = planMonths;
+
+            } catch(err) {
+                statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Fehler: '+(err.message||err)+'</p>';
+            }
+        }
+
+        async function saveParsedPlan() {
+            var planMonths = window._parsedPlanMonths;
+            if(!planMonths) return;
+            try {
+                var stdId = sbProfile ? sbProfile.standort_id : null;
+                var payload = {
+                    standort_id: stdId,
+                    jahr: planIstYear,
+                    plan_daten: planMonths,
+                    erstellt_von: sbUser ? sbUser.id : null,
+                    updated_at: new Date().toISOString()
+                };
+                var resp = await sb.from('jahresplaene').upsert(payload, {onConflict:'standort_id,jahr'}).select();
+                if(resp.error) throw resp.error;
+                currentPlan = resp.data[0] || payload;
+                alert('✅ Jahresplan '+planIstYear+' gespeichert!');
+                renderPlanIst();
+            } catch(err) { alert('Fehler: '+(err.message||err)); }
+        }
+
+        async function saveManualPlan() {
+            var planMonths = {};
+            for(var m=1;m<=12;m++) {
+                var u = parseFloat((document.getElementById('planM_umsatz_'+m)||{}).value) || 0;
+                var we = parseFloat((document.getElementById('planM_we_'+m)||{}).value) || 0;
+                var pk = parseFloat((document.getElementById('planM_pk_'+m)||{}).value) || 0;
+                var rk = parseFloat((document.getElementById('planM_rk_'+m)||{}).value) || 0;
+                if(u || we || pk || rk) {
+                    planMonths[m] = { monat:m, umsatz:u, wareneinsatz:we, personalkosten:pk, raumkosten:rk };
+                }
+            }
+            if(Object.keys(planMonths).length < 1) { alert('Bitte mindestens einen Monat ausfüllen.'); return; }
+            window._parsedPlanMonths = planMonths;
+            await saveParsedPlan();
+        }
+
+        async function renderPlanVergleich(el) {
+            // Load all BWAs for this year
+            var stdId = sbProfile ? sbProfile.standort_id : null;
+            var bwaResp = await sb.from('bwa_daten').select('*').eq('standort_id', stdId).eq('jahr', planIstYear).order('monat');
+            var bwas = bwaResp.data || [];
+            var bwaByMonth = {};
+            bwas.forEach(function(b) { bwaByMonth[b.monat] = b; });
+
+            var plan = currentPlan.plan_daten;
+            var mLabels = ['','Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+            var currentMonth = new Date().getMonth() + 1;
+
+            // Find selected month for detail view (default: latest with BWA data)
+            var detailMonth = 0;
+            for(var dm=12;dm>=1;dm--) { if(bwaByMonth[dm]) { detailMonth = dm; break; } }
+
+            // KPIs: YTD totals
+            var ytdPlanUmsatz = 0, ytdIstUmsatz = 0, ytdPlanErgebnis = 0, ytdIstErgebnis = 0;
+            for(var k=1;k<=12;k++) {
+                var p = plan[String(k)] || plan[k] || {};
+                ytdPlanUmsatz += (p.umsatz||0);
+                ytdPlanErgebnis += (p.ergebnis||0);
+                if(bwaByMonth[k]) {
+                    ytdIstUmsatz += (parseFloat(bwaByMonth[k].umsatzerloese)||0);
+                    ytdIstErgebnis += (parseFloat(bwaByMonth[k].ergebnis_vor_steuern)||0);
+                }
+            }
+
+            var h = '';
+            // Year selector + reupload button
+            h += '<div class="flex items-center justify-between mb-4">';
+            h += '<div class="flex items-center space-x-3"><h2 class="text-lg font-bold text-gray-800">Plan / Ist Vergleich</h2>';
+            h += '<select id="planIstYearSel" onchange="planIstYear=parseInt(this.value);currentPlan=null;renderPlanIst()" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm">';
+            for(var yy=2026;yy>=2024;yy--) h += '<option value="'+yy+'"'+(yy===planIstYear?' selected':'')+'>'+yy+'</option>';
+            h += '</select></div>';
+            h += '<button onclick="currentPlan=null;renderPlanIst()" class="text-xs text-vit-orange font-semibold hover:underline">📄 Neuen Plan hochladen</button>';
+            h += '</div>';
+
+            // KPIs
+            var diffUmsatz = ytdIstUmsatz - ytdPlanUmsatz;
+            var pctUmsatz = ytdPlanUmsatz ? Math.round(ytdIstUmsatz/ytdPlanUmsatz*100) : 0;
+            h += '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">';
+            h += '<div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Umsatz Plan YTD</p><p class="text-2xl font-bold text-blue-600">'+ytdPlanUmsatz.toLocaleString('de-DE')+' €</p></div>';
+            h += '<div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Umsatz Ist YTD</p><p class="text-2xl font-bold '+(ytdIstUmsatz>=ytdPlanUmsatz?'text-green-600':'text-red-500')+'">'+ytdIstUmsatz.toLocaleString('de-DE')+' €</p><p class="text-xs '+(diffUmsatz>=0?'text-green-600':'text-red-500')+'">'+(diffUmsatz>=0?'+':'')+diffUmsatz.toLocaleString('de-DE')+' € ('+pctUmsatz+'%)</p></div>';
+            h += '<div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">BWAs eingereicht</p><p class="text-2xl font-bold text-gray-800">'+bwas.length+' / '+(currentMonth-1)+'</p><p class="text-xs text-gray-500">Monate</p></div>';
+            var missing = [];
+            for(var mm=1;mm<currentMonth;mm++) { if(!bwaByMonth[mm]) missing.push(mLabels[mm]); }
+            h += '<div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Fehlend</p><p class="text-2xl font-bold '+(missing.length>0?'text-red-500':'text-green-600')+'">'+(missing.length||'✅')+'</p>'+(missing.length?'<p class="text-[10px] text-red-400">'+missing.join(', ')+'</p>':'')+'</div>';
+            h += '</div>';
+
+            // Monthly overview table
+            h += '<div class="vit-card p-6 mb-6">';
+            h += '<h3 class="font-semibold text-gray-800 mb-3">Monatsübersicht '+planIstYear+'</h3>';
+            h += '<div class="overflow-x-auto"><table class="w-full text-sm">';
+            h += '<thead><tr class="bg-gray-50"><th class="text-left py-2.5 px-3 font-semibold text-gray-600">Monat</th><th class="text-right py-2.5 px-3 font-semibold text-blue-600">Plan Umsatz</th><th class="text-right py-2.5 px-3 font-semibold text-vit-orange">Ist Umsatz</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Abweichung</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Erfüllung</th><th class="text-center py-2.5 px-3 font-semibold text-gray-600">Status</th></tr></thead>';
+            h += '<tbody>';
+            var sumPlan=0,sumIst=0;
+            for(var m=1;m<=12;m++) {
+                var p = plan[String(m)] || plan[m] || {};
+                var b = bwaByMonth[m];
+                var pu = p.umsatz || 0;
+                var iu = b ? (parseFloat(b.umsatzerloese)||0) : 0;
+                sumPlan += pu; sumIst += iu;
+                var diff = iu - pu;
+                var pct = pu ? Math.round(iu/pu*100) : 0;
+                var hasBwa = !!b;
+                var isPast = m < currentMonth;
+                var isCurrent = m === currentMonth;
+                var status = hasBwa ? (pct>=100?'🟢':pct>=75?'🟡':'🔴') : (isPast?'⚠️':'⏳');
+                var rowCls = hasBwa ? (pct>=100?'bg-green-50 border-l-4 border-green-400':'bg-orange-50 border-l-4 border-orange-400') : (isCurrent?'bg-blue-50 border-l-4 border-blue-400':'text-gray-400');
+                h += '<tr class="border-b '+rowCls+'" '+(hasBwa?'onclick="showMonthDetail('+m+')" class="cursor-pointer hover:bg-gray-100"':'')+'>';
+                h += '<td class="py-2.5 px-3 font-semibold">'+mLabels[m]+(isCurrent?' <span class="text-[10px] text-blue-500">(aktuell)</span>':'')+'</td>';
+                h += '<td class="text-right py-2.5 px-3 text-blue-600">'+pu.toLocaleString('de-DE')+'</td>';
+                h += '<td class="text-right py-2.5 px-3 font-bold '+(hasBwa?'text-vit-orange':'')+'">'+( hasBwa ? iu.toLocaleString('de-DE') : '—')+'</td>';
+                h += '<td class="text-right py-2.5 px-3 '+(hasBwa?(diff>=0?'text-green-600 font-semibold':'text-red-600 font-semibold'):'')+'">'+( hasBwa ? (diff>=0?'+':'')+diff.toLocaleString('de-DE') : '—')+'</td>';
+                h += '<td class="text-right py-2.5 px-3 '+(hasBwa?(pct>=100?'text-green-600 font-bold':'text-red-600 font-bold'):'')+'">'+( hasBwa ? pct+'%' : '—')+'</td>';
+                h += '<td class="text-center py-2.5 px-3">'+status+'</td>';
+                h += '</tr>';
+            }
+            var totalDiff = sumIst-sumPlan; var totalPct = sumPlan?Math.round(sumIst/sumPlan*100):0;
+            h += '<tr class="bg-gray-100 border-t-2"><td class="py-3 px-3 font-bold">GESAMT '+planIstYear+'</td>';
+            h += '<td class="text-right py-3 px-3 font-bold text-blue-600">'+sumPlan.toLocaleString('de-DE')+'</td>';
+            h += '<td class="text-right py-3 px-3 font-bold text-vit-orange">'+sumIst.toLocaleString('de-DE')+'</td>';
+            h += '<td class="text-right py-3 px-3 font-bold '+(totalDiff>=0?'text-green-600':'text-red-600')+'">'+(totalDiff>=0?'+':'')+totalDiff.toLocaleString('de-DE')+'</td>';
+            h += '<td class="text-right py-3 px-3 font-bold">'+totalPct+'%</td><td class="text-center">📊</td></tr>';
+            h += '</tbody></table></div></div>';
+
+            // Detail view for selected month
+            if(detailMonth && bwaByMonth[detailMonth]) {
+                var b = bwaByMonth[detailMonth];
+                var p = plan[String(detailMonth)] || plan[detailMonth] || {};
+                h += '<div class="vit-card p-6" id="planIstDetail">';
+                h += '<div class="flex items-center justify-between mb-4"><h3 class="font-semibold text-gray-800">Plan / Ist Detail – '+mLabels[detailMonth]+' '+planIstYear+'</h3>';
+                h += '<select onchange="showMonthDetail(parseInt(this.value))" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm">';
+                for(var ms=1;ms<=12;ms++) {
+                    var hasBwa2 = !!bwaByMonth[ms];
+                    h += '<option value="'+ms+'"'+(ms===detailMonth?' selected':'')+(hasBwa2?'':' disabled')+'>'+mLabels[ms]+(hasBwa2?'':' (keine BWA)')+'</option>';
+                }
+                h += '</select></div>';
+                h += buildPlanIstTable(p, b);
+                h += '</div>';
+            }
+
+            el.innerHTML = h;
+        }
+
+        function buildPlanIstTable(plan, bwa) {
+            var rows = [
+                {label:'Umsatzerlöse', plan: plan.umsatz, ist: parseFloat(bwa.umsatzerloese)||0, bold:true},
+                {label:'Wareneinsatz', plan: plan.wareneinsatz, ist: parseFloat(bwa.wareneinsatz)||0, bold:true},
+                {label:'Rohertrag', plan: (plan.umsatz||0)+(plan.wareneinsatz||0), ist: parseFloat(bwa.rohertrag)||0, highlight:'blue'},
+                {label:'Personalkosten', plan: plan.personalkosten, ist: parseFloat(bwa.personalkosten)||0, bold:true},
+                {label:'Raumkosten', plan: plan.raumkosten, ist: parseFloat(bwa.raumkosten)||0},
+                {label:'Werbe-/Reisekosten', plan: plan.werbekosten, ist: parseFloat(bwa.werbekosten)||0},
+                {label:'Abschreibungen', plan: plan.abschreibungen||plan.abschreibung, ist: parseFloat(bwa.abschreibungen)||0},
+                {label:'Sonstige Kosten', plan: plan.sonstige, ist: parseFloat(bwa.sonstige_kosten)||0},
+                {label:'Gesamtkosten', plan: (plan.personalkosten||0)+(plan.raumkosten||0)+(plan.werbekosten||0)+(plan.sonstige||0), ist: parseFloat(bwa.gesamtkosten)||0, highlight:'gray'},
+                {label:'Betriebsergebnis', plan: plan.ergebnis||((plan.umsatz||0)+(plan.wareneinsatz||0)+(plan.personalkosten||0)+(plan.raumkosten||0)+(plan.sonstige||0)), ist: parseFloat(bwa.betriebsergebnis)||0, highlight:'yellow'},
+                {label:'Zinsaufwand', plan: plan.zins||plan.zinsaufwand, ist: parseFloat(bwa.zinsaufwand)||0},
+                {label:'Ergebnis vor Steuern', plan: plan.ergebnis, ist: parseFloat(bwa.ergebnis_vor_steuern)||0, highlight:'result'}
+            ];
+
+            var h = '<div class="overflow-x-auto"><table class="w-full text-sm">';
+            h += '<thead><tr class="bg-gray-50"><th class="text-left py-2.5 px-3 font-semibold text-gray-600 w-1/4">Position</th><th class="text-right py-2.5 px-3 font-semibold text-blue-600">Plan</th><th class="text-right py-2.5 px-3 font-semibold text-vit-orange">Ist (BWA)</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Abweichung</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">%</th></tr></thead>';
+            h += '<tbody>';
+            rows.forEach(function(r) {
+                var pv = r.plan || 0;
+                var iv = r.ist || 0;
+                var diff = iv - pv;
+                var isGood = r.label.match(/Umsatz|Rohertrag|Ergebnis/) ? diff >= 0 : diff <= 0;
+                var pct = pv ? Math.round(Math.abs(iv/pv)*100) : (iv?'—':'—');
+                var bgCls = '';
+                if(r.highlight==='blue') bgCls = 'bg-blue-50 border-b-2 border-gray-800';
+                else if(r.highlight==='yellow') bgCls = 'bg-yellow-50 border-b-2 border-gray-600';
+                else if(r.highlight==='gray') bgCls = 'bg-gray-100 border-t-2';
+                else if(r.highlight==='result') bgCls = (iv>=0?'bg-green-50':'bg-red-50')+' border-t-2 border-gray-800';
+                h += '<tr class="border-b '+bgCls+'">';
+                h += '<td class="py-2.5 px-3 '+(r.bold||r.highlight?'font-bold':'font-semibold')+' text-gray-800 '+(r.highlight?'text-base':'')+'">'+r.label+'</td>';
+                h += '<td class="text-right py-2.5 px-3 text-blue-600 '+(r.highlight?'font-bold':'')+'">'+pv.toLocaleString('de-DE')+'</td>';
+                h += '<td class="text-right py-2.5 px-3 '+(r.highlight?'font-bold text-base':'font-semibold')+' text-vit-orange">'+iv.toLocaleString('de-DE')+'</td>';
+                h += '<td class="text-right py-2.5 px-3 font-semibold '+(isGood?'text-green-600':'text-red-600')+'">'+(diff>=0?'+':'')+diff.toLocaleString('de-DE')+'</td>';
+                h += '<td class="text-right py-2.5 px-3 '+(isGood?'text-green-600':'text-red-600')+'">'+pct+'%</td>';
+                h += '</tr>';
+            });
+            h += '</tbody></table></div>';
+            // Rohertragsmarge
+            var planMarge = (rows[0].plan||1) ? (((rows[2].plan||0)/(rows[0].plan||1))*100).toFixed(1) : 0;
+            var istMarge = (rows[0].ist||1) ? (((rows[2].ist||0)/(rows[0].ist||1))*100).toFixed(1) : 0;
+            h += '<div class="mt-3 flex items-center space-x-4 text-xs text-gray-500"><span>Rohertragsmarge: <strong class="text-blue-600">Plan '+planMarge+'%</strong></span><span>|</span><span><strong class="text-vit-orange">Ist '+istMarge+'%</strong></span><span>|</span><span class="'+(parseFloat(istMarge)>=parseFloat(planMarge)?'text-green-600':'text-red-500')+'">Differenz: '+(parseFloat(istMarge)-parseFloat(planMarge)).toFixed(1)+' Pp</span></div>';
+            return h;
+        }
+
+        function showMonthDetail(m) {
+            // Re-render detail only - we need to reload
+            renderPlanIst();
+        }
+
         function editSelectedBwa() {
             if(!selectedBwaId) return;
             // Find in cache and open modal pre-filled
@@ -8328,6 +8381,7 @@
         showControllingTab = function(t) {
             origShowControllingTab(t);
             if(t === 'bwa') loadBwaList();
+            if(t === 'planist') renderPlanIst();
         };
 
         // === LEAD REPORTING DASHBOARD (computed from hqStandorte) ===
