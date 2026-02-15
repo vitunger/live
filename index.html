@@ -7571,19 +7571,11 @@
             var html = '<div id="bwaUploadOverlay" onclick="closeBwaUploadModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
             html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:600px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
             html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">📊 BWA erfassen</h3><button onclick="closeBwaUploadModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div>';
-            // Month/Year
-            html += '<div class="grid grid-cols-2 gap-3 mb-4">';
-            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Monat</label><select id="bwaMonth" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">';
-            for(var m=1;m<=12;m++) html += '<option value="'+m+'"'+(m===(now.getMonth())?' selected':'')+'>'+monatNamen[m]+'</option>';
-            html += '</select></div>';
-            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Jahr</label><select id="bwaYear" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">';
-            for(var y=2026;y>=2023;y--) html += '<option value="'+y+'">'+y+'</option>';
-            html += '</select></div></div>';
             
-            // AI Upload Section
+            // AI Upload Section FIRST
             html += '<div class="mb-4 p-4 border-2 border-dashed border-vit-orange/40 rounded-lg bg-orange-50/50">';
             html += '<div class="flex items-center space-x-2 mb-2"><span class="text-lg">🤖</span><p class="text-sm font-semibold text-gray-800">BWA-Datei hochladen – KI liest Werte automatisch</p></div>';
-            html += '<p class="text-xs text-gray-500 mb-3">Lade deine BWA als Excel (.xlsx/.xls/.csv) oder PDF hoch. Die KI extrahiert alle Kennzahlen automatisch und füllt die Felder aus.</p>';
+            html += '<p class="text-xs text-gray-500 mb-3">Lade deine BWA als Excel (.xlsx/.xls/.csv) oder PDF hoch. Die KI erkennt Monat, Jahr und alle Kennzahlen automatisch.</p>';
             html += '<div class="flex items-center space-x-3">';
             html += '<input type="file" id="bwaFileInput" accept=".pdf,.xlsx,.xls,.csv" class="text-xs flex-1" onchange="handleBwaFileSelect(this)">';
             html += '<button id="bwaParseBtn" onclick="parseBwaWithAI()" disabled class="px-4 py-2 bg-vit-orange text-white rounded-lg text-xs font-semibold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap">🤖 Auslesen</button>';
@@ -7591,6 +7583,15 @@
             html += '<div id="bwaAiStatus" class="mt-2 hidden"><div class="flex items-center space-x-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600" id="bwaAiStatusText">KI analysiert Datei...</span></div></div>';
             html += '<div id="bwaAiResult" class="mt-2 hidden"></div>';
             html += '</div>';
+
+            // Month/Year AFTER upload (auto-filled by KI)
+            html += '<div class="grid grid-cols-2 gap-3 mb-4">';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Monat</label><select id="bwaMonth" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">';
+            for(var m=1;m<=12;m++) html += '<option value="'+m+'"'+(m===(now.getMonth())?' selected':'')+'>'+monatNamen[m]+'</option>';
+            html += '</select></div>';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Jahr</label><select id="bwaYear" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">';
+            for(var y=2026;y>=2023;y--) html += '<option value="'+y+'">'+y+'</option>';
+            html += '</select></div></div>';
             
             // Data entry
             html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Kennzahlen <span class="text-gray-400 font-normal">(werden automatisch befüllt oder manuell eingeben)</span></p>';
