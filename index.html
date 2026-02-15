@@ -8393,7 +8393,7 @@
                         var wb = XLSX.read(arrayBuf, { type: 'array' });
                         var sheet = wb.Sheets[wb.SheetNames[0]];
                         var rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-                        var mNamen = {januar:1,jan:1,february:2,februar:2,feb:2,maerz:3,mÃ¤rz:3,mar:3,april:4,apr:4,mai:5,may:5,juni:6,jun:6,juli:7,jul:7,august:8,aug:8,september:9,sep:9,oktober:10,okt:10,oct:10,november:11,nov:11,dezember:12,dez:12,dec:12};
+                        var mNamen = {januar:1,jan:1,february:2,februar:2,feb:2,maerz:3,'m\u00e4rz':3,mar:3,april:4,apr:4,mai:5,may:5,juni:6,jun:6,juli:7,jul:7,august:8,aug:8,september:9,sep:9,oktober:10,okt:10,oct:10,november:11,nov:11,dezember:12,dez:12,dec:12};
                         rows.forEach(function(row) {
                             if(!row || row.length < 2) return;
                             var label = String(row[0]||'').trim().toLowerCase().replace(/[^a-zÃ¤Ã¶Ã¼]/g,'');
