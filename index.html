@@ -7677,6 +7677,75 @@
 
                 statusText.textContent = '🔍 Kennzahlen werden extrahiert...';
 
+                // === AUTO-DETECT MONTH & YEAR ===
+                var detectedMonat = null;
+                var detectedJahr = null;
+                var monatPatterns = {
+                    1:/\bjanuar\b|\bjan\b/i, 2:/\bfebruar\b|\bfeb\b/i, 3:/\bm[äa]rz\b|\bmar\b|\bmrz\b/i,
+                    4:/\bapril\b|\bapr\b/i, 5:/\bmai\b|\bmay\b/i, 6:/\bjuni\b|\bjun\b/i,
+                    7:/\bjuli\b|\bjul\b/i, 8:/\baugust\b|\baug\b/i, 9:/\bseptember\b|\bsep\b/i,
+                    10:/\boktober\b|\bokt\b|\boct\b/i, 11:/\bnovember\b|\bnov\b/i, 12:/\bdezember\b|\bdez\b|\bdec\b/i
+                };
+                // 1) Check filename
+                var fn = file.name.toLowerCase();
+                Object.keys(monatPatterns).forEach(function(m) {
+                    if(!detectedMonat && monatPatterns[m].test(fn)) detectedMonat = parseInt(m);
+                });
+                // Filename pattern like "BWA_01_2026" or "BWA-2026-01"
+                var fnMatch = fn.match(/(\d{4})[_\-.](\d{1,2})/) || fn.match(/(\d{1,2})[_\-.](\d{4})/);
+                if(fnMatch) {
+                    var a = parseInt(fnMatch[1]), b = parseInt(fnMatch[2]);
+                    if(a >= 2020 && a <= 2030 && b >= 1 && b <= 12) { detectedJahr = a; if(!detectedMonat) detectedMonat = b; }
+                    else if(b >= 2020 && b <= 2030 && a >= 1 && a <= 12) { detectedJahr = b; if(!detectedMonat) detectedMonat = a; }
+                }
+                var jahrMatch = fn.match(/20(2[3-9]|3[0-2])/);
+                if(!detectedJahr && jahrMatch) detectedJahr = parseInt(jahrMatch[0]);
+
+                // 2) Check sheet name
+                if(!detectedMonat || !detectedJahr) {
+                    var sn = sheetName.toLowerCase();
+                    Object.keys(monatPatterns).forEach(function(m) {
+                        if(!detectedMonat && monatPatterns[m].test(sn)) detectedMonat = parseInt(m);
+                    });
+                    var snJahr = sn.match(/20(2[3-9]|3[0-2])/);
+                    if(!detectedJahr && snJahr) detectedJahr = parseInt(snJahr[0]);
+                }
+
+                // 3) Check first 10 rows of sheet for month/year references
+                if(!detectedMonat || !detectedJahr) {
+                    for(var ri = 0; ri < Math.min(rows.length, 10); ri++) {
+                        var rowText = (rows[ri]||[]).join(' ').toLowerCase();
+                        if(!detectedMonat) {
+                            Object.keys(monatPatterns).forEach(function(m) {
+                                if(!detectedMonat && monatPatterns[m].test(rowText)) detectedMonat = parseInt(m);
+                            });
+                        }
+                        if(!detectedJahr) {
+                            var rJahr = rowText.match(/20(2[3-9]|3[0-2])/);
+                            if(rJahr) detectedJahr = parseInt(rJahr[0]);
+                        }
+                        // Pattern: "01/2026" or "1.2026" or "01.26"
+                        var dateP = rowText.match(/(\d{1,2})[\/\.](\d{2,4})/);
+                        if(dateP && !detectedMonat) {
+                            var dm = parseInt(dateP[1]), dy = parseInt(dateP[2]);
+                            if(dm >= 1 && dm <= 12 && dy >= 23 && dy <= 32) { detectedMonat = dm; detectedJahr = 2000 + dy; }
+                            if(dm >= 1 && dm <= 12 && dy >= 2023 && dy <= 2032) { detectedMonat = dm; if(!detectedJahr) detectedJahr = dy; }
+                        }
+                        if(detectedMonat && detectedJahr) break;
+                    }
+                }
+
+                // Apply detected values to dropdowns
+                if(detectedMonat) {
+                    var mSel = document.getElementById('bwaMonth');
+                    if(mSel) { mSel.value = detectedMonat; mSel.style.borderColor = '#f97316'; mSel.style.backgroundColor = '#fff7ed'; }
+                }
+                if(detectedJahr) {
+                    var ySel = document.getElementById('bwaYear');
+                    if(ySel) { ySel.value = detectedJahr; ySel.style.borderColor = '#f97316'; ySel.style.backgroundColor = '#fff7ed'; }
+                }
+                var periodInfo = detectedMonat && detectedJahr ? ' (' + monatNamen[detectedMonat] + ' ' + detectedJahr + ')' : '';
+
                 // Search patterns for BWA fields (German accounting terms)
                 var patterns = {
                     umsatzerloese: /umsatz|erlöse|erloese|gesamterlöse|gesamterloese|betriebsertrag|umsatzerl/i,
@@ -7761,7 +7830,7 @@
                     return;
                 }
 
-                statusText.textContent = '✅ ' + matchedRows.length + ' Werte erkannt!';
+                statusText.textContent = '✅ ' + matchedRows.length + ' Werte erkannt!' + periodInfo;
 
                 // Fill form fields
                 var fieldMap = {
