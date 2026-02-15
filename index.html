@@ -5473,9 +5473,9 @@
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             try { updateUIForRole(); updatePremiumFeatures(); } catch(e) { console.warn(e); }
-            if(currentRole === 'hq') { switchViewMode('hq'); } else { showView('home'); }
-            // Demo mode check
+            // Demo mode check BEFORE rendering views (so demo data is available)
             checkDemoMode();
+            if(currentRole === 'hq') { switchViewMode('hq'); } else { showView('home'); }
             // Check for pending approvals (HQ + GF only)
             checkPendingApprovals();
             // Check BWA deadlines and create reminders
@@ -5489,6 +5489,7 @@
         function checkDemoMode() {
             var oldDemo = isDemoMode;
             isDemoMode = sbProfile && sbProfile.status === 'demo';
+            console.log('[DEMO] checkDemoMode: status=' + (sbProfile ? sbProfile.status : 'null') + ', isDemoMode=' + isDemoMode + ', demoDataSeeded=' + demoDataSeeded);
             // Remove banner if it exists
             var existing = document.getElementById('demoBanner');
             if(existing) existing.remove();
