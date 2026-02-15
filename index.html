@@ -14227,6 +14227,25 @@
                 viewEl.style.display = 'block';
                 console.log('SUCCESS: Showed', viewId, '- offsetHeight:', viewEl.offsetHeight);
                 if(viewName === 'dashboards') initDashboardTabs();
+                // Auto-load data when switching to views
+                if(viewName === 'controlling') showControllingTab('bwa');
+                if(viewName === 'todo') { try { loadTodos(); } catch(e){} }
+                if(viewName === 'kalender') { try { loadKalTermine(); } catch(e){} }
+                if(viewName === 'kommunikation') { try { renderAnnouncements(); } catch(e){} }
+                if(viewName === 'support') { try { renderTickets(); } catch(e){} }
+                if(viewName === 'ideenboard') { try { renderIdeen(); } catch(e){} }
+                if(viewName === 'shop') { try { renderShop(); } catch(e){} }
+                if(viewName === 'aktenschrank') { try { loadAktenFiles(); } catch(e){} }
+                if(viewName === 'verkauf') { try { showVerkaufTab('woche'); } catch(e){} }
+                if(viewName === 'mitarbeiter') { try { renderPartnerMitarbeiter(); } catch(e){} }
+                // HQ Views auto-load
+                if(viewName === 'hqStandorte') { try { loadHqStandorte(); } catch(e){} }
+                if(viewName === 'hqIdeen') { try { renderHqIdeen(); } catch(e){} }
+                if(viewName === 'hqSupport') { try { renderHqSupport(); } catch(e){} }
+                if(viewName === 'hqShop') { try { renderHqShop(); } catch(e){} }
+                if(viewName === 'hqKommando') { try { renderKommandozentrale(); } catch(e){} }
+                if(viewName === 'hqEinstellungen') { try { renderHqEinstellungen(); } catch(e){} }
+                if(viewName === 'hqFinanzen') { try { loadHqBwaStatus(); } catch(e){} }
             } else {
                 console.error('FAILED: View not found:', viewId);
             }
