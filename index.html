@@ -8233,46 +8233,41 @@
                     hochgeladen_von: sbUser ? sbUser.id : null,
                     updated_at: new Date().toISOString()
                 };
-                // Detect available columns once, cache result
-                if(!window._bwaColumns) {
-                    try {
-                        var colResp = await sb.rpc('get_table_columns', {p_table: 'bwa_daten'});
-                        if(colResp.data) window._bwaColumns = colResp.data.map(function(r){return r.column_name;});
-                    } catch(e) {}
-                    if(!window._bwaColumns) {
-                        // Fallback: detect via single select
-                        try {
-                            var probe = await sb.from('bwa_daten').select('*').limit(1);
-                            if(probe.data && probe.data[0]) window._bwaColumns = Object.keys(probe.data[0]);
-                            else if(!probe.error) window._bwaColumns = [];
-                        } catch(e2) { window._bwaColumns = []; }
-                    }
-                }
-                var cols = window._bwaColumns || [];
-                function addIf(name, val) { if(cols.length === 0 || cols.indexOf(name) >= 0) data[name] = val; }
-                // Map to actual DB column names (supports both old and new schemas)
-                addIf('werbung_marketing', werbe); addIf('werbekosten', werbe);
-                addIf('miete', raum); addIf('raumkosten', raum);
-                addIf('zinsen', zins); addIf('zinsaufwand', zins);
-                addIf('kosten_warenabgabe', warenabgabe);
-                addIf('reparaturen_instandhaltung', v('bwaF_instandhaltung'));
-                addIf('versicherungen', v('bwaF_versicherungen'));
-                addIf('fahrzeugkosten', v('bwaF_fahrzeug'));
-                addIf('davon_fahrraeder', v('bwaF_fahrraeder'));
-                addIf('davon_teile', v('bwaF_teile'));
-                addIf('davon_service', v('bwaF_service'));
-                addIf('davon_skonti', v('bwaF_skonti'));
-                addIf('plan_umsatz', v('bwaF_planUmsatz'));
-                addIf('plan_wareneinsatz', v('bwaF_planWareneinsatz'));
-                addIf('plan_rohertrag', v('bwaF_planRohertrag'));
-                addIf('plan_personalkosten', v('bwaF_planPersonal'));
-                addIf('plan_raumkosten', v('bwaF_planRaum'));
-                addIf('plan_werbekosten', v('bwaF_planWerbe'));
-                addIf('plan_gesamtkosten', v('bwaF_planGesamt'));
-                addIf('plan_ergebnis', v('bwaF_planErgebnis'));
+                // Add optional fields using DB column names from your schema
+                data.werbung_marketing = werbe;
+                data.miete = raum;
+                data.zinsen = zins;
+                data.kosten_warenabgabe = warenabgabe;
+                data.davon_fahrraeder = v('bwaF_fahrraeder');
+                data.davon_teile = v('bwaF_teile');
+                data.davon_service = v('bwaF_service');
+                data.davon_skonti = v('bwaF_skonti');
+                data.plan_umsatz = v('bwaF_planUmsatz');
+                data.plan_wareneinsatz = v('bwaF_planWareneinsatz');
+                data.plan_rohertrag = v('bwaF_planRohertrag');
+                data.plan_personalkosten = v('bwaF_planPersonal');
+                data.plan_raumkosten = v('bwaF_planRaum');
+                data.plan_werbekosten = v('bwaF_planWerbe');
+                data.plan_gesamtkosten = v('bwaF_planGesamt');
+                data.plan_ergebnis = v('bwaF_planErgebnis');
                 if(fileUrl) { data.datei_url = fileUrl; data.datei_name = fileName; }
 
                 var resp = await sb.from('bwa_daten').upsert(data, {onConflict:'standort_id,monat,jahr'}).select();
+                // If error mentions a missing column, remove it and retry
+                if(resp.error && resp.error.message && resp.error.message.includes('Could not find')) {
+                    var colMatch = resp.error.message.match(/the '([^']+)' column/);
+                    if(colMatch) {
+                        console.warn('BWA Save: removing unknown column "' + colMatch[1] + '" and retrying...');
+                        delete data[colMatch[1]];
+                        resp = await sb.from('bwa_daten').upsert(data, {onConflict:'standort_id,monat,jahr'}).select();
+                        // Try up to 3 more removals
+                        for(var retry=0; retry<3 && resp.error && resp.error.message && resp.error.message.includes('Could not find'); retry++) {
+                            colMatch = resp.error.message.match(/the '([^']+)' column/);
+                            if(colMatch) { console.warn('BWA Save: removing "' + colMatch[1] + '"'); delete data[colMatch[1]]; }
+                            resp = await sb.from('bwa_daten').upsert(data, {onConflict:'standort_id,monat,jahr'}).select();
+                        }
+                    }
+                }
                 if(resp.error) throw resp.error;
                 var bwaId = resp.data && resp.data[0] ? resp.data[0].id : null;
 
