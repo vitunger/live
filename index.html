@@ -7594,24 +7594,6 @@
                 html += '<input id="'+f.id+'" type="number" step="0.01" class="flex-1 px-2 py-1.5 border border-gray-200 rounded text-sm text-right bwa-field" placeholder="'+f.ph+'"></div>';
             });
             html += '</div>';
-            // Plan values section
-            html += '<details class="mb-4"><summary class="text-xs font-semibold text-gray-500 cursor-pointer">Plan-Werte (optional)</summary>';
-            html += '<div class="space-y-2 mt-2">';
-            var planFields = [
-                {id:'bwaF_planUmsatz',label:'Plan Umsatz'},
-                {id:'bwaF_planWareneinsatz',label:'Plan Wareneinsatz'},
-                {id:'bwaF_planRohertrag',label:'Plan Rohertrag'},
-                {id:'bwaF_planPersonal',label:'Plan Personalkosten'},
-                {id:'bwaF_planRaum',label:'Plan Raumkosten'},
-                {id:'bwaF_planWerbe',label:'Plan Werbekosten'},
-                {id:'bwaF_planGesamt',label:'Plan Gesamtkosten'},
-                {id:'bwaF_planErgebnis',label:'Plan Ergebnis'}
-            ];
-            planFields.forEach(function(f) {
-                html += '<div class="flex items-center space-x-2"><label class="text-xs text-gray-600 w-48 flex-shrink-0">'+f.label+'</label>';
-                html += '<input id="'+f.id+'" type="number" step="0.01" class="flex-1 px-2 py-1.5 border border-gray-200 rounded text-sm text-right bwa-field"></div>';
-            });
-            html += '</div></details>';
             html += '<div id="bwaUploadError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mb-3"></div>';
             html += '<button onclick="saveBwaData()" id="bwaSaveBtn" class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">BWA speichern</button>';
             html += '</div></div>';
@@ -8587,6 +8569,7 @@
             origShowControllingTab(t);
             if(t === 'bwa') loadBwaList();
             if(t === 'planist') renderPlanIst();
+            if(t === 'ctrlWissen') renderWissenTab('controlling','ctrlTabCtrlWissen');
         };
 
         // === LEAD REPORTING DASHBOARD (computed from hqStandorte) ===
@@ -9283,8 +9266,6 @@
         var origShowEinkaufTab = showEinkaufTab;
         showEinkaufTab = function(t) { origShowEinkaufTab(t); if(t==='ekWissen') renderWissenTab('einkauf','ekTabEkWissen'); };
 
-        var origShowControllingTab = showControllingTab;
-        showControllingTab = function(t) { origShowControllingTab(t); if(t==='ctrlWissen') renderWissenTab('controlling','ctrlTabCtrlWissen'); };
 
         var origShowVerkaufTab = showVerkaufTab;
         var ausLoaded = false;
