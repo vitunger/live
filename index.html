@@ -9044,94 +9044,387 @@
             statusEl.classList.remove('hidden');
             statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">Excel wird analysiert...</span></div>';
 
-            // Try BwaParser first for structured Planung files
-            BwaParser.parseFile(file, async function(err, result) {
-                if(err) {
-                    statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Fehler: '+(err.message||err)+'</p>';
+            try {
+                var arrayBuf = await file.arrayBuffer();
+                var wb = XLSX.read(arrayBuf, { type: 'array', cellDates: true });
+
+                // 1. Find BWA sheet (most important for plan values)
+                var bwaSheetName = null;
+                var umsatzSheetName = null;
+                var personalSheetName = null;
+                wb.SheetNames.forEach(function(sn) {
+                    var sl = sn.toLowerCase();
+                    if(sl.includes('bwa')) bwaSheetName = sn;
+                    if(sl.includes('umsätze') || sl.includes('umsaetze') || sl.includes('umsätze')) umsatzSheetName = sn;
+                    if(sl.includes('personal')) personalSheetName = sn;
+                });
+
+                console.log('[Plan Parser] Sheets:', wb.SheetNames, 'BWA:', bwaSheetName, 'Umsätze:', umsatzSheetName);
+
+                if(!bwaSheetName) {
+                    // Fallback: try first sheet
+                    bwaSheetName = wb.SheetNames[0];
+                    console.log('[Plan Parser] No BWA sheet found, using first:', bwaSheetName);
+                }
+
+                var ws = wb.Sheets[bwaSheetName];
+                var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: true });
+
+                // 2. Find plan year columns - supports 3 formats:
+                //    A) Standard: R3=year, R4=Date(year-01-01), 12 monthly columns
+                //    B) Compact: Plan starts at col 5, R3=year, only plan year (no IST)
+                //    C) Yearly total: R4="Plan 2026" single column + seasonal % in R1
+                var planStartCol = -1;
+                var planYear = planIstYear;
+                var planFormat = null; // 'monthly' | 'yearly_total'
+                var seasonalPcts = null;
+                var yearlyTotalCol = -1;
+
+                var r1 = rows[0] || [];
+                var r2 = rows[1] || [];
+                var r3 = rows[2] || [];
+                var r4 = rows[3] || [];
+
+                // Strategy A+B: scan for column where R3 = planYear and R4 is a Date with Jan of that year
+                for(var c = 0; c < r4.length; c++) {
+                    var yr = r3[c];
+                    var hdr = r4[c];
+                    if(yr == planYear || (typeof yr === 'number' && yr == planYear)) {
+                        // Check R4 for Jan date or serial number  
+                        var isDateJan = hdr instanceof Date && hdr.getMonth() === 0 && hdr.getFullYear() == planYear;
+                        var isSerialJan = typeof hdr === 'number' && hdr > 40000;
+                        // Check if date string like "2026-01-01"
+                        var isDateStr = typeof hdr === 'string' && hdr.includes(planYear) && (hdr.includes('01-01') || hdr.includes('Jan'));
+                        if(isDateJan || isSerialJan || isDateStr) {
+                            planStartCol = c;
+                            planFormat = 'monthly';
+                            console.log('[Plan Parser] Format A/B: Found plan year ' + planYear + ' at col ' + c);
+                            break;
+                        }
+                        // Also accept if R4 has 'Jan' text
+                        if(typeof hdr === 'string' && hdr.toLowerCase().startsWith('jan')) {
+                            planStartCol = c;
+                            planFormat = 'monthly';
+                            break;
+                        }
+                    }
+                }
+
+                // Fallback: scan R4 for dates with planYear anywhere
+                if(planStartCol < 0) {
+                    for(var c2 = 0; c2 < r4.length; c2++) {
+                        var h = r4[c2];
+                        if(h instanceof Date && h.getFullYear() == planYear && h.getMonth() === 0) {
+                            planStartCol = c2;
+                            planFormat = 'monthly';
+                            console.log('[Plan Parser] Fallback: found plan year via date header at col ' + c2);
+                            break;
+                        }
+                    }
+                }
+
+                // Strategy C: scan R4 for "Plan 2026" text in a single column
+                if(planStartCol < 0) {
+                    for(var c3 = 0; c3 < r4.length; c3++) {
+                        var txt = String(r4[c3] || '');
+                        if(txt.toLowerCase().includes('plan') && txt.includes(String(planYear))) {
+                            yearlyTotalCol = c3;
+                            planFormat = 'yearly_total';
+                            console.log('[Plan Parser] Format C: Found yearly total "Plan ' + planYear + '" at col ' + c3);
+                            // Look for seasonal distribution in R1 (sum should be ~1.0)
+                            // Find 12 consecutive percentage values in R1
+                            for(var sc = 0; sc < r1.length - 11; sc++) {
+                                var pctSum = 0;
+                                var pcts = [];
+                                var allNum = true;
+                                for(var si = 0; si < 12; si++) {
+                                    var pv = r1[sc + si];
+                                    if(typeof pv === 'number' && pv > 0 && pv < 1) {
+                                        pcts.push(pv);
+                                        pctSum += pv;
+                                    } else { allNum = false; break; }
+                                }
+                                if(allNum && pctSum > 0.95 && pctSum < 1.05) {
+                                    seasonalPcts = pcts;
+                                    console.log('[Plan Parser] Found seasonal distribution at R1 cols ' + sc + '-' + (sc + 11) + ', sum=' + pctSum.toFixed(4));
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                if(planStartCol < 0 && yearlyTotalCol < 0) {
+                    statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Keine Plan-Spalten für ' + planYear + ' gefunden. Bitte prüfe ob die Datei Planwerte für ' + planYear + ' enthält.</p>';
+                    // Try AI fallback
+                    var rawJson = XLSX.utils.sheet_to_json(ws, { header: 'A', defval: null, raw: true });
+                    startPlanAiFallback(rawJson, file.name, statusEl, resultEl);
                     return;
                 }
+
+                // 3. Find key BWA rows by scanning Kontengruppe column (typically col B = index 1)
+                var gruppeCol = -1;
+                for(var gc = 0; gc < 5; gc++) {
+                    if(r4[gc] && String(r4[gc]).toLowerCase().includes('kontengruppe')) { gruppeCol = gc; break; }
+                }
+                if(gruppeCol < 0) gruppeCol = 1; // Default B
 
                 var planMonths = {};
-                var meta = result.meta;
+                var keyRows = {};
+                var keyPatterns = {
+                    umsatz: /umsatzerlöse\s*gesamt|^umsatzerlöse\s*$/i,
+                    wareneinsatz: /material.*wareneinkauf\s*gesamt|materialaufwand|^wareneinsatz$/i,
+                    rohertrag: /^rohertrag$/i,
+                    personalkosten: /personalkosten\s*gesamt|^personalkosten\s*$/i,
+                    raumkosten: /raumkosten\s*gesamt|^raumkosten\s*$/i,
+                    versicherungen: /versicherungen.*beitr/i,
+                    fahrzeugkosten: /fahrzeugkosten/i,
+                    werbekosten: /werbe.*reise|marketing/i,
+                    warenabgabe: /kosten\s*warenabgabe/i,
+                    abschreibungen: /^abschreibung/i,
+                    reparaturen: /reparatur.*instandhaltung/i,
+                    sonstige: /sonstige.*kosten/i,
+                    gesamtkosten: /^gesamtkosten$/i,
+                    betriebsergebnis: /^betriebsergebnis$/i,
+                    ergebnis: /vorsteuer.*ergebnis|ergebnis.*vor.*steuer/i,
+                    zins: /zinsaufwand\s*gesamt|^zinsaufwand$/i
+                };
 
-                // If it's a structured Planung file with plan_bwa data
-                if(result.plan_bwa && result.plan_bwa.length > 0) {
-                    var mn = ['jan','feb','mrz','apr','mai','jun','jul','aug','sep','okt','nov','dez'];
-                    // Find key BWA rows
-                    var umsatzRow = result.plan_bwa.find(function(r) { return r.kontengruppe && r.kontengruppe.includes('Umsatzerlöse') && !r.konto; }) 
-                        || result.plan_bwa.find(function(r) { return r.bezeichnung && r.bezeichnung.toLowerCase().includes('umsatzerlöse'); });
-                    var weRow = result.plan_bwa.find(function(r) { return r.kontengruppe && (r.kontengruppe.includes('Wareneinsatz') || r.kontengruppe.includes('Materialaufwand')); });
-                    var pkRow = result.plan_bwa.find(function(r) { return r.kontengruppe && r.kontengruppe.includes('Personalkosten'); });
-                    var rkRow = result.plan_bwa.find(function(r) { return r.kontengruppe && r.kontengruppe.includes('Raumkosten'); });
-                    
-                    for(var m=0; m<12; m++) {
-                        var mKey = mn[m];
-                        planMonths[m+1] = {
-                            monat: m+1,
-                            umsatz: umsatzRow ? (umsatzRow[mKey]||0) : 0,
-                            wareneinsatz: weRow ? (weRow[mKey]||0) : 0,
-                            personalkosten: pkRow ? (pkRow[mKey]||0) : 0,
-                            raumkosten: rkRow ? (rkRow[mKey]||0) : 0
-                        };
-                        // Calculate rohertrag + ergebnis
-                        var pm = planMonths[m+1];
-                        pm.rohertrag = pm.umsatz + pm.wareneinsatz;
-                        pm.ergebnis = pm.rohertrag + pm.personalkosten + pm.raumkosten;
-                    }
-                    statusEl.innerHTML = '<p class="text-xs text-green-600 mt-2">✅ Planung erkannt! ('+result.plan_bwa.length+' Konten, Format: '+meta.format+')</p>';
-                } 
-                // Fallback: old parsing logic for simple plan files
-                else {
-                    try {
-                        var arrayBuf = await file.arrayBuffer();
-                        var wb = XLSX.read(arrayBuf, { type: 'array' });
-                        var sheet = wb.Sheets[wb.SheetNames[0]];
-                        var rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-                        var mNamen = {januar:1,jan:1,february:2,februar:2,feb:2,maerz:3,märz:3,mar:3,april:4,apr:4,mai:5,may:5,juni:6,jun:6,juli:7,jul:7,august:8,aug:8,september:9,sep:9,oktober:10,okt:10,oct:10,november:11,nov:11,dezember:12,dez:12,dec:12};
-                        rows.forEach(function(row) {
-                            if(!row || row.length < 2) return;
-                            var label = String(row[0]||'').trim().toLowerCase().replace(/[^a-zäöü]/g,'');
-                            var monat = mNamen[label];
-                            if(!monat) return;
-                            var nums = [];
-                            for(var c=1; c<row.length; c++) {
-                                var v = typeof row[c]==='number' ? row[c] : parseFloat(String(row[c]).replace(/\./g,'').replace(',','.').replace(/[€%\s]/g,''));
-                                if(!isNaN(v)) nums.push(v);
+                // Scan all rows for matching groups (prefer "Gesamt" summary rows)
+                for(var r = 4; r < rows.length; r++) {
+                    var gruppe = String(rows[r][gruppeCol] || '').trim();
+                    if(!gruppe) continue;
+                    Object.keys(keyPatterns).forEach(function(key) {
+                        if(keyPatterns[key].test(gruppe) && !keyRows[key]) {
+                            if(planFormat === 'monthly') {
+                                // Format A/B: Extract 12 monthly values from consecutive columns
+                                var vals = [];
+                                for(var m = 0; m < 12; m++) {
+                                    var v = rows[r][planStartCol + m];
+                                    vals.push(typeof v === 'number' ? v : 0);
+                                }
+                                keyRows[key] = { row: r, label: gruppe, values: vals };
+                            } else if(planFormat === 'yearly_total') {
+                                // Format C: Single yearly total, distribute by seasonal %
+                                var yearTotal = rows[r][yearlyTotalCol];
+                                yearTotal = typeof yearTotal === 'number' ? yearTotal : 0;
+                                var vals2 = [];
+                                if(seasonalPcts && seasonalPcts.length === 12) {
+                                    for(var m2 = 0; m2 < 12; m2++) vals2.push(yearTotal * seasonalPcts[m2]);
+                                } else {
+                                    // Equal distribution if no seasonal data
+                                    for(var m3 = 0; m3 < 12; m3++) vals2.push(yearTotal / 12);
+                                }
+                                keyRows[key] = { row: r, label: gruppe, values: vals2, yearTotal: yearTotal };
                             }
-                            if(nums.length > 0) planMonths[monat] = {monat:monat,umsatz:nums[0]||0,wareneinsatz:nums[1]||0,rohertrag:nums[2]||0,personalkosten:nums[3]||0,raumkosten:nums[4]||0,ergebnis:nums[7]||0};
-                        });
-                        statusEl.innerHTML = '<p class="text-xs text-green-600 mt-2">✅ '+Object.keys(planMonths).length+' Monate erkannt!</p>';
-                    } catch(e2) {
-                        statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Fehler: '+(e2.message||e2)+'</p>';
-                        return;
-                    }
+                        }
+                    });
                 }
 
-                var count = Object.keys(planMonths).length;
-                if(count < 1) {
-                    statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Keine Monatsdaten erkannt. Bitte prüfe das Format deiner Excel-Datei.</p>';
+                // Build planMonths
+                var mLabels2 = ['Jan','Feb','Mrz','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+                for(var m = 0; m < 12; m++) {
+                    var pm = { monat: m + 1 };
+                    Object.keys(keyRows).forEach(function(key) {
+                        pm[key] = keyRows[key].values[m];
+                    });
+                    // Calculate derived values if missing
+                    if(pm.umsatz !== undefined && pm.wareneinsatz !== undefined && pm.rohertrag === undefined) {
+                        pm.rohertrag = pm.umsatz + pm.wareneinsatz;
+                    }
+                    if(pm.rohertrag !== undefined && pm.gesamtkosten !== undefined && pm.betriebsergebnis === undefined) {
+                        pm.betriebsergebnis = pm.rohertrag + pm.gesamtkosten;
+                    }
+                    planMonths[m + 1] = pm;
+                }
+
+                // 4. Validate plan data
+                var validation = validatePlanData(planMonths, keyRows);
+                var matchCount = Object.keys(keyRows).length;
+
+                if(validation.level === 'critical') {
+                    statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">🚨 ' + matchCount + ' Positionen erkannt, aber Plausibilitätsprobleme!</p>';
+                    // Try AI fallback
+                    var rawJson2 = XLSX.utils.sheet_to_json(ws, { header: 'A', defval: null, raw: true });
+                    startPlanAiFallback(rawJson2, file.name, statusEl, resultEl);
                     return;
                 }
 
-                // Show preview
-                var mLabels = ['','Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
-                var ph = '<div class="bg-green-50 border border-green-200 rounded-lg p-3 mt-3">';
-                ph += '<p class="text-xs font-semibold text-green-700 mb-2">Erkannte Plan-Werte:</p>';
-                ph += '<div class="grid grid-cols-6 gap-1 text-[10px]">';
-                for(var mm=1;mm<=12;mm++) {
-                    var pd = planMonths[mm];
-                    ph += '<div class="text-center p-1 '+(pd?'bg-white rounded':'text-gray-300')+'"><div class="font-semibold">'+mLabels[mm]+'</div>';
-                    ph += '<div>'+(pd ? Math.round(pd.umsatz).toLocaleString('de-DE') : '—')+'</div></div>';
-                }
-                ph += '</div>';
-                ph += '<button onclick="saveParsedPlan()" class="w-full mt-3 py-2 bg-green-600 text-white rounded-lg text-xs font-semibold hover:opacity-90">✅ Plan für '+planIstYear+' speichern</button>';
-                ph += '</div>';
-                resultEl.innerHTML = ph;
-                resultEl.classList.remove('hidden');
+                // Show status
+                var fmtLabel = planFormat === 'yearly_total' ? 'Jahressumme + saisonale Verteilung' : 'Monatswerte';
+                var warnText = validation.level === 'warning' ? ' ⚠️ ' + validation.issues.length + ' Hinweise' : '';
+                statusEl.innerHTML = '<p class="text-xs text-green-600 mt-2">✅ ' + matchCount + ' Positionen erkannt für ' + planYear + ' (' + fmtLabel + ', Sheet: ' + bwaSheetName + ')' + warnText + '</p>';
 
-                // Store for saving
+                // 5. Show preview
+                renderPlanPreview(resultEl, planMonths, keyRows, validation, planYear);
+
                 window._parsedPlanMonths = planMonths;
+
+            } catch(err) {
+                console.error('[Plan Parser] Error:', err);
+                statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Fehler: ' + (err.message || err) + '</p>';
+            }
+        }
+
+        function validatePlanData(planMonths, keyRows) {
+            var issues = [];
+            var hasUmsatz = !!keyRows.umsatz;
+            var hasRohertrag = !!keyRows.rohertrag;
+            var totalUmsatz = 0;
+
+            // Check: Umsatz found?
+            if(!hasUmsatz) {
+                issues.push({ severity: 'error', message: 'Umsatzerlöse nicht erkannt. Möglicherweise fehlt die Zeile "Umsatzerlöse Gesamt".' });
+            } else {
+                for(var m = 1; m <= 12; m++) {
+                    totalUmsatz += (planMonths[m] && planMonths[m].umsatz) || 0;
+                }
+                if(totalUmsatz === 0) {
+                    issues.push({ severity: 'error', message: 'Jahresumsatz = 0 €. Möglicherweise wurden die falschen Spalten gelesen.' });
+                }
+                if(totalUmsatz > 0 && totalUmsatz < 10000) {
+                    issues.push({ severity: 'error', message: 'Jahresumsatz nur ' + Math.round(totalUmsatz).toLocaleString('de-DE') + ' €. Sieht nach Prozentwerten oder falscher Spalte aus.' });
+                }
+            }
+
+            // Check: at least 3 key positions found
+            if(Object.keys(keyRows).length < 3) {
+                issues.push({ severity: 'warning', message: 'Nur ' + Object.keys(keyRows).length + ' Positionen erkannt. Erwartet: mindestens 5.' });
+            }
+
+            // Check: all months have values
+            var emptyMonths = 0;
+            for(var m2 = 1; m2 <= 12; m2++) {
+                if(!planMonths[m2] || (planMonths[m2].umsatz === 0 && planMonths[m2].rohertrag === 0)) emptyMonths++;
+            }
+            if(emptyMonths > 3) {
+                issues.push({ severity: 'warning', message: emptyMonths + ' Monate ohne Werte. Bitte prüfen.' });
+            }
+
+            // Check: Rohertragsmarge plausibel
+            if(hasUmsatz && hasRohertrag && totalUmsatz > 0) {
+                var totalRoh = 0;
+                for(var m3 = 1; m3 <= 12; m3++) totalRoh += (planMonths[m3] && planMonths[m3].rohertrag) || 0;
+                var marge = (totalRoh / totalUmsatz) * 100;
+                if(marge < 10 || marge > 80) {
+                    issues.push({ severity: 'warning', message: 'Rohertragsmarge ' + marge.toFixed(1) + '% ungewöhnlich für Fahrradhandel (erwartet: 30-50%).' });
+                }
+            }
+
+            var hasError = issues.some(function(i) { return i.severity === 'error'; });
+            return { level: hasError ? 'critical' : (issues.length > 0 ? 'warning' : 'ok'), issues: issues };
+        }
+
+        function renderPlanPreview(resultEl, planMonths, keyRows, validation, planYear) {
+            var mLabels = ['','Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+            var h = '';
+
+            // Validation warnings
+            if(validation.issues.length > 0) {
+                var vBg = validation.level === 'warning' ? 'bg-yellow-50 border-yellow-300' : 'bg-red-50 border-red-300';
+                h += '<div class="' + vBg + ' border rounded-lg p-2 mt-3 mb-2">';
+                validation.issues.forEach(function(i) {
+                    h += '<p class="text-[11px] ' + (i.severity === 'error' ? 'text-red-700' : 'text-yellow-700') + '">' + (i.severity === 'error' ? '❌' : '⚡') + ' ' + i.message + '</p>';
+                });
+                h += '</div>';
+            }
+
+            // Summary card
+            var totalU = 0, totalR = 0, totalE = 0;
+            for(var m = 1; m <= 12; m++) {
+                var pm = planMonths[m] || {};
+                totalU += pm.umsatz || 0;
+                totalR += pm.rohertrag || 0;
+                totalE += pm.ergebnis || pm.betriebsergebnis || 0;
+            }
+            h += '<div class="bg-green-50 border border-green-200 rounded-lg p-3 mt-3">';
+            h += '<p class="text-xs font-semibold text-green-700 mb-2">Plan-Werte ' + planYear + ':</p>';
+            h += '<div class="grid grid-cols-3 gap-3 text-xs mb-3">';
+            h += '<div class="bg-white rounded p-2 text-center"><span class="text-gray-500 text-[10px]">Umsatz (Jahr)</span><br><strong>' + Math.round(totalU).toLocaleString('de-DE') + ' €</strong></div>';
+            h += '<div class="bg-white rounded p-2 text-center"><span class="text-gray-500 text-[10px]">Rohertrag</span><br><strong>' + (totalU ? ((totalR/totalU)*100).toFixed(1) : 0) + '%</strong></div>';
+            h += '<div class="bg-white rounded p-2 text-center"><span class="text-gray-500 text-[10px]">Ergebnis</span><br><strong class="' + (totalE >= 0 ? 'text-green-600' : 'text-red-600') + '">' + Math.round(totalE).toLocaleString('de-DE') + ' €</strong></div>';
+            h += '</div>';
+
+            // Monthly mini-chart
+            h += '<div class="grid grid-cols-12 gap-0.5 text-[9px] mb-3">';
+            for(var m2 = 1; m2 <= 12; m2++) {
+                var pm = planMonths[m2] || {};
+                var u = pm.umsatz || 0;
+                h += '<div class="text-center p-1 bg-white rounded"><div class="font-bold">' + mLabels[m2] + '</div>';
+                h += '<div>' + (u ? Math.round(u/1000) + 'k' : '—') + '</div></div>';
+            }
+            h += '</div>';
+
+            // Recognized positions
+            h += '<details><summary class="text-[10px] text-gray-400 cursor-pointer">Erkannte Positionen (' + Object.keys(keyRows).length + ')</summary>';
+            h += '<div class="mt-1 space-y-0.5">';
+            Object.keys(keyRows).forEach(function(key) {
+                var kr = keyRows[key];
+                var total = kr.values.reduce(function(a, b) { return a + b; }, 0);
+                h += '<div class="text-[10px] text-gray-500">' + key + ' → "<span class="text-gray-700">' + kr.label + '</span>" (Zeile ' + (kr.row + 1) + ') = ' + Math.round(total).toLocaleString('de-DE') + ' €/Jahr</div>';
             });
+            h += '</div></details>';
+
+            h += '<button onclick="saveParsedPlan()" class="w-full mt-3 py-2 bg-green-600 text-white rounded-lg text-xs font-semibold hover:opacity-90">✅ Plan für ' + planYear + ' speichern</button>';
+            h += '</div>';
+            resultEl.innerHTML = h;
+            resultEl.classList.remove('hidden');
+        }
+
+        async function startPlanAiFallback(rawRows, filename, statusEl, resultEl) {
+            var MAX_RETRIES = 3;
+            var compact = rawRows.slice(0, 80).map(function(row) {
+                var cells = {};
+                Object.keys(row).forEach(function(k) {
+                    if(row[k] !== null && row[k] !== undefined && row[k] !== '') cells[k] = row[k];
+                });
+                return cells;
+            }).filter(function(r) { return Object.keys(r).length > 0; });
+
+            for(var attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+                statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-purple-600">🤖 KI analysiert Plan-Daten (Versuch ' + attempt + '/' + MAX_RETRIES + ')...</span></div>';
+
+                try {
+                    var response = await fetch('https://api.anthropic.com/v1/messages', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: 'claude-sonnet-4-20250514',
+                            max_tokens: 2000,
+                            system: 'Du bist ein Finanz-Datenexperte. Extrahiere monatliche Plan-BWA-Werte aus Excel-Rohdaten. Antwort NUR als JSON, keine Erklärung.',
+                            messages: [{ role: 'user', content: 'Datei: ' + filename + '\nPlanjahr: ' + planIstYear + '\n\nRohdaten (erste 80 Zeilen):\n' + JSON.stringify(compact) + '\n\nExtrahiere für jeden Monat (1-12) diese Werte:\n{"1":{"umsatz":number,"wareneinsatz":number(negativ),"rohertrag":number,"personalkosten":number(negativ),"raumkosten":number(negativ),"gesamtkosten":number(negativ),"ergebnis":number},"2":{...},...,"12":{...}}\n\nWICHTIG: Finde die Spalten für das Planjahr ' + planIstYear + '. Suche nach Spaltenüberschriften mit Datum ' + planIstYear + '. Monatliche Werte, NICHT kumuliert.' }]
+                        })
+                    });
+                    var data = await response.json();
+                    var text = (data.content || []).map(function(b) { return b.text || ''; }).join('');
+                    text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+                    var aiPlan = JSON.parse(text);
+
+                    // Validate AI result
+                    var planMonths = {};
+                    var totalU = 0;
+                    for(var m = 1; m <= 12; m++) {
+                        var pd = aiPlan[String(m)] || aiPlan[m] || {};
+                        planMonths[m] = { monat: m, umsatz: pd.umsatz || 0, wareneinsatz: pd.wareneinsatz || 0, rohertrag: pd.rohertrag || (pd.umsatz||0) + (pd.wareneinsatz||0), personalkosten: pd.personalkosten || 0, raumkosten: pd.raumkosten || 0, gesamtkosten: pd.gesamtkosten || 0, ergebnis: pd.ergebnis || 0 };
+                        totalU += planMonths[m].umsatz;
+                    }
+
+                    if(totalU > 10000) {
+                        statusEl.innerHTML = '<p class="text-xs text-purple-600 mt-2">🤖 KI hat Plan-Daten extrahiert! (Versuch ' + attempt + ')</p>';
+                        renderPlanPreview(resultEl, planMonths, { 'KI-extrahiert': { row: 0, label: 'Claude AI', values: [] } }, { level: 'ok', issues: [] }, planIstYear);
+                        window._parsedPlanMonths = planMonths;
+                        return;
+                    }
+                } catch(aiErr) {
+                    console.warn('[Plan AI] Attempt ' + attempt + ' failed:', aiErr);
+                }
+            }
+
+            // All attempts failed
+            statusEl.innerHTML = '<p class="text-xs text-amber-600 mt-2">⚠️ Automatische Erkennung nicht möglich. Bitte trage die Plan-Werte manuell ein.</p>';
+            resultEl.innerHTML = '<div class="bg-amber-50 border border-amber-300 rounded-lg p-3 mt-2"><p class="text-xs text-amber-700">Die Plan-Datei konnte nicht automatisch gelesen werden. Nutze die manuelle Eingabe unten.</p></div>';
+            resultEl.classList.remove('hidden');
         }
 
         async function saveParsedPlan() {
@@ -9139,6 +9432,28 @@
             if(!planMonths) return;
             try {
                 var stdId = sbProfile ? sbProfile.standort_id : null;
+
+                // Duplicate check
+                if(!window._planDuplicateConfirmed) {
+                    var existing = await sb.from('jahresplaene').select('id,plan_daten,updated_at').eq('standort_id', stdId).eq('jahr', planIstYear).maybeSingle();
+                    if(existing.data) {
+                        var exDate = existing.data.updated_at ? new Date(existing.data.updated_at).toLocaleDateString('de-DE') : '?';
+                        var resultEl = document.getElementById('planParseResult');
+                        if(resultEl) {
+                            resultEl.innerHTML = '<div class="bg-amber-50 border border-amber-300 rounded-lg p-3 mt-2">'
+                                + '<p class="text-xs font-bold text-amber-800 mb-1">⚠️ Für ' + planIstYear + ' existiert bereits ein Jahresplan</p>'
+                                + '<p class="text-[10px] text-amber-600 mb-2">Zuletzt aktualisiert: ' + exDate + '</p>'
+                                + '<div class="flex gap-2">'
+                                + '<button onclick="window._planDuplicateConfirmed=true;saveParsedPlan();" class="px-3 py-1.5 bg-amber-500 text-white text-xs font-semibold rounded hover:bg-amber-600">✅ Überschreiben</button>'
+                                + '<button onclick="document.getElementById(\'planParseResult\').innerHTML=\'\'" class="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs font-semibold rounded hover:bg-gray-300">Abbrechen</button>'
+                                + '</div></div>';
+                            resultEl.classList.remove('hidden');
+                        }
+                        return;
+                    }
+                }
+                window._planDuplicateConfirmed = false;
+
                 var payload = {
                     standort_id: stdId,
                     jahr: planIstYear,
