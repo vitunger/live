@@ -5270,9 +5270,9 @@
             'hqAuswertung':'stub','hqWissen':'teilweise','hqShop':'demo'
         };
         var BETA_TABS = {
-            'benchmark':true,'planist':true,'liquiditaet':true,
-            'vkWissen':true,'ekWissen':true,'ctrlWissen':true,'mktWissen':true,
-            'kontakte':true,'leadreporting':true
+            'benchmark':'demo','planist':'beta','liquiditaet':'demo',
+            'vkWissen':'beta','ekWissen':'beta','ctrlWissen':'demo','mktWissen':'beta',
+            'kontakte':'beta','leadreporting':'beta'
         };
 
         function applyBetaBadges() {
@@ -5297,7 +5297,7 @@
                 if(btn.querySelector('.auto-beta-badge')) return;
                 var badge = document.createElement('span');
                 badge.className = 'auto-beta-badge beta-badge-tab';
-                badge.textContent = 'BETA';
+                badge.textContent = BETA_TABS[tab]==='demo'?'DEMO':'BETA';
                 btn.appendChild(badge);
             });
             Object.keys(BETA_MODULES).forEach(function(viewName) {
@@ -7641,7 +7641,7 @@
             if(!container) return;
             try {
                 var stdId = sbProfile ? sbProfile.standort_id : null;
-                var query = sb.from('bwa_daten').select('id,monat,jahr,umsatzerloese,rohertrag,ergebnis_vor_steuern,datei_name,created_at').order('jahr', {ascending:false}).order('monat', {ascending:false});
+                var query = sb.from('bwa_daten').select('*').order('jahr', {ascending:false}).order('monat', {ascending:false});
                 if(stdId && !sbProfile.is_hq) query = query.eq('standort_id', stdId);
                 var resp = await query;
                 if(resp.error) throw resp.error;
