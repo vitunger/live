@@ -5888,6 +5888,7 @@
 
             // Location name from Supabase
             var locationName = sbStandort ? sbStandort.name : 'Standort';
+            var isHQ = currentRole === 'hq' || (sbProfile && sbProfile.is_hq);
             
             var userRoleText = document.getElementById('userRoleText');
             var locationDisplay = document.getElementById('locationDisplay');
@@ -5898,7 +5899,7 @@
             if (userRoleText) userRoleText.textContent = roleDisplay;
             if (locationDisplay) locationDisplay.textContent = displayLocation;
             if (locationDisplayMobile) locationDisplayMobile.textContent = displayLocation;
-            if (userRoleDisplay) userRoleDisplay.textContent = 'Partnerportal';
+            if (userRoleDisplay) userRoleDisplay.textContent = isHQ ? '' : '';
 
             // Premium Badge
             var premiumBadge = document.getElementById('premiumBadge');
@@ -5911,7 +5912,6 @@
                 }
             }
 
-            var isHQ = currentRole === 'hq';
             var isInhaber = hasRole('inhaber');
 
             // HQ Toggle anzeigen für Inhaber
