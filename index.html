@@ -306,7 +306,7 @@
                 <form onsubmit="handleLogin(event); return false;" class="space-y-4">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">E-Mail</label>
-                        <input type="email" id="loginEmail" value="max@vitbikes-grafrath.de" class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="name@standort.de" required>
+                        <input type="email" id="loginEmail" value="" class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="name@standort.de" required>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Passwort</label>
@@ -452,7 +452,7 @@
                         <!-- Partner-level quick access (hidden in HQ mode) -->
                         <div id="partnerQuickNav">
                         <!-- Startseite -->
-                        <button onclick="showView('home')" data-module="startseite" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                        <button onclick="showView('home'); loadDashboardWidgets();" data-module="startseite" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                             <span data-i18n="nav_home">Startseite</span>
                         </button>
@@ -743,43 +743,38 @@
                         </div>
 
                         <!-- Kern-Metrik: Umsatz -->
-                        <div class="vit-card p-6">
-                            <h2 class="h2-headline text-gray-800 mb-4">UMSATZ VS. PLAN</h2>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="vit-card p-6" id="dashUmsatzCard">
+                            <h2 class="h2-headline text-gray-800 mb-4">UMSATZ & ERGEBNIS</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                                 <div>
-                                    <p class="text-sm text-gray-500 mb-1">Heute</p>
-                                    <p class="text-3xl font-bold text-gray-800">4.250€</p>
-                                    <div class="flex items-center space-x-2 mt-2">
-                                        <div class="flex-1 bg-gray-200 rounded-full h-2">
-                                            <div class="bg-green-500 h-2 rounded-full" style="width: 85%"></div>
-                                        </div>
-                                        <span class="text-xs text-green-600 font-semibold">85%</span>
-                                    </div>
-                                    <p class="text-xs text-gray-500 mt-1">Plan: 5.000€</p>
+                                    <p class="text-sm text-gray-500 mb-1">Letzte BWA</p>
+                                    <p class="text-3xl font-bold text-gray-800" id="dashUmsatzWert">—</p>
+                                    <p class="text-xs text-gray-500 mt-1" id="dashUmsatzLabel">Lade Daten...</p>
                                 </div>
-
                                 <div>
-                                    <p class="text-sm text-gray-500 mb-1">Diese Woche</p>
-                                    <p class="text-3xl font-bold text-gray-800">28.400€</p>
+                                    <p class="text-sm text-gray-500 mb-1">Rohertrag</p>
+                                    <p class="text-3xl font-bold text-gray-800" id="dashRohertragWert">—</p>
                                     <div class="flex items-center space-x-2 mt-2">
                                         <div class="flex-1 bg-gray-200 rounded-full h-2">
-                                            <div class="bg-vit-orange h-2 rounded-full" style="width: 94%"></div>
+                                            <div class="bg-blue-500 h-2 rounded-full" id="dashRohertragBar" style="width: 0%"></div>
                                         </div>
-                                        <span class="text-xs text-vit-orange font-semibold">94%</span>
+                                        <span class="text-xs text-blue-600 font-semibold" id="dashRohertragPct">—</span>
                                     </div>
-                                    <p class="text-xs text-gray-500 mt-1">Plan: 30.000€</p>
                                 </div>
-
                                 <div>
-                                    <p class="text-sm text-gray-500 mb-1">Dieser Monat</p>
-                                    <p class="text-3xl font-bold text-gray-800">127.500€</p>
+                                    <p class="text-sm text-gray-500 mb-1">Gesamtkosten</p>
+                                    <p class="text-3xl font-bold text-gray-800" id="dashKostenWert">—</p>
+                                    <p class="text-xs text-gray-500 mt-1" id="dashKostenLabel"></p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500 mb-1">Ergebnis</p>
+                                    <p class="text-3xl font-bold text-green-600" id="dashErgebnisWert">—</p>
                                     <div class="flex items-center space-x-2 mt-2">
                                         <div class="flex-1 bg-gray-200 rounded-full h-2">
-                                            <div class="bg-green-500 h-2 rounded-full" style="width: 106%"></div>
+                                            <div class="bg-green-500 h-2 rounded-full" id="dashErgebnisBar" style="width: 0%"></div>
                                         </div>
-                                        <span class="text-xs text-green-600 font-semibold">106%</span>
+                                        <span class="text-xs font-semibold" id="dashErgebnisPct">—</span>
                                     </div>
-                                    <p class="text-xs text-gray-500 mt-1">Plan: 120.000€ ✓</p>
                                 </div>
                             </div>
                         </div>
@@ -823,7 +818,7 @@
                         <!-- Widget 2: Verkaufserfolg KW -->
                         <div class="dashboard-widget vit-card p-6" data-widget="success">
                             <div class="flex items-center justify-between mb-4">
-                                <h3 class="font-semibold text-gray-800">💰 Verkaufserfolg KW 7</h3>
+                                <h3 class="font-semibold text-gray-800">💰 Verkaufserfolg <span id="dashKwLabel">KW</span></h3>
                                 <button class="widget-remove hidden text-gray-400 hover:text-red-500">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -5571,11 +5566,197 @@
             try { updateUIForRole(); updatePremiumFeatures(); } catch(e) { console.warn(e); }
             // Demo mode check BEFORE rendering views (so demo data is available)
             checkDemoMode();
-            if(currentRole === 'hq') { switchViewMode('hq'); } else { showView('home'); }
+            if(currentRole === 'hq') { switchViewMode('hq'); } else { showView('home'); loadDashboardWidgets(); }
             // Check for pending approvals (HQ + GF only)
             checkPendingApprovals();
             // Check BWA deadlines and create reminders
             checkBwaDeadlines();
+        }
+
+        // === LIVE DASHBOARD WIDGETS ===
+        async function loadDashboardWidgets() {
+            if(!sb || !sbUser) return;
+            var stdId = sbProfile ? sbProfile.standort_id : null;
+            
+            // KW Label
+            var kwEl = document.getElementById('dashKwLabel');
+            if(kwEl) {
+                var now2 = new Date(); var oneJan = new Date(now2.getFullYear(),0,1);
+                var kw = Math.ceil(((now2 - oneJan) / 86400000 + oneJan.getDay() + 1) / 7);
+                kwEl.textContent = 'KW ' + kw;
+            }
+            
+            // 1. Offene Todos
+            try {
+                var tQ = sb.from('todos').select('id,titel,erledigt').eq('erledigt', false);
+                if(stdId) tQ = tQ.eq('standort_id', stdId);
+                var tR = await tQ.limit(5);
+                if(tR.data && tR.data.length >= 0) {
+                    var w = document.querySelector('[data-widget="aufgaben"] .space-y-2');
+                    if(w) {
+                        if(tR.data.length === 0) {
+                            w.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">✅ Keine offenen Aufgaben</p>';
+                        } else {
+                            w.innerHTML = tR.data.map(function(t){
+                                return '<div class="flex items-center space-x-2">'
+                                    +'<input type="checkbox" class="rounded border-gray-300" onchange="toggleTodo(\''+t.id+'\')">'
+                                    +'<span class="text-sm text-gray-700">'+t.titel+'</span></div>';
+                            }).join('');
+                        }
+                        // Update link
+                        var btn = document.querySelector('[data-widget="aufgaben"] button[onclick]');
+                        if(btn) btn.onclick = function(){ showView('todos'); };
+                    }
+                }
+            } catch(e) { console.warn('Dashboard todos:', e); }
+
+            // 2. Heutige Termine
+            try {
+                var today = new Date().toISOString().split('T')[0];
+                var kQ = sb.from('kalender_termine').select('id,titel,startzeit,beschreibung').gte('startzeit', today+'T00:00:00').lte('startzeit', today+'T23:59:59');
+                if(stdId) kQ = kQ.eq('standort_id', stdId);
+                var kR = await kQ.order('startzeit').limit(4);
+                if(kR.data) {
+                    var w = document.querySelector('[data-widget="termine"] .space-y-3');
+                    if(w) {
+                        if(kR.data.length === 0) {
+                            w.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">Keine Termine heute</p>';
+                        } else {
+                            var colors = ['bg-blue-50','bg-purple-50','bg-green-50','bg-orange-50'];
+                            w.innerHTML = kR.data.map(function(t,i){
+                                var zeit = t.startzeit ? new Date(t.startzeit).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) : '';
+                                return '<div class="p-3 '+colors[i%4]+' rounded-lg">'
+                                    +'<p class="text-sm font-semibold text-gray-800">'+zeit+' - '+t.titel+'</p>'
+                                    +(t.beschreibung ? '<p class="text-xs text-gray-600">'+t.beschreibung+'</p>' : '')
+                                    +'</div>';
+                            }).join('');
+                        }
+                    }
+                }
+            } catch(e) { console.warn('Dashboard termine:', e); }
+
+            // 3. Support Tickets
+            try {
+                var sQ = sb.from('tickets').select('id,titel,status,created_at').in('status',['offen','in_bearbeitung']);
+                if(stdId) sQ = sQ.eq('standort_id', stdId);
+                var sR = await sQ.order('created_at',{ascending:false}).limit(3);
+                if(sR.data) {
+                    var w = document.querySelector('[data-widget="support"] .text-center');
+                    if(w) {
+                        var count = sR.data.length;
+                        var h = '<p class="text-4xl font-bold '+(count>0?'text-yellow-600':'text-green-600')+'">'+count+'</p>';
+                        h += '<p class="text-sm text-gray-600 mt-1">Offene Tickets</p>';
+                        if(count > 0) {
+                            h += '<div class="mt-3 space-y-2">';
+                            sR.data.forEach(function(t){
+                                var ago = Math.floor((Date.now()-new Date(t.created_at).getTime())/86400000);
+                                h += '<div class="text-xs text-left p-2 bg-yellow-50 rounded">'
+                                    +'<p class="font-semibold">'+t.titel+'</p>'
+                                    +'<p class="text-gray-600">Offen seit '+(ago<1?'heute':ago+' Tag'+(ago>1?'en':''))+'</p></div>';
+                            });
+                            h += '</div>';
+                        }
+                        w.innerHTML = h;
+                    }
+                }
+            } catch(e) { console.warn('Dashboard tickets:', e); }
+
+            // 4. BWA/Controlling Status
+            try {
+                var bQ = sb.from('bwa_daten').select('monat,jahr,umsatzerloese,rohertrag,ergebnis_vor_steuern').eq('jahr', new Date().getFullYear());
+                if(stdId) bQ = bQ.eq('standort_id', stdId);
+                var bR = await bQ.order('monat',{ascending:false}).limit(1);
+                if(bR.data && bR.data.length > 0) {
+                    var last = bR.data[0];
+                    var w = document.querySelector('[data-widget="controlling"] .space-y-3');
+                    if(w) {
+                        var u = parseFloat(last.umsatzerloese)||0;
+                        var r = parseFloat(last.rohertrag)||0;
+                        var e2 = parseFloat(last.ergebnis_vor_steuern)||0;
+                        var rm = u > 0 ? Math.round(r/u*100) : 0;
+                        var em = u > 0 ? Math.round(e2/u*100) : 0;
+                        w.innerHTML = '<p class="text-xs text-gray-400 mb-2">Letzte BWA: '+monatNamen[last.monat]+' '+last.jahr+'</p>'
+                            +'<div><div class="flex justify-between mb-1"><span class="text-sm text-gray-600">Umsatz</span><span class="text-sm font-semibold">'+eur(u)+' €</span></div></div>'
+                            +'<div><div class="flex justify-between mb-1"><span class="text-sm text-gray-600">Rohertrag-Marge</span><span class="text-sm font-semibold">'+rm+'%</span></div>'
+                            +'<div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full" style="width:'+Math.min(rm,100)+'%"></div></div></div>'
+                            +'<div><div class="flex justify-between mb-1"><span class="text-sm text-gray-600">Ergebnis-Marge</span><span class="text-sm font-semibold '+(em>=0?'text-green-600':'text-red-600')+'">'+em+'%</span></div>'
+                            +'<div class="w-full bg-gray-200 rounded-full h-2"><div class="'+(em>=0?'bg-green-500':'bg-red-500')+' h-2 rounded-full" style="width:'+Math.min(Math.abs(em),100)+'%"></div></div></div>';
+                    }
+                }
+            } catch(e) { console.warn('Dashboard controlling:', e); }
+
+            // 5. Nachrichten/Ankündigungen
+            try {
+                var aR = await sb.from('ankuendigungen').select('id,titel,created_at').order('created_at',{ascending:false}).limit(3);
+                if(aR.data && aR.data.length > 0) {
+                    var w = document.querySelector('[data-widget="nachrichten"] .space-y-3');
+                    if(w) {
+                        var colors2 = ['border-vit-orange bg-orange-50','border-blue-500 bg-blue-50','border-green-500 bg-green-50'];
+                        w.innerHTML = aR.data.map(function(a,i){
+                            var ago = Math.floor((Date.now()-new Date(a.created_at).getTime())/3600000);
+                            var agoStr = ago < 1 ? 'gerade eben' : (ago < 24 ? 'vor '+ago+' Stunde'+(ago>1?'n':'') : 'vor '+Math.floor(ago/24)+' Tag'+(Math.floor(ago/24)>1?'en':''));
+                            return '<div class="p-3 rounded-lg border-l-4 '+colors2[i%3]+'">'
+                                +'<p class="text-sm font-semibold text-gray-800">'+a.titel+'</p>'
+                                +'<p class="text-xs text-gray-600">'+agoStr+'</p></div>';
+                        }).join('');
+                    }
+                }
+            } catch(e) { console.warn('Dashboard announcements:', e); }
+
+            // 6. Pipeline Widget
+            try {
+                var pQ = sb.from('leads').select('id,status');
+                if(stdId) pQ = pQ.eq('standort_id', stdId);
+                var pR = await pQ;
+                if(pR.data) {
+                    var offene = pR.data.filter(function(l){ return l.status !== 'abgeschlossen' && l.status !== 'verloren'; }).length;
+                    var angebote = pR.data.filter(function(l){ return l.status === 'angebot'; }).length;
+                    var w = document.querySelector('[data-widget="pipeline"] .space-y-3');
+                    if(w) {
+                        // Count today's termine for pipeline widget too
+                        var todayTermine = 0;
+                        try {
+                            var td = new Date().toISOString().split('T')[0];
+                            var tResp = await sb.from('kalender_termine').select('id',{count:'exact',head:true}).gte('startzeit',td+'T00:00:00').lte('startzeit',td+'T23:59:59');
+                            todayTermine = tResp.count || 0;
+                        } catch(e2){}
+                        w.innerHTML = '<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Offene Leads</span><span class="font-bold text-blue-600">'+offene+'</span></div>'
+                            +'<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Heute Termine</span><span class="font-bold text-purple-600">'+todayTermine+'</span></div>'
+                            +'<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Angebote offen</span><span class="font-bold text-orange-600">'+angebote+'</span></div>';
+                    }
+                }
+            } catch(e) { console.warn('Dashboard pipeline:', e); }
+
+            // 7. Umsatz & Ergebnis Hauptkarte
+            try {
+                var uQ = sb.from('bwa_daten').select('monat,jahr,umsatzerloese,rohertrag,gesamtkosten,ergebnis_vor_steuern,betriebsergebnis');
+                if(stdId) uQ = uQ.eq('standort_id', stdId);
+                var uR = await uQ.order('jahr',{ascending:false}).order('monat',{ascending:false}).limit(1);
+                if(uR.data && uR.data.length > 0) {
+                    var d = uR.data[0];
+                    var u = parseFloat(d.umsatzerloese)||0;
+                    var r = parseFloat(d.rohertrag)||0;
+                    var k = parseFloat(d.gesamtkosten)||0;
+                    var eg = parseFloat(d.ergebnis_vor_steuern)||parseFloat(d.betriebsergebnis)||0;
+                    var rm = u>0?Math.round(r/u*100):0;
+                    var em = u>0?Math.round(eg/u*100):0;
+                    
+                    var el = function(id){ return document.getElementById(id); };
+                    if(el('dashUmsatzWert')) el('dashUmsatzWert').textContent = eur(u)+' €';
+                    if(el('dashUmsatzLabel')) el('dashUmsatzLabel').textContent = monatNamen[d.monat]+' '+d.jahr;
+                    if(el('dashRohertragWert')) el('dashRohertragWert').textContent = eur(r)+' €';
+                    if(el('dashRohertragBar')) el('dashRohertragBar').style.width = Math.min(rm,100)+'%';
+                    if(el('dashRohertragPct')) el('dashRohertragPct').textContent = rm+'%';
+                    if(el('dashKostenWert')) el('dashKostenWert').textContent = eur(k)+' €';
+                    if(el('dashErgebnisWert')) { el('dashErgebnisWert').textContent = eur(eg)+' €'; el('dashErgebnisWert').className = 'text-3xl font-bold '+(eg>=0?'text-green-600':'text-red-600'); }
+                    if(el('dashErgebnisBar')) el('dashErgebnisBar').style.width = Math.min(Math.abs(em),100)+'%';
+                    if(el('dashErgebnisPct')) { el('dashErgebnisPct').textContent = em+'%'; el('dashErgebnisPct').className = 'text-xs font-semibold '+(em>=0?'text-green-600':'text-red-600'); }
+                    if(el('dashErgebnisBar')) el('dashErgebnisBar').className = (eg>=0?'bg-green-500':'bg-red-500')+' h-2 rounded-full';
+                } else {
+                    var el2 = document.getElementById('dashUmsatzLabel');
+                    if(el2) el2.textContent = 'Noch keine BWA hochgeladen';
+                }
+            } catch(e) { console.warn('Dashboard umsatz card:', e); }
         }
 
         // === DEMO MODE SYSTEM ===
@@ -7607,14 +7788,18 @@
                         
                         // Highlight für wichtige Summenzeilen
                         var hlCls = '';
-                        if(d.kontengruppe === 'Rohertrag' && isSumme) { cls = 'bg-blue-50 border-b-2 border-blue-200'; hlCls = 'text-blue-800'; }
-                        if(d.kontengruppe === 'Ergebnis' && isSumme) { 
+                        var kg = d.kontengruppe || '';
+                        if((kg === 'Rohertrag' || kg === 'Betrieblicher Rohertrag') && isSumme) { cls = 'bg-blue-50 border-b-2 border-blue-200'; hlCls = 'text-blue-800'; }
+                        if((kg === 'Ergebnis' || kg === 'Ergebnis vor Steuern' || kg === 'Vorläufiges Ergebnis') && isSumme) { 
                             var ergVal = parseFloat(d.wert)||0;
                             cls = (ergVal >= 0 ? 'bg-green-50 border-t-2 border-green-400' : 'bg-red-50 border-t-2 border-red-400');
                             hlCls = ergVal >= 0 ? 'text-green-800' : 'text-red-800';
                         }
-                        if(d.kontengruppe === 'Betriebsergebnis' && isSumme) cls = 'bg-orange-50 border-b-2 border-orange-200';
-                        if(d.kontengruppe === 'Gesamtkosten' || d.kontengruppe === 'Summe Aufwendungen') cls = 'bg-gray-100 border-b-2 border-gray-400';
+                        if(kg === 'Betriebsergebnis' && isSumme) cls = 'bg-orange-50 border-b-2 border-orange-200';
+                        if(kg === 'Gesamtkosten' || kg === 'Summe Aufwendungen') { if(isSumme) cls = 'bg-gray-100 border-b-2 border-gray-400'; }
+                        if(kg === 'Materialaufwand' && isSumme) cls = 'bg-gray-50 border-b-2 border-gray-200';
+                        if(kg === 'Personalkosten' && isSumme) cls = 'bg-gray-50 border-b border-gray-200';
+                        if(kg === 'Umsatzerlöse' && isSumme) cls = 'bg-gray-50 border-b-2 border-gray-300';
                         
                         tbody += '<tr class="'+cls+'">';
                         tbody += '<td class="py-1.5 px-3 '+tdBold+' '+hlCls+' '+indent+'">';
@@ -8215,11 +8400,13 @@
             // Try load plan from DB
             try {
                 var stdId = sbProfile ? sbProfile.standort_id : null;
-                var resp = await sb.from('jahresplaene').select('*').eq('jahr', planIstYear).eq('standort_id', stdId).single();
-                if(!resp.error && resp.data) {
-                    currentPlan = resp.data;
+                if(stdId) {
+                    var resp = await sb.from('jahresplaene').select('*').eq('jahr', planIstYear).eq('standort_id', stdId).maybeSingle();
+                    if(!resp.error && resp.data) {
+                        currentPlan = resp.data;
+                    }
                 }
-            } catch(e) { /* no plan yet */ }
+            } catch(e) { /* no plan yet or table does not exist */ }
 
             if(!currentPlan || !currentPlan.plan_daten) {
                 renderPlanUploadScreen(el);
@@ -8881,9 +9068,10 @@
 
         // === LEAD REPORTING DASHBOARD (computed from hqStandorte) ===
         function getLeadData() {
+            if(!hqStandorte || !Array.isArray(hqStandorte) || hqStandorte.length === 0) return { standorte: [], monate: [] };
             // Standorte performance sorted
             var standorte = hqStandorte.map(function(s) {
-                return { name: s.name, perf: s.leadPerf };
+                return { name: s.name, perf: s.leadPerf || 0 };
             }).sort(function(a,b) { return a.perf - b.perf; });
 
             // Monthly data - use actual data from DB where available
