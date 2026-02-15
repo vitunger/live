@@ -7606,6 +7606,15 @@
         // BWA SUPABASE FUNCTIONS
         // =============================================
         var bwaCache = [];
+        // Normalize BWA data to handle different DB column names
+        function normBwa(b) {
+            if(!b) return b;
+            b.raumkosten = b.raumkosten || b.miete || 0;
+            b.werbekosten = b.werbekosten || b.werbung_marketing || 0;
+            b.zinsaufwand = b.zinsaufwand || b.zinsen || 0;
+            b.instandhaltung = b.instandhaltung || b.reparaturen_instandhaltung || 0;
+            return b;
+        }
         var selectedBwaId = null;
 
         var monatNamen = ['','Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
@@ -7636,7 +7645,7 @@
                 if(stdId && !sbProfile.is_hq) query = query.eq('standort_id', stdId);
                 var resp = await query;
                 if(resp.error) throw resp.error;
-                bwaCache = resp.data || [];
+                bwaCache = (resp.data || []).map(normBwa);
                 if(bwaCache.length === 0) {
                     container.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">Noch keine BWAs erfasst.</p>';
                     return;
@@ -7676,7 +7685,7 @@
             try {
                 var resp = await sb.from('bwa_daten').select('*').eq('id', bwaId).single();
                 if(resp.error) throw resp.error;
-                var b = resp.data;
+                var b = normBwa(resp.data);
                 // Update title
                 document.getElementById('bwaTitle').textContent = 'BWA ' + monatNamen[b.monat] + ' ' + b.jahr;
                 document.getElementById('bwaEditBtn').style.display = '';
@@ -8195,39 +8204,61 @@
                     else fileUrl = path;
                 }
 
+                // Build data object dynamically to handle different DB schemas
                 var data = {
                     standort_id: stdId,
                     monat: month,
                     jahr: year,
                     umsatzerloese: umsatz,
-                    davon_fahrraeder: v('bwaF_fahrraeder'),
-                    davon_teile: v('bwaF_teile'),
-                    davon_service: v('bwaF_service'),
-                    davon_skonti: v('bwaF_skonti'),
                     wareneinsatz: wareneinsatz,
                     rohertrag: rohertrag,
                     personalkosten: personal,
-                    raumkosten: raum,
-                    werbekosten: werbe,
-                    kosten_warenabgabe: warenabgabe,
                     abschreibungen: abschreibung,
                     sonstige_kosten: sonstige,
                     gesamtkosten: gesamtkosten,
                     betriebsergebnis: betriebsergebnis,
-                    zinsaufwand: zins,
                     ergebnis_vor_steuern: ergebnis,
-                    plan_umsatz: v('bwaF_planUmsatz'),
-                    plan_wareneinsatz: v('bwaF_planWareneinsatz'),
-                    plan_rohertrag: v('bwaF_planRohertrag'),
-                    plan_personalkosten: v('bwaF_planPersonal'),
-                    plan_raumkosten: v('bwaF_planRaum'),
-                    plan_werbekosten: v('bwaF_planWerbe'),
-                    plan_gesamtkosten: v('bwaF_planGesamt'),
-                    plan_ergebnis: v('bwaF_planErgebnis'),
                     format: window._lastParsedFormat || null,
                     hochgeladen_von: sbUser ? sbUser.id : null,
                     updated_at: new Date().toISOString()
                 };
+                // Detect available columns once, cache result
+                if(!window._bwaColumns) {
+                    try {
+                        var colResp = await sb.rpc('get_table_columns', {p_table: 'bwa_daten'});
+                        if(colResp.data) window._bwaColumns = colResp.data.map(function(r){return r.column_name;});
+                    } catch(e) {}
+                    if(!window._bwaColumns) {
+                        // Fallback: detect via single select
+                        try {
+                            var probe = await sb.from('bwa_daten').select('*').limit(1);
+                            if(probe.data && probe.data[0]) window._bwaColumns = Object.keys(probe.data[0]);
+                            else if(!probe.error) window._bwaColumns = [];
+                        } catch(e2) { window._bwaColumns = []; }
+                    }
+                }
+                var cols = window._bwaColumns || [];
+                function addIf(name, val) { if(cols.length === 0 || cols.indexOf(name) >= 0) data[name] = val; }
+                // Map to actual DB column names (supports both old and new schemas)
+                addIf('werbung_marketing', werbe); addIf('werbekosten', werbe);
+                addIf('miete', raum); addIf('raumkosten', raum);
+                addIf('zinsen', zins); addIf('zinsaufwand', zins);
+                addIf('kosten_warenabgabe', warenabgabe);
+                addIf('reparaturen_instandhaltung', v('bwaF_instandhaltung'));
+                addIf('versicherungen', v('bwaF_versicherungen'));
+                addIf('fahrzeugkosten', v('bwaF_fahrzeug'));
+                addIf('davon_fahrraeder', v('bwaF_fahrraeder'));
+                addIf('davon_teile', v('bwaF_teile'));
+                addIf('davon_service', v('bwaF_service'));
+                addIf('davon_skonti', v('bwaF_skonti'));
+                addIf('plan_umsatz', v('bwaF_planUmsatz'));
+                addIf('plan_wareneinsatz', v('bwaF_planWareneinsatz'));
+                addIf('plan_rohertrag', v('bwaF_planRohertrag'));
+                addIf('plan_personalkosten', v('bwaF_planPersonal'));
+                addIf('plan_raumkosten', v('bwaF_planRaum'));
+                addIf('plan_werbekosten', v('bwaF_planWerbe'));
+                addIf('plan_gesamtkosten', v('bwaF_planGesamt'));
+                addIf('plan_ergebnis', v('bwaF_planErgebnis'));
                 if(fileUrl) { data.datei_url = fileUrl; data.datei_name = fileName; }
 
                 var resp = await sb.from('bwa_daten').upsert(data, {onConflict:'standort_id,monat,jahr'}).select();
@@ -8480,7 +8511,7 @@
             // Load all BWAs for this year
             var stdId = sbProfile ? sbProfile.standort_id : null;
             var bwaResp = await sb.from('bwa_daten').select('*').eq('standort_id', stdId).eq('jahr', planIstYear).order('monat');
-            var bwas = bwaResp.data || [];
+            var bwas = (bwaResp.data || []).map(normBwa);
             var bwaByMonth = {};
             bwas.forEach(function(b) { bwaByMonth[b.monat] = b; });
 
@@ -8644,7 +8675,7 @@
                 try {
                     var resp = await sb.from('bwa_daten').select('*').eq('id', selectedBwaId).single();
                     if(resp.error) return;
-                    var d = resp.data;
+                    var d = normBwa(resp.data);
                     document.getElementById('bwaMonth').value = d.monat;
                     document.getElementById('bwaYear').value = d.jahr;
                     var map = {
