@@ -9714,7 +9714,6 @@
                     alert('Status konnte nicht geändert werden – keine Berechtigung.');
                     return;
                 }
-                showNotification('✅ Status geändert: ' + newStatus, 'success');
                 renderHqIdeen('all');
             } catch(err) { alert('Fehler: '+err.message); }
         }
