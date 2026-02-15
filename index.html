@@ -9256,11 +9256,12 @@
                 function isJanOfYear(v, yr) {
                     if(!v) return false;
                     if(v instanceof Date) {
-                        // Use UTC to avoid timezone issues
-                        return v.getUTCMonth() === 0 && v.getUTCFullYear() == yr;
+                        // SheetJS cellDates:true creates dates in LOCAL timezone
+                        // 2026-01-01 in Excel → Date(2026,0,1) → getMonth()=0, getFullYear()=2026
+                        return v.getMonth() === 0 && v.getFullYear() == yr;
                     }
                     if(typeof v === 'number' && v > 40000) {
-                        // Excel serial date: convert to JS date (UTC)
+                        // Excel serial date: convert to JS date
                         var d = new Date((v - 25569) * 86400000);
                         return d.getUTCMonth() === 0 && d.getUTCFullYear() == yr;
                     }
