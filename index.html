@@ -9281,7 +9281,7 @@
                         if(isJanOfYear(r4[c], planYear)) {
                             planStartCol = c;
                             planFormat = 'monthly';
-                            console.log('[Plan Parser] Format A/B: R3 year + R4 date match at col ' + c);
+                            console.log('[Plan Parser] Format A/B: R3 year + R4 date match at col ' + c + ' (R3=' + r3[c] + ', R4=' + (r4[c] instanceof Date ? r4[c].toISOString() + ' local:M=' + r4[c].getMonth() + '/Y=' + r4[c].getFullYear() : r4[c]) + ')');
                             break;
                         }
                         // R3 has year but R4 doesn't look like a date - check if R4 has 'Jan' text
