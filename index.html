@@ -227,6 +227,32 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+        .beta-badge {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-size: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 4px;
+            vertical-align: middle;
+            display: inline-block;
+            line-height: 14px;
+        }
+        .beta-badge-tab {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 0px 5px;
+            border-radius: 6px;
+            font-size: 7px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-left: 3px;
+            vertical-align: middle;
+        }
         
         .locked-menu-item {
             opacity: 0.5;
@@ -5226,6 +5252,94 @@
             wissenTabSelectors.forEach(function(sel) {
                 var el = document.querySelector(sel);
                 if(el) el.style.display = wissenDisabled ? 'none' : '';
+            });
+
+            // Apply beta badges to non-final modules
+            try { applyBetaBadges(); } catch(e) { console.warn('Beta badges:', e); }
+        }
+
+        // === BETA BADGES ===
+        // Mapping: sidebar showView name → module status (not live = beta)
+        var BETA_MODULES = {
+            // Standort modules
+            'verkauf': 'teilweise',
+            'dashboards': 'demo',
+            'allgemein': 'demo',
+            'einkauf': 'demo',
+            'marketing': 'demo',
+            'wissen': 'teilweise',
+            'shop': 'teilweise',
+            'onboarding': 'demo',
+            'notifications': 'stub',
+            // HQ modules
+            'hqCockpit': 'teilweise',
+            'hqKommando': 'teilweise',
+            'hqAktionen': 'stub',
+            'hqMarketing': 'demo',
+            'hqEinkauf': 'demo',
+            'hqVerkauf': 'demo',
+            'hqAuswertung': 'stub',
+            'hqWissen': 'teilweise',
+            'hqShop': 'demo'
+        };
+        // Tabs that are beta (within otherwise-live modules)
+        var BETA_TABS = {
+            'benchmark': true,    // Controlling: Benchmarks
+            'planist': true,      // Controlling: Plan/Ist
+            'liquiditaet': true,  // Controlling: Liquidität
+            'vkWissen': true,     // Verkauf: Wissen
+            'ekWissen': true,     // Einkauf: Wissen  
+            'ctrlWissen': true,   // Controlling: Wissen
+            'mktWissen': true,    // Marketing: Wissen
+            'kontakte': true,     // Support: Kontakte
+            'leadreporting': true // Dashboards: Reporting
+        };
+
+        function applyBetaBadges() {
+            // Remove old badges first
+            document.querySelectorAll('.auto-beta-badge').forEach(function(b){ b.remove(); });
+
+            // Sidebar buttons
+            document.querySelectorAll('.sidebar-item').forEach(function(btn) {
+                var onclick = btn.getAttribute('onclick') || '';
+                var m = onclick.match(/showView\('([^']+)'\)/);
+                if(!m) return;
+                var viewName = m[1];
+                if(!BETA_MODULES[viewName]) return;
+                // Don't duplicate
+                if(btn.querySelector('.auto-beta-badge')) return;
+                var span = btn.querySelector('span[data-i18n], span:not(.auto-beta-badge):not(.modul-wip-badge)');
+                if(!span) return;
+                var badge = document.createElement('span');
+                badge.className = 'auto-beta-badge beta-badge';
+                badge.textContent = 'BETA';
+                span.parentNode.insertBefore(badge, span.nextSibling);
+            });
+
+            // Tab buttons
+            document.querySelectorAll('[data-tab]').forEach(function(btn) {
+                var tab = btn.getAttribute('data-tab');
+                if(!BETA_TABS[tab]) return;
+                if(btn.querySelector('.auto-beta-badge')) return;
+                var badge = document.createElement('span');
+                badge.className = 'auto-beta-badge beta-badge-tab';
+                badge.textContent = 'BETA';
+                btn.appendChild(badge);
+            });
+
+            // View headlines – add beta tag next to H1 inside beta views
+            Object.keys(BETA_MODULES).forEach(function(viewName) {
+                var viewEl = document.getElementById(viewName + 'View');
+                if(!viewEl) return;
+                var h1 = viewEl.querySelector('h1');
+                if(!h1 || h1.querySelector('.auto-beta-badge')) return;
+                var badge = document.createElement('span');
+                badge.className = 'auto-beta-badge beta-badge';
+                badge.style.fontSize = '10px';
+                badge.style.marginLeft = '8px';
+                badge.style.verticalAlign = 'middle';
+                badge.textContent = 'BETA';
+                h1.appendChild(badge);
             });
         }
 
