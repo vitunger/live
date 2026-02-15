@@ -5442,12 +5442,13 @@
             'ideenboard':     ['alle'],
             'shop':           ['inhaber'],
             'onboarding':     ['inhaber'],
-            'mitarbeiter':    ['inhaber']
+            'mitarbeiter':    ['inhaber'],
+            'devStatus':      ['alle']
         };
 
         // Prüft ob der aktuelle User Zugriff auf eine View hat
         function hasAccess(viewName) {
-            if(currentRole === 'hq') return viewName.indexOf('hq')===0 || viewName==='kalender' || viewName==='todo' || viewName==='kommunikation';
+            if(currentRole === 'hq') return viewName.indexOf('hq')===0 || viewName==='kalender' || viewName==='todo' || viewName==='kommunikation' || viewName==='devStatus';
             var perms = rolePermissions[viewName];
             if(!perms) return true;
             if(perms.indexOf('alle') >= 0) return true;
