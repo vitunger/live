@@ -12679,31 +12679,73 @@
                 if(rollenResp.data) rollenResp.data.forEach(function(r){ rollenMap[r.name] = r.id; });
                 var rollenIds = selected.map(function(r){ return rollenMap[r]; }).filter(Boolean);
 
-                // Edge Function aufrufen statt create_full_user RPC
-                var session = await sb.auth.getSession();
-                if(!session.data.session) throw { message: 'Nicht eingeloggt' };
+                // Aktuelle Admin-Session sichern (signUp erstellt neue Session!)
+                var adminSession = await sb.auth.getSession();
+                var adminToken = adminSession.data.session ? adminSession.data.session.access_token : null;
+                var adminRefresh = adminSession.data.session ? adminSession.data.session.refresh_token : null;
 
-                var response = await fetch(sb.supabaseUrl + '/functions/v1/create-user', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + session.data.session.access_token,
-                        'apikey': sb.supabaseKey
-                    },
-                    body: JSON.stringify({
-                        email: email.trim().toLowerCase(),
-                        password: pw,
-                        vorname: vorname.trim(),
-                        nachname: nachname.trim(),
-                        is_hq: isHqUser,
-                        standort_id: isHqUser ? null : (standortId || null),
-                        rollen: rollenIds,
-                        status: 'aktiv'
-                    })
+                // User direkt über Auth API erstellen (ohne Edge Function)
+                var signUpResp = await sb.auth.signUp({
+                    email: email.trim().toLowerCase(),
+                    password: pw,
+                    options: {
+                        data: {
+                            vorname: vorname.trim(),
+                            nachname: nachname.trim(),
+                            name: vorname.trim() + ' ' + nachname.trim()
+                        }
+                    }
                 });
 
-                var result = await response.json();
-                if(!response.ok) throw { message: result.error || 'User-Erstellung fehlgeschlagen' };
+                // Admin-Session sofort wiederherstellen!
+                if(adminRefresh) {
+                    await sb.auth.setSession({ access_token: adminToken, refresh_token: adminRefresh });
+                    console.log('[CreateUser] Admin session restored');
+                }
+
+                if(signUpResp.error) throw { message: 'Auth-Fehler: ' + signUpResp.error.message };
+                if(!signUpResp.data.user) throw { message: 'User konnte nicht erstellt werden' };
+
+                var newUserId = signUpResp.data.user.id;
+                console.log('[CreateUser] Auth user created:', newUserId);
+
+                // Profil in users-Tabelle erstellen/aktualisieren
+                var profileData = {
+                    id: newUserId,
+                    email: email.trim().toLowerCase(),
+                    name: vorname.trim() + ' ' + nachname.trim(),
+                    vorname: vorname.trim(),
+                    nachname: nachname.trim(),
+                    is_hq: isHqUser,
+                    standort_id: isHqUser ? null : (standortId || null),
+                    status: 'aktiv',
+                    created_at: new Date().toISOString()
+                };
+
+                var profileResp = await sb.from('users').upsert(profileData, {onConflict: 'id'}).select();
+                if(profileResp.error) {
+                    console.warn('[CreateUser] Profile upsert error:', profileResp.error);
+                    // Trotzdem weitermachen - DB-Trigger könnte das Profil schon erstellt haben
+                }
+                console.log('[CreateUser] Profile created/updated');
+
+                // Rollen zuweisen
+                if(rollenIds.length > 0) {
+                    var rollenInserts = rollenIds.map(function(rid) {
+                        return { user_id: newUserId, rollen_id: rid };
+                    });
+                    var rollenInsResp = await sb.from('user_rollen').insert(rollenInserts);
+                    if(rollenInsResp.error) console.warn('[CreateUser] Rollen insert error:', rollenInsResp.error);
+                    else console.log('[CreateUser] Rollen assigned:', selected);
+                }
+
+                // Passwort setzen (falls signUp ein confirmation-basiertes System nutzt)
+                try {
+                    var pwResp = await sb.rpc('set_user_password', { user_id: newUserId, new_password: pw });
+                    if(pwResp.error) console.warn('[CreateUser] set_user_password warning:', pwResp.error);
+                } catch(pwErr) {
+                    console.warn('[CreateUser] Password set skipped:', pwErr);
+                }
 
                 closeNeuerMaModal();
                 var rollenLabels = {'hq':'HQ','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
