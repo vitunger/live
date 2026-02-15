@@ -7738,7 +7738,10 @@
                         tbody += '<tr class="'+cls+'">';
                         tbody += '<td class="py-1.5 px-3 '+tdBold+' '+hlCls+' '+indent+'">';
                         if(isDetail && d.konto) tbody += '<span class="text-gray-400 text-[10px] mr-1">'+d.konto+'</span> ';
-                        tbody += (d.bezeichnung||'')+'</td>';
+                        var bz = d.bezeichnung||'';
+                        // Filter out S/H markers stored as bezeichnung in older data
+                        if(bz.length <= 2 && /^[SH]?$/.test(bz.trim())) bz = d.kontengruppe||'';
+                        tbody += bz+'</td>';
                         tbody += '<td class="text-right py-1.5 px-3 '+tdBold+' '+hlCls+' '+eurColor(d.wert)+'">'+eur(d.wert)+'</td>';
                         tbody += '<td class="text-right py-1.5 px-3 text-gray-400">'+(d.wert_kumuliert ? eur(d.wert_kumuliert) : '—')+'</td>';
                         tbody += '<td class="text-right py-1.5 px-3 text-gray-400">'+(d.wert_vorjahr ? eur(d.wert_vorjahr) : '—')+'</td>';
@@ -7964,7 +7967,7 @@
                 if(daten && daten.length > 0) {
                     console.log('[BWA Parser] Format:', meta.format, 'Total rows:', daten.length);
                     daten.slice(0,8).forEach(function(d,i) {
-                        console.log('[BWA Detail '+i+']', 'zeile:'+d.zeile, 'konto:'+d.konto, 'bez:"'+d.bezeichnung+'"', 'summe:'+d.ist_summenzeile);
+                        console.log('[BWA Detail '+i+']', JSON.stringify({z:d.zeile, k:d.konto, b:d.bezeichnung, s:d.ist_summenzeile}));
                     });
                 }
 
