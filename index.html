@@ -5778,6 +5778,7 @@
             };
 
             // Rollen-Anzeige zusammenbauen
+            if(!currentRoles || !Array.isArray(currentRoles)) currentRoles = ['inhaber'];
             var roleDisplay = currentRoles.map(function(r){ return roleLabels[r]||r; }).join(', ');
 
             // Location name from Supabase
@@ -8581,8 +8582,9 @@
         }
 
         async function renderLeadDashboard() {
-            if(hqStandorte.length === 0) await loadHqStandorte();
+            try { if(hqStandorte.length === 0) await loadHqStandorte(); } catch(e) { console.warn('Lead dashboard: no HQ data'); }
             var leadData = getLeadData();
+            if(!leadData || !leadData.monate) return;
             // Chart Bars
             var chartBars = document.getElementById('chartBars');
             var chartLabels = document.getElementById('chartLabels');
