@@ -7645,9 +7645,12 @@
                         {label:'Rohertrag', ist:b.rohertrag, plan:b.plan_rohertrag, bold:true, bg:'bg-blue-50', highlight:'text-blue-800'},
                         {label:'Personalkosten', ist:b.personalkosten, plan:b.plan_personalkosten, bold:true},
                         {label:'Miete / Raumkosten', ist:b.miete, plan:b.plan_raumkosten, bold:true},
+                        {label:'Versicherungen / Beiträge', ist:b.versicherungen, bold:true},
+                        {label:'Fahrzeugkosten', ist:b.fahrzeugkosten, bold:true},
                         {label:'Werbung / Marketing', ist:b.werbung_marketing, plan:b.plan_werbekosten, bold:true},
                         {label:'Kosten Warenabgabe', ist:b.kosten_warenabgabe, bold:true},
                         {label:'Abschreibungen', ist:b.abschreibungen, bold:true},
+                        {label:'Reparatur / Instandhaltung', ist:b.reparaturen_instandhaltung, bold:true},
                         {label:'Sonstige Kosten', ist:b.sonstige_kosten, bold:true},
                         {label:'Gesamtkosten', ist:b.gesamtkosten, plan:b.plan_gesamtkosten, bold:true, bg:'bg-gray-50', separator:true},
                         {label:'Betriebsergebnis', ist:b.betriebsergebnis, bold:true},
@@ -8043,6 +8046,7 @@
                 // Store detail data for saveBwaData()
                 window._lastParsedDetails = daten && daten.length > 0 ? daten : [];
                 window._lastParsedFormat = meta.format;
+                window._lastParsedSummary = parsed;
                 
                 if(parseBtn) parseBtn.disabled = false;
             });
@@ -8056,20 +8060,25 @@
             var errEl = document.getElementById('bwaUploadError');
             var btn = document.getElementById('bwaSaveBtn');
             var v = function(id) { return parseFloat((document.getElementById(id)||{}).value) || 0; };
+            var p = window._lastParsedSummary || {};
 
-            var umsatz = v('bwaF_umsatz');
-            var wareneinsatz = v('bwaF_wareneinsatz');
-            var rohertrag = umsatz + wareneinsatz; // wareneinsatz is negative
-            var personal = v('bwaF_personal');
-            var raum = v('bwaF_raum');
-            var werbe = v('bwaF_werbe');
-            var warenabgabe = v('bwaF_warenabgabe');
-            var abschreibung = v('bwaF_abschreibung');
-            var sonstige = v('bwaF_sonstige');
-            var gesamtkosten = personal + raum + werbe + warenabgabe + abschreibung + sonstige;
-            var betriebsergebnis = rohertrag + gesamtkosten;
-            var zins = v('bwaF_zins');
-            var ergebnis = betriebsergebnis + zins;
+            // Use parsed values if available, otherwise form fields
+            var umsatz = p.umsatzerloese || v('bwaF_umsatz');
+            var wareneinsatz = p.wareneinsatz || v('bwaF_wareneinsatz');
+            var rohertrag = p.rohertrag || (umsatz + wareneinsatz);
+            var personal = p.personalkosten || v('bwaF_personal');
+            var raum = p.raumkosten || v('bwaF_raum');
+            var werbe = p.werbekosten || v('bwaF_werbe');
+            var warenabgabe = p.kosten_warenabgabe || v('bwaF_warenabgabe');
+            var abschreibung = p.abschreibungen || v('bwaF_abschreibung');
+            var sonstige = p.sonstige_kosten || v('bwaF_sonstige');
+            var gesamtkosten = p.gesamtkosten || (personal + raum + werbe + warenabgabe + abschreibung + sonstige);
+            var betriebsergebnis = p.betriebsergebnis || (rohertrag + gesamtkosten);
+            var zins = p.zinsaufwand || v('bwaF_zins');
+            var ergebnis = p.ergebnis_vor_steuern || (betriebsergebnis + zins);
+            var fahrzeugkosten = p.fahrzeugkosten || 0;
+            var versicherungen = p.versicherungen || 0;
+            var instandhaltung = p.instandhaltung || 0;
 
             if(!umsatz && !wareneinsatz) { if(errEl){errEl.textContent='Bitte mindestens Umsatz oder Wareneinsatz eingeben.';errEl.style.display='block';} return; }
 
@@ -8099,10 +8108,10 @@
                     monat: month,
                     jahr: year,
                     umsatzerloese: umsatz,
-                    davon_fahrraeder: v('bwaF_fahrraeder'),
-                    davon_teile: v('bwaF_teile'),
-                    davon_service: v('bwaF_service'),
-                    davon_skonti: v('bwaF_skonti'),
+                    davon_fahrraeder: p.davon_fahrraeder || v('bwaF_fahrraeder'),
+                    davon_teile: p.davon_teile || v('bwaF_teile'),
+                    davon_service: p.davon_service || v('bwaF_service'),
+                    davon_skonti: p.davon_skonti || v('bwaF_skonti'),
                     wareneinsatz: wareneinsatz,
                     rohertrag: rohertrag,
                     personalkosten: personal,
@@ -8110,6 +8119,9 @@
                     werbung_marketing: werbe,
                     kosten_warenabgabe: warenabgabe,
                     abschreibungen: abschreibung,
+                    fahrzeugkosten: fahrzeugkosten,
+                    versicherungen: versicherungen,
+                    reparaturen_instandhaltung: instandhaltung,
                     sonstige_kosten: sonstige,
                     gesamtkosten: gesamtkosten,
                     betriebsergebnis: betriebsergebnis,
@@ -8171,6 +8183,7 @@
                 // Cleanup temp vars
                 window._lastParsedDetails = null;
                 window._lastParsedFormat = null;
+                window._lastParsedSummary = null;
 
                 closeBwaUploadModal();
                 await loadBwaList();
