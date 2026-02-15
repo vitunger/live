@@ -5784,10 +5784,9 @@
             var isGF = currentRoles.indexOf('inhaber') >= 0;
             if(!isHQ && !isGF) return;
             try {
-                var query = sb.from('users').select('id,name,email,created_at').eq('status','onboarding');
+                var query = sb.from('users').select('id,name,email,created_at').in('status',['onboarding','pending']);
                 // GF: nur eigener Standort
                 if(!isHQ && sbStandort) query = query.eq('standort_id', sbStandort.id);
-                // Nur User ohne Rollen (= noch nicht freigegebene)
                 var resp = await query;
                 if(resp.error || !resp.data) return;
                 // Filter: nur User die wirklich keine Rollen haben
@@ -11999,6 +11998,8 @@
             if(s==='aktiv') return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">🟢 Aktiv</span>';
             if(s==='demo') return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-red-100 text-red-700 animate-pulse">🔴 Demo</span>';
             if(s==='onboarding') return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">🔵 Onboarding</span>';
+            if(s==='pending') return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-yellow-100 text-yellow-700">⏳ Wartet</span>';
+            if(s==='gesperrt') return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">🚫 Gesperrt</span>';
             if(s==='offboarding') return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">🔴 Offboarding</span>';
             return s;
         }
@@ -12071,16 +12072,16 @@
                     var st = u.status || 'aktiv';
                     var d = u.created_at ? new Date(u.created_at) : new Date();
                     var eintritt = String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
-                    // Action button: Freigeben for onboarding, Details for others
+                    // Action button: Freigeben for onboarding/pending, Details for others
                     var actionBtn = '';
-                    if(st === 'onboarding' && rollen.length === 0) {
+                    if((st === 'onboarding' || st === 'pending') && rollen.length === 0) {
                         actionBtn = '<button class="text-xs px-3 py-1 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600" onclick="approveUser(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')">Freigeben</button>';
                     } else {
                         actionBtn = '<button class="text-xs text-vit-orange hover:underline font-semibold" onclick="openEditMaModal(\''+u.id+'\')">✏️</button>'
                     +' <button class="text-xs text-blue-500 hover:text-blue-700 hover:underline font-semibold ml-1" onclick="loginAs(\''+u.id+'\',\''+u.email+'\',\''+u.name.replace(/'/g,"\\'")+'\')">🔑</button>'
                     +' <button class="text-xs text-red-400 hover:text-red-600 hover:underline font-semibold ml-1" onclick="deleteMa(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')">🗑️</button>';
                     }
-                    h+='<tr class="border-t border-gray-100 hover:bg-gray-50'+(st==='onboarding' && rollen.length===0 ? ' bg-yellow-50':'')+'">';
+                    h+='<tr class="border-t border-gray-100 hover:bg-gray-50'+((st==='onboarding' || st==='pending') && rollen.length===0 ? ' bg-yellow-50':'')+'">';
                     h+='<td class="px-4 py-3"><div class="flex items-center space-x-2"><img src="https://ui-avatars.com/api/?name='+encodeURIComponent(u.name)+'&background=EF7D00&color=fff&size=28" class="w-7 h-7 rounded-full"><div><span class="font-semibold text-gray-800">'+u.name+'</span><p class="text-[10px] text-gray-400">'+u.email+'</p></div></div></td>';
                     h+='<td class="px-4 py-3 text-gray-600 text-xs">'+stdName+'</td>';
                     h+='<td class="px-4 py-3 text-center">'+(rollen.length > 0 ? rollenBadges(rollen) : '<span class="text-xs text-yellow-600 font-semibold">Wartet auf Freigabe</span>')+'</td>';
@@ -12108,26 +12109,62 @@
             } catch(err) { console.error('Mitarbeiter:', err); body.innerHTML='<tr><td colspan="7" class="text-center py-4 text-red-400">Fehler: '+err.message+'</td></tr>'; }
         }
 
-        // === USER FREIGABE ===
+        // === USER FREIGABE (mit Ebene-Logik) ===
+        var approveEbene = 'standort';
+        
         async function approveUser(userId, userName) {
-            var allRollen = ['hq','inhaber','verkauf','werkstatt','buchhaltung'];
-            var labels = {'hq':'HQ','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
+            approveEbene = 'standort';
+            
+            // User-Daten laden für Standort-Info
+            var userResp = await sb.from('users').select('*, standorte(name)').eq('id', userId).single();
+            var userData = userResp.data || {};
+            var currentStandortId = userData.standort_id || '';
+            var currentStandortName = userData.standorte ? userData.standorte.name : '';
             
             var html = '<div id="approveOverlay" onclick="closeApproveModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:420px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:460px;max-width:90vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
             html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">User freigeben</h3><button onclick="closeApproveModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
-            html += '<p class="text-sm text-gray-600 mb-4"><strong>'+userName+'</strong> hat sich registriert und wartet auf Freigabe.</p>';
+            html += '<p class="text-sm text-gray-600 mb-4"><strong>'+userName+'</strong> hat sich registriert und wartet auf Freigabe.'+(currentStandortName ? ' <span class="text-xs text-gray-400">(Gewünschter Standort: '+currentStandortName+')</span>' : '')+'</p>';
+            
+            // === EBENE (HQ vs Standort) ===
+            html += '<div class="space-y-3 mb-4">';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Ebene</label>';
+            html += '<div class="flex space-x-2">';
+            html += '<button type="button" id="approveEbeneHQ" onclick="switchApproveEbene(\'hq\')" class="flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-gray-200 bg-white text-gray-500 hover:border-gray-300">\ud83c\udfe2 HQ</button>';
+            html += '<button type="button" id="approveEbeneStd" onclick="switchApproveEbene(\'standort\')" class="flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-vit-orange bg-orange-50 text-orange-700">\ud83c\udfea Standort</button>';
+            html += '</div></div>';
+            
+            // Standort Dropdown
+            html += '<div id="approveStandortWrap"><label class="block text-xs font-semibold text-gray-600 mb-1">Standort *</label><select id="approveStandort" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="">Wird geladen...</option></select></div>';
+            html += '</div>';
+            
+            // === ROLLEN (dynamisch basierend auf Ebene) ===
             html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Rollen zuweisen</p>';
-            var colors = {'hq':'border-red-300 bg-red-50','inhaber':'border-orange-300 bg-orange-50','verkauf':'border-blue-300 bg-blue-50','werkstatt':'border-gray-300 bg-gray-50','buchhaltung':'border-purple-300 bg-purple-50'};
-            allRollen.forEach(function(r){
-                html += '<label class="flex items-center space-x-3 p-2.5 rounded-lg border '+colors[r]+' mb-2 cursor-pointer hover:shadow-sm transition">';
+            
+            // HQ Rollen (initial hidden)
+            html += '<div id="approveRollesHQ" style="display:none">';
+            html += '<label class="flex items-center space-x-3 p-2 rounded-lg border border-red-300 bg-red-50 mb-1.5 cursor-pointer hover:shadow-sm transition">';
+            html += '<input type="checkbox" id="approveRole_hq" class="rounded" style="accent-color:#EF7D00;" checked>';
+            html += '<span class="text-sm font-semibold text-gray-800">HQ</span></label>';
+            html += '</div>';
+            
+            // Standort Rollen (initial visible)
+            html += '<div id="approveRollesStd">';
+            var stdRollen = ['inhaber','verkauf','werkstatt','buchhaltung'];
+            var stdLabels = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
+            var stdColors = {'inhaber':'border-orange-300 bg-orange-50','verkauf':'border-blue-300 bg-blue-50','werkstatt':'border-gray-300 bg-gray-50','buchhaltung':'border-purple-300 bg-purple-50'};
+            stdRollen.forEach(function(r){
+                html += '<label class="flex items-center space-x-3 p-2 rounded-lg border '+stdColors[r]+' mb-1.5 cursor-pointer hover:shadow-sm transition">';
                 html += '<input type="checkbox" id="approveRole_'+r+'" class="rounded" style="accent-color:#EF7D00;">';
-                html += '<span class="text-sm font-semibold text-gray-800">'+labels[r]+'</span>';
-                html += '</label>';
+                html += '<span class="text-sm font-semibold text-gray-800">'+stdLabels[r]+'</span></label>';
             });
+            html += '</div>';
+            
+            html += '<div id="approveError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mt-3"></div>';
             html += '<div class="flex space-x-3 mt-4">';
-            html += '<button onclick="confirmApprove(\''+userId+'\')" class="flex-1 py-2.5 bg-green-500 text-white rounded-lg font-semibold text-sm hover:bg-green-600">\u2705 Freigeben</button>';
-            html += '<button onclick="rejectUser(\''+userId+'\')" class="flex-1 py-2.5 bg-red-100 text-red-600 rounded-lg font-semibold text-sm hover:bg-red-200">\u274c Ablehnen</button>';
+            html += '<button id="approveSaveBtn" onclick="confirmApprove(\''+userId+'\')" class="flex-1 py-2.5 bg-green-500 text-white rounded-lg font-semibold text-sm hover:bg-green-600">\u2705 Freigeben</button>';
+            html += '<button onclick="rejectUser(\''+userId+'\')" class="py-2.5 px-4 bg-red-100 text-red-600 rounded-lg font-semibold text-sm hover:bg-red-200">\u274c Ablehnen</button>';
+            html += '<button onclick="closeApproveModal()" class="py-2.5 px-4 bg-gray-100 text-gray-600 rounded-lg font-semibold text-sm hover:bg-gray-200">Abbrechen</button>';
             html += '</div>';
             html += '</div></div>';
             
@@ -12135,6 +12172,51 @@
             c.id = 'approveContainer';
             c.innerHTML = html;
             document.body.appendChild(c);
+            
+            // Standorte laden
+            setTimeout(async function(){
+                try {
+                    var stdResp = await sb.from('standorte').select('id,name').order('name');
+                    var sel = document.getElementById('approveStandort');
+                    if(sel && stdResp.data) {
+                        sel.innerHTML = '<option value="">— Standort wählen —</option>';
+                        stdResp.data.forEach(function(s){
+                            var selected = (currentStandortId === s.id) ? ' selected' : '';
+                            sel.innerHTML += '<option value="'+s.id+'"'+selected+'>'+s.name+'</option>';
+                        });
+                    }
+                } catch(e){ console.error(e); }
+            }, 100);
+        }
+        
+        function switchApproveEbene(ebene) {
+            approveEbene = ebene;
+            var hqBtn = document.getElementById('approveEbeneHQ');
+            var stdBtn = document.getElementById('approveEbeneStd');
+            var stdWrap = document.getElementById('approveStandortWrap');
+            var rollesHQ = document.getElementById('approveRollesHQ');
+            var rollesStd = document.getElementById('approveRollesStd');
+            if(ebene === 'hq') {
+                if(hqBtn) hqBtn.className = 'flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-red-500 bg-red-50 text-red-700';
+                if(stdBtn) stdBtn.className = 'flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-gray-200 bg-white text-gray-500 hover:border-gray-300';
+                if(stdWrap) stdWrap.style.display = 'none';
+                if(rollesHQ) rollesHQ.style.display = '';
+                if(rollesStd) rollesStd.style.display = 'none';
+                var hqChk = document.getElementById('approveRole_hq');
+                if(hqChk) hqChk.checked = true;
+                ['inhaber','verkauf','werkstatt','buchhaltung'].forEach(function(r){
+                    var chk = document.getElementById('approveRole_'+r);
+                    if(chk) chk.checked = false;
+                });
+            } else {
+                if(stdBtn) stdBtn.className = 'flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-vit-orange bg-orange-50 text-orange-700';
+                if(hqBtn) hqBtn.className = 'flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-gray-200 bg-white text-gray-500 hover:border-gray-300';
+                if(stdWrap) stdWrap.style.display = '';
+                if(rollesHQ) rollesHQ.style.display = 'none';
+                if(rollesStd) rollesStd.style.display = '';
+                var hqChk = document.getElementById('approveRole_hq');
+                if(hqChk) hqChk.checked = false;
+            }
         }
 
         function closeApproveModal() {
@@ -12143,38 +12225,84 @@
         }
 
         async function confirmApprove(userId) {
-            var allRollen = ['hq','inhaber','verkauf','werkstatt','buchhaltung'];
+            var errEl = document.getElementById('approveError');
+            if(errEl) errEl.style.display = 'none';
+            
+            // Rollen basierend auf Ebene sammeln
             var selected = [];
-            allRollen.forEach(function(r){
-                var chk = document.getElementById('approveRole_'+r);
-                if(chk && chk.checked) selected.push(r);
-            });
-            if(selected.length === 0) { alert('Bitte mindestens eine Rolle zuweisen.'); return; }
+            var isHqUser = (approveEbene === 'hq');
+            if(isHqUser) {
+                var hqChk = document.getElementById('approveRole_hq');
+                if(hqChk && hqChk.checked) selected.push('hq');
+            } else {
+                ['inhaber','verkauf','werkstatt','buchhaltung'].forEach(function(r){
+                    var chk = document.getElementById('approveRole_'+r);
+                    if(chk && chk.checked) selected.push(r);
+                });
+            }
+            if(selected.length === 0) { 
+                if(errEl) { errEl.textContent = 'Bitte mindestens eine Rolle zuweisen.'; errEl.style.display = 'block'; }
+                return; 
+            }
+            
+            // Standort-Pflicht für Standort-User
+            var standortId = null;
+            if(!isHqUser) {
+                var stdSel = document.getElementById('approveStandort');
+                standortId = stdSel ? stdSel.value : null;
+                if(!standortId) {
+                    if(errEl) { errEl.textContent = 'Bitte einen Standort wählen.'; errEl.style.display = 'block'; }
+                    return;
+                }
+            }
+            
+            var btn = document.getElementById('approveSaveBtn');
+            if(btn) { btn.disabled = true; btn.textContent = 'Wird freigeschaltet...'; }
             
             try {
-                // 1. Status auf aktiv setzen
-                var upd = await sb.from('users').update({status: 'aktiv'}).eq('id', userId);
+                // 1. Status auf aktiv + is_hq + Standort setzen
+                var updateData = { 
+                    status: 'aktiv', 
+                    is_hq: isHqUser,
+                    standort_id: isHqUser ? null : standortId
+                };
+                var upd = await sb.from('users').update(updateData).eq('id', userId);
                 if(upd.error) throw upd.error;
                 
-                // 2. Rollen zuweisen via SECURITY DEFINER
-                for(var i=0; i<selected.length; i++) {
-                    await sb.rpc('assign_user_role', { p_user_id: userId, p_rolle_name: selected[i] });
+                // 2. Rollen-IDs holen
+                var rollenResp = await sb.from('rollen').select('id, name');
+                var rollenMap = {};
+                if(rollenResp.data) rollenResp.data.forEach(function(r){ rollenMap[r.name] = r.id; });
+                
+                // 3. Bestehende Rollen löschen
+                await sb.from('user_rollen').delete().eq('user_id', userId);
+                
+                // 4. Neue Rollen zuweisen
+                var rollenInserts = selected.map(function(roleName){
+                    return { user_id: userId, rolle_id: rollenMap[roleName] };
+                }).filter(function(ri){ return ri.rolle_id; });
+                
+                if(rollenInserts.length > 0) {
+                    var insResp = await sb.from('user_rollen').insert(rollenInserts);
+                    if(insResp.error) throw insResp.error;
                 }
                 
                 closeApproveModal();
-                alert('\u2705 User freigeschaltet! Der Mitarbeiter kann sich jetzt einloggen.');
+                var rollenLabels = {'hq':'HQ','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
+                alert('\u2705 User freigeschaltet!\nRollen: ' + selected.map(function(r){return rollenLabels[r]||r;}).join(', ') + '\n\nDer Mitarbeiter kann sich jetzt einloggen.');
                 renderKzMitarbeiter();
             } catch(err) {
-                alert('Fehler: ' + err.message);
+                if(errEl) { errEl.textContent = 'Fehler: ' + err.message; errEl.style.display = 'block'; }
+                if(btn) { btn.disabled = false; btn.textContent = '\u2705 Freigeben'; }
             }
         }
 
         async function rejectUser(userId) {
-            if(!confirm('User wirklich ablehnen? Der Account wird deaktiviert.')) return;
+            if(!confirm('User wirklich ablehnen? Der Account wird gesperrt.')) return;
             try {
-                await sb.from('users').update({status: 'offboarding'}).eq('id', userId);
+                await sb.from('users').update({status: 'gesperrt'}).eq('id', userId);
                 closeApproveModal();
-                alert('User abgelehnt.');
+                alert('User abgelehnt und gesperrt.');
                 renderKzMitarbeiter();
             } catch(err) { alert('Fehler: ' + err.message); }
         }
@@ -12303,25 +12431,35 @@
         }
 
         // Neuer Mitarbeiter Modal
+        var newMaEbene = 'standort'; // tracks current ebene selection in create modal
+        
         function openNeuerMaModal() {
             var isHQ = currentRoles.indexOf('hq') >= 0 || (sbProfile && sbProfile.is_hq);
-            var isGF = currentRoles.indexOf('inhaber') >= 0;
-            
-            // GF darf nur Standort-Rollen vergeben, kein HQ/GF
-            var allRollen = isHQ ? ['hq','inhaber','verkauf','werkstatt','buchhaltung'] : ['verkauf','werkstatt','buchhaltung'];
-            var labels = {'hq':'HQ','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
+            newMaEbene = 'standort';
 
             var html = '<div id="neuerMaOverlay" onclick="closeNeuerMaModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
             html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:460px;max-width:90vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
             html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">Neuen Mitarbeiter anlegen</h3><button onclick="closeNeuerMaModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
-            if(!isHQ) { html += '<p class="text-xs text-blue-600 bg-blue-50 rounded-lg p-2 mb-3">\ud83d\udccd Mitarbeiter wird deinem Standort zugeordnet.</p>'; }
+            
+            // Name fields
             html += '<div class="space-y-3 mb-4">';
             html += '<div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold text-gray-600 mb-1">Vorname *</label><input id="newMaVorname" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="Max"></div>';
             html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Nachname *</label><input id="newMaNachname" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="Mustermann"></div></div>';
             html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">E-Mail *</label><input id="newMaEmail" type="email" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="name@vitbikes-standort.de"></div>';
-            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Passwort * (min. 6 Zeichen)</label><input id="newMaPassword" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="VitBikes2026!"></div>';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Passwort * (min. 8 Zeichen)</label><input id="newMaPassword" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="VitBikes2026!"></div>';
+
+            // === EBENE (HQ vs Standort) – nur für HQ-Admins sichtbar ===
             if(isHQ) {
-                html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Standort</label><select id="newMaStandort" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="">Wird geladen...</option></select></div>';
+                html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Ebene</label>';
+                html += '<div class="flex space-x-2">';
+                html += '<button type="button" id="newMaEbeneHQ" onclick="switchNewMaEbene(\'hq\')" class="flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-gray-200 bg-white text-gray-500 hover:border-gray-300">\ud83c\udfe2 HQ</button>';
+                html += '<button type="button" id="newMaEbeneStd" onclick="switchNewMaEbene(\'standort\')" class="flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-vit-orange bg-orange-50 text-orange-700">\ud83c\udfea Standort</button>';
+                html += '</div></div>';
+            }
+
+            // Standort Dropdown (visible when Ebene = Standort)
+            if(isHQ) {
+                html += '<div id="newMaStandortWrap"><label class="block text-xs font-semibold text-gray-600 mb-1">Standort *</label><select id="newMaStandort" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="">Wird geladen...</option></select></div>';
             } else {
                 // GF: Standort ist fix der eigene
                 var stdName = sbStandort ? sbStandort.name : 'Dein Standort';
@@ -12329,13 +12467,31 @@
                 html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Standort</label><input type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500" value="'+stdName+'" disabled><input type="hidden" id="newMaStandort" value="'+stdId+'"></div>';
             }
             html += '</div>';
+
+            // === ROLLEN (dynamisch basierend auf Ebene) ===
             html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Rollen zuweisen</p>';
-            var colors = {'hq':'border-red-300 bg-red-50','inhaber':'border-orange-300 bg-orange-50','verkauf':'border-blue-300 bg-blue-50','werkstatt':'border-gray-300 bg-gray-50','buchhaltung':'border-purple-300 bg-purple-50'};
-            allRollen.forEach(function(r){
-                html += '<label class="flex items-center space-x-3 p-2 rounded-lg border '+colors[r]+' mb-1.5 cursor-pointer hover:shadow-sm transition">';
+
+            // HQ Rollen (initial hidden)
+            html += '<div id="newMaRollesHQ" style="display:none">';
+            html += '<label class="flex items-center space-x-3 p-2 rounded-lg border border-red-300 bg-red-50 mb-1.5 cursor-pointer hover:shadow-sm transition">';
+            html += '<input type="checkbox" id="newMaRole_hq" class="rounded" style="accent-color:#EF7D00;" checked>';
+            html += '<span class="text-sm font-semibold text-gray-800">HQ</span></label>';
+            html += '<p class="text-[10px] text-gray-400 ml-1 mb-2">Weitere HQ-Rollen kommen bald (z.B. HQ Marketing, HQ Finanzen)</p>';
+            html += '</div>';
+
+            // Standort Rollen (initial visible)
+            html += '<div id="newMaRollesStd">';
+            var stdRollen = isHQ ? ['inhaber','verkauf','werkstatt','buchhaltung'] : ['verkauf','werkstatt','buchhaltung'];
+            var stdLabels = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
+            var stdColors = {'inhaber':'border-orange-300 bg-orange-50','verkauf':'border-blue-300 bg-blue-50','werkstatt':'border-gray-300 bg-gray-50','buchhaltung':'border-purple-300 bg-purple-50'};
+            stdRollen.forEach(function(r){
+                html += '<label class="flex items-center space-x-3 p-2 rounded-lg border '+stdColors[r]+' mb-1.5 cursor-pointer hover:shadow-sm transition">';
                 html += '<input type="checkbox" id="newMaRole_'+r+'" class="rounded" style="accent-color:#EF7D00;">';
-                html += '<span class="text-sm font-semibold text-gray-800">'+labels[r]+'</span></label>';
+                html += '<span class="text-sm font-semibold text-gray-800">'+stdLabels[r]+'</span></label>';
             });
+            html += '</div>';
+
+            if(!isHQ) { html += '<p class="text-xs text-blue-600 bg-blue-50 rounded-lg p-2 mt-2">\ud83d\udccd Mitarbeiter wird deinem Standort zugeordnet.</p>'; }
             html += '<div id="newMaError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mt-3"></div>';
             html += '<div class="flex space-x-3 mt-4"><button id="newMaSaveBtn" onclick="saveNeuerMa()" class="flex-1 py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Anlegen</button>';
             html += '<button onclick="closeNeuerMaModal()" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-semibold text-sm hover:bg-gray-200">Abbrechen</button></div>';
@@ -12347,11 +12503,44 @@
                         var stdResp = await sb.from('standorte').select('id,name').order('name');
                         var sel = document.getElementById('newMaStandort');
                         if(sel && stdResp.data) {
-                            sel.innerHTML = '<option value="hq">HQ (kein Standort)</option>';
+                            sel.innerHTML = '<option value="">— Standort wählen —</option>';
                             stdResp.data.forEach(function(s){ sel.innerHTML += '<option value="'+s.id+'">'+s.name+'</option>'; });
                         }
                     } catch(e){ console.error(e); }
                 }, 100);
+            }
+        }
+
+        function switchNewMaEbene(ebene) {
+            newMaEbene = ebene;
+            var hqBtn = document.getElementById('newMaEbeneHQ');
+            var stdBtn = document.getElementById('newMaEbeneStd');
+            var stdWrap = document.getElementById('newMaStandortWrap');
+            var rollesHQ = document.getElementById('newMaRollesHQ');
+            var rollesStd = document.getElementById('newMaRollesStd');
+            if(ebene === 'hq') {
+                if(hqBtn) hqBtn.className = 'flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-red-500 bg-red-50 text-red-700';
+                if(stdBtn) stdBtn.className = 'flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-gray-200 bg-white text-gray-500 hover:border-gray-300';
+                if(stdWrap) stdWrap.style.display = 'none';
+                if(rollesHQ) rollesHQ.style.display = '';
+                if(rollesStd) rollesStd.style.display = 'none';
+                // Auto-check HQ role
+                var hqChk = document.getElementById('newMaRole_hq');
+                if(hqChk) hqChk.checked = true;
+                // Uncheck standort roles
+                ['inhaber','verkauf','werkstatt','buchhaltung'].forEach(function(r){
+                    var chk = document.getElementById('newMaRole_'+r);
+                    if(chk) chk.checked = false;
+                });
+            } else {
+                if(stdBtn) stdBtn.className = 'flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-vit-orange bg-orange-50 text-orange-700';
+                if(hqBtn) hqBtn.className = 'flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-gray-200 bg-white text-gray-500 hover:border-gray-300';
+                if(stdWrap) stdWrap.style.display = '';
+                if(rollesHQ) rollesHQ.style.display = 'none';
+                if(rollesStd) rollesStd.style.display = '';
+                // Uncheck HQ role
+                var hqChk = document.getElementById('newMaRole_hq');
+                if(hqChk) hqChk.checked = false;
             }
         }
 
@@ -12370,9 +12559,20 @@
             if(!vorname.trim() || !nachname.trim() || !email.trim()) { if(errEl){errEl.textContent='Bitte Vorname, Nachname und E-Mail ausfüllen.';errEl.style.display='block';} return; }
             if(!pw || pw.length < 8) { if(errEl){errEl.textContent='Passwort muss mindestens 8 Zeichen haben.';errEl.style.display='block';} return; }
 
-            var allRollen = ['hq','inhaber','verkauf','werkstatt','buchhaltung'];
+            // Rollen basierend auf Ebene sammeln
             var selected = [];
-            allRollen.forEach(function(r){ var chk = document.getElementById('newMaRole_'+r); if(chk && chk.checked) selected.push(r); });
+            var isHqUser = (newMaEbene === 'hq');
+            if(isHqUser) {
+                var hqChk = document.getElementById('newMaRole_hq');
+                if(hqChk && hqChk.checked) selected.push('hq');
+            } else {
+                ['inhaber','verkauf','werkstatt','buchhaltung'].forEach(function(r){
+                    var chk = document.getElementById('newMaRole_'+r);
+                    if(chk && chk.checked) selected.push(r);
+                });
+                // Standort-Pflicht prüfen
+                if(!standortId) { if(errEl){errEl.textContent='Bitte einen Standort wählen.';errEl.style.display='block';} return; }
+            }
             if(selected.length===0) { if(errEl){errEl.textContent='Bitte mindestens eine Rolle zuweisen.';errEl.style.display='block';} return; }
 
             var btn = document.getElementById('newMaSaveBtn');
@@ -12404,7 +12604,7 @@
                         vorname: vorname.trim(),
                         nachname: nachname.trim(),
                         is_hq: isHqUser,
-                        standort_id: standortId && standortId !== 'hq' ? standortId : null,
+                        standort_id: isHqUser ? null : (standortId || null),
                         rollen: rollenIds,
                         status: 'aktiv'
                     })
