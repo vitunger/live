@@ -9374,13 +9374,13 @@
                         pm[key] = keyRows[key].values[m];
                     });
                     // Calculate derived values if missing or zero
-                    // Umsatz = Rohertrag - Wareneinsatz (WE is negative, so Umsatz = Rohertrag - WE)
-                    if((!pm.umsatz || pm.umsatz === 0) && pm.rohertrag !== undefined && pm.wareneinsatz !== undefined) {
-                        pm.umsatz = pm.rohertrag - pm.wareneinsatz;
-                        if(m === 0) console.log('[Plan Parser] Calculated Umsatz from Rohertrag-WE: ' + pm.umsatz);
+                    // Umsatz = Rohertrag + abs(Wareneinsatz) (WE can be positive or negative depending on format)
+                    if((!pm.umsatz || pm.umsatz === 0) && pm.rohertrag !== undefined && pm.wareneinsatz !== undefined && (pm.rohertrag !== 0 || pm.wareneinsatz !== 0)) {
+                        pm.umsatz = Math.abs(pm.rohertrag) + Math.abs(pm.wareneinsatz);
+                        if(m === 0) console.log('[Plan Parser] Calculated Umsatz = |Rohertrag| + |WE| = ' + pm.umsatz);
                     }
                     if(pm.umsatz !== undefined && pm.wareneinsatz !== undefined && (!pm.rohertrag || pm.rohertrag === 0)) {
-                        pm.rohertrag = pm.umsatz + pm.wareneinsatz;
+                        pm.rohertrag = pm.umsatz - Math.abs(pm.wareneinsatz);
                     }
                     if(pm.rohertrag !== undefined && pm.gesamtkosten !== undefined && (!pm.betriebsergebnis || pm.betriebsergebnis === 0)) {
                         pm.betriebsergebnis = pm.rohertrag - Math.abs(pm.gesamtkosten);
