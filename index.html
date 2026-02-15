@@ -677,6 +677,11 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                 <span>Einstellungen</span>
                             </button>
+
+                            <button onclick="showView('hqModulStatus')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                                <span>Modul-Übersicht</span>
+                            </button>
                         </div>
                     </nav>
                 </div>
@@ -5131,6 +5136,25 @@
                     </div><!-- /settingsTabRechte -->
                 </div>
     </div>
+
+                <!-- HQ Modul-Übersicht View -->
+                <div id="hqModulStatusView" class="view" style="display: none;">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h1 class="h1-headline text-gray-800">MODUL-ÜBERSICHT</h1>
+                            <p class="text-gray-500 text-sm">Entwicklungsstand aller Portal-Module · Stand: 15. Februar 2026</p>
+                        </div>
+                        <div class="flex items-center space-x-2" id="modulStatusSummary"></div>
+                    </div>
+                    <!-- Filter -->
+                    <div class="flex items-center space-x-2 mb-6">
+                        <button onclick="filterModulStatus('alle')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white" data-f="alle">Alle</button>
+                        <button onclick="filterModulStatus('standort')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="standort">Standort-Module</button>
+                        <button onclick="filterModulStatus('hq')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="hq">HQ-Module</button>
+                        <button onclick="filterModulStatus('widgets')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="widgets">Dashboard-Widgets</button>
+                    </div>
+                    <div id="modulStatusContent"></div>
+                </div>
 
     <script>
         // ============================================
@@ -10683,6 +10707,156 @@
             }
         }
 
+        // === MODUL-ÜBERSICHT ===
+        var currentModulFilter = 'alle';
+        
+        var MODUL_DATEN = {
+            standort: [
+                {name:'Startseite / Dashboard', view:'homeView', status:'live', details:'Personalisiert, 7 Live-Widgets (Todos, Termine, Tickets, BWA, Pipeline, Nachrichten, Controlling), 3 Demo-Widgets'},
+                {name:'Verkauf / CRM', view:'verkaufView', status:'teilweise', details:'Pipeline/Kanban mit DB, Lead-CRUD, Verkaufstracking, Auswertung. Angebotserstellung fehlt'},
+                {name:'Kalender', view:'kalenderView', status:'live', details:'Monatsansicht, Termine aus DB laden/erstellen/löschen. MS365-Sync noch Stub'},
+                {name:'Aufgaben / Todos', view:'todoView', status:'live', details:'Vollständig: Erstellen, Bearbeiten, Abhaken, Löschen, Filtern – alles DB-basiert'},
+                {name:'Kommunikation', view:'kommunikationView', status:'live', details:'Ankündigungen, Schwarzes Brett, Forum, Chat mit Echtzeit-Kanälen. Direktnachrichten fehlt'},
+                {name:'Controlling / BWA', view:'controllingView', status:'live', details:'BWA-Parser (10 Formate), Detail-Positionen (115+ Zeilen), KPI-Boxen, Trend-Sparklines. Benchmarks + Liquidität fehlt'},
+                {name:'Marketing', view:'marketingView', status:'demo', details:'6 Tabs: Kampagnen, Social, Content, Analytics, Strategie, Wissen. Alles statische Demo-Daten, keine DB-Tabelle'},
+                {name:'Einkauf', view:'einkaufView', status:'demo', details:'Lieferanten-Übersicht mit statischen JS-Daten. Keine DB-Anbindung'},
+                {name:'Allgemein', view:'allgemeinView', status:'demo', details:'Standort-Übersicht, Strategie, Wissen-Tab. Überwiegend statisch'},
+                {name:'Wissen', view:'wissenView', status:'teilweise', details:'Komplettes UI mit Bereichen, Typen, Suche. Alle Inhalte in JS hardcoded (keine DB)'},
+                {name:'Support', view:'supportView', status:'live', details:'Ticket-CRUD, Detail-Ansicht, Kommentare, Status-Änderung – alles DB-basiert'},
+                {name:'Ideenboard', view:'ideenboardView', status:'live', details:'Ideen einreichen, abstimmen (1 Stimme/User), Status-Filter – alles DB-basiert'},
+                {name:'Shop', view:'shopView', status:'teilweise', details:'Produktliste aus DB, Warenkorb client-seitig, Bestellung speichern'},
+                {name:'Aktenschrank', view:'aktenschrankView', status:'live', details:'Dokumente aus DB laden, Upload in Supabase Storage, Download, Kategorie-Filter'},
+                {name:'Onboarding', view:'onboardingView', status:'demo', details:'Checkliste mit Demo-Tasks (kein echter Asana-API-Call), Fortschrittsbalken'},
+                {name:'Mitarbeiter', view:'mitarbeiterView', status:'live', details:'User-CRUD, Rollen-Zuweisung, Freigabe-Workflow, Standort-Filter – alles DB-basiert'},
+                {name:'Dashboards', view:'dashboardsView', status:'demo', details:'Lead-Dashboard + Reporting mit überwiegend berechneten Demo-Daten'},
+                {name:'Benachrichtigungen', view:'notificationsView', status:'stub', details:'Leerer Container, keine Funktionalität implementiert'}
+            ],
+            hq: [
+                {name:'HQ Cockpit', view:'hqCockpitView', status:'teilweise', details:'Netzwerk-KPIs, Standort-Karten mit Ampel, BWA-Status. Daten aus loadHqStandorte()'},
+                {name:'HQ Kommandozentrale', view:'hqKommandoView', status:'teilweise', details:'Kommunikation, Dokumente (DB), Kalender (DB), Kampagnen (Demo). Aufgaben-Zuweisung fehlt'},
+                {name:'HQ Aktionen', view:'hqAktionenView', status:'stub', details:'Nur Container-Stub, keine Funktionalität'},
+                {name:'HQ Standorte', view:'hqStandorteView', status:'live', details:'Standort-Tabelle aus DB, Neuen Standort anlegen, Status-Filter'},
+                {name:'HQ Finanzen', view:'hqFinanzenView', status:'live', details:'BWA-Status aller Standorte, Netzwerk-Finanztabelle aus aggregierten Daten'},
+                {name:'HQ Marketing', view:'hqMarketingView', status:'demo', details:'Standort-Performance-Tabelle mit berechneten Demo-Daten. Keine Kampagnen-DB'},
+                {name:'HQ Einkauf', view:'hqEinkaufView', status:'demo', details:'Einkaufs-Tabelle mit Demo-Rabattquoten und Bestellvolumen'},
+                {name:'HQ Verkauf', view:'hqVerkaufView', status:'demo', details:'Verkaufs-Ranking mit Demo-Daten. Keine netzwerkweite Lead-Aggregation'},
+                {name:'HQ Auswertung', view:'hqAuswertungView', status:'stub', details:'Tab-Struktur vorhanden, keine Inhalte'},
+                {name:'HQ Wissen', view:'hqWissenView', status:'teilweise', details:'Artikel-Übersicht, keine Bearbeitungsfunktion für HQ'},
+                {name:'HQ Support', view:'hqSupportView', status:'live', details:'Alle Netzwerk-Tickets sichtbar, Status ändern. Zuweisung fehlt'},
+                {name:'HQ Ideen', view:'hqIdeenView', status:'live', details:'Netzwerkweite Ideen verwalten, Status ändern (umgesetzt/abgelehnt), Filter'},
+                {name:'HQ Shop', view:'hqShopView', status:'demo', details:'UI zum Produkte hinzufügen. Keine echte DB-Integration, Bestellverwaltung fehlt'},
+                {name:'HQ Einstellungen', view:'hqEinstellungenView', status:'live', details:'Modul-Verwaltung, Rollen, User-Freigabe, Login-As – alles DB-basiert'}
+            ],
+            widgets: [
+                {name:'Umsatz & Ergebnis (Hauptkarte)', status:'live', details:'Letzte BWA-Daten: Umsatz, Rohertrag-Marge, Gesamtkosten, Ergebnis-Marge aus bwa_daten'},
+                {name:'Widget: Pipeline', status:'live', details:'Offene Leads, heutige Termine, offene Angebote – Live aus leads + kalender_termine'},
+                {name:'Widget: Termine heute', status:'live', details:'Echte Termine aus kalender_termine mit Uhrzeit'},
+                {name:'Widget: Offene Aufgaben', status:'live', details:'Echte Todos aus todos-Tabelle mit Checkbox'},
+                {name:'Widget: Controlling', status:'live', details:'Letzte BWA: Umsatz + Rohertrag-/Ergebnis-Marge als Fortschrittsbalken'},
+                {name:'Widget: Support Tickets', status:'live', details:'Offene Tickets mit Alter ("seit X Tagen") aus support_tickets'},
+                {name:'Widget: Nachrichten HQ', status:'live', details:'Neueste Ankündigungen aus ankuendigungen mit relativer Zeitangabe'},
+                {name:'Widget: Verkaufserfolg KW', status:'demo', details:'KW-Nummer dynamisch, Verkaufszahlen noch statisch'},
+                {name:'Widget: Aktive Kampagnen', status:'stub', details:'Statische Demo-Daten, keine DB-Tabelle für Kampagnen'},
+                {name:'Widget: Top Verkäufer', status:'stub', details:'Statische Demo-Namen, kein Ranking aus DB'},
+                {name:'Widget: Neue Inhalte', status:'stub', details:'Statische Demo-Einträge'}
+            ]
+        };
+
+        function getStatusBadge(s) {
+            var map = {
+                'live': {bg:'bg-green-100 text-green-800', icon:'🟢', label:'Live'},
+                'teilweise': {bg:'bg-yellow-100 text-yellow-800', icon:'🟡', label:'Teilweise'},
+                'demo': {bg:'bg-orange-100 text-orange-800', icon:'🟠', label:'Demo/UI'},
+                'stub': {bg:'bg-red-100 text-red-800', icon:'🔴', label:'Stub'}
+            };
+            var m = map[s] || map['stub'];
+            return '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold '+m.bg+'">'+m.icon+' '+m.label+'</span>';
+        }
+
+        function filterModulStatus(f) {
+            currentModulFilter = f;
+            document.querySelectorAll('.ms-filter').forEach(function(b){
+                b.className = 'ms-filter text-xs px-3 py-1.5 rounded-full font-semibold ' + (b.getAttribute('data-f')===f ? 'bg-vit-orange text-white' : 'bg-gray-100 text-gray-600');
+            });
+            renderModulStatus();
+        }
+
+        function renderModulStatus() {
+            var el = document.getElementById('modulStatusContent');
+            if(!el) return;
+            var h = '';
+
+            // Count stats
+            var allModules = MODUL_DATEN.standort.concat(MODUL_DATEN.hq).concat(MODUL_DATEN.widgets);
+            var counts = {live:0, teilweise:0, demo:0, stub:0};
+            allModules.forEach(function(m){ counts[m.status] = (counts[m.status]||0)+1; });
+
+            // Summary badges
+            var sumEl = document.getElementById('modulStatusSummary');
+            if(sumEl) {
+                sumEl.innerHTML = '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-semibold">🟢 '+counts.live+' Live</span>'
+                    +'<span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-semibold">🟡 '+counts.teilweise+' Teilweise</span>'
+                    +'<span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full font-semibold">🟠 '+counts.demo+' Demo</span>'
+                    +'<span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full font-semibold">🔴 '+counts.stub+' Stub</span>';
+            }
+
+            function renderSection(title, items, icon) {
+                var s = '<div class="vit-card p-6 mb-6">';
+                s += '<h2 class="text-lg font-bold text-gray-800 mb-4">'+icon+' '+title+' <span class="text-sm font-normal text-gray-400">('+items.length+' Module)</span></h2>';
+                s += '<div class="overflow-x-auto"><table class="w-full text-sm">';
+                s += '<thead><tr class="border-b-2 border-gray-200"><th class="text-left py-2 px-3 font-semibold text-gray-600">Modul</th><th class="text-left py-2 px-3 font-semibold text-gray-600 w-28">Status</th><th class="text-left py-2 px-3 font-semibold text-gray-600">Details</th></tr></thead><tbody>';
+                items.forEach(function(m) {
+                    var rowCls = m.status==='stub' ? 'bg-red-50/30' : (m.status==='demo' ? 'bg-orange-50/30' : '');
+                    s += '<tr class="border-b border-gray-100 hover:bg-gray-50 '+rowCls+'">';
+                    s += '<td class="py-2.5 px-3 font-semibold text-gray-800">';
+                    if(m.view) s += '<button onclick="showView(\''+m.view.replace('View','')+'\')" class="hover:text-vit-orange transition-colors text-left">'+m.name+'</button>';
+                    else s += m.name;
+                    s += '</td>';
+                    s += '<td class="py-2.5 px-3">'+getStatusBadge(m.status)+'</td>';
+                    s += '<td class="py-2.5 px-3 text-gray-500 text-xs">'+m.details+'</td>';
+                    s += '</tr>';
+                });
+                s += '</tbody></table></div></s>';
+                s += '</div>';
+                return s;
+            }
+
+            if(currentModulFilter === 'alle' || currentModulFilter === 'standort') {
+                h += renderSection('Standort-Module (Partner-Sicht)', MODUL_DATEN.standort, '🏪');
+            }
+            if(currentModulFilter === 'alle' || currentModulFilter === 'hq') {
+                h += renderSection('HQ-Module (Hauptquartier)', MODUL_DATEN.hq, '🏢');
+            }
+            if(currentModulFilter === 'alle' || currentModulFilter === 'widgets') {
+                h += renderSection('Dashboard-Widgets (Startseite)', MODUL_DATEN.widgets, '📊');
+            }
+
+            // Progress overview
+            if(currentModulFilter === 'alle') {
+                var total = allModules.length;
+                var pctLive = Math.round(counts.live/total*100);
+                var pctTeil = Math.round(counts.teilweise/total*100);
+                var pctDemo = Math.round(counts.demo/total*100);
+                var pctStub = Math.round(counts.stub/total*100);
+                h += '<div class="vit-card p-6">';
+                h += '<h2 class="text-lg font-bold text-gray-800 mb-4">📈 Gesamtfortschritt</h2>';
+                h += '<div class="w-full bg-gray-200 rounded-full h-6 flex overflow-hidden mb-3">';
+                h += '<div class="bg-green-500 h-6 flex items-center justify-center text-white text-xs font-bold" style="width:'+pctLive+'%">'+counts.live+'</div>';
+                h += '<div class="bg-yellow-400 h-6 flex items-center justify-center text-white text-xs font-bold" style="width:'+pctTeil+'%">'+counts.teilweise+'</div>';
+                h += '<div class="bg-orange-400 h-6 flex items-center justify-center text-white text-xs font-bold" style="width:'+pctDemo+'%">'+counts.demo+'</div>';
+                h += '<div class="bg-red-400 h-6 flex items-center justify-center text-white text-xs font-bold" style="width:'+pctStub+'%">'+counts.stub+'</div>';
+                h += '</div>';
+                h += '<div class="grid grid-cols-4 gap-4 text-center">';
+                h += '<div><p class="text-2xl font-bold text-green-600">'+counts.live+'</p><p class="text-xs text-gray-500">Live / Voll funktional</p></div>';
+                h += '<div><p class="text-2xl font-bold text-yellow-600">'+counts.teilweise+'</p><p class="text-xs text-gray-500">Teilweise funktional</p></div>';
+                h += '<div><p class="text-2xl font-bold text-orange-600">'+counts.demo+'</p><p class="text-xs text-gray-500">Demo / Nur UI</p></div>';
+                h += '<div><p class="text-2xl font-bold text-red-600">'+counts.stub+'</p><p class="text-xs text-gray-500">Stub / Platzhalter</p></div>';
+                h += '</div></div>';
+            }
+
+            el.innerHTML = h;
+        }
+
         // Init: show partner mode by default
         switchViewMode('partner_grafrath');
 
@@ -14222,6 +14396,7 @@
                 viewEl.style.display = 'block';
                 console.log('SUCCESS: Showed', viewId, '- offsetHeight:', viewEl.offsetHeight);
                 if(viewName === 'dashboards') initDashboardTabs();
+                if(viewName === 'hqModulStatus') renderModulStatus();
             } else {
                 console.error('FAILED: View not found:', viewId);
             }
