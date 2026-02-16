@@ -11498,13 +11498,13 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var el = document.getElementById('wPipelineContent'); if(!el) return;
             try {
                 var stdId = sbProfile ? sbProfile.standort_id : null;
-                var q = sb.from('leads').select('id, status, wert').eq('archiviert', false);
+                var q = sb.from('leads').select('id, status, geschaetzter_wert');
                 if(stdId) q = q.eq('standort_id', stdId);
                 var res = await q;
                 var leads = res.data || [];
                 var offen = leads.filter(function(l){ return l.status !== 'gewonnen' && l.status !== 'verloren'; });
                 var angebote = leads.filter(function(l){ return l.status === 'angebot'; });
-                var pipeWert = offen.reduce(function(s,l){ return s + (l.wert||0); }, 0);
+                var pipeWert = offen.reduce(function(s,l){ return s + (l.geschaetzter_wert||0); }, 0);
                 var badge = document.getElementById('wPipelineBadge');
                 if(badge) badge.textContent = offen.length + ' aktiv';
                 el.innerHTML = '<div class="space-y-3">'
@@ -11524,12 +11524,12 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var stdId = sbProfile ? sbProfile.standort_id : null;
                 var mondayISO = getKWMonday(kw);
                 var sundayISO = getKWSunday(kw);
-                var q = sb.from('verkauf_tracking').select('id, typ').gte('datum', mondayISO).lte('datum', sundayISO);
+                var q = sb.from('verkauf_tracking').select('id, beratungen, verkauft, umsatz').gte('datum', mondayISO).lte('datum', sundayISO);
                 if(stdId) q = q.eq('standort_id', stdId);
                 var res = await q;
                 var data = res.data || [];
-                var verkauft = data.filter(function(d){ return d.typ === 'verkauf'; }).length;
-                var beratung = data.filter(function(d){ return d.typ === 'beratung'; }).length;
+                var verkauft = data.reduce(function(s,d){ return s + (d.verkauft||0); }, 0);
+                var beratung = data.reduce(function(s,d){ return s + (d.beratungen||0); }, 0);
                 var quote = beratung > 0 ? Math.round(verkauft / beratung * 100) : 0;
                 el.innerHTML = '<div class="mb-3"><div class="flex items-center justify-between mb-1"><span class="text-sm text-gray-600">Verkaufsquote</span>'
                     +'<span class="text-2xl font-bold '+(quote>=40?'text-green-600':quote>=20?'text-yellow-600':'text-red-500')+'">'+quote+'%</span></div>'
@@ -11606,15 +11606,14 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var el = document.getElementById('wTeamContent'); if(!el) return;
             try {
                 var stdId = sbProfile ? sbProfile.standort_id : null;
-                var q = sb.from('users').select('id, vorname, nachname, status, rolle').eq('status', 'aktiv');
+                var q = sb.from('users').select('id, name, status').eq('status', 'aktiv');
                 if(stdId) q = q.eq('standort_id', stdId);
                 var res = await q;
                 var team = res.data || [];
                 if(!team.length) { el.innerHTML = '<p class="text-sm text-gray-400">Keine Mitarbeiter</p>'; return; }
                 var rolleIcons = {admin:'👑',geschaeftsfuehrer:'🏢',standortleiter:'⭐',verkauf:'💰',werkstatt:'🔧',mitarbeiter:'👤'};
                 el.innerHTML = '<div class="space-y-2">'+team.slice(0,5).map(function(u){
-                    var icon = rolleIcons[u.rolle] || '👤';
-                    return '<div class="flex items-center justify-between"><div class="flex items-center space-x-2"><span>'+icon+'</span><span class="text-sm font-semibold text-gray-800">'+escH((u.vorname||'')+' '+(u.nachname||'').charAt(0)+'.')+'</span></div><span class="text-xs text-green-600">● aktiv</span></div>';
+                    return '<div class="flex items-center justify-between"><div class="flex items-center space-x-2"><span>👤</span><span class="text-sm font-semibold text-gray-800">'+escH(u.name||'Unbekannt')+'</span></div><span class="text-xs text-green-600">● aktiv</span></div>';
                 }).join('')+(team.length>5?'<p class="text-xs text-gray-400 text-center">+' + (team.length-5) + ' weitere</p>':'')+'</div>';
             } catch(e) { el.innerHTML = '<p class="text-sm text-gray-400">Fehler beim Laden</p>'; }
         }
@@ -11624,17 +11623,18 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var el = document.getElementById('wControllingContent'); if(!el) return;
             try {
                 var stdId = sbProfile ? sbProfile.standort_id : null;
-                var q = sb.from('bwa_daten').select('monat, umsatz, rohertrag_pct, personalkosten_pct, ergebnis').order('monat', {ascending:false}).limit(1);
+                var q = sb.from('bwa_daten').select('monat, umsatzerloese, rohertrag, personalkosten, ergebnis_vor_steuern').order('monat', {ascending:false}).limit(1);
                 if(stdId) q = q.eq('standort_id', stdId);
                 var res = await q;
                 var bwa = (res.data||[])[0];
                 if(!bwa) { el.innerHTML = '<p class="text-sm text-gray-400 text-center py-2">Noch keine BWA hochgeladen</p>'; return; }
+                var rohPct = bwa.umsatzerloese ? Math.round(bwa.rohertrag / bwa.umsatzerloese * 100) : 0;
                 el.innerHTML = '<div class="space-y-3">'
-                    +'<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Umsatz</span><span class="font-bold text-gray-800">'+fmtN(bwa.umsatz||0)+' €</span></div>'
-                    +'<div><div class="flex justify-between mb-1"><span class="text-sm text-gray-600">Rohertrag</span><span class="text-sm font-semibold '+(bwa.rohertrag_pct>=35?'text-green-600':'text-red-500')+'">'+(bwa.rohertrag_pct||0).toFixed(1)+'%</span></div>'
-                    +'<div class="w-full bg-gray-200 rounded-full h-2"><div class="'+(bwa.rohertrag_pct>=35?'bg-green-500':'bg-red-500')+' h-2 rounded-full" style="width:'+Math.min(bwa.rohertrag_pct||0,60)/60*100+'%"></div></div></div>'
-                    +'<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Ergebnis</span><span class="font-bold '+((bwa.ergebnis||0)>=0?'text-green-600':'text-red-500')+'">'+fmtN(bwa.ergebnis||0)+' €</span></div>'
-                    +'<p class="text-[10px] text-gray-400">Letzte BWA: '+escH(bwa.monat||'')+'</p>'
+                    +'<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Umsatz</span><span class="font-bold text-gray-800">'+fmtN(bwa.umsatzerloese||0)+' €</span></div>'
+                    +'<div><div class="flex justify-between mb-1"><span class="text-sm text-gray-600">Rohertrag</span><span class="text-sm font-semibold '+(rohPct>=35?'text-green-600':'text-red-500')+'">'+rohPct+'%</span></div>'
+                    +'<div class="w-full bg-gray-200 rounded-full h-2"><div class="'+(rohPct>=35?'bg-green-500':'bg-red-500')+' h-2 rounded-full" style="width:'+Math.min(rohPct,60)/60*100+'%"></div></div></div>'
+                    +'<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Ergebnis</span><span class="font-bold '+((bwa.ergebnis_vor_steuern||0)>=0?'text-green-600':'text-red-500')+'">'+fmtN(bwa.ergebnis_vor_steuern||0)+' €</span></div>'
+                    +'<p class="text-[10px] text-gray-400">Letzte BWA: Monat '+escH(String(bwa.monat||''))+'</p>'
                     +'</div>';
             } catch(e) { el.innerHTML = '<p class="text-sm text-gray-400">Fehler beim Laden</p>'; }
         }
@@ -11906,7 +11906,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var tickets = ticketResp.data || [];
 
                 // Load leads
-                var leadResp = await sb.from('leads').select('standort_id, status, wert');
+                var leadResp = await sb.from('leads').select('standort_id, status, geschaetzter_wert');
                 var leads = leadResp.data || [];
 
                 // Load verkauf tracking
@@ -13848,11 +13848,11 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             // Load users if not cached
             if(kalStandortUsers.length === 0) {
                 try {
-                    var q = sb.from('users').select('id, vorname, nachname, rolle').eq('status', 'aktiv');
+                    var q = sb.from('users').select('id, name').eq('status', 'aktiv');
                     if(sbProfile && sbProfile.standort_id && !sbProfile.is_hq) q = q.eq('standort_id', sbProfile.standort_id);
                     var res = await q;
                     kalStandortUsers = (res.data || []).map(function(u) {
-                        return { id: u.id, name: ((u.vorname || '') + ' ' + (u.nachname || '')).trim() || 'Unbekannt', rolle: u.rolle };
+                        return { id: u.id, name: u.name || 'Unbekannt' };
                     });
                 } catch(e) { console.warn('Teilnehmer laden:', e); }
             }
