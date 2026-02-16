@@ -7815,7 +7815,7 @@
             if(!container) return;
             try {
                 var stdId = sbProfile ? sbProfile.standort_id : null;
-                var query = sb.from('bwa_daten').select('id,monat,jahr,umsatzerloese,rohertrag,ergebnis_vor_steuern,datei_name,created_at').order('jahr', {ascending:false}).order('monat', {ascending:false});
+                var query = sb.from('bwa_daten').select('id,monat,jahr,umsatzerloese,rohertrag,ergebnis_vor_steuern,datei_name,datei_url,created_at').gte('jahr', 2026).order('jahr', {ascending:false}).order('monat', {ascending:false});
                 if(stdId && !sbProfile.is_hq) query = query.eq('standort_id', stdId);
                 var resp = await query;
                 if(resp.error) throw resp.error;
@@ -7824,6 +7824,11 @@
                     container.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">Noch keine BWAs erfasst.</p>';
                     return;
                 }
+                // Load corrected ergebnis from detail positions (Zeile 1355)
+                var bwaIds = bwaCache.map(function(b){ return b.id; });
+                var detResp = await sb.from('bwa_detail_positionen').select('bwa_id,wert').in('bwa_id', bwaIds).eq('zeile', 1355).eq('ist_summenzeile', true);
+                var detMap = {};
+                if(detResp.data) detResp.data.forEach(function(d){ detMap[d.bwa_id] = parseFloat(d.wert)||0; });
                 // Group by year
                 var years = {};
                 bwaCache.forEach(function(b) {
@@ -7840,18 +7845,86 @@
                     h += '<div class="mt-2 space-y-1">';
                     items.forEach(function(b) {
                         var isSelected = selectedBwaId === b.id;
-                        var ergClass = parseFloat(b.ergebnis_vor_steuern) >= 0 ? 'text-green-600' : 'text-red-500';
-                        h += '<button onclick="showBwaFromDb(\''+b.id+'\')" class="bwa-file-db w-full flex items-center justify-between p-2.5 rounded-lg hover:bg-orange-50 text-left'+(isSelected?' bg-orange-50 border border-vit-orange':'')+'">';
+                        // Use corrected ergebnis from detail positions if available
+                        var erg = detMap[b.id] !== undefined ? detMap[b.id] : parseFloat(b.ergebnis_vor_steuern);
+                        var ergClass = erg >= 0 ? 'text-green-600' : 'text-red-500';
+                        h += '<div class="flex items-center gap-1">';
+                        h += '<button onclick="showBwaFromDb(\''+b.id+'\')" class="bwa-file-db flex-1 flex items-center justify-between p-2.5 rounded-lg hover:bg-orange-50 text-left'+(isSelected?' bg-orange-50 border border-vit-orange':'')+'">';
                         h += '<div class="flex items-center space-x-3"><span class="text-red-500">📄</span>';
                         h += '<div><p class="text-sm font-semibold '+(isSelected?'text-vit-orange':'text-gray-800')+'">'+monatNamen[b.monat]+' '+b.jahr+'</p>';
                         h += '<p class="text-xs text-gray-500">Umsatz: '+eur(b.umsatzerloese)+' €</p></div></div>';
-                        h += '<span class="text-xs '+ergClass+'">'+eur(b.ergebnis_vor_steuern)+' €</span>';
+                        h += '<span class="text-xs '+ergClass+'">'+eur(erg)+' €</span>';
                         h += '</button>';
+                        h += '<button onclick="downloadBwa(\''+b.id+'\')" class="p-2 text-gray-400 hover:text-vit-orange rounded-lg hover:bg-orange-50" title="BWA herunterladen"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></button>';
+                        h += '</div>';
                     });
                     h += '</div></div>';
                 });
                 container.innerHTML = h;
             } catch(err) { container.innerHTML = '<p class="text-sm text-red-400 text-center py-4">Fehler: '+err.message+'</p>'; }
+        }
+
+        async function downloadBwa(bwaId) {
+            try {
+                // Load BWA summary
+                var resp = await sb.from('bwa_daten').select('*').eq('id', bwaId).single();
+                if(resp.error) throw resp.error;
+                var b = resp.data;
+
+                // If original file exists in storage, download that
+                if(b.datei_url) {
+                    var dlResp = await sb.storage.from('bwa-dateien').download(b.datei_url);
+                    if(dlResp.data) {
+                        var url = URL.createObjectURL(dlResp.data);
+                        var a = document.createElement('a');
+                        a.href = url; a.download = b.datei_name || ('BWA_'+monatNamen[b.monat]+'_'+b.jahr+'.csv');
+                        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        return;
+                    }
+                }
+
+                // Otherwise generate CSV from detail positions
+                var detResp = await sb.from('bwa_detail_positionen').select('*').eq('bwa_id', bwaId).order('sortierung');
+                var rows = (detResp.data && detResp.data.length > 0) ? detResp.data : null;
+                var csv = '\uFEFF'; // BOM for Excel
+                csv += 'BWA ' + monatNamen[b.monat] + ' ' + b.jahr + '\n\n';
+                csv += 'Position;Monat;Kumuliert\n';
+
+                if(rows) {
+                    rows.forEach(function(d) {
+                        var prefix = d.ist_summenzeile ? '' : '  ';
+                        var name = (prefix + (d.bezeichnung||'')).replace(/;/g, ',');
+                        var wert = d.wert !== null ? d.wert.toString().replace('.', ',') : '';
+                        var kum = d.wert_kumuliert !== null ? d.wert_kumuliert.toString().replace('.', ',') : '';
+                        csv += name + ';' + wert + ';' + kum + '\n';
+                    });
+                } else {
+                    // Fallback: use summary fields
+                    csv += 'Umsatzerlöse;' + b.umsatzerloese + ';\n';
+                    csv += 'Wareneinsatz;' + b.wareneinsatz + ';\n';
+                    csv += 'Rohertrag;' + b.rohertrag + ';\n';
+                    csv += 'Personalkosten;' + b.personalkosten + ';\n';
+                    csv += 'Raumkosten;' + b.raumkosten + ';\n';
+                    csv += 'Werbekosten;' + b.werbekosten + ';\n';
+                    csv += 'Abschreibungen;' + b.abschreibungen + ';\n';
+                    csv += 'Sonstige Kosten;' + b.sonstige_kosten + ';\n';
+                    csv += 'Gesamtkosten;' + b.gesamtkosten + ';\n';
+                    csv += 'Betriebsergebnis;' + b.betriebsergebnis + ';\n';
+                    csv += 'Zinsaufwand;' + b.zinsaufwand + ';\n';
+                    csv += 'Ergebnis vor Steuern;' + b.ergebnis_vor_steuern + ';\n';
+                }
+
+                var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url; a.download = 'BWA_' + monatNamen[b.monat] + '_' + b.jahr + '.csv';
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch(err) {
+                console.error('[BWA Download]', err);
+                alert('Download fehlgeschlagen: ' + err.message);
+            }
         }
 
         async function showBwaFromDb(bwaId) {
@@ -11907,12 +11980,14 @@
             var today = new Date();
             var todayStr = today.toISOString().slice(0,10);
 
-            // Welche BWA-Monate fehlen? Prüfe die letzten 3 Monate
+            // Welche BWA-Monate fehlen? Prüfe die letzten 3 Monate (nur ab Jan 2026)
             var missingMonths = [];
             for(var offset = 1; offset <= 3; offset++) {
                 var checkDate = new Date(today.getFullYear(), today.getMonth() - offset, 1);
                 var bwaMonat = checkDate.getMonth() + 1; // 1-12
                 var bwaJahr = checkDate.getFullYear();
+                // Nur BWAs ab Januar 2026 erforderlich
+                if(bwaJahr < 2026) continue;
                 // Deadline = 15. des Folgemonats
                 var deadlineDate = new Date(bwaJahr, bwaMonat, 15); // bwaMonat ist 0-indexed+1 = nächster Monat
                 // Nur relevant wenn wir nach dem 1. des Folgemonats sind
