@@ -732,16 +732,6 @@
 
                             <hr class="border-gray-600 my-3">
 
-                            
-                            <!-- Theme Toggle -->
-                            <div class="theme-toggle" onclick="toggleTheme()" title="Dark/Light Mode">
-                                <span style="font-size:14px">☀️</span>
-                                <div class="theme-toggle-track" id="themeToggleTrack">
-                                    <div class="theme-toggle-knob"></div>
-                                </div>
-                                <span style="font-size:14px">🌙</span>
-                            </div>
-
                             <button onclick="showView('hqEinstellungen')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                 <span>Einstellungen</span>
@@ -1434,27 +1424,52 @@
                     </div>
                 </div>
 
-                <!-- Marketing View (Hauptmenü) – REDESIGN v3: Cockpit, Budget, Kampagnen, Reichweite + Social, Strategie, Wissen -->
+                <!-- Marketing View (Hauptmenü) – REDESIGN v3 -->
                 <div id="marketingView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-6" data-i18n="h_marketing">MARKETING</h1>
                     
+                    <!-- Tab Navigation -->
                     <div class="mb-6 border-b border-gray-200">
                         <nav class="-mb-px flex space-x-8 overflow-x-auto">
-                            <button onclick="showMarketingTab('cockpit')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="cockpit">🎯 Cockpit</button>
-                            <button onclick="showMarketingTab('budget')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="budget">💰 Budget</button>
-                            <button onclick="showMarketingTab('kampagnen')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="kampagnen">📅 Kampagnen</button>
-                            <button onclick="showMarketingTab('reichweite')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="reichweite">📡 Reichweite</button>
-                            <button onclick="showMarketingTab('social')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="social">🎬 Social Media</button>
-                            <button onclick="showMarketingTab('mktStrategie')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="mktStrategie">📋 Strategie</button>
-                            <button onclick="showMarketingTab('mktWissen')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="mktWissen">📚 Wissen</button>
+                            <button onclick="showMarketingTab('cockpit')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="cockpit">
+                                🎯 Cockpit
+                            </button>
+                            <button onclick="showMarketingTab('budget')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="budget">
+                                💰 Budget
+                            </button>
+                            <button onclick="showMarketingTab('kampagnen')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="kampagnen">
+                                📅 Kampagnen
+                            </button>
+                            <button onclick="showMarketingTab('reichweite')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="reichweite">
+                                📡 Reichweite
+                            </button>
+                            <button onclick="showMarketingTab('social')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="social">
+                                🎬 Social Media
+                            </button>
+                            <button onclick="showMarketingTab('mktStrategie')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="mktStrategie">
+                                📋 Strategie
+                            </button>
+                            <button onclick="showMarketingTab('mktWissen')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="mktWissen">
+                                📚 Wissen
+                            </button>
                         </nav>
                     </div>
 
-                    <div id="marketingTabCockpit" class="marketing-tab-content"><div id="mktReactCockpit"></div></div>
-                    <div id="marketingTabBudget" class="marketing-tab-content" style="display:none;"><div id="mktReactBudget"></div></div>
-                    <div id="marketingTabKampagnen" class="marketing-tab-content" style="display:none;"><div id="mktReactKampagnen"></div></div>
-                    <div id="marketingTabReichweite" class="marketing-tab-content" style="display:none;"><div id="mktReactReichweite"></div></div>
+                    <!-- NEW TABS: React-Container -->
+                    <div id="marketingTabCockpit" class="marketing-tab-content">
+                        <div id="mktReactCockpit"></div>
+                    </div>
+                    <div id="marketingTabBudget" class="marketing-tab-content" style="display:none;">
+                        <div id="mktReactBudget"></div>
+                    </div>
+                    <div id="marketingTabKampagnen" class="marketing-tab-content" style="display:none;">
+                        <div id="mktReactKampagnen"></div>
+                    </div>
+                    <div id="marketingTabReichweite" class="marketing-tab-content" style="display:none;">
+                        <div id="mktReactReichweite"></div>
+                    </div>
 
+                    <!-- PRESERVED TABS -->
                     <div id="marketingTabSocial" class="marketing-tab-content" style="display:none;">
 
                         <!-- Motivation Header -->
@@ -4072,38 +4087,7 @@
                 <div id="todoView" class="view" style="display: none;">
                     <div class="flex h-[calc(100vh-100px)] min-h-[600px] overflow-hidden">
 
-                        <!-- LEFT: Filter Sidebar -->
-                        <div id="todoSidebar" class="w-52 flex-shrink-0 bg-gray-50 border-r border-gray-200 flex flex-col">
-                            <div class="p-3 border-b border-gray-200">
-                                <div class="flex items-center space-x-2">
-                                    <div class="w-7 h-7 rounded-lg flex items-center justify-center text-white font-black text-[10px]" style="background:linear-gradient(135deg,#f97316,#ea580c)">v</div>
-                                    <span class="font-bold text-gray-800 text-sm">Aufgaben</span>
-                                </div>
-                            </div>
-                            <nav class="flex-1 p-2 space-y-0.5">
-                                <p class="font-bold text-gray-400 uppercase px-2 mb-1" style="font-size:9px;letter-spacing:0.05em">Ansichten</p>
-                                <button onclick="todoSetFilter('all')" data-tf2="all" class="todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] bg-white shadow-sm text-gray-900 font-semibold">
-                                    <span class="w-5 text-center text-sm">📋</span><span class="flex-1 text-left">Alle Aufgaben</span><span id="tfBadgeAll" class="text-[9px] font-bold bg-gray-200 text-gray-500 rounded-full px-1.5 py-0.5"></span>
-                                </button>
-                                <button onclick="todoSetFilter('heute')" data-tf2="heute" class="todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] text-gray-600 hover:bg-gray-200">
-                                    <span class="w-5 text-center text-sm">📅</span><span class="flex-1 text-left">Heute</span><span id="tfBadgeHeute" class="text-[9px] font-bold bg-yellow-100 text-yellow-700 rounded-full px-1.5 py-0.5 hidden"></span>
-                                </button>
-                                <button onclick="todoSetFilter('ueberfaellig')" data-tf2="ueberfaellig" class="todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] text-gray-600 hover:bg-gray-200">
-                                    <span class="w-5 text-center text-sm">🔴</span><span class="flex-1 text-left">Überfällig</span><span id="tfBadgeUeber" class="text-[9px] font-bold bg-red-100 text-red-600 rounded-full px-1.5 py-0.5 hidden"></span>
-                                </button>
-                                <button onclick="todoSetFilter('done')" data-tf2="done" class="todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] text-gray-600 hover:bg-gray-200">
-                                    <span class="w-5 text-center text-sm">✅</span><span class="flex-1 text-left">Erledigt</span><span id="tfBadgeDone" class="text-[9px] font-bold bg-green-100 text-green-600 rounded-full px-1.5 py-0.5 hidden"></span>
-                                </button>
-                            </nav>
-                            <div class="p-3 border-t border-gray-200">
-                                <div class="flex items-center space-x-2 px-2 py-1">
-                                    <div class="w-7 h-7 rounded-full bg-yellow-100 flex items-center justify-center"><span class="font-bold text-[9px] text-vit-orange" id="todoSbInitials">MB</span></div>
-                                    <div><p class="font-semibold text-gray-700 text-[11px]" id="todoSbStore">Mein Standort</p><p class="text-gray-400 text-[9px]">Partner</p></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- CENTER: Main Content -->
+<!-- CENTER: Main Content -->
                         <div class="flex-1 flex flex-col min-w-0">
                             <!-- Header -->
                             <div class="flex-shrink-0 border-b border-gray-200 bg-white px-5 py-3">
@@ -7100,7 +7084,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 });
 
                 // Standort-Kanäle (lokal, orange)
-                var standortName = sbProfile && sbProfile.standort_id ? (typeof standorte !== 'undefined' ? (standorte.find(function(s){return s.id===sbProfile.standort_id})||{}).name : '') : '';
+                var standortName = sbProfile && sbProfile.standort_id ? (Array.isArray(standorte) ? (standorte.find(function(s){return s.id===sbProfile.standort_id})||{}).name : (sbProfile.standort_name || '')) : '';
                 html += '<div class="px-3 pt-4 pb-1 flex items-center justify-between"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">🏪 ' + (standortName ? escH(standortName) : 'Mein Standort') + '</span>';
                 html += '<button onclick="kommCreateKanal()" class="text-gray-400 hover:text-vit-orange" title="Neuen Kanal erstellen"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button>';
                 html += '</div>';
@@ -11483,13 +11467,13 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var el = document.getElementById('wPipelineContent'); if(!el) return;
             try {
                 var stdId = sbProfile ? sbProfile.standort_id : null;
-                var q = sb.from('leads').select('id, status, wert').eq('archiviert', false);
+                var q = sb.from('leads').select('id, status, geschaetzter_wert');
                 if(stdId) q = q.eq('standort_id', stdId);
                 var res = await q;
                 var leads = res.data || [];
                 var offen = leads.filter(function(l){ return l.status !== 'gewonnen' && l.status !== 'verloren'; });
                 var angebote = leads.filter(function(l){ return l.status === 'angebot'; });
-                var pipeWert = offen.reduce(function(s,l){ return s + (l.wert||0); }, 0);
+                var pipeWert = offen.reduce(function(s,l){ return s + (l.geschaetzter_wert||0); }, 0);
                 var badge = document.getElementById('wPipelineBadge');
                 if(badge) badge.textContent = offen.length + ' aktiv';
                 el.innerHTML = '<div class="space-y-3">'
@@ -11509,12 +11493,12 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var stdId = sbProfile ? sbProfile.standort_id : null;
                 var mondayISO = getKWMonday(kw);
                 var sundayISO = getKWSunday(kw);
-                var q = sb.from('verkauf_tracking').select('id, typ').gte('datum', mondayISO).lte('datum', sundayISO);
+                var q = sb.from('verkauf_tracking').select('id, beratungen, verkauft, umsatz').gte('datum', mondayISO).lte('datum', sundayISO);
                 if(stdId) q = q.eq('standort_id', stdId);
                 var res = await q;
                 var data = res.data || [];
-                var verkauft = data.filter(function(d){ return d.typ === 'verkauf'; }).length;
-                var beratung = data.filter(function(d){ return d.typ === 'beratung'; }).length;
+                var verkauft = data.reduce(function(s,d){ return s + (d.verkauft||0); }, 0);
+                var beratung = data.reduce(function(s,d){ return s + (d.beratungen||0); }, 0);
                 var quote = beratung > 0 ? Math.round(verkauft / beratung * 100) : 0;
                 el.innerHTML = '<div class="mb-3"><div class="flex items-center justify-between mb-1"><span class="text-sm text-gray-600">Verkaufsquote</span>'
                     +'<span class="text-2xl font-bold '+(quote>=40?'text-green-600':quote>=20?'text-yellow-600':'text-red-500')+'">'+quote+'%</span></div>'
@@ -11591,15 +11575,14 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var el = document.getElementById('wTeamContent'); if(!el) return;
             try {
                 var stdId = sbProfile ? sbProfile.standort_id : null;
-                var q = sb.from('users').select('id, vorname, nachname, status, rolle').eq('status', 'aktiv');
+                var q = sb.from('users').select('id, name, status').eq('status', 'aktiv');
                 if(stdId) q = q.eq('standort_id', stdId);
                 var res = await q;
                 var team = res.data || [];
                 if(!team.length) { el.innerHTML = '<p class="text-sm text-gray-400">Keine Mitarbeiter</p>'; return; }
                 var rolleIcons = {admin:'👑',geschaeftsfuehrer:'🏢',standortleiter:'⭐',verkauf:'💰',werkstatt:'🔧',mitarbeiter:'👤'};
                 el.innerHTML = '<div class="space-y-2">'+team.slice(0,5).map(function(u){
-                    var icon = rolleIcons[u.rolle] || '👤';
-                    return '<div class="flex items-center justify-between"><div class="flex items-center space-x-2"><span>'+icon+'</span><span class="text-sm font-semibold text-gray-800">'+escH((u.vorname||'')+' '+(u.nachname||'').charAt(0)+'.')+'</span></div><span class="text-xs text-green-600">● aktiv</span></div>';
+                    return '<div class="flex items-center justify-between"><div class="flex items-center space-x-2"><span>👤</span><span class="text-sm font-semibold text-gray-800">'+escH(u.name||'Unbekannt')+'</span></div><span class="text-xs text-green-600">● aktiv</span></div>';
                 }).join('')+(team.length>5?'<p class="text-xs text-gray-400 text-center">+' + (team.length-5) + ' weitere</p>':'')+'</div>';
             } catch(e) { el.innerHTML = '<p class="text-sm text-gray-400">Fehler beim Laden</p>'; }
         }
@@ -11609,17 +11592,18 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var el = document.getElementById('wControllingContent'); if(!el) return;
             try {
                 var stdId = sbProfile ? sbProfile.standort_id : null;
-                var q = sb.from('bwa_daten').select('monat, umsatz, rohertrag_pct, personalkosten_pct, ergebnis').order('monat', {ascending:false}).limit(1);
+                var q = sb.from('bwa_daten').select('monat, umsatzerloese, rohertrag, personalkosten, ergebnis_vor_steuern').order('monat', {ascending:false}).limit(1);
                 if(stdId) q = q.eq('standort_id', stdId);
                 var res = await q;
                 var bwa = (res.data||[])[0];
                 if(!bwa) { el.innerHTML = '<p class="text-sm text-gray-400 text-center py-2">Noch keine BWA hochgeladen</p>'; return; }
+                var rohPct = bwa.umsatzerloese ? Math.round(bwa.rohertrag / bwa.umsatzerloese * 100) : 0;
                 el.innerHTML = '<div class="space-y-3">'
-                    +'<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Umsatz</span><span class="font-bold text-gray-800">'+fmtN(bwa.umsatz||0)+' €</span></div>'
-                    +'<div><div class="flex justify-between mb-1"><span class="text-sm text-gray-600">Rohertrag</span><span class="text-sm font-semibold '+(bwa.rohertrag_pct>=35?'text-green-600':'text-red-500')+'">'+(bwa.rohertrag_pct||0).toFixed(1)+'%</span></div>'
-                    +'<div class="w-full bg-gray-200 rounded-full h-2"><div class="'+(bwa.rohertrag_pct>=35?'bg-green-500':'bg-red-500')+' h-2 rounded-full" style="width:'+Math.min(bwa.rohertrag_pct||0,60)/60*100+'%"></div></div></div>'
-                    +'<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Ergebnis</span><span class="font-bold '+((bwa.ergebnis||0)>=0?'text-green-600':'text-red-500')+'">'+fmtN(bwa.ergebnis||0)+' €</span></div>'
-                    +'<p class="text-[10px] text-gray-400">Letzte BWA: '+escH(bwa.monat||'')+'</p>'
+                    +'<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Umsatz</span><span class="font-bold text-gray-800">'+fmtN(bwa.umsatzerloese||0)+' €</span></div>'
+                    +'<div><div class="flex justify-between mb-1"><span class="text-sm text-gray-600">Rohertrag</span><span class="text-sm font-semibold '+(rohPct>=35?'text-green-600':'text-red-500')+'">'+rohPct+'%</span></div>'
+                    +'<div class="w-full bg-gray-200 rounded-full h-2"><div class="'+(rohPct>=35?'bg-green-500':'bg-red-500')+' h-2 rounded-full" style="width:'+Math.min(rohPct,60)/60*100+'%"></div></div></div>'
+                    +'<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Ergebnis</span><span class="font-bold '+((bwa.ergebnis_vor_steuern||0)>=0?'text-green-600':'text-red-500')+'">'+fmtN(bwa.ergebnis_vor_steuern||0)+' €</span></div>'
+                    +'<p class="text-[10px] text-gray-400">Letzte BWA: Monat '+escH(String(bwa.monat||''))+'</p>'
                     +'</div>';
             } catch(e) { el.innerHTML = '<p class="text-sm text-gray-400">Fehler beim Laden</p>'; }
         }
@@ -11891,7 +11875,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var tickets = ticketResp.data || [];
 
                 // Load leads
-                var leadResp = await sb.from('leads').select('standort_id, status, wert');
+                var leadResp = await sb.from('leads').select('standort_id, status, geschaetzter_wert');
                 var leads = leadResp.data || [];
 
                 // Load verkauf tracking
@@ -13833,11 +13817,11 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             // Load users if not cached
             if(kalStandortUsers.length === 0) {
                 try {
-                    var q = sb.from('users').select('id, vorname, nachname, rolle').eq('status', 'aktiv');
+                    var q = sb.from('users').select('id, name').eq('status', 'aktiv');
                     if(sbProfile && sbProfile.standort_id && !sbProfile.is_hq) q = q.eq('standort_id', sbProfile.standort_id);
                     var res = await q;
                     kalStandortUsers = (res.data || []).map(function(u) {
-                        return { id: u.id, name: ((u.vorname || '') + ' ' + (u.nachname || '')).trim() || 'Unbekannt', rolle: u.rolle };
+                        return { id: u.id, name: u.name || 'Unbekannt' };
                     });
                 } catch(e) { console.warn('Teilnehmer laden:', e); }
             }
@@ -13977,7 +13961,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var isHQ = sbProfile && sbProfile.is_hq;
 
                 // Todos
-                var q = sb.from('todos').select('*, zugewiesen:zugewiesen_an(name)').order('prio_sort',{ascending:true}).order('faellig_am',{ascending:true,nullsFirst:false});
+                var q = sb.from('todos').select('*').order('prio_sort',{ascending:true}).order('faellig_am',{ascending:true,nullsFirst:false});
                 if(sid && !isHQ) q = q.eq('standort_id', sid);
                 var r = await q;
                 todoState.todos = (!r.error && r.data) ? r.data : [];
@@ -14001,10 +13985,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 todoState.labels = (!lr.error && lr.data) ? lr.data : [];
 
                 // Store info in sidebar
-                var sbI = document.getElementById('todoSbInitials');
-                var sbS = document.getElementById('todoSbStore');
-                if(sbI && sbProfile) sbI.textContent = (sbProfile.name||'??').split(' ').map(function(w){return w[0];}).join('').substring(0,2);
-                if(sbS && sbProfile) sbS.textContent = sbProfile.standort_name || 'Mein Standort';
 
             } catch(e) { console.warn('loadTodos:', e); }
             todoRender();
@@ -14027,12 +14007,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var titles = {all:'Alle Aufgaben',heute:'Heute',ueberfaellig:'Überfällig',done:'Erledigt'};
             var h1 = document.getElementById('todoHeaderTitle');
             if(h1) h1.textContent = titles[f] || 'Aufgaben';
-            // Sidebar highlight
-            document.querySelectorAll('.todo-f2').forEach(function(b){
-                b.className = 'todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] text-gray-600 hover:bg-gray-200';
-            });
-            var btn = document.querySelector('.todo-f2[data-tf2="'+f+'"]');
-            if(btn) btn.className = 'todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] bg-white shadow-sm text-gray-900 font-semibold';
             // KPI highlight
             document.querySelectorAll('.todo-kpi').forEach(function(b){ b.style.background=''; b.style.boxShadow=''; });
             var kpiColors = {all:'#fafaf9',heute:'#fff7ed',ueberfaellig:'#fef2f2',done:'#f0fdf4'};
@@ -14081,10 +14055,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             // Header sub
             var hs=document.getElementById('todoHeaderSub');if(hs) hs.textContent=c.open+' offen · '+c.today+' heute · '+c.overdue+' überfällig';
             // Sidebar badges
-            var ba=document.getElementById('tfBadgeAll');if(ba){ba.textContent=c.open;ba.classList.toggle('hidden',!c.open);}
-            var bh=document.getElementById('tfBadgeHeute');if(bh){bh.textContent=c.today;bh.classList.toggle('hidden',!c.today);}
-            var bu=document.getElementById('tfBadgeUeber');if(bu){bu.textContent=c.overdue;bu.classList.toggle('hidden',!c.overdue);}
-            var bd=document.getElementById('tfBadgeDone');if(bd){bd.textContent=c.done;bd.classList.toggle('hidden',!c.done);}
             // Sidebar badge in nav
             var navBadge=document.getElementById('todoSidebarBadge');if(navBadge)navBadge.textContent=c.open;
 
@@ -14142,17 +14112,20 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(!title||!title.trim()) return;
             var due=(document.getElementById('todoQADate')||{}).value||null;
             var prio=(document.getElementById('todoQAPrio')||{}).value||'normal';
-            var secId=(document.getElementById('todoQASec')||{}).value||null;
+            var secId=(document.getElementById('todoQASec')||{}).value;
+            if(!secId) secId=null;
             var prioSort=(TODO_PRIO[prio]||{}).sort||1;
             try {
-                var resp = await sb.from('todos').insert({
+                var ins = {
                     standort_id:sbProfile?sbProfile.standort_id:null, erstellt_von:sbUser?sbUser.id:null,
                     titel:title.trim(), faellig_am:due, prio:prio, prio_sort:prioSort,
-                    kategorie:'sonstig', section_id:secId, erledigt:false
-                }).select('*, zugewiesen:zugewiesen_an(name)');
+                    kategorie:'sonstig', erledigt:false
+                };
+                if(secId) ins.section_id = secId;
+                var resp = await sb.from('todos').insert(ins).select();
                 if(resp.error) throw resp.error;
-                if(resp.data&&resp.data[0]) todoState.todos.unshift(resp.data[0]);
-            } catch(e){console.error('QA add:',e);}
+                if(resp.data&&resp.data[0]) { resp.data[0].zugewiesen=null; todoState.todos.unshift(resp.data[0]); }
+            } catch(e){console.error('QA add:',e);alert('Fehler: '+e.message);}
             todoCloseQuickAdd();
             todoRender();
         }
@@ -14544,9 +14517,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             try {
                 var resp = await sb.from('todos').insert({
                     standort_id:sbProfile?sbProfile.standort_id:null, erstellt_von:sbUser?sbUser.id:null,
-                    titel:title, parent_id:parentId, section_id:parent?parent.section_id:null,
+                    titel:title, parent_id:parentId, section_id:(parent&&parent.section_id)||null,
                     kategorie:parent?parent.kategorie:'sonstig', prio:'normal', prio_sort:1, erledigt:false
-                }).select('*, zugewiesen:zugewiesen_an(name)');
+                }).select('*');
                 if(resp.error) throw resp.error;
                 if(resp.data&&resp.data[0]) todoState.todos.push(resp.data[0]);
             } catch(e){console.error(e);}
@@ -14559,9 +14532,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var parent = todoState.todos.find(function(t){return t.id===parentId;});
             sb.from('todos').insert({
                 standort_id:sbProfile?sbProfile.standort_id:null, erstellt_von:sbUser?sbUser.id:null,
-                titel:title.trim(), parent_id:parentId, section_id:parent?parent.section_id:null,
+                titel:title.trim(), parent_id:parentId, section_id:(parent&&parent.section_id)||null,
                 kategorie:parent?parent.kategorie:'sonstig', prio:'normal', prio_sort:1, erledigt:false
-            }).select('*, zugewiesen:zugewiesen_an(name)').then(function(r){
+            }).select('*').then(function(r){
                 if(r.data&&r.data[0]) todoState.todos.push(r.data[0]);
                 todoRender();
             });
@@ -18918,146 +18891,6 @@ function SalesForm({deal,sales,seller,onClose,onUpdateDeal,mode}){
       .box{width:11px;height:11px;border:1.5px solid #888;border-radius:2px;display:inline-block}
       .ft{margin-top:24px;text-align:center;font-size:8px;color:#bbb;border-top:1px solid #eee;padding-top:6px}
       @media print{.np{display:none!important}body{padding:20px 28px}}
-
-        /* ═══════════════════════════════════════════════════════════
-           DARK THEME – Global CSS Override Layer
-           Activated by data-theme="dark" on <html>
-           All existing Tailwind classes keep working, colors remap.
-           ═══════════════════════════════════════════════════════════ */
-        [data-theme="dark"] { color-scheme: dark; }
-
-        /* Body & Main backgrounds */
-        [data-theme="dark"] body,
-        [data-theme="dark"] .bg-gray-50 { background-color: #0c0c0d !important; }
-        [data-theme="dark"] .bg-white,
-        [data-theme="dark"] .vit-card { background-color: #161618 !important; }
-        [data-theme="dark"] .bg-gray-100 { background-color: #1c1c1f !important; }
-        [data-theme="dark"] .bg-gray-200 { background-color: #242428 !important; }
-        [data-theme="dark"] .bg-gray-300 { background-color: #2e2e33 !important; }
-
-        /* vit-background gradient */
-        [data-theme="dark"] .vit-background::before {
-            background: linear-gradient(135deg, #0c0c0d 0%, #111113 100%) !important;
-        }
-
-        /* Cards */
-        [data-theme="dark"] .vit-card {
-            border: 1px solid #2a2a2e !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
-        }
-        [data-theme="dark"] .vit-card:hover {
-            box-shadow: 0 4px 16px rgba(239, 125, 0, 0.15) !important;
-        }
-        [data-theme="dark"] .vit-card-watermark::before { color: rgba(239,125,0,0.02) !important; }
-
-        /* Text colors */
-        [data-theme="dark"] .text-gray-800,
-        [data-theme="dark"] .text-gray-900,
-        [data-theme="dark"] .text-black,
-        [data-theme="dark"] .h1-headline { color: #f0f0f0 !important; }
-        [data-theme="dark"] .text-gray-700 { color: #c8c8cc !important; }
-        [data-theme="dark"] .text-gray-600 { color: #a1a1aa !important; }
-        [data-theme="dark"] .text-gray-500 { color: #8b8b94 !important; }
-        [data-theme="dark"] .text-gray-400 { color: #71717a !important; }
-        [data-theme="dark"] .text-gray-300 { color: #52525b !important; }
-        [data-theme="dark"] .h2-headline { color: #8b8b94 !important; }
-
-        /* Borders */
-        [data-theme="dark"] .border-gray-200,
-        [data-theme="dark"] .border-gray-100 { border-color: #2a2a2e !important; }
-        [data-theme="dark"] .border-gray-300 { border-color: #3a3a3f !important; }
-        [data-theme="dark"] .border-gray-600 { border-color: #444 !important; }
-        [data-theme="dark"] hr { border-color: #333 !important; }
-
-        /* Colored backgrounds – darker versions */
-        [data-theme="dark"] .bg-orange-50,
-        [data-theme="dark"] .bg-orange-100 { background-color: rgba(239,125,0,0.1) !important; }
-        [data-theme="dark"] .bg-green-50,
-        [data-theme="dark"] .bg-green-100 { background-color: rgba(34,197,94,0.1) !important; }
-        [data-theme="dark"] .bg-red-50,
-        [data-theme="dark"] .bg-red-100 { background-color: rgba(239,68,68,0.1) !important; }
-        [data-theme="dark"] .bg-blue-50,
-        [data-theme="dark"] .bg-blue-100 { background-color: rgba(59,130,246,0.1) !important; }
-        [data-theme="dark"] .bg-yellow-50,
-        [data-theme="dark"] .bg-yellow-100 { background-color: rgba(234,179,8,0.1) !important; }
-
-        /* Shadows in dark mode */
-        [data-theme="dark"] .shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important; }
-        [data-theme="dark"] .shadow-md { box-shadow: 0 4px 6px rgba(0,0,0,0.4) !important; }
-        [data-theme="dark"] .shadow-lg { box-shadow: 0 8px 16px rgba(0,0,0,0.4) !important; }
-        [data-theme="dark"] .shadow-2xl { box-shadow: 0 16px 32px rgba(0,0,0,0.5) !important; }
-
-        /* Inputs & Forms */
-        [data-theme="dark"] input, [data-theme="dark"] select, [data-theme="dark"] textarea {
-            background-color: #1c1c1f !important;
-            border-color: #2a2a2e !important;
-            color: #f0f0f0 !important;
-        }
-        [data-theme="dark"] input:focus, [data-theme="dark"] select:focus, [data-theme="dark"] textarea:focus {
-            border-color: #EF7D00 !important;
-            box-shadow: 0 0 0 3px rgba(239,125,0,0.15) !important;
-        }
-        [data-theme="dark"] input::placeholder, [data-theme="dark"] textarea::placeholder {
-            color: #52525b !important;
-        }
-
-        /* Sidebar – already dark, minor tweaks */
-        [data-theme="dark"] .sidebar {
-            background: linear-gradient(180deg, #0a0a0b 0%, #080808 100%) !important;
-            border-right: 1px solid #1a1a1e;
-        }
-
-        /* Tables */
-        [data-theme="dark"] table { color: #d4d4d8; }
-        [data-theme="dark"] th { color: #a1a1aa !important; background-color: #1c1c1f !important; }
-        [data-theme="dark"] td { border-color: #2a2a2e !important; }
-
-        /* Modal/overlay backgrounds */
-        [data-theme="dark"] [class*="bg-white"] { background-color: #161618 !important; }
-
-        /* Gradient overrides for colored headers */
-        [data-theme="dark"] .bg-gradient-to-r.from-orange-50 { background: rgba(239,125,0,0.08) !important; }
-        [data-theme="dark"] .bg-gradient-to-r.from-green-50 { background: rgba(34,197,94,0.08) !important; }
-        [data-theme="dark"] .bg-gradient-to-r.from-blue-50 { background: rgba(59,130,246,0.08) !important; }
-        [data-theme="dark"] .bg-gradient-to-r.from-red-50 { background: rgba(239,68,68,0.08) !important; }
-
-        /* Login screen */
-        [data-theme="dark"] #loginScreen { background-color: #0c0c0d !important; }
-
-        /* Scrollbar */
-        [data-theme="dark"] ::-webkit-scrollbar-track { background: #0c0c0d; }
-        [data-theme="dark"] ::-webkit-scrollbar-thumb { background: #2a2a2e; border-radius: 4px; }
-
-        /* Pending/Blocked screens */
-        [data-theme="dark"] #pendingScreen, [data-theme="dark"] #blockedScreen { background-color: #0c0c0d !important; }
-
-        /* Theme toggle in sidebar */
-        .theme-toggle {
-            display: flex; align-items: center; gap: 8px;
-            padding: 8px 12px; margin: 8px 12px;
-            background: rgba(255,255,255,0.05); border-radius: 8px;
-            cursor: pointer; transition: background 0.2s;
-        }
-        .theme-toggle:hover { background: rgba(255,255,255,0.1); }
-        .theme-toggle-track {
-            width: 36px; height: 20px; border-radius: 10px;
-            background: #444; position: relative; transition: background 0.3s;
-        }
-        .theme-toggle-track.active { background: #EF7D00; }
-        .theme-toggle-knob {
-            width: 16px; height: 16px; border-radius: 50%;
-            background: white; position: absolute; top: 2px; left: 2px;
-            transition: left 0.3s cubic-bezier(0.16,1,0.3,1);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-        }
-        .theme-toggle-track.active .theme-toggle-knob { left: 18px; }
-
-        /* Smooth transition for theme switch */
-        body, .vit-card, .sidebar, .vit-background::before,
-        input, select, textarea, .main-content-area {
-            transition: background-color 0.4s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-        }
-
     </style></head><body>
     <div class="hdr"><h1>FAHRRADBERATUNG</h1><div class="sub">vit:bikes · ${new Date().toLocaleDateString("de-DE")}</div></div>
     <div class="meta"><span><b>Kunde:</b> ________________________________</span><span><b>Datum:</b> ___________</span><span><b>Verkäufer:</b> ____________________</span></div>
@@ -20143,30 +19976,5 @@ if(document.readyState==="complete") initMkt();
 else window.addEventListener("load",initMkt);
 })();
 </script>
-
-<!-- Theme Switching -->
-<script>
-function toggleTheme() {
-    var current = document.documentElement.getAttribute('data-theme') || 'light';
-    var next = current === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-}
-function setTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    try { localStorage.setItem('vit-theme', theme); } catch(e){}
-    var track = document.getElementById('themeToggleTrack');
-    if(track) {
-        if(theme === 'dark') track.classList.add('active');
-        else track.classList.remove('active');
-    }
-}
-// Init on load
-(function(){
-    var saved = 'light';
-    try { saved = localStorage.getItem('vit-theme') || 'light'; } catch(e){}
-    setTheme(saved);
-})();
-</script>
-
 </body>
 </html>
