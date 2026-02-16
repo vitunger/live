@@ -2210,7 +2210,8 @@
                     <!-- Tab Navigation -->
                     <div class="mb-6 border-b border-gray-200">
                         <nav class="-mb-px flex space-x-8">
-                            <button onclick="showControllingTab('bwa')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="bwa">BWAs</button>
+                            <button onclick="showControllingTab('cockpit')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="cockpit">🎯 Cockpit</button>
+                            <button onclick="showControllingTab('bwa')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="bwa">BWAs</button>
                             <button onclick="showControllingTab('benchmark')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="benchmark">Benchmarks</button>
                             <button onclick="showControllingTab('planist')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="planist">Plan / Ist</button>
                             <button onclick="showControllingTab('liquiditaet')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="liquiditaet">Liquiditaet</button>
@@ -2218,8 +2219,13 @@
                         </nav>
                     </div>
 
+                    <!-- ===== TAB 0: COCKPIT ===== -->
+                    <div id="ctrlTabCockpit" class="ctrl-tab-content">
+                        <div id="cockpitContent"><p class="text-sm text-gray-400 text-center py-8">Lade Cockpit-Daten...</p></div>
+                    </div>
+
                     <!-- ===== TAB 1: BWAs ===== -->
-                    <div id="ctrlTabBwa" class="ctrl-tab-content">
+                    <div id="ctrlTabBwa" class="ctrl-tab-content" style="display:none;">
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <!-- Left: BWA Ablage -->
                             <div class="lg:col-span-1">
@@ -4475,7 +4481,7 @@
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 <button onclick="showView('marketing'); showMarketingTab('mktStrategie')" class="p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition text-center"><p class="text-2xl mb-1">📢</p><p class="text-xs font-semibold">Marketing-Strategie</p></button>
                                 <button onclick="showView('einkauf'); showEinkaufTab('ekStrategie')" class="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition text-center"><p class="text-2xl mb-1">🛒</p><p class="text-xs font-semibold">Einkaufsstrategie</p></button>
-                                <button onclick="showView('controlling'); showControllingTab('bwa')" class="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition text-center"><p class="text-2xl mb-1">📊</p><p class="text-xs font-semibold">BWA &amp; Controlling</p></button>
+                                <button onclick="showView('controlling'); showControllingTab('cockpit')" class="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition text-center"><p class="text-2xl mb-1">📊</p><p class="text-xs font-semibold">BWA &amp; Controlling</p></button>
                                 <button onclick="showView('aktenschrank')" class="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition text-center"><p class="text-2xl mb-1">📁</p><p class="text-xs font-semibold">Aktenschrank</p></button>
                             </div>
                         </div>
@@ -10943,6 +10949,177 @@
         function renderDevStatus() { renderModulStatus(); }
 
 
+
+        // === PERFORMANCE COCKPIT ===
+        var cockpitMonth = null;
+        async function renderPerformanceCockpit() {
+            var el = document.getElementById('cockpitContent');
+            if(!el) return;
+            el.innerHTML = '<p class="text-sm text-gray-400 text-center py-8 animate-pulse">Lade Cockpit-Daten...</p>';
+
+            var stdId = sbProfile ? sbProfile.standort_id : null;
+            var stdName = sbProfile ? (sbProfile.standort_name || sbProfile.name || 'Mein Standort') : 'Mein Standort';
+            var currentYear = new Date().getFullYear();
+            var pn = function(v) { return parseFloat(v) || 0; };
+            var mLabels = {1:'Jan',2:'Feb',3:'Mär',4:'Apr',5:'Mai',6:'Jun',7:'Jul',8:'Aug',9:'Sep',10:'Okt',11:'Nov',12:'Dez'};
+
+            try {
+                // Load BWAs for current + previous year
+                var bwaResp = await sb.from('bwa_daten').select('*').eq('standort_id', stdId).eq('jahr', currentYear).order('monat');
+                var bwas = (bwaResp.data || []);
+                var vjResp = await sb.from('bwa_daten').select('*').eq('standort_id', stdId).eq('jahr', currentYear - 1).order('monat');
+                var vjBwas = (vjResp.data || []);
+
+                if(bwas.length === 0) {
+                    el.innerHTML = '<div class="text-center py-12"><p class="text-4xl mb-3">📊</p><p class="text-gray-500">Noch keine BWA-Daten für ' + currentYear + ' vorhanden.</p><p class="text-sm text-gray-400 mt-2">Lade eine BWA hoch, um das Performance Cockpit zu aktivieren.</p><button onclick="showControllingTab(\'bwa\')" class="mt-4 px-4 py-2 bg-vit-orange text-white rounded-lg text-sm hover:opacity-90">BWA hochladen →</button></div>';
+                    return;
+                }
+
+                // Find latest month or selected month
+                var latestMonth = cockpitMonth || Math.max.apply(null, bwas.map(function(b) { return b.monat; }));
+                var bwa = bwas.find(function(b) { return b.monat === latestMonth; });
+                var vjBwa = vjBwas.find(function(b) { return b.monat === latestMonth; });
+
+                if(!bwa) { el.innerHTML = '<p class="text-sm text-gray-400 text-center py-8">Keine Daten für gewählten Monat.</p>'; return; }
+
+                // Extract values
+                var umsatz = pn(bwa.umsatzerloese);
+                var rohertrag = pn(bwa.rohertrag);
+                var marge = umsatz ? (rohertrag / umsatz * 100) : 0;
+                var gesamtkosten = pn(bwa.gesamtkosten);
+                var betriebsergebnis = pn(bwa.betriebsergebnis || bwa.ergebnis_vor_steuern);
+                var ergebnis = pn(bwa.ergebnis_vor_steuern);
+                var personal = pn(bwa.personalkosten);
+                var raum = pn(bwa.raumkosten);
+                var werbe = pn(bwa.werbekosten);
+                var sonstige = pn(bwa.sonstige_kosten) + pn(bwa.abschreibungen) + pn(bwa.kosten_warenabgabe);
+                var ebitMarge = umsatz ? (ergebnis / umsatz * 100) : null;
+                var kostenquote = umsatz ? (Math.abs(gesamtkosten) / umsatz * 100) : null;
+
+                // Plan values
+                var planUmsatz = pn(bwa.plan_umsatz);
+                var planRohertrag = pn(bwa.plan_rohertrag);
+                var planErgebnis = pn(bwa.plan_ergebnis);
+
+                // YTD
+                var ytdUmsatz = 0, ytdVjUmsatz = 0;
+                bwas.forEach(function(b) { ytdUmsatz += pn(b.umsatzerloese); });
+                vjBwas.forEach(function(b) { if(b.monat <= latestMonth) ytdVjUmsatz += pn(b.umsatzerloese); });
+                var ytdUmsatzVjPct = ytdVjUmsatz ? (ytdUmsatz / ytdVjUmsatz * 100) : null;
+
+                var vjEbitMarge = (vjBwa && pn(vjBwa.umsatzerloese)) ? (pn(vjBwa.ergebnis_vor_steuern) / pn(vjBwa.umsatzerloese) * 100) : null;
+                var ebitMargeDelta = (ebitMarge !== null && vjEbitMarge !== null) ? (ebitMarge - vjEbitMarge) : null;
+
+                // Marketing
+                var mktUmsatzPct = (umsatz && werbe) ? (Math.abs(werbe) / umsatz * 100) : null;
+
+                // Build HTML
+                var h = '';
+
+                // Header
+                h += '<div class="flex items-center justify-between mb-6">';
+                h += '<div class="flex items-center space-x-3"><h2 class="text-lg font-bold text-vit-orange">Filial-Performance Cockpit</h2>';
+                h += '<span class="text-sm text-gray-500">' + stdName + ' | ' + currentYear + '</span></div>';
+                h += '<select id="cockpitMonthSel" onchange="cockpitMonth=parseInt(this.value);renderPerformanceCockpit()" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white">';
+                for(var mm = 1; mm <= 12; mm++) {
+                    var hasBwa = bwas.some(function(b){ return b.monat===mm; });
+                    h += '<option value="'+mm+'"'+(mm===latestMonth?' selected':'')+(hasBwa?'':' disabled')+'>'+mLabels[mm]+(hasBwa?'':' (leer)')+'</option>';
+                }
+                h += '</select></div>';
+
+                // KPI Cards
+                var vjUmsatz = vjBwa ? pn(vjBwa.umsatzerloese) : null;
+                var vjMarge = vjBwa && pn(vjBwa.umsatzerloese) ? (pn(vjBwa.rohertrag) / pn(vjBwa.umsatzerloese) * 100) : null;
+                var umsatzDelta = vjUmsatz ? ((umsatz - vjUmsatz) / vjUmsatz * 100) : null;
+
+                function kpiCard(label, value, suffix, delta, deltaLabel, color) {
+                    var c = color || 'text-gray-800';
+                    var dStr = '';
+                    if(delta !== null && delta !== undefined) {
+                        var dColor = delta >= 0 ? 'text-green-600' : 'text-red-500';
+                        dStr = '<p class="text-xs mt-1 '+dColor+'">'+(delta>=0?'▲':'▼')+' '+Math.abs(delta).toFixed(1)+(deltaLabel||'')+'</p>';
+                    }
+                    return '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-500 mb-1">'+label+'</p><p class="text-xl font-bold '+c+'">'+value+(suffix||'')+'</p>'+dStr+'</div>';
+                }
+
+                h += '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">';
+                h += kpiCard('Umsatz', umsatz.toLocaleString('de-DE'), ' €', umsatzDelta, '% vs VJ');
+                h += kpiCard('Rohertrag', rohertrag.toLocaleString('de-DE'), ' €', null, null);
+                h += kpiCard('Marge', marge.toFixed(1), '%', vjMarge !== null ? (marge - vjMarge) : null, ' Pp vs VJ', marge >= 35 ? 'text-green-600' : 'text-orange-500');
+                h += kpiCard('Gesamtkosten', Math.abs(gesamtkosten).toLocaleString('de-DE'), ' €', null, null);
+                h += kpiCard('Ergebnis', ergebnis.toLocaleString('de-DE'), ' €', null, null, ergebnis >= 0 ? 'text-green-600' : 'text-red-600');
+                h += kpiCard('EBIT-Marge', ebitMarge !== null ? ebitMarge.toFixed(1) : '—', '%', ebitMargeDelta, ' Pp vs VJ', ebitMarge >= 0 ? 'text-green-600' : 'text-red-500');
+                h += kpiCard('Kostenquote', kostenquote !== null ? kostenquote.toFixed(1) : '—', '%', null, null, kostenquote <= 100 ? 'text-blue-600' : 'text-red-500');
+                h += kpiCard('YTD Umsatz', ytdUmsatz.toLocaleString('de-DE'), ' €', ytdUmsatzVjPct ? (ytdUmsatzVjPct - 100) : null, '% vs VJ');
+                h += '</div>';
+
+                // Plan vs Ist bars
+                if(planUmsatz || planRohertrag || planErgebnis) {
+                    h += '<div class="vit-card p-5 mb-6"><h3 class="font-bold text-gray-800 mb-4">Plan vs. Ist</h3>';
+                    h += '<div class="space-y-4">';
+                    function planBar(label, ist, plan) {
+                        if(!plan) return '';
+                        var pct = Math.min(Math.round(ist / plan * 100), 150);
+                        var color = pct >= 100 ? 'bg-green-500' : pct >= 80 ? 'bg-yellow-400' : 'bg-red-400';
+                        return '<div><div class="flex justify-between text-sm mb-1"><span class="text-gray-600">'+label+'</span><span class="font-semibold">'+pct+'%</span></div><div class="w-full bg-gray-100 rounded-full h-3"><div class="'+color+' h-3 rounded-full transition-all" style="width:'+Math.min(pct,100)+'%"></div></div><div class="flex justify-between text-xs text-gray-400 mt-1"><span>Ist: '+ist.toLocaleString('de-DE')+' €</span><span>Plan: '+plan.toLocaleString('de-DE')+' €</span></div></div>';
+                    }
+                    h += planBar('Umsatz', umsatz, planUmsatz);
+                    h += planBar('Rohertrag', rohertrag, planRohertrag);
+                    h += planBar('Ergebnis', ergebnis, planErgebnis);
+                    h += '</div></div>';
+                }
+
+                // Kostenstruktur
+                h += '<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">';
+                h += '<div class="vit-card p-5"><h3 class="font-bold text-gray-800 mb-4">Kostenstruktur</h3>';
+                var totalK = Math.abs(personal) + Math.abs(raum) + Math.abs(werbe) + Math.abs(sonstige);
+                function kostenBar(label, val, color) {
+                    var pct = totalK ? (Math.abs(val) / totalK * 100) : 0;
+                    return '<div class="flex items-center gap-3 mb-3"><span class="text-xs text-gray-500 w-24">'+label+'</span><div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="'+color+' h-2.5 rounded-full" style="width:'+pct+'%"></div></div><span class="text-xs font-semibold text-gray-600 w-20 text-right">'+Math.abs(val).toLocaleString('de-DE')+' €</span></div>';
+                }
+                h += kostenBar('Personal', personal, 'bg-blue-500');
+                h += kostenBar('Raum', raum, 'bg-purple-500');
+                h += kostenBar('Werbung', werbe, 'bg-orange-500');
+                h += kostenBar('Sonstige', sonstige, 'bg-gray-400');
+                h += '</div>';
+
+                // Monatsvergleich Trend
+                h += '<div class="vit-card p-5"><h3 class="font-bold text-gray-800 mb-4">Umsatz-Trend ' + currentYear + '</h3>';
+                if(bwas.length >= 2) {
+                    var maxU = Math.max.apply(null, bwas.map(function(b){ return pn(b.umsatzerloese); }));
+                    h += '<div class="flex items-end gap-2 h-32">';
+                    bwas.forEach(function(b) {
+                        var pct = maxU ? (pn(b.umsatzerloese) / maxU * 100) : 0;
+                        var isSelected = b.monat === latestMonth;
+                        h += '<div class="flex-1 flex flex-col items-center">';
+                        h += '<span class="text-[9px] text-gray-500 mb-1">'+pn(b.umsatzerloese).toLocaleString('de-DE')+'</span>';
+                        h += '<div class="w-full '+(isSelected?'bg-vit-orange':'bg-gray-300')+' rounded-t" style="height:'+Math.max(pct,5)+'%"></div>';
+                        h += '<span class="text-[10px] text-gray-400 mt-1">'+mLabels[b.monat]+'</span></div>';
+                    });
+                    h += '</div>';
+                } else {
+                    h += '<p class="text-sm text-gray-400 text-center py-4">Mindestens 2 Monate für Trend nötig.</p>';
+                }
+                h += '</div></div>';
+
+                // Marketing KPI + Benchmark (coming soon)
+                h += '<div class="grid grid-cols-1 md:grid-cols-2 gap-6">';
+                h += '<div class="vit-card p-5"><h3 class="font-bold text-gray-800 mb-3">Marketing-Kennzahlen</h3>';
+                h += '<div class="space-y-3">';
+                h += '<div class="flex justify-between text-sm"><span class="text-gray-500">Werbekosten</span><span class="font-semibold">'+Math.abs(werbe).toLocaleString('de-DE')+' €</span></div>';
+                h += '<div class="flex justify-between text-sm"><span class="text-gray-500">% vom Umsatz</span><span class="font-semibold '+(mktUmsatzPct && mktUmsatzPct <= 5 ? 'text-green-600' : 'text-orange-500')+'">'+(mktUmsatzPct ? mktUmsatzPct.toFixed(1) : '—')+'%</span></div>';
+                h += '</div></div>';
+                h += '<div class="vit-card p-5 opacity-50"><h3 class="font-bold text-gray-800 mb-3">🔒 Netzwerk-Benchmark</h3>';
+                h += '<p class="text-sm text-gray-400 py-4 text-center">Verfügbar sobald Netzwerk-Daten aggregiert werden.</p></div>';
+                h += '</div>';
+
+                el.innerHTML = h;
+            } catch(err) {
+                console.error('[COCKPIT]', err);
+                el.innerHTML = '<div class="text-center py-8"><p class="text-red-400 text-sm">Fehler beim Laden: ' + err.message + '</p><button onclick="renderPerformanceCockpit()" class="mt-2 text-sm text-vit-orange underline">Erneut versuchen</button></div>';
+            }
+        }
+
         // Hook HQ views into showView
         var origShowView2 = showView;
         showView = function(v) {
@@ -10978,7 +11155,7 @@
             if(v==='todo') loadTodos();
             if(v==='notifications') renderNotifications('all');
             // Auto-Loading for Standort-Views
-            if(v==='controlling') { showControllingTab('bwas'); loadBwaList(); }
+            if(v==='controlling') { showControllingTab('cockpit'); renderPerformanceCockpit(); }
             if(v==='verkauf') { loadWeekFromDb(); loadPipelineFromSupabase(); }
             if(v==='kommunikation') { showKommTab('inbox'); }
             if(v==='aktenschrank') { loadAktenFiles(); }
