@@ -20053,8 +20053,9 @@ function setTheme(theme) {
                 </div>
 
                 <div style="margin-bottom:0;">
-                    <label style="font-size:11px;color:#6b7280;font-weight:600;display:block;margin-bottom:3px;">Position / Rolle</label>
-                    <input id="profilePosition" type="text" value="" placeholder="z.B. Geschäftsführer, Werkstattleiter..." style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='#e5e7eb'">
+                    <label style="font-size:11px;color:#6b7280;font-weight:600;display:block;margin-bottom:3px;">Rolle</label>
+                    <div id="profileRolle" style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;background:#f3f4f6;color:#6b7280;">Inhaber</div>
+                    <p style="font-size:9px;color:#9ca3af;margin-top:2px;">Wird vom HQ verwaltet</p>
                 </div>
             </div>
 
@@ -20104,11 +20105,11 @@ function openProfilePanel() {
         document.getElementById('profileVorname').value = nameParts[0] || '';
         document.getElementById('profileNachname').value = nameParts.slice(1).join(' ') || '';
         document.getElementById('profileEmail').value = sbProfile.email || '';
-        document.getElementById('profileTelefon').value = sbProfile.telefon || '';
-        document.getElementById('profilePosition').value = sbProfile.position || '';
+        document.getElementById('profileTelefon').value = sbProfile.phone || '';
         document.getElementById('profileNameDisplay').textContent = sbProfile.name || 'Demo User';
-        document.getElementById('profileRoleDisplay').textContent = (typeof currentRole !== 'undefined' ? currentRole : 'Inhaber');
-        var stdName = (typeof sbStandort !== 'undefined' && sbStandort) ? sbStandort.name : '';
+        document.getElementById('profileRoleDisplay').textContent = (typeof currentRole !== 'undefined' ? currentRole : sbProfile.is_hq ? 'HQ' : 'Inhaber');
+        var roleEl = document.getElementById('profileRolle'); if(roleEl) roleEl.textContent = (typeof currentRole !== 'undefined' ? currentRole : sbProfile.is_hq ? 'HQ' : 'Inhaber');
+        var stdName = sbProfile.standort_name || ((typeof sbStandort !== 'undefined' && sbStandort) ? sbStandort.name : '');
         document.getElementById('profileStandortDisplay').textContent = stdName ? '📍 ' + stdName : '';
         // Avatar
         var avatarUrl = sbProfile.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(sbProfile.name||'User') + '&background=EF7D00&color=fff';
@@ -20154,17 +20155,15 @@ async function saveProfile() {
     var nachname = document.getElementById('profileNachname').value.trim();
     var fullName = (vorname + ' ' + nachname).trim();
     var telefon = document.getElementById('profileTelefon').value.trim();
-    var position = document.getElementById('profilePosition').value.trim();
 
     if(typeof sb !== 'undefined' && typeof sbProfile !== 'undefined' && sbProfile) {
         try {
-            var upd = { name: fullName, telefon: telefon, position: position };
+            var upd = { name: fullName, phone: telefon };
             var resp = await sb.from('users').update(upd).eq('id', sbProfile.id);
             if(resp.error) throw resp.error;
             // Update local state
             sbProfile.name = fullName;
-            sbProfile.telefon = telefon;
-            sbProfile.position = position;
+            sbProfile.phone = telefon;
             // Update UI
             document.querySelectorAll('[data-user-name]').forEach(function(el){ el.textContent = fullName; });
             document.getElementById('profileNameDisplay').textContent = fullName;
