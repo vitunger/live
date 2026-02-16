@@ -1882,6 +1882,75 @@
 
                     <!-- ===== TAB 0: COCKPIT ===== -->
                     <div id="ctrlTabCockpit" class="ctrl-tab-content">
+                        <!-- BWA Deadline Countdown + Motivation -->
+                        <div id="bwaDeadlineWidget" class="vit-card p-5 mb-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <div id="bwaCountdownRing" style="position:relative;width:64px;height:64px;flex-shrink:0">
+                                        <svg width="64" height="64" style="transform:rotate(-90deg)">
+                                            <circle cx="32" cy="32" r="28" fill="none" stroke="#f3f4f6" stroke-width="5"/>
+                                            <circle id="bwaRingCircle" cx="32" cy="32" r="28" fill="none" stroke="#EF7D00" stroke-width="5" stroke-dasharray="175.9" stroke-dashoffset="0" stroke-linecap="round" style="transition:stroke-dashoffset 1s ease"/>
+                                        </svg>
+                                        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+                                            <span id="bwaCountdownDays" style="font-size:18px;font-weight:900;color:#EF7D00">—</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h2 id="bwaDeadlineTitle" class="text-base font-bold text-gray-800">BWA-Status wird geladen...</h2>
+                                        <p id="bwaDeadlineSubtext" class="text-sm text-gray-500 mt-1"></p>
+                                        <div id="bwaRatingBadge" style="display:none;margin-top:6px"></div>
+                                    </div>
+                                </div>
+                                <div id="bwaCTAArea">
+                                    <button onclick="showControllingTab('bwa')" id="bwaUploadCTA" class="px-5 py-2.5 bg-vit-orange text-white font-bold text-sm rounded-lg hover:opacity-90 transition" style="display:none">
+                                        📤 BWA jetzt einreichen
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Eskalation-Banner (Stufe 2+3) -->
+                            <div id="bwaEskalationBanner" style="display:none;margin-top:12px;padding:12px 16px;border-radius:10px;background:#fef2f2;border:1px solid #fecaca;">
+                                <div class="flex items-center gap-3">
+                                    <span style="font-size:20px">⚠️</span>
+                                    <div>
+                                        <p id="bwaEskText" class="text-sm font-semibold text-red-700"></p>
+                                        <p id="bwaEskSub" class="text-xs text-red-500 mt-0.5"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Netzwerk-Vergleich: Wer hat schon eingereicht? -->
+                        <div id="bwaNetzwerkWidget" class="vit-card p-5 mb-6">
+                            <div class="flex items-center justify-between mb-3">
+                                <h2 class="text-sm font-bold text-gray-800">📊 BWA-Status im Netzwerk</h2>
+                                <span id="bwaNetzwerkProgress" class="text-xs font-semibold text-gray-500"></span>
+                            </div>
+                            <div class="bg-gray-200 rounded-full h-2.5 mb-3"><div id="bwaNetzwerkBar" class="h-2.5 rounded-full transition-all" style="width:0%;background:#EF7D00"></div></div>
+                            <div id="bwaNetzwerkDetail" class="flex gap-4 text-xs text-gray-500">
+                                <span id="bwaNwGold">🥇 Gold: —</span>
+                                <span id="bwaNwOk">✅ OK: —</span>
+                                <span id="bwaNwMissing">⏳ Ausstehend: —</span>
+                                <span id="bwaNwOverdue">🚨 Überfällig: —</span>
+                            </div>
+                        </div>
+
+                        <!-- KPI Sofort-Report (nach Upload sichtbar) -->
+                        <div id="bwaKpiReport" class="vit-card p-5 mb-6" style="display:none;border-left:4px solid #16a34a">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h2 class="text-sm font-bold text-gray-800">✅ Dein Monats-Feedback</h2>
+                                    <p class="text-xs text-gray-500" id="bwaKpiReportMonth"></p>
+                                </div>
+                                <div id="bwaKpiRating"></div>
+                            </div>
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4" id="bwaKpiReportGrid"></div>
+                            <div id="bwaKpiInsights" class="p-3 bg-green-50 rounded-lg">
+                                <p class="text-xs font-semibold text-green-700 mb-1">💡 Empfehlungen</p>
+                                <ul id="bwaKpiRecList" class="text-xs text-green-600 space-y-1"></ul>
+                            </div>
+                        </div>
+
+                        
                         <div id="cockpitContent"><p class="text-sm text-gray-400 text-center py-8">Lade Cockpit-Daten...</p></div>
                     </div>
 
@@ -1936,6 +2005,18 @@
 
                     <!-- ===== TAB 2: Benchmarks ===== -->
                     <div id="ctrlTabBenchmark" class="ctrl-tab-content" style="display:none;">
+                        <!-- Feature Lock Overlay -->
+                        <div id="benchmarkLockOverlay" style="display:none;">
+                            <div class="vit-card p-8 text-center mb-6" style="border:2px dashed #e5e7eb;">
+                                <div style="font-size:48px;margin-bottom:12px">🔒</div>
+                                <h2 class="text-lg font-bold text-gray-800 mb-2">Benchmark-Vergleich gesperrt</h2>
+                                <p class="text-sm text-gray-500 mb-4">Ohne aktuelle BWA-Daten ist kein Netzwerk-Vergleich möglich.<br>Reiche deine BWA ein, um die Benchmarks freizuschalten.</p>
+                                <button onclick="showControllingTab('bwa')" class="px-6 py-3 bg-vit-orange text-white font-bold text-sm rounded-lg hover:opacity-90 transition">
+                                    📤 BWA einreichen & freischalten
+                                </button>
+                                <p class="text-xs text-gray-400 mt-3">Tipp: Frühabgabe vor dem 8. = Gold-Status 🥇</p>
+                            </div>
+                        </div>
                         <div class="vit-card p-6">
                             <h2 class="text-lg font-semibold text-gray-800 mb-2">Standort-Vergleich</h2>
                             <p class="text-sm text-gray-500 mb-6">Dein Standort vs. Netzwerk-Durchschnitt (Februar 2026)</p>
@@ -4416,6 +4497,56 @@
 
                 <!-- ===== HQ FINANZEN ===== -->
                 <div id="hqFinanzenView" class="view" style="display: none;">
+                    <!-- BWA Network Status Dashboard (Spec Section 5) -->
+                    <div id="hqBwaStatusDashboard" class="mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <p class="h2-headline text-vit-gray mb-1">NETZWERK</p>
+                                <h1 class="h1-headline">BWA-Status Übersicht</h1>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-400">Aktueller Monat</p>
+                                    <p id="hqBwaMonth" class="text-sm font-bold text-gray-800">—</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KPI Cards -->
+                        <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+                            <div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">Eingereicht</p><p id="hqBwaSubmitted" class="text-2xl font-bold text-green-600">—</p><p class="text-xs text-gray-400">von <span id="hqBwaTotal">—</span></p></div>
+                            <div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">🥇 Gold</p><p id="hqBwaGold" class="text-2xl font-bold text-yellow-500">—</p><p class="text-xs text-gray-400">vor dem 8.</p></div>
+                            <div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">✅ OK</p><p id="hqBwaOk" class="text-2xl font-bold text-green-600">—</p><p class="text-xs text-gray-400">bis zum 15.</p></div>
+                            <div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">⏳ Ausstehend</p><p id="hqBwaMissing" class="text-2xl font-bold text-gray-400">—</p><p class="text-xs text-gray-400">noch Zeit</p></div>
+                            <div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">🚨 Überfällig</p><p id="hqBwaOverdue" class="text-2xl font-bold text-red-500">—</p><p class="text-xs text-gray-400">Stufe 3</p></div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="vit-card p-4 mb-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-semibold text-gray-600">Netzwerk-Fortschritt</span>
+                                <span id="hqBwaPct" class="text-xs font-bold text-vit-orange">—%</span>
+                            </div>
+                            <div class="bg-gray-200 rounded-full h-3"><div id="hqBwaBar" class="h-3 rounded-full transition-all" style="width:0%;background:linear-gradient(90deg,#EF7D00,#F59E0B)"></div></div>
+                        </div>
+
+                        <!-- Standort-Tabelle -->
+                        <div class="vit-card p-4">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-left text-xs text-gray-400 border-b border-gray-200">
+                                        <th class="pb-2 font-semibold">Standort</th>
+                                        <th class="pb-2 font-semibold">Status</th>
+                                        <th class="pb-2 font-semibold">Rating</th>
+                                        <th class="pb-2 font-semibold">Eingereicht</th>
+                                        <th class="pb-2 font-semibold">Eskalation</th>
+                                        <th class="pb-2 font-semibold">Tage</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="hqBwaTableBody" class="divide-y divide-gray-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
                     <h1 class="h1-headline text-gray-800 mb-6">FINANZEN – NETZWERK</h1>
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="hqFinKpis"></div>
                     <div class="vit-card p-6 mb-6">
@@ -20047,11 +20178,6 @@ function setTheme(theme) {
                     <p style="font-size:9px;color:#9ca3af;margin-top:2px;">Wird vom HQ verwaltet</p>
                 </div>
 
-                <div style="margin-bottom:12px;">
-                    <label style="font-size:11px;color:#6b7280;font-weight:600;display:block;margin-bottom:3px;">Telefon</label>
-                    <input id="profileTelefon" type="tel" value="" placeholder="+49 ..." style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='#e5e7eb'">
-                </div>
-
                 <div style="margin-bottom:0;">
                     <label style="font-size:11px;color:#6b7280;font-weight:600;display:block;margin-bottom:3px;">Rolle</label>
                     <div id="profileRolle" style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;background:#f3f4f6;color:#6b7280;">Inhaber</div>
@@ -20105,7 +20231,6 @@ function openProfilePanel() {
         document.getElementById('profileVorname').value = nameParts[0] || '';
         document.getElementById('profileNachname').value = nameParts.slice(1).join(' ') || '';
         document.getElementById('profileEmail').value = sbProfile.email || '';
-        document.getElementById('profileTelefon').value = sbProfile.phone || '';
         document.getElementById('profileNameDisplay').textContent = sbProfile.name || 'Demo User';
         document.getElementById('profileRoleDisplay').textContent = (typeof currentRole !== 'undefined' ? currentRole : sbProfile.is_hq ? 'HQ' : 'Inhaber');
         var roleEl = document.getElementById('profileRolle'); if(roleEl) roleEl.textContent = (typeof currentRole !== 'undefined' ? currentRole : sbProfile.is_hq ? 'HQ' : 'Inhaber');
@@ -20154,16 +20279,14 @@ async function saveProfile() {
     var vorname = document.getElementById('profileVorname').value.trim();
     var nachname = document.getElementById('profileNachname').value.trim();
     var fullName = (vorname + ' ' + nachname).trim();
-    var telefon = document.getElementById('profileTelefon').value.trim();
 
     if(typeof sb !== 'undefined' && typeof sbProfile !== 'undefined' && sbProfile) {
         try {
-            var upd = { name: fullName, phone: telefon };
+            var upd = { name: fullName };
             var resp = await sb.from('users').update(upd).eq('id', sbProfile.id);
             if(resp.error) throw resp.error;
             // Update local state
             sbProfile.name = fullName;
-            sbProfile.phone = telefon;
             // Update UI
             document.querySelectorAll('[data-user-name]').forEach(function(el){ el.textContent = fullName; });
             document.getElementById('profileNameDisplay').textContent = fullName;
@@ -20208,6 +20331,360 @@ function changePassword() {
 }
 </script>
 
+
+
+<!-- ═══ BWA MOTIVATION + ESKALATION SYSTEM ═══ -->
+<script>
+(function(){
+    // ──── CONFIG ────
+    var MO_NAMES = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+    var STANDORTE_DEMO = [
+        {id:'s1',name:'München City',submitted:'2026-02-03',rating:'gold'},
+        {id:'s2',name:'Berlin Mitte',submitted:'2026-02-05',rating:'gold'},
+        {id:'s3',name:'Hamburg Altona',submitted:'2026-02-07',rating:'gold'},
+        {id:'s4',name:'Frankfurt Main',submitted:'2026-02-10',rating:'ok'},
+        {id:'s5',name:'Köln Ehrenfeld',submitted:'2026-02-11',rating:'ok'},
+        {id:'s6',name:'Stuttgart West',submitted:'2026-02-14',rating:'ok'},
+        {id:'s7',name:'Düsseldorf',submitted:'2026-02-15',rating:'ok'},
+        {id:'s8',name:'Leipzig',submitted:null,rating:'missing'},
+        {id:'s9',name:'Dresden',submitted:null,rating:'missing'},
+        {id:'s10',name:'Nürnberg',submitted:null,rating:'missing'},
+        {id:'s11',name:'Hannover',submitted:null,rating:'missing'},
+        {id:'s12',name:'Grafrath',submitted:null,rating:'missing'},
+        {id:'s13',name:'Münster',submitted:null,rating:'missing'},
+        {id:'s14',name:'Freiburg',submitted:null,rating:'missing'},
+        {id:'s15',name:'Augsburg',submitted:null,rating:'missing'},
+        {id:'s16',name:'Bonn',submitted:null,rating:'overdue'},
+        {id:'s17',name:'Mannheim',submitted:null,rating:'overdue'},
+        {id:'s18',name:'Karlsruhe',submitted:'2026-02-18',rating:'overdue'},
+        {id:'s19',name:'Dortmund',submitted:null,rating:'missing'},
+        {id:'s20',name:'Essen',submitted:null,rating:'missing'},
+        {id:'s21',name:'Bremen',submitted:'2026-02-12',rating:'ok'}
+    ];
+
+    // ──── HELPERS ────
+    function getBwaMonth(today) {
+        var d = today || new Date();
+        var m = d.getMonth(); // 0-based
+        var y = d.getFullYear();
+        // BWA bezieht sich auf Vormonat
+        if(m === 0) return {y:y-1, m:11};
+        return {y:y, m:m-1};
+    }
+
+    function getDeadline(bwaMonth) {
+        // Deadline = 15. des Folgemonats
+        var fm = bwaMonth.m + 1;
+        var fy = bwaMonth.y;
+        if(fm > 11) { fm = 0; fy++; }
+        return new Date(fy, fm, 15, 23, 59, 59);
+    }
+
+    function getEskalationsStufe(today, bwaMonth) {
+        var fm = bwaMonth.m + 1;
+        var fy = bwaMonth.y;
+        if(fm > 11) { fm = 0; fy++; }
+        // Are we in the follow month?
+        if(today.getFullYear() < fy || (today.getFullYear() === fy && today.getMonth() < fm)) return -1; // not yet
+        if(today.getFullYear() > fy || today.getMonth() > fm) return 3; // way past
+        var day = today.getDate();
+        if(day <= 7) return 0;
+        if(day <= 12) return 1;
+        if(day <= 15) return 2;
+        return 3;
+    }
+
+    function getRating(submittedDate, bwaMonth) {
+        if(!submittedDate) return 'missing';
+        var fm = bwaMonth.m + 1;
+        var fy = bwaMonth.y;
+        if(fm > 11) { fm = 0; fy++; }
+        var d8 = new Date(fy, fm, 8, 23, 59, 59);
+        var d15 = new Date(fy, fm, 15, 23, 59, 59);
+        var sd = new Date(submittedDate);
+        if(sd <= d8) return 'gold';
+        if(sd <= d15) return 'ok';
+        return 'overdue';
+    }
+
+    function daysUntil(deadline) {
+        var now = new Date();
+        return Math.ceil((deadline - now) / (1000*60*60*24));
+    }
+
+    function ratingBadge(rating) {
+        var map = {
+            gold: {t:'🥇 GOLD', c:'#ca8a04', bg:'rgba(202,138,4,0.1)'},
+            ok: {t:'✅ OK', c:'#16a34a', bg:'rgba(22,163,74,0.1)'},
+            overdue: {t:'🚨 ÜBERFÄLLIG', c:'#dc2626', bg:'rgba(220,38,38,0.1)'},
+            missing: {t:'⏳ AUSSTEHEND', c:'#9ca3af', bg:'rgba(156,163,175,0.1)'}
+        };
+        var m = map[rating] || map.missing;
+        return '<span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:6px;color:'+m.c+';background:'+m.bg+'">'+m.t+'</span>';
+    }
+
+    function eskalationBadge(stufe) {
+        var cols = ['#9ca3af','#ca8a04','#ea580c','#dc2626'];
+        var c = cols[Math.min(stufe,3)] || cols[0];
+        return '<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;color:'+c+';background:'+c+'18">Stufe '+stufe+'</span>';
+    }
+
+    // ──── STANDORT-SICHT: Cockpit Widget ────
+    function updateBwaDeadlineWidget() {
+        var today = new Date();
+        var bwaMo = getBwaMonth(today);
+        var deadline = getDeadline(bwaMo);
+        var stufe = getEskalationsStufe(today, bwaMo);
+        var days = daysUntil(deadline);
+        var moName = MO_NAMES[bwaMo.m] + ' ' + bwaMo.y;
+
+        // Check if current user submitted (demo: use Grafrath)
+        var myStandort = STANDORTE_DEMO.find(function(s){return s.name==='Grafrath';});
+        var submitted = myStandort && myStandort.submitted;
+        var rating = myStandort ? myStandort.rating : 'missing';
+
+        var titleEl = document.getElementById('bwaDeadlineTitle');
+        var subEl = document.getElementById('bwaDeadlineSubtext');
+        var daysEl = document.getElementById('bwaCountdownDays');
+        var ringEl = document.getElementById('bwaRingCircle');
+        var ctaEl = document.getElementById('bwaUploadCTA');
+        var badgeEl = document.getElementById('bwaRatingBadge');
+        var eskBanner = document.getElementById('bwaEskalationBanner');
+
+        if(!titleEl) return;
+
+        if(submitted && rating !== 'missing') {
+            // Already submitted
+            titleEl.textContent = 'BWA für ' + moName + ' eingereicht';
+            subEl.textContent = 'Eingereicht am ' + submitted.split('-').reverse().join('.');
+            badgeEl.innerHTML = ratingBadge(rating);
+            badgeEl.style.display = '';
+            ctaEl.style.display = 'none';
+            daysEl.textContent = '✓';
+            daysEl.style.color = '#16a34a';
+            daysEl.style.fontSize = '20px';
+            ringEl.style.stroke = '#16a34a';
+            ringEl.setAttribute('stroke-dashoffset', '0');
+            eskBanner.style.display = 'none';
+            // Show KPI report
+            showKpiReport(bwaMo, rating);
+            // Unlock benchmark
+            setBenchmarkLock(false);
+        } else {
+            // Not submitted
+            ctaEl.style.display = '';
+            badgeEl.style.display = 'none';
+            setBenchmarkLock(true);
+            document.getElementById('bwaKpiReport').style.display = 'none';
+
+            if(days > 0) {
+                titleEl.textContent = 'Noch ' + days + ' Tage bis zur BWA-Deadline';
+                subEl.textContent = 'BWA für ' + moName + ' · Frist: 15. ' + MO_NAMES[bwaMo.m+1 > 11 ? 0 : bwaMo.m+1];
+                daysEl.textContent = days;
+                daysEl.style.color = days <= 3 ? '#dc2626' : days <= 7 ? '#ca8a04' : '#EF7D00';
+                ringEl.style.stroke = days <= 3 ? '#dc2626' : days <= 7 ? '#ca8a04' : '#EF7D00';
+                var pct = Math.max(0, 1 - days/15);
+                ringEl.setAttribute('stroke-dashoffset', (175.9 * (1-pct)).toFixed(1));
+
+                // CTA subtext
+                if(days > 7) {
+                    ctaEl.textContent = '🥇 Frühabgabe = Gold-Status!';
+                } else {
+                    ctaEl.textContent = '📤 BWA jetzt einreichen';
+                }
+            } else {
+                var overdueDays = Math.abs(days);
+                titleEl.textContent = 'BWA ist seit ' + overdueDays + ' Tag' + (overdueDays>1?'en':'') + ' überfällig';
+                subEl.textContent = 'BWA für ' + moName + ' · Deadline war der 15.';
+                daysEl.textContent = '!';
+                daysEl.style.color = '#dc2626';
+                daysEl.style.fontSize = '24px';
+                ringEl.style.stroke = '#dc2626';
+                ringEl.setAttribute('stroke-dashoffset', '0');
+                ctaEl.textContent = '🚨 BWA sofort einreichen';
+                ctaEl.style.background = '#dc2626';
+            }
+
+            // Eskalation Banner
+            if(stufe >= 2) {
+                eskBanner.style.display = '';
+                var eskText = document.getElementById('bwaEskText');
+                var eskSub = document.getElementById('bwaEskSub');
+                if(stufe === 2) {
+                    eskText.textContent = 'Eskalationsstufe 2 – Nur noch ' + Math.max(0,days) + ' Tage!';
+                    eskSub.textContent = 'Reiche jetzt ein, um Stufe 3 und HQ-Benachrichtigung zu vermeiden.';
+                } else {
+                    eskText.textContent = 'Eskalationsstufe 3 – BWA überfällig!';
+                    eskSub.textContent = 'Ohne aktuelle Zahlen können wir dich nicht gezielt bei Einkauf, Marketing und Controlling unterstützen.';
+                    eskBanner.style.background = '#fef2f2';
+                    eskBanner.style.borderColor = '#fca5a5';
+                }
+            } else {
+                eskBanner.style.display = 'none';
+            }
+        }
+
+        // Netzwerk-Widget
+        updateNetzwerkWidget();
+    }
+
+    // ──── NETZWERK WIDGET (Standort-Sicht) ────
+    function updateNetzwerkWidget() {
+        var gold = 0, ok = 0, missing = 0, overdue = 0;
+        STANDORTE_DEMO.forEach(function(s) {
+            if(s.rating==='gold') gold++;
+            else if(s.rating==='ok') ok++;
+            else if(s.rating==='overdue') overdue++;
+            else missing++;
+        });
+        var total = STANDORTE_DEMO.length;
+        var submitted = gold + ok + overdue;
+        var pct = Math.round(submitted / total * 100);
+
+        var el = function(id) { return document.getElementById(id); };
+        if(el('bwaNetzwerkProgress')) el('bwaNetzwerkProgress').textContent = submitted + ' von ' + total + ' eingereicht';
+        if(el('bwaNetzwerkBar')) el('bwaNetzwerkBar').style.width = pct + '%';
+        if(el('bwaNwGold')) el('bwaNwGold').textContent = '🥇 Gold: ' + gold;
+        if(el('bwaNwOk')) el('bwaNwOk').textContent = '✅ OK: ' + ok;
+        if(el('bwaNwMissing')) el('bwaNwMissing').textContent = '⏳ Ausstehend: ' + missing;
+        if(el('bwaNwOverdue')) el('bwaNwOverdue').textContent = '🚨 Überfällig: ' + overdue;
+    }
+
+    // ──── KPI REPORT (Sofort-Nutzen nach Upload) ────
+    function showKpiReport(bwaMo, rating) {
+        var report = document.getElementById('bwaKpiReport');
+        if(!report) return;
+        report.style.display = '';
+
+        var moName = MO_NAMES[bwaMo.m] + ' ' + bwaMo.y;
+        document.getElementById('bwaKpiReportMonth').textContent = moName;
+        document.getElementById('bwaKpiRating').innerHTML = ratingBadge(rating);
+
+        // Demo KPIs
+        var kpis = [
+            {l:'Umsatz', v:'68.400 €', c:'+4.2%', co:'#16a34a'},
+            {l:'Rohertrag', v:'24.100 €', c:'36.7%', co:'#2563eb'},
+            {l:'Personalkosten', v:'13.600 €', c:'19.9%', co:'#ca8a04'},
+            {l:'Ergebnis', v:'3.200 €', c:'+12%', co:'#16a34a'}
+        ];
+        var grid = document.getElementById('bwaKpiReportGrid');
+        grid.innerHTML = kpis.map(function(k){
+            return '<div style="padding:12px;background:#f9fafb;border-radius:10px;text-align:center"><p style="font-size:9px;color:#9ca3af;text-transform:uppercase">'+k.l+'</p><p style="font-size:18px;font-weight:800;color:#111827;margin-top:2px">'+k.v+'</p><p style="font-size:10px;font-weight:600;color:'+k.co+'">'+k.c+'</p></div>';
+        }).join('');
+
+        // Insights
+        var recs = [
+            'Rohertragsmarge +2.5 Pp über Netzwerk-Durchschnitt – starke Performance! 💪',
+            'Personalkosten leicht über Schnitt (19.9% vs. 18.5%) – Arbeitszeitplanung prüfen.',
+            'Werkstatt-Umsatz +8% ggü. Vorjahr – Trend beibehalten mit proaktiver Service-Ansprache.'
+        ];
+        document.getElementById('bwaKpiRecList').innerHTML = recs.map(function(r){return '<li>→ '+r+'</li>';}).join('');
+    }
+
+    // ──── BENCHMARK LOCK ────
+    function setBenchmarkLock(locked) {
+        var overlay = document.getElementById('benchmarkLockOverlay');
+        var content = document.getElementById('benchmarkContent');
+        if(!overlay || !content) return;
+        if(locked) {
+            overlay.style.display = '';
+            content.style.display = 'none';
+        } else {
+            overlay.style.display = 'none';
+            content.style.display = '';
+        }
+    }
+
+    // ──── HQ-SICHT: BWA Netzwerk-Status ────
+    function renderHqBwaStatus() {
+        var bwaMo = getBwaMonth(new Date());
+        var moName = MO_NAMES[bwaMo.m] + ' ' + bwaMo.y;
+        var deadline = getDeadline(bwaMo);
+        var today = new Date();
+
+        var el = function(id){return document.getElementById(id);};
+        if(el('hqBwaMonth')) el('hqBwaMonth').textContent = moName;
+
+        // Sort: gold first, then ok, then overdue, then missing
+        var order = {gold:0, ok:1, overdue:2, missing:3};
+        var sorted = STANDORTE_DEMO.slice().sort(function(a,b){return (order[a.rating]||3) - (order[b.rating]||3);});
+
+        var gold=0, ok=0, overdue=0, missing=0;
+        sorted.forEach(function(s){
+            if(s.rating==='gold') gold++;
+            else if(s.rating==='ok') ok++;
+            else if(s.rating==='overdue') overdue++;
+            else missing++;
+        });
+
+        var total = sorted.length;
+        var submitted = gold + ok + overdue;
+        var pct = Math.round(submitted/total*100);
+
+        if(el('hqBwaSubmitted')) el('hqBwaSubmitted').textContent = submitted;
+        if(el('hqBwaTotal')) el('hqBwaTotal').textContent = total;
+        if(el('hqBwaGold')) el('hqBwaGold').textContent = gold;
+        if(el('hqBwaOk')) el('hqBwaOk').textContent = ok;
+        if(el('hqBwaMissing')) el('hqBwaMissing').textContent = missing;
+        if(el('hqBwaOverdue')) el('hqBwaOverdue').textContent = overdue;
+        if(el('hqBwaPct')) el('hqBwaPct').textContent = pct + '%';
+        if(el('hqBwaBar')) el('hqBwaBar').style.width = pct + '%';
+
+        // Table
+        var tbody = el('hqBwaTableBody');
+        if(!tbody) return;
+
+        tbody.innerHTML = sorted.map(function(s){
+            var stufe = s.rating === 'missing' ? getEskalationsStufe(today, bwaMo) : (s.rating==='overdue'?3:0);
+            var dl = daysUntil(deadline);
+            var daysText = s.submitted ? s.submitted.split('-').reverse().join('.') : (dl>0 ? 'noch '+dl+' Tage' : Math.abs(dl)+' Tage überfällig');
+            var daysColor = s.submitted ? '#16a34a' : (dl>0 ? '#9ca3af' : '#dc2626');
+            return '<tr class="text-sm">'+
+                '<td class="py-2.5 font-semibold text-gray-800">'+s.name+'</td>'+
+                '<td class="py-2.5">'+(s.submitted ? '<span class="text-green-600 text-xs font-semibold">✓ Eingereicht</span>' : '<span class="text-gray-400 text-xs">Ausstehend</span>')+'</td>'+
+                '<td class="py-2.5">'+ratingBadge(s.rating)+'</td>'+
+                '<td class="py-2.5 text-xs text-gray-500">'+(s.submitted||'—')+'</td>'+
+                '<td class="py-2.5">'+(s.rating==='missing'||s.rating==='overdue' ? eskalationBadge(stufe) : '<span class="text-xs text-gray-300">—</span>')+'</td>'+
+                '<td class="py-2.5 text-xs" style="color:'+daysColor+'">'+daysText+'</td>'+
+                '</tr>';
+        }).join('');
+    }
+
+    // ──── INIT ────
+    // Hook into controlling view activation
+    var _origShowCtrl = window.showControllingTab;
+    if(_origShowCtrl) {
+        window.showControllingTab = function(t) {
+            _origShowCtrl(t);
+            if(t === 'cockpit') setTimeout(updateBwaDeadlineWidget, 100);
+        };
+    }
+
+    // Hook into HQ Finanzen view
+    var _origShowView = window.showView;
+    if(_origShowView) {
+        var _wrapped = false;
+        if(!_wrapped) {
+            window.showView = function(v) {
+                _origShowView(v);
+                if(v === 'hqFinanzen' || v === 'controlling') {
+                    setTimeout(function(){
+                        if(v === 'hqFinanzen') renderHqBwaStatus();
+                        if(v === 'controlling') updateBwaDeadlineWidget();
+                    }, 150);
+                }
+            };
+            _wrapped = true;
+        }
+    }
+
+    // Auto-init if controlling is visible
+    setTimeout(function(){
+        updateBwaDeadlineWidget();
+        renderHqBwaStatus();
+    }, 500);
+})();
+</script>
 
 </body>
 </html>
