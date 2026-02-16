@@ -5436,18 +5436,37 @@
                 }
             });
 
-            // Apply demo banners to views
-            document.querySelectorAll('.demo-mode-banner').forEach(function(b){ b.remove(); });
+            // Apply demo banners + overlay to views
+            document.querySelectorAll('.demo-mode-banner,.demo-mode-watermark').forEach(function(b){ b.remove(); });
+            document.querySelectorAll('.demo-mode-active').forEach(function(v){ v.classList.remove('demo-mode-active'); });
             Object.keys(sbModulStatus).forEach(function(key) {
                 if(sbModulStatus[key] === 'demo') {
                     var viewMap = {startseite:'homeView',verkauf:'verkaufView',kalender:'kalenderView',aufgaben:'todoView',kommunikation:'kommunikationView',controlling:'controllingView',marketing:'marketingView',einkauf:'einkaufView',dashboards:'dashboardsView',allgemein:'allgemeinView',wissen:'wissenView',support:'supportView',ideenboard:'ideenboardView',shop:'shopView',onboarding:'onboardingView',mitarbeiter:'mitarbeiterView',aktenschrank:'aktenschrankView'};
                     var viewId = viewMap[key];
                     var viewEl = viewId ? document.getElementById(viewId) : null;
-                    if(viewEl && !viewEl.querySelector('.demo-mode-banner')) {
-                        var banner = document.createElement('div');
-                        banner.className = 'demo-mode-banner';
-                        banner.innerHTML = '<div style="background:linear-gradient(90deg,#EF7D00,#F59E0B);color:white;padding:12px 20px;border-radius:10px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:20px">👁️</span><div><strong style="font-size:14px">Demo-Modus</strong><p style="font-size:11px;margin:2px 0 0;opacity:0.9">Dieses Modul zeigt Beispieldaten zur Veranschaulichung. Die dargestellten Inhalte sind nicht real.</p></div></div><span style="background:rgba(255,255,255,0.25);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700">DEMO</span></div>';
-                        viewEl.insertBefore(banner, viewEl.firstChild);
+                    if(viewEl) {
+                        viewEl.classList.add('demo-mode-active');
+                        // Sticky banner at top
+                        if(!viewEl.querySelector('.demo-mode-banner')) {
+                            var banner = document.createElement('div');
+                            banner.className = 'demo-mode-banner';
+                            banner.style.cssText = 'position:sticky;top:0;z-index:40;margin:-24px -24px 20px -24px;padding:0';
+                            banner.innerHTML = '<div style="background:repeating-linear-gradient(45deg,#EF7D00,#EF7D00 10px,#F59E0B 10px,#F59E0B 20px);padding:3px 0"><div style="background:#EF7D00;padding:14px 24px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:12px"><div style="background:rgba(255,255,255,0.2);border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:22px">👁️</div><div><strong style="color:white;font-size:15px;letter-spacing:0.5px">DEMO-MODUS</strong><p style="color:rgba(255,255,255,0.9);font-size:12px;margin:2px 0 0">Dieses Modul zeigt Beispieldaten zur Veranschaulichung. Die dargestellten Inhalte sind nicht real.</p></div></div><div style="display:flex;align-items:center;gap:8px"><span style="background:white;color:#EF7D00;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:800;letter-spacing:1px">DEMO</span></div></div></div>';
+                            viewEl.insertBefore(banner, viewEl.firstChild);
+                        }
+                        // Diagonal watermark across content
+                        if(!viewEl.querySelector('.demo-mode-watermark')) {
+                            var wm = document.createElement('div');
+                            wm.className = 'demo-mode-watermark';
+                            wm.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:30;overflow:hidden';
+                            var wmText = '';
+                            for(var i=0;i<8;i++) {
+                                wmText += '<div style="position:absolute;top:'+(i*180-50)+'px;left:-100px;right:-100px;text-align:center;transform:rotate(-25deg);font-size:64px;font-weight:900;color:rgba(239,125,0,0.06);letter-spacing:12px;white-space:nowrap;user-select:none">DEMO   DEMO   DEMO   DEMO</div>';
+                            }
+                            wm.innerHTML = wmText;
+                            viewEl.style.position = 'relative';
+                            viewEl.appendChild(wm);
+                        }
                     }
                 }
             });
@@ -5490,13 +5509,34 @@
                             if(!tabBtn.querySelector('.tab-demo-dot')) {
                                 var dot = document.createElement('span');
                                 dot.className = 'tab-demo-dot';
-                                dot.style.cssText = 'display:inline-block;width:6px;height:6px;border-radius:50%;background:#F97316;margin-left:4px';
+                                dot.style.cssText = 'display:inline-flex;align-items:center;margin-left:6px;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;background:linear-gradient(135deg,#F97316,#EA580C);color:white;letter-spacing:0.5px';
+                                dot.textContent = 'DEMO';
                                 tabBtn.appendChild(dot);
+                            }
+                            // Add demo banner inside tab content
+                            if(tabContent && !tabContent.querySelector('.tab-demo-banner')) {
+                                tabContent.style.position = 'relative';
+                                var tb = document.createElement('div');
+                                tb.className = 'tab-demo-banner';
+                                tb.innerHTML = '<div style="background:linear-gradient(90deg,#EF7D00,#F59E0B);color:white;padding:10px 16px;border-radius:8px;margin-bottom:12px;display:flex;align-items:center;gap:8px;font-size:12px"><span style="font-size:16px">👁️</span><span><strong>Demo-Daten</strong> – Dieser Bereich zeigt Beispieldaten.</span><span style="margin-left:auto;background:rgba(255,255,255,0.25);padding:2px 10px;border-radius:12px;font-weight:700;font-size:10px">DEMO</span></div>';
+                                tabContent.insertBefore(tb, tabContent.firstChild);
+                                // Watermark for tab
+                                var twm = document.createElement('div');
+                                twm.className = 'tab-demo-banner';
+                                twm.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:20;overflow:hidden';
+                                var twmH = '';
+                                for(var wi=0;wi<5;wi++) twmH += '<div style="position:absolute;top:'+(wi*200)+'px;left:-50px;right:-50px;text-align:center;transform:rotate(-25deg);font-size:48px;font-weight:900;color:rgba(239,125,0,0.05);letter-spacing:10px;white-space:nowrap;user-select:none">DEMO   DEMO   DEMO</div>';
+                                twm.innerHTML = twmH;
+                                tabContent.appendChild(twm);
                             }
                         } else {
                             tabBtn.style.display = '';
                             var oldDot = tabBtn.querySelector('.tab-demo-dot');
                             if(oldDot) oldDot.remove();
+                            // Clean up demo elements from tab content
+                            if(tabContent) {
+                                tabContent.querySelectorAll('.tab-demo-banner').forEach(function(el){ el.remove(); });
+                            }
                         }
                     }
                 });
@@ -5517,14 +5557,25 @@
                         wEl.style.display = 'none';
                     } else if(wStatus === 'demo') {
                         wEl.style.display = '';
+                        wEl.style.position = 'relative';
+                        wEl.style.border = '2px dashed #F97316';
+                        wEl.style.boxShadow = 'inset 0 0 0 1px rgba(249,115,22,0.1)';
+                        // Badge top-right
                         var overlay = document.createElement('div');
                         overlay.className = 'widget-demo-overlay';
-                        overlay.style.cssText = 'position:absolute;top:8px;right:8px;background:#F97316;color:white;font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;z-index:5';
+                        overlay.style.cssText = 'position:absolute;top:-1px;right:-1px;background:linear-gradient(135deg,#F97316,#EA580C);color:white;font-size:9px;font-weight:800;padding:3px 10px;border-radius:0 8px 0 8px;z-index:5;letter-spacing:0.5px';
                         overlay.textContent = 'DEMO';
-                        wEl.style.position = 'relative';
                         wEl.appendChild(overlay);
+                        // Subtle watermark
+                        var wwm = document.createElement('div');
+                        wwm.className = 'widget-demo-overlay';
+                        wwm.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-20deg);font-size:28px;font-weight:900;color:rgba(249,115,22,0.06);letter-spacing:6px;pointer-events:none;white-space:nowrap;z-index:4;user-select:none';
+                        wwm.textContent = 'DEMO';
+                        wEl.appendChild(wwm);
                     } else {
                         wEl.style.display = '';
+                        wEl.style.border = '';
+                        wEl.style.boxShadow = '';
                     }
                 });
             }
@@ -8114,13 +8165,26 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     var detUmsatz = sumMap[1000] ? parseFloat(sumMap[1000].wert)||0 : parseFloat(b.umsatzerloese)||0;
                     var detRohertrag = sumMap[1040] ? parseFloat(sumMap[1040].wert)||0 : parseFloat(b.rohertrag)||0;
                     var detErgebnis = sumMap[1355] ? parseFloat(sumMap[1355].wert)||0 : (sumMap[1300] ? parseFloat(sumMap[1300].wert)||0 : parseFloat(b.ergebnis_vor_steuern)||0);
-                    // Gesamtkosten = Rohertrag - Ergebnis (alles was dazwischen liegt)
-                    var detKosten = sumMap[1260] ? parseFloat(sumMap[1260].wert)||0 : parseFloat(b.gesamtkosten)||0;
-                    if(!sumMap[1260] && detRohertrag && detErgebnis) {
-                        // Fallback: Gesamtkosten = Betriebsergebnis - Rohertrag
-                        var betriebsErg = sumMap[1300] ? parseFloat(sumMap[1300].wert)||0 : 0;
-                        if(betriebsErg) detKosten = betriebsErg - detRohertrag;
+                    // Gesamtkosten berechnen: Summe aller Kostenpositionen aus Detail-Zeilen
+                    var detKosten = 0;
+                    // Methode 1: Direkt aus Summenzeile 1250 (Gesamtkosten) oder 1260 (Summe Aufwendungen)
+                    if(sumMap[1250]) { detKosten = parseFloat(sumMap[1250].wert)||0; }
+                    else if(sumMap[1260]) { detKosten = parseFloat(sumMap[1260].wert)||0; }
+                    else {
+                        // Methode 2: Alle Kostengruppen-Summen addieren
+                        var kostenZeilen = [1140,1160,1170,1175,1180,1190,1200,1210,1220,1240];
+                        var kostenSumme = 0;
+                        kostenZeilen.forEach(function(z) {
+                            if(sumMap[z]) kostenSumme += Math.abs(parseFloat(sumMap[z].wert)||0);
+                        });
+                        if(kostenSumme > 0) { detKosten = -kostenSumme; }
+                        else if(detRohertrag) {
+                            // Methode 3: Rohertrag - Betriebsergebnis
+                            var betriebsErg = sumMap[1270] ? parseFloat(sumMap[1270].wert)||0 : (sumMap[1300] ? parseFloat(sumMap[1300].wert)||0 : 0);
+                            if(betriebsErg) detKosten = betriebsErg - detRohertrag;
+                        }
                     }
+                    console.log('[BWA] Gesamtkosten-Berechnung:', {z1250:sumMap[1250]?sumMap[1250].wert:'n/a', z1260:sumMap[1260]?sumMap[1260].wert:'n/a', berechnet:detKosten});
                     // Override KPIs with corrected values
                     var detMarge = detUmsatz > 0 ? ((detRohertrag/detUmsatz)*100).toFixed(1) : 0;
                     var detErgMarge = detUmsatz > 0 ? ((detErgebnis/detUmsatz)*100).toFixed(1) : 0;
@@ -8555,7 +8619,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 }
                 if(!parsed.gesamtkosten) {
                     parsed.gesamtkosten = (parsed.personalkosten||0) + (parsed.raumkosten||0) + (parsed.werbekosten||0) + 
-                        (parsed.kosten_warenabgabe||0) + (parsed.abschreibungen||0) + (parsed.sonstige_kosten||0);
+                        (parsed.kosten_warenabgabe||0) + (parsed.abschreibungen||0) + (parsed.sonstige_kosten||0) +
+                        (parsed.kfzkosten||0) + (parsed.versicherungen||0) + (parsed.instandhaltung||0);
                 }
                 if(!parsed.betriebsergebnis && parsed.rohertrag) {
                     parsed.betriebsergebnis = parsed.rohertrag + (parsed.gesamtkosten||0);
