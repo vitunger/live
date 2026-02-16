@@ -13341,9 +13341,17 @@
             
             // Name fields
             html += '<div class="space-y-3 mb-4">';
-            html += '<div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold text-gray-600 mb-1">Vorname *</label><input id="newMaVorname" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="Max"></div>';
-            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Nachname *</label><input id="newMaNachname" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="Mustermann"></div></div>';
-            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">E-Mail *</label><input id="newMaEmail" type="email" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="name@vitbikes-standort.de"></div>';
+            html += '<div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold text-gray-600 mb-1">Vorname *</label><input id="newMaVorname" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="Max" oninput="updateNewMaEmail()"></div>';
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Nachname *</label><input id="newMaNachname" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="Mustermann" oninput="updateNewMaEmail()"></div></div>';
+
+            // E-Mail Typ Auswahl
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">E-Mail-Typ</label>';
+            html += '<div class="flex space-x-2 mb-2">';
+            html += '<button type="button" id="newMaEmailTypeVit" onclick="switchNewMaEmailType(\'vitbikes\')" class="flex-1 py-2 rounded-lg text-xs font-semibold border-2 transition border-vit-orange bg-orange-50 text-orange-700">🏢 vit:bikes E-Mail</button>';
+            html += '<button type="button" id="newMaEmailTypeOwn" onclick="switchNewMaEmailType(\'eigen\')" class="flex-1 py-2 rounded-lg text-xs font-semibold border-2 transition border-gray-200 bg-white text-gray-500 hover:border-gray-300">📧 Eigene E-Mail</button>';
+            html += '</div>';
+            html += '<input id="newMaEmail" type="email" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="vorname.nachname@vitbikes.de"></div>';
+            html += '<input type="hidden" id="newMaEmailType" value="vitbikes">';
             html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Passwort * (min. 8 Zeichen)</label><input id="newMaPassword" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="VitBikes2026!"></div>';
 
             // === EBENE (HQ vs Standort) – nur für HQ-Admins sichtbar ===
@@ -13443,6 +13451,45 @@
         }
 
         function closeNeuerMaModal() { var c = document.getElementById('neuerMaContainer'); if(c) c.remove(); }
+
+        var newMaEmailTypeValue = 'vitbikes';
+
+        function switchNewMaEmailType(typ) {
+            newMaEmailTypeValue = typ;
+            var vitBtn = document.getElementById('newMaEmailTypeVit');
+            var ownBtn = document.getElementById('newMaEmailTypeOwn');
+            var emailInput = document.getElementById('newMaEmail');
+            var typeHidden = document.getElementById('newMaEmailType');
+            if(typeHidden) typeHidden.value = typ;
+
+            if(typ === 'vitbikes') {
+                if(vitBtn) vitBtn.className = 'flex-1 py-2 rounded-lg text-xs font-semibold border-2 transition border-vit-orange bg-orange-50 text-orange-700';
+                if(ownBtn) ownBtn.className = 'flex-1 py-2 rounded-lg text-xs font-semibold border-2 transition border-gray-200 bg-white text-gray-500 hover:border-gray-300';
+                if(emailInput) { emailInput.readOnly = true; emailInput.style.backgroundColor = '#F9FAFB'; emailInput.style.color = '#6B7280'; }
+                updateNewMaEmail();
+            } else {
+                if(ownBtn) ownBtn.className = 'flex-1 py-2 rounded-lg text-xs font-semibold border-2 transition border-vit-orange bg-orange-50 text-orange-700';
+                if(vitBtn) vitBtn.className = 'flex-1 py-2 rounded-lg text-xs font-semibold border-2 transition border-gray-200 bg-white text-gray-500 hover:border-gray-300';
+                if(emailInput) { emailInput.readOnly = false; emailInput.style.backgroundColor = '#fff'; emailInput.style.color = '#1a202c'; emailInput.value = ''; emailInput.placeholder = 'eigene@email.de'; emailInput.focus(); }
+            }
+        }
+
+        function updateNewMaEmail() {
+            if(newMaEmailTypeValue !== 'vitbikes') return;
+            var vorname = (document.getElementById('newMaVorname') || {}).value || '';
+            var nachname = (document.getElementById('newMaNachname') || {}).value || '';
+            var emailInput = document.getElementById('newMaEmail');
+            if(!emailInput) return;
+            if(vorname.trim() && nachname.trim()) {
+                // Umlaute und Sonderzeichen bereinigen
+                var v = vorname.trim().toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss').replace(/[^a-z0-9.-]/g,'');
+                var n = nachname.trim().toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss').replace(/[^a-z0-9.-]/g,'');
+                emailInput.value = v + '.' + n + '@vitbikes.de';
+            } else {
+                emailInput.value = '';
+                emailInput.placeholder = 'vorname.nachname@vitbikes.de';
+            }
+        }
 
         async function saveNeuerMa() {
             var vorname = (document.getElementById('newMaVorname')||{}).value||'';
@@ -16011,69 +16058,32 @@ function ScanUploadModal({deal,sales,onClose,onUpdateDeal}){
       const base64=preview.split(",")[1];
       const mediaType=file.type||"image/jpeg";
 
-      const resp=await fetch("https://api.anthropic.com/v1/messages",{
+      // Call via Supabase Edge Function (API key is server-side)
+      const session=await window.sb?.auth?.getSession?.();
+      const token=session?.data?.session?.access_token;
+      const supabaseUrl=window.sb?.supabaseUrl||"";
+      const supabaseKey=window.sb?.supabaseKey||"";
+
+      const resp=await fetch(supabaseUrl+"/functions/v1/analyze-scan",{
         method:"POST",
-        headers:{"Content-Type":"application/json","x-api-key":"","anthropic-dangerous-direct-browser-access":"true"},
+        headers:{
+          "Content-Type":"application/json",
+          "Authorization":"Bearer "+(token||""),
+          "apikey":supabaseKey
+        },
         body:JSON.stringify({
-          model:"claude-sonnet-4-20250514",
-          max_tokens:2000,
-          messages:[{role:"user",content:[
-            {type:"image",source:{type:"base64",media_type:mediaType,data:base64}},
-            {type:"text",text:`Du siehst ein eingescanntes Fahrrad-Beratungsformular von vit:bikes.
-Extrahiere ALLE erkennbaren Werte und gib sie als JSON zurück. Nur valides JSON, kein Markdown.
-
-Verwende exakt diese Schlüssel (nur Felder zurückgeben die du lesen kannst):
-{
-  "payment": "Bezahlart (JobRad/BLS/BusinessBike/Finanzierung/Leasing/Bar/EC)",
-  "nutzung": "Text",
-  "ziel": "Text",
-  "distanz": "Text",
-  "haeufigkeit": "Text",
-  "erfahrung": "Text",
-  "lagerung": "Text",
-  "aufladen": "Text",
-  "zeitrahmen": "Text",
-  "wichtig": "Text",
-  "budget": "Text/Betrag",
-  "budgetRange": "<2k oder 2-3k oder 3-5k oder 5k+",
-  "akku": "Text",
-  "dreiPunkte": "Text",
-  "einwaende": "Text",
-  "next": "Text",
-  "notizen": "Text",
-  "ergoMethod": "Bodyscanner oder Smartfit",
-  "sattelhoehe": "Wert",
-  "sattelversatz": "Wert",
-  "abstandLenker": "Wert",
-  "lenkerhoehe": "Wert",
-  "sitzknochen": "Wert",
-  "griffgroesse": "Wert",
-  "gekauftesRad": "Modell/Marke/Farbe",
-  "nrTeilekiste": "Nummer",
-  "nrAuftrag": "Nummer",
-  "todoZubehoer": true/false,
-  "todoRadBestellt": true/false,
-  "todoKiste": true/false,
-  "todoLeasing": true/false,
-  "todoFinanzierung": true/false,
-  "todoWertgarantie": true/false
-}
-
-Gib NUR das JSON zurück.`}
-          ]}]
+          image_base64:base64,
+          media_type:mediaType
         })
       });
 
       if(!resp.ok){
-        const errBody=await resp.text();
-        throw new Error(`API Fehler ${resp.status}: ${errBody.substring(0,200)}`);
+        const errBody=await resp.json().catch(()=>({}));
+        throw new Error(errBody.error||`Fehler ${resp.status}`);
       }
 
       const data=await resp.json();
-      const text=data.content?.find(c=>c.type==="text")?.text||"";
-      // Parse JSON - handle possible markdown wrapping
-      const jsonStr=text.replace(/```json\s*/g,"").replace(/```\s*/g,"").trim();
-      const result=JSON.parse(jsonStr);
+      const result=data.fields||{};
       setParsed(result);
 
       // Merge: bestehende sales haben Vorrang, gescannte Werte füllen Lücken
