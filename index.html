@@ -7982,6 +7982,15 @@
                     ergEl2.className = 'text-xl font-bold ' + (detErgebnis >= 0 ? 'text-green-600' : 'text-red-600');
                     document.getElementById('bwaKpiErgebnisMarge').textContent = 'Marge: '+detErgMarge+'%';
                     console.log('[BWA] KPIs recalculated from detail positions:', {umsatz:detUmsatz, rohertrag:detRohertrag, kosten:detKosten, ergebnis:detErgebnis});
+                    // Permanently fix wrong values in bwa_daten
+                    if(Math.abs(detErgebnis - pn(b.ergebnis_vor_steuern)) > 1) {
+                        var fixData = {ergebnis_vor_steuern: detErgebnis, rohertrag: detRohertrag, umsatzerloese: detUmsatz};
+                        if(detKosten && Math.abs(detKosten - pn(b.gesamtkosten)) > 1) fixData.gesamtkosten = detKosten;
+                        sb.from('bwa_daten').update(fixData).eq('id', bwaId).then(function(r){
+                            if(!r.error) { console.log('[BWA] DB values corrected for', bwaId); loadBwaList(); }
+                            else console.warn('[BWA] DB fix failed:', r.error);
+                        });
+                    }
                 }
                 
                 var tbody = '';
@@ -11054,6 +11063,17 @@
                 var vjBwa = vjBwas.find(function(b) { return b.monat === latestMonth; });
 
                 if(!bwa) { el.innerHTML = '<p class="text-sm text-gray-400 text-center py-8">Keine Daten für gewählten Monat.</p>'; return; }
+
+                // Correct values from detail positions if available
+                var detCockpit = await sb.from('bwa_detail_positionen').select('zeile,wert').eq('bwa_id', bwa.id).eq('ist_summenzeile', true).in('zeile', [1000,1040,1260,1300,1355]);
+                if(detCockpit.data && detCockpit.data.length > 0) {
+                    var dm = {}; detCockpit.data.forEach(function(d){ dm[d.zeile] = pn(d.wert); });
+                    if(dm[1000]) bwa.umsatzerloese = dm[1000];
+                    if(dm[1040]) bwa.rohertrag = dm[1040];
+                    if(dm[1260]) bwa.gesamtkosten = dm[1260];
+                    if(dm[1355]) bwa.ergebnis_vor_steuern = dm[1355];
+                    else if(dm[1300]) bwa.ergebnis_vor_steuern = dm[1300];
+                }
 
                 // Extract values
                 var umsatz = pn(bwa.umsatzerloese);
