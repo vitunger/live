@@ -4586,6 +4586,18 @@
                     </div>
 
 
+                    <!-- E-Mail-Aktionen (HQ) -->
+                    <div class="vit-card p-4 mb-6">
+                        <h3 class="text-xs font-bold text-gray-800 mb-2">📧 E-Mail-Aktionen<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-email')">i</button></h3>
+                        <div class="widget-info-popup" id="info-hq-email">Manuelles Auslösen von E-Mail-Triggern. In Produktion laufen diese automatisch über Cron-Jobs und Event-Trigger via Supabase Edge Functions + Resend.</div>
+                        <div class="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                            <button onclick="checkStaleLeads()" class="p-2 text-xs font-semibold rounded-lg border border-gray-200 hover:border-vit-orange hover:text-vit-orange transition">📈 Stale Leads prüfen</button>
+                            <button onclick="triggerBwaEscalation('Demo','demo@vitbikes.de','2026-01')" class="p-2 text-xs font-semibold rounded-lg border border-gray-200 hover:border-vit-orange hover:text-vit-orange transition">⚠️ BWA-Eskalation testen</button>
+                            <button onclick="triggerGroupcallReminder('Inhaber-Call','05.03.2026','10:00','https://zoom.us/j/123',[{email:'demo@vitbikes.de'}])" class="p-2 text-xs font-semibold rounded-lg border border-gray-200 hover:border-vit-orange hover:text-vit-orange transition">📞 Call-Reminder testen</button>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-2">Demo-Modus: Mails werden geloggt, nicht versendet (Supabase Edge Function + Resend API-Key nötig)</p>
+                    </div>
+
                     <!-- Netzwerk KPIs -->
                     <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6" id="hqKpiCards"></div>
 
@@ -20420,6 +20432,28 @@ function setTheme(theme) {
 
             <!-- Meta -->
             <div style="margin-top:16px;padding:12px;background:#f9fafb;border-radius:8px;text-align:center;">
+            <!-- E-Mail-Einstellungen -->
+            <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:16px;">
+                <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;font-weight:600;margin-bottom:12px;">E-Mail-Benachrichtigungen</p>
+                <label style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:#4b5563;">
+                    <span>📊 BWA-Erinnerungen</span>
+                    <input type="checkbox" checked id="prefBwa" style="accent-color:#EF7D00;width:16px;height:16px;">
+                </label>
+                <label style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:#4b5563;">
+                    <span>📈 Lead-Benachrichtigungen</span>
+                    <input type="checkbox" checked id="prefLeads" style="accent-color:#EF7D00;width:16px;height:16px;">
+                </label>
+                <label style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:#4b5563;">
+                    <span>🎓 Trainer-Erinnerungen</span>
+                    <input type="checkbox" checked id="prefTrainer" style="accent-color:#EF7D00;width:16px;height:16px;">
+                </label>
+                <label style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:#4b5563;">
+                    <span>📞 Gruppencall-Erinnerungen</span>
+                    <input type="checkbox" checked id="prefCalls" style="accent-color:#EF7D00;width:16px;height:16px;">
+                </label>
+            </div>
+
+            <div style="margin-top:16px;padding:12px;background:#f9fafb;border-radius:8px;text-align:center;">
                 <p style="font-size:9px;color:#9ca3af;">vit:bikes Partner Portal v7.0 · Mitglied seit Jan 2025</p>
             </div>
         </div>
@@ -21501,6 +21535,203 @@ setTimeout(function(){document.getElementById('groupcallPrepPanel').style.displa
         if(typeof renderDailyFocus === 'function') renderDailyFocus();
         if(typeof renderHealthScore === 'function') renderHealthScore();
     }, 1000);
+})();
+</script>
+
+
+<!-- ═══ RESEND E-MAIL INTEGRATION ═══ -->
+<script>
+(function(){
+    // ── Config ──
+    var RESEND_EDGE_URL = ''; // Set: sb.functions.invoke('send-email', ...)
+    var EMAIL_LOG = []; // In-memory log (prod: notifications_log table)
+
+    // ── Central send function ──
+    window.sendEmail = async function(template, to, data) {
+        // Anti-spam check
+        var key = template + '|' + to + '|' + (data.context_id || '');
+        var cooldowns = {welcome:Infinity, bwa_escalation:30*86400000, lead_stale:7*86400000, deal_status:0, trainer_ignored:48*3600000, groupcall_reminder:24*3600000};
+        var cd = cooldowns[template] || 86400000;
+        if(cd > 0) {
+            var existing = EMAIL_LOG.find(function(l){return l.key===key && (Date.now()-l.ts)<cd;});
+            if(existing) { console.log('[Email] Cooldown active for', key); return null; }
+        }
+
+        // Log
+        var logEntry = {key:key, template:template, to:to, ts:Date.now(), status:'sent'};
+        EMAIL_LOG.push(logEntry);
+
+        // In production: call Supabase Edge Function
+        if(typeof sb !== 'undefined' && sb.functions) {
+            try {
+                var res = await sb.functions.invoke('send-email', {body:{template:template, to:to, data:data}});
+                if(res.error) { logEntry.status = 'failed'; console.error('[Email] Error:', res.error); }
+                else { console.log('[Email] Sent:', template, 'to', to); }
+                // Log to DB
+                if(sb.from) {
+                    await sb.from('notifications_log').insert({
+                        location_id: data.location_id || null,
+                        user_id: data.user_id || null,
+                        template: template,
+                        recipient_email: to,
+                        context_json: data,
+                        status: logEntry.status,
+                        resend_id: res.data ? res.data.id : null
+                    });
+                }
+                return res;
+            } catch(e) { logEntry.status = 'failed'; console.error('[Email]', e); }
+        } else {
+            console.log('[Email][Demo] Would send:', template, 'to', to, data);
+        }
+
+        // Show notification in portal
+        showEmailNotification(template, to);
+        return logEntry;
+    };
+
+    // ── Visual notification ──
+    function showEmailNotification(template, to) {
+        var names = {
+            welcome: '📧 Willkommens-Mail gesendet',
+            bwa_escalation: '⚠️ BWA-Eskalationsmail gesendet',
+            lead_stale: '📧 Lead-Erinnerung gesendet',
+            deal_status: '📧 Deal-Status-Mail gesendet',
+            trainer_ignored: '📧 Trainer-Erinnerung gesendet',
+            groupcall_reminder: '📧 Gruppencall-Erinnerung gesendet'
+        };
+        var msg = names[template] || '📧 E-Mail gesendet';
+        var toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;top:16px;right:16px;z-index:10000;padding:12px 20px;border-radius:10px;background:#16a34a;color:white;font-size:13px;font-weight:600;font-family:Outfit,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,0.15);opacity:0;transition:opacity 0.3s;';
+        toast.innerHTML = msg + '<span style="font-size:11px;opacity:0.8;margin-left:8px;">→ ' + to + '</span>';
+        document.body.appendChild(toast);
+        requestAnimationFrame(function(){toast.style.opacity='1';});
+        setTimeout(function(){toast.style.opacity='0';setTimeout(function(){toast.remove();},300);},3500);
+    }
+
+    // ════════════════════════════════════════════════
+    // TRIGGER 1: Welcome bei Anmeldung
+    // ════════════════════════════════════════════════
+    // Hook into enterApp for first-login detection
+    var _origEnterApp2 = window.enterApp;
+    if(_origEnterApp2) {
+        window.enterApp = function() {
+            _origEnterApp2();
+            // Check if first login (no previous session)
+            setTimeout(function(){
+                if(typeof sbProfile !== 'undefined' && sbProfile) {
+                    var isFirst = !localStorage.getItem('vit-welcomed-' + sbProfile.id);
+                    if(isFirst) {
+                        sendEmail('welcome', sbProfile.email || '', {
+                            name: sbProfile.name || 'Partner',
+                            portalUrl: window.location.href,
+                            standort: (typeof sbStandort !== 'undefined' && sbStandort) ? sbStandort.name : '',
+                            location_id: sbProfile.standort_id,
+                            user_id: sbProfile.id
+                        });
+                        try { localStorage.setItem('vit-welcomed-' + sbProfile.id, '1'); } catch(e){}
+                    }
+                }
+            }, 2000);
+        };
+    }
+
+    // ════════════════════════════════════════════════
+    // TRIGGER 2: BWA Eskalation (Stufe 3)
+    // ════════════════════════════════════════════════
+    window.triggerBwaEscalation = function(standortName, ownerEmail, bwaMonth) {
+        sendEmail('bwa_escalation', ownerEmail, {
+            month: bwaMonth,
+            standort: standortName,
+            uploadUrl: window.location.href + '#controlling',
+            context_id: 'bwa_' + bwaMonth
+        });
+    };
+
+    // ════════════════════════════════════════════════
+    // TRIGGER 3: Lead älter als X Tage
+    // ════════════════════════════════════════════════
+    window.checkStaleLeads = function() {
+        // In prod: query leads table
+        // Demo: simulate
+        var staleLeads = [
+            {name:'Thomas Müller', age:7, seller:'max@vitbikes-grafrath.de', id:'l1'},
+            {name:'Anna Schmidt', age:12, seller:'max@vitbikes-grafrath.de', id:'l2'}
+        ];
+        staleLeads.forEach(function(lead){
+            if(lead.age >= 5) {
+                sendEmail('lead_stale', lead.seller, {
+                    leadName: lead.name,
+                    daysSinceContact: lead.age,
+                    context_id: 'lead_' + lead.id
+                });
+            }
+        });
+    };
+
+    // ════════════════════════════════════════════════
+    // TRIGGER 4: Pipeline – Angebot angenommen/abgelehnt
+    // ════════════════════════════════════════════════
+    window.triggerDealStatusEmail = function(dealName, dealValue, status, sellerEmail, kundeEmail) {
+        sendEmail('deal_status', sellerEmail, {
+            deal: dealName,
+            value: dealValue,
+            status: status, // 'gewonnen' oder 'verloren'
+            context_id: 'deal_' + dealName
+        });
+        // Optional: Auch Kunden benachrichtigen bei Gewonnen
+        if(status === 'gewonnen' && kundeEmail) {
+            sendEmail('deal_status', kundeEmail, {
+                deal: dealName,
+                value: dealValue,
+                status: 'bestaetigung'
+            });
+        }
+    };
+
+    // ════════════════════════════════════════════════
+    // TRIGGER 5: Trainer ignoriert (48h)
+    // ════════════════════════════════════════════════
+    var _origSnooze = window.snoozeTrainer;
+    var snoozeCount = {};
+    window.snoozeTrainer = function() {
+        if(typeof currentTrainer !== 'undefined' && currentTrainer) {
+            var tid = currentTrainer.id;
+            snoozeCount[tid] = (snoozeCount[tid] || 0) + 1;
+            if(snoozeCount[tid] >= 2) {
+                // 2x ignoriert → E-Mail
+                var email = (typeof sbProfile !== 'undefined' && sbProfile) ? sbProfile.email : 'demo@vitbikes.de';
+                sendEmail('trainer_ignored', email, {
+                    trainerTitle: currentTrainer.title,
+                    module: currentTrainer.module,
+                    context_id: 'trainer_' + tid
+                });
+            }
+        }
+        if(_origSnooze) _origSnooze();
+        else if(document.getElementById('trainerCardOverlay')) document.getElementById('trainerCardOverlay').style.display='none';
+    };
+
+    // ════════════════════════════════════════════════
+    // TRIGGER 6: Gruppencall-Erinnerung (24h vorher)
+    // ════════════════════════════════════════════════
+    window.triggerGroupcallReminder = function(callTitle, callDate, callTime, zoomLink, participants) {
+        participants.forEach(function(p){
+            sendEmail('groupcall_reminder', p.email, {
+                callTitle: callTitle,
+                date: callDate,
+                time: callTime,
+                link: zoomLink,
+                context_id: 'call_' + callDate + '_' + callTitle
+            });
+        });
+    };
+
+    // ════════════════════════════════════════════════
+    // EMAIL LOG VIEWER (HQ feature)
+    // ════════════════════════════════════════════════
+    window.getEmailLog = function(){ return EMAIL_LOG; };
+
 })();
 </script>
 
