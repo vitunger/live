@@ -19235,6 +19235,23 @@ function SalesForm({deal,sales,seller,onClose,onUpdateDeal,mode}){
       .ft{margin-top:24px;text-align:center;font-size:8px;color:#bbb;border-top:1px solid #eee;padding-top:6px}
       @media print{.np{display:none!important}body{padding:20px 28px}}
 
+        /* Info Button (ℹ) on Widgets */
+        .widget-info-btn {
+            display:inline-flex;align-items:center;justify-content:center;
+            width:18px;height:18px;border-radius:50%;background:#f3f4f6;
+            color:#9ca3af;font-size:10px;font-weight:700;cursor:pointer;
+            border:none;margin-left:6px;transition:all 0.2s;font-style:italic;
+            font-family:Georgia,serif;line-height:1;vertical-align:middle;
+        }
+        .widget-info-btn:hover { background:#EF7D00; color:white; }
+        .widget-info-popup {
+            display:none;position:absolute;top:100%;left:0;right:0;
+            background:white;border:1px solid #e5e7eb;border-radius:10px;
+            padding:12px 14px;margin-top:6px;box-shadow:0 8px 24px rgba(0,0,0,0.1);
+            z-index:100;font-size:12px;color:#4b5563;line-height:1.5;
+        }
+        .widget-info-popup.active { display:block; }
+
         
     </style></head><body>
     <div class="hdr"><h1>FAHRRADBERATUNG</h1><div class="sub">vit:bikes · ${new Date().toLocaleDateString("de-DE")}</div></div>
