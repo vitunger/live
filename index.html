@@ -21942,5 +21942,18 @@ if(activeTrainers.length>0) showTrainerCard(activeTrainers[0]);
 })();
 </script>
 
+
+<!-- ═══ GRUPPENCALL PREP BANNER ═══ -->
+<div id="groupcallBanner" style="display:none;position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:8999;width:500px;">
+    <div class="vit-card p-4" style="box-shadow:0 8px 24px rgba(0,0,0,0.12);border:2px solid #3b82f6;">
+        <div class="flex items-center gap-3">
+            <span style="font-size:24px">📞</span>
+            <div style="flex:1"><p class="text-sm font-bold text-gray-800" id="gcBannerTitle">Inhaber-Call in 2 Stunden</p><p class="text-xs text-gray-500" id="gcBannerSub">Deine Zahlen sind vorbereitet</p></div>
+            <button onclick="showGroupcallPrep()" class="px-3 py-2 bg-blue-500 text-white text-xs font-bold rounded-lg hover:bg-blue-600">📊 Vorbereitung</button>
+            <button onclick="document.getElementById('groupcallBanner').style.display='none'" style="background:none;border:none;color:#9ca3af;cursor:pointer">✕</button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
