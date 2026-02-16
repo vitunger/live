@@ -338,6 +338,8 @@
 .widget-info-popup.active{display:block}
 .widget-info-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.15);z-index:9998}
 .widget-info-overlay.active{display:block}
+.notif-pref-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:#4b5563;}
+.notif-toggle{accent-color:#EF7D00;width:16px;height:16px;cursor:pointer;}
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -1457,8 +1459,7 @@
                         </div>
                     </div>
                 </div>
-
-                </div>
+                </div><!-- /verkaufView -->
 
                 <!-- MARKETING View -->
                 <!-- ===== DASHBOARDS VIEW (Finanzen, Marketing PRO, Team als Tabs) ===== -->
@@ -1577,7 +1578,6 @@
                             </table>
                         </div>
                     </div>
-                </div>
                 </div>
 
                 <!-- Marketing View (Hauptmenü) – REDESIGN v3: Cockpit, Budget, Kampagnen, Reichweite + Social, Strategie, Wissen -->
@@ -4900,7 +4900,6 @@
                     <div id="hqEkTabLief" class="hqek-tab-content" style="display:none;"></div>
                     <div id="hqEkTabStrat" class="hqek-tab-content" style="display:none;"></div>
                 </div>
-                </div>
 
                 <div id="hqVerkaufView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-6">VERKAUF – NETZWERK</h1>
@@ -5480,7 +5479,9 @@
                     </div>
                 </div>
 
-    </div>
+            </main>
+        </div>
+    </div><!-- /mainApp -->
 
     <script>
         // ============================================
@@ -20482,29 +20483,41 @@ function setTheme(theme) {
             </div>
 
             <!-- Meta -->
-            <!-- E-Mail-Einstellungen -->
-            <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:16px;">
-                <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;font-weight:600;margin-bottom:12px;">E-Mail-Benachrichtigungen</p>
-                <label style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:#4b5563;">
-                    <span>📊 BWA-Erinnerungen</span>
-                    <input type="checkbox" checked id="prefBwa" style="accent-color:#EF7D00;width:16px;height:16px;">
-                </label>
-                <label style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:#4b5563;">
-                    <span>📈 Lead-Benachrichtigungen</span>
-                    <input type="checkbox" checked id="prefLeads" style="accent-color:#EF7D00;width:16px;height:16px;">
-                </label>
-                <label style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:#4b5563;">
-                    <span>🎓 Trainer-Erinnerungen</span>
-                    <input type="checkbox" checked id="prefTrainer" style="accent-color:#EF7D00;width:16px;height:16px;">
-                </label>
-                <label style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:#4b5563;">
-                    <span>📞 Gruppencall-Erinnerungen</span>
-                    <input type="checkbox" checked id="prefCalls" style="accent-color:#EF7D00;width:16px;height:16px;">
-                </label>
-                <div style="border-top:1px solid #e5e7eb;margin-top:8px;padding-top:8px;">
-                    <button onclick="setupPushNotifications()" style="width:100%;padding:8px;background:#EF7D00;color:white;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🔔 Push-Benachrichtigungen aktivieren</button>
-                    <p style="font-size:9px;color:#9ca3af;margin-top:4px;text-align:center">Erhalte Benachrichtigungen direkt auf dein Gerät</p>
+            <!-- Benachrichtigungseinstellungen -->
+            <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:16px;" id="notifPrefsContainer">
+                <!-- E-Mail Benachrichtigungen -->
+                <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;font-weight:600;margin-bottom:10px;">📧 E-Mail-Benachrichtigungen</p>
+                <label class="notif-pref-row"><span>📊 BWA-Erinnerungen</span><input type="checkbox" checked data-pref="email_bwa_erinnerung" class="notif-toggle"></label>
+                <label class="notif-pref-row"><span>📈 Lead-Benachrichtigungen</span><input type="checkbox" checked data-pref="email_lead_benachrichtigung" class="notif-toggle"></label>
+                <label class="notif-pref-row"><span>🎓 Trainer-Erinnerungen</span><input type="checkbox" checked data-pref="email_trainer_erinnerung" class="notif-toggle"></label>
+                <label class="notif-pref-row"><span>📞 Gruppencall-Erinnerungen</span><input type="checkbox" checked data-pref="email_gruppencall_erinnerung" class="notif-toggle"></label>
+                <label class="notif-pref-row"><span>✅ Aufgabe zugewiesen</span><input type="checkbox" checked data-pref="email_aufgaben_zugewiesen" class="notif-toggle"></label>
+                <label class="notif-pref-row"><span>💬 Chat-Nachrichten</span><input type="checkbox" data-pref="email_chat_nachricht" class="notif-toggle"></label>
+
+                <!-- Push Benachrichtigungen -->
+                <div style="border-top:1px solid #e5e7eb;margin-top:12px;padding-top:12px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                        <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;font-weight:600;margin:0;">🔔 Push-Benachrichtigungen</p>
+                        <span id="pushStatusBadge" style="font-size:9px;padding:2px 8px;border-radius:10px;font-weight:600;background:#fee2e2;color:#dc2626;">Inaktiv</span>
+                    </div>
+                    <div id="pushPrefsArea" style="opacity:0.4;pointer-events:none;">
+                        <label class="notif-pref-row"><span>💬 Neue Nachrichten</span><input type="checkbox" checked data-pref="push_neue_nachricht" class="notif-toggle"></label>
+                        <label class="notif-pref-row"><span>✅ Aufgabe zugewiesen</span><input type="checkbox" checked data-pref="push_aufgabe_zugewiesen" class="notif-toggle"></label>
+                        <label class="notif-pref-row"><span>📅 Termin-Erinnerungen</span><input type="checkbox" checked data-pref="push_termin_erinnerung" class="notif-toggle"></label>
+                        <label class="notif-pref-row"><span>📈 Lead-Aktivität</span><input type="checkbox" checked data-pref="push_lead_aktivitaet" class="notif-toggle"></label>
+                        <label class="notif-pref-row"><span>📢 Ankündigungen</span><input type="checkbox" checked data-pref="push_ankuendigung" class="notif-toggle"></label>
+                        <label class="notif-pref-row"><span>🎫 Support-Updates</span><input type="checkbox" checked data-pref="push_support_update" class="notif-toggle"></label>
+                    </div>
+                    <button id="pushToggleBtn" onclick="setupPushNotifications()" style="width:100%;padding:10px;background:#EF7D00;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px;">
+                        🔔 Push-Benachrichtigungen aktivieren
+                    </button>
+                    <p id="pushSubInfo" style="font-size:9px;color:#9ca3af;margin-top:4px;text-align:center;">Erhalte Benachrichtigungen direkt auf dein Gerät</p>
                 </div>
+
+                <!-- Speichern -->
+                <button onclick="saveNotificationPrefs()" style="width:100%;padding:10px;background:#16a34a;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:12px;display:flex;align-items:center;justify-content:center;gap:6px;">
+                    💾 Einstellungen speichern
+                </button>
             </div>
 
             <div style="margin-top:16px;padding:12px;background:#f9fafb;border-radius:8px;text-align:center;">
@@ -22196,6 +22209,231 @@ window.switchWissenTyp = function(typ) {
         deferredPrompt = e;
         showInstallBanner();
     });
+
+    // ========== PUSH NOTIFICATIONS & PREFERENCES ==========
+    const VAPID_PUBLIC_KEY = 'BFjv8qdfhEPXyWvz8Ite8laCH0XMaLtzTXvRBRq7XIa4FELmOz2RA3fUh7me1LIAh0JsKQVd-Pl8Dlxg_8mFc3c';
+    
+    function urlBase64ToUint8Array(base64String) {
+        var padding = '='.repeat((4 - base64String.length % 4) % 4);
+        var base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+        var rawData = window.atob(base64);
+        var outputArray = new Uint8Array(rawData.length);
+        for (var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+        return outputArray;
+    }
+
+    async function setupPushNotifications() {
+        var btn = document.getElementById('pushToggleBtn');
+        var badge = document.getElementById('pushStatusBadge');
+        var info = document.getElementById('pushSubInfo');
+        
+        // Check if already subscribed - if so, unsubscribe
+        if (btn && btn.dataset.active === 'true') {
+            await unsubscribePush();
+            return;
+        }
+        
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            showNotification('Push-Benachrichtigungen werden von deinem Browser nicht unterstützt.', 'error');
+            return;
+        }
+        
+        if (btn) { btn.textContent = '⏳ Aktiviere...'; btn.disabled = true; }
+        
+        try {
+            // Request permission
+            var perm = await Notification.requestPermission();
+            if (perm !== 'granted') {
+                showNotification('Push-Berechtigung wurde verweigert. Bitte erlaube Benachrichtigungen in den Browser-Einstellungen.', 'error');
+                if (btn) { btn.textContent = '🔔 Push-Benachrichtigungen aktivieren'; btn.disabled = false; }
+                return;
+            }
+            
+            // Register Service Worker
+            var reg = await navigator.serviceWorker.register('/sw.js');
+            await navigator.serviceWorker.ready;
+            
+            // Subscribe
+            var subscription = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+            });
+            
+            var subJson = subscription.toJSON();
+            var userId = (await window._supabase.auth.getUser()).data.user?.id;
+            if (!userId) throw new Error('Nicht eingeloggt');
+            
+            // Save to DB
+            var { error } = await window._supabase.from('push_subscriptions').upsert({
+                user_id: userId,
+                endpoint: subJson.endpoint,
+                p256dh: subJson.keys.p256dh,
+                auth_key: subJson.keys.auth,
+                user_agent: navigator.userAgent,
+                device_name: detectDeviceName()
+            }, { onConflict: 'user_id,endpoint' });
+            
+            if (error) throw error;
+            
+            updatePushUI(true, detectDeviceName());
+            showNotification('Push-Benachrichtigungen aktiviert! 🎉', 'success');
+            
+            // Send test notification
+            setTimeout(function() {
+                reg.showNotification('vit:bikes Portal', {
+                    body: 'Push-Benachrichtigungen sind jetzt aktiv!',
+                    icon: '/icon-192.png',
+                    badge: '/icon-badge.png',
+                    vibrate: [200, 100, 200]
+                });
+            }, 1000);
+            
+        } catch(err) {
+            console.error('Push setup error:', err);
+            showNotification('Fehler beim Aktivieren: ' + err.message, 'error');
+            if (btn) { btn.textContent = '🔔 Push-Benachrichtigungen aktivieren'; btn.disabled = false; }
+        }
+    }
+    
+    async function unsubscribePush() {
+        try {
+            var reg = await navigator.serviceWorker.getRegistration();
+            if (reg) {
+                var sub = await reg.pushManager.getSubscription();
+                if (sub) {
+                    var endpoint = sub.endpoint;
+                    await sub.unsubscribe();
+                    // Remove from DB
+                    await window._supabase.from('push_subscriptions').delete().eq('endpoint', endpoint);
+                }
+            }
+            updatePushUI(false);
+            showNotification('Push-Benachrichtigungen deaktiviert.', 'info');
+        } catch(err) {
+            console.error('Unsubscribe error:', err);
+        }
+    }
+    
+    function detectDeviceName() {
+        var ua = navigator.userAgent;
+        if (/iPhone/.test(ua)) return 'iPhone';
+        if (/iPad/.test(ua)) return 'iPad';
+        if (/Android/.test(ua)) return 'Android';
+        if (/Mac/.test(ua)) return 'Mac';
+        if (/Windows/.test(ua)) return 'Windows PC';
+        if (/Linux/.test(ua)) return 'Linux';
+        return 'Unbekanntes Gerät';
+    }
+    
+    function updatePushUI(active, deviceName) {
+        var btn = document.getElementById('pushToggleBtn');
+        var badge = document.getElementById('pushStatusBadge');
+        var area = document.getElementById('pushPrefsArea');
+        var info = document.getElementById('pushSubInfo');
+        
+        if (active) {
+            if (btn) {
+                btn.innerHTML = '🔕 Push deaktivieren';
+                btn.style.background = '#6b7280';
+                btn.dataset.active = 'true';
+                btn.disabled = false;
+            }
+            if (badge) {
+                badge.style.background = '#dcfce7';
+                badge.style.color = '#16a34a';
+                badge.textContent = '✓ Aktiv';
+            }
+            if (area) { area.style.opacity = '1'; area.style.pointerEvents = 'auto'; }
+            if (info) info.textContent = deviceName ? ('Aktiv auf: ' + deviceName) : 'Push-Benachrichtigungen sind aktiv';
+        } else {
+            if (btn) {
+                btn.innerHTML = '🔔 Push-Benachrichtigungen aktivieren';
+                btn.style.background = '#EF7D00';
+                btn.dataset.active = 'false';
+                btn.disabled = false;
+            }
+            if (badge) {
+                badge.style.background = '#fee2e2';
+                badge.style.color = '#dc2626';
+                badge.textContent = 'Inaktiv';
+            }
+            if (area) { area.style.opacity = '0.4'; area.style.pointerEvents = 'none'; }
+            if (info) info.textContent = 'Erhalte Benachrichtigungen direkt auf dein Gerät';
+        }
+    }
+    
+    async function checkPushStatus() {
+        try {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+            var reg = await navigator.serviceWorker.getRegistration();
+            if (!reg) return;
+            var sub = await reg.pushManager.getSubscription();
+            updatePushUI(!!sub, sub ? detectDeviceName() : null);
+        } catch(e) { /* ignore */ }
+    }
+    
+    async function loadNotificationPrefs() {
+        try {
+            var userId = (await window._supabase.auth.getUser()).data.user?.id;
+            if (!userId) return;
+            
+            var { data } = await window._supabase
+                .from('notification_preferences')
+                .select('*')
+                .eq('user_id', userId)
+                .single();
+            
+            if (!data) return; // Use defaults if no prefs saved yet
+            
+            document.querySelectorAll('.notif-toggle').forEach(function(cb) {
+                var key = cb.dataset.pref;
+                if (key && data[key] !== undefined) cb.checked = data[key];
+            });
+        } catch(e) { console.log('Prefs not loaded yet:', e.message); }
+    }
+    
+    async function saveNotificationPrefs() {
+        try {
+            var userId = (await window._supabase.auth.getUser()).data.user?.id;
+            if (!userId) { showNotification('Nicht eingeloggt', 'error'); return; }
+            
+            var prefs = { user_id: userId, updated_at: new Date().toISOString() };
+            document.querySelectorAll('.notif-toggle').forEach(function(cb) {
+                var key = cb.dataset.pref;
+                if (key) prefs[key] = cb.checked;
+            });
+            
+            var { error } = await window._supabase
+                .from('notification_preferences')
+                .upsert(prefs, { onConflict: 'user_id' });
+            
+            if (error) throw error;
+            showNotification('Benachrichtigungseinstellungen gespeichert! ✅', 'success');
+        } catch(err) {
+            console.error('Save prefs error:', err);
+            showNotification('Fehler beim Speichern: ' + err.message, 'error');
+        }
+    }
+    
+    // Init: check push status + load prefs when profile opens
+    var _origToggleProfile = window.toggleProfilePanel;
+    window.toggleProfilePanel = function() {
+        if (_origToggleProfile) _origToggleProfile();
+        setTimeout(function() {
+            checkPushStatus();
+            loadNotificationPrefs();
+        }, 300);
+    };
+    
+    // Listen for push navigation messages from SW
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', function(event) {
+            if (event.data?.type === 'PUSH_NAVIGATE' && event.data.url) {
+                var viewMatch = event.data.url.match(/view=(\w+)/);
+                if (viewMatch && window.showView) window.showView(viewMatch[1]);
+            }
+        });
+    }
 
     function showInstallBanner() {
         // Don't show if already installed or dismissed
