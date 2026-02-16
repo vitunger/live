@@ -8542,7 +8542,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             html += '<div class="flex items-center space-x-2 mb-2"><span class="text-lg">🤖</span><p class="text-sm font-semibold text-gray-800">BWA-Datei hochladen – KI liest Werte automatisch</p></div>';
             html += '<p class="text-xs text-gray-500 mb-3">Lade deine BWA als Excel (.xlsx/.xls/.csv) oder PDF hoch. Die KI erkennt Monat, Jahr und alle Kennzahlen automatisch.</p>';
             html += '<div class="flex items-center space-x-3">';
-            html += '<input type="file" id="bwaFileInput" accept=".pdf,.xlsx,.xls,.csv" class="text-xs flex-1" onchange="handleBwaFileSelect(this)">';
+            html += '<input type="file" id="bwaFileInput" accept=".pdf,.xlsx,.xls,.csv" multiple class="text-xs flex-1" onchange="handleBwaFileSelect(this)">';
             html += '<button id="bwaParseBtn" onclick="parseBwaWithAI()" disabled class="px-4 py-2 bg-vit-orange text-white rounded-lg text-xs font-semibold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap">🤖 Auslesen</button>';
             html += '</div>';
             html += '<div id="bwaAiStatus" class="mt-2 hidden"><div class="flex items-center space-x-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600" id="bwaAiStatusText">KI analysiert Datei...</span></div></div>';
@@ -8589,12 +8589,22 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         function handleBwaFileSelect(input) {
             var btn = document.getElementById('bwaParseBtn');
-            if(btn) btn.disabled = !(input.files && input.files.length > 0);
+            var count = input.files ? input.files.length : 0;
+            if(btn) {
+                btn.disabled = count === 0;
+                btn.textContent = count > 1 ? '🤖 ' + count + ' Dateien auslesen' : '🤖 Auslesen';
+            }
         }
 
         async function parseBwaWithAI() {
             var fileInput = document.getElementById('bwaFileInput');
-            if(!fileInput || !fileInput.files || !fileInput.files[0]) return;
+            if(!fileInput || !fileInput.files || !fileInput.files.length) return;
+            
+            // Multi-file mode
+            if(fileInput.files.length > 1) {
+                return parseBwaBatch(fileInput.files);
+            }
+            
             var file = fileInput.files[0];
             var statusEl = document.getElementById('bwaAiStatus');
             var statusText = document.getElementById('bwaAiStatusText');
@@ -8959,6 +8969,175 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 
                 if(parseBtn) parseBtn.disabled = false;
             });
+        }
+
+        // Batch BWA Upload – mehrere Dateien nacheinander parsen + speichern
+        async function parseBwaBatch(files) {
+            var statusEl = document.getElementById('bwaAiStatus');
+            var statusText = document.getElementById('bwaAiStatusText');
+            var resultEl = document.getElementById('bwaAiResult');
+            var parseBtn = document.getElementById('bwaParseBtn');
+            statusEl.classList.remove('hidden');
+            resultEl.classList.remove('hidden');
+            if(parseBtn) parseBtn.disabled = true;
+
+            var total = files.length;
+            var results = [];
+            resultEl.innerHTML = '<div id="bwaBatchProgress" class="space-y-2"></div>';
+
+            for(var i = 0; i < total; i++) {
+                var file = files[i];
+                statusText.textContent = '📊 Datei ' + (i+1) + '/' + total + ': ' + file.name + '...';
+                
+                var progEl = document.getElementById('bwaBatchProgress');
+                var itemId = 'bwaBatch_' + i;
+                progEl.innerHTML += '<div id="' + itemId + '" class="flex items-center space-x-2 text-xs p-2 bg-gray-50 rounded"><div class="w-3 h-3 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="flex-1">' + escH(file.name) + '</span><span class="text-gray-400">Analysiert...</span></div>';
+
+                try {
+                    var bwaResult = await parseSingleBwaFile(file);
+                    if(bwaResult && bwaResult.umsatzerloese) {
+                        // Auto-save
+                        var saveRes = await autoSaveBwa(bwaResult, file.name);
+                        var el = document.getElementById(itemId);
+                        if(el) el.innerHTML = '<span class="text-green-600">✅</span><span class="flex-1">' + escH(file.name) + '</span><span class="text-green-600 font-semibold">' + bwaResult.monatName + ' ' + bwaResult.jahr + ' – Umsatz: ' + Math.round(bwaResult.umsatzerloese).toLocaleString('de-DE') + ' €</span>';
+                        results.push({file: file.name, success: true, monat: bwaResult.monat, jahr: bwaResult.jahr});
+                    } else {
+                        throw new Error('Keine Werte erkannt');
+                    }
+                } catch(err) {
+                    var el2 = document.getElementById(itemId);
+                    if(el2) el2.innerHTML = '<span class="text-red-500">❌</span><span class="flex-1">' + escH(file.name) + '</span><span class="text-red-500">' + escH(err.message || 'Fehler') + '</span>';
+                    results.push({file: file.name, success: false, error: err.message});
+                }
+            }
+
+            var ok = results.filter(function(r){return r.success;}).length;
+            statusEl.querySelector('.animate-spin').style.display = 'none';
+            statusText.textContent = '✅ Batch fertig: ' + ok + '/' + total + ' BWAs erfolgreich gespeichert';
+            if(parseBtn) parseBtn.disabled = false;
+
+            // Reload BWA list
+            if(ok > 0 && typeof loadBwaList === 'function') {
+                setTimeout(function(){ loadBwaList(); }, 500);
+            }
+        }
+
+        // Parse a single BWA file – returns {monat, jahr, monatName, umsatzerloese, ...} or throws
+        async function parseSingleBwaFile(file) {
+            return new Promise(function(resolve, reject) {
+                var meta = BwaParser.extractMonatJahr(file.name);
+                meta.dateiname = file.name;
+                var monatNamen = ['','Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+                var isPdf = file.name.match(/\.pdf$/i);
+                if(isPdf) {
+                    // PDF → direkt KI
+                    var reader = new FileReader();
+                    reader.onload = async function(e) {
+                        try {
+                            var base64 = e.target.result.split(',')[1];
+                            var kiResult = await callFinanceKi('bwa', base64, 'application/pdf', null, {jahr: meta.jahr, monat: meta.monat});
+                            if(kiResult && kiResult.werte) {
+                                var w = kiResult.werte;
+                                var m = (kiResult.meta && kiResult.meta.monat) || meta.monat;
+                                var j = (kiResult.meta && kiResult.meta.jahr) || meta.jahr;
+                                resolve(Object.assign(w, {monat: m, jahr: j, monatName: monatNamen[m] || '?', quelle: 'ki'}));
+                            } else { reject(new Error('KI: Keine Werte')); }
+                        } catch(err) { reject(err); }
+                    };
+                    reader.readAsDataURL(file);
+                    return;
+                }
+
+                // Excel → Parser zuerst, dann KI-Fallback
+                BwaParser.parseFile(file, async function(err, result) {
+                    // Versuche regelbasiert zu parsen
+                    var parsed = {};
+                    var matchCount = 0;
+                    if(!err && result) {
+                        var daten = result.bwa_daten || [];
+                        var gruppenMap = {
+                            'Umsatzerlöse':'umsatzerloese','Materialaufwand':'wareneinsatz','Rohertrag':'rohertrag',
+                            'Betrieblicher Rohertrag':'rohertrag','Personalkosten':'personalkosten','Raumkosten':'raumkosten',
+                            'Werbe-/Reisekosten':'werbekosten','Warenabgabekosten':'kosten_warenabgabe',
+                            'Abschreibungen':'abschreibungen','Sonstige Kosten':'sonstige_kosten',
+                            'Fahrzeugkosten':'kfzkosten','Steuern/Versicherungen':'versicherungen',
+                            'Betriebsergebnis':'betriebsergebnis','Zinsen':'zinsaufwand'
+                        };
+                        daten.forEach(function(row) {
+                            if(row.ist_summenzeile && row.kontengruppe && gruppenMap[row.kontengruppe] && row.wert !== null) {
+                                var key = gruppenMap[row.kontengruppe];
+                                if(!parsed[key]) { parsed[key] = row.wert; matchCount++; }
+                            }
+                        });
+                        if(result.meta) { meta.monat = result.meta.monat || meta.monat; meta.jahr = result.meta.jahr || meta.jahr; }
+                    }
+
+                    if(matchCount >= 3) {
+                        // Parser hat genug Felder gefunden
+                        resolve(Object.assign(parsed, {monat: meta.monat, jahr: meta.jahr, monatName: monatNamen[meta.monat] || '?', quelle: 'parser'}));
+                        return;
+                    }
+
+                    // KI-Fallback
+                    try {
+                        var arrayBuf = await file.arrayBuffer();
+                        var wb = XLSX.read(arrayBuf, { type: 'array' });
+                        var rawText = '';
+                        wb.SheetNames.forEach(function(sn) {
+                            rawText += '=== Sheet: ' + sn + ' ===\n' + XLSX.utils.sheet_to_csv(wb.Sheets[sn], {FS:';'}) + '\n\n';
+                        });
+                        var kiResult = await callFinanceKi('bwa', null, null, rawText.substring(0, 15000), {jahr: meta.jahr, monat: meta.monat, format: meta.format});
+                        if(kiResult && kiResult.werte) {
+                            var w2 = kiResult.werte;
+                            var m2 = (kiResult.meta && kiResult.meta.monat) || meta.monat;
+                            var j2 = (kiResult.meta && kiResult.meta.jahr) || meta.jahr;
+                            resolve(Object.assign(w2, {monat: m2, jahr: j2, monatName: monatNamen[m2] || '?', quelle: 'ki'}));
+                        } else { reject(new Error('KI: Keine Werte')); }
+                    } catch(kiErr) { reject(kiErr); }
+                });
+            });
+        }
+
+        // Auto-save a parsed BWA to DB
+        async function autoSaveBwa(data, filename) {
+            var stdId = sbProfile ? sbProfile.standort_id : null;
+            if(!stdId) throw new Error('Kein Standort');
+            var rohertrag = (data.umsatzerloese||0) + (data.wareneinsatz||0);
+            var gesamtkosten = (data.personalkosten||0) + (data.raumkosten||0) + (data.werbekosten||0) + (data.kosten_warenabgabe||0) + (data.abschreibungen||0) + (data.sonstige_kosten||0);
+            var betriebsergebnis = rohertrag + gesamtkosten;
+            var ergebnis = betriebsergebnis + (data.zinsaufwand||0);
+
+            var payload = {
+                standort_id: stdId,
+                monat: data.monat,
+                jahr: data.jahr,
+                umsatzerloese: data.umsatzerloese || 0,
+                davon_fahrraeder: data.davon_fahrraeder || null,
+                davon_teile: data.davon_teile || null,
+                davon_service: data.davon_service || null,
+                davon_skonti: data.davon_skonti || null,
+                wareneinsatz: data.wareneinsatz || 0,
+                rohertrag: rohertrag,
+                personalkosten: data.personalkosten || 0,
+                raumkosten: data.raumkosten || 0,
+                werbekosten: data.werbekosten || 0,
+                kosten_warenabgabe: data.kosten_warenabgabe || 0,
+                abschreibungen: data.abschreibungen || 0,
+                sonstige_kosten: data.sonstige_kosten || 0,
+                gesamtkosten: gesamtkosten,
+                betriebsergebnis: betriebsergebnis,
+                zinsaufwand: data.zinsaufwand || 0,
+                ergebnis_vor_steuern: ergebnis,
+                datei_name: filename,
+                format: data.quelle === 'ki' ? 'KI-Analyse' : 'Auto-Parser',
+                hochgeladen_von: sbUser ? sbUser.id : null,
+                updated_at: new Date().toISOString()
+            };
+
+            var resp = await sb.from('bwa_daten').upsert(payload, {onConflict: 'standort_id,monat,jahr'}).select();
+            if(resp.error) throw resp.error;
+            return resp.data;
         }
 
         // Apply KI analysis result to BWA form fields
