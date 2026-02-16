@@ -21322,6 +21322,9 @@ function changePassword() {
         if(!container) return;
         container.innerHTML = '';
         
+        // ── Smart Trigger: Auto-assign trainers based on live data ──
+        await _smartTriggerCheck(areaKey);
+        
         var assignments = await loadTrainersForArea(areaKey);
         trainerState.assignments = (trainerState.assignments || []).concat(assignments);
         
@@ -21329,6 +21332,113 @@ function changePassword() {
             renderTrainerCard(assignments[0], container);
         }
     };
+
+    // ── Smart Trigger Engine ──
+    async function _smartTriggerCheck(areaKey) {
+        if(typeof sb === 'undefined' || !sbProfile || !sbProfile.standort_id) return;
+        var sid = sbProfile.standort_id;
+        var uid = sbUser ? sbUser.id : null;
+        if(!uid) return;
+
+        try {
+            // Get all active trainers for this area
+            var tResp = await sb.from('trainers').select('*').eq('area_key', areaKey).eq('is_active', true);
+            var trainers = tResp.data || [];
+            if(!trainers.length) return;
+
+            // Get existing active assignments to avoid duplicates
+            var aResp = await sb.from('trainer_assignments').select('trainer_id').eq('standort_id', sid).eq('status', 'active');
+            var existingIds = (aResp.data || []).map(function(a){ return a.trainer_id; });
+
+            // Get completed trainer IDs (don't re-assign recently completed)
+            var cResp = await sb.from('trainer_completions').select('trainer_id,completed_at')
+                .eq('user_id', uid).order('completed_at', {ascending:false}).limit(50);
+            var completedMap = {};
+            (cResp.data || []).forEach(function(c){
+                completedMap[c.trainer_id] = c.completed_at;
+            });
+
+            for(var i = 0; i < trainers.length; i++) {
+                var t = trainers[i];
+                // Skip if already assigned or completed in last 14 days
+                if(existingIds.indexOf(t.id) >= 0) continue;
+                if(completedMap[t.id]) {
+                    var daysSince = (Date.now() - new Date(completedMap[t.id]).getTime()) / 86400000;
+                    if(daysSince < 14) continue;
+                }
+
+                var shouldAssign = await _evaluateTrigger(t, sid);
+                if(shouldAssign) {
+                    // Create assignment
+                    await sb.from('trainer_assignments').upsert({
+                        trainer_id: t.id,
+                        standort_id: sid,
+                        assigned_by: 'smart_trigger',
+                        status: 'active',
+                        priority: t.priority || 3
+                    }, { onConflict: 'trainer_id,standort_id' });
+                    console.log('🎓 Trainer assigned:', t.title, '→', t.trigger_key);
+                }
+            }
+        } catch(e) { console.warn('SmartTrigger:', e); }
+    }
+
+    async function _evaluateTrigger(trainer, standortId) {
+        var cond = trainer.trigger_condition_json || {};
+        var key = trainer.trigger_key;
+
+        // ── VERKAUF Triggers ──
+        if(key === 'open_offers_no_followup') {
+            // Trigger wenn offene Leads ohne Follow-up > threshold
+            var resp = await sb.from('leads').select('id,letzter_kontakt,status')
+                .eq('standort_id', standortId)
+                .not('status', 'in', '("gewonnen","verloren")');
+            var leads = resp.data || [];
+            var staleLeads = leads.filter(function(l) {
+                if(!l.letzter_kontakt) return true;
+                var daysSince = (Date.now() - new Date(l.letzter_kontakt).getTime()) / 86400000;
+                return daysSince > 7;
+            });
+            // Trigger if >5 stale leads OR if no leads at all (starter scenario)
+            if(staleLeads.length >= (cond.threshold || 5)) return true;
+            if(leads.length === 0) return true; // Empty pipeline → show starter trainer
+            return false;
+        }
+
+        // ── CONTROLLING Triggers ──
+        if(key === 'bwa_missing') {
+            var today = new Date();
+            var bwaMo = (typeof getBwaMonth === 'function') ? getBwaMonth(today) : null;
+            if(!bwaMo) return false;
+            var resp = await sb.from('bwa_daten').select('id')
+                .eq('standort_id', standortId)
+                .eq('monat', bwaMo.m + 1).eq('jahr', bwaMo.y).limit(1);
+            return !(resp.data && resp.data.length > 0); // Trigger if no BWA found
+        }
+
+        if(key === 'bwa_uploaded') {
+            // Only trigger via events, not here
+            return false;
+        }
+
+        // ── MARKETING Triggers ──
+        if(key === 'no_content_14d') {
+            // Check portal_events for content uploads in last 14 days
+            var since = new Date(Date.now() - 14 * 86400000).toISOString();
+            var resp = await sb.from('portal_events').select('id')
+                .eq('standort_id', standortId)
+                .eq('event_type', 'content_uploaded')
+                .gte('created_at', since).limit(1);
+            return !(resp.data && resp.data.length > 0); // Trigger if no content
+        }
+
+        // ── ONBOARDING ──
+        if(trainer.trigger_type === 'onboarding_step') {
+            return false; // Handled separately in loadTrainersForArea
+        }
+
+        return false;
+    }
 
     // ── Init ──
     window._initTrainerEngine = async function() {
