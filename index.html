@@ -4097,6 +4097,7 @@
                                         <p class="text-gray-400 text-[11px]" id="todoHeaderSub">0 offen · 0 heute · 0 überfällig</p>
                                     </div>
                                     <div class="flex items-center space-x-2">
+                                        <button onclick="todoCreateNew()" class="flex items-center space-x-1 px-3 py-1.5 bg-vit-orange text-white rounded-lg text-xs font-semibold hover:opacity-90"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span>Neue Aufgabe</span></button>
                                         <div class="relative">
                                             <svg class="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                                             <input type="text" id="todoSearchInput" placeholder="Suchen..." class="pl-7 pr-3 py-1 border border-gray-200 rounded-lg bg-gray-50 text-xs focus:outline-none focus:border-vit-orange" style="width:160px" oninput="todoSearchChanged()">
@@ -4130,13 +4131,11 @@
                             <!-- Content: List or Board + Detail Panel -->
                             <div class="flex-1 flex overflow-hidden">
                                 <div class="flex-1 overflow-y-auto px-5 py-3" id="todoMainContent">
-                                    <!-- Quick Add -->
-                                    <div id="todoQuickAddArea" class="mb-3"></div>
                                     <!-- Tasks -->
                                     <div id="todoListArea"></div>
                                 </div>
                                 <!-- Detail Panel (hidden by default) -->
-                                <div id="todoDetailPanel" class="hidden flex-shrink-0 border-l border-gray-200 bg-white flex flex-col overflow-hidden" style="width:360px;"></div>
+                                <div id="todoDetailPanel" class="hidden flex-shrink-0 border-l border-gray-200 bg-white flex flex-col overflow-hidden" style="width:380px;"></div>
                             </div>
                         </div>
                     </div>
@@ -14058,10 +14057,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             // Sidebar badge in nav
             var navBadge=document.getElementById('todoSidebarBadge');if(navBadge)navBadge.textContent=c.open;
 
-            // Quick Add
-            var qa = document.getElementById('todoQuickAddArea');
-            if(qa) qa.innerHTML = todoQuickAddHTML();
-
             // List or Board
             var area = document.getElementById('todoListArea');
             if(!area) return;
@@ -14073,64 +14068,44 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         // ── Quick Add HTML ──
-        function todoQuickAddHTML() {
-            return '<div id="todoQAWrapper">' +
-                '<button onclick="todoOpenQuickAdd()" id="todoQABtn" class="w-full flex items-center space-x-2 px-4 py-2 text-left text-sm text-gray-400 hover:text-vit-orange border border-dashed border-gray-200 hover:border-vit-orange rounded-xl group">' +
-                '<span class="w-5 h-5 rounded-full border-2 border-gray-300 group-hover:border-vit-orange flex items-center justify-center"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="text-gray-300 group-hover:text-vit-orange"><path d="M12 5v14M5 12h14"/></svg></span>' +
-                '<span>Aufgabe hinzufügen...</span></button>' +
-                '<div id="todoQAForm" class="hidden border border-vit-orange/30 bg-white rounded-xl overflow-hidden" style="box-shadow:0 4px 20px rgba(249,115,22,0.08)">' +
-                '<div class="px-4 pt-3 pb-1"><input id="todoQATitle" placeholder="Was muss erledigt werden?" class="w-full text-sm text-gray-800 placeholder-gray-400 font-medium outline-none" onkeydown="todoQAKeydown(event)"></div>' +
-                '<div class="flex items-center space-x-2 px-4 pb-3 flex-wrap">' +
-                '<input type="date" id="todoQADate" class="text-xs px-2 py-1 border border-gray-200 rounded-md outline-none focus:border-vit-orange">' +
-                '<select id="todoQAPrio" class="text-xs px-2 py-1 border border-gray-200 rounded-md outline-none focus:border-vit-orange">' +
-                '<option value="normal">🟡 Normal</option><option value="dringend">🔴 Dringend</option><option value="hoch">🟠 Hoch</option><option value="niedrig">🟢 Niedrig</option></select>' +
-                '<select id="todoQASec" class="text-xs px-2 py-1 border border-gray-200 rounded-md outline-none focus:border-vit-orange">' +
-                todoState.sections.map(function(s){return '<option value="'+s.id+'">'+escH(s.name)+'</option>';}).join('') +
-                '</select>' +
-                '<div class="ml-auto flex space-x-1">' +
-                '<button onclick="todoCloseQuickAdd()" class="px-3 py-1 text-xs text-gray-500 hover:bg-gray-100 rounded-md">Abbrechen</button>' +
-                '<button onclick="todoSubmitQuickAdd()" class="px-4 py-1 text-xs font-semibold text-white rounded-md bg-vit-orange hover:opacity-90">Hinzufügen</button>' +
-                '</div></div></div></div>';
-        }
-
-        function todoOpenQuickAdd() {
-            var btn=document.getElementById('todoQABtn');if(btn)btn.classList.add('hidden');
-            var form=document.getElementById('todoQAForm');if(form)form.classList.remove('hidden');
-            var inp=document.getElementById('todoQATitle');if(inp)inp.focus();
-        }
-        function todoCloseQuickAdd() {
-            var btn=document.getElementById('todoQABtn');if(btn)btn.classList.remove('hidden');
-            var form=document.getElementById('todoQAForm');if(form)form.classList.add('hidden');
-            var inp=document.getElementById('todoQATitle');if(inp)inp.value='';
-        }
-        function todoQAKeydown(e) {
-            if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();todoSubmitQuickAdd();}
-            if(e.key==='Escape')todoCloseQuickAdd();
-        }
-        async function todoSubmitQuickAdd() {
-            var title=(document.getElementById('todoQATitle')||{}).value;
-            if(!title||!title.trim()) return;
-            var due=(document.getElementById('todoQADate')||{}).value||null;
-            var prio=(document.getElementById('todoQAPrio')||{}).value||'normal';
-            var secId=(document.getElementById('todoQASec')||{}).value;
-            if(!secId) secId=null;
-            var prioSort=(TODO_PRIO[prio]||{}).sort||1;
+        // ── Create New Task (opens detail panel) ──
+        var todoStandortUsers = [];
+        async function todoLoadStandortUsers() {
+            if(todoStandortUsers.length) return;
             try {
-                var ins = {
-                    standort_id:sbProfile?sbProfile.standort_id:null, erstellt_von:sbUser?sbUser.id:null,
-                    titel:title.trim(), faellig_am:due, prio:prio, prio_sort:prioSort,
-                    kategorie:'sonstig', erledigt:false
-                };
-                if(secId) ins.section_id = secId;
-                var resp = await sb.from('todos').insert(ins).select();
-                if(resp.error) throw resp.error;
-                if(resp.data&&resp.data[0]) { resp.data[0].zugewiesen=null; todoState.todos.unshift(resp.data[0]); }
-            } catch(e){console.error('QA add:',e);alert('Fehler: '+e.message);}
-            todoCloseQuickAdd();
-            todoRender();
+                var sid = sbProfile ? sbProfile.standort_id : null;
+                var q = sb.from('users').select('id, name').eq('status','aktiv');
+                if(sid && !(sbProfile&&sbProfile.is_hq)) q = q.eq('standort_id', sid);
+                var r = await q;
+                todoStandortUsers = (!r.error && r.data) ? r.data : [];
+            } catch(e) { console.warn('Users load:', e); }
         }
 
-        // ── List View HTML ──
+        async function todoCreateNew() {
+            await todoLoadStandortUsers();
+            var inbox = todoState.sections.find(function(s){return s.name==='Eingang';});
+            try {
+                var resp = await sb.from('todos').insert({
+                    standort_id:sbProfile?sbProfile.standort_id:null, erstellt_von:sbUser?sbUser.id:null,
+                    titel:'Neue Aufgabe', prio:'normal', prio_sort:1,
+                    kategorie:'sonstig', section_id:inbox?inbox.id:null, erledigt:false
+                }).select();
+                if(resp.error) throw resp.error;
+                if(resp.data&&resp.data[0]) {
+                    todoState.todos.unshift(resp.data[0]);
+                    todoState.selectedId = resp.data[0].id;
+                    todoState.filter = 'all';
+                    todoRender();
+                    // Focus title input in detail panel
+                    setTimeout(function(){
+                        var inp = document.querySelector('#todoDetailPanel input[type="text"]');
+                        if(inp) { inp.select(); inp.focus(); }
+                    }, 100);
+                }
+            } catch(e) { console.error(e); alert('Fehler: '+e.message); }
+        }
+
+                // ── List View HTML ──
         function todoListHTML() {
             var parents = todoFilteredParents();
             var secs = todoState.sections.slice().sort(function(a,b){return (a.sort_order||0)-(b.sort_order||0);});
@@ -14330,6 +14305,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var task = todoState.todos.find(function(t){return t.id===todoState.selectedId;});
             if(!task) { panel.classList.add('hidden'); todoState.selectedId=null; return; }
             panel.classList.remove('hidden');
+            // Lazy-load standort users for assignee dropdown
+            if(!todoStandortUsers.length) { todoLoadStandortUsers().then(function(){ todoRenderDetail(); }); return; }
 
             var subs = todoState.todos.filter(function(t){return t.parent_id===task.id;});
             var doneSubs = subs.filter(function(s){return s.erledigt;}).length;
@@ -14380,6 +14357,15 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             todoState.sections.forEach(function(s){h+='<option value="'+s.id+'"'+(task.section_id===s.id?' selected':'')+'>'+escH(s.name)+'</option>';});
             h += '</select></div>';
             h += '</div>';
+
+            // Zugewiesen an
+            h += '<div><label class="font-bold text-gray-400 uppercase text-[9px]" style="letter-spacing:0.05em">Zugewiesen an</label>';
+            h += '<select onchange="todoUpdateField(\''+task.id+'\',\'zugewiesen_an\',this.value||null)" class="mt-1 w-full px-2 py-1 text-xs border border-gray-200 rounded-lg outline-none focus:border-vit-orange/50">';
+            h += '<option value="">— Nicht zugewiesen —</option>';
+            todoStandortUsers.forEach(function(u){
+                h += '<option value="'+u.id+'"'+(task.zugewiesen_an===u.id?' selected':'')+'>👤 '+escH(u.name)+'</option>';
+            });
+            h += '</select></div>';
 
             // Labels
             h += '<div><label class="font-bold text-gray-400 uppercase text-[9px]" style="letter-spacing:0.05em">Labels</label>';
