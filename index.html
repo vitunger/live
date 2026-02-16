@@ -4651,7 +4651,7 @@
                     <div class="flex items-center justify-between mb-6">
                         <div>
                             <h1 class="h1-headline text-gray-800">MODULÜBERSICHT</h1>
-                            <p class="text-sm text-gray-500">Entwicklungsstand aller Module – Stand: Februar 2026</p>
+                            <p class="text-sm text-gray-500">Entwicklungsstand aller Module – Stand: 16. Februar 2026</p>
                         </div>
                         <div class="flex items-center space-x-2" id="modulStatusSummary"></div>
                     </div>
@@ -12059,52 +12059,57 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         // Aufwand: S = <1 Tag, M = 1-3 Tage, L = 3-7 Tage, XL = >1 Woche
         var MODUL_DATEN = {
             standort: [
-                {name:'Startseite / Dashboard', view:'homeView', status:'live', typ:'standort', details:'Personalisiert, 7 Live-Widgets, 3 Demo-Widgets', kiPrio:35, aufwand:'S', kiTodo:'Restliche 3 Widgets (Kampagnen, Top-Verkäufer, Neue Inhalte) an DB anbinden'},
-                {name:'Verkauf / CRM', view:'verkaufView', status:'teilweise', typ:'standort', details:'React Deal Flow Pipeline (Kanban, Drag&Drop, Gamification, Verkaufsformular digital+print), Scan-Upload mit KI-Analyse, KI-Verkaufstrainer, Wochenansicht, Auswertung', kiPrio:2, aufwand:'L', kiTodo:'⚠️ SICHERHEIT: Scan-Analyse nutzt Anthropic API-Key im Frontend – muss auf Supabase Edge Function umgestellt werden! Danach: Angebotserstellung (PDF), Lead-Import, Follow-up-Erinnerungen, Supabase-Anbindung der Pipeline-Deals.'},
-                {name:'Kalender', view:'kalenderView', status:'live', typ:'standort', details:'Monatsansicht, Termine aus DB laden/erstellen/löschen', kiPrio:20, aufwand:'XL', kiTodo:'MS365-Sync ist nice-to-have, kein Blocker. Wochenansicht wäre UX-Verbesserung.'},
-                {name:'Aufgaben / Todos', view:'todoView', status:'live', typ:'standort', details:'Erstellen, Bearbeiten, Abhaken, Löschen, Filtern – alles DB', kiPrio:30, aufwand:'M', kiTodo:'Fälligkeitsdatum, Zuweisung an Mitarbeiter. Funktioniert bereits gut.'},
+                {name:'Startseite / Dashboard', view:'homeView', status:'live', typ:'standort', details:'Personalisiert, 11 Widgets (7 Live, 4 Allgemein-Module neu: Monatsfokus, Jahresziele, Journal, Maßnahmen)', kiPrio:35, aufwand:'S', kiTodo:'Restliche Demo-Widgets (Top-Verkäufer, Neue Inhalte) an DB anbinden.'},
+                {name:'Verkauf / CRM', view:'verkaufView', status:'teilweise', typ:'standort', details:'React Pipeline (Kanban, Drag&Drop, Gamification), Scan-Upload mit KI-Analyse, KI-Verkaufstrainer, Wochenansicht, Auswertung', kiPrio:2, aufwand:'L', kiTodo:'⚠️ API-Key ins Backend! Angebotserstellung PDF, Lead-Import, Follow-up-Erinnerungen, Supabase-Anbindung Pipeline-Deals.'},
+                {name:'Kalender', view:'kalenderView', status:'live', typ:'standort', details:'Monatsansicht, Termine aus DB laden/erstellen/löschen', kiPrio:20, aufwand:'XL', kiTodo:'MS365-Sync nice-to-have. Wochenansicht wäre UX-Verbesserung.'},
+                {name:'Aufgaben / Todos', view:'todoView', status:'live', typ:'standort', details:'Erstellen, Bearbeiten, Abhaken, Löschen, Filtern – alles DB', kiPrio:30, aufwand:'M', kiTodo:'Fälligkeitsdatum, Zuweisung an Mitarbeiter.'},
                 {name:'Kommunikation', view:'kommunikationView', status:'live', typ:'standort', details:'Ankündigungen, Brett, Forum, Chat-Kanäle – alles DB', kiPrio:28, aufwand:'M', kiTodo:'Direktnachrichten fehlt. Ansonsten solide.'},
-                {name:'Controlling / BWA', view:'controllingView', status:'live', typ:'standort', details:'BWA-Parser (13 Formate), Detail-Positionen, KPIs, Trend-Sparklines', kiPrio:3, aufwand:'M', kiTodo:'Benchmarks gegen Netzwerk-Durchschnitt, Liquiditätsplanung, Plan/Ist mit echten Plan-Daten. Kernmodul.'},
-                {name:'Marketing', view:'marketingView', status:'demo', typ:'standort', details:'6 Tabs, alles statische Demo-Daten, keine DB', kiPrio:8, aufwand:'L', kiTodo:'DB-Tabelle für Kampagnen anlegen, Social-Media Kalender, Content-Bibliothek aus DB.'},
-                {name:'Einkauf', view:'einkaufView', status:'demo', typ:'standort', details:'Lieferanten-Übersicht statisch, keine DB', kiPrio:12, aufwand:'L', kiTodo:'Lieferanten-DB anlegen, Konditionen pflegen, Bestellvorschläge.'},
+                {name:'Controlling / BWA', view:'controllingView', status:'live', typ:'standort', details:'Performance-Cockpit, BWA-Parser (13 Formate), Detail-Positionen, KPIs, Trend-Sparklines, Monatsvergleich', kiPrio:3, aufwand:'M', kiTodo:'Benchmarks gegen Netzwerk-Durchschnitt, Liquiditätsplanung, Plan/Ist mit echten Plan-Daten.'},
+                {name:'Marketing', view:'marketingView', status:'teilweise', typ:'standort', details:'6 Tabs: Performance (Cross-Channel KPIs), Budget (491k€ Jahresbudget, Spending-Chart), Leads (Forecast, Live-Leads), Social (Local Hero), Strategie, Wissen', kiPrio:8, aufwand:'L', kiTodo:'DB-Tabellen für Kampagnen/Budget anlegen, Social-Media Kalender, Content-Bibliothek. Aktuell Demo-Daten aber vollständige UI.'},
+                {name:'Einkauf', view:'einkaufView', status:'teilweise', typ:'standort', details:'5 Tabs: Sortiment (Hauptmarken-Cards, Bestandsmarken, Teilelieferanten), Lieferanten (65 Einträge mit Status/Konditionen/IHT/B2B), Zentralreg. (Cronbank/IHT/HIW-System), Strategie (Fortschritt, ToDos), Wissen (5 Sub-Sections: IHT, Parts-Matrix, DB1, Kernsortiment, Vororder)', kiPrio:12, aufwand:'M', kiTodo:'Lieferanten-DB anlegen (aktuell JS-Array), Konditionen editierbar machen, Bestellvorschläge.'},
                 {name:'Dashboards', view:'dashboardsView', status:'demo', typ:'standort', details:'Tabs vorhanden, Inhalte statisch', kiPrio:10, aufwand:'L', kiTodo:'Echte Charts aus BWA-Daten, Verkaufsdaten, Pipeline-Conversion.'},
-                {name:'Allgemein', view:'allgemeinView', status:'demo', typ:'standort', details:'Profil, Social Media Tracker teilweise', kiPrio:33, aufwand:'M', kiTodo:'Profilbearbeitung, Strategie-Übersicht.'},
-                {name:'Wissen', view:'wissenView', status:'demo', typ:'standort', details:'Struktur da, Inhalte statisch', kiPrio:15, aufwand:'L', kiTodo:'CMS-Backend: Artikel erstellen, Kategorien. Basis für Wissen-Tabs in anderen Modulen.'},
+                {name:'Allgemein', view:'allgemeinView', status:'teilweise', typ:'standort', details:'6 Tabs: Übersicht (Monatsfokus, Meeting, Ziele, Maßnahmen), Jahresziele (Hart/SMART/Soft mit CRUD + Modal), Monatsplan (12 Monate, Massnahmen, Zielverknüpfung), Partner-Journal (Gesprächsprotokoll + Modal), Strategie, Wissen. 3 neue DB-Tabellen mit RLS.', kiPrio:9, aufwand:'M', kiTodo:'Supabase-Anbindung der 3 Tabellen (partner_jahresziele, partner_monatsplan, partner_journal). UI komplett fertig.'},
+                {name:'Wissen', view:'wissenView', status:'teilweise', typ:'standort', details:'Struktur mit Bereichen (Verkauf, Marketing, Einkauf, Controlling, Allgemein), Suche, Wissen-Tabs in jedem Modul', kiPrio:15, aufwand:'L', kiTodo:'CMS-Backend: Artikel erstellen, Kategorien. Basis für Wissen-Tabs in anderen Modulen.'},
                 {name:'Support', view:'supportView', status:'teilweise', typ:'standort', details:'Tickets mit DB, Kontakte-Seite', kiPrio:22, aufwand:'M', kiTodo:'Ticket-Prioritäten, SLA-Timer, E-Mail-Benachrichtigung.'},
                 {name:'Ideenboard', view:'ideenboardView', status:'live', typ:'standort', details:'Einreichen, Voting, Status – alles DB', kiPrio:34, aufwand:'S', kiTodo:'Kommentar-Funktion. Grundfunktion top.'},
                 {name:'Shop', view:'shopView', status:'demo', typ:'standort', details:'UI + Warenkorb, keine echte Bestelllogik', kiPrio:18, aufwand:'L', kiTodo:'Bestellungen in DB speichern, Bestätigung, HQ-Verarbeitung.'},
                 {name:'Aktenschrank', view:'aktenschrankView', status:'live', typ:'standort', details:'Upload, Download, Kategorien – alles DB', kiPrio:31, aufwand:'S', kiTodo:'Ordner-System, Dateigröße-Limits. Funktioniert.'},
                 {name:'Onboarding', view:'onboardingView', status:'teilweise', typ:'standort', details:'Asana-Demo-Integration, Checklisten', kiPrio:7, aufwand:'L', kiTodo:'Echte Asana-API Anbindung oder eigene Checklisten-DB. Wichtig für neue Partner.'},
-                {name:'Mitarbeiter', view:'mitarbeiterView', status:'live', typ:'standort', details:'Anlegen, Rollen, Approval, Passwort-Reset', kiPrio:29, aufwand:'S', kiTodo:'Deaktivierung statt Löschung, Aktivitäts-Log.'}
+                {name:'Mitarbeiter', view:'mitarbeiterView', status:'live', typ:'standort', details:'Anlegen, Rollen, Approval, Passwort-Reset, Deaktivierung', kiPrio:29, aufwand:'S', kiTodo:'Aktivitäts-Log. Funktioniert sehr gut.'}
             ],
             hq: [
-                {name:'Netzwerk-Cockpit', view:'hqCockpitView', status:'teilweise', typ:'hq', details:'KPIs teilweise mit Daten', kiPrio:4, aufwand:'M', kiTodo:'Echte KPIs aus allen Standort-Daten aggregieren. Zentrales HQ-Dashboard.'},
-                {name:'Kommandozentrale', view:'hqKommandoView', status:'teilweise', typ:'hq', details:'7 Tabs, teilweise mit DB', kiPrio:5, aufwand:'XL', kiTodo:'Alle Tabs mit echten Daten: Standorte, Mitarbeiter, Kampagnen, Kommunikation, Aufgaben, Kalender, Dokumente.'},
-                {name:'Handlungsbedarf', view:'hqAktionenView', status:'teilweise', typ:'hq', details:'Auto-Erkennung, Regeln teilweise statisch', kiPrio:1, aufwand:'L', kiTodo:'Echte Regeln: Fehlende BWAs, negatives Ergebnis, offene Tickets. Höchste Prio für HQ-Alltag.'},
-                {name:'HQ Standorte', view:'hqStandorteView', status:'live', typ:'hq', details:'Alle Standorte, Filter, Status', kiPrio:25, aufwand:'M', kiTodo:'Standort-Detail-Seite mit allen KPIs.'},
-                {name:'HQ Finanzen', view:'hqFinanzenView', status:'live', typ:'hq', details:'BWA-Status aller Standorte, Netzwerk-Finanzen', kiPrio:6, aufwand:'M', kiTodo:'Netzwerk-P&L, Standort-Vergleich, Excel/PDF-Export.'},
-                {name:'HQ Marketing', view:'hqMarketingView', status:'demo', typ:'hq', details:'Performance-Tabelle mit Demo-Daten', kiPrio:16, aufwand:'L', kiTodo:'Kampagnen-DB, Erfolgs-Tracking pro Standort.'},
-                {name:'HQ Einkauf', view:'hqEinkaufView', status:'demo', typ:'hq', details:'Demo-Rabattquoten und Bestellvolumen', kiPrio:19, aufwand:'L', kiTodo:'Zentraleinkauf-Dashboard, Konditionen, Bestellbündelung.'},
-                {name:'HQ Verkauf', view:'hqVerkaufView', status:'demo', typ:'hq', details:'Ranking mit Demo-Daten', kiPrio:11, aufwand:'M', kiTodo:'Echtes Netzwerk-Ranking aus verkauf_tracking + leads.'},
-                {name:'HQ Auswertung', view:'hqAuswertungView', status:'stub', typ:'hq', details:'Tab-Struktur, keine Inhalte', kiPrio:14, aufwand:'XL', kiTodo:'Business-Intelligence: Netzwerk-Trends, Saisonvergleiche, Forecasting.'},
-                {name:'HQ Wissen', view:'hqWissenView', status:'teilweise', typ:'hq', details:'Artikel-Übersicht', kiPrio:13, aufwand:'L', kiTodo:'CMS: Artikel erstellen/bearbeiten/publizieren, Pflichtlektüre.'},
-                {name:'HQ Support', view:'hqSupportView', status:'live', typ:'hq', details:'Netzwerk-Tickets, Status ändern', kiPrio:24, aufwand:'M', kiTodo:'Ticket-Zuweisung, SLA-Tracking, Auto-Eskalation.'},
+                {name:'Netzwerk-Cockpit', view:'hqCockpitView', status:'teilweise', typ:'hq', details:'KPIs, Schnellzugriffe, Standort-Vergleich, teilweise mit echten Daten', kiPrio:4, aufwand:'M', kiTodo:'Echte KPIs aus allen Standort-Daten aggregieren. Zentrales HQ-Dashboard.'},
+                {name:'Kommandozentrale', view:'hqKommandoView', status:'teilweise', typ:'hq', details:'7 Tabs (Standorte, Mitarbeiter, Kampagnen, Kommunikation, Aufgaben, Kalender, Dokumente), teilweise mit DB', kiPrio:5, aufwand:'XL', kiTodo:'Alle Tabs mit echten Daten versorgen. Mitarbeiter-Tab funktioniert bereits.'},
+                {name:'Handlungsbedarf', view:'hqAktionenView', status:'teilweise', typ:'hq', details:'Auto-Erkennung aus Standort-KPIs, priorisierte Aktionsliste', kiPrio:1, aufwand:'L', kiTodo:'Echte Regeln: Fehlende BWAs, negatives Ergebnis, offene Tickets. Höchste Prio für HQ-Alltag.'},
+                {name:'HQ Standorte', view:'hqStandorteView', status:'live', typ:'hq', details:'Alle Standorte mit Filter und Status', kiPrio:25, aufwand:'M', kiTodo:'Standort-Detail-Seite mit allen KPIs.'},
+                {name:'HQ Finanzen', view:'hqFinanzenView', status:'live', typ:'hq', details:'BWA-Status aller Standorte, Netzwerk-Finanzen, Periodenvergleich', kiPrio:6, aufwand:'M', kiTodo:'Netzwerk-P&L, Standort-Vergleich, Excel/PDF-Export.'},
+                {name:'HQ Marketing', view:'hqMarketingView', status:'teilweise', typ:'hq', details:'5 Tabs: Übersicht, Budgetsteuerung (15 Standorte × 8 Spalten), Leadreport (Ranking mit Balken), Jahresgespräche (Status-Tracking), Handlungsbedarf (Ampel-Alerts)', kiPrio:16, aufwand:'M', kiTodo:'DB-Anbindung für Budget und Lead-Daten. UI komplett fertig.'},
+                {name:'HQ Einkauf', view:'hqEinkaufView', status:'teilweise', typ:'hq', details:'3 Tabs: Übersicht (Dashboard mit 5-Standort-Vergleich, Alarme, Rohertrag-Bars), Lieferanten (editierbar mit Modal), Strategien (Fortschritt pro Standort mit Ampel)', kiPrio:19, aufwand:'M', kiTodo:'Lieferanten-DB, Konditionen editierbar per Supabase.'},
+                {name:'HQ Verkauf', view:'hqVerkaufView', status:'demo', typ:'hq', details:'Ranking mit Demo-Daten, KPIs', kiPrio:11, aufwand:'M', kiTodo:'Echtes Netzwerk-Ranking aus verkauf_tracking + leads.'},
+                {name:'HQ Allgemein', view:'hqAllgemeinView', status:'teilweise', typ:'hq', details:'Netzwerk-Stimmung (4 Kategorien), HQ-Aufgaben aus Partner-Journals, Standort-Tabelle (Stimmung, Monatsfokus, Ziele, Maßnahmen, Gespräche)', kiPrio:9, aufwand:'M', kiTodo:'Supabase-Anbindung an partner_journal, partner_jahresziele, partner_monatsplan Tabellen.'},
+                {name:'HQ Auswertung / Nutzung', view:'hqAuswertungView', status:'live', typ:'hq', details:'Portal-Nutzung mit echten DB-Daten: Logins, BWA-Status, Modul-Nutzung, Aufgaben, Score pro Standort. Supabase RPC get_portal_usage_stats()', kiPrio:14, aufwand:'S', kiTodo:'Weitere BI-Auswertungen: Netzwerk-Trends, Saisonvergleiche, Forecasting.'},
+                {name:'HQ Wissen', view:'hqWissenView', status:'teilweise', typ:'hq', details:'Artikel-Übersicht mit Kategorien', kiPrio:13, aufwand:'L', kiTodo:'CMS: Artikel erstellen/bearbeiten/publizieren, Pflichtlektüre.'},
+                {name:'HQ Support', view:'hqSupportView', status:'live', typ:'hq', details:'Netzwerk-Tickets, Status ändern, Prioritäten', kiPrio:24, aufwand:'M', kiTodo:'Ticket-Zuweisung, SLA-Tracking, Auto-Eskalation.'},
                 {name:'HQ Ideen', view:'hqIdeenView', status:'live', typ:'hq', details:'Ideen verwalten, Status ändern, Filter', kiPrio:32, aufwand:'S', kiTodo:'Idee-zu-Projekt Konversion. Grundfunktion top.'},
                 {name:'HQ Shop', view:'hqShopView', status:'demo', typ:'hq', details:'UI zum Hinzufügen, keine echte DB', kiPrio:21, aufwand:'L', kiTodo:'Produktverwaltung CRUD, Bestellübersicht.'},
-                {name:'HQ Einstellungen', view:'hqEinstellungenView', status:'live', typ:'hq', details:'Module, Rollen, User-Freigabe – alles DB', kiPrio:36, aufwand:'S', kiTodo:'Branding-Einstellungen. Core funktioniert bereits.'}
+                {name:'HQ Einstellungen', view:'hqEinstellungenView', status:'live', typ:'hq', details:'Module aktivieren/deaktivieren, Rollen-Matrix, User-Freigabe – alles DB', kiPrio:36, aufwand:'S', kiTodo:'Branding-Einstellungen. Core funktioniert bereits.'}
             ],
             widgets: [
-                {name:'Umsatz & Ergebnis', status:'live', typ:'widget', details:'Letzte BWA aus bwa_daten', kiPrio:37, aufwand:'S', kiTodo:'Plan-Vergleich wenn Plan-Daten vorhanden.'},
+                {name:'Widget: Umsatz & Ergebnis', status:'live', typ:'widget', details:'Letzte BWA aus bwa_daten mit Trend', kiPrio:37, aufwand:'S', kiTodo:'Plan-Vergleich wenn Plan-Daten vorhanden.'},
                 {name:'Widget: Pipeline', status:'live', typ:'widget', details:'Live aus leads + kalender_termine', kiPrio:38, aufwand:'S', kiTodo:'Click-Through zu Lead. Funktioniert.'},
                 {name:'Widget: Termine heute', status:'live', typ:'widget', details:'Echte Termine aus DB', kiPrio:39, aufwand:'S', kiTodo:'Termin-Direkterstellung. Funktioniert.'},
                 {name:'Widget: Offene Aufgaben', status:'live', typ:'widget', details:'Echte Todos mit Checkbox', kiPrio:40, aufwand:'S', kiTodo:'Direkt-Erstellung im Widget. Funktioniert.'},
-                {name:'Widget: Controlling', status:'live', typ:'widget', details:'Letzte BWA-Kennzahlen', kiPrio:41, aufwand:'S', kiTodo:'Trend-Pfeil vs. Vormonat. Funktioniert.'},
+                {name:'Widget: Marketing Performance', status:'teilweise', typ:'widget', details:'4 KPIs (Kosten MTD, Leads, Store Visits, Budget), 2 Action-Buttons. Demo-Daten.', kiPrio:23, aufwand:'M', kiTodo:'An echte Marketing-DB anbinden.'},
+                {name:'Widget: Controlling', status:'live', typ:'widget', details:'Letzte BWA-Kennzahlen mit Trend', kiPrio:41, aufwand:'S', kiTodo:'Trend-Pfeil vs. Vormonat. Funktioniert.'},
                 {name:'Widget: Support Tickets', status:'live', typ:'widget', details:'Offene Tickets mit Alter', kiPrio:42, aufwand:'S', kiTodo:'Farbe bei >7 Tage. Funktioniert.'},
                 {name:'Widget: Nachrichten HQ', status:'live', typ:'widget', details:'Ankündigungen mit relativer Zeit', kiPrio:43, aufwand:'S', kiTodo:'Funktioniert. Keine Änderung nötig.'},
+                {name:'Widget: Team-Übersicht', status:'live', typ:'widget', details:'Mitarbeiter mit Rollen und Verfügbarkeit aus DB', kiPrio:44, aufwand:'S', kiTodo:'Funktioniert.'},
+                {name:'Widget: Wissen', status:'live', typ:'widget', details:'Empfohlene Artikel mit Kategorien', kiPrio:45, aufwand:'S', kiTodo:'An Wissens-CMS anbinden.'},
                 {name:'Widget: Verkaufserfolg KW', status:'demo', typ:'widget', details:'KW dynamisch, Zahlen statisch', kiPrio:17, aufwand:'M', kiTodo:'Echte Wochen-Daten aus verkauf_tracking.'},
-                {name:'Widget: Aktive Kampagnen', status:'stub', typ:'widget', details:'Statisch, keine DB', kiPrio:23, aufwand:'M', kiTodo:'Braucht erst Kampagnen-DB (abhängig von Marketing).'},
-                {name:'Widget: Top Verkäufer', status:'stub', typ:'widget', details:'Statische Demo-Namen', kiPrio:26, aufwand:'M', kiTodo:'Ranking aus verkauf_tracking pro Mitarbeiter.'},
-                {name:'Widget: Neue Inhalte', status:'stub', typ:'widget', details:'Statische Demo-Einträge', kiPrio:36, aufwand:'M', kiTodo:'Braucht Wissens-CMS.'}
+                {name:'Widget: Monatsfokus', status:'teilweise', typ:'widget', details:'Aus Allgemein-Modul Monatsplan. Demo-Daten.', kiPrio:46, aufwand:'S', kiTodo:'An partner_monatsplan DB anbinden.'},
+                {name:'Widget: Jahresziele', status:'teilweise', typ:'widget', details:'Aus Allgemein-Modul Jahresziele. Demo-Daten.', kiPrio:47, aufwand:'S', kiTodo:'An partner_jahresziele DB anbinden.'},
+                {name:'Widget: Letztes Journal', status:'teilweise', typ:'widget', details:'Aus Allgemein-Modul Journal. Demo-Daten.', kiPrio:48, aufwand:'S', kiTodo:'An partner_journal DB anbinden.'},
+                {name:'Widget: Offene Maßnahmen', status:'teilweise', typ:'widget', details:'Aus Allgemein-Modul. Demo-Daten.', kiPrio:49, aufwand:'S', kiTodo:'An partner_monatsplan DB anbinden.'}
             ]
         };
 
@@ -13856,106 +13861,294 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         // === HQ AUSWERTUNG: Portal-Nutzung ===
-        var portalNutzung = [
-            {name:'Grafrath',logins:48,bwaUploaded:true,videosDone:4,aufgabenDone:85,moduleUsed:11,lastLogin:'2026-02-14'},
-            {name:'Hamburg',logins:62,bwaUploaded:true,videosDone:6,aufgabenDone:92,moduleUsed:12,lastLogin:'2026-02-14'},
-            {name:'Karlsdorf-Neuth.',logins:55,bwaUploaded:true,videosDone:5,aufgabenDone:88,moduleUsed:11,lastLogin:'2026-02-14'},
-            {name:'Weilheim',logins:41,bwaUploaded:true,videosDone:3,aufgabenDone:78,moduleUsed:10,lastLogin:'2026-02-13'},
-            {name:'Muenchen-Thal.',logins:38,bwaUploaded:true,videosDone:2,aufgabenDone:72,moduleUsed:9,lastLogin:'2026-02-13'},
-            {name:'Holzkirchen',logins:35,bwaUploaded:true,videosDone:3,aufgabenDone:80,moduleUsed:10,lastLogin:'2026-02-14'},
-            {name:'Teisendorf',logins:29,bwaUploaded:true,videosDone:2,aufgabenDone:65,moduleUsed:8,lastLogin:'2026-02-12'},
-            {name:'Wesel',logins:26,bwaUploaded:true,videosDone:1,aufgabenDone:60,moduleUsed:8,lastLogin:'2026-02-12'},
-            {name:'Reutlingen',logins:33,bwaUploaded:true,videosDone:2,aufgabenDone:70,moduleUsed:9,lastLogin:'2026-02-13'},
-            {name:'Muenster',logins:22,bwaUploaded:false,videosDone:1,aufgabenDone:55,moduleUsed:7,lastLogin:'2026-02-11'},
-            {name:'Rottweil',logins:18,bwaUploaded:false,videosDone:0,aufgabenDone:45,moduleUsed:6,lastLogin:'2026-02-10'},
-            {name:'Berlin-Brand.',logins:31,bwaUploaded:false,videosDone:1,aufgabenDone:50,moduleUsed:7,lastLogin:'2026-02-11'},
-            {name:'Witten',logins:15,bwaUploaded:false,videosDone:0,aufgabenDone:40,moduleUsed:5,lastLogin:'2026-02-09'},
-            {name:'Warendorf',logins:12,bwaUploaded:false,videosDone:0,aufgabenDone:35,moduleUsed:5,lastLogin:'2026-02-08'},
-            {name:'Muenchen-Berg',logins:20,bwaUploaded:false,videosDone:1,aufgabenDone:42,moduleUsed:6,lastLogin:'2026-02-10'},
-            {name:'Pfaffenhofen',logins:8,bwaUploaded:false,videosDone:0,aufgabenDone:25,moduleUsed:4,lastLogin:'2026-02-06'},
-            {name:'Zell',logins:5,bwaUploaded:false,videosDone:0,aufgabenDone:15,moduleUsed:3,lastLogin:'2026-02-03'},
-            {name:'Lohmar',logins:6,bwaUploaded:false,videosDone:0,aufgabenDone:20,moduleUsed:3,lastLogin:'2026-02-04'},
-            {name:'Garching',logins:4,bwaUploaded:false,videosDone:0,aufgabenDone:10,moduleUsed:2,lastLogin:'2026-02-02'},
-            {name:'Dresden',logins:0,bwaUploaded:false,videosDone:0,aufgabenDone:0,moduleUsed:0,lastLogin:'—'},
-            {name:'Passau (Onb.)',logins:3,bwaUploaded:false,videosDone:0,aufgabenDone:5,moduleUsed:1,lastLogin:'2026-02-01'}
-        ];
-
-        var modulNutzung = [
-            {name:'Verkauf',icon:'💰',pct:92,users:19},
-            {name:'Marketing',icon:'📣',pct:85,users:18},
-            {name:'Einkauf',icon:'🛒',pct:78,users:16},
-            {name:'Controlling / BWA',icon:'📊',pct:71,users:15},
-            {name:'Kommunikation',icon:'💬',pct:68,users:14},
-            {name:'Social Media',icon:'📱',pct:62,users:13},
-            {name:'Aktenschrank',icon:'📁',pct:55,users:12},
-            {name:'Kalender',icon:'📅',pct:82,users:17},
-            {name:'Aufgaben',icon:'📋',pct:75,users:16},
-            {name:'Ideenboard',icon:'💡',pct:38,users:8},
-            {name:'Support',icon:'🎫',pct:45,users:9},
-            {name:'Onboarding',icon:'✅',pct:95,users:20}
-        ];
-
-        function calcScore(p){return Math.round(p.logins*0.3+p.aufgabenDone*0.3+p.moduleUsed*3+p.videosDone*2+(p.bwaUploaded?5:0));}
-
-        function renderHqAuswertung(){
-            var sorted=portalNutzung.slice().sort(function(a,b){return calcScore(b)-calcScore(a);});
-            var avgLogins=Math.round(portalNutzung.reduce(function(a,p){return a+p.logins;},0)/portalNutzung.length);
-            var bwaCount=portalNutzung.filter(function(p){return p.bwaUploaded;}).length;
-            var avgScore=Math.round(sorted.reduce(function(a,p){return a+calcScore(p);},0)/sorted.length);
-            var inactive=portalNutzung.filter(function(p){return p.logins<5;}).length;
-            var avgModules=Math.round(portalNutzung.reduce(function(a,p){return a+p.moduleUsed;},0)/portalNutzung.length*10)/10;
-
-            var kpi=document.getElementById('hqAuswKpis');
-            if(kpi) kpi.innerHTML='<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-gray-800">'+avgScore+'</p><p class="text-xs text-gray-500">Ø Nutzungs-Score</p></div>'
-                +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-blue-600">'+avgLogins+'</p><p class="text-xs text-gray-500">Ø Logins/Monat</p></div>'
-                +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold '+(bwaCount>=15?'text-green-600':'text-yellow-600')+'">'+bwaCount+'/21</p><p class="text-xs text-gray-500">BWA hochgeladen</p></div>'
-                +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-vit-orange">'+avgModules+'</p><p class="text-xs text-gray-500">Ø Module genutzt</p></div>'
-                +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold '+(inactive>3?'text-red-500':'text-gray-500')+'">'+inactive+'</p><p class="text-xs text-gray-500">Inaktive Standorte</p></div>';
-
-            // Top 5
-            var topEl=document.getElementById('hqAuswTop');
-            if(topEl){
-                var h='';
-                sorted.slice(0,5).forEach(function(p,i){
-                    var sc=calcScore(p);
-                    h+='<div class="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg"><span class="text-sm font-bold text-gray-300 w-5">'+(i+1)+'</span><div class="flex-1"><p class="text-xs font-semibold">'+p.name+'</p><p class="text-[10px] text-gray-400">'+p.logins+' Logins · '+p.moduleUsed+' Module · '+p.videosDone+' Videos</p></div><span class="text-sm font-bold text-green-600">'+sc+'</span></div>';
-                });
-                topEl.innerHTML=h;
+        // ========================================
+        // PORTAL-NUTZUNG MODUL - STANDALONE VERSION
+        // NUR für das Modul "Nutzung Portal" (hqAuswertung)
+        // 
+        // ERSETZE HIERMIT (in index.html):
+        // Von: var portalNutzung = [
+        // Bis: // === HQ WISSEN-VERWALTUNG ===
+        //
+        // Zeilen ca. 11726-11820
+        // ========================================
+        
+        // === HILFSFUNKTIONEN ===
+        
+        // Berechnet das Alter einer BWA in Tagen
+        function calculateBwaAge(uploadDate) {
+          if (!uploadDate) return null;
+          const upload = new Date(uploadDate);
+          const now = new Date();
+          const diffTime = Math.abs(now - upload);
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          return diffDays;
+        }
+        
+        // Zählt wie viele Features ein Standort nutzt (max 7)
+        function countFeaturesUsed(s) {
+          let count = 0;
+          if (s.termine_30d > 0) count++; // Kalender
+          if (s.todos_created_30d > 0) count++; // Aufgaben
+          if (s.leads_30d > 0) count++; // Verkauf/Pipeline
+          if (s.latest_bwa_month) count++; // BWA/Controlling
+          if (s.chat_messages_30d > 0) count++; // Chat
+          if (s.tickets_total > 0) count++; // Support
+          if (s.forum_posts_30d > 0) count++; // Forum
+          return count;
+        }
+        
+        // Berechnet Activity Score (0-100 Punkte)
+        function calculateActivityScore(s) {
+          let score = 0;
+          
+          // 1. Team-Beteiligung (20 Punkte)
+          if (s.user_count > 0) {
+            const participationRate = s.active_users / s.user_count;
+            score += Math.min(20, participationRate * 20);
+          }
+          
+          // 2. Feature-Nutzung (30 Punkte)
+          const featureScore = (s.features_used / 7) * 15;
+          score += featureScore;
+          
+          // BWA-Bonus (15 Punkte)
+          if (s.latest_bwa_month) {
+            const bwaAge = calculateBwaAge(s.latest_bwa_upload);
+            if (bwaAge !== null && bwaAge <= 45) {
+              score += 15; // BWA aktuell
+            } else if (bwaAge !== null && bwaAge <= 90) {
+              score += 10; // BWA etwas älter
+            } else {
+              score += 5; // BWA sehr alt
             }
-
-            // Bottom 5
-            var botEl=document.getElementById('hqAuswBottom');
-            if(botEl){
-                var h='';
-                sorted.slice(-5).reverse().forEach(function(p,i){
-                    var sc=calcScore(p);
-                    h+='<div class="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg"><div class="flex-1"><p class="text-xs font-semibold text-gray-800">'+p.name+'</p><p class="text-[10px] text-gray-400">'+p.logins+' Logins · Letzter: '+(p.lastLogin||'nie')+'</p></div><span class="text-sm font-bold '+(sc<10?'text-red-500':'text-yellow-600')+'">'+sc+'</span></div>';
-                });
-                botEl.innerHTML=h;
+          }
+          
+          // 3. Produktivität (30 Punkte)
+          score += Math.min(10, s.todos_done_30d / 5); // max 10 bei 50+ Todos
+          score += Math.min(10, s.termine_30d / 3); // max 10 bei 30+ Terminen
+          score += Math.min(10, s.leads_30d / 2); // max 10 bei 20+ Leads
+          
+          // 4. Kommunikation (20 Punkte)
+          score += Math.min(10, s.chat_messages_30d / 5); // max 10 bei 50+ Chat
+          const commScore = Math.min(5, s.tickets_total) + Math.min(5, s.forum_posts_30d / 2);
+          score += Math.min(10, commScore);
+          
+          return Math.round(score);
+        }
+        
+        // === DATEN LADEN ===
+        
+        // Lädt Portal-Nutzungsdaten aus Supabase
+        async function loadPortalNutzungData() {
+          try {
+            // Supabase RPC-Call
+            const { data, error } = await supabase.rpc('get_portal_usage_stats');
+            
+            if (error) {
+              console.error('Error loading portal usage stats:', error);
+              return [];
             }
-
-            // Module usage
-            var modEl=document.getElementById('hqAuswModules');
-            if(modEl){
-                var h='';
-                modulNutzung.sort(function(a,b){return b.pct-a.pct;}).forEach(function(m){
-                    h+='<div class="flex items-center space-x-3"><span class="text-sm w-5">'+m.icon+'</span><span class="text-xs w-32 truncate font-semibold">'+m.name+'</span><div class="flex-1 bg-gray-100 rounded-full h-3"><div class="h-3 rounded-full '+(m.pct>=75?'bg-green-500':m.pct>=50?'bg-yellow-500':'bg-red-400')+'" style="width:'+m.pct+'%"></div></div><span class="text-xs font-bold w-16 text-right">'+m.pct+'% ('+m.users+')</span></div>';
-                });
-                modEl.innerHTML=h;
+            
+            if (!data || data.length === 0) {
+              console.warn('No usage data returned from database');
+              return [];
             }
-
-            // All locations bar
-            var allEl=document.getElementById('hqAuswAll');
-            if(allEl){
-                var h='';
-                sorted.forEach(function(p){
-                    var sc=calcScore(p);
-                    var maxSc=60;
-                    var w=Math.min(100,Math.round(sc/maxSc*100));
-                    h+='<div class="flex items-center space-x-2"><span class="text-[10px] w-28 truncate">'+p.name+'</span><div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="h-2.5 rounded-full '+(sc>=30?'bg-green-500':sc>=15?'bg-yellow-500':'bg-red-400')+'" style="width:'+w+'%"></div></div><span class="text-[10px] font-bold w-8 text-right">'+sc+'</span></div>';
-                });
-                allEl.innerHTML=h;
+            
+            // Daten transformieren
+            return data.map(standort => {
+              const features_used = countFeaturesUsed(standort);
+              const transformed = {
+                id: standort.standort_id,
+                name: standort.standort_name,
+                user_count: parseInt(standort.user_count),
+                active_users: parseInt(standort.active_users),
+                termine_30d: parseInt(standort.termine_30d),
+                todos_created_30d: parseInt(standort.todos_created_30d),
+                todos_done_30d: parseInt(standort.todos_done_30d),
+                leads_30d: parseInt(standort.leads_30d),
+                pipeline_value: parseFloat(standort.pipeline_value),
+                latest_bwa_month: standort.latest_bwa_month,
+                latest_bwa_upload: standort.latest_bwa_upload,
+                bwa_age_days: calculateBwaAge(standort.latest_bwa_upload),
+                chat_messages_30d: parseInt(standort.chat_messages_30d),
+                tickets_total: parseInt(standort.tickets_total),
+                tickets_open: parseInt(standort.tickets_open),
+                forum_posts_30d: parseInt(standort.forum_posts_30d),
+                features_used: features_used
+              };
+              
+              transformed.score = calculateActivityScore(transformed);
+              return transformed;
+            });
+            
+          } catch (err) {
+            console.error('Error in loadPortalNutzungData:', err);
+            return [];
+          }
+        }
+        
+        // === RENDER-FUNKTION ===
+        
+        // Rendert das komplette HQ Auswertung Dashboard
+        async function renderHqAuswertung() {
+          // Daten laden
+          const usageData = await loadPortalNutzungData();
+          
+          if (!usageData || usageData.length === 0) {
+            console.warn('No usage data available - showing empty state');
+            const kpiEl = document.getElementById('hqAuswKpis');
+            if (kpiEl) {
+              kpiEl.innerHTML = '<div class="col-span-5 text-center text-gray-500 p-8">Keine Nutzungsdaten verfügbar. Bitte SQL-Funktion in Supabase erstellen.</div>';
             }
+            return;
+          }
+          
+          // Nach Score sortieren
+          const sorted = usageData.slice().sort((a, b) => b.score - a.score);
+          const totalStandorte = usageData.length;
+          
+          // === KPI BERECHNUNG ===
+          const avgScore = Math.round(usageData.reduce((sum, s) => sum + s.score, 0) / totalStandorte);
+          
+          const avgParticipation = Math.round(
+            usageData.reduce((sum, s) => {
+              return sum + (s.user_count > 0 ? (s.active_users / s.user_count) * 100 : 0);
+            }, 0) / totalStandorte
+          );
+          
+          const bwaCount = usageData.filter(s => s.bwa_age_days !== null && s.bwa_age_days <= 45).length;
+          const avgFeatures = (usageData.reduce((sum, s) => sum + s.features_used, 0) / totalStandorte).toFixed(1);
+          const inactiveCount = usageData.filter(s => s.score < 30).length;
+          
+          // === KPI-KARTEN ===
+          const kpiEl = document.getElementById('hqAuswKpis');
+          if (kpiEl) {
+            kpiEl.innerHTML = `
+              <div class="vit-card p-4 text-center">
+                <p class="text-3xl font-bold text-gray-800">${avgScore}</p>
+                <p class="text-xs text-gray-500 mt-1">Ø Activity Score</p>
+              </div>
+              <div class="vit-card p-4 text-center">
+                <p class="text-3xl font-bold text-blue-600">${avgParticipation}%</p>
+                <p class="text-xs text-gray-500 mt-1">Ø Team-Beteiligung</p>
+              </div>
+              <div class="vit-card p-4 text-center">
+                <p class="text-3xl font-bold ${bwaCount >= Math.floor(totalStandorte * 0.7) ? 'text-green-600' : 'text-yellow-500'}">${bwaCount}/${totalStandorte}</p>
+                <p class="text-xs text-gray-500 mt-1">Aktuelle BWA</p>
+              </div>
+              <div class="vit-card p-4 text-center">
+                <p class="text-3xl font-bold text-vit-orange">${avgFeatures}</p>
+                <p class="text-xs text-gray-500 mt-1">Ø Features genutzt</p>
+              </div>
+              <div class="vit-card p-4 text-center">
+                <p class="text-3xl font-bold ${inactiveCount > 3 ? 'text-red-500' : 'text-gray-500'}">${inactiveCount}</p>
+                <p class="text-xs text-gray-500 mt-1">Niedrige Aktivität</p>
+              </div>
+            `;
+          }
+          
+          // === TOP 5 ===
+          const topEl = document.getElementById('hqAuswTop');
+          if (topEl) {
+            let html = '';
+            sorted.slice(0, 5).forEach((s, index) => {
+              const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+              html += `
+                <div class="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
+                  <span class="text-sm font-bold text-gray-400 w-6">${medal || (index + 1)}</span>
+                  <div class="flex-1">
+                    <p class="text-xs font-semibold text-gray-800">${s.name}</p>
+                    <p class="text-[10px] text-gray-500">${s.active_users}/${s.user_count} User • ${s.features_used}/7 Features</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-sm font-bold text-vit-orange">${s.score}</p>
+                    <p class="text-[10px] text-gray-500">Score</p>
+                  </div>
+                </div>
+              `;
+            });
+            topEl.innerHTML = html;
+          }
+          
+          // === BOTTOM 5 ===
+          const bottomEl = document.getElementById('hqAuswBottom');
+          if (bottomEl) {
+            let html = '';
+            sorted.slice(-5).reverse().forEach((s) => {
+              const statusColor = s.score < 20 ? 'red' : s.score < 40 ? 'yellow' : 'gray';
+              html += `
+                <div class="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
+                  <div class="flex-1">
+                    <p class="text-xs font-semibold text-gray-800">${s.name}</p>
+                    <p class="text-[10px] text-gray-500">
+                      ${s.active_users}/${s.user_count} User • 
+                      ${s.latest_bwa_month ? `BWA: ${s.latest_bwa_month}` : 'Keine BWA'}
+                    </p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-sm font-bold text-${statusColor}-500">${s.score}</p>
+                    <p class="text-[10px] text-gray-500">Score</p>
+                  </div>
+                </div>
+              `;
+            });
+            bottomEl.innerHTML = html;
+          }
+          
+          // === MODUL-NUTZUNG ===
+          const moduleStats = [
+            { name: 'Kalender', count: usageData.filter(s => s.termine_30d > 0).length, icon: '📅' },
+            { name: 'Aufgaben', count: usageData.filter(s => s.todos_created_30d > 0).length, icon: '✓' },
+            { name: 'Verkauf/Pipeline', count: usageData.filter(s => s.leads_30d > 0).length, icon: '💰' },
+            { name: 'BWA/Controlling', count: usageData.filter(s => s.latest_bwa_month).length, icon: '📊' },
+            { name: 'Chat', count: usageData.filter(s => s.chat_messages_30d > 0).length, icon: '💬' },
+            { name: 'Support', count: usageData.filter(s => s.tickets_total > 0).length, icon: '🎫' },
+            { name: 'Forum', count: usageData.filter(s => s.forum_posts_30d > 0).length, icon: '📢' }
+          ];
+          
+          const moduleEl = document.getElementById('hqAuswModules');
+          if (moduleEl) {
+            let html = '';
+            moduleStats.sort((a, b) => b.count - a.count).forEach(m => {
+              const pct = Math.round((m.count / totalStandorte) * 100);
+              html += `
+                <div class="flex items-center space-x-3 py-2">
+                  <span class="text-sm w-6">${m.icon}</span>
+                  <span class="text-xs font-medium text-gray-700 w-36">${m.name}</span>
+                  <div class="flex-1 bg-gray-200 rounded-full h-2">
+                    <div class="bg-vit-orange h-2 rounded-full transition-all" style="width: ${pct}%"></div>
+                  </div>
+                  <span class="text-xs font-semibold text-gray-600 w-16 text-right">${m.count}/${totalStandorte}</span>
+                  <span class="text-xs text-gray-500 w-10 text-right">${pct}%</span>
+                </div>
+              `;
+            });
+            moduleEl.innerHTML = html;
+          }
+          
+          // === ALLE STANDORTE - SCORE BARS ===
+          const allEl = document.getElementById('hqAuswAll');
+          if (allEl) {
+            let html = '';
+            sorted.forEach(s => {
+              const maxScore = 100;
+              const widthPct = Math.min(100, (s.score / maxScore) * 100);
+              const barColor = s.score >= 70 ? 'bg-green-500' : 
+                               s.score >= 50 ? 'bg-vit-orange' : 
+                               s.score >= 30 ? 'bg-yellow-500' : 'bg-red-400';
+              
+              html += `
+                <div class="flex items-center space-x-2 py-1">
+                  <span class="text-[10px] w-32 truncate text-gray-700 font-medium">${s.name}</span>
+                  <div class="flex-1 bg-gray-200 rounded-full h-1.5">
+                    <div class="${barColor} h-1.5 rounded-full transition-all" style="width: ${widthPct}%"></div>
+                  </div>
+                  <span class="text-[10px] font-bold text-gray-800 w-8 text-right">${s.score}</span>
+                </div>
+              `;
+            });
+            allEl.innerHTML = html;
+          }
         }
 
         // === HQ WISSEN-VERWALTUNG ===
