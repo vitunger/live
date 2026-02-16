@@ -1335,7 +1335,7 @@
                                 <div class="flex items-center justify-between mb-6">
                                     <div>
                                         <div class="inline-flex items-center gap-2 mb-2 px-4 py-1.5 rounded-full" style="background:rgba(239,125,0,0.1);border:1px solid rgba(239,125,0,0.2)">
-                                            <span>\ud83c\udfa4</span>
+                                            <span>🎤</span>
                                             <span class="text-sm font-bold" style="color:#EF7D00;letter-spacing:1px">VERKAUFSTRAINER KI</span>
                                         </div>
                                         <h2 class="text-2xl font-extrabold text-gray-800 mb-1">Trainiere deine Verkaufsgespraeche</h2>
@@ -1345,7 +1345,7 @@
 
                                 <!-- Speech Support Warning -->
                                 <div id="trainingSpeechWarn" class="hidden mb-4 p-3 rounded-xl text-sm" style="background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.15);color:#b91c1c">
-                                    \u26a0\ufe0f Spracherkennung nicht verfuegbar. Du kannst per Text trainieren.
+                                    ⚠️ Spracherkennung nicht verfuegbar. Du kannst per Text trainieren.
                                 </div>
 
                                 <!-- Scenario Cards -->
@@ -1355,9 +1355,9 @@
                                 <div class="vit-card p-5" style="background:#fafafa;border:1px dashed #e5e7eb">
                                     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">So funktioniert's</p>
                                     <div class="grid grid-cols-3 gap-4 text-center">
-                                        <div><span class="text-2xl block mb-1">\ud83c\udfa4</span><p class="font-bold text-gray-800 text-xs">Sprechen</p><p class="text-[10px] text-gray-500">Druecke Mikrofon und sprich</p></div>
-                                        <div><span class="text-2xl block mb-1">\ud83e\udd16</span><p class="font-bold text-gray-800 text-xs">KI-Kunde</p><p class="text-[10px] text-gray-500">Reagiert realistisch</p></div>
-                                        <div><span class="text-2xl block mb-1">\ud83d\udcca</span><p class="font-bold text-gray-800 text-xs">Feedback</p><p class="text-[10px] text-gray-500">Detaillierte Bewertung</p></div>
+                                        <div><span class="text-2xl block mb-1">🎤</span><p class="font-bold text-gray-800 text-xs">Sprechen</p><p class="text-[10px] text-gray-500">Druecke Mikrofon und sprich</p></div>
+                                        <div><span class="text-2xl block mb-1">🤖</span><p class="font-bold text-gray-800 text-xs">KI-Kunde</p><p class="text-[10px] text-gray-500">Reagiert realistisch</p></div>
+                                        <div><span class="text-2xl block mb-1">📊</span><p class="font-bold text-gray-800 text-xs">Feedback</p><p class="text-[10px] text-gray-500">Detaillierte Bewertung</p></div>
                                     </div>
                                 </div>
                             </div>
@@ -1367,10 +1367,10 @@
                                 <!-- Session Header -->
                                 <div class="flex items-center justify-between mb-4">
                                     <div class="flex items-center gap-3">
-                                        <span id="tSessionIcon" class="text-2xl">\ud83d\ude80</span>
+                                        <span id="tSessionIcon" class="text-2xl">🚀</span>
                                         <div>
                                             <h3 id="tSessionTitle" class="font-bold text-gray-800"></h3>
-                                            <p class="text-xs text-gray-500"><span id="tSessionDiff"></span> \u2022 <span id="tSessionTimer">0:00</span></p>
+                                            <p class="text-xs text-gray-500"><span id="tSessionDiff"></span> • <span id="tSessionTimer">0:00</span></p>
                                         </div>
                                     </div>
                                     <button onclick="endTrainingSession()" id="tEndBtn" disabled class="px-4 py-2 rounded-xl text-sm font-semibold border border-red-200 text-red-400 hover:bg-red-50 disabled:opacity-40">Beenden & Bewerten</button>
@@ -1378,7 +1378,7 @@
 
                                 <!-- Scenario Hint -->
                                 <div class="mb-4 p-3 rounded-xl text-center text-xs font-semibold" style="background:rgba(239,125,0,0.06);border:1px solid rgba(239,125,0,0.12);color:#EF7D00">
-                                    \ud83d\udca1 <span id="tSessionHint"></span>
+                                    💡 <span id="tSessionHint"></span>
                                 </div>
 
                                 <!-- Chat Messages -->
@@ -1395,7 +1395,7 @@
                                 <!-- Waveform -->
                                 <div id="tWaveform" class="hidden mb-3 p-3 rounded-xl text-center" style="background:rgba(239,125,0,0.05)">
                                     <div id="tWaveBars" class="flex items-center justify-center gap-[2px] h-8 mb-1"></div>
-                                    <p id="tWaveLabel" class="text-[10px] font-semibold" style="color:#EF7D00">\ud83c\udfa4 Hoert zu...</p>
+                                    <p id="tWaveLabel" class="text-[10px] font-semibold" style="color:#EF7D00">🎤 Hoert zu...</p>
                                 </div>
 
                                 <!-- Live Transcript -->
@@ -1404,11 +1404,11 @@
                                 <!-- Input Area -->
                                 <div class="flex items-center gap-2">
                                     <input type="text" id="tTextInput" placeholder="Oder hier tippen..." class="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm" onkeydown="if(event.key==='Enter')sendTrainingText()">
-                                    <button id="tSendTextBtn" onclick="sendTrainingText()" class="hidden w-11 h-11 rounded-xl bg-vit-orange text-white font-bold text-lg" style="line-height:1">\u2191</button>
-                                    <button id="tMicBtn" onclick="toggleTrainingMic()" class="w-12 h-12 rounded-full text-white text-xl flex items-center justify-center" style="background:linear-gradient(135deg,#EF7D00,#dc6b00);box-shadow:0 4px 15px rgba(239,125,0,0.3)">\ud83c\udfa4</button>
-                                    <button id="tSendMicBtn" onclick="sendTrainingVoice()" class="hidden w-12 h-12 rounded-full text-white text-xl flex items-center justify-center" style="background:linear-gradient(135deg,#059669,#047857);box-shadow:0 4px 15px rgba(5,150,105,0.3);animation:tpulse 2s infinite">\u2713</button>
+                                    <button id="tSendTextBtn" onclick="sendTrainingText()" class="hidden w-11 h-11 rounded-xl bg-vit-orange text-white font-bold text-lg" style="line-height:1">↑</button>
+                                    <button id="tMicBtn" onclick="toggleTrainingMic()" class="w-12 h-12 rounded-full text-white text-xl flex items-center justify-center" style="background:linear-gradient(135deg,#EF7D00,#dc6b00);box-shadow:0 4px 15px rgba(239,125,0,0.3)">🎤</button>
+                                    <button id="tSendMicBtn" onclick="sendTrainingVoice()" class="hidden w-12 h-12 rounded-full text-white text-xl flex items-center justify-center" style="background:linear-gradient(135deg,#059669,#047857);box-shadow:0 4px 15px rgba(5,150,105,0.3);animation:tpulse 2s infinite">✓</button>
                                 </div>
-                                <p id="tInputHint" class="text-center text-[10px] text-gray-400 mt-2">Druecke \ud83c\udfa4 oder tippe deine Antwort</p>
+                                <p id="tInputHint" class="text-center text-[10px] text-gray-400 mt-2">Druecke 🎤 oder tippe deine Antwort</p>
                             </div>
 
                             <!-- Evaluation Screen (hidden initially) -->
@@ -1436,19 +1436,19 @@
                                 <!-- Strengths + Tips -->
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
                                     <div class="vit-card p-4 border-l-4 border-green-400">
-                                        <p class="text-[10px] font-bold text-green-600 uppercase tracking-wider mb-2">\u2705 Staerken</p>
+                                        <p class="text-[10px] font-bold text-green-600 uppercase tracking-wider mb-2">✅ Staerken</p>
                                         <div id="tStrengths" class="space-y-1"></div>
                                     </div>
                                     <div class="vit-card p-4 border-l-4" style="border-color:#EF7D00">
-                                        <p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color:#EF7D00">\ud83d\udca1 Tipps</p>
+                                        <p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color:#EF7D00">💡 Tipps</p>
                                         <div id="tImprovements" class="space-y-1"></div>
                                     </div>
                                 </div>
 
                                 <!-- Actions -->
                                 <div class="flex gap-3">
-                                    <button onclick="restartTrainingScenario()" class="flex-1 py-3 rounded-xl text-white font-bold text-sm" style="background:linear-gradient(135deg,#EF7D00,#dc6b00)">\ud83d\udd04 Nochmal ueben</button>
-                                    <button onclick="backToTrainingMenu()" class="flex-1 py-3 rounded-xl font-bold text-sm text-gray-600 border border-gray-200 hover:bg-gray-50">\u2190 Szenarien</button>
+                                    <button onclick="restartTrainingScenario()" class="flex-1 py-3 rounded-xl text-white font-bold text-sm" style="background:linear-gradient(135deg,#EF7D00,#dc6b00)">🔄 Nochmal ueben</button>
+                                    <button onclick="backToTrainingMenu()" class="flex-1 py-3 rounded-xl font-bold text-sm text-gray-600 border border-gray-200 hover:bg-gray-50">← Szenarien</button>
                                 </div>
                             </div>
                         </div>
@@ -6075,7 +6075,7 @@
         function showChangePasswordModal() {
             var html = '<div id="changePwOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
             html += '<div style="background:white;border-radius:16px;padding:28px;width:420px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
-            html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">\uD83D\uDD12 '+t('pw_change_title')+'</h3></div>';
+            html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">🔒 '+t('pw_change_title')+'</h3></div>';
             html += '<p class="text-sm text-gray-500 mb-4">'+t('pw_change_desc')+'</p>';
             html += '<input id="newPw1" type="password" class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm mb-3" placeholder="'+t('pw_change_new')+'">';
             html += '<input id="newPw2" type="password" class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm mb-3" placeholder="'+t('pw_change_repeat')+'">';
@@ -7045,13 +7045,13 @@
                 if(resp.error) throw resp.error;
                 var anns = resp.data || [];
                 var html = '';
-                var icons = {news:'\uD83D\uDCE2',event:'\uD83D\uDCC5',schulung:'\uD83C\uDF93',marketing:'\uD83D\uDCE3',sortiment:'\uD83D\uDEB2',preise:'\uD83D\uDCB0',it:'\uD83D\uDCBB'};
+                var icons = {news:'📢',event:'📅',schulung:'🎓',marketing:'📣',sortiment:'🚲',preise:'💰',it:'💻'};
                 anns.forEach(function(a) {
                     var d = new Date(a.created_at);
                     var dateStr = d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
                     html += '<div class="vit-card p-5 ' + (a.wichtig ? 'border-l-4 border-vit-orange' : '') + '">';
                     html += '<div class="flex items-start space-x-4">';
-                    html += '<div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">' + (icons[a.kategorie]||'\uD83D\uDCE2') + '</div>';
+                    html += '<div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">' + (icons[a.kategorie]||'📢') + '</div>';
                     html += '<div class="flex-1">';
                     html += '<div class="flex items-center justify-between">';
                     html += '<div class="flex items-center space-x-2 mb-1">';
@@ -7062,7 +7062,7 @@
                     if(isHQ) {
                         html += '<div class="flex space-x-1">';
                         html += '<button onclick="editAnkuendigung(\''+a.id+'\',\''+a.titel.replace(/'/g,"\\\'")+'\',\''+a.kategorie+'\','+a.wichtig+')" class="text-xs px-2 py-1 text-gray-400 hover:text-blue-600" title="Bearbeiten">\u270F\uFE0F</button>';
-                        html += '<button onclick="deleteAnkuendigung(\''+a.id+'\')" class="text-xs px-2 py-1 text-gray-400 hover:text-red-600" title="L\u00f6schen">\uD83D\uDDD1\uFE0F</button>';
+                        html += '<button onclick="deleteAnkuendigung(\''+a.id+'\')" class="text-xs px-2 py-1 text-gray-400 hover:text-red-600" title="L\u00f6schen">🗑\uFE0F</button>';
                         html += '</div>';
                     }
                     html += '</div>';
@@ -7559,7 +7559,7 @@
         function openDokUploadModal() {
             var html = '<div id="dokUpOverlay" onclick="closeDokUpModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
             html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:480px;max-width:95vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
-            html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">\uD83D\uDCC4 Dokument hochladen</h3><button onclick="closeDokUpModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
+            html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">📄 Dokument hochladen</h3><button onclick="closeDokUpModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
             html += '<div class="space-y-3 mb-4">';
             html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Titel *</label><input id="dokUpTitel" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="z.B. Richtlinie Preisgestaltung"></div>';
             html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Kategorie</label><select id="dokUpKat" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="richtlinie">Richtlinie</option><option value="vorlage">Vorlage</option><option value="schulung">Schulung</option><option value="vertrag">Vertrag</option><option value="sonstiges">Sonstiges</option></select></div>';
@@ -8965,7 +8965,7 @@
             var sellers=Object.values(sellerMap).sort(function(a,b){return b.umsatz-a.umsatz;});
             var rankEl=document.getElementById('ausRanking');
             if(rankEl && sellers.length>0){
-                var medals=['\ud83e\udd47','\ud83e\udd48','\ud83e\udd49'];
+                var medals=['🥇','🥈','🥉'];
                 var colors=['border-2 border-yellow-400 bg-yellow-50','border-2 border-gray-300 bg-gray-50','border-2 border-orange-300 bg-orange-50'];
                 var rh='';
                 sellers.slice(0,8).forEach(function(s,i){
@@ -9748,7 +9748,7 @@
                 var html = '';
                 var statusColors = {offen:'bg-yellow-100 text-yellow-700',in_bearbeitung:'bg-blue-100 text-blue-700',warten:'bg-gray-100 text-gray-700',geloest:'bg-green-100 text-green-700'};
                 var statusLabels = {offen:'Offen',in_bearbeitung:'In Bearbeitung',warten:'Wartend',geloest:'Gel\u00f6st'};
-                var prioIcons = {dringend:'\uD83D\uDD34',hoch:'\uD83D\uDFE0',mittel:'\uD83D\uDFE1',niedrig:'\u26AA'};
+                var prioIcons = {dringend:'🔴',hoch:'🟠',mittel:'🟡',niedrig:'\u26AA'};
                 tickets.forEach(function(t) {
                     var d = new Date(t.created_at);
                     var desc = (t.beschreibung||'').length > 120 ? t.beschreibung.substring(0,120)+'...' : (t.beschreibung||'');
@@ -9763,7 +9763,7 @@
                     html += '<div class="flex items-center space-x-3 mt-2 text-xs text-gray-400">';
                     html += '<span>' + d.toLocaleDateString('de-DE') + '</span>';
                     html += '<span>' + (t.kategorie||'') + '</span>';
-                    if(t.users && t.users.name) html += '<span>\uD83D\uDC64 '+t.users.name+'</span>';
+                    if(t.users && t.users.name) html += '<span>👤 '+t.users.name+'</span>';
                     html += '</div></div>';
                     html += '<span class="text-gray-300 text-lg ml-2">\u203A</span>';
                     html += '</div></div>';
@@ -9783,7 +9783,7 @@
 
                 var statusLabels = {offen:'Offen',in_bearbeitung:'In Bearbeitung',warten:'Wartend',geloest:'Gel\u00f6st'};
                 var statusColors = {offen:'bg-yellow-100 text-yellow-700',in_bearbeitung:'bg-blue-100 text-blue-700',warten:'bg-gray-100 text-gray-700',geloest:'bg-green-100 text-green-700'};
-                var prioIcons = {dringend:'\uD83D\uDD34',hoch:'\uD83D\uDFE0',mittel:'\uD83D\uDFE1',niedrig:'\u26AA'};
+                var prioIcons = {dringend:'🔴',hoch:'🟠',mittel:'🟡',niedrig:'\u26AA'};
                 var d = new Date(t.created_at);
                 var isHQ = sbProfile && sbProfile.is_hq;
 
@@ -10019,7 +10019,7 @@
                     html += '<span class="text-xs text-gray-400">' + authorName + ' \u00b7 ' + datum + '</span>';
                     html += '</div></div></div>';
                 });
-                if(ideas.length===0) html = '<div class="text-center py-8 text-gray-400">Noch keine Ideen — sei der Erste! \ud83d\udca1</div>';
+                if(ideas.length===0) html = '<div class="text-center py-8 text-gray-400">Noch keine Ideen — sei der Erste! 💡</div>';
                 container.innerHTML = html;
             } catch(err) { console.error('Ideen:', err); container.innerHTML='<div class="text-center py-4 text-red-400">Fehler: '+err.message+'</div>'; }
         }
@@ -11218,8 +11218,8 @@
 
             var el=document.getElementById('todoList');if(!el)return;
             var h='';
-            var prioIcons={hoch:'\uD83D\uDD34',dringend:'\uD83D\uDD34',normal:'\uD83D\uDFE1',niedrig:'\uD83D\uDFE2'};
-            var katIcons={verkauf:'\uD83D\uDCB0',werkstatt:'\uD83D\uDD27',marketing:'\uD83D\uDCE3',admin:'\uD83D\uDCCB',sonstig:'\uD83D\uDCCC'};
+            var prioIcons={hoch:'🔴',dringend:'🔴',normal:'🟡',niedrig:'🟢'};
+            var katIcons={verkauf:'💰',werkstatt:'🔧',marketing:'📣',admin:'📋',sonstig:'📌'};
             var katLabels={verkauf:t('cat_sales'),werkstatt:t('cat_workshop'),marketing:t('cat_marketing'),admin:t('cat_admin'),sonstig:t('cat_other')};
             var prioSort={dringend:-1,hoch:0,normal:1,niedrig:2};
             list.sort(function(a,b){return (prioSort[a.prio]||1)-(prioSort[b.prio]||1);});
@@ -11235,8 +11235,8 @@
                 h+='</button>';
                 h+='<div class="flex-1 min-w-0">';
                 h+='<div class="flex items-center space-x-1.5">';
-                if(isSystem) h+='<span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-600 font-bold">\uD83E\uDD16 '+t('todo_system')+'</span>';
-                if(isEscalated) h+='<span class="text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-600 font-bold">\uD83D\uDD25 '+t('prio_urgent')+'</span>';
+                if(isSystem) h+='<span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-600 font-bold">🤖 '+t('todo_system')+'</span>';
+                if(isEscalated) h+='<span class="text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-600 font-bold">🔥 '+t('prio_urgent')+'</span>';
                 h+='</div>';
                 h+='<p class="font-semibold text-sm '+(td.erledigt?'line-through text-gray-400':'text-gray-800')+'">'+td.titel+'</p>';
                 h+='<p class="text-[10px] text-gray-500 mt-0.5">'+(katIcons[td.kategorie]||'')+' '+(katLabels[td.kategorie]||td.kategorie||'')+' \u00B7 '+t('todo_due')+': '+fmtDate+(isOver?' <span class="text-red-500 font-bold">'+t('todo_overdue')+'</span>':'')+'</p>';
@@ -11489,7 +11489,7 @@
             });
 
             var colors = ['bg-blue-50 border-blue-300 text-blue-800','bg-yellow-50 border-yellow-300 text-yellow-800','bg-orange-50 border-orange-400 text-orange-800','bg-red-50 border-red-400 text-red-800'];
-            var icons = ['\u2139\uFE0F','\u26A0\uFE0F','\uD83D\uDD25','\uD83D\uDEA8'];
+            var icons = ['\u2139\uFE0F','\u26A0\uFE0F','🔥','🚨'];
             var msgKeys = ['bwa_banner_info','bwa_banner_warn','bwa_banner_urgent','bwa_banner_overdue'];
 
             var banner = document.createElement('div');
@@ -11561,7 +11561,7 @@
         function openAnkuendigungModal() {
             var html = '<div id="ankOverlay" onclick="closeAnkModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
             html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
-            html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">\uD83D\uDCE2 Neue Ankuendigung</h3><button onclick="closeAnkModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
+            html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">📢 Neue Ankuendigung</h3><button onclick="closeAnkModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
             html += '<div class="space-y-3 mb-4">';
             html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Titel *</label><input id="ankTitel" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="z.B. Neue Preisliste ab Maerz"></div>';
             html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Kategorie</label><select id="ankKat" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="news">News</option><option value="event">Event</option><option value="schulung">Schulung</option><option value="marketing">Marketing</option><option value="sortiment">Sortiment</option><option value="preise">Preise</option><option value="it">IT</option></select></div>';
@@ -11751,7 +11751,7 @@
 
             var el=document.getElementById('hqDokList');if(!el)return;
             var h='';
-            var katIcons={richtlinie:'\uD83D\uDCCB',vorlage:'\uD83D\uDCC4',schulung:'\uD83C\uDF93',vertrag:'\uD83D\uDCD1',sonstiges:'\uD83D\uDCC1'};
+            var katIcons={richtlinie:'📋',vorlage:'📄',schulung:'🎓',vertrag:'📑',sonstiges:'📁'};
             list.forEach(function(d){
                 var kat = isFromDb ? d.kategorie : d.kat;
                 var name = isFromDb ? d.titel : d.name;
@@ -11762,7 +11762,7 @@
                 var typeColors={PDF:'bg-red-100 text-red-600',XLSX:'bg-green-100 text-green-700',DOCX:'bg-blue-100 text-blue-700',MP4:'bg-purple-100 text-purple-700',PNG:'bg-pink-100 text-pink-600',JPG:'bg-pink-100 text-pink-600'};
 
                 h+='<div class="vit-card p-3 flex items-center space-x-3">';
-                h+='<span class="text-2xl">'+(katIcons[kat]||'\uD83D\uDCC1')+'</span>';
+                h+='<span class="text-2xl">'+(katIcons[kat]||'📁')+'</span>';
                 h+='<div class="flex-1 min-w-0"><p class="font-semibold text-sm text-gray-800 truncate">'+name+'</p>';
                 h+='<p class="text-[10px] text-gray-500">'+dateStr+' \u00B7 '+sizeStr;
                 if(isFromDb && d.users && d.users.name) h+=' \u00B7 '+d.users.name;
@@ -12157,7 +12157,7 @@
                     h+='<div class="p-4 bg-gray-50 rounded-lg">';
                     h+='<div class="flex items-center justify-between mb-2">';
                     h+='<div class="flex items-center space-x-3">';
-                    h+='<span class="text-lg font-bold text-vit-orange">\ud83d\udc4d '+(idee.votes||0)+'</span>';
+                    h+='<span class="text-lg font-bold text-vit-orange">👍 '+(idee.votes||0)+'</span>';
                     h+='<span class="text-xs px-2 py-0.5 rounded-full font-semibold '+(statusC[idee.status]||'bg-gray-100 text-gray-600')+'">'+(statusL[idee.status]||idee.status)+'</span>';
                     h+='<select onchange="updateIdeeStatus(\''+idee.id+'\',this.value)" class="text-xs border border-gray-200 rounded px-1 py-0.5">';
                     ['neu','wird_geprueft','geplant','umgesetzt','abgelehnt'].forEach(function(s){
@@ -12167,7 +12167,7 @@
                     h+='<span class="text-xs text-gray-400">'+d+'</span></div>';
                     h+='<p class="text-sm font-semibold text-gray-800">'+idee.titel+'</p>';
                     if(idee.beschreibung) h+='<p class="text-xs text-gray-600 mt-1">'+idee.beschreibung+'</p>';
-                    h+='<p class="text-xs text-gray-400 mt-1">\ud83d\udca1 '+authorName+' \u00b7 \ud83d\udccd '+standortName+'</p>';
+                    h+='<p class="text-xs text-gray-400 mt-1">💡 '+authorName+' \u00b7 📍 '+standortName+'</p>';
                     h+='</div>';
                 });
                 if(ideas.length===0) h='<div class="text-center py-4 text-gray-400">Noch keine Ideen eingereicht.</div>';
@@ -12408,8 +12408,8 @@
             html += '<div class="space-y-3 mb-4">';
             html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Ebene</label>';
             html += '<div class="flex space-x-2">';
-            html += '<button type="button" id="approveEbeneHQ" onclick="switchApproveEbene(\'hq\')" class="flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-gray-200 bg-white text-gray-500 hover:border-gray-300">\ud83c\udfe2 HQ</button>';
-            html += '<button type="button" id="approveEbeneStd" onclick="switchApproveEbene(\'standort\')" class="flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-vit-orange bg-orange-50 text-orange-700">\ud83c\udfea Standort</button>';
+            html += '<button type="button" id="approveEbeneHQ" onclick="switchApproveEbene(\'hq\')" class="flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-gray-200 bg-white text-gray-500 hover:border-gray-300">🏢 HQ</button>';
+            html += '<button type="button" id="approveEbeneStd" onclick="switchApproveEbene(\'standort\')" class="flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-vit-orange bg-orange-50 text-orange-700">🏪 Standort</button>';
             html += '</div></div>';
             
             // Standort Dropdown
@@ -12730,8 +12730,8 @@
             if(isHQ) {
                 html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Ebene</label>';
                 html += '<div class="flex space-x-2">';
-                html += '<button type="button" id="newMaEbeneHQ" onclick="switchNewMaEbene(\'hq\')" class="flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-gray-200 bg-white text-gray-500 hover:border-gray-300">\ud83c\udfe2 HQ</button>';
-                html += '<button type="button" id="newMaEbeneStd" onclick="switchNewMaEbene(\'standort\')" class="flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-vit-orange bg-orange-50 text-orange-700">\ud83c\udfea Standort</button>';
+                html += '<button type="button" id="newMaEbeneHQ" onclick="switchNewMaEbene(\'hq\')" class="flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-gray-200 bg-white text-gray-500 hover:border-gray-300">🏢 HQ</button>';
+                html += '<button type="button" id="newMaEbeneStd" onclick="switchNewMaEbene(\'standort\')" class="flex-1 py-2.5 rounded-lg text-sm font-semibold border-2 transition border-vit-orange bg-orange-50 text-orange-700">🏪 Standort</button>';
                 html += '</div></div>';
             }
 
@@ -12769,7 +12769,7 @@
             });
             html += '</div>';
 
-            if(!isHQ) { html += '<p class="text-xs text-blue-600 bg-blue-50 rounded-lg p-2 mt-2">\ud83d\udccd Mitarbeiter wird deinem Standort zugeordnet.</p>'; }
+            if(!isHQ) { html += '<p class="text-xs text-blue-600 bg-blue-50 rounded-lg p-2 mt-2">📍 Mitarbeiter wird deinem Standort zugeordnet.</p>'; }
             html += '<div id="newMaError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mt-3"></div>';
             html += '<div class="flex space-x-3 mt-4"><button id="newMaSaveBtn" onclick="saveNeuerMa()" class="flex-1 py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Anlegen</button>';
             html += '<button onclick="closeNeuerMaModal()" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-semibold text-sm hover:bg-gray-200">Abbrechen</button></div>';
@@ -13452,7 +13452,7 @@
                 bwa_reminder_title:'BWA {monat} {jahr} einreichen',
                 bwa_reminder_desc:'Die BWA f\u00fcr {monat} {jahr} muss bis zum {deadline} eingereicht werden. Bitte im Bereich Controlling hochladen.',
                 bwa_reminder_urgent:'\u26A0\uFE0F DRINGEND: Die Deadline ist in wenigen Tagen!',
-                bwa_reminder_overdue:'\uD83D\uDEA8 \u00dcBERF\u00c4LLIG! Bitte umgehend einreichen. Das HQ wird benachrichtigt.',
+                bwa_reminder_overdue:'🚨 \u00dcBERF\u00c4LLIG! Bitte umgehend einreichen. Das HQ wird benachrichtigt.',
                 bwa_banner_info:'BWA-Erinnerung: Bitte einreichen.',
                 bwa_banner_warn:'BWA-Erinnerung: Deadline naht!',
                 bwa_banner_urgent:'BWA dringend einreichen!',
@@ -13584,7 +13584,7 @@
                 bwa_reminder_title:'Submit BWA {monat} {jahr}',
                 bwa_reminder_desc:'The BWA for {monat} {jahr} must be submitted by {deadline}. Please upload in the Controlling section.',
                 bwa_reminder_urgent:'\u26A0\uFE0F URGENT: The deadline is in a few days!',
-                bwa_reminder_overdue:'\uD83D\uDEA8 OVERDUE! Please submit immediately. HQ will be notified.',
+                bwa_reminder_overdue:'🚨 OVERDUE! Please submit immediately. HQ will be notified.',
                 bwa_banner_info:'BWA reminder: Please submit.',
                 bwa_banner_warn:'BWA reminder: Deadline approaching!',
                 bwa_banner_urgent:'Submit BWA urgently!',
@@ -13720,7 +13720,7 @@
                 bwa_reminder_title:'BWA {monat} {jahr} indienen',
                 bwa_reminder_desc:'De BWA voor {monat} {jahr} moet voor {deadline} ingediend worden. Upload in het onderdeel Controlling.',
                 bwa_reminder_urgent:'\u26A0\uFE0F DRINGEND: De deadline is over een paar dagen!',
-                bwa_reminder_overdue:'\uD83D\uDEA8 TE LAAT! Dien zo snel mogelijk in. HQ wordt ge\u00efnformeerd.',
+                bwa_reminder_overdue:'🚨 TE LAAT! Dien zo snel mogelijk in. HQ wordt ge\u00efnformeerd.',
                 bwa_banner_info:'BWA-herinnering: Gelieve in te dienen.',
                 bwa_banner_warn:'BWA-herinnering: Deadline nadert!',
                 bwa_banner_urgent:'BWA dringend indienen!',
@@ -13870,7 +13870,7 @@
                 var positionen = shopCart.map(function(c){ return {bestellung_id:orderResp.data.id, produkt_id:c.id, menge:c.menge, einzelpreis:c.preis}; });
                 await sb.from('shop_positionen').insert(positionen);
                 shopCart = [];
-                alert('Bestellung erfolgreich! \ud83c\udf89');
+                alert('Bestellung erfolgreich! 🎉');
                 renderShop();
             } catch(err) { alert('Fehler: '+err.message); }
         }
@@ -14124,36 +14124,36 @@
         }
 
         // === TOAST SYSTEM ===
-        function showToast(msg,type,dur){type=type||'info';dur=dur||3000;var c=document.getElementById('toastContainer');if(!c)return;var icons={success:'\u2705',error:'\u274c',info:'\u2139\ufe0f',warning:'\u26a0\ufe0f'};var t=document.createElement('div');t.className='toast '+type;t.innerHTML='<span>'+(icons[type]||'')+'</span><span>'+msg+'</span>';c.appendChild(t);setTimeout(function(){t.classList.add('show')},10);setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove()},300)},dur);}
+        function showToast(msg,type,dur){type=type||'info';dur=dur||3000;var c=document.getElementById('toastContainer');if(!c)return;var icons={success:'✅',error:'❌',info:'ℹ️',warning:'⚠️'};var t=document.createElement('div');t.className='toast '+type;t.innerHTML='<span>'+(icons[type]||'')+'</span><span>'+msg+'</span>';c.appendChild(t);setTimeout(function(){t.classList.add('show')},10);setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove()},300)},dur);}
 
         // === SKELETON LOADING ===
         function showSkeleton(id,n){n=n||3;var el=document.getElementById(id);if(!el)return;var h='';for(var i=0;i<n;i++)h+='<div class="vit-card p-5 mb-3"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-text" style="width:80%"></div><div class="skeleton skeleton-text" style="width:60%"></div></div>';el.innerHTML=h;}
 
         // === GLOBAL SEARCH (Ctrl+K) ===
         var SEARCH_INDEX=[
-            {name:'Startseite',desc:'Dashboard & Widgets',icon:'\ud83c\udfe0',view:'home',cat:'Navigation'},
-            {name:'Kalender',desc:'Termine & Probefahrten',icon:'\ud83d\udcc5',view:'kalender',cat:'Navigation'},
-            {name:'Aufgaben',desc:'Todos & Aufgabenliste',icon:'\u2705',view:'todo',cat:'Navigation'},
-            {name:'Kommunikation',desc:'Inbox, Forum, Brett',icon:'\ud83d\udcac',view:'kommunikation',cat:'Navigation'},
-            {name:'Verkauf',desc:'Pipeline, Wochenansicht',icon:'\ud83d\udcb0',view:'verkauf',cat:'Navigation'},
-            {name:'Einkauf',desc:'Lieferanten & Auswertung',icon:'\ud83d\uded2',view:'einkauf',cat:'Navigation'},
-            {name:'Marketing',desc:'Social Media, Kampagnen',icon:'\ud83d\udce3',view:'marketing',cat:'Navigation'},
-            {name:'Controlling',desc:'BWA, Benchmarks',icon:'\ud83d\udcc8',view:'controlling',cat:'Navigation'},
-            {name:'Wissen',desc:'Akademie, FAQ',icon:'\ud83d\udcda',view:'wissen',cat:'Navigation'},
-            {name:'Support',desc:'Tickets & Kontakte',icon:'\ud83d\udee0\ufe0f',view:'support',cat:'Navigation'},
-            {name:'Ideenboard',desc:'Ideen & Abstimmungen',icon:'\ud83d\udca1',view:'ideenboard',cat:'Navigation'},
-            {name:'Shop',desc:'Werbemittel bestellen',icon:'\ud83d\udecd\ufe0f',view:'shop',cat:'Navigation'},
-            {name:'Aktenschrank',desc:'Dokumente & Dateien',icon:'\ud83d\udcc1',view:'aktenschrank',cat:'Navigation'},
-            {name:'Onboarding',desc:'Checklisten',icon:'\ud83c\udf93',view:'onboarding',cat:'Navigation'},
-            {name:'Mitarbeiter',desc:'Team-Verwaltung',icon:'\ud83d\udc65',view:'mitarbeiter',cat:'Navigation'},
-            {name:'HQ Cockpit',desc:'Netzwerk-Uebersicht',icon:'\ud83c\udf10',view:'hqCockpit',cat:'HQ'},
-            {name:'HQ Kommandozentrale',desc:'Standorte & MA',icon:'\ud83c\udfdb\ufe0f',view:'hqKommando',cat:'HQ'},
-            {name:'HQ Finanzen',desc:'Netzwerk-Finanzen',icon:'\ud83d\udcb6',view:'hqFinanzen',cat:'HQ'},
-            {name:'Dev-Status',desc:'Entwicklungsstand',icon:'\ud83d\udee0\ufe0f',view:'devStatus',cat:'System'},
-            {name:'Verkaufstraining',desc:'KI-Kundengespraeche ueben',icon:'\ud83c\udfa4',action:function(){showView('verkauf');showVerkaufTab('training');},cat:'Aktionen'},
-            {name:'Neuer Lead',desc:'Pipeline oeffnen',icon:'\u2795',action:function(){showView('verkauf');showNewLeadModal();},cat:'Aktionen'},
-            {name:'Neue Aufgabe',desc:'Todo erstellen',icon:'\u2705',action:function(){showView('todo');document.getElementById('todoNewModal').classList.remove('hidden');},cat:'Aktionen'},
-            {name:'Abmelden',desc:'Ausloggen',icon:'\ud83d\udeaa',action:function(){handleLogout();},cat:'Einstellungen'},
+            {name:'Startseite',desc:'Dashboard & Widgets',icon:'🏠',view:'home',cat:'Navigation'},
+            {name:'Kalender',desc:'Termine & Probefahrten',icon:'📅',view:'kalender',cat:'Navigation'},
+            {name:'Aufgaben',desc:'Todos & Aufgabenliste',icon:'✅',view:'todo',cat:'Navigation'},
+            {name:'Kommunikation',desc:'Inbox, Forum, Brett',icon:'💬',view:'kommunikation',cat:'Navigation'},
+            {name:'Verkauf',desc:'Pipeline, Wochenansicht',icon:'💰',view:'verkauf',cat:'Navigation'},
+            {name:'Einkauf',desc:'Lieferanten & Auswertung',icon:'🛒',view:'einkauf',cat:'Navigation'},
+            {name:'Marketing',desc:'Social Media, Kampagnen',icon:'📣',view:'marketing',cat:'Navigation'},
+            {name:'Controlling',desc:'BWA, Benchmarks',icon:'📈',view:'controlling',cat:'Navigation'},
+            {name:'Wissen',desc:'Akademie, FAQ',icon:'📚',view:'wissen',cat:'Navigation'},
+            {name:'Support',desc:'Tickets & Kontakte',icon:'🛠️',view:'support',cat:'Navigation'},
+            {name:'Ideenboard',desc:'Ideen & Abstimmungen',icon:'💡',view:'ideenboard',cat:'Navigation'},
+            {name:'Shop',desc:'Werbemittel bestellen',icon:'🛍️',view:'shop',cat:'Navigation'},
+            {name:'Aktenschrank',desc:'Dokumente & Dateien',icon:'📁',view:'aktenschrank',cat:'Navigation'},
+            {name:'Onboarding',desc:'Checklisten',icon:'🎓',view:'onboarding',cat:'Navigation'},
+            {name:'Mitarbeiter',desc:'Team-Verwaltung',icon:'👥',view:'mitarbeiter',cat:'Navigation'},
+            {name:'HQ Cockpit',desc:'Netzwerk-Uebersicht',icon:'🌐',view:'hqCockpit',cat:'HQ'},
+            {name:'HQ Kommandozentrale',desc:'Standorte & MA',icon:'🏛️',view:'hqKommando',cat:'HQ'},
+            {name:'HQ Finanzen',desc:'Netzwerk-Finanzen',icon:'💶',view:'hqFinanzen',cat:'HQ'},
+            {name:'Dev-Status',desc:'Entwicklungsstand',icon:'🛠️',view:'devStatus',cat:'System'},
+            {name:'Verkaufstraining',desc:'KI-Kundengespraeche ueben',icon:'🎤',action:function(){showView('verkauf');showVerkaufTab('training');},cat:'Aktionen'},
+            {name:'Neuer Lead',desc:'Pipeline oeffnen',icon:'➕',action:function(){showView('verkauf');showNewLeadModal();},cat:'Aktionen'},
+            {name:'Neue Aufgabe',desc:'Todo erstellen',icon:'✅',action:function(){showView('todo');document.getElementById('todoNewModal').classList.remove('hidden');},cat:'Aktionen'},
+            {name:'Abmelden',desc:'Ausloggen',icon:'🚪',action:function(){handleLogout();},cat:'Einstellungen'},
         ];
         var searchSelIdx=0;
         function openGlobalSearch(){var o=document.getElementById('searchOverlay');if(!o)return;o.classList.add('active');var inp=document.getElementById('globalSearchInput');if(inp){inp.value='';inp.focus();}filterGlobalSearch('');}
@@ -14471,41 +14471,168 @@
         
         
 
+        
         // ============================================================
-        // === VERKAUFSTRAINING KI ENGINE ===
+        // === VERKAUFSTRAINING KI ENGINE (Local Simulation) ===
         // ============================================================
+
         var TRAIN_SCENARIOS = [
             {
-                id:'ebike_beratung', title:'E-Bike Erstberatung', icon:'\ud83d\udeb2', difficulty:'Einsteiger', diffColor:'#059669',
-                desc:'Kunde interessiert sich fuer ein E-Bike, ist unsicher und braucht Beratung.',
-                system:'Du spielst einen Kunden in einem Fahrradladen (vit:bikes). Du heisst Thomas Mueller, bist 52 Jahre alt, und ueberlegst dir ein E-Bike zu kaufen.\n\nDeine Persoenlichkeit:\n- Freundlich aber zurueckhaltend\n- Wenig Ahnung von E-Bikes, Anfaengerfragen\n- Budget ca. 3.000-4.000 EUR, nennst es nicht sofort\n- Pendelst 12km zur Arbeit, willst Auto ersetzen\n- Bedenken: Akku-Reichweite, Diebstahl\n- Laesst dich von guter Beratung ueberzeugen\n\nAntworte kurz (1-3 Saetze), natuerlich, stelle Gegenfragen. WICHTIG: Du bist der KUNDE.',
-                opener:'Hallo! Ich schau mich mal ein bisschen um... Ich ueberlege mir eventuell ein E-Bike anzuschaffen, aber ich bin mir noch nicht so sicher.',
-                criteria:['Bedarfsermittlung','Produktwissen','Einwandbehandlung','Abschlusstechnik','Kundenfreundlichkeit']
+                id:'ebike_beratung', title:'E-Bike Erstberatung', icon:'🚲', difficulty:'Einsteiger', diffColor:'#059669',
+                desc:'Kunde interessiert sich für ein E-Bike, ist unsicher und braucht Beratung.',
+                opener:'Hallo! Ich schau mich mal ein bisschen um... Ich überlege mir eventuell ein E-Bike anzuschaffen, aber ich bin mir noch nicht so sicher.',
+                criteria:['Bedarfsermittlung','Produktwissen','Einwandbehandlung','Abschlusstechnik','Kundenfreundlichkeit'],
+                customer:'Thomas Müller, 52 Jahre, Pendler (12km), Budget 3-4k',
+                responses:[
+                    {phase:'start', triggers:['willkommen','hallo','guten tag','herzlich','grüß','schön dass','freut mich','kann ich','darf ich','helfen','beratung','was suchen'],
+                     replies:['Danke! Ja, ich pendel jeden Tag 12 Kilometer zur Arbeit und dachte, vielleicht wäre ein E-Bike eine Alternative zum Auto.','Danke, ja genau. Ich fahre täglich zur Arbeit, so 12 Kilometer einfach. Da kam mir die Idee mit dem E-Bike.'],
+                     score:{kundenfreundlichkeit:15}},
+                    {phase:'bedarf', triggers:['wie weit','strecke','kilometer','wohin','wofür','nutzen','fahren','pendel','alltag','einsatz','gelände','stadt','weg','route'],
+                     replies:['Also hauptsächlich für den Arbeitsweg. 12 Kilometer einfach, größtenteils Radweg, ein paar Steigungen sind dabei. Und am Wochenende vielleicht mal eine Tour mit meiner Frau.','Der Arbeitsweg ist 12km, relativ flach mit zwei kleinen Hügeln. Gibt es da einen großen Unterschied bei den Motoren?'],
+                     score:{bedarfsermittlung:20}},
+                    {phase:'budget', triggers:['budget','preis','kosten','ausgeben','vorstellung','preislich','investieren','preisklasse','euro','geld','wert'],
+                     replies:['So zwischen 3.000 und 4.000 Euro hatte ich mir gedacht. Ist das realistisch für ein gutes E-Bike?','Hmm, ich hatte so an 3.000 bis 4.000 gedacht. Kriegt man da was Vernünftiges?'],
+                     score:{bedarfsermittlung:15}},
+                    {phase:'produkt', triggers:['motor','bosch','shimano','akku','reichweite','watt','nm','drehmoment','antrieb','mittelmotor','hinterrad','schaltung','gang','bremse','federung','rahmen','gewicht','kilo'],
+                     replies:['Bosch kenne ich vom Hören. Wie weit kommt man denn mit einer Akkuladung? Meine Strecke ist ja 24km hin und zurück.','Das klingt schon gut. Und wie ist das mit der Reichweite? Ich will nicht auf halber Strecke stehen bleiben!'],
+                     score:{produktwissen:20}},
+                    {phase:'einwand_akku', triggers:['reichweite','laden','akku','batterie','strom','ladezeit','km','kilometer','weit','laden'],
+                     replies:['80 bis 120 Kilometer? Das reicht ja locker für die ganze Woche! Muss man den Akku komplett leerfahren oder kann man auch zwischendurch laden?','Ok, das beruhigt mich. Wie lange hält so ein Akku eigentlich, bevor man ihn tauschen muss?'],
+                     score:{einwandbehandlung:15}},
+                    {phase:'einwand_diebstahl', triggers:['diebstahl','sicher','schloss','versicherung','stehlen','abschließen','geklaut','angst','keller','garage','dieb'],
+                     replies:['Ja, das ist bei mir ein großes Thema. Bei der Arbeit steht das Rad draußen. Was empfehlen Sie da?','Guter Punkt! Auf der Arbeit gibt es nur einen normalen Fahrradständer draußen. Gibt es gute Schlösser oder eine Versicherung?'],
+                     score:{einwandbehandlung:20}},
+                    {phase:'probefahrt', triggers:['probefahrt','testen','ausprobieren','mal drauf','fahren','sitzen','test','probe','aufsteigen','mal setzen'],
+                     replies:['Ja, sehr gerne! Das würde mir die Entscheidung bestimmt leichter machen.','Probefahrt wäre super! Dann merke ich ja, ob mir das Fahrgefühl taugt.'],
+                     score:{abschlusstechnik:20}},
+                    {phase:'vergleich', triggers:['unterschied','vergleich','besser','oder','modell','empfehl','welches','tipp','vorschlag','favorit','top','best'],
+                     replies:['Und was würden Sie mir konkret empfehlen? Also welches Modell für meinen Einsatz?','Haben Sie einen persönlichen Favoriten für Pendler in meiner Preisklasse?'],
+                     score:{produktwissen:15}},
+                    {phase:'abschluss', triggers:['bestellen','kaufen','nehmen','haben','reservieren','lieferzeit','verfügbar','mitnehmen','wann','finanzierung','leasing','jobrad'],
+                     replies:['Das klingt wirklich gut. Wie sieht es mit der Verfügbarkeit aus? Und bieten Sie auch Finanzierung an?','Ich bin ziemlich überzeugt. Gibt es die Möglichkeit, das über JobRad zu machen? Mein Arbeitgeber bietet das an.'],
+                     score:{abschlusstechnik:25}},
+                    {phase:'positiv', triggers:['gut','super','toll','klasse','prima','perfekt','genau','richtig','stimmt','interessant','klingt gut','spannend'],
+                     replies:['Ja, das klingt wirklich überzeugend. Haben Sie noch weitere Tipps für E-Bike-Einsteiger?','Super, danke für die Info! Was sollte ich noch wissen, bevor ich mich entscheide?'],
+                     score:{kundenfreundlichkeit:10}},
+                    {phase:'negativ', triggers:['teuer','viel geld','überlegen','nochmal drüber','frau fragen','weiß nicht','unsicher','schwierig','hmm','naja'],
+                     replies:['Hmm, das ist schon eine Menge Geld. Lohnt sich das wirklich gegenüber dem Auto?','Ich muss da nochmal drüber nachdenken. Kann ich ein Angebot mitnehmen?'],
+                     score:{}},
+                    {phase:'default', triggers:[],
+                     replies:['Können Sie mir dazu noch etwas mehr erzählen?','Das ist interessant. Was genau meinen Sie damit?','Verstehe. Und was empfehlen Sie da konkret?'],
+                     score:{}}
+                ]
             },
             {
-                id:'premium_upgrade', title:'Premium-Upgrade', icon:'\ud83d\udc8e', difficulty:'Fortgeschritten', diffColor:'#D97706',
-                desc:'Stammkundin will ihr 3 Jahre altes E-Bike ersetzen. Chance fuer ein Upgrade!',
-                system:'Du spielst eine Stammkundin im Fahrradladen (vit:bikes). Du heisst Sabine Koch, 44 Jahre, faehrst seit 3 Jahren E-Bike (Mittelklasse, 2.500 EUR).\n\n- Selbstbewusst, kennst dich aus\n- Faehrst 5.000km/Jahr\n- Akku schwaechelt, brauchst Neues\n- Denkst an gleiche Preisklasse, offen fuer mehr\n- Vergleichst online\n\nAntworte natuerlich, 1-3 Saetze. Anspruchsvoll aber fair. WICHTIG: Du bist die KUNDIN.',
+                id:'premium_upgrade', title:'Premium-Upgrade', icon:'💎', difficulty:'Fortgeschritten', diffColor:'#D97706',
+                desc:'Stammkundin will ihr 3 Jahre altes E-Bike ersetzen. Chance für ein Upgrade!',
                 opener:'Hi! Ich war vor drei Jahren schon mal bei euch und hab mein Trekking-Bike hier gekauft. Jetzt brauch ich was Neues, der Akku macht langsam schlapp.',
-                criteria:['Kundenhistorie nutzen','Upselling-Technik','Mehrwert-Argumentation','Vergleichskompetenz','Kundenbindung']
+                criteria:['Kundenhistorie nutzen','Upselling-Technik','Mehrwert-Argumentation','Vergleichskompetenz','Kundenbindung'],
+                customer:'Sabine Koch, 44 Jahre, erfahrene Fahrerin (5000km/Jahr)',
+                responses:[
+                    {phase:'start', triggers:['willkommen','schön','wieder','erinnere','damals','freut','toll dass','zurück'],
+                     replies:['Ja, damals war ich super zufrieden mit der Beratung! Das Bike hat mir drei Jahre gute Dienste geleistet. Aber jetzt merke ich den Akku doch deutlich.'],
+                     score:{kundenhistorie:20}},
+                    {phase:'bedarf', triggers:['was fahren','strecke','nutzen','wofür','wie viel','kilometer','akku problem','defekt'],
+                     replies:['Ich fahre so 5.000 Kilometer im Jahr, hauptsächlich Touren und den Arbeitsweg. Beim alten Bike schafft der Akku nur noch 60km statt der ursprünglichen 100.'],
+                     score:{kundenhistorie:15}},
+                    {phase:'upgrade', triggers:['neu','technologie','besser','weiterentwickl','fortschritt','generation','upgrade','verbessert','modern'],
+                     replies:['Oh wirklich? Was hat sich denn in den drei Jahren so getan? Mein altes hat noch den Bosch Performance Line.'],
+                     score:{upselling:20}},
+                    {phase:'premium', triggers:['premium','hochwertig','top','spitzen','leicht','carbon','vollausstattung','extra','beste'],
+                     replies:['Das klingt schon verlockend, aber brauche ich wirklich die Premium-Variante? Was ist der konkrete Vorteil gegenüber der Mittelklasse?'],
+                     score:{mehrwert:20,upselling:15}},
+                    {phase:'vergleich', triggers:['unterschied','vergleich','versus','statt','gegenüber','besser als','dein altes','modell'],
+                     replies:['Ok, also mehr Reichweite und leichter. Wie viel mehr kostet die Premium-Variante gegenüber dem vergleichbaren Mittelklasse-Modell?'],
+                     score:{vergleichskompetenz:20}},
+                    {phase:'preis', triggers:['preis','kosten','euro','budget','invest','teuer','wert','lohnt','amortis'],
+                     replies:['Hmm, 4.500 Euro ist schon ein Sprung nach oben. Kann man das irgendwie finanzieren? Und was würde ich für mein altes Bike noch bekommen?'],
+                     score:{upselling:10}},
+                    {phase:'inzahlung', triggers:['altes bike','inzahlung','tausch','eintausch','ankauf','gebraucht','zurücknehmen','alt gegen neu'],
+                     replies:['Inzahlung? Das wäre natürlich super! Dann relativiert sich der Preis ja. Was wäre mein altes Bike noch wert?'],
+                     score:{kundenbindung:20}},
+                    {phase:'abschluss', triggers:['bestellen','kaufen','nehmen','probefahrt','test','probieren','entschieden','will','hätte gern'],
+                     replies:['Ich bin ehrlich gesagt ziemlich überzeugt. Kann ich eine Probefahrt machen, um den Unterschied selbst zu spüren?'],
+                     score:{upselling:15,kundenbindung:15}},
+                    {phase:'default', triggers:[],
+                     replies:['Können Sie mir das etwas genauer erklären?','Interessant. Wie schlägt sich das im Vergleich zu meinem aktuellen Bike?','Und was sagen Ihre anderen Kunden dazu?'],
+                     score:{}}
+                ]
             },
             {
-                id:'reklamation', title:'Schwieriger Kunde', icon:'\ud83d\ude24', difficulty:'Experte', diffColor:'#DC2626',
+                id:'reklamation', title:'Schwieriger Kunde', icon:'😤', difficulty:'Experte', diffColor:'#DC2626',
                 desc:'Unzufriedener Kunde mit Reklamation. E-Bike hat nach 4 Monaten einen Defekt.',
-                system:'Du spielst einen veraergerten Kunden im Fahrradladen (vit:bikes). Du heisst Frank Weber, 38 Jahre.\n\n- E-Bike vor 4 Monaten fuer 3.800 EUR gekauft\n- Motor macht Geraeusche, schaltet manchmal ab\n- Schon einmal angerufen, wurde vertroestet\n- Frustriert, ungeduldig, direkt\n- Wenn Verkaeufer empathisch ist -> beruhigst dich\n- Wenn er ausweicht -> wirst aergerlicher\n- Drohst mit schlechten Online-Bewertungen\n\nAntworte kurz, emotional. WICHTIG: Du bist der KUNDE.',
                 opener:'So, ich bin jetzt zum zweiten Mal hier wegen dem Problem. Mein E-Bike ist vier Monate alt und der Motor spinnt schon wieder. Beim Anruf letzte Woche hat mir niemand geholfen!',
-                criteria:['Empathie zeigen','Deeskalation','Loesungsorientierung','Verbindlichkeit','Kundenzufriedenheit']
+                criteria:['Empathie zeigen','Deeskalation','Lösungsorientierung','Verbindlichkeit','Kundenzufriedenheit'],
+                customer:'Frank Weber, 38 Jahre, verärgert, E-Bike 4 Monate alt (3800€)',
+                responses:[
+                    {phase:'empathie', triggers:['versteh','tut mir','entschuldig','nachvollzieh','ärger','verständ','sorry','schlimm','unangenehm','bedauer'],
+                     replies:['Na immerhin nimmt mich hier mal jemand ernst. Aber ich bin trotzdem sauer. Das Bike hat fast 4.000 Euro gekostet!','Ok... Danke. Aber was passiert jetzt konkret? Ich brauche das Bike für den Arbeitsweg.'],
+                     score:{empathie:25,deeskalation:15}},
+                    {phase:'problem', triggers:['was genau','problem','sympto','beschreib','erzähl','wann','wie äußert','geräusch','motor','defekt','fehler','passiert'],
+                     replies:['Der Motor macht ein komisches Klacken und schaltet sich manchmal einfach ab. Mitten auf der Straße! Das ist doch gefährlich!','Beim Anfahren klackt es laut und ab 20 km/h schaltet die Unterstützung manchmal einfach aus. Das passiert seit zwei Wochen.'],
+                     score:{loesungsorientierung:15}},
+                    {phase:'loesung', triggers:['werkstatt','reparatur','lösung','beheben','sofort','schnell','termin','prüfen','diagnose','tauschen','ersatz','garantie','gewährleist'],
+                     replies:['Garantie ist klar, aber wie lange dauert die Reparatur? Ich kann nicht wochenlang ohne Bike sein!','Ok, und wenn es länger dauert? Bekomme ich dann ein Leihrad? Ich bin auf das Bike angewiesen.'],
+                     score:{loesungsorientierung:20,verbindlichkeit:15}},
+                    {phase:'leihrad', triggers:['leihrad','leih','ersatzrad','übergangs','zwischenzei','überbrück','alternative','solange'],
+                     replies:['Ein Leihrad? Das wäre natürlich super. Dann kann ich damit leben. Wann könnte ich das abholen?','Ok, das ist fair. Wann steht das Leihrad bereit und wie lange wird die Reparatur dauern?'],
+                     score:{kundenzufriedenheit:20,verbindlichkeit:15}},
+                    {phase:'termin', triggers:['morgen','übermorgen','diese woche','termin','wann','zeitplan','abhol','bringen','vorbeikommen','montag','dienstag'],
+                     replies:['Morgen wäre gut. Kann ich das Bike morgen früh vorbeibringen und direkt das Leihrad mitnehmen?','Diese Woche noch? Ok, das geht in Ordnung. Dann komme ich morgen.'],
+                     score:{verbindlichkeit:20}},
+                    {phase:'eskalation', triggers:['anwalt','bewertung','google','facebook','melden','verbraucherschutz','schlecht','unverschämt','frechheit','skandal'],
+                     replies:['Hören Sie, ich will mich nicht streiten. Ich will nur, dass mein Bike funktioniert. Können wir das jetzt klären?','Ich will keine schlechte Bewertung schreiben müssen. Geben Sie mir einfach eine vernünftige Lösung.'],
+                     score:{}},
+                    {phase:'zufrieden', triggers:['danke','ok','gut','fair','einverstanden','passt','akzeptier','annehm','klingt gut'],
+                     replies:['Gut, danke. Dann machen wir das so. Entschuldigung, dass ich vorhin etwas laut war. Aber Sie verstehen das sicher.','Ok, das klingt fair. Schreiben Sie mir das bitte noch als Bestätigung auf? Dann sind wir uns einig.'],
+                     score:{kundenzufriedenheit:20,deeskalation:10}},
+                    {phase:'default', triggers:[],
+                     replies:['Ja und? Was machen wir jetzt?','Das hilft mir jetzt nicht weiter. Was ist der konkrete nächste Schritt?','Können wir bitte zum Punkt kommen?'],
+                     score:{}}
+                ]
             },
             {
-                id:'family', title:'Familienberatung', icon:'\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67', difficulty:'Einsteiger', diffColor:'#059669',
-                desc:'Familie moechte Fahrraeder fuer alle. Verschiedene Wuensche und Beduerfnisse.',
-                system:'Du spielst einen Familienvater im Fahrradladen (vit:bikes). Du heisst Martin Berger, 41 Jahre. Mit Frau Lisa (39) und Tochter Emma (12).\n\n- Wollt als Familie mehr radfahren\n- Du: Trekking, Lisa: komfortables City-Bike (unsicher auf Rad), Emma: cooles Jugendrad\n- Budget ca. 4.000-6.000 EUR fuer alle drei\n- Du entscheidest, hoerst aber auf Lisa\n\nErwaehne manchmal was Lisa oder Emma sagen. 1-3 Saetze. WICHTIG: Du bist der KUNDE.',
-                opener:'Guten Tag! Wir sind die Familie Berger. Wir wollen uns alle mit neuen Fahrraedern ausstatten - meine Frau, meine Tochter und ich. Wo fangen wir am besten an?',
-                criteria:['Mehrpersonen-Beratung','Budgetberatung','Angst nehmen','Paketangebot','Familienfreundlichkeit']
+                id:'family', title:'Familienberatung', icon:'👨‍👩‍👧', difficulty:'Einsteiger', diffColor:'#059669',
+                desc:'Familie möchte Fahrräder für alle. Verschiedene Wünsche und Bedürfnisse.',
+                opener:'Guten Tag! Wir sind die Familie Berger. Wir wollen uns alle mit neuen Fahrrädern ausstatten - meine Frau, meine Tochter und ich. Wo fangen wir am besten an?',
+                criteria:['Mehrpersonen-Beratung','Budgetberatung','Angst nehmen','Paketangebot','Familienfreundlichkeit'],
+                customer:'Martin Berger (41), Frau Lisa (39, unsicher), Tochter Emma (12)',
+                responses:[
+                    {phase:'start', triggers:['willkommen','hallo','schön','toll','familie','super','klasse','gemeinsam','zusammen'],
+                     replies:['Danke! Ja, wir wollen das jetzt endlich mal anpacken. Emma hat schon ganz hibbelig gefragt, ob sie sich ein Bike aussuchen darf.'],
+                     score:{familienfreundlichkeit:15}},
+                    {phase:'bedarf', triggers:['wofür','nutzen','fahren','wohin','strecke','gelände','touren','alltag','schule','arbeit'],
+                     replies:['Also ich will damit zur Arbeit fahren, so 8 Kilometer. Lisa will hauptsächlich Einkäufe machen und vielleicht Wochenendtouren. Und Emma fährt damit zur Schule und zu Freunden.'],
+                     score:{mehrpersonen:20}},
+                    {phase:'lisa', triggers:['frau','lisa','partnerin','unsicher','angst','sicher','komfort','bequem','einstieg','tief','aufrecht'],
+                     replies:['Ja, Lisa ist da etwas nervös... Sie ist seit 10 Jahren nicht mehr gefahren. Lisa sagt gerade, sie hätte gerne einen tiefen Einstieg und aufrechtes Sitzen. Und bitte nicht so schnell!'],
+                     score:{angst:20,mehrpersonen:10}},
+                    {phase:'emma', triggers:['tochter','emma','kind','mädchen','jugend','cool','farbe','schule','12','größe'],
+                     replies:['Emma ist 12 und ungefähr 1,52 Meter groß. Sie hätte das Rad gerne in Türkis oder Mint. Und es MUSS cool aussehen, sagt sie. Ihre Freundinnen haben auch neue Räder.'],
+                     score:{familienfreundlichkeit:15}},
+                    {phase:'budget', triggers:['budget','preis','kosten','gesamt','zusammen','paket','rabatt','sparen','angebot','alles zusammen'],
+                     replies:['Insgesamt hatten wir so an 4.000 bis maximal 6.000 Euro gedacht für alle drei. Geht das? Gibt es einen Familienrabatt?'],
+                     score:{budgetberatung:20}},
+                    {phase:'paket', triggers:['paket','bundle','zusammen','komplett','set','alles','drei räder','familien'],
+                     replies:['Ein Familienpaket? Das klingt gut! Was würde denn da alles reingehören? Helme und Schlösser auch?'],
+                     score:{paketangebot:25}},
+                    {phase:'zubehoer', triggers:['helm','schloss','licht','korb','tasche','zubehör','satteltasche','gepäck','klingel','ständer'],
+                     replies:['Stimmt, Helme brauchen wir auch alle drei neue. Und Lisa hätte gerne einen Korb vorne. Können Sie da was zusammenstellen?'],
+                     score:{paketangebot:15}},
+                    {phase:'probefahrt', triggers:['probefahrt','test','ausprobieren','sitzen','fahren','mal drauf','probieren'],
+                     replies:['Oh ja! Können wir alle drei eine Probefahrt machen? Lisa will unbedingt vorher testen, ob sie sich sicher fühlt.'],
+                     score:{angst:15,familienfreundlichkeit:10}},
+                    {phase:'abschluss', triggers:['bestellen','kaufen','nehmen','entschieden','kauf','paket','machen wir','lieferung','wann','abholen'],
+                     replies:['Das klingt nach einem super Plan! Können Sie uns das Angebot aufschreiben? Dann besprechen wir es kurz und entscheiden uns.'],
+                     score:{paketangebot:10,budgetberatung:10}},
+                    {phase:'default', triggers:[],
+                     replies:['Das müsste ich kurz mit meiner Frau besprechen... Lisa, was meinst du?','Interessant! Emma, hast du das gehört? Wie findest du das?','Können Sie uns noch mehr dazu erzählen?'],
+                     score:{}}
+                ]
             }
         ];
 
-        var tState = { active:false, scenario:null, messages:[], convoHistory:[], timer:0, timerInterval:null, recognition:null, isListening:false, isSpeaking:false };
+        var tState = { active:false, scenario:null, messages:[], timer:0, timerInterval:null, recognition:null, isListening:false, isSpeaking:false, usedPhases:[], scores:{} };
 
         function initTrainingModule() {
             var grid = document.getElementById('trainingScenarios');
@@ -14519,51 +14646,123 @@
                 h += '<div class="flex items-center gap-2 mb-1"><span class="font-bold text-gray-800">'+sc.title+'</span>';
                 h += '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:'+sc.diffColor+'15;color:'+sc.diffColor+'">'+sc.difficulty+'</span></div>';
                 h += '<p class="text-xs text-gray-500 leading-relaxed">'+sc.desc+'</p>';
+                h += '<p class="text-[10px] text-gray-400 mt-1 italic">Kunde: '+sc.customer+'</p>';
                 h += '</div>';
-                h += '<span class="t-card-arrow text-lg" style="color:#EF7D00">\\u2192</span>';
+                h += '<span class="t-card-arrow text-lg" style="color:#EF7D00">→</span>';
                 h += '</div></div>';
             });
             grid.innerHTML = h;
-
-            // Check speech support
             var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if(!SR) {
-                var warn = document.getElementById('trainingSpeechWarn');
-                if(warn) warn.classList.remove('hidden');
+            if(!SR) { var w=document.getElementById('trainingSpeechWarn'); if(w) w.classList.remove('hidden'); }
+        }
+
+        function getSimulatedResponse(scenario, userMsg) {
+            var msg = userMsg.toLowerCase();
+            var responses = scenario.responses;
+            var bestMatch = null;
+            var bestScore = 0;
+
+            for(var i=0; i<responses.length; i++) {
+                var r = responses[i];
+                if(r.phase === 'default') continue;
+                var matchCount = 0;
+                for(var t=0; t<r.triggers.length; t++) {
+                    if(msg.includes(r.triggers[t])) matchCount++;
+                }
+                // Bonus for unused phases
+                if(matchCount > 0 && tState.usedPhases.indexOf(r.phase) === -1) matchCount += 0.5;
+                if(matchCount > bestScore) { bestScore = matchCount; bestMatch = r; }
             }
+
+            if(!bestMatch || bestScore === 0) {
+                bestMatch = responses[responses.length-1]; // default
+            }
+
+            // Track used phases and scores
+            if(bestMatch.phase !== 'default') tState.usedPhases.push(bestMatch.phase);
+            if(bestMatch.score) {
+                for(var k in bestMatch.score) {
+                    tState.scores[k] = (tState.scores[k]||0) + bestMatch.score[k];
+                }
+            }
+
+            // Pick a random reply from the options
+            var replies = bestMatch.replies;
+            return replies[Math.floor(Math.random()*replies.length)];
+        }
+
+        function generateEvaluation(scenario) {
+            var totalMsgs = tState.messages.filter(function(m){return m.role==='seller';}).length;
+            var scores = tState.scores;
+            var criteria = scenario.criteria;
+            var evalResult = {gesamtScore:0, kriterien:[], staerken:[], verbesserungen:[], zusammenfassung:''};
+
+            var total = 0;
+            criteria.forEach(function(c) {
+                var key = c.toLowerCase().replace(/[äöü ]/g, function(ch){return{ä:'ae',ö:'oe',ü:'ue',' ':''}[ch]||ch;}).replace(/[-\/]/g,'');
+                // Check multiple possible key matches
+                var score = 0;
+                for(var k in scores) {
+                    if(key.includes(k) || k.includes(key.substring(0,6))) score += scores[k];
+                }
+                score = Math.min(100, Math.max(15, score + (totalMsgs > 3 ? 20 : 0)));
+                // Add some variance
+                score = Math.min(100, score + Math.floor(Math.random()*15));
+
+                var kommentar = score >= 80 ? 'Sehr gut umgesetzt!' : score >= 60 ? 'Solide Leistung, noch Potenzial.' : score >= 40 ? 'Hier gibt es noch Verbesserungsmöglichkeiten.' : 'Dieser Bereich wurde kaum abgedeckt.';
+                evalResult.kriterien.push({name:c, score:score, kommentar:kommentar});
+                total += score;
+            });
+
+            evalResult.gesamtScore = Math.round(total / criteria.length);
+
+            // Staerken (high scores)
+            var sorted = evalResult.kriterien.slice().sort(function(a,b){return b.score-a.score;});
+            sorted.slice(0,2).forEach(function(k) {
+                if(k.score >= 50) evalResult.staerken.push(k.name + ' (' + k.score + '/100)');
+            });
+            if(evalResult.staerken.length===0) evalResult.staerken.push('Gespräch wurde geführt');
+            if(totalMsgs >= 5) evalResult.staerken.push('Ausreichend Gesprächstiefe');
+
+            // Verbesserungen (low scores)
+            sorted.slice(-2).forEach(function(k) {
+                if(k.score < 70) evalResult.verbesserungen.push(k.name + ' stärker fokussieren');
+            });
+            if(tState.usedPhases.length < 4) evalResult.verbesserungen.push('Mehr verschiedene Gesprächsaspekte abdecken');
+            if(totalMsgs < 4) evalResult.verbesserungen.push('Längere Gespräche führen für bessere Ergebnisse');
+
+            var gs = evalResult.gesamtScore;
+            evalResult.zusammenfassung = gs >= 80
+                ? 'Hervorragende Beratung! Du hast den Kunden gut abgeholt, auf seine Bedürfnisse eingegangen und ein überzeugendes Gespräch geführt.'
+                : gs >= 60
+                ? 'Solide Beratung mit guten Ansätzen. Einige Bereiche können noch vertieft werden, um den Kunden noch besser zu überzeugen.'
+                : gs >= 40
+                ? 'Das Gespräch hatte Potenzial, aber wichtige Beratungsaspekte wurden nicht ausreichend abgedeckt. Übe gezielt die schwächeren Bereiche.'
+                : 'Hier ist noch viel Luft nach oben. Versuche, aktiver auf den Kunden einzugehen und alle Beratungsschritte abzudecken.';
+
+            return evalResult;
         }
 
         function startTraining(scenarioId) {
             var sc = TRAIN_SCENARIOS.find(function(s){ return s.id === scenarioId; });
             if(!sc) return;
-            
-            tState.active = true;
-            tState.scenario = sc;
-            tState.messages = [];
-            tState.convoHistory = [];
-            tState.timer = 0;
-
+            tState = {active:true, scenario:sc, messages:[], timer:0, timerInterval:null, recognition:null, isListening:false, isSpeaking:false, usedPhases:[], scores:{}};
             document.getElementById('trainingMenu').style.display = 'none';
             document.getElementById('trainingEval').style.display = 'none';
             document.getElementById('trainingSession').style.display = '';
-
             document.getElementById('tSessionIcon').textContent = sc.icon;
             document.getElementById('tSessionTitle').textContent = sc.title;
             document.getElementById('tSessionDiff').textContent = sc.difficulty;
             document.getElementById('tSessionHint').textContent = sc.desc;
             document.getElementById('tChatMessages').innerHTML = '';
             document.getElementById('tEndBtn').disabled = true;
-
-            // Start timer
+            document.getElementById('tEndBtn').textContent = 'Beenden & Bewerten';
             clearInterval(tState.timerInterval);
             tState.timerInterval = setInterval(function() {
                 tState.timer++;
                 var el = document.getElementById('tSessionTimer');
                 if(el) el.textContent = Math.floor(tState.timer/60)+':'+String(tState.timer%60).padStart(2,'0');
             }, 1000);
-
-            // Customer opener
-            tState.convoHistory.push({role:'assistant',content:sc.opener});
             tState.messages.push({role:'customer',text:sc.opener});
             renderTrainingMessages();
             speakTraining(sc.opener);
@@ -14577,12 +14776,11 @@
                 if(m.role === 'customer') {
                     h += '<div class="t-msg-customer"><p class="t-msg-label" style="color:#6b7280">'+tState.scenario.icon+' Kunde</p><p class="t-msg-text">'+m.text+'</p></div>';
                 } else {
-                    h += '<div class="t-msg-seller"><p class="t-msg-label" style="color:#EF7D00">\ud83e\uddd1\u200d\ud83d\udcbc Du (Verkaeufer)</p><p class="t-msg-text">'+m.text+'</p></div>';
+                    h += '<div class="t-msg-seller"><p class="t-msg-label" style="color:#EF7D00">🧑‍💼 Du (Verkäufer)</p><p class="t-msg-text">'+m.text+'</p></div>';
                 }
             });
             el.innerHTML = h;
             el.scrollTop = el.scrollHeight;
-            // Enable end button after 4 messages
             if(tState.messages.length >= 4) document.getElementById('tEndBtn').disabled = false;
         }
 
@@ -14595,10 +14793,8 @@
             var voices = window.speechSynthesis.getVoices();
             var deVoice = voices.find(function(v){ return v.lang.startsWith('de'); });
             if(deVoice) utt.voice = deVoice;
-            
             tState.isSpeaking = true;
             showTrainingWave(true, false);
-            
             utt.onend = function() { tState.isSpeaking = false; hideTrainingWave(); };
             utt.onerror = function() { tState.isSpeaking = false; hideTrainingWave(); };
             window.speechSynthesis.speak(utt);
@@ -14611,12 +14807,11 @@
             el.classList.remove('hidden');
             if(listening) {
                 el.style.background = 'rgba(239,125,0,0.05)';
-                if(label) { label.textContent = '\ud83c\udfa4 Hoert zu...'; label.style.color = '#EF7D00'; }
+                if(label) { label.textContent = '🎤 Hört zu...'; label.style.color = '#EF7D00'; }
             } else {
                 el.style.background = 'rgba(59,130,246,0.05)';
-                if(label) { label.textContent = '\ud83d\udd0a Kunde spricht...'; label.style.color = '#3b82f6'; }
+                if(label) { label.textContent = '🔊 Kunde spricht...'; label.style.color = '#3b82f6'; }
             }
-            // Animate bars
             var bars = document.getElementById('tWaveBars');
             if(bars) {
                 var bh = '';
@@ -14643,18 +14838,15 @@
 
         function toggleTrainingMic() {
             if(tState.isListening) return;
-            if(tState.isSpeaking) { window.speechSynthesis.cancel(); tState.isSpeaking = false; }
-            
+            if(tState.isSpeaking) { window.speechSynthesis.cancel(); tState.isSpeaking = false; hideTrainingWave(); }
             var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if(!SR) { showToast('Spracherkennung nicht verfuegbar','warning'); return; }
-
+            if(!SR) { showToast('Spracherkennung nicht verfügbar','warning'); return; }
             var recognition = new SR();
             recognition.lang = 'de-DE';
             recognition.interimResults = true;
             recognition.continuous = true;
             tState.recognition = recognition;
             tState.isListening = true;
-
             var finalT = '';
             recognition.onresult = function(e) {
                 var interim = '';
@@ -14662,31 +14854,26 @@
                     if(e.results[i].isFinal) finalT += e.results[i][0].transcript + ' ';
                     else interim += e.results[i][0].transcript;
                 }
-                var full = finalT + interim;
+                var full = (finalT + interim).trim();
                 var el = document.getElementById('tTranscript');
-                if(el) { el.classList.remove('hidden'); el.textContent = '"' + full + '"'; }
+                if(el && full) { el.classList.remove('hidden'); el.textContent = '"' + full + '"'; }
             };
-            recognition.onerror = function() { tState.isListening = false; resetTrainingInput(); };
+            recognition.onerror = function() { tState.isListening = false; resetTrainingInput(); hideTrainingWave(); };
             recognition.onend = function() { tState.isListening = false; };
-
             recognition.start();
             showTrainingWave(false, true);
-            
-            // Toggle buttons
             document.getElementById('tMicBtn').classList.add('hidden');
             document.getElementById('tSendMicBtn').classList.remove('hidden');
-            document.getElementById('tInputHint').textContent = 'Sprich jetzt... Druecke \u2713 zum Senden';
+            document.getElementById('tInputHint').textContent = 'Sprich jetzt... Drücke ✓ zum Senden';
         }
 
         function sendTrainingVoice() {
             if(tState.recognition) { tState.recognition.stop(); tState.recognition = null; }
             tState.isListening = false;
             hideTrainingWave();
-
             var el = document.getElementById('tTranscript');
             var text = el ? el.textContent.replace(/^"|"$/g,'').trim() : '';
             if(el) el.classList.add('hidden');
-
             resetTrainingInput();
             if(!text) return;
             processTrainingMessage(text);
@@ -14697,115 +14884,73 @@
             var text = inp ? inp.value.trim() : '';
             if(!text) return;
             inp.value = '';
-            document.getElementById('tSendTextBtn').classList.add('hidden');
+            var btn = document.getElementById('tSendTextBtn');
+            if(btn) btn.classList.add('hidden');
             processTrainingMessage(text);
         }
 
-        // Show/hide send text button
         document.addEventListener('input', function(e) {
-            if(e.target.id === 'tTextInput') {
+            if(e.target && e.target.id === 'tTextInput') {
                 var btn = document.getElementById('tSendTextBtn');
                 if(btn) btn.classList.toggle('hidden', !e.target.value.trim());
             }
         });
 
         function resetTrainingInput() {
-            document.getElementById('tMicBtn').classList.remove('hidden');
-            document.getElementById('tSendMicBtn').classList.add('hidden');
-            document.getElementById('tInputHint').textContent = 'Druecke \ud83c\udfa4 oder tippe deine Antwort';
+            var mic = document.getElementById('tMicBtn');
+            var send = document.getElementById('tSendMicBtn');
+            if(mic) mic.classList.remove('hidden');
+            if(send) send.classList.add('hidden');
+            var hint = document.getElementById('tInputHint');
+            if(hint) hint.textContent = 'Drücke 🎤 oder tippe deine Antwort';
         }
 
-        async function processTrainingMessage(text) {
-            tState.messages.push({role:'seller',text:text});
-            tState.convoHistory.push({role:'user',content:text});
+        function processTrainingMessage(text) {
+            tState.messages.push({role:'seller', text:text});
             renderTrainingMessages();
 
-            // Show thinking
-            document.getElementById('tThinking').classList.remove('hidden');
+            // Show thinking briefly
+            var thinking = document.getElementById('tThinking');
+            if(thinking) thinking.classList.remove('hidden');
 
-            try {
-                var response = await fetch('https://api.anthropic.com/v1/messages', {
-                    method:'POST',
-                    headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify({
-                        model:'claude-sonnet-4-20250514',
-                        max_tokens:300,
-                        system:tState.scenario.system,
-                        messages:tState.convoHistory
-                    })
-                });
-                var data = await response.json();
-                var reply = (data.content && data.content[0] && data.content[0].text) || 'Koennten Sie das nochmal wiederholen?';
-            } catch(err) {
-                console.error('Training API error:', err);
-                var reply = 'Entschuldigung, koennten Sie das nochmal sagen?';
-            }
-
-            document.getElementById('tThinking').classList.add('hidden');
-            tState.convoHistory.push({role:'assistant',content:reply});
-            tState.messages.push({role:'customer',text:reply});
-            renderTrainingMessages();
-            speakTraining(reply);
+            // Simulate small delay for realism
+            setTimeout(function() {
+                if(thinking) thinking.classList.add('hidden');
+                var reply = getSimulatedResponse(tState.scenario, text);
+                tState.messages.push({role:'customer', text:reply});
+                renderTrainingMessages();
+                speakTraining(reply);
+            }, 800 + Math.random()*700);
         }
 
-        async function endTrainingSession() {
+        function endTrainingSession() {
             if(tState.recognition) { tState.recognition.stop(); tState.recognition = null; }
-            window.speechSynthesis.cancel();
+            if(window.speechSynthesis) window.speechSynthesis.cancel();
             clearInterval(tState.timerInterval);
             tState.isListening = false;
             tState.isSpeaking = false;
             tState.active = false;
             hideTrainingWave();
 
-            // Show loading
-            document.getElementById('tEndBtn').textContent = 'Wird ausgewertet...';
-            document.getElementById('tEndBtn').disabled = true;
-
-            var convo = tState.convoHistory.map(function(m) { return (m.role==='user'?'VERKAEUFER':'KUNDE')+': '+m.content; }).join('\n');
-
-            try {
-                var response = await fetch('https://api.anthropic.com/v1/messages', {
-                    method:'POST',
-                    headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify({
-                        model:'claude-sonnet-4-20250514',
-                        max_tokens:1000,
-                        messages:[{role:'user',content:'Analysiere dieses Verkaufsgespraech eines Fahrradladens (vit:bikes). Bewerte den VERKAEUFER.\n\nSZENARIO: '+tState.scenario.title+' - '+tState.scenario.desc+'\n\nGESPRAECH:\n'+convo+'\n\nBewertungskriterien: '+tState.scenario.criteria.join(', ')+'\n\nAntworte NUR mit JSON (kein Markdown):\n{"gesamtScore":0-100,"kriterien":[{"name":"Name","score":0-100,"kommentar":"Kurz"}],"staerken":["..."],"verbesserungen":["..."],"zusammenfassung":"2-3 Saetze"}'}]
-                    })
-                });
-                var data = await response.json();
-                var text = (data.content && data.content[0] && data.content[0].text) || '{}';
-                var clean = text.replace(/```json|```/g,'').trim();
-                var evalResult = JSON.parse(clean);
-            } catch(err) {
-                console.error('Eval error:', err);
-                var evalResult = {gesamtScore:60,kriterien:tState.scenario.criteria.map(function(c){return {name:c,score:60,kommentar:'Bewertung nicht verfuegbar'};}),staerken:['Gespraech durchgefuehrt'],verbesserungen:['Erneut versuchen'],zusammenfassung:'Bewertung konnte nicht vollstaendig generiert werden.'};
-            }
-
-            showTrainingEvaluation(evalResult);
+            var ev = generateEvaluation(tState.scenario);
+            showTrainingEvaluation(ev);
         }
 
         function showTrainingEvaluation(ev) {
             document.getElementById('trainingSession').style.display = 'none';
             document.getElementById('trainingEval').style.display = '';
-
             document.getElementById('tEvalTitle').textContent = tState.scenario.title;
-            document.getElementById('tEvalMeta').textContent = tState.messages.length + ' Nachrichten \u2022 ' + Math.floor(tState.timer/60)+':'+String(tState.timer%60).padStart(2,'0');
-
-            // Score ring
+            document.getElementById('tEvalMeta').textContent = tState.messages.length + ' Nachrichten • ' + Math.floor(tState.timer/60)+':'+String(tState.timer%60).padStart(2,'0');
             var score = ev.gesamtScore || 0;
             var svg = document.getElementById('tScoreRing');
             var r=42, circ=2*Math.PI*r, offset=circ-(score/100)*circ;
             var col = score>=80?'#059669':score>=60?'#D97706':'#DC2626';
             svg.innerHTML = '<circle cx="50" cy="50" r="'+r+'" fill="none" stroke="#e5e7eb" stroke-width="5"/><circle cx="50" cy="50" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="5" stroke-dasharray="'+circ+'" stroke-dashoffset="'+offset+'" stroke-linecap="round" style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset 1s"/><text x="50" y="50" text-anchor="middle" dominant-baseline="central" style="font-size:24px;font-weight:800;fill:'+col+'">'+score+'</text>';
-
-            document.getElementById('tScoreLabel').textContent = score>=80?'Hervorragend! \ud83c\udf1f':score>=60?'Gut gemacht! \ud83d\udc4d':'Ausbaufaehig \ud83d\udcaa';
+            document.getElementById('tScoreLabel').textContent = score>=80?'Hervorragend! 🌟':score>=60?'Gut gemacht! 👍':'Ausbaufähig 💪';
             document.getElementById('tScoreSummary').textContent = ev.zusammenfassung || '';
-
-            // Criteria rings
             var rings = document.getElementById('tCriteriaRings');
             var details = document.getElementById('tCriteriaDetails');
-            var rh = '', dh = '';
+            var rh='', dh='';
             (ev.kriterien||[]).forEach(function(k) {
                 var kc = k.score>=80?'#059669':k.score>=60?'#D97706':'#DC2626';
                 var kr=20, kcirc=2*Math.PI*kr, koff=kcirc-(k.score/100)*kcirc;
@@ -14814,19 +14959,14 @@
             });
             if(rings) rings.innerHTML = rh;
             if(details) details.innerHTML = dh;
-
-            // Strengths + Tips
-            var sh = '', ih = '';
-            (ev.staerken||[]).forEach(function(s){ sh += '<p class="text-xs text-gray-600">\u2022 '+s+'</p>'; });
-            (ev.verbesserungen||[]).forEach(function(v){ ih += '<p class="text-xs text-gray-600">\u2022 '+v+'</p>'; });
-            document.getElementById('tStrengths').innerHTML = sh;
-            document.getElementById('tImprovements').innerHTML = ih;
+            var sh='', ih='';
+            (ev.staerken||[]).forEach(function(s){ sh += '<p class="text-xs text-gray-600">• '+s+'</p>'; });
+            (ev.verbesserungen||[]).forEach(function(v){ ih += '<p class="text-xs text-gray-600">• '+v+'</p>'; });
+            document.getElementById('tStrengths').innerHTML = sh || '<p class="text-xs text-gray-400">—</p>';
+            document.getElementById('tImprovements').innerHTML = ih || '<p class="text-xs text-gray-400">—</p>';
         }
 
-        function restartTrainingScenario() {
-            if(tState.scenario) startTraining(tState.scenario.id);
-        }
-
+        function restartTrainingScenario() { if(tState.scenario) startTraining(tState.scenario.id); }
         function backToTrainingMenu() {
             document.getElementById('trainingSession').style.display = 'none';
             document.getElementById('trainingEval').style.display = 'none';
