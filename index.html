@@ -336,408 +336,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
-<!-- ═══ DUAL THEME SYSTEM ═══ -->
-<style>
-/* ── Light Theme (Default) ── */
-:root, [data-theme="light"] {
-    --bg: #f7f7f8;
-    --surface: #ffffff;
-    --surface-2: #f3f4f6;
-    --surface-3: #e5e7eb;
-    --border: #e5e7eb;
-    --border-light: #d1d5db;
-    --text: #111827;
-    --text-2: #4b5563;
-    --text-3: #9ca3af;
-    --vit: #EF7D00;
-    --vit-glow: rgba(239,125,0,0.12);
-    --vit-light: rgba(239,125,0,0.08);
-    --green: #16a34a;
-    --green-bg: rgba(22,163,74,0.08);
-    --yellow: #ca8a04;
-    --yellow-bg: rgba(202,138,4,0.08);
-    --red: #dc2626;
-    --red-bg: rgba(220,38,38,0.08);
-    --blue: #2563eb;
-    --blue-bg: rgba(37,99,235,0.08);
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-    --card-hover: 0 4px 20px rgba(0,0,0,0.06);
-    --sidebar-bg: #ffffff;
-    --sidebar-text: #374151;
-    --sidebar-hover: #f3f4f6;
-    --input-bg: #ffffff;
-    --modal-bg: #ffffff;
-    --header-bg: rgba(255,255,255,0.85);
-}
-
-/* ── Dark Theme ── */
-[data-theme="dark"] {
-    --bg: #0a0a0b;
-    --surface: #141416;
-    --surface-2: #1c1c1f;
-    --surface-3: #242428;
-    --border: #2a2a2e;
-    --border-light: #3a3a3f;
-    --text: #f5f5f5;
-    --text-2: #a1a1aa;
-    --text-3: #71717a;
-    --vit: #EF7D00;
-    --vit-glow: rgba(239,125,0,0.25);
-    --vit-light: rgba(239,125,0,0.12);
-    --green: #22c55e;
-    --green-bg: rgba(34,197,94,0.12);
-    --yellow: #eab308;
-    --yellow-bg: rgba(234,179,8,0.12);
-    --red: #ef4444;
-    --red-bg: rgba(239,68,68,0.12);
-    --blue: #3b82f6;
-    --blue-bg: rgba(59,130,246,0.12);
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
-    --card-hover: 0 0 20px rgba(239,125,0,0.15);
-    --sidebar-bg: #111113;
-    --sidebar-text: #d4d4d8;
-    --sidebar-hover: #1c1c1f;
-    --input-bg: #1c1c1f;
-    --modal-bg: #141416;
-    --header-bg: rgba(10,10,11,0.85);
-}
-
-/* ── Global Transition ── */
-body, .vit-card, .sidebar-item, input, select, textarea, .ek-modal, th, td {
-    transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease;
-}
-
-/* ── Dark Mode Global Overrides ── */
-[data-theme="dark"] body,
-[data-theme="dark"] .bg-gray-50,
-[data-theme="dark"] .bg-white {
-    background-color: var(--bg) !important;
-    color: var(--text) !important;
-}
-
-/* Cards */
-[data-theme="dark"] .vit-card,
-[data-theme="dark"] .card,
-[data-theme="dark"] [class*="bg-white"] {
-    background-color: var(--surface) !important;
-    border-color: var(--border) !important;
-    color: var(--text) !important;
-}
-
-/* Surface variants */
-[data-theme="dark"] .bg-gray-100,
-[data-theme="dark"] .bg-gray-50 {
-    background-color: var(--surface-2) !important;
-}
-[data-theme="dark"] .bg-gray-200 {
-    background-color: var(--surface-3) !important;
-}
-
-/* Text colors */
-[data-theme="dark"] .text-gray-800,
-[data-theme="dark"] .text-gray-900 {
-    color: var(--text) !important;
-}
-[data-theme="dark"] .text-gray-700,
-[data-theme="dark"] .text-gray-600 {
-    color: var(--text-2) !important;
-}
-[data-theme="dark"] .text-gray-500,
-[data-theme="dark"] .text-gray-400 {
-    color: var(--text-3) !important;
-}
-
-/* Sidebar */
-[data-theme="dark"] .sidebar,
-[data-theme="dark"] #mainSidebar {
-    background-color: var(--sidebar-bg) !important;
-    border-color: var(--border) !important;
-}
-[data-theme="dark"] .sidebar-item {
-    color: var(--sidebar-text) !important;
-}
-[data-theme="dark"] .sidebar-item:hover,
-[data-theme="dark"] .sidebar-item.active {
-    background-color: var(--sidebar-hover) !important;
-}
-
-/* Header / Top Nav */
-[data-theme="dark"] #topNavbar,
-[data-theme="dark"] .top-nav,
-[data-theme="dark"] nav[class*="bg-white"] {
-    background-color: var(--header-bg) !important;
-    border-color: var(--border) !important;
-    backdrop-filter: blur(12px);
-}
-
-/* Inputs */
-[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-[data-theme="dark"] select,
-[data-theme="dark"] textarea,
-[data-theme="dark"] .form-input {
-    background-color: var(--input-bg) !important;
-    border-color: var(--border) !important;
-    color: var(--text) !important;
-}
-[data-theme="dark"] input::placeholder,
-[data-theme="dark"] textarea::placeholder {
-    color: var(--text-3) !important;
-}
-
-/* Tables */
-[data-theme="dark"] table th {
-    background-color: var(--surface-2) !important;
-    color: var(--text-2) !important;
-    border-color: var(--border) !important;
-}
-[data-theme="dark"] table td {
-    border-color: var(--border) !important;
-    color: var(--text) !important;
-}
-[data-theme="dark"] table tr:hover td {
-    background-color: var(--surface-2) !important;
-}
-
-/* Borders */
-[data-theme="dark"] .border-gray-200,
-[data-theme="dark"] .border-gray-100,
-[data-theme="dark"] .border-gray-300,
-[data-theme="dark"] [class*="border-gray"] {
-    border-color: var(--border) !important;
-}
-[data-theme="dark"] .divide-gray-200 > * + * {
-    border-color: var(--border) !important;
-}
-
-/* Modals */
-[data-theme="dark"] .ek-modal,
-[data-theme="dark"] [class*="modal"] {
-    background-color: var(--modal-bg) !important;
-    border-color: var(--border) !important;
-}
-
-/* Profile Panel */
-[data-theme="dark"] #profileSlider {
-    background-color: var(--surface) !important;
-}
-
-/* Badges / Pills */
-[data-theme="dark"] .bg-green-50 { background-color: var(--green-bg) !important; }
-[data-theme="dark"] .bg-orange-50 { background-color: var(--vit-light) !important; }
-[data-theme="dark"] .bg-red-50 { background-color: var(--red-bg) !important; }
-[data-theme="dark"] .bg-blue-50 { background-color: var(--blue-bg) !important; }
-[data-theme="dark"] .bg-yellow-50 { background-color: var(--yellow-bg) !important; }
-[data-theme="dark"] .bg-purple-50 { background-color: rgba(147,51,234,0.12) !important; }
-
-/* Shadows */
-[data-theme="dark"] .shadow-sm,
-[data-theme="dark"] .shadow,
-[data-theme="dark"] .shadow-md {
-    box-shadow: var(--shadow-sm) !important;
-}
-
-/* Scrollbar */
-[data-theme="dark"]::-webkit-scrollbar-thumb { background: var(--border); }
-[data-theme="dark"]::-webkit-scrollbar-track { background: var(--bg); }
-
-/* Login Screen */
-[data-theme="dark"] #loginScreen {
-    background-color: var(--bg) !important;
-}
-[data-theme="dark"] #loginScreen .bg-white {
-    background-color: var(--surface) !important;
-}
-
-/* Pipeline / Kanban */
-[data-theme="dark"] [style*="background:#f9fafb"],
-[data-theme="dark"] [style*="background: #f9fafb"],
-[data-theme="dark"] [style*="background:#f3f4f6"],
-[data-theme="dark"] [style*="background: #f3f4f6"] {
-    background-color: var(--surface-2) !important;
-}
-
-/* Inline style overrides for common patterns */
-[data-theme="dark"] [style*="background:#fff"],
-[data-theme="dark"] [style*="background: #fff"],
-[data-theme="dark"] [style*="background:white"],
-[data-theme="dark"] [style*="background: white"],
-[data-theme="dark"] [style*="background-color:#fff"],
-[data-theme="dark"] [style*="background-color: #fff"],
-[data-theme="dark"] [style*="background-color:white"] {
-    background-color: var(--surface) !important;
-}
-[data-theme="dark"] [style*="color:#111827"],
-[data-theme="dark"] [style*="color: #111827"],
-[data-theme="dark"] [style*="color:#374151"],
-[data-theme="dark"] [style*="color: #374151"] {
-    color: var(--text) !important;
-}
-[data-theme="dark"] [style*="color:#6b7280"],
-[data-theme="dark"] [style*="color: #6b7280"],
-[data-theme="dark"] [style*="color:#4b5563"],
-[data-theme="dark"] [style*="color: #4b5563"] {
-    color: var(--text-2) !important;
-}
-[data-theme="dark"] [style*="border-color:#e5e7eb"],
-[data-theme="dark"] [style*="border:1px solid #e5e7eb"],
-[data-theme="dark"] [style*="border: 1px solid #e5e7eb"] {
-    border-color: var(--border) !important;
-}
-
-/* Hover glow for cards in dark mode */
-[data-theme="dark"] .vit-card:hover {
-    box-shadow: var(--card-hover) !important;
-}
-
-/* Tab buttons */
-[data-theme="dark"] .ctrl-tab-btn,
-[data-theme="dark"] .vk-tab-btn,
-[data-theme="dark"] button[class*="tab-btn"] {
-    color: var(--text-3) !important;
-}
-[data-theme="dark"] .ctrl-tab-btn.active,
-[data-theme="dark"] button[class*="tab-btn"][class*="text-vit-orange"],
-[data-theme="dark"] button[class*="tab-btn"][style*="border-color:#EF7D00"] {
-    color: var(--vit) !important;
-}
-
-/* Trainer cards in dark */
-[data-theme="dark"] .trainer-card {
-    background: linear-gradient(135deg, var(--surface-2), var(--surface)) !important;
-    border-color: var(--border) !important;
-}
-[data-theme="dark"] .trainer-drawer {
-    background-color: var(--surface) !important;
-}
-[data-theme="dark"] .trainer-step.active {
-    background-color: var(--surface-2) !important;
-}
-
-/* ── Dark Mode Refinements ── */
-
-/* Daily Focus tiles: use surface instead of transparent color bg */
-[data-theme="dark"] #dailyFocusBlock .bg-green-50,
-[data-theme="dark"] #dailyFocusBlock .bg-orange-50,
-[data-theme="dark"] #dailyFocusBlock .bg-blue-50,
-[data-theme="dark"] #dailyFocusBlock .bg-purple-50,
-[data-theme="dark"] #dailyFocusBlock .bg-yellow-50 {
-    background-color: var(--surface-2) !important;
-    border: 1px solid var(--border) !important;
-}
-
-/* Daily Focus impulse bar */
-[data-theme="dark"] #dailyImpulse {
-    background: var(--surface-2) !important;
-}
-
-/* Quick Action Cards on Home */
-[data-theme="dark"] .vit-card {
-    background-color: var(--surface) !important;
-    border-color: var(--border) !important;
-}
-
-/* Sub-text in tiles */
-[data-theme="dark"] .text-green-500,
-[data-theme="dark"] .text-green-600 { color: var(--green) !important; }
-[data-theme="dark"] .text-orange-500,
-[data-theme="dark"] .text-vit-orange { color: var(--vit) !important; }
-[data-theme="dark"] .text-blue-500,
-[data-theme="dark"] .text-blue-600 { color: var(--blue) !important; }
-[data-theme="dark"] .text-yellow-500,
-[data-theme="dark"] .text-yellow-600 { color: var(--yellow) !important; }
-[data-theme="dark"] .text-red-500,
-[data-theme="dark"] .text-red-600 { color: var(--red) !important; }
-
-/* Headlines in dark */
-[data-theme="dark"] .h1-headline,
-[data-theme="dark"] .h2-headline { color: var(--text) !important; }
-
-/* Progress bar tracks */
-[data-theme="dark"] .bg-gray-200.rounded-full,
-[data-theme="dark"] [class*="bg-gray-200"][class*="rounded-full"] {
-    background-color: var(--surface-3) !important;
-}
-
-/* KPI cards in controlling/dashboard */
-[data-theme="dark"] [class*="border-green-200"],
-[data-theme="dark"] [class*="border-orange-200"],
-[data-theme="dark"] [class*="border-blue-200"],
-[data-theme="dark"] [class*="border-red-200"] {
-    border-color: var(--border) !important;
-}
-
-/* Streak momentum bar */
-[data-theme="dark"] #salesMomentumBar .vit-card {
-    background-color: var(--surface) !important;
-}
-
-/* BWA Deadline Widget */
-[data-theme="dark"] #bwaDeadlineWidget {
-    background-color: var(--surface) !important;
-    border-color: var(--border) !important;
-}
-[data-theme="dark"] #bwaEskalationBanner {
-    background-color: var(--red-bg) !important;
-    border-color: rgba(239,68,68,0.2) !important;
-}
-
-/* Benchmark lock */
-[data-theme="dark"] #benchmarkLockOverlay .vit-card {
-    border-color: var(--border) !important;
-    background-color: var(--surface) !important;
-}
-
-/* HQ BWA Status Dashboard */
-[data-theme="dark"] #hqBwaStatusDashboard .vit-card {
-    background-color: var(--surface) !important;
-}
-
-/* Dropdown menus */
-[data-theme="dark"] [class*="dropdown"],
-[data-theme="dark"] [role="menu"] {
-    background-color: var(--surface) !important;
-    border-color: var(--border) !important;
-}
-
-/* Rounded icon boxes (Quick Actions) keep their color */
-[data-theme="dark"] .rounded-2xl[class*="bg-green"],
-[data-theme="dark"] .rounded-2xl[class*="bg-orange"],
-[data-theme="dark"] .rounded-2xl[class*="bg-blue"],
-[data-theme="dark"] .rounded-2xl[class*="bg-purple"] {
-    opacity: 0.9;
-}
-
-/* Skeleton placeholders */
-[data-theme="dark"] .animate-pulse .bg-gray-200,
-[data-theme="dark"] [class*="skeleton"] {
-    background-color: var(--surface-3) !important;
-}
-
-/* Status badges */
-[data-theme="dark"] .bg-green-100 { background-color: var(--green-bg) !important; }
-[data-theme="dark"] .bg-red-100 { background-color: var(--red-bg) !important; }
-[data-theme="dark"] .bg-yellow-100 { background-color: var(--yellow-bg) !important; }
-[data-theme="dark"] .bg-blue-100 { background-color: var(--blue-bg) !important; }
-[data-theme="dark"] .bg-orange-100 { background-color: var(--vit-light) !important; }
-[data-theme="dark"] .bg-purple-100 { background-color: rgba(147,51,234,0.12) !important; }
-[data-theme="dark"] .bg-gray-100 { background-color: var(--surface-2) !important; }
-
-/* Space/Gap fix: ensure all text colors are readable */
-[data-theme="dark"] p, [data-theme="dark"] span, [data-theme="dark"] h1,
-[data-theme="dark"] h2, [data-theme="dark"] h3, [data-theme="dark"] h4,
-[data-theme="dark"] label, [data-theme="dark"] li, [data-theme="dark"] td,
-[data-theme="dark"] th, [data-theme="dark"] a:not(.text-vit-orange):not([class*="text-green"]):not([class*="text-red"]):not([class*="text-blue"]) {
-    color: inherit;
-}
-
-/* Fix ring-track for BWA countdown */
-[data-theme="dark"] #bwaCountdownRing circle[stroke="#f3f4f6"] {
-    stroke: var(--surface-3);
-}
-
-</style>
+<!-- Dark Mode: deaktiviert, wird als eigenes Projekt umgesetzt -->
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
@@ -1251,6 +850,35 @@ body, .vit-card, .sidebar-item, input, select, textarea, .ek-modal, th, td {
                             </button>
                         </div>
 
+                        <!-- 🏥 PERFORMANCE HEALTH SCORE -->
+                        <div id="healthScoreWidget" class="vit-card p-5 mb-6">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="text-sm font-bold text-gray-800">🏥 Performance Health Score</h3>
+                                <div id="healthBadge"></div>
+                            </div>
+                            <div class="flex items-center gap-5">
+                                <div style="position:relative;width:80px;height:80px;flex-shrink:0">
+                                    <svg width="80" height="80" style="transform:rotate(-90deg)">
+                                        <circle cx="40" cy="40" r="34" fill="none" stroke="#f3f4f6" stroke-width="6"/>
+                                        <circle id="healthRing" cx="40" cy="40" r="34" fill="none" stroke="#16a34a" stroke-width="6" stroke-dasharray="213.6" stroke-dashoffset="42.7" stroke-linecap="round" style="transition:all 1s ease"/>
+                                    </svg>
+                                    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                                        <span id="healthScoreNum" style="font-size:24px;font-weight:900;color:#16a34a">—</span>
+                                    </div>
+                                </div>
+                                <div style="flex:1"><div id="healthCategories" class="space-y-2"></div></div>
+                                <div style="width:90px;text-align:center;flex-shrink:0">
+                                    <p class="text-xs text-gray-400">Trend 4W</p>
+                                    <svg id="healthTrendSvg" width="80" height="32" style="margin:4px auto"></svg>
+                                    <p id="healthTrendText" class="text-xs font-semibold text-green-600"></p>
+                                </div>
+                            </div>
+                            <div id="healthTrainerHint" class="mt-3 p-2.5 rounded-lg text-xs" style="background:linear-gradient(135deg,rgba(239,125,0,0.06),rgba(245,158,11,0.04));display:none">
+                                <span style="font-size:13px">🎓</span> <span id="healthTrainerText" class="text-gray-600"></span>
+                            </div>
+                        </div>
+
+                        
                         <!-- Kern-Metrik: Umsatz -->
                         <div class="vit-card p-6">
                             <h2 class="h2-headline text-gray-800 mb-4">UMSATZ VS. PLAN</h2>
@@ -4897,6 +4525,29 @@ body, .vit-card, .sidebar-item, input, select, textarea, .ek-modal, th, td {
                     </div>
 
                     <!-- Netzwerk KPIs -->
+                    <!-- 🏥 Netzwerk Health Score Dashboard -->
+                    <div class="vit-card p-5 mb-6" id="hqHealthDashboard">
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="text-sm font-bold text-gray-800">🏥 Netzwerk Health Score</h2>
+                            <div class="flex gap-2 text-xs">
+                                <span class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-semibold" id="hqHealthGreen">🟢 —</span>
+                                <span class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 font-semibold" id="hqHealthYellow">🟡 —</span>
+                                <span class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-semibold" id="hqHealthRed">🔴 —</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 mb-3">
+                            <div style="text-align:center"><p class="text-3xl font-black text-gray-800" id="hqHealthAvg">—</p><p class="text-[10px] text-gray-400">Netzwerk Ø</p></div>
+                            <div style="flex:1"><div class="bg-gray-200 rounded-full h-3"><div id="hqHealthBar" class="h-3 rounded-full transition-all" style="width:0%;background:linear-gradient(90deg,#16a34a,#22c55e)"></div></div></div>
+                        </div>
+                        <div id="hqHealthGrid" class="grid grid-cols-3 lg:grid-cols-7 gap-2"></div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                        <div class="vit-card p-4"><h3 class="text-xs font-bold text-gray-800 mb-2">🎓 Aktive Trainer im Netzwerk</h3><div id="hqTrainerList" class="space-y-1"></div></div>
+                        <div class="vit-card p-4"><h3 class="text-xs font-bold text-gray-800 mb-2">📞 Nächste Gruppencalls</h3><div id="hqGroupcallList" class="space-y-1"></div></div>
+                    </div>
+
+
+                    
                     <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6" id="hqKpiCards"></div>
 
                     <!-- Handlungsbedarf Ticker -->
@@ -20696,13 +20347,13 @@ function setTheme(theme) {
             <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:16px;">
                 <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;font-weight:600;margin-bottom:12px;">Erscheinungsbild</p>
                 <div style="display:flex;gap:8px;">
-                    <button onclick="setTheme('light')" id="profileThemeLight" style="flex:1;padding:12px;border-radius:10px;border:2px solid #EF7D00;background:#f9fafb;cursor:pointer;text-align:center;">
+                    <button style="flex:1;padding:12px;border-radius:10px;border:2px solid #EF7D00;background:#f9fafb;cursor:default;text-align:center;">
                         <span style="font-size:20px;">☀️</span>
                         <p style="font-size:11px;font-weight:600;color:#111827;margin-top:4px;">Light</p>
                     </button>
-                    <button onclick="setTheme('dark')" id="profileThemeDark" style="flex:1;padding:12px;border-radius:10px;border:2px solid transparent;background:#1a1a1e;cursor:pointer;text-align:center;">
+                    <button style="flex:1;padding:12px;border-radius:10px;border:2px solid transparent;background:#e5e7eb;cursor:not-allowed;text-align:center;opacity:0.5;">
                         <span style="font-size:20px;">🌙</span>
-                        <p style="font-size:11px;font-weight:600;color:#f0f0f0;margin-top:4px;">Dark</p>
+                        <p style="font-size:11px;font-weight:600;color:#6b7280;margin-top:4px;">Dark <span style="font-size:9px;">(bald)</span></p>
                     </button>
                 </div>
             </div>
@@ -20937,7 +20588,7 @@ function changePassword() {
     }
 
     // ──── STANDORT-SICHT: Cockpit Widget ────
-    function updateBwaDeadlineWidget() {
+    async function updateBwaDeadlineWidget() {
         var today = new Date();
         var bwaMo = getBwaMonth(today);
         var deadline = getDeadline(bwaMo);
@@ -20945,10 +20596,25 @@ function changePassword() {
         var days = daysUntil(deadline);
         var moName = MO_NAMES[bwaMo.m] + ' ' + bwaMo.y;
 
-        // Check if current user submitted (demo: use Grafrath)
-        var myStandort = STANDORTE_DEMO.find(function(s){return s.name==='Grafrath';});
-        var submitted = myStandort && myStandort.submitted;
-        var rating = myStandort ? myStandort.rating : 'missing';
+        // Check real DB for submission
+        var submitted = null;
+        var rating = 'missing';
+        if(typeof sb !== 'undefined' && typeof sbProfile !== 'undefined' && sbProfile && sbProfile.standort_id) {
+            try {
+                var bwaResp = await sb.from('bwa_daten').select('created_at').eq('standort_id', sbProfile.standort_id).eq('monat', bwaMo.m + 1).eq('jahr', bwaMo.y).limit(1);
+                if(bwaResp.data && bwaResp.data.length > 0) {
+                    submitted = bwaResp.data[0].created_at.slice(0,10);
+                    // Determine rating based on submission date
+                    var subDate = new Date(bwaResp.data[0].created_at);
+                    var subDay = subDate.getDate();
+                    var subMonth = subDate.getMonth(); // 0-based
+                    var deadlineMonth = bwaMo.m + 1 > 11 ? 0 : bwaMo.m + 1;
+                    if(subMonth === deadlineMonth && subDay <= 8) rating = 'gold';
+                    else if(subMonth === deadlineMonth && subDay <= 15) rating = 'ok';
+                    else rating = 'overdue';
+                }
+            } catch(e) { console.warn('BWA check:', e); }
+        }
 
         var titleEl = document.getElementById('bwaDeadlineTitle');
         var subEl = document.getElementById('bwaDeadlineSubtext');
@@ -21036,15 +20702,44 @@ function changePassword() {
     }
 
     // ──── NETZWERK WIDGET (Standort-Sicht) ────
-    function updateNetzwerkWidget() {
+    async function updateNetzwerkWidget() {
         var gold = 0, ok = 0, missing = 0, overdue = 0;
-        STANDORTE_DEMO.forEach(function(s) {
-            if(s.rating==='gold') gold++;
-            else if(s.rating==='ok') ok++;
-            else if(s.rating==='overdue') overdue++;
-            else missing++;
-        });
-        var total = STANDORTE_DEMO.length;
+        var total = 0;
+
+        // Fetch real data from DB
+        if(typeof sb !== 'undefined') {
+            try {
+                var bwaMo = getBwaMonth(new Date());
+                var targetMonth = bwaMo.m + 1; // 1-based
+                var targetYear = bwaMo.y;
+                
+                // Get all standorte
+                var stdResp = await sb.from('standorte').select('id,name').eq('aktiv', true);
+                var standorte = stdResp.data || [];
+                total = standorte.length || 1;
+                
+                // Get all BWA submissions for this month
+                var bwaResp = await sb.from('bwa_daten').select('standort_id,created_at').eq('monat', targetMonth).eq('jahr', targetYear);
+                var submissions = bwaResp.data || [];
+                var submittedIds = {};
+                submissions.forEach(function(b) {
+                    var subDate = new Date(b.created_at);
+                    var subDay = subDate.getDate();
+                    var deadlineMonth = bwaMo.m + 1 > 11 ? 0 : bwaMo.m + 1;
+                    var subMonth = subDate.getMonth();
+                    if(subMonth === deadlineMonth && subDay <= 8) { submittedIds[b.standort_id] = 'gold'; gold++; }
+                    else if(subMonth === deadlineMonth && subDay <= 15) { submittedIds[b.standort_id] = 'ok'; ok++; }
+                    else { submittedIds[b.standort_id] = 'overdue'; overdue++; }
+                });
+                missing = total - gold - ok - overdue;
+            } catch(e) {
+                console.warn('Netzwerk widget:', e);
+                total = 21; missing = total;
+            }
+        } else {
+            total = 21; missing = total;
+        }
+        
         var submitted = gold + ok + overdue;
         var pct = Math.round(submitted / total * 100);
 
@@ -21775,6 +21470,365 @@ function changePassword() {
         renderDailyFocus();
         renderSalesMomentum();
     }, 600);
+})();
+</script>
+
+
+<!-- ═══ HEALTH SCORE SYSTEM ═══ -->
+<script>
+(function(){
+var HEALTH_CATS=[
+{id:'controlling',n:'Controlling',w:25,icon:'📊',color:'#2563eb'},
+{id:'verkauf',n:'Verkauf',w:25,icon:'💰',color:'#16a34a'},
+{id:'marketing',n:'Marketing',w:15,icon:'📣',color:'#EF7D00'},
+{id:'werkstatt',n:'Werkstatt',w:15,icon:'🔧',color:'#9333ea'},
+{id:'engagement',n:'Engagement',w:10,icon:'🔥',color:'#f59e0b'},
+{id:'disziplin',n:'Disziplin',w:10,icon:'✅',color:'#6b7280'}
+];
+
+var DEMO_STD=[
+{name:'München City',score:92,s:{controlling:95,verkauf:90,marketing:88,werkstatt:92,engagement:90,disziplin:95}},
+{name:'Berlin Mitte',score:85,s:{controlling:90,verkauf:82,marketing:80,werkstatt:88,engagement:85,disziplin:82}},
+{name:'Hamburg Altona',score:81,s:{controlling:85,verkauf:78,marketing:76,werkstatt:85,engagement:80,disziplin:80}},
+{name:'Frankfurt Main',score:78,s:{controlling:80,verkauf:75,marketing:78,werkstatt:80,engagement:75,disziplin:78}},
+{name:'Köln Ehrenfeld',score:74,s:{controlling:72,verkauf:80,marketing:70,werkstatt:74,engagement:72,disziplin:75}},
+{name:'Stuttgart West',score:71,s:{controlling:75,verkauf:68,marketing:72,werkstatt:70,engagement:70,disziplin:72}},
+{name:'Düsseldorf',score:68,s:{controlling:70,verkauf:65,marketing:68,werkstatt:72,engagement:66,disziplin:68}},
+{name:'Grafrath',score:78,s:{controlling:72,verkauf:82,marketing:75,werkstatt:80,engagement:78,disziplin:80}},
+{name:'Leipzig',score:62,s:{controlling:55,verkauf:70,marketing:60,werkstatt:65,engagement:62,disziplin:60}},
+{name:'Dresden',score:58,s:{controlling:50,verkauf:62,marketing:55,werkstatt:60,engagement:58,disziplin:58}},
+{name:'Nürnberg',score:54,s:{controlling:48,verkauf:60,marketing:50,werkstatt:58,engagement:54,disziplin:55}},
+{name:'Freiburg',score:82,s:{controlling:88,verkauf:78,marketing:82,werkstatt:80,engagement:80,disziplin:82}},
+{name:'Münster',score:76,s:{controlling:78,verkauf:74,marketing:76,werkstatt:78,engagement:72,disziplin:76}},
+{name:'Augsburg',score:65,s:{controlling:60,verkauf:68,marketing:65,werkstatt:66,engagement:64,disziplin:62}},
+{name:'Bonn',score:44,s:{controlling:35,verkauf:52,marketing:40,werkstatt:48,engagement:42,disziplin:45}},
+{name:'Mannheim',score:48,s:{controlling:42,verkauf:55,marketing:45,werkstatt:50,engagement:48,disziplin:46}},
+{name:'Dortmund',score:72,s:{controlling:74,verkauf:70,marketing:72,werkstatt:74,engagement:70,disziplin:72}},
+{name:'Essen',score:66,s:{controlling:62,verkauf:68,marketing:65,werkstatt:70,engagement:64,disziplin:66}},
+{name:'Bremen',score:79,s:{controlling:82,verkauf:76,marketing:78,werkstatt:80,engagement:76,disziplin:80}},
+{name:'Karlsruhe',score:42,s:{controlling:38,verkauf:48,marketing:40,werkstatt:44,engagement:40,disziplin:42}},
+{name:'Hannover',score:60,s:{controlling:58,verkauf:62,marketing:58,werkstatt:62,engagement:58,disziplin:60}}
+];
+
+var MY=DEMO_STD.find(function(s){return s.name==='Grafrath';});
+var MY_TREND=[72,74,73,76,78];
+
+function sc(v){return v>=75?'#16a34a':v>=50?'#ca8a04':'#dc2626';}
+function se(v){return v>=75?'🟢':v>=50?'🟡':'🔴';}
+function sl(v){return v>=75?'Gesund':v>=50?'Beobachtung':'Kritisch';}
+
+// ── TRAINERS ──
+var TRAINERS=[
+{id:'t1',module:'verkauf',title:'Nachfass-Systematik',desc:'Offene Angebote systematisch nachfassen. Abschlussquote +10-15%.',trigger:'Abschlussquote unter Netzwerk-Ø',dur:'5 Min',steps:['Offene Angebote prüfen','Follow-Up-Template wählen','Innerhalb 48h anrufen'],task:'3 älteste Angebote heute nachfassen'},
+{id:'t2',module:'controlling',title:'BWA richtig lesen',desc:'Wichtigste BWA-Kennzahlen verstehen und Maßnahmen ableiten.',trigger:'BWA hochgeladen',dur:'7 Min',steps:['Rohertragsmarge prüfen (>35%)','Personalkostenquote checken','1 Maßnahme ableiten'],task:'1 Maßnahme aus BWA-Analyse eintragen'},
+{id:'t3',module:'marketing',title:'Content in 10 Minuten',desc:'Local-Hero-Video in unter 10 Minuten erstellen.',trigger:'Kein Content seit 14+ Tagen',dur:'3 Min',steps:['Thema wählen','30-Sek-Video aufnehmen','Im Portal hochladen'],task:'1 Local Hero Video diese Woche'},
+{id:'t4',module:'werkstatt',title:'Durchlaufzeit optimieren',desc:'Durchlaufzeit reduzieren, Kundenzufriedenheit steigern.',trigger:'Durchlaufzeit über Schwellwert',dur:'5 Min',steps:['Engpässe identifizieren','Vorab-Diagnose einführen','Teile-Verfügbarkeit prüfen'],task:'Vorab-Diagnose bei Terminkunden testen'},
+{id:'t5',module:'verkauf',title:'Lead-Qualifizierung',desc:'Leads systematisch bewerten und priorisieren. Fokus auf kaufbereite Kunden.',trigger:'Leads/Woche unter Mindestwert',dur:'4 Min',steps:['Lead-Scoring verstehen (A/B/C)','Bestehende Leads bewerten','Top-3 priorisieren'],task:'Top-3 A-Leads heute anrufen'},
+{id:'t6',module:'einkauf',title:'Rohertrag steigern',desc:'Zubehör-Attach-Rate erhöhen. 2-3% mehr Rohertrag möglich.',trigger:'Rohertrag unter Netzwerk-Ø',dur:'5 Min',steps:['Aktuelle Attach-Rate prüfen','Top-5 Zubehör-Combos lernen','Bei nächstem Verkauf aktiv anbieten'],task:'3 Kunden heute Zubehör aktiv anbieten'},
+{id:'t7',module:'controlling',title:'Liquiditätsplanung',desc:'Cashflow vorausplanen, Engpässe vermeiden.',trigger:'Liquidität unter Schwelle',dur:'6 Min',steps:['Nächste 30 Tage Zahlungen prüfen','Erwartete Eingänge planen','Puffer identifizieren'],task:'30-Tage-Cashflow-Plan erstellen'},
+{id:'t8',module:'marketing',title:'Google My Business optimieren',desc:'GMB-Profil vollständig pflegen. Mehr lokale Sichtbarkeit.',trigger:'GMB Score unter 80%',dur:'7 Min',steps:['Alle Felder prüfen und ausfüllen','5 aktuelle Fotos hochladen','2 Bewertungen beantworten'],task:'GMB-Profil heute vervollständigen'}
+];
+var activeTrainers=[TRAINERS[0]];
+var currentTrainer=null;
+
+// ── INTERCEPTOR DATA ──
+var SOLUTIONS={
+'it':{title:'IT-Probleme? Probier zuerst:',items:['Browser-Cache leeren (Strg+Shift+Del)','Anderen Browser testen (Chrome empfohlen)','Portal abmelden und neu anmelden']},
+'einkauf':{title:'Einkauf – Häufige Lösung:',items:['Konditionen findest du unter Einkauf → Lieferanten','Bestellformulare im Wissen → Downloads','Vororder-Infos unter Einkauf → Kalender']},
+'buchhaltung':{title:'Buchhaltung – Schnellhilfe:',items:['BWA hochladen: Controlling → BWAs → Upload','Trainer "BWA richtig lesen" starten','BWA-Vorlage im Wissen → Downloads']},
+'marketing':{title:'Marketing – Sofort-Hilfe:',items:['Content-Vorlagen unter Marketing → Wissen','Posting-Kalender unter Marketing → Kampagnen','Trainer "Content in 10 Min" verfügbar']},
+'allgemein':{title:'Allgemein – Mögliche Lösung:',items:['Wissensdatenbank durchsuchen','FAQ im Support-Bereich prüfen','Nächster Gruppencall: Frage dort stellen?']}
+};
+
+// ═══ HEALTH SCORE RENDER (Standort) ═══
+function renderHealthScore(){
+if(!MY)return;
+var v=MY.score,col=sc(v);
+var b=document.getElementById('healthBadge');
+if(b){
+var rank=DEMO_STD.slice().sort(function(a,b){return b.score-a.score;}).findIndex(function(s){return s.name==='Grafrath';})+1;
+b.innerHTML='<span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:6px;color:'+col+';background:'+col+'18">'+se(v)+' '+sl(v)+' · Rang '+rank+'/'+DEMO_STD.length+'</span>';
+}
+var ring=document.getElementById('healthRing');
+if(ring){ring.setAttribute('stroke-dashoffset',(213.6*(1-v/100)).toFixed(1));ring.style.stroke=col;}
+var num=document.getElementById('healthScoreNum');
+if(num){num.textContent=v;num.style.color=col;}
+var cats=document.getElementById('healthCategories');
+if(cats){
+cats.innerHTML=HEALTH_CATS.map(function(c){
+var cv=MY.s[c.id]||0,cc=sc(cv);
+return '<div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;width:14px">'+c.icon+'</span><span style="font-size:10px;color:#9ca3af;width:70px">'+c.n+'</span><div style="flex:1;height:4px;background:#f3f4f6;border-radius:2px"><div style="height:100%;width:'+cv+'%;background:'+cc+';border-radius:2px;transition:width 1s"></div></div><span style="font-size:10px;font-weight:700;color:'+cc+';width:24px;text-align:right">'+cv+'</span></div>';
+}).join('');
+}
+// Trend sparkline
+var svg=document.getElementById('healthTrendSvg');
+if(svg&&MY_TREND.length>1){
+var pts=MY_TREND.map(function(v,i){return (i*(80/(MY_TREND.length-1)))+','+(32-((v-40)/60)*32);});
+var h='';for(var i=1;i<pts.length;i++)h+='<line x1="'+pts[i-1].split(',')[0]+'" y1="'+pts[i-1].split(',')[1]+'" x2="'+pts[i].split(',')[0]+'" y2="'+pts[i].split(',')[1]+'" stroke="'+col+'" stroke-width="2"/>';
+pts.forEach(function(p,i){h+='<circle cx="'+p.split(',')[0]+'" cy="'+p.split(',')[1]+'" r="'+(i===pts.length-1?3:1.5)+'" fill="'+col+'"/>';});
+svg.innerHTML=h;
+}
+var tt=document.getElementById('healthTrendText');
+if(tt){var d=MY_TREND[MY_TREND.length-1]-MY_TREND[MY_TREND.length-2];tt.textContent=(d>=0?'↑ +':'↓ ')+d;tt.style.color=d>=0?'#16a34a':'#dc2626';}
+// Trainer hint
+var th=document.getElementById('healthTrainerHint'),thT=document.getElementById('healthTrainerText');
+if(th&&activeTrainers.length>0){th.style.display='';thT.textContent=activeTrainers.length+' Trainer aktiv: '+activeTrainers.map(function(t){return t.title;}).join(', ');}
+}
+
+// ═══ HQ HEALTH RENDER ═══
+function renderHqHealth(){
+var g=0,y=0,r=0,tot=0;
+DEMO_STD.forEach(function(s){tot+=s.score;if(s.score>=75)g++;else if(s.score>=50)y++;else r++;});
+var avg=Math.round(tot/DEMO_STD.length);
+var $=function(id){return document.getElementById(id);};
+if($('hqHealthGreen'))$('hqHealthGreen').textContent='🟢 '+g;
+if($('hqHealthYellow'))$('hqHealthYellow').textContent='🟡 '+y;
+if($('hqHealthRed'))$('hqHealthRed').textContent='🔴 '+r;
+if($('hqHealthAvg'))$('hqHealthAvg').textContent=avg;
+if($('hqHealthBar'))$('hqHealthBar').style.width=avg+'%';
+var gr=$('hqHealthGrid');
+if(gr){
+var sorted=DEMO_STD.slice().sort(function(a,b){return b.score-a.score;});
+gr.innerHTML=sorted.map(function(s){var c=sc(s.score);return '<div style="padding:8px;border-radius:8px;text-align:center;background:'+c+'08;border:1px solid '+c+'20;cursor:pointer" title="'+s.name+': '+s.score+'"><p style="font-size:9px;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.name.split(' ')[0]+'</p><p style="font-size:16px;font-weight:800;color:'+c+'">'+s.score+'</p></div>';}).join('');
+}
+// Trainer list
+var tl=$('hqTrainerList');
+if(tl){tl.innerHTML=[
+{s:'Bonn',m:'Controlling',t:'BWA pünktlich',st:'aktiv'},
+{s:'Karlsruhe',m:'Verkauf',t:'Nachfass-System',st:'aktiv'},
+{s:'Mannheim',m:'Marketing',t:'Content-Routine',st:'gestartet'},
+{s:'Nürnberg',m:'Controlling',t:'BWA hochladen',st:'ignoriert'},
+{s:'Dresden',m:'Werkstatt',t:'Auslastung',st:'aktiv'}
+].map(function(t){var c={aktiv:'#16a34a',gestartet:'#2563eb',ignoriert:'#dc2626'}[t.st]||'#9ca3af';return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #f3f4f6"><span style="font-size:10px;font-weight:600;color:#111;flex:1">'+t.s+'</span><span style="font-size:9px;color:#9ca3af">'+t.m+' → '+t.t+'</span><span style="font-size:9px;padding:1px 6px;border-radius:4px;color:'+c+';background:'+c+'12;font-weight:600">'+t.st+'</span></div>';}).join('');}
+// Gruppencall list
+var gl=$('hqGroupcallList');
+if(gl){gl.innerHTML=[
+{t:'Inhaber-Call',d:'Mi 05.03 · 10:00',p:18},{t:'Verkäufer-Call',d:'Fr 07.03 · 09:00',p:24},{t:'Werkstatt-Call',d:'Do 13.03 · 14:00',p:15}
+].map(function(c){return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f3f4f6"><span style="font-size:14px">📞</span><div style="flex:1"><p style="font-size:11px;font-weight:600;color:#111">'+c.t+'</p><p style="font-size:9px;color:#9ca3af">'+c.d+'</p></div><span style="font-size:9px;color:#6b7280">'+c.p+' TN</span></div>';}).join('');}
+}
+
+// ═══ TRAINER CARD ═══
+window.showTrainerCard=function(tr){
+currentTrainer=tr;
+var el=document.getElementById('trainerCardOverlay');if(!el)return;
+document.getElementById('trainerModuleTag').textContent=tr.module.toUpperCase();
+document.getElementById('trainerTitle').textContent=tr.title;
+document.getElementById('trainerDesc').textContent=tr.desc;
+document.getElementById('trainerTriggerInfo').textContent='Ausgelöst: '+tr.trigger;
+document.getElementById('trainerCTA').textContent='▶ Starten ('+tr.dur+')';
+var st=document.getElementById('trainerSteps');
+if(st)st.innerHTML=tr.steps.map(function(s,i){return '<div style="display:flex;align-items:flex-start;gap:6px"><span style="width:18px;height:18px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#9ca3af;flex-shrink:0">'+(i+1)+'</span><span style="font-size:11px;color:#4b5563">'+s+'</span></div>';}).join('');
+el.style.display='';
+};
+window.closeTrainer=function(){document.getElementById('trainerCardOverlay').style.display='none';};
+window.snoozeTrainer=function(){closeTrainer();};
+window.startTrainer=function(){
+if(!currentTrainer)return;
+alert('🎓 Trainer "'+currentTrainer.title+'" gestartet!\n\nIn Produktion: Micro-Learning ('+currentTrainer.dur+') mit konkreter Handlung.');
+var imp=document.getElementById('trainerImpact');
+if(imp){imp.style.display='';imp.innerHTML='✅ Trainer gestartet! Aufgabe: <strong>'+currentTrainer.task+'</strong>';}
+};
+window.createTrainerTask=function(){
+if(!currentTrainer)return;
+alert('📋 Aufgabe erstellt: "'+currentTrainer.task+'"');
+closeTrainer();
+};
+
+// ═══ TICKET INTERCEPTOR ═══
+window.checkTicketInterceptor=function(){
+var catEl=document.getElementById('ticketCatInput');
+if(!catEl)return;
+var cat=catEl.value;
+var sol=SOLUTIONS[cat];
+var ic=document.getElementById('ticketInterceptor');
+var icC=document.getElementById('interceptorContent');
+if(!sol||!ic||!icC){if(ic)ic.style.display='none';return;}
+ic.style.display='';
+icC.innerHTML='<p class="text-xs font-semibold text-gray-700 mb-1">'+sol.title+'</p>'+sol.items.map(function(i){return '<div style="display:flex;align-items:flex-start;gap:6px;padding:4px 8px;background:white;border-radius:6px"><span style="color:#EF7D00;font-size:12px">→</span><span style="font-size:11px;color:#4b5563">'+i+'</span></div>';}).join('');
+};
+window.acceptInterceptor=function(){
+document.getElementById('ticketInterceptor').style.display='none';
+document.getElementById('ticketCreate').classList.add('hidden');
+alert('✅ Danke! Probiere die vorgeschlagene Lösung aus.\nWenn sie nicht hilft, erstelle einfach ein neues Ticket.');
+};
+window.skipInterceptor=function(){
+document.getElementById('ticketInterceptor').style.display='none';
+};
+// Hook category select
+setTimeout(function(){
+var catSel=document.getElementById('ticketCatInput');
+if(catSel)catSel.addEventListener('change',function(){checkTicketInterceptor();});
+},500);
+
+// ═══ GRUPPENCALL PREP ═══
+window.showGroupcallPrep=function(){
+var p=document.getElementById('groupcallPrepPanel');if(!p)return;
+document.getElementById('gcpScore').textContent=MY.score;
+document.getElementById('gcpScore').style.color=sc(MY.score);
+document.getElementById('gcpStatus').innerHTML=se(MY.score)+' '+sl(MY.score);
+document.getElementById('gcpRank').textContent=DEMO_STD.slice().sort(function(a,b){return b.score-a.score;}).findIndex(function(s){return s.name==='Grafrath';})+1+'/'+DEMO_STD.length;
+// Categories
+var cats=document.getElementById('gcpCategories');
+if(cats)cats.innerHTML=HEALTH_CATS.map(function(c){var v=MY.s[c.id]||0;return '<div style="display:flex;align-items:center;justify-content:between;gap:6px;padding:4px 0"><span style="font-size:12px">'+c.icon+'</span><span style="flex:1;font-size:11px;color:#6b7280">'+c.n+'</span><span style="font-size:12px;font-weight:700;color:'+sc(v)+'">'+v+'</span></div>';}).join('');
+// Trainers
+var tl=document.getElementById('gcpTrainers');
+if(tl)tl.innerHTML=activeTrainers.length>0?activeTrainers.map(function(t){return '<div style="font-size:11px;padding:3px 0;border-bottom:1px solid #f3f4f6">🎓 '+t.title+' <span style="color:#9ca3af">('+t.module+')</span></div>';}).join(''):'<p style="font-size:11px;color:#9ca3af">Keine aktiven Trainer</p>';
+p.style.display='';
+p.querySelector('.gc-prep-slider').style.transform='translateX(0)';
+};
+window.closeGroupcallPrep=function(){
+var s=document.querySelector('.gc-prep-slider');
+if(s)s.style.transform='translateX(100%)';
+setTimeout(function(){document.getElementById('groupcallPrepPanel').style.display='none';},350);
+};
+
+// ═══ HOOKS ═══
+var __sv=window.showView;
+if(__sv){
+window.showView=function(v){
+__sv(v);
+if(v==='home')setTimeout(renderHealthScore,150);
+if(v==='hqCockpit')setTimeout(renderHqHealth,150);
+};
+}
+
+// ═══ AUTO-INIT ═══
+setTimeout(function(){
+renderHealthScore();
+renderHqHealth();
+// Show trainer card after 3s (demo)
+setTimeout(function(){
+if(activeTrainers.length>0) showTrainerCard(activeTrainers[0]);
+},3000);
+},700);
+
+})();
+</script>
+
+
+<!-- ═══ KPI TRIGGER ENGINE ═══ -->
+
+
+
+<!-- ═══ KPI TRIGGER ENGINE ═══ -->
+<script>
+(function(){
+    // ──── KPI TRIGGER ENGINE ────
+    // Checks metrics and auto-assigns trainers
+    window.kpiTriggerEngine = function() {
+        if(typeof MY === 'undefined' || !MY) return;
+        var triggers = [];
+
+        // Controlling: BWA pünktlich?
+        if(MY.s.controlling < 60) triggers.push({module:'controlling', trainerId:'t2', reason:'Controlling-Score unter 60'});
+
+        // Verkauf: Abschlussquote?
+        if(MY.s.verkauf < 65) triggers.push({module:'verkauf', trainerId:'t1', reason:'Verkaufs-Score unter 65'});
+
+        // Marketing: Content-Frequenz?
+        if(MY.s.marketing < 60) triggers.push({module:'marketing', trainerId:'t3', reason:'Marketing-Score unter 60'});
+
+        // Werkstatt: Auslastung?
+        if(MY.s.werkstatt < 60) triggers.push({module:'werkstatt', trainerId:'t4', reason:'Werkstatt-Score unter 60'});
+
+        // Einkauf: Rohertrag?
+        if(MY.s.controlling < 50 || MY.s.verkauf < 50) triggers.push({module:'einkauf', trainerId:'t6', reason:'Rohertrag potentiell unter Schnitt'});
+
+        console.log('[KPI Trigger Engine] '+triggers.length+' triggers found:', triggers.map(function(t){return t.module;}).join(', '));
+        return triggers;
+    };
+
+    // ──── SUPPORT LEVEL SYSTEM ────
+    window.getSupportLevel = function() {
+        if(typeof MY === 'undefined' || !MY) return 'A';
+        var score = MY.score;
+        var hasTrainer = typeof activeTrainers !== 'undefined' && activeTrainers.length > 0;
+
+        // Level A: Quick Ping (async, for healthy scores)
+        // Level B: Review (for observation scores)
+        // Level C: 15 Min Call (only for critical or post-trainer)
+        if(score < 50) return 'C'; // Critical -> direct HQ access
+        if(score < 75 && !hasTrainer) return 'A'; // Observation, try trainer first
+        if(score < 75 && hasTrainer) return 'B'; // Observation + trainer tried
+        return 'A'; // Healthy
+    };
+
+    window.canBookHqCall = function() {
+        var level = getSupportLevel();
+        // Can only book call at Level B or C
+        return level === 'B' || level === 'C';
+    };
+
+    // ──── IMPACT CHECK (7-day follow-up) ────
+    window.scheduleImpactCheck = function(trainerId, startDate) {
+        // In production: store in Supabase, cron checks after 7 days
+        var checkDate = new Date(startDate);
+        checkDate.setDate(checkDate.getDate() + 7);
+        console.log('[Impact Check] Scheduled for trainer '+trainerId+' on '+checkDate.toISOString().split('T')[0]);
+        // Store locally for demo
+        try {
+            var checks = JSON.parse(localStorage.getItem('vit_impact_checks') || '[]');
+            checks.push({trainerId: trainerId, checkDate: checkDate.toISOString(), resolved: false});
+            localStorage.setItem('vit_impact_checks', JSON.stringify(checks));
+        } catch(e){}
+    };
+
+    window.checkPendingImpacts = function() {
+        try {
+            var checks = JSON.parse(localStorage.getItem('vit_impact_checks') || '[]');
+            var today = new Date();
+            var due = checks.filter(function(c) { return !c.resolved && new Date(c.checkDate) <= today; });
+            if(due.length > 0) {
+                console.log('[Impact Check] '+due.length+' checks due!');
+                // In production: compare KPI before/after, show result
+            }
+        } catch(e){}
+    };
+
+    // ──── ONBOARDING PHASE TRACKING ────
+    window.getOnboardingPhase = function() {
+        try {
+            var phase = localStorage.getItem('vit_onb_phase');
+            if(phase === 'done') return {phase: 4, label: 'Abgeschlossen'};
+            if(phase) return JSON.parse(phase);
+        } catch(e){}
+        // Default: check if onboarding view has been shown
+        return {phase: 2, label: 'Woche 1', progress: 65};
+    };
+
+    window.completeOnboardingPhase = function(phaseNum) {
+        if(phaseNum >= 3) {
+            try { localStorage.setItem('vit_onb_phase', 'done'); } catch(e){}
+            console.log('[Onboarding] Completed! Switching to Performance trainers.');
+        } else {
+            try { localStorage.setItem('vit_onb_phase', JSON.stringify({phase: phaseNum+1, label: phaseNum===1?'Woche 1':'Woche 2-3', progress: phaseNum*33})); } catch(e){}
+        }
+    };
+
+    // ──── SOFT LOCK CONTROLLER ────
+    window.checkSoftLocks = function() {
+        if(typeof MY === 'undefined' || !MY) return;
+
+        // Pipeline Insights: locked if close rate low AND no trainer completed
+        var pLock = document.getElementById('pipelineInsightLock');
+        if(pLock) {
+            // Demo: lock if verkauf < 70
+            pLock.style.display = MY.s.verkauf < 70 ? '' : 'none';
+        }
+
+        // HQ Booking: only available after trainer attempt or critical score
+        // (This is checked by canBookHqCall())
+    };
+
+    // ──── Dark mode for new panels ────
+    // Handled by existing [data-theme="dark"] rules for .gc-prep-slider via white bg override
+
+    // ──── INIT ────
+    setTimeout(function(){
+        if(typeof kpiTriggerEngine === 'function') kpiTriggerEngine();
+        if(typeof checkPendingImpacts === 'function') checkPendingImpacts();
+        if(typeof checkSoftLocks === 'function') checkSoftLocks();
+    }, 1000);
 })();
 </script>
 
