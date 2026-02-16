@@ -7777,7 +7777,8 @@
             if(!container) return;
             try {
                 var stdId = sbProfile ? sbProfile.standort_id : null;
-                var query = sb.from('bwa_daten').select('id,monat,jahr,umsatzerloese,rohertrag,ergebnis_vor_steuern,datei_name,datei_url,created_at').gte('jahr', 2026).order('jahr', {ascending:false}).order('monat', {ascending:false});
+                console.log('[BWA] loadBwaList() called, stdId:', stdId, 'is_hq:', sbProfile ? sbProfile.is_hq : 'no profile');
+                var query = sb.from('bwa_daten').select('id,monat,jahr,umsatzerloese,rohertrag,ergebnis_vor_steuern,datei_name,datei_url,created_at').order('jahr', {ascending:false}).order('monat', {ascending:false});
                 if(stdId && !sbProfile.is_hq) query = query.eq('standort_id', stdId);
                 var resp = await query;
                 if(resp.error) throw resp.error;
@@ -7823,7 +7824,7 @@
                     h += '</div></div>';
                 });
                 container.innerHTML = h;
-            } catch(err) { container.innerHTML = '<p class="text-sm text-red-400 text-center py-4">Fehler: '+err.message+'</p>'; }
+            } catch(err) { console.error('[BWA] loadBwaList error:', err); container.innerHTML = '<p class="text-sm text-red-400 text-center py-4">Fehler: '+err.message+'</p><button onclick="loadBwaList()" class="text-xs text-vit-orange underline mt-2">Erneut versuchen</button>'; }
         }
 
         async function downloadBwa(bwaId) {
@@ -10794,7 +10795,7 @@
         var MODUL_DATEN = {
             standort: [
                 {name:'Startseite / Dashboard', view:'homeView', status:'live', typ:'standort', details:'Personalisiert, 7 Live-Widgets, 3 Demo-Widgets', kiPrio:35, aufwand:'S', kiTodo:'Restliche 3 Widgets (Kampagnen, Top-Verkäufer, Neue Inhalte) an DB anbinden'},
-                {name:'Verkauf / CRM', view:'verkaufView', status:'teilweise', typ:'standort', details:'Pipeline/Kanban mit DB, Lead-CRUD, Verkaufstracking, Auswertung', kiPrio:2, aufwand:'L', kiTodo:'Angebotserstellung (PDF), Lead-Import, Follow-up-Erinnerungen. Kernmodul für Umsatz.'},
+                {name:'Verkauf / CRM', view:'verkaufView', status:'teilweise', typ:'standort', details:'React Deal Flow Pipeline (Kanban, Drag&Drop, Gamification, Verkaufsformular digital+print), Scan-Upload mit KI-Analyse, KI-Verkaufstrainer, Wochenansicht, Auswertung', kiPrio:2, aufwand:'L', kiTodo:'⚠️ SICHERHEIT: Scan-Analyse nutzt Anthropic API-Key im Frontend – muss auf Supabase Edge Function umgestellt werden! Danach: Angebotserstellung (PDF), Lead-Import, Follow-up-Erinnerungen, Supabase-Anbindung der Pipeline-Deals.'},
                 {name:'Kalender', view:'kalenderView', status:'live', typ:'standort', details:'Monatsansicht, Termine aus DB laden/erstellen/löschen', kiPrio:20, aufwand:'XL', kiTodo:'MS365-Sync ist nice-to-have, kein Blocker. Wochenansicht wäre UX-Verbesserung.'},
                 {name:'Aufgaben / Todos', view:'todoView', status:'live', typ:'standort', details:'Erstellen, Bearbeiten, Abhaken, Löschen, Filtern – alles DB', kiPrio:30, aufwand:'M', kiTodo:'Fälligkeitsdatum, Zuweisung an Mitarbeiter. Funktioniert bereits gut.'},
                 {name:'Kommunikation', view:'kommunikationView', status:'live', typ:'standort', details:'Ankündigungen, Brett, Forum, Chat-Kanäle – alles DB', kiPrio:28, aufwand:'M', kiTodo:'Direktnachrichten fehlt. Ansonsten solide.'},
@@ -11002,6 +11003,7 @@
             el.innerHTML = '<p class="text-sm text-gray-400 text-center py-8 animate-pulse">Lade Cockpit-Daten...</p>';
 
             var stdId = sbProfile ? sbProfile.standort_id : null;
+            console.log('[Cockpit] renderPerformanceCockpit() called, stdId:', stdId);
             var stdName = sbProfile ? (sbProfile.standort_name || sbProfile.name || 'Mein Standort') : 'Mein Standort';
             var currentYear = new Date().getFullYear();
             var pn = function(v) { return parseFloat(v) || 0; };
@@ -11210,7 +11212,7 @@
             if(v==='todo') loadTodos();
             if(v==='notifications') renderNotifications('all');
             // Auto-Loading for Standort-Views
-            if(v==='controlling') { showControllingTab('cockpit'); renderPerformanceCockpit(); }
+            if(v==='controlling') { showControllingTab('cockpit'); renderPerformanceCockpit(); loadBwaList(); }
             if(v==='verkauf') { showVerkaufTab('pipeline'); }
             if(v==='kommunikation') { showKommTab('inbox'); }
             if(v==='aktenschrank') { loadAktenFiles(); }
@@ -16058,32 +16060,75 @@ function ScanUploadModal({deal,sales,onClose,onUpdateDeal}){
       const base64=preview.split(",")[1];
       const mediaType=file.type||"image/jpeg";
 
-      // Call via Supabase Edge Function (API key is server-side)
-      const session=await window.sb?.auth?.getSession?.();
-      const token=session?.data?.session?.access_token;
-      const supabaseUrl=window.sb?.supabaseUrl||"";
-      const supabaseKey=window.sb?.supabaseKey||"";
-
-      const resp=await fetch(supabaseUrl+"/functions/v1/analyze-scan",{
+      // ⚠️ TEMPORÄR: Direkter API-Call aus dem Frontend
+      // TODO: Auf Supabase Edge Function umstellen (analyze-scan)
+      const resp=await fetch("https://api.anthropic.com/v1/messages",{
         method:"POST",
         headers:{
           "Content-Type":"application/json",
-          "Authorization":"Bearer "+(token||""),
-          "apikey":supabaseKey
+          "x-api-key":"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",
+          "anthropic-version":"2023-06-01",
+          "anthropic-dangerous-direct-browser-access":"true"
         },
         body:JSON.stringify({
-          image_base64:base64,
-          media_type:mediaType
+          model:"claude-sonnet-4-20250514",
+          max_tokens:2000,
+          messages:[{role:"user",content:[
+            {type:"image",source:{type:"base64",media_type:mediaType,data:base64}},
+            {type:"text",text:`Du siehst ein eingescanntes Fahrrad-Beratungsformular von vit:bikes.
+Extrahiere ALLE erkennbaren Werte und gib sie als JSON zurück. Nur valides JSON, kein Markdown.
+
+Verwende exakt diese Schlüssel (nur Felder zurückgeben die du lesen kannst):
+{
+  "payment": "Bezahlart (JobRad/BLS/BusinessBike/Finanzierung/Leasing/Bar/EC)",
+  "nutzung": "Text",
+  "ziel": "Text",
+  "distanz": "Text",
+  "haeufigkeit": "Text",
+  "erfahrung": "Text",
+  "lagerung": "Text",
+  "aufladen": "Text",
+  "zeitrahmen": "Text",
+  "wichtig": "Text",
+  "budget": "Text/Betrag",
+  "budgetRange": "<2k oder 2-3k oder 3-5k oder 5k+",
+  "akku": "Text",
+  "dreiPunkte": "Text",
+  "einwaende": "Text",
+  "next": "Text",
+  "notizen": "Text",
+  "ergoMethod": "Bodyscanner oder Smartfit",
+  "sattelhoehe": "Wert",
+  "sattelversatz": "Wert",
+  "abstandLenker": "Wert",
+  "lenkerhoehe": "Wert",
+  "sitzknochen": "Wert",
+  "griffgroesse": "Wert",
+  "gekauftesRad": "Modell/Marke/Farbe",
+  "nrTeilekiste": "Nummer",
+  "nrAuftrag": "Nummer",
+  "todoZubehoer": true/false,
+  "todoRadBestellt": true/false,
+  "todoKiste": true/false,
+  "todoLeasing": true/false,
+  "todoFinanzierung": true/false,
+  "todoWertgarantie": true/false
+}
+
+Gib NUR das JSON zurück.`}
+          ]}]
         })
       });
 
       if(!resp.ok){
-        const errBody=await resp.json().catch(()=>({}));
-        throw new Error(errBody.error||`Fehler ${resp.status}`);
+        const errBody=await resp.text();
+        throw new Error(`API Fehler ${resp.status}: ${errBody.substring(0,200)}`);
       }
 
       const data=await resp.json();
-      const result=data.fields||{};
+      const text=data.content?.find(c=>c.type==="text")?.text||"";
+      const jsonStr=text.replace(/```json\s*/g,"").replace(/```\s*/g,"").trim();
+      const result=JSON.parse(jsonStr);
       setParsed(result);
 
       // Merge: bestehende sales haben Vorrang, gescannte Werte füllen Lücken
