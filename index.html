@@ -13942,7 +13942,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         async function loadPortalNutzungData() {
           try {
             // Supabase RPC-Call
-            const { data, error } = await supabase.rpc('get_portal_usage_stats');
+            const { data, error } = await sb.rpc('get_portal_usage_stats');
             
             if (error) {
               console.error('Error loading portal usage stats:', error);
