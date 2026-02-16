@@ -338,8 +338,6 @@
 .widget-info-popup.active{display:block}
 .widget-info-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.15);z-index:9998}
 .widget-info-overlay.active{display:block}
-.notif-pref-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:#4b5563;}
-.notif-toggle{accent-color:#EF7D00;width:16px;height:16px;cursor:pointer;}
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -389,6 +387,28 @@
                 <div class="mt-5 pt-4 border-t border-gray-100 text-center">
                     <p class="text-sm text-gray-500 mb-3">Noch kein Konto?</p>
                     <button onclick="showRegistration()" class="w-full py-2.5 bg-gray-100 text-gray-700 rounded-lg font-semibold text-sm hover:bg-gray-200 transition">Registrieren</button>
+                </div>
+
+                <!-- Demo Quick-Switch (3-Ebenen Test) -->
+                <div class="mt-4 pt-4 border-t border-gray-100">
+                    <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-2 text-center font-semibold">Demo: 3-Ebenen testen</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="switchDemoAccount('extern','phase0')" class="py-2 px-2 rounded-lg text-[10px] font-semibold border border-orange-200 text-vit-orange hover:bg-orange-50 transition">
+                            ⚡ Extern (Phase 0)
+                        </button>
+                        <button onclick="switchDemoAccount('standort','part1')" class="py-2 px-2 rounded-lg text-[10px] font-semibold border border-purple-200 text-purple-600 hover:bg-purple-50 transition">
+                            📋 Standort (Part 1)
+                        </button>
+                        <button onclick="switchDemoAccount('standort','part2')" class="py-2 px-2 rounded-lg text-[10px] font-semibold border border-blue-200 text-blue-600 hover:bg-blue-50 transition">
+                            ⚡ Standort (Part 2)
+                        </button>
+                        <button onclick="switchDemoAccount('standort','partner')" class="py-2 px-2 rounded-lg text-[10px] font-semibold border border-green-200 text-green-600 hover:bg-green-50 transition">
+                            🏆 Standort (Partner)
+                        </button>
+                    </div>
+                    <button onclick="switchDemoAccount('hq')" class="mt-2 w-full py-2 rounded-lg text-[10px] font-semibold border border-gray-300 text-gray-600 hover:bg-gray-50 transition">
+                        🏢 HQ-Modus
+                    </button>
                 </div>
                 
             </div>
@@ -637,6 +657,43 @@
                             <span>Dev-Status</span>
                         </button>
                         </div>
+
+                        <!-- ═══ EXTERN (BikeEngine) SIDEBAR ═══ -->
+                        <div id="externMenu" class="space-y-1 hidden">
+                            <div class="mb-3 px-3 py-2 rounded-lg" style="background: linear-gradient(135deg, rgba(239,125,0,0.15), rgba(239,125,0,0.05));">
+                                <div class="flex items-center space-x-2 mb-1">
+                                    <span class="text-lg">⚡</span>
+                                    <span class="text-sm font-bold text-vit-orange">BikeEngine</span>
+                                </div>
+                                <p class="text-[10px] text-gray-400">Dein Einstieg ins vit:bikes Netzwerk</p>
+                            </div>
+
+                            <button onclick="showView('externHome')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                                <span>Dashboard</span>
+                            </button>
+
+                            <button onclick="showView('onboarding')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                                <span>Onboarding & Weg</span>
+                            </button>
+
+                            <button onclick="showView('wissen')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                                <span>Akademie</span>
+                            </button>
+
+                            <button onclick="showView('kommunikation')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                <span>Community</span>
+                                <span class="ml-auto text-[9px] bg-gray-600 text-gray-300 rounded px-1.5 py-0.5 font-bold">LESEN</span>
+                            </button>
+
+                            <button onclick="showView('support')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                                <span>Support</span>
+                            </button>
+                        </div>
                         <!-- HQ-specific items (hidden by default) -->
                         <div id="hqMenu" class="space-y-2 hidden">
                             <!-- HQ Top-Level -->
@@ -751,6 +808,12 @@
 
                             <hr class="border-gray-600 my-3">
 
+                            
+                            <button onclick="showView('hqOnboarding')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                                <span>Onboarding-Pipeline</span>
+                                <span class="ml-auto bg-vit-orange text-white text-[9px] rounded-full px-1.5 py-0.5 font-bold" id="hqOnbBadge">3</span>
+                            </button>
                             
                             <button onclick="showView('hqEinstellungen')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -1459,7 +1522,8 @@
                         </div>
                     </div>
                 </div>
-                </div><!-- /verkaufView -->
+
+                </div>
 
                 <!-- MARKETING View -->
                 <!-- ===== DASHBOARDS VIEW (Finanzen, Marketing PRO, Team als Tabs) ===== -->
@@ -1578,6 +1642,7 @@
                             </table>
                         </div>
                     </div>
+                </div>
                 </div>
 
                 <!-- Marketing View (Hauptmenü) – REDESIGN v3: Cockpit, Budget, Kampagnen, Reichweite + Social, Strategie, Wissen -->
@@ -3914,176 +3979,106 @@
                     </div>
                 </div>
 
-                <div id="onboardingView" class="view" style="display: none;">
-                    <h1 class="h1-headline text-gray-800 mb-6" data-i18n="h_onboarding">ONBOARDING</h1>
-                    
+                <!-- ═══ EXTERN HOME VIEW (BikeEngine Dashboard) ═══ -->
+                <div id="externHomeView" class="view" style="display: none;">
                     <div class="mb-6">
-                        <p class="text-gray-600 mb-4">Willkommen bei vit:bikes! Hier findest du alle Aufgaben für deinen erfolgreichen Start.</p>
+                        <div class="flex items-center space-x-3 mb-2">
+                            <span class="text-3xl">⚡</span>
+                            <div>
+                                <h1 class="h1-headline text-gray-800" style="font-size:22px">BIKEENGINE DASHBOARD</h1>
+                                <p class="text-sm text-gray-500">Dein Einstieg in die vit:bikes Welt</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Asana Project Container (wird dynamisch gefüllt) -->
-                    <div id="asanaOnboardingContent">
-                        <!-- Wird via JavaScript befüllt -->
+                    <!-- Stage Banner -->
+                    <div id="externStageBanner" class="vit-card p-5 mb-6" style="background: linear-gradient(135deg, #1a1a1a, #2a2a2a); color: white;">
+                        <div class="flex items-center justify-between flex-wrap gap-4">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-14 h-14 rounded-xl flex items-center justify-center text-2xl" style="background: rgba(239,125,0,0.2);">🚀</div>
+                                <div>
+                                    <p class="text-xs text-gray-400 uppercase tracking-wider">Aktueller Status</p>
+                                    <p class="text-lg font-bold text-vit-orange" id="externStageLabel">Phase 0 – Kostenloser Akademiezugang</p>
+                                    <p class="text-xs text-gray-400 mt-1" id="externStageDesc">Einstieg ohne Verpflichtung – lerne vit:bikes kennen</p>
+                                </div>
+                            </div>
+                            <div id="externStageAction">
+                                <button onclick="showView('onboarding')" class="px-5 py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition">
+                                    Nächster Schritt →
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Static Content als Fallback -->
-                    <div id="staticOnboardingContent">
-                    <!-- Asana Project wird hier angezeigt -->
+                    <!-- Quick Cards -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <button onclick="showView('onboarding')" class="vit-card p-4 hover:shadow-lg transition-shadow text-center">
+                            <p class="text-2xl mb-1">🗺️</p>
+                            <p class="text-xs font-semibold text-gray-700">Dein Weg</p>
+                            <p class="text-[10px] text-gray-400">Roadmap & Status</p>
+                        </button>
+                        <button onclick="showView('wissen')" class="vit-card p-4 hover:shadow-lg transition-shadow text-center">
+                            <p class="text-2xl mb-1">📚</p>
+                            <p class="text-xs font-semibold text-gray-700">Akademie</p>
+                            <p class="text-[10px] text-gray-400">Lerninhalte & Kurse</p>
+                        </button>
+                        <button onclick="showView('kommunikation')" class="vit-card p-4 hover:shadow-lg transition-shadow text-center">
+                            <p class="text-2xl mb-1">💬</p>
+                            <p class="text-xs font-semibold text-gray-700">Community</p>
+                            <p class="text-[10px] text-gray-400">Forum (nur lesen)</p>
+                        </button>
+                        <button onclick="showView('support')" class="vit-card p-4 hover:shadow-lg transition-shadow text-center">
+                            <p class="text-2xl mb-1">🆘</p>
+                            <p class="text-xs font-semibold text-gray-700">Support</p>
+                            <p class="text-[10px] text-gray-400">Fragen & Hilfe</p>
+                        </button>
+                    </div>
+
+                    <!-- Phase Roadmap Visual -->
                     <div class="vit-card p-6 mb-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h2 class="h2-headline text-gray-800">Dein Onboarding-Plan</h2>
-                            <button class="text-sm text-vit-orange hover:underline font-semibold">In Asana öffnen →</button>
-                        </div>
-                        
-                        <p class="text-sm text-gray-600 mb-6">Arbeite dich durch diese Aufgaben, um optimal vorbereitet zu sein!</p>
-
-                        <!-- Onboarding Fortschritt -->
-                        <div class="mb-6">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm font-semibold text-gray-700">Gesamt-Fortschritt</span>
-                                <span class="text-sm font-semibold text-vit-orange">65%</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-3">
-                                <div class="bg-vit-orange h-3 rounded-full" style="width: 65%"></div>
-                            </div>
-                        </div>
-
-                        <!-- Section: Erste Schritte -->
-                        <div class="mb-6">
-                            <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
-                                <span class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">✓</span>
-                                Erste Schritte
-                            </h3>
-                            <div class="space-y-2 ml-8">
-                                <div class="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                                    <input type="checkbox" checked disabled class="w-4 h-4">
-                                    <span class="text-sm text-gray-700 line-through">Portalzugang einrichten</span>
-                                    <span class="ml-auto text-xs text-gray-500">✓ Erledigt</span>
-                                </div>
-                                <div class="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                                    <input type="checkbox" checked disabled class="w-4 h-4">
-                                    <span class="text-sm text-gray-700 line-through">Willkommensvideo ansehen</span>
-                                    <span class="ml-auto text-xs text-gray-500">✓ Erledigt</span>
-                                </div>
-                                <div class="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                                    <input type="checkbox" checked disabled class="w-4 h-4">
-                                    <span class="text-sm text-gray-700 line-through">Team-Mitglieder einladen</span>
-                                    <span class="ml-auto text-xs text-gray-500">✓ Erledigt</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Section: Produkt-Schulung -->
-                        <div class="mb-6">
-                            <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
-                                <span class="bg-vit-orange text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">2/4</span>
-                                Produkt-Schulung
-                            </h3>
-                            <div class="space-y-2 ml-8">
-                                <div class="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                                    <input type="checkbox" checked disabled class="w-4 h-4">
-                                    <span class="text-sm text-gray-700 line-through">E-Bike Grundlagen Kurs absolvieren</span>
-                                    <span class="ml-auto text-xs text-gray-500">✓ Erledigt</span>
-                                </div>
-                                <div class="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                                    <input type="checkbox" checked disabled class="w-4 h-4">
-                                    <span class="text-sm text-gray-700 line-through">Marken-Portfolio kennenlernen</span>
-                                    <span class="ml-auto text-xs text-gray-500">✓ Erledigt</span>
-                                </div>
-                                <div class="flex items-center space-x-3 p-3 bg-white border-2 border-vit-orange rounded-lg">
-                                    <input type="checkbox" class="w-4 h-4">
-                                    <span class="text-sm text-gray-700 font-semibold">3D-Vermessungs-System Training</span>
-                                    <span class="ml-auto px-2 py-1 bg-vit-orange text-white text-xs rounded">In Arbeit</span>
-                                </div>
-                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                                    <input type="checkbox" class="w-4 h-4">
-                                    <span class="text-sm text-gray-700">Werkstatt-Prozesse verstehen</span>
-                                    <span class="ml-auto text-xs text-gray-500">Fällig: 20.02.</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Section: Verkaufsprozesse -->
-                        <div class="mb-6">
-                            <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
-                                <span class="bg-gray-300 text-gray-700 rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">0/5</span>
-                                Verkaufsprozesse
-                            </h3>
-                            <div class="space-y-2 ml-8">
-                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                                    <input type="checkbox" class="w-4 h-4">
-                                    <span class="text-sm text-gray-700">CRM-System einrichten</span>
-                                    <span class="ml-auto text-xs text-gray-500">Fällig: 18.02.</span>
-                                </div>
-                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                                    <input type="checkbox" class="w-4 h-4">
-                                    <span class="text-sm text-gray-700">Beratungsgespräch-Training</span>
-                                    <span class="ml-auto text-xs text-gray-500">Fällig: 22.02.</span>
-                                </div>
-                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                                    <input type="checkbox" class="w-4 h-4">
-                                    <span class="text-sm text-gray-700">Finanzierungs- & Leasing-Optionen</span>
-                                    <span class="ml-auto text-xs text-gray-500">Fällig: 25.02.</span>
-                                </div>
-                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                                    <input type="checkbox" class="w-4 h-4">
-                                    <span class="text-sm text-gray-700">Probefahrt-Prozess durchführen</span>
-                                    <span class="ml-auto text-xs text-gray-500">Fällig: 28.02.</span>
-                                </div>
-                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                                    <input type="checkbox" class="w-4 h-4">
-                                    <span class="text-sm text-gray-700">Ersten Verkauf abschließen 🎯</span>
-                                    <span class="ml-auto text-xs text-gray-500">Fällig: 03.03.</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Section: Marketing & Kommunikation -->
-                        <div>
-                            <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
-                                <span class="bg-gray-300 text-gray-700 rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">0/3</span>
-                                Marketing & Kommunikation
-                            </h3>
-                            <div class="space-y-2 ml-8">
-                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                                    <input type="checkbox" class="w-4 h-4">
-                                    <span class="text-sm text-gray-700">Social Media Guidelines durchgehen</span>
-                                    <span class="ml-auto text-xs text-gray-500">Fällig: 19.02.</span>
-                                </div>
-                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                                    <input type="checkbox" class="w-4 h-4">
-                                    <span class="text-sm text-gray-700">Ersten Social Media Post erstellen</span>
-                                    <span class="ml-auto text-xs text-gray-500">Fällig: 24.02.</span>
-                                </div>
-                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                                    <input type="checkbox" class="w-4 h-4">
-                                    <span class="text-sm text-gray-700">Marketing-Materialien herunterladen</span>
-                                    <span class="ml-auto text-xs text-gray-500">Fällig: 26.02.</span>
-                                </div>
-                            </div>
+                        <h2 class="h2-headline text-gray-800 mb-6">Dein Weg zum vit:bikes Partner</h2>
+                        <div class="flex items-center justify-between mb-4 mt-8" id="externRoadmap">
+                            <!-- Will be rendered dynamically -->
                         </div>
                     </div>
 
-                    <!-- Hilfe & Support -->
+                    <!-- What's included -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div class="vit-card p-6">
-                            <h3 class="font-semibold text-gray-800 mb-4">📞 Brauchst du Hilfe?</h3>
-                            <p class="text-sm text-gray-600 mb-4">Unser Onboarding-Team steht dir zur Verfügung!</p>
-                            <button class="w-full bg-vit-orange text-white py-2 rounded-lg hover:opacity-90">
-                                Support kontaktieren
-                            </button>
+                        <div class="vit-card p-6 vit-card-watermark">
+                            <h3 class="font-semibold text-gray-800 mb-4 flex items-center space-x-2">
+                                <span class="text-xl">🎓</span><span>Dein Zugang umfasst</span>
+                            </h3>
+                            <div class="space-y-3" id="externIncluded">
+                                <!-- Rendered dynamically based on stage -->
+                            </div>
                         </div>
-
-                        <div class="vit-card p-6">
-                            <h3 class="font-semibold text-gray-800 mb-4">📚 Weitere Ressourcen</h3>
-                            <ul class="space-y-2 text-sm">
-                                <li><a href="#" class="text-vit-orange hover:underline">→ Handbuch für neue Partner</a></li>
-                                <li><a href="#" class="text-vit-orange hover:underline">→ Video-Tutorials</a></li>
-                                <li><a href="#" class="text-vit-orange hover:underline">→ FAQ für Einsteiger</a></li>
-                            </ul>
+                        <div class="vit-card p-6 vit-card-watermark">
+                            <h3 class="font-semibold text-gray-800 mb-4 flex items-center space-x-2">
+                                <span class="text-xl">📰</span><span>Neuigkeiten aus dem Netzwerk</span>
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="p-3 bg-orange-50 rounded-lg border-l-3 border-vit-orange">
+                                    <p class="text-xs font-semibold text-gray-800">Neues Trainingsmodul verfügbar</p>
+                                    <p class="text-[10px] text-gray-500 mt-1">Verkaufsstrategie 2025 – jetzt in der Akademie</p>
+                                </div>
+                                <div class="p-3 bg-gray-50 rounded-lg">
+                                    <p class="text-xs font-semibold text-gray-800">Community Update</p>
+                                    <p class="text-[10px] text-gray-500 mt-1">3 neue Beiträge im Partnerforum diese Woche</p>
+                                </div>
+                                <div class="p-3 bg-gray-50 rounded-lg">
+                                    <p class="text-xs font-semibold text-gray-800">vit:bikes wächst</p>
+                                    <p class="text-[10px] text-gray-500 mt-1">2 neue Partner im Februar begrüßt 🎉</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    </div><!-- End staticOnboardingContent -->
+                </div>
+
+                <!-- ═══ ONBOARDING VIEW (Stage-aware, all levels) ═══ -->
+                <div id="onboardingView" class="view" style="display: none;">
+                    <div id="onboardingContent">
+                        <!-- Wird dynamisch durch renderOnboardingView() befüllt -->
+                    </div>
                 </div>
 
                 <!-- MITARBEITER VIEW (Partner/GF) -->
@@ -4537,6 +4532,40 @@
                 </div>
 
 
+                <!-- ═══ HQ ONBOARDING MANAGEMENT VIEW ═══ -->
+                <div id="hqOnboardingView" class="view" style="display: none;">
+                    <h1 class="h1-headline text-gray-800 mb-2">🚀 ONBOARDING – PIPELINE & MANAGEMENT</h1>
+                    <p class="text-sm text-gray-500 mb-6">Bewerbungen, Trainingsphasen und Übergänge aller Standorte steuern.</p>
+
+                    <!-- Tab Nav -->
+                    <div class="flex space-x-1 mb-6 border-b border-gray-200">
+                        <button onclick="showHqOnbTab('pipeline')" class="hq-onb-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-vit-orange text-vit-orange" data-tab="pipeline">📊 Pipeline</button>
+                        <button onclick="showHqOnbTab('bewerbungen')" class="hq-onb-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="bewerbungen">📬 Bewerbungen</button>
+                        <button onclick="showHqOnbTab('log')" class="hq-onb-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="log">📋 Aktionslog</button>
+                    </div>
+
+                    <!-- Pipeline Tab -->
+                    <div id="hqOnbTabPipeline" class="hq-onb-tab-content">
+                        <div id="hqOnbPipelineContent">
+                            <!-- Rendered by renderHqOnboarding() -->
+                        </div>
+                    </div>
+
+                    <!-- Bewerbungen Tab -->
+                    <div id="hqOnbTabBewerbungen" class="hq-onb-tab-content" style="display:none;">
+                        <div id="hqOnbBewerbungenContent">
+                            <!-- Rendered by renderHqOnboarding() -->
+                        </div>
+                    </div>
+
+                    <!-- Aktionslog Tab -->
+                    <div id="hqOnbTabLog" class="hq-onb-tab-content" style="display:none;">
+                        <div id="hqOnbLogContent">
+                            <!-- Rendered by renderHqOnboarding() -->
+                        </div>
+                    </div>
+                </div>
+
                 <div id="devStatusView" class="view" style="display: none;">
                     <div class="flex items-center justify-between mb-6">
                         <div>
@@ -4899,6 +4928,7 @@
                     <div id="hqEkTabDash" class="hqek-tab-content"></div>
                     <div id="hqEkTabLief" class="hqek-tab-content" style="display:none;"></div>
                     <div id="hqEkTabStrat" class="hqek-tab-content" style="display:none;"></div>
+                </div>
                 </div>
 
                 <div id="hqVerkaufView" class="view" style="display: none;">
@@ -5479,9 +5509,7 @@
                     </div>
                 </div>
 
-            </main>
-        </div>
-    </div><!-- /mainApp -->
+    </div>
 
     <script>
         // ============================================
@@ -5707,6 +5735,141 @@
         var currentLocation = 'vitbikes-muenchen';
         var isPremium = true;
 
+        // === 3-EBENEN SYSTEM: HQ / Standort / Extern ===
+        var SESSION = {
+            account_level: 'standort', // 'hq' | 'standort' | 'extern'
+            stage: 'partner',          // 'phase0' | 'part1' | 'part2' | 'partner'
+            stage_status: 'active',    // 'active' | 'paused' | 'extended' | 'completed'
+            stage_started_at: null,
+            stage_due_at: null,
+            account_id: null,
+            account_name: ''
+        };
+
+        // Onboarding Milestones Definition
+        var ONBOARDING_MILESTONES = {
+            part1: [
+                { key: 'license_signed', title: 'Lizenzvertrag unterschrieben', description: 'Partnerschafts-Lizenzvertrag mit vit:bikes unterzeichnet', required: true, order: 1 },
+                { key: 'iht_onboarding_done', title: 'IHT-Onboarding abgeschlossen', description: 'Initial Hardware & Tools Setup vollständig', required: true, order: 2 },
+                { key: 'strategy_marketing', title: 'Modul: Marketingstrategie', description: 'Marketingstrategie-Schulung absolviert', required: true, order: 3 },
+                { key: 'strategy_purchasing', title: 'Modul: Einkaufsstrategie', description: 'Einkaufsstrategie-Schulung absolviert', required: true, order: 4 },
+                { key: 'strategy_finance', title: 'Modul: Finanzstrategie', description: 'Finanzstrategie-Schulung absolviert', required: true, order: 5 },
+                { key: 'strategy_general', title: 'Modul: Allgemeine Strategie', description: 'Allgemeine Unternehmensstrategie absolviert', required: true, order: 6 }
+            ],
+            part2: [
+                { key: 'workshop_sales', title: 'Workshop: Verkauf', description: 'Verkaufsworkshop absolviert', required: true, order: 1 },
+                { key: 'workshop_team', title: 'Workshop: Teamführung', description: 'Teamführung-Workshop absolviert', required: true, order: 2 },
+                { key: 'workshop_org', title: 'Workshop: Organisation', description: 'Organisationsworkshop absolviert', required: true, order: 3 },
+                { key: 'system_integration', title: 'Systemintegration abgeschlossen', description: 'Warenwirtschaft & Prozesse integriert', required: true, order: 4 },
+                { key: 'brand_guidelines', title: 'Markenrichtlinien umgesetzt', description: 'CI/CD Richtlinien im Laden umgesetzt', required: true, order: 5 },
+                { key: 'all_trainings_done', title: 'Alle Trainingsmodule abgeschlossen', description: 'Sämtliche Pflichtmodule erfolgreich absolviert', required: true, order: 6 },
+                { key: 'hq_final_review', title: 'HQ Abschlussbewertung', description: 'Finale Bewertung durch vit:bikes HQ', required: true, order: 7 }
+            ]
+        };
+
+        // Account milestone states (in-memory prototype)
+        var accountMilestoneStates = {};
+
+        // Onboarding actions log
+        var onboardingActionsLog = [];
+
+        // Initialize milestones for an account
+        function initMilestonesForStage(stage) {
+            var milestones = ONBOARDING_MILESTONES[stage] || [];
+            milestones.forEach(function(m) {
+                var key = SESSION.account_id + '_' + m.key;
+                if (!accountMilestoneStates[key]) {
+                    accountMilestoneStates[key] = { status: 'todo', updated_at: null };
+                }
+            });
+        }
+
+        // Get milestone state
+        function getMilestoneStatus(milestoneKey) {
+            var key = SESSION.account_id + '_' + milestoneKey;
+            return accountMilestoneStates[key] ? accountMilestoneStates[key].status : 'todo';
+        }
+
+        // Set milestone state
+        function setMilestoneStatus(milestoneKey, status) {
+            var key = SESSION.account_id + '_' + milestoneKey;
+            accountMilestoneStates[key] = { status: status, updated_at: new Date().toISOString() };
+        }
+
+        // Log onboarding action
+        function logOnboardingAction(actionType, payload) {
+            onboardingActionsLog.push({
+                account_id: SESSION.account_id,
+                action_type: actionType,
+                payload: payload || {},
+                actor: sbProfile ? sbProfile.email : 'demo',
+                created_at: new Date().toISOString()
+            });
+            console.log('[Onboarding] Action logged:', actionType, payload);
+        }
+
+        // Evaluate stage transitions
+        function evaluateTransitions() {
+            var stage = SESSION.stage;
+            var now = new Date();
+
+            if (stage === 'part1' && SESSION.stage_due_at && now > new Date(SESSION.stage_due_at)) {
+                if (SESSION.stage_status !== 'extended') {
+                    SESSION.stage_status = 'extended';
+                    logOnboardingAction('auto_extend', { stage: 'part1', reason: 'overdue' });
+                }
+            }
+
+            if (stage === 'part1') {
+                var part1Ready = true;
+                var requiredKeys = ['license_signed', 'iht_onboarding_done', 'strategy_marketing', 'strategy_purchasing', 'strategy_finance', 'strategy_general'];
+                requiredKeys.forEach(function(k) { if (getMilestoneStatus(k) !== 'done') part1Ready = false; });
+                return { canAdvance: part1Ready, nextStage: 'part2', missingMilestones: requiredKeys.filter(function(k){ return getMilestoneStatus(k) !== 'done'; }) };
+            }
+
+            if (stage === 'part2') {
+                var part2Ready = true;
+                var requiredKeys2 = ONBOARDING_MILESTONES.part2.filter(function(m){ return m.required; }).map(function(m){ return m.key; });
+                requiredKeys2.forEach(function(k) { if (getMilestoneStatus(k) !== 'done') part2Ready = false; });
+                return { canAdvance: part2Ready, nextStage: 'partner', missingMilestones: requiredKeys2.filter(function(k){ return getMilestoneStatus(k) !== 'done'; }) };
+            }
+
+            return { canAdvance: false, nextStage: null, missingMilestones: [] };
+        }
+
+        // Execute stage transition
+        function executeTransition(targetStage) {
+            var now = new Date();
+            var oldStage = SESSION.stage;
+            if (targetStage === 'part1') {
+                SESSION.account_level = 'standort';
+                SESSION.stage = 'part1'; SESSION.stage_status = 'active';
+                SESSION.stage_started_at = now.toISOString();
+                SESSION.stage_due_at = new Date(now.getTime() + 90*24*60*60*1000).toISOString();
+                initMilestonesForStage('part1');
+                logOnboardingAction('start_part1', { from: oldStage });
+            } else if (targetStage === 'part2') {
+                SESSION.stage = 'part2'; SESSION.stage_status = 'active';
+                SESSION.stage_started_at = now.toISOString();
+                SESSION.stage_due_at = new Date(now.getTime() + 270*24*60*60*1000).toISOString();
+                initMilestonesForStage('part2');
+                logOnboardingAction('start_part2', { from: oldStage });
+            } else if (targetStage === 'partner') {
+                SESSION.stage = 'partner'; SESSION.stage_status = 'active';
+                SESSION.stage_started_at = now.toISOString(); SESSION.stage_due_at = null;
+                logOnboardingAction('promote_partner', { from: oldStage });
+            }
+            updateUIForRole();
+            if (SESSION.account_level === 'extern') { showView('externHome'); } else { showView('onboarding'); }
+        }
+
+        // Apply for Part 1 (Extern action)
+        function applyForPart1() {
+            logOnboardingAction('apply_part1', { account_name: SESSION.account_name });
+            alert('Ihre Bewerbung für die Trainingsphase Part 1 wurde eingereicht! ✅\n\nDas vit:bikes Team wird sich in Kürze bei Ihnen melden.');
+            renderOnboardingView();
+        }
+
         // Location data
         var locations = {
             'vitbikes-muenchen': { name: 'vit:bikes München Sendling', premium: true },
@@ -5748,7 +5911,10 @@
             'anna@vitbikes-grafrath.de': {roles:['verkauf','werkstatt'],location:'grafrath',name:'Anna Allround'},
             'buchhaltung@vitbikes-grafrath.de': {roles:['buchhaltung'],location:'grafrath',name:'Petra Zahlen'},
             'hq@vitbikes.de': {roles:['hq'],location:'hq',name:'Lisa Zentrale'},
-            'admin@vitbikes.de': {roles:['hq'],location:'hq',name:'Michael Stenzel'}
+            'admin@vitbikes.de': {roles:['hq'],location:'hq',name:'Michael Stenzel'},
+            'extern@bikeshop.de': {roles:['external_owner'],location:'extern_demo',name:'Thomas Radler',account_level:'extern',stage:'phase0'},
+            'extern-p1@bikeshop.de': {roles:['inhaber'],location:'extern_p1',name:'Sabine Treter',account_level:'standort',stage:'part1'},
+            'extern-p2@bikeshop.de': {roles:['inhaber'],location:'extern_p2',name:'Klaus Speiche',account_level:'standort',stage:'part2'}
         };
 
         // Welche Rollen Zugriff auf welche Module haben
@@ -5769,13 +5935,20 @@
             'aktenschrank':   ['inhaber','buchhaltung'],
             'ideenboard':     ['alle'],
             'shop':           ['inhaber'],
-            'onboarding':     ['inhaber'],
-            'mitarbeiter':    ['inhaber']
+            'onboarding':     ['inhaber','external_owner'],
+            'mitarbeiter':    ['inhaber'],
+            'externHome':     ['external_owner'],
+            'externWissen':   ['external_owner']
         };
 
         // Prüft ob der aktuelle User Zugriff auf eine View hat
         function hasAccess(viewName) {
             if(currentRole === 'hq') return viewName.indexOf('hq')===0 || viewName==='kalender' || viewName==='todo' || viewName==='kommunikation' || viewName==='devStatus';
+            // Extern level: only allow specific views
+            if(SESSION.account_level === 'extern') {
+                var externAllowed = ['externHome','onboarding','externWissen','wissen','kommunikation','support','notifications'];
+                return externAllowed.indexOf(viewName) >= 0;
+            }
             var perms = rolePermissions[viewName];
             if(!perms) return true;
             if(perms.indexOf('alle') >= 0) return true;
@@ -6072,9 +6245,11 @@
             document.getElementById('mainApp').style.display = 'block';
             try { updateUIForRole(); updatePremiumFeatures(); } catch(e) { console.warn(e); }
             // Apply DEMO/BETA badges
-            if(currentRole === 'hq') { switchViewMode('hq'); } else { showView('home'); }
+            if(SESSION.account_level === 'extern') {
+                showView('externHome');
+            } else if(currentRole === 'hq') { switchViewMode('hq'); } else { showView('home'); }
             // Load dashboard widgets with live data
-            if(currentRole !== 'hq') { loadDashboardWidgets(); loadAllgemeinData(); }
+            if(currentRole !== 'hq' && SESSION.account_level !== 'extern') { loadDashboardWidgets(); loadAllgemeinData(); }
             // Check for pending approvals (HQ + GF only)
             checkPendingApprovals();
             // Check BWA deadlines and create reminders
@@ -6346,6 +6521,42 @@
             // HQ Menu
             var hqMenu = document.getElementById('hqMenu');
             if(hqMenu) hqMenu.classList.toggle('hidden', !isHQ);
+
+            // ═══ EXTERN MENU ═══
+            var isExtern = SESSION.account_level === 'extern';
+            var externMenu = document.getElementById('externMenu');
+            if(externMenu) externMenu.classList.toggle('hidden', !isExtern);
+
+            // Hide all partner sections when extern
+            if(isExtern) {
+                if(partnerQuickNav) partnerQuickNav.classList.add('hidden');
+                if(ownerDashboards) ownerDashboards.classList.add('hidden');
+                if(commonTools) commonTools.classList.add('hidden');
+                if(onboardingNav) onboardingNav.classList.add('hidden');
+                if(mitarbeiterNav) mitarbeiterNav.classList.add('hidden');
+                var ptNav = document.getElementById('partnerToolsNav');
+                if(ptNav) ptNav.classList.add('hidden');
+                var devNav = document.getElementById('devStatusNavSection');
+                if(devNav) devNav.classList.add('hidden');
+            }
+
+            // Update location display for extern
+            if(isExtern) {
+                var stageLabels = {phase0:'⚡ BikeEngine',part1:'📋 Trainingsphase Part 1',part2:'📋 Trainingsphase Part 2',partner:'✅ Partner'};
+                if(locationDisplay) locationDisplay.textContent = stageLabels[SESSION.stage] || '⚡ BikeEngine';
+                if(locationDisplayMobile) locationDisplayMobile.textContent = stageLabels[SESSION.stage] || '⚡ BikeEngine';
+                if(userRoleText) userRoleText.textContent = 'Extern';
+            }
+
+            // Show stage-badge in header for standort in training
+            if(SESSION.account_level === 'standort' && SESSION.stage !== 'partner') {
+                var stageLabels2 = {part1:'Training Part 1',part2:'Training Part 2'};
+                var premBadge = document.getElementById('premiumBadge');
+                if(premBadge) {
+                    premBadge.innerHTML = '<span style="display:inline-flex;align-items:center;padding:2px 10px;border-radius:9999px;font-size:10px;font-weight:700;letter-spacing:0.3px;background:#ede9fe;color:#6d28d9;">🎓 '+(stageLabels2[SESSION.stage]||SESSION.stage)+'</span>';
+                    premBadge.classList.remove('view-hidden');
+                }
+            }
         }
 
         // Switch between Chat and Forum in Communication view
@@ -13246,7 +13457,11 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             }
             // Redirect 'home' to HQ Cockpit when in HQ mode
             if(v==='home' && currentRole==='hq') { v='hqCockpit'; }
+            if(v==='home' && SESSION.account_level==='extern') { v='externHome'; }
             origShowView2(v);
+            if(v==='externHome') renderExternHome();
+            if(v==='onboarding') renderOnboardingView();
+            if(v==='hqOnboarding') renderHqOnboarding();
             if(v==='hqCockpit') renderHqCockpit();
             if(v==='hqStandorte') renderHqStandorte();
             if(v==='hqFinanzen') renderHqFinanzen();
@@ -20483,41 +20698,29 @@ function setTheme(theme) {
             </div>
 
             <!-- Meta -->
-            <!-- Benachrichtigungseinstellungen -->
-            <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:16px;" id="notifPrefsContainer">
-                <!-- E-Mail Benachrichtigungen -->
-                <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;font-weight:600;margin-bottom:10px;">📧 E-Mail-Benachrichtigungen</p>
-                <label class="notif-pref-row"><span>📊 BWA-Erinnerungen</span><input type="checkbox" checked data-pref="email_bwa_erinnerung" class="notif-toggle"></label>
-                <label class="notif-pref-row"><span>📈 Lead-Benachrichtigungen</span><input type="checkbox" checked data-pref="email_lead_benachrichtigung" class="notif-toggle"></label>
-                <label class="notif-pref-row"><span>🎓 Trainer-Erinnerungen</span><input type="checkbox" checked data-pref="email_trainer_erinnerung" class="notif-toggle"></label>
-                <label class="notif-pref-row"><span>📞 Gruppencall-Erinnerungen</span><input type="checkbox" checked data-pref="email_gruppencall_erinnerung" class="notif-toggle"></label>
-                <label class="notif-pref-row"><span>✅ Aufgabe zugewiesen</span><input type="checkbox" checked data-pref="email_aufgaben_zugewiesen" class="notif-toggle"></label>
-                <label class="notif-pref-row"><span>💬 Chat-Nachrichten</span><input type="checkbox" data-pref="email_chat_nachricht" class="notif-toggle"></label>
-
-                <!-- Push Benachrichtigungen -->
-                <div style="border-top:1px solid #e5e7eb;margin-top:12px;padding-top:12px;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                        <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;font-weight:600;margin:0;">🔔 Push-Benachrichtigungen</p>
-                        <span id="pushStatusBadge" style="font-size:9px;padding:2px 8px;border-radius:10px;font-weight:600;background:#fee2e2;color:#dc2626;">Inaktiv</span>
-                    </div>
-                    <div id="pushPrefsArea" style="opacity:0.4;pointer-events:none;">
-                        <label class="notif-pref-row"><span>💬 Neue Nachrichten</span><input type="checkbox" checked data-pref="push_neue_nachricht" class="notif-toggle"></label>
-                        <label class="notif-pref-row"><span>✅ Aufgabe zugewiesen</span><input type="checkbox" checked data-pref="push_aufgabe_zugewiesen" class="notif-toggle"></label>
-                        <label class="notif-pref-row"><span>📅 Termin-Erinnerungen</span><input type="checkbox" checked data-pref="push_termin_erinnerung" class="notif-toggle"></label>
-                        <label class="notif-pref-row"><span>📈 Lead-Aktivität</span><input type="checkbox" checked data-pref="push_lead_aktivitaet" class="notif-toggle"></label>
-                        <label class="notif-pref-row"><span>📢 Ankündigungen</span><input type="checkbox" checked data-pref="push_ankuendigung" class="notif-toggle"></label>
-                        <label class="notif-pref-row"><span>🎫 Support-Updates</span><input type="checkbox" checked data-pref="push_support_update" class="notif-toggle"></label>
-                    </div>
-                    <button id="pushToggleBtn" onclick="setupPushNotifications()" style="width:100%;padding:10px;background:#EF7D00;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px;">
-                        🔔 Push-Benachrichtigungen aktivieren
-                    </button>
-                    <p id="pushSubInfo" style="font-size:9px;color:#9ca3af;margin-top:4px;text-align:center;">Erhalte Benachrichtigungen direkt auf dein Gerät</p>
+            <!-- E-Mail-Einstellungen -->
+            <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:16px;">
+                <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;font-weight:600;margin-bottom:12px;">E-Mail-Benachrichtigungen</p>
+                <label style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:#4b5563;">
+                    <span>📊 BWA-Erinnerungen</span>
+                    <input type="checkbox" checked id="prefBwa" style="accent-color:#EF7D00;width:16px;height:16px;">
+                </label>
+                <label style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:#4b5563;">
+                    <span>📈 Lead-Benachrichtigungen</span>
+                    <input type="checkbox" checked id="prefLeads" style="accent-color:#EF7D00;width:16px;height:16px;">
+                </label>
+                <label style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:#4b5563;">
+                    <span>🎓 Trainer-Erinnerungen</span>
+                    <input type="checkbox" checked id="prefTrainer" style="accent-color:#EF7D00;width:16px;height:16px;">
+                </label>
+                <label style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:#4b5563;">
+                    <span>📞 Gruppencall-Erinnerungen</span>
+                    <input type="checkbox" checked id="prefCalls" style="accent-color:#EF7D00;width:16px;height:16px;">
+                </label>
+                <div style="border-top:1px solid #e5e7eb;margin-top:8px;padding-top:8px;">
+                    <button onclick="setupPushNotifications()" style="width:100%;padding:8px;background:#EF7D00;color:white;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🔔 Push-Benachrichtigungen aktivieren</button>
+                    <p style="font-size:9px;color:#9ca3af;margin-top:4px;text-align:center">Erhalte Benachrichtigungen direkt auf dein Gerät</p>
                 </div>
-
-                <!-- Speichern -->
-                <button onclick="saveNotificationPrefs()" style="width:100%;padding:10px;background:#16a34a;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:12px;display:flex;align-items:center;justify-content:center;gap:6px;">
-                    💾 Einstellungen speichern
-                </button>
             </div>
 
             <div style="margin-top:16px;padding:12px;background:#f9fafb;border-radius:8px;text-align:center;">
@@ -22210,231 +22413,6 @@ window.switchWissenTyp = function(typ) {
         showInstallBanner();
     });
 
-    // ========== PUSH NOTIFICATIONS & PREFERENCES ==========
-    const VAPID_PUBLIC_KEY = 'BFjv8qdfhEPXyWvz8Ite8laCH0XMaLtzTXvRBRq7XIa4FELmOz2RA3fUh7me1LIAh0JsKQVd-Pl8Dlxg_8mFc3c';
-    
-    function urlBase64ToUint8Array(base64String) {
-        var padding = '='.repeat((4 - base64String.length % 4) % 4);
-        var base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-        var rawData = window.atob(base64);
-        var outputArray = new Uint8Array(rawData.length);
-        for (var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
-        return outputArray;
-    }
-
-    async function setupPushNotifications() {
-        var btn = document.getElementById('pushToggleBtn');
-        var badge = document.getElementById('pushStatusBadge');
-        var info = document.getElementById('pushSubInfo');
-        
-        // Check if already subscribed - if so, unsubscribe
-        if (btn && btn.dataset.active === 'true') {
-            await unsubscribePush();
-            return;
-        }
-        
-        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            showNotification('Push-Benachrichtigungen werden von deinem Browser nicht unterstützt.', 'error');
-            return;
-        }
-        
-        if (btn) { btn.textContent = '⏳ Aktiviere...'; btn.disabled = true; }
-        
-        try {
-            // Request permission
-            var perm = await Notification.requestPermission();
-            if (perm !== 'granted') {
-                showNotification('Push-Berechtigung wurde verweigert. Bitte erlaube Benachrichtigungen in den Browser-Einstellungen.', 'error');
-                if (btn) { btn.textContent = '🔔 Push-Benachrichtigungen aktivieren'; btn.disabled = false; }
-                return;
-            }
-            
-            // Register Service Worker
-            var reg = await navigator.serviceWorker.register('/sw.js');
-            await navigator.serviceWorker.ready;
-            
-            // Subscribe
-            var subscription = await reg.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-            });
-            
-            var subJson = subscription.toJSON();
-            var userId = (await window._supabase.auth.getUser()).data.user?.id;
-            if (!userId) throw new Error('Nicht eingeloggt');
-            
-            // Save to DB
-            var { error } = await window._supabase.from('push_subscriptions').upsert({
-                user_id: userId,
-                endpoint: subJson.endpoint,
-                p256dh: subJson.keys.p256dh,
-                auth_key: subJson.keys.auth,
-                user_agent: navigator.userAgent,
-                device_name: detectDeviceName()
-            }, { onConflict: 'user_id,endpoint' });
-            
-            if (error) throw error;
-            
-            updatePushUI(true, detectDeviceName());
-            showNotification('Push-Benachrichtigungen aktiviert! 🎉', 'success');
-            
-            // Send test notification
-            setTimeout(function() {
-                reg.showNotification('vit:bikes Portal', {
-                    body: 'Push-Benachrichtigungen sind jetzt aktiv!',
-                    icon: '/icon-192.png',
-                    badge: '/icon-badge.png',
-                    vibrate: [200, 100, 200]
-                });
-            }, 1000);
-            
-        } catch(err) {
-            console.error('Push setup error:', err);
-            showNotification('Fehler beim Aktivieren: ' + err.message, 'error');
-            if (btn) { btn.textContent = '🔔 Push-Benachrichtigungen aktivieren'; btn.disabled = false; }
-        }
-    }
-    
-    async function unsubscribePush() {
-        try {
-            var reg = await navigator.serviceWorker.getRegistration();
-            if (reg) {
-                var sub = await reg.pushManager.getSubscription();
-                if (sub) {
-                    var endpoint = sub.endpoint;
-                    await sub.unsubscribe();
-                    // Remove from DB
-                    await window._supabase.from('push_subscriptions').delete().eq('endpoint', endpoint);
-                }
-            }
-            updatePushUI(false);
-            showNotification('Push-Benachrichtigungen deaktiviert.', 'info');
-        } catch(err) {
-            console.error('Unsubscribe error:', err);
-        }
-    }
-    
-    function detectDeviceName() {
-        var ua = navigator.userAgent;
-        if (/iPhone/.test(ua)) return 'iPhone';
-        if (/iPad/.test(ua)) return 'iPad';
-        if (/Android/.test(ua)) return 'Android';
-        if (/Mac/.test(ua)) return 'Mac';
-        if (/Windows/.test(ua)) return 'Windows PC';
-        if (/Linux/.test(ua)) return 'Linux';
-        return 'Unbekanntes Gerät';
-    }
-    
-    function updatePushUI(active, deviceName) {
-        var btn = document.getElementById('pushToggleBtn');
-        var badge = document.getElementById('pushStatusBadge');
-        var area = document.getElementById('pushPrefsArea');
-        var info = document.getElementById('pushSubInfo');
-        
-        if (active) {
-            if (btn) {
-                btn.innerHTML = '🔕 Push deaktivieren';
-                btn.style.background = '#6b7280';
-                btn.dataset.active = 'true';
-                btn.disabled = false;
-            }
-            if (badge) {
-                badge.style.background = '#dcfce7';
-                badge.style.color = '#16a34a';
-                badge.textContent = '✓ Aktiv';
-            }
-            if (area) { area.style.opacity = '1'; area.style.pointerEvents = 'auto'; }
-            if (info) info.textContent = deviceName ? ('Aktiv auf: ' + deviceName) : 'Push-Benachrichtigungen sind aktiv';
-        } else {
-            if (btn) {
-                btn.innerHTML = '🔔 Push-Benachrichtigungen aktivieren';
-                btn.style.background = '#EF7D00';
-                btn.dataset.active = 'false';
-                btn.disabled = false;
-            }
-            if (badge) {
-                badge.style.background = '#fee2e2';
-                badge.style.color = '#dc2626';
-                badge.textContent = 'Inaktiv';
-            }
-            if (area) { area.style.opacity = '0.4'; area.style.pointerEvents = 'none'; }
-            if (info) info.textContent = 'Erhalte Benachrichtigungen direkt auf dein Gerät';
-        }
-    }
-    
-    async function checkPushStatus() {
-        try {
-            if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-            var reg = await navigator.serviceWorker.getRegistration();
-            if (!reg) return;
-            var sub = await reg.pushManager.getSubscription();
-            updatePushUI(!!sub, sub ? detectDeviceName() : null);
-        } catch(e) { /* ignore */ }
-    }
-    
-    async function loadNotificationPrefs() {
-        try {
-            var userId = (await window._supabase.auth.getUser()).data.user?.id;
-            if (!userId) return;
-            
-            var { data } = await window._supabase
-                .from('notification_preferences')
-                .select('*')
-                .eq('user_id', userId)
-                .single();
-            
-            if (!data) return; // Use defaults if no prefs saved yet
-            
-            document.querySelectorAll('.notif-toggle').forEach(function(cb) {
-                var key = cb.dataset.pref;
-                if (key && data[key] !== undefined) cb.checked = data[key];
-            });
-        } catch(e) { console.log('Prefs not loaded yet:', e.message); }
-    }
-    
-    async function saveNotificationPrefs() {
-        try {
-            var userId = (await window._supabase.auth.getUser()).data.user?.id;
-            if (!userId) { showNotification('Nicht eingeloggt', 'error'); return; }
-            
-            var prefs = { user_id: userId, updated_at: new Date().toISOString() };
-            document.querySelectorAll('.notif-toggle').forEach(function(cb) {
-                var key = cb.dataset.pref;
-                if (key) prefs[key] = cb.checked;
-            });
-            
-            var { error } = await window._supabase
-                .from('notification_preferences')
-                .upsert(prefs, { onConflict: 'user_id' });
-            
-            if (error) throw error;
-            showNotification('Benachrichtigungseinstellungen gespeichert! ✅', 'success');
-        } catch(err) {
-            console.error('Save prefs error:', err);
-            showNotification('Fehler beim Speichern: ' + err.message, 'error');
-        }
-    }
-    
-    // Init: check push status + load prefs when profile opens
-    var _origToggleProfile = window.toggleProfilePanel;
-    window.toggleProfilePanel = function() {
-        if (_origToggleProfile) _origToggleProfile();
-        setTimeout(function() {
-            checkPushStatus();
-            loadNotificationPrefs();
-        }, 300);
-    };
-    
-    // Listen for push navigation messages from SW
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.addEventListener('message', function(event) {
-            if (event.data?.type === 'PUSH_NAVIGATE' && event.data.url) {
-                var viewMatch = event.data.url.match(/view=(\w+)/);
-                if (viewMatch && window.showView) window.showView(viewMatch[1]);
-            }
-        });
-    }
-
     function showInstallBanner() {
         // Don't show if already installed or dismissed
         if (window.matchMedia('(display-mode: standalone)').matches) return;
@@ -22554,6 +22532,394 @@ window.switchWissenTyp = function(typ) {
     #pwaInstallBanner { bottom: 80px !important; }
 }
 </style>
+
+<script>
+// ═══ 3-EBENEN SYSTEM: RENDER FUNCTIONS ═══
+
+function renderExternHome() {
+    var stage = SESSION.stage;
+    var stageLabels = {
+        phase0: { label: 'Phase 0 – Kostenloser Akademiezugang', desc: 'Einstieg ohne Verpflichtung – lerne vit:bikes kennen' },
+        part1: { label: 'Trainingsphase Part 1 – Strategie & Qualifizierung', desc: '3 Monate strategisches Fundament' },
+        part2: { label: 'Trainingsphase Part 2 – Integration & Umsetzung', desc: '9 Monate operative Systemintegration' },
+        partner: { label: 'Partnerphase – Voller Standort', desc: 'Willkommen im vit:bikes Netzwerk!' }
+    };
+    var info = stageLabels[stage] || stageLabels.phase0;
+    var el = document.getElementById('externStageLabel');
+    if(el) el.textContent = info.label;
+    var descEl = document.getElementById('externStageDesc');
+    if(descEl) descEl.textContent = info.desc;
+
+    // Roadmap
+    var roadmapEl = document.getElementById('externRoadmap');
+    if(roadmapEl) {
+        var stages = ['phase0','part1','part2','partner'];
+        var labels = ['Phase 0','Part 1','Part 2','Partner'];
+        var icons = ['\u{1F193}','\u{1F4CB}','\u{26A1}','\u{1F3C6}'];
+        var currentIdx = stages.indexOf(stage);
+        var h = '';
+        stages.forEach(function(s, i) {
+            var isCurrent = i === currentIdx;
+            var isDone = i < currentIdx;
+            var bgColor = isDone ? '#15803d' : isCurrent ? '#EF7D00' : '#e5e7eb';
+            var textColor = isDone || isCurrent ? 'white' : '#6b7280';
+            h += '<div class="flex-1 text-center">';
+            h += '<div class="mx-auto w-12 h-12 rounded-full flex items-center justify-center text-xl mb-2" style="background:'+bgColor+';color:'+textColor+';">'+(isDone?'\u2713':icons[i])+'</div>';
+            h += '<p class="text-xs font-semibold '+(isCurrent?'text-vit-orange':isDone?'text-green-600':'text-gray-400')+'">'+labels[i]+'</p>';
+            h += '</div>';
+            if(i < stages.length - 1) {
+                h += '<div class="flex-shrink-0 w-8 lg:w-16 flex items-center justify-center" style="margin-top:-20px"><div style="height:2px;width:100%;background:'+(isDone?'#15803d':'#e5e7eb')+';"></div></div>';
+            }
+        });
+        roadmapEl.innerHTML = h;
+    }
+
+    // Included features
+    var includedEl = document.getElementById('externIncluded');
+    if(includedEl) {
+        var features = {
+            phase0: [
+                { icon: '\u{1F4DA}', text: 'Akademie-Zugang (Grundkurse)', active: true },
+                { icon: '\u{1F4AC}', text: 'Community lesen', active: true },
+                { icon: '\u{1F198}', text: 'Basis-Support', active: true },
+                { icon: '\u{1F5FA}', text: 'Onboarding-Roadmap', active: true },
+                { icon: '\u{1F512}', text: 'Strategiemodule', active: false },
+                { icon: '\u{1F512}', text: 'Einkaufskonditionen', active: false }
+            ],
+            part1: [
+                { icon: '\u{1F4DA}', text: 'Alle Akademie-Inhalte', active: true },
+                { icon: '\u{1F4CA}', text: 'Strategiemodule', active: true },
+                { icon: '\u{1F465}', text: 'Begleitung durch vit:bikes Team', active: true },
+                { icon: '\u{1F512}', text: 'Einkaufskonditionen', active: false }
+            ],
+            part2: [
+                { icon: '\u{1F6D2}', text: 'Einkaufs- & Leasingkonditionen', active: true },
+                { icon: '\u{1F393}', text: 'Workshops', active: true },
+                { icon: '\u{1F4DE}', text: 'Vollstaendiger Support', active: true },
+                { icon: '\u{1F512}', text: 'Volle Markenfuehrung', active: false }
+            ]
+        };
+        var list = features[stage] || features.phase0;
+        var fh = '';
+        list.forEach(function(f) {
+            fh += '<div class="flex items-center space-x-3 p-2.5 rounded-lg '+(f.active?'bg-green-50':'bg-gray-50 opacity-60')+'">';
+            fh += '<span class="text-lg">'+f.icon+'</span>';
+            fh += '<span class="text-sm '+(f.active?'text-gray-700':'text-gray-400')+'">'+f.text+'</span>';
+            if(f.active) fh += '<span class="ml-auto text-green-500 text-xs">\u2713</span>';
+            fh += '</div>';
+        });
+        includedEl.innerHTML = fh;
+    }
+}
+
+function renderOnboardingView() {
+    var container = document.getElementById('onboardingContent');
+    if(!container) return;
+    var stage = SESSION.stage;
+    var level = SESSION.account_level;
+    var isHQUser = currentRole === 'hq';
+    var h = '';
+
+    var stageColors = {phase0:'#EF7D00',part1:'#6d28d9',part2:'#1d4ed8',partner:'#15803d'};
+    var stageNames = {phase0:'Phase 0 \u2013 Akademiezugang',part1:'Trainingsphase Part 1',part2:'Trainingsphase Part 2',partner:'Partnerphase'};
+    var stageIcons = {phase0:'\u{1F680}',part1:'\u{1F4CB}',part2:'\u{26A1}',partner:'\u{1F3C6}'};
+
+    // Header
+    h += '<div class="flex items-center justify-between flex-wrap gap-4 mb-6"><div>';
+    h += '<h1 class="h1-headline text-gray-800 mb-1" style="font-size:22px">ONBOARDING & WEG</h1>';
+    h += '<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold text-white" style="background:'+stageColors[stage]+'">'+stageIcons[stage]+' '+stageNames[stage]+'</span>';
+    if(SESSION.stage_status === 'extended') h += ' <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-600">\u26A0\uFE0F Verlaengerung aktiv</span>';
+    h += '</div>';
+    if(SESSION.stage_due_at) {
+        var due = new Date(SESSION.stage_due_at);
+        var daysLeft = Math.ceil((due - new Date()) / (1000*60*60*24));
+        var dueColor = daysLeft < 0 ? 'text-red-600' : daysLeft < 30 ? 'text-orange-500' : 'text-green-600';
+        h += '<div class="text-right"><p class="text-xs text-gray-500">Zieldatum</p><p class="text-sm font-bold '+dueColor+'">'+due.toLocaleDateString('de-DE')+'</p>';
+        h += '<p class="text-xs '+dueColor+'">'+(daysLeft<0?Math.abs(daysLeft)+' Tage ueberfaellig':daysLeft+' Tage verbleibend')+'</p></div>';
+    }
+    h += '</div>';
+
+    // PHASE 0
+    if(stage === 'phase0') {
+        h += '<div class="vit-card p-6 mb-6" style="background:linear-gradient(135deg,#1a1a1a,#2a2a2a);color:white;">';
+        h += '<div class="flex items-start space-x-4"><div class="w-16 h-16 rounded-xl flex items-center justify-center text-3xl flex-shrink-0" style="background:rgba(239,125,0,0.2);">\u{1F680}</div>';
+        h += '<div><h2 class="text-lg font-bold text-vit-orange mb-2">Willkommen bei BikeEngine!</h2>';
+        h += '<p class="text-sm text-gray-300 mb-3">Du bist im kostenlosen Akademiezugang. Lerne vit:bikes kennen und entscheide in deinem Tempo.</p>';
+        h += '<div class="grid grid-cols-2 gap-3 mt-4">';
+        h += '<div class="p-3 rounded-lg" style="background:rgba(255,255,255,0.05);"><p class="text-xs text-gray-400">Kosten</p><p class="text-sm font-bold text-white">Kostenlos</p></div>';
+        h += '<div class="p-3 rounded-lg" style="background:rgba(255,255,255,0.05);"><p class="text-xs text-gray-400">Verpflichtung</p><p class="text-sm font-bold text-white">Keine</p></div>';
+        h += '</div></div></div></div>';
+
+        var hasApplied = onboardingActionsLog.some(function(a){ return a.action_type === 'apply_part1'; });
+        h += '<div class="vit-card p-6 mb-6 border-2 border-dashed border-vit-orange">';
+        h += '<h3 class="font-bold text-gray-800 mb-3">\u{1F3AF} Naechster Schritt: Trainingsphase Part 1</h3>';
+        h += '<p class="text-sm text-gray-600 mb-4">Bewirb dich fuer die Trainingsphase Part 1 (Strategie & Qualifizierung). 3 Monate, 7.000\u20AC netto (BAFA moeglich).</p>';
+        h += '<div class="grid grid-cols-3 gap-3 mb-4">';
+        h += '<div class="p-3 bg-orange-50 rounded-lg text-center"><p class="text-xs text-gray-500">Dauer</p><p class="text-sm font-bold">3 Monate</p></div>';
+        h += '<div class="p-3 bg-orange-50 rounded-lg text-center"><p class="text-xs text-gray-500">Kosten</p><p class="text-sm font-bold">7.000\u20AC</p></div>';
+        h += '<div class="p-3 bg-orange-50 rounded-lg text-center"><p class="text-xs text-gray-500">BAFA</p><p class="text-sm font-bold text-green-600">Moeglich \u2713</p></div>';
+        h += '</div>';
+        if(hasApplied) {
+            h += '<div class="p-4 bg-green-50 border border-green-200 rounded-lg text-center"><span class="text-green-600 font-semibold text-sm">\u2705 Bewerbung eingereicht \u2013 wir melden uns!</span></div>';
+        } else {
+            h += '<button onclick="applyForPart1()" class="w-full py-3 bg-vit-orange text-white rounded-lg font-bold text-sm hover:opacity-90 transition">Jetzt fuer Trainingsphase Part 1 bewerben \u2192</button>';
+        }
+        h += '</div>';
+    }
+
+    // PART 1 / PART 2
+    if(stage === 'part1' || stage === 'part2') {
+        var milestones = ONBOARDING_MILESTONES[stage] || [];
+        var doneCount = 0;
+        milestones.forEach(function(m) { if(getMilestoneStatus(m.key) === 'done') doneCount++; });
+        var progress = milestones.length > 0 ? Math.round(doneCount / milestones.length * 100) : 0;
+
+        h += '<div class="vit-card p-6 mb-6" style="background:linear-gradient(135deg,#1a1a1a,#2a2a2a);color:white;">';
+        h += '<div class="flex items-center justify-between flex-wrap gap-4">';
+        h += '<div class="flex items-center space-x-4"><div class="w-14 h-14 rounded-xl flex items-center justify-center text-2xl" style="background:rgba(239,125,0,0.2);">'+stageIcons[stage]+'</div>';
+        h += '<div><h2 class="text-lg font-bold text-vit-orange">'+stageNames[stage]+'</h2>';
+        if(stage==='part1') h += '<p class="text-xs text-gray-400">Strategisches Fundament \u00B7 7.000\u20AC netto \u00B7 3 Monate</p>';
+        else h += '<p class="text-xs text-gray-400">Operative Integration \u00B7 2% + 800\u20AC/Monat \u00B7 9 Monate</p>';
+        h += '</div></div>';
+        h += '<div class="text-center"><div class="relative w-16 h-16"><svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36"><path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="3"/><path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#EF7D00" stroke-width="3" stroke-dasharray="'+progress+', 100"/></svg><div class="absolute inset-0 flex items-center justify-center"><span class="text-sm font-bold text-white">'+progress+'%</span></div></div>';
+        h += '<p class="text-[10px] text-gray-400 mt-1">'+doneCount+'/'+milestones.length+'</p></div>';
+        h += '</div></div>';
+
+        if(SESSION.stage_status === 'extended' && stage === 'part1') {
+            h += '<div class="vit-card p-4 mb-4 border-l-4 border-red-500 bg-red-50"><p class="text-sm font-bold text-red-700">\u26A0\uFE0F Verlaengerung aktiv \u2013 2.000\u20AC netto/Monat</p></div>';
+        }
+
+        // Milestones
+        h += '<div class="vit-card p-6 mb-6"><div class="flex items-center justify-between mb-4"><h2 class="h2-headline text-gray-800">Meilensteine</h2>';
+        h += '<span class="text-xs text-gray-500">'+doneCount+'/'+milestones.length+'</span></div>';
+        h += '<div class="w-full bg-gray-200 rounded-full h-2 mb-6"><div class="bg-vit-orange h-2 rounded-full" style="width:'+progress+'%"></div></div>';
+        h += '<div class="space-y-3">';
+        milestones.forEach(function(m) {
+            var status = getMilestoneStatus(m.key);
+            var isDone = status === 'done';
+            var isIP = status === 'in_progress';
+            var bgClass = isDone ? 'bg-green-50' : isIP ? 'bg-white border-2 border-vit-orange' : 'bg-gray-50';
+            h += '<div class="flex items-center space-x-3 p-3 rounded-lg '+bgClass+'">';
+            h += '<button onclick="toggleMilestone(\''+m.key+'\')" class="w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 cursor-pointer '+(isDone?'bg-green-500 border-green-500 text-white':'border-gray-300 hover:border-vit-orange')+'">'+(isDone?'\u2713':'')+'</button>';
+            h += '<div class="flex-1"><span class="text-sm '+(isDone?'text-gray-500 line-through':'text-gray-700')+' font-medium">'+m.title+'</span>';
+            h += '<p class="text-xs text-gray-400">'+m.description+'</p></div>';
+            if(isDone) h += '<span class="text-xs text-green-600 font-semibold">Erledigt</span>';
+            else if(isIP) h += '<span class="px-2 py-1 bg-vit-orange text-white text-[10px] rounded font-semibold">In Arbeit</span>';
+            else if(m.required) h += '<span class="text-[10px] text-red-400 font-semibold">Pflicht</span>';
+            h += '</div>';
+        });
+        h += '</div></div>';
+
+        var transition = evaluateTransitions();
+        if(transition.canAdvance) {
+            h += '<div class="vit-card p-6 mb-6 border-2 border-green-400 bg-green-50">';
+            h += '<h3 class="font-bold text-green-700 mb-2">\u{1F389} Alle Meilensteine erreicht!</h3>';
+            h += '<p class="text-sm text-green-600 mb-4">Uebergang zu '+(stage==='part1'?'Part 2':'Partner')+' kann freigegeben werden.</p>';
+            if(isHQUser) {
+                h += '<button onclick="executeTransition(\''+transition.nextStage+'\')" class="px-6 py-2.5 bg-green-600 text-white rounded-lg font-bold text-sm hover:bg-green-700">'+(stage==='part1'?'Part 2 freigeben':'Partner freischalten')+' \u2192</button>';
+            } else {
+                h += '<p class="text-xs text-gray-500 italic">\u23F3 Warte auf HQ-Freigabe</p>';
+            }
+            h += '</div>';
+        }
+    }
+
+    // PARTNER
+    if(stage === 'partner') {
+        h += '<div class="vit-card p-6 mb-6" style="background:linear-gradient(135deg,#065f46,#047857);color:white;">';
+        h += '<div class="flex items-center space-x-4"><div class="w-16 h-16 rounded-xl flex items-center justify-center text-3xl" style="background:rgba(255,255,255,0.15);">\u{1F3C6}</div>';
+        h += '<div><h2 class="text-xl font-bold">Voller Partnerstandort</h2>';
+        h += '<p class="text-sm text-green-200">Alle Module und Features sind freigeschaltet.</p></div></div></div>';
+        h += '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">';
+        [['verkauf','\u{1F4C8}','Verkauf'],['controlling','\u{1F4CA}','Controlling'],['marketing','\u{1F4E2}','Marketing'],['wissen','\u{1F4DA}','Wissen']].forEach(function(v) {
+            h += '<button onclick="showView(\''+v[0]+'\')" class="vit-card p-4 hover:shadow-lg transition-shadow text-center"><p class="text-2xl mb-1">'+v[1]+'</p><p class="text-xs font-semibold text-gray-700">'+v[2]+'</p></button>';
+        });
+        h += '</div>';
+    }
+
+    // Help
+    h += '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">';
+    h += '<div class="vit-card p-6"><h3 class="font-semibold text-gray-800 mb-4">\u{1F4DE} Brauchst du Hilfe?</h3>';
+    h += '<button onclick="showView(\'support\')" class="w-full bg-vit-orange text-white py-2 rounded-lg hover:opacity-90 font-semibold text-sm">Support kontaktieren</button></div>';
+    h += '<div class="vit-card p-6"><h3 class="font-semibold text-gray-800 mb-4">\u{1F4DA} Ressourcen</h3>';
+    h += '<div class="space-y-2 text-sm"><a href="#" class="block text-vit-orange hover:underline" onclick="showView(\'wissen\');return false;">\u2192 Akademie</a>';
+    h += '<a href="#" class="block text-vit-orange hover:underline">\u2192 FAQ</a></div></div></div>';
+
+    container.innerHTML = h;
+}
+
+function toggleMilestone(key) {
+    var current = getMilestoneStatus(key);
+    var next = current === 'todo' ? 'in_progress' : current === 'in_progress' ? 'done' : 'todo';
+    setMilestoneStatus(key, next);
+    renderOnboardingView();
+}
+
+// HQ Onboarding Management
+var hqOnboardingAccounts = [
+    { id:'ext-001', name:'Radhaus Koeln', stage:'phase0', stage_status:'active', contact:'Thomas Mueller', email:'mueller@radhaus.de', applied:false },
+    { id:'ext-002', name:'BikeShop Dresden', stage:'phase0', stage_status:'active', contact:'Sabine Weber', email:'weber@bikeshop-dd.de', applied:true, applied_at:'2025-02-10' },
+    { id:'ext-003', name:'Zweirad Frank', stage:'part1', stage_status:'active', contact:'Peter Frank', email:'frank@zweirad-frank.de', started:'2025-01-15', due:'2025-04-15', progress:50 },
+    { id:'ext-004', name:'Fahrradland Stuttgart', stage:'part1', stage_status:'extended', contact:'Lisa Schmidt', email:'schmidt@fahrradland.de', started:'2024-10-01', due:'2025-01-01', progress:83 },
+    { id:'ext-005', name:'VeloPlus Hamburg', stage:'part2', stage_status:'active', contact:'Jan Hansen', email:'hansen@veloplus.de', started:'2025-01-01', due:'2025-10-01', progress:29 }
+];
+
+function showHqOnbTab(tab) {
+    document.querySelectorAll('.hq-onb-tab').forEach(function(t) {
+        t.classList.remove('border-vit-orange','text-vit-orange');
+        t.classList.add('border-transparent','text-gray-500');
+    });
+    document.querySelectorAll('.hq-onb-tab-content').forEach(function(c) { c.style.display = 'none'; });
+    var activeTab = document.querySelector('.hq-onb-tab[data-tab="'+tab+'"]');
+    if(activeTab) { activeTab.classList.add('border-vit-orange','text-vit-orange'); activeTab.classList.remove('border-transparent','text-gray-500'); }
+    var content = document.getElementById('hqOnbTab'+tab.charAt(0).toUpperCase()+tab.slice(1));
+    if(content) content.style.display = 'block';
+}
+
+function renderHqOnboarding() {
+    var pipelineEl = document.getElementById('hqOnbPipelineContent');
+    if(pipelineEl) {
+        var h = '';
+        var counts = {phase0:0,part1:0,part2:0,partner:0,applied:0};
+        hqOnboardingAccounts.forEach(function(a) { counts[a.stage]++; if(a.applied) counts.applied++; });
+
+        h += '<div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">';
+        h += '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-gray-600">'+counts.phase0+'</p><p class="text-xs text-gray-500">Phase 0</p></div>';
+        h += '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-vit-orange">'+counts.applied+'</p><p class="text-xs text-gray-500">Bewerbungen</p></div>';
+        h += '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold" style="color:#6d28d9">'+counts.part1+'</p><p class="text-xs text-gray-500">Part 1</p></div>';
+        h += '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-blue-600">'+counts.part2+'</p><p class="text-xs text-gray-500">Part 2</p></div>';
+        h += '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-green-600">'+counts.partner+'</p><p class="text-xs text-gray-500">Partner</p></div>';
+        h += '</div>';
+
+        h += '<div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead><tr class="bg-gray-50 border-b">';
+        h += '<th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">Standort</th>';
+        h += '<th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">Kontakt</th>';
+        h += '<th class="px-4 py-3 text-center text-xs font-semibold text-gray-600">Stage</th>';
+        h += '<th class="px-4 py-3 text-center text-xs font-semibold text-gray-600">Status</th>';
+        h += '<th class="px-4 py-3 text-center text-xs font-semibold text-gray-600">Fortschritt</th>';
+        h += '<th class="px-4 py-3 text-center text-xs font-semibold text-gray-600">Aktion</th>';
+        h += '</tr></thead><tbody>';
+
+        var stC = {phase0:'bg-gray-100 text-gray-600',part1:'bg-purple-100 text-purple-700',part2:'bg-blue-100 text-blue-700',partner:'bg-green-100 text-green-700'};
+        var stL = {phase0:'Phase 0',part1:'Part 1',part2:'Part 2',partner:'Partner'};
+        var ssC = {active:'bg-green-100 text-green-700',paused:'bg-yellow-100 text-yellow-700',extended:'bg-red-100 text-red-700'};
+
+        hqOnboardingAccounts.forEach(function(a) {
+            h += '<tr class="border-b hover:bg-gray-50">';
+            h += '<td class="px-4 py-3 font-semibold text-gray-800">'+a.name+'</td>';
+            h += '<td class="px-4 py-3 text-gray-600">'+a.contact+'<br><span class="text-xs text-gray-400">'+a.email+'</span></td>';
+            h += '<td class="px-4 py-3 text-center"><span class="inline-block px-2 py-1 rounded text-[10px] font-bold '+(stC[a.stage]||'')+'">'+stL[a.stage]+'</span></td>';
+            h += '<td class="px-4 py-3 text-center"><span class="inline-block px-2 py-1 rounded text-[10px] font-bold '+(ssC[a.stage_status]||'bg-gray-100 text-gray-600')+'">'+a.stage_status+'</span></td>';
+            h += '<td class="px-4 py-3 text-center">';
+            if(a.progress !== undefined) {
+                h += '<div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-vit-orange h-2 rounded-full" style="width:'+a.progress+'%"></div></div><span class="text-[10px] text-gray-500">'+a.progress+'%</span>';
+            } else { h += '<span class="text-xs text-gray-400">\u2013</span>'; }
+            h += '</td><td class="px-4 py-3 text-center">';
+            if(a.applied && a.stage === 'phase0') {
+                h += '<button onclick="hqApprovePart1(\''+a.id+'\')" class="px-3 py-1 bg-vit-orange text-white rounded text-xs font-semibold hover:opacity-90">Einladen</button>';
+            } else if(a.stage === 'part1' || a.stage === 'part2') {
+                h += '<button class="px-3 py-1 bg-gray-100 text-gray-600 rounded text-xs font-semibold hover:bg-gray-200">Details</button>';
+            } else { h += '<span class="text-xs text-gray-400">\u2013</span>'; }
+            h += '</td></tr>';
+        });
+        h += '</tbody></table></div>';
+        pipelineEl.innerHTML = h;
+    }
+
+    // Bewerbungen
+    var bewEl = document.getElementById('hqOnbBewerbungenContent');
+    if(bewEl) {
+        var apps = hqOnboardingAccounts.filter(function(a) { return a.applied && a.stage === 'phase0'; });
+        var bh = '';
+        if(apps.length === 0) { bh = '<div class="vit-card p-8 text-center text-gray-400 text-sm">Keine offenen Bewerbungen</div>'; }
+        else apps.forEach(function(a) {
+            bh += '<div class="vit-card p-6 mb-4 border-l-4 border-vit-orange"><div class="flex items-center justify-between flex-wrap gap-4"><div>';
+            bh += '<h3 class="font-bold text-gray-800">'+a.name+'</h3><p class="text-sm text-gray-500">'+a.contact+' \u00B7 '+a.email+'</p>';
+            bh += '<p class="text-xs text-gray-400 mt-1">Beworben: '+(a.applied_at||'?')+'</p></div>';
+            bh += '<div class="flex space-x-2"><button onclick="hqApprovePart1(\''+a.id+'\')" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700">\u2713 Einladen</button>';
+            bh += '<button class="px-4 py-2 bg-red-100 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-200">\u2717 Ablehnen</button></div></div></div>';
+        });
+        bewEl.innerHTML = bh;
+    }
+
+    // Log
+    var logEl = document.getElementById('hqOnbLogContent');
+    if(logEl) {
+        var lh = '<div class="vit-card overflow-hidden">';
+        if(onboardingActionsLog.length === 0) { lh += '<div class="p-8 text-center text-gray-400 text-sm">Noch keine Aktionen</div>'; }
+        else {
+            lh += '<table class="w-full text-sm"><thead><tr class="bg-gray-50 border-b"><th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">Zeit</th><th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">Aktion</th><th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">Akteur</th><th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">Details</th></tr></thead><tbody>';
+            onboardingActionsLog.slice().reverse().forEach(function(a) {
+                lh += '<tr class="border-b"><td class="px-4 py-3 text-xs text-gray-500">'+new Date(a.created_at).toLocaleString('de-DE')+'</td><td class="px-4 py-3 font-semibold">'+a.action_type+'</td><td class="px-4 py-3 text-gray-600">'+a.actor+'</td><td class="px-4 py-3 text-xs text-gray-500">'+JSON.stringify(a.payload)+'</td></tr>';
+            });
+            lh += '</tbody></table>';
+        }
+        lh += '</div>';
+        logEl.innerHTML = lh;
+    }
+}
+
+function hqApprovePart1(accountId) {
+    var account = hqOnboardingAccounts.find(function(a) { return a.id === accountId; });
+    if(!account) return;
+    if(!confirm('\"'+account.name+'\" zur Trainingsphase Part 1 einladen?')) return;
+    account.stage = 'part1';
+    account.stage_status = 'active';
+    account.applied = false;
+    account.started = new Date().toISOString().split('T')[0];
+    var d = new Date(); d.setDate(d.getDate()+90);
+    account.due = d.toISOString().split('T')[0];
+    account.progress = 0;
+    logOnboardingAction('invite_part1', { account: account.name });
+    renderHqOnboarding();
+    alert('\u2705 ' + account.name + ' wurde zur Trainingsphase Part 1 eingeladen!');
+}
+
+// Quick-switch demo function for testing all account levels
+function switchDemoAccount(level, stage) {
+    // Hide login, show app
+    var ls = document.getElementById('loginScreen');
+    var ma = document.getElementById('mainApp');
+    if(ls) ls.style.display = 'none';
+    if(ma) ma.style.display = 'block';
+
+    SESSION.account_level = level;
+    SESSION.stage = stage || 'partner';
+    SESSION.stage_status = 'active';
+    SESSION.account_id = 'demo-'+level;
+    SESSION.account_name = 'Demo '+level;
+
+    if(level === 'extern') {
+        currentRole = 'external_owner';
+        currentRoles = ['external_owner'];
+        SESSION.stage = stage || 'phase0';
+    } else if(level === 'hq') {
+        currentRole = 'hq';
+        currentRoles = ['hq'];
+    } else {
+        currentRole = 'inhaber';
+        currentRoles = ['inhaber'];
+    }
+
+    if(stage === 'part1') {
+        SESSION.stage_started_at = new Date(Date.now() - 30*24*60*60*1000).toISOString();
+        SESSION.stage_due_at = new Date(Date.now() + 60*24*60*60*1000).toISOString();
+        initMilestonesForStage('part1');
+    } else if(stage === 'part2') {
+        SESSION.stage_started_at = new Date(Date.now() - 60*24*60*60*1000).toISOString();
+        SESSION.stage_due_at = new Date(Date.now() + 210*24*60*60*1000).toISOString();
+        initMilestonesForStage('part2');
+    }
+
+    updateUIForRole();
+    try { applyModulStatus(); } catch(e) {}
+    if(level === 'extern') showView('externHome');
+    else if(level === 'hq') switchViewMode('hq');
+    else showView('home');
+}
+
+console.log('[3-Ebenen] System loaded. Use switchDemoAccount("extern","phase0"), switchDemoAccount("standort","part1"), switchDemoAccount("hq") to test.');
+</script>
 
 </body>
 </html>
