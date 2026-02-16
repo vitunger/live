@@ -20386,11 +20386,10 @@ function setTheme(theme) {
         else track.classList.remove('active');
     }
 }
-// Init on load
+// Init on load - always light (dark mode removed)
 (function(){
-    var saved = 'light';
-    try { saved = localStorage.getItem('vit-theme') || 'light'; } catch(e){}
-    setTheme(saved);
+    setTheme('light');
+    try { localStorage.removeItem('vit-theme'); } catch(e){}
 })();
 </script>
 
