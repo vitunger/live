@@ -470,8 +470,8 @@
                         <span class="absolute -top-1 -right-1 bg-vit-orange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
                     </button>
                     
-                    <div class="flex items-center space-x-3 topnav-desktop">
-                        <img src="https://ui-avatars.com/api/?name=Demo+User&background=EF7D00&color=fff" class="w-10 h-10 rounded-full">
+                    <div class="flex items-center space-x-3 topnav-desktop cursor-pointer hover:opacity-80 transition-opacity" onclick="openProfilePanel()">
+                        <img id="userAvatarImg" src="https://ui-avatars.com/api/?name=Demo+User&background=EF7D00&color=fff" class="w-10 h-10 rounded-full ring-2 ring-transparent hover:ring-orange-300 transition-all">
                         <div>
                             <div class="text-sm font-semibold text-gray-800" data-user-name>Demo User</div>
                             <div class="text-xs text-gray-500" id="userRoleText">Rolle</div>
@@ -5130,7 +5130,15 @@
 
     </div>
 
-    <script>
+    
+<style>
+.theme-toggle{display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 0;}
+.theme-toggle-track{width:36px;height:20px;border-radius:10px;background:#d1d5db;position:relative;transition:background 0.3s;}
+.theme-toggle-track.active{background:#EF7D00;}
+.theme-toggle-knob{width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:transform 0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+.theme-toggle-track.active .theme-toggle-knob{transform:translateX(16px);}
+</style>
+<script>
         // ============================================
         // SUPABASE CLIENT
         // ============================================
@@ -19962,5 +19970,245 @@ if(document.readyState==="complete") initMkt();
 else window.addEventListener("load",initMkt);
 })();
 </script>
+
+
+
+
+
+
+<!-- Theme Switching -->
+<script>
+function toggleTheme() {
+    var current = document.documentElement.getAttribute('data-theme') || 'light';
+    var next = current === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+}
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    try { localStorage.setItem('vit-theme', theme); } catch(e){}
+    var track = document.getElementById('themeToggleTrack');
+    if(track) {
+        if(theme === 'dark') track.classList.add('active');
+        else track.classList.remove('active');
+    }
+}
+// Init on load
+(function(){
+    var saved = 'light';
+    try { saved = localStorage.getItem('vit-theme') || 'light'; } catch(e){}
+    setTheme(saved);
+})();
+</script>
+
+
+<!-- ═══ NUTZERPROFIL SLIDE-OVER PANEL ═══ -->
+<div id="profilePanel" style="display:none;position:fixed;inset:0;z-index:9999;">
+    <!-- Backdrop -->
+    <div onclick="closeProfilePanel()" style="position:absolute;inset:0;background:rgba(0,0,0,0.4);transition:opacity 0.3s;" id="profileBackdrop"></div>
+    <!-- Panel -->
+    <div id="profileSlider" style="position:absolute;top:0;right:0;bottom:0;width:380px;background:var(--vit-white,#fff);box-shadow:-8px 0 30px rgba(0,0,0,0.15);transform:translateX(100%);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);overflow-y:auto;">
+
+        <!-- Header -->
+        <div style="padding:24px 24px 0;position:relative;">
+            <button onclick="closeProfilePanel()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:#9ca3af;padding:4px;">✕</button>
+            <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;font-weight:600;margin-bottom:16px;">Mein Profil</p>
+
+            <!-- Avatar + Name -->
+            <div style="text-align:center;margin-bottom:24px;">
+                <div style="position:relative;display:inline-block;">
+                    <img id="profileAvatarImg" src="https://ui-avatars.com/api/?name=Demo+User&background=EF7D00&color=fff" style="width:80px;height:80px;border-radius:50%;border:3px solid #EF7D00;">
+                    <label for="profilePhotoUpload" style="position:absolute;bottom:0;right:0;width:26px;height:26px;border-radius:50%;background:#EF7D00;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid white;font-size:12px;" title="Foto ändern">📷</label>
+                    <input type="file" id="profilePhotoUpload" accept="image/*" style="display:none;" onchange="handleProfilePhoto(this)">
+                </div>
+                <h2 id="profileNameDisplay" style="font-size:20px;font-weight:800;margin-top:10px;color:#111827;">Demo User</h2>
+                <p id="profileRoleDisplay" style="font-size:12px;color:#9ca3af;">Inhaber</p>
+                <p id="profileStandortDisplay" style="font-size:11px;color:#9ca3af;margin-top:2px;">📍 Grafrath</p>
+            </div>
+        </div>
+
+        <!-- Persönliche Daten -->
+        <div style="padding:0 24px 24px;">
+            <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:16px;">
+                <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;font-weight:600;margin-bottom:12px;">Persönliche Daten</p>
+
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:11px;color:#6b7280;font-weight:600;display:block;margin-bottom:3px;">Vorname</label>
+                    <input id="profileVorname" type="text" value="Max" style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='#e5e7eb'">
+                </div>
+
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:11px;color:#6b7280;font-weight:600;display:block;margin-bottom:3px;">Nachname</label>
+                    <input id="profileNachname" type="text" value="Bauer" style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='#e5e7eb'">
+                </div>
+
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:11px;color:#6b7280;font-weight:600;display:block;margin-bottom:3px;">E-Mail</label>
+                    <input id="profileEmail" type="email" value="max@vitbikes-grafrath.de" disabled style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;background:#f3f4f6;color:#6b7280;font-family:Outfit,sans-serif;">
+                    <p style="font-size:9px;color:#9ca3af;margin-top:2px;">Wird vom HQ verwaltet</p>
+                </div>
+
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:11px;color:#6b7280;font-weight:600;display:block;margin-bottom:3px;">Telefon</label>
+                    <input id="profileTelefon" type="tel" value="" placeholder="+49 ..." style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='#e5e7eb'">
+                </div>
+
+                <div style="margin-bottom:0;">
+                    <label style="font-size:11px;color:#6b7280;font-weight:600;display:block;margin-bottom:3px;">Position / Rolle</label>
+                    <input id="profilePosition" type="text" value="" placeholder="z.B. Geschäftsführer, Werkstattleiter..." style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='#e5e7eb'">
+                </div>
+            </div>
+
+            <!-- Erscheinungsbild -->
+            <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:16px;">
+                <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;font-weight:600;margin-bottom:12px;">Erscheinungsbild</p>
+                <div style="display:flex;gap:8px;">
+                    <button onclick="setTheme('light')" id="profileThemeLight" style="flex:1;padding:12px;border-radius:10px;border:2px solid #EF7D00;background:#f9fafb;cursor:pointer;text-align:center;">
+                        <span style="font-size:20px;">☀️</span>
+                        <p style="font-size:11px;font-weight:600;color:#111827;margin-top:4px;">Light</p>
+                    </button>
+                    <button onclick="setTheme('dark')" id="profileThemeDark" style="flex:1;padding:12px;border-radius:10px;border:2px solid transparent;background:#1a1a1e;cursor:pointer;text-align:center;">
+                        <span style="font-size:20px;">🌙</span>
+                        <p style="font-size:11px;font-weight:600;color:#f0f0f0;margin-top:4px;">Dark</p>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Speichern -->
+            <button onclick="saveProfile()" style="width:100%;padding:12px;background:#EF7D00;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;margin-bottom:12px;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                Änderungen speichern
+            </button>
+
+            <!-- Passwort / Abmelden -->
+            <div style="display:flex;gap:8px;">
+                <button onclick="changePassword()" style="flex:1;padding:8px;background:none;border:1px solid #e5e7eb;border-radius:8px;font-size:11px;color:#6b7280;cursor:pointer;font-family:Outfit,sans-serif;">🔒 Passwort ändern</button>
+                <button onclick="handleLogout()" style="flex:1;padding:8px;background:none;border:1px solid #fecaca;border-radius:8px;font-size:11px;color:#dc2626;cursor:pointer;font-family:Outfit,sans-serif;">🚪 Abmelden</button>
+            </div>
+
+            <!-- Meta -->
+            <div style="margin-top:16px;padding:12px;background:#f9fafb;border-radius:8px;text-align:center;">
+                <p style="font-size:9px;color:#9ca3af;">vit:bikes Partner Portal v7.0 · Mitglied seit Jan 2025</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Profile Panel JS -->
+<script>
+function openProfilePanel() {
+    var panel = document.getElementById('profilePanel');
+    var slider = document.getElementById('profileSlider');
+    panel.style.display = 'block';
+    // Populate from sbProfile if available
+    if(typeof sbProfile !== 'undefined' && sbProfile) {
+        var nameParts = (sbProfile.name || 'Demo User').split(' ');
+        document.getElementById('profileVorname').value = nameParts[0] || '';
+        document.getElementById('profileNachname').value = nameParts.slice(1).join(' ') || '';
+        document.getElementById('profileEmail').value = sbProfile.email || '';
+        document.getElementById('profileTelefon').value = sbProfile.telefon || '';
+        document.getElementById('profilePosition').value = sbProfile.position || '';
+        document.getElementById('profileNameDisplay').textContent = sbProfile.name || 'Demo User';
+        document.getElementById('profileRoleDisplay').textContent = (typeof currentRole !== 'undefined' ? currentRole : 'Inhaber');
+        var stdName = (typeof sbStandort !== 'undefined' && sbStandort) ? sbStandort.name : '';
+        document.getElementById('profileStandortDisplay').textContent = stdName ? '📍 ' + stdName : '';
+        // Avatar
+        var avatarUrl = sbProfile.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(sbProfile.name||'User') + '&background=EF7D00&color=fff';
+        document.getElementById('profileAvatarImg').src = avatarUrl;
+    }
+    // Theme buttons
+    updateProfileThemeButtons();
+    // Animate in
+    requestAnimationFrame(function(){
+        slider.style.transform = 'translateX(0)';
+    });
+}
+
+function closeProfilePanel() {
+    var slider = document.getElementById('profileSlider');
+    slider.style.transform = 'translateX(100%)';
+    setTimeout(function(){
+        document.getElementById('profilePanel').style.display = 'none';
+    }, 350);
+}
+
+function updateProfileThemeButtons() {
+    var current = document.documentElement.getAttribute('data-theme') || 'light';
+    var lightBtn = document.getElementById('profileThemeLight');
+    var darkBtn = document.getElementById('profileThemeDark');
+    if(lightBtn) lightBtn.style.borderColor = current === 'light' ? '#EF7D00' : 'transparent';
+    if(darkBtn) darkBtn.style.borderColor = current === 'dark' ? '#EF7D00' : 'transparent';
+}
+
+// Override setTheme to also update profile buttons
+var _origSetTheme = typeof setTheme === 'function' ? setTheme : null;
+setTheme = function(theme) {
+    if(_origSetTheme) _origSetTheme(theme);
+    else {
+        document.documentElement.setAttribute('data-theme', theme);
+        try { localStorage.setItem('vit-theme', theme); } catch(e){}
+    }
+    updateProfileThemeButtons();
+};
+
+async function saveProfile() {
+    var vorname = document.getElementById('profileVorname').value.trim();
+    var nachname = document.getElementById('profileNachname').value.trim();
+    var fullName = (vorname + ' ' + nachname).trim();
+    var telefon = document.getElementById('profileTelefon').value.trim();
+    var position = document.getElementById('profilePosition').value.trim();
+
+    if(typeof sb !== 'undefined' && typeof sbProfile !== 'undefined' && sbProfile) {
+        try {
+            var upd = { name: fullName, telefon: telefon, position: position };
+            var resp = await sb.from('users').update(upd).eq('id', sbProfile.id);
+            if(resp.error) throw resp.error;
+            // Update local state
+            sbProfile.name = fullName;
+            sbProfile.telefon = telefon;
+            sbProfile.position = position;
+            // Update UI
+            document.querySelectorAll('[data-user-name]').forEach(function(el){ el.textContent = fullName; });
+            document.getElementById('profileNameDisplay').textContent = fullName;
+            var avatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(fullName) + '&background=EF7D00&color=fff';
+            document.getElementById('profileAvatarImg').src = avatarUrl;
+            var topAvatar = document.getElementById('userAvatarImg');
+            if(topAvatar) topAvatar.src = avatarUrl;
+            alert('✅ Profil gespeichert!');
+        } catch(e) {
+            console.error('Profile save error:', e);
+            alert('Fehler beim Speichern: ' + (e.message||e));
+        }
+    } else {
+        alert('✅ Profil gespeichert! (Demo-Modus)');
+    }
+}
+
+function handleProfilePhoto(input) {
+    if(input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('profileAvatarImg').src = e.target.result;
+            var topAvatar = document.getElementById('userAvatarImg');
+            if(topAvatar) topAvatar.src = e.target.result;
+            // TODO: Upload to Supabase Storage
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function changePassword() {
+    var newPw = prompt('Neues Passwort eingeben (min. 8 Zeichen):');
+    if(!newPw || newPw.length < 8) { if(newPw !== null) alert('Passwort muss mindestens 8 Zeichen haben.'); return; }
+    if(typeof sb !== 'undefined') {
+        sb.auth.updateUser({ password: newPw }).then(function(res){
+            if(res.error) alert('Fehler: ' + res.error.message);
+            else alert('✅ Passwort geändert!');
+        });
+    } else {
+        alert('✅ Passwort geändert! (Demo-Modus)');
+    }
+}
+</script>
+
+
 </body>
 </html>
