@@ -614,6 +614,129 @@ body, .vit-card, .sidebar-item, input, select, textarea, .ek-modal, th, td {
 [data-theme="dark"] .trainer-step.active {
     background-color: var(--surface-2) !important;
 }
+
+/* ── Dark Mode Refinements ── */
+
+/* Daily Focus tiles: use surface instead of transparent color bg */
+[data-theme="dark"] #dailyFocusBlock .bg-green-50,
+[data-theme="dark"] #dailyFocusBlock .bg-orange-50,
+[data-theme="dark"] #dailyFocusBlock .bg-blue-50,
+[data-theme="dark"] #dailyFocusBlock .bg-purple-50,
+[data-theme="dark"] #dailyFocusBlock .bg-yellow-50 {
+    background-color: var(--surface-2) !important;
+    border: 1px solid var(--border) !important;
+}
+
+/* Daily Focus impulse bar */
+[data-theme="dark"] #dailyImpulse {
+    background: var(--surface-2) !important;
+}
+
+/* Quick Action Cards on Home */
+[data-theme="dark"] .vit-card {
+    background-color: var(--surface) !important;
+    border-color: var(--border) !important;
+}
+
+/* Sub-text in tiles */
+[data-theme="dark"] .text-green-500,
+[data-theme="dark"] .text-green-600 { color: var(--green) !important; }
+[data-theme="dark"] .text-orange-500,
+[data-theme="dark"] .text-vit-orange { color: var(--vit) !important; }
+[data-theme="dark"] .text-blue-500,
+[data-theme="dark"] .text-blue-600 { color: var(--blue) !important; }
+[data-theme="dark"] .text-yellow-500,
+[data-theme="dark"] .text-yellow-600 { color: var(--yellow) !important; }
+[data-theme="dark"] .text-red-500,
+[data-theme="dark"] .text-red-600 { color: var(--red) !important; }
+
+/* Headlines in dark */
+[data-theme="dark"] .h1-headline,
+[data-theme="dark"] .h2-headline { color: var(--text) !important; }
+
+/* Progress bar tracks */
+[data-theme="dark"] .bg-gray-200.rounded-full,
+[data-theme="dark"] [class*="bg-gray-200"][class*="rounded-full"] {
+    background-color: var(--surface-3) !important;
+}
+
+/* KPI cards in controlling/dashboard */
+[data-theme="dark"] [class*="border-green-200"],
+[data-theme="dark"] [class*="border-orange-200"],
+[data-theme="dark"] [class*="border-blue-200"],
+[data-theme="dark"] [class*="border-red-200"] {
+    border-color: var(--border) !important;
+}
+
+/* Streak momentum bar */
+[data-theme="dark"] #salesMomentumBar .vit-card {
+    background-color: var(--surface) !important;
+}
+
+/* BWA Deadline Widget */
+[data-theme="dark"] #bwaDeadlineWidget {
+    background-color: var(--surface) !important;
+    border-color: var(--border) !important;
+}
+[data-theme="dark"] #bwaEskalationBanner {
+    background-color: var(--red-bg) !important;
+    border-color: rgba(239,68,68,0.2) !important;
+}
+
+/* Benchmark lock */
+[data-theme="dark"] #benchmarkLockOverlay .vit-card {
+    border-color: var(--border) !important;
+    background-color: var(--surface) !important;
+}
+
+/* HQ BWA Status Dashboard */
+[data-theme="dark"] #hqBwaStatusDashboard .vit-card {
+    background-color: var(--surface) !important;
+}
+
+/* Dropdown menus */
+[data-theme="dark"] [class*="dropdown"],
+[data-theme="dark"] [role="menu"] {
+    background-color: var(--surface) !important;
+    border-color: var(--border) !important;
+}
+
+/* Rounded icon boxes (Quick Actions) keep their color */
+[data-theme="dark"] .rounded-2xl[class*="bg-green"],
+[data-theme="dark"] .rounded-2xl[class*="bg-orange"],
+[data-theme="dark"] .rounded-2xl[class*="bg-blue"],
+[data-theme="dark"] .rounded-2xl[class*="bg-purple"] {
+    opacity: 0.9;
+}
+
+/* Skeleton placeholders */
+[data-theme="dark"] .animate-pulse .bg-gray-200,
+[data-theme="dark"] [class*="skeleton"] {
+    background-color: var(--surface-3) !important;
+}
+
+/* Status badges */
+[data-theme="dark"] .bg-green-100 { background-color: var(--green-bg) !important; }
+[data-theme="dark"] .bg-red-100 { background-color: var(--red-bg) !important; }
+[data-theme="dark"] .bg-yellow-100 { background-color: var(--yellow-bg) !important; }
+[data-theme="dark"] .bg-blue-100 { background-color: var(--blue-bg) !important; }
+[data-theme="dark"] .bg-orange-100 { background-color: var(--vit-light) !important; }
+[data-theme="dark"] .bg-purple-100 { background-color: rgba(147,51,234,0.12) !important; }
+[data-theme="dark"] .bg-gray-100 { background-color: var(--surface-2) !important; }
+
+/* Space/Gap fix: ensure all text colors are readable */
+[data-theme="dark"] p, [data-theme="dark"] span, [data-theme="dark"] h1,
+[data-theme="dark"] h2, [data-theme="dark"] h3, [data-theme="dark"] h4,
+[data-theme="dark"] label, [data-theme="dark"] li, [data-theme="dark"] td,
+[data-theme="dark"] th, [data-theme="dark"] a:not(.text-vit-orange):not([class*="text-green"]):not([class*="text-red"]):not([class*="text-blue"]) {
+    color: inherit;
+}
+
+/* Fix ring-track for BWA countdown */
+[data-theme="dark"] #bwaCountdownRing circle[stroke="#f3f4f6"] {
+    stroke: var(--surface-3);
+}
+
 </style>
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
