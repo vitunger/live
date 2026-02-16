@@ -15739,7 +15739,7 @@ function Card({deal,onDrag,onClick,isNew}){
 function Col({stage,deals,onDrop,onDrag,onClick,newId}){
   const[dg,setDg]=useState(false);
   const tv=deals.reduce((s,d)=>s+d.value,0);
-  return <div onDragOver={e=>{e.preventDefault();setDg(true)}} onDragLeave={()=>setDg(false)} onDrop={e=>{e.preventDefault();setDg(false);onDrop(+e.dataTransfer.getData("id"),stage.id)}} style={{flex:"1 1 0",minWidth:220,maxWidth:300,display:"flex",flexDirection:"column",gap:6,background:dg?`${stage.color}08`:"transparent",borderRadius:14,padding:8,transition:"all .2s",border:`2px dashed ${dg?stage.color:"transparent"}`}}>
+  return <div onDragOver={e=>{e.preventDefault();setDg(true)}} onDragLeave={()=>setDg(false)} onDrop={e=>{e.preventDefault();setDg(false);onDrop(+e.dataTransfer.getData("id"),stage.id)}} style={{flex:"1 1 0",minWidth:180,display:"flex",flexDirection:"column",gap:6,background:dg?`${stage.color}08`:"transparent",borderRadius:14,padding:8,transition:"all .2s",border:`2px dashed ${dg?stage.color:"transparent"}`}}>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 4px 2px"}}>
       <div style={{display:"flex",alignItems:"center",gap:6}}>
         <div style={{width:8,height:8,borderRadius:"50%",background:stage.color}}/>
@@ -15801,8 +15801,20 @@ function AddModal({onClose,onAdd,currentLoc}){
 /* ── Verkaufsformular (2 Modi) ────────────────────── */
 function SalesForm({deal,sales,seller,onClose,onUpdateDeal,mode}){
   const[form,setForm]=useState({...sales});
-  const u=(k,v)=>setForm(p=>({...p,[k]:v}));
-  const saveAndClose=()=>{onUpdateDeal(deal.id,"sales",form);onClose()};
+  const u=(k,v)=>{
+    setForm(p=>({...p,[k]:v}));
+    // Budget-Range → Deal-Wert automatisch setzen
+    if(k==="budgetRange"){
+      const map={"<2k":1500,"2-3k":2500,"3-5k":4000,"5k+":6000};
+      if(map[v]) onUpdateDeal(deal.id,"value",map[v]);
+    }
+  };
+  const saveAndClose=()=>{
+    // Merge: bestehende sales + form (damit Upload-Daten nicht überschrieben werden)
+    const merged = {...(deal.sales||{}), ...form};
+    onUpdateDeal(deal.id,"sales",merged);
+    onClose();
+  };
   const isInt=mode==="interactive";
 
   const payOpts=["JobRad","BLS","BusinessBike","Finanzierung","Leasing/Divers","Bar/EC"];
@@ -15957,6 +15969,265 @@ function SalesForm({deal,sales,seller,onClose,onUpdateDeal,mode}){
 const SOURCES=["Empfehlung","Google","Instagram","Facebook","Messe","Walk-In","Website","Flyer","TikTok","Andere"];
 const LEASING_PROVIDERS=["JobRad","BLS (Bikeleasing-Service)","BusinessBike","Leasing/Divers"];
 const PAY_METHODS=[{id:"Bar/EC",icon:"💶"},{id:"Finanzierung",icon:"🏦"},{id:"Leasing",icon:"📋"}];
+
+/* ── Scan Upload Modal ────────────────────────────── */
+function ScanUploadModal({deal,sales,onClose,onUpdateDeal}){
+  const[file,setFile]=useState(null);
+  const[preview,setPreview]=useState(null);
+  const[loading,setLoading]=useState(false);
+  const[error,setError]=useState(null);
+  const[parsed,setParsed]=useState(null); // KI-erkannte Werte
+  const[editData,setEditData]=useState(null); // Bearbeitbare Felder
+  const fileRef=useRef(null);
+
+  const FIELD_LABELS={
+    payment:"Bezahlart",nutzung:"Nutzung",ziel:"Ziel",distanz:"Distanzen",haeufigkeit:"Häufigkeit",
+    erfahrung:"E-Bike Erfahrung",lagerung:"Lagerung",aufladen:"Aufladen",zeitrahmen:"Zeitrahmen",
+    wichtig:"Wichtig am Rad",budget:"Budget",akku:"Akku-Ladezeit",dreiPunkte:"3 Kaufkriterien",
+    einwaende:"Einwände",next:"Nächster Schritt",notizen:"Notizen",
+    ergoMethod:"Ergonomie-Methode",sattelhoehe:"Sattelhöhe",sattelversatz:"Sattelversatz",
+    abstandLenker:"Abstand Sattel-Lenker",lenkerhoehe:"Lenkerhöhe",sitzknochen:"Sitzknochen",griffgroesse:"Griffgrösse",
+    gekauftesRad:"Gekauftes Rad",nrTeilekiste:"Nr. Teilekiste",nrAuftrag:"Nr. Auftrag",
+    todoZubehoer:"Zubehörteile bestellt",todoRadBestellt:"Rad bestellt/lagernd",todoKiste:"Kiste gepackt",
+    todoLeasing:"Leasing-Anfrage gestellt",todoFinanzierung:"Finanzierung: Unterlagen",todoWertgarantie:"Wertgarantie",
+    nutzungTags:"Nutzungs-Tags",lagerungTags:"Lagerungs-Tags",wichtigTags:"Wichtig-Tags",
+    budgetRange:"Budget-Bereich",dreiPunkteList:"3-Punkte-Liste"
+  };
+
+  const handleFile=(f)=>{
+    if(!f)return;
+    setFile(f);setError(null);setParsed(null);setEditData(null);
+    const reader=new FileReader();
+    reader.onload=e=>setPreview(e.target.result);
+    reader.readAsDataURL(f);
+  };
+
+  const handleDrop=(e)=>{e.preventDefault();e.stopPropagation();const f=e.dataTransfer?.files?.[0];if(f)handleFile(f)};
+
+  const analyze=async()=>{
+    if(!preview)return;
+    setLoading(true);setError(null);
+    try{
+      const base64=preview.split(",")[1];
+      const mediaType=file.type||"image/jpeg";
+
+      const resp=await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",
+        headers:{"Content-Type":"application/json","x-api-key":"","anthropic-dangerous-direct-browser-access":"true"},
+        body:JSON.stringify({
+          model:"claude-sonnet-4-20250514",
+          max_tokens:2000,
+          messages:[{role:"user",content:[
+            {type:"image",source:{type:"base64",media_type:mediaType,data:base64}},
+            {type:"text",text:`Du siehst ein eingescanntes Fahrrad-Beratungsformular von vit:bikes.
+Extrahiere ALLE erkennbaren Werte und gib sie als JSON zurück. Nur valides JSON, kein Markdown.
+
+Verwende exakt diese Schlüssel (nur Felder zurückgeben die du lesen kannst):
+{
+  "payment": "Bezahlart (JobRad/BLS/BusinessBike/Finanzierung/Leasing/Bar/EC)",
+  "nutzung": "Text",
+  "ziel": "Text",
+  "distanz": "Text",
+  "haeufigkeit": "Text",
+  "erfahrung": "Text",
+  "lagerung": "Text",
+  "aufladen": "Text",
+  "zeitrahmen": "Text",
+  "wichtig": "Text",
+  "budget": "Text/Betrag",
+  "budgetRange": "<2k oder 2-3k oder 3-5k oder 5k+",
+  "akku": "Text",
+  "dreiPunkte": "Text",
+  "einwaende": "Text",
+  "next": "Text",
+  "notizen": "Text",
+  "ergoMethod": "Bodyscanner oder Smartfit",
+  "sattelhoehe": "Wert",
+  "sattelversatz": "Wert",
+  "abstandLenker": "Wert",
+  "lenkerhoehe": "Wert",
+  "sitzknochen": "Wert",
+  "griffgroesse": "Wert",
+  "gekauftesRad": "Modell/Marke/Farbe",
+  "nrTeilekiste": "Nummer",
+  "nrAuftrag": "Nummer",
+  "todoZubehoer": true/false,
+  "todoRadBestellt": true/false,
+  "todoKiste": true/false,
+  "todoLeasing": true/false,
+  "todoFinanzierung": true/false,
+  "todoWertgarantie": true/false
+}
+
+Gib NUR das JSON zurück.`}
+          ]}]
+        })
+      });
+
+      if(!resp.ok){
+        const errBody=await resp.text();
+        throw new Error(`API Fehler ${resp.status}: ${errBody.substring(0,200)}`);
+      }
+
+      const data=await resp.json();
+      const text=data.content?.find(c=>c.type==="text")?.text||"";
+      // Parse JSON - handle possible markdown wrapping
+      const jsonStr=text.replace(/```json\s*/g,"").replace(/```\s*/g,"").trim();
+      const result=JSON.parse(jsonStr);
+      setParsed(result);
+
+      // Merge: bestehende sales haben Vorrang, gescannte Werte füllen Lücken
+      const existing=deal.sales||{};
+      const merged={};
+      for(const[k,v] of Object.entries(result)){
+        if(v===null||v===undefined||v==="")continue;
+        merged[k]=v;
+      }
+      // Overlay: bestehende Werte überschreiben gescannte (digitale Eingaben haben Vorrang)
+      for(const[k,v] of Object.entries(existing)){
+        if(v!==null&&v!==undefined&&v!==""&&v!==false&&!(Array.isArray(v)&&v.length===0)){
+          merged[k]=v;
+        }
+      }
+      setEditData(merged);
+
+    }catch(err){
+      console.error("Scan analysis error:",err);
+      setError(err.message||"Analyse fehlgeschlagen");
+    }finally{
+      setLoading(false);
+    }
+  };
+
+  const updateField=(k,v)=>setEditData(p=>({...p,[k]:v}));
+
+  const saveAll=()=>{
+    if(!editData)return;
+    // Merge with whatever is already saved
+    const current=deal.sales||{};
+    const final={...current,...editData};
+    onUpdateDeal(deal.id,"sales",final);
+    // Update deal value from budgetRange if present
+    if(editData.budgetRange){
+      const map={"<2k":1500,"2-3k":2500,"3-5k":4000,"5k+":6000};
+      if(map[editData.budgetRange])onUpdateDeal(deal.id,"value",map[editData.budgetRange]);
+    }
+    onClose();
+  };
+
+  const ip={width:"100%",padding:"8px 12px",borderRadius:10,border:"1.5px solid #E2E8F0",fontSize:13,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box",background:"#fff"};
+
+  return <div onClick={e=>{e.stopPropagation();onClose()}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2000,animation:"fadeIn .15s"}}>
+    <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:24,width:560,maxWidth:"96vw",maxHeight:"94vh",display:"flex",flexDirection:"column",overflow:"hidden",boxShadow:"0 24px 80px rgba(0,0,0,.12)",animation:"pop .25s ease"}}>
+
+      {/* Header */}
+      <div style={{padding:"20px 28px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid #F0F0F0"}}>
+        <div>
+          <div style={{fontWeight:800,fontSize:18,color:"#1a202c"}}>📷 Formular-Scan</div>
+          <div style={{fontSize:11,color:"#A0AEC0",marginTop:2}}>{deal.name} – Beratungsformular einscannen & analysieren</div>
+        </div>
+        <button onClick={onClose} style={{width:34,height:34,borderRadius:10,border:"none",background:"#F5F5F5",fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#999"}}>✕</button>
+      </div>
+
+      {/* Content */}
+      <div style={{padding:"20px 28px",overflowY:"auto",flex:1}}>
+
+        {/* Step 1: Upload */}
+        {!editData&&<>
+          <input ref={fileRef} type="file" accept="image/*,.pdf" style={{display:"none"}} onChange={e=>handleFile(e.target.files[0])}/>
+
+          {!preview&&<div
+            onClick={()=>fileRef.current?.click()}
+            onDragOver={e=>{e.preventDefault();e.stopPropagation()}}
+            onDrop={handleDrop}
+            style={{border:"2px dashed #E2E8F0",borderRadius:16,padding:"48px 24px",textAlign:"center",cursor:"pointer",transition:"all .2s",background:"#FAFAFA"}}
+            onMouseOver={e=>e.currentTarget.style.borderColor="#FF6B35"}
+            onMouseOut={e=>e.currentTarget.style.borderColor="#E2E8F0"}
+          >
+            <div style={{fontSize:48,marginBottom:12}}>📄</div>
+            <div style={{fontWeight:700,fontSize:15,color:"#2D3748",marginBottom:4}}>Formular hochladen</div>
+            <div style={{fontSize:12,color:"#A0AEC0"}}>Foto oder Scan per Klick oder Drag & Drop</div>
+            <div style={{fontSize:11,color:"#CBD5E0",marginTop:8}}>JPG, PNG, PDF</div>
+          </div>}
+
+          {preview&&<div style={{marginBottom:20}}>
+            <div style={{position:"relative",borderRadius:14,overflow:"hidden",border:"1px solid #E2E8F0",marginBottom:14}}>
+              <img src={preview} alt="Scan" style={{width:"100%",maxHeight:300,objectFit:"contain",background:"#F9FAFB"}}/>
+              <button onClick={()=>{setFile(null);setPreview(null);setError(null)}} style={{position:"absolute",top:8,right:8,width:28,height:28,borderRadius:8,border:"none",background:"rgba(0,0,0,.6)",color:"#fff",fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+            </div>
+            <div style={{fontSize:11,color:"#A0AEC0",marginBottom:12}}>📁 {file?.name} ({(file?.size/1024).toFixed(0)} KB)</div>
+
+            {error&&<div style={{padding:"10px 14px",borderRadius:10,background:"#FFF5F5",border:"1px solid #FED7D7",color:"#C53030",fontSize:12,fontWeight:600,marginBottom:12}}>⚠️ {error}</div>}
+
+            <button onClick={analyze} disabled={loading} style={{width:"100%",padding:"14px",borderRadius:12,border:"none",background:loading?"#A0AEC0":"linear-gradient(135deg,#FF6B35,#E55D2B)",color:"#fff",fontSize:14,fontWeight:700,cursor:loading?"wait":"pointer",fontFamily:"'Outfit',sans-serif",opacity:loading?.7:1,boxShadow:"0 4px 15px rgba(255,107,53,.3)"}}>
+              {loading?<span>⏳ KI analysiert Formular...</span>:<span>🤖 Mit KI analysieren</span>}
+            </button>
+          </div>}
+
+          {loading&&<div style={{padding:20,textAlign:"center"}}>
+            <div style={{display:"inline-flex",gap:6,marginBottom:10}}>{[0,1,2].map(i=><div key={i} style={{width:10,height:10,borderRadius:"50%",background:"#FF6B35",animation:`pulse 1s infinite ${i*.2}s`}}/>)}</div>
+            <div style={{fontSize:13,color:"#718096",fontWeight:600}}>Handschrift wird erkannt...</div>
+            <div style={{fontSize:11,color:"#A0AEC0",marginTop:4}}>Dies kann einige Sekunden dauern</div>
+          </div>}
+        </>}
+
+        {/* Step 2: Voransicht & Bearbeiten */}
+        {editData&&<div>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16,padding:"10px 14px",borderRadius:10,background:"#F0FFF4",border:"1px solid #C6F6D5"}}>
+            <span style={{fontSize:20}}>✅</span>
+            <div>
+              <div style={{fontWeight:700,fontSize:13,color:"#22543D"}}>Analyse abgeschlossen</div>
+              <div style={{fontSize:11,color:"#48BB78"}}>{Object.keys(editData).filter(k=>editData[k]!==null&&editData[k]!==undefined&&editData[k]!=="").length} Felder erkannt – prüfe & ergänze die Werte</div>
+            </div>
+          </div>
+
+          {/* Show which fields came from existing digital data */}
+          {Object.keys(deal.sales||{}).length>0&&<div style={{padding:"8px 12px",borderRadius:8,background:"#EBF4FF",border:"1px solid #BEE3F8",fontSize:11,color:"#2B6CB0",fontWeight:600,marginBottom:14}}>
+            ℹ️ Bestehende Daten aus der digitalen Beratung wurden beibehalten
+          </div>}
+
+          <div style={{display:"flex",flexDirection:"column",gap:12}}>
+            {Object.entries(editData).filter(([k,v])=>v!==null&&v!==undefined).map(([k,v])=>{
+              const label=FIELD_LABELS[k]||k;
+              const isFromExisting=sales[k]!==undefined&&sales[k]!==null&&sales[k]!==""&&sales[k]!==false;
+              const isBoolean=typeof v==="boolean";
+              const isArray=Array.isArray(v);
+
+              return <div key={k} style={{padding:"10px 14px",borderRadius:12,background:isFromExisting?"#F0F7FF":"#FAFAFA",border:`1px solid ${isFromExisting?"#BEE3F8":"#EDF2F7"}`}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:5}}>
+                  <span style={{fontSize:10,fontWeight:700,color:"#A0AEC0",textTransform:"uppercase",letterSpacing:".04em"}}>{label}</span>
+                  {isFromExisting&&<span style={{fontSize:8,fontWeight:700,background:"#667EEA",color:"#fff",padding:"1px 5px",borderRadius:4}}>DIGITAL</span>}
+                  {!isFromExisting&&parsed?.[k]&&<span style={{fontSize:8,fontWeight:700,background:"#FF6B35",color:"#fff",padding:"1px 5px",borderRadius:4}}>SCAN</span>}
+                </div>
+                {isBoolean?
+                  <div onClick={()=>updateField(k,!v)} style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer"}}>
+                    <div style={{width:20,height:20,borderRadius:6,border:`2px solid ${v?"#38B2AC":"#CBD5E0"}`,background:v?"#38B2AC":"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}>{v&&<span style={{color:"#fff",fontSize:11,fontWeight:900}}>✓</span>}</div>
+                    <span style={{fontSize:12,fontWeight:600,color:v?"#2D3748":"#A0AEC0"}}>{v?"Ja":"Nein"}</span>
+                  </div>
+                :isArray?
+                  <input value={v.join(", ")} onChange={e=>updateField(k,e.target.value.split(",").map(s=>s.trim()).filter(Boolean))} style={ip}/>
+                :
+                  <input value={v||""} onChange={e=>updateField(k,e.target.value)} style={ip}/>
+                }
+              </div>
+            })}
+          </div>
+
+          {/* Option to re-scan */}
+          <button onClick={()=>{setParsed(null);setEditData(null);setFile(null);setPreview(null)}} style={{marginTop:14,padding:"8px 14px",borderRadius:8,border:"1px solid #E2E8F0",background:"#fff",fontSize:11,fontWeight:600,color:"#718096",cursor:"pointer",width:"100%"}}>
+            📷 Anderen Scan hochladen
+          </button>
+        </div>}
+      </div>
+
+      {/* Footer */}
+      <div style={{padding:"14px 28px",borderTop:"1px solid #F0F0F0",display:"flex",gap:10}}>
+        <button onClick={onClose} style={{flex:1,padding:"12px",borderRadius:12,border:"2px solid #E2E8F0",background:"#fff",fontSize:13,fontWeight:700,color:"#718096",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Abbrechen</button>
+        {editData&&<button onClick={saveAll} style={{flex:2,padding:"12px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#FF6B35,#E55D2B)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif",boxShadow:"0 4px 15px rgba(255,107,53,.3)"}}>✅ Werte übernehmen</button>}
+      </div>
+    </div>
+  </div>
+}
 
 function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateDeal,onChangeStage}){
   const[tab,setTab]=useState("overview");
@@ -16185,15 +16456,17 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
       </div>
 
       {/* ── Footer ── */}
-      <div style={{padding:"10px 24px",borderTop:"1px solid #F0F0F0",display:"flex",gap:6,justifyContent:"space-between"}}>
-        <div style={{display:"flex",gap:6}}>
+      <div style={{padding:"10px 24px",borderTop:"1px solid #F0F0F0",display:"flex",gap:6,justifyContent:"space-between",flexWrap:"wrap"}}>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
           <button onClick={()=>setShowForm("interactive")} style={{padding:"9px 14px",borderRadius:8,border:"1.5px solid #667EEA",background:"#fff",fontSize:11,fontWeight:700,color:"#667EEA",cursor:"pointer"}}>📋 Beratung digital</button>
           <button onClick={()=>setShowForm("print")} style={{padding:"9px 14px",borderRadius:8,border:"1.5px solid #A0AEC0",background:"#fff",fontSize:11,fontWeight:700,color:"#718096",cursor:"pointer"}}>🖨️ Druckformular</button>
+          <button onClick={()=>setShowForm("scan")} style={{padding:"9px 14px",borderRadius:8,border:"1.5px solid #FF6B35",background:"#fff",fontSize:11,fontWeight:700,color:"#FF6B35",cursor:"pointer"}}>📷 Scan hochladen</button>
         </div>
         <button onClick={onClose} style={{padding:"9px 24px",borderRadius:8,border:"none",background:"#F7FAFC",fontSize:12,fontWeight:700,color:"#718096",cursor:"pointer"}}>Schliessen</button>
       </div>
 
-      {showForm&&<SalesForm deal={deal} sales={sales} seller={seller} onClose={()=>setShowForm(null)} onUpdateDeal={onUpdateDeal} mode={showForm}/>}
+      {showForm&&showForm!=="scan"&&<SalesForm deal={deal} sales={sales} seller={seller} onClose={()=>setShowForm(null)} onUpdateDeal={onUpdateDeal} mode={showForm}/>}
+      {showForm==="scan"&&<ScanUploadModal deal={deal} sales={sales} onClose={()=>setShowForm(null)} onUpdateDeal={onUpdateDeal}/>}
     </div>
   </div>
 }
@@ -16348,7 +16621,15 @@ function PipelineApp(){
   const[showIn,setShowIn]=useState(false);
   const[showAuto,setShowAuto]=useState(false);
   const[rules,setRules]=useState(DEFAULT_RULES);
-  const[curLoc,setCurLoc]=useState("hq");
+  // Determine location from logged-in user profile
+  const isHqUser = window.sbProfile && window.sbProfile.is_hq;
+  const userStandortSlug = (function() {
+    // Map standort_id to a loc slug - for now use demo mapping
+    // TODO: Replace with real standort lookup from DB
+    if(!window.sbProfile || window.sbProfile.is_hq) return "hq";
+    return "berlin"; // Default for non-HQ users until DB mapping exists
+  })();
+  const[curLoc,setCurLoc]=useState(isHqUser ? "hq" : userStandortSlug);
   const nid=useRef(100);
 
   const filteredDeals = curLoc === "hq" ? deals : deals.filter(d => d.loc === curLoc);
@@ -16437,9 +16718,9 @@ function PipelineApp(){
         </div>
       </div>
       <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
-        <div style={{display:"flex",background:"#fff",borderRadius:8,border:"1px solid #EDF2F7",overflow:"hidden"}}>
+        {isHqUser&&<div style={{display:"flex",background:"#fff",borderRadius:8,border:"1px solid #EDF2F7",overflow:"hidden"}}>
           {LOCATIONS.map(l=><div key={l.id} onClick={()=>setCurLoc(l.id)} style={{padding:"6px 12px",fontSize:11,fontWeight:600,cursor:"pointer",background:curLoc===l.id?"#667EEA":"transparent",color:curLoc===l.id?"#fff":"#718096",transition:"all .15s",whiteSpace:"nowrap"}}>{l.label}</div>)}
-        </div>
+        </div>}
         <button onClick={()=>setShowAuto(true)} style={{padding:"7px 12px",borderRadius:8,border:"1px solid #EDF2F7",background:"#fff",fontSize:12,fontWeight:600,color:"#718096",cursor:"pointer"}}>⚡</button>
         <button onClick={()=>setShowIn(v=>!v)} style={{padding:"7px 12px",borderRadius:8,border:"1px solid #EDF2F7",background:showIn?"#EBF4FF":"#fff",fontSize:12,fontWeight:600,color:showIn?"#667EEA":"#718096",cursor:"pointer"}}>📊</button>
         <button onClick={()=>setShowAdd(true)} style={{padding:"7px 16px",borderRadius:8,border:"none",background:"#667EEA",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>+ Kontakt</button>
