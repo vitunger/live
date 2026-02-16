@@ -13580,16 +13580,19 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         async function deleteKalTermin() {
             if(!kalEditId) return;
             var t = kalTermine.find(function(x){ return x.id == kalEditId; });
+
             if(t && t.serie_id) {
                 var choice = prompt('Dieser Termin gehört zu einer Serie.\n\n1 = Nur diesen Termin löschen\n2 = Alle Termine der Serie löschen\n\nBitte 1 oder 2 eingeben:', '1');
                 if(!choice) return;
                 try {
                     if(choice === '2') {
-                        var resp = await sb.from('termine').delete().eq('serie_id', t.serie_id);
+                        var resp = await sb.from('termine').delete().eq('serie_id', t.serie_id).select();
                         if(resp.error) throw resp.error;
+                        if(!resp.data || resp.data.length === 0) throw new Error('Löschen fehlgeschlagen – evtl. fehlende Berechtigung. Bitte Admin kontaktieren.');
                     } else {
-                        var resp = await sb.from('termine').delete().eq('id', kalEditId);
+                        var resp = await sb.from('termine').delete().eq('id', kalEditId).select();
                         if(resp.error) throw resp.error;
+                        if(!resp.data || resp.data.length === 0) throw new Error('Löschen fehlgeschlagen – evtl. fehlende Berechtigung. Bitte Admin kontaktieren.');
                     }
                     document.getElementById('kalNewModal').classList.add('hidden');
                     kalEditId = null;
@@ -13598,8 +13601,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             } else {
                 if(!confirm('Termin wirklich löschen?')) return;
                 try {
-                    var resp = await sb.from('termine').delete().eq('id', kalEditId);
+                    var resp = await sb.from('termine').delete().eq('id', kalEditId).select();
                     if(resp.error) throw resp.error;
+                    if(!resp.data || resp.data.length === 0) throw new Error('Löschen fehlgeschlagen – evtl. fehlende Berechtigung. Bitte Admin kontaktieren.');
                     document.getElementById('kalNewModal').classList.add('hidden');
                     kalEditId = null;
                     await loadKalTermine();
