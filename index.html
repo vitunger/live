@@ -335,9 +335,6 @@
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-
-<!-- Dark Mode: deaktiviert, wird als eigenes Projekt umgesetzt -->
-
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body class="bg-gray-50">
@@ -735,6 +732,7 @@
 
                             <hr class="border-gray-600 my-3">
 
+                            
                             <button onclick="showView('hqEinstellungen')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                 <span>Einstellungen</span>
@@ -742,58 +740,24 @@
                         </div>
                     </nav>
                 </div>
+
+                <!-- Theme Toggle (immer sichtbar, für alle User) -->
+                <div style="padding:8px 16px;border-top:1px solid #333;">
+                    <div class="theme-toggle" onclick="toggleTheme()" title="Dark/Light Mode">
+                        <span style="font-size:13px">☀️</span>
+                        <div class="theme-toggle-track" id="themeToggleTrack">
+                            <div class="theme-toggle-knob"></div>
+                        </div>
+                        <span style="font-size:13px">🌙</span>
+                        <span style="font-size:11px;color:#888;margin-left:4px;">Theme</span>
+                    </div>
+                </div>
             </aside>
 
             <!-- Main Content Area -->
             <main class="main-content-area flex-1 overflow-y-auto p-4 md:p-8 vit-background" style="min-height: 0;">
                 <!-- Startseite View (für ALLE) -->
                 <div id="homeView" class="view" style="display: block;">
-                    <div id="trainerAreaHome" class="mb-4"></div>
-<!-- 🎯 TAGES-COCKPIT – Heute steuern -->
-                        <div id="dailyFocusBlock" class="mb-6">
-                            <div class="vit-card p-5" style="border-left:4px solid #EF7D00;">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h3 class="text-sm font-bold text-gray-800">🎯 Heute steuern</h3>
-                                    <span class="text-xs text-gray-400" id="dailyFocusDate"></span>
-                                </div>
-                                <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
-                                    <div class="p-3 bg-green-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('verkauf')">
-                                        <p class="text-xs text-gray-500">Umsatz heute</p>
-                                        <p id="dfUmsatz" class="text-xl font-bold text-green-600">4.250 €</p>
-                                        <p class="text-[10px] text-green-500">85% vom Tagesziel</p>
-                                    </div>
-                                    <div class="p-3 bg-orange-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('verkauf')">
-                                        <p class="text-xs text-gray-500">Offene Leads</p>
-                                        <p id="dfLeads" class="text-xl font-bold text-vit-orange">7</p>
-                                        <p class="text-[10px] text-orange-500">2 heute neu</p>
-                                    </div>
-                                    <div class="p-3 bg-blue-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('todo')">
-                                        <p class="text-xs text-gray-500">Aufgaben heute</p>
-                                        <p id="dfTasks" class="text-xl font-bold text-blue-600">4</p>
-                                        <p class="text-[10px] text-blue-500">1 überfällig</p>
-                                    </div>
-                                    <div class="p-3 bg-purple-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('controlling')">
-                                        <p class="text-xs text-gray-500">BWA-Status</p>
-                                        <p id="dfBwa" class="text-lg font-bold text-gray-800">⏳</p>
-                                        <p id="dfBwaSub" class="text-[10px] text-gray-500">— Tage</p>
-                                    </div>
-                                    <div class="p-3 bg-yellow-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('kalender')">
-                                        <p class="text-xs text-gray-500">Termine heute</p>
-                                        <p id="dfTermine" class="text-xl font-bold text-yellow-600">3</p>
-                                        <p class="text-[10px] text-yellow-500">nächster: 10:30</p>
-                                    </div>
-                                </div>
-                                <!-- Tagesimpuls -->
-                                <div id="dailyImpulse" class="p-3 rounded-lg" style="background:linear-gradient(135deg,rgba(239,125,0,0.06),rgba(245,158,11,0.06))">
-                                    <div class="flex items-center gap-2">
-                                        <span style="font-size:16px">💡</span>
-                                        <p class="text-xs text-gray-700"><strong>Tagesimpuls:</strong> <span id="dfImpulseText">Du hast 2 Angebote, die seit 5+ Tagen offen sind. Ein kurzer Follow-Up-Anruf könnte den Unterschied machen!</span></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        
                     <!-- Header mit Willkommen + Dashboard anpassen -->
                     <div class="flex items-center justify-between mb-6">
                         <div>
@@ -850,10 +814,57 @@
                             </button>
                         </div>
 
+
+                        <!-- 🎯 TAGES-COCKPIT – Heute steuern -->
+                        <div id="dailyFocusBlock" class="mb-6">
+                            <div class="vit-card p-5" style="border-left:4px solid #EF7D00;">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-sm font-bold text-gray-800">🎯 Heute steuern<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-daily')">i</button></h3><div class="widget-info-popup" id="info-daily">Dein tägliches Steuerungs-Cockpit. Zeigt die 5 wichtigsten Kennzahlen für heute: Umsatz, offene Leads, Aufgaben, BWA-Deadline und Termine. Klicke auf eine Kachel, um direkt ins Modul zu springen.</div>
+                                    <span class="text-xs text-gray-400" id="dailyFocusDate"></span>
+                                </div>
+                                <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+                                    <div class="p-3 bg-green-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('verkauf')">
+                                        <p class="text-xs text-gray-500">Umsatz heute</p>
+                                        <p id="dfUmsatz" class="text-xl font-bold text-green-600">4.250 €</p>
+                                        <p class="text-[10px] text-green-500">85% vom Tagesziel</p>
+                                    </div>
+                                    <div class="p-3 bg-orange-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('verkauf')">
+                                        <p class="text-xs text-gray-500">Offene Leads</p>
+                                        <p id="dfLeads" class="text-xl font-bold text-vit-orange">7</p>
+                                        <p class="text-[10px] text-orange-500">2 heute neu</p>
+                                    </div>
+                                    <div class="p-3 bg-blue-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('todo')">
+                                        <p class="text-xs text-gray-500">Aufgaben heute</p>
+                                        <p id="dfTasks" class="text-xl font-bold text-blue-600">4</p>
+                                        <p class="text-[10px] text-blue-500">1 überfällig</p>
+                                    </div>
+                                    <div class="p-3 bg-purple-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('controlling')">
+                                        <p class="text-xs text-gray-500">BWA-Status</p>
+                                        <p id="dfBwa" class="text-lg font-bold text-gray-800">⏳</p>
+                                        <p id="dfBwaSub" class="text-[10px] text-gray-500">— Tage</p>
+                                    </div>
+                                    <div class="p-3 bg-yellow-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('kalender')">
+                                        <p class="text-xs text-gray-500">Termine heute</p>
+                                        <p id="dfTermine" class="text-xl font-bold text-yellow-600">3</p>
+                                        <p class="text-[10px] text-yellow-500">nächster: 10:30</p>
+                                    </div>
+                                </div>
+                                <!-- Tagesimpuls -->
+                                <div id="dailyImpulse" class="p-3 rounded-lg" style="background:linear-gradient(135deg,rgba(239,125,0,0.06),rgba(245,158,11,0.06))">
+                                    <div class="flex items-center gap-2">
+                                        <span style="font-size:16px">💡</span>
+                                        <p class="text-xs text-gray-700"><strong>Tagesimpuls:</strong> <span id="dfImpulseText">Du hast 2 Angebote, die seit 5+ Tagen offen sind. Ein kurzer Follow-Up-Anruf könnte den Unterschied machen!</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div id="trainerAreaHome" class="mb-4"></div>
                         <!-- 🏥 PERFORMANCE HEALTH SCORE -->
                         <div id="healthScoreWidget" class="vit-card p-5 mb-6">
                             <div class="flex items-center justify-between mb-3">
-                                <h3 class="text-sm font-bold text-gray-800">🏥 Performance Health Score</h3>
+                                <h3 class="text-sm font-bold text-gray-800">🏥 Performance Health Score<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-health')">i</button></h3><div class="widget-info-popup" id="info-health">Dein Gesamt-Score (0–100) zeigt, wie gut dein Standort performt. Er setzt sich zusammen aus: Controlling (25%), Verkauf (25%), Marketing (15%), Werkstatt (15%), Engagement (10%) und Disziplin (10%). 🟢 ab 75 = Gesund, 🟡 50–74 = Beobachtung, 🔴 unter 50 = Kritisch.</div>
                                 <div id="healthBadge"></div>
                             </div>
                             <div class="flex items-center gap-5">
@@ -878,10 +889,9 @@
                             </div>
                         </div>
 
-                        
                         <!-- Kern-Metrik: Umsatz -->
                         <div class="vit-card p-6">
-                            <h2 class="h2-headline text-gray-800 mb-4">UMSATZ VS. PLAN</h2>
+                            <h2 class="h2-headline text-gray-800 mb-4">UMSATZ VS. PLAN<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-umsatz')">i</button></h2><div class="widget-info-popup" id="info-umsatz">Vergleich deines tatsächlichen Umsatzes mit dem Plan – aufgeteilt in Heute, diese Woche und diesen Monat. Der Fortschrittsbalken zeigt, wie nah du am Ziel bist.</div>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div>
                                     <p class="text-sm text-gray-500 mb-1">Heute</p>
@@ -1216,16 +1226,17 @@
 
                 <!-- CRM View -->
                 <div id="verkaufView" class="view" style="display: none;">
-                    <div id="trainerAreaVerkauf" class="mb-4"></div>
                     <h1 class="h1-headline text-gray-800 mb-6" data-i18n="h_sales">VERKAUF</h1>
-                    
+
+                    <!-- 🔥 Verkaufs-Momentum --><div style="position:relative">
+                    <div id="trainerAreaVerkauf" class="mb-4"></div>
                     <div id="salesMomentumBar" class="mb-6">
                         <div class="grid grid-cols-1 lg:grid-cols-4 gap-3">
                             <!-- Streak -->
                             <div class="vit-card p-4 flex items-center gap-3" style="border-left:3px solid #EF7D00;">
                                 <div style="font-size:28px" id="streakEmoji">🔥</div>
                                 <div>
-                                    <p class="text-xs text-gray-400">Lead-Streak</p>
+                                    <p class="text-xs text-gray-400">Lead-Streak<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-streak')">i</button></p><div class="widget-info-popup" id="info-streak">Dein Lead-Streak zählt, wie viele Tage in Folge du mindestens 1 Lead-Aktivität hattest. Dazu kommen Monatsziel-Fortschritt, Abschlussquote und durchschnittlicher Deal-Wert im Vergleich zum Netzwerk.</div>
                                     <p class="text-xl font-bold text-gray-800"><span id="streakDays">12</span> Tage</p>
                                     <p class="text-[10px] text-vit-orange font-semibold">Längster: 18 Tage</p>
                                 </div>
@@ -1257,7 +1268,6 @@
                         </div>
                     </div>
 
-                    
                     <!-- Tab Navigation -->
                     <div class="mb-6 border-b border-gray-200">
                         <nav class="-mb-px flex space-x-8 overflow-x-auto">
@@ -1314,6 +1324,15 @@
 
                     <!-- ===== TAB 3: Auswertung ===== -->
                     <div id="vkTabAuswertung" class="vk-tab-content" style="display:none;">
+                        <!-- Soft Lock: Pipeline Insights -->
+                        <div id="pipelineInsightLock" style="display:none;">
+                            <div class="vit-card p-6 text-center mb-4" style="border:2px dashed #e5e7eb;">
+                                <div style="font-size:40px;margin-bottom:8px">📊</div>
+                                <h3 class="text-base font-bold text-gray-800 mb-1">Erweiterte Pipeline-Auswertung</h3>
+                                <p class="text-xs text-gray-500 mb-3">Verfügbar ab einer Abschlussquote ≥ 20% oder nach Abschluss des Trainers "Nachfass-Systematik".</p>
+                                <button onclick="showTrainerCard(TRAINERS&&TRAINERS[0])" class="px-4 py-2 bg-vit-orange text-white text-sm font-bold rounded-lg hover:opacity-90">🎓 Trainer starten</button>
+                            </div>
+                        </div>
                         <!-- Year KPIs -->
                         <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
                             <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Jahresumsatz Plan</p><p class="text-2xl font-bold text-gray-800" id="ausJahresPlan">—</p></div>
@@ -1542,53 +1561,28 @@
                     </div>
                 </div>
 
-                <!-- Marketing View (Hauptmenü) – REDESIGN v3 -->
+                <!-- Marketing View (Hauptmenü) – REDESIGN v3: Cockpit, Budget, Kampagnen, Reichweite + Social, Strategie, Wissen -->
                 <div id="marketingView" class="view" style="display: none;">
                     <div id="trainerAreaMarketing" class="mb-4"></div>
                     <h1 class="h1-headline text-gray-800 mb-6" data-i18n="h_marketing">MARKETING</h1>
                     
-                    <!-- Tab Navigation -->
                     <div class="mb-6 border-b border-gray-200">
                         <nav class="-mb-px flex space-x-8 overflow-x-auto">
-                            <button onclick="showMarketingTab('cockpit')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="cockpit">
-                                🎯 Cockpit
-                            </button>
-                            <button onclick="showMarketingTab('budget')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="budget">
-                                💰 Budget
-                            </button>
-                            <button onclick="showMarketingTab('kampagnen')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="kampagnen">
-                                📅 Kampagnen
-                            </button>
-                            <button onclick="showMarketingTab('reichweite')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="reichweite">
-                                📡 Reichweite
-                            </button>
-                            <button onclick="showMarketingTab('social')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="social">
-                                🎬 Social Media
-                            </button>
-                            <button onclick="showMarketingTab('mktStrategie')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="mktStrategie">
-                                📋 Strategie
-                            </button>
-                            <button onclick="showMarketingTab('mktWissen')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="mktWissen">
-                                📚 Wissen
-                            </button>
+                            <button onclick="showMarketingTab('cockpit')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="cockpit">🎯 Cockpit</button>
+                            <button onclick="showMarketingTab('budget')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="budget">💰 Budget</button>
+                            <button onclick="showMarketingTab('kampagnen')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="kampagnen">📅 Kampagnen</button>
+                            <button onclick="showMarketingTab('reichweite')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="reichweite">📡 Reichweite</button>
+                            <button onclick="showMarketingTab('social')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="social">🎬 Social Media</button>
+                            <button onclick="showMarketingTab('mktStrategie')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="mktStrategie">📋 Strategie</button>
+                            <button onclick="showMarketingTab('mktWissen')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="mktWissen">📚 Wissen</button>
                         </nav>
                     </div>
 
-                    <!-- NEW TABS: React-Container -->
-                    <div id="marketingTabCockpit" class="marketing-tab-content">
-                        <div id="mktReactCockpit"></div>
-                    </div>
-                    <div id="marketingTabBudget" class="marketing-tab-content" style="display:none;">
-                        <div id="mktReactBudget"></div>
-                    </div>
-                    <div id="marketingTabKampagnen" class="marketing-tab-content" style="display:none;">
-                        <div id="mktReactKampagnen"></div>
-                    </div>
-                    <div id="marketingTabReichweite" class="marketing-tab-content" style="display:none;">
-                        <div id="mktReactReichweite"></div>
-                    </div>
+                    <div id="marketingTabCockpit" class="marketing-tab-content"><div id="mktReactCockpit"></div></div>
+                    <div id="marketingTabBudget" class="marketing-tab-content" style="display:none;"><div id="mktReactBudget"></div></div>
+                    <div id="marketingTabKampagnen" class="marketing-tab-content" style="display:none;"><div id="mktReactKampagnen"></div></div>
+                    <div id="marketingTabReichweite" class="marketing-tab-content" style="display:none;"><div id="mktReactReichweite"></div></div>
 
-                    <!-- PRESERVED TABS -->
                     <div id="marketingTabSocial" class="marketing-tab-content" style="display:none;">
 
                         <!-- Motivation Header -->
@@ -2016,7 +2010,7 @@
                                         </div>
                                     </div>
                                     <div>
-                                        <h2 id="bwaDeadlineTitle" class="text-base font-bold text-gray-800">BWA-Status wird geladen...</h2>
+                                        <h2 id="bwaDeadlineTitle" class="text-base font-bold text-gray-800">BWA-Status wird geladen...<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-bwa')">i</button></h2><div class="widget-info-popup" id="info-bwa">Zeigt den Status deiner monatlichen BWA-Einreichung. Deadline ist der 15. des Folgemonats. Einreichung vor dem 8. = 🥇 Gold-Status. Nach dem 15. = überfällig mit Eskalation. Aktuelle BWA freischaltet Benchmarks und KPI-Feedback.</div>
                                         <p id="bwaDeadlineSubtext" class="text-sm text-gray-500 mt-1"></p>
                                         <div id="bwaRatingBadge" style="display:none;margin-top:6px"></div>
                                     </div>
@@ -2042,7 +2036,7 @@
                         <!-- Netzwerk-Vergleich: Wer hat schon eingereicht? -->
                         <div id="bwaNetzwerkWidget" class="vit-card p-5 mb-6">
                             <div class="flex items-center justify-between mb-3">
-                                <h2 class="text-sm font-bold text-gray-800">📊 BWA-Status im Netzwerk</h2>
+                                <h2 class="text-sm font-bold text-gray-800">📊 BWA-Status im Netzwerk<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-bwa-nw')">i</button></h2><div class="widget-info-popup" id="info-bwa-nw">Wie viele der 21 Standorte haben ihre BWA bereits eingereicht? Gold = vor dem 8., OK = bis zum 15., Überfällig = nach dem 15. Je mehr Standorte einreichen, desto besser die Netzwerk-Analyse.</div>
                                 <span id="bwaNetzwerkProgress" class="text-xs font-semibold text-gray-500"></span>
                             </div>
                             <div class="bg-gray-200 rounded-full h-2.5 mb-3"><div id="bwaNetzwerkBar" class="h-2.5 rounded-full transition-all" style="width:0%;background:#EF7D00"></div></div>
@@ -2058,7 +2052,7 @@
                         <div id="bwaKpiReport" class="vit-card p-5 mb-6" style="display:none;border-left:4px solid #16a34a">
                             <div class="flex items-center justify-between mb-4">
                                 <div>
-                                    <h2 class="text-sm font-bold text-gray-800">✅ Dein Monats-Feedback</h2>
+                                    <h2 class="text-sm font-bold text-gray-800">✅ Dein Monats-Feedback<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-kpi')">i</button></h2><div class="widget-info-popup" id="info-kpi">Nach Einreichung deiner BWA erhältst du sofort ein Feedback mit KPIs und 1–3 konkreten Empfehlungen. Der Vergleich zum Netzwerk-Durchschnitt zeigt, wo du gut bist und wo Potenzial liegt.</div>
                                     <p class="text-xs text-gray-500" id="bwaKpiReportMonth"></p>
                                 </div>
                                 <div id="bwaKpiRating"></div>
@@ -2070,7 +2064,7 @@
                             </div>
                         </div>
 
-                        
+                        <!-- Original Cockpit Content -->
                         <div id="cockpitContent"><p class="text-sm text-gray-400 text-center py-8">Lade Cockpit-Daten...</p></div>
                     </div>
 
@@ -2137,6 +2131,7 @@
                                 <p class="text-xs text-gray-400 mt-3">Tipp: Frühabgabe vor dem 8. = Gold-Status 🥇</p>
                             </div>
                         </div>
+                        <div id="benchmarkContent">
                         <div class="vit-card p-6">
                             <h2 class="text-lg font-semibold text-gray-800 mb-2">Standort-Vergleich</h2>
                             <p class="text-sm text-gray-500 mb-6">Dein Standort vs. Netzwerk-Durchschnitt (Februar 2026)</p>
@@ -2179,7 +2174,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div></div>
 
                     <!-- ===== TAB 3: Plan / Ist (dynamisch) ===== -->
                     <div id="ctrlTabPlanist" class="ctrl-tab-content" style="display:none;">
@@ -2419,6 +2414,19 @@
 
                         <!-- Create Ticket Form -->
                         <div id="ticketCreate" class="hidden vit-card p-5 mb-4">
+                                                        <!-- Auto-Support Interceptor -->
+                            <div id="ticketInterceptor" style="display:none" class="mb-4 p-4 rounded-xl border-2 border-orange-200 bg-orange-50">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <span style="font-size:24px">🤖</span>
+                                    <div><p class="text-sm font-bold text-gray-800">Bevor du ein Ticket erstellst...</p><p class="text-xs text-gray-500">Wir haben möglicherweise eine sofortige Lösung!</p></div>
+                                </div>
+                                <div id="interceptorContent" class="space-y-2 mb-3"></div>
+                                <div class="flex gap-2">
+                                    <button onclick="acceptInterceptor()" class="flex-1 px-3 py-2 bg-green-500 text-white text-xs font-bold rounded-lg hover:bg-green-600">✅ Lösung ausprobieren</button>
+                                    <button onclick="skipInterceptor()" class="flex-1 px-3 py-2 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg hover:bg-gray-200">Trotzdem Ticket erstellen →</button>
+                                </div>
+                            </div>
+
                             <h3 class="font-semibold text-gray-800 mb-3">Neues Support-Ticket erstellen</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                                 <select id="ticketCatInput" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
@@ -4288,7 +4296,38 @@
                 <div id="todoView" class="view" style="display: none;">
                     <div class="flex h-[calc(100vh-100px)] min-h-[600px] overflow-hidden">
 
-<!-- CENTER: Main Content -->
+                        <!-- LEFT: Filter Sidebar -->
+                        <div id="todoSidebar" class="w-52 flex-shrink-0 bg-gray-50 border-r border-gray-200 flex flex-col">
+                            <div class="p-3 border-b border-gray-200">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-7 h-7 rounded-lg flex items-center justify-center text-white font-black text-[10px]" style="background:linear-gradient(135deg,#f97316,#ea580c)">v</div>
+                                    <span class="font-bold text-gray-800 text-sm">Aufgaben</span>
+                                </div>
+                            </div>
+                            <nav class="flex-1 p-2 space-y-0.5">
+                                <p class="font-bold text-gray-400 uppercase px-2 mb-1" style="font-size:9px;letter-spacing:0.05em">Ansichten</p>
+                                <button onclick="todoSetFilter('all')" data-tf2="all" class="todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] bg-white shadow-sm text-gray-900 font-semibold">
+                                    <span class="w-5 text-center text-sm">📋</span><span class="flex-1 text-left">Alle Aufgaben</span><span id="tfBadgeAll" class="text-[9px] font-bold bg-gray-200 text-gray-500 rounded-full px-1.5 py-0.5"></span>
+                                </button>
+                                <button onclick="todoSetFilter('heute')" data-tf2="heute" class="todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] text-gray-600 hover:bg-gray-200">
+                                    <span class="w-5 text-center text-sm">📅</span><span class="flex-1 text-left">Heute</span><span id="tfBadgeHeute" class="text-[9px] font-bold bg-yellow-100 text-yellow-700 rounded-full px-1.5 py-0.5 hidden"></span>
+                                </button>
+                                <button onclick="todoSetFilter('ueberfaellig')" data-tf2="ueberfaellig" class="todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] text-gray-600 hover:bg-gray-200">
+                                    <span class="w-5 text-center text-sm">🔴</span><span class="flex-1 text-left">Überfällig</span><span id="tfBadgeUeber" class="text-[9px] font-bold bg-red-100 text-red-600 rounded-full px-1.5 py-0.5 hidden"></span>
+                                </button>
+                                <button onclick="todoSetFilter('done')" data-tf2="done" class="todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] text-gray-600 hover:bg-gray-200">
+                                    <span class="w-5 text-center text-sm">✅</span><span class="flex-1 text-left">Erledigt</span><span id="tfBadgeDone" class="text-[9px] font-bold bg-green-100 text-green-600 rounded-full px-1.5 py-0.5 hidden"></span>
+                                </button>
+                            </nav>
+                            <div class="p-3 border-t border-gray-200">
+                                <div class="flex items-center space-x-2 px-2 py-1">
+                                    <div class="w-7 h-7 rounded-full bg-yellow-100 flex items-center justify-center"><span class="font-bold text-[9px] text-vit-orange" id="todoSbInitials">MB</span></div>
+                                    <div><p class="font-semibold text-gray-700 text-[11px]" id="todoSbStore">Mein Standort</p><p class="text-gray-400 text-[9px]">Partner</p></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CENTER: Main Content -->
                         <div class="flex-1 flex flex-col min-w-0">
                             <!-- Header -->
                             <div class="flex-shrink-0 border-b border-gray-200 bg-white px-5 py-3">
@@ -4298,7 +4337,6 @@
                                         <p class="text-gray-400 text-[11px]" id="todoHeaderSub">0 offen · 0 heute · 0 überfällig</p>
                                     </div>
                                     <div class="flex items-center space-x-2">
-                                        <button onclick="todoCreateNew()" class="flex items-center space-x-1 px-3 py-1.5 bg-vit-orange text-white rounded-lg text-xs font-semibold hover:opacity-90"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span>Neue Aufgabe</span></button>
                                         <div class="relative">
                                             <svg class="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                                             <input type="text" id="todoSearchInput" placeholder="Suchen..." class="pl-7 pr-3 py-1 border border-gray-200 rounded-lg bg-gray-50 text-xs focus:outline-none focus:border-vit-orange" style="width:160px" oninput="todoSearchChanged()">
@@ -4332,11 +4370,13 @@
                             <!-- Content: List or Board + Detail Panel -->
                             <div class="flex-1 flex overflow-hidden">
                                 <div class="flex-1 overflow-y-auto px-5 py-3" id="todoMainContent">
+                                    <!-- Quick Add -->
+                                    <div id="todoQuickAddArea" class="mb-3"></div>
                                     <!-- Tasks -->
                                     <div id="todoListArea"></div>
                                 </div>
                                 <!-- Detail Panel (hidden by default) -->
-                                <div id="todoDetailPanel" class="hidden flex-shrink-0 border-l border-gray-200 bg-white flex flex-col overflow-hidden" style="width:380px;"></div>
+                                <div id="todoDetailPanel" class="hidden flex-shrink-0 border-l border-gray-200 bg-white flex flex-col overflow-hidden" style="width:360px;"></div>
                             </div>
                         </div>
                     </div>
@@ -4524,11 +4564,10 @@
                         <button onclick="showView('hqAuswertung')" class="vit-card p-3 hover:shadow-md transition text-center"><p class="text-xl mb-1">📊</p><p class="text-[10px] font-semibold text-gray-700">Auswertung</p></button>
                     </div>
 
-                    <!-- Netzwerk KPIs -->
                     <!-- 🏥 Netzwerk Health Score Dashboard -->
                     <div class="vit-card p-5 mb-6" id="hqHealthDashboard">
                         <div class="flex items-center justify-between mb-3">
-                            <h2 class="text-sm font-bold text-gray-800">🏥 Netzwerk Health Score</h2>
+                            <h2 class="text-sm font-bold text-gray-800">🏥 Netzwerk Health Score<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-health')">i</button></h2><div class="widget-info-popup" id="info-hq-health">Aggregierter Health Score aller 21 Standorte. 🟢 Gesund (≥75), 🟡 Beobachtung (50–74), 🔴 Kritisch (&lt;50). Der Netzwerk-Durchschnitt zeigt die Gesamtperformance. Klicke auf einen Standort für Details.</div>
                             <div class="flex gap-2 text-xs">
                                 <span class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-semibold" id="hqHealthGreen">🟢 —</span>
                                 <span class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 font-semibold" id="hqHealthYellow">🟡 —</span>
@@ -4542,12 +4581,12 @@
                         <div id="hqHealthGrid" class="grid grid-cols-3 lg:grid-cols-7 gap-2"></div>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-                        <div class="vit-card p-4"><h3 class="text-xs font-bold text-gray-800 mb-2">🎓 Aktive Trainer im Netzwerk</h3><div id="hqTrainerList" class="space-y-1"></div></div>
-                        <div class="vit-card p-4"><h3 class="text-xs font-bold text-gray-800 mb-2">📞 Nächste Gruppencalls</h3><div id="hqGroupcallList" class="space-y-1"></div></div>
+                        <div class="vit-card p-4"><h3 class="text-xs font-bold text-gray-800 mb-2">🎓 Aktive Trainer im Netzwerk<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-trainer')">i</button></h3><div class="widget-info-popup" id="info-hq-trainer">Zeigt alle aktuell laufenden Trainer-Sessions im Netzwerk. Status: aktiv = Standort arbeitet daran, gestartet = gerade begonnen, ignoriert = keine Reaktion seit 48h. Max 1 Trainer pro Modul pro Standort.</div><div id="hqTrainerList" class="space-y-1"></div></div>
+                        <div class="vit-card p-4"><h3 class="text-xs font-bold text-gray-800 mb-2">📞 Nächste Gruppencalls<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-calls')">i</button></h3><div class="widget-info-popup" id="info-hq-calls">Regelmäßige Netzwerk-Calls: 1. Mittwoch = Inhaber, Freitags = Verkäufer, 2. Donnerstag = Werkstatt. Vor jedem Call werden automatisch KPI-Snapshots und offene Maßnahmen pro Standort vorbereitet.</div><div id="hqGroupcallList" class="space-y-1"></div></div>
                     </div>
 
 
-                    
+                    <!-- Netzwerk KPIs -->
                     <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6" id="hqKpiCards"></div>
 
                     <!-- Handlungsbedarf Ticker -->
@@ -4559,7 +4598,7 @@
                         <div class="lg:col-span-2 space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="vit-card p-5">
-                                    <h2 class="text-sm font-bold text-gray-800 mb-3">🏆 Top 5 Standorte</h2>
+                                    <h2 class="text-sm font-bold text-gray-800 mb-3">🏆 Top 5 Standorte<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-top5')">i</button></h2><div class="widget-info-popup" id="info-hq-top5">Die 5 Standorte mit der besten Lead-Performance diesen Monat, gemessen an Anzahl neuer Leads und Abschlussquote.</div>
                                     <div id="hqTop5" class="space-y-2"></div>
                                 </div>
                                 <div class="vit-card p-5">
@@ -4579,7 +4618,7 @@
 
                             <!-- Standort-Grid -->
                             <div class="vit-card p-5">
-                                <h2 class="text-sm font-bold text-gray-800 mb-3">📊 Alle Standorte – Lead-Performance</h2>
+                                <h2 class="text-sm font-bold text-gray-800 mb-3">📊 Alle Standorte – Lead-Performance<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-leads')">i</button></h2><div class="widget-info-popup" id="info-hq-leads">Ranking aller Standorte nach Lead-Aktivität: neue Leads, Angebote, Abschlüsse und Abschlussquote. Standorte mit rotem Trend brauchen ggf. einen Verkaufs-Trainer.</div>
                                 <div class="flex items-center space-x-4 mb-3 text-[10px] text-gray-500">
                                     <span>🔴 &lt; 50%</span><span>🟠 50-75%</span><span>🟢 75-100%</span><span>🟡 ≥ 100%</span>
                                 </div>
@@ -4645,7 +4684,7 @@
                         <div class="flex items-center justify-between mb-4">
                             <div>
                                 <p class="h2-headline text-vit-gray mb-1">NETZWERK</p>
-                                <h1 class="h1-headline">BWA-Status Übersicht</h1>
+                                <h1 class="h1-headline">BWA-Status Übersicht<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-bwa')">i</button></h1><div class="widget-info-popup" id="info-hq-bwa">Überblick über BWA-Einreichungen aller Standorte. Gold = vor dem 8. eingereicht, OK = bis zum 15., Überfällig = nach Deadline. Bei Stufe 3 werden automatisch Eskalationsmails an Inhaber versendet. Sortierung: Gold → OK → Ausstehend → Überfällig.</div>
                             </div>
                             <div class="flex items-center gap-3">
                                 <div class="text-right">
@@ -4667,7 +4706,7 @@
                         <!-- Progress Bar -->
                         <div class="vit-card p-4 mb-4">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs font-semibold text-gray-600">Netzwerk-Fortschritt</span>
+                                <span class="text-xs font-semibold text-gray-600">Netzwerk-Fortschritt<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-progress')">i</button></span><div class="widget-info-popup" id="info-hq-progress">Prozentualer Anteil der Standorte, die ihre BWA für den aktuellen Monat eingereicht haben. Ziel: 100% bis zum 15. des Folgemonats.</div>
                                 <span id="hqBwaPct" class="text-xs font-bold text-vit-orange">—%</span>
                             </div>
                             <div class="bg-gray-200 rounded-full h-3"><div id="hqBwaBar" class="h-3 rounded-full transition-all" style="width:0%;background:linear-gradient(90deg,#EF7D00,#F59E0B)"></div></div>
@@ -4690,6 +4729,7 @@
                             </table>
                         </div>
                     </div>
+
                     <h1 class="h1-headline text-gray-800 mb-6">FINANZEN – NETZWERK</h1>
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="hqFinKpis"></div>
                     <div class="vit-card p-6 mb-6">
@@ -5092,21 +5132,21 @@
 
                 <!-- HQ AUSWERTUNG: Portal-Nutzung -->
                 <div id="hqAuswertungView" class="view" style="display: none;">
-                    <h1 class="h1-headline text-gray-800 mb-2">📊 AUSWERTUNG – PORTAL-NUTZUNG</h1>
+                    <h1 class="h1-headline text-gray-800 mb-2">📊 AUSWERTUNG – PORTAL-NUTZUNG<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-usage')">i</button></h1><div class="widget-info-popup" id="info-hq-usage">Wie aktiv nutzen die Standorte das Portal? Score basiert auf: Team-Logins, Modul-Nutzung, Aufgaben-Erledigung und BWA-Pünktlichkeit. Niedrige Scores deuten auf Onboarding-Bedarf oder fehlende Gewohnheitsbildung hin.</div>
                     <p class="text-sm text-gray-500 mb-6">Wie aktiv nutzen die Standorte das vit:bikes Partner-Portal?</p>
                     <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6" id="hqAuswKpis"></div>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                         <div class="vit-card p-5">
-                            <h2 class="text-sm font-bold text-gray-800 mb-3">🏆 Aktivste Standorte</h2>
+                            <h2 class="text-sm font-bold text-gray-800 mb-3">🏆 Aktivste Standorte<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-active')">i</button></h2><div class="widget-info-popup" id="info-hq-active">Standorte mit dem höchsten Portal-Nutzungs-Score. Berücksichtigt werden Login-Frequenz, Feature-Nutzung, Aufgaben und Kommunikation.</div>
                             <div id="hqAuswTop" class="space-y-2"></div>
                         </div>
                         <div class="vit-card p-5">
-                            <h2 class="text-sm font-bold text-gray-800 mb-3">⚠️ Geringste Nutzung</h2>
+                            <h2 class="text-sm font-bold text-gray-800 mb-3">⚠️ Geringste Nutzung<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-inactive')">i</button></h2><div class="widget-info-popup" id="info-hq-inactive">Standorte mit niedrigster Aktivität. Diese Standorte benötigen möglicherweise gezielte Ansprache, Onboarding-Trainer oder einen Anruf zur Klärung von Hürden.</div>
                             <div id="hqAuswBottom" class="space-y-2"></div>
                         </div>
                     </div>
                     <div class="vit-card p-5 mb-6">
-                        <h2 class="text-sm font-bold text-gray-800 mb-3">📋 Modul-Nutzung im Netzwerk</h2>
+                        <h2 class="text-sm font-bold text-gray-800 mb-3">📋 Modul-Nutzung im Netzwerk<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-modules')">i</button></h2><div class="widget-info-popup" id="info-hq-modules">Welche Module werden am meisten genutzt? Niedrige Nutzung bei wichtigen Modulen (z.B. Controlling, Verkauf) kann auf fehlendes Training oder unklaren Nutzen hinweisen.</div>
                         <div id="hqAuswModules" class="space-y-2"></div>
                     </div>
                     <div class="vit-card p-5">
@@ -5404,16 +5444,7 @@
 
     </div>
 
-    
-<style>
-.theme-toggle{display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 0;}
-.theme-toggle-track{width:36px;height:20px;border-radius:10px;background:#d1d5db;position:relative;transition:background 0.3s;}
-.theme-toggle-track.active{background:#EF7D00;}
-.theme-toggle-knob{width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:transform 0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
-.theme-toggle-track.active .theme-toggle-knob{transform:translateX(16px);}
-</style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script>
+    <script>
         // ============================================
         // SUPABASE CLIENT
         // ============================================
@@ -6008,8 +6039,6 @@
             // Check for pending approvals (HQ + GF only)
             checkPendingApprovals();
             // Check BWA deadlines and create reminders
-            // Init Trainer Engine
-            if(typeof _initTrainerEngine === 'function') _initTrainerEngine();
             checkBwaDeadlines();
         }
 
@@ -7368,7 +7397,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 });
 
                 // Standort-Kanäle (lokal, orange)
-                var standortName = sbProfile && sbProfile.standort_id ? (Array.isArray(standorte) ? (standorte.find(function(s){return s.id===sbProfile.standort_id})||{}).name : (sbProfile.standort_name || '')) : '';
+                var standortName = sbProfile && sbProfile.standort_id ? (typeof standorte !== 'undefined' ? (standorte.find(function(s){return s.id===sbProfile.standort_id})||{}).name : '') : '';
                 html += '<div class="px-3 pt-4 pb-1 flex items-center justify-between"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">🏪 ' + (standortName ? escH(standortName) : 'Mein Standort') + '</span>';
                 html += '<button onclick="kommCreateKanal()" class="text-gray-400 hover:text-vit-orange" title="Neuen Kanal erstellen"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button>';
                 html += '</div>';
@@ -11751,13 +11780,13 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var el = document.getElementById('wPipelineContent'); if(!el) return;
             try {
                 var stdId = sbProfile ? sbProfile.standort_id : null;
-                var q = sb.from('leads').select('id, status, geschaetzter_wert');
+                var q = sb.from('leads').select('id, status, wert').eq('archiviert', false);
                 if(stdId) q = q.eq('standort_id', stdId);
                 var res = await q;
                 var leads = res.data || [];
                 var offen = leads.filter(function(l){ return l.status !== 'gewonnen' && l.status !== 'verloren'; });
                 var angebote = leads.filter(function(l){ return l.status === 'angebot'; });
-                var pipeWert = offen.reduce(function(s,l){ return s + (l.geschaetzter_wert||0); }, 0);
+                var pipeWert = offen.reduce(function(s,l){ return s + (l.wert||0); }, 0);
                 var badge = document.getElementById('wPipelineBadge');
                 if(badge) badge.textContent = offen.length + ' aktiv';
                 el.innerHTML = '<div class="space-y-3">'
@@ -11777,12 +11806,12 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var stdId = sbProfile ? sbProfile.standort_id : null;
                 var mondayISO = getKWMonday(kw);
                 var sundayISO = getKWSunday(kw);
-                var q = sb.from('verkauf_tracking').select('id, beratungen, verkauft, umsatz').gte('datum', mondayISO).lte('datum', sundayISO);
+                var q = sb.from('verkauf_tracking').select('id, typ').gte('datum', mondayISO).lte('datum', sundayISO);
                 if(stdId) q = q.eq('standort_id', stdId);
                 var res = await q;
                 var data = res.data || [];
-                var verkauft = data.reduce(function(s,d){ return s + (d.verkauft||0); }, 0);
-                var beratung = data.reduce(function(s,d){ return s + (d.beratungen||0); }, 0);
+                var verkauft = data.filter(function(d){ return d.typ === 'verkauf'; }).length;
+                var beratung = data.filter(function(d){ return d.typ === 'beratung'; }).length;
                 var quote = beratung > 0 ? Math.round(verkauft / beratung * 100) : 0;
                 el.innerHTML = '<div class="mb-3"><div class="flex items-center justify-between mb-1"><span class="text-sm text-gray-600">Verkaufsquote</span>'
                     +'<span class="text-2xl font-bold '+(quote>=40?'text-green-600':quote>=20?'text-yellow-600':'text-red-500')+'">'+quote+'%</span></div>'
@@ -11859,14 +11888,15 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var el = document.getElementById('wTeamContent'); if(!el) return;
             try {
                 var stdId = sbProfile ? sbProfile.standort_id : null;
-                var q = sb.from('users').select('id, name, status').eq('status', 'aktiv');
+                var q = sb.from('users').select('id, vorname, nachname, status, rolle').eq('status', 'aktiv');
                 if(stdId) q = q.eq('standort_id', stdId);
                 var res = await q;
                 var team = res.data || [];
                 if(!team.length) { el.innerHTML = '<p class="text-sm text-gray-400">Keine Mitarbeiter</p>'; return; }
                 var rolleIcons = {admin:'👑',geschaeftsfuehrer:'🏢',standortleiter:'⭐',verkauf:'💰',werkstatt:'🔧',mitarbeiter:'👤'};
                 el.innerHTML = '<div class="space-y-2">'+team.slice(0,5).map(function(u){
-                    return '<div class="flex items-center justify-between"><div class="flex items-center space-x-2"><span>👤</span><span class="text-sm font-semibold text-gray-800">'+escH(u.name||'Unbekannt')+'</span></div><span class="text-xs text-green-600">● aktiv</span></div>';
+                    var icon = rolleIcons[u.rolle] || '👤';
+                    return '<div class="flex items-center justify-between"><div class="flex items-center space-x-2"><span>'+icon+'</span><span class="text-sm font-semibold text-gray-800">'+escH((u.vorname||'')+' '+(u.nachname||'').charAt(0)+'.')+'</span></div><span class="text-xs text-green-600">● aktiv</span></div>';
                 }).join('')+(team.length>5?'<p class="text-xs text-gray-400 text-center">+' + (team.length-5) + ' weitere</p>':'')+'</div>';
             } catch(e) { el.innerHTML = '<p class="text-sm text-gray-400">Fehler beim Laden</p>'; }
         }
@@ -11876,18 +11906,17 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var el = document.getElementById('wControllingContent'); if(!el) return;
             try {
                 var stdId = sbProfile ? sbProfile.standort_id : null;
-                var q = sb.from('bwa_daten').select('monat, umsatzerloese, rohertrag, personalkosten, ergebnis_vor_steuern').order('monat', {ascending:false}).limit(1);
+                var q = sb.from('bwa_daten').select('monat, umsatz, rohertrag_pct, personalkosten_pct, ergebnis').order('monat', {ascending:false}).limit(1);
                 if(stdId) q = q.eq('standort_id', stdId);
                 var res = await q;
                 var bwa = (res.data||[])[0];
                 if(!bwa) { el.innerHTML = '<p class="text-sm text-gray-400 text-center py-2">Noch keine BWA hochgeladen</p>'; return; }
-                var rohPct = bwa.umsatzerloese ? Math.round(bwa.rohertrag / bwa.umsatzerloese * 100) : 0;
                 el.innerHTML = '<div class="space-y-3">'
-                    +'<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Umsatz</span><span class="font-bold text-gray-800">'+fmtN(bwa.umsatzerloese||0)+' €</span></div>'
-                    +'<div><div class="flex justify-between mb-1"><span class="text-sm text-gray-600">Rohertrag</span><span class="text-sm font-semibold '+(rohPct>=35?'text-green-600':'text-red-500')+'">'+rohPct+'%</span></div>'
-                    +'<div class="w-full bg-gray-200 rounded-full h-2"><div class="'+(rohPct>=35?'bg-green-500':'bg-red-500')+' h-2 rounded-full" style="width:'+Math.min(rohPct,60)/60*100+'%"></div></div></div>'
-                    +'<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Ergebnis</span><span class="font-bold '+((bwa.ergebnis_vor_steuern||0)>=0?'text-green-600':'text-red-500')+'">'+fmtN(bwa.ergebnis_vor_steuern||0)+' €</span></div>'
-                    +'<p class="text-[10px] text-gray-400">Letzte BWA: Monat '+escH(String(bwa.monat||''))+'</p>'
+                    +'<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Umsatz</span><span class="font-bold text-gray-800">'+fmtN(bwa.umsatz||0)+' €</span></div>'
+                    +'<div><div class="flex justify-between mb-1"><span class="text-sm text-gray-600">Rohertrag</span><span class="text-sm font-semibold '+(bwa.rohertrag_pct>=35?'text-green-600':'text-red-500')+'">'+(bwa.rohertrag_pct||0).toFixed(1)+'%</span></div>'
+                    +'<div class="w-full bg-gray-200 rounded-full h-2"><div class="'+(bwa.rohertrag_pct>=35?'bg-green-500':'bg-red-500')+' h-2 rounded-full" style="width:'+Math.min(bwa.rohertrag_pct||0,60)/60*100+'%"></div></div></div>'
+                    +'<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Ergebnis</span><span class="font-bold '+((bwa.ergebnis||0)>=0?'text-green-600':'text-red-500')+'">'+fmtN(bwa.ergebnis||0)+' €</span></div>'
+                    +'<p class="text-[10px] text-gray-400">Letzte BWA: '+escH(bwa.monat||'')+'</p>'
                     +'</div>';
             } catch(e) { el.innerHTML = '<p class="text-sm text-gray-400">Fehler beim Laden</p>'; }
         }
@@ -12159,7 +12188,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var tickets = ticketResp.data || [];
 
                 // Load leads
-                var leadResp = await sb.from('leads').select('standort_id, status, geschaetzter_wert');
+                var leadResp = await sb.from('leads').select('standort_id, status, wert');
                 var leads = leadResp.data || [];
 
                 // Load verkauf tracking
@@ -14101,11 +14130,11 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             // Load users if not cached
             if(kalStandortUsers.length === 0) {
                 try {
-                    var q = sb.from('users').select('id, name').eq('status', 'aktiv');
+                    var q = sb.from('users').select('id, vorname, nachname, rolle').eq('status', 'aktiv');
                     if(sbProfile && sbProfile.standort_id && !sbProfile.is_hq) q = q.eq('standort_id', sbProfile.standort_id);
                     var res = await q;
                     kalStandortUsers = (res.data || []).map(function(u) {
-                        return { id: u.id, name: u.name || 'Unbekannt' };
+                        return { id: u.id, name: ((u.vorname || '') + ' ' + (u.nachname || '')).trim() || 'Unbekannt', rolle: u.rolle };
                     });
                 } catch(e) { console.warn('Teilnehmer laden:', e); }
             }
@@ -14245,7 +14274,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var isHQ = sbProfile && sbProfile.is_hq;
 
                 // Todos
-                var q = sb.from('todos').select('*').order('prio_sort',{ascending:true}).order('faellig_am',{ascending:true,nullsFirst:false});
+                var q = sb.from('todos').select('*, zugewiesen:zugewiesen_an(name)').order('prio_sort',{ascending:true}).order('faellig_am',{ascending:true,nullsFirst:false});
                 if(sid && !isHQ) q = q.eq('standort_id', sid);
                 var r = await q;
                 todoState.todos = (!r.error && r.data) ? r.data : [];
@@ -14269,6 +14298,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 todoState.labels = (!lr.error && lr.data) ? lr.data : [];
 
                 // Store info in sidebar
+                var sbI = document.getElementById('todoSbInitials');
+                var sbS = document.getElementById('todoSbStore');
+                if(sbI && sbProfile) sbI.textContent = (sbProfile.name||'??').split(' ').map(function(w){return w[0];}).join('').substring(0,2);
+                if(sbS && sbProfile) sbS.textContent = sbProfile.standort_name || 'Mein Standort';
 
             } catch(e) { console.warn('loadTodos:', e); }
             todoRender();
@@ -14291,6 +14324,12 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var titles = {all:'Alle Aufgaben',heute:'Heute',ueberfaellig:'Überfällig',done:'Erledigt'};
             var h1 = document.getElementById('todoHeaderTitle');
             if(h1) h1.textContent = titles[f] || 'Aufgaben';
+            // Sidebar highlight
+            document.querySelectorAll('.todo-f2').forEach(function(b){
+                b.className = 'todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] text-gray-600 hover:bg-gray-200';
+            });
+            var btn = document.querySelector('.todo-f2[data-tf2="'+f+'"]');
+            if(btn) btn.className = 'todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] bg-white shadow-sm text-gray-900 font-semibold';
             // KPI highlight
             document.querySelectorAll('.todo-kpi').forEach(function(b){ b.style.background=''; b.style.boxShadow=''; });
             var kpiColors = {all:'#fafaf9',heute:'#fff7ed',ueberfaellig:'#fef2f2',done:'#f0fdf4'};
@@ -14339,8 +14378,16 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             // Header sub
             var hs=document.getElementById('todoHeaderSub');if(hs) hs.textContent=c.open+' offen · '+c.today+' heute · '+c.overdue+' überfällig';
             // Sidebar badges
+            var ba=document.getElementById('tfBadgeAll');if(ba){ba.textContent=c.open;ba.classList.toggle('hidden',!c.open);}
+            var bh=document.getElementById('tfBadgeHeute');if(bh){bh.textContent=c.today;bh.classList.toggle('hidden',!c.today);}
+            var bu=document.getElementById('tfBadgeUeber');if(bu){bu.textContent=c.overdue;bu.classList.toggle('hidden',!c.overdue);}
+            var bd=document.getElementById('tfBadgeDone');if(bd){bd.textContent=c.done;bd.classList.toggle('hidden',!c.done);}
             // Sidebar badge in nav
             var navBadge=document.getElementById('todoSidebarBadge');if(navBadge)navBadge.textContent=c.open;
+
+            // Quick Add
+            var qa = document.getElementById('todoQuickAddArea');
+            if(qa) qa.innerHTML = todoQuickAddHTML();
 
             // List or Board
             var area = document.getElementById('todoListArea');
@@ -14353,44 +14400,61 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         // ── Quick Add HTML ──
-        // ── Create New Task (opens detail panel) ──
-        var todoStandortUsers = [];
-        async function todoLoadStandortUsers() {
-            if(todoStandortUsers.length) return;
-            try {
-                var sid = sbProfile ? sbProfile.standort_id : null;
-                var q = sb.from('users').select('id, name').eq('status','aktiv');
-                if(sid && !(sbProfile&&sbProfile.is_hq)) q = q.eq('standort_id', sid);
-                var r = await q;
-                todoStandortUsers = (!r.error && r.data) ? r.data : [];
-            } catch(e) { console.warn('Users load:', e); }
+        function todoQuickAddHTML() {
+            return '<div id="todoQAWrapper">' +
+                '<button onclick="todoOpenQuickAdd()" id="todoQABtn" class="w-full flex items-center space-x-2 px-4 py-2 text-left text-sm text-gray-400 hover:text-vit-orange border border-dashed border-gray-200 hover:border-vit-orange rounded-xl group">' +
+                '<span class="w-5 h-5 rounded-full border-2 border-gray-300 group-hover:border-vit-orange flex items-center justify-center"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="text-gray-300 group-hover:text-vit-orange"><path d="M12 5v14M5 12h14"/></svg></span>' +
+                '<span>Aufgabe hinzufügen...</span></button>' +
+                '<div id="todoQAForm" class="hidden border border-vit-orange/30 bg-white rounded-xl overflow-hidden" style="box-shadow:0 4px 20px rgba(249,115,22,0.08)">' +
+                '<div class="px-4 pt-3 pb-1"><input id="todoQATitle" placeholder="Was muss erledigt werden?" class="w-full text-sm text-gray-800 placeholder-gray-400 font-medium outline-none" onkeydown="todoQAKeydown(event)"></div>' +
+                '<div class="flex items-center space-x-2 px-4 pb-3 flex-wrap">' +
+                '<input type="date" id="todoQADate" class="text-xs px-2 py-1 border border-gray-200 rounded-md outline-none focus:border-vit-orange">' +
+                '<select id="todoQAPrio" class="text-xs px-2 py-1 border border-gray-200 rounded-md outline-none focus:border-vit-orange">' +
+                '<option value="normal">🟡 Normal</option><option value="dringend">🔴 Dringend</option><option value="hoch">🟠 Hoch</option><option value="niedrig">🟢 Niedrig</option></select>' +
+                '<select id="todoQASec" class="text-xs px-2 py-1 border border-gray-200 rounded-md outline-none focus:border-vit-orange">' +
+                todoState.sections.map(function(s){return '<option value="'+s.id+'">'+escH(s.name)+'</option>';}).join('') +
+                '</select>' +
+                '<div class="ml-auto flex space-x-1">' +
+                '<button onclick="todoCloseQuickAdd()" class="px-3 py-1 text-xs text-gray-500 hover:bg-gray-100 rounded-md">Abbrechen</button>' +
+                '<button onclick="todoSubmitQuickAdd()" class="px-4 py-1 text-xs font-semibold text-white rounded-md bg-vit-orange hover:opacity-90">Hinzufügen</button>' +
+                '</div></div></div></div>';
         }
 
-        async function todoCreateNew() {
-            await todoLoadStandortUsers();
-            var inbox = todoState.sections.find(function(s){return s.name==='Eingang';});
+        function todoOpenQuickAdd() {
+            var btn=document.getElementById('todoQABtn');if(btn)btn.classList.add('hidden');
+            var form=document.getElementById('todoQAForm');if(form)form.classList.remove('hidden');
+            var inp=document.getElementById('todoQATitle');if(inp)inp.focus();
+        }
+        function todoCloseQuickAdd() {
+            var btn=document.getElementById('todoQABtn');if(btn)btn.classList.remove('hidden');
+            var form=document.getElementById('todoQAForm');if(form)form.classList.add('hidden');
+            var inp=document.getElementById('todoQATitle');if(inp)inp.value='';
+        }
+        function todoQAKeydown(e) {
+            if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();todoSubmitQuickAdd();}
+            if(e.key==='Escape')todoCloseQuickAdd();
+        }
+        async function todoSubmitQuickAdd() {
+            var title=(document.getElementById('todoQATitle')||{}).value;
+            if(!title||!title.trim()) return;
+            var due=(document.getElementById('todoQADate')||{}).value||null;
+            var prio=(document.getElementById('todoQAPrio')||{}).value||'normal';
+            var secId=(document.getElementById('todoQASec')||{}).value||null;
+            var prioSort=(TODO_PRIO[prio]||{}).sort||1;
             try {
                 var resp = await sb.from('todos').insert({
                     standort_id:sbProfile?sbProfile.standort_id:null, erstellt_von:sbUser?sbUser.id:null,
-                    titel:'Neue Aufgabe', prio:'normal', prio_sort:1,
-                    kategorie:'sonstig', section_id:inbox?inbox.id:null, erledigt:false
-                }).select();
+                    titel:title.trim(), faellig_am:due, prio:prio, prio_sort:prioSort,
+                    kategorie:'sonstig', section_id:secId, erledigt:false
+                }).select('*, zugewiesen:zugewiesen_an(name)');
                 if(resp.error) throw resp.error;
-                if(resp.data&&resp.data[0]) {
-                    todoState.todos.unshift(resp.data[0]);
-                    todoState.selectedId = resp.data[0].id;
-                    todoState.filter = 'all';
-                    todoRender();
-                    // Focus title input in detail panel
-                    setTimeout(function(){
-                        var inp = document.querySelector('#todoDetailPanel input[type="text"]');
-                        if(inp) { inp.select(); inp.focus(); }
-                    }, 100);
-                }
-            } catch(e) { console.error(e); alert('Fehler: '+e.message); }
+                if(resp.data&&resp.data[0]) todoState.todos.unshift(resp.data[0]);
+            } catch(e){console.error('QA add:',e);}
+            todoCloseQuickAdd();
+            todoRender();
         }
 
-                // ── List View HTML ──
+        // ── List View HTML ──
         function todoListHTML() {
             var parents = todoFilteredParents();
             var secs = todoState.sections.slice().sort(function(a,b){return (a.sort_order||0)-(b.sort_order||0);});
@@ -14590,8 +14654,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var task = todoState.todos.find(function(t){return t.id===todoState.selectedId;});
             if(!task) { panel.classList.add('hidden'); todoState.selectedId=null; return; }
             panel.classList.remove('hidden');
-            // Lazy-load standort users for assignee dropdown
-            if(!todoStandortUsers.length) { todoLoadStandortUsers().then(function(){ todoRenderDetail(); }); return; }
 
             var subs = todoState.todos.filter(function(t){return t.parent_id===task.id;});
             var doneSubs = subs.filter(function(s){return s.erledigt;}).length;
@@ -14642,15 +14704,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             todoState.sections.forEach(function(s){h+='<option value="'+s.id+'"'+(task.section_id===s.id?' selected':'')+'>'+escH(s.name)+'</option>';});
             h += '</select></div>';
             h += '</div>';
-
-            // Zugewiesen an
-            h += '<div><label class="font-bold text-gray-400 uppercase text-[9px]" style="letter-spacing:0.05em">Zugewiesen an</label>';
-            h += '<select onchange="todoUpdateField(\''+task.id+'\',\'zugewiesen_an\',this.value||null)" class="mt-1 w-full px-2 py-1 text-xs border border-gray-200 rounded-lg outline-none focus:border-vit-orange/50">';
-            h += '<option value="">— Nicht zugewiesen —</option>';
-            todoStandortUsers.forEach(function(u){
-                h += '<option value="'+u.id+'"'+(task.zugewiesen_an===u.id?' selected':'')+'>👤 '+escH(u.name)+'</option>';
-            });
-            h += '</select></div>';
 
             // Labels
             h += '<div><label class="font-bold text-gray-400 uppercase text-[9px]" style="letter-spacing:0.05em">Labels</label>';
@@ -14788,9 +14841,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             try {
                 var resp = await sb.from('todos').insert({
                     standort_id:sbProfile?sbProfile.standort_id:null, erstellt_von:sbUser?sbUser.id:null,
-                    titel:title, parent_id:parentId, section_id:(parent&&parent.section_id)||null,
+                    titel:title, parent_id:parentId, section_id:parent?parent.section_id:null,
                     kategorie:parent?parent.kategorie:'sonstig', prio:'normal', prio_sort:1, erledigt:false
-                }).select('*');
+                }).select('*, zugewiesen:zugewiesen_an(name)');
                 if(resp.error) throw resp.error;
                 if(resp.data&&resp.data[0]) todoState.todos.push(resp.data[0]);
             } catch(e){console.error(e);}
@@ -14803,9 +14856,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var parent = todoState.todos.find(function(t){return t.id===parentId;});
             sb.from('todos').insert({
                 standort_id:sbProfile?sbProfile.standort_id:null, erstellt_von:sbUser?sbUser.id:null,
-                titel:title.trim(), parent_id:parentId, section_id:(parent&&parent.section_id)||null,
+                titel:title.trim(), parent_id:parentId, section_id:parent?parent.section_id:null,
                 kategorie:parent?parent.kategorie:'sonstig', prio:'normal', prio_sort:1, erledigt:false
-            }).select('*').then(function(r){
+            }).select('*, zugewiesen:zugewiesen_an(name)').then(function(r){
                 if(r.data&&r.data[0]) todoState.todos.push(r.data[0]);
                 todoRender();
             });
@@ -18029,18 +18082,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         function showView(viewName) {
             console.log('showView called with:', viewName);
             
-            // Log event
-            if(typeof logPortalEvent === 'function') logPortalEvent('view_opened', {view: viewName});
-            
-            // Trainer: map view to area
-            var viewAreaMap = {home:'allgemein',controlling:'controlling',verkauf:'verkauf',marketing:'marketing',einkauf:'einkauf',werkstatt:'werkstatt',todo:'allgemein',kommunikation:'allgemein'};
-            var viewContainerMap = {home:'trainerAreaHome',controlling:'trainerAreaControlling',verkauf:'trainerAreaVerkauf',marketing:'trainerAreaMarketing'};
-            var trainerArea = viewAreaMap[viewName];
-            var trainerContainer = viewContainerMap[viewName];
-            if(trainerArea && trainerContainer && typeof showTrainerForArea === 'function') {
-                showTrainerForArea(trainerArea, trainerContainer);
-            }
-            
             // Verstecke ALLE Views automatisch (per Klasse statt hardcoded Liste)
             var allViews = document.querySelectorAll('.view');
             console.log('Found', allViews.length, 'views to hide');
@@ -18055,6 +18096,13 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 viewEl.style.display = 'block';
                 console.log('SUCCESS: Showed', viewId, '- offsetHeight:', viewEl.offsetHeight);
                 if(viewName === 'dashboards') initDashboardTabs();
+                
+                // Smart Trainer: Load trainers for this area
+                var areaMap = {home:'allgemein',controlling:'controlling',verkauf:'verkauf',marketing:'marketing'};
+                var containerMap = {home:'trainerAreaHome',controlling:'trainerAreaControlling',verkauf:'trainerAreaVerkauf',marketing:'trainerAreaMarketing'};
+                if(areaMap[viewName] && window.showTrainerForArea) {
+                    window.showTrainerForArea(areaMap[viewName], containerMap[viewName]);
+                }
                 
                 // Version badge anzeigen
                 showModuleVersionBadge(viewName + 'View');
@@ -19174,6 +19222,8 @@ function SalesForm({deal,sales,seller,onClose,onUpdateDeal,mode}){
       .box{width:11px;height:11px;border:1.5px solid #888;border-radius:2px;display:inline-block}
       .ft{margin-top:24px;text-align:center;font-size:8px;color:#bbb;border-top:1px solid #eee;padding-top:6px}
       @media print{.np{display:none!important}body{padding:20px 28px}}
+
+        
     </style></head><body>
     <div class="hdr"><h1>FAHRRADBERATUNG</h1><div class="sub">vit:bikes · ${new Date().toLocaleDateString("de-DE")}</div></div>
     <div class="meta"><span><b>Kunde:</b> ________________________________</span><span><b>Datum:</b> ___________</span><span><b>Verkäufer:</b> ____________________</span></div>
@@ -20260,11 +20310,6 @@ else window.addEventListener("load",initMkt);
 })();
 </script>
 
-
-
-
-
-
 <!-- Theme Switching -->
 <script>
 function toggleTheme() {
@@ -20336,10 +20381,14 @@ function setTheme(theme) {
                     <p style="font-size:9px;color:#9ca3af;margin-top:2px;">Wird vom HQ verwaltet</p>
                 </div>
 
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:11px;color:#6b7280;font-weight:600;display:block;margin-bottom:3px;">Telefon</label>
+                    <input id="profileTelefon" type="tel" value="" placeholder="+49 ..." style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='#e5e7eb'">
+                </div>
+
                 <div style="margin-bottom:0;">
-                    <label style="font-size:11px;color:#6b7280;font-weight:600;display:block;margin-bottom:3px;">Rolle</label>
-                    <div id="profileRolle" style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;background:#f3f4f6;color:#6b7280;">Inhaber</div>
-                    <p style="font-size:9px;color:#9ca3af;margin-top:2px;">Wird vom HQ verwaltet</p>
+                    <label style="font-size:11px;color:#6b7280;font-weight:600;display:block;margin-bottom:3px;">Position / Rolle</label>
+                    <input id="profilePosition" type="text" value="" placeholder="z.B. Geschäftsführer, Werkstattleiter..." style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='#e5e7eb'">
                 </div>
             </div>
 
@@ -20347,13 +20396,13 @@ function setTheme(theme) {
             <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:16px;">
                 <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;font-weight:600;margin-bottom:12px;">Erscheinungsbild</p>
                 <div style="display:flex;gap:8px;">
-                    <button style="flex:1;padding:12px;border-radius:10px;border:2px solid #EF7D00;background:#f9fafb;cursor:default;text-align:center;">
+                    <button onclick="setTheme('light')" id="profileThemeLight" style="flex:1;padding:12px;border-radius:10px;border:2px solid #EF7D00;background:#f9fafb;cursor:pointer;text-align:center;">
                         <span style="font-size:20px;">☀️</span>
                         <p style="font-size:11px;font-weight:600;color:#111827;margin-top:4px;">Light</p>
                     </button>
-                    <button style="flex:1;padding:12px;border-radius:10px;border:2px solid transparent;background:#e5e7eb;cursor:not-allowed;text-align:center;opacity:0.5;">
+                    <button disabled id="profileThemeDark" style="flex:1;padding:12px;border-radius:10px;border:2px solid transparent;background:#e5e7eb;cursor:not-allowed;text-align:center;opacity:0.5;">
                         <span style="font-size:20px;">🌙</span>
-                        <p style="font-size:11px;font-weight:600;color:#6b7280;margin-top:4px;">Dark <span style="font-size:9px;">(bald)</span></p>
+                        <p style="font-size:11px;font-weight:600;color:#9ca3af;margin-top:4px;">Dark (bald)</p>
                     </button>
                 </div>
             </div>
@@ -20389,10 +20438,11 @@ function openProfilePanel() {
         document.getElementById('profileVorname').value = nameParts[0] || '';
         document.getElementById('profileNachname').value = nameParts.slice(1).join(' ') || '';
         document.getElementById('profileEmail').value = sbProfile.email || '';
+        document.getElementById('profileTelefon').value = sbProfile.telefon || '';
+        document.getElementById('profilePosition').value = sbProfile.position || '';
         document.getElementById('profileNameDisplay').textContent = sbProfile.name || 'Demo User';
-        document.getElementById('profileRoleDisplay').textContent = (typeof currentRole !== 'undefined' ? currentRole : sbProfile.is_hq ? 'HQ' : 'Inhaber');
-        var roleEl = document.getElementById('profileRolle'); if(roleEl) roleEl.textContent = (typeof currentRole !== 'undefined' ? currentRole : sbProfile.is_hq ? 'HQ' : 'Inhaber');
-        var stdName = sbProfile.standort_name || ((typeof sbStandort !== 'undefined' && sbStandort) ? sbStandort.name : '');
+        document.getElementById('profileRoleDisplay').textContent = (typeof currentRole !== 'undefined' ? currentRole : 'Inhaber');
+        var stdName = (typeof sbStandort !== 'undefined' && sbStandort) ? sbStandort.name : '';
         document.getElementById('profileStandortDisplay').textContent = stdName ? '📍 ' + stdName : '';
         // Avatar
         var avatarUrl = sbProfile.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(sbProfile.name||'User') + '&background=EF7D00&color=fff';
@@ -20437,14 +20487,18 @@ async function saveProfile() {
     var vorname = document.getElementById('profileVorname').value.trim();
     var nachname = document.getElementById('profileNachname').value.trim();
     var fullName = (vorname + ' ' + nachname).trim();
+    var telefon = document.getElementById('profileTelefon').value.trim();
+    var position = document.getElementById('profilePosition').value.trim();
 
     if(typeof sb !== 'undefined' && typeof sbProfile !== 'undefined' && sbProfile) {
         try {
-            var upd = { name: fullName };
+            var upd = { name: fullName, telefon: telefon, position: position };
             var resp = await sb.from('users').update(upd).eq('id', sbProfile.id);
             if(resp.error) throw resp.error;
             // Update local state
             sbProfile.name = fullName;
+            sbProfile.telefon = telefon;
+            sbProfile.position = position;
             // Update UI
             document.querySelectorAll('[data-user-name]').forEach(function(el){ el.textContent = fullName; });
             document.getElementById('profileNameDisplay').textContent = fullName;
@@ -20488,7 +20542,6 @@ function changePassword() {
     }
 }
 </script>
-
 
 
 <!-- ═══ BWA MOTIVATION + ESKALATION SYSTEM ═══ -->
@@ -20588,6 +20641,7 @@ function changePassword() {
     }
 
     // ──── STANDORT-SICHT: Cockpit Widget ────
+    window.updateBwaDeadlineWidget = updateBwaDeadlineWidget;
     async function updateBwaDeadlineWidget() {
         var today = new Date();
         var bwaMo = getBwaMonth(today);
@@ -20596,7 +20650,7 @@ function changePassword() {
         var days = daysUntil(deadline);
         var moName = MO_NAMES[bwaMo.m] + ' ' + bwaMo.y;
 
-        // Check real DB for submission
+        // Check real DB for BWA submission
         var submitted = null;
         var rating = 'missing';
         if(typeof sb !== 'undefined' && typeof sbProfile !== 'undefined' && sbProfile && sbProfile.standort_id) {
@@ -20604,13 +20658,9 @@ function changePassword() {
                 var bwaResp = await sb.from('bwa_daten').select('created_at').eq('standort_id', sbProfile.standort_id).eq('monat', bwaMo.m + 1).eq('jahr', bwaMo.y).limit(1);
                 if(bwaResp.data && bwaResp.data.length > 0) {
                     submitted = bwaResp.data[0].created_at.slice(0,10);
-                    // Determine rating based on submission date
-                    var subDate = new Date(bwaResp.data[0].created_at);
-                    var subDay = subDate.getDate();
-                    var subMonth = subDate.getMonth(); // 0-based
-                    var deadlineMonth = bwaMo.m + 1 > 11 ? 0 : bwaMo.m + 1;
-                    if(subMonth === deadlineMonth && subDay <= 8) rating = 'gold';
-                    else if(subMonth === deadlineMonth && subDay <= 15) rating = 'ok';
+                    var subDay = new Date(bwaResp.data[0].created_at).getDate();
+                    if(subDay <= 8) rating = 'gold';
+                    else if(subDay <= 15) rating = 'ok';
                     else rating = 'overdue';
                 }
             } catch(e) { console.warn('BWA check:', e); }
@@ -20703,43 +20753,21 @@ function changePassword() {
 
     // ──── NETZWERK WIDGET (Standort-Sicht) ────
     async function updateNetzwerkWidget() {
-        var gold = 0, ok = 0, missing = 0, overdue = 0;
-        var total = 0;
-
-        // Fetch real data from DB
+        var gold = 0, ok = 0, missing = 0, overdue = 0, total = 21;
         if(typeof sb !== 'undefined') {
             try {
                 var bwaMo = getBwaMonth(new Date());
-                var targetMonth = bwaMo.m + 1; // 1-based
-                var targetYear = bwaMo.y;
-                
-                // Get all standorte
                 var stdResp = await sb.from('standorte').select('id,name').eq('aktiv', true);
                 var standorte = stdResp.data || [];
-                total = standorte.length || 1;
-                
-                // Get all BWA submissions for this month
-                var bwaResp = await sb.from('bwa_daten').select('standort_id,created_at').eq('monat', targetMonth).eq('jahr', targetYear);
-                var submissions = bwaResp.data || [];
-                var submittedIds = {};
-                submissions.forEach(function(b) {
-                    var subDate = new Date(b.created_at);
-                    var subDay = subDate.getDate();
-                    var deadlineMonth = bwaMo.m + 1 > 11 ? 0 : bwaMo.m + 1;
-                    var subMonth = subDate.getMonth();
-                    if(subMonth === deadlineMonth && subDay <= 8) { submittedIds[b.standort_id] = 'gold'; gold++; }
-                    else if(subMonth === deadlineMonth && subDay <= 15) { submittedIds[b.standort_id] = 'ok'; ok++; }
-                    else { submittedIds[b.standort_id] = 'overdue'; overdue++; }
+                total = standorte.length || 21;
+                var bwaResp = await sb.from('bwa_daten').select('standort_id,created_at').eq('monat', bwaMo.m + 1).eq('jahr', bwaMo.y);
+                (bwaResp.data || []).forEach(function(b) {
+                    var subDay = new Date(b.created_at).getDate();
+                    if(subDay <= 8) gold++; else if(subDay <= 15) ok++; else overdue++;
                 });
                 missing = total - gold - ok - overdue;
-            } catch(e) {
-                console.warn('Netzwerk widget:', e);
-                total = 21; missing = total;
-            }
-        } else {
-            total = 21; missing = total;
-        }
-        
+            } catch(e) { console.warn('Netzwerk widget:', e); missing = total; }
+        } else { missing = total; }
         var submitted = gold + ok + overdue;
         var pct = Math.round(submitted / total * 100);
 
@@ -20798,6 +20826,7 @@ function changePassword() {
     }
 
     // ──── HQ-SICHT: BWA Netzwerk-Status ────
+    window.renderHqBwaStatus = renderHqBwaStatus;
     function renderHqBwaStatus() {
         var bwaMo = getBwaMonth(new Date());
         var moName = MO_NAMES[bwaMo.m] + ' ' + bwaMo.y;
@@ -20862,601 +20891,9 @@ function changePassword() {
         };
     }
 
-    // Hook into HQ Finanzen view
-    var _origShowView = window.showView;
-    if(_origShowView) {
-        var _wrapped = false;
-        if(!_wrapped) {
-            window.showView = function(v) {
-                _origShowView(v);
-                if(v === 'hqFinanzen' || v === 'controlling') {
-                    setTimeout(function(){
-                        if(v === 'hqFinanzen') renderHqBwaStatus();
-                        if(v === 'controlling') updateBwaDeadlineWidget();
-                    }, 150);
-                }
-            };
-            _wrapped = true;
-        }
-    }
+// [Hook 1 moved to unified dispatcher]
 
-    // Auto-init if controlling is visible
-    setTimeout(function(){
-        updateBwaDeadlineWidget();
-        renderHqBwaStatus();
-    }, 500);
-})();
-</script>
-
-
-<!-- ═══ TRAINER ENGINE ═══ -->
-<style>
-.trainer-card{background:linear-gradient(135deg,#fffbf5,#fff);border:1px solid #fed7aa;border-radius:16px;padding:20px;margin-bottom:20px;position:relative;overflow:hidden;transition:all 0.3s;}
-.trainer-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#f97316,#fb923c);}
-.trainer-card:hover{box-shadow:0 4px 20px rgba(249,115,22,0.12);}
-.trainer-card .tc-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:3px 8px;border-radius:6px;}
-.trainer-card .tc-badge.perf{background:#fef3c7;color:#92400e;}
-.trainer-card .tc-badge.onb{background:#dbeafe;color:#1e40af;}
-.trainer-drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9998;opacity:0;transition:opacity 0.3s;}
-.trainer-drawer-backdrop.active{opacity:1;}
-.trainer-drawer{position:fixed;top:0;right:0;bottom:0;width:440px;max-width:95vw;background:#fff;z-index:9999;transform:translateX(100%);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);overflow-y:auto;box-shadow:-8px 0 30px rgba(0,0,0,0.15);}
-.trainer-drawer.open{transform:translateX(0);}
-.trainer-step{padding:20px 24px;border-bottom:1px solid #f3f4f6;}
-.trainer-step.active{background:#fffbf5;}
-.trainer-step .step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
-.trainer-step .step-num.done{background:#dcfce7;color:#16a34a;}
-.trainer-step .step-num.current{background:#f97316;color:#fff;}
-.trainer-step .step-num.upcoming{background:#f3f4f6;color:#9ca3af;}
-.trainer-locked-card{background:linear-gradient(135deg,#fef2f2,#fff);border:2px dashed #fecaca;border-radius:16px;padding:32px;text-align:center;}
-</style>
-
-<script>
-// ═══ TRAINER ENGINE v1.0 ═══
-(function(){
-    'use strict';
-    
-    var trainerState = {
-        trainers: [],
-        assignments: [],
-        completions: [],
-        onboarding: null,
-        activeDrawer: null,
-        currentStep: 0,
-        stepResults: {}
-    };
-
-    // ── Event Logging ──
-    window.logPortalEvent = async function(eventType, meta) {
-        if(typeof sb === 'undefined' || !sbUser) return;
-        try {
-            await sb.from('portal_events').insert({
-                user_id: sbUser.id,
-                standort_id: sbProfile ? sbProfile.standort_id : null,
-                event_type: eventType,
-                meta: meta || {}
-            });
-        } catch(e) { console.warn('logEvent:', e); }
-    };
-
-    // ── Load Active Trainers for Area ──
-    async function loadTrainersForArea(areaKey) {
-        if(typeof sb === 'undefined' || !sbProfile) return [];
-        var sid = sbProfile.standort_id;
-        try {
-            // Get active assignments for this standort
-            var aResp = await sb.from('trainer_assignments')
-                .select('*, trainer:trainer_id(*)')
-                .eq('standort_id', sid)
-                .eq('status', 'active');
-            var assignments = (aResp.data || []).filter(function(a) {
-                if(!a.trainer || !a.trainer.is_active) return false;
-                if(areaKey && a.trainer.area_key !== areaKey) return false;
-                // Check cooldown
-                if(a.cooldown_until && new Date(a.cooldown_until) > new Date()) return false;
-                return true;
-            });
-            
-            // Also check for onboarding trainers if not done
-            if(trainerState.onboarding && !trainerState.onboarding.onboarding_done) {
-                var oResp = await sb.from('trainers')
-                    .select('*')
-                    .eq('mode', 'onboarding')
-                    .eq('is_active', true)
-                    .eq('trigger_type', 'onboarding_step');
-                var obTrainers = (oResp.data || []).filter(function(t) {
-                    var cond = t.trigger_condition_json || {};
-                    return cond.phase === trainerState.onboarding.phase && cond.step === trainerState.onboarding.step;
-                });
-                // Add onboarding trainers as virtual assignments
-                obTrainers.forEach(function(t) {
-                    if(!assignments.find(function(a){ return a.trainer_id === t.id; })) {
-                        assignments.push({ id: 'ob_'+t.id, trainer_id: t.id, trainer: t, status: 'active', _isOnboarding: true });
-                    }
-                });
-            }
-            
-            // Sort: onboarding first, then by priority
-            assignments.sort(function(a,b) {
-                if(a._isOnboarding && !b._isOnboarding) return -1;
-                if(!a._isOnboarding && b._isOnboarding) return 1;
-                return (a.trainer.priority||3) - (b.trainer.priority||3);
-            });
-            
-            return assignments.slice(0, 1); // max 1 per area
-        } catch(e) { console.warn('loadTrainers:', e); return []; }
-    }
-
-    // ── Load Onboarding State ──
-    async function loadOnboardingState() {
-        if(typeof sb === 'undefined' || !sbUser) return;
-        try {
-            var resp = await sb.from('user_onboarding').select('*').eq('user_id', sbUser.id).maybeSingle();
-            trainerState.onboarding = resp.data;
-        } catch(e) { console.warn('loadOnboarding:', e); }
-    }
-
-    // ── Render Trainer Card ──
-    function renderTrainerCard(assignment, containerEl) {
-        if(!assignment || !assignment.trainer || !containerEl) return;
-        var t = assignment.trainer;
-        var modeLabel = t.mode === 'onboarding' ? 'Onboarding' : 'Training';
-        var modeCls = t.mode === 'onboarding' ? 'onb' : 'perf';
-        var areaIcons = {verkauf:'💰',controlling:'📊',marketing:'📱',einkauf:'📦',werkstatt:'🔧',allgemein:'🏠'};
-        
-        var html = '<div class="trainer-card" id="trainerCard_'+assignment.id+'">'
-            + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">'
-            + '<div style="flex:1">'
-            + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
-            + '<span class="tc-badge '+modeCls+'">'+modeLabel+'</span>'
-            + '<span style="font-size:10px;color:#9ca3af">'+(areaIcons[t.area_key]||'📋')+' '+t.area_key+'</span>'
-            + '<span style="font-size:10px;color:#9ca3af">· '+t.duration_minutes+' Min</span>'
-            + '</div>'
-            + '<h3 style="font-size:15px;font-weight:800;color:#111827;margin-bottom:4px">'+escH(t.title)+'</h3>'
-            + '<p style="font-size:13px;color:#6b7280;line-height:1.4">'+escH(t.summary||'')+'</p>'
-            + '</div>'
-            + '<div style="flex-shrink:0;font-size:32px">'+(areaIcons[t.area_key]||'📋')+'</div>'
-            + '</div>'
-            + '<div style="display:flex;align-items:center;gap:8px;margin-top:14px">'
-            + '<button onclick="window._trainerStart(\''+assignment.id+'\',\''+t.id+'\')" style="padding:8px 20px;background:#f97316;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif">▶ Starten</button>'
-            + '<button onclick="window._trainerSnooze(\''+assignment.id+'\')" style="padding:8px 16px;background:none;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;color:#9ca3af;cursor:pointer;font-family:Outfit,sans-serif">Später</button>'
-            + '</div>'
-            + '</div>';
-        
-        containerEl.innerHTML = html;
-    }
-
-    // ── Trainer Drawer (Micro-Learning) ──
-    function openTrainerDrawer(trainerId) {
-        var trainer = null;
-        // Find trainer in state
-        trainerState.assignments.forEach(function(a) {
-            if(a.trainer && a.trainer.id === trainerId) trainer = a.trainer;
-        });
-        if(!trainer) {
-            // Try direct load
-            sb.from('trainers').select('*').eq('id', trainerId).single().then(function(r) {
-                if(r.data) { _buildDrawer(r.data); }
-            });
-            return;
-        }
-        _buildDrawer(trainer);
-    }
-
-    function _buildDrawer(trainer) {
-        trainerState.activeDrawer = trainer;
-        trainerState.currentStep = 0;
-        trainerState.stepResults = {};
-        
-        var steps = (trainer.content_json || {}).steps || [];
-        var areaIcons = {verkauf:'💰',controlling:'📊',marketing:'📱',einkauf:'📦',werkstatt:'🔧',allgemein:'🏠'};
-        
-        // Remove existing
-        var old = document.getElementById('trainerDrawerBackdrop');
-        if(old) old.remove();
-        old = document.getElementById('trainerDrawer');
-        if(old) old.remove();
-        
-        // Backdrop
-        var backdrop = document.createElement('div');
-        backdrop.id = 'trainerDrawerBackdrop';
-        backdrop.className = 'trainer-drawer-backdrop';
-        backdrop.onclick = function(){ closeTrainerDrawer(); };
-        document.body.appendChild(backdrop);
-        
-        // Drawer
-        var drawer = document.createElement('div');
-        drawer.id = 'trainerDrawer';
-        drawer.className = 'trainer-drawer';
-        
-        var h = '<div style="padding:20px 24px;border-bottom:1px solid #f3f4f6;position:sticky;top:0;background:#fff;z-index:1">'
-            + '<div style="display:flex;align-items:center;justify-content:space-between">'
-            + '<div>'
-            + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'
-            + '<span style="font-size:16px">'+(areaIcons[trainer.area_key]||'📋')+'</span>'
-            + '<span style="font-size:10px;font-weight:700;text-transform:uppercase;color:#f97316;letter-spacing:0.05em">'+(trainer.mode==='onboarding'?'Onboarding':'Training')+'</span>'
-            + '</div>'
-            + '<h2 style="font-size:18px;font-weight:800;color:#111827">'+escH(trainer.title)+'</h2>'
-            + '</div>'
-            + '<button onclick="closeTrainerDrawer()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#9ca3af;padding:4px">✕</button>'
-            + '</div>'
-            + '<div style="display:flex;align-items:center;gap:12px;margin-top:12px">'
-            + '<div style="flex:1;height:4px;background:#f3f4f6;border-radius:2px;overflow:hidden"><div id="trainerProgressBar" style="height:100%;background:#f97316;border-radius:2px;width:0%;transition:width 0.5s"></div></div>'
-            + '<span id="trainerStepLabel" style="font-size:11px;color:#9ca3af;white-space:nowrap">0/'+steps.length+'</span>'
-            + '</div>'
-            + '</div>';
-        
-        h += '<div id="trainerStepsContainer">';
-        steps.forEach(function(step, i) {
-            h += '<div class="trainer-step'+(i===0?' active':'')+'" id="trainerStep_'+i+'" style="'+(i>0?'display:none':'')+'">'
-                + '<div style="display:flex;align-items:flex-start;gap:12px">'
-                + '<div class="step-num '+(i===0?'current':'upcoming')+'" id="trainerStepNum_'+i+'">'+(i+1)+'</div>'
-                + '<div style="flex:1">'
-                + '<h3 style="font-size:15px;font-weight:700;color:#111827;margin-bottom:8px">'+escH(step.title||'Schritt '+(i+1))+'</h3>'
-                + '<p style="font-size:13px;color:#4b5563;line-height:1.6;white-space:pre-line">'+escH(step.body||'')+'</p>';
-            
-            if(step.type === 'question' && step.options) {
-                h += '<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px" id="trainerOpts_'+i+'">';
-                step.options.forEach(function(opt, oi) {
-                    h += '<button onclick="window._trainerSelectOpt('+i+','+oi+',this)" style="padding:6px 14px;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;color:#374151;cursor:pointer;background:#fff;font-family:Outfit,sans-serif;transition:all 0.2s">'+escH(opt)+'</button>';
-                });
-                h += '</div>';
-            }
-            
-            if(step.type === 'action' && step.input_placeholder) {
-                h += '<textarea id="trainerInput_'+i+'" placeholder="'+escH(step.input_placeholder)+'" style="width:100%;margin-top:12px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:Outfit,sans-serif;resize:vertical;min-height:60px;outline:none" onfocus="this.style.borderColor=\'#f97316\'" onblur="this.style.borderColor=\'#e5e7eb\'"></textarea>';
-            }
-            
-            if(step.cta) {
-                h += '<button onclick="'+step.cta+';closeTrainerDrawer()" style="margin-top:12px;padding:8px 16px;background:#f97316;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif">→ Direkt öffnen</button>';
-            }
-            
-            h += '</div></div></div>';
-        });
-        h += '</div>';
-        
-        // Footer
-        h += '<div style="padding:20px 24px;border-top:1px solid #f3f4f6;position:sticky;bottom:0;background:#fff;display:flex;align-items:center;justify-content:space-between">'
-            + '<button id="trainerPrevBtn" onclick="window._trainerPrev()" style="padding:8px 16px;background:none;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;color:#6b7280;cursor:pointer;font-family:Outfit,sans-serif;display:none">← Zurück</button>'
-            + '<div style="flex:1"></div>'
-            + '<button id="trainerNextBtn" onclick="window._trainerNext()" style="padding:10px 24px;background:#f97316;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif">Weiter →</button>'
-            + '</div>';
-        
-        drawer.innerHTML = h;
-        document.body.appendChild(drawer);
-        
-        // Animate in
-        requestAnimationFrame(function(){
-            backdrop.classList.add('active');
-            drawer.classList.add('open');
-        });
-        
-        _updateDrawerUI();
-        
-        // Log start
-        logPortalEvent('trainer_started', { trainer_id: trainer.id, title: trainer.title });
-        // Insert completion record
-        if(typeof sb !== 'undefined' && sbUser) {
-            sb.from('trainer_completions').insert({
-                user_id: sbUser.id,
-                standort_id: sbProfile ? sbProfile.standort_id : null,
-                trainer_id: trainer.id
-            });
-        }
-    }
-
-    function _updateDrawerUI() {
-        var trainer = trainerState.activeDrawer;
-        if(!trainer) return;
-        var steps = (trainer.content_json || {}).steps || [];
-        var cur = trainerState.currentStep;
-        var total = steps.length;
-        
-        // Progress
-        var bar = document.getElementById('trainerProgressBar');
-        var label = document.getElementById('trainerStepLabel');
-        if(bar) bar.style.width = Math.round(((cur+1)/total)*100) + '%';
-        if(label) label.textContent = (cur+1)+'/'+total;
-        
-        // Show/hide steps
-        for(var i=0; i<total; i++) {
-            var el = document.getElementById('trainerStep_'+i);
-            var num = document.getElementById('trainerStepNum_'+i);
-            if(el) { el.style.display = i===cur ? 'block' : 'none'; el.className = 'trainer-step'+(i===cur?' active':''); }
-            if(num) num.className = 'step-num '+(i<cur?'done':i===cur?'current':'upcoming');
-        }
-        
-        // Buttons
-        var prev = document.getElementById('trainerPrevBtn');
-        var next = document.getElementById('trainerNextBtn');
-        if(prev) prev.style.display = cur > 0 ? 'inline-block' : 'none';
-        if(next) next.textContent = cur >= total-1 ? '✅ Abschließen' : 'Weiter →';
-    }
-
-    window._trainerNext = function() {
-        var trainer = trainerState.activeDrawer;
-        if(!trainer) return;
-        var steps = (trainer.content_json || {}).steps || [];
-        var cur = trainerState.currentStep;
-        
-        // Save current step input
-        var inp = document.getElementById('trainerInput_'+cur);
-        if(inp) trainerState.stepResults['step_'+cur+'_input'] = inp.value;
-        
-        if(cur >= steps.length - 1) {
-            _completeTrainer(trainer);
-            return;
-        }
-        trainerState.currentStep++;
-        _updateDrawerUI();
-    };
-
-    window._trainerPrev = function() {
-        if(trainerState.currentStep > 0) {
-            trainerState.currentStep--;
-            _updateDrawerUI();
-        }
-    };
-
-    window._trainerSelectOpt = function(stepIdx, optIdx, btn) {
-        var trainer = trainerState.activeDrawer;
-        var steps = (trainer.content_json || {}).steps || [];
-        var opt = steps[stepIdx] && steps[stepIdx].options ? steps[stepIdx].options[optIdx] : '';
-        trainerState.stepResults['step_'+stepIdx+'_choice'] = opt;
-        // Highlight selected
-        var container = document.getElementById('trainerOpts_'+stepIdx);
-        if(container) {
-            container.querySelectorAll('button').forEach(function(b){ b.style.background='#fff'; b.style.borderColor='#e5e7eb'; b.style.color='#374151'; });
-            btn.style.background='#fff7ed'; btn.style.borderColor='#f97316'; btn.style.color='#f97316';
-        }
-    };
-
-    async function _completeTrainer(trainer) {
-        closeTrainerDrawer();
-        
-        var action = trainer.action_after_json || {};
-        var successMetric = trainer.success_metric_json || {};
-        
-        // Create task if configured
-        if(action.create_task && typeof sb !== 'undefined' && sbUser) {
-            try {
-                var taskData = {
-                    standort_id: sbProfile ? sbProfile.standort_id : null,
-                    erstellt_von: sbUser.id,
-                    titel: action.task_title || 'Trainer-Aktion',
-                    beschreibung: 'Aus Training: ' + trainer.title + '\n' + JSON.stringify(trainerState.stepResults),
-                    kategorie: action.task_kategorie || 'sonstig',
-                    prio: action.task_prio || 'normal',
-                    prio_sort: action.task_prio === 'hoch' ? 3 : action.task_prio === 'dringend' ? 4 : 1,
-                    quelle: 'trainer',
-                    erledigt: false
-                };
-                await sb.from('todos').insert(taskData);
-            } catch(e) { console.warn('Trainer task:', e); }
-        }
-        
-        // Update completion record
-        if(typeof sb !== 'undefined' && sbUser) {
-            var followupDays = successMetric.check_after_days || 7;
-            var followupDate = new Date();
-            followupDate.setDate(followupDate.getDate() + followupDays);
-            
-            await sb.from('trainer_completions')
-                .update({ 
-                    completed_at: new Date().toISOString(),
-                    result_json: trainerState.stepResults,
-                    followup_due_at: followupDate.toISOString()
-                })
-                .eq('user_id', sbUser.id)
-                .eq('trainer_id', trainer.id)
-                .is('completed_at', null);
-            
-            // Update assignment status
-            await sb.from('trainer_assignments')
-                .update({ status: 'completed', updated_at: new Date().toISOString() })
-                .eq('standort_id', sbProfile.standort_id)
-                .eq('trainer_id', trainer.id)
-                .eq('status', 'active');
-        }
-        
-        // Advance onboarding if applicable
-        if(action.advance_onboarding && trainerState.onboarding) {
-            var nextPhase = action.next_phase || trainerState.onboarding.phase;
-            var nextStep = (action.next_step || trainerState.onboarding.step) + 0;
-            await sb.from('user_onboarding')
-                .update({ phase: nextPhase, step: nextStep, updated_at: new Date().toISOString() })
-                .eq('user_id', sbUser.id);
-            trainerState.onboarding.phase = nextPhase;
-            trainerState.onboarding.step = nextStep;
-        }
-        
-        logPortalEvent('trainer_completed', { trainer_id: trainer.id, title: trainer.title, results: trainerState.stepResults });
-        
-        // Show success toast
-        _showTrainerToast('✅ Training abgeschlossen!' + (action.create_task ? ' Aufgabe wurde erstellt.' : ''));
-    }
-
-    window.closeTrainerDrawer = function() {
-        var backdrop = document.getElementById('trainerDrawerBackdrop');
-        var drawer = document.getElementById('trainerDrawer');
-        if(drawer) drawer.classList.remove('open');
-        if(backdrop) backdrop.classList.remove('active');
-        setTimeout(function(){
-            if(backdrop) backdrop.remove();
-            if(drawer) drawer.remove();
-        }, 400);
-        trainerState.activeDrawer = null;
-    };
-
-    // ── Snooze ──
-    window._trainerSnooze = async function(assignmentId) {
-        if(typeof sb === 'undefined') return;
-        var cooldown = new Date();
-        cooldown.setHours(cooldown.getHours() + 48);
-        await sb.from('trainer_assignments')
-            .update({ cooldown_until: cooldown.toISOString() })
-            .eq('id', assignmentId);
-        // Remove card
-        var card = document.getElementById('trainerCard_'+assignmentId);
-        if(card) card.style.display = 'none';
-        logPortalEvent('trainer_snoozed', { assignment_id: assignmentId });
-    };
-
-    // ── Start ──
-    window._trainerStart = function(assignmentId, trainerId) {
-        openTrainerDrawer(trainerId);
-    };
-
-    // ── Toast ──
-    function _showTrainerToast(msg) {
-        var toast = document.createElement('div');
-        toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#111827;color:white;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;z-index:99999;box-shadow:0 8px 30px rgba(0,0,0,0.2);font-family:Outfit,sans-serif;transition:opacity 0.5s;';
-        toast.textContent = msg;
-        document.body.appendChild(toast);
-        setTimeout(function(){ toast.style.opacity='0'; }, 3000);
-        setTimeout(function(){ toast.remove(); }, 3500);
-    }
-
-    // ── Show Trainer in Area ──
-    window.showTrainerForArea = async function(areaKey, containerId) {
-        var container = document.getElementById(containerId);
-        if(!container) return;
-        container.innerHTML = '';
-        
-        // ── Smart Trigger: Auto-assign trainers based on live data ──
-        await _smartTriggerCheck(areaKey);
-        
-        var assignments = await loadTrainersForArea(areaKey);
-        trainerState.assignments = (trainerState.assignments || []).concat(assignments);
-        
-        if(assignments.length > 0) {
-            renderTrainerCard(assignments[0], container);
-        }
-    };
-
-    // ── Smart Trigger Engine ──
-    async function _smartTriggerCheck(areaKey) {
-        if(typeof sb === 'undefined' || !sbProfile || !sbProfile.standort_id) return;
-        var sid = sbProfile.standort_id;
-        var uid = sbUser ? sbUser.id : null;
-        if(!uid) return;
-
-        try {
-            // Get all active trainers for this area
-            var tResp = await sb.from('trainers').select('*').eq('area_key', areaKey).eq('is_active', true);
-            var trainers = tResp.data || [];
-            if(!trainers.length) return;
-
-            // Get existing active assignments to avoid duplicates
-            var aResp = await sb.from('trainer_assignments').select('trainer_id').eq('standort_id', sid).eq('status', 'active');
-            var existingIds = (aResp.data || []).map(function(a){ return a.trainer_id; });
-
-            // Get completed trainer IDs (don't re-assign recently completed)
-            var cResp = await sb.from('trainer_completions').select('trainer_id,completed_at')
-                .eq('user_id', uid).order('completed_at', {ascending:false}).limit(50);
-            var completedMap = {};
-            (cResp.data || []).forEach(function(c){
-                completedMap[c.trainer_id] = c.completed_at;
-            });
-
-            for(var i = 0; i < trainers.length; i++) {
-                var t = trainers[i];
-                // Skip if already assigned or completed in last 14 days
-                if(existingIds.indexOf(t.id) >= 0) continue;
-                if(completedMap[t.id]) {
-                    var daysSince = (Date.now() - new Date(completedMap[t.id]).getTime()) / 86400000;
-                    if(daysSince < 14) continue;
-                }
-
-                var shouldAssign = await _evaluateTrigger(t, sid);
-                if(shouldAssign) {
-                    // Create assignment
-                    await sb.from('trainer_assignments').upsert({
-                        trainer_id: t.id,
-                        standort_id: sid,
-                        assigned_by: 'smart_trigger',
-                        status: 'active',
-                        priority: t.priority || 3
-                    }, { onConflict: 'trainer_id,standort_id' });
-                    console.log('🎓 Trainer assigned:', t.title, '→', t.trigger_key);
-                }
-            }
-        } catch(e) { console.warn('SmartTrigger:', e); }
-    }
-
-    async function _evaluateTrigger(trainer, standortId) {
-        var cond = trainer.trigger_condition_json || {};
-        var key = trainer.trigger_key;
-
-        // ── VERKAUF Triggers ──
-        if(key === 'open_offers_no_followup') {
-            // Trigger wenn offene Leads ohne Follow-up > threshold
-            var resp = await sb.from('leads').select('id,letzter_kontakt,status')
-                .eq('standort_id', standortId)
-                .not('status', 'in', '("gewonnen","verloren")');
-            var leads = resp.data || [];
-            var staleLeads = leads.filter(function(l) {
-                if(!l.letzter_kontakt) return true;
-                var daysSince = (Date.now() - new Date(l.letzter_kontakt).getTime()) / 86400000;
-                return daysSince > 7;
-            });
-            // Trigger if >5 stale leads OR if no leads at all (starter scenario)
-            if(staleLeads.length >= (cond.threshold || 5)) return true;
-            if(leads.length === 0) return true; // Empty pipeline → show starter trainer
-            return false;
-        }
-
-        // ── CONTROLLING Triggers ──
-        if(key === 'bwa_missing') {
-            var today = new Date();
-            var bwaMo = (typeof getBwaMonth === 'function') ? getBwaMonth(today) : null;
-            if(!bwaMo) return false;
-            var resp = await sb.from('bwa_daten').select('id')
-                .eq('standort_id', standortId)
-                .eq('monat', bwaMo.m + 1).eq('jahr', bwaMo.y).limit(1);
-            return !(resp.data && resp.data.length > 0); // Trigger if no BWA found
-        }
-
-        if(key === 'bwa_uploaded') {
-            // Only trigger via events, not here
-            return false;
-        }
-
-        // ── MARKETING Triggers ──
-        if(key === 'no_content_14d') {
-            // Check portal_events for content uploads in last 14 days
-            var since = new Date(Date.now() - 14 * 86400000).toISOString();
-            var resp = await sb.from('portal_events').select('id')
-                .eq('standort_id', standortId)
-                .eq('event_type', 'content_uploaded')
-                .gte('created_at', since).limit(1);
-            return !(resp.data && resp.data.length > 0); // Trigger if no content
-        }
-
-        // ── ONBOARDING ──
-        if(trainer.trigger_type === 'onboarding_step') {
-            return false; // Handled separately in loadTrainersForArea
-        }
-
-        return false;
-    }
-
-    // ── Init ──
-    window._initTrainerEngine = async function() {
-        await loadOnboardingState();
-        
-        // Init onboarding for new users
-        if(!trainerState.onboarding && typeof sb !== 'undefined' && sbUser && sbProfile) {
-            await sb.from('user_onboarding').upsert({
-                user_id: sbUser.id,
-                standort_id: sbProfile.standort_id,
-                role_key: sbProfile.is_hq ? 'hq' : 'allgemein',
-                phase: 1, step: 1,
-                onboarding_done: false
-            }, { onConflict: 'user_id' });
-            trainerState.onboarding = { phase: 1, step: 1, onboarding_done: false };
-        }
-    };
-
+// [Init moved to unified dispatcher]
 })();
 </script>
 
@@ -21478,6 +20915,7 @@ function changePassword() {
     ];
 
     // ──── TAGES-COCKPIT ────
+    window.renderDailyFocus = renderDailyFocus;
     function renderDailyFocus() {
         var now = new Date();
         var dateEl = document.getElementById('dailyFocusDate');
@@ -21517,6 +20955,7 @@ function changePassword() {
     }
 
     // ──── VERKAUFS-STREAK ────
+    window.renderSalesMomentum = renderSalesMomentum;
     function renderSalesMomentum() {
         // Demo data - in prod, fetch from Supabase
         var streak = 12;
@@ -21560,31 +20999,58 @@ function changePassword() {
     }
 
     // ──── INIT ────
-    // Hook into showView
-    var _origSV = window.showView;
-    if(_origSV) {
-        var _hooked = false;
-        if(!_hooked) {
-            var __origSV = _origSV;
-            window.showView = function(v) {
-                __origSV(v);
-                if(v === 'home' || v === 'startseite') setTimeout(renderDailyFocus, 100);
-                if(v === 'verkauf') setTimeout(renderSalesMomentum, 100);
-            };
-            _hooked = true;
-        }
-    }
+// [Hook 2 moved to unified dispatcher]
 
-    // Auto-init
-    setTimeout(function(){
-        renderDailyFocus();
-        renderSalesMomentum();
-    }, 600);
+// [Init moved to unified dispatcher]
 })();
 </script>
 
 
-<!-- ═══ HEALTH SCORE SYSTEM ═══ -->
+<!-- ═══ FLOATING TRAINER CARD ═══ -->
+<div id="trainerCardOverlay" style="display:none;position:fixed;bottom:24px;right:24px;z-index:9000;width:360px;">
+    <div class="vit-card p-0" style="box-shadow:0 8px 32px rgba(0,0,0,0.15);border:1px solid #fed7aa;overflow:visible;">
+        <div style="padding:14px 16px;background:linear-gradient(135deg,#EF7D00,#F59E0B);border-radius:8px 8px 0 0;color:white;">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span style="font-size:20px">🎓</span>
+                    <div><p class="text-xs font-bold" style="opacity:0.8" id="trainerModuleTag">VERKAUF</p><p class="text-sm font-bold" id="trainerTitle">—</p></div>
+                </div>
+                <div class="flex gap-1">
+                    <button onclick="snoozeTrainer()" style="background:rgba(255,255,255,0.2);border:none;border-radius:6px;padding:4px 8px;color:white;font-size:10px;cursor:pointer">⏰ Später</button>
+                    <button onclick="closeTrainer()" style="background:rgba(255,255,255,0.2);border:none;border-radius:6px;padding:4px 8px;color:white;font-size:10px;cursor:pointer">✕</button>
+                </div>
+            </div>
+        </div>
+        <div style="padding:16px;">
+            <p id="trainerDesc" class="text-xs text-gray-600 mb-3"></p>
+            <div id="trainerSteps" class="space-y-2 mb-3"></div>
+            <div class="flex gap-2">
+                <button onclick="startTrainer()" id="trainerCTA" class="flex-1 px-3 py-2.5 bg-vit-orange text-white text-xs font-bold rounded-lg hover:opacity-90">▶ Jetzt starten</button>
+                <button onclick="createTrainerTask()" class="px-3 py-2.5 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg hover:bg-gray-200">📋 Als Aufgabe</button>
+            </div>
+            <div id="trainerImpact" class="mt-2 p-2 bg-green-50 rounded-lg text-xs text-green-700" style="display:none"></div>
+        </div>
+        <div style="padding:8px 16px;background:#f9fafb;border-radius:0 0 8px 8px;border-top:1px solid #f3f4f6;">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] text-gray-400" id="trainerTriggerInfo"></span>
+                <span class="text-[10px] text-gray-400" id="trainerProgress"></span>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ═══ GRUPPENCALL PREP BANNER ═══ -->
+<div id="groupcallBanner" style="display:none;position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:8999;width:500px;">
+    <div class="vit-card p-4" style="box-shadow:0 8px 24px rgba(0,0,0,0.12);border:2px solid #3b82f6;">
+        <div class="flex items-center gap-3">
+            <span style="font-size:24px">📞</span>
+            <div style="flex:1"><p class="text-sm font-bold text-gray-800" id="gcBannerTitle">Inhaber-Call in 2 Stunden</p><p class="text-xs text-gray-500" id="gcBannerSub">Deine Zahlen sind vorbereitet</p></div>
+            <button onclick="showGroupcallPrep()" class="px-3 py-2 bg-blue-500 text-white text-xs font-bold rounded-lg hover:bg-blue-600">📊 Vorbereitung</button>
+            <button onclick="document.getElementById('groupcallBanner').style.display='none'" style="background:none;border:none;color:#9ca3af;cursor:pointer">✕</button>
+        </div>
+    </div>
+</div>
+
+<!-- === PERFORMANCE GOVERNANCE SYSTEM === -->
 <script>
 (function(){
 var HEALTH_CATS=[
@@ -21639,6 +21105,7 @@ var TRAINERS=[
 {id:'t8',module:'marketing',title:'Google My Business optimieren',desc:'GMB-Profil vollständig pflegen. Mehr lokale Sichtbarkeit.',trigger:'GMB Score unter 80%',dur:'7 Min',steps:['Alle Felder prüfen und ausfüllen','5 aktuelle Fotos hochladen','2 Bewertungen beantworten'],task:'GMB-Profil heute vervollständigen'}
 ];
 var activeTrainers=[TRAINERS[0]];
+window.activeTrainers = activeTrainers;
 var currentTrainer=null;
 
 // ── INTERCEPTOR DATA ──
@@ -21651,6 +21118,7 @@ var SOLUTIONS={
 };
 
 // ═══ HEALTH SCORE RENDER (Standort) ═══
+window.renderHealthScore = renderHealthScore;
 function renderHealthScore(){
 if(!MY)return;
 var v=MY.score,col=sc(v);
@@ -21686,6 +21154,7 @@ if(th&&activeTrainers.length>0){th.style.display='';thT.textContent=activeTraine
 }
 
 // ═══ HQ HEALTH RENDER ═══
+window.renderHqHealth = renderHqHealth;
 function renderHqHealth(){
 var g=0,y=0,r=0,tot=0;
 DEMO_STD.forEach(function(s){tot+=s.score;if(s.score>=75)g++;else if(s.score>=50)y++;else r++;});
@@ -21792,35 +21261,64 @@ if(s)s.style.transform='translateX(100%)';
 setTimeout(function(){document.getElementById('groupcallPrepPanel').style.display='none';},350);
 };
 
-// ═══ HOOKS ═══
-var __sv=window.showView;
-if(__sv){
-window.showView=function(v){
-__sv(v);
-if(v==='home')setTimeout(renderHealthScore,150);
-if(v==='hqCockpit')setTimeout(renderHqHealth,150);
-};
-}
+// [Hook 3 moved to unified dispatcher]
 
-// ═══ AUTO-INIT ═══
-setTimeout(function(){
-renderHealthScore();
-renderHqHealth();
-// Show trainer card after 3s (demo)
-setTimeout(function(){
-if(activeTrainers.length>0) showTrainerCard(activeTrainers[0]);
-},3000);
-},700);
+// [Init moved to unified dispatcher]
 
 })();
 </script>
 
 
-<!-- ═══ KPI TRIGGER ENGINE ═══ -->
+<!-- ═══ GRUPPENCALL PREP PANEL ═══ -->
+<div id="groupcallPrepPanel" style="display:none;position:fixed;inset:0;z-index:9998;">
+    <div onclick="closeGroupcallPrep()" style="position:absolute;inset:0;background:rgba(0,0,0,0.4)"></div>
+    <div class="gc-prep-slider" style="position:absolute;top:0;right:0;bottom:0;width:380px;background:white;box-shadow:-8px 0 30px rgba(0,0,0,0.15);transform:translateX(100%);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);overflow-y:auto;">
+        <div style="padding:24px;">
+            <button onclick="closeGroupcallPrep()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
+            <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;font-weight:600;margin-bottom:4px;">Gruppencall</p>
+            <h2 style="font-size:16px;font-weight:800;color:#111827;margin-bottom:16px;">📊 Deine Zahlen für den Call</h2>
 
+            <!-- Score Card -->
+            <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:16px;text-align:center;">
+                <p style="font-size:10px;color:#9ca3af;">Health Score</p>
+                <p id="gcpScore" style="font-size:36px;font-weight:900;color:#16a34a">—</p>
+                <p id="gcpStatus" style="font-size:11px;font-weight:600;margin-top:2px;"></p>
+                <p style="font-size:10px;color:#9ca3af;margin-top:4px;">Rang: <span id="gcpRank" style="font-weight:700;">—</span></p>
+            </div>
 
+            <!-- Categories -->
+            <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:16px;">
+                <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;font-weight:600;margin-bottom:8px;">KPI-Übersicht</p>
+                <div id="gcpCategories"></div>
+            </div>
 
-<!-- ═══ KPI TRIGGER ENGINE ═══ -->
+            <!-- Key Metrics -->
+            <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:16px;">
+                <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;font-weight:600;margin-bottom:8px;">Wichtige Kennzahlen</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div style="padding:8px;background:white;border-radius:8px;text-align:center"><p style="font-size:9px;color:#9ca3af">Abschlussquote</p><p style="font-size:16px;font-weight:800;color:#111">34%</p></div>
+                    <div style="padding:8px;background:white;border-radius:8px;text-align:center"><p style="font-size:9px;color:#9ca3af">BWA-Status</p><p style="font-size:16px;font-weight:800;color:#ca8a04">⏳</p></div>
+                    <div style="padding:8px;background:white;border-radius:8px;text-align:center"><p style="font-size:9px;color:#9ca3af">Offene Aufgaben</p><p style="font-size:16px;font-weight:800;color:#111">4</p></div>
+                    <div style="padding:8px;background:white;border-radius:8px;text-align:center"><p style="font-size:9px;color:#9ca3af">Content letzte 14d</p><p style="font-size:16px;font-weight:800;color:#16a34a">2</p></div>
+                </div>
+            </div>
+
+            <!-- Active Trainers -->
+            <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:16px;">
+                <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;font-weight:600;margin-bottom:8px;">Aktive Trainer</p>
+                <div id="gcpTrainers"></div>
+            </div>
+
+            <!-- Actions -->
+            <div style="display:flex;flex-direction:column;gap:8px;">
+                <button onclick="alert('📋 Frage für den Gruppencall vorgemerkt!')" style="width:100%;padding:10px;background:#EF7D00;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Frage für den Call einreichen</button>
+                <button onclick="closeGroupcallPrep()" style="width:100%;padding:10px;background:#f3f4f6;color:#6b7280;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">Schließen</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ GOVERNANCE EXTENSIONS: KPI Triggers, Support Levels, Impact Checks ═══ -->
 <script>
 (function(){
     // ──── KPI TRIGGER ENGINE ────
@@ -21943,17 +21441,193 @@ if(activeTrainers.length>0) showTrainerCard(activeTrainers[0]);
 </script>
 
 
-<!-- ═══ GRUPPENCALL PREP BANNER ═══ -->
-<div id="groupcallBanner" style="display:none;position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:8999;width:500px;">
-    <div class="vit-card p-4" style="box-shadow:0 8px 24px rgba(0,0,0,0.12);border:2px solid #3b82f6;">
-        <div class="flex items-center gap-3">
-            <span style="font-size:24px">📞</span>
-            <div style="flex:1"><p class="text-sm font-bold text-gray-800" id="gcBannerTitle">Inhaber-Call in 2 Stunden</p><p class="text-xs text-gray-500" id="gcBannerSub">Deine Zahlen sind vorbereitet</p></div>
-            <button onclick="showGroupcallPrep()" class="px-3 py-2 bg-blue-500 text-white text-xs font-bold rounded-lg hover:bg-blue-600">📊 Vorbereitung</button>
-            <button onclick="document.getElementById('groupcallBanner').style.display='none'" style="background:none;border:none;color:#9ca3af;cursor:pointer">✕</button>
-        </div>
-    </div>
-</div>
+<!-- ═══ UNIFIED VIEW DISPATCHER + AUTO-INIT ═══ -->
+<script>
+(function(){
+    // Single hook on showView – calls ALL subsystems
+    var _baseShowView = window.showView;
+    if(_baseShowView) {
+        window.showView = function(v) {
+            _baseShowView(v);
+            setTimeout(function(){
+                // Startseite
+                if(v === 'home' || v === 'startseite') {
+                    if(typeof renderDailyFocus === 'function') renderDailyFocus();
+                    if(typeof renderHealthScore === 'function') renderHealthScore();
+                }
+                // Verkauf
+                if(v === 'verkauf') {
+                    if(typeof renderSalesMomentum === 'function') renderSalesMomentum();
+                }
+                // Controlling
+                if(v === 'controlling') {
+                    if(typeof updateBwaDeadlineWidget === 'function') updateBwaDeadlineWidget();
+                }
+                // HQ Finanzen
+                if(v === 'hqFinanzen') {
+                    if(typeof renderHqBwaStatus === 'function') renderHqBwaStatus();
+                }
+                // HQ Cockpit
+                if(v === 'hqCockpit') {
+                    if(typeof renderHqHealth === 'function') renderHqHealth();
+                }
+            }, 150);
+        };
+    }
+
+    // Auto-init for initial page load (homeView is display:block by default)
+    // Wait for enterApp() to finish, then render everything
+    var _baseEnterApp = window.enterApp;
+    if(_baseEnterApp) {
+        window.enterApp = function() {
+            _baseEnterApp();
+            setTimeout(function(){
+                if(typeof renderDailyFocus === 'function') renderDailyFocus();
+                if(typeof renderHealthScore === 'function') renderHealthScore();
+                if(typeof renderSalesMomentum === 'function') renderSalesMomentum();
+                if(typeof updateBwaDeadlineWidget === 'function') updateBwaDeadlineWidget();
+                if(typeof renderHqBwaStatus === 'function') renderHqBwaStatus();
+                if(typeof renderHqHealth === 'function') renderHqHealth();
+                // Trainer card after 4s
+                if(typeof showTrainerCard === 'function' && typeof activeTrainers !== 'undefined' && activeTrainers.length > 0) {
+                    setTimeout(function(){ showTrainerCard(activeTrainers[0]); }, 4000);
+                }
+            }, 500);
+        };
+    }
+
+    // Fallback: also init after 1s in case enterApp is not called (direct page load)
+    setTimeout(function(){
+        if(typeof renderDailyFocus === 'function') renderDailyFocus();
+        if(typeof renderHealthScore === 'function') renderHealthScore();
+    }, 1000);
+})();
+</script>
+
+
+<!-- ═══ DB-BACKED SMART TRIGGER ENGINE ═══ -->
+<script>
+(function(){
+    function renderTrainerCard(assignment, container) {
+        var t = assignment.trainer; if(!t) return;
+        var card = document.createElement('div');
+        card.className = 'vit-card p-0 mb-3';
+        card.style.cssText = 'border:1px solid #fed7aa;overflow:hidden;';
+        card.id = 'trainerCard_' + assignment.id;
+        card.innerHTML = '<div style="padding:12px 16px;background:linear-gradient(135deg,rgba(239,125,0,0.08),rgba(245,158,11,0.04));border-bottom:1px solid #fed7aa;">' +
+            '<div class="flex items-center justify-between"><div class="flex items-center gap-2">' +
+            '<span style="font-size:18px">🎓</span><div>' +
+            '<p class="text-[10px] font-bold text-vit-orange uppercase">' + (t.area_key||'').toUpperCase() + '</p>' +
+            '<p class="text-sm font-bold text-gray-800">' + t.title + '</p></div></div>' +
+            '<span class="text-[10px] text-gray-400">' + (t.duration_minutes||5) + ' Min</span></div></div>' +
+            '<div style="padding:12px 16px;">' +
+            '<p class="text-xs text-gray-600 mb-2">' + (t.summary||'') + '</p>' +
+            '<div class="flex gap-2">' +
+            '<button onclick="window._startDbTrainer && window._startDbTrainer(\'' + assignment.id + '\')" class="flex-1 px-3 py-2 bg-vit-orange text-white text-xs font-bold rounded-lg hover:opacity-90">▶ Starten</button>' +
+            '<button onclick="window._snoozeDbTrainer && window._snoozeDbTrainer(\'' + assignment.id + '\')" class="px-3 py-2 bg-gray-100 text-gray-500 text-xs font-bold rounded-lg hover:bg-gray-200">⏰ Später</button>' +
+            '</div></div>';
+        container.appendChild(card);
+    }
+
+    async function loadTrainersForArea(areaKey) {
+        if(typeof sb === 'undefined' || !sbProfile) return [];
+        try {
+            var aResp = await sb.from('trainer_assignments').select('*, trainer:trainer_id(*)').eq('standort_id', sbProfile.standort_id).eq('status', 'active');
+            return (aResp.data || []).filter(function(a) {
+                if(!a.trainer || !a.trainer.is_active) return false;
+                if(areaKey && a.trainer.area_key !== areaKey) return false;
+                if(a.cooldown_until && new Date(a.cooldown_until) > new Date()) return false;
+                return true;
+            }).sort(function(a,b){ return (a.trainer.priority||3) - (b.trainer.priority||3); }).slice(0,1);
+        } catch(e) { return []; }
+    }
+
+    async function _smartTriggerCheck(areaKey) {
+        if(typeof sb === 'undefined' || !sbProfile || !sbProfile.standort_id) return;
+        var sid = sbProfile.standort_id;
+        try {
+            var tResp = await sb.from('trainers').select('*').eq('area_key', areaKey).eq('is_active', true);
+            var trainers = tResp.data || []; if(!trainers.length) return;
+            var aResp = await sb.from('trainer_assignments').select('trainer_id').eq('standort_id', sid).eq('status', 'active');
+            var existingIds = (aResp.data || []).map(function(a){ return a.trainer_id; });
+            var cResp = await sb.from('trainer_completions').select('trainer_id,completed_at').eq('standort_id', sid).order('completed_at', {ascending:false}).limit(50);
+            var completedMap = {}; (cResp.data || []).forEach(function(c){ completedMap[c.trainer_id] = c.completed_at; });
+
+            for(var i = 0; i < trainers.length; i++) {
+                var t = trainers[i];
+                if(existingIds.indexOf(t.id) >= 0) continue;
+                if(completedMap[t.id] && (Date.now() - new Date(completedMap[t.id]).getTime()) / 86400000 < 14) continue;
+                var fire = await _evaluateTrigger(t, sid);
+                if(fire) {
+                    await sb.from('trainer_assignments').upsert({ trainer_id: t.id, standort_id: sid, status: 'active' }, { onConflict: 'trainer_id,standort_id' });
+                }
+            }
+        } catch(e) { console.warn('SmartTrigger:', e); }
+    }
+
+    async function _evaluateTrigger(trainer, sid) {
+        var key = trainer.trigger_key;
+        if(key === 'open_offers_no_followup') {
+            var r = await sb.from('leads').select('id,letzter_kontakt,status').eq('standort_id', sid).not('status', 'in', '("gewonnen","verloren")');
+            var leads = r.data || [];
+            var stale = leads.filter(function(l){ return !l.letzter_kontakt || (Date.now() - new Date(l.letzter_kontakt).getTime()) / 86400000 > 7; });
+            return stale.length >= 5 || leads.length === 0;
+        }
+        if(key === 'bwa_missing') {
+            var bwaMo = (typeof getBwaMonth === 'function') ? getBwaMonth(new Date()) : null;
+            if(!bwaMo) return false;
+            var r = await sb.from('bwa_daten').select('id').eq('standort_id', sid).eq('monat', bwaMo.m + 1).eq('jahr', bwaMo.y).limit(1);
+            return !(r.data && r.data.length > 0);
+        }
+        if(key === 'no_content_14d') {
+            var since = new Date(Date.now() - 14 * 86400000).toISOString();
+            var r = await sb.from('portal_events').select('id').eq('standort_id', sid).eq('event_type', 'content_uploaded').gte('created_at', since).limit(1);
+            return !(r.data && r.data.length > 0);
+        }
+        return false;
+    }
+
+    window.showTrainerForArea = async function(areaKey, containerId) {
+        var c = document.getElementById(containerId); if(!c) return;
+        c.innerHTML = '';
+        await _smartTriggerCheck(areaKey);
+        var a = await loadTrainersForArea(areaKey);
+        if(a.length > 0) renderTrainerCard(a[0], c);
+    };
+
+    window._snoozeDbTrainer = async function(id) {
+        if(typeof sb === 'undefined') return;
+        await sb.from('trainer_assignments').update({ cooldown_until: new Date(Date.now() + 48*3600000).toISOString() }).eq('id', id);
+        var card = document.getElementById('trainerCard_' + id); if(card) card.remove();
+    };
+
+    window._startDbTrainer = function(id) {
+        alert('🎓 Trainer gestartet! In Produktion: Micro-Learning mit konkreter Handlung.');
+    };
+})();
+</script>
+
+<!-- Widget Info Toggle -->
+<script>
+function toggleWidgetInfo(e, id) {
+    e.stopPropagation();
+    var el = document.getElementById(id);
+    if(!el) return;
+    // Close all others
+    document.querySelectorAll('.widget-info-popup.active').forEach(function(p){
+        if(p.id !== id) p.classList.remove('active');
+    });
+    el.classList.toggle('active');
+    // Close on outside click
+    if(el.classList.contains('active')) {
+        setTimeout(function(){
+            document.addEventListener('click', function handler(ev){
+                if(!el.contains(ev.target)) { el.classList.remove('active'); document.removeEventListener('click', handler); }
+            });
+        }, 10);
+    }
+}
+</script>
 
 </body>
 </html>
