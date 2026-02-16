@@ -5808,29 +5808,17 @@
                 btn.appendChild(badge);
             });
 
-            // 3. Home dashboard widgets
+            // 3. Home dashboard widgets - use data-widget attribute
             var homeView = document.getElementById('homeView');
             if(!homeView) return;
-            homeView.querySelectorAll('.vit-card').forEach(function(card) {
+            homeView.querySelectorAll('.dashboard-widget[data-widget]').forEach(function(card) {
                 var old = card.querySelector('.demo-badge, .beta-badge');
                 if(old) old.remove();
                 var h3 = card.querySelector('h3');
                 if(!h3) return;
-                var title = (h3.textContent || '').toLowerCase();
-                var widgetKey = null;
-                if(title.includes('verkaufserfolg') || title.includes('verkaufsquote')) widgetKey = 'success';
-                else if(title.includes('kampagn') || title.includes('marketing')) widgetKey = 'marketing';
-                else if(title.includes('top') && title.includes('verk')) widgetKey = 'team';
-                else if(title.includes('budget') || title.includes('controlling')) widgetKey = 'controlling';
-                else if(title.includes('wissen') || title.includes('inhalt') || title.includes('schulung')) widgetKey = 'wissen';
-                else if(title.includes('pipeline') || title.includes('lead')) widgetKey = 'pipeline';
-                else if(title.includes('termin')) widgetKey = 'termine';
-                else if(title.includes('aufgabe') || title.includes('todo')) widgetKey = 'aufgaben';
-                else if(title.includes('ticket') || title.includes('support')) widgetKey = 'support';
-                else if(title.includes('nachricht') || title.includes('hq')) widgetKey = 'nachrichten';
-                else if(title.includes('umsatz')) widgetKey = 'demo';
-                if(!widgetKey) return;
-                var ws = WIDGET_STATUS[widgetKey] || widgetKey;
+                var widgetKey = card.getAttribute('data-widget');
+                var ws = WIDGET_STATUS[widgetKey];
+                if(!ws) return;
                 var isDemo = (ws === 'demo');
                 var badge = document.createElement('span');
                 badge.className = isDemo ? 'demo-badge' : 'beta-badge';
@@ -7887,6 +7875,35 @@
                 // Detail table - try loading from bwa_detail_positionen first
                 var detailResp = await sb.from('bwa_detail_positionen').select('*').eq('bwa_id', bwaId).order('sortierung');
                 var detailRows = (detailResp.data && detailResp.data.length > 0) ? detailResp.data : null;
+
+                // Recalculate KPIs from detail positions if available (sign-inversion correction)
+                if(detailRows) {
+                    var sumMap = {};
+                    detailRows.forEach(function(d) { if(d.ist_summenzeile && d.zeile) sumMap[d.zeile] = d; });
+                    // BWA Zeilen: 1000=Umsatzerlöse, 1040=Rohertrag, 1300=Betriebsergebnis, 1355=Vorl.Ergebnis
+                    var detUmsatz = sumMap[1000] ? parseFloat(sumMap[1000].wert)||0 : parseFloat(b.umsatzerloese)||0;
+                    var detRohertrag = sumMap[1040] ? parseFloat(sumMap[1040].wert)||0 : parseFloat(b.rohertrag)||0;
+                    var detErgebnis = sumMap[1355] ? parseFloat(sumMap[1355].wert)||0 : (sumMap[1300] ? parseFloat(sumMap[1300].wert)||0 : parseFloat(b.ergebnis_vor_steuern)||0);
+                    // Gesamtkosten = Rohertrag - Ergebnis (alles was dazwischen liegt)
+                    var detKosten = sumMap[1260] ? parseFloat(sumMap[1260].wert)||0 : parseFloat(b.gesamtkosten)||0;
+                    if(!sumMap[1260] && detRohertrag && detErgebnis) {
+                        // Fallback: Gesamtkosten = Betriebsergebnis - Rohertrag
+                        var betriebsErg = sumMap[1300] ? parseFloat(sumMap[1300].wert)||0 : 0;
+                        if(betriebsErg) detKosten = betriebsErg - detRohertrag;
+                    }
+                    // Override KPIs with corrected values
+                    var detMarge = detUmsatz > 0 ? ((detRohertrag/detUmsatz)*100).toFixed(1) : 0;
+                    var detErgMarge = detUmsatz > 0 ? ((detErgebnis/detUmsatz)*100).toFixed(1) : 0;
+                    document.getElementById('bwaKpiUmsatz').textContent = eur(detUmsatz) + ' €';
+                    document.getElementById('bwaKpiRohertrag').textContent = eur(detRohertrag) + ' €';
+                    document.getElementById('bwaKpiMarge').textContent = 'Marge: '+detMarge+'%';
+                    if(detKosten) document.getElementById('bwaKpiKosten').textContent = eur(detKosten) + ' €';
+                    var ergEl2 = document.getElementById('bwaKpiErgebnis');
+                    ergEl2.textContent = eur(detErgebnis) + ' €';
+                    ergEl2.className = 'text-xl font-bold ' + (detErgebnis >= 0 ? 'text-green-600' : 'text-red-600');
+                    document.getElementById('bwaKpiErgebnisMarge').textContent = 'Marge: '+detErgMarge+'%';
+                    console.log('[BWA] KPIs recalculated from detail positions:', {umsatz:detUmsatz, rohertrag:detRohertrag, kosten:detKosten, ergebnis:detErgebnis});
+                }
                 
                 var tbody = '';
                 if(detailRows) {
