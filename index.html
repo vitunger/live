@@ -1003,26 +1003,23 @@
                         <!-- Widget 5: Marketing Kampagnen -->
                         <div class="dashboard-widget vit-card p-6" data-widget="marketing">
                             <div class="flex items-center justify-between mb-4">
-                                <h3 class="font-semibold text-gray-800">📢 Aktive Kampagnen</h3>
+                                <h3 class="font-semibold text-gray-800">📊 Marketing Performance</h3>
                                 <button class="widget-remove hidden text-gray-400 hover:text-red-500">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                     </svg>
                                 </button>
                             </div>
-                            <div class="space-y-3">
-                                <div class="p-3 bg-orange-50 rounded-lg border-l-4 border-vit-orange">
-                                    <p class="text-sm font-semibold text-gray-800">🚀 Frühjahrs-Aktion</p>
-                                    <p class="text-xs text-gray-600">Läuft noch 12 Tage</p>
-                                </div>
-                                <div class="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                                    <p class="text-sm font-semibold text-gray-800">🎯 E-Bike Wochen</p>
-                                    <p class="text-xs text-gray-600">Startet in 5 Tagen</p>
-                                </div>
+                            <div class="grid grid-cols-2 gap-3 mb-3">
+                                <div class="p-2 bg-gray-50 rounded-lg text-center"><p class="text-[10px] text-gray-400">Kosten MTD</p><p class="text-sm font-bold text-gray-800">1.724 €</p><p class="text-[10px] text-red-500">↓ -2.5%</p></div>
+                                <div class="p-2 bg-gray-50 rounded-lg text-center"><p class="text-[10px] text-gray-400">Leads MTD</p><p class="text-sm font-bold text-vit-orange">4</p><p class="text-[10px] text-gray-400">CPT: 431 €</p></div>
+                                <div class="p-2 bg-gray-50 rounded-lg text-center"><p class="text-[10px] text-gray-400">Store Visits</p><p class="text-sm font-bold text-green-600">65</p><p class="text-[10px] text-green-600">↑ 69.8%</p></div>
+                                <div class="p-2 bg-gray-50 rounded-lg text-center"><p class="text-[10px] text-gray-400">Budget</p><p class="text-sm font-bold text-gray-800">1.500 €</p><div class="mt-1 bg-gray-200 rounded-full h-1.5"><div class="bg-vit-orange h-1.5 rounded-full" style="width:100%"></div></div></div>
                             </div>
-                            <button onclick="showView('marketing')" class="mt-4 w-full text-sm text-vit-orange hover:text-orange-600 font-semibold">
-                                → Zu Marketing
-                            </button>
+                            <div class="flex space-x-2">
+                                <button onclick="showView('marketing')" class="flex-1 text-xs text-vit-orange hover:text-orange-600 font-semibold">→ Performance</button>
+                                <button onclick="showView('marketing'); showMarketingTab('budget')" class="flex-1 text-xs text-blue-600 hover:text-blue-700 font-semibold">→ Budget</button>
+                            </div>
                         </div>
 
                         <!-- Widget 6: Team Performance -->
@@ -1506,18 +1503,18 @@
                     
                     <!-- Tab Navigation -->
                     <div class="mb-6 border-b border-gray-200">
-                        <nav class="-mb-px flex space-x-8">
-                            <button onclick="showMarketingTab('kampagnen')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="kampagnen">
-                                Kampagnen
+                        <nav class="-mb-px flex space-x-8 overflow-x-auto">
+                            <button onclick="showMarketingTab('performance')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="performance">
+                                📊 Performance
+                            </button>
+                            <button onclick="showMarketingTab('budget')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="budget">
+                                💰 Budget
+                            </button>
+                            <button onclick="showMarketingTab('leads')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="leads">
+                                🎯 Leads & ROI
                             </button>
                             <button onclick="showMarketingTab('social')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="social">
-                                Social Media
-                            </button>
-                            <button onclick="showMarketingTab('content')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="content">
-                                Content Library
-                            </button>
-                            <button onclick="showMarketingTab('analytics')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="analytics">
-                                Analytics
+                                🎬 Social Media
                             </button>
                             <button onclick="showMarketingTab('mktStrategie')" class="marketing-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="mktStrategie">
                                 📋 Strategie
@@ -1528,42 +1525,318 @@
                         </nav>
                     </div>
 
-                    <!-- Tab Contents -->
-                    <div id="marketingTabKampagnen" class="marketing-tab-content">
-                        <div class="vit-card p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Aktuelle Kampagnen</h2>
-                            <div class="space-y-4">
-                                <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
-                                    <div>
-                                        <h3 class="font-semibold text-gray-800">Fruehjahrs-Aktion 2026</h3>
-                                        <p class="text-sm text-gray-600">E-Bike Fruehlings-Angebote mit 15% Rabatt</p>
+                    <!-- ===== TAB 1: PERFORMANCE (Cross-Channel Dashboard) ===== -->
+                    <div id="marketingTabPerformance" class="marketing-tab-content">
+
+                        <!-- Zeitraum Selector -->
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center space-x-3">
+                                <select id="mktPerfZeitraum" onchange="updateMktPerformance()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-vit-orange">
+                                    <option value="mtd">Aktueller Monat (MTD)</option>
+                                    <option value="lm">Letzter Monat</option>
+                                    <option value="q1">Q1 2026</option>
+                                    <option value="ytd" selected>Year-to-Date</option>
+                                    <option value="2025">Gesamtjahr 2025</option>
+                                </select>
+                                <span class="text-xs text-gray-400">Letzte Aktualisierung: 16.02.2026</span>
+                            </div>
+                            <a href="https://lookerstudio.google.com" target="_blank" class="text-xs text-gray-400 hover:text-vit-orange flex items-center space-x-1"><span>Looker Studio öffnen</span><span>↗</span></a>
+                        </div>
+
+                        <!-- Cross-Channel KPIs -->
+                        <div class="vit-card p-6 mb-6">
+                            <div class="flex items-center space-x-3 mb-4">
+                                <div class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center text-white font-bold text-lg">Σ</div>
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-800">Cross Channel – Gesamtübersicht</h2>
+                                    <p class="text-xs text-gray-500">Standort: <span id="mktPerfStandort">Grafrath (82284)</span></p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" id="mktCrossKpis">
+                                <div class="p-4 bg-gray-50 rounded-lg text-center"><p class="text-xs text-gray-500">Kosten Gesamt</p><p class="text-xl font-bold text-gray-800">1.724,07 €</p><p class="text-xs text-red-500">↓ -2.5%</p></div>
+                                <div class="p-4 bg-gray-50 rounded-lg text-center"><p class="text-xs text-gray-500">Impressionen Gesamt</p><p class="text-xl font-bold text-gray-800">192.350</p><p class="text-xs text-red-500">↓ -9.0%</p></div>
+                                <div class="p-4 bg-gray-50 rounded-lg text-center"><p class="text-xs text-gray-500">Klicks Gesamt</p><p class="text-xl font-bold text-gray-800">1.620</p><p class="text-xs text-green-600">↑ 5.9%</p></div>
+                                <div class="p-4 bg-gray-50 rounded-lg text-center"><p class="text-xs text-gray-500">Termine</p><p class="text-xl font-bold text-vit-orange">4</p><p class="text-xs text-gray-400">CPT: 431 €</p></div>
+                                <div class="p-4 bg-gray-50 rounded-lg text-center"><p class="text-xs text-gray-500">Store Visits</p><p class="text-xl font-bold text-green-600">65,35</p><p class="text-xs text-green-600">↑ 69.8%</p></div>
+                                <div class="p-4 bg-gray-50 rounded-lg text-center"><p class="text-xs text-gray-500">Besucher Website</p><p class="text-xl font-bold text-blue-600">528</p><p class="text-xs text-green-600">↑ 29.4%</p></div>
+                            </div>
+                        </div>
+
+                        <!-- Channel Cards: Meta + Google Side by Side -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                            <!-- Meta Ads Card -->
+                            <div class="vit-card p-6">
+                                <div class="flex items-center space-x-3 mb-4">
+                                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/></svg>
                                     </div>
-                                    <div class="text-right">
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Aktiv</span>
-                                        <p class="text-xs text-gray-500 mt-1">Noch 12 Tage</p>
+                                    <div>
+                                        <h3 class="font-bold text-gray-800">Meta Ads</h3>
+                                        <p class="text-xs text-gray-400">Facebook & Instagram</p>
                                     </div>
                                 </div>
-                                <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                    <div>
-                                        <h3 class="font-semibold text-gray-800">E-Bike Wochen</h3>
-                                        <p class="text-sm text-gray-600">Testtage und Probefahrt-Events</p>
+                                <div class="grid grid-cols-3 gap-3 mb-4">
+                                    <div class="p-3 bg-blue-50 rounded-lg text-center"><p class="text-xs text-gray-500">Kosten</p><p class="text-lg font-bold text-gray-800">279 €</p><p class="text-xs text-gray-400">↕ 0.0%</p></div>
+                                    <div class="p-3 bg-blue-50 rounded-lg text-center"><p class="text-xs text-gray-500">Impressionen</p><p class="text-lg font-bold text-gray-800">148.809</p><p class="text-xs text-red-500">↓ -16.8%</p></div>
+                                    <div class="p-3 bg-blue-50 rounded-lg text-center"><p class="text-xs text-gray-500">Klicks</p><p class="text-lg font-bold text-gray-800">571</p><p class="text-xs text-red-500">↓ -12.2%</p></div>
+                                </div>
+                                <!-- Kampagnen Performance -->
+                                <h4 class="text-sm font-semibold text-gray-700 mb-2">Kampagnen Performance</h4>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-xs">
+                                        <thead><tr class="bg-blue-50"><th class="text-left py-2 px-2 font-semibold">#</th><th class="text-left py-2 px-2 font-semibold">Kampagne</th><th class="text-right py-2 px-2 font-semibold">Ausgaben</th><th class="text-right py-2 px-2 font-semibold">Impr.</th><th class="text-right py-2 px-2 font-semibold">Klicks</th></tr></thead>
+                                        <tbody id="mktMetaKampagnen">
+                                            <tr class="border-b"><td class="py-1.5 px-2">1.</td><td class="py-1.5 px-2 truncate max-w-[180px]">Awareness</td><td class="py-1.5 px-2 text-right">140,21 €</td><td class="py-1.5 px-2 text-right">120.730</td><td class="py-1.5 px-2 text-right">153</td></tr>
+                                            <tr class="border-b"><td class="py-1.5 px-2">2.</td><td class="py-1.5 px-2 truncate max-w-[180px]">Conversion</td><td class="py-1.5 px-2 text-right">138,88 €</td><td class="py-1.5 px-2 text-right">28.079</td><td class="py-1.5 px-2 text-right">418</td></tr>
+                                            <tr class="bg-blue-50 font-semibold"><td class="py-1.5 px-2" colspan="2">Gesamt</td><td class="py-1.5 px-2 text-right">279,09 €</td><td class="py-1.5 px-2 text-right">148.809</td><td class="py-1.5 px-2 text-right">571</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <!-- Demografie Mini -->
+                                <div class="grid grid-cols-3 gap-3 mt-4">
+                                    <div class="text-center"><p class="text-[10px] text-gray-400 uppercase">Top Alter</p><p class="text-sm font-bold">35-44</p><p class="text-[10px] text-gray-400">24,3%</p></div>
+                                    <div class="text-center"><p class="text-[10px] text-gray-400 uppercase">Geschlecht</p><p class="text-sm font-bold">♂ 77,8%</p><p class="text-[10px] text-gray-400">♀ 19,4%</p></div>
+                                    <div class="text-center"><p class="text-[10px] text-gray-400 uppercase">Plattform</p><p class="text-sm font-bold">Mobile App</p><p class="text-[10px] text-gray-400">98,6%</p></div>
+                                </div>
+                            </div>
+
+                            <!-- Google Ads Card -->
+                            <div class="vit-card p-6">
+                                <div class="flex items-center space-x-3 mb-4">
+                                    <div class="w-10 h-10 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center">
+                                        <svg class="w-6 h-6" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
                                     </div>
-                                    <div class="text-right">
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Geplant</span>
-                                        <p class="text-xs text-gray-500 mt-1">Startet in 5 Tagen</p>
+                                    <div>
+                                        <h3 class="font-bold text-gray-800">Google Ads</h3>
+                                        <p class="text-xs text-gray-400">Search, Display & Video</p>
                                     </div>
                                 </div>
-                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                    <div>
-                                        <h3 class="font-semibold text-gray-800">Winter-Werkstatt-Aktion</h3>
-                                        <p class="text-sm text-gray-600">Inspektion + Wintercheck zum Sonderpreis</p>
+                                <div class="grid grid-cols-3 gap-3 mb-4">
+                                    <div class="p-3 bg-green-50 rounded-lg text-center"><p class="text-xs text-gray-500">Kosten</p><p class="text-lg font-bold text-gray-800">1.444,98 €</p><p class="text-xs text-red-500">↓ -2.9%</p></div>
+                                    <div class="p-3 bg-green-50 rounded-lg text-center"><p class="text-xs text-gray-500">Impressionen</p><p class="text-lg font-bold text-gray-800">43.541</p><p class="text-xs text-green-600">↑ 34.2%</p></div>
+                                    <div class="p-3 bg-green-50 rounded-lg text-center"><p class="text-xs text-gray-500">Klicks</p><p class="text-lg font-bold text-gray-800">1.049</p><p class="text-xs text-green-600">↑ 19.2%</p></div>
+                                </div>
+                                <!-- Kampagnen Performance -->
+                                <h4 class="text-sm font-semibold text-gray-700 mb-2">Kampagnen Performance</h4>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-xs">
+                                        <thead><tr class="bg-green-50"><th class="text-left py-2 px-2 font-semibold">#</th><th class="text-left py-2 px-2 font-semibold">Kampagne</th><th class="text-right py-2 px-2 font-semibold">Kosten</th><th class="text-right py-2 px-2 font-semibold">Impr.</th><th class="text-right py-2 px-2 font-semibold">Klicks</th></tr></thead>
+                                        <tbody id="mktGoogleKampagnen">
+                                            <tr class="border-b"><td class="py-1.5 px-2">1.</td><td class="py-1.5 px-2 truncate max-w-[180px]">PerformanceMax · Audience</td><td class="py-1.5 px-2 text-right">1.161,76 €</td><td class="py-1.5 px-2 text-right">39.296</td><td class="py-1.5 px-2 text-right">848</td></tr>
+                                            <tr class="border-b"><td class="py-1.5 px-2">2.</td><td class="py-1.5 px-2 truncate max-w-[180px]">Search · Keywords · Service</td><td class="py-1.5 px-2 text-right">142,15 €</td><td class="py-1.5 px-2 text-right">1.944</td><td class="py-1.5 px-2 text-right">129</td></tr>
+                                            <tr class="border-b"><td class="py-1.5 px-2">3.</td><td class="py-1.5 px-2 truncate max-w-[180px]">Search · Keywords · Marken</td><td class="py-1.5 px-2 text-right">141,06 €</td><td class="py-1.5 px-2 text-right">2.301</td><td class="py-1.5 px-2 text-right">72</td></tr>
+                                            <tr class="bg-green-50 font-semibold"><td class="py-1.5 px-2" colspan="2">Gesamt</td><td class="py-1.5 px-2 text-right">1.444,98 €</td><td class="py-1.5 px-2 text-right">43.541</td><td class="py-1.5 px-2 text-right">1.049</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <!-- Demografie Mini -->
+                                <div class="grid grid-cols-3 gap-3 mt-4">
+                                    <div class="text-center"><p class="text-[10px] text-gray-400 uppercase">Top Alter</p><p class="text-sm font-bold">45-54</p><p class="text-[10px] text-gray-400">45,8%</p></div>
+                                    <div class="text-center"><p class="text-[10px] text-gray-400 uppercase">Geschlecht</p><p class="text-sm font-bold">♂ 46,8%</p><p class="text-[10px] text-gray-400">♀ 35,3%</p></div>
+                                    <div class="text-center"><p class="text-[10px] text-gray-400 uppercase">Top Region</p><p class="text-sm font-bold">BW</p><p class="text-[10px] text-gray-400">99,6%</p></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Brand Reichweite -->
+                        <div class="vit-card p-6 mb-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">📡 Brand-Reichweite – Organisch</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <!-- YouTube -->
+                                <div class="p-4 bg-red-50 rounded-lg border border-red-200">
+                                    <div class="flex items-center space-x-2 mb-3"><div class="w-8 h-8 bg-red-600 rounded flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/><path fill="#fff" d="M9.545 15.568V8.432L15.818 12z"/></svg></div><span class="font-bold text-sm">YouTube</span></div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div><p class="text-[10px] text-gray-400">Neue Subscriber</p><p class="text-lg font-bold">1.147</p></div>
+                                        <div><p class="text-[10px] text-gray-400">Views</p><p class="text-lg font-bold">745.844</p></div>
+                                        <div><p class="text-[10px] text-gray-400">Watchtime (h)</p><p class="text-lg font-bold">41.722</p></div>
+                                        <div><p class="text-[10px] text-gray-400">Likes</p><p class="text-lg font-bold">11.646</p></div>
                                     </div>
-                                    <div class="text-right">
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-600">Beendet</span>
-                                        <p class="text-xs text-gray-500 mt-1">31. Jan beendet</p>
+                                </div>
+                                <!-- Instagram -->
+                                <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                                    <div class="flex items-center space-x-2 mb-3"><div class="w-8 h-8 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 rounded flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></div><span class="font-bold text-sm">Instagram</span></div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div><p class="text-[10px] text-gray-400">Follower</p><p class="text-lg font-bold">10.2k</p></div>
+                                        <div><p class="text-[10px] text-gray-400">Engagement</p><p class="text-lg font-bold">4.2%</p></div>
+                                        <div><p class="text-[10px] text-gray-400">Beitraege</p><p class="text-lg font-bold">847</p></div>
+                                        <div><p class="text-[10px] text-gray-400">Reichweite/Woche</p><p class="text-lg font-bold">3.4k</p></div>
+                                    </div>
+                                </div>
+                                <!-- TikTok -->
+                                <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                    <div class="flex items-center space-x-2 mb-3"><div class="w-8 h-8 bg-black rounded flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15.2a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.73a8.19 8.19 0 0 0 4.76 1.52V6.79a4.82 4.82 0 0 1-1-.1z"/></svg></div><span class="font-bold text-sm">TikTok</span></div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div><p class="text-[10px] text-gray-400">Follower</p><p class="text-lg font-bold">2.8k</p></div>
+                                        <div><p class="text-[10px] text-gray-400">Videos</p><p class="text-lg font-bold">124</p></div>
+                                        <div><p class="text-[10px] text-gray-400">Likes gesamt</p><p class="text-lg font-bold">89k</p></div>
+                                        <div><p class="text-[10px] text-gray-400">Views/Monat</p><p class="text-lg font-bold">18.2k</p></div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Performance vs Netzwerk Vergleich -->
+                        <div class="vit-card p-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">📈 Dein Standort vs. Netzwerk-Durchschnitt</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h3 class="text-sm font-semibold text-gray-600 mb-3">⌀ Dein Standort</h3>
+                                    <table class="w-full text-sm"><tbody>
+                                        <tr class="border-b"><td class="py-2 text-gray-500">Budget/Monat</td><td class="py-2 text-right font-semibold">863,86 €</td></tr>
+                                        <tr class="border-b"><td class="py-2 text-gray-500">CPC</td><td class="py-2 text-right font-semibold">103,50 €</td></tr>
+                                        <tr class="border-b"><td class="py-2 text-gray-500">CPT (Cost per Termin)</td><td class="py-2 text-right font-semibold">205,92 €</td></tr>
+                                        <tr class="border-b"><td class="py-2 text-gray-500">Termine / Monat</td><td class="py-2 text-right font-semibold">4,88</td></tr>
+                                        <tr><td class="py-2 text-gray-500">Store Visits / Monat</td><td class="py-2 text-right font-semibold">16,38</td></tr>
+                                    </tbody></table>
+                                </div>
+                                <div class="border-l-4 border-vit-orange pl-4">
+                                    <h3 class="text-sm font-semibold text-vit-orange mb-3">⌀ vit:bikes Netzwerk</h3>
+                                    <table class="w-full text-sm"><tbody>
+                                        <tr class="border-b"><td class="py-2 text-gray-500">Budget/Monat</td><td class="py-2 text-right font-semibold">1.436 €</td></tr>
+                                        <tr class="border-b"><td class="py-2 text-gray-500">CPC</td><td class="py-2 text-right font-semibold">104,32 €</td></tr>
+                                        <tr class="border-b"><td class="py-2 text-gray-500">CPT (Cost per Termin)</td><td class="py-2 text-right font-semibold text-green-600">163,15 € ✓</td></tr>
+                                        <tr class="border-b"><td class="py-2 text-gray-500">Termine / Monat</td><td class="py-2 text-right font-semibold text-green-600">9 ✓</td></tr>
+                                        <tr><td class="py-2 text-gray-500">Store Visits / Monat</td><td class="py-2 text-right font-semibold text-green-600">22 ✓</td></tr>
+                                    </tbody></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== TAB 2: BUDGET ===== -->
+                    <div id="marketingTabBudget" class="marketing-tab-content" style="display:none;">
+
+                        <!-- Budget Overview KPIs -->
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Jahresbudget 2026</p><p class="text-2xl font-bold text-gray-800" id="mktBudgetJahr">18.000 €</p><p class="text-xs text-gray-400">1.500 €/Monat</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">YTD Ausgegeben</p><p class="text-2xl font-bold text-vit-orange" id="mktBudgetYtd">2.653 €</p><p class="text-xs text-gray-400">Bis Februar</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Budget Februar</p><p class="text-2xl font-bold text-gray-800">1.500 €</p><p class="text-xs text-gray-400" id="mktBudgetFebVerbraucht">1.724 € ausgegeben</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Hochrechnung Feb</p><p class="text-2xl font-bold text-red-500" id="mktBudgetHochr">+224 €</p><p class="text-xs text-red-500">Über Budget</p></div>
+                        </div>
+
+                        <!-- Channel Split -->
+                        <div class="vit-card p-6 mb-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">💳 Channel Budget Übersicht – Februar 2026</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Google Ads -->
+                                <div class="p-5 bg-gray-50 rounded-lg border-l-4 border-yellow-500">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="flex items-center space-x-2"><span class="w-3 h-3 bg-yellow-500 rounded-full"></span><span class="font-bold text-gray-800">Google Ads</span></div>
+                                        <span class="text-xs text-gray-400 font-semibold">80% Split</span>
+                                    </div>
+                                    <div class="space-y-1 text-sm">
+                                        <div class="flex justify-between"><span class="text-gray-500">Budget Februar:</span><span class="font-bold">1.152 €</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-500">Ausgegeben:</span><span class="font-semibold text-gray-700">302 €</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-500">↳ Hochrechnung:</span><span class="font-semibold text-red-500">-529 €</span></div>
+                                    </div>
+                                    <div class="mt-3 bg-gray-200 rounded-full h-2"><div class="bg-yellow-500 h-2 rounded-full transition-all" style="width:26%"></div></div>
+                                    <p class="text-[10px] text-gray-400 mt-1">26% verbraucht (7/28 Tage)</p>
+                                </div>
+                                <!-- Meta Ads -->
+                                <div class="p-5 bg-gray-50 rounded-lg border-l-4 border-blue-500">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="flex items-center space-x-2"><span class="w-3 h-3 bg-blue-500 rounded-full"></span><span class="font-bold text-gray-800">Meta Ads</span></div>
+                                        <span class="text-xs text-gray-400 font-semibold">20% Split</span>
+                                    </div>
+                                    <div class="space-y-1 text-sm">
+                                        <div class="flex justify-between"><span class="text-gray-500">Budget Februar:</span><span class="font-bold">288 €</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-500">Ausgegeben:</span><span class="font-semibold text-gray-700">111 €</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-500">↳ Hochrechnung:</span><span class="font-semibold text-red-500">-195 €</span></div>
+                                    </div>
+                                    <div class="mt-3 bg-gray-200 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full transition-all" style="width:39%"></div></div>
+                                    <p class="text-[10px] text-gray-400 mt-1">39% verbraucht (7/28 Tage)</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Spending Trend -->
+                        <div class="vit-card p-6 mb-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">📈 Spending Trend</h2>
+                            <div class="h-48 flex items-end space-x-2" id="mktSpendingChart">
+                                <!-- Chart bars rendered dynamically -->
+                            </div>
+                            <div class="flex items-center justify-center space-x-6 mt-3">
+                                <span class="flex items-center space-x-1 text-xs text-gray-500"><span class="w-3 h-3 bg-yellow-500 rounded-sm"></span><span>Google Ads</span></span>
+                                <span class="flex items-center space-x-1 text-xs text-gray-500"><span class="w-3 h-3 bg-blue-500 rounded-sm"></span><span>Meta Ads</span></span>
+                            </div>
+                        </div>
+
+                        <!-- Monatsübersicht Tabelle -->
+                        <div class="vit-card p-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">📅 Monatliche Budget-Übersicht 2026</h2>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead><tr class="bg-gray-50"><th class="text-left py-2.5 px-3 font-semibold text-gray-600">Monat</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Budget</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Google</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Meta</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Gesamt</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Differenz</th><th class="text-center py-2.5 px-3 font-semibold text-gray-600">Status</th></tr></thead>
+                                    <tbody>
+                                        <tr class="border-b"><td class="py-2 px-3 font-semibold">Januar</td><td class="py-2 px-3 text-right">1.500 €</td><td class="py-2 px-3 text-right">1.152 €</td><td class="py-2 px-3 text-right">279 €</td><td class="py-2 px-3 text-right font-semibold">1.431 €</td><td class="py-2 px-3 text-right text-green-600">-69 €</td><td class="py-2 px-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">✅ Im Plan</span></td></tr>
+                                        <tr class="border-b bg-orange-50"><td class="py-2 px-3 font-semibold">Februar</td><td class="py-2 px-3 text-right">1.500 €</td><td class="py-2 px-3 text-right">1.445 €</td><td class="py-2 px-3 text-right">279 €</td><td class="py-2 px-3 text-right font-semibold">1.724 €</td><td class="py-2 px-3 text-right text-red-500">+224 €</td><td class="py-2 px-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">⚠️ Über Budget</span></td></tr>
+                                        <tr class="border-b"><td class="py-2 px-3 text-gray-400">März</td><td class="py-2 px-3 text-right text-gray-400">1.500 €</td><td class="py-2 px-3 text-right text-gray-300">—</td><td class="py-2 px-3 text-right text-gray-300">—</td><td class="py-2 px-3 text-right text-gray-300">—</td><td class="py-2 px-3 text-right text-gray-300">—</td><td class="py-2 px-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-500">Geplant</span></td></tr>
+                                        <tr class="border-b"><td class="py-2 px-3 text-gray-400">April – Dezember</td><td class="py-2 px-3 text-right text-gray-400">15.000 €</td><td class="py-2 px-3 text-right text-gray-300" colspan="4">—</td></tr>
+                                        <tr class="bg-gray-100 border-t-2"><td class="py-3 px-3 font-bold">GESAMT 2026</td><td class="py-3 px-3 text-right font-bold">18.000 €</td><td class="py-3 px-3 text-right font-bold">—</td><td class="py-3 px-3 text-right font-bold">—</td><td class="py-3 px-3 text-right font-bold">3.155 €</td><td class="py-3 px-3 text-right font-bold text-green-600">—</td><td class="py-3 px-3 text-center font-bold text-xs">17.5% YTD</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== TAB 3: LEADS & ROI ===== -->
+                    <div id="marketingTabLeads" class="marketing-tab-content" style="display:none;">
+
+                        <!-- Lead KPIs -->
+                        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Leads YTD</p><p class="text-2xl font-bold text-gray-800">80</p><p class="text-xs text-gray-400">Ziel: 109</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">⌀ Leads/Monat</p><p class="text-2xl font-bold text-vit-orange">9,6</p><p class="text-xs text-gray-400">Soll: 5.0/Monat</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">⌀ VK pro Lead</p><p class="text-2xl font-bold text-gray-800">3.900 €</p><p class="text-xs text-gray-400">Ø-Verkauf</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Verkaufsquote</p><p class="text-2xl font-bold text-green-600">52%</p><p class="text-xs text-gray-400">Ziel: 75%</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Lead-Umsatz geschätzt</p><p class="text-2xl font-bold text-green-600">319.090 €</p><p class="text-xs text-green-600">38% Leadanteil lt. Umsatzplan</p></div>
+                        </div>
+
+                        <!-- Monatliche Übersicht / Forecast -->
+                        <div class="vit-card p-6 mb-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">📅 Monatliche Lead-Übersicht & Forecast 2026</h2>
+                            <!-- Chart Area -->
+                            <div class="h-40 flex items-end space-x-1 mb-4" id="mktLeadChart"></div>
+                            <div class="flex items-center justify-center space-x-6 mb-4">
+                                <span class="flex items-center space-x-1 text-xs text-gray-500"><span class="w-3 h-3 bg-vit-orange rounded-sm"></span><span>Ist-Leads</span></span>
+                                <span class="flex items-center space-x-1 text-xs text-gray-500"><span class="w-3 h-3 bg-gray-300 rounded-sm"></span><span>Ziel-Leads</span></span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs">
+                                    <thead><tr class="bg-gray-50"><th class="text-left py-2 px-2 font-semibold">Monat</th><th class="text-right py-2 px-2 font-semibold">Gewichtung</th><th class="text-right py-2 px-2 font-semibold">Umsatzziel</th><th class="text-right py-2 px-2 font-semibold">Budget</th><th class="text-right py-2 px-2 font-semibold">Max Lead-Anz.</th><th class="text-right py-2 px-2 font-semibold">Lead-Umsatz</th><th class="text-right py-2 px-2 font-semibold">Differenz</th><th class="text-center py-2 px-2 font-semibold">Status</th></tr></thead>
+                                    <tbody>
+                                        <tr class="border-b bg-green-50"><td class="py-1.5 px-2 font-semibold">Januar</td><td class="py-1.5 px-2 text-right">4%</td><td class="py-1.5 px-2 text-right">33.520 €</td><td class="py-1.5 px-2 text-right">960 €</td><td class="py-1.5 px-2 text-right">4,36</td><td class="py-1.5 px-2 text-right">12.763 €</td><td class="py-1.5 px-2 text-right text-red-500">-4.718 €</td><td class="py-1.5 px-2 text-center"><span class="text-green-600">✓</span></td></tr>
+                                        <tr class="border-b bg-blue-50"><td class="py-1.5 px-2 font-semibold">Februar</td><td class="py-1.5 px-2 text-right">8%</td><td class="py-1.5 px-2 text-right">67.040 €</td><td class="py-1.5 px-2 text-right">1.920 €</td><td class="py-1.5 px-2 text-right">8,73</td><td class="py-1.5 px-2 text-right">25.527 €</td><td class="py-1.5 px-2 text-right text-red-500">-9.437 €</td><td class="py-1.5 px-2 text-center"><span class="text-blue-600">◉</span></td></tr>
+                                        <tr class="border-b"><td class="py-1.5 px-2 text-gray-400">März</td><td class="py-1.5 px-2 text-right text-gray-400">10%</td><td class="py-1.5 px-2 text-right text-gray-400">83.800 €</td><td class="py-1.5 px-2 text-right text-gray-400">2.400 €</td><td class="py-1.5 px-2 text-right text-gray-400">10,91</td><td class="py-1.5 px-2 text-right text-gray-400">31.909 €</td><td class="py-1.5 px-2 text-right text-gray-300">—</td><td class="py-1.5 px-2 text-center text-gray-300">—</td></tr>
+                                        <tr class="border-b"><td class="py-1.5 px-2 text-gray-400">April</td><td class="py-1.5 px-2 text-right text-gray-400">11%</td><td class="py-1.5 px-2 text-right text-gray-400">92.180 €</td><td class="py-1.5 px-2 text-right text-gray-400">2.640 €</td><td class="py-1.5 px-2 text-right text-gray-400">12,00</td><td class="py-1.5 px-2 text-right text-gray-400">35.100 €</td><td class="py-1.5 px-2 text-right text-gray-300">—</td><td class="py-1.5 px-2 text-center text-gray-300">—</td></tr>
+                                        <tr class="border-b"><td class="py-1.5 px-2 text-gray-400">Mai – Dez</td><td class="py-1.5 px-2 text-right text-gray-400">67%</td><td class="py-1.5 px-2 text-right text-gray-400">561.460 €</td><td class="py-1.5 px-2 text-right text-gray-300" colspan="4">—</td></tr>
+                                        <tr class="bg-gray-100 border-t-2 font-bold"><td class="py-2 px-2">GESAMT 2026</td><td class="py-2 px-2 text-right">100%</td><td class="py-2 px-2 text-right">838.000 €</td><td class="py-2 px-2 text-right">24.000 €</td><td class="py-2 px-2 text-right">109</td><td class="py-2 px-2 text-right">319.090 €</td><td class="py-2 px-2 text-right text-red-500">-117.970 €</td><td class="py-2 px-2 text-center text-xs">38% Leadanteil</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                                <p class="text-xs text-gray-600"><strong>Lesehinweis:</strong> % Marketingbudget vom Gesamtumsatz: <strong>2,86%</strong> · CPT (Cost per Termin): <strong>220 €</strong> · Ø-Verkauf: <strong>3.900 €</strong> · Verkaufsquote: <strong>75%</strong></p>
+                            </div>
+                        </div>
+
+                        <!-- Live Leads (letzten 10) -->
+                        <div class="vit-card p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-lg font-semibold text-gray-800">🔴 Live Leads – Letzte Einträge</h2>
+                                <span class="text-xs text-gray-400">Quelle: Lead Reporting System</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs">
+                                    <thead><tr class="bg-gray-50"><th class="text-left py-2 px-2">Datum</th><th class="text-center py-2 px-2">Monat</th><th class="text-left py-2 px-2">PLZ</th><th class="text-left py-2 px-2">Standort</th><th class="text-left py-2 px-2">Name</th><th class="text-center py-2 px-2">Wert</th></tr></thead>
+                                    <tbody id="mktLiveLeads">
+                                        <tr class="border-b"><td class="py-1.5 px-2">10.02.2026</td><td class="py-1.5 px-2 text-center">2</td><td class="py-1.5 px-2">82284</td><td class="py-1.5 px-2">Grafrath</td><td class="py-1.5 px-2">Ulrich S.</td><td class="py-1.5 px-2 text-center">—</td></tr>
+                                        <tr class="border-b bg-gray-50"><td class="py-1.5 px-2">07.02.2026</td><td class="py-1.5 px-2 text-center">2</td><td class="py-1.5 px-2">82284</td><td class="py-1.5 px-2">Grafrath</td><td class="py-1.5 px-2">Beatrix L.</td><td class="py-1.5 px-2 text-center">—</td></tr>
+                                        <tr class="border-b"><td class="py-1.5 px-2">04.02.2026</td><td class="py-1.5 px-2 text-center">2</td><td class="py-1.5 px-2">83607</td><td class="py-1.5 px-2">Holzkirchen</td><td class="py-1.5 px-2">Jürgen S.</td><td class="py-1.5 px-2 text-center">—</td></tr>
+                                        <tr class="border-b bg-gray-50"><td class="py-1.5 px-2">01.02.2026</td><td class="py-1.5 px-2 text-center">2</td><td class="py-1.5 px-2">82284</td><td class="py-1.5 px-2">Grafrath</td><td class="py-1.5 px-2">Roberto F.</td><td class="py-1.5 px-2 text-center">—</td></tr>
+                                        <tr class="border-b"><td class="py-1.5 px-2">31.01.2026</td><td class="py-1.5 px-2 text-center">1</td><td class="py-1.5 px-2">84518</td><td class="py-1.5 px-2">Garching a.d. Alz</td><td class="py-1.5 px-2">Alice R.</td><td class="py-1.5 px-2 text-center">—</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="text-[10px] text-gray-400 mt-3 text-center">Seite 1 von 52 · 1314 Einträge gesamt</p>
                         </div>
                     </div>
 
@@ -1839,66 +2112,6 @@
                             </div>
                         </div>
 
-                    </div>
-
-                    <div id="marketingTabContent" class="marketing-tab-content" style="display:none;">
-                        <div class="vit-card p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Content Library</h2>
-                            <div class="space-y-3">
-                                <div class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
-                                    <span class="text-2xl">🖼️</span>
-                                    <div class="flex-1">
-                                        <h3 class="font-semibold text-gray-800">Logo & Brand Assets</h3>
-                                        <p class="text-xs text-gray-500">Logos, Farben, Schriftarten</p>
-                                    </div>
-                                    <button class="px-3 py-1 text-sm text-vit-orange border border-vit-orange rounded hover:bg-vit-orange hover:text-white transition">Download</button>
-                                </div>
-                                <div class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
-                                    <span class="text-2xl">📄</span>
-                                    <div class="flex-1">
-                                        <h3 class="font-semibold text-gray-800">Flyer-Vorlagen</h3>
-                                        <p class="text-xs text-gray-500">Aktionsflyer, Eroeffnungsflyer</p>
-                                    </div>
-                                    <button class="px-3 py-1 text-sm text-vit-orange border border-vit-orange rounded hover:bg-vit-orange hover:text-white transition">Download</button>
-                                </div>
-                                <div class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
-                                    <span class="text-2xl">📋</span>
-                                    <div class="flex-1">
-                                        <h3 class="font-semibold text-gray-800">Social Media Templates</h3>
-                                        <p class="text-xs text-gray-500">Instagram Posts, Facebook Banner</p>
-                                    </div>
-                                    <button class="px-3 py-1 text-sm text-vit-orange border border-vit-orange rounded hover:bg-vit-orange hover:text-white transition">Download</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="marketingTabAnalytics" class="marketing-tab-content" style="display:none;">
-                        <div class="vit-card p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Marketing Analytics</h2>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div class="p-4 bg-orange-50 rounded-lg text-center">
-                                    <p class="text-sm text-gray-600">Website-Besucher</p>
-                                    <p class="text-2xl font-bold text-vit-orange">2,458</p>
-                                    <p class="text-xs text-green-600">+12% vs. Vormonat</p>
-                                </div>
-                                <div class="p-4 bg-blue-50 rounded-lg text-center">
-                                    <p class="text-sm text-gray-600">Google-Bewertungen</p>
-                                    <p class="text-2xl font-bold text-blue-600">4.7 ★</p>
-                                    <p class="text-xs text-gray-500">89 Bewertungen</p>
-                                </div>
-                                <div class="p-4 bg-green-50 rounded-lg text-center">
-                                    <p class="text-sm text-gray-600">Conversion Rate</p>
-                                    <p class="text-2xl font-bold text-green-600">3.2%</p>
-                                    <p class="text-xs text-green-600">+0.4% vs. Vormonat</p>
-                                </div>
-                                <div class="p-4 bg-purple-50 rounded-lg text-center">
-                                    <p class="text-sm text-gray-600">Kosten/Lead</p>
-                                    <p class="text-2xl font-bold text-purple-600">146 €</p>
-                                    <p class="text-xs text-red-600">+8% vs. Vormonat</p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Tab: Marketing Strategie -->
@@ -4712,20 +4925,99 @@
                 <!-- ===== HQ MARKETING ===== -->
                 <div id="hqMarketingView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-6">MARKETING – NETZWERK</h1>
-                    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6" id="hqMktKpis"></div>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                        <div class="vit-card p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">📊 Lead-Performance pro Standort</h2>
-                            <div id="hqMktLeads" class="space-y-2"></div>
+
+                    <!-- HQ Marketing Tab Navigation -->
+                    <div class="mb-6 border-b border-gray-200">
+                        <nav class="-mb-px flex space-x-8 overflow-x-auto">
+                            <button onclick="showHqMktTab('uebersicht')" class="hqmkt-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-hqmkt="uebersicht">🏠 Übersicht</button>
+                            <button onclick="showHqMktTab('budgetsteuerung')" class="hqmkt-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-hqmkt="budgetsteuerung">💰 Budget-Steuerung</button>
+                            <button onclick="showHqMktTab('leadreport')" class="hqmkt-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-hqmkt="leadreport">📊 Lead Reporting</button>
+                            <button onclick="showHqMktTab('jahresgespraeche')" class="hqmkt-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-hqmkt="jahresgespraeche">📋 Jahresgespräche</button>
+                            <button onclick="showHqMktTab('handlungsbedarf')" class="hqmkt-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-hqmkt="handlungsbedarf">⚠️ Handlungsbedarf</button>
+                        </nav>
+                    </div>
+
+                    <!-- HQ MKT TAB 1: Übersicht -->
+                    <div id="hqMktTabUebersicht" class="hqmkt-tab-content">
+                        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6" id="hqMktKpis"></div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                            <div class="vit-card p-6"><h2 class="text-lg font-semibold text-gray-800 mb-4">📊 Lead-Performance pro Standort</h2><div id="hqMktLeads" class="space-y-2"></div></div>
+                            <div class="vit-card p-6"><h2 class="text-lg font-semibold text-gray-800 mb-4">🎯 Strategie-Status</h2><div id="hqMktStrategie" class="space-y-2"></div></div>
+                        </div>
+                        <div class="vit-card p-6"><h2 class="text-lg font-semibold text-gray-800 mb-4">⚠️ Schnell-Alerts</h2><div id="hqMktAlerts" class="space-y-2"></div></div>
+                    </div>
+
+                    <!-- HQ MKT TAB 2: Budget-Steuerung -->
+                    <div id="hqMktTabBudgetsteuerung" class="hqmkt-tab-content" style="display:none;">
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-400 uppercase">Jahresbudget</p><p class="text-2xl font-bold text-gray-800">491.958 €</p><p class="text-xs text-gray-400">Gesamt 2026</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-400 uppercase">YTD Budget</p><p class="text-2xl font-bold text-vit-orange">54.794 €</p><p class="text-xs text-gray-400">Bis Feb</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-400 uppercase">⌀ Monatlich</p><p class="text-2xl font-bold text-gray-800">40.997 €</p><p class="text-xs text-gray-400">Netzwerk</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-400 uppercase">Aktive Standorte</p><p class="text-2xl font-bold text-green-600">22</p><p class="text-xs text-gray-400">mit Budget</p></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div class="vit-card p-5 border-l-4 border-yellow-500">
+                                <div class="flex items-center justify-between mb-2"><div class="flex items-center space-x-2"><span class="w-3 h-3 bg-yellow-500 rounded-full"></span><span class="font-bold">Google Ads</span></div><span class="text-xs text-gray-400">80% Split</span></div>
+                                <div class="text-sm space-y-1"><div class="flex justify-between"><span class="text-gray-500">Budget Feb:</span><span class="font-bold">29.960 €</span></div><div class="flex justify-between"><span class="text-gray-500">Ausgegeben:</span><span>8.133 €</span></div><div class="flex justify-between"><span class="text-gray-500">Hochrechnung:</span><span class="text-red-500">-14.232 €</span></div></div>
+                                <div class="mt-2 bg-gray-200 rounded-full h-2"><div class="bg-yellow-500 h-2 rounded-full" style="width:27%"></div></div>
+                            </div>
+                            <div class="vit-card p-5 border-l-4 border-blue-500">
+                                <div class="flex items-center justify-between mb-2"><div class="flex items-center space-x-2"><span class="w-3 h-3 bg-blue-500 rounded-full"></span><span class="font-bold">Meta Ads</span></div><span class="text-xs text-gray-400">20% Split</span></div>
+                                <div class="text-sm space-y-1"><div class="flex justify-between"><span class="text-gray-500">Budget Feb:</span><span class="font-bold">7.490 €</span></div><div class="flex justify-between"><span class="text-gray-500">Ausgegeben:</span><span>1.966 €</span></div><div class="flex justify-between"><span class="text-gray-500">Hochrechnung:</span><span class="text-red-500">-3.441 €</span></div></div>
+                                <div class="mt-2 bg-gray-200 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full" style="width:26%"></div></div>
+                            </div>
                         </div>
                         <div class="vit-card p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">🎯 Strategie-Status</h2>
-                            <div id="hqMktStrategie" class="space-y-2"></div>
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">📋 Budget pro Standort – Februar 2026</h2>
+                            <div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="bg-gray-50"><th class="text-left py-2 px-2 font-semibold">Standort</th><th class="text-center py-2 px-2 font-semibold">Status</th><th class="text-right py-2 px-2 font-semibold text-yellow-600">● Google</th><th class="text-right py-2 px-2 font-semibold">Ausg.</th><th class="text-right py-2 px-2 font-semibold">Hoch.</th><th class="text-right py-2 px-2 font-semibold text-blue-600">● Meta</th><th class="text-right py-2 px-2 font-semibold">Ausg.</th><th class="text-right py-2 px-2 font-semibold">Hoch.</th></tr></thead><tbody id="hqMktBudgetTable"></tbody></table></div>
                         </div>
                     </div>
-                    <div class="vit-card p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">⚠️ Handlungsbedarf Marketing</h2>
-                        <div id="hqMktAlerts" class="space-y-2"></div>
+
+                    <!-- HQ MKT TAB 3: Lead Reporting -->
+                    <div id="hqMktTabLeadreport" class="hqmkt-tab-content" style="display:none;">
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-400 uppercase">Live-Leads</p><p class="text-2xl font-bold text-gray-800" id="hqMktTotalLeads">777</p><p class="text-xs text-gray-400">YTD Netzwerk</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-400 uppercase">⌀ pro Standort/Monat</p><p class="text-2xl font-bold text-vit-orange" id="hqMktAvgLeads">9.6</p><p class="text-xs text-gray-400">Soll: 5.0</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-400 uppercase">⌀ Verkaufsquote</p><p class="text-2xl font-bold text-green-600">52%</p><p class="text-xs text-gray-400">Ziel: 75%</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-400 uppercase">Lead-Umsatz geschätzt</p><p class="text-2xl font-bold text-green-600">4,2 Mio €</p><p class="text-xs text-green-600">38% lt. Umsatzplan</p></div>
+                        </div>
+                        <div class="vit-card p-6 mb-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">📊 Standort-Performance – Leads & Conversion</h2>
+                            <div id="hqMktLeadRanking" class="space-y-2"></div>
+                        </div>
+                        <div class="vit-card p-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">📅 Monatliche Übersicht – Netzwerk</h2>
+                            <div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="bg-gray-50"><th class="text-left py-2 px-2">Monat</th><th class="text-right py-2 px-2">Soll</th><th class="text-right py-2 px-2">Ist</th><th class="text-right py-2 px-2">Diff</th><th class="text-right py-2 px-2">Performance</th><th class="text-center py-2 px-2">Status</th></tr></thead><tbody>
+                                <tr class="border-b bg-green-50"><td class="py-1.5 px-2 font-semibold">Januar</td><td class="py-1.5 px-2 text-right">5,2</td><td class="py-1.5 px-2 text-right font-bold">8,7</td><td class="py-1.5 px-2 text-right text-green-600">+3,5</td><td class="py-1.5 px-2 text-right text-green-600">167%</td><td class="py-1.5 px-2 text-center"><span class="text-green-600">✅</span></td></tr>
+                                <tr class="border-b bg-blue-50"><td class="py-1.5 px-2 font-semibold">Februar</td><td class="py-1.5 px-2 text-right">4,1</td><td class="py-1.5 px-2 text-right font-bold">2,8</td><td class="py-1.5 px-2 text-right text-red-500">-1,3</td><td class="py-1.5 px-2 text-right text-yellow-600">68%</td><td class="py-1.5 px-2 text-center"><span class="text-blue-600">◉ Laufend</span></td></tr>
+                                <tr class="border-b"><td class="py-1.5 px-2 text-gray-400">März – Dez</td><td class="py-1.5 px-2 text-right text-gray-400">—</td><td class="py-1.5 px-2 text-right text-gray-300" colspan="4">—</td></tr>
+                            </tbody></table></div>
+                        </div>
+                    </div>
+
+                    <!-- HQ MKT TAB 4: Jahresgespräche -->
+                    <div id="hqMktTabJahresgespraeche" class="hqmkt-tab-content" style="display:none;">
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-400">Vereinbart</p><p class="text-2xl font-bold text-green-600" id="hqMktJgDone">18</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-400">Ausstehend</p><p class="text-2xl font-bold text-red-500" id="hqMktJgOpen">4</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-400">⌀ Budget vereinbart</p><p class="text-2xl font-bold text-vit-orange">1.640 €</p><p class="text-xs text-gray-400">/Monat</p></div>
+                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-400">⌀ Terminziel-Erreichung</p><p class="text-2xl font-bold text-yellow-600">56%</p><p class="text-xs text-gray-400">2025</p></div>
+                        </div>
+                        <div class="vit-card p-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">📋 Jahresgespräch-Status pro Standort</h2>
+                            <div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="bg-gray-50"><th class="text-left py-2 px-2">Standort</th><th class="text-left py-2 px-2">Inhaber</th><th class="text-left py-2 px-2">AP vit:bikes</th><th class="text-right py-2 px-2">Budget/Mo</th><th class="text-left py-2 px-2">Mediamix</th><th class="text-center py-2 px-2">CRM</th><th class="text-center py-2 px-2">Status</th></tr></thead><tbody id="hqMktJgTable"></tbody></table></div>
+                        </div>
+                    </div>
+
+                    <!-- HQ MKT TAB 5: Handlungsbedarf -->
+                    <div id="hqMktTabHandlungsbedarf" class="hqmkt-tab-content" style="display:none;">
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <div class="vit-card p-5 text-center border-l-4 border-red-500"><p class="text-xs text-gray-400">Kritisch</p><p class="text-2xl font-bold text-red-600" id="hqMktAlertKrit">3</p></div>
+                            <div class="vit-card p-5 text-center border-l-4 border-yellow-500"><p class="text-xs text-gray-400">Warnung</p><p class="text-2xl font-bold text-yellow-600" id="hqMktAlertWarn">5</p></div>
+                            <div class="vit-card p-5 text-center border-l-4 border-blue-500"><p class="text-xs text-gray-400">Info</p><p class="text-2xl font-bold text-blue-600" id="hqMktAlertInfo">4</p></div>
+                            <div class="vit-card p-5 text-center border-l-4 border-green-500"><p class="text-xs text-gray-400">Im grünen Bereich</p><p class="text-2xl font-bold text-green-600" id="hqMktAlertOk">10</p></div>
+                        </div>
+                        <div id="hqMktAlertsFull" class="space-y-3"></div>
                     </div>
                 </div>
 
@@ -6418,6 +6710,8 @@
 
             // Init Social Media themen on first open
             if(tabName==='social') { renderSmThemen(); }
+            if(tabName==='budget') { renderMktSpendingChart(); }
+            if(tabName==='leads') { renderMktLeadChart(); }
         }
         
         // === VERKAUF MODULE ===
@@ -7012,6 +7306,52 @@
 
         // Init Einkauf
         renderLieferanten();
+
+        // === EINKAUF DATEN (65 Lieferanten aus Zentraleinkauf-Excel) ===
+        var allLief=[{"n": "AMFLOW/ DJI", "art": "bike", "kern": false, "zusatz": false, "auslauf": true, "stat": "Verhandlung gescheitert", "sc": "red", "kond": "Konditionen zu gering", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Babboe", "art": "bike", "kern": false, "zusatz": true, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Konditionen Accell", "iht": "IHT aktiv", "zr": true, "mail": "service@winora-group.de", "tel": "+49 (0)9721-6501-7878", "b2b": "Accentry b2b", "regmail": "callcenter@winora.de"}, {"n": "CaGo", "art": "bike", "kern": false, "zusatz": true, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Konditionen Ca Go", "iht": "IHT aktiv", "zr": true, "mail": "nouri.hamsoro@rtisports.de", "tel": "+49 (0)261 899998-220", "b2b": "Ca Go b2b", "regmail": "nouri.hamsoro@rtisports.de"}, {"n": "Centurion", "art": "bike", "kern": false, "zusatz": false, "auslauf": true, "stat": "Verhandlung gescheitert", "sc": "red", "kond": "", "iht": "Abgelehnt", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Conway", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Gazelle", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Volumen nicht ausreichend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Ghost, Lapierre", "art": "bike", "kern": false, "zusatz": true, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Konditionen Accell", "iht": "IHT aktiv", "zr": true, "mail": "sales@ghost-bikes.de", "tel": "+49 9632 9255-0", "b2b": "Accentry b2b", "regmail": "service@ghost-bikes.de"}, {"n": "HASE bike", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "6-7% Rabatt + 2% Sk. 10T", "iht": "Im Onboarding", "zr": false, "mail": "Hendrik.Forejta@hasebikes.com", "tel": "+49 2309 9377-236", "b2b": "", "regmail": "Hendrik.Forejta@hasebikes.com"}, {"n": "HEPHA", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "", "iht": "IHT aktiv", "zr": true, "mail": "info@hepha.com", "tel": "+49(0) 8142 / 2844480", "b2b": "", "regmail": "bernd.lesch@hepha.com"}, {"n": "i:SY", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Volumen nicht ausreichend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "yasemin@isy.de", "tel": "+49 221 5727744445", "b2b": "", "regmail": "yasemin@isy.de"}, {"n": "Kalkhoff", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Volumen nicht ausreichend", "sc": "gray", "kond": "", "iht": "Abgelehnt", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Koga", "art": "bike", "kern": false, "zusatz": true, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Konditionen Accell", "iht": "IHT aktiv", "zr": true, "mail": "service@winora-group.de", "tel": "+49 (0)9721-6501-7878", "b2b": "Accentry b2b", "regmail": "callcenter@winora.de"}, {"n": "KTM", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Volumen nicht ausreichend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "M1", "art": "bike", "kern": false, "zusatz": false, "auslauf": true, "stat": "Ausgelaufen (Insolvenz)", "sc": "red", "kond": "", "iht": "Abgelehnt", "zr": false, "mail": "info@m1-sporttechnik.de", "tel": "08020-90891170", "b2b": "", "regmail": "j.sauer@m1-sporttechnik.de"}, {"n": "Nicolai", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "In Verhandlung", "sc": "yellow", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Orbea", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "40/60% TAM, Diamond 17%", "iht": "In Verhandlung", "zr": false, "mail": "cponzlet@orbea.com", "tel": "+49 231 98819869", "b2b": "Orbea KIDE", "regmail": "cponzlet@orbea.com"}, {"n": "Raymon", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Riese und Müller", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "In Verhandlung", "sc": "yellow", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "vertrieb@r-m.de", "tel": "+49 6151 36686-11", "b2b": "R&M b2b", "regmail": "vertrieb@r-m.de"}, {"n": "Simplon", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Premium-Händler, hohe Marge", "iht": "Im Onboarding", "zr": false, "mail": "sales@simplon.com", "tel": "+43 5574 72564401", "b2b": "Simplon b2b", "regmail": "sales@simplon.com"}, {"n": "Specialized", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Volumen nicht ausreichend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Steppenwolf", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Kalk. 1,85 + 3% VO + 3% Sk.", "iht": "IHT aktiv", "zr": true, "mail": "sales@steppenwolf-bikes.com", "tel": "+49 30 863280217", "b2b": "Steppenwolf b2b", "regmail": "sales@steppenwolf-bikes.com"}, {"n": "Urban Arrow", "art": "bike", "kern": false, "zusatz": false, "auslauf": true, "stat": "Verhandlung gescheitert", "sc": "red", "kond": "", "iht": "Abgelehnt", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Velo de Ville", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "12% + 2% Sk. 16T (Fakt. 1,8)", "iht": "IHT aktiv", "zr": true, "mail": "philipp.niehues@velo-de-ville.com", "tel": "+49 2505 9305 965", "b2b": "VdV b2b", "regmail": "marketing@velo-de-ville.com"}, {"n": "Winora, Haibike", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Accell max. Staffel (nur IHT)", "iht": "IHT aktiv", "zr": true, "mail": "service@winora-group.de", "tel": "+49(0) 9721-6501-7878", "b2b": "Accentry b2b", "regmail": "callcenter@winora.de"}, {"n": "Bike Leasing Service", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "6% Prov. - 33,4% MKT - bis 66,67% Wachstum", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "BLS b2b", "regmail": ""}, {"n": "BikeCenter", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "In Verhandlung", "sc": "yellow", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Businessbike", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "In Finalisierung", "sc": "yellow", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Businessbike b2b", "regmail": ""}, {"n": "Company Bike", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "In Verhandlung", "sc": "yellow", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "CB b2b", "regmail": ""}, {"n": "Deutsche Dienstrad", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "0% Prov. + 3% Fulfillment + 1% Rückverg.", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "DD b2b", "regmail": ""}, {"n": "Eleasa", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Eleasa b2b", "regmail": ""}, {"n": "GO", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Jobrad", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Jobrad b2b", "regmail": ""}, {"n": "Kazenmaier", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Kazenmaier b2b", "regmail": ""}, {"n": "lease a bike", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "leasabike b2b", "regmail": ""}, {"n": "Linexo", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "linexo b2b", "regmail": ""}, {"n": "Mein Dienstrad", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "MDR b2b", "regmail": ""}, {"n": "Probonio", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Smartfit", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "", "iht": "Im Onboarding", "zr": false, "mail": "rw@smartfit.bike", "tel": "+49 160 6666367", "b2b": "", "regmail": "rw@smartfit.bike"}, {"n": "Strom", "art": "dl", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Telecash", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Clover Flex LTE V2, ab 18,90€/Mo", "iht": "", "zr": false, "mail": "christian.koenig@fiserv.com", "tel": "+49 (0) 911 945 8387", "b2b": "", "regmail": "christian.koenig@fiserv.com"}, {"n": "Telekom", "art": "dl", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Wertgarantie by linexo", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Wertgarantie b2b", "regmail": ""}, {"n": "Würth Leasing", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Würth Leasing b2b", "regmail": ""}, {"n": "ABUS", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "48% Grund + VO-Staffel", "iht": "Abgelehnt", "zr": false, "mail": "mobile.vertrieb@abus.de", "tel": "+49 2335 634 470", "b2b": "ABUS b2b", "regmail": "mobile.vertrieb@abus.de"}, {"n": "Alps Alpine", "art": "parts", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "ASISTA", "art": "parts", "kern": false, "zusatz": false, "auslauf": true, "stat": "Verhandlung gescheitert", "sc": "red", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Cosmic Sports", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "SQlab 18%+1%+3%, SP Connect", "iht": "IHT aktiv", "zr": true, "mail": "tm@cosmicsports.de", "tel": "+49 911 310 755 59", "b2b": "Cosmic Sports b2b", "regmail": "tm@cosmicsports.de"}, {"n": "Croozer", "art": "parts", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "", "zr": false, "mail": "order@croozer.com", "tel": "02233-959913", "b2b": "", "regmail": "support@croozer.com"}, {"n": "Fidlock", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "In Finalisierung", "sc": "yellow", "kond": "", "iht": "Im Onboarding", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Grofa", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Giro 19%, Lumos 14%, Park Tool 26%", "iht": "IHT aktiv", "zr": true, "mail": "order@grofa.com", "tel": "06434/2008-200", "b2b": "GROFA b2b", "regmail": "stammdaten@grofa.com"}, {"n": "Hartje", "art": "parts", "kern": false, "zusatz": true, "auslauf": false, "stat": "In Verhandlung", "sc": "yellow", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "Hartje EOSweb", "regmail": ""}, {"n": "Livall/ CycloSport", "art": "parts", "kern": false, "zusatz": true, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Livall 15% + 1% Delk.", "iht": "IHT aktiv", "zr": true, "mail": "bestellung@ciclosport.de", "tel": "089-895270-20", "b2b": "", "regmail": "bestellung@ciclosport.de"}, {"n": "Magura/ Bosch", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "MBPS b2b", "regmail": ""}, {"n": "MCG", "art": "parts", "kern": false, "zusatz": false, "auslauf": true, "stat": "Verhandlung gescheitert", "sc": "red", "kond": "", "iht": "Abgelehnt", "zr": false, "mail": "vertrieb@merida-centurion.com", "tel": "+49 (0)7159/9459-300", "b2b": "MCG b2b", "regmail": "vertrieb@merida-centurion.com"}, {"n": "OneUp Components", "art": "parts", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "ONEup b2b", "regmail": ""}, {"n": "Ortlieb", "art": "parts", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Paul Lange", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "In Finalisierung", "sc": "yellow", "kond": "", "iht": "Im Onboarding", "zr": false, "mail": "verkauf@paul-lange.de", "tel": "+49 (0) 711 2588 333", "b2b": "Paul Lange b2b", "regmail": "verkauf@paul-lange.de"}, {"n": "Pow Unity", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Powunity b2b", "regmail": ""}, {"n": "RTI Sports", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Topeak, Ca Go", "iht": "IHT aktiv", "zr": true, "mail": "nouri.hamsoro@rtisports.de", "tel": "+49 (0)261 899998-220", "b2b": "RTI Sports b2b", "regmail": "nouri.hamsoro@rtisports.de"}, {"n": "SportsNut", "art": "parts", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "SportsNut b2b", "regmail": ""}, {"n": "SQlab", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "18% + 1% Delk. + 3% Sk.", "iht": "IHT aktiv", "zr": true, "mail": "feb@sq-lab.com", "tel": "089-6661046-0", "b2b": "SQlab b2b", "regmail": "aba@sq-lab.com"}, {"n": "Thule", "art": "parts", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Tunap", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "In Finalisierung", "sc": "yellow", "kond": "Premium Partner, Marge 2,5x", "iht": "Im Onboarding", "zr": false, "mail": "Carolin.Schorsten@tunap-sports.de", "tel": "0151 15059430", "b2b": "TUNAP eShop", "regmail": "Carolin.Schorsten@tunap-sports.de"}, {"n": "Vaude", "art": "parts", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "VAUDE b2b", "regmail": ""}, {"n": "Wiener Bike Parts", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "10% Kopf + Markenrabatte", "iht": "IHT aktiv", "zr": true, "mail": "callcenter@bike-parts.de", "tel": "09721 65 01-0", "b2b": "Accentry b2b", "regmail": "customer-data@winora-group.de"}];
+        
+        // Standort demo data
+        var standorte={
+            holzkirchen:{name:'Holzkirchen',inhaber:'Dirk Kolditz',nachlassIst:9.73,db1Ist:28.6,bestand:104,bestWert:340105,verkauft:71,umsatz:274593},
+            berlin:{name:'Berlin Mitte',inhaber:'Max Müller',nachlassIst:6.2,db1Ist:32.1,bestand:86,bestWert:290000,verkauft:95,umsatz:410000},
+            hamburg:{name:'Hamburg',inhaber:'Sandra Weber',nachlassIst:8.1,db1Ist:30.5,bestand:92,bestWert:310000,verkauft:68,umsatz:295000},
+            muenchen:{name:'München',inhaber:'Thomas Bauer',nachlassIst:5.8,db1Ist:33.9,bestand:78,bestWert:380000,verkauft:120,umsatz:580000},
+            grafrath:{name:'Grafrath',inhaber:'Julian Neumann',nachlassIst:7.5,db1Ist:31.2,bestand:65,bestWert:220000,verkauft:52,umsatz:198000}
+        };
+        
+        var strategien={
+            holzkirchen:{status:'veroeffentlicht',datum:'2025-08-28',nachlass25:7,nachlass26:5,db1Ziel:34,
+                todos:[{t:'Abstimmung mit Marketing',d:true},{t:'POS-Kampagnen',d:false},{t:'Events vor Ort',d:false},{t:'Kaltakquise Leasing',d:true},{t:'Verkäufer schulen',d:false}]},
+            berlin:{status:'entwurf',datum:'2025-09-10',nachlass25:5,nachlass26:4,db1Ziel:35,
+                todos:[{t:'Simplon Dealervertrag',d:false},{t:'Premium-Umbau',d:false}]},
+            hamburg:{status:'review',datum:'2025-09-01',nachlass25:6,nachlass26:5,db1Ziel:34,
+                todos:[{t:'Haibike Restbestand',d:true},{t:'Orbea Testflotte',d:false},{t:'Leasing vor Ort',d:false}]},
+            muenchen:{status:'veroeffentlicht',datum:'2025-07-15',nachlass25:5,nachlass26:4,db1Ziel:36,
+                todos:[{t:'R&M World Umbau',d:true},{t:'Simplon Gravel-Event',d:true},{t:'Zubehör-Bundles',d:false}]},
+            grafrath:{status:'veroeffentlicht',datum:'2025-08-01',nachlass25:6,nachlass26:5,db1Ziel:34,
+                todos:[{t:'Kalkhoff auflösen',d:true},{t:'Orbea Marketing',d:false},{t:'Leasing-Angebote',d:false}]}
+        };
+        
+        // Parts Priorisierung Matrix (from Excel)
+        var partsPrio=[{n:'SQlab (Ergonomie)',t:'Ergonomie','5':5,'10':5,'15':5,'17':5,'20':5,'25':5,kap:11240},{n:'Shimano (Ersatzteile)',t:'Service','5':0,'10':1,'15':2,'17':2,'20':3,'25':3,kap:2542},{n:'Schwalbe (Mäntel)',t:'Service','5':0,'10':0.25,'15':2,'17':2,'20':3,'25':3,kap:2859},{n:'Tunap (Pflege)',t:'Service','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:1528},{n:'ABUS (Schlösser)',t:'Trend','5':0,'10':0.25,'15':0.5,'17':0.75,'20':0.75,'25':1,kap:2885},{n:'Helme',t:'Trend','5':0,'10':1,'15':2,'17':3,'20':3,'25':3,kap:3599},{n:'Topeak (Tools)',t:'Trend','5':0,'10':0,'15':0.5,'17':1,'20':1.5,'25':1.5,kap:2102},{n:'SP Connect',t:'Trend','5':0,'10':0.25,'15':0.25,'17':0.5,'20':0.5,'25':0.5,kap:1829},{n:'Elite/Fidlock',t:'Trend','5':0,'10':0.5,'15':0.5,'17':0.5,'20':0.5,'25':0.5,kap:513},{n:'Busch&Müller',t:'Zubehör','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:942},{n:'Pedale',t:'Zubehör','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:862},{n:'Ursus (Ständer)',t:'Zubehör','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:153},{n:'Vaude (Taschen)',t:'Trend','5':0,'10':0,'15':0.5,'17':0.5,'20':1,'25':1.5,kap:253},{n:'SKS/KlickFix',t:'Zubehör','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:312},{n:'Kleinteile',t:'Zubehör','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:753},{n:'by.Schulz',t:'Zubehör','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:2558},{n:'Supernova/Lupine',t:'Zubehör','5':0,'10':0,'15':0,'17':0,'20':0,'25':0.25,kap:0}];
+        
+        // WBP Markenrabatte
+        var wbpR=[{m:'Schwalbe',k:'',r:'Key Account',d:'1%'},{m:'Continental',k:'',r:'14-18%',d:'1%'},{m:'SRAM',k:'',r:'5-10%',d:'1%'},{m:'Shimano',k:'',r:'5%',d:'1%'},{m:'DT Swiss',k:'10%',r:'3%',d:'1%'},{m:'XLC',k:'10%',r:'5%',d:'1%'},{m:'BySchulz',k:'',r:'5%',d:'1%'},{m:'KindShock',k:'',r:'8%',d:'1%'},{m:'Xpedo',k:'10%',r:'8%',d:'1%'},{m:'Basil',k:'10%',r:'5%',d:'1%'},{m:'B&M',k:'10%',r:'5%',d:'1%'},{m:'SKS',k:'10%',r:'5%',d:'1%'},{m:'KMC',k:'10%',r:'5%',d:'1%'},{m:'Cratoni',k:'10%',r:'6%',d:'1%'},{m:'Trelock',k:'10%',r:'8%',d:'1%'}];
+        
+        // Sortiment Holzkirchen
+        var hauptmarken=[
+            {name:'Riese und Müller',s:'R&M',bg:'#1a1a1a',seg:'Premium · Nachorder',sp:'pg',v:27,vj:26,um:130856,ant:47.7,be:33,bw:116645,nl:5.45,vnl:6.24,bew:'Läuft gut',bc:'text-green-600',bi:'✓'},
+            {name:'Orbea',s:'ORB',bg:'#ea580c',seg:'Premium · Nachorder',sp:'pg',v:22,vj:13,um:83078,ant:30.3,be:28,bw:82092,nl:9.98,vnl:11.70,bew:'Rabatt zu hoch',bc:'text-yellow-600',bi:'⚠'},
+            {name:'Haibike (Accell)',s:'HAI',bg:'#dc2626',seg:'Preiseinstieg · Vororder',sp:'pb',v:7,vj:1,um:28528,ant:10.4,be:28,bw:100172,nl:6.72,vnl:13.77,bew:'7 verkauft, 28 Bestand!',bc:'text-red-600',bi:'⛔'}
+        ];
+        var bestandsm=[
+            {n:'Kalkhoff',s:'KH',bg:'#2563eb',st:'Abverkauf',sp:'py',v:13,be:4,um:'26.946€',nl:'26,45%'},
+            {n:'Ca Go',s:'CG',bg:'#059669',st:'Abverkauf',sp:'py',v:1,be:1,um:'4.333€',nl:'20,55%'},
+            {n:'Velo de Ville',s:'VdV',bg:'#7c3aed',st:'Beobachtung',sp:'po',v:1,be:8,um:'952€',nl:'12%+2%Sk'},
+            {n:'Hase Bikes',s:'HB',bg:'#0891b2',st:'Onboarding',sp:'pb',v:0,be:2,um:'0€',nl:'—'}
+        ];
+        
+        
 
         // === KOMMUNIKATION: Inbox, Ankuendigungen, Brett, Termine ===
         var inboxMessages = [
@@ -10667,7 +11007,132 @@
             }
         }
 
-        // === HQ EINKAUF ===
+        // === HQ MARKETING TABS ===
+        function showHqMktTab(tabName) {
+            document.querySelectorAll('.hqmkt-tab-content').forEach(function(t){t.style.display='none';});
+            document.querySelectorAll('.hqmkt-tab-btn').forEach(function(b){b.className='hqmkt-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';});
+            var el=document.getElementById('hqMktTab'+tabName.charAt(0).toUpperCase()+tabName.slice(1));
+            if(el) el.style.display='block';
+            var btn=document.querySelector('.hqmkt-tab-btn[data-hqmkt="'+tabName+'"]');
+            if(btn) btn.className='hqmkt-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
+            if(tabName==='budgetsteuerung') renderHqMktBudget();
+            if(tabName==='leadreport') renderHqMktLeadReport();
+            if(tabName==='jahresgespraeche') renderHqMktJahresgespraeche();
+            if(tabName==='handlungsbedarf') renderHqMktHandlungsbedarf();
+        }
+
+        function renderHqMktBudget() {
+            var tb=document.getElementById('hqMktBudgetTable');
+            if(!tb||tb.children.length>0) return;
+            var data=[
+                {name:'Berlin-Brandenburg',plz:'14513',st:'Aktiv',gBud:2800,gAusg:539,gHoch:-944,mBud:700,mAusg:56,mHoch:-97},
+                {name:'Garching a.d. Alz',plz:'84518',st:'Aktiv',gBud:1152,gAusg:397,gHoch:-695,mBud:288,mAusg:57,mHoch:-99},
+                {name:'Grafrath',plz:'82284',st:'Aktiv',gBud:1152,gAusg:302,gHoch:-529,mBud:280,mAusg:111,mHoch:-195},
+                {name:'Gunzenhausen',plz:'91710',st:'Aktiv',gBud:1382,gAusg:0,gHoch:0,mBud:346,mAusg:0,mHoch:0},
+                {name:'Hamburg',plz:'22761',st:'Aktiv',gBud:3072,gAusg:801,gHoch:-1500,mBud:768,mAusg:113,mHoch:-188},
+                {name:'Hann Muenden',plz:'34346',st:'Aktiv',gBud:1152,gAusg:260,gHoch:-455,mBud:280,mAusg:0,mHoch:0},
+                {name:'Holzkirchen',plz:'83607',st:'Aktiv',gBud:1536,gAusg:410,gHoch:-734,mBud:384,mAusg:111,mHoch:-194},
+                {name:'Karlsdorf-Neuthard',plz:'76689',st:'Aktiv',gBud:1042,gAusg:567,gHoch:-993,mBud:261,mAusg:113,mHoch:-198},
+                {name:'Limburg',plz:'65552',st:'Aktiv',gBud:1382,gAusg:419,gHoch:-734,mBud:346,mAusg:0,mHoch:0},
+                {name:'Muenchen TK',plz:'81379',st:'Aktiv',gBud:1200,gAusg:273,gHoch:-479,mBud:300,mAusg:22,mHoch:-38},
+                {name:'Muenster',plz:'48159',st:'Aktiv',gBud:1536,gAusg:331,gHoch:-579,mBud:384,mAusg:146,mHoch:-255},
+                {name:'Pfaffenhofen a.d. Ilm',plz:'85276',st:'Aktiv',gBud:2074,gAusg:521,gHoch:-912,mBud:518,mAusg:110,mHoch:-192},
+                {name:'Reutlingen',plz:'72793',st:'Aktiv',gBud:922,gAusg:209,gHoch:-366,mBud:230,mAusg:114,mHoch:-199},
+                {name:'Rottweil',plz:'78628',st:'Aktiv',gBud:1152,gAusg:225,gHoch:-994,mBud:288,mAusg:182,mHoch:-318},
+                {name:'Witten',plz:'58455',st:'Aktiv',gBud:2304,gAusg:513,gHoch:-887,mBud:576,mAusg:111,mHoch:-194}
+            ];
+            var h='';
+            data.forEach(function(r,i){
+                h+='<tr class="border-b'+(i%2?' bg-gray-50':'')+'"><td class="py-1.5 px-2 font-semibold">'+r.name+'<br><span class="text-gray-400">'+r.plz+'</span></td><td class="py-1.5 px-2 text-center"><span class="px-1.5 py-0.5 rounded-full text-[10px] bg-green-100 text-green-700">'+r.st+'</span></td><td class="py-1.5 px-2 text-right font-semibold text-yellow-600">'+fmt(r.gBud)+' €</td><td class="py-1.5 px-2 text-right">'+fmt(r.gAusg)+' €</td><td class="py-1.5 px-2 text-right text-red-500">'+fmt(r.gHoch)+'</td><td class="py-1.5 px-2 text-right font-semibold text-blue-600">'+fmt(r.mBud)+' €</td><td class="py-1.5 px-2 text-right">'+fmt(r.mAusg)+' €</td><td class="py-1.5 px-2 text-right text-red-500">'+fmt(r.mHoch)+'</td></tr>';
+            });
+            h+='<tr class="bg-gray-100 border-t-2 font-bold"><td class="py-2 px-2">Summe Februar</td><td></td><td class="py-2 px-2 text-right text-yellow-600">29.960 €</td><td class="py-2 px-2 text-right">8.133 €</td><td class="py-2 px-2 text-right text-red-500">-14.232 €</td><td class="py-2 px-2 text-right text-blue-600">7.490 €</td><td class="py-2 px-2 text-right">1.966 €</td><td class="py-2 px-2 text-right text-red-500">-3.441 €</td></tr>';
+            tb.innerHTML=h;
+        }
+
+        function renderHqMktLeadReport() {
+            var el=document.getElementById('hqMktLeadRanking');
+            if(!el||el.children.length>0) return;
+            var sorted=hqStandorte.slice().sort(function(a,b){return b.leads-a.leads;});
+            var h='';
+            sorted.forEach(function(s,i){
+                var perf=s.leadPerf; var pCol=perf>=80?'bg-green-500':perf>=50?'bg-yellow-500':'bg-red-500';
+                h+='<div class="flex items-center space-x-3 py-2 border-b border-gray-50"><span class="text-xs font-bold text-gray-400 w-6">#'+(i+1)+'</span><span class="text-xs w-32 truncate font-semibold">'+s.name+'</span><div class="flex-1 bg-gray-100 rounded-full h-3"><div class="h-3 rounded-full '+pCol+'" style="width:'+Math.min(100,perf)+'%"></div></div><span class="text-xs font-bold w-10 text-right">'+s.leads+'</span><span class="text-xs w-16 text-right '+perfColor(perf)+'">'+perf+'%</span><span class="text-xs w-16 text-right text-gray-400">CPT '+s.cpt+'€</span></div>';
+            });
+            el.innerHTML=h;
+        }
+
+        function renderHqMktJahresgespraeche() {
+            var el=document.getElementById('hqMktJgTable');
+            if(!el||el.children.length>0) return;
+            var data=[
+                {standort:'Grafrath',inhaber:'Sandra E.',ap:'Michael Stenzel',budget:1500,mix:'Meta+Google',crm:'✅',status:'done'},
+                {standort:'Holzkirchen',inhaber:'Dirk Kolditz',ap:'Michael Stenzel',budget:2000,mix:'Meta+Google+Events',crm:'✅',status:'done'},
+                {standort:'Hamburg',inhaber:'Thorsten B.',ap:'Michael Stenzel',budget:3072,mix:'Meta+Google',crm:'✅',status:'done'},
+                {standort:'Muenster',inhaber:'Wolfgang P.',ap:'Michael Stenzel',budget:1536,mix:'Meta+Google',crm:'—',status:'done'},
+                {standort:'Witten',inhaber:'Monique S.',ap:'Michael Stenzel',budget:2304,mix:'Meta+Google',crm:'✅',status:'done'},
+                {standort:'Pfaffenhofen',inhaber:'Sabrina H.',ap:'Michael Stenzel',budget:2074,mix:'Meta+Google',crm:'✅',status:'done'},
+                {standort:'Berlin-Brandenb.',inhaber:'Sven T.',ap:'Michael Stenzel',budget:2800,mix:'Meta+Google',crm:'—',status:'done'},
+                {standort:'Kalkar',inhaber:'—',ap:'Michael Stenzel',budget:0,mix:'—',crm:'—',status:'missing'},
+                {standort:'Wesel',inhaber:'—',ap:'Michael Stenzel',budget:0,mix:'—',crm:'—',status:'missing'},
+                {standort:'Zell',inhaber:'—',ap:'Michael Stenzel',budget:0,mix:'—',crm:'—',status:'missing'}
+            ];
+            var h='';
+            data.forEach(function(r,i){
+                var sc={done:'bg-green-100 text-green-700',partial:'bg-yellow-100 text-yellow-700',missing:'bg-red-100 text-red-700'};
+                var sl={done:'✅ Vereinbart',partial:'🔶 In Abstimmung',missing:'❌ Ausstehend'};
+                h+='<tr class="border-b'+(i%2?' bg-gray-50':'')+'"><td class="py-1.5 px-2 font-semibold">'+r.standort+'</td><td class="py-1.5 px-2">'+r.inhaber+'</td><td class="py-1.5 px-2">'+r.ap+'</td><td class="py-1.5 px-2 text-right font-semibold">'+(r.budget?fmt(r.budget)+' €':'—')+'</td><td class="py-1.5 px-2">'+r.mix+'</td><td class="py-1.5 px-2 text-center">'+r.crm+'</td><td class="py-1.5 px-2 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold '+(sc[r.status]||sc.missing)+'">'+(sl[r.status]||'?')+'</span></td></tr>';
+            });
+            el.innerHTML=h;
+        }
+
+        function renderHqMktHandlungsbedarf() {
+            var el=document.getElementById('hqMktAlertsFull');
+            if(!el||el.children.length>0) return;
+            var alerts=[];
+            hqStandorte.forEach(function(s){
+                if(s.leadPerf<30) alerts.push({prio:'kritisch',icon:'🔴',title:s.name+' – Nur '+s.leadPerf+'% Lead-Performance',desc:'Budget: '+s.budget+' €/Mo · '+s.leads+' Leads · CPT: '+s.cpt+' € · Dringend Gespraech fuehren',color:'bg-red-50 border-red-200'});
+                else if(s.leadPerf<50) alerts.push({prio:'warnung',icon:'🟡',title:s.name+' – '+s.leadPerf+'% Lead-Performance',desc:'Unter Ziel. Budget-Optimierung pruefen. CPT: '+s.cpt+' €',color:'bg-yellow-50 border-yellow-200'});
+                if(s.strategieStatus==='missing') alerts.push({prio:'kritisch',icon:'📋',title:s.name+' – Keine Marketing-Strategie vereinbart',desc:'Jahresgespraech muss noch terminiert werden',color:'bg-red-50 border-red-200'});
+            });
+            alerts.push({prio:'info',icon:'💰',title:'3 Standorte über Budget im Februar',desc:'Grafrath (+224€), Rottweil (+318€), Lohmar (+342€) – Channel-Split prüfen',color:'bg-blue-50 border-blue-200'});
+            alerts.push({prio:'info',icon:'🎬',title:'13 Standorte ohne Local Hero Video',desc:'Social-Media-Aktivierung pushen. Naechster Content-Drop: KW 9',color:'bg-blue-50 border-blue-200'});
+            var h='';
+            alerts.sort(function(a,b){var p={kritisch:0,warnung:1,info:2};return (p[a.prio]||9)-(p[b.prio]||9);});
+            alerts.forEach(function(a){
+                h+='<div class="p-4 rounded-lg border '+a.color+'"><div class="flex items-start space-x-3"><span class="text-lg">'+a.icon+'</span><div><p class="text-sm font-semibold text-gray-800">'+a.title+'</p><p class="text-xs text-gray-500 mt-1">'+a.desc+'</p></div></div></div>';
+            });
+            el.innerHTML=h||'<p class="text-sm text-green-600">✅ Keine offenen Punkte</p>';
+            var krit=alerts.filter(function(a){return a.prio==='kritisch';}).length;
+            var warn=alerts.filter(function(a){return a.prio==='warnung';}).length;
+            var info=alerts.filter(function(a){return a.prio==='info';}).length;
+            var ok=hqStandorte.length-krit-warn;
+            var setVal=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
+            setVal('hqMktAlertKrit',krit); setVal('hqMktAlertWarn',warn); setVal('hqMktAlertInfo',info); setVal('hqMktAlertOk',Math.max(0,ok));
+        }
+
+        function renderMktSpendingChart() {
+            var el=document.getElementById('mktSpendingChart');
+            if(!el||el.children.length>0) return;
+            var days=[{d:'01',g:42,m:10},{d:'02',g:38,m:9},{d:'03',g:45,m:11},{d:'04',g:51,m:12},{d:'05',g:48,m:10},{d:'06',g:55,m:13},{d:'07',g:60,m:14},{d:'08',g:43,m:10},{d:'09',g:52,m:12},{d:'10',g:47,m:11},{d:'11',g:58,m:13},{d:'12',g:62,m:15},{d:'13',g:50,m:12},{d:'14',g:45,m:10},{d:'15',g:0,m:0},{d:'16',g:0,m:0}];
+            var max=80;var h='';
+            days.forEach(function(d){
+                var gH=Math.round((d.g/max)*100);var mH=Math.round((d.m/max)*100);
+                h+='<div class="flex-1 flex flex-col items-center justify-end space-y-0.5"><div class="w-full bg-yellow-400 rounded-t" style="height:'+gH+'%"></div><div class="w-full bg-blue-400 rounded-t" style="height:'+mH+'%"></div><span class="text-[8px] text-gray-400">'+d.d+'</span></div>';
+            });
+            el.innerHTML=h;
+        }
+
+        function renderMktLeadChart() {
+            var el=document.getElementById('mktLeadChart');
+            if(!el||el.children.length>0) return;
+            var months=[{m:'Jan',ist:5,soll:4},{m:'Feb',ist:4,soll:9},{m:'Mrz',ist:0,soll:11},{m:'Apr',ist:0,soll:12},{m:'Mai',ist:0,soll:13},{m:'Jun',ist:0,soll:12},{m:'Jul',ist:0,soll:12},{m:'Aug',ist:0,soll:11},{m:'Sep',ist:0,soll:10},{m:'Okt',ist:0,soll:7},{m:'Nov',ist:0,soll:5},{m:'Dez',ist:0,soll:3}];
+            var max=15;var h='';
+            months.forEach(function(d){
+                var iH=Math.round((d.ist/max)*100);var sH=Math.round((d.soll/max)*100);
+                h+='<div class="flex-1 flex flex-col items-center justify-end space-x-0"><div class="flex space-x-0.5 w-full items-end" style="height:100%"><div class="flex-1 bg-vit-orange rounded-t transition-all" style="height:'+iH+'%"></div><div class="flex-1 bg-gray-200 rounded-t" style="height:'+sH+'%"></div></div><span class="text-[8px] text-gray-400 mt-1">'+d.m+'</span></div>';
+            });
+            el.innerHTML=h;
+        }
         function renderHqEinkauf() {
             var totalVO = hqStandorte.reduce(function(a,s){return a+s.vororderBikes;},0);
             var voDone = hqStandorte.filter(function(s){return s.vororderStatus==='done';}).length;
@@ -11201,7 +11666,7 @@
             if(v==='hqCockpit') renderHqCockpit();
             if(v==='hqStandorte') renderHqStandorte();
             if(v==='hqFinanzen') renderHqFinanzen();
-            if(v==='hqMarketing') renderHqMarketing();
+            if(v==='hqMarketing') { renderHqMarketing(); showHqMktTab('uebersicht'); }
             if(v==='hqEinkauf') renderHqEinkauf();
             if(v==='hqVerkauf') renderHqVerkauf();
             if(v==='hqAktionen') renderHqAktionen();
