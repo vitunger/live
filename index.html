@@ -8607,13 +8607,47 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
             var isPdf = file.name.match(/\.pdf$/i);
             if(isPdf) {
-                statusEl.querySelector('.animate-spin').style.display = 'none';
-                statusText.textContent = 'ℹ️ PDF erkannt – bitte Werte manuell eingeben';
-                resultEl.innerHTML = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-700">'
-                    + '<p class="font-semibold mb-1">PDF-Erkennung kommt bald</p>'
-                    + '<p>Aktuell werden nur Excel-Dateien (.xlsx/.xls/.csv) automatisch ausgelesen.</p></div>';
-                resultEl.classList.remove('hidden');
-                if(parseBtn) parseBtn.disabled = false;
+                // PDF → KI-Analyse via Edge Function
+                statusText.textContent = '🤖 PDF wird mit KI analysiert...';
+                try {
+                    var reader = new FileReader();
+                    reader.onload = async function(e) {
+                        try {
+                            var base64 = e.target.result.split(',')[1];
+                            var session = await sb.auth.getSession();
+                            var token = session?.data?.session?.access_token;
+                            var resp = await fetch(SUPABASE_URL + '/functions/v1/analyze-finance', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (token||''), 'apikey': SUPABASE_ANON_KEY },
+                                body: JSON.stringify({ type: 'bwa', file_base64: base64, media_type: 'application/pdf' })
+                            });
+                            if(!resp.ok) throw new Error('API Fehler ' + resp.status);
+                            var data = await resp.json();
+                            var result = data.result;
+                            if(result && result.werte) {
+                                // Fill form fields from KI result
+                                bwaApplyKiResult(result);
+                                statusEl.querySelector('.animate-spin').style.display = 'none';
+                                statusText.textContent = '✅ KI-Analyse abgeschlossen' + (result.confidence ? ' (Konfidenz: ' + Math.round(result.confidence * 100) + '%)' : '');
+                                if(result.hinweise && result.hinweise.length > 0) {
+                                    resultEl.innerHTML = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-700"><p class="font-semibold mb-1">KI-Hinweise:</p><ul class="list-disc pl-4">' + result.hinweise.map(function(h){return '<li>'+escH(h)+'</li>';}).join('') + '</ul></div>';
+                                    resultEl.classList.remove('hidden');
+                                }
+                            } else {
+                                throw new Error('Keine Werte erkannt');
+                            }
+                        } catch(err2) {
+                            statusEl.querySelector('.animate-spin').style.display = 'none';
+                            statusText.textContent = '❌ KI-Analyse fehlgeschlagen: ' + (err2.message||err2);
+                        }
+                        if(parseBtn) parseBtn.disabled = false;
+                    };
+                    reader.readAsDataURL(file);
+                } catch(pdfErr) {
+                    statusEl.querySelector('.animate-spin').style.display = 'none';
+                    statusText.textContent = '❌ Fehler: ' + (pdfErr.message||pdfErr);
+                    if(parseBtn) parseBtn.disabled = false;
+                }
                 return;
             }
 
@@ -8653,20 +8687,47 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 }
                 return bwaRows;
             }
-            BwaParser.parseFile(file, function(err, result) {
-                if(!err && result && result.bwa_daten) {
-                    result.bwa_daten = fixDatevSigns(result.bwa_daten);
-                }
+            BwaParser.parseFile(file, async function(err, result) {
                 if(!err && result && result.bwa_daten) {
                     result.bwa_daten = fixDatevSigns(result.bwa_daten);
                 }
                 if(err) {
-                    statusEl.querySelector('.animate-spin').style.display = 'none';
-                    statusText.textContent = '❌ Fehler: ' + (err.message||'Unbekannt');
-                    resultEl.innerHTML = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-700">'
-                        + '<p class="font-semibold mb-1">Automatische Erkennung fehlgeschlagen</p>'
-                        + '<p>Bitte die Werte manuell eingeben.</p></div>';
-                    resultEl.classList.remove('hidden');
+                    // KI-Fallback: Excel-Text extrahieren und an KI senden
+                    statusText.textContent = '🤖 Parser fehlgeschlagen – KI-Analyse wird gestartet...';
+                    try {
+                        var arrayBuf = await file.arrayBuffer();
+                        var wb = XLSX.read(arrayBuf, { type: 'array' });
+                        var rawText = '';
+                        wb.SheetNames.forEach(function(sn) {
+                            var rows = XLSX.utils.sheet_to_csv(wb.Sheets[sn], {FS:';'});
+                            rawText += '=== Sheet: ' + sn + ' ===\n' + rows + '\n\n';
+                        });
+                        var session = await sb.auth.getSession();
+                        var token = session?.data?.session?.access_token;
+                        var resp = await fetch(SUPABASE_URL + '/functions/v1/analyze-finance', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (token||''), 'apikey': SUPABASE_ANON_KEY },
+                            body: JSON.stringify({ type: 'bwa', raw_text: rawText.substring(0, 15000) })
+                        });
+                        if(!resp.ok) throw new Error('KI-API Fehler ' + resp.status);
+                        var data = await resp.json();
+                        if(data.result && data.result.werte) {
+                            bwaApplyKiResult(data.result);
+                            statusEl.querySelector('.animate-spin').style.display = 'none';
+                            statusText.textContent = '✅ KI-Analyse abgeschlossen' + (data.result.confidence ? ' (Konfidenz: ' + Math.round(data.result.confidence * 100) + '%)' : '');
+                            if(data.result.hinweise && data.result.hinweise.length > 0) {
+                                resultEl.innerHTML = '<div class="bg-purple-50 border border-purple-200 rounded-lg p-3 text-xs text-purple-700"><p class="font-semibold mb-1">🤖 KI-Hinweise:</p><ul class="list-disc pl-4">' + data.result.hinweise.map(function(h){return '<li>'+escH(h)+'</li>';}).join('') + '</ul><p class="mt-2 text-[10px] text-purple-400">Bitte Werte vor dem Speichern kontrollieren.</p></div>';
+                                resultEl.classList.remove('hidden');
+                            }
+                        } else { throw new Error('Keine Werte erkannt'); }
+                    } catch(kiFallbackErr) {
+                        statusEl.querySelector('.animate-spin').style.display = 'none';
+                        statusText.textContent = '❌ Auch KI-Analyse fehlgeschlagen: ' + (kiFallbackErr.message||'Unbekannt');
+                        resultEl.innerHTML = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-700">'
+                            + '<p class="font-semibold mb-1">Automatische Erkennung fehlgeschlagen</p>'
+                            + '<p>Bitte die Werte manuell eingeben.</p></div>';
+                        resultEl.classList.remove('hidden');
+                    }
                     if(parseBtn) parseBtn.disabled = false;
                     return;
                 }
@@ -8806,11 +8867,33 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 statusEl.querySelector('.animate-spin').style.display = 'none';
 
                 if(matchedRows.length === 0) {
-                    statusText.textContent = '⚠️ Keine BWA-Felder erkannt (Format: ' + meta.format + ')';
-                    resultEl.innerHTML = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-700">'
-                        + '<p class="font-semibold mb-1">Format erkannt: <code>' + meta.format + '</code></p>'
-                        + '<p>Aber keine Werte konnten zugeordnet werden. Bitte manuell eingeben.</p></div>';
-                    resultEl.classList.remove('hidden');
+                    // KI-Fallback: Format erkannt aber keine Zuordnung möglich
+                    statusText.textContent = '🤖 Format "' + meta.format + '" nicht zuordbar – KI-Analyse läuft...';
+                    try {
+                        var arrayBuf2 = await file.arrayBuffer();
+                        var wb2 = XLSX.read(arrayBuf2, { type: 'array' });
+                        var rawText2 = '';
+                        wb2.SheetNames.forEach(function(sn2) {
+                            rawText2 += '=== Sheet: ' + sn2 + ' ===\n' + XLSX.utils.sheet_to_csv(wb2.Sheets[sn2], {FS:';'}) + '\n\n';
+                        });
+                        var kiResult = await callFinanceKi('bwa', null, null, rawText2.substring(0, 15000), {jahr: meta.jahr, monat: meta.monat, format: meta.format});
+                        if(kiResult && kiResult.werte) {
+                            bwaApplyKiResult(kiResult);
+                            statusEl.querySelector('.animate-spin').style.display = 'none';
+                            statusText.textContent = '✅ KI-Analyse abgeschlossen' + (kiResult.confidence ? ' (Konfidenz: ' + Math.round(kiResult.confidence * 100) + '%)' : '') + ' [' + meta.format + ' → KI]';
+                            if(kiResult.hinweise && kiResult.hinweise.length > 0) {
+                                resultEl.innerHTML = '<div class="bg-purple-50 border border-purple-200 rounded-lg p-3 text-xs text-purple-700"><p class="font-semibold mb-1">🤖 KI-Hinweise:</p><ul class="list-disc pl-4">' + kiResult.hinweise.map(function(h){return '<li>'+escH(h)+'</li>';}).join('') + '</ul><p class="mt-2 text-[10px] text-purple-400">Bitte Werte vor dem Speichern kontrollieren.</p></div>';
+                                resultEl.classList.remove('hidden');
+                            }
+                        } else { throw new Error('Keine Werte erkannt'); }
+                    } catch(kiErr2) {
+                        statusEl.querySelector('.animate-spin').style.display = 'none';
+                        statusText.textContent = '⚠️ Auch KI konnte keine Werte zuordnen (Format: ' + meta.format + ')';
+                        resultEl.innerHTML = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-700">'
+                            + '<p class="font-semibold mb-1">Automatische Erkennung fehlgeschlagen</p>'
+                            + '<p>Bitte die Werte manuell eingeben.</p></div>';
+                        resultEl.classList.remove('hidden');
+                    }
                     if(parseBtn) parseBtn.disabled = false;
                     return;
                 }
@@ -8876,6 +8959,45 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 
                 if(parseBtn) parseBtn.disabled = false;
             });
+        }
+
+        // Apply KI analysis result to BWA form fields
+        function bwaApplyKiResult(result) {
+            if(!result) return;
+            var meta = result.meta || {};
+            var werte = result.werte || {};
+            // Apply month/year
+            if(meta.monat) {
+                var mSel = document.getElementById('bwaMonth');
+                if(mSel) { mSel.value = meta.monat; mSel.style.borderColor = '#a855f7'; mSel.style.backgroundColor = '#faf5ff'; }
+            }
+            if(meta.jahr) {
+                var ySel = document.getElementById('bwaYear');
+                if(ySel) { ySel.value = meta.jahr; ySel.style.borderColor = '#a855f7'; ySel.style.backgroundColor = '#faf5ff'; }
+            }
+            // Map KI werte to form fields (bwaF_ IDs)
+            var fieldMap = {
+                umsatzerloese:'bwaF_umsatz', wareneinsatz:'bwaF_wareneinsatz',
+                personalkosten:'bwaF_personal', raumkosten:'bwaF_raum',
+                werbekosten:'bwaF_werbe', kosten_warenabgabe:'bwaF_warenabgabe',
+                abschreibungen:'bwaF_abschreibung', sonstige_kosten:'bwaF_sonstige',
+                zinsaufwand:'bwaF_zins',
+                davon_fahrraeder:'bwaF_fahrraeder', davon_teile:'bwaF_teile',
+                davon_service:'bwaF_service', davon_skonti:'bwaF_skonti'
+            };
+            var filled = 0;
+            Object.keys(werte).forEach(function(key) {
+                var elId = fieldMap[key];
+                if(!elId) return;
+                var el = document.getElementById(elId);
+                if(el && werte[key] !== null && werte[key] !== undefined) {
+                    el.value = Math.round(werte[key] * 100) / 100;
+                    el.style.borderColor = '#a855f7';
+                    el.style.backgroundColor = '#faf5ff';
+                    filled++;
+                }
+            });
+            console.log('[BWA KI] ' + filled + ' Felder befüllt, Konfidenz: ' + (result.confidence||'?'));
         }
 
         function closeBwaUploadModal() { var c = document.getElementById('bwaUploadContainer'); if(c) c.remove(); }
@@ -9041,8 +9163,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             h += '<div class="vit-card p-6 text-left">';
             h += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Schritt 1: Plan-Datei hochladen</p>';
             h += '<div class="p-4 border-2 border-dashed border-vit-orange/40 rounded-lg bg-orange-50/50 mb-4">';
-            h += '<p class="text-xs text-gray-500 mb-2">Erwartetes Format: Excel mit Monatszeilen und Spalten für Umsatz, Wareneinsatz, Personalkosten, etc.</p>';
-            h += '<input type="file" id="planFileInput" accept=".xlsx,.xls,.csv" class="text-xs" onchange="document.getElementById(\'planParseBtn\').disabled=!this.files.length">';
+            h += '<p class="text-xs text-gray-500 mb-2">Erwartetes Format: Excel oder PDF mit Monatszeilen und Spalten für Umsatz, Wareneinsatz, Personalkosten, etc.</p>';
+            h += '<input type="file" id="planFileInput" accept=".xlsx,.xls,.csv,.pdf" class="text-xs" onchange="document.getElementById(\'planParseBtn\').disabled=!this.files.length">';
             h += '</div>';
             h += '<button id="planParseBtn" onclick="parsePlanFile()" disabled class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed mb-3">📊 Plan auslesen & speichern</button>';
             h += '<div id="planParseStatus" class="hidden"></div>';
@@ -9073,12 +9195,49 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var statusEl = document.getElementById('planParseStatus');
             var resultEl = document.getElementById('planParseResult');
             statusEl.classList.remove('hidden');
+
+            var isPdf = file.name.match(/\.pdf$/i);
+
+            // PDF → direkt KI-Analyse
+            if(isPdf) {
+                statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">🤖 PDF wird mit KI analysiert...</span></div>';
+                try {
+                    var reader = new FileReader();
+                    reader.onload = async function(e) {
+                        try {
+                            var base64 = e.target.result.split(',')[1];
+                            var kiResult = await callFinanceKi('jahresplan', base64, 'application/pdf', null, {jahr: planIstYear});
+                            applyPlanKiResult(kiResult, statusEl, resultEl);
+                        } catch(err) {
+                            statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ KI-Analyse fehlgeschlagen: ' + escH(err.message||'Unbekannt') + '</p>';
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                } catch(pdfErr) {
+                    statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Fehler: ' + escH(pdfErr.message||pdfErr) + '</p>';
+                }
+                return;
+            }
+
             statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">Excel wird analysiert...</span></div>';
 
             // Try BwaParser first for structured Planung files
             BwaParser.parseFile(file, async function(err, result) {
                 if(err) {
-                    statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Fehler: '+(err.message||err)+'</p>';
+                    // KI-Fallback bei Parse-Fehler
+                    statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">🤖 Parser fehlgeschlagen – KI-Analyse...</span></div>';
+                    try {
+                        var arrayBuf = await file.arrayBuffer();
+                        var wb = XLSX.read(arrayBuf, { type: 'array' });
+                        var rawText = '';
+                        wb.SheetNames.forEach(function(sn) {
+                            rawText += '=== Sheet: ' + sn + ' ===\n' + XLSX.utils.sheet_to_csv(wb.Sheets[sn], {FS:';'}) + '\n\n';
+                        });
+                        var kiResult = await callFinanceKi('jahresplan', null, null, rawText.substring(0, 15000), {jahr: planIstYear});
+                        applyPlanKiResult(kiResult, statusEl, resultEl);
+                    } catch(kiErr) {
+                        statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Auch KI-Analyse fehlgeschlagen: ' + escH(kiErr.message||kiErr) + '</p>';
+                    }
                     return;
                 }
 
@@ -9163,6 +9322,71 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 // Store for saving
                 window._parsedPlanMonths = planMonths;
             });
+        }
+
+        // Shared KI-Finance helper
+        async function callFinanceKi(type, fileBase64, mediaType, rawText, meta) {
+            var session = await sb.auth.getSession();
+            var token = session?.data?.session?.access_token;
+            var payload = { type: type };
+            if(fileBase64) { payload.file_base64 = fileBase64; payload.media_type = mediaType || 'application/pdf'; }
+            if(rawText) { payload.raw_text = rawText; }
+            if(meta) { payload.meta = meta; }
+            var resp = await fetch(SUPABASE_URL + '/functions/v1/analyze-finance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (token||''), 'apikey': SUPABASE_ANON_KEY },
+                body: JSON.stringify(payload)
+            });
+            if(!resp.ok) throw new Error('KI-API Fehler ' + resp.status);
+            var data = await resp.json();
+            if(!data.result) throw new Error('Keine Ergebnisse');
+            return data.result;
+        }
+
+        // Apply KI Jahresplan result to the plan preview
+        function applyPlanKiResult(result, statusEl, resultEl) {
+            if(!result || !result.monate) throw new Error('Keine Monatsdaten erkannt');
+            var planMonths = {};
+            Object.keys(result.monate).forEach(function(m) {
+                var md = result.monate[m];
+                if(!md) return;
+                var monat = parseInt(m);
+                planMonths[monat] = {
+                    monat: monat,
+                    umsatz: md.umsatz || 0,
+                    wareneinsatz: md.wareneinsatz || 0,
+                    personalkosten: md.personalkosten || 0,
+                    raumkosten: md.raumkosten || 0,
+                    rohertrag: (md.umsatz||0) + (md.wareneinsatz||0),
+                    ergebnis: (md.umsatz||0) + (md.wareneinsatz||0) + (md.personalkosten||0) + (md.raumkosten||0)
+                };
+            });
+            var count = Object.keys(planMonths).length;
+            if(count < 1) throw new Error('Keine Monatsdaten erkannt');
+
+            statusEl.innerHTML = '<p class="text-xs text-green-600 mt-2">✅ KI-Analyse: ' + count + ' Monate erkannt' + (result.confidence ? ' (Konfidenz: ' + Math.round(result.confidence * 100) + '%)' : '') + '</p>';
+
+            // Show preview (same format as normal parser)
+            var mLabels = ['','Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+            var ph = '<div class="bg-purple-50 border border-purple-200 rounded-lg p-3 mt-3">';
+            ph += '<p class="text-xs font-semibold text-purple-700 mb-2">🤖 KI-erkannte Plan-Werte:</p>';
+            ph += '<div class="grid grid-cols-6 gap-1 text-[10px]">';
+            for(var mm=1;mm<=12;mm++) {
+                var pd = planMonths[mm];
+                ph += '<div class="text-center p-1 '+(pd?'bg-white rounded':'text-gray-300')+'"><div class="font-semibold">'+mLabels[mm]+'</div>';
+                ph += '<div>'+(pd ? Math.round(pd.umsatz).toLocaleString('de-DE') : '—')+'</div></div>';
+            }
+            ph += '</div>';
+            if(result.hinweise && result.hinweise.length > 0) {
+                ph += '<div class="mt-2 text-[10px] text-purple-600">' + result.hinweise.map(function(h){return '⚠️ '+escH(h);}).join('<br>') + '</div>';
+            }
+            ph += '<p class="mt-2 text-[10px] text-purple-400">Bitte Werte vor dem Speichern kontrollieren.</p>';
+            ph += '<button onclick="saveParsedPlan()" class="w-full mt-3 py-2 bg-green-600 text-white rounded-lg text-xs font-semibold hover:opacity-90">✅ Plan für '+planIstYear+' speichern</button>';
+            ph += '</div>';
+            resultEl.innerHTML = ph;
+            resultEl.classList.remove('hidden');
+
+            window._parsedPlanMonths = planMonths;
         }
 
         async function saveParsedPlan() {
