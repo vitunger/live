@@ -910,25 +910,17 @@
                         <div class="dashboard-widget vit-card p-6" data-widget="pipeline">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="font-semibold text-gray-800">📈 Meine Pipeline</h3>
-                                <button class="widget-remove hidden text-gray-400 hover:text-red-500">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                </button>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs text-gray-400" id="wPipelineBadge"></span>
+                                    <button class="widget-remove hidden text-gray-400 hover:text-red-500">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm text-gray-600">Offene Leads</span>
-                                    <span class="font-bold text-blue-600">23</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm text-gray-600">Heute Termine</span>
-                                    <span class="font-bold text-purple-600">8</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm text-gray-600">Angebote offen</span>
-                                    <span class="font-bold text-orange-600">5</span>
-                                </div>
+                            <div id="wPipelineContent">
+                                <div class="space-y-2 animate-pulse"><div class="h-3 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div><div class="h-3 bg-gray-200 rounded w-2/3"></div></div>
                             </div>
                             <button onclick="showView('verkauf')" class="mt-4 w-full text-sm text-vit-orange hover:text-orange-600 font-semibold">
                                 → Zur Pipeline
@@ -938,83 +930,60 @@
                         <!-- Widget 2: Verkaufserfolg KW -->
                         <div class="dashboard-widget vit-card p-6" data-widget="success">
                             <div class="flex items-center justify-between mb-4">
-                                <h3 class="font-semibold text-gray-800">💰 Verkaufserfolg KW 7</h3>
-                                <button class="widget-remove hidden text-gray-400 hover:text-red-500">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                </button>
-                            </div>
-                            <div class="mb-3">
-                                <div class="flex items-center justify-between mb-1">
-                                    <span class="text-sm text-gray-600">Verkaufsquote</span>
-                                    <span class="text-2xl font-bold text-green-600">42%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-green-500 h-2 rounded-full" style="width: 42%"></div>
+                                <h3 class="font-semibold text-gray-800">💰 Verkaufserfolg</h3>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700" id="wSuccessKW"></span>
+                                    <button class="widget-remove hidden text-gray-400 hover:text-red-500">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 gap-2 text-sm">
-                                <div>
-                                    <p class="text-gray-500">Verkäufe</p>
-                                    <p class="font-bold text-gray-800">5</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-500">Beratungen</p>
-                                    <p class="font-bold text-gray-800">12</p>
-                                </div>
+                            <div id="wSuccessContent">
+                                <div class="space-y-2 animate-pulse"><div class="h-3 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div><div class="h-3 bg-gray-200 rounded w-2/3"></div></div>
                             </div>
+                            <button onclick="showView('verkauf')" class="mt-4 w-full text-sm text-vit-orange hover:text-orange-600 font-semibold">
+                                → Zum Verkauf
+                            </button>
                         </div>
 
                         <!-- Widget 3: Termine Heute -->
                         <div class="dashboard-widget vit-card p-6" data-widget="termine">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="font-semibold text-gray-800">📅 Termine Heute</h3>
-                                <button class="widget-remove hidden text-gray-400 hover:text-red-500">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                </button>
-                            </div>
-                            <div class="space-y-3">
-                                <div class="p-3 bg-blue-50 rounded-lg">
-                                    <p class="text-sm font-semibold text-gray-800">10:00 - Familie Schmidt</p>
-                                    <p class="text-xs text-gray-600">E-Bike Beratung</p>
-                                </div>
-                                <div class="p-3 bg-purple-50 rounded-lg">
-                                    <p class="text-sm font-semibold text-gray-800">14:30 - Herr Müller</p>
-                                    <p class="text-xs text-gray-600">Probefahrt Lastenrad</p>
-                                </div>
-                                <div class="p-3 bg-green-50 rounded-lg">
-                                    <p class="text-sm font-semibold text-gray-800">16:00 - Frau Weber</p>
-                                    <p class="text-xs text-gray-600">Abholung</p>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700" id="wTermineCount"></span>
+                                    <button class="widget-remove hidden text-gray-400 hover:text-red-500">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
+                            <div id="wTermineContent">
+                                <div class="space-y-2 animate-pulse"><div class="h-3 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div><div class="h-3 bg-gray-200 rounded w-2/3"></div></div>
+                            </div>
+                            <button onclick="showView('kalender')" class="mt-4 w-full text-sm text-vit-orange hover:text-orange-600 font-semibold">
+                                → Zum Kalender
+                            </button>
                         </div>
 
                         <!-- Widget 4: Offene Aufgaben -->
                         <div class="dashboard-widget vit-card p-6" data-widget="aufgaben">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="font-semibold text-gray-800">✅ Offene Aufgaben</h3>
-                                <button class="widget-remove hidden text-gray-400 hover:text-red-500">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                </button>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700" id="wAufgabenCount"></span>
+                                    <button class="widget-remove hidden text-gray-400 hover:text-red-500">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="space-y-2">
-                                <div class="flex items-center space-x-2">
-                                    <input type="checkbox" class="rounded border-gray-300">
-                                    <span class="text-sm text-gray-700">Google My Business optimieren</span>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <input type="checkbox" class="rounded border-gray-300">
-                                    <span class="text-sm text-gray-700">Angebot Herr Schmidt nachfassen</span>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <input type="checkbox" class="rounded border-gray-300">
-                                    <span class="text-sm text-gray-700">Onboarding-Schulung abschließen</span>
-                                </div>
+                            <div id="wAufgabenContent">
+                                <div class="space-y-2 animate-pulse"><div class="h-3 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div><div class="h-3 bg-gray-200 rounded w-2/3"></div></div>
                             </div>
                             <button onclick="showView('onboarding')" class="mt-4 w-full text-sm text-vit-orange hover:text-orange-600 font-semibold">
                                 → Alle Aufgaben
@@ -1025,121 +994,79 @@
                         <div class="dashboard-widget vit-card p-6" data-widget="marketing">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="font-semibold text-gray-800">📊 Marketing Performance</h3>
-                                <button class="widget-remove hidden text-gray-400 hover:text-red-500">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                </button>
+                                <div class="flex items-center space-x-2">
+                                    <button class="widget-remove hidden text-gray-400 hover:text-red-500">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="grid grid-cols-2 gap-3 mb-3">
-                                <div class="p-2 bg-gray-50 rounded-lg text-center"><p class="text-[10px] text-gray-400">Kosten MTD</p><p class="text-sm font-bold text-gray-800">1.724 €</p><p class="text-[10px] text-red-500">↓ -2.5%</p></div>
-                                <div class="p-2 bg-gray-50 rounded-lg text-center"><p class="text-[10px] text-gray-400">Leads MTD</p><p class="text-sm font-bold text-vit-orange">4</p><p class="text-[10px] text-gray-400">CPT: 431 €</p></div>
-                                <div class="p-2 bg-gray-50 rounded-lg text-center"><p class="text-[10px] text-gray-400">Store Visits</p><p class="text-sm font-bold text-green-600">65</p><p class="text-[10px] text-green-600">↑ 69.8%</p></div>
-                                <div class="p-2 bg-gray-50 rounded-lg text-center"><p class="text-[10px] text-gray-400">Budget</p><p class="text-sm font-bold text-gray-800">1.500 €</p><div class="mt-1 bg-gray-200 rounded-full h-1.5"><div class="bg-vit-orange h-1.5 rounded-full" style="width:100%"></div></div></div>
+                            <div id="wMarketingContent">
+                                <div class="space-y-2 animate-pulse"><div class="h-3 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div><div class="h-3 bg-gray-200 rounded w-2/3"></div></div>
                             </div>
-                            <div class="flex space-x-2">
-                                <button onclick="showView('marketing')" class="flex-1 text-xs text-vit-orange hover:text-orange-600 font-semibold">→ Performance</button>
-                                <button onclick="showView('marketing'); showMarketingTab('budget')" class="flex-1 text-xs text-blue-600 hover:text-blue-700 font-semibold">→ Budget</button>
-                            </div>
+                            <button onclick="showView('marketing')" class="mt-4 w-full text-sm text-vit-orange hover:text-orange-600 font-semibold">
+                                → Marketing öffnen
+                            </button>
                         </div>
 
                         <!-- Widget 6: Team Performance -->
                         <div class="dashboard-widget vit-card p-6" data-widget="team">
                             <div class="flex items-center justify-between mb-4">
-                                <h3 class="font-semibold text-gray-800">🏆 Top Verkäufer</h3>
-                                <button class="widget-remove hidden text-gray-400 hover:text-red-500">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                </button>
-                            </div>
-                            <div class="space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-2xl">🥇</span>
-                                        <span class="text-sm font-semibold text-gray-800">Sarah</span>
-                                    </div>
-                                    <span class="text-sm text-gray-600">12 Verkäufe</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-2xl">🥈</span>
-                                        <span class="text-sm font-semibold text-gray-800">Michael</span>
-                                    </div>
-                                    <span class="text-sm text-gray-600">10 Verkäufe</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-2xl">🥉</span>
-                                        <span class="text-sm font-semibold text-gray-800">Benny</span>
-                                    </div>
-                                    <span class="text-sm text-gray-600">8 Verkäufe</span>
+                                <h3 class="font-semibold text-gray-800">👥 Team-Übersicht</h3>
+                                <div class="flex items-center space-x-2">
+                                    <button class="widget-remove hidden text-gray-400 hover:text-red-500">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
+                            <div id="wTeamContent">
+                                <div class="space-y-2 animate-pulse"><div class="h-3 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div><div class="h-3 bg-gray-200 rounded w-2/3"></div></div>
+                            </div>
+                            <button onclick="showView('mitarbeiter')" class="mt-4 w-full text-sm text-vit-orange hover:text-orange-600 font-semibold">
+                                → Mitarbeiter
+                            </button>
                         </div>
 
                         <!-- Widget 7: Controlling -->
                         <div class="dashboard-widget vit-card p-6" data-widget="controlling">
                             <div class="flex items-center justify-between mb-4">
-                                <h3 class="font-semibold text-gray-800">📊 Budget-Status</h3>
-                                <button class="widget-remove hidden text-gray-400 hover:text-red-500">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                </button>
-                            </div>
-                            <div class="space-y-3">
-                                <div>
-                                    <div class="flex justify-between mb-1">
-                                        <span class="text-sm text-gray-600">Marketing</span>
-                                        <span class="text-sm font-semibold">75%</span>
-                                    </div>
-                                    <div class="w-full bg-gray-200 rounded-full h-2">
-                                        <div class="bg-blue-500 h-2 rounded-full" style="width: 75%"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="flex justify-between mb-1">
-                                        <span class="text-sm text-gray-600">Personal</span>
-                                        <span class="text-sm font-semibold">92%</span>
-                                    </div>
-                                    <div class="w-full bg-gray-200 rounded-full h-2">
-                                        <div class="bg-orange-500 h-2 rounded-full" style="width: 92%"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="flex justify-between mb-1">
-                                        <span class="text-sm text-gray-600">Lager</span>
-                                        <span class="text-sm font-semibold">58%</span>
-                                    </div>
-                                    <div class="w-full bg-gray-200 rounded-full h-2">
-                                        <div class="bg-green-500 h-2 rounded-full" style="width: 58%"></div>
-                                    </div>
+                                <h3 class="font-semibold text-gray-800">📊 Controlling</h3>
+                                <div class="flex items-center space-x-2">
+                                    <button class="widget-remove hidden text-gray-400 hover:text-red-500">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
+                            <div id="wControllingContent">
+                                <div class="space-y-2 animate-pulse"><div class="h-3 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div><div class="h-3 bg-gray-200 rounded w-2/3"></div></div>
+                            </div>
+                            <button onclick="showView('controlling')" class="mt-4 w-full text-sm text-vit-orange hover:text-orange-600 font-semibold">
+                                → Controlling öffnen
+                            </button>
                         </div>
 
                         <!-- Widget 8: Support Tickets -->
                         <div class="dashboard-widget vit-card p-6" data-widget="support">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="font-semibold text-gray-800">🎯 Support Tickets</h3>
-                                <button class="widget-remove hidden text-gray-400 hover:text-red-500">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                </button>
-                            </div>
-                            <div class="text-center py-4">
-                                <p class="text-4xl font-bold text-green-600">2</p>
-                                <p class="text-sm text-gray-600 mt-1">Offene Tickets</p>
-                                <div class="mt-3 space-y-2">
-                                    <div class="text-xs text-left p-2 bg-yellow-50 rounded">
-                                        <p class="font-semibold">Kassensystem Frage</p>
-                                        <p class="text-gray-600">Offen seit 2 Tagen</p>
-                                    </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700" id="wSupportCount"></span>
+                                    <button class="widget-remove hidden text-gray-400 hover:text-red-500">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
-                            <button onclick="showView('support')" class="mt-2 w-full text-sm text-vit-orange hover:text-orange-600 font-semibold">
+                            <div id="wSupportContent">
+                                <div class="space-y-2 animate-pulse"><div class="h-3 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div><div class="h-3 bg-gray-200 rounded w-2/3"></div></div>
+                            </div>
+                            <button onclick="showView('support')" class="mt-4 w-full text-sm text-vit-orange hover:text-orange-600 font-semibold">
                                 → Zu Support
                             </button>
                         </div>
@@ -1148,21 +1075,16 @@
                         <div class="dashboard-widget vit-card p-6" data-widget="wissen">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="font-semibold text-gray-800">📚 Neue Inhalte</h3>
-                                <button class="widget-remove hidden text-gray-400 hover:text-red-500">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                </button>
+                                <div class="flex items-center space-x-2">
+                                    <button class="widget-remove hidden text-gray-400 hover:text-red-500">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="space-y-2">
-                                <div class="p-2 bg-purple-50 rounded">
-                                    <p class="text-sm font-semibold text-gray-800">🎓 Neue Schulung</p>
-                                    <p class="text-xs text-gray-600">E-Bike Antriebstechnik 2026</p>
-                                </div>
-                                <div class="p-2 bg-blue-50 rounded">
-                                    <p class="text-sm font-semibold text-gray-800">📄 Produktinfo</p>
-                                    <p class="text-xs text-gray-600">Haibike 2026 Katalog</p>
-                                </div>
+                            <div id="wWissenContent">
+                                <div class="space-y-2 animate-pulse"><div class="h-3 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div><div class="h-3 bg-gray-200 rounded w-2/3"></div></div>
                             </div>
                             <button onclick="showView('allgemein');showAllgemeinTab('wissen')" class="mt-4 w-full text-sm text-vit-orange hover:text-orange-600 font-semibold">
                                 → Zu Wissen
@@ -1173,22 +1095,20 @@
                         <div class="dashboard-widget vit-card p-6" data-widget="nachrichten">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="font-semibold text-gray-800">📬 Nachrichten HQ</h3>
-                                <button class="widget-remove hidden text-gray-400 hover:text-red-500">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                </button>
-                            </div>
-                            <div class="space-y-3">
-                                <div class="p-3 bg-orange-50 rounded-lg border-l-4 border-vit-orange">
-                                    <p class="text-sm font-semibold text-gray-800">🚀 Frühjahrs-Kampagne live!</p>
-                                    <p class="text-xs text-gray-600">vor 2 Stunden</p>
-                                </div>
-                                <div class="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                                    <p class="text-sm font-semibold text-gray-800">📚 Neue Schulung verfügbar</p>
-                                    <p class="text-xs text-gray-600">gestern</p>
+                                <div class="flex items-center space-x-2">
+                                    <button class="widget-remove hidden text-gray-400 hover:text-red-500">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
+                            <div id="wNachrichtenContent">
+                                <div class="space-y-2 animate-pulse"><div class="h-3 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div><div class="h-3 bg-gray-200 rounded w-2/3"></div></div>
+                            </div>
+                            <button onclick="showView('kommunikation')" class="mt-4 w-full text-sm text-vit-orange hover:text-orange-600 font-semibold">
+                                → Zur Kommunikation
+                            </button>
                         </div>
                     </div>
 
@@ -5375,8 +5295,9 @@
 
                     <!-- TAB 1: Modul-Status -->
                     <div id="settingsTabModulstatus" class="settings-tab-content">
-                        <div class="grid grid-cols-3 gap-4 mb-6">
-                            <div class="vit-card p-4 text-center border-l-4 border-green-500"><div class="text-2xl font-bold text-green-600" id="countAktiv">0</div><div class="text-xs text-gray-500">Aktive Module</div></div>
+                        <div class="grid grid-cols-4 gap-4 mb-6">
+                            <div class="vit-card p-4 text-center border-l-4 border-green-500"><div class="text-2xl font-bold text-green-600" id="countAktiv">0</div><div class="text-xs text-gray-500">Aktiv</div></div>
+                            <div class="vit-card p-4 text-center border-l-4 border-orange-400"><div class="text-2xl font-bold text-orange-500" id="countDemo">0</div><div class="text-xs text-gray-500">Demo</div></div>
                             <div class="vit-card p-4 text-center border-l-4 border-yellow-500"><div class="text-2xl font-bold text-yellow-600" id="countWip">0</div><div class="text-xs text-gray-500">In Bearbeitung</div></div>
                             <div class="vit-card p-4 text-center border-l-4 border-gray-400"><div class="text-2xl font-bold text-gray-400" id="countDeaktiviert">0</div><div class="text-xs text-gray-500">Deaktiviert</div></div>
                         </div>
@@ -5385,6 +5306,7 @@
                                 <h2 class="font-bold text-gray-800">Modul-Verwaltung</h2>
                                 <div class="flex items-center space-x-4 text-xs text-gray-500">
                                     <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span><span>Aktiv</span></span>
+                                    <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-orange-400 inline-block"></span><span>Demo</span></span>
                                     <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-yellow-500 inline-block"></span><span>In Bearbeitung</span></span>
                                     <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-gray-300 inline-block"></span><span>Deaktiviert</span></span>
                                 </div>
@@ -5394,9 +5316,12 @@
                         <div class="vit-card p-5">
                             <h3 class="font-bold text-gray-800 mb-2">ℹ️ So funktioniert es</h3>
                             <div class="space-y-1.5 text-xs text-gray-600">
-                                <p><span class="font-bold text-green-600">Aktiv:</span> Das Modul ist für alle Nutzer sichtbar und nutzbar (sofern ihre Rolle es erlaubt).</p>
+                                <p><span class="font-bold text-green-600">Aktiv:</span> Das Modul ist für alle Nutzer sichtbar und voll nutzbar (sofern ihre Rolle es erlaubt).</p>
+                                <p><span class="font-bold text-orange-500">Demo:</span> Das Modul ist sichtbar und klickbar, zeigt aber Demo-Daten. Ein oranges Demo-Banner ist prominent sichtbar. Ideal für Module in Vorbereitung.</p>
                                 <p><span class="font-bold text-yellow-600">In Bearbeitung:</span> Das Modul erscheint ausgegraut in der Sidebar mit einem „BALD"-Badge. Nutzer können es nicht öffnen.</p>
                                 <p><span class="font-bold text-gray-500">Deaktiviert:</span> Das Modul ist komplett unsichtbar – kein Menüpunkt, kein Zugang.</p>
+                                <hr class="my-3 border-gray-200">
+                                <p><strong>Tabs & Widgets:</strong> Klicke auf ▶ bei einem Modul, um einzelne Tabs und Dashboard-Widgets zu konfigurieren. Jeder Tab/Widget kann separat auf Aktiv, Demo oder Deaktiviert gesetzt werden.</p>
                             </div>
                         </div>
                     </div>
@@ -5512,24 +5437,32 @@
         var sbProfile = null; // users table row
         var sbRollen = []; // role names array
         var sbStandort = null; // standorte row
-        var sbModulStatus = {}; // {modul_key: 'aktiv'|'in_bearbeitung'|'deaktiviert'}
+        var sbModulStatus = {}; // {modul_key: 'aktiv'|'demo'|'in_bearbeitung'|'deaktiviert'}
 
         // Modul-Status aus Supabase laden und auf Sidebar anwenden
         async function loadModulStatus() {
             try {
-                var resp = await sb.from('modul_status').select('modul_key, status').order('reihenfolge');
+                var resp = await sb.from('modul_status').select('modul_key, status, config').order('reihenfolge');
                 if(resp.error) throw resp.error;
                 sbModulStatus = {};
-                (resp.data||[]).forEach(function(m) { sbModulStatus[m.modul_key] = m.status; });
+                sbModulConfig = {};
+                (resp.data||[]).forEach(function(m) { 
+                    sbModulStatus[m.modul_key] = m.status;
+                    sbModulConfig[m.modul_key] = m.config || {};
+                });
                 applyModulStatus();
             } catch(err) { console.error('ModulStatus:', err); }
         }
 
         function applyModulStatus() {
-            // Alle Sidebar-Buttons mit data-module durchgehen
+            // Apply module-level status to sidebar
             document.querySelectorAll('[data-module]').forEach(function(btn) {
                 var key = btn.getAttribute('data-module');
                 var status = sbModulStatus[key] || 'aktiv';
+
+                // Remove old badges
+                var oldBadge = btn.querySelector('.modul-wip-badge,.modul-demo-badge');
+                if(oldBadge) oldBadge.remove();
 
                 if(status === 'deaktiviert') {
                     btn.style.display = 'none';
@@ -5538,35 +5471,126 @@
                     btn.style.opacity = '0.4';
                     btn.style.pointerEvents = 'none';
                     btn.style.cursor = 'not-allowed';
-                    if(!btn.querySelector('.modul-wip-badge')) {
-                        var badge = document.createElement('span');
-                        badge.className = 'modul-wip-badge ml-auto text-[9px] bg-yellow-500 text-white rounded px-1 py-0.5 font-bold';
-                        badge.textContent = 'BALD';
-                        btn.appendChild(badge);
-                    }
+                    var badge = document.createElement('span');
+                    badge.className = 'modul-wip-badge ml-auto text-[9px] bg-yellow-500 text-white rounded px-1 py-0.5 font-bold';
+                    badge.textContent = 'BALD';
+                    btn.appendChild(badge);
+                } else if(status === 'demo') {
+                    btn.style.display = '';
+                    btn.style.opacity = '';
+                    btn.style.pointerEvents = '';
+                    btn.style.cursor = '';
+                    var badge = document.createElement('span');
+                    badge.className = 'modul-demo-badge ml-auto text-[9px] bg-orange-400 text-white rounded px-1 py-0.5 font-bold';
+                    badge.textContent = 'DEMO';
+                    btn.appendChild(badge);
                 } else {
                     btn.style.display = '';
                     btn.style.opacity = '';
                     btn.style.pointerEvents = '';
                     btn.style.cursor = '';
-                    var oldBadge = btn.querySelector('.modul-wip-badge');
-                    if(oldBadge) oldBadge.remove();
                 }
             });
 
-            // Wissen-Tabs in Fachbereichen ausblenden wenn Modul deaktiviert
+            // Apply demo banners to views
+            document.querySelectorAll('.demo-mode-banner').forEach(function(b){ b.remove(); });
+            Object.keys(sbModulStatus).forEach(function(key) {
+                if(sbModulStatus[key] === 'demo') {
+                    var viewMap = {startseite:'homeView',verkauf:'verkaufView',kalender:'kalenderView',aufgaben:'todoView',kommunikation:'kommunikationView',controlling:'controllingView',marketing:'marketingView',einkauf:'einkaufView',dashboards:'dashboardsView',allgemein:'allgemeinView',wissen:'wissenView',support:'supportView',ideenboard:'ideenboardView',shop:'shopView',onboarding:'onboardingView',mitarbeiter:'mitarbeiterView',aktenschrank:'aktenschrankView'};
+                    var viewId = viewMap[key];
+                    var viewEl = viewId ? document.getElementById(viewId) : null;
+                    if(viewEl && !viewEl.querySelector('.demo-mode-banner')) {
+                        var banner = document.createElement('div');
+                        banner.className = 'demo-mode-banner';
+                        banner.innerHTML = '<div style="background:linear-gradient(90deg,#EF7D00,#F59E0B);color:white;padding:12px 20px;border-radius:10px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:20px">👁️</span><div><strong style="font-size:14px">Demo-Modus</strong><p style="font-size:11px;margin:2px 0 0;opacity:0.9">Dieses Modul zeigt Beispieldaten zur Veranschaulichung. Die dargestellten Inhalte sind nicht real.</p></div></div><span style="background:rgba(255,255,255,0.25);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700">DEMO</span></div>';
+                        viewEl.insertBefore(banner, viewEl.firstChild);
+                    }
+                }
+            });
+
+            // Apply tab-level status
+            var tabBtnSelectors = {
+                verkauf: '.vk-tab-btn,[data-tab="pipeline"],[data-tab="woche"],[data-tab="auswertung"],[data-tab="training"],[data-tab="vkWissen"]',
+                marketing: '.marketing-tab-btn',
+                einkauf: '.ek-tab-btn',
+                controlling: '.ctrl-tab-btn,[data-tab="cockpit"],[data-tab="bwa"],[data-tab="benchmark"],[data-tab="planist"],[data-tab="liquiditaet"],[data-tab="ctrlWissen"]',
+                allgemein: '[id^="allgemeinTab-"]',
+                support: '[id^="supportTab-"]'
+            };
+            Object.keys(sbModulConfig).forEach(function(modulKey) {
+                var cfg = sbModulConfig[modulKey];
+                if(!cfg || !cfg.tabs) return;
+                Object.keys(cfg.tabs).forEach(function(tabKey) {
+                    var tabStatus = cfg.tabs[tabKey];
+                    // Find tab button by data-tab attribute
+                    var tabBtn = document.querySelector('[data-tab="'+tabKey+'"]') || document.getElementById('allgemeinTab-'+tabKey) || document.getElementById('supportTab-'+tabKey);
+                    // Find tab content
+                    var contentIds = {
+                        verkauf: 'vkTab',
+                        marketing: 'marketingTab',
+                        einkauf: 'ekTab',
+                        controlling: 'ctrlTab',
+                        allgemein: 'allgemeinTabContent-',
+                        support: 'supportTabContent-'
+                    };
+                    var prefix = contentIds[modulKey] || '';
+                    var tabContent = prefix ? document.getElementById(prefix + tabKey.charAt(0).toUpperCase()+tabKey.slice(1)) || document.getElementById(prefix + tabKey) : null;
+
+                    if(tabBtn) {
+                        if(tabStatus === 'deaktiviert') {
+                            tabBtn.style.display = 'none';
+                            if(tabContent) tabContent.style.display = 'none';
+                        } else if(tabStatus === 'demo') {
+                            tabBtn.style.display = '';
+                            // Add demo indicator to tab button
+                            if(!tabBtn.querySelector('.tab-demo-dot')) {
+                                var dot = document.createElement('span');
+                                dot.className = 'tab-demo-dot';
+                                dot.style.cssText = 'display:inline-block;width:6px;height:6px;border-radius:50%;background:#F97316;margin-left:4px';
+                                tabBtn.appendChild(dot);
+                            }
+                        } else {
+                            tabBtn.style.display = '';
+                            var oldDot = tabBtn.querySelector('.tab-demo-dot');
+                            if(oldDot) oldDot.remove();
+                        }
+                    }
+                });
+            });
+
+            // Apply widget-level status
+            var startCfg = sbModulConfig['startseite'];
+            if(startCfg && startCfg.widgets) {
+                Object.keys(startCfg.widgets).forEach(function(wKey) {
+                    var wStatus = startCfg.widgets[wKey];
+                    var wEl = document.querySelector('[data-widget="'+wKey+'"]');
+                    if(!wEl) return;
+                    // Remove old demo overlay
+                    var oldOverlay = wEl.querySelector('.widget-demo-overlay');
+                    if(oldOverlay) oldOverlay.remove();
+
+                    if(wStatus === 'deaktiviert') {
+                        wEl.style.display = 'none';
+                    } else if(wStatus === 'demo') {
+                        wEl.style.display = '';
+                        var overlay = document.createElement('div');
+                        overlay.className = 'widget-demo-overlay';
+                        overlay.style.cssText = 'position:absolute;top:8px;right:8px;background:#F97316;color:white;font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;z-index:5';
+                        overlay.textContent = 'DEMO';
+                        wEl.style.position = 'relative';
+                        wEl.appendChild(overlay);
+                    } else {
+                        wEl.style.display = '';
+                    }
+                });
+            }
+
+            // Wissen-Tabs: hide across modules if wissen deactivated
             var wissenStatus = sbModulStatus['wissen'] || 'aktiv';
             var wissenDisabled = wissenStatus === 'deaktiviert';
-            var wissenTabSelectors = [
-                'button[data-tab="vkWissen"]', '#vkTabVkWissen',
-                'button[data-tab="mktWissen"]', '#marketingTabMktWissen',
-                'button[data-tab="ekWissen"]', '#ekTabEkWissen',
-                'button[data-tab="ctrlWissen"]', '#ctrlTabCtrlWissen',
-                'button[data-tab="wissen"]', '#allgTabWissen'
-            ];
-            wissenTabSelectors.forEach(function(sel) {
-                var el = document.querySelector(sel);
-                if(el) el.style.display = wissenDisabled ? 'none' : '';
+            ['vkWissen','mktWissen','ekWissen','ctrlWissen','wissen'].forEach(function(tabKey) {
+                var btn = document.querySelector('[data-tab="'+tabKey+'"]') || document.getElementById('allgemeinTab-'+tabKey);
+                if(btn) btn.style.display = wissenDisabled ? 'none' : '';
             });
         }
 
@@ -6045,6 +6069,8 @@
             // Demo mode check BEFORE rendering views (so demo data is available)
             checkDemoMode();
             if(currentRole === 'hq') { switchViewMode('hq'); } else { showView('home'); }
+            // Load dashboard widgets with live data
+            if(currentRole !== 'hq') { loadDashboardWidgets(); loadAllgemeinData(); }
             // Check for pending approvals (HQ + GF only)
             checkPendingApprovals();
             // Check BWA deadlines and create reminders
@@ -11247,6 +11273,219 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         // HOME WIDGETS (Startseite)
         // ============================================================
         
+
+        // ========================================
+        // DASHBOARD WIDGETS – Live-Daten laden
+        // ========================================
+        async function loadDashboardWidgets() {
+            try { await Promise.all([
+                loadWidgetPipeline(),
+                loadWidgetSuccess(),
+                loadWidgetTermine(),
+                loadWidgetAufgaben(),
+                loadWidgetMarketing(),
+                loadWidgetTeam(),
+                loadWidgetControlling(),
+                loadWidgetSupport(),
+                loadWidgetWissen(),
+                loadWidgetNachrichten()
+            ]); } catch(e) { console.error('Widget-Laden:', e); }
+        }
+
+        // --- Pipeline Widget ---
+        async function loadWidgetPipeline() {
+            var el = document.getElementById('wPipelineContent'); if(!el) return;
+            try {
+                var stdId = sbProfile ? sbProfile.standort_id : null;
+                var q = sb.from('leads').select('id, status, wert').eq('archiviert', false);
+                if(stdId) q = q.eq('standort_id', stdId);
+                var res = await q;
+                var leads = res.data || [];
+                var offen = leads.filter(function(l){ return l.status !== 'gewonnen' && l.status !== 'verloren'; });
+                var angebote = leads.filter(function(l){ return l.status === 'angebot'; });
+                var pipeWert = offen.reduce(function(s,l){ return s + (l.wert||0); }, 0);
+                var badge = document.getElementById('wPipelineBadge');
+                if(badge) badge.textContent = offen.length + ' aktiv';
+                el.innerHTML = '<div class="space-y-3">'
+                    +'<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Offene Leads</span><span class="font-bold text-blue-600">'+offen.length+'</span></div>'
+                    +'<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Angebote offen</span><span class="font-bold text-orange-600">'+angebote.length+'</span></div>'
+                    +'<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Pipeline-Wert</span><span class="font-bold text-green-600">'+fmtN(pipeWert)+' €</span></div>'
+                    +'</div>';
+            } catch(e) { el.innerHTML = '<p class="text-sm text-gray-400">Daten nicht verfügbar</p>'; }
+        }
+
+        // --- Verkaufserfolg Widget ---
+        async function loadWidgetSuccess() {
+            var el = document.getElementById('wSuccessContent'); if(!el) return;
+            try {
+                var kw = getKWnow(); var kwBadge = document.getElementById('wSuccessKW');
+                if(kwBadge) kwBadge.textContent = 'KW ' + kw;
+                var stdId = sbProfile ? sbProfile.standort_id : null;
+                var mondayISO = getKWMonday(kw);
+                var sundayISO = getKWSunday(kw);
+                var q = sb.from('verkauf_tracking').select('id, typ').gte('datum', mondayISO).lte('datum', sundayISO);
+                if(stdId) q = q.eq('standort_id', stdId);
+                var res = await q;
+                var data = res.data || [];
+                var verkauft = data.filter(function(d){ return d.typ === 'verkauf'; }).length;
+                var beratung = data.filter(function(d){ return d.typ === 'beratung'; }).length;
+                var quote = beratung > 0 ? Math.round(verkauft / beratung * 100) : 0;
+                el.innerHTML = '<div class="mb-3"><div class="flex items-center justify-between mb-1"><span class="text-sm text-gray-600">Verkaufsquote</span>'
+                    +'<span class="text-2xl font-bold '+(quote>=40?'text-green-600':quote>=20?'text-yellow-600':'text-red-500')+'">'+quote+'%</span></div>'
+                    +'<div class="w-full bg-gray-200 rounded-full h-2"><div class="'+(quote>=40?'bg-green-500':quote>=20?'bg-yellow-500':'bg-red-500')+' h-2 rounded-full" style="width:'+Math.min(quote,100)+'%"></div></div></div>'
+                    +'<div class="grid grid-cols-2 gap-2 text-sm"><div><p class="text-gray-500">Verkäufe</p><p class="font-bold text-gray-800">'+verkauft+'</p></div>'
+                    +'<div><p class="text-gray-500">Beratungen</p><p class="font-bold text-gray-800">'+beratung+'</p></div></div>';
+            } catch(e) { el.innerHTML = '<p class="text-sm text-gray-400">Keine Verkaufsdaten</p>'; }
+        }
+        function getKWnow() { var d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()+3-(d.getDay()+6)%7); var w=new Date(d.getFullYear(),0,4); return 1+Math.round(((d-w)/864e5-3+(w.getDay()+6)%7)/7); }
+        function getKWMonday(kw) { var y=new Date().getFullYear(); var d=new Date(y,0,4); var dayOfWeek=d.getDay()||7; d.setDate(d.getDate()-dayOfWeek+1+(kw-1)*7); return d.toISOString().split('T')[0]; }
+        function getKWSunday(kw) { var m=getKWMonday(kw); var d=new Date(m); d.setDate(d.getDate()+6); return d.toISOString().split('T')[0]; }
+
+        // --- Termine Widget ---
+        async function loadWidgetTermine() {
+            var el = document.getElementById('wTermineContent'); if(!el) return;
+            try {
+                var today = new Date().toISOString().split('T')[0];
+                var tomorrow = new Date(Date.now()+864e5).toISOString().split('T')[0];
+                var stdId = sbProfile ? sbProfile.standort_id : null;
+                var q = sb.from('termine').select('id, titel, beschreibung, start_zeit').gte('start_zeit', today+'T00:00:00').lt('start_zeit', tomorrow+'T00:00:00').order('start_zeit');
+                if(stdId) q = q.eq('standort_id', stdId);
+                var res = await q;
+                var terme = res.data || [];
+                var badge = document.getElementById('wTermineCount');
+                if(badge) badge.textContent = terme.length;
+                if(!terme.length) { el.innerHTML = '<p class="text-sm text-gray-400 text-center py-2">Keine Termine heute 📭</p>'; return; }
+                var colors = ['bg-blue-50','bg-purple-50','bg-green-50','bg-orange-50','bg-pink-50'];
+                el.innerHTML = '<div class="space-y-2">'+terme.slice(0,4).map(function(t,i){
+                    var zeit = t.start_zeit ? new Date(t.start_zeit).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) : '';
+                    return '<div class="p-2.5 '+colors[i%5]+' rounded-lg"><p class="text-sm font-semibold text-gray-800">'+zeit+(zeit?' - ':'')+escH(t.titel||'')+'</p>'+(t.beschreibung?'<p class="text-xs text-gray-600">'+escH(t.beschreibung).substring(0,50)+'</p>':'')+'</div>';
+                }).join('')+(terme.length>4?'<p class="text-xs text-gray-400 text-center">+'+(terme.length-4)+' weitere</p>':'')+'</div>';
+            } catch(e) { el.innerHTML = '<p class="text-sm text-gray-400">Fehler beim Laden</p>'; }
+        }
+
+        // --- Aufgaben Widget ---
+        async function loadWidgetAufgaben() {
+            var el = document.getElementById('wAufgabenContent'); if(!el) return;
+            try {
+                var stdId = sbProfile ? sbProfile.standort_id : null;
+                var userId = sbProfile ? sbProfile.user_id : null;
+                var q = sb.from('todos').select('id, titel, erledigt, faellig_am, prio_sort').eq('erledigt', false).order('prio_sort').order('faellig_am').limit(5);
+                if(userId) q = q.eq('user_id', userId);
+                var res = await q;
+                var aufgaben = res.data || [];
+                var badge = document.getElementById('wAufgabenCount');
+                if(badge) badge.textContent = aufgaben.length + (aufgaben.length>=5?'+':'');
+                if(!aufgaben.length) { el.innerHTML = '<p class="text-sm text-green-600 font-semibold text-center py-2">Alles erledigt! 🎉</p>'; return; }
+                var today = new Date().toISOString().split('T')[0];
+                el.innerHTML = '<div class="space-y-2">'+aufgaben.map(function(t){
+                    var overdue = t.faellig_am && t.faellig_am < today;
+                    return '<div class="flex items-start space-x-2"><input type="checkbox" class="mt-0.5 rounded border-gray-300 accent-orange-500" onchange="quickToggleTodo(\''+t.id+'\',this.checked)"><span class="text-sm '+(overdue?'text-red-600':'text-gray-700')+'">'+escH(t.titel||'')+(overdue?' ⏰':'')+'</span></div>';
+                }).join('')+'</div>';
+            } catch(e) { el.innerHTML = '<p class="text-sm text-gray-400">Fehler beim Laden</p>'; }
+        }
+        async function quickToggleTodo(id, checked) {
+            try { await sb.from('todos').update({erledigt:checked, erledigt_am:checked?new Date().toISOString():null}).eq('id',id); loadWidgetAufgaben(); } catch(e){}
+        }
+
+        // --- Marketing Widget ---
+        async function loadWidgetMarketing() {
+            var el = document.getElementById('wMarketingContent'); if(!el) return;
+            // Marketing data is currently demo - show static KPIs from module
+            el.innerHTML = '<div class="grid grid-cols-2 gap-3">'
+                +'<div class="p-2 bg-gray-50 rounded-lg text-center"><p class="text-[10px] text-gray-400">Kosten MTD</p><p class="text-sm font-bold text-gray-800">1.724 €</p><p class="text-[10px] text-red-500">↓ -2.5%</p></div>'
+                +'<div class="p-2 bg-gray-50 rounded-lg text-center"><p class="text-[10px] text-gray-400">Leads MTD</p><p class="text-sm font-bold text-vit-orange">4</p><p class="text-[10px] text-gray-400">CPT: 431 €</p></div>'
+                +'<div class="p-2 bg-gray-50 rounded-lg text-center"><p class="text-[10px] text-gray-400">Store Visits</p><p class="text-sm font-bold text-green-600">65</p><p class="text-[10px] text-green-600">↑ 69.8%</p></div>'
+                +'<div class="p-2 bg-gray-50 rounded-lg text-center"><p class="text-[10px] text-gray-400">Budget</p><p class="text-sm font-bold text-gray-800">1.500 €</p><div class="mt-1 bg-gray-200 rounded-full h-1.5"><div class="bg-vit-orange h-1.5 rounded-full" style="width:100%"></div></div></div>'
+                +'</div>'
+                +'<span class="inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 font-semibold">Demo-Daten</span>';
+        }
+
+        // --- Team Widget ---
+        async function loadWidgetTeam() {
+            var el = document.getElementById('wTeamContent'); if(!el) return;
+            try {
+                var stdId = sbProfile ? sbProfile.standort_id : null;
+                var q = sb.from('users').select('id, vorname, nachname, status, rolle').eq('status', 'aktiv');
+                if(stdId) q = q.eq('standort_id', stdId);
+                var res = await q;
+                var team = res.data || [];
+                if(!team.length) { el.innerHTML = '<p class="text-sm text-gray-400">Keine Mitarbeiter</p>'; return; }
+                var rolleIcons = {admin:'👑',geschaeftsfuehrer:'🏢',standortleiter:'⭐',verkauf:'💰',werkstatt:'🔧',mitarbeiter:'👤'};
+                el.innerHTML = '<div class="space-y-2">'+team.slice(0,5).map(function(u){
+                    var icon = rolleIcons[u.rolle] || '👤';
+                    return '<div class="flex items-center justify-between"><div class="flex items-center space-x-2"><span>'+icon+'</span><span class="text-sm font-semibold text-gray-800">'+escH((u.vorname||'')+' '+(u.nachname||'').charAt(0)+'.')+'</span></div><span class="text-xs text-green-600">● aktiv</span></div>';
+                }).join('')+(team.length>5?'<p class="text-xs text-gray-400 text-center">+' + (team.length-5) + ' weitere</p>':'')+'</div>';
+            } catch(e) { el.innerHTML = '<p class="text-sm text-gray-400">Fehler beim Laden</p>'; }
+        }
+
+        // --- Controlling Widget ---
+        async function loadWidgetControlling() {
+            var el = document.getElementById('wControllingContent'); if(!el) return;
+            try {
+                var stdId = sbProfile ? sbProfile.standort_id : null;
+                var q = sb.from('bwa_daten').select('monat, umsatz, rohertrag_pct, personalkosten_pct, ergebnis').order('monat', {ascending:false}).limit(1);
+                if(stdId) q = q.eq('standort_id', stdId);
+                var res = await q;
+                var bwa = (res.data||[])[0];
+                if(!bwa) { el.innerHTML = '<p class="text-sm text-gray-400 text-center py-2">Noch keine BWA hochgeladen</p>'; return; }
+                el.innerHTML = '<div class="space-y-3">'
+                    +'<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Umsatz</span><span class="font-bold text-gray-800">'+fmtN(bwa.umsatz||0)+' €</span></div>'
+                    +'<div><div class="flex justify-between mb-1"><span class="text-sm text-gray-600">Rohertrag</span><span class="text-sm font-semibold '+(bwa.rohertrag_pct>=35?'text-green-600':'text-red-500')+'">'+(bwa.rohertrag_pct||0).toFixed(1)+'%</span></div>'
+                    +'<div class="w-full bg-gray-200 rounded-full h-2"><div class="'+(bwa.rohertrag_pct>=35?'bg-green-500':'bg-red-500')+' h-2 rounded-full" style="width:'+Math.min(bwa.rohertrag_pct||0,60)/60*100+'%"></div></div></div>'
+                    +'<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Ergebnis</span><span class="font-bold '+((bwa.ergebnis||0)>=0?'text-green-600':'text-red-500')+'">'+fmtN(bwa.ergebnis||0)+' €</span></div>'
+                    +'<p class="text-[10px] text-gray-400">Letzte BWA: '+escH(bwa.monat||'')+'</p>'
+                    +'</div>';
+            } catch(e) { el.innerHTML = '<p class="text-sm text-gray-400">Fehler beim Laden</p>'; }
+        }
+
+        // --- Support Widget ---
+        async function loadWidgetSupport() {
+            var el = document.getElementById('wSupportContent'); if(!el) return;
+            try {
+                var stdId = sbProfile ? sbProfile.standort_id : null;
+                var q = sb.from('support_tickets').select('id, titel, status, created_at').eq('status', 'offen').order('created_at', {ascending:false}).limit(3);
+                if(stdId) q = q.eq('standort_id', stdId);
+                var res = await q;
+                var tickets = res.data || [];
+                var badge = document.getElementById('wSupportCount');
+                if(badge) badge.textContent = tickets.length + (tickets.length>=3?'+':'');
+                if(!tickets.length) { el.innerHTML = '<div class="text-center py-3"><p class="text-2xl">✅</p><p class="text-sm text-green-600 font-semibold mt-1">Keine offenen Tickets</p></div>'; return; }
+                el.innerHTML = '<div class="space-y-2">'+tickets.map(function(t){
+                    var age = Math.floor((Date.now() - new Date(t.created_at).getTime()) / 864e5);
+                    return '<div class="text-xs p-2 '+(age>7?'bg-red-50':'bg-yellow-50')+' rounded"><p class="font-semibold">'+escH(t.titel||'Ticket')+'</p><p class="text-gray-600">Offen seit '+age+' Tag'+(age!==1?'en':'')+'</p></div>';
+                }).join('')+'</div>';
+            } catch(e) { el.innerHTML = '<p class="text-sm text-gray-400">Fehler beim Laden</p>'; }
+        }
+
+        // --- Wissen Widget ---
+        async function loadWidgetWissen() {
+            var el = document.getElementById('wWissenContent'); if(!el) return;
+            // Wissen currently has no CMS DB - show curated static content
+            el.innerHTML = '<div class="space-y-2">'
+                +'<div class="p-2 bg-purple-50 rounded"><p class="text-sm font-semibold text-gray-800">🎓 Einkauf</p><p class="text-xs text-gray-600">Kernsortiment & DB1-Optimierung</p></div>'
+                +'<div class="p-2 bg-blue-50 rounded"><p class="text-sm font-semibold text-gray-800">📋 Marketing</p><p class="text-xs text-gray-600">Local Hero & Google Ads</p></div>'
+                +'<div class="p-2 bg-green-50 rounded"><p class="text-sm font-semibold text-gray-800">💰 Verkauf</p><p class="text-xs text-gray-600">Beratungsleitfaden 2026</p></div>'
+                +'</div>'
+                +'<span class="inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 font-semibold">Demo-Daten</span>';
+        }
+
+        // --- Nachrichten Widget ---
+        async function loadWidgetNachrichten() {
+            var el = document.getElementById('wNachrichtenContent'); if(!el) return;
+            try {
+                var res = await sb.from('ankuendigungen').select('id, titel, kategorie, created_at').order('created_at', {ascending:false}).limit(3);
+                var news = res.data || [];
+                if(!news.length) { el.innerHTML = '<p class="text-sm text-gray-400 text-center py-2">Keine Nachrichten</p>'; return; }
+                var catColors = {wichtig:'bg-red-50 border-red-400',info:'bg-blue-50 border-blue-400',aktion:'bg-orange-50 border-vit-orange',update:'bg-green-50 border-green-400'};
+                el.innerHTML = '<div class="space-y-2">'+news.map(function(n){
+                    var ago = Math.floor((Date.now()-new Date(n.created_at).getTime())/36e5);
+                    var agoTxt = ago < 1 ? 'gerade eben' : ago < 24 ? 'vor '+ago+' Std.' : 'vor '+Math.floor(ago/24)+' Tag'+(Math.floor(ago/24)!==1?'en':'');
+                    var col = catColors[n.kategorie] || 'bg-gray-50 border-gray-300';
+                    return '<div class="p-2.5 '+col+' rounded-lg border-l-4"><p class="text-sm font-semibold text-gray-800">'+escH(n.titel||'')+'</p><p class="text-xs text-gray-500">'+agoTxt+'</p></div>';
+                }).join('')+'</div>';
+            } catch(e) { el.innerHTML = '<p class="text-sm text-gray-400">Fehler beim Laden</p>'; }
+        }
+
         function loadHomeWidgets() {
             var fokusContent = document.getElementById('homeMonatsfokusContent');
             var fokusMonat = document.getElementById('homeMonatsfokusMonat');
@@ -12059,7 +12298,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         // Aufwand: S = <1 Tag, M = 1-3 Tage, L = 3-7 Tage, XL = >1 Woche
         var MODUL_DATEN = {
             standort: [
-                {name:'Startseite / Dashboard', view:'homeView', status:'live', typ:'standort', details:'Personalisiert, 11 Widgets (7 Live, 4 Allgemein-Module neu: Monatsfokus, Jahresziele, Journal, Maßnahmen)', kiPrio:35, aufwand:'S', kiTodo:'Restliche Demo-Widgets (Top-Verkäufer, Neue Inhalte) an DB anbinden.'},
+                {name:'Startseite / Dashboard', view:'homeView', status:'live', typ:'standort', details:'Personalisiert, 14 Widgets (12 Live aus DB, 2 Demo). Pipeline, Verkauf, Termine, Aufgaben, Team, Controlling, Support, Nachrichten, Monatsfokus, Jahresziele, Journal, Maßnahmen alle live.', kiPrio:35, aufwand:'S', kiTodo:'Restliche Demo-Widgets (Top-Verkäufer, Neue Inhalte) an DB anbinden.'},
                 {name:'Verkauf / CRM', view:'verkaufView', status:'teilweise', typ:'standort', details:'React Pipeline (Kanban, Drag&Drop, Gamification), Scan-Upload mit KI-Analyse, KI-Verkaufstrainer, Wochenansicht, Auswertung', kiPrio:2, aufwand:'L', kiTodo:'⚠️ API-Key ins Backend! Angebotserstellung PDF, Lead-Import, Follow-up-Erinnerungen, Supabase-Anbindung Pipeline-Deals.'},
                 {name:'Kalender', view:'kalenderView', status:'live', typ:'standort', details:'Monatsansicht, Termine aus DB laden/erstellen/löschen', kiPrio:20, aufwand:'XL', kiTodo:'MS365-Sync nice-to-have. Wochenansicht wäre UX-Verbesserung.'},
                 {name:'Aufgaben / Todos', view:'todoView', status:'live', typ:'standort', details:'Erstellen, Bearbeiten, Abhaken, Löschen, Filtern – alles DB', kiPrio:30, aufwand:'M', kiTodo:'Fälligkeitsdatum, Zuweisung an Mitarbeiter.'},
@@ -12095,21 +12334,21 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 {name:'HQ Einstellungen', view:'hqEinstellungenView', status:'live', typ:'hq', details:'Module aktivieren/deaktivieren, Rollen-Matrix, User-Freigabe – alles DB', kiPrio:36, aufwand:'S', kiTodo:'Branding-Einstellungen. Core funktioniert bereits.'}
             ],
             widgets: [
-                {name:'Widget: Umsatz & Ergebnis', status:'live', typ:'widget', details:'Letzte BWA aus bwa_daten mit Trend', kiPrio:37, aufwand:'S', kiTodo:'Plan-Vergleich wenn Plan-Daten vorhanden.'},
-                {name:'Widget: Pipeline', status:'live', typ:'widget', details:'Live aus leads + kalender_termine', kiPrio:38, aufwand:'S', kiTodo:'Click-Through zu Lead. Funktioniert.'},
-                {name:'Widget: Termine heute', status:'live', typ:'widget', details:'Echte Termine aus DB', kiPrio:39, aufwand:'S', kiTodo:'Termin-Direkterstellung. Funktioniert.'},
-                {name:'Widget: Offene Aufgaben', status:'live', typ:'widget', details:'Echte Todos mit Checkbox', kiPrio:40, aufwand:'S', kiTodo:'Direkt-Erstellung im Widget. Funktioniert.'},
-                {name:'Widget: Marketing Performance', status:'teilweise', typ:'widget', details:'4 KPIs (Kosten MTD, Leads, Store Visits, Budget), 2 Action-Buttons. Demo-Daten.', kiPrio:23, aufwand:'M', kiTodo:'An echte Marketing-DB anbinden.'},
-                {name:'Widget: Controlling', status:'live', typ:'widget', details:'Letzte BWA-Kennzahlen mit Trend', kiPrio:41, aufwand:'S', kiTodo:'Trend-Pfeil vs. Vormonat. Funktioniert.'},
-                {name:'Widget: Support Tickets', status:'live', typ:'widget', details:'Offene Tickets mit Alter', kiPrio:42, aufwand:'S', kiTodo:'Farbe bei >7 Tage. Funktioniert.'},
-                {name:'Widget: Nachrichten HQ', status:'live', typ:'widget', details:'Ankündigungen mit relativer Zeit', kiPrio:43, aufwand:'S', kiTodo:'Funktioniert. Keine Änderung nötig.'},
-                {name:'Widget: Team-Übersicht', status:'live', typ:'widget', details:'Mitarbeiter mit Rollen und Verfügbarkeit aus DB', kiPrio:44, aufwand:'S', kiTodo:'Funktioniert.'},
-                {name:'Widget: Wissen', status:'live', typ:'widget', details:'Empfohlene Artikel mit Kategorien', kiPrio:45, aufwand:'S', kiTodo:'An Wissens-CMS anbinden.'},
-                {name:'Widget: Verkaufserfolg KW', status:'demo', typ:'widget', details:'KW dynamisch, Zahlen statisch', kiPrio:17, aufwand:'M', kiTodo:'Echte Wochen-Daten aus verkauf_tracking.'},
-                {name:'Widget: Monatsfokus', status:'teilweise', typ:'widget', details:'Aus Allgemein-Modul Monatsplan. Demo-Daten.', kiPrio:46, aufwand:'S', kiTodo:'An partner_monatsplan DB anbinden.'},
-                {name:'Widget: Jahresziele', status:'teilweise', typ:'widget', details:'Aus Allgemein-Modul Jahresziele. Demo-Daten.', kiPrio:47, aufwand:'S', kiTodo:'An partner_jahresziele DB anbinden.'},
-                {name:'Widget: Letztes Journal', status:'teilweise', typ:'widget', details:'Aus Allgemein-Modul Journal. Demo-Daten.', kiPrio:48, aufwand:'S', kiTodo:'An partner_journal DB anbinden.'},
-                {name:'Widget: Offene Maßnahmen', status:'teilweise', typ:'widget', details:'Aus Allgemein-Modul. Demo-Daten.', kiPrio:49, aufwand:'S', kiTodo:'An partner_monatsplan DB anbinden.'}
+                {name:'Widget: Umsatz & Ergebnis', status:'live', typ:'widget', details:'Integriert in Controlling-Widget: Umsatz + Ergebnis aus letzter BWA', kiPrio:37, aufwand:'S', kiTodo:'Plan-Vergleich wenn Plan-Daten vorhanden.'},
+                {name:'Widget: Pipeline', status:'live', typ:'widget', details:'Live aus leads-Tabelle: Offene Leads, Angebote, Pipeline-Wert', kiPrio:38, aufwand:'S', kiTodo:'Click-Through zu Lead. Funktioniert.'},
+                {name:'Widget: Termine heute', status:'live', typ:'widget', details:'Live aus termine-Tabelle, farbige Tagesansicht', kiPrio:39, aufwand:'S', kiTodo:'Termin-Direkterstellung. Funktioniert.'},
+                {name:'Widget: Offene Aufgaben', status:'live', typ:'widget', details:'Live aus todos-Tabelle, Quick-Toggle zum Abhaken direkt im Widget', kiPrio:40, aufwand:'S', kiTodo:'Direkt-Erstellung im Widget. Funktioniert.'},
+                {name:'Widget: Marketing Performance', status:'demo', typ:'widget', details:'4 KPIs (Kosten MTD, Leads, Store Visits, Budget). Demo-Daten bis Marketing-DB fertig.', kiPrio:23, aufwand:'M', kiTodo:'An echte Marketing-DB anbinden.'},
+                {name:'Widget: Controlling', status:'live', typ:'widget', details:'Live aus bwa_daten: Umsatz, Rohertrag-%, Ergebnis der letzten BWA', kiPrio:41, aufwand:'S', kiTodo:'Trend-Pfeil vs. Vormonat. Funktioniert.'},
+                {name:'Widget: Support Tickets', status:'live', typ:'widget', details:'Live aus support_tickets: Offene Tickets mit Alter in Tagen, Farbcodierung', kiPrio:42, aufwand:'S', kiTodo:'Farbe bei >7 Tage. Funktioniert.'},
+                {name:'Widget: Nachrichten HQ', status:'live', typ:'widget', details:'Live aus ankuendigungen: Neueste Nachrichten mit relativer Zeitanzeige, Kategorie-Farben', kiPrio:43, aufwand:'S', kiTodo:'Funktioniert. Keine Änderung nötig.'},
+                {name:'Widget: Team-Übersicht', status:'live', typ:'widget', details:'Live aus users-Tabelle: Aktive Mitarbeiter mit Rollen-Icons', kiPrio:44, aufwand:'S', kiTodo:'Funktioniert.'},
+                {name:'Widget: Wissen', status:'demo', typ:'widget', details:'Kuratierte Wissens-Artikel. Demo-Daten bis CMS-Backend fertig.', kiPrio:45, aufwand:'S', kiTodo:'An Wissens-CMS anbinden.'},
+                {name:'Widget: Verkaufserfolg KW', status:'live', typ:'widget', details:'Live aus verkauf_tracking: Verkaufsquote, Beratungen, aktuelle KW', kiPrio:17, aufwand:'M', kiTodo:'Echte Wochen-Daten aus verkauf_tracking.'},
+                {name:'Widget: Monatsfokus', status:'live', typ:'widget', details:'Live aus partner_monatsplan: Aktueller Fokus und Beschreibung', kiPrio:46, aufwand:'S', kiTodo:'Funktioniert.'},
+                {name:'Widget: Jahresziele', status:'live', typ:'widget', details:'Live aus partner_jahresziele: Top-2 Ziele mit Fortschrittsbalken', kiPrio:47, aufwand:'S', kiTodo:'Funktioniert.'},
+                {name:'Widget: Letztes Journal', status:'live', typ:'widget', details:'Live aus partner_journal: Letztes Gespräch mit Stimmung', kiPrio:48, aufwand:'S', kiTodo:'Funktioniert.'},
+                {name:'Widget: Offene Maßnahmen', status:'live', typ:'widget', details:'Live aus partner_journal: Offene Massnahmen aus Gesprächen', kiPrio:49, aufwand:'S', kiTodo:'Funktioniert.'}
             ]
         };
 
@@ -12462,7 +12701,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(v==='hqStandorte') renderHqStandorte();
             if(v==='hqFinanzen') renderHqFinanzen();
             if(v==='hqMarketing') { renderHqMarketing(); showHqMktTab('uebersicht'); }
-            if(v==='allgemein') { showAllgemeinTab('uebersicht'); }
+            if(v==='allgemein') { loadAllgemeinData().then(function(){ showAllgemeinTab('uebersicht'); }); }
+            if(v==='home') { loadDashboardWidgets(); loadAllgemeinData(); }
             if(v==='einkauf') { showEinkaufTab('sortiment'); }
             if(v==='hqAllgemein') { renderHqAllgemein(hqStandorte, [], [], []); }
             if(v==='hqEinkauf') { showHqEkTab('dash'); }
@@ -15367,6 +15607,24 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(content) content.style.display = '';
         }
 
+        // Tab/Widget-Konfiguration pro Modul
+        var MODULE_TABS = {
+            verkauf: [{key:'pipeline',label:'Pipeline'},{key:'woche',label:'Wochenansicht'},{key:'auswertung',label:'Auswertung'},{key:'training',label:'KI-Trainer'},{key:'vkWissen',label:'Wissen'}],
+            marketing: [{key:'performance',label:'Performance'},{key:'budget',label:'Budget'},{key:'leads',label:'Leads'},{key:'social',label:'Social Media'},{key:'mktStrategie',label:'Strategie'},{key:'mktWissen',label:'Wissen'}],
+            einkauf: [{key:'sortiment',label:'Sortiment'},{key:'lieferanten',label:'Lieferanten'},{key:'zentralreg',label:'Zentralreg.'},{key:'ekStrategie',label:'Strategie'},{key:'ekWissen',label:'Wissen'}],
+            controlling: [{key:'cockpit',label:'Cockpit'},{key:'bwa',label:'BWA-Analyse'},{key:'benchmark',label:'Benchmark'},{key:'planist',label:'Plan/Ist'},{key:'liquiditaet',label:'Liquidität'},{key:'ctrlWissen',label:'Wissen'}],
+            allgemein: [{key:'uebersicht',label:'Übersicht'},{key:'jahresziele',label:'Jahresziele'},{key:'monatsplan',label:'Monatsplan'},{key:'journal',label:'Journal'},{key:'strategie',label:'Strategie'},{key:'wissen',label:'Wissen'}],
+            support: [{key:'tickets',label:'Tickets'},{key:'kontakte',label:'Kontakte'}]
+        };
+        var MODULE_WIDGETS = {
+            startseite: [{key:'pipeline',label:'Pipeline'},{key:'success',label:'Verkaufserfolg'},{key:'termine',label:'Termine'},{key:'aufgaben',label:'Aufgaben'},{key:'marketing',label:'Marketing'},{key:'team',label:'Team'},{key:'controlling',label:'Controlling'},{key:'support',label:'Support'},{key:'wissen',label:'Wissen'},{key:'nachrichten',label:'Nachrichten'}]
+        };
+
+        // Persistent expanded state
+        var expandedModules = {};
+        // Local config cache: {modul_key: {tabs: {tab_key: status}, widgets: {w_key: status}}}
+        var sbModulConfig = {};
+
         async function renderModulStatusList() {
             var container = document.getElementById('modulStatusList');
             if(!container) return;
@@ -15377,36 +15635,122 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var html = '';
                 var katLabels = {basis:'Basis',dashboards:'Dashboards',fachbereiche:'Fachbereiche',tools:'Tools'};
                 var lastKat = '';
-                var counts = {aktiv:0, in_bearbeitung:0, deaktiviert:0};
+                var counts = {aktiv:0, demo:0, in_bearbeitung:0, deaktiviert:0};
 
                 modules.forEach(function(m) {
                     counts[m.status] = (counts[m.status]||0) + 1;
+                    // Parse config JSONB
+                    var cfg = m.config || {};
+                    sbModulConfig[m.modul_key] = cfg;
+
                     if(m.kategorie !== lastKat) {
                         lastKat = m.kategorie;
                         html += '<div class="px-5 py-2 bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider">' + (katLabels[m.kategorie]||m.kategorie) + '</div>';
                     }
-                    var icons = {startseite:'🏠',kalender:'📅',aufgaben:'📋',kommunikation:'💬',dashboards:'📊',allgemein:'🏢',verkauf:'📈',einkauf:'🛒',marketing:'📣',controlling:'📊',wissen:'📚',support:'🎫',ideenboard:'💡',shop:'🛍️',onboarding:'🎯',mitarbeiter:'👥'};
-                    html += '<div class="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition">';
+                    var icons = {startseite:'🏠',kalender:'📅',aufgaben:'📋',kommunikation:'💬',dashboards:'📊',allgemein:'🏢',verkauf:'📈',einkauf:'🛒',marketing:'📣',controlling:'📊',wissen:'📚',support:'🎫',ideenboard:'💡',shop:'🛍️',onboarding:'🎯',mitarbeiter:'👥',aktenschrank:'📁'};
+                    var hasTabs = MODULE_TABS[m.modul_key] && MODULE_TABS[m.modul_key].length > 0;
+                    var hasWidgets = MODULE_WIDGETS[m.modul_key] && MODULE_WIDGETS[m.modul_key].length > 0;
+                    var hasChildren = hasTabs || hasWidgets;
+                    var isExpanded = expandedModules[m.modul_key] || false;
+
+                    // Module row
+                    html += '<div class="px-5 py-3 hover:bg-gray-50 transition">';
+                    html += '<div class="flex items-center justify-between">';
                     html += '<div class="flex items-center space-x-3">';
+                    if(hasChildren) {
+                        html += '<button onclick="toggleModuleExpand(\'' + m.modul_key + '\')" class="text-gray-400 hover:text-gray-700 text-sm transition-transform ' + (isExpanded?'rotate-90':'') + '" style="width:20px">' + (isExpanded?'▼':'▶') + '</button>';
+                    } else {
+                        html += '<span style="width:20px"></span>';
+                    }
                     html += '<span class="text-xl">' + (icons[m.modul_key]||'📦') + '</span>';
                     html += '<div><span class="font-semibold text-gray-800 text-sm">' + m.modul_name + '</span>';
-                    html += '<span class="text-xs text-gray-400 ml-2">' + m.modul_key + '</span></div>';
-                    html += '</div>';
-                    html += '<div class="flex items-center space-x-1 bg-gray-100 rounded-lg p-0.5">';
-                    // 3 Toggle Buttons
-                    var btnBase = 'px-3 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer';
-                    html += '<button onclick="setModulStatus(\'' + m.id + '\',\'aktiv\')" class="' + btnBase + ' ' + (m.status==='aktiv' ? 'bg-green-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">✓ Aktiv</button>';
-                    html += '<button onclick="setModulStatus(\'' + m.id + '\',\'in_bearbeitung\')" class="' + btnBase + ' ' + (m.status==='in_bearbeitung' ? 'bg-yellow-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">🔧 In Bearbeitung</button>';
-                    html += '<button onclick="setModulStatus(\'' + m.id + '\',\'deaktiviert\')" class="' + btnBase + ' ' + (m.status==='deaktiviert' ? 'bg-gray-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">✕ Deaktiviert</button>';
+                    html += '<span class="text-xs text-gray-400 ml-2">' + m.modul_key + '</span>';
+                    if(hasTabs) html += '<span class="text-[10px] text-gray-400 ml-1">(' + MODULE_TABS[m.modul_key].length + ' Tabs)</span>';
+                    if(hasWidgets) html += '<span class="text-[10px] text-gray-400 ml-1">(' + MODULE_WIDGETS[m.modul_key].length + ' Widgets)</span>';
                     html += '</div></div>';
+
+                    // Status toggle buttons - now with 4 options
+                    html += '<div class="flex items-center space-x-1 bg-gray-100 rounded-lg p-0.5">';
+                    var btnBase = 'px-2.5 py-1.5 rounded-md text-[11px] font-semibold transition cursor-pointer';
+                    html += '<button onclick="setModulStatus(\'' + m.id + '\',\'aktiv\')" class="' + btnBase + ' ' + (m.status==='aktiv' ? 'bg-green-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">✓ Aktiv</button>';
+                    html += '<button onclick="setModulStatus(\'' + m.id + '\',\'demo\')" class="' + btnBase + ' ' + (m.status==='demo' ? 'bg-orange-400 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">👁 Demo</button>';
+                    html += '<button onclick="setModulStatus(\'' + m.id + '\',\'in_bearbeitung\')" class="' + btnBase + ' ' + (m.status==='in_bearbeitung' ? 'bg-yellow-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">🔧 Bald</button>';
+                    html += '<button onclick="setModulStatus(\'' + m.id + '\',\'deaktiviert\')" class="' + btnBase + ' ' + (m.status==='deaktiviert' ? 'bg-gray-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">✕ Aus</button>';
+                    html += '</div></div>';
+
+                    // Expandable children section
+                    if(hasChildren && isExpanded) {
+                        html += '<div class="ml-12 mt-3 mb-1 space-y-2">';
+                        if(hasTabs) {
+                            html += '<div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Tabs</div>';
+                            MODULE_TABS[m.modul_key].forEach(function(tab) {
+                                var tabStatus = (cfg.tabs && cfg.tabs[tab.key]) || 'aktiv';
+                                html += '<div class="flex items-center justify-between py-1">';
+                                html += '<span class="text-xs text-gray-700">↳ ' + tab.label + '</span>';
+                                html += '<div class="flex items-center space-x-0.5 bg-gray-100 rounded p-0.5">';
+                                var tbtn = 'px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer';
+                                html += '<button onclick="setTabStatus(\'' + m.modul_key + '\',\'' + tab.key + '\',\'aktiv\')" class="' + tbtn + ' ' + (tabStatus==='aktiv'?'bg-green-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✓</button>';
+                                html += '<button onclick="setTabStatus(\'' + m.modul_key + '\',\'' + tab.key + '\',\'demo\')" class="' + tbtn + ' ' + (tabStatus==='demo'?'bg-orange-400 text-white':'text-gray-400 hover:bg-gray-200') + '">👁</button>';
+                                html += '<button onclick="setTabStatus(\'' + m.modul_key + '\',\'' + tab.key + '\',\'deaktiviert\')" class="' + tbtn + ' ' + (tabStatus==='deaktiviert'?'bg-gray-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✕</button>';
+                                html += '</div></div>';
+                            });
+                        }
+                        if(hasWidgets) {
+                            html += '<div class="text-[10px] font-bold text-gray-400 uppercase mb-1 mt-2">Widgets</div>';
+                            MODULE_WIDGETS[m.modul_key].forEach(function(w) {
+                                var wStatus = (cfg.widgets && cfg.widgets[w.key]) || 'aktiv';
+                                html += '<div class="flex items-center justify-between py-1">';
+                                html += '<span class="text-xs text-gray-700">↳ ' + w.label + '</span>';
+                                html += '<div class="flex items-center space-x-0.5 bg-gray-100 rounded p-0.5">';
+                                var wbtn = 'px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer';
+                                html += '<button onclick="setWidgetStatus(\'' + m.modul_key + '\',\'' + w.key + '\',\'aktiv\')" class="' + wbtn + ' ' + (wStatus==='aktiv'?'bg-green-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✓</button>';
+                                html += '<button onclick="setWidgetStatus(\'' + m.modul_key + '\',\'' + w.key + '\',\'demo\')" class="' + wbtn + ' ' + (wStatus==='demo'?'bg-orange-400 text-white':'text-gray-400 hover:bg-gray-200') + '">👁</button>';
+                                html += '<button onclick="setWidgetStatus(\'' + m.modul_key + '\',\'' + w.key + '\',\'deaktiviert\')" class="' + wbtn + ' ' + (wStatus==='deaktiviert'?'bg-gray-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✕</button>';
+                                html += '</div></div>';
+                            });
+                        }
+                        html += '</div>';
+                    }
+                    html += '</div>';
                 });
                 container.innerHTML = html;
 
-                // Update counters
                 var el1 = document.getElementById('countAktiv'); if(el1) el1.textContent = counts.aktiv||0;
+                var el1b = document.getElementById('countDemo'); if(el1b) el1b.textContent = counts.demo||0;
                 var el2 = document.getElementById('countWip'); if(el2) el2.textContent = counts.in_bearbeitung||0;
                 var el3 = document.getElementById('countDeaktiviert'); if(el3) el3.textContent = counts.deaktiviert||0;
             } catch(err) { console.error('ModulStatusList:', err); container.innerHTML = '<div class="p-4 text-center text-red-400">Fehler beim Laden</div>'; }
+        }
+
+        function toggleModuleExpand(key) {
+            expandedModules[key] = !expandedModules[key];
+            renderModulStatusList();
+        }
+
+        async function setTabStatus(modulKey, tabKey, newStatus) {
+            try {
+                var cfg = sbModulConfig[modulKey] || {};
+                if(!cfg.tabs) cfg.tabs = {};
+                cfg.tabs[tabKey] = newStatus;
+                var resp = await sb.from('modul_status').update({config: cfg}).eq('modul_key', modulKey);
+                if(resp.error) throw resp.error;
+                sbModulConfig[modulKey] = cfg;
+                renderModulStatusList();
+                applyModulStatus();
+            } catch(err) { console.error('setTabStatus:', err); }
+        }
+
+        async function setWidgetStatus(modulKey, widgetKey, newStatus) {
+            try {
+                var cfg = sbModulConfig[modulKey] || {};
+                if(!cfg.widgets) cfg.widgets = {};
+                cfg.widgets[widgetKey] = newStatus;
+                var resp = await sb.from('modul_status').update({config: cfg}).eq('modul_key', modulKey);
+                if(resp.error) throw resp.error;
+                sbModulConfig[modulKey] = cfg;
+                renderModulStatusList();
+                applyModulStatus();
+            } catch(err) { console.error('setWidgetStatus:', err); }
         }
 
         async function setModulStatus(id, newStatus) {
