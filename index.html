@@ -7789,11 +7789,18 @@
                     container.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">Noch keine BWAs erfasst.</p>';
                     return;
                 }
-                // Load corrected ergebnis from detail positions (Zeile 1355)
+                // Load corrected ergebnis from detail positions (Zeile 1355, 1300, or 1370)
                 var bwaIds = bwaCache.map(function(b){ return b.id; });
-                var detResp = await sb.from('bwa_detail_positionen').select('bwa_id,wert').in('bwa_id', bwaIds).eq('zeile', 1355).eq('ist_summenzeile', true);
+                var detResp = await sb.from('bwa_detail_positionen').select('bwa_id,zeile,wert').in('bwa_id', bwaIds).in('zeile', [1300, 1355, 1370]).eq('ist_summenzeile', true);
                 var detMap = {};
-                if(detResp.data) detResp.data.forEach(function(d){ detMap[d.bwa_id] = parseFloat(d.wert)||0; });
+                if(detResp.data) detResp.data.forEach(function(d){ 
+                    var val = parseFloat(d.wert)||0;
+                    // Priorität: 1355 > 1300 > 1370
+                    if(!detMap[d.bwa_id] || d.zeile === 1355 || (d.zeile === 1300 && !detMap[d.bwa_id + '_z1355'])) {
+                        detMap[d.bwa_id] = val;
+                        if(d.zeile === 1355) detMap[d.bwa_id + '_z1355'] = true;
+                    }
+                });
                 // Group by year
                 var years = {};
                 bwaCache.forEach(function(b) {
@@ -7948,9 +7955,9 @@
                     document.getElementById('bwaKpiErgebnisMarge').textContent = 'Marge: '+detErgMarge+'%';
                     console.log('[BWA] KPIs recalculated from detail positions:', {umsatz:detUmsatz, rohertrag:detRohertrag, kosten:detKosten, ergebnis:detErgebnis});
                     // Permanently fix wrong values in bwa_daten
-                    if(Math.abs(detErgebnis - pn(b.ergebnis_vor_steuern)) > 1) {
+                    if(Math.abs(detErgebnis - (parseFloat(b.ergebnis_vor_steuern)||0)) > 1) {
                         var fixData = {ergebnis_vor_steuern: detErgebnis, rohertrag: detRohertrag, umsatzerloese: detUmsatz};
-                        if(detKosten && Math.abs(detKosten - pn(b.gesamtkosten)) > 1) fixData.gesamtkosten = detKosten;
+                        if(detKosten && Math.abs(detKosten - (parseFloat(b.gesamtkosten)||0)) > 1) fixData.gesamtkosten = detKosten;
                         sb.from('bwa_daten').update(fixData).eq('id', bwaId).then(function(r){
                             if(!r.error) { console.log('[BWA] DB values corrected for', bwaId); loadBwaList(); }
                             else console.warn('[BWA] DB fix failed:', r.error);
