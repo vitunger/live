@@ -2784,31 +2784,27 @@
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <!-- Upcoming Events -->
                             <div class="lg:col-span-2 space-y-3" id="termineList"></div>
-                            <!-- Mini Calendar Sidebar -->
+                            <!-- Dynamic Mini Calendar Sidebar -->
                             <div>
                                 <div class="vit-card p-5 mb-4">
-                                    <h3 class="font-semibold text-gray-800 mb-3">Februar 2026</h3>
-                                    <div class="grid grid-cols-7 gap-1 text-center text-xs">
-                                        <span class="text-gray-400 font-semibold py-1">Mo</span><span class="text-gray-400 font-semibold py-1">Di</span><span class="text-gray-400 font-semibold py-1">Mi</span><span class="text-gray-400 font-semibold py-1">Do</span><span class="text-gray-400 font-semibold py-1">Fr</span><span class="text-gray-400 font-semibold py-1">Sa</span><span class="text-gray-400 font-semibold py-1">So</span>
-                                        <span class="py-1"></span><span class="py-1"></span><span class="py-1"></span><span class="py-1"></span><span class="py-1"></span><span class="py-1"></span><span class="py-1 text-gray-300">1</span>
-                                        <span class="py-1">2</span><span class="py-1">3</span><span class="py-1">4</span><span class="py-1">5</span><span class="py-1">6</span><span class="py-1">7</span><span class="py-1 text-gray-300">8</span>
-                                        <span class="py-1">9</span><span class="py-1">10</span><span class="py-1">11</span><span class="py-1">12</span><span class="py-1">13</span><span class="py-1 bg-vit-orange text-white rounded-full font-bold">14</span><span class="py-1 text-gray-300">15</span>
-                                        <span class="py-1">16</span><span class="py-1">17</span><span class="py-1 bg-blue-100 text-blue-700 rounded-full font-semibold">18</span><span class="py-1">19</span><span class="py-1">20</span><span class="py-1">21</span><span class="py-1 text-gray-300">22</span>
-                                        <span class="py-1">23</span><span class="py-1">24</span><span class="py-1 bg-red-100 text-red-700 rounded-full font-semibold">25</span><span class="py-1">26</span><span class="py-1 bg-blue-100 text-blue-700 rounded-full font-semibold">27</span><span class="py-1 bg-green-100 text-green-700 rounded-full font-semibold">28</span><span class="py-1 text-gray-300"></span>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <button onclick="kommMiniCalNav(-1)" class="p-1 hover:bg-gray-100 rounded"><svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+                                        <h3 class="font-semibold text-gray-800 text-sm" id="kommMiniCalTitle">Februar 2026</h3>
+                                        <button onclick="kommMiniCalNav(1)" class="p-1 hover:bg-gray-100 rounded"><svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
                                     </div>
+                                    <div id="kommMiniCalGrid" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
                                     <div class="mt-3 space-y-1 text-xs">
                                         <div class="flex items-center space-x-2"><span class="w-2 h-2 bg-vit-orange rounded-full"></span><span class="text-gray-500">Heute</span></div>
-                                        <div class="flex items-center space-x-2"><span class="w-2 h-2 bg-blue-500 rounded-full"></span><span class="text-gray-500">Meeting / Schulung</span></div>
+                                        <div class="flex items-center space-x-2"><span class="w-2 h-2 bg-blue-500 rounded-full"></span><span class="text-gray-500">Beratung / Meeting</span></div>
                                         <div class="flex items-center space-x-2"><span class="w-2 h-2 bg-red-500 rounded-full"></span><span class="text-gray-500">Deadline</span></div>
-                                        <div class="flex items-center space-x-2"><span class="w-2 h-2 bg-green-500 rounded-full"></span><span class="text-gray-500">Event</span></div>
+                                        <div class="flex items-center space-x-2"><span class="w-2 h-2 bg-green-500 rounded-full"></span><span class="text-gray-500">Probefahrt / Event</span></div>
                                     </div>
                                 </div>
                                 <div class="vit-card p-5">
-                                    <h3 class="font-semibold text-gray-800 mb-3">Schnellzugriff</h3>
+                                    <h3 class="font-semibold text-gray-800 mb-3">Kalender</h3>
                                     <div class="space-y-2 text-sm">
-                                        <a href="#" class="block text-vit-orange hover:underline">Vororder-Formular H/W 2026</a>
-                                        <a href="#" class="block text-vit-orange hover:underline">Schulungskatalog 2026</a>
-                                        <a href="#" class="block text-vit-orange hover:underline">Messekalender Bike-Branche</a>
+                                        <button onclick="showView('kalender')" class="block text-vit-orange hover:underline font-semibold">📅 Zum Kalender-Modul →</button>
+                                        <div id="kommMiniCalStats" class="text-xs text-gray-500 space-y-1"></div>
                                     </div>
                                 </div>
                             </div>
@@ -3244,12 +3240,6 @@
                 </div>
 
                 <!-- Other views placeholders -->
-                <div id="appointmentsView" class="view" style="display: none;">
-                    <h1 class="h1-headline text-gray-800 mb-6" data-i18n="h_calendar">TERMINE</h1>
-                    <div class="vit-card p-6">
-                        <p class="text-gray-600">Terminkalender wird hier angezeigt...</p>
-                    </div>
-                </div>
 
                 <div id="todosView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-6" data-i18n="h_todos">TODOS</h1>
@@ -4249,47 +4239,116 @@
 
                 <!-- ===== KALENDER VIEW ===== -->
                 <div id="kalenderView" class="view" style="display: none;">
-                    <div class="flex items-center justify-between mb-6">
+                    <!-- Header -->
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-5 gap-3">
                         <h1 class="h1-headline text-gray-800">KALENDER</h1>
-                        <div class="flex items-center space-x-3">
-                            <select id="kalFilterUser" onchange="renderKalender()" class="px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                        <div class="flex items-center space-x-2 flex-wrap gap-y-2">
+                            <select id="kalFilterUser" onchange="kalRenderActive()" class="px-3 py-2 border border-gray-200 rounded-lg text-sm">
                                 <option value="all">Alle Termine (Standort)</option>
                                 <option value="me">Nur meine Termine</option>
                             </select>
-                            <button class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90" onclick="openKalDayModal(new Date().toISOString().slice(0,10))">+ Neuer Termin</button>
+                            <button class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90 whitespace-nowrap" onclick="openKalDayModal(new Date().toISOString().slice(0,10))">+ Neuer Termin</button>
                         </div>
                     </div>
 
-                    <!-- Month Navigation -->
+                    <!-- View Toggle + Navigation -->
                     <div class="flex items-center justify-between mb-4">
-                        <button onclick="kalNavMonth(-1)" class="p-2 hover:bg-gray-100 rounded-lg"><svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
-                        <h2 class="text-lg font-bold text-gray-800" id="kalMonthTitle">Februar 2026</h2>
-                        <button onclick="kalNavMonth(1)" class="p-2 hover:bg-gray-100 rounded-lg"><svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
-                    </div>
-
-                    <!-- Calendar Grid -->
-                    <div class="vit-card overflow-hidden">
-                        <!-- Day Headers -->
-                        <div class="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
-                            <div class="py-2 text-center text-xs font-semibold text-gray-500">Mo</div>
-                            <div class="py-2 text-center text-xs font-semibold text-gray-500">Di</div>
-                            <div class="py-2 text-center text-xs font-semibold text-gray-500">Mi</div>
-                            <div class="py-2 text-center text-xs font-semibold text-gray-500">Do</div>
-                            <div class="py-2 text-center text-xs font-semibold text-gray-500">Fr</div>
-                            <div class="py-2 text-center text-xs font-semibold text-gray-500 text-orange-400">Sa</div>
-                            <div class="py-2 text-center text-xs font-semibold text-gray-500 text-orange-400">So</div>
+                        <div class="flex items-center space-x-1">
+                            <button onclick="kalNav(-1)" class="p-2 hover:bg-gray-100 rounded-lg"><svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+                            <button onclick="kalGoToday()" class="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700">Heute</button>
+                            <button onclick="kalNav(1)" class="p-2 hover:bg-gray-100 rounded-lg"><svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
+                            <h2 class="text-lg font-bold text-gray-800 ml-2" id="kalNavTitle">Februar 2026</h2>
                         </div>
-                        <!-- Calendar Body -->
-                        <div id="kalGrid" class="grid grid-cols-7"></div>
+                        <div class="flex bg-gray-100 rounded-lg p-0.5">
+                            <button onclick="switchKalView('month')" id="kalViewBtnMonth" class="kal-view-btn px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-gray-800 shadow-sm">Monat</button>
+                            <button onclick="switchKalView('week')" id="kalViewBtnWeek" class="kal-view-btn px-3 py-1.5 text-xs font-semibold rounded-md text-gray-500">Woche</button>
+                            <button onclick="switchKalView('day')" id="kalViewBtnDay" class="kal-view-btn px-3 py-1.5 text-xs font-semibold rounded-md text-gray-500">Tag</button>
+                        </div>
                     </div>
 
-                    <!-- Upcoming list -->
-                    <h3 class="font-bold text-gray-800 mt-6 mb-3">Anstehende Termine</h3>
-                    <div id="kalUpcoming" class="space-y-2"></div>
+                    <!-- ===== MONTH VIEW ===== -->
+                    <div id="kalMonthContainer">
+                        <div class="vit-card overflow-hidden">
+                            <div class="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+                                <div class="py-2 text-center text-xs font-semibold text-gray-500">Mo</div>
+                                <div class="py-2 text-center text-xs font-semibold text-gray-500">Di</div>
+                                <div class="py-2 text-center text-xs font-semibold text-gray-500">Mi</div>
+                                <div class="py-2 text-center text-xs font-semibold text-gray-500">Do</div>
+                                <div class="py-2 text-center text-xs font-semibold text-gray-500">Fr</div>
+                                <div class="py-2 text-center text-xs font-semibold text-gray-500 text-orange-400">Sa</div>
+                                <div class="py-2 text-center text-xs font-semibold text-gray-500 text-orange-400">So</div>
+                            </div>
+                            <div id="kalGrid" class="grid grid-cols-7"></div>
+                        </div>
+                        <h3 class="font-bold text-gray-800 mt-6 mb-3">Anstehende Termine</h3>
+                        <div id="kalUpcoming" class="space-y-2"></div>
+                    </div>
+
+                    <!-- ===== WEEK VIEW ===== -->
+                    <div id="kalWeekContainer" style="display:none;">
+                        <!-- Ganztägig row -->
+                        <div id="kalWeekAllDay" class="vit-card mb-2 p-0 overflow-hidden" style="display:none;">
+                            <div class="grid grid-cols-8 text-xs">
+                                <div class="p-2 bg-gray-50 border-r border-b border-gray-200 text-gray-400 font-semibold text-center">Ganztägig</div>
+                                <div id="kalWeekAllDay0" class="p-1.5 border-r border-b border-gray-100 min-h-[32px]"></div>
+                                <div id="kalWeekAllDay1" class="p-1.5 border-r border-b border-gray-100 min-h-[32px]"></div>
+                                <div id="kalWeekAllDay2" class="p-1.5 border-r border-b border-gray-100 min-h-[32px]"></div>
+                                <div id="kalWeekAllDay3" class="p-1.5 border-r border-b border-gray-100 min-h-[32px]"></div>
+                                <div id="kalWeekAllDay4" class="p-1.5 border-r border-b border-gray-100 min-h-[32px]"></div>
+                                <div id="kalWeekAllDay5" class="p-1.5 border-r border-b border-gray-100 min-h-[32px]"></div>
+                                <div id="kalWeekAllDay6" class="p-1.5 border-b border-gray-100 min-h-[32px]"></div>
+                            </div>
+                        </div>
+                        <!-- Week time grid -->
+                        <div class="vit-card overflow-hidden">
+                            <!-- Day headers -->
+                            <div class="grid grid-cols-8 bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                                <div class="py-2 text-center text-[10px] font-semibold text-gray-400">Uhrzeit</div>
+                                <div id="kalWeekHead0" class="py-2 text-center text-xs font-semibold text-gray-600"></div>
+                                <div id="kalWeekHead1" class="py-2 text-center text-xs font-semibold text-gray-600"></div>
+                                <div id="kalWeekHead2" class="py-2 text-center text-xs font-semibold text-gray-600"></div>
+                                <div id="kalWeekHead3" class="py-2 text-center text-xs font-semibold text-gray-600"></div>
+                                <div id="kalWeekHead4" class="py-2 text-center text-xs font-semibold text-gray-600"></div>
+                                <div id="kalWeekHead5" class="py-2 text-center text-xs font-semibold text-gray-600 text-orange-400"></div>
+                                <div id="kalWeekHead6" class="py-2 text-center text-xs font-semibold text-gray-600 text-orange-400"></div>
+                            </div>
+                            <!-- Scrollable time grid -->
+                            <div id="kalWeekGrid" class="overflow-y-auto" style="max-height:calc(100vh - 320px); min-height:500px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- ===== DAY VIEW ===== -->
+                    <div id="kalDayContainer" style="display:none;">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <!-- Day timeline (left 2/3) -->
+                            <div class="lg:col-span-2">
+                                <!-- Ganztägig -->
+                                <div id="kalDayAllDay" class="vit-card mb-3 p-3" style="display:none;">
+                                    <p class="text-[10px] text-gray-400 font-semibold uppercase mb-1">Ganztägig</p>
+                                    <div id="kalDayAllDayList" class="space-y-1"></div>
+                                </div>
+                                <!-- Hour grid -->
+                                <div class="vit-card overflow-hidden">
+                                    <div id="kalDayGrid" class="overflow-y-auto" style="max-height:calc(100vh - 320px); min-height:500px;"></div>
+                                </div>
+                            </div>
+                            <!-- Day sidebar (right 1/3) -->
+                            <div>
+                                <div class="vit-card p-5 mb-4">
+                                    <h3 class="font-semibold text-gray-800 mb-3" id="kalDaySideTitle">Termine am Tag</h3>
+                                    <div id="kalDaySideList" class="space-y-2"></div>
+                                </div>
+                                <div class="vit-card p-5">
+                                    <h3 class="font-semibold text-gray-800 mb-3">Zusammenfassung</h3>
+                                    <div id="kalDayStats" class="space-y-2 text-sm text-gray-600"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- Termin Modal (New + Edit) -->
                     <div id="kalNewModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
-                        <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                        <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
                             <h3 id="kalModalTitle" class="font-bold text-gray-800 text-lg mb-4">Neuen Termin anlegen</h3>
                             <div class="space-y-3">
                                 <input type="text" id="kalNewTitle" placeholder="Titel" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
@@ -7451,6 +7510,97 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             renderBrett(cat);
         }
 
+        // === DYNAMIC MINI CALENDAR (Kommunikation Termine Tab) ===
+        var kommMiniCalMonth = new Date().getMonth();
+        var kommMiniCalYear = new Date().getFullYear();
+
+        function kommMiniCalNav(dir) {
+            kommMiniCalMonth += dir;
+            if (kommMiniCalMonth > 11) { kommMiniCalMonth = 0; kommMiniCalYear++; }
+            if (kommMiniCalMonth < 0) { kommMiniCalMonth = 11; kommMiniCalYear--; }
+            renderKommMiniCal();
+        }
+
+        function renderKommMiniCal() {
+            var months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+            var titleEl = document.getElementById('kommMiniCalTitle');
+            if (titleEl) titleEl.textContent = months[kommMiniCalMonth] + ' ' + kommMiniCalYear;
+
+            var gridEl = document.getElementById('kommMiniCalGrid');
+            if (!gridEl) return;
+
+            var today = new Date();
+            var todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+
+            var firstDay = new Date(kommMiniCalYear, kommMiniCalMonth, 1).getDay();
+            firstDay = firstDay === 0 ? 6 : firstDay - 1;
+            var daysInMonth = new Date(kommMiniCalYear, kommMiniCalMonth + 1, 0).getDate();
+
+            // Header row
+            var h = '<span class="text-gray-400 font-semibold py-1">Mo</span><span class="text-gray-400 font-semibold py-1">Di</span><span class="text-gray-400 font-semibold py-1">Mi</span><span class="text-gray-400 font-semibold py-1">Do</span><span class="text-gray-400 font-semibold py-1">Fr</span><span class="text-gray-400 font-semibold py-1">Sa</span><span class="text-gray-400 font-semibold py-1">So</span>';
+
+            // Empty cells before first day
+            for (var i = 0; i < firstDay; i++) h += '<span class="py-1"></span>';
+
+            // Build date-to-termine lookup from kalTermine (shared data)
+            var termineDates = {};
+            (typeof kalTermine !== 'undefined' ? kalTermine : []).forEach(function(t) {
+                if (!termineDates[t.date]) termineDates[t.date] = [];
+                termineDates[t.date].push(t);
+            });
+
+            // Day cells
+            for (var d = 1; d <= daysInMonth; d++) {
+                var dateStr = kommMiniCalYear + '-' + String(kommMiniCalMonth + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+                var isToday = dateStr === todayStr;
+                var dayTerms = termineDates[dateStr] || [];
+                var isWeekend = ((firstDay + d - 1) % 7) >= 5;
+
+                var cls = 'py-1 cursor-pointer hover:bg-gray-100 rounded-full transition ';
+                if (isToday) {
+                    cls += 'bg-vit-orange text-white font-bold ';
+                } else if (dayTerms.length > 0) {
+                    // Color by first termin type
+                    var firstType = dayTerms[0].type;
+                    if (firstType === 'deadline') cls += 'bg-red-100 text-red-700 font-semibold ';
+                    else if (firstType === 'probefahrt' || firstType === 'event') cls += 'bg-green-100 text-green-700 font-semibold ';
+                    else cls += 'bg-blue-100 text-blue-700 font-semibold ';
+                } else if (isWeekend) {
+                    cls += 'text-gray-300 ';
+                }
+
+                var tooltip = dayTerms.length > 0 ? dayTerms.map(function(t) { return t.time + ' ' + t.title; }).join('\n') : '';
+                h += '<span class="' + cls + '" title="' + escH(tooltip) + '" onclick="kommMiniCalClick(\'' + dateStr + '\')">' + d + '</span>';
+            }
+
+            gridEl.innerHTML = h;
+
+            // Stats
+            var statsEl = document.getElementById('kommMiniCalStats');
+            if (statsEl) {
+                var monthTerms = (typeof kalTermine !== 'undefined' ? kalTermine : []).filter(function(t) {
+                    return t.date.slice(0, 7) === kommMiniCalYear + '-' + String(kommMiniCalMonth + 1).padStart(2, '0');
+                });
+                var typeCount = {};
+                monthTerms.forEach(function(t) { typeCount[t.type] = (typeCount[t.type] || 0) + 1; });
+                var sh = '<p class="font-semibold text-gray-700">' + monthTerms.length + ' Termine im ' + months[kommMiniCalMonth] + '</p>';
+                var typeLabelsLocal = {beratung:'Beratung',probefahrt:'Probefahrt',werkstatt:'Werkstatt',meeting:'Meeting',sonstig:'Sonstiges',schulung:'Schulung',event:'Event',deadline:'Deadline'};
+                Object.keys(typeCount).forEach(function(k) {
+                    sh += '<p>' + typeCount[k] + '× ' + (typeLabelsLocal[k] || k) + '</p>';
+                });
+                statsEl.innerHTML = sh;
+            }
+        }
+
+        function kommMiniCalClick(dateStr) {
+            // Navigate to Kalender module with day view
+            showView('kalender');
+            if (typeof kalDayDate !== 'undefined') {
+                kalDayDate = new Date(dateStr + 'T12:00:00');
+                switchKalView('day');
+            }
+        }
+
         async function renderTermine() {
             var container = document.getElementById('termineList');
             if(!container) return;
@@ -7492,7 +7642,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(tabName==='forum') renderForumPosts('all');
             if(tabName==='brett') renderBrett('all');
             if(tabName==='channel') renderChannelMessages();
-            if(tabName==='termine') renderTermine();
+            if(tabName==='termine'){ renderTermine(); renderKommMiniCal(); }
         }
 
         // Init default tab
@@ -12798,10 +12948,345 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         // === KALENDER DATA & LOGIC (DB-backed) ===
         var kalMonth = new Date().getMonth(); var kalYear = new Date().getFullYear();
         var kalTermine = [];
-        var kalEditId = null; // Track which termin is being edited
+        var kalEditId = null;
+        var kalCurrentView = 'month'; // 'month' | 'week' | 'day'
+        var kalWeekStart = null; // Date object for Monday of current week
+        var kalDayDate = null; // Date object for current day view
+        var kalHourStart = 7; // First hour shown in week/day grids
+        var kalHourEnd = 20; // Last hour shown
 
         var typeColors = {beratung:'bg-blue-100 text-blue-700 border-blue-300',probefahrt:'bg-green-100 text-green-700 border-green-300',werkstatt:'bg-gray-200 text-gray-700 border-gray-300',meeting:'bg-purple-100 text-purple-700 border-purple-300',sonstig:'bg-orange-100 text-orange-700 border-orange-300',schulung:'bg-indigo-100 text-indigo-700 border-indigo-300',event:'bg-pink-100 text-pink-700 border-pink-300',deadline:'bg-red-100 text-red-700 border-red-300'};
         var typeLabels = {beratung:'Beratung',probefahrt:'Probefahrt',werkstatt:'Werkstatt',meeting:'Meeting',sonstig:'Sonstiges',schulung:'Schulung',event:'Event',deadline:'Deadline'};
+        var typeSolid = {beratung:'bg-blue-500',probefahrt:'bg-green-500',werkstatt:'bg-gray-500',meeting:'bg-purple-500',sonstig:'bg-orange-500',schulung:'bg-indigo-500',event:'bg-pink-500',deadline:'bg-red-500'};
+
+        // Init week/day to current
+        (function(){
+            var now=new Date(); var day=now.getDay(); var diff=now.getDate()-day+(day===0?-6:1);
+            kalWeekStart=new Date(now.getFullYear(),now.getMonth(),diff);
+            kalDayDate=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+        })();
+
+        // === VIEW SWITCHING ===
+        function switchKalView(view){
+            kalCurrentView=view;
+            document.querySelectorAll('.kal-view-btn').forEach(function(b){b.className='kal-view-btn px-3 py-1.5 text-xs font-semibold rounded-md text-gray-500';});
+            var btn=document.getElementById('kalViewBtn'+view.charAt(0).toUpperCase()+view.slice(1));
+            if(btn)btn.className='kal-view-btn px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-gray-800 shadow-sm';
+            document.getElementById('kalMonthContainer').style.display=view==='month'?'':'none';
+            document.getElementById('kalWeekContainer').style.display=view==='week'?'':'none';
+            document.getElementById('kalDayContainer').style.display=view==='day'?'':'none';
+            kalRenderActive();
+        }
+
+        // Unified navigation
+        function kalNav(dir){
+            if(kalCurrentView==='month'){kalMonth+=dir;if(kalMonth>11){kalMonth=0;kalYear++;}if(kalMonth<0){kalMonth=11;kalYear--;}
+            }else if(kalCurrentView==='week'){kalWeekStart=new Date(kalWeekStart.getTime()+dir*7*86400000);
+            }else if(kalCurrentView==='day'){kalDayDate=new Date(kalDayDate.getTime()+dir*86400000);}
+            kalRenderActive();
+        }
+        function kalGoToday(){
+            var now=new Date();kalMonth=now.getMonth();kalYear=now.getFullYear();
+            var day=now.getDay();var diff=now.getDate()-day+(day===0?-6:1);
+            kalWeekStart=new Date(now.getFullYear(),now.getMonth(),diff);
+            kalDayDate=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+            kalRenderActive();
+        }
+
+        function kalRenderActive(){
+            kalUpdateNavTitle();
+            if(kalCurrentView==='month')renderKalender();
+            else if(kalCurrentView==='week')renderKalWeek();
+            else if(kalCurrentView==='day')renderKalDay();
+        }
+
+        function kalUpdateNavTitle(){
+            var months=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+            var dayNames=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+            var title='';
+            if(kalCurrentView==='month'){title=months[kalMonth]+' '+kalYear;}
+            else if(kalCurrentView==='week'){
+                var end=new Date(kalWeekStart.getTime()+6*86400000);
+                if(kalWeekStart.getMonth()===end.getMonth()){
+                    title=kalWeekStart.getDate()+'. – '+end.getDate()+'. '+months[end.getMonth()]+' '+end.getFullYear();
+                }else{
+                    title=kalWeekStart.getDate()+'. '+months[kalWeekStart.getMonth()].slice(0,3)+' – '+end.getDate()+'. '+months[end.getMonth()].slice(0,3)+' '+end.getFullYear();
+                }
+                // Add KW
+                var d=new Date(Date.UTC(kalWeekStart.getFullYear(),kalWeekStart.getMonth(),kalWeekStart.getDate()));
+                d.setUTCDate(d.getUTCDate()+4-(d.getUTCDay()||7));
+                var yearStart=new Date(Date.UTC(d.getUTCFullYear(),0,1));
+                var kw=Math.ceil((((d-yearStart)/86400000)+1)/7);
+                title='KW '+kw+' · '+title;
+            }
+            else if(kalCurrentView==='day'){title=dayNames[kalDayDate.getDay()]+', '+kalDayDate.getDate()+'. '+months[kalDayDate.getMonth()]+' '+kalDayDate.getFullYear();}
+            document.getElementById('kalNavTitle').textContent=title;
+        }
+
+        // === FILTERED TERMINE HELPER ===
+        function kalGetFiltered(){
+            var userFilter=(document.getElementById('kalFilterUser')||{}).value||'all';
+            return kalTermine.filter(function(t){
+                if(userFilter==='me' && sbProfile) return t.erstellt_von===(sbUser?sbUser.id:null) || t.user==='all';
+                return true;
+            });
+        }
+
+        // Helper: format date to YYYY-MM-DD
+        function kalFmtDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+
+        // === MONTH VIEW (enhanced existing) ===
+        function renderKalender(){
+            var filtered=kalGetFiltered();
+            var firstDay=new Date(kalYear,kalMonth,1).getDay();
+            firstDay=firstDay===0?6:firstDay-1;
+            var daysInMonth=new Date(kalYear,kalMonth+1,0).getDate();
+            var today=new Date(); var todayStr=kalFmtDate(today);
+            var grid=document.getElementById('kalGrid'); var h='';
+
+            for(var i=0;i<firstDay;i++) h+='<div class="min-h-[80px] border-b border-r border-gray-100 p-1 bg-gray-50"></div>';
+
+            for(var d=1;d<=daysInMonth;d++){
+                var dateStr=kalYear+'-'+String(kalMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+                var isToday=dateStr===todayStr;
+                var dayTermine=filtered.filter(function(t){return t.date===dateStr;});
+                h+='<div class="min-h-[80px] border-b border-r border-gray-100 p-1 cursor-pointer hover:bg-blue-50 transition '+(isToday?'bg-orange-50':'')
+                    +'" onclick="kalClickDay(\''+dateStr+'\')">';
+                h+='<p class="text-xs font-bold '+(isToday?'text-vit-orange':'text-gray-600')+'">'+d+'</p>';
+                var shown=0;
+                dayTermine.forEach(function(t){
+                    if(shown<3){
+                        var cls=typeColors[t.type]||'bg-gray-100 text-gray-600';
+                        h+='<div onclick="event.stopPropagation();openTerminDetail(\''+t.id+'\')" class="mt-0.5 px-1 py-0.5 rounded text-[9px] font-semibold truncate border cursor-pointer hover:opacity-80 '+cls+'" title="'+escH(t.title)+'">'+
+                            (t.ganztaegig?'◆':t.time.slice(0,5))+' '+escH(t.title.slice(0,15))+'</div>';
+                    }
+                    shown++;
+                });
+                if(dayTermine.length>3) h+='<p class="text-[9px] text-gray-400 mt-0.5">+'+(dayTermine.length-3)+' weitere</p>';
+                h+='</div>';
+            }
+            grid.innerHTML=h;
+
+            // Upcoming list
+            var todayStrUp=kalFmtDate(new Date());
+            var upcoming=filtered.filter(function(t){return t.date>=todayStrUp;}).sort(function(a,b){return a.date>b.date?1:-1;}).slice(0,8);
+            var uEl=document.getElementById('kalUpcoming'); var uh='';
+            var dayNamesShort=['So','Mo','Di','Mi','Do','Fr','Sa'];
+            upcoming.forEach(function(t){
+                var cls=typeColors[t.type]||'bg-gray-100 text-gray-600';
+                var dd=new Date(t.date); var dayName=dayNamesShort[dd.getDay()];
+                uh+='<div class="vit-card p-3 flex items-center space-x-3 cursor-pointer hover:shadow-md transition" onclick="openTerminDetail(\''+t.id+'\')">';
+                uh+='<div class="text-center flex-shrink-0 w-12"><p class="text-xs text-gray-500">'+dayName+'</p><p class="text-lg font-bold text-gray-800">'+parseInt(t.date.slice(8))+'</p><p class="text-[10px] text-gray-400">'+t.date.slice(5,7)+'</p></div>';
+                uh+='<div class="flex-1 min-w-0"><p class="font-semibold text-gray-800 text-sm truncate">'+escH(t.title)+'</p><p class="text-xs text-gray-500">'+(t.ganztaegig?'Ganztägig':t.time+' Uhr'+(t.endTime?' – '+t.endTime+' Uhr':''))+(t.ort?' · '+escH(t.ort):'')+(t.user!=='all'?' · '+escH(t.user):'')+'</p></div>';
+                uh+='<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold '+cls+'">'+typeLabels[t.type]+'</span>';
+                if(t.ms365_event_id) uh+='<span class="text-[10px] text-blue-500" title="Synced with MS365">📅</span>';
+                uh+='</div>';
+            });
+            uEl.innerHTML=uh||'<div class="text-center py-4 text-gray-400 text-sm">Keine anstehenden Termine.</div>';
+        }
+
+        // Click on day in month view → switch to day view
+        function kalClickDay(dateStr){
+            kalDayDate=new Date(dateStr+'T12:00:00');
+            switchKalView('day');
+        }
+
+        // === WEEK VIEW ===
+        function renderKalWeek(){
+            var filtered=kalGetFiltered();
+            var todayStr=kalFmtDate(new Date());
+            var dayNamesShort=['Mo','Di','Mi','Do','Fr','Sa','So'];
+
+            // Build day columns
+            var weekDays=[];
+            for(var i=0;i<7;i++){
+                var d=new Date(kalWeekStart.getTime()+i*86400000);
+                weekDays.push({date:kalFmtDate(d),dayObj:d,label:dayNamesShort[i]+' '+d.getDate()+'.',isToday:kalFmtDate(d)===todayStr});
+            }
+
+            // Update headers
+            for(var i=0;i<7;i++){
+                var hEl=document.getElementById('kalWeekHead'+i);
+                if(hEl){
+                    hEl.textContent=weekDays[i].label;
+                    hEl.className='py-2 text-center text-xs font-semibold '+(weekDays[i].isToday?'text-vit-orange bg-orange-50':'text-gray-600')+(i>=5?' text-orange-400':'');
+                }
+            }
+
+            // All-day events
+            var hasAllDay=false;
+            for(var i=0;i<7;i++){
+                var adEl=document.getElementById('kalWeekAllDay'+i);
+                if(!adEl)continue;
+                var adTerms=filtered.filter(function(t){return t.date===weekDays[i].date && t.ganztaegig;});
+                var ah='';
+                adTerms.forEach(function(t){
+                    var cls=typeColors[t.type]||'bg-gray-100 text-gray-600';
+                    ah+='<div onclick="openTerminDetail(\''+t.id+'\')" class="px-1 py-0.5 rounded text-[9px] font-semibold truncate border cursor-pointer hover:opacity-80 '+cls+'" title="'+escH(t.title)+'">'+escH(t.title.slice(0,12))+'</div>';
+                });
+                adEl.innerHTML=ah;
+                adEl.className='p-1.5 border-r border-b border-gray-100 min-h-[32px]'+(weekDays[i].isToday?' bg-orange-50':'');
+                if(adTerms.length>0) hasAllDay=true;
+            }
+            document.getElementById('kalWeekAllDay').style.display=hasAllDay?'':'none';
+
+            // Time grid
+            var gridEl=document.getElementById('kalWeekGrid');
+            var h='';
+            for(var hour=kalHourStart;hour<=kalHourEnd;hour++){
+                h+='<div class="grid grid-cols-8 border-b border-gray-50" style="min-height:60px;">';
+                h+='<div class="p-1 border-r border-gray-200 text-[10px] text-gray-400 font-semibold text-right pr-2 pt-1 bg-gray-50/50">'+String(hour).padStart(2,'0')+':00</div>';
+                for(var col=0;col<7;col++){
+                    var dateStr=weekDays[col].date;
+                    var cellTerms=filtered.filter(function(t){
+                        if(t.ganztaegig) return false;
+                        if(t.date!==dateStr) return false;
+                        var tHour=parseInt(t.time.split(':')[0]);
+                        return tHour===hour;
+                    });
+                    var bgCls=weekDays[col].isToday?'bg-orange-50/30':'';
+                    h+='<div class="border-r border-gray-100 p-0.5 cursor-pointer hover:bg-blue-50/50 relative '+bgCls+'" onclick="kalClickWeekCell(\''+dateStr+'\','+hour+')">';
+                    cellTerms.forEach(function(t){
+                        var solid=typeSolid[t.type]||'bg-gray-500';
+                        var durSlots=1;
+                        if(t.endTime){var eh=parseInt(t.endTime.split(':')[0]);durSlots=Math.max(1,eh-hour);}
+                        var heightPx=Math.min(durSlots*60,180);
+                        h+='<div onclick="event.stopPropagation();openTerminDetail(\''+t.id+'\')" class="'+solid+' text-white rounded px-1.5 py-1 mb-0.5 text-[10px] cursor-pointer hover:opacity-90 shadow-sm overflow-hidden" style="min-height:'+Math.max(24,heightPx-4)+'px;" title="'+escH(t.title)+'">';
+                        h+='<p class="font-bold truncate">'+escH(t.title)+'</p>';
+                        h+='<p class="opacity-80 truncate">'+t.time+(t.endTime?' – '+t.endTime:'')+(t.ort?' · '+escH(t.ort):'')+'</p>';
+                        h+='</div>';
+                    });
+                    h+='</div>';
+                }
+                h+='</div>';
+            }
+            gridEl.innerHTML=h;
+
+            // Scroll to current hour
+            var nowHour=new Date().getHours();
+            if(nowHour>=kalHourStart && nowHour<=kalHourEnd){
+                var scrollTo=(nowHour-kalHourStart)*60;
+                gridEl.scrollTop=Math.max(0,scrollTo-60);
+            }
+        }
+
+        function kalClickWeekCell(dateStr,hour){
+            kalEditId=null;
+            document.getElementById('kalNewTitle').value='';
+            document.getElementById('kalNewDate').value=dateStr;
+            document.getElementById('kalNewTime').value=String(hour).padStart(2,'0')+':00';
+            document.getElementById('kalNewEndTime').value=String(Math.min(hour+1,23)).padStart(2,'0')+':00';
+            document.getElementById('kalNewType').value='beratung';
+            document.getElementById('kalNewNotes').value='';
+            document.getElementById('kalNewOrt').value='';
+            document.getElementById('kalNewGanztaegig').checked=false;
+            document.getElementById('kalTimeFields').style.display='';
+            document.getElementById('kalModalTitle').textContent='Neuen Termin anlegen';
+            document.getElementById('kalSaveBtn').textContent='Speichern';
+            var delBtn=document.getElementById('kalDeleteBtn');if(delBtn)delBtn.style.display='none';
+            document.getElementById('kalNewModal').classList.remove('hidden');
+        }
+
+        // === DAY VIEW ===
+        function renderKalDay(){
+            var filtered=kalGetFiltered();
+            var dateStr=kalFmtDate(kalDayDate);
+            var todayStr=kalFmtDate(new Date());
+            var isToday=dateStr===todayStr;
+            var dayTermine=filtered.filter(function(t){return t.date===dateStr;});
+            var allDayTerms=dayTermine.filter(function(t){return t.ganztaegig;});
+            var timedTerms=dayTermine.filter(function(t){return !t.ganztaegig;}).sort(function(a,b){return a.time>b.time?1:-1;});
+
+            // All-day section
+            var adEl=document.getElementById('kalDayAllDay');
+            var adList=document.getElementById('kalDayAllDayList');
+            if(allDayTerms.length>0){
+                adEl.style.display='';
+                var ah='';
+                allDayTerms.forEach(function(t){
+                    var cls=typeColors[t.type]||'bg-gray-100 text-gray-600';
+                    ah+='<div onclick="openTerminDetail(\''+t.id+'\')" class="px-3 py-2 rounded-lg border cursor-pointer hover:shadow-sm transition '+cls+'"><span class="font-semibold text-sm">'+escH(t.title)+'</span>'+(t.ort?' <span class="text-xs opacity-70">· '+escH(t.ort)+'</span>':'')+'</div>';
+                });
+                adList.innerHTML=ah;
+            }else{adEl.style.display='none';}
+
+            // Hour grid
+            var gridEl=document.getElementById('kalDayGrid');
+            var h='';
+            var nowHour=new Date().getHours();
+            var nowMin=new Date().getMinutes();
+
+            for(var hour=kalHourStart;hour<=kalHourEnd;hour++){
+                var hourTerms=timedTerms.filter(function(t){return parseInt(t.time.split(':')[0])===hour;});
+                var isNowHour=isToday&&hour===nowHour;
+                h+='<div class="flex border-b border-gray-50 relative'+(isNowHour?' bg-orange-50/40':'')+'" style="min-height:72px;">';
+                h+='<div class="w-16 flex-shrink-0 p-2 border-r border-gray-200 text-right pr-3 bg-gray-50/50"><span class="text-xs text-gray-400 font-semibold">'+String(hour).padStart(2,'0')+':00</span></div>';
+                h+='<div class="flex-1 p-1 cursor-pointer hover:bg-blue-50/50 relative" onclick="kalClickWeekCell(\''+dateStr+'\','+hour+')">';
+
+                hourTerms.forEach(function(t){
+                    var solid=typeSolid[t.type]||'bg-gray-500';
+                    var durMin=60;
+                    if(t.endTime){
+                        var sh=parseInt(t.time.split(':')[0]),sm=parseInt(t.time.split(':')[1]||0);
+                        var eh=parseInt(t.endTime.split(':')[0]),em=parseInt(t.endTime.split(':')[1]||0);
+                        durMin=Math.max(30,(eh*60+em)-(sh*60+sm));
+                    }
+                    var heightPx=Math.max(36,Math.round(durMin/60*72));
+                    h+='<div onclick="event.stopPropagation();openTerminDetail(\''+t.id+'\')" class="'+solid+' text-white rounded-lg px-3 py-2 mb-1 cursor-pointer hover:opacity-90 shadow-sm" style="min-height:'+heightPx+'px;">';
+                    h+='<p class="font-bold text-sm">'+escH(t.title)+'</p>';
+                    h+='<p class="text-xs opacity-80">'+t.time+(t.endTime?' – '+t.endTime:'')+(t.ort?' · '+escH(t.ort):'')+'</p>';
+                    if(t.notes)h+='<p class="text-xs opacity-70 mt-0.5 truncate">'+escH(t.notes)+'</p>';
+                    h+='</div>';
+                });
+
+                // Now indicator
+                if(isNowHour){
+                    var topPct=Math.round((nowMin/60)*72);
+                    h+='<div class="absolute left-0 right-0 border-t-2 border-red-500 z-10 pointer-events-none" style="top:'+topPct+'px;"><div class="w-2.5 h-2.5 bg-red-500 rounded-full -mt-1.5 -ml-1"></div></div>';
+                }
+                h+='</div></div>';
+            }
+            gridEl.innerHTML=h;
+
+            // Scroll to now
+            if(isToday&&nowHour>=kalHourStart&&nowHour<=kalHourEnd){
+                gridEl.scrollTop=Math.max(0,(nowHour-kalHourStart)*72-72);
+            }
+
+            // Sidebar: list of day's termine
+            var months=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+            document.getElementById('kalDaySideTitle').textContent='Termine am '+kalDayDate.getDate()+'. '+months[kalDayDate.getMonth()];
+            var sideEl=document.getElementById('kalDaySideList');
+            if(dayTermine.length===0){sideEl.innerHTML='<p class="text-sm text-gray-400">Keine Termine an diesem Tag.</p>';
+            }else{
+                var sh='';
+                dayTermine.sort(function(a,b){if(a.ganztaegig&&!b.ganztaegig)return -1;if(!a.ganztaegig&&b.ganztaegig)return 1;return a.time>b.time?1:-1;});
+                dayTermine.forEach(function(t){
+                    var cls=typeColors[t.type]||'bg-gray-100 text-gray-600';
+                    var solid=typeSolid[t.type]||'bg-gray-500';
+                    sh+='<div onclick="openTerminDetail(\''+t.id+'\')" class="flex items-start space-x-2 p-2 rounded-lg cursor-pointer hover:bg-gray-50 transition">';
+                    sh+='<div class="w-1 rounded-full self-stretch flex-shrink-0 mt-0.5 '+solid+'"></div>';
+                    sh+='<div class="flex-1 min-w-0"><p class="font-semibold text-sm text-gray-800 truncate">'+escH(t.title)+'</p>';
+                    sh+='<p class="text-xs text-gray-500">'+(t.ganztaegig?'Ganztägig':t.time+(t.endTime?' – '+t.endTime:''))+'</p>';
+                    if(t.ort)sh+='<p class="text-xs text-gray-400">📍 '+escH(t.ort)+'</p>';
+                    sh+='</div><span class="text-[10px] px-1.5 py-0.5 rounded-full font-semibold flex-shrink-0 '+cls+'">'+typeLabels[t.type]+'</span></div>';
+                });
+                sideEl.innerHTML=sh;
+            }
+
+            // Stats
+            var statsEl=document.getElementById('kalDayStats');
+            var typeCount={};dayTermine.forEach(function(t){typeCount[t.type]=(typeCount[t.type]||0)+1;});
+            var statH='<p><span class="font-semibold text-gray-800">'+dayTermine.length+'</span> Termine gesamt</p>';
+            Object.keys(typeCount).forEach(function(k){
+                statH+='<div class="flex items-center space-x-2"><div class="w-2 h-2 rounded-full '+(typeSolid[k]||'bg-gray-400')+'"></div><span>'+typeCount[k]+'× '+typeLabels[k]+'</span></div>';
+            });
+            var totalMin=0;timedTerms.forEach(function(t){
+                if(t.endTime){var sh=parseInt(t.time.split(':')[0]),sm=parseInt(t.time.split(':')[1]||0),eh=parseInt(t.endTime.split(':')[0]),em=parseInt(t.endTime.split(':')[1]||0);totalMin+=(eh*60+em)-(sh*60+sm);}
+            });
+            if(totalMin>0){var hrs=Math.floor(totalMin/60);var mins=totalMin%60;statH+='<p class="mt-1">⏱️ Verplante Zeit: <span class="font-semibold">'+(hrs>0?hrs+'h ':'')+(mins>0?mins+'min':'')+'</span></p>';}
+            statsEl.innerHTML=statH;
+        }
 
         async function loadKalTermine() {
             try {
@@ -12829,59 +13314,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     });
                 } else { kalTermine = []; }
             } catch(e) { console.warn('Kalender load:', e); kalTermine = []; }
-            renderKalender();
+            kalRenderActive();
         }
 
-        function kalNavMonth(d){kalMonth+=d;if(kalMonth>11){kalMonth=0;kalYear++;}if(kalMonth<0){kalMonth=11;kalYear--;}renderKalender();}
-
-        function renderKalender(){
-            var months=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-            document.getElementById('kalMonthTitle').textContent=months[kalMonth]+' '+kalYear;
-            var userFilter=(document.getElementById('kalFilterUser')||{}).value||'all';
-            var filtered=kalTermine.filter(function(t){
-                if(userFilter==='me' && sbProfile) return t.erstellt_von===sbUser.id || t.user==='all';
-                return true;
-            });
-
-            var firstDay=new Date(kalYear,kalMonth,1).getDay();
-            firstDay=firstDay===0?6:firstDay-1;
-            var daysInMonth=new Date(kalYear,kalMonth+1,0).getDate();
-            var today=new Date(); var todayStr=today.toISOString().slice(0,10);
-            var grid=document.getElementById('kalGrid'); var h='';
-
-            for(var i=0;i<firstDay;i++) h+='<div class="min-h-[80px] border-b border-r border-gray-100 p-1 bg-gray-50"></div>';
-
-            for(var d=1;d<=daysInMonth;d++){
-                var dateStr=kalYear+'-'+String(kalMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-                var isToday=dateStr===todayStr;
-                var dayTermine=filtered.filter(function(t){return t.date===dateStr;});
-                h+='<div class="min-h-[80px] border-b border-r border-gray-100 p-1 cursor-pointer hover:bg-blue-50 '+(isToday?'bg-orange-50':'')+'" onclick="openKalDayModal(\''+dateStr+'\')">';
-                h+='<p class="text-xs font-bold '+(isToday?'text-vit-orange':'text-gray-600')+'">'+d+'</p>';
-                dayTermine.forEach(function(t){
-                    var cls=typeColors[t.type]||'bg-gray-100 text-gray-600';
-                    h+='<div onclick="event.stopPropagation();openTerminDetail(\''+t.id+'\')" class="mt-0.5 px-1 py-0.5 rounded text-[9px] font-semibold truncate border cursor-pointer hover:opacity-80 '+cls+'" title="'+t.time+' '+t.title+'">'+t.time.slice(0,5)+' '+t.title.slice(0,15)+'</div>';
-                });
-                h+='</div>';
-            }
-            grid.innerHTML=h;
-
-            // Upcoming list with edit/delete buttons
-            var upcoming=filtered.filter(function(t){return t.date>=todayStr;}).sort(function(a,b){return a.date>b.date?1:-1;}).slice(0,8);
-            var uEl=document.getElementById('kalUpcoming'); var uh='';
-            upcoming.forEach(function(t){
-                var cls=typeColors[t.type]||'bg-gray-100 text-gray-600';
-                var dayNames=['So','Mo','Di','Mi','Do','Fr','Sa'];
-                var dd=new Date(t.date); var dayName=dayNames[dd.getDay()];
-                var canEdit = !sbProfile || sbProfile.is_hq || t.erstellt_von === (sbUser?sbUser.id:null);
-                uh+='<div class="vit-card p-3 flex items-center space-x-3 cursor-pointer hover:shadow-md transition" onclick="openTerminDetail(\''+t.id+'\')">';
-                uh+='<div class="text-center flex-shrink-0 w-12"><p class="text-xs text-gray-500">'+dayName+'</p><p class="text-lg font-bold text-gray-800">'+parseInt(t.date.slice(8))+'</p><p class="text-[10px] text-gray-400">'+t.date.slice(5,7)+'</p></div>';
-                uh+='<div class="flex-1 min-w-0"><p class="font-semibold text-gray-800 text-sm truncate">'+t.title+'</p><p class="text-xs text-gray-500">'+t.time+' Uhr'+(t.endTime?' – '+t.endTime+' Uhr':'')+(t.ort?' · '+t.ort:'')+(t.user!=='all'?' · '+t.user:'')+'</p></div>';
-                uh+='<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold '+cls+'">'+typeLabels[t.type]+'</span>';
-                if(t.ms365_event_id) uh+='<span class="text-[10px] text-blue-500" title="Synced with MS365">📅</span>';
-                uh+='</div>';
-            });
-            uEl.innerHTML=uh||'<div class="text-center py-4 text-gray-400 text-sm">Keine anstehenden Termine.</div>';
-        }
+        function kalNavMonth(d){kalNav(d);}
 
         // Open day view to quickly add termin on that date
         function openKalDayModal(dateStr) {
@@ -13726,11 +14162,26 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             });
             el.innerHTML=h;
         }
-        function addHqKalTermin(){
+        async function addHqKalTermin(){
             var title=document.getElementById('hqKalTitle').value;if(!title){alert('Bitte Titel eingeben.');return;}
-            hqKalTermine.push({id:hqKalTermine.length+1,title:title,date:document.getElementById('hqKalDate').value||'2026-03-01',time:document.getElementById('hqKalTime').value||'09:00',type:document.getElementById('hqKalType').value,target:document.getElementById('hqKalTarget').value==='alle'?'alle':'Region',pflicht:false});
-            document.getElementById('hqKalModal').classList.add('hidden');document.getElementById('hqKalTitle').value='';
-            renderHqKalender();
+            var date=document.getElementById('hqKalDate').value||new Date().toISOString().slice(0,10);
+            var time=document.getElementById('hqKalTime').value||'09:00';
+            var type=document.getElementById('hqKalType').value;
+            var target=document.getElementById('hqKalTarget').value;
+            var payload={
+                titel:title, start_zeit:date+'T'+time+':00', typ:type,
+                ist_netzwerk_termin:true, zielgruppe:target==='alle'?'alle':target,
+                pflicht:false, ganztaegig:type==='deadline',
+                erstellt_von:sbUser?sbUser.id:null,
+                erstellt_von_name:sbProfile?sbProfile.name:'HQ'
+            };
+            try{
+                var resp=await sb.from('termine').insert(payload);
+                if(resp.error)throw resp.error;
+                document.getElementById('hqKalModal').classList.add('hidden');
+                document.getElementById('hqKalTitle').value='';
+                await loadHqKalTermine();
+            }catch(err){alert('Fehler: '+(err.message||err));}
         }
 
         // === HQ AUFGABEN ===
