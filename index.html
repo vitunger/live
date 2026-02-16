@@ -371,6 +371,24 @@
         .t-msg-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
         .t-msg-text{font-size:13px;color:#374151;line-height:1.5}
         .t-scenario-card{cursor:pointer;transition:all 0.2s}.t-scenario-card:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,0,0,0.1)}
+
+/* === EINKAUF MODULE CSS (from standalone) === */
+.vc{background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid #eee;transition:box-shadow .2s}.vc:hover{box-shadow:0 6px 20px rgba(0,0,0,.08)}
+.pill{display:inline-flex;align-items:center;padding:2px 9px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.3px}
+.pg{background:#ecfdf5;color:#059669}.py{background:#fefce8;color:#ca8a04}.pr{background:#fef2f2;color:#dc2626}.pb{background:#eff6ff;color:#2563eb}.pgr{background:#f3f4f6;color:#6b7280}.po{background:#fff7ed;color:#ea580c}
+.prog{height:6px;border-radius:3px;background:#e5e7eb;overflow:hidden}.pf{height:100%;border-radius:3px;transition:width .4s}
+.si{border:1.5px solid #e5e7eb;border-radius:10px;padding:7px 11px 7px 34px;font-size:12.5px;transition:border .15s;width:100%}.si:focus{outline:none;border-color:var(--vit-orange, #EF7D00);box-shadow:0 0 0 3px rgba(239,125,0,.1)}
+.fi{animation:fi .25s ease}@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.td{transition:background .15s;border-radius:7px;padding:7px 9px}.td:hover{background:#fef7ed}
+.td input[type=checkbox]{accent-color:#EF7D00;width:15px;height:15px}
+.dt{width:100%;border-collapse:collapse;font-size:12.5px}.dt th{background:#fafafa;font-weight:600;color:#666;padding:9px 12px;text-align:left;border-bottom:1.5px solid #eee}.dt td{padding:8px 12px;border-bottom:1px solid #f3f3f3}.dt tr:hover td{background:#fafafa}
+.wn{padding:7px 14px;border-radius:9px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s;border:1.5px solid transparent}.wn.on{background:#EF7D00;color:#fff;border-color:#EF7D00}.wn:not(.on){background:#fff;color:#666;border-color:#e5e7eb}.wn:not(.on):hover{border-color:#EF7D00;color:#EF7D00}
+.mc{transition:all .2s}.mc:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.1)}
+.rbtn{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:9px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;border:1.5px solid #e5e7eb;background:#fff;color:#666}.rbtn:hover{border-color:#EF7D00;color:#EF7D00}
+.vbtn{background:#EF7D00;color:#fff;border:none;padding:7px 18px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer}.vbtn:hover{opacity:.9}
+.ek-modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:100;display:flex;align-items:center;justify-content:center}
+.ek-modal{background:#fff;border-radius:16px;max-width:720px;width:95%;max-height:85vh;overflow-y:auto;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
@@ -2264,164 +2282,19 @@
 
                     <!-- Tab Navigation -->
                     <div class="mb-6 border-b border-gray-200">
-                        <nav class="-mb-px flex space-x-8">
-                            <button onclick="showEinkaufTab('lieferanten')" class="ek-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="lieferanten">Lieferanten</button>
-                            <button onclick="showEinkaufTab('auswertung')" class="ek-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="auswertung">Auswertung</button>
-                            <button onclick="showEinkaufTab('ekStrategie')" class="ek-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="ekStrategie">📋 Strategie</button>
+                        <nav class="-mb-px flex space-x-8 overflow-x-auto">
+                            <button onclick="showEinkaufTab('sortiment')" class="ek-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="sortiment">🏪 Sortiment</button>
+                            <button onclick="showEinkaufTab('lieferanten')" class="ek-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="lieferanten">📋 Lieferanten</button>
+                            <button onclick="showEinkaufTab('zentralreg')" class="ek-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="zentralreg">🏦 Zentralreg.</button>
+                            <button onclick="showEinkaufTab('ekStrategie')" class="ek-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="ekStrategie">🎯 Strategie</button>
                             <button onclick="showEinkaufTab('ekWissen')" class="ek-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="ekWissen">📚 Wissen</button>
                         </nav>
                     </div>
 
-                    <!-- ===== TAB 1: Lieferanten ===== -->
-                    <div id="ekTabLieferanten" class="ek-tab-content">
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-                            <div class="relative flex-1 max-w-md">
-                                <input type="text" id="liefSearch" onkeyup="filterLieferanten()" placeholder="Lieferant oder Marke suchen..." class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-vit-orange">
-                                <svg class="absolute left-3 top-3 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                            </div>
-                            <div class="flex items-center space-x-2 flex-wrap gap-y-2">
-                                <span class="text-xs text-gray-400 font-semibold mr-1">Typ:</span>
-                                <button onclick="toggleLiefFilter('typ','all')" class="lief-typ-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white" data-typ="all">Alle</button>
-                                <button onclick="toggleLiefFilter('typ','fahrrad')" class="lief-typ-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-typ="fahrrad">Fahrrad</button>
-                                <button onclick="toggleLiefFilter('typ','teile')" class="lief-typ-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-typ="teile">Teile / Komponenten</button>
-                                <span class="text-gray-300 mx-1">|</span>
-                                <span class="text-xs text-gray-400 font-semibold mr-1">Status:</span>
-                                <button onclick="toggleLiefFilter('status','all')" class="lief-status-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white" data-st="all">Alle</button>
-                                <button onclick="toggleLiefFilter('status','aktiv')" class="lief-status-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-st="aktiv">Aktiv</button>
-                                <button onclick="toggleLiefFilter('status','neu')" class="lief-status-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-st="neu">Neu</button>
-                                <button onclick="toggleLiefFilter('status','inaktiv')" class="lief-status-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-st="inaktiv">Inaktiv</button>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="lieferantenGrid"></div>
-                    </div>
-
-                    <!-- ===== TAB 2: Auswertung ===== -->
-                    <div id="ekTabAuswertung" class="ek-tab-content" style="display:none;">
-                        <!-- KPIs -->
-                        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Einkaufsvolumen YTD</p><p class="text-2xl font-bold text-gray-800">33.580 €</p><p class="text-xs text-gray-400">Jan 2026</p></div>
-                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Ø Rohertragsmarge</p><p class="text-2xl font-bold text-green-600">38.9%</p><p class="text-xs text-green-600">+1.6 Pp vs. VJ</p></div>
-                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Raeder auf Lager</p><p class="text-2xl font-bold text-gray-800">47</p><p class="text-xs text-gray-400">Lagerwert: 189.400 €</p></div>
-                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Lagerumschlag</p><p class="text-2xl font-bold text-blue-600">4.2x</p><p class="text-xs text-green-600">Ziel: 4.0x</p></div>
-                            <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Offene Bestellungen</p><p class="text-2xl font-bold text-vit-orange">12</p><p class="text-xs text-gray-400">Wert: 58.200 €</p></div>
-                        </div>
-
-                        <!-- Marge pro Marke -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                            <div class="vit-card p-6">
-                                <h2 class="text-lg font-semibold text-gray-800 mb-4">Rohertragsmarge pro Marke</h2>
-                                <div class="space-y-3" id="ekMargenList"></div>
-                            </div>
-                            <div class="vit-card p-6">
-                                <h2 class="text-lg font-semibold text-gray-800 mb-4">Top & Flop Modelle (YTD)</h2>
-                                <div class="mb-4">
-                                    <h3 class="text-xs font-semibold text-green-600 uppercase tracking-wider mb-2">Top 5 – Meistverkauft</h3>
-                                    <div class="space-y-2" id="ekTopModelle"></div>
-                                </div>
-                                <div>
-                                    <h3 class="text-xs font-semibold text-red-600 uppercase tracking-wider mb-2">Flop – Ladenhueter (> 90 Tage auf Lager)</h3>
-                                    <div class="space-y-2" id="ekFlopModelle"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Einkauf nach Kategorie -->
-                        <div class="vit-card p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Einkaufsvolumen nach Kategorie (Jan 2026)</h2>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-sm">
-                                    <thead><tr class="bg-gray-50"><th class="text-left py-2.5 px-3 font-semibold text-gray-600">Kategorie</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Einkauf</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Verkauf</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Marge</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Stueck</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Ø EK/Stueck</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Anteil</th></tr></thead>
-                                    <tbody>
-                                        <tr class="border-b"><td class="py-2.5 px-3 font-semibold">E-Bikes</td><td class="text-right py-2.5 px-3">24.821</td><td class="text-right py-2.5 px-3">47.380</td><td class="text-right py-2.5 px-3 text-green-600 font-semibold">47.6%</td><td class="text-right py-2.5 px-3">11</td><td class="text-right py-2.5 px-3">2.256</td><td class="text-right py-2.5 px-3 text-gray-500">73.9%</td></tr>
-                                        <tr class="border-b"><td class="py-2.5 px-3 font-semibold">Teile &amp; Zubehoer</td><td class="text-right py-2.5 px-3">5.515</td><td class="text-right py-2.5 px-3">6.052</td><td class="text-right py-2.5 px-3 text-orange-600 font-semibold">8.9%</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3 text-gray-500">16.4%</td></tr>
-                                        <tr class="border-b"><td class="py-2.5 px-3 font-semibold">Werkstatt-Material</td><td class="text-right py-2.5 px-3">3.244</td><td class="text-right py-2.5 px-3">3.534</td><td class="text-right py-2.5 px-3 text-orange-600 font-semibold">8.2%</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3">—</td><td class="text-right py-2.5 px-3 text-gray-500">9.7%</td></tr>
-                                        <tr class="bg-gray-100 border-t-2"><td class="py-3 px-3 font-bold">GESAMT</td><td class="text-right py-3 px-3 font-bold">33.580</td><td class="text-right py-3 px-3 font-bold">54.938</td><td class="text-right py-3 px-3 text-green-600 font-bold">38.9%</td><td class="text-right py-3 px-3 font-bold">—</td><td class="text-right py-3 px-3 font-bold">—</td><td class="text-right py-3 px-3 font-bold">100%</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ===== TAB 3: Einkauf Strategie ===== -->
-                    <div id="ekTabEkStrategie" class="ek-tab-content" style="display:none;">
-                        <div class="vit-card p-6 mb-6">
-                            <div class="flex items-center justify-between mb-4">
-                                <div>
-                                    <h2 class="text-lg font-semibold text-gray-800">Einkaufsstrategie 2026</h2>
-                                    <p class="text-sm text-gray-500">Erstellt am 15.09.2025 · Ansprechpartner vit:bikes: Florian Meier</p>
-                                </div>
-                                <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">Vereinbart &amp; Unterschrieben</span>
-                            </div>
-                            <p class="text-sm text-gray-600">Unterschrieben von: Florian Meier, Sandra Engelmann, Sascha Matthies</p>
-                        </div>
-
-                        <!-- Ziele -->
-                        <div class="vit-card p-6 mb-6">
-                            <h3 class="font-semibold text-gray-800 mb-4 flex items-center"><span class="w-8 h-8 bg-vit-orange text-white rounded-lg flex items-center justify-center text-sm mr-3">🎯</span> Strategische Ziele</h3>
-                            <div class="space-y-2 mb-4">
-                                <div class="flex items-center space-x-2 text-sm"><span class="text-green-600 font-bold">✓</span><span>Sortiment 2026 definieren &amp; Rohertrag optimieren</span></div>
-                                <div class="flex items-center space-x-2 text-sm"><span class="text-green-600 font-bold">✓</span><span>Vororder 2026 sichern</span></div>
-                                <div class="flex items-center space-x-2 text-sm"><span class="text-green-600 font-bold">✓</span><span>Verkaufsbereitschaft aller Bike-Kategorien sicherstellen</span></div>
-                                <div class="flex items-center space-x-2 text-sm"><span class="text-green-600 font-bold">✓</span><span>Rabatte minimieren, Dreingaben statt Preisnachlaesse</span></div>
-                            </div>
-                        </div>
-
-                        <!-- Status Quo -->
-                        <div class="vit-card p-6 mb-6">
-                            <h3 class="font-semibold text-gray-800 mb-4 flex items-center"><span class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center text-sm mr-3">📦</span> Status Quo (Stand 15.09.2025)</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                <div class="p-4 bg-blue-50 rounded-lg text-center"><p class="text-xs text-gray-500">Bike-Bestand</p><p class="text-2xl font-bold text-blue-600">156</p><p class="text-xs text-gray-400">25 MTB · 131 Trekking/City</p></div>
-                                <div class="p-4 bg-green-50 rounded-lg text-center"><p class="text-xs text-gray-500">Gesamt-Umsatz (netto)</p><p class="text-2xl font-bold text-green-600">995.897 €</p><p class="text-xs text-gray-400">262 Bikes, ⌀ 4.508 € DB</p></div>
-                                <div class="p-4 bg-orange-50 rounded-lg text-center"><p class="text-xs text-gray-500">Ø Nachlass</p><p class="text-2xl font-bold text-vit-orange">8,70%</p><p class="text-xs text-red-500">Ziel: unter 5%</p></div>
-                            </div>
-                        </div>
-
-                        <!-- Sortiment 2026 Marken -->
-                        <div class="vit-card p-6 mb-6">
-                            <h3 class="font-semibold text-gray-800 mb-4 flex items-center"><span class="w-8 h-8 bg-green-600 text-white rounded-lg flex items-center justify-center text-sm mr-3">🚲</span> Sortiment 2026 – Zielmarken</h3>
-                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-                                <div class="p-3 bg-green-50 rounded-lg border border-green-200"><p class="font-semibold text-sm">Kalkhoff</p><p class="text-xs text-gray-500">VO: 80 Bikes · Top-Volumen</p><p class="text-xs text-green-600">Rabatt durch 7er an Upway erhoet</p></div>
-                                <div class="p-3 bg-green-50 rounded-lg border border-green-200"><p class="font-semibold text-sm">Haibike</p><p class="text-xs text-gray-500">Blockorder 30-50 eMTBs geplant</p><p class="text-xs text-yellow-600">⚠ Konditionen wackeln</p></div>
-                                <div class="p-3 bg-green-50 rounded-lg border border-green-200"><p class="font-semibold text-sm">Orbea</p><p class="text-xs text-gray-500">Hoechster DB1 im Sortiment</p><p class="text-xs text-green-600">Umsatz steigern!</p></div>
-                                <div class="p-3 bg-green-50 rounded-lg border border-green-200"><p class="font-semibold text-sm">Simplon</p><p class="text-xs text-gray-500">VO: 10 Bikes (Gravel, MTB)</p><p class="text-xs text-green-600">Hoechster brutto-VK</p></div>
-                                <div class="p-3 bg-blue-50 rounded-lg border border-blue-200"><p class="font-semibold text-sm">Velo de Ville</p><p class="text-xs text-gray-500">VO: 8 Bikes · NEU im Sortiment</p><p class="text-xs text-blue-600">Alternative zu Kalkhoff/Haibike Trekking</p></div>
-                                <div class="p-3 bg-blue-50 rounded-lg border border-blue-200"><p class="font-semibold text-sm">Steppenwolf</p><p class="text-xs text-gray-500">VO: 5 Bikes · Lieferung ab Juli</p><p class="text-xs text-blue-600">Sportives DJI Sortiment</p></div>
-                            </div>
-                            <div class="p-3 bg-red-50 rounded-lg border border-red-200">
-                                <p class="text-sm font-semibold text-red-700 mb-1">Abverkauf / Ausgelistet:</p>
-                                <p class="text-xs text-gray-600">Stevens (letzte 3 abverkaufen) · HNF Nicolai · Raymon · Husqvarna – Lagerbereinigung 2025 fast abgeschlossen</p>
-                            </div>
-                        </div>
-
-                        <!-- Haibike Blockorder Detail -->
-                        <div class="vit-card p-6 mb-6">
-                            <h3 class="font-semibold text-gray-800 mb-4 flex items-center"><span class="w-8 h-8 bg-red-600 text-white rounded-lg flex items-center justify-center text-sm mr-3">📊</span> Haibike Verkaufszahlen (09/24–09/25)</h3>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-sm"><thead><tr class="border-b-2 border-gray-200"><th class="text-left py-2 px-2">Modell</th><th class="text-right py-2 px-2">Menge</th><th class="text-right py-2 px-2">Umsatz (netto)</th><th class="text-right py-2 px-2">⌀ Stueckpreis</th></tr></thead><tbody>
-                                    <tr class="border-b bg-orange-50"><td class="py-1.5 px-2 font-semibold">ALLMTN 3</td><td class="py-1.5 px-2 text-right font-bold">12</td><td class="py-1.5 px-2 text-right">52.427 €</td><td class="py-1.5 px-2 text-right">4.369 €</td></tr>
-                                    <tr class="border-b"><td class="py-1.5 px-2">ALLMTN 6</td><td class="py-1.5 px-2 text-right">2</td><td class="py-1.5 px-2 text-right">30.247 €</td><td class="py-1.5 px-2 text-right">15.124 €</td></tr>
-                                    <tr class="border-b"><td class="py-1.5 px-2">ADVENTR 10</td><td class="py-1.5 px-2 text-right">5</td><td class="py-1.5 px-2 text-right">23.945 €</td><td class="py-1.5 px-2 text-right">4.789 €</td></tr>
-                                    <tr class="border-b"><td class="py-1.5 px-2">ADVENTR 9</td><td class="py-1.5 px-2 text-right">3</td><td class="py-1.5 px-2 text-right">21.004 €</td><td class="py-1.5 px-2 text-right">7.001 €</td></tr>
-                                    <tr class="border-b"><td class="py-1.5 px-2">ALLTRACK 7 29</td><td class="py-1.5 px-2 text-right">5</td><td class="py-1.5 px-2 text-right">16.803 €</td><td class="py-1.5 px-2 text-right">3.361 €</td></tr>
-                                    <tr class="border-b"><td class="py-1.5 px-2">Weitere 10 Modelle</td><td class="py-1.5 px-2 text-right">18</td><td class="py-1.5 px-2 text-right">79.987 €</td><td class="py-1.5 px-2 text-right text-gray-400">div.</td></tr>
-                                    <tr class="border-t-2 border-gray-300 font-bold bg-gray-50"><td class="py-2 px-2">GESAMT</td><td class="py-2 px-2 text-right">45</td><td class="py-2 px-2 text-right">224.413 €</td><td class="py-2 px-2 text-right">4.987 €</td></tr>
-                                </tbody></table>
-                            </div>
-                        </div>
-
-                        <!-- ToDos -->
-                        <div class="vit-card p-6">
-                            <h3 class="font-semibold text-gray-800 mb-4 flex items-center"><span class="w-8 h-8 bg-purple-600 text-white rounded-lg flex items-center justify-center text-sm mr-3">📌</span> Fortlaufende Massnahmen 2026</h3>
-                            <div class="space-y-3">
-                                <div class="flex items-start space-x-3 p-3 bg-orange-50 rounded-lg border-l-4 border-vit-orange"><div><p class="font-semibold text-sm">Orbea &amp; Simplon pushen</p><p class="text-xs text-gray-500">Bewusst in Beratung anbieten. Verkaeufermotivation: zum Anzuenden muss der Verkaeufer brennen!</p></div></div>
-                                <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg"><div><p class="font-semibold text-sm">Rabatte minimieren</p><p class="text-xs text-gray-500">Woechentlich/monatlich auswerten. Tipp: 100 € Sqlab Sattel als Dreingabe statt 100 € Rabatt (nur 50 € netto Rohertrags-Verlust)</p></div></div>
-                                <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg"><div><p class="font-semibold text-sm">Haibike Blockorder sichern</p><p class="text-xs text-gray-500">30-50 eMTBs (AllMtn, AllTrack, Adventr) mit Bosch, Liefertermine ab Maerz 2026, Valuta+Skonto bei Fruehlieferung</p></div></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Wissen Tab -->
+                    <div id="ekTabSortiment" class="ek-tab-content"></div>
+                    <div id="ekTabLieferanten" class="ek-tab-content" style="display:none;"></div>
+                    <div id="ekTabZentralreg" class="ek-tab-content" style="display:none;"></div>
+                    <div id="ekTabEkStrategie" class="ek-tab-content" style="display:none;"></div>
                     <div id="ekTabEkWissen" class="ek-tab-content" style="display:none;"></div>
                 </div>
 
@@ -5041,24 +4914,18 @@
                 <!-- ===== HQ EINKAUF ===== -->
                 <div id="hqEinkaufView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-6">EINKAUF – NETZWERK</h1>
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="hqEkKpis"></div>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                        <div class="vit-card p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">📦 Vororder-Status 2026</h2>
-                            <div id="hqEkVororder" class="space-y-2"></div>
-                        </div>
-                        <div class="vit-card p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">📊 Rohertrag pro Standort</h2>
-                            <div id="hqEkRohertrag" class="space-y-2"></div>
-                        </div>
+                    <div class="mb-6 border-b border-gray-200">
+                        <nav class="-mb-px flex space-x-8">
+                            <button onclick="showHqEkTab('dash')" class="hqek-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-hqek="dash">📊 Übersicht</button>
+                            <button onclick="showHqEkTab('lief')" class="hqek-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-hqek="lief">📋 Lieferanten</button>
+                            <button onclick="showHqEkTab('strat')" class="hqek-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-hqek="strat">🎯 Strategien</button>
+                        </nav>
                     </div>
-                    <div class="vit-card p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">⚠️ Handlungsbedarf Einkauf</h2>
-                        <div id="hqEkAlerts" class="space-y-2"></div>
-                    </div>
+                    <div id="hqEkTabDash" class="hqek-tab-content"></div>
+                    <div id="hqEkTabLief" class="hqek-tab-content" style="display:none;"></div>
+                    <div id="hqEkTabStrat" class="hqek-tab-content" style="display:none;"></div>
                 </div>
 
-                <!-- ===== HQ VERKAUF ===== -->
                 <div id="hqVerkaufView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-6">VERKAUF – NETZWERK</h1>
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="hqVkKpis"></div>
@@ -7213,140 +7080,407 @@
             container.innerHTML = html;
         }
 
-        // === EINKAUF ===
-        var lieferanten = [
-            {name:'Kalkhoff / Derby Cycle',marken:['Kalkhoff','Rixe'],typ:'fahrrad',kontakt:'Sarah Mueller',email:'s.mueller@derbycycle.de',tel:'+49 5765 20-0',konditionen:'38% vom UVP, 3% Skonto 14 Tage',rahmenvertrag:'bis 31.12.2026',portal:'https://b2b.derbycycle.com',status:'aktiv',volumen:245000,anteil:22,logo:'bg-blue-600'},
-            {name:'Winora Group / Haibike',marken:['Haibike','Winora','Sinus'],typ:'fahrrad',kontakt:'Thomas Weber',email:'t.weber@winora-group.de',tel:'+49 9725 71-0',konditionen:'36% vom UVP, 2% Skonto 10 Tage',rahmenvertrag:'bis 31.12.2026',portal:'https://b2b.winora-group.de',status:'aktiv',volumen:198000,anteil:18,logo:'bg-red-600'},
-            {name:'Simplon Fahrrad GmbH',marken:['Simplon'],typ:'fahrrad',kontakt:'Markus Huber',email:'m.huber@simplon.com',tel:'+43 5574 6722-0',konditionen:'40% vom UVP, netto 30 Tage',rahmenvertrag:'bis 31.12.2026',portal:'https://dealer.simplon.com',status:'aktiv',volumen:165000,anteil:15,logo:'bg-gray-800'},
-            {name:'Orbea S.Coop.',marken:['Orbea'],typ:'fahrrad',kontakt:'Carlos Garcia',email:'c.garcia@orbea.com',tel:'+34 943 882 488',konditionen:'37% vom UVP, netto 30 Tage',rahmenvertrag:'bis 31.12.2026',portal:'https://b2b.orbea.com',status:'aktiv',volumen:142000,anteil:13,logo:'bg-orange-600'},
-            {name:'Stevens Vertriebs GmbH',marken:['Stevens'],typ:'fahrrad',kontakt:'Petra Schulz',email:'p.schulz@stevensbikes.de',tel:'+49 40 6896 20-0',konditionen:'35% vom UVP, 2% Skonto 14 Tage',rahmenvertrag:'bis 31.12.2026',portal:'https://dealer.stevensbikes.de',status:'aktiv',volumen:88000,anteil:8,logo:'bg-green-700'},
-            {name:'Babboe B.V.',marken:['Babboe'],typ:'fahrrad',kontakt:'Jan de Vries',email:'j.devries@babboe.de',tel:'+31 78 684 56 00',konditionen:'32% vom UVP, netto 30 Tage',rahmenvertrag:'bis 31.12.2026',portal:'https://dealer.babboe.com',status:'aktiv',volumen:52000,anteil:5,logo:'bg-yellow-500'},
-            {name:'Riese & Mueller (NEU)',marken:['Riese & Mueller'],typ:'fahrrad',kontakt:'Wird zugeteilt',email:'dealer@r-m.de',tel:'+49 6151 366 86-0',konditionen:'In Verhandlung',rahmenvertrag:'Ab 01.03.2026',portal:'https://b2b.r-m.de',status:'neu',volumen:0,anteil:0,logo:'bg-purple-600'},
-            {name:'Shimano Europe',marken:['Shimano','Steps','Deore','XT','SLX'],typ:'teile',kontakt:'Key Account DACH',email:'dealer-dach@shimano.eu',tel:'+49 211 13 06-0',konditionen:'Staffelpreise, netto 30 Tage',rahmenvertrag:'Netzwerkvertrag',portal:'https://b2b.shimano-eu.com',status:'aktiv',volumen:67000,anteil:6,logo:'bg-gray-600'},
-            {name:'Bosch eBike Systems',marken:['Bosch','PowerTube','Kiox'],typ:'teile',kontakt:'Partner Service',email:'service@bosch-ebike.de',tel:'+49 711 400 40-990',konditionen:'UVP-gebunden, Bonus 2%',rahmenvertrag:'Netzwerkvertrag',portal:'https://www.bosch-ebike.com/de/haendler',status:'aktiv',volumen:45000,anteil:4,logo:'bg-red-700'},
-            {name:'SRAM Europe',marken:['SRAM','RockShox','Avid','Zipp'],typ:'teile',kontakt:'Dealer Support',email:'dealersupport@sram.com',tel:'+49 9721 6571-0',konditionen:'Staffelpreise, netto 30 Tage',rahmenvertrag:'Netzwerkvertrag',portal:'https://b2b.sram.com',status:'aktiv',volumen:28000,anteil:3,logo:'bg-black'},
-            {name:'Schwalbe / Ralf Bohle',marken:['Schwalbe','Marathon','Energizer'],typ:'teile',kontakt:'Innenservice',email:'info@schwalbe.de',tel:'+49 2191 946-0',konditionen:'35% vom UVP, netto 14 Tage',rahmenvertrag:'Netzwerkvertrag',portal:'https://b2b.schwalbe.com',status:'aktiv',volumen:12000,anteil:1,logo:'bg-blue-800'},
-            {name:'HNF Nicolai (Ausgelistet)',marken:['HNF Nicolai'],typ:'fahrrad',kontakt:'—',email:'—',tel:'—',konditionen:'Vertrag ausgelaufen',rahmenvertrag:'Beendet 31.12.2025',portal:'—',status:'inaktiv',volumen:21500,anteil:0,logo:'bg-gray-400'},
-            {name:'Husqvarna Bicycles (Ausgelistet)',marken:['Husqvarna'],typ:'fahrrad',kontakt:'—',email:'—',tel:'—',konditionen:'Marke eingestellt',rahmenvertrag:'Beendet 2025',portal:'—',status:'inaktiv',volumen:14000,anteil:0,logo:'bg-gray-400'},
-        ];
+        // === EINKAUF MODULE (from standalone einkauf_modul.html) ===
+        var ekLiefFilter = 'all';
+        var ekLiefQ = '';
+        var stLiefQ = '';
+        var wissenSec = 'iht';
 
-        var liefFilterTyp = 'all';
-        var liefFilterStatus = 'all';
+        var allLief=[{"n": "AMFLOW/ DJI", "art": "bike", "kern": false, "zusatz": false, "auslauf": true, "stat": "Verhandlung gescheitert", "sc": "red", "kond": "Konditionen zu gering", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Babboe", "art": "bike", "kern": false, "zusatz": true, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Konditionen Accell", "iht": "IHT aktiv", "zr": true, "mail": "service@winora-group.de", "tel": "+49 (0)9721-6501-7878", "b2b": "Accentry b2b", "regmail": "callcenter@winora.de"}, {"n": "CaGo", "art": "bike", "kern": false, "zusatz": true, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Konditionen Ca Go", "iht": "IHT aktiv", "zr": true, "mail": "nouri.hamsoro@rtisports.de", "tel": "+49 (0)261 899998-220", "b2b": "Ca Go b2b", "regmail": "nouri.hamsoro@rtisports.de"}, {"n": "Centurion", "art": "bike", "kern": false, "zusatz": false, "auslauf": true, "stat": "Verhandlung gescheitert", "sc": "red", "kond": "", "iht": "Abgelehnt", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Conway", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Gazelle", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Volumen nicht ausreichend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Ghost, Lapierre", "art": "bike", "kern": false, "zusatz": true, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Konditionen Accell", "iht": "IHT aktiv", "zr": true, "mail": "sales@ghost-bikes.de", "tel": "+49 9632 9255-0", "b2b": "Accentry b2b", "regmail": "service@ghost-bikes.de"}, {"n": "HASE bike", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "6-7% Rabatt + 2% Sk. 10T", "iht": "Im Onboarding", "zr": false, "mail": "Hendrik.Forejta@hasebikes.com", "tel": "+49 2309 9377-236", "b2b": "", "regmail": "Hendrik.Forejta@hasebikes.com"}, {"n": "HEPHA", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "", "iht": "IHT aktiv", "zr": true, "mail": "info@hepha.com", "tel": "+49(0) 8142 / 2844480", "b2b": "", "regmail": "bernd.lesch@hepha.com"}, {"n": "i:SY", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Volumen nicht ausreichend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "yasemin@isy.de", "tel": "+49 221 5727744445", "b2b": "", "regmail": "yasemin@isy.de"}, {"n": "Kalkhoff", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Volumen nicht ausreichend", "sc": "gray", "kond": "", "iht": "Abgelehnt", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Koga", "art": "bike", "kern": false, "zusatz": true, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Konditionen Accell", "iht": "IHT aktiv", "zr": true, "mail": "service@winora-group.de", "tel": "+49 (0)9721-6501-7878", "b2b": "Accentry b2b", "regmail": "callcenter@winora.de"}, {"n": "KTM", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Volumen nicht ausreichend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "M1", "art": "bike", "kern": false, "zusatz": false, "auslauf": true, "stat": "Ausgelaufen (Insolvenz)", "sc": "red", "kond": "", "iht": "Abgelehnt", "zr": false, "mail": "info@m1-sporttechnik.de", "tel": "08020-90891170", "b2b": "", "regmail": "j.sauer@m1-sporttechnik.de"}, {"n": "Nicolai", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "In Verhandlung", "sc": "yellow", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Orbea", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "40/60% TAM, Diamond 17%", "iht": "In Verhandlung", "zr": false, "mail": "cponzlet@orbea.com", "tel": "+49 231 98819869", "b2b": "Orbea KIDE", "regmail": "cponzlet@orbea.com"}, {"n": "Raymon", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Riese und Müller", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "In Verhandlung", "sc": "yellow", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "vertrieb@r-m.de", "tel": "+49 6151 36686-11", "b2b": "R&M b2b", "regmail": "vertrieb@r-m.de"}, {"n": "Simplon", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Premium-Händler, hohe Marge", "iht": "Im Onboarding", "zr": false, "mail": "sales@simplon.com", "tel": "+43 5574 72564401", "b2b": "Simplon b2b", "regmail": "sales@simplon.com"}, {"n": "Specialized", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Volumen nicht ausreichend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Steppenwolf", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Kalk. 1,85 + 3% VO + 3% Sk.", "iht": "IHT aktiv", "zr": true, "mail": "sales@steppenwolf-bikes.com", "tel": "+49 30 863280217", "b2b": "Steppenwolf b2b", "regmail": "sales@steppenwolf-bikes.com"}, {"n": "Urban Arrow", "art": "bike", "kern": false, "zusatz": false, "auslauf": true, "stat": "Verhandlung gescheitert", "sc": "red", "kond": "", "iht": "Abgelehnt", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Velo de Ville", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "12% + 2% Sk. 16T (Fakt. 1,8)", "iht": "IHT aktiv", "zr": true, "mail": "philipp.niehues@velo-de-ville.com", "tel": "+49 2505 9305 965", "b2b": "VdV b2b", "regmail": "marketing@velo-de-ville.com"}, {"n": "Winora, Haibike", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Accell max. Staffel (nur IHT)", "iht": "IHT aktiv", "zr": true, "mail": "service@winora-group.de", "tel": "+49(0) 9721-6501-7878", "b2b": "Accentry b2b", "regmail": "callcenter@winora.de"}, {"n": "Bike Leasing Service", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "6% Prov. - 33,4% MKT - bis 66,67% Wachstum", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "BLS b2b", "regmail": ""}, {"n": "BikeCenter", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "In Verhandlung", "sc": "yellow", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Businessbike", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "In Finalisierung", "sc": "yellow", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Businessbike b2b", "regmail": ""}, {"n": "Company Bike", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "In Verhandlung", "sc": "yellow", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "CB b2b", "regmail": ""}, {"n": "Deutsche Dienstrad", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "0% Prov. + 3% Fulfillment + 1% Rückverg.", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "DD b2b", "regmail": ""}, {"n": "Eleasa", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Eleasa b2b", "regmail": ""}, {"n": "GO", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Jobrad", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Jobrad b2b", "regmail": ""}, {"n": "Kazenmaier", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Kazenmaier b2b", "regmail": ""}, {"n": "lease a bike", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "leasabike b2b", "regmail": ""}, {"n": "Linexo", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "linexo b2b", "regmail": ""}, {"n": "Mein Dienstrad", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "MDR b2b", "regmail": ""}, {"n": "Probonio", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Smartfit", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "", "iht": "Im Onboarding", "zr": false, "mail": "rw@smartfit.bike", "tel": "+49 160 6666367", "b2b": "", "regmail": "rw@smartfit.bike"}, {"n": "Strom", "art": "dl", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Telecash", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Clover Flex LTE V2, ab 18,90€/Mo", "iht": "", "zr": false, "mail": "christian.koenig@fiserv.com", "tel": "+49 (0) 911 945 8387", "b2b": "", "regmail": "christian.koenig@fiserv.com"}, {"n": "Telekom", "art": "dl", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Wertgarantie by linexo", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Wertgarantie b2b", "regmail": ""}, {"n": "Würth Leasing", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Würth Leasing b2b", "regmail": ""}, {"n": "ABUS", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "48% Grund + VO-Staffel", "iht": "Abgelehnt", "zr": false, "mail": "mobile.vertrieb@abus.de", "tel": "+49 2335 634 470", "b2b": "ABUS b2b", "regmail": "mobile.vertrieb@abus.de"}, {"n": "Alps Alpine", "art": "parts", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "ASISTA", "art": "parts", "kern": false, "zusatz": false, "auslauf": true, "stat": "Verhandlung gescheitert", "sc": "red", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Cosmic Sports", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "SQlab 18%+1%+3%, SP Connect", "iht": "IHT aktiv", "zr": true, "mail": "tm@cosmicsports.de", "tel": "+49 911 310 755 59", "b2b": "Cosmic Sports b2b", "regmail": "tm@cosmicsports.de"}, {"n": "Croozer", "art": "parts", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "", "zr": false, "mail": "order@croozer.com", "tel": "02233-959913", "b2b": "", "regmail": "support@croozer.com"}, {"n": "Fidlock", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "In Finalisierung", "sc": "yellow", "kond": "", "iht": "Im Onboarding", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Grofa", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Giro 19%, Lumos 14%, Park Tool 26%", "iht": "IHT aktiv", "zr": true, "mail": "order@grofa.com", "tel": "06434/2008-200", "b2b": "GROFA b2b", "regmail": "stammdaten@grofa.com"}, {"n": "Hartje", "art": "parts", "kern": false, "zusatz": true, "auslauf": false, "stat": "In Verhandlung", "sc": "yellow", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "Hartje EOSweb", "regmail": ""}, {"n": "Livall/ CycloSport", "art": "parts", "kern": false, "zusatz": true, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Livall 15% + 1% Delk.", "iht": "IHT aktiv", "zr": true, "mail": "bestellung@ciclosport.de", "tel": "089-895270-20", "b2b": "", "regmail": "bestellung@ciclosport.de"}, {"n": "Magura/ Bosch", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "MBPS b2b", "regmail": ""}, {"n": "MCG", "art": "parts", "kern": false, "zusatz": false, "auslauf": true, "stat": "Verhandlung gescheitert", "sc": "red", "kond": "", "iht": "Abgelehnt", "zr": false, "mail": "vertrieb@merida-centurion.com", "tel": "+49 (0)7159/9459-300", "b2b": "MCG b2b", "regmail": "vertrieb@merida-centurion.com"}, {"n": "OneUp Components", "art": "parts", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "ONEup b2b", "regmail": ""}, {"n": "Ortlieb", "art": "parts", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Paul Lange", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "In Finalisierung", "sc": "yellow", "kond": "", "iht": "Im Onboarding", "zr": false, "mail": "verkauf@paul-lange.de", "tel": "+49 (0) 711 2588 333", "b2b": "Paul Lange b2b", "regmail": "verkauf@paul-lange.de"}, {"n": "Pow Unity", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Powunity b2b", "regmail": ""}, {"n": "RTI Sports", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Topeak, Ca Go", "iht": "IHT aktiv", "zr": true, "mail": "nouri.hamsoro@rtisports.de", "tel": "+49 (0)261 899998-220", "b2b": "RTI Sports b2b", "regmail": "nouri.hamsoro@rtisports.de"}, {"n": "SportsNut", "art": "parts", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "SportsNut b2b", "regmail": ""}, {"n": "SQlab", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "18% + 1% Delk. + 3% Sk.", "iht": "IHT aktiv", "zr": true, "mail": "feb@sq-lab.com", "tel": "089-6661046-0", "b2b": "SQlab b2b", "regmail": "aba@sq-lab.com"}, {"n": "Thule", "art": "parts", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Tunap", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "In Finalisierung", "sc": "yellow", "kond": "Premium Partner, Marge 2,5x", "iht": "Im Onboarding", "zr": false, "mail": "Carolin.Schorsten@tunap-sports.de", "tel": "0151 15059430", "b2b": "TUNAP eShop", "regmail": "Carolin.Schorsten@tunap-sports.de"}, {"n": "Vaude", "art": "parts", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "VAUDE b2b", "regmail": ""}, {"n": "Wiener Bike Parts", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "10% Kopf + Markenrabatte", "iht": "IHT aktiv", "zr": true, "mail": "callcenter@bike-parts.de", "tel": "09721 65 01-0", "b2b": "Accentry b2b", "regmail": "customer-data@winora-group.de"}];
 
-        var ekMargen = [
-            {marke:'Simplon',marge:42.1,color:'bg-green-500'},
-            {marke:'Orbea',marge:39.8,color:'bg-green-500'},
-            {marke:'Kalkhoff',marge:38.5,color:'bg-green-500'},
-            {marke:'Haibike',marge:37.2,color:'bg-green-400'},
-            {marke:'Stevens',marge:35.8,color:'bg-yellow-500'},
-            {marke:'Babboe',marge:33.0,color:'bg-orange-500'},
-        ];
+// Standort demo data
+var standorte={
+    holzkirchen:{name:'Holzkirchen',inhaber:'Dirk Kolditz',nachlassIst:9.73,db1Ist:28.6,bestand:104,bestWert:340105,verkauft:71,umsatz:274593},
+    berlin:{name:'Berlin Mitte',inhaber:'Max Müller',nachlassIst:6.2,db1Ist:32.1,bestand:86,bestWert:290000,verkauft:95,umsatz:410000},
+    hamburg:{name:'Hamburg',inhaber:'Sandra Weber',nachlassIst:8.1,db1Ist:30.5,bestand:92,bestWert:310000,verkauft:68,umsatz:295000},
+    muenchen:{name:'München',inhaber:'Thomas Bauer',nachlassIst:5.8,db1Ist:33.9,bestand:78,bestWert:380000,verkauft:120,umsatz:580000},
+    grafrath:{name:'Grafrath',inhaber:'Julian Neumann',nachlassIst:7.5,db1Ist:31.2,bestand:65,bestWert:220000,verkauft:52,umsatz:198000}
+};
 
-        var ekTopModelle = [
-            {name:'Kalkhoff Endeavour 5.B Move+',stueck:3,umsatz:14280},
-            {name:'Simplon Kagu Bosch 275',stueck:2,umsatz:9798},
-            {name:'Haibike Trekking 7',stueck:2,umsatz:7990},
-            {name:'Orbea Gain D30 1x',stueck:2,umsatz:7198},
-            {name:'Stevens E-Triton Forma',stueck:1,umsatz:3799},
-        ];
+var strategien={
+    holzkirchen:{status:'veroeffentlicht',datum:'2025-08-28',nachlass25:7,nachlass26:5,db1Ziel:34,
+        todos:[{t:'Abstimmung mit Marketing',d:true},{t:'POS-Kampagnen',d:false},{t:'Events vor Ort',d:false},{t:'Kaltakquise Leasing',d:true},{t:'Verkäufer schulen',d:false}]},
+    berlin:{status:'entwurf',datum:'2025-09-10',nachlass25:5,nachlass26:4,db1Ziel:35,
+        todos:[{t:'Simplon Dealervertrag',d:false},{t:'Premium-Umbau',d:false}]},
+    hamburg:{status:'review',datum:'2025-09-01',nachlass25:6,nachlass26:5,db1Ziel:34,
+        todos:[{t:'Haibike Restbestand',d:true},{t:'Orbea Testflotte',d:false},{t:'Leasing vor Ort',d:false}]},
+    muenchen:{status:'veroeffentlicht',datum:'2025-07-15',nachlass25:5,nachlass26:4,db1Ziel:36,
+        todos:[{t:'R&M World Umbau',d:true},{t:'Simplon Gravel-Event',d:true},{t:'Zubehör-Bundles',d:false}]},
+    grafrath:{status:'veroeffentlicht',datum:'2025-08-01',nachlass25:6,nachlass26:5,db1Ziel:34,
+        todos:[{t:'Kalkhoff auflösen',d:true},{t:'Orbea Marketing',d:false},{t:'Leasing-Angebote',d:false}]}
+};
 
-        var ekFlopModelle = [
-            {name:'Babboe City Mountain',tage:128,ek:2890,grund:'Saisonware, Herbst-Rest'},
-            {name:'Stevens Jazz Lite',tage:104,ek:1249,grund:'Wenig Nachfrage Trekking analog'},
-            {name:'Haibike HardSeven 1',tage:96,ek:899,grund:'Auslaufmodell 2025'},
-        ];
+// Parts Priorisierung Matrix (from Excel)
+var partsPrio=[{n:'SQlab (Ergonomie)',t:'Ergonomie','5':5,'10':5,'15':5,'17':5,'20':5,'25':5,kap:11240},{n:'Shimano (Ersatzteile)',t:'Service','5':0,'10':1,'15':2,'17':2,'20':3,'25':3,kap:2542},{n:'Schwalbe (Mäntel)',t:'Service','5':0,'10':0.25,'15':2,'17':2,'20':3,'25':3,kap:2859},{n:'Tunap (Pflege)',t:'Service','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:1528},{n:'ABUS (Schlösser)',t:'Trend','5':0,'10':0.25,'15':0.5,'17':0.75,'20':0.75,'25':1,kap:2885},{n:'Helme',t:'Trend','5':0,'10':1,'15':2,'17':3,'20':3,'25':3,kap:3599},{n:'Topeak (Tools)',t:'Trend','5':0,'10':0,'15':0.5,'17':1,'20':1.5,'25':1.5,kap:2102},{n:'SP Connect',t:'Trend','5':0,'10':0.25,'15':0.25,'17':0.5,'20':0.5,'25':0.5,kap:1829},{n:'Elite/Fidlock',t:'Trend','5':0,'10':0.5,'15':0.5,'17':0.5,'20':0.5,'25':0.5,kap:513},{n:'Busch&Müller',t:'Zubehör','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:942},{n:'Pedale',t:'Zubehör','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:862},{n:'Ursus (Ständer)',t:'Zubehör','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:153},{n:'Vaude (Taschen)',t:'Trend','5':0,'10':0,'15':0.5,'17':0.5,'20':1,'25':1.5,kap:253},{n:'SKS/KlickFix',t:'Zubehör','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:312},{n:'Kleinteile',t:'Zubehör','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:753},{n:'by.Schulz',t:'Zubehör','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:2558},{n:'Supernova/Lupine',t:'Zubehör','5':0,'10':0,'15':0,'17':0,'20':0,'25':0.25,kap:0}];
 
-        function renderLieferanten() {
-            var filtered = lieferanten.filter(function(l) {
-                if(liefFilterTyp !== 'all' && l.typ !== liefFilterTyp) return false;
-                if(liefFilterStatus !== 'all' && l.status !== liefFilterStatus) return false;
-                return true;
-            });
-            var q = (document.getElementById('liefSearch').value || '').toLowerCase();
-            if(q) filtered = filtered.filter(function(l){ return (l.name + ' ' + l.marken.join(' ')).toLowerCase().indexOf(q) >= 0; });
+// WBP Markenrabatte
+var wbpR=[{m:'Schwalbe',k:'',r:'Key Account',d:'1%'},{m:'Continental',k:'',r:'14-18%',d:'1%'},{m:'SRAM',k:'',r:'5-10%',d:'1%'},{m:'Shimano',k:'',r:'5%',d:'1%'},{m:'DT Swiss',k:'10%',r:'3%',d:'1%'},{m:'XLC',k:'10%',r:'5%',d:'1%'},{m:'BySchulz',k:'',r:'5%',d:'1%'},{m:'KindShock',k:'',r:'8%',d:'1%'},{m:'Xpedo',k:'10%',r:'8%',d:'1%'},{m:'Basil',k:'10%',r:'5%',d:'1%'},{m:'B&M',k:'10%',r:'5%',d:'1%'},{m:'SKS',k:'10%',r:'5%',d:'1%'},{m:'KMC',k:'10%',r:'5%',d:'1%'},{m:'Cratoni',k:'10%',r:'6%',d:'1%'},{m:'Trelock',k:'10%',r:'8%',d:'1%'}];
 
-            if(filtered.length === 0) {
-                document.getElementById('lieferantenGrid').innerHTML = '<div class="col-span-full vit-card p-8 text-center text-gray-400"><p class="text-lg mb-1">Keine Lieferanten gefunden</p><p class="text-sm">Filter anpassen oder Suche aendern</p></div>';
-                return;
-            }
-            var html = '';
-            filtered.forEach(function(l) {
-                var opacity = l.status === 'inaktiv' ? ' opacity-60' : '';
-                html += '<div class="lief-card vit-card p-5 hover:shadow-lg transition' + opacity + '">';
-                html += '<div class="flex items-start justify-between mb-3">';
-                html += '<div class="flex items-center space-x-3"><div class="w-10 h-10 ' + l.logo + ' rounded-lg flex items-center justify-center text-white font-bold text-xs">' + l.name.charAt(0) + '</div>';
-                html += '<div><h3 class="font-bold text-gray-800">' + l.name + '</h3>';
-                html += '<p class="text-xs text-gray-500">' + l.marken.join(', ') + '</p></div></div>';
-                html += '<div class="flex flex-col items-end space-y-1">';
-                if(l.status==='neu') html += '<span class="text-xs font-bold bg-purple-100 text-purple-700 rounded-full px-2 py-0.5">NEU</span>';
-                else if(l.status==='inaktiv') html += '<span class="text-xs font-bold bg-gray-200 text-gray-500 rounded-full px-2 py-0.5">Inaktiv</span>';
-                else html += '<span class="text-xs font-bold bg-green-100 text-green-700 rounded-full px-2 py-0.5">Aktiv</span>';
-                html += '<span class="text-xs rounded-full px-2 py-0.5 ' + (l.typ==='fahrrad' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-700') + '">' + (l.typ==='fahrrad' ? '🚲 Fahrrad' : '🔧 Teile') + '</span>';
-                html += '</div></div>';
-                html += '<div class="space-y-1.5 text-xs text-gray-600 mb-3">';
-                html += '<div class="flex justify-between"><span class="text-gray-400">Ansprechpartner:</span><span class="font-semibold">' + l.kontakt + '</span></div>';
-                html += '<div class="flex justify-between"><span class="text-gray-400">Konditionen:</span><span class="font-semibold">' + l.konditionen + '</span></div>';
-                html += '<div class="flex justify-between"><span class="text-gray-400">Rahmenvertrag:</span><span>' + l.rahmenvertrag + '</span></div>';
-                if(l.volumen > 0) html += '<div class="flex justify-between"><span class="text-gray-400">Volumen 2025:</span><span class="font-semibold">' + l.volumen.toLocaleString('de-DE') + ' €' + (l.anteil > 0 ? ' (' + l.anteil + '%)' : '') + '</span></div>';
-                html += '</div>';
-                if(l.status !== 'inaktiv') {
-                    html += '<div class="flex items-center space-x-2 pt-3 border-t border-gray-100">';
-                    html += '<a href="mailto:' + l.email + '" class="flex-1 text-center px-2 py-1.5 text-xs font-semibold border border-gray-300 rounded-lg hover:bg-gray-50">E-Mail</a>';
-                    html += '<a href="' + l.portal + '" target="_blank" class="flex-1 text-center px-2 py-1.5 text-xs font-semibold bg-vit-orange text-white rounded-lg hover:opacity-90">B2B-Portal</a>';
-                    html += '</div>';
-                }
-                html += '</div>';
-            });
-            document.getElementById('lieferantenGrid').innerHTML = html;
+// Sortiment Holzkirchen
+var hauptmarken=[
+    {name:'Riese und Müller',s:'R&M',bg:'#1a1a1a',seg:'Premium · Nachorder',sp:'pg',v:27,vj:26,um:130856,ant:47.7,be:33,bw:116645,nl:5.45,vnl:6.24,bew:'Läuft gut',bc:'text-green-600',bi:'✓'},
+    {name:'Orbea',s:'ORB',bg:'#ea580c',seg:'Premium · Nachorder',sp:'pg',v:22,vj:13,um:83078,ant:30.3,be:28,bw:82092,nl:9.98,vnl:11.70,bew:'Rabatt zu hoch',bc:'text-yellow-600',bi:'⚠'},
+    {name:'Haibike (Accell)',s:'HAI',bg:'#dc2626',seg:'Preiseinstieg · Vororder',sp:'pb',v:7,vj:1,um:28528,ant:10.4,be:28,bw:100172,nl:6.72,vnl:13.77,bew:'7 verkauft, 28 Bestand!',bc:'text-red-600',bi:'⛔'}
+];
+var bestandsm=[
+    {n:'Kalkhoff',s:'KH',bg:'#2563eb',st:'Abverkauf',sp:'py',v:13,be:4,um:'26.946€',nl:'26,45%'},
+    {n:'Ca Go',s:'CG',bg:'#059669',st:'Abverkauf',sp:'py',v:1,be:1,um:'4.333€',nl:'20,55%'},
+    {n:'Velo de Ville',s:'VdV',bg:'#7c3aed',st:'Beobachtung',sp:'po',v:1,be:8,um:'952€',nl:'12%+2%Sk'},
+    {n:'Hase Bikes',s:'HB',bg:'#0891b2',st:'Onboarding',sp:'pb',v:0,be:2,um:'0€',nl:'—'}
+];
+
+// ==================== HQ DASHBOARD ====================
+function renderHQDash(){
+    var h='';
+    // KPI row
+    var totLief=allLief.length, fixiert=allLief.filter(function(l){return l.sc=='green'}).length;
+    var offen=allLief.filter(function(l){return l.sc=='yellow'}).length;
+    h+='<div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">';
+    h+='<div class="vc p-3.5 text-center"><p class="text-[10px] text-gray-400 uppercase">Lieferanten gesamt</p><p class="text-2xl font-bold mt-1">'+totLief+'</p></div>';
+    h+='<div class="vc p-3.5 text-center"><p class="text-[10px] text-gray-400 uppercase">Fixiert</p><p class="text-2xl font-bold text-green-600 mt-1">'+fixiert+'</p></div>';
+    h+='<div class="vc p-3.5 text-center"><p class="text-[10px] text-gray-400 uppercase">In Verhandlung</p><p class="text-2xl font-bold mt-1" style="color:#EF7D00">'+offen+'</p></div>';
+    h+='<div class="vc p-3.5 text-center"><p class="text-[10px] text-gray-400 uppercase">Standorte</p><p class="text-2xl font-bold mt-1">'+Object.keys(standorte).length+'</p></div>';
+    var kritisch=Object.values(standorte).filter(function(s){return s.nachlassIst>7}).length;
+    h+='<div class="vc p-3.5 text-center '+(kritisch?'border-2 border-red-200':'')+'"><p class="text-[10px] text-gray-400 uppercase">Nachlass kritisch</p><p class="text-2xl font-bold text-red-500 mt-1">'+kritisch+'</p></div>';
+    h+='</div>';
+
+    // Standort-Alarme
+    h+='<h2 class="text-sm font-bold mb-3">🚨 Standort-Alarme</h2><div class="grid md:grid-cols-2 xl:grid-cols-3 gap-3 mb-6">';
+    Object.keys(standorte).forEach(function(k){
+        var s=standorte[k], st=strategien[k]||{};
+        var done=(st.todos||[]).filter(function(t){return t.d}).length, total=(st.todos||[]).length;
+        var pct=total?Math.round(done/total*100):0;
+        var nlCls=s.nachlassIst>7?'text-red-500':s.nachlassIst>5?'text-yellow-600':'text-green-600';
+        var dbCls=s.db1Ist<32?'text-red-500':s.db1Ist<34?'text-yellow-600':'text-green-600';
+        var statMap={veroeffentlicht:'pg',review:'pb',entwurf:'py'};
+        var statLabel={veroeffentlicht:'✅',review:'🔍',entwurf:'📝'};
+        h+='<div class="vc p-4"><div class="flex items-center justify-between mb-2"><h3 class="font-bold text-sm">'+s.name+'</h3><span class="pill '+(statMap[st.status]||'pgr')+'">'+(statLabel[st.status]||'—')+' '+(st.status||'—')+'</span></div>';
+        h+='<p class="text-[10px] text-gray-400 mb-2">'+s.inhaber+' · '+s.verkauft+' Bikes · '+s.umsatz.toLocaleString('de-DE')+'€</p>';
+        h+='<div class="grid grid-cols-3 gap-2 text-center text-[11px] mb-2">';
+        h+='<div class="p-2 rounded-lg bg-gray-50"><span class="text-gray-400 block">Nachlass</span><b class="'+nlCls+'">'+s.nachlassIst.toFixed(1).replace('.',',')+'%</b></div>';
+        h+='<div class="p-2 rounded-lg bg-gray-50"><span class="text-gray-400 block">DB1</span><b class="'+dbCls+'">'+s.db1Ist.toFixed(1).replace('.',',')+'%</b></div>';
+        h+='<div class="p-2 rounded-lg bg-gray-50"><span class="text-gray-400 block">Bestand</span><b>'+s.bestand+'</b></div>';
+        h+='</div>';
+        h+='<div class="flex items-center gap-2"><div class="prog flex-1"><div class="pf" style="width:'+pct+'%;background:var(--v)"></div></div><span class="text-[10px] font-bold" style="color:#EF7D00">'+pct+'% ToDos</span></div>';
+        h+='</div>';
+    });
+    h+='</div>';
+
+    // Offene Lieferanten-Verhandlungen
+    h+='<h2 class="text-sm font-bold mb-3">🔄 Offene Verhandlungen & Aktionen</h2><div class="vc overflow-x-auto mb-6"><table class="dt"><thead><tr><th>Lieferant</th><th>Art</th><th>Status</th><th>IHT</th><th>Aktion nötig</th></tr></thead><tbody>';
+    allLief.filter(function(l){return l.sc=='yellow'||l.sc=='blue'}).forEach(function(l){
+        var artI={bike:'🚲',parts:'🔧',dl:'🏢'};
+        h+='<tr><td class="font-semibold">'+l.n+'</td><td class="text-xs">'+(artI[l.art]||'')+' '+l.art+'</td>';
+        h+='<td><span class="pill '+(l.sc=='yellow'?'py':'pb')+'">'+l.stat+'</span></td>';
+        h+='<td class="text-xs">'+(l.iht||'—')+'</td>';
+        var aktion='Verhandlung fortführen';
+        if(l.stat.indexOf('Finalisierung')>=0) aktion='Vertrag abschließen';
+        if(l.stat.indexOf('Kontakt au')>=0) aktion='Erstkontakt herstellen';
+        if(l.stat.indexOf('Kontakt aufgenommen')>=0) aktion='Angebot einholen';
+        h+='<td><span class="text-xs font-semibold" style="color:#EF7D00">→ '+aktion+'</span></td></tr>';
+    });
+    h+='</tbody></table></div>';
+
+    // Bestands-Alarme
+    h+='<h2 class="text-sm font-bold mb-3">📦 Bestands-Alarme (Holzkirchen)</h2><div class="grid md:grid-cols-3 gap-3">';
+    hauptmarken.forEach(function(m){
+        if(m.be>20 && m.v<15){
+            h+='<div class="vc p-4 border-l-4 border-red-400"><div class="flex items-center gap-2 mb-1"><div class="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[9px] font-bold" style="background:'+m.bg+'">'+m.s+'</div><b class="text-xs">'+m.name+'</b></div>';
+            h+='<p class="text-[11px] text-red-600 font-semibold">'+m.v+' verkauft vs. '+m.be+' Bestand ('+m.bw.toLocaleString('de-DE')+'€)</p>';
+            h+='<p class="text-[10px] text-gray-400">Ratio: '+(m.v/m.be).toFixed(2)+' — Aktion: Abverkauf forcieren</p></div>';
         }
+    });
+    h+='</div>';
+    return h;
+}
 
-        function filterLieferanten() { renderLieferanten(); }
+// ==================== HQ LIEFERANTEN ====================
+var liefFilter='all', liefQ='';
+function renderHQLief(){
+    var h='';
+    h+='<div class="flex flex-col sm:flex-row gap-3 mb-4"><div class="relative flex-1 max-w-md"><svg class="absolute left-3 top-2.5 w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><input type="text" id="lq" oninput="liefQ=this.value;reRenderEkTab()" placeholder="Suchen…" class="si" value="'+liefQ+'"></div>';
+    h+='<div class="flex gap-1.5 flex-wrap">';
+    ['all','bike','parts','dl'].forEach(function(f){
+        var lb={all:'Alle',bike:'🚲 Bikes',parts:'🔧 Parts',dl:'🏢 DL'}[f];
+        h+='<button onclick="liefFilter=\''+f+'\';reRenderEkTab()" class="px-3 py-1.5 rounded-full text-xs font-semibold '+(liefFilter==f?'text-white':'bg-gray-100 text-gray-600')+'" '+(liefFilter==f?'style="background:#EF7D00"':'')+'>'+lb+'</button>';
+    });
+    h+='</div><button onclick="openLiefEditor()" class="vbtn">＋ Neuer Lieferant</button></div>';
 
-        function toggleLiefFilter(group, val) {
-            if(group === 'typ') {
-                liefFilterTyp = val;
-                document.querySelectorAll('.lief-typ-btn').forEach(function(b){ b.className = 'lief-typ-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200'; });
-                var btn = document.querySelector('.lief-typ-btn[data-typ="'+val+'"]');
-                if(btn) btn.className = 'lief-typ-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white';
-            } else {
-                liefFilterStatus = val;
-                document.querySelectorAll('.lief-status-btn').forEach(function(b){ b.className = 'lief-status-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200'; });
-                var btn2 = document.querySelector('.lief-status-btn[data-st="'+val+'"]');
-                if(btn2) btn2.className = 'lief-status-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white';
+    // Legend
+    h+='<div class="flex flex-wrap gap-3 mb-3 text-[10px] text-gray-500">';
+    [{c:'bg-green-500',l:'Fixiert'},{c:'bg-yellow-500',l:'In Verhandlung'},{c:'bg-blue-500',l:'Kontakt'},{c:'bg-gray-400',l:'Ausstehend'},{c:'bg-red-500',l:'Gescheitert'}].forEach(function(s){h+='<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full '+s.c+'"></span>'+s.l+'</span>'});
+    h+='</div>';
+
+    h+='<div class="vc overflow-x-auto"><table class="dt"><thead><tr><th>Lieferant</th><th>Art</th><th>Kern</th><th>Status</th><th>Kalkulation</th><th>IHT</th><th>Kontakt</th><th>B2B</th><th></th></tr></thead><tbody>';
+    var sc={green:'bg-green-500',yellow:'bg-yellow-500',blue:'bg-blue-500',gray:'bg-gray-400',red:'bg-red-500'};
+    var artI={bike:'🚲',parts:'🔧',dl:'🏢'};
+    var q=liefQ.toLowerCase();
+    allLief.filter(function(l){
+        if(liefFilter!='all'&&l.art!=liefFilter) return false;
+        if(q&&l.n.toLowerCase().indexOf(q)<0) return false;
+        return true;
+    }).forEach(function(l,i){
+        var kernLabel=l.kern?'<span class="font-bold text-[10px]" style="color:#EF7D00">★ Kern</span>':l.zusatz?'<span class="text-[10px] text-gray-400">Zusatz</span>':l.auslauf?'<span class="text-[10px] text-red-400">⊘ Auslauf</span>':'<span class="text-[10px] text-gray-300">—</span>';
+        h+='<tr><td class="font-semibold">'+l.n+'</td>';
+        h+='<td class="text-xs">'+(artI[l.art]||'')+' '+l.art+'</td>';
+        h+='<td>'+kernLabel+'</td>';
+        h+='<td><span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full '+(sc[l.sc]||'bg-gray-300')+'"></span><span class="text-xs">'+l.stat+'</span></span></td>';
+        h+='<td class="text-[11px]">'+(l.kond||'<span class="text-gray-300">—</span>')+'</td>';
+        h+='<td class="text-xs">'+(l.iht||'<span class="text-gray-300">—</span>')+'</td>';
+        h+='<td class="text-[11px]">'+(l.mail?'<a href="mailto:'+l.mail+'" class="text-blue-600">'+l.mail+'</a>':'<span class="text-gray-300">—</span>')+(l.tel?'<br><span class="text-gray-400">'+l.tel+'</span>':'')+'</td>';
+        h+='<td>'+(l.b2b?'<span class="text-[10px] font-semibold text-blue-600">'+l.b2b+'</span>':'<span class="text-gray-300 text-xs">—</span>')+'</td>';
+        h+='<td><button onclick="openLiefEditor('+i+')" class="rbtn text-[10px]">✏️</button></td>';
+        h+='</tr>';
+    });
+    h+='</tbody></table></div>';
+    return h;
+}
+
+// ==================== LIEFERANT EDITOR MODAL ====================
+function openLiefEditor(idx){
+    var l=idx!=null?allLief[idx]:{n:'',art:'bike',kern:false,zusatz:false,auslauf:false,stat:'',sc:'gray',kond:'',iht:'',zr:false,mail:'',tel:'',b2b:'',regmail:'',hp:'',katalog:'',notizen:''};
+    var isNew=idx==null;
+    var h='<div class="modal-bg" onclick="if(event.target==this)closeModal()"><div class="modal">';
+    h+='<div class="flex items-center justify-between mb-4"><h2 class="font-bold text-base">'+(isNew?'Neuer Lieferant':'✏️ '+l.n+' bearbeiten')+'</h2><button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-lg">✕</button></div>';
+    
+    h+='<div class="form-row"><div><label class="form-label">Name</label><input class="form-input" id="eN" value="'+l.n+'"></div><div><label class="form-label">Art</label><select class="form-input" id="eArt"><option value="bike"'+(l.art=='bike'?' selected':'')+'>🚲 Bike</option><option value="parts"'+(l.art=='parts'?' selected':'')+'>🔧 Parts</option><option value="dl"'+(l.art=='dl'?' selected':'')+'>🏢 Dienstleister</option></select></div></div>';
+    
+    h+='<div class="form-row"><div><label class="form-label">Status Konditionen</label><select class="form-input" id="eStat"><option value="Zentral fixiert"'+(l.stat.indexOf('fixiert')>=0?' selected':'')+'>✅ Zentral fixiert</option><option value="In Verhandlung"'+(l.stat=='In Verhandlung'?' selected':'')+'>🔄 In Verhandlung</option><option value="In Finalisierung"'+(l.stat.indexOf('Finalisierung')>=0?' selected':'')+'>📝 In Finalisierung</option><option value="Kontakt aufgenommen"'+(l.stat=='Kontakt aufgenommen'?' selected':'')+'>📞 Kontakt aufgenommen</option><option value="Kontakt ausstehend"'+(l.stat.indexOf('ausstehend')>=0?' selected':'')+'>⏳ Kontakt ausstehend</option><option value="Volumen nicht ausreichend"'+(l.stat.indexOf('Volumen')>=0?' selected':'')+'>📉 Volumen nicht ausreichend</option><option value="Verhandlung gescheitert"'+(l.stat.indexOf('gescheitert')>=0?' selected':'')+'>❌ Gescheitert</option><option value="Ausgelaufen"'+(l.stat.indexOf('Ausgelaufen')>=0?' selected':'')+'>⊘ Ausgelaufen</option></select></div>';
+    h+='<div><label class="form-label">Einstufung</label><select class="form-input" id="eKern"><option value="kern"'+(l.kern?' selected':'')+'>★ Kernsortiment</option><option value="zusatz"'+(l.zusatz?' selected':'')+'>＋ Zusatz</option><option value="auslauf"'+(l.auslauf?' selected':'')+'>⊘ Auslauf</option><option value=""'+(!l.kern&&!l.zusatz&&!l.auslauf?' selected':'')+'>— Keine</option></select></div></div>';
+    
+    h+='<h3 class="font-bold text-xs text-gray-500 mt-4 mb-2">💰 Kalkulation & Konditionen</h3>';
+    h+='<div class="form-row"><div><label class="form-label">Konditionen (Kurzform)</label><input class="form-input" id="eKond" value="'+(l.kond||'').replace(/"/g,'&quot;')+'"></div><div><label class="form-label">IHT-Status</label><select class="form-input" id="eIht"><option value="">— Nicht relevant</option><option value="IHT aktiv"'+(l.iht=='IHT aktiv'?' selected':'')+'>✅ IHT aktiv</option><option value="Im Onboarding"'+(l.iht=='Im Onboarding'?' selected':'')+'>🔄 Im Onboarding</option><option value="In Verhandlung"'+(l.iht=='In Verhandlung'?' selected':'')+'>📝 In Verhandlung</option><option value="Abgelehnt"'+(l.iht=='Abgelehnt'?' selected':'')+'>❌ Abgelehnt</option></select></div></div>';
+    h+='<div><label class="form-label">Konditionen Detail / Vertragsinhalte</label><textarea class="form-input" id="eKondDetail" rows="3" placeholder="z.B. 12% Händlerrabatt, 2% Skonto 16 Tage, Faktor 1,8…">'+(l.kondDetail||'')+'</textarea></div>';
+    
+    h+='<h3 class="font-bold text-xs text-gray-500 mt-4 mb-2">👤 Ansprechpartner & Kontakt</h3>';
+    h+='<div class="form-row"><div><label class="form-label">E-Mail Innendienst</label><input class="form-input" id="eMail" value="'+(l.mail||'')+'"></div><div><label class="form-label">Telefon</label><input class="form-input" id="eTel" value="'+(l.tel||'')+'"></div></div>';
+    h+='<div class="form-row"><div><label class="form-label">E-Mail für Registrierung</label><input class="form-input" id="eReg" value="'+(l.regmail||'')+'"></div><div><label class="form-label">Ansprechpartner Name</label><input class="form-input" id="eAP" value="'+(l.ansprechpartner||'')+'"></div></div>';
+    
+    h+='<h3 class="font-bold text-xs text-gray-500 mt-4 mb-2">🔗 Links & Ressourcen</h3>';
+    h+='<div class="form-row"><div><label class="form-label">B2B-Shop</label><input class="form-input" id="eB2b" value="'+(l.b2b||'')+'"></div><div><label class="form-label">Homepage</label><input class="form-input" id="eHp" value="'+(l.hp||'')+'"></div></div>';
+    h+='<div class="form-row"><div><label class="form-label">Katalog-Link</label><input class="form-input" id="eKat" value="'+(l.katalog||'')+'"></div><div><label class="form-label">ZR über IHT</label><select class="form-input" id="eZr"><option value="false"'+(!l.zr?' selected':'')+'>Nein</option><option value="true"'+(l.zr?' selected':'')+'>Ja</option></select></div></div>';
+    
+    h+='<div><label class="form-label">Notizen</label><textarea class="form-input" id="eNot" rows="2" placeholder="Interne Notizen…">'+(l.notizen||'')+'</textarea></div>';
+    
+    h+='<div class="flex gap-3 mt-5 pt-4 border-t border-gray-100"><button onclick="saveLief('+(idx!=null?idx:'null')+')" class="vbtn">💾 Speichern</button><button onclick="closeModal()" class="rbtn">Abbrechen</button></div>';
+    h+='</div></div>';
+    document.getElementById('modalWrap').innerHTML=h;
+    document.getElementById('modalWrap').style.display='block';
+}
+
+function saveLief(idx){
+    var statToSc={'Zentral fixiert':'green','In Verhandlung':'yellow','In Finalisierung':'yellow','Kontakt aufgenommen':'blue','Kontakt ausstehend':'gray','Volumen nicht ausreichend':'gray','Verhandlung gescheitert':'red','Ausgelaufen':'red'};
+    var kernVal=document.getElementById('eKern').value;
+    var obj={
+        n:document.getElementById('eN').value,
+        art:document.getElementById('eArt').value,
+        kern:kernVal=='kern',zusatz:kernVal=='zusatz',auslauf:kernVal=='auslauf',
+        stat:document.getElementById('eStat').value,
+        sc:statToSc[document.getElementById('eStat').value]||'gray',
+        kond:document.getElementById('eKond').value,
+        kondDetail:document.getElementById('eKondDetail').value,
+        iht:document.getElementById('eIht').value,
+        zr:document.getElementById('eZr').value=='true',
+        mail:document.getElementById('eMail').value,
+        tel:document.getElementById('eTel').value,
+        regmail:document.getElementById('eReg').value,
+        ansprechpartner:document.getElementById('eAP').value,
+        b2b:document.getElementById('eB2b').value,
+        hp:document.getElementById('eHp').value,
+        katalog:document.getElementById('eKat').value,
+        notizen:document.getElementById('eNot').value
+    };
+    if(idx!=null) allLief[idx]=Object.assign(allLief[idx],obj);
+    else allLief.push(obj);
+    closeModal();
+    reRenderEkTab();
+}
+
+function closeModal(){document.getElementById('modalWrap').style.display='none';document.getElementById('modalWrap').innerHTML='';}
+
+// ==================== HQ STRATEGIEN ====================
+function renderHQStrat(){
+    var h='<div class="vc p-5 mb-5"><h2 class="font-bold text-sm mb-3">📊 Strategie-Übersicht aller Standorte</h2>';
+    h+='<div class="overflow-x-auto"><table class="dt"><thead><tr><th>Standort</th><th>Inhaber</th><th>Status</th><th>Ø Nachlass</th><th>DB1 Ist/Ziel</th><th>ToDo-Fortschritt</th><th>Stand</th></tr></thead><tbody>';
+    var stL={veroeffentlicht:{p:'pg',l:'✅ Veröff.'},review:{p:'pb',l:'🔍 Review'},entwurf:{p:'py',l:'📝 Entwurf'}};
+    Object.keys(standorte).forEach(function(k){
+        var s=standorte[k],st=strategien[k]||{};
+        var done=(st.todos||[]).filter(function(t){return t.d}).length,total=(st.todos||[]).length;
+        var pct=total?Math.round(done/total*100):0;
+        var sl=stL[st.status]||{p:'pgr',l:'—'};
+        h+='<tr><td class="font-semibold">'+s.name+'</td><td class="text-xs text-gray-500">'+s.inhaber+'</td>';
+        h+='<td><span class="pill '+sl.p+'">'+sl.l+'</span></td>';
+        h+='<td class="font-bold '+(s.nachlassIst>7?'text-red-500':s.nachlassIst>5?'text-yellow-600':'text-green-600')+'">'+s.nachlassIst.toFixed(1).replace('.',',')+'%</td>';
+        h+='<td class="text-xs">'+s.db1Ist.toFixed(1).replace('.',',')+'% <span class="text-gray-400">/ '+(st.db1Ziel||'—')+'%</span></td>';
+        h+='<td><div class="flex items-center gap-2"><div class="prog flex-1"><div class="pf" style="width:'+pct+'%;background:var(--v)"></div></div><span class="text-[10px] font-bold" style="color:#EF7D00">'+pct+'%</span></div></td>';
+        h+='<td class="text-xs text-gray-400">'+(st.datum||'—')+'</td></tr>';
+    });
+    h+='</tbody></table></div></div>';
+    return h;
+}
+
+// ==================== STANDORT: SORTIMENT ====================
+function renderStSortiment(){
+    var h='';
+    // KPIs
+    var s=standorte.holzkirchen;
+    h+='<div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">';
+    h+='<div class="vc p-3 text-center"><p class="text-[10px] text-gray-400 uppercase">Bike-Marken</p><p class="text-xl font-bold mt-1">4</p></div>';
+    h+='<div class="vc p-3 text-center"><p class="text-[10px] text-gray-400 uppercase">Verkauft</p><p class="text-xl font-bold mt-1">'+s.verkauft+'</p></div>';
+    h+='<div class="vc p-3 text-center"><p class="text-[10px] text-gray-400 uppercase">Umsatz netto</p><p class="text-xl font-bold mt-1">'+s.umsatz.toLocaleString('de-DE')+'€</p></div>';
+    h+='<div class="vc p-3 text-center"><p class="text-[10px] text-gray-400 uppercase">Ø DB1</p><p class="text-xl font-bold mt-1" style="color:#EF7D00">'+s.db1Ist+'%</p></div>';
+    h+='<div class="vc p-3 text-center"><p class="text-[10px] text-gray-400 uppercase">Ø Nachlass</p><p class="text-xl font-bold text-red-500 mt-1">'+s.nachlassIst+'%</p></div>';
+    h+='</div>';
+
+    // Hauptmarken
+    h+='<h2 class="text-sm font-bold mb-3">🚲 Hauptmarken</h2><div class="grid lg:grid-cols-3 gap-4 mb-6">';
+    hauptmarken.forEach(function(m){
+        var vc=m.vj>0?((m.v-m.vj)/m.vj*100).toFixed(0):'—';
+        h+='<div class="mc vc p-4"><div class="flex items-center gap-2.5 mb-2.5"><div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-[10px]" style="background:'+m.bg+'">'+m.s+'</div><div><h3 class="font-bold text-sm">'+m.name+'</h3><span class="pill '+m.sp+'">'+m.seg+'</span></div></div>';
+        h+='<div class="grid grid-cols-2 gap-2 text-[10px] mb-2">';
+        h+='<div class="p-2 bg-blue-50 rounded-lg"><span class="text-gray-400">Verkauft</span><p class="font-bold text-sm">'+m.v+'</p><span class="text-gray-400">VJ: '+m.vj+' ('+vc+'%)</span></div>';
+        h+='<div class="p-2 bg-green-50 rounded-lg"><span class="text-gray-400">Umsatz</span><p class="font-bold text-sm">'+m.um.toLocaleString('de-DE')+'€</p><span class="text-gray-400">'+m.ant+'%</span></div>';
+        h+='<div class="p-2 '+(m.be>20&&m.v<10?'bg-red-50 border border-red-200':'bg-orange-50')+' rounded-lg"><span class="text-gray-400">Bestand</span><p class="font-bold text-sm">'+m.be+'</p><span class="text-gray-400">'+m.bw.toLocaleString('de-DE')+'€</span></div>';
+        h+='<div class="p-2 bg-purple-50 rounded-lg"><span class="text-gray-400">Nachlass</span><p class="font-bold text-sm '+(m.nl>7?'text-red-600':'')+'">'+m.nl.toFixed(2).replace('.',',')+'%</p></div>';
+        h+='</div><p class="text-[10px] '+m.bc+' font-bold">'+m.bi+' '+m.bew+'</p></div>';
+    });
+    h+='</div>';
+
+    // Bestandsmarken
+    h+='<h2 class="text-sm font-bold mb-3">📦 Bestandsmarken</h2><div class="grid md:grid-cols-2 xl:grid-cols-4 gap-3 mb-6">';
+    bestandsm.forEach(function(m){
+        h+='<div class="vc p-3 opacity-80 border-l-4 border-yellow-400"><div class="flex items-center gap-2 mb-1.5"><div class="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[9px] font-bold" style="background:'+m.bg+'">'+m.s+'</div><div><b class="text-xs">'+m.n+'</b><span class="pill '+m.sp+' ml-1">'+m.st+'</span></div></div>';
+        h+='<div class="grid grid-cols-2 gap-1 text-[10px]"><div>Verk: <b>'+m.v+'</b></div><div>Best: <b>'+m.be+'</b></div><div>Ums: <b>'+m.um+'</b></div><div>NL: <b>'+m.nl+'</b></div></div></div>';
+    });
+    h+='</div>';
+
+    // Teilelieferanten
+    h+='<h2 class="text-sm font-bold mb-3">🔧 Teilelieferanten</h2><div class="vc overflow-x-auto"><table class="dt"><thead><tr><th>Lieferant</th><th>Konditionen</th><th>IHT</th><th>Kontakt</th></tr></thead><tbody>';
+    allLief.filter(function(l){return l.art=='parts'&&l.sc=='green'}).forEach(function(l){
+        h+='<tr><td class="font-semibold">'+l.n+'</td><td class="text-xs">'+l.kond+'</td><td>'+(l.zr?'<span class="pill pg">IHT ✓</span>':'<span class="pill pgr">Direkt</span>')+'</td><td class="text-xs text-gray-500">'+l.mail+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+    return h;
+}
+
+// ==================== STANDORT: LIEFERANTEN (READ-ONLY) ====================
+function renderStLief(){
+    var h='<div class="relative mb-4 max-w-md"><svg class="absolute left-3 top-2.5 w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><input type="text" id="slq" oninput="stLiefQ=this.value;reRenderEkTab()" placeholder="Suchen…" class="si" value="'+(stLiefQ||'')+'"></div>';
+    h+='<div class="vc overflow-x-auto"><table class="dt"><thead><tr><th>Lieferant</th><th>Art</th><th>Kern</th><th>Status</th><th>Konditionen</th><th>IHT</th><th>Kontakt</th><th>B2B</th></tr></thead><tbody>';
+    var sc={green:'bg-green-500',yellow:'bg-yellow-500',blue:'bg-blue-500',gray:'bg-gray-400',red:'bg-red-500'};
+    var q=(stLiefQ||'').toLowerCase();
+    allLief.filter(function(l){return !q||l.n.toLowerCase().indexOf(q)>=0}).forEach(function(l){
+        h+='<tr><td class="font-semibold">'+l.n+'</td><td class="text-xs">'+(l.art=='bike'?'🚲':l.art=='parts'?'🔧':'🏢')+' '+l.art+'</td>';
+        h+='<td>'+(l.kern?'<span class="font-bold text-[10px]" style="color:#EF7D00">★ Kern</span>':l.zusatz?'<span class="text-[10px] text-gray-400">Zusatz</span>':'<span class="text-gray-300 text-[10px]">—</span>')+'</td>';
+        h+='<td><span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full '+(sc[l.sc]||'bg-gray-300')+'"></span><span class="text-xs">'+l.stat+'</span></span></td>';
+        h+='<td class="text-[11px]">'+(l.kond||'—')+'</td>';
+        h+='<td class="text-xs">'+(l.iht||'—')+'</td>';
+        h+='<td class="text-[11px]">'+(l.mail||'—')+'</td>';
+        h+='<td class="text-[10px]">'+(l.b2b?'<span class="text-blue-600 font-semibold">'+l.b2b+'</span>':'—')+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+    return h;
+}
+var stLiefQ='';
+
+// ==================== ZENTRALREGULIERUNG ====================
+function renderZR(){
+    return '<div class="vc p-5 mb-5" style="border-left:4px solid #EF7D00"><h2 class="text-base font-bold mb-1">vit:bikes Streckenlieferantensystem</h2><p class="text-xs text-gray-500">Full-Service-Kooperation mit Cronbank, IHT und HIW.</p></div>'+
+    '<div class="grid md:grid-cols-3 gap-4 mb-5">'+
+    '<div class="vc p-4 text-center"><div class="text-xl mb-1">🏦</div><h3 class="font-bold text-xs">Cronbank</h3><p class="text-[10px] text-gray-500 mt-1">Finanzierung & Bankkonto. Wöchentlich: Sofort+Skonto oder Kontokorrent.</p></div>'+
+    '<div class="vc p-4 text-center"><div class="text-xl mb-1">📋</div><h3 class="font-bold text-xs">IHT</h3><p class="text-[10px] text-gray-500 mt-1">Zahlungsmanagement, Zahlungsabsicherung, Rechnungsarchiv MHK.net.</p></div>'+
+    '<div class="vc p-4 text-center"><div class="text-xl mb-1">💻</div><h3 class="font-bold text-xs">HIW</h3><p class="text-[10px] text-gray-500 mt-1">Warenwirtschaft, IC-Bestellungen, Onlineshop-Anbindung.</p></div></div>'+
+    '<div class="vc p-5 mb-5"><h3 class="font-bold text-xs mb-3">Ablauf</h3><div class="grid md:grid-cols-3 gap-3">'+
+    ['1|Bestellung|Direkt beim Lieferanten','2|Rechnung → IHT|Kopie an IHT','3|Digitalisierung|MHK.net Archiv','4|Zahlung|IHT zahlt in Skontofrist','5|SEPA-Lastschrift|16+x Tage (Fr)','✓|Flexibilität|Sofort+Skonto oder schieben'].map(function(s){var p=s.split('|');return '<div class="flex gap-2"><div class="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0" style="background:#EF7D00">'+p[0]+'</div><div><p class="text-[11px] font-semibold">'+p[1]+'</p><p class="text-[10px] text-gray-400">'+p[2]+'</p></div></div>'}).join('')+
+    '</div></div>'+
+    '<div class="grid md:grid-cols-2 gap-4">'+
+    '<div class="vc p-4"><h3 class="font-bold text-xs text-green-700 mb-2">✓ Vorteile für Dich</h3><div class="text-[11px] text-gray-600 space-y-1"><p>▸ Höhere Konditionen → besserer DB1</p><p>▸ Zeitsparende Belegarchivierung</p><p>▸ Flexible Zahlungsziele → Liquidität</p><p>▸ IC-Austausch via HIW</p></div></div>'+
+    '<div class="vc p-4"><h3 class="font-bold text-xs text-blue-700 mb-2">🤝 Vorteile für Lieferanten</h3><div class="text-[11px] text-gray-600 space-y-1"><p>▸ Zahlungsgarantie durch IHT</p><p>▸ Hohes Gruppenvolumen</p><p>▸ Zentrale Ansprechpartner</p><p>▸ Premium-Ladenbau</p></div></div></div>';
+}
+
+// ==================== STANDORT: STRATEGIE ====================
+function renderStStrat(){
+    var s=standorte.holzkirchen, st=strategien.holzkirchen;
+    var done=st.todos.filter(function(t){return t.d}).length, total=st.todos.length, pct=total?Math.round(done/total*100):0;
+    var h='<div class="vc p-5 mb-5" style="border-left:4px solid #EF7D00"><div class="flex items-start justify-between"><div><h2 class="font-bold text-base">Einkaufsstrategie — Holzkirchen</h2><p class="text-[11px] text-gray-400">Stand '+st.datum+' · Inhaber: '+s.inhaber+'</p></div><div class="flex gap-2"><span class="pill pg">✅ Veröffentlicht</span><button class="vbtn text-[11px]">📥 PDF</button></div></div></div>';
+    
+    // Progress
+    h+='<div class="vc p-4 mb-5 flex items-center gap-4" style="background:linear-gradient(135deg,#fff7ed,#fff)"><div class="w-14 h-14 rounded-full flex items-center justify-center font-bold text-base text-white flex-shrink-0" style="background:#EF7D00">'+pct+'%</div><div class="flex-1"><p class="text-xs font-bold">Gesamtfortschritt</p><div class="prog mt-1" style="height:9px"><div class="pf" style="width:'+pct+'%;background:var(--v)"></div></div><p class="text-[10px] text-gray-400 mt-1">'+done+' von '+total+' erledigt</p></div></div>';
+    
+    // KPIs
+    h+='<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">';
+    h+='<div class="vc p-3 text-center border-2 border-red-200"><p class="text-[10px] text-gray-400 uppercase">Nachlass</p><p class="text-2xl font-bold text-red-500 mt-1">'+s.nachlassIst+'%</p><p class="text-[10px] text-gray-400">Ziel: '+st.nachlass25+'%</p></div>';
+    h+='<div class="vc p-3 text-center"><p class="text-[10px] text-gray-400 uppercase">DB1</p><p class="text-2xl font-bold mt-1" style="color:#EF7D00">'+s.db1Ist+'%</p><p class="text-[10px] text-gray-400">Ziel: '+st.db1Ziel+'%</p></div>';
+    h+='<div class="vc p-3 text-center"><p class="text-[10px] text-gray-400 uppercase">Bestand</p><p class="text-2xl font-bold mt-1">'+s.bestand+'</p></div>';
+    h+='<div class="vc p-3 text-center"><p class="text-[10px] text-gray-400 uppercase">Liquidität</p><p class="text-lg font-bold mt-1">🟡 Angespannt</p></div>';
+    h+='</div>';
+    
+    // ToDos
+    h+='<div class="vc p-5"><h3 class="font-bold text-sm mb-3">📋 Deine ToDos</h3><div class="space-y-1">';
+    st.todos.forEach(function(t,i){
+        h+='<div class="td flex items-center gap-2.5 '+(t.d?'opacity-60':'')+'"><input type="checkbox" '+(t.d?'checked':'')+' onchange="strategien.holzkirchen.todos['+i+'].d=!strategien.holzkirchen.todos['+i+'].d;reRenderEkTab()"><span class="text-xs '+(t.d?'line-through text-gray-400':'text-gray-700')+'">'+t.t+'</span>'+(t.d?'<span class="pill pg ml-auto">✓</span>':'')+'</div>';
+    });
+    h+='</div></div>';
+    return h;
+}
+
+// ==================== WISSEN ====================
+var wissenSec='iht';
+function renderWissen(){
+    var h='<div class="flex flex-wrap gap-2 mb-5">';
+    [{id:'iht',l:'🏦 IHT'},{id:'parts',l:'🔧 Parts'},{id:'db1',l:'📊 DB1'},{id:'kern',l:'🚲 Kernsortiment'},{id:'vo',l:'📦 Vororder'}].forEach(function(w){
+        h+='<div class="wn'+(wissenSec==w.id?' on':'')+'" onclick="wissenSec=\''+w.id+'\';reRenderEkTab()">'+w.l+'</div>';
+    });
+    h+='</div>';
+    
+    if(wissenSec=='iht') h+=renderWIht();
+    if(wissenSec=='parts') h+=renderWParts();
+    if(wissenSec=='db1') h+=renderWDb1();
+    if(wissenSec=='kern') h+=renderWKern();
+    if(wissenSec=='vo') h+=renderWVo();
+    return h;
+}
+
+function renderWIht(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb-2">Wie funktioniert die IHT?</h3><p class="text-xs text-gray-500 mb-3">Zahlungsmanagement für alle registrierten Standorte. Bestellprozess wie gewohnt.</p><div class="grid md:grid-cols-2 gap-3"><div class="p-3 bg-gray-50 rounded-xl"><h4 class="font-semibold text-[11px] mb-1">Rechnungsverarbeitung</h4><p class="text-[10px] text-gray-500">IHT digitalisiert → MHK.net Archiv. Per Suche abrufbar oder an Steuerberater.</p></div><div class="p-3 bg-gray-50 rounded-xl"><h4 class="font-semibold text-[11px] mb-1">Zahlung & Flexibilität</h4><p class="text-[10px] text-gray-500">IHT zahlt in Skontofrist. Wöchentlich wählbar: Sofort+Skonto oder Kontokorrent Cronbank.</p></div></div></div>';}
+
+function renderWParts(){
+    var lfdm=17;
+    var h='<div class="vc p-5 mb-4"><h3 class="font-bold text-sm mb-2">Zentrale Parts-Empfehlung</h3><p class="text-xs text-gray-500 mb-3">Basierend auf laufenden Metern deiner Zubehörwände (Daten aus Excel-Matrix).</p>';
+    h+='<div class="p-3 rounded-xl border-2 mb-3" style="background:#fff7ed;border-color:var(--v)"><label class="text-[11px] font-semibold">Laufende Meter: </label><input type="range" min="5" max="25" value="17" id="lfdmSlider" oninput="document.getElementById(\'lfdmVal\').textContent=this.value" class="mx-2"><span id="lfdmVal" class="font-bold">17</span> lfdm</div></div>';
+    
+    var tc={Ergonomie:'pb',Service:'pg',Trend:'po','Zubehör':'pgr'};
+    h+='<div class="vc overflow-x-auto"><table class="dt"><thead><tr><th>Produktgruppe</th><th class="text-center">Typ</th><th class="text-right">lfdm</th><th class="text-right">Kapitalbedarf</th></tr></thead><tbody>';
+    var total=0;
+    partsPrio.forEach(function(p){
+        var l=p['17']||0;
+        total+=p.kap;
+        h+='<tr><td class="font-semibold">'+p.n+'</td><td class="text-center"><span class="pill '+(tc[p.t]||'pgr')+'">'+p.t+'</span></td><td class="text-right font-semibold">'+l+'</td><td class="text-right">'+(p.kap>0?Math.round(p.kap).toLocaleString('de-DE')+'€':'—')+'</td></tr>';
+    });
+    h+='<tr class="font-bold" style="background:#f9fafb"><td>GESAMT</td><td></td><td class="text-right">17</td><td class="text-right">'+Math.round(total).toLocaleString('de-DE')+'€</td></tr>';
+    h+='</tbody></table></div>';
+    
+    // WBP Markenrabatte
+    h+='<div class="vc p-5 mt-4"><h3 class="font-bold text-sm mb-2">Wiener Bike Parts — Markenrabatte</h3><div class="overflow-x-auto"><table class="dt"><thead><tr><th>Marke</th><th>Kopfrabatt</th><th>Markenrabatt</th><th>Delkredere</th><th>Skonto</th></tr></thead><tbody>';
+    wbpR.forEach(function(r){h+='<tr><td class="font-semibold">'+r.m+'</td><td class="text-xs">'+r.k+'</td><td class="text-xs">'+r.r+'</td><td class="text-xs">'+r.d+'</td><td class="text-xs">2%</td></tr>'});
+    h+='</tbody></table></div><p class="text-[10px] text-gray-400 mt-2">Lieferung ab 100€ versandkostenfrei. Alle Preise zzgl. 2% Skonto 14 Tage.</p></div>';
+    return h;
+}
+
+function renderWDb1(){return '<div class="vc p-5 mb-4"><h3 class="font-bold text-sm mb-2">DB1 — Deckungsbeitrag 1</h3><p class="text-xs text-gray-500 mb-3">Der echte Ertragswert nach MwSt-Bereinigung.</p><div class="grid md:grid-cols-3 gap-3"><div class="p-3 bg-gray-50 rounded-xl"><h4 class="text-[11px] font-semibold mb-1" style="color:#EF7D00">Handelsspanne 45%</h4><p class="text-[10px] text-gray-500">3.999€ × 45% = 1.799€</p><p class="text-xs font-bold text-green-600 mt-1">DB1 = 1.161€</p></div><div class="p-3 bg-gray-50 rounded-xl"><h4 class="text-[11px] font-semibold mb-1" style="color:#EF7D00">Faktor 1,82</h4><p class="text-[10px] text-gray-500">3.999€ / 1,82 = 2.197€ HEK</p><p class="text-xs font-bold text-green-600 mt-1">DB1 = 1.163€</p></div><div class="p-3 rounded-xl text-white" style="background:#EF7D00"><h4 class="text-[11px] font-semibold mb-1">In Prozent</h4><p class="text-[10px] opacity-80">= 1.163 / 3.361</p><p class="text-lg font-bold mt-1">= 34,62%</p></div></div></div><div class="vc p-5"><h4 class="font-semibold text-xs mb-3">+3% DB1 aufs Ergebnis</h4><div class="grid md:grid-cols-2 gap-3"><div class="p-3 bg-gray-50 rounded-xl"><p class="text-xs font-semibold">Ohne</p><p class="text-base font-bold">100.000€</p></div><div class="p-3 bg-green-50 rounded-xl border border-green-200"><p class="text-xs font-semibold">Mit +3%</p><p class="text-base font-bold text-green-600">129.400€ (+29%)</p></div></div></div>';}
+
+function renderWKern(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb-2">Kernsortiment — 4-Marken-Politik</h3><p class="text-xs text-gray-500 mb-3">Max. 4 Bike-Marken pro Standort aus dem Pool.</p><div class="overflow-x-auto"><table class="dt"><thead><tr style="background:#EF7D00"><th class="text-white"></th><th class="text-white">E-Trekking</th><th class="text-white">E-City/Urban</th><th class="text-white">E-MTB</th><th class="text-white">E-Race/Gravel</th></tr></thead><tbody><tr><td class="font-bold" style="background:#fff7ed">Premium<br><span class="text-[9px] text-gray-400">ab 6k€</span></td><td class="text-[11px]">R&M·Orbea·Simplon·Steppenwolf</td><td class="text-[11px]">R&M·Orbea·Simplon·Steppenwolf</td><td class="text-[11px]">Orbea·Simplon·Steppenwolf</td><td class="text-[11px]">Orbea·Simplon</td></tr><tr><td class="font-bold" style="background:#eff6ff">Preis<br><span class="text-[9px] text-gray-400">bis 6k€</span></td><td class="text-[11px]">VdV·Haibike·Winora·Hepha</td><td class="text-[11px]">VdV·Winora·Hepha</td><td class="text-[11px]">Haibike·Hepha</td><td class="text-[11px] text-gray-300">—</td></tr></tbody></table></div></div>';}
+
+function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb-2">Vororder & Nachorder</h3><p class="text-xs text-gray-500 mb-3">Cashflow: Großteil mit Nachordermarken planen.</p><div class="grid md:grid-cols-2 gap-4"><div class="p-4 bg-red-50 rounded-xl border border-red-200"><h4 class="font-bold text-xs mb-2">Vorordermarken</h4><p class="text-[10px] text-gray-500 mb-2">Verbindlich → bessere Konditionen, hohe Kapitalbindung</p><div class="flex flex-wrap gap-1"><span class="pill pr">Haibike</span><span class="pill pr">Winora</span><span class="pill pr">Hepha</span><span class="pill pr">Steppenwolf</span></div></div><div class="p-4 bg-green-50 rounded-xl border border-green-200"><h4 class="font-bold text-xs mb-2">Nachordermarken</h4><p class="text-[10px] text-gray-500 mb-2">Konfigurierbar, weniger Kapitalbindung</p><div class="flex flex-wrap gap-1"><span class="pill pg">Orbea</span><span class="pill pg">R&amp;M</span><span class="pill pg">Simplon</span><span class="pill pg">Velo de Ville</span></div></div></div></div>';} 
+
+        // === EINKAUF TAB NAVIGATION (Portal-adapted) ===
+
+        function reRenderEkTab() {
+            var activeBtn = document.querySelector('.ek-tab-btn.text-vit-orange') || document.querySelector('.hqek-tab-btn.text-vit-orange');
+            if(activeBtn) {
+                var tab = activeBtn.dataset.tab || activeBtn.dataset.hqek;
+                if(activeBtn.classList.contains('hqek-tab-btn')) { showHqEkTab(tab); }
+                else { showEinkaufTab(tab); }
             }
-            renderLieferanten();
-        }
-
-        function renderEkAuswertung() {
-            // Margen
-            var html = '';
-            ekMargen.forEach(function(m) {
-                html += '<div class="flex items-center space-x-3">';
-                html += '<span class="w-20 text-sm font-semibold text-gray-700">' + m.marke + '</span>';
-                html += '<div class="flex-1 bg-gray-200 rounded-full h-4"><div class="' + m.color + ' h-4 rounded-full flex items-center justify-end pr-2" style="width:' + (m.marge/50*100) + '%"><span class="text-xs text-white font-bold">' + m.marge + '%</span></div></div>';
-                html += '</div>';
-            });
-            document.getElementById('ekMargenList').innerHTML = html;
-
-            // Top Modelle
-            html = '';
-            ekTopModelle.forEach(function(m,i) {
-                html += '<div class="flex items-center justify-between py-2 ' + (i<4?'border-b border-gray-100':'') + '">';
-                html += '<div class="flex items-center space-x-2"><span class="text-sm font-bold text-green-600">' + (i+1) + '.</span><span class="text-sm text-gray-800">' + m.name + '</span></div>';
-                html += '<div class="text-right"><span class="text-sm font-bold text-gray-800">' + m.stueck + 'x</span><span class="text-xs text-gray-400 ml-2">' + m.umsatz.toLocaleString('de-DE') + ' €</span></div>';
-                html += '</div>';
-            });
-            document.getElementById('ekTopModelle').innerHTML = html;
-
-            // Flop Modelle
-            html = '';
-            ekFlopModelle.forEach(function(m,i) {
-                html += '<div class="flex items-center justify-between py-2 ' + (i<2?'border-b border-gray-100':'') + '">';
-                html += '<div><span class="text-sm text-gray-800">' + m.name + '</span><span class="text-xs text-red-500 ml-2">' + m.tage + ' Tage</span></div>';
-                html += '<div class="text-right"><span class="text-xs text-gray-400">EK: ' + m.ek + ' €</span></div>';
-                html += '</div>';
-            });
-            document.getElementById('ekFlopModelle').innerHTML = html;
         }
 
         function showEinkaufTab(tabName) {
@@ -7354,63 +7488,42 @@
             document.querySelectorAll('.ek-tab-btn').forEach(function(b){
                 b.className='ek-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
             });
-            var tabMap = {lieferanten:'Lieferanten',auswertung:'Auswertung',ekStrategie:'EkStrategie',ekWissen:'EkWissen'};
+            var tabMap = {sortiment:'Sortiment',lieferanten:'Lieferanten',zentralreg:'Zentralreg',ekStrategie:'EkStrategie',ekWissen:'EkWissen'};
             var el = document.getElementById('ekTab' + (tabMap[tabName]||''));
             if(el) el.style.display = 'block';
             var btn = document.querySelector('.ek-tab-btn[data-tab="'+tabName+'"]');
             if(btn) btn.className='ek-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
-            if(tabName==='lieferanten') renderLieferanten();
-            if(tabName==='auswertung') renderEkAuswertung();
+
+            // Render tab content dynamically
+            if(tabName==='sortiment') { var c=document.getElementById('ekTabSortiment'); if(c) c.innerHTML='<div class="fi">'+renderStSortiment()+'</div>'; }
+            if(tabName==='lieferanten') { var c=document.getElementById('ekTabLieferanten'); if(c) c.innerHTML='<div class="fi">'+renderStLief()+'</div>'; }
+            if(tabName==='zentralreg') { var c=document.getElementById('ekTabZentralreg'); if(c) c.innerHTML='<div class="fi">'+renderZR()+'</div>'; }
+            if(tabName==='ekStrategie') { var c=document.getElementById('ekTabEkStrategie'); if(c) c.innerHTML='<div class="fi">'+renderStStrat()+'</div>'; }
+            // ekWissen handled by Wissen override
         }
 
-        // Init Einkauf
-        renderLieferanten();
+        // === HQ EINKAUF TAB NAVIGATION ===
+        function showHqEkTab(tabName) {
+            document.querySelectorAll('.hqek-tab-content').forEach(function(t){t.style.display='none';});
+            document.querySelectorAll('.hqek-tab-btn').forEach(function(b){
+                b.className='hqek-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
+            });
+            var tabMap = {dash:'Dash',lief:'Lief',strat:'Strat'};
+            var el = document.getElementById('hqEkTab' + (tabMap[tabName]||''));
+            if(el) el.style.display = 'block';
+            var btn = document.querySelector('.hqek-tab-btn[data-hqek="'+tabName+'"]');
+            if(btn) btn.className='hqek-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
 
-        // === EINKAUF DATEN (65 Lieferanten aus Zentraleinkauf-Excel) ===
-        var allLief=[{"n": "AMFLOW/ DJI", "art": "bike", "kern": false, "zusatz": false, "auslauf": true, "stat": "Verhandlung gescheitert", "sc": "red", "kond": "Konditionen zu gering", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Babboe", "art": "bike", "kern": false, "zusatz": true, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Konditionen Accell", "iht": "IHT aktiv", "zr": true, "mail": "service@winora-group.de", "tel": "+49 (0)9721-6501-7878", "b2b": "Accentry b2b", "regmail": "callcenter@winora.de"}, {"n": "CaGo", "art": "bike", "kern": false, "zusatz": true, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Konditionen Ca Go", "iht": "IHT aktiv", "zr": true, "mail": "nouri.hamsoro@rtisports.de", "tel": "+49 (0)261 899998-220", "b2b": "Ca Go b2b", "regmail": "nouri.hamsoro@rtisports.de"}, {"n": "Centurion", "art": "bike", "kern": false, "zusatz": false, "auslauf": true, "stat": "Verhandlung gescheitert", "sc": "red", "kond": "", "iht": "Abgelehnt", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Conway", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Gazelle", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Volumen nicht ausreichend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Ghost, Lapierre", "art": "bike", "kern": false, "zusatz": true, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Konditionen Accell", "iht": "IHT aktiv", "zr": true, "mail": "sales@ghost-bikes.de", "tel": "+49 9632 9255-0", "b2b": "Accentry b2b", "regmail": "service@ghost-bikes.de"}, {"n": "HASE bike", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "6-7% Rabatt + 2% Sk. 10T", "iht": "Im Onboarding", "zr": false, "mail": "Hendrik.Forejta@hasebikes.com", "tel": "+49 2309 9377-236", "b2b": "", "regmail": "Hendrik.Forejta@hasebikes.com"}, {"n": "HEPHA", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "", "iht": "IHT aktiv", "zr": true, "mail": "info@hepha.com", "tel": "+49(0) 8142 / 2844480", "b2b": "", "regmail": "bernd.lesch@hepha.com"}, {"n": "i:SY", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Volumen nicht ausreichend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "yasemin@isy.de", "tel": "+49 221 5727744445", "b2b": "", "regmail": "yasemin@isy.de"}, {"n": "Kalkhoff", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Volumen nicht ausreichend", "sc": "gray", "kond": "", "iht": "Abgelehnt", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Koga", "art": "bike", "kern": false, "zusatz": true, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Konditionen Accell", "iht": "IHT aktiv", "zr": true, "mail": "service@winora-group.de", "tel": "+49 (0)9721-6501-7878", "b2b": "Accentry b2b", "regmail": "callcenter@winora.de"}, {"n": "KTM", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Volumen nicht ausreichend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "M1", "art": "bike", "kern": false, "zusatz": false, "auslauf": true, "stat": "Ausgelaufen (Insolvenz)", "sc": "red", "kond": "", "iht": "Abgelehnt", "zr": false, "mail": "info@m1-sporttechnik.de", "tel": "08020-90891170", "b2b": "", "regmail": "j.sauer@m1-sporttechnik.de"}, {"n": "Nicolai", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "In Verhandlung", "sc": "yellow", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Orbea", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "40/60% TAM, Diamond 17%", "iht": "In Verhandlung", "zr": false, "mail": "cponzlet@orbea.com", "tel": "+49 231 98819869", "b2b": "Orbea KIDE", "regmail": "cponzlet@orbea.com"}, {"n": "Raymon", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Riese und Müller", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "In Verhandlung", "sc": "yellow", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "vertrieb@r-m.de", "tel": "+49 6151 36686-11", "b2b": "R&M b2b", "regmail": "vertrieb@r-m.de"}, {"n": "Simplon", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Premium-Händler, hohe Marge", "iht": "Im Onboarding", "zr": false, "mail": "sales@simplon.com", "tel": "+43 5574 72564401", "b2b": "Simplon b2b", "regmail": "sales@simplon.com"}, {"n": "Specialized", "art": "bike", "kern": false, "zusatz": false, "auslauf": false, "stat": "Volumen nicht ausreichend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Steppenwolf", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Kalk. 1,85 + 3% VO + 3% Sk.", "iht": "IHT aktiv", "zr": true, "mail": "sales@steppenwolf-bikes.com", "tel": "+49 30 863280217", "b2b": "Steppenwolf b2b", "regmail": "sales@steppenwolf-bikes.com"}, {"n": "Urban Arrow", "art": "bike", "kern": false, "zusatz": false, "auslauf": true, "stat": "Verhandlung gescheitert", "sc": "red", "kond": "", "iht": "Abgelehnt", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Velo de Ville", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "12% + 2% Sk. 16T (Fakt. 1,8)", "iht": "IHT aktiv", "zr": true, "mail": "philipp.niehues@velo-de-ville.com", "tel": "+49 2505 9305 965", "b2b": "VdV b2b", "regmail": "marketing@velo-de-ville.com"}, {"n": "Winora, Haibike", "art": "bike", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Accell max. Staffel (nur IHT)", "iht": "IHT aktiv", "zr": true, "mail": "service@winora-group.de", "tel": "+49(0) 9721-6501-7878", "b2b": "Accentry b2b", "regmail": "callcenter@winora.de"}, {"n": "Bike Leasing Service", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "6% Prov. - 33,4% MKT - bis 66,67% Wachstum", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "BLS b2b", "regmail": ""}, {"n": "BikeCenter", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "In Verhandlung", "sc": "yellow", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Businessbike", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "In Finalisierung", "sc": "yellow", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Businessbike b2b", "regmail": ""}, {"n": "Company Bike", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "In Verhandlung", "sc": "yellow", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "CB b2b", "regmail": ""}, {"n": "Deutsche Dienstrad", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "0% Prov. + 3% Fulfillment + 1% Rückverg.", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "DD b2b", "regmail": ""}, {"n": "Eleasa", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Eleasa b2b", "regmail": ""}, {"n": "GO", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Jobrad", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Jobrad b2b", "regmail": ""}, {"n": "Kazenmaier", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Kazenmaier b2b", "regmail": ""}, {"n": "lease a bike", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "leasabike b2b", "regmail": ""}, {"n": "Linexo", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "linexo b2b", "regmail": ""}, {"n": "Mein Dienstrad", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "MDR b2b", "regmail": ""}, {"n": "Probonio", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Smartfit", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "", "iht": "Im Onboarding", "zr": false, "mail": "rw@smartfit.bike", "tel": "+49 160 6666367", "b2b": "", "regmail": "rw@smartfit.bike"}, {"n": "Strom", "art": "dl", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Telecash", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Clover Flex LTE V2, ab 18,90€/Mo", "iht": "", "zr": false, "mail": "christian.koenig@fiserv.com", "tel": "+49 (0) 911 945 8387", "b2b": "", "regmail": "christian.koenig@fiserv.com"}, {"n": "Telekom", "art": "dl", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Wertgarantie by linexo", "art": "dl", "kern": true, "zusatz": false, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Wertgarantie b2b", "regmail": ""}, {"n": "Würth Leasing", "art": "dl", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Würth Leasing b2b", "regmail": ""}, {"n": "ABUS", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "48% Grund + VO-Staffel", "iht": "Abgelehnt", "zr": false, "mail": "mobile.vertrieb@abus.de", "tel": "+49 2335 634 470", "b2b": "ABUS b2b", "regmail": "mobile.vertrieb@abus.de"}, {"n": "Alps Alpine", "art": "parts", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "ASISTA", "art": "parts", "kern": false, "zusatz": false, "auslauf": true, "stat": "Verhandlung gescheitert", "sc": "red", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Cosmic Sports", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "SQlab 18%+1%+3%, SP Connect", "iht": "IHT aktiv", "zr": true, "mail": "tm@cosmicsports.de", "tel": "+49 911 310 755 59", "b2b": "Cosmic Sports b2b", "regmail": "tm@cosmicsports.de"}, {"n": "Croozer", "art": "parts", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "", "zr": false, "mail": "order@croozer.com", "tel": "02233-959913", "b2b": "", "regmail": "support@croozer.com"}, {"n": "Fidlock", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "In Finalisierung", "sc": "yellow", "kond": "", "iht": "Im Onboarding", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Grofa", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Giro 19%, Lumos 14%, Park Tool 26%", "iht": "IHT aktiv", "zr": true, "mail": "order@grofa.com", "tel": "06434/2008-200", "b2b": "GROFA b2b", "regmail": "stammdaten@grofa.com"}, {"n": "Hartje", "art": "parts", "kern": false, "zusatz": true, "auslauf": false, "stat": "In Verhandlung", "sc": "yellow", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "Hartje EOSweb", "regmail": ""}, {"n": "Livall/ CycloSport", "art": "parts", "kern": false, "zusatz": true, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Livall 15% + 1% Delk.", "iht": "IHT aktiv", "zr": true, "mail": "bestellung@ciclosport.de", "tel": "089-895270-20", "b2b": "", "regmail": "bestellung@ciclosport.de"}, {"n": "Magura/ Bosch", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "MBPS b2b", "regmail": ""}, {"n": "MCG", "art": "parts", "kern": false, "zusatz": false, "auslauf": true, "stat": "Verhandlung gescheitert", "sc": "red", "kond": "", "iht": "Abgelehnt", "zr": false, "mail": "vertrieb@merida-centurion.com", "tel": "+49 (0)7159/9459-300", "b2b": "MCG b2b", "regmail": "vertrieb@merida-centurion.com"}, {"n": "OneUp Components", "art": "parts", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "In Verhandlung", "zr": false, "mail": "", "tel": "", "b2b": "ONEup b2b", "regmail": ""}, {"n": "Ortlieb", "art": "parts", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Paul Lange", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "In Finalisierung", "sc": "yellow", "kond": "", "iht": "Im Onboarding", "zr": false, "mail": "verkauf@paul-lange.de", "tel": "+49 (0) 711 2588 333", "b2b": "Paul Lange b2b", "regmail": "verkauf@paul-lange.de"}, {"n": "Pow Unity", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "Powunity b2b", "regmail": ""}, {"n": "RTI Sports", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "Topeak, Ca Go", "iht": "IHT aktiv", "zr": true, "mail": "nouri.hamsoro@rtisports.de", "tel": "+49 (0)261 899998-220", "b2b": "RTI Sports b2b", "regmail": "nouri.hamsoro@rtisports.de"}, {"n": "SportsNut", "art": "parts", "kern": false, "zusatz": false, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "SportsNut b2b", "regmail": ""}, {"n": "SQlab", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "18% + 1% Delk. + 3% Sk.", "iht": "IHT aktiv", "zr": true, "mail": "feb@sq-lab.com", "tel": "089-6661046-0", "b2b": "SQlab b2b", "regmail": "aba@sq-lab.com"}, {"n": "Thule", "art": "parts", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt aufgenommen", "sc": "blue", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "", "regmail": ""}, {"n": "Tunap", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "In Finalisierung", "sc": "yellow", "kond": "Premium Partner, Marge 2,5x", "iht": "Im Onboarding", "zr": false, "mail": "Carolin.Schorsten@tunap-sports.de", "tel": "0151 15059430", "b2b": "TUNAP eShop", "regmail": "Carolin.Schorsten@tunap-sports.de"}, {"n": "Vaude", "art": "parts", "kern": false, "zusatz": true, "auslauf": false, "stat": "Kontakt ausstehend", "sc": "gray", "kond": "", "iht": "", "zr": false, "mail": "", "tel": "", "b2b": "VAUDE b2b", "regmail": ""}, {"n": "Wiener Bike Parts", "art": "parts", "kern": true, "zusatz": false, "auslauf": false, "stat": "Zentral fixiert", "sc": "green", "kond": "10% Kopf + Markenrabatte", "iht": "IHT aktiv", "zr": true, "mail": "callcenter@bike-parts.de", "tel": "09721 65 01-0", "b2b": "Accentry b2b", "regmail": "customer-data@winora-group.de"}];
-        
-        // Standort demo data
-        var standorte={
-            holzkirchen:{name:'Holzkirchen',inhaber:'Dirk Kolditz',nachlassIst:9.73,db1Ist:28.6,bestand:104,bestWert:340105,verkauft:71,umsatz:274593},
-            berlin:{name:'Berlin Mitte',inhaber:'Max Müller',nachlassIst:6.2,db1Ist:32.1,bestand:86,bestWert:290000,verkauft:95,umsatz:410000},
-            hamburg:{name:'Hamburg',inhaber:'Sandra Weber',nachlassIst:8.1,db1Ist:30.5,bestand:92,bestWert:310000,verkauft:68,umsatz:295000},
-            muenchen:{name:'München',inhaber:'Thomas Bauer',nachlassIst:5.8,db1Ist:33.9,bestand:78,bestWert:380000,verkauft:120,umsatz:580000},
-            grafrath:{name:'Grafrath',inhaber:'Julian Neumann',nachlassIst:7.5,db1Ist:31.2,bestand:65,bestWert:220000,verkauft:52,umsatz:198000}
-        };
-        
-        var strategien={
-            holzkirchen:{status:'veroeffentlicht',datum:'2025-08-28',nachlass25:7,nachlass26:5,db1Ziel:34,
-                todos:[{t:'Abstimmung mit Marketing',d:true},{t:'POS-Kampagnen',d:false},{t:'Events vor Ort',d:false},{t:'Kaltakquise Leasing',d:true},{t:'Verkäufer schulen',d:false}]},
-            berlin:{status:'entwurf',datum:'2025-09-10',nachlass25:5,nachlass26:4,db1Ziel:35,
-                todos:[{t:'Simplon Dealervertrag',d:false},{t:'Premium-Umbau',d:false}]},
-            hamburg:{status:'review',datum:'2025-09-01',nachlass25:6,nachlass26:5,db1Ziel:34,
-                todos:[{t:'Haibike Restbestand',d:true},{t:'Orbea Testflotte',d:false},{t:'Leasing vor Ort',d:false}]},
-            muenchen:{status:'veroeffentlicht',datum:'2025-07-15',nachlass25:5,nachlass26:4,db1Ziel:36,
-                todos:[{t:'R&M World Umbau',d:true},{t:'Simplon Gravel-Event',d:true},{t:'Zubehör-Bundles',d:false}]},
-            grafrath:{status:'veroeffentlicht',datum:'2025-08-01',nachlass25:6,nachlass26:5,db1Ziel:34,
-                todos:[{t:'Kalkhoff auflösen',d:true},{t:'Orbea Marketing',d:false},{t:'Leasing-Angebote',d:false}]}
-        };
-        
-        // Parts Priorisierung Matrix (from Excel)
-        var partsPrio=[{n:'SQlab (Ergonomie)',t:'Ergonomie','5':5,'10':5,'15':5,'17':5,'20':5,'25':5,kap:11240},{n:'Shimano (Ersatzteile)',t:'Service','5':0,'10':1,'15':2,'17':2,'20':3,'25':3,kap:2542},{n:'Schwalbe (Mäntel)',t:'Service','5':0,'10':0.25,'15':2,'17':2,'20':3,'25':3,kap:2859},{n:'Tunap (Pflege)',t:'Service','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:1528},{n:'ABUS (Schlösser)',t:'Trend','5':0,'10':0.25,'15':0.5,'17':0.75,'20':0.75,'25':1,kap:2885},{n:'Helme',t:'Trend','5':0,'10':1,'15':2,'17':3,'20':3,'25':3,kap:3599},{n:'Topeak (Tools)',t:'Trend','5':0,'10':0,'15':0.5,'17':1,'20':1.5,'25':1.5,kap:2102},{n:'SP Connect',t:'Trend','5':0,'10':0.25,'15':0.25,'17':0.5,'20':0.5,'25':0.5,kap:1829},{n:'Elite/Fidlock',t:'Trend','5':0,'10':0.5,'15':0.5,'17':0.5,'20':0.5,'25':0.5,kap:513},{n:'Busch&Müller',t:'Zubehör','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:942},{n:'Pedale',t:'Zubehör','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:862},{n:'Ursus (Ständer)',t:'Zubehör','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:153},{n:'Vaude (Taschen)',t:'Trend','5':0,'10':0,'15':0.5,'17':0.5,'20':1,'25':1.5,kap:253},{n:'SKS/KlickFix',t:'Zubehör','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:312},{n:'Kleinteile',t:'Zubehör','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:753},{n:'by.Schulz',t:'Zubehör','5':0,'10':0.25,'15':0.25,'17':0.25,'20':0.25,'25':0.25,kap:2558},{n:'Supernova/Lupine',t:'Zubehör','5':0,'10':0,'15':0,'17':0,'20':0,'25':0.25,kap:0}];
-        
-        // WBP Markenrabatte
-        var wbpR=[{m:'Schwalbe',k:'',r:'Key Account',d:'1%'},{m:'Continental',k:'',r:'14-18%',d:'1%'},{m:'SRAM',k:'',r:'5-10%',d:'1%'},{m:'Shimano',k:'',r:'5%',d:'1%'},{m:'DT Swiss',k:'10%',r:'3%',d:'1%'},{m:'XLC',k:'10%',r:'5%',d:'1%'},{m:'BySchulz',k:'',r:'5%',d:'1%'},{m:'KindShock',k:'',r:'8%',d:'1%'},{m:'Xpedo',k:'10%',r:'8%',d:'1%'},{m:'Basil',k:'10%',r:'5%',d:'1%'},{m:'B&M',k:'10%',r:'5%',d:'1%'},{m:'SKS',k:'10%',r:'5%',d:'1%'},{m:'KMC',k:'10%',r:'5%',d:'1%'},{m:'Cratoni',k:'10%',r:'6%',d:'1%'},{m:'Trelock',k:'10%',r:'8%',d:'1%'}];
-        
-        // Sortiment Holzkirchen
-        var hauptmarken=[
-            {name:'Riese und Müller',s:'R&M',bg:'#1a1a1a',seg:'Premium · Nachorder',sp:'pg',v:27,vj:26,um:130856,ant:47.7,be:33,bw:116645,nl:5.45,vnl:6.24,bew:'Läuft gut',bc:'text-green-600',bi:'✓'},
-            {name:'Orbea',s:'ORB',bg:'#ea580c',seg:'Premium · Nachorder',sp:'pg',v:22,vj:13,um:83078,ant:30.3,be:28,bw:82092,nl:9.98,vnl:11.70,bew:'Rabatt zu hoch',bc:'text-yellow-600',bi:'⚠'},
-            {name:'Haibike (Accell)',s:'HAI',bg:'#dc2626',seg:'Preiseinstieg · Vororder',sp:'pb',v:7,vj:1,um:28528,ant:10.4,be:28,bw:100172,nl:6.72,vnl:13.77,bew:'7 verkauft, 28 Bestand!',bc:'text-red-600',bi:'⛔'}
-        ];
-        var bestandsm=[
-            {n:'Kalkhoff',s:'KH',bg:'#2563eb',st:'Abverkauf',sp:'py',v:13,be:4,um:'26.946€',nl:'26,45%'},
-            {n:'Ca Go',s:'CG',bg:'#059669',st:'Abverkauf',sp:'py',v:1,be:1,um:'4.333€',nl:'20,55%'},
-            {n:'Velo de Ville',s:'VdV',bg:'#7c3aed',st:'Beobachtung',sp:'po',v:1,be:8,um:'952€',nl:'12%+2%Sk'},
-            {n:'Hase Bikes',s:'HB',bg:'#0891b2',st:'Onboarding',sp:'pb',v:0,be:2,um:'0€',nl:'—'}
-        ];
-        
-        
+            if(tabName==='dash') { var c=document.getElementById('hqEkTabDash'); if(c) c.innerHTML='<div class="fi">'+renderHQDash()+'</div>'; }
+            if(tabName==='lief') { var c=document.getElementById('hqEkTabLief'); if(c) c.innerHTML='<div class="fi">'+renderHQLief()+'</div>'; }
+            if(tabName==='strat') { var c=document.getElementById('hqEkTabStrat'); if(c) c.innerHTML='<div class="fi">'+renderHQStrat()+'</div>'; }
+        }
+
+        // Init Einkauf on first open
+        function initEinkaufModule() {
+            showEinkaufTab('sortiment');
+        }
+
 
         // === KOMMUNIKATION: Inbox, Ankuendigungen, Brett, Termine ===
         var inboxMessages = [
@@ -12345,8 +12458,9 @@
             if(v==='hqFinanzen') renderHqFinanzen();
             if(v==='hqMarketing') { renderHqMarketing(); showHqMktTab('uebersicht'); }
             if(v==='allgemein') { showAllgemeinTab('uebersicht'); }
+            if(v==='einkauf') { showEinkaufTab('sortiment'); }
             if(v==='hqAllgemein') { renderHqAllgemein(hqStandorte, [], [], []); }
-            if(v==='hqEinkauf') renderHqEinkauf();
+            if(v==='hqEinkauf') { showHqEkTab('dash'); }
             if(v==='hqVerkauf') renderHqVerkauf();
             if(v==='hqAktionen') renderHqAktionen();
             if(v==='hqKomm'){showView('hqKommando');showKommandoTab('kommunikation');return;}
