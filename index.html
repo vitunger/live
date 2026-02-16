@@ -2648,7 +2648,7 @@
                     <!-- Tab Navigation -->
                     <div class="mb-6 border-b border-gray-200">
                         <nav class="-mb-px flex space-x-8">
-                            <button onclick="showKommTab('inbox')" class="komm-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="inbox">Inbox <span class="ml-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">3</span></button>
+                            <button onclick="showKommTab('inbox')" class="komm-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="inbox">Inbox</button>
                             <button onclick="showKommTab('announce')" class="komm-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="announce">Ankuendigungen</button>
                             <button onclick="showKommTab('forum')" class="komm-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="forum">Forum</button>
                             <button onclick="showKommTab('brett')" class="komm-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="brett">Schwarzes Brett</button>
@@ -2670,14 +2670,17 @@
 
                         <!-- Compose -->
                         <div id="inboxCompose" class="hidden vit-card p-5 mb-4">
-                            <select class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3"><option>An: Zentrale – Allgemein</option><option>An: Einkauf (Lisa Berger)</option><option>An: Marketing (Jan Krause)</option><option>An: Support / IT</option><option>An: Geschaeftsfuehrung</option></select>
-                            <input type="text" placeholder="Betreff..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3">
-                            <textarea placeholder="Nachricht..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3" rows="4"></textarea>
+                            <select id="inboxRecipient" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3"><option value="">Empfänger wird geladen...</option></select>
+                            <input type="text" id="inboxSubject" placeholder="Betreff..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3">
+                            <textarea id="inboxBody" placeholder="Nachricht..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3" rows="4"></textarea>
                             <div class="flex justify-end space-x-2">
                                 <button onclick="document.getElementById('inboxCompose').classList.add('hidden')" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Abbrechen</button>
-                                <button onclick="sendInboxMsg()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90"'>2019+t(2019ticket_comment_send2019)+2019</button>
+                                <button onclick="sendInboxMsg()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Senden</button>
                             </div>
                         </div>
+
+                        <!-- Message Detail -->
+                        <div id="inboxDetail" class="hidden vit-card p-5 mb-4"></div>
 
                         <!-- Message List -->
                         <div id="inboxList" class="space-y-2"></div>
@@ -2690,33 +2693,47 @@
 
                     <!-- ===== TAB 1: Forum ===== -->
                     <div id="kommTabForum" class="komm-tab-content" style="display:none;">
-                        <!-- Forum Categories -->
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex space-x-2">
-                                <button onclick="filterForum('all')" class="forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white" data-cat="all">Alle</button>
-                                <button onclick="filterForum('allgemein')" class="forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="allgemein">Allgemein</button>
-                                <button onclick="filterForum('verkauf')" class="forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="verkauf">Verkauf &amp; Beratung</button>
-                                <button onclick="filterForum('werkstatt')" class="forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="werkstatt">Werkstatt</button>
-                                <button onclick="filterForum('einkauf')" class="forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="einkauf">Einkauf &amp; Lager</button>
-                                <button onclick="filterForum('zentrale')" class="forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="zentrale">Zentrale</button>
+                        <!-- Forum List View -->
+                        <div id="forumListView">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex space-x-2 flex-wrap gap-y-2">
+                                    <button onclick="filterForum('all')" class="forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white" data-cat="all">Alle</button>
+                                    <button onclick="filterForum('allgemein')" class="forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="allgemein">Allgemein</button>
+                                    <button onclick="filterForum('verkauf')" class="forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="verkauf">Verkauf</button>
+                                    <button onclick="filterForum('werkstatt')" class="forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="werkstatt">Werkstatt</button>
+                                    <button onclick="filterForum('einkauf')" class="forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="einkauf">Einkauf</button>
+                                    <button onclick="filterForum('zentrale')" class="forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="zentrale">Zentrale</button>
+                                </div>
+                                <button onclick="document.getElementById('forumNewPost').classList.toggle('hidden')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90 flex-shrink-0">+ Neuer Beitrag</button>
                             </div>
-                            <button onclick="document.getElementById('forumNewPost').classList.toggle('hidden')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">+ Neuer Beitrag</button>
+                            <div id="forumNewPost" class="hidden vit-card p-5 mb-4">
+                                <input type="text" id="forumNewTitle" placeholder="Betreff..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3 focus:outline-none focus:border-vit-orange">
+                                <textarea id="forumNewBody" placeholder="Deine Nachricht an das Netzwerk..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3 focus:outline-none focus:border-vit-orange" rows="3"></textarea>
+                                <div class="flex items-center justify-between">
+                                    <select id="forumNewCat" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                        <option value="allgemein">Allgemein</option><option value="verkauf">Verkauf &amp; Beratung</option><option value="werkstatt">Werkstatt</option><option value="einkauf">Einkauf &amp; Lager</option>
+                                    </select>
+                                    <div class="flex space-x-2">
+                                        <button onclick="document.getElementById('forumNewPost').classList.add('hidden')" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Abbrechen</button>
+                                        <button onclick="createForumPost()" class="px-5 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Posten</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="forumPosts" class="space-y-3"></div>
                         </div>
-
-                        <!-- New Post Form (hidden) -->
-                        <div id="forumNewPost" class="hidden vit-card p-5 mb-4">
-                            <input type="text" placeholder="Betreff..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3 focus:outline-none focus:border-vit-orange">
-                            <textarea placeholder="Deine Nachricht an das Netzwerk..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3 focus:outline-none focus:border-vit-orange" rows="3"></textarea>
-                            <div class="flex items-center justify-between">
-                                <select class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                    <option>Allgemein</option><option>Verkauf &amp; Beratung</option><option>Werkstatt</option><option>Einkauf &amp; Lager</option>
-                                </select>
-                                <button onclick="document.getElementById('forumNewPost').classList.add('hidden')" class="px-5 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Posten</button>
+                        <!-- Forum Detail View -->
+                        <div id="forumDetailView" class="hidden">
+                            <button onclick="closeForumDetail()" class="mb-4 text-sm text-vit-orange hover:underline font-semibold">← Zurück zur Übersicht</button>
+                            <div id="forumDetailContent" class="vit-card p-6 mb-4"></div>
+                            <div class="vit-card p-5">
+                                <h4 class="font-semibold text-gray-800 mb-3">Kommentare</h4>
+                                <div id="forumComments" class="space-y-3 mb-4"></div>
+                                <div class="flex space-x-3">
+                                    <textarea id="forumCommentInput" placeholder="Dein Kommentar..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-vit-orange" rows="2"></textarea>
+                                    <button onclick="postForumComment()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90 self-end">Senden</button>
+                                </div>
                             </div>
                         </div>
-
-                        <!-- Forum Posts -->
-                        <div id="forumPosts" class="space-y-3"></div>
                     </div>
 
                     <!-- ===== TAB 2: Standort-Channel ===== -->
@@ -2751,7 +2768,7 @@
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
                                 </button>
                                 <input type="text" id="channelInput" placeholder="Nachricht schreiben..." class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-vit-orange" onkeydown="if(event.key==='Enter')sendChannelMsg()">
-                                <button onclick="sendChannelMsg()" class="px-4 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90"'>2019+t(2019ticket_comment_send2019)+2019</button>
+                                <button onclick="sendChannelMsg()" class="px-4 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Senden</button>
                             </div>
                         </div>
                     </div>
@@ -2759,21 +2776,24 @@
                     <!-- ===== TAB: Schwarzes Brett ===== -->
                     <div id="kommTabBrett" class="komm-tab-content" style="display:none;">
                         <div class="flex items-center justify-between mb-4">
-                            <div class="flex space-x-2">
+                            <div class="flex space-x-2 flex-wrap gap-y-2">
                                 <button onclick="filterBrett('all')" class="brett-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white" data-bc="all">Alle</button>
                                 <button onclick="filterBrett('suche')" class="brett-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-bc="suche">Rad gesucht</button>
                                 <button onclick="filterBrett('biete')" class="brett-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-bc="biete">Rad abzugeben</button>
                                 <button onclick="filterBrett('frage')" class="brett-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-bc="frage">Fragen</button>
                                 <button onclick="filterBrett('tipp')" class="brett-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-bc="tipp">Tipps</button>
                             </div>
-                            <button onclick="document.getElementById('brettNewPost').classList.toggle('hidden')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">+ Neuer Aushang</button>
+                            <button onclick="document.getElementById('brettNewPost').classList.toggle('hidden')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90 flex-shrink-0">+ Neuer Aushang</button>
                         </div>
                         <div id="brettNewPost" class="hidden vit-card p-5 mb-4">
-                            <input type="text" placeholder="Titel..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3">
-                            <textarea placeholder="Beschreibung..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3" rows="3"></textarea>
+                            <input type="text" id="brettNewTitle" placeholder="Titel..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3">
+                            <textarea id="brettNewBody" placeholder="Beschreibung..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3" rows="3"></textarea>
                             <div class="flex items-center justify-between">
-                                <select class="px-3 py-2 border border-gray-300 rounded-lg text-sm"><option>Rad gesucht</option><option>Rad abzugeben</option><option>Frage</option><option>Tipp</option></select>
-                                <button onclick="document.getElementById('brettNewPost').classList.add('hidden')" class="px-5 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Posten</button>
+                                <select id="brettNewCat" class="px-3 py-2 border border-gray-300 rounded-lg text-sm"><option value="suche">Rad gesucht</option><option value="biete">Rad abzugeben</option><option value="frage">Frage</option><option value="tipp">Tipp</option></select>
+                                <div class="flex space-x-2">
+                                    <button onclick="document.getElementById('brettNewPost').classList.add('hidden')" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Abbrechen</button>
+                                    <button onclick="createBrettPost()" class="px-5 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Posten</button>
+                                </div>
                             </div>
                         </div>
                         <div id="brettPosts" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
@@ -7326,68 +7346,152 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
 
-        // === KOMMUNIKATION: Inbox, Ankuendigungen, Brett, Termine ===
-        var inboxMessages = [
-            {id:1,from:'Lisa Berger (Einkauf)',avatar:'LB',color:'bg-emerald-500',subject:'Kalkhoff Vororder – Sonderkonditionen fuer Grafrath',preview:'Hallo Sandra, ich hab fuer euch nochmal 3% Extra auf die Kalkhoff Endeavour Serie rausgeholt. Bitte bis 20.02. bestaetigen...',date:'14.02.2026 09:30',unread:true,sent:false},
-            {id:2,from:'Jan Krause (Marketing)',avatar:'JK',color:'bg-blue-500',subject:'Freigabe Fruehjahrs-Schaufenster',preview:'Die Schaufenster-Deko fuer Maerz muss bis 25.02. bestellt werden. Anbei die Vorlage und Bestellliste. Bitte kurz bestaetigen...',date:'13.02.2026 16:10',unread:true,sent:false},
-            {id:3,from:'Support / IT',avatar:'IT',color:'bg-gray-500',subject:'Kassensystem-Update am 18.02. ab 20 Uhr',preview:'Am Dienstag wird das Kassensystem aktualisiert. Bitte alle Tagesabschluesse vor 20 Uhr machen. Downtime ca. 2 Stunden...',date:'13.02.2026 11:45',unread:true,sent:false},
-            {id:4,from:'Michael Frey (GF)',avatar:'MF',color:'bg-vit-orange',subject:'Re: Personalplanung Saison 2026',preview:'Danke fuer die Rueckmeldung Sandra. Die Aushilfe ab April ist genehmigt. Bitte Stellenanzeige ueber HR abstimmen...',date:'12.02.2026 14:20',unread:false,sent:false},
-            {id:5,from:'Lisa Berger (Einkauf)',avatar:'LB',color:'bg-emerald-500',subject:'Re: Orbea Lieferverzoegerung',preview:'Update: Die Orbea-Lieferung KW 8 verschiebt sich auf KW 10. Betrifft 4 Raeder fuer Grafrath. Sorry, liegt am Zoll...',date:'11.02.2026 10:05',unread:false,sent:false},
-            {id:6,from:'Du an Lisa Berger',avatar:'SG',color:'bg-blue-300',subject:'Orbea Lieferverzoegerung – 2 Kunden warten',preview:'Hallo Lisa, bei uns warten 2 Kunden auf ihren Orbea Gain. Kannst du mal nachfragen wann die genau kommen?',date:'10.02.2026 16:30',unread:false,sent:true},
-            {id:7,from:'Du an Support / IT',avatar:'SG',color:'bg-blue-300',subject:'Drucker im Buero druckt nicht mehr',preview:'Seit Montag druckt der Brother im Buero nicht mehr. Fehlermeldung: Toner leer. Brauchen wir neuen Toner oder neuen Drucker?',date:'08.02.2026 09:15',unread:false,sent:true},
-        ];
+        // === KOMMUNIKATION v2.0: Inbox (DB), Ankuendigungen, Brett, Forum, Termine ===
+        var kommUnreadCount = 0;
+        var kommInboxRecipients = [];
+        var kommCurrentForumPost = null;
 
-        var announcements = [
-            {id:1,title:'Neue Marke ab Maerz: Riese & Mueller',body:'Wir freuen uns, Riese & Mueller ab Saison 2026 ins Sortiment aufzunehmen! Preislisten und Schulungstermine folgen naechste Woche. Bitte meldet euer Interesse an der Erstbestuckung bis 28.02.',date:'14.02.2026',category:'Sortiment',icon:'🚲',important:true,readBy:8,totalPartners:21},
-            {id:2,title:'Preisanpassung Shimano Ersatzteile ab 01.03.',body:'Shimano hat eine Preiserhoehung von durchschnittlich 4.5% auf Ersatzteile angekuendigt (Steps-Motoren, Schaltgruppen, Bremsbelaege). Die neuen Preislisten sind im Einkaufsbereich hinterlegt. Bitte Lagerbestaende pruefen und ggf. vorbestellen.',date:'12.02.2026',category:'Preise',icon:'💰',important:true,readBy:15,totalPartners:21},
-            {id:3,title:'Kampagnenstart: Fruehjahrs-Aktion 2026',body:'Ab 01.03. startet unsere Fruehjahrs-Kampagne "Dein Fruehling faehrt vit:bikes". Alle Materialien (Flyer, Plakate, Social-Media-Posts, Schaufenster-Deko) sind im Marketing-Bereich zum Download bereit. Bitte bis 25.02. bestellen.',date:'10.02.2026',category:'Marketing',icon:'📣',important:false,readBy:19,totalPartners:21},
-            {id:4,title:'Schulung: Bosch Smart System am 18.02.',body:'Online-Schulung zum neuen Bosch Smart System (Diagnose, Firmware, Fehlercodes) am 18.02. um 18:00 Uhr via Teams. Anmeldung ueber den Termine-Tab. Pflicht fuer alle Werkstatt-Mitarbeiter.',date:'07.02.2026',category:'Schulung',icon:'🎓',important:false,readBy:21,totalPartners:21},
-            {id:5,title:'Partner-Meeting Q1 am 28.02. in Muenchen',body:'Das Q1-Partnermeeting findet am 28.02. im Hotel & Wirtshaus Post in Muenchen statt. Agenda: Jahresrueckblick, Sortimentsstrategie 2026, Marketing-Roadmap, offene Runde. Anmeldung bis 20.02.',date:'05.02.2026',category:'Event',icon:'📅',important:false,readBy:18,totalPartners:21},
-            {id:6,title:'IT: Neues Portal-Feature – Verkaufsmodul live!',body:'Ab sofort ist das neue Verkaufsmodul mit Wochenansicht, Pipeline und Auswertung im Portal verfuegbar. Es ersetzt die Excel-Erfolgstabelle. Bitte testet es und gebt Feedback ueber den Support.',date:'01.02.2026',category:'IT/Portal',icon:'💻',important:false,readBy:21,totalPartners:21},
-        ];
+        // --- INBOX (aus nachrichten-Tabelle) ---
+        async function loadInboxRecipients() {
+            try {
+                var resp = await sb.from('users').select('id, name, is_hq, standort_id, standorte(name)').eq('status', 'aktiv').order('name');
+                if(resp.error) throw resp.error;
+                kommInboxRecipients = (resp.data || []).filter(function(u) { return u.id !== (sbUser ? sbUser.id : null); });
+                var sel = document.getElementById('inboxRecipient');
+                if(!sel) return;
+                var html = '<option value="">– Empfänger wählen –</option>';
+                kommInboxRecipients.forEach(function(u) {
+                    var label = u.name + (u.standorte ? ' (' + u.standorte.name + ')' : (u.is_hq ? ' (HQ)' : ''));
+                    html += '<option value="' + u.id + '">' + label + '</option>';
+                });
+                sel.innerHTML = html;
+            } catch(err) { console.error('Empfänger laden:', err); }
+        }
 
-        var brettPosts = [
-            {id:1,cat:'suche',author:'Thomas (Grafrath)',avatar:'TG',color:'bg-green-500',title:'Kalkhoff Endeavour 5.B Move+ L/Diamant gesucht',body:'Kunde braucht es dringend, bei uns erst KW 12. Standort-Transfer moeglich. Bitte melden!',date:'12.02.2026',replies:3,urgent:true},
-            {id:2,cat:'biete',author:'Stefan (Karlsfeld)',avatar:'SK',color:'bg-blue-500',title:'2x Orbea Gain D30 in M/S abzugeben',body:'Vorjahresmodell, nagelneu verpackt. Wuerde Selbstkostenpreis machen. Standort-Transfer oder Abholung.',date:'13.02.2026',replies:5,urgent:false},
-            {id:3,cat:'biete',author:'Julia (Muenchen Ost)',avatar:'JM',color:'bg-purple-500',title:'Shimano Steps E6100 Motor (Austausch)',body:'Haben einen neuen E6100 Motor uebrig aus Garantiefall. Originalverpackt. VB 480 EUR netto.',date:'11.02.2026',replies:2,urgent:false},
-            {id:4,cat:'suche',author:'Markus (Hanau)',avatar:'MH',color:'bg-red-500',title:'Bosch PowerTube 750 horizontal gesucht',body:'Fuer Kundenrad, Bosch liefert erst KW 14. Hat jemand einen auf Lager?',date:'10.02.2026',replies:1,urgent:true},
-            {id:5,cat:'frage',author:'Anna (Starnberg)',avatar:'AS',color:'bg-pink-500',title:'Erfahrung mit neuem Kassensystem-Update?',body:'Hat schon jemand das Update installiert? Letzes Mal hatten wir Probleme mit dem EC-Terminal. Will vorbereitet sein.',date:'09.02.2026',replies:7,urgent:false},
-            {id:6,cat:'tipp',author:'Dirk (Grafrath)',avatar:'DG',color:'bg-cyan-500',title:'Genialer Montagestaender-Hack',body:'Wer den Feedback Sports Pro Ultra hat: mit einem 3D-gedruckten Adapter passt auch der Bosch CX Gen5 Rahmen rein. STL-Datei kann ich teilen.',date:'08.02.2026',replies:12,urgent:false},
-            {id:7,cat:'suche',author:'Petra (Augsburg)',avatar:'PA',color:'bg-yellow-600',title:'Aushilfe fuer Saison gesucht – Erfahrungen?',body:'Wir suchen eine Verkaufs-Aushilfe fuer April-August. Hat jemand Tipps wo man gute Leute findet? Indeed war bei uns bisher Fehlanzeige.',date:'07.02.2026',replies:9,urgent:false},
-            {id:8,cat:'biete',author:'Thomas (Grafrath)',avatar:'TG',color:'bg-green-500',title:'Messestand-Material abzugeben',body:'Haben noch 2 Roll-ups und 1 Theke vom letzten Hausmesse-Event. Guter Zustand, gegen Abholung kostenlos.',date:'05.02.2026',replies:4,urgent:false},
-        ];
+        async function renderInbox(filter) {
+            var container = document.getElementById('inboxList');
+            if(!container) return;
+            var detail = document.getElementById('inboxDetail');
+            if(detail) detail.classList.add('hidden');
 
-        var termine = [
-            {id:1,date:'14.02.2026',time:'Heute',title:'Vororder-Konditionen pruefen',desc:'Sonderkonditionen von Lisa fuer Kalkhoff bestaetigen',type:'deadline',color:'bg-red-500',past:false},
-            {id:2,date:'18.02.2026',time:'Di · 18:00 – 19:30',title:'Online-Schulung: Bosch Smart System',desc:'Pflicht fuer Werkstatt. Diagnose, Firmware-Updates, Fehlercodes. Via Microsoft Teams.',type:'schulung',color:'bg-blue-500',past:false},
-            {id:3,date:'20.02.2026',time:'Do',title:'Deadline: Kalkhoff Vororder H/W 2026',desc:'Bestellformular an Lisa Berger (Einkauf) senden.',type:'deadline',color:'bg-red-500',past:false},
-            {id:4,date:'25.02.2026',time:'Mi',title:'Deadline: Fruehjahrs-Schaufenster bestellen',desc:'Deko-Material und Plakate ueber Marketing-Portal bestellen.',type:'deadline',color:'bg-red-500',past:false},
-            {id:5,date:'27.02.2026',time:'Fr · 10:00 – 11:00',title:'Standort-Call mit Michael Frey',desc:'Monatlicher 1:1 Call mit GF. Themen: Personalplanung, Q1-Performance, Saisonvorbereitung.',type:'meeting',color:'bg-blue-500',past:false},
-            {id:6,date:'28.02.2026',time:'Sa · 10:00 – 17:00',title:'Partner-Meeting Q1 – Muenchen',desc:'Hotel & Wirtshaus Post, Muenchen. Jahresrueckblick, Sortiment 2026, Marketing-Roadmap. Mittagessen inklusive.',type:'event',color:'bg-green-500',past:false},
-            {id:7,date:'28.02.2026',time:'Sa',title:'Deadline: Vororder komplett H/W 2026',desc:'Letzte Moeglichkeit fuer alle H/W Vororders mit Fruehbucher-Konditionen.',type:'deadline',color:'bg-red-500',past:false},
-            {id:8,date:'01.03.2026',time:'So',title:'Kampagnenstart: Fruehjahrs-Aktion',desc:'Flyer, Plakate, Schaufenster muessen stehen. Social-Media-Posts starten automatisch.',type:'event',color:'bg-green-500',past:false},
-            {id:9,date:'12.03.2026',time:'Do · 18:00 – 19:00',title:'Online-Schulung: Riese & Mueller Sortiment',desc:'Einfuehrung neue Marke. Modelle, USPs, Zielgruppen, Preise.',type:'schulung',color:'bg-blue-500',past:false},
-            {id:10,date:'18.03.2026',time:'Mi · 09:00 – 18:00',title:'Hausmesse Grafrath',desc:'Eigene Hausmesse am Standort. Probefahrten, Fruehjahrs-Angebote, Leasing-Beratung.',type:'event',color:'bg-green-500',past:false},
-        ];
+            try {
+                var uid = sbUser ? sbUser.id : null;
+                if(!uid) { container.innerHTML = '<div class="text-center py-8 text-gray-400">Bitte einloggen.</div>'; return; }
 
-        function renderInbox(filter) {
-            var msgs = inboxMessages;
-            if(filter==='unread') msgs = msgs.filter(function(m){return m.unread;});
-            if(filter==='sent') msgs = msgs.filter(function(m){return m.sent;});
-            var html = '';
-            msgs.forEach(function(m) {
-                html += '<div class="vit-card p-4 hover:shadow-md transition cursor-pointer ' + (m.unread ? 'border-l-4 border-vit-orange bg-orange-50' : '') + '">';
-                html += '<div class="flex items-start space-x-3">';
-                html += '<div class="w-10 h-10 ' + m.color + ' rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">' + m.avatar + '</div>';
-                html += '<div class="flex-1 min-w-0">';
-                html += '<div class="flex items-center justify-between mb-0.5"><span class="font-semibold text-gray-800 text-sm">' + m.from + '</span><span class="text-xs text-gray-400 flex-shrink-0 ml-2">' + m.date + '</span></div>';
-                html += '<p class="font-semibold text-gray-800 text-sm ' + (m.unread ? '' : 'font-normal') + '">' + m.subject + '</p>';
-                html += '<p class="text-xs text-gray-500 truncate mt-0.5">' + m.preview + '</p>';
+                var query;
+                if(filter === 'sent') {
+                    query = sb.from('nachrichten').select('*, empfaenger:an_user_id(name)').eq('von_user_id', uid).order('created_at', {ascending: false});
+                } else {
+                    query = sb.from('nachrichten').select('*, absender:von_user_id(name)').or('an_user_id.eq.' + uid + ',an_standort_id.eq.' + (sbProfile ? sbProfile.standort_id : '00000000-0000-0000-0000-000000000000')).order('created_at', {ascending: false});
+                    if(filter === 'unread') query = query.eq('gelesen', false);
+                }
+
+                var resp = await query;
+                if(resp.error) throw resp.error;
+                var msgs = resp.data || [];
+
+                // Unread count
+                var unreadResp = await sb.from('nachrichten').select('id', {count:'exact', head:true}).or('an_user_id.eq.' + uid + ',an_standort_id.eq.' + (sbProfile ? sbProfile.standort_id : '00000000-0000-0000-0000-000000000000')).eq('gelesen', false);
+                kommUnreadCount = unreadResp.count || 0;
+                updateKommBadges();
+
+                var html = '';
+                msgs.forEach(function(m) {
+                    var isSent = filter === 'sent';
+                    var name = isSent ? (m.empfaenger ? m.empfaenger.name : 'Unbekannt') : (m.absender ? m.absender.name : 'Unbekannt');
+                    var initials = name.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
+                    var colors = ['bg-emerald-500','bg-blue-500','bg-purple-500','bg-pink-500','bg-cyan-500','bg-red-500'];
+                    var ci = name.split('').reduce(function(a,c){return a+c.charCodeAt(0);},0) % colors.length;
+                    var d = new Date(m.created_at);
+                    var dateStr = d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' + d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+                    var isUnread = !isSent && !m.gelesen;
+
+                    html += '<div class="vit-card p-4 hover:shadow-md transition cursor-pointer ' + (isUnread ? 'border-l-4 border-vit-orange bg-orange-50' : '') + '" onclick="openInboxMsg(\'' + m.id + '\',' + isSent + ')">';
+                    html += '<div class="flex items-start space-x-3">';
+                    html += '<div class="w-10 h-10 ' + (isSent ? 'bg-gray-400' : colors[ci]) + ' rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">' + (isSent ? '📤' : initials) + '</div>';
+                    html += '<div class="flex-1 min-w-0">';
+                    html += '<div class="flex items-center justify-between mb-0.5"><span class="font-semibold text-gray-800 text-sm">' + (isSent ? 'An: ' : '') + escH(name) + '</span><span class="text-xs text-gray-400 flex-shrink-0 ml-2">' + dateStr + '</span></div>';
+                    html += '<p class="font-semibold text-gray-800 text-sm ' + (isUnread ? '' : 'font-normal') + '">' + escH(m.betreff) + '</p>';
+                    html += '<p class="text-xs text-gray-500 truncate mt-0.5">' + escH(m.inhalt).substring(0,100) + '</p>';
+                    html += '</div>';
+                    if(isUnread) html += '<span class="w-2.5 h-2.5 bg-vit-orange rounded-full flex-shrink-0 mt-2"></span>';
+                    html += '</div></div>';
+                });
+                if(msgs.length === 0) html = '<div class="text-center py-8 text-gray-400">' + (filter==='sent' ? 'Keine gesendeten Nachrichten.' : 'Keine Nachrichten.') + '</div>';
+                container.innerHTML = html;
+            } catch(err) {
+                console.error('Inbox laden:', err);
+                container.innerHTML = '<div class="text-center py-8 text-red-400">Fehler: ' + err.message + '</div>';
+            }
+        }
+
+        async function openInboxMsg(id, isSent) {
+            var detail = document.getElementById('inboxDetail');
+            if(!detail) return;
+            try {
+                var resp = await sb.from('nachrichten').select('*, absender:von_user_id(name), empfaenger:an_user_id(name)').eq('id', id).single();
+                if(resp.error) throw resp.error;
+                var m = resp.data;
+
+                // Mark as read
+                if(!isSent && !m.gelesen) {
+                    await sb.from('nachrichten').update({gelesen: true}).eq('id', id);
+                    kommUnreadCount = Math.max(0, kommUnreadCount - 1);
+                    updateKommBadges();
+                }
+
+                var senderName = m.absender ? m.absender.name : 'Unbekannt';
+                var recipientName = m.empfaenger ? m.empfaenger.name : 'Standort';
+                var d = new Date(m.created_at);
+                var dateStr = d.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}) + ' um ' + d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+
+                var html = '<div class="flex items-center justify-between mb-4">';
+                html += '<h3 class="font-bold text-gray-800 text-lg">' + escH(m.betreff) + '</h3>';
+                html += '<button onclick="document.getElementById(\'inboxDetail\').classList.add(\'hidden\')" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>';
                 html += '</div>';
-                if(m.unread) html += '<span class="w-2.5 h-2.5 bg-vit-orange rounded-full flex-shrink-0 mt-2"></span>';
-                html += '</div></div>';
-            });
-            document.getElementById('inboxList').innerHTML = html;
+                html += '<div class="flex items-center space-x-2 mb-4 text-sm text-gray-500">';
+                html += '<span class="font-semibold text-gray-700">Von: ' + escH(senderName) + '</span>';
+                html += '<span>→</span><span>An: ' + escH(recipientName) + '</span>';
+                html += '<span class="ml-auto text-xs">' + dateStr + '</span>';
+                html += '</div>';
+                html += '<div class="text-sm text-gray-700 whitespace-pre-wrap border-t pt-4">' + escH(m.inhalt) + '</div>';
+                if(!isSent) {
+                    html += '<div class="mt-4 pt-4 border-t"><button onclick="replyToMsg(\'' + m.von_user_id + '\',\'' + escH(m.betreff).replace(/'/g,"\\'") + '\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">↩ Antworten</button></div>';
+                }
+
+                detail.innerHTML = html;
+                detail.classList.remove('hidden');
+            } catch(err) { console.error('Nachricht öffnen:', err); }
+        }
+
+        function replyToMsg(userId, subject) {
+            var compose = document.getElementById('inboxCompose');
+            if(compose) compose.classList.remove('hidden');
+            var sel = document.getElementById('inboxRecipient');
+            if(sel) sel.value = userId;
+            var subj = document.getElementById('inboxSubject');
+            if(subj) subj.value = (subject.indexOf('Re:') === 0 ? subject : 'Re: ' + subject);
+            var body = document.getElementById('inboxBody');
+            if(body) body.focus();
+            document.getElementById('inboxDetail').classList.add('hidden');
+        }
+
+        function openInboxCompose(recipientId, subject) {
+            showKommTab('inbox');
+            setTimeout(function() {
+                var compose = document.getElementById('inboxCompose');
+                if(compose) compose.classList.remove('hidden');
+                if(recipientId) {
+                    var sel = document.getElementById('inboxRecipient');
+                    if(sel) sel.value = recipientId;
+                }
+                if(subject) {
+                    var subj = document.getElementById('inboxSubject');
+                    if(subj) subj.value = subject;
+                }
+                var body = document.getElementById('inboxBody');
+                if(body) body.focus();
+            }, 100);
         }
 
         function filterInbox(f) {
@@ -7397,29 +7501,64 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             renderInbox(f);
         }
 
-        function sendInboxMsg() {
-            var compose = document.getElementById('inboxCompose');
-            var inputs = compose.querySelectorAll('input[type=text], textarea, select');
-            var to = inputs[0] ? inputs[0].options[inputs[0].selectedIndex].text : 'Zentrale';
-            var subject = inputs[1] ? inputs[1].value : '';
-            var body = inputs[2] ? inputs[2].value : '';
+        async function sendInboxMsg() {
+            var recipient = (document.getElementById('inboxRecipient')||{}).value;
+            var subject = (document.getElementById('inboxSubject')||{}).value;
+            var body = (document.getElementById('inboxBody')||{}).value;
+            if(!recipient) { alert('Bitte Empfänger wählen.'); return; }
             if(!subject && !body) { alert('Bitte Betreff oder Nachricht eingeben.'); return; }
-            inboxMessages.unshift({
-                id: inboxMessages.length+1,
-                from: 'Du',
-                subject: subject || '(Kein Betreff)',
-                preview: body.substring(0,80) || '',
-                date: 'Gerade',
-                read: true,
-                folder: 'sent',
-                icon: '📤'
-            });
-            if(inputs[1]) inputs[1].value = '';
-            if(inputs[2]) inputs[2].value = '';
-            compose.classList.add('hidden');
-            filterInbox('sent');
+            try {
+                var resp = await sb.from('nachrichten').insert({
+                    von_user_id: sbUser.id,
+                    an_user_id: recipient,
+                    betreff: subject || '(Kein Betreff)',
+                    inhalt: body || '',
+                    kategorie: 'direkt'
+                });
+                if(resp.error) throw resp.error;
+                document.getElementById('inboxSubject').value = '';
+                document.getElementById('inboxBody').value = '';
+                document.getElementById('inboxCompose').classList.add('hidden');
+                filterInbox('sent');
+            } catch(err) { alert('Fehler beim Senden: ' + err.message); }
         }
 
+        // --- Unread badges ---
+        function updateKommBadges() {
+            // Inbox tab badge
+            var inboxBtn = document.querySelector('.komm-tab-btn[data-tab="inbox"]');
+            if(inboxBtn) {
+                var badge = inboxBtn.querySelector('.inbox-badge');
+                if(kommUnreadCount > 0) {
+                    if(!badge) {
+                        inboxBtn.insertAdjacentHTML('beforeend', ' <span class="inbox-badge ml-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">' + kommUnreadCount + '</span>');
+                    } else {
+                        badge.textContent = kommUnreadCount;
+                    }
+                } else if(badge) {
+                    badge.remove();
+                }
+            }
+            // Sidebar badge
+            var sidebarBtn = document.querySelector('[data-module="kommunikation"]');
+            if(sidebarBtn) {
+                var sBadge = sidebarBtn.querySelector('.komm-sidebar-badge');
+                if(kommUnreadCount > 0) {
+                    if(!sBadge) {
+                        sidebarBtn.insertAdjacentHTML('beforeend', '<span class="komm-sidebar-badge ml-auto bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">' + kommUnreadCount + '</span>');
+                    } else {
+                        sBadge.textContent = kommUnreadCount;
+                    }
+                } else if(sBadge) {
+                    sBadge.remove();
+                }
+            }
+            // Unread filter button text
+            var unreadBtn = document.querySelector('.inbox-filter-btn[data-f="unread"]');
+            if(unreadBtn) unreadBtn.textContent = 'Ungelesen (' + kommUnreadCount + ')';
+        }
+
+        // --- ANKÜNDIGUNGEN (bereits DB, erweitert mit Gelesen-Tracking) ---
         async function renderAnnouncements() {
             var container = document.getElementById('announceList');
             if(!container) return;
@@ -7428,39 +7567,59 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var resp = await sb.from('ankuendigungen').select('*, users(name)').order('created_at', {ascending:false});
                 if(resp.error) throw resp.error;
                 var anns = resp.data || [];
+
+                // Gelesen-Status laden
+                var gelesenIds = [];
+                if(sbUser) {
+                    var gr = await sb.from('ankuendigungen_gelesen').select('ankuendigung_id').eq('user_id', sbUser.id);
+                    if(!gr.error && gr.data) gelesenIds = gr.data.map(function(g){return g.ankuendigung_id;});
+                }
+
                 var html = '';
                 var icons = {news:'\uD83D\uDCE2',event:'\uD83D\uDCC5',schulung:'\uD83C\uDF93',marketing:'\uD83D\uDCE3',sortiment:'\uD83D\uDEB2',preise:'\uD83D\uDCB0',it:'\uD83D\uDCBB'};
                 anns.forEach(function(a) {
                     var d = new Date(a.created_at);
                     var dateStr = d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
-                    html += '<div class="vit-card p-5 ' + (a.wichtig ? 'border-l-4 border-vit-orange' : '') + '">';
+                    var istGelesen = gelesenIds.indexOf(a.id) !== -1;
+
+                    html += '<div class="vit-card p-5 ' + (a.wichtig ? 'border-l-4 border-vit-orange' : '') + ' ' + (istGelesen ? 'opacity-70' : '') + '">';
                     html += '<div class="flex items-start space-x-4">';
                     html += '<div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">' + (icons[a.kategorie]||'\uD83D\uDCE2') + '</div>';
                     html += '<div class="flex-1">';
                     html += '<div class="flex items-center justify-between">';
                     html += '<div class="flex items-center space-x-2 mb-1">';
                     if(a.wichtig) html += '<span class="text-xs font-bold bg-red-100 text-red-600 rounded px-2 py-0.5">Wichtig</span>';
+                    if(!istGelesen) html += '<span class="text-xs font-bold bg-blue-100 text-blue-600 rounded px-2 py-0.5">Neu</span>';
                     html += '<span class="text-xs text-gray-400">' + dateStr + '</span>';
                     if(a.users&&a.users.name) html += '<span class="text-xs text-gray-400">\u00B7 '+a.users.name+'</span>';
                     html += '</div>';
+                    html += '<div class="flex space-x-1">';
+                    if(!istGelesen) html += '<button onclick="markAnkGelesen(\'' + a.id + '\',this)" class="text-xs px-2 py-1 text-gray-400 hover:text-green-600" title="Als gelesen markieren">✓</button>';
                     if(isHQ) {
-                        html += '<div class="flex space-x-1">';
-                        html += '<button onclick="editAnkuendigung(\''+a.id+'\',\''+a.titel.replace(/'/g,"\\\'")+'\',\''+a.kategorie+'\','+a.wichtig+')" class="text-xs px-2 py-1 text-gray-400 hover:text-blue-600" title="Bearbeiten">\u270F\uFE0F</button>';
-                        html += '<button onclick="deleteAnkuendigung(\''+a.id+'\')" class="text-xs px-2 py-1 text-gray-400 hover:text-red-600" title="L\u00f6schen">\uD83D\uDDD1\uFE0F</button>';
-                        html += '</div>';
+                        html += '<button onclick="editAnkuendigung(\'' + a.id + '\',\'' + a.titel.replace(/'/g,"\\'") + '\',\'' + (a.kategorie||'news') + '\',' + a.wichtig + ')" class="text-xs px-2 py-1 text-gray-400 hover:text-blue-600" title="Bearbeiten">✏️</button>';
+                        html += '<button onclick="deleteAnkuendigung(\'' + a.id + '\')" class="text-xs px-2 py-1 text-gray-400 hover:text-red-600" title="Löschen">🗑️</button>';
                     }
-                    html += '</div>';
-                    html += '<h3 class="font-bold text-gray-800 mb-2">' + a.titel + '</h3>';
-                    html += '<p class="text-sm text-gray-600">' + a.inhalt + '</p>';
+                    html += '</div></div>';
+                    html += '<h3 class="font-bold text-gray-800 mb-2">' + escH(a.titel) + '</h3>';
+                    html += '<p class="text-sm text-gray-600">' + escH(a.inhalt) + '</p>';
                     html += '</div></div></div>';
                 });
-                if(anns.length===0) html = '<div class="text-center py-8 text-gray-400">Keine Ank\u00fcndigungen.</div>';
+                if(anns.length===0) html = '<div class="text-center py-8 text-gray-400">Keine Ankündigungen.</div>';
                 container.innerHTML = html;
-            } catch(err) { console.error('Ank\u00fcndigungen:', err); }
+            } catch(err) { console.error('Ankündigungen:', err); }
+        }
+
+        async function markAnkGelesen(id, btn) {
+            if(!sbUser) return;
+            try {
+                await sb.from('ankuendigungen_gelesen').upsert({ankuendigung_id: id, user_id: sbUser.id});
+                if(btn) { var card = btn.closest('.vit-card'); if(card) card.classList.add('opacity-70'); }
+                btn.remove();
+            } catch(err) { console.error('Gelesen markieren:', err); }
         }
 
         async function deleteAnkuendigung(id) {
-            if(!confirm('Ankuendigung wirklich loeschen?')) return;
+            if(!confirm('Ankündigung wirklich löschen?')) return;
             try {
                 var resp = await sb.from('ankuendigungen').delete().eq('id', id);
                 if(resp.error) throw resp.error;
@@ -7470,12 +7629,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         function editAnkuendigung(id, titel, kategorie, wichtig) {
             openAnkuendigungModal();
-            // Prefill nach kurzem Timeout damit Modal da ist
             setTimeout(function() {
                 var t = document.getElementById('ankTitel'); if(t) t.value = titel;
                 var k = document.getElementById('ankKat'); if(k) k.value = kategorie;
                 var w = document.getElementById('ankWichtig'); if(w) w.checked = wichtig;
-                // Change save button to update mode
                 var btn = document.getElementById('ankSaveBtn');
                 if(btn) { btn.textContent = 'Aktualisieren'; btn.onclick = function() { updateAnkuendigung(id); }; }
             }, 100);
@@ -7486,16 +7643,17 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var inhalt = (document.getElementById('ankInhalt')||{}).value;
             var kategorie = (document.getElementById('ankKat')||{}).value || 'news';
             var wichtig = (document.getElementById('ankWichtig')||{}).checked || false;
-            if(!titel||!titel.trim()||!inhalt||!inhalt.trim()) { alert('Bitte Titel und Inhalt ausfuellen.'); return; }
+            if(!titel||!titel.trim()||!inhalt||!inhalt.trim()) { alert('Bitte Titel und Inhalt ausfüllen.'); return; }
             try {
                 var resp = await sb.from('ankuendigungen').update({titel:titel.trim(),inhalt:inhalt.trim(),kategorie:kategorie,wichtig:wichtig}).eq('id',id);
                 if(resp.error) throw resp.error;
                 closeAnkModal();
-                alert('\u2705 Ankuendigung aktualisiert!');
+                alert('✅ Ankündigung aktualisiert!');
                 renderAnnouncements();
             } catch(err) { alert('Fehler: '+err.message); }
         }
 
+        // --- BRETT (DB-Anbindung mit Create) ---
         async function renderBrett(cat) {
             var container = document.getElementById('brettPosts');
             if(!container) return;
@@ -7514,17 +7672,51 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     var colors = ['bg-green-500','bg-blue-500','bg-purple-500','bg-red-500','bg-pink-500','bg-cyan-500'];
                     var ci = authorName.split('').reduce(function(a,c){return a+c.charCodeAt(0)},0) % colors.length;
                     var d = new Date(p.created_at);
+                    var isOwn = p.user_id === (sbUser ? sbUser.id : null);
                     html += '<div class="vit-card p-5 hover:shadow-md transition">';
-                    html += '<div class="flex items-center space-x-2 mb-2"><span class="text-xs font-bold rounded-full px-2.5 py-1 border ' + (catColors[p.kategorie]||catColors.allgemein) + '">' + (catLabels[p.kategorie]||p.kategorie) + '</span></div>';
-                    html += '<h3 class="font-bold text-gray-800 mb-1">' + p.titel + '</h3>';
-                    html += '<p class="text-sm text-gray-600 mb-3">' + (p.beschreibung||'') + '</p>';
-                    html += '<div class="flex items-center space-x-3 text-xs text-gray-400">';
-                    html += '<div class="flex items-center space-x-1"><div class="w-5 h-5 ' + colors[ci] + ' rounded-full flex items-center justify-center text-white text-[10px] font-bold">' + initials + '</div><span>' + authorName + '</span></div>';
-                    html += '<span>' + d.toLocaleDateString('de-DE') + '</span></div></div>';
+                    html += '<div class="flex items-center justify-between mb-2"><span class="text-xs font-bold rounded-full px-2.5 py-1 border ' + (catColors[p.kategorie]||catColors.allgemein) + '">' + (catLabels[p.kategorie]||p.kategorie) + '</span>';
+                    if(isOwn) html += '<button onclick="deactivateBrettPost(\'' + p.id + '\')" class="text-xs text-gray-400 hover:text-red-500" title="Deaktivieren">✕</button>';
+                    html += '</div>';
+                    html += '<h3 class="font-bold text-gray-800 mb-1">' + escH(p.titel) + '</h3>';
+                    html += '<p class="text-sm text-gray-600 mb-3">' + escH(p.beschreibung||'') + '</p>';
+                    html += '<div class="flex items-center justify-between text-xs text-gray-400">';
+                    html += '<div class="flex items-center space-x-1"><div class="w-5 h-5 ' + colors[ci] + ' rounded-full flex items-center justify-center text-white text-[10px] font-bold">' + initials + '</div><span>' + escH(authorName) + '</span></div>';
+                    html += '<div class="flex items-center space-x-2"><span>' + d.toLocaleDateString('de-DE') + '</span>';
+                    if(!isOwn) html += '<button onclick="openInboxCompose(\'' + p.user_id + '\',\'Bzgl: ' + escH(p.titel).replace(/'/g,"\\'") + '\')" class="text-vit-orange hover:underline font-semibold">✉ Nachricht</button>';
+                    html += '</div></div></div>';
                 });
                 if(posts.length===0) html = '<div class="col-span-2 text-center py-8 text-gray-400">Keine Einträge.</div>';
                 container.innerHTML = html;
             } catch(err) { console.error('Brett:', err); }
+        }
+
+        async function createBrettPost() {
+            var titel = (document.getElementById('brettNewTitle')||{}).value;
+            var body = (document.getElementById('brettNewBody')||{}).value;
+            var kat = (document.getElementById('brettNewCat')||{}).value || 'allgemein';
+            if(!titel || !titel.trim()) { alert('Bitte Titel eingeben.'); return; }
+            try {
+                var resp = await sb.from('brett_eintraege').insert({
+                    user_id: sbUser.id,
+                    standort_id: sbProfile ? sbProfile.standort_id : null,
+                    titel: titel.trim(),
+                    beschreibung: body ? body.trim() : null,
+                    kategorie: kat
+                });
+                if(resp.error) throw resp.error;
+                document.getElementById('brettNewTitle').value = '';
+                document.getElementById('brettNewBody').value = '';
+                document.getElementById('brettNewPost').classList.add('hidden');
+                renderBrett('all');
+            } catch(err) { alert('Fehler: ' + err.message); }
+        }
+
+        async function deactivateBrettPost(id) {
+            if(!confirm('Eintrag wirklich entfernen?')) return;
+            try {
+                await sb.from('brett_eintraege').update({aktiv: false}).eq('id', id);
+                renderBrett('all');
+            } catch(err) { alert('Fehler: ' + err.message); }
         }
 
         function filterBrett(cat) {
@@ -7560,20 +7752,15 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             firstDay = firstDay === 0 ? 6 : firstDay - 1;
             var daysInMonth = new Date(kommMiniCalYear, kommMiniCalMonth + 1, 0).getDate();
 
-            // Header row
             var h = '<span class="text-gray-400 font-semibold py-1">Mo</span><span class="text-gray-400 font-semibold py-1">Di</span><span class="text-gray-400 font-semibold py-1">Mi</span><span class="text-gray-400 font-semibold py-1">Do</span><span class="text-gray-400 font-semibold py-1">Fr</span><span class="text-gray-400 font-semibold py-1">Sa</span><span class="text-gray-400 font-semibold py-1">So</span>';
-
-            // Empty cells before first day
             for (var i = 0; i < firstDay; i++) h += '<span class="py-1"></span>';
 
-            // Build date-to-termine lookup from kalTermine (shared data)
             var termineDates = {};
             (typeof kalTermine !== 'undefined' ? kalTermine : []).forEach(function(t) {
                 if (!termineDates[t.date]) termineDates[t.date] = [];
                 termineDates[t.date].push(t);
             });
 
-            // Day cells
             for (var d = 1; d <= daysInMonth; d++) {
                 var dateStr = kommMiniCalYear + '-' + String(kommMiniCalMonth + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
                 var isToday = dateStr === todayStr;
@@ -7584,7 +7771,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 if (isToday) {
                     cls += 'bg-vit-orange text-white font-bold ';
                 } else if (dayTerms.length > 0) {
-                    // Color by first termin type
                     var firstType = dayTerms[0].type;
                     if (firstType === 'deadline') cls += 'bg-red-100 text-red-700 font-semibold ';
                     else if (firstType === 'probefahrt' || firstType === 'event') cls += 'bg-green-100 text-green-700 font-semibold ';
@@ -7599,7 +7785,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
             gridEl.innerHTML = h;
 
-            // Stats
             var statsEl = document.getElementById('kommMiniCalStats');
             if (statsEl) {
                 var monthTerms = (typeof kalTermine !== 'undefined' ? kalTermine : []).filter(function(t) {
@@ -7617,7 +7802,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         function kommMiniCalClick(dateStr) {
-            // Navigate to Kalender module with day view
             showView('kalender');
             if (typeof kalDayDate !== 'undefined') {
                 kalDayDate = new Date(dateStr + 'T12:00:00');
@@ -7641,9 +7825,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     if(t.end_zeit) { var e=new Date(t.end_zeit); timeStr += ' – '+e.getHours()+':'+String(e.getMinutes()).padStart(2,'0'); }
                     html += '<div class="vit-card p-4 flex items-start space-x-4 hover:shadow-md transition">';
                     html += '<div class="text-center flex-shrink-0 w-14"><div class="text-2xl">' + (typeLabels[t.typ]||'📋') + '</div><div class="text-xs font-bold text-gray-500 mt-1">' + dateStr + '</div></div>';
-                    html += '<div class="flex-1"><h4 class="font-bold text-gray-800 text-sm">' + t.titel + '</h4>';
-                    html += '<p class="text-xs text-gray-500 mt-0.5">' + timeStr + (t.ort ? ' · ' + t.ort : '') + '</p>';
-                    if(t.beschreibung) html += '<p class="text-xs text-gray-400 mt-1">' + t.beschreibung + '</p>';
+                    html += '<div class="flex-1"><h4 class="font-bold text-gray-800 text-sm">' + escH(t.titel) + '</h4>';
+                    html += '<p class="text-xs text-gray-500 mt-0.5">' + timeStr + (t.ort ? ' · ' + escH(t.ort) : '') + '</p>';
+                    if(t.beschreibung) html += '<p class="text-xs text-gray-400 mt-1">' + escH(t.beschreibung) + '</p>';
                     html += '</div></div>';
                 });
                 if(terms.length===0) html = '<div class="text-center py-8 text-gray-400">Keine anstehenden Termine.</div>';
@@ -7651,56 +7835,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             } catch(err) { console.error('Termine:', err); }
         }
 
-        function showKommTab(tabName) {
-            document.querySelectorAll('.komm-tab-content').forEach(function(t){t.style.display='none';});
-            document.querySelectorAll('.komm-tab-btn').forEach(function(b){
-                b.className='komm-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
-            });
-            var tabMap = {inbox:'Inbox',announce:'Announce',forum:'Forum',brett:'Brett',channel:'Channel',termine:'Termine'};
-            var el = document.getElementById('kommTab' + (tabMap[tabName]||''));
-            if(el) el.style.display = 'block';
-            var btn = document.querySelector('.komm-tab-btn[data-tab="'+tabName+'"]');
-            if(btn) btn.className='komm-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
-            if(tabName==='inbox') renderInbox('all');
-            if(tabName==='announce') renderAnnouncements();
-            if(tabName==='forum') renderForumPosts('all');
-            if(tabName==='brett') renderBrett('all');
-            if(tabName==='channel') renderChannelMessages();
-            if(tabName==='termine'){ renderTermine(); renderKommMiniCal(); }
-        }
-
-        // Init default tab
-        renderInbox('all');
-
-        // === KOMMUNIKATION (Forum + Channel data) ===
-        var forumPosts = [
-            {id:1,cat:'zentrale',pinned:true,author:'vit:bikes Zentrale',avatar:'V',avatarColor:'bg-vit-orange',date:'14.02.2026 · 09:00',title:'Vororder Herbst/Winter 2026 – Deadline 28.02.',body:'Liebe Partner, bitte denkt an die Vororder-Deadline fuer H/W 2026. Die Konditionen und Bestellformulare findet ihr im Einkaufsbereich. Bei Fragen meldet euch bei eurem Ansprechpartner.',replies:8,views:142,lastReply:'vor 2 Std.'},
-            {id:2,cat:'verkauf',author:'Stefan (Karlsfeld)',avatar:'SK',avatarColor:'bg-blue-500',date:'13.02.2026 · 16:45',title:'Erfahrungen mit Simplon Kagu 2026?',body:'Hat jemand schon den neuen Simplon Kagu 2026 im Laden? Wir hatten 3 Probefahrten und die Kunden waren begeistert, aber der Preis ist schon sportlich. Wie argumentiert ihr das?',replies:12,views:89,lastReply:'vor 30 Min.'},
-            {id:3,cat:'werkstatt',author:'Markus (Hanau)',avatar:'MH',avatarColor:'bg-green-600',date:'13.02.2026 · 14:20',title:'Shimano EP6 Firmware-Update Probleme',body:'Wir haben seit dem letzten Firmware-Update Probleme mit dem EP6 Motor – Display zeigt sporadisch Fehlercode W013. Hat das noch jemand? Shimano Support reagiert langsam.',replies:6,views:67,lastReply:'vor 1 Std.'},
-            {id:4,cat:'allgemein',author:'Julia (Muenchen Ost)',avatar:'JM',avatarColor:'bg-purple-500',date:'12.02.2026 · 11:30',title:'Wer hat Lust auf ein Partner-Stammtisch Muenchen?',body:'Wir koennten uns mal informell treffen – Pizza, Bier und Erfahrungsaustausch. Wuerde vorschlagen Ende Maerz, wenn die Saison noch nicht voll angelaufen ist. Wer waere dabei?',replies:15,views:103,lastReply:'vor 4 Std.'},
-            {id:5,cat:'einkauf',author:'Thomas (Grafrath)',avatar:'TG',avatarColor:'bg-cyan-600',date:'12.02.2026 · 09:15',title:'Kalkhoff Endeavour lieferbar?',body:'Hat jemand gerade einen Kalkhoff Endeavour 5.B Move+ in L/Diamant auf Lager? Mein Kunde braucht ihn dringend, bei uns erst KW 12 avisiert. Wuerde Standort-Transfer machen.',replies:3,views:34,lastReply:'vor 8 Std.'},
-            {id:6,cat:'zentrale',author:'vit:bikes Zentrale',avatar:'V',avatarColor:'bg-vit-orange',date:'10.02.2026 · 10:00',title:'Neue Marketingmaterialien Fruehjahr 2026 verfuegbar',body:'Die neuen Fruehjahrs-Flyer, Plakate und Social Media Templates stehen ab sofort im Marketing-Bereich zum Download bereit. Bitte bis 01.03. im Laden aufhaengen.',replies:4,views:118,lastReply:'vor 2 Tagen'},
-            {id:7,cat:'werkstatt',author:'Dirk (Grafrath)',avatar:'DG',avatarColor:'bg-red-500',date:'09.02.2026 · 15:40',title:'Tipp: Bosch CX Gen5 Kettenblatt-Wechsel',body:'Kleiner Werkstatt-Tipp: Beim neuen Bosch CX Gen5 muss man das Spezialwerkzeug BDU3741 verwenden, sonst verkratzt man die Motorabdeckung. Hat mich eine Stunde gekostet bis ichs rausgefunden hab.',replies:9,views:76,lastReply:'vor 3 Tagen'},
-            {id:8,cat:'verkauf',author:'Anna (Starnberg)',avatar:'AS',avatarColor:'bg-pink-500',date:'08.02.2026 · 13:00',title:'Leasing-Antraege beschleunigen – mein Workflow',body:'Ich hab mir einen Prozess gebaut, mit dem Leasing-Antraege in unter 10 Min. durch sind. Kann ich gerne teilen, wenn Interesse besteht. Funktioniert mit Jobrad und Bikeleasing.',replies:18,views:156,lastReply:'vor 4 Tagen'},
-        ];
-
-        var channelMessages = [
-            {author:'Sandra',avatar:'S',color:'bg-blue-500',time:'08:15',text:'Guten Morgen zusammen! Hab heute 3 Termine ab 10 Uhr. Wer macht Kasse?'},
-            {author:'Dirk',avatar:'D',color:'bg-purple-500',time:'08:22',text:'Moin! Ich mach Kasse bis Mittag, dann hab ich den Werkstatt-Rueckstau von gestern.'},
-            {author:'Thomas',avatar:'T',color:'bg-green-500',time:'08:30',text:'Bin ab 9 da. Sandra, dein 10-Uhr Termin hat angerufen – kommt 15 Min. spaeter.'},
-            {author:'Sandra',avatar:'S',color:'bg-blue-500',time:'08:32',text:'Danke Thomas! Dann zieh ich den Papierkram vor.'},
-            {author:'Max',avatar:'M',color:'bg-orange-500',time:'09:05',text:'Morgen! Die Shimano-Lieferung ist da, 3 Kartons. Soll ich direkt einraeumen oder erst die Werkstatt-Auftraege?'},
-            {author:'Dirk',avatar:'D',color:'bg-purple-500',time:'09:08',text:'Werkstatt zuerst bitte – der Herr Mueller will sein Rad heute abholen und da fehlen noch die Bremsbelaege.'},
-            {author:'Max',avatar:'M',color:'bg-orange-500',time:'09:10',text:'Alles klar, Bremsbelaege muessten in Karton 2 sein. Mach ich sofort.'},
-            {author:'Sandra',avatar:'S',color:'bg-blue-500',time:'10:45',text:'Erster Termin war super – Fam. Mueller nimmt den Simplon Kagu! 4.899 EUR. Muss noch Leasing-Antrag machen.'},
-            {author:'Thomas',avatar:'T',color:'bg-green-500',time:'10:48',text:'Nice! Welche Farbe?'},
-            {author:'Sandra',avatar:'S',color:'bg-blue-500',time:'10:50',text:'Midnight Blue, Groesse M. Lieferzeit hat er gesagt ist ok, braucht es erst Ende Maerz.'},
-            {author:'Dirk',avatar:'D',color:'bg-purple-500',time:'12:15',text:'Kurze Info: Der Kalkhoff Endeavour fuer Herrn Schmidt ist jetzt fertig aufgebaut. Kann ab morgen abgeholt werden. Wer ruft ihn an?'},
-            {author:'Thomas',avatar:'T',color:'bg-green-500',time:'12:18',text:'Mach ich nach der Pause!'},
-            {author:'Max',avatar:'M',color:'bg-orange-500',time:'13:30',text:'Shimano-Lieferung komplett eingeraeumt. Aber es fehlen 2x Deore XT Kassette 12-fach, die waren auf dem Lieferschein. Hab Reklamation per Mail geschickt.'},
-            {author:'Sandra',avatar:'S',color:'bg-blue-500',time:'14:20',text:'Zweiter Termin war leider nix – wollte nur Preise vergleichen und kauft wahrscheinlich online. Dritter kommt um 15 Uhr.'},
-        ];
-
+        // --- FORUM (komplett mit Create, Detail, Comments) ---
         async function renderForumPosts(cat) {
             var container = document.getElementById('forumPosts');
             if(!container) return;
@@ -7717,11 +7852,21 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var html = '';
 
                 if(posts.length === 0) {
-                    html = '<div class="text-center py-8"><span class="text-gray-400 text-sm">Keine Beiträge gefunden.</span></div>';
+                    html = '<div class="text-center py-8"><span class="text-gray-400 text-sm">Keine Beiträge gefunden. Starte die Diskussion!</span></div>';
                 }
 
-                var catColors = {news:'bg-vit-orange text-white',frage:'bg-blue-100 text-blue-700',tipp:'bg-green-100 text-green-700',allgemein:'bg-gray-100 text-gray-700'};
-                var catLabels = {news:'News',frage:'Frage',tipp:'Tipp',allgemein:'Allgemein'};
+                var catColors = {news:'bg-vit-orange text-white',frage:'bg-blue-100 text-blue-700',tipp:'bg-green-100 text-green-700',allgemein:'bg-gray-100 text-gray-700',verkauf:'bg-purple-100 text-purple-700',werkstatt:'bg-cyan-100 text-cyan-700',einkauf:'bg-yellow-100 text-yellow-700',zentrale:'bg-orange-100 text-orange-700'};
+                var catLabels = {news:'News',frage:'Frage',tipp:'Tipp',allgemein:'Allgemein',verkauf:'Verkauf',werkstatt:'Werkstatt',einkauf:'Einkauf',zentrale:'Zentrale'};
+
+                // Alle Kommentar-Counts in einem Batch laden
+                var postIds = posts.map(function(p){return p.id;});
+                var commentCounts = {};
+                if(postIds.length > 0) {
+                    for(var ci = 0; ci < postIds.length; ci++) {
+                        var cr = await sb.from('forum_kommentare').select('id', { count: 'exact', head: true }).eq('beitrag_id', postIds[ci]);
+                        commentCounts[postIds[ci]] = cr.count || 0;
+                    }
+                }
 
                 for(var i = 0; i < posts.length; i++) {
                     var p = posts[i];
@@ -7731,23 +7876,25 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     var colorIdx = authorName.split('').reduce(function(a,c){return a+c.charCodeAt(0);},0) % colors.length;
                     var d = new Date(p.created_at);
                     var dateStr = d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}) + ' · ' + d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+                    var replyCount = commentCounts[p.id] || 0;
+                    var isOwn = p.user_id === (sbUser ? sbUser.id : null);
+                    var isHQ = sbProfile && sbProfile.is_hq;
 
-                    // Kommentare zählen
-                    var commResp = await sb.from('forum_kommentare').select('id', { count: 'exact', head: true }).eq('beitrag_id', p.id);
-                    var replyCount = commResp.count || 0;
-
-                    html += '<div class="vit-card p-5 hover:shadow-md transition ' + (p.gepinnt ? 'border-l-4 border-vit-orange' : '') + '">';
+                    html += '<div class="vit-card p-5 hover:shadow-md transition cursor-pointer ' + (p.gepinnt ? 'border-l-4 border-vit-orange' : '') + '" onclick="openForumDetail(\'' + p.id + '\')">';
                     html += '<div class="flex items-start space-x-4">';
                     html += '<div class="w-10 h-10 ' + (p.gepinnt ? 'bg-vit-orange' : colors[colorIdx]) + ' rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">' + initials + '</div>';
                     html += '<div class="flex-1 min-w-0">';
-                    html += '<div class="flex items-center space-x-2 mb-1">';
+                    html += '<div class="flex items-center space-x-2 mb-1 flex-wrap">';
                     if(p.gepinnt) html += '<span class="text-xs font-bold bg-yellow-100 text-yellow-700 rounded px-1.5 py-0.5">📌 Angepinnt</span>';
                     html += '<span class="text-xs font-semibold rounded px-2 py-0.5 ' + (catColors[p.kategorie]||catColors.allgemein) + '">' + (catLabels[p.kategorie]||p.kategorie) + '</span>';
+                    if(isOwn || isHQ) {
+                        html += '<button onclick="event.stopPropagation();deleteForumPost(\'' + p.id + '\')" class="text-xs text-gray-300 hover:text-red-500 ml-auto" title="Löschen">🗑️</button>';
+                    }
                     html += '</div>';
-                    html += '<h3 class="font-bold text-gray-800 mb-1 hover:text-vit-orange cursor-pointer">' + p.titel + '</h3>';
-                    html += '<p class="text-sm text-gray-600 mb-2 line-clamp-2">' + p.inhalt + '</p>';
+                    html += '<h3 class="font-bold text-gray-800 mb-1 hover:text-vit-orange">' + escH(p.titel) + '</h3>';
+                    html += '<p class="text-sm text-gray-600 mb-2 line-clamp-2">' + escH(p.inhalt) + '</p>';
                     html += '<div class="flex items-center space-x-4 text-xs text-gray-400">';
-                    html += '<span class="font-semibold text-gray-600">' + authorName + '</span>';
+                    html += '<span class="font-semibold text-gray-600">' + escH(authorName) + '</span>';
                     html += '<span>' + dateStr + '</span>';
                     html += '<span>💬 ' + replyCount + ' Antworten</span>';
                     html += '</div></div></div></div>';
@@ -7760,6 +7907,115 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             }
         }
 
+        async function createForumPost() {
+            var titel = (document.getElementById('forumNewTitle')||{}).value;
+            var body = (document.getElementById('forumNewBody')||{}).value;
+            var kat = (document.getElementById('forumNewCat')||{}).value || 'allgemein';
+            if(!titel || !titel.trim()) { alert('Bitte Betreff eingeben.'); return; }
+            if(!body || !body.trim()) { alert('Bitte Nachricht eingeben.'); return; }
+            try {
+                var resp = await sb.from('forum_beitraege').insert({
+                    user_id: sbUser.id,
+                    standort_id: sbProfile ? sbProfile.standort_id : null,
+                    titel: titel.trim(),
+                    inhalt: body.trim(),
+                    kategorie: kat
+                });
+                if(resp.error) throw resp.error;
+                document.getElementById('forumNewTitle').value = '';
+                document.getElementById('forumNewBody').value = '';
+                document.getElementById('forumNewPost').classList.add('hidden');
+                renderForumPosts('all');
+            } catch(err) { alert('Fehler: ' + err.message); }
+        }
+
+        async function deleteForumPost(id) {
+            if(!confirm('Beitrag wirklich löschen?')) return;
+            try {
+                // Erst Kommentare löschen
+                await sb.from('forum_kommentare').delete().eq('beitrag_id', id);
+                var resp = await sb.from('forum_beitraege').delete().eq('id', id);
+                if(resp.error) throw resp.error;
+                renderForumPosts('all');
+            } catch(err) { alert('Fehler: ' + err.message); }
+        }
+
+        async function openForumDetail(postId) {
+            kommCurrentForumPost = postId;
+            document.getElementById('forumListView').classList.add('hidden');
+            document.getElementById('forumDetailView').classList.remove('hidden');
+
+            var contentEl = document.getElementById('forumDetailContent');
+            var commentsEl = document.getElementById('forumComments');
+
+            try {
+                // Post laden
+                var resp = await sb.from('forum_beitraege').select('*, users(name)').eq('id', postId).single();
+                if(resp.error) throw resp.error;
+                var p = resp.data;
+                var authorName = p.users ? p.users.name : 'Unbekannt';
+                var d = new Date(p.created_at);
+                var dateStr = d.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}) + ' um ' + d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+
+                var html = '<div class="flex items-center space-x-2 mb-3">';
+                if(p.gepinnt) html += '<span class="text-xs font-bold bg-yellow-100 text-yellow-700 rounded px-2 py-0.5">📌 Angepinnt</span>';
+                html += '<span class="text-xs text-gray-400">' + dateStr + '</span>';
+                html += '</div>';
+                html += '<h2 class="text-xl font-bold text-gray-800 mb-3">' + escH(p.titel) + '</h2>';
+                html += '<div class="flex items-center space-x-2 mb-4"><span class="text-sm font-semibold text-gray-700">' + escH(authorName) + '</span></div>';
+                html += '<div class="text-sm text-gray-700 whitespace-pre-wrap">' + escH(p.inhalt) + '</div>';
+                contentEl.innerHTML = html;
+
+                // Kommentare laden
+                var commResp = await sb.from('forum_kommentare').select('*, users(name)').eq('beitrag_id', postId).order('created_at', {ascending: true});
+                if(commResp.error) throw commResp.error;
+                var comments = commResp.data || [];
+                var cHtml = '';
+                if(comments.length === 0) {
+                    cHtml = '<div class="text-sm text-gray-400 py-2">Noch keine Kommentare. Sei der Erste!</div>';
+                }
+                comments.forEach(function(c) {
+                    var cName = c.users ? c.users.name : 'Unbekannt';
+                    var cInit = cName.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
+                    var colors = ['bg-blue-500','bg-green-600','bg-purple-500','bg-cyan-600','bg-pink-500','bg-red-500'];
+                    var cci = cName.split('').reduce(function(a,ch){return a+ch.charCodeAt(0);},0) % colors.length;
+                    var cd = new Date(c.created_at);
+                    var cDate = cd.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}) + ' ' + cd.getHours()+':'+String(cd.getMinutes()).padStart(2,'0');
+
+                    cHtml += '<div class="flex items-start space-x-3 py-2 border-b border-gray-100">';
+                    cHtml += '<div class="w-8 h-8 ' + colors[cci] + ' rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">' + cInit + '</div>';
+                    cHtml += '<div class="flex-1"><div class="flex items-baseline space-x-2"><span class="font-semibold text-gray-800 text-sm">' + escH(cName) + '</span><span class="text-xs text-gray-400">' + cDate + '</span></div>';
+                    cHtml += '<p class="text-sm text-gray-700 mt-0.5">' + escH(c.inhalt) + '</p></div></div>';
+                });
+                commentsEl.innerHTML = cHtml;
+            } catch(err) {
+                contentEl.innerHTML = '<div class="text-red-400">Fehler: ' + err.message + '</div>';
+            }
+        }
+
+        async function postForumComment() {
+            var input = document.getElementById('forumCommentInput');
+            var text = input ? input.value.trim() : '';
+            if(!text || !kommCurrentForumPost) { alert('Bitte Kommentar eingeben.'); return; }
+            try {
+                var resp = await sb.from('forum_kommentare').insert({
+                    beitrag_id: kommCurrentForumPost,
+                    user_id: sbUser.id,
+                    inhalt: text
+                });
+                if(resp.error) throw resp.error;
+                input.value = '';
+                openForumDetail(kommCurrentForumPost); // Reload
+            } catch(err) { alert('Fehler: ' + err.message); }
+        }
+
+        function closeForumDetail() {
+            document.getElementById('forumDetailView').classList.add('hidden');
+            document.getElementById('forumListView').classList.remove('hidden');
+            kommCurrentForumPost = null;
+            renderForumPosts('all');
+        }
+
         function filterForum(cat) {
             document.querySelectorAll('.forum-cat-btn').forEach(function(b){
                 b.className = 'forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200';
@@ -7769,8 +8025,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             renderForumPosts(cat);
         }
 
-        var sbKanalId = null; // aktiver Kanal
-        var sbKanaele = []; // geladene Kanäle
+        // --- CHANNEL (bestehend, keine Änderung nötig) ---
+        var sbKanalId = null;
+        var sbKanaele = [];
         var realtimeSubscription = null;
 
         async function loadKanaele() {
@@ -7787,29 +8044,22 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             container.innerHTML = '<div class="text-center py-8"><span class="text-gray-400 text-sm">Nachrichten werden geladen...</span></div>';
 
             try {
-                // Kanäle laden falls noch nicht geschehen
                 if(sbKanaele.length === 0) await loadKanaele();
-
-                // Ersten Standort-Kanal wählen (Team-Chat)
                 if(!sbKanalId && sbKanaele.length > 0) {
                     var teamKanal = sbKanaele.find(function(k) { return k.standort_id !== null; });
                     sbKanalId = teamKanal ? teamKanal.id : sbKanaele[0].id;
                 }
-
                 if(!sbKanalId) {
                     container.innerHTML = '<div class="text-center py-8"><span class="text-gray-400 text-sm">Kein Chat-Kanal verfügbar.</span></div>';
                     return;
                 }
 
-                // Header aktualisieren
                 var aktKanal = sbKanaele.find(function(k) { return k.id === sbKanalId; });
-                var headerTitle = container.closest('.komm-tab-content').querySelector('h3.font-bold');
+                var headerTitle = container.closest('.komm-tab-content') ? container.closest('.komm-tab-content').querySelector('h3.font-bold') : null;
                 if(headerTitle && aktKanal) headerTitle.textContent = aktKanal.name;
 
-                // Kanal-Tabs rendern
                 renderKanalTabs();
 
-                // Nachrichten laden mit User-Daten
                 var resp = await sb.from('chat_nachrichten')
                     .select('*, users(name)')
                     .eq('kanal_id', sbKanalId)
@@ -7836,7 +8086,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
                     html += '<div class="flex items-start space-x-3">';
                     html += '<div class="w-8 h-8 ' + (isMe ? 'bg-vit-orange' : colors[colorIdx]) + ' rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">' + initials + '</div>';
-                    html += '<div class="flex-1"><div class="flex items-baseline space-x-2"><span class="font-semibold text-gray-800 text-sm">' + authorName + '</span><span class="text-xs text-gray-400">' + time + '</span></div>';
+                    html += '<div class="flex-1"><div class="flex items-baseline space-x-2"><span class="font-semibold text-gray-800 text-sm">' + escH(authorName) + '</span><span class="text-xs text-gray-400">' + time + '</span></div>';
                     html += '<p class="text-sm text-gray-700 mt-0.5">' + m.nachricht.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p></div></div>';
                 });
 
@@ -7846,10 +8096,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
                 container.innerHTML = html;
                 container.scrollTop = container.scrollHeight;
-
-                // Realtime subscription starten
                 subscribeToChannel();
-
             } catch(err) {
                 console.error('Chat laden:', err);
                 container.innerHTML = '<div class="text-center py-8"><span class="text-red-400 text-sm">Fehler beim Laden: ' + err.message + '</span></div>';
@@ -7857,7 +8104,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         function renderKanalTabs() {
-            // Kanal-Wechsel Buttons über dem Chat einfügen
             var channelTab = document.getElementById('kommTabChannel');
             var existing = document.getElementById('kanalTabsBar');
             if(existing) existing.remove();
@@ -7868,7 +8114,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var active = k.id === sbKanalId;
                 tabsHtml += '<button onclick="switchKanal(\'' + k.id + '\')" class="px-3 py-1.5 rounded-full text-xs font-semibold ' +
                     (active ? 'bg-vit-orange text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + '">' +
-                    (k.standort_id ? '# ' : '🌐 ') + k.name + '</button>';
+                    (k.standort_id ? '# ' : '🌐 ') + escH(k.name) + '</button>';
             });
             tabsHtml += '</div>';
 
@@ -7878,27 +8124,19 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         async function switchKanal(kanalId) {
             sbKanalId = kanalId;
-            if(realtimeSubscription) {
-                sb.removeChannel(realtimeSubscription);
-                realtimeSubscription = null;
-            }
+            if(realtimeSubscription) { sb.removeChannel(realtimeSubscription); realtimeSubscription = null; }
             await renderChannelMessages();
         }
 
         function subscribeToChannel() {
-            if(realtimeSubscription) {
-                sb.removeChannel(realtimeSubscription);
-            }
+            if(realtimeSubscription) { sb.removeChannel(realtimeSubscription); }
             realtimeSubscription = sb.channel('chat-' + sbKanalId)
                 .on('postgres_changes', {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'chat_nachrichten',
+                    event: 'INSERT', schema: 'public', table: 'chat_nachrichten',
                     filter: 'kanal_id=eq.' + sbKanalId
                 }, async function(payload) {
-                    // Neue Nachricht eingetroffen – Autor laden
                     var msg = payload.new;
-                    if(msg.user_id === (sbUser ? sbUser.id : null)) return; // eigene schon gerendert
+                    if(msg.user_id === (sbUser ? sbUser.id : null)) return;
                     var resp = await sb.from('users').select('name').eq('id', msg.user_id).single();
                     var authorName = resp.data ? resp.data.name : 'Unbekannt';
                     var initials = authorName.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
@@ -7911,7 +8149,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     if(!container) return;
                     var msgHtml = '<div class="flex items-start space-x-3">';
                     msgHtml += '<div class="w-8 h-8 ' + colors[colorIdx] + ' rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">' + initials + '</div>';
-                    msgHtml += '<div class="flex-1"><div class="flex items-baseline space-x-2"><span class="font-semibold text-gray-800 text-sm">' + authorName + '</span><span class="text-xs text-gray-400">' + time + '</span></div>';
+                    msgHtml += '<div class="flex-1"><div class="flex items-baseline space-x-2"><span class="font-semibold text-gray-800 text-sm">' + escH(authorName) + '</span><span class="text-xs text-gray-400">' + time + '</span></div>';
                     msgHtml += '<p class="text-sm text-gray-700 mt-0.5">' + msg.nachricht.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p></div></div>';
                     container.insertAdjacentHTML('beforeend', msgHtml);
                     container.scrollTop = container.scrollHeight;
@@ -7935,7 +8173,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 });
                 if(resp.error) throw resp.error;
 
-                // Sofort lokal rendern (optimistic UI)
                 var container = document.getElementById('channelMessages');
                 var emptyMsg = container.querySelector('.text-center.py-8');
                 if(emptyMsg) emptyMsg.remove();
@@ -7947,7 +8184,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
                 var msgHtml = '<div class="flex items-start space-x-3">';
                 msgHtml += '<div class="w-8 h-8 bg-vit-orange rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">' + initials + '</div>';
-                msgHtml += '<div class="flex-1"><div class="flex items-baseline space-x-2"><span class="font-semibold text-gray-800 text-sm">' + authorName + '</span><span class="text-xs text-gray-400">' + time + '</span></div>';
+                msgHtml += '<div class="flex-1"><div class="flex items-baseline space-x-2"><span class="font-semibold text-gray-800 text-sm">' + escH(authorName) + '</span><span class="text-xs text-gray-400">' + time + '</span></div>';
                 msgHtml += '<p class="text-sm text-gray-700 mt-0.5">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p></div></div>';
                 container.insertAdjacentHTML('beforeend', msgHtml);
                 container.scrollTop = container.scrollHeight;
@@ -7960,6 +8197,27 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             }
         }
 
+        // --- TAB NAVIGATION ---
+        function showKommTab(tabName) {
+            document.querySelectorAll('.komm-tab-content').forEach(function(t){t.style.display='none';});
+            document.querySelectorAll('.komm-tab-btn').forEach(function(b){
+                b.className=b.className.replace(/border-vit-orange/g,'border-transparent').replace(/text-vit-orange/g,'text-gray-500');
+            });
+            var tabMap = {inbox:'Inbox',announce:'Announce',forum:'Forum',brett:'Brett',channel:'Channel',termine:'Termine'};
+            var el = document.getElementById('kommTab' + (tabMap[tabName]||''));
+            if(el) el.style.display = 'block';
+            var btn = document.querySelector('.komm-tab-btn[data-tab="'+tabName+'"]');
+            if(btn) btn.className='komm-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
+            if(tabName==='inbox') { loadInboxRecipients(); renderInbox('all'); }
+            if(tabName==='announce') renderAnnouncements();
+            if(tabName==='forum') { closeForumDetail(); }
+            if(tabName==='brett') renderBrett('all');
+            if(tabName==='channel') renderChannelMessages();
+            if(tabName==='termine'){ renderTermine(); renderKommMiniCal(); }
+        }
+
+        // Init
+        renderInbox('all');
         // === AKTENSCHRANK ===
         var aktenFiles = {};
         var aktenLoaded = false;
@@ -12611,7 +12869,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 {name:'Verkauf / CRM', view:'verkaufView', status:'teilweise', typ:'standort', version:'2.1.0', details:'React Pipeline (Kanban, Drag&Drop, Gamification), Scan-Upload mit KI-Analyse via Edge Function, KI-Verkaufstrainer, Wochenansicht, Auswertung', kiPrio:2, aufwand:'L', kiTodo:'✅ API-Key gesichert (Edge Function). Noch offen: Angebotserstellung PDF, Lead-Import, Follow-up-Erinnerungen, Supabase-Anbindung Pipeline-Deals.'},
                 {name:'Kalender', view:'kalenderView', status:'live', typ:'standort', version:'2.0.0', details:'Monats/Wochen/Tagesansicht, Wiederkehrende Termine, Teilnehmer, Serien, CRUD komplett, 8 Typen, Mini-Kalender, HQ-Kalender', kiPrio:20, aufwand:'XL', kiTodo:'MS365-Sync, Drag&Drop, Notifications nice-to-have.'},
                 {name:'Aufgaben / Todos', view:'todoView', status:'live', typ:'standort', version:'1.2.0', details:'Erstellen, Bearbeiten, Abhaken, Löschen, Filtern – alles DB', kiPrio:30, aufwand:'M', kiTodo:'Fälligkeitsdatum, Zuweisung an Mitarbeiter.'},
-                {name:'Kommunikation', view:'kommunikationView', status:'live', typ:'standort', version:'1.3.0', details:'Ankündigungen, Brett, Forum, Chat-Kanäle, Mini-Kalender – alles DB', kiPrio:28, aufwand:'M', kiTodo:'Direktnachrichten fehlt. Ansonsten solide.'},
+                {name:'Kommunikation', view:'kommunikationView', status:'live', typ:'standort', version:'2.0.0', details:'Inbox (DB-Nachrichten mit Gelesen-Status), Ankündigungen (Gelesen-Tracking), Forum (erstellen, Detail, Kommentare), Brett (erstellen, deaktivieren, Nachricht an Autor), Chat-Kanäle (Realtime), Mini-Kalender – alles DB', kiPrio:28, aufwand:'M', kiTodo:'Direktnachrichten 1:1 als eigenen Tab. Push-Notifications.'},
                 {name:'Controlling / BWA', view:'controllingView', status:'live', typ:'standort', version:'2.3.0', details:'Performance-Cockpit, BWA-Parser (13+ Formate), KI-Fallback für unbekannte Formate, PDF-Support, Multi-Upload Batch, Detail-Positionen, KPIs, Trend-Sparklines, Plan/Ist, Jahresplan-Upload', kiPrio:3, aufwand:'M', kiTodo:'Benchmarks gegen Netzwerk-Durchschnitt, Liquiditätsplanung.'},
                 {name:'Marketing', view:'marketingView', status:'teilweise', typ:'standort', version:'1.0.0', details:'6 Tabs: Performance (Cross-Channel KPIs), Budget (491k€ Jahresbudget, Spending-Chart), Leads (Forecast, Live-Leads), Social (Local Hero), Strategie, Wissen', kiPrio:8, aufwand:'L', kiTodo:'DB-Tabellen für Kampagnen/Budget anlegen, Social-Media Kalender, Content-Bibliothek. Aktuell Demo-Daten aber vollständige UI.'},
                 {name:'Einkauf', view:'einkaufView', status:'teilweise', typ:'standort', version:'1.0.0', details:'5 Tabs: Sortiment (Hauptmarken-Cards, Bestandsmarken, Teilelieferanten), Lieferanten (65 Einträge mit Status/Konditionen/IHT/B2B), Zentralreg. (Cronbank/IHT/HIW-System), Strategie (Fortschritt, ToDos), Wissen (5 Sub-Sections: IHT, Parts-Matrix, DB1, Kernsortiment, Vororder)', kiPrio:12, aufwand:'M', kiTodo:'Lieferanten-DB anlegen (aktuell JS-Array), Konditionen editierbar machen, Bestellvorschläge.'},
