@@ -728,6 +728,9 @@
                                 </svg>
                                 <span data-i18n="nav_purchasing">Einkauf</span>
                             </button>
+                            <button onclick="showView('hqAllgemein')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                                <span>🏢</span><span>HQ Allgemein</span>
+                            </button>
 
                             <button onclick="showView('hqVerkauf')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1172,7 +1175,49 @@
                     </div>
 
                     <!-- Widget hinzufügen Panel (versteckt bis Edit-Modus) -->
-                    <div id="widgetAddPanel" class="hidden mt-6 vit-card p-6">
+                    
+
+                        <!-- Widget: Monatsfokus -->
+                        <div class="vit-card vit-card-watermark p-5">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-bold text-gray-800 text-sm">📅 Monatsfokus</h3>
+                                <span class="text-xs text-gray-400" id="homeMonatsfokusMonat"></span>
+                            </div>
+                            <div id="homeMonatsfokusContent"><p class="text-sm text-gray-400 italic">Lade...</p></div>
+                            <button onclick="showView('allgemein');showAllgemeinTab('monatsplan')" class="mt-4 w-full text-sm text-vit-orange hover:text-orange-600 font-semibold">Monatsplan öffnen →</button>
+                        </div>
+                        
+                        <!-- Widget: Jahresziele -->
+                        <div class="vit-card vit-card-watermark p-5">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-bold text-gray-800 text-sm">🎯 Jahresziele</h3>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-vit-orange" id="homeJahreszieleCount">0 Ziele</span>
+                            </div>
+                            <div id="homeJahreszieleContent"><p class="text-sm text-gray-400 italic">Lade...</p></div>
+                            <button onclick="showView('allgemein');showAllgemeinTab('jahresziele')" class="mt-4 w-full text-sm text-vit-orange hover:text-orange-600 font-semibold">Alle Ziele →</button>
+                        </div>
+                        
+                        <!-- Widget: Letztes Journal -->
+                        <div class="vit-card vit-card-watermark p-5">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-bold text-gray-800 text-sm">📝 Partner-Journal</h3>
+                                <span class="text-xs text-gray-400" id="homeJournalDatum"></span>
+                            </div>
+                            <div id="homeJournalContent"><p class="text-sm text-gray-400 italic">Lade...</p></div>
+                            <button onclick="showView('allgemein');showAllgemeinTab('journal')" class="mt-4 w-full text-sm text-vit-orange hover:text-orange-600 font-semibold">Journal öffnen →</button>
+                        </div>
+                        
+                        <!-- Widget: Offene Maßnahmen -->
+                        <div class="vit-card vit-card-watermark p-5">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-bold text-gray-800 text-sm">⚡ Offene Maßnahmen</h3>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-600" id="homeMassnahmenCount">0</span>
+                            </div>
+                            <div id="homeMassnahmenContent"><p class="text-sm text-gray-400 italic">Lade...</p></div>
+                            <button onclick="showView('allgemein');showAllgemeinTab('journal')" class="mt-4 w-full text-sm text-vit-orange hover:text-orange-600 font-semibold">Alle Maßnahmen →</button>
+                        </div>
+
+<div id="widgetAddPanel" class="hidden mt-6 vit-card p-6">
                         <h3 class="font-semibold text-gray-800 mb-4">Widget hinzufügen</h3>
                         <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
                             <button onclick="addWidget('pipeline')" class="p-3 border-2 border-gray-200 rounded-lg hover:border-vit-orange text-sm">
@@ -4600,163 +4645,135 @@
                 </div>
 
                 <!-- ===== ALLGEMEIN VIEW ===== -->
-                <div id="allgemeinView" class="view" style="display: none;">
-                    <h1 class="h1-headline text-gray-800 mb-6">ALLGEMEIN</h1>
-
-                    <!-- Tab Navigation -->
-                    <div class="mb-6 border-b border-gray-200">
-                        <nav class="-mb-px flex space-x-8">
-                            <button onclick="showAllgemeinTab('uebersicht')" class="allg-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="uebersicht">Standort-Uebersicht</button>
-                            <button onclick="showAllgemeinTab('strategie')" class="allg-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="strategie">📋 Strategie</button>
-                            <button onclick="showAllgemeinTab('wissen')" class="allg-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="wissen">📚 Wissen</button>
-                        </nav>
+                <div id="allgemeinView" class="view" style="display:none">
+                    <div class="p-6 md:p-8 max-w-7xl mx-auto">
+                
+                        <div class="mb-6">
+                            <p class="h2-headline text-vit-gray mb-1">MEIN STANDORT</p>
+                            <h1 class="h1-headline">Allgemein</h1>
+                        </div>
+                
+                        <!-- Tab Navigation -->
+                        <div class="flex space-x-1 mb-6 bg-gray-100 rounded-lg p-1 overflow-x-auto" id="allgemeinTabs">
+                            <button onclick="showAllgemeinTab('uebersicht')" id="allgemeinTab-uebersicht" class="px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap transition bg-white text-vit-orange shadow-sm">Übersicht</button>
+                            <button onclick="showAllgemeinTab('jahresziele')" id="allgemeinTab-jahresziele" class="px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap transition text-gray-500 hover:text-gray-700">🎯 Jahresziele</button>
+                            <button onclick="showAllgemeinTab('monatsplan')" id="allgemeinTab-monatsplan" class="px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap transition text-gray-500 hover:text-gray-700">📅 Monatsplan</button>
+                            <button onclick="showAllgemeinTab('journal')" id="allgemeinTab-journal" class="px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap transition text-gray-500 hover:text-gray-700">📝 Partner-Journal</button>
+                            <button onclick="showAllgemeinTab('strategie')" id="allgemeinTab-strategie" class="px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap transition text-gray-500 hover:text-gray-700">Strategie</button>
+                            <button onclick="showAllgemeinTab('wissen')" id="allgemeinTab-wissen" class="px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap transition text-gray-500 hover:text-gray-700">Wissen</button>
+                        </div>
+                
+                        <!-- TAB: Übersicht -->
+                        <div id="allgemeinTabContent-uebersicht">
+                            <!-- Stimmung -->
+                            <div class="vit-card p-5 mb-6">
+                                <div class="flex items-center justify-between">
+                                    <div><h3 class="font-bold text-gray-800 mb-1">Wie läuft der Monat?</h3><p class="text-sm text-gray-500">Setze dein Stimmungsbild</p></div>
+                                    <div class="flex space-x-2" id="stimmungSelector">
+                                        <button onclick="setStimmung('positiv')" class="stimmung-btn text-3xl hover:scale-125 transition-transform cursor-pointer opacity-40" data-stimmung="positiv">😊</button>
+                                        <button onclick="setStimmung('neutral')" class="stimmung-btn text-3xl hover:scale-125 transition-transform cursor-pointer opacity-40" data-stimmung="neutral">😐</button>
+                                        <button onclick="setStimmung('besorgt')" class="stimmung-btn text-3xl hover:scale-125 transition-transform cursor-pointer opacity-40" data-stimmung="besorgt">😟</button>
+                                        <button onclick="setStimmung('kritisch')" class="stimmung-btn text-3xl hover:scale-125 transition-transform cursor-pointer opacity-40" data-stimmung="kritisch">😤</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Dashboard -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                <div class="vit-card p-5 md:col-span-2 lg:col-span-2 border-l-4 border-vit-orange">
+                                    <div class="flex items-center justify-between mb-3"><h3 class="font-bold text-gray-800">📅 Aktueller Monatsfokus</h3><span class="text-xs font-semibold px-2 py-1 rounded-full bg-orange-100 text-vit-orange" id="uebersichtAktuellerMonat"></span></div>
+                                    <div id="uebersichtMonatsfokus"><p class="text-gray-400 text-sm">Lade...</p></div>
+                                </div>
+                                <div class="vit-card p-5">
+                                    <h3 class="font-bold text-gray-800 mb-3">📞 Nächstes HQ-Meeting</h3>
+                                    <div id="uebersichtNaechstesMeeting"><p class="text-gray-400 text-sm">Kein Termin</p></div>
+                                </div>
+                                <div class="vit-card p-5">
+                                    <div class="flex items-center justify-between mb-3"><h3 class="font-bold text-gray-800">🎯 Jahresziele</h3><button onclick="showAllgemeinTab('jahresziele')" class="text-xs text-vit-orange font-semibold hover:underline">Alle →</button></div>
+                                    <div id="uebersichtJahresziele"><p class="text-gray-400 text-sm">Lade...</p></div>
+                                </div>
+                                <div class="vit-card p-5">
+                                    <div class="flex items-center justify-between mb-3"><h3 class="font-bold text-gray-800">⚡ Offene Maßnahmen</h3><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-600" id="uebersichtMassnahmenBadge">0</span></div>
+                                    <div id="uebersichtMassnahmen"><p class="text-gray-400 text-sm">Lade...</p></div>
+                                </div>
+                                <div class="vit-card p-5">
+                                    <div class="flex items-center justify-between mb-3"><h3 class="font-bold text-gray-800">📝 Letztes Gespräch</h3><button onclick="showAllgemeinTab('journal')" class="text-xs text-vit-orange font-semibold hover:underline">Alle →</button></div>
+                                    <div id="uebersichtLetztesJournal"><p class="text-gray-400 text-sm">Lade...</p></div>
+                                </div>
+                            </div>
+                            <!-- Quick Actions -->
+                            <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <button onclick="showAllgemeinTab('jahresziele');setTimeout(openJahreszielModal,100)" class="vit-card p-4 hover:shadow-lg transition-shadow text-center"><p class="text-2xl mb-1">🎯</p><p class="text-xs font-semibold text-gray-700">Neues Ziel</p></button>
+                                <button onclick="showAllgemeinTab('monatsplan')" class="vit-card p-4 hover:shadow-lg transition-shadow text-center"><p class="text-2xl mb-1">📅</p><p class="text-xs font-semibold text-gray-700">Monatsplan</p></button>
+                                <button onclick="showAllgemeinTab('journal');setTimeout(openJournalModal,100)" class="vit-card p-4 hover:shadow-lg transition-shadow text-center"><p class="text-2xl mb-1">📝</p><p class="text-xs font-semibold text-gray-700">Gespräch protokollieren</p></button>
+                                <button onclick="showView('controlling')" class="vit-card p-4 hover:shadow-lg transition-shadow text-center"><p class="text-2xl mb-1">📊</p><p class="text-xs font-semibold text-gray-700">BWA & Controlling</p></button>
+                            </div>
+                        </div>
+                
+                        <!-- TAB: Jahresziele -->
+                        <div id="allgemeinTabContent-jahresziele" style="display:none">
+                            <div class="flex items-center justify-between mb-5">
+                                <div><h2 class="text-lg font-bold text-gray-800">Jahresziele <span id="jahreszieleJahr"></span></h2><p class="text-sm text-gray-500">SMART-Ziele, Soft Targets und Umsatzziele</p></div>
+                                <button onclick="openJahreszielModal()" class="px-4 py-2 bg-vit-orange text-white text-sm font-semibold rounded-lg hover:opacity-90">+ Neues Ziel</button>
+                            </div>
+                            <div class="mb-6"><h3 class="font-semibold text-gray-700 mb-3 flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-vit-orange"></span><span>Harte Ziele (Umsatz & Ertrag)</span></h3><div id="jahreszieleHart" class="space-y-3"></div></div>
+                            <div class="mb-6"><h3 class="font-semibold text-gray-700 mb-3 flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><span>SMART Ziele</span></h3><div id="jahreszieleSmart" class="space-y-3"></div></div>
+                            <div class="mb-6"><h3 class="font-semibold text-gray-700 mb-3 flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-green-500"></span><span>Soft Targets</span></h3><div id="jahreszieleSoft" class="space-y-2"></div></div>
+                        </div>
+                
+                        <!-- TAB: Monatsplan -->
+                        <div id="allgemeinTabContent-monatsplan" style="display:none">
+                            <div class="flex items-center justify-between mb-5">
+                                <div><h2 class="text-lg font-bold text-gray-800">Monatsplan <span id="monatsplanJahr"></span></h2><p class="text-sm text-gray-500">12 Monate – 12 Fokusthemen</p></div>
+                            </div>
+                            <div id="monatsplanContent" class="space-y-3"></div>
+                            <!-- Inline Detail Panel -->
+                            <div id="monatsDetailPanel" class="mt-6" style="display:none">
+                                <div class="vit-card p-6 border-l-4 border-vit-orange">
+                                    <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-lg text-gray-800" id="monatsDetailTitel"></h3><button onclick="closeMonatsDetail()" class="text-gray-400 hover:text-gray-600 text-lg">✕</button></div>
+                                    <div class="mb-4"><label class="block text-sm font-semibold text-gray-700 mb-1">Fokus-Thema</label><input id="monatsDetailFokus" type="text" class="w-full border rounded-lg px-3 py-2 text-sm focus:border-orange-400 focus:ring-1 focus:ring-orange-400" placeholder="Fokus-Thema..."></div>
+                                    <div class="mb-4"><label class="block text-sm font-semibold text-gray-700 mb-1">Beschreibung</label><textarea id="monatsDetailBeschreibung" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm focus:border-orange-400 focus:ring-1 focus:ring-orange-400" placeholder="Details..."></textarea></div>
+                                    <div class="mb-4"><label class="block text-sm font-semibold text-gray-700 mb-2">Maßnahmen</label><div id="monatsDetailMassnahmen" class="space-y-2 mb-2"></div><button onclick="addMonatsMassnahme()" class="text-sm text-vit-orange hover:text-orange-600 font-semibold">+ Maßnahme</button></div>
+                                    <div class="mb-4"><label class="block text-sm font-semibold text-gray-700 mb-2">Zahlt ein auf Jahresziel</label><div id="monatsDetailZiele" class="space-y-1"></div></div>
+                                    <div class="mb-4" id="monatsDetailReflexionWrap" style="display:none"><label class="block text-sm font-semibold text-gray-700 mb-1">Monats-Reflexion</label><textarea id="monatsDetailReflexion" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm focus:border-orange-400 focus:ring-1 focus:ring-orange-400" placeholder="Was lief gut?"></textarea></div>
+                                    <div class="flex justify-end space-x-3 mt-4 pt-4 border-t"><button onclick="closeMonatsDetail()" class="px-4 py-2 text-sm text-gray-600">Abbrechen</button><button onclick="saveMonatsDetail()" class="px-4 py-2 bg-vit-orange text-white text-sm font-semibold rounded-lg hover:opacity-90">Speichern</button></div>
+                                </div>
+                            </div>
+                        </div>
+                
+                        <!-- TAB: Journal -->
+                        <div id="allgemeinTabContent-journal" style="display:none">
+                            <div class="flex items-center justify-between mb-5">
+                                <div><h2 class="text-lg font-bold text-gray-800">Partner-Journal</h2><p class="text-sm text-gray-500">Protokolle der Partnergespräche</p></div>
+                                <button onclick="openJournalModal()" class="px-4 py-2 bg-vit-orange text-white text-sm font-semibold rounded-lg hover:opacity-90">+ Neues Gespräch</button>
+                            </div>
+                            <div id="journalContent" class="space-y-4"></div>
+                        </div>
+                
+                        <!-- TAB: Strategie -->
+                        <div id="allgemeinTabContent-strategie" style="display:none">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div class="vit-card p-5 border-l-4 border-vit-orange"><h3 class="font-bold text-gray-800 mb-2">📅 Dein Monatsplan</h3><p class="text-sm text-gray-500 mb-3">12 Fokusthemen für dieses Jahr</p><button onclick="showAllgemeinTab('monatsplan')" class="text-sm text-vit-orange font-semibold">Öffnen →</button></div>
+                                <div class="vit-card p-5 border-l-4 border-blue-500"><h3 class="font-bold text-gray-800 mb-2">🎯 Deine Jahresziele</h3><p class="text-sm text-gray-500 mb-3">SMART-Ziele und Soft Targets</p><button onclick="showAllgemeinTab('jahresziele')" class="text-sm text-blue-600 font-semibold">Öffnen →</button></div>
+                                <button onclick="showView('marketing')" class="vit-card p-5 text-left hover:shadow-lg transition"><p class="text-2xl mb-2">📢</p><h3 class="font-bold text-gray-800 mb-1">Marketing-Strategie</h3><p class="text-xs text-gray-500">Kampagnen, Social Media</p></button>
+                                <button onclick="showView('einkauf')" class="vit-card p-5 text-left hover:shadow-lg transition"><p class="text-2xl mb-2">🛒</p><h3 class="font-bold text-gray-800 mb-1">Einkaufsstrategie</h3><p class="text-xs text-gray-500">Lieferanten, Konditionen</p></button>
+                                <button onclick="showView('controlling')" class="vit-card p-5 text-left hover:shadow-lg transition"><p class="text-2xl mb-2">📊</p><h3 class="font-bold text-gray-800 mb-1">BWA & Controlling</h3><p class="text-xs text-gray-500">Finanzkennzahlen</p></button>
+                                <button onclick="showView('aktenschrank')" class="vit-card p-5 text-left hover:shadow-lg transition"><p class="text-2xl mb-2">📁</p><h3 class="font-bold text-gray-800 mb-1">Aktenschrank</h3><p class="text-xs text-gray-500">Dokumente und Vorlagen</p></button>
+                            </div>
+                        </div>
+                
+                        <!-- TAB: Wissen -->
+                        <div id="allgemeinTabContent-wissen" style="display:none">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <button onclick="showView('wissen')" class="vit-card p-5 text-left hover:shadow-lg transition"><p class="text-2xl mb-2">📚</p><h3 class="font-bold text-gray-800 mb-1">Wissensdatenbank</h3><p class="text-xs text-gray-500">Artikel und Schulungen</p></button>
+                                <button onclick="showView('onboarding')" class="vit-card p-5 text-left hover:shadow-lg transition"><p class="text-2xl mb-2">🚀</p><h3 class="font-bold text-gray-800 mb-1">Onboarding</h3><p class="text-xs text-gray-500">Checklisten</p></button>
+                                <button onclick="showView('support')" class="vit-card p-5 text-left hover:shadow-lg transition"><p class="text-2xl mb-2">🆘</p><h3 class="font-bold text-gray-800 mb-1">Support</h3><p class="text-xs text-gray-500">Tickets und Kontakte</p></button>
+                            </div>
+                        </div>
+                
                     </div>
-
-                    <!-- TAB 1: Standort-Uebersicht -->
-                    <div id="allgTabUebersicht" class="allg-tab-content">
-                        <div class="vit-card p-6 mb-6">
-                            <div class="flex items-center space-x-4 mb-4">
-                                <div class="w-14 h-14 bg-vit-orange rounded-xl flex items-center justify-center text-white font-bold text-xl">G</div>
-                                <div>
-                                    <h2 class="text-xl font-bold text-gray-800">vit:bikes Grafrath</h2>
-                                    <p class="text-sm text-gray-500">Jesenwanger Str. 52 · 82284 Grafrath · Tel: 08144/5519377</p>
-                                </div>
-                                <span class="ml-auto px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">Aktiver Partner</span>
-                            </div>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div class="p-3 bg-gray-50 rounded-lg"><p class="text-xs text-gray-400">Inhaber</p><p class="text-sm font-semibold">Sandra &amp; Thomas Engelmann</p></div>
-                                <div class="p-3 bg-gray-50 rounded-lg"><p class="text-xs text-gray-400">Mitarbeiter</p><p class="text-sm font-semibold">4 Verkaeufer + Werkstatt</p></div>
-                                <div class="p-3 bg-gray-50 rounded-lg"><p class="text-xs text-gray-400">Schwerpunkt</p><p class="text-sm font-semibold">E-Bikes, Trekking, MTB</p></div>
-                                <div class="p-3 bg-gray-50 rounded-lg"><p class="text-xs text-gray-400">Google-Bewertung</p><p class="text-sm font-semibold">⭐ 4,9 (127 Rezensionen)</p></div>
-                            </div>
-                        </div>
-
-                        <!-- Ansprechpartner vit:bikes -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                            <div class="vit-card p-5">
-                                <p class="text-xs text-gray-400 mb-2">Marketing</p>
-                                <p class="font-semibold">Michael Stenzel</p>
-                                <p class="text-xs text-gray-500">Jahresgespraech 23.12.2025</p>
-                            </div>
-                            <div class="vit-card p-5">
-                                <p class="text-xs text-gray-400 mb-2">Einkauf</p>
-                                <p class="font-semibold">Florian Meier</p>
-                                <p class="text-xs text-gray-500">Strategie vom 15.09.2025</p>
-                            </div>
-                            <div class="vit-card p-5">
-                                <p class="text-xs text-gray-400 mb-2">Geschaeftsfuehrung vit:bikes</p>
-                                <p class="font-semibold">Sascha Matthies</p>
-                                <p class="text-xs text-gray-500">Mitunterzeichner Einkaufsstrategie</p>
-                            </div>
-                        </div>
-
-                        <!-- Schnellzugriffe -->
-                        <div class="vit-card p-6">
-                            <h3 class="font-semibold text-gray-800 mb-4">Schnellzugriff</h3>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                <button onclick="showView('marketing'); showMarketingTab('mktStrategie')" class="p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition text-center"><p class="text-2xl mb-1">📢</p><p class="text-xs font-semibold">Marketing-Strategie</p></button>
-                                <button onclick="showView('einkauf'); showEinkaufTab('ekStrategie')" class="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition text-center"><p class="text-2xl mb-1">🛒</p><p class="text-xs font-semibold">Einkaufsstrategie</p></button>
-                                <button onclick="showView('controlling'); showControllingTab('cockpit')" class="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition text-center"><p class="text-2xl mb-1">📊</p><p class="text-xs font-semibold">BWA &amp; Controlling</p></button>
-                                <button onclick="showView('aktenschrank')" class="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition text-center"><p class="text-2xl mb-1">📁</p><p class="text-xs font-semibold">Aktenschrank</p></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TAB 2: Strategie (Gesamtueberblick) -->
-                    <div id="allgTabStrategie" class="allg-tab-content" style="display:none;">
-                        <div class="vit-card p-6 mb-6">
-                            <div class="flex items-center justify-between mb-2">
-                                <h2 class="text-lg font-semibold text-gray-800">Strategie-Ueberblick 2026 – vit:bikes Grafrath</h2>
-                                <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">Alle Strategien vereinbart</span>
-                            </div>
-                            <p class="text-sm text-gray-500">Zusammenfassung aller strategischen Vereinbarungen fuer den Standort Grafrath</p>
-                        </div>
-
-                        <!-- Marketing-Strategie Zusammenfassung -->
-                        <div class="vit-card p-6 mb-6 border-l-4 border-vit-orange">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="font-semibold text-gray-800 flex items-center"><span class="w-8 h-8 bg-vit-orange text-white rounded-lg flex items-center justify-center text-sm mr-3">📢</span> Marketing-Strategie 2026</h3>
-                                <button onclick="showView('marketing'); showMarketingTab('mktStrategie')" class="text-xs text-vit-orange hover:text-orange-600 font-semibold">Details anzeigen →</button>
-                            </div>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                                <div class="p-3 bg-orange-50 rounded-lg text-center"><p class="text-xs text-gray-400">Budget/Monat</p><p class="text-lg font-bold text-vit-orange">1.500 €</p></div>
-                                <div class="p-3 bg-blue-50 rounded-lg text-center"><p class="text-xs text-gray-400">Mediamix</p><p class="text-sm font-bold text-blue-600">Meta + Google</p></div>
-                                <div class="p-3 bg-green-50 rounded-lg text-center"><p class="text-xs text-gray-400">Storevisit-Ziel</p><p class="text-lg font-bold text-green-600">103%</p></div>
-                                <div class="p-3 bg-yellow-50 rounded-lg text-center"><p class="text-xs text-gray-400">Terminziel</p><p class="text-lg font-bold text-yellow-600">56%</p></div>
-                            </div>
-                            <div class="text-sm text-gray-600 space-y-1">
-                                <p>✓ Individuelle Ads mit besserem Performance &amp; Authentizitaet</p>
-                                <p>✓ Organische Platzierung auf YouTube, Meta &amp; TikTok</p>
-                                <p>✓ Lokale Events zur Kundenbindung &amp; Neukundengewinnung</p>
-                                <p>✓ Content-Unterstuetzung durch vit:bikes Content-Team</p>
-                            </div>
-                            <p class="text-xs text-gray-400 mt-3">Vereinbart am 23.12.2025 · Unterschrieben: Michael Stenzel, Sandra &amp; Thomas Engelmann</p>
-                        </div>
-
-                        <!-- Einkaufsstrategie Zusammenfassung -->
-                        <div class="vit-card p-6 mb-6 border-l-4 border-blue-500">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="font-semibold text-gray-800 flex items-center"><span class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center text-sm mr-3">🛒</span> Einkaufsstrategie 2026</h3>
-                                <button onclick="showView('einkauf'); showEinkaufTab('ekStrategie')" class="text-xs text-blue-600 hover:text-blue-700 font-semibold">Details anzeigen →</button>
-                            </div>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                                <div class="p-3 bg-blue-50 rounded-lg text-center"><p class="text-xs text-gray-400">Bike-Bestand (09/25)</p><p class="text-lg font-bold text-blue-600">156</p></div>
-                                <div class="p-3 bg-green-50 rounded-lg text-center"><p class="text-xs text-gray-400">Zielmarken 2026</p><p class="text-lg font-bold text-green-600">6</p></div>
-                                <div class="p-3 bg-orange-50 rounded-lg text-center"><p class="text-xs text-gray-400">Vororder Kalkhoff</p><p class="text-lg font-bold text-vit-orange">80 Bikes</p></div>
-                                <div class="p-3 bg-red-50 rounded-lg text-center"><p class="text-xs text-gray-400">Ø Nachlass</p><p class="text-lg font-bold text-red-600">8,7%</p><p class="text-xs text-red-400">Ziel: unter 5%</p></div>
-                            </div>
-                            <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
-                                <div class="p-2 bg-green-50 rounded text-xs"><span class="font-semibold">Kalkhoff</span> – VO 80 Bikes</div>
-                                <div class="p-2 bg-green-50 rounded text-xs"><span class="font-semibold">Haibike</span> – Blockorder 30-50 eMTBs</div>
-                                <div class="p-2 bg-green-50 rounded text-xs"><span class="font-semibold">Orbea</span> – Hoechster DB1</div>
-                                <div class="p-2 bg-green-50 rounded text-xs"><span class="font-semibold">Simplon</span> – VO 10 (Gravel/MTB)</div>
-                                <div class="p-2 bg-blue-50 rounded text-xs"><span class="font-semibold">Velo de Ville</span> – NEU, 8 Bikes</div>
-                                <div class="p-2 bg-blue-50 rounded text-xs"><span class="font-semibold">Steppenwolf</span> – 5 Bikes, ab Juli</div>
-                            </div>
-                            <div class="text-sm text-gray-600 space-y-1">
-                                <p>✓ Sortiment auf 6 Zielmarken umstellen, Auslaufmarken abverkauft</p>
-                                <p>✓ Orbea &amp; Simplon aktiv pushen fuer hoeheren Rohertrag</p>
-                                <p>✓ Rabatte minimieren – Dreingaben statt Preisnachlaesse (Sqlab-Tipp)</p>
-                                <p>✓ Haibike-Blockorder mit Valuta-Klausel bei Fruehlieferung</p>
-                            </div>
-                            <p class="text-xs text-gray-400 mt-3">Vereinbart am 15.09.2025 · Unterschrieben: Florian Meier, Sandra Engelmann, Sascha Matthies</p>
-                        </div>
-
-                        <!-- Strategische Prioritaeten -->
-                        <div class="vit-card p-6">
-                            <h3 class="font-semibold text-gray-800 mb-4 flex items-center"><span class="w-8 h-8 bg-green-600 text-white rounded-lg flex items-center justify-center text-sm mr-3">🎯</span> Strategische Prioritaeten 2026</h3>
-                            <div class="space-y-3">
-                                <div class="flex items-start space-x-3 p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
-                                    <span class="text-red-600 font-bold text-sm mt-0.5">P1</span>
-                                    <div><p class="font-semibold text-sm">Rohertrag steigern</p><p class="text-xs text-gray-500">Rabatte unter 5% halten. Orbea (hoechster DB1) und Simplon (hoechster VK) aktiv verkaufen. Sqlab-Sattel statt Rabatt.</p></div>
-                                </div>
-                                <div class="flex items-start space-x-3 p-3 bg-orange-50 rounded-lg border-l-4 border-vit-orange">
-                                    <span class="text-vit-orange font-bold text-sm mt-0.5">P2</span>
-                                    <div><p class="font-semibold text-sm">Haibike eMTB-Sortiment sichern</p><p class="text-xs text-gray-500">Blockorder 30-50 AllMtn/AllTrack/Adventr mit Bosch. Konditionen wackeln – Volumen wichtig fuer Netzwerk.</p></div>
-                                </div>
-                                <div class="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                                    <span class="text-blue-600 font-bold text-sm mt-0.5">P3</span>
-                                    <div><p class="font-semibold text-sm">Marketing-Budget effizient nutzen</p><p class="text-xs text-gray-500">1.500 €/Monat. CPT senken (aktuell 205 € vs. Netzwerk 163 €). Terminziel von 56% auf 80%+ steigern.</p></div>
-                                </div>
-                                <div class="flex items-start space-x-3 p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
-                                    <span class="text-green-600 font-bold text-sm mt-0.5">P4</span>
-                                    <div><p class="font-semibold text-sm">Neue Marken etablieren</p><p class="text-xs text-gray-500">Velo de Ville (Alternative Trekking) und Steppenwolf (sportives DJI) erfolgreich einfuehren.</p></div>
-                                </div>
-                                <div class="flex items-start space-x-3 p-3 bg-purple-50 rounded-lg border-l-4 border-purple-500">
-                                    <span class="text-purple-600 font-bold text-sm mt-0.5">P5</span>
-                                    <div><p class="font-semibold text-sm">Lokale Events &amp; Authentizitaet</p><p class="text-xs text-gray-500">Testivals, Grillvents, individuelle Ads. Benefit statt Rabatt kommunizieren. Haendlerprofil schaerfen.</p></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TAB 3: Wissen -->
-                    <div id="allgTabWissen" class="allg-tab-content" style="display:none;"></div>
                 </div>
 
-                <!-- ================================================================= -->
 
-                <!-- ===== DEV-STATUS / MODULÜBERSICHT ===== -->
                 <div id="devStatusView" class="view" style="display: none;">
                     <div class="flex items-center justify-between mb-6">
                         <div>
@@ -5573,6 +5590,48 @@
                     </div>
                     </div><!-- /settingsTabRechte -->
                 </div>
+
+                <div id="hqAllgemeinView" class="view" style="display:none">
+                    <div class="p-6 md:p-8 max-w-7xl mx-auto">
+                        <div class="mb-6"><p class="h2-headline text-vit-gray mb-1">HQ STEUERUNG</p><h1 class="h1-headline">Partner-Übersicht</h1></div>
+                
+                        <!-- Stimmung -->
+                        <div class="vit-card p-5 mb-6">
+                            <h3 class="font-bold text-gray-800 mb-3">🌡️ Netzwerk-Stimmung</h3>
+                            <div class="flex items-center space-x-6">
+                                <div class="flex items-center space-x-2"><span class="text-2xl">😊</span><div><span class="text-lg font-bold text-green-600" id="hqStimmungPositiv">0</span><span class="text-xs text-gray-500 ml-1">positiv</span></div></div>
+                                <div class="flex items-center space-x-2"><span class="text-2xl">😐</span><div><span class="text-lg font-bold text-yellow-600" id="hqStimmungNeutral">0</span><span class="text-xs text-gray-500 ml-1">neutral</span></div></div>
+                                <div class="flex items-center space-x-2"><span class="text-2xl">😟</span><div><span class="text-lg font-bold text-orange-600" id="hqStimmungBesorgt">0</span><span class="text-xs text-gray-500 ml-1">besorgt</span></div></div>
+                                <div class="flex items-center space-x-2"><span class="text-2xl">😤</span><div><span class="text-lg font-bold text-red-600" id="hqStimmungKritisch">0</span><span class="text-xs text-gray-500 ml-1">kritisch</span></div></div>
+                            </div>
+                        </div>
+                
+                        <!-- HQ-Aufgaben -->
+                        <div class="vit-card p-5 mb-6 border-l-4 border-red-500">
+                            <div class="flex items-center justify-between mb-3"><h3 class="font-bold text-gray-800">🔴 Offene HQ-Aufgaben aus Partner-Journals</h3><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-600" id="hqAufgabenBadge">0</span></div>
+                            <div id="hqJournalAufgaben"><p class="text-gray-400 text-sm">Lade...</p></div>
+                        </div>
+                
+                        <!-- Tabelle -->
+                        <div class="vit-card overflow-hidden">
+                            <div class="p-5 border-b"><h3 class="font-bold text-gray-800">📋 Alle Standorte</h3></div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-50"><tr>
+                                        <th class="text-left p-3 font-semibold text-gray-600">Standort</th>
+                                        <th class="text-center p-3 font-semibold text-gray-600">Stimmung</th>
+                                        <th class="text-left p-3 font-semibold text-gray-600">Monatsfokus</th>
+                                        <th class="text-center p-3 font-semibold text-gray-600">Ziele</th>
+                                        <th class="text-center p-3 font-semibold text-gray-600">Offene Maßn.</th>
+                                        <th class="text-center p-3 font-semibold text-gray-600">Letztes Gespräch</th>
+                                    </tr></thead>
+                                    <tbody id="hqPartnerTabelle"><tr><td colspan="6" class="p-4 text-center text-gray-400">Lade...</td></tr></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
     </div>
 
     <script>
@@ -10546,6 +10605,624 @@
         }
 
         // Init support on view
+
+        // === ALLGEMEIN MODULE (Jahresziele, Monatsplan, Journal) ===
+        // ╔══════════════════════════════════════════════════════════════╗
+        // ║  vit:bikes – MODUL ALLGEMEIN: JavaScript (komplett)         ║
+        // ║  Einsetzen im <script>-Block der index.html                 ║
+        // ║  ERSETZE die bestehende showAllgemeinTab() Funktion!        ║
+        // ╚══════════════════════════════════════════════════════════════╝
+        
+        // --- State ---
+        var allgemeinJahresziele = [];
+        var allgemeinMonatsplan = [];
+        var allgemeinJournal = [];
+        var allgemeinAktuellerMonat = new Date().getMonth() + 1;
+        var allgemeinJahr = new Date().getFullYear();
+        var monatsDetailEditMonat = null;
+        var journalStimmungValue = '';
+        var monatsNamen = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+            'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+        
+        // ============================================================
+        // TAB NAVIGATION (ERSETZE bestehende showAllgemeinTab!)
+        // ============================================================
+        
+        function showAllgemeinTab(tabName) {
+            document.querySelectorAll('[id^="allgemeinTabContent-"]').forEach(function(el) {
+                el.style.display = 'none';
+            });
+            document.querySelectorAll('#allgemeinTabs button').forEach(function(btn) {
+                btn.className = 'px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap transition text-gray-500 hover:text-gray-700';
+            });
+            var content = document.getElementById('allgemeinTabContent-' + tabName);
+            if (content) content.style.display = 'block';
+            var btn = document.getElementById('allgemeinTab-' + tabName);
+            if (btn) btn.className = 'px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap transition bg-white text-vit-orange shadow-sm';
+        
+            if (tabName === 'uebersicht') renderAllgemeinUebersicht();
+            if (tabName === 'jahresziele') loadJahresziele();
+            if (tabName === 'monatsplan') loadMonatsplan();
+            if (tabName === 'journal') loadJournal();
+        }
+        
+        // ============================================================
+        // MASTER LOAD
+        // ============================================================
+        
+        async function loadAllgemeinData() {
+            try {
+                await Promise.all([loadJahresziele(), loadMonatsplan(), loadJournal()]);
+                renderAllgemeinUebersicht();
+                loadHomeWidgets();
+            } catch (err) {
+                console.error('Fehler loadAllgemeinData:', err);
+            }
+        }
+        
+        // ============================================================
+        // JAHRESZIELE
+        // ============================================================
+        
+        async function loadJahresziele() {
+            try {
+                var query = sb.from('partner_jahresziele').select('*')
+                    .eq('jahr', allgemeinJahr)
+                    .order('sortierung', {ascending: true});
+                if (!sbProfile.is_hq) query = query.eq('standort_id', sbProfile.standort_id);
+                var res = await query;
+                if (res.error) throw res.error;
+                allgemeinJahresziele = res.data || [];
+                renderJahresziele();
+            } catch (err) { console.error('loadJahresziele:', err); }
+        }
+        
+        function renderJahresziele() {
+            var hart = allgemeinJahresziele.filter(function(z){return z.typ==='umsatz'||z.typ==='deckungsbeitrag';});
+            var smart = allgemeinJahresziele.filter(function(z){return z.typ==='smart';});
+            var soft = allgemeinJahresziele.filter(function(z){return z.typ==='soft_target';});
+        
+            var el = document.getElementById('jahreszieleHart');
+            if (el) {
+                if (!hart.length) {
+                    el.innerHTML = '<div class="vit-card p-4 text-center text-gray-400 text-sm">Noch keine Umsatz-/Ertragsziele definiert</div>';
+                } else {
+                    el.innerHTML = hart.map(function(z){
+                        var pct = z.zielwert > 0 ? Math.round((z.aktueller_wert/z.zielwert)*100) : 0;
+                        var barColor = pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-yellow-500' : 'bg-vit-orange';
+                        return '<div class="vit-card p-4"><div class="flex items-center justify-between mb-2"><div><h4 class="font-bold text-gray-800">'+escH(z.titel)+'</h4>'
+                          +(z.beschreibung?'<p class="text-xs text-gray-500">'+escH(z.beschreibung)+'</p>':'')
+                          +'</div><div class="text-right"><span class="text-lg font-bold text-vit-orange">'+pct+'%</span>'
+                          +'<p class="text-xs text-gray-500">'+fmtN(z.aktueller_wert)+' / '+fmtN(z.zielwert)+' '+(z.einheit||'€')+'</p></div></div>'
+                          +'<div class="w-full bg-gray-200 rounded-full h-2.5"><div class="'+barColor+' h-2.5 rounded-full transition-all" style="width:'+Math.min(pct,100)+'%"></div></div>'
+                          +'<div class="flex justify-end mt-2 space-x-3"><button onclick="openJahreszielEdit(\''+z.id+'\')" class="text-xs text-gray-400 hover:text-gray-600">Bearbeiten</button>'
+                          +'<button onclick="deleteJahresziel(\''+z.id+'\')" class="text-xs text-red-400 hover:text-red-600">Löschen</button></div></div>';
+                    }).join('');
+                }
+            }
+        
+            el = document.getElementById('jahreszieleSmart');
+            if (el) {
+                if (!smart.length) {
+                    el.innerHTML = '<div class="vit-card p-4 text-center text-gray-400 text-sm">Noch keine SMART-Ziele definiert</div>';
+                } else {
+                    el.innerHTML = smart.map(function(z){
+                        var pct = z.zielwert > 0 ? Math.round((z.aktueller_wert/z.zielwert)*100) : 0;
+                        var badge = z.status==='erreicht'?'<span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">✓ Erreicht</span>'
+                            : z.status==='gefaehrdet'?'<span class="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700">⚠ Gefährdet</span>'
+                            : '<span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Aktiv</span>';
+                        return '<div class="vit-card p-4"><div class="flex items-center justify-between mb-2">'
+                          +'<h4 class="font-bold text-gray-800 flex-1">'+escH(z.titel)+'</h4>'
+                          +'<div class="flex items-center space-x-2">'+badge
+                          +(z.zielwert>0?'<span class="text-sm font-bold text-blue-600">'+pct+'%</span>':'')
+                          +'</div></div>'
+                          +(z.beschreibung?'<p class="text-xs text-gray-500 mb-2 whitespace-pre-line">'+escH(z.beschreibung)+'</p>':'')
+                          +(z.zielwert>0?'<div class="w-full bg-gray-200 rounded-full h-2 mb-2"><div class="bg-blue-500 h-2 rounded-full" style="width:'+Math.min(pct,100)+'%"></div></div>':'')
+                          +'<div class="flex justify-end space-x-3"><button onclick="openJahreszielEdit(\''+z.id+'\')" class="text-xs text-gray-400 hover:text-gray-600">Bearbeiten</button>'
+                          +'<button onclick="deleteJahresziel(\''+z.id+'\')" class="text-xs text-red-400 hover:text-red-600">Löschen</button></div></div>';
+                    }).join('');
+                }
+            }
+        
+            el = document.getElementById('jahreszieleSoft');
+            if (el) {
+                if (!soft.length) {
+                    el.innerHTML = '<div class="vit-card p-4 text-center text-gray-400 text-sm">Noch keine Soft Targets definiert</div>';
+                } else {
+                    el.innerHTML = soft.map(function(z){
+                        var ck = z.ist_abgehakt ? 'checked' : '';
+                        var strike = z.ist_abgehakt ? 'line-through text-gray-400' : 'text-gray-800';
+                        return '<div class="vit-card p-3 flex items-center justify-between">'
+                          +'<label class="flex items-center space-x-3 cursor-pointer flex-1">'
+                          +'<input type="checkbox" '+ck+' onchange="toggleSoftTarget(\''+z.id+'\',this.checked)" class="w-4 h-4 rounded border-gray-300 text-vit-orange focus:ring-orange-400">'
+                          +'<span class="text-sm font-semibold '+strike+'">'+escH(z.titel)+'</span></label>'
+                          +'<button onclick="deleteJahresziel(\''+z.id+'\')" class="text-xs text-red-400 hover:text-red-600 ml-2">✕</button></div>';
+                    }).join('');
+                }
+            }
+        }
+        
+        function fmtN(n) { return (!n && n !== 0) ? '0' : Number(n).toLocaleString('de-DE'); }
+        function escH(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+        
+        function openJahreszielModal() {
+            document.getElementById('jahreszielEditId').value = '';
+            document.getElementById('jahreszielTyp').value = 'umsatz';
+            document.getElementById('jahreszielTitel').value = '';
+            document.getElementById('jahreszielBeschreibung').value = '';
+            document.getElementById('jahreszielZielwert').value = '';
+            document.getElementById('jahreszielAktuellerWert').value = '';
+            document.getElementById('jahreszielEinheit').value = '€';
+            toggleJahreszielFelder();
+            document.getElementById('jahreszielModal').style.display = 'flex';
+        }
+        
+        function openJahreszielEdit(id) {
+            var z = allgemeinJahresziele.find(function(x){return x.id===id;});
+            if (!z) return;
+            document.getElementById('jahreszielEditId').value = z.id;
+            document.getElementById('jahreszielTyp').value = z.typ;
+            document.getElementById('jahreszielTitel').value = z.titel||'';
+            document.getElementById('jahreszielBeschreibung').value = z.beschreibung||'';
+            document.getElementById('jahreszielZielwert').value = z.zielwert||'';
+            document.getElementById('jahreszielAktuellerWert').value = z.aktueller_wert||'';
+            document.getElementById('jahreszielEinheit').value = z.einheit||'€';
+            toggleJahreszielFelder();
+            document.getElementById('jahreszielModal').style.display = 'flex';
+        }
+        function closeJahreszielModal() { document.getElementById('jahreszielModal').style.display='none'; }
+        
+        function toggleJahreszielFelder() {
+            var typ = document.getElementById('jahreszielTyp').value;
+            document.getElementById('jahreszielWerteWrap').style.display = typ==='soft_target' ? 'none' : 'grid';
+            document.getElementById('jahreszielBeschreibungWrap').style.display = typ==='soft_target' ? 'none' : 'block';
+        }
+        
+        async function saveJahresziel() {
+            var editId = document.getElementById('jahreszielEditId').value;
+            var payload = {
+                standort_id: sbProfile.standort_id, jahr: allgemeinJahr,
+                typ: document.getElementById('jahreszielTyp').value,
+                titel: document.getElementById('jahreszielTitel').value.trim(),
+                beschreibung: document.getElementById('jahreszielBeschreibung').value.trim(),
+                zielwert: parseFloat(document.getElementById('jahreszielZielwert').value)||0,
+                aktueller_wert: parseFloat(document.getElementById('jahreszielAktuellerWert').value)||0,
+                einheit: document.getElementById('jahreszielEinheit').value,
+                status: 'aktiv', ist_abgehakt: false, sortierung: allgemeinJahresziele.length + 1
+            };
+            if (!payload.titel) { alert('Bitte Titel eingeben'); return; }
+            try {
+                var res = editId ? await sb.from('partner_jahresziele').update(payload).eq('id', editId) : await sb.from('partner_jahresziele').insert([payload]);
+                if (res.error) throw res.error;
+                closeJahreszielModal(); loadJahresziele();
+            } catch(e) { alert('Fehler: '+e.message); }
+        }
+        
+        async function deleteJahresziel(id) {
+            if (!confirm('Ziel wirklich löschen?')) return;
+            try { var r = await sb.from('partner_jahresziele').delete().eq('id', id); if (r.error) throw r.error; loadJahresziele(); } catch(e) { alert('Fehler: '+e.message); }
+        }
+        
+        async function toggleSoftTarget(id, checked) {
+            try { await sb.from('partner_jahresziele').update({ist_abgehakt:checked, status:checked?'erreicht':'aktiv'}).eq('id',id); loadJahresziele(); } catch(e) { console.error(e); }
+        }
+        
+        // ============================================================
+        // MONATSPLAN
+        // ============================================================
+        
+        async function loadMonatsplan() {
+            try {
+                var query = sb.from('partner_monatsplan').select('*').eq('jahr', allgemeinJahr).order('monat',{ascending:true});
+                if (!sbProfile.is_hq) query = query.eq('standort_id', sbProfile.standort_id);
+                var res = await query;
+                if (res.error) throw res.error;
+                allgemeinMonatsplan = res.data || [];
+                for (var m = 1; m <= 12; m++) {
+                    if (!allgemeinMonatsplan.find(function(p){return p.monat===m;})) {
+                        allgemeinMonatsplan.push({id:null, standort_id:sbProfile.standort_id, jahr:allgemeinJahr, monat:m, fokus_thema:'', beschreibung:'', massnahmen:[], verknuepfte_ziele:[], reflexion:'', status:'offen'});
+                    }
+                }
+                allgemeinMonatsplan.sort(function(a,b){return a.monat-b.monat;});
+                renderMonatsplan();
+            } catch(e) { console.error('loadMonatsplan:',e); }
+        }
+        
+        function renderMonatsplan() {
+            var c = document.getElementById('monatsplanContent');
+            if (!c) return;
+            c.innerHTML = allgemeinMonatsplan.map(function(mp){
+                var isAkt = mp.monat === allgemeinAktuellerMonat;
+                var isVerg = mp.monat < allgemeinAktuellerMonat;
+                var isDone = mp.status === 'abgeschlossen';
+                var border = isAkt ? 'border-l-4 border-vit-orange' : isDone ? 'border-l-4 border-green-500' : isVerg ? 'border-l-4 border-gray-300' : '';
+                var bg = isAkt ? 'bg-orange-50' : '';
+                var icon = isDone ? '✅' : isAkt ? '🔶' : isVerg ? '⬜' : '○';
+                var hasFokus = mp.fokus_thema && mp.fokus_thema.trim().length > 0;
+                var mCount = 0, mDone = 0;
+                if (mp.massnahmen && Array.isArray(mp.massnahmen)) { mCount = mp.massnahmen.length; mDone = mp.massnahmen.filter(function(x){return x.erledigt;}).length; }
+                return '<div class="vit-card p-4 '+border+' '+bg+' cursor-pointer hover:shadow-lg transition" onclick="openMonatsDetail('+mp.monat+')">'
+                  +'<div class="flex items-center justify-between"><div class="flex items-center space-x-3"><span class="text-lg">'+icon+'</span><div>'
+                  +'<span class="font-bold text-gray-800">'+monatsNamen[mp.monat]+'</span>'
+                  +(isAkt?' <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-vit-orange ml-2">Aktuell</span>':'')
+                  +'<p class="text-sm '+(hasFokus?'text-gray-600':'text-gray-400 italic')+'">'+(hasFokus?escH(mp.fokus_thema):'Kein Fokus definiert – klicke zum Bearbeiten')+'</p>'
+                  +'</div></div><div class="flex items-center space-x-4">'
+                  +(mCount>0?'<span class="text-xs text-gray-500">'+mDone+'/'+mCount+' Maßnahmen</span>':'')
+                  +'<span class="text-gray-300">›</span></div></div></div>';
+            }).join('');
+        }
+        
+        function openMonatsDetail(monat) {
+            monatsDetailEditMonat = monat;
+            var mp = allgemeinMonatsplan.find(function(p){return p.monat===monat;});
+            if (!mp) return;
+            document.getElementById('monatsDetailTitel').textContent = '📅 ' + monatsNamen[monat] + ' ' + allgemeinJahr;
+            document.getElementById('monatsDetailFokus').value = mp.fokus_thema || '';
+            document.getElementById('monatsDetailBeschreibung').value = mp.beschreibung || '';
+            document.getElementById('monatsDetailReflexion').value = mp.reflexion || '';
+            document.getElementById('monatsDetailReflexionWrap').style.display = monat <= allgemeinAktuellerMonat ? 'block' : 'none';
+        
+            var mc = document.getElementById('monatsDetailMassnahmen');
+            mc.innerHTML = (mp.massnahmen||[]).map(function(m,i){
+                return '<div class="flex items-center space-x-2">'
+                  +'<input type="checkbox" '+(m.erledigt?'checked':'')+' class="monats-massnahme-cb w-4 h-4 rounded border-gray-300 text-vit-orange focus:ring-orange-400" data-index="'+i+'">'
+                  +'<input type="text" value="'+escH(m.text)+'" class="monats-massnahme-text flex-1 border rounded px-2 py-1 text-sm">'
+                  +'<button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 text-xs">✕</button></div>';
+            }).join('');
+        
+            var zc = document.getElementById('monatsDetailZiele');
+            var vIds = mp.verknuepfte_ziele || [];
+            if (!allgemeinJahresziele.length) {
+                zc.innerHTML = '<p class="text-xs text-gray-400">Erst Jahresziele anlegen</p>';
+            } else {
+                zc.innerHTML = allgemeinJahresziele.filter(function(z){return z.typ!=='soft_target';}).map(function(z){
+                    var linked = vIds.indexOf(z.id) !== -1;
+                    return '<label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" value="'+z.id+'" class="monats-ziel-cb w-3.5 h-3.5 rounded border-gray-300 text-vit-orange focus:ring-orange-400" '+(linked?'checked':'')+'><span class="text-xs text-gray-600">'+escH(z.titel)+'</span></label>';
+                }).join('');
+            }
+            document.getElementById('monatsDetailPanel').style.display = 'block';
+            document.getElementById('monatsDetailPanel').scrollIntoView({behavior:'smooth'});
+        }
+        
+        function addMonatsMassnahme() {
+            document.getElementById('monatsDetailMassnahmen').insertAdjacentHTML('beforeend',
+                '<div class="flex items-center space-x-2"><input type="checkbox" class="monats-massnahme-cb w-4 h-4 rounded border-gray-300 text-vit-orange focus:ring-orange-400"><input type="text" class="monats-massnahme-text flex-1 border rounded px-2 py-1 text-sm" placeholder="Neue Maßnahme..."><button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 text-xs">✕</button></div>');
+        }
+        function closeMonatsDetail() { document.getElementById('monatsDetailPanel').style.display = 'none'; monatsDetailEditMonat = null; }
+        
+        async function saveMonatsDetail() {
+            if (!monatsDetailEditMonat) return;
+            var massnahmen = [];
+            document.querySelectorAll('#monatsDetailMassnahmen > div').forEach(function(row){
+                var txt = row.querySelector('.monats-massnahme-text');
+                if (txt && txt.value.trim()) massnahmen.push({text: txt.value.trim(), erledigt: row.querySelector('.monats-massnahme-cb').checked});
+            });
+            var zielIds = [];
+            document.querySelectorAll('.monats-ziel-cb:checked').forEach(function(cb){ zielIds.push(cb.value); });
+            var m = monatsDetailEditMonat;
+            var payload = { standort_id: sbProfile.standort_id, jahr: allgemeinJahr, monat: m,
+                fokus_thema: document.getElementById('monatsDetailFokus').value.trim(),
+                beschreibung: document.getElementById('monatsDetailBeschreibung').value.trim(),
+                massnahmen: massnahmen, verknuepfte_ziele: zielIds,
+                reflexion: document.getElementById('monatsDetailReflexion').value.trim(),
+                status: m < allgemeinAktuellerMonat ? 'abgeschlossen' : m === allgemeinAktuellerMonat ? 'aktiv' : 'offen'
+            };
+            try {
+                var existing = allgemeinMonatsplan.find(function(p){return p.monat===m && p.id;});
+                var res = existing && existing.id ? await sb.from('partner_monatsplan').update(payload).eq('id', existing.id) : await sb.from('partner_monatsplan').insert([payload]);
+                if (res.error) throw res.error;
+                closeMonatsDetail(); loadMonatsplan();
+            } catch(e) { alert('Fehler: '+e.message); }
+        }
+        
+        // ============================================================
+        // PARTNER-JOURNAL
+        // ============================================================
+        
+        async function loadJournal() {
+            try {
+                var query = sb.from('partner_journal').select('*').order('datum',{ascending:false});
+                if (!sbProfile.is_hq) query = query.eq('standort_id', sbProfile.standort_id);
+                var res = await query;
+                if (res.error) throw res.error;
+                allgemeinJournal = res.data || [];
+                renderJournal();
+            } catch(e) { console.error('loadJournal:',e); }
+        }
+        
+        function renderJournal() {
+            var c = document.getElementById('journalContent');
+            if (!c) return;
+            var stimmungEmojis = {positiv:'😊', neutral:'😐', besorgt:'😟', kritisch:'😤'};
+            if (!allgemeinJournal.length) {
+                c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-3">📝</p><p class="font-semibold">Noch keine Gesprächsprotokolle</p><p class="text-sm mt-1">Dokumentiere dein nächstes Partner-Meeting</p></div>';
+                return;
+            }
+            c.innerHTML = allgemeinJournal.map(function(j){
+                var themen = j.themen || [];
+                var wuensche = j.wuensche_hq || [];
+                var massnahmen = j.massnahmen || [];
+                var offen = massnahmen.filter(function(m){return !m.erledigt;});
+                var emoji = stimmungEmojis[j.stimmung] || '😐';
+                var teiln = Array.isArray(j.teilnehmer) ? j.teilnehmer.join(', ') : (j.teilnehmer||'');
+                var datFmt = j.datum ? new Date(j.datum+'T00:00:00').toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
+        
+                return '<div class="vit-card p-5">'
+                  +'<div class="flex items-start justify-between mb-3"><div class="flex items-center space-x-3"><span class="text-2xl">'+emoji+'</span><div>'
+                  +'<h4 class="font-bold text-gray-800">📅 '+datFmt+' – Partnergespräch</h4>'
+                  +'<p class="text-xs text-gray-500">Teilnehmer: '+escH(teiln)+'</p></div></div>'
+                  +'<div class="flex space-x-2"><button onclick="openJournalEdit(\''+j.id+'\')" class="text-xs text-gray-400 hover:text-gray-600">Bearbeiten</button>'
+                  +'<button onclick="deleteJournalEntry(\''+j.id+'\')" class="text-xs text-red-400 hover:text-red-600">Löschen</button></div></div>'
+                  +(themen.length?'<div class="flex flex-wrap gap-1 mb-3">'+themen.map(function(t){return '<span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">'+escH(t)+'</span>';}).join('')+'</div>':'')
+                  +(j.aktuelle_lage?'<div class="mb-3"><p class="text-sm text-gray-700">'+escH(j.aktuelle_lage).replace(/\n/g,'<br>')+'</p></div>':'')
+                  +(wuensche.length?'<div class="mb-3 p-3 bg-red-50 rounded-lg"><p class="text-xs font-semibold text-red-700 mb-1">🔴 Wünsche an HQ:</p>'+wuensche.map(function(w){var t=typeof w==='string'?w:w.text; return '<p class="text-sm text-red-800">• '+escH(t)+'</p>';}).join('')+'</div>':'')
+                  +(massnahmen.length?'<div class="mb-2"><p class="text-xs font-semibold text-gray-600 mb-1">Maßnahmen ('+(massnahmen.length-offen.length)+'/'+massnahmen.length+' erledigt):</p>'
+                    +massnahmen.map(function(m){
+                        return '<div class="flex items-center space-x-2 text-sm"><input type="checkbox" '+(m.erledigt?'checked':'')+' onchange="toggleJournalMassnahme(\''+j.id+'\',\''+escH(m.text).replace(/'/g,"\\'")+'\',this.checked)" class="w-3.5 h-3.5 rounded">'
+                          +'<span class="'+(m.erledigt?'line-through text-gray-400':'text-gray-700')+'">'+escH(m.text)+(m.verantwortlich?' <span class="text-xs text-gray-400">('+escH(m.verantwortlich)+')</span>':'')+'</span></div>';}).join('')+'</div>':'')
+                  +(j.naechster_termin?'<p class="text-xs text-gray-500 mt-2">📅 Nächster Termin: '+new Date(j.naechster_termin+'T00:00:00').toLocaleDateString('de-DE')+'</p>':'')
+                  +'</div>';
+            }).join('');
+        }
+        
+        function openJournalModal() {
+            document.getElementById('journalEditId').value = '';
+            document.getElementById('journalDatum').value = new Date().toISOString().split('T')[0];
+            document.getElementById('journalStimmung').value = '';
+            journalStimmungValue = '';
+            document.getElementById('journalTeilnehmer').value = '';
+            document.getElementById('journalLage').value = '';
+            document.getElementById('journalNaechsterTermin').value = '';
+            document.querySelectorAll('.journal-thema-cb').forEach(function(cb){cb.checked=false; updateThemaStyle(cb);});
+            document.querySelectorAll('.journal-stimmung-btn').forEach(function(b){b.style.opacity='0.4'; b.style.transform='scale(1)';});
+            document.getElementById('journalWuensche').innerHTML = '';
+            document.getElementById('journalMassnahmen').innerHTML = '';
+            document.getElementById('journalModal').style.display = 'flex';
+        }
+        
+        function openJournalEdit(id) {
+            var j = allgemeinJournal.find(function(x){return x.id===id;});
+            if (!j) return;
+            document.getElementById('journalEditId').value = j.id;
+            document.getElementById('journalDatum').value = j.datum||'';
+            setJournalStimmung(j.stimmung||'neutral');
+            document.getElementById('journalTeilnehmer').value = Array.isArray(j.teilnehmer)?j.teilnehmer.join(', '):(j.teilnehmer||'');
+            document.getElementById('journalLage').value = j.aktuelle_lage||'';
+            document.getElementById('journalNaechsterTermin').value = j.naechster_termin||'';
+            document.querySelectorAll('.journal-thema-cb').forEach(function(cb){ cb.checked = (j.themen||[]).indexOf(cb.value)!==-1; updateThemaStyle(cb); });
+            var wEl = document.getElementById('journalWuensche'); wEl.innerHTML='';
+            (j.wuensche_hq||[]).forEach(function(w){addJournalWunsch(typeof w==='string'?w:w.text);});
+            var mEl = document.getElementById('journalMassnahmen'); mEl.innerHTML='';
+            (j.massnahmen||[]).forEach(function(m){addJournalMassnahme(m.text,m.verantwortlich,m.frist);});
+            document.getElementById('journalModal').style.display = 'flex';
+        }
+        function closeJournalModal() { document.getElementById('journalModal').style.display='none'; }
+        
+        function setJournalStimmung(val) {
+            journalStimmungValue = val;
+            document.getElementById('journalStimmung').value = val;
+            document.querySelectorAll('.journal-stimmung-btn').forEach(function(b){
+                var match = b.getAttribute('data-val') === val;
+                b.style.opacity = match ? '1' : '0.4';
+                b.style.transform = match ? 'scale(1.2)' : 'scale(1)';
+            });
+        }
+        
+        function updateThemaStyle(cb) {
+            var label = cb.closest('label');
+            if (!label) return;
+            if (cb.checked) { label.className = label.className.replace('bg-gray-100','bg-orange-100').replace('text-gray-600','text-vit-orange'); }
+            else { label.className = label.className.replace('bg-orange-100','bg-gray-100').replace('text-vit-orange','text-gray-600'); }
+        }
+        document.addEventListener('change', function(e) { if (e.target.classList.contains('journal-thema-cb')) updateThemaStyle(e.target); });
+        
+        function addJournalWunsch(text) {
+            document.getElementById('journalWuensche').insertAdjacentHTML('beforeend',
+                '<div class="flex items-center space-x-2"><span class="text-red-500 text-xs">🔴</span>'
+                +'<input type="text" value="'+escH(text||'')+'" class="journal-wunsch-text flex-1 border rounded px-2 py-1 text-sm" placeholder="Wunsch an HQ...">'
+                +'<button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 text-xs">✕</button></div>');
+        }
+        function addJournalMassnahme(text, verantw, frist) {
+            document.getElementById('journalMassnahmen').insertAdjacentHTML('beforeend',
+                '<div class="flex items-center space-x-2 flex-wrap gap-y-1"><span class="text-xs">☐</span>'
+                +'<input type="text" value="'+escH(text||'')+'" class="journal-massnahme-text flex-1 min-w-[150px] border rounded px-2 py-1 text-sm" placeholder="Maßnahme...">'
+                +'<input type="text" value="'+escH(verantw||'')+'" class="journal-massnahme-verantw w-24 border rounded px-2 py-1 text-sm" placeholder="Wer?">'
+                +'<input type="date" value="'+(frist||'')+'" class="journal-massnahme-frist border rounded px-2 py-1 text-sm">'
+                +'<button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 text-xs">✕</button></div>');
+        }
+        
+        async function saveJournalEntry() {
+            var editId = document.getElementById('journalEditId').value;
+            var themen = []; document.querySelectorAll('.journal-thema-cb:checked').forEach(function(cb){themen.push(cb.value);});
+            var wuensche = []; document.querySelectorAll('.journal-wunsch-text').forEach(function(inp){ if (inp.value.trim()) wuensche.push({text:inp.value.trim(), status:'offen'}); });
+            var massnahmen = [];
+            document.querySelectorAll('#journalMassnahmen > div').forEach(function(row){
+                var t = row.querySelector('.journal-massnahme-text');
+                if (t && t.value.trim()) massnahmen.push({ text: t.value.trim(), verantwortlich: (row.querySelector('.journal-massnahme-verantw')||{}).value||'', frist: (row.querySelector('.journal-massnahme-frist')||{}).value||'', erledigt: false });
+            });
+            var teilnStr = document.getElementById('journalTeilnehmer').value;
+            var teilnehmer = teilnStr.split(',').map(function(s){return s.trim();}).filter(Boolean);
+            var payload = { standort_id: sbProfile.standort_id, datum: document.getElementById('journalDatum').value,
+                teilnehmer: teilnehmer, stimmung: journalStimmungValue || 'neutral', themen: themen,
+                aktuelle_lage: document.getElementById('journalLage').value.trim(), wuensche_hq: wuensche, massnahmen: massnahmen,
+                naechster_termin: document.getElementById('journalNaechsterTermin').value || null, erstellt_von: sbUser.id
+            };
+            if (!payload.datum) { alert('Bitte Datum eingeben'); return; }
+            try {
+                var res = editId ? await sb.from('partner_journal').update(payload).eq('id', editId) : await sb.from('partner_journal').insert([payload]);
+                if (res.error) throw res.error;
+                closeJournalModal(); loadJournal();
+            } catch(e) { alert('Fehler: '+e.message); }
+        }
+        
+        async function deleteJournalEntry(id) {
+            if (!confirm('Protokoll wirklich löschen?')) return;
+            try { var r = await sb.from('partner_journal').delete().eq('id',id); if (r.error) throw r.error; loadJournal(); } catch(e) { alert('Fehler: '+e.message); }
+        }
+        
+        async function toggleJournalMassnahme(journalId, massnahmeText, checked) {
+            var j = allgemeinJournal.find(function(x){return x.id===journalId;});
+            if (!j) return;
+            var massnahmen = (j.massnahmen||[]).map(function(m){ if (m.text === massnahmeText) return Object.assign({}, m, {erledigt: checked}); return m; });
+            try { await sb.from('partner_journal').update({massnahmen:massnahmen}).eq('id',journalId); j.massnahmen = massnahmen; } catch(e) { console.error(e); }
+        }
+        
+        // ============================================================
+        // STIMMUNG
+        // ============================================================
+        
+        async function setStimmung(val) {
+            document.querySelectorAll('.stimmung-btn').forEach(function(b){
+                b.style.opacity = b.getAttribute('data-stimmung') === val ? '1' : '0.4';
+                b.style.transform = b.getAttribute('data-stimmung') === val ? 'scale(1.2)' : 'scale(1)';
+            });
+            try {
+                var existing = allgemeinMonatsplan.find(function(p){return p.monat===allgemeinAktuellerMonat && p.id;});
+                if (existing && existing.id) { await sb.from('partner_monatsplan').update({stimmung:val}).eq('id',existing.id); }
+                else { await sb.from('partner_monatsplan').insert([{standort_id:sbProfile.standort_id, jahr:allgemeinJahr, monat:allgemeinAktuellerMonat, stimmung:val, fokus_thema:'', status:'aktiv', massnahmen:[], verknuepfte_ziele:[]}]); }
+            } catch(e) { console.error('setStimmung:',e); }
+        }
+        
+        // ============================================================
+        // ÜBERSICHT TAB
+        // ============================================================
+        
+        function renderAllgemeinUebersicht() {
+            var monatLabel = document.getElementById('uebersichtAktuellerMonat');
+            if (monatLabel) monatLabel.textContent = monatsNamen[allgemeinAktuellerMonat] + ' ' + allgemeinJahr;
+            var fokusEl = document.getElementById('uebersichtMonatsfokus');
+            var aktMonat = allgemeinMonatsplan.find(function(p){return p.monat===allgemeinAktuellerMonat;});
+            if (fokusEl) {
+                if (aktMonat && aktMonat.fokus_thema) {
+                    var mCount = (aktMonat.massnahmen||[]).length, mDone = (aktMonat.massnahmen||[]).filter(function(m){return m.erledigt;}).length;
+                    fokusEl.innerHTML = '<p class="font-bold text-gray-800 text-lg mb-1">'+escH(aktMonat.fokus_thema)+'</p>'
+                      +(aktMonat.beschreibung?'<p class="text-sm text-gray-600 mb-2">'+escH(aktMonat.beschreibung)+'</p>':'')
+                      +(mCount>0?'<div class="flex items-center space-x-2"><div class="flex-1 bg-gray-200 rounded-full h-2"><div class="bg-vit-orange h-2 rounded-full" style="width:'+Math.round(mDone/mCount*100)+'%"></div></div><span class="text-xs text-gray-500">'+mDone+'/'+mCount+'</span></div>':'');
+                } else { fokusEl.innerHTML = '<p class="text-gray-400 text-sm italic">Kein Fokusthema definiert</p><button onclick="showAllgemeinTab(\'monatsplan\')" class="text-sm text-vit-orange font-semibold mt-1">Jetzt festlegen →</button>'; }
+            }
+            var jzEl = document.getElementById('uebersichtJahresziele');
+            if (jzEl) {
+                var aktiveZiele = allgemeinJahresziele.filter(function(z){return z.typ!=='soft_target';});
+                if (!aktiveZiele.length) { jzEl.innerHTML = '<p class="text-gray-400 text-sm italic">Keine Ziele definiert</p>'; }
+                else { jzEl.innerHTML = aktiveZiele.slice(0,3).map(function(z){ var pct = z.zielwert>0 ? Math.round((z.aktueller_wert/z.zielwert)*100) : 0; return '<div class="mb-2"><div class="flex justify-between text-xs mb-0.5"><span class="text-gray-700 font-semibold truncate">'+escH(z.titel)+'</span><span class="text-gray-500">'+pct+'%</span></div><div class="w-full bg-gray-200 rounded-full h-1.5"><div class="bg-vit-orange h-1.5 rounded-full" style="width:'+Math.min(pct,100)+'%"></div></div></div>'; }).join(''); }
+            }
+            var maEl = document.getElementById('uebersichtMassnahmen');
+            var maBadge = document.getElementById('uebersichtMassnahmenBadge');
+            var offeneMassn = [];
+            allgemeinJournal.forEach(function(j){ (j.massnahmen||[]).forEach(function(m){ if (!m.erledigt) offeneMassn.push({text:m.text, datum:j.datum}); }); });
+            if (maBadge) maBadge.textContent = offeneMassn.length;
+            if (maEl) {
+                if (!offeneMassn.length) { maEl.innerHTML = '<p class="text-gray-400 text-sm">Keine offenen Maßnahmen 🎉</p>'; }
+                else { maEl.innerHTML = offeneMassn.slice(0,4).map(function(m){ return '<div class="flex items-center space-x-2 text-sm mb-1"><span class="text-red-400">•</span><span class="text-gray-700 truncate">'+escH(m.text)+'</span></div>'; }).join('') + (offeneMassn.length>4?'<p class="text-xs text-gray-400 mt-1">+ '+(offeneMassn.length-4)+' weitere</p>':''); }
+            }
+            var stimmungEmojis = {positiv:'😊', neutral:'😐', besorgt:'😟', kritisch:'😤'};
+            var ljEl = document.getElementById('uebersichtLetztesJournal');
+            if (ljEl) {
+                if (!allgemeinJournal.length) { ljEl.innerHTML = '<p class="text-gray-400 text-sm italic">Noch kein Gespräch protokolliert</p>'; }
+                else { var lj = allgemeinJournal[0]; ljEl.innerHTML = '<div class="flex items-center space-x-2 mb-1"><span class="text-lg">'+(stimmungEmojis[lj.stimmung]||'😐')+'</span><span class="text-sm font-semibold text-gray-800">'+(lj.datum?new Date(lj.datum+'T00:00:00').toLocaleDateString('de-DE'):'')+'</span></div>'+(lj.aktuelle_lage?'<p class="text-xs text-gray-600 line-clamp-2">'+escH(lj.aktuelle_lage).substring(0,120)+'...</p>':''); }
+            }
+            var nmEl = document.getElementById('uebersichtNaechstesMeeting');
+            if (nmEl) {
+                var naechster = null;
+                allgemeinJournal.forEach(function(j){ if (j.naechster_termin && (!naechster || j.naechster_termin > naechster)) naechster = j.naechster_termin; });
+                nmEl.innerHTML = naechster ? '<p class="text-2xl font-bold text-vit-orange">'+new Date(naechster+'T00:00:00').toLocaleDateString('de-DE')+'</p>' : '<p class="text-gray-400 text-sm italic">Kein Termin eingetragen</p>';
+            }
+            if (aktMonat && aktMonat.stimmung) { document.querySelectorAll('.stimmung-btn').forEach(function(b){ b.style.opacity = b.getAttribute('data-stimmung')===aktMonat.stimmung ? '1' : '0.4'; b.style.transform = b.getAttribute('data-stimmung')===aktMonat.stimmung ? 'scale(1.2)' : 'scale(1)'; }); }
+        }
+        
+        // ============================================================
+        // HOME WIDGETS (Startseite)
+        // ============================================================
+        
+        function loadHomeWidgets() {
+            var fokusContent = document.getElementById('homeMonatsfokusContent');
+            var fokusMonat = document.getElementById('homeMonatsfokusMonat');
+            var aktMonat = allgemeinMonatsplan.find(function(p){return p.monat===allgemeinAktuellerMonat;});
+            if (fokusMonat) fokusMonat.textContent = monatsNamen[allgemeinAktuellerMonat];
+            if (fokusContent) { fokusContent.innerHTML = aktMonat && aktMonat.fokus_thema ? '<p class="font-bold text-gray-800">'+escH(aktMonat.fokus_thema)+'</p>'+(aktMonat.beschreibung?'<p class="text-xs text-gray-500 mt-1">'+escH(aktMonat.beschreibung).substring(0,80)+'</p>':'') : '<p class="text-sm text-gray-400 italic">Noch kein Fokus definiert</p>'; }
+        
+            var jzContent = document.getElementById('homeJahreszieleContent');
+            var jzCount = document.getElementById('homeJahreszieleCount');
+            if (jzCount) jzCount.textContent = allgemeinJahresziele.length + ' Ziele';
+            if (jzContent) {
+                var top = allgemeinJahresziele.filter(function(z){return z.typ!=='soft_target';}).slice(0,2);
+                jzContent.innerHTML = !top.length ? '<p class="text-sm text-gray-400 italic">Keine Ziele definiert</p>' : top.map(function(z){ var pct = z.zielwert>0?Math.round((z.aktueller_wert/z.zielwert)*100):0; return '<div class="mb-2"><div class="flex justify-between text-xs"><span class="font-semibold text-gray-700 truncate">'+escH(z.titel)+'</span><span>'+pct+'%</span></div><div class="w-full bg-gray-200 rounded-full h-1.5 mt-0.5"><div class="bg-vit-orange h-1.5 rounded-full" style="width:'+Math.min(pct,100)+'%"></div></div></div>'; }).join('');
+            }
+        
+            var jContent = document.getElementById('homeJournalContent');
+            var jDatum = document.getElementById('homeJournalDatum');
+            var stimmungEmojis = {positiv:'😊', neutral:'😐', besorgt:'😟', kritisch:'😤'};
+            if (!allgemeinJournal.length) { if (jContent) jContent.innerHTML = '<p class="text-sm text-gray-400 italic">Noch kein Gespräch</p>'; if (jDatum) jDatum.textContent = ''; }
+            else { var lj = allgemeinJournal[0]; if (jDatum) jDatum.textContent = lj.datum?new Date(lj.datum+'T00:00:00').toLocaleDateString('de-DE'):''; if (jContent) jContent.innerHTML = '<div class="flex items-center space-x-2 mb-1"><span>'+(stimmungEmojis[lj.stimmung]||'😐')+'</span><span class="text-sm font-semibold">Partnergespräch</span></div>'+(lj.aktuelle_lage?'<p class="text-xs text-gray-500 line-clamp-2">'+escH(lj.aktuelle_lage).substring(0,100)+'</p>':''); }
+        
+            var maContent = document.getElementById('homeMassnahmenContent');
+            var maCount = document.getElementById('homeMassnahmenCount');
+            var offene = []; allgemeinJournal.forEach(function(j){ (j.massnahmen||[]).forEach(function(m){ if (!m.erledigt) offene.push(m); }); });
+            if (maCount) maCount.textContent = offene.length + ' offen';
+            if (maContent) { maContent.innerHTML = !offene.length ? '<p class="text-sm text-green-600 font-semibold">Alles erledigt! 🎉</p>' : offene.slice(0,3).map(function(m){ return '<p class="text-sm text-gray-700 mb-1">• '+escH(m.text)+'</p>'; }).join('') + (offene.length>3?'<p class="text-xs text-gray-400">+ '+(offene.length-3)+' weitere</p>':''); }
+        }
+        
+        // ============================================================
+        // HQ PARTNER-ÜBERSICHT
+        // ============================================================
+        
+        async function loadHqAllgemeinData() {
+            try {
+                var mpRes = await sb.from('partner_monatsplan').select('*, standorte(name, stadt)').eq('jahr', allgemeinJahr).eq('monat', allgemeinAktuellerMonat);
+                var jRes = await sb.from('partner_journal').select('*, standorte(name, stadt)').order('datum', {ascending:false});
+                var jzRes = await sb.from('partner_jahresziele').select('*, standorte(name, stadt)').eq('jahr', allgemeinJahr);
+                var stRes = await sb.from('standorte').select('id, name, stadt, status').eq('status', 'aktiv');
+                if (mpRes.error) throw mpRes.error; if (jRes.error) throw jRes.error; if (stRes.error) throw stRes.error;
+                renderHqAllgemein(stRes.data||[], mpRes.data||[], jRes.data||[], jzRes.data||[]);
+            } catch(e) { console.error('loadHqAllgemeinData:', e); }
+        }
+        
+        function renderHqAllgemein(standorte, monatsplaene, journals, jahresziele) {
+            var stimmungEmojis = {positiv:'😊', neutral:'😐', besorgt:'😟', kritisch:'😤'};
+            var stimmungen = {positiv:0, neutral:0, besorgt:0, kritisch:0};
+            monatsplaene.forEach(function(mp){ if (mp.stimmung && stimmungen.hasOwnProperty(mp.stimmung)) stimmungen[mp.stimmung]++; });
+            document.getElementById('hqStimmungPositiv').textContent = stimmungen.positiv;
+            document.getElementById('hqStimmungNeutral').textContent = stimmungen.neutral;
+            document.getElementById('hqStimmungBesorgt').textContent = stimmungen.besorgt;
+            document.getElementById('hqStimmungKritisch').textContent = stimmungen.kritisch;
+        
+            var hqAufgaben = [];
+            journals.forEach(function(j){ (j.wuensche_hq||[]).forEach(function(w){ var text = typeof w==='string'?w:w.text; var status = typeof w==='object'?w.status:'offen'; if (status === 'offen') hqAufgaben.push({text:text, standort:j.standorte?j.standorte.name:'', datum:j.datum}); }); });
+            document.getElementById('hqAufgabenBadge').textContent = hqAufgaben.length;
+            var aufgEl = document.getElementById('hqJournalAufgaben');
+            aufgEl.innerHTML = !hqAufgaben.length ? '<p class="text-sm text-green-600 font-semibold">Keine offenen HQ-Aufgaben 🎉</p>'
+                : hqAufgaben.map(function(a){ return '<div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"><div class="flex items-center space-x-2"><span class="text-red-500">•</span><span class="text-sm text-gray-800">'+escH(a.text)+'</span></div><div class="text-xs text-gray-500">'+escH(a.standort)+' · '+(a.datum?new Date(a.datum+'T00:00:00').toLocaleDateString('de-DE'):'')+'</div></div>'; }).join('');
+        
+            var tbody = document.getElementById('hqPartnerTabelle');
+            if (!standorte.length) { tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-400">Keine aktiven Standorte</td></tr>'; return; }
+            tbody.innerHTML = standorte.map(function(st){
+                var mp = monatsplaene.find(function(p){return p.standort_id===st.id;});
+                var stJournals = journals.filter(function(j){return j.standort_id===st.id;});
+                var stZiele = jahresziele.filter(function(z){return z.standort_id===st.id;});
+                var letztes = stJournals.length ? stJournals[0] : null;
+                var stimmung = mp && mp.stimmung ? stimmungEmojis[mp.stimmung] : '—';
+                var fokus = mp && mp.fokus_thema ? mp.fokus_thema : '—';
+                var offenCount = 0; stJournals.forEach(function(j){ (j.massnahmen||[]).forEach(function(m){if(!m.erledigt) offenCount++;}); });
+                return '<tr class="border-b hover:bg-gray-50">'
+                  +'<td class="p-3"><span class="font-semibold text-gray-800">'+escH(st.name)+'</span><br><span class="text-xs text-gray-500">'+escH(st.stadt||'')+'</span></td>'
+                  +'<td class="p-3 text-center text-xl">'+stimmung+'</td>'
+                  +'<td class="p-3 text-sm text-gray-700 max-w-[200px] truncate">'+escH(fokus)+'</td>'
+                  +'<td class="p-3 text-center"><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">'+stZiele.length+'</span></td>'
+                  +'<td class="p-3 text-center">'+(offenCount>0?'<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-600">'+offenCount+'</span>':'<span class="text-xs text-green-600">✓</span>')+'</td>'
+                  +'<td class="p-3 text-center text-xs text-gray-500">'+(letztes?new Date(letztes.datum+'T00:00:00').toLocaleDateString('de-DE'):'—')+'</td>'
+                  +'<td class="p-3 text-center"><button onclick="viewPartnerDetails(\''+st.id+'\')" class="text-xs text-vit-orange font-semibold hover:underline">Details →</button></td></tr>';
+            }).join('');
+        }
+        
+        function viewPartnerDetails(standortId) { alert('Partner-Detail für Standort ' + standortId + ' – wird in nächster Iteration implementiert'); }
+        
+        // ============================================================
+        // showView() HOOKS – Diese 2 Zeilen in showView() ergänzen:
+        // ============================================================
+        // if(viewName === 'allgemein') loadAllgemeinData();
+        // if(viewName === 'hqAllgemein') loadHqAllgemeinData();
+        
+
         var origShowView = showView;
         showView = function(v) {
             origShowView(v);
@@ -11667,6 +12344,8 @@
             if(v==='hqStandorte') renderHqStandorte();
             if(v==='hqFinanzen') renderHqFinanzen();
             if(v==='hqMarketing') { renderHqMarketing(); showHqMktTab('uebersicht'); }
+            if(v==='allgemein') { showAllgemeinTab('uebersicht'); }
+            if(v==='hqAllgemein') { renderHqAllgemein(hqStandorte, [], [], []); }
             if(v==='hqEinkauf') renderHqEinkauf();
             if(v==='hqVerkauf') renderHqVerkauf();
             if(v==='hqAktionen') renderHqAktionen();
@@ -15255,17 +15934,7 @@
             el.innerHTML = h;
         }
 
-        function showAllgemeinTab(tabName) {
-            document.querySelectorAll('.allg-tab-content').forEach(function(c){ c.style.display='none'; });
-            document.querySelectorAll('.allg-tab-btn').forEach(function(b){
-                b.className='allg-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
-            });
-            var tabMap = {uebersicht:'Uebersicht',strategie:'Strategie',wissen:'Wissen'};
-            var el = document.getElementById('allgTab' + (tabMap[tabName]||''));
-            if(el) el.style.display='block';
-            var btn = document.querySelector('.allg-tab-btn[data-tab="'+tabName+'"]');
-            if(btn) btn.className='allg-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
-        }
+        // showAllgemeinTab - replaced by new allgemein module (see below)
 
         function showView(viewName) {
             console.log('showView called with:', viewName);
@@ -17286,5 +17955,66 @@ if(document.getElementById('react-pipeline-root') && document.getElementById('vk
     mountReactPipeline();
 }
 </script>
+
+<!-- Jahresziel Modal -->
+<div id="jahreszielModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" style="display:none" onclick="if(event.target===this)closeJahreszielModal()">
+    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold" id="jahreszielModalTitle">Neues Jahresziel</h3><button onclick="closeJahreszielModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div>
+            <input type="hidden" id="jahreszielEditId" value="">
+            <div class="mb-4"><label class="block text-sm font-semibold text-gray-700 mb-1">Typ</label>
+                <select id="jahreszielTyp" onchange="toggleJahreszielFelder()" class="w-full border rounded-lg px-3 py-2 text-sm focus:border-orange-400 focus:ring-1 focus:ring-orange-400">
+                    <option value="umsatz">💰 Umsatzziel</option><option value="deckungsbeitrag">📊 Deckungsbeitrag</option><option value="smart">🎯 SMART-Ziel</option><option value="soft_target">✅ Soft Target</option>
+                </select></div>
+            <div class="mb-4"><label class="block text-sm font-semibold text-gray-700 mb-1">Titel</label><input id="jahreszielTitel" type="text" class="w-full border rounded-lg px-3 py-2 text-sm focus:border-orange-400 focus:ring-1 focus:ring-orange-400" placeholder="z.B. Jahresumsatz €850.000"></div>
+            <div class="mb-4" id="jahreszielBeschreibungWrap"><label class="block text-sm font-semibold text-gray-700 mb-1">Beschreibung / SMART-Details</label><textarea id="jahreszielBeschreibung" rows="3" class="w-full border rounded-lg px-3 py-2 text-sm focus:border-orange-400 focus:ring-1 focus:ring-orange-400" placeholder="S: M: A: R: T:"></textarea></div>
+            <div class="grid grid-cols-3 gap-3 mb-4" id="jahreszielWerteWrap">
+                <div><label class="block text-sm font-semibold text-gray-700 mb-1">Zielwert</label><input id="jahreszielZielwert" type="number" class="w-full border rounded-lg px-3 py-2 text-sm focus:border-orange-400 focus:ring-1 focus:ring-orange-400"></div>
+                <div><label class="block text-sm font-semibold text-gray-700 mb-1">Aktueller Wert</label><input id="jahreszielAktuellerWert" type="number" class="w-full border rounded-lg px-3 py-2 text-sm focus:border-orange-400 focus:ring-1 focus:ring-orange-400"></div>
+                <div><label class="block text-sm font-semibold text-gray-700 mb-1">Einheit</label><select id="jahreszielEinheit" class="w-full border rounded-lg px-3 py-2 text-sm focus:border-orange-400 focus:ring-1 focus:ring-orange-400"><option value="€">€</option><option value="Stück">Stück</option><option value="Bewertungen">Bewertungen</option><option value="%">%</option></select></div>
+            </div>
+            <div class="flex justify-end space-x-3 pt-4 border-t"><button onclick="closeJahreszielModal()" class="px-4 py-2 text-sm text-gray-600">Abbrechen</button><button onclick="saveJahresziel()" class="px-4 py-2 bg-vit-orange text-white text-sm font-semibold rounded-lg hover:opacity-90">Speichern</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- Journal Modal -->
+<div id="journalModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" style="display:none" onclick="if(event.target===this)closeJournalModal()">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">Gespräch protokollieren</h3><button onclick="closeJournalModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div>
+            <input type="hidden" id="journalEditId" value="">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div><label class="block text-sm font-semibold text-gray-700 mb-1">Datum</label><input id="journalDatum" type="date" class="w-full border rounded-lg px-3 py-2 text-sm focus:border-orange-400 focus:ring-1 focus:ring-orange-400"></div>
+                <div><label class="block text-sm font-semibold text-gray-700 mb-1">Stimmung</label>
+                    <div class="flex space-x-3 mt-1">
+                        <button type="button" onclick="setJournalStimmung('positiv')" class="journal-stimmung-btn text-2xl opacity-40 hover:opacity-100 transition" data-val="positiv">😊</button>
+                        <button type="button" onclick="setJournalStimmung('neutral')" class="journal-stimmung-btn text-2xl opacity-40 hover:opacity-100 transition" data-val="neutral">😐</button>
+                        <button type="button" onclick="setJournalStimmung('besorgt')" class="journal-stimmung-btn text-2xl opacity-40 hover:opacity-100 transition" data-val="besorgt">😟</button>
+                        <button type="button" onclick="setJournalStimmung('kritisch')" class="journal-stimmung-btn text-2xl opacity-40 hover:opacity-100 transition" data-val="kritisch">😤</button>
+                    </div><input type="hidden" id="journalStimmung" value=""></div>
+            </div>
+            <div class="mb-4"><label class="block text-sm font-semibold text-gray-700 mb-1">Teilnehmer</label><input id="journalTeilnehmer" type="text" class="w-full border rounded-lg px-3 py-2 text-sm focus:border-orange-400 focus:ring-1 focus:ring-orange-400" placeholder="z.B. Matthias, Sascha (HQ)"></div>
+            <div class="mb-4"><label class="block text-sm font-semibold text-gray-700 mb-2">Themen</label>
+                <div class="flex flex-wrap gap-2" id="journalThemenTags">
+                    <label class="flex items-center px-3 py-1.5 bg-gray-100 rounded-full text-xs font-semibold cursor-pointer hover:bg-orange-50"><input type="checkbox" value="Umsatz/Zahlen" class="journal-thema-cb hidden"><span>💰 Umsatz</span></label>
+                    <label class="flex items-center px-3 py-1.5 bg-gray-100 rounded-full text-xs font-semibold cursor-pointer hover:bg-orange-50"><input type="checkbox" value="Personal" class="journal-thema-cb hidden"><span>👥 Personal</span></label>
+                    <label class="flex items-center px-3 py-1.5 bg-gray-100 rounded-full text-xs font-semibold cursor-pointer hover:bg-orange-50"><input type="checkbox" value="Marketing" class="journal-thema-cb hidden"><span>📢 Marketing</span></label>
+                    <label class="flex items-center px-3 py-1.5 bg-gray-100 rounded-full text-xs font-semibold cursor-pointer hover:bg-orange-50"><input type="checkbox" value="Werkstatt" class="journal-thema-cb hidden"><span>🔧 Werkstatt</span></label>
+                    <label class="flex items-center px-3 py-1.5 bg-gray-100 rounded-full text-xs font-semibold cursor-pointer hover:bg-orange-50"><input type="checkbox" value="Einkauf" class="journal-thema-cb hidden"><span>🛒 Einkauf</span></label>
+                    <label class="flex items-center px-3 py-1.5 bg-gray-100 rounded-full text-xs font-semibold cursor-pointer hover:bg-orange-50"><input type="checkbox" value="Ziele" class="journal-thema-cb hidden"><span>🎯 Ziele</span></label>
+                    <label class="flex items-center px-3 py-1.5 bg-gray-100 rounded-full text-xs font-semibold cursor-pointer hover:bg-orange-50"><input type="checkbox" value="Work-Life-Balance" class="journal-thema-cb hidden"><span>⚖️ WLB</span></label>
+                    <label class="flex items-center px-3 py-1.5 bg-gray-100 rounded-full text-xs font-semibold cursor-pointer hover:bg-orange-50"><input type="checkbox" value="Sonstiges" class="journal-thema-cb hidden"><span>📌 Sonstiges</span></label>
+                </div></div>
+            <div class="mb-4"><label class="block text-sm font-semibold text-gray-700 mb-1">Aktuelle Lage</label><textarea id="journalLage" rows="3" class="w-full border rounded-lg px-3 py-2 text-sm focus:border-orange-400 focus:ring-1 focus:ring-orange-400" placeholder="Wie steht der Partner da?"></textarea></div>
+            <div class="mb-4"><label class="block text-sm font-semibold text-gray-700 mb-2">Wünsche an HQ</label><div id="journalWuensche" class="space-y-2 mb-2"></div><button onclick="addJournalWunsch()" class="text-sm text-vit-orange font-semibold">+ Wunsch</button></div>
+            <div class="mb-4"><label class="block text-sm font-semibold text-gray-700 mb-2">Vereinbarte Maßnahmen</label><div id="journalMassnahmen" class="space-y-2 mb-2"></div><button onclick="addJournalMassnahme()" class="text-sm text-vit-orange font-semibold">+ Maßnahme</button></div>
+            <div class="mb-4"><label class="block text-sm font-semibold text-gray-700 mb-1">Notizen</label><textarea id="journalNotizen" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm focus:border-orange-400 focus:ring-1 focus:ring-orange-400" placeholder="Sonstiges..."></textarea></div>
+            <div class="mb-4"><label class="block text-sm font-semibold text-gray-700 mb-1">Nächster Termin</label><input id="journalNaechsterTermin" type="date" class="w-full border rounded-lg px-3 py-2 text-sm focus:border-orange-400 focus:ring-1 focus:ring-orange-400"></div>
+            <div class="flex justify-end space-x-3 pt-4 border-t"><button onclick="closeJournalModal()" class="px-4 py-2 text-sm text-gray-600">Abbrechen</button><button onclick="saveJournalEntry()" class="px-4 py-2 bg-vit-orange text-white text-sm font-semibold rounded-lg hover:opacity-90">Speichern</button></div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
