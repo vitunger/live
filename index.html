@@ -2643,57 +2643,91 @@
                 </div>
 
                 <div id="kommunikationView" class="view" style="display: none;">
-                    <h1 class="h1-headline text-gray-800 mb-6" data-i18n="h_communication">KOMMUNIKATION</h1>
-
-                    <!-- Tab Navigation -->
-                    <div class="mb-6 border-b border-gray-200">
-                        <nav class="-mb-px flex space-x-8">
-                            <button onclick="showKommTab('inbox')" class="komm-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="inbox">Inbox</button>
-                            <button onclick="showKommTab('announce')" class="komm-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="announce">Ankuendigungen</button>
-                            <button onclick="showKommTab('forum')" class="komm-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="forum">Forum</button>
-                            <button onclick="showKommTab('brett')" class="komm-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="brett">Schwarzes Brett</button>
-                            <button onclick="showKommTab('channel')" class="komm-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="channel">Standort-Channel</button>
-                            <button onclick="showKommTab('termine')" class="komm-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="termine">Termine</button>
-                        </nav>
-                    </div>
-
-                    <!-- ===== TAB: Inbox ===== -->
-                    <div id="kommTabInbox" class="komm-tab-content">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex space-x-2">
-                                <button onclick="filterInbox('all')" class="inbox-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white" data-f="all">Alle</button>
-                                <button onclick="filterInbox('unread')" class="inbox-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-f="unread">Ungelesen (3)</button>
-                                <button onclick="filterInbox('sent')" class="inbox-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-f="sent">Gesendet</button>
-                            </div>
-                            <button onclick="document.getElementById('inboxCompose').classList.toggle('hidden')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">+ Neue Nachricht</button>
+                    <!-- Top Tab Navigation (compact) -->
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex space-x-1 bg-gray-100 rounded-lg p-1">
+                            <button onclick="showKommTab('chat')" class="komm-tab-btn px-4 py-2 rounded-md text-sm font-semibold bg-white text-gray-800 shadow-sm" data-tab="chat">💬 Chat</button>
+                            <button onclick="showKommTab('forum')" class="komm-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500 hover:text-gray-700" data-tab="forum">📋 Forum</button>
+                            <button onclick="showKommTab('brett')" class="komm-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500 hover:text-gray-700" data-tab="brett">📌 Brett</button>
+                            <button onclick="showKommTab('termine')" class="komm-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500 hover:text-gray-700" data-tab="termine">📅 Termine</button>
                         </div>
+                    </div>
 
-                        <!-- Compose -->
-                        <div id="inboxCompose" class="hidden vit-card p-5 mb-4">
-                            <select id="inboxRecipient" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3"><option value="">Empfänger wird geladen...</option></select>
-                            <input type="text" id="inboxSubject" placeholder="Betreff..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3">
-                            <textarea id="inboxBody" placeholder="Nachricht..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3" rows="4"></textarea>
-                            <div class="flex justify-end space-x-2">
-                                <button onclick="document.getElementById('inboxCompose').classList.add('hidden')" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Abbrechen</button>
-                                <button onclick="sendInboxMsg()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Senden</button>
+                    <!-- ===== TAB: Chat (Teams-Style 2-Column) ===== -->
+                    <div id="kommTabChat" class="komm-tab-content">
+                        <div class="flex h-[calc(100vh-180px)] min-h-[500px] bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            
+                            <!-- LEFT: Conversation Sidebar -->
+                            <div class="w-80 flex-shrink-0 border-r border-gray-200 flex flex-col bg-gray-50">
+                                <!-- Search -->
+                                <div class="p-3 border-b border-gray-200">
+                                    <div class="relative">
+                                        <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                        <input type="text" id="kommSearchInput" placeholder="Suchen..." class="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-vit-orange" oninput="filterKommSidebar(this.value)">
+                                    </div>
+                                </div>
+
+                                <!-- New Message Button -->
+                                <div class="p-3 border-b border-gray-200">
+                                    <button onclick="kommStartNewChat()" class="w-full flex items-center space-x-2 px-3 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        <span>Neue Nachricht</span>
+                                    </button>
+                                </div>
+
+                                <!-- Conversation List -->
+                                <div id="kommConvList" class="flex-1 overflow-y-auto">
+                                    <!-- Filled by JS: sections for Kanäle, Inbox, Ankündigungen -->
+                                </div>
+                            </div>
+
+                            <!-- RIGHT: Message/Chat Area -->
+                            <div class="flex-1 flex flex-col min-w-0">
+                                <!-- Chat Header -->
+                                <div id="kommChatHeader" class="px-5 py-3 border-b border-gray-200 flex items-center justify-between bg-white">
+                                    <div class="flex items-center space-x-3">
+                                        <div id="kommChatAvatar" class="w-9 h-9 bg-vit-orange rounded-lg flex items-center justify-center text-white font-bold text-sm">#</div>
+                                        <div>
+                                            <h3 id="kommChatTitle" class="font-bold text-gray-800 text-sm">Wähle eine Konversation</h3>
+                                            <p id="kommChatSubtitle" class="text-xs text-gray-500"></p>
+                                        </div>
+                                    </div>
+                                    <div id="kommChatHeaderActions" class="flex items-center space-x-2"></div>
+                                </div>
+
+                                <!-- Messages Area -->
+                                <div id="kommChatMessages" class="flex-1 overflow-y-auto p-5 space-y-1" style="scroll-behavior:smooth;">
+                                    <div class="flex items-center justify-center h-full text-gray-400 text-sm">
+                                        <div class="text-center">
+                                            <div class="text-4xl mb-3">💬</div>
+                                            <p class="font-semibold">Willkommen in der Kommunikation</p>
+                                            <p class="text-xs mt-1">Wähle links eine Konversation oder starte eine neue Nachricht</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Message Input (fixed bottom) -->
+                                <div id="kommChatInput" class="border-t border-gray-200 p-4 bg-white" style="display:none;">
+                                    <!-- Reply indicator -->
+                                    <div id="kommReplyBar" class="hidden mb-2 p-2 bg-orange-50 border-l-4 border-vit-orange rounded flex items-center justify-between">
+                                        <div class="text-xs text-gray-600"><span class="font-semibold" id="kommReplyTo"></span>: <span id="kommReplyPreview" class="text-gray-400"></span></div>
+                                        <button onclick="cancelReply()" class="text-gray-400 hover:text-gray-600 text-sm">&times;</button>
+                                    </div>
+                                    <div class="flex items-end space-x-3">
+                                        <div class="flex-1">
+                                            <textarea id="kommMsgInput" placeholder="Nachricht schreiben..." class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-vit-orange resize-none" rows="1" onkeydown="kommInputKeydown(event)" oninput="kommAutoResize(this)"></textarea>
+                                        </div>
+                                        <button onclick="kommSendMessage()" class="px-4 py-2.5 bg-vit-orange text-white rounded-xl text-sm font-semibold hover:opacity-90 flex-shrink-0">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-
-                        <!-- Message Detail -->
-                        <div id="inboxDetail" class="hidden vit-card p-5 mb-4"></div>
-
-                        <!-- Message List -->
-                        <div id="inboxList" class="space-y-2"></div>
                     </div>
 
-                    <!-- ===== TAB: Ankuendigungen ===== -->
-                    <div id="kommTabAnnounce" class="komm-tab-content" style="display:none;">
-                        <div id="announceList" class="space-y-4"></div>
-                    </div>
-
-                    <!-- ===== TAB 1: Forum ===== -->
+                    <!-- ===== TAB: Forum ===== -->
                     <div id="kommTabForum" class="komm-tab-content" style="display:none;">
-                        <!-- Forum List View -->
                         <div id="forumListView">
                             <div class="flex items-center justify-between mb-4">
                                 <div class="flex space-x-2 flex-wrap gap-y-2">
@@ -2721,7 +2755,6 @@
                             </div>
                             <div id="forumPosts" class="space-y-3"></div>
                         </div>
-                        <!-- Forum Detail View -->
                         <div id="forumDetailView" class="hidden">
                             <button onclick="closeForumDetail()" class="mb-4 text-sm text-vit-orange hover:underline font-semibold">← Zurück zur Übersicht</button>
                             <div id="forumDetailContent" class="vit-card p-6 mb-4"></div>
@@ -2732,43 +2765,6 @@
                                     <textarea id="forumCommentInput" placeholder="Dein Kommentar..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-vit-orange" rows="2"></textarea>
                                     <button onclick="postForumComment()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90 self-end">Senden</button>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ===== TAB 2: Standort-Channel ===== -->
-                    <div id="kommTabChannel" class="komm-tab-content" style="display:none;">
-                        <!-- Channel Header -->
-                        <div class="vit-card p-4 mb-4 flex items-center justify-between">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 bg-vit-orange rounded-lg flex items-center justify-center text-white font-bold">#</div>
-                                <div>
-                                    <h3 class="font-bold text-gray-800">Grafrath Team-Chat</h3>
-                                    <p class="text-xs text-gray-500">Sandra, Thomas, Dirk, Max · Nur fuer euer Team sichtbar</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <div class="flex -space-x-2">
-                                    <div class="w-7 h-7 bg-blue-500 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-bold">S</div>
-                                    <div class="w-7 h-7 bg-green-500 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-bold">T</div>
-                                    <div class="w-7 h-7 bg-purple-500 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-bold">D</div>
-                                    <div class="w-7 h-7 bg-orange-500 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-bold">M</div>
-                                </div>
-                                <span class="text-xs text-green-600 font-semibold">3 online</span>
-                            </div>
-                        </div>
-
-                        <!-- Chat Messages -->
-                        <div class="vit-card overflow-hidden">
-                            <div id="channelMessages" class="p-4 space-y-4 max-h-[500px] overflow-y-auto" style="min-height:400px;"></div>
-
-                            <!-- Message Input -->
-                            <div class="border-t border-gray-200 p-4 flex items-center space-x-3">
-                                <button class="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-                                </button>
-                                <input type="text" id="channelInput" placeholder="Nachricht schreiben..." class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-vit-orange" onkeydown="if(event.key==='Enter')sendChannelMsg()">
-                                <button onclick="sendChannelMsg()" class="px-4 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Senden</button>
                             </div>
                         </div>
                     </div>
@@ -2802,9 +2798,7 @@
                     <!-- ===== TAB: Termine ===== -->
                     <div id="kommTabTermine" class="komm-tab-content" style="display:none;">
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <!-- Upcoming Events -->
                             <div class="lg:col-span-2 space-y-3" id="termineList"></div>
-                            <!-- Dynamic Mini Calendar Sidebar -->
                             <div>
                                 <div class="vit-card p-5 mb-4">
                                     <div class="flex items-center justify-between mb-3">
@@ -7346,314 +7340,550 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
 
-        // === KOMMUNIKATION v2.0: Inbox (DB), Ankuendigungen, Brett, Forum, Termine ===
-        var kommUnreadCount = 0;
-        var kommInboxRecipients = [];
-        var kommCurrentForumPost = null;
+        // === KOMMUNIKATION v3.0: Teams-Hybrid Layout ===
+        var kommState = {
+            activeConv: null,       // {type:'channel'|'inbox'|'announce', id:..., name:...}
+            convList: [],           // all conversations for sidebar
+            unreadInbox: 0,
+            unreadAnnounce: 0,
+            replyTo: null,          // {id, author, preview} for thread reply
+            allUsers: [],           // cached users for recipient selection
+            kanaele: [],
+            realtimeSub: null,
+            currentForumPost: null
+        };
 
-        // --- INBOX (aus nachrichten-Tabelle) ---
-        async function loadInboxRecipients() {
-            try {
-                var resp = await sb.from('users').select('id, name, is_hq, standort_id, standorte(name)').eq('status', 'aktiv').order('name');
-                if(resp.error) throw resp.error;
-                kommInboxRecipients = (resp.data || []).filter(function(u) { return u.id !== (sbUser ? sbUser.id : null); });
-                var sel = document.getElementById('inboxRecipient');
-                if(!sel) return;
-                var html = '<option value="">– Empfänger wählen –</option>';
-                kommInboxRecipients.forEach(function(u) {
-                    var label = u.name + (u.standorte ? ' (' + u.standorte.name + ')' : (u.is_hq ? ' (HQ)' : ''));
-                    html += '<option value="' + u.id + '">' + label + '</option>';
-                });
-                sel.innerHTML = html;
-            } catch(err) { console.error('Empfänger laden:', err); }
-        }
-
-        async function renderInbox(filter) {
-            var container = document.getElementById('inboxList');
+        // =============================================
+        //  SIDEBAR: Load & render conversation list
+        // =============================================
+        async function loadKommSidebar() {
+            var container = document.getElementById('kommConvList');
             if(!container) return;
-            var detail = document.getElementById('inboxDetail');
-            if(detail) detail.classList.add('hidden');
+            var uid = sbUser ? sbUser.id : null;
+            var standortId = sbProfile ? sbProfile.standort_id : null;
 
             try {
-                var uid = sbUser ? sbUser.id : null;
-                if(!uid) { container.innerHTML = '<div class="text-center py-8 text-gray-400">Bitte einloggen.</div>'; return; }
+                // 1. Load channels
+                var chResp = await sb.from('chat_kanaele').select('*').order('created_at');
+                if(!chResp.error) kommState.kanaele = chResp.data || [];
 
-                var query;
-                if(filter === 'sent') {
-                    query = sb.from('nachrichten').select('*, empfaenger:an_user_id(name)').eq('von_user_id', uid).order('created_at', {ascending: false});
-                } else {
-                    query = sb.from('nachrichten').select('*, absender:von_user_id(name)').or('an_user_id.eq.' + uid + ',an_standort_id.eq.' + (sbProfile ? sbProfile.standort_id : '00000000-0000-0000-0000-000000000000')).order('created_at', {ascending: false});
-                    if(filter === 'unread') query = query.eq('gelesen', false);
+                // 2. Load inbox conversations (grouped by partner)
+                var inboxResp = await sb.from('nachrichten').select('*, absender:von_user_id(name), empfaenger:an_user_id(name)')
+                    .or('von_user_id.eq.' + uid + ',an_user_id.eq.' + uid + (standortId ? ',an_standort_id.eq.' + standortId : ''))
+                    .order('created_at', {ascending: false});
+                var inboxMsgs = !inboxResp.error ? (inboxResp.data || []) : [];
+
+                // Group inbox by conversation partner
+                var inboxConvs = {};
+                inboxMsgs.forEach(function(m) {
+                    var isSender = m.von_user_id === uid;
+                    var partnerId = isSender ? m.an_user_id : m.von_user_id;
+                    var partnerName = isSender ? (m.empfaenger ? m.empfaenger.name : 'Unbekannt') : (m.absender ? m.absender.name : 'Unbekannt');
+                    if(!partnerId) { partnerId = 'standort'; partnerName = 'Standort-Nachrichten'; }
+                    if(!inboxConvs[partnerId]) {
+                        inboxConvs[partnerId] = { partnerId: partnerId, partnerName: partnerName, lastMsg: m, unread: 0, messages: [] };
+                    }
+                    inboxConvs[partnerId].messages.push(m);
+                    if(!isSender && !m.gelesen) inboxConvs[partnerId].unread++;
+                });
+
+                // 3. Count unread
+                kommState.unreadInbox = 0;
+                Object.values(inboxConvs).forEach(function(c) { kommState.unreadInbox += c.unread; });
+
+                // 4. Announcements unread count
+                var ankResp = await sb.from('ankuendigungen').select('id');
+                var ankAll = !ankResp.error ? (ankResp.data || []) : [];
+                var gelesenResp = await sb.from('ankuendigungen_gelesen').select('ankuendigung_id').eq('user_id', uid || '');
+                var gelesenIds = !gelesenResp.error ? (gelesenResp.data || []).map(function(g){return g.ankuendigung_id;}) : [];
+                kommState.unreadAnnounce = ankAll.filter(function(a) { return gelesenIds.indexOf(a.id) === -1; }).length;
+
+                // Build sidebar HTML
+                var html = '';
+
+                // --- Channels Section ---
+                html += '<div class="px-3 pt-3 pb-1"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Kanäle</span></div>';
+                kommState.kanaele.forEach(function(k) {
+                    var isActive = kommState.activeConv && kommState.activeConv.type === 'channel' && kommState.activeConv.id === k.id;
+                    html += '<div class="komm-conv-item mx-2 px-3 py-2.5 rounded-lg cursor-pointer flex items-center space-x-3 ' + (isActive ? 'bg-vit-orange/10 border-l-3 border-vit-orange' : 'hover:bg-gray-100') + '" onclick="openKommConv(\'channel\',\'' + k.id + '\',\'' + escH(k.name).replace(/'/g,"\\'") + '\')">';
+                    html += '<div class="w-8 h-8 ' + (k.standort_id ? 'bg-vit-orange' : 'bg-blue-500') + ' rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">#</div>';
+                    html += '<div class="flex-1 min-w-0"><p class="text-sm font-semibold text-gray-800 truncate">' + escH(k.name) + '</p>';
+                    html += '<p class="text-[11px] text-gray-400 truncate">' + (k.standort_id ? 'Team-Kanal' : 'Netzwerk') + '</p></div>';
+                    html += '</div>';
+                });
+
+                // --- Announcements ---
+                html += '<div class="px-3 pt-4 pb-1 flex items-center justify-between"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Ankündigungen</span>';
+                if(kommState.unreadAnnounce > 0) html += '<span class="bg-red-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">' + kommState.unreadAnnounce + '</span>';
+                html += '</div>';
+                var isAnnActive = kommState.activeConv && kommState.activeConv.type === 'announce';
+                html += '<div class="komm-conv-item mx-2 px-3 py-2.5 rounded-lg cursor-pointer flex items-center space-x-3 ' + (isAnnActive ? 'bg-vit-orange/10' : 'hover:bg-gray-100') + '" onclick="openKommConv(\'announce\',\'all\',\'Ankündigungen\')">';
+                html += '<div class="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center text-white text-sm">📢</div>';
+                html += '<div class="flex-1 min-w-0"><p class="text-sm font-semibold text-gray-800">Alle Ankündigungen</p>';
+                html += '<p class="text-[11px] text-gray-400">Von der Zentrale</p></div>';
+                if(kommState.unreadAnnounce > 0) html += '<span class="w-2.5 h-2.5 bg-red-500 rounded-full flex-shrink-0"></span>';
+                html += '</div>';
+
+                // --- Inbox Conversations ---
+                html += '<div class="px-3 pt-4 pb-1 flex items-center justify-between"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nachrichten</span>';
+                if(kommState.unreadInbox > 0) html += '<span class="bg-red-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">' + kommState.unreadInbox + '</span>';
+                html += '</div>';
+
+                var sortedConvs = Object.values(inboxConvs).sort(function(a,b) { return new Date(b.lastMsg.created_at) - new Date(a.lastMsg.created_at); });
+                if(sortedConvs.length === 0) {
+                    html += '<div class="mx-2 px-3 py-2 text-xs text-gray-400 text-center">Keine Nachrichten</div>';
                 }
+                sortedConvs.forEach(function(conv) {
+                    var isActive = kommState.activeConv && kommState.activeConv.type === 'inbox' && kommState.activeConv.id === conv.partnerId;
+                    var initials = conv.partnerName.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
+                    var colors = ['bg-emerald-500','bg-blue-500','bg-purple-500','bg-pink-500','bg-cyan-500','bg-red-500'];
+                    var ci = conv.partnerName.split('').reduce(function(a,c){return a+c.charCodeAt(0);},0) % colors.length;
+                    var lastDate = new Date(conv.lastMsg.created_at);
+                    var timeStr = isToday(lastDate) ? lastDate.getHours()+':'+String(lastDate.getMinutes()).padStart(2,'0') : lastDate.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
+                    var preview = conv.lastMsg.betreff || conv.lastMsg.inhalt || '';
+                    if(preview.length > 40) preview = preview.substring(0,40) + '…';
 
-                var resp = await query;
-                if(resp.error) throw resp.error;
-                var msgs = resp.data || [];
+                    html += '<div class="komm-conv-item mx-2 px-3 py-2.5 rounded-lg cursor-pointer flex items-center space-x-3 ' + (isActive ? 'bg-vit-orange/10' : 'hover:bg-gray-100') + '" onclick="openKommConv(\'inbox\',\'' + conv.partnerId + '\',\'' + escH(conv.partnerName).replace(/'/g,"\\'") + '\')">';
+                    html += '<div class="w-8 h-8 ' + colors[ci] + ' rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">' + initials + '</div>';
+                    html += '<div class="flex-1 min-w-0"><div class="flex items-center justify-between"><p class="text-sm font-semibold text-gray-800 truncate">' + escH(conv.partnerName) + '</p><span class="text-[10px] text-gray-400 flex-shrink-0 ml-1">' + timeStr + '</span></div>';
+                    html += '<p class="text-[11px] text-gray-500 truncate ' + (conv.unread > 0 ? 'font-semibold text-gray-700' : '') + '">' + escH(preview) + '</p></div>';
+                    if(conv.unread > 0) html += '<span class="bg-vit-orange text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center flex-shrink-0">' + conv.unread + '</span>';
+                    html += '</div>';
+                });
 
-                // Unread count
-                var unreadResp = await sb.from('nachrichten').select('id', {count:'exact', head:true}).or('an_user_id.eq.' + uid + ',an_standort_id.eq.' + (sbProfile ? sbProfile.standort_id : '00000000-0000-0000-0000-000000000000')).eq('gelesen', false);
-                kommUnreadCount = unreadResp.count || 0;
+                container.innerHTML = html;
                 updateKommBadges();
 
-                var html = '';
-                msgs.forEach(function(m) {
-                    var isSent = filter === 'sent';
-                    var name = isSent ? (m.empfaenger ? m.empfaenger.name : 'Unbekannt') : (m.absender ? m.absender.name : 'Unbekannt');
-                    var initials = name.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
-                    var colors = ['bg-emerald-500','bg-blue-500','bg-purple-500','bg-pink-500','bg-cyan-500','bg-red-500'];
-                    var ci = name.split('').reduce(function(a,c){return a+c.charCodeAt(0);},0) % colors.length;
-                    var d = new Date(m.created_at);
-                    var dateStr = d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' + d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
-                    var isUnread = !isSent && !m.gelesen;
-
-                    html += '<div class="vit-card p-4 hover:shadow-md transition cursor-pointer ' + (isUnread ? 'border-l-4 border-vit-orange bg-orange-50' : '') + '" onclick="openInboxMsg(\'' + m.id + '\',' + isSent + ')">';
-                    html += '<div class="flex items-start space-x-3">';
-                    html += '<div class="w-10 h-10 ' + (isSent ? 'bg-gray-400' : colors[ci]) + ' rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">' + (isSent ? '📤' : initials) + '</div>';
-                    html += '<div class="flex-1 min-w-0">';
-                    html += '<div class="flex items-center justify-between mb-0.5"><span class="font-semibold text-gray-800 text-sm">' + (isSent ? 'An: ' : '') + escH(name) + '</span><span class="text-xs text-gray-400 flex-shrink-0 ml-2">' + dateStr + '</span></div>';
-                    html += '<p class="font-semibold text-gray-800 text-sm ' + (isUnread ? '' : 'font-normal') + '">' + escH(m.betreff) + '</p>';
-                    html += '<p class="text-xs text-gray-500 truncate mt-0.5">' + escH(m.inhalt).substring(0,100) + '</p>';
-                    html += '</div>';
-                    if(isUnread) html += '<span class="w-2.5 h-2.5 bg-vit-orange rounded-full flex-shrink-0 mt-2"></span>';
-                    html += '</div></div>';
-                });
-                if(msgs.length === 0) html = '<div class="text-center py-8 text-gray-400">' + (filter==='sent' ? 'Keine gesendeten Nachrichten.' : 'Keine Nachrichten.') + '</div>';
-                container.innerHTML = html;
             } catch(err) {
-                console.error('Inbox laden:', err);
-                container.innerHTML = '<div class="text-center py-8 text-red-400">Fehler: ' + err.message + '</div>';
+                console.error('Sidebar laden:', err);
+                container.innerHTML = '<div class="p-4 text-xs text-red-400">Fehler: ' + err.message + '</div>';
             }
         }
 
-        async function openInboxMsg(id, isSent) {
-            var detail = document.getElementById('inboxDetail');
-            if(!detail) return;
-            try {
-                var resp = await sb.from('nachrichten').select('*, absender:von_user_id(name), empfaenger:an_user_id(name)').eq('id', id).single();
-                if(resp.error) throw resp.error;
-                var m = resp.data;
+        function isToday(d) { var t = new Date(); return d.getDate()===t.getDate() && d.getMonth()===t.getMonth() && d.getFullYear()===t.getFullYear(); }
 
-                // Mark as read
-                if(!isSent && !m.gelesen) {
-                    await sb.from('nachrichten').update({gelesen: true}).eq('id', id);
-                    kommUnreadCount = Math.max(0, kommUnreadCount - 1);
+        function filterKommSidebar(q) {
+            q = q.toLowerCase();
+            document.querySelectorAll('.komm-conv-item').forEach(function(el) {
+                el.style.display = (!q || el.textContent.toLowerCase().indexOf(q) !== -1) ? '' : 'none';
+            });
+        }
+
+        // =============================================
+        //  OPEN CONVERSATION (right pane)
+        // =============================================
+        async function openKommConv(type, id, name) {
+            kommState.activeConv = { type: type, id: id, name: name };
+            kommState.replyTo = null;
+            document.getElementById('kommReplyBar').classList.add('hidden');
+            document.getElementById('kommChatInput').style.display = '';
+
+            // Update header
+            var avatar = document.getElementById('kommChatAvatar');
+            var title = document.getElementById('kommChatTitle');
+            var subtitle = document.getElementById('kommChatSubtitle');
+            var actions = document.getElementById('kommChatHeaderActions');
+            title.textContent = name;
+            actions.innerHTML = '';
+
+            if(type === 'channel') {
+                var kanal = kommState.kanaele.find(function(k){return k.id===id;});
+                avatar.className = 'w-9 h-9 ' + (kanal && kanal.standort_id ? 'bg-vit-orange' : 'bg-blue-500') + ' rounded-lg flex items-center justify-center text-white font-bold text-sm';
+                avatar.textContent = '#';
+                subtitle.textContent = kanal && kanal.beschreibung ? kanal.beschreibung : 'Team-Kanal';
+                await loadChannelMessages(id);
+                subscribeToChannel(id);
+            } else if(type === 'inbox') {
+                var initials = name.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
+                var colors = ['bg-emerald-500','bg-blue-500','bg-purple-500','bg-pink-500','bg-cyan-500','bg-red-500'];
+                var ci = name.split('').reduce(function(a,c){return a+c.charCodeAt(0);},0) % colors.length;
+                avatar.className = 'w-9 h-9 ' + colors[ci] + ' rounded-full flex items-center justify-center text-white font-bold text-sm';
+                avatar.textContent = initials;
+                subtitle.textContent = 'Direktnachricht';
+                await loadInboxConversation(id);
+            } else if(type === 'announce') {
+                avatar.className = 'w-9 h-9 bg-yellow-500 rounded-lg flex items-center justify-center text-white text-sm';
+                avatar.textContent = '📢';
+                subtitle.textContent = 'Ankündigungen von der Zentrale';
+                document.getElementById('kommChatInput').style.display = sbProfile && sbProfile.is_hq ? '' : 'none';
+                await loadAnnouncements();
+            }
+
+            // Re-highlight sidebar
+            loadKommSidebar();
+        }
+
+        // =============================================
+        //  CHANNEL MESSAGES
+        // =============================================
+        async function loadChannelMessages(kanalId) {
+            var container = document.getElementById('kommChatMessages');
+            container.innerHTML = '<div class="flex justify-center py-8"><span class="text-gray-400 text-sm">Nachrichten laden...</span></div>';
+
+            try {
+                var resp = await sb.from('chat_nachrichten').select('*, users(name)')
+                    .eq('kanal_id', kanalId).order('created_at', {ascending:true});
+                if(resp.error) throw resp.error;
+
+                var messages = resp.data || [];
+                container.innerHTML = renderChatBubbles(messages, 'channel');
+                container.scrollTop = container.scrollHeight;
+            } catch(err) {
+                container.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">Fehler: ' + err.message + '</div>';
+            }
+        }
+
+        function subscribeToChannel(kanalId) {
+            if(kommState.realtimeSub) { sb.removeChannel(kommState.realtimeSub); kommState.realtimeSub = null; }
+            kommState.realtimeSub = sb.channel('komm-chat-' + kanalId)
+                .on('postgres_changes', {
+                    event: 'INSERT', schema: 'public', table: 'chat_nachrichten',
+                    filter: 'kanal_id=eq.' + kanalId
+                }, async function(payload) {
+                    var msg = payload.new;
+                    if(msg.user_id === (sbUser ? sbUser.id : null)) return;
+                    var userResp = await sb.from('users').select('name').eq('id', msg.user_id).single();
+                    msg.users = userResp.data || { name: 'Unbekannt' };
+                    var container = document.getElementById('kommChatMessages');
+                    if(!container) return;
+                    var bubble = renderSingleBubble(msg, 'channel');
+                    container.insertAdjacentHTML('beforeend', bubble);
+                    container.scrollTop = container.scrollHeight;
+                }).subscribe();
+        }
+
+        // =============================================
+        //  INBOX CONVERSATION (1:1 messages)
+        // =============================================
+        async function loadInboxConversation(partnerId) {
+            var container = document.getElementById('kommChatMessages');
+            container.innerHTML = '<div class="flex justify-center py-8"><span class="text-gray-400 text-sm">Nachrichten laden...</span></div>';
+            var uid = sbUser ? sbUser.id : null;
+
+            try {
+                var resp = await sb.from('nachrichten').select('*, absender:von_user_id(name), empfaenger:an_user_id(name)')
+                    .or('and(von_user_id.eq.' + uid + ',an_user_id.eq.' + partnerId + '),and(von_user_id.eq.' + partnerId + ',an_user_id.eq.' + uid + ')')
+                    .order('created_at', {ascending:true});
+                if(resp.error) throw resp.error;
+
+                var msgs = resp.data || [];
+
+                // Mark unread as read
+                var unreadIds = msgs.filter(function(m){ return m.an_user_id === uid && !m.gelesen; }).map(function(m){return m.id;});
+                if(unreadIds.length > 0) {
+                    for(var i=0;i<unreadIds.length;i++) {
+                        await sb.from('nachrichten').update({gelesen:true}).eq('id', unreadIds[i]);
+                    }
+                    kommState.unreadInbox = Math.max(0, kommState.unreadInbox - unreadIds.length);
                     updateKommBadges();
                 }
 
-                var senderName = m.absender ? m.absender.name : 'Unbekannt';
-                var recipientName = m.empfaenger ? m.empfaenger.name : 'Standort';
+                container.innerHTML = renderInboxBubbles(msgs);
+                container.scrollTop = container.scrollHeight;
+            } catch(err) {
+                container.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">Fehler: ' + err.message + '</div>';
+            }
+        }
+
+        function renderInboxBubbles(msgs) {
+            if(msgs.length === 0) return '<div class="flex items-center justify-center h-full text-gray-400 text-sm">Noch keine Nachrichten in dieser Konversation</div>';
+            var uid = sbUser ? sbUser.id : null;
+            var html = '';
+            var lastDateStr = '';
+
+            msgs.forEach(function(m) {
                 var d = new Date(m.created_at);
-                var dateStr = d.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}) + ' um ' + d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
-
-                var html = '<div class="flex items-center justify-between mb-4">';
-                html += '<h3 class="font-bold text-gray-800 text-lg">' + escH(m.betreff) + '</h3>';
-                html += '<button onclick="document.getElementById(\'inboxDetail\').classList.add(\'hidden\')" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>';
-                html += '</div>';
-                html += '<div class="flex items-center space-x-2 mb-4 text-sm text-gray-500">';
-                html += '<span class="font-semibold text-gray-700">Von: ' + escH(senderName) + '</span>';
-                html += '<span>→</span><span>An: ' + escH(recipientName) + '</span>';
-                html += '<span class="ml-auto text-xs">' + dateStr + '</span>';
-                html += '</div>';
-                html += '<div class="text-sm text-gray-700 whitespace-pre-wrap border-t pt-4">' + escH(m.inhalt) + '</div>';
-                if(!isSent) {
-                    html += '<div class="mt-4 pt-4 border-t"><button onclick="replyToMsg(\'' + m.von_user_id + '\',\'' + escH(m.betreff).replace(/'/g,"\\'") + '\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">↩ Antworten</button></div>';
+                var dateStr = d.toLocaleDateString('de-DE', {weekday:'short', day:'numeric', month:'long'});
+                if(dateStr !== lastDateStr) {
+                    html += '<div class="flex justify-center my-4"><span class="text-[11px] bg-gray-100 text-gray-500 px-3 py-1 rounded-full">' + dateStr + '</span></div>';
+                    lastDateStr = dateStr;
                 }
 
-                detail.innerHTML = html;
-                detail.classList.remove('hidden');
-            } catch(err) { console.error('Nachricht öffnen:', err); }
+                var isMe = m.von_user_id === uid;
+                var authorName = isMe ? 'Du' : (m.absender ? m.absender.name : 'Unbekannt');
+                var time = d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+
+                html += '<div class="flex ' + (isMe ? 'justify-end' : 'justify-start') + ' mb-2 group">';
+                html += '<div class="max-w-[70%] ' + (isMe ? 'bg-vit-orange/10 border border-vit-orange/20' : 'bg-gray-100') + ' rounded-2xl ' + (isMe ? 'rounded-tr-sm' : 'rounded-tl-sm') + ' px-4 py-2.5">';
+                if(m.betreff) html += '<p class="text-[11px] font-bold text-gray-500 mb-1">' + escH(m.betreff) + '</p>';
+                html += '<p class="text-sm text-gray-800">' + escH(m.inhalt) + '</p>';
+                html += '<div class="flex items-center justify-between mt-1.5">';
+                html += '<span class="text-[10px] text-gray-400">' + time + '</span>';
+                if(!isMe) html += '<button onclick="setReply(\'' + m.id + '\',\'' + escH(authorName).replace(/'/g,"\\'") + '\',\'' + escH(m.inhalt).substring(0,50).replace(/'/g,"\\'") + '\')" class="text-[10px] text-vit-orange font-semibold opacity-0 group-hover:opacity-100 ml-3 hover:underline">↩ Antworten</button>';
+                html += '</div></div></div>';
+            });
+            return html;
         }
 
-        function replyToMsg(userId, subject) {
-            var compose = document.getElementById('inboxCompose');
-            if(compose) compose.classList.remove('hidden');
-            var sel = document.getElementById('inboxRecipient');
-            if(sel) sel.value = userId;
-            var subj = document.getElementById('inboxSubject');
-            if(subj) subj.value = (subject.indexOf('Re:') === 0 ? subject : 'Re: ' + subject);
-            var body = document.getElementById('inboxBody');
-            if(body) body.focus();
-            document.getElementById('inboxDetail').classList.add('hidden');
-        }
+        // =============================================
+        //  ANNOUNCEMENTS in chat view
+        // =============================================
+        async function loadAnnouncements() {
+            var container = document.getElementById('kommChatMessages');
+            container.innerHTML = '<div class="flex justify-center py-8"><span class="text-gray-400 text-sm">Ankündigungen laden...</span></div>';
 
-        function openInboxCompose(recipientId, subject) {
-            showKommTab('inbox');
-            setTimeout(function() {
-                var compose = document.getElementById('inboxCompose');
-                if(compose) compose.classList.remove('hidden');
-                if(recipientId) {
-                    var sel = document.getElementById('inboxRecipient');
-                    if(sel) sel.value = recipientId;
-                }
-                if(subject) {
-                    var subj = document.getElementById('inboxSubject');
-                    if(subj) subj.value = subject;
-                }
-                var body = document.getElementById('inboxBody');
-                if(body) body.focus();
-            }, 100);
-        }
-
-        function filterInbox(f) {
-            document.querySelectorAll('.inbox-filter-btn').forEach(function(b){b.className='inbox-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600';});
-            var btn=document.querySelector('.inbox-filter-btn[data-f="'+f+'"]');
-            if(btn) btn.className='inbox-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white';
-            renderInbox(f);
-        }
-
-        async function sendInboxMsg() {
-            var recipient = (document.getElementById('inboxRecipient')||{}).value;
-            var subject = (document.getElementById('inboxSubject')||{}).value;
-            var body = (document.getElementById('inboxBody')||{}).value;
-            if(!recipient) { alert('Bitte Empfänger wählen.'); return; }
-            if(!subject && !body) { alert('Bitte Betreff oder Nachricht eingeben.'); return; }
-            try {
-                var resp = await sb.from('nachrichten').insert({
-                    von_user_id: sbUser.id,
-                    an_user_id: recipient,
-                    betreff: subject || '(Kein Betreff)',
-                    inhalt: body || '',
-                    kategorie: 'direkt'
-                });
-                if(resp.error) throw resp.error;
-                document.getElementById('inboxSubject').value = '';
-                document.getElementById('inboxBody').value = '';
-                document.getElementById('inboxCompose').classList.add('hidden');
-                filterInbox('sent');
-            } catch(err) { alert('Fehler beim Senden: ' + err.message); }
-        }
-
-        // --- Unread badges ---
-        function updateKommBadges() {
-            // Inbox tab badge
-            var inboxBtn = document.querySelector('.komm-tab-btn[data-tab="inbox"]');
-            if(inboxBtn) {
-                var badge = inboxBtn.querySelector('.inbox-badge');
-                if(kommUnreadCount > 0) {
-                    if(!badge) {
-                        inboxBtn.insertAdjacentHTML('beforeend', ' <span class="inbox-badge ml-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">' + kommUnreadCount + '</span>');
-                    } else {
-                        badge.textContent = kommUnreadCount;
-                    }
-                } else if(badge) {
-                    badge.remove();
-                }
-            }
-            // Sidebar badge
-            var sidebarBtn = document.querySelector('[data-module="kommunikation"]');
-            if(sidebarBtn) {
-                var sBadge = sidebarBtn.querySelector('.komm-sidebar-badge');
-                if(kommUnreadCount > 0) {
-                    if(!sBadge) {
-                        sidebarBtn.insertAdjacentHTML('beforeend', '<span class="komm-sidebar-badge ml-auto bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">' + kommUnreadCount + '</span>');
-                    } else {
-                        sBadge.textContent = kommUnreadCount;
-                    }
-                } else if(sBadge) {
-                    sBadge.remove();
-                }
-            }
-            // Unread filter button text
-            var unreadBtn = document.querySelector('.inbox-filter-btn[data-f="unread"]');
-            if(unreadBtn) unreadBtn.textContent = 'Ungelesen (' + kommUnreadCount + ')';
-        }
-
-        // --- ANKÜNDIGUNGEN (bereits DB, erweitert mit Gelesen-Tracking) ---
-        async function renderAnnouncements() {
-            var container = document.getElementById('announceList');
-            if(!container) return;
-            var isHQ = sbProfile && sbProfile.is_hq;
             try {
                 var resp = await sb.from('ankuendigungen').select('*, users(name)').order('created_at', {ascending:false});
                 if(resp.error) throw resp.error;
                 var anns = resp.data || [];
 
-                // Gelesen-Status laden
-                var gelesenIds = [];
-                if(sbUser) {
-                    var gr = await sb.from('ankuendigungen_gelesen').select('ankuendigung_id').eq('user_id', sbUser.id);
-                    if(!gr.error && gr.data) gelesenIds = gr.data.map(function(g){return g.ankuendigung_id;});
-                }
+                var gelesenResp = await sb.from('ankuendigungen_gelesen').select('ankuendigung_id').eq('user_id', sbUser ? sbUser.id : '');
+                var gelesenIds = !gelesenResp.error ? (gelesenResp.data||[]).map(function(g){return g.ankuendigung_id;}) : [];
 
+                var icons = {news:'📢',event:'📅',schulung:'🎓',marketing:'📣',sortiment:'🚲',preise:'💰',it:'💻'};
                 var html = '';
-                var icons = {news:'\uD83D\uDCE2',event:'\uD83D\uDCC5',schulung:'\uD83C\uDF93',marketing:'\uD83D\uDCE3',sortiment:'\uD83D\uDEB2',preise:'\uD83D\uDCB0',it:'\uD83D\uDCBB'};
                 anns.forEach(function(a) {
                     var d = new Date(a.created_at);
-                    var dateStr = d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
-                    var istGelesen = gelesenIds.indexOf(a.id) !== -1;
+                    var dateStr = d.toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'long',year:'numeric'});
+                    var time = d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+                    var gelesen = gelesenIds.indexOf(a.id) !== -1;
+                    var authorName = a.users ? a.users.name : 'Zentrale';
 
-                    html += '<div class="vit-card p-5 ' + (a.wichtig ? 'border-l-4 border-vit-orange' : '') + ' ' + (istGelesen ? 'opacity-70' : '') + '">';
-                    html += '<div class="flex items-start space-x-4">';
-                    html += '<div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">' + (icons[a.kategorie]||'\uD83D\uDCE2') + '</div>';
+                    html += '<div class="mb-4 group ' + (gelesen ? 'opacity-60' : '') + '">';
+                    html += '<div class="flex justify-center mb-2"><span class="text-[11px] bg-gray-100 text-gray-500 px-3 py-1 rounded-full">' + dateStr + ' · ' + time + '</span></div>';
+                    html += '<div class="bg-gradient-to-r ' + (a.wichtig ? 'from-red-50 to-orange-50 border border-red-200' : 'from-blue-50 to-indigo-50 border border-blue-200') + ' rounded-2xl px-5 py-4">';
+                    html += '<div class="flex items-start space-x-3">';
+                    html += '<div class="text-2xl flex-shrink-0">' + (icons[a.kategorie] || '📢') + '</div>';
                     html += '<div class="flex-1">';
-                    html += '<div class="flex items-center justify-between">';
                     html += '<div class="flex items-center space-x-2 mb-1">';
-                    if(a.wichtig) html += '<span class="text-xs font-bold bg-red-100 text-red-600 rounded px-2 py-0.5">Wichtig</span>';
-                    if(!istGelesen) html += '<span class="text-xs font-bold bg-blue-100 text-blue-600 rounded px-2 py-0.5">Neu</span>';
-                    html += '<span class="text-xs text-gray-400">' + dateStr + '</span>';
-                    if(a.users&&a.users.name) html += '<span class="text-xs text-gray-400">\u00B7 '+a.users.name+'</span>';
+                    if(a.wichtig) html += '<span class="text-[10px] font-bold bg-red-100 text-red-600 rounded px-1.5 py-0.5">Wichtig</span>';
+                    if(!gelesen) html += '<span class="text-[10px] font-bold bg-blue-100 text-blue-600 rounded px-1.5 py-0.5">Neu</span>';
+                    html += '<span class="text-[11px] text-gray-400">' + escH(authorName) + '</span>';
                     html += '</div>';
-                    html += '<div class="flex space-x-1">';
-                    if(!istGelesen) html += '<button onclick="markAnkGelesen(\'' + a.id + '\',this)" class="text-xs px-2 py-1 text-gray-400 hover:text-green-600" title="Als gelesen markieren">✓</button>';
-                    if(isHQ) {
-                        html += '<button onclick="editAnkuendigung(\'' + a.id + '\',\'' + a.titel.replace(/'/g,"\\'") + '\',\'' + (a.kategorie||'news') + '\',' + a.wichtig + ')" class="text-xs px-2 py-1 text-gray-400 hover:text-blue-600" title="Bearbeiten">✏️</button>';
-                        html += '<button onclick="deleteAnkuendigung(\'' + a.id + '\')" class="text-xs px-2 py-1 text-gray-400 hover:text-red-600" title="Löschen">🗑️</button>';
-                    }
-                    html += '</div></div>';
-                    html += '<h3 class="font-bold text-gray-800 mb-2">' + escH(a.titel) + '</h3>';
+                    html += '<h3 class="font-bold text-gray-800 text-sm mb-1">' + escH(a.titel) + '</h3>';
                     html += '<p class="text-sm text-gray-600">' + escH(a.inhalt) + '</p>';
-                    html += '</div></div></div>';
+                    if(!gelesen) html += '<button onclick="markAnkGelesen(\'' + a.id + '\',this)" class="mt-2 text-xs text-green-600 font-semibold hover:underline">✓ Als gelesen markieren</button>';
+                    html += '</div></div></div></div>';
                 });
-                if(anns.length===0) html = '<div class="text-center py-8 text-gray-400">Keine Ankündigungen.</div>';
+
+                if(anns.length === 0) html = '<div class="flex items-center justify-center h-full text-gray-400 text-sm">Keine Ankündigungen</div>';
                 container.innerHTML = html;
-            } catch(err) { console.error('Ankündigungen:', err); }
+            } catch(err) {
+                container.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">Fehler: ' + err.message + '</div>';
+            }
         }
 
         async function markAnkGelesen(id, btn) {
             if(!sbUser) return;
             try {
                 await sb.from('ankuendigungen_gelesen').upsert({ankuendigung_id: id, user_id: sbUser.id});
-                if(btn) { var card = btn.closest('.vit-card'); if(card) card.classList.add('opacity-70'); }
+                var card = btn.closest('.mb-4.group');
+                if(card) card.classList.add('opacity-60');
                 btn.remove();
+                kommState.unreadAnnounce = Math.max(0, kommState.unreadAnnounce - 1);
+                updateKommBadges();
             } catch(err) { console.error('Gelesen markieren:', err); }
         }
 
-        async function deleteAnkuendigung(id) {
-            if(!confirm('Ankündigung wirklich löschen?')) return;
+        // =============================================
+        //  RENDER CHAT BUBBLES (Channel)
+        // =============================================
+        function renderChatBubbles(messages, type) {
+            if(messages.length === 0) return '<div class="flex items-center justify-center h-full text-gray-400 text-sm"><div class="text-center"><div class="text-3xl mb-2">👋</div><p>Noch keine Nachrichten. Schreib die erste!</p></div></div>';
+            var uid = sbUser ? sbUser.id : null;
+            var html = '';
+            var lastDateStr = '';
+            var lastAuthor = '';
+
+            messages.forEach(function(m) {
+                var d = new Date(m.created_at);
+                var dateStr = d.toLocaleDateString('de-DE', {weekday:'short', day:'numeric', month:'long'});
+                if(dateStr !== lastDateStr) {
+                    html += '<div class="flex justify-center my-4"><span class="text-[11px] bg-gray-100 text-gray-500 px-3 py-1 rounded-full">' + dateStr + '</span></div>';
+                    lastDateStr = dateStr;
+                    lastAuthor = '';
+                }
+                html += renderSingleBubble(m, type, lastAuthor === m.user_id);
+                lastAuthor = m.user_id;
+            });
+            return html;
+        }
+
+        function renderSingleBubble(m, type, isConsecutive) {
+            var uid = sbUser ? sbUser.id : null;
+            var isMe = (type === 'channel') ? m.user_id === uid : m.von_user_id === uid;
+            var authorName = m.users ? m.users.name : (m.absender ? m.absender.name : 'Unbekannt');
+            var initials = authorName.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
+            var colors = ['bg-blue-500','bg-green-600','bg-purple-500','bg-cyan-600','bg-pink-500','bg-red-500','bg-teal-500'];
+            var ci = authorName.split('').reduce(function(a,c){return a+c.charCodeAt(0);},0) % colors.length;
+            var d = new Date(m.created_at);
+            var time = d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+            var text = type === 'channel' ? m.nachricht : m.inhalt;
+
+            var html = '<div class="flex items-start space-x-2.5 group ' + (isConsecutive ? 'mt-0.5' : 'mt-3') + '">';
+            if(!isConsecutive) {
+                html += '<div class="w-8 h-8 ' + (isMe ? 'bg-vit-orange' : colors[ci]) + ' rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">' + initials + '</div>';
+            } else {
+                html += '<div class="w-8 flex-shrink-0 flex items-center justify-center"><span class="text-[9px] text-gray-300 opacity-0 group-hover:opacity-100">' + time + '</span></div>';
+            }
+            html += '<div class="flex-1 min-w-0">';
+            if(!isConsecutive) {
+                html += '<div class="flex items-baseline space-x-2 mb-0.5"><span class="text-sm font-semibold ' + (isMe ? 'text-vit-orange' : 'text-gray-800') + '">' + escH(authorName) + '</span><span class="text-[10px] text-gray-400">' + time + '</span></div>';
+            }
+            html += '<div class="text-sm text-gray-700 hover:bg-gray-50 rounded px-1 -mx-1 py-0.5 relative group">' + escH(text).replace(/\n/g, '<br>');
+            // Reply button (thread)
+            html += '<button onclick="setReply(\'' + m.id + '\',\'' + escH(authorName).replace(/'/g,"\\'") + '\',\'' + escH(text).substring(0,50).replace(/'/g,"\\'").replace(/\n/g,' ') + '\')" class="absolute right-1 top-0 text-[10px] text-gray-400 hover:text-vit-orange opacity-0 group-hover:opacity-100 bg-white px-1.5 py-0.5 rounded shadow-sm border">↩</button>';
+            html += '</div></div></div>';
+            return html;
+        }
+
+        // =============================================
+        //  REPLY / THREAD
+        // =============================================
+        function setReply(msgId, author, preview) {
+            kommState.replyTo = { id: msgId, author: author, preview: preview };
+            document.getElementById('kommReplyBar').classList.remove('hidden');
+            document.getElementById('kommReplyTo').textContent = author;
+            document.getElementById('kommReplyPreview').textContent = preview;
+            document.getElementById('kommMsgInput').focus();
+        }
+
+        function cancelReply() {
+            kommState.replyTo = null;
+            document.getElementById('kommReplyBar').classList.add('hidden');
+        }
+
+        // =============================================
+        //  SEND MESSAGE (unified)
+        // =============================================
+        async function kommSendMessage() {
+            var input = document.getElementById('kommMsgInput');
+            var text = input.value.trim();
+            if(!text || !sbUser || !kommState.activeConv) return;
+
+            input.value = '';
+            input.style.height = 'auto';
+            input.disabled = true;
+            var replyCtx = kommState.replyTo ? (' [↩ ' + kommState.replyTo.author + ': ' + kommState.replyTo.preview + ']') : '';
+            cancelReply();
+
             try {
-                var resp = await sb.from('ankuendigungen').delete().eq('id', id);
-                if(resp.error) throw resp.error;
-                renderAnnouncements();
-            } catch(err) { alert('Fehler: '+err.message); }
+                var conv = kommState.activeConv;
+                if(conv.type === 'channel') {
+                    var resp = await sb.from('chat_nachrichten').insert({
+                        kanal_id: conv.id, user_id: sbUser.id, nachricht: replyCtx ? text + '\n' + replyCtx : text
+                    });
+                    if(resp.error) throw resp.error;
+                    // Optimistic append
+                    var container = document.getElementById('kommChatMessages');
+                    var emptyMsg = container.querySelector('.text-center');
+                    if(emptyMsg && container.children.length === 1) container.innerHTML = '';
+                    container.insertAdjacentHTML('beforeend', renderSingleBubble({
+                        user_id: sbUser.id, users: {name: sbProfile ? sbProfile.name : 'Ich'},
+                        nachricht: replyCtx ? text + '\n' + replyCtx : text, created_at: new Date().toISOString()
+                    }, 'channel', false));
+                    container.scrollTop = container.scrollHeight;
+
+                } else if(conv.type === 'inbox') {
+                    var resp = await sb.from('nachrichten').insert({
+                        von_user_id: sbUser.id, an_user_id: conv.id,
+                        betreff: '', inhalt: replyCtx ? text + '\n' + replyCtx : text,
+                        kategorie: 'direkt'
+                    });
+                    if(resp.error) throw resp.error;
+                    await loadInboxConversation(conv.id);
+
+                } else if(conv.type === 'announce') {
+                    // Only HQ can post announcements via chat
+                    if(sbProfile && sbProfile.is_hq) {
+                        var resp = await sb.from('ankuendigungen').insert({
+                            erstellt_von: sbUser.id, titel: text.split('\n')[0].substring(0,80),
+                            inhalt: text, kategorie: 'news', wichtig: false
+                        });
+                        if(resp.error) throw resp.error;
+                        await loadAnnouncements();
+                    }
+                }
+            } catch(err) {
+                alert('Senden fehlgeschlagen: ' + err.message);
+                input.value = text;
+            } finally {
+                input.disabled = false;
+                input.focus();
+            }
         }
 
-        function editAnkuendigung(id, titel, kategorie, wichtig) {
-            openAnkuendigungModal();
-            setTimeout(function() {
-                var t = document.getElementById('ankTitel'); if(t) t.value = titel;
-                var k = document.getElementById('ankKat'); if(k) k.value = kategorie;
-                var w = document.getElementById('ankWichtig'); if(w) w.checked = wichtig;
-                var btn = document.getElementById('ankSaveBtn');
-                if(btn) { btn.textContent = 'Aktualisieren'; btn.onclick = function() { updateAnkuendigung(id); }; }
-            }, 100);
+        function kommInputKeydown(e) {
+            if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); kommSendMessage(); }
         }
 
-        async function updateAnkuendigung(id) {
-            var titel = (document.getElementById('ankTitel')||{}).value;
-            var inhalt = (document.getElementById('ankInhalt')||{}).value;
-            var kategorie = (document.getElementById('ankKat')||{}).value || 'news';
-            var wichtig = (document.getElementById('ankWichtig')||{}).checked || false;
-            if(!titel||!titel.trim()||!inhalt||!inhalt.trim()) { alert('Bitte Titel und Inhalt ausfüllen.'); return; }
-            try {
-                var resp = await sb.from('ankuendigungen').update({titel:titel.trim(),inhalt:inhalt.trim(),kategorie:kategorie,wichtig:wichtig}).eq('id',id);
-                if(resp.error) throw resp.error;
-                closeAnkModal();
-                alert('✅ Ankündigung aktualisiert!');
-                renderAnnouncements();
-            } catch(err) { alert('Fehler: '+err.message); }
+        function kommAutoResize(el) {
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 120) + 'px';
         }
 
-        // --- BRETT (DB-Anbindung mit Create) ---
+        // =============================================
+        //  NEW CHAT (compose to new recipient)
+        // =============================================
+        async function kommStartNewChat() {
+            if(kommState.allUsers.length === 0) {
+                var resp = await sb.from('users').select('id, name, is_hq, standorte(name)').eq('status','aktiv').order('name');
+                if(!resp.error) kommState.allUsers = (resp.data||[]).filter(function(u){return u.id !== (sbUser?sbUser.id:null);});
+            }
+
+            var container = document.getElementById('kommChatMessages');
+            document.getElementById('kommChatInput').style.display = '';
+            document.getElementById('kommChatTitle').textContent = 'Neue Nachricht';
+            document.getElementById('kommChatSubtitle').textContent = 'Empfänger wählen';
+            document.getElementById('kommChatAvatar').className = 'w-9 h-9 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold text-sm';
+            document.getElementById('kommChatAvatar').textContent = '+';
+
+            var html = '<div class="p-4"><div class="mb-4">';
+            html += '<select id="kommNewChatRecipient" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-vit-orange" onchange="kommSelectNewRecipient(this.value)">';
+            html += '<option value="">– Empfänger wählen –</option>';
+            kommState.allUsers.forEach(function(u) {
+                var label = u.name + (u.standorte ? ' (' + u.standorte.name + ')' : (u.is_hq ? ' (HQ)' : ''));
+                html += '<option value="' + u.id + '" data-name="' + escH(label) + '">' + escH(label) + '</option>';
+            });
+            html += '</select></div>';
+            html += '<div class="text-center text-gray-400 text-sm mt-8"><div class="text-3xl mb-2">✉️</div><p>Wähle einen Empfänger, um die Konversation zu starten</p></div></div>';
+
+            container.innerHTML = html;
+            kommState.activeConv = null;
+        }
+
+        function kommSelectNewRecipient(userId) {
+            if(!userId) return;
+            var sel = document.getElementById('kommNewChatRecipient');
+            var opt = sel.options[sel.selectedIndex];
+            var name = opt.getAttribute('data-name') || opt.textContent;
+            openKommConv('inbox', userId, name);
+        }
+
+        // =============================================
+        //  BADGES
+        // =============================================
+        function updateKommBadges() {
+            var total = kommState.unreadInbox + kommState.unreadAnnounce;
+            // Sidebar badge
+            var sidebarBtn = document.querySelector('[data-module="kommunikation"]');
+            if(sidebarBtn) {
+                var sBadge = sidebarBtn.querySelector('.komm-sidebar-badge');
+                if(total > 0) {
+                    if(!sBadge) {
+                        sidebarBtn.insertAdjacentHTML('beforeend', '<span class="komm-sidebar-badge ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center">' + total + '</span>');
+                    } else {
+                        sBadge.textContent = total;
+                    }
+                } else if(sBadge) { sBadge.remove(); }
+            }
+            // Chat tab badge
+            var chatBtn = document.querySelector('.komm-tab-btn[data-tab="chat"]');
+            if(chatBtn) {
+                var cBadge = chatBtn.querySelector('.komm-chat-badge');
+                if(total > 0) {
+                    if(!cBadge) {
+                        chatBtn.insertAdjacentHTML('beforeend', ' <span class="komm-chat-badge bg-red-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 ml-1">' + total + '</span>');
+                    } else {
+                        cBadge.textContent = total;
+                    }
+                } else if(cBadge) { cBadge.remove(); }
+            }
+        }
+
+        // =============================================
+        //  BRETT (unchanged DB logic)
+        // =============================================
         async function renderBrett(cat) {
             var container = document.getElementById('brettPosts');
             if(!container) return;
@@ -7682,7 +7912,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     html += '<div class="flex items-center justify-between text-xs text-gray-400">';
                     html += '<div class="flex items-center space-x-1"><div class="w-5 h-5 ' + colors[ci] + ' rounded-full flex items-center justify-center text-white text-[10px] font-bold">' + initials + '</div><span>' + escH(authorName) + '</span></div>';
                     html += '<div class="flex items-center space-x-2"><span>' + d.toLocaleDateString('de-DE') + '</span>';
-                    if(!isOwn) html += '<button onclick="openInboxCompose(\'' + p.user_id + '\',\'Bzgl: ' + escH(p.titel).replace(/'/g,"\\'") + '\')" class="text-vit-orange hover:underline font-semibold">✉ Nachricht</button>';
+                    if(!isOwn) html += '<button onclick="openKommConv(\'inbox\',\'' + p.user_id + '\',\'' + escH(authorName).replace(/'/g,"\\'") + '\');showKommTab(\'chat\')" class="text-vit-orange hover:underline font-semibold">✉ Nachricht</button>';
                     html += '</div></div></div>';
                 });
                 if(posts.length===0) html = '<div class="col-span-2 text-center py-8 text-gray-400">Keine Einträge.</div>';
@@ -7697,11 +7927,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(!titel || !titel.trim()) { alert('Bitte Titel eingeben.'); return; }
             try {
                 var resp = await sb.from('brett_eintraege').insert({
-                    user_id: sbUser.id,
-                    standort_id: sbProfile ? sbProfile.standort_id : null,
-                    titel: titel.trim(),
-                    beschreibung: body ? body.trim() : null,
-                    kategorie: kat
+                    user_id: sbUser.id, standort_id: sbProfile ? sbProfile.standort_id : null,
+                    titel: titel.trim(), beschreibung: body ? body.trim() : null, kategorie: kat
                 });
                 if(resp.error) throw resp.error;
                 document.getElementById('brettNewTitle').value = '';
@@ -7713,10 +7940,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         async function deactivateBrettPost(id) {
             if(!confirm('Eintrag wirklich entfernen?')) return;
-            try {
-                await sb.from('brett_eintraege').update({aktiv: false}).eq('id', id);
-                renderBrett('all');
-            } catch(err) { alert('Fehler: ' + err.message); }
+            try { await sb.from('brett_eintraege').update({aktiv:false}).eq('id',id); renderBrett('all'); } catch(err) { alert('Fehler: '+err.message); }
         }
 
         function filterBrett(cat) {
@@ -7726,150 +7950,32 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             renderBrett(cat);
         }
 
-        // === DYNAMIC MINI CALENDAR (Kommunikation Termine Tab) ===
-        var kommMiniCalMonth = new Date().getMonth();
-        var kommMiniCalYear = new Date().getFullYear();
-
-        function kommMiniCalNav(dir) {
-            kommMiniCalMonth += dir;
-            if (kommMiniCalMonth > 11) { kommMiniCalMonth = 0; kommMiniCalYear++; }
-            if (kommMiniCalMonth < 0) { kommMiniCalMonth = 11; kommMiniCalYear--; }
-            renderKommMiniCal();
-        }
-
-        function renderKommMiniCal() {
-            var months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-            var titleEl = document.getElementById('kommMiniCalTitle');
-            if (titleEl) titleEl.textContent = months[kommMiniCalMonth] + ' ' + kommMiniCalYear;
-
-            var gridEl = document.getElementById('kommMiniCalGrid');
-            if (!gridEl) return;
-
-            var today = new Date();
-            var todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-
-            var firstDay = new Date(kommMiniCalYear, kommMiniCalMonth, 1).getDay();
-            firstDay = firstDay === 0 ? 6 : firstDay - 1;
-            var daysInMonth = new Date(kommMiniCalYear, kommMiniCalMonth + 1, 0).getDate();
-
-            var h = '<span class="text-gray-400 font-semibold py-1">Mo</span><span class="text-gray-400 font-semibold py-1">Di</span><span class="text-gray-400 font-semibold py-1">Mi</span><span class="text-gray-400 font-semibold py-1">Do</span><span class="text-gray-400 font-semibold py-1">Fr</span><span class="text-gray-400 font-semibold py-1">Sa</span><span class="text-gray-400 font-semibold py-1">So</span>';
-            for (var i = 0; i < firstDay; i++) h += '<span class="py-1"></span>';
-
-            var termineDates = {};
-            (typeof kalTermine !== 'undefined' ? kalTermine : []).forEach(function(t) {
-                if (!termineDates[t.date]) termineDates[t.date] = [];
-                termineDates[t.date].push(t);
-            });
-
-            for (var d = 1; d <= daysInMonth; d++) {
-                var dateStr = kommMiniCalYear + '-' + String(kommMiniCalMonth + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-                var isToday = dateStr === todayStr;
-                var dayTerms = termineDates[dateStr] || [];
-                var isWeekend = ((firstDay + d - 1) % 7) >= 5;
-
-                var cls = 'py-1 cursor-pointer hover:bg-gray-100 rounded-full transition ';
-                if (isToday) {
-                    cls += 'bg-vit-orange text-white font-bold ';
-                } else if (dayTerms.length > 0) {
-                    var firstType = dayTerms[0].type;
-                    if (firstType === 'deadline') cls += 'bg-red-100 text-red-700 font-semibold ';
-                    else if (firstType === 'probefahrt' || firstType === 'event') cls += 'bg-green-100 text-green-700 font-semibold ';
-                    else cls += 'bg-blue-100 text-blue-700 font-semibold ';
-                } else if (isWeekend) {
-                    cls += 'text-gray-300 ';
-                }
-
-                var tooltip = dayTerms.length > 0 ? dayTerms.map(function(t) { return t.time + ' ' + t.title; }).join('\n') : '';
-                h += '<span class="' + cls + '" title="' + escH(tooltip) + '" onclick="kommMiniCalClick(\'' + dateStr + '\')">' + d + '</span>';
-            }
-
-            gridEl.innerHTML = h;
-
-            var statsEl = document.getElementById('kommMiniCalStats');
-            if (statsEl) {
-                var monthTerms = (typeof kalTermine !== 'undefined' ? kalTermine : []).filter(function(t) {
-                    return t.date.slice(0, 7) === kommMiniCalYear + '-' + String(kommMiniCalMonth + 1).padStart(2, '0');
-                });
-                var typeCount = {};
-                monthTerms.forEach(function(t) { typeCount[t.type] = (typeCount[t.type] || 0) + 1; });
-                var sh = '<p class="font-semibold text-gray-700">' + monthTerms.length + ' Termine im ' + months[kommMiniCalMonth] + '</p>';
-                var typeLabelsLocal = {beratung:'Beratung',probefahrt:'Probefahrt',werkstatt:'Werkstatt',meeting:'Meeting',sonstig:'Sonstiges',schulung:'Schulung',event:'Event',deadline:'Deadline'};
-                Object.keys(typeCount).forEach(function(k) {
-                    sh += '<p>' + typeCount[k] + '× ' + (typeLabelsLocal[k] || k) + '</p>';
-                });
-                statsEl.innerHTML = sh;
-            }
-        }
-
-        function kommMiniCalClick(dateStr) {
-            showView('kalender');
-            if (typeof kalDayDate !== 'undefined') {
-                kalDayDate = new Date(dateStr + 'T12:00:00');
-                switchKalView('day');
-            }
-        }
-
-        async function renderTermine() {
-            var container = document.getElementById('termineList');
-            if(!container) return;
-            try {
-                var resp = await sb.from('termine').select('*').gte('start_zeit', new Date().toISOString().split('T')[0]).order('start_zeit', {ascending:true}).limit(15);
-                if(resp.error) throw resp.error;
-                var terms = resp.data || [];
-                var html = '';
-                var typeLabels = {termin:'📋',meeting:'👥',schulung:'🎓',event:'🎉',deadline:'⏰',probefahrt:'🚲'};
-                terms.forEach(function(t) {
-                    var d = new Date(t.start_zeit);
-                    var dateStr = d.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'});
-                    var timeStr = t.ganztaegig ? 'Ganztägig' : d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
-                    if(t.end_zeit) { var e=new Date(t.end_zeit); timeStr += ' – '+e.getHours()+':'+String(e.getMinutes()).padStart(2,'0'); }
-                    html += '<div class="vit-card p-4 flex items-start space-x-4 hover:shadow-md transition">';
-                    html += '<div class="text-center flex-shrink-0 w-14"><div class="text-2xl">' + (typeLabels[t.typ]||'📋') + '</div><div class="text-xs font-bold text-gray-500 mt-1">' + dateStr + '</div></div>';
-                    html += '<div class="flex-1"><h4 class="font-bold text-gray-800 text-sm">' + escH(t.titel) + '</h4>';
-                    html += '<p class="text-xs text-gray-500 mt-0.5">' + timeStr + (t.ort ? ' · ' + escH(t.ort) : '') + '</p>';
-                    if(t.beschreibung) html += '<p class="text-xs text-gray-400 mt-1">' + escH(t.beschreibung) + '</p>';
-                    html += '</div></div>';
-                });
-                if(terms.length===0) html = '<div class="text-center py-8 text-gray-400">Keine anstehenden Termine.</div>';
-                container.innerHTML = html;
-            } catch(err) { console.error('Termine:', err); }
-        }
-
-        // --- FORUM (komplett mit Create, Detail, Comments) ---
+        // =============================================
+        //  FORUM (unchanged DB logic)
+        // =============================================
         async function renderForumPosts(cat) {
             var container = document.getElementById('forumPosts');
             if(!container) return;
             container.innerHTML = '<div class="text-center py-4"><span class="text-gray-400 text-sm">Beiträge werden geladen...</span></div>';
-
             try {
-                var query = sb.from('forum_beitraege').select('*, users(name)').order('gepinnt', { ascending: false }).order('created_at', { ascending: false });
+                var query = sb.from('forum_beitraege').select('*, users(name)').order('gepinnt',{ascending:false}).order('created_at',{ascending:false});
                 if(cat && cat !== 'all') query = query.eq('kategorie', cat);
-
                 var resp = await query;
                 if(resp.error) throw resp.error;
-
                 var posts = resp.data || [];
-                var html = '';
-
-                if(posts.length === 0) {
-                    html = '<div class="text-center py-8"><span class="text-gray-400 text-sm">Keine Beiträge gefunden. Starte die Diskussion!</span></div>';
-                }
-
                 var catColors = {news:'bg-vit-orange text-white',frage:'bg-blue-100 text-blue-700',tipp:'bg-green-100 text-green-700',allgemein:'bg-gray-100 text-gray-700',verkauf:'bg-purple-100 text-purple-700',werkstatt:'bg-cyan-100 text-cyan-700',einkauf:'bg-yellow-100 text-yellow-700',zentrale:'bg-orange-100 text-orange-700'};
                 var catLabels = {news:'News',frage:'Frage',tipp:'Tipp',allgemein:'Allgemein',verkauf:'Verkauf',werkstatt:'Werkstatt',einkauf:'Einkauf',zentrale:'Zentrale'};
 
-                // Alle Kommentar-Counts in einem Batch laden
-                var postIds = posts.map(function(p){return p.id;});
+                // Load comment counts
                 var commentCounts = {};
-                if(postIds.length > 0) {
-                    for(var ci = 0; ci < postIds.length; ci++) {
-                        var cr = await sb.from('forum_kommentare').select('id', { count: 'exact', head: true }).eq('beitrag_id', postIds[ci]);
-                        commentCounts[postIds[ci]] = cr.count || 0;
-                    }
+                for(var i=0;i<posts.length;i++) {
+                    var cr = await sb.from('forum_kommentare').select('id',{count:'exact',head:true}).eq('beitrag_id', posts[i].id);
+                    commentCounts[posts[i].id] = cr.count || 0;
                 }
 
-                for(var i = 0; i < posts.length; i++) {
-                    var p = posts[i];
+                var html = '';
+                if(posts.length===0) html = '<div class="text-center py-8"><span class="text-gray-400 text-sm">Keine Beiträge. Starte die Diskussion!</span></div>';
+                posts.forEach(function(p) {
                     var authorName = p.users ? p.users.name : 'Unbekannt';
                     var initials = authorName.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
                     var colors = ['bg-blue-500','bg-green-600','bg-purple-500','bg-cyan-600','bg-pink-500','bg-red-500'];
@@ -7887,23 +7993,16 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     html += '<div class="flex items-center space-x-2 mb-1 flex-wrap">';
                     if(p.gepinnt) html += '<span class="text-xs font-bold bg-yellow-100 text-yellow-700 rounded px-1.5 py-0.5">📌 Angepinnt</span>';
                     html += '<span class="text-xs font-semibold rounded px-2 py-0.5 ' + (catColors[p.kategorie]||catColors.allgemein) + '">' + (catLabels[p.kategorie]||p.kategorie) + '</span>';
-                    if(isOwn || isHQ) {
-                        html += '<button onclick="event.stopPropagation();deleteForumPost(\'' + p.id + '\')" class="text-xs text-gray-300 hover:text-red-500 ml-auto" title="Löschen">🗑️</button>';
-                    }
+                    if(isOwn||isHQ) html += '<button onclick="event.stopPropagation();deleteForumPost(\'' + p.id + '\')" class="text-xs text-gray-300 hover:text-red-500 ml-auto" title="Löschen">🗑️</button>';
                     html += '</div>';
                     html += '<h3 class="font-bold text-gray-800 mb-1 hover:text-vit-orange">' + escH(p.titel) + '</h3>';
                     html += '<p class="text-sm text-gray-600 mb-2 line-clamp-2">' + escH(p.inhalt) + '</p>';
-                    html += '<div class="flex items-center space-x-4 text-xs text-gray-400">';
-                    html += '<span class="font-semibold text-gray-600">' + escH(authorName) + '</span>';
-                    html += '<span>' + dateStr + '</span>';
-                    html += '<span>💬 ' + replyCount + ' Antworten</span>';
-                    html += '</div></div></div></div>';
-                }
-
+                    html += '<div class="flex items-center space-x-4 text-xs text-gray-400"><span class="font-semibold text-gray-600">' + escH(authorName) + '</span><span>' + dateStr + '</span><span>💬 ' + replyCount + '</span></div>';
+                    html += '</div></div></div>';
+                });
                 container.innerHTML = html;
             } catch(err) {
-                console.error('Forum laden:', err);
-                container.innerHTML = '<div class="text-center py-4"><span class="text-red-400 text-sm">Fehler: ' + err.message + '</span></div>';
+                container.innerHTML = '<div class="text-center py-4 text-red-400 text-sm">Fehler: ' + err.message + '</div>';
             }
         }
 
@@ -7911,16 +8010,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var titel = (document.getElementById('forumNewTitle')||{}).value;
             var body = (document.getElementById('forumNewBody')||{}).value;
             var kat = (document.getElementById('forumNewCat')||{}).value || 'allgemein';
-            if(!titel || !titel.trim()) { alert('Bitte Betreff eingeben.'); return; }
-            if(!body || !body.trim()) { alert('Bitte Nachricht eingeben.'); return; }
+            if(!titel||!titel.trim()) { alert('Bitte Betreff eingeben.'); return; }
+            if(!body||!body.trim()) { alert('Bitte Nachricht eingeben.'); return; }
             try {
-                var resp = await sb.from('forum_beitraege').insert({
-                    user_id: sbUser.id,
-                    standort_id: sbProfile ? sbProfile.standort_id : null,
-                    titel: titel.trim(),
-                    inhalt: body.trim(),
-                    kategorie: kat
-                });
+                var resp = await sb.from('forum_beitraege').insert({ user_id: sbUser.id, standort_id: sbProfile ? sbProfile.standort_id : null, titel: titel.trim(), inhalt: body.trim(), kategorie: kat });
                 if(resp.error) throw resp.error;
                 document.getElementById('forumNewTitle').value = '';
                 document.getElementById('forumNewBody').value = '';
@@ -7932,292 +8025,170 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         async function deleteForumPost(id) {
             if(!confirm('Beitrag wirklich löschen?')) return;
             try {
-                // Erst Kommentare löschen
                 await sb.from('forum_kommentare').delete().eq('beitrag_id', id);
-                var resp = await sb.from('forum_beitraege').delete().eq('id', id);
-                if(resp.error) throw resp.error;
+                await sb.from('forum_beitraege').delete().eq('id', id);
                 renderForumPosts('all');
             } catch(err) { alert('Fehler: ' + err.message); }
         }
 
         async function openForumDetail(postId) {
-            kommCurrentForumPost = postId;
+            kommState.currentForumPost = postId;
             document.getElementById('forumListView').classList.add('hidden');
             document.getElementById('forumDetailView').classList.remove('hidden');
-
             var contentEl = document.getElementById('forumDetailContent');
             var commentsEl = document.getElementById('forumComments');
-
             try {
-                // Post laden
                 var resp = await sb.from('forum_beitraege').select('*, users(name)').eq('id', postId).single();
                 if(resp.error) throw resp.error;
                 var p = resp.data;
                 var authorName = p.users ? p.users.name : 'Unbekannt';
                 var d = new Date(p.created_at);
                 var dateStr = d.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}) + ' um ' + d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
-
                 var html = '<div class="flex items-center space-x-2 mb-3">';
                 if(p.gepinnt) html += '<span class="text-xs font-bold bg-yellow-100 text-yellow-700 rounded px-2 py-0.5">📌 Angepinnt</span>';
-                html += '<span class="text-xs text-gray-400">' + dateStr + '</span>';
-                html += '</div>';
+                html += '<span class="text-xs text-gray-400">' + dateStr + '</span></div>';
                 html += '<h2 class="text-xl font-bold text-gray-800 mb-3">' + escH(p.titel) + '</h2>';
                 html += '<div class="flex items-center space-x-2 mb-4"><span class="text-sm font-semibold text-gray-700">' + escH(authorName) + '</span></div>';
                 html += '<div class="text-sm text-gray-700 whitespace-pre-wrap">' + escH(p.inhalt) + '</div>';
                 contentEl.innerHTML = html;
 
-                // Kommentare laden
-                var commResp = await sb.from('forum_kommentare').select('*, users(name)').eq('beitrag_id', postId).order('created_at', {ascending: true});
-                if(commResp.error) throw commResp.error;
-                var comments = commResp.data || [];
+                var commResp = await sb.from('forum_kommentare').select('*, users(name)').eq('beitrag_id', postId).order('created_at',{ascending:true});
+                var comments = !commResp.error ? (commResp.data||[]) : [];
                 var cHtml = '';
-                if(comments.length === 0) {
-                    cHtml = '<div class="text-sm text-gray-400 py-2">Noch keine Kommentare. Sei der Erste!</div>';
-                }
+                if(comments.length===0) cHtml = '<div class="text-sm text-gray-400 py-2">Noch keine Kommentare. Sei der Erste!</div>';
                 comments.forEach(function(c) {
                     var cName = c.users ? c.users.name : 'Unbekannt';
                     var cInit = cName.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
                     var colors = ['bg-blue-500','bg-green-600','bg-purple-500','bg-cyan-600','bg-pink-500','bg-red-500'];
                     var cci = cName.split('').reduce(function(a,ch){return a+ch.charCodeAt(0);},0) % colors.length;
                     var cd = new Date(c.created_at);
-                    var cDate = cd.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}) + ' ' + cd.getHours()+':'+String(cd.getMinutes()).padStart(2,'0');
-
                     cHtml += '<div class="flex items-start space-x-3 py-2 border-b border-gray-100">';
                     cHtml += '<div class="w-8 h-8 ' + colors[cci] + ' rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">' + cInit + '</div>';
-                    cHtml += '<div class="flex-1"><div class="flex items-baseline space-x-2"><span class="font-semibold text-gray-800 text-sm">' + escH(cName) + '</span><span class="text-xs text-gray-400">' + cDate + '</span></div>';
+                    cHtml += '<div class="flex-1"><div class="flex items-baseline space-x-2"><span class="font-semibold text-gray-800 text-sm">' + escH(cName) + '</span><span class="text-xs text-gray-400">' + cd.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}) + ' ' + cd.getHours()+':'+String(cd.getMinutes()).padStart(2,'0') + '</span></div>';
                     cHtml += '<p class="text-sm text-gray-700 mt-0.5">' + escH(c.inhalt) + '</p></div></div>';
                 });
                 commentsEl.innerHTML = cHtml;
-            } catch(err) {
-                contentEl.innerHTML = '<div class="text-red-400">Fehler: ' + err.message + '</div>';
-            }
+            } catch(err) { contentEl.innerHTML = '<div class="text-red-400">Fehler: ' + err.message + '</div>'; }
         }
 
         async function postForumComment() {
             var input = document.getElementById('forumCommentInput');
             var text = input ? input.value.trim() : '';
-            if(!text || !kommCurrentForumPost) { alert('Bitte Kommentar eingeben.'); return; }
+            if(!text||!kommState.currentForumPost) { alert('Bitte Kommentar eingeben.'); return; }
             try {
-                var resp = await sb.from('forum_kommentare').insert({
-                    beitrag_id: kommCurrentForumPost,
-                    user_id: sbUser.id,
-                    inhalt: text
-                });
+                var resp = await sb.from('forum_kommentare').insert({ beitrag_id: kommState.currentForumPost, user_id: sbUser.id, inhalt: text });
                 if(resp.error) throw resp.error;
                 input.value = '';
-                openForumDetail(kommCurrentForumPost); // Reload
+                openForumDetail(kommState.currentForumPost);
             } catch(err) { alert('Fehler: ' + err.message); }
         }
 
         function closeForumDetail() {
             document.getElementById('forumDetailView').classList.add('hidden');
             document.getElementById('forumListView').classList.remove('hidden');
-            kommCurrentForumPost = null;
+            kommState.currentForumPost = null;
             renderForumPosts('all');
         }
 
         function filterForum(cat) {
-            document.querySelectorAll('.forum-cat-btn').forEach(function(b){
-                b.className = 'forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200';
-            });
+            document.querySelectorAll('.forum-cat-btn').forEach(function(b){ b.className='forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200'; });
             var btn = document.querySelector('.forum-cat-btn[data-cat="'+cat+'"]');
-            if(btn) btn.className = 'forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white';
+            if(btn) btn.className='forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white';
             renderForumPosts(cat);
         }
 
-        // --- CHANNEL (bestehend, keine Änderung nötig) ---
-        var sbKanalId = null;
-        var sbKanaele = [];
-        var realtimeSubscription = null;
+        // =============================================
+        //  TERMINE (Mini Calendar + List)
+        // =============================================
+        var kommMiniCalMonth = new Date().getMonth();
+        var kommMiniCalYear = new Date().getFullYear();
 
-        async function loadKanaele() {
-            try {
-                var resp = await sb.from('chat_kanaele').select('*').order('created_at');
-                if(resp.error) throw resp.error;
-                sbKanaele = resp.data || [];
-            } catch(err) { console.error('Kanäle laden:', err); }
+        function kommMiniCalNav(dir) {
+            kommMiniCalMonth += dir;
+            if(kommMiniCalMonth > 11) { kommMiniCalMonth = 0; kommMiniCalYear++; }
+            if(kommMiniCalMonth < 0) { kommMiniCalMonth = 11; kommMiniCalYear--; }
+            renderKommMiniCal();
         }
 
-        async function renderChannelMessages() {
-            var container = document.getElementById('channelMessages');
+        function renderKommMiniCal() {
+            var months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+            var titleEl = document.getElementById('kommMiniCalTitle');
+            if(titleEl) titleEl.textContent = months[kommMiniCalMonth] + ' ' + kommMiniCalYear;
+            var gridEl = document.getElementById('kommMiniCalGrid');
+            if(!gridEl) return;
+            var today = new Date();
+            var todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            var firstDay = new Date(kommMiniCalYear, kommMiniCalMonth, 1).getDay();
+            firstDay = firstDay === 0 ? 6 : firstDay - 1;
+            var daysInMonth = new Date(kommMiniCalYear, kommMiniCalMonth + 1, 0).getDate();
+            var h = '<span class="text-gray-400 font-semibold py-1">Mo</span><span class="text-gray-400 font-semibold py-1">Di</span><span class="text-gray-400 font-semibold py-1">Mi</span><span class="text-gray-400 font-semibold py-1">Do</span><span class="text-gray-400 font-semibold py-1">Fr</span><span class="text-gray-400 font-semibold py-1">Sa</span><span class="text-gray-400 font-semibold py-1">So</span>';
+            for(var i=0;i<firstDay;i++) h+='<span class="py-1"></span>';
+            var termineDates = {};
+            (typeof kalTermine !== 'undefined' ? kalTermine : []).forEach(function(t) { if(!termineDates[t.date]) termineDates[t.date] = []; termineDates[t.date].push(t); });
+            for(var d=1;d<=daysInMonth;d++) {
+                var dateStr = kommMiniCalYear + '-' + String(kommMiniCalMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+                var isT = dateStr === todayStr;
+                var dayT = termineDates[dateStr] || [];
+                var isW = ((firstDay + d - 1) % 7) >= 5;
+                var cls = 'py-1 cursor-pointer hover:bg-gray-100 rounded-full transition ';
+                if(isT) cls += 'bg-vit-orange text-white font-bold ';
+                else if(dayT.length > 0) cls += 'bg-blue-100 text-blue-700 font-semibold ';
+                else if(isW) cls += 'text-gray-300 ';
+                var tooltip = dayT.map(function(t){return t.time + ' ' + t.title;}).join('\n');
+                h += '<span class="' + cls + '" title="' + escH(tooltip) + '" onclick="kommMiniCalClick(\'' + dateStr + '\')">' + d + '</span>';
+            }
+            gridEl.innerHTML = h;
+        }
+
+        function kommMiniCalClick(dateStr) { showView('kalender'); if(typeof kalDayDate !== 'undefined') { kalDayDate = new Date(dateStr + 'T12:00:00'); switchKalView('day'); } }
+
+        async function renderTermine() {
+            var container = document.getElementById('termineList');
             if(!container) return;
-            container.innerHTML = '<div class="text-center py-8"><span class="text-gray-400 text-sm">Nachrichten werden geladen...</span></div>';
-
             try {
-                if(sbKanaele.length === 0) await loadKanaele();
-                if(!sbKanalId && sbKanaele.length > 0) {
-                    var teamKanal = sbKanaele.find(function(k) { return k.standort_id !== null; });
-                    sbKanalId = teamKanal ? teamKanal.id : sbKanaele[0].id;
-                }
-                if(!sbKanalId) {
-                    container.innerHTML = '<div class="text-center py-8"><span class="text-gray-400 text-sm">Kein Chat-Kanal verfügbar.</span></div>';
-                    return;
-                }
-
-                var aktKanal = sbKanaele.find(function(k) { return k.id === sbKanalId; });
-                var headerTitle = container.closest('.komm-tab-content') ? container.closest('.komm-tab-content').querySelector('h3.font-bold') : null;
-                if(headerTitle && aktKanal) headerTitle.textContent = aktKanal.name;
-
-                renderKanalTabs();
-
-                var resp = await sb.from('chat_nachrichten')
-                    .select('*, users(name)')
-                    .eq('kanal_id', sbKanalId)
-                    .order('created_at', { ascending: true });
+                var resp = await sb.from('termine').select('*').gte('start_zeit', new Date().toISOString().split('T')[0]).order('start_zeit',{ascending:true}).limit(15);
                 if(resp.error) throw resp.error;
-
-                var messages = resp.data || [];
+                var terms = resp.data || [];
+                var typeLabels = {termin:'📋',meeting:'👥',schulung:'🎓',event:'🎉',deadline:'⏰',probefahrt:'🚲'};
                 var html = '';
-                var lastDateStr = '';
-
-                messages.forEach(function(m) {
-                    var d = new Date(m.created_at);
-                    var dateStr = d.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-                    if(dateStr !== lastDateStr) {
-                        html += '<div class="text-center my-3"><span class="text-xs bg-gray-100 text-gray-500 px-3 py-1 rounded-full">' + dateStr + '</span></div>';
-                        lastDateStr = dateStr;
-                    }
-                    var authorName = m.users ? m.users.name : 'Unbekannt';
-                    var initials = authorName.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
-                    var isMe = m.user_id === (sbUser ? sbUser.id : null);
-                    var colors = ['bg-blue-500','bg-green-500','bg-purple-500','bg-orange-500','bg-cyan-500','bg-pink-500','bg-red-500'];
-                    var colorIdx = authorName.split('').reduce(function(a,c){return a+c.charCodeAt(0);},0) % colors.length;
-                    var time = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
-
-                    html += '<div class="flex items-start space-x-3">';
-                    html += '<div class="w-8 h-8 ' + (isMe ? 'bg-vit-orange' : colors[colorIdx]) + ' rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">' + initials + '</div>';
-                    html += '<div class="flex-1"><div class="flex items-baseline space-x-2"><span class="font-semibold text-gray-800 text-sm">' + escH(authorName) + '</span><span class="text-xs text-gray-400">' + time + '</span></div>';
-                    html += '<p class="text-sm text-gray-700 mt-0.5">' + m.nachricht.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p></div></div>';
+                terms.forEach(function(t) {
+                    var d = new Date(t.start_zeit);
+                    var dateStr = d.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'});
+                    var timeStr = t.ganztaegig ? 'Ganztägig' : d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+                    html += '<div class="vit-card p-4 flex items-start space-x-4 hover:shadow-md transition">';
+                    html += '<div class="text-center flex-shrink-0 w-14"><div class="text-2xl">' + (typeLabels[t.typ]||'📋') + '</div><div class="text-xs font-bold text-gray-500 mt-1">' + dateStr + '</div></div>';
+                    html += '<div class="flex-1"><h4 class="font-bold text-gray-800 text-sm">' + escH(t.titel) + '</h4>';
+                    html += '<p class="text-xs text-gray-500 mt-0.5">' + timeStr + (t.ort ? ' · ' + escH(t.ort) : '') + '</p>';
+                    if(t.beschreibung) html += '<p class="text-xs text-gray-400 mt-1">' + escH(t.beschreibung) + '</p>';
+                    html += '</div></div>';
                 });
-
-                if(messages.length === 0) {
-                    html = '<div class="text-center py-8"><span class="text-gray-400 text-sm">Noch keine Nachrichten. Schreib die erste! 👋</span></div>';
-                }
-
+                if(terms.length===0) html = '<div class="text-center py-8 text-gray-400">Keine anstehenden Termine.</div>';
                 container.innerHTML = html;
-                container.scrollTop = container.scrollHeight;
-                subscribeToChannel();
-            } catch(err) {
-                console.error('Chat laden:', err);
-                container.innerHTML = '<div class="text-center py-8"><span class="text-red-400 text-sm">Fehler beim Laden: ' + err.message + '</span></div>';
-            }
+            } catch(err) { console.error('Termine:', err); }
         }
 
-        function renderKanalTabs() {
-            var channelTab = document.getElementById('kommTabChannel');
-            var existing = document.getElementById('kanalTabsBar');
-            if(existing) existing.remove();
-            if(!channelTab || sbKanaele.length <= 1) return;
-
-            var tabsHtml = '<div id="kanalTabsBar" class="flex space-x-2 mb-3">';
-            sbKanaele.forEach(function(k) {
-                var active = k.id === sbKanalId;
-                tabsHtml += '<button onclick="switchKanal(\'' + k.id + '\')" class="px-3 py-1.5 rounded-full text-xs font-semibold ' +
-                    (active ? 'bg-vit-orange text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + '">' +
-                    (k.standort_id ? '# ' : '🌐 ') + escH(k.name) + '</button>';
-            });
-            tabsHtml += '</div>';
-
-            var headerCard = channelTab.querySelector('.vit-card.p-4.mb-4');
-            if(headerCard) headerCard.insertAdjacentHTML('afterend', tabsHtml);
-        }
-
-        async function switchKanal(kanalId) {
-            sbKanalId = kanalId;
-            if(realtimeSubscription) { sb.removeChannel(realtimeSubscription); realtimeSubscription = null; }
-            await renderChannelMessages();
-        }
-
-        function subscribeToChannel() {
-            if(realtimeSubscription) { sb.removeChannel(realtimeSubscription); }
-            realtimeSubscription = sb.channel('chat-' + sbKanalId)
-                .on('postgres_changes', {
-                    event: 'INSERT', schema: 'public', table: 'chat_nachrichten',
-                    filter: 'kanal_id=eq.' + sbKanalId
-                }, async function(payload) {
-                    var msg = payload.new;
-                    if(msg.user_id === (sbUser ? sbUser.id : null)) return;
-                    var resp = await sb.from('users').select('name').eq('id', msg.user_id).single();
-                    var authorName = resp.data ? resp.data.name : 'Unbekannt';
-                    var initials = authorName.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
-                    var colors = ['bg-blue-500','bg-green-500','bg-purple-500','bg-orange-500','bg-cyan-500','bg-pink-500','bg-red-500'];
-                    var colorIdx = authorName.split('').reduce(function(a,c){return a+c.charCodeAt(0);},0) % colors.length;
-                    var d = new Date(msg.created_at);
-                    var time = d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
-
-                    var container = document.getElementById('channelMessages');
-                    if(!container) return;
-                    var msgHtml = '<div class="flex items-start space-x-3">';
-                    msgHtml += '<div class="w-8 h-8 ' + colors[colorIdx] + ' rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">' + initials + '</div>';
-                    msgHtml += '<div class="flex-1"><div class="flex items-baseline space-x-2"><span class="font-semibold text-gray-800 text-sm">' + escH(authorName) + '</span><span class="text-xs text-gray-400">' + time + '</span></div>';
-                    msgHtml += '<p class="text-sm text-gray-700 mt-0.5">' + msg.nachricht.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p></div></div>';
-                    container.insertAdjacentHTML('beforeend', msgHtml);
-                    container.scrollTop = container.scrollHeight;
-                })
-                .subscribe();
-        }
-
-        async function sendChannelMsg() {
-            var input = document.getElementById('channelInput');
-            var text = input.value.trim();
-            if(!text || !sbUser || !sbKanalId) return;
-
-            input.value = '';
-            input.disabled = true;
-
-            try {
-                var resp = await sb.from('chat_nachrichten').insert({
-                    kanal_id: sbKanalId,
-                    user_id: sbUser.id,
-                    nachricht: text
-                });
-                if(resp.error) throw resp.error;
-
-                var container = document.getElementById('channelMessages');
-                var emptyMsg = container.querySelector('.text-center.py-8');
-                if(emptyMsg) emptyMsg.remove();
-
-                var d = new Date();
-                var time = d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
-                var authorName = sbProfile ? sbProfile.name : 'Ich';
-                var initials = authorName.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
-
-                var msgHtml = '<div class="flex items-start space-x-3">';
-                msgHtml += '<div class="w-8 h-8 bg-vit-orange rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">' + initials + '</div>';
-                msgHtml += '<div class="flex-1"><div class="flex items-baseline space-x-2"><span class="font-semibold text-gray-800 text-sm">' + escH(authorName) + '</span><span class="text-xs text-gray-400">' + time + '</span></div>';
-                msgHtml += '<p class="text-sm text-gray-700 mt-0.5">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p></div></div>';
-                container.insertAdjacentHTML('beforeend', msgHtml);
-                container.scrollTop = container.scrollHeight;
-            } catch(err) {
-                alert('Senden fehlgeschlagen: ' + err.message);
-                input.value = text;
-            } finally {
-                input.disabled = false;
-                input.focus();
-            }
-        }
-
-        // --- TAB NAVIGATION ---
+        // =============================================
+        //  TAB NAVIGATION
+        // =============================================
         function showKommTab(tabName) {
             document.querySelectorAll('.komm-tab-content').forEach(function(t){t.style.display='none';});
             document.querySelectorAll('.komm-tab-btn').forEach(function(b){
-                b.className=b.className.replace(/border-vit-orange/g,'border-transparent').replace(/text-vit-orange/g,'text-gray-500');
+                b.className = b.className.replace(/bg-white text-gray-800 shadow-sm/g, 'text-gray-500 hover:text-gray-700').replace(/ shadow-sm/g, '');
             });
-            var tabMap = {inbox:'Inbox',announce:'Announce',forum:'Forum',brett:'Brett',channel:'Channel',termine:'Termine'};
+            var tabMap = {chat:'Chat',forum:'Forum',brett:'Brett',termine:'Termine'};
             var el = document.getElementById('kommTab' + (tabMap[tabName]||''));
             if(el) el.style.display = 'block';
             var btn = document.querySelector('.komm-tab-btn[data-tab="'+tabName+'"]');
-            if(btn) btn.className='komm-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
-            if(tabName==='inbox') { loadInboxRecipients(); renderInbox('all'); }
-            if(tabName==='announce') renderAnnouncements();
-            if(tabName==='forum') { closeForumDetail(); }
+            if(btn) btn.className = 'komm-tab-btn px-4 py-2 rounded-md text-sm font-semibold bg-white text-gray-800 shadow-sm';
+
+            if(tabName==='chat') loadKommSidebar();
+            if(tabName==='forum') closeForumDetail();
             if(tabName==='brett') renderBrett('all');
-            if(tabName==='channel') renderChannelMessages();
-            if(tabName==='termine'){ renderTermine(); renderKommMiniCal(); }
+            if(tabName==='termine') { renderTermine(); renderKommMiniCal(); }
         }
 
-        // Init
-        renderInbox('all');
+        // Init on first load
+        loadKommSidebar();
         // === AKTENSCHRANK ===
         var aktenFiles = {};
         var aktenLoaded = false;
@@ -12869,7 +12840,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 {name:'Verkauf / CRM', view:'verkaufView', status:'teilweise', typ:'standort', version:'2.1.0', details:'React Pipeline (Kanban, Drag&Drop, Gamification), Scan-Upload mit KI-Analyse via Edge Function, KI-Verkaufstrainer, Wochenansicht, Auswertung', kiPrio:2, aufwand:'L', kiTodo:'✅ API-Key gesichert (Edge Function). Noch offen: Angebotserstellung PDF, Lead-Import, Follow-up-Erinnerungen, Supabase-Anbindung Pipeline-Deals.'},
                 {name:'Kalender', view:'kalenderView', status:'live', typ:'standort', version:'2.0.0', details:'Monats/Wochen/Tagesansicht, Wiederkehrende Termine, Teilnehmer, Serien, CRUD komplett, 8 Typen, Mini-Kalender, HQ-Kalender', kiPrio:20, aufwand:'XL', kiTodo:'MS365-Sync, Drag&Drop, Notifications nice-to-have.'},
                 {name:'Aufgaben / Todos', view:'todoView', status:'live', typ:'standort', version:'1.2.0', details:'Erstellen, Bearbeiten, Abhaken, Löschen, Filtern – alles DB', kiPrio:30, aufwand:'M', kiTodo:'Fälligkeitsdatum, Zuweisung an Mitarbeiter.'},
-                {name:'Kommunikation', view:'kommunikationView', status:'live', typ:'standort', version:'2.0.0', details:'Inbox (DB-Nachrichten mit Gelesen-Status), Ankündigungen (Gelesen-Tracking), Forum (erstellen, Detail, Kommentare), Brett (erstellen, deaktivieren, Nachricht an Autor), Chat-Kanäle (Realtime), Mini-Kalender – alles DB', kiPrio:28, aufwand:'M', kiTodo:'Direktnachrichten 1:1 als eigenen Tab. Push-Notifications.'},
+                {name:'Kommunikation', view:'kommunikationView', status:'live', typ:'standort', version:'3.0.0', details:'Teams-Hybrid: 2-Spalten Chat mit Konversations-Sidebar (Kanäle, Nachrichten, Ankündigungen), Thread-Replies, fixierte Eingabe. Forum (CRUD+Kommentare), Brett (CRUD+Nachr. an Autor), Mini-Kalender – alles DB+Realtime', kiPrio:28, aufwand:'M', kiTodo:'Push-Notifications. Emoji-Reactions. Nachricht bearbeiten/löschen.'},
                 {name:'Controlling / BWA', view:'controllingView', status:'live', typ:'standort', version:'2.3.0', details:'Performance-Cockpit, BWA-Parser (13+ Formate), KI-Fallback für unbekannte Formate, PDF-Support, Multi-Upload Batch, Detail-Positionen, KPIs, Trend-Sparklines, Plan/Ist, Jahresplan-Upload', kiPrio:3, aufwand:'M', kiTodo:'Benchmarks gegen Netzwerk-Durchschnitt, Liquiditätsplanung.'},
                 {name:'Marketing', view:'marketingView', status:'teilweise', typ:'standort', version:'1.0.0', details:'6 Tabs: Performance (Cross-Channel KPIs), Budget (491k€ Jahresbudget, Spending-Chart), Leads (Forecast, Live-Leads), Social (Local Hero), Strategie, Wissen', kiPrio:8, aufwand:'L', kiTodo:'DB-Tabellen für Kampagnen/Budget anlegen, Social-Media Kalender, Content-Bibliothek. Aktuell Demo-Daten aber vollständige UI.'},
                 {name:'Einkauf', view:'einkaufView', status:'teilweise', typ:'standort', version:'1.0.0', details:'5 Tabs: Sortiment (Hauptmarken-Cards, Bestandsmarken, Teilelieferanten), Lieferanten (65 Einträge mit Status/Konditionen/IHT/B2B), Zentralreg. (Cronbank/IHT/HIW-System), Strategie (Fortschritt, ToDos), Wissen (5 Sub-Sections: IHT, Parts-Matrix, DB1, Kernsortiment, Vororder)', kiPrio:12, aufwand:'M', kiTodo:'Lieferanten-DB anlegen (aktuell JS-Array), Konditionen editierbar machen, Bestellvorschläge.'},
@@ -13295,7 +13266,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             // Auto-Loading for Standort-Views
             if(v==='controlling') { showControllingTab('cockpit'); renderPerformanceCockpit(); loadBwaList(); }
             if(v==='verkauf') { showVerkaufTab('pipeline'); }
-            if(v==='kommunikation') { showKommTab('inbox'); }
+            if(v==='kommunikation') { showKommTab('chat'); }
             if(v==='aktenschrank') { loadAktenFiles(); }
             if(v==='devStatus') { renderDevStatus(); }
         };
