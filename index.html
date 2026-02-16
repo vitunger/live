@@ -332,15 +332,27 @@
 .vbtn{background:#EF7D00;color:#fff;border:none;padding:7px 18px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer}.vbtn:hover{opacity:.9}
 .ek-modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:100;display:flex;align-items:center;justify-content:center}
 .ek-modal{background:#fff;border-radius:16px;max-width:720px;width:95%;max-height:85vh;overflow-y:auto;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
-/* Info Button (i) on Widgets */
 .widget-info-btn{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#f3f4f6;color:#9ca3af;font-size:10px;font-weight:700;cursor:pointer;border:none;margin-left:6px;transition:all .2s;font-style:italic;font-family:Georgia,serif;line-height:1;vertical-align:middle}
 .widget-info-btn:hover{background:#EF7D00;color:#fff}
-.widget-info-popup{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-top:6px;box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:100;font-size:12px;color:#4b5563;line-height:1.5}
+.widget-info-popup{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;max-width:420px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px 18px;box-shadow:0 12px 40px rgba(0,0,0,.18);z-index:9999;font-size:13px;color:#4b5563;line-height:1.6}
 .widget-info-popup.active{display:block}
+.widget-info-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.15);z-index:9998}
+.widget-info-overlay.active{display:block}
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#EF7D00">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="vit:bikes">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="vit:bikes Portal">
+
 </head>
 <body class="bg-gray-50">
 
@@ -865,7 +877,6 @@
                         </div>
 
 
-                        <div id="trainerAreaHome" class="mb-4"></div>
                         <!-- 🏥 PERFORMANCE HEALTH SCORE -->
                         <div id="healthScoreWidget" class="vit-card p-5 mb-6">
                             <div class="flex items-center justify-between mb-3">
@@ -10704,10 +10715,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     {title:'Erfolgreiche Event-Formate fuer Standorte',standort:'Weilheim',datum:'Nov 2025',tags:['Events','Marketing']}
                 ],
                 faq: [
-                    {frage:'Wie melde ich einen Garantiefall?',antwort:'Garantiefall im Portal unter Support → Neues Ticket → Kategorie „Garantie“ melden. Fotos + Kaufbeleg beifügen. HQ koordiniert mit dem Hersteller.',kat:'Prozesse'},
+                    {frage:'Wie melde ich einen Garantiefall?',antwort:'Garantiefall im Portal unter Support → Neues Ticket → Kategorie ’Garantie’ melden. Fotos + Kaufbeleg beifügen. HQ koordiniert mit dem Hersteller.',kat:'Prozesse'},
                     {frage:'Welche Leasing-Anbieter sind freigeschaltet?',antwort:'Aktuell: JobRad, Bikeleasing, BusinessBike, Lease-a-Bike. Details und Formulare unter Verkauf → Wissen → Leasing-Leitfaden.',kat:'Leasing'},
-                    {frage:'Wie funktioniert die Upway-Abwicklung?',antwort:'Upway-Bikes werden über das Einkauf-Modul abgewickelt. Anleitung unter Einkauf → Wissen → „Upway Abwicklung".',kat:'Einkauf'},
-                    {frage:'Wer ist mein Ansprechpartner bei IT-Problemen?',antwort:'IT-Support über Support → Neues Ticket → Kategorie „IT". Direkter Kontakt: support@vitbikes.de oder über Kontakte-Tab.',kat:'IT/Support'},
+                    {frage:'Wie funktioniert die Upway-Abwicklung?',antwort:'Upway-Bikes werden über das Einkauf-Modul abgewickelt. Anleitung unter Einkauf → Wissen → ’Upway Abwicklung’.',kat:'Einkauf'},
+                    {frage:'Wer ist mein Ansprechpartner bei IT-Problemen?',antwort:'IT-Support über Support → Neues Ticket → Kategorie ’IT’. Direkter Kontakt: support@vitbikes.de oder über Kontakte-Tab.',kat:'IT/Support'},
                     {frage:'Wie laeuft die Monatsabrechnung?',antwort:'BWA wird vom Steuerberater erstellt und bis zum 15. des Folgemonats im Portal hochgeladen. Details unter Controlling → BWAs.',kat:'Buchhaltung'}
                 ]
             },
@@ -10757,11 +10768,11 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     {title:'Haibike Blockorder: Verhandlungstipps',standort:'Zentrale',datum:'Aug 2025',tags:['Haibike','Konditionen']}
                 ],
                 faq: [
-                    {frage:'Wie platziere ich eine Nachbestellung?',antwort:'Einkauf → Sortiment → Gewünschtes Produkt → „Nachbestellen". Oder direkt über das Lieferanten-B2B-Portal.',kat:'Bestellung'},
+                    {frage:'Wie platziere ich eine Nachbestellung?',antwort:'Einkauf → Sortiment → Gewünschtes Produkt → ’Nachbestellen’. Oder direkt über das Lieferanten-B2B-Portal.',kat:'Bestellung'},
                     {frage:'Was tun bei Lieferverzoegerung?',antwort:'Status im Einkauf-Modul prüfen. Bei kritischer Verzögerung: Support-Ticket mit Bestellnummer erstellen.',kat:'Logistik'},
                     {frage:'Wie funktioniert die Garantieabwicklung pro Marke?',antwort:'Jeder Hersteller hat eigene Prozesse. Übersicht unter Einkauf → Wissen → Garantie-Handbuch.',kat:'Garantie'},
                     {frage:'Kann ich Konditionen individuell verhandeln?',antwort:'Grundkonditionen sind netzwerkweit festgelegt. Sondervereinbarungen nur über HQ. Anfrage per Ticket.',kat:'Konditionen'},
-                    {frage:'Wie melde ich defekte Ware / Transportschaden?',antwort:'Sofort dokumentieren (Fotos!), dann Support-Ticket → Kategorie „Reklamation". Innerhalb 48h melden.',kat:'Reklamation'}
+                    {frage:'Wie melde ich defekte Ware / Transportschaden?',antwort:'Sofort dokumentieren (Fotos!), dann Support-Ticket → Kategorie ’Reklamation’. Innerhalb 48h melden.',kat:'Reklamation'}
                 ]
             },
             controlling: {
@@ -10786,7 +10797,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     {frage:'Wann erhalte ich meine monatliche BWA?',antwort:'Die BWA wird vom Steuerberater erstellt, üblicherweise in der ersten Woche des Folgemonats.',kat:'BWA'},
                     {frage:'Wie ist die Ziel-Rohertragsmarge?',antwort:'Ziel-Rohertragsmarge: mindestens 35%. Details im Benchmark unter Controlling → Benchmarks.',kat:'Kennzahlen'},
                     {frage:'Wer ist fuer die Buchhaltung zustaendig?',antwort:'Buchhaltung läuft über euren Steuerberater. Belege digital einreichen via DATEV-Schnittstelle.',kat:'Prozesse'},
-                    {frage:'Wie beantrage ich eine Investition?',antwort:'Investitionsantrag über Support → Neues Ticket → Kategorie „Investition". Business Case beifügen.',kat:'Investition'},
+                    {frage:'Wie beantrage ich eine Investition?',antwort:'Investitionsantrag über Support → Neues Ticket → Kategorie ’Investition’. Business Case beifügen.',kat:'Investition'},
                     {frage:'Was bedeuten die Benchmark-Ampelfarben?',antwort:'🟢 Grün = über Netzwerk-Durchschnitt, 🟡 Gelb = im Durchschnitt, 🔴 Rot = unter Durchschnitt.',kat:'Benchmark'}
                 ]
             },
@@ -18149,12 +18160,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 console.log('SUCCESS: Showed', viewId, '- offsetHeight:', viewEl.offsetHeight);
                 if(viewName === 'dashboards') initDashboardTabs();
                 
-                // Smart Trainer: Load trainers for this area
                 var areaMap = {home:'allgemein',controlling:'controlling',verkauf:'verkauf',marketing:'marketing'};
                 var containerMap = {home:'trainerAreaHome',controlling:'trainerAreaControlling',verkauf:'trainerAreaVerkauf',marketing:'trainerAreaMarketing'};
-                if(areaMap[viewName] && window.showTrainerForArea) {
-                    window.showTrainerForArea(areaMap[viewName], containerMap[viewName]);
-                }
+                if(areaMap[viewName] && window.showTrainerForArea) window.showTrainerForArea(areaMap[viewName], containerMap[viewName]);
                 
                 // Version badge anzeigen
                 showModuleVersionBadge(viewName + 'View');
@@ -20490,6 +20498,10 @@ function setTheme(theme) {
                     <span>📞 Gruppencall-Erinnerungen</span>
                     <input type="checkbox" checked id="prefCalls" style="accent-color:#EF7D00;width:16px;height:16px;">
                 </label>
+                <div style="border-top:1px solid #e5e7eb;margin-top:8px;padding-top:8px;">
+                    <button onclick="setupPushNotifications()" style="width:100%;padding:8px;background:#EF7D00;color:white;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🔔 Push-Benachrichtigungen aktivieren</button>
+                    <p style="font-size:9px;color:#9ca3af;margin-top:4px;text-align:center">Erhalte Benachrichtigungen direkt auf dein Gerät</p>
+                </div>
             </div>
 
             <div style="margin-top:16px;padding:12px;background:#f9fafb;border-radius:8px;text-align:center;">
@@ -20723,7 +20735,6 @@ function changePassword() {
         var days = daysUntil(deadline);
         var moName = MO_NAMES[bwaMo.m] + ' ' + bwaMo.y;
 
-        // Check real DB for BWA submission
         var submitted = null;
         var rating = 'missing';
         if(typeof sb !== 'undefined' && typeof sbProfile !== 'undefined' && sbProfile && sbProfile.standort_id) {
@@ -20831,8 +20842,7 @@ function changePassword() {
             try {
                 var bwaMo = getBwaMonth(new Date());
                 var stdResp = await sb.from('standorte').select('id,name').eq('aktiv', true);
-                var standorte = stdResp.data || [];
-                total = standorte.length || 21;
+                total = (stdResp.data || []).length || 21;
                 var bwaResp = await sb.from('bwa_daten').select('standort_id,created_at').eq('monat', bwaMo.m + 1).eq('jahr', bwaMo.y);
                 (bwaResp.data || []).forEach(function(b) {
                     var subDay = new Date(b.created_at).getDate();
@@ -21582,21 +21592,33 @@ setTimeout(function(){document.getElementById('groupcallPrepPanel').style.displa
 <script>
 function toggleWidgetInfo(e, id) {
     e.stopPropagation();
+    e.preventDefault();
     var el = document.getElementById(id);
     if(!el) return;
+    
     // Close all others
     document.querySelectorAll('.widget-info-popup.active').forEach(function(p){
         if(p.id !== id) p.classList.remove('active');
     });
-    el.classList.toggle('active');
-    // Close on outside click
-    if(el.classList.contains('active')) {
-        setTimeout(function(){
-            document.addEventListener('click', function handler(ev){
-                if(!el.contains(ev.target)) { el.classList.remove('active'); document.removeEventListener('click', handler); }
-            });
-        }, 10);
+    
+    // Remove existing overlay
+    var oldOv = document.getElementById('widgetInfoOverlay');
+    if(oldOv) oldOv.remove();
+    
+    var isOpen = el.classList.contains('active');
+    if(isOpen) {
+        el.classList.remove('active');
+        return;
     }
+    
+    // Create overlay
+    var ov = document.createElement('div');
+    ov.id = 'widgetInfoOverlay';
+    ov.className = 'widget-info-overlay active';
+    ov.onclick = function(){ el.classList.remove('active'); ov.remove(); };
+    document.body.appendChild(ov);
+    
+    el.classList.add('active');
 }
 </script>
 
@@ -21798,108 +21820,23 @@ function toggleWidgetInfo(e, id) {
 </script>
 
 
-<!-- ═══ DB-BACKED SMART TRIGGER ENGINE ═══ -->
+<!-- === DB-BACKED SMART TRIGGER ENGINE === -->
 <script>
 (function(){
-    function renderTrainerCard(assignment, container) {
-        var t = assignment.trainer; if(!t) return;
-        var card = document.createElement('div');
-        card.className = 'vit-card p-0 mb-3';
-        card.style.cssText = 'border:1px solid #fed7aa;overflow:hidden;';
-        card.id = 'trainerCard_' + assignment.id;
-        card.innerHTML = '<div style="padding:12px 16px;background:linear-gradient(135deg,rgba(239,125,0,0.08),rgba(245,158,11,0.04));border-bottom:1px solid #fed7aa;">' +
-            '<div class="flex items-center justify-between"><div class="flex items-center gap-2">' +
-            '<span style="font-size:18px">🎓</span><div>' +
-            '<p class="text-[10px] font-bold text-vit-orange uppercase">' + (t.area_key||'').toUpperCase() + '</p>' +
-            '<p class="text-sm font-bold text-gray-800">' + t.title + '</p></div></div>' +
-            '<span class="text-[10px] text-gray-400">' + (t.duration_minutes||5) + ' Min</span></div></div>' +
-            '<div style="padding:12px 16px;">' +
-            '<p class="text-xs text-gray-600 mb-2">' + (t.summary||'') + '</p>' +
-            '<div class="flex gap-2">' +
-            '<button onclick="window._startDbTrainer && window._startDbTrainer(\'' + assignment.id + '\')" class="flex-1 px-3 py-2 bg-vit-orange text-white text-xs font-bold rounded-lg hover:opacity-90">▶ Starten</button>' +
-            '<button onclick="window._snoozeDbTrainer && window._snoozeDbTrainer(\'' + assignment.id + '\')" class="px-3 py-2 bg-gray-100 text-gray-500 text-xs font-bold rounded-lg hover:bg-gray-200">⏰ Später</button>' +
-            '</div></div>';
-        container.appendChild(card);
+    function renderTrainerCard(a, c) {
+        var t=a.trainer;if(!t)return;var d=document.createElement('div');d.className='vit-card p-0 mb-3';
+        d.style.cssText='border:1px solid #fed7aa;overflow:hidden;';d.id='trainerCard_'+a.id;
+        d.innerHTML='<div style="padding:12px 16px;background:linear-gradient(135deg,rgba(239,125,0,0.08),rgba(245,158,11,0.04));border-bottom:1px solid #fed7aa;"><div class="flex items-center justify-between"><div class="flex items-center gap-2"><span style="font-size:18px">🎓</span><div><p class="text-[10px] font-bold text-vit-orange uppercase">'+(t.area_key||'').toUpperCase()+'</p><p class="text-sm font-bold text-gray-800">'+t.title+'</p></div></div><span class="text-[10px] text-gray-400">'+(t.duration_minutes||5)+' Min</span></div></div><div style="padding:12px 16px;"><p class="text-xs text-gray-600 mb-2">'+(t.summary||'')+'</p><div class="flex gap-2"><button onclick="window._startDbTrainer&&window._startDbTrainer(\''+a.id+'\')" class="flex-1 px-3 py-2 bg-vit-orange text-white text-xs font-bold rounded-lg hover:opacity-90">▶ Starten</button><button onclick="window._snoozeDbTrainer&&window._snoozeDbTrainer(\''+a.id+'\')" class="px-3 py-2 bg-gray-100 text-gray-500 text-xs font-bold rounded-lg hover:bg-gray-200">⏰ Später</button></div></div>';
+        c.appendChild(d);
     }
-
-    async function loadTrainersForArea(areaKey) {
-        if(typeof sb === 'undefined' || !sbProfile) return [];
-        try {
-            var aResp = await sb.from('trainer_assignments').select('*, trainer:trainer_id(*)').eq('standort_id', sbProfile.standort_id).eq('status', 'active');
-            return (aResp.data || []).filter(function(a) {
-                if(!a.trainer || !a.trainer.is_active) return false;
-                if(areaKey && a.trainer.area_key !== areaKey) return false;
-                if(a.cooldown_until && new Date(a.cooldown_until) > new Date()) return false;
-                return true;
-            }).sort(function(a,b){ return (a.trainer.priority||3) - (b.trainer.priority||3); }).slice(0,1);
-        } catch(e) { return []; }
-    }
-
-    async function _smartTriggerCheck(areaKey) {
-        if(typeof sb === 'undefined' || !sbProfile || !sbProfile.standort_id) return;
-        var sid = sbProfile.standort_id;
-        try {
-            var tResp = await sb.from('trainers').select('*').eq('area_key', areaKey).eq('is_active', true);
-            var trainers = tResp.data || []; if(!trainers.length) return;
-            var aResp = await sb.from('trainer_assignments').select('trainer_id').eq('standort_id', sid).eq('status', 'active');
-            var existingIds = (aResp.data || []).map(function(a){ return a.trainer_id; });
-            var cResp = await sb.from('trainer_completions').select('trainer_id,completed_at').eq('standort_id', sid).order('completed_at', {ascending:false}).limit(50);
-            var completedMap = {}; (cResp.data || []).forEach(function(c){ completedMap[c.trainer_id] = c.completed_at; });
-
-            for(var i = 0; i < trainers.length; i++) {
-                var t = trainers[i];
-                if(existingIds.indexOf(t.id) >= 0) continue;
-                if(completedMap[t.id] && (Date.now() - new Date(completedMap[t.id]).getTime()) / 86400000 < 14) continue;
-                var fire = await _evaluateTrigger(t, sid);
-                if(fire) {
-                    await sb.from('trainer_assignments').upsert({ trainer_id: t.id, standort_id: sid, status: 'active' }, { onConflict: 'trainer_id,standort_id' });
-                }
-            }
-        } catch(e) { console.warn('SmartTrigger:', e); }
-    }
-
-    async function _evaluateTrigger(trainer, sid) {
-        var key = trainer.trigger_key;
-        if(key === 'open_offers_no_followup') {
-            var r = await sb.from('leads').select('id,letzter_kontakt,status').eq('standort_id', sid).not('status', 'in', '("gewonnen","verloren")');
-            var leads = r.data || [];
-            var stale = leads.filter(function(l){ return !l.letzter_kontakt || (Date.now() - new Date(l.letzter_kontakt).getTime()) / 86400000 > 7; });
-            return stale.length >= 5 || leads.length === 0;
-        }
-        if(key === 'bwa_missing') {
-            var bwaMo = (typeof getBwaMonth === 'function') ? getBwaMonth(new Date()) : null;
-            if(!bwaMo) return false;
-            var r = await sb.from('bwa_daten').select('id').eq('standort_id', sid).eq('monat', bwaMo.m + 1).eq('jahr', bwaMo.y).limit(1);
-            return !(r.data && r.data.length > 0);
-        }
-        if(key === 'no_content_14d') {
-            var since = new Date(Date.now() - 14 * 86400000).toISOString();
-            var r = await sb.from('portal_events').select('id').eq('standort_id', sid).eq('event_type', 'content_uploaded').gte('created_at', since).limit(1);
-            return !(r.data && r.data.length > 0);
-        }
-        return false;
-    }
-
-    window.showTrainerForArea = async function(areaKey, containerId) {
-        var c = document.getElementById(containerId); if(!c) return;
-        c.innerHTML = '';
-        await _smartTriggerCheck(areaKey);
-        var a = await loadTrainersForArea(areaKey);
-        if(a.length > 0) renderTrainerCard(a[0], c);
-    };
-
-    window._snoozeDbTrainer = async function(id) {
-        if(typeof sb === 'undefined') return;
-        await sb.from('trainer_assignments').update({ cooldown_until: new Date(Date.now() + 48*3600000).toISOString() }).eq('id', id);
-        var card = document.getElementById('trainerCard_' + id); if(card) card.remove();
-    };
-
-    window._startDbTrainer = function(id) {
-        alert('🎓 Trainer gestartet! In Produktion: Micro-Learning mit konkreter Handlung.');
-    };
+    async function loadTrainersForArea(k){if(typeof sb==='undefined'||!sbProfile)return[];try{var r=await sb.from('trainer_assignments').select('*,trainer:trainer_id(*)').eq('standort_id',sbProfile.standort_id).eq('status','active');return(r.data||[]).filter(function(a){return a.trainer&&a.trainer.is_active&&(!k||a.trainer.area_key===k)&&(!a.cooldown_until||new Date(a.cooldown_until)<=new Date());}).sort(function(a,b){return(a.trainer.priority||3)-(b.trainer.priority||3);}).slice(0,1);}catch(e){return[];}}
+    async function _smartTriggerCheck(k){if(typeof sb==='undefined'||!sbProfile||!sbProfile.standort_id)return;var sid=sbProfile.standort_id;try{var t=(await sb.from('trainers').select('*').eq('area_key',k).eq('is_active',true)).data||[];if(!t.length)return;var ex=((await sb.from('trainer_assignments').select('trainer_id').eq('standort_id',sid).eq('status','active')).data||[]).map(function(a){return a.trainer_id;});var cm={};((await sb.from('trainer_completions').select('trainer_id,completed_at').eq('standort_id',sid).order('completed_at',{ascending:false}).limit(50)).data||[]).forEach(function(c){cm[c.trainer_id]=c.completed_at;});for(var i=0;i<t.length;i++){var tr=t[i];if(ex.indexOf(tr.id)>=0)continue;if(cm[tr.id]&&(Date.now()-new Date(cm[tr.id]).getTime())/86400000<14)continue;var fire=await _evaluateTrigger(tr,sid);if(fire)await sb.from('trainer_assignments').upsert({trainer_id:tr.id,standort_id:sid,status:'active'},{onConflict:'trainer_id,standort_id'});}}catch(e){console.warn('SmartTrigger:',e);}}
+    async function _evaluateTrigger(tr,sid){var k=tr.trigger_key;if(k==='open_offers_no_followup'){var r=await sb.from('leads').select('id,letzter_kontakt,status').eq('standort_id',sid).not('status','in','("gewonnen","verloren")');var l=r.data||[];return l.filter(function(x){return!x.letzter_kontakt||(Date.now()-new Date(x.letzter_kontakt).getTime())/86400000>7;}).length>=5||l.length===0;}if(k==='bwa_missing'){var m=typeof getBwaMonth==='function'?getBwaMonth(new Date()):null;if(!m)return false;var r=await sb.from('bwa_daten').select('id').eq('standort_id',sid).eq('monat',m.m+1).eq('jahr',m.y).limit(1);return!(r.data&&r.data.length>0);}if(k==='no_content_14d'){var s=new Date(Date.now()-14*86400000).toISOString();var r=await sb.from('portal_events').select('id').eq('standort_id',sid).eq('event_type','content_uploaded').gte('created_at',s).limit(1);return!(r.data&&r.data.length>0);}return false;}
+    window.showTrainerForArea=async function(k,cid){var c=document.getElementById(cid);if(!c)return;c.innerHTML='';await _smartTriggerCheck(k);var a=await loadTrainersForArea(k);if(a.length>0)renderTrainerCard(a[0],c);};
+    window._snoozeDbTrainer=async function(id){if(typeof sb==='undefined')return;await sb.from('trainer_assignments').update({cooldown_until:new Date(Date.now()+48*3600000).toISOString()}).eq('id',id);var c=document.getElementById('trainerCard_'+id);if(c)c.remove();};
+    window._startDbTrainer=function(){alert('🎓 Trainer gestartet!');};
 })();
 </script>
-
 <!-- === WISSEN MODULE: MEMBERSPOT-STYLE LEARNING PLATFORM === -->
 <script>
 (function(){
@@ -22229,6 +22166,153 @@ window.switchWissenTyp = function(typ) {
 
 })();
 </script>
+
+
+<!-- ═══ PWA: Service Worker + Install Prompt + Push Notifications ═══ -->
+<script>
+(function(){
+    // ── Service Worker Registration ──
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js')
+                .then(function(reg) {
+                    console.log('[PWA] Service Worker registered, scope:', reg.scope);
+                    // Check for updates periodically
+                    setInterval(function(){ reg.update(); }, 60 * 60 * 1000); // hourly
+                })
+                .catch(function(err) {
+                    console.log('[PWA] SW registration failed:', err);
+                });
+        });
+    }
+
+    // ── Install Prompt ──
+    var deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        showInstallBanner();
+    });
+
+    function showInstallBanner() {
+        // Don't show if already installed or dismissed
+        if (window.matchMedia('(display-mode: standalone)').matches) return;
+        try { if (localStorage.getItem('vit-pwa-dismissed')) return; } catch(e){}
+
+        var banner = document.createElement('div');
+        banner.id = 'pwaInstallBanner';
+        banner.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:10001;width:calc(100% - 32px);max-width:420px;';
+        banner.innerHTML = '<div style="background:white;border-radius:14px;padding:16px;box-shadow:0 8px 32px rgba(0,0,0,0.15);border:1px solid #f3f4f6;display:flex;align-items:center;gap:12px">' +
+            '<div style="width:44px;height:44px;border-radius:10px;background:#EF7D00;display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="font-size:20px;color:white;font-weight:900">v</span></div>' +
+            '<div style="flex:1"><p style="font-size:13px;font-weight:700;color:#111827;margin:0">vit:bikes als App installieren</p><p style="font-size:11px;color:#6b7280;margin:2px 0 0">Schnellzugriff auf Pipeline, Kalender & mehr</p></div>' +
+            '<button onclick="installPWA()" style="background:#EF7D00;color:white;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Installieren</button>' +
+            '<button onclick="dismissInstall()" style="background:none;border:none;color:#9ca3af;font-size:16px;cursor:pointer;padding:4px">✕</button>' +
+            '</div>';
+        document.body.appendChild(banner);
+    }
+
+    window.installPWA = function() {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(result) {
+            if (result.outcome === 'accepted') {
+                console.log('[PWA] App installed');
+            }
+            deferredPrompt = null;
+            var b = document.getElementById('pwaInstallBanner');
+            if (b) b.remove();
+        });
+    };
+
+    window.dismissInstall = function() {
+        var b = document.getElementById('pwaInstallBanner');
+        if (b) b.remove();
+        try { localStorage.setItem('vit-pwa-dismissed', '1'); } catch(e){}
+    };
+
+    // ── Push Notifications Setup ──
+    window.setupPushNotifications = async function() {
+        if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+            console.log('[Push] Not supported');
+            return;
+        }
+        
+        var permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+            console.log('[Push] Permission denied');
+            return;
+        }
+
+        var reg = await navigator.serviceWorker.ready;
+        
+        // In production: subscribe to push service
+        // var subscription = await reg.pushManager.subscribe({
+        //     userVisibleOnly: true,
+        //     applicationServerKey: VAPID_PUBLIC_KEY
+        // });
+        // Send subscription to your server/Supabase
+        
+        console.log('[Push] Notifications enabled');
+        
+        // Demo: show local notification
+        showLocalNotification('🔔 Benachrichtigungen aktiviert', 'Du erhältst jetzt Push-Notifications für BWA-Deadlines, Leads und Trainer.');
+    };
+
+    window.showLocalNotification = function(title, body, url) {
+        if (!('serviceWorker' in navigator)) return;
+        navigator.serviceWorker.ready.then(function(reg) {
+            reg.showNotification(title, {
+                body: body,
+                icon: '/icons/icon-192.png',
+                badge: '/icons/icon-72.png',
+                vibrate: [100, 50, 100],
+                data: { url: url || '/' },
+                tag: 'local-' + Date.now()
+            });
+        });
+    };
+
+    // ── Camera Access for Content Upload ──
+    window.openCamera = function(callback) {
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*,video/*';
+        input.capture = 'environment'; // rear camera
+        input.onchange = function(e) {
+            var file = e.target.files[0];
+            if (file && callback) callback(file);
+        };
+        input.click();
+    };
+
+    // ── App-installed detection ──
+    window.addEventListener('appinstalled', function() {
+        console.log('[PWA] App was installed');
+        var b = document.getElementById('pwaInstallBanner');
+        if (b) b.remove();
+    });
+
+    // ── Detect standalone mode ──
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+        document.body.classList.add('pwa-standalone');
+        console.log('[PWA] Running as installed app');
+    }
+})();
+</script>
+
+<style>
+/* PWA Standalone mode adjustments */
+.pwa-standalone .top-navigation-bar {
+    padding-top: env(safe-area-inset-top, 0px);
+}
+.pwa-standalone .sidebar-container {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (max-width: 768px) {
+    #pwaInstallBanner { bottom: 80px !important; }
+}
+</style>
 
 </body>
 </html>
