@@ -2647,9 +2647,7 @@
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex space-x-1 bg-gray-100 rounded-lg p-1">
                             <button onclick="showKommTab('chat')" class="komm-tab-btn px-4 py-2 rounded-md text-sm font-semibold bg-white text-gray-800 shadow-sm" data-tab="chat">💬 Chat</button>
-                            <button onclick="showKommTab('forum')" class="komm-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500 hover:text-gray-700" data-tab="forum">📋 Forum</button>
-                            <button onclick="showKommTab('brett')" class="komm-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500 hover:text-gray-700" data-tab="brett">📌 Brett</button>
-                            <button onclick="showKommTab('termine')" class="komm-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500 hover:text-gray-700" data-tab="termine">📅 Termine</button>
+                            <button onclick="showKommTab('community')" class="komm-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500 hover:text-gray-700" data-tab="community">👥 Community</button>
                         </div>
                     </div>
 
@@ -2727,16 +2725,21 @@
                     </div>
 
                     <!-- ===== TAB: Forum ===== -->
-                    <div id="kommTabForum" class="komm-tab-content" style="display:none;">
+                    <!-- ===== TAB: Community (Forum + Marktplatz vereint) ===== -->
+                    <div id="kommTabCommunity" class="komm-tab-content" style="display:none;">
                         <div id="forumListView">
                             <div class="flex items-center justify-between mb-4">
                                 <div class="flex space-x-2 flex-wrap gap-y-2">
-                                    <button onclick="filterForum('all')" class="forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white" data-cat="all">Alle</button>
-                                    <button onclick="filterForum('allgemein')" class="forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="allgemein">Allgemein</button>
-                                    <button onclick="filterForum('verkauf')" class="forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="verkauf">Verkauf</button>
-                                    <button onclick="filterForum('werkstatt')" class="forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="werkstatt">Werkstatt</button>
-                                    <button onclick="filterForum('einkauf')" class="forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="einkauf">Einkauf</button>
-                                    <button onclick="filterForum('zentrale')" class="forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="zentrale">Zentrale</button>
+                                    <button onclick="filterCommunity('all')" class="comm-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white" data-cat="all">Alle</button>
+                                    <span class="text-gray-300 self-center">|</span>
+                                    <button onclick="filterCommunity('allgemein')" class="comm-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="allgemein">💬 Allgemein</button>
+                                    <button onclick="filterCommunity('verkauf')" class="comm-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="verkauf">🛒 Verkauf</button>
+                                    <button onclick="filterCommunity('werkstatt')" class="comm-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="werkstatt">🔧 Werkstatt</button>
+                                    <button onclick="filterCommunity('einkauf')" class="comm-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="einkauf">📦 Einkauf</button>
+                                    <span class="text-gray-300 self-center">|</span>
+                                    <button onclick="filterCommunity('suche')" class="comm-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="suche">🔍 Gesucht</button>
+                                    <button onclick="filterCommunity('biete')" class="comm-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="biete">🏷️ Biete</button>
+                                    <button onclick="filterCommunity('tipp')" class="comm-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200" data-cat="tipp">💡 Tipp</button>
                                 </div>
                                 <button onclick="document.getElementById('forumNewPost').classList.toggle('hidden')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90 flex-shrink-0">+ Neuer Beitrag</button>
                             </div>
@@ -2745,11 +2748,21 @@
                                 <textarea id="forumNewBody" placeholder="Deine Nachricht an das Netzwerk..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3 focus:outline-none focus:border-vit-orange" rows="3"></textarea>
                                 <div class="flex items-center justify-between">
                                     <select id="forumNewCat" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                        <option value="allgemein">Allgemein</option><option value="verkauf">Verkauf &amp; Beratung</option><option value="werkstatt">Werkstatt</option><option value="einkauf">Einkauf &amp; Lager</option>
+                                        <optgroup label="Diskussion">
+                                            <option value="allgemein">💬 Allgemein</option>
+                                            <option value="verkauf">🛒 Verkauf &amp; Beratung</option>
+                                            <option value="werkstatt">🔧 Werkstatt</option>
+                                            <option value="einkauf">📦 Einkauf &amp; Lager</option>
+                                        </optgroup>
+                                        <optgroup label="Marktplatz">
+                                            <option value="suche">🔍 Rad gesucht</option>
+                                            <option value="biete">🏷️ Rad abzugeben</option>
+                                            <option value="tipp">💡 Tipp</option>
+                                        </optgroup>
                                     </select>
                                     <div class="flex space-x-2">
                                         <button onclick="document.getElementById('forumNewPost').classList.add('hidden')" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Abbrechen</button>
-                                        <button onclick="createForumPost()" class="px-5 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Posten</button>
+                                        <button onclick="createCommunityPost()" class="px-5 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Posten</button>
                                     </div>
                                 </div>
                             </div>
@@ -2764,62 +2777,6 @@
                                 <div class="flex space-x-3">
                                     <textarea id="forumCommentInput" placeholder="Dein Kommentar..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-vit-orange" rows="2"></textarea>
                                     <button onclick="postForumComment()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90 self-end">Senden</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ===== TAB: Schwarzes Brett ===== -->
-                    <div id="kommTabBrett" class="komm-tab-content" style="display:none;">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex space-x-2 flex-wrap gap-y-2">
-                                <button onclick="filterBrett('all')" class="brett-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white" data-bc="all">Alle</button>
-                                <button onclick="filterBrett('suche')" class="brett-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-bc="suche">Rad gesucht</button>
-                                <button onclick="filterBrett('biete')" class="brett-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-bc="biete">Rad abzugeben</button>
-                                <button onclick="filterBrett('frage')" class="brett-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-bc="frage">Fragen</button>
-                                <button onclick="filterBrett('tipp')" class="brett-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-bc="tipp">Tipps</button>
-                            </div>
-                            <button onclick="document.getElementById('brettNewPost').classList.toggle('hidden')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90 flex-shrink-0">+ Neuer Aushang</button>
-                        </div>
-                        <div id="brettNewPost" class="hidden vit-card p-5 mb-4">
-                            <input type="text" id="brettNewTitle" placeholder="Titel..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3">
-                            <textarea id="brettNewBody" placeholder="Beschreibung..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3" rows="3"></textarea>
-                            <div class="flex items-center justify-between">
-                                <select id="brettNewCat" class="px-3 py-2 border border-gray-300 rounded-lg text-sm"><option value="suche">Rad gesucht</option><option value="biete">Rad abzugeben</option><option value="frage">Frage</option><option value="tipp">Tipp</option></select>
-                                <div class="flex space-x-2">
-                                    <button onclick="document.getElementById('brettNewPost').classList.add('hidden')" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Abbrechen</button>
-                                    <button onclick="createBrettPost()" class="px-5 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Posten</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="brettPosts" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-                    </div>
-
-                    <!-- ===== TAB: Termine ===== -->
-                    <div id="kommTabTermine" class="komm-tab-content" style="display:none;">
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div class="lg:col-span-2 space-y-3" id="termineList"></div>
-                            <div>
-                                <div class="vit-card p-5 mb-4">
-                                    <div class="flex items-center justify-between mb-3">
-                                        <button onclick="kommMiniCalNav(-1)" class="p-1 hover:bg-gray-100 rounded"><svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
-                                        <h3 class="font-semibold text-gray-800 text-sm" id="kommMiniCalTitle">Februar 2026</h3>
-                                        <button onclick="kommMiniCalNav(1)" class="p-1 hover:bg-gray-100 rounded"><svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
-                                    </div>
-                                    <div id="kommMiniCalGrid" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
-                                    <div class="mt-3 space-y-1 text-xs">
-                                        <div class="flex items-center space-x-2"><span class="w-2 h-2 bg-vit-orange rounded-full"></span><span class="text-gray-500">Heute</span></div>
-                                        <div class="flex items-center space-x-2"><span class="w-2 h-2 bg-blue-500 rounded-full"></span><span class="text-gray-500">Beratung / Meeting</span></div>
-                                        <div class="flex items-center space-x-2"><span class="w-2 h-2 bg-red-500 rounded-full"></span><span class="text-gray-500">Deadline</span></div>
-                                        <div class="flex items-center space-x-2"><span class="w-2 h-2 bg-green-500 rounded-full"></span><span class="text-gray-500">Probefahrt / Event</span></div>
-                                    </div>
-                                </div>
-                                <div class="vit-card p-5">
-                                    <h3 class="font-semibold text-gray-800 mb-3">Kalender</h3>
-                                    <div class="space-y-2 text-sm">
-                                        <button onclick="showView('kalender')" class="block text-vit-orange hover:underline font-semibold">📅 Zum Kalender-Modul →</button>
-                                        <div id="kommMiniCalStats" class="text-xs text-gray-500 space-y-1"></div>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -7401,14 +7358,38 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 // Build sidebar HTML
                 var html = '';
 
-                // --- Channels Section ---
-                html += '<div class="px-3 pt-3 pb-1"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Kanäle</span></div>';
-                kommState.kanaele.forEach(function(k) {
+                // --- Split channels into Netzwerk vs Standort ---
+                var netzwerkKanaele = kommState.kanaele.filter(function(k) { return !k.standort_id; });
+                var standortKanaele = kommState.kanaele.filter(function(k) { return !!k.standort_id; });
+
+                // Netzwerk-Kanäle (global, blau)
+                html += '<div class="px-3 pt-3 pb-1 flex items-center justify-between"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">🌐 Netzwerk</span></div>';
+                if(netzwerkKanaele.length === 0) {
+                    html += '<div class="mx-2 px-3 py-1.5 text-[11px] text-gray-400">Keine Netzwerk-Kanäle</div>';
+                }
+                netzwerkKanaele.forEach(function(k) {
+                    var isActive = kommState.activeConv && kommState.activeConv.type === 'channel' && kommState.activeConv.id === k.id;
+                    html += '<div class="komm-conv-item mx-2 px-3 py-2.5 rounded-lg cursor-pointer flex items-center space-x-3 ' + (isActive ? 'bg-blue-50 border-l-3 border-blue-500' : 'hover:bg-gray-100') + '" onclick="openKommConv(\'channel\',\'' + k.id + '\',\'' + escH(k.name).replace(/'/g,"\\'") + '\')">';
+                    html += '<div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">#</div>';
+                    html += '<div class="flex-1 min-w-0"><p class="text-sm font-semibold text-gray-800 truncate">' + escH(k.name) + '</p>';
+                    html += '<p class="text-[11px] text-blue-500 truncate">Netzwerk-Kanal</p></div>';
+                    html += '</div>';
+                });
+
+                // Standort-Kanäle (lokal, orange)
+                var standortName = sbProfile && sbProfile.standort_id ? (typeof standorte !== 'undefined' ? (standorte.find(function(s){return s.id===sbProfile.standort_id})||{}).name : '') : '';
+                html += '<div class="px-3 pt-4 pb-1 flex items-center justify-between"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">🏪 ' + (standortName ? escH(standortName) : 'Mein Standort') + '</span>';
+                html += '<button onclick="kommCreateKanal()" class="text-gray-400 hover:text-vit-orange" title="Neuen Kanal erstellen"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button>';
+                html += '</div>';
+                if(standortKanaele.length === 0) {
+                    html += '<div class="mx-2 px-3 py-1.5 text-[11px] text-gray-400">Keine Standort-Kanäle</div>';
+                }
+                standortKanaele.forEach(function(k) {
                     var isActive = kommState.activeConv && kommState.activeConv.type === 'channel' && kommState.activeConv.id === k.id;
                     html += '<div class="komm-conv-item mx-2 px-3 py-2.5 rounded-lg cursor-pointer flex items-center space-x-3 ' + (isActive ? 'bg-vit-orange/10 border-l-3 border-vit-orange' : 'hover:bg-gray-100') + '" onclick="openKommConv(\'channel\',\'' + k.id + '\',\'' + escH(k.name).replace(/'/g,"\\'") + '\')">';
-                    html += '<div class="w-8 h-8 ' + (k.standort_id ? 'bg-vit-orange' : 'bg-blue-500') + ' rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">#</div>';
+                    html += '<div class="w-8 h-8 bg-vit-orange rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">#</div>';
                     html += '<div class="flex-1 min-w-0"><p class="text-sm font-semibold text-gray-800 truncate">' + escH(k.name) + '</p>';
-                    html += '<p class="text-[11px] text-gray-400 truncate">' + (k.standort_id ? 'Team-Kanal' : 'Netzwerk') + '</p></div>';
+                    html += '<p class="text-[11px] text-vit-orange truncate">Standort-Kanal</p></div>';
                     html += '</div>';
                 });
 
@@ -7488,9 +7469,11 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
             if(type === 'channel') {
                 var kanal = kommState.kanaele.find(function(k){return k.id===id;});
-                avatar.className = 'w-9 h-9 ' + (kanal && kanal.standort_id ? 'bg-vit-orange' : 'bg-blue-500') + ' rounded-lg flex items-center justify-center text-white font-bold text-sm';
+                var isNetzwerk = kanal && !kanal.standort_id;
+                avatar.className = 'w-9 h-9 ' + (isNetzwerk ? 'bg-blue-500' : 'bg-vit-orange') + ' rounded-lg flex items-center justify-center text-white font-bold text-sm';
                 avatar.textContent = '#';
-                subtitle.textContent = kanal && kanal.beschreibung ? kanal.beschreibung : 'Team-Kanal';
+                var kanalLabel = isNetzwerk ? '🌐 Netzwerk-Kanal' : '🏪 Standort-Kanal';
+                subtitle.textContent = (kanal && kanal.beschreibung ? kanal.beschreibung + ' · ' : '') + kanalLabel;
                 await loadChannelMessages(id);
                 subscribeToChannel(id);
             } else if(type === 'inbox') {
@@ -7853,6 +7836,27 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         // =============================================
         //  BADGES
         // =============================================
+        // =============================================
+        //  CREATE KANAL
+        // =============================================
+        async function kommCreateKanal() {
+            var name = prompt('Name des neuen Kanals:');
+            if(!name || !name.trim()) return;
+            var beschreibung = prompt('Kurze Beschreibung (optional):') || '';
+            try {
+                var isHQ = sbProfile && sbProfile.is_hq;
+                var resp = await sb.from('chat_kanaele').insert({
+                    name: name.trim(),
+                    beschreibung: beschreibung.trim() || null,
+                    standort_id: isHQ ? null : (sbProfile ? sbProfile.standort_id : null),
+                    erstellt_von: sbUser.id,
+                    ist_privat: false
+                });
+                if(resp.error) throw resp.error;
+                await loadKommSidebar();
+            } catch(err) { alert('Fehler: ' + err.message); }
+        }
+
         function updateKommBadges() {
             var total = kommState.unreadInbox + kommState.unreadAnnounce;
             // Sidebar badge
@@ -7882,144 +7886,139 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         // =============================================
-        //  BRETT (unchanged DB logic)
+        //  COMMUNITY (merged Forum + Brett)
         // =============================================
-        async function renderBrett(cat) {
-            var container = document.getElementById('brettPosts');
-            if(!container) return;
-            try {
-                var query = sb.from('brett_eintraege').select('*, users(name)').eq('aktiv', true).order('created_at', {ascending:false});
-                if(cat && cat !== 'all') query = query.eq('kategorie', cat);
-                var resp = await query;
-                if(resp.error) throw resp.error;
-                var posts = resp.data || [];
-                var html = '';
-                var catColors = {suche:'bg-red-100 text-red-700 border-red-200',biete:'bg-green-100 text-green-700 border-green-200',frage:'bg-blue-100 text-blue-700 border-blue-200',tipp:'bg-yellow-100 text-yellow-700 border-yellow-200',allgemein:'bg-gray-100 text-gray-700 border-gray-200'};
-                var catLabels = {suche:'🔍 Gesucht',biete:'🏷️ Biete',frage:'❓ Frage',tipp:'💡 Tipp',allgemein:'📌 Allgemein'};
-                posts.forEach(function(p) {
-                    var authorName = p.users ? p.users.name : 'Unbekannt';
-                    var initials = authorName.split(' ').map(function(n){return n[0]}).join('').substring(0,2);
-                    var colors = ['bg-green-500','bg-blue-500','bg-purple-500','bg-red-500','bg-pink-500','bg-cyan-500'];
-                    var ci = authorName.split('').reduce(function(a,c){return a+c.charCodeAt(0)},0) % colors.length;
-                    var d = new Date(p.created_at);
-                    var isOwn = p.user_id === (sbUser ? sbUser.id : null);
-                    html += '<div class="vit-card p-5 hover:shadow-md transition">';
-                    html += '<div class="flex items-center justify-between mb-2"><span class="text-xs font-bold rounded-full px-2.5 py-1 border ' + (catColors[p.kategorie]||catColors.allgemein) + '">' + (catLabels[p.kategorie]||p.kategorie) + '</span>';
-                    if(isOwn) html += '<button onclick="deactivateBrettPost(\'' + p.id + '\')" class="text-xs text-gray-400 hover:text-red-500" title="Deaktivieren">✕</button>';
-                    html += '</div>';
-                    html += '<h3 class="font-bold text-gray-800 mb-1">' + escH(p.titel) + '</h3>';
-                    html += '<p class="text-sm text-gray-600 mb-3">' + escH(p.beschreibung||'') + '</p>';
-                    html += '<div class="flex items-center justify-between text-xs text-gray-400">';
-                    html += '<div class="flex items-center space-x-1"><div class="w-5 h-5 ' + colors[ci] + ' rounded-full flex items-center justify-center text-white text-[10px] font-bold">' + initials + '</div><span>' + escH(authorName) + '</span></div>';
-                    html += '<div class="flex items-center space-x-2"><span>' + d.toLocaleDateString('de-DE') + '</span>';
-                    if(!isOwn) html += '<button onclick="openKommConv(\'inbox\',\'' + p.user_id + '\',\'' + escH(authorName).replace(/'/g,"\\'") + '\');showKommTab(\'chat\')" class="text-vit-orange hover:underline font-semibold">✉ Nachricht</button>';
-                    html += '</div></div></div>';
-                });
-                if(posts.length===0) html = '<div class="col-span-2 text-center py-8 text-gray-400">Keine Einträge.</div>';
-                container.innerHTML = html;
-            } catch(err) { console.error('Brett:', err); }
-        }
+        var communityMarktplatzCats = ['suche','biete','tipp'];
 
-        async function createBrettPost() {
-            var titel = (document.getElementById('brettNewTitle')||{}).value;
-            var body = (document.getElementById('brettNewBody')||{}).value;
-            var kat = (document.getElementById('brettNewCat')||{}).value || 'allgemein';
-            if(!titel || !titel.trim()) { alert('Bitte Titel eingeben.'); return; }
-            try {
-                var resp = await sb.from('brett_eintraege').insert({
-                    user_id: sbUser.id, standort_id: sbProfile ? sbProfile.standort_id : null,
-                    titel: titel.trim(), beschreibung: body ? body.trim() : null, kategorie: kat
-                });
-                if(resp.error) throw resp.error;
-                document.getElementById('brettNewTitle').value = '';
-                document.getElementById('brettNewBody').value = '';
-                document.getElementById('brettNewPost').classList.add('hidden');
-                renderBrett('all');
-            } catch(err) { alert('Fehler: ' + err.message); }
-        }
-
-        async function deactivateBrettPost(id) {
-            if(!confirm('Eintrag wirklich entfernen?')) return;
-            try { await sb.from('brett_eintraege').update({aktiv:false}).eq('id',id); renderBrett('all'); } catch(err) { alert('Fehler: '+err.message); }
-        }
-
-        function filterBrett(cat) {
-            document.querySelectorAll('.brett-cat-btn').forEach(function(b){b.className='brett-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600';});
-            var btn=document.querySelector('.brett-cat-btn[data-bc="'+cat+'"]');
-            if(btn) btn.className='brett-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white';
-            renderBrett(cat);
-        }
-
-        // =============================================
-        //  FORUM (unchanged DB logic)
-        // =============================================
-        async function renderForumPosts(cat) {
+        async function renderCommunityPosts(cat) {
             var container = document.getElementById('forumPosts');
             if(!container) return;
             container.innerHTML = '<div class="text-center py-4"><span class="text-gray-400 text-sm">Beiträge werden geladen...</span></div>';
-            try {
-                var query = sb.from('forum_beitraege').select('*, users(name)').order('gepinnt',{ascending:false}).order('created_at',{ascending:false});
-                if(cat && cat !== 'all') query = query.eq('kategorie', cat);
-                var resp = await query;
-                if(resp.error) throw resp.error;
-                var posts = resp.data || [];
-                var catColors = {news:'bg-vit-orange text-white',frage:'bg-blue-100 text-blue-700',tipp:'bg-green-100 text-green-700',allgemein:'bg-gray-100 text-gray-700',verkauf:'bg-purple-100 text-purple-700',werkstatt:'bg-cyan-100 text-cyan-700',einkauf:'bg-yellow-100 text-yellow-700',zentrale:'bg-orange-100 text-orange-700'};
-                var catLabels = {news:'News',frage:'Frage',tipp:'Tipp',allgemein:'Allgemein',verkauf:'Verkauf',werkstatt:'Werkstatt',einkauf:'Einkauf',zentrale:'Zentrale'};
 
-                // Load comment counts
+            try {
+                // Load forum posts
+                var fQuery = sb.from('forum_beitraege').select('*, users(name)').order('gepinnt',{ascending:false}).order('created_at',{ascending:false});
+                if(cat && cat !== 'all' && communityMarktplatzCats.indexOf(cat) === -1) fQuery = fQuery.eq('kategorie', cat);
+                if(cat && communityMarktplatzCats.indexOf(cat) !== -1) fQuery = fQuery.eq('kategorie', 'NONE_MATCH');
+                var fResp = await fQuery;
+                var forumPosts = (!fResp.error ? fResp.data : []) || [];
+
+                // Load brett entries
+                var bQuery = sb.from('brett_eintraege').select('*, users(name)').eq('aktiv', true).order('created_at',{ascending:false});
+                if(cat && cat !== 'all' && communityMarktplatzCats.indexOf(cat) !== -1) bQuery = bQuery.eq('kategorie', cat);
+                if(cat && cat !== 'all' && communityMarktplatzCats.indexOf(cat) === -1) bQuery = bQuery.eq('kategorie', 'NONE_MATCH');
+                var bResp = await bQuery;
+                var brettPosts = (!bResp.error ? bResp.data : []) || [];
+
+                // Merge into unified list
+                var allPosts = [];
+                forumPosts.forEach(function(p) {
+                    allPosts.push({ source:'forum', id:p.id, titel:p.titel, inhalt:p.inhalt, kategorie:p.kategorie, user_id:p.user_id, users:p.users, created_at:p.created_at, gepinnt:p.gepinnt });
+                });
+                brettPosts.forEach(function(p) {
+                    allPosts.push({ source:'brett', id:p.id, titel:p.titel, inhalt:p.beschreibung, kategorie:p.kategorie, user_id:p.user_id, users:p.users, created_at:p.created_at, gepinnt:false });
+                });
+
+                // Sort: pinned first, then by date
+                allPosts.sort(function(a,b) {
+                    if(a.gepinnt && !b.gepinnt) return -1;
+                    if(!a.gepinnt && b.gepinnt) return 1;
+                    return new Date(b.created_at) - new Date(a.created_at);
+                });
+
+                // Load comment counts for forum posts
                 var commentCounts = {};
-                for(var i=0;i<posts.length;i++) {
-                    var cr = await sb.from('forum_kommentare').select('id',{count:'exact',head:true}).eq('beitrag_id', posts[i].id);
-                    commentCounts[posts[i].id] = cr.count || 0;
+                for(var i=0;i<forumPosts.length;i++) {
+                    var cr = await sb.from('forum_kommentare').select('id',{count:'exact',head:true}).eq('beitrag_id', forumPosts[i].id);
+                    commentCounts[forumPosts[i].id] = cr.count || 0;
                 }
 
+                var catColors = {
+                    allgemein:'bg-gray-100 text-gray-700', verkauf:'bg-purple-100 text-purple-700', werkstatt:'bg-cyan-100 text-cyan-700',
+                    einkauf:'bg-yellow-100 text-yellow-700', zentrale:'bg-orange-100 text-orange-700', news:'bg-vit-orange text-white',
+                    suche:'bg-red-100 text-red-700', biete:'bg-green-100 text-green-700', tipp:'bg-blue-100 text-blue-700', frage:'bg-indigo-100 text-indigo-700'
+                };
+                var catLabels = {
+                    allgemein:'💬 Allgemein', verkauf:'🛒 Verkauf', werkstatt:'🔧 Werkstatt', einkauf:'📦 Einkauf',
+                    zentrale:'Zentrale', news:'News', suche:'🔍 Gesucht', biete:'🏷️ Biete', tipp:'💡 Tipp', frage:'❓ Frage'
+                };
+
                 var html = '';
-                if(posts.length===0) html = '<div class="text-center py-8"><span class="text-gray-400 text-sm">Keine Beiträge. Starte die Diskussion!</span></div>';
-                posts.forEach(function(p) {
+                if(allPosts.length===0) html = '<div class="text-center py-8"><span class="text-gray-400 text-sm">Keine Beiträge. Starte die Diskussion!</span></div>';
+
+                allPosts.forEach(function(p) {
                     var authorName = p.users ? p.users.name : 'Unbekannt';
                     var initials = authorName.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
                     var colors = ['bg-blue-500','bg-green-600','bg-purple-500','bg-cyan-600','bg-pink-500','bg-red-500'];
                     var colorIdx = authorName.split('').reduce(function(a,c){return a+c.charCodeAt(0);},0) % colors.length;
                     var d = new Date(p.created_at);
                     var dateStr = d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}) + ' · ' + d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
-                    var replyCount = commentCounts[p.id] || 0;
                     var isOwn = p.user_id === (sbUser ? sbUser.id : null);
                     var isHQ = sbProfile && sbProfile.is_hq;
+                    var isMarkt = communityMarktplatzCats.indexOf(p.kategorie) !== -1;
+                    var replyCount = commentCounts[p.id] || 0;
 
-                    html += '<div class="vit-card p-5 hover:shadow-md transition cursor-pointer ' + (p.gepinnt ? 'border-l-4 border-vit-orange' : '') + '" onclick="openForumDetail(\'' + p.id + '\')">';
+                    html += '<div class="vit-card p-5 hover:shadow-md transition cursor-pointer ' + (p.gepinnt ? 'border-l-4 border-vit-orange' : '') + (isMarkt ? ' border-l-4 border-green-400' : '') + '" ' + (p.source==='forum' ? 'onclick="openForumDetail(\'' + p.id + '\')"' : '') + '>';
                     html += '<div class="flex items-start space-x-4">';
                     html += '<div class="w-10 h-10 ' + (p.gepinnt ? 'bg-vit-orange' : colors[colorIdx]) + ' rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">' + initials + '</div>';
                     html += '<div class="flex-1 min-w-0">';
                     html += '<div class="flex items-center space-x-2 mb-1 flex-wrap">';
                     if(p.gepinnt) html += '<span class="text-xs font-bold bg-yellow-100 text-yellow-700 rounded px-1.5 py-0.5">📌 Angepinnt</span>';
+                    if(isMarkt) html += '<span class="text-[10px] font-bold bg-green-50 text-green-600 rounded px-1.5 py-0.5 border border-green-200">Marktplatz</span>';
                     html += '<span class="text-xs font-semibold rounded px-2 py-0.5 ' + (catColors[p.kategorie]||catColors.allgemein) + '">' + (catLabels[p.kategorie]||p.kategorie) + '</span>';
-                    if(isOwn||isHQ) html += '<button onclick="event.stopPropagation();deleteForumPost(\'' + p.id + '\')" class="text-xs text-gray-300 hover:text-red-500 ml-auto" title="Löschen">🗑️</button>';
+                    if(isOwn || isHQ) {
+                        if(p.source==='forum') html += '<button onclick="event.stopPropagation();deleteForumPost(\'' + p.id + '\')" class="text-xs text-gray-300 hover:text-red-500 ml-auto" title="Löschen">🗑️</button>';
+                        if(p.source==='brett') html += '<button onclick="event.stopPropagation();deactivateBrettPost(\'' + p.id + '\')" class="text-xs text-gray-300 hover:text-red-500 ml-auto" title="Entfernen">✕</button>';
+                    }
                     html += '</div>';
-                    html += '<h3 class="font-bold text-gray-800 mb-1 hover:text-vit-orange">' + escH(p.titel) + '</h3>';
-                    html += '<p class="text-sm text-gray-600 mb-2 line-clamp-2">' + escH(p.inhalt) + '</p>';
-                    html += '<div class="flex items-center space-x-4 text-xs text-gray-400"><span class="font-semibold text-gray-600">' + escH(authorName) + '</span><span>' + dateStr + '</span><span>💬 ' + replyCount + '</span></div>';
-                    html += '</div></div></div>';
+                    html += '<h3 class="font-bold text-gray-800 mb-1 ' + (p.source==='forum'?'hover:text-vit-orange':'') + '">' + escH(p.titel) + '</h3>';
+                    if(p.inhalt) html += '<p class="text-sm text-gray-600 mb-2 line-clamp-2">' + escH(p.inhalt) + '</p>';
+                    html += '<div class="flex items-center space-x-4 text-xs text-gray-400">';
+                    html += '<span class="font-semibold text-gray-600">' + escH(authorName) + '</span>';
+                    html += '<span>' + dateStr + '</span>';
+                    if(p.source==='forum') html += '<span>💬 ' + replyCount + '</span>';
+                    if(isMarkt && !isOwn) html += '<button onclick="event.stopPropagation();openKommConv(\'inbox\',\'' + p.user_id + '\',\'' + escH(authorName).replace(/'/g,"\\'") + '\');showKommTab(\'chat\')" class="text-vit-orange font-semibold hover:underline">✉ Nachricht</button>';
+                    html += '</div></div></div></div>';
                 });
+
                 container.innerHTML = html;
             } catch(err) {
                 container.innerHTML = '<div class="text-center py-4 text-red-400 text-sm">Fehler: ' + err.message + '</div>';
             }
         }
 
-        async function createForumPost() {
+        async function createCommunityPost() {
             var titel = (document.getElementById('forumNewTitle')||{}).value;
             var body = (document.getElementById('forumNewBody')||{}).value;
             var kat = (document.getElementById('forumNewCat')||{}).value || 'allgemein';
             if(!titel||!titel.trim()) { alert('Bitte Betreff eingeben.'); return; }
-            if(!body||!body.trim()) { alert('Bitte Nachricht eingeben.'); return; }
+
+            var isMarkt = communityMarktplatzCats.indexOf(kat) !== -1;
             try {
-                var resp = await sb.from('forum_beitraege').insert({ user_id: sbUser.id, standort_id: sbProfile ? sbProfile.standort_id : null, titel: titel.trim(), inhalt: body.trim(), kategorie: kat });
-                if(resp.error) throw resp.error;
+                if(isMarkt) {
+                    var resp = await sb.from('brett_eintraege').insert({
+                        user_id: sbUser.id, standort_id: sbProfile ? sbProfile.standort_id : null,
+                        titel: titel.trim(), beschreibung: body ? body.trim() : null, kategorie: kat
+                    });
+                    if(resp.error) throw resp.error;
+                } else {
+                    if(!body||!body.trim()) { alert('Bitte Nachricht eingeben.'); return; }
+                    var resp = await sb.from('forum_beitraege').insert({
+                        user_id: sbUser.id, standort_id: sbProfile ? sbProfile.standort_id : null,
+                        titel: titel.trim(), inhalt: body.trim(), kategorie: kat
+                    });
+                    if(resp.error) throw resp.error;
+                }
                 document.getElementById('forumNewTitle').value = '';
                 document.getElementById('forumNewBody').value = '';
                 document.getElementById('forumNewPost').classList.add('hidden');
-                renderForumPosts('all');
+                renderCommunityPosts('all');
             } catch(err) { alert('Fehler: ' + err.message); }
+        }
+
+        async function deactivateBrettPost(id) {
+            if(!confirm('Eintrag wirklich entfernen?')) return;
+            try { await sb.from('brett_eintraege').update({aktiv:false}).eq('id',id); renderCommunityPosts('all'); } catch(err) { alert('Fehler: '+err.message); }
         }
 
         async function deleteForumPost(id) {
@@ -8027,8 +8026,15 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             try {
                 await sb.from('forum_kommentare').delete().eq('beitrag_id', id);
                 await sb.from('forum_beitraege').delete().eq('id', id);
-                renderForumPosts('all');
+                renderCommunityPosts('all');
             } catch(err) { alert('Fehler: ' + err.message); }
+        }
+
+        function filterCommunity(cat) {
+            document.querySelectorAll('.comm-cat-btn').forEach(function(b){ b.className='comm-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200'; });
+            var btn = document.querySelector('.comm-cat-btn[data-cat="'+cat+'"]');
+            if(btn) btn.className='comm-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white';
+            renderCommunityPosts(cat);
         }
 
         async function openForumDetail(postId) {
@@ -8087,104 +8093,21 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             document.getElementById('forumDetailView').classList.add('hidden');
             document.getElementById('forumListView').classList.remove('hidden');
             kommState.currentForumPost = null;
-            renderForumPosts('all');
         }
 
-        function filterForum(cat) {
-            document.querySelectorAll('.forum-cat-btn').forEach(function(b){ b.className='forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200'; });
-            var btn = document.querySelector('.forum-cat-btn[data-cat="'+cat+'"]');
-            if(btn) btn.className='forum-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white';
-            renderForumPosts(cat);
-        }
-
-        // =============================================
-        //  TERMINE (Mini Calendar + List)
-        // =============================================
-        var kommMiniCalMonth = new Date().getMonth();
-        var kommMiniCalYear = new Date().getFullYear();
-
-        function kommMiniCalNav(dir) {
-            kommMiniCalMonth += dir;
-            if(kommMiniCalMonth > 11) { kommMiniCalMonth = 0; kommMiniCalYear++; }
-            if(kommMiniCalMonth < 0) { kommMiniCalMonth = 11; kommMiniCalYear--; }
-            renderKommMiniCal();
-        }
-
-        function renderKommMiniCal() {
-            var months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-            var titleEl = document.getElementById('kommMiniCalTitle');
-            if(titleEl) titleEl.textContent = months[kommMiniCalMonth] + ' ' + kommMiniCalYear;
-            var gridEl = document.getElementById('kommMiniCalGrid');
-            if(!gridEl) return;
-            var today = new Date();
-            var todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
-            var firstDay = new Date(kommMiniCalYear, kommMiniCalMonth, 1).getDay();
-            firstDay = firstDay === 0 ? 6 : firstDay - 1;
-            var daysInMonth = new Date(kommMiniCalYear, kommMiniCalMonth + 1, 0).getDate();
-            var h = '<span class="text-gray-400 font-semibold py-1">Mo</span><span class="text-gray-400 font-semibold py-1">Di</span><span class="text-gray-400 font-semibold py-1">Mi</span><span class="text-gray-400 font-semibold py-1">Do</span><span class="text-gray-400 font-semibold py-1">Fr</span><span class="text-gray-400 font-semibold py-1">Sa</span><span class="text-gray-400 font-semibold py-1">So</span>';
-            for(var i=0;i<firstDay;i++) h+='<span class="py-1"></span>';
-            var termineDates = {};
-            (typeof kalTermine !== 'undefined' ? kalTermine : []).forEach(function(t) { if(!termineDates[t.date]) termineDates[t.date] = []; termineDates[t.date].push(t); });
-            for(var d=1;d<=daysInMonth;d++) {
-                var dateStr = kommMiniCalYear + '-' + String(kommMiniCalMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-                var isT = dateStr === todayStr;
-                var dayT = termineDates[dateStr] || [];
-                var isW = ((firstDay + d - 1) % 7) >= 5;
-                var cls = 'py-1 cursor-pointer hover:bg-gray-100 rounded-full transition ';
-                if(isT) cls += 'bg-vit-orange text-white font-bold ';
-                else if(dayT.length > 0) cls += 'bg-blue-100 text-blue-700 font-semibold ';
-                else if(isW) cls += 'text-gray-300 ';
-                var tooltip = dayT.map(function(t){return t.time + ' ' + t.title;}).join('\n');
-                h += '<span class="' + cls + '" title="' + escH(tooltip) + '" onclick="kommMiniCalClick(\'' + dateStr + '\')">' + d + '</span>';
-            }
-            gridEl.innerHTML = h;
-        }
-
-        function kommMiniCalClick(dateStr) { showView('kalender'); if(typeof kalDayDate !== 'undefined') { kalDayDate = new Date(dateStr + 'T12:00:00'); switchKalView('day'); } }
-
-        async function renderTermine() {
-            var container = document.getElementById('termineList');
-            if(!container) return;
-            try {
-                var resp = await sb.from('termine').select('*').gte('start_zeit', new Date().toISOString().split('T')[0]).order('start_zeit',{ascending:true}).limit(15);
-                if(resp.error) throw resp.error;
-                var terms = resp.data || [];
-                var typeLabels = {termin:'📋',meeting:'👥',schulung:'🎓',event:'🎉',deadline:'⏰',probefahrt:'🚲'};
-                var html = '';
-                terms.forEach(function(t) {
-                    var d = new Date(t.start_zeit);
-                    var dateStr = d.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'});
-                    var timeStr = t.ganztaegig ? 'Ganztägig' : d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
-                    html += '<div class="vit-card p-4 flex items-start space-x-4 hover:shadow-md transition">';
-                    html += '<div class="text-center flex-shrink-0 w-14"><div class="text-2xl">' + (typeLabels[t.typ]||'📋') + '</div><div class="text-xs font-bold text-gray-500 mt-1">' + dateStr + '</div></div>';
-                    html += '<div class="flex-1"><h4 class="font-bold text-gray-800 text-sm">' + escH(t.titel) + '</h4>';
-                    html += '<p class="text-xs text-gray-500 mt-0.5">' + timeStr + (t.ort ? ' · ' + escH(t.ort) : '') + '</p>';
-                    if(t.beschreibung) html += '<p class="text-xs text-gray-400 mt-1">' + escH(t.beschreibung) + '</p>';
-                    html += '</div></div>';
-                });
-                if(terms.length===0) html = '<div class="text-center py-8 text-gray-400">Keine anstehenden Termine.</div>';
-                container.innerHTML = html;
-            } catch(err) { console.error('Termine:', err); }
-        }
-
-        // =============================================
-        //  TAB NAVIGATION
-        // =============================================
         function showKommTab(tabName) {
             document.querySelectorAll('.komm-tab-content').forEach(function(t){t.style.display='none';});
             document.querySelectorAll('.komm-tab-btn').forEach(function(b){
                 b.className = b.className.replace(/bg-white text-gray-800 shadow-sm/g, 'text-gray-500 hover:text-gray-700').replace(/ shadow-sm/g, '');
             });
-            var tabMap = {chat:'Chat',forum:'Forum',brett:'Brett',termine:'Termine'};
+            var tabMap = {chat:'Chat',community:'Community'};
             var el = document.getElementById('kommTab' + (tabMap[tabName]||''));
             if(el) el.style.display = 'block';
             var btn = document.querySelector('.komm-tab-btn[data-tab="'+tabName+'"]');
             if(btn) btn.className = 'komm-tab-btn px-4 py-2 rounded-md text-sm font-semibold bg-white text-gray-800 shadow-sm';
 
             if(tabName==='chat') loadKommSidebar();
-            if(tabName==='forum') closeForumDetail();
-            if(tabName==='brett') renderBrett('all');
-            if(tabName==='termine') { renderTermine(); renderKommMiniCal(); }
+            if(tabName==='community') { closeForumDetail(); renderCommunityPosts('all'); }
         }
 
         // Init on first load
