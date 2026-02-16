@@ -126,6 +126,7 @@
         
         /* Status Badges */
         .status-badge {
+
             padding: 4px 12px;
             border-radius: 12px;
             font-size: 11px;
@@ -145,6 +146,34 @@
         .status-done { 
             background-color: var(--vit-gray); 
             color: white; 
+        }
+
+        /* DEMO / BETA Badge System (Session 7) */
+        .demo-badge {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background-color: #F97316;
+            color: white;
+            vertical-align: middle;
+            margin-left: 6px;
+        }
+        .beta-badge {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background-color: #8B5CF6;
+            color: white;
+            vertical-align: middle;
+            margin-left: 6px;
         }
         
         /* Chat Styles */
@@ -5615,6 +5644,108 @@
             isPremium = sbStandort ? sbStandort.is_premium : false;
         }
 
+        // === DEMO / BETA BADGE SYSTEM (Session 7) ===
+        // Module die nur statische Demo-Daten zeigen (orange Badge)
+        var BETA_MODULES = {
+            // Standort-Module
+            'dashboards': 'DEMO',
+            'allgemein': 'DEMO',
+            'einkauf': 'DEMO',
+            'marketing': 'DEMO',
+            'wissen': 'DEMO',
+            // HQ-Module
+            'hqMarketing': 'DEMO',
+            'hqEinkauf': 'DEMO',
+            'hqVerkauf': 'DEMO',
+            'hqShop': 'DEMO',
+            'hqAuswertung': 'DEMO',
+            'hqWissen': 'DEMO',
+            // Echte DB-Anbindung aber unvollständig (lila Badge)
+            'verkauf': 'BETA',
+            'shop': 'BETA',
+            'hqCockpit': 'BETA',
+            'hqKommando': 'BETA',
+            'hqAktionen': 'BETA'
+        };
+
+        // Tabs innerhalb von Modulen die DEMO/BETA sind
+        var BETA_TABS = {
+            // Controlling-Tabs
+            'performance': 'DEMO',
+            'benchmarks': 'DEMO',
+            'planist': 'DEMO',
+            'liquiditaet': 'DEMO',
+            // Verkauf-Tabs
+            'auswertung': 'DEMO',
+            'vkWissen': 'DEMO',
+            // Dashboard-Tabs
+            'finanzen': 'DEMO',
+            'leadreporting': 'DEMO',
+            'team': 'DEMO'
+        };
+
+        function applyBetaBadges() {
+            // 1. Sidebar-Buttons: Badge an Modul-Buttons
+            document.querySelectorAll('.sidebar-item').forEach(function(btn) {
+                // Entferne alte Badges
+                var oldBadge = btn.querySelector('.demo-badge, .beta-badge');
+                if(oldBadge) oldBadge.remove();
+
+                var onclickAttr = btn.getAttribute('onclick') || '';
+                var match = onclickAttr.match(/showView\('([^']+)'\)/);
+                if(!match) return;
+                var viewName = match[1];
+                var status = BETA_MODULES[viewName];
+                if(!status) return;
+
+                var badge = document.createElement('span');
+                badge.className = status === 'DEMO' ? 'demo-badge' : 'beta-badge';
+                badge.textContent = status;
+                btn.appendChild(badge);
+            });
+
+            // 2. Tab-Buttons: Badge an Tab-Buttons
+            var tabSelectors = '.ctrl-tab-btn, .vk-tab-btn, .dash-tab-btn, .mk-tab-btn, .ek-tab-btn';
+            document.querySelectorAll(tabSelectors).forEach(function(btn) {
+                var oldBadge = btn.querySelector('.demo-badge, .beta-badge');
+                if(oldBadge) oldBadge.remove();
+
+                var onclickAttr = btn.getAttribute('onclick') || '';
+                // Extract tab name from various tab functions
+                var tabMatch = onclickAttr.match(/(?:showControllingTab|showVerkaufTab|showDashboardTab|showMarketingTab|showEinkaufTab)\('([^']+)'\)/);
+                if(!tabMatch) return;
+                var tabName = tabMatch[1];
+                var status = BETA_TABS[tabName];
+                if(!status) return;
+
+                var badge = document.createElement('span');
+                badge.className = status === 'DEMO' ? 'demo-badge' : 'beta-badge';
+                badge.textContent = status;
+                badge.style.marginLeft = '4px';
+                btn.appendChild(badge);
+            });
+
+            // 3. Dashboard-Widgets auf Home: DEMO-Badge
+            document.querySelectorAll('#homeView .vit-card').forEach(function(card) {
+                // Prüfe ob schon ein Badge vorhanden
+                if(card.querySelector('.demo-badge, .beta-badge')) return;
+                // Nur Widgets mit statischen Demo-Daten markieren
+                var h3 = card.querySelector('h3');
+                if(!h3) return;
+                var title = h3.textContent || '';
+                var demoWidgets = ['Umsatz', 'Verkäufe', 'Top-Marken', 'Pipeline', 'Werkstatt', 'Nächste Termine', 'Letzte Aktivitäten', 'Marketing', 'Wetter', 'Team'];
+                var isDemo = demoWidgets.some(function(w) { return title.includes(w); });
+                if(isDemo) {
+                    var badge = document.createElement('span');
+                    badge.className = 'demo-badge';
+                    badge.textContent = 'DEMO';
+                    h3.appendChild(badge);
+                }
+            });
+
+            console.log('[BADGES] DEMO/BETA Badges applied');
+        }
+
         function enterApp() {
             var userName = sbProfile ? sbProfile.name : 'Benutzer';
             var firstName = userName.split(' ')[0];
@@ -5640,6 +5771,8 @@
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             try { updateUIForRole(); updatePremiumFeatures(); } catch(e) { console.warn(e); }
+            // Apply DEMO/BETA badges to sidebar and tabs
+            applyBetaBadges();
             // Demo mode check BEFORE rendering views (so demo data is available)
             checkDemoMode();
             if(currentRole === 'hq') { switchViewMode('hq'); } else { showView('home'); }
@@ -10482,6 +10615,11 @@
             if(v==='kalender') loadKalTermine();
             if(v==='todo') loadTodos();
             if(v==='notifications') renderNotifications('all');
+            // === Auto-Loading für Standort-Views (Session 7 Feature) ===
+            if(v==='controlling') { showControllingTab('bwas'); loadBwaList(); }
+            if(v==='verkauf') { loadWeekFromDb(); loadPipelineFromSupabase(); }
+            if(v==='kommunikation') { showKommTab('inbox'); }
+            if(v==='aktenschrank') { loadAktenFiles(); }
         };
 
         // === MOBILE SIDEBAR ===
