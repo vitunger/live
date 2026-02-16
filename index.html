@@ -4382,60 +4382,95 @@
 
                 <!-- ===== TODO VIEW ===== -->
                 <div id="todoView" class="view" style="display: none;">
-                    <div class="flex items-center justify-between mb-6">
-                        <h1 class="h1-headline text-gray-800" data-i18n="h_todos">AUFGABEN</h1>
-                        <button class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90" onclick="document.getElementById('todoNewModal').classList.remove('hidden')">+ Neue Aufgabe</button>
-                    </div>
+                    <div class="flex h-[calc(100vh-100px)] min-h-[600px] overflow-hidden">
 
-                    <!-- KPI -->
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-gray-800" id="todoKpiOffen">5</p><p class="text-xs text-gray-500" id="todoKpiOffenLabel" data-i18n="todo_open">Offen</p></div>
-                        <div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-vit-orange" id="todoKpiHeute">2</p><p class="text-xs text-gray-500" id="todoKpiHeuteLabel" data-i18n="todo_today">F&auml;llig heute</p></div>
-                        <div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-red-500" id="todoKpiUeber">1</p><p class="text-xs text-gray-500" id="todoKpiUeberLabel" data-i18n="todo_overdue">&Uuml;berf&auml;llig</p></div>
-                        <div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-green-600" id="todoKpiDone">12</p><p class="text-xs text-gray-500" id="todoKpiDoneLabel" data-i18n="todo_done">Erledigt (KW)</p></div>
-                    </div>
-
-                    <!-- Filter -->
-                    <div class="flex space-x-2 mb-4">
-                        <button onclick="filterTodos('all')" class="todo-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white" data-tf="all">Alle offen</button>
-                        <button onclick="filterTodos('heute')" class="todo-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-tf="heute">Heute</button>
-                        <button onclick="filterTodos('ueberfaellig')" class="todo-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-tf="ueberfaellig">Überfällig</button>
-                        <button onclick="filterTodos('done')" class="todo-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-tf="done">✅ Erledigt</button>
-                    </div>
-
-                    <div id="todoList" class="space-y-2"></div>
-
-                    <!-- New Todo Modal -->
-                    <div id="todoNewModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
-                        <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
-                            <h3 class="font-bold text-gray-800 text-lg mb-4">Neue Aufgabe</h3>
-                            <div class="space-y-3">
-                                <input type="text" id="todoNewTitle" placeholder="Aufgabe" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
-                                <div class="grid grid-cols-2 gap-3">
-                                    <input type="date" id="todoNewDate" class="px-3 py-2 border border-gray-200 rounded-lg text-sm">
-                                    <select id="todoNewPrio" class="px-3 py-2 border border-gray-200 rounded-lg text-sm">
-                                        <option value="normal">Normal</option>
-                                        <option value="hoch">Hoch</option>
-                                        <option value="niedrig">Niedrig</option>
-                                    </select>
+                        <!-- LEFT: Filter Sidebar -->
+                        <div id="todoSidebar" class="w-52 flex-shrink-0 bg-gray-50 border-r border-gray-200 flex flex-col">
+                            <div class="p-3 border-b border-gray-200">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-7 h-7 rounded-lg flex items-center justify-center text-white font-black text-[10px]" style="background:linear-gradient(135deg,#f97316,#ea580c)">v</div>
+                                    <span class="font-bold text-gray-800 text-sm">Aufgaben</span>
                                 </div>
-                                <select id="todoNewKat" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
-                                    <option value="verkauf">Verkauf</option>
-                                    <option value="werkstatt">Werkstatt</option>
-                                    <option value="marketing">Marketing</option>
-                                    <option value="admin">Administration</option>
-                                    <option value="sonstig">Sonstiges</option>
-                                </select>
                             </div>
-                            <div class="flex space-x-3 mt-4">
-                                <button onclick="addTodo()" class="flex-1 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Speichern</button>
-                                <button onclick="document.getElementById('todoNewModal').classList.add('hidden')" class="flex-1 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Abbrechen</button>
+                            <nav class="flex-1 p-2 space-y-0.5">
+                                <p class="font-bold text-gray-400 uppercase px-2 mb-1" style="font-size:9px;letter-spacing:0.05em">Ansichten</p>
+                                <button onclick="todoSetFilter('all')" data-tf2="all" class="todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] bg-white shadow-sm text-gray-900 font-semibold">
+                                    <span class="w-5 text-center text-sm">📋</span><span class="flex-1 text-left">Alle Aufgaben</span><span id="tfBadgeAll" class="text-[9px] font-bold bg-gray-200 text-gray-500 rounded-full px-1.5 py-0.5"></span>
+                                </button>
+                                <button onclick="todoSetFilter('heute')" data-tf2="heute" class="todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] text-gray-600 hover:bg-gray-200">
+                                    <span class="w-5 text-center text-sm">📅</span><span class="flex-1 text-left">Heute</span><span id="tfBadgeHeute" class="text-[9px] font-bold bg-yellow-100 text-yellow-700 rounded-full px-1.5 py-0.5 hidden"></span>
+                                </button>
+                                <button onclick="todoSetFilter('ueberfaellig')" data-tf2="ueberfaellig" class="todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] text-gray-600 hover:bg-gray-200">
+                                    <span class="w-5 text-center text-sm">🔴</span><span class="flex-1 text-left">Überfällig</span><span id="tfBadgeUeber" class="text-[9px] font-bold bg-red-100 text-red-600 rounded-full px-1.5 py-0.5 hidden"></span>
+                                </button>
+                                <button onclick="todoSetFilter('done')" data-tf2="done" class="todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] text-gray-600 hover:bg-gray-200">
+                                    <span class="w-5 text-center text-sm">✅</span><span class="flex-1 text-left">Erledigt</span><span id="tfBadgeDone" class="text-[9px] font-bold bg-green-100 text-green-600 rounded-full px-1.5 py-0.5 hidden"></span>
+                                </button>
+                            </nav>
+                            <div class="p-3 border-t border-gray-200">
+                                <div class="flex items-center space-x-2 px-2 py-1">
+                                    <div class="w-7 h-7 rounded-full bg-yellow-100 flex items-center justify-center"><span class="font-bold text-[9px] text-vit-orange" id="todoSbInitials">MB</span></div>
+                                    <div><p class="font-semibold text-gray-700 text-[11px]" id="todoSbStore">Mein Standort</p><p class="text-gray-400 text-[9px]">Partner</p></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CENTER: Main Content -->
+                        <div class="flex-1 flex flex-col min-w-0">
+                            <!-- Header -->
+                            <div class="flex-shrink-0 border-b border-gray-200 bg-white px-5 py-3">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h1 class="font-bold text-gray-900 text-lg" id="todoHeaderTitle">Alle Aufgaben</h1>
+                                        <p class="text-gray-400 text-[11px]" id="todoHeaderSub">0 offen · 0 heute · 0 überfällig</p>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <div class="relative">
+                                            <svg class="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                            <input type="text" id="todoSearchInput" placeholder="Suchen..." class="pl-7 pr-3 py-1 border border-gray-200 rounded-lg bg-gray-50 text-xs focus:outline-none focus:border-vit-orange" style="width:160px" oninput="todoSearchChanged()">
+                                        </div>
+                                        <div class="flex bg-gray-100 rounded-lg p-0.5">
+                                            <button onclick="todoSetView('list')" id="todoViewListBtn" class="px-2 py-1 rounded-md text-[11px] bg-white text-gray-900 shadow-sm">☰ Liste</button>
+                                            <button onclick="todoSetView('board')" id="todoViewBoardBtn" class="px-2 py-1 rounded-md text-[11px] text-gray-500 hover:text-gray-700">▦ Board</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- KPI Bar -->
+                            <div class="flex-shrink-0 px-5 py-2 bg-white border-b border-gray-100">
+                                <div class="flex space-x-2">
+                                    <button onclick="todoSetFilter('all')" class="todo-kpi flex-1 flex items-center space-x-2 px-3 py-2 rounded-xl" data-kpi="all">
+                                        <span class="font-bold text-xl text-gray-800" id="kpiOpen2">0</span><span class="text-gray-500 text-[11px]">Offen</span>
+                                    </button>
+                                    <button onclick="todoSetFilter('heute')" class="todo-kpi flex-1 flex items-center space-x-2 px-3 py-2 rounded-xl" data-kpi="heute">
+                                        <span class="font-bold text-xl text-vit-orange" id="kpiToday2">0</span><span class="text-gray-500 text-[11px]">Heute</span>
+                                    </button>
+                                    <button onclick="todoSetFilter('ueberfaellig')" class="todo-kpi flex-1 flex items-center space-x-2 px-3 py-2 rounded-xl" data-kpi="ueberfaellig">
+                                        <span class="font-bold text-xl text-red-500" id="kpiOverdue2">0</span><span class="text-gray-500 text-[11px]">Überfällig</span>
+                                    </button>
+                                    <button onclick="todoSetFilter('done')" class="todo-kpi flex-1 flex items-center space-x-2 px-3 py-2 rounded-xl" data-kpi="done">
+                                        <span class="font-bold text-xl text-green-600" id="kpiDone2">0</span><span class="text-gray-500 text-[11px]">Erledigt</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Content: List or Board + Detail Panel -->
+                            <div class="flex-1 flex overflow-hidden">
+                                <div class="flex-1 overflow-y-auto px-5 py-3" id="todoMainContent">
+                                    <!-- Quick Add -->
+                                    <div id="todoQuickAddArea" class="mb-3"></div>
+                                    <!-- Tasks -->
+                                    <div id="todoListArea"></div>
+                                </div>
+                                <!-- Detail Panel (hidden by default) -->
+                                <div id="todoDetailPanel" class="hidden flex-shrink-0 border-l border-gray-200 bg-white flex flex-col overflow-hidden" style="width:360px;"></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- ===== ALLGEMEIN VIEW ===== -->
+                <!-- ===== ALLGEMEIN VIEW =====
                 <div id="allgemeinView" class="view" style="display:none">
                     <div class="p-6 md:p-8 max-w-7xl mx-auto">
                 
@@ -12762,7 +12797,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 {name:'Startseite / Dashboard', view:'homeView', status:'live', typ:'standort', version:'1.4.0', details:'Personalisiert, 14 Widgets (12 Live aus DB, 2 Demo). Pipeline, Verkauf, Termine, Aufgaben, Team, Controlling, Support, Nachrichten, Monatsfokus, Jahresziele, Journal, Maßnahmen alle live.', kiPrio:35, aufwand:'S', kiTodo:'Restliche Demo-Widgets (Top-Verkäufer, Neue Inhalte) an DB anbinden.'},
                 {name:'Verkauf / CRM', view:'verkaufView', status:'teilweise', typ:'standort', version:'2.1.0', details:'React Pipeline (Kanban, Drag&Drop, Gamification), Scan-Upload mit KI-Analyse via Edge Function, KI-Verkaufstrainer, Wochenansicht, Auswertung', kiPrio:2, aufwand:'L', kiTodo:'✅ API-Key gesichert (Edge Function). Noch offen: Angebotserstellung PDF, Lead-Import, Follow-up-Erinnerungen, Supabase-Anbindung Pipeline-Deals.'},
                 {name:'Kalender', view:'kalenderView', status:'live', typ:'standort', version:'2.0.0', details:'Monats/Wochen/Tagesansicht, Wiederkehrende Termine, Teilnehmer, Serien, CRUD komplett, 8 Typen, Mini-Kalender, HQ-Kalender', kiPrio:20, aufwand:'XL', kiTodo:'MS365-Sync, Drag&Drop, Notifications nice-to-have.'},
-                {name:'Aufgaben / Todos', view:'todoView', status:'live', typ:'standort', version:'1.2.0', details:'Erstellen, Bearbeiten, Abhaken, Löschen, Filtern – alles DB', kiPrio:30, aufwand:'M', kiTodo:'Fälligkeitsdatum, Zuweisung an Mitarbeiter.'},
+                {name:'Aufgaben / Todos', view:'todoView', status:'live', typ:'standort', version:'2.0.0', details:'Todoist-Redesign: Sektionen, Subtasks mit Fortschritt, Board/Kanban Drag&Drop, Detail-Panel, Labels, Kommentare, Quick-Add, Suche – alles DB+Realtime', kiPrio:30, aufwand:'M', kiTodo:'Label-Management UI, Zuweisung an Mitarbeiter.'},
                 {name:'Kommunikation', view:'kommunikationView', status:'live', typ:'standort', version:'3.0.0', details:'Teams-Hybrid: 2-Spalten Chat mit Konversations-Sidebar (Kanäle, Nachrichten, Ankündigungen), Thread-Replies, fixierte Eingabe. Forum (CRUD+Kommentare), Brett (CRUD+Nachr. an Autor), Mini-Kalender – alles DB+Realtime', kiPrio:28, aufwand:'M', kiTodo:'Push-Notifications. Emoji-Reactions. Nachricht bearbeiten/löschen.'},
                 {name:'Controlling / BWA', view:'controllingView', status:'live', typ:'standort', version:'2.3.0', details:'Performance-Cockpit, BWA-Parser (13+ Formate), KI-Fallback für unbekannte Formate, PDF-Support, Multi-Upload Batch, Detail-Positionen, KPIs, Trend-Sparklines, Plan/Ist, Jahresplan-Upload', kiPrio:3, aufwand:'M', kiTodo:'Benchmarks gegen Netzwerk-Durchschnitt, Liquiditätsplanung.'},
                 {name:'Marketing', view:'marketingView', status:'teilweise', typ:'standort', version:'1.0.0', details:'6 Tabs: Performance (Cross-Channel KPIs), Budget (491k€ Jahresbudget, Spending-Chart), Leads (Forecast, Live-Leads), Social (Local Hero), Strategie, Wissen', kiPrio:8, aufwand:'L', kiTodo:'DB-Tabellen für Kampagnen/Budget anlegen, Social-Media Kalender, Content-Bibliothek. Aktuell Demo-Daten aber vollständige UI.'},
@@ -14231,159 +14266,688 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             // Future: var resp = await sb.functions.invoke('ms365-calendar-sync', { body: { action: 'pull' } });
         }
 
-        // === TODO DATA & LOGIC (DB-backed) ===
-        var todos = [];
-        var currentTodoFilter='all';
+        // === AUFGABEN MODULE v2.0 – Todoist-Inspired (Vanilla JS + Supabase) ===
+        var todoState = {
+            todos: [], sections: [], labels: [], comments: {},
+            filter: 'all', view: 'list', search: '', selectedId: null,
+            collapsedSecs: {}
+        };
+        var TODO_TODAY = new Date().toISOString().slice(0,10);
+        var TODO_PRIO = {
+            dringend:{icon:'🔴',border:'border-red-400',bg:'bg-red-500',sort:-1},
+            hoch:{icon:'🟠',border:'border-yellow-500',bg:'bg-yellow-500',sort:0},
+            normal:{icon:'🟡',border:'border-gray-300',bg:'bg-gray-400',sort:1},
+            niedrig:{icon:'🟢',border:'border-green-400',bg:'bg-green-500',sort:2}
+        };
+        var TODO_CAT = {verkauf:{icon:'💰',label:'Verkauf'},werkstatt:{icon:'🔧',label:'Werkstatt'},marketing:{icon:'📣',label:'Marketing'},admin:{icon:'📋',label:'Admin'},sonstig:{icon:'📌',label:'Sonstiges'}};
+        var TODO_SRC = {system:{icon:'🤖',label:'System',cls:'bg-blue-50 text-blue-600 border border-blue-100'},hq:{icon:'🏢',label:'HQ',cls:'bg-purple-50 text-purple-600 border border-purple-100'}};
 
+        // ── Load all data ──
         async function loadTodos() {
             try {
-                var query = sb.from('todos').select('*').order('prio_sort', {ascending:true}).order('faellig_am', {ascending:true});
-                if(sbProfile && sbProfile.standort_id && !sbProfile.is_hq) query = query.eq('standort_id', sbProfile.standort_id);
-                var resp = await query;
-                if(!resp.error) todos = resp.data || [];
-                else todos = [];
-            } catch(e) { console.warn('Todos load:', e); }
-            renderTodos();
+                var sid = sbProfile ? sbProfile.standort_id : null;
+                var isHQ = sbProfile && sbProfile.is_hq;
+
+                // Todos
+                var q = sb.from('todos').select('*, zugewiesen:zugewiesen_an(name)').order('prio_sort',{ascending:true}).order('faellig_am',{ascending:true,nullsFirst:false});
+                if(sid && !isHQ) q = q.eq('standort_id', sid);
+                var r = await q;
+                todoState.todos = (!r.error && r.data) ? r.data : [];
+
+                // Sections
+                var sq = sb.from('todo_sections').select('*').order('sort_order',{ascending:true});
+                if(sid && !isHQ) sq = sq.eq('standort_id', sid);
+                var sr = await sq;
+                todoState.sections = (!sr.error && sr.data) ? sr.data : [];
+
+                // Ensure "Eingang" section exists
+                if(!todoState.sections.find(function(s){return s.name==='Eingang';})) {
+                    var ins = await sb.from('todo_sections').insert({name:'Eingang',standort_id:sid,sort_order:0}).select();
+                    if(ins.data && ins.data[0]) todoState.sections.unshift(ins.data[0]);
+                }
+
+                // Labels
+                var lq = sb.from('todo_labels').select('*').order('name');
+                if(sid && !isHQ) lq = lq.or('standort_id.eq.'+sid+',standort_id.is.null');
+                var lr = await lq;
+                todoState.labels = (!lr.error && lr.data) ? lr.data : [];
+
+                // Store info in sidebar
+                var sbI = document.getElementById('todoSbInitials');
+                var sbS = document.getElementById('todoSbStore');
+                if(sbI && sbProfile) sbI.textContent = (sbProfile.name||'??').split(' ').map(function(w){return w[0];}).join('').substring(0,2);
+                if(sbS && sbProfile) sbS.textContent = sbProfile.standort_name || 'Mein Standort';
+
+            } catch(e) { console.warn('loadTodos:', e); }
+            todoRender();
         }
 
-        function filterTodos(f){
-            currentTodoFilter=f;
-            document.querySelectorAll('.todo-filter').forEach(function(b){b.className='todo-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600';});
-            var btn=document.querySelector('.todo-filter[data-tf="'+f+'"]');
-            if(btn)btn.className='todo-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white';
-            renderTodos();
+        // ── Counts ──
+        function todoCounts() {
+            var parents = todoState.todos.filter(function(t){return !t.parent_id;});
+            return {
+                open: parents.filter(function(t){return !t.erledigt;}).length,
+                today: parents.filter(function(t){return !t.erledigt && t.faellig_am===TODO_TODAY;}).length,
+                overdue: parents.filter(function(t){return !t.erledigt && t.faellig_am && t.faellig_am<TODO_TODAY;}).length,
+                done: parents.filter(function(t){return t.erledigt;}).length
+            };
         }
 
-        function renderTodos(){
-            var today=new Date().toISOString().slice(0,10);
-            var list=todos.filter(function(td){
-                if(currentTodoFilter==='all') return !td.erledigt;
-                if(currentTodoFilter==='heute') return !td.erledigt && td.faellig_am===today;
-                if(currentTodoFilter==='ueberfaellig') return !td.erledigt && td.faellig_am && td.faellig_am<today;
-                if(currentTodoFilter==='done') return td.erledigt;
-                return true;
+        // ── Set Filter ──
+        function todoSetFilter(f) {
+            todoState.filter = f;
+            var titles = {all:'Alle Aufgaben',heute:'Heute',ueberfaellig:'Überfällig',done:'Erledigt'};
+            var h1 = document.getElementById('todoHeaderTitle');
+            if(h1) h1.textContent = titles[f] || 'Aufgaben';
+            // Sidebar highlight
+            document.querySelectorAll('.todo-f2').forEach(function(b){
+                b.className = 'todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] text-gray-600 hover:bg-gray-200';
             });
-            var offen=todos.filter(function(td){return !td.erledigt;}).length;
-            var heute=todos.filter(function(td){return !td.erledigt && td.faellig_am===today;}).length;
-            var ueber=todos.filter(function(td){return !td.erledigt && td.faellig_am && td.faellig_am<today;}).length;
-            var done=todos.filter(function(td){return td.erledigt;}).length;
-            var kO=document.getElementById('todoKpiOffen');if(kO)kO.textContent=offen;
-            var kH=document.getElementById('todoKpiHeute');if(kH)kH.textContent=heute;
-            var kU=document.getElementById('todoKpiUeber');if(kU)kU.textContent=ueber;
-            var kD=document.getElementById('todoKpiDone');if(kD)kD.textContent=done;
-            // Update KPI labels
-            var lO=document.getElementById('todoKpiOffenLabel');if(lO)lO.textContent=t('todo_open');
-            var lH=document.getElementById('todoKpiHeuteLabel');if(lH)lH.textContent=t('todo_today');
-            var lU=document.getElementById('todoKpiUeberLabel');if(lU)lU.textContent=t('todo_overdue');
-            var lD=document.getElementById('todoKpiDoneLabel');if(lD)lD.textContent=t('todo_done');
-            var badge=document.getElementById('todoSidebarBadge');if(badge)badge.textContent=offen;
+            var btn = document.querySelector('.todo-f2[data-tf2="'+f+'"]');
+            if(btn) btn.className = 'todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] bg-white shadow-sm text-gray-900 font-semibold';
+            // KPI highlight
+            document.querySelectorAll('.todo-kpi').forEach(function(b){ b.style.background=''; b.style.boxShadow=''; });
+            var kpiColors = {all:'#fafaf9',heute:'#fff7ed',ueberfaellig:'#fef2f2',done:'#f0fdf4'};
+            var kpiBtn = document.querySelector('.todo-kpi[data-kpi="'+f+'"]');
+            if(kpiBtn) { kpiBtn.style.background=kpiColors[f]||''; kpiBtn.style.boxShadow='0 0 0 1px #e7e5e4'; }
+            todoRender();
+        }
 
-            var el=document.getElementById('todoList');if(!el)return;
-            var h='';
-            var prioIcons={hoch:'\uD83D\uDD34',dringend:'\uD83D\uDD34',normal:'\uD83D\uDFE1',niedrig:'\uD83D\uDFE2'};
-            var katIcons={verkauf:'\uD83D\uDCB0',werkstatt:'\uD83D\uDD27',marketing:'\uD83D\uDCE3',admin:'\uD83D\uDCCB',sonstig:'\uD83D\uDCCC'};
-            var katLabels={verkauf:t('cat_sales'),werkstatt:t('cat_workshop'),marketing:t('cat_marketing'),admin:t('cat_admin'),sonstig:t('cat_other')};
-            var prioSort={dringend:-1,hoch:0,normal:1,niedrig:2};
-            list.sort(function(a,b){return (prioSort[a.prio]||1)-(prioSort[b.prio]||1);});
-            list.forEach(function(td){
-                var isOver=!td.erledigt && td.faellig_am && td.faellig_am<today;
-                var isSystem = td.typ === 'system' || td.referenz_typ === 'bwa_erinnerung';
-                var isEscalated = td.eskalation_stufe && td.eskalation_stufe >= 2;
-                var fmtDate=td.faellig_am?td.faellig_am.slice(8)+'.'+td.faellig_am.slice(5,7)+'.':'';
-                var borderClass = isEscalated ? 'border-l-4 border-red-400' : (isSystem ? 'border-l-4 border-blue-300' : '');
-                h+='<div class="vit-card p-3 flex items-center space-x-3 '+(td.erledigt?'opacity-50':'')+' '+borderClass+'">';
-                h+='<button onclick="toggleTodo(\''+td.id+'\')" class="mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 '+(td.erledigt?'border-green-500 bg-green-500 text-white':'border-gray-300 hover:border-vit-orange')+'">';
-                if(td.erledigt) h+='<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>';
-                h+='</button>';
-                h+='<div class="flex-1 min-w-0">';
-                h+='<div class="flex items-center space-x-1.5">';
-                if(isSystem) h+='<span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-600 font-bold">\uD83E\uDD16 '+t('todo_system')+'</span>';
-                if(isEscalated) h+='<span class="text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-600 font-bold">\uD83D\uDD25 '+t('prio_urgent')+'</span>';
-                h+='</div>';
-                h+='<p class="font-semibold text-sm '+(td.erledigt?'line-through text-gray-400':'text-gray-800')+'">'+td.titel+'</p>';
-                h+='<p class="text-[10px] text-gray-500 mt-0.5">'+(katIcons[td.kategorie]||'')+' '+(katLabels[td.kategorie]||td.kategorie||'')+' \u00B7 '+t('todo_due')+': '+fmtDate+(isOver?' <span class="text-red-500 font-bold">'+t('todo_overdue')+'</span>':'')+'</p>';
-                if(td.beschreibung && !td.erledigt) h+='<p class="text-[10px] text-gray-400 mt-0.5 truncate">'+td.beschreibung.substring(0,80)+'</p>';
-                h+='</div>';
-                h+='<span class="text-xs">'+(prioIcons[td.prio]||'')+'</span>';
-                if(!isSystem) h+='<button onclick="editTodo(\''+td.id+'\')" class="text-gray-300 hover:text-blue-500 text-xs" title="'+t('todo_edit')+'">\u270F\uFE0F</button>';
-                h+='<button onclick="deleteTodo(\''+td.id+'\')" class="text-gray-300 hover:text-red-500 text-xs" title="'+t('todo_delete')+'">\u2715</button>';
-                h+='</div>';
+        // ── Set View ──
+        function todoSetView(v) {
+            todoState.view = v;
+            var lb = document.getElementById('todoViewListBtn');
+            var bb = document.getElementById('todoViewBoardBtn');
+            if(lb) lb.className = 'px-2 py-1 rounded-md text-[11px] ' + (v==='list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700');
+            if(bb) bb.className = 'px-2 py-1 rounded-md text-[11px] ' + (v==='board' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700');
+            todoRender();
+        }
+
+        function todoSearchChanged() {
+            todoState.search = (document.getElementById('todoSearchInput')||{}).value || '';
+            todoRender();
+        }
+
+        // ── Filter tasks ──
+        function todoFilteredParents() {
+            var f = todoState.filter, s = todoState.search.toLowerCase();
+            return todoState.todos.filter(function(t) {
+                if(t.parent_id) return false;
+                if(s && t.titel.toLowerCase().indexOf(s)===-1 && (!t.beschreibung || t.beschreibung.toLowerCase().indexOf(s)===-1)) return false;
+                if(f==='all') return !t.erledigt;
+                if(f==='heute') return !t.erledigt && t.faellig_am===TODO_TODAY;
+                if(f==='ueberfaellig') return !t.erledigt && t.faellig_am && t.faellig_am<TODO_TODAY;
+                if(f==='done') return t.erledigt;
+                return !t.erledigt;
             });
-            if(!list.length) h='<div class="text-center py-8 text-gray-400"><p class="text-3xl mb-2">\u2705</p><p class="text-sm">'+t('todo_no_tasks')+'</p></div>';
-            el.innerHTML=h;
         }
 
-        async function toggleTodo(id){
-            var td=todos.find(function(t){return t.id===id;});
-            if(!td) return;
-            td.erledigt=!td.erledigt;
-            try { await sb.from('todos').update({erledigt:td.erledigt, erledigt_am:td.erledigt?new Date().toISOString():null}).eq('id',id); } catch(e){}
-            renderTodos();
+        // ── Main render ──
+        function todoRender() {
+            var c = todoCounts();
+            // KPIs
+            var e1=document.getElementById('kpiOpen2');if(e1)e1.textContent=c.open;
+            var e2=document.getElementById('kpiToday2');if(e2)e2.textContent=c.today;
+            var e3=document.getElementById('kpiOverdue2');if(e3)e3.textContent=c.overdue;
+            var e4=document.getElementById('kpiDone2');if(e4)e4.textContent=c.done;
+            // Header sub
+            var hs=document.getElementById('todoHeaderSub');if(hs) hs.textContent=c.open+' offen · '+c.today+' heute · '+c.overdue+' überfällig';
+            // Sidebar badges
+            var ba=document.getElementById('tfBadgeAll');if(ba){ba.textContent=c.open;ba.classList.toggle('hidden',!c.open);}
+            var bh=document.getElementById('tfBadgeHeute');if(bh){bh.textContent=c.today;bh.classList.toggle('hidden',!c.today);}
+            var bu=document.getElementById('tfBadgeUeber');if(bu){bu.textContent=c.overdue;bu.classList.toggle('hidden',!c.overdue);}
+            var bd=document.getElementById('tfBadgeDone');if(bd){bd.textContent=c.done;bd.classList.toggle('hidden',!c.done);}
+            // Sidebar badge in nav
+            var navBadge=document.getElementById('todoSidebarBadge');if(navBadge)navBadge.textContent=c.open;
+
+            // Quick Add
+            var qa = document.getElementById('todoQuickAddArea');
+            if(qa) qa.innerHTML = todoQuickAddHTML();
+
+            // List or Board
+            var area = document.getElementById('todoListArea');
+            if(!area) return;
+            if(todoState.view === 'list') area.innerHTML = todoListHTML();
+            else area.innerHTML = todoBoardHTML();
+
+            // Detail panel
+            todoRenderDetail();
         }
 
-        async function deleteTodo(id){
-            try { await sb.from('todos').delete().eq('id',id); todos=todos.filter(function(t){return t.id!==id;}); } catch(e){}
-            renderTodos();
+        // ── Quick Add HTML ──
+        function todoQuickAddHTML() {
+            return '<div id="todoQAWrapper">' +
+                '<button onclick="todoOpenQuickAdd()" id="todoQABtn" class="w-full flex items-center space-x-2 px-4 py-2 text-left text-sm text-gray-400 hover:text-vit-orange border border-dashed border-gray-200 hover:border-vit-orange rounded-xl group">' +
+                '<span class="w-5 h-5 rounded-full border-2 border-gray-300 group-hover:border-vit-orange flex items-center justify-center"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="text-gray-300 group-hover:text-vit-orange"><path d="M12 5v14M5 12h14"/></svg></span>' +
+                '<span>Aufgabe hinzufügen...</span></button>' +
+                '<div id="todoQAForm" class="hidden border border-vit-orange/30 bg-white rounded-xl overflow-hidden" style="box-shadow:0 4px 20px rgba(249,115,22,0.08)">' +
+                '<div class="px-4 pt-3 pb-1"><input id="todoQATitle" placeholder="Was muss erledigt werden?" class="w-full text-sm text-gray-800 placeholder-gray-400 font-medium outline-none" onkeydown="todoQAKeydown(event)"></div>' +
+                '<div class="flex items-center space-x-2 px-4 pb-3 flex-wrap">' +
+                '<input type="date" id="todoQADate" class="text-xs px-2 py-1 border border-gray-200 rounded-md outline-none focus:border-vit-orange">' +
+                '<select id="todoQAPrio" class="text-xs px-2 py-1 border border-gray-200 rounded-md outline-none focus:border-vit-orange">' +
+                '<option value="normal">🟡 Normal</option><option value="dringend">🔴 Dringend</option><option value="hoch">🟠 Hoch</option><option value="niedrig">🟢 Niedrig</option></select>' +
+                '<select id="todoQASec" class="text-xs px-2 py-1 border border-gray-200 rounded-md outline-none focus:border-vit-orange">' +
+                todoState.sections.map(function(s){return '<option value="'+s.id+'">'+escH(s.name)+'</option>';}).join('') +
+                '</select>' +
+                '<div class="ml-auto flex space-x-1">' +
+                '<button onclick="todoCloseQuickAdd()" class="px-3 py-1 text-xs text-gray-500 hover:bg-gray-100 rounded-md">Abbrechen</button>' +
+                '<button onclick="todoSubmitQuickAdd()" class="px-4 py-1 text-xs font-semibold text-white rounded-md bg-vit-orange hover:opacity-90">Hinzufügen</button>' +
+                '</div></div></div></div>';
         }
 
-        function editTodo(id) {
-            var td = todos.find(function(t){return t.id===id;});
-            if(!td) return;
-            var html = '<div id="todoEditOverlay" onclick="closeTodoEdit()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:440px;max-width:95vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
-            html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">Aufgabe bearbeiten</h3><button onclick="closeTodoEdit()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
-            html += '<div class="space-y-3 mb-4">';
-            html += '<input id="todoEditTitle" type="text" value="'+td.titel.replace(/"/g,'&quot;')+'" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">';
-            html += '<div class="grid grid-cols-3 gap-2">';
-            html += '<input id="todoEditDate" type="date" value="'+(td.faellig_am||'')+'" class="px-3 py-2 border border-gray-200 rounded-lg text-sm">';
-            html += '<select id="todoEditPrio" class="px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="hoch"'+(td.prio==='hoch'?' selected':'')+'>Hoch</option><option value="normal"'+(td.prio==='normal'?' selected':'')+'>Normal</option><option value="niedrig"'+(td.prio==='niedrig'?' selected':'')+'>Niedrig</option></select>';
-            html += '<select id="todoEditKat" class="px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="verkauf"'+(td.kategorie==='verkauf'?' selected':'')+'>Verkauf</option><option value="werkstatt"'+(td.kategorie==='werkstatt'?' selected':'')+'>Werkstatt</option><option value="marketing"'+(td.kategorie==='marketing'?' selected':'')+'>Marketing</option><option value="admin"'+(td.kategorie==='admin'?' selected':'')+'>Admin</option><option value="sonstig"'+(td.kategorie==='sonstig'?' selected':'')+'>Sonstig</option></select>';
-            html += '</div></div>';
-            html += '<button onclick="saveTodoEdit(\''+id+'\')" class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Speichern</button>';
-            html += '</div></div>';
-            var c = document.createElement('div'); c.id = 'todoEditContainer'; c.innerHTML = html; document.body.appendChild(c);
+        function todoOpenQuickAdd() {
+            var btn=document.getElementById('todoQABtn');if(btn)btn.classList.add('hidden');
+            var form=document.getElementById('todoQAForm');if(form)form.classList.remove('hidden');
+            var inp=document.getElementById('todoQATitle');if(inp)inp.focus();
         }
-
-        function closeTodoEdit() { var c = document.getElementById('todoEditContainer'); if(c) c.remove(); }
-
-        async function saveTodoEdit(id) {
-            var titel = (document.getElementById('todoEditTitle')||{}).value;
-            var faellig = (document.getElementById('todoEditDate')||{}).value || null;
-            var prio = (document.getElementById('todoEditPrio')||{}).value || 'normal';
-            var kat = (document.getElementById('todoEditKat')||{}).value || 'sonstig';
-            var prioSortMap = {hoch:0,normal:1,niedrig:2};
-            if(!titel||!titel.trim()) return;
-            try {
-                var resp = await sb.from('todos').update({titel:titel.trim(),faellig_am:faellig,prio:prio,kategorie:kat,prio_sort:prioSortMap[prio]||1}).eq('id',id);
-                if(resp.error) throw resp.error;
-                var td = todos.find(function(t){return t.id===id;});
-                if(td) { td.titel=titel.trim(); td.faellig_am=faellig; td.prio=prio; td.kategorie=kat; td.prio_sort=prioSortMap[prio]||1; }
-                closeTodoEdit();
-                renderTodos();
-            } catch(e) { alert('Fehler: '+e.message); }
+        function todoCloseQuickAdd() {
+            var btn=document.getElementById('todoQABtn');if(btn)btn.classList.remove('hidden');
+            var form=document.getElementById('todoQAForm');if(form)form.classList.add('hidden');
+            var inp=document.getElementById('todoQATitle');if(inp)inp.value='';
         }
-
-        async function addTodo(){
-            var title=(document.getElementById('todoNewTitle')||{}).value;
-            if(!title||!title.trim()){alert('Bitte Aufgabe eingeben.');return;}
-            var faellig=(document.getElementById('todoNewDate')||{}).value||null;
-            var prio=(document.getElementById('todoNewPrio')||{}).value||'normal';
-            var kat=(document.getElementById('todoNewKat')||{}).value||'sonstig';
-            var prioSort={hoch:0,normal:1,niedrig:2};
+        function todoQAKeydown(e) {
+            if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();todoSubmitQuickAdd();}
+            if(e.key==='Escape')todoCloseQuickAdd();
+        }
+        async function todoSubmitQuickAdd() {
+            var title=(document.getElementById('todoQATitle')||{}).value;
+            if(!title||!title.trim()) return;
+            var due=(document.getElementById('todoQADate')||{}).value||null;
+            var prio=(document.getElementById('todoQAPrio')||{}).value||'normal';
+            var secId=(document.getElementById('todoQASec')||{}).value||null;
+            var prioSort=(TODO_PRIO[prio]||{}).sort||1;
             try {
                 var resp = await sb.from('todos').insert({
-                    standort_id: sbProfile?sbProfile.standort_id:null,
-                    erstellt_von: sbUser?sbUser.id:null,
-                    titel: title.trim(), faellig_am: faellig, prio: prio, kategorie: kat,
-                    prio_sort: prioSort[prio]||1, erledigt: false
-                }).select();
+                    standort_id:sbProfile?sbProfile.standort_id:null, erstellt_von:sbUser?sbUser.id:null,
+                    titel:title.trim(), faellig_am:due, prio:prio, prio_sort:prioSort,
+                    kategorie:'sonstig', section_id:secId, erledigt:false
+                }).select('*, zugewiesen:zugewiesen_an(name)');
                 if(resp.error) throw resp.error;
-                if(resp.data&&resp.data[0]) todos.unshift(resp.data[0]);
-            } catch(e) { console.error('Todo add:', e); }
-            document.getElementById('todoNewModal').classList.add('hidden');
-            document.getElementById('todoNewTitle').value='';
-            renderTodos();
+                if(resp.data&&resp.data[0]) todoState.todos.unshift(resp.data[0]);
+            } catch(e){console.error('QA add:',e);}
+            todoCloseQuickAdd();
+            todoRender();
         }
+
+        // ── List View HTML ──
+        function todoListHTML() {
+            var parents = todoFilteredParents();
+            var secs = todoState.sections.slice().sort(function(a,b){return (a.sort_order||0)-(b.sort_order||0);});
+            // Group: assigned section, or "unsorted"
+            var h = '';
+
+            secs.forEach(function(sec) {
+                var tasks = parents.filter(function(t){return t.section_id===sec.id;});
+                if(!tasks.length && todoState.filter !== 'all') return;
+                var collapsed = todoState.collapsedSecs[sec.id];
+                h += '<div class="mb-1">';
+                // Section header
+                h += '<div class="group flex items-center space-x-2 py-1 px-1 cursor-pointer" onclick="todoToggleSec(\''+sec.id+'\')">';
+                h += '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-gray-400" style="transform:rotate('+(collapsed?'0':'90')+'deg);transition:transform 150ms"><path d="M9 18l6-6-6-6"/></svg>';
+                h += '<h3 class="font-bold text-gray-500 uppercase" style="font-size:11px;letter-spacing:0.05em">'+escH(sec.name)+'</h3>';
+                h += '<span class="text-gray-400 text-[10px]">'+tasks.length+'</span>';
+                h += '<div class="flex-1"></div>';
+                if(sec.name!=='Eingang') h += '<button onclick="event.stopPropagation();todoDeleteSec(\''+sec.id+'\')" class="text-gray-400 hover:text-red-500 text-xs opacity-0 group-hover:opacity-100">✕</button>';
+                h += '</div>';
+                // Tasks
+                if(!collapsed) {
+                    if(tasks.length) {
+                        tasks.forEach(function(t){ h += todoRowHTML(t, 0); });
+                    } else {
+                        h += '<p class="text-xs text-gray-400 italic px-3 py-1">Keine Aufgaben</p>';
+                    }
+                }
+                h += '</div>';
+            });
+
+            // Unsectioned tasks
+            var unsec = parents.filter(function(t){return !t.section_id || !todoState.sections.find(function(s){return s.id===t.section_id;});});
+            if(unsec.length) {
+                h += '<div class="mb-1"><div class="flex items-center space-x-2 py-1 px-1"><h3 class="font-bold text-gray-500 uppercase" style="font-size:11px;letter-spacing:0.05em">Ohne Sektion</h3><span class="text-gray-400 text-[10px]">'+unsec.length+'</span></div>';
+                unsec.forEach(function(t){ h += todoRowHTML(t, 0); });
+                h += '</div>';
+            }
+
+            // Add section button
+            h += '<div class="mt-3 px-1"><button onclick="todoAddSecPrompt()" class="text-xs text-gray-400 hover:text-vit-orange flex items-center space-x-1">' +
+                '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>' +
+                '<span>Sektion hinzufügen</span></button></div>';
+
+            return h;
+        }
+
+        // ── Single Task Row ──
+        function todoRowHTML(task, depth) {
+            var subs = todoState.todos.filter(function(t){return t.parent_id===task.id;});
+            var doneSubs = subs.filter(function(s){return s.erledigt;}).length;
+            var p = TODO_PRIO[task.prio]||TODO_PRIO.normal;
+            var isOver = !task.erledigt && task.faellig_am && task.faellig_am < TODO_TODAY;
+            var isToday = task.faellig_am === TODO_TODAY;
+            var isSel = todoState.selectedId === task.id;
+            var isOwn = task.erstellt_von === (sbUser?sbUser.id:null);
+            var isSystem = task.typ==='system';
+            var isHQTask = task.typ==='hq';
+            var isEsc = task.eskalation_stufe >= 2;
+            var assigneeName = task.zugewiesen && task.zugewiesen.name ? task.zugewiesen.name : null;
+            var fmtD = task.faellig_am ? task.faellig_am.slice(8)+'.'+task.faellig_am.slice(5,7)+'.' : '';
+            var lbls = (task.labels||[]).map(function(lid){return todoState.labels.find(function(l){return l.id===lid;});}).filter(Boolean);
+
+            var h = '<div style="margin-left:'+(depth>0?28:0)+'px">';
+            h += '<div class="group flex items-start space-x-2 px-3 py-2 rounded-lg cursor-pointer '+(isSel?'bg-yellow-50':'hover:bg-gray-50')+' '+(task.erledigt?'opacity-40':'')+'" '+(isSel?'style="box-shadow:0 0 0 1px #fed7aa"':'')+' onclick="todoSelect(\''+task.id+'\')">';
+
+            // Checkbox
+            h += '<button onclick="event.stopPropagation();todoToggle(\''+task.id+'\')" class="mt-1 flex-shrink-0 w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center '+(task.erledigt?p.bg+' border-transparent':p.border)+'">';
+            if(task.erledigt) h += '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><path d="M5 13l4 4L19 7"/></svg>';
+            h += '</button>';
+
+            // Expand toggle for subtasks
+            if(subs.length>0 && depth===0) {
+                h += '<button onclick="event.stopPropagation();todoToggleExpand(\''+task.id+'\')" class="mt-1 text-gray-400 hover:text-gray-600">' +
+                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transform:rotate('+(todoState.collapsedSecs['sub_'+task.id]?'0':'90')+'deg);transition:transform 150ms"><path d="M9 18l6-6-6-6"/></svg></button>';
+            }
+
+            // Content
+            h += '<div class="flex-1 min-w-0">';
+            // Source badges
+            if(isSystem || isHQTask || isEsc) {
+                h += '<div class="flex items-center space-x-1 flex-wrap">';
+                if(isSystem && TODO_SRC.system) h += '<span class="text-[9px] px-1 rounded font-bold '+TODO_SRC.system.cls+'">'+TODO_SRC.system.icon+' '+TODO_SRC.system.label+'</span>';
+                if(isHQTask && TODO_SRC.hq) h += '<span class="text-[9px] px-1 rounded font-bold '+TODO_SRC.hq.cls+'">'+TODO_SRC.hq.icon+' '+TODO_SRC.hq.label+'</span>';
+                if(isEsc) h += '<span class="text-[9px] px-1 rounded bg-red-50 text-red-600 border border-red-100 font-bold">🔥 Eskaliert</span>';
+                h += '</div>';
+            }
+            // Title
+            h += '<p class="text-sm leading-snug '+(task.erledigt?'line-through text-gray-400':'text-gray-800 font-medium')+'">'+escH(task.titel)+'</p>';
+            // Meta
+            h += '<div class="flex items-center mt-1 flex-wrap" style="gap:6px">';
+            h += '<span class="text-gray-400 text-[10px]">'+(TODO_CAT[task.kategorie]||TODO_CAT.sonstig).icon+'</span>';
+            if(fmtD && !task.erledigt) h += '<span class="font-semibold text-[10px] '+(isOver?'text-red-500':isToday?'text-yellow-600':'text-gray-400')+'">📅 '+fmtD+(isOver?' überfällig':isToday?' heute':'')+'</span>';
+            lbls.forEach(function(l){ h += '<span class="font-semibold px-1 rounded-full text-[9px]" style="background:'+l.color+'18;color:'+l.color+'">'+escH(l.name)+'</span>'; });
+            if(subs.length>0) h += '<span class="text-gray-400 text-[10px]">☑ '+doneSubs+'/'+subs.length+'</span>';
+            if(assigneeName) h += '<span class="text-gray-400 text-[10px]">👤 '+escH(assigneeName)+'</span>';
+            h += '</div></div>';
+
+            // Hover actions
+            h += '<div class="flex space-x-1 opacity-0 group-hover:opacity-100">';
+            if(depth===0) h += '<button onclick="event.stopPropagation();todoAddSubPrompt(\''+task.id+'\')" class="p-1 text-gray-400 hover:text-yellow-600 rounded" title="Unteraufgabe"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>';
+            h += '<button onclick="event.stopPropagation();todoDelete(\''+task.id+'\')" class="p-1 text-gray-400 hover:text-red-500 rounded" title="Löschen"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>';
+            h += '</div></div>';
+
+            // Subtasks
+            if(subs.length>0 && !todoState.collapsedSecs['sub_'+task.id]) {
+                subs.forEach(function(st){ h += todoRowHTML(st, depth+1); });
+            }
+
+            // Subtask progress bar
+            if(subs.length>0 && depth===0 && !todoState.collapsedSecs['sub_'+task.id]) {
+                var pct = subs.length ? Math.round(doneSubs/subs.length*100) : 0;
+                h += '<div style="margin-left:28px" class="mt-1 mb-2 rounded-full overflow-hidden bg-gray-100 h-1"><div class="h-full bg-green-400 rounded-full" style="width:'+pct+'%;transition:width 150ms"></div></div>';
+            }
+            h += '</div>';
+            return h;
+        }
+
+        // ── Board View HTML ──
+        function todoBoardHTML() {
+            var parents = todoFilteredParents();
+            var secs = todoState.sections.slice().sort(function(a,b){return (a.sort_order||0)-(b.sort_order||0);});
+            var h = '<div class="mt-2 flex space-x-3 overflow-x-auto pb-4" style="min-height:400px">';
+
+            secs.forEach(function(sec) {
+                var tasks = parents.filter(function(t){return t.section_id===sec.id;});
+                h += '<div class="flex-shrink-0" style="width:260px" ondragover="event.preventDefault();event.dataTransfer.dropEffect=\'move\'" ondrop="todoBoardDrop(event,\''+sec.id+'\')">';
+                h += '<div class="flex items-center space-x-2 px-2 py-1 mb-2"><h3 class="font-bold text-gray-500 uppercase" style="font-size:11px;letter-spacing:0.05em">'+escH(sec.name)+'</h3>';
+                h += '<span class="font-bold rounded-full bg-gray-200 text-gray-500 flex items-center justify-center" style="width:18px;height:18px;font-size:9px">'+tasks.length+'</span></div>';
+                h += '<div class="space-y-2">';
+
+                tasks.forEach(function(task) {
+                    var subs = todoState.todos.filter(function(t){return t.parent_id===task.id;});
+                    var doneSubs = subs.filter(function(s){return s.erledigt;}).length;
+                    var p = TODO_PRIO[task.prio]||TODO_PRIO.normal;
+                    var isOver = !task.erledigt && task.faellig_am && task.faellig_am<TODO_TODAY;
+                    var isToday = task.faellig_am===TODO_TODAY;
+                    var fmtD = task.faellig_am ? task.faellig_am.slice(8)+'.'+task.faellig_am.slice(5,7)+'.' : '';
+                    var lbls = (task.labels||[]).map(function(lid){return todoState.labels.find(function(l){return l.id===lid;});}).filter(Boolean);
+                    var assigneeName = task.zugewiesen && task.zugewiesen.name ? task.zugewiesen.name : null;
+
+                    h += '<div draggable="true" ondragstart="event.dataTransfer.setData(\'text/plain\',\''+task.id+'\')" onclick="todoSelect(\''+task.id+'\')" class="bg-white rounded-xl border border-gray-200 p-3 cursor-pointer hover:shadow-md '+(task.erledigt?'opacity-40':'')+'" style="cursor:grab">';
+                    // Labels
+                    if(lbls.length) {
+                        h += '<div class="flex space-x-1 mb-1 flex-wrap">';
+                        lbls.forEach(function(l){ h += '<span class="font-bold px-1 rounded-full" style="font-size:8px;background:'+l.color+'18;color:'+l.color+'">'+escH(l.name)+'</span>'; });
+                        h += '</div>';
+                    }
+                    // Checkbox + Title
+                    h += '<div class="flex items-start space-x-2">';
+                    h += '<button onclick="event.stopPropagation();todoToggle(\''+task.id+'\')" class="mt-1 flex-shrink-0 rounded-full border-2 flex items-center justify-center '+(task.erledigt?p.bg+' border-transparent':p.border)+'" style="width:15px;height:15px">';
+                    if(task.erledigt) h += '<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><path d="M5 13l4 4L19 7"/></svg>';
+                    h += '</button>';
+                    h += '<p class="text-xs leading-snug flex-1 '+(task.erledigt?'line-through text-gray-400':'text-gray-800 font-medium')+'">'+escH(task.titel)+'</p></div>';
+                    // Meta
+                    h += '<div class="flex items-center mt-1 flex-wrap" style="gap:5px">';
+                    if(fmtD) h += '<span class="font-semibold text-[9px] '+(isOver?'text-red-500':isToday?'text-yellow-600':'text-gray-400')+'">📅 '+fmtD+'</span>';
+                    if(subs.length) h += '<span class="text-gray-400 text-[9px]">☑ '+doneSubs+'/'+subs.length+'</span>';
+                    if(task.typ!=='manual') h += '<span class="px-1 rounded font-bold text-[8px] '+(task.typ==='system'?'bg-blue-50 text-blue-500':'bg-purple-50 text-purple-500')+'">'+(task.typ==='system'?'🤖':'🏢')+'</span>';
+                    h += '<div class="flex-1"></div>';
+                    if(assigneeName) {
+                        var ini = assigneeName.split(' ').map(function(w){return w[0];}).join('').substring(0,2);
+                        h += '<div class="rounded-full bg-gray-200 flex items-center justify-center" style="width:18px;height:18px" title="'+escH(assigneeName)+'"><span class="font-bold text-gray-500" style="font-size:7px">'+ini+'</span></div>';
+                    }
+                    h += '</div>';
+                    // Progress bar
+                    if(subs.length) {
+                        var pct = Math.round(doneSubs/subs.length*100);
+                        h += '<div class="mt-1 rounded-full overflow-hidden bg-gray-100" style="height:4px"><div class="h-full bg-green-400 rounded-full" style="width:'+pct+'%"></div></div>';
+                    }
+                    h += '</div>';
+                });
+
+                if(!tasks.length) h += '<div class="border-2 border-dashed border-gray-200 rounded-xl p-3 text-center"><p class="text-gray-400 text-[11px]">Hierher ziehen</p></div>';
+                h += '</div></div>';
+            });
+            h += '</div>';
+            return h;
+        }
+
+        // ── Board drag & drop ──
+        async function todoBoardDrop(e, secId) {
+            e.preventDefault();
+            var id = e.dataTransfer.getData('text/plain');
+            if(!id) return;
+            var t = todoState.todos.find(function(x){return x.id===id;});
+            if(!t) return;
+            t.section_id = secId;
+            todoRender();
+            try { await sb.from('todos').update({section_id:secId}).eq('id',id); } catch(err){console.warn(err);}
+        }
+
+        // ── Detail Panel ──
+        function todoRenderDetail() {
+            var panel = document.getElementById('todoDetailPanel');
+            if(!panel) return;
+            if(!todoState.selectedId) { panel.classList.add('hidden'); return; }
+            var task = todoState.todos.find(function(t){return t.id===todoState.selectedId;});
+            if(!task) { panel.classList.add('hidden'); todoState.selectedId=null; return; }
+            panel.classList.remove('hidden');
+
+            var subs = todoState.todos.filter(function(t){return t.parent_id===task.id;});
+            var doneSubs = subs.filter(function(s){return s.erledigt;}).length;
+            var sec = todoState.sections.find(function(s){return s.id===task.section_id;});
+            var p = TODO_PRIO[task.prio]||TODO_PRIO.normal;
+            var comments = todoState.comments[task.id] || [];
+            var lbls = (task.labels||[]).map(function(lid){return todoState.labels.find(function(l){return l.id===lid;});}).filter(Boolean);
+
+            var h = '';
+            // Header
+            h += '<div class="flex items-center justify-between px-4 py-2 border-b border-gray-100 bg-gray-50">';
+            h += '<div class="flex items-center space-x-2 text-xs text-gray-400">';
+            if(sec) h += '<span class="font-medium">'+escH(sec.name)+'</span>';
+            if(task.typ!=='manual' && TODO_SRC[task.typ]) h += '<span class="px-1 py-0 rounded font-bold text-[9px] '+TODO_SRC[task.typ].cls+'">'+TODO_SRC[task.typ].icon+' '+TODO_SRC[task.typ].label+'</span>';
+            h += '</div>';
+            h += '<button onclick="todoCloseDetail()" class="p-1 hover:bg-gray-200 rounded-lg text-gray-400 hover:text-gray-600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>';
+            h += '</div>';
+
+            // Scrollable content
+            h += '<div class="flex-1 overflow-y-auto"><div class="p-4 space-y-4">';
+
+            // Title with checkbox
+            h += '<div class="flex items-start space-x-2">';
+            h += '<button onclick="todoToggle(\''+task.id+'\')" class="mt-1 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center '+(task.erledigt?p.bg+' border-transparent':p.border)+'">';
+            if(task.erledigt) h += '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><path d="M5 13l4 4L19 7"/></svg>';
+            h += '</button>';
+            h += '<input value="'+escH(task.titel).replace(/"/g,'&quot;')+'" onblur="todoUpdateField(\''+task.id+'\',\'titel\',this.value)" onkeydown="if(event.key===\'Enter\')this.blur()" class="flex-1 font-semibold outline-none bg-transparent '+(task.erledigt?'line-through text-gray-400':'text-gray-800')+'" style="font-size:15px">';
+            h += '</div>';
+
+            // Description
+            h += '<textarea onblur="todoUpdateField(\''+task.id+'\',\'beschreibung\',this.value)" placeholder="Beschreibung..." rows="2" class="w-full text-sm text-gray-600 placeholder-gray-400 outline-none bg-gray-50 rounded-lg p-2 border border-gray-100 focus:border-vit-orange/30" style="resize:none">'+(task.beschreibung||'')+'</textarea>';
+
+            // Properties grid
+            h += '<div class="grid grid-cols-2 gap-2">';
+            h += '<div><label class="font-bold text-gray-400 uppercase text-[9px]" style="letter-spacing:0.05em">Fällig</label>';
+            h += '<input type="date" value="'+(task.faellig_am||'')+'" onchange="todoUpdateField(\''+task.id+'\',\'faellig_am\',this.value||null)" class="mt-1 w-full px-2 py-1 text-xs border border-gray-200 rounded-lg outline-none focus:border-vit-orange/50"></div>';
+            h += '<div><label class="font-bold text-gray-400 uppercase text-[9px]" style="letter-spacing:0.05em">Priorität</label>';
+            h += '<select onchange="todoUpdatePrio(\''+task.id+'\',this.value)" class="mt-1 w-full px-2 py-1 text-xs border border-gray-200 rounded-lg outline-none focus:border-vit-orange/50">';
+            Object.keys(TODO_PRIO).forEach(function(k){h+='<option value="'+k+'"'+(task.prio===k?' selected':'')+'>'+TODO_PRIO[k].icon+' '+k[0].toUpperCase()+k.slice(1)+'</option>';});
+            h += '</select></div>';
+            h += '<div><label class="font-bold text-gray-400 uppercase text-[9px]" style="letter-spacing:0.05em">Kategorie</label>';
+            h += '<select onchange="todoUpdateField(\''+task.id+'\',\'kategorie\',this.value)" class="mt-1 w-full px-2 py-1 text-xs border border-gray-200 rounded-lg outline-none focus:border-vit-orange/50">';
+            Object.keys(TODO_CAT).forEach(function(k){h+='<option value="'+k+'"'+(task.kategorie===k?' selected':'')+'>'+TODO_CAT[k].icon+' '+TODO_CAT[k].label+'</option>';});
+            h += '</select></div>';
+            h += '<div><label class="font-bold text-gray-400 uppercase text-[9px]" style="letter-spacing:0.05em">Sektion</label>';
+            h += '<select onchange="todoUpdateField(\''+task.id+'\',\'section_id\',this.value)" class="mt-1 w-full px-2 py-1 text-xs border border-gray-200 rounded-lg outline-none focus:border-vit-orange/50">';
+            h += '<option value="">—</option>';
+            todoState.sections.forEach(function(s){h+='<option value="'+s.id+'"'+(task.section_id===s.id?' selected':'')+'>'+escH(s.name)+'</option>';});
+            h += '</select></div>';
+            h += '</div>';
+
+            // Labels
+            h += '<div><label class="font-bold text-gray-400 uppercase text-[9px]" style="letter-spacing:0.05em">Labels</label>';
+            h += '<div class="flex flex-wrap gap-1 mt-1">';
+            todoState.labels.forEach(function(l) {
+                var active = (task.labels||[]).indexOf(l.id) >= 0;
+                h += '<button onclick="todoToggleLabel(\''+task.id+'\',\''+l.id+'\')" class="font-semibold px-2 py-1 rounded-full border text-[10px] '+(active?'':'opacity-50 hover:opacity-80')+'" style="background:'+l.color+'15;color:'+l.color+';border-color:'+(active?l.color:'transparent')+';'+(active?'box-shadow:0 0 0 1px '+l.color+'40':'')+'">'+escH(l.name)+'</button>';
+            });
+            h += '</div></div>';
+
+            // Subtasks
+            h += '<div><div class="flex items-center justify-between mb-2"><label class="font-bold text-gray-400 uppercase text-[9px]" style="letter-spacing:0.05em">Unteraufgaben</label>';
+            if(subs.length) h += '<span class="text-gray-400 text-[10px]">'+doneSubs+'/'+subs.length+'</span>';
+            h += '</div>';
+            if(subs.length) {
+                var pct = Math.round(doneSubs/subs.length*100);
+                h += '<div class="rounded-full overflow-hidden bg-gray-100 mb-2" style="height:5px"><div class="h-full bg-green-400 rounded-full" style="width:'+pct+'%"></div></div>';
+            }
+            subs.forEach(function(s) {
+                var sp = TODO_PRIO[s.prio]||TODO_PRIO.normal;
+                h += '<div class="flex items-center space-x-2 py-1 group">';
+                h += '<button onclick="todoToggle(\''+s.id+'\')" class="flex-shrink-0 rounded-full border-2 flex items-center justify-center '+(s.erledigt?sp.bg+' border-transparent':sp.border)+'" style="width:15px;height:15px">';
+                if(s.erledigt) h += '<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><path d="M5 13l4 4L19 7"/></svg>';
+                h += '</button>';
+                h += '<span class="flex-1 text-xs '+(s.erledigt?'line-through text-gray-400':'text-gray-700')+'">'+escH(s.titel)+'</span>';
+                h += '<button onclick="todoDelete(\''+s.id+'\')" class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 text-[10px]">✕</button>';
+                h += '</div>';
+            });
+            h += '<div class="flex items-center space-x-2 mt-1">';
+            h += '<div class="rounded-full border-2 border-dashed border-gray-300 flex-shrink-0" style="width:15px;height:15px"></div>';
+            h += '<input id="todoDetailSubInput" placeholder="Unteraufgabe..." class="flex-1 px-1 py-1 border-b border-gray-100 outline-none focus:border-vit-orange/30 bg-transparent text-xs" onkeydown="if(event.key===\'Enter\')todoAddSubFromDetail(\''+task.id+'\')">';
+            h += '</div></div>';
+
+            // Comments
+            h += '<div><label class="font-bold text-gray-400 uppercase text-[9px]" style="letter-spacing:0.05em">Kommentare</label>';
+            h += '<div class="mt-2 space-y-2" id="todoDetailComments">';
+            comments.forEach(function(c) {
+                var cName = c.users ? c.users.name : 'Du';
+                var cInit = cName.split(' ').map(function(w){return w[0];}).join('').substring(0,2);
+                var cd = new Date(c.created_at);
+                var cDate = String(cd.getDate()).padStart(2,'0')+'.'+String(cd.getMonth()+1).padStart(2,'0')+'.';
+                h += '<div class="bg-gray-50 rounded-lg p-2">';
+                h += '<div class="flex items-center space-x-1 mb-1"><div class="rounded-full bg-yellow-100 flex items-center justify-center" style="width:16px;height:16px"><span class="font-bold text-yellow-600 text-[7px]">'+cInit+'</span></div>';
+                h += '<span class="font-semibold text-gray-600 text-[10px]">'+escH(cName)+'</span>';
+                h += '<span class="text-gray-400 text-[9px]">'+cDate+'</span></div>';
+                h += '<p class="text-gray-600 text-xs">'+escH(c.inhalt)+'</p></div>';
+            });
+            h += '</div>';
+            h += '<div class="flex space-x-2 mt-2"><input id="todoCommentInput" placeholder="Kommentar..." class="flex-1 px-2 py-1 border border-gray-200 rounded-lg outline-none focus:border-vit-orange/30 text-xs" onkeydown="if(event.key===\'Enter\')todoAddComment(\''+task.id+'\')">';
+            h += '</div></div>';
+
+            h += '</div></div>';
+
+            // Footer
+            h += '<div class="px-4 py-2 border-t border-gray-100 bg-gray-50 flex items-center justify-between">';
+            var cDate = task.created_at ? new Date(task.created_at) : null;
+            var cStr = cDate ? String(cDate.getDate()).padStart(2,'0')+'.'+String(cDate.getMonth()+1).padStart(2,'0')+'.' : '';
+            h += '<span class="text-gray-400 text-[9px]">Erstellt: '+cStr+'</span>';
+            h += '<button onclick="todoDelete(\''+task.id+'\');todoCloseDetail()" class="text-red-400 hover:text-red-600 font-semibold text-[10px]">Löschen</button>';
+            h += '</div>';
+
+            panel.innerHTML = h;
+            // Load comments async
+            todoLoadComments(task.id);
+        }
+
+        // ── Actions ──
+        function todoSelect(id) {
+            todoState.selectedId = (todoState.selectedId===id) ? null : id;
+            todoRender();
+        }
+        function todoCloseDetail() { todoState.selectedId=null; todoRender(); }
+        function todoToggleSec(id) { todoState.collapsedSecs[id]=!todoState.collapsedSecs[id]; todoRender(); }
+        function todoToggleExpand(id) { todoState.collapsedSecs['sub_'+id]=!todoState.collapsedSecs['sub_'+id]; todoRender(); }
+
+        async function todoToggle(id) {
+            var t = todoState.todos.find(function(x){return x.id===id;});
+            if(!t) return;
+            var nowDone = !t.erledigt;
+            t.erledigt = nowDone;
+            t.erledigt_am = nowDone ? new Date().toISOString() : null;
+            // If completing parent → complete all subtasks
+            if(nowDone && !t.parent_id) {
+                todoState.todos.forEach(function(s){
+                    if(s.parent_id===id && !s.erledigt) { s.erledigt=true; s.erledigt_am=new Date().toISOString(); sb.from('todos').update({erledigt:true,erledigt_am:s.erledigt_am}).eq('id',s.id); }
+                });
+            }
+            todoRender();
+            try { await sb.from('todos').update({erledigt:nowDone,erledigt_am:t.erledigt_am}).eq('id',id); } catch(e){console.warn(e);}
+        }
+
+        async function todoDelete(id) {
+            // Delete subtasks too
+            todoState.todos = todoState.todos.filter(function(t){return t.id!==id && t.parent_id!==id;});
+            todoRender();
+            try { await sb.from('todos').delete().eq('id',id); } catch(e){console.warn(e);}
+        }
+
+        async function todoUpdateField(id, field, value) {
+            var t = todoState.todos.find(function(x){return x.id===id;});
+            if(!t) return;
+            t[field] = value;
+            todoRender();
+            var upd = {};
+            upd[field] = value;
+            try { await sb.from('todos').update(upd).eq('id',id); } catch(e){console.warn(e);}
+        }
+
+        async function todoUpdatePrio(id, prio) {
+            var t = todoState.todos.find(function(x){return x.id===id;});
+            if(!t) return;
+            t.prio = prio;
+            t.prio_sort = (TODO_PRIO[prio]||{}).sort || 1;
+            todoRender();
+            try { await sb.from('todos').update({prio:prio,prio_sort:t.prio_sort}).eq('id',id); } catch(e){console.warn(e);}
+        }
+
+        async function todoToggleLabel(taskId, labelId) {
+            var t = todoState.todos.find(function(x){return x.id===taskId;});
+            if(!t) return;
+            var arr = t.labels || [];
+            var idx = arr.indexOf(labelId);
+            if(idx>=0) arr.splice(idx,1); else arr.push(labelId);
+            t.labels = arr;
+            todoRender();
+            try { await sb.from('todos').update({labels:arr}).eq('id',taskId); } catch(e){console.warn(e);}
+        }
+
+        // ── Subtask from detail ──
+        async function todoAddSubFromDetail(parentId) {
+            var inp = document.getElementById('todoDetailSubInput');
+            var title = inp ? inp.value.trim() : '';
+            if(!title) return;
+            var parent = todoState.todos.find(function(t){return t.id===parentId;});
+            try {
+                var resp = await sb.from('todos').insert({
+                    standort_id:sbProfile?sbProfile.standort_id:null, erstellt_von:sbUser?sbUser.id:null,
+                    titel:title, parent_id:parentId, section_id:parent?parent.section_id:null,
+                    kategorie:parent?parent.kategorie:'sonstig', prio:'normal', prio_sort:1, erledigt:false
+                }).select('*, zugewiesen:zugewiesen_an(name)');
+                if(resp.error) throw resp.error;
+                if(resp.data&&resp.data[0]) todoState.todos.push(resp.data[0]);
+            } catch(e){console.error(e);}
+            todoRender();
+        }
+
+        function todoAddSubPrompt(parentId) {
+            var title = prompt('Unteraufgabe:');
+            if(!title || !title.trim()) return;
+            var parent = todoState.todos.find(function(t){return t.id===parentId;});
+            sb.from('todos').insert({
+                standort_id:sbProfile?sbProfile.standort_id:null, erstellt_von:sbUser?sbUser.id:null,
+                titel:title.trim(), parent_id:parentId, section_id:parent?parent.section_id:null,
+                kategorie:parent?parent.kategorie:'sonstig', prio:'normal', prio_sort:1, erledigt:false
+            }).select('*, zugewiesen:zugewiesen_an(name)').then(function(r){
+                if(r.data&&r.data[0]) todoState.todos.push(r.data[0]);
+                todoRender();
+            });
+        }
+
+        // ── Sections ──
+        async function todoAddSecPrompt() {
+            var name = prompt('Name der neuen Sektion:');
+            if(!name || !name.trim()) return;
+            try {
+                var resp = await sb.from('todo_sections').insert({name:name.trim(),standort_id:sbProfile?sbProfile.standort_id:null,sort_order:todoState.sections.length}).select();
+                if(resp.error) throw resp.error;
+                if(resp.data&&resp.data[0]) todoState.sections.push(resp.data[0]);
+            } catch(e){alert('Fehler: '+e.message);}
+            todoRender();
+        }
+
+        async function todoDeleteSec(id) {
+            if(!confirm('Sektion löschen? Aufgaben werden zu "Eingang" verschoben.')) return;
+            var inbox = todoState.sections.find(function(s){return s.name==='Eingang';});
+            var inboxId = inbox ? inbox.id : null;
+            // Move tasks
+            todoState.todos.forEach(function(t){if(t.section_id===id)t.section_id=inboxId;});
+            todoState.sections = todoState.sections.filter(function(s){return s.id!==id;});
+            todoRender();
+            try {
+                if(inboxId) await sb.from('todos').update({section_id:inboxId}).eq('section_id',id);
+                await sb.from('todo_sections').delete().eq('id',id);
+            } catch(e){console.warn(e);}
+        }
+
+        // ── Comments ──
+        async function todoLoadComments(taskId) {
+            try {
+                var r = await sb.from('todo_comments').select('*, users(name)').eq('todo_id',taskId).order('created_at',{ascending:true});
+                todoState.comments[taskId] = (!r.error && r.data) ? r.data : [];
+                // Re-render comments section only
+                var el = document.getElementById('todoDetailComments');
+                if(el && todoState.selectedId===taskId) {
+                    var comments = todoState.comments[taskId] || [];
+                    var ch = '';
+                    comments.forEach(function(c) {
+                        var cName = c.users ? c.users.name : 'Du';
+                        var cInit = cName.split(' ').map(function(w){return w[0];}).join('').substring(0,2);
+                        var cd = new Date(c.created_at);
+                        var cDate = String(cd.getDate()).padStart(2,'0')+'.'+String(cd.getMonth()+1).padStart(2,'0')+'.';
+                        ch += '<div class="bg-gray-50 rounded-lg p-2"><div class="flex items-center space-x-1 mb-1"><div class="rounded-full bg-yellow-100 flex items-center justify-center" style="width:16px;height:16px"><span class="font-bold text-yellow-600 text-[7px]">'+cInit+'</span></div>';
+                        ch += '<span class="font-semibold text-gray-600 text-[10px]">'+escH(cName)+'</span><span class="text-gray-400 text-[9px]">'+cDate+'</span></div>';
+                        ch += '<p class="text-gray-600 text-xs">'+escH(c.inhalt)+'</p></div>';
+                    });
+                    if(!comments.length) ch = '<p class="text-xs text-gray-400 italic">Noch keine Kommentare.</p>';
+                    el.innerHTML = ch;
+                }
+            } catch(e){console.warn(e);}
+        }
+
+        async function todoAddComment(taskId) {
+            var inp = document.getElementById('todoCommentInput');
+            var text = inp ? inp.value.trim() : '';
+            if(!text) return;
+            try {
+                var r = await sb.from('todo_comments').insert({todo_id:taskId,user_id:sbUser?sbUser.id:null,inhalt:text}).select('*, users(name)');
+                if(r.error) throw r.error;
+                if(!todoState.comments[taskId]) todoState.comments[taskId] = [];
+                if(r.data&&r.data[0]) todoState.comments[taskId].push(r.data[0]);
+                inp.value = '';
+                todoLoadComments(taskId);
+            } catch(e){alert('Fehler: '+e.message);}
+        }
+
+        // ── Backwards compat: old functions redirect to new ──
+        function filterTodos(f) { todoSetFilter(f); }
+        function renderTodos() { todoRender(); }
+        var currentTodoFilter = 'all';
 
         // =====================================================================
         // BWA ERINNERUNGSLOGIK – Automatische Deadline-Todos mit Eskalation
@@ -14598,6 +15162,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 return { missing: missing, escalated: escalated, total: standorte.length, month: prevMonth, year: prevYear };
             } catch(e) { console.warn('HQ BWA status:', e); return null; }
         }
+
 
         // === HQ KOMMUNIKATION ===
         var hqAnnouncements = [
