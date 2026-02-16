@@ -4374,13 +4374,37 @@
                                     <option value="deadline">Deadline</option>
                                     <option value="sonstig">Sonstiges</option>
                                 </select>
+                                <!-- Wiederholung -->
+                                <div>
+                                    <label class="text-[10px] text-gray-500 font-semibold">Wiederholung</label>
+                                    <select id="kalNewRepeat" onchange="kalToggleRepeatEnd()" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                                        <option value="">Keine Wiederholung</option>
+                                        <option value="taeglich">Täglich</option>
+                                        <option value="woechentlich">Wöchentlich</option>
+                                        <option value="2wochen">Alle 2 Wochen</option>
+                                        <option value="monatlich">Monatlich</option>
+                                    </select>
+                                    <div id="kalRepeatEndRow" class="mt-2 flex items-center space-x-2" style="display:none;">
+                                        <label class="text-[10px] text-gray-500 whitespace-nowrap">Bis</label>
+                                        <input type="date" id="kalNewRepeatEnd" onchange="kalUpdateRepeatInfo()" class="flex-1 px-3 py-1.5 border border-gray-200 rounded-lg text-sm">
+                                        <span class="text-[10px] text-gray-400" id="kalRepeatInfo"></span>
+                                    </div>
+                                </div>
+                                <!-- Teilnehmer -->
+                                <div>
+                                    <label class="text-[10px] text-gray-500 font-semibold">Teilnehmer</label>
+                                    <div id="kalTeilnehmerList" class="flex flex-wrap gap-1 mb-1.5"></div>
+                                    <select id="kalNewTeilnehmer" onchange="kalAddTeilnehmer()" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                                        <option value="">+ Teilnehmer hinzufügen...</option>
+                                    </select>
+                                </div>
                                 <textarea id="kalNewNotes" placeholder="Notizen (optional)" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"></textarea>
                             </div>
                             <div class="flex space-x-3 mt-4">
                                 <button id="kalSaveBtn" onclick="saveKalTermin()" class="flex-1 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Speichern</button>
                                 <button onclick="document.getElementById('kalNewModal').classList.add('hidden')" class="flex-1 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Abbrechen</button>
+                                <button id="kalDeleteBtn" onclick="deleteKalTermin()" style="display:none" class="py-2 px-4 bg-red-50 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-100 border border-red-200">🗑️</button>
                             </div>
-                            <button id="kalDeleteBtn" onclick="deleteKalTermin()" style="display:none" class="w-full mt-2 py-2 text-red-500 text-sm font-semibold hover:bg-red-50 rounded-lg">🗑️ Termin löschen</button>
                         </div>
                     </div>
                 </div>
@@ -12153,7 +12177,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         var MODUL_DATEN = {
             standort: [
                 {name:'Startseite / Dashboard', view:'homeView', status:'live', typ:'standort', details:'Personalisiert, 14 Widgets (12 Live aus DB, 2 Demo). Pipeline, Verkauf, Termine, Aufgaben, Team, Controlling, Support, Nachrichten, Monatsfokus, Jahresziele, Journal, Maßnahmen alle live.', kiPrio:35, aufwand:'S', kiTodo:'Restliche Demo-Widgets (Top-Verkäufer, Neue Inhalte) an DB anbinden.'},
-                {name:'Verkauf / CRM', view:'verkaufView', status:'teilweise', typ:'standort', details:'React Pipeline (Kanban, Drag&Drop, Gamification), Scan-Upload mit KI-Analyse, KI-Verkaufstrainer, Wochenansicht, Auswertung', kiPrio:2, aufwand:'L', kiTodo:'⚠️ API-Key ins Backend! Angebotserstellung PDF, Lead-Import, Follow-up-Erinnerungen, Supabase-Anbindung Pipeline-Deals.'},
+                {name:'Verkauf / CRM', view:'verkaufView', status:'teilweise', typ:'standort', details:'React Pipeline (Kanban, Drag&Drop, Gamification), Scan-Upload mit KI-Analyse via Edge Function, KI-Verkaufstrainer, Wochenansicht, Auswertung', kiPrio:2, aufwand:'L', kiTodo:'✅ API-Key gesichert (Edge Function). Noch offen: Angebotserstellung PDF, Lead-Import, Follow-up-Erinnerungen, Supabase-Anbindung Pipeline-Deals.'},
                 {name:'Kalender', view:'kalenderView', status:'live', typ:'standort', details:'Monatsansicht, Termine aus DB laden/erstellen/löschen', kiPrio:20, aufwand:'XL', kiTodo:'MS365-Sync nice-to-have. Wochenansicht wäre UX-Verbesserung.'},
                 {name:'Aufgaben / Todos', view:'todoView', status:'live', typ:'standort', details:'Erstellen, Bearbeiten, Abhaken, Löschen, Filtern – alles DB', kiPrio:30, aufwand:'M', kiTodo:'Fälligkeitsdatum, Zuweisung an Mitarbeiter.'},
                 {name:'Kommunikation', view:'kommunikationView', status:'live', typ:'standort', details:'Ankündigungen, Brett, Forum, Chat-Kanäle – alles DB', kiPrio:28, aufwand:'M', kiTodo:'Direktnachrichten fehlt. Ansonsten solide.'},
@@ -12949,6 +12973,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         var kalMonth = new Date().getMonth(); var kalYear = new Date().getFullYear();
         var kalTermine = [];
         var kalEditId = null;
+        var kalSelectedTeilnehmer = []; // Array of {id, name} for current modal
+        var kalStandortUsers = []; // Cached users for teilnehmer dropdown
         var kalCurrentView = 'month'; // 'month' | 'week' | 'day'
         var kalWeekStart = null; // Date object for Monday of current week
         var kalDayDate = null; // Date object for current day view
@@ -13077,9 +13103,17 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var dd=new Date(t.date); var dayName=dayNamesShort[dd.getDay()];
                 uh+='<div class="vit-card p-3 flex items-center space-x-3 cursor-pointer hover:shadow-md transition" onclick="openTerminDetail(\''+t.id+'\')">';
                 uh+='<div class="text-center flex-shrink-0 w-12"><p class="text-xs text-gray-500">'+dayName+'</p><p class="text-lg font-bold text-gray-800">'+parseInt(t.date.slice(8))+'</p><p class="text-[10px] text-gray-400">'+t.date.slice(5,7)+'</p></div>';
-                uh+='<div class="flex-1 min-w-0"><p class="font-semibold text-gray-800 text-sm truncate">'+escH(t.title)+'</p><p class="text-xs text-gray-500">'+(t.ganztaegig?'Ganztägig':t.time+' Uhr'+(t.endTime?' – '+t.endTime+' Uhr':''))+(t.ort?' · '+escH(t.ort):'')+(t.user!=='all'?' · '+escH(t.user):'')+'</p></div>';
+                uh+='<div class="flex-1 min-w-0"><p class="font-semibold text-gray-800 text-sm truncate">'+escH(t.title)+'</p><p class="text-xs text-gray-500">'+(t.ganztaegig?'Ganztägig':t.time+' Uhr'+(t.endTime?' – '+t.endTime+' Uhr':''))+(t.ort?' · '+escH(t.ort):'')+(t.user!=='all'?' · '+escH(t.user):'')+'</p>';
+                // Teilnehmer
+                if(t.teilnehmer && t.teilnehmer.length > 0) {
+                    uh+='<p class="text-[10px] text-gray-400 mt-0.5">👥 '+t.teilnehmer.map(function(tn){return escH(typeof tn==='object'?tn.name:tn);}).join(', ')+'</p>';
+                }
+                uh+='</div>';
+                uh+='<div class="flex flex-col items-end space-y-1">';
                 uh+='<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold '+cls+'">'+typeLabels[t.type]+'</span>';
+                if(t.serie_id) uh+='<span class="text-[10px] text-gray-400" title="Serie">🔁</span>';
                 if(t.ms365_event_id) uh+='<span class="text-[10px] text-blue-500" title="Synced with MS365">📅</span>';
+                uh+='</div>';
                 uh+='</div>';
             });
             uEl.innerHTML=uh||'<div class="text-center py-4 text-gray-400 text-sm">Keine anstehenden Termine.</div>';
@@ -13172,6 +13206,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         function kalClickWeekCell(dateStr,hour){
             kalEditId=null;
+            kalSelectedTeilnehmer=[];
             document.getElementById('kalNewTitle').value='';
             document.getElementById('kalNewDate').value=dateStr;
             document.getElementById('kalNewTime').value=String(hour).padStart(2,'0')+':00';
@@ -13180,10 +13215,15 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             document.getElementById('kalNewNotes').value='';
             document.getElementById('kalNewOrt').value='';
             document.getElementById('kalNewGanztaegig').checked=false;
+            var rptEl=document.getElementById('kalNewRepeat');if(rptEl)rptEl.value='';
+            var rptEndEl=document.getElementById('kalNewRepeatEnd');if(rptEndEl)rptEndEl.value='';
+            var rptRow=document.getElementById('kalRepeatEndRow');if(rptRow)rptRow.style.display='none';
             document.getElementById('kalTimeFields').style.display='';
             document.getElementById('kalModalTitle').textContent='Neuen Termin anlegen';
             document.getElementById('kalSaveBtn').textContent='Speichern';
             var delBtn=document.getElementById('kalDeleteBtn');if(delBtn)delBtn.style.display='none';
+            kalRenderTeilnehmerChips();
+            kalLoadTeilnehmerDropdown();
             document.getElementById('kalNewModal').classList.remove('hidden');
         }
 
@@ -13269,6 +13309,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     sh+='<div class="flex-1 min-w-0"><p class="font-semibold text-sm text-gray-800 truncate">'+escH(t.title)+'</p>';
                     sh+='<p class="text-xs text-gray-500">'+(t.ganztaegig?'Ganztägig':t.time+(t.endTime?' – '+t.endTime:''))+'</p>';
                     if(t.ort)sh+='<p class="text-xs text-gray-400">📍 '+escH(t.ort)+'</p>';
+                    if(t.teilnehmer && t.teilnehmer.length > 0) sh+='<p class="text-[10px] text-gray-400">👥 '+t.teilnehmer.map(function(tn){return escH(typeof tn==="object"?tn.name:tn);}).join(", ")+'</p>';
                     sh+='</div><span class="text-[10px] px-1.5 py-0.5 rounded-full font-semibold flex-shrink-0 '+cls+'">'+typeLabels[t.type]+'</span></div>';
                 });
                 sideEl.innerHTML=sh;
@@ -13308,6 +13349,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                             ort: t.ort || '',
                             ganztaegig: t.ganztaegig || false,
                             erstellt_von: t.erstellt_von,
+                            teilnehmer: t.teilnehmer || [],
+                            wiederholung: t.wiederholung || '',
+                            wiederholung_bis: t.wiederholung_bis || null,
+                            serie_id: t.serie_id || null,
                             ms365_event_id: t.ms365_event_id || null,
                             ms365_sync_status: t.ms365_sync_status || null
                         };
@@ -13322,6 +13367,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         // Open day view to quickly add termin on that date
         function openKalDayModal(dateStr) {
             kalEditId = null;
+            kalSelectedTeilnehmer = [];
             document.getElementById('kalNewTitle').value = '';
             document.getElementById('kalNewDate').value = dateStr;
             document.getElementById('kalNewTime').value = '09:00';
@@ -13330,10 +13376,16 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             document.getElementById('kalNewNotes').value = '';
             document.getElementById('kalNewOrt').value = '';
             document.getElementById('kalNewGanztaegig').checked = false;
+            var rptEl=document.getElementById('kalNewRepeat'); if(rptEl) rptEl.value='';
+            var rptEndEl=document.getElementById('kalNewRepeatEnd'); if(rptEndEl) rptEndEl.value='';
+            var rptRow=document.getElementById('kalRepeatEndRow'); if(rptRow) rptRow.style.display='none';
+            var rptInfo=document.getElementById('kalRepeatInfo'); if(rptInfo) rptInfo.textContent='';
             document.getElementById('kalModalTitle').textContent = 'Neuen Termin anlegen';
             document.getElementById('kalSaveBtn').textContent = 'Speichern';
             var delBtn = document.getElementById('kalDeleteBtn');
             if(delBtn) delBtn.style.display = 'none';
+            kalRenderTeilnehmerChips();
+            kalLoadTeilnehmerDropdown();
             document.getElementById('kalNewModal').classList.remove('hidden');
         }
 
@@ -13342,6 +13394,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var t = kalTermine.find(function(x){ return x.id == terminId; });
             if(!t) return;
             kalEditId = t.id;
+            kalSelectedTeilnehmer = (t.teilnehmer || []).map(function(tn) {
+                return typeof tn === 'object' ? tn : {id: tn, name: tn};
+            });
             document.getElementById('kalNewTitle').value = t.title;
             document.getElementById('kalNewDate').value = t.date;
             document.getElementById('kalNewTime').value = t.time || '09:00';
@@ -13350,10 +13405,15 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             document.getElementById('kalNewNotes').value = t.notes || '';
             document.getElementById('kalNewOrt').value = t.ort || '';
             document.getElementById('kalNewGanztaegig').checked = t.ganztaegig || false;
+            var rptEl=document.getElementById('kalNewRepeat'); if(rptEl) rptEl.value=t.wiederholung||'';
+            var rptEndEl=document.getElementById('kalNewRepeatEnd'); if(rptEndEl) rptEndEl.value=t.wiederholung_bis||'';
+            kalToggleRepeatEnd();
             document.getElementById('kalModalTitle').textContent = 'Termin bearbeiten';
             document.getElementById('kalSaveBtn').textContent = 'Aktualisieren';
             var delBtn = document.getElementById('kalDeleteBtn');
             if(delBtn) delBtn.style.display = '';
+            kalRenderTeilnehmerChips();
+            kalLoadTeilnehmerDropdown();
             document.getElementById('kalNewModal').classList.remove('hidden');
         }
 
@@ -13366,44 +13426,185 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var notes=document.getElementById('kalNewNotes').value;
             var ort=document.getElementById('kalNewOrt').value;
             var ganztaegig=document.getElementById('kalNewGanztaegig').checked;
+            var repeat=document.getElementById('kalNewRepeat').value||'';
+            var repeatEnd=document.getElementById('kalNewRepeatEnd').value||null;
             if(!title||!date){alert('Bitte Titel und Datum angeben.');return;}
 
             var startZeit = date+'T'+time+':00';
             var endZeit = endTime ? date+'T'+endTime+':00' : null;
+            var teilnehmerData = kalSelectedTeilnehmer.map(function(tn){ return {id:tn.id, name:tn.name}; });
+
             var payload = {
                 titel: title, start_zeit: startZeit, end_zeit: endZeit,
                 typ: type, beschreibung: notes, ort: ort, ganztaegig: ganztaegig,
                 erstellt_von: sbUser ? sbUser.id : null,
                 erstellt_von_name: sbProfile ? sbProfile.name : 'Unbekannt',
-                standort_id: sbProfile ? sbProfile.standort_id : null
+                standort_id: sbProfile ? sbProfile.standort_id : null,
+                teilnehmer: teilnehmerData,
+                wiederholung: repeat || null,
+                wiederholung_bis: repeatEnd || null
             };
 
             try {
                 if(kalEditId) {
-                    // Update existing
                     var resp = await sb.from('termine').update(payload).eq('id', kalEditId);
                     if(resp.error) throw resp.error;
                 } else {
-                    // Insert new
-                    var resp = await sb.from('termine').insert(payload);
-                    if(resp.error) throw resp.error;
+                    // Generate serie_id for repeating events
+                    if(repeat && repeatEnd) {
+                        var serieId = 'serie_' + Date.now();
+                        payload.serie_id = serieId;
+                        var dates = kalGenerateRepeatDates(date, repeat, repeatEnd);
+                        var inserts = dates.map(function(d) {
+                            var p = JSON.parse(JSON.stringify(payload));
+                            p.start_zeit = d + 'T' + time + ':00';
+                            p.end_zeit = endTime ? d + 'T' + endTime + ':00' : null;
+                            return p;
+                        });
+                        if(inserts.length > 100) { alert('Maximal 100 Wiederholungen erlaubt. Bitte kürzeren Zeitraum wählen.'); return; }
+                        var resp = await sb.from('termine').insert(inserts);
+                        if(resp.error) throw resp.error;
+                    } else {
+                        var resp = await sb.from('termine').insert(payload);
+                        if(resp.error) throw resp.error;
+                    }
                 }
                 document.getElementById('kalNewModal').classList.add('hidden');
                 kalEditId = null;
+                kalSelectedTeilnehmer = [];
                 await loadKalTermine();
             } catch(err) { alert('Fehler: '+(err.message||err)); }
         }
 
+        // Generate repeat dates array
+        function kalGenerateRepeatDates(startDate, repeat, endDate) {
+            var dates = [];
+            var current = new Date(startDate + 'T12:00:00');
+            var end = new Date(endDate + 'T12:00:00');
+            var maxIterations = 200;
+            var i = 0;
+            while(current <= end && i < maxIterations) {
+                dates.push(kalFmtDate(current));
+                if(repeat === 'taeglich') current.setDate(current.getDate() + 1);
+                else if(repeat === 'woechentlich') current.setDate(current.getDate() + 7);
+                else if(repeat === '2wochen') current.setDate(current.getDate() + 14);
+                else if(repeat === 'monatlich') current.setMonth(current.getMonth() + 1);
+                else break;
+                i++;
+            }
+            return dates;
+        }
+
+        // Toggle repeat end date visibility + calculate count preview
+        function kalToggleRepeatEnd() {
+            var repeatEl = document.getElementById('kalNewRepeat');
+            var endRow = document.getElementById('kalRepeatEndRow');
+            if(!repeatEl || !endRow) return;
+            var repeat = repeatEl.value;
+            if(repeat) {
+                endRow.style.display = '';
+                kalUpdateRepeatInfo();
+            } else {
+                endRow.style.display = 'none';
+            }
+        }
+
+        function kalUpdateRepeatInfo() {
+            var repeat = document.getElementById('kalNewRepeat').value;
+            var startDate = document.getElementById('kalNewDate').value;
+            var endDate = document.getElementById('kalNewRepeatEnd').value;
+            var infoEl = document.getElementById('kalRepeatInfo');
+            if(!repeat || !startDate || !endDate) { infoEl.textContent = ''; return; }
+            var dates = kalGenerateRepeatDates(startDate, repeat, endDate);
+            infoEl.textContent = dates.length + ' Termine';
+        }
+
+        // Teilnehmer management
+        async function kalLoadTeilnehmerDropdown() {
+            var select = document.getElementById('kalNewTeilnehmer');
+            if(!select) return;
+            // Load users if not cached
+            if(kalStandortUsers.length === 0) {
+                try {
+                    var q = sb.from('users').select('id, vorname, nachname, rolle').eq('status', 'aktiv');
+                    if(sbProfile && sbProfile.standort_id && !sbProfile.is_hq) q = q.eq('standort_id', sbProfile.standort_id);
+                    var res = await q;
+                    kalStandortUsers = (res.data || []).map(function(u) {
+                        return { id: u.id, name: ((u.vorname || '') + ' ' + (u.nachname || '')).trim() || 'Unbekannt', rolle: u.rolle };
+                    });
+                } catch(e) { console.warn('Teilnehmer laden:', e); }
+            }
+            var h = '<option value="">+ Teilnehmer hinzufügen...</option>';
+            kalStandortUsers.forEach(function(u) {
+                // Don't show users already selected
+                var already = kalSelectedTeilnehmer.find(function(tn) { return tn.id === u.id; });
+                if(!already) {
+                    h += '<option value="' + u.id + '">' + escH(u.name) + (u.rolle ? ' (' + u.rolle + ')' : '') + '</option>';
+                }
+            });
+            select.innerHTML = h;
+        }
+
+        function kalAddTeilnehmer() {
+            var select = document.getElementById('kalNewTeilnehmer');
+            var userId = select.value;
+            if(!userId) return;
+            var user = kalStandortUsers.find(function(u) { return u.id === userId; });
+            if(!user) return;
+            kalSelectedTeilnehmer.push({ id: user.id, name: user.name });
+            kalRenderTeilnehmerChips();
+            kalLoadTeilnehmerDropdown(); // refresh to remove selected
+            select.value = '';
+        }
+
+        function kalRemoveTeilnehmer(userId) {
+            kalSelectedTeilnehmer = kalSelectedTeilnehmer.filter(function(tn) { return tn.id !== userId; });
+            kalRenderTeilnehmerChips();
+            kalLoadTeilnehmerDropdown();
+        }
+
+        function kalRenderTeilnehmerChips() {
+            var container = document.getElementById('kalTeilnehmerList');
+            if(!container) return;
+            if(kalSelectedTeilnehmer.length === 0) { container.innerHTML = '<span class="text-xs text-gray-400">Keine Teilnehmer zugewiesen</span>'; return; }
+            var h = '';
+            kalSelectedTeilnehmer.forEach(function(tn) {
+                h += '<span class="inline-flex items-center space-x-1 bg-blue-50 text-blue-700 text-xs font-semibold px-2 py-1 rounded-full">';
+                h += '<span>' + escH(tn.name) + '</span>';
+                h += '<button onclick="kalRemoveTeilnehmer(\'' + tn.id + '\')" class="text-blue-400 hover:text-red-500 ml-0.5">×</button>';
+                h += '</span>';
+            });
+            container.innerHTML = h;
+        }
+
         async function deleteKalTermin() {
             if(!kalEditId) return;
-            if(!confirm('Termin wirklich löschen?')) return;
-            try {
-                var resp = await sb.from('termine').delete().eq('id', kalEditId);
-                if(resp.error) throw resp.error;
-                document.getElementById('kalNewModal').classList.add('hidden');
-                kalEditId = null;
-                await loadKalTermine();
-            } catch(err) { alert('Fehler: '+(err.message||err)); }
+            var t = kalTermine.find(function(x){ return x.id == kalEditId; });
+            if(t && t.serie_id) {
+                var choice = prompt('Dieser Termin gehört zu einer Serie.\n\n1 = Nur diesen Termin löschen\n2 = Alle Termine der Serie löschen\n\nBitte 1 oder 2 eingeben:', '1');
+                if(!choice) return;
+                try {
+                    if(choice === '2') {
+                        var resp = await sb.from('termine').delete().eq('serie_id', t.serie_id);
+                        if(resp.error) throw resp.error;
+                    } else {
+                        var resp = await sb.from('termine').delete().eq('id', kalEditId);
+                        if(resp.error) throw resp.error;
+                    }
+                    document.getElementById('kalNewModal').classList.add('hidden');
+                    kalEditId = null;
+                    await loadKalTermine();
+                } catch(err) { alert('Fehler: '+(err.message||err)); }
+            } else {
+                if(!confirm('Termin wirklich löschen?')) return;
+                try {
+                    var resp = await sb.from('termine').delete().eq('id', kalEditId);
+                    if(resp.error) throw resp.error;
+                    document.getElementById('kalNewModal').classList.add('hidden');
+                    kalEditId = null;
+                    await loadKalTermine();
+                } catch(err) { alert('Fehler: '+(err.message||err)); }
+            }
         }
 
         // === MS365 CALENDAR SYNC PREPARATION ===
@@ -18008,75 +18209,32 @@ function ScanUploadModal({deal,sales,onClose,onUpdateDeal}){
       const base64=preview.split(",")[1];
       const mediaType=file.type||"image/jpeg";
 
-      // ⚠️ TEMPORÄR: Direkter API-Call aus dem Frontend
-      // TODO: Auf Supabase Edge Function umstellen (analyze-scan)
-      const resp=await fetch("https://api.anthropic.com/v1/messages",{
+      // Scan-Analyse via Supabase Edge Function (API-Key liegt sicher auf dem Server)
+      const session=await window.sb.auth.getSession();
+      const token=session?.data?.session?.access_token;
+      const supabaseUrl=window.sb?.supabaseUrl||SUPABASE_URL||"";
+      const supabaseKey=window.sb?.supabaseKey||SUPABASE_ANON_KEY||"";
+
+      const resp=await fetch(supabaseUrl+"/functions/v1/analyze-scan",{
         method:"POST",
         headers:{
           "Content-Type":"application/json",
-          "x-api-key":"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",
-          "anthropic-version":"2023-06-01",
-          "anthropic-dangerous-direct-browser-access":"true"
+          "Authorization":"Bearer "+(token||""),
+          "apikey":supabaseKey
         },
         body:JSON.stringify({
-          model:"claude-sonnet-4-20250514",
-          max_tokens:2000,
-          messages:[{role:"user",content:[
-            {type:"image",source:{type:"base64",media_type:mediaType,data:base64}},
-            {type:"text",text:`Du siehst ein eingescanntes Fahrrad-Beratungsformular von vit:bikes.
-Extrahiere ALLE erkennbaren Werte und gib sie als JSON zurück. Nur valides JSON, kein Markdown.
-
-Verwende exakt diese Schlüssel (nur Felder zurückgeben die du lesen kannst):
-{
-  "payment": "Bezahlart (JobRad/BLS/BusinessBike/Finanzierung/Leasing/Bar/EC)",
-  "nutzung": "Text",
-  "ziel": "Text",
-  "distanz": "Text",
-  "haeufigkeit": "Text",
-  "erfahrung": "Text",
-  "lagerung": "Text",
-  "aufladen": "Text",
-  "zeitrahmen": "Text",
-  "wichtig": "Text",
-  "budget": "Text/Betrag",
-  "budgetRange": "<2k oder 2-3k oder 3-5k oder 5k+",
-  "akku": "Text",
-  "dreiPunkte": "Text",
-  "einwaende": "Text",
-  "next": "Text",
-  "notizen": "Text",
-  "ergoMethod": "Bodyscanner oder Smartfit",
-  "sattelhoehe": "Wert",
-  "sattelversatz": "Wert",
-  "abstandLenker": "Wert",
-  "lenkerhoehe": "Wert",
-  "sitzknochen": "Wert",
-  "griffgroesse": "Wert",
-  "gekauftesRad": "Modell/Marke/Farbe",
-  "nrTeilekiste": "Nummer",
-  "nrAuftrag": "Nummer",
-  "todoZubehoer": true/false,
-  "todoRadBestellt": true/false,
-  "todoKiste": true/false,
-  "todoLeasing": true/false,
-  "todoFinanzierung": true/false,
-  "todoWertgarantie": true/false
-}
-
-Gib NUR das JSON zurück.`}
-          ]}]
+          image_base64:base64,
+          media_type:mediaType
         })
       });
 
       if(!resp.ok){
-        const errBody=await resp.text();
-        throw new Error(`API Fehler ${resp.status}: ${errBody.substring(0,200)}`);
+        const errBody=await resp.json().catch(()=>({}));
+        throw new Error(errBody.error||`Fehler ${resp.status}`);
       }
 
       const data=await resp.json();
-      const text=data.content?.find(c=>c.type==="text")?.text||"";
-      const jsonStr=text.replace(/```json\s*/g,"").replace(/```\s*/g,"").trim();
-      const result=JSON.parse(jsonStr);
+      const result=data.fields||{};
       setParsed(result);
 
       // Merge: bestehende sales haben Vorrang, gescannte Werte füllen Lücken
