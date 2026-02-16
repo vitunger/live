@@ -335,6 +335,287 @@
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<!-- ═══ DUAL THEME SYSTEM ═══ -->
+<style>
+/* ── Light Theme (Default) ── */
+:root, [data-theme="light"] {
+    --bg: #f7f7f8;
+    --surface: #ffffff;
+    --surface-2: #f3f4f6;
+    --surface-3: #e5e7eb;
+    --border: #e5e7eb;
+    --border-light: #d1d5db;
+    --text: #111827;
+    --text-2: #4b5563;
+    --text-3: #9ca3af;
+    --vit: #EF7D00;
+    --vit-glow: rgba(239,125,0,0.12);
+    --vit-light: rgba(239,125,0,0.08);
+    --green: #16a34a;
+    --green-bg: rgba(22,163,74,0.08);
+    --yellow: #ca8a04;
+    --yellow-bg: rgba(202,138,4,0.08);
+    --red: #dc2626;
+    --red-bg: rgba(220,38,38,0.08);
+    --blue: #2563eb;
+    --blue-bg: rgba(37,99,235,0.08);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --card-hover: 0 4px 20px rgba(0,0,0,0.06);
+    --sidebar-bg: #ffffff;
+    --sidebar-text: #374151;
+    --sidebar-hover: #f3f4f6;
+    --input-bg: #ffffff;
+    --modal-bg: #ffffff;
+    --header-bg: rgba(255,255,255,0.85);
+}
+
+/* ── Dark Theme ── */
+[data-theme="dark"] {
+    --bg: #0a0a0b;
+    --surface: #141416;
+    --surface-2: #1c1c1f;
+    --surface-3: #242428;
+    --border: #2a2a2e;
+    --border-light: #3a3a3f;
+    --text: #f5f5f5;
+    --text-2: #a1a1aa;
+    --text-3: #71717a;
+    --vit: #EF7D00;
+    --vit-glow: rgba(239,125,0,0.25);
+    --vit-light: rgba(239,125,0,0.12);
+    --green: #22c55e;
+    --green-bg: rgba(34,197,94,0.12);
+    --yellow: #eab308;
+    --yellow-bg: rgba(234,179,8,0.12);
+    --red: #ef4444;
+    --red-bg: rgba(239,68,68,0.12);
+    --blue: #3b82f6;
+    --blue-bg: rgba(59,130,246,0.12);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+    --card-hover: 0 0 20px rgba(239,125,0,0.15);
+    --sidebar-bg: #111113;
+    --sidebar-text: #d4d4d8;
+    --sidebar-hover: #1c1c1f;
+    --input-bg: #1c1c1f;
+    --modal-bg: #141416;
+    --header-bg: rgba(10,10,11,0.85);
+}
+
+/* ── Global Transition ── */
+body, .vit-card, .sidebar-item, input, select, textarea, .ek-modal, th, td {
+    transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease;
+}
+
+/* ── Dark Mode Global Overrides ── */
+[data-theme="dark"] body,
+[data-theme="dark"] .bg-gray-50,
+[data-theme="dark"] .bg-white {
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+}
+
+/* Cards */
+[data-theme="dark"] .vit-card,
+[data-theme="dark"] .card,
+[data-theme="dark"] [class*="bg-white"] {
+    background-color: var(--surface) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+}
+
+/* Surface variants */
+[data-theme="dark"] .bg-gray-100,
+[data-theme="dark"] .bg-gray-50 {
+    background-color: var(--surface-2) !important;
+}
+[data-theme="dark"] .bg-gray-200 {
+    background-color: var(--surface-3) !important;
+}
+
+/* Text colors */
+[data-theme="dark"] .text-gray-800,
+[data-theme="dark"] .text-gray-900 {
+    color: var(--text) !important;
+}
+[data-theme="dark"] .text-gray-700,
+[data-theme="dark"] .text-gray-600 {
+    color: var(--text-2) !important;
+}
+[data-theme="dark"] .text-gray-500,
+[data-theme="dark"] .text-gray-400 {
+    color: var(--text-3) !important;
+}
+
+/* Sidebar */
+[data-theme="dark"] .sidebar,
+[data-theme="dark"] #mainSidebar {
+    background-color: var(--sidebar-bg) !important;
+    border-color: var(--border) !important;
+}
+[data-theme="dark"] .sidebar-item {
+    color: var(--sidebar-text) !important;
+}
+[data-theme="dark"] .sidebar-item:hover,
+[data-theme="dark"] .sidebar-item.active {
+    background-color: var(--sidebar-hover) !important;
+}
+
+/* Header / Top Nav */
+[data-theme="dark"] #topNavbar,
+[data-theme="dark"] .top-nav,
+[data-theme="dark"] nav[class*="bg-white"] {
+    background-color: var(--header-bg) !important;
+    border-color: var(--border) !important;
+    backdrop-filter: blur(12px);
+}
+
+/* Inputs */
+[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+[data-theme="dark"] select,
+[data-theme="dark"] textarea,
+[data-theme="dark"] .form-input {
+    background-color: var(--input-bg) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+}
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+    color: var(--text-3) !important;
+}
+
+/* Tables */
+[data-theme="dark"] table th {
+    background-color: var(--surface-2) !important;
+    color: var(--text-2) !important;
+    border-color: var(--border) !important;
+}
+[data-theme="dark"] table td {
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+}
+[data-theme="dark"] table tr:hover td {
+    background-color: var(--surface-2) !important;
+}
+
+/* Borders */
+[data-theme="dark"] .border-gray-200,
+[data-theme="dark"] .border-gray-100,
+[data-theme="dark"] .border-gray-300,
+[data-theme="dark"] [class*="border-gray"] {
+    border-color: var(--border) !important;
+}
+[data-theme="dark"] .divide-gray-200 > * + * {
+    border-color: var(--border) !important;
+}
+
+/* Modals */
+[data-theme="dark"] .ek-modal,
+[data-theme="dark"] [class*="modal"] {
+    background-color: var(--modal-bg) !important;
+    border-color: var(--border) !important;
+}
+
+/* Profile Panel */
+[data-theme="dark"] #profileSlider {
+    background-color: var(--surface) !important;
+}
+
+/* Badges / Pills */
+[data-theme="dark"] .bg-green-50 { background-color: var(--green-bg) !important; }
+[data-theme="dark"] .bg-orange-50 { background-color: var(--vit-light) !important; }
+[data-theme="dark"] .bg-red-50 { background-color: var(--red-bg) !important; }
+[data-theme="dark"] .bg-blue-50 { background-color: var(--blue-bg) !important; }
+[data-theme="dark"] .bg-yellow-50 { background-color: var(--yellow-bg) !important; }
+[data-theme="dark"] .bg-purple-50 { background-color: rgba(147,51,234,0.12) !important; }
+
+/* Shadows */
+[data-theme="dark"] .shadow-sm,
+[data-theme="dark"] .shadow,
+[data-theme="dark"] .shadow-md {
+    box-shadow: var(--shadow-sm) !important;
+}
+
+/* Scrollbar */
+[data-theme="dark"]::-webkit-scrollbar-thumb { background: var(--border); }
+[data-theme="dark"]::-webkit-scrollbar-track { background: var(--bg); }
+
+/* Login Screen */
+[data-theme="dark"] #loginScreen {
+    background-color: var(--bg) !important;
+}
+[data-theme="dark"] #loginScreen .bg-white {
+    background-color: var(--surface) !important;
+}
+
+/* Pipeline / Kanban */
+[data-theme="dark"] [style*="background:#f9fafb"],
+[data-theme="dark"] [style*="background: #f9fafb"],
+[data-theme="dark"] [style*="background:#f3f4f6"],
+[data-theme="dark"] [style*="background: #f3f4f6"] {
+    background-color: var(--surface-2) !important;
+}
+
+/* Inline style overrides for common patterns */
+[data-theme="dark"] [style*="background:#fff"],
+[data-theme="dark"] [style*="background: #fff"],
+[data-theme="dark"] [style*="background:white"],
+[data-theme="dark"] [style*="background: white"],
+[data-theme="dark"] [style*="background-color:#fff"],
+[data-theme="dark"] [style*="background-color: #fff"],
+[data-theme="dark"] [style*="background-color:white"] {
+    background-color: var(--surface) !important;
+}
+[data-theme="dark"] [style*="color:#111827"],
+[data-theme="dark"] [style*="color: #111827"],
+[data-theme="dark"] [style*="color:#374151"],
+[data-theme="dark"] [style*="color: #374151"] {
+    color: var(--text) !important;
+}
+[data-theme="dark"] [style*="color:#6b7280"],
+[data-theme="dark"] [style*="color: #6b7280"],
+[data-theme="dark"] [style*="color:#4b5563"],
+[data-theme="dark"] [style*="color: #4b5563"] {
+    color: var(--text-2) !important;
+}
+[data-theme="dark"] [style*="border-color:#e5e7eb"],
+[data-theme="dark"] [style*="border:1px solid #e5e7eb"],
+[data-theme="dark"] [style*="border: 1px solid #e5e7eb"] {
+    border-color: var(--border) !important;
+}
+
+/* Hover glow for cards in dark mode */
+[data-theme="dark"] .vit-card:hover {
+    box-shadow: var(--card-hover) !important;
+}
+
+/* Tab buttons */
+[data-theme="dark"] .ctrl-tab-btn,
+[data-theme="dark"] .vk-tab-btn,
+[data-theme="dark"] button[class*="tab-btn"] {
+    color: var(--text-3) !important;
+}
+[data-theme="dark"] .ctrl-tab-btn.active,
+[data-theme="dark"] button[class*="tab-btn"][class*="text-vit-orange"],
+[data-theme="dark"] button[class*="tab-btn"][style*="border-color:#EF7D00"] {
+    color: var(--vit) !important;
+}
+
+/* Trainer cards in dark */
+[data-theme="dark"] .trainer-card {
+    background: linear-gradient(135deg, var(--surface-2), var(--surface)) !important;
+    border-color: var(--border) !important;
+}
+[data-theme="dark"] .trainer-drawer {
+    background-color: var(--surface) !important;
+}
+[data-theme="dark"] .trainer-step.active {
+    background-color: var(--surface-2) !important;
+}
+</style>
+
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body class="bg-gray-50">
@@ -745,6 +1026,52 @@
             <main class="main-content-area flex-1 overflow-y-auto p-4 md:p-8 vit-background" style="min-height: 0;">
                 <!-- Startseite View (für ALLE) -->
                 <div id="homeView" class="view" style="display: block;">
+                    <div id="trainerAreaHome" class="mb-4"></div>
+<!-- 🎯 TAGES-COCKPIT – Heute steuern -->
+                        <div id="dailyFocusBlock" class="mb-6">
+                            <div class="vit-card p-5" style="border-left:4px solid #EF7D00;">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-sm font-bold text-gray-800">🎯 Heute steuern</h3>
+                                    <span class="text-xs text-gray-400" id="dailyFocusDate"></span>
+                                </div>
+                                <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+                                    <div class="p-3 bg-green-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('verkauf')">
+                                        <p class="text-xs text-gray-500">Umsatz heute</p>
+                                        <p id="dfUmsatz" class="text-xl font-bold text-green-600">4.250 €</p>
+                                        <p class="text-[10px] text-green-500">85% vom Tagesziel</p>
+                                    </div>
+                                    <div class="p-3 bg-orange-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('verkauf')">
+                                        <p class="text-xs text-gray-500">Offene Leads</p>
+                                        <p id="dfLeads" class="text-xl font-bold text-vit-orange">7</p>
+                                        <p class="text-[10px] text-orange-500">2 heute neu</p>
+                                    </div>
+                                    <div class="p-3 bg-blue-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('todo')">
+                                        <p class="text-xs text-gray-500">Aufgaben heute</p>
+                                        <p id="dfTasks" class="text-xl font-bold text-blue-600">4</p>
+                                        <p class="text-[10px] text-blue-500">1 überfällig</p>
+                                    </div>
+                                    <div class="p-3 bg-purple-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('controlling')">
+                                        <p class="text-xs text-gray-500">BWA-Status</p>
+                                        <p id="dfBwa" class="text-lg font-bold text-gray-800">⏳</p>
+                                        <p id="dfBwaSub" class="text-[10px] text-gray-500">— Tage</p>
+                                    </div>
+                                    <div class="p-3 bg-yellow-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('kalender')">
+                                        <p class="text-xs text-gray-500">Termine heute</p>
+                                        <p id="dfTermine" class="text-xl font-bold text-yellow-600">3</p>
+                                        <p class="text-[10px] text-yellow-500">nächster: 10:30</p>
+                                    </div>
+                                </div>
+                                <!-- Tagesimpuls -->
+                                <div id="dailyImpulse" class="p-3 rounded-lg" style="background:linear-gradient(135deg,rgba(239,125,0,0.06),rgba(245,158,11,0.06))">
+                                    <div class="flex items-center gap-2">
+                                        <span style="font-size:16px">💡</span>
+                                        <p class="text-xs text-gray-700"><strong>Tagesimpuls:</strong> <span id="dfImpulseText">Du hast 2 Angebote, die seit 5+ Tagen offen sind. Ein kurzer Follow-Up-Anruf könnte den Unterschied machen!</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        
                     <!-- Header mit Willkommen + Dashboard anpassen -->
                     <div class="flex items-center justify-between mb-6">
                         <div>
@@ -1138,7 +1465,47 @@
 
                 <!-- CRM View -->
                 <div id="verkaufView" class="view" style="display: none;">
+                    <div id="trainerAreaVerkauf" class="mb-4"></div>
                     <h1 class="h1-headline text-gray-800 mb-6" data-i18n="h_sales">VERKAUF</h1>
+                    
+                    <div id="salesMomentumBar" class="mb-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-3">
+                            <!-- Streak -->
+                            <div class="vit-card p-4 flex items-center gap-3" style="border-left:3px solid #EF7D00;">
+                                <div style="font-size:28px" id="streakEmoji">🔥</div>
+                                <div>
+                                    <p class="text-xs text-gray-400">Lead-Streak</p>
+                                    <p class="text-xl font-bold text-gray-800"><span id="streakDays">12</span> Tage</p>
+                                    <p class="text-[10px] text-vit-orange font-semibold">Längster: 18 Tage</p>
+                                </div>
+                            </div>
+                            <!-- Monatsziel -->
+                            <div class="vit-card p-4">
+                                <div class="flex items-center justify-between mb-1">
+                                    <p class="text-xs text-gray-400">Monatsziel</p>
+                                    <span id="goalPct" class="text-xs font-bold text-green-600">72%</span>
+                                </div>
+                                <div class="bg-gray-200 rounded-full h-2.5 mb-2"><div id="goalBar" class="h-2.5 rounded-full bg-green-500 transition-all" style="width:72%"></div></div>
+                                <div class="flex justify-between text-[10px] text-gray-500">
+                                    <span><span id="goalIst" class="font-bold text-gray-800">86.400 €</span> erreicht</span>
+                                    <span>Ziel: <span id="goalSoll">120.000 €</span></span>
+                                </div>
+                            </div>
+                            <!-- Abschlussquote -->
+                            <div class="vit-card p-4 text-center">
+                                <p class="text-xs text-gray-400">Abschlussquote</p>
+                                <p class="text-2xl font-bold text-gray-800" id="closeRate">34%</p>
+                                <p class="text-[10px] text-green-500 font-semibold">↑ +4% ggü. Vormonat</p>
+                            </div>
+                            <!-- Durchschn. Dealwert -->
+                            <div class="vit-card p-4 text-center">
+                                <p class="text-xs text-gray-400">Ø Deal-Wert</p>
+                                <p class="text-2xl font-bold text-gray-800" id="avgDeal">4.320 €</p>
+                                <p class="text-[10px] text-gray-500">Netzwerk Ø: 3.890 €</p>
+                            </div>
+                        </div>
+                    </div>
+
                     
                     <!-- Tab Navigation -->
                     <div class="mb-6 border-b border-gray-200">
@@ -1426,6 +1793,7 @@
 
                 <!-- Marketing View (Hauptmenü) – REDESIGN v3 -->
                 <div id="marketingView" class="view" style="display: none;">
+                    <div id="trainerAreaMarketing" class="mb-4"></div>
                     <h1 class="h1-headline text-gray-800 mb-6" data-i18n="h_marketing">MARKETING</h1>
                     
                     <!-- Tab Navigation -->
@@ -1883,6 +2251,7 @@
                     <!-- ===== TAB 0: COCKPIT ===== -->
                     <div id="ctrlTabCockpit" class="ctrl-tab-content">
                         <!-- BWA Deadline Countdown + Motivation -->
+                        <div id="trainerAreaControlling" class="mb-4"></div>
                         <div id="bwaDeadlineWidget" class="vit-card p-5 mb-6">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-4">
@@ -5269,6 +5638,7 @@
 .theme-toggle-knob{width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:transform 0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
 .theme-toggle-track.active .theme-toggle-knob{transform:translateX(16px);}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
         // ============================================
         // SUPABASE CLIENT
@@ -5864,6 +6234,8 @@
             // Check for pending approvals (HQ + GF only)
             checkPendingApprovals();
             // Check BWA deadlines and create reminders
+            // Init Trainer Engine
+            if(typeof _initTrainerEngine === 'function') _initTrainerEngine();
             checkBwaDeadlines();
         }
 
@@ -17883,6 +18255,18 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         function showView(viewName) {
             console.log('showView called with:', viewName);
             
+            // Log event
+            if(typeof logPortalEvent === 'function') logPortalEvent('view_opened', {view: viewName});
+            
+            // Trainer: map view to area
+            var viewAreaMap = {home:'allgemein',controlling:'controlling',verkauf:'verkauf',marketing:'marketing',einkauf:'einkauf',werkstatt:'werkstatt',todo:'allgemein',kommunikation:'allgemein'};
+            var viewContainerMap = {home:'trainerAreaHome',controlling:'trainerAreaControlling',verkauf:'trainerAreaVerkauf',marketing:'trainerAreaMarketing'};
+            var trainerArea = viewAreaMap[viewName];
+            var trainerContainer = viewContainerMap[viewName];
+            if(trainerArea && trainerContainer && typeof showTrainerForArea === 'function') {
+                showTrainerForArea(trainerArea, trainerContainer);
+            }
+            
             // Verstecke ALLE Views automatisch (per Klasse statt hardcoded Liste)
             var allViews = document.querySelectorAll('.view');
             console.log('Found', allViews.length, 'views to hide');
@@ -20683,6 +21067,591 @@ function changePassword() {
         updateBwaDeadlineWidget();
         renderHqBwaStatus();
     }, 500);
+})();
+</script>
+
+
+<!-- ═══ TRAINER ENGINE ═══ -->
+<style>
+.trainer-card{background:linear-gradient(135deg,#fffbf5,#fff);border:1px solid #fed7aa;border-radius:16px;padding:20px;margin-bottom:20px;position:relative;overflow:hidden;transition:all 0.3s;}
+.trainer-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#f97316,#fb923c);}
+.trainer-card:hover{box-shadow:0 4px 20px rgba(249,115,22,0.12);}
+.trainer-card .tc-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:3px 8px;border-radius:6px;}
+.trainer-card .tc-badge.perf{background:#fef3c7;color:#92400e;}
+.trainer-card .tc-badge.onb{background:#dbeafe;color:#1e40af;}
+.trainer-drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9998;opacity:0;transition:opacity 0.3s;}
+.trainer-drawer-backdrop.active{opacity:1;}
+.trainer-drawer{position:fixed;top:0;right:0;bottom:0;width:440px;max-width:95vw;background:#fff;z-index:9999;transform:translateX(100%);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);overflow-y:auto;box-shadow:-8px 0 30px rgba(0,0,0,0.15);}
+.trainer-drawer.open{transform:translateX(0);}
+.trainer-step{padding:20px 24px;border-bottom:1px solid #f3f4f6;}
+.trainer-step.active{background:#fffbf5;}
+.trainer-step .step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+.trainer-step .step-num.done{background:#dcfce7;color:#16a34a;}
+.trainer-step .step-num.current{background:#f97316;color:#fff;}
+.trainer-step .step-num.upcoming{background:#f3f4f6;color:#9ca3af;}
+.trainer-locked-card{background:linear-gradient(135deg,#fef2f2,#fff);border:2px dashed #fecaca;border-radius:16px;padding:32px;text-align:center;}
+</style>
+
+<script>
+// ═══ TRAINER ENGINE v1.0 ═══
+(function(){
+    'use strict';
+    
+    var trainerState = {
+        trainers: [],
+        assignments: [],
+        completions: [],
+        onboarding: null,
+        activeDrawer: null,
+        currentStep: 0,
+        stepResults: {}
+    };
+
+    // ── Event Logging ──
+    window.logPortalEvent = async function(eventType, meta) {
+        if(typeof sb === 'undefined' || !sbUser) return;
+        try {
+            await sb.from('portal_events').insert({
+                user_id: sbUser.id,
+                standort_id: sbProfile ? sbProfile.standort_id : null,
+                event_type: eventType,
+                meta: meta || {}
+            });
+        } catch(e) { console.warn('logEvent:', e); }
+    };
+
+    // ── Load Active Trainers for Area ──
+    async function loadTrainersForArea(areaKey) {
+        if(typeof sb === 'undefined' || !sbProfile) return [];
+        var sid = sbProfile.standort_id;
+        try {
+            // Get active assignments for this standort
+            var aResp = await sb.from('trainer_assignments')
+                .select('*, trainer:trainer_id(*)')
+                .eq('standort_id', sid)
+                .eq('status', 'active');
+            var assignments = (aResp.data || []).filter(function(a) {
+                if(!a.trainer || !a.trainer.is_active) return false;
+                if(areaKey && a.trainer.area_key !== areaKey) return false;
+                // Check cooldown
+                if(a.cooldown_until && new Date(a.cooldown_until) > new Date()) return false;
+                return true;
+            });
+            
+            // Also check for onboarding trainers if not done
+            if(trainerState.onboarding && !trainerState.onboarding.onboarding_done) {
+                var oResp = await sb.from('trainers')
+                    .select('*')
+                    .eq('mode', 'onboarding')
+                    .eq('is_active', true)
+                    .eq('trigger_type', 'onboarding_step');
+                var obTrainers = (oResp.data || []).filter(function(t) {
+                    var cond = t.trigger_condition_json || {};
+                    return cond.phase === trainerState.onboarding.phase && cond.step === trainerState.onboarding.step;
+                });
+                // Add onboarding trainers as virtual assignments
+                obTrainers.forEach(function(t) {
+                    if(!assignments.find(function(a){ return a.trainer_id === t.id; })) {
+                        assignments.push({ id: 'ob_'+t.id, trainer_id: t.id, trainer: t, status: 'active', _isOnboarding: true });
+                    }
+                });
+            }
+            
+            // Sort: onboarding first, then by priority
+            assignments.sort(function(a,b) {
+                if(a._isOnboarding && !b._isOnboarding) return -1;
+                if(!a._isOnboarding && b._isOnboarding) return 1;
+                return (a.trainer.priority||3) - (b.trainer.priority||3);
+            });
+            
+            return assignments.slice(0, 1); // max 1 per area
+        } catch(e) { console.warn('loadTrainers:', e); return []; }
+    }
+
+    // ── Load Onboarding State ──
+    async function loadOnboardingState() {
+        if(typeof sb === 'undefined' || !sbUser) return;
+        try {
+            var resp = await sb.from('user_onboarding').select('*').eq('user_id', sbUser.id).maybeSingle();
+            trainerState.onboarding = resp.data;
+        } catch(e) { console.warn('loadOnboarding:', e); }
+    }
+
+    // ── Render Trainer Card ──
+    function renderTrainerCard(assignment, containerEl) {
+        if(!assignment || !assignment.trainer || !containerEl) return;
+        var t = assignment.trainer;
+        var modeLabel = t.mode === 'onboarding' ? 'Onboarding' : 'Training';
+        var modeCls = t.mode === 'onboarding' ? 'onb' : 'perf';
+        var areaIcons = {verkauf:'💰',controlling:'📊',marketing:'📱',einkauf:'📦',werkstatt:'🔧',allgemein:'🏠'};
+        
+        var html = '<div class="trainer-card" id="trainerCard_'+assignment.id+'">'
+            + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">'
+            + '<div style="flex:1">'
+            + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+            + '<span class="tc-badge '+modeCls+'">'+modeLabel+'</span>'
+            + '<span style="font-size:10px;color:#9ca3af">'+(areaIcons[t.area_key]||'📋')+' '+t.area_key+'</span>'
+            + '<span style="font-size:10px;color:#9ca3af">· '+t.duration_minutes+' Min</span>'
+            + '</div>'
+            + '<h3 style="font-size:15px;font-weight:800;color:#111827;margin-bottom:4px">'+escH(t.title)+'</h3>'
+            + '<p style="font-size:13px;color:#6b7280;line-height:1.4">'+escH(t.summary||'')+'</p>'
+            + '</div>'
+            + '<div style="flex-shrink:0;font-size:32px">'+(areaIcons[t.area_key]||'📋')+'</div>'
+            + '</div>'
+            + '<div style="display:flex;align-items:center;gap:8px;margin-top:14px">'
+            + '<button onclick="window._trainerStart(\''+assignment.id+'\',\''+t.id+'\')" style="padding:8px 20px;background:#f97316;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif">▶ Starten</button>'
+            + '<button onclick="window._trainerSnooze(\''+assignment.id+'\')" style="padding:8px 16px;background:none;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;color:#9ca3af;cursor:pointer;font-family:Outfit,sans-serif">Später</button>'
+            + '</div>'
+            + '</div>';
+        
+        containerEl.innerHTML = html;
+    }
+
+    // ── Trainer Drawer (Micro-Learning) ──
+    function openTrainerDrawer(trainerId) {
+        var trainer = null;
+        // Find trainer in state
+        trainerState.assignments.forEach(function(a) {
+            if(a.trainer && a.trainer.id === trainerId) trainer = a.trainer;
+        });
+        if(!trainer) {
+            // Try direct load
+            sb.from('trainers').select('*').eq('id', trainerId).single().then(function(r) {
+                if(r.data) { _buildDrawer(r.data); }
+            });
+            return;
+        }
+        _buildDrawer(trainer);
+    }
+
+    function _buildDrawer(trainer) {
+        trainerState.activeDrawer = trainer;
+        trainerState.currentStep = 0;
+        trainerState.stepResults = {};
+        
+        var steps = (trainer.content_json || {}).steps || [];
+        var areaIcons = {verkauf:'💰',controlling:'📊',marketing:'📱',einkauf:'📦',werkstatt:'🔧',allgemein:'🏠'};
+        
+        // Remove existing
+        var old = document.getElementById('trainerDrawerBackdrop');
+        if(old) old.remove();
+        old = document.getElementById('trainerDrawer');
+        if(old) old.remove();
+        
+        // Backdrop
+        var backdrop = document.createElement('div');
+        backdrop.id = 'trainerDrawerBackdrop';
+        backdrop.className = 'trainer-drawer-backdrop';
+        backdrop.onclick = function(){ closeTrainerDrawer(); };
+        document.body.appendChild(backdrop);
+        
+        // Drawer
+        var drawer = document.createElement('div');
+        drawer.id = 'trainerDrawer';
+        drawer.className = 'trainer-drawer';
+        
+        var h = '<div style="padding:20px 24px;border-bottom:1px solid #f3f4f6;position:sticky;top:0;background:#fff;z-index:1">'
+            + '<div style="display:flex;align-items:center;justify-content:space-between">'
+            + '<div>'
+            + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'
+            + '<span style="font-size:16px">'+(areaIcons[trainer.area_key]||'📋')+'</span>'
+            + '<span style="font-size:10px;font-weight:700;text-transform:uppercase;color:#f97316;letter-spacing:0.05em">'+(trainer.mode==='onboarding'?'Onboarding':'Training')+'</span>'
+            + '</div>'
+            + '<h2 style="font-size:18px;font-weight:800;color:#111827">'+escH(trainer.title)+'</h2>'
+            + '</div>'
+            + '<button onclick="closeTrainerDrawer()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#9ca3af;padding:4px">✕</button>'
+            + '</div>'
+            + '<div style="display:flex;align-items:center;gap:12px;margin-top:12px">'
+            + '<div style="flex:1;height:4px;background:#f3f4f6;border-radius:2px;overflow:hidden"><div id="trainerProgressBar" style="height:100%;background:#f97316;border-radius:2px;width:0%;transition:width 0.5s"></div></div>'
+            + '<span id="trainerStepLabel" style="font-size:11px;color:#9ca3af;white-space:nowrap">0/'+steps.length+'</span>'
+            + '</div>'
+            + '</div>';
+        
+        h += '<div id="trainerStepsContainer">';
+        steps.forEach(function(step, i) {
+            h += '<div class="trainer-step'+(i===0?' active':'')+'" id="trainerStep_'+i+'" style="'+(i>0?'display:none':'')+'">'
+                + '<div style="display:flex;align-items:flex-start;gap:12px">'
+                + '<div class="step-num '+(i===0?'current':'upcoming')+'" id="trainerStepNum_'+i+'">'+(i+1)+'</div>'
+                + '<div style="flex:1">'
+                + '<h3 style="font-size:15px;font-weight:700;color:#111827;margin-bottom:8px">'+escH(step.title||'Schritt '+(i+1))+'</h3>'
+                + '<p style="font-size:13px;color:#4b5563;line-height:1.6;white-space:pre-line">'+escH(step.body||'')+'</p>';
+            
+            if(step.type === 'question' && step.options) {
+                h += '<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px" id="trainerOpts_'+i+'">';
+                step.options.forEach(function(opt, oi) {
+                    h += '<button onclick="window._trainerSelectOpt('+i+','+oi+',this)" style="padding:6px 14px;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;color:#374151;cursor:pointer;background:#fff;font-family:Outfit,sans-serif;transition:all 0.2s">'+escH(opt)+'</button>';
+                });
+                h += '</div>';
+            }
+            
+            if(step.type === 'action' && step.input_placeholder) {
+                h += '<textarea id="trainerInput_'+i+'" placeholder="'+escH(step.input_placeholder)+'" style="width:100%;margin-top:12px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:Outfit,sans-serif;resize:vertical;min-height:60px;outline:none" onfocus="this.style.borderColor=\'#f97316\'" onblur="this.style.borderColor=\'#e5e7eb\'"></textarea>';
+            }
+            
+            if(step.cta) {
+                h += '<button onclick="'+step.cta+';closeTrainerDrawer()" style="margin-top:12px;padding:8px 16px;background:#f97316;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif">→ Direkt öffnen</button>';
+            }
+            
+            h += '</div></div></div>';
+        });
+        h += '</div>';
+        
+        // Footer
+        h += '<div style="padding:20px 24px;border-top:1px solid #f3f4f6;position:sticky;bottom:0;background:#fff;display:flex;align-items:center;justify-content:space-between">'
+            + '<button id="trainerPrevBtn" onclick="window._trainerPrev()" style="padding:8px 16px;background:none;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;color:#6b7280;cursor:pointer;font-family:Outfit,sans-serif;display:none">← Zurück</button>'
+            + '<div style="flex:1"></div>'
+            + '<button id="trainerNextBtn" onclick="window._trainerNext()" style="padding:10px 24px;background:#f97316;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif">Weiter →</button>'
+            + '</div>';
+        
+        drawer.innerHTML = h;
+        document.body.appendChild(drawer);
+        
+        // Animate in
+        requestAnimationFrame(function(){
+            backdrop.classList.add('active');
+            drawer.classList.add('open');
+        });
+        
+        _updateDrawerUI();
+        
+        // Log start
+        logPortalEvent('trainer_started', { trainer_id: trainer.id, title: trainer.title });
+        // Insert completion record
+        if(typeof sb !== 'undefined' && sbUser) {
+            sb.from('trainer_completions').insert({
+                user_id: sbUser.id,
+                standort_id: sbProfile ? sbProfile.standort_id : null,
+                trainer_id: trainer.id
+            });
+        }
+    }
+
+    function _updateDrawerUI() {
+        var trainer = trainerState.activeDrawer;
+        if(!trainer) return;
+        var steps = (trainer.content_json || {}).steps || [];
+        var cur = trainerState.currentStep;
+        var total = steps.length;
+        
+        // Progress
+        var bar = document.getElementById('trainerProgressBar');
+        var label = document.getElementById('trainerStepLabel');
+        if(bar) bar.style.width = Math.round(((cur+1)/total)*100) + '%';
+        if(label) label.textContent = (cur+1)+'/'+total;
+        
+        // Show/hide steps
+        for(var i=0; i<total; i++) {
+            var el = document.getElementById('trainerStep_'+i);
+            var num = document.getElementById('trainerStepNum_'+i);
+            if(el) { el.style.display = i===cur ? 'block' : 'none'; el.className = 'trainer-step'+(i===cur?' active':''); }
+            if(num) num.className = 'step-num '+(i<cur?'done':i===cur?'current':'upcoming');
+        }
+        
+        // Buttons
+        var prev = document.getElementById('trainerPrevBtn');
+        var next = document.getElementById('trainerNextBtn');
+        if(prev) prev.style.display = cur > 0 ? 'inline-block' : 'none';
+        if(next) next.textContent = cur >= total-1 ? '✅ Abschließen' : 'Weiter →';
+    }
+
+    window._trainerNext = function() {
+        var trainer = trainerState.activeDrawer;
+        if(!trainer) return;
+        var steps = (trainer.content_json || {}).steps || [];
+        var cur = trainerState.currentStep;
+        
+        // Save current step input
+        var inp = document.getElementById('trainerInput_'+cur);
+        if(inp) trainerState.stepResults['step_'+cur+'_input'] = inp.value;
+        
+        if(cur >= steps.length - 1) {
+            _completeTrainer(trainer);
+            return;
+        }
+        trainerState.currentStep++;
+        _updateDrawerUI();
+    };
+
+    window._trainerPrev = function() {
+        if(trainerState.currentStep > 0) {
+            trainerState.currentStep--;
+            _updateDrawerUI();
+        }
+    };
+
+    window._trainerSelectOpt = function(stepIdx, optIdx, btn) {
+        var trainer = trainerState.activeDrawer;
+        var steps = (trainer.content_json || {}).steps || [];
+        var opt = steps[stepIdx] && steps[stepIdx].options ? steps[stepIdx].options[optIdx] : '';
+        trainerState.stepResults['step_'+stepIdx+'_choice'] = opt;
+        // Highlight selected
+        var container = document.getElementById('trainerOpts_'+stepIdx);
+        if(container) {
+            container.querySelectorAll('button').forEach(function(b){ b.style.background='#fff'; b.style.borderColor='#e5e7eb'; b.style.color='#374151'; });
+            btn.style.background='#fff7ed'; btn.style.borderColor='#f97316'; btn.style.color='#f97316';
+        }
+    };
+
+    async function _completeTrainer(trainer) {
+        closeTrainerDrawer();
+        
+        var action = trainer.action_after_json || {};
+        var successMetric = trainer.success_metric_json || {};
+        
+        // Create task if configured
+        if(action.create_task && typeof sb !== 'undefined' && sbUser) {
+            try {
+                var taskData = {
+                    standort_id: sbProfile ? sbProfile.standort_id : null,
+                    erstellt_von: sbUser.id,
+                    titel: action.task_title || 'Trainer-Aktion',
+                    beschreibung: 'Aus Training: ' + trainer.title + '\n' + JSON.stringify(trainerState.stepResults),
+                    kategorie: action.task_kategorie || 'sonstig',
+                    prio: action.task_prio || 'normal',
+                    prio_sort: action.task_prio === 'hoch' ? 3 : action.task_prio === 'dringend' ? 4 : 1,
+                    quelle: 'trainer',
+                    erledigt: false
+                };
+                await sb.from('todos').insert(taskData);
+            } catch(e) { console.warn('Trainer task:', e); }
+        }
+        
+        // Update completion record
+        if(typeof sb !== 'undefined' && sbUser) {
+            var followupDays = successMetric.check_after_days || 7;
+            var followupDate = new Date();
+            followupDate.setDate(followupDate.getDate() + followupDays);
+            
+            await sb.from('trainer_completions')
+                .update({ 
+                    completed_at: new Date().toISOString(),
+                    result_json: trainerState.stepResults,
+                    followup_due_at: followupDate.toISOString()
+                })
+                .eq('user_id', sbUser.id)
+                .eq('trainer_id', trainer.id)
+                .is('completed_at', null);
+            
+            // Update assignment status
+            await sb.from('trainer_assignments')
+                .update({ status: 'completed', updated_at: new Date().toISOString() })
+                .eq('standort_id', sbProfile.standort_id)
+                .eq('trainer_id', trainer.id)
+                .eq('status', 'active');
+        }
+        
+        // Advance onboarding if applicable
+        if(action.advance_onboarding && trainerState.onboarding) {
+            var nextPhase = action.next_phase || trainerState.onboarding.phase;
+            var nextStep = (action.next_step || trainerState.onboarding.step) + 0;
+            await sb.from('user_onboarding')
+                .update({ phase: nextPhase, step: nextStep, updated_at: new Date().toISOString() })
+                .eq('user_id', sbUser.id);
+            trainerState.onboarding.phase = nextPhase;
+            trainerState.onboarding.step = nextStep;
+        }
+        
+        logPortalEvent('trainer_completed', { trainer_id: trainer.id, title: trainer.title, results: trainerState.stepResults });
+        
+        // Show success toast
+        _showTrainerToast('✅ Training abgeschlossen!' + (action.create_task ? ' Aufgabe wurde erstellt.' : ''));
+    }
+
+    window.closeTrainerDrawer = function() {
+        var backdrop = document.getElementById('trainerDrawerBackdrop');
+        var drawer = document.getElementById('trainerDrawer');
+        if(drawer) drawer.classList.remove('open');
+        if(backdrop) backdrop.classList.remove('active');
+        setTimeout(function(){
+            if(backdrop) backdrop.remove();
+            if(drawer) drawer.remove();
+        }, 400);
+        trainerState.activeDrawer = null;
+    };
+
+    // ── Snooze ──
+    window._trainerSnooze = async function(assignmentId) {
+        if(typeof sb === 'undefined') return;
+        var cooldown = new Date();
+        cooldown.setHours(cooldown.getHours() + 48);
+        await sb.from('trainer_assignments')
+            .update({ cooldown_until: cooldown.toISOString() })
+            .eq('id', assignmentId);
+        // Remove card
+        var card = document.getElementById('trainerCard_'+assignmentId);
+        if(card) card.style.display = 'none';
+        logPortalEvent('trainer_snoozed', { assignment_id: assignmentId });
+    };
+
+    // ── Start ──
+    window._trainerStart = function(assignmentId, trainerId) {
+        openTrainerDrawer(trainerId);
+    };
+
+    // ── Toast ──
+    function _showTrainerToast(msg) {
+        var toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#111827;color:white;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;z-index:99999;box-shadow:0 8px 30px rgba(0,0,0,0.2);font-family:Outfit,sans-serif;transition:opacity 0.5s;';
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        setTimeout(function(){ toast.style.opacity='0'; }, 3000);
+        setTimeout(function(){ toast.remove(); }, 3500);
+    }
+
+    // ── Show Trainer in Area ──
+    window.showTrainerForArea = async function(areaKey, containerId) {
+        var container = document.getElementById(containerId);
+        if(!container) return;
+        container.innerHTML = '';
+        
+        var assignments = await loadTrainersForArea(areaKey);
+        trainerState.assignments = (trainerState.assignments || []).concat(assignments);
+        
+        if(assignments.length > 0) {
+            renderTrainerCard(assignments[0], container);
+        }
+    };
+
+    // ── Init ──
+    window._initTrainerEngine = async function() {
+        await loadOnboardingState();
+        
+        // Init onboarding for new users
+        if(!trainerState.onboarding && typeof sb !== 'undefined' && sbUser && sbProfile) {
+            await sb.from('user_onboarding').upsert({
+                user_id: sbUser.id,
+                standort_id: sbProfile.standort_id,
+                role_key: sbProfile.is_hq ? 'hq' : 'allgemein',
+                phase: 1, step: 1,
+                onboarding_done: false
+            }, { onConflict: 'user_id' });
+            trainerState.onboarding = { phase: 1, step: 1, onboarding_done: false };
+        }
+    };
+
+})();
+</script>
+
+
+<!-- ═══ TAGES-COCKPIT + VERKAUFS-STREAK SYSTEM ═══ -->
+<script>
+(function(){
+    var MO = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+    var WOCHENTAGE = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+    var IMPULSE = [
+        'Du hast 2 Angebote, die seit 5+ Tagen offen sind. Ein kurzer Follow-Up-Anruf könnte den Unterschied machen!',
+        'Kunden, die am Wochenende Probefahrt hatten, sind jetzt kaufbereit. Heute anrufen!',
+        'Werkstatt ist zu 78% ausgelastet – perfekte Gelegenheit für Service-Angebote an Bestandskunden.',
+        'Tipp: E-Bike-Leasing-Anfragen steigen im Frühjahr um 40%. Sprich aktiv Pendler an!',
+        'Dein Standort liegt 12% über dem Netzwerk-Durchschnitt bei Zubehör-Attach-Rate. Weiter so! 💪',
+        '3 Leads sind im "Schwebend"-Status. Schick heute ein kurzes "Noch Fragen?"-Follow-Up.',
+        'Diese Woche sind 2 Events im Kalender. Nutze die Chance für spontane Leads!',
+        'Top-Performer im Netzwerk machen 30% ihres Umsatzes mit Service. Wie siehts bei dir aus?'
+    ];
+
+    // ──── TAGES-COCKPIT ────
+    function renderDailyFocus() {
+        var now = new Date();
+        var dateEl = document.getElementById('dailyFocusDate');
+        if(dateEl) dateEl.textContent = WOCHENTAGE[now.getDay()] + ', ' + now.getDate() + '. ' + MO[now.getMonth()];
+
+        // BWA Status
+        var bwaMo = now.getMonth() === 0 ? {y:now.getFullYear()-1,m:11} : {y:now.getFullYear(),m:now.getMonth()-1};
+        var fm = bwaMo.m+1 > 11 ? 0 : bwaMo.m+1;
+        var fy = bwaMo.m+1 > 11 ? bwaMo.y+1 : bwaMo.y;
+        var deadline = new Date(fy, fm, 15, 23, 59, 59);
+        var daysLeft = Math.ceil((deadline - now) / (1000*60*60*24));
+
+        var bwaEl = document.getElementById('dfBwa');
+        var bwaSubEl = document.getElementById('dfBwaSub');
+        if(bwaEl && bwaSubEl) {
+            if(daysLeft > 7) {
+                bwaEl.textContent = '✅';
+                bwaSubEl.textContent = daysLeft + ' Tage Zeit';
+                bwaSubEl.style.color = '#16a34a';
+            } else if(daysLeft > 0) {
+                bwaEl.textContent = '⚠️';
+                bwaSubEl.textContent = 'Noch ' + daysLeft + ' Tage!';
+                bwaSubEl.style.color = '#ca8a04';
+            } else {
+                bwaEl.textContent = '🚨';
+                bwaSubEl.textContent = Math.abs(daysLeft) + ' Tage überfällig';
+                bwaSubEl.style.color = '#dc2626';
+            }
+        }
+
+        // Random Impulse
+        var impulseEl = document.getElementById('dfImpulseText');
+        if(impulseEl) {
+            var idx = now.getDate() % IMPULSE.length;
+            impulseEl.textContent = IMPULSE[idx];
+        }
+    }
+
+    // ──── VERKAUFS-STREAK ────
+    function renderSalesMomentum() {
+        // Demo data - in prod, fetch from Supabase
+        var streak = 12;
+        var bestStreak = 18;
+        var goalIst = 86400;
+        var goalSoll = 120000;
+        var closeRate = 34;
+        var closeRatePrev = 30;
+        var avgDeal = 4320;
+        var nwAvgDeal = 3890;
+
+        // Update streak emoji
+        var emojiEl = document.getElementById('streakEmoji');
+        if(emojiEl) {
+            if(streak >= 14) emojiEl.textContent = '🔥🔥';
+            else if(streak >= 7) emojiEl.textContent = '🔥';
+            else if(streak >= 3) emojiEl.textContent = '✨';
+            else emojiEl.textContent = '💤';
+        }
+
+        // Goal bar
+        var pct = Math.min(Math.round(goalIst / goalSoll * 100), 100);
+        var goalPctEl = document.getElementById('goalPct');
+        var goalBarEl = document.getElementById('goalBar');
+        if(goalPctEl) {
+            goalPctEl.textContent = pct + '%';
+            goalPctEl.style.color = pct >= 90 ? '#16a34a' : pct >= 60 ? '#ca8a04' : '#dc2626';
+        }
+        if(goalBarEl) {
+            goalBarEl.style.width = pct + '%';
+            goalBarEl.style.backgroundColor = pct >= 90 ? '#16a34a' : pct >= 60 ? '#EF7D00' : '#dc2626';
+        }
+
+        // Close rate change
+        var crDiff = closeRate - closeRatePrev;
+        var crEl = document.querySelector('#closeRate + p');
+        if(crEl && crDiff !== 0) {
+            crEl.textContent = (crDiff > 0 ? '↑ +' : '↓ ') + crDiff + '% ggü. Vormonat';
+            crEl.style.color = crDiff > 0 ? '#16a34a' : '#dc2626';
+        }
+    }
+
+    // ──── INIT ────
+    // Hook into showView
+    var _origSV = window.showView;
+    if(_origSV) {
+        var _hooked = false;
+        if(!_hooked) {
+            var __origSV = _origSV;
+            window.showView = function(v) {
+                __origSV(v);
+                if(v === 'home' || v === 'startseite') setTimeout(renderDailyFocus, 100);
+                if(v === 'verkauf') setTimeout(renderSalesMomentum, 100);
+            };
+            _hooked = true;
+        }
+    }
+
+    // Auto-init
+    setTimeout(function(){
+        renderDailyFocus();
+        renderSalesMomentum();
+    }, 600);
 })();
 </script>
 
