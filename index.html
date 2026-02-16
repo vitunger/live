@@ -13992,7 +13992,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var isHQ = sbProfile && sbProfile.is_hq;
 
                 // Todos
-                var q = sb.from('todos').select('*, zugewiesen:zugewiesen_an(name)').order('prio_sort',{ascending:true}).order('faellig_am',{ascending:true,nullsFirst:false});
+                var q = sb.from('todos').select('*').order('prio_sort',{ascending:true}).order('faellig_am',{ascending:true,nullsFirst:false});
                 if(sid && !isHQ) q = q.eq('standort_id', sid);
                 var r = await q;
                 todoState.todos = (!r.error && r.data) ? r.data : [];
@@ -14157,17 +14157,20 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(!title||!title.trim()) return;
             var due=(document.getElementById('todoQADate')||{}).value||null;
             var prio=(document.getElementById('todoQAPrio')||{}).value||'normal';
-            var secId=(document.getElementById('todoQASec')||{}).value||null;
+            var secId=(document.getElementById('todoQASec')||{}).value;
+            if(!secId) secId=null;
             var prioSort=(TODO_PRIO[prio]||{}).sort||1;
             try {
-                var resp = await sb.from('todos').insert({
+                var ins = {
                     standort_id:sbProfile?sbProfile.standort_id:null, erstellt_von:sbUser?sbUser.id:null,
                     titel:title.trim(), faellig_am:due, prio:prio, prio_sort:prioSort,
-                    kategorie:'sonstig', section_id:secId, erledigt:false
-                }).select('*, zugewiesen:zugewiesen_an(name)');
+                    kategorie:'sonstig', erledigt:false
+                };
+                if(secId) ins.section_id = secId;
+                var resp = await sb.from('todos').insert(ins).select();
                 if(resp.error) throw resp.error;
-                if(resp.data&&resp.data[0]) todoState.todos.unshift(resp.data[0]);
-            } catch(e){console.error('QA add:',e);}
+                if(resp.data&&resp.data[0]) { resp.data[0].zugewiesen=null; todoState.todos.unshift(resp.data[0]); }
+            } catch(e){console.error('QA add:',e);alert('Fehler: '+e.message);}
             todoCloseQuickAdd();
             todoRender();
         }
@@ -14559,9 +14562,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             try {
                 var resp = await sb.from('todos').insert({
                     standort_id:sbProfile?sbProfile.standort_id:null, erstellt_von:sbUser?sbUser.id:null,
-                    titel:title, parent_id:parentId, section_id:parent?parent.section_id:null,
+                    titel:title, parent_id:parentId, section_id:(parent&&parent.section_id)||null,
                     kategorie:parent?parent.kategorie:'sonstig', prio:'normal', prio_sort:1, erledigt:false
-                }).select('*, zugewiesen:zugewiesen_an(name)');
+                }).select('*');
                 if(resp.error) throw resp.error;
                 if(resp.data&&resp.data[0]) todoState.todos.push(resp.data[0]);
             } catch(e){console.error(e);}
@@ -14574,9 +14577,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var parent = todoState.todos.find(function(t){return t.id===parentId;});
             sb.from('todos').insert({
                 standort_id:sbProfile?sbProfile.standort_id:null, erstellt_von:sbUser?sbUser.id:null,
-                titel:title.trim(), parent_id:parentId, section_id:parent?parent.section_id:null,
+                titel:title.trim(), parent_id:parentId, section_id:(parent&&parent.section_id)||null,
                 kategorie:parent?parent.kategorie:'sonstig', prio:'normal', prio_sort:1, erledigt:false
-            }).select('*, zugewiesen:zugewiesen_an(name)').then(function(r){
+            }).select('*').then(function(r){
                 if(r.data&&r.data[0]) todoState.todos.push(r.data[0]);
                 todoRender();
             });
