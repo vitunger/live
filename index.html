@@ -4575,43 +4575,26 @@
 
                 <!-- ================================================================= -->
 
-                <!-- ===== DEV-STATUS MODULE ===== -->
+                <!-- ===== DEV-STATUS / MODULÜBERSICHT ===== -->
                 <div id="devStatusView" class="view" style="display: none;">
                     <div class="flex items-center justify-between mb-6">
                         <div>
-                            <h1 class="h1-headline text-gray-800">ENTWICKLUNGSSTATUS</h1>
-                            <p class="text-sm text-gray-500">Uebersicht aller Module und deren Entwicklungsstand</p>
+                            <h1 class="h1-headline text-gray-800">MODULÜBERSICHT</h1>
+                            <p class="text-sm text-gray-500">Entwicklungsstand aller Module – Stand: Februar 2026</p>
                         </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="text-xs text-gray-400">Stand: Februar 2026</span>
-                        </div>
+                        <div class="flex items-center space-x-2" id="modulStatusSummary"></div>
                     </div>
-                    <div class="vit-card p-5 mb-6">
-                        <div class="flex items-center justify-between mb-3">
-                            <h3 class="font-bold text-gray-800">Gesamtfortschritt</h3>
-                            <span id="devProgressPct" class="text-lg font-bold text-vit-orange">0%</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-3">
-                            <div id="devProgressBar" class="h-3 rounded-full bg-gradient-to-r from-vit-orange to-orange-400 transition-all" style="width:0%"></div>
-                        </div>
-                        <div class="grid grid-cols-5 gap-3 mt-4" id="devStatusKpis"></div>
+                    <!-- Filter -->
+                    <div class="flex flex-wrap items-center gap-2 mb-6">
+                        <button onclick="filterModulStatus('alle')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white" data-f="alle">Alle</button>
+                        <button onclick="filterModulStatus('standort')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="standort">Standort-Module</button>
+                        <button onclick="filterModulStatus('hq')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="hq">HQ-Module</button>
+                        <button onclick="filterModulStatus('widgets')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="widgets">Dashboard-Widgets</button>
+                        <span class="border-l border-gray-300 h-5 mx-1"></span>
+                        <button onclick="filterModulStatus('kiPrio')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="kiPrio">🤖 Priorität KI</button>
+                        <button onclick="filterModulStatus('hqPrio')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="hqPrio">🏢 Prio HQ</button>
                     </div>
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <button onclick="filterDevStatus('all')" class="dev-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-800 text-white" data-df="all">Alle</button>
-                        <button onclick="filterDevStatus('live')" class="dev-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-df="live">Live</button>
-                        <button onclick="filterDevStatus('beta')" class="dev-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-df="beta">Beta</button>
-                        <button onclick="filterDevStatus('demo')" class="dev-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-df="demo">Demo</button>
-                        <button onclick="filterDevStatus('wip')" class="dev-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-df="wip">In Arbeit</button>
-                        <button onclick="filterDevStatus('planned')" class="dev-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-df="planned">Geplant</button>
-                    </div>
-                    <div class="mb-4 border-b border-gray-200">
-                        <nav class="-mb-px flex space-x-6">
-                            <button onclick="switchDevTab('standort')" class="dev-tab whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-dt="standort">Standort-Module</button>
-                            <button onclick="switchDevTab('hq')" class="dev-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700" data-dt="hq">HQ-Module</button>
-                            <button onclick="switchDevTab('widgets')" class="dev-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700" data-dt="widgets">Dashboard-Widgets</button>
-                        </nav>
-                    </div>
-                    <div id="devStatusList" class="space-y-3"></div>
+                    <div id="modulStatusContent"></div>
                 </div>
 
                 <!-- ==================== HQ VIEWS ================================== -->
@@ -10734,109 +10717,214 @@
         }
 
 
+
         // ======================================================
-        // === DEV-STATUS MODULE ===
+        // === MODULÜBERSICHT / DEV-STATUS ===
         // ======================================================
-        var DEV_COMPONENTS = {
+        var currentModulFilter = 'alle';
+
+        // Aufwand: S = <1 Tag, M = 1-3 Tage, L = 3-7 Tage, XL = >1 Woche
+        var MODUL_DATEN = {
             standort: [
-                { id: 'startseite', name: 'Startseite / Dashboard', status: 'beta', pct: 70, effort: '4h', desc: 'Widgets teilweise mit echten Daten, Layout fertig' },
-                { id: 'verkauf_woche', name: 'Verkauf - Wochenansicht', status: 'live', pct: 95, effort: '1h', desc: 'DB-Anbindung, KW-Wechsel, Eingabe funktioniert' },
-                { id: 'verkauf_pipeline', name: 'Verkauf - Pipeline/Kanban', status: 'live', pct: 90, effort: '2h', desc: 'Kanban mit DB, Drag-Drop, Stufen inkl. Fakturiert' },
-                { id: 'verkauf_auswertung', name: 'Verkauf - Auswertung', status: 'demo', pct: 40, effort: '6h', desc: 'Jahrestabelle statisch, DB-Anbindung fehlt' },
-                { id: 'verkauf_training', name: 'Verkauf - Training', status: 'beta', pct: 55, effort: '4h', desc: 'Video-Upload, Gamification, Punkte' },
-                { id: 'kalender', name: 'Kalender', status: 'live', pct: 85, effort: '2h', desc: 'Monatsansicht, CRUD, DB-Sync' },
-                { id: 'todo', name: 'Aufgaben / Todos', status: 'live', pct: 80, effort: '2h', desc: 'CRUD, Filter, DB-Anbindung' },
-                { id: 'kommunikation', name: 'Kommunikation', status: 'beta', pct: 60, effort: '6h', desc: 'Forum DB, Kanaele DB, Brett DB, Inbox teilw. Demo' },
-                { id: 'dashboards', name: 'Dashboards', status: 'demo', pct: 30, effort: '8h', desc: 'Tabs vorhanden, Inhalte statisch' },
-                { id: 'allgemein', name: 'Allgemein / Einstellungen', status: 'beta', pct: 50, effort: '4h', desc: 'Profil, Social Media Tracker' },
-                { id: 'einkauf', name: 'Einkauf', status: 'demo', pct: 35, effort: '6h', desc: 'Lieferanten statisch, Tabs vorhanden' },
-                { id: 'marketing', name: 'Marketing', status: 'beta', pct: 55, effort: '6h', desc: 'Social Media Planer, Themenplan teilw. funktional' },
-                { id: 'controlling', name: 'Controlling / BWA', status: 'live', pct: 85, effort: '4h', desc: '13 Parser-Formate, Upload, Detail-Ansicht, Trend' },
-                { id: 'wissen', name: 'Wissensdatenbank', status: 'demo', pct: 40, effort: '6h', desc: 'Struktur da, Inhalte statisch' },
-                { id: 'support', name: 'Support / Tickets', status: 'beta', pct: 65, effort: '4h', desc: 'Ticket-CRUD mit DB, Kontakte' },
-                { id: 'ideenboard', name: 'Ideenboard', status: 'live', pct: 85, effort: '2h', desc: 'Voting, Status-Aenderung mit DB' },
-                { id: 'shop', name: 'Werbemittel-Shop', status: 'demo', pct: 35, effort: '6h', desc: 'UI fertig, Warenkorb, keine Bestelllogik' },
-                { id: 'aktenschrank', name: 'Aktenschrank', status: 'live', pct: 80, effort: '3h', desc: 'Upload, Download, Ordner mit DB' },
-                { id: 'onboarding', name: 'Onboarding', status: 'beta', pct: 50, effort: '6h', desc: 'Asana-Integration Demo, Checklisten' },
-                { id: 'mitarbeiter', name: 'Mitarbeiter-Verwaltung', status: 'live', pct: 85, effort: '2h', desc: 'CRUD, Rollen, Approval, Passwort-Reset' }
+                {name:'Startseite / Dashboard', view:'homeView', status:'live', typ:'standort', details:'Personalisiert, 7 Live-Widgets, 3 Demo-Widgets', kiPrio:35, aufwand:'S', kiTodo:'Restliche 3 Widgets (Kampagnen, Top-Verkäufer, Neue Inhalte) an DB anbinden'},
+                {name:'Verkauf / CRM', view:'verkaufView', status:'teilweise', typ:'standort', details:'Pipeline/Kanban mit DB, Lead-CRUD, Verkaufstracking, Auswertung', kiPrio:2, aufwand:'L', kiTodo:'Angebotserstellung (PDF), Lead-Import, Follow-up-Erinnerungen. Kernmodul für Umsatz.'},
+                {name:'Kalender', view:'kalenderView', status:'live', typ:'standort', details:'Monatsansicht, Termine aus DB laden/erstellen/löschen', kiPrio:20, aufwand:'XL', kiTodo:'MS365-Sync ist nice-to-have, kein Blocker. Wochenansicht wäre UX-Verbesserung.'},
+                {name:'Aufgaben / Todos', view:'todoView', status:'live', typ:'standort', details:'Erstellen, Bearbeiten, Abhaken, Löschen, Filtern – alles DB', kiPrio:30, aufwand:'M', kiTodo:'Fälligkeitsdatum, Zuweisung an Mitarbeiter. Funktioniert bereits gut.'},
+                {name:'Kommunikation', view:'kommunikationView', status:'live', typ:'standort', details:'Ankündigungen, Brett, Forum, Chat-Kanäle – alles DB', kiPrio:28, aufwand:'M', kiTodo:'Direktnachrichten fehlt. Ansonsten solide.'},
+                {name:'Controlling / BWA', view:'controllingView', status:'live', typ:'standort', details:'BWA-Parser (13 Formate), Detail-Positionen, KPIs, Trend-Sparklines', kiPrio:3, aufwand:'M', kiTodo:'Benchmarks gegen Netzwerk-Durchschnitt, Liquiditätsplanung, Plan/Ist mit echten Plan-Daten. Kernmodul.'},
+                {name:'Marketing', view:'marketingView', status:'demo', typ:'standort', details:'6 Tabs, alles statische Demo-Daten, keine DB', kiPrio:8, aufwand:'L', kiTodo:'DB-Tabelle für Kampagnen anlegen, Social-Media Kalender, Content-Bibliothek aus DB.'},
+                {name:'Einkauf', view:'einkaufView', status:'demo', typ:'standort', details:'Lieferanten-Übersicht statisch, keine DB', kiPrio:12, aufwand:'L', kiTodo:'Lieferanten-DB anlegen, Konditionen pflegen, Bestellvorschläge.'},
+                {name:'Dashboards', view:'dashboardsView', status:'demo', typ:'standort', details:'Tabs vorhanden, Inhalte statisch', kiPrio:10, aufwand:'L', kiTodo:'Echte Charts aus BWA-Daten, Verkaufsdaten, Pipeline-Conversion.'},
+                {name:'Allgemein', view:'allgemeinView', status:'demo', typ:'standort', details:'Profil, Social Media Tracker teilweise', kiPrio:33, aufwand:'M', kiTodo:'Profilbearbeitung, Strategie-Übersicht.'},
+                {name:'Wissen', view:'wissenView', status:'demo', typ:'standort', details:'Struktur da, Inhalte statisch', kiPrio:15, aufwand:'L', kiTodo:'CMS-Backend: Artikel erstellen, Kategorien. Basis für Wissen-Tabs in anderen Modulen.'},
+                {name:'Support', view:'supportView', status:'teilweise', typ:'standort', details:'Tickets mit DB, Kontakte-Seite', kiPrio:22, aufwand:'M', kiTodo:'Ticket-Prioritäten, SLA-Timer, E-Mail-Benachrichtigung.'},
+                {name:'Ideenboard', view:'ideenboardView', status:'live', typ:'standort', details:'Einreichen, Voting, Status – alles DB', kiPrio:34, aufwand:'S', kiTodo:'Kommentar-Funktion. Grundfunktion top.'},
+                {name:'Shop', view:'shopView', status:'demo', typ:'standort', details:'UI + Warenkorb, keine echte Bestelllogik', kiPrio:18, aufwand:'L', kiTodo:'Bestellungen in DB speichern, Bestätigung, HQ-Verarbeitung.'},
+                {name:'Aktenschrank', view:'aktenschrankView', status:'live', typ:'standort', details:'Upload, Download, Kategorien – alles DB', kiPrio:31, aufwand:'S', kiTodo:'Ordner-System, Dateigröße-Limits. Funktioniert.'},
+                {name:'Onboarding', view:'onboardingView', status:'teilweise', typ:'standort', details:'Asana-Demo-Integration, Checklisten', kiPrio:7, aufwand:'L', kiTodo:'Echte Asana-API Anbindung oder eigene Checklisten-DB. Wichtig für neue Partner.'},
+                {name:'Mitarbeiter', view:'mitarbeiterView', status:'live', typ:'standort', details:'Anlegen, Rollen, Approval, Passwort-Reset', kiPrio:29, aufwand:'S', kiTodo:'Deaktivierung statt Löschung, Aktivitäts-Log.'}
             ],
             hq: [
-                { id: 'hqCockpit', name: 'Netzwerk-Cockpit', status: 'beta', pct: 50, effort: '6h', desc: 'KPIs teilweise mit Daten' },
-                { id: 'hqKommando', name: 'Kommandozentrale', status: 'beta', pct: 55, effort: '8h', desc: '7 Tabs, teilweise DB' },
-                { id: 'hqAktionen', name: 'Handlungsbedarf', status: 'beta', pct: 45, effort: '6h', desc: 'Auto-Erkennung teilweise, Regeln statisch' },
-                { id: 'hqStandorte', name: 'Standortverwaltung', status: 'live', pct: 80, effort: '3h', desc: 'Alle Standorte, Filter, Status' },
-                { id: 'hqFinanzen', name: 'HQ Finanzen / BWA', status: 'live', pct: 80, effort: '4h', desc: 'Netzwerk-BWA, Vergleiche, Hochladen' },
-                { id: 'hqMarketing', name: 'HQ Marketing', status: 'demo', pct: 25, effort: '8h', desc: 'UI vorhanden, keine DB' },
-                { id: 'hqEinkauf', name: 'HQ Einkauf', status: 'demo', pct: 25, effort: '8h', desc: 'UI vorhanden, keine DB' },
-                { id: 'hqVerkauf', name: 'HQ Verkauf', status: 'demo', pct: 25, effort: '8h', desc: 'UI vorhanden, keine DB' },
-                { id: 'hqAuswertung', name: 'HQ Auswertung', status: 'demo', pct: 20, effort: '8h', desc: 'Dashboard-Framework, statische Daten' },
-                { id: 'hqWissen', name: 'HQ Wissensverwaltung', status: 'demo', pct: 30, effort: '6h', desc: 'Artikel-Verwaltung UI' },
-                { id: 'hqSupport', name: 'HQ Support', status: 'beta', pct: 60, effort: '4h', desc: 'Alle Tickets einsehen' },
-                { id: 'hqIdeen', name: 'HQ Ideenboard', status: 'live', pct: 80, effort: '2h', desc: 'Alle Ideen, Status aendern' },
-                { id: 'hqShop', name: 'HQ Shop-Verwaltung', status: 'demo', pct: 20, effort: '8h', desc: 'Produkte/Bestellungen UI' },
-                { id: 'hqEinstellungen', name: 'Einstellungen', status: 'live', pct: 75, effort: '4h', desc: 'Modulstatus, Rechte-Matrix' }
+                {name:'Netzwerk-Cockpit', view:'hqCockpitView', status:'teilweise', typ:'hq', details:'KPIs teilweise mit Daten', kiPrio:4, aufwand:'M', kiTodo:'Echte KPIs aus allen Standort-Daten aggregieren. Zentrales HQ-Dashboard.'},
+                {name:'Kommandozentrale', view:'hqKommandoView', status:'teilweise', typ:'hq', details:'7 Tabs, teilweise mit DB', kiPrio:5, aufwand:'XL', kiTodo:'Alle Tabs mit echten Daten: Standorte, Mitarbeiter, Kampagnen, Kommunikation, Aufgaben, Kalender, Dokumente.'},
+                {name:'Handlungsbedarf', view:'hqAktionenView', status:'teilweise', typ:'hq', details:'Auto-Erkennung, Regeln teilweise statisch', kiPrio:1, aufwand:'L', kiTodo:'Echte Regeln: Fehlende BWAs, negatives Ergebnis, offene Tickets. Höchste Prio für HQ-Alltag.'},
+                {name:'HQ Standorte', view:'hqStandorteView', status:'live', typ:'hq', details:'Alle Standorte, Filter, Status', kiPrio:25, aufwand:'M', kiTodo:'Standort-Detail-Seite mit allen KPIs.'},
+                {name:'HQ Finanzen', view:'hqFinanzenView', status:'live', typ:'hq', details:'BWA-Status aller Standorte, Netzwerk-Finanzen', kiPrio:6, aufwand:'M', kiTodo:'Netzwerk-P&L, Standort-Vergleich, Excel/PDF-Export.'},
+                {name:'HQ Marketing', view:'hqMarketingView', status:'demo', typ:'hq', details:'Performance-Tabelle mit Demo-Daten', kiPrio:16, aufwand:'L', kiTodo:'Kampagnen-DB, Erfolgs-Tracking pro Standort.'},
+                {name:'HQ Einkauf', view:'hqEinkaufView', status:'demo', typ:'hq', details:'Demo-Rabattquoten und Bestellvolumen', kiPrio:19, aufwand:'L', kiTodo:'Zentraleinkauf-Dashboard, Konditionen, Bestellbündelung.'},
+                {name:'HQ Verkauf', view:'hqVerkaufView', status:'demo', typ:'hq', details:'Ranking mit Demo-Daten', kiPrio:11, aufwand:'M', kiTodo:'Echtes Netzwerk-Ranking aus verkauf_tracking + leads.'},
+                {name:'HQ Auswertung', view:'hqAuswertungView', status:'stub', typ:'hq', details:'Tab-Struktur, keine Inhalte', kiPrio:14, aufwand:'XL', kiTodo:'Business-Intelligence: Netzwerk-Trends, Saisonvergleiche, Forecasting.'},
+                {name:'HQ Wissen', view:'hqWissenView', status:'teilweise', typ:'hq', details:'Artikel-Übersicht', kiPrio:13, aufwand:'L', kiTodo:'CMS: Artikel erstellen/bearbeiten/publizieren, Pflichtlektüre.'},
+                {name:'HQ Support', view:'hqSupportView', status:'live', typ:'hq', details:'Netzwerk-Tickets, Status ändern', kiPrio:24, aufwand:'M', kiTodo:'Ticket-Zuweisung, SLA-Tracking, Auto-Eskalation.'},
+                {name:'HQ Ideen', view:'hqIdeenView', status:'live', typ:'hq', details:'Ideen verwalten, Status ändern, Filter', kiPrio:32, aufwand:'S', kiTodo:'Idee-zu-Projekt Konversion. Grundfunktion top.'},
+                {name:'HQ Shop', view:'hqShopView', status:'demo', typ:'hq', details:'UI zum Hinzufügen, keine echte DB', kiPrio:21, aufwand:'L', kiTodo:'Produktverwaltung CRUD, Bestellübersicht.'},
+                {name:'HQ Einstellungen', view:'hqEinstellungenView', status:'live', typ:'hq', details:'Module, Rollen, User-Freigabe – alles DB', kiPrio:36, aufwand:'S', kiTodo:'Branding-Einstellungen. Core funktioniert bereits.'}
             ],
             widgets: [
-                { id: 'w_quickactions', name: 'Quick Actions', status: 'live', pct: 90, effort: '1h', desc: 'Neuer Lead, Angebot, Support, Wissen' },
-                { id: 'w_umsatz', name: 'Umsatz vs. Plan', status: 'demo', pct: 20, effort: '4h', desc: 'Hardcoded Werte, keine DB' },
-                { id: 'w_pipeline', name: 'Meine Pipeline', status: 'beta', pct: 65, effort: '2h', desc: 'Laedt echte Leads aus DB' },
-                { id: 'w_verkauf', name: 'Verkaufserfolg', status: 'demo', pct: 20, effort: '4h', desc: 'Hardcoded 42% Quote' },
-                { id: 'w_termine', name: 'Termine Heute', status: 'beta', pct: 60, effort: '2h', desc: 'Laedt echte Kalender-Daten' },
-                { id: 'w_budget', name: 'Budget-Status', status: 'demo', pct: 15, effort: '6h', desc: 'Hardcoded Prozentwerte' },
-                { id: 'w_support', name: 'Support Tickets', status: 'beta', pct: 60, effort: '2h', desc: 'Laedt echte Tickets' },
-                { id: 'w_wissen', name: 'Neue Inhalte', status: 'demo', pct: 20, effort: '4h', desc: 'Statische Schulungsliste' },
-                { id: 'w_nachrichten', name: 'Nachrichten HQ', status: 'beta', pct: 55, effort: '3h', desc: 'Laedt echte Ankuendigungen' },
-                { id: 'w_onboarding', name: 'Onboarding Fortschritt', status: 'demo', pct: 30, effort: '4h', desc: 'Statischer Fortschrittsbalken' }
+                {name:'Umsatz & Ergebnis', status:'live', typ:'widget', details:'Letzte BWA aus bwa_daten', kiPrio:37, aufwand:'S', kiTodo:'Plan-Vergleich wenn Plan-Daten vorhanden.'},
+                {name:'Widget: Pipeline', status:'live', typ:'widget', details:'Live aus leads + kalender_termine', kiPrio:38, aufwand:'S', kiTodo:'Click-Through zu Lead. Funktioniert.'},
+                {name:'Widget: Termine heute', status:'live', typ:'widget', details:'Echte Termine aus DB', kiPrio:39, aufwand:'S', kiTodo:'Termin-Direkterstellung. Funktioniert.'},
+                {name:'Widget: Offene Aufgaben', status:'live', typ:'widget', details:'Echte Todos mit Checkbox', kiPrio:40, aufwand:'S', kiTodo:'Direkt-Erstellung im Widget. Funktioniert.'},
+                {name:'Widget: Controlling', status:'live', typ:'widget', details:'Letzte BWA-Kennzahlen', kiPrio:41, aufwand:'S', kiTodo:'Trend-Pfeil vs. Vormonat. Funktioniert.'},
+                {name:'Widget: Support Tickets', status:'live', typ:'widget', details:'Offene Tickets mit Alter', kiPrio:42, aufwand:'S', kiTodo:'Farbe bei >7 Tage. Funktioniert.'},
+                {name:'Widget: Nachrichten HQ', status:'live', typ:'widget', details:'Ankündigungen mit relativer Zeit', kiPrio:43, aufwand:'S', kiTodo:'Funktioniert. Keine Änderung nötig.'},
+                {name:'Widget: Verkaufserfolg KW', status:'demo', typ:'widget', details:'KW dynamisch, Zahlen statisch', kiPrio:17, aufwand:'M', kiTodo:'Echte Wochen-Daten aus verkauf_tracking.'},
+                {name:'Widget: Aktive Kampagnen', status:'stub', typ:'widget', details:'Statisch, keine DB', kiPrio:23, aufwand:'M', kiTodo:'Braucht erst Kampagnen-DB (abhängig von Marketing).'},
+                {name:'Widget: Top Verkäufer', status:'stub', typ:'widget', details:'Statische Demo-Namen', kiPrio:26, aufwand:'M', kiTodo:'Ranking aus verkauf_tracking pro Mitarbeiter.'},
+                {name:'Widget: Neue Inhalte', status:'stub', typ:'widget', details:'Statische Demo-Einträge', kiPrio:36, aufwand:'M', kiTodo:'Braucht Wissens-CMS.'}
             ]
         };
 
-        var currentDevFilter = 'all';
-        var currentDevTab = 'standort';
+        // HQ-Prio: eigene Reihenfolge, gespeichert
+        var hqPrioOrder = null;
+        function loadHqPrio() { try { var s = localStorage.getItem('vitbikes_hq_prio'); if(s) hqPrioOrder = JSON.parse(s); } catch(e) {} }
+        function saveHqPrio() { try { localStorage.setItem('vitbikes_hq_prio', JSON.stringify(hqPrioOrder)); } catch(e) {} }
+        function resetHqPrio() { hqPrioOrder = null; try { localStorage.removeItem('vitbikes_hq_prio'); } catch(e) {} renderModulStatus(); }
+        function getAllModulesFlat() { return MODUL_DATEN.standort.concat(MODUL_DATEN.hq).concat(MODUL_DATEN.widgets); }
 
-        function renderDevStatus() {
-            var components = DEV_COMPONENTS[currentDevTab] || [];
-            if(currentDevFilter !== 'all') {
-                components = components.filter(function(c) { return c.status === currentDevFilter; });
-            }
-            var all = [].concat(DEV_COMPONENTS.standort, DEV_COMPONENTS.hq, DEV_COMPONENTS.widgets);
-            var counts = { live: 0, beta: 0, demo: 0, wip: 0, planned: 0 };
-            var totalPct = 0;
-            all.forEach(function(c) { counts[c.status] = (counts[c.status]||0) + 1; totalPct += c.pct; });
-            var avgPct = Math.round(totalPct / all.length);
-            var bar = document.getElementById('devProgressBar');
-            var pct = document.getElementById('devProgressPct');
-            if(bar) bar.style.width = avgPct + '%';
-            if(pct) pct.textContent = avgPct + '%';
-            var kpis = document.getElementById('devStatusKpis');
-            if(kpis) kpis.innerHTML = '<div class="text-center"><p class="text-lg font-bold text-green-600">'+counts.live+'</p><p class="text-[10px] text-gray-500">Live</p></div><div class="text-center"><p class="text-lg font-bold text-purple-600">'+counts.beta+'</p><p class="text-[10px] text-gray-500">Beta</p></div><div class="text-center"><p class="text-lg font-bold text-amber-600">'+counts.demo+'</p><p class="text-[10px] text-gray-500">Demo</p></div><div class="text-center"><p class="text-lg font-bold text-blue-600">'+(counts.wip||0)+'</p><p class="text-[10px] text-gray-500">In Arbeit</p></div><div class="text-center"><p class="text-lg font-bold text-gray-400">'+(counts.planned||0)+'</p><p class="text-[10px] text-gray-500">Geplant</p></div>';
-            var list = document.getElementById('devStatusList');
-            if(!list) return;
-            if(components.length === 0) { list.innerHTML = '<div class="text-center py-8 text-gray-400">Keine Module in dieser Kategorie</div>'; return; }
+        function getAufwandBadge(a) {
+            var map = {'S':{bg:'bg-green-100 text-green-700',label:'S (<1 Tag)'},'M':{bg:'bg-blue-100 text-blue-700',label:'M (1-3 Tage)'},'L':{bg:'bg-orange-100 text-orange-700',label:'L (3-7 Tage)'},'XL':{bg:'bg-red-100 text-red-700',label:'XL (>1 Woche)'}};
+            var m = map[a] || map['M'];
+            return '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold '+m.bg+'">'+m.label+'</span>';
+        }
+        function getTypBadge(t) {
+            var map = {'standort':{bg:'bg-indigo-100 text-indigo-700',label:'🏪 Standort'},'hq':{bg:'bg-purple-100 text-purple-700',label:'🏢 HQ'},'widget':{bg:'bg-cyan-100 text-cyan-700',label:'📊 Widget'}};
+            var m = map[t] || map['standort'];
+            return '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold '+m.bg+'">'+m.label+'</span>';
+        }
+        function getStatusBadge(s) {
+            var map = {'live':{bg:'bg-green-100 text-green-800',icon:'🟢',label:'Live'},'teilweise':{bg:'bg-yellow-100 text-yellow-800',icon:'🟡',label:'Teilweise'},'demo':{bg:'bg-orange-100 text-orange-800',icon:'🟠',label:'Demo/UI'},'stub':{bg:'bg-red-100 text-red-800',icon:'🔴',label:'Stub'}};
+            var m = map[s] || map['stub'];
+            return '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold '+m.bg+'">'+m.icon+' '+m.label+'</span>';
+        }
+
+        function filterModulStatus(f) {
+            currentModulFilter = f;
+            document.querySelectorAll('.ms-filter').forEach(function(b) {
+                b.className = 'ms-filter text-xs px-3 py-1.5 rounded-full font-semibold ' + (b.getAttribute('data-f') === f ? 'bg-vit-orange text-white' : 'bg-gray-100 text-gray-600');
+            });
+            renderModulStatus();
+        }
+
+        var _dragIdx = null;
+        function onPrioDragStart(e) { _dragIdx = parseInt(e.target.closest('tr').getAttribute('data-idx')); e.dataTransfer.effectAllowed = 'move'; }
+        function onPrioDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; var tr = e.target.closest('tr'); if(tr) tr.style.borderTop = '2px solid #EF7D00'; }
+        function onPrioDragLeave(e) { var tr = e.target.closest('tr'); if(tr) tr.style.borderTop = ''; }
+        function onPrioDrop(e) {
+            e.preventDefault();
+            var targetIdx = parseInt(e.target.closest('tr').getAttribute('data-idx'));
+            e.target.closest('tr').style.borderTop = '';
+            if(_dragIdx === null || _dragIdx === targetIdx) return;
+            var item = hqPrioOrder.splice(_dragIdx, 1)[0];
+            hqPrioOrder.splice(targetIdx, 0, item);
+            saveHqPrio();
+            renderModulStatus();
+            _dragIdx = null;
+        }
+        function moveHqPrio(idx, dir) {
+            if(!hqPrioOrder) return;
+            var newIdx = idx + dir;
+            if(newIdx < 0 || newIdx >= hqPrioOrder.length) return;
+            var tmp = hqPrioOrder[idx];
+            hqPrioOrder[idx] = hqPrioOrder[newIdx];
+            hqPrioOrder[newIdx] = tmp;
+            saveHqPrio();
+            renderModulStatus();
+        }
+
+        function renderModulStatus() {
+            var el = document.getElementById('modulStatusContent');
+            if(!el) return;
             var h = '';
-            components.forEach(function(c) {
-                var sl = {live:'Live',beta:'Beta',demo:'Demo',wip:'In Arbeit',planned:'Geplant'}[c.status] || c.status;
-                var bc = {live:'bg-green-500',beta:'bg-purple-500',demo:'bg-amber-500',wip:'bg-blue-500',planned:'bg-gray-300'}[c.status] || 'bg-gray-300';
-                h += '<div class="vit-card p-4 hover:shadow-md transition-shadow"><div class="flex items-center justify-between mb-2"><div class="flex items-center gap-3"><h4 class="font-semibold text-gray-800 text-sm">'+c.name+'</h4><span class="dev-badge '+c.status+'">'+sl+'</span></div><span class="text-xs text-gray-400">~'+c.effort+' verbleibend</span></div><p class="text-xs text-gray-500 mb-3">'+c.desc+'</p><div class="flex items-center gap-3"><div class="flex-1 bg-gray-100 rounded-full h-2"><div class="'+bc+' h-2 rounded-full" style="width:'+c.pct+'%"></div></div><span class="text-xs font-bold text-gray-600">'+c.pct+'%</span></div></div>';
+            var allModules = getAllModulesFlat();
+            var counts = {live:0, teilweise:0, demo:0, stub:0};
+            allModules.forEach(function(m) { counts[m.status] = (counts[m.status]||0)+1; });
+            var sumEl = document.getElementById('modulStatusSummary');
+            if(sumEl) {
+                sumEl.innerHTML = '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-semibold">🟢 '+counts.live+' Live</span>'
+                    +'<span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-semibold">🟡 '+counts.teilweise+' Teilweise</span>'
+                    +'<span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full font-semibold">🟠 '+counts.demo+' Demo</span>'
+                    +'<span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full font-semibold">🔴 '+counts.stub+' Stub</span>';
+            }
+
+            // KI PRIO VIEW
+            if(currentModulFilter === 'kiPrio') {
+                var sorted = allModules.slice().sort(function(a,b){ return (a.kiPrio||99) - (b.kiPrio||99); });
+                h += '<div class="vit-card p-6 mb-6">';
+                h += '<div class="flex items-center justify-between mb-4">';
+                h += '<div><h2 class="text-lg font-bold text-gray-800">🤖 KI-Empfehlung: Umsetzungs-Reihenfolge</h2>';
+                h += '<p class="text-xs text-gray-500 mt-1">Sortiert nach Business-Impact × Machbarkeit. Niedrigere Nummer = höhere Priorität.</p></div></div>';
+                h += '<div class="overflow-x-auto"><table class="w-full text-sm">';
+                h += '<thead><tr class="border-b border-gray-200"><th class="text-left py-2 px-3 text-xs font-bold text-gray-500 w-10">#</th><th class="text-left py-2 px-3 text-xs font-bold text-gray-500">Modul</th><th class="text-left py-2 px-3 text-xs font-bold text-gray-500">Status</th><th class="text-left py-2 px-3 text-xs font-bold text-gray-500">Typ</th><th class="text-left py-2 px-3 text-xs font-bold text-gray-500">Aufwand</th><th class="text-left py-2 px-3 text-xs font-bold text-gray-500">Nächster Schritt</th></tr></thead><tbody>';
+                sorted.forEach(function(m, i) {
+                    var bg = i < 3 ? 'bg-green-50' : i < 10 ? 'bg-yellow-50' : '';
+                    h += '<tr class="border-b border-gray-100 hover:bg-gray-50 '+bg+'">';
+                    h += '<td class="py-3 px-3 font-bold '+(i<3?'text-green-600':i<10?'text-yellow-600':'text-gray-400')+'">'+(i+1)+'</td>';
+                    h += '<td class="py-3 px-3"><div class="font-semibold text-gray-800">'+m.name+'</div><div class="text-[10px] text-gray-400 mt-0.5">'+m.details+'</div></td>';
+                    h += '<td class="py-3 px-3">'+getStatusBadge(m.status)+'</td>';
+                    h += '<td class="py-3 px-3">'+getTypBadge(m.typ)+'</td>';
+                    h += '<td class="py-3 px-3">'+getAufwandBadge(m.aufwand)+'</td>';
+                    h += '<td class="py-3 px-3 text-xs text-gray-600 max-w-xs">'+(m.kiTodo||'')+'</td>';
+                    h += '</tr>';
+                });
+                h += '</tbody></table></div></div>';
+                el.innerHTML = h;
+                return;
+            }
+
+            // HQ PRIO VIEW
+            if(currentModulFilter === 'hqPrio') {
+                loadHqPrio();
+                if(!hqPrioOrder) {
+                    hqPrioOrder = allModules.slice().sort(function(a,b){ return (a.kiPrio||99)-(b.kiPrio||99); }).map(function(m){ return {name:m.name, typ:m.typ}; });
+                }
+                var prioModules = [];
+                hqPrioOrder.forEach(function(p) {
+                    var found = allModules.find(function(m){ return m.name===p.name && m.typ===p.typ; });
+                    if(found) prioModules.push(found);
+                });
+                h += '<div class="vit-card p-6 mb-6">';
+                h += '<div class="flex items-center justify-between mb-4">';
+                h += '<div><h2 class="text-lg font-bold text-gray-800">🏢 HQ-Priorität: Eigene Reihenfolge</h2>';
+                h += '<p class="text-xs text-gray-500 mt-1">Per Drag & Drop oder Pfeiltasten sortieren. Wird automatisch gespeichert.</p></div>';
+                h += '<button onclick="resetHqPrio()" class="text-xs px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 font-semibold">↩️ Auf KI-Empfehlung zurücksetzen</button></div>';
+                h += '<div class="overflow-x-auto"><table class="w-full text-sm">';
+                h += '<thead><tr class="border-b border-gray-200"><th class="w-10"></th><th class="text-left py-2 px-3 text-xs font-bold text-gray-500 w-10">#</th><th class="text-left py-2 px-3 text-xs font-bold text-gray-500">Modul</th><th class="text-left py-2 px-3 text-xs font-bold text-gray-500">Status</th><th class="text-left py-2 px-3 text-xs font-bold text-gray-500">Aufwand</th><th class="text-left py-2 px-3 text-xs font-bold text-gray-500">Nächster Schritt</th><th class="w-20"></th></tr></thead><tbody>';
+                prioModules.forEach(function(m, i) {
+                    h += '<tr class="border-b border-gray-100 hover:bg-gray-50 cursor-grab" draggable="true" data-idx="'+i+'" ondragstart="onPrioDragStart(event)" ondragover="onPrioDragOver(event)" ondragleave="onPrioDragLeave(event)" ondrop="onPrioDrop(event)">';
+                    h += '<td class="py-2 px-2 text-gray-300 cursor-grab">⠿</td>';
+                    h += '<td class="py-3 px-3 font-bold text-gray-400">'+(i+1)+'</td>';
+                    h += '<td class="py-3 px-3"><div class="font-semibold text-gray-800">'+m.name+'</div><div class="text-[10px] text-gray-400">'+getTypBadge(m.typ)+'</div></td>';
+                    h += '<td class="py-3 px-3">'+getStatusBadge(m.status)+'</td>';
+                    h += '<td class="py-3 px-3">'+getAufwandBadge(m.aufwand)+'</td>';
+                    h += '<td class="py-3 px-3 text-xs text-gray-600 max-w-xs">'+(m.kiTodo||'')+'</td>';
+                    h += '<td class="py-2 px-2"><button onclick="moveHqPrio('+i+',-1)" class="text-gray-400 hover:text-gray-700 text-sm">▲</button><button onclick="moveHqPrio('+i+',1)" class="text-gray-400 hover:text-gray-700 text-sm ml-1">▼</button></td>';
+                    h += '</tr>';
+                });
+                h += '</tbody></table></div></div>';
+                el.innerHTML = h;
+                return;
+            }
+
+            // NORMAL FILTER (alle / standort / hq / widgets)
+            var modules = currentModulFilter === 'alle' ? allModules : (MODUL_DATEN[currentModulFilter] || allModules.filter(function(m){ return m.typ === currentModulFilter; }));
+            h += '<div class="overflow-x-auto"><table class="w-full text-sm">';
+            h += '<thead><tr class="border-b border-gray-200"><th class="text-left py-2 px-3 text-xs font-bold text-gray-500">Modul</th><th class="text-left py-2 px-3 text-xs font-bold text-gray-500">Status</th><th class="text-left py-2 px-3 text-xs font-bold text-gray-500">Typ</th><th class="text-left py-2 px-3 text-xs font-bold text-gray-500">Details</th></tr></thead><tbody>';
+            modules.forEach(function(m) {
+                h += '<tr class="border-b border-gray-100 hover:bg-gray-50">';
+                h += '<td class="py-3 px-3 font-semibold text-gray-800">'+m.name+'</td>';
+                h += '<td class="py-3 px-3">'+getStatusBadge(m.status)+'</td>';
+                h += '<td class="py-3 px-3">'+getTypBadge(m.typ)+'</td>';
+                h += '<td class="py-3 px-3 text-xs text-gray-500">'+m.details+'</td>';
+                h += '</tr>';
             });
-            list.innerHTML = h;
+            h += '</tbody></table></div>';
+            el.innerHTML = h;
         }
 
-        function filterDevStatus(f) {
-            currentDevFilter = f;
-            document.querySelectorAll('.dev-filter').forEach(function(b) {
-                b.className = 'dev-filter text-xs px-3 py-1.5 rounded-full font-semibold ' + (b.getAttribute('data-df') === f ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600');
-            });
-            renderDevStatus();
-        }
+        // Alias for auto-loading
+        function renderDevStatus() { renderModulStatus(); }
 
-        function switchDevTab(tab) {
-            currentDevTab = tab;
-            document.querySelectorAll('.dev-tab').forEach(function(btn) {
-                var isActive = btn.getAttribute('data-dt') === tab;
-                btn.className = 'dev-tab whitespace-nowrap py-3 px-1 border-b-2 font-semibold text-sm ' + (isActive ? 'border-vit-orange text-vit-orange' : 'border-transparent text-gray-500 hover:text-gray-700');
-            });
-            renderDevStatus();
-        }
 
         // Hook HQ views into showView
         var origShowView2 = showView;
