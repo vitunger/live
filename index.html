@@ -8014,7 +8014,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 });
 
                 // Standort-Kanäle (lokal, orange)
-                var standortName = sbProfile && sbProfile.standort_id ? (typeof standorte !== 'undefined' ? (standorte.find(function(s){return s.id===sbProfile.standort_id})||{}).name : '') : '';
+                var standortName = sbProfile && sbProfile.standort_id ? (typeof standorte !== 'undefined' && Array.isArray(standorte) ? (standorte.find(function(s){return s.id===sbProfile.standort_id})||{}).name : '') : '';
                 html += '<div class="px-3 pt-4 pb-1 flex items-center justify-between"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">🏪 ' + (standortName ? escH(standortName) : 'Mein Standort') + '</span>';
                 html += '<button onclick="kommCreateKanal()" class="text-gray-400 hover:text-vit-orange" title="Neuen Kanal erstellen"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button>';
                 html += '</div>';
@@ -17156,6 +17156,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         var currentBillingMonth = '';
 
         function fmtEur(n) { return new Intl.NumberFormat('de-DE', { style:'currency', currency:'EUR' }).format(n || 0); }
+        function fmtDate(d) { if (!d) return '–'; return new Date(d).toLocaleDateString('de-DE'); }
 
         function billingStatusBadge(s) {
             var m = {
@@ -20862,8 +20863,65 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         var shopSelectedSizes = {}; // kept for backwards compat
         
+        function shopSizeQty(productId, variantId, variantName, delta, price) {
+            var input = document.getElementById('sqty_' + variantId);
+            if(!input) return;
+            var current = parseInt(input.value) || 0;
+            var max = parseInt(input.max) || 99;
+            var newVal = Math.max(0, Math.min(max, current + delta));
+            input.value = newVal;
+            // Update styling
+            if(newVal > 0) {
+                input.className = input.className.replace('text-gray-600','text-vit-orange').replace('border-gray-200','border-vit-orange').replace('bg-white','bg-orange-50');
+                if(input.className.indexOf('bg-orange-50') === -1) input.className += ' bg-orange-50';
+                if(input.className.indexOf('text-vit-orange') === -1) input.className = input.className.replace('text-gray-600','text-vit-orange');
+                if(input.className.indexOf('border-vit-orange') === -1) input.className = input.className.replace('border-gray-200','border-vit-orange');
+            } else {
+                input.className = input.className.replace('text-vit-orange','text-gray-600').replace('border-vit-orange','border-gray-200').replace('bg-orange-50','');
+            }
+            // Update cart
+            shopUpdateSizeCart(productId, variantId, variantName, newVal, price);
+        }
+
+        function shopSizeQtyInput(productId, variantId, variantName, val, price) {
+            var qty = parseInt(val) || 0;
+            var input = document.getElementById('sqty_' + variantId);
+            if(input) {
+                var max = parseInt(input.max) || 99;
+                qty = Math.max(0, Math.min(max, qty));
+                input.value = qty;
+            }
+            shopUpdateSizeCart(productId, variantId, variantName, qty, price);
+        }
+
+        function shopUpdateSizeCart(productId, variantId, variantName, qty, price) {
+            // Find product name
+            var pName = '';
+            var cardEl = document.getElementById('sizeGrid_' + productId);
+            if(cardEl) {
+                var card = cardEl.closest('.vit-card');
+                if(card) { var nameEl = card.querySelector('.font-bold.text-gray-800'); if(nameEl) pName = nameEl.textContent; }
+            }
+            var cartKey = productId + '_' + variantId;
+            // Remove existing entry
+            shopCart = shopCart.filter(function(c){ return c.cartKey !== cartKey; });
+            // Add if qty > 0
+            if(qty > 0) {
+                shopCart.push({
+                    cartKey: cartKey,
+                    id: productId,
+                    variant_id: variantId,
+                    variant_name: variantName,
+                    name: (pName || 'Produkt') + ' (' + variantName + ')',
+                    preis: price,
+                    menge: qty
+                });
+            }
+            renderShopCart();
+        }
+
         function selectShopSize(productId, variantId, variantName) {
-            // Legacy - now handled by updateCartQty
+            // Legacy - now handled by shopSizeQty
         }
 
         function updateCartQty(input) {
