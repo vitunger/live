@@ -5979,6 +5979,7 @@
         var SUPABASE_URL = 'https://lwwagbkxeofahhwebkab.supabase.co';
         var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3d2FnYmt4ZW9mYWhod2Via2FiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwMTM3NDAsImV4cCI6MjA4NjU4OTc0MH0.YBKO7grysp8RHzGWA6xSGpTVi0wG2PmeEWJHI25f7ks';
         var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        window.sb = sb;
         var sbUser = null; // Supabase auth user
         var sbProfile = null; // users table row
         var sbRollen = []; // role names array
@@ -6604,6 +6605,7 @@
                 var resp = await sb.auth.signInWithPassword({ email: email, password: pw });
                 if(resp.error) throw resp.error;
                 sbUser = resp.data.user;
+                window.sbUser = sbUser;
                 console.log('[Login] Auth OK, user:', sbUser.id);
                 
                 // Status-Check: Was darf der User sehen?
@@ -6659,6 +6661,8 @@
             if(resp1.error) { console.error('[Profile] Error:', resp1.error.message); throw resp1.error; }
             sbProfile = resp1.data;
             sbStandort = sbProfile ? sbProfile.standorte : null;
+            window.sbStandort = sbStandort;
+            window.sbUser = sbUser;
             var resp2 = await sb.from('user_rollen').select('rollen(name, label)').eq('user_id', userId);
             if(resp2.error) { console.error('[Roles] Error:', resp2.error.message); }
             sbRollen = (resp2.data || []).map(function(ur) { return ur.rollen; });
@@ -13281,6 +13285,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(tabName==='leadreport') renderHqMktLeadReport();
             if(tabName==='jahresgespraeche') renderHqMktJahresgespraeche();
             if(tabName==='handlungsbedarf') renderHqMktHandlungsbedarf();
+            if(tabName==='videoFreigabe' && window.vpRenderHqReview) vpRenderHqReview();
         }
 
         function renderHqMktBudget() {
@@ -21442,6 +21447,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(btn) btn.className='sm-sub-btn px-4 py-2 rounded-full text-sm font-semibold bg-vit-orange text-white';
             if(sub==='themen') renderSmThemen();
             if(sub==='ranking') renderSmRanking();
+            if(sub==='pipeline' && window.vpRenderPipelineDashboard) vpRenderPipelineDashboard();
+            if(sub==='consents' && window.vpRenderConsents) vpRenderConsents();
+            if(sub==='upload' && window.vpInitUpload) vpInitUpload();
         }
 
         function filterSmThemen(filter) {
@@ -28816,15 +28824,6 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     window.vpCloseModal = function() { document.getElementById('vpModal').style.display = 'none'; };
     document.addEventListener('click', function(e){ if(e.target && e.target.id === 'vpModal') vpCloseModal(); });
 
-    // ==================== HOOK INTO switchSmSub ====================
-    var origSwitchSmSub = window.switchSmSub;
-    window.switchSmSub = function(sub) {
-        if(origSwitchSmSub) origSwitchSmSub(sub);
-        if(sub === 'pipeline') vpRenderPipelineDashboard();
-        if(sub === 'consents') vpRenderConsents();
-        if(sub === 'upload') vpInitUpload();
-    };
-
     // ==================== UPLOAD (Standort) ====================
     window.vpInitUpload = function() {
         var dz = document.getElementById('vpDropZone');
@@ -29261,13 +29260,6 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
             var b = document.getElementById('hqVpReviewBadge');
             if(b) { b.textContent = count||0; b.style.display = count>0?'inline':'none'; }
         } catch(e) {}
-    };
-
-    // ==================== HOOK INTO HQ MKT TAB ====================
-    var origShowHqMktTab = window.showHqMktTab;
-    window.showHqMktTab = function(tabName) {
-        if(origShowHqMktTab) origShowHqMktTab(tabName);
-        if(tabName === 'videoFreigabe') vpRenderHqReview();
     };
 
     // ==================== REALTIME ====================
