@@ -20763,7 +20763,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     var totalStock = hasVariants ? variants.reduce(function(a,v){return a+v.stock},0) : null;
                     var catIcons = {print:'\ud83d\udda8\ufe0f',textil:'\ud83d\udc55',display:'\ud83c\udfea',digital:'\ud83d\udcbb',give:'\ud83c\udf81'};
                     
-                    html += '<div class="vit-card p-5 hover:shadow-md transition">';
+                    html += '<div class="vit-card p-5 hover:shadow-md transition flex flex-col">';
                     if (p.image_url) {
                         html += '<div class="w-full h-40 rounded-lg mb-3 overflow-hidden bg-gray-50"><img src="'+p.image_url+'" alt="'+p.name+'" class="w-full h-full object-contain" onerror="this.parentNode.innerHTML=\'<div class=\\\'flex items-center justify-center h-full text-5xl\\\'>'+(catIcons[p.category]||'\ud83d\udecd\ufe0f')+'</div>\'"></div>';
                     } else {
@@ -20817,7 +20817,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     var productCartTotal = productCartItems.reduce(function(s,c){return s + c.menge * c.preis;},0);
                     var productCartQty = productCartItems.reduce(function(s,c){return s + c.menge;},0);
                     
-                    html += '<div class="mt-3 pt-2 border-t border-gray-100" id="shopCardFooter_'+p.id+'">';
+                    html += '<div class="mt-auto pt-2 border-t border-gray-100" id="shopCardFooter_'+p.id+'">';
                     html += '<div class="flex items-center justify-between mb-2">';
                     html += '<span class="font-bold text-gray-800 text-lg">' + fmtEur(p.price) + '</span>';
                     if(productCartQty > 0) {
@@ -20825,7 +20825,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     }
                     html += '</div>';
                     if(hasVariants) {
-                        html += '<button onclick="shopAddSelectedSizes(\''+p.id+'\',\''+escH(p.name)+'\')" class="w-full py-2.5 bg-vit-orange text-white rounded-lg text-sm font-bold hover:opacity-90 transition flex items-center justify-center space-x-2"><span>\ud83d\uded2</span><span>In den Warenkorb</span></button>';
+                        html += '<button id="shopAddBtn_'+p.id+'" onclick="shopAddSelectedSizes(\''+p.id+'\',\''+escH(p.name)+'\')" class="w-full py-2.5 bg-gray-200 text-gray-400 rounded-lg text-sm font-bold cursor-not-allowed flex items-center justify-center space-x-2">\ud83d\uded2 In den Warenkorb</button>';
                     } else {
                         html += '<button onclick="addToCart(\''+p.id+'\',\''+escH(p.name)+'\','+p.price+')" class="w-full py-2.5 bg-vit-orange text-white rounded-lg text-sm font-bold hover:opacity-90 transition flex items-center justify-center space-x-2"><span>\ud83d\uded2</span><span>In den Warenkorb</span></button>';
                     }
@@ -20841,56 +20841,51 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         
         function shopSizeQty(productId, variantId, variantName, delta, price) {
             var input = document.getElementById('sqty_' + variantId);
-            if(!input) return;
+            if(!input) { console.error('Input not found: sqty_' + variantId); return; }
             var current = parseInt(input.value) || 0;
-            var max = parseInt(input.max) || 99;
-            var newVal = Math.max(0, Math.min(max, current + delta));
-            input.value = newVal;
-            // Update styling
-            if(newVal > 0) {
-                input.className = 'w-10 h-6 text-center text-xs font-bold border rounded mx-1 bg-orange-50 text-vit-orange border-vit-orange';
-            } else {
-                input.className = 'w-10 h-6 text-center text-xs font-bold border border-gray-200 rounded mx-1 text-gray-600';
+            var mx = parseInt(input.max) || 99;
+            var nv = current + delta;
+            if(nv < 0) nv = 0;
+            if(nv > mx) nv = mx;
+            input.value = nv;
+            input.style.backgroundColor = nv > 0 ? '#fff7ed' : '';
+            input.style.color = nv > 0 ? '#ea580c' : '#4b5563';
+            input.style.borderColor = nv > 0 ? '#ea580c' : '#e5e7eb';
+            // Update button text
+            var grid = document.getElementById('sizeGrid_' + productId);
+            if(grid) {
+                var allInputs = grid.querySelectorAll('input[type="number"]');
+                var totalQty = 0;
+                allInputs.forEach(function(i) { totalQty += (parseInt(i.value) || 0); });
+                var btn = document.getElementById('shopAddBtn_' + productId);
+                if(btn) {
+                    if(totalQty > 0) {
+                        btn.textContent = '\ud83d\uded2 ' + totalQty + ' St\u00fcck in den Warenkorb (' + fmtEur(totalQty * price) + ')';
+                        btn.style.backgroundColor = '#ea580c';
+                        btn.style.color = 'white';
+                        btn.style.cursor = 'pointer';
+                    } else {
+                        btn.textContent = '\ud83d\uded2 In den Warenkorb';
+                        btn.style.backgroundColor = '#e5e7eb';
+                        btn.style.color = '#9ca3af';
+                        btn.style.cursor = 'not-allowed';
+                    }
+                }
             }
-            // Update the card footer to show pending total
-            shopUpdateCardFooter(productId, price);
         }
 
         function shopSizeQtyInput(productId, variantId, variantName, val, price) {
-            var qty = parseInt(val) || 0;
             var input = document.getElementById('sqty_' + variantId);
-            if(input) {
-                var max = parseInt(input.max) || 99;
-                qty = Math.max(0, Math.min(max, qty));
-                input.value = qty;
-                if(qty > 0) {
-                    input.className = 'w-10 h-6 text-center text-xs font-bold border rounded mx-1 bg-orange-50 text-vit-orange border-vit-orange';
-                } else {
-                    input.className = 'w-10 h-6 text-center text-xs font-bold border border-gray-200 rounded mx-1 text-gray-600';
-                }
-            }
-            shopUpdateCardFooter(productId, price);
-        }
-
-        function shopUpdateCardFooter(productId, price) {
-            // Count selected qty from all size inputs for this product
-            var grid = document.getElementById('sizeGrid_' + productId);
-            if(!grid) return;
-            var inputs = grid.querySelectorAll('input[type="number"]');
-            var totalQty = 0;
-            inputs.forEach(function(inp) { totalQty += parseInt(inp.value) || 0; });
-            var footer = document.getElementById('shopCardFooter_' + productId);
-            if(!footer) return;
-            var btn = footer.querySelector('button');
-            if(btn) {
-                if(totalQty > 0) {
-                    btn.innerHTML = '<span>\ud83d\uded2</span><span>'+totalQty+' St\u00fcck in den Warenkorb ('+fmtEur(totalQty * price)+')</span>';
-                    btn.className = 'w-full py-2.5 bg-vit-orange text-white rounded-lg text-sm font-bold hover:opacity-90 transition flex items-center justify-center space-x-2 animate-pulse';
-                } else {
-                    btn.innerHTML = '<span>\ud83d\uded2</span><span>In den Warenkorb</span>';
-                    btn.className = 'w-full py-2.5 bg-gray-200 text-gray-400 rounded-lg text-sm font-bold cursor-not-allowed flex items-center justify-center space-x-2';
-                }
-            }
+            if(!input) return;
+            var qty = parseInt(val) || 0;
+            var mx = parseInt(input.max) || 99;
+            if(qty < 0) qty = 0;
+            if(qty > mx) qty = mx;
+            input.value = qty;
+            input.style.backgroundColor = qty > 0 ? '#fff7ed' : '';
+            input.style.color = qty > 0 ? '#ea580c' : '#4b5563';
+            input.style.borderColor = qty > 0 ? '#ea580c' : '#e5e7eb';
+            shopSizeQty(productId, variantId, variantName, 0, price);
         }
 
         function shopAddSelectedSizes(productId, productName) {
