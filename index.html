@@ -20799,7 +20799,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                             if(!oos) {
                                 html += '<div class="flex-1 flex items-center justify-center">';
                                 html += '<button onclick="shopSizeQty(\''+p.id+'\',\''+v.id+'\',\''+v.variant_name+'\',-1,'+p.price+')" class="w-6 h-6 rounded bg-gray-100 text-gray-500 hover:bg-gray-200 text-xs font-bold flex items-center justify-center">\u2212</button>';
-                                html += '<input type="number" id="sqty_'+v.id+'" min="0" max="'+v.stock+'" value="'+cartQty+'" onchange="shopSizeQtyInput(\''+p.id+'\',\''+v.id+'\',\''+v.variant_name+'\',this.value,'+p.price+')" class="w-10 h-6 text-center text-xs font-bold border border-gray-200 rounded mx-1 '+(cartQty>0?'bg-orange-50 text-vit-orange border-vit-orange':'text-gray-600')+'">';
+                                html += '<input type="number" id="sqty_'+v.id+'" data-name="'+escH(v.variant_name)+'" min="0" max="'+v.stock+'" value="'+cartQty+'" onchange="shopSizeQtyInput(\''+p.id+'\',\''+v.id+'\',\''+v.variant_name+'\',this.value,'+p.price+')" class="w-10 h-6 text-center text-xs font-bold border border-gray-200 rounded mx-1 '+(cartQty>0?'bg-orange-50 text-vit-orange border-vit-orange':'text-gray-600')+'">';
                                 html += '<button onclick="shopSizeQty(\''+p.id+'\',\''+v.id+'\',\''+v.variant_name+'\',1,'+p.price+')" class="w-6 h-6 rounded bg-gray-100 text-gray-500 hover:bg-gray-200 text-xs font-bold flex items-center justify-center">+</button>';
                                 html += '</div>';
                                 html += '<span class="w-12 text-right text-[10px] text-gray-400">'+v.stock+'</span>';
@@ -20892,9 +20892,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var qty = parseInt(inp.value) || 0;
                 if(qty <= 0) return;
                 var vid = inp.id.replace('sqty_','');
-                var row = inp.closest('.flex');
-                var nameEl = row ? row.querySelector('.font-bold') : null;
-                var vname = nameEl ? nameEl.textContent.trim() : vid;
+                var vname = inp.dataset.name || vid;
                 var cartKey = productId + '_' + vid;
                 shopCart = shopCart.filter(function(c){ return c.cartKey !== cartKey; });
                 shopCart.push({
