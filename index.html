@@ -508,6 +508,9 @@
                         </svg>
                         <span class="absolute -top-1 -right-1 bg-vit-orange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
                     </button>
+
+                    <!-- Mobile Profile Avatar -->
+                    <img id="userAvatarImgMobile" src="https://ui-avatars.com/api/?name=Demo+User&background=EF7D00&color=fff" class="topnav-mobile w-9 h-9 rounded-full ring-2 ring-transparent hover:ring-orange-300 cursor-pointer" style="display:none;" onclick="openProfilePanel()">
                     
                     <div class="flex items-center space-x-3 topnav-desktop cursor-pointer hover:opacity-80 transition-opacity" onclick="openProfilePanel()">
                         <img id="userAvatarImg" src="https://ui-avatars.com/api/?name=Demo+User&background=EF7D00&color=fff" class="w-10 h-10 rounded-full ring-2 ring-transparent hover:ring-orange-300 transition-all">
@@ -6224,8 +6227,12 @@
             var firstName = userName.split(' ')[0];
             var nameEl = document.querySelector('[data-user-name]');
             if(nameEl) nameEl.textContent = userName;
+            var avatarUrl = 'https://ui-avatars.com/api/?name='+encodeURIComponent(userName)+'&background=EF7D00&color=fff';
+            if(sbProfile && sbProfile.avatar_url) avatarUrl = sbProfile.avatar_url;
             var avatarEl = document.querySelector('.topnav-desktop img.rounded-full');
-            if(avatarEl) avatarEl.src = 'https://ui-avatars.com/api/?name='+encodeURIComponent(userName)+'&background=EF7D00&color=fff';
+            if(avatarEl) avatarEl.src = avatarUrl;
+            var mobileAv = document.getElementById('userAvatarImgMobile');
+            if(mobileAv) mobileAv.src = avatarUrl;
             // Dynamic welcome text
             var welcomeEl = document.getElementById('welcomeText');
             if(welcomeEl) {
@@ -20628,7 +20635,7 @@ function setTheme(theme) {
     <!-- Backdrop -->
     <div onclick="closeProfilePanel()" style="position:absolute;inset:0;background:rgba(0,0,0,0.4);transition:opacity 0.3s;" id="profileBackdrop"></div>
     <!-- Panel -->
-    <div id="profileSlider" style="position:absolute;top:0;right:0;bottom:0;width:380px;background:var(--vit-white,#fff);box-shadow:-8px 0 30px rgba(0,0,0,0.15);transform:translateX(100%);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);overflow-y:auto;">
+    <div id="profileSlider" style="position:absolute;top:0;right:0;bottom:0;width:380px;max-width:100vw;background:var(--vit-white,#fff);box-shadow:-8px 0 30px rgba(0,0,0,0.15);transform:translateX(100%);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);overflow-y:auto;">
 
         <!-- Header -->
         <div style="padding:24px 24px 0;position:relative;">
@@ -20859,6 +20866,8 @@ async function saveProfile() {
             document.getElementById('profileAvatarImg').src = avatarUrl;
             var topAvatar = document.getElementById('userAvatarImg');
             if(topAvatar) topAvatar.src = avatarUrl;
+            var mobileAvatar = document.getElementById('userAvatarImgMobile');
+            if(mobileAvatar) mobileAvatar.src = avatarUrl;
             alert('✅ Profil gespeichert!');
         } catch(e) {
             console.error('Profile save error:', e);
@@ -20876,6 +20885,8 @@ function handleProfilePhoto(input) {
             document.getElementById('profileAvatarImg').src = e.target.result;
             var topAvatar = document.getElementById('userAvatarImg');
             if(topAvatar) topAvatar.src = e.target.result;
+            var mobileAvatar = document.getElementById('userAvatarImgMobile');
+            if(mobileAvatar) mobileAvatar.src = e.target.result;
             // TODO: Upload to Supabase Storage
         };
         reader.readAsDataURL(input.files[0]);
