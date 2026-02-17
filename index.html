@@ -5278,12 +5278,40 @@
                     <!-- Tabs -->
                     <div class="border-b border-gray-200 mb-6">
                         <nav class="flex space-x-4 overflow-x-auto -mb-px">
+                            <button onclick="showBillingTab('approval')" class="billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500 hover:text-gray-700" data-tab="approval">✅ Freigabe <span id="approvalBadge" class="hidden ml-1 px-1.5 py-0.5 text-[10px] bg-red-500 text-white rounded-full font-bold">0</span></button>
                             <button onclick="showBillingTab('overview')" class="billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="overview">📊 Übersicht</button>
                             <button onclick="showBillingTab('invoices')" class="billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500 hover:text-gray-700" data-tab="invoices">📄 Rechnungen</button>
                             <button onclick="showBillingTab('strategies')" class="billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500 hover:text-gray-700" data-tab="strategies">🎯 Strategien</button>
                             <button onclick="showBillingTab('products')" class="billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500 hover:text-gray-700" data-tab="products">📦 Produkte</button>
                             <button onclick="showBillingTab('tools')" class="billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500 hover:text-gray-700" data-tab="tools">🔧 Tools</button>
                         </nav>
+                    </div>
+
+                    <!-- Tab: Overview -->
+                    <!-- Tab: Freigabe / Approval -->
+                    <div id="billingTabApproval" class="billing-tab-content" style="display:none;">
+                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-yellow-600" id="appPending">0</div><div class="text-xs text-gray-500">Warten auf Prüfung</div></div>
+                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-blue-600" id="appReview">0</div><div class="text-xs text-gray-500">In Prüfung</div></div>
+                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600" id="appApproved">0</div><div class="text-xs text-gray-500">Freigegeben (heute)</div></div>
+                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-red-500" id="appRejected">0</div><div class="text-xs text-gray-500">Zurückgewiesen</div></div>
+                        </div>
+
+                        <!-- Approval Mode Toggle -->
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-sm font-semibold text-gray-600">Automatischer Versand:</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="autoSendToggle" class="sr-only peer" onchange="toggleAutoSend()">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                                </label>
+                                <span id="autoSendLabel" class="text-xs text-red-600 font-semibold">AUS – Manuelle Freigabe erforderlich</span>
+                            </div>
+                            <button onclick="generateAllDrafts()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">📝 Monatsrechnungen generieren</button>
+                        </div>
+
+                        <!-- Pending Invoices List -->
+                        <div id="approvalList" class="space-y-3"></div>
                     </div>
 
                     <!-- Tab: Overview -->
@@ -12620,7 +12648,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(v==='support') { renderTickets('all'); renderKontakte(); }
             if(v==='ideenboard') { renderIdeen('all'); }
             if(v==='wissen') { renderWissenGlobal(); }
-            if(v==='shop') { renderShop(); }
+            if(v==='shop') { shopAllProducts=[]; shopVariants={}; renderShop(); }
         };
 
         // === IDEENBOARD ===
@@ -17346,6 +17374,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if (tab === 'strategies') loadAllStrategies();
             if (tab === 'products') loadBillingProducts();
             if (tab === 'tools') loadBillingTools();
+            if (tab === 'approval') loadApprovalQueue();
         }
 
         async function loadAllInvoices() {
@@ -17484,6 +17513,317 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             });
             h += '</tbody></table></div>';
             container.innerHTML = h;
+        }
+
+        // ============================================================
+        // === INVOICE APPROVAL WORKFLOW ===
+        // ============================================================
+        var _billingAutoSend = false; // default OFF = manual approval required
+
+        function toggleAutoSend() {
+            _billingAutoSend = document.getElementById('autoSendToggle').checked;
+            var label = document.getElementById('autoSendLabel');
+            if(label) {
+                if(_billingAutoSend) {
+                    label.textContent = 'AN – Rechnungen werden nach Freigabe automatisch versendet';
+                    label.className = 'text-xs text-green-600 font-semibold';
+                } else {
+                    label.textContent = 'AUS – Manuelle Freigabe erforderlich';
+                    label.className = 'text-xs text-red-600 font-semibold';
+                }
+            }
+        }
+
+        async function loadApprovalQueue() {
+            var container = document.getElementById('approvalList');
+            if(!container) return;
+            container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
+
+            try {
+                // Load drafts, review, rejected invoices
+                var resp = await sb.from('billing_invoices')
+                    .select('*, standort:standorte(name), line_items:billing_invoice_line_items(*)')
+                    .in('status', ['draft', 'review', 'rejected', 'approved'])
+                    .order('created_at', {ascending: false});
+                if(resp.error) throw resp.error;
+                var invoices = resp.data || [];
+
+                // KPIs
+                var pending = invoices.filter(function(i){return i.status==='draft';}).length;
+                var inReview = invoices.filter(function(i){return i.status==='review';}).length;
+                var approved = invoices.filter(function(i){return i.status==='approved';}).length;
+                var rejected = invoices.filter(function(i){return i.status==='rejected';}).length;
+
+                var el;
+                el=document.getElementById('appPending'); if(el) el.textContent=pending;
+                el=document.getElementById('appReview'); if(el) el.textContent=inReview;
+                el=document.getElementById('appApproved'); if(el) el.textContent=approved;
+                el=document.getElementById('appRejected'); if(el) el.textContent=rejected;
+
+                // Badge in tab
+                var badge = document.getElementById('approvalBadge');
+                if(badge) {
+                    var actionNeeded = pending + inReview + rejected;
+                    if(actionNeeded > 0) { badge.textContent = actionNeeded; badge.classList.remove('hidden'); }
+                    else { badge.classList.add('hidden'); }
+                }
+
+                if(invoices.length === 0) {
+                    container.innerHTML = '<div class="vit-card p-8 text-center"><p class="text-gray-400 text-lg mb-2">\u2705 Alles erledigt!</p><p class="text-sm text-gray-500">Keine Rechnungen zur Freigabe.</p></div>';
+                    return;
+                }
+
+                var h = '';
+                invoices.forEach(function(inv) {
+                    var lineItems = inv.line_items || [];
+                    var statusMap = {
+                        draft: {color:'bg-yellow-100 text-yellow-700', icon:'\ud83d\udcdd', label:'Entwurf'},
+                        review: {color:'bg-blue-100 text-blue-700', icon:'\ud83d\udd0d', label:'In Pr\u00fcfung'},
+                        approved: {color:'bg-green-100 text-green-700', icon:'\u2705', label:'Freigegeben'},
+                        rejected: {color:'bg-red-100 text-red-700', icon:'\u274c', label:'Zur\u00fcckgewiesen'}
+                    };
+                    var st = statusMap[inv.status] || statusMap.draft;
+                    var stdName = inv.standort ? inv.standort.name : 'Unbekannt';
+
+                    h += '<div class="vit-card p-4 '+(inv.status==='rejected'?'border-l-4 border-red-400':inv.status==='draft'?'border-l-4 border-yellow-400':inv.status==='approved'?'border-l-4 border-green-400':'border-l-4 border-blue-400')+'">';
+                    h += '<div class="flex items-start justify-between mb-3">';
+                    h += '<div><div class="flex items-center space-x-2 mb-1"><span class="font-bold text-gray-800">'+inv.invoice_number+'</span>';
+                    h += '<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold '+st.color+'">'+st.icon+' '+st.label+'</span></div>';
+                    h += '<div class="text-sm text-gray-600">'+stdName+'</div>';
+                    h += '<div class="text-xs text-gray-400">Zeitraum: '+(inv.period_start||'')+' bis '+(inv.period_end||'')+'</div>';
+                    h += '</div>';
+                    h += '<div class="text-right"><div class="text-xl font-bold text-gray-800">'+Number(inv.subtotal||0).toLocaleString('de-DE')+' \u20ac</div>';
+                    h += '<div class="text-xs text-gray-400">netto</div>';
+                    h += '<div class="text-sm font-semibold text-gray-600">'+Number(inv.total||0).toLocaleString('de-DE')+' \u20ac brutto</div>';
+                    h += '</div></div>';
+
+                    // Line items preview
+                    if(lineItems.length > 0) {
+                        h += '<div class="bg-gray-50 rounded-lg p-3 mb-3"><table class="w-full text-xs"><thead><tr class="text-gray-500"><th class="text-left pb-1">Position</th><th class="text-center pb-1">Menge</th><th class="text-right pb-1">Einzelpreis</th><th class="text-right pb-1">Gesamt</th></tr></thead><tbody>';
+                        lineItems.forEach(function(li) {
+                            h += '<tr class="border-t border-gray-200"><td class="py-1 text-gray-700">'+li.description+'</td>';
+                            h += '<td class="py-1 text-center text-gray-500">'+Number(li.quantity)+'</td>';
+                            h += '<td class="py-1 text-right text-gray-500">'+Number(li.unit_price).toLocaleString('de-DE')+' \u20ac</td>';
+                            h += '<td class="py-1 text-right font-semibold">'+Number(li.amount).toLocaleString('de-DE')+' \u20ac</td></tr>';
+                        });
+                        h += '</tbody></table></div>';
+                    }
+
+                    // Rejection reason
+                    if(inv.status==='rejected' && inv.rejection_reason) {
+                        h += '<div class="bg-red-50 border border-red-200 rounded-lg p-2 mb-3 text-xs text-red-700"><strong>Grund:</strong> '+inv.rejection_reason+'</div>';
+                    }
+
+                    // Actions
+                    h += '<div class="flex items-center justify-between">';
+                    h += '<div class="flex space-x-2">';
+                    if(inv.status==='draft') {
+                        h += '<button onclick="approvalAction(\''+inv.id+'\',\'validate\')" class="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-semibold hover:bg-blue-100">\ud83d\udd0d Pr\u00fcfen</button>';
+                        h += '<button onclick="approvalAction(\''+inv.id+'\',\'approve\')" class="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-semibold hover:bg-green-100">\u2705 Freigeben</button>';
+                        h += '<button onclick="approvalAction(\''+inv.id+'\',\'reject\')" class="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs font-semibold hover:bg-red-100">\u274c Zur\u00fcckweisen</button>';
+                    }
+                    if(inv.status==='review') {
+                        h += '<button onclick="approvalAction(\''+inv.id+'\',\'approve\')" class="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-semibold hover:bg-green-100">\u2705 Freigeben</button>';
+                        h += '<button onclick="approvalAction(\''+inv.id+'\',\'reject\')" class="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs font-semibold hover:bg-red-100">\u274c Zur\u00fcckweisen</button>';
+                    }
+                    if(inv.status==='approved') {
+                        h += '<button onclick="approvalAction(\''+inv.id+'\',\'send\')" class="px-3 py-1.5 bg-vit-orange text-white rounded-lg text-xs font-semibold hover:opacity-90">\ud83d\udce8 An LexOffice senden</button>';
+                    }
+                    if(inv.status==='rejected') {
+                        h += '<button onclick="approvalAction(\''+inv.id+'\',\'redraft\')" class="px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg text-xs font-semibold hover:bg-yellow-100">\ud83d\udd04 Neu erstellen</button>';
+                    }
+                    h += '</div>';
+                    h += '<button onclick="showBillingInvoice(\''+inv.id+'\')" class="text-xs text-vit-orange hover:underline font-semibold">Details \u2192</button>';
+                    h += '</div></div>';
+                });
+                container.innerHTML = h;
+            } catch(err) { container.innerHTML = '<div class="text-red-400 p-4">Fehler: '+err.message+'</div>'; }
+        }
+
+        async function approvalAction(invId, action) {
+            try {
+                if(action === 'validate') {
+                    // Generate validation snapshot and show diff
+                    var valResp = await sb.rpc('generate_invoice_validation', {p_invoice_id: invId});
+                    if(valResp.error) throw valResp.error;
+                    var val = valResp.data;
+
+                    await sb.from('billing_invoices').update({
+                        status: 'review',
+                        validation_snapshot: val,
+                        reviewed_by: sbProfile ? sbProfile.id : null,
+                        reviewed_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }).eq('id', invId);
+
+                    // Log audit
+                    await sb.from('billing_invoice_audit').insert({
+                        invoice_id: invId, action: 'submitted_for_review',
+                        old_status: 'draft', new_status: 'review',
+                        performed_by: sbProfile ? sbProfile.id : null,
+                        diff_data: val,
+                        notes: 'Validierung durchgef\u00fchrt. Erwartete Summe: '+Number(val.expected_total).toLocaleString('de-DE')+' \u20ac, Ist-Summe: '+Number(val.actual_total).toLocaleString('de-DE')+' \u20ac, Differenz: '+Number(val.difference).toLocaleString('de-DE')+' \u20ac'
+                    });
+
+                    // Show validation result
+                    var diff = Number(val.difference);
+                    if(Math.abs(diff) < 0.01) {
+                        alert('\u2705 Validierung OK!\n\nExpected: '+Number(val.expected_total).toLocaleString('de-DE')+' \u20ac\nAktuell:  '+Number(val.actual_total).toLocaleString('de-DE')+' \u20ac\nDifferenz: 0 \u20ac\n\nRechnung ist in Pr\u00fcfung.');
+                    } else {
+                        alert('\u26a0\ufe0f Abweichung festgestellt!\n\nExpected: '+Number(val.expected_total).toLocaleString('de-DE')+' \u20ac\nAktuell:  '+Number(val.actual_total).toLocaleString('de-DE')+' \u20ac\nDifferenz: '+diff.toLocaleString('de-DE')+' \u20ac\n\nBitte pr\u00fcfen und ggf. korrigieren.');
+                    }
+
+                } else if(action === 'approve') {
+                    var note = prompt('Freigabenotiz (optional):','');
+                    await sb.from('billing_invoices').update({
+                        status: 'approved',
+                        approved_by: sbProfile ? sbProfile.id : null,
+                        approved_at: new Date().toISOString(),
+                        approval_notes: note || null,
+                        updated_at: new Date().toISOString()
+                    }).eq('id', invId);
+                    await sb.from('billing_invoice_audit').insert({
+                        invoice_id: invId, action: 'approved',
+                        old_status: 'review', new_status: 'approved',
+                        performed_by: sbProfile ? sbProfile.id : null,
+                        notes: note || 'Freigegeben'
+                    });
+
+                } else if(action === 'reject') {
+                    var reason = prompt('Grund f\u00fcr Zur\u00fcckweisung:');
+                    if(!reason) return;
+                    await sb.from('billing_invoices').update({
+                        status: 'rejected',
+                        rejection_reason: reason,
+                        updated_at: new Date().toISOString()
+                    }).eq('id', invId);
+                    await sb.from('billing_invoice_audit').insert({
+                        invoice_id: invId, action: 'rejected',
+                        old_status: 'review', new_status: 'rejected',
+                        performed_by: sbProfile ? sbProfile.id : null,
+                        notes: reason
+                    });
+
+                } else if(action === 'send') {
+                    if(!confirm('Rechnung jetzt finalisieren und an LexOffice senden?')) return;
+                    // Finalize
+                    await sb.from('billing_invoices').update({
+                        status: 'sent',
+                        finalized_by: sbProfile ? sbProfile.id : null,
+                        finalized_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }).eq('id', invId);
+                    await sb.from('billing_invoice_audit').insert({
+                        invoice_id: invId, action: 'sent',
+                        old_status: 'approved', new_status: 'sent',
+                        performed_by: sbProfile ? sbProfile.id : null,
+                        notes: 'Finalisiert und zum Sync bereit'
+                    });
+                    // Trigger LexOffice sync for this single invoice
+                    try {
+                        var session = await sb.auth.getSession();
+                        await fetch(sb.supabaseUrl + '/functions/v1/lexoffice-sync', {
+                            method: 'POST',
+                            headers: {'Content-Type':'application/json','Authorization':'Bearer '+(session.data.session?session.data.session.access_token:''),'apikey':sb.supabaseKey},
+                            body: JSON.stringify({action:'sync-all-finalized'})
+                        });
+                    } catch(syncErr) { console.warn('LexOffice sync:', syncErr); }
+
+                } else if(action === 'redraft') {
+                    await sb.from('billing_invoices').update({
+                        status: 'draft',
+                        rejection_reason: null,
+                        validation_snapshot: null,
+                        updated_at: new Date().toISOString()
+                    }).eq('id', invId);
+                    await sb.from('billing_invoice_audit').insert({
+                        invoice_id: invId, action: 'corrected',
+                        old_status: 'rejected', new_status: 'draft',
+                        performed_by: sbProfile ? sbProfile.id : null,
+                        notes: 'Zur\u00fcck in Entwurf zur Korrektur'
+                    });
+                }
+
+                loadApprovalQueue();
+            } catch(err) { alert('Fehler: '+err.message); }
+        }
+
+        async function generateAllDrafts() {
+            if(!confirm('Monatsrechnungen f\u00fcr alle aktiven Standorte generieren?\n\nDie Rechnungen werden als Entwurf erstellt und m\u00fcssen einzeln gepr\u00fcft werden.')) return;
+            try {
+                var stdResp = await sb.from('standorte').select('id, name').eq('status', 'aktiv').order('name');
+                var standorte = stdResp.data || [];
+                var now = new Date();
+                var year = now.getFullYear();
+                var month = now.getMonth() + 1;
+                var periodStart = year+'-'+String(month).padStart(2,'0')+'-01';
+                var lastDay = new Date(year, month, 0).getDate();
+                var periodEnd = year+'-'+String(month).padStart(2,'0')+'-'+lastDay;
+                var created = 0; var skipped = 0;
+
+                for(var i=0; i<standorte.length; i++) {
+                    var std = standorte[i];
+                    // Check if invoice already exists for this period
+                    var existResp = await sb.from('billing_invoices').select('id').eq('standort_id', std.id).gte('period_start', periodStart).lte('period_start', periodEnd);
+                    if(existResp.data && existResp.data.length > 0) { skipped++; continue; }
+
+                    // Calculate billing
+                    var calcResp = await sb.rpc('calculate_monthly_billing', {p_standort_id: std.id, p_billing_date: periodStart});
+                    var items = calcResp.data || [];
+                    if(items.length === 0) { skipped++; continue; }
+
+                    var subtotal = items.reduce(function(s,r){return s+Number(r.line_total);},0);
+                    var taxAmt = Math.round(subtotal * 0.19 * 100) / 100;
+
+                    // Create invoice
+                    var invNum = 'VB-'+year+String(month).padStart(2,'0')+'-'+(1000+created+1);
+                    var invResp = await sb.from('billing_invoices').insert({
+                        standort_id: std.id,
+                        invoice_number: invNum,
+                        invoice_type: 'monthly',
+                        period_start: periodStart,
+                        period_end: periodEnd,
+                        subtotal: subtotal,
+                        tax_rate: 19,
+                        tax_amount: taxAmt,
+                        total: subtotal + taxAmt,
+                        status: 'draft',
+                        auto_generated: true,
+                        requires_approval: true,
+                        due_date: new Date(year, month, 14).toISOString().slice(0,10),
+                        calculated_snapshot: {items: items, generated_at: new Date().toISOString()},
+                        created_by: sbProfile ? sbProfile.id : null
+                    }).select().single();
+
+                    if(invResp.data) {
+                        // Create line items
+                        var lineItems = items.map(function(item, idx) {
+                            return {
+                                invoice_id: invResp.data.id,
+                                description: item.product_name + (item.detail ? ' ('+item.detail+')' : ''),
+                                quantity: item.quantity,
+                                unit_price: Number(item.unit_price),
+                                amount: Number(item.line_total),
+                                sort_index: idx,
+                                meta: {source: item.source, product_key: item.product_key}
+                            };
+                        });
+                        await sb.from('billing_invoice_line_items').insert(lineItems);
+
+                        // Audit
+                        await sb.from('billing_invoice_audit').insert({
+                            invoice_id: invResp.data.id, action: 'created',
+                            new_status: 'draft',
+                            performed_by: sbProfile ? sbProfile.id : null,
+                            notes: 'Automatisch generiert f\u00fcr '+std.name+' ('+periodStart+' bis '+periodEnd+')'
+                        });
+                        created++;
+                    }
+                }
+
+                alert('\u2705 Fertig!\n\n'+created+' Rechnungsentw\u00fcrfe erstellt\n'+skipped+' \u00fcbersprungen (bereits vorhanden oder keine Positionen)');
+                loadApprovalQueue();
+            } catch(err) { alert('Fehler: '+err.message); }
         }
 
         // ============================================================
@@ -20312,13 +20652,13 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     var variants = shopVariants[p.id] || [];
                     var hasVariants = variants.length > 0;
                     var totalStock = hasVariants ? variants.reduce(function(a,v){return a+v.stock},0) : null;
-                    var inCart = shopCart.find(function(c){return c.id===p.id});
+                    var catIcons = {print:'\ud83d\udda8\ufe0f',textil:'\ud83d\udc55',display:'\ud83c\udfea',digital:'\ud83d\udcbb',give:'\ud83c\udf81'};
                     
                     html += '<div class="vit-card p-5 hover:shadow-md transition">';
                     if (p.image_url) {
-                        html += '<div class="w-full h-40 rounded-lg mb-3 overflow-hidden bg-gray-50"><img src="'+p.image_url+'" alt="'+p.name+'" class="w-full h-full object-contain" onerror="this.parentNode.innerHTML=\'<div class=\\\'flex items-center justify-center h-full text-5xl\\\'>'+(catIcons[p.category]||'🛍️')+'</div>\'"></div>';
+                        html += '<div class="w-full h-40 rounded-lg mb-3 overflow-hidden bg-gray-50"><img src="'+p.image_url+'" alt="'+p.name+'" class="w-full h-full object-contain" onerror="this.parentNode.innerHTML=\'<div class=\\\'flex items-center justify-center h-full text-5xl\\\'>'+(catIcons[p.category]||'\ud83d\udecd\ufe0f')+'</div>\'"></div>';
                     } else {
-                        html += '<div class="w-full h-40 bg-gradient-to-br from-gray-50 to-orange-50 rounded-lg mb-3 flex items-center justify-center text-5xl">' + (catIcons[p.category]||'🛍️') + '</div>';
+                        html += '<div class="w-full h-40 bg-gradient-to-br from-gray-50 to-orange-50 rounded-lg mb-3 flex items-center justify-center text-5xl">' + (catIcons[p.category]||'\ud83d\udecd\ufe0f') + '</div>';
                     }
                     html += '<span class="text-xs font-semibold text-vit-orange uppercase">' + (p.category||'') + '</span>';
                     html += '<h3 class="font-bold text-gray-800 text-sm mt-1">' + p.name + '</h3>';
@@ -20332,34 +20672,46 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                         } else if (totalStock <= 5) {
                             html += '<span class="text-xs font-semibold text-amber-500">Nur noch ' + totalStock + ' auf Lager</span>';
                         } else {
-                            html += '<span class="text-xs text-green-600">✓ Auf Lager (' + totalStock + ')</span>';
+                            html += '<span class="text-xs text-green-600">\u2713 Auf Lager (' + totalStock + ')</span>';
                         }
                         html += '</div>';
                     }
                     
-                    // Size selector for variants
+                    // SIZE + QUANTITY GRID (for textil/variants)
                     if (hasVariants && totalStock > 0) {
-                        html += '<div class="mt-2 flex flex-wrap gap-1" id="sizes_'+p.id+'">';
+                        html += '<div class="mt-3 space-y-1" id="sizeGrid_'+p.id+'">';
+                        html += '<div class="flex items-center text-[9px] text-gray-400 uppercase font-semibold mb-1"><span class="w-10">Gr\u00f6\u00dfe</span><span class="flex-1 text-center">Anzahl</span><span class="w-12 text-right">Lager</span></div>';
                         variants.forEach(function(v) {
                             var oos = v.stock <= 0;
-                            html += '<button onclick="selectShopSize(\x27'+p.id+'\x27,\x27'+v.id+'\x27,\x27'+v.variant_name+'\x27)" ';
-                            html += 'data-vid="'+v.id+'" class="shop-size-btn-'+p.id+' text-[10px] px-2 py-1 rounded border font-semibold ';
-                            html += oos ? 'border-gray-200 text-gray-300 line-through cursor-not-allowed" disabled' : 'border-gray-300 text-gray-600 hover:border-vit-orange hover:text-vit-orange cursor-pointer"';
-                            html += ' title="'+v.variant_name+': '+v.stock+' verfügbar">' + v.variant_name + '</button>';
+                            var inCart = shopCart.find(function(c){return c.variant_id===v.id;});
+                            var cartQty = inCart ? inCart.menge : 0;
+                            html += '<div class="flex items-center gap-1 '+(oos?'opacity-40':'')+'\">';
+                            html += '<span class="w-10 text-[11px] font-bold '+(oos?'text-gray-300 line-through':'text-gray-700')+'">'+v.variant_name+'</span>';
+                            if(!oos) {
+                                html += '<div class="flex-1 flex items-center justify-center">';
+                                html += '<button onclick="shopSizeQty(\''+p.id+'\',\''+v.id+'\',\''+v.variant_name+'\',-1,'+p.price+')" class="w-6 h-6 rounded bg-gray-100 text-gray-500 hover:bg-gray-200 text-xs font-bold flex items-center justify-center">\u2212</button>';
+                                html += '<input type="number" id="sqty_'+v.id+'" min="0" max="'+v.stock+'" value="'+cartQty+'" onchange="shopSizeQtyInput(\''+p.id+'\',\''+v.id+'\',\''+v.variant_name+'\',this.value,'+p.price+')" class="w-10 h-6 text-center text-xs font-bold border border-gray-200 rounded mx-1 '+(cartQty>0?'bg-orange-50 text-vit-orange border-vit-orange':'text-gray-600')+'">';
+                                html += '<button onclick="shopSizeQty(\''+p.id+'\',\''+v.id+'\',\''+v.variant_name+'\',1,'+p.price+')" class="w-6 h-6 rounded bg-gray-100 text-gray-500 hover:bg-gray-200 text-xs font-bold flex items-center justify-center">+</button>';
+                                html += '</div>';
+                                html += '<span class="w-12 text-right text-[10px] text-gray-400">'+v.stock+'</span>';
+                            } else {
+                                html += '<div class="flex-1 text-center text-[10px] text-gray-300">\u2014</div>';
+                                html += '<span class="w-12 text-right text-[10px] text-gray-300">0</span>';
+                            }
+                            html += '</div>';
                         });
                         html += '</div>';
                     }
                     
-                    html += '<div class="flex items-center justify-between mt-3">';
-                    html += '<span class="font-bold text-gray-800">' + fmtEur(p.price) + '</span>';
+                    // Price + total for this product
+                    var productCartItems = shopCart.filter(function(c){return c.id===p.id;});
+                    var productCartTotal = productCartItems.reduce(function(s,c){return s + c.menge * c.preis;},0);
+                    var productCartQty = productCartItems.reduce(function(s,c){return s + c.menge;},0);
                     
-                    if (hasVariants && totalStock > 0) {
-                        html += '<button id="addBtn_'+p.id+'" onclick="addToCartWithSize(\x27'+p.id+'\x27,\x27'+(p.name||'').replace(/\x27/g,'')+'\x27,'+p.price+')" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-300 text-white cursor-not-allowed" disabled>Größe wählen</button>';
-                    } else if (hasVariants && totalStock === 0) {
-                        html += '<span class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-200 text-gray-400">Ausverkauft</span>';
-                    } else {
-                        // Non-variant product (print, digital etc)
-                        html += '<button onclick="addToCart(\x27'+p.id+'\x27,\x27'+(p.name||'').replace(/\x27/g,'')+'\x27,'+p.price+')" class="px-3 py-1.5 text-xs font-semibold rounded-lg ' + (inCart ? 'bg-green-500 text-white' : 'bg-vit-orange text-white hover:opacity-90') + '">' + (inCart ? '\u2713 (' + inCart.menge + ')' : '+ Bestellen') + '</button>';
+                    html += '<div class="flex items-center justify-between mt-3 pt-2 border-t border-gray-100">';
+                    html += '<span class="font-bold text-gray-800">' + fmtEur(p.price) + '</span>';
+                    if(productCartQty > 0) {
+                        html += '<span class="text-xs font-bold text-vit-orange">\ud83d\uded2 '+productCartQty+' St\u00fcck = '+fmtEur(productCartTotal)+'</span>';
                     }
                     html += '</div></div>';
                 });
@@ -20369,29 +20721,52 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             } catch(err) { console.error('Shop:', err); container.innerHTML = '<p class="text-center text-red-400 py-8">Fehler: '+err.message+'</p>'; }
         }
 
-        var shopSelectedSizes = {}; // product_id -> {variant_id, variant_name}
+        var shopSelectedSizes = {}; // kept for backwards compat
         
         function selectShopSize(productId, variantId, variantName) {
-            shopSelectedSizes[productId] = { variant_id: variantId, variant_name: variantName };
-            // Highlight selected
-            document.querySelectorAll('.shop-size-btn-'+productId).forEach(function(b){
-                if(b.dataset.vid === variantId) {
-                    b.className = 'shop-size-btn-'+productId+' text-[10px] px-2 py-1 rounded border font-semibold border-vit-orange bg-vit-orange text-white';
-                } else if (!b.disabled) {
-                    b.className = 'shop-size-btn-'+productId+' text-[10px] px-2 py-1 rounded border font-semibold border-gray-300 text-gray-600 hover:border-vit-orange hover:text-vit-orange cursor-pointer';
-                }
-            });
-            // Enable add button
-            var btn = document.getElementById('addBtn_'+productId);
-            if(btn) {
-                var inCart = shopCart.find(function(c){return c.id===productId && c.variant_id===variantId});
-                btn.disabled = false;
-                btn.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg ' + (inCart ? 'bg-green-500 text-white' : 'bg-vit-orange text-white hover:opacity-90');
-                btn.textContent = inCart ? '\u2713 (' + inCart.menge + ')' : '+ ' + variantName;
+            // Legacy - now handled by updateCartQty
+        }
+
+        function updateCartQty(input) {
+            var pid = input.dataset.pid;
+            var vid = input.dataset.vid;
+            var vname = input.dataset.vname;
+            var pname = input.dataset.pname;
+            var price = parseFloat(input.dataset.price);
+            var qty = parseInt(input.value) || 0;
+            var cartKey = pid + '_' + vid;
+            
+            // Remove existing
+            shopCart = shopCart.filter(function(c){ return c.cartKey !== cartKey; });
+            
+            // Add if qty > 0
+            if(qty > 0) {
+                shopCart.push({
+                    cartKey: cartKey,
+                    id: pid,
+                    variant_id: vid,
+                    variant_name: vname,
+                    name: pname + ' (' + vname + ')',
+                    preis: price,
+                    menge: qty
+                });
             }
+            renderShopCart();
+            // Update the border color of this input's parent
+            var parent = input.closest('div');
+            if(parent) {
+                if(qty > 0) parent.className = parent.className.replace('border-gray-200','border-vit-orange bg-orange-50');
+                else parent.className = parent.className.replace('border-vit-orange bg-orange-50','border-gray-200');
+            }
+            // Update cart count display on product card
+            var cartCount = shopCart.filter(function(c){return c.id===pid;}).reduce(function(s,c){return s+c.menge;},0);
+            // Just update the cart badge
+            var countEl = document.getElementById('shopCartCount');
+            if(countEl) countEl.textContent = shopCart.reduce(function(s,c){return s+c.menge;},0);
         }
 
         function addToCartWithSize(productId, name, preis) {
+            // Legacy - now handled by quantity inputs
             var sel = shopSelectedSizes[productId];
             if (!sel) return;
             // Check stock
@@ -20468,10 +20843,14 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         async function loadMyShopOrders() {
             var el = document.getElementById('myShopOrders');
-            if(!el || !sbStandort) return;
+            if(!el) return;
             el.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-vit-orange"></div></div>';
-            var { data: orders } = await sb.from('shop_orders').select('*, items:shop_order_items(quantity, product_name, variant_name, amount)').eq('standort_id', sbStandort.id).order('created_at', {ascending:false}).limit(20);
-            if(!orders?.length) { el.innerHTML = '<p class="text-center text-gray-400 py-8">Noch keine Bestellungen aufgegeben.</p>'; return; }
+            try {
+                var query = sb.from('shop_orders').select('*, items:shop_order_items(quantity, product_name, variant_name, amount)').order('created_at', {ascending:false}).limit(20);
+                if(sbStandort && sbStandort.id) query = query.eq('standort_id', sbStandort.id);
+                var { data: orders, error } = await query;
+                if(error) throw error;
+                if(!orders || !orders.length) { el.innerHTML = '<p class="text-center text-gray-400 py-8">Noch keine Bestellungen aufgegeben.</p>'; return; }
             var statusC = {pending:'bg-yellow-100 text-yellow-700',confirmed:'bg-blue-100 text-blue-700',shipped:'bg-purple-100 text-purple-700',delivered:'bg-green-100 text-green-700',cancelled:'bg-gray-100 text-gray-400'};
             var statusL = {pending:'⏳ Wird bearbeitet',confirmed:'📋 In Vorbereitung',shipped:'🚚 Unterwegs',delivered:'✅ Zugestellt',cancelled:'❌ Storniert'};
             var statusStep = {pending:1,confirmed:2,shipped:3,delivered:4};
@@ -20512,6 +20891,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 h += '</div>';
             });
             el.innerHTML = h;
+            } catch(err) { console.error('Shop orders:', err); el.innerHTML = '<p class="text-center text-gray-400 py-8">Fehler beim Laden: '+err.message+'</p>'; }
         }
 
         async function submitShopOrder() {
