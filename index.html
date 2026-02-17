@@ -2099,7 +2099,6 @@
                             <button onclick="showControllingTab('benchmark')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="benchmark">Benchmarks</button>
                             <button onclick="showControllingTab('planist')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="planist">Plan / Ist</button>
                             <button onclick="showControllingTab('liquiditaet')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="liquiditaet">Liquiditaet</button>
-                            <button onclick="showControllingTab('wawi')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="wawi">📄 WaWi Belege</button>
                             <button onclick="showControllingTab('ctrlWissen')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="ctrlWissen">📚 Wissen</button>
                         </nav>
                     </div>
@@ -2343,88 +2342,6 @@
                                     <div><p class="font-semibold text-gray-800 text-sm">Positiver Trend ab KW 13</p><p class="text-xs text-gray-600">Fruehjahrsgeschaeft startet - steigende Einnahmen erwartet</p></div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- WaWi Belege Tab -->
-                    <div id="ctrlTabWawi" class="ctrl-tab-content" style="display:none;">
-                        <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
-                            <p class="text-sm text-gray-500">Belege aus der WaWi importieren & auswerten</p>
-                            <button onclick="document.getElementById('wawiFileInput').click()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                                PDF hochladen
-                            </button>
-                            <input type="file" id="wawiFileInput" accept=".pdf" multiple style="display:none" onchange="wawiHandleFiles(this.files)">
-                        </div>
-
-                        <!-- WaWi Sub-Tabs -->
-                        <div class="flex space-x-1 mb-5 bg-gray-100 rounded-lg p-1">
-                            <button onclick="showWawiSubTab('upload')" class="wawi-sub-btn flex-1 py-2 rounded-md text-xs font-semibold transition bg-white text-gray-800 shadow-sm" data-sub="upload">📄 Upload</button>
-                            <button onclick="showWawiSubTab('belege')" class="wawi-sub-btn flex-1 py-2 rounded-md text-xs font-semibold transition text-gray-500" data-sub="belege">📋 Belege</button>
-                            <button onclick="showWawiSubTab('dashboard')" class="wawi-sub-btn flex-1 py-2 rounded-md text-xs font-semibold transition text-gray-500" data-sub="dashboard">📊 Auswertung</button>
-                            <button onclick="showWawiSubTab('leasing')" class="wawi-sub-btn flex-1 py-2 rounded-md text-xs font-semibold transition text-gray-500" data-sub="leasing">🚲 Leasing</button>
-                        </div>
-
-                        <!-- Upload Sub-Tab -->
-                        <div id="wawiSubUpload" class="wawi-sub-content">
-                            <div id="wawiDropZone" class="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center hover:border-vit-orange hover:bg-orange-50/30 transition cursor-pointer mb-6" onclick="document.getElementById('wawiFileInput').click()" ondragover="event.preventDefault();this.classList.add('border-vit-orange','bg-orange-50')" ondragleave="this.classList.remove('border-vit-orange','bg-orange-50')" ondrop="event.preventDefault();this.classList.remove('border-vit-orange','bg-orange-50');wawiHandleFiles(event.dataTransfer.files)">
-                                <div class="text-4xl mb-3">📄</div>
-                                <p class="text-gray-600 font-semibold">PDF-Belege hierher ziehen</p>
-                                <p class="text-gray-400 text-sm mt-1">oder klicken zum Auswählen • Angebote, Aufträge, Rechnungen</p>
-                            </div>
-                            <div id="wawiParseResults" class="space-y-3"></div>
-                        </div>
-
-                        <!-- Belege Sub-Tab -->
-                        <div id="wawiSubBelege" class="wawi-sub-content" style="display:none;">
-                            <div class="flex gap-3 mb-4 flex-wrap">
-                                <select id="wawiFilterTyp" onchange="loadWawiBelege()" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
-                                    <option value="">Alle Typen</option>
-                                    <option value="Angebot">Angebote</option>
-                                    <option value="Auftrag">Aufträge</option>
-                                    <option value="Rechnung">Rechnungen</option>
-                                </select>
-                                <select id="wawiFilterLeasing" onchange="loadWawiBelege()" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
-                                    <option value="">Alle</option>
-                                    <option value="true">Nur Leasing</option>
-                                    <option value="false">Ohne Leasing</option>
-                                </select>
-                                <input type="text" id="wawiFilterSearch" onkeyup="loadWawiBelege()" placeholder="Suche (Beleg-Nr, Kunde...)" class="text-sm border border-gray-300 rounded-lg px-3 py-2 flex-1 min-w-[200px]">
-                            </div>
-                            <div id="wawiListContainer" class="vit-card overflow-hidden">
-                                <div class="p-8 text-center text-gray-400">Wird geladen...</div>
-                            </div>
-                        </div>
-
-                        <!-- Dashboard Sub-Tab -->
-                        <div id="wawiSubDashboard" class="wawi-sub-content" style="display:none;">
-                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="wawiKpiCards"></div>
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                                <div class="vit-card p-5">
-                                    <h3 class="text-sm font-bold text-gray-700 mb-3">📈 Umsatz nach Belegtyp</h3>
-                                    <div id="wawiChartTyp" class="min-h-[200px]"></div>
-                                </div>
-                                <div class="vit-card p-5">
-                                    <h3 class="text-sm font-bold text-gray-700 mb-3">🏆 Top-Produkte</h3>
-                                    <div id="wawiTopProducts" class="min-h-[200px]"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Leasing Sub-Tab -->
-                        <div id="wawiSubLeasing" class="wawi-sub-content" style="display:none;">
-                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="wawiLeasingKpis"></div>
-                            <div class="vit-card p-5">
-                                <h3 class="text-sm font-bold text-gray-700 mb-3">🚲 Leasing-Vorgänge nach Anbieter</h3>
-                                <div id="wawiLeasingTable"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Beleg Detail Modal (shared) -->
-                    <div id="wawiBelegModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-                        <div class="bg-white rounded-xl max-w-3xl w-full max-h-[85vh] overflow-y-auto p-6">
-                            <div id="wawiBelegDetail"></div>
                         </div>
                     </div>
 
@@ -5538,6 +5455,7 @@
                             <button onclick="showStBillingTab('payments')" class="st-billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500" data-tab="payments">💳 Zahlungsstatus</button>
                             <button onclick="showStBillingTab('strategy')" class="st-billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500" data-tab="strategy">🎯 Jahresstrategie</button>
                             <button onclick="showStBillingTab('costs')" class="st-billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500" data-tab="costs">🔍 Kostenaufschlüsselung</button>
+                            <button onclick="showStBillingTab('wawi')" class="st-billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500" data-tab="wawi">📄 WaWi Belege</button>
                         </nav>
                     </div>
 
@@ -5552,6 +5470,61 @@
                     </div>
                     <div id="stBillingTabCosts" class="st-billing-tab-content" style="display:none;">
                         <div id="stBillingCostsContent"></div>
+                    </div>
+                    <div id="stBillingTabWawi" class="st-billing-tab-content" style="display:none;">
+                        <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
+                            <p class="text-sm text-gray-500">Belege aus der WaWi importieren & auswerten</p>
+                            <button onclick="document.getElementById('wawiFileInput').click()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                PDF hochladen
+                            </button>
+                            <input type="file" id="wawiFileInput" accept=".pdf" multiple style="display:none" onchange="wawiHandleFiles(this.files)">
+                        </div>
+
+                        <!-- WaWi Sub-Tabs -->
+                        <div class="flex space-x-1 mb-5 bg-gray-100 rounded-lg p-1">
+                            <button onclick="showWawiSubTab('upload')" class="wawi-sub-btn flex-1 py-2 rounded-md text-xs font-semibold transition bg-white text-gray-800 shadow-sm" data-sub="upload">📄 Upload</button>
+                            <button onclick="showWawiSubTab('belege')" class="wawi-sub-btn flex-1 py-2 rounded-md text-xs font-semibold transition text-gray-500" data-sub="belege">📋 Belege</button>
+                            <button onclick="showWawiSubTab('dashboard')" class="wawi-sub-btn flex-1 py-2 rounded-md text-xs font-semibold transition text-gray-500" data-sub="dashboard">📊 Auswertung</button>
+                            <button onclick="showWawiSubTab('leasing')" class="wawi-sub-btn flex-1 py-2 rounded-md text-xs font-semibold transition text-gray-500" data-sub="leasing">🚲 Leasing</button>
+                        </div>
+
+                        <div id="wawiSubUpload" class="wawi-sub-content">
+                            <div id="wawiDropZone" class="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center hover:border-vit-orange hover:bg-orange-50/30 transition cursor-pointer mb-6" onclick="document.getElementById('wawiFileInput').click()" ondragover="event.preventDefault();this.classList.add('border-vit-orange','bg-orange-50')" ondragleave="this.classList.remove('border-vit-orange','bg-orange-50')" ondrop="event.preventDefault();this.classList.remove('border-vit-orange','bg-orange-50');wawiHandleFiles(event.dataTransfer.files)">
+                                <div class="text-4xl mb-3">📄</div>
+                                <p class="text-gray-600 font-semibold">PDF-Belege hierher ziehen</p>
+                                <p class="text-gray-400 text-sm mt-1">oder klicken zum Auswählen • Angebote, Aufträge, Rechnungen</p>
+                            </div>
+                            <div id="wawiParseResults" class="space-y-3"></div>
+                        </div>
+                        <div id="wawiSubBelege" class="wawi-sub-content" style="display:none;">
+                            <div class="flex gap-3 mb-4 flex-wrap">
+                                <select id="wawiFilterTyp" onchange="loadWawiBelege()" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
+                                    <option value="">Alle Typen</option><option value="Angebot">Angebote</option><option value="Auftrag">Aufträge</option><option value="Rechnung">Rechnungen</option>
+                                </select>
+                                <select id="wawiFilterLeasing" onchange="loadWawiBelege()" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
+                                    <option value="">Alle</option><option value="true">Nur Leasing</option><option value="false">Ohne Leasing</option>
+                                </select>
+                                <input type="text" id="wawiFilterSearch" onkeyup="loadWawiBelege()" placeholder="Suche (Beleg-Nr, Kunde...)" class="text-sm border border-gray-300 rounded-lg px-3 py-2 flex-1 min-w-[200px]">
+                            </div>
+                            <div id="wawiListContainer" class="vit-card overflow-hidden"><div class="p-8 text-center text-gray-400">Wird geladen...</div></div>
+                        </div>
+                        <div id="wawiSubDashboard" class="wawi-sub-content" style="display:none;">
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="wawiKpiCards"></div>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                                <div class="vit-card p-5"><h3 class="text-sm font-bold text-gray-700 mb-3">📈 Umsatz nach Belegtyp</h3><div id="wawiChartTyp" class="min-h-[200px]"></div></div>
+                                <div class="vit-card p-5"><h3 class="text-sm font-bold text-gray-700 mb-3">🏆 Top-Produkte</h3><div id="wawiTopProducts" class="min-h-[200px]"></div></div>
+                            </div>
+                        </div>
+                        <div id="wawiSubLeasing" class="wawi-sub-content" style="display:none;">
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="wawiLeasingKpis"></div>
+                            <div class="vit-card p-5"><h3 class="text-sm font-bold text-gray-700 mb-3">🚲 Leasing-Vorgänge nach Anbieter</h3><div id="wawiLeasingTable"></div></div>
+                        </div>
+                    </div>
+
+                    <!-- Beleg Detail Modal -->
+                    <div id="wawiBelegModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+                        <div class="bg-white rounded-xl max-w-3xl w-full max-h-[85vh] overflow-y-auto p-6"><div id="wawiBelegDetail"></div></div>
                     </div>
                 </div>
 
@@ -6032,7 +6005,7 @@
                 verkauf: '.vk-tab-btn,[data-tab="pipeline"],[data-tab="woche"],[data-tab="auswertung"],[data-tab="training"],[data-tab="vkWissen"]',
                 marketing: '.marketing-tab-btn',
                 einkauf: '.ek-tab-btn',
-                controlling: '.ctrl-tab-btn,[data-tab="cockpit"],[data-tab="bwa"],[data-tab="benchmark"],[data-tab="planist"],[data-tab="liquiditaet"],[data-tab="wawi"],[data-tab="ctrlWissen"]',
+                controlling: '.ctrl-tab-btn,[data-tab="cockpit"],[data-tab="bwa"],[data-tab="benchmark"],[data-tab="planist"],[data-tab="liquiditaet"],[data-tab="ctrlWissen"]',
                 allgemein: '[id^="allgemeinTab-"]',
                 support: '[id^="supportTab-"]'
             };
@@ -8971,8 +8944,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if (el) el.style.display = 'block';
             var btn = document.querySelector('.ctrl-tab-btn[data-tab="' + tabName + '"]');
             if (btn) btn.className = 'ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
-            // Load WaWi data when tab opens
-            if (tabName === 'wawi') { initWawiTab(); }
         }
 
         function showBwaDetail(id) {
@@ -13492,7 +13463,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 {name:'Kalender', view:'kalenderView', status:'live', typ:'standort', version:'2.0.0', details:'Monats/Wochen/Tagesansicht, Wiederkehrende Termine, Teilnehmer, Serien, CRUD komplett, 8 Typen, Mini-Kalender, HQ-Kalender', kiPrio:20, aufwand:'XL', kiTodo:'MS365-Sync, Drag&Drop, Notifications nice-to-have.'},
                 {name:'Aufgaben / Todos', view:'todoView', status:'live', typ:'standort', version:'2.0.0', details:'Todoist-Redesign: Sektionen, Subtasks mit Fortschritt, Board/Kanban Drag&Drop, Detail-Panel, Labels, Kommentare, Quick-Add, Suche – alles DB+Realtime', kiPrio:30, aufwand:'M', kiTodo:'Label-Management UI, Zuweisung an Mitarbeiter.'},
                 {name:'Kommunikation', view:'kommunikationView', status:'live', typ:'standort', version:'3.0.0', details:'Teams-Hybrid: 2-Spalten Chat mit Konversations-Sidebar (Kanäle, Nachrichten, Ankündigungen), Thread-Replies, fixierte Eingabe. Forum (CRUD+Kommentare), Brett (CRUD+Nachr. an Autor), Mini-Kalender – alles DB+Realtime', kiPrio:28, aufwand:'M', kiTodo:'Push-Notifications. Emoji-Reactions. Nachricht bearbeiten/löschen.'},
-                {name:'Zahlen (BWA + WaWi)', view:'controllingView', status:'live', typ:'standort', version:'2.4.0', details:'Performance-Cockpit, BWA-Parser (13+ Formate), KI-Fallback für unbekannte Formate, PDF-Support, Multi-Upload Batch, Detail-Positionen, KPIs, Trend-Sparklines, Plan/Ist, Jahresplan-Upload, WaWi Belege Tab', kiPrio:3, aufwand:'M', kiTodo:'Benchmarks gegen Netzwerk-Durchschnitt, Liquiditätsplanung.'},
+                {name:'Zahlen (BWA)', view:'controllingView', status:'live', typ:'standort', version:'2.4.0', details:'Performance-Cockpit, BWA-Parser (13+ Formate), KI-Fallback für unbekannte Formate, PDF-Support, Multi-Upload Batch, Detail-Positionen, KPIs, Trend-Sparklines, Plan/Ist, Jahresplan-Upload', kiPrio:3, aufwand:'M', kiTodo:'Benchmarks gegen Netzwerk-Durchschnitt, Liquiditätsplanung.'},
                 {name:'Marketing', view:'marketingView', status:'teilweise', typ:'standort', version:'1.0.0', details:'6 Tabs: Performance (Cross-Channel KPIs), Budget (491k€ Jahresbudget, Spending-Chart), Leads (Forecast, Live-Leads), Social (Local Hero), Strategie, Wissen', kiPrio:8, aufwand:'L', kiTodo:'DB-Tabellen für Kampagnen/Budget anlegen, Social-Media Kalender, Content-Bibliothek. Aktuell Demo-Daten aber vollständige UI.'},
                 {name:'Einkauf', view:'einkaufView', status:'teilweise', typ:'standort', version:'1.0.0', details:'5 Tabs: Sortiment (Hauptmarken-Cards, Bestandsmarken, Teilelieferanten), Lieferanten (65 Einträge mit Status/Konditionen/IHT/B2B), Zentralreg. (Cronbank/IHT/HIW-System), Strategie (Fortschritt, ToDos), Wissen (5 Sub-Sections: IHT, Parts-Matrix, DB1, Kernsortiment, Vororder)', kiPrio:12, aufwand:'M', kiTodo:'Lieferanten-DB anlegen (aktuell JS-Array), Konditionen editierbar machen, Bestellvorschläge.'},
                 {name:'Dashboards', view:'dashboardsView', status:'demo', typ:'standort', version:'0.1.0', details:'Tabs vorhanden, Inhalte statisch', kiPrio:10, aufwand:'L', kiTodo:'Echte Charts aus BWA-Daten, Verkaufsdaten, Pipeline-Conversion.'},
@@ -13522,7 +13493,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 {name:'HQ Shop', view:'hqShopView', status:'beta', typ:'hq', version:'1.0.0', details:'Produkte verwalten, Bestellungen einsehen und bestätigen', kiPrio:21, aufwand:'L', kiTodo:'Lagerverwaltung, Versandintegration.'},
                 {name:'HQ Buchhaltung', view:'hqBillingView', status:'beta', typ:'hq', version:'1.0.0', details:'Monats-Drafts, Quartals-Settlement, Strategien, Produkte, Tools – Full Stack mit Supabase Edge Function', kiPrio:2, aufwand:'XL', kiTodo:'Stripe/LexOffice-Integration, PDF-Export, automatischer SEPA-Einzug.'},
                 {name:'Standort Buchhaltung', view:'standortBillingView', status:'beta', typ:'standort', version:'1.0.0', details:'Rechnungsübersicht, Jahresstrategie einreichen, Kostenaufschlüsselung mit Formeln', kiPrio:3, aufwand:'L', kiTodo:'PDF-Download, Zahlungsstatus-Tracking.'},
-                {name:'WaWi Belege (Tab in Zahlen)', view:'controllingView', status:'beta', typ:'standort', version:'1.0.0', details:'PDF-Upload & Parser für Angebote/Aufträge/Rechnungen, Belegübersicht mit Filtern, Umsatz-Dashboard, Leasing-Auswertung, Beleg-Detailansicht. Jetzt als Tab im Zahlen-Modul. Pipeline: Browser-seitiges PDF-Parsing via pdf.js', kiPrio:2, aufwand:'M', kiTodo:'Email-Ingestion (IMAP), Multi-Page PDF Tests, WooCommerce Stock-Sync.'},
+                {name:'WaWi Belege (Tab in Buchhaltung)', view:'standortBillingView', status:'beta', typ:'standort', version:'1.1.0', details:'PDF-Upload & Parser für Angebote/Aufträge/Rechnungen, Belegübersicht mit Filtern, Umsatz-Dashboard, Leasing-Auswertung, Beleg-Detailansicht. Jetzt als Tab im Buchhaltungs-Modul. Pipeline: Browser-seitiges PDF-Parsing via pdf.js', kiPrio:2, aufwand:'M', kiTodo:'Email-Ingestion (IMAP), Multi-Page PDF Tests, WooCommerce Stock-Sync.'},
                 {name:'HQ Einstellungen', view:'hqEinstellungenView', status:'live', typ:'hq', version:'1.2.0', details:'Module aktivieren/deaktivieren, Rollen-Matrix, User-Freigabe – alles DB', kiPrio:36, aufwand:'S', kiTodo:'Branding-Einstellungen. Core funktioniert bereits.'}
             ],
             widgets: [
@@ -18025,6 +17996,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if (tab === 'payments') loadStandortPayments();
             if (tab === 'strategy') loadStandortStrategy();
             if (tab === 'costs') loadStandortCosts();
+            if (tab === 'wawi') initWawiTab();
         }
 
         async function initStandortBilling() {
@@ -19114,17 +19086,11 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             html += '<input id="newMaEmail" type="email" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="vorname.nachname@vitbikes.de"></div>';
             html += '<input type="hidden" id="newMaEmailType" value="vitbikes">';
 
-            // === MODUS: Direkt anlegen vs Einladen ===
-            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Zugangs-Modus</label>';
-            html += '<div class="flex space-x-2 mb-2">';
-            html += '<button type="button" id="newMaModeInvite" onclick="switchNewMaMode(\'invite\')" class="flex-1 py-2 rounded-lg text-xs font-semibold border-2 transition border-vit-orange bg-orange-50 text-orange-700">✉️ Per E-Mail einladen</button>';
-            html += '<button type="button" id="newMaModeDirect" onclick="switchNewMaMode(\'direct\')" class="flex-1 py-2 rounded-lg text-xs font-semibold border-2 transition border-gray-200 bg-white text-gray-500 hover:border-gray-300">🔑 Direkt mit Passwort</button>';
-            html += '</div>';
-            html += '<p id="newMaModeHint" class="text-[10px] text-gray-400">Mitarbeiter erhält eine E-Mail und setzt sein Passwort selbst.</p>';
+            // === Info: Mitarbeiter setzt Passwort selbst via E-Mail ===
+            html += '<div class="bg-blue-50 border border-blue-200 rounded-lg p-3">';
+            html += '<p class="text-xs text-blue-700"><strong>✉️ So funktioniert es:</strong> Der Mitarbeiter erhält eine Willkommens-E-Mail mit einem Link, über den er sein eigenes Passwort setzen kann.</p>';
             html += '</div>';
             html += '<input type="hidden" id="newMaMode" value="invite">';
-
-            html += '<div id="newMaPasswordWrap" style="display:none"><label class="block text-xs font-semibold text-gray-600 mb-1">Passwort * (min. 8 Zeichen)</label><input id="newMaPassword" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="VitBikes2026!"></div>';
 
             // === EBENE (HQ vs Standort) – nur für HQ-Admins sichtbar ===
             if(isHQ) {
@@ -19224,29 +19190,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         function closeNeuerMaModal() { var c = document.getElementById('neuerMaContainer'); if(c) c.remove(); }
 
-        window.switchNewMaMode = function(mode) {
-            var modeInput = document.getElementById('newMaMode');
-            var pwWrap = document.getElementById('newMaPasswordWrap');
-            var inviteBtn = document.getElementById('newMaModeInvite');
-            var directBtn = document.getElementById('newMaModeDirect');
-            var hint = document.getElementById('newMaModeHint');
-            var saveBtn = document.getElementById('newMaSaveBtn');
-            if(modeInput) modeInput.value = mode;
-            if(mode === 'invite') {
-                if(pwWrap) pwWrap.style.display = 'none';
-                if(inviteBtn) inviteBtn.className = 'flex-1 py-2 rounded-lg text-xs font-semibold border-2 transition border-vit-orange bg-orange-50 text-orange-700';
-                if(directBtn) directBtn.className = 'flex-1 py-2 rounded-lg text-xs font-semibold border-2 transition border-gray-200 bg-white text-gray-500 hover:border-gray-300';
-                if(hint) hint.textContent = 'Mitarbeiter erhält eine E-Mail und setzt sein Passwort selbst.';
-                if(saveBtn) saveBtn.textContent = '✉️ Einladen';
-            } else {
-                if(pwWrap) pwWrap.style.display = '';
-                if(directBtn) directBtn.className = 'flex-1 py-2 rounded-lg text-xs font-semibold border-2 transition border-vit-orange bg-orange-50 text-orange-700';
-                if(inviteBtn) inviteBtn.className = 'flex-1 py-2 rounded-lg text-xs font-semibold border-2 transition border-gray-200 bg-white text-gray-500 hover:border-gray-300';
-                if(hint) hint.textContent = 'Du setzt das Passwort und teilst es dem Mitarbeiter mit. Er erhält eine Willkommens-Mail.';
-                if(saveBtn) saveBtn.textContent = '🔑 Anlegen';
-            }
-        };
-
         var newMaEmailTypeValue = 'vitbikes';
 
         function switchNewMaEmailType(typ) {
@@ -19290,15 +19233,12 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var vorname = (document.getElementById('newMaVorname')||{}).value||'';
             var nachname = (document.getElementById('newMaNachname')||{}).value||'';
             var email = (document.getElementById('newMaEmail')||{}).value||'';
-            var pw = (document.getElementById('newMaPassword')||{}).value||'';
-            var mode = (document.getElementById('newMaMode')||{}).value||'invite';
             var stdSel = document.getElementById('newMaStandort');
             var standortId = stdSel ? stdSel.value : null;
             var errEl = document.getElementById('newMaError');
             if(errEl) errEl.style.display = 'none';
 
             if(!vorname.trim() || !nachname.trim() || !email.trim()) { if(errEl){errEl.textContent='Bitte Vorname, Nachname und E-Mail ausfüllen.';errEl.style.display='block';} return; }
-            if(mode === 'direct' && (!pw || pw.length < 8)) { if(errEl){errEl.textContent='Passwort muss mindestens 8 Zeichen haben.';errEl.style.display='block';} return; }
 
             // Rollen basierend auf Ebene sammeln
             var selected = [];
@@ -19317,7 +19257,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(selected.length===0) { if(errEl){errEl.textContent='Bitte mindestens eine Rolle zuweisen.';errEl.style.display='block';} return; }
 
             var btn = document.getElementById('newMaSaveBtn');
-            if(btn) { btn.disabled=true; btn.textContent=mode==='invite'?'Wird eingeladen...':'Wird angelegt...'; }
+            if(btn) { btn.disabled=true; btn.textContent='Wird eingeladen...'; }
 
             var isHqUser = selected.indexOf('hq') >= 0;
 
@@ -19328,7 +19268,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 if(rollenResp.data) rollenResp.data.forEach(function(r){ rollenMap[r.name] = r.id; });
                 var rollenIds = selected.map(function(r){ return rollenMap[r]; }).filter(Boolean);
 
-                // Edge Function aufrufen statt create_full_user RPC
+                // Edge Function aufrufen
                 var session = await sb.auth.getSession();
                 if(!session.data.session) throw { message: 'Nicht eingeloggt' };
 
@@ -19341,14 +19281,13 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     },
                     body: JSON.stringify({
                         email: email.trim().toLowerCase(),
-                        password: mode === 'direct' ? pw : undefined,
                         vorname: vorname.trim(),
                         nachname: nachname.trim(),
                         is_hq: isHqUser,
                         standort_id: isHqUser ? null : (standortId || null),
                         rollen: rollenIds,
                         status: 'aktiv',
-                        mode: mode,
+                        mode: 'invite',
                         portalUrl: window.location.origin + window.location.pathname
                     })
                 });
@@ -19373,8 +19312,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                             status: 'aktiv'
                         }).select().single();
                         if(empInsert.data && empInsert.data.id) {
-                            // Ask if user wants to assign tools now
-                            var assignTools = confirm('\u2705 Mitarbeiter '+(mode==='invite'?'eingeladen':'angelegt')+'!\n'+vorname.trim()+' '+nachname.trim()+'\nRollen: '+selected.map(function(r){return rollenLabels[r]||r;}).join(', ')+'\n\n'+(mode==='invite'?'📧 Einladungs-E-Mail gesendet.':'📧 Willkommens-E-Mail gesendet.')+'\n\nMöchtest du jetzt Tools/Lizenzen zuweisen?');
+                            var assignTools = confirm('✅ Mitarbeiter eingeladen!\n'+vorname.trim()+' '+nachname.trim()+'\nRollen: '+selected.map(function(r){return rollenLabels[r]||r;}).join(', ')+'\n\n📧 Eine E-Mail mit dem Link zur Passwortvergabe wurde gesendet.\n\nMöchtest du jetzt Tools/Lizenzen zuweisen?');
                             if(assignTools) {
                                 await renderPartnerMitarbeiter();
                                 openEmployeeToolsModal(empInsert.data.id);
@@ -19384,12 +19322,12 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     } catch(empErr) { console.warn('Employee record creation:', empErr); }
                 }
                 
-                alert('\u2705 Mitarbeiter '+(mode==='invite'?'eingeladen':'angelegt')+'!\n'+vorname.trim()+' '+nachname.trim()+'\nRollen: '+selected.map(function(r){return rollenLabels[r]||r;}).join(', ')+'\n\n'+(mode==='invite'?'Eine Einladungs-E-Mail wurde an '+email.trim()+' gesendet.\nDer Mitarbeiter kann dort sein Passwort setzen.':'Eine Willkommens-E-Mail wurde an '+email.trim()+' gesendet.\nTeile dem Mitarbeiter sein Passwort mit.'));
+                alert('✅ Mitarbeiter eingeladen!\n'+vorname.trim()+' '+nachname.trim()+'\nRollen: '+selected.map(function(r){return rollenLabels[r]||r;}).join(', ')+'\n\n📧 Eine E-Mail mit dem Link zur Passwortvergabe wurde an '+email.trim()+' gesendet.');
                 renderPartnerMitarbeiter();
                 renderKzMitarbeiter();
             } catch(err) {
                 if(errEl){errEl.textContent='Fehler: '+(err.message||err);errEl.style.display='block';}
-                if(btn) { btn.disabled=false; btn.textContent=mode==='invite'?'✉️ Einladen':'🔑 Anlegen'; }
+                if(btn) { btn.disabled=false; btn.textContent='✉️ Einladen'; }
             }
         }
 
