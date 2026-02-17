@@ -4128,44 +4128,48 @@
                 <!-- MITARBEITER VIEW (Partner/GF) -->
                 <div id="mitarbeiterView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-2">👥 MITARBEITER</h1>
-                    <p class="text-sm text-gray-500 mb-6">Mitarbeiter Ihres Standorts verwalten und Rollen zuweisen.</p>
+                    <p class="text-sm text-gray-500 mb-6">Mitarbeiter verwalten, Tools zuweisen und Abrechnungsübersicht.</p>
 
-                    <!-- KPIs -->
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-gray-800" id="pMaGesamt">0</div><div class="text-xs text-gray-500">Mitarbeiter</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600" id="pMaAktiv">0</div><div class="text-xs text-gray-500">Aktiv</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-blue-600" id="pMaOnb">0</div><div class="text-xs text-gray-500">Im Onboarding</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-vit-orange" id="pMaRollen">4</div><div class="text-xs text-gray-500">Rollen verfügbar</div></div>
+                    <!-- Tabs -->
+                    <div class="flex space-x-1 mb-6 border-b border-gray-200">
+                        <button onclick="showMaTab('liste')" class="ma-tab-btn py-3 px-4 text-sm font-semibold border-b-2 border-vit-orange text-vit-orange" data-matab="liste">👥 Mitarbeiter</button>
+                        <button onclick="showMaTab('tools')" class="ma-tab-btn py-3 px-4 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-matab="tools">🔧 Tools &amp; Lizenzen</button>
+                        <button onclick="showMaTab('kosten')" class="ma-tab-btn py-3 px-4 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-matab="kosten">💰 Kostenübersicht</button>
                     </div>
 
-                    <!-- Action Bar -->
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex space-x-2">
-                            <button onclick="filterPartnerMa('all')" class="p-ma-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white" data-pmf="all">Alle</button>
-                            <button onclick="filterPartnerMa('aktiv')" class="p-ma-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-pmf="aktiv">🟢 Aktiv</button>
-                            <button onclick="filterPartnerMa('demo')" class="p-ma-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-pmf="demo">🔴 Demo</button>
-                            <button onclick="filterPartnerMa('onboarding')" class="p-ma-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-pmf="onboarding">🔵 Onboarding</button>
+                    <!-- TAB 1: Mitarbeiter Liste -->
+                    <div id="maTabListe">
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-gray-800" id="pMaGesamt">0</div><div class="text-xs text-gray-500">Mitarbeiter</div></div>
+                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600" id="pMaAktiv">0</div><div class="text-xs text-gray-500">Aktiv</div></div>
+                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-blue-600" id="pMaTools">0</div><div class="text-xs text-gray-500">Aktive Lizenzen</div></div>
+                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-vit-orange" id="pMaMonatl">0 €</div><div class="text-xs text-gray-500">Toolkosten/Monat</div></div>
                         </div>
-                        <button class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90" onclick="openNeuerMaModal()">+ Neuer Mitarbeiter</button>
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex space-x-2">
+                                <button onclick="filterPartnerMa('all')" class="p-ma-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white" data-pmf="all">Alle</button>
+                                <button onclick="filterPartnerMa('aktiv')" class="p-ma-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-pmf="aktiv">🟢 Aktiv</button>
+                                <button onclick="filterPartnerMa('gekündigt')" class="p-ma-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-pmf="gekündigt">🔴 Gekündigt</button>
+                            </div>
+                            <button class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90" onclick="openNeuerMaModal()">+ Neuer Mitarbeiter</button>
+                        </div>
+                        <div id="maCardList" class="space-y-3"></div>
                     </div>
 
-                    <!-- Mitarbeiter Table -->
-                    <div class="vit-card overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-4 py-3 text-left font-semibold text-gray-600">Name</th>
-                                        <th class="px-4 py-3 text-left font-semibold text-gray-600">E-Mail</th>
-                                        <th class="px-4 py-3 text-center font-semibold text-gray-600">Rollen</th>
-                                        <th class="px-4 py-3 text-center font-semibold text-gray-600">Status</th>
-                                        <th class="px-4 py-3 text-center font-semibold text-gray-600">Eintritt</th>
-                                        <th class="px-4 py-3 text-center font-semibold text-gray-600">Aktion</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="partnerMaBody"></tbody>
-                            </table>
+                    <!-- TAB 2: Tools Matrix -->
+                    <div id="maTabTools" style="display:none;">
+                        <div class="vit-card overflow-hidden">
+                            <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                                <h3 class="font-semibold text-gray-700">Tool-Zuordnung pro Mitarbeiter</h3>
+                                <span class="text-xs text-gray-400">✅ = aktiv · ⏳ = gekündigt (Frist läuft) · ➖ = inaktiv</span>
+                            </div>
+                            <div class="overflow-x-auto" id="maToolsMatrix"></div>
                         </div>
+                    </div>
+
+                    <!-- TAB 3: Kostenübersicht -->
+                    <div id="maTabKosten" style="display:none;">
+                        <div id="maKostenContent"></div>
                     </div>
                 </div>
 
@@ -5068,11 +5072,9 @@
                                         <tr>
                                             <th class="px-4 py-3 text-left font-semibold text-gray-600">Standort</th>
                                             <th class="px-4 py-3 text-left font-semibold text-gray-600">Adresse</th>
-                                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Typ</th>
+                                            <th class="px-4 py-3 text-center font-semibold text-gray-600">WaWi</th>
                                             <th class="px-4 py-3 text-center font-semibold text-gray-600">Status</th>
-                                            <th class="px-4 py-3 text-center font-semibold text-gray-600">Mitarbeiter</th>
-                                            <th class="px-4 py-3 text-center font-semibold text-gray-600">Beitritt</th>
-                                            <th class="px-4 py-3 text-center font-semibold text-gray-600">Telefon</th>
+                                            <th class="px-4 py-3 text-center font-semibold text-gray-600">MA</th>
                                             <th class="px-4 py-3 text-center font-semibold text-gray-600">Aktion</th>
                                         </tr>
                                     </thead>
@@ -17878,6 +17880,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             return rollen.map(function(r){ return rolleBadge(r); }).join(' ');
         }
 
+        var WAWI_OPTIONS = ['tridata','veloport','HIW','app-room','Doitxp','E-vendo','Radfak'];
+        var WAWI_COLORS = {tridata:'bg-blue-100 text-blue-700',veloport:'bg-green-100 text-green-700',HIW:'bg-orange-100 text-orange-700','app-room':'bg-purple-100 text-purple-700',Doitxp:'bg-teal-100 text-teal-700','E-vendo':'bg-red-100 text-red-700',Radfak:'bg-yellow-100 text-yellow-700'};
+
         async function renderKzStandorte() {
             var body=document.getElementById('kzStandorteBody');
             if(!body)return;
@@ -17893,26 +17898,85 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 standorte.forEach(function(s){
                     var st = s.status || 'aktiv';
                     if(filter!=='all' && st!==filter) return;
-                    var d = s.created_at ? new Date(s.created_at) : new Date();
-                    var beitritt = String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+                    var wawi = s.warenwirtschaft || '';
+                    var wawiClass = WAWI_COLORS[wawi] || 'bg-gray-100 text-gray-500';
                     h+='<tr class="border-t border-gray-100 hover:bg-gray-50">';
-                    h+='<td class="px-4 py-3 font-semibold text-gray-800">'+s.name+'</td>';
-                    h+='<td class="px-4 py-3 text-gray-600">'+(s.adresse||s.region||'')+'</td>';
-                    h+='<td class="px-4 py-3"><span class="text-xs px-2 py-0.5 rounded '+(s.is_premium?'bg-vit-orange text-white':'bg-gray-100 text-gray-600')+'">'+(s.is_premium?'Premium':'Standard')+'</span></td>';
+                    h+='<td class="px-4 py-3"><div class="font-semibold text-gray-800">'+s.name+'</div><div class="text-[10px] text-gray-400">'+(s.telefon||'')+'</div></td>';
+                    h+='<td class="px-4 py-3 text-xs text-gray-600">'+(s.adresse||'')+'</td>';
+                    h+='<td class="px-4 py-3 text-center">'+(wawi?'<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold '+wawiClass+'">'+wawi+'</span>':'<span class="text-[10px] text-gray-300">\u2014</span>')+'</td>';
                     h+='<td class="px-4 py-3 text-center">'+statusBadge(st)+'</td>';
                     h+='<td class="px-4 py-3 text-center font-semibold">'+(userCounts[s.id]||0)+'</td>';
-                    h+='<td class="px-4 py-3 text-center text-gray-500 text-xs">'+beitritt+'</td>';
-                    h+='<td class="px-4 py-3 text-center text-xs text-gray-500">'+(s.telefon||'—')+'</td>';
-                    h+='<td class="px-4 py-3 text-center"><button class="text-xs text-vit-orange hover:underline font-semibold" onclick="alert(\''+s.name+'\\nAdresse: '+(s.adresse||'–')+'\\nTelefon: '+(s.telefon||'–')+'\\nSlug: '+s.slug+'\')">Details →</button></td>';
+                    h+='<td class="px-4 py-3 text-center"><button class="text-xs text-vit-orange hover:underline font-semibold" onclick="openStandortDetailModal(\''+s.id+'\')">Details \u2192</button></td>';
                     h+='</tr>';
                 });
-                if(standorte.length===0) h='<tr><td colspan="8" class="text-center py-8 text-gray-400">Keine Standorte.</td></tr>';
+                if(standorte.length===0) h='<tr><td colspan="6" class="text-center py-8 text-gray-400">Keine Standorte.</td></tr>';
                 body.innerHTML=h;
                 var ge=document.getElementById('kzStandorteGesamt');if(ge)ge.textContent=standorte.length;
                 var ak=document.getElementById('kzStandorteAktiv');if(ak)ak.textContent=standorte.filter(function(s){return (s.status||'aktiv')==='aktiv';}).length;
                 var ob=document.getElementById('kzStandorteOnb');if(ob)ob.textContent=standorte.filter(function(s){return s.status==='onboarding';}).length;
                 var of2=document.getElementById('kzStandorteOff');if(of2)of2.textContent=standorte.filter(function(s){return s.status==='offboarding';}).length;
-            } catch(err) { console.error('Standorte:', err); body.innerHTML='<tr><td colspan="8" class="text-center py-4 text-red-400">Fehler: '+err.message+'</td></tr>'; }
+            } catch(err) { console.error('Standorte:', err); body.innerHTML='<tr><td colspan="6" class="text-center py-4 text-red-400">Fehler: '+err.message+'</td></tr>'; }
+        }
+
+        async function openStandortDetailModal(stdId) {
+            try {
+                var resp = await sb.from('standorte').select('*').eq('id', stdId).single();
+                if(resp.error) throw resp.error;
+                var s = resp.data;
+                var svcResp = await sb.from('standort_services').select('*, product:billing_products(name, default_amount)').eq('standort_id', stdId).eq('is_active', true);
+                var services = svcResp.data || [];
+                var empCount = await sb.from('employees').select('id', {count:'exact', head:true}).eq('standort_id', stdId).eq('status','aktiv');
+
+                var html = '<div id="stdDetailOverlay" onclick="closeStdDetailModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
+                html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+                html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">'+s.name+'</h3><button onclick="closeStdDetailModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
+                html += '<div class="grid grid-cols-2 gap-3 mb-5 text-sm">';
+                html += '<div><span class="text-gray-500">Adresse:</span><br><span class="font-semibold">'+(s.adresse||'\u2014')+'</span></div>';
+                html += '<div><span class="text-gray-500">Inhaber:</span><br><span class="font-semibold">'+(s.inhaber_name||'\u2014')+'</span></div>';
+                html += '<div><span class="text-gray-500">Telefon:</span><br><span class="font-semibold">'+(s.telefon||'\u2014')+'</span></div>';
+                html += '<div><span class="text-gray-500">Mitarbeiter (aktiv):</span><br><span class="font-semibold">'+(empCount.count||0)+'</span></div>';
+                html += '</div>';
+                html += '<div class="mb-5"><label class="block text-xs font-semibold text-gray-600 mb-2">\ud83d\udcbb Warenwirtschaft</label>';
+                html += '<div class="grid grid-cols-4 gap-2" id="wawiSelector">';
+                WAWI_OPTIONS.forEach(function(w){
+                    var isActive = s.warenwirtschaft === w;
+                    var cls = isActive ? 'border-vit-orange bg-orange-50 text-orange-700 ring-2 ring-orange-300' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300';
+                    html += '<button onclick="selectWawi(\''+stdId+'\',\''+w+'\',this)" class="wawi-opt px-2 py-2 rounded-lg border-2 text-xs font-semibold transition '+cls+'">'+w+(w==='HIW'?'<br><span class=\\"text-[9px] font-normal text-gray-400\\">+300 \u20ac/M</span>':'')+'</button>';
+                });
+                var noneActive = !s.warenwirtschaft;
+                html += '<button onclick="selectWawi(\''+stdId+'\',null,this)" class="wawi-opt px-2 py-2 rounded-lg border-2 text-xs font-semibold transition '+(noneActive?'border-gray-400 bg-gray-50 text-gray-700 ring-2 ring-gray-300':'border-gray-200 bg-white text-gray-400 hover:border-gray-300')+'">keine</button>';
+                html += '</div>';
+                if(s.warenwirtschaft==='HIW') html += '<p class="text-[10px] text-orange-600 mt-1">\u2139\ufe0f HIW Grundgeb\u00fchr (300 \u20ac/Monat) wird automatisch abgerechnet.</p>';
+                html += '</div>';
+                if(services.length > 0) {
+                    html += '<div class="mb-4"><label class="block text-xs font-semibold text-gray-600 mb-2">Aktive Standort-Services</label><div class="flex flex-wrap gap-1">';
+                    services.forEach(function(svc) {
+                        var name = svc.product ? svc.product.name : svc.product_key;
+                        var price = svc.custom_price || (svc.product ? svc.product.default_amount : 0);
+                        html += '<span class="text-[10px] px-2 py-1 rounded bg-blue-50 text-blue-700">'+name+' ('+Number(price).toLocaleString('de-DE')+' \u20ac)</span>';
+                    });
+                    html += '</div></div>';
+                }
+                html += '<div class="flex space-x-3 mt-4"><button onclick="closeStdDetailModal()" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-semibold text-sm hover:bg-gray-200">Schlie\u00dfen</button></div>';
+                html += '</div></div>';
+                var c = document.createElement('div'); c.id='stdDetailContainer'; c.innerHTML=html; document.body.appendChild(c);
+            } catch(err) { alert('Fehler: '+err.message); }
+        }
+        function closeStdDetailModal() { var c=document.getElementById('stdDetailContainer'); if(c) c.remove(); }
+
+        async function selectWawi(stdId, wawiValue, btn) {
+            document.querySelectorAll('.wawi-opt').forEach(function(b){
+                b.className = b.className.replace(/border-vit-orange|bg-orange-50|text-orange-700|ring-2|ring-orange-300|border-gray-400|bg-gray-50|text-gray-700|ring-gray-300/g,'').trim();
+                b.className += ' border-gray-200 bg-white text-gray-600';
+            });
+            btn.className = btn.className.replace(/border-gray-200|bg-white|text-gray-600|text-gray-400/g,'').trim();
+            btn.className += ' border-vit-orange bg-orange-50 text-orange-700 ring-2 ring-orange-300';
+            try {
+                var resp = await sb.from('standorte').update({ warenwirtschaft: wawiValue, updated_at: new Date().toISOString() }).eq('id', stdId);
+                if(resp.error) throw resp.error;
+                closeStdDetailModal();
+                renderKzStandorte();
+            } catch(err) { alert('Fehler beim Speichern: '+err.message); }
         }
 
         async function renderKzMitarbeiter() {
@@ -18247,53 +18311,246 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             renderPartnerMitarbeiter();
         }
 
+        // ============== EMPLOYEE + TOOLS SYSTEM ==============
+        var _empCache = [];
+        var _empToolsCache = [];
+        var _toolProductsCache = [];
+
+        function showMaTab(tab) {
+            ['liste','tools','kosten'].forEach(function(t){
+                var el=document.getElementById('maTab'+t.charAt(0).toUpperCase()+t.slice(1));
+                if(el) el.style.display=(t===tab)?'':'none';
+            });
+            document.querySelectorAll('.ma-tab-btn').forEach(function(b){
+                var isActive = b.getAttribute('data-matab')===tab;
+                b.className='ma-tab-btn py-3 px-4 text-sm font-semibold border-b-2 '+(isActive?'border-vit-orange text-vit-orange':'border-transparent text-gray-500 hover:text-gray-700');
+            });
+            if(tab==='tools') renderMaToolsMatrix();
+            if(tab==='kosten') renderMaKosten();
+        }
+
         async function renderPartnerMitarbeiter() {
-            var body=document.getElementById('partnerMaBody');
-            if(!body) return;
+            var container=document.getElementById('maCardList');
+            if(!container) return;
             try {
-                // Nur Mitarbeiter des eigenen Standorts laden
-                var query = sb.from('users').select('*, standorte(name), user_rollen(rollen(name,label))').order('name');
-                if(sbStandort && sbStandort.id) {
-                    query = query.eq('standort_id', sbStandort.id);
-                }
-                var resp = await query;
-                if(resp.error) throw resp.error;
-                var users = resp.data || [];
+                var stdId = (sbStandort&&sbStandort.id) ? sbStandort.id : null;
+                var isHQ = currentRoles.indexOf('hq')>=0||(sbProfile&&sbProfile.is_hq);
+                var empQ = sb.from('employees').select('*, employee_tools(*, product:billing_products(name, key, default_amount))').order('nachname');
+                if(stdId && !isHQ) empQ = empQ.eq('standort_id', stdId);
+                var empResp = await empQ;
+                if(empResp.error) throw empResp.error;
+                var emps = empResp.data || [];
+                _empCache = emps;
+                var prodResp = await sb.from('billing_products').select('*').eq('is_per_employee',true).eq('active',true).order('name');
+                _toolProductsCache = (prodResp.data||[]);
                 var filter = currentPartnerMaFilter || 'all';
-                var list = users.filter(function(u){
-                    var st = u.status || 'aktiv';
-                    if(filter!=='all' && st!==filter) return false;
-                    return true;
-                });
-                // KPIs
-                var ge=document.getElementById('pMaGesamt');if(ge)ge.textContent=users.length;
-                var ak=document.getElementById('pMaAktiv');if(ak)ak.textContent=users.filter(function(u){return (u.status||'aktiv')==='aktiv';}).length;
-                var ob=document.getElementById('pMaOnb');if(ob)ob.textContent=users.filter(function(u){return u.status==='onboarding';}).length;
+                var list = emps.filter(function(e){ if(filter!=='all' && e.status!==filter) return false; return true; });
+                var el;
+                el=document.getElementById('pMaGesamt'); if(el) el.textContent=emps.length;
+                el=document.getElementById('pMaAktiv'); if(el) el.textContent=emps.filter(function(e){return e.status==='aktiv';}).length;
+                var totalTools=0, totalCost=0;
+                emps.forEach(function(e){ (e.employee_tools||[]).forEach(function(t){ if(t.is_active){totalTools++;totalCost+=Number(t.custom_price||(t.product?t.product.default_amount:0))||0;} }); });
+                el=document.getElementById('pMaTools'); if(el) el.textContent=totalTools;
+                el=document.getElementById('pMaMonatl'); if(el) el.textContent=totalCost.toLocaleString('de-DE')+' \u20ac';
                 var h='';
-                list.forEach(function(u){
-                    var rollen = (u.user_rollen||[]).map(function(ur){return ur.rollen?ur.rollen.name:'';}).filter(Boolean);
-                    var st = u.status || 'aktiv';
-                    var d = u.created_at ? new Date(u.created_at) : new Date();
-                    var eintritt = String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
-                    h+='<tr class="border-t border-gray-100 hover:bg-gray-50">';
-                    h+='<td class="px-4 py-3"><div class="flex items-center space-x-2"><img src="https://ui-avatars.com/api/?name='+encodeURIComponent(u.name)+'&background=EF7D00&color=fff&size=28" class="w-7 h-7 rounded-full"><span class="font-semibold text-gray-800">'+u.name+'</span></div></td>';
-                    h+='<td class="px-4 py-3 text-gray-500 text-xs">'+u.email+'</td>';
-                    h+='<td class="px-4 py-3 text-center">'+rollenBadges(rollen)+'</td>';
-                    h+='<td class="px-4 py-3 text-center">'+statusBadge(st)+'</td>';
-                    h+='<td class="px-4 py-3 text-center text-gray-500 text-xs">'+eintritt+'</td>';
-                    h+='<td class="px-4 py-3 text-center"><div class="flex justify-center space-x-2">';
-                    h+='<button class="text-xs text-vit-orange hover:underline font-semibold" onclick="openEditMaModal(\''+u.id+'\')">✏️</button>';
-                    h+='<button class="text-xs text-red-400 hover:underline font-semibold" onclick="deleteMa(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')">🗑️</button>';
-                    h+='</div></td>';
-                    h+='</tr>';
+                list.forEach(function(e){
+                    var tools=(e.employee_tools||[]).filter(function(t){return t.is_active;});
+                    var toolBadges=tools.map(function(t){ var name=t.product?t.product.name.replace(/ pro Nutzer/g,''):t.product_key; var isCan=!!t.cancellation_requested_at; return '<span class="inline-block text-[10px] px-1.5 py-0.5 rounded '+(isCan?'bg-yellow-100 text-yellow-700':'bg-blue-100 text-blue-700')+' mr-1 mb-1">'+(isCan?'\u23f3 ':'')+name+'</span>'; }).join('');
+                    var cost=tools.reduce(function(s,t){return s+(Number(t.custom_price||(t.product?t.product.default_amount:0))||0);},0);
+                    var statusColors={aktiv:'bg-green-100 text-green-700',inaktiv:'bg-gray-100 text-gray-500','gek\u00fcndigt':'bg-red-100 text-red-700',ausgeschieden:'bg-gray-200 text-gray-500'};
+                    var stClass=statusColors[e.status]||'bg-gray-100 text-gray-500';
+                    var eintritt=e.anstelldatum?new Date(e.anstelldatum).toLocaleDateString('de-DE',{month:'2-digit',year:'numeric'}):'-';
+                    h+='<div class="vit-card p-4 hover:shadow-md transition">';
+                    h+='<div class="flex items-start justify-between">';
+                    h+='<div class="flex items-center space-x-3">';
+                    h+='<img src="https://ui-avatars.com/api/?name='+encodeURIComponent(e.vorname+' '+e.nachname)+'&background=EF7D00&color=fff&size=40" class="w-10 h-10 rounded-full">';
+                    h+='<div><div class="font-semibold text-gray-800">'+e.vorname+' '+e.nachname+'</div>';
+                    h+='<div class="text-xs text-gray-500">'+(e.position||'-')+' \u00b7 '+(e.abteilung||'-')+' \u00b7 seit '+eintritt+'</div>';
+                    if(e.email) h+='<div class="text-xs text-gray-400">'+e.email+'</div>';
+                    h+='</div></div>';
+                    h+='<div class="flex items-center space-x-2">';
+                    h+='<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold '+stClass+'">'+e.status+'</span>';
+                    h+='<button onclick="openEmployeeToolsModal(\''+e.id+'\')" class="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 font-semibold" title="Tools bearbeiten">\ud83d\udd27 Tools</button>';
+                    h+='<button onclick="openEditEmployeeModal(\''+e.id+'\')" class="text-xs text-vit-orange hover:underline font-semibold">\u270f\ufe0f</button>';
+                    h+='</div></div>';
+                    if(tools.length>0){
+                        h+='<div class="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">';
+                        h+='<div class="flex flex-wrap">'+toolBadges+'</div>';
+                        h+='<span class="text-xs font-bold text-gray-600 whitespace-nowrap ml-2">'+cost.toLocaleString('de-DE')+' \u20ac/M</span>';
+                        h+='</div>';
+                    }
+                    h+='</div>';
                 });
-                if(list.length===0) h='<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Keine Mitarbeiter gefunden.</td></tr>';
-                body.innerHTML=h;
-            } catch(err) { console.error('Partner-MA:', err); body.innerHTML='<tr><td colspan="6" class="text-center py-4 text-red-400">Fehler: '+err.message+'</td></tr>'; }
+                if(list.length===0) h='<div class="vit-card p-8 text-center text-gray-400">Keine Mitarbeiter gefunden.</div>';
+                container.innerHTML=h;
+            } catch(err) { console.error('MA:', err); container.innerHTML='<div class="text-red-400 p-4">Fehler: '+err.message+'</div>'; }
+        }
+
+        // ---- Tool Assignment Modal ----
+        async function openEmployeeToolsModal(empId) {
+            var emp = _empCache.find(function(e){return e.id===empId;});
+            if(!emp) return;
+            var tools = emp.employee_tools || [];
+            var html = '<div id="empToolsOverlay" onclick="closeEmpToolsModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
+            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">\ud83d\udd27 Tools f\u00fcr '+emp.vorname+' '+emp.nachname+'</h3><button onclick="closeEmpToolsModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
+            html += '<p class="text-xs text-gray-500 mb-4">'+(emp.position||'')+' \u00b7 '+(emp.abteilung||'')+'</p>';
+            _toolProductsCache.forEach(function(prod){
+                var existing = tools.find(function(t){return t.product_key===prod.key;});
+                var isActive = existing && existing.is_active;
+                var isCancelled = existing && existing.cancellation_requested_at;
+                var price = (existing && existing.custom_price) ? existing.custom_price : prod.default_amount;
+                html += '<div class="flex items-center justify-between p-3 rounded-lg border mb-2 '+(isActive?(isCancelled?'border-yellow-300 bg-yellow-50':'border-green-300 bg-green-50'):'border-gray-200 bg-white')+'">';
+                html += '<div class="flex items-center space-x-3">';
+                html += '<label class="relative inline-flex items-center cursor-pointer">';
+                html += '<input type="checkbox" class="sr-only peer empToolCheck" data-key="'+prod.key+'" data-empid="'+empId+'"'+(isActive?' checked':'')+(isCancelled?' disabled':'')+'>';
+                html += '<div class="w-9 h-5 bg-gray-200 peer-focus:ring-2 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[\'\'] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-vit-orange"></div>';
+                html += '</label>';
+                html += '<div><div class="text-sm font-semibold text-gray-800">'+prod.name+'</div>';
+                if(isCancelled){ var effDate=new Date(existing.cancellation_effective_at).toLocaleDateString('de-DE'); html+='<div class="text-[10px] text-yellow-600">\u23f3 Gek\u00fcndigt zum '+effDate+'</div>'; }
+                html += '</div></div>';
+                html += '<div class="text-right"><span class="text-sm font-bold text-gray-700">'+Number(price).toLocaleString('de-DE')+' \u20ac</span><span class="text-[10px] text-gray-400">/Monat</span>';
+                if(prod.default_cancellation_days > 0) html += '<br><span class="text-[10px] text-gray-400">'+prod.default_cancellation_days+' Tage Frist</span>';
+                html += '</div></div>';
+            });
+            html += '<div id="empToolsError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mt-3"></div>';
+            html += '<div class="flex space-x-3 mt-4"><button onclick="saveEmployeeTools(\''+empId+'\')" id="saveEmpToolsBtn" class="flex-1 py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">\u2714 Speichern</button>';
+            html += '<button onclick="closeEmpToolsModal()" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-semibold text-sm hover:bg-gray-200">Abbrechen</button></div>';
+            html += '</div></div>';
+            var c = document.createElement('div'); c.id='empToolsContainer'; c.innerHTML=html; document.body.appendChild(c);
+        }
+        function closeEmpToolsModal() { var c=document.getElementById('empToolsContainer'); if(c) c.remove(); }
+
+        async function saveEmployeeTools(empId) {
+            var btn=document.getElementById('saveEmpToolsBtn');
+            var errEl=document.getElementById('empToolsError');
+            if(btn){btn.disabled=true;btn.textContent='Speichern...';}
+            if(errEl) errEl.style.display='none';
+            try {
+                var checks=document.querySelectorAll('.empToolCheck');
+                for(var i=0;i<checks.length;i++){
+                    var chk=checks[i]; var key=chk.getAttribute('data-key'); var shouldBeActive=chk.checked;
+                    if(chk.disabled) continue;
+                    var emp=_empCache.find(function(e){return e.id===empId;});
+                    var existing=(emp&&emp.employee_tools||[]).find(function(t){return t.product_key===key;});
+                    var prod=_toolProductsCache.find(function(p){return p.key===key;});
+                    var cancDays=(prod&&prod.default_cancellation_days)||0;
+                    if(shouldBeActive && !existing){
+                        await sb.from('employee_tools').insert({employee_id:empId,product_key:key,is_active:true,activated_at:new Date().toISOString().slice(0,10),cancellation_period_days:cancDays});
+                    } else if(shouldBeActive && existing && !existing.is_active){
+                        await sb.from('employee_tools').update({is_active:true,activated_at:new Date().toISOString().slice(0,10),deactivated_at:null,cancellation_requested_at:null,cancellation_effective_at:null,updated_at:new Date().toISOString()}).eq('id',existing.id);
+                    } else if(!shouldBeActive && existing && existing.is_active){
+                        if(cancDays > 0){
+                            var effDate=new Date(); effDate.setDate(effDate.getDate()+cancDays);
+                            await sb.from('employee_tools').update({cancellation_requested_at:new Date().toISOString().slice(0,10),cancellation_effective_at:effDate.toISOString().slice(0,10),cancelled_by:sbProfile?sbProfile.id:null,updated_at:new Date().toISOString()}).eq('id',existing.id);
+                        } else {
+                            await sb.from('employee_tools').update({is_active:false,deactivated_at:new Date().toISOString().slice(0,10),updated_at:new Date().toISOString()}).eq('id',existing.id);
+                        }
+                    }
+                }
+                closeEmpToolsModal();
+                renderPartnerMitarbeiter();
+            } catch(err){ if(errEl){errEl.textContent='Fehler: '+err.message;errEl.style.display='block';} if(btn){btn.disabled=false;btn.textContent='\u2714 Speichern';} }
+        }
+
+        // ---- Edit Employee Modal ----
+        async function openEditEmployeeModal(empId) {
+            var emp=_empCache.find(function(e){return e.id===empId;});
+            if(!emp) return;
+            var html='<div id="editEmpOverlay" onclick="closeEditEmpModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
+            html+='<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:460px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html+='<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">\u270f\ufe0f Mitarbeiter bearbeiten</h3><button onclick="closeEditEmpModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
+            html+='<div class="space-y-3">';
+            html+='<div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold text-gray-600 mb-1">Vorname</label><input id="editEmpVorname" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+emp.vorname+'"></div>';
+            html+='<div><label class="block text-xs font-semibold text-gray-600 mb-1">Nachname</label><input id="editEmpNachname" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+emp.nachname+'"></div></div>';
+            html+='<div><label class="block text-xs font-semibold text-gray-600 mb-1">E-Mail</label><input id="editEmpEmail" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+(emp.email||'')+'"></div>';
+            html+='<div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold text-gray-600 mb-1">Position</label><input id="editEmpPosition" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+(emp.position||'')+'"></div>';
+            html+='<div><label class="block text-xs font-semibold text-gray-600 mb-1">Abteilung</label><select id="editEmpAbt" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="Verkauf"'+(emp.abteilung==='Verkauf'?' selected':'')+'>Verkauf</option><option value="Werkstatt"'+(emp.abteilung==='Werkstatt'?' selected':'')+'>Werkstatt</option><option value="Verwaltung"'+(emp.abteilung==='Verwaltung'?' selected':'')+'>Verwaltung</option><option value="Sonstiges"'+(emp.abteilung==='Sonstiges'?' selected':'')+'>Sonstiges</option></select></div></div>';
+            html+='<div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold text-gray-600 mb-1">Status</label><select id="editEmpStatus" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="aktiv"'+(emp.status==='aktiv'?' selected':'')+'>Aktiv</option><option value="inaktiv"'+(emp.status==='inaktiv'?' selected':'')+'>Inaktiv</option><option value="gek\u00fcndigt"'+(emp.status==='gek\u00fcndigt'?' selected':'')+'>Gek\u00fcndigt</option><option value="ausgeschieden"'+(emp.status==='ausgeschieden'?' selected':'')+'>Ausgeschieden</option></select></div>';
+            html+='<div><label class="block text-xs font-semibold text-gray-600 mb-1">Anstelldatum</label><input id="editEmpStart" type="date" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+(emp.anstelldatum||'')+'"></div></div>';
+            html+='<div><label class="block text-xs font-semibold text-gray-600 mb-1">Austrittsdatum</label><input id="editEmpEnd" type="date" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+(emp.austrittsdatum||'')+'"></div>';
+            html+='</div>';
+            html+='<div class="flex space-x-3 mt-4"><button onclick="saveEditEmployee(\''+empId+'\')" id="saveEditEmpBtn" class="flex-1 py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Speichern</button>';
+            html+='<button onclick="closeEditEmpModal()" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-semibold text-sm hover:bg-gray-200">Abbrechen</button></div>';
+            html+='</div></div>';
+            var c=document.createElement('div');c.id='editEmpContainer';c.innerHTML=html;document.body.appendChild(c);
+        }
+        function closeEditEmpModal(){var c=document.getElementById('editEmpContainer');if(c)c.remove();}
+        async function saveEditEmployee(empId){
+            var btn=document.getElementById('saveEditEmpBtn');
+            if(btn){btn.disabled=true;btn.textContent='Speichern...';}
+            try{
+                await sb.from('employees').update({vorname:document.getElementById('editEmpVorname').value.trim(),nachname:document.getElementById('editEmpNachname').value.trim(),email:document.getElementById('editEmpEmail').value.trim()||null,position:document.getElementById('editEmpPosition').value.trim()||null,abteilung:document.getElementById('editEmpAbt').value,status:document.getElementById('editEmpStatus').value,anstelldatum:document.getElementById('editEmpStart').value||null,austrittsdatum:document.getElementById('editEmpEnd').value||null,updated_at:new Date().toISOString()}).eq('id',empId);
+                closeEditEmpModal(); renderPartnerMitarbeiter();
+            }catch(err){alert('Fehler: '+err.message);if(btn){btn.disabled=false;btn.textContent='Speichern';}}
+        }
+
+        // ---- Tools Matrix (Tab 2) ----
+        function renderMaToolsMatrix(){
+            var el=document.getElementById('maToolsMatrix'); if(!el)return;
+            var emps=_empCache.filter(function(e){return e.status==='aktiv';}); var prods=_toolProductsCache;
+            if(emps.length===0||prods.length===0){el.innerHTML='<p class="p-4 text-gray-400 text-center">Keine Daten.</p>';return;}
+            var h='<table class="w-full text-xs"><thead><tr class="bg-gray-50"><th class="px-3 py-2 text-left font-semibold text-gray-600 sticky left-0 bg-gray-50 z-10">Mitarbeiter</th>';
+            prods.forEach(function(p){h+='<th class="px-2 py-2 text-center font-semibold text-gray-600 whitespace-nowrap" style="writing-mode:vertical-lr;transform:rotate(180deg);max-width:30px;">'+p.name.replace(/ pro Nutzer/g,'')+'</th>';});
+            h+='<th class="px-3 py-2 text-right font-semibold text-gray-600">Summe</th></tr></thead><tbody>';
+            var colTotals=prods.map(function(){return 0;});
+            emps.forEach(function(e){
+                var tools=e.employee_tools||[]; var rowSum=0;
+                h+='<tr class="border-t border-gray-100 hover:bg-gray-50"><td class="px-3 py-2 font-semibold text-gray-800 sticky left-0 bg-white z-10 whitespace-nowrap">'+e.vorname+' '+e.nachname+'</td>';
+                prods.forEach(function(p,idx){
+                    var t=tools.find(function(t){return t.product_key===p.key;}); var isActive=t&&t.is_active; var isCan=t&&t.cancellation_requested_at;
+                    var price=Number(isActive?(t.custom_price||p.default_amount):0);
+                    if(isActive){rowSum+=price;colTotals[idx]+=price;}
+                    h+='<td class="px-2 py-2 text-center">';
+                    if(isActive&&!isCan)h+='<span class="text-green-600">\u2705</span>'; else if(isCan)h+='<span class="text-yellow-500">\u23f3</span>'; else h+='<span class="text-gray-300">\u2796</span>';
+                    h+='</td>';
+                });
+                h+='<td class="px-3 py-2 text-right font-bold text-gray-700">'+rowSum.toLocaleString('de-DE')+' \u20ac</td></tr>';
+            });
+            h+='<tr class="border-t-2 border-gray-300 bg-gray-50 font-bold"><td class="px-3 py-2 sticky left-0 bg-gray-50 z-10">Gesamt</td>';
+            var grandTotal=0; colTotals.forEach(function(ct){h+='<td class="px-2 py-2 text-center text-gray-600">'+ct.toLocaleString('de-DE')+'</td>';grandTotal+=ct;});
+            h+='<td class="px-3 py-2 text-right text-vit-orange">'+grandTotal.toLocaleString('de-DE')+' \u20ac</td></tr>';
+            h+='</tbody></table>';
+            el.innerHTML=h;
+        }
+
+        // ---- Kostenübersicht (Tab 3) ----
+        async function renderMaKosten(){
+            var el=document.getElementById('maKostenContent'); if(!el)return;
+            el.innerHTML='<div class="text-center py-8 text-gray-400">Lade Kosten\u00fcbersicht...</div>';
+            try{
+                var stdId=(sbStandort&&sbStandort.id)?sbStandort.id:null;
+                if(!stdId){el.innerHTML='<div class="text-center py-8 text-gray-400">Standort-Kontext ben\u00f6tigt.</div>';return;}
+                var resp=await sb.rpc('calculate_monthly_billing',{p_standort_id:stdId});
+                if(resp.error) throw resp.error;
+                var rows=resp.data||[];
+                var standortRows=rows.filter(function(r){return r.source==='standort';});
+                var empRows=rows.filter(function(r){return r.source==='employee';});
+                var standortSum=standortRows.reduce(function(s,r){return s+Number(r.line_total);},0);
+                var empSum=empRows.reduce(function(s,r){return s+Number(r.line_total);},0);
+                var h='<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">';
+                h+='<div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-gray-800">'+(standortSum+empSum).toLocaleString('de-DE')+' \u20ac</div><div class="text-xs text-gray-500">Gesamt monatlich (netto)</div></div>';
+                h+='<div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-blue-600">'+standortSum.toLocaleString('de-DE')+' \u20ac</div><div class="text-xs text-gray-500">Standort-Services</div></div>';
+                h+='<div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-purple-600">'+empSum.toLocaleString('de-DE')+' \u20ac</div><div class="text-xs text-gray-500">Mitarbeiter-Tools</div></div>';
+                h+='</div>';
+                if(standortRows.length>0){
+                    h+='<div class="vit-card mb-4"><div class="px-4 py-3 bg-blue-50 border-b"><h3 class="font-semibold text-blue-800">\ud83c\udfe2 Standort-Services</h3></div><table class="w-full text-sm"><tbody>';
+                    standortRows.forEach(function(r){h+='<tr class="border-t border-gray-100"><td class="px-4 py-2 text-gray-700">'+r.product_name+'</td><td class="px-4 py-2 text-center text-gray-500">'+r.quantity+'x</td><td class="px-4 py-2 text-right font-semibold">'+Number(r.line_total).toLocaleString('de-DE')+' \u20ac</td></tr>';});
+                    h+='<tr class="border-t-2 border-blue-200 bg-blue-50"><td class="px-4 py-2 font-bold text-blue-800" colspan="2">Summe Standort</td><td class="px-4 py-2 text-right font-bold text-blue-800">'+standortSum.toLocaleString('de-DE')+' \u20ac</td></tr>';
+                    h+='</tbody></table></div>';
+                }
+                if(empRows.length>0){
+                    h+='<div class="vit-card"><div class="px-4 py-3 bg-purple-50 border-b"><h3 class="font-semibold text-purple-800">\ud83d\udc65 Mitarbeiter-Tools (aggregiert)</h3></div><table class="w-full text-sm"><tbody>';
+                    empRows.forEach(function(r){h+='<tr class="border-t border-gray-100"><td class="px-4 py-2"><div class="text-gray-700">'+r.product_name+'</div><div class="text-[10px] text-gray-400">'+(r.detail||'')+'</div></td><td class="px-4 py-2 text-center text-gray-500">'+r.quantity+'x</td><td class="px-4 py-2 text-right font-semibold">'+Number(r.line_total).toLocaleString('de-DE')+' \u20ac</td></tr>';});
+                    h+='<tr class="border-t-2 border-purple-200 bg-purple-50"><td class="px-4 py-2 font-bold text-purple-800" colspan="2">Summe Mitarbeiter</td><td class="px-4 py-2 text-right font-bold text-purple-800">'+empSum.toLocaleString('de-DE')+' \u20ac</td></tr>';
+                    h+='</tbody></table></div>';
+                }
+                el.innerHTML=h;
+            }catch(err){el.innerHTML='<div class="text-red-400 p-4">Fehler: '+err.message+'</div>';}
         }
 
         function deactivateMa(idx) {
-            // Deprecated - use openEditMaModal instead
+            // Deprecated - use openEditEmployeeModal instead
         }
 
         // Neuer Mitarbeiter Modal
@@ -18528,7 +18785,34 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
                 closeNeuerMaModal();
                 var rollenLabels = {'hq':'HQ','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
+                
+                // Also create employee record for tool tracking
+                if(!isHqUser && standortId) {
+                    try {
+                        var empInsert = await sb.from('employees').insert({
+                            standort_id: standortId,
+                            vorname: vorname.trim(),
+                            nachname: nachname.trim(),
+                            email: email.trim().toLowerCase(),
+                            position: selected.indexOf('inhaber')>=0 ? 'Geschäftsführer' : (selected.indexOf('verkauf')>=0 ? 'Verkäufer' : (selected.indexOf('werkstatt')>=0 ? 'Werkstatt' : 'Mitarbeiter')),
+                            abteilung: selected.indexOf('verkauf')>=0 ? 'Verkauf' : (selected.indexOf('werkstatt')>=0 ? 'Werkstatt' : 'Verwaltung'),
+                            anstelldatum: new Date().toISOString().slice(0,10),
+                            status: 'aktiv'
+                        }).select().single();
+                        if(empInsert.data && empInsert.data.id) {
+                            // Ask if user wants to assign tools now
+                            var assignTools = confirm('\u2705 Mitarbeiter angelegt!\n'+vorname.trim()+' '+nachname.trim()+'\nRollen: '+selected.map(function(r){return rollenLabels[r]||r;}).join(', ')+'\n\nMöchtest du jetzt Tools/Lizenzen zuweisen?');
+                            if(assignTools) {
+                                await renderPartnerMitarbeiter();
+                                openEmployeeToolsModal(empInsert.data.id);
+                                return;
+                            }
+                        }
+                    } catch(empErr) { console.warn('Employee record creation:', empErr); }
+                }
+                
                 alert('\u2705 Mitarbeiter angelegt!\n'+vorname.trim()+' '+nachname.trim()+'\nRollen: '+selected.map(function(r){return rollenLabels[r]||r;}).join(', ')+'\n\nDer Mitarbeiter kann sich sofort mit seinem Passwort anmelden.');
+                renderPartnerMitarbeiter();
                 renderKzMitarbeiter();
             } catch(err) {
                 if(errEl){errEl.textContent='Fehler: '+(err.message||err);errEl.style.display='block';}
