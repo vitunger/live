@@ -3959,7 +3959,7 @@
 
                 <!-- ===== WERBEMITTEL-SHOP ===== -->
                 <div id="shopView" class="view" style="display: none;">
-                    <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center justify-between mb-4">
                         <div>
                             <h1 class="h1-headline text-gray-800">🛍️ WERBEMITTEL-SHOP</h1>
                             <p class="text-sm text-gray-500">Offizielle vit:bikes Werbemittel fuer deinen Standort bestellen.</p>
@@ -3969,6 +3969,14 @@
                         </button>
                     </div>
 
+                    <!-- Shop Tabs -->
+                    <div class="flex space-x-1 mb-6 border-b border-gray-200">
+                        <button onclick="showShopTab('products')" class="shop-main-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-vit-orange text-vit-orange" data-tab="products">🛍️ Sortiment</button>
+                        <button onclick="showShopTab('orders')" class="shop-main-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="orders">📦 Meine Bestellungen</button>
+                    </div>
+
+                    <!-- Tab: Products -->
+                    <div id="shopTabProducts" class="shop-main-tabcontent">
                     <!-- Cart Overlay -->
                     <div id="shopCart" class="hidden mb-6 vit-card p-5 border-2 border-vit-orange">
                         <h3 class="font-bold text-gray-800 mb-3">🛒 Dein Warenkorb</h3>
@@ -3991,6 +3999,12 @@
 
                     <!-- Product Grid -->
                     <div id="shopGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
+                    </div><!-- end shopTabProducts -->
+
+                    <!-- Tab: Meine Bestellungen -->
+                    <div id="shopTabOrders" class="shop-main-tabcontent" style="display:none">
+                        <div id="myShopOrders" class="space-y-3"></div>
+                    </div>
 
                     <!-- Order Confirmation Modal -->
                     <div id="shopOrderModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
@@ -5510,51 +5524,107 @@
                 <!-- ===== HQ SHOP-VERWALTUNG ===== -->
                 <div id="hqShopView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-2">🛍️ WERBEMITTEL-SHOP – VERWALTUNG</h1>
-                    <p class="text-sm text-gray-500 mb-6">Sortiment, Preise und Bestellungen verwalten.</p>
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-vit-orange">20</div><div class="text-xs text-gray-500">Produkte aktiv</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600">34</div><div class="text-xs text-gray-500">Bestellungen (Monat)</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-blue-600">€ 4.280</div><div class="text-xs text-gray-500">Umsatz (Monat)</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-purple-600">€ 126</div><div class="text-xs text-gray-500">⌀ Bestellwert</div></div>
+                    <p class="text-sm text-gray-500 mb-6">Bestellungen bearbeiten, Packlisten drucken, Versand tracken.</p>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="hqShopKpis">
+                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-vit-orange" id="hqShopKpiProducts">-</div><div class="text-xs text-gray-500">Produkte aktiv</div></div>
+                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-yellow-600" id="hqShopKpiPending">-</div><div class="text-xs text-gray-500">Offen / zu packen</div></div>
+                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-blue-600" id="hqShopKpiShipped">-</div><div class="text-xs text-gray-500">Versendet (Monat)</div></div>
+                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600" id="hqShopKpiRevenue">-</div><div class="text-xs text-gray-500">Umsatz (Monat)</div></div>
                     </div>
-                    <!-- Neues Produkt -->
-                    <div class="vit-card p-6 mb-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">➕ Neues Produkt anlegen</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Produktname</label>
-                                <input type="text" id="hqShopName" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="z.B. Regenjacke">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Kategorie</label>
-                                <select id="hqShopKat" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                    <option value="print">🖨️ Print</option>
-                                    <option value="textil">👕 Textilien</option>
-                                    <option value="display">🪧 Displays</option>
-                                    <option value="digital">💻 Digital</option>
-                                    <option value="give">🎁 Giveaways</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Preis (€)</label>
-                                <input type="number" id="hqShopPreis" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="0.00" step="0.01">
-                            </div>
+
+                    <!-- Tabs -->
+                    <div class="flex space-x-1 mb-6 border-b border-gray-200">
+                        <button onclick="showHqShopTab('orders')" class="hq-shop-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-vit-orange text-vit-orange" data-tab="orders">📦 Bestellungen</button>
+                        <button onclick="showHqShopTab('products')" class="hq-shop-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="products">📋 Produkte & Bestand</button>
+                        <button onclick="showHqShopTab('addproduct')" class="hq-shop-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="addproduct">➕ Neues Produkt</button>
+                    </div>
+
+                    <!-- Tab: Bestellungen -->
+                    <div id="hqShopTabOrders" class="hq-shop-tabcontent">
+                        <div class="flex items-center space-x-2 mb-4">
+                            <button onclick="filterHqShopOrders('all')" class="hq-order-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white" data-f="all">Alle</button>
+                            <button onclick="filterHqShopOrders('pending')" class="hq-order-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="pending">🔴 Offen</button>
+                            <button onclick="filterHqShopOrders('confirmed')" class="hq-order-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="confirmed">🟡 Bestätigt</button>
+                            <button onclick="filterHqShopOrders('shipped')" class="hq-order-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="shipped">🔵 Versendet</button>
+                            <button onclick="filterHqShopOrders('delivered')" class="hq-order-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="delivered">🟢 Geliefert</button>
                         </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Beschreibung</label>
-                            <input type="text" id="hqShopDesc" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Kurze Produktbeschreibung">
-                        </div>
-                        <button onclick="addHqShopProduct()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600">🛍️ Produkt anlegen</button>
+                        <div id="hqShopOrders" class="space-y-3"></div>
                     </div>
-                    <!-- Bestellungen -->
-                    <div class="vit-card p-6 mb-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">📦 Letzte Bestellungen</h2>
-                        <div id="hqShopOrders" class="space-y-2"></div>
-                    </div>
-                    <!-- Produkte -->
-                    <div class="vit-card p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">📋 Alle Produkte</h2>
+
+                    <!-- Tab: Produkte -->
+                    <div id="hqShopTabProducts" class="hq-shop-tabcontent" style="display:none">
                         <div id="hqShopProducts" class="space-y-2"></div>
+                    </div>
+
+                    <!-- Tab: Neues Produkt -->
+                    <div id="hqShopTabAddproduct" class="hq-shop-tabcontent" style="display:none">
+                        <div class="vit-card p-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">➕ Neues Produkt anlegen</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Produktname</label>
+                                    <input type="text" id="hqShopName" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="z.B. Regenjacke">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Kategorie</label>
+                                    <select id="hqShopKat" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                        <option value="print">🖨️ Print</option>
+                                        <option value="textil">👕 Textilien</option>
+                                        <option value="display">🪧 Displays</option>
+                                        <option value="digital">💻 Digital</option>
+                                        <option value="give">🎁 Giveaways</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Preis (€)</label>
+                                    <input type="number" id="hqShopPreis" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="0.00" step="0.01">
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Beschreibung</label>
+                                <input type="text" id="hqShopDesc" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Kurze Produktbeschreibung">
+                            </div>
+                            <button onclick="addHqShopProduct()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600">🛍️ Produkt anlegen</button>
+                        </div>
+                    </div>
+
+                    <!-- Packliste Modal -->
+                    <div id="packingListModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                        <div class="bg-white rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-auto">
+                            <div id="packingListContent"></div>
+                            <div class="flex space-x-3 mt-4 print:hidden">
+                                <button onclick="window.print()" class="flex-1 px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600">🖨️ Drucken</button>
+                                <button onclick="document.getElementById('packingListModal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-300">Schließen</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tracking Modal -->
+                    <div id="trackingModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                        <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
+                            <h3 class="font-bold text-lg mb-4">📦 Sendungsverfolgung eintragen</h3>
+                            <input type="hidden" id="trackingOrderId">
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Versanddienstleister</label>
+                                    <select id="trackingCarrier" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                        <option value="DHL">DHL</option>
+                                        <option value="DPD">DPD</option>
+                                        <option value="Hermes">Hermes</option>
+                                        <option value="UPS">UPS</option>
+                                        <option value="GLS">GLS</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tracking-Nummer</label>
+                                    <input type="text" id="trackingNumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="z.B. 00340434161094042557">
+                                </div>
+                            </div>
+                            <div class="flex space-x-3 mt-4">
+                                <button onclick="saveTracking()" class="flex-1 px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600">💾 Speichern & Versenden</button>
+                                <button onclick="document.getElementById('trackingModal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-300">Abbrechen</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -16775,39 +16845,189 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
 
         // === HQ SHOP-VERWALTUNG ===
-        async function renderHqShop(){
-            // Orders from DB
-            var oEl=document.getElementById('hqShopOrders');
-            if(oEl){
-                var { data: orders } = await sb.from('shop_orders').select('*, standort:standorte(name)').order('created_at', {ascending:false}).limit(20);
-                var h='';
-                var statusC={'pending':'bg-yellow-100 text-yellow-700','confirmed':'bg-blue-100 text-blue-700','shipped':'bg-purple-100 text-purple-700','delivered':'bg-green-100 text-green-700','cancelled':'bg-red-100 text-red-700'};
-                var statusL={'pending':'Offen','confirmed':'Bestätigt','shipped':'Versendet','delivered':'Geliefert','cancelled':'Storniert'};
-                (orders||[]).forEach(function(o){
-                    h+='<div class="p-3 bg-gray-50 rounded-lg"><div class="flex items-center justify-between mb-1"><div class="flex items-center space-x-2"><span class="text-xs font-mono text-gray-400">'+o.order_number+'</span><span class="text-xs px-2 py-0.5 rounded-full font-semibold '+(statusC[o.status]||'')+'">'+(statusL[o.status]||o.status)+'</span></div><span class="text-sm font-bold text-gray-800">'+fmtEur(o.total)+'</span></div><p class="text-xs text-gray-600">'+(o.notes||'')+'</p><p class="text-xs text-gray-400">📍 '+(o.standort?.name||'?')+' · '+fmtDate(o.created_at)+'</p>';
-                    if(o.status==='pending'||o.status==='confirmed') {
-                        h+='<div class="flex space-x-2 mt-2">';
-                        if(o.status==='pending') h+='<button onclick="updateShopOrderStatus(\x27'+o.id+'\x27,\x27confirmed\x27)" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">✓ Bestätigen</button>';
-                        h+='<button onclick="updateShopOrderStatus(\x27'+o.id+'\x27,\x27shipped\x27)" class="text-xs px-2 py-1 bg-purple-500 text-white rounded hover:bg-purple-600">📦 Versendet</button>';
-                        h+='</div>';
-                    }
-                    h+='</div>';
-                });
-                if(!orders?.length) h='<p class="text-center text-gray-400 py-4">Noch keine Bestellungen</p>';
-                oEl.innerHTML=h;
-            }
-            // Products from DB
-            var pEl=document.getElementById('hqShopProducts');
-            if(pEl){
-                var { data: products } = await sb.from('shop_products').select('*').order('category');
-                var catIcons = {print:'🖨️',textil:'👕',display:'🏪',digital:'💻',give:'🎁'};
-                var h='';
-                (products||[]).forEach(function(p){
-                    h+='<div class="flex items-center justify-between p-2 bg-gray-50 rounded"><div class="flex items-center space-x-2"><span>'+(catIcons[p.category]||'🛍️')+'</span><span class="text-sm font-semibold">'+p.name+'</span><span class="text-xs text-gray-400">('+p.category+')</span>'+(p.is_active?'':'<span class="text-xs text-red-400">inaktiv</span>')+'</div><span class="text-sm font-bold text-gray-800">'+fmtEur(p.price)+'</span></div>';
-                });
-                pEl.innerHTML=h;
-            }
+        var hqShopOrderFilter = 'all';
+        var hqShopOrdersCache = [];
+
+        function showHqShopTab(tab) {
+            document.querySelectorAll('.hq-shop-tabcontent').forEach(function(el){el.style.display='none';});
+            document.querySelectorAll('.hq-shop-tab').forEach(function(b){b.className='hq-shop-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700';});
+            var tabEl = document.getElementById('hqShopTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            if(tabEl) tabEl.style.display = 'block';
+            var btn = document.querySelector('.hq-shop-tab[data-tab="'+tab+'"]');
+            if(btn) btn.className = 'hq-shop-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-vit-orange text-vit-orange';
+            if(tab==='orders') renderHqShopOrders();
+            if(tab==='products') renderHqShopProducts();
         }
+
+        function filterHqShopOrders(f) {
+            hqShopOrderFilter = f;
+            document.querySelectorAll('.hq-order-filter').forEach(function(b){b.className='hq-order-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600';});
+            var btn = document.querySelector('.hq-order-filter[data-f="'+f+'"]');
+            if(btn) btn.className = 'hq-order-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white';
+            renderHqShopOrders();
+        }
+
+        async function renderHqShop() {
+            // Load KPIs
+            var { data: products } = await sb.from('shop_products').select('id').eq('is_active', true);
+            var el1 = document.getElementById('hqShopKpiProducts'); if(el1) el1.textContent = (products||[]).length;
+
+            var { data: allOrders } = await sb.from('shop_orders').select('id, status, total, created_at').order('created_at', {ascending:false});
+            hqShopOrdersCache = allOrders || [];
+            var pending = hqShopOrdersCache.filter(function(o){return o.status==='pending'||o.status==='confirmed'}).length;
+            var el2 = document.getElementById('hqShopKpiPending'); if(el2) el2.textContent = pending;
+            if(el2 && pending > 0) el2.parentNode.classList.add('ring-2','ring-yellow-400');
+
+            var thisMonth = new Date().toISOString().substring(0,7);
+            var monthOrders = hqShopOrdersCache.filter(function(o){return o.created_at.substring(0,7)===thisMonth});
+            var shipped = monthOrders.filter(function(o){return o.status==='shipped'||o.status==='delivered'}).length;
+            var el3 = document.getElementById('hqShopKpiShipped'); if(el3) el3.textContent = shipped;
+            var revenue = monthOrders.reduce(function(a,o){return a+(parseFloat(o.total)||0)},0);
+            var el4 = document.getElementById('hqShopKpiRevenue'); if(el4) el4.textContent = fmtEur(revenue);
+
+            renderHqShopOrders();
+        }
+
+        async function renderHqShopOrders() {
+            var oEl = document.getElementById('hqShopOrders');
+            if(!oEl) return;
+            var { data: orders } = await sb.from('shop_orders').select('*, standort:standorte(name, ort), items:shop_order_items(*, product:shop_products(name))').order('created_at', {ascending:false}).limit(50);
+            if(!orders?.length) { oEl.innerHTML = '<p class="text-center text-gray-400 py-4">Keine Bestellungen</p>'; return; }
+
+            var filtered = hqShopOrderFilter === 'all' ? orders : orders.filter(function(o){return o.status===hqShopOrderFilter});
+            var statusC = {pending:'bg-red-100 text-red-700',confirmed:'bg-yellow-100 text-yellow-700',shipped:'bg-blue-100 text-blue-700',delivered:'bg-green-100 text-green-700',cancelled:'bg-gray-100 text-gray-400'};
+            var statusL = {pending:'⏳ Offen',confirmed:'📋 Bestätigt',shipped:'🚚 Versendet',delivered:'✅ Geliefert',cancelled:'❌ Storniert'};
+            var h = '';
+            filtered.forEach(function(o) {
+                var itemList = (o.items||[]).map(function(it){return it.quantity+'x '+(it.variant_name?it.variant_name+' ':'')+(it.product?.name||it.product_name)}).join(', ');
+                h += '<div class="vit-card p-4 '+(o.status==='pending'?'border-l-4 border-red-500':'')+'">';
+                h += '<div class="flex items-center justify-between mb-2">';
+                h += '<div class="flex items-center space-x-3"><span class="font-mono text-sm font-bold text-gray-700">'+o.order_number+'</span>';
+                h += '<span class="text-xs px-2 py-0.5 rounded-full font-semibold '+(statusC[o.status]||'')+'">'+(statusL[o.status]||o.status)+'</span></div>';
+                h += '<span class="text-lg font-bold text-gray-800">'+fmtEur(o.total)+'</span></div>';
+                h += '<p class="text-sm text-gray-600 mb-1">📍 <strong>'+(o.standort?.name||'?')+'</strong>'+(o.standort?.ort?' · '+o.standort.ort:'')+'</p>';
+                h += '<p class="text-xs text-gray-500 mb-2">'+itemList+'</p>';
+                h += '<p class="text-xs text-gray-400 mb-3">Bestellt: '+fmtDate(o.created_at)+'</p>';
+
+                // Tracking info
+                if(o.tracking_number) {
+                    var trackUrl = o.tracking_url || getTrackingUrl(o.tracking_carrier, o.tracking_number);
+                    h += '<div class="p-2 bg-blue-50 rounded-lg mb-3 text-xs"><span class="font-semibold text-blue-700">🚚 '+(o.tracking_carrier||'')+': </span>';
+                    h += '<a href="'+trackUrl+'" target="_blank" class="text-blue-600 underline hover:text-blue-800">'+o.tracking_number+'</a></div>';
+                }
+
+                // Action buttons
+                h += '<div class="flex flex-wrap gap-2">';
+                if(o.status==='pending') {
+                    h += '<button onclick="updateShopOrderStatus(\x27'+o.id+'\x27,\x27confirmed\x27)" class="text-xs px-3 py-1.5 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600">✓ Bestätigen</button>';
+                }
+                if(o.status==='pending'||o.status==='confirmed') {
+                    h += '<button onclick="showPackingList(\x27'+o.id+'\x27)" class="text-xs px-3 py-1.5 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700">🖨️ Packliste</button>';
+                    h += '<button onclick="showTrackingModal(\x27'+o.id+'\x27)" class="text-xs px-3 py-1.5 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600">📦 Versenden</button>';
+                }
+                if(o.status==='shipped') {
+                    h += '<button onclick="updateShopOrderStatus(\x27'+o.id+'\x27,\x27delivered\x27)" class="text-xs px-3 py-1.5 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600">✅ Zugestellt</button>';
+                }
+                h += '</div></div>';
+            });
+            oEl.innerHTML = h;
+        }
+
+        async function renderHqShopProducts() {
+            var pEl = document.getElementById('hqShopProducts');
+            if(!pEl) return;
+            var { data: products } = await sb.from('shop_products').select('*, variants:shop_product_variants(*)').order('category');
+            var catIcons = {print:'🖨️',textil:'👕',display:'🏪',digital:'💻',give:'🎁'};
+            var h = '';
+            (products||[]).forEach(function(p) {
+                var totalStock = (p.variants||[]).reduce(function(a,v){return a+v.stock},0);
+                var hasVariants = p.variants && p.variants.length > 0;
+                h += '<div class="vit-card p-4">';
+                h += '<div class="flex items-center justify-between mb-1">';
+                h += '<div class="flex items-center space-x-2"><span>'+(catIcons[p.category]||'🛍️')+'</span><span class="text-sm font-semibold">'+p.name+'</span>';
+                h += '<span class="text-xs text-gray-400">('+p.category+')</span>';
+                if(!p.is_active) h += '<span class="text-xs text-red-400 font-semibold">inaktiv</span>';
+                h += '</div><span class="text-sm font-bold text-gray-800">'+fmtEur(p.price)+'</span></div>';
+                if(hasVariants) {
+                    h += '<div class="flex flex-wrap gap-1 mt-2">';
+                    p.variants.sort(function(a,b){return a.sort_index-b.sort_index}).forEach(function(v) {
+                        var color = v.stock <= 0 ? 'bg-red-50 text-red-500' : v.stock <= 3 ? 'bg-yellow-50 text-yellow-700' : 'bg-green-50 text-green-700';
+                        h += '<span class="text-[10px] px-2 py-0.5 rounded font-mono '+color+'">'+v.variant_name+':'+v.stock+'</span>';
+                    });
+                    h += '<span class="text-[10px] px-2 py-0.5 rounded bg-gray-100 text-gray-600 font-semibold">Σ '+totalStock+'</span>';
+                    h += '</div>';
+                }
+                h += '</div>';
+            });
+            pEl.innerHTML = h;
+        }
+
+        function getTrackingUrl(carrier, number) {
+            var urls = {
+                'DHL': 'https://www.dhl.de/de/privatkunden/pakete-empfangen/verfolgen.html?piececode='+number,
+                'DPD': 'https://tracking.dpd.de/status/de_DE/parcel/'+number,
+                'Hermes': 'https://www.myhermes.de/empfangen/sendungsverfolgung/sendungsinformation/#'+number,
+                'UPS': 'https://www.ups.com/track?tracknum='+number,
+                'GLS': 'https://gls-group.eu/DE/de/paketverfolgung?match='+number
+            };
+            return urls[carrier] || '#';
+        }
+
+        async function showPackingList(orderId) {
+            var { data: order } = await sb.from('shop_orders').select('*, standort:standorte(name, strasse, plz, ort), items:shop_order_items(*, product:shop_products(name, sku))').eq('id', orderId).single();
+            if(!order) return;
+            var h = '<div style="font-family:monospace;font-size:12px;">';
+            h += '<div style="text-align:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:12px;">';
+            h += '<h2 style="margin:0;font-size:16px;">📋 PACKLISTE</h2>';
+            h += '<p style="margin:4px 0 0;">'+order.order_number+' · '+fmtDate(order.created_at)+'</p></div>';
+            h += '<div style="margin-bottom:12px;"><strong>Lieferadresse:</strong><br>';
+            h += (order.standort?.name||'')+'<br>';
+            h += (order.standort?.strasse||'')+'<br>';
+            h += (order.standort?.plz||'')+' '+(order.standort?.ort||'')+'</div>';
+            h += '<table style="width:100%;border-collapse:collapse;">';
+            h += '<tr style="border-bottom:1px solid #000;"><th style="text-align:left;padding:4px;">✓</th><th style="text-align:left;padding:4px;">Menge</th><th style="text-align:left;padding:4px;">Artikel</th><th style="text-align:left;padding:4px;">SKU</th><th style="text-align:left;padding:4px;">Größe</th></tr>';
+            (order.items||[]).forEach(function(it) {
+                h += '<tr style="border-bottom:1px dashed #ccc;">';
+                h += '<td style="padding:6px 4px;">☐</td>';
+                h += '<td style="padding:6px 4px;font-weight:bold;font-size:14px;">'+it.quantity+'x</td>';
+                h += '<td style="padding:6px 4px;">'+(it.product?.name||it.product_name)+'</td>';
+                h += '<td style="padding:6px 4px;color:#888;">'+(it.product?.sku||'')+'</td>';
+                h += '<td style="padding:6px 4px;font-weight:bold;">'+(it.variant_name||'-')+'</td>';
+                h += '</tr>';
+            });
+            h += '</table>';
+            h += '<div style="margin-top:16px;border-top:1px solid #000;padding-top:8px;">';
+            h += '<strong>Gesamt: '+fmtEur(order.total)+'</strong></div>';
+            h += '<div style="margin-top:20px;border-top:1px dashed #ccc;padding-top:8px;">';
+            h += '<p>Gepackt von: _________________ Datum: _________</p></div></div>';
+            document.getElementById('packingListContent').innerHTML = h;
+            document.getElementById('packingListModal').classList.remove('hidden');
+        }
+
+        function showTrackingModal(orderId) {
+            document.getElementById('trackingOrderId').value = orderId;
+            document.getElementById('trackingNumber').value = '';
+            document.getElementById('trackingModal').classList.remove('hidden');
+        }
+
+        async function saveTracking() {
+            var orderId = document.getElementById('trackingOrderId').value;
+            var carrier = document.getElementById('trackingCarrier').value;
+            var number = document.getElementById('trackingNumber').value.trim();
+            if(!number) { alert('Bitte Tracking-Nummer eingeben.'); return; }
+            var trackUrl = getTrackingUrl(carrier, number);
+            await sb.from('shop_orders').update({
+                status: 'shipped',
+                shipped_at: new Date().toISOString(),
+                tracking_number: number,
+                tracking_carrier: carrier,
+                tracking_url: trackUrl,
+                updated_at: new Date().toISOString()
+            }).eq('id', orderId);
+            document.getElementById('trackingModal').classList.add('hidden');
+            renderHqShop();
+        }
+
         window.updateShopOrderStatus = async function(orderId, newStatus) {
             var updates = { status: newStatus, updated_at: new Date().toISOString() };
             if (newStatus === 'confirmed') updates.confirmed_at = new Date().toISOString();
@@ -16825,7 +17045,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 category: document.getElementById('hqShopKat')?.value || 'print',
                 price: parseFloat(p.value)||0,
                 description: document.getElementById('hqShopDesc')?.value || ''
-            }).then(function(){ n.value='';p.value='';if(document.getElementById('hqShopDesc'))document.getElementById('hqShopDesc').value=''; renderHqShop(); });
+            }).then(function(){ n.value='';p.value='';if(document.getElementById('hqShopDesc'))document.getElementById('hqShopDesc').value=''; showHqShopTab('products'); });
         }
         var kzStandorte = []; // loaded from Supabase
 
@@ -19950,6 +20170,64 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var btn=document.querySelector('.shop-filter-btn[data-sf="'+kat+'"]');
             if(btn) btn.className='shop-filter-btn text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white';
             renderShop();
+        }
+
+        function showShopTab(tab) {
+            document.querySelectorAll('.shop-main-tabcontent').forEach(function(el){el.style.display='none';});
+            document.querySelectorAll('.shop-main-tab').forEach(function(b){b.className='shop-main-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700';});
+            var tabEl = document.getElementById('shopTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            if(tabEl) tabEl.style.display = 'block';
+            var btn = document.querySelector('.shop-main-tab[data-tab="'+tab+'"]');
+            if(btn) btn.className = 'shop-main-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-vit-orange text-vit-orange';
+            if(tab==='orders') loadMyShopOrders();
+        }
+
+        async function loadMyShopOrders() {
+            var el = document.getElementById('myShopOrders');
+            if(!el || !sbStandort) return;
+            el.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-vit-orange"></div></div>';
+            var { data: orders } = await sb.from('shop_orders').select('*, items:shop_order_items(quantity, product_name, variant_name, amount)').eq('standort_id', sbStandort.id).order('created_at', {ascending:false}).limit(20);
+            if(!orders?.length) { el.innerHTML = '<p class="text-center text-gray-400 py-8">Noch keine Bestellungen aufgegeben.</p>'; return; }
+            var statusC = {pending:'bg-yellow-100 text-yellow-700',confirmed:'bg-blue-100 text-blue-700',shipped:'bg-purple-100 text-purple-700',delivered:'bg-green-100 text-green-700',cancelled:'bg-gray-100 text-gray-400'};
+            var statusL = {pending:'⏳ Wird bearbeitet',confirmed:'📋 In Vorbereitung',shipped:'🚚 Unterwegs',delivered:'✅ Zugestellt',cancelled:'❌ Storniert'};
+            var statusStep = {pending:1,confirmed:2,shipped:3,delivered:4};
+            var h = '';
+            orders.forEach(function(o) {
+                var step = statusStep[o.status] || 0;
+                h += '<div class="vit-card p-5">';
+                h += '<div class="flex items-center justify-between mb-3">';
+                h += '<div><span class="font-mono text-sm font-bold text-gray-700">'+o.order_number+'</span>';
+                h += '<span class="ml-2 text-xs px-2 py-0.5 rounded-full font-semibold '+(statusC[o.status]||'')+'">'+(statusL[o.status]||o.status)+'</span></div>';
+                h += '<span class="text-lg font-bold text-gray-800">'+fmtEur(o.total)+'</span></div>';
+                
+                // Progress bar
+                h += '<div class="flex items-center space-x-1 mb-4">';
+                ['Bestellt','Vorbereitung','Versendet','Zugestellt'].forEach(function(label, i) {
+                    var active = i < step;
+                    h += '<div class="flex-1"><div class="h-1.5 rounded-full '+(active?'bg-vit-orange':'bg-gray-200')+'"></div>';
+                    h += '<p class="text-[9px] text-center mt-0.5 '+(active?'text-vit-orange font-semibold':'text-gray-400')+'">'+label+'</p></div>';
+                });
+                h += '</div>';
+                
+                // Items
+                h += '<div class="space-y-1 mb-3">';
+                (o.items||[]).forEach(function(it) {
+                    h += '<div class="flex justify-between text-xs text-gray-600"><span>'+it.quantity+'x '+(it.variant_name?it.variant_name+' ':'')+it.product_name+'</span><span class="font-semibold">'+fmtEur(it.amount)+'</span></div>';
+                });
+                h += '</div>';
+                
+                // Tracking
+                if(o.tracking_number) {
+                    var trackUrl = o.tracking_url || '#';
+                    h += '<a href="'+trackUrl+'" target="_blank" class="inline-flex items-center space-x-2 px-3 py-2 bg-blue-50 rounded-lg text-sm text-blue-700 hover:bg-blue-100">';
+                    h += '<span>🚚 '+(o.tracking_carrier||'Paket')+': <strong>'+o.tracking_number+'</strong></span>';
+                    h += '<span class="text-xs underline">Sendung verfolgen →</span></a>';
+                }
+                
+                h += '<p class="text-xs text-gray-400 mt-2">Bestellt am '+fmtDate(o.created_at)+'</p>';
+                h += '</div>';
+            });
+            el.innerHTML = h;
         }
 
         async function submitShopOrder() {
