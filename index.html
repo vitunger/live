@@ -3994,12 +3994,17 @@
 
                     <!-- Order Confirmation Modal -->
                     <div id="shopOrderModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 text-center">
-                            <div class="text-5xl mb-4">✅</div>
-                            <h3 class="text-xl font-bold text-gray-800 mb-2">Bestellung eingegangen!</h3>
-                            <p class="text-sm text-gray-500 mb-2">Deine Bestellung wird bearbeitet und an deinen Standort geliefert.</p>
-                            <p class="text-xs text-gray-400 mb-6">Bestell-Nr.: VB-<span id="shopOrderNr"></span></p>
-                            <button onclick="document.getElementById('shopOrderModal').classList.add('hidden')" class="bg-vit-orange text-white px-6 py-2 rounded-lg text-sm font-semibold hover:opacity-90">OK</button>
+                        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+                            <div id="shopOrderModalContent">
+                                <div class="text-center">
+                                    <div class="text-5xl mb-4">✅</div>
+                                    <h3 class="text-xl font-bold text-gray-800 mb-2">Bestellung eingegangen!</h3>
+                                    <p class="text-sm text-gray-500 mb-2">Deine Bestellung wird bearbeitet und an deinen Standort geliefert.</p>
+                                </div>
+                            </div>
+                            <div class="text-center mt-4">
+                                <button onclick="document.getElementById('shopOrderModal').classList.add('hidden')" class="bg-vit-orange text-white px-6 py-2 rounded-lg text-sm font-semibold hover:opacity-90">OK</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -13271,7 +13276,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 {name:'Wissen', view:'wissenView', status:'teilweise', typ:'standort', version:'0.5.0', details:'Struktur mit Bereichen (Verkauf, Marketing, Einkauf, Controlling, Allgemein), Suche, Wissen-Tabs in jedem Modul', kiPrio:15, aufwand:'L', kiTodo:'CMS-Backend: Artikel erstellen, Kategorien. Basis für Wissen-Tabs in anderen Modulen.'},
                 {name:'Support', view:'supportView', status:'teilweise', typ:'standort', version:'1.1.0', details:'Tickets mit DB, Kontakte-Seite', kiPrio:22, aufwand:'M', kiTodo:'Ticket-Prioritäten, SLA-Timer, E-Mail-Benachrichtigung.'},
                 {name:'Ideenboard', view:'ideenboardView', status:'live', typ:'standort', version:'1.0.0', details:'Einreichen, Voting, Status – alles DB', kiPrio:34, aufwand:'S', kiTodo:'Kommentar-Funktion. Grundfunktion top.'},
-                {name:'Shop', view:'shopView', status:'demo', typ:'standort', version:'0.1.0', details:'UI + Warenkorb, keine echte Bestelllogik', kiPrio:18, aufwand:'L', kiTodo:'Bestellungen in DB speichern, Bestätigung, HQ-Verarbeitung.'},
+                {name:'Shop', view:'shopView', status:'beta', typ:'standort', version:'1.0.0', details:'Werbemittel bestellen, automatische Rechnungserstellung, LexOffice-Sync', kiPrio:18, aufwand:'L', kiTodo:'Bestellstatus-Tracking, HQ-Bestätigungsworkflow.'},
                 {name:'Aktenschrank', view:'aktenschrankView', status:'live', typ:'standort', version:'1.0.0', details:'Upload, Download, Kategorien – alles DB', kiPrio:31, aufwand:'S', kiTodo:'Ordner-System, Dateigröße-Limits. Funktioniert.'},
                 {name:'Onboarding', view:'onboardingView', status:'teilweise', typ:'standort', version:'0.5.0', details:'Asana-Demo-Integration, Checklisten', kiPrio:7, aufwand:'L', kiTodo:'Echte Asana-API Anbindung oder eigene Checklisten-DB. Wichtig für neue Partner.'},
                 {name:'Mitarbeiter', view:'mitarbeiterView', status:'live', typ:'standort', version:'1.5.0', details:'Anlegen, Rollen, Approval, Passwort-Reset, Deaktivierung', kiPrio:29, aufwand:'S', kiTodo:'Aktivitäts-Log. Funktioniert sehr gut.'}
@@ -13290,7 +13295,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 {name:'HQ Wissen', view:'hqWissenView', status:'teilweise', typ:'hq', version:'0.5.0', details:'Artikel-Übersicht mit Kategorien', kiPrio:13, aufwand:'L', kiTodo:'CMS: Artikel erstellen/bearbeiten/publizieren, Pflichtlektüre.'},
                 {name:'HQ Support', view:'hqSupportView', status:'live', typ:'hq', version:'1.0.0', details:'Netzwerk-Tickets, Status ändern, Prioritäten', kiPrio:24, aufwand:'M', kiTodo:'Ticket-Zuweisung, SLA-Tracking, Auto-Eskalation.'},
                 {name:'HQ Ideen', view:'hqIdeenView', status:'live', typ:'hq', version:'1.0.0', details:'Ideen verwalten, Status ändern, Filter', kiPrio:32, aufwand:'S', kiTodo:'Idee-zu-Projekt Konversion. Grundfunktion top.'},
-                {name:'HQ Shop', view:'hqShopView', status:'demo', typ:'hq', version:'0.1.0', details:'UI zum Hinzufügen, keine echte DB', kiPrio:21, aufwand:'L', kiTodo:'Produktverwaltung CRUD, Bestellübersicht.'},
+                {name:'HQ Shop', view:'hqShopView', status:'beta', typ:'hq', version:'1.0.0', details:'Produkte verwalten, Bestellungen einsehen und bestätigen', kiPrio:21, aufwand:'L', kiTodo:'Lagerverwaltung, Versandintegration.'},
                 {name:'HQ Buchhaltung', view:'hqBillingView', status:'beta', typ:'hq', version:'1.0.0', details:'Monats-Drafts, Quartals-Settlement, Strategien, Produkte, Tools – Full Stack mit Supabase Edge Function', kiPrio:2, aufwand:'XL', kiTodo:'Stripe/LexOffice-Integration, PDF-Export, automatischer SEPA-Einzug.'},
                 {name:'Standort Buchhaltung', view:'standortBillingView', status:'beta', typ:'standort', version:'1.0.0', details:'Rechnungsübersicht, Jahresstrategie einreichen, Kostenaufschlüsselung mit Formeln', kiPrio:3, aufwand:'L', kiTodo:'PDF-Download, Zahlungsstatus-Tracking.'},
                 {name:'HQ Einstellungen', view:'hqEinstellungenView', status:'live', typ:'hq', version:'1.2.0', details:'Module aktivieren/deaktivieren, Rollen-Matrix, User-Freigabe – alles DB', kiPrio:36, aufwand:'S', kiTodo:'Branding-Einstellungen. Core funktioniert bereits.'}
@@ -16770,43 +16775,57 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
 
         // === HQ SHOP-VERWALTUNG ===
-        var hqShopOrders = [
-            {nr:'B-20260214-001',standort:'Grafrath',produkte:'3x Polo-Shirt, 2x Roll-Up',summe:309.70,datum:'14.02.2026',status:'in Bearbeitung'},
-            {nr:'B-20260213-004',standort:'Hamburg',produkte:'100x Visitenkarten, 50x Flyer',summe:138.90,datum:'13.02.2026',status:'versendet'},
-            {nr:'B-20260213-002',standort:'Weilheim',produkte:'5x Trinkflasche, 20x Sattelbezug',summe:122.50,datum:'13.02.2026',status:'versendet'},
-            {nr:'B-20260212-001',standort:'Karlsdorf',produkte:'1x Kundenstopper, 2x Fensterfolie',summe:239.00,datum:'12.02.2026',status:'geliefert'},
-            {nr:'B-20260211-003',standort:'Hamburg',produkte:'10x Softshell-Jacke',summe:799.00,datum:'11.02.2026',status:'geliefert'}
-        ];
-        function renderHqShop(){
-            // Orders
+        async function renderHqShop(){
+            // Orders from DB
             var oEl=document.getElementById('hqShopOrders');
             if(oEl){
+                var { data: orders } = await sb.from('shop_orders').select('*, standort:standorte(name)').order('created_at', {ascending:false}).limit(20);
                 var h='';
-                var statusC={'in Bearbeitung':'bg-yellow-100 text-yellow-700','versendet':'bg-blue-100 text-blue-700','geliefert':'bg-green-100 text-green-700'};
-                hqShopOrders.forEach(function(o){
-                    h+='<div class="p-3 bg-gray-50 rounded-lg"><div class="flex items-center justify-between mb-1"><div class="flex items-center space-x-2"><span class="text-xs font-mono text-gray-400">'+o.nr+'</span><span class="text-xs px-2 py-0.5 rounded-full font-semibold '+(statusC[o.status]||'')+'">'+o.status+'</span></div><span class="text-sm font-bold text-gray-800">€ '+o.summe.toFixed(2)+'</span></div><p class="text-xs text-gray-600">'+o.produkte+'</p><p class="text-xs text-gray-400">📍 '+o.standort+' · '+o.datum+'</p></div>';
+                var statusC={'pending':'bg-yellow-100 text-yellow-700','confirmed':'bg-blue-100 text-blue-700','shipped':'bg-purple-100 text-purple-700','delivered':'bg-green-100 text-green-700','cancelled':'bg-red-100 text-red-700'};
+                var statusL={'pending':'Offen','confirmed':'Bestätigt','shipped':'Versendet','delivered':'Geliefert','cancelled':'Storniert'};
+                (orders||[]).forEach(function(o){
+                    h+='<div class="p-3 bg-gray-50 rounded-lg"><div class="flex items-center justify-between mb-1"><div class="flex items-center space-x-2"><span class="text-xs font-mono text-gray-400">'+o.order_number+'</span><span class="text-xs px-2 py-0.5 rounded-full font-semibold '+(statusC[o.status]||'')+'">'+(statusL[o.status]||o.status)+'</span></div><span class="text-sm font-bold text-gray-800">'+fmtEur(o.total)+'</span></div><p class="text-xs text-gray-600">'+(o.notes||'')+'</p><p class="text-xs text-gray-400">📍 '+(o.standort?.name||'?')+' · '+fmtDate(o.created_at)+'</p>';
+                    if(o.status==='pending'||o.status==='confirmed') {
+                        h+='<div class="flex space-x-2 mt-2">';
+                        if(o.status==='pending') h+='<button onclick="updateShopOrderStatus(\x27'+o.id+'\x27,\x27confirmed\x27)" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">✓ Bestätigen</button>';
+                        h+='<button onclick="updateShopOrderStatus(\x27'+o.id+'\x27,\x27shipped\x27)" class="text-xs px-2 py-1 bg-purple-500 text-white rounded hover:bg-purple-600">📦 Versendet</button>';
+                        h+='</div>';
+                    }
+                    h+='</div>';
                 });
+                if(!orders?.length) h='<p class="text-center text-gray-400 py-4">Noch keine Bestellungen</p>';
                 oEl.innerHTML=h;
             }
-            // Products from shop data
+            // Products from DB
             var pEl=document.getElementById('hqShopProducts');
-            if(pEl && typeof shopProducts!=='undefined'){
+            if(pEl){
+                var { data: products } = await sb.from('shop_products').select('*').order('category');
+                var catIcons = {print:'🖨️',textil:'👕',display:'🏪',digital:'💻',give:'🎁'};
                 var h='';
-                shopProducts.forEach(function(p){
-                    h+='<div class="flex items-center justify-between p-2 bg-gray-50 rounded"><div class="flex items-center space-x-2"><span>'+p.icon+'</span><span class="text-sm font-semibold">'+p.name+'</span><span class="text-xs text-gray-400">('+p.kat+')</span></div><span class="text-sm font-bold text-gray-800">'+(p.preis>0?'€ '+p.preis.toFixed(2):'Kostenlos')+'</span></div>';
+                (products||[]).forEach(function(p){
+                    h+='<div class="flex items-center justify-between p-2 bg-gray-50 rounded"><div class="flex items-center space-x-2"><span>'+(catIcons[p.category]||'🛍️')+'</span><span class="text-sm font-semibold">'+p.name+'</span><span class="text-xs text-gray-400">('+p.category+')</span>'+(p.is_active?'':'<span class="text-xs text-red-400">inaktiv</span>')+'</div><span class="text-sm font-bold text-gray-800">'+fmtEur(p.price)+'</span></div>';
                 });
                 pEl.innerHTML=h;
             }
         }
+        window.updateShopOrderStatus = async function(orderId, newStatus) {
+            var updates = { status: newStatus, updated_at: new Date().toISOString() };
+            if (newStatus === 'confirmed') updates.confirmed_at = new Date().toISOString();
+            if (newStatus === 'shipped') updates.shipped_at = new Date().toISOString();
+            if (newStatus === 'delivered') updates.delivered_at = new Date().toISOString();
+            await sb.from('shop_orders').update(updates).eq('id', orderId);
+            renderHqShop();
+        };
         function addHqShopProduct(){
             var n=document.getElementById('hqShopName');
             var p=document.getElementById('hqShopPreis');
-            if(!n||!n.value.trim()){alert(t('misc_enter_product'));return;}
-            if(typeof shopProducts!=='undefined'){
-                shopProducts.push({id:'prod_new_'+Date.now(),name:n.value.trim(),kat:document.getElementById('hqShopKat').value,preis:parseFloat(p.value)||0,icon:'🆕',beschreibung:document.getElementById('hqShopDesc').value||''});
-            }
-            n.value='';p.value='';document.getElementById('hqShopDesc').value='';
-            renderHqShop();
+            if(!n||!n.value.trim()){alert('Produktname eingeben');return;}
+            sb.from('shop_products').insert({
+                name: n.value.trim(),
+                category: document.getElementById('hqShopKat')?.value || 'print',
+                price: parseFloat(p.value)||0,
+                description: document.getElementById('hqShopDesc')?.value || ''
+            }).then(function(){ n.value='';p.value='';if(document.getElementById('hqShopDesc'))document.getElementById('hqShopDesc').value=''; renderHqShop(); });
         }
         var kzStandorte = []; // loaded from Supabase
 
@@ -19761,31 +19780,37 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         // ========== WERBEMITTEL-SHOP ==========
         var shopCart = [];
+        var shopCurrentFilter = 'all';
+        var shopAllProducts = [];
 
         async function renderShop() {
             var container = document.getElementById('shopGrid');
             if(!container) return;
             try {
-                var resp = await sb.from('shop_produkte').select('*').eq('verfuegbar', true).order('kategorie');
-                if(resp.error) throw resp.error;
-                var products = resp.data || [];
+                if (shopAllProducts.length === 0) {
+                    var resp = await sb.from('shop_products').select('*').eq('is_active', true).order('category');
+                    if(resp.error) throw resp.error;
+                    shopAllProducts = resp.data || [];
+                }
+                var products = shopCurrentFilter === 'all' ? shopAllProducts : shopAllProducts.filter(function(p){ return p.category === shopCurrentFilter; });
+                var catIcons = {print:'🖨️',textil:'👕',display:'🏪',digital:'💻',give:'🎁'};
                 var html = '';
                 products.forEach(function(p) {
                     var inCart = shopCart.find(function(c){return c.id===p.id});
                     html += '<div class="vit-card p-5 hover:shadow-md transition">';
-                    html += '<div class="w-full h-32 bg-gray-100 rounded-lg mb-3 flex items-center justify-center text-4xl">🛍️</div>';
-                    html += '<span class="text-xs font-semibold text-vit-orange uppercase">' + (p.kategorie||'') + '</span>';
+                    html += '<div class="w-full h-32 bg-gradient-to-br from-gray-50 to-orange-50 rounded-lg mb-3 flex items-center justify-center text-5xl">' + (catIcons[p.category]||'🛍️') + '</div>';
+                    html += '<span class="text-xs font-semibold text-vit-orange uppercase">' + (p.category||'') + '</span>';
                     html += '<h3 class="font-bold text-gray-800 text-sm mt-1">' + p.name + '</h3>';
-                    if(p.beschreibung) html += '<p class="text-xs text-gray-500 mt-1">' + p.beschreibung + '</p>';
+                    if(p.description) html += '<p class="text-xs text-gray-500 mt-1 line-clamp-2">' + p.description + '</p>';
                     html += '<div class="flex items-center justify-between mt-3">';
-                    html += '<span class="font-bold text-gray-800">' + (p.preis > 0 ? p.preis.toFixed(2) + ' \u20ac' : 'Kostenlos') + '</span>';
-                    html += '<button onclick="addToCart(\x27'+p.id+'\x27,\x27'+(p.name||'').replace(/\x27/g,'')+'\x27,'+p.preis+')" class="px-3 py-1.5 text-xs font-semibold rounded-lg ' + (inCart ? 'bg-green-500 text-white' : 'bg-vit-orange text-white hover:opacity-90') + '">' + (inCart ? '\u2713 Im Warenkorb' : '+ Bestellen') + '</button>';
+                    html += '<span class="font-bold text-gray-800">' + fmtEur(p.price) + '</span>';
+                    html += '<button onclick="addToCart(\x27'+p.id+'\x27,\x27'+(p.name||'').replace(/\x27/g,'')+'\x27,'+p.price+')" class="px-3 py-1.5 text-xs font-semibold rounded-lg ' + (inCart ? 'bg-green-500 text-white' : 'bg-vit-orange text-white hover:opacity-90') + '">' + (inCart ? '\u2713 (' + inCart.menge + ')' : '+ Bestellen') + '</button>';
                     html += '</div></div>';
                 });
-                if(products.length===0) html = '<div class="col-span-3 text-center py-8 text-gray-400">Keine Produkte.</div>';
+                if(products.length===0) html = '<div class="col-span-3 text-center py-8 text-gray-400">Keine Produkte in dieser Kategorie.</div>';
                 container.innerHTML = html;
                 renderShopCart();
-            } catch(err) { console.error('Shop:', err); }
+            } catch(err) { console.error('Shop:', err); container.innerHTML = '<p class="text-center text-red-400 py-8">Fehler: '+err.message+'</p>'; }
         }
 
         function addToCart(id, name, preis) {
@@ -19809,22 +19834,25 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 count += c.menge;
                 html += '<div class="flex items-center justify-between py-2 border-b border-gray-100">';
                 html += '<div class="flex-1 min-w-0"><span class="text-sm font-medium text-gray-800 truncate block">' + c.name + '</span>';
-                html += '<span class="text-xs text-gray-400">' + c.preis.toFixed(2) + ' \u20ac / St\u00fcck</span></div>';
+                html += '<span class="text-xs text-gray-400">' + fmtEur(c.preis) + ' / St\u00fcck</span></div>';
                 html += '<div class="flex items-center space-x-2 ml-3">';
                 html += '<button onclick="updateShopCart(\x27'+c.id+'\x27,-1)" class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 text-sm font-bold">\u2212</button>';
                 html += '<span class="text-sm font-bold w-6 text-center">' + c.menge + '</span>';
                 html += '<button onclick="updateShopCart(\x27'+c.id+'\x27,1)" class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 text-sm font-bold">+</button>';
-                html += '<span class="text-sm font-bold text-gray-800 w-16 text-right">' + (c.preis*c.menge).toFixed(2) + ' \u20ac</span>';
+                html += '<span class="text-sm font-bold text-gray-800 w-16 text-right">' + fmtEur(c.preis*c.menge) + '</span>';
                 html += '<button onclick="removeFromCart(\x27'+c.id+'\x27)" class="text-gray-300 hover:text-red-500 ml-1">\u2715</button>';
                 html += '</div></div>';
             });
-            html += '<div class="flex justify-between pt-3 font-bold text-gray-800"><span>Gesamt</span><span>' + total.toFixed(2) + ' \u20ac</span></div>';
+            html += '<div class="flex justify-between pt-3 font-bold text-gray-800"><span>Gesamt (netto)</span><span>' + fmtEur(total) + '</span></div>';
+            html += '<div class="flex justify-between text-xs text-gray-400"><span>zzgl. 19% MwSt</span><span>' + fmtEur(total*0.19) + '</span></div>';
+            html += '<div class="flex justify-between pt-1 font-bold text-lg text-vit-orange"><span>Brutto</span><span>' + fmtEur(total*1.19) + '</span></div>';
             container.innerHTML = html;
             var totalEl = document.getElementById('shopCartTotal'); if(totalEl) totalEl.textContent = total.toFixed(2).replace('.',',');
             var countEl = document.getElementById('shopCartCount'); if(countEl) countEl.textContent = count;
         }
 
         function filterShop(kat) {
+            shopCurrentFilter = kat;
             document.querySelectorAll('.shop-filter-btn').forEach(function(b){b.className='shop-filter-btn text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600';});
             var btn=document.querySelector('.shop-filter-btn[data-sf="'+kat+'"]');
             if(btn) btn.className='shop-filter-btn text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white';
@@ -19833,16 +19861,85 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         async function submitShopOrder() {
             if(shopCart.length===0 || !sbUser) return;
+            if(!confirm('Bestellung aufgeben? Die Rechnung wird automatisch erstellt und an deinen Standort gebucht.')) return;
             try {
-                var total = shopCart.reduce(function(a,c){return a+c.preis*c.menge},0);
-                var orderResp = await sb.from('shop_bestellungen').insert({standort_id:sbStandort?sbStandort.id:null, user_id:sbUser.id, gesamt_preis:total}).select().single();
-                if(orderResp.error) throw orderResp.error;
-                var positionen = shopCart.map(function(c){ return {bestellung_id:orderResp.data.id, produkt_id:c.id, menge:c.menge, einzelpreis:c.preis}; });
-                await sb.from('shop_positionen').insert(positionen);
+                var subtotal = shopCart.reduce(function(a,c){return a+c.preis*c.menge},0);
+                var taxAmount = Math.round(subtotal * 0.19 * 100) / 100;
+                var total = Math.round((subtotal + taxAmount) * 100) / 100;
+                var stId = sbStandort ? sbStandort.id : null;
+                if(!stId) { alert('Kein Standort zugeordnet.'); return; }
+
+                // 1. Create shop order
+                var orderNum = 'SHOP-' + new Date().getFullYear() + '-' + Date.now().toString(36).toUpperCase();
+                var { data: order, error: orderErr } = await sb.from('shop_orders').insert({
+                    standort_id: stId,
+                    order_number: orderNum,
+                    subtotal: Math.round(subtotal*100)/100,
+                    tax_amount: taxAmount,
+                    total: total,
+                    ordered_by: sbUser.id,
+                    notes: shopCart.map(function(c){return c.menge+'x '+c.name}).join(', ')
+                }).select().single();
+                if(orderErr) throw orderErr;
+
+                // 2. Create order items
+                var items = shopCart.map(function(c){
+                    return { order_id: order.id, product_id: c.id, product_name: c.name, quantity: c.menge, unit_price: c.preis, amount: c.preis*c.menge };
+                });
+                await sb.from('shop_order_items').insert(items);
+
+                // 3. Create billing invoice (shop_immediate type)
+                var invNum = 'VB-SHOP-' + orderNum.split('-').pop();
+                var today = new Date().toISOString().substring(0,10);
+                var { data: inv, error: invErr } = await sb.from('billing_invoices').insert({
+                    standort_id: stId,
+                    invoice_number: invNum,
+                    invoice_type: 'shop_immediate',
+                    period_start: today,
+                    period_end: today,
+                    subtotal: Math.round(subtotal*100)/100,
+                    tax_amount: taxAmount,
+                    total: total,
+                    status: 'finalized',
+                    finalized_at: new Date().toISOString(),
+                    due_date: new Date(Date.now() + 14*24*60*60*1000).toISOString().substring(0,10),
+                    notes: 'Shop-Bestellung ' + orderNum,
+                    calculated_snapshot: { order_id: order.id, order_number: orderNum, items: shopCart }
+                }).select().single();
+
+                if (!invErr && inv) {
+                    // Link order to invoice
+                    await sb.from('shop_orders').update({ billing_invoice_id: inv.id, status: 'confirmed', confirmed_at: new Date().toISOString() }).eq('id', order.id);
+
+                    // Create billing line items
+                    var billingLines = shopCart.map(function(c, idx){
+                        return { invoice_id: inv.id, description: c.name, quantity: c.menge, unit_price: c.preis, amount: c.preis*c.menge, editable: false, sort_index: idx+1 };
+                    });
+                    await sb.from('billing_invoice_line_items').insert(billingLines);
+
+                    // 4. Auto-sync to LexOffice
+                    try {
+                        var syncResp = await fetch(SUPABASE_URL + '/functions/v1/lexoffice-sync', {
+                            method: 'POST',
+                            headers: { 'Authorization': 'Bearer ' + (await sb.auth.getSession()).data.session.access_token, 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'sync-invoice', invoice_id: inv.id })
+                        });
+                        var syncData = await syncResp.json();
+                        if(syncData.lexofficeId) console.log('Shop order synced to LexOffice:', syncData.lexofficeId);
+                    } catch(syncErr) { console.warn('LexOffice sync delayed:', syncErr); }
+                }
+
                 shopCart = [];
-                alert(t('alert_order_success'));
+                shopAllProducts = [];
+                document.getElementById('shopOrderModal').classList.remove('hidden');
+                document.getElementById('shopOrderModalContent').innerHTML = 
+                    '<div class="text-center"><div class="text-5xl mb-3">✅</div>' +
+                    '<h3 class="font-bold text-xl text-gray-800 mb-2">Bestellung aufgegeben!</h3>' +
+                    '<p class="text-sm text-gray-500 mb-1">Bestellnr: <strong>' + orderNum + '</strong></p>' +
+                    '<p class="text-sm text-gray-500 mb-3">Betrag: <strong>' + fmtEur(total) + ' (brutto)</strong></p>' +
+                    '<p class="text-xs text-gray-400">Die Rechnung findest du unter Buchhaltung → Meine Rechnungen.</p></div>';
                 renderShop();
-            } catch(err) { alert('Fehler: '+err.message); }
+            } catch(err) { alert('Fehler bei Bestellung: '+err.message); console.error(err); }
         }
 
         function removeFromCart(id) {
@@ -24521,6 +24618,45 @@ window.switchWissenTyp = function(typ) {
         el.innerHTML = h;
     };
 
+    // ── PDF Download via Proxy ──
+    window.downloadLexofficePdf = async function(invoiceId, invoiceNumber) {
+        try {
+            var session = (await sb.auth.getSession()).data.session;
+            if (!session) { alert('Bitte erneut einloggen.'); return; }
+            var btn = event.target;
+            btn.textContent = '⏳ Lade...';
+            btn.disabled = true;
+            
+            var resp = await fetch(SUPABASE_URL + '/functions/v1/lexoffice-pdf?invoice_id=' + invoiceId, {
+                headers: {
+                    'Authorization': 'Bearer ' + session.access_token,
+                    'apikey': SUPABASE_ANON
+                }
+            });
+            
+            if (!resp.ok) {
+                var errData = await resp.json().catch(function(){ return {error:'Download fehlgeschlagen'}; });
+                throw new Error(errData.error || 'HTTP ' + resp.status);
+            }
+            
+            var blob = await resp.blob();
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = (invoiceNumber || 'Rechnung') + '.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            btn.textContent = '✅ Heruntergeladen';
+            setTimeout(function(){ btn.textContent = '📥 PDF herunterladen'; btn.disabled = false; }, 2000);
+        } catch(err) {
+            alert('PDF Download fehlgeschlagen: ' + err.message);
+            if(event.target) { event.target.textContent = '📥 PDF herunterladen'; event.target.disabled = false; }
+        }
+    };
+
     // ── Standort: Load My Invoices ──
     window.loadStandortInvoices = async function() {
         var stId = sbProfile.standort_id;
@@ -24545,10 +24681,10 @@ window.switchWissenTyp = function(typ) {
                 h += '</ul></details>';
             }
             // PDF Download
-            if (inv.stripe_invoice_pdf || inv.lexoffice_pdf_url) {
+            if (inv.stripe_invoice_pdf || inv.lexoffice_invoice_id) {
                 h += '<div class="mt-2 flex space-x-2">';
                 if (inv.stripe_invoice_pdf) h += '<a href="'+inv.stripe_invoice_pdf+'" target="_blank" class="text-xs px-3 py-1 bg-gray-100 rounded hover:bg-gray-200">📥 PDF (Stripe)</a>';
-                if (inv.lexoffice_pdf_url) h += '<a href="'+inv.lexoffice_pdf_url+'" target="_blank" class="text-xs px-3 py-1 bg-gray-100 rounded hover:bg-gray-200">📥 PDF (LexOffice)</a>';
+                if (inv.lexoffice_invoice_id) h += '<button onclick="downloadLexofficePdf(\x27'+inv.id+'\x27,\x27'+(inv.invoice_number||'Rechnung')+'\x27)" class="text-xs px-3 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 font-semibold">📥 PDF herunterladen</button>';
                 h += '</div>';
             }
             h += '</div>';
