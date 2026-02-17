@@ -22507,29 +22507,57 @@ window.switchWissenTyp = function(typ) {
     // ── Push Notifications Setup ──
     window.setupPushNotifications = async function() {
         if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-            console.log('[Push] Not supported');
+            alert('Push-Benachrichtigungen werden von diesem Browser nicht unterstützt.');
             return;
         }
         
         var permission = await Notification.requestPermission();
         if (permission !== 'granted') {
-            console.log('[Push] Permission denied');
+            alert('Push-Berechtigung wurde verweigert. Bitte in den Browser-Einstellungen aktivieren.');
             return;
         }
 
-        var reg = await navigator.serviceWorker.ready;
-        
-        // In production: subscribe to push service
-        // var subscription = await reg.pushManager.subscribe({
-        //     userVisibleOnly: true,
-        //     applicationServerKey: VAPID_PUBLIC_KEY
-        // });
-        // Send subscription to your server/Supabase
-        
-        console.log('[Push] Notifications enabled');
-        
-        // Demo: show local notification
-        showLocalNotification('🔔 Benachrichtigungen aktiviert', 'Du erhältst jetzt Push-Notifications für BWA-Deadlines, Leads und Trainer.');
+        try {
+            var reg = await navigator.serviceWorker.ready;
+            var VAPID_PUBLIC_KEY = 'BFjv8qdfhEPXyWvz8Ite8laCH0XMaLtzTXvRBRq7XIa4FELmOz2RA3fUh7me1LIAh0JsKQVd-Pl8Dlxg_8mFc3c';
+            
+            // Convert VAPID key to Uint8Array
+            var padding = '='.repeat((4 - VAPID_PUBLIC_KEY.length % 4) % 4);
+            var base64 = (VAPID_PUBLIC_KEY + padding).replace(/-/g, '+').replace(/_/g, '/');
+            var rawData = atob(base64);
+            var outputArray = new Uint8Array(rawData.length);
+            for (var i = 0; i < rawData.length; i++) outputArray[i] = rawData.charCodeAt(i);
+
+            var subscription = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: outputArray
+            });
+
+            var sub = subscription.toJSON();
+            var sba = window._supabase || window.sb;
+            var user = (await sba.auth.getUser()).data.user;
+            if (!user) { alert('Nicht eingeloggt'); return; }
+
+            var deviceName = navigator.userAgent.indexOf('Mobile') > -1 ? 'Mobilgerät' : 'Desktop';
+            deviceName += ' – ' + (navigator.userAgent.match(/(Chrome|Firefox|Safari|Edge)[\/\s](\d+)/)||[])[0] || 'Browser';
+
+            var { error } = await sba.from('push_subscriptions').upsert({
+                user_id: user.id,
+                endpoint: sub.endpoint,
+                p256dh: sub.keys.p256dh,
+                auth_key: sub.keys.auth,
+                device_name: deviceName
+            }, { onConflict: 'endpoint' });
+
+            if (error) throw error;
+
+            console.log('[Push] Subscription saved successfully');
+            updatePushUI(true, deviceName);
+            showLocalNotification('🔔 Push aktiviert!', 'Du erhältst jetzt Benachrichtigungen für Nachrichten, Leads, Aufgaben & mehr.');
+        } catch(err) {
+            console.error('[Push] Setup error:', err);
+            alert('Push-Aktivierung fehlgeschlagen: ' + err.message);
+        }
     };
 
     window.showLocalNotification = function(title, body, url) {
