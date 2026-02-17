@@ -1821,12 +1821,12 @@
 
                         <!-- SUB 2: Upload -->
                         <div id="smSubUpload" class="sm-sub-content" style="display:none;">
-                            <div class="max-w-xl mx-auto">
+                            <div class="max-w-2xl mx-auto">
                                 <div class="vit-card p-6">
                                     <div class="text-center mb-5">
                                         <div class="text-4xl mb-2">📤</div>
-                                        <h3 class="text-lg font-bold text-gray-800">Video hochladen</h3>
-                                        <p class="text-sm text-gray-500">Waehle ein Thema, lade dein Video hoch – fertig! Wir kuemmern uns um Schnitt, Untertitel und Posting.</p>
+                                        <h3 class="text-lg font-bold text-gray-800">Videos hochladen</h3>
+                                        <p class="text-sm text-gray-500">Lade ein oder mehrere Videos hoch – sie werden als Gruppe zusammen geschnitten.</p>
                                     </div>
                                     <div class="space-y-4">
                                         <div>
@@ -1846,27 +1846,29 @@
                                             </select>
                                         </div>
                                         <div>
-                                            <label class="text-sm font-semibold text-gray-700 block mb-1">Dein Video</label>
-                                            <div id="vpDropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-vit-orange transition cursor-pointer">
+                                            <label class="text-sm font-semibold text-gray-700 block mb-1">Deine Videos <span class="font-normal text-gray-400">(mehrere moeglich)</span></label>
+                                            <div id="vpDropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-vit-orange transition cursor-pointer">
                                                 <div class="text-4xl mb-2">☁️</div>
-                                                <p class="text-sm text-gray-600">Video hierhin ziehen</p>
-                                                <p class="text-xs text-gray-400 mt-1">oder klicken zum Auswaehlen</p>
-                                                <p class="text-[10px] text-gray-300 mt-2">MP4, MOV, WebM · Max. 500 MB</p>
-                                                <input type="file" id="vpFileInput" accept="video/*" class="hidden">
+                                                <p class="text-sm text-gray-600">Videos hierhin ziehen</p>
+                                                <p class="text-xs text-gray-400 mt-1">oder klicken zum Auswaehlen · Mehrfachauswahl moeglich</p>
+                                                <p class="text-[10px] text-gray-300 mt-2">MP4, MOV, WebM · Max. 500 MB pro Datei</p>
+                                                <input type="file" id="vpFileInput" accept="video/*" multiple class="hidden">
                                             </div>
                                         </div>
+                                        <!-- File Queue -->
+                                        <div id="vpFileQueue" class="space-y-2"></div>
                                         <div>
                                             <label class="text-sm font-semibold text-gray-700 block mb-1">Kurzer Kommentar <span class="font-normal text-gray-400">(optional)</span></label>
-                                            <textarea id="vpUploadComment" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" rows="2" placeholder="z.B. 'Haben das im Laden gedreht, Lichtsituation war schwierig'"></textarea>
+                                            <textarea id="vpUploadComment" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" rows="2" placeholder="z.B. 'Drei Clips vom gleichen Kunden, bitte zusammen schneiden'"></textarea>
                                         </div>
-                                        <div id="vpUploadProgress" style="display:none" class="p-4 bg-gray-50 rounded-lg">
-                                            <div class="flex justify-between text-sm mb-1"><span id="vpUploadFileName" class="font-medium"></span><span id="vpUploadPercent">0%</span></div>
+                                        <div id="vpUploadStatus" style="display:none" class="p-4 bg-gray-50 rounded-lg">
+                                            <div class="flex justify-between text-sm mb-1"><span id="vpUploadStatusText" class="font-medium">Uploading...</span><span id="vpUploadPercent">0/0</span></div>
                                             <div class="w-full bg-gray-200 rounded-full h-2"><div id="vpUploadBar" class="bg-vit-orange h-2 rounded-full transition-all" style="width:0%"></div></div>
                                         </div>
-                                        <button id="vpUploadBtn" onclick="vpDoUpload()" class="w-full py-3 bg-vit-orange text-white rounded-lg font-bold hover:opacity-90 transition text-sm">
-                                            🚀 Video einreichen
+                                        <button id="vpUploadBtn" onclick="vpDoMultiUpload()" class="w-full py-3 bg-vit-orange text-white rounded-lg font-bold hover:opacity-90 transition text-sm disabled:opacity-50" disabled>
+                                            🚀 Videos einreichen
                                         </button>
-                                        <p class="text-[10px] text-gray-400 text-center">Das Video wird hochgeladen und durchläuft die Pipeline: Analyse → Consent-Check → Schnitt → HQ-Freigabe → Posting.</p>
+                                        <p class="text-[10px] text-gray-400 text-center">Mehrere Clips werden als Gruppe zusammen geschnitten. Pipeline: Analyse → Consent-Check → Schnitt → HQ-Freigabe → Posting.</p>
                                     </div>
                                 </div>
                             </div>
@@ -28824,7 +28826,9 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     window.vpCloseModal = function() { document.getElementById('vpModal').style.display = 'none'; };
     document.addEventListener('click', function(e){ if(e.target && e.target.id === 'vpModal') vpCloseModal(); });
 
-    // ==================== UPLOAD (Standort) ====================
+    // ==================== UPLOAD (Standort – Multi-File) ====================
+    var vpSelectedFiles = [];
+
     window.vpInitUpload = function() {
         var dz = document.getElementById('vpDropZone');
         var fi = document.getElementById('vpFileInput');
@@ -28833,61 +28837,121 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
         dz.addEventListener('click', function(){ fi.click(); });
         dz.addEventListener('dragover', function(e){ e.preventDefault(); dz.classList.add('border-vit-orange','bg-orange-50'); });
         dz.addEventListener('dragleave', function(){ dz.classList.remove('border-vit-orange','bg-orange-50'); });
-        dz.addEventListener('drop', function(e){ e.preventDefault(); dz.classList.remove('border-vit-orange','bg-orange-50'); if(e.dataTransfer.files[0]) vpStartUpload(e.dataTransfer.files[0]); });
-        fi.addEventListener('change', function(){ if(this.files[0]) vpStartUpload(this.files[0]); });
+        dz.addEventListener('drop', function(e){
+            e.preventDefault(); dz.classList.remove('border-vit-orange','bg-orange-50');
+            vpAddFiles(e.dataTransfer.files);
+        });
+        fi.addEventListener('change', function(){ vpAddFiles(this.files); this.value=''; });
     };
 
-    window.vpDoUpload = function() {
-        var fi = document.getElementById('vpFileInput');
-        if(!fi || !fi.files[0]) { fi.click(); return; }
-        vpStartUpload(fi.files[0]);
-    };
-
-    async function vpStartUpload(file) {
-        if(file.size > 500*1024*1024) { alert('Datei zu groß (max. 500 MB)'); return; }
-        if(!file.type.startsWith('video/')) { alert('Bitte nur Video-Dateien hochladen.'); return; }
-
-        var prog = document.getElementById('vpUploadProgress');
-        var btn = document.getElementById('vpUploadBtn');
-        prog.style.display = 'block';
-        if(btn) btn.disabled = true;
-        document.getElementById('vpUploadFileName').textContent = file.name;
-        document.getElementById('vpUploadPercent').textContent = 'Uploading...';
-        document.getElementById('vpUploadBar').style.width = '30%';
-
-        try {
-            var path = sbStandort.id + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-            var {error:uploadErr} = await sb.storage.from('videos').upload(path, file, {contentType: file.type});
-            if(uploadErr) throw uploadErr;
-
-            document.getElementById('vpUploadBar').style.width = '70%';
-            document.getElementById('vpUploadPercent').textContent = 'Saving...';
-
-            var cat = document.getElementById('vpUploadCategory')?.value || 'sonstiges';
-            var comment = document.getElementById('vpUploadComment')?.value?.trim() || null;
-            var {error:dbErr} = await sb.from('videos').insert({
-                standort_id: sbStandort.id,
-                uploaded_by: sbUser.id,
-                storage_path: path,
-                filename: file.name,
-                file_size_bytes: file.size,
-                category: cat,
-                pipeline_status: 'uploaded',
-                pipeline_status_detail: comment
-            });
-            if(dbErr) throw dbErr;
-
-            document.getElementById('vpUploadBar').style.width = '100%';
-            document.getElementById('vpUploadPercent').textContent = '✅ Fertig!';
-            document.getElementById('vpUploadBar').classList.replace('bg-vit-orange','bg-green-500');
-
-            setTimeout(function(){ switchSmSub('pipeline'); }, 1500);
-        } catch(e) {
-            document.getElementById('vpUploadPercent').textContent = '❌ Fehler: ' + e.message;
-            document.getElementById('vpUploadBar').classList.replace('bg-vit-orange','bg-red-500');
+    function vpAddFiles(fileList) {
+        for(var i=0; i<fileList.length; i++) {
+            var f = fileList[i];
+            if(!f.type.startsWith('video/')) continue;
+            if(f.size > 500*1024*1024) { alert(f.name + ': zu gross (max. 500 MB)'); continue; }
+            if(vpSelectedFiles.some(function(sf){ return sf.name===f.name && sf.size===f.size; })) continue;
+            vpSelectedFiles.push(f);
         }
-        if(btn) btn.disabled = false;
+        vpRenderFileQueue();
     }
+
+    function vpRenderFileQueue() {
+        var q = document.getElementById('vpFileQueue');
+        var btn = document.getElementById('vpUploadBtn');
+        if(!q) return;
+        if(vpSelectedFiles.length === 0) { q.innerHTML = ''; btn.disabled = true; return; }
+        btn.disabled = false;
+        var html = '<div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">' + vpSelectedFiles.length + ' Video' + (vpSelectedFiles.length>1?'s':'') + ' ausgewaehlt' + (vpSelectedFiles.length>1?' (werden als Gruppe geschnitten)':'') + '</div>';
+        vpSelectedFiles.forEach(function(f, idx) {
+            var sizeMB = (f.size/(1024*1024)).toFixed(1);
+            html += '<div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg" id="vpFileItem_'+idx+'">';
+            html += '<div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-sm font-bold">'+(idx+1)+'</div>';
+            html += '<div class="flex-1 min-w-0"><p class="text-sm font-medium text-gray-800 truncate">'+f.name+'</p><p class="text-xs text-gray-400">'+sizeMB+' MB</p></div>';
+            html += '<div id="vpFileStatus_'+idx+'" class="text-xs text-gray-400">Bereit</div>';
+            html += '<button onclick="vpRemoveFile('+idx+')" class="text-gray-300 hover:text-red-500 text-lg">&times;</button>';
+            html += '</div>';
+        });
+        q.innerHTML = html;
+    }
+
+    window.vpRemoveFile = function(idx) {
+        vpSelectedFiles.splice(idx, 1);
+        vpRenderFileQueue();
+    };
+
+    window.vpDoMultiUpload = async function() {
+        if(vpSelectedFiles.length === 0) return;
+        var btn = document.getElementById('vpUploadBtn');
+        var status = document.getElementById('vpUploadStatus');
+        var statusText = document.getElementById('vpUploadStatusText');
+        var bar = document.getElementById('vpUploadBar');
+        var pct = document.getElementById('vpUploadPercent');
+        btn.disabled = true;
+        status.style.display = 'block';
+        bar.className = 'bg-vit-orange h-2 rounded-full transition-all';
+
+        var cat = document.getElementById('vpUploadCategory')?.value || 'sonstiges';
+        var comment = document.getElementById('vpUploadComment')?.value?.trim() || null;
+        var thema = document.getElementById('smUploadThema')?.value || null;
+        var groupId = vpSelectedFiles.length > 1 ? crypto.randomUUID() : null;
+        var groupLabel = thema || (vpSelectedFiles.length > 1 ? 'Gruppe vom ' + new Date().toLocaleDateString('de-DE') : null);
+
+        var total = vpSelectedFiles.length;
+        var done = 0;
+        var errors = [];
+
+        for(var i=0; i<total; i++) {
+            var file = vpSelectedFiles[i];
+            pct.textContent = (done+1) + ' / ' + total;
+            statusText.textContent = 'Uploading: ' + file.name;
+            bar.style.width = Math.round((done/total)*100) + '%';
+
+            var fStatus = document.getElementById('vpFileStatus_'+i);
+            if(fStatus) fStatus.innerHTML = '<span class="text-blue-500">⬆️ Uploading...</span>';
+
+            try {
+                var path = sbStandort.id + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+                var {error:uploadErr} = await sb.storage.from('videos').upload(path, file, {contentType: file.type});
+                if(uploadErr) throw uploadErr;
+
+                if(fStatus) fStatus.innerHTML = '<span class="text-yellow-500">💾 Saving...</span>';
+
+                var insertData = {
+                    standort_id: sbStandort.id,
+                    uploaded_by: sbUser.id,
+                    storage_path: path,
+                    filename: file.name,
+                    file_size_bytes: file.size,
+                    category: cat,
+                    pipeline_status: 'uploaded',
+                    pipeline_status_detail: comment,
+                    sort_order: i
+                };
+                if(groupId) { insertData.group_id = groupId; insertData.group_label = groupLabel; }
+
+                var {error:dbErr} = await sb.from('videos').insert(insertData);
+                if(dbErr) throw dbErr;
+
+                if(fStatus) fStatus.innerHTML = '<span class="text-green-600">✅ Fertig</span>';
+                done++;
+            } catch(e) {
+                errors.push(file.name + ': ' + e.message);
+                if(fStatus) fStatus.innerHTML = '<span class="text-red-500">❌ ' + e.message.substring(0,40) + '</span>';
+            }
+        }
+
+        bar.style.width = '100%';
+        if(errors.length === 0) {
+            statusText.textContent = '✅ Alle ' + total + ' Videos hochgeladen!';
+            bar.className = 'bg-green-500 h-2 rounded-full transition-all';
+            vpSelectedFiles = [];
+            setTimeout(function(){ switchSmSub('pipeline'); }, 2000);
+        } else {
+            statusText.textContent = done + ' von ' + total + ' hochgeladen, ' + errors.length + ' Fehler';
+            bar.className = 'bg-yellow-500 h-2 rounded-full transition-all';
+        }
+        btn.disabled = false;
+    };
 
     // ==================== PIPELINE DASHBOARD (Standort: "Meine Videos") ====================
     window.vpRenderPipelineDashboard = async function() {
@@ -28928,8 +28992,39 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
             if(videos.length === 0) {
                 html += '<div class="vit-card p-8 text-center text-gray-400"><div class="text-4xl mb-2">🎬</div><p>Noch keine Videos hochgeladen.</p><button onclick="switchSmSub(\'upload\')" class="mt-3 text-vit-orange hover:underline font-medium">Erstes Video hochladen →</button></div>';
             } else {
-                html += '<div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="text-left p-3 font-medium text-gray-600">Video</th><th class="text-left p-3 font-medium text-gray-600">Kategorie</th><th class="text-left p-3 font-medium text-gray-600">Status</th><th class="text-left p-3 font-medium text-gray-600">Hochgeladen</th><th class="text-right p-3 font-medium text-gray-600">Größe</th></tr></thead><tbody>';
+                // Group videos by group_id
+                var groups = {};
+                var singles = [];
                 videos.forEach(function(v){
+                    if(v.group_id) {
+                        if(!groups[v.group_id]) groups[v.group_id] = {label: v.group_label || 'Gruppe', videos: []};
+                        groups[v.group_id].videos.push(v);
+                    } else {
+                        singles.push(v);
+                    }
+                });
+
+                html += '<div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="text-left p-3 font-medium text-gray-600">Video</th><th class="text-left p-3 font-medium text-gray-600">Kategorie</th><th class="text-left p-3 font-medium text-gray-600">Status</th><th class="text-left p-3 font-medium text-gray-600">Hochgeladen</th><th class="text-right p-3 font-medium text-gray-600">Groesse</th></tr></thead><tbody>';
+
+                // Render groups first
+                Object.keys(groups).forEach(function(gid){
+                    var g = groups[gid];
+                    var totalSize = g.videos.reduce(function(sum,v){return sum+v.file_size_bytes},0);
+                    html += '<tr class="border-t-2 border-orange-200 bg-orange-50"><td class="p-3 font-medium text-gray-800" colspan="2">📎 '+g.label+' <span class="text-xs text-gray-400">('+g.videos.length+' Clips)</span></td><td class="p-3">'+vpBadge(g.videos[0].pipeline_status)+'</td><td class="p-3 text-gray-500">'+vpDateTime(g.videos[0].created_at)+'</td><td class="p-3 text-right text-gray-500">'+vpFileSize(totalSize)+'</td></tr>';
+                    g.videos.sort(function(a,b){return (a.sort_order||0)-(b.sort_order||0)});
+                    g.videos.forEach(function(v){
+                        html += '<tr class="border-t border-gray-100 hover:bg-gray-50 cursor-pointer bg-orange-50/30" onclick="vpShowVideoDetail(\''+v.id+'\')">';
+                        html += '<td class="p-3 pl-8 text-gray-600">↳ '+v.filename+'</td>';
+                        html += '<td class="p-3 text-gray-500">'+(vpCategoryLabels[v.category]||v.category)+'</td>';
+                        html += '<td class="p-3">'+vpBadge(v.pipeline_status)+'</td>';
+                        html += '<td class="p-3 text-gray-500">'+vpDateTime(v.created_at)+'</td>';
+                        html += '<td class="p-3 text-right text-gray-500">'+vpFileSize(v.file_size_bytes)+'</td>';
+                        html += '</tr>';
+                    });
+                });
+
+                // Then singles
+                singles.forEach(function(v){
                     html += '<tr class="border-t border-gray-100 hover:bg-gray-50 cursor-pointer" onclick="vpShowVideoDetail(\''+v.id+'\')">';
                     html += '<td class="p-3 font-medium text-gray-800">'+v.filename+'</td>';
                     html += '<td class="p-3">'+(vpCategoryLabels[v.category]||v.category)+'</td>';
