@@ -409,7 +409,7 @@
                 
             </div>
         </div>
-        <p class="text-center text-xs text-gray-400 absolute bottom-4 left-0 right-0">&copy; 2026 vit:bikes GmbH &middot; Partner Portal v6.0</p>
+        <p class="text-center text-xs text-gray-400 absolute bottom-4 left-0 right-0">&copy; 2026 vit:bikes GmbH &middot; Partner Portal v7.2</p>
     </div>
 
     <!-- Pending-Screen: Warteseite nach Selbstregistrierung -->
@@ -5962,6 +5962,11 @@
     </div><!-- /mainApp -->
 
     <script>
+        // ============================================
+        // PORTAL VERSION – wird bei jedem Deploy erhoeht
+        // ============================================
+        var PORTAL_VERSION = '7.2.0218';
+
         // ============================================
         // SUPABASE CLIENT
         // ============================================
@@ -21604,17 +21609,12 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         function showModuleVersionBadge(viewId) {
-            // Entferne altes Badge
             var old = document.getElementById('moduleVersionBadge');
             if(old) old.remove();
-            // Finde Modul-Version
-            var allMods = getAllModulesFlat();
-            var mod = allMods.find(function(m){ return m.view === viewId; });
-            if(!mod || !mod.version) return;
             var badge = document.createElement('div');
             badge.id = 'moduleVersionBadge';
             badge.style.cssText = 'position:fixed;bottom:8px;right:8px;z-index:50;background:rgba(255,255,255,0.9);border:1px solid #e5e7eb;border-radius:6px;padding:2px 8px;font-size:10px;color:#9ca3af;font-family:monospace;pointer-events:none;backdrop-filter:blur(4px);';
-            badge.textContent = 'v' + mod.version;
+            badge.textContent = 'v' + PORTAL_VERSION;
             document.body.appendChild(badge);
         }
 
