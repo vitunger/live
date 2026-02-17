@@ -4362,40 +4362,9 @@
 
                 <!-- ===== TODO VIEW ===== -->
                 <div id="todoView" class="view" style="display: none;">
-                    <div class="flex h-[calc(100vh-100px)] min-h-[600px] overflow-hidden">
+                    <div class="flex flex-col h-[calc(100vh-100px)] min-h-[600px] overflow-hidden">
 
-                        <!-- LEFT: Filter Sidebar -->
-                        <div id="todoSidebar" class="w-52 flex-shrink-0 bg-gray-50 border-r border-gray-200 flex flex-col">
-                            <div class="p-3 border-b border-gray-200">
-                                <div class="flex items-center space-x-2">
-                                    <div class="w-7 h-7 rounded-lg flex items-center justify-center text-white font-black text-[10px]" style="background:linear-gradient(135deg,#f97316,#ea580c)">v</div>
-                                    <span class="font-bold text-gray-800 text-sm">Aufgaben</span>
-                                </div>
-                            </div>
-                            <nav class="flex-1 p-2 space-y-0.5">
-                                <p class="font-bold text-gray-400 uppercase px-2 mb-1" style="font-size:9px;letter-spacing:0.05em">Ansichten</p>
-                                <button onclick="todoSetFilter('all')" data-tf2="all" class="todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] bg-white shadow-sm text-gray-900 font-semibold">
-                                    <span class="w-5 text-center text-sm">📋</span><span class="flex-1 text-left">Alle Aufgaben</span><span id="tfBadgeAll" class="text-[9px] font-bold bg-gray-200 text-gray-500 rounded-full px-1.5 py-0.5"></span>
-                                </button>
-                                <button onclick="todoSetFilter('heute')" data-tf2="heute" class="todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] text-gray-600 hover:bg-gray-200">
-                                    <span class="w-5 text-center text-sm">📅</span><span class="flex-1 text-left">Heute</span><span id="tfBadgeHeute" class="text-[9px] font-bold bg-yellow-100 text-yellow-700 rounded-full px-1.5 py-0.5 hidden"></span>
-                                </button>
-                                <button onclick="todoSetFilter('ueberfaellig')" data-tf2="ueberfaellig" class="todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] text-gray-600 hover:bg-gray-200">
-                                    <span class="w-5 text-center text-sm">🔴</span><span class="flex-1 text-left">Überfällig</span><span id="tfBadgeUeber" class="text-[9px] font-bold bg-red-100 text-red-600 rounded-full px-1.5 py-0.5 hidden"></span>
-                                </button>
-                                <button onclick="todoSetFilter('done')" data-tf2="done" class="todo-f2 w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-[13px] text-gray-600 hover:bg-gray-200">
-                                    <span class="w-5 text-center text-sm">✅</span><span class="flex-1 text-left">Erledigt</span><span id="tfBadgeDone" class="text-[9px] font-bold bg-green-100 text-green-600 rounded-full px-1.5 py-0.5 hidden"></span>
-                                </button>
-                            </nav>
-                            <div class="p-3 border-t border-gray-200">
-                                <div class="flex items-center space-x-2 px-2 py-1">
-                                    <div class="w-7 h-7 rounded-full bg-yellow-100 flex items-center justify-center"><span class="font-bold text-[9px] text-vit-orange" id="todoSbInitials">MB</span></div>
-                                    <div><p class="font-semibold text-gray-700 text-[11px]" id="todoSbStore">Mein Standort</p><p class="text-gray-400 text-[9px]">Partner</p></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- CENTER: Main Content -->
+                        <!-- Main Content (no sidebar) -->
                         <div class="flex-1 flex flex-col min-w-0">
                             <!-- Header -->
                             <div class="flex-shrink-0 border-b border-gray-200 bg-white px-5 py-3">
