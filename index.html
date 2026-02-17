@@ -21130,10 +21130,16 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 for (var ci = 0; ci < shopCart.length; ci++) {
                     var cartItem = shopCart[ci];
                     if (cartItem.variant_id) {
-                        await sb.rpc('decrement_stock', { p_variant_id: cartItem.variant_id, p_qty: cartItem.menge }).catch(function(){
+                        try {
+                            var stockResp = await sb.rpc('decrement_stock', { p_variant_id: cartItem.variant_id, p_qty: cartItem.menge });
+                            if(stockResp.error) throw stockResp.error;
+                        } catch(stockErr) {
                             // Fallback: direct update
-                            sb.from('shop_product_variants').update({ stock: Math.max(0, (shopVariants[cartItem.id]||[]).find(function(v){return v.id===cartItem.variant_id})?.stock - cartItem.menge || 0) }).eq('id', cartItem.variant_id);
-                        });
+                            var currentVariants = shopVariants[cartItem.id] || [];
+                            var matchV = currentVariants.find(function(v){return v.id===cartItem.variant_id});
+                            var newStock = Math.max(0, (matchV ? matchV.stock : 0) - cartItem.menge);
+                            await sb.from('shop_product_variants').update({ stock: newStock }).eq('id', cartItem.variant_id);
+                        }
                     }
                 }
 
