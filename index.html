@@ -826,12 +826,7 @@
                             <button onclick="showView('hqIdeen')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
                                 <span data-i18n="nav_ideaboard">Ideenboard</span>
-                            </button>
-
-                            <button onclick="showView('hqFeedback')" data-module="hqFeedback" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
-                                <span>Feedback-Inbox</span>
-                                <span class="ml-auto bg-emerald-500 text-white text-[9px] rounded-full px-1.5 py-0.5 font-bold" id="hqFbBadge" style="display:none">0</span>
+                                <span class="ml-auto bg-vit-orange text-white text-[9px] rounded-full px-1.5 py-0.5 font-bold" id="hqFbBadge" style="display:none">0</span>
                             </button>
 
                             <button onclick="showView('hqShop')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
@@ -5632,52 +5627,56 @@
                 <!-- ===== HQ IDEENBOARD-ÜBERSICHT ===== -->
                 <div id="hqIdeenView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-2">💡 IDEENBOARD – NETZWERK</h1>
-                    <p class="text-sm text-gray-500 mb-6">Alle Ideen und Vorschlaege der Partner einsehen und bewerten.</p>
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-vit-orange" id="hqIdeenTotal">0</div><div class="text-xs text-gray-500">Eingereichte Ideen</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-yellow-500" id="hqIdeenPruefung">0</div><div class="text-xs text-gray-500">In Prüfung</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600" id="hqIdeenUmgesetzt">0</div><div class="text-xs text-gray-500">Umgesetzt</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-red-400" id="hqIdeenAbgelehnt">0</div><div class="text-xs text-gray-500">Abgelehnt</div></div>
-                    </div>
-                    <div class="flex space-x-2 mb-4">
-                        <button onclick="filterHqIdeen('all')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white" data-hif="all">Alle</button>
-                        <button onclick="filterHqIdeen('neu')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="neu">Neu</button>
-                        <button onclick="filterHqIdeen('wird_geprueft')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="wird_geprueft">Wird geprüft</button>
-                        <button onclick="filterHqIdeen('umgesetzt')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="umgesetzt">Umgesetzt</button>
-                        <button onclick="filterHqIdeen('abgelehnt')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="abgelehnt">Abgelehnt</button>
-                    </div>
-                    <div class="vit-card p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">📋 Eingereichte Ideen aller Partner</h2>
-                        <div id="hqIdeenList" class="space-y-3"></div>
-                    </div>
-                </div>
+                    <p class="text-sm text-gray-500 mb-6">Ideen, Vorschläge und Portal-Feedback aller Partner.</p>
 
-                <!-- ===== HQ FEEDBACK-INBOX ===== -->
-                <div id="hqFeedbackView" class="view" style="display: none;">
-                    <div class="flex items-center justify-between mb-2">
-                        <h1 class="h1-headline text-gray-800">💬 FEEDBACK-INBOX</h1>
-                        <button onclick="renderHqFeedbackInbox()" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-200">🔄 Aktualisieren</button>
-                    </div>
-                    <p class="text-sm text-gray-500 mb-6">Portal-Feedback aller Partner – Bugs, Wünsche, Ideen direkt aus dem Widget.</p>
-
-                    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6" id="hqFbKpis">
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-blue-600" id="hqFbTotal">-</div><div class="text-xs text-gray-500">Gesamt</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-amber-500" id="hqFbNeu">-</div><div class="text-xs text-gray-500">Neu / Offen</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-red-500" id="hqFbBugs">-</div><div class="text-xs text-gray-500">Bugs</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-emerald-500" id="hqFbWuensche">-</div><div class="text-xs text-gray-500">Wünsche</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-purple-500" id="hqFbIdeen">-</div><div class="text-xs text-gray-500">Ideen</div></div>
+                    <!-- Tabs: Ideen | Portal-Feedback -->
+                    <div class="border-b border-gray-200 mb-6">
+                        <nav class="flex space-x-4 -mb-px">
+                            <button onclick="showIdeenTab('ideen')" class="ideen-tab whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-itab="ideen">💡 Ideen & Vorschläge</button>
+                            <button onclick="showIdeenTab('feedback')" class="ideen-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500" data-itab="feedback">💬 Portal-Feedback <span id="hqFbTabBadge" class="ml-1 bg-amber-400 text-white text-[9px] rounded-full px-1.5 py-0.5 font-bold" style="display:none">0</span></button>
+                        </nav>
                     </div>
 
-                    <div class="flex gap-2 mb-4 flex-wrap">
-                        <button onclick="filterHqFb('alle')" class="hq-fb-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500 text-white" data-fbf="alle">Alle</button>
-                        <button onclick="filterHqFb('neu')" class="hq-fb-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-fbf="neu">🆕 Neu</button>
-                        <button onclick="filterHqFb('gesehen')" class="hq-fb-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-fbf="gesehen">👁️ Gesehen</button>
-                        <button onclick="filterHqFb('in_arbeit')" class="hq-fb-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-fbf="in_arbeit">🔧 In Arbeit</button>
-                        <button onclick="filterHqFb('erledigt')" class="hq-fb-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-fbf="erledigt">✅ Erledigt</button>
+                    <!-- Ideen Tab -->
+                    <div id="ideenTabIdeen" class="ideen-tab-content">
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-vit-orange" id="hqIdeenTotal">0</div><div class="text-xs text-gray-500">Eingereichte Ideen</div></div>
+                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-yellow-500" id="hqIdeenPruefung">0</div><div class="text-xs text-gray-500">In Prüfung</div></div>
+                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600" id="hqIdeenUmgesetzt">0</div><div class="text-xs text-gray-500">Umgesetzt</div></div>
+                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-red-400" id="hqIdeenAbgelehnt">0</div><div class="text-xs text-gray-500">Abgelehnt</div></div>
+                        </div>
+                        <div class="flex space-x-2 mb-4">
+                            <button onclick="filterHqIdeen('all')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white" data-hif="all">Alle</button>
+                            <button onclick="filterHqIdeen('neu')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="neu">Neu</button>
+                            <button onclick="filterHqIdeen('wird_geprueft')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="wird_geprueft">Wird geprüft</button>
+                            <button onclick="filterHqIdeen('umgesetzt')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="umgesetzt">Umgesetzt</button>
+                            <button onclick="filterHqIdeen('abgelehnt')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="abgelehnt">Abgelehnt</button>
+                        </div>
+                        <div class="vit-card p-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">📋 Eingereichte Ideen aller Partner</h2>
+                            <div id="hqIdeenList" class="space-y-3"></div>
+                        </div>
                     </div>
 
-                    <div class="vit-card overflow-hidden">
-                        <div id="hqFbList" class="divide-y divide-gray-100"></div>
+                    <!-- Feedback Tab -->
+                    <div id="ideenTabFeedback" class="ideen-tab-content" style="display:none;">
+                        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-blue-600" id="hqFbTotal">-</div><div class="text-xs text-gray-500">Gesamt</div></div>
+                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-amber-500" id="hqFbNeu">-</div><div class="text-xs text-gray-500">Neu / Offen</div></div>
+                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-red-500" id="hqFbBugs">-</div><div class="text-xs text-gray-500">Bugs</div></div>
+                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-emerald-500" id="hqFbWuensche">-</div><div class="text-xs text-gray-500">Wünsche</div></div>
+                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-purple-500" id="hqFbIdeen">-</div><div class="text-xs text-gray-500">Ideen</div></div>
+                        </div>
+                        <div class="flex gap-2 mb-4 flex-wrap">
+                            <button onclick="filterHqFb('alle')" class="hq-fb-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white" data-fbf="alle">Alle</button>
+                            <button onclick="filterHqFb('neu')" class="hq-fb-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-fbf="neu">🆕 Neu</button>
+                            <button onclick="filterHqFb('gesehen')" class="hq-fb-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-fbf="gesehen">👁️ Gesehen</button>
+                            <button onclick="filterHqFb('in_arbeit')" class="hq-fb-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-fbf="in_arbeit">🔧 In Arbeit</button>
+                            <button onclick="filterHqFb('erledigt')" class="hq-fb-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-fbf="erledigt">✅ Erledigt</button>
+                        </div>
+                        <div class="vit-card overflow-hidden">
+                            <div id="hqFbList" class="divide-y divide-gray-100"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -13513,7 +13512,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 {name:'Wissen', view:'wissenView', status:'teilweise', typ:'standort', version:'0.5.0', details:'Struktur mit Bereichen (Verkauf, Marketing, Einkauf, Controlling, Allgemein), Suche, Wissen-Tabs in jedem Modul', kiPrio:15, aufwand:'L', kiTodo:'CMS-Backend: Artikel erstellen, Kategorien. Basis für Wissen-Tabs in anderen Modulen.'},
                 {name:'Support', view:'supportView', status:'teilweise', typ:'standort', version:'1.1.0', details:'Tickets mit DB, Kontakte-Seite', kiPrio:22, aufwand:'M', kiTodo:'Ticket-Prioritäten, SLA-Timer, E-Mail-Benachrichtigung.'},
                 {name:'Ideenboard', view:'ideenboardView', status:'live', typ:'standort', version:'1.0.0', details:'Einreichen, Voting, Status – alles DB', kiPrio:34, aufwand:'S', kiTodo:'Kommentar-Funktion. Grundfunktion top.'},
-                {name:'Feedback-Widget + HQ-Inbox', view:'hqFeedbackView', status:'live', typ:'alle', version:'1.0.0', details:'Floating-Button „Portal verbessern", Kategorien (Bug/Wunsch/UX/Performance/Idee), Sprachaufnahme, Bildschirmaufnahme, Screenshot, Supabase Storage, HQ-Inbox mit Filter/Status/Detail, Ideenboard-Integration, Pulse-Animation, kontextuelles Prompt bei Modulwechsel', kiPrio:2, aufwand:'M', kiTodo:'Audio-Transkription via Whisper, Asana-Integration für Ticket-Sync.'},
+                {name:'Feedback-Widget + Ideenboard-Tab', view:'hqIdeenView', status:'live', typ:'alle', version:'1.1.0', details:'Top-Center-Button „Portal verbessern", Kategorien (Bug/Wunsch/UX/Performance/Idee), Sprachaufnahme, Bildschirmaufnahme, Screenshot, Supabase Storage + portal_feedback Tabelle, als Tab im Ideenboard integriert mit Filter/Status/Detail, Pulse-Animation, kontextuelles Prompt bei Modulwechsel', kiPrio:2, aufwand:'M', kiTodo:'Audio-Transkription via Whisper, Asana-Integration.'},
                 {name:'Shop', view:'shopView', status:'beta', typ:'standort', version:'1.0.0', details:'Produkte bestellen, automatische Rechnungserstellung, LexOffice-Sync', kiPrio:18, aufwand:'L', kiTodo:'Bestellstatus-Tracking, HQ-Bestätigungsworkflow.'},
                 {name:'Aktenschrank', view:'aktenschrankView', status:'live', typ:'standort', version:'1.0.0', details:'Upload, Download, Kategorien – alles DB', kiPrio:31, aufwand:'S', kiTodo:'Ordner-System, Dateigröße-Limits. Funktioniert.'},
                 {name:'Onboarding', view:'onboardingView', status:'teilweise', typ:'standort', version:'0.5.0', details:'Asana-Demo-Integration, Checklisten', kiPrio:7, aufwand:'L', kiTodo:'Echte Asana-API Anbindung oder eigene Checklisten-DB. Wichtig für neue Partner.'},
@@ -14197,8 +14196,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(v==='hqAuswertung') renderHqAuswertung();
             if(v==='hqWissen') renderHqWissen();
             if(v==='hqSupport') renderHqSupport();
-            if(v==='hqIdeen') renderHqIdeen();
-            if(v==='hqFeedback') renderHqFeedbackInbox();
+            if(v==='hqIdeen') { renderHqIdeen(); renderHqFeedbackInbox(); }
             if(v==='hqShop') renderHqShop();
             if(v==='hqBilling') { initBillingModule(); showBillingTab('overview'); }
             if(v==='hqBillingDetail') { /* opened via showBillingInvoice() */ }
@@ -27905,6 +27903,17 @@ console.log('[3-Ebenen] Demo-System with password protection loaded.');
 // ═══════════════════════════════════════
 var hqFbCurrentFilter = 'alle';
 
+window.showIdeenTab = function(tab) {
+    document.querySelectorAll('.ideen-tab').forEach(function(b){
+        var t = b.getAttribute('data-itab');
+        b.className = 'ideen-tab whitespace-nowrap py-3 px-1 border-b-2 font-semibold text-sm ' + (t===tab ? 'border-vit-orange text-vit-orange' : 'border-transparent text-gray-500');
+    });
+    document.querySelectorAll('.ideen-tab-content').forEach(function(c){ c.style.display = 'none'; });
+    var el = document.getElementById(tab === 'ideen' ? 'ideenTabIdeen' : 'ideenTabFeedback');
+    if(el) el.style.display = 'block';
+    if(tab === 'feedback') renderHqFeedbackInbox();
+};
+
 async function renderHqFeedbackInbox() {
     var list = document.getElementById('hqFbList');
     if(!list) return;
@@ -27912,7 +27921,7 @@ async function renderHqFeedbackInbox() {
 
     try {
         var resp = await sb.from('portal_feedback')
-            .select('*, users!portal_feedback_user_id_fkey(name, email), standorte(name)')
+            .select('*, users(name, email), standorte(name)')
             .order('created_at', { ascending: false })
             .limit(100);
 
@@ -27928,10 +27937,12 @@ async function renderHqFeedbackInbox() {
         if(el('hqFbWuensche')) el('hqFbWuensche').textContent = items.filter(function(i){ return i.kategorie==='wunsch'; }).length;
         if(el('hqFbIdeen')) el('hqFbIdeen').textContent = items.filter(function(i){ return i.kategorie==='idee'; }).length;
 
-        // Badge
+        // Badge (sidebar + tab)
         var badge = document.getElementById('hqFbBadge');
+        var tabBadge = document.getElementById('hqFbTabBadge');
         var neuCount = items.filter(function(i){ return i.status==='neu'; }).length;
         if(badge) { badge.textContent = neuCount; badge.style.display = neuCount > 0 ? '' : 'none'; }
+        if(tabBadge) { tabBadge.textContent = neuCount; tabBadge.style.display = neuCount > 0 ? '' : 'none'; }
 
         renderHqFbList(items);
     } catch(err) {
@@ -27991,7 +28002,7 @@ window.filterHqFb = function(filter) {
     hqFbCurrentFilter = filter;
     document.querySelectorAll('.hq-fb-filter').forEach(function(b){
         var f = b.getAttribute('data-fbf');
-        b.className = 'hq-fb-filter px-3 py-1.5 rounded-full text-xs font-semibold ' + (f===filter ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-600');
+        b.className = 'hq-fb-filter px-3 py-1.5 rounded-full text-xs font-semibold ' + (f===filter ? 'bg-vit-orange text-white' : 'bg-gray-100 text-gray-600');
     });
     if(window._hqFbItems) renderHqFbList(window._hqFbItems);
 };
@@ -28148,12 +28159,16 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
 <style>
 /* ── Feedback Widget Styles ── */
 @keyframes fbPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.5); }
-    50% { box-shadow: 0 0 0 12px rgba(16,185,129,0); }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,125,0,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(239,125,0,0); }
 }
 @keyframes fbSlideUp {
     from { opacity:0; transform:translateY(20px) scale(0.95); }
     to { opacity:1; transform:translateY(0) scale(1); }
+}
+@keyframes fbSlideDown {
+    from { opacity:0; transform:translateY(-10px); }
+    to { opacity:1; transform:translateY(0); }
 }
 @keyframes fbFadeIn {
     from { opacity:0; }
@@ -28164,31 +28179,33 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     50% { opacity:0.3; }
 }
 #fbWidget {
-    position:fixed; bottom:24px; right:24px; z-index:9999; font-family:'Open Sans',sans-serif;
+    position:fixed; top:0; left:50%; transform:translateX(-50%); z-index:9999; font-family:'Open Sans',sans-serif;
 }
 #fbTrigger {
-    display:flex; align-items:center; gap:8px;
-    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-    color:#fff; border:none; padding:12px 20px; border-radius:50px;
-    font-size:13px; font-weight:700; cursor:pointer;
-    box-shadow: 0 4px 20px rgba(16,185,129,0.35), 0 2px 8px rgba(0,0,0,0.1);
+    display:flex; align-items:center; gap:7px;
+    background: linear-gradient(135deg, #EF7D00 0%, #f59e0b 100%);
+    color:#fff; border:none; padding:8px 20px 8px 16px;
+    border-radius:0 0 14px 14px;
+    font-size:12px; font-weight:700; cursor:pointer;
+    box-shadow: 0 4px 16px rgba(239,125,0,0.25), 0 2px 6px rgba(0,0,0,0.08);
     transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
     letter-spacing: 0.02em;
+    animation: fbSlideDown 0.5s ease-out;
 }
 #fbTrigger:hover {
-    transform: translateY(-2px) scale(1.03);
-    box-shadow: 0 6px 28px rgba(16,185,129,0.45), 0 3px 12px rgba(0,0,0,0.15);
+    transform: translateY(2px);
+    box-shadow: 0 2px 12px rgba(239,125,0,0.35);
 }
-#fbTrigger.fb-pulse { animation: fbPulse 2s ease-in-out 3; }
+#fbTrigger.fb-pulse { animation: fbPulse 2s ease-in-out 3, fbSlideDown 0.5s ease-out; }
 #fbTrigger svg { flex-shrink:0; }
 
 /* Contextual mini-prompt */
 #fbContextPrompt {
-    position:fixed; bottom:76px; right:24px; z-index:9998;
-    background:#fff; border:1px solid #e5e7eb; border-left:3px solid #10b981;
-    border-radius:12px; padding:10px 16px; max-width:260px;
+    position:fixed; top:44px; left:50%; transform:translateX(-50%); z-index:9998;
+    background:#fff; border:1px solid #e5e7eb; border-left:3px solid #EF7D00;
+    border-radius:10px; padding:10px 16px; max-width:280px;
     box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-    animation: fbSlideUp 0.4s ease-out;
+    animation: fbSlideDown 0.3s ease-out;
     display:none; font-size:12px; color:#374151; line-height:1.5;
 }
 #fbContextPrompt .fb-ctx-close {
@@ -28215,7 +28232,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
 #fbModal::-webkit-scrollbar-thumb { background:#d1d5db; border-radius:3px; }
 
 .fb-header {
-    background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
+    background: linear-gradient(135deg, #EF7D00 0%, #f59e0b 50%, #fbbf24 100%);
     padding:28px 28px 24px; border-radius:20px 20px 0 0; position:relative; overflow:hidden;
 }
 .fb-header::before {
@@ -28241,7 +28258,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     font-family:'Open Sans',sans-serif; outline:none;
 }
 .fb-body input:focus, .fb-body textarea:focus, .fb-body select:focus {
-    border-color:#10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.12);
+    border-color:#EF7D00; box-shadow: 0 0 0 3px rgba(239,125,0,0.12);
 }
 .fb-body textarea { resize:vertical; min-height:90px; }
 .fb-field { margin-bottom:16px; }
@@ -28253,8 +28270,8 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     background:#fff; font-size:12px; font-weight:600; cursor:pointer;
     transition: all 0.2s; color:#6b7280;
 }
-.fb-cat:hover { border-color:#10b981; color:#059669; }
-.fb-cat.active { background:#ecfdf5; border-color:#10b981; color:#059669; }
+.fb-cat:hover { border-color:#EF7D00; color:#EF7D00; }
+.fb-cat.active { background:#fff7ed; border-color:#EF7D00; color:#EF7D00; }
 
 /* Media buttons */
 .fb-media-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
@@ -28264,7 +28281,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     background:#fafafa; font-size:12px; font-weight:600; cursor:pointer;
     transition: all 0.2s; color:#4b5563;
 }
-.fb-media-btn:hover { border-color:#10b981; background:#ecfdf5; color:#059669; }
+.fb-media-btn:hover { border-color:#EF7D00; background:#fff7ed; color:#EF7D00; }
 .fb-media-btn.recording { border-color:#ef4444; background:#fef2f2; color:#ef4444; animation: fbRecPulse 1.2s infinite; }
 .fb-media-btn svg { width:16px; height:16px; }
 
@@ -28288,11 +28305,11 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
 /* Submit */
 .fb-submit {
     width:100%; padding:14px; border:none; border-radius:12px;
-    background: linear-gradient(135deg, #059669, #10b981);
+    background: linear-gradient(135deg, #EF7D00, #f59e0b);
     color:#fff; font-size:14px; font-weight:700; cursor:pointer;
     transition: all 0.3s; letter-spacing:0.02em;
 }
-.fb-submit:hover { transform:translateY(-1px); box-shadow: 0 4px 16px rgba(16,185,129,0.35); }
+.fb-submit:hover { transform:translateY(-1px); box-shadow: 0 4px 16px rgba(239,125,0,0.35); }
 .fb-submit:disabled { opacity:0.5; cursor:not-allowed; transform:none; box-shadow:none; }
 
 .fb-footer-note {
@@ -28302,12 +28319,13 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     text-align:center; padding:40px 28px;
 }
 .fb-success .fb-check { font-size:48px; margin-bottom:12px; }
-.fb-success h3 { font-size:18px; font-weight:800; color:#059669; margin:0 0 8px; }
+.fb-success h3 { font-size:18px; font-weight:800; color:#EF7D00; margin:0 0 8px; }
 .fb-success p { font-size:13px; color:#6b7280; margin:0; line-height:1.6; }
 
 @media (max-width:640px) {
-    #fbTrigger span { display:none; }
-    #fbTrigger { padding:14px; border-radius:50%; }
+    #fbTrigger span.fb-label-full { display:none; }
+    #fbTrigger span.fb-label-short { display:inline; }
+    #fbTrigger { padding:6px 14px; font-size:11px; }
     #fbModal { max-width:100%; border-radius:16px 16px 0 0; max-height:95vh; }
     #fbOverlay { align-items:flex-end; padding:0; }
 }
@@ -28316,8 +28334,9 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
 <!-- Feedback Widget HTML -->
 <div id="fbWidget" style="display:none">
     <button id="fbTrigger" onclick="fbOpen()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/></svg>
-        <span>Portal verbessern</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/></svg>
+        <span class="fb-label-full">Portal verbessern – Feedback geben</span>
+        <span class="fb-label-short" style="display:none">Feedback</span>
     </button>
 </div>
 
@@ -28388,8 +28407,8 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
             <div class="fb-check">🎉</div>
             <h3>Danke für dein Feedback!</h3>
             <p>Wir schauen uns das an und melden uns, wenn wir Rückfragen haben. Dein Input hilft uns, das Portal für alle Partner besser zu machen.</p>
-            <div style="margin-top:20px;padding:16px;background:#f0fdf4;border-radius:12px;text-align:left">
-                <p style="font-size:11px;font-weight:700;color:#059669;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.05em">✅ Letzte Verbesserungen dank Partner-Feedback</p>
+            <div style="margin-top:20px;padding:16px;background:#fff7ed;border-radius:12px;text-align:left">
+                <p style="font-size:11px;font-weight:700;color:#EF7D00;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.05em">✅ Letzte Verbesserungen dank Partner-Feedback</p>
                 <ul style="font-size:12px;color:#374151;margin:0;padding:0 0 0 16px;line-height:1.8">
                     <li>BWA-Parser: 13+ DATEV-Formate erkannt</li>
                     <li>Mitarbeiter-Onboarding mit E-Mail-Einladung</li>
