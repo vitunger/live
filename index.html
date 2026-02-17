@@ -1643,7 +1643,6 @@
                         </div>
                     </div>
                 </div>
-                </div>
 
                 <!-- Marketing View (Hauptmenü) – REDESIGN v3: Cockpit, Budget, Kampagnen, Reichweite + Social, Strategie, Wissen -->
                 <div id="marketingView" class="view" style="display: none;">
@@ -4929,7 +4928,6 @@
                     <div id="hqEkTabLief" class="hqek-tab-content" style="display:none;"></div>
                     <div id="hqEkTabStrat" class="hqek-tab-content" style="display:none;"></div>
                 </div>
-                </div>
 
                 <div id="hqVerkaufView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-6">VERKAUF – NETZWERK</h1>
@@ -5509,7 +5507,9 @@
                     </div>
                 </div>
 
-    </div>
+            </main>
+        </div>
+    </div><!-- /mainApp -->
 
     <script>
         // ============================================
@@ -6925,6 +6925,7 @@
                     prioritaet: 'mittel'
                 });
                 if(resp.error) throw resp.error;
+                triggerPushStandort('🎯 Neuer Lead', vorname + ' ' + nachname + ' – ' + (type||'Interesse'), '/?view=verkauf', 'push_lead_aktivitaet');
 
                 document.getElementById('newLeadModal').classList.add('hidden');
                 document.getElementById('leadName').value = '';
@@ -8017,6 +8018,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                         kanal_id: conv.id, user_id: sbUser.id, nachricht: replyCtx ? text + '\n' + replyCtx : text
                     });
                     if(resp.error) throw resp.error;
+                    // Push: notify channel members
+                    (async function() { try { var { data: members } = await sb.from('kanal_mitglieder').select('user_id').eq('kanal_id', conv.id); if (members) { var sn = sbProfile ? sbProfile.name : 'Jemand'; var ids = members.map(function(m){return m.user_id;}).filter(function(id){return id !== sbUser.id;}); triggerPush(ids, '💬 ' + sn, text.substring(0,100), '/?view=kommunikation', 'push_neue_nachricht'); } } catch(e){} })();
                     // Optimistic append
                     var container = document.getElementById('kommChatMessages');
                     var emptyMsg = container.querySelector('.text-center');
@@ -8034,6 +8037,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                         kategorie: 'direkt'
                     });
                     if(resp.error) throw resp.error;
+                    triggerPush([conv.id], '✉️ ' + (sbProfile ? sbProfile.name : 'Nachricht'), text.substring(0,100), '/?view=kommunikation', 'push_neue_nachricht');
                     await loadInboxConversation(conv.id);
 
                 } else if(conv.type === 'announce') {
@@ -8044,6 +8048,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                             inhalt: text, kategorie: 'news', wichtig: false
                         });
                         if(resp.error) throw resp.error;
+                        (async function() { try { var { data: au } = await sb.from('user_profiles').select('user_id'); if(au) { var ids = au.map(function(u){return u.user_id;}).filter(function(id){return id!==sbUser.id;}); triggerPush(ids, '📢 Ankündigung', text.split('\n')[0].substring(0,60), '/?view=kommunikation', 'push_ankuendigung'); } } catch(e){} })();
                         await loadAnnouncements();
                     }
                 }
@@ -8282,6 +8287,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 document.getElementById('forumNewTitle').value = '';
                 document.getElementById('forumNewBody').value = '';
                 document.getElementById('forumNewPost').classList.add('hidden');
+                triggerPushStandort('💬 Neuer Beitrag', (sbProfile?sbProfile.name:'Jemand') + ': ' + titel.trim().substring(0,60), '/?view=forum', 'push_neue_nachricht');
                 renderCommunityPosts('all');
             } catch(err) { alert('Fehler: ' + err.message); }
         }
@@ -11397,6 +11403,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     ticket_id:ticketId, erstellt_von:sbUser?sbUser.id:null, text:input.value.trim()
                 });
                 if(resp.error) throw resp.error;
+                (async function() { try { var { data: t } = await sb.from('support_tickets').select('erstellt_von,titel').eq('id',ticketId).single(); if(t&&t.erstellt_von&&t.erstellt_von!==sbUser.id) triggerPush([t.erstellt_von],'💬 Ticket-Kommentar',(sbProfile?sbProfile.name:'Jemand')+' zu: '+(t.titel||'').substring(0,50),'/?view=support','push_support_update'); } catch(e){} })();
                 closeTicketDetail();
                 await openTicketDetail(ticketId);
             } catch(err) { alert('Fehler: '+err.message); }
@@ -11436,6 +11443,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     kategorie: kategorie, prioritaet: prioritaet, status: 'offen'
                 });
                 if(resp.error) throw resp.error;
+                triggerPushHQ('🆘 Neues Ticket', titel.trim() + (sbStandort ? ' – ' + sbStandort.name : ''), '/?view=hqSupport', 'push_support_update');
                 document.getElementById('ticketCreate').classList.add('hidden');
                 document.getElementById('ticketTitelInput').value = '';
                 document.getElementById('ticketBeschreibungInput').value = '';
@@ -15093,6 +15101,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var upd = {};
             upd[field] = value;
             try { await sb.from('todos').update(upd).eq('id',id); } catch(e){console.warn(e);}
+            if (field === 'zugewiesen_an' && value && value !== (sbUser ? sbUser.id : '')) triggerPush([value], '📋 Aufgabe zugewiesen', (sbProfile?sbProfile.name:'Jemand') + ': ' + (t.titel||'').substring(0,80), '/?view=todo', 'push_aufgabe_zugewiesen');
         }
 
         async function todoUpdatePrio(id, prio) {
@@ -22412,6 +22421,52 @@ window.switchWissenTyp = function(typ) {
         deferredPrompt = e;
         showInstallBanner();
     });
+
+    // ── Push Notification Trigger Helper ──
+    async function triggerPush(userIds, title, body, url, prefKey) {
+        if (!userIds || userIds.length === 0) return;
+        try {
+            var sb = window._supabase;
+            if (!sb) return;
+            if (prefKey) {
+                var { data: prefs } = await sb.from('notification_preferences').select('user_id, ' + prefKey).in('user_id', userIds);
+                if (prefs) userIds = prefs.filter(function(p) { return p[prefKey] !== false; }).map(function(p) { return p.user_id; });
+                if (userIds.length === 0) return;
+            }
+            var { data: session } = await sb.auth.getSession();
+            var token = session?.session?.access_token;
+            if (!token) return;
+            await fetch('https://lwwagbkxeofahhwebkab.supabase.co/functions/v1/send-push', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_ids: userIds, title: title, body: body, url: url || '/', icon: '/icon-192.png' })
+            });
+        } catch(e) { console.log('[Push] trigger error:', e.message); }
+    }
+
+    async function triggerPushStandort(title, body, url, prefKey) {
+        try {
+            var sb = window._supabase;
+            var me = (await sb.auth.getUser()).data.user?.id;
+            var sid = sbProfile ? sbProfile.standort_id : null;
+            if (!sid || !me) return;
+            var { data: users } = await sb.from('user_profiles').select('user_id').eq('standort_id', sid);
+            if (!users) return;
+            var ids = users.map(function(u) { return u.user_id; }).filter(function(id) { return id !== me; });
+            await triggerPush(ids, title, body, url, prefKey);
+        } catch(e) { console.log('[Push] standort trigger:', e.message); }
+    }
+
+    async function triggerPushHQ(title, body, url, prefKey) {
+        try {
+            var sb = window._supabase;
+            var me = (await sb.auth.getUser()).data.user?.id;
+            var { data: hqUsers } = await sb.from('user_profiles').select('user_id').eq('is_hq', true);
+            if (!hqUsers) return;
+            var ids = hqUsers.map(function(u) { return u.user_id; }).filter(function(id) { return id !== me; });
+            await triggerPush(ids, title, body, url, prefKey);
+        } catch(e) { console.log('[Push] HQ trigger:', e.message); }
+    }
 
     function showInstallBanner() {
         // Don't show if already installed or dismissed
