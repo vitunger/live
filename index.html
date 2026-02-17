@@ -28906,7 +28906,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
             try {
                 await new Promise(function(resolve, reject) {
                     var upload = new tus.Upload(file, {
-                        endpoint: 'https://' + projectId + '.supabase.co/storage/v1/upload/resumable',
+                        endpoint: 'https://' + projectId + '.storage.supabase.co/storage/v1/upload/resumable',
                         retryDelays: [0, 3000, 5000, 10000, 20000],
                         headers: {
                             authorization: 'Bearer ' + accessToken,
