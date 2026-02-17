@@ -3945,7 +3945,7 @@
                             <button onclick="switchWissenTyp('bestpractices')" class="wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-wtt="bestpractices">💡 Best Practices</button>
                             <button onclick="switchWissenTyp('faq')" class="wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-wtt="faq">❓ FAQ</button>
                             <button onclick="switchWissenTyp('onboarding')" class="wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-wtt="onboarding">🚀 Onboarding</button>
-                            <button onclick="switchWissenTyp('changelog')" class="wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-wtt="changelog">📋 Changelog</button>
+
                         </nav>
                     </div>
 
@@ -23923,20 +23923,6 @@ var ONBOARDING = [
     ]}
 ];
 
-// ═══ CHANGELOG ═══
-var CHANGELOG = [
-    {version:'7.0',date:'16.02.2026',title:'Performance Governance System',type:'major',
-     items:['🏥 Health Score pro Standort (0-100)','🎓 Trainer-Engine mit 4 Micro-Trainings','🤖 Auto-Ticket-Interceptor im Support','📞 Gruppencall-Vorbereitung','📧 E-Mail-Integration mit Resend (6 Trigger)','🎯 Tages-Cockpit auf Startseite','🔥 Verkaufs-Streak & Zielbalken','📱 Portal-Guide & Memberspot-Style Kurse']},
-    {version:'6.5',date:'10.02.2026',title:'BWA Motivation & Eskalation',type:'feature',
-     items:['⏰ Deadline-Countdown mit Ring-Animation','🥇 Gold/OK/Overdue Rating-System','🔒 Benchmark Feature Lock ohne aktuelle BWA','📊 HQ BWA-Netzwerk-Dashboard','📧 Eskalationsmails bei Stufe 3']},
-    {version:'6.4',date:'05.02.2026',title:'Dark Mode & Nutzerprofil',type:'feature',
-     items:['🌙 Globaler Dark/Light Theme-Switch','👤 Slide-Over Nutzerprofil','⚙️ E-Mail-Benachrichtigungs-Preferences']},
-    {version:'6.3',date:'28.01.2026',title:'Marketing v3 (React)',type:'feature',
-     items:['📊 Kampagnen-Cockpit mit Live-KPIs','📈 Social Media Ranking','🏆 Badge & Achievement System','📹 Content-Upload mit Vorschau']},
-    {version:'6.0',date:'01.01.2026',title:'Partner Portal Launch',type:'major',
-     items:['🚀 Komplettes Portal mit allen Modulen','💰 CRM / Pipeline Management','📊 Controlling mit BWA & Plan/Ist','📅 Kalender & Aufgaben-System','📚 Wissensdatenbank','💬 Kommunikation & Chat']}
-];
-
 // ═══ RENDER: Portal Guide ═══
 window.renderPortalGuide = function() {
     var el = document.getElementById('wissenGlobalContent');
@@ -24063,16 +24049,7 @@ window.toggleOnboardingStep = function(phase,idx) {
     if(p && p.steps[idx]) { p.steps[idx].done = !p.steps[idx].done; renderOnboarding(); }
 };
 
-// ═══ RENDER: Changelog ═══
-window.renderChangelog = function() {
-    var el = document.getElementById('wissenGlobalContent');
-    if(!el) return;
-    el.innerHTML = CHANGELOG.map(function(v){
-        var badge = v.type==='major'?'bg-vit-orange text-white':'bg-blue-100 text-blue-700';
-        return '<div class="vit-card p-5 mb-3"><div class="flex items-center gap-3 mb-3"><span class="text-xs px-2 py-0.5 rounded-full font-bold '+badge+'">v'+v.version+'</span><h3 class="text-sm font-bold text-gray-800">'+v.title+'</h3><span class="text-[10px] text-gray-400 ml-auto">'+v.date+'</span></div>' +
-        '<div class="space-y-1">'+v.items.map(function(i){return '<p class="text-xs text-gray-600">'+i+'</p>';}).join('')+'</div></div>';
-    }).join('');
-};
+
 
 // ═══ HOOK: extend switchWissenTyp ═══
 var _origSwitch = window.switchWissenTyp;
@@ -24087,7 +24064,7 @@ window.switchWissenTyp = function(typ) {
     if(typ === 'portal') { renderPortalGuide(); return; }
     if(typ === 'kurse') { renderKurse(); return; }
     if(typ === 'onboarding') { renderOnboarding(); return; }
-    if(typ === 'changelog') { renderChangelog(); return; }
+
     // Fallback to original for akademie/handbuecher/bestpractices/faq
     if(_origSwitch) _origSwitch(typ);
     else if(typeof renderWissenGlobal === 'function') renderWissenGlobal();
@@ -24654,6 +24631,22 @@ window.switchWissenTyp = function(typ) {
                 .catch(function(err) {
                     console.log('[PWA] SW registration failed:', err);
                 });
+        });
+
+        // Listen for push navigation messages from SW
+        navigator.serviceWorker.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'PUSH_NAVIGATE') {
+                var url = event.data.url || '/';
+                var params = new URLSearchParams(url.split('?')[1] || '');
+                var view = params.get('view');
+                if (view && typeof showView === 'function') {
+                    showView(view);
+                }
+            }
+            if (event.data && event.data.type === 'PUSH_SUBSCRIPTION_CHANGED') {
+                console.log('[Push] Subscription changed, re-subscribing...');
+                if (typeof setupPushNotifications === 'function') setupPushNotifications();
+            }
         });
     }
 
