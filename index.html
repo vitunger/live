@@ -607,6 +607,13 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                                 <span data-i18n="nav_controlling">Controlling</span>
                             </button>
+
+                            <!-- Buchhaltung (Standort) -->
+                            <button onclick="showView('standortBilling')" data-module="standortBilling" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                <span>Buchhaltung</span>
+                                <span class="ml-auto text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
+                            </button>
                         </div>
 
                         <!-- Tools - alle Standort-Rollen -->
@@ -628,6 +635,10 @@
                         <button onclick="showView('shop')" data-module="shop" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                             <span>Werbemittel-Shop</span>
+                        </button>
+                        <button onclick="showView('standortBilling')" data-module="standortBilling" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
+                            <span>💰 Buchhaltung</span>
                         </button>
                         <button onclick="showView('aktenschrank')" data-module="aktenschrank" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
@@ -778,6 +789,14 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                                 </svg>
                                 <span data-i18n="nav_sales">Verkauf</span>
+                            </button>
+
+                            <button onclick="showView('hqBilling')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                <span>Buchhaltung</span>
+                                <span class="ml-auto text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
                             </button>
 
                             <button onclick="showView('hqAuswertung')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
@@ -4572,10 +4591,20 @@
                     <div class="flex items-center justify-between mb-6">
                         <div>
                             <h1 class="h1-headline text-gray-800">MODULÜBERSICHT</h1>
-                            <p class="text-sm text-gray-500">Entwicklungsstand aller Module – Stand: 16. Februar 2026</p>
+                            <p class="text-sm text-gray-500">Entwicklungsstand aller Module – Stand: 17. Februar 2026</p>
                         </div>
                         <div class="flex items-center space-x-2" id="modulStatusSummary"></div>
                     </div>
+
+                    <!-- Dev-Status Tabs -->
+                    <div class="border-b border-gray-200 mb-6">
+                        <nav class="flex space-x-4 -mb-px">
+                            <button onclick="showDevTab('modules')" class="dev-tab whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-dtab="modules">📦 Module</button>
+                            <button onclick="showDevTab('releases')" class="dev-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500" data-dtab="releases">🚀 Release-Updates</button>
+                        </nav>
+                    </div>
+
+                    <div id="devTabModules" class="dev-tab-content">
                     <!-- Filter -->
                     <div class="flex flex-wrap items-center gap-2 mb-6">
                         <button onclick="filterModulStatus('alle')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white" data-f="alle">Alle</button>
@@ -4587,6 +4616,11 @@
                         <button onclick="filterModulStatus('hqPrio')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="hqPrio">🏢 Prio HQ</button>
                     </div>
                     <div id="modulStatusContent"></div>
+                    </div><!-- /devTabModules -->
+
+                    <div id="devTabReleases" class="dev-tab-content" style="display:none;">
+                        <div id="releaseUpdatesContent"></div>
+                    </div>
                 </div>
 
                 <!-- ==================== HQ VIEWS ================================== -->
@@ -5199,6 +5233,148 @@
                 </div>
 
                 <!-- HQ AUSWERTUNG: Portal-Nutzung -->
+                <!-- ===== HQ BILLING / ABRECHNUNG ===== -->
+                <div id="hqBillingView" class="view" style="display: none;">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-800">💰 Buchhaltung</h1>
+                            <p class="text-sm text-gray-500">Rechnungen, Quartals-Settlements, Jahresstrategien</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <select id="billingMonthSelect" onchange="loadBillingOverview()" class="text-sm border border-gray-300 rounded-lg px-3 py-2"></select>
+                        </div>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div class="border-b border-gray-200 mb-6">
+                        <nav class="flex space-x-4 overflow-x-auto -mb-px">
+                            <button onclick="showBillingTab('overview')" class="billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="overview">📊 Übersicht</button>
+                            <button onclick="showBillingTab('invoices')" class="billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500 hover:text-gray-700" data-tab="invoices">📄 Rechnungen</button>
+                            <button onclick="showBillingTab('strategies')" class="billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500 hover:text-gray-700" data-tab="strategies">🎯 Strategien</button>
+                            <button onclick="showBillingTab('products')" class="billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500 hover:text-gray-700" data-tab="products">📦 Produkte</button>
+                            <button onclick="showBillingTab('tools')" class="billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500 hover:text-gray-700" data-tab="tools">🔧 Tools</button>
+                        </nav>
+                    </div>
+
+                    <!-- Tab: Overview -->
+                    <div id="billingTabOverview" class="billing-tab-content">
+                        <!-- KPIs -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="billingKpis"></div>
+
+                        <!-- Actions -->
+                        <div class="vit-card p-4 mb-6">
+                            <h3 class="font-semibold text-gray-800 mb-3">⚡ Aktionen</h3>
+                            <div class="flex flex-wrap gap-3">
+                                <button onclick="generateMonthlyDrafts()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600">📝 Monats-Drafts generieren</button>
+                                <button onclick="showQuarterlySettlementDialog()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">📊 Quartals-Settlement</button>
+                                <button onclick="finalizeAllReady()" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700">✅ Alle Drafts finalisieren</button>
+                            </div>
+                        </div>
+
+                        <!-- Standort Overview Table -->
+                        <div class="vit-card overflow-hidden">
+                            <div class="p-4 border-b bg-gray-50">
+                                <h3 class="font-semibold text-gray-800">Standort-Übersicht</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
+                                        <tr>
+                                            <th class="text-left p-3">Standort</th>
+                                            <th class="text-center p-3">Strategie</th>
+                                            <th class="text-center p-3">SEPA</th>
+                                            <th class="text-right p-3">Rechnung</th>
+                                            <th class="text-center p-3">Status</th>
+                                            <th class="text-center p-3">Aktion</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="billingOverviewTable"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Invoices -->
+                    <div id="billingTabInvoices" class="billing-tab-content" style="display:none;">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-semibold text-gray-800">Alle Rechnungen</h3>
+                            <div class="flex space-x-2">
+                                <select id="billingInvoiceFilter" onchange="loadAllInvoices()" class="text-xs border rounded px-2 py-1">
+                                    <option value="">Alle Status</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="finalized">Finalisiert</option>
+                                    <option value="paid">Bezahlt</option>
+                                    <option value="failed">Fehlgeschlagen</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="billingInvoicesList" class="space-y-2"></div>
+                    </div>
+
+                    <!-- Tab: Strategies -->
+                    <div id="billingTabStrategies" class="billing-tab-content" style="display:none;">
+                        <div id="billingStrategiesList" class="space-y-3"></div>
+                    </div>
+
+                    <!-- Tab: Products -->
+                    <div id="billingTabProducts" class="billing-tab-content" style="display:none;">
+                        <div id="billingProductsList" class="space-y-2"></div>
+                    </div>
+
+                    <!-- Tab: Tools -->
+                    <div id="billingTabTools" class="billing-tab-content" style="display:none;">
+                        <div id="billingToolsList" class="space-y-2"></div>
+                    </div>
+                </div>
+
+                <!-- ===== HQ BILLING INVOICE DETAIL (Modal/Overlay) ===== -->
+                <div id="hqBillingDetailView" class="view" style="display: none;">
+                    <div class="flex items-center mb-6">
+                        <button onclick="showView('hqBilling')" class="mr-3 p-2 rounded-lg hover:bg-gray-100">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        </button>
+                        <div>
+                            <h1 class="text-xl font-bold text-gray-800" id="billingDetailTitle">Rechnung</h1>
+                            <p class="text-sm text-gray-500" id="billingDetailSubtitle"></p>
+                        </div>
+                        <div class="ml-auto flex space-x-2" id="billingDetailActions"></div>
+                    </div>
+                    <div id="billingDetailContent"></div>
+                </div>
+
+                <!-- ===== STANDORT BILLING VIEW ===== -->
+                <div id="standortBillingView" class="view" style="display: none;">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-800">💰 Meine Buchhaltung</h1>
+                            <p class="text-sm text-gray-500">Rechnungen, Zahlungsstatus, Downloads</p>
+                        </div>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div class="border-b border-gray-200 mb-6">
+                        <nav class="flex space-x-4 -mb-px">
+                            <button onclick="showStBillingTab('invoices')" class="st-billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="invoices">📄 Rechnungen</button>
+                            <button onclick="showStBillingTab('payments')" class="st-billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500" data-tab="payments">💳 Zahlungsstatus</button>
+                            <button onclick="showStBillingTab('strategy')" class="st-billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500" data-tab="strategy">🎯 Jahresstrategie</button>
+                            <button onclick="showStBillingTab('costs')" class="st-billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500" data-tab="costs">🔍 Kostenaufschlüsselung</button>
+                        </nav>
+                    </div>
+
+                    <div id="stBillingTabInvoices" class="st-billing-tab-content">
+                        <div id="stBillingInvoicesList" class="space-y-3"></div>
+                    </div>
+                    <div id="stBillingTabPayments" class="st-billing-tab-content" style="display:none;">
+                        <div id="stBillingPaymentsContent"></div>
+                    </div>
+                    <div id="stBillingTabStrategy" class="st-billing-tab-content" style="display:none;">
+                        <div id="stBillingStrategyContent"></div>
+                    </div>
+                    <div id="stBillingTabCosts" class="st-billing-tab-content" style="display:none;">
+                        <div id="stBillingCostsContent"></div>
+                    </div>
+                </div>
+
                 <div id="hqAuswertungView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-2">📊 AUSWERTUNG – PORTAL-NUTZUNG<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-usage')">i</button></h1><div class="widget-info-popup" id="info-hq-usage">Wie aktiv nutzen die Standorte das Portal? Score basiert auf: Team-Logins, Modul-Nutzung, Aufgaben-Erledigung und BWA-Pünktlichkeit. Niedrige Scores deuten auf Onboarding-Bedarf oder fehlende Gewohnheitsbildung hin.</div>
                     <p class="text-sm text-gray-500 mb-6">Wie aktiv nutzen die Standorte das vit:bikes Partner-Portal?</p>
@@ -6071,7 +6247,7 @@
                 return;
             }
             if(pw.length < 8) {
-                if(errEl) { errEl.textContent = 'Passwort muss mindestens 8 Zeichen haben.'; errEl.style.display = 'block'; }
+                if(errEl) { errEl.textContent = t('misc_min_8_chars'); errEl.style.display = 'block'; }
                 return;
             }
             
@@ -6134,10 +6310,10 @@
             if(event) { event.preventDefault(); event.stopPropagation(); }
             var email = (document.getElementById('loginEmail')||{}).value||'';
             var pw = (document.getElementById('loginPassword')||{}).value||'';
-            if(!email || !pw) { alert('Bitte E-Mail und Passwort eingeben.'); return false; }
+            if(!email || !pw) { alert(t('alert_enter_email_pw')); return false; }
 
             var loginBtn = document.querySelector('#loginScreen form button[type="submit"]');
-            if(loginBtn) { loginBtn.disabled = true; loginBtn.textContent = 'Anmelden...'; }
+            if(loginBtn) { loginBtn.disabled = true; loginBtn.textContent = t('ui_signing_in'); }
             var errEl = document.getElementById('loginError');
             if(errEl) errEl.style.display = 'none';
 
@@ -6158,14 +6334,14 @@
                     document.getElementById('pendingScreen').style.display = 'flex';
                     var pendingEmailEl = document.getElementById('pendingEmail');
                     if(pendingEmailEl) pendingEmailEl.textContent = email;
-                    if(loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Anmelden'; }
+                    if(loginBtn) { loginBtn.disabled = false; loginBtn.textContent = t('ui_sign_in'); }
                     return false;
                 }
                 if(profileResp.data && (profileResp.data.status === 'offboarding' || profileResp.data.status === 'gesperrt')) {
                     // Gesperrt-Screen zeigen
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('blockedScreen').style.display = 'flex';
-                    if(loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Anmelden'; }
+                    if(loginBtn) { loginBtn.disabled = false; loginBtn.textContent = t('ui_sign_in'); }
                     return false;
                 }
                 
@@ -6175,7 +6351,7 @@
                     document.getElementById('pendingScreen').style.display = 'flex';
                     var pendingEmailEl2 = document.getElementById('pendingEmail');
                     if(pendingEmailEl2) pendingEmailEl2.textContent = email;
-                    if(loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Anmelden'; }
+                    if(loginBtn) { loginBtn.disabled = false; loginBtn.textContent = t('ui_sign_in'); }
                     return false;
                 }
                 
@@ -6191,7 +6367,7 @@
                 if(errEl) { errEl.textContent = err.message || 'Login fehlgeschlagen'; errEl.style.display = 'block'; }
                 else alert('Login fehlgeschlagen: ' + (err.message||err));
             } finally {
-                if(loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Anmelden'; }
+                if(loginBtn) { loginBtn.disabled = false; loginBtn.textContent = t('ui_sign_in'); }
             }
             return false;
         }
@@ -6397,7 +6573,7 @@
                 var resp = await sb.auth.updateUser({ password: pw1 });
                 if (resp.error) throw resp.error;
                 msg.className='text-sm rounded-lg p-3 mb-3 bg-green-50 border border-green-200 text-green-700';
-                msg.textContent='Passwort erfolgreich geaendert! Du wirst weitergeleitet...';
+                msg.textContent=t('ui_pw_changed_redirect');
                 msg.style.display='block';
                 // Clear hash and redirect
                 window.location.hash = '';
@@ -8273,7 +8449,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var titel = (document.getElementById('forumNewTitle')||{}).value;
             var body = (document.getElementById('forumNewBody')||{}).value;
             var kat = (document.getElementById('forumNewCat')||{}).value || 'allgemein';
-            if(!titel||!titel.trim()) { alert('Bitte Betreff eingeben.'); return; }
+            if(!titel||!titel.trim()) { alert(t('alert_enter_subject')); return; }
 
             var isMarkt = communityMarktplatzCats.indexOf(kat) !== -1;
             try {
@@ -8284,7 +8460,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     });
                     if(resp.error) throw resp.error;
                 } else {
-                    if(!body||!body.trim()) { alert('Bitte Nachricht eingeben.'); return; }
+                    if(!body||!body.trim()) { alert(t('alert_enter_message')); return; }
                     var resp = await sb.from('forum_beitraege').insert({
                         user_id: sbUser.id, standort_id: sbProfile ? sbProfile.standort_id : null,
                         titel: titel.trim(), inhalt: body.trim(), kategorie: kat
@@ -8300,12 +8476,12 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         async function deactivateBrettPost(id) {
-            if(!confirm('Eintrag wirklich entfernen?')) return;
+            if(!confirm(t('confirm_delete_entry'))) return;
             try { await sb.from('brett_eintraege').update({aktiv:false}).eq('id',id); renderCommunityPosts('all'); } catch(err) { alert('Fehler: '+err.message); }
         }
 
         async function deleteForumPost(id) {
-            if(!confirm('Beitrag wirklich löschen?')) return;
+            if(!confirm(t('confirm_delete_post'))) return;
             try {
                 await sb.from('forum_kommentare').delete().eq('beitrag_id', id);
                 await sb.from('forum_beitraege').delete().eq('id', id);
@@ -8363,7 +8539,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         async function postForumComment() {
             var input = document.getElementById('forumCommentInput');
             var text = input ? input.value.trim() : '';
-            if(!text||!kommState.currentForumPost) { alert('Bitte Kommentar eingeben.'); return; }
+            if(!text||!kommState.currentForumPost) { alert(t('alert_enter_comment')); return; }
             try {
                 var resp = await sb.from('forum_kommentare').insert({ beitrag_id: kommState.currentForumPost, user_id: sbUser.id, inhalt: text });
                 if(resp.error) throw resp.error;
@@ -8489,7 +8665,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var btn = document.getElementById('dokUpBtn');
             if(!titel||!titel.trim()) { if(errEl){errEl.textContent='Bitte Titel eingeben.';errEl.style.display='block';} return; }
             if(!fileInput||!fileInput.files||!fileInput.files[0]) { if(errEl){errEl.textContent='Bitte Datei auswaehlen.';errEl.style.display='block';} return; }
-            if(btn){btn.disabled=true;btn.textContent='Wird hochgeladen...';}
+            if(btn){btn.disabled=true;btn.textContent=t('ui_uploading');}
             try {
                 var file = fileInput.files[0];
                 var path = 'netzwerk/'+kat+'/'+Date.now()+'_'+file.name;
@@ -8506,7 +8682,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 loadNetzwerkDokumente();
             } catch(err) {
                 if(errEl){errEl.textContent='Fehler: '+err.message;errEl.style.display='block';}
-                if(btn){btn.disabled=false;btn.textContent='Hochladen';}
+                if(btn){btn.disabled=false;btn.textContent=t('ui_upload');}
             }
         }
 
@@ -9770,7 +9946,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 alert('✅ BWA '+monatNamen[month]+' '+year+' gespeichert!');
             } catch(err) {
                 if(errEl){errEl.textContent='Fehler: '+err.message;errEl.style.display='block';}
-                if(btn) { btn.disabled=false; btn.textContent='BWA speichern'; }
+                if(btn) { btn.disabled=false; btn.textContent=t('ui_save_bwa'); }
             }
         }
 
@@ -10062,7 +10238,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     planMonths[m] = { monat:m, umsatz:u, wareneinsatz:we, personalkosten:pk, raumkosten:rk };
                 }
             }
-            if(Object.keys(planMonths).length < 1) { alert('Bitte mindestens einen Monat ausfüllen.'); return; }
+            if(Object.keys(planMonths).length < 1) { alert(t('misc_min_month')); return; }
             window._parsedPlanMonths = planMonths;
             await saveParsedPlan();
         }
@@ -10254,7 +10430,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         async function deleteBwa() {
             if(!selectedBwaId) return;
-            if(!confirm('BWA wirklich loeschen?')) return;
+            if(!confirm(t('confirm_delete_bwa'))) return;
             try {
                 var resp = await sb.from('bwa_daten').delete().eq('id', selectedBwaId);
                 if(resp.error) throw resp.error;
@@ -10535,7 +10711,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 loadWeekFromDb();
             } catch(err) {
                 if(errEl){errEl.textContent='Fehler: '+err.message;errEl.style.display='block';}
-                if(btn) { btn.disabled=false; btn.textContent='Speichern'; }
+                if(btn) { btn.disabled=false; btn.textContent=t('btn_save'); }
             }
         }
 
@@ -11441,7 +11617,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var beschreibung = (document.getElementById('ticketBeschreibungInput')||{}).value;
             var kategorie = (document.getElementById('ticketCatInput')||{}).value || 'allgemein';
             var prioritaet = (document.getElementById('ticketPrioInput')||{}).value || 'mittel';
-            if(!titel || !titel.trim()) { alert('Bitte Betreff eingeben.'); return; }
+            if(!titel || !titel.trim()) { alert(t('alert_enter_subject')); return; }
             try {
                 var stdId = sbProfile ? sbProfile.standort_id : null;
                 var resp = await sb.from('support_tickets').insert({
@@ -11706,7 +11882,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 einheit: document.getElementById('jahreszielEinheit').value,
                 status: 'aktiv', ist_abgehakt: false, sortierung: allgemeinJahresziele.length + 1
             };
-            if (!payload.titel) { alert('Bitte Titel eingeben'); return; }
+            if (!payload.titel) { alert(t('alert_enter_title')); return; }
             try {
                 var res = editId ? await sb.from('partner_jahresziele').update(payload).eq('id', editId) : await sb.from('partner_jahresziele').insert([payload]);
                 if (res.error) throw res.error;
@@ -11715,7 +11891,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
         
         async function deleteJahresziel(id) {
-            if (!confirm('Ziel wirklich löschen?')) return;
+            if (!confirm(t('confirm_delete_goal'))) return;
             try { var r = await sb.from('partner_jahresziele').delete().eq('id', id); if (r.error) throw r.error; loadJahresziele(); } catch(e) { alert('Fehler: '+e.message); }
         }
         
@@ -11963,7 +12139,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 aktuelle_lage: document.getElementById('journalLage').value.trim(), wuensche_hq: wuensche, massnahmen: massnahmen,
                 naechster_termin: document.getElementById('journalNaechsterTermin').value || null, erstellt_von: sbUser.id
             };
-            if (!payload.datum) { alert('Bitte Datum eingeben'); return; }
+            if (!payload.datum) { alert(t('alert_enter_date')); return; }
             try {
                 var res = editId ? await sb.from('partner_journal').update(payload).eq('id', editId) : await sb.from('partner_journal').insert([payload]);
                 if (res.error) throw res.error;
@@ -11972,7 +12148,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
         
         async function deleteJournalEntry(id) {
-            if (!confirm('Protokoll wirklich löschen?')) return;
+            if (!confirm(t('confirm_delete_protocol'))) return;
             try { var r = await sb.from('partner_journal').delete().eq('id',id); if (r.error) throw r.error; loadJournal(); } catch(e) { alert('Fehler: '+e.message); }
         }
         
@@ -12419,7 +12595,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 // Check if already voted
                 var checkResp = await sb.from('ideen_votes').select('id').eq('idee_id',id).eq('user_id',sbUser.id);
                 if(checkResp.data && checkResp.data.length > 0) {
-                    alert('Du hast bereits für diese Idee gestimmt!');
+                    alert(t('alert_already_voted'));
                     return;
                 }
                 // Insert vote
@@ -12430,7 +12606,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 await sb.from('ideen').update({votes: newVotes}).eq('id',id);
                 renderIdeen('all');
             } catch(err) { 
-                if(err.code==='23505') alert('Du hast bereits für diese Idee gestimmt!');
+                if(err.code==='23505') alert(t('alert_already_voted'));
                 else { console.error('Vote:', err); alert('Fehler: '+(err.message||err)); }
             }
         }
@@ -12440,7 +12616,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var beschEl = document.getElementById('ideeBeschreibung');
             var katEl = document.getElementById('ideeKat');
             var typEl = document.getElementById('ideeTyp');
-            if(!titelEl || !titelEl.value.trim()) { alert('Bitte einen Titel eingeben.'); return; }
+            if(!titelEl || !titelEl.value.trim()) { alert(t('alert_enter_title')); return; }
             try {
                 var insertData = {
                     user_id: sbUser.id,
@@ -13106,6 +13282,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 {name:'HQ Support', view:'hqSupportView', status:'live', typ:'hq', version:'1.0.0', details:'Netzwerk-Tickets, Status ändern, Prioritäten', kiPrio:24, aufwand:'M', kiTodo:'Ticket-Zuweisung, SLA-Tracking, Auto-Eskalation.'},
                 {name:'HQ Ideen', view:'hqIdeenView', status:'live', typ:'hq', version:'1.0.0', details:'Ideen verwalten, Status ändern, Filter', kiPrio:32, aufwand:'S', kiTodo:'Idee-zu-Projekt Konversion. Grundfunktion top.'},
                 {name:'HQ Shop', view:'hqShopView', status:'demo', typ:'hq', version:'0.1.0', details:'UI zum Hinzufügen, keine echte DB', kiPrio:21, aufwand:'L', kiTodo:'Produktverwaltung CRUD, Bestellübersicht.'},
+                {name:'HQ Buchhaltung', view:'hqBillingView', status:'beta', typ:'hq', version:'1.0.0', details:'Monats-Drafts, Quartals-Settlement, Strategien, Produkte, Tools – Full Stack mit Supabase Edge Function', kiPrio:2, aufwand:'XL', kiTodo:'Stripe/LexOffice-Integration, PDF-Export, automatischer SEPA-Einzug.'},
+                {name:'Standort Buchhaltung', view:'standortBillingView', status:'beta', typ:'standort', version:'1.0.0', details:'Rechnungsübersicht, Jahresstrategie einreichen, Kostenaufschlüsselung mit Formeln', kiPrio:3, aufwand:'L', kiTodo:'PDF-Download, Zahlungsstatus-Tracking.'},
                 {name:'HQ Einstellungen', view:'hqEinstellungenView', status:'live', typ:'hq', version:'1.2.0', details:'Module aktivieren/deaktivieren, Rollen-Matrix, User-Freigabe – alles DB', kiPrio:36, aufwand:'S', kiTodo:'Branding-Einstellungen. Core funktioniert bereits.'}
             ],
             widgets: [
@@ -13277,6 +13455,229 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         // Alias for auto-loading
         function renderDevStatus() { renderModulStatus(); }
+
+        function showDevTab(tab) {
+            document.querySelectorAll('.dev-tab-content').forEach(function(el) { el.style.display = 'none'; });
+            document.querySelectorAll('.dev-tab').forEach(function(b) {
+                b.className = 'dev-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500';
+            });
+            var tabEl = document.getElementById('devTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            if (tabEl) tabEl.style.display = 'block';
+            var btn = document.querySelector('.dev-tab[data-dtab="' + tab + '"]');
+            if (btn) btn.className = 'dev-tab whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
+            if (tab === 'modules') renderModulStatus();
+            if (tab === 'releases') renderReleaseUpdates();
+        }
+
+        var RELEASE_UPDATES = [
+            {
+                version: '2.9.0',
+                date: '2026-02-17',
+                title: 'Buchhaltung & i18n-Finalisierung',
+                type: 'major',
+                changes: [
+                    {cat:'feature', text:'Buchhaltungs-Modul: Komplett-Frontend für HQ + Standort mit Monats-Drafts, Quartals-Settlement, Strategieverwaltung, Produktkatalog und Tool-Zuweisung'},
+                    {cat:'feature', text:'Standort Zahlungsstatus-Tab: Summary-Cards (Bezahlt/Offen/Gesamt) + Zahlungsverlauf-Timeline mit Status-Icons und Datumsanzeige'},
+                    {cat:'feature', text:'PDF-Rechnungsdownload: Browser-basierte PDF-Generierung mit vit:bikes Branding, Positionen, Formeln und Bankdaten'},
+                    {cat:'feature', text:'Kostenaufschlüsselung: Transparente monatliche Berechnung mit Formeln (Umsatzbeteiligung, Grundgebühr, Marketing, Tools)'},
+                    {cat:'backend', text:'Billing Edge Function: 11 Actions (generate-monthly-drafts, quarterly-settlement, finalize, mark-paid, line-item CRUD, strategy approve/lock, billing-overview)'},
+                    {cat:'backend', text:'7 neue DB-Tabellen: billing_products, billing_annual_strategy, billing_tool_packages, billing_user_tool_assignments, billing_accounts, billing_invoices, billing_invoice_line_items + billing_audit_log + billing_credits'},
+                    {cat:'improve', text:'i18n komplett: 414 Keys × 3 Sprachen (DE/EN/NL) synchron – Niederländisch von 58 auf 414 Keys aufgefüllt'},
+                    {cat:'improve', text:'93 hardcodierte deutsche Strings durch t()-Aufrufe ersetzt (Alerts, Confirms, Buttons, Trainer, Billing)'},
+                    {cat:'improve', text:'Umbenennung „Abrechnung" → „Buchhaltung" im gesamten Portal'},
+                ]
+            },
+            {
+                version: '2.8.0',
+                date: '2026-02-17',
+                title: 'Push-Notifications & Service Worker',
+                type: 'major',
+                changes: [
+                    {cat:'feature', text:'Web Push Notifications: Vollständiges System mit VAPID-Verschlüsselung, Service Worker Registration und Browser-Permission-Handling'},
+                    {cat:'feature', text:'Push-Preferences: 6 individuelle Toggles (BWA-Erinnerungen, Nachrichten, Aufgaben, Ankündigungen, Verkauf, Trainer) im Profil'},
+                    {cat:'backend', text:'Edge Function push-notify: Abonnement-Verwaltung, Benachrichtigungsversand mit web-push Lib, automatische Cleanup fehlgeschlagener Subscriptions'},
+                    {cat:'backend', text:'DB-Schema: push_subscriptions + push_preferences Tabellen mit RLS-Policies'},
+                    {cat:'fix', text:'Desktop Chrome Push: Encryption-Troubleshooting, VAPID-Key Base64-Konvertierung, Service Worker Scope-Fix'},
+                ]
+            },
+            {
+                version: '2.7.0',
+                date: '2026-02-16',
+                title: 'BWA KI-Analyse & Controlling Deep-Dive',
+                type: 'major',
+                changes: [
+                    {cat:'feature', text:'KI-gestützte BWA-Analyse: Claude API (Sonnet) analysiert hochgeladene BWA-Daten und gibt Handlungsempfehlungen in 4 Kategorien (Umsatz, Kosten, Personal, Liquidität)'},
+                    {cat:'feature', text:'BWA Edge Function: 13 verschiedene Dateiformat-Parser (DATEV Standard, DATEV Kompakt, Agenda, Addison, Lexware, CSV, Excel u.a.)'},
+                    {cat:'improve', text:'DATEV Vorzeichen-Inversion: Automatische Korrektur der DATEV-typischen negativen Umsatzwerte'},
+                    {cat:'improve', text:'BWA-Trend-Ansicht: Monatsvergleich mit Sparklines und Farbcodierung für Abweichungen'},
+                ]
+            },
+            {
+                version: '2.6.0',
+                date: '2026-02-15',
+                title: 'Verkaufs-Pipeline React Rewrite',
+                type: 'major',
+                changes: [
+                    {cat:'feature', text:'React Kanban-Pipeline: 6-stufiges Board (Lead → Angebot → Schwebend → Verkauft → Fakturiert) mit Drag & Drop'},
+                    {cat:'feature', text:'Gamification: Punkte-System, Streak-Tracking, Level-Badges und Netzwerk-Ranking für Verkäufer'},
+                    {cat:'feature', text:'KI-Verkaufstrainer: Gesprächssimulation mit Claude API, personalisierte Tipps basierend auf Pipeline-Daten'},
+                    {cat:'improve', text:'Deal-Kalkulator: Automatische Berechnung von Rahmenwert, Zubehör, Gesamtwert mit Marge'},
+                ]
+            },
+            {
+                version: '2.5.0',
+                date: '2026-02-14',
+                title: 'Kommunikationsmodul & Forum',
+                type: 'major',
+                changes: [
+                    {cat:'feature', text:'Echtzeit-Chat: 1:1 und Gruppen-Nachrichten mit Supabase Realtime, Lesebestätigungen und Datei-Anhänge'},
+                    {cat:'feature', text:'Ankündigungen: HQ kann Netzwerk-weite Mitteilungen mit Prioritäts-Markierung und Lesebestätigung versenden'},
+                    {cat:'feature', text:'Schwarzes Brett: Community-Posts mit Upvoting, Kategorien und Anhängen'},
+                    {cat:'feature', text:'Ideenboard: Standorte können Verbesserungsvorschläge einreichen, abstimmen und kommentieren'},
+                ]
+            },
+            {
+                version: '2.4.0',
+                date: '2026-02-12',
+                title: 'Health Score & Trainer-System',
+                type: 'major',
+                changes: [
+                    {cat:'feature', text:'Health Score Dashboard: Aggregierter KPI pro Standort aus 5 Kategorien (Verkauf, BWA, Marketing, Werkstatt, Portal-Nutzung)'},
+                    {cat:'feature', text:'8 interaktive Micro-Trainer: Nachfass-Systematik, BWA lesen, Content erstellen, Durchlaufzeit, Lead-Qualifizierung, Rohertrag steigern, Liquiditätsplanung, GMB optimieren'},
+                    {cat:'feature', text:'Smart Interceptor: Erkennt Support-Anfragen und bietet kontextbezogene Sofortlösungen vor Ticket-Erstellung'},
+                    {cat:'feature', text:'HQ Netzwerk-Cockpit: Ampel-Übersicht aller Standorte mit Score, Trend und Handlungsbedarf'},
+                ]
+            },
+            {
+                version: '2.3.0',
+                date: '2026-02-10',
+                title: 'Onboarding & Wissensportal',
+                type: 'feature',
+                changes: [
+                    {cat:'feature', text:'Onboarding-Checkliste: Geführter Prozess für neue Standorte mit Pflicht-/Optional-Aufgaben und Fortschrittsanzeige'},
+                    {cat:'feature', text:'Wissensportal: Kursbasiertes Lernmodul mit Kapiteln, eingebetteten Videos und Quiz-Fragen'},
+                    {cat:'feature', text:'Dokumentenarchiv (Aktenschrank): Kategorisierte Ablage mit Upload, Suche und Vorschau'},
+                ]
+            },
+            {
+                version: '2.2.0',
+                date: '2026-02-08',
+                title: 'Local Hero Social Media',
+                type: 'feature',
+                changes: [
+                    {cat:'feature', text:'Local Hero Content-Plattform: Themen-Aufträge mit Briefings, Hooks, Beispielvideos und Upload-Workflow'},
+                    {cat:'feature', text:'Content-Ranking: Netzwerk-weites Leaderboard mit Badges (Erster Upload bis 50 Videos)'},
+                    {cat:'feature', text:'Kanal-Übersicht: Instagram, TikTok, YouTube, Facebook mit Follower-Zahlen und Engagement-Tracking'},
+                ]
+            },
+            {
+                version: '2.1.0',
+                date: '2026-02-05',
+                title: 'Aufgaben & Kalender',
+                type: 'feature',
+                changes: [
+                    {cat:'feature', text:'Todo-System: Aufgaben mit Priorität, Kategorie, Fälligkeitsdatum – automatische + manuelle Tasks'},
+                    {cat:'feature', text:'Kalender: Termin-Verwaltung mit Tages/Wochen/Monatsansicht, Serienterminen und Farb-Kategorien'},
+                    {cat:'feature', text:'BWA-Erinnerungssystem: 4-stufige Eskalation (Info → Warnung → Dringend → Überfällig) mit automatischer HQ-Benachrichtigung'},
+                ]
+            },
+            {
+                version: '2.0.0',
+                date: '2026-02-01',
+                title: 'Portal-Launch mit Supabase Backend',
+                type: 'major',
+                changes: [
+                    {cat:'backend', text:'Migration von statischem Prototype zu Supabase-Backend mit Auth, RLS-Policies und Realtime'},
+                    {cat:'feature', text:'Multi-Tenant Architektur: Rollen-basierte Sichtbarkeit (HQ sieht alles, Standorte nur eigene Daten)'},
+                    {cat:'feature', text:'Login-System: E-Mail/Passwort mit Passwort-Reset, Session-Management und automatischer Standort-Zuweisung'},
+                    {cat:'feature', text:'Dashboard: Personalisierte Startseite mit KPIs (Beratungen, Angebote, Tickets) und Schnellzugriff'},
+                    {cat:'feature', text:'Ticket-System: Kategorie-basierter Support mit Status-Workflow, Kommentaren und Prioritäten'},
+                ]
+            },
+            {
+                version: '1.0.0',
+                date: '2026-01-15',
+                title: 'Erster Prototype',
+                type: 'initial',
+                changes: [
+                    {cat:'feature', text:'Single-Page HTML-Portal mit Demo-Daten für alle Kernmodule'},
+                    {cat:'feature', text:'3-Sprachen-System (DE/EN/NL) mit data-i18n Attributen und switchLang()'},
+                    {cat:'feature', text:'Responsive Design mit Tailwind CSS, vit:bikes Corporate Design (Orange #EF7D00)'},
+                    {cat:'feature', text:'Modul-Status-Tracker mit Live/Teilweise/Demo/Stub-Klassifizierung und KI-Priorität'},
+                ]
+            }
+        ];
+
+        function renderReleaseUpdates() {
+            var el = document.getElementById('releaseUpdatesContent');
+            if (!el) return;
+
+            var catColors = {
+                feature: {bg:'bg-green-100', text:'text-green-800', label:'Feature'},
+                improve: {bg:'bg-blue-100', text:'text-blue-800', label:'Verbesserung'},
+                fix: {bg:'bg-yellow-100', text:'text-yellow-800', label:'Fix'},
+                backend: {bg:'bg-purple-100', text:'text-purple-800', label:'Backend'},
+            };
+            var typeIcons = {major:'🚀', feature:'✨', fix:'🔧', initial:'🎉'};
+
+            var h = '';
+            
+            // Summary
+            h += '<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">';
+            h += '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-vit-orange">' + RELEASE_UPDATES.length + '</p><p class="text-xs text-gray-400">Releases</p></div>';
+            var totalChanges = RELEASE_UPDATES.reduce(function(s,r){ return s + r.changes.length; }, 0);
+            h += '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-green-600">' + totalChanges + '</p><p class="text-xs text-gray-400">Änderungen</p></div>';
+            var features = RELEASE_UPDATES.reduce(function(s,r){ return s + r.changes.filter(function(c){return c.cat==='feature'}).length; }, 0);
+            h += '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-blue-600">' + features + '</p><p class="text-xs text-gray-400">Features</p></div>';
+            var latestDate = RELEASE_UPDATES[0] ? RELEASE_UPDATES[0].date : '—';
+            h += '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-gray-700">' + latestDate + '</p><p class="text-xs text-gray-400">Letztes Update</p></div>';
+            h += '</div>';
+
+            // Timeline
+            h += '<div class="relative">';
+            h += '<div class="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>';
+
+            RELEASE_UPDATES.forEach(function(rel, idx) {
+                var isLatest = idx === 0;
+                h += '<div class="relative pl-14 pb-8">';
+                
+                // Timeline dot
+                h += '<div class="absolute left-4 w-5 h-5 rounded-full border-2 ' + (isLatest ? 'bg-vit-orange border-vit-orange' : 'bg-white border-gray-300') + ' flex items-center justify-center" style="top:4px">';
+                if (isLatest) h += '<div class="w-2 h-2 bg-white rounded-full"></div>';
+                h += '</div>';
+
+                // Release card
+                h += '<div class="vit-card p-5 ' + (isLatest ? 'ring-2 ring-vit-orange/30' : '') + '">';
+                
+                // Header
+                h += '<div class="flex items-center justify-between mb-3">';
+                h += '<div class="flex items-center gap-2">';
+                h += '<span class="text-lg">' + (typeIcons[rel.type] || '📦') + '</span>';
+                h += '<span class="font-mono text-xs font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded">v' + rel.version + '</span>';
+                if (isLatest) h += '<span class="text-[10px] font-bold bg-vit-orange text-white px-2 py-0.5 rounded-full uppercase">Aktuell</span>';
+                h += '</div>';
+                h += '<span class="text-xs text-gray-400">' + new Date(rel.date).toLocaleDateString('de-DE', {day:'numeric', month:'long', year:'numeric'}) + '</span>';
+                h += '</div>';
+
+                h += '<h3 class="font-bold text-gray-800 mb-3">' + rel.title + '</h3>';
+
+                // Changes
+                h += '<div class="space-y-2">';
+                rel.changes.forEach(function(c) {
+                    var cc = catColors[c.cat] || catColors.feature;
+                    h += '<div class="flex items-start gap-2">';
+                    h += '<span class="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded ' + cc.bg + ' ' + cc.text + '">' + cc.label + '</span>';
+                    h += '<span class="text-sm text-gray-600">' + c.text + '</span>';
+                    h += '</div>';
+                });
+                h += '</div>';
+
+                h += '</div></div>';
+            });
+
+            h += '</div>';
+            el.innerHTML = h;
+        }
 
 
 
@@ -13498,6 +13899,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(v==='hqSupport') renderHqSupport();
             if(v==='hqIdeen') renderHqIdeen();
             if(v==='hqShop') renderHqShop();
+            if(v==='hqBilling') { initBillingModule(); showBillingTab('overview'); }
+            if(v==='hqBillingDetail') { /* opened via showBillingInvoice() */ }
+            if(v==='standortBilling') { initStandortBilling(); showStBillingTab('invoices'); }
             if(v==='hqEinstellungen') renderHqEinstellungen();
             if(v==='mitarbeiter') renderPartnerMitarbeiter();
             if(v==='hqKommando') renderKommandozentrale();
@@ -14330,7 +14734,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var ganztaegig=document.getElementById('kalNewGanztaegig').checked;
             var repeat=document.getElementById('kalNewRepeat').value||'';
             var repeatEnd=document.getElementById('kalNewRepeatEnd').value||null;
-            if(!title||!date){alert('Bitte Titel und Datum angeben.');return;}
+            if(!title||!date){alert(t('misc_enter_title_date'));return;}
 
             var startZeit = date+'T'+time+':00';
             var endZeit = endTime ? date+'T'+endTime+':00' : null;
@@ -14363,7 +14767,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                             p.end_zeit = endTime ? d + 'T' + endTime + ':00' : null;
                             return p;
                         });
-                        if(inserts.length > 100) { alert('Maximal 100 Wiederholungen erlaubt. Bitte kürzeren Zeitraum wählen.'); return; }
+                        if(inserts.length > 100) { alert(t('misc_max_repeat')); return; }
                         var resp = await sb.from('termine').insert(inserts);
                         if(resp.error) throw resp.error;
                     } else {
@@ -14501,7 +14905,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     await loadKalTermine();
                 } catch(err) { alert('Fehler: '+(err.message||err)); }
             } else {
-                if(!confirm('Termin wirklich löschen?')) return;
+                if(!confirm(t('confirm_delete_event'))) return;
                 try {
                     var resp = await sb.from('termine').delete().eq('id', kalEditId).select();
                     if(resp.error) throw resp.error;
@@ -15176,7 +15580,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         async function todoDeleteSec(id) {
-            if(!confirm('Sektion löschen? Aufgaben werden zu "Eingang" verschoben.')) return;
+            if(!confirm(t('confirm_delete_section'))) return;
             var inbox = todoState.sections.find(function(s){return s.name==='Eingang';});
             var inboxId = inbox ? inbox.id : null;
             // Move tasks
@@ -15604,7 +16008,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             el.innerHTML=h;
         }
         function addHqKampagne(){
-            var n=document.getElementById('hqKampName').value;if(!n){alert('Bitte Name eingeben.');return;}
+            var n=document.getElementById('hqKampName').value;if(!n){alert(t('alert_enter_name'));return;}
             hqKampagnen.unshift({id:hqKampagnen.length+1,name:n,type:document.getElementById('hqKampType').value,start:document.getElementById('hqKampStart').value||'2026-03-01',end:document.getElementById('hqKampEnd').value||'2026-04-30',status:'geplant',standorte:21,umgesetzt:0,budget:0,desc:document.getElementById('hqKampDesc').value||''});
             document.getElementById('hqKampModal').classList.add('hidden');document.getElementById('hqKampName').value='';
             renderHqKampagnen();
@@ -15710,7 +16114,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         async function deleteNetzwerkDok(id) {
-            if(!confirm('Dokument wirklich loeschen?')) return;
+            if(!confirm(t('confirm_delete_doc'))) return;
             try {
                 var dokResp = await sb.from('netzwerk_dokumente').select('datei_url').eq('id',id).single();
                 if(dokResp.data && dokResp.data.datei_url) {
@@ -15801,7 +16205,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             el.innerHTML=h;
         }
         async function addHqKalTermin(){
-            var title=document.getElementById('hqKalTitle').value;if(!title){alert('Bitte Titel eingeben.');return;}
+            var title=document.getElementById('hqKalTitle').value;if(!title){alert(t('alert_enter_title'));return;}
             var date=document.getElementById('hqKalDate').value||new Date().toISOString().slice(0,10);
             var time=document.getElementById('hqKalTime').value||'09:00';
             var type=document.getElementById('hqKalType').value;
@@ -15885,7 +16289,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             el.innerHTML=h;
         }
         function addHqTask(){
-            var title=document.getElementById('hqTaskTitle').value;if(!title){alert('Bitte Aufgabe eingeben.');return;}
+            var title=document.getElementById('hqTaskTitle').value;if(!title){alert(t('alert_enter_task'));return;}
             var target=document.getElementById('hqTaskTarget').value;
             var total=target==='alle'?21:target==='region_sued'?8:target==='region_nord'?5:target==='region_west'?5:3;
             hqTasks.unshift({id:hqTasks.length+1,title:title,deadline:document.getElementById('hqTaskDeadline').value||'2026-03-31',prio:document.getElementById('hqTaskPrio').value,target:target==='alle'?'alle':target.replace('region_','Region '),status:'offen',done:0,total:total,kat:'HQ'});
@@ -16208,7 +16612,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         function addHqWissen(){
             var t=document.getElementById('hqWissenTitel');
             var k=document.getElementById('hqWissenKat');
-            if(!t||!t.value.trim()){alert('Bitte Titel eingeben');return;}
+            if(!t||!t.value.trim()){alert(t('alert_enter_title'));return;}
             hqWissenItems.unshift({titel:t.value.trim(),kat:k.value,bereich:document.getElementById('hqWissenBereich').value,datum:new Date().toLocaleDateString('de-DE'),status:'live'});
             t.value='';document.getElementById('hqWissenInhalt').value='';
             renderHqWissen();
@@ -16341,7 +16745,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         function addHqShopProduct(){
             var n=document.getElementById('hqShopName');
             var p=document.getElementById('hqShopPreis');
-            if(!n||!n.value.trim()){alert('Bitte Produktname eingeben');return;}
+            if(!n||!n.value.trim()){alert(t('misc_enter_product'));return;}
             if(typeof shopProducts!=='undefined'){
                 shopProducts.push({id:'prod_new_'+Date.now(),name:n.value.trim(),kat:document.getElementById('hqShopKat').value,preis:parseFloat(p.value)||0,icon:'🆕',beschreibung:document.getElementById('hqShopDesc').value||''});
             }
@@ -16349,6 +16753,780 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             renderHqShop();
         }
         var kzStandorte = []; // loaded from Supabase
+
+        // ============================================================
+        // === HQ BILLING / ABRECHNUNG MODULE ===
+        // ============================================================
+        var BILLING_FN = 'https://lwwagbkxeofahhwebkab.supabase.co/functions/v1/billing';
+        var billingData = { invoices: [], products: [], strategies: [], tools: [], overview: [] };
+        var currentBillingMonth = '';
+
+        function fmtEur(n) { return new Intl.NumberFormat('de-DE', { style:'currency', currency:'EUR' }).format(n || 0); }
+
+        function billingStatusBadge(s) {
+            var m = {
+                draft: ['Draft','bg-yellow-100 text-yellow-700'],
+                ready: ['Bereit','bg-blue-100 text-blue-700'],
+                finalized: ['Finalisiert','bg-indigo-100 text-indigo-700'],
+                sent: ['Gesendet','bg-purple-100 text-purple-700'],
+                paid: ['Bezahlt','bg-green-100 text-green-700'],
+                failed: ['Fehlgeschlagen','bg-red-100 text-red-700'],
+                void: ['Storniert','bg-gray-100 text-gray-500'],
+                credited: ['Gutschrift','bg-teal-100 text-teal-700']
+            };
+            var v = m[s] || [s, 'bg-gray-100 text-gray-600'];
+            return '<span class="px-2 py-0.5 rounded-full text-xs font-semibold ' + v[1] + '">' + v[0] + '</span>';
+        }
+
+        async function billingApi(action, params) {
+            try {
+                var resp = await fetch(BILLING_FN, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(Object.assign({ action: action }, params || {}))
+                });
+                return await resp.json();
+            } catch (e) { console.error('[Billing]', e); return { error: e.message }; }
+        }
+
+        function initBillingModule() {
+            // Populate month selector
+            var sel = document.getElementById('billingMonthSelect');
+            if (!sel) return;
+            var now = new Date();
+            sel.innerHTML = '';
+            for (var i = -2; i <= 3; i++) {
+                var d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+                var val = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-01';
+                var label = d.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+                var opt = document.createElement('option');
+                opt.value = val; opt.textContent = label;
+                if (i === 0) opt.selected = true;
+                sel.appendChild(opt);
+            }
+            currentBillingMonth = sel.value;
+            loadBillingOverview();
+        }
+
+        async function loadBillingOverview() {
+            var sel = document.getElementById('billingMonthSelect');
+            currentBillingMonth = sel ? sel.value : currentBillingMonth;
+            var tbl = document.getElementById('billingOverviewTable');
+            var kpis = document.getElementById('billingKpis');
+            if (tbl) tbl.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-400"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></td></tr>';
+
+            var result = await billingApi('billing-overview', { month: currentBillingMonth });
+            if (result.error) { if (tbl) tbl.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">Fehler: ' + result.error + '</td></tr>'; return; }
+
+            billingData.overview = result.standorte || [];
+            var ov = billingData.overview;
+
+            // KPIs
+            var totalInvoiced = ov.reduce(function(s, x) { return s + (x.invoice ? x.invoice.total : 0); }, 0);
+            var drafts = ov.filter(function(x) { return x.invoice && x.invoice.status === 'draft'; }).length;
+            var paid = ov.filter(function(x) { return x.invoice && x.invoice.status === 'paid'; }).length;
+            var noStrategy = ov.filter(function(x) { return !x.strategy || !x.strategy.locked; }).length;
+
+            if (kpis) kpis.innerHTML =
+                '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Rechnungsvolumen</p><p class="text-xl font-bold text-gray-800">' + fmtEur(totalInvoiced) + '</p></div>' +
+                '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Drafts</p><p class="text-xl font-bold text-yellow-600">' + drafts + '</p></div>' +
+                '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Bezahlt</p><p class="text-xl font-bold text-green-600">' + paid + '</p></div>' +
+                '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Strategie fehlt</p><p class="text-xl font-bold ' + (noStrategy > 0 ? 'text-red-500' : 'text-green-600') + '">' + noStrategy + '</p></div>';
+
+            // Table
+            if (tbl) {
+                var h = '';
+                ov.sort(function(a, b) { return a.name.localeCompare(b.name); }).forEach(function(st) {
+                    var inv = st.invoice;
+                    var strat = st.strategy;
+                    var acct = st.billing_account;
+                    h += '<tr class="border-t hover:bg-gray-50 cursor-pointer" onclick="' + (inv ? "showBillingInvoice('" + inv.id + "')" : '') + '">';
+                    h += '<td class="p-3"><p class="font-semibold text-sm">' + st.name + '</p><p class="text-xs text-gray-400">' + (st.inhaber_name || '') + '</p></td>';
+                    h += '<td class="p-3 text-center">' + (strat && strat.locked ? '<span class="text-green-600 text-xs font-semibold">✅ Gesperrt</span>' : strat && strat.approved_at ? '<span class="text-blue-600 text-xs">✓ Genehmigt</span>' : '<span class="text-red-500 text-xs">❌ Fehlt</span>') + '</td>';
+                    h += '<td class="p-3 text-center">' + (acct && acct.sepa_active ? '<span class="text-green-600 text-xs">✅</span>' : '<span class="text-gray-300 text-xs">—</span>') + '</td>';
+                    h += '<td class="p-3 text-right">' + (inv ? '<span class="font-semibold">' + fmtEur(inv.total) + '</span>' : '<span class="text-gray-300">—</span>') + '</td>';
+                    h += '<td class="p-3 text-center">' + (inv ? billingStatusBadge(inv.status) : '<span class="text-gray-300 text-xs">Keine</span>') + '</td>';
+                    h += '<td class="p-3 text-center">';
+                    if (inv) h += '<button onclick="event.stopPropagation();showBillingInvoice(\'' + inv.id + '\')" class="text-xs text-vit-orange hover:underline">Details →</button>';
+                    else h += '<span class="text-xs text-gray-400">—</span>';
+                    h += '</td></tr>';
+                });
+                tbl.innerHTML = h || '<tr><td colspan="6" class="p-8 text-center text-gray-400">Keine Standorte gefunden</td></tr>';
+            }
+        }
+
+        async function generateMonthlyDrafts() {
+            if (!confirm('Monats-Drafts für ' + currentBillingMonth + ' generieren?\n\nDies erstellt Rechnungsentwürfe für alle Standorte mit gesperrter Jahresstrategie.')) return;
+            var btn = event.target;
+            btn.disabled = true; btn.textContent = '⏳ Generiere...';
+            var result = await billingApi('generate-monthly-drafts', { month: currentBillingMonth });
+            btn.disabled = false; btn.textContent = t('bill_generate_drafts');
+            if (result.error) { alert('Fehler: ' + result.error); return; }
+            alert('✅ ' + result.created + ' Drafts erstellt, ' + result.skipped + ' übersprungen');
+            loadBillingOverview();
+        }
+
+        function showQuarterlySettlementDialog() {
+            var year = new Date().getFullYear();
+            var q = Math.ceil((new Date().getMonth() + 1) / 3);
+            var prevQ = q > 1 ? q - 1 : 4;
+            var prevY = q > 1 ? year : year - 1;
+            if (!confirm('Quartals-Settlement Q' + prevQ + '/' + prevY + ' generieren?\n\nDies berechnet die Spitzenausgleiche basierend auf den vorliegenden BWA-Daten.\n\nFehlende BWA-Monate werden zu 100% Planbasis abgerechnet.')) return;
+            generateQuarterlySettlement(prevY, prevQ);
+        }
+
+        async function generateQuarterlySettlement(year, quarter) {
+            var result = await billingApi('generate-quarterly-settlement', { year: year, quarter: quarter });
+            if (result.error) { alert('Fehler: ' + result.error); return; }
+            alert('✅ ' + result.created + ' Settlements erstellt');
+            loadBillingOverview();
+        }
+
+        async function finalizeAllReady() {
+            if (!confirm('Alle Drafts für ' + currentBillingMonth + ' finalisieren?')) return;
+            var drafts = billingData.overview.filter(function(x) { return x.invoice && x.invoice.status === 'draft'; });
+            var count = 0;
+            for (var i = 0; i < drafts.length; i++) {
+                var r = await billingApi('finalize-invoice', { invoice_id: drafts[i].invoice.id, user_id: SESSION.user_id });
+                if (!r.error) count++;
+            }
+            alert('✅ ' + count + ' Rechnungen finalisiert');
+            loadBillingOverview();
+        }
+
+        async function showBillingInvoice(invId) {
+            showView('hqBillingDetail');
+            var content = document.getElementById('billingDetailContent');
+            var title = document.getElementById('billingDetailTitle');
+            var subtitle = document.getElementById('billingDetailSubtitle');
+            var actions = document.getElementById('billingDetailActions');
+            if (content) content.innerHTML = '<div class="text-center py-12"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-vit-orange"></div></div>';
+
+            // Load invoice + line items + audit
+            var sb = window.supabase;
+            var { data: inv } = await sb.from('billing_invoices').select('*, standort:standorte(name)').eq('id', invId).single();
+            if (!inv) { content.innerHTML = '<p class="text-red-500">Rechnung nicht gefunden</p>'; return; }
+
+            var { data: lines } = await sb.from('billing_invoice_line_items').select('*, product:billing_products(name, key)').eq('invoice_id', invId).order('sort_index');
+            var { data: audit } = await sb.from('billing_audit_log').select('*').eq('invoice_id', invId).order('created_at', { ascending: false });
+
+            if (title) title.textContent = inv.invoice_number || 'Rechnung';
+            if (subtitle) subtitle.textContent = (inv.standort ? inv.standort.name : '') + ' · ' + (inv.period_start || '') + ' bis ' + (inv.period_end || '');
+
+            // Actions
+            if (actions) {
+                var h = '';
+                if (inv.status === 'draft') {
+                    h += '<button onclick="finalizeInvoice(\'' + invId + '\')" class="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-semibold hover:bg-green-700">✅ Finalisieren</button>';
+                    h += '<button onclick="addManualLineItem(\'' + invId + '\')" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700">➕ Position</button>';
+                }
+                if (inv.status === 'finalized') {
+                    h += '<button onclick="markInvoicePaid(\'' + invId + '\')" class="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-semibold hover:bg-green-700">💰 Als bezahlt</button>';
+                }
+                actions.innerHTML = h;
+            }
+
+            // Content
+            var ch = '';
+
+            // Status + Summary Card
+            ch += '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">';
+            ch += '<div class="vit-card p-4"><p class="text-xs text-gray-400">Status</p><div class="mt-1">' + billingStatusBadge(inv.status) + '</div></div>';
+            ch += '<div class="vit-card p-4"><p class="text-xs text-gray-400">Netto</p><p class="text-lg font-bold">' + fmtEur(inv.subtotal) + '</p></div>';
+            ch += '<div class="vit-card p-4"><p class="text-xs text-gray-400">MwSt (' + (inv.tax_rate || 19) + '%)</p><p class="text-lg font-bold text-gray-500">' + fmtEur(inv.tax_amount) + '</p></div>';
+            ch += '<div class="vit-card p-4"><p class="text-xs text-gray-400">Gesamt</p><p class="text-lg font-bold text-vit-orange">' + fmtEur(inv.total) + '</p></div>';
+            ch += '</div>';
+
+            // Line Items
+            ch += '<div class="vit-card overflow-hidden mb-6">';
+            ch += '<div class="p-4 border-b bg-gray-50 flex items-center justify-between"><h3 class="font-semibold text-sm">Positionen</h3></div>';
+            ch += '<table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr>';
+            ch += '<th class="text-left p-3">Beschreibung</th><th class="text-right p-3">Menge</th><th class="text-right p-3">Einzelpreis</th><th class="text-right p-3">Betrag</th>';
+            if (inv.status === 'draft') ch += '<th class="text-center p-3">Aktion</th>';
+            ch += '</tr></thead><tbody>';
+            (lines || []).forEach(function(li) {
+                ch += '<tr class="border-t">';
+                ch += '<td class="p-3"><p class="font-medium">' + li.description + '</p>';
+                if (li.meta && li.meta.formula) ch += '<p class="text-xs text-gray-400 mt-1">📐 ' + li.meta.formula + '</p>';
+                ch += '</td>';
+                ch += '<td class="p-3 text-right">' + (li.quantity || 1) + '</td>';
+                ch += '<td class="p-3 text-right">' + fmtEur(li.unit_price) + '</td>';
+                ch += '<td class="p-3 text-right font-semibold">' + fmtEur(li.amount) + '</td>';
+                if (inv.status === 'draft') {
+                    ch += '<td class="p-3 text-center">';
+                    if (li.editable) ch += '<button onclick="editLineItem(\'' + li.id + '\', ' + li.amount + ', \'' + li.description.replace(/'/g, "\\'") + '\')" class="text-xs text-blue-600 hover:underline mr-2">✏️</button>';
+                    ch += '<button onclick="removeLineItem(\'' + li.id + '\',\'' + invId + '\')" class="text-xs text-red-500 hover:underline">🗑</button>';
+                    ch += '</td>';
+                }
+                ch += '</tr>';
+            });
+            ch += '</tbody></table></div>';
+
+            // Calculation Snapshot (Transparency)
+            if (inv.calculated_snapshot && inv.calculated_snapshot.formulas) {
+                ch += '<div class="vit-card p-4 mb-6">';
+                ch += '<h3 class="font-semibold text-sm mb-3">📐 Berechnungs-Transparenz</h3>';
+                ch += '<div class="space-y-1">';
+                inv.calculated_snapshot.formulas.forEach(function(f) {
+                    ch += '<p class="text-xs text-gray-600 font-mono bg-gray-50 px-3 py-1.5 rounded">' + f + '</p>';
+                });
+                ch += '</div></div>';
+            }
+
+            // Audit Trail
+            if (audit && audit.length) {
+                ch += '<div class="vit-card p-4">';
+                ch += '<h3 class="font-semibold text-sm mb-3">📋 Änderungsprotokoll</h3>';
+                ch += '<div class="space-y-2">';
+                audit.forEach(function(a) {
+                    var actionLabels = { create_draft:'Entwurf erstellt', edit_line:'Position bearbeitet', add_line:'Position hinzugefügt', remove_line:'Position entfernt', finalize:'Finalisiert', mark_paid:'Als bezahlt markiert', charge:'Belastet', void:'Storniert', override_amount:'Betrag überschrieben' };
+                    ch += '<div class="flex items-center justify-between text-xs">';
+                    ch += '<span class="text-gray-600">' + (actionLabels[a.action] || a.action) + (a.note ? ' – ' + a.note : '') + '</span>';
+                    ch += '<span class="text-gray-400">' + new Date(a.created_at).toLocaleString('de-DE') + '</span>';
+                    ch += '</div>';
+                });
+                ch += '</div></div>';
+            }
+
+            if (content) content.innerHTML = ch;
+        }
+
+        async function finalizeInvoice(invId) {
+            if (!confirm(t('bill_finalize'))) return;
+            var r = await billingApi('finalize-invoice', { invoice_id: invId, user_id: SESSION.user_id });
+            if (r.error) { alert('Fehler: ' + r.error); return; }
+            showBillingInvoice(invId);
+        }
+
+        async function markInvoicePaid(invId) {
+            if (!confirm(t('bill_mark_paid'))) return;
+            var r = await billingApi('mark-paid', { invoice_id: invId, user_id: SESSION.user_id });
+            if (r.error) { alert('Fehler: ' + r.error); return; }
+            showBillingInvoice(invId);
+        }
+
+        async function editLineItem(lineId, currentAmount, currentDesc) {
+            var newAmount = prompt('Neuer Betrag (aktuell: ' + fmtEur(currentAmount) + '):', currentAmount);
+            if (newAmount === null) return;
+            var r = await billingApi('update-line-item', { line_item_id: lineId, amount: parseFloat(newAmount), user_id: SESSION.user_id });
+            if (r.error) { alert('Fehler: ' + r.error); return; }
+            // Reload current invoice
+            var backBtn = document.querySelector('#billingDetailContent');
+            if (backBtn) {
+                var invRow = document.querySelector('#billingDetailTitle');
+                // Reload by finding the invoice ID from audit or just go back
+                showView('hqBilling'); loadBillingOverview();
+            }
+        }
+
+        async function removeLineItem(lineId, invId) {
+            if (!confirm(t('bill_remove_line'))) return;
+            var r = await billingApi('remove-line-item', { line_item_id: lineId, user_id: SESSION.user_id });
+            if (r.error) { alert('Fehler: ' + r.error); return; }
+            showBillingInvoice(invId);
+        }
+
+        async function addManualLineItem(invId) {
+            var desc = prompt(t('bill_new_desc'));
+            if (!desc) return;
+            var amount = prompt(t('bill_new_amount'));
+            if (amount === null) return;
+            var r = await billingApi('add-line-item', { invoice_id: invId, description: desc, amount: parseFloat(amount), user_id: SESSION.user_id });
+            if (r.error) { alert('Fehler: ' + r.error); return; }
+            showBillingInvoice(invId);
+        }
+
+        function showBillingTab(tab) {
+            document.querySelectorAll('.billing-tab-content').forEach(function(el) { el.style.display = 'none'; });
+            document.querySelectorAll('.billing-tab').forEach(function(b) {
+                b.className = 'billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500 hover:text-gray-700';
+            });
+            var tabEl = document.getElementById('billingTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            if (tabEl) tabEl.style.display = 'block';
+            var btn = document.querySelector('.billing-tab[data-tab="' + tab + '"]');
+            if (btn) btn.className = 'billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
+
+            if (tab === 'overview') loadBillingOverview();
+            if (tab === 'invoices') loadAllInvoices();
+            if (tab === 'strategies') loadAllStrategies();
+            if (tab === 'products') loadBillingProducts();
+            if (tab === 'tools') loadBillingTools();
+        }
+
+        async function loadAllInvoices() {
+            var container = document.getElementById('billingInvoicesList');
+            if (!container) return;
+            container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
+
+            var filter = document.getElementById('billingInvoiceFilter');
+            var statusFilter = filter ? filter.value : '';
+            var query = window.supabase.from('billing_invoices').select('*, standort:standorte(name)').order('created_at', { ascending: false }).limit(100);
+            if (statusFilter) query = query.eq('status', statusFilter);
+            var { data: invoices } = await query;
+
+            var h = '';
+            (invoices || []).forEach(function(inv) {
+                h += '<div class="vit-card p-4 flex items-center justify-between cursor-pointer hover:shadow-md transition-shadow" onclick="showBillingInvoice(\'' + inv.id + '\')">';
+                h += '<div class="flex-1 min-w-0">';
+                h += '<div class="flex items-center space-x-2 mb-1">';
+                h += '<span class="font-mono text-xs text-gray-400">' + (inv.invoice_number || '—') + '</span>';
+                h += billingStatusBadge(inv.status);
+                var typeLabels = { monthly_advance: '📅 Monat', quarterly_settlement: '📊 Quartal', shop_immediate: '🛒 Shop', manual: '✏️ Manuell' };
+                h += '<span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">' + (typeLabels[inv.invoice_type] || inv.invoice_type) + '</span>';
+                h += '</div>';
+                h += '<p class="text-sm font-semibold truncate">' + (inv.standort ? inv.standort.name : '—') + '</p>';
+                h += '<p class="text-xs text-gray-400">' + (inv.period_start || '') + ' bis ' + (inv.period_end || '') + '</p>';
+                h += '</div>';
+                h += '<div class="text-right ml-4">';
+                h += '<p class="font-bold text-lg">' + fmtEur(inv.total) + '</p>';
+                h += '<p class="text-xs text-gray-400">' + new Date(inv.created_at).toLocaleDateString('de-DE') + '</p>';
+                h += '</div></div>';
+            });
+            container.innerHTML = h || '<p class="text-center text-gray-400 py-8">Keine Rechnungen gefunden</p>';
+        }
+
+        async function loadAllStrategies() {
+            var container = document.getElementById('billingStrategiesList');
+            if (!container) return;
+            container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
+
+            var year = new Date().getFullYear();
+            var { data: strategies } = await window.supabase.from('billing_annual_strategy').select('*, standort:standorte(name)').eq('year', year).order('standort_id');
+
+            var h = '<div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr>';
+            h += '<th class="text-left p-3">Standort</th><th class="text-right p-3">Plan-Umsatz</th><th class="text-right p-3">Marketing</th><th class="text-center p-3">Genehmigt</th><th class="text-center p-3">Gesperrt</th><th class="text-center p-3">Aktion</th>';
+            h += '</tr></thead><tbody>';
+            (strategies || []).forEach(function(s) {
+                h += '<tr class="border-t">';
+                h += '<td class="p-3 font-semibold">' + (s.standort ? s.standort.name : '—') + ' <span class="text-xs text-gray-400">v' + s.version + '</span></td>';
+                h += '<td class="p-3 text-right">' + fmtEur(s.planned_revenue_year) + '</td>';
+                h += '<td class="p-3 text-right">' + fmtEur(s.planned_marketing_year) + '</td>';
+                h += '<td class="p-3 text-center">' + (s.approved_at ? '<span class="text-green-600">✅ ' + new Date(s.approved_at).toLocaleDateString('de-DE') + '</span>' : '<button onclick="approveStrategy(\'' + s.id + '\')" class="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">Genehmigen</button>') + '</td>';
+                h += '<td class="p-3 text-center">' + (s.locked ? '<span class="text-green-600 font-semibold">🔒</span>' : s.approved_at ? '<button onclick="lockStrategy(\'' + s.id + '\')" class="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">Sperren</button>' : '<span class="text-gray-300">—</span>') + '</td>';
+                h += '<td class="p-3 text-center"><span class="text-xs text-gray-400">' + fmtEur(s.planned_revenue_year / 12) + '/Mo</span></td>';
+                h += '</tr>';
+            });
+            h += '</tbody></table></div>';
+
+            // All standorte without strategy
+            var { data: standorte } = await window.supabase.from('standorte').select('id, name').eq('status', 'aktiv');
+            var stratIds = (strategies || []).map(function(s) { return s.standort_id; });
+            var missing = (standorte || []).filter(function(st) { return stratIds.indexOf(st.id) === -1; });
+            if (missing.length) {
+                h += '<div class="vit-card p-4 mt-4 border-l-4 border-red-400"><h3 class="font-semibold text-sm text-red-700 mb-2">⚠️ Standorte ohne Jahresstrategie ' + year + '</h3>';
+                h += '<div class="flex flex-wrap gap-2">';
+                missing.forEach(function(m) { h += '<span class="text-xs bg-red-50 text-red-600 px-2 py-1 rounded">' + m.name + '</span>'; });
+                h += '</div></div>';
+            }
+
+            container.innerHTML = h;
+        }
+
+        async function approveStrategy(stratId) {
+            var r = await billingApi('approve-strategy', { strategy_id: stratId, user_id: SESSION.user_id });
+            if (r.error) { alert('Fehler: ' + r.error); return; }
+            loadAllStrategies();
+        }
+
+        async function lockStrategy(stratId) {
+            if (!confirm(t('bill_strategy_lock'))) return;
+            var r = await billingApi('lock-strategy', { strategy_id: stratId, user_id: SESSION.user_id });
+            if (r.error) { alert('Fehler: ' + r.error); return; }
+            loadAllStrategies();
+        }
+
+        async function loadBillingProducts() {
+            var container = document.getElementById('billingProductsList');
+            if (!container) return;
+            var { data: products } = await window.supabase.from('billing_products').select('*').order('key');
+            var h = '<div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr>';
+            h += '<th class="text-left p-3">Key</th><th class="text-left p-3">Name</th><th class="text-left p-3">Typ</th><th class="text-left p-3">Frequenz</th><th class="text-right p-3">Betrag/Prozent</th><th class="text-center p-3">Aktiv</th>';
+            h += '</tr></thead><tbody>';
+            (products || []).forEach(function(p) {
+                h += '<tr class="border-t">';
+                h += '<td class="p-3 font-mono text-xs">' + p.key + '</td>';
+                h += '<td class="p-3 font-semibold">' + p.name + '</td>';
+                h += '<td class="p-3 text-xs">' + p.product_type + '</td>';
+                h += '<td class="p-3 text-xs">' + p.billing_frequency + '</td>';
+                h += '<td class="p-3 text-right">' + (p.default_amount ? fmtEur(p.default_amount) : p.default_percent ? (p.default_percent * 100).toFixed(2) + '%' : '—') + '</td>';
+                h += '<td class="p-3 text-center">' + (p.active ? '✅' : '❌') + '</td>';
+                h += '</tr>';
+            });
+            h += '</tbody></table></div>';
+            container.innerHTML = h;
+        }
+
+        async function loadBillingTools() {
+            var container = document.getElementById('billingToolsList');
+            if (!container) return;
+
+            var { data: packages } = await window.supabase.from('billing_tool_packages').select('*').order('monthly_cost');
+            var { data: assignments } = await window.supabase.from('billing_user_tool_assignments').select('*, tool:billing_tool_packages(name), user:users(name), standort:standorte(name)').eq('is_active', true);
+
+            var h = '<div class="vit-card p-4 mb-4"><h3 class="font-semibold text-sm mb-3">📦 Tool-Pakete</h3>';
+            h += '<div class="grid grid-cols-1 md:grid-cols-3 gap-3">';
+            (packages || []).forEach(function(p) {
+                h += '<div class="p-4 border rounded-lg ' + (p.active ? 'border-gray-200' : 'border-red-200 opacity-60') + '">';
+                h += '<p class="font-semibold">' + p.name + '</p>';
+                h += '<p class="text-xl font-bold text-vit-orange mt-1">' + fmtEur(p.monthly_cost) + '<span class="text-xs text-gray-400 font-normal">/Monat</span></p>';
+                h += '<p class="text-xs text-gray-500 mt-1">' + (p.description || '') + '</p>';
+                h += '</div>';
+            });
+            h += '</div></div>';
+
+            h += '<div class="vit-card overflow-hidden"><div class="p-4 border-b bg-gray-50"><h3 class="font-semibold text-sm">👥 Aktive Zuweisungen (' + (assignments || []).length + ')</h3></div>';
+            h += '<table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr>';
+            h += '<th class="text-left p-3">Mitarbeiter</th><th class="text-left p-3">Standort</th><th class="text-left p-3">Paket</th><th class="text-right p-3">Kosten</th><th class="text-left p-3">Seit</th>';
+            h += '</tr></thead><tbody>';
+            (assignments || []).forEach(function(a) {
+                h += '<tr class="border-t">';
+                h += '<td class="p-3">' + (a.user ? a.user.name : '—') + '</td>';
+                h += '<td class="p-3">' + (a.standort ? a.standort.name : '—') + '</td>';
+                h += '<td class="p-3">' + (a.tool ? a.tool.name : '—') + '</td>';
+                h += '<td class="p-3 text-right font-semibold">' + fmtEur(a.cost_override || (a.tool ? a.tool.monthly_cost : 0)) + '</td>';
+                h += '<td class="p-3 text-xs text-gray-400">' + (a.active_from || '—') + '</td>';
+                h += '</tr>';
+            });
+            h += '</tbody></table></div>';
+            container.innerHTML = h;
+        }
+
+        // ============================================================
+        // === STANDORT BILLING VIEW ===
+        // ============================================================
+        function showStBillingTab(tab) {
+            document.querySelectorAll('.st-billing-tab-content').forEach(function(el) { el.style.display = 'none'; });
+            document.querySelectorAll('.st-billing-tab').forEach(function(b) {
+                b.className = 'st-billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500';
+            });
+            var tabEl = document.getElementById('stBillingTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            if (tabEl) tabEl.style.display = 'block';
+            var btn = document.querySelector('.st-billing-tab[data-tab="' + tab + '"]');
+            if (btn) btn.className = 'st-billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
+
+            if (tab === 'invoices') loadStandortInvoices();
+            if (tab === 'payments') loadStandortPayments();
+            if (tab === 'strategy') loadStandortStrategy();
+            if (tab === 'costs') loadStandortCosts();
+        }
+
+        async function initStandortBilling() {
+            loadStandortInvoices();
+        }
+
+        async function loadStandortInvoices() {
+            var container = document.getElementById('stBillingInvoicesList');
+            if (!container) return;
+            container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
+
+            var { data: invoices } = await window.supabase.from('billing_invoices').select('*').eq('standort_id', SESSION.standort_id).order('period_start', { ascending: false });
+
+            var h = '';
+            (invoices || []).forEach(function(inv) {
+                h += '<div class="vit-card p-4 cursor-pointer hover:shadow-md transition-shadow" onclick="showStandortInvoiceDetail(\'' + inv.id + '\')">';
+                h += '<div class="flex items-center justify-between mb-2">';
+                h += '<div class="flex items-center space-x-2">';
+                h += '<span class="font-mono text-xs text-gray-400">' + (inv.invoice_number || '—') + '</span>';
+                h += billingStatusBadge(inv.status);
+                h += '</div>';
+                h += '<span class="font-bold text-lg">' + fmtEur(inv.total) + '</span>';
+                h += '</div>';
+                h += '<p class="text-sm text-gray-600">Zeitraum: ' + (inv.period_start || '') + ' bis ' + (inv.period_end || '') + '</p>';
+                h += '</div>';
+            });
+            container.innerHTML = h || '<div class="text-center py-8"><p class="text-gray-400">Noch keine Rechnungen vorhanden</p></div>';
+        }
+
+        async function showStandortInvoiceDetail(invId) {
+            // Reuse the same detail view pattern
+            var container = document.getElementById('stBillingInvoicesList');
+            if (!container) return;
+            container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
+
+            var { data: inv } = await window.supabase.from('billing_invoices').select('*').eq('id', invId).single();
+            var { data: lines } = await window.supabase.from('billing_invoice_line_items').select('*, product:billing_products(name)').eq('invoice_id', invId).order('sort_index');
+
+            var h = '<button onclick="loadStandortInvoices()" class="text-xs text-vit-orange hover:underline mb-4 inline-block">← Zurück zur Übersicht</button>';
+
+            h += '<div class="vit-card p-6 mb-4">';
+            h += '<div class="flex items-center justify-between mb-4">';
+            h += '<div><h3 class="font-bold text-lg">' + (inv.invoice_number || 'Rechnung') + '</h3><p class="text-xs text-gray-400">' + (inv.period_start || '') + ' bis ' + (inv.period_end || '') + '</p></div>';
+            h += '<div class="text-right">' + billingStatusBadge(inv.status);
+            if (inv.status !== 'draft') h += '<button onclick="downloadInvoicePdf(\'' + inv.id + '\')" class="ml-2 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> PDF</button>';
+            h += '<p class="text-2xl font-bold text-vit-orange mt-2">' + fmtEur(inv.total) + '</p></div>';
+            h += '</div>';
+
+            h += '<table class="w-full text-sm mb-4"><thead class="text-xs text-gray-500 uppercase border-b"><tr>';
+            h += '<th class="text-left py-2">Position</th><th class="text-right py-2">Betrag</th>';
+            h += '</tr></thead><tbody>';
+            (lines || []).forEach(function(li) {
+                h += '<tr class="border-b border-gray-100">';
+                h += '<td class="py-2"><p class="font-medium">' + li.description + '</p>';
+                if (li.meta && li.meta.formula) h += '<p class="text-xs text-blue-600 mt-0.5">📐 ' + li.meta.formula + '</p>';
+                h += '</td>';
+                h += '<td class="py-2 text-right font-semibold">' + fmtEur(li.amount) + '</td>';
+                h += '</tr>';
+            });
+            h += '<tr class="border-t-2"><td class="py-2 font-semibold">Netto</td><td class="py-2 text-right font-semibold">' + fmtEur(inv.subtotal) + '</td></tr>';
+            h += '<tr><td class="py-1 text-gray-500 text-xs">MwSt (' + (inv.tax_rate || 19) + '%)</td><td class="py-1 text-right text-xs text-gray-500">' + fmtEur(inv.tax_amount) + '</td></tr>';
+            h += '<tr class="border-t-2"><td class="py-2 font-bold text-lg">Gesamt</td><td class="py-2 text-right font-bold text-lg text-vit-orange">' + fmtEur(inv.total) + '</td></tr>';
+            h += '</tbody></table>';
+
+            // Formulas
+            if (inv.calculated_snapshot && inv.calculated_snapshot.formulas) {
+                h += '<div class="bg-blue-50 rounded-lg p-4"><h4 class="text-xs font-semibold text-blue-800 mb-2">📐 So wurde deine Rechnung berechnet:</h4>';
+                inv.calculated_snapshot.formulas.forEach(function(f) {
+                    h += '<p class="text-xs text-blue-700 font-mono">' + f + '</p>';
+                });
+                h += '</div>';
+            }
+
+            h += '</div>';
+            container.innerHTML = h;
+        }
+
+        async function loadStandortStrategy() {
+            var container = document.getElementById('stBillingStrategyContent');
+            if (!container) return;
+            container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
+
+            var year = new Date().getFullYear();
+            var { data: strategies } = await window.supabase.from('billing_annual_strategy').select('*').eq('standort_id', SESSION.standort_id).eq('year', year).order('version', { ascending: false });
+            var strat = strategies && strategies[0];
+
+            var h = '';
+            if (strat) {
+                h += '<div class="vit-card p-6 mb-4">';
+                h += '<div class="flex items-center justify-between mb-4">';
+                h += '<h3 class="font-bold text-lg">Jahresstrategie ' + year + ' <span class="text-xs text-gray-400">v' + strat.version + '</span></h3>';
+                h += '<div>' + (strat.locked ? '<span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-semibold">🔒 Gesperrt</span>' : strat.approved_at ? '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">✓ Genehmigt</span>' : '<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">⏳ Warte auf Genehmigung</span>') + '</div>';
+                h += '</div>';
+                h += '<div class="grid grid-cols-2 gap-4">';
+                h += '<div class="p-4 bg-gray-50 rounded-lg"><p class="text-xs text-gray-400">Geplanter Jahresumsatz</p><p class="text-xl font-bold">' + fmtEur(strat.planned_revenue_year) + '</p><p class="text-xs text-gray-400 mt-1">= ' + fmtEur(strat.planned_revenue_year / 12) + ' / Monat</p></div>';
+                h += '<div class="p-4 bg-gray-50 rounded-lg"><p class="text-xs text-gray-400">Geplantes Marketingbudget</p><p class="text-xl font-bold">' + fmtEur(strat.planned_marketing_year) + '</p><p class="text-xs text-gray-400 mt-1">= ' + fmtEur(strat.planned_marketing_year / 12) + ' / Monat</p></div>';
+                h += '</div>';
+                if (strat.notes) h += '<p class="text-sm text-gray-600 mt-4">' + strat.notes + '</p>';
+                h += '</div>';
+            }
+
+            // Submit/Edit form (only if not locked)
+            if (!strat || !strat.locked) {
+                h += '<div class="vit-card p-6">';
+                h += '<h3 class="font-semibold text-sm mb-4">' + (strat ? '✏️ Neue Version einreichen' : '📝 Jahresstrategie ' + year + ' einreichen') + '</h3>';
+                h += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">';
+                h += '<div><label class="block text-sm font-medium text-gray-700 mb-1">Geplanter Jahresumsatz (€)</label>';
+                h += '<input type="number" id="stStratRevenue" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="z.B. 1500000" value="' + (strat ? strat.planned_revenue_year : '') + '"></div>';
+                h += '<div><label class="block text-sm font-medium text-gray-700 mb-1">Marketing-Jahresbudget (€)</label>';
+                h += '<input type="number" id="stStratMarketing" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="z.B. 18000" value="' + (strat ? strat.planned_marketing_year : '') + '"></div>';
+                h += '</div>';
+                h += '<div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Notizen</label>';
+                h += '<textarea id="stStratNotes" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" rows="2" placeholder="Optional">' + (strat && strat.notes ? strat.notes : '') + '</textarea></div>';
+                h += '<button onclick="submitStandortStrategy(' + year + ')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600">📤 Einreichen</button>';
+                h += '</div>';
+            }
+
+            container.innerHTML = h;
+        }
+
+        async function submitStandortStrategy(year) {
+            var revenue = parseFloat(document.getElementById('stStratRevenue').value);
+            var marketing = parseFloat(document.getElementById('stStratMarketing').value);
+            var notes = document.getElementById('stStratNotes').value;
+            if (!revenue || revenue <= 0) { alert(t('bill_valid_revenue')); return; }
+
+            // Get current version
+            var { data: existing } = await window.supabase.from('billing_annual_strategy').select('version').eq('standort_id', SESSION.standort_id).eq('year', year).order('version', { ascending: false }).limit(1);
+            var newVersion = existing && existing[0] ? existing[0].version + 1 : 1;
+
+            var { error } = await window.supabase.from('billing_annual_strategy').insert({
+                standort_id: SESSION.standort_id,
+                year: year,
+                planned_revenue_year: revenue,
+                planned_marketing_year: marketing || 0,
+                submitted_at: new Date().toISOString(),
+                submitted_by: SESSION.user_id,
+                version: newVersion,
+                notes: notes || null
+            });
+
+            if (error) { alert('Fehler: ' + error.message); return; }
+            alert(t('bill_strategy_submitted') + ' (v' + newVersion + ')');
+            loadStandortStrategy();
+        }
+
+        async function loadStandortCosts() {
+            var container = document.getElementById('stBillingCostsContent');
+            if (!container) return;
+            container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
+
+            var year = new Date().getFullYear();
+            var { data: strategies } = await window.supabase.from('billing_annual_strategy').select('*').eq('standort_id', SESSION.standort_id).eq('year', year).eq('locked', true).order('version', { ascending: false }).limit(1);
+            var strat = strategies && strategies[0];
+
+            var { data: tools } = await window.supabase.from('billing_user_tool_assignments').select('*, tool:billing_tool_packages(name, monthly_cost), user:users(name)').eq('standort_id', SESSION.standort_id).eq('is_active', true);
+
+            var h = '<div class="vit-card p-6 mb-4">';
+            h += '<h3 class="font-bold text-sm mb-4">📊 Monatliche Kostenaufschlüsselung</h3>';
+
+            if (!strat) {
+                h += '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4"><p class="text-sm text-yellow-700">⚠️ Keine gesperrte Jahresstrategie vorhanden. Berechnung basiert auf Schätzwerten.</p></div>';
+                h += '</div>';
+                container.innerHTML = h;
+                return;
+            }
+
+            var planMonthRevenue = strat.planned_revenue_year / 12;
+            var revShare = 0.02 * planMonthRevenue;
+            var revShareAdvance = 0.80 * revShare;
+            var baseFee = 800;
+            var marketingMonth = strat.planned_marketing_year / 12;
+            var toolCosts = (tools || []).reduce(function(s, t) { return s + (t.cost_override || t.tool.monthly_cost); }, 0);
+            var total = revShareAdvance + baseFee + marketingMonth + toolCosts;
+
+            h += '<table class="w-full text-sm">';
+            h += '<tr class="border-b"><td class="py-3">Umsatzbeteiligung (80% Abschlag)</td><td class="py-3 text-right font-semibold">' + fmtEur(revShareAdvance) + '</td></tr>';
+            h += '<tr><td class="py-1 text-xs text-gray-400 pl-4" colspan="2">2% × ' + fmtEur(planMonthRevenue) + ' × 80% = ' + fmtEur(revShareAdvance) + '</td></tr>';
+            h += '<tr class="border-b"><td class="py-3">Grundgebühr</td><td class="py-3 text-right font-semibold">' + fmtEur(baseFee) + '</td></tr>';
+            h += '<tr class="border-b"><td class="py-3">Marketingbudget</td><td class="py-3 text-right font-semibold">' + fmtEur(marketingMonth) + '</td></tr>';
+            h += '<tr><td class="py-1 text-xs text-gray-400 pl-4" colspan="2">' + fmtEur(strat.planned_marketing_year) + ' / 12 = ' + fmtEur(marketingMonth) + '</td></tr>';
+            h += '<tr class="border-b"><td class="py-3">Toolkosten (' + (tools || []).length + ' Nutzer)</td><td class="py-3 text-right font-semibold">' + fmtEur(toolCosts) + '</td></tr>';
+            (tools || []).forEach(function(t) {
+                h += '<tr><td class="py-1 text-xs text-gray-400 pl-4">' + (t.user ? t.user.name : '—') + ' – ' + (t.tool ? t.tool.name : '—') + '</td><td class="py-1 text-xs text-gray-400 text-right">' + fmtEur(t.cost_override || t.tool.monthly_cost) + '</td></tr>';
+            });
+            h += '<tr class="border-t-2"><td class="py-3 font-bold text-lg">Netto / Monat</td><td class="py-3 text-right font-bold text-lg text-vit-orange">' + fmtEur(total) + '</td></tr>';
+            h += '<tr><td class="py-1 text-xs text-gray-400">zzgl. MwSt 19%</td><td class="py-1 text-xs text-gray-400 text-right">' + fmtEur(total * 0.19) + '</td></tr>';
+            h += '<tr class="border-t"><td class="py-2 font-bold">Brutto / Monat</td><td class="py-2 text-right font-bold">' + fmtEur(total * 1.19) + '</td></tr>';
+            h += '</table></div>';
+
+            // Quarterly settlement info
+            h += '<div class="vit-card p-6">';
+            h += '<h3 class="font-bold text-sm mb-3">📊 Quartals-Spitzenausgleich</h3>';
+            h += '<p class="text-sm text-gray-600 mb-2">Vierteljährlich wird auf Basis der tatsächlichen BWA-Umsätze abgerechnet:</p>';
+            h += '<div class="bg-blue-50 rounded-lg p-4 text-xs text-blue-800 space-y-1 font-mono">';
+            h += '<p>IST-Beteiligung = 2% × tatsächlicher Umsatz (aus BWA)</p>';
+            h += '<p>Bereits bezahlt = Summe der monatl. Abschläge (80%)</p>';
+            h += '<p>Spitzenausgleich = IST-Beteiligung − bereits bezahlt</p>';
+            h += '<p class="text-red-600 font-semibold mt-2">⚠️ Fehlende BWA-Monate: 100% Planbasis statt IST</p>';
+            h += '</div></div>';
+
+            container.innerHTML = h;
+        }
+
+        // PDF Download for invoices
+        async function downloadInvoicePdf(invId) {
+            try {
+                var { data: inv } = await window.supabase.from('billing_invoices').select('*').eq('id', invId).single();
+                var { data: lines } = await window.supabase.from('billing_invoice_line_items').select('*, product:billing_products(name)').eq('invoice_id', invId).order('sort_index');
+                var { data: stdArr } = await window.supabase.from('standorte').select('name, strasse, plz, ort').eq('id', inv.standort_id).limit(1);
+                var std = stdArr && stdArr[0];
+
+                // Generate PDF using browser print
+                var w = window.open('', '_blank');
+                w.document.write('<!DOCTYPE html><html><head><title>' + (inv.invoice_number || 'Rechnung') + '</title>');
+                w.document.write('<style>body{font-family:Arial,sans-serif;margin:40px;color:#333;font-size:13px} .logo{font-size:24px;font-weight:bold;color:#EF7D00} table{width:100%;border-collapse:collapse;margin:20px 0} th{text-align:left;padding:8px 4px;border-bottom:2px solid #333;font-size:11px;text-transform:uppercase;color:#666} td{padding:8px 4px;border-bottom:1px solid #eee} .right{text-align:right} .bold{font-weight:bold} .total-row td{border-top:2px solid #333;font-weight:bold;font-size:16px} .formula{font-size:10px;color:#2563eb;font-family:monospace} .footer{margin-top:40px;padding-top:20px;border-top:1px solid #ddd;font-size:10px;color:#999} .header{display:flex;justify-content:space-between;margin-bottom:40px} .addr{font-size:12px;line-height:1.6} .badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:10px;font-weight:bold} @media print{body{margin:20px}}</style>');
+                w.document.write('</head><body>');
+                w.document.write('<div class="header"><div><div class="logo">vit:bikes</div><p style="font-size:10px;color:#999">vit:bikes Franchise GmbH · Musterstraße 1 · 80331 München</p></div>');
+                w.document.write('<div style="text-align:right"><h2 style="margin:0;color:#EF7D00">RECHNUNG</h2><p style="font-size:14px;font-weight:bold">' + (inv.invoice_number || '') + '</p></div></div>');
+                
+                if (std) {
+                    w.document.write('<div class="addr"><strong>' + (std.name || '') + '</strong><br>' + (std.strasse || '') + '<br>' + (std.plz || '') + ' ' + (std.ort || '') + '</div>');
+                }
+                
+                w.document.write('<p style="margin:20px 0"><strong>Rechnungsdatum:</strong> ' + (inv.finalized_at ? new Date(inv.finalized_at).toLocaleDateString('de-DE') : new Date().toLocaleDateString('de-DE')) + '<br>');
+                w.document.write('<strong>Leistungszeitraum:</strong> ' + (inv.period_start || '') + ' bis ' + (inv.period_end || '') + '</p>');
+                
+                w.document.write('<table><thead><tr><th>Position</th><th>Menge</th><th class="right">Einzelpreis</th><th class="right">Betrag</th></tr></thead><tbody>');
+                (lines || []).forEach(function(li) {
+                    w.document.write('<tr><td>' + li.description);
+                    if (li.meta && li.meta.formula) w.document.write('<br><span class="formula">📐 ' + li.meta.formula + '</span>');
+                    w.document.write('</td><td>' + (li.quantity || 1) + '</td><td class="right">' + fmtEur(li.unit_price) + '</td><td class="right">' + fmtEur(li.amount) + '</td></tr>');
+                });
+                w.document.write('</tbody></table>');
+                
+                w.document.write('<table style="width:300px;margin-left:auto"><tbody>');
+                w.document.write('<tr><td>Nettobetrag</td><td class="right">' + fmtEur(inv.subtotal) + '</td></tr>');
+                w.document.write('<tr><td>MwSt ' + (inv.tax_rate || 19) + '%</td><td class="right">' + fmtEur(inv.tax_amount) + '</td></tr>');
+                w.document.write('<tr class="total-row"><td>Gesamtbetrag</td><td class="right" style="color:#EF7D00">' + fmtEur(inv.total) + '</td></tr>');
+                w.document.write('</tbody></table>');
+                
+                w.document.write('<p style="margin-top:30px;font-size:12px">Zahlungsziel: 14 Tage netto<br>Bitte überweisen Sie den Betrag unter Angabe der Rechnungsnummer.</p>');
+                w.document.write('<div class="footer"><p>vit:bikes Franchise GmbH · Amtsgericht München · HRB 123456 · USt-IdNr: DE123456789</p><p>Bankverbindung: IBAN DE89 3704 0044 0532 0130 00 · BIC COBADEFFXXX</p></div>');
+                w.document.write('</body></html>');
+                w.document.close();
+                setTimeout(function() { w.print(); }, 500);
+            } catch (err) {
+                alert(t('alert_error') + err.message);
+            }
+        }
+
+        // Payment history for Standort
+        async function loadStandortPayments() {
+            var container = document.getElementById('stBillingPaymentsContent');
+            if (!container) return;
+            container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
+
+            var { data: invoices } = await window.supabase.from('billing_invoices')
+                .select('id, invoice_number, period_start, period_end, total, status, finalized_at, paid_at, created_at')
+                .eq('standort_id', SESSION.standort_id)
+                .order('period_start', { ascending: false });
+
+            var h = '';
+            
+            // Summary cards
+            var totalPaid = 0, totalOpen = 0, countPaid = 0, countOpen = 0;
+            (invoices || []).forEach(function(inv) {
+                if (inv.status === 'paid') { totalPaid += inv.total; countPaid++; }
+                else if (['finalized','sent'].indexOf(inv.status) >= 0) { totalOpen += inv.total; countOpen++; }
+            });
+
+            h += '<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">';
+            h += '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Bezahlt</p><p class="text-2xl font-bold text-green-600">' + fmtEur(totalPaid) + '</p><p class="text-xs text-gray-400">' + countPaid + ' Rechnungen</p></div>';
+            h += '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Offen</p><p class="text-2xl font-bold text-amber-500">' + fmtEur(totalOpen) + '</p><p class="text-xs text-gray-400">' + countOpen + ' Rechnungen</p></div>';
+            h += '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Gesamt ' + new Date().getFullYear() + '</p><p class="text-2xl font-bold text-gray-800">' + fmtEur(totalPaid + totalOpen) + '</p><p class="text-xs text-gray-400">' + (invoices || []).length + ' Rechnungen</p></div>';
+            h += '</div>';
+
+            // Payment timeline
+            h += '<div class="vit-card p-6"><h3 class="font-bold text-sm mb-4">📋 Zahlungsverlauf</h3>';
+            
+            if (!invoices || invoices.length === 0) {
+                h += '<p class="text-gray-400 text-center py-4">Noch keine Zahlungsdaten vorhanden</p>';
+            } else {
+                h += '<div class="space-y-3">';
+                (invoices || []).forEach(function(inv) {
+                    var statusColor = inv.status === 'paid' ? 'green' : inv.status === 'finalized' || inv.status === 'sent' ? 'amber' : 'gray';
+                    var statusIcon = inv.status === 'paid' ? '✅' : inv.status === 'finalized' ? '📬' : inv.status === 'sent' ? '📨' : inv.status === 'draft' ? '📝' : '⏳';
+                    var statusText = inv.status === 'paid' ? 'Bezahlt' : inv.status === 'finalized' ? 'Finalisiert' : inv.status === 'sent' ? 'Versendet' : inv.status === 'draft' ? 'Entwurf' : inv.status;
+                    
+                    h += '<div class="flex items-center gap-4 p-3 rounded-lg bg-' + statusColor + '-50 border border-' + statusColor + '-100">';
+                    h += '<div class="text-xl">' + statusIcon + '</div>';
+                    h += '<div class="flex-1 min-w-0">';
+                    h += '<div class="flex items-center justify-between">';
+                    h += '<span class="font-mono text-xs font-semibold text-gray-700">' + (inv.invoice_number || '—') + '</span>';
+                    h += '<span class="font-bold text-' + statusColor + '-700">' + fmtEur(inv.total) + '</span>';
+                    h += '</div>';
+                    h += '<div class="flex items-center justify-between mt-1">';
+                    h += '<span class="text-xs text-gray-500">' + (inv.period_start || '') + ' – ' + (inv.period_end || '') + '</span>';
+                    h += '<div class="flex items-center gap-2">';
+                    if (inv.paid_at) {
+                        h += '<span class="text-xs text-green-600">Bezahlt am ' + new Date(inv.paid_at).toLocaleDateString('de-DE') + '</span>';
+                    } else if (inv.finalized_at) {
+                        h += '<span class="text-xs text-amber-600">Fällig seit ' + new Date(inv.finalized_at).toLocaleDateString('de-DE') + '</span>';
+                    }
+                    h += '<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-' + statusColor + '-100 text-' + statusColor + '-700">' + statusText + '</span>';
+                    h += '</div></div></div>';
+                    
+                    // PDF download for non-drafts
+                    if (inv.status !== 'draft') {
+                        h += '<button onclick="downloadInvoicePdf(\'' + inv.id + '\')" class="text-gray-400 hover:text-gray-600 p-1" title="PDF Download"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></button>';
+                    }
+                    
+                    h += '</div>';
+                });
+                h += '</div>';
+            }
+            h += '</div>';
+
+            container.innerHTML = h;
+        }
 
         var kzMitarbeiter = []; // loaded from Supabase
 
@@ -16692,7 +17870,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         async function rejectUser(userId) {
-            if(!confirm('User wirklich ablehnen? Der Account wird gesperrt.')) return;
+            if(!confirm(t('confirm_reject_user'))) return;
             try {
                 await sb.from('users').update({status: 'gesperrt'}).eq('id', userId);
                 closeApproveModal();
@@ -17260,7 +18438,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 }
             } catch(err) {
                 if(errEl){errEl.textContent='Fehler: '+(err.message||err);errEl.style.display='block';}
-                if(btn) { btn.disabled=false; btn.textContent='Speichern'; }
+                if(btn) { btn.disabled=false; btn.textContent=t('btn_save'); }
             }
         }
 
@@ -17359,7 +18537,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var telefon = (document.getElementById('newStdTelefon')||{}).value||'';
             var premium = (document.getElementById('newStdPremium')||{}).checked||false;
 
-            if(!name.trim() || !slug.trim()) { alert('Bitte Name und Slug ausfüllen.'); return; }
+            if(!name.trim() || !slug.trim()) { alert(t('misc_enter_name_slug')); return; }
             slug = slug.toLowerCase().replace(/[^a-z0-9-]/g,'');
 
             var btn = document.querySelector('#neuerStdContainer .bg-vit-orange');
@@ -17782,7 +18960,164 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 pw_change_new:'Neues Passwort', pw_change_repeat:'Passwort wiederholen',
                 pw_change_save:'Passwort speichern', pw_change_success:'Passwort erfolgreich ge\u00e4ndert!',
                 pw_change_mismatch:'Passw\u00f6rter stimmen nicht \u00fcberein.',
-                pw_change_min:'Mindestens 6 Zeichen.'
+                pw_change_min:'Mindestens 6 Zeichen.',
+                // === Erweiterte Übersetzungen ===
+                tr_followup_title:'Nachfass-Systematik',
+                tr_followup_desc:'Offene Angebote systematisch nachfassen. Abschlussquote +10-15%.',
+                tr_followup_trigger:'Abschlussquote unter Netzwerk-Ø',
+                tr_bwa_title:'BWA richtig lesen',
+                tr_bwa_desc:'Wichtigste BWA-Kennzahlen verstehen und Maßnahmen ableiten.',
+                tr_bwa_trigger:'BWA hochgeladen',
+                tr_content_title:'Content in 10 Minuten',
+                tr_content_desc:'Local-Hero-Video in unter 10 Minuten erstellen.',
+                tr_content_trigger:'Kein Content seit 14+ Tagen',
+                tr_workshop_title:'Durchlaufzeit optimieren',
+                tr_workshop_desc:'Durchlaufzeit reduzieren, Kundenzufriedenheit steigern.',
+                tr_workshop_trigger:'Durchlaufzeit über Schwellwert',
+                tr_leadqual_title:'Lead-Qualifizierung',
+                tr_leadqual_desc:'Leads systematisch bewerten und priorisieren. Fokus auf kaufbereite Kunden.',
+                tr_leadqual_trigger:'Leads/Woche unter Mindestwert',
+                tr_margin_title:'Rohertrag steigern',
+                tr_margin_desc:'Zubehör-Attach-Rate erhöhen. 2-3% mehr Rohertrag möglich.',
+                tr_margin_trigger:'Rohertrag unter Netzwerk-Ø',
+                tr_liquidity_title:'Liquiditätsplanung',
+                tr_liquidity_desc:'Cashflow vorausplanen, Engpässe vermeiden.',
+                tr_liquidity_trigger:'Liquidität unter Schwelle',
+                tr_gmb_title:'Google My Business optimieren',
+                tr_gmb_desc:'GMB-Profil vollständig pflegen. Mehr lokale Sichtbarkeit.',
+                tr_gmb_trigger:'GMB Score unter 80%',
+                tr_triggered:'Ausgelöst: ',
+                tr_started:'🎓 Trainer gestartet!',
+                tr_active:'Trainer aktiv',
+                tr_min:'Min',
+                tr_start_cta:'▶ Starten',
+                tr_snooze:'⏰ Später',
+                sol_it_title:'IT-Probleme? Probier zuerst:',
+                sol_purchasing_title:'Einkauf – Häufige Lösung:',
+                sol_accounting_title:'Buchhaltung – Schnellhilfe:',
+                sol_marketing_title:'Marketing – Sofort-Hilfe:',
+                sol_general_title:'Allgemein – Mögliche Lösung:',
+                bill_generate_drafts:'📝 Monats-Drafts generieren',
+                bill_confirm_drafts:'Monats-Drafts generieren?',
+                bill_drafts_desc:'Dies erstellt Rechnungsentwürfe für alle Standorte mit gesperrter Jahresstrategie.',
+                bill_quarterly:'📊 Quartals-Settlement',
+                bill_confirm_quarterly:'Quartals-Settlement generieren?',
+                bill_quarterly_desc:'Dies berechnet die Spitzenausgleiche basierend auf den vorliegenden BWA-Daten.',
+                bill_quarterly_warn:'Fehlende BWA-Monate werden zu 100% Planbasis abgerechnet.',
+                bill_finalize_all:'✅ Alle Drafts finalisieren',
+                bill_confirm_finalize:'Alle Drafts finalisieren?',
+                bill_finalize:'Rechnung finalisieren?',
+                bill_mark_paid:'Als bezahlt markieren?',
+                bill_remove_line:'Position entfernen?',
+                bill_new_desc:'Beschreibung:',
+                bill_new_amount:'Betrag (€):',
+                bill_strategy_lock:'Strategie sperren? Danach kann sie nicht mehr bearbeitet werden und wird zur Berechnungsbasis.',
+                bill_strategy_submitted:'✅ Jahresstrategie eingereicht',
+                bill_valid_revenue:'Bitte gültigen Jahresumsatz eingeben',
+                alert_error:'Fehler: ',
+                alert_success:'Erfolg!',
+                alert_fill_required:'Bitte alle Pflichtfelder ausfüllen.',
+                alert_enter_email_pw:'Bitte E-Mail und Passwort eingeben.',
+                alert_enter_subject:'Bitte Betreff eingeben.',
+                alert_enter_title:'Bitte Titel eingeben.',
+                alert_enter_name:'Bitte Name eingeben.',
+                alert_enter_task:'Bitte Aufgabe eingeben.',
+                alert_enter_comment:'Bitte Kommentar eingeben.',
+                alert_enter_message:'Bitte Nachricht eingeben.',
+                alert_enter_date:'Bitte Datum eingeben',
+                alert_select_file:'Bitte Datei auswaehlen.',
+                alert_select_location:'Bitte einen Standort wählen.',
+                alert_enter_firstname:'Bitte Vorname, Nachname und E-Mail ausfüllen.',
+                alert_min_role:'Mindestens eine Rolle nötig.',
+                alert_already_voted:'Du hast bereits für diese Idee gestimmt!',
+                alert_order_success:'Bestellung erfolgreich! 🎉',
+                alert_pw_changed:'✅ Passwort geändert!',
+                alert_push_unsupported:'Push-Benachrichtigungen werden von diesem Browser nicht unterstützt.',
+                alert_push_denied:'Push-Berechtigung wurde verweigert. Bitte in den Browser-Einstellungen aktivieren.',
+                confirm_delete_post:'Beitrag wirklich löschen?',
+                confirm_delete_bwa:'BWA wirklich loeschen?',
+                confirm_delete_doc:'Dokument wirklich loeschen?',
+                confirm_delete_event:'Termin wirklich löschen?',
+                confirm_delete_goal:'Ziel wirklich löschen?',
+                confirm_delete_entry:'Eintrag wirklich entfernen?',
+                confirm_delete_protocol:'Protokoll wirklich löschen?',
+                confirm_delete_section:'Sektion löschen? Aufgaben werden zu "Eingang" verschoben.',
+                confirm_reject_user:'User wirklich ablehnen? Der Account wird gesperrt.',
+                ui_uploading:'Wird hochgeladen...',
+                ui_saving:'Speichern...',
+                ui_signing_in:'Anmelden...',
+                ui_sign_in:'Anmelden',
+                ui_upload:'Hochladen',
+                ui_save_bwa:'BWA speichern',
+                ui_save_pw:'Passwort speichern',
+                ui_pw_changed_redirect:'Passwort erfolgreich geaendert! Du wirst weitergeleitet...',
+                ui_choose_recipient:'Empfänger wählen',
+                ui_choose_location:'— Standort wählen —',
+                ui_speak_now:'Sprich jetzt... Drücke ✓ zum Senden',
+                ui_listening:'🎤 Hört zu...',
+                ui_press_mic:'Drücke 🎤 oder tippe deine Antwort',
+                health_rank:'Rang',
+                health_of:'von',
+                bwa_escalation3:'Eskalationsstufe 3 – BWA überfällig!',
+                bwa_overdue:'🚨 Überfällig:',
+                bwa_early_gold:'🥇 Frühabgabe = Gold-Status!',
+                bwa_no_data_warning:'Ohne aktuelle Zahlen können wir dich nicht gezielt bei Einkauf, Marketing und Controlling unterstützen.',
+                misc_ticket_load_error:'Fehler beim Laden des Tickets.',
+                misc_no_permission:'Status konnte nicht geändert werden – keine Berechtigung.',
+                misc_solution_try:'✅ Danke! Probiere die vorgeschlagene Lösung aus.',
+                misc_group_call:'📋 Frage für den Gruppencall vorgemerkt!',
+                misc_announcements_hq:'Ankündigungen von der Zentrale',
+                misc_max_repeat:'Maximal 100 Wiederholungen erlaubt. Bitte kürzeren Zeitraum wählen.',
+                misc_enter_name_slug:'Bitte Name und Slug ausfüllen.',
+                misc_enter_title_date:'Bitte Titel und Datum angeben.',
+                misc_enter_title_content:'Bitte Titel und Inhalt ausfuellen.',
+                misc_enter_date_seller:'Bitte Datum und Verkaeufer eingeben.',
+                misc_enter_revenue:'Bitte Plan-Umsatz eingeben',
+                misc_enter_product:'Bitte Produktname eingeben',
+                misc_min_month:'Bitte mindestens einen Monat ausfüllen.',
+                misc_min_revenue:'Bitte mindestens Umsatz oder Wareneinsatz eingeben.',
+                misc_assign_location:'Bitte einen Standort zuweisen.',
+                misc_enter_valid_email:'Bitte gib eine gueltige E-Mail ein.',
+                misc_doc_uploaded:'✅ Dokument hochgeladen!',
+                misc_bwa_for:'BWA für',
+                misc_min_8_chars:'Passwort muss mindestens 8 Zeichen haben.',
+                // === Buchhaltung & PDF ===
+                bill_tab_invoices:'📄 Rechnungen',
+                bill_tab_payments:'💳 Zahlungsstatus',
+                bill_tab_strategy:'🎯 Jahresstrategie',
+                bill_tab_costs:'🔍 Kostenaufschlüsselung',
+                bill_paid:'Bezahlt',
+                bill_open:'Offen',
+                bill_total_year:'Gesamt',
+                bill_invoices:'Rechnungen',
+                bill_payment_history:'📋 Zahlungsverlauf',
+                bill_no_payments:'Noch keine Zahlungsdaten vorhanden',
+                bill_paid_on:'Bezahlt am',
+                bill_due_since:'Fällig seit',
+                bill_status_paid:'Bezahlt',
+                bill_status_finalized:'Finalisiert',
+                bill_status_sent:'Versendet',
+                bill_status_draft:'Entwurf',
+                bill_no_invoices:'Noch keine Rechnungen vorhanden',
+                bill_period:'Zeitraum',
+                bill_back_overview:'← Zurück zur Übersicht',
+                bill_how_calculated:'📐 So wurde deine Rechnung berechnet:',
+                bill_position:'Position',
+                bill_amount:'Betrag',
+                bill_net:'Netto',
+                bill_vat:'MwSt',
+                bill_gross_total:'Gesamt',
+                bill_pdf_invoice:'RECHNUNG',
+                bill_pdf_date:'Rechnungsdatum',
+                bill_pdf_period:'Leistungszeitraum',
+                bill_pdf_qty:'Menge',
+                bill_pdf_unit_price:'Einzelpreis',
+                bill_pdf_net_amount:'Nettobetrag',
+                bill_pdf_total:'Gesamtbetrag',
+                bill_pdf_payment_terms:'Zahlungsziel: 14 Tage netto',
+                bill_pdf_transfer:'Bitte überweisen Sie den Betrag unter Angabe der Rechnungsnummer.',
+                nav_billing:'Buchhaltung',
+                nav_my_billing:'Meine Buchhaltung'
             },
             en: {
                 nav_home:'Home', nav_dashboards:'Dashboards', nav_mainmenu:'Main Menu',
@@ -17914,78 +19249,236 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 pw_change_new:'New password', pw_change_repeat:'Repeat password',
                 pw_change_save:'Save password', pw_change_success:'Password changed successfully!',
                 pw_change_mismatch:'Passwords do not match.',
-                pw_change_min:'At least 6 characters.'
+                pw_change_min:'At least 6 characters.',
+                // === Extended translations ===
+                tr_followup_title:'Follow-up System',
+                tr_followup_desc:'Systematically follow up on open offers. Close rate +10-15%.',
+                tr_followup_trigger:'Close rate below network average',
+                tr_bwa_title:'Reading BWA correctly',
+                tr_bwa_desc:'Understand key BWA metrics and derive actions.',
+                tr_bwa_trigger:'BWA uploaded',
+                tr_content_title:'Content in 10 minutes',
+                tr_content_desc:'Create a Local Hero video in under 10 minutes.',
+                tr_content_trigger:'No content for 14+ days',
+                tr_workshop_title:'Optimize turnaround time',
+                tr_workshop_desc:'Reduce turnaround time, increase customer satisfaction.',
+                tr_workshop_trigger:'Turnaround time above threshold',
+                tr_leadqual_title:'Lead Qualification',
+                tr_leadqual_desc:'Systematically evaluate and prioritize leads. Focus on purchase-ready customers.',
+                tr_leadqual_trigger:'Leads/week below minimum',
+                tr_margin_title:'Increase gross margin',
+                tr_margin_desc:'Increase accessory attach rate. 2-3% more gross margin possible.',
+                tr_margin_trigger:'Gross margin below network average',
+                tr_liquidity_title:'Liquidity planning',
+                tr_liquidity_desc:'Plan cash flow ahead, avoid bottlenecks.',
+                tr_liquidity_trigger:'Liquidity below threshold',
+                tr_gmb_title:'Optimize Google My Business',
+                tr_gmb_desc:'Maintain complete GMB profile. More local visibility.',
+                tr_gmb_trigger:'GMB Score below 80%',
+                tr_triggered:'Triggered: ',
+                tr_started:'🎓 Trainer started!',
+                tr_active:'Trainers active',
+                tr_min:'min',
+                tr_start_cta:'▶ Start',
+                tr_snooze:'⏰ Later',
+                sol_it_title:'IT problems? Try first:',
+                sol_purchasing_title:'Purchasing – Common solution:',
+                sol_accounting_title:'Accounting – Quick help:',
+                sol_marketing_title:'Marketing – Instant help:',
+                sol_general_title:'General – Possible solution:',
+                bill_generate_drafts:'📝 Generate monthly drafts',
+                bill_confirm_drafts:'Generate monthly drafts?',
+                bill_drafts_desc:'This creates invoice drafts for all locations with locked annual strategies.',
+                bill_quarterly:'📊 Quarterly settlement',
+                bill_confirm_quarterly:'Generate quarterly settlement?',
+                bill_quarterly_desc:'This calculates settlements based on available BWA data.',
+                bill_quarterly_warn:'Missing BWA months will be billed at 100% plan basis.',
+                bill_finalize_all:'✅ Finalize all drafts',
+                bill_confirm_finalize:'Finalize all drafts?',
+                bill_finalize:'Finalize invoice?',
+                bill_mark_paid:'Mark as paid?',
+                bill_remove_line:'Remove line item?',
+                bill_new_desc:'Description:',
+                bill_new_amount:'Amount (€):',
+                bill_strategy_lock:'Lock strategy? It can no longer be edited and becomes the calculation basis.',
+                bill_strategy_submitted:'✅ Annual strategy submitted',
+                bill_valid_revenue:'Please enter a valid annual revenue',
+                alert_error:'Error: ',
+                alert_success:'Success!',
+                alert_fill_required:'Please fill in all required fields.',
+                alert_enter_email_pw:'Please enter email and password.',
+                alert_enter_subject:'Please enter a subject.',
+                alert_enter_title:'Please enter a title.',
+                alert_enter_name:'Please enter a name.',
+                alert_enter_task:'Please enter a task.',
+                alert_enter_comment:'Please enter a comment.',
+                alert_enter_message:'Please enter a message.',
+                alert_enter_date:'Please enter a date',
+                alert_select_file:'Please select a file.',
+                alert_select_location:'Please select a location.',
+                alert_enter_firstname:'Please fill in first name, last name and email.',
+                alert_min_role:'At least one role required.',
+                alert_already_voted:'You have already voted for this idea!',
+                alert_order_success:'Order successful! 🎉',
+                alert_pw_changed:'✅ Password changed!',
+                alert_push_unsupported:'Push notifications are not supported by this browser.',
+                alert_push_denied:'Push permission was denied. Please enable in browser settings.',
+                confirm_delete_post:'Really delete this post?',
+                confirm_delete_bwa:'Really delete this BWA?',
+                confirm_delete_doc:'Really delete this document?',
+                confirm_delete_event:'Really delete this event?',
+                confirm_delete_goal:'Really delete this goal?',
+                confirm_delete_entry:'Really remove this entry?',
+                confirm_delete_protocol:'Really delete this protocol?',
+                confirm_delete_section:'Delete section? Tasks will be moved to "Inbox".',
+                confirm_reject_user:'Really reject user? The account will be blocked.',
+                ui_uploading:'Uploading...',
+                ui_saving:'Saving...',
+                ui_signing_in:'Signing in...',
+                ui_sign_in:'Sign in',
+                ui_upload:'Upload',
+                ui_save_bwa:'Save BWA',
+                ui_save_pw:'Save password',
+                ui_pw_changed_redirect:'Password changed successfully! Redirecting...',
+                ui_choose_recipient:'Choose recipient',
+                ui_choose_location:'— Select location —',
+                ui_speak_now:'Speak now... Press ✓ to send',
+                ui_listening:'🎤 Listening...',
+                ui_press_mic:'Press 🎤 or type your answer',
+                health_rank:'Rank',
+                health_of:'of',
+                bwa_escalation3:'Escalation level 3 – BWA overdue!',
+                bwa_overdue:'🚨 Overdue:',
+                bwa_early_gold:'🥇 Early submission = Gold status!',
+                bwa_no_data_warning:'Without current figures, we cannot support you effectively in purchasing, marketing, and controlling.',
+                misc_ticket_load_error:'Error loading ticket.',
+                misc_no_permission:'Status could not be changed – no permission.',
+                misc_solution_try:'✅ Thanks! Try the suggested solution.',
+                misc_group_call:'📋 Question noted for the group call!',
+                misc_announcements_hq:'Announcements from HQ',
+                misc_max_repeat:'Maximum 100 repetitions allowed. Please choose a shorter period.',
+                misc_enter_name_slug:'Please fill in name and slug.',
+                misc_enter_title_date:'Please provide title and date.',
+                misc_enter_title_content:'Please fill in title and content.',
+                misc_enter_date_seller:'Please enter date and seller.',
+                misc_enter_revenue:'Please enter planned revenue',
+                misc_enter_product:'Please enter product name',
+                misc_min_month:'Please fill in at least one month.',
+                misc_min_revenue:'Please enter at least revenue or cost of goods.',
+                misc_assign_location:'Please assign a location.',
+                misc_enter_valid_email:'Please enter a valid email.',
+                misc_doc_uploaded:'✅ Document uploaded!',
+                misc_bwa_for:'BWA for',
+                misc_min_8_chars:'Password must be at least 8 characters.',
+                // === Buchhaltung & PDF ===
+                bill_tab_invoices:'📄 Invoices',
+                bill_tab_payments:'💳 Payment status',
+                bill_tab_strategy:'🎯 Annual strategy',
+                bill_tab_costs:'🔍 Cost breakdown',
+                bill_paid:'Paid',
+                bill_open:'Open',
+                bill_total_year:'Total',
+                bill_invoices:'Invoices',
+                bill_payment_history:'📋 Payment history',
+                bill_no_payments:'No payment data available yet',
+                bill_paid_on:'Paid on',
+                bill_due_since:'Due since',
+                bill_status_paid:'Paid',
+                bill_status_finalized:'Finalized',
+                bill_status_sent:'Sent',
+                bill_status_draft:'Draft',
+                bill_no_invoices:'No invoices yet',
+                bill_period:'Period',
+                bill_back_overview:'← Back to overview',
+                bill_how_calculated:'📐 How your invoice was calculated:',
+                bill_position:'Line item',
+                bill_amount:'Amount',
+                bill_net:'Net',
+                bill_vat:'VAT',
+                bill_gross_total:'Total',
+                bill_pdf_invoice:'INVOICE',
+                bill_pdf_date:'Invoice date',
+                bill_pdf_period:'Service period',
+                bill_pdf_qty:'Qty',
+                bill_pdf_unit_price:'Unit price',
+                bill_pdf_net_amount:'Net amount',
+                bill_pdf_total:'Total amount',
+                bill_pdf_payment_terms:'Payment terms: 14 days net',
+                bill_pdf_transfer:'Please transfer the amount stating the invoice number.',
+                nav_billing:'Accounting',
+                nav_my_billing:'My Accounting'
             },
             nl: {
+                // Navigatie
                 nav_home:'Startpagina', nav_dashboards:'Dashboards', nav_mainmenu:'Hoofdmenu',
                 nav_general:'Algemeen', nav_marketing:'Marketing', nav_purchasing:'Inkoop',
                 nav_controlling:'Controlling', nav_sales:'Verkoop', nav_filingcab:'Documentenarchief',
-                nav_support:'Ondersteuning', nav_communication:'Communicatie', nav_ideaboard:'Ideeënbord',
+                nav_support:'Ondersteuning', nav_communication:'Communicatie', nav_knowledge:'Kennis', nav_shop:'Promotieshop', h_purchasing:'INKOOP', h_controlling:'CONTROLLING', h_filingcab:'DOCUMENTENARCHIEF', h_support:'ONDERSTEUNING', h_ideaboard:'IDEE\u00cbNBORD', h_communication:'COMMUNICATIE', h_forum:'FORUM', h_chat:'CHAT', h_calendar:'AGENDA', h_todos:'TAKEN', h_onboarding:'ONBOARDING', nav_ideaboard:'Idee\u00ebnbord',
                 nav_onboarding:'Onboarding', nav_hq_control:'HQ Beheer',
                 nav_hq_cockpit:'Netwerk-Cockpit', nav_hq_locations:'Locaties',
-                nav_hq_finance:'Financiën', nav_hq_actions:'Actie vereist', nav_hq_command:'Commandocentrum', nav_hq_comm:'Communicatie', nav_hq_campaigns:'Campagnes', nav_hq_docs:'Documenten', nav_hq_calendar:'Agenda', nav_hq_tasks:'Taken', nav_hq_analytics:'Portaalgebruik', nav_calendar:'Agenda', nav_todo:'Taken',
+                nav_hq_finance:'Financi\u00ebn', nav_hq_actions:'Actie vereist', nav_hq_command:'Commandocentrum', nav_hq_comm:'Communicatie', nav_hq_campaigns:'Campagnes', nav_hq_docs:'Documenten', nav_hq_calendar:'Agenda', nav_hq_tasks:'Taken', nav_hq_analytics:'Portaalgebruik', nav_calendar:'Agenda', nav_todo:'Taken',
+                // Kopjes
                 h_marketing:'MARKETING', h_sales:'VERKOOP', h_dashboards:'DASHBOARDS',
                 h_leadreporting:'LEAD RAPPORTAGE',
-                h_purchasing:'INKOOP', h_controlling:'CONTROLLING', h_filingcab:'DOCUMENTENARCHIEF',
-                h_support:'ONDERSTEUNING', h_ideaboard:'IDEE\u00cbNBORD', h_communication:'COMMUNICATIE',
-                h_forum:'FORUM', h_chat:'CHAT', h_calendar:'AGENDA', h_todos:'TAKEN', h_onboarding:'ONBOARDING',
-                nav_knowledge:'Kennis', nav_shop:'Promotieshop',
                 welcome:'Welkom terug, {name}!',
+                // Dashboard
                 dash_consultations:'Adviezen vandaag', dash_openoffers:'Openstaande offertes',
                 dash_opentickets:'Open tickets',
+                // Marketing tabs
                 tab_campaigns:'Campagnes', tab_socialmedia:'Social Media',
                 tab_contentlib:'Content Bibliotheek', tab_analytics:'Analytics',
-                tab_strategy:'📋 Strategie', tab_knowledge:'📚 Kennis',
-                sm_channels:'📱 Onze kanalen', sm_topics:'🎬 Content-opdrachten',
-                sm_upload:'📤 Video uploaden', sm_ranking:'📊 Netwerk-ranking',
-                sm_howto:'ℹ️ Zo werkt het',
-                filter_all:'Alle', filter_new:'🆕 Nieuw voor jou', filter_done:'✅ Afgerond',
+                tab_strategy:'\ud83d\udccb Strategie', tab_knowledge:'\ud83d\udcda Kennis',
+                // Social Media
+                sm_channels:'\ud83d\udcf1 Onze kanalen', sm_topics:'\ud83c\udfac Content-opdrachten',
+                sm_upload:'\ud83d\udce4 Video uploaden', sm_ranking:'\ud83d\udcca Netwerk-ranking',
+                sm_howto:'\u2139\ufe0f Zo werkt het',
+                filter_all:'Alle', filter_new:'\ud83c\udd95 Nieuw voor jou', filter_done:'\u2705 Afgerond',
                 search_topic:'Onderwerp zoeken...',
                 role_seller:'Verkoper',
-                btn_shoot:'📤 Filmen', btn_upload_now:'📤 Dit onderwerp nu filmen & uploaden',
-                btn_submit:'🚀 Video indienen', btn_to_channel:'Naar kanaal →',
+                btn_shoot:'\ud83d\udce4 Filmen', btn_upload_now:'\ud83d\udce4 Dit onderwerp nu filmen & uploaden',
+                btn_submit:'\ud83d\ude80 Video indienen', btn_to_channel:'Naar kanaal \u2192',
                 btn_follow:'Volgen', btn_subscribe:'Abonneren',
                 lbl_videos_shot:'Videos gemaakt', lbl_topics:'Onderwerpen',
-                lbl_streak:'🔥 Reeks: 2 weken', lbl_rank:'🏆 Rang 5 van 21',
-                lbl_next_badge:'⭐ Volgende badge: 5 Videos',
-                lbl_hook:'🎣 Hook / Intro (eerste 3 seconden)',
-                lbl_main:'📋 Hoofddeel – Wat laten zien/vertellen',
-                lbl_outro:'📣 Outro / Call-to-Action',
-                lbl_hqtip:'💡 Tip van HQ Marketing',
+                lbl_streak:'\ud83d\udd25 Reeks: 2 weken', lbl_rank:'\ud83c\udfc6 Rang 5 van 21',
+                lbl_next_badge:'\u2b50 Volgende badge: 5 Videos',
+                lbl_hook:'\ud83c\udfa3 Hook / Intro (eerste 3 seconden)',
+                lbl_main:'\ud83d\udccb Hoofddeel \u2013 Wat laten zien/vertellen',
+                lbl_outro:'\ud83d\udce3 Outro / Call-to-Action',
+                lbl_hqtip:'\ud83d\udca1 Tip van HQ Marketing',
                 lbl_example_video:'Voorbeeldvideo bekijken',
-                lbl_example_desc:'Bekijk hoe anderen het deden – en doe het na!',
-                lbl_watch:'Bekijken →', lbl_done_video:'✅ Je hebt deze video al ingediend!',
+                lbl_example_desc:'Bekijk hoe anderen het deden \u2013 en doe het na!',
+                lbl_watch:'Bekijken \u2192', lbl_done_video:'\u2705 Je hebt deze video al ingediend!',
                 lbl_difficulty:'Moeilijkheid',
-                upl_title:'Video uploaden', upl_desc:'Kies een onderwerp, upload je video – klaar! Wij zorgen voor montage, ondertiteling en publicatie.',
-                upl_select:'Onderwerp kiezen...', upl_own:'0000 – Eigen voorstel',
+                upl_title:'Video uploaden', upl_desc:'Kies een onderwerp, upload je video \u2013 klaar! Wij zorgen voor montage, ondertiteling en publicatie.',
+                upl_select:'Onderwerp kiezen...', upl_own:'0000 \u2013 Eigen voorstel',
                 upl_your_video:'Jouw video', upl_drag:'Sleep video hierheen',
                 upl_click:'of klik om te selecteren', upl_comment:'Kort commentaar',
                 upl_comment_ph:"bijv. 'In de winkel gefilmd, belichting was lastig'",
                 upl_footer:'HQ monteert je video, voegt ondertiteling toe en plaatst het als collab-post op je profiel.',
-                rank_title:'🏆 Content-ranking – Wie filmt het meest?',
-                rank_badges:'🎖️ Badges', rank_stats:'📊 Netwerkstatistieken',
+                rank_title:'\ud83c\udfc6 Content-ranking \u2013 Wie filmt het meest?',
+                rank_badges:'\ud83c\udf96\ufe0f Badges', rank_stats:'\ud83d\udcca Netwerkstatistieken',
                 rank_total_vids:'Totaal videos', rank_topics_covered:'Onderwerpen behandeld',
                 rank_active:'Actieve locaties', rank_no_video:'Nog geen video',
-                howto_title:'Zo werkt Local Hero – in 3 stappen',
+                howto_title:'Zo werkt Local Hero \u2013 in 3 stappen',
                 howto_step1:'1. Inspiratie', howto_step1d:'Wij leveren het onderwerp + voorbeeldvideo',
                 howto_step2:'2. Filmen & Upload', howto_step2d:'Film 1-3 min. video met je telefoon en upload hier',
                 howto_step3:'3. Montage & Publicatie', howto_step3d:'Wij monteren, voegen ondertiteling toe en publiceren als collab',
-                howto_tips:'💡 Tips voor goede videos', howto_links:'🔗 Handige links',
-                lh_title:'🎬 Local Hero – Content Strategie',
-                lh_desc:'Film een korte video, upload het – wij doen de rest! Montage, ondertiteling & publicatie doet het HQ.',
+                howto_tips:'\ud83d\udca1 Tips voor goede videos', howto_links:'\ud83d\udd17 Handige links',
+                lh_title:'\ud83c\udfac Local Hero \u2013 Content Strategie',
+                lh_desc:'Film een korte video, upload het \u2013 wij doen de rest! Montage, ondertiteling & publicatie doet het HQ.',
                 ch_followers:'Volgers', ch_posts:'Berichten', ch_engagement:'Betrokkenheid',
                 ch_subscribers:'Abonnees', ch_videos:'Videos', ch_views:'Weergaven',
                 ch_likes:'Likes',
                 badge_first:'Eerste upload', badge_3:'3 Videos', badge_5:'5 Videos',
                 badge_10:'10 Videos', badge_25:'25 Videos', badge_50:'50 Videos',
-                badge_reached:'✅ Behaald', badge_almost:'Nog 1!', badge_locked:'Vergrendeld',
+                badge_reached:'\u2705 Behaald', badge_almost:'Nog 1!', badge_locked:'Vergrendeld',
                 lbl_content_theme:'Content-onderwerp kiezen',
                 optional:'(optioneel)',
                 // === BWA Herinneringen ===
                 bwa_reminder_title:'BWA {monat} {jahr} indienen',
                 bwa_reminder_desc:'De BWA voor {monat} {jahr} moet voor {deadline} ingediend worden. Upload in het onderdeel Controlling.',
-                bwa_reminder_urgent:'\u26A0\uFE0F DRINGEND: De deadline is over een paar dagen!',
-                bwa_reminder_overdue:'\uD83D\uDEA8 TE LAAT! Dien zo snel mogelijk in. HQ wordt ge\u00efnformeerd.',
+                bwa_reminder_urgent:'\u26a0\ufe0f DRINGEND: De deadline is over een paar dagen!',
+                bwa_reminder_overdue:'\ud83d\udea8 TE LAAT! Dien zo snel mogelijk in. HQ wordt ge\u00efnformeerd.',
                 bwa_banner_info:'BWA-herinnering: Gelieve in te dienen.',
                 bwa_banner_warn:'BWA-herinnering: Deadline nadert!',
                 bwa_banner_urgent:'BWA dringend indienen!',
@@ -18050,7 +19543,164 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 pw_change_new:'Nieuw wachtwoord', pw_change_repeat:'Wachtwoord herhalen',
                 pw_change_save:'Wachtwoord opslaan', pw_change_success:'Wachtwoord succesvol gewijzigd!',
                 pw_change_mismatch:'Wachtwoorden komen niet overeen.',
-                pw_change_min:'Minimaal 6 tekens.'
+                pw_change_min:'Minimaal 6 tekens.',
+                // === Uitgebreide vertalingen ===
+                tr_followup_title:'Opvolgsysteem',
+                tr_followup_desc:'Openstaande offertes systematisch opvolgen. Sluitingspercentage +10-15%.',
+                tr_followup_trigger:'Sluitingspercentage onder netwerkgemiddelde',
+                tr_bwa_title:'BWA correct lezen',
+                tr_bwa_desc:'Belangrijkste BWA-kengetallen begrijpen en acties afleiden.',
+                tr_bwa_trigger:'BWA geüpload',
+                tr_content_title:'Content in 10 minuten',
+                tr_content_desc:'Maak een Local Hero-video in minder dan 10 minuten.',
+                tr_content_trigger:'Geen content sinds 14+ dagen',
+                tr_workshop_title:'Doorlooptijd optimaliseren',
+                tr_workshop_desc:'Doorlooptijd verkorten, klanttevredenheid verhogen.',
+                tr_workshop_trigger:'Doorlooptijd boven drempelwaarde',
+                tr_leadqual_title:'Lead-kwalificatie',
+                tr_leadqual_desc:'Leads systematisch beoordelen en prioriteren. Focus op koopklare klanten.',
+                tr_leadqual_trigger:'Leads/week onder minimum',
+                tr_margin_title:'Brutowinst verhogen',
+                tr_margin_desc:'Accessoire-attach-rate verhogen. 2-3% meer brutowinst mogelijk.',
+                tr_margin_trigger:'Brutowinst onder netwerkgemiddelde',
+                tr_liquidity_title:'Liquiditeitsplanning',
+                tr_liquidity_desc:'Cashflow vooruit plannen, knelpunten vermijden.',
+                tr_liquidity_trigger:'Liquiditeit onder drempel',
+                tr_gmb_title:'Google My Business optimaliseren',
+                tr_gmb_desc:'Volledig GMB-profiel onderhouden. Meer lokale zichtbaarheid.',
+                tr_gmb_trigger:'GMB Score onder 80%',
+                tr_triggered:'Geactiveerd: ',
+                tr_started:'🎓 Trainer gestart!',
+                tr_active:'Trainers actief',
+                tr_min:'min',
+                tr_start_cta:'▶ Starten',
+                tr_snooze:'⏰ Later',
+                sol_it_title:'IT-problemen? Probeer eerst:',
+                sol_purchasing_title:'Inkoop – Veelvoorkomende oplossing:',
+                sol_accounting_title:'Boekhouding – Snelle hulp:',
+                sol_marketing_title:'Marketing – Directe hulp:',
+                sol_general_title:'Algemeen – Mogelijke oplossing:',
+                bill_generate_drafts:'📝 Maand-concepten genereren',
+                bill_confirm_drafts:'Maand-concepten genereren?',
+                bill_drafts_desc:'Dit maakt factuurconcepten voor alle locaties met vergrendelde jaarstrategie.',
+                bill_quarterly:'📊 Kwartaalafrekening',
+                bill_confirm_quarterly:'Kwartaalafrekening genereren?',
+                bill_quarterly_desc:'Dit berekent de verrekening op basis van beschikbare BWA-gegevens.',
+                bill_quarterly_warn:'Ontbrekende BWA-maanden worden tegen 100% planbasis gefactureerd.',
+                bill_finalize_all:'✅ Alle concepten afronden',
+                bill_confirm_finalize:'Alle concepten afronden?',
+                bill_finalize:'Factuur afronden?',
+                bill_mark_paid:'Als betaald markeren?',
+                bill_remove_line:'Positie verwijderen?',
+                bill_new_desc:'Beschrijving:',
+                bill_new_amount:'Bedrag (€):',
+                bill_strategy_lock:'Strategie vergrendelen? Kan daarna niet meer worden bewerkt en wordt de berekeningsbasis.',
+                bill_strategy_submitted:'✅ Jaarstrategie ingediend',
+                bill_valid_revenue:'Voer een geldige jaaromzet in',
+                alert_error:'Fout: ',
+                alert_success:'Gelukt!',
+                alert_fill_required:'Vul alle verplichte velden in.',
+                alert_enter_email_pw:'Voer e-mail en wachtwoord in.',
+                alert_enter_subject:'Voer een onderwerp in.',
+                alert_enter_title:'Voer een titel in.',
+                alert_enter_name:'Voer een naam in.',
+                alert_enter_task:'Voer een taak in.',
+                alert_enter_comment:'Voer een reactie in.',
+                alert_enter_message:'Voer een bericht in.',
+                alert_enter_date:'Voer een datum in',
+                alert_select_file:'Selecteer een bestand.',
+                alert_select_location:'Selecteer een locatie.',
+                alert_enter_firstname:'Vul voornaam, achternaam en e-mail in.',
+                alert_min_role:'Minimaal één rol vereist.',
+                alert_already_voted:'Je hebt al op dit idee gestemd!',
+                alert_order_success:'Bestelling geslaagd! 🎉',
+                alert_pw_changed:'✅ Wachtwoord gewijzigd!',
+                alert_push_unsupported:'Pushmeldingen worden niet ondersteund door deze browser.',
+                alert_push_denied:'Pushtoestemming is geweigerd. Schakel in via browserinstellingen.',
+                confirm_delete_post:'Bericht echt verwijderen?',
+                confirm_delete_bwa:'BWA echt verwijderen?',
+                confirm_delete_doc:'Document echt verwijderen?',
+                confirm_delete_event:'Afspraak echt verwijderen?',
+                confirm_delete_goal:'Doel echt verwijderen?',
+                confirm_delete_entry:'Invoer echt verwijderen?',
+                confirm_delete_protocol:'Protocol echt verwijderen?',
+                confirm_delete_section:'Sectie verwijderen? Taken worden naar "Inbox" verplaatst.',
+                confirm_reject_user:'Gebruiker echt afwijzen? Het account wordt geblokkeerd.',
+                ui_uploading:'Wordt geüpload...',
+                ui_saving:'Opslaan...',
+                ui_signing_in:'Inloggen...',
+                ui_sign_in:'Inloggen',
+                ui_upload:'Uploaden',
+                ui_save_bwa:'BWA opslaan',
+                ui_save_pw:'Wachtwoord opslaan',
+                ui_pw_changed_redirect:'Wachtwoord succesvol gewijzigd! Je wordt doorgestuurd...',
+                ui_choose_recipient:'Ontvanger kiezen',
+                ui_choose_location:'— Locatie kiezen —',
+                ui_speak_now:'Spreek nu... Druk op ✓ om te verzenden',
+                ui_listening:'🎤 Luistert...',
+                ui_press_mic:'Druk op 🎤 of typ je antwoord',
+                health_rank:'Rang',
+                health_of:'van',
+                bwa_escalation3:'Escalatieniveau 3 – BWA te laat!',
+                bwa_overdue:'🚨 Te laat:',
+                bwa_early_gold:'🥇 Vroege indiening = Gold-status!',
+                bwa_no_data_warning:'Zonder actuele cijfers kunnen we je niet gericht ondersteunen bij inkoop, marketing en controlling.',
+                misc_ticket_load_error:'Fout bij laden van ticket.',
+                misc_no_permission:'Status kon niet worden gewijzigd – geen toestemming.',
+                misc_solution_try:'✅ Bedankt! Probeer de voorgestelde oplossing.',
+                misc_group_call:'📋 Vraag genoteerd voor de groepscall!',
+                misc_announcements_hq:'Aankondigingen van het hoofdkantoor',
+                misc_max_repeat:'Maximaal 100 herhalingen toegestaan. Kies een kortere periode.',
+                misc_enter_name_slug:'Vul naam en slug in.',
+                misc_enter_title_date:'Vul titel en datum in.',
+                misc_enter_title_content:'Vul titel en inhoud in.',
+                misc_enter_date_seller:'Voer datum en verkoper in.',
+                misc_enter_revenue:'Voer geplande omzet in',
+                misc_enter_product:'Voer productnaam in',
+                misc_min_month:'Vul minimaal één maand in.',
+                misc_min_revenue:'Voer minimaal omzet of wareneinkoop in.',
+                misc_assign_location:'Wijs een locatie toe.',
+                misc_enter_valid_email:'Voer een geldig e-mailadres in.',
+                misc_doc_uploaded:'✅ Document geüpload!',
+                misc_bwa_for:'BWA voor',
+                misc_min_8_chars:'Wachtwoord moet minimaal 8 tekens bevatten.',
+                // === Buchhaltung & PDF ===
+                bill_tab_invoices:'📄 Facturen',
+                bill_tab_payments:'💳 Betalingsstatus',
+                bill_tab_strategy:'🎯 Jaarstrategie',
+                bill_tab_costs:'🔍 Kostenoverzicht',
+                bill_paid:'Betaald',
+                bill_open:'Openstaand',
+                bill_total_year:'Totaal',
+                bill_invoices:'Facturen',
+                bill_payment_history:'📋 Betalingsgeschiedenis',
+                bill_no_payments:'Nog geen betalingsgegevens beschikbaar',
+                bill_paid_on:'Betaald op',
+                bill_due_since:'Verschuldigd sinds',
+                bill_status_paid:'Betaald',
+                bill_status_finalized:'Afgerond',
+                bill_status_sent:'Verzonden',
+                bill_status_draft:'Concept',
+                bill_no_invoices:'Nog geen facturen beschikbaar',
+                bill_period:'Periode',
+                bill_back_overview:'← Terug naar overzicht',
+                bill_how_calculated:'📐 Zo is je factuur berekend:',
+                bill_position:'Positie',
+                bill_amount:'Bedrag',
+                bill_net:'Netto',
+                bill_vat:'BTW',
+                bill_gross_total:'Totaal',
+                bill_pdf_invoice:'FACTUUR',
+                bill_pdf_date:'Factuurdatum',
+                bill_pdf_period:'Dienstverleningsperiode',
+                bill_pdf_qty:'Aantal',
+                bill_pdf_unit_price:'Stukprijs',
+                bill_pdf_net_amount:'Nettobedrag',
+                bill_pdf_total:'Totaalbedrag',
+                bill_pdf_payment_terms:'Betalingstermijn: 14 dagen netto',
+                bill_pdf_transfer:'Gelieve het bedrag over te maken onder vermelding van het factuurnummer.',
+                nav_billing:'Boekhouding',
+                nav_my_billing:'Mijn Boekhouding'
             }
         };
 
@@ -18135,7 +19785,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var positionen = shopCart.map(function(c){ return {bestellung_id:orderResp.data.id, produkt_id:c.id, menge:c.menge, einzelpreis:c.preis}; });
                 await sb.from('shop_positionen').insert(positionen);
                 shopCart = [];
-                alert('Bestellung erfolgreich! \ud83c\udf89');
+                alert(t('alert_order_success'));
                 renderShop();
             } catch(err) { alert('Fehler: '+err.message); }
         }
@@ -20899,10 +22549,10 @@ function changePassword() {
     if(typeof sb !== 'undefined') {
         sb.auth.updateUser({ password: newPw }).then(function(res){
             if(res.error) alert('Fehler: ' + res.error.message);
-            else alert('✅ Passwort geändert!');
+            else alert(t('alert_pw_changed'));
         });
     } else {
-        alert('✅ Passwort geändert! (Demo-Modus)');
+        alert(t('alert_pw_changed'));
     }
 }
 </script>
@@ -21555,7 +23205,7 @@ var el=document.getElementById('trainerCardOverlay');if(!el)return;
 document.getElementById('trainerModuleTag').textContent=tr.module.toUpperCase();
 document.getElementById('trainerTitle').textContent=tr.title;
 document.getElementById('trainerDesc').textContent=tr.desc;
-document.getElementById('trainerTriggerInfo').textContent='Ausgelöst: '+tr.trigger;
+document.getElementById('trainerTriggerInfo').textContent=t('tr_triggered')+tr.trigger;
 document.getElementById('trainerCTA').textContent='▶ Starten ('+tr.dur+')';
 var st=document.getElementById('trainerSteps');
 if(st)st.innerHTML=tr.steps.map(function(s,i){return '<div style="display:flex;align-items:flex-start;gap:6px"><span style="width:18px;height:18px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#9ca3af;flex-shrink:0">'+(i+1)+'</span><span style="font-size:11px;color:#4b5563">'+s+'</span></div>';}).join('');
@@ -21590,7 +23240,7 @@ icC.innerHTML='<p class="text-xs font-semibold text-gray-700 mb-1">'+sol.title+'
 window.acceptInterceptor=function(){
 document.getElementById('ticketInterceptor').style.display='none';
 document.getElementById('ticketCreate').classList.add('hidden');
-alert('✅ Danke! Probiere die vorgeschlagene Lösung aus.\nWenn sie nicht hilft, erstelle einfach ein neues Ticket.');
+alert(t('misc_solution_try'));
 };
 window.skipInterceptor=function(){
 document.getElementById('ticketInterceptor').style.display='none';
@@ -21673,7 +23323,7 @@ setTimeout(function(){document.getElementById('groupcallPrepPanel').style.displa
 
             <!-- Actions -->
             <div style="display:flex;flex-direction:column;gap:8px;">
-                <button onclick="alert('📋 Frage für den Gruppencall vorgemerkt!')" style="width:100%;padding:10px;background:#EF7D00;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Frage für den Call einreichen</button>
+                <button onclick="alert(t('misc_group_call'))" style="width:100%;padding:10px;background:#EF7D00;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Frage für den Call einreichen</button>
                 <button onclick="closeGroupcallPrep()" style="width:100%;padding:10px;background:#f3f4f6;color:#6b7280;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">Schließen</button>
             </div>
         </div>
@@ -22113,7 +23763,7 @@ function toggleWidgetInfo(e, id) {
     async function _evaluateTrigger(tr,sid){var k=tr.trigger_key;if(k==='open_offers_no_followup'){var r=await sb.from('leads').select('id,letzter_kontakt,status').eq('standort_id',sid).not('status','in','("gewonnen","verloren")');var l=r.data||[];return l.filter(function(x){return!x.letzter_kontakt||(Date.now()-new Date(x.letzter_kontakt).getTime())/86400000>7;}).length>=5||l.length===0;}if(k==='bwa_missing'){var m=typeof getBwaMonth==='function'?getBwaMonth(new Date()):null;if(!m)return false;var r=await sb.from('bwa_daten').select('id').eq('standort_id',sid).eq('monat',m.m+1).eq('jahr',m.y).limit(1);return!(r.data&&r.data.length>0);}if(k==='no_content_14d'){var s=new Date(Date.now()-14*86400000).toISOString();var r=await sb.from('portal_events').select('id').eq('standort_id',sid).eq('event_type','content_uploaded').gte('created_at',s).limit(1);return!(r.data&&r.data.length>0);}return false;}
     window.showTrainerForArea=async function(k,cid){var c=document.getElementById(cid);if(!c)return;c.innerHTML='';await _smartTriggerCheck(k);var a=await loadTrainersForArea(k);if(a.length>0)renderTrainerCard(a[0],c);};
     window._snoozeDbTrainer=async function(id){if(typeof sb==='undefined')return;await sb.from('trainer_assignments').update({cooldown_until:new Date(Date.now()+48*3600000).toISOString()}).eq('id',id);var c=document.getElementById('trainerCard_'+id);if(c)c.remove();};
-    window._startDbTrainer=function(){alert('🎓 Trainer gestartet!');};
+    window._startDbTrainer=function(){alert(t('tr_started'));};
 })();
 </script>
 <!-- === WISSEN MODULE: MEMBERSPOT-STYLE LEARNING PLATFORM === -->
@@ -22446,6 +24096,548 @@ window.switchWissenTyp = function(typ) {
 })();
 </script>
 
+<!-- ═══ BILLING MODULE ═══ -->
+<script>
+(function(){
+    const BILLING_FN = 'https://lwwagbkxeofahhwebkab.supabase.co/functions/v1/billing';
+    
+    // ── Helpers ──
+    function fmtEur(n) { return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n || 0); }
+    function fmtDate(d) { if (!d) return '–'; return new Date(d).toLocaleDateString('de-DE'); }
+    function statusBadge(s) {
+        const map = {
+            draft: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">Draft</span>',
+            ready: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Bereit</span>',
+            finalized: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">Finalisiert</span>',
+            sent: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">Versendet</span>',
+            paid: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Bezahlt</span>',
+            failed: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">Fehlgeschl.</span>',
+            void: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">Storniert</span>',
+            credited: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-700">Gutschrift</span>',
+        };
+        return map[s] || '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">'+s+'</span>';
+    }
+    async function billingCall(action, params) {
+        const res = await fetch(BILLING_FN, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, ...params })
+        });
+        return res.json();
+    }
+
+    // ── Month Selector ──
+    function initBillingMonthSelect() {
+        var sel = document.getElementById('billingMonthSelect');
+        if (!sel || sel.options.length > 0) return;
+        var now = new Date();
+        for (var i = -2; i <= 3; i++) {
+            var d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+            var val = d.toISOString().substring(0, 10);
+            var label = d.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+            var opt = new Option(label, val);
+            if (i === 0) opt.selected = true;
+            sel.appendChild(opt);
+        }
+    }
+
+    // ── Tab Switching ──
+    window.showBillingTab = function(tab) {
+        document.querySelectorAll('.billing-tab').forEach(function(b) {
+            b.classList.remove('border-vit-orange', 'text-vit-orange', 'font-semibold');
+            b.classList.add('border-transparent', 'text-gray-500');
+        });
+        document.querySelectorAll('.billing-tab-content').forEach(function(c) { c.style.display = 'none'; });
+        var btn = document.querySelector('.billing-tab[data-tab="'+tab+'"]');
+        if (btn) { btn.classList.add('border-vit-orange', 'text-vit-orange', 'font-semibold'); btn.classList.remove('border-transparent', 'text-gray-500'); }
+        var el = document.getElementById('billingTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+        if (el) el.style.display = 'block';
+        if (tab === 'overview') loadBillingOverview();
+        if (tab === 'invoices') loadAllInvoices();
+        if (tab === 'strategies') loadStrategies();
+        if (tab === 'products') loadProducts();
+        if (tab === 'tools') loadToolPackages();
+    };
+
+    window.showStBillingTab = function(tab) {
+        document.querySelectorAll('.st-billing-tab').forEach(function(b) {
+            b.classList.remove('border-vit-orange', 'text-vit-orange', 'font-semibold');
+            b.classList.add('border-transparent', 'text-gray-500');
+        });
+        document.querySelectorAll('.st-billing-tab-content').forEach(function(c) { c.style.display = 'none'; });
+        var btn = document.querySelector('.st-billing-tab[data-tab="'+tab+'"]');
+        if (btn) { btn.classList.add('border-vit-orange', 'text-vit-orange', 'font-semibold'); btn.classList.remove('border-transparent', 'text-gray-500'); }
+        var el = document.getElementById('stBillingTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+        if (el) el.style.display = 'block';
+        if (tab === 'invoices') loadStandortInvoices();
+        if (tab === 'payments') loadStandortPayments();
+        if (tab === 'strategy') loadStandortStrategy();
+        if (tab === 'costs') loadStandortCosts();
+    };
+
+    // ── HQ: Load Billing Overview ──
+    window.loadBillingOverview = async function() {
+        initBillingMonthSelect();
+        var month = document.getElementById('billingMonthSelect')?.value;
+        if (!month) return;
+
+        var data = await billingCall('billing-overview', { month: month });
+        if (data.error) { console.error('Billing overview error:', data.error); return; }
+
+        var standorte = data.standorte || [];
+        var drafts = standorte.filter(function(s) { return s.invoice && s.invoice.status === 'draft'; }).length;
+        var finalized = standorte.filter(function(s) { return s.invoice && s.invoice.status === 'finalized'; }).length;
+        var paid = standorte.filter(function(s) { return s.invoice && s.invoice.status === 'paid'; }).length;
+        var totalRevenue = standorte.reduce(function(sum, s) { return sum + (s.invoice ? s.invoice.total : 0); }, 0);
+
+        var kpiEl = document.getElementById('billingKpis');
+        if (kpiEl) kpiEl.innerHTML = 
+            '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Standorte</p><p class="text-2xl font-bold">'+standorte.length+'</p></div>'
+            +'<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Drafts</p><p class="text-2xl font-bold text-yellow-600">'+drafts+'</p></div>'
+            +'<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Bezahlt</p><p class="text-2xl font-bold text-green-600">'+paid+'</p></div>'
+            +'<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Volumen</p><p class="text-2xl font-bold text-vit-orange">'+fmtEur(totalRevenue)+'</p></div>';
+
+        var tbody = document.getElementById('billingOverviewTable');
+        if (!tbody) return;
+        var h = '';
+        standorte.forEach(function(s) {
+            var stratBadge = !s.strategy ? '<span class="text-xs text-red-500">❌ Fehlt</span>' : s.strategy.locked ? '<span class="text-xs text-green-600">🔒 Locked</span>' : s.strategy.approved_at ? '<span class="text-xs text-blue-500">✓ Approved</span>' : '<span class="text-xs text-yellow-500">⏳ Offen</span>';
+            var sepaBadge = s.billing_account?.sepa_active ? '<span class="text-xs text-green-600">✅</span>' : '<span class="text-xs text-gray-400">–</span>';
+            var invTotal = s.invoice ? fmtEur(s.invoice.total) : '<span class="text-xs text-gray-400">–</span>';
+            var invStatus = s.invoice ? statusBadge(s.invoice.status) : '<span class="text-xs text-gray-400">Kein Draft</span>';
+            var action = '';
+            if (s.invoice && s.invoice.status === 'draft') {
+                action = '<button onclick="openBillingDetail(\''+s.invoice.id+'\')" class="text-xs px-2 py-1 bg-vit-orange text-white rounded hover:bg-orange-600">Bearbeiten</button>';
+            } else if (!s.invoice && s.strategy?.locked) {
+                action = '<span class="text-xs text-gray-400">Warte auf Draft</span>';
+            }
+            h += '<tr class="border-b hover:bg-gray-50">'
+                +'<td class="p-3"><p class="font-semibold text-sm">'+s.name+'</p><p class="text-xs text-gray-400">'+(s.inhaber_name||'')+'</p></td>'
+                +'<td class="p-3 text-center">'+stratBadge+'</td>'
+                +'<td class="p-3 text-center">'+sepaBadge+'</td>'
+                +'<td class="p-3 text-right font-mono text-sm">'+invTotal+'</td>'
+                +'<td class="p-3 text-center">'+invStatus+'</td>'
+                +'<td class="p-3 text-center">'+action+'</td>'
+                +'</tr>';
+        });
+        tbody.innerHTML = h || '<tr><td colspan="6" class="p-8 text-center text-gray-400">Keine aktiven Standorte</td></tr>';
+    };
+
+    // ── HQ: Generate Monthly Drafts ──
+    window.generateMonthlyDrafts = async function() {
+        var month = document.getElementById('billingMonthSelect')?.value;
+        if (!confirm('Monats-Drafts für ' + month + ' generieren?')) return;
+        var btn = event.target; btn.disabled = true; btn.textContent = '⏳ Wird generiert...';
+        var data = await billingCall('generate-monthly-drafts', { month: month });
+        btn.disabled = false; btn.textContent = t('bill_generate_drafts');
+        if (data.error) { alert('Fehler: ' + data.error); return; }
+        alert('✅ ' + data.created + ' Drafts erstellt, ' + data.skipped + ' übersprungen');
+        loadBillingOverview();
+    };
+
+    // ── HQ: Quarterly Settlement Dialog ──
+    window.showQuarterlySettlementDialog = function() {
+        var year = new Date().getFullYear();
+        var quarter = Math.ceil((new Date().getMonth() + 1) / 3);
+        var q = prompt('Quartal eingeben (z.B. ' + quarter + ' für Q' + quarter + '/' + year + '):', quarter);
+        if (!q) return;
+        var y = prompt('Jahr:', year);
+        if (!y) return;
+        generateSettlement(parseInt(y), parseInt(q));
+    };
+    async function generateSettlement(year, quarter) {
+        var data = await billingCall('generate-quarterly-settlement', { year: year, quarter: quarter });
+        if (data.error) { alert('Fehler: ' + data.error); return; }
+        alert('✅ ' + data.created + ' Settlements erstellt');
+        loadBillingOverview();
+    }
+
+    // ── HQ: Finalize all drafts ──
+    window.finalizeAllReady = async function() {
+        if (!confirm('Alle Drafts des aktuellen Monats finalisieren?')) return;
+        var month = document.getElementById('billingMonthSelect')?.value;
+        var { data: invoices } = await window.supabaseClient.from('billing_invoices')
+            .select('id').eq('status', 'draft').eq('period_start', month);
+        if (!invoices?.length) { alert('Keine Drafts zum Finalisieren'); return; }
+        var count = 0;
+        for (var inv of invoices) {
+            await billingCall('finalize-invoice', { invoice_id: inv.id, user_id: window.currentUser?.id });
+            count++;
+        }
+        alert('✅ ' + count + ' Rechnungen finalisiert');
+        loadBillingOverview();
+    };
+
+    // ── HQ: Invoice Detail ──
+    window.openBillingDetail = async function(invoiceId) {
+        showView('hqBillingDetail');
+        var { data: inv } = await window.supabaseClient.from('billing_invoices')
+            .select('*, standort:standorte(name)').eq('id', invoiceId).single();
+        if (!inv) return;
+        var { data: lines } = await window.supabaseClient.from('billing_invoice_line_items')
+            .select('*, product:billing_products(key, name)').eq('invoice_id', invoiceId).order('sort_index');
+        var { data: audits } = await window.supabaseClient.from('billing_audit_log')
+            .select('*, user:users(name)').eq('invoice_id', invoiceId).order('created_at', { ascending: false });
+
+        document.getElementById('billingDetailTitle').textContent = (inv.invoice_number || 'Rechnung') + ' – ' + (inv.standort?.name || '');
+        document.getElementById('billingDetailSubtitle').textContent = fmtDate(inv.period_start) + ' – ' + fmtDate(inv.period_end) + ' · ' + statusBadge(inv.status);
+        document.getElementById('billingDetailSubtitle').innerHTML = fmtDate(inv.period_start) + ' – ' + fmtDate(inv.period_end) + ' · ' + statusBadge(inv.status);
+
+        // Action buttons
+        var actionsHtml = '';
+        if (inv.status === 'draft') {
+            actionsHtml += '<button onclick="finalizeInvoice(\''+inv.id+'\')" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700">✅ Finalisieren</button>';
+        }
+        if (inv.status === 'finalized') {
+            actionsHtml += '<button onclick="markInvoicePaid(\''+inv.id+'\')" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">💰 Als bezahlt markieren</button>';
+        }
+        if (inv.stripe_invoice_pdf) {
+            actionsHtml += '<a href="'+inv.stripe_invoice_pdf+'" target="_blank" class="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-semibold hover:bg-gray-700">📥 PDF</a>';
+        }
+        document.getElementById('billingDetailActions').innerHTML = actionsHtml;
+
+        // Content
+        var h = '';
+
+        // Snapshot / Transparency
+        if (inv.calculated_snapshot?.formulas) {
+            h += '<div class="vit-card p-4 mb-4 bg-blue-50 border-l-4 border-blue-400">';
+            h += '<h4 class="font-semibold text-blue-800 mb-2">📐 Berechnungsgrundlage</h4>';
+            h += '<ul class="text-sm text-blue-700 space-y-1">';
+            inv.calculated_snapshot.formulas.forEach(function(f) { h += '<li>• ' + f + '</li>'; });
+            h += '</ul></div>';
+        }
+
+        // Line Items Table
+        h += '<div class="vit-card overflow-hidden mb-4">';
+        h += '<div class="p-4 border-b bg-gray-50 flex justify-between items-center">';
+        h += '<h4 class="font-semibold text-gray-800">Positionen</h4>';
+        if (inv.status === 'draft') {
+            h += '<button onclick="addManualLine(\''+inv.id+'\')" class="text-xs px-3 py-1 bg-vit-orange text-white rounded hover:bg-orange-600">+ Position</button>';
+        }
+        h += '</div><table class="w-full text-sm">';
+        h += '<thead class="bg-gray-50 text-gray-500 text-xs uppercase"><tr><th class="text-left p-3">#</th><th class="text-left p-3">Beschreibung</th><th class="text-right p-3">Betrag</th>';
+        if (inv.status === 'draft') h += '<th class="text-center p-3">Aktion</th>';
+        h += '</tr></thead><tbody>';
+        (lines || []).forEach(function(li, idx) {
+            h += '<tr class="border-b">';
+            h += '<td class="p-3 text-gray-400">' + (idx+1) + '</td>';
+            h += '<td class="p-3">' + li.description;
+            if (li.meta?.formula) h += '<br><span class="text-xs text-gray-400">' + li.meta.formula + '</span>';
+            h += '</td>';
+            h += '<td class="p-3 text-right font-mono">' + fmtEur(li.amount) + '</td>';
+            if (inv.status === 'draft') {
+                h += '<td class="p-3 text-center">';
+                if (li.editable) {
+                    h += '<button onclick="editLineItem(\''+li.id+'\', '+li.amount+', \''+li.description.replace(/'/g,"\\'")+'\')" class="text-xs text-blue-600 hover:underline mr-2">✏️</button>';
+                    h += '<button onclick="removeLineItem(\''+li.id+'\', \''+inv.id+'\')" class="text-xs text-red-500 hover:underline">🗑️</button>';
+                }
+                h += '</td>';
+            }
+            h += '</tr>';
+        });
+        h += '</tbody>';
+        h += '<tfoot class="bg-gray-50 font-semibold">';
+        h += '<tr><td class="p-3" colspan="' + (inv.status === 'draft' ? 2 : 2) + '">Netto</td><td class="p-3 text-right font-mono">' + fmtEur(inv.subtotal) + '</td>'+(inv.status==='draft'?'<td></td>':'')+'</tr>';
+        h += '<tr><td class="p-3" colspan="' + (inv.status === 'draft' ? 2 : 2) + '">MwSt. ('+inv.tax_rate+'%)</td><td class="p-3 text-right font-mono">' + fmtEur(inv.tax_amount) + '</td>'+(inv.status==='draft'?'<td></td>':'')+'</tr>';
+        h += '<tr class="text-lg"><td class="p-3" colspan="' + (inv.status === 'draft' ? 2 : 2) + '">Gesamt</td><td class="p-3 text-right font-mono text-vit-orange">' + fmtEur(inv.total) + '</td>'+(inv.status==='draft'?'<td></td>':'')+'</tr>';
+        h += '</tfoot></table></div>';
+
+        // Audit Log
+        if (audits?.length) {
+            h += '<div class="vit-card p-4"><h4 class="font-semibold text-gray-800 mb-3">📋 Änderungsprotokoll</h4>';
+            h += '<div class="space-y-2">';
+            audits.forEach(function(a) {
+                h += '<div class="flex items-start text-xs text-gray-500"><span class="mr-2">' + fmtDate(a.created_at) + '</span>';
+                h += '<span class="font-semibold mr-1">' + (a.user?.name || 'System') + '</span>';
+                h += '<span>' + a.action + (a.note ? ': ' + a.note : '') + '</span></div>';
+            });
+            h += '</div></div>';
+        }
+
+        document.getElementById('billingDetailContent').innerHTML = h;
+    };
+
+    // ── HQ: Line Item Actions ──
+    window.editLineItem = async function(lineId, currentAmount, currentDesc) {
+        var newAmt = prompt('Neuer Betrag:', currentAmount);
+        if (newAmt === null) return;
+        await billingCall('update-line-item', { line_item_id: lineId, amount: parseFloat(newAmt), user_id: window.currentUser?.id });
+        // Reload the current invoice detail
+        var invId = document.querySelector('[onclick*="finalizeInvoice"]')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+        if (invId) openBillingDetail(invId);
+    };
+
+    window.removeLineItem = async function(lineId, invoiceId) {
+        if (!confirm(t('bill_remove_line'))) return;
+        await billingCall('remove-line-item', { line_item_id: lineId, user_id: window.currentUser?.id });
+        openBillingDetail(invoiceId);
+    };
+
+    window.addManualLine = async function(invoiceId) {
+        var desc = prompt(t('bill_new_desc'));
+        if (!desc) return;
+        var amt = prompt('Betrag (€):', '0');
+        if (amt === null) return;
+        await billingCall('add-line-item', { invoice_id: invoiceId, description: desc, amount: parseFloat(amt), user_id: window.currentUser?.id });
+        openBillingDetail(invoiceId);
+    };
+
+    window.finalizeInvoice = async function(invoiceId) {
+        if (!confirm(t('bill_finalize'))) return;
+        var data = await billingCall('finalize-invoice', { invoice_id: invoiceId, user_id: window.currentUser?.id });
+        if (data.error) { alert('Fehler: ' + data.error); return; }
+        alert('✅ Rechnung finalisiert' + (data.message ? '\n' + data.message : ''));
+        openBillingDetail(invoiceId);
+    };
+
+    window.markInvoicePaid = async function(invoiceId) {
+        if (!confirm(t('bill_mark_paid'))) return;
+        await billingCall('mark-paid', { invoice_id: invoiceId, user_id: window.currentUser?.id });
+        openBillingDetail(invoiceId);
+    };
+
+    // ── HQ: Load All Invoices ──
+    window.loadAllInvoices = async function() {
+        var filter = document.getElementById('billingInvoiceFilter')?.value;
+        var query = window.supabaseClient.from('billing_invoices')
+            .select('*, standort:standorte(name)').order('created_at', { ascending: false }).limit(50);
+        if (filter) query = query.eq('status', filter);
+        var { data: invoices } = await query;
+
+        var el = document.getElementById('billingInvoicesList');
+        if (!el) return;
+        if (!invoices?.length) { el.innerHTML = '<p class="text-center text-gray-400 py-8">Keine Rechnungen</p>'; return; }
+
+        var h = '';
+        invoices.forEach(function(inv) {
+            h += '<div class="vit-card p-4 flex items-center justify-between cursor-pointer hover:shadow-md" onclick="openBillingDetail(\''+inv.id+'\')">';
+            h += '<div><p class="font-semibold text-sm">' + (inv.invoice_number || '–') + '</p>';
+            h += '<p class="text-xs text-gray-500">' + (inv.standort?.name || '') + ' · ' + fmtDate(inv.period_start) + '</p></div>';
+            h += '<div class="text-right">';
+            h += '<p class="font-mono font-semibold">' + fmtEur(inv.total) + '</p>';
+            h += statusBadge(inv.status);
+            h += '</div></div>';
+        });
+        el.innerHTML = h;
+    };
+
+    // ── HQ: Load Strategies ──
+    window.loadStrategies = async function() {
+        var { data: strategies } = await window.supabaseClient.from('billing_annual_strategy')
+            .select('*, standort:standorte(name)').order('year', { ascending: false });
+        var el = document.getElementById('billingStrategiesList');
+        if (!el) return;
+        if (!strategies?.length) {
+            el.innerHTML = '<p class="text-center text-gray-400 py-8">Keine Jahresstrategien vorhanden</p>';
+            return;
+        }
+        var h = '';
+        strategies.forEach(function(s) {
+            var lockBadge = s.locked ? '🔒 Locked' : s.approved_at ? '✓ Approved' : '⏳ Offen';
+            var lockClass = s.locked ? 'text-green-600' : s.approved_at ? 'text-blue-500' : 'text-yellow-500';
+            h += '<div class="vit-card p-4 flex items-center justify-between">';
+            h += '<div><p class="font-semibold text-sm">' + (s.standort?.name || '') + ' – ' + s.year + ' (v' + s.version + ')</p>';
+            h += '<p class="text-xs text-gray-500">Plan-Umsatz: ' + fmtEur(s.planned_revenue_year) + ' · Marketing: ' + fmtEur(s.planned_marketing_year) + '</p></div>';
+            h += '<div class="flex items-center space-x-3">';
+            h += '<span class="text-xs font-semibold ' + lockClass + '">' + lockBadge + '</span>';
+            if (!s.approved_at) h += '<button onclick="approveStrategy(\''+s.id+'\')" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Approve</button>';
+            if (s.approved_at && !s.locked) h += '<button onclick="lockStrategy(\''+s.id+'\')" class="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700">Lock</button>';
+            h += '</div></div>';
+        });
+        el.innerHTML = h;
+    };
+
+    window.approveStrategy = async function(id) {
+        await billingCall('approve-strategy', { strategy_id: id, user_id: window.currentUser?.id });
+        loadStrategies();
+    };
+    window.lockStrategy = async function(id) {
+        if (!confirm(t('bill_strategy_lock'))) return;
+        await billingCall('lock-strategy', { strategy_id: id, user_id: window.currentUser?.id });
+        loadStrategies();
+    };
+
+    // ── HQ: Products ──
+    window.loadProducts = async function() {
+        var { data: products } = await window.supabaseClient.from('billing_products').select('*').order('key');
+        var el = document.getElementById('billingProductsList');
+        if (!el) return;
+        var h = '<div class="vit-card overflow-hidden"><table class="w-full text-sm">';
+        h += '<thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr><th class="p-3 text-left">Key</th><th class="p-3 text-left">Name</th><th class="p-3 text-left">Typ</th><th class="p-3 text-right">Betrag</th><th class="p-3 text-right">%</th></tr></thead><tbody>';
+        (products || []).forEach(function(p) {
+            h += '<tr class="border-b"><td class="p-3 font-mono text-xs">'+p.key+'</td><td class="p-3">'+p.name+'</td><td class="p-3 text-xs text-gray-500">'+p.product_type+'</td>';
+            h += '<td class="p-3 text-right">'+(p.default_amount ? fmtEur(p.default_amount) : '–')+'</td>';
+            h += '<td class="p-3 text-right">'+(p.default_percent ? (p.default_percent*100).toFixed(1)+'%' : '–')+'</td></tr>';
+        });
+        h += '</tbody></table></div>';
+        el.innerHTML = h;
+    };
+
+    // ── HQ: Tool Packages ──
+    window.loadToolPackages = async function() {
+        var { data: tools } = await window.supabaseClient.from('billing_tool_packages').select('*').order('monthly_cost');
+        var el = document.getElementById('billingToolsList');
+        if (!el) return;
+        var h = '<div class="vit-card overflow-hidden"><table class="w-full text-sm">';
+        h += '<thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr><th class="p-3 text-left">Paket</th><th class="p-3 text-left">Beschreibung</th><th class="p-3 text-right">Preis/Monat</th><th class="p-3 text-center">Status</th></tr></thead><tbody>';
+        (tools || []).forEach(function(t) {
+            h += '<tr class="border-b"><td class="p-3 font-semibold">'+t.name+'</td><td class="p-3 text-sm text-gray-500">'+(t.description||'')+'</td>';
+            h += '<td class="p-3 text-right font-mono">'+fmtEur(t.monthly_cost)+'</td>';
+            h += '<td class="p-3 text-center">'+(t.active?'<span class="text-green-600">✅</span>':'<span class="text-gray-400">–</span>')+'</td></tr>';
+        });
+        h += '</tbody></table></div>';
+        el.innerHTML = h;
+    };
+
+    // ── Standort: Load My Invoices ──
+    window.loadStandortInvoices = async function() {
+        var stId = window.currentUser?.standort_id;
+        if (!stId) return;
+        var { data: invoices } = await window.supabaseClient.from('billing_invoices')
+            .select('*').eq('standort_id', stId).order('period_start', { ascending: false });
+        var el = document.getElementById('stBillingInvoicesList');
+        if (!el) return;
+        if (!invoices?.length) { el.innerHTML = '<p class="text-center text-gray-400 py-8">Noch keine Rechnungen</p>'; return; }
+        var h = '';
+        invoices.forEach(function(inv) {
+            h += '<div class="vit-card p-4">';
+            h += '<div class="flex items-center justify-between mb-2">';
+            h += '<div><p class="font-semibold">' + (inv.invoice_number || 'Rechnung') + '</p>';
+            h += '<p class="text-xs text-gray-500">' + fmtDate(inv.period_start) + ' – ' + fmtDate(inv.period_end) + '</p></div>';
+            h += '<div class="text-right"><p class="font-mono text-lg font-bold">' + fmtEur(inv.total) + '</p>' + statusBadge(inv.status) + '</div></div>';
+            // Transparency
+            if (inv.calculated_snapshot?.formulas) {
+                h += '<details class="mt-2"><summary class="text-xs text-blue-600 cursor-pointer hover:underline">📐 Berechnung anzeigen</summary>';
+                h += '<ul class="mt-1 text-xs text-gray-600 space-y-1">';
+                inv.calculated_snapshot.formulas.forEach(function(f) { h += '<li>• ' + f + '</li>'; });
+                h += '</ul></details>';
+            }
+            // PDF Download
+            if (inv.stripe_invoice_pdf || inv.lexoffice_pdf_url) {
+                h += '<div class="mt-2 flex space-x-2">';
+                if (inv.stripe_invoice_pdf) h += '<a href="'+inv.stripe_invoice_pdf+'" target="_blank" class="text-xs px-3 py-1 bg-gray-100 rounded hover:bg-gray-200">📥 PDF (Stripe)</a>';
+                if (inv.lexoffice_pdf_url) h += '<a href="'+inv.lexoffice_pdf_url+'" target="_blank" class="text-xs px-3 py-1 bg-gray-100 rounded hover:bg-gray-200">📥 PDF (LexOffice)</a>';
+                h += '</div>';
+            }
+            h += '</div>';
+        });
+        el.innerHTML = h;
+    };
+
+    // ── Standort: Strategy ──
+    window.loadStandortStrategy = async function() {
+        var stId = window.currentUser?.standort_id;
+        if (!stId) return;
+        var year = new Date().getFullYear();
+        var { data: strategies } = await window.supabaseClient.from('billing_annual_strategy')
+            .select('*').eq('standort_id', stId).eq('year', year).order('version', { ascending: false });
+        var el = document.getElementById('stBillingStrategyContent');
+        if (!el) return;
+        var s = strategies?.[0];
+        var h = '';
+        if (s) {
+            var lockBadge = s.locked ? '🔒 Gesperrt (verbindlich)' : s.approved_at ? '✅ Genehmigt von HQ' : '⏳ Warte auf HQ-Genehmigung';
+            h += '<div class="vit-card p-6">';
+            h += '<div class="flex items-center justify-between mb-4"><h3 class="font-bold text-lg">Jahresstrategie ' + year + '</h3><span class="text-sm font-semibold">' + lockBadge + '</span></div>';
+            h += '<div class="grid grid-cols-2 gap-4">';
+            h += '<div class="p-4 bg-orange-50 rounded-lg"><p class="text-xs text-gray-400">Plan-Umsatz</p><p class="text-xl font-bold text-vit-orange">' + fmtEur(s.planned_revenue_year) + '</p><p class="text-xs text-gray-500">' + fmtEur(s.planned_revenue_year/12) + ' / Monat</p></div>';
+            h += '<div class="p-4 bg-blue-50 rounded-lg"><p class="text-xs text-gray-400">Marketing-Budget</p><p class="text-xl font-bold text-blue-600">' + fmtEur(s.planned_marketing_year) + '</p><p class="text-xs text-gray-500">' + fmtEur(s.planned_marketing_year/12) + ' / Monat</p></div>';
+            h += '</div></div>';
+        }
+        if (!s || !s.locked) {
+            h += '<div class="vit-card p-6 mt-4">';
+            h += '<h3 class="font-semibold mb-3">' + (s ? 'Neue Version einreichen' : 'Jahresstrategie einreichen') + '</h3>';
+            h += '<div class="grid grid-cols-2 gap-4 mb-4">';
+            h += '<div><label class="block text-xs text-gray-500 mb-1">Plan-Umsatz (Jahr)</label><input type="number" id="stStratRevenue" class="w-full border rounded-lg p-2" value="' + (s?.planned_revenue_year || '') + '"></div>';
+            h += '<div><label class="block text-xs text-gray-500 mb-1">Marketing-Budget (Jahr)</label><input type="number" id="stStratMarketing" class="w-full border rounded-lg p-2" value="' + (s?.planned_marketing_year || '') + '"></div>';
+            h += '</div>';
+            h += '<button onclick="submitStrategy()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600">🎯 Strategie einreichen</button>';
+            h += '</div>';
+        }
+        el.innerHTML = h;
+    };
+
+    window.submitStrategy = async function() {
+        var stId = window.currentUser?.standort_id;
+        var rev = parseFloat(document.getElementById('stStratRevenue')?.value);
+        var mkt = parseFloat(document.getElementById('stStratMarketing')?.value);
+        if (!rev || isNaN(rev)) { alert(t('misc_enter_revenue')); return; }
+        // Get current max version
+        var { data: existing } = await window.supabaseClient.from('billing_annual_strategy')
+            .select('version').eq('standort_id', stId).eq('year', new Date().getFullYear())
+            .order('version', { ascending: false }).limit(1);
+        var newVersion = (existing?.[0]?.version || 0) + 1;
+        await window.supabaseClient.from('billing_annual_strategy').insert({
+            standort_id: stId, year: new Date().getFullYear(),
+            planned_revenue_year: rev, planned_marketing_year: mkt || 0,
+            submitted_at: new Date().toISOString(), submitted_by: window.currentUser?.id,
+            version: newVersion
+        });
+        alert('✅ Jahresstrategie eingereicht (v' + newVersion + ')');
+        loadStandortStrategy();
+    };
+
+    // ── Standort: Cost Breakdown ──
+    window.loadStandortCosts = async function() {
+        var stId = window.currentUser?.standort_id;
+        if (!stId) return;
+        var el = document.getElementById('stBillingCostsContent');
+        if (!el) return;
+        // Load strategy + tools
+        var year = new Date().getFullYear();
+        var { data: strats } = await window.supabaseClient.from('billing_annual_strategy')
+            .select('*').eq('standort_id', stId).eq('year', year).eq('locked', true).order('version', { ascending: false }).limit(1);
+        var { data: tools } = await window.supabaseClient.from('billing_user_tool_assignments')
+            .select('*, tool:billing_tool_packages(name, monthly_cost), user:users(name)')
+            .eq('standort_id', stId).eq('is_active', true);
+        var s = strats?.[0];
+        var h = '';
+        if (s) {
+            var planMonth = s.planned_revenue_year / 12;
+            var revShare = 0.02 * planMonth;
+            var advance = 0.80 * revShare;
+            var mktMonth = s.planned_marketing_year / 12;
+            var toolTotal = (tools||[]).reduce(function(sum, t) { return sum + (t.cost_override || t.tool?.monthly_cost || 0); }, 0);
+            h += '<div class="vit-card p-6">';
+            h += '<h3 class="font-bold text-lg mb-4">Monatliche Kostenaufschlüsselung</h3>';
+            h += '<table class="w-full text-sm"><tbody>';
+            h += '<tr class="border-b"><td class="py-2">Grundgebühr</td><td class="py-2 text-right font-mono">'+fmtEur(800)+'</td></tr>';
+            h += '<tr class="border-b"><td class="py-2">Umsatzbeteiligung (80% × 2% × '+fmtEur(planMonth)+')</td><td class="py-2 text-right font-mono">'+fmtEur(advance)+'</td></tr>';
+            h += '<tr class="border-b"><td class="py-2">Marketing ('+fmtEur(s.planned_marketing_year)+' / 12)</td><td class="py-2 text-right font-mono">'+fmtEur(mktMonth)+'</td></tr>';
+            h += '<tr class="border-b"><td class="py-2">Toolkosten ('+(tools?.length||0)+' Nutzer)</td><td class="py-2 text-right font-mono">'+fmtEur(toolTotal)+'</td></tr>';
+            var nettoSum = 800 + advance + mktMonth + toolTotal;
+            h += '<tr class="font-bold text-lg"><td class="pt-3">Netto gesamt</td><td class="pt-3 text-right font-mono text-vit-orange">'+fmtEur(nettoSum)+'</td></tr>';
+            h += '<tr><td class="py-1 text-gray-400">zzgl. 19% MwSt.</td><td class="py-1 text-right font-mono text-gray-400">'+fmtEur(nettoSum*0.19)+'</td></tr>';
+            h += '<tr class="font-bold text-xl border-t"><td class="pt-2">Brutto</td><td class="pt-2 text-right font-mono text-vit-orange">'+fmtEur(nettoSum*1.19)+'</td></tr>';
+            h += '</tbody></table>';
+            // Tool breakdown
+            if (tools?.length) {
+                h += '<h4 class="font-semibold mt-6 mb-2">🔧 Tool-Zuweisungen</h4><div class="space-y-1">';
+                tools.forEach(function(t) {
+                    h += '<div class="flex justify-between text-sm"><span>'+((t.user?.name)||'–')+' – '+(t.tool?.name||'–')+'</span><span class="font-mono">'+fmtEur(t.cost_override||t.tool?.monthly_cost)+'</span></div>';
+                });
+                h += '</div>';
+            }
+            h += '</div>';
+        } else {
+            h = '<div class="text-center py-8 text-gray-400">Keine gesperrte Jahresstrategie vorhanden – Kostenberechnung nicht möglich.</div>';
+        }
+        el.innerHTML = h;
+    };
+
+    // ── Auto-init when view is shown ──
+    var origShowView = window.showView;
+    if (origShowView) {
+        window.showView = function(view) {
+            origShowView(view);
+            if (view === 'hqBilling') { initBillingMonthSelect(); loadBillingOverview(); }
+            if (view === 'standortBilling') { loadStandortInvoices(); }
+        };
+    }
+
+})();
+</script>
+
 
 <!-- ═══ PWA: Service Worker + Install Prompt + Push Notifications ═══ -->
 <script>
@@ -22558,13 +24750,13 @@ window.switchWissenTyp = function(typ) {
     // ── Push Notifications Setup ──
     window.setupPushNotifications = async function() {
         if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-            alert('Push-Benachrichtigungen werden von diesem Browser nicht unterstützt.');
+            alert(t('alert_push_unsupported'));
             return;
         }
         
         var permission = await Notification.requestPermission();
         if (permission !== 'granted') {
-            alert('Push-Berechtigung wurde verweigert. Bitte in den Browser-Einstellungen aktivieren.');
+            alert(t('alert_push_denied'));
             return;
         }
 
