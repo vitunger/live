@@ -26286,26 +26286,76 @@ window.switchWissenTyp = function(typ) {
 
     function parseWawiText(text, fileName) {
         var lines = text.split('\n');
-        var result = { source_file:fileName, header:{}, customer:{}, items:[], totals:{}, meta:{} };
+        var result = { source_file:fileName, header:{}, customer:{}, items:[], totals:{}, meta:{}, raw_text: text.substring(0, 2000) };
         var m;
+        var textLower = text.toLowerCase();
 
-        // Belegtyp
-        ['Rechnung','Auftrag','Angebot'].forEach(function(typ){
-            if(!result.header.beleg_typ && new RegExp('^'+typ+'(?:\\s|$)','m').test(text)) result.header.beleg_typ=typ;
-        });
+        // ── Belegtyp: 1) Text scan, 2) Filename fallback ──
+        // Broad text scan – check first 30 lines and full text
+        var headerText = lines.slice(0, 30).join('\n');
+        if(!result.header.beleg_typ) {
+            // Direct word matches (case-insensitive, various positions)
+            if(/\brechnung\b/i.test(headerText)) result.header.beleg_typ = 'Rechnung';
+            else if(/\bauftrag\b/i.test(headerText)) result.header.beleg_typ = 'Auftrag';
+            else if(/\bangebot\b/i.test(headerText)) result.header.beleg_typ = 'Angebot';
+            else if(/\bgutschrift\b/i.test(headerText)) result.header.beleg_typ = 'Gutschrift';
+            else if(/\blieferschein\b/i.test(headerText)) result.header.beleg_typ = 'Lieferschein';
+            // Full text fallback
+            else if(/\brechnung\b/i.test(text)) result.header.beleg_typ = 'Rechnung';
+            else if(/\bauftrag\b/i.test(text)) result.header.beleg_typ = 'Auftrag';
+            else if(/\bangebot\b/i.test(text)) result.header.beleg_typ = 'Angebot';
+        }
 
-        m=text.match(/Belegnummer:\s*(\d+)/); if(m) result.header.beleg_nr=m[1];
-        m=text.match(/Datum:\s*(\d{2})\.(\d{2})\.(\d{4})/); if(m) result.header.datum=m[3]+'-'+m[2]+'-'+m[1];
-        m=text.match(/Kunden-Nr\.?:\s*(\d+)/); if(m) result.header.kunden_nr=m[1];
-        m=text.match(/Verkäufer:\s*(.+)/); if(m) result.header.verkaeufer=m[1].trim();
-        m=text.match(/Zahlungsbedingung:\s*(.+)/); if(m) result.header.zahlungsbedingung=m[1].trim();
+        // Filename fallback: "Auftrag_939313_...", "Rechnung_939329_..."
+        if(!result.header.beleg_typ) {
+            var fnLower = fileName.toLowerCase();
+            if(fnLower.indexOf('rechnung') >= 0) result.header.beleg_typ = 'Rechnung';
+            else if(fnLower.indexOf('auftrag') >= 0) result.header.beleg_typ = 'Auftrag';
+            else if(fnLower.indexOf('angebot') >= 0) result.header.beleg_typ = 'Angebot';
+            else if(fnLower.indexOf('gutschrift') >= 0) result.header.beleg_typ = 'Gutschrift';
+            else if(fnLower.indexOf('lieferschein') >= 0) result.header.beleg_typ = 'Lieferschein';
+        }
 
-        // Standort
-        for(var li=0;li<Math.min(5,lines.length);li++){
+        // ── Belegnummer: Multiple patterns ──
+        // Pattern 1: "Belegnummer: 939313"
+        m = text.match(/Belegnummer[:\s]+(\d+)/i); if(m) result.header.beleg_nr = m[1];
+        // Pattern 2: "Beleg-Nr.: 939313" or "Beleg-Nr: 939313"
+        if(!result.header.beleg_nr) { m = text.match(/Beleg[\-\s]?Nr\.?[:\s]+(\d+)/i); if(m) result.header.beleg_nr = m[1]; }
+        // Pattern 3: "Rechnungsnummer: 939329" / "Auftragsnummer: 939313"
+        if(!result.header.beleg_nr) { m = text.match(/(?:Rechnungs?|Auftrags?|Angebots?)[\-\s]?(?:nummer|nr)\.?[:\s]+(\d+)/i); if(m) result.header.beleg_nr = m[1]; }
+        // Pattern 4: "Nr.: 939313" or "Nr: 939313"
+        if(!result.header.beleg_nr) { m = text.match(/\bNr\.?[:\s]+(\d{5,})/); if(m) result.header.beleg_nr = m[1]; }
+        // Pattern 5: "Beleg 939313" (just the word Beleg followed by number)
+        if(!result.header.beleg_nr) { m = text.match(/\bBeleg\s+(\d{5,})/i); if(m) result.header.beleg_nr = m[1]; }
+        // Filename fallback: "Auftrag_939313_20260217..."
+        if(!result.header.beleg_nr) { m = fileName.match(/(\d{5,7})/); if(m) result.header.beleg_nr = m[1]; }
+
+        // ── Datum: Multiple patterns ──
+        m = text.match(/Datum[:\s]+(\d{2})\.(\d{2})\.(\d{4})/i);
+        if(m) result.header.datum = m[3]+'-'+m[2]+'-'+m[1];
+        if(!result.header.datum) { m = text.match(/(\d{2})\.(\d{2})\.(\d{4})/); if(m) result.header.datum = m[3]+'-'+m[2]+'-'+m[1]; }
+        // Filename date: "..._202602171339" = 2026-02-17
+        if(!result.header.datum) { m = fileName.match(/(\d{4})(\d{2})(\d{2})\d{4,6}/); if(m) result.header.datum = m[1]+'-'+m[2]+'-'+m[3]; }
+
+        // ── Kunden-Nr ──
+        m = text.match(/Kunden[\-\s]?Nr\.?[:\s]+(\d+)/i); if(m) result.header.kunden_nr = m[1];
+        if(!result.header.kunden_nr) { m = text.match(/Kdnr\.?[:\s]+(\d+)/i); if(m) result.header.kunden_nr = m[1]; }
+
+        // ── Verkäufer ──
+        m = text.match(/Verkäufer[:\s]+(.+)/i); if(m) result.header.verkaeufer = m[1].trim();
+        if(!result.header.verkaeufer) { m = text.match(/Berater[:\s]+(.+)/i); if(m) result.header.verkaeufer = m[1].trim(); }
+        if(!result.header.verkaeufer) { m = text.match(/Sachbearbeiter[:\s]+(.+)/i); if(m) result.header.verkaeufer = m[1].trim(); }
+
+        // ── Zahlungsbedingung ──
+        m = text.match(/Zahlungsbedingung[:\s]+(.+)/i); if(m) result.header.zahlungsbedingung = m[1].trim();
+        if(!result.header.zahlungsbedingung) { m = text.match(/Zahlungsart[:\s]+(.+)/i); if(m) result.header.zahlungsbedingung = m[1].trim(); }
+
+        // Standort (first lines)
+        for(var li=0;li<Math.min(8,lines.length);li++){
             m=lines[li].match(/^(.+?)\s*\|\s*(.+?)\s*\|\s*(\d{5})\s+(.+?)(?:\s+Bezahlen|$)/);
             if(m){ result.meta.standort_name=m[1].trim(); result.meta.standort_plz=m[3]; result.meta.standort_ort=m[4].trim(); break; }
         }
-        m=text.match(/Email:\s*([\w@.\-]+)/); if(m) result.meta.standort_email=m[1];
+        m=text.match(/Email[:\s]+([\w@.\-]+)/i); if(m) result.meta.standort_email=m[1];
 
         // Kunde
         var kundeLines=[], inKunde=false;
@@ -26313,8 +26363,8 @@ window.switchWissenTyp = function(typ) {
             var ls=line.trim();
             if(['Herr','Frau','Firma'].indexOf(ls)>=0){ inKunde=true; result.customer.anrede=ls; return; }
             if(inKunde){
-                if(['Datum:','Kunden-Nr','Verkäufer','Zahlungs','Auftrag','Angebot','Rechnung','Belegnummer','Kunde ','Abweichende'].some(function(k){return ls.startsWith(k);})){ inKunde=false; return; }
-                if(ls && ls!=='Girocode:' && ls!=='Bezahlen per App') kundeLines.push(ls);
+                if(['Datum:','Kunden-Nr','Verkäufer','Zahlungs','Auftrag','Angebot','Rechnung','Belegnummer','Kunde ','Abweichende','Art.-Nr'].some(function(k){return ls.startsWith(k);})){ inKunde=false; return; }
+                if(ls && ls!=='Girocode:' && ls!=='Bezahlen per App' && ls.length < 80) kundeLines.push(ls);
             }
         });
         for(var j=kundeLines.length-1;j>=0;j--){
@@ -26331,27 +26381,34 @@ window.switchWissenTyp = function(typ) {
             }
         }
         if(!result.customer.name && kundeLines.length) result.customer.name=kundeLines.join(' ').replace(/\s*\. \.\s*/,' ').trim();
-        m=text.match(/Kunde Telefon:\s*(.+)/); if(m) result.customer.telefon=m[1].trim();
-        m=text.match(/Kunde Mobil:\s*(.+)/); if(m) result.customer.mobil=m[1].trim();
+        m=text.match(/Kunde Telefon[:\s]+(.+)/i); if(m) result.customer.telefon=m[1].trim();
+        m=text.match(/Kunde Mobil[:\s]+(.+)/i); if(m) result.customer.mobil=m[1].trim();
+        m=text.match(/(?:Tel|Telefon)\.?[:\s]+([\d\s\+\-\/]+)/i); if(m && !result.customer.telefon) result.customer.telefon=m[1].trim();
 
-        // Positionen
+        // ── Positionen: Multiple patterns ──
         var itemRe=/^(\d{4,7})\s+(.+?)\s+(\d+)\s+([\d.,]+)\s*€\s*(?:([\d.,]+)\s*€\s*)?([\d.,]+)\s*€/;
+        // Alternative: without € sign, just numbers at end
+        var itemRe2=/^(\d{4,7})\s+(.+?)\s+(\d+)\s+([\d.,]+)\s+([\d.,]+)$/;
+        // Alternative: Pos | ArtNr | Bezeichnung | Menge | Preis
+        var itemRe3=/^\d+\s+(\d{4,7})\s+(.+?)\s+(\d+)\s+([\d.,]+)\s+([\d.,]+)/;
         var inItems=false, i=0;
         while(i<lines.length){
             var line=lines[i].trim();
-            if(line.indexOf('Art.-Nr.')>=0 && line.indexOf('Artikelbezeichnung')>=0){ inItems=true; i++; continue; }
-            if(inItems && (line.startsWith('Belegrabatt')||line.startsWith('MwSt'))){
-                if(line.startsWith('Belegrabatt')){ var rabM=line.match(/-?([\d.,]+)\s*€/); if(rabM) result.totals.belegrabatt=-parseEur(rabM[1]); }
+            if(line.indexOf('Art.-Nr.')>=0 || line.indexOf('Artikelbezeichnung')>=0 || line.indexOf('Artikelnr')>=0 || (line.indexOf('Pos')>=0 && line.indexOf('Bezeichnung')>=0)){ inItems=true; i++; continue; }
+            if(inItems && (line.startsWith('Belegrabatt')||line.startsWith('MwSt')||line.startsWith('Summe')||line.startsWith('Gesamt'))){
+                if(line.startsWith('Belegrabatt')){ var rabM=line.match(/-?([\d.,]+)\s*€?/); if(rabM) result.totals.belegrabatt=-parseEur(rabM[1]); }
                 inItems=false; i++; continue;
             }
             if(!inItems){ i++; continue; }
             var mI=line.match(itemRe);
+            if(!mI) mI = line.match(itemRe2);
+            if(!mI) { var mI3 = line.match(itemRe3); if(mI3) mI = [null, mI3[1], mI3[2], mI3[3], mI3[4], null, mI3[5]]; }
             if(mI){
-                var itm={art_nr:mI[1],bezeichnung:mI[2].trim(),menge:parseInt(mI[3]),einzelpreis:parseEur(mI[4]),gesamtpreis:parseEur(mI[6])};
-                if(mI[5]) itm.rabatt=parseEur(mI[5]);
+                var itm={art_nr:mI[1],bezeichnung:mI[2].trim(),menge:parseInt(mI[3]),einzelpreis:parseEur(mI[4]),gesamtpreis:parseEur(mI[6]||mI[5])};
+                if(mI[5] && mI[6]) itm.rabatt=parseEur(mI[5]);
                 var extra=[];var k=i+1;
-                while(k<lines.length){ var nl=lines[k].trim(); if(!nl||itemRe.test(nl)||nl.startsWith('Belegrabatt')||nl.startsWith('MwSt')||/^\d{4,7}\s+/.test(nl))break; extra.push(nl);k++; }
-                if(extra.length){ itm.zusatzinfo=extra.join(' | '); var snrM=extra.join(' ').match(/SNr:\s*(\S+)/); if(snrM) itm.seriennummer=snrM[1]; }
+                while(k<lines.length){ var nl=lines[k].trim(); if(!nl||itemRe.test(nl)||itemRe2.test(nl)||nl.startsWith('Belegrabatt')||nl.startsWith('MwSt')||nl.startsWith('Summe')||/^\d{4,7}\s+/.test(nl))break; extra.push(nl);k++; }
+                if(extra.length){ itm.zusatzinfo=extra.join(' | '); var snrM=extra.join(' ').match(/(?:SNr|Seriennr|S\/N)[:\s]*(\S+)/i); if(snrM) itm.seriennummer=snrM[1]; }
                 result.items.push(itm); i=k; continue;
             }
             var mZ=line.match(/^(\d{4,7})\s+(.+)$/);
@@ -26361,15 +26418,33 @@ window.switchWissenTyp = function(typ) {
             i++;
         }
 
-        // Totals
+        // ── Totals: Multiple patterns ──
         m=text.match(/MwSt\s+([\d,]+)%\s+auf\s+([\d.,]+)\s*€\s*=\s*([\d.,]+)\s*€\s*Endbetrag\s*([\d.,]+)\s*€/);
         if(m){ result.totals.mwst_satz=parseFloat(m[1].replace(',','.')); result.totals.netto=parseEur(m[2]); result.totals.mwst_betrag=parseEur(m[3]); result.totals.endbetrag=parseEur(m[4]); }
-        if(text.indexOf('Skonto')>=0){ var skM=text.match(/(\d+)%\s*Skonto/); if(skM) result.totals.skonto_prozent=parseInt(skM[1]); }
+        // Alternative: "Netto: 1.234,56 €" + "MwSt: 234,56 €" + "Brutto: 1.469,12 €"
+        if(!result.totals.endbetrag) { m=text.match(/(?:Endbetrag|Brutto|Gesamtbetrag|Rechnungsbetrag)[:\s]*([\d.,]+)\s*€/i); if(m) result.totals.endbetrag=parseEur(m[1]); }
+        if(!result.totals.netto) { m=text.match(/(?:Netto(?:betrag)?|Zwischensumme)[:\s]*([\d.,]+)\s*€/i); if(m) result.totals.netto=parseEur(m[1]); }
+        if(!result.totals.mwst_betrag) { m=text.match(/MwSt\.?\s*(?:\d+[,%]?\s*)?[:\s]*([\d.,]+)\s*€/i); if(m) result.totals.mwst_betrag=parseEur(m[1]); }
+        // If still no endbetrag, sum items
+        if(!result.totals.endbetrag && result.items.length) {
+            result.totals.endbetrag = result.items.reduce(function(s,it){ return s + (it.gesamtpreis||0); }, 0);
+        }
+
+        if(text.indexOf('Skonto')>=0){ var skM=text.match(/(\d+)%\s*Skonto/i); if(skM) result.totals.skonto_prozent=parseInt(skM[1]); }
 
         // Leasing
-        var zb=result.header.zahlungsbedingung||'';
-        if(/leasing/i.test(zb)){ result.meta.ist_leasing=true; var lm=zb.match(/Leasing\s*-\s*(.+)/); if(lm)result.meta.leasing_anbieter=lm[1].trim(); }
+        var zb=(result.header.zahlungsbedingung||'').toLowerCase();
+        if(/leasing/i.test(text) || /leasing/i.test(zb)){
+            result.meta.ist_leasing=true;
+            var lm=text.match(/[Ll]easing\s*[-–]\s*(.+?)(?:\n|$)/); if(lm) result.meta.leasing_anbieter=lm[1].trim();
+            if(!result.meta.leasing_anbieter) { lm=text.match(/(JobRad|BusinessBike|Bikeleasing|eurorad|Lease\s*a\s*bike|mein[\-\s]?dienstrad)/i); if(lm) result.meta.leasing_anbieter=lm[1]; }
+        }
         else result.meta.ist_leasing=false;
+
+        // Debug log for development
+        if(!result.header.beleg_nr && !result.header.beleg_typ) {
+            console.warn('[WaWi Parser] Konnte Beleg nicht erkennen:', fileName, '\nErste 500 Zeichen:\n', text.substring(0,500));
+        }
 
         return result;
     }
@@ -26393,8 +26468,12 @@ window.switchWissenTyp = function(typ) {
                 var text = await extractPdfText(file);
                 var parsed = parseWawiText(text, file.name);
 
-                if(!parsed.header.beleg_nr || !parsed.header.beleg_typ) {
+                if(!parsed.header.beleg_nr && !parsed.header.beleg_typ) {
                     card.innerHTML = renderParseCard(file.name, null, 'Beleg konnte nicht erkannt werden');
+                    // Debug: show first 300 chars of extracted text
+                    var dbg = document.createElement('details');
+                    dbg.innerHTML = '<summary style="cursor:pointer;font-size:10px;color:#9ca3af;margin-top:6px">🔍 Debug: Extrahierter Text anzeigen</summary><pre style="font-size:9px;color:#6b7280;background:#f9fafb;padding:8px;border-radius:6px;max-height:200px;overflow:auto;white-space:pre-wrap;margin-top:4px">'+text.substring(0,500).replace(/</g,'&lt;')+'</pre>';
+                    card.appendChild(dbg);
                     continue;
                 }
                 parsedQueue.push(parsed);
