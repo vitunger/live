@@ -611,6 +611,13 @@
                                 <span data-i18n="nav_marketing">Marketing</span>
                             </button>
 
+                            <!-- Video-Pipeline -->
+                            <button onclick="showView('videoPipeline')" data-module="videoPipeline" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                <span>Video-Pipeline</span>
+                                <span id="vpReviewBadge" class="ml-auto text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full" style="display:none">0</span>
+                            </button>
+
                             <!-- Zahlen -->
                             <button onclick="showView('controlling')" data-module="controlling" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
@@ -2087,6 +2094,32 @@
                     <div id="ekTabZentralreg" class="ek-tab-content" style="display:none;"></div>
                     <div id="ekTabEkStrategie" class="ek-tab-content" style="display:none;"></div>
                     <div id="ekTabEkWissen" class="ek-tab-content" style="display:none;"></div>
+                </div>
+
+                <!-- ===== VIDEO-PIPELINE VIEW ===== -->
+                <div id="videoPipelineView" class="view" style="display: none;">
+                    <h1 class="h1-headline text-gray-800 mb-6">🎬 VIDEO-PIPELINE</h1>
+
+                    <!-- Tab Navigation -->
+                    <div class="mb-6 border-b border-gray-200">
+                        <nav class="-mb-px flex space-x-8">
+                            <button onclick="showVPTab('dashboard')" class="vp-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="dashboard">📊 Dashboard</button>
+                            <button onclick="showVPTab('upload')" class="vp-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="upload">📤 Upload</button>
+                            <button onclick="showVPTab('consents')" class="vp-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="consents">✅ Consents</button>
+                            <button onclick="showVPTab('review')" class="vp-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="review">👁️ Freigabe <span id="vpReviewTabBadge" class="ml-1 text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full" style="display:none">0</span></button>
+                        </nav>
+                    </div>
+
+                    <!-- Tab Contents -->
+                    <div id="vpTabDashboard" class="vp-tab-content"></div>
+                    <div id="vpTabUpload" class="vp-tab-content" style="display:none;"></div>
+                    <div id="vpTabConsents" class="vp-tab-content" style="display:none;"></div>
+                    <div id="vpTabReview" class="vp-tab-content" style="display:none;"></div>
+
+                    <!-- Modals -->
+                    <div id="vpModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" style="display:none;">
+                        <div id="vpModalContent" class="bg-white rounded-xl shadow-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6"></div>
+                    </div>
                 </div>
 
                 <div id="controllingView" class="view" style="display: none;">
@@ -28746,6 +28779,602 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
 
 })();
 </script>
+
+<!-- ===== VIDEO-PIPELINE MODULE ===== -->
+<script>
+(function(){
+    'use strict';
+
+    // ==================== TAB SWITCHING ====================
+    window.showVPTab = function(tabName) {
+        document.querySelectorAll('.vp-tab-content').forEach(function(el){ el.style.display = 'none'; });
+        document.querySelectorAll('.vp-tab-btn').forEach(function(btn){
+            btn.classList.remove('border-vit-orange','text-vit-orange');
+            btn.classList.add('border-transparent','text-gray-500');
+        });
+        var tab = document.getElementById('vpTab' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+        if(tab) tab.style.display = 'block';
+        var btn = document.querySelector('.vp-tab-btn[data-tab="'+tabName+'"]');
+        if(btn) { btn.classList.add('border-vit-orange','text-vit-orange'); btn.classList.remove('border-transparent','text-gray-500'); }
+
+        if(tabName === 'dashboard') vpRenderDashboard();
+        if(tabName === 'upload') vpRenderUpload();
+        if(tabName === 'consents') vpRenderConsents();
+        if(tabName === 'review') vpRenderReview();
+    };
+
+    // ==================== HELPERS ====================
+    var vpStatusLabels = {
+        uploaded:'Hochgeladen', analyzing:'Analyse...', consent_check:'Consent-Check',
+        consent_blocked:'Consent fehlt', cutting:'Wird geschnitten', review:'Freigabe',
+        approved:'Freigegeben', publishing:'Publishing...', published:'Veröffentlicht',
+        rejected:'Abgelehnt', failed:'Fehler'
+    };
+    var vpStatusColors = {
+        uploaded:'bg-gray-100 text-gray-700', analyzing:'bg-blue-100 text-blue-700',
+        consent_check:'bg-yellow-100 text-yellow-700', consent_blocked:'bg-red-100 text-red-700',
+        cutting:'bg-purple-100 text-purple-700', review:'bg-orange-100 text-orange-700',
+        approved:'bg-green-100 text-green-700', publishing:'bg-blue-100 text-blue-700',
+        published:'bg-green-200 text-green-800', rejected:'bg-red-100 text-red-700',
+        failed:'bg-red-200 text-red-800'
+    };
+    var vpCategoryLabels = {probefahrt:'Probefahrt',event:'Event',werkstatt:'Werkstatt',cargo_demo:'Cargo Demo',sonstiges:'Sonstiges'};
+    var vpConsentTypeLabels = {employee_general:'Mitarbeiter (Generell)',customer_single:'Kunde (Einmalig)',customer_general:'Kunde (Generell)'};
+
+    function vpBadge(status) {
+        return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium '+(vpStatusColors[status]||'bg-gray-100 text-gray-700')+'">'+(vpStatusLabels[status]||status)+'</span>';
+    }
+    function vpDate(d) { if(!d) return '–'; return new Date(d).toLocaleDateString('de-DE'); }
+    function vpDateTime(d) { if(!d) return '–'; return new Date(d).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+    function vpFileSize(bytes) { if(!bytes) return '–'; if(bytes<1024*1024) return (bytes/1024).toFixed(0)+' KB'; return (bytes/(1024*1024)).toFixed(1)+' MB'; }
+
+    function vpModal(html) {
+        document.getElementById('vpModalContent').innerHTML = html;
+        document.getElementById('vpModal').style.display = 'flex';
+    }
+    window.vpCloseModal = function() { document.getElementById('vpModal').style.display = 'none'; };
+    document.getElementById('vpModal')?.addEventListener('click', function(e){ if(e.target === this) vpCloseModal(); });
+
+    // ==================== DASHBOARD ====================
+    window.vpRenderDashboard = async function() {
+        var c = document.getElementById('vpTabDashboard');
+        if(!c) return;
+        c.innerHTML = '<div class="flex justify-center py-12"><div class="animate-spin w-8 h-8 border-4 border-vit-orange border-t-transparent rounded-full"></div></div>';
+
+        try {
+            var sid = sbStandort?.id;
+            var {data:videos,error} = await sb.from('videos').select('*').eq('standort_id',sid).order('created_at',{ascending:false});
+            if(error) throw error;
+            videos = videos || [];
+
+            // Stats
+            var total = videos.length;
+            var inPipeline = videos.filter(function(v){return !['published','rejected','failed'].includes(v.pipeline_status)}).length;
+            var published = videos.filter(function(v){return v.pipeline_status==='published'}).length;
+            var needReview = videos.filter(function(v){return v.pipeline_status==='review'}).length;
+
+            var html = '';
+            // Stats cards
+            html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">';
+            html += '<div class="vit-card p-4"><div class="text-2xl font-bold text-gray-800">'+total+'</div><div class="text-xs text-gray-500">Videos gesamt</div></div>';
+            html += '<div class="vit-card p-4"><div class="text-2xl font-bold text-blue-600">'+inPipeline+'</div><div class="text-xs text-gray-500">In Pipeline</div></div>';
+            html += '<div class="vit-card p-4"><div class="text-2xl font-bold text-green-600">'+published+'</div><div class="text-xs text-gray-500">Veröffentlicht</div></div>';
+            html += '<div class="vit-card p-4 '+(needReview>0?'ring-2 ring-orange-400':'')+'"><div class="text-2xl font-bold text-orange-600">'+needReview+'</div><div class="text-xs text-gray-500">Warten auf Freigabe</div></div>';
+            html += '</div>';
+
+            // Pipeline visualization
+            html += '<div class="vit-card p-4 mb-6"><h3 class="font-semibold text-gray-700 mb-3">Pipeline-Übersicht</h3>';
+            var stages = ['uploaded','analyzing','consent_check','cutting','review','publishing','published'];
+            html += '<div class="flex items-center gap-1 text-xs">';
+            stages.forEach(function(s){
+                var count = videos.filter(function(v){return v.pipeline_status===s}).length;
+                html += '<div class="flex-1 text-center"><div class="h-8 rounded flex items-center justify-center font-medium '+(vpStatusColors[s]||'')+'">'+(count||'')+'</div><div class="mt-1 text-gray-500 truncate">'+(vpStatusLabels[s]||s)+'</div></div>';
+                if(s !== 'published') html += '<div class="text-gray-300">→</div>';
+            });
+            html += '</div></div>';
+
+            // Video list
+            if(videos.length === 0) {
+                html += '<div class="vit-card p-8 text-center text-gray-400"><div class="text-4xl mb-2">🎬</div><p>Noch keine Videos hochgeladen.</p><button onclick="showVPTab(\'upload\')" class="mt-3 text-vit-orange hover:underline font-medium">Erstes Video hochladen →</button></div>';
+            } else {
+                html += '<div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="text-left p-3 font-medium text-gray-600">Video</th><th class="text-left p-3 font-medium text-gray-600">Kategorie</th><th class="text-left p-3 font-medium text-gray-600">Status</th><th class="text-left p-3 font-medium text-gray-600">Hochgeladen</th><th class="text-right p-3 font-medium text-gray-600">Größe</th></tr></thead><tbody>';
+                videos.forEach(function(v){
+                    html += '<tr class="border-t border-gray-100 hover:bg-gray-50 cursor-pointer" onclick="vpShowVideoDetail(\''+v.id+'\')">';
+                    html += '<td class="p-3 font-medium text-gray-800">'+v.filename+'</td>';
+                    html += '<td class="p-3">'+(vpCategoryLabels[v.category]||v.category)+'</td>';
+                    html += '<td class="p-3">'+vpBadge(v.pipeline_status)+'</td>';
+                    html += '<td class="p-3 text-gray-500">'+vpDateTime(v.created_at)+'</td>';
+                    html += '<td class="p-3 text-right text-gray-500">'+vpFileSize(v.file_size_bytes)+'</td>';
+                    html += '</tr>';
+                });
+                html += '</tbody></table></div>';
+            }
+
+            c.innerHTML = html;
+        } catch(e) {
+            c.innerHTML = '<div class="vit-card p-6 text-red-600">Fehler beim Laden: '+e.message+'</div>';
+        }
+    };
+
+    // ==================== VIDEO DETAIL ====================
+    window.vpShowVideoDetail = async function(videoId) {
+        vpModal('<div class="flex justify-center py-8"><div class="animate-spin w-8 h-8 border-4 border-vit-orange border-t-transparent rounded-full"></div></div>');
+        try {
+            var {data:v} = await sb.from('videos').select('*').eq('id',videoId).single();
+            var {data:persons} = await sb.from('video_persons').select('*, consents(person_name,consent_type,valid_until,revoked_at)').eq('video_id',videoId);
+            var {data:reels} = await sb.from('reels').select('*, reel_publications(*)').eq('video_id',videoId);
+            var {data:logs} = await sb.from('pipeline_log').select('*').eq('video_id',videoId).order('created_at',{ascending:true});
+
+            var html = '<div class="flex justify-between items-start mb-4"><div><h2 class="text-xl font-bold text-gray-800">'+v.filename+'</h2><p class="text-sm text-gray-500">'+(vpCategoryLabels[v.category]||v.category)+' · '+vpFileSize(v.file_size_bytes)+' · '+vpDateTime(v.created_at)+'</p></div><div class="flex items-center gap-2">'+vpBadge(v.pipeline_status)+'<button onclick="vpCloseModal()" class="text-gray-400 hover:text-gray-600 text-2xl ml-2">&times;</button></div></div>';
+
+            // Pipeline progress bar
+            var stages = ['uploaded','analyzing','consent_check','cutting','review','approved','published'];
+            var currentIdx = stages.indexOf(v.pipeline_status);
+            if(currentIdx === -1 && ['consent_blocked','rejected','failed'].includes(v.pipeline_status)) currentIdx = stages.indexOf({consent_blocked:'consent_check',rejected:'review',failed:'uploaded'}[v.pipeline_status]);
+            html += '<div class="flex items-center gap-0.5 mb-6">';
+            stages.forEach(function(s,i){
+                var cls = i<currentIdx ? 'bg-green-400' : i===currentIdx ? 'bg-vit-orange' : 'bg-gray-200';
+                html += '<div class="flex-1 h-2 rounded-full '+cls+'" title="'+(vpStatusLabels[s]||s)+'"></div>';
+            });
+            html += '</div>';
+
+            if(v.pipeline_status_detail) html += '<div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">ℹ️ '+v.pipeline_status_detail+'</div>';
+
+            // Persons
+            if(persons && persons.length > 0) {
+                html += '<div class="mb-4"><h3 class="font-semibold text-gray-700 mb-2">👥 Getaggte Personen ('+persons.length+')</h3><div class="space-y-1">';
+                persons.forEach(function(p){
+                    var statusCls = p.consent_status==='valid'?'text-green-600':p.consent_status==='missing'?'text-red-600':'text-yellow-600';
+                    html += '<div class="flex items-center gap-2 text-sm"><span class="'+statusCls+'">'+(p.consent_status==='valid'?'✅':p.consent_status==='missing'?'❌':'⚠️')+'</span><span class="font-medium">'+p.person_label+'</span><span class="text-gray-400">'+(p.consent_status||'–')+'</span></div>';
+                });
+                html += '</div></div>';
+            }
+
+            // Reels
+            if(reels && reels.length > 0) {
+                html += '<div class="mb-4"><h3 class="font-semibold text-gray-700 mb-2">🎞️ Reels ('+reels.length+')</h3><div class="grid gap-2">';
+                reels.forEach(function(r){
+                    html += '<div class="p-3 bg-gray-50 rounded-lg"><div class="flex justify-between items-center"><span class="font-medium text-sm">'+(r.caption?r.caption.substring(0,60)+'...':'Reel')+'</span>'+vpBadge(r.status)+'</div>';
+                    if(r.reel_publications && r.reel_publications.length>0) {
+                        html += '<div class="flex gap-2 mt-2">';
+                        r.reel_publications.forEach(function(pub){
+                            html += '<span class="text-xs px-2 py-1 rounded '+(pub.is_published?'bg-green-100 text-green-700':'bg-gray-100 text-gray-600')+'">'+pub.platform.replace('_',' ')+(pub.is_published?' ✓':'')+'</span>';
+                        });
+                        html += '</div>';
+                    }
+                    html += '</div>';
+                });
+                html += '</div></div>';
+            }
+
+            // Pipeline log
+            if(logs && logs.length > 0) {
+                html += '<div class="mb-4"><h3 class="font-semibold text-gray-700 mb-2">📋 Pipeline-Log</h3><div class="space-y-1 max-h-48 overflow-y-auto">';
+                logs.forEach(function(l){
+                    html += '<div class="flex gap-2 text-xs text-gray-500"><span class="whitespace-nowrap">'+vpDateTime(l.created_at)+'</span><span class="font-medium text-gray-600">['+l.phase+']</span><span>'+l.action+'</span></div>';
+                });
+                html += '</div></div>';
+            }
+
+            // Tagging Button (if in consent_check)
+            if(v.pipeline_status === 'consent_check' || v.pipeline_status === 'consent_blocked') {
+                html += '<div class="mt-4 pt-4 border-t"><button onclick="vpCloseModal();vpShowTagging(\''+v.id+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 transition font-medium">👥 Personen taggen</button></div>';
+            }
+
+            vpModal(html);
+        } catch(e) {
+            vpModal('<p class="text-red-600">Fehler: '+e.message+'</p><button onclick="vpCloseModal()" class="mt-4 text-gray-500">Schließen</button>');
+        }
+    };
+
+    // ==================== UPLOAD ====================
+    window.vpRenderUpload = function() {
+        var c = document.getElementById('vpTabUpload');
+        if(!c) return;
+        c.innerHTML = '<div class="max-w-xl mx-auto">' +
+            '<div id="vpDropZone" class="vit-card p-8 border-2 border-dashed border-gray-300 rounded-xl text-center hover:border-vit-orange transition-colors cursor-pointer">' +
+            '<div class="text-5xl mb-3">📹</div>' +
+            '<p class="text-lg font-semibold text-gray-700 mb-1">Video hierhin ziehen</p>' +
+            '<p class="text-sm text-gray-500 mb-4">oder klicken zum Auswählen · MP4, MOV, WebM · max. 500 MB</p>' +
+            '<input type="file" id="vpFileInput" accept="video/*" class="hidden">' +
+            '<button onclick="document.getElementById(\'vpFileInput\').click()" class="px-6 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 transition font-medium">Datei auswählen</button>' +
+            '</div>' +
+            '<div class="mt-4">' +
+            '<label class="block text-sm font-medium text-gray-700 mb-1">Kategorie</label>' +
+            '<select id="vpUploadCategory" class="si w-full">' +
+            '<option value="sonstiges">Sonstiges</option>' +
+            '<option value="probefahrt">Probefahrt</option>' +
+            '<option value="event">Event</option>' +
+            '<option value="werkstatt">Werkstatt</option>' +
+            '<option value="cargo_demo">Cargo Demo</option>' +
+            '</select></div>' +
+            '<div id="vpUploadProgress" style="display:none" class="mt-4 vit-card p-4">' +
+            '<div class="flex justify-between text-sm mb-1"><span id="vpUploadFileName" class="font-medium"></span><span id="vpUploadPercent">0%</span></div>' +
+            '<div class="w-full bg-gray-200 rounded-full h-2"><div id="vpUploadBar" class="bg-vit-orange h-2 rounded-full transition-all" style="width:0%"></div></div>' +
+            '</div></div>';
+
+        // Drag & drop
+        var dz = document.getElementById('vpDropZone');
+        if(dz) {
+            dz.addEventListener('dragover', function(e){ e.preventDefault(); dz.classList.add('border-vit-orange','bg-orange-50'); });
+            dz.addEventListener('dragleave', function(){ dz.classList.remove('border-vit-orange','bg-orange-50'); });
+            dz.addEventListener('drop', function(e){ e.preventDefault(); dz.classList.remove('border-vit-orange','bg-orange-50'); if(e.dataTransfer.files[0]) vpUploadFile(e.dataTransfer.files[0]); });
+        }
+        var fi = document.getElementById('vpFileInput');
+        if(fi) fi.addEventListener('change', function(){ if(this.files[0]) vpUploadFile(this.files[0]); });
+    };
+
+    async function vpUploadFile(file) {
+        if(file.size > 500*1024*1024) { alert('Datei zu groß (max. 500 MB)'); return; }
+        if(!file.type.startsWith('video/')) { alert('Bitte nur Video-Dateien hochladen.'); return; }
+
+        var prog = document.getElementById('vpUploadProgress');
+        prog.style.display = 'block';
+        document.getElementById('vpUploadFileName').textContent = file.name;
+        document.getElementById('vpUploadPercent').textContent = 'Uploading...';
+        document.getElementById('vpUploadBar').style.width = '30%';
+
+        try {
+            var path = sbStandort.id + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+            var {error:uploadErr} = await sb.storage.from('videos').upload(path, file, {contentType: file.type});
+            if(uploadErr) throw uploadErr;
+
+            document.getElementById('vpUploadBar').style.width = '70%';
+            document.getElementById('vpUploadPercent').textContent = 'Saving...';
+
+            var cat = document.getElementById('vpUploadCategory').value;
+            var {error:dbErr} = await sb.from('videos').insert({
+                standort_id: sbStandort.id,
+                uploaded_by: sbUser.id,
+                storage_path: path,
+                filename: file.name,
+                file_size_bytes: file.size,
+                category: cat,
+                pipeline_status: 'uploaded'
+            });
+            if(dbErr) throw dbErr;
+
+            document.getElementById('vpUploadBar').style.width = '100%';
+            document.getElementById('vpUploadPercent').textContent = '✅ Fertig!';
+
+            setTimeout(function(){ showVPTab('dashboard'); }, 1500);
+        } catch(e) {
+            document.getElementById('vpUploadPercent').textContent = '❌ Fehler: ' + e.message;
+            document.getElementById('vpUploadBar').classList.replace('bg-vit-orange','bg-red-500');
+        }
+    }
+
+    // ==================== CONSENTS ====================
+    window.vpRenderConsents = async function() {
+        var c = document.getElementById('vpTabConsents');
+        if(!c) return;
+        c.innerHTML = '<div class="flex justify-center py-8"><div class="animate-spin w-8 h-8 border-4 border-vit-orange border-t-transparent rounded-full"></div></div>';
+
+        try {
+            var sid = sbStandort?.id;
+            var {data:consents,error} = await sb.from('consents').select('*').eq('standort_id',sid).order('created_at',{ascending:false});
+            if(error) throw error;
+            consents = consents || [];
+
+            var active = consents.filter(function(co){ return !co.revoked_at && (!co.valid_until || new Date(co.valid_until) >= new Date()); });
+            var expired = consents.filter(function(co){ return co.revoked_at || (co.valid_until && new Date(co.valid_until) < new Date()); });
+
+            var html = '<div class="flex justify-between items-center mb-4"><h3 class="font-semibold text-gray-700">Consent-Datenbank ('+consents.length+')</h3><button onclick="vpShowConsentForm()" class="px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 transition text-sm font-medium">+ Consent erfassen</button></div>';
+
+            if(consents.length === 0) {
+                html += '<div class="vit-card p-8 text-center text-gray-400"><div class="text-4xl mb-2">✅</div><p>Noch keine Einverständniserklärungen erfasst.</p><p class="text-sm mt-1">Erfasse Consents bevor Videos mit Personen verarbeitet werden.</p></div>';
+            } else {
+                html += '<div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="text-left p-3 font-medium text-gray-600">Person</th><th class="text-left p-3 font-medium text-gray-600">Typ</th><th class="text-left p-3 font-medium text-gray-600">Gültig ab</th><th class="text-left p-3 font-medium text-gray-600">Gültig bis</th><th class="text-left p-3 font-medium text-gray-600">Status</th><th class="text-right p-3 font-medium text-gray-600">Aktion</th></tr></thead><tbody>';
+                consents.forEach(function(co){
+                    var isActive = !co.revoked_at && (!co.valid_until || new Date(co.valid_until) >= new Date());
+                    html += '<tr class="border-t border-gray-100">';
+                    html += '<td class="p-3 font-medium">'+co.person_name+(co.person_email?' <span class="text-gray-400 text-xs">('+co.person_email+')</span>':'')+'</td>';
+                    html += '<td class="p-3 text-gray-600">'+(vpConsentTypeLabels[co.consent_type]||co.consent_type)+'</td>';
+                    html += '<td class="p-3 text-gray-500">'+vpDate(co.valid_from)+'</td>';
+                    html += '<td class="p-3 text-gray-500">'+(co.valid_until?vpDate(co.valid_until):'Unbefristet')+'</td>';
+                    html += '<td class="p-3">'+(isActive?'<span class="text-green-600 font-medium">✅ Aktiv</span>':co.revoked_at?'<span class="text-red-600 font-medium">🚫 Widerrufen</span>':'<span class="text-yellow-600 font-medium">⏰ Abgelaufen</span>')+'</td>';
+                    html += '<td class="p-3 text-right">';
+                    if(isActive) html += '<button onclick="vpRevokeConsent(\''+co.id+'\')" class="text-xs text-red-500 hover:text-red-700">Widerrufen</button>';
+                    html += '</td></tr>';
+                });
+                html += '</tbody></table></div>';
+            }
+            c.innerHTML = html;
+        } catch(e) {
+            c.innerHTML = '<div class="text-red-600 p-4">Fehler: '+e.message+'</div>';
+        }
+    };
+
+    window.vpShowConsentForm = function(prefill) {
+        prefill = prefill || {};
+        vpModal(
+            '<h2 class="text-lg font-bold text-gray-800 mb-4">✅ Neuen Consent erfassen</h2>' +
+            '<div class="space-y-3">' +
+            '<div><label class="block text-sm font-medium text-gray-700 mb-1">Name der Person *</label><input id="vpConsentName" class="si w-full" value="'+(prefill.name||'')+'" placeholder="Max Mustermann"></div>' +
+            '<div><label class="block text-sm font-medium text-gray-700 mb-1">E-Mail (optional)</label><input id="vpConsentEmail" class="si w-full" placeholder="max@example.com"></div>' +
+            '<div><label class="block text-sm font-medium text-gray-700 mb-1">Consent-Typ *</label><select id="vpConsentType" class="si w-full"><option value="employee_general">Mitarbeiter (Generell)</option><option value="customer_single">Kunde (Einmalig)</option><option value="customer_general">Kunde (Generell)</option></select></div>' +
+            '<div class="grid grid-cols-2 gap-3">' +
+            '<div><label class="block text-sm font-medium text-gray-700 mb-1">Gültig ab</label><input type="date" id="vpConsentFrom" class="si w-full" value="'+new Date().toISOString().split('T')[0]+'"></div>' +
+            '<div><label class="block text-sm font-medium text-gray-700 mb-1">Gültig bis (leer = unbefristet)</label><input type="date" id="vpConsentUntil" class="si w-full"></div></div>' +
+            '<div><label class="block text-sm font-medium text-gray-700 mb-1">Notizen</label><textarea id="vpConsentNotes" class="si w-full" rows="2" placeholder="Optional..."></textarea></div>' +
+            '</div>' +
+            '<div class="flex justify-end gap-2 mt-4"><button onclick="vpCloseModal()" class="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50">Abbrechen</button><button onclick="vpSaveConsent()" class="px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 font-medium">Speichern</button></div>'
+        );
+    };
+
+    window.vpSaveConsent = async function() {
+        var name = document.getElementById('vpConsentName').value.trim();
+        if(!name) { alert('Name ist erforderlich.'); return; }
+        try {
+            var {error} = await sb.from('consents').insert({
+                person_name: name,
+                person_email: document.getElementById('vpConsentEmail').value.trim() || null,
+                standort_id: sbStandort.id,
+                consent_type: document.getElementById('vpConsentType').value,
+                valid_from: document.getElementById('vpConsentFrom').value,
+                valid_until: document.getElementById('vpConsentUntil').value || null,
+                notes: document.getElementById('vpConsentNotes').value.trim() || null,
+                created_by: sbUser.id
+            });
+            if(error) throw error;
+            vpCloseModal();
+            vpRenderConsents();
+        } catch(e) { alert('Fehler: ' + e.message); }
+    };
+
+    window.vpRevokeConsent = async function(id) {
+        if(!confirm('Consent wirklich widerrufen? Dies kann nicht rückgängig gemacht werden.')) return;
+        try {
+            var {error} = await sb.from('consents').update({revoked_at: new Date().toISOString()}).eq('id',id);
+            if(error) throw error;
+            vpRenderConsents();
+        } catch(e) { alert('Fehler: ' + e.message); }
+    };
+
+    // ==================== TAGGING ====================
+    window.vpShowTagging = async function(videoId) {
+        vpModal('<div class="flex justify-center py-8"><div class="animate-spin w-8 h-8 border-4 border-vit-orange border-t-transparent rounded-full"></div></div>');
+        try {
+            var {data:v} = await sb.from('videos').select('*').eq('id',videoId).single();
+            var {data:existingPersons} = await sb.from('video_persons').select('*').eq('video_id',videoId);
+            var {data:consents} = await sb.from('consents').select('*').eq('standort_id',sbStandort.id).is('revoked_at',null).order('person_name');
+
+            var scenes = v.analysis_result?.scenes || [];
+
+            var html = '<div class="flex justify-between items-start mb-4"><h2 class="text-lg font-bold text-gray-800">👥 Personen taggen: '+v.filename+'</h2><button onclick="vpCloseModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button></div>';
+
+            if(scenes.length > 0) {
+                html += '<div class="mb-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-700">KI-Analyse hat '+scenes.length+' Szenen erkannt.</div>';
+            }
+
+            html += '<div id="vpTaggingList" class="space-y-2 mb-4">';
+            if(existingPersons && existingPersons.length > 0) {
+                existingPersons.forEach(function(p,i){
+                    html += vpTaggingRow(i, consents, p);
+                });
+            } else {
+                html += vpTaggingRow(0, consents);
+            }
+            html += '</div>';
+
+            html += '<button onclick="vpAddTagRow()" class="text-sm text-vit-orange hover:underline mb-4">+ Weitere Person hinzufügen</button>';
+            html += '<div class="flex justify-end gap-2 mt-4 pt-4 border-t">';
+            html += '<button onclick="vpCloseModal()" class="px-4 py-2 border rounded-lg text-gray-600">Abbrechen</button>';
+            html += '<button onclick="vpSaveTagsAndCheck(\''+videoId+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 font-medium">Speichern & Consent prüfen</button>';
+            html += '</div>';
+
+            // Store consents for dynamic row adding
+            window._vpTagConsents = consents;
+            window._vpTagRowCount = (existingPersons&&existingPersons.length) || 1;
+
+            vpModal(html);
+        } catch(e) {
+            vpModal('<p class="text-red-600">Fehler: '+e.message+'</p><button onclick="vpCloseModal()" class="mt-4 text-gray-500">Schließen</button>');
+        }
+    };
+
+    function vpTaggingRow(idx, consents, existing) {
+        var opts = '<option value="">– Consent auswählen –</option>';
+        if(consents) consents.forEach(function(co){
+            var sel = existing && existing.consent_id === co.id ? ' selected':'';
+            opts += '<option value="'+co.id+'"'+sel+'>'+co.person_name+' ('+vpConsentTypeLabels[co.consent_type]+')</option>';
+        });
+        return '<div class="flex gap-2 items-center vp-tag-row"><input class="si flex-1 vp-tag-label" placeholder="Name/Beschreibung" value="'+(existing?existing.person_label:'')+'"><select class="si flex-1 vp-tag-consent">'+opts+'</select><label class="flex items-center gap-1 text-xs text-gray-500"><input type="checkbox" class="vp-tag-employee" '+(existing&&existing.is_employee?'checked':'')+'>MA</label></div>';
+    }
+
+    window.vpAddTagRow = function() {
+        var list = document.getElementById('vpTaggingList');
+        if(!list) return;
+        window._vpTagRowCount = (window._vpTagRowCount||0) + 1;
+        var div = document.createElement('div');
+        div.innerHTML = vpTaggingRow(window._vpTagRowCount, window._vpTagConsents);
+        list.appendChild(div.firstChild);
+    };
+
+    window.vpSaveTagsAndCheck = async function(videoId) {
+        var rows = document.querySelectorAll('.vp-tag-row');
+        var tags = [];
+        rows.forEach(function(row){
+            var label = row.querySelector('.vp-tag-label').value.trim();
+            if(!label) return;
+            tags.push({
+                video_id: videoId,
+                person_label: label,
+                consent_id: row.querySelector('.vp-tag-consent').value || null,
+                is_employee: row.querySelector('.vp-tag-employee').checked,
+                tagged_by: sbUser.id
+            });
+        });
+        if(tags.length === 0) { alert('Mindestens eine Person taggen.'); return; }
+
+        try {
+            // Delete existing tags and re-insert
+            await sb.from('video_persons').delete().eq('video_id',videoId);
+            var {error} = await sb.from('video_persons').insert(tags);
+            if(error) throw error;
+
+            // Mark as tagged
+            await sb.from('videos').update({persons_tagged: true}).eq('id',videoId);
+
+            // Run consent check
+            var {data:result} = await sb.rpc('check_video_consent',{p_video_id: videoId});
+            var checkResult = result && result[0] ? result[0] : {all_cleared:false};
+
+            if(checkResult.all_cleared) {
+                await sb.from('videos').update({pipeline_status:'cutting',consent_cleared:true,pipeline_status_detail:'Alle Consents gültig'}).eq('id',videoId);
+                vpCloseModal();
+                alert('✅ Alle Consents gültig! Video geht in den Schnitt.');
+            } else {
+                await sb.from('videos').update({pipeline_status:'consent_blocked',pipeline_status_detail:'Consent fehlt für ' + (checkResult.blocked_persons||[]).map(function(p){return p.person}).join(', ')}).eq('id',videoId);
+                vpCloseModal();
+                alert('⚠️ Consent fehlt für: ' + (checkResult.blocked_persons||[]).map(function(p){return p.person + ' (' + p.reason + ')'}).join(', '));
+            }
+            vpRenderDashboard();
+        } catch(e) { alert('Fehler: ' + e.message); }
+    };
+
+    // ==================== REVIEW ====================
+    window.vpRenderReview = async function() {
+        var c = document.getElementById('vpTabReview');
+        if(!c) return;
+        c.innerHTML = '<div class="flex justify-center py-8"><div class="animate-spin w-8 h-8 border-4 border-vit-orange border-t-transparent rounded-full"></div></div>';
+
+        try {
+            var sid = sbStandort?.id;
+            var {data:videos} = await sb.from('videos').select('*').eq('standort_id',sid).eq('pipeline_status','review').order('created_at',{ascending:true});
+            var {data:reels} = await sb.from('reels').select('*').eq('status','generated');
+            videos = videos || [];
+
+            if(videos.length === 0) {
+                c.innerHTML = '<div class="vit-card p-8 text-center text-gray-400"><div class="text-4xl mb-2">👁️</div><p>Keine Videos warten auf Freigabe.</p></div>';
+                return;
+            }
+
+            var html = '<h3 class="font-semibold text-gray-700 mb-3">Freigabe-Queue ('+videos.length+')</h3>';
+            html += '<div class="space-y-4">';
+            videos.forEach(function(v){
+                var videoReels = (reels||[]).filter(function(r){ return r.video_id === v.id; });
+                html += '<div class="vit-card p-4">';
+                html += '<div class="flex justify-between items-start mb-3"><div><h4 class="font-semibold text-gray-800">'+v.filename+'</h4><p class="text-xs text-gray-500">'+(vpCategoryLabels[v.category]||v.category)+' · '+vpDateTime(v.created_at)+'</p></div>'+vpBadge('review')+'</div>';
+
+                if(videoReels.length > 0) {
+                    html += '<div class="space-y-2 mb-3">';
+                    videoReels.forEach(function(r){
+                        html += '<div class="p-3 bg-gray-50 rounded-lg"><p class="text-sm font-medium mb-1">🎞️ '+(r.caption||'Reel')+'</p>';
+                        if(r.hashtags && r.hashtags.length) html += '<p class="text-xs text-blue-500">'+r.hashtags.join(' ')+'</p>';
+                        html += '</div>';
+                    });
+                    html += '</div>';
+                }
+
+                // Checklist
+                html += '<div class="border-t pt-3 mt-3"><p class="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wider">Prüfcheckliste</p>';
+                html += '<div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm" id="vpChecklist_'+v.id+'">';
+                ['consent_ok:Datenschutz/Consent','legal_ok:Rechtlich ok','brand_ok:Markenkonform','quality_ok:Qualität ok','platform_ok:Plattform-Regeln','music_ok:Musik lizenziert'].forEach(function(item){
+                    var parts = item.split(':');
+                    html += '<label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="vp-check-item rounded text-vit-orange" data-key="'+parts[0]+'"><span>'+parts[1]+'</span></label>';
+                });
+                html += '</div></div>';
+
+                html += '<div class="flex gap-2 mt-3 pt-3 border-t">';
+                html += '<button onclick="vpApproveVideo(\''+v.id+'\')" class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium text-sm">✅ Freigeben</button>';
+                html += '<button onclick="vpRejectVideo(\''+v.id+'\')" class="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 font-medium text-sm">❌ Ablehnen</button>';
+                html += '<button onclick="vpShowVideoDetail(\''+v.id+'\')" class="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50 text-sm">Details</button>';
+                html += '</div></div>';
+            });
+            html += '</div>';
+            c.innerHTML = html;
+        } catch(e) {
+            c.innerHTML = '<div class="text-red-600 p-4">Fehler: '+e.message+'</div>';
+        }
+    };
+
+    window.vpApproveVideo = async function(videoId) {
+        // Gather checklist
+        var checks = {};
+        var allChecked = true;
+        document.querySelectorAll('#vpChecklist_'+videoId+' .vp-check-item').forEach(function(cb){
+            checks[cb.dataset.key] = cb.checked;
+            if(!cb.checked) allChecked = false;
+        });
+        if(!allChecked) {
+            if(!confirm('Nicht alle Prüfpunkte sind abgehakt. Trotzdem freigeben?')) return;
+        }
+        try {
+            await sb.from('videos').update({pipeline_status:'approved',pipeline_status_detail:'Freigegeben von ' + (sbUser.email||'User')}).eq('id',videoId);
+            // Update review task
+            await sb.from('review_tasks').update({completed_at:new Date().toISOString(),decision:'approved',checklist:checks}).eq('video_id',videoId).is('completed_at',null);
+            // Update reels
+            await sb.from('reels').update({status:'approved',approved_by:sbUser.id,approved_at:new Date().toISOString()}).eq('video_id',videoId).eq('status','generated');
+            vpRenderReview();
+            updateVPReviewBadge();
+        } catch(e) { alert('Fehler: '+e.message); }
+    };
+
+    window.vpRejectVideo = async function(videoId) {
+        var reason = prompt('Ablehnungsgrund:');
+        if(reason === null) return;
+        try {
+            await sb.from('videos').update({pipeline_status:'rejected',pipeline_status_detail:'Abgelehnt: '+reason}).eq('id',videoId);
+            await sb.from('review_tasks').update({completed_at:new Date().toISOString(),decision:'rejected',checklist:{reason:reason}}).eq('video_id',videoId).is('completed_at',null);
+            await sb.from('reels').update({status:'rejected',review_notes:reason}).eq('video_id',videoId).eq('status','generated');
+            vpRenderReview();
+            updateVPReviewBadge();
+        } catch(e) { alert('Fehler: '+e.message); }
+    };
+
+    // ==================== REVIEW BADGE ====================
+    window.updateVPReviewBadge = async function() {
+        try {
+            var sid = sbStandort?.id;
+            if(!sid) return;
+            var {count} = await sb.from('videos').select('*',{count:'exact',head:true}).eq('standort_id',sid).eq('pipeline_status','review');
+            var b1 = document.getElementById('vpReviewBadge');
+            var b2 = document.getElementById('vpReviewTabBadge');
+            if(b1) { b1.textContent = count||0; b1.style.display = count>0?'inline':'none'; }
+            if(b2) { b2.textContent = count||0; b2.style.display = count>0?'inline':'none'; }
+        } catch(e) {}
+    };
+
+    // ==================== REALTIME ====================
+    function vpSetupRealtime() {
+        if(!sbStandort?.id) return;
+        sb.channel('video-pipeline-' + sbStandort.id)
+            .on('postgres_changes',{event:'*',schema:'public',table:'videos',filter:'standort_id=eq.'+sbStandort.id}, function(){
+                // Refresh dashboard if currently visible
+                var dv = document.getElementById('videoPipelineView');
+                if(dv && dv.style.display !== 'none') {
+                    var dashTab = document.getElementById('vpTabDashboard');
+                    if(dashTab && dashTab.style.display !== 'none') vpRenderDashboard();
+                }
+                updateVPReviewBadge();
+            })
+            .subscribe();
+    }
+
+    // ==================== INIT ====================
+    // Wait for portal to be ready, then init
+    var vpInitInterval = setInterval(function(){
+        if(window.sbStandort && window.sb) {
+            clearInterval(vpInitInterval);
+            updateVPReviewBadge();
+            vpSetupRealtime();
+            setInterval(updateVPReviewBadge, 60000);
+        }
+    }, 500);
+
+    // Auto-render dashboard when view is shown
+    var origShowView = window.showView;
+    if(origShowView) {
+        window.showView = function(viewName) {
+            origShowView(viewName);
+            if(viewName === 'videoPipeline') {
+                showVPTab('dashboard');
+            }
+        };
+    }
+
+})();
 
 </body>
 </html>
