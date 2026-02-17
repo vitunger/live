@@ -342,6 +342,7 @@
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tus-js-client@4/dist/tus.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
     <!-- PWA Meta Tags -->
@@ -28886,26 +28887,66 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
         var done = 0;
         var errors = [];
 
+        // Get session for auth token
+        var sessionResp = await sb.auth.getSession();
+        var accessToken = sessionResp?.data?.session?.access_token;
+        if(!accessToken) { alert('Nicht eingeloggt!'); btn.disabled = false; return; }
+
+        var projectId = 'lwwagbkxeofahhwebkab';
+
         for(var i=0; i<total; i++) {
             var file = vpSelectedFiles[i];
-            pct.textContent = (done+1) + ' / ' + total;
-            statusText.textContent = 'Uploading: ' + file.name;
-            bar.style.width = Math.round((done/total)*100) + '%';
-
             var fStatus = document.getElementById('vpFileStatus_'+i);
-            if(fStatus) fStatus.innerHTML = '<span class="text-blue-500">⬆️ Uploading...</span>';
+            var storagePath = sbStandort.id + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+
+            pct.textContent = (i+1) + ' / ' + total;
+            statusText.textContent = 'Uploading: ' + file.name;
+            if(fStatus) fStatus.innerHTML = '<span class="text-blue-500">⬆️ 0%</span>';
 
             try {
-                var path = sbStandort.id + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-                var {error:uploadErr} = await sb.storage.from('videos').upload(path, file, {contentType: file.type});
-                if(uploadErr) throw uploadErr;
+                await new Promise(function(resolve, reject) {
+                    var upload = new tus.Upload(file, {
+                        endpoint: 'https://' + projectId + '.supabase.co/storage/v1/upload/resumable',
+                        retryDelays: [0, 3000, 5000, 10000, 20000],
+                        headers: {
+                            authorization: 'Bearer ' + accessToken,
+                            'x-upsert': 'true'
+                        },
+                        uploadDataDuringCreation: true,
+                        removeFingerprintOnSuccess: true,
+                        metadata: {
+                            bucketName: 'videos',
+                            objectName: storagePath,
+                            contentType: file.type,
+                            cacheControl: '3600'
+                        },
+                        chunkSize: 6 * 1024 * 1024,
+                        onError: function(error) {
+                            reject(error);
+                        },
+                        onProgress: function(bytesUploaded, bytesTotal) {
+                            var filePct = Math.round((bytesUploaded / bytesTotal) * 100);
+                            var totalPct = Math.round(((done + bytesUploaded/bytesTotal) / total) * 100);
+                            bar.style.width = totalPct + '%';
+                            if(fStatus) fStatus.innerHTML = '<span class="text-blue-500">⬆️ ' + filePct + '%</span>';
+                            statusText.textContent = 'Uploading: ' + file.name + ' (' + filePct + '%)';
+                        },
+                        onSuccess: function() {
+                            resolve();
+                        }
+                    });
+                    upload.findPreviousUploads().then(function(prev) {
+                        if(prev.length) upload.resumeFromPreviousUpload(prev[0]);
+                        upload.start();
+                    });
+                });
 
-                if(fStatus) fStatus.innerHTML = '<span class="text-yellow-500">💾 Saving...</span>';
+                if(fStatus) fStatus.innerHTML = '<span class="text-yellow-500">💾 Speichern...</span>';
 
                 var insertData = {
                     standort_id: sbStandort.id,
                     uploaded_by: sbUser.id,
-                    storage_path: path,
+                    storage_path: storagePath,
                     filename: file.name,
                     file_size_bytes: file.size,
                     category: cat,
@@ -28921,8 +28962,9 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
                 if(fStatus) fStatus.innerHTML = '<span class="text-green-600">✅ Fertig</span>';
                 done++;
             } catch(e) {
-                errors.push(file.name + ': ' + e.message);
-                if(fStatus) fStatus.innerHTML = '<span class="text-red-500">❌ ' + e.message.substring(0,40) + '</span>';
+                var errMsg = e.message || e.toString();
+                errors.push(file.name + ': ' + errMsg);
+                if(fStatus) fStatus.innerHTML = '<span class="text-red-500">❌ ' + errMsg.substring(0,40) + '</span>';
             }
         }
 
