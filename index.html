@@ -19782,6 +19782,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         var shopCart = [];
         var shopCurrentFilter = 'all';
         var shopAllProducts = [];
+        var shopVariants = {}; // product_id -> [variants]
 
         async function renderShop() {
             var container = document.getElementById('shopGrid');
@@ -19791,12 +19792,24 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     var resp = await sb.from('shop_products').select('*').eq('is_active', true).order('category');
                     if(resp.error) throw resp.error;
                     shopAllProducts = resp.data || [];
+                    // Load all variants
+                    var vResp = await sb.from('shop_product_variants').select('*').order('sort_index');
+                    if(!vResp.error && vResp.data) {
+                        vResp.data.forEach(function(v) {
+                            if(!shopVariants[v.product_id]) shopVariants[v.product_id] = [];
+                            shopVariants[v.product_id].push(v);
+                        });
+                    }
                 }
                 var products = shopCurrentFilter === 'all' ? shopAllProducts : shopAllProducts.filter(function(p){ return p.category === shopCurrentFilter; });
                     var catIcons = {print:'🖨️',textil:'👕',display:'🏪',digital:'💻',give:'🎁'};
                 var html = '';
                 products.forEach(function(p) {
+                    var variants = shopVariants[p.id] || [];
+                    var hasVariants = variants.length > 0;
+                    var totalStock = hasVariants ? variants.reduce(function(a,v){return a+v.stock},0) : null;
                     var inCart = shopCart.find(function(c){return c.id===p.id});
+                    
                     html += '<div class="vit-card p-5 hover:shadow-md transition">';
                     if (p.image_url) {
                         html += '<div class="w-full h-40 rounded-lg mb-3 overflow-hidden bg-gray-50"><img src="'+p.image_url+'" alt="'+p.name+'" class="w-full h-full object-contain" onerror="this.parentNode.innerHTML=\'<div class=\\\'flex items-center justify-center h-full text-5xl\\\'>'+(catIcons[p.category]||'🛍️')+'</div>\'"></div>';
@@ -19806,9 +19819,44 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     html += '<span class="text-xs font-semibold text-vit-orange uppercase">' + (p.category||'') + '</span>';
                     html += '<h3 class="font-bold text-gray-800 text-sm mt-1">' + p.name + '</h3>';
                     if(p.description) html += '<p class="text-xs text-gray-500 mt-1 line-clamp-2">' + p.description + '</p>';
+                    
+                    // Stock indicator
+                    if (hasVariants) {
+                        html += '<div class="mt-2">';
+                        if (totalStock === 0) {
+                            html += '<span class="text-xs font-semibold text-red-500">Ausverkauft</span>';
+                        } else if (totalStock <= 5) {
+                            html += '<span class="text-xs font-semibold text-amber-500">Nur noch ' + totalStock + ' auf Lager</span>';
+                        } else {
+                            html += '<span class="text-xs text-green-600">✓ Auf Lager (' + totalStock + ')</span>';
+                        }
+                        html += '</div>';
+                    }
+                    
+                    // Size selector for variants
+                    if (hasVariants && totalStock > 0) {
+                        html += '<div class="mt-2 flex flex-wrap gap-1" id="sizes_'+p.id+'">';
+                        variants.forEach(function(v) {
+                            var oos = v.stock <= 0;
+                            html += '<button onclick="selectShopSize(\x27'+p.id+'\x27,\x27'+v.id+'\x27,\x27'+v.variant_name+'\x27)" ';
+                            html += 'data-vid="'+v.id+'" class="shop-size-btn-'+p.id+' text-[10px] px-2 py-1 rounded border font-semibold ';
+                            html += oos ? 'border-gray-200 text-gray-300 line-through cursor-not-allowed" disabled' : 'border-gray-300 text-gray-600 hover:border-vit-orange hover:text-vit-orange cursor-pointer"';
+                            html += ' title="'+v.variant_name+': '+v.stock+' verfügbar">' + v.variant_name + '</button>';
+                        });
+                        html += '</div>';
+                    }
+                    
                     html += '<div class="flex items-center justify-between mt-3">';
                     html += '<span class="font-bold text-gray-800">' + fmtEur(p.price) + '</span>';
-                    html += '<button onclick="addToCart(\x27'+p.id+'\x27,\x27'+(p.name||'').replace(/\x27/g,'')+'\x27,'+p.price+')" class="px-3 py-1.5 text-xs font-semibold rounded-lg ' + (inCart ? 'bg-green-500 text-white' : 'bg-vit-orange text-white hover:opacity-90') + '">' + (inCart ? '\u2713 (' + inCart.menge + ')' : '+ Bestellen') + '</button>';
+                    
+                    if (hasVariants && totalStock > 0) {
+                        html += '<button id="addBtn_'+p.id+'" onclick="addToCartWithSize(\x27'+p.id+'\x27,\x27'+(p.name||'').replace(/\x27/g,'')+'\x27,'+p.price+')" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-300 text-white cursor-not-allowed" disabled>Größe wählen</button>';
+                    } else if (hasVariants && totalStock === 0) {
+                        html += '<span class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-200 text-gray-400">Ausverkauft</span>';
+                    } else {
+                        // Non-variant product (print, digital etc)
+                        html += '<button onclick="addToCart(\x27'+p.id+'\x27,\x27'+(p.name||'').replace(/\x27/g,'')+'\x27,'+p.price+')" class="px-3 py-1.5 text-xs font-semibold rounded-lg ' + (inCart ? 'bg-green-500 text-white' : 'bg-vit-orange text-white hover:opacity-90') + '">' + (inCart ? '\u2713 (' + inCart.menge + ')' : '+ Bestellen') + '</button>';
+                    }
                     html += '</div></div>';
                 });
                 if(products.length===0) html = '<div class="col-span-3 text-center py-8 text-gray-400">Keine Produkte in dieser Kategorie.</div>';
@@ -19817,9 +19865,50 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             } catch(err) { console.error('Shop:', err); container.innerHTML = '<p class="text-center text-red-400 py-8">Fehler: '+err.message+'</p>'; }
         }
 
+        var shopSelectedSizes = {}; // product_id -> {variant_id, variant_name}
+        
+        function selectShopSize(productId, variantId, variantName) {
+            shopSelectedSizes[productId] = { variant_id: variantId, variant_name: variantName };
+            // Highlight selected
+            document.querySelectorAll('.shop-size-btn-'+productId).forEach(function(b){
+                if(b.dataset.vid === variantId) {
+                    b.className = 'shop-size-btn-'+productId+' text-[10px] px-2 py-1 rounded border font-semibold border-vit-orange bg-vit-orange text-white';
+                } else if (!b.disabled) {
+                    b.className = 'shop-size-btn-'+productId+' text-[10px] px-2 py-1 rounded border font-semibold border-gray-300 text-gray-600 hover:border-vit-orange hover:text-vit-orange cursor-pointer';
+                }
+            });
+            // Enable add button
+            var btn = document.getElementById('addBtn_'+productId);
+            if(btn) {
+                var inCart = shopCart.find(function(c){return c.id===productId && c.variant_id===variantId});
+                btn.disabled = false;
+                btn.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg ' + (inCart ? 'bg-green-500 text-white' : 'bg-vit-orange text-white hover:opacity-90');
+                btn.textContent = inCart ? '\u2713 (' + inCart.menge + ')' : '+ ' + variantName;
+            }
+        }
+
+        function addToCartWithSize(productId, name, preis) {
+            var sel = shopSelectedSizes[productId];
+            if (!sel) return;
+            // Check stock
+            var variants = shopVariants[productId] || [];
+            var variant = variants.find(function(v){return v.id===sel.variant_id});
+            if (!variant || variant.stock <= 0) { alert('Diese Größe ist leider ausverkauft.'); return; }
+            
+            var cartKey = productId + '_' + sel.variant_id;
+            var existing = shopCart.find(function(c){return c.cartKey===cartKey});
+            if (existing) {
+                if (existing.menge >= variant.stock) { alert('Maximal ' + variant.stock + ' verfügbar in Größe ' + sel.variant_name + '.'); return; }
+                existing.menge++;
+            } else {
+                shopCart.push({ cartKey: cartKey, id: productId, variant_id: sel.variant_id, variant_name: sel.variant_name, name: name + ' (' + sel.variant_name + ')', preis: preis, menge: 1 });
+            }
+            renderShop();
+        }
+
         function addToCart(id, name, preis) {
-            var existing = shopCart.find(function(c){return c.id===id});
-            if(existing) { existing.menge++; } else { shopCart.push({id:id, name:name, preis:preis, menge:1}); }
+            var existing = shopCart.find(function(c){return c.id===id && !c.variant_id});
+            if(existing) { existing.menge++; } else { shopCart.push({cartKey:id, id:id, name:name, preis:preis, menge:1}); }
             renderShop();
         }
 
@@ -19840,11 +19929,11 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 html += '<div class="flex-1 min-w-0"><span class="text-sm font-medium text-gray-800 truncate block">' + c.name + '</span>';
                 html += '<span class="text-xs text-gray-400">' + fmtEur(c.preis) + ' / St\u00fcck</span></div>';
                 html += '<div class="flex items-center space-x-2 ml-3">';
-                html += '<button onclick="updateShopCart(\x27'+c.id+'\x27,-1)" class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 text-sm font-bold">\u2212</button>';
+                html += '<button onclick="updateShopCart(\x27'+c.cartKey+'\x27,-1)" class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 text-sm font-bold">\u2212</button>';
                 html += '<span class="text-sm font-bold w-6 text-center">' + c.menge + '</span>';
-                html += '<button onclick="updateShopCart(\x27'+c.id+'\x27,1)" class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 text-sm font-bold">+</button>';
+                html += '<button onclick="updateShopCart(\x27'+c.cartKey+'\x27,1)" class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 text-sm font-bold">+</button>';
                 html += '<span class="text-sm font-bold text-gray-800 w-16 text-right">' + fmtEur(c.preis*c.menge) + '</span>';
-                html += '<button onclick="removeFromCart(\x27'+c.id+'\x27)" class="text-gray-300 hover:text-red-500 ml-1">\u2715</button>';
+                html += '<button onclick="removeFromCart(\x27'+c.cartKey+'\x27)" class="text-gray-300 hover:text-red-500 ml-1">\u2715</button>';
                 html += '</div></div>';
             });
             html += '<div class="flex justify-between pt-3 font-bold text-gray-800"><span>Gesamt (netto)</span><span>' + fmtEur(total) + '</span></div>';
@@ -19888,9 +19977,20 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
                 // 2. Create order items
                 var items = shopCart.map(function(c){
-                    return { order_id: order.id, product_id: c.id, product_name: c.name, quantity: c.menge, unit_price: c.preis, amount: c.preis*c.menge };
+                    return { order_id: order.id, product_id: c.id, product_name: c.name, quantity: c.menge, unit_price: c.preis, amount: c.preis*c.menge, variant_id: c.variant_id||null, variant_name: c.variant_name||null };
                 });
                 await sb.from('shop_order_items').insert(items);
+
+                // 2b. Decrement stock for variant items
+                for (var ci = 0; ci < shopCart.length; ci++) {
+                    var cartItem = shopCart[ci];
+                    if (cartItem.variant_id) {
+                        await sb.rpc('decrement_stock', { p_variant_id: cartItem.variant_id, p_qty: cartItem.menge }).catch(function(){
+                            // Fallback: direct update
+                            sb.from('shop_product_variants').update({ stock: Math.max(0, (shopVariants[cartItem.id]||[]).find(function(v){return v.id===cartItem.variant_id})?.stock - cartItem.menge || 0) }).eq('id', cartItem.variant_id);
+                        });
+                    }
+                }
 
                 // 3. Create billing invoice (shop_immediate type)
                 var invNum = 'VB-SHOP-' + orderNum.split('-').pop();
@@ -19935,6 +20035,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
                 shopCart = [];
                 shopAllProducts = [];
+                shopVariants = {};
+                shopSelectedSizes = {};
                 document.getElementById('shopOrderModal').classList.remove('hidden');
                 document.getElementById('shopOrderModalContent').innerHTML = 
                     '<div class="text-center"><div class="text-5xl mb-3">✅</div>' +
@@ -19946,16 +20048,22 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             } catch(err) { alert('Fehler bei Bestellung: '+err.message); console.error(err); }
         }
 
-        function removeFromCart(id) {
-            shopCart = shopCart.filter(function(c){return c.id!==id;});
+        function removeFromCart(cartKey) {
+            shopCart = shopCart.filter(function(c){return c.cartKey!==cartKey;});
             renderShop();
         }
 
-        function updateShopCart(id, delta) {
-            var item = shopCart.find(function(c){return c.id===id;});
+        function updateShopCart(cartKey, delta) {
+            var item = shopCart.find(function(c){return c.cartKey===cartKey;});
             if(!item) return;
+            // Check stock for variant items
+            if (delta > 0 && item.variant_id) {
+                var variants = shopVariants[item.id] || [];
+                var variant = variants.find(function(v){return v.id===item.variant_id});
+                if (variant && item.menge >= variant.stock) { alert('Maximal ' + variant.stock + ' verfügbar.'); return; }
+            }
             item.menge += delta;
-            if(item.menge <= 0) shopCart = shopCart.filter(function(c){return c.id!==id;});
+            if(item.menge <= 0) shopCart = shopCart.filter(function(c){return c.cartKey!==cartKey;});
             renderShop();
         }
 
