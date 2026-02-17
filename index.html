@@ -392,21 +392,29 @@
                 <!-- Demo Quick-Switch (3-Ebenen Test) -->
                 <div class="mt-4 pt-4 border-t border-gray-100">
                     <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-2 text-center font-semibold">Demo: 3-Ebenen testen</p>
+                    <!-- Password input (hidden by default) -->
+                    <div id="demoPwBox" style="display:none" class="mb-2">
+                        <div class="flex gap-2">
+                            <input type="password" id="demoPwInput" placeholder="Demo-Passwort" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-vit-orange focus:border-transparent" onkeydown="if(event.key==='Enter')confirmDemoPw()">
+                            <button onclick="confirmDemoPw()" class="px-3 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition">→</button>
+                        </div>
+                        <p id="demoPwError" class="text-[10px] text-red-500 mt-1" style="display:none">Falsches Passwort</p>
+                    </div>
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="switchDemoAccount('extern','phase0')" class="py-2 px-2 rounded-lg text-[10px] font-semibold border border-orange-200 text-vit-orange hover:bg-orange-50 transition">
+                        <button onclick="requestDemoAccess('extern','phase0')" class="py-2 px-2 rounded-lg text-[10px] font-semibold border border-orange-200 text-vit-orange hover:bg-orange-50 transition">
                             ⚡ Extern (Phase 0)
                         </button>
-                        <button onclick="switchDemoAccount('standort','part1')" class="py-2 px-2 rounded-lg text-[10px] font-semibold border border-purple-200 text-purple-600 hover:bg-purple-50 transition">
+                        <button onclick="requestDemoAccess('standort','part1')" class="py-2 px-2 rounded-lg text-[10px] font-semibold border border-purple-200 text-purple-600 hover:bg-purple-50 transition">
                             📋 Standort (Part 1)
                         </button>
-                        <button onclick="switchDemoAccount('standort','part2')" class="py-2 px-2 rounded-lg text-[10px] font-semibold border border-blue-200 text-blue-600 hover:bg-blue-50 transition">
+                        <button onclick="requestDemoAccess('standort','part2')" class="py-2 px-2 rounded-lg text-[10px] font-semibold border border-blue-200 text-blue-600 hover:bg-blue-50 transition">
                             ⚡ Standort (Part 2)
                         </button>
-                        <button onclick="switchDemoAccount('standort','partner')" class="py-2 px-2 rounded-lg text-[10px] font-semibold border border-green-200 text-green-600 hover:bg-green-50 transition">
+                        <button onclick="requestDemoAccess('standort','partner')" class="py-2 px-2 rounded-lg text-[10px] font-semibold border border-green-200 text-green-600 hover:bg-green-50 transition">
                             🏆 Standort (Partner)
                         </button>
                     </div>
-                    <button onclick="switchDemoAccount('hq')" class="mt-2 w-full py-2 rounded-lg text-[10px] font-semibold border border-gray-300 text-gray-600 hover:bg-gray-50 transition">
+                    <button onclick="requestDemoAccess('hq')" class="mt-2 w-full py-2 rounded-lg text-[10px] font-semibold border border-gray-300 text-gray-600 hover:bg-gray-50 transition">
                         🏢 HQ-Modus
                     </button>
                 </div>
@@ -635,10 +643,6 @@
                         <button onclick="showView('shop')" data-module="shop" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                             <span>Werbemittel-Shop</span>
-                        </button>
-                        <button onclick="showView('standortBilling')" data-module="standortBilling" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
-                            <span>💰 Buchhaltung</span>
                         </button>
                         <button onclick="showView('aktenschrank')" data-module="aktenschrank" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
@@ -16902,7 +16906,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if (content) content.innerHTML = '<div class="text-center py-12"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-vit-orange"></div></div>';
 
             // Load invoice + line items + audit
-            var sb = window.supabase;
             var { data: inv } = await sb.from('billing_invoices').select('*, standort:standorte(name)').eq('id', invId).single();
             if (!inv) { content.innerHTML = '<p class="text-red-500">Rechnung nicht gefunden</p>'; return; }
 
@@ -17059,7 +17062,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
             var filter = document.getElementById('billingInvoiceFilter');
             var statusFilter = filter ? filter.value : '';
-            var query = window.supabase.from('billing_invoices').select('*, standort:standorte(name)').order('created_at', { ascending: false }).limit(100);
+            var query = sb.from('billing_invoices').select('*, standort:standorte(name)').order('created_at', { ascending: false }).limit(100);
             if (statusFilter) query = query.eq('status', statusFilter);
             var { data: invoices } = await query;
 
@@ -17090,7 +17093,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
 
             var year = new Date().getFullYear();
-            var { data: strategies } = await window.supabase.from('billing_annual_strategy').select('*, standort:standorte(name)').eq('year', year).order('standort_id');
+            var { data: strategies } = await sb.from('billing_annual_strategy').select('*, standort:standorte(name)').eq('year', year).order('standort_id');
 
             var h = '<div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr>';
             h += '<th class="text-left p-3">Standort</th><th class="text-right p-3">Plan-Umsatz</th><th class="text-right p-3">Marketing</th><th class="text-center p-3">Genehmigt</th><th class="text-center p-3">Gesperrt</th><th class="text-center p-3">Aktion</th>';
@@ -17108,7 +17111,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             h += '</tbody></table></div>';
 
             // All standorte without strategy
-            var { data: standorte } = await window.supabase.from('standorte').select('id, name').eq('status', 'aktiv');
+            var { data: standorte } = await sb.from('standorte').select('id, name').eq('status', 'aktiv');
             var stratIds = (strategies || []).map(function(s) { return s.standort_id; });
             var missing = (standorte || []).filter(function(st) { return stratIds.indexOf(st.id) === -1; });
             if (missing.length) {
@@ -17137,7 +17140,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         async function loadBillingProducts() {
             var container = document.getElementById('billingProductsList');
             if (!container) return;
-            var { data: products } = await window.supabase.from('billing_products').select('*').order('key');
+            var { data: products } = await sb.from('billing_products').select('*').order('key');
             var h = '<div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr>';
             h += '<th class="text-left p-3">Key</th><th class="text-left p-3">Name</th><th class="text-left p-3">Typ</th><th class="text-left p-3">Frequenz</th><th class="text-right p-3">Betrag/Prozent</th><th class="text-center p-3">Aktiv</th>';
             h += '</tr></thead><tbody>';
@@ -17159,8 +17162,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var container = document.getElementById('billingToolsList');
             if (!container) return;
 
-            var { data: packages } = await window.supabase.from('billing_tool_packages').select('*').order('monthly_cost');
-            var { data: assignments } = await window.supabase.from('billing_user_tool_assignments').select('*, tool:billing_tool_packages(name), user:users(name), standort:standorte(name)').eq('is_active', true);
+            var { data: packages } = await sb.from('billing_tool_packages').select('*').order('monthly_cost');
+            var { data: assignments } = await sb.from('billing_user_tool_assignments').select('*, tool:billing_tool_packages(name), user:users(name), standort:standorte(name)').eq('is_active', true);
 
             var h = '<div class="vit-card p-4 mb-4"><h3 class="font-semibold text-sm mb-3">📦 Tool-Pakete</h3>';
             h += '<div class="grid grid-cols-1 md:grid-cols-3 gap-3">';
@@ -17218,7 +17221,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if (!container) return;
             container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
 
-            var { data: invoices } = await window.supabase.from('billing_invoices').select('*').eq('standort_id', SESSION.standort_id).order('period_start', { ascending: false });
+            var { data: invoices } = await sb.from('billing_invoices').select('*').eq('standort_id', sbProfile.standort_id).order('period_start', { ascending: false });
 
             var h = '';
             (invoices || []).forEach(function(inv) {
@@ -17242,8 +17245,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if (!container) return;
             container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
 
-            var { data: inv } = await window.supabase.from('billing_invoices').select('*').eq('id', invId).single();
-            var { data: lines } = await window.supabase.from('billing_invoice_line_items').select('*, product:billing_products(name)').eq('invoice_id', invId).order('sort_index');
+            var { data: inv } = await sb.from('billing_invoices').select('*').eq('id', invId).single();
+            var { data: lines } = await sb.from('billing_invoice_line_items').select('*, product:billing_products(name)').eq('invoice_id', invId).order('sort_index');
 
             var h = '<button onclick="loadStandortInvoices()" class="text-xs text-vit-orange hover:underline mb-4 inline-block">← Zurück zur Übersicht</button>';
 
@@ -17290,7 +17293,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
 
             var year = new Date().getFullYear();
-            var { data: strategies } = await window.supabase.from('billing_annual_strategy').select('*').eq('standort_id', SESSION.standort_id).eq('year', year).order('version', { ascending: false });
+            var { data: strategies } = await sb.from('billing_annual_strategy').select('*').eq('standort_id', sbProfile.standort_id).eq('year', year).order('version', { ascending: false });
             var strat = strategies && strategies[0];
 
             var h = '';
@@ -17334,11 +17337,11 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if (!revenue || revenue <= 0) { alert(t('bill_valid_revenue')); return; }
 
             // Get current version
-            var { data: existing } = await window.supabase.from('billing_annual_strategy').select('version').eq('standort_id', SESSION.standort_id).eq('year', year).order('version', { ascending: false }).limit(1);
+            var { data: existing } = await sb.from('billing_annual_strategy').select('version').eq('standort_id', sbProfile.standort_id).eq('year', year).order('version', { ascending: false }).limit(1);
             var newVersion = existing && existing[0] ? existing[0].version + 1 : 1;
 
-            var { error } = await window.supabase.from('billing_annual_strategy').insert({
-                standort_id: SESSION.standort_id,
+            var { error } = await sb.from('billing_annual_strategy').insert({
+                standort_id: sbProfile.standort_id,
                 year: year,
                 planned_revenue_year: revenue,
                 planned_marketing_year: marketing || 0,
@@ -17359,10 +17362,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
 
             var year = new Date().getFullYear();
-            var { data: strategies } = await window.supabase.from('billing_annual_strategy').select('*').eq('standort_id', SESSION.standort_id).eq('year', year).eq('locked', true).order('version', { ascending: false }).limit(1);
+            var { data: strategies } = await sb.from('billing_annual_strategy').select('*').eq('standort_id', sbProfile.standort_id).eq('year', year).eq('locked', true).order('version', { ascending: false }).limit(1);
             var strat = strategies && strategies[0];
 
-            var { data: tools } = await window.supabase.from('billing_user_tool_assignments').select('*, tool:billing_tool_packages(name, monthly_cost), user:users(name)').eq('standort_id', SESSION.standort_id).eq('is_active', true);
+            var { data: tools } = await sb.from('billing_user_tool_assignments').select('*, tool:billing_tool_packages(name, monthly_cost), user:users(name)').eq('standort_id', sbProfile.standort_id).eq('is_active', true);
 
             var h = '<div class="vit-card p-6 mb-4">';
             h += '<h3 class="font-bold text-sm mb-4">📊 Monatliche Kostenaufschlüsselung</h3>';
@@ -17414,9 +17417,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         // PDF Download for invoices
         async function downloadInvoicePdf(invId) {
             try {
-                var { data: inv } = await window.supabase.from('billing_invoices').select('*').eq('id', invId).single();
-                var { data: lines } = await window.supabase.from('billing_invoice_line_items').select('*, product:billing_products(name)').eq('invoice_id', invId).order('sort_index');
-                var { data: stdArr } = await window.supabase.from('standorte').select('name, strasse, plz, ort').eq('id', inv.standort_id).limit(1);
+                var { data: inv } = await sb.from('billing_invoices').select('*').eq('id', invId).single();
+                var { data: lines } = await sb.from('billing_invoice_line_items').select('*, product:billing_products(name)').eq('invoice_id', invId).order('sort_index');
+                var { data: stdArr } = await sb.from('standorte').select('name, strasse, plz, ort').eq('id', inv.standort_id).limit(1);
                 var std = stdArr && stdArr[0];
 
                 // Generate PDF using browser print
@@ -17464,9 +17467,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if (!container) return;
             container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
 
-            var { data: invoices } = await window.supabase.from('billing_invoices')
+            var { data: invoices } = await sb.from('billing_invoices')
                 .select('id, invoice_number, period_start, period_end, total, status, finalized_at, paid_at, created_at')
-                .eq('standort_id', SESSION.standort_id)
+                .eq('standort_id', sbProfile.standort_id)
                 .order('period_start', { ascending: false });
 
             var h = '';
@@ -24232,12 +24235,12 @@ window.switchWissenTyp = function(typ) {
     window.finalizeAllReady = async function() {
         if (!confirm('Alle Drafts des aktuellen Monats finalisieren?')) return;
         var month = document.getElementById('billingMonthSelect')?.value;
-        var { data: invoices } = await window.supabaseClient.from('billing_invoices')
+        var { data: invoices } = await sb.from('billing_invoices')
             .select('id').eq('status', 'draft').eq('period_start', month);
         if (!invoices?.length) { alert('Keine Drafts zum Finalisieren'); return; }
         var count = 0;
         for (var inv of invoices) {
-            await billingCall('finalize-invoice', { invoice_id: inv.id, user_id: window.currentUser?.id });
+            await billingCall('finalize-invoice', { invoice_id: inv.id, user_id: sbUser.id });
             count++;
         }
         alert('✅ ' + count + ' Rechnungen finalisiert');
@@ -24247,12 +24250,12 @@ window.switchWissenTyp = function(typ) {
     // ── HQ: Invoice Detail ──
     window.openBillingDetail = async function(invoiceId) {
         showView('hqBillingDetail');
-        var { data: inv } = await window.supabaseClient.from('billing_invoices')
+        var { data: inv } = await sb.from('billing_invoices')
             .select('*, standort:standorte(name)').eq('id', invoiceId).single();
         if (!inv) return;
-        var { data: lines } = await window.supabaseClient.from('billing_invoice_line_items')
+        var { data: lines } = await sb.from('billing_invoice_line_items')
             .select('*, product:billing_products(key, name)').eq('invoice_id', invoiceId).order('sort_index');
-        var { data: audits } = await window.supabaseClient.from('billing_audit_log')
+        var { data: audits } = await sb.from('billing_audit_log')
             .select('*, user:users(name)').eq('invoice_id', invoiceId).order('created_at', { ascending: false });
 
         document.getElementById('billingDetailTitle').textContent = (inv.invoice_number || 'Rechnung') + ' – ' + (inv.standort?.name || '');
@@ -24338,7 +24341,7 @@ window.switchWissenTyp = function(typ) {
     window.editLineItem = async function(lineId, currentAmount, currentDesc) {
         var newAmt = prompt('Neuer Betrag:', currentAmount);
         if (newAmt === null) return;
-        await billingCall('update-line-item', { line_item_id: lineId, amount: parseFloat(newAmt), user_id: window.currentUser?.id });
+        await billingCall('update-line-item', { line_item_id: lineId, amount: parseFloat(newAmt), user_id: sbUser.id });
         // Reload the current invoice detail
         var invId = document.querySelector('[onclick*="finalizeInvoice"]')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
         if (invId) openBillingDetail(invId);
@@ -24346,7 +24349,7 @@ window.switchWissenTyp = function(typ) {
 
     window.removeLineItem = async function(lineId, invoiceId) {
         if (!confirm(t('bill_remove_line'))) return;
-        await billingCall('remove-line-item', { line_item_id: lineId, user_id: window.currentUser?.id });
+        await billingCall('remove-line-item', { line_item_id: lineId, user_id: sbUser.id });
         openBillingDetail(invoiceId);
     };
 
@@ -24355,13 +24358,13 @@ window.switchWissenTyp = function(typ) {
         if (!desc) return;
         var amt = prompt('Betrag (€):', '0');
         if (amt === null) return;
-        await billingCall('add-line-item', { invoice_id: invoiceId, description: desc, amount: parseFloat(amt), user_id: window.currentUser?.id });
+        await billingCall('add-line-item', { invoice_id: invoiceId, description: desc, amount: parseFloat(amt), user_id: sbUser.id });
         openBillingDetail(invoiceId);
     };
 
     window.finalizeInvoice = async function(invoiceId) {
         if (!confirm(t('bill_finalize'))) return;
-        var data = await billingCall('finalize-invoice', { invoice_id: invoiceId, user_id: window.currentUser?.id });
+        var data = await billingCall('finalize-invoice', { invoice_id: invoiceId, user_id: sbUser.id });
         if (data.error) { alert('Fehler: ' + data.error); return; }
         alert('✅ Rechnung finalisiert' + (data.message ? '\n' + data.message : ''));
         openBillingDetail(invoiceId);
@@ -24369,14 +24372,14 @@ window.switchWissenTyp = function(typ) {
 
     window.markInvoicePaid = async function(invoiceId) {
         if (!confirm(t('bill_mark_paid'))) return;
-        await billingCall('mark-paid', { invoice_id: invoiceId, user_id: window.currentUser?.id });
+        await billingCall('mark-paid', { invoice_id: invoiceId, user_id: sbUser.id });
         openBillingDetail(invoiceId);
     };
 
     // ── HQ: Load All Invoices ──
     window.loadAllInvoices = async function() {
         var filter = document.getElementById('billingInvoiceFilter')?.value;
-        var query = window.supabaseClient.from('billing_invoices')
+        var query = sb.from('billing_invoices')
             .select('*, standort:standorte(name)').order('created_at', { ascending: false }).limit(50);
         if (filter) query = query.eq('status', filter);
         var { data: invoices } = await query;
@@ -24400,7 +24403,7 @@ window.switchWissenTyp = function(typ) {
 
     // ── HQ: Load Strategies ──
     window.loadStrategies = async function() {
-        var { data: strategies } = await window.supabaseClient.from('billing_annual_strategy')
+        var { data: strategies } = await sb.from('billing_annual_strategy')
             .select('*, standort:standorte(name)').order('year', { ascending: false });
         var el = document.getElementById('billingStrategiesList');
         if (!el) return;
@@ -24425,18 +24428,18 @@ window.switchWissenTyp = function(typ) {
     };
 
     window.approveStrategy = async function(id) {
-        await billingCall('approve-strategy', { strategy_id: id, user_id: window.currentUser?.id });
+        await billingCall('approve-strategy', { strategy_id: id, user_id: sbUser.id });
         loadStrategies();
     };
     window.lockStrategy = async function(id) {
         if (!confirm(t('bill_strategy_lock'))) return;
-        await billingCall('lock-strategy', { strategy_id: id, user_id: window.currentUser?.id });
+        await billingCall('lock-strategy', { strategy_id: id, user_id: sbUser.id });
         loadStrategies();
     };
 
     // ── HQ: Products ──
     window.loadProducts = async function() {
-        var { data: products } = await window.supabaseClient.from('billing_products').select('*').order('key');
+        var { data: products } = await sb.from('billing_products').select('*').order('key');
         var el = document.getElementById('billingProductsList');
         if (!el) return;
         var h = '<div class="vit-card overflow-hidden"><table class="w-full text-sm">';
@@ -24452,7 +24455,7 @@ window.switchWissenTyp = function(typ) {
 
     // ── HQ: Tool Packages ──
     window.loadToolPackages = async function() {
-        var { data: tools } = await window.supabaseClient.from('billing_tool_packages').select('*').order('monthly_cost');
+        var { data: tools } = await sb.from('billing_tool_packages').select('*').order('monthly_cost');
         var el = document.getElementById('billingToolsList');
         if (!el) return;
         var h = '<div class="vit-card overflow-hidden"><table class="w-full text-sm">';
@@ -24468,9 +24471,9 @@ window.switchWissenTyp = function(typ) {
 
     // ── Standort: Load My Invoices ──
     window.loadStandortInvoices = async function() {
-        var stId = window.currentUser?.standort_id;
+        var stId = sbProfile.standort_id;
         if (!stId) return;
-        var { data: invoices } = await window.supabaseClient.from('billing_invoices')
+        var { data: invoices } = await sb.from('billing_invoices')
             .select('*').eq('standort_id', stId).order('period_start', { ascending: false });
         var el = document.getElementById('stBillingInvoicesList');
         if (!el) return;
@@ -24503,10 +24506,10 @@ window.switchWissenTyp = function(typ) {
 
     // ── Standort: Strategy ──
     window.loadStandortStrategy = async function() {
-        var stId = window.currentUser?.standort_id;
+        var stId = sbProfile.standort_id;
         if (!stId) return;
         var year = new Date().getFullYear();
-        var { data: strategies } = await window.supabaseClient.from('billing_annual_strategy')
+        var { data: strategies } = await sb.from('billing_annual_strategy')
             .select('*').eq('standort_id', stId).eq('year', year).order('version', { ascending: false });
         var el = document.getElementById('stBillingStrategyContent');
         if (!el) return;
@@ -24535,19 +24538,19 @@ window.switchWissenTyp = function(typ) {
     };
 
     window.submitStrategy = async function() {
-        var stId = window.currentUser?.standort_id;
+        var stId = sbProfile.standort_id;
         var rev = parseFloat(document.getElementById('stStratRevenue')?.value);
         var mkt = parseFloat(document.getElementById('stStratMarketing')?.value);
         if (!rev || isNaN(rev)) { alert(t('misc_enter_revenue')); return; }
         // Get current max version
-        var { data: existing } = await window.supabaseClient.from('billing_annual_strategy')
+        var { data: existing } = await sb.from('billing_annual_strategy')
             .select('version').eq('standort_id', stId).eq('year', new Date().getFullYear())
             .order('version', { ascending: false }).limit(1);
         var newVersion = (existing?.[0]?.version || 0) + 1;
-        await window.supabaseClient.from('billing_annual_strategy').insert({
+        await sb.from('billing_annual_strategy').insert({
             standort_id: stId, year: new Date().getFullYear(),
             planned_revenue_year: rev, planned_marketing_year: mkt || 0,
-            submitted_at: new Date().toISOString(), submitted_by: window.currentUser?.id,
+            submitted_at: new Date().toISOString(), submitted_by: sbUser.id,
             version: newVersion
         });
         alert('✅ Jahresstrategie eingereicht (v' + newVersion + ')');
@@ -24556,15 +24559,15 @@ window.switchWissenTyp = function(typ) {
 
     // ── Standort: Cost Breakdown ──
     window.loadStandortCosts = async function() {
-        var stId = window.currentUser?.standort_id;
+        var stId = sbProfile.standort_id;
         if (!stId) return;
         var el = document.getElementById('stBillingCostsContent');
         if (!el) return;
         // Load strategy + tools
         var year = new Date().getFullYear();
-        var { data: strats } = await window.supabaseClient.from('billing_annual_strategy')
+        var { data: strats } = await sb.from('billing_annual_strategy')
             .select('*').eq('standort_id', stId).eq('year', year).eq('locked', true).order('version', { ascending: false }).limit(1);
-        var { data: tools } = await window.supabaseClient.from('billing_user_tool_assignments')
+        var { data: tools } = await sb.from('billing_user_tool_assignments')
             .select('*, tool:billing_tool_packages(name, monthly_cost), user:users(name)')
             .eq('standort_id', stId).eq('is_active', true);
         var s = strats?.[0];
@@ -24600,6 +24603,54 @@ window.switchWissenTyp = function(typ) {
             h = '<div class="text-center py-8 text-gray-400">Keine gesperrte Jahresstrategie vorhanden – Kostenberechnung nicht möglich.</div>';
         }
         el.innerHTML = h;
+    };
+
+    // ── Standort: Payment Status ──
+    window.loadStandortPayments = async function() {
+        var stId = sbProfile.standort_id;
+        if (!stId) return;
+        var container = document.getElementById('stBillingPaymentsContent');
+        if (!container) return;
+        container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
+
+        var { data: invoices } = await sb.from('billing_invoices')
+            .select('id, invoice_number, period_start, period_end, total, status, finalized_at, paid_at, created_at')
+            .eq('standort_id', stId)
+            .order('period_start', { ascending: false });
+
+        var totalPaid = 0, totalOpen = 0, countPaid = 0, countOpen = 0;
+        (invoices || []).forEach(function(inv) {
+            if (inv.status === 'paid') { totalPaid += parseFloat(inv.total)||0; countPaid++; }
+            else if (['finalized','sent'].indexOf(inv.status) >= 0) { totalOpen += parseFloat(inv.total)||0; countOpen++; }
+        });
+
+        var h = '<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">';
+        h += '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Bezahlt</p><p class="text-2xl font-bold text-green-600">' + fmtEur(totalPaid) + '</p><p class="text-xs text-gray-400">' + countPaid + ' Rechnungen</p></div>';
+        h += '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Offen</p><p class="text-2xl font-bold text-amber-500">' + fmtEur(totalOpen) + '</p><p class="text-xs text-gray-400">' + countOpen + ' Rechnungen</p></div>';
+        h += '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Gesamt ' + new Date().getFullYear() + '</p><p class="text-2xl font-bold text-gray-800">' + fmtEur(totalPaid + totalOpen) + '</p><p class="text-xs text-gray-400">' + (invoices || []).length + ' Rechnungen</p></div>';
+        h += '</div>';
+
+        h += '<div class="vit-card p-6"><h3 class="font-bold text-sm mb-4">📋 Zahlungsverlauf</h3>';
+        if (!invoices || invoices.length === 0) {
+            h += '<p class="text-gray-400 text-center py-4">Noch keine Zahlungsdaten vorhanden</p>';
+        } else {
+            h += '<div class="space-y-3">';
+            (invoices || []).forEach(function(inv) {
+                var sc = inv.status === 'paid' ? 'green' : inv.status === 'finalized' || inv.status === 'sent' ? 'amber' : 'gray';
+                var si = inv.status === 'paid' ? '✅' : inv.status === 'finalized' ? '📬' : inv.status === 'sent' ? '📨' : inv.status === 'draft' ? '📝' : '⏳';
+                var st = inv.status === 'paid' ? 'Bezahlt' : inv.status === 'finalized' ? 'Finalisiert' : inv.status === 'sent' ? 'Versendet' : inv.status === 'draft' ? 'Entwurf' : inv.status;
+                h += '<div class="flex items-center gap-4 p-3 rounded-lg bg-'+sc+'-50 border border-'+sc+'-100">';
+                h += '<div class="text-xl">'+si+'</div>';
+                h += '<div class="flex-1 min-w-0">';
+                h += '<div class="flex items-center justify-between"><span class="font-mono text-xs font-semibold text-gray-700">'+(inv.invoice_number||'—')+'</span><span class="font-bold text-'+sc+'-700">'+fmtEur(inv.total)+'</span></div>';
+                h += '<div class="flex items-center justify-between mt-1"><span class="text-xs text-gray-500">'+(inv.period_start||'')+' – '+(inv.period_end||'')+'</span>';
+                h += '<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-'+sc+'-100 text-'+sc+'-700">'+st+'</span>';
+                h += '</div></div></div>';
+            });
+            h += '</div>';
+        }
+        h += '</div>';
+        container.innerHTML = h;
     };
 
     // ── Auto-init when view is shown ──
@@ -25256,14 +25307,44 @@ function hqApprovePart1(accountId) {
     alert('\u2705 ' + account.name + ' wurde zur Trainingsphase Part 1 eingeladen!');
 }
 
+// ═══ DEMO SYSTEM: Password Protection + Frontend Demo Data ═══
+var _demoPendingLevel = null;
+var _demoPendingStage = null;
+var _demoAuthenticated = false;
+var DEMO_ACTIVE = false;
+
+function requestDemoAccess(level, stage) {
+    _demoPendingLevel = level;
+    _demoPendingStage = stage;
+    if (_demoAuthenticated) { switchDemoAccount(level, stage); return; }
+    var box = document.getElementById('demoPwBox');
+    var inp = document.getElementById('demoPwInput');
+    if (box) { box.style.display = 'block'; }
+    if (inp) { inp.value = ''; inp.focus(); }
+    document.getElementById('demoPwError').style.display = 'none';
+}
+
+function confirmDemoPw() {
+    var inp = document.getElementById('demoPwInput');
+    var pw = inp ? inp.value : '';
+    if (pw === 'sdvsv9r2r3') {
+        _demoAuthenticated = true;
+        document.getElementById('demoPwBox').style.display = 'none';
+        switchDemoAccount(_demoPendingLevel, _demoPendingStage);
+    } else {
+        document.getElementById('demoPwError').style.display = 'block';
+        if (inp) { inp.value = ''; inp.focus(); }
+    }
+}
+
 // Quick-switch demo function for testing all account levels
 function switchDemoAccount(level, stage) {
-    // Hide login, show app
     var ls = document.getElementById('loginScreen');
     var ma = document.getElementById('mainApp');
     if(ls) ls.style.display = 'none';
     if(ma) ma.style.display = 'block';
 
+    DEMO_ACTIVE = true;
     SESSION.account_level = level;
     SESSION.stage = stage || 'partner';
     SESSION.stage_status = 'active';
@@ -25292,14 +25373,199 @@ function switchDemoAccount(level, stage) {
         initMilestonesForStage('part2');
     }
 
+    // Inject demo banner
+    injectDemoBanner(level, stage);
+    // Fill demo data into widgets
+    fillDemoWidgets(level, stage);
+
     updateUIForRole();
     try { applyModulStatus(); } catch(e) {}
     if(level === 'extern') showView('externHome');
-    else if(level === 'hq') switchViewMode('hq');
+    else if(level === 'hq') { switchViewMode('hq'); fillDemoHQ(); }
     else showView('home');
 }
 
-console.log('[3-Ebenen] System loaded. Use switchDemoAccount("extern","phase0"), switchDemoAccount("standort","part1"), switchDemoAccount("hq") to test.');
+function injectDemoBanner(level, stage) {
+    var existing = document.getElementById('demoBannerTop');
+    if (existing) existing.remove();
+    var labels = {'extern':'Extern · Phase 0','hq':'HQ-Modus'};
+    if(level==='standort') labels.standort = 'Standort · ' + (stage==='part1'?'Part 1':stage==='part2'?'Part 2':'Partner');
+    var label = labels[level] || level;
+    var banner = document.createElement('div');
+    banner.id = 'demoBannerTop';
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(90deg,#EF7D00,#F59E0B);color:white;text-align:center;padding:6px 16px;font-size:12px;font-weight:700;letter-spacing:0.5px;display:flex;align-items:center;justify-content:center;gap:12px;';
+    banner.innerHTML = '🎭 DEMO-MODUS: ' + label + ' <span style="font-weight:400;opacity:0.85">– Alle Daten sind fiktiv</span> <button onclick="exitDemoMode()" style="margin-left:12px;background:rgba(255,255,255,0.25);border:none;color:white;padding:2px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600">✕ Demo beenden</button>';
+    document.body.prepend(banner);
+    // Shift main content down
+    var app = document.getElementById('mainApp');
+    if(app) app.style.marginTop = '34px';
+}
+
+function exitDemoMode() {
+    DEMO_ACTIVE = false;
+    var banner = document.getElementById('demoBannerTop');
+    if(banner) banner.remove();
+    var app = document.getElementById('mainApp');
+    if(app) app.style.marginTop = '0';
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+}
+
+// ═══ DEMO DATA: Fill all dashboard widgets with realistic fake data ═══
+function fillDemoWidgets(level, stage) {
+    setTimeout(function() {
+        // Daily cockpit
+        var dfU = document.getElementById('dfUmsatz');
+        var dfL = document.getElementById('dfLeads');
+        var dfT = document.getElementById('dfTasks');
+        var dfTe = document.getElementById('dfTermine');
+        if(dfU) dfU.textContent = '4.250 €';
+        if(dfL) dfL.textContent = '7';
+        if(dfT) dfT.textContent = '4';
+        if(dfTe) dfTe.textContent = '3';
+
+        // Health Score
+        var hs = document.getElementById('healthScoreNum');
+        var hr = document.getElementById('healthRing');
+        if(hs) { hs.textContent = '74'; hs.style.color = '#ca8a04'; }
+        if(hr) { hr.setAttribute('stroke', '#ca8a04'); hr.setAttribute('stroke-dashoffset', '55.5'); }
+        var hCat = document.getElementById('healthCategories');
+        if(hCat) hCat.innerHTML = '<div class="flex items-center justify-between text-xs"><span class="text-gray-600">📊 Controlling</span><div class="flex items-center gap-2"><div class="w-16 bg-gray-200 rounded-full h-1.5"><div class="bg-green-500 h-1.5 rounded-full" style="width:82%"></div></div><span class="font-bold text-green-600">82</span></div></div>'
+            +'<div class="flex items-center justify-between text-xs"><span class="text-gray-600">💰 Verkauf</span><div class="flex items-center gap-2"><div class="w-16 bg-gray-200 rounded-full h-1.5"><div class="bg-yellow-500 h-1.5 rounded-full" style="width:68%"></div></div><span class="font-bold text-yellow-600">68</span></div></div>'
+            +'<div class="flex items-center justify-between text-xs"><span class="text-gray-600">📢 Marketing</span><div class="flex items-center gap-2"><div class="w-16 bg-gray-200 rounded-full h-1.5"><div class="bg-green-500 h-1.5 rounded-full" style="width:76%"></div></div><span class="font-bold text-green-600">76</span></div></div>'
+            +'<div class="flex items-center justify-between text-xs"><span class="text-gray-600">🔧 Werkstatt</span><div class="flex items-center gap-2"><div class="w-16 bg-gray-200 rounded-full h-1.5"><div class="bg-yellow-500 h-1.5 rounded-full" style="width:71%"></div></div><span class="font-bold text-yellow-600">71</span></div></div>'
+            +'<div class="flex items-center justify-between text-xs"><span class="text-gray-600">📱 Engagement</span><div class="flex items-center gap-2"><div class="w-16 bg-gray-200 rounded-full h-1.5"><div class="bg-green-500 h-1.5 rounded-full" style="width:80%"></div></div><span class="font-bold text-green-600">80</span></div></div>';
+        var hBadge = document.getElementById('healthBadge');
+        if(hBadge) hBadge.innerHTML = '<span class="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 font-semibold">🟡 Beobachtung</span>';
+
+        // Pipeline Widget
+        var wp = document.getElementById('wPipelineContent');
+        if(wp) wp.innerHTML = '<div class="space-y-3">'
+            +'<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Offene Leads</span><span class="font-bold text-blue-600">7</span></div>'
+            +'<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Angebote offen</span><span class="font-bold text-orange-600">3</span></div>'
+            +'<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Pipeline-Wert</span><span class="font-bold text-green-600">24.890 €</span></div>'
+            +'</div>';
+        var wpb = document.getElementById('wPipelineBadge');
+        if(wpb) wpb.textContent = '7 aktiv';
+
+        // Verkaufserfolg Widget
+        var ws = document.getElementById('wSuccessContent');
+        if(ws) ws.innerHTML = '<div class="mb-3"><div class="flex items-center justify-between mb-1"><span class="text-sm text-gray-600">Verkaufsquote</span>'
+            +'<span class="text-2xl font-bold text-green-600">42%</span></div>'
+            +'<div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-green-500 h-2 rounded-full" style="width:42%"></div></div></div>'
+            +'<div class="grid grid-cols-2 gap-2 text-sm"><div><p class="text-gray-500">Verkäufe</p><p class="font-bold text-gray-800">5</p></div>'
+            +'<div><p class="text-gray-500">Beratungen</p><p class="font-bold text-gray-800">12</p></div></div>';
+
+        // Termine Widget
+        var wt = document.getElementById('wTermineContent');
+        if(wt) wt.innerHTML = '<div class="space-y-2">'
+            +'<div class="p-2.5 bg-blue-50 rounded-lg"><p class="text-sm font-semibold text-gray-800">10:00 - Probefahrt Cube Kathmandu</p><p class="text-xs text-gray-600">Herr Müller, E-MTB Beratung</p></div>'
+            +'<div class="p-2.5 bg-purple-50 rounded-lg"><p class="text-sm font-semibold text-gray-800">14:00 - Team-Meeting</p><p class="text-xs text-gray-600">Wochenplanung & Verkaufsziele</p></div>'
+            +'<div class="p-2.5 bg-green-50 rounded-lg"><p class="text-sm font-semibold text-gray-800">16:30 - HQ Gruppencall</p><p class="text-xs text-gray-600">Monatliches Netzwerk-Update</p></div>'
+            +'</div>';
+        var wtc = document.getElementById('wTermineCount');
+        if(wtc) wtc.textContent = '3';
+
+        // Aufgaben Widget
+        var wa = document.getElementById('wAufgabenContent');
+        if(wa) wa.innerHTML = '<div class="space-y-2">'
+            +'<div class="flex items-start space-x-2"><input type="checkbox" class="mt-0.5 rounded border-gray-300 accent-orange-500" disabled><span class="text-sm text-red-600">BWA Januar hochladen ⏰</span></div>'
+            +'<div class="flex items-start space-x-2"><input type="checkbox" class="mt-0.5 rounded border-gray-300 accent-orange-500" disabled><span class="text-sm text-gray-700">Schaufenster-Deko aktualisieren</span></div>'
+            +'<div class="flex items-start space-x-2"><input type="checkbox" class="mt-0.5 rounded border-gray-300 accent-orange-500" disabled><span class="text-sm text-gray-700">Angebot Frau Kirchner finalisieren</span></div>'
+            +'<div class="flex items-start space-x-2"><input type="checkbox" class="mt-0.5 rounded border-gray-300 accent-orange-500" disabled><span class="text-sm text-gray-700">Werkstatt-Termin Herr Weber bestätigen</span></div>'
+            +'</div>';
+        var wac = document.getElementById('wAufgabenCount');
+        if(wac) wac.textContent = '4';
+
+        // Team Widget
+        var wte = document.getElementById('wTeamContent');
+        if(wte) wte.innerHTML = '<div class="space-y-2">'
+            +'<div class="flex items-center justify-between"><div class="flex items-center space-x-2"><span>👑</span><span class="text-sm font-semibold text-gray-800">Sandra E.</span></div><span class="text-xs text-green-600">● aktiv</span></div>'
+            +'<div class="flex items-center justify-between"><div class="flex items-center space-x-2"><span>💰</span><span class="text-sm font-semibold text-gray-800">Dirk G.</span></div><span class="text-xs text-green-600">● aktiv</span></div>'
+            +'<div class="flex items-center justify-between"><div class="flex items-center space-x-2"><span>🔧</span><span class="text-sm font-semibold text-gray-800">Jan K.</span></div><span class="text-xs text-yellow-500">● abwesend</span></div>'
+            +'<div class="flex items-center justify-between"><div class="flex items-center space-x-2"><span>💰</span><span class="text-sm font-semibold text-gray-800">Lisa M.</span></div><span class="text-xs text-green-600">● aktiv</span></div>'
+            +'</div>';
+
+        // Controlling Widget
+        var wc = document.getElementById('wControllingContent');
+        if(wc) wc.innerHTML = '<div class="space-y-3">'
+            +'<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Umsatz</span><span class="font-bold text-gray-800">187.420 €</span></div>'
+            +'<div><div class="flex justify-between mb-1"><span class="text-sm text-gray-600">Rohertrag</span><span class="text-sm font-semibold text-green-600">38.2%</span></div>'
+            +'<div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-green-500 h-2 rounded-full" style="width:63.7%"></div></div></div>'
+            +'<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Ergebnis</span><span class="font-bold text-green-600">8.340 €</span></div>'
+            +'<p class="text-[10px] text-gray-400">Letzte BWA: Januar 2026</p>'
+            +'</div>';
+
+        // Support Widget
+        var wsu = document.getElementById('wSupportContent');
+        if(wsu) wsu.innerHTML = '<div class="space-y-2">'
+            +'<div class="text-xs p-2 bg-yellow-50 rounded"><p class="font-semibold">Kassensystem-Integration fehlgeschlagen</p><p class="text-gray-600">Offen seit 2 Tagen</p></div>'
+            +'<div class="text-xs p-2 bg-red-50 rounded"><p class="font-semibold">Logo-Dateien für Werbebanner anfordern</p><p class="text-gray-600">Offen seit 5 Tagen</p></div>'
+            +'</div>';
+        var wsc = document.getElementById('wSupportCount');
+        if(wsc) wsc.textContent = '2';
+
+        // Nachrichten Widget
+        var wn = document.getElementById('wNachrichtenContent');
+        if(wn) wn.innerHTML = '<div class="space-y-2">'
+            +'<div class="p-2.5 bg-red-50 rounded-lg border-l-4 border-red-400"><p class="text-sm font-semibold text-gray-800">⚠️ BWA-Deadline: 15. März</p><p class="text-xs text-gray-500">vor 1 Tag</p></div>'
+            +'<div class="p-2.5 bg-blue-50 rounded-lg border-l-4 border-blue-400"><p class="text-sm font-semibold text-gray-800">🚲 Neue Modelle 2026 online</p><p class="text-xs text-gray-500">vor 3 Tagen</p></div>'
+            +'<div class="p-2.5 bg-green-50 rounded-lg border-l-4 border-green-400"><p class="text-sm font-semibold text-gray-800">🎉 Q1-Bonus: 5 Standorte qualifiziert</p><p class="text-xs text-gray-500">vor 5 Tagen</p></div>'
+            +'</div>';
+
+        // Welcome text
+        var wt2 = document.getElementById('welcomeText');
+        if(wt2) wt2.textContent = level === 'hq' ? 'Willkommen im HQ! 👋' : 'Willkommen zurück, Sandra! 👋';
+
+    }, 200);
+}
+
+// ═══ DEMO: HQ-specific data ═══
+function fillDemoHQ() {
+    setTimeout(function() {
+        // Fill HQ KPI cards if they exist
+        var kpiContainer = document.getElementById('hqKpiGrid');
+        if(kpiContainer) {
+            kpiContainer.innerHTML = '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">Standorte aktiv</p><p class="text-2xl font-bold text-vit-orange">23</p><p class="text-[10px] text-green-500">+2 diesen Monat</p></div>'
+                +'<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">Netzwerk-Umsatz</p><p class="text-2xl font-bold text-green-600">3.42 Mio €</p><p class="text-[10px] text-green-500">↑ 12.4% vs VJ</p></div>'
+                +'<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">Ø Health Score</p><p class="text-2xl font-bold text-yellow-600">71</p><p class="text-[10px] text-yellow-500">🟡 Beobachtung</p></div>'
+                +'<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">BWA ausstehend</p><p class="text-2xl font-bold text-red-500">4</p><p class="text-[10px] text-red-400">Deadline: 15.03.</p></div>'
+                +'<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">Offene Tickets</p><p class="text-2xl font-bold text-blue-600">8</p><p class="text-[10px] text-blue-400">3 dringend</p></div>';
+        }
+
+        // Fill HQ standort table if exists
+        var hqTable = document.getElementById('hqStandortTable');
+        if(hqTable) {
+            var standorte = [
+                {name:'Grafrath', score:74, umsatz:187420, bwa:'✅', status:'partner'},
+                {name:'Berlin-Brandenburg', score:82, umsatz:312500, bwa:'✅', status:'partner'},
+                {name:'Witten', score:68, umsatz:145800, bwa:'⏳', status:'partner'},
+                {name:'Rottweil', score:71, umsatz:156200, bwa:'✅', status:'partner'},
+                {name:'Hamburg', score:85, umsatz:289300, bwa:'✅', status:'partner'},
+                {name:'München BAL', score:79, umsatz:234100, bwa:'✅', status:'partner'},
+                {name:'Holzkirchen', score:63, umsatz:98700, bwa:'❌', status:'partner'},
+                {name:'Lohmar', score:76, umsatz:178900, bwa:'✅', status:'partner'},
+                {name:'Dessau', score:45, umsatz:0, bwa:'—', status:'onboarding'},
+                {name:'Ellerhoop', score:38, umsatz:0, bwa:'—', status:'onboarding'}
+            ];
+            var h = '<table class="w-full text-sm"><thead class="text-xs text-gray-500 uppercase bg-gray-50"><tr><th class="text-left p-3">Standort</th><th class="text-center p-3">Score</th><th class="text-right p-3">Umsatz</th><th class="text-center p-3">BWA</th><th class="text-center p-3">Status</th></tr></thead><tbody>';
+            standorte.forEach(function(s){
+                var sColor = s.score >= 75 ? 'text-green-600' : s.score >= 50 ? 'text-yellow-600' : 'text-red-500';
+                var sBg = s.score >= 75 ? 'bg-green-100' : s.score >= 50 ? 'bg-yellow-100' : 'bg-red-100';
+                h += '<tr class="border-t hover:bg-gray-50"><td class="p-3 font-semibold">vit:bikes '+s.name+'</td>';
+                h += '<td class="p-3 text-center"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-bold '+sBg+' '+sColor+'">'+s.score+'</span></td>';
+                h += '<td class="p-3 text-right font-mono">'+(s.umsatz ? (s.umsatz/1000).toFixed(0)+'k €':'—')+'</td>';
+                h += '<td class="p-3 text-center">'+s.bwa+'</td>';
+                h += '<td class="p-3 text-center"><span class="text-xs px-2 py-0.5 rounded-full '+(s.status==='partner'?'bg-green-100 text-green-700':'bg-purple-100 text-purple-700')+'">'+s.status+'</span></td>';
+                h += '</tr>';
+            });
+            h += '</tbody></table>';
+            hqTable.innerHTML = h;
+        }
+    }, 300);
+}
+
+console.log('[3-Ebenen] Demo-System with password protection loaded.');
 </script>
 
 </body>
