@@ -392,7 +392,7 @@
 
                 <!-- Demo Quick-Switch (3-Ebenen Test) -->
                 <div class="mt-4 pt-4 border-t border-gray-100">
-                    <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-2 text-center font-semibold">Demo: 3-Ebenen testen</p>
+                    <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-2 text-center font-semibold">Demo</p>
                     <!-- Password input (hidden by default) -->
                     <div id="demoPwBox" style="display:none" class="mb-2">
                         <div class="flex gap-2">
@@ -401,22 +401,8 @@
                         </div>
                         <p id="demoPwError" class="text-[10px] text-red-500 mt-1" style="display:none">Falsches Passwort</p>
                     </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="requestDemoAccess('extern','phase0')" class="py-2 px-2 rounded-lg text-[10px] font-semibold border border-orange-200 text-vit-orange hover:bg-orange-50 transition">
-                            ⚡ Extern (Phase 0)
-                        </button>
-                        <button onclick="requestDemoAccess('standort','part1')" class="py-2 px-2 rounded-lg text-[10px] font-semibold border border-purple-200 text-purple-600 hover:bg-purple-50 transition">
-                            📋 Standort (Part 1)
-                        </button>
-                        <button onclick="requestDemoAccess('standort','part2')" class="py-2 px-2 rounded-lg text-[10px] font-semibold border border-blue-200 text-blue-600 hover:bg-blue-50 transition">
-                            ⚡ Standort (Part 2)
-                        </button>
-                        <button onclick="requestDemoAccess('standort','partner')" class="py-2 px-2 rounded-lg text-[10px] font-semibold border border-green-200 text-green-600 hover:bg-green-50 transition">
-                            🏆 Standort (Partner)
-                        </button>
-                    </div>
-                    <button onclick="requestDemoAccess('hq')" class="mt-2 w-full py-2 rounded-lg text-[10px] font-semibold border border-gray-300 text-gray-600 hover:bg-gray-50 transition">
-                        🏢 HQ-Modus
+                    <button onclick="requestDemoAccess('standort','partner')" class="w-full py-2 rounded-lg text-[10px] font-semibold border border-green-200 text-green-600 hover:bg-green-50 transition">
+                        🏆 Standort (Partner) – Demo starten
                     </button>
                 </div>
                 
@@ -1851,7 +1837,7 @@
                                                 <div class="text-4xl mb-2">☁️</div>
                                                 <p class="text-sm text-gray-600">Videos hierhin ziehen</p>
                                                 <p class="text-xs text-gray-400 mt-1">oder klicken zum Auswaehlen · Mehrfachauswahl moeglich</p>
-                                                <p class="text-[10px] text-gray-300 mt-2">MP4, MOV, WebM · Max. 500 MB pro Datei</p>
+                                                <p class="text-[10px] text-gray-300 mt-2">MP4, MOV, WebM · Max. 2 GB pro Datei</p>
                                                 <input type="file" id="vpFileInput" accept="video/*" multiple class="hidden">
                                             </div>
                                         </div>
@@ -28848,7 +28834,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
         for(var i=0; i<fileList.length; i++) {
             var f = fileList[i];
             if(!f.type.startsWith('video/')) continue;
-            if(f.size > 500*1024*1024) { alert(f.name + ': zu gross (max. 500 MB)'); continue; }
+            if(f.size > 2147483648) { alert(f.name + ': zu gross (max. 2 GB)'); continue; }
             if(vpSelectedFiles.some(function(sf){ return sf.name===f.name && sf.size===f.size; })) continue;
             vpSelectedFiles.push(f);
         }
