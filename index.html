@@ -611,10 +611,10 @@
                                 <span data-i18n="nav_marketing">Marketing</span>
                             </button>
 
-                            <!-- Controlling -->
+                            <!-- Zahlen -->
                             <button onclick="showView('controlling')" data-module="controlling" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                                <span data-i18n="nav_controlling">Controlling</span>
+                                <span data-i18n="nav_controlling">Zahlen</span>
                             </button>
 
                             <!-- Buchhaltung (Standort) -->
@@ -622,13 +622,6 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                                 <span>Buchhaltung</span>
                                 <span class="ml-auto text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
-                            </button>
-
-                            <!-- WaWi Belege -->
-                            <button onclick="showView('wawi')" data-module="wawi" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                <span>WaWi Belege</span>
-                                <span class="ml-auto text-xs bg-green-500 text-white px-1.5 py-0.5 rounded-full">Neu</span>
                             </button>
                         </div>
 
@@ -809,12 +802,6 @@
                                 </svg>
                                 <span>Buchhaltung</span>
                                 <span class="ml-auto text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
-                            </button>
-
-                            <button onclick="showView('wawi')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                <span>WaWi Belege</span>
-                                <span class="ml-auto text-xs bg-green-500 text-white px-1.5 py-0.5 rounded-full">Neu</span>
                             </button>
 
                             <button onclick="showView('devStatus');setTimeout(function(){showDevTab('nutzung')},100)" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
@@ -2102,7 +2089,7 @@
                 </div>
 
                 <div id="controllingView" class="view" style="display: none;">
-                    <h1 class="h1-headline text-gray-800 mb-6" data-i18n="h_controlling">CONTROLLING</h1>
+                    <h1 class="h1-headline text-gray-800 mb-6" data-i18n="h_controlling">ZAHLEN</h1>
                     
                     <!-- Tab Navigation -->
                     <div class="mb-6 border-b border-gray-200">
@@ -2112,6 +2099,7 @@
                             <button onclick="showControllingTab('benchmark')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="benchmark">Benchmarks</button>
                             <button onclick="showControllingTab('planist')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="planist">Plan / Ist</button>
                             <button onclick="showControllingTab('liquiditaet')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="liquiditaet">Liquiditaet</button>
+                            <button onclick="showControllingTab('wawi')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="wawi">📄 WaWi Belege</button>
                             <button onclick="showControllingTab('ctrlWissen')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="ctrlWissen">📚 Wissen</button>
                         </nav>
                     </div>
@@ -2355,6 +2343,88 @@
                                     <div><p class="font-semibold text-gray-800 text-sm">Positiver Trend ab KW 13</p><p class="text-xs text-gray-600">Fruehjahrsgeschaeft startet - steigende Einnahmen erwartet</p></div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- WaWi Belege Tab -->
+                    <div id="ctrlTabWawi" class="ctrl-tab-content" style="display:none;">
+                        <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
+                            <p class="text-sm text-gray-500">Belege aus der WaWi importieren & auswerten</p>
+                            <button onclick="document.getElementById('wawiFileInput').click()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                PDF hochladen
+                            </button>
+                            <input type="file" id="wawiFileInput" accept=".pdf" multiple style="display:none" onchange="wawiHandleFiles(this.files)">
+                        </div>
+
+                        <!-- WaWi Sub-Tabs -->
+                        <div class="flex space-x-1 mb-5 bg-gray-100 rounded-lg p-1">
+                            <button onclick="showWawiSubTab('upload')" class="wawi-sub-btn flex-1 py-2 rounded-md text-xs font-semibold transition bg-white text-gray-800 shadow-sm" data-sub="upload">📄 Upload</button>
+                            <button onclick="showWawiSubTab('belege')" class="wawi-sub-btn flex-1 py-2 rounded-md text-xs font-semibold transition text-gray-500" data-sub="belege">📋 Belege</button>
+                            <button onclick="showWawiSubTab('dashboard')" class="wawi-sub-btn flex-1 py-2 rounded-md text-xs font-semibold transition text-gray-500" data-sub="dashboard">📊 Auswertung</button>
+                            <button onclick="showWawiSubTab('leasing')" class="wawi-sub-btn flex-1 py-2 rounded-md text-xs font-semibold transition text-gray-500" data-sub="leasing">🚲 Leasing</button>
+                        </div>
+
+                        <!-- Upload Sub-Tab -->
+                        <div id="wawiSubUpload" class="wawi-sub-content">
+                            <div id="wawiDropZone" class="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center hover:border-vit-orange hover:bg-orange-50/30 transition cursor-pointer mb-6" onclick="document.getElementById('wawiFileInput').click()" ondragover="event.preventDefault();this.classList.add('border-vit-orange','bg-orange-50')" ondragleave="this.classList.remove('border-vit-orange','bg-orange-50')" ondrop="event.preventDefault();this.classList.remove('border-vit-orange','bg-orange-50');wawiHandleFiles(event.dataTransfer.files)">
+                                <div class="text-4xl mb-3">📄</div>
+                                <p class="text-gray-600 font-semibold">PDF-Belege hierher ziehen</p>
+                                <p class="text-gray-400 text-sm mt-1">oder klicken zum Auswählen • Angebote, Aufträge, Rechnungen</p>
+                            </div>
+                            <div id="wawiParseResults" class="space-y-3"></div>
+                        </div>
+
+                        <!-- Belege Sub-Tab -->
+                        <div id="wawiSubBelege" class="wawi-sub-content" style="display:none;">
+                            <div class="flex gap-3 mb-4 flex-wrap">
+                                <select id="wawiFilterTyp" onchange="loadWawiBelege()" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
+                                    <option value="">Alle Typen</option>
+                                    <option value="Angebot">Angebote</option>
+                                    <option value="Auftrag">Aufträge</option>
+                                    <option value="Rechnung">Rechnungen</option>
+                                </select>
+                                <select id="wawiFilterLeasing" onchange="loadWawiBelege()" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
+                                    <option value="">Alle</option>
+                                    <option value="true">Nur Leasing</option>
+                                    <option value="false">Ohne Leasing</option>
+                                </select>
+                                <input type="text" id="wawiFilterSearch" onkeyup="loadWawiBelege()" placeholder="Suche (Beleg-Nr, Kunde...)" class="text-sm border border-gray-300 rounded-lg px-3 py-2 flex-1 min-w-[200px]">
+                            </div>
+                            <div id="wawiListContainer" class="vit-card overflow-hidden">
+                                <div class="p-8 text-center text-gray-400">Wird geladen...</div>
+                            </div>
+                        </div>
+
+                        <!-- Dashboard Sub-Tab -->
+                        <div id="wawiSubDashboard" class="wawi-sub-content" style="display:none;">
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="wawiKpiCards"></div>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                                <div class="vit-card p-5">
+                                    <h3 class="text-sm font-bold text-gray-700 mb-3">📈 Umsatz nach Belegtyp</h3>
+                                    <div id="wawiChartTyp" class="min-h-[200px]"></div>
+                                </div>
+                                <div class="vit-card p-5">
+                                    <h3 class="text-sm font-bold text-gray-700 mb-3">🏆 Top-Produkte</h3>
+                                    <div id="wawiTopProducts" class="min-h-[200px]"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Leasing Sub-Tab -->
+                        <div id="wawiSubLeasing" class="wawi-sub-content" style="display:none;">
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="wawiLeasingKpis"></div>
+                            <div class="vit-card p-5">
+                                <h3 class="text-sm font-bold text-gray-700 mb-3">🚲 Leasing-Vorgänge nach Anbieter</h3>
+                                <div id="wawiLeasingTable"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Beleg Detail Modal (shared) -->
+                    <div id="wawiBelegModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+                        <div class="bg-white rounded-xl max-w-3xl w-full max-h-[85vh] overflow-y-auto p-6">
+                            <div id="wawiBelegDetail"></div>
                         </div>
                     </div>
 
@@ -5485,97 +5555,6 @@
                     </div>
                 </div>
 
-                <!-- ===== WAWI BELEGE VIEW ===== -->
-                <div id="wawiView" class="view" style="display: none;">
-                    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
-                        <div>
-                            <h1 class="h1-headline text-gray-800">WARENWIRTSCHAFT</h1>
-                            <p class="text-sm text-gray-500 mt-1">Belege aus der WaWi importieren & auswerten</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="document.getElementById('wawiFileInput').click()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                                PDF hochladen
-                            </button>
-                            <input type="file" id="wawiFileInput" accept=".pdf" multiple style="display:none" onchange="wawiHandleFiles(this.files)">
-                        </div>
-                    </div>
-
-                    <!-- Tab Navigation -->
-                    <div class="mb-6 border-b border-gray-200">
-                        <nav class="-mb-px flex space-x-8 overflow-x-auto">
-                            <button onclick="showWawiTab('upload')" class="wawi-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="upload">📄 Upload & Import</button>
-                            <button onclick="showWawiTab('belege')" class="wawi-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="belege">📋 Belegübersicht</button>
-                            <button onclick="showWawiTab('dashboard')" class="wawi-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="dashboard">📊 Auswertung</button>
-                            <button onclick="showWawiTab('leasing')" class="wawi-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="leasing">🚲 Leasing</button>
-                        </nav>
-                    </div>
-
-                    <!-- Upload Tab -->
-                    <div id="wawiTabUpload" class="wawi-tab-content">
-                        <div id="wawiDropZone" class="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center hover:border-vit-orange hover:bg-orange-50/30 transition cursor-pointer mb-6" onclick="document.getElementById('wawiFileInput').click()" ondragover="event.preventDefault();this.classList.add('border-vit-orange','bg-orange-50')" ondragleave="this.classList.remove('border-vit-orange','bg-orange-50')" ondrop="event.preventDefault();this.classList.remove('border-vit-orange','bg-orange-50');wawiHandleFiles(event.dataTransfer.files)">
-                            <div class="text-4xl mb-3">📄</div>
-                            <p class="text-gray-600 font-semibold">PDF-Belege hierher ziehen</p>
-                            <p class="text-gray-400 text-sm mt-1">oder klicken zum Auswählen • Angebote, Aufträge, Rechnungen</p>
-                        </div>
-                        <!-- Parse Results -->
-                        <div id="wawiParseResults" class="space-y-3"></div>
-                    </div>
-
-                    <!-- Belegübersicht Tab -->
-                    <div id="wawiTabBelege" class="wawi-tab-content" style="display:none;">
-                        <!-- Filters -->
-                        <div class="flex gap-3 mb-4 flex-wrap">
-                            <select id="wawiFilterTyp" onchange="loadWawiBelege()" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
-                                <option value="">Alle Typen</option>
-                                <option value="Angebot">Angebote</option>
-                                <option value="Auftrag">Aufträge</option>
-                                <option value="Rechnung">Rechnungen</option>
-                            </select>
-                            <select id="wawiFilterLeasing" onchange="loadWawiBelege()" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
-                                <option value="">Alle</option>
-                                <option value="true">Nur Leasing</option>
-                                <option value="false">Ohne Leasing</option>
-                            </select>
-                            <input type="text" id="wawiFilterSearch" onkeyup="loadWawiBelege()" placeholder="Suche (Beleg-Nr, Kunde...)" class="text-sm border border-gray-300 rounded-lg px-3 py-2 flex-1 min-w-[200px]">
-                        </div>
-                        <div id="wawiListContainer" class="vit-card overflow-hidden">
-                            <div class="p-8 text-center text-gray-400">Wird geladen...</div>
-                        </div>
-                    </div>
-
-                    <!-- Auswertung/Dashboard Tab -->
-                    <div id="wawiTabDashboard" class="wawi-tab-content" style="display:none;">
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="wawiKpiCards"></div>
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                            <div class="vit-card p-5">
-                                <h3 class="text-sm font-bold text-gray-700 mb-3">📈 Umsatz nach Belegtyp</h3>
-                                <div id="wawiChartTyp" class="min-h-[200px]"></div>
-                            </div>
-                            <div class="vit-card p-5">
-                                <h3 class="text-sm font-bold text-gray-700 mb-3">🏆 Top-Produkte</h3>
-                                <div id="wawiTopProducts" class="min-h-[200px]"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Leasing Tab -->
-                    <div id="wawiTabLeasing" class="wawi-tab-content" style="display:none;">
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="wawiLeasingKpis"></div>
-                        <div class="vit-card p-5">
-                            <h3 class="text-sm font-bold text-gray-700 mb-3">🚲 Leasing-Vorgänge nach Anbieter</h3>
-                            <div id="wawiLeasingTable"></div>
-                        </div>
-                    </div>
-
-                    <!-- Beleg Detail Modal -->
-                    <div id="wawiBelegModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-                        <div class="bg-white rounded-xl max-w-3xl w-full max-h-[85vh] overflow-y-auto p-6">
-                            <div id="wawiBelegDetail"></div>
-                        </div>
-                    </div>
-                </div>
-
                 <div id="hqAuswertungView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-2">📊 AUSWERTUNG – PORTAL-NUTZUNG<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-usage')">i</button></h1><div class="widget-info-popup" id="info-hq-usage">Wie aktiv nutzen die Standorte das Portal? Score basiert auf: Team-Logins, Modul-Nutzung, Aufgaben-Erledigung und BWA-Pünktlichkeit. Niedrige Scores deuten auf Onboarding-Bedarf oder fehlende Gewohnheitsbildung hin.</div>
                     <p class="text-sm text-gray-500 mb-6">Wie aktiv nutzen die Standorte das vit:bikes Partner-Portal?</p>
@@ -6018,7 +5997,7 @@
             document.querySelectorAll('.demo-mode-active').forEach(function(v){ v.classList.remove('demo-mode-active'); });
             Object.keys(sbModulStatus).forEach(function(key) {
                 if(sbModulStatus[key] === 'demo') {
-                    var viewMap = {startseite:'homeView',verkauf:'verkaufView',kalender:'kalenderView',aufgaben:'todoView',kommunikation:'kommunikationView',controlling:'controllingView',marketing:'marketingView',einkauf:'einkaufView',dashboards:'dashboardsView',allgemein:'allgemeinView',wissen:'wissenView',support:'supportView',ideenboard:'ideenboardView',shop:'shopView',onboarding:'onboardingView',mitarbeiter:'mitarbeiterView',aktenschrank:'aktenschrankView',wawi:'wawiView'};
+                    var viewMap = {startseite:'homeView',verkauf:'verkaufView',kalender:'kalenderView',aufgaben:'todoView',kommunikation:'kommunikationView',controlling:'controllingView',marketing:'marketingView',einkauf:'einkaufView',dashboards:'dashboardsView',allgemein:'allgemeinView',wissen:'wissenView',support:'supportView',ideenboard:'ideenboardView',shop:'shopView',onboarding:'onboardingView',mitarbeiter:'mitarbeiterView',aktenschrank:'aktenschrankView'};
                     var viewId = viewMap[key];
                     var viewEl = viewId ? document.getElementById(viewId) : null;
                     if(viewEl) {
@@ -6053,7 +6032,7 @@
                 verkauf: '.vk-tab-btn,[data-tab="pipeline"],[data-tab="woche"],[data-tab="auswertung"],[data-tab="training"],[data-tab="vkWissen"]',
                 marketing: '.marketing-tab-btn',
                 einkauf: '.ek-tab-btn',
-                controlling: '.ctrl-tab-btn,[data-tab="cockpit"],[data-tab="bwa"],[data-tab="benchmark"],[data-tab="planist"],[data-tab="liquiditaet"],[data-tab="ctrlWissen"]',
+                controlling: '.ctrl-tab-btn,[data-tab="cockpit"],[data-tab="bwa"],[data-tab="benchmark"],[data-tab="planist"],[data-tab="liquiditaet"],[data-tab="wawi"],[data-tab="ctrlWissen"]',
                 allgemein: '[id^="allgemeinTab-"]',
                 support: '[id^="supportTab-"]'
             };
@@ -6373,14 +6352,13 @@
             'shop':           ['inhaber'],
             'onboarding':     ['inhaber','external_owner'],
             'mitarbeiter':    ['inhaber'],
-            'wawi':           ['inhaber','verkauf','werkstatt','buchhaltung'],
             'externHome':     ['external_owner'],
             'externWissen':   ['external_owner']
         };
 
         // Prüft ob der aktuelle User Zugriff auf eine View hat
         function hasAccess(viewName) {
-            if(currentRole === 'hq') return viewName.indexOf('hq')===0 || viewName==='kalender' || viewName==='todo' || viewName==='kommunikation' || viewName==='devStatus' || viewName==='wawi';
+            if(currentRole === 'hq') return viewName.indexOf('hq')===0 || viewName==='kalender' || viewName==='todo' || viewName==='kommunikation' || viewName==='devStatus';
             // Extern level: only allow specific views
             if(SESSION.account_level === 'extern') {
                 var externAllowed = ['externHome','onboarding','externWissen','wissen','kommunikation','support','notifications'];
@@ -8993,6 +8971,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if (el) el.style.display = 'block';
             var btn = document.querySelector('.ctrl-tab-btn[data-tab="' + tabName + '"]');
             if (btn) btn.className = 'ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
+            // Load WaWi data when tab opens
+            if (tabName === 'wawi') { initWawiTab(); }
         }
 
         function showBwaDetail(id) {
@@ -13512,7 +13492,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 {name:'Kalender', view:'kalenderView', status:'live', typ:'standort', version:'2.0.0', details:'Monats/Wochen/Tagesansicht, Wiederkehrende Termine, Teilnehmer, Serien, CRUD komplett, 8 Typen, Mini-Kalender, HQ-Kalender', kiPrio:20, aufwand:'XL', kiTodo:'MS365-Sync, Drag&Drop, Notifications nice-to-have.'},
                 {name:'Aufgaben / Todos', view:'todoView', status:'live', typ:'standort', version:'2.0.0', details:'Todoist-Redesign: Sektionen, Subtasks mit Fortschritt, Board/Kanban Drag&Drop, Detail-Panel, Labels, Kommentare, Quick-Add, Suche – alles DB+Realtime', kiPrio:30, aufwand:'M', kiTodo:'Label-Management UI, Zuweisung an Mitarbeiter.'},
                 {name:'Kommunikation', view:'kommunikationView', status:'live', typ:'standort', version:'3.0.0', details:'Teams-Hybrid: 2-Spalten Chat mit Konversations-Sidebar (Kanäle, Nachrichten, Ankündigungen), Thread-Replies, fixierte Eingabe. Forum (CRUD+Kommentare), Brett (CRUD+Nachr. an Autor), Mini-Kalender – alles DB+Realtime', kiPrio:28, aufwand:'M', kiTodo:'Push-Notifications. Emoji-Reactions. Nachricht bearbeiten/löschen.'},
-                {name:'Controlling / BWA', view:'controllingView', status:'live', typ:'standort', version:'2.3.0', details:'Performance-Cockpit, BWA-Parser (13+ Formate), KI-Fallback für unbekannte Formate, PDF-Support, Multi-Upload Batch, Detail-Positionen, KPIs, Trend-Sparklines, Plan/Ist, Jahresplan-Upload', kiPrio:3, aufwand:'M', kiTodo:'Benchmarks gegen Netzwerk-Durchschnitt, Liquiditätsplanung.'},
+                {name:'Zahlen (BWA + WaWi)', view:'controllingView', status:'live', typ:'standort', version:'2.4.0', details:'Performance-Cockpit, BWA-Parser (13+ Formate), KI-Fallback für unbekannte Formate, PDF-Support, Multi-Upload Batch, Detail-Positionen, KPIs, Trend-Sparklines, Plan/Ist, Jahresplan-Upload, WaWi Belege Tab', kiPrio:3, aufwand:'M', kiTodo:'Benchmarks gegen Netzwerk-Durchschnitt, Liquiditätsplanung.'},
                 {name:'Marketing', view:'marketingView', status:'teilweise', typ:'standort', version:'1.0.0', details:'6 Tabs: Performance (Cross-Channel KPIs), Budget (491k€ Jahresbudget, Spending-Chart), Leads (Forecast, Live-Leads), Social (Local Hero), Strategie, Wissen', kiPrio:8, aufwand:'L', kiTodo:'DB-Tabellen für Kampagnen/Budget anlegen, Social-Media Kalender, Content-Bibliothek. Aktuell Demo-Daten aber vollständige UI.'},
                 {name:'Einkauf', view:'einkaufView', status:'teilweise', typ:'standort', version:'1.0.0', details:'5 Tabs: Sortiment (Hauptmarken-Cards, Bestandsmarken, Teilelieferanten), Lieferanten (65 Einträge mit Status/Konditionen/IHT/B2B), Zentralreg. (Cronbank/IHT/HIW-System), Strategie (Fortschritt, ToDos), Wissen (5 Sub-Sections: IHT, Parts-Matrix, DB1, Kernsortiment, Vororder)', kiPrio:12, aufwand:'M', kiTodo:'Lieferanten-DB anlegen (aktuell JS-Array), Konditionen editierbar machen, Bestellvorschläge.'},
                 {name:'Dashboards', view:'dashboardsView', status:'demo', typ:'standort', version:'0.1.0', details:'Tabs vorhanden, Inhalte statisch', kiPrio:10, aufwand:'L', kiTodo:'Echte Charts aus BWA-Daten, Verkaufsdaten, Pipeline-Conversion.'},
@@ -13542,7 +13522,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 {name:'HQ Shop', view:'hqShopView', status:'beta', typ:'hq', version:'1.0.0', details:'Produkte verwalten, Bestellungen einsehen und bestätigen', kiPrio:21, aufwand:'L', kiTodo:'Lagerverwaltung, Versandintegration.'},
                 {name:'HQ Buchhaltung', view:'hqBillingView', status:'beta', typ:'hq', version:'1.0.0', details:'Monats-Drafts, Quartals-Settlement, Strategien, Produkte, Tools – Full Stack mit Supabase Edge Function', kiPrio:2, aufwand:'XL', kiTodo:'Stripe/LexOffice-Integration, PDF-Export, automatischer SEPA-Einzug.'},
                 {name:'Standort Buchhaltung', view:'standortBillingView', status:'beta', typ:'standort', version:'1.0.0', details:'Rechnungsübersicht, Jahresstrategie einreichen, Kostenaufschlüsselung mit Formeln', kiPrio:3, aufwand:'L', kiTodo:'PDF-Download, Zahlungsstatus-Tracking.'},
-                {name:'WaWi Belege', view:'wawiView', status:'beta', typ:'standort', version:'1.0.0', details:'PDF-Upload & Parser für Angebote/Aufträge/Rechnungen, Belegübersicht mit Filtern, Umsatz-Dashboard, Leasing-Auswertung, Beleg-Detailansicht. Pipeline: Browser-seitiges PDF-Parsing via pdf.js', kiPrio:2, aufwand:'M', kiTodo:'Email-Ingestion (IMAP), Multi-Page PDF Tests, WooCommerce Stock-Sync.'},
+                {name:'WaWi Belege (Tab in Zahlen)', view:'controllingView', status:'beta', typ:'standort', version:'1.0.0', details:'PDF-Upload & Parser für Angebote/Aufträge/Rechnungen, Belegübersicht mit Filtern, Umsatz-Dashboard, Leasing-Auswertung, Beleg-Detailansicht. Jetzt als Tab im Zahlen-Modul. Pipeline: Browser-seitiges PDF-Parsing via pdf.js', kiPrio:2, aufwand:'M', kiTodo:'Email-Ingestion (IMAP), Multi-Page PDF Tests, WooCommerce Stock-Sync.'},
                 {name:'HQ Einstellungen', view:'hqEinstellungenView', status:'live', typ:'hq', version:'1.2.0', details:'Module aktivieren/deaktivieren, Rollen-Matrix, User-Freigabe – alles DB', kiPrio:36, aufwand:'S', kiTodo:'Branding-Einstellungen. Core funktioniert bereits.'}
             ],
             widgets: [
@@ -19990,8 +19970,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 // Navigation
                 nav_home:'Startseite', nav_dashboards:'Dashboards', nav_mainmenu:'Hauptmenü',
                 nav_general:'Allgemein', nav_marketing:'Marketing', nav_purchasing:'Einkauf',
-                nav_controlling:'Controlling', nav_sales:'Verkauf', nav_filingcab:'Aktenschrank',
-                nav_support:'Support', nav_communication:'Kommunikation', nav_knowledge:'Wissen', nav_shop:'Shop', h_purchasing:'EINKAUF', h_controlling:'CONTROLLING', h_filingcab:'AKTENSCHRANK', h_support:'SUPPORT', h_ideaboard:'IDEENBOARD', h_communication:'KOMMUNIKATION', h_forum:'FORUM', h_chat:'CHAT', h_calendar:'TERMINE', h_todos:'AUFGABEN', h_onboarding:'ONBOARDING', nav_ideaboard:'Ideenboard',
+                nav_controlling:'Zahlen', nav_sales:'Verkauf', nav_filingcab:'Aktenschrank',
+                nav_support:'Support', nav_communication:'Kommunikation', nav_knowledge:'Wissen', nav_shop:'Shop', h_purchasing:'EINKAUF', h_controlling:'ZAHLEN', h_filingcab:'AKTENSCHRANK', h_support:'SUPPORT', h_ideaboard:'IDEENBOARD', h_communication:'KOMMUNIKATION', h_forum:'FORUM', h_chat:'CHAT', h_calendar:'TERMINE', h_todos:'AUFGABEN', h_onboarding:'ONBOARDING', nav_ideaboard:'Ideenboard',
                 nav_onboarding:'Onboarding', nav_hq_control:'HQ Steuerung',
                 nav_hq_cockpit:'Netzwerk-Cockpit', nav_hq_locations:'Standorte',
                 nav_hq_finance:'Finanzen', nav_hq_actions:'Handlungsbedarf', nav_hq_command:'Kommandozentrale', nav_hq_comm:'Kommunikation', nav_hq_campaigns:'Kampagnen', nav_hq_docs:'Dokumente', nav_hq_calendar:'Kalender', nav_hq_tasks:'Aufgaben', nav_hq_analytics:'Nutzung Portal', nav_calendar:'Kalender', nav_todo:'Aufgaben',
@@ -20293,8 +20273,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             en: {
                 nav_home:'Home', nav_dashboards:'Dashboards', nav_mainmenu:'Main Menu',
                 nav_general:'General', nav_marketing:'Marketing', nav_purchasing:'Purchasing',
-                nav_controlling:'Controlling', nav_sales:'Sales', nav_filingcab:'Filing Cabinet',
-                nav_support:'Support', nav_communication:'Communication', nav_knowledge:'Knowledge', nav_shop:'Merchandise Shop', h_purchasing:'PURCHASING', h_controlling:'CONTROLLING', h_filingcab:'FILE CABINET', h_support:'SUPPORT', h_ideaboard:'IDEA BOARD', h_communication:'COMMUNICATION', h_forum:'FORUM', h_chat:'CHAT', h_calendar:'CALENDAR', h_todos:'TASKS', h_onboarding:'ONBOARDING', nav_ideaboard:'Idea Board',
+                nav_controlling:'Zahlen', nav_sales:'Sales', nav_filingcab:'Filing Cabinet',
+                nav_support:'Support', nav_communication:'Communication', nav_knowledge:'Knowledge', nav_shop:'Merchandise Shop', h_purchasing:'PURCHASING', h_controlling:'ZAHLEN', h_filingcab:'FILE CABINET', h_support:'SUPPORT', h_ideaboard:'IDEA BOARD', h_communication:'COMMUNICATION', h_forum:'FORUM', h_chat:'CHAT', h_calendar:'CALENDAR', h_todos:'TASKS', h_onboarding:'ONBOARDING', nav_ideaboard:'Idea Board',
                 nav_onboarding:'Onboarding', nav_hq_control:'HQ Control',
                 nav_hq_cockpit:'Network Cockpit', nav_hq_locations:'Locations',
                 nav_hq_finance:'Finance', nav_hq_actions:'Action Required', nav_hq_command:'Command Center', nav_hq_comm:'Communication', nav_hq_campaigns:'Campaigns', nav_hq_docs:'Documents', nav_hq_calendar:'Calendar', nav_hq_tasks:'Tasks', nav_hq_analytics:'Portal Usage', nav_calendar:'Calendar', nav_todo:'Tasks',
@@ -20583,8 +20563,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 // Navigatie
                 nav_home:'Startpagina', nav_dashboards:'Dashboards', nav_mainmenu:'Hoofdmenu',
                 nav_general:'Algemeen', nav_marketing:'Marketing', nav_purchasing:'Inkoop',
-                nav_controlling:'Controlling', nav_sales:'Verkoop', nav_filingcab:'Documentenarchief',
-                nav_support:'Ondersteuning', nav_communication:'Communicatie', nav_knowledge:'Kennis', nav_shop:'Promotieshop', h_purchasing:'INKOOP', h_controlling:'CONTROLLING', h_filingcab:'DOCUMENTENARCHIEF', h_support:'ONDERSTEUNING', h_ideaboard:'IDEE\u00cbNBORD', h_communication:'COMMUNICATIE', h_forum:'FORUM', h_chat:'CHAT', h_calendar:'AGENDA', h_todos:'TAKEN', h_onboarding:'ONBOARDING', nav_ideaboard:'Idee\u00ebnbord',
+                nav_controlling:'Zahlen', nav_sales:'Verkoop', nav_filingcab:'Documentenarchief',
+                nav_support:'Ondersteuning', nav_communication:'Communicatie', nav_knowledge:'Kennis', nav_shop:'Promotieshop', h_purchasing:'INKOOP', h_controlling:'ZAHLEN', h_filingcab:'DOCUMENTENARCHIEF', h_support:'ONDERSTEUNING', h_ideaboard:'IDEE\u00cbNBORD', h_communication:'COMMUNICATIE', h_forum:'FORUM', h_chat:'CHAT', h_calendar:'AGENDA', h_todos:'TAKEN', h_onboarding:'ONBOARDING', nav_ideaboard:'Idee\u00ebnbord',
                 nav_onboarding:'Onboarding', nav_hq_control:'HQ Beheer',
                 nav_hq_cockpit:'Netwerk-Cockpit', nav_hq_locations:'Locaties',
                 nav_hq_finance:'Financi\u00ebn', nav_hq_actions:'Actie vereist', nav_hq_command:'Commandocentrum', nav_hq_comm:'Communicatie', nav_hq_campaigns:'Campagnes', nav_hq_docs:'Documenten', nav_hq_calendar:'Agenda', nav_hq_tasks:'Taken', nav_hq_analytics:'Portaalgebruik', nav_calendar:'Agenda', nav_todo:'Taken',
@@ -26255,7 +26235,6 @@ window.switchWissenTyp = function(typ) {
             origShowView(view);
             if (view === 'hqBilling') { initBillingMonthSelect(); loadBillingOverview(); }
             if (view === 'standortBilling') { loadStandortInvoices(); }
-            if (view === 'wawi') { if(typeof initWawiView==='function') initWawiView(); }
         };
     }
 
@@ -26275,24 +26254,24 @@ window.switchWissenTyp = function(typ) {
     var wawiInitDone = false;
     var parsedQueue = []; // pending parsed docs awaiting save
 
-    // ── Tab Switching ──
-    window.showWawiTab = function(tab) {
-        document.querySelectorAll('.wawi-tab-content').forEach(function(el){ el.style.display='none'; });
-        document.querySelectorAll('.wawi-tab-btn').forEach(function(b){
-            b.classList.remove('border-vit-orange','text-vit-orange');
-            b.classList.add('border-transparent','text-gray-500');
+    // ── Sub-Tab Switching (inside Controlling → WaWi tab) ──
+    window.showWawiSubTab = function(tab) {
+        document.querySelectorAll('.wawi-sub-content').forEach(function(el){ el.style.display='none'; });
+        document.querySelectorAll('.wawi-sub-btn').forEach(function(b){
+            b.classList.remove('bg-white','text-gray-800','shadow-sm');
+            b.classList.add('text-gray-500');
         });
-        var tabEl = document.getElementById('wawiTab'+tab.charAt(0).toUpperCase()+tab.slice(1));
+        var tabEl = document.getElementById('wawiSub'+tab.charAt(0).toUpperCase()+tab.slice(1));
         if(tabEl) tabEl.style.display='block';
-        var btn = document.querySelector('.wawi-tab-btn[data-tab="'+tab+'"]');
-        if(btn){ btn.classList.add('border-vit-orange','text-vit-orange'); btn.classList.remove('border-transparent','text-gray-500'); }
+        var btn = document.querySelector('.wawi-sub-btn[data-sub="'+tab+'"]');
+        if(btn){ btn.classList.add('bg-white','text-gray-800','shadow-sm'); btn.classList.remove('text-gray-500'); }
         if(tab==='belege') loadWawiBelege();
         if(tab==='dashboard') loadWawiDashboard();
         if(tab==='leasing') loadWawiLeasing();
     };
 
-    // ── Init ──
-    window.initWawiView = function() {
+    // ── Init (called when Controlling WaWi tab opens) ──
+    window.initWawiTab = function() {
         if(wawiInitDone) return;
         wawiInitDone = true;
     };
