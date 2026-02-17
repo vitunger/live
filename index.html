@@ -642,7 +642,7 @@
                         </button>
                         <button onclick="showView('shop')" data-module="shop" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                            <span>Werbemittel-Shop</span>
+                            <span>Shop</span>
                         </button>
                         <button onclick="showView('aktenschrank')" data-module="aktenschrank" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
@@ -829,7 +829,7 @@
 
                             <button onclick="showView('hqShop')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                                <span data-i18n="nav_shop">Werbemittel-Shop</span>
+                                <span data-i18n="nav_shop">Shop</span>
                             </button>
 
                             <hr class="border-gray-600 my-3">
@@ -5297,17 +5297,86 @@
                             <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-red-500" id="appRejected">0</div><div class="text-xs text-gray-500">Zurückgewiesen</div></div>
                         </div>
 
-                        <!-- Approval Mode Toggle -->
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex items-center space-x-3">
-                                <span class="text-sm font-semibold text-gray-600">Automatischer Versand:</span>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="autoSendToggle" class="sr-only peer" onchange="toggleAutoSend()">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                                </label>
-                                <span id="autoSendLabel" class="text-xs text-red-600 font-semibold">AUS – Manuelle Freigabe erforderlich</span>
+                        <!-- Abrechnungsmodus Erklärung -->
+                        <div id="approvalModeCard" class="vit-card mb-5 overflow-hidden">
+                            <div id="approvalModeHeader" class="p-4 bg-amber-50 border-b-2 border-amber-300">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <div id="approvalModeIcon" class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-xl">🛡️</div>
+                                        <div>
+                                            <div class="font-bold text-gray-800" id="approvalModeTitle">Manueller Freigabemodus aktiv</div>
+                                            <div class="text-xs text-gray-500" id="approvalModeSubtitle">Jede Rechnung muss einzeln geprüft und freigegeben werden</div>
+                                        </div>
+                                    </div>
+                                    <button onclick="toggleApprovalMode()" id="approvalModeBtn" class="px-4 py-2 rounded-lg text-sm font-semibold border-2 border-amber-400 text-amber-700 bg-white hover:bg-amber-50 transition">
+                                        Zu Automatik wechseln →
+                                    </button>
+                                </div>
                             </div>
-                            <button onclick="generateAllDrafts()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">📝 Monatsrechnungen generieren</button>
+                            <div class="p-4">
+                                <div id="approvalModeManualInfo">
+                                    <div class="text-sm font-semibold text-gray-700 mb-2">So funktioniert der aktuelle Ablauf:</div>
+                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-center">
+                                        <div class="p-3 rounded-lg bg-yellow-50 border border-yellow-200">
+                                            <div class="text-lg mb-1">📝</div>
+                                            <div class="text-xs font-bold text-yellow-700">1. Entwurf</div>
+                                            <div class="text-[10px] text-gray-500">Rechnungen werden als Entwurf erstellt</div>
+                                        </div>
+                                        <div class="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                                            <div class="text-lg mb-1">🔍</div>
+                                            <div class="text-xs font-bold text-blue-700">2. Prüfen</div>
+                                            <div class="text-[10px] text-gray-500">Positionen & Beträge kontrollieren</div>
+                                        </div>
+                                        <div class="p-3 rounded-lg bg-green-50 border border-green-200">
+                                            <div class="text-lg mb-1">✅</div>
+                                            <div class="text-xs font-bold text-green-700">3. Freigeben</div>
+                                            <div class="text-[10px] text-gray-500">Rechnung bestätigen</div>
+                                        </div>
+                                        <div class="p-3 rounded-lg bg-orange-50 border border-orange-200">
+                                            <div class="text-lg mb-1">📨</div>
+                                            <div class="text-xs font-bold text-orange-700">4. Versenden</div>
+                                            <div class="text-[10px] text-gray-500">Manuell an LexOffice senden</div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 p-2 bg-amber-50 rounded text-[11px] text-amber-700 border border-amber-200">
+                                        💡 <strong>Empfehlung:</strong> Bleibt im manuellen Modus, bis ihr sicher seid, dass alle Positionen und Beträge stimmen. Ihr könnt jederzeit auf Automatik wechseln.
+                                    </div>
+                                </div>
+                                <div id="approvalModeAutoInfo" style="display:none;">
+                                    <div class="text-sm font-semibold text-gray-700 mb-2">Automatischer Ablauf:</div>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-center">
+                                        <div class="p-3 rounded-lg bg-green-50 border border-green-200">
+                                            <div class="text-lg mb-1">⚡</div>
+                                            <div class="text-xs font-bold text-green-700">1. Generieren</div>
+                                            <div class="text-[10px] text-gray-500">Rechnungen werden automatisch berechnet</div>
+                                        </div>
+                                        <div class="p-3 rounded-lg bg-green-50 border border-green-200">
+                                            <div class="text-lg mb-1">✅</div>
+                                            <div class="text-xs font-bold text-green-700">2. Auto-Freigabe</div>
+                                            <div class="text-[10px] text-gray-500">Sofort freigegeben wenn Validierung OK</div>
+                                        </div>
+                                        <div class="p-3 rounded-lg bg-green-50 border border-green-200">
+                                            <div class="text-lg mb-1">📨</div>
+                                            <div class="text-xs font-bold text-green-700">3. Auto-Versand</div>
+                                            <div class="text-[10px] text-gray-500">Direkt an LexOffice gesendet</div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 p-2 bg-red-50 rounded text-[11px] text-red-700 border border-red-200">
+                                        ⚠️ <strong>Achtung:</strong> Rechnungen werden ohne manuelle Prüfung versendet. Nur aktivieren wenn das Abrechnungssystem zuverlässig läuft!
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Aktionen -->
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="text-sm text-gray-500">
+                                <span id="approvalListCount">0</span> Rechnungen in der Warteschlange
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="approvalBulkAction('approveAll')" id="bulkApproveBtn" class="hidden px-3 py-2 bg-green-50 text-green-700 rounded-lg text-xs font-semibold hover:bg-green-100 border border-green-200">✅ Alle freigeben</button>
+                                <button onclick="generateAllDrafts()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">📝 Monatsrechnungen generieren</button>
+                            </div>
                         </div>
 
                         <!-- Pending Invoices List -->
@@ -13376,7 +13445,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 {name:'Wissen', view:'wissenView', status:'teilweise', typ:'standort', version:'0.5.0', details:'Struktur mit Bereichen (Verkauf, Marketing, Einkauf, Controlling, Allgemein), Suche, Wissen-Tabs in jedem Modul', kiPrio:15, aufwand:'L', kiTodo:'CMS-Backend: Artikel erstellen, Kategorien. Basis für Wissen-Tabs in anderen Modulen.'},
                 {name:'Support', view:'supportView', status:'teilweise', typ:'standort', version:'1.1.0', details:'Tickets mit DB, Kontakte-Seite', kiPrio:22, aufwand:'M', kiTodo:'Ticket-Prioritäten, SLA-Timer, E-Mail-Benachrichtigung.'},
                 {name:'Ideenboard', view:'ideenboardView', status:'live', typ:'standort', version:'1.0.0', details:'Einreichen, Voting, Status – alles DB', kiPrio:34, aufwand:'S', kiTodo:'Kommentar-Funktion. Grundfunktion top.'},
-                {name:'Shop', view:'shopView', status:'beta', typ:'standort', version:'1.0.0', details:'Werbemittel bestellen, automatische Rechnungserstellung, LexOffice-Sync', kiPrio:18, aufwand:'L', kiTodo:'Bestellstatus-Tracking, HQ-Bestätigungsworkflow.'},
+                {name:'Shop', view:'shopView', status:'beta', typ:'standort', version:'1.0.0', details:'Produkte bestellen, automatische Rechnungserstellung, LexOffice-Sync', kiPrio:18, aufwand:'L', kiTodo:'Bestellstatus-Tracking, HQ-Bestätigungsworkflow.'},
                 {name:'Aktenschrank', view:'aktenschrankView', status:'live', typ:'standort', version:'1.0.0', details:'Upload, Download, Kategorien – alles DB', kiPrio:31, aufwand:'S', kiTodo:'Ordner-System, Dateigröße-Limits. Funktioniert.'},
                 {name:'Onboarding', view:'onboardingView', status:'teilweise', typ:'standort', version:'0.5.0', details:'Asana-Demo-Integration, Checklisten', kiPrio:7, aufwand:'L', kiTodo:'Echte Asana-API Anbindung oder eigene Checklisten-DB. Wichtig für neue Partner.'},
                 {name:'Mitarbeiter', view:'mitarbeiterView', status:'live', typ:'standort', version:'1.5.0', details:'Anlegen, Rollen, Approval, Passwort-Reset, Deaktivierung', kiPrio:29, aufwand:'S', kiTodo:'Aktivitäts-Log. Funktioniert sehr gut.'}
@@ -17518,19 +17587,69 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         // ============================================================
         // === INVOICE APPROVAL WORKFLOW ===
         // ============================================================
-        var _billingAutoSend = false; // default OFF = manual approval required
+        var _billingAutoSend = false;
 
-        function toggleAutoSend() {
-            _billingAutoSend = document.getElementById('autoSendToggle').checked;
-            var label = document.getElementById('autoSendLabel');
-            if(label) {
-                if(_billingAutoSend) {
-                    label.textContent = 'AN – Rechnungen werden nach Freigabe automatisch versendet';
-                    label.className = 'text-xs text-green-600 font-semibold';
-                } else {
-                    label.textContent = 'AUS – Manuelle Freigabe erforderlich';
-                    label.className = 'text-xs text-red-600 font-semibold';
+        function toggleApprovalMode() {
+            if(!_billingAutoSend) {
+                // Switching to auto
+                if(!confirm('⚠️ Wirklich auf Automatik umstellen?\n\nRechnungen werden dann OHNE manuelle Prüfung generiert und direkt an LexOffice gesendet.\n\nNur empfohlen wenn das System seit mind. 2-3 Monaten fehlerfrei läuft.')) return;
+            }
+            _billingAutoSend = !_billingAutoSend;
+            updateApprovalModeUI();
+        }
+
+        function updateApprovalModeUI() {
+            var header = document.getElementById('approvalModeHeader');
+            var icon = document.getElementById('approvalModeIcon');
+            var title = document.getElementById('approvalModeTitle');
+            var subtitle = document.getElementById('approvalModeSubtitle');
+            var btn = document.getElementById('approvalModeBtn');
+            var manualInfo = document.getElementById('approvalModeManualInfo');
+            var autoInfo = document.getElementById('approvalModeAutoInfo');
+            if(!header) return;
+
+            if(_billingAutoSend) {
+                header.className = 'p-4 bg-green-50 border-b-2 border-green-300';
+                if(icon) { icon.className = 'w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-xl'; icon.textContent = '⚡'; }
+                if(title) title.textContent = 'Automatischer Modus aktiv';
+                if(subtitle) subtitle.textContent = 'Rechnungen werden automatisch geprüft und versendet';
+                if(btn) { btn.textContent = '← Zurück zu Manuell'; btn.className = 'px-4 py-2 rounded-lg text-sm font-semibold border-2 border-green-400 text-green-700 bg-white hover:bg-green-50 transition'; }
+                if(manualInfo) manualInfo.style.display = 'none';
+                if(autoInfo) autoInfo.style.display = 'block';
+            } else {
+                header.className = 'p-4 bg-amber-50 border-b-2 border-amber-300';
+                if(icon) { icon.className = 'w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-xl'; icon.textContent = '\ud83d\udee1\ufe0f'; }
+                if(title) title.textContent = 'Manueller Freigabemodus aktiv';
+                if(subtitle) subtitle.textContent = 'Jede Rechnung muss einzeln gepr\u00fcft und freigegeben werden';
+                if(btn) { btn.textContent = 'Zu Automatik wechseln \u2192'; btn.className = 'px-4 py-2 rounded-lg text-sm font-semibold border-2 border-amber-400 text-amber-700 bg-white hover:bg-amber-50 transition'; }
+                if(manualInfo) manualInfo.style.display = 'block';
+                if(autoInfo) autoInfo.style.display = 'none';
+            }
+        }
+
+        async function approvalBulkAction(action) {
+            if(action === 'approveAll') {
+                var resp = await sb.from('billing_invoices').select('id, invoice_number').in('status', ['draft','review']);
+                var drafts = resp.data || [];
+                if(drafts.length === 0) { alert('Keine Rechnungen zum Freigeben.'); return; }
+                if(!confirm('Alle '+drafts.length+' Rechnungen auf einmal freigeben?\n\nDas überspringt die Einzelprüfung.')) return;
+                for(var i=0; i<drafts.length; i++) {
+                    await sb.from('billing_invoices').update({
+                        status: 'approved',
+                        approved_by: sbProfile ? sbProfile.id : null,
+                        approved_at: new Date().toISOString(),
+                        approval_notes: 'Sammelfreigabe',
+                        updated_at: new Date().toISOString()
+                    }).eq('id', drafts[i].id);
+                    await sb.from('billing_invoice_audit').insert({
+                        invoice_id: drafts[i].id, action: 'approved',
+                        new_status: 'approved',
+                        performed_by: sbProfile ? sbProfile.id : null,
+                        notes: 'Sammelfreigabe ('+drafts.length+' Rechnungen)'
+                    });
                 }
+                alert('\u2705 '+drafts.length+' Rechnungen freigegeben.');
+                loadApprovalQueue();
             }
         }
 
@@ -17567,6 +17686,12 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     if(actionNeeded > 0) { badge.textContent = actionNeeded; badge.classList.remove('hidden'); }
                     else { badge.classList.add('hidden'); }
                 }
+
+                // List count + bulk button
+                var listCount = document.getElementById('approvalListCount');
+                if(listCount) listCount.textContent = invoices.length;
+                var bulkBtn = document.getElementById('bulkApproveBtn');
+                if(bulkBtn) { if(pending + inReview > 1) bulkBtn.classList.remove('hidden'); else bulkBtn.classList.add('hidden'); }
 
                 if(invoices.length === 0) {
                     container.innerHTML = '<div class="vit-card p-8 text-center"><p class="text-gray-400 text-lg mb-2">\u2705 Alles erledigt!</p><p class="text-sm text-gray-500">Keine Rechnungen zur Freigabe.</p></div>';
@@ -18022,8 +18147,22 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             h += '<tr class="border-b"><td class="py-3">Umsatzbeteiligung (80% Abschlag)</td><td class="py-3 text-right font-semibold">' + fmtEur(revShareAdvance) + '</td></tr>';
             h += '<tr><td class="py-1 text-xs text-gray-400 pl-4" colspan="2">2% × ' + fmtEur(planMonthRevenue) + ' × 80% = ' + fmtEur(revShareAdvance) + '</td></tr>';
             h += '<tr class="border-b"><td class="py-3">Grundgebühr</td><td class="py-3 text-right font-semibold">' + fmtEur(baseFee) + '</td></tr>';
-            h += '<tr class="border-b"><td class="py-3">Marketingbudget</td><td class="py-3 text-right font-semibold">' + fmtEur(marketingMonth) + '</td></tr>';
+            h += '<tr class="border-b"><td class="py-3">Online-Werbebudget <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold ml-1">Durchlaufposten</span></td><td class="py-3 text-right font-semibold">' + fmtEur(marketingMonth) + '</td></tr>';
             h += '<tr><td class="py-1 text-xs text-gray-400 pl-4" colspan="2">' + fmtEur(strat.planned_marketing_year) + ' / 12 = ' + fmtEur(marketingMonth) + '</td></tr>';
+            h += '<tr><td colspan="2" class="pb-3 pl-4"><div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-1">';
+            h += '<p class="text-[11px] text-blue-800 mb-2"><strong>💡 Dieses Budget ist kein Honorar an vit:bikes</strong> – es fließt zu <strong>100%</strong> in eure Werbekampagnen bei Google Ads, Meta (Facebook/Instagram) und weiteren Kanälen.</p>';
+            h += '<p class="text-[11px] text-blue-700 mb-2">vit:bikes übernimmt die komplette Kampagnensteuerung, Optimierung und das Reporting – ohne zusätzliche Agenturgebühren.</p>';
+            h += '<div class="border-t border-blue-200 pt-2 mt-2">';
+            h += '<p class="text-[10px] font-bold text-gray-600 mb-1.5">Was dieselbe Leistung bei einer externen Agentur kosten würde:</p>';
+            h += '<table class="w-full text-[10px]">';
+            h += '<tr class="text-gray-500"><td>Kampagnen-Management (15–20% vom Budget)</td><td class="text-right">' + fmtEur(marketingMonth * 0.175) + '</td></tr>';
+            h += '<tr class="text-gray-500"><td>Content-Erstellung & Anzeigendesign</td><td class="text-right">300–800 €</td></tr>';
+            h += '<tr class="text-gray-500"><td>Reporting & Analyse</td><td class="text-right">200–400 €</td></tr>';
+            h += '<tr class="text-gray-500"><td>Setup & laufende Optimierung</td><td class="text-right">250–500 €</td></tr>';
+            h += '<tr class="border-t border-blue-200 font-bold text-gray-700"><td class="pt-1">Agenturkosten on top zum Werbebudget</td><td class="text-right pt-1 text-red-600">~' + fmtEur(marketingMonth * 0.175 + 900) + ' /Mon.</td></tr>';
+            h += '</table>';
+            h += '<p class="text-[10px] text-green-700 font-semibold mt-1.5">✅ Bei vit:bikes: 0 € Agenturkosten – alles inklusive in eurer Partnerschaft</p>';
+            h += '</div></div></td></tr>';
             h += '<tr class="border-b"><td class="py-3">Toolkosten (' + (tools || []).length + ' Nutzer)</td><td class="py-3 text-right font-semibold">' + fmtEur(toolCosts) + '</td></tr>';
             (tools || []).forEach(function(t) {
                 h += '<tr><td class="py-1 text-xs text-gray-400 pl-4">' + (t.user ? t.user.name : '—') + ' – ' + (t.tool ? t.tool.name : '—') + '</td><td class="py-1 text-xs text-gray-400 text-right">' + fmtEur(t.cost_override || t.tool.monthly_cost) + '</td></tr>';
@@ -19670,7 +19809,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 {key:'support',label:'Support',icon:'🎫',core:false},
                 {key:'aktenschrank',label:'Aktenschrank',icon:'📁',core:false},
                 {key:'ideenboard',label:'Ideenboard',icon:'💡',core:false},
-                {key:'shop',label:'Werbemittel-Shop',icon:'🛍️',core:false},
+                {key:'shop',label:'Shop',icon:'🛍️',core:false},
                 {key:'onboarding',label:'Onboarding',icon:'🎯',core:false}
             ];
             var rollen = ['inhaber','verkauf','werkstatt','buchhaltung'];
@@ -19738,7 +19877,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 nav_home:'Startseite', nav_dashboards:'Dashboards', nav_mainmenu:'Hauptmenü',
                 nav_general:'Allgemein', nav_marketing:'Marketing', nav_purchasing:'Einkauf',
                 nav_controlling:'Controlling', nav_sales:'Verkauf', nav_filingcab:'Aktenschrank',
-                nav_support:'Support', nav_communication:'Kommunikation', nav_knowledge:'Wissen', nav_shop:'Werbemittel-Shop', h_purchasing:'EINKAUF', h_controlling:'CONTROLLING', h_filingcab:'AKTENSCHRANK', h_support:'SUPPORT', h_ideaboard:'IDEENBOARD', h_communication:'KOMMUNIKATION', h_forum:'FORUM', h_chat:'CHAT', h_calendar:'TERMINE', h_todos:'AUFGABEN', h_onboarding:'ONBOARDING', nav_ideaboard:'Ideenboard',
+                nav_support:'Support', nav_communication:'Kommunikation', nav_knowledge:'Wissen', nav_shop:'Shop', h_purchasing:'EINKAUF', h_controlling:'CONTROLLING', h_filingcab:'AKTENSCHRANK', h_support:'SUPPORT', h_ideaboard:'IDEENBOARD', h_communication:'KOMMUNIKATION', h_forum:'FORUM', h_chat:'CHAT', h_calendar:'TERMINE', h_todos:'AUFGABEN', h_onboarding:'ONBOARDING', nav_ideaboard:'Ideenboard',
                 nav_onboarding:'Onboarding', nav_hq_control:'HQ Steuerung',
                 nav_hq_cockpit:'Netzwerk-Cockpit', nav_hq_locations:'Standorte',
                 nav_hq_finance:'Finanzen', nav_hq_actions:'Handlungsbedarf', nav_hq_command:'Kommandozentrale', nav_hq_comm:'Kommunikation', nav_hq_campaigns:'Kampagnen', nav_hq_docs:'Dokumente', nav_hq_calendar:'Kalender', nav_hq_tasks:'Aufgaben', nav_hq_analytics:'Nutzung Portal', nav_calendar:'Kalender', nav_todo:'Aufgaben',
@@ -25825,7 +25964,7 @@ window.switchWissenTyp = function(typ) {
             h += '<table class="w-full text-sm"><tbody>';
             h += '<tr class="border-b"><td class="py-2">Grundgebühr</td><td class="py-2 text-right font-mono">'+fmtEur(800)+'</td></tr>';
             h += '<tr class="border-b"><td class="py-2">Umsatzbeteiligung (80% × 2% × '+fmtEur(planMonth)+')</td><td class="py-2 text-right font-mono">'+fmtEur(advance)+'</td></tr>';
-            h += '<tr class="border-b"><td class="py-2">Marketing ('+fmtEur(s.planned_marketing_year)+' / 12)</td><td class="py-2 text-right font-mono">'+fmtEur(mktMonth)+'</td></tr>';
+            h += '<tr class="border-b"><td class="py-2">Online-Werbebudget <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold">Durchlaufposten</span><br><span class="text-[10px] text-gray-400">'+fmtEur(s.planned_marketing_year)+' / 12 – fließt 100% in Google/Meta Ads</span></td><td class="py-2 text-right font-mono">'+fmtEur(mktMonth)+'</td></tr>';
             h += '<tr class="border-b"><td class="py-2">Toolkosten ('+(tools?.length||0)+' Nutzer)</td><td class="py-2 text-right font-mono">'+fmtEur(toolTotal)+'</td></tr>';
             var nettoSum = 800 + advance + mktMonth + toolTotal;
             h += '<tr class="font-bold text-lg"><td class="pt-3">Netto gesamt</td><td class="pt-3 text-right font-mono text-vit-orange">'+fmtEur(nettoSum)+'</td></tr>';
@@ -26868,7 +27007,7 @@ function fillDemoBilling() {
         +'<table class="w-full text-sm"><tbody>'
         +'<tr class="border-b"><td class="py-2">Grundgebühr</td><td class="py-2 text-right font-mono">800,00 €</td></tr>'
         +'<tr class="border-b"><td class="py-2">Umsatzbeteiligung (80% × 2% × 200.000 €)</td><td class="py-2 text-right font-mono">3.200,00 €</td></tr>'
-        +'<tr class="border-b"><td class="py-2">Marketing (24.000 € / 12)</td><td class="py-2 text-right font-mono">2.000,00 €</td></tr>'
+        +'<tr class="border-b"><td class="py-2">Online-Werbebudget <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold">Durchlaufposten</span><br><span class="text-[10px] text-gray-400">24.000 € / 12 – fließt 100% in Google/Meta Ads</span></td><td class="py-2 text-right font-mono">2.000,00 €</td></tr>'
         +'<tr class="border-b"><td class="py-2">Toolkosten (3 Nutzer)</td><td class="py-2 text-right font-mono">147,00 €</td></tr>'
         +'<tr class="font-bold text-lg"><td class="pt-3">Netto gesamt</td><td class="pt-3 text-right font-mono text-vit-orange">6.147,00 €</td></tr>'
         +'<tr><td class="py-1 text-gray-400">zzgl. 19% MwSt.</td><td class="py-1 text-right font-mono text-gray-400">1.167,93 €</td></tr>'
@@ -27031,7 +27170,7 @@ function fillDemoHQProducts() {
     var products = [
         {name:'Grundgebühr',key:'grundgebuehr',price:'800,00',type:'fix',desc:'Monatliche Franchise-Grundgebühr'},
         {name:'Umsatzbeteiligung',key:'umsatzbeteiligung',price:'2%',type:'variabel',desc:'Revenue Share auf Basis Plan-Umsatz (80% Vorauszahlung)'},
-        {name:'Marketing-Umlage',key:'marketing_umlage',price:'variabel',type:'variabel',desc:'Anteilige Marketingkosten gemäß Jahresstrategie'},
+        {name:'Online-Werbebudget (Durchlaufposten)',key:'marketing_umlage',price:'variabel',type:'variabel',desc:'100% Werbebudget für Google/Meta Ads – kein Honorar an vit:bikes'},
         {name:'Portal Premium',key:'portal_premium',price:'49,00',type:'pro Nutzer',desc:'Vollzugang Partner-Portal inkl. KI-Features'},
         {name:'Portal Standard',key:'portal_standard',price:'49,00',type:'pro Nutzer',desc:'Standard-Zugang Partner-Portal'},
         {name:'Werkstatt-Software',key:'werkstatt_sw',price:'29,00',type:'pro Nutzer',desc:'Werkstatt-Management & Auftragsverwaltung'}
