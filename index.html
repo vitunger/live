@@ -26449,6 +26449,7 @@ window.switchWissenTyp = function(typ) {
 
     // ── File Handler ──
     window.wawiHandleFiles = async function(files) {
+        console.log('[WaWi Parser v2.0] Processing', files.length, 'files');
         var container = document.getElementById('wawiParseResults');
         if(!container) return;
         parsedQueue = [];
@@ -26464,20 +26465,29 @@ window.switchWissenTyp = function(typ) {
 
             try {
                 var text = await extractPdfText(file);
+                console.log('[WaWi] Extracted text from', file.name, '– length:', text.length, '– first 200:', text.substring(0,200));
                 var parsed = parseWawiText(text, file.name);
+                console.log('[WaWi] Parsed result:', JSON.stringify(parsed.header), 'items:', parsed.items.length);
 
                 if(!parsed.header.beleg_nr && !parsed.header.beleg_typ) {
                     card.innerHTML = renderParseCard(file.name, null, 'Beleg konnte nicht erkannt werden');
-                    // Debug: show first 300 chars of extracted text
+                    // Debug: show first 500 chars of extracted text
                     var dbg = document.createElement('details');
-                    dbg.innerHTML = '<summary style="cursor:pointer;font-size:10px;color:#9ca3af;margin-top:6px">🔍 Debug: Extrahierter Text anzeigen</summary><pre style="font-size:9px;color:#6b7280;background:#f9fafb;padding:8px;border-radius:6px;max-height:200px;overflow:auto;white-space:pre-wrap;margin-top:4px">'+text.substring(0,500).replace(/</g,'&lt;')+'</pre>';
+                    dbg.style.cssText = 'padding:8px 12px';
+                    dbg.innerHTML = '<summary style="cursor:pointer;font-size:11px;color:#EF7D00;margin-top:4px;font-weight:600">🔍 Extrahierten Text anzeigen (Debug)</summary><pre style="font-size:10px;color:#6b7280;background:#f9fafb;padding:10px;border-radius:8px;max-height:250px;overflow:auto;white-space:pre-wrap;margin-top:6px;border:1px solid #e5e7eb">'+(text||'(leer)').substring(0,800).replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</pre>';
                     card.appendChild(dbg);
                     continue;
                 }
                 parsedQueue.push(parsed);
                 card.innerHTML = renderParseCard(file.name, parsed, null);
             } catch(err) {
-                card.innerHTML = renderParseCard(file.name, null, err.message || 'Fehler beim Verarbeiten');
+                console.error('[WaWi] PDF parse error for', file.name, err);
+                card.innerHTML = renderParseCard(file.name, null, 'Fehler: ' + (err.message || String(err)));
+                // Also show debug for errors
+                var dbgErr = document.createElement('details');
+                dbgErr.style.cssText = 'padding:8px 12px';
+                dbgErr.innerHTML = '<summary style="cursor:pointer;font-size:11px;color:#ef4444;margin-top:4px;font-weight:600">🔍 Fehlerdetails anzeigen</summary><pre style="font-size:10px;color:#991b1b;background:#fef2f2;padding:10px;border-radius:8px;max-height:200px;overflow:auto;white-space:pre-wrap;margin-top:6px;border:1px solid #fecaca">'+(err.stack||err.message||String(err)).replace(/</g,'&lt;')+'</pre>';
+                card.appendChild(dbgErr);
             }
         }
 
