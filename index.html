@@ -877,7 +877,7 @@
             </aside>
 
             <!-- Main Content Area -->
-            <main class="main-content-area flex-1 overflow-y-auto p-4 md:p-8 vit-background" style="min-height: 0;">
+            <main class="main-content-area flex-1 overflow-y-auto p-4 md:p-8 vit-background" style="min-height: 0; min-width: 0;">
                 <!-- Startseite View (für ALLE) -->
                 <div id="homeView" class="view" style="display: block;">
                     <!-- Header mit Willkommen + Dashboard anpassen -->
@@ -6373,13 +6373,14 @@
             'shop':           ['inhaber'],
             'onboarding':     ['inhaber','external_owner'],
             'mitarbeiter':    ['inhaber'],
+            'wawi':           ['inhaber','verkauf','werkstatt','buchhaltung'],
             'externHome':     ['external_owner'],
             'externWissen':   ['external_owner']
         };
 
         // Prüft ob der aktuelle User Zugriff auf eine View hat
         function hasAccess(viewName) {
-            if(currentRole === 'hq') return viewName.indexOf('hq')===0 || viewName==='kalender' || viewName==='todo' || viewName==='kommunikation' || viewName==='devStatus';
+            if(currentRole === 'hq') return viewName.indexOf('hq')===0 || viewName==='kalender' || viewName==='todo' || viewName==='kommunikation' || viewName==='devStatus' || viewName==='wawi';
             // Extern level: only allow specific views
             if(SESSION.account_level === 'extern') {
                 var externAllowed = ['externHome','onboarding','externWissen','wissen','kommunikation','support','notifications'];
@@ -19132,7 +19133,18 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             html += '</div>';
             html += '<input id="newMaEmail" type="email" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="vorname.nachname@vitbikes.de"></div>';
             html += '<input type="hidden" id="newMaEmailType" value="vitbikes">';
-            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Passwort * (min. 8 Zeichen)</label><input id="newMaPassword" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="VitBikes2026!"></div>';
+
+            // === MODUS: Direkt anlegen vs Einladen ===
+            html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Zugangs-Modus</label>';
+            html += '<div class="flex space-x-2 mb-2">';
+            html += '<button type="button" id="newMaModeInvite" onclick="switchNewMaMode(\'invite\')" class="flex-1 py-2 rounded-lg text-xs font-semibold border-2 transition border-vit-orange bg-orange-50 text-orange-700">✉️ Per E-Mail einladen</button>';
+            html += '<button type="button" id="newMaModeDirect" onclick="switchNewMaMode(\'direct\')" class="flex-1 py-2 rounded-lg text-xs font-semibold border-2 transition border-gray-200 bg-white text-gray-500 hover:border-gray-300">🔑 Direkt mit Passwort</button>';
+            html += '</div>';
+            html += '<p id="newMaModeHint" class="text-[10px] text-gray-400">Mitarbeiter erhält eine E-Mail und setzt sein Passwort selbst.</p>';
+            html += '</div>';
+            html += '<input type="hidden" id="newMaMode" value="invite">';
+
+            html += '<div id="newMaPasswordWrap" style="display:none"><label class="block text-xs font-semibold text-gray-600 mb-1">Passwort * (min. 8 Zeichen)</label><input id="newMaPassword" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="VitBikes2026!"></div>';
 
             // === EBENE (HQ vs Standort) – nur für HQ-Admins sichtbar ===
             if(isHQ) {
@@ -19179,7 +19191,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
             if(!isHQ) { html += '<p class="text-xs text-blue-600 bg-blue-50 rounded-lg p-2 mt-2">\ud83d\udccd Mitarbeiter wird deinem Standort zugeordnet.</p>'; }
             html += '<div id="newMaError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mt-3"></div>';
-            html += '<div class="flex space-x-3 mt-4"><button id="newMaSaveBtn" onclick="saveNeuerMa()" class="flex-1 py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Anlegen</button>';
+            html += '<div class="flex space-x-3 mt-4"><button id="newMaSaveBtn" onclick="saveNeuerMa()" class="flex-1 py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">✉️ Einladen</button>';
             html += '<button onclick="closeNeuerMaModal()" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-semibold text-sm hover:bg-gray-200">Abbrechen</button></div>';
             html += '</div></div>';
             var c = document.createElement('div'); c.id = 'neuerMaContainer'; c.innerHTML = html; document.body.appendChild(c);
@@ -19232,6 +19244,29 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         function closeNeuerMaModal() { var c = document.getElementById('neuerMaContainer'); if(c) c.remove(); }
 
+        window.switchNewMaMode = function(mode) {
+            var modeInput = document.getElementById('newMaMode');
+            var pwWrap = document.getElementById('newMaPasswordWrap');
+            var inviteBtn = document.getElementById('newMaModeInvite');
+            var directBtn = document.getElementById('newMaModeDirect');
+            var hint = document.getElementById('newMaModeHint');
+            var saveBtn = document.getElementById('newMaSaveBtn');
+            if(modeInput) modeInput.value = mode;
+            if(mode === 'invite') {
+                if(pwWrap) pwWrap.style.display = 'none';
+                if(inviteBtn) inviteBtn.className = 'flex-1 py-2 rounded-lg text-xs font-semibold border-2 transition border-vit-orange bg-orange-50 text-orange-700';
+                if(directBtn) directBtn.className = 'flex-1 py-2 rounded-lg text-xs font-semibold border-2 transition border-gray-200 bg-white text-gray-500 hover:border-gray-300';
+                if(hint) hint.textContent = 'Mitarbeiter erhält eine E-Mail und setzt sein Passwort selbst.';
+                if(saveBtn) saveBtn.textContent = '✉️ Einladen';
+            } else {
+                if(pwWrap) pwWrap.style.display = '';
+                if(directBtn) directBtn.className = 'flex-1 py-2 rounded-lg text-xs font-semibold border-2 transition border-vit-orange bg-orange-50 text-orange-700';
+                if(inviteBtn) inviteBtn.className = 'flex-1 py-2 rounded-lg text-xs font-semibold border-2 transition border-gray-200 bg-white text-gray-500 hover:border-gray-300';
+                if(hint) hint.textContent = 'Du setzt das Passwort und teilst es dem Mitarbeiter mit. Er erhält eine Willkommens-Mail.';
+                if(saveBtn) saveBtn.textContent = '🔑 Anlegen';
+            }
+        };
+
         var newMaEmailTypeValue = 'vitbikes';
 
         function switchNewMaEmailType(typ) {
@@ -19276,13 +19311,14 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var nachname = (document.getElementById('newMaNachname')||{}).value||'';
             var email = (document.getElementById('newMaEmail')||{}).value||'';
             var pw = (document.getElementById('newMaPassword')||{}).value||'';
+            var mode = (document.getElementById('newMaMode')||{}).value||'invite';
             var stdSel = document.getElementById('newMaStandort');
             var standortId = stdSel ? stdSel.value : null;
             var errEl = document.getElementById('newMaError');
             if(errEl) errEl.style.display = 'none';
 
             if(!vorname.trim() || !nachname.trim() || !email.trim()) { if(errEl){errEl.textContent='Bitte Vorname, Nachname und E-Mail ausfüllen.';errEl.style.display='block';} return; }
-            if(!pw || pw.length < 8) { if(errEl){errEl.textContent='Passwort muss mindestens 8 Zeichen haben.';errEl.style.display='block';} return; }
+            if(mode === 'direct' && (!pw || pw.length < 8)) { if(errEl){errEl.textContent='Passwort muss mindestens 8 Zeichen haben.';errEl.style.display='block';} return; }
 
             // Rollen basierend auf Ebene sammeln
             var selected = [];
@@ -19301,7 +19337,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(selected.length===0) { if(errEl){errEl.textContent='Bitte mindestens eine Rolle zuweisen.';errEl.style.display='block';} return; }
 
             var btn = document.getElementById('newMaSaveBtn');
-            if(btn) { btn.disabled=true; btn.textContent='Wird angelegt...'; }
+            if(btn) { btn.disabled=true; btn.textContent=mode==='invite'?'Wird eingeladen...':'Wird angelegt...'; }
 
             var isHqUser = selected.indexOf('hq') >= 0;
 
@@ -19325,13 +19361,15 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     },
                     body: JSON.stringify({
                         email: email.trim().toLowerCase(),
-                        password: pw,
+                        password: mode === 'direct' ? pw : undefined,
                         vorname: vorname.trim(),
                         nachname: nachname.trim(),
                         is_hq: isHqUser,
                         standort_id: isHqUser ? null : (standortId || null),
                         rollen: rollenIds,
-                        status: 'aktiv'
+                        status: 'aktiv',
+                        mode: mode,
+                        portalUrl: window.location.origin + window.location.pathname
                     })
                 });
 
@@ -19356,7 +19394,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                         }).select().single();
                         if(empInsert.data && empInsert.data.id) {
                             // Ask if user wants to assign tools now
-                            var assignTools = confirm('\u2705 Mitarbeiter angelegt!\n'+vorname.trim()+' '+nachname.trim()+'\nRollen: '+selected.map(function(r){return rollenLabels[r]||r;}).join(', ')+'\n\nMöchtest du jetzt Tools/Lizenzen zuweisen?');
+                            var assignTools = confirm('\u2705 Mitarbeiter '+(mode==='invite'?'eingeladen':'angelegt')+'!\n'+vorname.trim()+' '+nachname.trim()+'\nRollen: '+selected.map(function(r){return rollenLabels[r]||r;}).join(', ')+'\n\n'+(mode==='invite'?'📧 Einladungs-E-Mail gesendet.':'📧 Willkommens-E-Mail gesendet.')+'\n\nMöchtest du jetzt Tools/Lizenzen zuweisen?');
                             if(assignTools) {
                                 await renderPartnerMitarbeiter();
                                 openEmployeeToolsModal(empInsert.data.id);
@@ -19366,12 +19404,12 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     } catch(empErr) { console.warn('Employee record creation:', empErr); }
                 }
                 
-                alert('\u2705 Mitarbeiter angelegt!\n'+vorname.trim()+' '+nachname.trim()+'\nRollen: '+selected.map(function(r){return rollenLabels[r]||r;}).join(', ')+'\n\nDer Mitarbeiter kann sich sofort mit seinem Passwort anmelden.');
+                alert('\u2705 Mitarbeiter '+(mode==='invite'?'eingeladen':'angelegt')+'!\n'+vorname.trim()+' '+nachname.trim()+'\nRollen: '+selected.map(function(r){return rollenLabels[r]||r;}).join(', ')+'\n\n'+(mode==='invite'?'Eine Einladungs-E-Mail wurde an '+email.trim()+' gesendet.\nDer Mitarbeiter kann dort sein Passwort setzen.':'Eine Willkommens-E-Mail wurde an '+email.trim()+' gesendet.\nTeile dem Mitarbeiter sein Passwort mit.'));
                 renderPartnerMitarbeiter();
                 renderKzMitarbeiter();
             } catch(err) {
                 if(errEl){errEl.textContent='Fehler: '+(err.message||err);errEl.style.display='block';}
-                if(btn) { btn.disabled=false; btn.textContent='Anlegen'; }
+                if(btn) { btn.disabled=false; btn.textContent=mode==='invite'?'✉️ Einladen':'🔑 Anlegen'; }
             }
         }
 
@@ -25082,7 +25120,7 @@ function toggleWidgetInfo(e, id) {
     window.sendEmail = async function(template, to, data) {
         // Anti-spam check
         var key = template + '|' + to + '|' + (data.context_id || '');
-        var cooldowns = {welcome:Infinity, bwa_escalation:30*86400000, lead_stale:7*86400000, deal_status:0, trainer_ignored:48*3600000, groupcall_reminder:24*3600000};
+        var cooldowns = {welcome:Infinity, employee_welcome:Infinity, employee_invite:Infinity, bwa_escalation:30*86400000, lead_stale:7*86400000, deal_status:0, trainer_ignored:48*3600000, groupcall_reminder:24*3600000};
         var cd = cooldowns[template] || 86400000;
         if(cd > 0) {
             var existing = EMAIL_LOG.find(function(l){return l.key===key && (Date.now()-l.ts)<cd;});
@@ -25126,6 +25164,8 @@ function toggleWidgetInfo(e, id) {
     function showEmailNotification(template, to) {
         var names = {
             welcome: '📧 Willkommens-Mail gesendet',
+            employee_welcome: '📧 Willkommens-Mail an Mitarbeiter gesendet',
+            employee_invite: '✉️ Einladungs-Mail an Mitarbeiter gesendet',
             bwa_escalation: '⚠️ BWA-Eskalationsmail gesendet',
             lead_stale: '📧 Lead-Erinnerung gesendet',
             deal_status: '📧 Deal-Status-Mail gesendet',
