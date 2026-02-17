@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
         * {
             font-family: 'Open Sans', sans-serif;
@@ -622,6 +623,13 @@
                                 <span>Buchhaltung</span>
                                 <span class="ml-auto text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
                             </button>
+
+                            <!-- WaWi Belege -->
+                            <button onclick="showView('wawi')" data-module="wawi" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                <span>WaWi Belege</span>
+                                <span class="ml-auto text-xs bg-green-500 text-white px-1.5 py-0.5 rounded-full">Neu</span>
+                            </button>
                         </div>
 
                         <!-- Tools - alle Standort-Rollen -->
@@ -801,6 +809,12 @@
                                 </svg>
                                 <span>Buchhaltung</span>
                                 <span class="ml-auto text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
+                            </button>
+
+                            <button onclick="showView('wawi')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                <span>WaWi Belege</span>
+                                <span class="ml-auto text-xs bg-green-500 text-white px-1.5 py-0.5 rounded-full">Neu</span>
                             </button>
 
                             <button onclick="showView('devStatus');setTimeout(function(){showDevTab('nutzung')},100)" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
@@ -5471,6 +5485,97 @@
                     </div>
                 </div>
 
+                <!-- ===== WAWI BELEGE VIEW ===== -->
+                <div id="wawiView" class="view" style="display: none;">
+                    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+                        <div>
+                            <h1 class="h1-headline text-gray-800">WARENWIRTSCHAFT</h1>
+                            <p class="text-sm text-gray-500 mt-1">Belege aus der WaWi importieren & auswerten</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="document.getElementById('wawiFileInput').click()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                PDF hochladen
+                            </button>
+                            <input type="file" id="wawiFileInput" accept=".pdf" multiple style="display:none" onchange="wawiHandleFiles(this.files)">
+                        </div>
+                    </div>
+
+                    <!-- Tab Navigation -->
+                    <div class="mb-6 border-b border-gray-200">
+                        <nav class="-mb-px flex space-x-8 overflow-x-auto">
+                            <button onclick="showWawiTab('upload')" class="wawi-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="upload">📄 Upload & Import</button>
+                            <button onclick="showWawiTab('belege')" class="wawi-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="belege">📋 Belegübersicht</button>
+                            <button onclick="showWawiTab('dashboard')" class="wawi-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="dashboard">📊 Auswertung</button>
+                            <button onclick="showWawiTab('leasing')" class="wawi-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="leasing">🚲 Leasing</button>
+                        </nav>
+                    </div>
+
+                    <!-- Upload Tab -->
+                    <div id="wawiTabUpload" class="wawi-tab-content">
+                        <div id="wawiDropZone" class="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center hover:border-vit-orange hover:bg-orange-50/30 transition cursor-pointer mb-6" onclick="document.getElementById('wawiFileInput').click()" ondragover="event.preventDefault();this.classList.add('border-vit-orange','bg-orange-50')" ondragleave="this.classList.remove('border-vit-orange','bg-orange-50')" ondrop="event.preventDefault();this.classList.remove('border-vit-orange','bg-orange-50');wawiHandleFiles(event.dataTransfer.files)">
+                            <div class="text-4xl mb-3">📄</div>
+                            <p class="text-gray-600 font-semibold">PDF-Belege hierher ziehen</p>
+                            <p class="text-gray-400 text-sm mt-1">oder klicken zum Auswählen • Angebote, Aufträge, Rechnungen</p>
+                        </div>
+                        <!-- Parse Results -->
+                        <div id="wawiParseResults" class="space-y-3"></div>
+                    </div>
+
+                    <!-- Belegübersicht Tab -->
+                    <div id="wawiTabBelege" class="wawi-tab-content" style="display:none;">
+                        <!-- Filters -->
+                        <div class="flex gap-3 mb-4 flex-wrap">
+                            <select id="wawiFilterTyp" onchange="loadWawiBelege()" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
+                                <option value="">Alle Typen</option>
+                                <option value="Angebot">Angebote</option>
+                                <option value="Auftrag">Aufträge</option>
+                                <option value="Rechnung">Rechnungen</option>
+                            </select>
+                            <select id="wawiFilterLeasing" onchange="loadWawiBelege()" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
+                                <option value="">Alle</option>
+                                <option value="true">Nur Leasing</option>
+                                <option value="false">Ohne Leasing</option>
+                            </select>
+                            <input type="text" id="wawiFilterSearch" onkeyup="loadWawiBelege()" placeholder="Suche (Beleg-Nr, Kunde...)" class="text-sm border border-gray-300 rounded-lg px-3 py-2 flex-1 min-w-[200px]">
+                        </div>
+                        <div id="wawiListContainer" class="vit-card overflow-hidden">
+                            <div class="p-8 text-center text-gray-400">Wird geladen...</div>
+                        </div>
+                    </div>
+
+                    <!-- Auswertung/Dashboard Tab -->
+                    <div id="wawiTabDashboard" class="wawi-tab-content" style="display:none;">
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="wawiKpiCards"></div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                            <div class="vit-card p-5">
+                                <h3 class="text-sm font-bold text-gray-700 mb-3">📈 Umsatz nach Belegtyp</h3>
+                                <div id="wawiChartTyp" class="min-h-[200px]"></div>
+                            </div>
+                            <div class="vit-card p-5">
+                                <h3 class="text-sm font-bold text-gray-700 mb-3">🏆 Top-Produkte</h3>
+                                <div id="wawiTopProducts" class="min-h-[200px]"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Leasing Tab -->
+                    <div id="wawiTabLeasing" class="wawi-tab-content" style="display:none;">
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="wawiLeasingKpis"></div>
+                        <div class="vit-card p-5">
+                            <h3 class="text-sm font-bold text-gray-700 mb-3">🚲 Leasing-Vorgänge nach Anbieter</h3>
+                            <div id="wawiLeasingTable"></div>
+                        </div>
+                    </div>
+
+                    <!-- Beleg Detail Modal -->
+                    <div id="wawiBelegModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+                        <div class="bg-white rounded-xl max-w-3xl w-full max-h-[85vh] overflow-y-auto p-6">
+                            <div id="wawiBelegDetail"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="hqAuswertungView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-2">📊 AUSWERTUNG – PORTAL-NUTZUNG<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-usage')">i</button></h1><div class="widget-info-popup" id="info-hq-usage">Wie aktiv nutzen die Standorte das Portal? Score basiert auf: Team-Logins, Modul-Nutzung, Aufgaben-Erledigung und BWA-Pünktlichkeit. Niedrige Scores deuten auf Onboarding-Bedarf oder fehlende Gewohnheitsbildung hin.</div>
                     <p class="text-sm text-gray-500 mb-6">Wie aktiv nutzen die Standorte das vit:bikes Partner-Portal?</p>
@@ -5913,7 +6018,7 @@
             document.querySelectorAll('.demo-mode-active').forEach(function(v){ v.classList.remove('demo-mode-active'); });
             Object.keys(sbModulStatus).forEach(function(key) {
                 if(sbModulStatus[key] === 'demo') {
-                    var viewMap = {startseite:'homeView',verkauf:'verkaufView',kalender:'kalenderView',aufgaben:'todoView',kommunikation:'kommunikationView',controlling:'controllingView',marketing:'marketingView',einkauf:'einkaufView',dashboards:'dashboardsView',allgemein:'allgemeinView',wissen:'wissenView',support:'supportView',ideenboard:'ideenboardView',shop:'shopView',onboarding:'onboardingView',mitarbeiter:'mitarbeiterView',aktenschrank:'aktenschrankView'};
+                    var viewMap = {startseite:'homeView',verkauf:'verkaufView',kalender:'kalenderView',aufgaben:'todoView',kommunikation:'kommunikationView',controlling:'controllingView',marketing:'marketingView',einkauf:'einkaufView',dashboards:'dashboardsView',allgemein:'allgemeinView',wissen:'wissenView',support:'supportView',ideenboard:'ideenboardView',shop:'shopView',onboarding:'onboardingView',mitarbeiter:'mitarbeiterView',aktenschrank:'aktenschrankView',wawi:'wawiView'};
                     var viewId = viewMap[key];
                     var viewEl = viewId ? document.getElementById(viewId) : null;
                     if(viewEl) {
@@ -13436,6 +13541,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 {name:'HQ Shop', view:'hqShopView', status:'beta', typ:'hq', version:'1.0.0', details:'Produkte verwalten, Bestellungen einsehen und bestätigen', kiPrio:21, aufwand:'L', kiTodo:'Lagerverwaltung, Versandintegration.'},
                 {name:'HQ Buchhaltung', view:'hqBillingView', status:'beta', typ:'hq', version:'1.0.0', details:'Monats-Drafts, Quartals-Settlement, Strategien, Produkte, Tools – Full Stack mit Supabase Edge Function', kiPrio:2, aufwand:'XL', kiTodo:'Stripe/LexOffice-Integration, PDF-Export, automatischer SEPA-Einzug.'},
                 {name:'Standort Buchhaltung', view:'standortBillingView', status:'beta', typ:'standort', version:'1.0.0', details:'Rechnungsübersicht, Jahresstrategie einreichen, Kostenaufschlüsselung mit Formeln', kiPrio:3, aufwand:'L', kiTodo:'PDF-Download, Zahlungsstatus-Tracking.'},
+                {name:'WaWi Belege', view:'wawiView', status:'beta', typ:'standort', version:'1.0.0', details:'PDF-Upload & Parser für Angebote/Aufträge/Rechnungen, Belegübersicht mit Filtern, Umsatz-Dashboard, Leasing-Auswertung, Beleg-Detailansicht. Pipeline: Browser-seitiges PDF-Parsing via pdf.js', kiPrio:2, aufwand:'M', kiTodo:'Email-Ingestion (IMAP), Multi-Page PDF Tests, WooCommerce Stock-Sync.'},
                 {name:'HQ Einstellungen', view:'hqEinstellungenView', status:'live', typ:'hq', version:'1.2.0', details:'Module aktivieren/deaktivieren, Rollen-Matrix, User-Freigabe – alles DB', kiPrio:36, aufwand:'S', kiTodo:'Branding-Einstellungen. Core funktioniert bereits.'}
             ],
             widgets: [
@@ -26109,8 +26215,451 @@ window.switchWissenTyp = function(typ) {
             origShowView(view);
             if (view === 'hqBilling') { initBillingMonthSelect(); loadBillingOverview(); }
             if (view === 'standortBilling') { loadStandortInvoices(); }
+            if (view === 'wawi') { if(typeof initWawiView==='function') initWawiView(); }
         };
     }
+
+})();
+</script>
+
+<!-- ═══ WaWi Beleg-Pipeline Modul ═══ -->
+<script>
+(function(){
+
+    // ── pdf.js worker ──
+    if(typeof pdfjsLib !== 'undefined') {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    // ── State ──
+    var wawiInitDone = false;
+    var parsedQueue = []; // pending parsed docs awaiting save
+
+    // ── Tab Switching ──
+    window.showWawiTab = function(tab) {
+        document.querySelectorAll('.wawi-tab-content').forEach(function(el){ el.style.display='none'; });
+        document.querySelectorAll('.wawi-tab-btn').forEach(function(b){
+            b.classList.remove('border-vit-orange','text-vit-orange');
+            b.classList.add('border-transparent','text-gray-500');
+        });
+        var tabEl = document.getElementById('wawiTab'+tab.charAt(0).toUpperCase()+tab.slice(1));
+        if(tabEl) tabEl.style.display='block';
+        var btn = document.querySelector('.wawi-tab-btn[data-tab="'+tab+'"]');
+        if(btn){ btn.classList.add('border-vit-orange','text-vit-orange'); btn.classList.remove('border-transparent','text-gray-500'); }
+        if(tab==='belege') loadWawiBelege();
+        if(tab==='dashboard') loadWawiDashboard();
+        if(tab==='leasing') loadWawiLeasing();
+    };
+
+    // ── Init ──
+    window.initWawiView = function() {
+        if(wawiInitDone) return;
+        wawiInitDone = true;
+    };
+
+    // ── PDF Text Extraction ──
+    async function extractPdfText(file) {
+        var buf = await file.arrayBuffer();
+        var pdf = await pdfjsLib.getDocument({data: buf}).promise;
+        var fullText = '';
+        for(var p = 1; p <= pdf.numPages; p++) {
+            var page = await pdf.getPage(p);
+            var content = await page.getTextContent();
+            var lastY = null;
+            content.items.forEach(function(item) {
+                if(lastY !== null && Math.abs(item.transform[5] - lastY) > 3) fullText += '\n';
+                else if(lastY !== null) fullText += ' ';
+                fullText += item.str;
+                lastY = item.transform[5];
+            });
+            fullText += '\n';
+        }
+        return fullText;
+    }
+
+    // ── Parser ──
+    function parseEur(s) {
+        if(!s) return 0;
+        return parseFloat(s.replace(/\./g,'').replace(',','.'));
+    }
+
+    function parseWawiText(text, fileName) {
+        var lines = text.split('\n');
+        var result = { source_file:fileName, header:{}, customer:{}, items:[], totals:{}, meta:{} };
+        var m;
+
+        // Belegtyp
+        ['Rechnung','Auftrag','Angebot'].forEach(function(typ){
+            if(!result.header.beleg_typ && new RegExp('^'+typ+'(?:\\s|$)','m').test(text)) result.header.beleg_typ=typ;
+        });
+
+        m=text.match(/Belegnummer:\s*(\d+)/); if(m) result.header.beleg_nr=m[1];
+        m=text.match(/Datum:\s*(\d{2})\.(\d{2})\.(\d{4})/); if(m) result.header.datum=m[3]+'-'+m[2]+'-'+m[1];
+        m=text.match(/Kunden-Nr\.?:\s*(\d+)/); if(m) result.header.kunden_nr=m[1];
+        m=text.match(/Verkäufer:\s*(.+)/); if(m) result.header.verkaeufer=m[1].trim();
+        m=text.match(/Zahlungsbedingung:\s*(.+)/); if(m) result.header.zahlungsbedingung=m[1].trim();
+
+        // Standort
+        for(var li=0;li<Math.min(5,lines.length);li++){
+            m=lines[li].match(/^(.+?)\s*\|\s*(.+?)\s*\|\s*(\d{5})\s+(.+?)(?:\s+Bezahlen|$)/);
+            if(m){ result.meta.standort_name=m[1].trim(); result.meta.standort_plz=m[3]; result.meta.standort_ort=m[4].trim(); break; }
+        }
+        m=text.match(/Email:\s*([\w@.\-]+)/); if(m) result.meta.standort_email=m[1];
+
+        // Kunde
+        var kundeLines=[], inKunde=false;
+        lines.forEach(function(line){
+            var ls=line.trim();
+            if(['Herr','Frau','Firma'].indexOf(ls)>=0){ inKunde=true; result.customer.anrede=ls; return; }
+            if(inKunde){
+                if(['Datum:','Kunden-Nr','Verkäufer','Zahlungs','Auftrag','Angebot','Rechnung','Belegnummer','Kunde ','Abweichende'].some(function(k){return ls.startsWith(k);})){ inKunde=false; return; }
+                if(ls && ls!=='Girocode:' && ls!=='Bezahlen per App') kundeLines.push(ls);
+            }
+        });
+        for(var j=kundeLines.length-1;j>=0;j--){
+            var plzM=kundeLines[j].match(/^(?:DE\s*)?(\d{5})\s+(.+)/);
+            if(plzM){
+                result.customer.plz=plzM[1]; result.customer.ort=plzM[2];
+                if(j>0 && /\d/.test(kundeLines[j-1])){
+                    result.customer.strasse=kundeLines[j-1];
+                    result.customer.name=kundeLines.slice(0,j-1).join(' ').replace(/\s*\. \.\s*/,' ').trim();
+                } else {
+                    result.customer.name=kundeLines.slice(0,j).join(' ').replace(/\s*\. \.\s*/,' ').trim();
+                }
+                break;
+            }
+        }
+        if(!result.customer.name && kundeLines.length) result.customer.name=kundeLines.join(' ').replace(/\s*\. \.\s*/,' ').trim();
+        m=text.match(/Kunde Telefon:\s*(.+)/); if(m) result.customer.telefon=m[1].trim();
+        m=text.match(/Kunde Mobil:\s*(.+)/); if(m) result.customer.mobil=m[1].trim();
+
+        // Positionen
+        var itemRe=/^(\d{4,7})\s+(.+?)\s+(\d+)\s+([\d.,]+)\s*€\s*(?:([\d.,]+)\s*€\s*)?([\d.,]+)\s*€/;
+        var inItems=false, i=0;
+        while(i<lines.length){
+            var line=lines[i].trim();
+            if(line.indexOf('Art.-Nr.')>=0 && line.indexOf('Artikelbezeichnung')>=0){ inItems=true; i++; continue; }
+            if(inItems && (line.startsWith('Belegrabatt')||line.startsWith('MwSt'))){
+                if(line.startsWith('Belegrabatt')){ var rabM=line.match(/-?([\d.,]+)\s*€/); if(rabM) result.totals.belegrabatt=-parseEur(rabM[1]); }
+                inItems=false; i++; continue;
+            }
+            if(!inItems){ i++; continue; }
+            var mI=line.match(itemRe);
+            if(mI){
+                var itm={art_nr:mI[1],bezeichnung:mI[2].trim(),menge:parseInt(mI[3]),einzelpreis:parseEur(mI[4]),gesamtpreis:parseEur(mI[6])};
+                if(mI[5]) itm.rabatt=parseEur(mI[5]);
+                var extra=[];var k=i+1;
+                while(k<lines.length){ var nl=lines[k].trim(); if(!nl||itemRe.test(nl)||nl.startsWith('Belegrabatt')||nl.startsWith('MwSt')||/^\d{4,7}\s+/.test(nl))break; extra.push(nl);k++; }
+                if(extra.length){ itm.zusatzinfo=extra.join(' | '); var snrM=extra.join(' ').match(/SNr:\s*(\S+)/); if(snrM) itm.seriennummer=snrM[1]; }
+                result.items.push(itm); i=k; continue;
+            }
+            var mZ=line.match(/^(\d{4,7})\s+(.+)$/);
+            if(mZ && !/\d+\s+[\d.,]+\s*€/.test(line)){
+                result.items.push({art_nr:mZ[1],bezeichnung:mZ[2].trim(),menge:0,einzelpreis:0,gesamtpreis:0,hinweis:true});
+            }
+            i++;
+        }
+
+        // Totals
+        m=text.match(/MwSt\s+([\d,]+)%\s+auf\s+([\d.,]+)\s*€\s*=\s*([\d.,]+)\s*€\s*Endbetrag\s*([\d.,]+)\s*€/);
+        if(m){ result.totals.mwst_satz=parseFloat(m[1].replace(',','.')); result.totals.netto=parseEur(m[2]); result.totals.mwst_betrag=parseEur(m[3]); result.totals.endbetrag=parseEur(m[4]); }
+        if(text.indexOf('Skonto')>=0){ var skM=text.match(/(\d+)%\s*Skonto/); if(skM) result.totals.skonto_prozent=parseInt(skM[1]); }
+
+        // Leasing
+        var zb=result.header.zahlungsbedingung||'';
+        if(/leasing/i.test(zb)){ result.meta.ist_leasing=true; var lm=zb.match(/Leasing\s*-\s*(.+)/); if(lm)result.meta.leasing_anbieter=lm[1].trim(); }
+        else result.meta.ist_leasing=false;
+
+        return result;
+    }
+
+    // ── File Handler ──
+    window.wawiHandleFiles = async function(files) {
+        var container = document.getElementById('wawiParseResults');
+        if(!container) return;
+        parsedQueue = [];
+
+        for(var f = 0; f < files.length; f++) {
+            var file = files[f];
+            if(!file.name.toLowerCase().endsWith('.pdf')){ continue; }
+
+            var card = document.createElement('div');
+            card.className = 'vit-card p-4';
+            card.innerHTML = '<div class="flex items-center gap-3"><div class="animate-pulse w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-vit-orange">⏳</div><div><p class="font-semibold text-sm text-gray-800">'+file.name+'</p><p class="text-xs text-gray-400">Wird verarbeitet...</p></div></div>';
+            container.appendChild(card);
+
+            try {
+                var text = await extractPdfText(file);
+                var parsed = parseWawiText(text, file.name);
+
+                if(!parsed.header.beleg_nr || !parsed.header.beleg_typ) {
+                    card.innerHTML = renderParseCard(file.name, null, 'Beleg konnte nicht erkannt werden');
+                    continue;
+                }
+                parsedQueue.push(parsed);
+                card.innerHTML = renderParseCard(file.name, parsed, null);
+            } catch(err) {
+                card.innerHTML = renderParseCard(file.name, null, err.message || 'Fehler beim Verarbeiten');
+            }
+        }
+
+        // Add save-all button if there are results
+        if(parsedQueue.length > 0) {
+            var btnDiv = document.createElement('div');
+            btnDiv.className = 'flex justify-end mt-4 gap-3';
+            btnDiv.innerHTML = '<button onclick="wawiSaveAll()" class="px-6 py-2.5 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'+parsedQueue.length+' Beleg'+(parsedQueue.length>1?'e':'')+' importieren</button>';
+            container.appendChild(btnDiv);
+        }
+
+        // Reset file input
+        document.getElementById('wawiFileInput').value = '';
+    };
+
+    function renderParseCard(fileName, parsed, error) {
+        if(error) {
+            return '<div class="flex items-center gap-3"><div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center text-red-500">✗</div><div><p class="font-semibold text-sm text-gray-800">'+fileName+'</p><p class="text-xs text-red-500">'+error+'</p></div></div>';
+        }
+        var typColors = {Angebot:'blue',Auftrag:'orange',Rechnung:'green'};
+        var tc = typColors[parsed.header.beleg_typ]||'gray';
+        var leasing = parsed.meta.ist_leasing ? '<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 font-semibold">🚲 '+escH(parsed.meta.leasing_anbieter||'Leasing')+'</span>' : '';
+        return '<div class="flex items-start gap-3"><div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 flex-shrink-0 mt-0.5">✓</div>'
+            +'<div class="flex-1 min-w-0">'
+            +'<div class="flex items-center gap-2 flex-wrap"><p class="font-semibold text-sm text-gray-800">'+escH(fileName)+'</p>'
+            +'<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-'+tc+'-100 text-'+tc+'-700 font-semibold">'+parsed.header.beleg_typ+'</span>'
+            +leasing+'</div>'
+            +'<div class="flex gap-4 mt-1 text-xs text-gray-500">'
+            +'<span>Nr. <strong>'+parsed.header.beleg_nr+'</strong></span>'
+            +'<span>'+escH(parsed.customer.name||'–')+'</span>'
+            +'<span>'+parsed.items.filter(function(x){return !x.hinweis}).length+' Positionen</span>'
+            +'<span class="font-bold text-gray-800">'+(parsed.totals.endbetrag||0).toLocaleString('de-DE',{style:'currency',currency:'EUR'})+'</span>'
+            +'</div>'
+            +'<div class="flex gap-1 mt-1.5 flex-wrap">'
+            +parsed.items.filter(function(x){return !x.hinweis && x.einzelpreis>100}).map(function(x){
+                return '<span class="text-[9px] px-1 py-0.5 rounded bg-gray-100 text-gray-600 truncate max-w-[200px]">'+escH(x.bezeichnung.substring(0,40))+'</span>';
+            }).join('')
+            +'</div></div></div>';
+    }
+
+    function escH(s) { var d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+    // ── Save All ──
+    window.wawiSaveAll = async function() {
+        var container = document.getElementById('wawiParseResults');
+        var saved = 0, errors = 0;
+        var standortId = typeof currentUser !== 'undefined' && currentUser ? currentUser.standort_id : null;
+
+        for(var i = 0; i < parsedQueue.length; i++) {
+            var p = parsedQueue[i];
+            p.standort_id = standortId;
+            p.quelle = 'upload';
+            p.quell_datei_name = p.source_file;
+
+            try {
+                var resp = await sb.rpc('upsert_wawi_beleg', { p_data: p });
+                if(resp.error) { errors++; console.error('WaWi save error:', resp.error); }
+                else saved++;
+            } catch(e) { errors++; console.error('WaWi save exception:', e); }
+        }
+
+        container.innerHTML = '<div class="vit-card p-5 text-center">'
+            +'<div class="text-3xl mb-2">'+(errors===0?'🎉':'⚠️')+'</div>'
+            +'<p class="font-bold text-gray-800">'+saved+' Beleg'+(saved!==1?'e':'')+' importiert'+(errors>0?', '+errors+' Fehler':'')+'</p>'
+            +'<button onclick="showWawiTab(\'belege\')" class="mt-3 text-sm text-vit-orange font-semibold hover:underline">→ Zur Belegübersicht</button>'
+            +'</div>';
+        parsedQueue = [];
+    };
+
+    // ── Load Belege List ──
+    window.loadWawiBelege = async function() {
+        var container = document.getElementById('wawiListContainer');
+        if(!container) return;
+        container.innerHTML = '<div class="p-6 text-center text-gray-400"><div class="animate-pulse">Lade Belege...</div></div>';
+
+        var q = sb.from('wawi_belege').select('id,beleg_typ,beleg_nr,datum,kunde_name,verkaeufer,endbetrag,ist_leasing,leasing_anbieter,status,kunden_nr').order('datum',{ascending:false}).limit(100);
+
+        var fTyp = document.getElementById('wawiFilterTyp');
+        if(fTyp && fTyp.value) q = q.eq('beleg_typ', fTyp.value);
+        var fL = document.getElementById('wawiFilterLeasing');
+        if(fL && fL.value) q = q.eq('ist_leasing', fL.value==='true');
+        var fS = document.getElementById('wawiFilterSearch');
+        if(fS && fS.value.length >= 2) q = q.or('beleg_nr.ilike.%'+fS.value+'%,kunde_name.ilike.%'+fS.value+'%');
+
+        var {data, error} = await q;
+        if(error){ container.innerHTML='<div class="p-4 text-red-500 text-sm">Fehler: '+error.message+'</div>'; return; }
+        if(!data || data.length===0){ container.innerHTML='<div class="p-8 text-center text-gray-400"><div class="text-3xl mb-2">📭</div><p>Noch keine Belege importiert</p><p class="text-xs mt-1">Lade PDFs im Upload-Tab hoch</p></div>'; return; }
+
+        var typColors = {Angebot:'blue',Auftrag:'orange',Rechnung:'green'};
+        var h = '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-50 text-left text-xs text-gray-500 uppercase">'
+            +'<th class="px-4 py-3">Typ</th><th class="px-4 py-3">Nr.</th><th class="px-4 py-3">Datum</th><th class="px-4 py-3">Kunde</th>'
+            +'<th class="px-4 py-3">Verkäufer</th><th class="px-4 py-3 text-right">Betrag</th><th class="px-4 py-3">Leasing</th>'
+            +'</tr></thead><tbody>';
+
+        data.forEach(function(b) {
+            var tc = typColors[b.beleg_typ]||'gray';
+            var datum = b.datum ? new Date(b.datum).toLocaleDateString('de-DE') : '–';
+            h += '<tr class="border-t border-gray-100 hover:bg-gray-50 cursor-pointer" onclick="showWawiBelegDetail(\''+b.id+'\')">';
+            h += '<td class="px-4 py-3"><span class="text-[10px] px-2 py-0.5 rounded-full bg-'+tc+'-100 text-'+tc+'-700 font-bold">'+b.beleg_typ+'</span></td>';
+            h += '<td class="px-4 py-3 font-mono font-bold text-gray-800">'+escH(b.beleg_nr)+'</td>';
+            h += '<td class="px-4 py-3 text-gray-600">'+datum+'</td>';
+            h += '<td class="px-4 py-3 text-gray-800 font-medium truncate max-w-[200px]">'+escH(b.kunde_name||'–')+'</td>';
+            h += '<td class="px-4 py-3 text-gray-600">'+escH(b.verkaeufer||'–')+'</td>';
+            h += '<td class="px-4 py-3 text-right font-bold text-gray-800">'+(b.endbetrag||0).toLocaleString('de-DE',{style:'currency',currency:'EUR'})+'</td>';
+            h += '<td class="px-4 py-3">'+(b.ist_leasing?'<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 font-semibold">'+escH(b.leasing_anbieter||'Ja')+'</span>':'<span class="text-xs text-gray-300">–</span>')+'</td>';
+            h += '</tr>';
+        });
+        h += '</tbody></table></div>';
+        container.innerHTML = h;
+    };
+
+    // ── Beleg Detail ──
+    window.showWawiBelegDetail = async function(id) {
+        var modal = document.getElementById('wawiBelegModal');
+        var detail = document.getElementById('wawiBelegDetail');
+        modal.style.display = 'flex';
+        detail.innerHTML = '<div class="text-center p-6"><div class="animate-pulse text-gray-400">Lade Beleg...</div></div>';
+
+        var {data:b} = await sb.from('wawi_belege').select('*').eq('id',id).single();
+        if(!b){ detail.innerHTML='<p class="text-red-500">Beleg nicht gefunden</p>'; return; }
+        var {data:pos} = await sb.from('wawi_beleg_positionen').select('*').eq('beleg_id',id).order('sortierung');
+        pos = pos || [];
+
+        var typColors = {Angebot:'blue',Auftrag:'orange',Rechnung:'green'};
+        var tc = typColors[b.beleg_typ]||'gray';
+        var datum = b.datum ? new Date(b.datum).toLocaleDateString('de-DE') : '–';
+
+        var h = '<div class="flex items-center justify-between mb-4">';
+        h += '<div class="flex items-center gap-3"><span class="text-[11px] px-2.5 py-1 rounded-full bg-'+tc+'-100 text-'+tc+'-700 font-bold">'+b.beleg_typ+'</span>';
+        h += '<span class="text-xl font-bold text-gray-800">#'+escH(b.beleg_nr)+'</span></div>';
+        h += '<button onclick="document.getElementById(\'wawiBelegModal\').style.display=\'none\'" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button></div>';
+
+        // Info Grid
+        h += '<div class="grid grid-cols-2 gap-4 mb-5 text-sm">';
+        h += '<div><span class="text-gray-400 text-xs block">Datum</span><strong>'+datum+'</strong></div>';
+        h += '<div><span class="text-gray-400 text-xs block">Kunde</span><strong>'+escH(b.kunde_name||'–')+'</strong>'+(b.kunde_ort?'<br><span class="text-xs text-gray-500">'+escH(b.kunde_plz||'')+' '+escH(b.kunde_ort)+'</span>':'')+'</div>';
+        h += '<div><span class="text-gray-400 text-xs block">Verkäufer</span><strong>'+escH(b.verkaeufer||'–')+'</strong></div>';
+        h += '<div><span class="text-gray-400 text-xs block">Zahlung</span><strong>'+escH(b.zahlungsbedingung||'–')+'</strong></div>';
+        if(b.ist_leasing) h += '<div class="col-span-2"><span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-bold">🚲 Leasing: '+escH(b.leasing_anbieter||'Ja')+'</span></div>';
+        h += '</div>';
+
+        // Positionen
+        h += '<h3 class="text-xs font-bold text-gray-500 uppercase mb-2">Positionen</h3>';
+        h += '<div class="overflow-x-auto mb-4"><table class="w-full text-sm"><thead><tr class="text-left text-xs text-gray-400 border-b">';
+        h += '<th class="pb-2">Art.-Nr.</th><th class="pb-2">Bezeichnung</th><th class="pb-2 text-center">Mg.</th><th class="pb-2 text-right">Einzel</th><th class="pb-2 text-right">Gesamt</th></tr></thead><tbody>';
+        pos.forEach(function(p){
+            var isMain = (p.einzelpreis||0) > 500;
+            h += '<tr class="border-t border-gray-50'+(isMain?' bg-orange-50/50':'')+(p.ist_hinweis?' text-gray-400 italic':'')+'">';
+            h += '<td class="py-1.5 pr-2 font-mono text-xs text-gray-500">'+escH(p.art_nr||'–')+'</td>';
+            h += '<td class="py-1.5 pr-2 '+(isMain?'font-semibold text-gray-800':'text-gray-700')+'">'+escH(p.bezeichnung)+(p.seriennummer?'<br><span class="text-[10px] text-gray-400">SN: '+escH(p.seriennummer)+'</span>':'')+'</td>';
+            h += '<td class="py-1.5 text-center">'+(p.menge||'–')+'</td>';
+            h += '<td class="py-1.5 text-right">'+(p.einzelpreis?p.einzelpreis.toLocaleString('de-DE',{style:'currency',currency:'EUR'}):'–')+'</td>';
+            h += '<td class="py-1.5 text-right font-semibold">'+(p.gesamtpreis?p.gesamtpreis.toLocaleString('de-DE',{style:'currency',currency:'EUR'}):'–')+'</td>';
+            h += '</tr>';
+            if(p.zusatzinfo){ h += '<tr class="text-[10px] text-gray-400"><td></td><td colspan="4" class="pb-1">'+escH(p.zusatzinfo)+'</td></tr>'; }
+        });
+        h += '</tbody></table></div>';
+
+        // Totals
+        h += '<div class="border-t-2 border-gray-200 pt-3 space-y-1 text-sm">';
+        if(b.belegrabatt && b.belegrabatt!==0) h += '<div class="flex justify-between text-red-600"><span>Belegrabatt</span><span>'+b.belegrabatt.toLocaleString('de-DE',{style:'currency',currency:'EUR'})+'</span></div>';
+        h += '<div class="flex justify-between text-gray-600"><span>Netto</span><span>'+(b.netto||0).toLocaleString('de-DE',{style:'currency',currency:'EUR'})+'</span></div>';
+        h += '<div class="flex justify-between text-gray-600"><span>MwSt '+(b.mwst_satz||19)+'%</span><span>'+(b.mwst_betrag||0).toLocaleString('de-DE',{style:'currency',currency:'EUR'})+'</span></div>';
+        h += '<div class="flex justify-between text-lg font-bold text-gray-800 pt-1 border-t"><span>Endbetrag</span><span>'+(b.endbetrag||0).toLocaleString('de-DE',{style:'currency',currency:'EUR'})+'</span></div>';
+        if(b.skonto_prozent) h += '<div class="text-xs text-green-600 text-right">'+b.skonto_prozent+'% Skonto möglich</div>';
+        h += '</div>';
+
+        detail.innerHTML = h;
+    };
+
+    // ── Dashboard ──
+    window.loadWawiDashboard = async function() {
+        var kpiEl = document.getElementById('wawiKpiCards');
+        var typEl = document.getElementById('wawiChartTyp');
+        var topEl = document.getElementById('wawiTopProducts');
+        if(!kpiEl) return;
+
+        // Summary query
+        var {data:belege} = await sb.from('wawi_belege').select('beleg_typ,endbetrag,ist_leasing,datum').eq('status','neu');
+        belege = belege || [];
+
+        var total=0, countA=0, countR=0, countAng=0, leasingSum=0;
+        belege.forEach(function(b){
+            total += (b.endbetrag||0);
+            if(b.beleg_typ==='Auftrag') countA++;
+            if(b.beleg_typ==='Rechnung') countR++;
+            if(b.beleg_typ==='Angebot') countAng++;
+            if(b.ist_leasing) leasingSum += (b.endbetrag||0);
+        });
+
+        function kpiCard(icon, label, value, color) {
+            return '<div class="vit-card p-4 text-center"><div class="text-2xl mb-1">'+icon+'</div><div class="text-xl font-bold text-'+color+'-700">'+value+'</div><div class="text-[10px] text-gray-500 uppercase font-semibold mt-1">'+label+'</div></div>';
+        }
+        kpiEl.innerHTML = kpiCard('📄','Belege gesamt', belege.length, 'gray')
+            + kpiCard('💰','Umsatz gesamt', total.toLocaleString('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}), 'green')
+            + kpiCard('🚲','Davon Leasing', leasingSum.toLocaleString('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}), 'purple')
+            + kpiCard('📊','Ø Belegwert', belege.length>0?(total/belege.length).toLocaleString('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}):'–', 'blue');
+
+        // Typ breakdown
+        var typData = [
+            {typ:'Angebote', count:countAng, color:'#3B82F6'},
+            {typ:'Aufträge', count:countA, color:'#EF7D00'},
+            {typ:'Rechnungen', count:countR, color:'#22C55E'}
+        ];
+        var maxCount = Math.max(countAng, countA, countR, 1);
+        typEl.innerHTML = typData.map(function(t){
+            var pct = Math.round(t.count/maxCount*100);
+            return '<div class="flex items-center gap-3 mb-3"><span class="text-xs w-24 text-gray-600 font-semibold">'+t.typ+'</span><div class="flex-1 bg-gray-100 rounded-full h-6 overflow-hidden"><div class="h-full rounded-full flex items-center px-2 text-xs text-white font-bold" style="width:'+Math.max(pct,8)+'%;background:'+t.color+'">'+t.count+'</div></div></div>';
+        }).join('');
+
+        // Top Products
+        var {data:top} = await sb.from('v_wawi_top_produkte').select('*').order('gesamt_umsatz',{ascending:false}).limit(8);
+        top = top || [];
+        if(top.length===0){ topEl.innerHTML='<p class="text-gray-400 text-sm text-center py-6">Noch keine Daten</p>'; return; }
+        topEl.innerHTML = '<div class="space-y-2">'+top.map(function(p,i){
+            return '<div class="flex items-center gap-2 text-sm"><span class="w-5 text-center font-bold text-gray-400">'+(i+1)+'</span><span class="flex-1 truncate text-gray-800">'+escH(p.bezeichnung)+'</span><span class="font-bold text-gray-800 whitespace-nowrap">'+(p.gesamt_umsatz||0).toLocaleString('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0})+'</span></div>';
+        }).join('')+'</div>';
+    };
+
+    // ── Leasing ──
+    window.loadWawiLeasing = async function() {
+        var kpiEl = document.getElementById('wawiLeasingKpis');
+        var tableEl = document.getElementById('wawiLeasingTable');
+        if(!kpiEl) return;
+
+        var {data} = await sb.from('v_wawi_leasing_uebersicht').select('*');
+        data = data || [];
+
+        var totalCount=0, totalSum=0, providers={};
+        data.forEach(function(r){
+            totalCount += (r.anzahl||0);
+            totalSum += (r.summe_brutto||0);
+            var p = r.leasing_anbieter||'Sonstige';
+            if(!providers[p]) providers[p]={count:0,sum:0};
+            providers[p].count += (r.anzahl||0);
+            providers[p].sum += (r.summe_brutto||0);
+        });
+
+        function kpiCard(icon, label, value, color) {
+            return '<div class="vit-card p-4 text-center"><div class="text-2xl mb-1">'+icon+'</div><div class="text-xl font-bold text-'+color+'-700">'+value+'</div><div class="text-[10px] text-gray-500 uppercase font-semibold mt-1">'+label+'</div></div>';
+        }
+        kpiEl.innerHTML = kpiCard('🚲','Leasing-Vorgänge',totalCount,'purple')
+            + kpiCard('💰','Leasing-Volumen',totalSum.toLocaleString('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}),'green')
+            + kpiCard('📊','Ø Leasing-Wert',totalCount>0?(totalSum/totalCount).toLocaleString('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}):'–','blue')
+            + kpiCard('🏢','Anbieter',Object.keys(providers).length,'gray');
+
+        if(Object.keys(providers).length===0){ tableEl.innerHTML='<p class="text-gray-400 text-sm text-center py-6">Noch keine Leasing-Daten</p>'; return; }
+
+        var sortedProviders = Object.entries(providers).sort(function(a,b){return b[1].sum-a[1].sum;});
+        var h = '<table class="w-full text-sm mt-3"><thead><tr class="text-left text-xs text-gray-400 border-b"><th class="pb-2">Anbieter</th><th class="pb-2 text-center">Anzahl</th><th class="pb-2 text-right">Volumen</th><th class="pb-2 text-right">Ø Wert</th></tr></thead><tbody>';
+        sortedProviders.forEach(function(e){
+            var name=e[0], d=e[1];
+            h += '<tr class="border-t border-gray-100"><td class="py-2 font-semibold text-gray-800">'+escH(name)+'</td>';
+            h += '<td class="py-2 text-center">'+d.count+'</td>';
+            h += '<td class="py-2 text-right font-bold">'+d.sum.toLocaleString('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0})+'</td>';
+            h += '<td class="py-2 text-right text-gray-600">'+(d.count>0?(d.sum/d.count).toLocaleString('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}):'–')+'</td></tr>';
+        });
+        h += '</tbody></table>';
+        tableEl.innerHTML = h;
+    };
 
 })();
 </script>
