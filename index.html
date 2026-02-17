@@ -22632,7 +22632,7 @@ window.switchWissenTyp = function(typ) {
         if (activeArea) activeArea.style.display = active ? 'block' : 'none';
     }
 
-    async function checkPushStatus() {
+    window.checkPushStatus = async function() {
         try {
             if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
             var reg = await navigator.serviceWorker.ready;
@@ -22642,7 +22642,7 @@ window.switchWissenTyp = function(typ) {
         } catch(e) { console.log('[Push] Status check:', e.message); }
     }
 
-    async function loadNotificationPrefs() {
+    window.loadNotificationPrefs = async function() {
         try {
             var sba = window._supabase || window.sb;
             var userId = (await sba.auth.getUser()).data.user?.id;
@@ -22656,7 +22656,7 @@ window.switchWissenTyp = function(typ) {
         } catch(e) { console.log('[Prefs] load:', e.message); }
     }
 
-    async function saveNotificationPrefs() {
+    window.saveNotificationPrefs = async function() {
         try {
             var sba = window._supabase || window.sb;
             var userId = (await sba.auth.getUser()).data.user?.id;
@@ -22672,7 +22672,7 @@ window.switchWissenTyp = function(typ) {
         } catch(e) { alert('Fehler: ' + e.message); }
     }
 
-    async function unsubscribePush() {
+    window.unsubscribePush = async function() {
         try {
             var reg = await navigator.serviceWorker.ready;
             var sub = await reg.pushManager.getSubscription();
