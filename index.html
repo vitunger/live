@@ -20727,8 +20727,46 @@ function setTheme(theme) {
                     <input type="checkbox" checked id="prefCalls" style="accent-color:#EF7D00;width:16px;height:16px;">
                 </label>
                 <div style="border-top:1px solid #e5e7eb;margin-top:8px;padding-top:8px;">
-                    <button onclick="setupPushNotifications()" style="width:100%;padding:8px;background:#EF7D00;color:white;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🔔 Push-Benachrichtigungen aktivieren</button>
-                    <p style="font-size:9px;color:#9ca3af;margin-top:4px;text-align:center">Erhalte Benachrichtigungen direkt auf dein Gerät</p>
+                    <div id="pushSettingsSection">
+                        <div id="pushActivateArea">
+                            <button id="pushToggleBtn" onclick="setupPushNotifications()" style="width:100%;padding:10px;background:#EF7D00;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+                                🔔 Push-Benachrichtigungen aktivieren
+                            </button>
+                            <p style="font-size:9px;color:#9ca3af;margin-top:4px;text-align:center">Erhalte Benachrichtigungen direkt auf dein Gerät</p>
+                        </div>
+                        <div id="pushActiveArea" style="display:none;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                                <span style="font-size:11px;font-weight:700;color:#059669;">✅ Push aktiv</span>
+                                <button onclick="unsubscribePush()" style="font-size:10px;color:#ef4444;background:none;border:none;cursor:pointer;text-decoration:underline;">Deaktivieren</button>
+                            </div>
+                            <p style="font-size:10px;font-weight:600;color:#6b7280;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Push-Benachrichtigungen</p>
+                            <label class="notif-toggle-wrap" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;cursor:pointer;font-size:12px;color:#4b5563;">
+                                <span>💬 Neue Nachrichten</span>
+                                <input type="checkbox" checked class="notif-toggle" data-pref="push_neue_nachricht" style="accent-color:#EF7D00;width:16px;height:16px;">
+                            </label>
+                            <label class="notif-toggle-wrap" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;cursor:pointer;font-size:12px;color:#4b5563;">
+                                <span>📋 Aufgabe zugewiesen</span>
+                                <input type="checkbox" checked class="notif-toggle" data-pref="push_aufgabe_zugewiesen" style="accent-color:#EF7D00;width:16px;height:16px;">
+                            </label>
+                            <label class="notif-toggle-wrap" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;cursor:pointer;font-size:12px;color:#4b5563;">
+                                <span>📅 Termin-Erinnerungen</span>
+                                <input type="checkbox" checked class="notif-toggle" data-pref="push_termin_erinnerung" style="accent-color:#EF7D00;width:16px;height:16px;">
+                            </label>
+                            <label class="notif-toggle-wrap" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;cursor:pointer;font-size:12px;color:#4b5563;">
+                                <span>🎯 Lead-Aktivitäten</span>
+                                <input type="checkbox" checked class="notif-toggle" data-pref="push_lead_aktivitaet" style="accent-color:#EF7D00;width:16px;height:16px;">
+                            </label>
+                            <label class="notif-toggle-wrap" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;cursor:pointer;font-size:12px;color:#4b5563;">
+                                <span>📢 Ankündigungen</span>
+                                <input type="checkbox" checked class="notif-toggle" data-pref="push_ankuendigung" style="accent-color:#EF7D00;width:16px;height:16px;">
+                            </label>
+                            <label class="notif-toggle-wrap" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;cursor:pointer;font-size:12px;color:#4b5563;">
+                                <span>🆘 Support-Updates</span>
+                                <input type="checkbox" checked class="notif-toggle" data-pref="push_support_update" style="accent-color:#EF7D00;width:16px;height:16px;">
+                            </label>
+                            <button onclick="saveNotificationPrefs()" style="width:100%;margin-top:8px;padding:7px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:6px;font-size:11px;font-weight:600;color:#374151;cursor:pointer;">💾 Push-Einstellungen speichern</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -20767,6 +20805,8 @@ function openProfilePanel() {
     requestAnimationFrame(function(){
         slider.style.transform = 'translateX(0)';
     });
+    // Check push status & load prefs
+    setTimeout(function() { checkPushStatus(); loadNotificationPrefs(); }, 200);
 }
 
 function closeProfilePanel() {
@@ -22573,6 +22613,68 @@ window.switchWissenTyp = function(typ) {
             });
         });
     };
+
+    function updatePushUI(active, deviceName) {
+        var activateArea = document.getElementById('pushActivateArea');
+        var activeArea = document.getElementById('pushActiveArea');
+        if (activateArea) activateArea.style.display = active ? 'none' : 'block';
+        if (activeArea) activeArea.style.display = active ? 'block' : 'none';
+    }
+
+    async function checkPushStatus() {
+        try {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+            var reg = await navigator.serviceWorker.ready;
+            var sub = await reg.pushManager.getSubscription();
+            updatePushUI(!!sub, sub ? 'Aktives Gerät' : null);
+            if (sub) loadNotificationPrefs();
+        } catch(e) { console.log('[Push] Status check:', e.message); }
+    }
+
+    async function loadNotificationPrefs() {
+        try {
+            var sba = window._supabase || window.sb;
+            var userId = (await sba.auth.getUser()).data.user?.id;
+            if (!userId) return;
+            var { data } = await sba.from('notification_preferences').select('*').eq('user_id', userId).single();
+            if (!data) return;
+            document.querySelectorAll('.notif-toggle').forEach(function(cb) {
+                var key = cb.dataset.pref;
+                if (key && data[key] !== undefined) cb.checked = data[key];
+            });
+        } catch(e) { console.log('[Prefs] load:', e.message); }
+    }
+
+    async function saveNotificationPrefs() {
+        try {
+            var sba = window._supabase || window.sb;
+            var userId = (await sba.auth.getUser()).data.user?.id;
+            if (!userId) { alert('Nicht eingeloggt'); return; }
+            var prefs = { user_id: userId, updated_at: new Date().toISOString() };
+            document.querySelectorAll('.notif-toggle').forEach(function(cb) {
+                var key = cb.dataset.pref;
+                if (key) prefs[key] = cb.checked;
+            });
+            var { error } = await sba.from('notification_preferences').upsert(prefs, { onConflict: 'user_id' });
+            if (error) throw error;
+            alert('✅ Push-Einstellungen gespeichert!');
+        } catch(e) { alert('Fehler: ' + e.message); }
+    }
+
+    async function unsubscribePush() {
+        try {
+            var reg = await navigator.serviceWorker.ready;
+            var sub = await reg.pushManager.getSubscription();
+            if (sub) {
+                var endpoint = sub.endpoint;
+                await sub.unsubscribe();
+                var sba = window._supabase || window.sb;
+                await sba.from('push_subscriptions').delete().eq('endpoint', endpoint);
+                console.log('[Push] Unsubscribed');
+            }
+            updatePushUI(false);
+        } catch(e) { console.error('[Push] Unsubscribe error:', e); }
+    }
 
     // ── Camera Access for Content Upload ──
     window.openCamera = function(callback) {
