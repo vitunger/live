@@ -5852,11 +5852,12 @@
 
                     <!-- Ideen Tab -->
                     <div id="ideenTabIdeen" class="ideen-tab-content">
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
                             <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-vit-orange" id="hqIdeenTotal">0</div><div class="text-xs text-gray-500">Eingereichte Ideen</div></div>
                             <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-yellow-500" id="hqIdeenPruefung">0</div><div class="text-xs text-gray-500">In Prüfung</div></div>
                             <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600" id="hqIdeenUmgesetzt">0</div><div class="text-xs text-gray-500">Umgesetzt</div></div>
                             <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-red-400" id="hqIdeenAbgelehnt">0</div><div class="text-xs text-gray-500">Abgelehnt</div></div>
+                            <div class="vit-card p-4 text-center border-2 border-purple-200"><div class="text-2xl font-bold text-purple-600" id="hqIdeenAnalysiert">0</div><div class="text-xs text-gray-500">🤖 KI-analysiert</div></div>
                         </div>
                         <div class="flex space-x-2 mb-4">
                             <button onclick="filterHqIdeen('all')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white" data-hif="all">Alle</button>
@@ -5864,6 +5865,19 @@
                             <button onclick="filterHqIdeen('wird_geprueft')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="wird_geprueft">Wird geprüft</button>
                             <button onclick="filterHqIdeen('umgesetzt')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="umgesetzt">Umgesetzt</button>
                             <button onclick="filterHqIdeen('abgelehnt')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="abgelehnt">Abgelehnt</button>
+                            <span class="border-l border-gray-300 h-5 mx-1"></span>
+                            <button onclick="filterHqIdeen('ki_hoch')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="ki_hoch">🤖 Prio: Hoch+</button>
+                            <button onclick="filterHqIdeen('ki_quickwin')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="ki_quickwin">⚡ Quick-Wins</button>
+                        </div>
+                        <div class="flex flex-wrap gap-2 mb-4 items-center">
+                            <select id="hqIdeenSort" onchange="renderHqIdeen(document.querySelector('.hq-ideen-filter.bg-vit-orange')?.dataset.hif||'all')" class="text-xs border rounded-lg px-3 py-1.5 bg-white">
+                                <option value="newest">Neueste zuerst</option>
+                                <option value="votes">Meiste Votes</option>
+                                <option value="ki_machbarkeit">Machbarkeit (KI)</option>
+                                <option value="ki_vision_fit">Vision-Fit (KI)</option>
+                                <option value="ki_prioritaet">KI-Priorität</option>
+                            </select>
+                            <button onclick="analysierAlleNeuen()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-600 text-white hover:bg-purple-700">🤖 Alle neuen analysieren</button>
                         </div>
                         <div class="vit-card p-6">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">📋 Eingereichte Ideen aller Partner</h2>
@@ -6927,11 +6941,93 @@
             if(currentRole !== 'hq' && SESSION.account_level !== 'extern') { loadDashboardWidgets(); loadAllgemeinData(); }
             // Check for pending approvals (HQ + GF only)
             checkPendingApprovals();
+            checkDemoMode();
             // Check BWA deadlines and create reminders
             checkBwaDeadlines();
         }
 
         // === DEMO MODE SYSTEM ===
+        var isDemoMode = false;
+        var demoDataSeeded = false;
+
+        function checkDemoMode() {
+            if(!sbProfile) return;
+            var isDemo = sbProfile.status === 'demo' || sbProfile.status === 'demo_active';
+            if(isDemo && !demoDataSeeded) {
+                isDemoMode = true;
+                seedDemoData();
+                showDemoBanner();
+            } else if(!isDemo && demoDataSeeded) {
+                isDemoMode = false;
+                clearDemoData();
+                removeDemoBanner();
+            }
+        }
+
+        function showDemoBanner() {
+            if(document.getElementById('demoBanner')) return;
+            var banner = document.createElement('div');
+            banner.id = 'demoBanner';
+            banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9998;background:linear-gradient(90deg,#f97316,#ea580c);color:white;text-align:center;padding:8px 16px;font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.2);';
+            banner.innerHTML = '\ud83c\udfad DEMO-MODUS AKTIV \u2013 Die angezeigten Daten sind Beispieldaten zur Veranschaulichung. <button onclick="removeDemoBanner()" style="margin-left:12px;background:rgba(255,255,255,0.2);border:none;color:white;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px;">\u2715 Ausblenden</button>';
+            document.body.prepend(banner);
+            document.body.style.paddingTop = '36px';
+        }
+
+        function removeDemoBanner() {
+            var b = document.getElementById('demoBanner');
+            if(b) b.remove();
+            document.body.style.paddingTop = '0';
+        }
+
+        async function seedDemoData() {
+            if(demoDataSeeded) return;
+            demoDataSeeded = true;
+            var stId = SESSION.standort_id;
+            if(!stId) return;
+            try {
+                // Demo leads
+                var demoLeads = [
+                    {standort_id:stId,name:'Thomas Müller',email:'t.mueller@example.com',telefon:'+49 170 1234567',interesse:'E-Bike Trekking',status:'neu',quelle:'Website',budget:'2000-3000',notizen:'Interessiert an Bosch CX Motor',demo_data:true},
+                    {standort_id:stId,name:'Lisa Schmidt',email:'l.schmidt@example.com',telefon:'+49 171 9876543',interesse:'Kinder-Mountainbike',status:'kontaktiert',quelle:'Empfehlung',budget:'500-800',notizen:'Für Tochter, 10 Jahre',demo_data:true},
+                    {standort_id:stId,name:'Hans Weber',email:'h.weber@example.com',telefon:'+49 172 5551234',interesse:'Rennrad Carbon',status:'angebot',quelle:'Laufkundschaft',budget:'3000-5000',notizen:'Wettkampfambition, sucht leichtes Rad',demo_data:true},
+                    {standort_id:stId,name:'Maria Fischer',email:'m.fischer@example.com',telefon:'+49 173 4445678',interesse:'City E-Bike',status:'verhandlung',quelle:'Google',budget:'2500-3500',notizen:'Pendlerin, 15km pro Tag',demo_data:true}
+                ];
+                await sb.from('leads').insert(demoLeads);
+                // Demo termine
+                var today = new Date();
+                var demoTermine = [
+                    {standort_id:stId,titel:'Probefahrt E-Bike',datum:new Date(today.getTime()+86400000).toISOString().split('T')[0],uhrzeit:'10:00',kunde:'Thomas Müller',typ:'probefahrt',notizen:'Bosch CX Testrad vorbereiten',demo_data:true},
+                    {standort_id:stId,titel:'Beratung Kinderrad',datum:new Date(today.getTime()+172800000).toISOString().split('T')[0],uhrzeit:'14:30',kunde:'Lisa Schmidt',typ:'beratung',notizen:'Mit Tochter',demo_data:true},
+                    {standort_id:stId,titel:'Werkstatt-Abholung',datum:new Date(today.getTime()+259200000).toISOString().split('T')[0],uhrzeit:'09:00',kunde:'Klaus Bauer',typ:'werkstatt',notizen:'Inspektion fertig',demo_data:true}
+                ];
+                await sb.from('termine').insert(demoTermine);
+                // Demo support tickets
+                var demoTickets = [
+                    {standort_id:stId,erstellt_von:sbUser.id,titel:'Bestellsystem zeigt falsche Preise',beschreibung:'Seit gestern werden bei einigen Artikeln die EK-Preise statt VK angezeigt.',prio:'hoch',status:'offen',kategorie:'IT & System',demo_data:true},
+                    {standort_id:stId,erstellt_von:sbUser.id,titel:'Marketing-Material Q2 anfordern',beschreibung:'Brauche neue Plakate und Flyer für Frühjahrsaktion.',prio:'mittel',status:'offen',kategorie:'Marketing',demo_data:true}
+                ];
+                await sb.from('support_tickets').insert(demoTickets);
+                console.log('[Demo] Demo data seeded');
+            } catch(err) {
+                console.warn('[Demo] Seed error:', err);
+            }
+        }
+
+        async function clearDemoData() {
+            if(!demoDataSeeded) return;
+            demoDataSeeded = false;
+            var stId = SESSION.standort_id;
+            if(!stId) return;
+            try {
+                await sb.from('leads').delete().eq('standort_id', stId).eq('demo_data', true);
+                await sb.from('termine').delete().eq('standort_id', stId).eq('demo_data', true);
+                await sb.from('support_tickets').delete().eq('standort_id', stId).eq('demo_data', true);
+                console.log('[Demo] Demo data cleared');
+            } catch(err) {
+                console.warn('[Demo] Clear error:', err);
+            }
+        }
 
         async function checkPendingApprovals() {
             var isHQ = currentRoles.indexOf('hq') >= 0 || (sbProfile && sbProfile.is_hq);
@@ -13428,6 +13524,264 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             }
         }
 
+
+        // === ADS / MARKETING PERFORMANCE ===
+        var adsCurrentContext = 'standort'; // 'standort' oder 'hq'
+
+        function adsFmtEuro(n) { return Number(n||0).toLocaleString('de-DE', {style:'currency', currency:'EUR', minimumFractionDigits:0, maximumFractionDigits:0}); }
+        function adsFmtK(n) { n = Number(n||0); if (n >= 1000000) return (n/1000000).toFixed(1)+'M'; if (n >= 1000) return (n/1000).toFixed(1)+'K'; return n.toString(); }
+        function adsSetText(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+
+        async function loadAdsData(context) {
+            adsCurrentContext = context || 'standort';
+            var suffix = adsCurrentContext === 'hq' ? 'Hq' : '';
+            var filterEl = document.getElementById('adsZeitraumFilter' + (suffix || ''));
+            var tage = filterEl ? parseInt(filterEl.value) : 30;
+            var datumVon = new Date();
+            datumVon.setDate(datumVon.getDate() - tage);
+            var vonStr = datumVon.toISOString().split('T')[0];
+
+            try {
+                var query = sb.from('ads_performance').select('*').gte('datum', vonStr).order('datum', {ascending: false});
+                if (adsCurrentContext !== 'hq' && !sbProfile.is_hq) {
+                    query = query.eq('standort_id', sbProfile.standort_id);
+                }
+                var res = await query;
+                if (res.error) throw res.error;
+                adsPerformanceData = res.data || [];
+
+                var kQuery = sb.from('ads_kampagnen').select('*, standorte(name, stadt)').eq('ist_aktiv', true);
+                if (adsCurrentContext !== 'hq' && !sbProfile.is_hq) kQuery = kQuery.eq('standort_id', sbProfile.standort_id);
+                var kRes = await kQuery;
+                adsKampagnenData = kRes.data || [];
+
+                if (sbProfile.is_hq) {
+                    var syncRes = await sb.from('ads_accounts').select('plattform, letzter_sync, sync_status, sync_fehler');
+                    renderAdsSyncInfo(syncRes.data || [], suffix);
+                }
+
+                renderAdsKpis(suffix);
+                renderAdsChart(suffix);
+                renderAdsKampagnenTabelle(suffix);
+                if (adsCurrentContext === 'hq' || sbProfile.is_hq) renderAdsStandortVergleich(suffix);
+
+                // Auch Performance-Tab KPIs updaten mit echten Daten
+                updateMktPerformanceFromAds();
+
+            } catch (e) {
+                console.error('loadAdsData:', e);
+            }
+        }
+
+        function renderAdsKpis(suffix) {
+            var s = suffix || '';
+            var d = adsPerformanceData;
+            var totalAusgaben=0, totalImpressions=0, totalKlicks=0, totalConv=0, totalConvWert=0;
+            var googleAusgaben=0, googleKlicks=0, googleConv=0, googleKamp=new Set();
+            var metaAusgaben=0, metaReichweite=0, metaConv=0, metaKamp=new Set();
+
+            d.forEach(function(r) {
+                totalAusgaben += Number(r.ausgaben||0); totalImpressions += Number(r.impressionen||0);
+                totalKlicks += Number(r.klicks||0); totalConv += Number(r.conversions||0); totalConvWert += Number(r.conversion_wert||0);
+                if (r.plattform==='google') { googleAusgaben+=Number(r.ausgaben||0); googleKlicks+=Number(r.klicks||0); googleConv+=Number(r.conversions||0); googleKamp.add(r.kampagne_id); }
+                else { metaAusgaben+=Number(r.ausgaben||0); metaReichweite+=Number(r.reichweite||0); metaConv+=Number(r.conversions||0); metaKamp.add(r.kampagne_id); }
+            });
+            var ctr = totalImpressions > 0 ? (totalKlicks / totalImpressions * 100).toFixed(2) : '0';
+            var cpc = totalKlicks > 0 ? (totalAusgaben / totalKlicks).toFixed(2) : '0';
+
+            adsSetText('adsKpiAusgaben'+s, adsFmtEuro(totalAusgaben));
+            adsSetText('adsKpiImpressions'+s, adsFmtK(totalImpressions));
+            adsSetText('adsKpiKlicks'+s, adsFmtK(totalKlicks));
+            adsSetText('adsKpiCtr'+s, ctr+'%');
+            adsSetText('adsKpiCpc'+s, adsFmtEuro(Number(cpc)));
+            adsSetText('adsKpiConversions'+s, Math.round(totalConv).toString());
+            adsSetText('adsGoogleAusgaben'+s, adsFmtEuro(googleAusgaben));
+            adsSetText('adsGoogleKlicks'+s, adsFmtK(googleKlicks));
+            adsSetText('adsGoogleConv'+s, Math.round(googleConv).toString());
+            adsSetText('adsGoogleKampagnenCount'+s, googleKamp.size+' Kampagnen');
+            adsSetText('adsMetaAusgaben'+s, adsFmtEuro(metaAusgaben));
+            adsSetText('adsMetaReichweite'+s, adsFmtK(metaReichweite));
+            adsSetText('adsMetaConv'+s, Math.round(metaConv).toString());
+            adsSetText('adsMetaKampagnenCount'+s, metaKamp.size+' Kampagnen');
+        }
+
+        function renderAdsChart(suffix) {
+            var s = suffix || '';
+            var c = document.getElementById('adsChartContainer'+s);
+            if (!c) return;
+            var tageMap = {};
+            adsPerformanceData.forEach(function(r) {
+                if (!tageMap[r.datum]) tageMap[r.datum] = {ausgaben:0, klicks:0};
+                tageMap[r.datum].ausgaben += Number(r.ausgaben||0);
+                tageMap[r.datum].klicks += Number(r.klicks||0);
+            });
+            var tage = Object.keys(tageMap).sort();
+            if (!tage.length) { c.innerHTML = '<p class="text-gray-400 text-sm text-center py-8">Keine Daten im gewählten Zeitraum</p>'; return; }
+            var maxAusgaben = Math.max.apply(null, tage.map(function(t){return tageMap[t].ausgaben;}))||1;
+            var maxKlicks = Math.max.apply(null, tage.map(function(t){return tageMap[t].klicks;}))||1;
+            var sichtbar = tage.slice(-14);
+            c.innerHTML = '<div class="flex items-end space-x-1" style="height:120px">'
+                + sichtbar.map(function(tag) {
+                    var d = tageMap[tag];
+                    var hA = Math.max(4, Math.round(d.ausgaben / maxAusgaben * 100));
+                    var hK = Math.max(4, Math.round(d.klicks / maxKlicks * 100));
+                    var tl = new Date(tag+'T00:00:00').toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
+                    return '<div class="flex-1 flex flex-col items-center justify-end" title="'+tl+': '+adsFmtEuro(d.ausgaben)+' / '+d.klicks+' Klicks">'
+                        +'<div class="w-full flex space-x-0.5 justify-center items-end">'
+                        +'<div class="bg-vit-orange rounded-t" style="width:45%;height:'+hA+'px;opacity:0.8"></div>'
+                        +'<div class="bg-blue-400 rounded-t" style="width:45%;height:'+hK+'px;opacity:0.7"></div>'
+                        +'</div><p class="text-[9px] text-gray-400 mt-1 leading-none">'+tl+'</p></div>';
+                }).join('') + '</div>'
+                +'<div class="flex items-center justify-center space-x-4 mt-3">'
+                +'<span class="flex items-center space-x-1 text-xs text-gray-500"><span class="w-3 h-3 rounded bg-vit-orange opacity-80"></span><span>Ausgaben</span></span>'
+                +'<span class="flex items-center space-x-1 text-xs text-gray-500"><span class="w-3 h-3 rounded bg-blue-400 opacity-70"></span><span>Klicks</span></span></div>';
+        }
+
+        function renderAdsKampagnenTabelle(suffix) {
+            var s = suffix || '';
+            var tbody = document.getElementById('adsKampagnenTabelle'+s);
+            if (!tbody) return;
+            var kampMap = {};
+            adsPerformanceData.forEach(function(r) {
+                if (adsPlattformFilter !== 'alle' && r.plattform !== adsPlattformFilter) return;
+                var key = r.plattform+'_'+r.kampagne_id;
+                if (!kampMap[key]) kampMap[key] = {plattform:r.plattform, name:r.kampagne_name, ausgaben:0, impressionen:0, klicks:0, conversions:0, conversion_wert:0};
+                kampMap[key].ausgaben += Number(r.ausgaben||0); kampMap[key].impressionen += Number(r.impressionen||0);
+                kampMap[key].klicks += Number(r.klicks||0); kampMap[key].conversions += Number(r.conversions||0); kampMap[key].conversion_wert += Number(r.conversion_wert||0);
+            });
+            var kampagnen = Object.values(kampMap).sort(function(a,b){return b.ausgaben-a.ausgaben;});
+            if (!kampagnen.length) { tbody.innerHTML = '<tr><td colspan="9" class="p-4 text-center text-gray-400">Keine Kampagnen</td></tr>'; return; }
+            tbody.innerHTML = kampagnen.map(function(k) {
+                var ctr = k.impressionen>0 ? (k.klicks/k.impressionen*100).toFixed(2) : '0.00';
+                var cpc = k.klicks>0 ? (k.ausgaben/k.klicks).toFixed(2) : '—';
+                var roas = k.ausgaben>0 ? (k.conversion_wert/k.ausgaben).toFixed(1) : '—';
+                var pb = k.plattform==='google' ? '<span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Google</span>' : '<span class="text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">Meta</span>';
+                var rc = roas!=='—'&&Number(roas)>=3 ? 'text-green-600 font-bold' : roas!=='—'&&Number(roas)>=1 ? 'text-yellow-600' : 'text-red-500';
+                return '<tr class="border-b hover:bg-gray-50"><td class="p-3 font-semibold text-gray-800 max-w-[200px] truncate" title="'+escH(k.name)+'">'+escH(k.name)+'</td><td class="p-3 text-center">'+pb+'</td><td class="p-3 text-right font-semibold">'+adsFmtEuro(k.ausgaben)+'</td><td class="p-3 text-right">'+adsFmtK(k.impressionen)+'</td><td class="p-3 text-right">'+adsFmtK(k.klicks)+'</td><td class="p-3 text-right">'+ctr+'%</td><td class="p-3 text-right">'+adsFmtEuro(Number(cpc||0))+'</td><td class="p-3 text-right font-semibold text-green-600">'+Math.round(k.conversions)+'</td><td class="p-3 text-right '+rc+'">'+(roas!=='—'?roas+'x':'—')+'</td></tr>';
+            }).join('');
+        }
+
+        function filterAdsPlattform(filter) {
+            adsPlattformFilter = filter;
+            document.querySelectorAll('.ads-plattform-filter').forEach(function(btn) {
+                btn.className = btn.getAttribute('data-filter')===filter
+                    ? 'ads-plattform-filter text-xs px-3 py-1 rounded-full bg-vit-orange text-white font-semibold'
+                    : 'ads-plattform-filter text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-600 font-semibold';
+            });
+            renderAdsKampagnenTabelle(adsCurrentContext==='hq'?'Hq':'');
+        }
+
+        function renderAdsStandortVergleich(suffix) {
+            var s = suffix || '';
+            var tbody = document.getElementById('adsStandortTabelle'+s);
+            if (!tbody) return;
+            var standortMap = {}; var totalAusgaben = 0;
+            adsPerformanceData.forEach(function(r) {
+                var sid = r.standort_id || 'ohne';
+                if (!standortMap[sid]) standortMap[sid] = {name:'Ohne Zuordnung', ausgaben:0, klicks:0, conversions:0, conversion_wert:0};
+                standortMap[sid].ausgaben += Number(r.ausgaben||0); standortMap[sid].klicks += Number(r.klicks||0);
+                standortMap[sid].conversions += Number(r.conversions||0); standortMap[sid].conversion_wert += Number(r.conversion_wert||0);
+                totalAusgaben += Number(r.ausgaben||0);
+            });
+            // Namen aus Kampagnen-Mapping
+            adsKampagnenData.forEach(function(k) {
+                if (k.standort_id && standortMap[k.standort_id] && k.standorte) {
+                    standortMap[k.standort_id].name = k.standorte.name + (k.standorte.stadt ? ' ('+k.standorte.stadt+')' : '');
+                }
+            });
+            // Fallback: Namen aus Kampagnen-Namen parsen
+            adsPerformanceData.forEach(function(r) {
+                var sid = r.standort_id || 'ohne';
+                if (standortMap[sid] && standortMap[sid].name === 'Ohne Zuordnung' && r.kampagne_name) {
+                    var m = r.kampagne_name.match(/\[vit:bikes\s+([^\]]+)\]/);
+                    if (m) standortMap[sid].name = 'vit:bikes ' + m[1];
+                }
+            });
+            var standorte = Object.values(standortMap).sort(function(a,b){return b.ausgaben-a.ausgaben;});
+            if (!standorte.length) { tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-400">Keine Daten</td></tr>'; return; }
+            tbody.innerHTML = standorte.map(function(st) {
+                var cpc = st.klicks>0 ? (st.ausgaben/st.klicks).toFixed(2) : '—';
+                var roas = st.ausgaben>0 ? (st.conversion_wert/st.ausgaben).toFixed(1) : '—';
+                var anteil = totalAusgaben>0 ? Math.round(st.ausgaben/totalAusgaben*100) : 0;
+                return '<tr class="border-b hover:bg-gray-50"><td class="p-3 font-semibold text-gray-800">'+escH(st.name)+'</td><td class="p-3 text-right">'+adsFmtEuro(st.ausgaben)+'</td><td class="p-3 text-right">'+adsFmtK(st.klicks)+'</td><td class="p-3 text-right font-semibold text-green-600">'+Math.round(st.conversions)+'</td><td class="p-3 text-right">'+adsFmtEuro(Number(cpc||0))+'</td><td class="p-3 text-right">'+(roas!=='—'?roas+'x':'—')+'</td><td class="p-3"><div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-vit-orange h-2 rounded-full" style="width:'+anteil+'%"></div></div><span class="text-xs text-gray-500">'+anteil+'%</span></td></tr>';
+            }).join('');
+        }
+
+        function renderAdsSyncInfo(accounts, suffix) {
+            var s = suffix || '';
+            var el = document.getElementById('adsSyncStatus'+s);
+            if (!el || !accounts.length) return;
+            el.innerHTML = accounts.map(function(a) {
+                var icon = a.sync_status==='success'?'🟢':a.sync_status==='error'?'🔴':'🟡';
+                var zeit = a.letzter_sync ? new Date(a.letzter_sync).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : 'nie';
+                return icon+' '+a.plattform+': '+zeit;
+            }).join(' &nbsp;|&nbsp; ');
+        }
+
+        // Update die bestehenden Performance-Tab KPIs mit echten Ads-Daten
+        function updateMktPerformanceFromAds() {
+            if (!adsPerformanceData.length) return;
+            var totalAusgaben=0, totalImpressions=0, totalKlicks=0, totalConv=0;
+            var metaAusgaben=0, metaImpressions=0, metaKlicks=0;
+            var googleAusgaben=0, googleImpressions=0, googleKlicks=0;
+
+            adsPerformanceData.forEach(function(r) {
+                totalAusgaben+=Number(r.ausgaben||0); totalImpressions+=Number(r.impressionen||0);
+                totalKlicks+=Number(r.klicks||0); totalConv+=Number(r.conversions||0);
+                if(r.plattform==='meta') { metaAusgaben+=Number(r.ausgaben||0); metaImpressions+=Number(r.impressionen||0); metaKlicks+=Number(r.klicks||0); }
+                else { googleAusgaben+=Number(r.ausgaben||0); googleImpressions+=Number(r.impressionen||0); googleKlicks+=Number(r.klicks||0); }
+            });
+
+            // Cross-Channel KPIs updaten
+            var kpiEl = document.getElementById('mktCrossKpis');
+            if (kpiEl) {
+                kpiEl.innerHTML = ''
+                    +'<div class="p-4 bg-gray-50 rounded-lg text-center"><p class="text-xs text-gray-500">Kosten Gesamt</p><p class="text-xl font-bold text-gray-800">'+adsFmtEuro(totalAusgaben)+'</p><p class="text-xs text-green-600">Live-Daten</p></div>'
+                    +'<div class="p-4 bg-gray-50 rounded-lg text-center"><p class="text-xs text-gray-500">Impressionen Gesamt</p><p class="text-xl font-bold text-gray-800">'+adsFmtK(totalImpressions)+'</p><p class="text-xs text-green-600">Live-Daten</p></div>'
+                    +'<div class="p-4 bg-gray-50 rounded-lg text-center"><p class="text-xs text-gray-500">Klicks Gesamt</p><p class="text-xl font-bold text-gray-800">'+adsFmtK(totalKlicks)+'</p><p class="text-xs text-green-600">Live-Daten</p></div>'
+                    +'<div class="p-4 bg-gray-50 rounded-lg text-center"><p class="text-xs text-gray-500">Conversions</p><p class="text-xl font-bold text-vit-orange">'+Math.round(totalConv)+'</p><p class="text-xs text-gray-400">Alle Plattformen</p></div>'
+                    +'<div class="p-4 bg-gray-50 rounded-lg text-center"><p class="text-xs text-gray-500">CPC</p><p class="text-xl font-bold text-gray-800">'+(totalKlicks>0?adsFmtEuro(totalAusgaben/totalKlicks):'—')+'</p><p class="text-xs text-gray-400">⌀ Kosten/Klick</p></div>'
+                    +'<div class="p-4 bg-gray-50 rounded-lg text-center"><p class="text-xs text-gray-500">CTR</p><p class="text-xl font-bold text-blue-600">'+(totalImpressions>0?(totalKlicks/totalImpressions*100).toFixed(2):'0')+'%</p><p class="text-xs text-gray-400">Click-Through</p></div>';
+            }
+
+            // Meta Kampagnen-Tabelle im Performance-Tab updaten
+            var metaTb = document.getElementById('mktMetaKampagnen');
+            if (metaTb) {
+                var metaKampMap = {};
+                adsPerformanceData.filter(function(r){return r.plattform==='meta';}).forEach(function(r) {
+                    var key = r.kampagne_id;
+                    if (!metaKampMap[key]) metaKampMap[key] = {name:r.kampagne_name, ausgaben:0, impressionen:0, klicks:0};
+                    metaKampMap[key].ausgaben+=Number(r.ausgaben||0); metaKampMap[key].impressionen+=Number(r.impressionen||0); metaKampMap[key].klicks+=Number(r.klicks||0);
+                });
+                var metaKamps = Object.values(metaKampMap).sort(function(a,b){return b.ausgaben-a.ausgaben;});
+                var html = metaKamps.map(function(k,i) {
+                    return '<tr class="border-b"><td class="py-1.5 px-2">'+(i+1)+'.</td><td class="py-1.5 px-2 truncate max-w-[180px]" title="'+escH(k.name)+'">'+escH(k.name)+'</td><td class="py-1.5 px-2 text-right">'+adsFmtEuro(k.ausgaben)+'</td><td class="py-1.5 px-2 text-right">'+adsFmtK(k.impressionen)+'</td><td class="py-1.5 px-2 text-right">'+adsFmtK(k.klicks)+'</td></tr>';
+                }).join('');
+                html += '<tr class="bg-blue-50 font-semibold"><td class="py-1.5 px-2" colspan="2">Gesamt</td><td class="py-1.5 px-2 text-right">'+adsFmtEuro(metaAusgaben)+'</td><td class="py-1.5 px-2 text-right">'+adsFmtK(metaImpressions)+'</td><td class="py-1.5 px-2 text-right">'+adsFmtK(metaKlicks)+'</td></tr>';
+                metaTb.innerHTML = html;
+            }
+
+            // Google Kampagnen-Tabelle im Performance-Tab updaten
+            var googleTb = document.getElementById('mktGoogleKampagnen');
+            if (googleTb) {
+                var googleKampMap = {};
+                adsPerformanceData.filter(function(r){return r.plattform==='google';}).forEach(function(r) {
+                    var key = r.kampagne_id;
+                    if (!googleKampMap[key]) googleKampMap[key] = {name:r.kampagne_name, ausgaben:0, impressionen:0, klicks:0};
+                    googleKampMap[key].ausgaben+=Number(r.ausgaben||0); googleKampMap[key].impressionen+=Number(r.impressionen||0); googleKampMap[key].klicks+=Number(r.klicks||0);
+                });
+                var googleKamps = Object.values(googleKampMap).sort(function(a,b){return b.ausgaben-a.ausgaben;});
+                if (googleKamps.length) {
+                    var ghtml = googleKamps.map(function(k,i) {
+                        return '<tr class="border-b"><td class="py-1.5 px-2">'+(i+1)+'.</td><td class="py-1.5 px-2 truncate max-w-[180px]" title="'+escH(k.name)+'">'+escH(k.name)+'</td><td class="py-1.5 px-2 text-right">'+adsFmtEuro(k.ausgaben)+'</td><td class="py-1.5 px-2 text-right">'+adsFmtK(k.impressionen)+'</td><td class="py-1.5 px-2 text-right">'+adsFmtK(k.klicks)+'</td></tr>';
+                    }).join('');
+                    ghtml += '<tr class="bg-green-50 font-semibold"><td class="py-1.5 px-2" colspan="2">Gesamt</td><td class="py-1.5 px-2 text-right">'+adsFmtEuro(googleAusgaben)+'</td><td class="py-1.5 px-2 text-right">'+adsFmtK(googleImpressions)+'</td><td class="py-1.5 px-2 text-right">'+adsFmtK(googleKlicks)+'</td></tr>';
+                    googleTb.innerHTML = ghtml;
+                }
+            }
+        }
+
+
         // === HQ MARKETING ===
         function renderHqMarketing() {
             var active = hqStandorte.filter(function(s){return s.leads>0;});
@@ -17225,16 +17579,29 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(!el) return;
             try {
                 var query = sb.from('ideen').select('*, users(name), standorte(name)').order('votes', {ascending:false});
-                if(filter && filter!=='all') query = query.eq('status', filter);
+                if(filter && filter!=='all' && filter!=='ki_hoch' && filter!=='ki_quickwin') query = query.eq('status', filter);
                 var resp = await query;
                 if(resp.error) throw resp.error;
                 var ideas = resp.data || [];
-                var allResp = await sb.from('ideen').select('status');
+                // KI filter
+                if(filter==='ki_hoch') ideas = ideas.filter(function(i){ var ki=i.ki_analyse; return ki && (ki.prioritaet==='kritisch'||ki.prioritaet==='hoch'); });
+                if(filter==='ki_quickwin') ideas = ideas.filter(function(i){ var ki=i.ki_analyse; return ki && ki.quick_win===true; });
+                // Sorting
+                var sort = document.getElementById('hqIdeenSort');
+                var sortVal = sort ? sort.value : 'newest';
+                if(sortVal==='ki_machbarkeit') ideas.sort(function(a,b){ return ((b.ki_analyse||{}).machbarkeit_score||0)-((a.ki_analyse||{}).machbarkeit_score||0); });
+                else if(sortVal==='ki_vision_fit') ideas.sort(function(a,b){ return ((b.ki_analyse||{}).vision_fit_score||0)-((a.ki_analyse||{}).vision_fit_score||0); });
+                else if(sortVal==='ki_prioritaet') { var pOrd={kritisch:4,hoch:3,mittel:2,niedrig:1}; ideas.sort(function(a,b){ return (pOrd[(b.ki_analyse||{}).prioritaet]||0)-(pOrd[(a.ki_analyse||{}).prioritaet]||0); }); }
+                else if(sortVal==='votes') ideas.sort(function(a,b){ return (b.votes||0)-(a.votes||0); });
+                else ideas.sort(function(a,b){ return new Date(b.created_at||0)-new Date(a.created_at||0); });
+                // Stats
+                var allResp = await sb.from('ideen').select('status, ki_analyse');
                 var all = allResp.data || [];
                 var t=document.getElementById('hqIdeenTotal');if(t)t.textContent=all.length;
                 var p=document.getElementById('hqIdeenPruefung');if(p)p.textContent=all.filter(function(i){return i.status==='wird_geprueft'||i.status==='diskussion';}).length;
                 var u=document.getElementById('hqIdeenUmgesetzt');if(u)u.textContent=all.filter(function(i){return i.status==='umgesetzt';}).length;
                 var a=document.getElementById('hqIdeenAbgelehnt');if(a)a.textContent=all.filter(function(i){return i.status==='abgelehnt';}).length;
+                var ak=document.getElementById('hqIdeenAnalysiert');if(ak)ak.textContent=all.filter(function(i){return i.ki_analyse;}).length;
                 var statusC={neu:'bg-blue-100 text-blue-700',diskussion:'bg-yellow-100 text-yellow-700',wird_geprueft:'bg-yellow-100 text-yellow-700',geplant:'bg-purple-100 text-purple-700',umgesetzt:'bg-green-100 text-green-700',abgelehnt:'bg-red-100 text-red-700'};
                 var statusL={neu:'Neu',diskussion:'In Diskussion',wird_geprueft:'Wird gepr\u00fcft',geplant:'Geplant',umgesetzt:'Umgesetzt',abgelehnt:'Abgelehnt'};
                 var h='';
@@ -17242,11 +17609,20 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     var standortName = idee.standorte ? idee.standorte.name : 'HQ';
                     var authorName = idee.users ? idee.users.name : 'Unbekannt';
                     var d = idee.created_at ? new Date(idee.created_at).toLocaleDateString('de-DE') : '';
+                    var ki = idee.ki_analyse;
                     h+='<div class="p-4 bg-gray-50 rounded-lg">';
                     h+='<div class="flex items-center justify-between mb-2">';
-                    h+='<div class="flex items-center space-x-3">';
+                    h+='<div class="flex flex-wrap items-center gap-2">';
                     h+='<span class="text-lg font-bold text-vit-orange">\ud83d\udc4d '+(idee.votes||0)+'</span>';
                     h+='<span class="text-xs px-2 py-0.5 rounded-full font-semibold '+(statusC[idee.status]||'bg-gray-100 text-gray-600')+'">'+(statusL[idee.status]||idee.status)+'</span>';
+                    // KI badges
+                    if(ki){
+                        var pc={kritisch:'bg-red-100 text-red-700',hoch:'bg-orange-100 text-orange-700',mittel:'bg-yellow-100 text-yellow-700',niedrig:'bg-gray-100 text-gray-600'};
+                        h+='<span class="text-xs px-2 py-0.5 rounded-full font-semibold '+(pc[ki.prioritaet]||'bg-gray-100 text-gray-600')+'">\ud83e\udd16 '+(ki.prioritaet||'?')+'</span>';
+                        var ac={S:'bg-green-100 text-green-700',M:'bg-blue-100 text-blue-700',L:'bg-orange-100 text-orange-700',XL:'bg-red-100 text-red-700'};
+                        if(ki.aufwand) h+='<span class="text-xs px-2 py-0.5 rounded-full font-semibold '+(ac[ki.aufwand]||'bg-gray-100')+'">'+ki.aufwand+'</span>';
+                        if(ki.quick_win) h+='<span class="text-xs px-2 py-0.5 rounded-full font-semibold bg-green-100 text-green-700">\u26a1 Quick-Win</span>';
+                    }
                     h+='<select onchange="updateIdeeStatus(\''+idee.id+'\',this.value)" class="text-xs border border-gray-200 rounded px-1 py-0.5">';
                     ['neu','wird_geprueft','geplant','umgesetzt','abgelehnt'].forEach(function(s){
                         h+='<option value="'+s+'"'+(idee.status===s?' selected':'')+'>'+(statusL[s]||s)+'</option>';
@@ -17255,10 +17631,29 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     h+='<span class="text-xs text-gray-400">'+d+'</span></div>';
                     h+='<p class="text-sm font-semibold text-gray-800">'+idee.titel+'</p>';
                     if(idee.beschreibung) h+='<p class="text-xs text-gray-600 mt-1">'+idee.beschreibung+'</p>';
-                    h+='<p class="text-xs text-gray-400 mt-1">\ud83d\udca1 '+authorName+' \u00b7 \ud83d\udccd '+standortName+'</p>';
+                    h+='<div class="flex items-center justify-between mt-2">';
+                    h+='<p class="text-xs text-gray-400">\ud83d\udca1 '+authorName+' \u00b7 \ud83d\udccd '+standortName+'</p>';
+                    // KI action buttons
+                    if(!ki) h+='<button onclick="analysiereIdee(\''+idee.id+'\',this)" class="text-xs px-2 py-1 rounded bg-purple-100 text-purple-700 hover:bg-purple-200 font-semibold">\ud83e\udd16 Analysieren</button>';
+                    else h+='<button onclick="toggleKiPanel(\''+idee.id+'\',this)" class="text-xs px-2 py-1 rounded bg-purple-100 text-purple-700 hover:bg-purple-200 font-semibold">Analyse \u25bc</button>';
+                    h+='</div>';
+                    // KI analysis panel (hidden by default)
+                    if(ki) {
+                        var analyseDate = ki.analysiert_am ? new Date(ki.analysiert_am).toLocaleDateString('de-DE') : '';
+                        h+='<div id="kiPanel_'+idee.id+'" style="display:none" class="mt-3 p-4 bg-purple-50 rounded-lg border border-purple-200">';
+                        h+=renderKiAnalyseHtml(ki, analyseDate);
+                        h+='</div>';
+                    }
+                    // Machbarkeit + Vision-Fit bars
+                    if(ki && (ki.machbarkeit_score || ki.vision_fit_score)) {
+                        h+='<div class="flex gap-4 mt-2">';
+                        if(ki.machbarkeit_score) h+='<div class="flex-1"><div class="flex justify-between text-[10px] text-gray-500 mb-0.5"><span>Machbarkeit</span><span>'+ki.machbarkeit_score+'/10</span></div><div class="h-1.5 bg-gray-200 rounded-full"><div class="h-1.5 bg-blue-500 rounded-full" style="width:'+(ki.machbarkeit_score*10)+'%"></div></div></div>';
+                        if(ki.vision_fit_score) h+='<div class="flex-1"><div class="flex justify-between text-[10px] text-gray-500 mb-0.5"><span>Vision-Fit</span><span>'+ki.vision_fit_score+'/10</span></div><div class="h-1.5 bg-gray-200 rounded-full"><div class="h-1.5 bg-green-500 rounded-full" style="width:'+(ki.vision_fit_score*10)+'%"></div></div></div>';
+                        h+='</div>';
+                    }
                     h+='</div>';
                 });
-                if(ideas.length===0) h='<div class="text-center py-4 text-gray-400">Noch keine Ideen eingereicht.</div>';
+                if(ideas.length===0) h='<div class="text-center py-4 text-gray-400">Keine Ideen f\u00fcr diesen Filter.</div>';
                 el.innerHTML=h;
             } catch(err) { console.error('HQ Ideen:', err); }
         }
@@ -17267,6 +17662,83 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var btn=document.querySelector('.hq-ideen-filter[data-hif="'+filter+'"]');
             if(btn) btn.className='hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white';
             renderHqIdeen(filter);
+        }
+
+        // === KI IDEENBOARD ANALYSE ===
+        function renderKiAnalyseHtml(ki, analyseDateStr) {
+            var h='<div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">';
+            // Machbarkeit
+            h+='<div><h4 class="font-bold text-purple-800 mb-1">\ud83d\udee0\ufe0f Machbarkeit</h4>';
+            if(ki.machbarkeit_score) h+='<p>Score: <strong>'+ki.machbarkeit_score+'/10</strong></p>';
+            var ac2={S:'bg-green-100 text-green-700',M:'bg-blue-100 text-blue-700',L:'bg-orange-100 text-orange-700',XL:'bg-red-100 text-red-700'};
+            if(ki.aufwand) h+='<p>Aufwand: <span class="px-1.5 py-0.5 rounded text-[10px] font-bold '+(ac2[ki.aufwand]||'')+'">'+ki.aufwand+'</span></p>';
+            if(ki.technische_bewertung) h+='<p class="text-gray-600 mt-1">'+ki.technische_bewertung+'</p>';
+            if(ki.risiken) h+='<p class="text-red-600 mt-1">\u26a0\ufe0f '+ki.risiken+'</p>';
+            h+='</div>';
+            // Vision-Fit
+            h+='<div><h4 class="font-bold text-purple-800 mb-1">\ud83c\udfaf Vision-Fit</h4>';
+            if(ki.vision_fit_score) h+='<p>Score: <strong>'+ki.vision_fit_score+'/10</strong></p>';
+            if(ki.vision_fit_reasoning) h+='<p class="text-gray-600 mt-1">'+ki.vision_fit_reasoning+'</p>';
+            if(ki.betroffene_ziele && ki.betroffene_ziele.length) h+='<p class="mt-1">Ziele: '+ki.betroffene_ziele.join(', ')+'</p>';
+            h+='</div>';
+            // Prioritaet
+            h+='<div><h4 class="font-bold text-purple-800 mb-1">\ud83d\udcca Priorit\u00e4t</h4>';
+            var pc2={kritisch:'text-red-700',hoch:'text-orange-700',mittel:'text-yellow-700',niedrig:'text-gray-600'};
+            if(ki.prioritaet) h+='<p>Empfehlung: <strong class="'+(pc2[ki.prioritaet]||'')+'">'+ki.prioritaet.toUpperCase()+'</strong></p>';
+            if(ki.quick_win) h+='<p class="text-green-600 font-semibold">\u26a1 Quick-Win!</p>';
+            if(ki.abhaengigkeiten) h+='<p class="text-gray-600 mt-1">Abh\u00e4ngigkeiten: '+ki.abhaengigkeiten+'</p>';
+            h+='</div>';
+            // Konzept
+            h+='<div><h4 class="font-bold text-purple-800 mb-1">\ud83d\udcd0 Konzept</h4>';
+            if(ki.zusammenfassung) h+='<p class="text-gray-600">'+ki.zusammenfassung+'</p>';
+            if(ki.betroffene_module && ki.betroffene_module.length) h+='<p class="mt-1">Module: '+ki.betroffene_module.join(', ')+'</p>';
+            if(ki.umsetzungsschritte && ki.umsetzungsschritte.length) { h+='<ol class="list-decimal ml-4 mt-1">'; ki.umsetzungsschritte.forEach(function(s){h+='<li>'+s+'</li>';}); h+='</ol>'; }
+            h+='</div>';
+            h+='</div>';
+            if(analyseDateStr) h+='<p class="text-[10px] text-gray-400 mt-2 text-right">Analysiert: '+analyseDateStr+'</p>';
+            return h;
+        }
+
+        function toggleKiPanel(ideeId, btn) {
+            var panel = document.getElementById('kiPanel_' + ideeId);
+            if(!panel) return;
+            if(panel.style.display === 'none') { panel.style.display = 'block'; btn.textContent = 'Analyse \u25b2'; }
+            else { panel.style.display = 'none'; btn.textContent = 'Analyse \u25bc'; }
+        }
+
+        async function analysiereIdee(ideeId, btnEl) {
+            if(btnEl) { btnEl.disabled = true; btnEl.textContent = '\u23f3 Analysiere...'; }
+            try {
+                var { data: idee } = await sb.from('ideen').select('titel, beschreibung, kategorie, standorte(name)').eq('id', ideeId).single();
+                if(!idee) throw new Error('Idee nicht gefunden');
+                var resp = await fetch(SUPABASE_URL + '/functions/v1/feedback-analyst', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await sb.auth.getSession()).data.session.access_token },
+                    body: JSON.stringify({ text: idee.titel + '\n' + (idee.beschreibung||''), kategorie: idee.kategorie||'idee', standort: idee.standorte ? idee.standorte.name : 'HQ' })
+                });
+                var result = await resp.json();
+                if(result.analyse) {
+                    result.analyse.analysiert_am = new Date().toISOString();
+                    await sb.from('ideen').update({ ki_analyse: result.analyse }).eq('id', ideeId);
+                }
+                var activeFilter = document.querySelector('.hq-ideen-filter.bg-vit-orange');
+                renderHqIdeen(activeFilter ? activeFilter.dataset.hif : 'all');
+            } catch(err) {
+                console.error('KI Analyse Fehler:', err);
+                if(btnEl) { btnEl.disabled = false; btnEl.textContent = '\u274c Fehler - nochmal'; }
+            }
+        }
+
+        async function analysierAlleNeuen() {
+            var { data: ideen } = await sb.from('ideen').select('id, titel').is('ki_analyse', null);
+            if(!ideen || !ideen.length) { alert('Alle Ideen sind bereits analysiert!'); return; }
+            if(!confirm(ideen.length + ' Ideen ohne KI-Analyse gefunden. Alle jetzt analysieren?')) return;
+            for(var i = 0; i < ideen.length; i++) {
+                try { await analysiereIdee(ideen[i].id, null); } catch(e) { console.error('Batch error:', e); }
+                if(i < ideen.length - 1) await new Promise(function(r){setTimeout(r, 2000);});
+            }
+            alert('Fertig! ' + ideen.length + ' Ideen analysiert.');
+            renderHqIdeen('all');
         }
         async function updateIdeeStatus(ideeId, newStatus) {
             try {
