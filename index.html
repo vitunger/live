@@ -105,7 +105,7 @@
         
         /* Card Styles */
         .vit-card {
-            background: white;
+            background: var(--c-bg);
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             transition: transform 0.2s, box-shadow 0.2s;
@@ -344,7 +344,6 @@
                 transform: translateX(0);
             }
             .sidebar-collapse-btn { display: none !important; }
-            .sidebar.collapsed { width: 280px !important; }
             .topnav-desktop { display: none !important; }
             .topnav-mobile { display: flex !important; }
             .main-content-area {
@@ -383,14 +382,14 @@
 .pill{display:inline-flex;align-items:center;padding:2px 9px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.3px}
 .pg{background:#ecfdf5;color:#059669}.py{background:#fefce8;color:#ca8a04}.pr{background:#fef2f2;color:#dc2626}.pb{background:var(--c-blue-tint,#eff6ff);color:#2563eb}.pgr{background:var(--c-bg3);color:var(--c-sub)}.po{background:var(--c-orange-tint,#fff7ed);color:#ea580c}
 .prog{height:6px;border-radius:3px;background:var(--c-border);overflow:hidden}.pf{height:100%;border-radius:3px;transition:width .4s}
-.si{border:1.5px solid #e5e7eb;border-radius:10px;padding:7px 11px 7px 34px;font-size:12.5px;transition:border .15s;width:100%}.si:focus{outline:none;border-color:var(--vit-orange, #EF7D00);box-shadow:0 0 0 3px rgba(239,125,0,.1)}
+.si{border:1.5px solid var(--c-border);border-radius:10px;padding:7px 11px 7px 34px;font-size:12.5px;transition:border .15s;width:100%}.si:focus{outline:none;border-color:var(--vit-orange, #EF7D00);box-shadow:0 0 0 3px rgba(239,125,0,.1)}
 .fi{animation:fi .25s ease}@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 .td{transition:background .15s;border-radius:7px;padding:7px 9px}.td:hover{background:#fef7ed}
 .td input[type=checkbox]{accent-color:#EF7D00;width:15px;height:15px}
 .dt{width:100%;border-collapse:collapse;font-size:12.5px}.dt th{background:var(--c-bg2);font-weight:600;color:#666;padding:9px 12px;text-align:left;border-bottom:1.5px solid #eee}.dt td{padding:8px 12px;border-bottom:1px solid #f3f3f3}.dt tr:hover td{background:var(--c-bg2)}
-.wn{padding:7px 14px;border-radius:9px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s;border:1.5px solid transparent}.wn.on{background:#EF7D00;color:#fff;border-color:#EF7D00}.wn:not(.on){background:var(--c-bg);color:#666;border-color:#e5e7eb}.wn:not(.on):hover{border-color:#EF7D00;color:#EF7D00}
+.wn{padding:7px 14px;border-radius:9px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s;border:1.5px solid transparent}.wn.on{background:#EF7D00;color:#fff;border-color:#EF7D00}.wn:not(.on){background:var(--c-bg);color:var(--c-sub);border-color:var(--c-border)}.wn:not(.on):hover{border-color:#EF7D00;color:#EF7D00}
 .mc{transition:all .2s}.mc:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.1)}
-.rbtn{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:9px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;border:1.5px solid #e5e7eb;background:var(--c-bg);color:#666}.rbtn:hover{border-color:#EF7D00;color:#EF7D00}
+.rbtn{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:9px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;border:1.5px solid var(--c-border);background:var(--c-bg);color:var(--c-sub)}.rbtn:hover{border-color:#EF7D00;color:#EF7D00}
 .vbtn{background:#EF7D00;color:#fff;border:none;padding:7px 18px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer}.vbtn:hover{opacity:.9}
 .ek-modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:100;display:flex;align-items:center;justify-content:center}
 .ek-modal{background:var(--c-bg);border-radius:16px;max-width:720px;width:95%;max-height:85vh;overflow-y:auto;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
@@ -871,7 +870,7 @@
                                 <p class="text-[10px] text-gray-400">Dein Einstieg ins vit:bikes Netzwerk</p>
                             </div>
 
-                            <button onclick="showView('externHome')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('externHome')" data-tooltip="Dashboard" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                                 <span>Dashboard</span>
                             </button>
@@ -900,14 +899,14 @@
                         <!-- HQ-specific items (hidden by default) -->
                         <div id="hqMenu" class="space-y-2 hidden">
                             <!-- HQ Top-Level -->
-                            <button onclick="showView('hqCockpit')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqCockpit')" data-tooltip="Netzwerk-Cockpit" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                                 <span class="sidebar-label" data-i18n="nav_hq_cockpit">Netzwerk-Cockpit</span>
                             </button>
 
-                            <button onclick="showView('hqKommando')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqKommando')" data-tooltip="Kommandozentrale" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -915,7 +914,7 @@
                                 <span class="sidebar-label" data-i18n="nav_hq_command">Kommandozentrale</span>
                             </button>
 
-                            <button onclick="showView('hqAktionen')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqAktionen')" data-tooltip="Handlungsbedarf" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                                 </svg>
@@ -939,48 +938,48 @@
 
                             <hr class="border-gray-600 my-4">
                             <div class="mb-2">
-                                <span class="text-xs text-gray-400 uppercase font-semibold px-3" data-i18n="nav_hq_control">HQ Steuerung</span>
+                                <span class="sidebar-label text-xs text-gray-400 uppercase font-semibold px-3" data-i18n="nav_hq_control">HQ Steuerung</span>
                             </div>
 
-                            <button onclick="showView('hqStandorte')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqStandorte')" data-tooltip="Standorte" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                                 </svg>
                                 <span class="sidebar-label" data-i18n="nav_hq_locations">Standorte</span>
                             </button>
 
-                            <button onclick="showView('hqFinanzen')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqFinanzen')" data-tooltip="Finanzen" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                                 <span class="sidebar-label" data-i18n="nav_hq_finance">Finanzen</span>
                             </button>
 
-                            <button onclick="showView('hqMarketing')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqMarketing')" data-tooltip="Marketing" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
                                 </svg>
                                 <span class="sidebar-label" data-i18n="nav_marketing">Marketing</span>
                             </button>
 
-                            <button onclick="showView('hqEinkauf')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqEinkauf')" data-tooltip="Einkauf" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
                                 </svg>
                                 <span class="sidebar-label" data-i18n="nav_purchasing">Einkauf</span>
                             </button>
-                            <button onclick="showView('hqAllgemein')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
-                                <span>🏢</span><span>HQ Allgemein</span>
+                            <button onclick="showView('hqAllgemein')" data-tooltip="HQ Allgemein" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                                <span>🏢</span><span class="sidebar-label">HQ Allgemein</span>
                             </button>
 
-                            <button onclick="showView('hqVerkauf')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqVerkauf')" data-tooltip="Verkauf" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                                 </svg>
                                 <span class="sidebar-label" data-i18n="nav_sales">Verkauf</span>
                             </button>
 
-                            <button onclick="showView('hqBilling')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqBilling')" data-tooltip="Buchhaltung" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
                                 </svg>
@@ -1619,7 +1618,7 @@
                     <div id="vkTabAuswertung" class="vk-tab-content" style="display:none;">
                         <!-- Soft Lock: Pipeline Insights -->
                         <div id="pipelineInsightLock" style="display:none;">
-                            <div class="vit-card p-6 text-center mb-4" style="border:2px dashed #e5e7eb;">
+                            <div class="vit-card p-6 text-center mb-4" style="border:2px dashed var(--c-border);">
                                 <div style="font-size:40px;margin-bottom:8px">📊</div>
                                 <h3 class="text-base font-bold text-gray-800 mb-1">Erweiterte Pipeline-Auswertung</h3>
                                 <p class="text-xs text-gray-500 mb-3">Verfügbar ab einer Abschlussquote ≥ 20% oder nach Abschluss des Trainers "Nachfass-Systematik".</p>
@@ -2440,7 +2439,7 @@
                     <div id="ctrlTabBenchmark" class="ctrl-tab-content" style="display:none;">
                         <!-- Feature Lock Overlay -->
                         <div id="benchmarkLockOverlay" style="display:none;">
-                            <div class="vit-card p-8 text-center mb-6" style="border:2px dashed #e5e7eb;">
+                            <div class="vit-card p-8 text-center mb-6" style="border:2px dashed var(--c-border);">
                                 <div style="font-size:48px;margin-bottom:12px">🔒</div>
                                 <h2 class="text-lg font-bold text-gray-800 mb-2">Benchmark-Vergleich gesperrt</h2>
                                 <p class="text-sm text-gray-500 mb-4">Ohne aktuelle BWA-Daten ist kein Netzwerk-Vergleich möglich.<br>Reiche deine BWA ein, um die Benchmarks freizuschalten.</p>
@@ -6162,7 +6161,7 @@
         // ============================================
         // PORTAL VERSION – wird bei jedem Deploy erhoeht
         // ============================================
-        var PORTAL_VERSION = '7.9.0218';
+        var PORTAL_VERSION = '7.9.1.0218';
 
         // ============================================
         // SUPABASE CLIENT
@@ -14473,19 +14472,30 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
         // Desktop sidebar collapse
         function toggleSidebarCollapse() {
+            if(window.innerWidth <= 768) return; // No collapse on mobile
             var sidebar = document.getElementById('sidebarNav');
             var isCollapsed = sidebar.classList.toggle('collapsed');
             try { localStorage.setItem('vit-sidebar-collapsed', isCollapsed ? '1' : '0'); } catch(e){}
         }
-        // Restore sidebar state on load
+        // Restore sidebar state on load (desktop only)
         (function(){
             try {
-                if(localStorage.getItem('vit-sidebar-collapsed') === '1') {
+                if(window.innerWidth > 768 && localStorage.getItem('vit-sidebar-collapsed') === '1') {
                     var sb = document.getElementById('sidebarNav');
                     if(sb) sb.classList.add('collapsed');
                 }
             } catch(e){}
         })();
+        // On resize: remove collapsed on mobile, restore on desktop
+        window.addEventListener('resize', function() {
+            var sb = document.getElementById('sidebarNav');
+            if(!sb) return;
+            if(window.innerWidth <= 768) {
+                sb.classList.remove('collapsed');
+            } else {
+                try { if(localStorage.getItem('vit-sidebar-collapsed') === '1') sb.classList.add('collapsed'); } catch(e){}
+            }
+        });
         function closeMobileSidebar() {
             var sidebar = document.getElementById('sidebarNav');
             var overlay = document.getElementById('sidebarOverlay');
@@ -21215,7 +21225,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             input.value = nv;
             input.style.backgroundColor = nv > 0 ? '#fff7ed' : '';
             input.style.color = nv > 0 ? '#ea580c' : '#4b5563';
-            input.style.borderColor = nv > 0 ? '#ea580c' : '#e5e7eb';
+            input.style.borderColor = nv > 0 ? '#ea580c' : 'var(--c-border)';
             // Update button text
             var grid = document.getElementById('sizeGrid_' + productId);
             if(grid) {
@@ -21243,7 +21253,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             input.value = qty;
             input.style.backgroundColor = qty > 0 ? '#fff7ed' : '';
             input.style.color = qty > 0 ? '#ea580c' : '#4b5563';
-            input.style.borderColor = qty > 0 ? '#ea580c' : '#e5e7eb';
+            input.style.borderColor = qty > 0 ? '#ea580c' : 'var(--c-border)';
             shopSizeQty(productId, variantId, variantName, 0, price);
         }
 
@@ -21670,7 +21680,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             'Performance':'Performance','Content Library':'Content Library',
             // Dashboard
             'Dashboard anpassen':'Customize dashboard','Meine Pipeline':'My pipeline',
-            'Marketing Performance':'Marketing Performance','Willkommen zurück':'Welcome back',
+            'Marketing Performance':'Marketing Performance',
             // Controlling / BWA
             'BWA hochladen':'Upload BWA','BWA auswaehlen':'Select BWA',
             'Bitte Datei auswaehlen.':'Please select a file.',
@@ -21755,7 +21765,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             'VIDEO AUSGEWAEHLT':'VIDEO GESELECTEERD','VIDEOS AUSGEWAEHLT':'VIDEO\'S GESELECTEERD',
             // Dashboard
             'Dashboard anpassen':'Dashboard aanpassen','Meine Pipeline':'Mijn pipeline',
-            'Willkommen zurück':'Welkom terug',
             // Profile
             'Erscheinungsbild':'Uiterlijk','E-Mail-Benachrichtigungen':'E-mailmeldingen',
             'BWA-Erinnerungen':'BWA-herinneringen','Lead-Benachrichtigungen':'Leadmeldingen',
@@ -24365,12 +24374,12 @@ function setTheme(theme) {
 
                 <div style="margin-bottom:12px;">
                     <label style="font-size:11px;color:var(--c-sub);font-weight:600;display:block;margin-bottom:3px;">Vorname</label>
-                    <input id="profileVorname" type="text" value="Max" style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='#e5e7eb'">
+                    <input id="profileVorname" type="text" value="Max" style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='var(--c-border)'">
                 </div>
 
                 <div style="margin-bottom:12px;">
                     <label style="font-size:11px;color:var(--c-sub);font-weight:600;display:block;margin-bottom:3px;">Nachname</label>
-                    <input id="profileNachname" type="text" value="Bauer" style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='#e5e7eb'">
+                    <input id="profileNachname" type="text" value="Bauer" style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='var(--c-border)'">
                 </div>
 
                 <div style="margin-bottom:12px;">
@@ -24381,12 +24390,12 @@ function setTheme(theme) {
 
                 <div style="margin-bottom:12px;">
                     <label style="font-size:11px;color:var(--c-sub);font-weight:600;display:block;margin-bottom:3px;">Telefon</label>
-                    <input id="profileTelefon" type="tel" value="" placeholder="+49 ..." style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='#e5e7eb'">
+                    <input id="profileTelefon" type="tel" value="" placeholder="+49 ..." style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='var(--c-border)'">
                 </div>
 
                 <div style="margin-bottom:0;">
                     <label style="font-size:11px;color:var(--c-sub);font-weight:600;display:block;margin-bottom:3px;">Position / Rolle</label>
-                    <input id="profilePosition" type="text" value="" placeholder="z.B. Geschäftsführer, Werkstattleiter..." style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='#e5e7eb'">
+                    <input id="profilePosition" type="text" value="" placeholder="z.B. Geschäftsführer, Werkstattleiter..." style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='var(--c-border)'">
                 </div>
             </div>
 
@@ -24709,7 +24718,7 @@ async function saveProfile() {
 
     if(typeof sb !== 'undefined' && typeof sbProfile !== 'undefined' && sbProfile) {
         try {
-            var upd = { name: fullName, telefon: telefon, position: position };
+            var upd = { name: fullName, vorname: vorname, nachname: nachname, telefon: telefon, position: position };
             var resp = await sb.from('users').update(upd).eq('id', sbProfile.id);
             if(resp.error) throw resp.error;
             // Update local state
@@ -25442,7 +25451,7 @@ var ic=document.getElementById('ticketInterceptor');
 var icC=document.getElementById('interceptorContent');
 if(!sol||!ic||!icC){if(ic)ic.style.display='none';return;}
 ic.style.display='';
-icC.innerHTML='<p class="text-xs font-semibold text-gray-700 mb-1">'+sol.title+'</p>'+sol.items.map(function(i){return '<div style="display:flex;align-items:flex-start;gap:6px;padding:4px 8px;background:white;border-radius:6px"><span style="color:#EF7D00;font-size:12px">→</span><span style="font-size:11px;color:var(--c-sub)">'+i+'</span></div>';}).join('');
+icC.innerHTML='<p class="text-xs font-semibold text-gray-700 mb-1">'+sol.title+'</p>'+sol.items.map(function(i){return '<div style="display:flex;align-items:flex-start;gap:6px;padding:4px 8px;background:var(--c-bg);border-radius:6px"><span style="color:#EF7D00;font-size:12px">→</span><span style="font-size:11px;color:var(--c-sub)">'+i+'</span></div>';}).join('');
 };
 window.acceptInterceptor=function(){
 document.getElementById('ticketInterceptor').style.display='none';
@@ -25515,10 +25524,10 @@ setTimeout(function(){document.getElementById('groupcallPrepPanel').style.displa
             <div style="background:var(--c-bg2);border-radius:12px;padding:16px;margin-bottom:16px;">
                 <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--c-muted);font-weight:600;margin-bottom:8px;">Wichtige Kennzahlen</p>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <div style="padding:8px;background:white;border-radius:8px;text-align:center"><p style="font-size:9px;color:var(--c-muted)">Abschlussquote</p><p style="font-size:16px;font-weight:800;color:#111">34%</p></div>
-                    <div style="padding:8px;background:white;border-radius:8px;text-align:center"><p style="font-size:9px;color:var(--c-muted)">BWA-Status</p><p style="font-size:16px;font-weight:800;color:#ca8a04">⏳</p></div>
-                    <div style="padding:8px;background:white;border-radius:8px;text-align:center"><p style="font-size:9px;color:var(--c-muted)">Offene Aufgaben</p><p style="font-size:16px;font-weight:800;color:#111">4</p></div>
-                    <div style="padding:8px;background:white;border-radius:8px;text-align:center"><p style="font-size:9px;color:var(--c-muted)">Content letzte 14d</p><p style="font-size:16px;font-weight:800;color:#16a34a">2</p></div>
+                    <div style="padding:8px;background:var(--c-bg);border-radius:8px;text-align:center"><p style="font-size:9px;color:var(--c-muted)">Abschlussquote</p><p style="font-size:16px;font-weight:800;color:var(--c-text)">34%</p></div>
+                    <div style="padding:8px;background:var(--c-bg);border-radius:8px;text-align:center"><p style="font-size:9px;color:var(--c-muted)">BWA-Status</p><p style="font-size:16px;font-weight:800;color:#ca8a04">⏳</p></div>
+                    <div style="padding:8px;background:var(--c-bg);border-radius:8px;text-align:center"><p style="font-size:9px;color:var(--c-muted)">Offene Aufgaben</p><p style="font-size:16px;font-weight:800;color:var(--c-text)">4</p></div>
+                    <div style="padding:8px;background:var(--c-bg);border-radius:8px;text-align:center"><p style="font-size:9px;color:var(--c-muted)">Content letzte 14d</p><p style="font-size:16px;font-weight:800;color:#16a34a">2</p></div>
                 </div>
             </div>
 
@@ -26214,7 +26223,7 @@ window.showKursDetail = function(id) {
     });
 
     // KI-Aufbereitung Button
-    h += '<div class="vit-card p-4 mt-4 text-center" style="border:2px dashed #e5e7eb"><p class="text-xs text-gray-400 mb-2">Inhalte erweitern?</p><button onclick="requestKiContent(\''+k.id+'\')" class="px-4 py-2 bg-purple-500 text-white text-xs font-bold rounded-lg hover:bg-purple-600">🤖 KI-Aufbereitung: Kurs erweitern</button><p class="text-[10px] text-gray-300 mt-1">KI erstellt zusätzliche Lektionen, Quizze und Zusammenfassungen</p></div>';
+    h += '<div class="vit-card p-4 mt-4 text-center" style="border:2px dashed var(--c-border)"><p class="text-xs text-gray-400 mb-2">Inhalte erweitern?</p><button onclick="requestKiContent(\''+k.id+'\')" class="px-4 py-2 bg-purple-500 text-white text-xs font-bold rounded-lg hover:bg-purple-600">🤖 KI-Aufbereitung: Kurs erweitern</button><p class="text-[10px] text-gray-300 mt-1">KI erstellt zusätzliche Lektionen, Quizze und Zusammenfassungen</p></div>';
     
     el.innerHTML = h;
 };
@@ -27769,7 +27778,7 @@ function renderExternHome() {
         stages.forEach(function(s, i) {
             var isCurrent = i === currentIdx;
             var isDone = i < currentIdx;
-            var bgColor = isDone ? '#15803d' : isCurrent ? '#EF7D00' : '#e5e7eb';
+            var bgColor = isDone ? '#15803d' : isCurrent ? '#EF7D00' : 'var(--c-border)';
             var textColor = isDone || isCurrent ? 'white' : '#6b7280';
             h += '<div class="flex-1 text-center">';
             h += '<div class="mx-auto w-12 h-12 rounded-full flex items-center justify-center text-xl mb-2" style="background:'+bgColor+';color:'+textColor+';">'+(isDone?'\u2713':icons[i])+'</div>';
@@ -28953,7 +28962,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
 .fb-body { padding:24px 28px 20px; }
 .fb-body label { display:block; font-size:11px; font-weight:700; color:var(--c-sub); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; }
 .fb-body input[type="text"], .fb-body textarea, .fb-body select {
-    width:100%; padding:10px 14px; border:1.5px solid #e5e7eb; border-radius:10px;
+    width:100%; padding:10px 14px; border:1.5px solid var(--c-border); border-radius:10px;
     font-size:14px; color:var(--c-text); transition: border-color 0.2s, box-shadow 0.2s;
     font-family:'Open Sans',sans-serif; outline:none;
 }
@@ -28966,7 +28975,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
 /* Category pills */
 .fb-cats { display:flex; flex-wrap:wrap; gap:6px; }
 .fb-cat {
-    padding:7px 14px; border-radius:20px; border:1.5px solid #e5e7eb;
+    padding:7px 14px; border-radius:20px; border:1.5px solid var(--c-border);
     background:var(--c-bg); font-size:12px; font-weight:600; cursor:pointer;
     transition: all 0.2s; color:var(--c-sub);
 }
@@ -28977,7 +28986,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
 .fb-media-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
 .fb-media-btn {
     display:flex; align-items:center; gap:6px;
-    padding:8px 14px; border-radius:10px; border:1.5px solid #e5e7eb;
+    padding:8px 14px; border-radius:10px; border:1.5px solid var(--c-border);
     background:var(--c-bg2); font-size:12px; font-weight:600; cursor:pointer;
     transition: all 0.2s; color:var(--c-sub);
 }
