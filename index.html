@@ -895,11 +895,6 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                                 <span class="sidebar-label">Support</span>
                             </button>
-
-                            <button onclick="showView('partnerSpiritus')" data-tooltip="Gespräche" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
-                                <span class="sidebar-label">Gespräche</span>
-                            </button>
                         </div>
                         <!-- HQ-specific items (hidden by default) -->
                         <div id="hqMenu" class="space-y-2 hidden">
@@ -990,14 +985,6 @@
                                 </svg>
                                 <span class="sidebar-label">Buchhaltung</span>
                                 <span class="sidebar-badge ml-auto text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
-                            </button>
-
-                            <button onclick="showView('hqSpiritus')" data-tooltip="Spiritus" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
-                                </svg>
-                                <span class="sidebar-label">Spiritus</span>
-                                <span class="sidebar-badge ml-auto text-xs bg-orange-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
                             </button>
 
                             <button onclick="showView('devStatus');setTimeout(function(){showDevTab('nutzung')},100)" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
@@ -1166,8 +1153,8 @@
                         </div>
 
 
-                        <!-- 🏥 PERFORMANCE HEALTH SCORE – DEAKTIVIERT -->
-                        <div id="healthScoreWidget" class="vit-card p-5 mb-6" style="display:none">
+                        <!-- 🏥 PERFORMANCE HEALTH SCORE -->
+                        <div id="healthScoreWidget" class="vit-card p-5 mb-6">
                             <div class="flex items-center justify-between mb-3">
                                 <h3 class="text-sm font-bold text-gray-800">🏥 Performance Health Score<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-health')">i</button></h3><div class="widget-info-popup" id="info-health">Dein Gesamt-Score (0–100) zeigt, wie gut dein Standort performt. Er setzt sich zusammen aus: Controlling (25%), Verkauf (25%), Marketing (15%), Werkstatt (15%), Engagement (10%) und Disziplin (10%). 🟢 ab 75 = Gesund, 🟡 50–74 = Beobachtung, 🔴 unter 50 = Kritisch.</div>
                                 <div id="healthBadge"></div>
@@ -4877,8 +4864,8 @@
                         <button onclick="showView('hqAuswertung')" class="vit-card p-3 hover:shadow-md transition text-center"><p class="text-xl mb-1">📊</p><p class="text-[10px] font-semibold text-gray-700">Auswertung</p></button>
                     </div>
 
-                    <!-- 🏥 Netzwerk Health Score Dashboard – DEAKTIVIERT: Muss noch definiert werden -->
-                    <div class="vit-card p-5 mb-6" id="hqHealthDashboard" style="display:none">
+                    <!-- 🏥 Netzwerk Health Score Dashboard -->
+                    <div class="vit-card p-5 mb-6" id="hqHealthDashboard">
                         <div class="flex items-center justify-between mb-3">
                             <h2 class="text-sm font-bold text-gray-800">🏥 Netzwerk Health Score<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-health')">i</button></h2><div class="widget-info-popup" id="info-hq-health">Aggregierter Health Score aller 21 Standorte. 🟢 Gesund (≥75), 🟡 Beobachtung (50–74), 🔴 Kritisch (&lt;50). Der Netzwerk-Durchschnitt zeigt die Gesamtperformance. Klicke auf einen Standort für Details.</div>
                             <div class="flex gap-2 text-xs">
@@ -6162,112 +6149,6 @@
                     </div>
                 </div>
 
-<!-- ===== SPIRITUS – HQ VIEW ===== -->
-                <div id="hqSpiritusView" class="view" style="display: none;">
-                    <div class="flex items-center justify-between mb-6">
-                        <div>
-                            <p class="h2-headline text-vit-gray mb-1">SPIRITUS</p>
-                            <h1 class="h1-headline">Gesprächsprotokoll-System</h1>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <button onclick="spiritOpenNewDialog()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90 transition flex items-center space-x-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                <span>Neues Gespräch</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Tabs -->
-                    <div class="flex space-x-1 mb-6 border-b border-gray-200" id="spiritTabs">
-                        <button onclick="spiritShowTab('dashboard')" class="spirit-tab px-4 py-2 text-sm font-semibold border-b-2 transition" data-tab="dashboard">Dashboard</button>
-                        <button onclick="spiritShowTab('gespraeche')" class="spirit-tab px-4 py-2 text-sm font-semibold border-b-2 transition" data-tab="gespraeche">Gespräche</button>
-                        <button onclick="spiritShowTab('review')" class="spirit-tab px-4 py-2 text-sm font-semibold border-b-2 transition" data-tab="review">Review-Queue</button>
-                        <button onclick="spiritShowTab('todos')" class="spirit-tab px-4 py-2 text-sm font-semibold border-b-2 transition" data-tab="todos">To-dos</button>
-                    </div>
-
-                    <!-- Tab Contents -->
-                    <div id="spiritTabDashboard" class="spirit-tab-content">
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                            <div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">Dokumentationsquote</p><p id="spiritKpiQuote" class="text-2xl font-bold text-green-600">—%</p><p class="text-xs text-gray-400">Ziel: >95%</p></div>
-                            <div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">Ø Bearbeitungszeit</p><p id="spiritKpiTime" class="text-2xl font-bold text-vit-orange">—h</p><p class="text-xs text-gray-400">Ziel: <24h</p></div>
-                            <div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">Offene Reviews</p><p id="spiritKpiReview" class="text-2xl font-bold text-yellow-500">—</p><p class="text-xs text-gray-400">ausstehend</p></div>
-                            <div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">Überfällige To-dos</p><p id="spiritKpiOverdue" class="text-2xl font-bold text-red-500">—</p><p class="text-xs text-gray-400">eskalieren</p></div>
-                        </div>
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div class="vit-card p-5">
-                                <h3 class="font-bold text-gray-800 mb-3">🔴 Risikopartner</h3>
-                                <div id="spiritRisikoListe" class="space-y-2"><p class="text-gray-400 text-sm">Lade...</p></div>
-                            </div>
-                            <div class="vit-card p-5">
-                                <h3 class="font-bold text-gray-800 mb-3">📅 Letzte Gespräche</h3>
-                                <div id="spiritLetzte" class="space-y-2"><p class="text-gray-400 text-sm">Lade...</p></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="spiritTabGespraeche" class="spirit-tab-content" style="display:none">
-                        <!-- Filter bar -->
-                        <div class="flex items-center space-x-3 mb-4">
-                            <input type="text" id="spiritSearchInput" placeholder="Suchen..." class="px-3 py-2 border border-gray-300 rounded-lg text-sm flex-1" oninput="spiritRenderGespraeche()">
-                            <select id="spiritStatusFilter" class="px-3 py-2 border border-gray-300 rounded-lg text-sm" onchange="spiritRenderGespraeche()">
-                                <option value="all">Alle Status</option>
-                                <option value="geplant">📋 Geplant</option>
-                                <option value="material_fehlt">⬆️ Material fehlt</option>
-                                <option value="ki_verarbeitung">🤖 KI-Verarbeitung</option>
-                                <option value="review">👁️ Review</option>
-                                <option value="freigegeben">✅ Freigegeben</option>
-                                <option value="abgeschlossen">🏁 Abgeschlossen</option>
-                            </select>
-                            <select id="spiritStandortFilter" class="px-3 py-2 border border-gray-300 rounded-lg text-sm" onchange="spiritRenderGespraeche()">
-                                <option value="all">Alle Standorte</option>
-                            </select>
-                        </div>
-                        <div id="spiritGespraecheListe" class="space-y-3"><p class="text-gray-400 text-sm">Lade...</p></div>
-                    </div>
-
-                    <div id="spiritTabReview" class="spirit-tab-content" style="display:none">
-                        <div id="spiritReviewListe" class="space-y-3"><p class="text-gray-400 text-sm">Lade...</p></div>
-                    </div>
-
-                    <div id="spiritTabTodos" class="spirit-tab-content" style="display:none">
-                        <div class="flex items-center space-x-3 mb-4">
-                            <select id="spiritTodoFilter" class="px-3 py-2 border border-gray-300 rounded-lg text-sm" onchange="spiritRenderTodos()">
-                                <option value="offen">Offen / In Arbeit</option>
-                                <option value="ueberfaellig">Überfällig</option>
-                                <option value="erledigt">Erledigt</option>
-                                <option value="all">Alle</option>
-                            </select>
-                            <select id="spiritTodoSeite" class="px-3 py-2 border border-gray-300 rounded-lg text-sm" onchange="spiritRenderTodos()">
-                                <option value="all">HQ + Partner</option>
-                                <option value="hq">Nur HQ</option>
-                                <option value="partner">Nur Partner</option>
-                            </select>
-                        </div>
-                        <div id="spiritTodoListe" class="space-y-2"><p class="text-gray-400 text-sm">Lade...</p></div>
-                    </div>
-                </div>
-
-                <!-- ===== SPIRITUS – PARTNER VIEW ===== -->
-                <div id="partnerSpiritusView" class="view" style="display: none;">
-                    <div class="mb-6">
-                        <p class="h2-headline text-vit-gray mb-1">MEIN STANDORT</p>
-                        <h1 class="h1-headline">Gesprächsprotokolle</h1>
-                    </div>
-
-                    <div class="flex space-x-1 mb-6 border-b border-gray-200" id="spiritPartnerTabs">
-                        <button onclick="spiritPartnerShowTab('protokolle')" class="spirit-ptab px-4 py-2 text-sm font-semibold border-b-2 transition" data-tab="protokolle">Protokolle</button>
-                        <button onclick="spiritPartnerShowTab('todos')" class="spirit-ptab px-4 py-2 text-sm font-semibold border-b-2 transition" data-tab="todos">Meine To-dos</button>
-                    </div>
-
-                    <div id="spiritPartnerTabProtokolle" class="spirit-ptab-content">
-                        <div id="spiritPartnerProtokolle" class="space-y-3"><p class="text-gray-400 text-sm">Lade...</p></div>
-                    </div>
-
-                    <div id="spiritPartnerTabTodos" class="spirit-ptab-content" style="display:none">
-                        <div id="spiritPartnerTodoListe" class="space-y-2"><p class="text-gray-400 text-sm">Lade...</p></div>
-                    </div>
-                </div>
-
             <!-- Video-Pipeline Modal (global) -->
             <div id="vpModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" style="display:none;">
                 <div id="vpModalContent" class="bg-white rounded-xl shadow-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6"></div>
@@ -6717,7 +6598,7 @@
             if(currentRole === 'hq') return viewName.indexOf('hq')===0 || viewName==='kalender' || viewName==='todo' || viewName==='kommunikation' || viewName==='devStatus';
             // Extern level: only allow specific views
             if(SESSION.account_level === 'extern') {
-                var externAllowed = ['externHome','onboarding','externWissen','wissen','kommunikation','support','notifications','partnerSpiritus'];
+                var externAllowed = ['externHome','onboarding','externWissen','wissen','kommunikation','support','notifications'];
                 return externAllowed.indexOf(viewName) >= 0;
             }
             var perms = rolePermissions[viewName];
@@ -13881,7 +13762,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 {name:'Mitarbeiter', view:'mitarbeiterView', status:'live', typ:'standort', version:'1.5.0', details:'Anlegen, Rollen, Approval, Passwort-Reset, Deaktivierung', kiPrio:29, aufwand:'S', kiTodo:'Aktivitäts-Log. Funktioniert sehr gut.'}
             ],
             hq: [
-                {name:'Netzwerk-Cockpit', view:'hqCockpitView', status:'teilweise', typ:'hq', version:'1.0.0', details:'KPIs, Schnellzugriffe, Standort-Vergleich, teilweise mit echten Daten. Health Score Widget vorhanden aber deaktiviert (Gewichtung/Formel muss noch definiert werden). Trainer-Popups auf HQ-Ebene deaktiviert.', kiPrio:4, aufwand:'M', kiTodo:'Health Score Formel definieren (welche KPIs, welche Gewichtung). Echte KPIs aus allen Standort-Daten aggregieren.'},
+                {name:'Netzwerk-Cockpit', view:'hqCockpitView', status:'teilweise', typ:'hq', version:'1.0.0', details:'KPIs, Schnellzugriffe, Standort-Vergleich, teilweise mit echten Daten', kiPrio:4, aufwand:'M', kiTodo:'Echte KPIs aus allen Standort-Daten aggregieren. Zentrales HQ-Dashboard.'},
                 {name:'Kommandozentrale', view:'hqKommandoView', status:'teilweise', typ:'hq', version:'1.2.0', details:'7 Tabs (Standorte, Mitarbeiter, Kampagnen, Kommunikation, Aufgaben, Kalender, Dokumente), teilweise mit DB', kiPrio:5, aufwand:'XL', kiTodo:'Alle Tabs mit echten Daten versorgen. Mitarbeiter-Tab funktioniert bereits.'},
                 {name:'Handlungsbedarf', view:'hqAktionenView', status:'teilweise', typ:'hq', version:'0.5.0', details:'Auto-Erkennung aus Standort-KPIs, priorisierte Aktionsliste', kiPrio:1, aufwand:'L', kiTodo:'Echte Regeln: Fehlende BWAs, negatives Ergebnis, offene Tickets. Höchste Prio für HQ-Alltag.'},
                 {name:'HQ Standorte', view:'hqStandorteView', status:'live', typ:'hq', version:'1.0.0', details:'Alle Standorte mit Filter und Status', kiPrio:25, aufwand:'M', kiTodo:'Standort-Detail-Seite mit allen KPIs.'},
@@ -13889,7 +13770,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 {name:'HQ Marketing', view:'hqMarketingView', status:'teilweise', typ:'hq', version:'1.0.0', details:'5 Tabs: Übersicht, Budgetsteuerung (15 Standorte × 8 Spalten), Leadreport (Ranking mit Balken), Jahresgespräche (Status-Tracking), Handlungsbedarf (Ampel-Alerts)', kiPrio:16, aufwand:'M', kiTodo:'DB-Anbindung für Budget und Lead-Daten. UI komplett fertig.'},
                 {name:'HQ Einkauf', view:'hqEinkaufView', status:'teilweise', typ:'hq', version:'1.0.0', details:'3 Tabs: Übersicht (Dashboard mit 5-Standort-Vergleich, Alarme, Rohertrag-Bars), Lieferanten (editierbar mit Modal), Strategien (Fortschritt pro Standort mit Ampel)', kiPrio:19, aufwand:'M', kiTodo:'Lieferanten-DB, Konditionen editierbar per Supabase.'},
                 {name:'HQ Verkauf', view:'hqVerkaufView', status:'demo', typ:'hq', version:'0.1.0', details:'Ranking mit Demo-Daten, KPIs', kiPrio:11, aufwand:'M', kiTodo:'Echtes Netzwerk-Ranking aus verkauf_tracking + leads.'},
-                {name:'Spiritus', view:'hqSpiritusView', status:'aktiv', typ:'hq', version:'1.0.0', details:'KI-Gesprächsprotokoll: Audio→Whisper→Claude→Protokoll+To-dos', kiPrio:10, aufwand:'XL', kiTodo:'Live'},
                 {name:'HQ Allgemein', view:'hqAllgemeinView', status:'teilweise', typ:'hq', version:'1.0.0', details:'Netzwerk-Stimmung (4 Kategorien), HQ-Aufgaben aus Partner-Journals, Standort-Tabelle (Stimmung, Monatsfokus, Ziele, Maßnahmen, Gespräche)', kiPrio:9, aufwand:'M', kiTodo:'Supabase-Anbindung an partner_journal, partner_jahresziele, partner_monatsplan Tabellen.'},
                 {name:'HQ Auswertung / Nutzung', view:'hqAuswertungView', status:'live', typ:'hq', version:'1.1.0', details:'Portal-Nutzung mit echten DB-Daten: Logins, BWA-Status, Modul-Nutzung, Aufgaben, Score pro Standort. Supabase RPC get_portal_usage_stats()', kiPrio:14, aufwand:'S', kiTodo:'Weitere BI-Auswertungen: Netzwerk-Trends, Saisonvergleiche, Forecasting.'},
                 {name:'HQ Wissen', view:'hqWissenView', status:'teilweise', typ:'hq', version:'0.5.0', details:'Artikel-Übersicht mit Kategorien', kiPrio:13, aufwand:'L', kiTodo:'CMS: Artikel erstellen/bearbeiten/publizieren, Pflichtlektüre.'},
@@ -22219,7 +22099,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 
                 var areaMap = {home:'allgemein',controlling:'controlling',verkauf:'verkauf',marketing:'marketing'};
                 var containerMap = {home:'trainerAreaHome',controlling:'trainerAreaControlling',verkauf:'trainerAreaVerkauf',marketing:'trainerAreaMarketing'};
-                if(areaMap[viewName] && window.showTrainerForArea && SESSION.account_level !== 'hq') window.showTrainerForArea(areaMap[viewName], containerMap[viewName]);
+                if(areaMap[viewName] && window.showTrainerForArea) window.showTrainerForArea(areaMap[viewName], containerMap[viewName]);
                 
                 // Version badge anzeigen
                 showModuleVersionBadge(viewName + 'View');
@@ -29911,8 +29791,37 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
                 html += '</div></div>';
             }
 
+            if(v.pipeline_status==='uploaded') {
+                html += '<div class="mt-4 pt-4 border-t flex gap-2">';
+                html += '<button onclick="vpTriggerAnalysis(\''+v.id+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 transition font-medium">🔬 Analyse starten</button>';
+                html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'analyzing\')" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm">⏩ Manuell weiter</button>';
+                html += '</div>';
+            }
+
             if(v.pipeline_status==='consent_check' || v.pipeline_status==='consent_blocked') {
-                html += '<div class="mt-4 pt-4 border-t"><button onclick="vpCloseModal();vpShowTagging(\''+v.id+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 transition font-medium">👥 Personen taggen</button></div>';
+                html += '<div class="mt-4 pt-4 border-t flex gap-2">';
+                html += '<button onclick="vpCloseModal();vpShowTagging(\''+v.id+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 transition font-medium">👥 Personen taggen</button>';
+                html += '<button onclick="vpTriggerConsent(\''+v.id+'\')" class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm">🔍 Consent prüfen</button>';
+                html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'cutting\')" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm">⏩ Überspringen</button>';
+                html += '</div>';
+            }
+
+            if(v.pipeline_status==='cutting') {
+                html += '<div class="mt-4 pt-4 border-t flex gap-2">';
+                html += '<button onclick="vpTriggerReels(\''+v.id+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 transition font-medium">🎬 Reels generieren</button>';
+                html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'review\')" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm">⏩ Zur Freigabe</button>';
+                html += '</div>';
+            }
+
+            if(v.pipeline_status==='review') {
+                html += '<div class="mt-4 pt-4 border-t flex gap-2">';
+                html += '<button onclick="vpApproveVideo(\''+v.id+'\')" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-medium">✅ Freigeben</button>';
+                html += '<button onclick="vpRejectVideo(\''+v.id+'\')" class="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition text-sm">❌ Ablehnen</button>';
+                html += '</div>';
+            }
+
+            if(v.pipeline_status==='approved') {
+                html += '<div class="mt-4 pt-4 border-t"><button onclick="vpManualAdvance(\''+v.id+'\',\'publishing\')" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition font-medium">🚀 Veröffentlichen</button></div>';
             }
 
             vpModal(html);
@@ -30063,6 +29972,144 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
         } catch(e) { alert('Fehler: '+e.message); }
     };
 
+    // ==================== PIPELINE TRIGGERS ====================
+    window.vpTriggerAnalysis = async function(videoId) {
+        if(!confirm('🔬 Video-Analyse starten?\n\nDas Video wird analysiert (Szenen, Personen, Highlights).\nDies kann 1-5 Minuten dauern.')) return;
+        try {
+            vpModal('<div class="text-center py-8"><div class="animate-spin w-10 h-10 border-4 border-vit-orange border-t-transparent rounded-full mx-auto mb-4"></div><p class="text-gray-600 font-medium">Analyse wird gestartet...</p><p class="text-xs text-gray-400 mt-1">Edge Function: analyze-video</p></div>');
+            var {data,error} = await sb.functions.invoke('analyze-video', {
+                body: { video_id: videoId }
+            });
+            if(error) throw error;
+            if(data && data.success) {
+                var msg = '✅ Analyse abgeschlossen!\n\n';
+                msg += '👥 Personen erkannt: ' + (data.analysis?.persons_detected || 0) + '\n';
+                msg += '🎬 Szenen: ' + (data.analysis?.scenes || 0) + '\n';
+                msg += '⭐ Highlights: ' + (data.analysis?.highlights || 0) + '\n';
+                msg += '📊 Qualität: ' + (data.analysis?.quality_score || '–') + '/100\n';
+                msg += '📁 Kategorie: ' + (data.analysis?.suggested_category || '–');
+                vpCloseModal();
+                alert(msg);
+            } else {
+                throw new Error(data?.error || 'Unbekannter Fehler');
+            }
+            vpRenderPipelineDashboard();
+        } catch(e) {
+            vpCloseModal();
+            alert('❌ Analyse fehlgeschlagen: ' + e.message);
+            vpRenderPipelineDashboard();
+        }
+    };
+
+    window.vpTriggerConsent = async function(videoId) {
+        try {
+            vpModal('<div class="text-center py-8"><div class="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div><p class="text-gray-600 font-medium">Consent wird geprüft...</p></div>');
+            var {data,error} = await sb.functions.invoke('check-consent', {
+                body: { video_id: videoId }
+            });
+            if(error) throw error;
+            vpCloseModal();
+            if(data && data.success) {
+                if(data.consent_result === 'all_cleared' || data.consent_result === 'auto_cleared') {
+                    alert('✅ Consent OK! ' + (data.cleared||0) + ' Person(en) geprüft.\nVideo geht in den Schnitt.');
+                } else {
+                    var missing = (data.details||[]).filter(function(d){return d.consent_status==='missing';});
+                    alert('⚠️ Consent fehlt für ' + missing.length + ' Person(en):\n' + missing.map(function(m){return '- ' + m.person_label + ': ' + m.reason;}).join('\n'));
+                }
+            } else {
+                throw new Error(data?.error || 'Unbekannter Fehler');
+            }
+            vpRenderPipelineDashboard();
+        } catch(e) {
+            vpCloseModal();
+            alert('❌ Consent-Check fehlgeschlagen: ' + e.message);
+        }
+    };
+
+    window.vpTriggerReels = async function(videoId) {
+        if(!confirm('🎬 Reels generieren?\n\nDas System wählt automatisch das passende Template\nund erstellt Reels basierend auf der Video-Analyse.')) return;
+        try {
+            vpModal('<div class="text-center py-8"><div class="animate-spin w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"></div><p class="text-gray-600 font-medium">Reels werden generiert...</p><p class="text-xs text-gray-400 mt-1">Edge Function: generate-reels</p></div>');
+            var {data,error} = await sb.functions.invoke('generate-reels', {
+                body: { video_id: videoId }
+            });
+            if(error) throw error;
+            vpCloseModal();
+            if(data && data.success) {
+                var msg = '✅ ' + (data.reels?.length||0) + ' Reel(s) generiert!\n\n';
+                msg += 'Template: ' + (data.template?.name || '–') + '\n';
+                msg += 'Clips: ' + (data.cut_list?.length || 0) + '\n\n';
+                msg += 'Das Video steht jetzt zur Freigabe bereit.';
+                alert(msg);
+            } else {
+                throw new Error(data?.error || 'Unbekannter Fehler');
+            }
+            vpRenderPipelineDashboard();
+        } catch(e) {
+            vpCloseModal();
+            alert('❌ Reel-Generierung fehlgeschlagen: ' + e.message);
+        }
+    };
+
+    window.vpApproveVideo = async function(videoId) {
+        if(!confirm('✅ Video freigeben und zur Veröffentlichung markieren?')) return;
+        try {
+            await sb.from('videos').update({
+                pipeline_status:'approved',
+                pipeline_status_detail:'Freigegeben am '+new Date().toLocaleDateString('de-DE'),
+                approved_by:sbUser?.id||null,
+                approved_at:new Date().toISOString(),
+                updated_at:new Date().toISOString()
+            }).eq('id',videoId);
+            await sb.from('pipeline_log').insert({
+                video_id:videoId, phase:'review', action:'approved',
+                actor:sbUser?.id||'unknown', details:{approved_by:sbUser?.name||'–'}
+            });
+            vpCloseModal();
+            alert('✅ Video freigegeben!');
+            vpRenderPipelineDashboard();
+            if(window.vpRenderHqReview) vpRenderHqReview();
+        } catch(e) { alert('Fehler: '+e.message); }
+    };
+
+    window.vpRejectVideo = async function(videoId) {
+        var reason = prompt('❌ Grund für Ablehnung:');
+        if(!reason) return;
+        try {
+            await sb.from('videos').update({
+                pipeline_status:'rejected',
+                pipeline_status_detail:'Abgelehnt: '+reason,
+                updated_at:new Date().toISOString()
+            }).eq('id',videoId);
+            await sb.from('pipeline_log').insert({
+                video_id:videoId, phase:'review', action:'rejected',
+                actor:sbUser?.id||'unknown', details:{reason:reason}
+            });
+            vpCloseModal();
+            alert('Video abgelehnt.');
+            vpRenderPipelineDashboard();
+            if(window.vpRenderHqReview) vpRenderHqReview();
+        } catch(e) { alert('Fehler: '+e.message); }
+    };
+
+    window.vpManualAdvance = async function(videoId, targetStatus) {
+        var labels = {analyzing:'Analyse',consent_check:'Consent-Check',cutting:'Schnitt',review:'Freigabe',approved:'Freigegeben',publishing:'Veröffentlichung',published:'Veröffentlicht'};
+        if(!confirm('⏩ Manuell weiter zu: '+(labels[targetStatus]||targetStatus)+'?')) return;
+        try {
+            await sb.from('videos').update({
+                pipeline_status:targetStatus,
+                pipeline_status_detail:'Manuell gesetzt am '+new Date().toLocaleDateString('de-DE'),
+                updated_at:new Date().toISOString()
+            }).eq('id',videoId);
+            await sb.from('pipeline_log').insert({
+                video_id:videoId, phase:targetStatus, action:'manual_advance',
+                actor:sbUser?.id||'unknown', details:{from:'manual',to:targetStatus}
+            });
+            vpCloseModal();
+            vpRenderPipelineDashboard();
+        } catch(e) { alert('Fehler: '+e.message); }
+    };
+
     // ==================== HQ VIDEO-FREIGABE ====================
     window.vpRenderHqReview = async function() {
         var c = document.getElementById('hqVpReviewContent');
@@ -30199,568 +30246,6 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
             setInterval(vpUpdateHqBadge, 60000);
         }
     }, 500);
-
-})();
-</script>
-
-
-
-<script>
-// ============================================================
-// SPIRITUS MODULE – Gesprächsprotokoll-System
-// ============================================================
-(function() {
-    'use strict';
-
-    // Cache
-    var spiritGespraeche = [];
-    var spiritTodos = [];
-    var spiritStandorte = [];
-    var spiritActiveTab = 'dashboard';
-    var spiritPartnerActiveTab = 'protokolle';
-
-    // Art → erlaubte Kanäle Mapping
-    var artKanalMap = {
-        'telefon':   [{ v:'telefon', l:'Telefon' }],
-        'video':     [{ v:'teams', l:'Teams' }, { v:'zoom', l:'Zoom' }, { v:'meet', l:'Meet' }],
-        'vor_ort':   [{ v:'persoenlich', l:'Persönlich' }],
-        'ad_hoc':    [{ v:'telefon', l:'Telefon' }, { v:'voice_note', l:'Voice Note' }, { v:'persoenlich', l:'Persönlich' }]
-    };
-
-    // ============================================================
-    // INIT
-    // ============================================================
-    window.spiritInit = async function() {
-        if (!window.sb) return;
-        await Promise.all([spiritLoadGespraeche(), spiritLoadTodos(), spiritLoadStandorte()]);
-        spiritShowTab(spiritActiveTab);
-    };
-
-    // Intercept showView
-    var _origShowView = window.showView;
-    window.showView = function(name) {
-        _origShowView(name);
-        if (name === 'hqSpiritus') spiritInit();
-        if (name === 'partnerSpiritus') spiritPartnerInit();
-    };
-
-    // ============================================================
-    // DATA LOADING
-    // ============================================================
-    async function spiritLoadGespraeche() {
-        try {
-            var resp = await sb.from('gespraeche')
-                .select('*, standorte(name, region, inhaber_name), protokoll_partner(id, status, executive_summary), protokoll_intern(id, gesamt_ampel)')
-                .order('datum', { ascending: false }).limit(200);
-            if (resp.error) throw resp.error;
-            spiritGespraeche = resp.data || [];
-        } catch (e) { console.error('[Spiritus] Gespräche laden:', e); spiritGespraeche = []; }
-    }
-
-    async function spiritLoadTodos() {
-        try {
-            var resp = await sb.from('spiritus_todos')
-                .select('*, standorte(name), gespraeche(thema, datum)')
-                .order('created_at', { ascending: false }).limit(500);
-            if (resp.error) throw resp.error;
-            spiritTodos = resp.data || [];
-        } catch (e) { console.error('[Spiritus] Todos laden:', e); spiritTodos = []; }
-    }
-
-    async function spiritLoadStandorte() {
-        try {
-            var resp = await sb.from('standorte').select('id, name').order('name');
-            spiritStandorte = resp.data || [];
-            var sel = document.getElementById('spiritStandortFilter');
-            if (sel) {
-                sel.innerHTML = '<option value="all">Alle Standorte</option>' +
-                    spiritStandorte.map(function(s) { return '<option value="' + s.id + '">' + esc(s.name) + '</option>'; }).join('');
-            }
-        } catch (e) { console.error('[Spiritus] Standorte laden:', e); }
-    }
-
-    // ============================================================
-    // TAB NAVIGATION
-    // ============================================================
-    window.spiritShowTab = function(tab) {
-        spiritActiveTab = tab;
-        document.querySelectorAll('.spirit-tab').forEach(function(el) {
-            var isActive = el.getAttribute('data-tab') === tab;
-            el.style.borderColor = isActive ? '#EF7D00' : 'transparent';
-            el.style.color = isActive ? '#EF7D00' : '#6b7280';
-        });
-        document.querySelectorAll('.spirit-tab-content').forEach(function(el) { el.style.display = 'none'; });
-        var target = document.getElementById('spiritTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
-        if (target) target.style.display = 'block';
-        if (tab === 'dashboard') spiritRenderDashboard();
-        if (tab === 'gespraeche') spiritRenderGespraeche();
-        if (tab === 'review') spiritRenderReview();
-        if (tab === 'todos') spiritRenderTodos();
-    };
-
-    // ============================================================
-    // DASHBOARD
-    // ============================================================
-    function spiritRenderDashboard() {
-        var total = spiritGespraeche.length;
-        var documented = spiritGespraeche.filter(function(g) { return ['review','freigegeben','abgeschlossen'].indexOf(g.status) >= 0; }).length;
-        var quote = total > 0 ? Math.round(documented / total * 100) : 0;
-        setText('spiritKpiQuote', quote + '%');
-        var reviewCount = spiritGespraeche.filter(function(g) { return g.status === 'review'; }).length;
-        setText('spiritKpiReview', reviewCount);
-        var overdue = spiritTodos.filter(function(t) { return t.status === 'ueberfaellig' || (t.status === 'offen' && t.deadline && t.deadline < new Date().toISOString().slice(0,10)); }).length;
-        setText('spiritKpiOverdue', overdue);
-        setText('spiritKpiTime', total > 0 ? '<24' : '—');
-
-        var risiko = spiritGespraeche.filter(function(g) {
-            return g.protokoll_intern && g.protokoll_intern.length > 0 && g.protokoll_intern[0].gesamt_ampel === 'rot';
-        });
-        var risikoEl = document.getElementById('spiritRisikoListe');
-        if (risikoEl) {
-            risikoEl.innerHTML = risiko.length === 0 ? '<p class="text-green-500 text-sm">✅ Keine Risikopartner</p>' :
-                risiko.slice(0, 5).map(function(g) {
-                    return '<div class="flex items-center justify-between p-2 bg-red-50 rounded cursor-pointer hover:bg-red-100" onclick="spiritOpenDetail(\'' + g.id + '\')">' +
-                        '<span class="text-sm font-semibold">🔴 ' + esc(g.standorte?.name || '?') + '</span>' +
-                        '<span class="text-xs text-gray-500">' + fmtDate(g.datum) + '</span></div>';
-                }).join('');
-        }
-
-        var letzteEl = document.getElementById('spiritLetzte');
-        if (letzteEl) {
-            letzteEl.innerHTML = spiritGespraeche.slice(0, 5).map(function(g) {
-                return '<div class="flex items-center justify-between p-2 rounded hover:bg-gray-50 cursor-pointer" onclick="spiritOpenDetail(\'' + g.id + '\')">' +
-                    '<div><span class="text-sm font-semibold">' + esc(g.standorte?.name || '?') + '</span>' +
-                    '<span class="text-xs text-gray-400 ml-2">' + esc(g.thema) + '</span></div>' +
-                    '<div class="flex items-center space-x-2">' + statusBadge(g.status) + '<span class="text-xs text-gray-400">' + fmtDate(g.datum) + '</span></div></div>';
-            }).join('') || '<p class="text-gray-400 text-sm">Keine Gespräche</p>';
-        }
-    }
-
-    // ============================================================
-    // GESPRÄCHE LISTE
-    // ============================================================
-    window.spiritRenderGespraeche = function() {
-        var search = (document.getElementById('spiritSearchInput')?.value || '').toLowerCase();
-        var statusF = document.getElementById('spiritStatusFilter')?.value || 'all';
-        var standortF = document.getElementById('spiritStandortFilter')?.value || 'all';
-        var filtered = spiritGespraeche.filter(function(g) {
-            if (statusF !== 'all' && g.status !== statusF) return false;
-            if (standortF !== 'all' && g.standort_id !== standortF) return false;
-            if (search) {
-                var hay = ((g.standorte?.name || '') + ' ' + g.thema + ' ' + g.status).toLowerCase();
-                if (hay.indexOf(search) < 0) return false;
-            }
-            return true;
-        });
-        var el = document.getElementById('spiritGespraecheListe');
-        if (!el) return;
-        el.innerHTML = filtered.length === 0 ? '<p class="text-gray-400 text-sm">Keine Gespräche gefunden</p>' :
-            filtered.map(function(g) {
-                var ampel = g.protokoll_intern?.[0]?.gesamt_ampel;
-                var ai = ampel === 'rot' ? '🔴' : ampel === 'gelb' ? '🟡' : ampel === 'gruen' ? '🟢' : '⚪';
-                var summary = g.protokoll_partner?.[0]?.executive_summary;
-                var st = summary && summary.length > 0 ? summary[0] : '';
-                return '<div class="vit-card p-4 cursor-pointer hover:shadow-md transition" onclick="spiritOpenDetail(\'' + g.id + '\')">' +
-                    '<div class="flex items-center justify-between mb-2"><div class="flex items-center space-x-3">' +
-                    '<span class="text-lg">' + ai + '</span><div><span class="font-bold text-gray-800">' + esc(g.standorte?.name || '?') + '</span>' +
-                    '<span class="text-xs text-gray-400 ml-2">' + esc(g.gespraechs_art) + ' · ' + esc(g.kanal) + '</span></div></div>' +
-                    '<div class="flex items-center space-x-3">' + statusBadge(g.status) +
-                    '<span class="text-xs text-gray-400">' + fmtDate(g.datum) + '</span></div></div>' +
-                    '<p class="text-sm text-gray-600">' + esc(g.thema) + '</p>' +
-                    (st ? '<p class="text-xs text-gray-400 mt-1 truncate">' + esc(st) + '</p>' : '') +
-                    (g.tags?.length ? '<div class="flex flex-wrap gap-1 mt-2">' + g.tags.map(function(t) { return '<span class="text-[10px] px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">' + t + '</span>'; }).join('') + '</div>' : '') +
-                    '</div>';
-            }).join('');
-    };
-
-    // ============================================================
-    // REVIEW QUEUE
-    // ============================================================
-    function spiritRenderReview() {
-        var reviews = spiritGespraeche.filter(function(g) { return g.status === 'review'; });
-        var el = document.getElementById('spiritReviewListe');
-        if (!el) return;
-        el.innerHTML = reviews.length === 0 ? '<div class="vit-card p-6 text-center"><p class="text-green-500 font-semibold">✅ Keine offenen Reviews</p></div>' :
-            reviews.map(function(g) {
-                return '<div class="vit-card p-4 border-l-4 border-yellow-400"><div class="flex items-center justify-between mb-2">' +
-                    '<div><span class="font-bold text-gray-800">' + esc(g.standorte?.name || '?') + '</span>' +
-                    '<span class="text-xs text-gray-400 ml-2">' + fmtDate(g.datum) + '</span></div>' +
-                    '<div class="flex items-center space-x-2">' +
-                    '<button onclick="event.stopPropagation();spiritApprove(\'' + g.id + '\')" class="px-3 py-1.5 bg-green-500 text-white text-xs rounded-lg hover:bg-green-600 font-semibold">✓ Freigeben</button>' +
-                    '<button onclick="event.stopPropagation();spiritOpenDetail(\'' + g.id + '\')" class="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs rounded-lg hover:bg-gray-300 font-semibold">Ansehen</button>' +
-                    '</div></div><p class="text-sm text-gray-600">' + esc(g.thema) + '</p></div>';
-            }).join('');
-    }
-
-    // ============================================================
-    // TODOS
-    // ============================================================
-    window.spiritRenderTodos = function() {
-        var filter = document.getElementById('spiritTodoFilter')?.value || 'offen';
-        var seite = document.getElementById('spiritTodoSeite')?.value || 'all';
-        var filtered = spiritTodos.filter(function(t) {
-            if (filter === 'offen' && t.status !== 'offen' && t.status !== 'in_arbeit') return false;
-            if (filter === 'ueberfaellig' && t.status !== 'ueberfaellig') return false;
-            if (filter === 'erledigt' && t.status !== 'erledigt') return false;
-            if (seite !== 'all' && t.seite !== seite) return false;
-            return true;
-        });
-        var el = document.getElementById('spiritTodoListe');
-        if (!el) return;
-        el.innerHTML = filtered.length === 0 ? '<p class="text-gray-400 text-sm">Keine To-dos</p>' :
-            filtered.map(function(t) {
-                var pi = { high:'🔴', medium:'🟡', low:'🟢' };
-                var si = t.status === 'erledigt' ? '✅' : t.status === 'ueberfaellig' ? '🚨' : t.status === 'in_arbeit' ? '⏳' : '⬜';
-                var sl = t.seite === 'hq' ? '<span class="text-[9px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-bold">HQ</span>' :
-                    '<span class="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold">Partner</span>';
-                return '<div class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 border border-gray-100">' +
-                    '<button onclick="spiritToggleTodo(\'' + t.id + '\')" class="text-lg flex-shrink-0">' + si + '</button>' +
-                    '<div class="flex-1 min-w-0"><p class="text-sm font-semibold text-gray-800 ' + (t.status === 'erledigt' ? 'line-through opacity-50' : '') + '">' + esc(t.beschreibung) + '</p>' +
-                    '<div class="flex items-center space-x-2 mt-1"><span class="text-[10px] text-gray-400">' + esc(t.standorte?.name || '') + '</span>' + sl +
-                    '<span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">' + t.kategorie + '</span>' +
-                    (t.deadline ? '<span class="text-[10px] text-gray-400">📅 ' + t.deadline + '</span>' : '') +
-                    '</div></div><span class="text-sm">' + (pi[t.prioritaet] || '') + '</span></div>';
-            }).join('');
-    };
-
-    // ============================================================
-    // NEW GESPRÄCH DIALOG (with Art↔Kanal dependency)
-    // ============================================================
-    window.spiritOpenNewDialog = function() {
-        var stdOpts = spiritStandorte.map(function(s) {
-            return '<option value="' + s.id + '">' + esc(s.name) + '</option>';
-        }).join('');
-
-        var html = '<div id="spiritNewModal" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)">' +
-            '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:12px;width:95%;max-width:560px;max-height:90vh;overflow-y:auto;padding:24px">' +
-            '<div class="flex items-center justify-between mb-4"><h2 class="text-lg font-bold text-gray-800">Neues Gespräch anlegen</h2>' +
-            '<button onclick="document.getElementById(\'spiritNewModal\').remove()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button></div>' +
-            '<div class="space-y-4">' +
-            '<div><label class="text-xs font-semibold text-gray-500 block mb-1">Standort *</label>' +
-            '<select id="spiritNewStandort" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">' + stdOpts + '</select></div>' +
-            '<div><label class="text-xs font-semibold text-gray-500 block mb-1">Thema *</label>' +
-            '<input id="spiritNewThema" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="z.B. Quartalsgespräch Q1 2026"></div>' +
-            '<div class="grid grid-cols-2 gap-4">' +
-            '<div><label class="text-xs font-semibold text-gray-500 block mb-1">Art</label>' +
-            '<select id="spiritNewArt" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" onchange="spiritUpdateKanal()">' +
-            '<option value="telefon">Telefon</option><option value="video">Video</option><option value="vor_ort">Vor Ort</option><option value="ad_hoc">Ad hoc</option></select></div>' +
-            '<div><label class="text-xs font-semibold text-gray-500 block mb-1">Kanal</label>' +
-            '<select id="spiritNewKanal" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
-            '<option value="telefon">Telefon</option></select></div></div>' +
-            '<div><label class="text-xs font-semibold text-gray-500 block mb-1">Datum *</label>' +
-            '<input id="spiritNewDatum" type="datetime-local" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" value="' + new Date().toISOString().slice(0,16) + '"></div>' +
-            '<div><label class="text-xs font-semibold text-gray-500 block mb-1">Vorab-Notizen</label>' +
-            '<textarea id="spiritNewNotizen" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" rows="2" placeholder="Optional"></textarea></div>' +
-            '<div class="flex items-center space-x-2"><input type="checkbox" id="spiritNewEinwilligung"><label class="text-sm text-gray-600" for="spiritNewEinwilligung">Einwilligung zur Aufnahme erhalten</label></div>' +
-            '<div class="flex items-center space-x-3 pt-2">' +
-            '<button onclick="spiritCreateGespraech()" class="flex-1 px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Anlegen</button>' +
-            '<button onclick="spiritCreateAndUpload()" class="flex-1 px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-semibold hover:opacity-90">Anlegen + Audio hochladen</button></div>' +
-            '</div></div></div>';
-
-        document.body.insertAdjacentHTML('beforeend', html);
-        // Initialize Kanal dropdown based on default Art
-        spiritUpdateKanal();
-    };
-
-    // Art → Kanal sync
-    window.spiritUpdateKanal = function() {
-        var art = document.getElementById('spiritNewArt')?.value;
-        var kanalSel = document.getElementById('spiritNewKanal');
-        if (!art || !kanalSel) return;
-        var opts = artKanalMap[art] || [{ v:'telefon', l:'Telefon' }];
-        kanalSel.innerHTML = opts.map(function(o) { return '<option value="' + o.v + '">' + o.l + '</option>'; }).join('');
-    };
-
-    window.spiritCreateGespraech = async function() {
-        var standort_id = document.getElementById('spiritNewStandort')?.value;
-        var thema = document.getElementById('spiritNewThema')?.value;
-        var datum = document.getElementById('spiritNewDatum')?.value;
-        if (!standort_id || !thema || !datum) { alert('Bitte Pflichtfelder ausfüllen'); return; }
-        try {
-            var user = (await sb.auth.getUser()).data.user;
-            var resp = await sb.from('gespraeche').insert({
-                standort_id: standort_id,
-                hq_owner_id: user.id,
-                thema: thema,
-                gespraechs_art: document.getElementById('spiritNewArt')?.value || 'telefon',
-                kanal: document.getElementById('spiritNewKanal')?.value || 'telefon',
-                datum: new Date(datum).toISOString(),
-                einwilligung_aufnahme: document.getElementById('spiritNewEinwilligung')?.checked || false,
-                notizen_vorab: document.getElementById('spiritNewNotizen')?.value || null,
-                status: 'geplant'
-            }).select().single();
-            if (resp.error) throw resp.error;
-            document.getElementById('spiritNewModal')?.remove();
-            await spiritLoadGespraeche();
-            spiritShowTab('gespraeche');
-            return resp.data;
-        } catch (e) { alert('Fehler: ' + e.message); }
-    };
-
-    window.spiritCreateAndUpload = async function() {
-        var gespraech = await spiritCreateGespraech();
-        if (gespraech) spiritOpenUploadDialog(gespraech.id);
-    };
-
-    // ============================================================
-    // UPLOAD DIALOG
-    // ============================================================
-    window.spiritOpenUploadDialog = function(gespraechId) {
-        var html = '<div id="spiritUploadModal" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)">' +
-            '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:12px;width:95%;max-width:480px;padding:24px">' +
-            '<div class="flex items-center justify-between mb-4"><h2 class="text-lg font-bold text-gray-800">🎤 Audio hochladen</h2>' +
-            '<button onclick="document.getElementById(\'spiritUploadModal\').remove()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button></div>' +
-            '<div id="spiritUploadZone" class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-vit-orange transition" onclick="document.getElementById(\'spiritFileInput\').click()">' +
-            '<svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>' +
-            '<p class="text-sm text-gray-500">Audio- oder Videodatei hier ablegen</p>' +
-            '<p class="text-xs text-gray-400 mt-1">MP3, WAV, M4A, WebM, MP4 – Max 500 MB</p></div>' +
-            '<input type="file" id="spiritFileInput" class="hidden" accept="audio/*,video/*" onchange="spiritHandleUpload(\'' + gespraechId + '\')">' +
-            '<div id="spiritUploadProgress" class="mt-4 hidden"><div class="flex items-center space-x-3"><div class="animate-spin rounded-full h-5 w-5 border-b-2 border-vit-orange"></div>' +
-            '<span id="spiritUploadStatus" class="text-sm text-gray-600">Uploading...</span></div>' +
-            '<div class="mt-2 bg-gray-200 rounded-full h-2"><div id="spiritUploadBar" class="h-2 rounded-full bg-vit-orange transition-all" style="width:0%"></div></div></div>' +
-            '</div></div>';
-        document.body.insertAdjacentHTML('beforeend', html);
-    };
-
-    window.spiritHandleUpload = async function(gespraechId) {
-        var file = document.getElementById('spiritFileInput')?.files?.[0];
-        if (!file) return;
-        var progress = document.getElementById('spiritUploadProgress');
-        var bar = document.getElementById('spiritUploadBar');
-        var status = document.getElementById('spiritUploadStatus');
-        if (progress) progress.classList.remove('hidden');
-        try {
-            status.textContent = 'Datei wird hochgeladen...';
-            bar.style.width = '20%';
-            var path = 'audio/' + gespraechId + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-            var upResp = await sb.storage.from('spiritus-media').upload(path, file);
-            if (upResp.error) throw upResp.error;
-            bar.style.width = '40%';
-
-            status.textContent = 'Asset wird registriert...';
-            var extMap = { 'video/mp4':'video', 'video/webm':'video', 'video/quicktime':'video' };
-            var asResp = await sb.from('spiritus_media_assets').insert({
-                gespraech_id: gespraechId, storage_path: path,
-                media_type: extMap[file.type] || 'audio', mime_type: file.type,
-                file_size_bytes: file.size, source: 'upload',
-                loeschfrist: new Date(Date.now() + 90*24*60*60*1000).toISOString()
-            }).select().single();
-            if (asResp.error) throw asResp.error;
-            bar.style.width = '50%';
-
-            await sb.from('gespraeche').update({ status: 'ki_verarbeitung' }).eq('id', gespraechId);
-
-            status.textContent = '🤖 KI-Transkription gestartet...';
-            bar.style.width = '60%';
-            var session = (await sb.auth.getSession()).data.session;
-            var resp = await fetch(SUPABASE_URL + '/functions/v1/spiritus-transcribe', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-                body: JSON.stringify({ media_asset_id: asResp.data.id, gespraech_id: gespraechId })
-            });
-            if (!resp.ok) throw new Error('Pipeline: ' + await resp.text());
-            bar.style.width = '100%';
-            status.textContent = '✅ Fertig! Protokoll wird erstellt...';
-            setTimeout(async function() {
-                document.getElementById('spiritUploadModal')?.remove();
-                await spiritLoadGespraeche(); await spiritLoadTodos();
-                spiritShowTab('review');
-            }, 2000);
-        } catch (e) {
-            console.error('[Spiritus] Upload:', e);
-            if (status) { status.textContent = '❌ ' + e.message; status.style.color = 'red'; }
-            if (bar) { bar.style.width = '100%'; bar.style.background = 'red'; }
-        }
-    };
-
-    // ============================================================
-    // DETAIL VIEW
-    // ============================================================
-    window.spiritOpenDetail = async function(id) {
-        var g = spiritGespraeche.find(function(x) { return x.id === id; });
-        if (!g) return;
-        var ppR = await sb.from('protokoll_partner').select('*').eq('gespraech_id', id).eq('is_current', true).maybeSingle();
-        var piR = await sb.from('protokoll_intern').select('*').eq('gespraech_id', id).eq('is_current', true).maybeSingle();
-        var tdR = await sb.from('spiritus_todos').select('*').eq('gespraech_id', id).order('seite').order('prioritaet');
-        var tlR = await sb.from('gespraech_teilnehmer').select('*, users(name, vorname, nachname)').eq('gespraech_id', id);
-        var pp = ppR.data, pi = piR.data, todos = tdR.data || [], teil = tlR.data || [];
-        var ai = pi?.gesamt_ampel === 'rot' ? '🔴' : pi?.gesamt_ampel === 'gelb' ? '🟡' : pi?.gesamt_ampel === 'gruen' ? '🟢' : '⚪';
-
-        var h = '<div id="spiritDetailModal" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:start;justify-content:center;background:rgba(0,0,0,0.5);padding:20px;overflow-y:auto">' +
-            '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:12px;width:95%;max-width:900px;padding:24px;margin:auto">' +
-            '<div class="flex items-center justify-between mb-6"><div>' +
-            '<p class="text-xs text-gray-400">' + esc(g.gespraechs_art) + ' · ' + esc(g.kanal) + ' · ' + fmtDate(g.datum) + '</p>' +
-            '<h2 class="text-xl font-bold text-gray-800">' + ai + ' ' + esc(g.standorte?.name || '?') + ' – ' + esc(g.thema) + '</h2>' +
-            '<div class="flex items-center space-x-2 mt-1">' + statusBadge(g.status) +
-            (g.tags?.length ? g.tags.map(function(t) { return '<span class="text-[10px] px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">' + t + '</span>'; }).join('') : '') +
-            '</div></div><div class="flex items-center space-x-2">' +
-            (g.status === 'review' ? '<button onclick="spiritApprove(\'' + id + '\')" class="px-3 py-1.5 bg-green-500 text-white text-xs rounded-lg hover:bg-green-600 font-semibold">✓ Freigeben</button>' : '') +
-            (g.status === 'geplant' || g.status === 'material_fehlt' ? '<button onclick="document.getElementById(\'spiritDetailModal\').remove();spiritOpenUploadDialog(\'' + id + '\')" class="px-3 py-1.5 bg-vit-orange text-white text-xs rounded-lg hover:opacity-90 font-semibold">🎤 Audio</button>' : '') +
-            '<button onclick="document.getElementById(\'spiritDetailModal\').remove()" class="text-gray-400 hover:text-gray-600 text-2xl ml-2">&times;</button></div></div>';
-
-        if (teil.length > 0) {
-            h += '<div class="mb-4 flex items-center space-x-2 flex-wrap"><span class="text-xs text-gray-400">Teilnehmer:</span>';
-            teil.forEach(function(t) {
-                var n = t.users ? ((t.users.vorname||'') + ' ' + (t.users.nachname||t.users.name)).trim() : t.name_extern;
-                var c = t.seite === 'hq' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700';
-                h += '<span class="text-[10px] px-2 py-0.5 rounded-full ' + c + ' font-semibold">' + esc(n) + '</span>';
-            });
-            h += '</div>';
-        }
-
-        h += '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">';
-        h += '<div><h3 class="font-bold text-gray-800 mb-3">📋 Partner-Protokoll ' +
-            (pp?.status === 'freigegeben' ? '<span class="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold ml-2">Freigegeben</span>' : '<span class="text-[9px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-bold ml-2">Entwurf</span>') + '</h3>';
-        h += pp ? renderPP(pp) : '<p class="text-gray-400 text-sm">Noch kein Protokoll</p>';
-        h += '</div>';
-        h += '<div><h3 class="font-bold text-gray-800 mb-3">🔒 Internes Protokoll <span class="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-bold">Nur HQ</span></h3>';
-        h += pi ? renderPI(pi) : '<p class="text-gray-400 text-sm">Noch kein internes Protokoll</p>';
-        h += '</div></div>';
-
-        if (todos.length > 0) {
-            h += '<div class="mt-6"><h3 class="font-bold text-gray-800 mb-3">✅ To-dos (' + todos.length + ')</h3><div class="grid grid-cols-1 lg:grid-cols-2 gap-2">';
-            todos.forEach(function(t) {
-                var si = t.status === 'erledigt' ? '✅' : t.status === 'ueberfaellig' ? '🚨' : '⬜';
-                var sl = t.seite === 'hq' ? '<span class="text-[9px] bg-purple-100 text-purple-700 px-1 py-0.5 rounded">HQ</span>' :
-                    '<span class="text-[9px] bg-blue-100 text-blue-700 px-1 py-0.5 rounded">Partner</span>';
-                h += '<div class="flex items-center space-x-2 p-2 rounded bg-gray-50 text-sm"><span>' + si + '</span><span class="flex-1">' + esc(t.beschreibung) + '</span>' + sl +
-                    (t.deadline ? '<span class="text-[10px] text-gray-400">📅 ' + t.deadline + '</span>' : '') + '</div>';
-            });
-            h += '</div></div>';
-        }
-        h += '</div></div>';
-        document.body.insertAdjacentHTML('beforeend', h);
-    };
-
-    function renderPP(pp) {
-        var h = '';
-        if (pp.executive_summary?.length) {
-            h += '<div class="mb-3 p-3 bg-orange-50 rounded-lg"><p class="text-xs font-bold text-vit-orange mb-1">Zusammenfassung</p>';
-            pp.executive_summary.forEach(function(s) { h += '<p class="text-sm text-gray-700">' + esc(s) + '</p>'; }); h += '</div>';
-        }
-        if (pp.besprochene_themen?.length) {
-            h += '<div class="mb-3"><p class="text-xs font-bold text-gray-500 mb-2">Besprochene Themen</p>';
-            pp.besprochene_themen.forEach(function(t) { h += '<div class="p-2 mb-1 rounded bg-gray-50"><p class="text-sm font-semibold">' + esc(t.thema) + '</p><p class="text-xs text-gray-500">' + esc(t.zusammenfassung) + '</p></div>'; }); h += '</div>';
-        }
-        if (pp.entscheidungen?.length) {
-            h += '<div class="mb-3"><p class="text-xs font-bold text-gray-500 mb-2">Entscheidungen</p>';
-            pp.entscheidungen.forEach(function(e) { h += '<div class="text-sm p-1">📌 ' + esc(e.entscheidung) + (e.verantwortlich ? ' <span class="text-gray-400">(' + esc(e.verantwortlich) + ')</span>' : '') + '</div>'; }); h += '</div>';
-        }
-        if (pp.vereinbarte_massnahmen?.length) {
-            h += '<div><p class="text-xs font-bold text-gray-500 mb-2">Maßnahmen</p>';
-            pp.vereinbarte_massnahmen.forEach(function(m) { h += '<div class="text-sm p-1">→ ' + esc(m.massnahme) + ' <span class="text-gray-400">(' + esc(m.verantwortlich||'?') + (m.deadline ? ', bis ' + m.deadline : '') + ')</span></div>'; }); h += '</div>';
-        }
-        return h || '<p class="text-gray-400 text-sm">Leer</p>';
-    }
-
-    function renderPI(pi) {
-        var h = '';
-        if (pi.interne_einschaetzung) {
-            h += '<div class="mb-3 p-3 bg-gray-50 rounded-lg"><p class="text-xs font-bold text-gray-500 mb-1">Interne Einschätzung</p><p class="text-sm text-gray-700">' + esc(pi.interne_einschaetzung) + '</p></div>';
-        }
-        if (pi.risiken?.length) {
-            h += '<div class="mb-3"><p class="text-xs font-bold text-gray-500 mb-2">Risiken</p>';
-            pi.risiken.forEach(function(r) { var a = r.ampel === 'rot' ? '🔴' : r.ampel === 'gelb' ? '🟡' : '🟢'; h += '<div class="p-2 mb-1 rounded bg-gray-50"><span class="text-sm">' + a + ' ' + esc(r.risiko) + '</span>' + (r.begruendung ? '<p class="text-xs text-gray-400 ml-5">' + esc(r.begruendung) + '</p>' : '') + '</div>'; }); h += '</div>';
-        }
-        if (pi.chancen?.length) {
-            h += '<div class="mb-3"><p class="text-xs font-bold text-gray-500 mb-2">Chancen</p>';
-            pi.chancen.forEach(function(c) { h += '<div class="text-sm p-1">💡 ' + esc(c.chance) + (c.potenzial ? ' <span class="text-gray-400">(' + esc(c.potenzial) + ')</span>' : '') + '</div>'; }); h += '</div>';
-        }
-        if (pi.offene_punkte?.length) {
-            h += '<div><p class="text-xs font-bold text-gray-500 mb-2">Offene Punkte</p>';
-            pi.offene_punkte.forEach(function(p) { h += '<div class="text-sm p-1">❓ ' + esc(p.punkt) + (p.naechster_schritt ? ' → <span class="text-gray-400">' + esc(p.naechster_schritt) + '</span>' : '') + '</div>'; }); h += '</div>';
-        }
-        return h || '<p class="text-gray-400 text-sm">Leer</p>';
-    }
-
-    // ============================================================
-    // ACTIONS
-    // ============================================================
-    window.spiritApprove = async function(id) {
-        if (!confirm('Protokoll freigeben? Der Partner kann es dann sehen.')) return;
-        try {
-            var user = (await sb.auth.getUser()).data.user;
-            await sb.from('protokoll_partner').update({ status: 'freigegeben', freigegeben_von: user.id, freigegeben_am: new Date().toISOString() }).eq('gespraech_id', id).eq('is_current', true);
-            await sb.from('gespraeche').update({ status: 'freigegeben' }).eq('id', id);
-            await sb.from('spiritus_audit_log').insert({ gespraech_id: id, user_id: user.id, aktion: 'protokoll_freigegeben' });
-            document.getElementById('spiritDetailModal')?.remove();
-            await spiritLoadGespraeche();
-            spiritShowTab(spiritActiveTab);
-        } catch (e) { alert('Fehler: ' + e.message); }
-    };
-
-    window.spiritToggleTodo = async function(id) {
-        var todo = spiritTodos.find(function(t) { return t.id === id; });
-        if (!todo) return;
-        var ns = todo.status === 'erledigt' ? 'offen' : 'erledigt';
-        try {
-            await sb.from('spiritus_todos').update({ status: ns, erledigt_am: ns === 'erledigt' ? new Date().toISOString() : null }).eq('id', id);
-            await spiritLoadTodos(); spiritRenderTodos();
-        } catch (e) { console.error('[Spiritus] Toggle:', e); }
-    };
-
-    // ============================================================
-    // PARTNER VIEW
-    // ============================================================
-    window.spiritPartnerInit = async function() {
-        if (!window.sb) return;
-        try {
-            var gR = await sb.from('gespraeche')
-                .select('*, protokoll_partner(id, status, executive_summary, besprochene_themen, entscheidungen, vereinbarte_massnahmen)')
-                .order('datum', { ascending: false }).limit(50);
-            var el = document.getElementById('spiritPartnerProtokolle');
-            if (el) {
-                el.innerHTML = (gR.data || []).length === 0 ? '<p class="text-gray-400 text-sm">Noch keine freigegebenen Protokolle</p>' :
-                    (gR.data || []).map(function(g) {
-                        var pp = g.protokoll_partner?.[0];
-                        var s = pp?.executive_summary?.[0] || '';
-                        return '<div class="vit-card p-4"><div class="flex items-center justify-between mb-2">' +
-                            '<span class="font-bold text-gray-800">' + esc(g.thema) + '</span>' +
-                            '<span class="text-xs text-gray-400">' + fmtDate(g.datum) + '</span></div>' +
-                            (s ? '<p class="text-sm text-gray-600 mb-2">' + esc(s) + '</p>' : '') +
-                            (pp?.besprochene_themen?.length ? '<div class="flex flex-wrap gap-1">' + pp.besprochene_themen.map(function(t) { return '<span class="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">' + esc(t.thema) + '</span>'; }).join('') + '</div>' : '') + '</div>';
-                    }).join('');
-            }
-            var tR = await sb.from('spiritus_todos').select('*, gespraeche(thema)').order('created_at', { ascending: false }).limit(100);
-            var te = document.getElementById('spiritPartnerTodoListe');
-            if (te) {
-                te.innerHTML = (tR.data || []).length === 0 ? '<p class="text-gray-400 text-sm">Keine To-dos</p>' :
-                    (tR.data || []).map(function(t) {
-                        var si = t.status === 'erledigt' ? '✅' : t.status === 'ueberfaellig' ? '🚨' : '⬜';
-                        return '<div class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 border border-gray-100">' +
-                            '<button onclick="spiritToggleTodo(\'' + t.id + '\')" class="text-lg">' + si + '</button>' +
-                            '<div class="flex-1"><p class="text-sm font-semibold text-gray-800 ' + (t.status === 'erledigt' ? 'line-through opacity-50' : '') + '">' + esc(t.beschreibung) + '</p>' +
-                            '<span class="text-[10px] text-gray-400">' + esc(t.gespraeche?.thema||'') + (t.deadline ? ' · 📅 ' + t.deadline : '') + '</span></div></div>';
-                    }).join('');
-            }
-        } catch (e) { console.error('[Spiritus Partner]', e); }
-    };
-
-    window.spiritPartnerShowTab = function(tab) {
-        document.querySelectorAll('.spirit-ptab').forEach(function(el) {
-            var a = el.getAttribute('data-tab') === tab;
-            el.style.borderColor = a ? '#EF7D00' : 'transparent';
-            el.style.color = a ? '#EF7D00' : '#6b7280';
-        });
-        document.querySelectorAll('.spirit-ptab-content').forEach(function(el) { el.style.display = 'none'; });
-        var t = document.getElementById('spiritPartnerTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
-        if (t) t.style.display = 'block';
-    };
-
-    // ============================================================
-    // HELPERS
-    // ============================================================
-    function statusBadge(s) {
-        var m = { geplant:{bg:'bg-gray-100 text-gray-600',i:'📋',l:'Geplant'}, material_fehlt:{bg:'bg-yellow-100 text-yellow-700',i:'⬆️',l:'Material fehlt'},
-            ki_verarbeitung:{bg:'bg-blue-100 text-blue-700',i:'🤖',l:'KI läuft'}, review:{bg:'bg-yellow-100 text-yellow-700',i:'👁️',l:'Review'},
-            freigegeben:{bg:'bg-green-100 text-green-700',i:'✅',l:'Freigegeben'}, abgeschlossen:{bg:'bg-gray-100 text-gray-600',i:'🏁',l:'Abgeschlossen'},
-            archiviert:{bg:'bg-gray-100 text-gray-400',i:'📦',l:'Archiviert'} };
-        var x = m[s] || {bg:'bg-gray-100 text-gray-500',i:'?',l:s};
-        return '<span class="text-[10px] px-2 py-0.5 rounded-full ' + x.bg + ' font-bold">' + x.i + ' ' + x.l + '</span>';
-    }
-    function fmtDate(d) { if(!d) return '—'; try { return new Date(d).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}); } catch(e) { return d; } }
-    function esc(s) { if(!s) return ''; var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
-    function setText(id,v) { var e=document.getElementById(id); if(e) e.textContent=v; }
 
 })();
 </script>
