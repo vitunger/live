@@ -478,6 +478,9 @@
 
         /* Profile sidebar */
         body.dark #profileSidebar { background-color: var(--dm-surface) !important; border-color: var(--dm-border) !important; }
+        body.dark #profileSlider { background: var(--dm-surface) !important; }
+        body.dark #profilePanel .text-gray-800, body.dark #profilePanel .text-gray-700 { color: var(--dm-text) !important; }
+        body.dark #profilePanel .text-gray-500, body.dark #profilePanel .text-gray-400 { color: var(--dm-sub) !important; }
 
         /* Widget info popup */
         body.dark .widget-info-popup { background: var(--dm-surface) !important; border-color: var(--dm-border) !important; color: var(--dm-sub) !important; }
@@ -6116,7 +6119,7 @@
         // ============================================
         // PORTAL VERSION – wird bei jedem Deploy erhoeht
         // ============================================
-        var PORTAL_VERSION = '7.7.0218';
+        var PORTAL_VERSION = '7.8.0218';
 
         // ============================================
         // SUPABASE CLIENT
@@ -6843,16 +6846,24 @@
             // Dynamic welcome text
             var welcomeEl = document.getElementById('welcomeText');
             if(welcomeEl) {
-                var tpl = welcomeEl.textContent || 'Willkommen zurück, {name}!';
-                welcomeEl.textContent = tpl.replace('{name}', firstName).replace('Max', firstName);
+                // Always start from German template, then translate
+                welcomeEl.textContent = 'Willkommen zurück, ' + firstName + '!';
+                welcomeEl.setAttribute('data-i18n-name', firstName);
             }
-            // Dynamic date
+            // Dynamic date (language-aware)
             var dateEl = document.getElementById('welcomeDate');
             var now = new Date();
-            var days = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
-            var months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-            var dateStr = 'Heute ist ' + days[now.getDay()] + ', ' + now.getDate() + '. ' + months[now.getMonth()] + ' ' + now.getFullYear();
-            if(dateEl) dateEl.textContent = dateStr;
+            function getDateStr(lng) {
+                var dD = {de:['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'],en:['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],nl:['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag']};
+                var mD = {de:['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'],en:['January','February','March','April','May','June','July','August','September','October','November','December'],nl:['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']};
+                var pre = {de:'Heute ist ',en:'Today is ',nl:'Vandaag is '};
+                var l = lng || currentLang || 'de';
+                var d = dD[l]||dD.de, m = mD[l]||mD.de, p = pre[l]||pre.de;
+                return p + d[now.getDay()] + ', ' + now.getDate() + '. ' + m[now.getMonth()] + ' ' + now.getFullYear();
+            }
+            window.getDateStr = getDateStr;
+            var dateStr = getDateStr(currentLang);
+            if(dateEl) { dateEl.textContent = dateStr; dateEl.setAttribute('data-i18n-date','1'); }
             var hqDateEl = document.getElementById('hqWelcomeDate');
             if(hqDateEl) hqDateEl.textContent = 'Willkommen zurueck · ' + dateStr;
             document.getElementById('loginScreen').style.display = 'none';
@@ -21797,7 +21808,11 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             document.querySelectorAll('[data-i18n]').forEach(function(el){
                 var key = el.getAttribute('data-i18n');
                 if(i18n[lang] && i18n[lang][key]) {
-                    el.textContent = i18n[lang][key];
+                    var txt = i18n[lang][key];
+                    // Replace {name} placeholder if element stores the user name
+                    var uname = el.getAttribute('data-i18n-name');
+                    if(uname) txt = txt.replace('{name}', uname);
+                    el.textContent = txt;
                 }
             });
             // Translate placeholders via data-i18n-placeholder
@@ -21829,6 +21844,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             try{if(document.getElementById('smRankingList') && document.getElementById('smRankingList').innerHTML) renderSmRanking();}catch(e){}
             // Re-translate after dynamic re-renders
             if(lang !== 'de') setTimeout(function(){ translateDOM(lang); }, 200);
+            // Update date display
+            var dateEl = document.getElementById('welcomeDate');
+            if(dateEl && typeof getDateStr === 'function') dateEl.textContent = getDateStr(lang);
         }
 
         // Helper: get translated text (for JS-rendered content)
@@ -24408,6 +24426,10 @@ function openProfilePanel() {
     var panel = document.getElementById('profilePanel');
     var slider = document.getElementById('profileSlider');
     panel.style.display = 'block';
+    // Force dark mode background
+    if(document.body.classList.contains('dark')) {
+        slider.style.background = '#1A1A1F';
+    }
     // Populate from sbProfile if available
     if(typeof sbProfile !== 'undefined' && sbProfile) {
         var nameParts = (sbProfile.name || 'Demo User').split(' ');
