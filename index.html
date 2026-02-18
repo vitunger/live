@@ -21,6 +21,14 @@
             --vit-gray: #626062;
             --vit-black: #000000;
             --vit-white: #FFFFFF;
+            /* Dark Mode Colors */
+            --dm-bg: #111114;
+            --dm-surface: #1A1A1F;
+            --dm-surface-hover: #222228;
+            --dm-border: #2A2A30;
+            --dm-text: #EAEAEC;
+            --dm-sub: #87878F;
+            --dm-muted: #55555C;
         }
         
         .bg-vit-orange { background-color: var(--vit-orange); }
@@ -339,6 +347,100 @@
 .widget-info-popup.active{display:block}
 .widget-info-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.15);z-index:9998}
 .widget-info-overlay.active{display:block}
+
+        /* ========================================
+           DARK MODE
+           ======================================== */
+        body.dark { background-color: var(--dm-bg) !important; color: var(--dm-text) !important; }
+        
+        /* Backgrounds */
+        body.dark .bg-white { background-color: var(--dm-surface) !important; }
+        body.dark .bg-gray-50 { background-color: var(--dm-bg) !important; }
+        body.dark .bg-gray-100 { background-color: var(--dm-surface) !important; }
+        body.dark .bg-gray-200 { background-color: var(--dm-surface-hover) !important; }
+        body.dark .bg-gray-300 { background-color: var(--dm-border) !important; }
+        body.dark .bg-gray-400 { background-color: #3A3A42 !important; }
+        body.dark .bg-gray-500 { background-color: #4A4A52 !important; }
+        body.dark .bg-slate-50, body.dark .bg-slate-100 { background-color: var(--dm-surface) !important; }
+
+        /* Text */
+        body.dark .text-gray-900, body.dark .text-gray-800, body.dark .text-black { color: var(--dm-text) !important; }
+        body.dark .text-gray-700 { color: #C8C8CE !important; }
+        body.dark .text-gray-600, body.dark .text-gray-500 { color: var(--dm-sub) !important; }
+        body.dark .text-gray-400, body.dark .text-gray-300 { color: var(--dm-muted) !important; }
+
+        /* Borders */
+        body.dark .border-gray-200, body.dark .border-gray-300, body.dark .border-gray-100, body.dark .border-gray-50, body.dark .border-white { border-color: var(--dm-border) !important; }
+        body.dark .border-gray-400 { border-color: #3A3A42 !important; }
+        body.dark .divide-gray-200 > * + *, body.dark .divide-gray-100 > * + * { border-color: var(--dm-border) !important; }
+
+        /* Shadows */
+        body.dark .shadow-sm, body.dark .shadow { box-shadow: 0 1px 3px rgba(0,0,0,0.5) !important; }
+        body.dark .shadow-md { box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important; }
+        body.dark .shadow-lg, body.dark .shadow-xl { box-shadow: 0 4px 16px rgba(0,0,0,0.6) !important; }
+
+        /* Inputs & Forms */
+        body.dark input, body.dark textarea, body.dark select {
+            background-color: var(--dm-surface) !important; color: var(--dm-text) !important; border-color: var(--dm-border) !important;
+        }
+        body.dark input::placeholder, body.dark textarea::placeholder { color: var(--dm-muted) !important; }
+        body.dark input:focus, body.dark textarea:focus, body.dark select:focus {
+            border-color: var(--vit-orange) !important; box-shadow: 0 0 0 1px var(--vit-orange) !important;
+        }
+
+        /* Tables */
+        body.dark table { color: var(--dm-text) !important; }
+        body.dark th { color: var(--dm-sub) !important; border-color: var(--dm-border) !important; }
+        body.dark td { border-color: var(--dm-border) !important; }
+
+        /* Hover states */
+        body.dark .hover\:bg-gray-50:hover, body.dark .hover\:bg-gray-100:hover { background-color: var(--dm-surface-hover) !important; }
+        body.dark .hover\:bg-gray-200:hover { background-color: var(--dm-border) !important; }
+
+        /* Status badges */
+        body.dark .status-new { background-color: rgba(59,130,246,0.15) !important; color: #60A5FA !important; }
+        body.dark .status-inprogress { background-color: rgba(239,125,0,0.15) !important; color: #EF7D00 !important; }
+
+        /* Colored backgrounds -> transparent tinted */
+        body.dark .bg-green-50, body.dark .bg-green-100 { background-color: rgba(34,197,94,0.12) !important; }
+        body.dark .bg-red-50, body.dark .bg-red-100 { background-color: rgba(248,113,113,0.12) !important; }
+        body.dark .bg-blue-50, body.dark .bg-blue-100 { background-color: rgba(59,130,246,0.12) !important; }
+        body.dark .bg-yellow-50, body.dark .bg-yellow-100 { background-color: rgba(250,204,21,0.12) !important; }
+        body.dark .bg-purple-50, body.dark .bg-purple-100 { background-color: rgba(139,92,246,0.12) !important; }
+        body.dark .bg-orange-50, body.dark .bg-orange-100 { background-color: rgba(239,125,0,0.12) !important; }
+        body.dark .bg-indigo-50 { background-color: rgba(99,102,241,0.12) !important; }
+        body.dark .bg-pink-50 { background-color: rgba(236,72,153,0.12) !important; }
+        body.dark .bg-teal-50 { background-color: rgba(20,184,166,0.12) !important; }
+        body.dark .bg-amber-50 { background-color: rgba(245,158,11,0.12) !important; }
+
+        /* Colored text -> brighter for dark bg */
+        body.dark .text-green-700, body.dark .text-green-600, body.dark .text-green-800 { color: #34D399 !important; }
+        body.dark .text-red-700, body.dark .text-red-600, body.dark .text-red-800 { color: #F87171 !important; }
+        body.dark .text-blue-700, body.dark .text-blue-600, body.dark .text-blue-800 { color: #60A5FA !important; }
+        body.dark .text-yellow-700, body.dark .text-yellow-600, body.dark .text-yellow-800 { color: #FBBF24 !important; }
+        body.dark .text-purple-700, body.dark .text-purple-600 { color: #A78BFA !important; }
+        body.dark .text-indigo-700, body.dark .text-indigo-600 { color: #818CF8 !important; }
+        body.dark .text-orange-600, body.dark .text-orange-700 { color: #EF7D00 !important; }
+
+        /* Scrollbar */
+        body.dark ::-webkit-scrollbar { width: 8px; }
+        body.dark ::-webkit-scrollbar-track { background: var(--dm-bg); }
+        body.dark ::-webkit-scrollbar-thumb { background: var(--dm-border); border-radius: 4px; }
+
+        /* Profile sidebar */
+        body.dark #profileSidebar { background-color: var(--dm-surface) !important; border-color: var(--dm-border) !important; }
+
+        /* Inline style overrides */
+        body.dark [style*="background:#f9fafb"], body.dark [style*="background: #f9fafb"],
+        body.dark [style*="background:#f3f4f6"], body.dark [style*="background: #f3f4f6"],
+        body.dark [style*="background:#fafafa"] { background-color: var(--dm-surface) !important; }
+        body.dark [style*="background:#fff"], body.dark [style*="background: #fff"],
+        body.dark [style*="background:white"] { background-color: var(--dm-surface) !important; }
+        body.dark [style*="color:#333"], body.dark [style*="color:#1f2937"] { color: var(--dm-text) !important; }
+        body.dark [style*="color:#666"], body.dark [style*="color:#6b7280"] { color: var(--dm-sub) !important; }
+
+        /* Widget info popup */
+        body.dark .widget-info-popup { background: var(--dm-surface) !important; border-color: var(--dm-border) !important; color: var(--dm-sub) !important; }
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -1849,7 +1951,7 @@
                                             <textarea id="vpUploadComment" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" rows="2" placeholder="z.B. 'Drei Clips vom gleichen Kunden, bitte zusammen schneiden'"></textarea>
                                         </div>
                                         <div id="vpUploadStatus" style="display:none" class="p-4 bg-gray-50 rounded-lg">
-                                            <div class="flex justify-between text-sm mb-1"><span id="vpUploadStatusText" class="font-medium">Uploading...</span><span id="vpUploadPercent">0/0</span></div>
+                                            <div class="flex justify-between text-sm mb-1"><span id="vpUploadStatusText" class="font-medium">Hochladen...</span><span id="vpUploadPercent">0/0</span></div>
                                             <div class="w-full bg-gray-200 rounded-full h-2"><div id="vpUploadBar" class="bg-vit-orange h-2 rounded-full transition-all" style="width:0%"></div></div>
                                         </div>
                                         <button id="vpUploadBtn" onclick="vpDoMultiUpload()" class="w-full py-3 bg-vit-orange text-white rounded-lg font-bold hover:opacity-90 transition text-sm disabled:opacity-50" disabled>
@@ -5965,7 +6067,7 @@
         // ============================================
         // PORTAL VERSION – wird bei jedem Deploy erhoeht
         // ============================================
-        var PORTAL_VERSION = '7.2.0218';
+        var PORTAL_VERSION = '7.4.0218';
 
         // ============================================
         // SUPABASE CLIENT
@@ -6707,6 +6809,8 @@
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             try { updateUIForRole(); updatePremiumFeatures(); } catch(e) { console.warn(e); }
+            // Apply saved language
+            if(currentLang !== 'de') { setTimeout(function(){ switchLang(currentLang); }, 500); }
             // Apply DEMO/BETA badges
             if(SESSION.account_level === 'extern') {
                 showView('externHome');
@@ -19976,6 +20080,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             renderKzMitarbeiter();
         }
         var currentLang = 'de';
+        // Restore saved language
+        (function(){ try { var sl = localStorage.getItem('vit-lang'); if(sl && ['de','en','nl'].indexOf(sl)!==-1) { currentLang = sl; document.documentElement.lang = sl; } } catch(e){} })();
         var i18n = {
             de: {
                 // Navigation
@@ -21382,8 +21488,250 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             }
         }
 
+        // ============================================
+        // RUNTIME TRANSLATION DICTIONARY
+        // Translates hardcoded German text to EN/NL
+        // ============================================
+        var rtDict = {
+          en: {
+            // Navigation & Menu
+            'Startseite':'Home','Kalender':'Calendar','Aufgaben':'Tasks','Kommunikation':'Communication',
+            'Dashboards':'Dashboards','Verkauf':'Sales','Einkauf':'Purchasing','Marketing':'Marketing',
+            'Zahlen':'Financials','Werkstatt':'Workshop','Buchhaltung':'Accounting','Aktenschrank':'Filing Cabinet',
+            'Support':'Support','Wissen':'Knowledge','Ideenboard':'Idea Board','Onboarding':'Onboarding',
+            'Einstellungen':'Settings','Profil':'Profile','Abmelden':'Log out','Forum':'Forum','Chat':'Chat',
+            'Hauptmenü':'Main Menu','Allgemein':'General','Netzwerk-Cockpit':'Network Cockpit',
+            'Standorte':'Locations','Finanzen':'Finance','Handlungsbedarf':'Action Required',
+            'Kommandozentrale':'Command Center','Dokumente':'Documents','Nutzung Portal':'Portal Usage',
+            // Common Actions
+            'Speichern':'Save','Abbrechen':'Cancel','Löschen':'Delete','Bearbeiten':'Edit',
+            'Schließen':'Close','Suchen':'Search','Filtern':'Filter','Hochladen':'Upload',
+            'Herunterladen':'Download','Zurück':'Back','Weiter':'Next','Fertig':'Done',
+            'Anlegen':'Create','Aktualisieren':'Update','Einreichen':'Submit',
+            'Änderungen speichern':'Save changes','Passwort ändern':'Change password',
+            'Abschicken':'Send','Anzeigen':'Show','Ausblenden':'Hide','Auswählen':'Select',
+            'Hinzufügen':'Add','Entfernen':'Remove','Übernehmen':'Apply',
+            // Status & Labels
+            'Alle':'All','Offen':'Open','Erledigt':'Done','Gesamt':'Total','Heute':'Today',
+            'Diesen Monat':'This month','Diese Woche':'This week','Neu':'New','Aktiv':'Active',
+            'Geplant':'Planned','Finalisiert':'Finalized','Gesperrt':'Blocked','In Bearbeitung':'In progress',
+            'Bezahlt':'Paid','Verkauft':'Sold','Umgesetzt':'Implemented','Abgeschlossen':'Completed',
+            'Überfällig':'Overdue','Ausstehend':'Pending','Entwurf':'Draft','Archiviert':'Archived',
+            // Business Terms
+            'Umsatz':'Revenue','Beratungen':'Consultations','Angebote':'Offers','Tickets':'Tickets',
+            'Mitarbeiter':'Employees','Standort':'Location','Netzwerk':'Network','Pipeline':'Pipeline',
+            'Strategie':'Strategy','Budget':'Budget','Kampagnen':'Campaigns','Reichweite':'Reach',
+            'Rohertrag':'Gross profit','Plan-Umsatz':'Planned revenue','Wareneinsatz':'Cost of goods',
+            'Offene Angebote':'Open offers','Offene Tickets':'Open tickets','Offene Leads':'Open leads',
+            'Beratungen heute':'Consultations today','Tickets offen':'Tickets open',
+            // Form Labels
+            'Kategorie':'Category','Status':'Status','Datum':'Date','Beschreibung':'Description',
+            'Notizen':'Notes','Kommentar':'Comment','Name':'Name','E-Mail':'Email','Telefon':'Phone',
+            'Position':'Position','Rolle':'Role','Passwort':'Password','Betrag':'Amount',
+            'Menge':'Quantity','Netto':'Net','Kosten':'Cost','Typ':'Type','Aktion':'Action',
+            'Monat':'Month','Details':'Details','Titel':'Title','Inhalt':'Content','Priorität':'Priority',
+            'Fällig':'Due','Zugewiesen':'Assigned','Erstellt':'Created',
+            // Video Pipeline
+            'Deine Videos':'Your Videos','Video hochladen':'Upload video','Videos einreichen':'Submit videos',
+            'Kurzer Kommentar':'Short comment','Meine Videos':'My videos',
+            'Themen-Aufträge':'Content briefs','Unsere Kanäle':'Our channels',
+            'Netzwerk-Ranking':'Network ranking','Noch keine Videos hochgeladen.':'No videos uploaded yet.',
+            'Erstes Video hochladen':'Upload first video','Video auswaehlen':'Select video',
+            'Videos hierhin ziehen':'Drag videos here','oder klicken zum Auswaehlen':'or click to browse',
+            'Mehrfachauswahl moeglich':'Multiple selection possible',
+            'Hochladen:':'Uploading:','Speichern...':'Saving...','hochgeladen':'uploaded',
+            'VIDEO AUSGEWAEHLT':'VIDEO SELECTED','VIDEOS AUSGEWAEHLT':'VIDEOS SELECTED',
+            // Marketing
+            'Cockpit':'Cockpit','Social Media':'Social Media','Wissen':'Knowledge',
+            'Performance':'Performance','Content Library':'Content Library',
+            // Dashboard
+            'Dashboard anpassen':'Customize dashboard','Meine Pipeline':'My pipeline',
+            'Marketing Performance':'Marketing Performance','Willkommen zurück':'Welcome back',
+            // Controlling / BWA
+            'BWA hochladen':'Upload BWA','BWA auswaehlen':'Select BWA',
+            'Bitte Datei auswaehlen.':'Please select a file.',
+            // Profile
+            'Erscheinungsbild':'Appearance','E-Mail-Benachrichtigungen':'Email notifications',
+            'BWA-Erinnerungen':'BWA reminders','Lead-Benachrichtigungen':'Lead notifications',
+            'Trainer-Erinnerungen':'Trainer reminders','Gruppencall-Erinnerungen':'Group call reminders',
+            'Push-Benachrichtigungen aktivieren':'Enable push notifications',
+            // Errors & Messages
+            'Fehler beim Laden':'Error loading','Keine Daten vorhanden':'No data available',
+            'Wird geladen...':'Loading...','Bitte warten...':'Please wait...',
+            'Nicht eingeloggt':'Not logged in','Kein Zugriff':'No access',
+            'Fehler:':'Error:','Bitte alle Pflichtfelder ausfüllen.':'Please fill in all required fields.',
+            'Profil gespeichert!':'Profile saved!','Änderungen gespeichert!':'Changes saved!',
+            // Time
+            'gerade eben':'just now','Std.':'hrs','Tagen':'days','Minuten':'min',
+            'Montag':'Monday','Dienstag':'Tuesday','Mittwoch':'Wednesday',
+            'Donnerstag':'Thursday','Freitag':'Friday','Samstag':'Saturday','Sonntag':'Sunday',
+            'Januar':'January','Februar':'February','März':'March','April':'April',
+            'Mai':'May','Juni':'June','Juli':'July','August':'August',
+            'September':'September','Oktober':'October','November':'November','Dezember':'December',
+            // Misc
+            'DEMO-MODUS':'DEMO MODE',
+            'Dieses Modul zeigt Beispieldaten zur Veranschaulichung. Die dargestellten Inhalte sind nicht real.':
+              'This module shows sample data for illustration. The displayed content is not real.',
+            'Sonstiges':'Other','Probefahrt':'Test ride','Werkstatt':'Workshop','Event':'Event',
+            'Bestandskunde':'Existing customer','Cargo':'Cargo',
+            'Dein Standort':'Your location','Lieferant':'Supplier','Kontakt':'Contact',
+            'Schulung':'Training','Pflicht':'Required','Modul':'Module',
+            'Vorname':'First name','Nachname':'Last name',
+            'Mehr anzeigen':'Show more','Weniger anzeigen':'Show less',
+            'Sortieren':'Sort','Exportieren':'Export','Drucken':'Print',
+            'Ja':'Yes','Nein':'No','OK':'OK',
+          },
+          nl: {
+            // Navigation & Menu
+            'Startseite':'Startpagina','Kalender':'Kalender','Aufgaben':'Taken','Kommunikation':'Communicatie',
+            'Dashboards':'Dashboards','Verkauf':'Verkoop','Einkauf':'Inkoop','Marketing':'Marketing',
+            'Zahlen':'Cijfers','Werkstatt':'Werkplaats','Buchhaltung':'Boekhouding','Aktenschrank':'Archiefkast',
+            'Support':'Support','Wissen':'Kennis','Ideenboard':'Ideeënbord','Onboarding':'Onboarding',
+            'Einstellungen':'Instellingen','Profil':'Profiel','Abmelden':'Uitloggen','Forum':'Forum','Chat':'Chat',
+            'Hauptmenü':'Hoofdmenu','Allgemein':'Algemeen','Netzwerk-Cockpit':'Netwerk-cockpit',
+            'Standorte':'Locaties','Finanzen':'Financiën','Handlungsbedarf':'Actie vereist',
+            'Kommandozentrale':'Commandocentrum','Dokumente':'Documenten','Nutzung Portal':'Portaalgebruik',
+            // Common Actions
+            'Speichern':'Opslaan','Abbrechen':'Annuleren','Löschen':'Verwijderen','Bearbeiten':'Bewerken',
+            'Schließen':'Sluiten','Suchen':'Zoeken','Filtern':'Filteren','Hochladen':'Uploaden',
+            'Herunterladen':'Downloaden','Zurück':'Terug','Weiter':'Volgende','Fertig':'Klaar',
+            'Anlegen':'Aanmaken','Aktualisieren':'Bijwerken','Einreichen':'Indienen',
+            'Änderungen speichern':'Wijzigingen opslaan','Passwort ändern':'Wachtwoord wijzigen',
+            'Abschicken':'Versturen','Anzeigen':'Tonen','Ausblenden':'Verbergen','Auswählen':'Selecteren',
+            'Hinzufügen':'Toevoegen','Entfernen':'Verwijderen','Übernehmen':'Toepassen',
+            // Status & Labels
+            'Alle':'Alle','Offen':'Open','Erledigt':'Afgerond','Gesamt':'Totaal','Heute':'Vandaag',
+            'Diesen Monat':'Deze maand','Diese Woche':'Deze week','Neu':'Nieuw','Aktiv':'Actief',
+            'Geplant':'Gepland','Finalisiert':'Afgerond','Gesperrt':'Geblokkeerd','In Bearbeitung':'In behandeling',
+            'Bezahlt':'Betaald','Verkauft':'Verkocht','Umgesetzt':'Geïmplementeerd','Abgeschlossen':'Voltooid',
+            'Überfällig':'Achterstallig','Ausstehend':'In afwachting','Entwurf':'Concept','Archiviert':'Gearchiveerd',
+            // Business Terms
+            'Umsatz':'Omzet','Beratungen':'Adviesgesprekken','Angebote':'Offertes','Tickets':'Tickets',
+            'Mitarbeiter':'Medewerkers','Standort':'Locatie','Netzwerk':'Netwerk','Pipeline':'Pipeline',
+            'Strategie':'Strategie','Budget':'Budget','Kampagnen':'Campagnes','Reichweite':'Bereik',
+            'Rohertrag':'Brutowinst','Plan-Umsatz':'Geplande omzet','Wareneinsatz':'Inkoopwaarde',
+            'Offene Angebote':'Open offertes','Offene Tickets':'Open tickets','Offene Leads':'Open leads',
+            'Beratungen heute':'Adviesgesprekken vandaag','Tickets offen':'Tickets open',
+            // Form Labels
+            'Kategorie':'Categorie','Status':'Status','Datum':'Datum','Beschreibung':'Beschrijving',
+            'Notizen':'Notities','Kommentar':'Opmerking','Name':'Naam','E-Mail':'E-mail','Telefon':'Telefoon',
+            'Position':'Positie','Rolle':'Rol','Passwort':'Wachtwoord','Betrag':'Bedrag',
+            'Menge':'Aantal','Netto':'Netto','Kosten':'Kosten','Typ':'Type','Aktion':'Actie',
+            'Monat':'Maand','Details':'Details','Titel':'Titel','Inhalt':'Inhoud','Priorität':'Prioriteit',
+            'Fällig':'Vervaldatum','Zugewiesen':'Toegewezen','Erstellt':'Aangemaakt',
+            // Video Pipeline
+            'Deine Videos':'Je video\'s','Video hochladen':'Video uploaden','Videos einreichen':'Video\'s indienen',
+            'Kurzer Kommentar':'Kort commentaar','Meine Videos':'Mijn video\'s',
+            'Themen-Aufträge':'Thema-opdrachten','Unsere Kanäle':'Onze kanalen',
+            'Netzwerk-Ranking':'Netwerkranking','Noch keine Videos hochgeladen.':'Nog geen video\'s geüpload.',
+            'Erstes Video hochladen':'Eerste video uploaden','Video auswaehlen':'Video selecteren',
+            'Videos hierhin ziehen':'Sleep video\'s hierheen','oder klicken zum Auswaehlen':'of klik om te selecteren',
+            'Mehrfachauswahl moeglich':'Meerdere selectie mogelijk',
+            'Hochladen:':'Uploaden:','Speichern...':'Opslaan...','hochgeladen':'geüpload',
+            'VIDEO AUSGEWAEHLT':'VIDEO GESELECTEERD','VIDEOS AUSGEWAEHLT':'VIDEO\'S GESELECTEERD',
+            // Dashboard
+            'Dashboard anpassen':'Dashboard aanpassen','Meine Pipeline':'Mijn pipeline',
+            'Willkommen zurück':'Welkom terug',
+            // Profile
+            'Erscheinungsbild':'Uiterlijk','E-Mail-Benachrichtigungen':'E-mailmeldingen',
+            'BWA-Erinnerungen':'BWA-herinneringen','Lead-Benachrichtigungen':'Leadmeldingen',
+            'Trainer-Erinnerungen':'Trainerherinneringen','Gruppencall-Erinnerungen':'Groepsgesprekherinneringen',
+            'Push-Benachrichtigungen aktivieren':'Pushmeldingen activeren',
+            // Errors & Messages
+            'Fehler beim Laden':'Fout bij laden','Keine Daten vorhanden':'Geen gegevens beschikbaar',
+            'Wird geladen...':'Laden...','Bitte warten...':'Even geduld...',
+            'Nicht eingeloggt':'Niet ingelogd','Kein Zugriff':'Geen toegang',
+            'Fehler:':'Fout:','Bitte alle Pflichtfelder ausfüllen.':'Vul alle verplichte velden in.',
+            'Profil gespeichert!':'Profiel opgeslagen!','Änderungen gespeichert!':'Wijzigingen opgeslagen!',
+            // Time
+            'gerade eben':'zojuist','Std.':'uur','Tagen':'dagen','Minuten':'min',
+            'Montag':'Maandag','Dienstag':'Dinsdag','Mittwoch':'Woensdag',
+            'Donnerstag':'Donderdag','Freitag':'Vrijdag','Samstag':'Zaterdag','Sonntag':'Zondag',
+            'Januar':'Januari','Februar':'Februari','März':'Maart','April':'April',
+            'Mai':'Mei','Juni':'Juni','Juli':'Juli','August':'Augustus',
+            'September':'September','Oktober':'Oktober','November':'November','Dezember':'December',
+            // Misc
+            'DEMO-MODUS':'DEMOMODUS',
+            'Dieses Modul zeigt Beispieldaten zur Veranschaulichung. Die dargestellten Inhalte sind nicht real.':
+              'Deze module toont voorbeeldgegevens ter illustratie. De getoonde inhoud is niet echt.',
+            'Sonstiges':'Overig','Probefahrt':'Proefrit','Event':'Evenement',
+            'Bestandskunde':'Bestaande klant','Cargo':'Cargo',
+            'Dein Standort':'Jouw locatie','Lieferant':'Leverancier','Kontakt':'Contact',
+            'Schulung':'Training','Pflicht':'Verplicht','Modul':'Module',
+            'Vorname':'Voornaam','Nachname':'Achternaam',
+            'Mehr anzeigen':'Meer tonen','Weniger anzeigen':'Minder tonen',
+            'Sortieren':'Sorteren','Exportieren':'Exporteren','Drucken':'Afdrukken',
+            'Ja':'Ja','Nein':'Nee','OK':'OK',
+          }
+        };
+
+        // Runtime DOM translator - walks the DOM and replaces German text
+        function translateDOM(lang) {
+            if(lang === 'de' || !rtDict[lang]) return; // German is source, no translation needed
+            var dict = rtDict[lang];
+            // Sort keys by length descending to match longer phrases first
+            var keys = Object.keys(dict).sort(function(a,b){ return b.length - a.length; });
+            
+            // Walk all text nodes
+            var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+            var node;
+            while(node = walker.nextNode()) {
+                if(!node.nodeValue || !node.nodeValue.trim()) continue;
+                // Skip script/style
+                var par = node.parentElement;
+                if(!par || par.tagName === 'SCRIPT' || par.tagName === 'STYLE' || par.tagName === 'NOSCRIPT') continue;
+                var txt = node.nodeValue;
+                var changed = false;
+                for(var i = 0; i < keys.length; i++) {
+                    if(txt.indexOf(keys[i]) !== -1) {
+                        txt = txt.split(keys[i]).join(dict[keys[i]]);
+                        changed = true;
+                    }
+                }
+                if(changed) node.nodeValue = txt;
+            }
+            // Translate placeholders
+            document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(function(el) {
+                var ph = el.placeholder;
+                for(var i = 0; i < keys.length; i++) {
+                    if(ph.indexOf(keys[i]) !== -1) {
+                        ph = ph.split(keys[i]).join(dict[keys[i]]);
+                    }
+                }
+                el.placeholder = ph;
+            });
+            // Translate title attributes
+            document.querySelectorAll('[title]').forEach(function(el) {
+                var ti = el.title;
+                for(var i = 0; i < keys.length; i++) {
+                    if(ti.indexOf(keys[i]) !== -1) {
+                        ti = ti.split(keys[i]).join(dict[keys[i]]);
+                    }
+                }
+                el.title = ti;
+            });
+        }
+
+        // Reverse translate: restore German (for switching back to DE)
+        var rtDictReverse = {};
+        ['en','nl'].forEach(function(lang) {
+            rtDictReverse[lang] = {};
+            Object.keys(rtDict[lang]).forEach(function(k) {
+                rtDictReverse[lang][rtDict[lang][k]] = k;
+            });
+        });
+
         function switchLang(lang) {
+            // If switching FROM a non-DE lang, first restore German
+            if(currentLang !== 'de' && lang !== currentLang) {
+                // Reload is safest way to restore
+                currentLang = lang;
+                try { localStorage.setItem('vit-lang', lang); } catch(e){}
+                location.reload();
+                return;
+            }
             currentLang = lang;
+            try { localStorage.setItem('vit-lang', lang); } catch(e){}
             document.documentElement.lang = lang;
             // Update flag opacity
             document.querySelectorAll('.lang-flag').forEach(function(f){
@@ -21397,14 +21745,16 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     el.textContent = i18n[lang][key];
                 }
             });
-            // Translate placeholders
+            // Translate placeholders via data-i18n-placeholder
             document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el){
                 var key = el.getAttribute('data-i18n-placeholder');
                 if(i18n[lang] && i18n[lang][key]) {
                     el.placeholder = i18n[lang][key];
                 }
             });
-            // Re-render ALL visible dynamic content
+            // Runtime DOM translation for hardcoded strings
+            translateDOM(lang);
+            // Re-render dynamic content
             try { renderTodos(); } catch(e){}
             try { renderTickets('all'); } catch(e){}
             try { renderAnnouncements(); } catch(e){}
@@ -21420,9 +21770,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     if(vid==='wissenView') { try{renderWissenGlobal();}catch(e){} }
                 }
             });
-            // Force re-render SM if visible
             try{if(document.getElementById('smThemenList') && document.getElementById('smThemenList').innerHTML) renderSmThemen();}catch(e){}
             try{if(document.getElementById('smRankingList') && document.getElementById('smRankingList').innerHTML) renderSmRanking();}catch(e){}
+            // Re-translate after dynamic re-renders
+            if(lang !== 'de') setTimeout(function(){ translateDOM(lang); }, 200);
         }
 
         // Helper: get translated text (for JS-rendered content)
@@ -21603,6 +21954,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 
                 // Version badge anzeigen
                 showModuleVersionBadge(viewName + 'View');
+                // Apply runtime translation if non-DE
+                if(currentLang !== 'de') setTimeout(function(){ translateDOM(currentLang); }, 100);
             } else {
                 console.error('FAILED: View not found:', viewId);
             }
@@ -23811,17 +24164,26 @@ function toggleTheme() {
 }
 function setTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
+    if(theme === 'dark') {
+        document.body.classList.add('dark');
+    } else {
+        document.body.classList.remove('dark');
+    }
     try { localStorage.setItem('vit-theme', theme); } catch(e){}
     var track = document.getElementById('themeToggleTrack');
     if(track) {
         if(theme === 'dark') track.classList.add('active');
         else track.classList.remove('active');
     }
+    // Update profile panel bg
+    var ps = document.getElementById('profileSlider');
+    if(ps) ps.style.background = theme === 'dark' ? 'var(--dm-surface)' : '#fff';
 }
-// Init on load - always light (dark mode removed)
+// Init on load - respect saved preference
 (function(){
-    setTheme('light');
-    try { localStorage.removeItem('vit-theme'); } catch(e){}
+    var saved = 'light';
+    try { saved = localStorage.getItem('vit-theme') || 'light'; } catch(e){}
+    setTheme(saved);
 })();
 </script>
 
@@ -23884,16 +24246,16 @@ function setTheme(theme) {
             </div>
 
             <!-- Erscheinungsbild -->
-            <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:16px;">
+            <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:16px;" class="bg-gray-50">
                 <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;font-weight:600;margin-bottom:12px;">Erscheinungsbild</p>
                 <div style="display:flex;gap:8px;">
                     <button onclick="setTheme('light')" id="profileThemeLight" style="flex:1;padding:12px;border-radius:10px;border:2px solid #EF7D00;background:#f9fafb;cursor:pointer;text-align:center;">
                         <span style="font-size:20px;">☀️</span>
                         <p style="font-size:11px;font-weight:600;color:#111827;margin-top:4px;">Light</p>
                     </button>
-                    <button disabled id="profileThemeDark" style="flex:1;padding:12px;border-radius:10px;border:2px solid transparent;background:#e5e7eb;cursor:not-allowed;text-align:center;opacity:0.5;">
+                    <button onclick="setTheme('dark')" id="profileThemeDark" style="flex:1;padding:12px;border-radius:10px;border:2px solid transparent;background:#e5e7eb;cursor:pointer;text-align:center;">
                         <span style="font-size:20px;">🌙</span>
-                        <p style="font-size:11px;font-weight:600;color:#9ca3af;margin-top:4px;">Dark (bald)</p>
+                        <p style="font-size:11px;font-weight:600;color:#9ca3af;margin-top:4px;">Dark</p>
                     </button>
                 </div>
             </div>
@@ -24034,9 +24396,14 @@ setTheme = function(theme) {
     if(_origSetTheme) _origSetTheme(theme);
     else {
         document.documentElement.setAttribute('data-theme', theme);
+        if(theme === 'dark') document.body.classList.add('dark');
+        else document.body.classList.remove('dark');
         try { localStorage.setItem('vit-theme', theme); } catch(e){}
     }
     updateProfileThemeButtons();
+    // Update profile panel background
+    var ps = document.getElementById('profileSlider');
+    if(ps) ps.style.background = theme === 'dark' ? '#1A1A1F' : '#fff';
 };
 
 async function saveProfile() {
@@ -28900,7 +29267,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
             var storagePath = sbStandort.id + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
 
             pct.textContent = (i+1) + ' / ' + total;
-            statusText.textContent = 'Uploading: ' + file.name;
+            statusText.textContent = 'Hochladen: ' + file.name;
             if(fStatus) fStatus.innerHTML = '<span class="text-blue-500">⬆️ 0%</span>';
 
             try {
@@ -28929,7 +29296,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
                             var totalPct = Math.round(((done + bytesUploaded/bytesTotal) / total) * 100);
                             bar.style.width = totalPct + '%';
                             if(fStatus) fStatus.innerHTML = '<span class="text-blue-500">⬆️ ' + filePct + '%</span>';
-                            statusText.textContent = 'Uploading: ' + file.name + ' (' + filePct + '%)';
+                            statusText.textContent = 'Hochladen: ' + file.name + ' (' + filePct + '%)';
                         },
                         onSuccess: function() {
                             resolve();
