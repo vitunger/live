@@ -134,7 +134,44 @@
         /* Sidebar */
         .sidebar {
             background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+            transition: width 0.25s cubic-bezier(0.4,0,0.2,1);
+            position: relative;
         }
+        .sidebar.collapsed { width: 64px !important; min-width: 64px; }
+        .sidebar.collapsed .sidebar-label,
+        .sidebar.collapsed .sidebar-badge,
+        .sidebar.collapsed .dev-badge,
+        .sidebar.collapsed hr { display: none !important; }
+        .sidebar.collapsed .sidebar-item {
+            justify-content: center !important;
+            padding: 10px 0 !important;
+        }
+        .sidebar.collapsed .sidebar-item svg { margin: 0 !important; }
+        .sidebar.collapsed .p-4 { padding: 8px !important; }
+        .sidebar.collapsed .space-x-3 > :not(svg) { display: none; }
+        .sidebar.collapsed .space-x-3 { gap: 0 !important; justify-content: center; }
+        .sidebar.collapsed #externMenu .mb-3 { display: none; }
+        /* Tooltip on hover when collapsed */
+        .sidebar.collapsed .sidebar-item { position: relative; }
+        .sidebar.collapsed .sidebar-item:hover::after {
+            content: attr(data-tooltip);
+            position: absolute; left: 68px; top: 50%; transform: translateY(-50%);
+            background: #333; color: #fff; padding: 4px 10px; border-radius: 6px;
+            font-size: 12px; white-space: nowrap; z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        /* Collapse toggle button */
+        .sidebar-collapse-btn {
+            position: absolute; bottom: 16px; right: -14px; z-index: 50;
+            width: 28px; height: 28px; border-radius: 50%;
+            background: #2a2a2a; border: 2px solid #3a3a3a;
+            color: #999; display: none; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s; padding: 0;
+        }
+        .sidebar-collapse-btn:hover { background: #EF7D00; color: #fff; border-color: #EF7D00; }
+        .sidebar:hover .sidebar-collapse-btn { display: flex; }
+        .sidebar.collapsed .sidebar-collapse-btn { display: flex; right: -14px; }
+        .sidebar.collapsed .sidebar-collapse-btn svg { transform: rotate(180deg); }
         
         .sidebar-item {
             transition: all 0.2s;
@@ -306,6 +343,8 @@
             .sidebar.mobile-open {
                 transform: translateX(0);
             }
+            .sidebar-collapse-btn { display: none !important; }
+            .sidebar.collapsed { width: 280px !important; }
             .topnav-desktop { display: none !important; }
             .topnav-mobile { display: flex !important; }
             .main-content-area {
@@ -683,7 +722,11 @@
             <!-- Sidebar Overlay (mobile) -->
             <div id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
             <!-- Sidebar -->
-            <aside id="sidebarNav" class="sidebar w-64 text-white overflow-y-auto flex-shrink-0">
+            <aside id="sidebarNav" class="sidebar w-64 text-white overflow-y-auto flex-shrink-0" style="position:relative;">
+                <!-- Collapse toggle -->
+                <button id="sidebarCollapseBtn" class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Sidebar einklappen">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
                 <div class="p-4 pt-5">
                         <!-- HQ/Standort Toggle entfernt - Umschaltung erfolgt automatisch per Rolle -->
                         <div id="hqToggleSection" class="hidden"></div>
@@ -691,28 +734,28 @@
                         <!-- Partner-level quick access (hidden in HQ mode) -->
                         <div id="partnerQuickNav">
                         <!-- Startseite -->
-                        <button onclick="showView('home')" data-module="startseite" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                        <button onclick="showView('home')" data-module="startseite" data-tooltip="Home" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                            <span data-i18n="nav_home">Startseite</span>
+                            <span class="sidebar-label" data-i18n="nav_home">Startseite</span>
                         </button>
 
                         <!-- Kalender -->
-                        <button onclick="showView('kalender')" data-module="kalender" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                        <button onclick="showView('kalender')" data-module="kalender" data-tooltip="Kalender" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                            <span data-i18n="nav_calendar">Kalender</span>
+                            <span class="sidebar-label" data-i18n="nav_calendar">Kalender</span>
                         </button>
 
                         <!-- Aufgaben -->
-                        <button onclick="showView('todo')" data-module="aufgaben" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                        <button onclick="showView('todo')" data-module="aufgaben" data-tooltip="Aufgaben" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                            <span data-i18n="nav_todo">Aufgaben</span>
-                            <span class="ml-auto bg-red-500 text-white text-[10px] rounded-full px-1.5 py-0.5 font-bold" id="todoSidebarBadge">5</span>
+                            <span class="sidebar-label" data-i18n="nav_todo">Aufgaben</span>
+                            <span class="sidebar-badge ml-auto bg-red-500 text-white text-[10px] rounded-full px-1.5 py-0.5 font-bold" id="todoSidebarBadge">5</span>
                         </button>
 
                         <!-- Kommunikation -->
-                        <button onclick="showView('kommunikation')" data-module="kommunikation" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                        <button onclick="showView('kommunikation')" data-module="kommunikation" data-tooltip="Kommunikation" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                            <span data-i18n="nav_communication">Kommunikation</span>
+                            <span class="sidebar-label" data-i18n="nav_communication">Kommunikation</span>
                         </button>
 
                         <hr class="border-gray-600 my-3">
@@ -720,49 +763,49 @@
 
                         <!-- Dashboards - nur für INHABER (jetzt in Allgemein integriert) -->
                         <div id="ownerDashboards" class="hidden">
-                            <button onclick="showView('dashboards')" data-module="dashboards" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('dashboards')" data-module="dashboards" data-tooltip="Dashboards" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                                <span data-i18n="nav_dashboards">Dashboards</span>
+                                <span class="sidebar-label" data-i18n="nav_dashboards">Dashboards</span>
                             </button>
                         </div>
 
                         <!-- Fachbereiche - nur Partner-Modus -->
                         <div id="commonTools">
                             <!-- Allgemein -->
-                            <button onclick="showView('allgemein')" data-module="allgemein" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('allgemein')" data-module="allgemein" data-tooltip="Allgemein" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                                <span data-i18n="nav_general">Allgemein</span>
+                                <span class="sidebar-label" data-i18n="nav_general">Allgemein</span>
                             </button>
 
                             <!-- Verkauf -->
-                            <button onclick="showView('verkauf')" data-module="verkauf" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('verkauf')" data-module="verkauf" data-tooltip="Verkauf" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-                                <span data-i18n="nav_sales">Verkauf</span>
+                                <span class="sidebar-label" data-i18n="nav_sales">Verkauf</span>
                             </button>
 
                             <!-- Einkauf -->
-                            <button onclick="showView('einkauf')" data-module="einkauf" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('einkauf')" data-module="einkauf" data-tooltip="Einkauf" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                                <span data-i18n="nav_purchasing">Einkauf</span>
+                                <span class="sidebar-label" data-i18n="nav_purchasing">Einkauf</span>
                             </button>
 
                             <!-- Marketing -->
-                            <button onclick="showView('marketing')" data-module="marketing" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('marketing')" data-module="marketing" data-tooltip="Marketing" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
-                                <span data-i18n="nav_marketing">Marketing</span>
+                                <span class="sidebar-label" data-i18n="nav_marketing">Marketing</span>
                             </button>
 
                             <!-- Zahlen -->
-                            <button onclick="showView('controlling')" data-module="controlling" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('controlling')" data-module="controlling" data-tooltip="Zahlen" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                                <span data-i18n="nav_controlling">Zahlen</span>
+                                <span class="sidebar-label" data-i18n="nav_controlling">Zahlen</span>
                             </button>
 
                             <!-- Buchhaltung (Standort) -->
-                            <button onclick="showView('standortBilling')" data-module="standortBilling" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('standortBilling')" data-module="standortBilling" data-tooltip="Buchhaltung" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                                <span>Buchhaltung</span>
-                                <span class="ml-auto text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
+                                <span class="sidebar-label">Buchhaltung</span>
+                                <span class="sidebar-badge ml-auto text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
                             </button>
                         </div>
 
@@ -770,41 +813,41 @@
                         <div id="partnerToolsNav">
                         <hr class="border-gray-600 my-3">
 
-                        <button onclick="showView('wissen')" data-module="wissen" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                        <button onclick="showView('wissen')" data-module="wissen" data-tooltip="Wissen" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                            <span>Wissen</span>
+                            <span class="sidebar-label">Wissen</span>
                         </button>
-                        <button onclick="showView('support')" data-module="support" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                        <button onclick="showView('support')" data-module="support" data-tooltip="Support" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                            <span>Support</span>
+                            <span class="sidebar-label">Support</span>
                         </button>
-                        <button onclick="showView('ideenboard')" data-module="ideenboard" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                        <button onclick="showView('ideenboard')" data-module="ideenboard" data-tooltip="Ideenboard" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-                            <span>Ideenboard</span>
+                            <span class="sidebar-label">Ideenboard</span>
                         </button>
-                        <button onclick="showView('shop')" data-module="shop" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                        <button onclick="showView('shop')" data-module="shop" data-tooltip="Shop" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                            <span>Shop</span>
+                            <span class="sidebar-label">Shop</span>
                         </button>
-                        <button onclick="showView('aktenschrank')" data-module="aktenschrank" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                        <button onclick="showView('aktenschrank')" data-module="aktenschrank" data-tooltip="Aktenschrank" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
-                            <span>Aktenschrank</span>
+                            <span class="sidebar-label">Aktenschrank</span>
                         </button>
                         </div>
 
                         <div id="onboardingNavSection">
                         <hr class="border-gray-600 my-3">
-                        <button onclick="showView('onboarding')" data-module="onboarding" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                        <button onclick="showView('onboarding')" data-module="onboarding" data-tooltip="Onboarding" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
-                            <span data-i18n="nav_onboarding">Onboarding</span>
+                            <span class="sidebar-label" data-i18n="nav_onboarding">Onboarding</span>
                         </button>
                         </div>
 
                         <!-- Mitarbeiter - nur Geschäftsleitung -->
                         <div id="mitarbeiterNavSection">
-                        <button onclick="showView('mitarbeiter')" data-module="mitarbeiter" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                        <button onclick="showView('mitarbeiter')" data-module="mitarbeiter" data-tooltip="Mitarbeiter" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                            <span>Mitarbeiter</span>
+                            <span class="sidebar-label">Mitarbeiter</span>
                         </button>
                         </div>
 
@@ -812,9 +855,9 @@
                         <!-- Dev-Status (nur HQ/Admin) -->
                         <div id="devStatusNavSection">
                         <hr class="border-gray-600 my-3">
-                        <button onclick="showView('devStatus')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                        <button onclick="showView('devStatus')" data-tooltip="Dev-Status" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                            <span>Dev-Status</span>
+                            <span class="sidebar-label">Dev-Status</span>
                         </button>
                         </div>
 
@@ -851,7 +894,7 @@
 
                             <button onclick="showView('support')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                                <span>Support</span>
+                                <span class="sidebar-label">Support</span>
                             </button>
                         </div>
                         <!-- HQ-specific items (hidden by default) -->
@@ -861,7 +904,7 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
-                                <span data-i18n="nav_hq_cockpit">Netzwerk-Cockpit</span>
+                                <span class="sidebar-label" data-i18n="nav_hq_cockpit">Netzwerk-Cockpit</span>
                             </button>
 
                             <button onclick="showView('hqKommando')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
@@ -869,29 +912,29 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 </svg>
-                                <span data-i18n="nav_hq_command">Kommandozentrale</span>
+                                <span class="sidebar-label" data-i18n="nav_hq_command">Kommandozentrale</span>
                             </button>
 
                             <button onclick="showView('hqAktionen')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                                 </svg>
-                                <span data-i18n="nav_hq_actions">Handlungsbedarf</span>
+                                <span class="sidebar-label" data-i18n="nav_hq_actions">Handlungsbedarf</span>
                             </button>
 
                             <hr class="border-gray-600 my-3">
 
-                            <button onclick="showView('kalender')" data-module="kalender" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('kalender')" data-module="kalender" data-tooltip="Kalender" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                <span data-i18n="nav_calendar">Kalender</span>
+                                <span class="sidebar-label" data-i18n="nav_calendar">Kalender</span>
                             </button>
-                            <button onclick="showView('todo')" data-module="aufgaben" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('todo')" data-module="aufgaben" data-tooltip="Aufgaben" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                                <span data-i18n="nav_todo">Aufgaben</span>
+                                <span class="sidebar-label" data-i18n="nav_todo">Aufgaben</span>
                             </button>
-                            <button onclick="showView('kommunikation')" data-module="kommunikation" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('kommunikation')" data-module="kommunikation" data-tooltip="Kommunikation" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                                <span data-i18n="nav_communication">Kommunikation</span>
+                                <span class="sidebar-label" data-i18n="nav_communication">Kommunikation</span>
                             </button>
 
                             <hr class="border-gray-600 my-4">
@@ -903,28 +946,28 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                                 </svg>
-                                <span data-i18n="nav_hq_locations">Standorte</span>
+                                <span class="sidebar-label" data-i18n="nav_hq_locations">Standorte</span>
                             </button>
 
                             <button onclick="showView('hqFinanzen')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
-                                <span data-i18n="nav_hq_finance">Finanzen</span>
+                                <span class="sidebar-label" data-i18n="nav_hq_finance">Finanzen</span>
                             </button>
 
                             <button onclick="showView('hqMarketing')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
                                 </svg>
-                                <span data-i18n="nav_marketing">Marketing</span>
+                                <span class="sidebar-label" data-i18n="nav_marketing">Marketing</span>
                             </button>
 
                             <button onclick="showView('hqEinkauf')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
                                 </svg>
-                                <span data-i18n="nav_purchasing">Einkauf</span>
+                                <span class="sidebar-label" data-i18n="nav_purchasing">Einkauf</span>
                             </button>
                             <button onclick="showView('hqAllgemein')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <span>🏢</span><span>HQ Allgemein</span>
@@ -934,45 +977,45 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                                 </svg>
-                                <span data-i18n="nav_sales">Verkauf</span>
+                                <span class="sidebar-label" data-i18n="nav_sales">Verkauf</span>
                             </button>
 
                             <button onclick="showView('hqBilling')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
                                 </svg>
-                                <span>Buchhaltung</span>
-                                <span class="ml-auto text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
+                                <span class="sidebar-label">Buchhaltung</span>
+                                <span class="sidebar-badge ml-auto text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
                             </button>
 
                             <button onclick="showView('devStatus');setTimeout(function(){showDevTab('nutzung')},100)" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
-                                <span data-i18n="nav_hq_analytics">Nutzung Portal</span>
+                                <span class="sidebar-label" data-i18n="nav_hq_analytics">Nutzung Portal</span>
                             </button>
 
                             <hr class="border-gray-600 my-3">
 
                             <button onclick="showView('hqWissen')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                                <span data-i18n="nav_knowledge">Wissen</span>
+                                <span class="sidebar-label" data-i18n="nav_knowledge">Wissen</span>
                             </button>
 
                             <button onclick="showView('hqSupport')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                                <span data-i18n="nav_support">Support</span>
+                                <span class="sidebar-label" data-i18n="nav_support">Support</span>
                             </button>
 
                             <button onclick="showView('hqIdeen')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-                                <span data-i18n="nav_ideaboard">Ideenboard</span>
+                                <span class="sidebar-label" data-i18n="nav_ideaboard">Ideenboard</span>
                                 <span class="ml-auto bg-vit-orange text-white text-[9px] rounded-full px-1.5 py-0.5 font-bold" id="hqFbBadge" style="display:none">0</span>
                             </button>
 
                             <button onclick="showView('hqShop')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                                <span data-i18n="nav_shop">Shop</span>
+                                <span class="sidebar-label" data-i18n="nav_shop">Shop</span>
                             </button>
 
                             <hr class="border-gray-600 my-3">
@@ -1012,7 +1055,7 @@
                     <!-- Header mit Willkommen + Dashboard anpassen -->
                     <div class="flex items-center justify-between mb-6">
                         <div>
-                            <h1 class="h1-headline text-gray-800"><span id="welcomeText" data-i18n="welcome">Willkommen zurück!</span> 👋</h1>
+                            <h1 class="h1-headline text-gray-800"><span id="welcomeText">Willkommen zurück!</span> 👋</h1>
                             <p class="text-gray-600" id="welcomeDate"></p>
                         </div>
                         <button onclick="toggleDashboardEdit()" class="flex items-center space-x-2 px-4 py-2 border-2 border-gray-300 rounded-lg hover:border-vit-orange hover:text-vit-orange transition-colors">
@@ -6119,7 +6162,7 @@
         // ============================================
         // PORTAL VERSION – wird bei jedem Deploy erhoeht
         // ============================================
-        var PORTAL_VERSION = '7.8.0218';
+        var PORTAL_VERSION = '7.9.0218';
 
         // ============================================
         // SUPABASE CLIENT
@@ -14428,6 +14471,21 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 overlay.classList.add('active');
             }
         }
+        // Desktop sidebar collapse
+        function toggleSidebarCollapse() {
+            var sidebar = document.getElementById('sidebarNav');
+            var isCollapsed = sidebar.classList.toggle('collapsed');
+            try { localStorage.setItem('vit-sidebar-collapsed', isCollapsed ? '1' : '0'); } catch(e){}
+        }
+        // Restore sidebar state on load
+        (function(){
+            try {
+                if(localStorage.getItem('vit-sidebar-collapsed') === '1') {
+                    var sb = document.getElementById('sidebarNav');
+                    if(sb) sb.classList.add('collapsed');
+                }
+            } catch(e){}
+        })();
         function closeMobileSidebar() {
             var sidebar = document.getElementById('sidebarNav');
             var overlay = document.getElementById('sidebarOverlay');
@@ -21746,6 +21804,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 // Skip script/style
                 var par = node.parentElement;
                 if(!par || par.tagName === 'SCRIPT' || par.tagName === 'STYLE' || par.tagName === 'NOSCRIPT') continue;
+                // Skip elements handled separately (welcome text, date)
+                if(par.id === 'welcomeText' || par.id === 'welcomeDate' || par.hasAttribute('data-i18n-date')) continue;
                 var txt = node.nodeValue;
                 var changed = false;
                 for(var i = 0; i < keys.length; i++) {
@@ -21847,6 +21907,13 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             // Update date display
             var dateEl = document.getElementById('welcomeDate');
             if(dateEl && typeof getDateStr === 'function') dateEl.textContent = getDateStr(lang);
+            // Update welcome text with name
+            var wEl = document.getElementById('welcomeText');
+            if(wEl) {
+                var nm = wEl.getAttribute('data-i18n-name') || '';
+                var wMap = {de:'Willkommen zurück, ',en:'Welcome back, ',nl:'Welkom terug, '};
+                wEl.textContent = (wMap[lang]||wMap.de) + nm + '!';
+            }
         }
 
         // Helper: get translated text (for JS-rendered content)
