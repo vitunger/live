@@ -29095,6 +29095,11 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                     Screenshot
                 </button>
+                <button class="fb-media-btn" onclick="document.getElementById('fbFileInput').click()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    Datei hochladen
+                </button>
+                <input type="file" id="fbFileInput" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip" style="display:none" onchange="fbHandleFiles(this)">
             </div>
 
             <div id="fbRecInfo" class="fb-rec-info" style="display:none">
@@ -29346,15 +29351,95 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
         }
     };
 
+    // ── File Upload ──
+    window.fbHandleFiles = function(input) {
+        var files = input.files;
+        if(!files || !files.length) return;
+        var maxSize = 25 * 1024 * 1024; // 25 MB per file
+        var maxTotal = 50 * 1024 * 1024; // 50 MB total
+        var currentTotal = fbState.attachments.reduce(function(s,a){ return s + a.size; }, 0);
+
+        for(var i = 0; i < files.length; i++) {
+            var f = files[i];
+            if(f.size > maxSize) {
+                alert('„' + f.name + '" ist zu groß (max. 25 MB pro Datei).');
+                continue;
+            }
+            if(currentTotal + f.size > maxTotal) {
+                alert('Maximale Gesamtgröße (50 MB) erreicht. „' + f.name + '" wurde nicht hinzugefügt.');
+                break;
+            }
+            currentTotal += f.size;
+
+            // Determine type category
+            var fileType = 'file';
+            if(f.type.startsWith('image/')) fileType = 'image';
+            else if(f.type === 'application/pdf') fileType = 'pdf';
+
+            fbState.attachments.push({
+                name: f.name,
+                type: fileType,
+                blob: f,
+                size: f.size,
+                mime: f.type || 'application/octet-stream'
+            });
+        }
+        input.value = ''; // Reset so same file can be re-selected
+        renderAttachments();
+    };
+
+    // ── Drag & Drop support ──
+    (function(){
+        var overlay = document.getElementById('fbOverlay');
+        if(!overlay) return;
+        var modal = document.getElementById('fbModal');
+        if(!modal) return;
+
+        ['dragenter','dragover'].forEach(function(evt){
+            modal.addEventListener(evt, function(e){
+                e.preventDefault(); e.stopPropagation();
+                modal.style.outline = '2px dashed #EF7D00';
+                modal.style.outlineOffset = '-6px';
+            });
+        });
+        ['dragleave','drop'].forEach(function(evt){
+            modal.addEventListener(evt, function(e){
+                e.preventDefault(); e.stopPropagation();
+                modal.style.outline = '';
+                modal.style.outlineOffset = '';
+            });
+        });
+        modal.addEventListener('drop', function(e){
+            if(!e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
+            // Reuse file handler via a temporary input
+            var dt = e.dataTransfer;
+            var tmpInput = { files: dt.files, value: '' };
+            window.fbHandleFiles(tmpInput);
+        });
+    })();
+
     // ── Attachments UI ──
     function renderAttachments() {
         var el = document.getElementById('fbAttachments');
         if(!el) return;
         if(!fbState.attachments.length) { el.innerHTML = ''; return; }
         el.innerHTML = fbState.attachments.map(function(a, i){
-            var icon = a.type==='audio' ? '🎙️' : a.type==='screen' ? '🖥️' : '📷';
-            return '<div class="fb-attachment">' + icon + ' ' + a.name + ' <span style="color:var(--c-muted)">(' + formatSize(a.size) + ')</span>' +
-                '<button onclick="fbRemoveAttachment('+i+')">&times;</button></div>';
+            var icon = '📎';
+            if(a.type==='audio') icon = '🎙️';
+            else if(a.type==='screen') icon = '🖥️';
+            else if(a.type==='screenshot') icon = '📷';
+            else if(a.type==='image') icon = '🖼️';
+            else if(a.type==='pdf') icon = '📄';
+
+            // Show image preview for images
+            var preview = '';
+            if((a.type==='image' || a.type==='screenshot') && a.blob) {
+                var url = URL.createObjectURL(a.blob);
+                preview = '<img src="'+url+'" style="width:48px;height:48px;object-fit:cover;border-radius:6px;margin-right:8px;flex-shrink:0" onerror="this.style.display=\'none\'">';
+            }
+
+            return '<div class="fb-attachment" style="display:flex;align-items:center">' + preview + icon + ' ' + a.name + ' <span style="color:var(--c-muted);margin-left:4px">(' + formatSize(a.size) + ')</span>' +
+                '<button onclick="fbRemoveAttachment('+i+')" style="margin-left:auto">&times;</button></div>';
         }).join('');
     }
     window.fbRemoveAttachment = function(i){
