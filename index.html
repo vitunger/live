@@ -40,6 +40,9 @@
             --c-border: #e5e7eb;
             --c-border2: #f3f4f6;
             --c-ring: #f3f4f6;
+            --c-orange-tint: #fff7ed;
+            --c-yellow-tint: #fffbeb;
+            --c-blue-tint: #eff6ff;
         }
         
         .bg-vit-orange { background-color: var(--vit-orange); }
@@ -96,7 +99,7 @@
             left: 256px; /* Sidebar width */
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            background: linear-gradient(135deg, var(--c-bg2) 0%, var(--c-bg3) 100%);
             z-index: -1;
         }
         
@@ -182,7 +185,7 @@
         .dev-badge.beta { background-color: #ede9fe; color: #6d28d9; }
         .dev-badge.demo { background-color: #fef3c7; color: #b45309; }
         .dev-badge.wip { background-color: #dbeafe; color: #1d4ed8; }
-        .dev-badge.planned { background-color: #f3f4f6; color: #6b7280; }
+        .dev-badge.planned { background-color: var(--c-bg3); color: var(--c-sub); }
 
         .status-done { 
             background-color: var(--vit-gray); 
@@ -331,15 +334,15 @@
     
         @keyframes tpulse{0%,100%{opacity:0.4;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}
         .t-msg-customer{padding:12px 16px;border-radius:12px;background:var(--c-bg2);border:1px solid var(--c-border);margin-bottom:8px}
-        .t-msg-seller{padding:12px 16px;border-radius:12px;background:#fff7ed;border:1px solid #fed7aa;margin-left:48px;margin-bottom:8px}
+        .t-msg-seller{padding:12px 16px;border-radius:12px;background:var(--c-orange-tint,#fff7ed);border:1px solid #fed7aa;margin-left:48px;margin-bottom:8px}
         .t-msg-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
         .t-msg-text{font-size:13px;color:var(--c-text2);line-height:1.5}
         .t-scenario-card{cursor:pointer;transition:all 0.2s}.t-scenario-card:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,0,0,0.1)}
 
 /* === EINKAUF MODULE CSS (from standalone) === */
-.vc{background:var(--c-bg);border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid #eee;transition:box-shadow .2s}.vc:hover{box-shadow:0 6px 20px rgba(0,0,0,.08)}
+.vc{background:var(--c-bg);border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid var(--c-border);transition:box-shadow .2s}.vc:hover{box-shadow:0 6px 20px rgba(0,0,0,.08)}
 .pill{display:inline-flex;align-items:center;padding:2px 9px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.3px}
-.pg{background:#ecfdf5;color:#059669}.py{background:#fefce8;color:#ca8a04}.pr{background:#fef2f2;color:#dc2626}.pb{background:#eff6ff;color:#2563eb}.pgr{background:var(--c-bg3);color:var(--c-sub)}.po{background:#fff7ed;color:#ea580c}
+.pg{background:#ecfdf5;color:#059669}.py{background:#fefce8;color:#ca8a04}.pr{background:#fef2f2;color:#dc2626}.pb{background:var(--c-blue-tint,#eff6ff);color:#2563eb}.pgr{background:var(--c-bg3);color:var(--c-sub)}.po{background:var(--c-orange-tint,#fff7ed);color:#ea580c}
 .prog{height:6px;border-radius:3px;background:var(--c-border);overflow:hidden}.pf{height:100%;border-radius:3px;transition:width .4s}
 .si{border:1.5px solid #e5e7eb;border-radius:10px;padding:7px 11px 7px 34px;font-size:12.5px;transition:border .15s;width:100%}.si:focus{outline:none;border-color:var(--vit-orange, #EF7D00);box-shadow:0 0 0 3px rgba(239,125,0,.1)}
 .fi{animation:fi .25s ease}@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
@@ -366,6 +369,41 @@
         
         /* Backgrounds */
         body.dark .bg-white { background-color: var(--dm-surface) !important; }
+        body.dark .vit-card { background: var(--dm-surface) !important; border: 1px solid var(--dm-border) !important; box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important; }
+        body.dark .vit-card:hover { box-shadow: 0 4px 12px rgba(239,125,0,0.15) !important; }
+        body.dark .vit-card-watermark::before { color: rgba(239,125,0,0.05) !important; }
+        
+        /* Main content area */
+        body.dark .vit-background { background: var(--dm-bg) !important; }
+        body.dark #mainApp { background: var(--dm-bg) !important; }
+        body.dark .h1-headline { color: var(--dm-text) !important; }
+        
+        /* Tages-Cockpit stat cards */
+        body.dark .bg-emerald-50, body.dark .bg-lime-50, body.dark .bg-cyan-50, body.dark .bg-sky-50, body.dark .bg-violet-50, body.dark .bg-rose-50, body.dark .bg-fuchsia-50, body.dark .bg-stone-50, body.dark .bg-slate-50, body.dark .bg-zinc-50, body.dark .bg-neutral-50 { background-color: rgba(255,255,255,0.05) !important; }
+        
+        /* Modal/Dialog backgrounds */
+        body.dark .modal-content, body.dark [role="dialog"] { background: var(--dm-surface) !important; border-color: var(--dm-border) !important; }
+        
+        /* Trainer / Coach popup */
+        body.dark #trainerPopup, body.dark .trainer-popup { background: var(--dm-surface) !important; border-color: var(--dm-border) !important; color: var(--dm-text) !important; }
+        
+        /* Login screen */
+        body.dark #loginScreen { background: var(--dm-bg) !important; }
+        body.dark #loginScreen .vit-card { background: var(--dm-surface) !important; }
+        
+        /* Tabs */
+        body.dark .vk-tab-btn { color: var(--dm-sub) !important; border-color: transparent !important; }
+        body.dark .vk-tab-btn.font-semibold.text-vit-orange { color: var(--vit-orange) !important; border-color: var(--vit-orange) !important; }
+        body.dark .sm-sub-btn { background: var(--dm-surface-hover) !important; color: var(--dm-sub) !important; }
+        body.dark .sm-sub-btn.bg-vit-orange { background: var(--vit-orange) !important; color: white !important; }
+        
+        /* Stat number colors stay readable */
+        body.dark .text-green-500 { color: #34D399 !important; }
+        body.dark .text-red-500 { color: #F87171 !important; }
+        body.dark .text-blue-500 { color: #60A5FA !important; }
+        body.dark .text-purple-500 { color: #A78BFA !important; }
+        body.dark .text-yellow-500 { color: #FBBF24 !important; }
+        body.dark .text-orange-500 { color: #FB923C !important; }
         body.dark .bg-gray-50 { background-color: var(--dm-bg) !important; }
         body.dark .bg-gray-100 { background-color: var(--dm-surface) !important; }
         body.dark .bg-gray-200 { background-color: var(--dm-surface-hover) !important; }
@@ -441,17 +479,17 @@
         /* Profile sidebar */
         body.dark #profileSidebar { background-color: var(--dm-surface) !important; border-color: var(--dm-border) !important; }
 
-        /* Inline style overrides */
-        body.dark [style*="background:var(--c-bg2)"], body.dark [style*="background: #f9fafb"],
-        body.dark [style*="background:var(--c-bg3)"], body.dark [style*="background: #f3f4f6"],
-        body.dark [style*="background:var(--c-bg2)"] { background-color: var(--dm-surface) !important; }
-        body.dark [style*="background:#fff"], body.dark [style*="background: #fff"],
-        body.dark [style*="background:white"] { background-color: var(--dm-surface) !important; }
-        body.dark [style*="color:#333"], body.dark [style*="color:var(--c-text)"] { color: var(--dm-text) !important; }
-        body.dark [style*="color:#666"], body.dark [style*="color:var(--c-sub)"] { color: var(--dm-sub) !important; }
-
         /* Widget info popup */
         body.dark .widget-info-popup { background: var(--dm-surface) !important; border-color: var(--dm-border) !important; color: var(--dm-sub) !important; }
+
+        /* Table & data displays in dark mode */
+        body.dark .dt th { background: var(--dm-surface-hover) !important; }
+        body.dark .dt td { background: var(--dm-surface) !important; }
+        body.dark tr:nth-child(even) td { background: var(--dm-bg) !important; }
+        body.dark .prog { background: var(--dm-border) !important; }
+        body.dark hr { border-color: var(--dm-border) !important; }
+        body.dark pre, body.dark code { background: var(--dm-surface-hover) !important; color: var(--dm-text) !important; }
+        body.dark .ring-1 { --tw-ring-color: var(--dm-border) !important; }
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -1079,7 +1117,7 @@
                             <div class="flex items-center gap-5">
                                 <div style="position:relative;width:80px;height:80px;flex-shrink:0">
                                     <svg width="80" height="80" style="transform:rotate(-90deg)">
-                                        <circle cx="40" cy="40" r="34" fill="none" stroke="#f3f4f6" stroke-width="6"/>
+                                        <circle cx="40" cy="40" r="34" fill="none" stroke="var(--c-bg3)" stroke-width="6"/>
                                         <circle id="healthRing" cx="40" cy="40" r="34" fill="none" stroke="#16a34a" stroke-width="6" stroke-dasharray="213.6" stroke-dashoffset="42.7" stroke-linecap="round" style="transition:all 1s ease"/>
                                     </svg>
                                     <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
@@ -1641,7 +1679,7 @@
                             </div>
                             <div class="grid grid-cols-2 gap-4 mb-6">
                                 <div class="p-3 rounded-lg" style="background:#f0fdf4"><p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color:#059669">💪 Stärken</p><div id="tStrengths"></div></div>
-                                <div class="p-3 rounded-lg" style="background:#fffbeb"><p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color:#EF7D00">💡 Tipps</p><div id="tImprovements"></div></div>
+                                <div class="p-3 rounded-lg" style="background:var(--c-yellow-tint,#fffbeb)"><p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color:#EF7D00">💡 Tipps</p><div id="tImprovements"></div></div>
                             </div>
                             <div class="flex justify-center gap-3">
                                 <button onclick="restartTrainingScenario()" class="px-6 py-2.5 rounded-lg text-white text-sm font-bold" style="background:linear-gradient(135deg,#EF7D00,#dc6b00)">🔄 Nochmal üben</button>
@@ -2237,7 +2275,7 @@
                                 <div class="flex items-center gap-4">
                                     <div id="bwaCountdownRing" style="position:relative;width:64px;height:64px;flex-shrink:0">
                                         <svg width="64" height="64" style="transform:rotate(-90deg)">
-                                            <circle cx="32" cy="32" r="28" fill="none" stroke="#f3f4f6" stroke-width="5"/>
+                                            <circle cx="32" cy="32" r="28" fill="none" stroke="var(--c-bg3)" stroke-width="5"/>
                                             <circle id="bwaRingCircle" cx="32" cy="32" r="28" fill="none" stroke="#EF7D00" stroke-width="5" stroke-dasharray="175.9" stroke-dashoffset="0" stroke-linecap="round" style="transition:stroke-dashoffset 1s ease"/>
                                         </svg>
                                         <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
@@ -6078,7 +6116,7 @@
         // ============================================
         // PORTAL VERSION – wird bei jedem Deploy erhoeht
         // ============================================
-        var PORTAL_VERSION = '7.5.0218';
+        var PORTAL_VERSION = '7.7.0218';
 
         // ============================================
         // SUPABASE CLIENT
@@ -6544,7 +6582,7 @@
         // === PASSWORD RESET ===
         function showPasswordReset() {
             var html = '<div id="pwResetOverlay" onclick="closePwReset()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:28px;width:420px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:28px;width:420px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
             html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">Passwort zuruecksetzen</h3><button onclick="closePwReset()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
             html += '<p class="text-sm text-gray-500 mb-4">Gib deine E-Mail-Adresse ein. Du erhaeltst einen Link zum Zuruecksetzen deines Passworts.</p>';
             html += '<input id="pwResetEmail" type="email" class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm mb-3" placeholder="deine@email.de">';
@@ -6582,7 +6620,7 @@
             var regLink = loginForm.parentElement.querySelector('.border-t');
             
             var html = '<div id="regOverlay" onclick="hideRegistration()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:28px;width:440px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:28px;width:440px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
             html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">Registrieren</h3><button onclick="hideRegistration()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
             html += '<p class="text-sm text-gray-500 mb-4">Nach der Registrierung muss dein Account vom HQ freigeschaltet werden.</p>';
             html += '<div class="space-y-3 mb-5">';
@@ -6951,7 +6989,7 @@
 
         function showChangePasswordModal() {
             var html = '<div id="changePwOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-            html += '<div style="background:white;border-radius:16px;padding:28px;width:420px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div style="background:var(--c-bg);border-radius:16px;padding:28px;width:420px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
             html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">\uD83D\uDD12 '+t('pw_change_title')+'</h3></div>';
             html += '<p class="text-sm text-gray-500 mb-4">'+t('pw_change_desc')+'</p>';
             html += '<input id="newPw1" type="password" class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm mb-3" placeholder="'+t('pw_change_new')+'">';
@@ -8073,7 +8111,7 @@ function renderWIht(){return '<div class="vc p-5"><h3 class="font-bold text-sm m
 function renderWParts(){
     var lfdm=17;
     var h='<div class="vc p-5 mb-4"><h3 class="font-bold text-sm mb-2">Zentrale Parts-Empfehlung</h3><p class="text-xs text-gray-500 mb-3">Basierend auf laufenden Metern deiner Zubehörwände (Daten aus Excel-Matrix).</p>';
-    h+='<div class="p-3 rounded-xl border-2 mb-3" style="background:#fff7ed;border-color:var(--v)"><label class="text-[11px] font-semibold">Laufende Meter: </label><input type="range" min="5" max="25" value="17" id="lfdmSlider" oninput="document.getElementById(\'lfdmVal\').textContent=this.value" class="mx-2"><span id="lfdmVal" class="font-bold">17</span> lfdm</div></div>';
+    h+='<div class="p-3 rounded-xl border-2 mb-3" style="background:var(--c-orange-tint,#fff7ed);border-color:var(--v)"><label class="text-[11px] font-semibold">Laufende Meter: </label><input type="range" min="5" max="25" value="17" id="lfdmSlider" oninput="document.getElementById(\'lfdmVal\').textContent=this.value" class="mx-2"><span id="lfdmVal" class="font-bold">17</span> lfdm</div></div>';
     
     var tc={Ergonomie:'pb',Service:'pg',Trend:'po','Zubehör':'pgr'};
     h+='<div class="vc overflow-x-auto"><table class="dt"><thead><tr><th>Produktgruppe</th><th class="text-center">Typ</th><th class="text-right">lfdm</th><th class="text-right">Kapitalbedarf</th></tr></thead><tbody>';
@@ -8095,7 +8133,7 @@ function renderWParts(){
 
 function renderWDb1(){return '<div class="vc p-5 mb-4"><h3 class="font-bold text-sm mb-2">DB1 — Deckungsbeitrag 1</h3><p class="text-xs text-gray-500 mb-3">Der echte Ertragswert nach MwSt-Bereinigung.</p><div class="grid md:grid-cols-3 gap-3"><div class="p-3 bg-gray-50 rounded-xl"><h4 class="text-[11px] font-semibold mb-1" style="color:#EF7D00">Handelsspanne 45%</h4><p class="text-[10px] text-gray-500">3.999€ × 45% = 1.799€</p><p class="text-xs font-bold text-green-600 mt-1">DB1 = 1.161€</p></div><div class="p-3 bg-gray-50 rounded-xl"><h4 class="text-[11px] font-semibold mb-1" style="color:#EF7D00">Faktor 1,82</h4><p class="text-[10px] text-gray-500">3.999€ / 1,82 = 2.197€ HEK</p><p class="text-xs font-bold text-green-600 mt-1">DB1 = 1.163€</p></div><div class="p-3 rounded-xl text-white" style="background:#EF7D00"><h4 class="text-[11px] font-semibold mb-1">In Prozent</h4><p class="text-[10px] opacity-80">= 1.163 / 3.361</p><p class="text-lg font-bold mt-1">= 34,62%</p></div></div></div><div class="vc p-5"><h4 class="font-semibold text-xs mb-3">+3% DB1 aufs Ergebnis</h4><div class="grid md:grid-cols-2 gap-3"><div class="p-3 bg-gray-50 rounded-xl"><p class="text-xs font-semibold">Ohne</p><p class="text-base font-bold">100.000€</p></div><div class="p-3 bg-green-50 rounded-xl border border-green-200"><p class="text-xs font-semibold">Mit +3%</p><p class="text-base font-bold text-green-600">129.400€ (+29%)</p></div></div></div>';}
 
-function renderWKern(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb-2">Kernsortiment — 4-Marken-Politik</h3><p class="text-xs text-gray-500 mb-3">Max. 4 Bike-Marken pro Standort aus dem Pool.</p><div class="overflow-x-auto"><table class="dt"><thead><tr style="background:#EF7D00"><th class="text-white"></th><th class="text-white">E-Trekking</th><th class="text-white">E-City/Urban</th><th class="text-white">E-MTB</th><th class="text-white">E-Race/Gravel</th></tr></thead><tbody><tr><td class="font-bold" style="background:#fff7ed">Premium<br><span class="text-[9px] text-gray-400">ab 6k€</span></td><td class="text-[11px]">R&M·Orbea·Simplon·Steppenwolf</td><td class="text-[11px]">R&M·Orbea·Simplon·Steppenwolf</td><td class="text-[11px]">Orbea·Simplon·Steppenwolf</td><td class="text-[11px]">Orbea·Simplon</td></tr><tr><td class="font-bold" style="background:#eff6ff">Preis<br><span class="text-[9px] text-gray-400">bis 6k€</span></td><td class="text-[11px]">VdV·Haibike·Winora·Hepha</td><td class="text-[11px]">VdV·Winora·Hepha</td><td class="text-[11px]">Haibike·Hepha</td><td class="text-[11px] text-gray-300">—</td></tr></tbody></table></div></div>';}
+function renderWKern(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb-2">Kernsortiment — 4-Marken-Politik</h3><p class="text-xs text-gray-500 mb-3">Max. 4 Bike-Marken pro Standort aus dem Pool.</p><div class="overflow-x-auto"><table class="dt"><thead><tr style="background:#EF7D00"><th class="text-white"></th><th class="text-white">E-Trekking</th><th class="text-white">E-City/Urban</th><th class="text-white">E-MTB</th><th class="text-white">E-Race/Gravel</th></tr></thead><tbody><tr><td class="font-bold" style="background:var(--c-orange-tint,#fff7ed)">Premium<br><span class="text-[9px] text-gray-400">ab 6k€</span></td><td class="text-[11px]">R&M·Orbea·Simplon·Steppenwolf</td><td class="text-[11px]">R&M·Orbea·Simplon·Steppenwolf</td><td class="text-[11px]">Orbea·Simplon·Steppenwolf</td><td class="text-[11px]">Orbea·Simplon</td></tr><tr><td class="font-bold" style="background:var(--c-blue-tint,#eff6ff)">Preis<br><span class="text-[9px] text-gray-400">bis 6k€</span></td><td class="text-[11px]">VdV·Haibike·Winora·Hepha</td><td class="text-[11px]">VdV·Winora·Hepha</td><td class="text-[11px]">Haibike·Hepha</td><td class="text-[11px] text-gray-300">—</td></tr></tbody></table></div></div>';}
 
 function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb-2">Vororder & Nachorder</h3><p class="text-xs text-gray-500 mb-3">Cashflow: Großteil mit Nachordermarken planen.</p><div class="grid md:grid-cols-2 gap-4"><div class="p-4 bg-red-50 rounded-xl border border-red-200"><h4 class="font-bold text-xs mb-2">Vorordermarken</h4><p class="text-[10px] text-gray-500 mb-2">Verbindlich → bessere Konditionen, hohe Kapitalbindung</p><div class="flex flex-wrap gap-1"><span class="pill pr">Haibike</span><span class="pill pr">Winora</span><span class="pill pr">Hepha</span><span class="pill pr">Steppenwolf</span></div></div><div class="p-4 bg-green-50 rounded-xl border border-green-200"><h4 class="font-bold text-xs mb-2">Nachordermarken</h4><p class="text-[10px] text-gray-500 mb-2">Konfigurierbar, weniger Kapitalbindung</p><div class="flex flex-wrap gap-1"><span class="pill pg">Orbea</span><span class="pill pg">R&amp;M</span><span class="pill pg">Simplon</span><span class="pill pg">Velo de Ville</span></div></div></div></div>';} 
 
@@ -9045,7 +9083,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         function openDokUploadModal() {
             var html = '<div id="dokUpOverlay" onclick="closeDokUpModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:480px;max-width:95vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:480px;max-width:95vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
             html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">\uD83D\uDCC4 Dokument hochladen</h3><button onclick="closeDokUpModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
             html += '<div class="space-y-3 mb-4">';
             html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Titel *</label><input id="dokUpTitel" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="z.B. Richtlinie Preisgestaltung"></div>';
@@ -9546,7 +9584,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var now = new Date();
             var _mn = (typeof monatNamen !== 'undefined') ? monatNamen : ['','Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
             var html = '<div id="bwaUploadOverlay" onclick="closeBwaUploadModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:600px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:600px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
             html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">📊 BWA erfassen</h3><button onclick="closeBwaUploadModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div>';
             
             // AI Upload Section FIRST
@@ -10910,7 +10948,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var now = new Date();
             var today = now.toISOString().slice(0,10);
             var html = '<div id="vtEntryOverlay" onclick="closeVtModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
             html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">💰 Verkaufserfolg eintragen</h3><button onclick="closeVtModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div>';
             html += '<div class="grid grid-cols-2 gap-3 mb-4">';
             html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Datum</label><input id="vtDate" type="date" value="'+today+'" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"></div>';
@@ -11909,7 +11947,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var isHQ = sbProfile && sbProfile.is_hq;
 
                 var html = '<div id="ticketDetailOverlay" onclick="closeTicketDetail()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-                html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:0;width:640px;max-width:95vw;max-height:90vh;overflow:hidden;box-shadow:0 25px 50px rgba(0,0,0,0.25);display:flex;flex-direction:column;">';
+                html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:0;width:640px;max-width:95vw;max-height:90vh;overflow:hidden;box-shadow:0 25px 50px rgba(0,0,0,0.25);display:flex;flex-direction:column;">';
 
                 // Header
                 html += '<div class="p-5 border-b border-gray-100">';
@@ -16328,7 +16366,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
         function openAnkuendigungModal() {
             var html = '<div id="ankOverlay" onclick="closeAnkModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
             html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">\uD83D\uDCE2 Neue Ankuendigung</h3><button onclick="closeAnkModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
             html += '<div class="space-y-3 mb-4">';
             html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Titel *</label><input id="ankTitel" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="z.B. Neue Preisliste ab Maerz"></div>';
@@ -18630,7 +18668,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var empCount = await sb.from('employees').select('id', {count:'exact', head:true}).eq('standort_id', stdId).eq('status','aktiv');
 
                 var html = '<div id="stdDetailOverlay" onclick="closeStdDetailModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-                html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+                html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
                 html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">'+s.name+'</h3><button onclick="closeStdDetailModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
                 html += '<div class="grid grid-cols-2 gap-3 mb-5 text-sm">';
                 html += '<div><span class="text-gray-500">Adresse:</span><br><span class="font-semibold">'+(s.adresse||'\u2014')+'</span></div>';
@@ -18754,7 +18792,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var currentStandortName = userData.standorte ? userData.standorte.name : '';
             
             var html = '<div id="approveOverlay" onclick="closeApproveModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:460px;max-width:90vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:460px;max-width:90vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
             html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">User freigeben</h3><button onclick="closeApproveModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
             html += '<p class="text-sm text-gray-600 mb-4"><strong>'+userName+'</strong> hat sich registriert und wartet auf Freigabe.'+(currentStandortName ? ' <span class="text-xs text-gray-400">(Gewünschter Standort: '+currentStandortName+')</span>' : '')+'</p>';
             
@@ -18948,7 +18986,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var desc = {'inhaber':'Vollzugriff auf alle Module, Dashboards, Shop, Onboarding','verkauf':'Verkauf, Marketing, Wissen, Support, Ideenboard','werkstatt':'Einkauf, Wissen, Support, Ideenboard','buchhaltung':'Allgemein, Verkauf, Einkauf, Controlling, Aktenschrank'};
 
             var html = '<div id="rollenModalOverlay" onclick="closeRollenModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:420px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:420px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
             html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">Rollen bearbeiten</h3><button onclick="closeRollenModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div>';
             html += '<div class="flex items-center space-x-3 mb-5 pb-4 border-b"><img src="https://ui-avatars.com/api/?name='+encodeURIComponent(m.name)+'&background=EF7D00&color=fff&size=40" class="w-10 h-10 rounded-full"><div><p class="font-semibold text-gray-800">'+m.name+'</p><p class="text-xs text-gray-500">'+m.standort+' · '+m.email+'</p></div></div>';
             html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Rollen zuweisen (Mehrfachauswahl)</p>';
@@ -19094,7 +19132,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(!emp) return;
             var tools = emp.employee_tools || [];
             var html = '<div id="empToolsOverlay" onclick="closeEmpToolsModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
             html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">\ud83d\udd27 Tools f\u00fcr '+emp.vorname+' '+emp.nachname+'</h3><button onclick="closeEmpToolsModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
             html += '<p class="text-xs text-gray-500 mb-4">'+(emp.position||'')+' \u00b7 '+(emp.abteilung||'')+'</p>';
             _toolProductsCache.forEach(function(prod){
@@ -19160,7 +19198,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var emp=_empCache.find(function(e){return e.id===empId;});
             if(!emp) return;
             var html='<div id="editEmpOverlay" onclick="closeEditEmpModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-            html+='<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:460px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html+='<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:460px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
             html+='<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">\u270f\ufe0f Mitarbeiter bearbeiten</h3><button onclick="closeEditEmpModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
             html+='<div class="space-y-3">';
             html+='<div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold text-gray-600 mb-1">Vorname</label><input id="editEmpVorname" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+emp.vorname+'"></div>';
@@ -19263,7 +19301,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             newMaEbene = 'standort';
 
             var html = '<div id="neuerMaOverlay" onclick="closeNeuerMaModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:460px;max-width:90vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:460px;max-width:90vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
             html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">Neuen Mitarbeiter anlegen</h3><button onclick="closeNeuerMaModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
             
             // Name fields
@@ -19536,7 +19574,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 editMaEbene = isUserHQ ? 'hq' : 'standort';
 
                 var html = '<div id="editMaOverlay" onclick="closeEditMaModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-                html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:460px;max-width:90vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+                html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:460px;max-width:90vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
                 html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">Mitarbeiter bearbeiten</h3><button onclick="closeEditMaModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
                 html += '<div class="space-y-3 mb-4">';
                 html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Name</label><input id="editMaName" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+u.name+'"></div>';
@@ -19777,7 +19815,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         // === NEUER STANDORT MODAL ===
         function openNeuerStandortModal() {
             var html = '<div id="neuerStdOverlay" onclick="closeNeuerStdModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-            html += '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:460px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+            html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:460px;max-width:90vw;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
             html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">Neuen Standort anlegen</h3><button onclick="closeNeuerStdModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
             html += '<div class="space-y-3 mb-5">';
             html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Name *</label><input id="newStdName" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="z.B. vit:bikes München"></div>';
@@ -24215,7 +24253,7 @@ function setTheme(theme) {
     <!-- Backdrop -->
     <div onclick="closeProfilePanel()" style="position:absolute;inset:0;background:rgba(0,0,0,0.4);transition:opacity 0.3s;" id="profileBackdrop"></div>
     <!-- Panel -->
-    <div id="profileSlider" style="position:absolute;top:0;right:0;bottom:0;width:380px;max-width:100vw;background:var(--vit-white,#fff);box-shadow:-8px 0 30px rgba(0,0,0,0.15);transform:translateX(100%);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);overflow-y:auto;">
+    <div id="profileSlider" style="position:absolute;top:0;right:0;bottom:0;width:380px;max-width:100vw;background:var(--c-bg);box-shadow:-8px 0 30px rgba(0,0,0,0.15);transform:translateX(100%);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);overflow-y:auto;">
 
         <!-- Header -->
         <div style="padding:24px 24px 0;position:relative;">
@@ -24439,6 +24477,9 @@ setTheme = function(theme) {
         r.style.setProperty('--c-border','#2A2A30');
         r.style.setProperty('--c-border2','#2A2A30');
         r.style.setProperty('--c-ring','#2A2A30');
+        r.style.setProperty('--c-orange-tint','rgba(239,125,0,0.1)');
+        r.style.setProperty('--c-yellow-tint','rgba(250,204,21,0.08)');
+        r.style.setProperty('--c-blue-tint','rgba(59,130,246,0.08)');
     } else {
         r.style.setProperty('--c-bg','#FFFFFF');
         r.style.setProperty('--c-bg2','#f9fafb');
@@ -24450,6 +24491,9 @@ setTheme = function(theme) {
         r.style.setProperty('--c-border','#e5e7eb');
         r.style.setProperty('--c-border2','#f3f4f6');
         r.style.setProperty('--c-ring','#f3f4f6');
+        r.style.setProperty('--c-orange-tint','#fff7ed');
+        r.style.setProperty('--c-yellow-tint','#fffbeb');
+        r.style.setProperty('--c-blue-tint','#eff6ff');
     }
     // Walk DOM and fix inline styles for dark mode
     applyDarkModeInlineStyles(theme === 'dark');
@@ -24457,69 +24501,115 @@ setTheme = function(theme) {
 
 function applyDarkModeInlineStyles(isDark) {
     if(!isDark) {
-        // Restore: reload is cleanest, but we store original styles
+        // Restore originals
         document.querySelectorAll('[data-dm-orig]').forEach(function(el){
             el.setAttribute('style', el.getAttribute('data-dm-orig'));
             el.removeAttribute('data-dm-orig');
         });
         return;
     }
-    var map = {
-        // backgrounds
-        '#ffffff':'#1A1A1F','#fff':'#1A1A1F','white':'#1A1A1F',
-        '#f9fafb':'#222228','#f3f4f6':'#2A2A30','#fafafa':'#222228',
-        '#e5e7eb':'#2A2A30','#d1d5db':'#3A3A42',
-        '#f0fdf4':'rgba(34,197,94,0.1)','#fef2f2':'rgba(248,113,113,0.1)',
-        '#eff6ff':'rgba(59,130,246,0.1)','#fff7ed':'rgba(239,125,0,0.1)',
-        '#fefce8':'rgba(250,204,21,0.1)','#faf5ff':'rgba(139,92,246,0.1)',
-        '#ecfdf5':'rgba(34,197,94,0.1)','#fef3c7':'rgba(245,158,11,0.1)',
-        'rgba(22,163,74,0.06)':'rgba(34,197,94,0.12)',
-        'rgba(202,138,4,0.06)':'rgba(250,204,21,0.12)',
-        'rgba(220,38,38,0.06)':'rgba(248,113,113,0.12)',
-        'rgba(239,125,0,0.08)':'rgba(239,125,0,0.15)',
+    
+    // Direct style property manipulation - much more reliable than regex
+    var bgMap = {
+        'rgb(255, 255, 255)':'#1A1A1F','rgb(249, 250, 251)':'#222228',
+        'rgb(243, 244, 246)':'#2A2A30','rgb(250, 250, 250)':'#222228',
+        'rgb(229, 231, 235)':'#2A2A30','rgb(209, 213, 219)':'#3A3A42',
+        'rgb(240, 253, 244)':'rgba(34,197,94,0.1)','rgb(254, 242, 242)':'rgba(248,113,113,0.1)',
+        'rgb(239, 246, 255)':'rgba(59,130,246,0.1)','rgb(255, 247, 237)':'rgba(239,125,0,0.1)',
+        'rgb(254, 252, 232)':'rgba(250,204,21,0.08)','rgb(250, 245, 255)':'rgba(139,92,246,0.1)',
+        'rgb(236, 253, 245)':'rgba(34,197,94,0.1)','rgb(254, 243, 199)':'rgba(245,158,11,0.1)',
+        'rgb(255, 251, 235)':'rgba(250,204,21,0.08)',
     };
-    var textMap = {
-        '#111827':'#EAEAEC','#1f2937':'#EAEAEC','#374151':'#C8C8CE',
-        '#4b5563':'#87878F','#6b7280':'#87878F','#9ca3af':'#55555C',
-        '#d1d5db':'#3A3A42','#333':'#EAEAEC',
+    var colorMap = {
+        'rgb(17, 24, 39)':'#EAEAEC','rgb(31, 41, 55)':'#EAEAEC',
+        'rgb(55, 65, 81)':'#C8C8CE','rgb(75, 85, 99)':'#87878F',
+        'rgb(107, 114, 128)':'#87878F','rgb(156, 163, 175)':'#55555C',
+        'rgb(51, 51, 51)':'#EAEAEC','rgb(0, 0, 0)':'#EAEAEC',
     };
-    var borderMap = {
-        '#e5e7eb':'#2A2A30','#f3f4f6':'#2A2A30','#d1d5db':'#2A2A30',
-        '#eee':'#2A2A30','#ddd':'#2A2A30',
-        '1px solid #f3f4f6':'1px solid #2A2A30',
-        '1px solid #e5e7eb':'1px solid #2A2A30',
+    var borderColorMap = {
+        'rgb(229, 231, 235)':'#2A2A30','rgb(243, 244, 246)':'#2A2A30',
+        'rgb(209, 213, 219)':'#2A2A30','rgb(238, 238, 238)':'#2A2A30',
+        'rgb(221, 221, 221)':'#2A2A30',
     };
-    // Process all elements with inline styles
+    
     document.querySelectorAll('[style]').forEach(function(el) {
-        var s = el.getAttribute('style');
-        if(!s) return;
-        var changed = false;
-        var ns = s;
-        // Skip elements inside script/style
         if(el.tagName === 'SCRIPT' || el.tagName === 'STYLE') return;
+        var origStyle = el.getAttribute('style');
+        if(!origStyle || el.hasAttribute('data-dm-skip')) return;
         
-        // Background replacements
-        Object.keys(map).forEach(function(from) {
-            // Match background: #xxx, background-color: #xxx
-            var re = new RegExp('(background(?:-color)?\\s*:\\s*)' + from.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi');
-            if(re.test(ns)) { ns = ns.replace(re, '$1' + map[from]); changed = true; }
-        });
-        // Color (text) replacements - only for color:, not background-color:
-        Object.keys(textMap).forEach(function(from) {
-            var re = new RegExp('(?<!background-)color\\s*:\\s*' + from.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi');
-            if(re.test(ns)) { ns = ns.replace(re, 'color:' + textMap[from]); changed = true; }
-        });
-        // Border replacements
-        Object.keys(borderMap).forEach(function(from) {
-            if(ns.indexOf(from) !== -1) { ns = ns.split(from).join(borderMap[from]); changed = true; }
-        });
+        // Store original before any changes
+        if(!el.hasAttribute('data-dm-orig')) el.setAttribute('data-dm-orig', origStyle);
         
-        if(changed) {
-            if(!el.hasAttribute('data-dm-orig')) el.setAttribute('data-dm-orig', s);
-            el.setAttribute('style', ns);
+        var cs = el.style;
+        var changed = false;
+        
+        // Background
+        var bg = cs.backgroundColor || cs.background;
+        if(bg) {
+            // Handle solid colors
+            Object.keys(bgMap).forEach(function(from) {
+                if(bg.indexOf(from) !== -1) {
+                    if(cs.backgroundColor) cs.backgroundColor = bgMap[from];
+                    else cs.background = cs.background.replace(from, bgMap[from]);
+                    changed = true;
+                }
+            });
+            // Handle rgba with low alpha (tinted backgrounds)
+            if(bg.indexOf('rgba(22, 163, 74') !== -1 && bg.indexOf('0.06') !== -1) { cs.background = bg.replace('0.06','0.12'); changed = true; }
+            if(bg.indexOf('rgba(202, 138, 4') !== -1 && bg.indexOf('0.06') !== -1) { cs.background = bg.replace('0.06','0.12'); changed = true; }
+            if(bg.indexOf('rgba(220, 38, 38') !== -1 && bg.indexOf('0.06') !== -1) { cs.background = bg.replace('0.06','0.12'); changed = true; }
+            if(bg.indexOf('rgba(239, 125, 0') !== -1 && bg.indexOf('0.08') !== -1) { cs.background = bg.replace('0.08','0.15'); changed = true; }
         }
+        
+        // Text color (only if not an icon/badge with intentional color)
+        var col = cs.color;
+        if(col && colorMap[col]) {
+            // Don't override status colors (green/red/blue/orange/purple)
+            if(col.indexOf('34, 197') === -1 && col.indexOf('248, 113') === -1 && 
+               col.indexOf('59, 130') === -1 && col.indexOf('239, 125') === -1 &&
+               col.indexOf('139, 92') === -1 && col.indexOf('22, 163') === -1 &&
+               col.indexOf('220, 38') === -1 && col.indexOf('202, 138') === -1 &&
+               col.indexOf('37, 99') === -1 && col.indexOf('147, 51') === -1) {
+                cs.color = colorMap[col];
+                changed = true;
+            }
+        }
+        
+        // Border color
+        var bc = cs.borderColor || cs.borderBottom || cs.borderTop;
+        if(cs.borderColor && borderColorMap[cs.borderColor]) { cs.borderColor = borderColorMap[cs.borderColor]; changed = true; }
+        // Handle border shorthand  
+        ['borderBottom','borderTop','borderLeft','borderRight','border'].forEach(function(prop) {
+            var val = cs[prop];
+            if(val) {
+                Object.keys(borderColorMap).forEach(function(from) {
+                    if(val.indexOf(from) !== -1) { cs[prop] = val.replace(from, borderColorMap[from]); changed = true; }
+                });
+            }
+        });
     });
 }
+
+// MutationObserver: auto-apply dark mode to dynamically inserted content
+(function() {
+    var dmTimer = null;
+    var observer = new MutationObserver(function(mutations) {
+        if(!document.body.classList.contains('dark')) return;
+        // Debounce - don't fire too often
+        if(dmTimer) clearTimeout(dmTimer);
+        dmTimer = setTimeout(function() {
+            applyDarkModeInlineStyles(true);
+        }, 100);
+    });
+    // Start observing once DOM is ready
+    if(document.body) {
+        observer.observe(document.body, { childList: true, subtree: true });
+    } else {
+        document.addEventListener('DOMContentLoaded', function() {
+            observer.observe(document.body, { childList: true, subtree: true });
+        });
+    }
+})();
 
 async function saveProfile() {
     var vorname = document.getElementById('profileVorname').value.trim();
@@ -25312,7 +25402,7 @@ setTimeout(function(){document.getElementById('groupcallPrepPanel').style.displa
 <!-- ═══ GRUPPENCALL PREP PANEL ═══ -->
 <div id="groupcallPrepPanel" style="display:none;position:fixed;inset:0;z-index:9998;">
     <div onclick="closeGroupcallPrep()" style="position:absolute;inset:0;background:rgba(0,0,0,0.4)"></div>
-    <div class="gc-prep-slider" style="position:absolute;top:0;right:0;bottom:0;width:380px;background:white;box-shadow:-8px 0 30px rgba(0,0,0,0.15);transform:translateX(100%);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);overflow-y:auto;">
+    <div class="gc-prep-slider" style="position:absolute;top:0;right:0;bottom:0;width:380px;background:var(--c-bg);box-shadow:-8px 0 30px rgba(0,0,0,0.15);transform:translateX(100%);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);overflow-y:auto;">
         <div style="padding:24px;">
             <button onclick="closeGroupcallPrep()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:18px;cursor:pointer;color:var(--c-muted)">✕</button>
             <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--c-muted);font-weight:600;margin-bottom:4px;">Gruppencall</p>
@@ -27360,7 +27450,7 @@ window.switchWissenTyp = function(typ) {
         var banner = document.createElement('div');
         banner.id = 'pwaInstallBanner';
         banner.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:10001;width:calc(100% - 32px);max-width:420px;';
-        banner.innerHTML = '<div style="background:white;border-radius:14px;padding:16px;box-shadow:0 8px 32px rgba(0,0,0,0.15);border:1px solid #f3f4f6;display:flex;align-items:center;gap:12px">' +
+        banner.innerHTML = '<div style="background:var(--c-bg);border-radius:14px;padding:16px;box-shadow:0 8px 32px rgba(0,0,0,0.25);border:1px solid var(--c-border);display:flex;align-items:center;gap:12px">' +
             '<div style="width:44px;height:44px;border-radius:10px;background:#EF7D00;display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="font-size:20px;color:white;font-weight:900">v</span></div>' +
             '<div style="flex:1"><p style="font-size:13px;font-weight:700;color:var(--c-text);margin:0">vit:bikes als App installieren</p><p style="font-size:11px;color:var(--c-sub);margin:2px 0 0">Schnellzugriff auf Pipeline, Kalender & mehr</p></div>' +
             '<button onclick="installPWA()" style="background:#EF7D00;color:white;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Installieren</button>' +
@@ -28792,7 +28882,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     transition: all 0.2s; color:var(--c-sub);
 }
 .fb-cat:hover { border-color:#EF7D00; color:#EF7D00; }
-.fb-cat.active { background:#fff7ed; border-color:#EF7D00; color:#EF7D00; }
+.fb-cat.active { background:var(--c-orange-tint,#fff7ed); border-color:#EF7D00; color:#EF7D00; }
 
 /* Media buttons */
 .fb-media-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
@@ -28802,7 +28892,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     background:var(--c-bg2); font-size:12px; font-weight:600; cursor:pointer;
     transition: all 0.2s; color:var(--c-sub);
 }
-.fb-media-btn:hover { border-color:#EF7D00; background:#fff7ed; color:#EF7D00; }
+.fb-media-btn:hover { border-color:#EF7D00; background:var(--c-orange-tint,#fff7ed); color:#EF7D00; }
 .fb-media-btn.recording { border-color:#ef4444; background:#fef2f2; color:#ef4444; animation: fbRecPulse 1.2s infinite; }
 .fb-media-btn svg { width:16px; height:16px; }
 
@@ -28928,7 +29018,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
             <div class="fb-check">🎉</div>
             <h3>Danke für dein Feedback!</h3>
             <p>Wir schauen uns das an und melden uns, wenn wir Rückfragen haben. Dein Input hilft uns, das Portal für alle Partner besser zu machen.</p>
-            <div style="margin-top:20px;padding:16px;background:#fff7ed;border-radius:12px;text-align:left">
+            <div style="margin-top:20px;padding:16px;background:var(--c-orange-tint,#fff7ed);border-radius:12px;text-align:left">
                 <p style="font-size:11px;font-weight:700;color:#EF7D00;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.05em">✅ Letzte Verbesserungen dank Partner-Feedback</p>
                 <ul style="font-size:12px;color:var(--c-text2);margin:0;padding:0 0 0 16px;line-height:1.8">
                     <li>BWA-Parser: 13+ DATEV-Formate erkannt</li>
