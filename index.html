@@ -2842,11 +2842,11 @@
 
                     <!-- Tab Navigation -->
                     <div class="flex space-x-1 bg-gray-100 rounded-lg p-1 mb-5">
-                        <button onclick="showDevTab('meine')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold bg-white text-gray-800 shadow-sm" data-dtab="meine">📋 Meine Feedbacks</button>
-                        <button onclick="showDevTab('alle')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500" data-dtab="alle">🌐 Alle Ideen</button>
-                        <button onclick="showDevTab('board')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500" data-dtab="board" id="devTabBoard" style="display:none;">🎯 HQ-Ideenboard</button>
-                        <button onclick="showDevTab('planung')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500" data-dtab="planung" id="devTabPlanung" style="display:none;">📅 Planung</button>
-                        <button onclick="showDevTab('roadmap')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500" data-dtab="roadmap">🚀 Entwicklung</button>
+                        <button onclick="showIdeenTab('meine')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold bg-white text-gray-800 shadow-sm" data-dtab="meine">📋 Meine Feedbacks</button>
+                        <button onclick="showIdeenTab('alle')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500" data-dtab="alle">🌐 Alle Ideen</button>
+                        <button onclick="showIdeenTab('board')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500" data-dtab="board" id="devTabBoardBtn" style="display:none;">🎯 HQ-Ideenboard</button>
+                        <button onclick="showIdeenTab('planung')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500" data-dtab="planung" id="devTabPlanungBtn" style="display:none;">📅 Planung</button>
+                        <button onclick="showIdeenTab('roadmap')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500" data-dtab="roadmap">🚀 Entwicklung</button>
                     </div>
 
                     <!-- ===== Submit Form (Toggle) ===== -->
@@ -2947,11 +2947,11 @@
                     </div>
 
                     <!-- Content Area (switched by tabs) -->
-                    <div id="devTabMeine" class="dev-tab-content"></div>
-                    <div id="devTabAlle" class="dev-tab-content" style="display:none;"></div>
-                    <div id="devTabBoard" class="dev-tab-content" style="display:none;"></div>
-                    <div id="devTabPlanung" class="dev-tab-content" style="display:none;"></div>
-                    <div id="devTabRoadmap" class="dev-tab-content" style="display:none;"></div>
+                    <div id="ideenTabMeine" class="ideen-tab-content"></div>
+                    <div id="ideenTabAlle" class="ideen-tab-content" style="display:none;"></div>
+                    <div id="ideenTabBoard" class="ideen-tab-content" style="display:none;"></div>
+                    <div id="ideenTabPlanung" class="ideen-tab-content" style="display:none;"></div>
+                    <div id="ideenTabRoadmap" class="ideen-tab-content" style="display:none;"></div>
 
                     <!-- Detail Modal -->
                     <div id="devDetailModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-10 overflow-y-auto" onclick="if(event.target===this)closeDevDetail()">
@@ -4895,7 +4895,7 @@
                         <nav class="flex space-x-4 -mb-px">
                             <button onclick="showDevTab('modules')" class="dev-tab whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-dtab="modules">📦 Module</button>
                             <button onclick="showDevTab('releases')" class="dev-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500" data-dtab="releases">🚀 Release-Updates</button>
-                            <button onclick="showDevTab('nutzung')" class="dev-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500" data-dtab="nutzung">📊 Portal-Nutzung</button>
+                            <button onclick="showDevTab('nutzung')" class="dev-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500" data-dtab="nutzung" id="devStatusNutzungTab">📊 Portal-Nutzung</button>
                         </nav>
                     </div>
 
@@ -13415,14 +13415,14 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             updateDevFileList();
         }
 
-        function showDevTab(tab) {
+        function showIdeenTab(tab) {
             devCurrentTab = tab;
             document.querySelectorAll('.dev-tab-btn').forEach(function(b) {
                 var isActive = b.getAttribute('data-dtab') === tab;
                 b.className = 'dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold ' + (isActive ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500');
             });
-            document.querySelectorAll('.dev-tab-content').forEach(function(c) { c.style.display = 'none'; });
-            var target = document.getElementById('devTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            document.querySelectorAll('#ideenboardView .ideen-tab-content').forEach(function(c) { c.style.display = 'none'; });
+            var target = document.getElementById('ideenTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
             if(target) target.style.display = '';
             renderDevTab(tab);
         }
@@ -13430,10 +13430,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         async function renderDevPipeline() {
             // Show HQ tabs if HQ user
             var isHQ = (sbRollen||[]).indexOf('hq') !== -1;
-            var boardTab = document.getElementById('devTabBoard');
-            var planTab = document.getElementById('devTabPlanung');
-            if(boardTab) boardTab.style.display = isHQ ? '' : 'none';
-            if(planTab) planTab.style.display = isHQ ? '' : 'none';
+            var boardBtn = document.getElementById('devTabBoardBtn');
+            var planBtn = document.getElementById('devTabPlanungBtn');
+            if(boardBtn) boardBtn.style.display = isHQ ? '' : 'none';
+            if(planBtn) planBtn.style.display = isHQ ? '' : 'none';
 
             // Load all submissions
             try {
@@ -13520,7 +13520,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         function renderDevMeine() {
-            var c = document.getElementById('devTabMeine');
+            var c = document.getElementById('ideenTabMeine');
             if(!c) return;
             var mine = devSubmissions.filter(function(s){ return s.user_id === (sbUser && sbUser.id); });
             if(mine.length === 0) {
@@ -13531,7 +13531,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         function renderDevAlle() {
-            var c = document.getElementById('devTabAlle');
+            var c = document.getElementById('ideenTabAlle');
             if(!c) return;
             // Show all except abgelehnt/geparkt unless explicitly asked
             var visible = devSubmissions.filter(function(s) { return s.status !== 'abgelehnt' && s.status !== 'geparkt'; });
@@ -13543,7 +13543,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         function renderDevBoard() {
-            var c = document.getElementById('devTabBoard');
+            var c = document.getElementById('ideenTabBoard');
             if(!c) return;
             var boardItems = devSubmissions.filter(function(s) {
                 return ['konzept_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1;
@@ -13579,7 +13579,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         function renderDevPlanung() {
-            var c = document.getElementById('devTabPlanung');
+            var c = document.getElementById('ideenTabPlanung');
             if(!c) return;
             var planItems = devSubmissions.filter(function(s) {
                 return ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant'].indexOf(s.status) !== -1;
@@ -13613,7 +13613,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         var devRoadmapFilter = 'alle';
 
         async function renderDevRoadmap() {
-            var c = document.getElementById('devTabRoadmap');
+            var c = document.getElementById('ideenTabRoadmap');
             if(!c) return;
 
             // Load roadmap items
@@ -15408,7 +15408,12 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         // Alias for auto-loading
-        function renderDevStatus() { renderModulStatus(); }
+        function renderDevStatus() {
+            renderModulStatus();
+            // Hide Portal-Nutzung tab for non-HQ users
+            var nutzTab = document.getElementById('devStatusNutzungTab');
+            if(nutzTab) nutzTab.style.display = ((sbRollen||[]).indexOf('hq') !== -1) ? '' : 'none';
+        }
 
         function showDevTab(tab) {
             document.querySelectorAll('.dev-tab-content').forEach(function(el) { el.style.display = 'none'; });
