@@ -14176,8 +14176,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     h += '</div></div>';
                 }
 
-                // === RÜCKFRAGEN-ANTWORT-FORMULAR ===
-                if(s.status === 'ki_rueckfragen' || s.status === 'hq_rueckfragen') {
+                // === RÜCKFRAGEN-ANTWORT-FORMULAR (nur für Einreicher, nicht HQ) ===
+                var isHQUser = (sbRollen||[]).indexOf('hq') !== -1;
+                var isSubmitter = sbUser && s.user_id === sbUser.id;
+                if((s.status === 'ki_rueckfragen' || s.status === 'hq_rueckfragen') && (isSubmitter || !isHQUser)) {
                     var rfQuelle = s.status === 'ki_rueckfragen' ? 'Unser System' : 'Das HQ';
                     h += '<div id="devRueckfragenForm" class="border-2 border-yellow-300 rounded-lg p-4 mb-4 bg-yellow-50">';
                     h += '<h4 class="text-sm font-bold text-yellow-800 mb-2">💬 '+rfQuelle+' hat Rückfragen – bitte antworte:</h4>';
@@ -14202,7 +14204,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
                 // === HQ-AKTIONEN im Detail-Modal ===
                 var isHQ = (sbRollen||[]).indexOf('hq') !== -1;
-                if(isHQ && ['konzept_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1) {
+                if(isHQ && ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1) {
                     h += '<div class="border-2 border-vit-orange/30 rounded-lg p-4 mb-4 bg-orange-50">';
                     h += '<h4 class="text-sm font-bold text-gray-800 mb-3">🎯 HQ-Entscheidung</h4>';
                     h += '<div class="grid grid-cols-2 gap-2 mb-3">';
