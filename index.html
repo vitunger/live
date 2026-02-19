@@ -13546,67 +13546,162 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         function renderDevBoard() {
             var c = document.getElementById('ideenTabBoard');
             if(!c) return;
+            var isHQ = (sbRollen||[]).indexOf('hq') !== -1;
+            // HQ sees all ideas that have a KI analysis and need a decision
             var boardItems = devSubmissions.filter(function(s) {
-                return ['konzept_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1;
+                return ['konzept_erstellt','im_ideenboard','hq_rueckfragen','ki_rueckfragen'].indexOf(s.status) !== -1;
             });
             if(boardItems.length === 0) {
                 c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-3">🎯</p><p>Keine Ideen warten auf HQ-Entscheidung.</p></div>';
                 return;
             }
-            var h = '<div class="space-y-3">';
-            boardItems.forEach(function(s) {
-                var ki = s.dev_ki_analysen && s.dev_ki_analysen[0] ? s.dev_ki_analysen[0] : null;
-                h += '<div class="vit-card p-5 border-l-4 border-vit-orange">';
-                h += '<div class="flex items-start justify-between">';
-                h += '<div class="flex-1 cursor-pointer" onclick="openDevDetail(\''+s.id+'\')">';
-                h += '<div class="flex items-center gap-2 mb-1"><span class="text-xs font-semibold rounded px-2 py-0.5 '+devStatusColors[s.status]+'">'+devStatusLabels[s.status]+'</span>';
-                if(ki) h += '<span class="text-xs bg-gray-100 rounded px-1.5 py-0.5">Machbarkeit: <b>'+(ki.machbarkeit||'-')+'</b></span>';
-                if(ki && ki.vision_fit_score) h += '<span class="text-xs bg-gray-100 rounded px-1.5 py-0.5">Vision: <b>'+ki.vision_fit_score+'/100</b></span>';
-                if(s.geschaetzter_aufwand) h += '<span class="text-xs bg-gray-100 rounded px-1.5 py-0.5">Aufwand: <b>'+s.geschaetzter_aufwand+'</b></span>';
+            var h = '';
+            // Group: Needs HQ decision vs waiting on user
+            var needsDecision = boardItems.filter(function(s){ return ['konzept_erstellt','im_ideenboard'].indexOf(s.status) !== -1; });
+            var waitingUser = boardItems.filter(function(s){ return s.status === 'ki_rueckfragen'; });
+            var waitingHQ = boardItems.filter(function(s){ return s.status === 'hq_rueckfragen'; });
+
+            if(needsDecision.length > 0) {
+                h += '<h3 class="text-sm font-bold text-gray-500 uppercase mb-2 mt-2">📋 Bereit zur Entscheidung ('+needsDecision.length+')</h3>';
+                h += '<div class="space-y-3 mb-6">';
+                needsDecision.forEach(function(s) { h += devBoardCardHTML(s, isHQ); });
                 h += '</div>';
-                h += '<h3 class="font-semibold text-gray-800">'+(s.titel||'(Ohne Titel)')+'</h3>';
-                if(ki && ki.zusammenfassung) h += '<p class="text-sm text-gray-500 mt-1">'+ki.zusammenfassung+'</p>';
+            }
+            if(waitingHQ.length > 0) {
+                h += '<h3 class="text-sm font-bold text-gray-500 uppercase mb-2">❓ Warten auf HQ-Antwort ('+waitingHQ.length+')</h3>';
+                h += '<div class="space-y-3 mb-6">';
+                waitingHQ.forEach(function(s) { h += devBoardCardHTML(s, isHQ); });
                 h += '</div>';
-                // HQ Action buttons
+            }
+            if(waitingUser.length > 0) {
+                h += '<h3 class="text-sm font-bold text-gray-500 uppercase mb-2">⏳ Warten auf User-Antwort ('+waitingUser.length+')</h3>';
+                h += '<div class="space-y-3 opacity-70">';
+                waitingUser.forEach(function(s) { h += devBoardCardHTML(s, false); });
+                h += '</div>';
+            }
+            c.innerHTML = h;
+        }
+
+        function devBoardCardHTML(s, showActions) {
+            var ki = s.dev_ki_analysen && s.dev_ki_analysen[0] ? s.dev_ki_analysen[0] : null;
+            var votes = s.dev_votes ? s.dev_votes.length : 0;
+            var h = '<div class="vit-card p-5 border-l-4 '+(s.status==='konzept_erstellt'||s.status==='im_ideenboard'?'border-vit-orange':'border-yellow-400')+'">';
+            h += '<div class="flex items-start justify-between">';
+            h += '<div class="flex-1 cursor-pointer" onclick="openDevDetail(\''+s.id+'\')">';
+            h += '<div class="flex items-center gap-2 mb-1 flex-wrap"><span class="text-xs font-semibold rounded px-2 py-0.5 '+devStatusColors[s.status]+'">'+devStatusLabels[s.status]+'</span>';
+            if(ki && ki.machbarkeit) h += '<span class="text-xs bg-gray-100 rounded px-1.5 py-0.5">Machbarkeit: <b>'+ki.machbarkeit+'</b></span>';
+            if(ki && ki.vision_fit_score) h += '<span class="text-xs bg-blue-50 text-blue-700 rounded px-1.5 py-0.5">Vision: <b>'+ki.vision_fit_score+'/100</b></span>';
+            if(ki && ki.aufwand_schaetzung) h += '<span class="text-xs bg-gray-100 rounded px-1.5 py-0.5">Aufwand: <b>'+ki.aufwand_schaetzung+'</b></span>';
+            if(votes > 0) h += '<span class="text-xs bg-orange-50 text-orange-600 rounded px-1.5 py-0.5">▲ '+votes+'</span>';
+            h += '</div>';
+            h += '<h3 class="font-semibold text-gray-800">'+(s.titel||'(Ohne Titel)')+'</h3>';
+            if(ki && ki.zusammenfassung) h += '<p class="text-sm text-gray-500 mt-1 line-clamp-2">'+ki.zusammenfassung+'</p>';
+            h += '</div>';
+            if(showActions) {
                 h += '<div class="flex flex-col space-y-1 ml-4 flex-shrink-0">';
                 h += '<button onclick="event.stopPropagation();devHQDecision(\''+s.id+'\',\'freigabe\')" class="px-3 py-1.5 bg-green-500 text-white rounded text-xs font-semibold hover:bg-green-600">✅ Freigeben</button>';
                 h += '<button onclick="event.stopPropagation();devHQDecision(\''+s.id+'\',\'rueckfragen\')" class="px-3 py-1.5 bg-yellow-500 text-white rounded text-xs font-semibold hover:bg-yellow-600">❓ Rückfrage</button>';
                 h += '<button onclick="event.stopPropagation();devHQDecision(\''+s.id+'\',\'spaeter\')" class="px-3 py-1.5 bg-gray-300 text-gray-700 rounded text-xs font-semibold hover:bg-gray-400">⏸ Später</button>';
                 h += '<button onclick="event.stopPropagation();devHQDecision(\''+s.id+'\',\'ablehnung\')" class="px-3 py-1.5 bg-red-100 text-red-600 rounded text-xs font-semibold hover:bg-red-200">❌ Ablehnen</button>';
-                h += '</div></div></div>';
-            });
-            h += '</div>';
-            c.innerHTML = h;
+                h += '</div>';
+            }
+            h += '</div></div>';
+            return h;
         }
 
         function renderDevPlanung() {
             var c = document.getElementById('ideenTabPlanung');
             if(!c) return;
+            var isHQ = (sbRollen||[]).indexOf('hq') !== -1;
             var planItems = devSubmissions.filter(function(s) {
-                return ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant'].indexOf(s.status) !== -1;
+                return ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant','geparkt'].indexOf(s.status) !== -1;
             }).sort(function(a,b) { return (a.queue_position||9999) - (b.queue_position||9999); });
             if(planItems.length === 0) {
                 c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-3">📅</p><p>Noch keine freigegebenen Ideen in der Planung.</p></div>';
                 return;
             }
-            var h = '<div class="space-y-2">';
-            planItems.forEach(function(s, i) {
-                h += '<div class="vit-card p-4 flex items-center space-x-3 cursor-pointer hover:shadow-md" onclick="openDevDetail(\''+s.id+'\')">';
-                h += '<span class="text-lg font-bold text-gray-300 w-8 text-center">'+(s.queue_position||i+1)+'</span>';
-                h += '<div class="flex-1">';
-                h += '<div class="flex items-center gap-2"><span class="text-xs font-semibold rounded px-2 py-0.5 '+devStatusColors[s.status]+'">'+devStatusLabels[s.status]+'</span>';
-                if(s.geschaetzter_aufwand) h += '<span class="text-[10px] bg-gray-100 rounded px-1.5 py-0.5 font-semibold">'+s.geschaetzter_aufwand+'</span>';
-                h += '</div>';
-                h += '<h3 class="font-semibold text-gray-800 text-sm mt-0.5">'+(s.titel||'(Ohne Titel)')+'</h3>';
-                h += '</div>';
-                // Queue reorder buttons (HQ only)
-                h += '<div class="flex flex-col space-y-0.5">';
-                if(i > 0) h += '<button onclick="event.stopPropagation();moveDevQueue(\''+s.id+'\',-1)" class="text-gray-400 hover:text-gray-700 text-xs">▲</button>';
-                if(i < planItems.length-1) h += '<button onclick="event.stopPropagation();moveDevQueue(\''+s.id+'\',1)" class="text-gray-400 hover:text-gray-700 text-xs">▼</button>';
+
+            // Group by status
+            var groups = [
+                { key: 'in_entwicklung', label: '🔨 In Entwicklung', items: [] },
+                { key: 'in_planung', label: '📅 In Planung', items: [] },
+                { key: 'freigegeben', label: '✅ Freigegeben (noch nicht geplant)', items: [] },
+                { key: 'im_review', label: '🔍 Im Review', items: [] },
+                { key: 'release_geplant', label: '🚀 Release geplant', items: [] },
+                { key: 'geparkt', label: '⏸ Geparkt', items: [] }
+            ];
+            planItems.forEach(function(s) {
+                var g = groups.find(function(gr){ return gr.key === s.status; });
+                if(g) g.items.push(s);
+                else groups[2].items.push(s); // fallback to freigegeben
+            });
+
+            var h = '';
+            groups.forEach(function(group) {
+                if(group.items.length === 0) return;
+                h += '<div class="mb-6">';
+                h += '<h3 class="text-sm font-bold text-gray-500 uppercase mb-2">'+group.label+' ('+group.items.length+')</h3>';
+                h += '<div class="space-y-2">';
+                group.items.forEach(function(s, i) {
+                    var ki = s.dev_ki_analysen && s.dev_ki_analysen[0] ? s.dev_ki_analysen[0] : null;
+                    h += '<div class="vit-card p-4 '+(s.status==='geparkt'?'opacity-60':'')+'">';
+                    h += '<div class="flex items-center space-x-3">';
+                    // Queue reorder (HQ only)
+                    if(isHQ) {
+                        h += '<div class="flex flex-col space-y-0.5 flex-shrink-0">';
+                        h += '<button onclick="moveDevQueue(\''+s.id+'\',-1)" class="text-gray-400 hover:text-gray-700 text-xs leading-none">▲</button>';
+                        h += '<button onclick="moveDevQueue(\''+s.id+'\',1)" class="text-gray-400 hover:text-gray-700 text-xs leading-none">▼</button>';
+                        h += '</div>';
+                    }
+                    // Content
+                    h += '<div class="flex-1 cursor-pointer" onclick="openDevDetail(\''+s.id+'\')">';
+                    h += '<div class="flex items-center gap-2 flex-wrap">';
+                    if(ki && ki.aufwand_schaetzung) h += '<span class="text-[10px] bg-gray-100 rounded px-1.5 py-0.5 font-semibold">'+ki.aufwand_schaetzung+'</span>';
+                    h += '<h3 class="font-semibold text-gray-800 text-sm">'+(s.titel||'(Ohne Titel)')+'</h3>';
+                    h += '</div>';
+                    // Meta info line
+                    var meta = [];
+                    if(s.ziel_release) meta.push('📅 '+s.ziel_release);
+                    if(s.verantwortlicher) meta.push('👤 Zugewiesen');
+                    if(meta.length) h += '<p class="text-xs text-gray-400 mt-0.5">'+meta.join(' · ')+'</p>';
+                    h += '</div>';
+                    // HQ inline actions
+                    if(isHQ) {
+                        h += '<div class="flex items-center gap-1 flex-shrink-0">';
+                        // Status change dropdown
+                        h += '<select onchange="updateDevPlanStatus(\''+s.id+'\',this.value)" class="text-xs border border-gray-200 rounded px-1.5 py-1 bg-white">';
+                        var planStatuses = ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant','geparkt'];
+                        planStatuses.forEach(function(st) {
+                            h += '<option value="'+st+'"'+(s.status===st?' selected':'')+'>'+devStatusLabels[st]+'</option>';
+                        });
+                        h += '</select>';
+                        // Deadline
+                        h += '<input type="text" placeholder="Q1/26" value="'+(s.ziel_release||'')+'" onchange="updateDevPlanField(\''+s.id+'\',\'ziel_release\',this.value)" class="text-xs border border-gray-200 rounded px-1.5 py-1 w-16 text-center" title="Ziel-Release">';
+                        h += '</div>';
+                    }
+                    h += '</div></div>';
+                });
                 h += '</div></div>';
             });
-            h += '</div>';
             c.innerHTML = h;
+        }
+
+        async function updateDevPlanStatus(subId, newStatus) {
+            try {
+                await sb.from('dev_submissions').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', subId);
+                renderDevPipeline();
+            } catch(err) { alert('Fehler: ' + (err.message||err)); }
+        }
+
+        async function updateDevPlanField(subId, field, value) {
+            try {
+                var upd = { updated_at: new Date().toISOString() };
+                upd[field] = value || null;
+                await sb.from('dev_submissions').update(upd).eq('id', subId);
+                // Don't re-render, just update locally
+                var s = devSubmissions.find(function(s){return s.id===subId;});
+                if(s) s[field] = value || null;
+            } catch(err) { console.error('Update error:', err); }
         }
 
         // === ROADMAP / ENTWICKLUNG TAB ===
@@ -14084,7 +14179,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 // === RÜCKFRAGEN-ANTWORT-FORMULAR ===
                 if(s.status === 'ki_rueckfragen' || s.status === 'hq_rueckfragen') {
                     var rfQuelle = s.status === 'ki_rueckfragen' ? 'Unser System' : 'Das HQ';
-                    h += '<div class="border-2 border-yellow-300 rounded-lg p-4 mb-4 bg-yellow-50">';
+                    h += '<div id="devRueckfragenForm" class="border-2 border-yellow-300 rounded-lg p-4 mb-4 bg-yellow-50">';
                     h += '<h4 class="text-sm font-bold text-yellow-800 mb-2">💬 '+rfQuelle+' hat Rückfragen – bitte antworte:</h4>';
                     // Zeige offene Rückfragen aus KI-Analyse
                     if(s.status === 'ki_rueckfragen' && ki && ki.rueckfragen) {
@@ -14151,6 +14246,12 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     return;
                 }
 
+                // Sofort: Formular durch Analyse-Hinweis ersetzen
+                var rfForm = document.getElementById('devRueckfragenForm');
+                if(rfForm) {
+                    rfForm.innerHTML = '<div class="text-center py-8"><div class="inline-flex items-center space-x-3 bg-purple-50 border border-purple-200 rounded-xl px-6 py-4"><div class="animate-spin w-6 h-6 border-3 border-purple-400 border-t-transparent rounded-full"></div><div><p class="font-semibold text-purple-700">⏳ Antworten gespeichert – wird erneut analysiert...</p><p class="text-sm text-purple-500 mt-1">Die KI verarbeitet deine Antworten. Das dauert ca. 15-30 Sekunden.</p></div></div></div>';
+                }
+
                 // Antworten als Kommentare speichern
                 var antwortText = '';
                 if(einzelAntworten.length > 0) {
@@ -14183,37 +14284,20 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     }
                 }
 
-                // KI neu analysieren lassen (mit Kontext der Antworten)
-                var statusEl = document.getElementById('devDetailContent');
-                if(statusEl) {
-                    var loadingDiv = document.createElement('div');
-                    loadingDiv.className = 'fixed bottom-4 right-4 bg-purple-600 text-white px-4 py-3 rounded-lg shadow-lg z-[60] animate-pulse';
-                    loadingDiv.id = 'devReanalyseLoading';
-                    loadingDiv.textContent = '⏳ Wird erneut analysiert...';
-                    document.body.appendChild(loadingDiv);
-                }
-
                 try {
                     await sb.functions.invoke('dev-ki-analyse', {
                         body: { submission_id: subId, mode: 'reanalyse' }
                     });
                 } catch(kiErr) {
                     console.warn('KI-Re-Analyse Fehler:', kiErr);
-                    // Fallback: Status manuell auf im_ideenboard setzen
                     await sb.from('dev_submissions').update({ status: 'im_ideenboard' }).eq('id', subId);
                 }
-
-                // Loading entfernen
-                var loadEl = document.getElementById('devReanalyseLoading');
-                if(loadEl) loadEl.remove();
 
                 // Detail neu laden
                 openDevDetail(subId);
                 renderDevPipeline();
             } catch(err) {
                 alert('Fehler: ' + (err.message||err));
-                var loadEl = document.getElementById('devReanalyseLoading');
-                if(loadEl) loadEl.remove();
             }
         }
 
