@@ -2845,6 +2845,7 @@
                         <span class="entw-hq-sep border-l border-gray-300 h-5 mx-1" style="display:none"></span>
                         <button onclick="showEntwicklungTab('steuerung')" class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="steuerung" style="display:none">🎯 Steuerung</button>
                         <button onclick="showEntwicklungTab('flags')" class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="flags" style="display:none">🚩 Feature Flags</button>
+                        <button onclick="showEntwicklungTab('nutzung')" class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="nutzung" style="display:none">📊 Nutzung</button>
                         <button onclick="showEntwicklungTab('system')" class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="system" style="display:none">⚙️ System</button>
                     </div>
 
@@ -3003,6 +3004,11 @@
                     <!-- ===== TAB: Feature Flags (HQ only) ===== -->
                     <div id="entwTabFlags" class="entw-tab-content" style="display:none;">
                         <div id="entwFlagsContent"></div>
+                    </div>
+
+                    <!-- ===== TAB: Nutzung (HQ only) ===== -->
+                    <div id="entwTabNutzung" class="entw-tab-content" style="display:none;">
+                        <div id="entwNutzungContent"></div>
                     </div>
 
                     <!-- ===== TAB: System (HQ only) ===== -->
@@ -14201,6 +14207,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 await renderEntwSteuerung();
             } else if(tab === 'flags') {
                 await renderEntwFlags();
+            } else if(tab === 'nutzung') {
+                await renderEntwNutzung();
             } else if(tab === 'system') {
                 await renderEntwSystem();
             }
@@ -14385,15 +14393,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         async function renderEntwSystem() {
             var c = document.getElementById('entwSystemContent');
             if(!c) return;
-            // System tab: Backups + Portal-Nutzung
-            var h = '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">';
-            // Backup section
-            h += '<div><h3 class="text-lg font-bold text-gray-800 mb-4">💾 Backups</h3><div id="entwBackupContent"><div class="text-center py-8 text-gray-400">Wird geladen...</div></div></div>';
-            // Portal Nutzung section
-            h += '<div><h3 class="text-lg font-bold text-gray-800 mb-4">📊 Portal-Nutzung</h3><div id="entwNutzungContent"><div class="text-center py-8 text-gray-400">Wird geladen...</div></div></div>';
-            h += '</div>';
+            var h = '<h3 class="text-lg font-bold text-gray-800 mb-4">💾 Backups</h3>';
+            h += '<div id="entwBackupContent"><div class="text-center py-8 text-gray-400 animate-pulse">Wird geladen...</div></div>';
             c.innerHTML = h;
-            // Load backup data
             try {
                 var days = 7;
                 var since = new Date(Date.now() - days*86400000).toISOString();
@@ -14403,24 +14405,190 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 if(!bc) return;
                 if(backups.length === 0) { bc.innerHTML = '<div class="text-center py-6 text-gray-400">Keine Backups in den letzten '+days+' Tagen</div>'; }
                 else {
-                    var bh = '<div class="space-y-2">';
+                    var bh = '<div class="grid grid-cols-1 md:grid-cols-2 gap-3">';
                     backups.forEach(function(b) {
                         var st = b.status === 'completed' ? '✅' : b.status === 'failed' ? '❌' : '⏳';
-                        bh += '<div class="vit-card p-3 flex items-center gap-3"><span>'+st+'</span><div class="flex-1 min-w-0">';
+                        bh += '<div class="vit-card p-3 flex items-center gap-3"><span class="text-xl">'+st+'</span><div class="flex-1 min-w-0">';
                         bh += '<p class="text-sm font-semibold text-gray-800">'+new Date(b.started_at).toLocaleString('de-DE')+'</p>';
                         bh += '<p class="text-xs text-gray-500">'+(b.backup_type||'auto')+' • '+(b.tables_count||'?')+' Tabellen • '+(b.total_rows||'?')+' Rows</p>';
                         bh += '</div></div>';
                     });
                     bh += '</div>';
-                    bh += '<button onclick="bkTriggerBackup()" class="mt-3 px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Backup jetzt starten</button>';
+                    bh += '<button onclick="bkTriggerBackup()" class="mt-4 px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Backup jetzt starten</button>';
                     bc.innerHTML = bh;
                 }
             } catch(err) { var bc2=document.getElementById('entwBackupContent'); if(bc2) bc2.innerHTML='<div class="text-red-400 text-sm">'+err.message+'</div>'; }
-            // Portal-Nutzung: reuse existing if available
-            var nc = document.getElementById('entwNutzungContent');
-            if(nc) {
-                if(typeof renderDevNutzung === 'function') { renderDevNutzung('entwNutzungContent'); }
-                else { nc.innerHTML = '<div class="text-center py-6 text-gray-400">Portal-Nutzungsanalyse kommt bald</div>'; }
+        }
+
+        async function renderEntwNutzung() {
+            var c = document.getElementById('entwNutzungContent');
+            if(!c) return;
+            c.innerHTML = '<div class="text-center py-8 text-gray-400 animate-pulse">Lade Portal-Nutzungsdaten...</div>';
+            try {
+                // Parallel load all relevant data
+                var [usersResp, loginsResp, bwaResp, tasksResp, msgsResp, subsResp] = await Promise.all([
+                    sb.from('users').select('id, name, rolle, standort_id, last_login, created_at, standorte(name)').order('last_login', {ascending:false,nullsFirst:false}),
+                    sb.from('audit_log').select('user_id, action, created_at').eq('action','login').gte('created_at', new Date(Date.now()-30*86400000).toISOString()).order('created_at',{ascending:false}).limit(500),
+                    sb.from('bwa_uploads').select('standort_id, created_at, monat, jahr').order('created_at',{ascending:false}).limit(100),
+                    sb.from('tasks').select('id, assignee_id, completed, created_at').gte('created_at', new Date(Date.now()-30*86400000).toISOString()),
+                    sb.from('nachrichten').select('id, autor_id, created_at').gte('created_at', new Date(Date.now()-30*86400000).toISOString()).limit(500),
+                    sb.from('dev_submissions').select('id, user_id, created_at, status')
+                ]);
+                var users = usersResp.data || [];
+                var logins = loginsResp.data || [];
+                var bwas = bwaResp.data || [];
+                var tasks = tasksResp.data || [];
+                var msgs = msgsResp.data || [];
+                var subs = subsResp.data || [];
+
+                // Compute stats
+                var totalUsers = users.length;
+                var activeUsers30d = new Set(logins.map(function(l){return l.user_id})).size;
+                var loginsToday = logins.filter(function(l){ return new Date(l.created_at).toDateString() === new Date().toDateString(); }).length;
+                var loginsWeek = logins.filter(function(l){ return Date.now() - new Date(l.created_at).getTime() < 7*86400000; }).length;
+                var tasksCreated = tasks.length;
+                var tasksCompleted = tasks.filter(function(t){return t.completed}).length;
+                var bwaCount = bwas.length;
+                var msgCount = msgs.length;
+                var feedbackCount = subs.length;
+
+                // Users by role
+                var roleCounts = {};
+                users.forEach(function(u) { roleCounts[u.rolle] = (roleCounts[u.rolle]||0) + 1; });
+
+                // Login heatmap (last 14 days)
+                var dayLabels = [];
+                var dayCounts = [];
+                for(var d=13; d>=0; d--) {
+                    var day = new Date(Date.now() - d*86400000);
+                    var ds = day.toDateString();
+                    dayLabels.push(day.toLocaleDateString('de-DE',{weekday:'short',day:'numeric'}));
+                    dayCounts.push(logins.filter(function(l){ return new Date(l.created_at).toDateString()===ds; }).length);
+                }
+                var maxLogins = Math.max.apply(null, dayCounts) || 1;
+
+                // Top active users (most logins in 30d)
+                var userLoginCount = {};
+                logins.forEach(function(l){ userLoginCount[l.user_id] = (userLoginCount[l.user_id]||0)+1; });
+                var topUsers = Object.keys(userLoginCount).map(function(uid){
+                    var u = users.find(function(x){return x.id===uid});
+                    return {name: u?u.name:'Unbekannt', standort: u&&u.standorte?u.standorte.name:'–', logins: userLoginCount[uid], rolle: u?u.rolle:'?'};
+                }).sort(function(a,b){return b.logins-a.logins}).slice(0,10);
+
+                // Never logged in
+                var neverLogged = users.filter(function(u){ return !u.last_login; });
+                // Inactive > 14 days
+                var inactive14d = users.filter(function(u){ return u.last_login && (Date.now() - new Date(u.last_login).getTime() > 14*86400000); });
+
+                var h = '';
+                // KPI Cards
+                h += '<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">';
+                h += '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-gray-800">'+totalUsers+'</p><p class="text-[10px] text-gray-500">User gesamt</p></div>';
+                h += '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-green-600">'+activeUsers30d+'</p><p class="text-[10px] text-gray-500">Aktiv (30 Tage)</p></div>';
+                h += '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-blue-600">'+loginsToday+'</p><p class="text-[10px] text-gray-500">Logins heute</p></div>';
+                h += '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-indigo-600">'+loginsWeek+'</p><p class="text-[10px] text-gray-500">Logins diese Woche</p></div>';
+                h += '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-yellow-600">'+tasksCreated+'</p><p class="text-[10px] text-gray-500">Aufgaben (30T)</p></div>';
+                h += '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-purple-600">'+msgCount+'</p><p class="text-[10px] text-gray-500">Nachrichten (30T)</p></div>';
+                h += '</div>';
+
+                // Login Heatmap
+                h += '<div class="vit-card p-4 mb-6"><h4 class="text-sm font-bold text-gray-700 mb-3">📈 Login-Verlauf (14 Tage)</h4>';
+                h += '<div class="flex items-end gap-1" style="height:120px">';
+                dayCounts.forEach(function(cnt, i) {
+                    var pct = Math.max(5, (cnt/maxLogins)*100);
+                    var color = cnt===0 ? 'bg-gray-200' : cnt<=2 ? 'bg-blue-200' : cnt<=5 ? 'bg-blue-400' : 'bg-blue-600';
+                    h += '<div class="flex-1 flex flex-col items-center justify-end h-full">';
+                    h += '<span class="text-[9px] text-gray-500 mb-1">'+cnt+'</span>';
+                    h += '<div class="w-full rounded-t '+color+'" style="height:'+pct+'%"></div>';
+                    h += '<span class="text-[8px] text-gray-400 mt-1 truncate w-full text-center">'+dayLabels[i]+'</span>';
+                    h += '</div>';
+                });
+                h += '</div></div>';
+
+                // Two columns: Top Users + Role Distribution
+                h += '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">';
+
+                // Top Active Users
+                h += '<div class="vit-card p-4"><h4 class="text-sm font-bold text-gray-700 mb-3">🏆 Aktivste User (30 Tage)</h4>';
+                h += '<div class="space-y-2">';
+                topUsers.forEach(function(u, i) {
+                    var barW = Math.max(10, (u.logins / (topUsers[0]?topUsers[0].logins:1)) * 100);
+                    h += '<div class="flex items-center gap-2">';
+                    h += '<span class="text-xs text-gray-400 w-4">'+(i+1)+'</span>';
+                    h += '<div class="flex-1 min-w-0"><div class="flex items-center justify-between mb-0.5"><span class="text-xs font-semibold text-gray-700 truncate">'+u.name+'</span><span class="text-[10px] text-gray-400">'+u.logins+'×</span></div>';
+                    h += '<div class="w-full bg-gray-100 rounded-full h-1.5"><div class="bg-vit-orange rounded-full h-1.5" style="width:'+barW+'%"></div></div>';
+                    h += '<span class="text-[9px] text-gray-400">'+u.standort+' • '+u.rolle+'</span>';
+                    h += '</div></div>';
+                });
+                if(topUsers.length === 0) h += '<p class="text-xs text-gray-400">Keine Login-Daten verfügbar</p>';
+                h += '</div></div>';
+
+                // Role Distribution
+                h += '<div class="vit-card p-4"><h4 class="text-sm font-bold text-gray-700 mb-3">👥 User nach Rolle</h4>';
+                var roleColors = {hq:'bg-red-500',inhaber:'bg-blue-500',geschaeftsleitung:'bg-indigo-500',verkauf:'bg-green-500',werkstatt:'bg-yellow-500',buchhaltung:'bg-purple-500',marketing:'bg-pink-500'};
+                var roleLabels = {hq:'HQ',inhaber:'Inhaber',geschaeftsleitung:'Geschäftsleitung',verkauf:'Verkauf',werkstatt:'Werkstatt',buchhaltung:'Buchhaltung',marketing:'Marketing'};
+                h += '<div class="space-y-3">';
+                Object.keys(roleCounts).sort(function(a,b){return roleCounts[b]-roleCounts[a]}).forEach(function(r) {
+                    var pct = Math.round((roleCounts[r]/totalUsers)*100);
+                    h += '<div><div class="flex justify-between text-xs mb-1"><span class="font-semibold text-gray-700">'+(roleLabels[r]||r)+'</span><span class="text-gray-500">'+roleCounts[r]+' ('+pct+'%)</span></div>';
+                    h += '<div class="w-full bg-gray-100 rounded-full h-2"><div class="'+(roleColors[r]||'bg-gray-500')+' rounded-full h-2" style="width:'+pct+'%"></div></div></div>';
+                });
+                h += '</div></div>';
+                h += '</div>';
+
+                // Activity Summary
+                h += '<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">';
+                // BWA Uploads
+                h += '<div class="vit-card p-4"><h4 class="text-sm font-bold text-gray-700 mb-3">📊 BWA-Uploads</h4>';
+                h += '<p class="text-3xl font-bold text-green-600 mb-1">'+bwaCount+'</p><p class="text-xs text-gray-500">in den letzten 30 Tagen</p>';
+                if(bwas.length > 0) {
+                    h += '<div class="mt-3 space-y-1">';
+                    bwas.slice(0,5).forEach(function(b) { h += '<p class="text-[10px] text-gray-400">'+new Date(b.created_at).toLocaleDateString('de-DE')+' – '+(b.monat||'?')+'/'+(b.jahr||'?')+'</p>'; });
+                    h += '</div>';
+                }
+                h += '</div>';
+
+                // Tasks
+                h += '<div class="vit-card p-4"><h4 class="text-sm font-bold text-gray-700 mb-3">✅ Aufgaben (30T)</h4>';
+                h += '<p class="text-3xl font-bold text-yellow-600 mb-1">'+tasksCreated+'</p>';
+                h += '<p class="text-xs text-gray-500">'+tasksCompleted+' abgeschlossen ('+(tasksCreated>0?Math.round(tasksCompleted/tasksCreated*100):0)+'%)</p>';
+                h += '</div>';
+
+                // Feedback
+                h += '<div class="vit-card p-4"><h4 class="text-sm font-bold text-gray-700 mb-3">💡 Entwicklungs-Feedback</h4>';
+                h += '<p class="text-3xl font-bold text-purple-600 mb-1">'+feedbackCount+'</p>';
+                var approved = subs.filter(function(s){return s.status==='freigegeben'||s.status==='ausgerollt'}).length;
+                h += '<p class="text-xs text-gray-500">'+approved+' freigegeben</p>';
+                h += '</div>';
+                h += '</div>';
+
+                // Inactive / Never logged in
+                if(neverLogged.length > 0 || inactive14d.length > 0) {
+                    h += '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">';
+                    if(neverLogged.length > 0) {
+                        h += '<div class="vit-card p-4 border-l-4 border-red-400"><h4 class="text-sm font-bold text-red-600 mb-2">⚠️ Nie eingeloggt ('+neverLogged.length+')</h4>';
+                        h += '<div class="space-y-1">';
+                        neverLogged.slice(0,10).forEach(function(u) { h += '<p class="text-xs text-gray-600">'+u.name+' <span class="text-gray-400">('+(u.rolle||'?')+')</span></p>'; });
+                        if(neverLogged.length>10) h += '<p class="text-xs text-gray-400">... und '+(neverLogged.length-10)+' weitere</p>';
+                        h += '</div></div>';
+                    }
+                    if(inactive14d.length > 0) {
+                        h += '<div class="vit-card p-4 border-l-4 border-yellow-400"><h4 class="text-sm font-bold text-yellow-700 mb-2">😴 Inaktiv >14 Tage ('+inactive14d.length+')</h4>';
+                        h += '<div class="space-y-1">';
+                        inactive14d.slice(0,10).forEach(function(u) {
+                            var days = Math.round((Date.now()-new Date(u.last_login).getTime())/86400000);
+                            h += '<p class="text-xs text-gray-600">'+u.name+' <span class="text-gray-400">('+days+' Tage, '+(u.rolle||'?')+')</span></p>';
+                        });
+                        if(inactive14d.length>10) h += '<p class="text-xs text-gray-400">... und '+(inactive14d.length-10)+' weitere</p>';
+                        h += '</div></div>';
+                    }
+                    h += '</div>';
+                }
+
+                c.innerHTML = h;
+            } catch(err) {
+                c.innerHTML = '<div class="text-center py-8"><p class="text-red-400 text-sm">Fehler beim Laden: '+err.message+'</p></div>';
+                console.error('renderEntwNutzung error:', err);
             }
         }
 
