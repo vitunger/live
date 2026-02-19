@@ -13522,7 +13522,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         function renderDevMeine() {
             var c = document.getElementById('ideenTabMeine');
             if(!c) return;
-            var mine = devSubmissions.filter(function(s){ return s.user_id === (sbUser && sbUser.id); });
+            var isHQ = (sbRollen||[]).indexOf('hq') !== -1;
+            var mine = isHQ ? devSubmissions : devSubmissions.filter(function(s){ return s.user_id === (sbUser && sbUser.id); });
             if(mine.length === 0) {
                 c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-3">💡</p><p>Du hast noch keine Ideen eingereicht.</p><p class="text-sm mt-1">Klick oben auf "Feedback geben" um loszulegen!</p></div>';
                 return;
@@ -13838,17 +13839,19 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var fl = document.getElementById('devFileList'); if(fl) fl.innerHTML = '';
                 toggleDevSubmitForm();
 
-                // Trigger KI-Analyse
-                try {
-                    if(btn) btn.textContent = '⏳ Wird analysiert...';
-                    var kiResp = await sb.functions.invoke('dev-ki-analyse', {
-                        body: { submission_id: resp.data.id }
-                    });
-                    if(kiResp.error) console.warn('KI-Analyse gestartet, aber Fehler:', kiResp.error);
-                } catch(kiErr) { console.warn('KI-Analyse Fehler (wird nachgeholt):', kiErr); }
-
-                // Reload
+                // Sofort anzeigen
                 renderDevPipeline();
+
+                // Trigger KI-Analyse (fire-and-forget, im Hintergrund)
+                var submissionId = resp.data.id;
+                sb.functions.invoke('dev-ki-analyse', {
+                    body: { submission_id: submissionId }
+                }).then(function(kiResp) {
+                    if(kiResp.error) console.warn('KI-Analyse Fehler:', kiResp.error);
+                    else console.log('KI-Analyse fertig für:', submissionId);
+                    // Nach Analyse nochmal neu laden um Ergebnis zu zeigen
+                    renderDevPipeline();
+                }).catch(function(kiErr) { console.warn('KI-Analyse Fehler (wird nachgeholt):', kiErr); });
             } catch(err) {
                 alert('Fehler beim Einreichen: ' + (err.message||err));
             } finally {
