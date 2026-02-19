@@ -964,6 +964,14 @@
 
                             <hr class="border-gray-600 my-3">
 
+                            <button onclick="showView('hqOffice')" data-tooltip="Office" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                </svg>
+                                <span class="sidebar-label">Office</span>
+                                <span class="sidebar-badge ml-auto text-[9px] rounded-full px-1.5 py-0.5 font-bold" id="officeOnlineBadge" style="background:#22c55e;color:white;display:none">0</span>
+                            </button>
+
                             <button onclick="showView('kalender')" data-module="kalender" data-tooltip="Kalender" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                 <span class="sidebar-label" data-i18n="nav_calendar">Kalender</span>
@@ -4877,6 +4885,39 @@
                 <!-- ================================================================= -->
 
                 <!-- ===== HQ NETZWERK-COCKPIT ===== -->
+                <!-- ═══ OFFICE VIEW (HQ only) ═══ -->
+                <div id="hqOfficeView" class="view" style="display: none;">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h1 class="text-2xl font-bold" style="color:var(--c-text)">🏢 Office</h1>
+                            <p class="text-sm" style="color:var(--c-sub)">Büro Unterföhring · Jahnstr. 2 · 1. OG</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span id="officeStatsPills"></span>
+                            <button id="officeMainBtn" onclick="officeToggleCheckin()" class="px-4 py-2 rounded-lg font-bold text-sm"></button>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabs -->
+                    <div class="flex gap-2 mb-4">
+                        <button onclick="showOfficeTab('team')" id="officeTabTeam" class="px-4 py-2 rounded-lg text-sm font-semibold bg-vit-orange text-white">👥 Team</button>
+                        <button onclick="showOfficeTab('plan')" id="officeTabPlan" class="px-4 py-2 rounded-lg text-sm font-semibold" style="background:var(--c-bg3);color:var(--c-sub)">🗺️ Grundriss</button>
+                    </div>
+                    
+                    <!-- My Status Bar -->
+                    <div id="officeMyStatus" class="mb-4 p-3 rounded-lg text-sm font-semibold" style="display:none"></div>
+                    
+                    <!-- Tab Content -->
+                    <div id="officeTeamContent"></div>
+                    <div id="officePlanContent" style="display:none"></div>
+                    
+                    <!-- Check-in Dropdown -->
+                    <div id="officeCheckinDropdown" class="fixed z-50" style="display:none"></div>
+                    
+                    <!-- QR Modal -->
+                    <div id="officeQrModal" class="fixed inset-0 z-50" style="display:none"></div>
+                </div>
+
                 <div id="hqCockpitView" class="view" style="display: none;">
                     <!-- Header -->
                     <div class="flex items-center justify-between mb-6">
@@ -33057,6 +33098,459 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
         }
     }, 500);
 
+})();
+</script>
+
+<!-- ==================== OFFICE MODUL ==================== -->
+<script>
+(function() {
+    'use strict';
+    
+    var officeDesks = [];
+    var officeCheckins = [];
+    var officeCharging = [];
+    var officeCurrentTab = 'team';
+    var officeInitDone = false;
+    
+    // ===== INIT =====
+    async function officeInit() {
+        if (!window.sb || !window.sbUser) return;
+        if (officeInitDone) return;
+        officeInitDone = true;
+        await officeLoadData();
+        officeRender();
+        officeSetupRealtime();
+        officeUpdateBadge();
+    }
+    
+    // ===== LOAD DATA =====
+    async function officeLoadData() {
+        try {
+            var results = await Promise.all([
+                sb.from('office_desks').select('*').eq('active', true).order('nr'),
+                sb.from('v_office_status').select('*'),
+                sb.from('office_charging').select('*')
+            ]);
+            officeDesks = results[0].data || [];
+            officeCheckins = results[1].data || [];
+            officeCharging = results[2].data || [];
+        } catch(err) {
+            console.error('[Office] Load error:', err);
+        }
+    }
+    
+    // ===== HELPERS =====
+    function officeMyCheckin() {
+        if (!window.sbUser) return null;
+        var uid = window.sbUser.id;
+        for (var i = 0; i < officeCheckins.length; i++) {
+            if (officeCheckins[i].user_id === uid) return officeCheckins[i];
+        }
+        return null;
+    }
+    
+    function officeDeskCheckin(nr) {
+        for (var i = 0; i < officeCheckins.length; i++) {
+            if (officeCheckins[i].desk_nr === nr) return officeCheckins[i];
+        }
+        return null;
+    }
+    
+    // ===== RENDER =====
+    function officeRender() {
+        var officeUsers = officeCheckins.filter(function(c) { return c.status === 'office'; });
+        var remoteUsers = officeCheckins.filter(function(c) { return c.status === 'remote'; });
+        var freeCount = officeDesks.length - officeUsers.length;
+        var my = officeMyCheckin();
+        
+        // Stats pills
+        var pills = document.getElementById('officeStatsPills');
+        if (pills) {
+            pills.innerHTML = '<span class="px-2 py-1 rounded-full text-xs font-bold" style="background:#f0fdf4;color:#22c55e">' + officeUsers.length + ' Büro</span> ' +
+                '<span class="px-2 py-1 rounded-full text-xs font-bold" style="background:#eff6ff;color:#3b82f6">' + remoteUsers.length + ' Remote</span> ' +
+                '<span class="px-2 py-1 rounded-full text-xs font-bold" style="background:#fafafa;color:#999">' + freeCount + ' Frei</span>';
+        }
+        
+        // Main button
+        var btn = document.getElementById('officeMainBtn');
+        if (btn) {
+            if (my) {
+                btn.textContent = '🚪 Auschecken';
+                btn.className = 'px-4 py-2 rounded-lg font-bold text-sm text-white';
+                btn.style.background = '#ef4444';
+            } else {
+                btn.textContent = '📍 Einchecken';
+                btn.className = 'px-4 py-2 rounded-lg font-bold text-sm text-white bg-vit-orange';
+                btn.style.background = '';
+            }
+        }
+        
+        // My status bar
+        var statusBar = document.getElementById('officeMyStatus');
+        if (statusBar) {
+            if (my) {
+                var loc = my.status === 'office' ? '🏢 Platz #' + my.desk_nr + ' (' + (my.room || '') + ')' : '🏠 Remote';
+                statusBar.innerHTML = '<div class="flex items-center justify-between"><span>' + loc + ' · seit ' + my.since + '</span><span class="text-xs" style="color:var(--c-muted)">Dein aktueller Status</span></div>';
+                statusBar.style.display = '';
+                statusBar.style.background = my.status === 'office' ? '#FFF4E6' : '#eff6ff';
+                statusBar.style.color = my.status === 'office' ? '#EF7D00' : '#3b82f6';
+            } else {
+                statusBar.style.display = 'none';
+            }
+        }
+        
+        // Render active tab
+        if (officeCurrentTab === 'team') officeRenderTeam(officeUsers, remoteUsers, freeCount);
+        if (officeCurrentTab === 'plan') officeRenderPlan(officeUsers, remoteUsers);
+        
+        officeUpdateBadge();
+    }
+    
+    function officeRenderTeam(officeUsers, remoteUsers, freeCount) {
+        var my = officeMyCheckin();
+        
+        var html = '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">';
+        
+        // Left: People lists
+        html += '<div>';
+        
+        // Office users
+        html += '<h3 class="text-xs font-bold uppercase tracking-wider mb-3" style="color:var(--c-muted)">🏢 Im Büro (' + officeUsers.length + ')</h3>';
+        if (officeUsers.length === 0) {
+            html += '<p class="text-sm mb-4" style="color:var(--c-muted)">Noch niemand im Büro</p>';
+        }
+        officeUsers.forEach(function(c) {
+            var isMe = window.sbUser && c.user_id === window.sbUser.id;
+            html += '<div class="flex items-center space-x-3 p-2.5 rounded-lg mb-1.5" style="background:' + (isMe ? '#FFF4E6' : 'var(--c-bg3)') + '">';
+            html += '<div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-extrabold text-white" style="background:#EF7D00">' + (c.initials || '?') + '</div>';
+            html += '<div class="flex-1 min-w-0"><div class="font-semibold text-sm truncate" style="color:var(--c-text)">' + c.name + (isMe ? ' <span class="text-vit-orange text-xs">(Du)</span>' : '') + '</div>';
+            html += '<div class="text-[11px]" style="color:var(--c-muted)">' + (c.role || '') + '</div></div>';
+            html += '<div class="text-right"><div class="text-xs font-bold text-vit-orange">#' + c.desk_nr + '</div>';
+            html += '<div class="text-[10px]" style="color:var(--c-muted)">seit ' + c.since + '</div></div>';
+            html += '</div>';
+        });
+        
+        // Remote users
+        html += '<h3 class="text-xs font-bold uppercase tracking-wider mb-3 mt-4" style="color:var(--c-muted)">🏠 Remote (' + remoteUsers.length + ')</h3>';
+        if (remoteUsers.length === 0) {
+            html += '<p class="text-sm mb-4" style="color:var(--c-muted)">Niemand remote</p>';
+        }
+        remoteUsers.forEach(function(c) {
+            var isMe = window.sbUser && c.user_id === window.sbUser.id;
+            html += '<div class="flex items-center space-x-3 p-2.5 rounded-lg mb-1.5" style="background:' + (isMe ? '#eff6ff' : 'var(--c-bg3)') + '">';
+            html += '<div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-extrabold text-white" style="background:#3b82f6">' + (c.initials || '?') + '</div>';
+            html += '<div class="flex-1 min-w-0"><div class="font-semibold text-sm truncate" style="color:var(--c-text)">' + c.name + (isMe ? ' <span class="text-blue-500 text-xs">(Du)</span>' : '') + '</div>';
+            html += '<div class="text-[11px]" style="color:var(--c-muted)">' + (c.role || '') + '</div></div>';
+            html += '<div class="text-[10px]" style="color:var(--c-muted)">seit ' + c.since + '</div>';
+            html += '</div>';
+        });
+        
+        html += '</div>';
+        
+        // Right: Stats + QR
+        html += '<div>';
+        html += '<div class="vit-card p-4 mb-3" style="background:#FFF4E6;border:1px solid rgba(239,125,0,0.12)">';
+        html += '<div class="text-xs font-bold text-vit-orange mb-2">📊 ' + new Date().toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long'}) + '</div>';
+        html += '<div class="grid grid-cols-3 gap-2 text-center">';
+        html += '<div><div class="text-xl font-extrabold" style="color:var(--c-text)">' + officeUsers.length + '</div><div class="text-[10px]" style="color:var(--c-muted)">Büro</div></div>';
+        html += '<div><div class="text-xl font-extrabold" style="color:#3b82f6">' + remoteUsers.length + '</div><div class="text-[10px]" style="color:var(--c-muted)">Remote</div></div>';
+        html += '<div><div class="text-xl font-extrabold" style="color:#22c55e">' + freeCount + '</div><div class="text-[10px]" style="color:var(--c-muted)">Frei</div></div>';
+        html += '</div></div>';
+        
+        // Ladesäulen
+        html += '<div class="vit-card p-4 mb-3">';
+        html += '<div class="text-xs font-bold mb-2" style="color:var(--c-muted)">⚡ E-Ladesäulen</div>';
+        officeCharging.forEach(function(ch) {
+            var free = !ch.user_id;
+            html += '<div class="flex items-center justify-between py-1.5">';
+            html += '<span class="text-sm">' + ch.label + '</span>';
+            html += '<span class="text-xs font-bold px-2 py-0.5 rounded-full" style="background:' + (free ? '#f0fdf4' : '#fef2f2') + ';color:' + (free ? '#22c55e' : '#ef4444') + '">' + (free ? '✓ Frei' : '⚡ Belegt') + '</span>';
+            html += '</div>';
+        });
+        html += '</div>';
+        
+        // QR Button
+        html += '<button onclick="officeShowQr()" class="vit-card p-3 w-full text-center text-sm font-bold text-vit-orange hover:shadow-md transition">📱 QR-Codes für Plätze</button>';
+        html += '</div></div>';
+        
+        document.getElementById('officeTeamContent').innerHTML = html;
+    }
+    
+    function officeRenderPlan(officeUsers, remoteUsers) {
+        var my = officeMyCheckin();
+        var html = '<div class="vit-card p-4">';
+        html += '<div class="flex justify-between items-center mb-2"><span class="text-xs" style="color:var(--c-muted)">1. OG · Büro Unterföhring</span><span class="text-[11px]" style="color:var(--c-dim)">Klick auf freien Platz = Check-in</span></div>';
+        html += '<svg viewBox="0 0 960 420" style="width:100%;height:auto">';
+        
+        // Building outline
+        html += '<rect x="15" y="15" width="930" height="390" rx="3" fill="#fafafa" stroke="#ddd" stroke-width="1.5"/>';
+        
+        // Top rooms
+        var topRooms = [
+            {x:15, w:130, label:'GF'}, {x:145, w:180, label:'Sales'}, {x:325, w:180, label:'Marketing'},
+            {x:505, w:80, label:'Server', fill:'#f5f5f5'}, {x:585, w:170, label:'Akademie'}, {x:755, w:190, label:'Admin'}
+        ];
+        topRooms.forEach(function(r) {
+            html += '<rect x="' + r.x + '" y="15" width="' + r.w + '" height="180" fill="' + (r.fill||'#fcfcfc') + '" stroke="#e0e0e0" stroke-width="1"/>';
+            html += '<text x="' + (r.x + r.w/2) + '" y="50" text-anchor="middle" font-size="10" fill="#bbb" font-weight="600">' + r.label + '</text>';
+        });
+        
+        // Corridor
+        html += '<rect x="15" y="195" width="930" height="30" fill="#f0f0f0" stroke="#e0e0e0" stroke-width="1"/>';
+        html += '<text x="480" y="214" text-anchor="middle" font-size="9" fill="#ccc">Flur</text>';
+        
+        // Bottom rooms
+        var botRooms = [
+            {x:15, w:200, label:'Tech'}, {x:215, w:200, label:'Flex'}, {x:415, w:150, label:'Küche', fill:'#f8f8f8'},
+            {x:565, w:190, label:'Meeting 1', fill:'#f8f8f8'}, {x:755, w:190, label:'Meeting 2', fill:'#f8f8f8'}
+        ];
+        botRooms.forEach(function(r) {
+            html += '<rect x="' + r.x + '" y="225" width="' + r.w + '" height="180" fill="' + (r.fill||'#fcfcfc') + '" stroke="#e0e0e0" stroke-width="1"/>';
+            html += '<text x="' + (r.x + r.w/2) + '" y="260" text-anchor="middle" font-size="10" fill="#bbb" font-weight="600">' + r.label + '</text>';
+        });
+        
+        // Desk dots
+        officeDesks.forEach(function(d) {
+            var ci = officeDeskCheckin(d.nr);
+            var free = !ci;
+            var isMe = ci && window.sbUser && ci.user_id === window.sbUser.id;
+            
+            if (free && !my) {
+                html += '<g style="cursor:pointer" onclick="officeCheckinDesk(' + d.nr + ')">';
+            } else {
+                html += '<g>';
+            }
+            
+            if (isMe) html += '<circle cx="' + d.x + '" cy="' + d.y + '" r="20" fill="none" stroke="#EF7D00" stroke-width="2" opacity="0.4"/>';
+            html += '<circle cx="' + d.x + '" cy="' + d.y + '" r="' + (free ? 13 : 15) + '" fill="' + (free ? '#22c55e20' : (isMe ? '#EF7D00' : '#EF7D00CC')) + '" stroke="' + (free ? '#22c55e' : 'none') + '" stroke-width="' + (free ? 1.5 : 0) + '"/>';
+            html += '<text x="' + d.x + '" y="' + (d.y + (free ? 4 : 1)) + '" text-anchor="middle" font-size="' + (free ? 8 : 7) + '" font-weight="800" fill="' + (free ? '#22c55e' : '#fff') + '">' + (free ? d.nr : (ci.initials || '?')) + '</text>';
+            if (!free) html += '<text x="' + d.x + '" y="' + (d.y + 9) + '" text-anchor="middle" font-size="5" fill="#fff" opacity="0.6">' + d.nr + '</text>';
+            html += '</g>';
+        });
+        
+        html += '</svg></div>';
+        
+        // Remote bar
+        if (remoteUsers.length > 0) {
+            html += '<div class="flex flex-wrap gap-2 mt-3 items-center">';
+            html += '<span class="text-xs font-bold" style="color:var(--c-muted)">🏠 Remote:</span>';
+            remoteUsers.forEach(function(c) {
+                html += '<span class="px-2 py-1 rounded-md text-xs font-semibold" style="background:#eff6ff;color:#3b82f6">' + (c.initials||'?') + ' · ' + c.since + '</span>';
+            });
+            html += '</div>';
+        }
+        
+        document.getElementById('officePlanContent').innerHTML = html;
+    }
+    
+    // ===== ACTIONS =====
+    window.officeToggleCheckin = function() {
+        var my = officeMyCheckin();
+        if (my) {
+            officeDoCheckout();
+        } else {
+            officeShowCheckinDropdown();
+        }
+    };
+    
+    function officeShowCheckinDropdown() {
+        var btn = document.getElementById('officeMainBtn');
+        var rect = btn.getBoundingClientRect();
+        var dd = document.getElementById('officeCheckinDropdown');
+        
+        var freeDesks = officeDesks.filter(function(d) { return !officeDeskCheckin(d.nr); });
+        var html = '<div class="vit-card p-3 shadow-xl" style="width:280px">';
+        html += '<div class="text-xs font-bold mb-2" style="color:var(--c-muted)">Wo arbeitest du heute?</div>';
+        html += '<button onclick="officeCheckinRemote()" class="w-full p-2.5 rounded-lg text-left text-sm font-semibold mb-2 hover:shadow transition" style="background:#eff6ff;color:#3b82f6">🏠 Remote</button>';
+        html += '<div class="text-[10px] font-bold mb-1" style="color:var(--c-muted)">🏢 Platz wählen:</div>';
+        html += '<div class="grid grid-cols-5 gap-1 max-h-40 overflow-auto">';
+        freeDesks.forEach(function(d) {
+            html += '<button onclick="officeCheckinDesk(' + d.nr + ')" class="p-1.5 rounded text-xs font-bold text-center hover:shadow transition" style="background:#f0fdf4;color:#22c55e;border:1px solid #22c55e30">' + d.nr + '</button>';
+        });
+        html += '</div>';
+        html += '<button onclick="officeCloseDropdown()" class="w-full mt-2 p-1.5 rounded text-xs text-center" style="color:var(--c-muted)">Abbrechen</button>';
+        html += '</div>';
+        
+        dd.innerHTML = html;
+        dd.style.display = 'block';
+        dd.style.top = (rect.bottom + 4) + 'px';
+        dd.style.right = (window.innerWidth - rect.right) + 'px';
+        
+        setTimeout(function() {
+            document.addEventListener('click', officeCloseDropdownHandler);
+        }, 100);
+    }
+    
+    function officeCloseDropdownHandler(e) {
+        var dd = document.getElementById('officeCheckinDropdown');
+        if (dd && !dd.contains(e.target)) {
+            officeCloseDropdown();
+        }
+    }
+    
+    window.officeCloseDropdown = function() {
+        var dd = document.getElementById('officeCheckinDropdown');
+        if (dd) dd.style.display = 'none';
+        document.removeEventListener('click', officeCloseDropdownHandler);
+    };
+    
+    window.officeCheckinDesk = async function(nr) {
+        officeCloseDropdown();
+        try {
+            var res = await sb.rpc('office_checkin', { p_status: 'office', p_desk_nr: nr });
+            if (res.error) throw res.error;
+            var data = res.data;
+            if (data && data.error) { showToast(data.error, 'error'); return; }
+            showToast('Eingecheckt an Platz #' + nr, 'success');
+            await officeLoadData();
+            officeRender();
+        } catch(err) { showToast('Fehler: ' + err.message, 'error'); }
+    };
+    
+    window.officeCheckinRemote = async function() {
+        officeCloseDropdown();
+        try {
+            var res = await sb.rpc('office_checkin', { p_status: 'remote' });
+            if (res.error) throw res.error;
+            var data = res.data;
+            if (data && data.error) { showToast(data.error, 'error'); return; }
+            showToast('Remote eingecheckt', 'success');
+            await officeLoadData();
+            officeRender();
+        } catch(err) { showToast('Fehler: ' + err.message, 'error'); }
+    };
+    
+    async function officeDoCheckout() {
+        try {
+            var res = await sb.rpc('office_checkout');
+            if (res.error) throw res.error;
+            showToast('Ausgecheckt', 'success');
+            await officeLoadData();
+            officeRender();
+        } catch(err) { showToast('Fehler: ' + err.message, 'error'); }
+    }
+    
+    // ===== TABS =====
+    window.showOfficeTab = function(tab) {
+        officeCurrentTab = tab;
+        var teamBtn = document.getElementById('officeTabTeam');
+        var planBtn = document.getElementById('officeTabPlan');
+        var teamC = document.getElementById('officeTeamContent');
+        var planC = document.getElementById('officePlanContent');
+        if (tab === 'team') {
+            teamBtn.className = 'px-4 py-2 rounded-lg text-sm font-semibold bg-vit-orange text-white';
+            teamBtn.style.background = '';
+            planBtn.className = 'px-4 py-2 rounded-lg text-sm font-semibold';
+            planBtn.style.background = 'var(--c-bg3)';
+            planBtn.style.color = 'var(--c-sub)';
+            teamC.style.display = '';
+            planC.style.display = 'none';
+        } else {
+            planBtn.className = 'px-4 py-2 rounded-lg text-sm font-semibold bg-vit-orange text-white';
+            planBtn.style.background = '';
+            teamBtn.className = 'px-4 py-2 rounded-lg text-sm font-semibold';
+            teamBtn.style.background = 'var(--c-bg3)';
+            teamBtn.style.color = 'var(--c-sub)';
+            teamC.style.display = 'none';
+            planC.style.display = '';
+        }
+        officeRender();
+    };
+    
+    // ===== QR MODAL =====
+    window.officeShowQr = function() {
+        var html = '<div style="background:rgba(0,0,0,0.5);position:fixed;inset:0;display:flex;align-items:center;justify-content:center" onclick="officeCloseQr()">';
+        html += '<div class="vit-card p-6" style="width:500px;max-height:85vh;overflow:auto" onclick="event.stopPropagation()">';
+        html += '<div class="flex justify-between items-center mb-3"><h2 class="text-lg font-bold" style="color:var(--c-text)">📱 QR-Codes drucken</h2><button onclick="officeCloseQr()" class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:var(--c-bg3);color:var(--c-muted)">✕</button></div>';
+        html += '<p class="text-xs mb-4" style="color:var(--c-muted)">Ausdrucken und an den Platz kleben. Scannen → sofort eingecheckt.</p>';
+        html += '<div class="grid grid-cols-4 gap-2">';
+        officeDesks.forEach(function(d) {
+            var url = window.location.origin + '/?office_desk_token=' + d.qr_token;
+            html += '<div class="border rounded-lg p-3 text-center" style="border-color:var(--c-border)">';
+            html += '<div class="w-14 h-14 mx-auto mb-2 rounded-md flex items-center justify-center" style="background:var(--c-orange-tint,#FFF4E6);border:1px solid rgba(239,125,0,0.12)"><img src="https://api.qrserver.com/v1/create-qr-code/?data=' + encodeURIComponent(url) + '&size=56x56&format=svg" alt="QR" width="48" height="48"></div>';
+            html += '<div class="text-base font-extrabold text-vit-orange">#' + d.nr + '</div>';
+            html += '<div class="text-[9px]" style="color:var(--c-muted)">' + d.room + '</div>';
+            html += '</div>';
+        });
+        html += '</div>';
+        html += '</div></div>';
+        
+        document.getElementById('officeQrModal').innerHTML = html;
+        document.getElementById('officeQrModal').style.display = 'block';
+    };
+    
+    window.officeCloseQr = function() {
+        document.getElementById('officeQrModal').style.display = 'none';
+    };
+    
+    // ===== BADGE =====
+    function officeUpdateBadge() {
+        var b = document.getElementById('officeOnlineBadge');
+        if (b) {
+            var count = officeCheckins.length;
+            b.textContent = count;
+            b.style.display = count > 0 ? 'inline' : 'none';
+        }
+    }
+    
+    // ===== REALTIME =====
+    function officeSetupRealtime() {
+        sb.channel('office-live')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'office_checkins' }, async function() {
+                await officeLoadData();
+                officeRender();
+            })
+            .subscribe();
+    }
+    
+    // ===== QR URL PARAM =====
+    function officeCheckUrlParams() {
+        var params = new URLSearchParams(window.location.search);
+        var token = params.get('office_desk_token');
+        if (token) {
+            window.history.replaceState({}, '', window.location.pathname);
+            var waitForAuth = setInterval(function() {
+                if (window.sb && window.sbUser) {
+                    clearInterval(waitForAuth);
+                    officeHandleQr(token);
+                }
+            }, 500);
+        }
+    }
+    
+    async function officeHandleQr(token) {
+        try {
+            var res = await sb.rpc('office_checkin', { p_status: 'office', p_qr_token: token });
+            if (res.error) throw res.error;
+            var data = res.data;
+            if (data && data.error) { showToast(data.error, 'error'); return; }
+            showToast('QR Check-in erfolgreich: Platz #' + (data.desk_nr || '?'), 'success');
+            if (typeof showView === 'function') showView('hqOffice');
+            await officeLoadData();
+            officeRender();
+        } catch(err) { showToast('QR Check-in Fehler: ' + err.message, 'error'); }
+    }
+    
+    // ===== STARTUP =====
+    var _origShowView = window.showView;
+    if (typeof _origShowView === 'function') {
+        window.showView = function(viewName) {
+            _origShowView(viewName);
+            if (viewName === 'hqOffice') {
+                officeInit().then(function() { officeRender(); });
+            }
+        };
+    }
+    
+    // Badge: init data early for sidebar badge count
+    var officeWait = setInterval(function() {
+        if (window.sb && window.sbUser) {
+            clearInterval(officeWait);
+            officeLoadData().then(function() { officeUpdateBadge(); });
+        }
+    }, 1000);
+    
+    officeCheckUrlParams();
 })();
 </script>
 
