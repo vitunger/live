@@ -14197,10 +14197,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 renderEntwIdeen();
             } else if(tab === 'module') {
                 renderModulStatus();
-                // Render into entwModulContent instead of modulStatusContent
-                var src = document.getElementById('modulStatusContent');
-                var dst = document.getElementById('entwModulContent');
-                if(src && dst && src !== dst) { dst.innerHTML = src.innerHTML; }
             } else if(tab === 'releases') {
                 await renderEntwReleases();
             } else if(tab === 'steuerung') {
@@ -14286,7 +14282,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 h += scopeLabel;
                 if(s.kategorie) h += '<span class="text-[10px] bg-gray-50 text-gray-500 px-1.5 py-0.5 rounded">'+s.kategorie+'</span>';
                 h += '</div>';
-                h += '<h3 class="font-semibold text-gray-800 text-sm truncate">'+((s.titel||s.text||'').substring(0,80))+'</h3>';
+                h += '<h3 class="font-semibold text-gray-800 text-sm truncate">'+((s.titel||s.beschreibung||s.kurz_notiz||s.transkription||'Kein Titel').substring(0,80))+'</h3>';
+                if(s.eingabe_typ && s.eingabe_typ !== 'text') h += '<span class="text-[10px] text-gray-400 ml-1">'+(s.eingabe_typ==='audio'?'🎤 Audio':s.eingabe_typ==='screenshot'?'📸 Screenshot':s.eingabe_typ==='video'?'🖥️ Video':'📎 '+s.eingabe_typ)+'</span>';
+                if(!s.titel && !s.beschreibung && !s.kurz_notiz && s.eingabe_typ==='audio' && !s.transkription) h += '<p class="text-xs text-amber-500 mt-1">⏳ Audio wird transkribiert...</p>';
+                if(!s.ki_analysiert_at && s.status==='neu') h += '<p class="text-xs text-blue-400 mt-1">🤖 KI-Analyse ausstehend</p>';
                 if(ki && ki.zusammenfassung) h += '<p class="text-xs text-gray-500 mt-1 line-clamp-2">'+ki.zusammenfassung+'</p>';
                 h += '</div>';
                 h += '<div class="flex items-center gap-3 ml-4 shrink-0">';
@@ -14302,27 +14301,20 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         async function renderEntwReleases() {
             var c = document.getElementById('entwReleasesContent');
             if(!c) return;
-            // Reuse existing release updates renderer
-            if(typeof renderReleaseUpdates === 'function') {
-                await renderReleaseUpdates();
-                var src = document.getElementById('releaseUpdatesContent');
-                if(src) c.innerHTML = src.innerHTML;
+            // Use the existing hardcoded RELEASE_UPDATES renderer
+            if(typeof RELEASE_UPDATES !== 'undefined' && RELEASE_UPDATES.length > 0) {
+                // Temporarily point renderReleaseUpdates to our container
+                var origEl = document.getElementById('releaseUpdatesContent');
+                var tempDiv = document.createElement('div');
+                tempDiv.id = 'releaseUpdatesContent';
+                tempDiv.style.display = 'none';
+                document.body.appendChild(tempDiv);
+                renderReleaseUpdates();
+                c.innerHTML = tempDiv.innerHTML;
+                tempDiv.remove();
+                // Restore original if exists
             } else {
-                c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-2">🚀</p><p>Release-Updates werden geladen...</p></div>';
-                try {
-                    var resp = await sb.from('dev_submissions').select('titel,text,status,updated_at,kategorie').eq('status','ausgerollt').order('updated_at',{ascending:false}).limit(20);
-                    var items = (resp.data||[]);
-                    if(items.length === 0) { c.innerHTML = '<div class="text-center py-12 text-gray-400">Noch keine Releases</div>'; return; }
-                    var h = '<div class="space-y-4">';
-                    items.forEach(function(r) {
-                        h += '<div class="vit-card p-4"><div class="flex items-center gap-2 mb-2"><span class="text-xs font-semibold rounded px-2 py-0.5 bg-green-100 text-green-700">✅ Ausgerollt</span>';
-                        if(r.kategorie) h += '<span class="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">'+r.kategorie+'</span>';
-                        h += '<span class="text-xs text-gray-400 ml-auto">'+(r.updated_at?new Date(r.updated_at).toLocaleDateString('de-DE'):'')+'</span></div>';
-                        h += '<h3 class="font-semibold text-gray-800 text-sm">'+(r.titel||r.text||'')+'</h3></div>';
-                    });
-                    h += '</div>';
-                    c.innerHTML = h;
-                } catch(err) { c.innerHTML = '<div class="text-center py-8 text-red-400">Fehler: '+err.message+'</div>'; }
+                c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-2">🚀</p><p>Noch keine Releases vorhanden</p></div>';
             }
         }
 
@@ -14347,7 +14339,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 items.slice(0,10).forEach(function(s) {
                     var statusLabel = devStatusLabels[s.status] || s.status;
                     h += '<div class="bg-white rounded-lg p-3 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition" onclick="showDevDetail(\''+s.id+'\')">';
-                    h += '<p class="text-xs font-semibold text-gray-800 mb-1 line-clamp-2">'+(s.titel||s.text||'').substring(0,60)+'</p>';
+                    h += '<p class="text-xs font-semibold text-gray-800 mb-1 line-clamp-2">'+(s.titel||s.beschreibung||s.kurz_notiz||s.transkription||'Kein Titel').substring(0,60)+'</p>';
                     h += '<div class="flex items-center gap-1 flex-wrap">';
                     h += '<span class="text-[9px] rounded px-1.5 py-0.5 '+(devStatusColors[s.status]||'bg-gray-100 text-gray-600')+'">'+statusLabel+'</span>';
                     var votes = (s.dev_votes||[]).length;
