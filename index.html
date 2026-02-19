@@ -5963,13 +5963,23 @@
 
                     <!-- Tab-Navigation -->
                     <div class="flex space-x-1 mb-6 border-b border-gray-200">
-                        <button onclick="showSettingsTab('modulstatus')" class="settings-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-vit-orange text-vit-orange" data-tab="modulstatus">🔧 Modul-Status</button>
+                        <button onclick="showSettingsTab('modulstatus')" class="settings-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-vit-orange text-vit-orange" data-tab="modulstatus">🏪 Partner-Module</button>
+                        <button onclick="showSettingsTab('hqmodule')" class="settings-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="hqmodule">🏢 HQ-Module</button>
                         <button onclick="showSettingsTab('demo')" class="settings-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="demo">🎭 Demo-Modus</button>
                         <button onclick="showSettingsTab('rechte')" class="settings-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="rechte">🔐 Rollen & Rechte</button>
                     </div>
 
                     <!-- TAB 1: Modul-Status -->
                     <div id="settingsTabModulstatus" class="settings-tab-content">
+                        <div class="vit-card p-4 mb-6 border-l-4 border-orange-500">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🏪</span>
+                                <div>
+                                    <h3 class="font-bold text-gray-800">Partner-Module (Standort-Ebene)</h3>
+                                    <p class="text-xs text-gray-500 mt-0.5">Diese Module sind für Franchise-Partner sichtbar. Status-Änderungen wirken sich auf alle Standorte aus.</p>
+                                </div>
+                            </div>
+                        </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
                             <div class="vit-card p-4 text-center border-l-4 border-green-500"><div class="text-2xl font-bold text-green-600" id="countAktiv">0</div><div class="text-xs text-gray-500">Aktiv</div></div>
                             <div class="vit-card p-4 text-center border-l-4 border-orange-400"><div class="text-2xl font-bold text-orange-500" id="countDemo">0</div><div class="text-xs text-gray-500">Demo</div></div>
@@ -5978,7 +5988,7 @@
                         </div>
                         <div class="vit-card overflow-hidden mb-6">
                             <div class="p-4 border-b bg-gray-50 flex items-center justify-between">
-                                <h2 class="font-bold text-gray-800">Modul-Verwaltung</h2>
+                                <h2 class="font-bold text-gray-800">🏪 Partner-Module</h2>
                                 <div class="flex items-center space-x-4 text-xs text-gray-500">
                                     <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span><span>Aktiv</span></span>
                                     <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-orange-400 inline-block"></span><span>Demo</span></span>
@@ -5997,6 +6007,45 @@
                                 <p><span class="font-bold text-gray-500">Deaktiviert:</span> Das Modul ist komplett unsichtbar – kein Menüpunkt, kein Zugang.</p>
                                 <hr class="my-3 border-gray-200">
                                 <p><strong>Tabs & Widgets:</strong> Klicke auf ▶ bei einem Modul, um einzelne Tabs und Dashboard-Widgets zu konfigurieren. Jeder Tab/Widget kann separat auf Aktiv, Demo oder Deaktiviert gesetzt werden.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: HQ-Module -->
+                    <div id="settingsTabHqmodule" class="settings-tab-content" style="display:none;">
+                        <div class="vit-card p-4 mb-6 border-l-4 border-blue-500">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🏢</span>
+                                <div>
+                                    <h3 class="font-bold text-gray-800">HQ-Module (Zentrale)</h3>
+                                    <p class="text-xs text-gray-500 mt-0.5">Diese Module sind nur für HQ-Mitarbeiter sichtbar. Partner sehen diese Module nicht.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
+                            <div class="vit-card p-4 text-center border-l-4 border-green-500"><div class="text-2xl font-bold text-green-600" id="countHqAktiv">0</div><div class="text-xs text-gray-500">Aktiv</div></div>
+                            <div class="vit-card p-4 text-center border-l-4 border-orange-400"><div class="text-2xl font-bold text-orange-500" id="countHqDemo">0</div><div class="text-xs text-gray-500">Demo</div></div>
+                            <div class="vit-card p-4 text-center border-l-4 border-yellow-500"><div class="text-2xl font-bold text-yellow-600" id="countHqWip">0</div><div class="text-xs text-gray-500">In Bearbeitung</div></div>
+                            <div class="vit-card p-4 text-center border-l-4 border-gray-400"><div class="text-2xl font-bold text-gray-400" id="countHqDeaktiviert">0</div><div class="text-xs text-gray-500">Deaktiviert</div></div>
+                        </div>
+                        <div class="vit-card overflow-hidden mb-6">
+                            <div class="p-4 border-b bg-gray-50 flex items-center justify-between">
+                                <h2 class="font-bold text-gray-800">🏢 HQ-Module</h2>
+                                <div class="flex items-center space-x-4 text-xs text-gray-500">
+                                    <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span><span>Aktiv</span></span>
+                                    <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-orange-400 inline-block"></span><span>Demo</span></span>
+                                    <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-yellow-500 inline-block"></span><span>In Bearbeitung</span></span>
+                                    <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-gray-300 inline-block"></span><span>Deaktiviert</span></span>
+                                </div>
+                            </div>
+                            <div id="hqModulStatusList" class="divide-y divide-gray-100"></div>
+                        </div>
+                        <div class="vit-card p-5">
+                            <h3 class="font-bold text-gray-800 mb-2">ℹ️ HQ-Module</h3>
+                            <div class="space-y-1.5 text-xs text-gray-600">
+                                <p>HQ-Module sind <strong>nur für die Zentrale</strong> sichtbar und werden unabhängig von den Partner-Modulen gesteuert.</p>
+                                <p>Module mit Ebene „Beide" (Kalender, Aufgaben, Kommunikation) erscheinen hier unter <strong>Basis</strong> — ihr HQ-Status ist separat steuerbar.</p>
+                                <p>Neue HQ-Module (z.B. Office, Abrechnung) werden hier hinzugefügt und sind automatisch nur für HQ-User verfügbar.</p>
                             </div>
                         </div>
                     </div>
@@ -6369,6 +6418,9 @@
         var sbRollen = []; // role names array
         var sbStandort = null; // standorte row
         var sbModulStatus = {}; // {modul_key: 'aktiv'|'demo'|'in_bearbeitung'|'deaktiviert'}
+        var sbHqModulStatus = {}; // {modul_key: 'aktiv'|'demo'|'in_bearbeitung'|'deaktiviert'} - HQ-Ebene
+        var sbHqModulConfig = {}; // HQ-spezifische Tab/Widget-Konfiguration
+        var sbModulEbene = {}; // {modul_key: 'partner'|'hq'|'beide'}
         var sbFeatureFlags = {}; // {flag_key: {enabled, rollout_percent, target_roles, target_standorte, target_users, scope, metadata, expires_at}}
 
         // ============================================
@@ -6890,14 +6942,20 @@
         // Modul-Status aus Supabase laden und auf Sidebar anwenden
         async function loadModulStatus() {
             try {
-                var resp = await sb.from('modul_status').select('modul_key, status, demo_status, config').order('reihenfolge');
+                var resp = await sb.from('modul_status').select('modul_key, status, hq_status, ebene, demo_status, config, hq_config').order('reihenfolge');
                 if(resp.error) throw resp.error;
                 sbModulStatus = {};
+                sbHqModulStatus = {};
                 sbModulConfig = {};
+                sbHqModulConfig = {};
+                sbModulEbene = {};
                 var useDemo = isDemoMode || (sbProfile && (sbProfile.status === 'demo' || sbProfile.status === 'demo_active'));
                 (resp.data||[]).forEach(function(m) { 
                     sbModulStatus[m.modul_key] = useDemo ? (m.demo_status || 'demo') : m.status;
+                    sbHqModulStatus[m.modul_key] = m.hq_status || 'aktiv';
                     sbModulConfig[m.modul_key] = m.config || {};
+                    sbHqModulConfig[m.modul_key] = m.hq_config || {};
+                    sbModulEbene[m.modul_key] = m.ebene || 'partner';
                 });
                 applyModulStatus();
             } catch(err) { console.error('ModulStatus:', err); }
@@ -22611,6 +22669,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(content) content.style.display = '';
             // Load tab-specific data
             if(tab === 'demo') renderDemoModulList();
+            if(tab === 'hqmodule') renderHqModulStatusList();
         }
 
         // Tab/Widget-Konfiguration pro Modul
@@ -22626,7 +22685,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             entwicklung: [{key:'ideen',label:'Ideen'},{key:'module',label:'Module'},{key:'releases',label:'Releases'},{key:'steuerung',label:'Steuerung'},{key:'featureflags',label:'Feature Flags'},{key:'system',label:'System'},{key:'nutzung',label:'Nutzung'}],
             wissen: [{key:'artikel',label:'Artikel'},{key:'downloads',label:'Downloads'},{key:'schulungen',label:'Schulungen'}],
             buchhaltung: [{key:'rechnungen',label:'Rechnungen'},{key:'zahlungen',label:'Zahlungen'},{key:'mahnwesen',label:'Mahnwesen'}],
-            abrechnung: [{key:'monatsabrechnung',label:'Monatsabrechnung'},{key:'settlement',label:'Settlement'},{key:'strategien',label:'Strategien'},{key:'produkte',label:'Produkte'},{key:'tools',label:'Tools'}]
+            abrechnung: [{key:'monatsabrechnung',label:'Monatsabrechnung'},{key:'settlement',label:'Settlement'},{key:'strategien',label:'Strategien'},{key:'produkte',label:'Produkte'},{key:'tools',label:'Tools'}],
+            office: [{key:'team',label:'Team'},{key:'plan',label:'Grundriss'}]
         };
         var MODULE_WIDGETS = {
             startseite: [{key:'daily_focus',label:'Heute steuern'},{key:'health_score',label:'Health Score'},{key:'sales_momentum',label:'Sales Momentum'},{key:'bwa_deadline',label:'BWA-Deadline'},{key:'bwa_netzwerk',label:'BWA Netzwerk-Status'},{key:'kpi_feedback',label:'Monats-Feedback'},{key:'pipeline',label:'Pipeline'},{key:'success',label:'Verkaufserfolg'},{key:'termine',label:'Termine'},{key:'aufgaben',label:'Aufgaben'},{key:'marketing',label:'Marketing'},{key:'team',label:'Team'},{key:'controlling',label:'Controlling'},{key:'support',label:'Support'},{key:'wissen',label:'Wissen'},{key:'nachrichten',label:'Nachrichten'}]
@@ -22643,7 +22703,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             try {
                 var resp = await sb.from('modul_status').select('*').order('reihenfolge');
                 if(resp.error) throw resp.error;
-                var modules = resp.data || [];
+                var modules = (resp.data || []).filter(function(m) { return m.ebene === 'partner' || m.ebene === 'beide'; });
                 var html = '';
                 var katLabels = {basis:'Basis',dashboards:'Dashboards',fachbereiche:'Fachbereiche',tools:'Tools'};
                 var lastKat = '';
@@ -22651,7 +22711,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
                 modules.forEach(function(m) {
                     counts[m.status] = (counts[m.status]||0) + 1;
-                    // Parse config JSONB
                     var cfg = m.config || {};
                     sbModulConfig[m.modul_key] = cfg;
 
@@ -22659,71 +22718,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                         lastKat = m.kategorie;
                         html += '<div class="px-5 py-2 bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider">' + (katLabels[m.kategorie]||m.kategorie) + '</div>';
                     }
-                    var icons = {startseite:'🏠',kalender:'📅',aufgaben:'📋',kommunikation:'💬',dashboards:'📊',allgemein:'🏢',verkauf:'📈',einkauf:'🛒',marketing:'📣',controlling:'📊',wissen:'📚',support:'🎫',ideenboard:'💡',shop:'🛍️',onboarding:'🎯',mitarbeiter:'👥',aktenschrank:'📁',entwicklung:'</>' ,spiritus:'📝'};
-                    var hasTabs = MODULE_TABS[m.modul_key] && MODULE_TABS[m.modul_key].length > 0;
-                    var hasWidgets = MODULE_WIDGETS[m.modul_key] && MODULE_WIDGETS[m.modul_key].length > 0;
-                    var hasChildren = hasTabs || hasWidgets;
-                    var isExpanded = expandedModules[m.modul_key] || false;
-
-                    // Module row
-                    html += '<div class="px-5 py-3 hover:bg-gray-50 transition">';
-                    html += '<div class="flex items-center justify-between">';
-                    html += '<div class="flex items-center space-x-3">';
-                    if(hasChildren) {
-                        html += '<button onclick="toggleModuleExpand(\'' + m.modul_key + '\')" class="text-gray-400 hover:text-gray-700 text-sm transition-transform ' + (isExpanded?'rotate-90':'') + '" style="width:20px">' + (isExpanded?'▼':'▶') + '</button>';
-                    } else {
-                        html += '<span style="width:20px"></span>';
-                    }
-                    html += '<span class="text-xl">' + (icons[m.modul_key]||'📦') + '</span>';
-                    html += '<div><span class="font-semibold text-gray-800 text-sm">' + m.modul_name + '</span>';
-                    html += '<span class="text-xs text-gray-400 ml-2">' + m.modul_key + '</span>';
-                    if(hasTabs) html += '<span class="text-[10px] text-gray-400 ml-1">(' + MODULE_TABS[m.modul_key].length + ' Tabs)</span>';
-                    if(hasWidgets) html += '<span class="text-[10px] text-gray-400 ml-1">(' + MODULE_WIDGETS[m.modul_key].length + ' Widgets)</span>';
-                    html += '</div></div>';
-
-                    // Status toggle buttons - now with 4 options
-                    html += '<div class="flex items-center space-x-1 bg-gray-100 rounded-lg p-0.5">';
-                    var btnBase = 'px-2.5 py-1.5 rounded-md text-[11px] font-semibold transition cursor-pointer';
-                    html += '<button onclick="setModulStatus(\'' + m.id + '\',\'aktiv\')" class="' + btnBase + ' ' + (m.status==='aktiv' ? 'bg-green-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">✓ Aktiv</button>';
-                    html += '<button onclick="setModulStatus(\'' + m.id + '\',\'demo\')" class="' + btnBase + ' ' + (m.status==='demo' ? 'bg-orange-400 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">👁 Demo</button>';
-                    html += '<button onclick="setModulStatus(\'' + m.id + '\',\'in_bearbeitung\')" class="' + btnBase + ' ' + (m.status==='in_bearbeitung' ? 'bg-yellow-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">🔧 Bald</button>';
-                    html += '<button onclick="setModulStatus(\'' + m.id + '\',\'deaktiviert\')" class="' + btnBase + ' ' + (m.status==='deaktiviert' ? 'bg-gray-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">✕ Aus</button>';
-                    html += '</div></div>';
-
-                    // Expandable children section
-                    if(hasChildren && isExpanded) {
-                        html += '<div class="ml-12 mt-3 mb-1 space-y-2">';
-                        if(hasTabs) {
-                            html += '<div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Tabs</div>';
-                            MODULE_TABS[m.modul_key].forEach(function(tab) {
-                                var tabStatus = (cfg.tabs && cfg.tabs[tab.key]) || 'aktiv';
-                                html += '<div class="flex items-center justify-between py-1">';
-                                html += '<span class="text-xs text-gray-700">↳ ' + tab.label + '</span>';
-                                html += '<div class="flex items-center space-x-0.5 bg-gray-100 rounded p-0.5">';
-                                var tbtn = 'px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer';
-                                html += '<button onclick="setTabStatus(\'' + m.modul_key + '\',\'' + tab.key + '\',\'aktiv\')" class="' + tbtn + ' ' + (tabStatus==='aktiv'?'bg-green-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✓</button>';
-                                html += '<button onclick="setTabStatus(\'' + m.modul_key + '\',\'' + tab.key + '\',\'demo\')" class="' + tbtn + ' ' + (tabStatus==='demo'?'bg-orange-400 text-white':'text-gray-400 hover:bg-gray-200') + '">👁</button>';
-                                html += '<button onclick="setTabStatus(\'' + m.modul_key + '\',\'' + tab.key + '\',\'deaktiviert\')" class="' + tbtn + ' ' + (tabStatus==='deaktiviert'?'bg-gray-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✕</button>';
-                                html += '</div></div>';
-                            });
-                        }
-                        if(hasWidgets) {
-                            html += '<div class="text-[10px] font-bold text-gray-400 uppercase mb-1 mt-2">Widgets</div>';
-                            MODULE_WIDGETS[m.modul_key].forEach(function(w) {
-                                var wStatus = (cfg.widgets && cfg.widgets[w.key]) || 'aktiv';
-                                html += '<div class="flex items-center justify-between py-1">';
-                                html += '<span class="text-xs text-gray-700">↳ ' + w.label + '</span>';
-                                html += '<div class="flex items-center space-x-0.5 bg-gray-100 rounded p-0.5">';
-                                var wbtn = 'px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer';
-                                html += '<button onclick="setWidgetStatus(\'' + m.modul_key + '\',\'' + w.key + '\',\'aktiv\')" class="' + wbtn + ' ' + (wStatus==='aktiv'?'bg-green-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✓</button>';
-                                html += '<button onclick="setWidgetStatus(\'' + m.modul_key + '\',\'' + w.key + '\',\'demo\')" class="' + wbtn + ' ' + (wStatus==='demo'?'bg-orange-400 text-white':'text-gray-400 hover:bg-gray-200') + '">👁</button>';
-                                html += '<button onclick="setWidgetStatus(\'' + m.modul_key + '\',\'' + w.key + '\',\'deaktiviert\')" class="' + wbtn + ' ' + (wStatus==='deaktiviert'?'bg-gray-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✕</button>';
-                                html += '</div></div>';
-                            });
-                        }
-                        html += '</div>';
-                    }
-                    html += '</div>';
+                    html += _renderModulRow(m, m.status, 'partner');
                 });
                 container.innerHTML = html;
 
@@ -22734,9 +22729,119 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             } catch(err) { console.error('ModulStatusList:', err); container.innerHTML = '<div class="p-4 text-center text-red-400">Fehler beim Laden</div>'; }
         }
 
-        function toggleModuleExpand(key) {
+        async function renderHqModulStatusList() {
+            var container = document.getElementById('hqModulStatusList');
+            if(!container) return;
+            try {
+                var resp = await sb.from('modul_status').select('*').order('reihenfolge');
+                if(resp.error) throw resp.error;
+                var modules = (resp.data || []).filter(function(m) { return m.ebene === 'hq' || m.ebene === 'beide'; });
+                var html = '';
+                var katLabels = {basis:'Basis (Shared)',hq:'HQ-Intern',dashboards:'Dashboards',fachbereiche:'Fachbereiche',tools:'Tools'};
+                var lastKat = '';
+                var counts = {aktiv:0, demo:0, in_bearbeitung:0, deaktiviert:0};
+
+                modules.forEach(function(m) {
+                    var hqSt = m.hq_status || 'aktiv';
+                    counts[hqSt] = (counts[hqSt]||0) + 1;
+                    var cfg = m.hq_config || {};
+                    sbHqModulConfig[m.modul_key] = cfg;
+
+                    if(m.kategorie !== lastKat) {
+                        lastKat = m.kategorie;
+                        html += '<div class="px-5 py-2 bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider">' + (katLabels[m.kategorie]||m.kategorie) + '</div>';
+                    }
+                    html += _renderModulRow(m, hqSt, 'hq');
+                });
+                container.innerHTML = html;
+
+                var el1 = document.getElementById('countHqAktiv'); if(el1) el1.textContent = counts.aktiv||0;
+                var el1b = document.getElementById('countHqDemo'); if(el1b) el1b.textContent = counts.demo||0;
+                var el2 = document.getElementById('countHqWip'); if(el2) el2.textContent = counts.in_bearbeitung||0;
+                var el3 = document.getElementById('countHqDeaktiviert'); if(el3) el3.textContent = counts.deaktiviert||0;
+            } catch(err) { console.error('HqModulStatusList:', err); container.innerHTML = '<div class="p-4 text-center text-red-400">Fehler beim Laden</div>'; }
+        }
+
+        // Shared renderer for both Partner and HQ module lists
+        function _renderModulRow(m, currentStatus, ebene) {
+            var icons = {startseite:'🏠',kalender:'📅',aufgaben:'📋',kommunikation:'💬',dashboards:'📊',allgemein:'🏢',verkauf:'📈',einkauf:'🛒',marketing:'📣',controlling:'📊',wissen:'📚',support:'🎫',ideenboard:'💡',shop:'🛍️',onboarding:'🎯',mitarbeiter:'👥',aktenschrank:'📁',entwicklung:'</>',spiritus:'📝',abrechnung:'💰',office:'🏢'};
+            var isHq = ebene === 'hq';
+            var expandKey = (isHq ? 'hq_' : '') + m.modul_key;
+            var cfg = isHq ? (m.hq_config || {}) : (m.config || {});
+            var hasTabs = MODULE_TABS[m.modul_key] && MODULE_TABS[m.modul_key].length > 0;
+            var hasWidgets = MODULE_WIDGETS[m.modul_key] && MODULE_WIDGETS[m.modul_key].length > 0;
+            var hasChildren = hasTabs || hasWidgets;
+            var isExpanded = expandedModules[expandKey] || false;
+            var setFn = isHq ? 'setHqModulStatus' : 'setModulStatus';
+            var setTabFn = isHq ? 'setHqTabStatus' : 'setTabStatus';
+            var setWidgetFn = isHq ? 'setHqWidgetStatus' : 'setWidgetStatus';
+
+            var html = '<div class="px-5 py-3 hover:bg-gray-50 transition">';
+            html += '<div class="flex items-center justify-between">';
+            html += '<div class="flex items-center space-x-3">';
+            if(hasChildren) {
+                html += '<button onclick="toggleModuleExpand(\'' + expandKey + '\',\'' + ebene + '\')" class="text-gray-400 hover:text-gray-700 text-sm" style="width:20px">' + (isExpanded?'▼':'▶') + '</button>';
+            } else {
+                html += '<span style="width:20px"></span>';
+            }
+            html += '<span class="text-xl">' + (icons[m.modul_key]||'📦') + '</span>';
+            html += '<div><span class="font-semibold text-gray-800 text-sm">' + m.modul_name + '</span>';
+            html += '<span class="text-xs text-gray-400 ml-2">' + m.modul_key + '</span>';
+            if(m.ebene === 'beide') html += '<span class="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded ml-2">Beide</span>';
+            if(hasTabs) html += '<span class="text-[10px] text-gray-400 ml-1">(' + MODULE_TABS[m.modul_key].length + ' Tabs)</span>';
+            if(hasWidgets) html += '<span class="text-[10px] text-gray-400 ml-1">(' + MODULE_WIDGETS[m.modul_key].length + ' Widgets)</span>';
+            html += '</div></div>';
+
+            // Status toggle buttons
+            html += '<div class="flex items-center space-x-1 bg-gray-100 rounded-lg p-0.5">';
+            var btnBase = 'px-2.5 py-1.5 rounded-md text-[11px] font-semibold transition cursor-pointer';
+            html += '<button onclick="' + setFn + '(\'' + m.id + '\',\'aktiv\')" class="' + btnBase + ' ' + (currentStatus==='aktiv' ? 'bg-green-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">✓ Aktiv</button>';
+            html += '<button onclick="' + setFn + '(\'' + m.id + '\',\'demo\')" class="' + btnBase + ' ' + (currentStatus==='demo' ? 'bg-orange-400 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">👁 Demo</button>';
+            html += '<button onclick="' + setFn + '(\'' + m.id + '\',\'in_bearbeitung\')" class="' + btnBase + ' ' + (currentStatus==='in_bearbeitung' ? 'bg-yellow-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">🔧 Bald</button>';
+            html += '<button onclick="' + setFn + '(\'' + m.id + '\',\'deaktiviert\')" class="' + btnBase + ' ' + (currentStatus==='deaktiviert' ? 'bg-gray-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">✕ Aus</button>';
+            html += '</div></div>';
+
+            // Expandable children
+            if(hasChildren && isExpanded) {
+                html += '<div class="ml-12 mt-3 mb-1 space-y-2">';
+                if(hasTabs) {
+                    html += '<div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Tabs</div>';
+                    MODULE_TABS[m.modul_key].forEach(function(tab) {
+                        var tabStatus = (cfg.tabs && cfg.tabs[tab.key]) || 'aktiv';
+                        html += '<div class="flex items-center justify-between py-1">';
+                        html += '<span class="text-xs text-gray-700">↳ ' + tab.label + '</span>';
+                        html += '<div class="flex items-center space-x-0.5 bg-gray-100 rounded p-0.5">';
+                        var tbtn = 'px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer';
+                        html += '<button onclick="' + setTabFn + '(\'' + m.modul_key + '\',\'' + tab.key + '\',\'aktiv\')" class="' + tbtn + ' ' + (tabStatus==='aktiv'?'bg-green-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✓</button>';
+                        html += '<button onclick="' + setTabFn + '(\'' + m.modul_key + '\',\'' + tab.key + '\',\'demo\')" class="' + tbtn + ' ' + (tabStatus==='demo'?'bg-orange-400 text-white':'text-gray-400 hover:bg-gray-200') + '">👁</button>';
+                        html += '<button onclick="' + setTabFn + '(\'' + m.modul_key + '\',\'' + tab.key + '\',\'deaktiviert\')" class="' + tbtn + ' ' + (tabStatus==='deaktiviert'?'bg-gray-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✕</button>';
+                        html += '</div></div>';
+                    });
+                }
+                if(hasWidgets) {
+                    html += '<div class="text-[10px] font-bold text-gray-400 uppercase mb-1 mt-2">Widgets</div>';
+                    MODULE_WIDGETS[m.modul_key].forEach(function(w) {
+                        var wStatus = (cfg.widgets && cfg.widgets[w.key]) || 'aktiv';
+                        html += '<div class="flex items-center justify-between py-1">';
+                        html += '<span class="text-xs text-gray-700">↳ ' + w.label + '</span>';
+                        html += '<div class="flex items-center space-x-0.5 bg-gray-100 rounded p-0.5">';
+                        var wbtn = 'px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer';
+                        html += '<button onclick="' + setWidgetFn + '(\'' + m.modul_key + '\',\'' + w.key + '\',\'aktiv\')" class="' + wbtn + ' ' + (wStatus==='aktiv'?'bg-green-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✓</button>';
+                        html += '<button onclick="' + setWidgetFn + '(\'' + m.modul_key + '\',\'' + w.key + '\',\'demo\')" class="' + wbtn + ' ' + (wStatus==='demo'?'bg-orange-400 text-white':'text-gray-400 hover:bg-gray-200') + '">👁</button>';
+                        html += '<button onclick="' + setWidgetFn + '(\'' + m.modul_key + '\',\'' + w.key + '\',\'deaktiviert\')" class="' + wbtn + ' ' + (wStatus==='deaktiviert'?'bg-gray-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✕</button>';
+                        html += '</div></div>';
+                    });
+                }
+                html += '</div>';
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function toggleModuleExpand(key, ebene) {
             expandedModules[key] = !expandedModules[key];
-            renderModulStatusList();
+            if(ebene === 'hq') renderHqModulStatusList();
+            else renderModulStatusList();
         }
 
         // ═══ DEMO-MODUS KONFIGURATION ═══
@@ -22907,10 +23012,42 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             try {
                 var resp = await sb.from('modul_status').update({status: newStatus, updated_by: sbUser ? sbUser.id : null}).eq('id', id);
                 if(resp.error) throw resp.error;
-                // Reload both the list and the sidebar
                 await loadModulStatus();
                 renderModulStatusList();
             } catch(err) { alert('Fehler: ' + err.message); }
+        }
+
+        async function setHqModulStatus(id, newStatus) {
+            try {
+                var resp = await sb.from('modul_status').update({hq_status: newStatus, updated_by: sbUser ? sbUser.id : null}).eq('id', id);
+                if(resp.error) throw resp.error;
+                await loadModulStatus();
+                renderHqModulStatusList();
+            } catch(err) { alert('Fehler: ' + err.message); }
+        }
+
+        async function setHqTabStatus(modulKey, tabKey, newStatus) {
+            try {
+                var cfg = sbHqModulConfig[modulKey] || {};
+                if(!cfg.tabs) cfg.tabs = {};
+                cfg.tabs[tabKey] = newStatus;
+                var resp = await sb.from('modul_status').update({hq_config: cfg}).eq('modul_key', modulKey);
+                if(resp.error) throw resp.error;
+                sbHqModulConfig[modulKey] = cfg;
+                renderHqModulStatusList();
+            } catch(err) { showToast('Fehler: ' + err.message, 'error'); }
+        }
+
+        async function setHqWidgetStatus(modulKey, widgetKey, newStatus) {
+            try {
+                var cfg = sbHqModulConfig[modulKey] || {};
+                if(!cfg.widgets) cfg.widgets = {};
+                cfg.widgets[widgetKey] = newStatus;
+                var resp = await sb.from('modul_status').update({hq_config: cfg}).eq('modul_key', modulKey);
+                if(resp.error) throw resp.error;
+                sbHqModulConfig[modulKey] = cfg;
+                renderHqModulStatusList();
+            } catch(err) { showToast('Fehler: ' + err.message, 'error'); }
         }
 
         function renderHqEinstellungen() {
