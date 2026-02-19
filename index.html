@@ -1061,15 +1061,21 @@
                     </nav>
                 </div>
 
-                <!-- Theme Toggle (immer sichtbar, für alle User) -->
-                <div style="padding:8px 16px;border-top:1px solid #333;">
-                    <div class="theme-toggle" onclick="toggleTheme()" title="Dark/Light Mode">
-                        <span style="font-size:13px">☀️</span>
-                        <div class="theme-toggle-track" id="themeToggleTrack">
-                            <div class="theme-toggle-knob"></div>
+                <!-- HQ Quick-Switch (nur für HQ-User sichtbar) -->
+                <div id="sidebarBottomHQ" style="padding:8px 12px;border-top:1px solid #333;display:none;">
+                    <div id="impersonationBtns" style="display:flex;flex-direction:column;gap:4px;">
+                        <button onclick="impersonateDemo()" style="width:100%;padding:6px 10px;background:#374151;border:1px solid #4B5563;border-radius:8px;color:#9CA3AF;font-size:11px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px;" onmouseover="this.style.background='#4B5563'" onmouseout="this.style.background='#374151'">
+                            <span style="font-size:14px">👁️</span> Demo-Standort
+                        </button>
+                        <button onclick="impersonateUser('a2135f35-fff3-48ca-a766-4b5370ed7a1a')" style="width:100%;padding:6px 10px;background:#374151;border:1px solid #4B5563;border-radius:8px;color:#9CA3AF;font-size:11px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px;" onmouseover="this.style.background='#4B5563'" onmouseout="this.style.background='#374151'">
+                            <span style="font-size:14px">🔄</span> Thorsten Guhr
+                        </button>
+                    </div>
+                    <div id="impersonationActive" style="display:none;">
+                        <div style="background:#7C3AED;border-radius:8px;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">
+                            <span style="font-size:10px;color:white;" id="impersonationLabel">👁️ Demo</span>
+                            <button onclick="exitImpersonation()" style="background:#EF4444;color:white;border:none;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;font-weight:600;">✕ Zurück</button>
                         </div>
-                        <span style="font-size:13px">🌙</span>
-                        <span style="font-size:11px;color:#888;margin-left:4px;">Theme</span>
                     </div>
                 </div>
             </aside>
@@ -7447,6 +7453,99 @@
         // Aktuelle Rollen (Array)
         var currentRoles = ['inhaber'];
 
+        // === IMPERSONATION (HQ only) ===
+        var _impOrigProfile = null;
+        var _impOrigRoles = null;
+        var _impOrigStandort = null;
+        var _impOrigSession = null;
+        var _impActive = false;
+
+        function impersonateDemo() {
+            if(!currentRoles || currentRoles.indexOf('hq') === -1) return;
+            _saveOrigState();
+            // Switch to demo standort view
+            currentRoles = ['inhaber'];
+            sbProfile = Object.assign({}, sbProfile, {
+                name: 'Demo Partner',
+                standort_id: '5a077c1a-5db2-4fde-949c-8e5e34dcd2c0'
+            });
+            SESSION.account_level = 'standort';
+            _activateImpersonation('👁️ Demo-Standort');
+        }
+
+        async function impersonateUser(userId) {
+            if(!currentRoles || currentRoles.indexOf('hq') === -1) return;
+            _saveOrigState();
+            try {
+                var resp = await sb.from('users').select('*, standorte(name)').eq('id', userId).single();
+                if(resp.error) throw resp.error;
+                var user = resp.data;
+                // Load user roles
+                var roleResp = await sb.from('user_rollen').select('*, rollen(name)').eq('user_id', userId);
+                var roles = (roleResp.data || []).map(function(r){ return r.rollen ? r.rollen.name : ''; }).filter(Boolean);
+                if(roles.length === 0) roles = ['inhaber'];
+
+                currentRoles = roles;
+                sbProfile = Object.assign({}, sbProfile, {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    standort_id: user.standort_id
+                });
+                SESSION.account_level = 'standort';
+                currentStandortId = user.standort_id;
+                var label = '🔄 ' + user.name + (user.standorte ? ' (' + user.standorte.name + ')' : '');
+                _activateImpersonation(label);
+            } catch(err) {
+                alert('Impersonation fehlgeschlagen: ' + err.message);
+                _restoreOrigState();
+            }
+        }
+
+        function _saveOrigState() {
+            if(!_impActive) {
+                _impOrigProfile = Object.assign({}, sbProfile);
+                _impOrigRoles = currentRoles.slice();
+                _impOrigStandort = typeof currentStandortId !== 'undefined' ? currentStandortId : null;
+                _impOrigSession = Object.assign({}, SESSION);
+            }
+        }
+
+        function _activateImpersonation(label) {
+            _impActive = true;
+            // Update UI
+            var btns = document.getElementById('impersonationBtns');
+            var active = document.getElementById('impersonationActive');
+            var lbl = document.getElementById('impersonationLabel');
+            if(btns) btns.style.display = 'none';
+            if(active) active.style.display = '';
+            if(lbl) lbl.textContent = label;
+            // Refresh sidebar & views
+            if(typeof updateUIForRole === 'function') updateUIForRole();
+            showView('home');
+        }
+
+        function exitImpersonation() {
+            if(!_impActive) return;
+            _restoreOrigState();
+            _impActive = false;
+            // Update UI
+            var btns = document.getElementById('impersonationBtns');
+            var active = document.getElementById('impersonationActive');
+            if(btns) btns.style.display = '';
+            if(active) active.style.display = 'none';
+            // Refresh sidebar & views
+            if(typeof updateUIForRole === 'function') updateUIForRole();
+            showView('home');
+        }
+
+        function _restoreOrigState() {
+            if(_impOrigProfile) sbProfile = _impOrigProfile;
+            if(_impOrigRoles) currentRoles = _impOrigRoles;
+            if(_impOrigStandort !== null) currentStandortId = _impOrigStandort;
+            if(_impOrigSession) Object.assign(SESSION, _impOrigSession);
+        }
+
         function quickLogin(email) {
             document.getElementById('loginEmail').value = email;
             document.getElementById('loginPassword').value = '';
@@ -8115,6 +8214,10 @@
             // HQ Menu
             var hqMenu = document.getElementById('hqMenu');
             if(hqMenu) hqMenu.classList.toggle('hidden', !isHQ);
+
+            // HQ Impersonation buttons (show if real user is HQ or currently impersonating)
+            var sidebarBtmHQ = document.getElementById('sidebarBottomHQ');
+            if(sidebarBtmHQ) sidebarBtmHQ.style.display = (isHQ || _impActive) ? '' : 'none';
 
             // ═══ EXTERN MENU ═══
             var isExtern = SESSION.account_level === 'extern';
