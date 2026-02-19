@@ -15043,7 +15043,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var modal = document.getElementById('devDetailModal');
             var content = document.getElementById('devDetailContent');
             if(!modal || !content) return;
-            content.innerHTML = '<div class="text-center py-8"><span class="animate-pulse text-gray-400">Lade Details...</span></div>';
+            var wasHidden = modal.classList.contains('hidden');
+            if(wasHidden) {
+                content.innerHTML = '<div class="text-center py-8"><span class="animate-pulse text-gray-400">Lade Details...</span></div>';
+            }
             modal.classList.remove('hidden');
 
             try {
@@ -15409,15 +15412,24 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         async function submitDevKommentar(subId) {
             var input = document.getElementById('devKommentarInput');
             if(!input || !input.value.trim()) return;
+            var text = input.value.trim();
+            input.value = '';
+            input.disabled = true;
             try {
-                await sb.from('dev_kommentare').insert({
+                var resp = await sb.from('dev_kommentare').insert({
                     submission_id: subId,
                     user_id: sbUser.id,
                     typ: 'kommentar',
-                    inhalt: input.value.trim()
-                });
-                openDevDetail(subId);
-            } catch(err) { alert('Fehler: ' + (err.message||err)); }
+                    inhalt: text
+                }).select();
+                if(resp.error) throw resp.error;
+                // Reload detail content without closing/reopening modal
+                await openDevDetail(subId);
+            } catch(err) {
+                alert('Fehler beim Kommentar: ' + (err.message||err));
+                input.value = text;
+            }
+            input.disabled = false;
         }
 
         function closeDevDetail() {
