@@ -6948,6 +6948,10 @@
             sbRollen = (resp2.data || []).map(function(ur) { return ur.rollen; });
             var roleNames = sbRollen.map(function(r) { return r ? r.name : ''; }).filter(Boolean);
             currentRoles = roleNames.length > 0 ? roleNames : ['inhaber'];
+            // Ensure HQ role is in currentRoles if is_hq flag is set
+            if(sbProfile && sbProfile.is_hq && currentRoles.indexOf('hq') === -1) {
+                currentRoles.push('hq');
+            }
             // is_hq from DB is the PRIMARY driver for HQ vs Standort view
             if(sbProfile && sbProfile.is_hq) {
                 currentRole = 'hq';
@@ -13429,7 +13433,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         async function renderDevPipeline() {
             // Show HQ tabs if HQ user
-            var isHQ = (sbRollen||[]).indexOf('hq') !== -1;
+            var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
             var boardBtn = document.getElementById('devTabBoardBtn');
             var planBtn = document.getElementById('devTabPlanungBtn');
             if(boardBtn) boardBtn.style.display = isHQ ? '' : 'none';
@@ -13508,7 +13512,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(ki && ki.zusammenfassung) h += '<p class="text-xs text-gray-500 mt-0.5 line-clamp-2">'+ki.zusammenfassung+'</p>';
             else if(s.beschreibung) h += '<p class="text-xs text-gray-500 mt-0.5 line-clamp-2">'+s.beschreibung+'</p>';
             // Score bar (nur HQ)
-            var isHQ = (sbRollen||[]).indexOf('hq') !== -1;
+            var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
             if(isHQ && ki && ki.vision_fit_score != null) {
                 var score = ki.vision_fit_score;
                 var barColor = score >= 70 ? 'bg-green-500' : score >= 40 ? 'bg-yellow-500' : 'bg-red-500';
@@ -13522,7 +13526,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         function renderDevMeine() {
             var c = document.getElementById('ideenTabMeine');
             if(!c) return;
-            var isHQ = (sbRollen||[]).indexOf('hq') !== -1;
+            var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
             var mine = isHQ ? devSubmissions : devSubmissions.filter(function(s){ return s.user_id === (sbUser && sbUser.id); });
             if(mine.length === 0) {
                 c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-3">💡</p><p>Du hast noch keine Ideen eingereicht.</p><p class="text-sm mt-1">Klick oben auf "Feedback geben" um loszulegen!</p></div>';
@@ -13546,7 +13550,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         function renderDevBoard() {
             var c = document.getElementById('ideenTabBoard');
             if(!c) return;
-            var isHQ = (sbRollen||[]).indexOf('hq') !== -1;
+            var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
             // HQ sees all ideas that have a KI analysis and need a decision
             var boardItems = devSubmissions.filter(function(s) {
                 return ['konzept_erstellt','im_ideenboard','hq_rueckfragen','ki_rueckfragen'].indexOf(s.status) !== -1;
@@ -13612,7 +13616,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         function renderDevPlanung() {
             var c = document.getElementById('ideenTabPlanung');
             if(!c) return;
-            var isHQ = (sbRollen||[]).indexOf('hq') !== -1;
+            var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
             var planItems = devSubmissions.filter(function(s) {
                 return ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant','geparkt'].indexOf(s.status) !== -1;
             }).sort(function(a,b) { return (a.queue_position||9999) - (b.queue_position||9999); });
@@ -13722,7 +13726,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 devRoadmapItems = [];
             }
 
-            var isHQ = (sbRollen||[]).indexOf('hq') !== -1;
+            var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
             var items = devRoadmapItems;
 
             // Stats
@@ -14079,7 +14083,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
                 // Analyse
                 if(ki) {
-                    var isHQDetail = (sbRollen||[]).indexOf('hq') !== -1;
+                    var isHQDetail = (currentRoles||[]).indexOf('hq') !== -1;
                     h += '<div class="border border-purple-200 rounded-lg p-4 mb-4 bg-purple-50/50">';
                     h += '<h4 class="text-xs font-bold text-purple-600 uppercase mb-2">📊 Analyse</h4>';
                     if(ki.zusammenfassung) h += '<p class="text-sm text-gray-700 mb-3">'+ki.zusammenfassung+'</p>';
@@ -14115,7 +14119,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 }
 
                 // Konzept (nur HQ) - prominent display
-                var isHQKonzept = (sbRollen||[]).indexOf('hq') !== -1;
+                var isHQKonzept = (currentRoles||[]).indexOf('hq') !== -1;
                 if(isHQKonzept && konzept) {
                     h += '<div class="border-2 border-indigo-300 rounded-lg mb-4 bg-indigo-50/30 overflow-hidden">';
                     h += '<div class="bg-indigo-100 px-4 py-3 cursor-pointer flex items-center justify-between" onclick="var el=document.getElementById(\'devKonzeptBody\');el.style.display=el.style.display===\'none\'?\'block\':\'none\'">';
@@ -14181,7 +14185,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 }
 
                 // === RÜCKFRAGEN-ANTWORT-FORMULAR (nur für Einreicher, nicht HQ) ===
-                var isHQUser = (sbRollen||[]).indexOf('hq') !== -1;
+                var isHQUser = (currentRoles||[]).indexOf('hq') !== -1;
                 var isSubmitter = sbUser && s.user_id === sbUser.id;
                 if((s.status === 'ki_rueckfragen' || s.status === 'hq_rueckfragen') && (isSubmitter || !isHQUser)) {
                     var rfQuelle = s.status === 'ki_rueckfragen' ? 'Unser System' : 'Das HQ';
@@ -14207,7 +14211,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 }
 
                 // === HQ-AKTIONEN im Detail-Modal ===
-                var isHQ = (sbRollen||[]).indexOf('hq') !== -1;
+                var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
                 if(isHQ && ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1) {
                     h += '<div class="border-2 border-vit-orange/30 rounded-lg p-4 mb-4 bg-orange-50">';
                     h += '<h4 class="text-sm font-bold text-gray-800 mb-3">🎯 HQ-Entscheidung</h4>';
@@ -15505,7 +15509,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             renderModulStatus();
             // Hide Portal-Nutzung tab for non-HQ users
             var nutzTab = document.getElementById('devStatusNutzungTab');
-            if(nutzTab) nutzTab.style.display = ((sbRollen||[]).indexOf('hq') !== -1) ? '' : 'none';
+            if(nutzTab) nutzTab.style.display = ((currentRoles||[]).indexOf('hq') !== -1) ? '' : 'none';
         }
 
         function showDevTab(tab) {
