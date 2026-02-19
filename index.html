@@ -2846,6 +2846,7 @@
                         <button onclick="showDevTab('alle')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500" data-dtab="alle">🌐 Alle Ideen</button>
                         <button onclick="showDevTab('board')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500" data-dtab="board" id="devTabBoard" style="display:none;">🎯 HQ-Ideenboard</button>
                         <button onclick="showDevTab('planung')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500" data-dtab="planung" id="devTabPlanung" style="display:none;">📅 Planung</button>
+                        <button onclick="showDevTab('roadmap')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500" data-dtab="roadmap">🚀 Entwicklung</button>
                     </div>
 
                     <!-- ===== Submit Form (Toggle) ===== -->
@@ -2949,6 +2950,7 @@
                     <div id="devTabAlle" class="dev-tab-content" style="display:none;"></div>
                     <div id="devTabBoard" class="dev-tab-content" style="display:none;"></div>
                     <div id="devTabPlanung" class="dev-tab-content" style="display:none;"></div>
+                    <div id="devTabRoadmap" class="dev-tab-content" style="display:none;"></div>
 
                     <!-- Detail Modal -->
                     <div id="devDetailModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-10 overflow-y-auto" onclick="if(event.target===this)closeDevDetail()">
@@ -5923,81 +5925,22 @@
                     </div>
                 </div>
 
-                <!-- ===== HQ IDEENBOARD-ÜBERSICHT ===== -->
+                <!-- ===== HQ IDEENBOARD → Redirect zum neuen Ideenboard ===== -->
                 <div id="hqIdeenView" class="view" style="display: none;">
-                    <h1 class="h1-headline text-gray-800 mb-2">💡 IDEENBOARD – NETZWERK</h1>
-                    <p class="text-sm text-gray-500 mb-6">Ideen, Vorschläge und Portal-Feedback aller Partner.</p>
-
-                    <!-- Tabs: Ideen | Portal-Feedback -->
-                    <div class="border-b border-gray-200 mb-6">
-                        <nav class="flex space-x-4 -mb-px">
-                            <button onclick="showIdeenTab('ideen')" class="ideen-tab whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-itab="ideen">💡 Ideen & Vorschläge</button>
-                            <button onclick="showIdeenTab('feedback')" class="ideen-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500" data-itab="feedback">💬 Portal-Feedback <span id="hqFbTabBadge" class="ml-1 bg-amber-400 text-white text-[9px] rounded-full px-1.5 py-0.5 font-bold" style="display:none">0</span></button>
-                        </nav>
-                    </div>
-
-                    <!-- Ideen Tab -->
-                    <div id="ideenTabIdeen" class="ideen-tab-content">
-                        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-vit-orange" id="hqIdeenTotal">0</div><div class="text-xs text-gray-500">Eingereichte Ideen</div></div>
-                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-yellow-500" id="hqIdeenPruefung">0</div><div class="text-xs text-gray-500">In Prüfung</div></div>
-                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600" id="hqIdeenUmgesetzt">0</div><div class="text-xs text-gray-500">Umgesetzt</div></div>
-                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-red-400" id="hqIdeenAbgelehnt">0</div><div class="text-xs text-gray-500">Abgelehnt</div></div>
-                            <div class="vit-card p-4 text-center border-2 border-purple-200"><div class="text-2xl font-bold text-purple-600" id="hqIdeenAnalysiert">0</div><div class="text-xs text-gray-500">🤖 KI-analysiert</div></div>
-                        </div>
-                        <div class="flex space-x-2 mb-4">
-                            <button onclick="filterHqIdeen('all')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white" data-hif="all">Alle</button>
-                            <button onclick="filterHqIdeen('neu')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="neu">Neu</button>
-                            <button onclick="filterHqIdeen('wird_geprueft')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="wird_geprueft">Wird geprüft</button>
-                            <button onclick="filterHqIdeen('umgesetzt')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="umgesetzt">Umgesetzt</button>
-                            <button onclick="filterHqIdeen('abgelehnt')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="abgelehnt">Abgelehnt</button>
-                            <span class="border-l border-gray-300 h-5 mx-1"></span>
-                            <button onclick="filterHqIdeen('ki_hoch')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="ki_hoch">🤖 Prio: Hoch+</button>
-                            <button onclick="filterHqIdeen('ki_quickwin')" class="hq-ideen-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-hif="ki_quickwin">⚡ Quick-Wins</button>
-                        </div>
-                        <div class="flex flex-wrap gap-2 mb-4 items-center">
-                            <select id="hqIdeenSort" onchange="renderHqIdeen(document.querySelector('.hq-ideen-filter.bg-vit-orange')?.dataset.hif||'all')" class="text-xs border rounded-lg px-3 py-1.5 bg-white">
-                                <option value="newest">Neueste zuerst</option>
-                                <option value="votes">Meiste Votes</option>
-                                <option value="ki_machbarkeit">Machbarkeit (KI)</option>
-                                <option value="ki_vision_fit">Vision-Fit (KI)</option>
-                                <option value="ki_prioritaet">KI-Priorität</option>
-                            </select>
-                            <button onclick="analysierAlleNeuen()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-600 text-white hover:bg-purple-700">🤖 Alle neuen analysieren</button>
-                        </div>
-                        <div class="vit-card p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">📋 Eingereichte Ideen aller Partner</h2>
-                            <div id="hqIdeenList" class="space-y-3"></div>
-                        </div>
-                    </div>
-
-                    <!-- Feedback Tab -->
-                    <div id="ideenTabFeedback" class="ideen-tab-content" style="display:none;">
-                        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-blue-600" id="hqFbTotal">-</div><div class="text-xs text-gray-500">Gesamt</div></div>
-                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-amber-500" id="hqFbNeu">-</div><div class="text-xs text-gray-500">Neu / Offen</div></div>
-                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-red-500" id="hqFbBugs">-</div><div class="text-xs text-gray-500">Bugs</div></div>
-                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-emerald-500" id="hqFbWuensche">-</div><div class="text-xs text-gray-500">Wünsche</div></div>
-                            <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-purple-500" id="hqFbIdeen">-</div><div class="text-xs text-gray-500">Ideen</div></div>
-                        </div>
-                        <div class="flex gap-2 mb-4 flex-wrap">
-                            <button onclick="filterHqFb('alle')" class="hq-fb-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white" data-fbf="alle">Alle</button>
-                            <button onclick="filterHqFb('neu')" class="hq-fb-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-fbf="neu">🆕 Neu</button>
-                            <button onclick="filterHqFb('gesehen')" class="hq-fb-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-fbf="gesehen">👁️ Gesehen</button>
-                            <button onclick="filterHqFb('in_arbeit')" class="hq-fb-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-fbf="in_arbeit">🔧 In Arbeit</button>
-                            <button onclick="filterHqFb('erledigt')" class="hq-fb-filter px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-fbf="erledigt">✅ Erledigt</button>
-                        </div>
-                        <div class="vit-card overflow-hidden">
-                            <div id="hqFbList" class="divide-y divide-gray-100"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Feedback Detail Modal -->
-                <div id="hqFbDetailModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-                    <div class="bg-white rounded-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto">
-                        <div id="hqFbDetailContent" class="p-6"></div>
-                    </div>
+                    <script>
+                        // HQ-Ideenboard leitet jetzt auf das neue Ideenboard um
+                        (function() {
+                            var origShow = showView;
+                            var _hqCheck = setInterval(function() {
+                                var v = document.getElementById('hqIdeenView');
+                                if(v && v.style.display !== 'none') {
+                                    clearInterval(_hqCheck);
+                                    showView('ideenboard');
+                                }
+                            }, 100);
+                        })();
+                    </script>
+                    <div class="text-center py-12 text-gray-400">Weiterleitung zum Ideenboard...</div>
                 </div>
 
                 <!-- ===== HQ SHOP-VERWALTUNG ===== -->
@@ -13536,6 +13479,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             else if(tab === 'alle') renderDevAlle();
             else if(tab === 'board') renderDevBoard();
             else if(tab === 'planung') renderDevPlanung();
+            else if(tab === 'roadmap') renderDevRoadmap();
         }
 
         var devStatusLabels = {
@@ -13673,6 +13617,189 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             });
             h += '</div>';
             c.innerHTML = h;
+        }
+
+        // === ROADMAP / ENTWICKLUNG TAB ===
+        var devRoadmapItems = [];
+        var devRoadmapFilter = 'alle';
+
+        async function renderDevRoadmap() {
+            var c = document.getElementById('devTabRoadmap');
+            if(!c) return;
+
+            // Load roadmap items
+            try {
+                var resp = await sb.from('dev_roadmap').select('*').order('sortierung');
+                if(resp.error) throw resp.error;
+                devRoadmapItems = resp.data || [];
+            } catch(err) {
+                console.error('Roadmap load:', err);
+                devRoadmapItems = [];
+            }
+
+            var isHQ = (sbRollen||[]).indexOf('hq') !== -1;
+            var items = devRoadmapItems;
+
+            // Stats
+            var total = items.length;
+            var done = items.filter(function(r){ return r.status === 'ausgerollt'; }).length;
+            var active = items.filter(function(r){ return r.status === 'in_entwicklung' || r.status === 'im_review'; }).length;
+            var planned = items.filter(function(r){ return r.status === 'geplant'; }).length;
+
+            // Quartale ermitteln
+            var quartale = [];
+            items.forEach(function(r) {
+                if(r.ziel_quartal && quartale.indexOf(r.ziel_quartal) === -1) quartale.push(r.ziel_quartal);
+            });
+            quartale.sort();
+
+            var h = '';
+
+            // Header mit Stats
+            h += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">';
+            h += '<div class="vit-card p-3 text-center"><p class="text-xl font-bold text-gray-800">'+total+'</p><p class="text-[10px] text-gray-500">Features gesamt</p></div>';
+            h += '<div class="vit-card p-3 text-center"><p class="text-xl font-bold text-green-600">'+done+'</p><p class="text-[10px] text-gray-500">Ausgerollt ✅</p></div>';
+            h += '<div class="vit-card p-3 text-center"><p class="text-xl font-bold text-blue-600">'+active+'</p><p class="text-[10px] text-gray-500">In Arbeit 🔨</p></div>';
+            h += '<div class="vit-card p-3 text-center"><p class="text-xl font-bold text-gray-400">'+planned+'</p><p class="text-[10px] text-gray-500">Geplant 📅</p></div>';
+            h += '</div>';
+
+            // Progress bar
+            var pct = total > 0 ? Math.round(done / total * 100) : 0;
+            h += '<div class="mb-6"><div class="flex items-center justify-between mb-1"><span class="text-xs font-semibold text-gray-600">Gesamtfortschritt</span><span class="text-xs font-bold text-gray-800">'+pct+'%</span></div>';
+            h += '<div class="h-3 bg-gray-100 rounded-full overflow-hidden"><div class="h-3 bg-gradient-to-r from-green-400 to-green-600 rounded-full transition-all" style="width:'+pct+'%"></div></div></div>';
+
+            // Filter
+            h += '<div class="flex flex-wrap gap-2 mb-5">';
+            var filters = [{k:'alle',l:'Alle'},{k:'geplant',l:'📅 Geplant'},{k:'in_entwicklung',l:'🔨 In Entwicklung'},{k:'ausgerollt',l:'✅ Ausgerollt'},{k:'verschoben',l:'⏸ Verschoben'}];
+            filters.forEach(function(f) {
+                var isActive = devRoadmapFilter === f.k;
+                h += '<button onclick="devRoadmapFilter=\''+f.k+'\';renderDevRoadmap()" class="px-3 py-1.5 rounded-full text-xs font-semibold '+(isActive?'bg-vit-orange text-white':'bg-gray-100 text-gray-600 hover:bg-gray-200')+'">'+f.l+'</button>';
+            });
+            h += '</div>';
+
+            // HQ: Neuen Eintrag hinzufügen
+            if(isHQ) {
+                h += '<div class="mb-4"><button onclick="toggleRoadmapForm()" class="px-3 py-1.5 bg-gray-700 text-white rounded-lg text-xs font-semibold hover:bg-gray-800">+ Roadmap-Eintrag</button></div>';
+                h += '<div id="roadmapAddForm" class="hidden vit-card p-4 mb-5 border border-gray-200">';
+                h += '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">';
+                h += '<input id="rmTitel" type="text" placeholder="Titel *" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">';
+                h += '<select id="rmKategorie" class="px-3 py-2 border border-gray-300 rounded-lg text-sm"><option value="feature">🚀 Feature</option><option value="verbesserung">🔧 Verbesserung</option><option value="bugfix">🐛 Bugfix</option><option value="infrastruktur">⚙️ Infrastruktur</option><option value="sicherheit">🔒 Sicherheit</option><option value="performance">⚡ Performance</option><option value="design">🎨 Design</option></select>';
+                h += '</div>';
+                h += '<textarea id="rmBeschreibung" placeholder="Beschreibung..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3" rows="2"></textarea>';
+                h += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">';
+                h += '<select id="rmPrio" class="px-3 py-2 border border-gray-300 rounded-lg text-sm"><option value="kritisch">🔴 Kritisch</option><option value="hoch">🟠 Hoch</option><option value="mittel" selected>🟡 Mittel</option><option value="niedrig">🟢 Niedrig</option></select>';
+                h += '<select id="rmAufwand" class="px-3 py-2 border border-gray-300 rounded-lg text-sm"><option value="XS">XS</option><option value="S">S</option><option value="M" selected>M</option><option value="L">L</option><option value="XL">XL</option></select>';
+                h += '<select id="rmQuartal" class="px-3 py-2 border border-gray-300 rounded-lg text-sm"><option value="Q1/2026">Q1/2026</option><option value="Q2/2026">Q2/2026</option><option value="Q3/2026">Q3/2026</option><option value="Q4/2026">Q4/2026</option><option value="Q1/2027">Q1/2027</option></select>';
+                h += '<input id="rmDatum" type="date" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">';
+                h += '</div>';
+                h += '<button onclick="addRoadmapItem()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Hinzufügen</button>';
+                h += '</div>';
+            }
+
+            // Gruppiert nach Quartal
+            quartale.forEach(function(q) {
+                var qItems = items.filter(function(r) {
+                    if(devRoadmapFilter !== 'alle' && r.status !== devRoadmapFilter) return false;
+                    return r.ziel_quartal === q;
+                });
+                if(qItems.length === 0) return;
+
+                var qDone = qItems.filter(function(r){ return r.status === 'ausgerollt'; }).length;
+                var qPct = Math.round(qDone / qItems.length * 100);
+
+                h += '<div class="mb-6">';
+                h += '<div class="flex items-center justify-between mb-3">';
+                h += '<h3 class="text-sm font-bold text-gray-800">📅 '+q+'</h3>';
+                h += '<div class="flex items-center space-x-2"><div class="w-24 h-1.5 bg-gray-100 rounded-full"><div class="h-1.5 bg-green-500 rounded-full" style="width:'+qPct+'%"></div></div><span class="text-[10px] text-gray-500">'+qDone+'/'+qItems.length+'</span></div>';
+                h += '</div>';
+
+                h += '<div class="space-y-2">';
+                qItems.forEach(function(r) {
+                    var statusIcons = {geplant:'📅',in_entwicklung:'🔨',im_review:'🔍',ausgerollt:'✅',verschoben:'⏸'};
+                    var statusColors = {geplant:'bg-gray-100 text-gray-600',in_entwicklung:'bg-blue-100 text-blue-700',im_review:'bg-purple-100 text-purple-700',ausgerollt:'bg-green-100 text-green-700',verschoben:'bg-gray-100 text-gray-400'};
+                    var prioColors = {kritisch:'text-red-600',hoch:'text-orange-500',mittel:'text-yellow-600',niedrig:'text-green-600'};
+                    var katIcons = {feature:'🚀',verbesserung:'🔧',bugfix:'🐛',infrastruktur:'⚙️',sicherheit:'🔒',performance:'⚡',design:'🎨'};
+
+                    h += '<div class="vit-card p-3 flex items-center space-x-3 '+(r.status==='ausgerollt'?'opacity-60':'')+'">';
+                    h += '<span class="text-lg">'+(statusIcons[r.status]||'📋')+'</span>';
+                    h += '<div class="flex-1 min-w-0">';
+                    h += '<div class="flex items-center flex-wrap gap-1.5">';
+                    h += '<span class="text-xs font-semibold rounded px-2 py-0.5 '+(statusColors[r.status]||'bg-gray-100 text-gray-600')+'">'+r.status.replace('_',' ')+'</span>';
+                    h += '<span class="text-[10px] '+(prioColors[r.prioritaet]||'text-gray-500')+' font-semibold">●</span>';
+                    if(r.aufwand) h += '<span class="text-[10px] bg-gray-100 rounded px-1.5 py-0.5 font-semibold text-gray-600">'+r.aufwand+'</span>';
+                    h += '<span class="text-[10px] text-gray-400">'+(katIcons[r.kategorie]||'')+'</span>';
+                    h += '</div>';
+                    h += '<h4 class="font-semibold text-sm text-gray-800 '+(r.status==='ausgerollt'?'line-through':'')+'">'+ r.titel+'</h4>';
+                    if(r.beschreibung) h += '<p class="text-xs text-gray-500 truncate">'+r.beschreibung+'</p>';
+                    if(r.ziel_datum) h += '<span class="text-[10px] text-gray-400">Ziel: '+new Date(r.ziel_datum).toLocaleDateString('de-DE')+'</span>';
+                    h += '</div>';
+
+                    // HQ: Status-Schnellwechsel
+                    if(isHQ) {
+                        h += '<select onchange="updateRoadmapStatus(\''+r.id+'\',this.value)" class="text-[10px] border rounded px-1.5 py-1 bg-white">';
+                        ['geplant','in_entwicklung','im_review','ausgerollt','verschoben'].forEach(function(st) {
+                            h += '<option value="'+st+'"'+(r.status===st?' selected':'')+'>'+st.replace('_',' ')+'</option>';
+                        });
+                        h += '</select>';
+                    }
+                    h += '</div>';
+                });
+                h += '</div></div>';
+            });
+
+            // Items ohne Quartal
+            var ohneQ = items.filter(function(r) {
+                if(devRoadmapFilter !== 'alle' && r.status !== devRoadmapFilter) return false;
+                return !r.ziel_quartal;
+            });
+            if(ohneQ.length > 0) {
+                h += '<div class="mb-6"><h3 class="text-sm font-bold text-gray-400 mb-3">📋 Ohne Zeitplan</h3><div class="space-y-2">';
+                ohneQ.forEach(function(r) {
+                    h += '<div class="vit-card p-3 opacity-50"><span class="font-semibold text-sm text-gray-600">'+r.titel+'</span></div>';
+                });
+                h += '</div></div>';
+            }
+
+            if(items.length === 0) {
+                h += '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-3">🚀</p><p>Noch keine Roadmap-Einträge.</p></div>';
+            }
+
+            c.innerHTML = h;
+        }
+
+        function toggleRoadmapForm() {
+            var f = document.getElementById('roadmapAddForm');
+            if(f) f.classList.toggle('hidden');
+        }
+
+        async function addRoadmapItem() {
+            var titel = (document.getElementById('rmTitel')||{}).value;
+            if(!titel || !titel.trim()) { alert('Bitte Titel eingeben.'); return; }
+            try {
+                var maxSort = devRoadmapItems.reduce(function(m, r){ return Math.max(m, r.sortierung||0); }, 0);
+                await sb.from('dev_roadmap').insert({
+                    titel: titel.trim(),
+                    beschreibung: (document.getElementById('rmBeschreibung')||{}).value || null,
+                    kategorie: (document.getElementById('rmKategorie')||{}).value || 'feature',
+                    prioritaet: (document.getElementById('rmPrio')||{}).value || 'mittel',
+                    aufwand: (document.getElementById('rmAufwand')||{}).value || 'M',
+                    ziel_quartal: (document.getElementById('rmQuartal')||{}).value || null,
+                    ziel_datum: (document.getElementById('rmDatum')||{}).value || null,
+                    sortierung: maxSort + 1,
+                    status: 'geplant'
+                });
+                document.getElementById('rmTitel').value = '';
+                document.getElementById('rmBeschreibung').value = '';
+                toggleRoadmapForm();
+                renderDevRoadmap();
+            } catch(err) { alert('Fehler: '+(err.message||err)); }
+        }
+
+        async function updateRoadmapStatus(id, newStatus) {
+            try {
+                await sb.from('dev_roadmap').update({ status: newStatus }).eq('id', id);
+                renderDevRoadmap();
+            } catch(err) { console.error('Roadmap status update:', err); }
         }
 
         async function submitDevIdea() {
