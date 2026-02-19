@@ -29581,6 +29581,11 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                     Screenshot
                 </button>
+                <button class="fb-media-btn" onclick="document.getElementById('fbFileInput').click()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    Datei anhängen
+                </button>
+                <input type="file" id="fbFileInput" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" style="display:none" onchange="fbHandleFiles(this)">
             </div>
 
             <div id="fbRecInfo" class="fb-rec-info" style="display:none">
@@ -29832,13 +29837,39 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
         }
     };
 
+    // ── File Upload ──
+    window.fbHandleFiles = function(input) {
+        if(!input.files) return;
+        var maxSize = 10 * 1024 * 1024; // 10MB per file
+        for(var i = 0; i < input.files.length; i++) {
+            var file = input.files[i];
+            if(file.size > maxSize) {
+                alert('Datei "' + file.name + '" ist zu groß (max. 10 MB).');
+                continue;
+            }
+            if(fbState.attachments.length >= 5) {
+                alert('Maximal 5 Anhänge möglich.');
+                break;
+            }
+            fbState.attachments.push({
+                name: file.name,
+                type: 'file',
+                blob: file,
+                size: file.size,
+                mime: file.type || 'application/octet-stream'
+            });
+        }
+        input.value = ''; // reset for re-selection
+        renderAttachments();
+    };
+
     // ── Attachments UI ──
     function renderAttachments() {
         var el = document.getElementById('fbAttachments');
         if(!el) return;
         if(!fbState.attachments.length) { el.innerHTML = ''; return; }
         el.innerHTML = fbState.attachments.map(function(a, i){
-            var icon = a.type==='audio' ? '🎙️' : a.type==='screen' ? '🖥️' : '📷';
+            var icon = a.type==='audio' ? '🎙️' : a.type==='screen' ? '🖥️' : a.type==='file' ? '📎' : '📷';
             return '<div class="fb-attachment">' + icon + ' ' + a.name + ' <span style="color:var(--c-muted)">(' + formatSize(a.size) + ')</span>' +
                 '<button onclick="fbRemoveAttachment('+i+')">&times;</button></div>';
         }).join('');
