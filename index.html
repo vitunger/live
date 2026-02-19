@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>vit:bikes Partnerportal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -101,6 +101,9 @@
             bottom: 0;
             background: linear-gradient(135deg, var(--c-bg2) 0%, var(--c-bg3) 100%);
             z-index: -1;
+        }
+        @media (max-width: 768px) {
+            .vit-background::before { left: 0 !important; }
         }
         
         /* Card Styles */
@@ -348,8 +351,32 @@
             .topnav-mobile { display: flex !important; }
             .main-content-area {
                 margin-left: 0 !important;
-                padding: 16px !important;
+                padding: 12px !important;
+                width: 100% !important;
             }
+            /* Fix: Collapsed sidebar class should not affect mobile */
+            .sidebar.collapsed { width: 280px !important; transform: translateX(-100%); }
+            .sidebar.collapsed.mobile-open { transform: translateX(0); }
+            /* Grids responsive: force fewer columns on mobile */
+            .grid.grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+            .grid.grid-cols-3:not(.no-mobile-override) { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+            .grid.grid-cols-6 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+            .grid.grid-cols-5 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+            /* Tables: horizontal scroll */
+            table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            thead, tbody, tr { display: table; width: 100%; table-layout: auto; }
+            /* Cards & flex containers */
+            .flex-wrap { gap: 8px !important; }
+            /* Dashboard header */
+            .h1-headline { font-size: 1.1rem !important; line-height: 1.3 !important; }
+            /* Quick-action cards on home */
+            #quickActionsGrid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px !important; }
+            #quickActionsGrid > div { padding: 8px !important; }
+            #quickActionsGrid > div p { font-size: 9px !important; }
+            /* Fix modals on mobile */
+            .fixed.inset-0 > div { max-width: 95vw !important; max-height: 90vh !important; overflow-y: auto !important; margin: 5vh auto !important; }
+            /* Profile slider */
+            #profileSlider { width: 100% !important; }
         }
         @media (min-width: 769px) {
             .topnav-mobile { display: none !important; }
@@ -367,7 +394,11 @@
 
         /* Headline responsive */
         @media (max-width: 768px) {
-            .h1-headline { font-size: 1.25rem !important; }
+            .h1-headline { font-size: 1.1rem !important; }
+            /* Flex containers that should stack on mobile */
+            .flex.items-center.justify-between { flex-wrap: wrap; gap: 8px; }
+            /* Version badge */
+            #versionBadge { font-size: 9px !important; }
         }
     
         @keyframes tpulse{0%,100%{opacity:0.4;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}
@@ -717,7 +748,7 @@
             </div>
         </nav>
 
-        <div class="flex" style="height: calc(100vh - 3.5rem); overflow: hidden;">
+        <div class="flex" style="height: calc(100vh - 3.5rem); height: calc(100dvh - 3.5rem); overflow: hidden;">
             <!-- Sidebar Overlay (mobile) -->
             <div id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
             <!-- Sidebar -->
@@ -1069,7 +1100,7 @@
                     <!-- FESTER BEREICH (immer sichtbar) -->
                     <div class="mb-8">
                         <!-- Schnellzugriff Aktionen -->
-                        <div class="grid grid-cols-4 gap-4 mb-6">
+                        <div id="quickActionsGrid" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
                             <button onclick="showView('verkauf')" class="vit-card p-4 hover:shadow-lg transition-shadow text-center">
                                 <div class="bg-vit-orange p-3 rounded-lg inline-block mb-2">
                                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -6034,7 +6065,7 @@
 
                     <!-- TAB 1: Modul-Status -->
                     <div id="settingsTabModulstatus" class="settings-tab-content">
-                        <div class="grid grid-cols-4 gap-4 mb-6">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
                             <div class="vit-card p-4 text-center border-l-4 border-green-500"><div class="text-2xl font-bold text-green-600" id="countAktiv">0</div><div class="text-xs text-gray-500">Aktiv</div></div>
                             <div class="vit-card p-4 text-center border-l-4 border-orange-400"><div class="text-2xl font-bold text-orange-500" id="countDemo">0</div><div class="text-xs text-gray-500">Demo</div></div>
                             <div class="vit-card p-4 text-center border-l-4 border-yellow-500"><div class="text-2xl font-bold text-yellow-600" id="countWip">0</div><div class="text-xs text-gray-500">In Bearbeitung</div></div>
@@ -9862,23 +9893,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
             statusText.textContent = '📊 Datei wird analysiert...';
 
-            // === DATEV Sign Inversion Fix ===
-            var negZeilen = {1060:1,1100:1,1120:1,1140:1,1150:1,1155:1,1160:1,1170:1,1175:1,1180:1,1190:1,1200:1,1210:1,1220:1,1240:1,1250:1,1260:1,1280:1,1290:1,1310:1,1312:1,1320:1,1355:1};
-            function fixDatevSigns(bwaRows) {
-                if(!bwaRows || bwaRows.length === 0) return bwaRows;
-                // Check if Material/Wareneinkauf (1060) is positive - if so, this is DATEV format where costs are positive
-                var we = bwaRows.find(function(x) { return x.zeile === 1060 && x.ist_summenzeile; });
-                if(we && we.wert > 0) {
-                    console.log('[BWA] DATEV Sign Inversion: inverting cost lines');
-                    bwaRows.forEach(function(row) {
-                        if(row.zeile && negZeilen[row.zeile] && row.ist_summenzeile) {
-                            if(row.wert > 0) row.wert = -row.wert;
-                            if(row.wert_kumuliert > 0) row.wert_kumuliert = -row.wert_kumuliert;
-                        }
-                    });
-                }
-                return bwaRows;
-            }
             // === DATEV Sign Inversion Fix ===
             var negZeilen = {1060:1,1100:1,1120:1,1140:1,1150:1,1155:1,1160:1,1170:1,1175:1,1180:1,1190:1,1200:1,1210:1,1220:1,1240:1,1250:1,1260:1,1280:1,1290:1,1310:1,1312:1,1320:1,1355:1};
             function fixDatevSigns(bwaRows) {
@@ -19228,7 +19242,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 html += '<div><span class="text-gray-500">Mitarbeiter (aktiv):</span><br><span class="font-semibold">'+(empCount.count||0)+'</span></div>';
                 html += '</div>';
                 html += '<div class="mb-5"><label class="block text-xs font-semibold text-gray-600 mb-2">\ud83d\udcbb Warenwirtschaft</label>';
-                html += '<div class="grid grid-cols-4 gap-2" id="wawiSelector">';
+                html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-2" id="wawiSelector">';
                 WAWI_OPTIONS.forEach(function(w){
                     var isActive = s.warenwirtschaft === w;
                     var cls = isActive ? 'border-vit-orange bg-orange-50 text-orange-700 ring-2 ring-orange-300' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300';
