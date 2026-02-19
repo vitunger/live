@@ -15397,8 +15397,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 // === KOMMENTAR SCHREIBEN (immer sichtbar) ===
                 h += '<div class="border-t border-gray-200 pt-4">';
                 h += '<div class="flex space-x-2">';
-                h += '<input type="text" id="devKommentarInput" placeholder="Kommentar schreiben..." class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm">';
-                h += '<button onclick="submitDevKommentar(\''+s.id+'\')" class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm font-semibold hover:bg-gray-800">Senden</button>';
+                h += '<input type="text" id="devKommentarInput" placeholder="Kommentar schreiben..." class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" onkeydown="if(event.key===\'Enter\'){event.preventDefault();submitDevKommentar(\''+s.id+'\')}">';
+                h += '<button id="devKommentarBtn" onclick="submitDevKommentar(\''+s.id+'\')" class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm font-semibold hover:bg-gray-800">Senden</button>';
                 h += '</div></div>';
 
                 content.innerHTML = h;
@@ -15580,25 +15580,31 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         // Kommentar schreiben
         async function submitDevKommentar(subId) {
             var input = document.getElementById('devKommentarInput');
-            if(!input || !input.value.trim()) return;
+            var btn = document.getElementById('devKommentarBtn');
+            if(!input || !input.value.trim()) { if(input) input.focus(); return; }
             var text = input.value.trim();
             input.value = '';
             input.disabled = true;
+            if(btn) { btn.disabled = true; btn.textContent = '⏳'; }
             try {
                 var resp = await sb.from('dev_kommentare').insert({
                     submission_id: subId,
                     user_id: sbUser.id,
                     typ: 'kommentar',
                     inhalt: text
-                }).select();
+                });
                 if(resp.error) throw resp.error;
-                // Reload detail content without closing/reopening modal
                 await openDevDetail(subId);
             } catch(err) {
+                console.error('Comment error:', err);
                 alert('Fehler beim Kommentar: ' + (err.message||err));
-                input.value = text;
+                var input2 = document.getElementById('devKommentarInput');
+                if(input2) input2.value = text;
             }
-            input.disabled = false;
+            var input3 = document.getElementById('devKommentarInput');
+            var btn3 = document.getElementById('devKommentarBtn');
+            if(input3) input3.disabled = false;
+            if(btn3) { btn3.disabled = false; btn3.textContent = 'Senden'; }
         }
 
         function closeDevDetail() {
