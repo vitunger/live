@@ -1008,6 +1008,11 @@
                                 <span class="sidebar-badge ml-auto text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
                             </button>
 
+                            <button onclick="showView('hqBackups')" data-tooltip="Backups" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                                <span>💾</span><span class="sidebar-label">Backups</span>
+                                <span class="sidebar-badge ml-auto text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
+                            </button>
+
                             <button onclick="showView('hqVerkauf')" data-tooltip="Verkauf" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
@@ -6322,6 +6327,87 @@
                     </div>
                 </div>
 
+                <!-- ============================================ -->
+                <!-- HQ BACKUP DASHBOARD VIEW                   -->
+                <!-- ============================================ -->
+                <div id="hqBackupsView" class="view" style="display:none">
+                    <div class="p-6 md:p-8 max-w-7xl mx-auto">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <p class="h2-headline text-vit-gray mb-1">HQ STEUERUNG</p>
+                                <h1 class="h1-headline">💾 Backup Dashboard</h1>
+                            </div>
+                            <div class="flex gap-3">
+                                <button onclick="bkTriggerBackup()" class="px-4 py-2 bg-vit-orange text-white text-sm font-semibold rounded-lg hover:opacity-90 flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                    Backup jetzt starten
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- KPIs -->
+                        <div id="bkStats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                                <p class="text-xs text-gray-500 uppercase tracking-wide">Letztes Backup</p>
+                                <p id="bkLastTime" class="text-lg font-bold text-gray-900 mt-1">-</p>
+                                <p id="bkLastStatus" class="text-xs mt-0.5">-</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                                <p class="text-xs text-gray-500 uppercase tracking-wide">Backups (24h)</p>
+                                <p id="bkCount24h" class="text-lg font-bold text-gray-900 mt-1">-</p>
+                                <p class="text-xs text-gray-400 mt-0.5">Erwartet: 24</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                                <p class="text-xs text-gray-500 uppercase tracking-wide">Tabellen gesichert</p>
+                                <p id="bkTableCount" class="text-lg font-bold text-gray-900 mt-1">-</p>
+                                <p class="text-xs text-gray-400 mt-0.5">von 15</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                                <p class="text-xs text-gray-500 uppercase tracking-wide">Datenvolumen (24h)</p>
+                                <p id="bkSizeTotal" class="text-lg font-bold text-gray-900 mt-1">-</p>
+                                <p class="text-xs text-gray-400 mt-0.5">Supabase + R2</p>
+                            </div>
+                        </div>
+
+                        <!-- Health indicator -->
+                        <div id="bkHealth" class="mb-6 p-4 rounded-xl border flex items-center gap-3">
+                            <div id="bkHealthDot" class="w-3 h-3 rounded-full bg-gray-300"></div>
+                            <span id="bkHealthText" class="text-sm font-medium text-gray-600">Status wird geladen...</span>
+                        </div>
+
+                        <!-- Backup History Table -->
+                        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                            <div class="p-4 border-b flex items-center justify-between">
+                                <h3 class="font-semibold text-gray-800">Backup-Verlauf</h3>
+                                <select id="bkFilterDays" onchange="loadBkView()" class="text-sm border rounded-lg px-3 py-1.5">
+                                    <option value="1">Letzte 24h</option>
+                                    <option value="3">Letzte 3 Tage</option>
+                                    <option value="7" selected>Letzte 7 Tage</option>
+                                    <option value="30">Letzte 30 Tage</option>
+                                </select>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-50 text-left text-xs text-gray-500 uppercase">
+                                        <tr>
+                                            <th class="px-4 py-3">Zeitpunkt</th>
+                                            <th class="px-4 py-3">Typ</th>
+                                            <th class="px-4 py-3">Status</th>
+                                            <th class="px-4 py-3">Tabellen</th>
+                                            <th class="px-4 py-3">Rows</th>
+                                            <th class="px-4 py-3">Groesse</th>
+                                            <th class="px-4 py-3">Dauer</th>
+                                            <th class="px-4 py-3">Fehler</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bkTableBody" class="divide-y divide-gray-100"></tbody>
+                                </table>
+                            </div>
+                            <div id="bkNoData" class="p-8 text-center text-gray-400 hidden">Keine Backups im gewaehlten Zeitraum</div>
+                        </div>
+                    </div>
+                </div>
+
             <!-- Video-Pipeline Modal (global) -->
             <div id="vpModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" style="display:none;">
                 <div id="vpModalContent" class="bg-white rounded-xl shadow-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6"></div>
@@ -6700,6 +6786,170 @@
 
         // Hook into showView to load FF management when navigated to
         var _origShowView = typeof showView === 'function' ? showView : null;
+
+        // ============================================
+        // HQ BACKUP DASHBOARD
+        // ============================================
+        async function loadBkView() {
+            var days = parseInt(document.getElementById('bkFilterDays')?.value || '7');
+            var since = new Date(Date.now() - days * 86400000).toISOString();
+            try {
+                var { data, error } = await sb.from('backup_log')
+                    .select('*')
+                    .gte('started_at', since)
+                    .order('started_at', { ascending: false });
+                if(error) throw error;
+                var logs = data || [];
+                bkRenderStats(logs, days);
+                bkRenderTable(logs);
+                bkRenderHealth(logs);
+            } catch(err) {
+                console.error('[Backup Dashboard]', err);
+                showToast('Fehler beim Laden der Backup-Daten', 'error');
+            }
+        }
+
+        function bkRenderStats(logs, days) {
+            // Last backup
+            var last = logs[0];
+            if(last) {
+                var d = new Date(last.started_at);
+                document.getElementById('bkLastTime').textContent = d.toLocaleDateString('de-DE') + ' ' + d.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
+                var st = last.status === 'completed' ? '✅ Erfolgreich' : last.status === 'running' ? '⏳ Laeuft...' : '❌ Fehlgeschlagen';
+                var stColor = last.status === 'completed' ? 'text-green-600' : last.status === 'running' ? 'text-yellow-600' : 'text-red-600';
+                document.getElementById('bkLastStatus').innerHTML = '<span class="' + stColor + '">' + st + '</span>';
+            } else {
+                document.getElementById('bkLastTime').textContent = '-';
+                document.getElementById('bkLastStatus').textContent = 'Keine Daten';
+            }
+
+            // 24h count
+            var h24 = new Date(Date.now() - 86400000).toISOString();
+            var count24 = logs.filter(function(l) { return l.started_at >= h24; }).length;
+            document.getElementById('bkCount24h').textContent = count24;
+
+            // Tables
+            if(last && last.tables_backed_up) {
+                document.getElementById('bkTableCount').textContent = last.tables_backed_up.length;
+            } else {
+                document.getElementById('bkTableCount').textContent = '-';
+            }
+
+            // Total size in period
+            var totalBytes = logs.reduce(function(s, l) { return s + (l.total_size_bytes || 0); }, 0);
+            if(totalBytes > 1048576) {
+                document.getElementById('bkSizeTotal').textContent = (totalBytes / 1048576).toFixed(1) + ' MB';
+            } else {
+                document.getElementById('bkSizeTotal').textContent = Math.round(totalBytes / 1024) + ' KB';
+            }
+        }
+
+        function bkRenderHealth(logs) {
+            var dot = document.getElementById('bkHealthDot');
+            var txt = document.getElementById('bkHealthText');
+            var container = document.getElementById('bkHealth');
+            
+            var h3 = new Date(Date.now() - 3 * 3600000).toISOString();
+            var recent = logs.filter(function(l) { return l.started_at >= h3 && l.status === 'completed'; });
+            
+            if(recent.length >= 2) {
+                dot.className = 'w-3 h-3 rounded-full bg-green-500 animate-pulse';
+                txt.textContent = 'Backup-System laeuft normal — ' + recent.length + ' erfolgreiche Backups in den letzten 3 Stunden';
+                txt.className = 'text-sm font-medium text-green-700';
+                container.className = 'mb-6 p-4 rounded-xl border border-green-200 bg-green-50 flex items-center gap-3';
+            } else if(recent.length === 1) {
+                dot.className = 'w-3 h-3 rounded-full bg-yellow-500';
+                txt.textContent = 'Achtung — Nur 1 Backup in den letzten 3 Stunden (erwartet: 3)';
+                txt.className = 'text-sm font-medium text-yellow-700';
+                container.className = 'mb-6 p-4 rounded-xl border border-yellow-200 bg-yellow-50 flex items-center gap-3';
+            } else {
+                dot.className = 'w-3 h-3 rounded-full bg-red-500';
+                txt.textContent = 'Warnung — Kein erfolgreiches Backup in den letzten 3 Stunden! Bitte pruefen.';
+                txt.className = 'text-sm font-medium text-red-700';
+                container.className = 'mb-6 p-4 rounded-xl border border-red-200 bg-red-50 flex items-center gap-3';
+            }
+        }
+
+        function bkRenderTable(logs) {
+            var tbody = document.getElementById('bkTableBody');
+            var noData = document.getElementById('bkNoData');
+            if(!logs.length) {
+                tbody.innerHTML = '';
+                noData.classList.remove('hidden');
+                return;
+            }
+            noData.classList.add('hidden');
+            
+            tbody.innerHTML = logs.map(function(l) {
+                var d = new Date(l.started_at);
+                var timeStr = d.toLocaleDateString('de-DE') + ' ' + d.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
+                
+                var typeBadge = l.backup_type === 'scheduled'
+                    ? '<span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">Auto</span>'
+                    : l.backup_type === 'manual'
+                    ? '<span class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">Manuell</span>'
+                    : '<span class="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">' + (l.backup_type||'?') + '</span>';
+                
+                var statusBadge = l.status === 'completed'
+                    ? '<span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">OK</span>'
+                    : l.status === 'running'
+                    ? '<span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">Laeuft</span>'
+                    : '<span class="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-medium">Fehler</span>';
+
+                var tables = l.tables_backed_up ? l.tables_backed_up.length : 0;
+                var sizeStr = l.total_size_bytes ? Math.round(l.total_size_bytes / 1024) + ' KB' : '-';
+                
+                var duration = '-';
+                if(l.started_at && l.completed_at) {
+                    var ms = new Date(l.completed_at) - new Date(l.started_at);
+                    duration = (ms / 1000).toFixed(1) + 's';
+                }
+
+                var errHtml = '';
+                if(l.error_message) {
+                    var shortErr = l.error_message.length > 60 ? l.error_message.substring(0, 60) + '...' : l.error_message;
+                    errHtml = '<span class="text-red-500 cursor-help" title="' + l.error_message.replace(/"/g, '&quot;') + '">' + shortErr + '</span>';
+                } else {
+                    errHtml = '<span class="text-green-500">—</span>';
+                }
+
+                return '<tr class="hover:bg-gray-50">'
+                    + '<td class="px-4 py-3 text-xs whitespace-nowrap">' + timeStr + '</td>'
+                    + '<td class="px-4 py-3">' + typeBadge + '</td>'
+                    + '<td class="px-4 py-3">' + statusBadge + '</td>'
+                    + '<td class="px-4 py-3 text-xs">' + tables + '/15</td>'
+                    + '<td class="px-4 py-3 text-xs">' + (l.total_rows || 0) + '</td>'
+                    + '<td class="px-4 py-3 text-xs">' + sizeStr + '</td>'
+                    + '<td class="px-4 py-3 text-xs">' + duration + '</td>'
+                    + '<td class="px-4 py-3 text-xs max-w-[200px] truncate">' + errHtml + '</td>'
+                    + '</tr>';
+            }).join('');
+        }
+
+        async function bkTriggerBackup() {
+            if(!confirm('Manuelles Backup jetzt starten?')) return;
+            try {
+                var session = (await sb.auth.getSession()).data.session;
+                if(!session) { showToast('Nicht eingeloggt', 'error'); return; }
+                var resp = await fetch(SUPABASE_URL + '/functions/v1/db-backup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + session.access_token
+                    },
+                    body: JSON.stringify({ type: 'manual' })
+                });
+                var result = await resp.json();
+                if(result.success) {
+                    showToast('Backup erfolgreich! ' + result.total_rows + ' Rows, ' + result.total_size_kb + ' KB', 'success');
+                    setTimeout(function() { loadBkView(); }, 1000);
+                } else {
+                    showToast('Backup-Fehler: ' + (result.error || 'Unbekannt'), 'error');
+                }
+            } catch(err) {
+                showToast('Backup fehlgeschlagen: ' + err.message, 'error');
+            }
+        }
 
 
         // Modul-Status aus Supabase laden und auf Sidebar anwenden
@@ -24200,6 +24450,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 console.log('SUCCESS: Showed', viewId, '- offsetHeight:', viewEl.offsetHeight);
                 if(viewName === 'dashboards') initDashboardTabs();
                 if(viewName === 'hqFeatureFlags') loadFFView();
+                if(viewName === 'hqBackups') loadBkView();
                 
                 var areaMap = {home:'allgemein',controlling:'controlling',verkauf:'verkauf',marketing:'marketing'};
                 var containerMap = {home:'trainerAreaHome',controlling:'trainerAreaControlling',verkauf:'trainerAreaVerkauf',marketing:'trainerAreaMarketing'};
