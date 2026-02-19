@@ -13744,12 +13744,18 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
             var h = '';
 
-            // Header mit Stats
+            // Header mit Stats (klickbar als Filter)
             h += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">';
-            h += '<div class="vit-card p-3 text-center"><p class="text-xl font-bold text-gray-800">'+total+'</p><p class="text-[10px] text-gray-500">Features gesamt</p></div>';
-            h += '<div class="vit-card p-3 text-center"><p class="text-xl font-bold text-green-600">'+done+'</p><p class="text-[10px] text-gray-500">Ausgerollt ✅</p></div>';
-            h += '<div class="vit-card p-3 text-center"><p class="text-xl font-bold text-blue-600">'+active+'</p><p class="text-[10px] text-gray-500">In Arbeit 🔨</p></div>';
-            h += '<div class="vit-card p-3 text-center"><p class="text-xl font-bold text-gray-400">'+planned+'</p><p class="text-[10px] text-gray-500">Geplant 📅</p></div>';
+            var statCards = [
+                {filter:'alle', val:total, color:'text-gray-800', label:'Features gesamt'},
+                {filter:'ausgerollt', val:done, color:'text-green-600', label:'Ausgerollt ✅'},
+                {filter:'in_entwicklung', val:active, color:'text-blue-600', label:'In Arbeit 🔨'},
+                {filter:'geplant', val:planned, color:'text-gray-400', label:'Geplant 📅'}
+            ];
+            statCards.forEach(function(sc) {
+                var isActive = devRoadmapFilter === sc.filter;
+                h += '<div onclick="devRoadmapFilter=\''+(sc.filter==='alle'&&devRoadmapFilter==='alle'?'alle':sc.filter===devRoadmapFilter?'alle':sc.filter)+'\';renderDevRoadmap()" class="vit-card p-3 text-center cursor-pointer transition-all '+(isActive&&sc.filter!=='alle'?'ring-2 ring-vit-orange bg-orange-50':'hover:shadow-md')+'"><p class="text-xl font-bold '+sc.color+'">'+sc.val+'</p><p class="text-[10px] text-gray-500">'+sc.label+'</p></div>';
+            });
             h += '</div>';
 
             // Progress bar
