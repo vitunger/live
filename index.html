@@ -33314,154 +33314,112 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
         if(!el) return;
         var ci = myCI();
         var offU = CI.filter(function(c){return c.status==='office'});
+        var remU = CI.filter(function(c){return c.status==='remote'});
         
         var html = '<div class="grid gap-4" style="grid-template-columns:280px 1fr">';
         
         // LEFT: Colleague list
         html += '<div class="vit-card p-4" style="max-height:600px;overflow-y:auto">';
         html += '<div class="text-xs font-bold mb-1" style="color:var(--c-muted)">📅 '+fmtDL(todayStr())+'</div>';
-        html += '<div class="text-xs mb-3" style="color:var(--c-dim)">1. OG · Büro Unterföhring</div>';
+        html += '<div class="text-xs mb-1" style="color:var(--c-dim)">1. OG · Büro Unterföhring</div>';
+        html += '<input type="text" id="officeSearchColleague" placeholder="Kollegen suchen..." oninput="officeFilterColleagues()" class="w-full px-3 py-1.5 rounded-lg text-xs mb-3" style="background:var(--c-bg3);border:1px solid var(--c-border);color:var(--c-text)">';
         html += '<div class="text-[10px] font-bold mb-2" style="color:var(--c-muted)">'+offU.length+' Kollegen im Büro</div>';
+        html += '<div id="officeColleagueList">';
         
         offU.forEach(function(c) {
             var isMe = c.user_id===me();
-            html += '<div class="flex items-center gap-2.5 py-2 border-b" style="border-color:var(--c-border)">';
+            html += '<div class="colleague-row flex items-center gap-2.5 py-2.5 border-b" style="border-color:var(--c-border)" data-name="'+(c.name||'').toLowerCase()+'">';
             html += '<img src="'+av(c,32)+'" width="32" height="32" style="border-radius:50%;object-fit:cover">';
             html += '<div class="flex-1"><div class="text-sm font-semibold" style="color:var(--c-text)">'+(c.name||'')+( isMe?' (Du)':'')+'</div>';
-            html += '<div class="text-[10px]" style="color:var(--c-muted)">'+(c.room||'Platz #'+c.desk_nr)+' · seit '+c.since+'</div></div></div>';
+            html += '<div class="text-[10px]" style="color:var(--c-muted)">'+(c.room||'Platz')+' · 08:00 - 17:00</div></div></div>';
         });
         
-        if(offU.length===0) html += '<div class="text-sm py-4 text-center" style="color:var(--c-muted)">Noch niemand im Büro</div>';
-        html += '</div>';
+        if(remU.length>0) {
+            html += '<div class="text-[10px] font-bold mt-3 mb-2" style="color:var(--c-muted)">🏠 Remote ('+remU.length+')</div>';
+            remU.forEach(function(c) {
+                html += '<div class="colleague-row flex items-center gap-2 py-2 border-b" style="border-color:var(--c-border)" data-name="'+(c.name||'').toLowerCase()+'">';
+                html += '<img src="'+av(c,28)+'" width="28" height="28" style="border-radius:50%;object-fit:cover">';
+                html += '<div class="text-xs font-semibold" style="color:#3b82f6">'+(c.name||'')+'</div></div>';
+            });
+        }
         
-        // RIGHT: Floor plan SVG
+        if(offU.length===0 && remU.length===0) html += '<div class="text-sm py-4 text-center" style="color:var(--c-muted)">Noch niemand eingecheckt</div>';
+        html += '</div></div>';
+        
+        // RIGHT: Floor plan with image background + dots overlay
         html += '<div class="vit-card p-3" style="overflow:auto">';
-        html += '<div class="text-xs font-bold mb-2" style="color:var(--c-muted)">1. OG · Büro Unterföhring</div>';
-        html += buildFloorplanSVG(ci);
+        html += '<div class="flex justify-between items-center mb-2"><span class="text-xs font-bold" style="color:var(--c-muted)">1. OG · Büro Unterföhring</span>';
+        html += '<div class="flex gap-3 text-[10px]" style="color:var(--c-dim)"><span>🟢 Frei</span><span>🟠 Belegt</span><span>🔵 Du</span></div></div>';
+        
+        // Container: relative positioning, image as background
+        html += '<div id="officePlanContainer" style="position:relative;width:100%;min-width:650px">';
+        html += '<img src="grundriss_og.png" style="width:100%;display:block;opacity:0.85" onload="officeRenderDots()">';
+        html += '<div id="officePlanDots" style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none"></div>';
         html += '</div>';
         
-        html += '</div>';
+        html += '</div></div>';
         el.innerHTML = html;
+        
+        // Render dots immediately if image already cached
+        setTimeout(officeRenderDots, 100);
     }
     
-    function buildFloorplanSVG(myCheckin) {
-        var h = '<svg viewBox="0 0 900 440" style="width:100%;height:auto;min-width:650px" xmlns="http://www.w3.org/2000/svg">';
+    window.officeRenderDots = function() {
+        var container = document.getElementById('officePlanContainer');
+        var dotsEl = document.getElementById('officePlanDots');
+        if(!container || !dotsEl) return;
         
-        // Background
-        h += '<rect x="0" y="0" width="900" height="440" fill="#fafafa" rx="4"/>';
+        var ci = myCI();
+        var html = '';
         
-        // ===== OUTER WALLS =====
-        h += '<rect x="15" y="15" width="870" height="410" fill="none" stroke="#999" stroke-width="2.5" rx="1"/>';
-        
-        // ===== TOP ROW ROOMS (y: 15-185) =====
-        // GF (top-left corner)
-        h += '<rect x="15" y="15" width="95" height="170" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
-        h += '<text x="62" y="30" text-anchor="middle" font-size="8" fill="#999" font-weight="600">GF</text>';
-        
-        // Großraum
-        h += '<rect x="110" y="15" width="210" height="170" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
-        h += '<text x="215" y="30" text-anchor="middle" font-size="8" fill="#999" font-weight="600">Großraum</text>';
-        
-        // Server-Raum
-        h += '<rect x="320" y="15" width="65" height="170" fill="#f5f5f5" stroke="#bbb" stroke-width="1.5"/>';
-        h += '<text x="352" y="95" text-anchor="middle" font-size="7" fill="#ccc" font-weight="600">Server</text>';
-        h += '<text x="352" y="105" text-anchor="middle" font-size="7" fill="#ccc">Raum</text>';
-        
-        // Mitte (♥)
-        h += '<rect x="385" y="15" width="135" height="170" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
-        h += '<text x="452" y="30" text-anchor="middle" font-size="9" fill="#ddd">♥</text>';
-        
-        // Expansion
-        h += '<rect x="520" y="15" width="170" height="170" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
-        
-        // Rechts oben
-        h += '<rect x="690" y="15" width="195" height="170" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
-        
-        // ===== FLUR (y: 185-235) =====
-        h += '<rect x="15" y="185" width="870" height="50" fill="#f0f0f0" stroke="#bbb" stroke-width="1"/>';
-        h += '<text x="450" y="215" text-anchor="middle" font-size="10" fill="#ccc" font-weight="500">Bürofläche OG</text>';
-        
-        // ===== BOTTOM ROW (y: 235-425) =====
-        // Treppe links
-        h += '<rect x="15" y="235" width="70" height="190" fill="#f3f3f3" stroke="#bbb" stroke-width="1.5"/>';
-        h += '<line x1="25" y1="280" x2="75" y2="280" stroke="#ddd"/><line x1="25" y1="300" x2="75" y2="300" stroke="#ddd"/><line x1="25" y1="320" x2="75" y2="320" stroke="#ddd"/><line x1="25" y1="340" x2="75" y2="340" stroke="#ddd"/><line x1="25" y1="360" x2="75" y2="360" stroke="#ddd"/>';
-        
-        // Unten Links
-        h += '<rect x="85" y="235" width="105" height="190" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
-        
-        // Gang
-        h += '<rect x="190" y="235" width="75" height="190" fill="#f3f3f3" stroke="#bbb" stroke-width="1.5"/>';
-        
-        // Unten Mitte 1
-        h += '<rect x="265" y="235" width="105" height="190" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
-        
-        // Unten Mitte 2
-        h += '<rect x="370" y="235" width="130" height="190" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
-        
-        // Konferenz
-        h += '<rect x="500" y="235" width="130" height="190" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
-        h += '<text x="565" y="252" text-anchor="middle" font-size="7" fill="#ccc" font-weight="600">Konferenz</text>';
-        // Table
-        h += '<rect x="530" y="290" width="70" height="40" rx="4" fill="#e8e8e8" stroke="#ccc"/>';
-        
-        // Besprechung
-        h += '<rect x="630" y="235" width="100" height="190" fill="#f5f5f5" stroke="#bbb" stroke-width="1.5"/>';
-        
-        // Treppe rechts
-        h += '<rect x="730" y="235" width="50" height="190" fill="#f3f3f3" stroke="#bbb" stroke-width="1.5"/>';
-        h += '<line x1="740" y1="280" x2="770" y2="280" stroke="#ddd"/><line x1="740" y1="300" x2="770" y2="300" stroke="#ddd"/><line x1="740" y1="320" x2="770" y2="320" stroke="#ddd"/>';
-        
-        // Unten Rechts
-        h += '<rect x="780" y="235" width="105" height="190" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
-        
-        // ===== DESK DOTS =====
         D.forEach(function(d) {
+            if(!d.pct_x || !d.pct_y) return;
             var c = deskCI(d.nr);
             var free = !c;
             var isMe = c && c.user_id===me();
             var isConf = d.room==='Konferenz';
-            var r = isConf ? 16 : 14;
+            var size = isConf ? 32 : 28;
             
-            if(free && !myCheckin) {
-                h += '<g style="cursor:pointer" onclick="officeCheckinDesk('+d.nr+')">';
-            } else { h += '<g>'; }
+            // Position as percentage
+            var left = d.pct_x;
+            var top = d.pct_y;
+            
+            var style = 'position:absolute;left:'+left+'%;top:'+top+'%;transform:translate(-50%,-50%);width:'+size+'px;height:'+size+'px;border-radius:50%;pointer-events:auto;cursor:'+(free&&!ci?'pointer':'default')+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;transition:all 0.2s;';
             
             if(free) {
-                // Green dot with desk icon
-                h += '<circle cx="'+d.x+'" cy="'+d.y+'" r="'+r+'" fill="#22c55e20" stroke="#22c55e" stroke-width="1.5"/>';
-                h += '<circle cx="'+(d.x-2)+'" cy="'+(d.y+1)+'" r="2" fill="#22c55e"/>';
-                h += '<line x1="'+(d.x-4)+'" y1="'+(d.y+4)+'" x2="'+(d.x+4)+'" y2="'+(d.y+4)+'" stroke="#22c55e" stroke-width="1.5"/>';
+                // Green free dot
+                style += 'background:rgba(34,197,94,0.15);border:2px solid #22c55e;color:#22c55e;';
+                html += '<div style="'+style+'" '+(ci?'':'onclick="officeCheckinDesk('+d.nr+')"')+' title="Platz #'+d.nr+' · '+d.room+' · Frei">';
+                html += '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><circle cx="12" cy="10" r="3"/><path d="M6 21v-1a6 6 0 0112 0v1"/></svg>';
+                html += '</div>';
+            } else if(isConf) {
+                // Gray conference
+                style += 'background:#e5e5e5;border:2px solid #ccc;';
+                html += '<div style="'+style+'" title="Konferenz · '+(c?c.name:'')+'"><img src="'+av(c,size-4)+'" width="'+(size-4)+'" height="'+(size-4)+'" style="border-radius:50%;object-fit:cover"></div>';
             } else {
-                // Occupied: avatar circle
+                // Occupied
                 var col = isMe ? '#3b82f6' : '#EF7D00';
-                if(isConf) col = '#888';
-                
-                h += '<circle cx="'+d.x+'" cy="'+d.y+'" r="'+r+'" fill="'+col+'"/>';
-                h += '<clipPath id="cp'+d.nr+'"><circle cx="'+d.x+'" cy="'+d.y+'" r="'+(r-1.5)+'"/></clipPath>';
-                h += '<image href="'+av(c,r*2)+'" x="'+(d.x-r+1.5)+'" y="'+(d.y-r+1.5)+'" width="'+(r*2-3)+'" height="'+(r*2-3)+'" clip-path="url(#cp'+d.nr+')" preserveAspectRatio="xMidYMid slice"/>';
-                
-                // Name label
-                if(!isConf) {
-                    h += '<text x="'+d.x+'" y="'+(d.y+r+10)+'" text-anchor="middle" font-size="6.5" fill="#666" font-weight="600">'+ini(c)+'</text>';
-                }
-                
-                if(isMe) {
-                    h += '<circle cx="'+d.x+'" cy="'+d.y+'" r="'+(r+3)+'" fill="none" stroke="#3b82f6" stroke-width="2" opacity="0.6">';
-                    h += '<animate attributeName="r" values="'+(r+3)+';'+(r+5)+';'+(r+3)+'" dur="2s" repeatCount="indefinite"/></circle>';
-                }
+                style += 'background:'+col+';border:2px solid '+col+';';
+                if(isMe) style += 'box-shadow:0 0 0 3px rgba(59,130,246,0.3);';
+                html += '<div style="'+style+'" title="'+(c.name||'')+' · '+d.room+'">';
+                html += '<img src="'+av(c,size-4)+'" width="'+(size-4)+'" height="'+(size-4)+'" style="border-radius:50%;object-fit:cover">';
+                html += '</div>';
+                // Name label below
+                html += '<div style="position:absolute;left:'+left+'%;top:calc('+top+'% + '+(size/2+2)+'px);transform:translateX(-50%);font-size:8px;font-weight:700;color:#666;white-space:nowrap;pointer-events:none">'+ini(c)+'</div>';
             }
-            h += '</g>';
         });
         
-        // Legend
-        h += '<g transform="translate(15,435)"><circle cx="5" cy="0" r="4" fill="#22c55e20" stroke="#22c55e" stroke-width="1"/><text x="13" y="3" font-size="7" fill="#999">Frei</text>';
-        h += '<circle cx="50" cy="0" r="4" fill="#EF7D00"/><text x="58" y="3" font-size="7" fill="#999">Belegt</text>';
-        h += '<circle cx="100" cy="0" r="4" fill="#3b82f6"/><text x="108" y="3" font-size="7" fill="#999">Du</text>';
-        h += '<circle cx="140" cy="0" r="4" fill="#888"/><text x="148" y="3" font-size="7" fill="#999">Konferenz</text></g>';
-        
-        h += '</svg>';
-        return h;
-    }
+        dotsEl.innerHTML = html;
+    };
+    
+    window.officeFilterColleagues = function() {
+        var q = (document.getElementById('officeSearchColleague')||{}).value||'';
+        q = q.toLowerCase();
+        document.querySelectorAll('#officeColleagueList .colleague-row').forEach(function(row) {
+            var name = row.getAttribute('data-name')||'';
+            row.style.display = !q || name.indexOf(q)!==-1 ? '' : 'none';
+        });
+    };
     
     // ===============================================================
     // TAB 3: WOCHE — Week overview with all colleagues
