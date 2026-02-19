@@ -851,9 +851,9 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                             <span class="sidebar-label">Support</span>
                         </button>
-                        <button onclick="showView('ideenboard')" data-module="ideenboard" data-tooltip="Ideenboard" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-                            <span class="sidebar-label">Ideenboard</span>
+                        <button onclick="showView('entwicklung')" data-module="entwicklung" data-tooltip="Entwicklung" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                            <span class="sidebar-label">Entwicklung</span>
                         </button>
                         <button onclick="showView('shop')" data-module="shop" data-tooltip="Shop" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
@@ -883,12 +883,7 @@
 
 
                         <!-- Dev-Status (nur HQ/Admin) -->
-                        <div id="devStatusNavSection">
-                        <hr class="border-gray-600 my-3">
-                        <button onclick="showView('devStatus')" data-tooltip="Dev-Status" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                            <span class="sidebar-label">Dev-Status</span>
-                        </button>
+                        <div id="devStatusNavSection" style="display:none">
                         </div>
 
                         <!-- ═══ EXTERN (BikeEngine) SIDEBAR ═══ -->
@@ -1003,15 +998,7 @@
                                 <span>🏢</span><span class="sidebar-label">HQ Allgemein</span>
                             </button>
 
-                            <button onclick="showView('hqFeatureFlags')" data-tooltip="Feature Flags" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
-                                <span>🚩</span><span class="sidebar-label">Feature Flags</span>
-                                <span class="sidebar-badge ml-auto text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
-                            </button>
-
-                            <button onclick="showView('hqBackups')" data-tooltip="Backups" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
-                                <span>💾</span><span class="sidebar-label">Backups</span>
-                                <span class="sidebar-badge ml-auto text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
-                            </button>
+                            <!-- Feature Flags & Backups moved to Entwicklung -->
 
                             <button onclick="showView('hqVerkauf')" data-tooltip="Verkauf" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1028,7 +1015,7 @@
                                 <span class="sidebar-badge ml-auto text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
                             </button>
 
-                            <button onclick="showView('devStatus');setTimeout(function(){showDevTab('nutzung')},100)" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('entwicklung');setTimeout(function(){showEntwicklungTab('system')},100)" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
@@ -1047,11 +1034,7 @@
                                 <span class="sidebar-label" data-i18n="nav_support">Support</span>
                             </button>
 
-                            <button onclick="showView('hqIdeen')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-                                <span class="sidebar-label" data-i18n="nav_ideaboard">Ideenboard</span>
-                                <span class="ml-auto bg-vit-orange text-white text-[9px] rounded-full px-1.5 py-0.5 font-bold" id="hqFbBadge" style="display:none">0</span>
-                            </button>
+                            <!-- HQ Ideenboard moved to Entwicklung -->
 
                             <button onclick="showView('hqShop')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
@@ -2839,27 +2822,30 @@
                 </div>
 
                 <!-- ===== IDEENBOARD VIEW (Dev Pipeline) ===== -->
-                <div id="ideenboardView" class="view" style="display: none;">
+                <div id="entwicklungView" class="view" style="display: none;">
                     <div class="flex items-center justify-between mb-4">
                         <div>
-                            <h1 class="h1-headline text-gray-800">IDEENBOARD</h1>
-                            <p class="text-sm text-gray-500 mt-1">Ideen einreichen, automatische Analyse, HQ-Freigabe, Entwicklungsplanung</p>
+                            <h1 class="h1-headline text-gray-800">ENTWICKLUNG</h1>
+                            <p class="text-sm text-gray-500 mt-1">Feedback, Modulübersicht, Releases & Steuerung</p>
                         </div>
                         <button onclick="toggleDevSubmitForm()" class="px-4 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90 flex items-center space-x-2">
                             <span>💡</span><span>Feedback geben</span>
                         </button>
                     </div>
 
-                    <!-- Tab Navigation -->
-                    <div class="flex space-x-1 bg-gray-100 rounded-lg p-1 mb-5">
-                        <button onclick="showIdeenTab('meine')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold bg-white text-gray-800 shadow-sm" data-dtab="meine">📋 Meine Feedbacks</button>
-                        <button onclick="showIdeenTab('alle')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500" data-dtab="alle">🌐 Alle Ideen</button>
-                        <button onclick="showIdeenTab('board')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500" data-dtab="board" id="devTabBoardBtn" style="display:none;">🎯 HQ-Ideenboard</button>
-                        <button onclick="showIdeenTab('planung')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500" data-dtab="planung" id="devTabPlanungBtn" style="display:none;">📅 Planung</button>
-                        <button onclick="showIdeenTab('roadmap')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500" data-dtab="roadmap">🚀 Entwicklung</button>
+                    <!-- Unified Tab Navigation -->
+                    <div class="flex items-center space-x-1 bg-gray-100 rounded-lg p-1 mb-5 overflow-x-auto" id="entwicklungTabs">
+                        <button onclick="showEntwicklungTab('ideen')" class="entw-tab-btn px-4 py-2 rounded-md text-sm font-semibold bg-white text-gray-800 shadow-sm whitespace-nowrap" data-etab="ideen">💡 Ideen</button>
+                        <button onclick="showEntwicklungTab('module')" class="entw-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="module">📦 Module</button>
+                        <button onclick="showEntwicklungTab('releases')" class="entw-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="releases">🚀 Releases</button>
+                        <!-- HQ-only tabs -->
+                        <span class="entw-hq-sep border-l border-gray-300 h-5 mx-1" style="display:none"></span>
+                        <button onclick="showEntwicklungTab('steuerung')" class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="steuerung" style="display:none">🎯 Steuerung</button>
+                        <button onclick="showEntwicklungTab('flags')" class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="flags" style="display:none">🚩 Feature Flags</button>
+                        <button onclick="showEntwicklungTab('system')" class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="system" style="display:none">⚙️ System</button>
                     </div>
 
-                    <!-- ===== Submit Form (Toggle) ===== -->
+                    <!-- Submit Form (same as before, toggled) -->
                     <div id="devSubmitForm" class="hidden vit-card p-5 mb-6 border-2 border-vit-orange/20 relative">
                         <button onclick="toggleDevSubmitForm()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 text-lg transition">&times;</button>
                         <h3 class="font-semibold text-gray-800 mb-1">💡 Feedback / Idee einreichen</h3>
@@ -2947,21 +2933,81 @@
                         </div>
                     </div>
 
-                    <!-- Stats (nur auf Ideenboard-Tabs, nicht auf Entwicklung) -->
-                    <div id="devStatsBar" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-                        <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-gray-800" id="devStatTotal">0</p><p class="text-[10px] text-gray-500">Gesamt</p></div>
-                        <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-blue-600" id="devStatNeu">0</p><p class="text-[10px] text-gray-500">Neu / In Prüfung</p></div>
-                        <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-purple-600" id="devStatBoard">0</p><p class="text-[10px] text-gray-500">Im Ideenboard</p></div>
-                        <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-yellow-600" id="devStatDev">0</p><p class="text-[10px] text-gray-500">In Entwicklung</p></div>
-                        <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-green-600" id="devStatDone">0</p><p class="text-[10px] text-gray-500">Ausgerollt</p></div>
+                    <!-- ===== TAB: Ideen ===== -->
+                    <div id="entwTabIdeen" class="entw-tab-content">
+                        <!-- Filter Bar -->
+                        <div class="flex flex-wrap items-center gap-2 mb-4">
+                            <select id="entwFilterScope" onchange="renderEntwIdeen()" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5">
+                                <option value="alle">Alle Bereiche</option>
+                                <option value="portal">Portal</option>
+                                <option value="netzwerk">Netzwerk</option>
+                            </select>
+                            <select id="entwFilterStatus" onchange="renderEntwIdeen()" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5">
+                                <option value="alle">Alle Status</option>
+                                <option value="neu">Neu / In Prüfung</option>
+                                <option value="board">Im Ideenboard</option>
+                                <option value="dev">In Entwicklung</option>
+                                <option value="done">Umgesetzt</option>
+                            </select>
+                            <select id="entwFilterKat" onchange="renderEntwIdeen()" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5">
+                                <option value="alle">Alle Kategorien</option>
+                                <option value="feature">Feature</option>
+                                <option value="bug">Bug</option>
+                                <option value="verbesserung">Verbesserung</option>
+                                <option value="design">Design</option>
+                                <option value="sonstiges">Sonstiges</option>
+                            </select>
+                            <select id="entwFilterQuelle" onchange="renderEntwIdeen()" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5">
+                                <option value="alle">Alle Quellen</option>
+                                <option value="meine">Meine</option>
+                                <option value="standort">Mein Standort</option>
+                            </select>
+                            <span class="text-xs text-gray-400 ml-auto" id="entwIdeenCount"></span>
+                        </div>
+                        <!-- Stats -->
+                        <div id="entwStatsBar" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+                            <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-gray-800" id="entwStatTotal">0</p><p class="text-[10px] text-gray-500">Gesamt</p></div>
+                            <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-blue-600" id="entwStatNeu">0</p><p class="text-[10px] text-gray-500">Neu / In Prüfung</p></div>
+                            <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-purple-600" id="entwStatBoard">0</p><p class="text-[10px] text-gray-500">Im Ideenboard</p></div>
+                            <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-yellow-600" id="entwStatDev">0</p><p class="text-[10px] text-gray-500">In Entwicklung</p></div>
+                            <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-green-600" id="entwStatDone">0</p><p class="text-[10px] text-gray-500">Ausgerollt</p></div>
+                        </div>
+                        <div id="entwIdeenContent"></div>
                     </div>
 
-                    <!-- Content Area (switched by tabs) -->
-                    <div id="ideenTabMeine" class="ideen-tab-content"></div>
-                    <div id="ideenTabAlle" class="ideen-tab-content" style="display:none;"></div>
-                    <div id="ideenTabBoard" class="ideen-tab-content" style="display:none;"></div>
-                    <div id="ideenTabPlanung" class="ideen-tab-content" style="display:none;"></div>
-                    <div id="ideenTabRoadmap" class="ideen-tab-content" style="display:none;"></div>
+                    <!-- ===== TAB: Module ===== -->
+                    <div id="entwTabModule" class="entw-tab-content" style="display:none;">
+                        <div class="flex flex-wrap items-center gap-2 mb-6">
+                            <button onclick="filterModulStatus('alle')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white" data-f="alle">Alle</button>
+                            <button onclick="filterModulStatus('standort')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="standort">Standort-Module</button>
+                            <button onclick="filterModulStatus('hq')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="hq">HQ-Module</button>
+                            <button onclick="filterModulStatus('widgets')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="widgets">Dashboard-Widgets</button>
+                            <span class="border-l border-gray-300 h-5 mx-1"></span>
+                            <button onclick="filterModulStatus('kiPrio')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="kiPrio">🤖 Priorität KI</button>
+                            <button onclick="filterModulStatus('hqPrio')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="hqPrio">🏢 Prio HQ</button>
+                        </div>
+                        <div id="entwModulContent"></div>
+                    </div>
+
+                    <!-- ===== TAB: Releases ===== -->
+                    <div id="entwTabReleases" class="entw-tab-content" style="display:none;">
+                        <div id="entwReleasesContent"></div>
+                    </div>
+
+                    <!-- ===== TAB: Steuerung (HQ only) ===== -->
+                    <div id="entwTabSteuerung" class="entw-tab-content" style="display:none;">
+                        <div id="entwSteuerungContent"></div>
+                    </div>
+
+                    <!-- ===== TAB: Feature Flags (HQ only) ===== -->
+                    <div id="entwTabFlags" class="entw-tab-content" style="display:none;">
+                        <div id="entwFlagsContent"></div>
+                    </div>
+
+                    <!-- ===== TAB: System (HQ only) ===== -->
+                    <div id="entwTabSystem" class="entw-tab-content" style="display:none;">
+                        <div id="entwSystemContent"></div>
+                    </div>
 
                     <!-- Detail Modal -->
                     <div id="devDetailModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-10 overflow-y-auto" onclick="if(event.target===this)closeDevDetail()">
@@ -7010,7 +7056,7 @@
             document.querySelectorAll('.demo-mode-active').forEach(function(v){ v.classList.remove('demo-mode-active'); });
             Object.keys(sbModulStatus).forEach(function(key) {
                 if(sbModulStatus[key] === 'demo') {
-                    var viewMap = {startseite:'homeView',verkauf:'verkaufView',kalender:'kalenderView',aufgaben:'todoView',kommunikation:'kommunikationView',controlling:'controllingView',marketing:'marketingView',einkauf:'einkaufView',dashboards:'dashboardsView',allgemein:'allgemeinView',wissen:'wissenView',support:'supportView',ideenboard:'ideenboardView',shop:'shopView',onboarding:'onboardingView',mitarbeiter:'mitarbeiterView',aktenschrank:'aktenschrankView'};
+                    var viewMap = {startseite:'homeView',verkauf:'verkaufView',kalender:'kalenderView',aufgaben:'todoView',kommunikation:'kommunikationView',controlling:'controllingView',marketing:'marketingView',einkauf:'einkaufView',dashboards:'dashboardsView',allgemein:'allgemeinView',wissen:'wissenView',support:'supportView',entwicklung:'entwicklungView',shop:'shopView',onboarding:'onboardingView',mitarbeiter:'mitarbeiterView',aktenschrank:'aktenschrankView'};
                     var viewId = viewMap[key];
                     var viewEl = viewId ? document.getElementById(viewId) : null;
                     if(viewEl) {
@@ -7361,7 +7407,7 @@
             'wissen':         ['alle'],
             'support':        ['alle'],
             'aktenschrank':   ['inhaber','buchhaltung'],
-            'ideenboard':     ['alle'],
+            'entwicklung':     ['alle'],
             'shop':           ['inhaber'],
             'onboarding':     ['inhaber','external_owner'],
             'mitarbeiter':    ['inhaber'],
@@ -7371,7 +7417,7 @@
 
         // Prüft ob der aktuelle User Zugriff auf eine View hat
         function hasAccess(viewName) {
-            if(currentRole === 'hq') return viewName.indexOf('hq')===0 || viewName==='kalender' || viewName==='todo' || viewName==='kommunikation' || viewName==='devStatus' || viewName==='ideenboard';
+            if(currentRole === 'hq') return viewName.indexOf('hq')===0 || viewName==='kalender' || viewName==='todo' || viewName==='kommunikation' || viewName==='entwicklung';
             // Extern level: only allow specific views
             if(SESSION.account_level === 'extern') {
                 var externAllowed = ['externHome','onboarding','externWissen','wissen','kommunikation','support','notifications'];
@@ -8033,7 +8079,7 @@
                 'wissen': ['alle'],
                 'support': ['alle'],
                 'aktenschrank': ['inhaber','buchhaltung'],
-                'ideenboard': ['alle'],
+                'entwicklung': ['alle'],
                 'shop': ['inhaber']
             };
             Object.keys(toolViews).forEach(function(viewName){
@@ -13873,7 +13919,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         showView = function(v) {
             origShowView(v);
             if(v==='support') { renderTickets('all'); renderKontakte(); }
-            if(v==='ideenboard') { renderDevPipeline(); }
+            if(v==='entwicklung') { renderEntwicklung(); }
             if(v==='wissen') { renderWissenGlobal(); }
             if(v==='shop') { shopAllProducts=[]; shopVariants={}; renderShop(); }
         };
@@ -14108,13 +14154,296 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             updateDevFileList();
         }
 
+        // ============================================
+        // ENTWICKLUNG V2 — Unified View Logic
+        // ============================================
+        var entwCurrentTab = 'ideen';
+
+        async function renderEntwicklung() {
+            var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
+            // Show/hide HQ-only tabs
+            document.querySelectorAll('.entw-hq-tab, .entw-hq-sep').forEach(function(el) {
+                el.style.display = isHQ ? '' : 'none';
+            });
+            // Load data based on current tab
+            showEntwicklungTab(entwCurrentTab);
+        }
+
+        function showEntwicklungTab(tab) {
+            entwCurrentTab = tab;
+            // Update tab buttons
+            document.querySelectorAll('.entw-tab-btn').forEach(function(b) {
+                var isActive = b.getAttribute('data-etab') === tab;
+                b.className = 'entw-tab-btn px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap ' + 
+                    (isActive ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500') +
+                    (b.classList.contains('entw-hq-tab') ? ' entw-hq-tab' : '');
+            });
+            // Hide all tab contents
+            document.querySelectorAll('.entw-tab-content').forEach(function(c) { c.style.display = 'none'; });
+            // Show target tab
+            var targetId = 'entwTab' + tab.charAt(0).toUpperCase() + tab.slice(1);
+            var target = document.getElementById(targetId);
+            if(target) target.style.display = '';
+            // Render tab content
+            renderEntwTabContent(tab);
+        }
+
+        async function renderEntwTabContent(tab) {
+            if(tab === 'ideen') {
+                await loadDevSubmissions();
+                renderEntwIdeen();
+            } else if(tab === 'module') {
+                renderModulStatus();
+                // Render into entwModulContent instead of modulStatusContent
+                var src = document.getElementById('modulStatusContent');
+                var dst = document.getElementById('entwModulContent');
+                if(src && dst && src !== dst) { dst.innerHTML = src.innerHTML; }
+            } else if(tab === 'releases') {
+                await renderEntwReleases();
+            } else if(tab === 'steuerung') {
+                await renderEntwSteuerung();
+            } else if(tab === 'flags') {
+                await renderEntwFlags();
+            } else if(tab === 'system') {
+                await renderEntwSystem();
+            }
+        }
+
+        async function loadDevSubmissions() {
+            try {
+                var query = sb.from('dev_submissions').select('*, dev_ki_analysen(zusammenfassung, vision_fit_score, machbarkeit, aufwand_schaetzung), dev_votes(user_id)').order('created_at', {ascending: false});
+                var resp = await query;
+                if(resp.error) throw resp.error;
+                devSubmissions = resp.data || [];
+            } catch(err) {
+                console.error('DevSubmissions load:', err);
+                devSubmissions = [];
+            }
+            // Update stats
+            var total = devSubmissions.length;
+            var neu = devSubmissions.filter(function(s){ return ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt'].indexOf(s.status) !== -1; }).length;
+            var board = devSubmissions.filter(function(s){ return ['im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1; }).length;
+            var dev = devSubmissions.filter(function(s){ return ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant'].indexOf(s.status) !== -1; }).length;
+            var done = devSubmissions.filter(function(s){ return s.status === 'ausgerollt'; }).length;
+            var e1=document.getElementById('entwStatTotal');if(e1)e1.textContent=total;
+            var e2=document.getElementById('entwStatNeu');if(e2)e2.textContent=neu;
+            var e3=document.getElementById('entwStatBoard');if(e3)e3.textContent=board;
+            var e4=document.getElementById('entwStatDev');if(e4)e4.textContent=dev;
+            var e5=document.getElementById('entwStatDone');if(e5)e5.textContent=done;
+        }
+
+        function renderEntwIdeen() {
+            var c = document.getElementById('entwIdeenContent');
+            if(!c) return;
+            var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
+            var userId = sbUser ? sbUser.id : null;
+            var fScope = document.getElementById('entwFilterScope');
+            var fStatus = document.getElementById('entwFilterStatus');
+            var fKat = document.getElementById('entwFilterKat');
+            var fQuelle = document.getElementById('entwFilterQuelle');
+            var scope = fScope ? fScope.value : 'alle';
+            var status = fStatus ? fStatus.value : 'alle';
+            var kat = fKat ? fKat.value : 'alle';
+            var quelle = fQuelle ? fQuelle.value : 'alle';
+
+            var items = devSubmissions.filter(function(s) {
+                if(scope !== 'alle' && s.scope !== scope) return false;
+                if(status === 'neu' && ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt'].indexOf(s.status) === -1) return false;
+                if(status === 'board' && ['im_ideenboard','hq_rueckfragen'].indexOf(s.status) === -1) return false;
+                if(status === 'dev' && ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant'].indexOf(s.status) === -1) return false;
+                if(status === 'done' && s.status !== 'ausgerollt') return false;
+                if(kat !== 'alle' && s.kategorie !== kat) return false;
+                if(quelle === 'meine' && s.user_id !== userId) return false;
+                if(quelle === 'standort' && s.standort_id !== currentStandortId) return false;
+                return true;
+            });
+
+            var countEl = document.getElementById('entwIdeenCount');
+            if(countEl) countEl.textContent = items.length + ' von ' + devSubmissions.length + ' Einträgen';
+
+            if(items.length === 0) {
+                c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-2">💡</p><p>Keine Ideen mit diesen Filtern gefunden</p></div>';
+                return;
+            }
+
+            var h = '<div class="space-y-3">';
+            items.forEach(function(s) {
+                var votes = (s.dev_votes || []).length;
+                var hasVoted = userId && (s.dev_votes || []).some(function(v){ return v.user_id === userId; });
+                var ki = s.dev_ki_analysen && s.dev_ki_analysen.length > 0 ? s.dev_ki_analysen[0] : null;
+                var scopeLabel = s.scope === 'netzwerk' ? '<span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-semibold">Netzwerk</span>' : '<span class="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-semibold">Portal</span>';
+                var statusLabel = devStatusLabels[s.status] || s.status;
+                var statusColor = devStatusColors[s.status] || 'bg-gray-100 text-gray-600';
+
+                h += '<div class="vit-card p-4 hover:shadow-md transition cursor-pointer" onclick="showDevDetail(\''+s.id+'\')">';
+                h += '<div class="flex items-start justify-between">';
+                h += '<div class="flex-1 min-w-0">';
+                h += '<div class="flex items-center gap-2 mb-1 flex-wrap">';
+                h += '<span class="text-xs font-semibold rounded px-2 py-0.5 '+statusColor+'">'+statusLabel+'</span>';
+                h += scopeLabel;
+                if(s.kategorie) h += '<span class="text-[10px] bg-gray-50 text-gray-500 px-1.5 py-0.5 rounded">'+s.kategorie+'</span>';
+                h += '</div>';
+                h += '<h3 class="font-semibold text-gray-800 text-sm truncate">'+((s.titel||s.text||'').substring(0,80))+'</h3>';
+                if(ki && ki.zusammenfassung) h += '<p class="text-xs text-gray-500 mt-1 line-clamp-2">'+ki.zusammenfassung+'</p>';
+                h += '</div>';
+                h += '<div class="flex items-center gap-3 ml-4 shrink-0">';
+                h += '<button onclick="event.stopPropagation();toggleDevVote(\''+s.id+'\')" class="flex items-center gap-1 text-sm '+(hasVoted?'text-vit-orange font-bold':'text-gray-400 hover:text-vit-orange')+'">';
+                h += '<span>'+(hasVoted?'▲':'△')+'</span><span>'+votes+'</span></button>';
+                if(ki && ki.vision_fit_score) h += '<div class="text-center"><div class="text-lg font-bold '+(ki.vision_fit_score>=7?'text-green-600':ki.vision_fit_score>=4?'text-yellow-600':'text-red-500')+'">'+ki.vision_fit_score+'</div><div class="text-[9px] text-gray-400">Fit</div></div>';
+                h += '</div></div></div>';
+            });
+            h += '</div>';
+            c.innerHTML = h;
+        }
+
+        async function renderEntwReleases() {
+            var c = document.getElementById('entwReleasesContent');
+            if(!c) return;
+            // Reuse existing release updates renderer
+            if(typeof renderReleaseUpdates === 'function') {
+                await renderReleaseUpdates();
+                var src = document.getElementById('releaseUpdatesContent');
+                if(src) c.innerHTML = src.innerHTML;
+            } else {
+                c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-2">🚀</p><p>Release-Updates werden geladen...</p></div>';
+                try {
+                    var resp = await sb.from('dev_submissions').select('titel,text,status,updated_at,kategorie').eq('status','ausgerollt').order('updated_at',{ascending:false}).limit(20);
+                    var items = (resp.data||[]);
+                    if(items.length === 0) { c.innerHTML = '<div class="text-center py-12 text-gray-400">Noch keine Releases</div>'; return; }
+                    var h = '<div class="space-y-4">';
+                    items.forEach(function(r) {
+                        h += '<div class="vit-card p-4"><div class="flex items-center gap-2 mb-2"><span class="text-xs font-semibold rounded px-2 py-0.5 bg-green-100 text-green-700">✅ Ausgerollt</span>';
+                        if(r.kategorie) h += '<span class="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">'+r.kategorie+'</span>';
+                        h += '<span class="text-xs text-gray-400 ml-auto">'+(r.updated_at?new Date(r.updated_at).toLocaleDateString('de-DE'):'')+'</span></div>';
+                        h += '<h3 class="font-semibold text-gray-800 text-sm">'+(r.titel||r.text||'')+'</h3></div>';
+                    });
+                    h += '</div>';
+                    c.innerHTML = h;
+                } catch(err) { c.innerHTML = '<div class="text-center py-8 text-red-400">Fehler: '+err.message+'</div>'; }
+            }
+        }
+
+        async function renderEntwSteuerung() {
+            var c = document.getElementById('entwSteuerungContent');
+            if(!c) return;
+            await loadDevSubmissions();
+            // Kanban board for HQ
+            var columns = [
+                {key:'neu', label:'📥 Eingang', statuses:['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt'], color:'blue'},
+                {key:'board', label:'🎯 Ideenboard', statuses:['im_ideenboard','hq_rueckfragen'], color:'purple'},
+                {key:'dev', label:'🔨 Entwicklung', statuses:['freigegeben','in_planung','in_entwicklung','im_review','release_geplant'], color:'yellow'},
+                {key:'done', label:'✅ Umgesetzt', statuses:['ausgerollt'], color:'green'},
+                {key:'parked', label:'⏸ Geparkt/Abgelehnt', statuses:['abgelehnt','geparkt'], color:'gray'}
+            ];
+            var h = '<div class="grid grid-cols-1 md:grid-cols-5 gap-4" style="min-height:400px">';
+            columns.forEach(function(col) {
+                var items = devSubmissions.filter(function(s) { return col.statuses.indexOf(s.status) !== -1; });
+                h += '<div class="bg-gray-50 rounded-xl p-3">';
+                h += '<div class="flex items-center justify-between mb-3"><h3 class="text-sm font-bold text-gray-700">'+col.label+'</h3><span class="text-xs bg-'+col.color+'-100 text-'+col.color+'-700 rounded-full px-2 py-0.5 font-semibold">'+items.length+'</span></div>';
+                h += '<div class="space-y-2">';
+                items.slice(0,10).forEach(function(s) {
+                    var statusLabel = devStatusLabels[s.status] || s.status;
+                    h += '<div class="bg-white rounded-lg p-3 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition" onclick="showDevDetail(\''+s.id+'\')">';
+                    h += '<p class="text-xs font-semibold text-gray-800 mb-1 line-clamp-2">'+(s.titel||s.text||'').substring(0,60)+'</p>';
+                    h += '<div class="flex items-center gap-1 flex-wrap">';
+                    h += '<span class="text-[9px] rounded px-1.5 py-0.5 '+(devStatusColors[s.status]||'bg-gray-100 text-gray-600')+'">'+statusLabel+'</span>';
+                    var votes = (s.dev_votes||[]).length;
+                    if(votes) h += '<span class="text-[9px] text-gray-400">▲'+votes+'</span>';
+                    h += '</div></div>';
+                });
+                if(items.length > 10) h += '<p class="text-xs text-gray-400 text-center mt-2">+'+(items.length-10)+' weitere</p>';
+                if(items.length === 0) h += '<p class="text-xs text-gray-300 text-center py-4">Keine Einträge</p>';
+                h += '</div></div>';
+            });
+            h += '</div>';
+            c.innerHTML = h;
+        }
+
+        async function renderEntwFlags() {
+            var c = document.getElementById('entwFlagsContent');
+            if(!c) return;
+            // Trigger the existing feature flags render if available
+            if(typeof renderHqFf === 'function') { renderHqFf(); return; }
+            try {
+                var resp = await sb.from('feature_flags').select('*').order('created_at', {ascending: false});
+                var flags = resp.data || [];
+                if(flags.length === 0) { c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-2">🚩</p><p>Keine Feature Flags vorhanden</p><button onclick="ffShowCreate()" class="mt-3 px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold">+ Neuer Flag</button></div>'; return; }
+                var active = flags.filter(function(f){return f.enabled;}).length;
+                var h = '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">';
+                h += '<div class="vit-card p-3 text-center"><p class="text-xl font-bold text-gray-800">'+flags.length+'</p><p class="text-[10px] text-gray-500">Gesamt</p></div>';
+                h += '<div class="vit-card p-3 text-center"><p class="text-xl font-bold text-green-600">'+active+'</p><p class="text-[10px] text-gray-500">Aktiv</p></div>';
+                h += '<div class="vit-card p-3 text-center"><p class="text-xl font-bold text-gray-400">'+(flags.length-active)+'</p><p class="text-[10px] text-gray-500">Inaktiv</p></div>';
+                h += '<div class="vit-card p-3 text-center"><button onclick="ffShowCreate()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">+ Neuer Flag</button></div>';
+                h += '</div>';
+                h += '<div class="space-y-3">';
+                flags.forEach(function(f) {
+                    h += '<div class="vit-card p-4 flex items-center justify-between">';
+                    h += '<div class="flex-1 min-w-0">';
+                    h += '<div class="flex items-center gap-2 mb-1"><span class="font-mono text-sm font-bold text-gray-800">'+f.flag_key+'</span>';
+                    h += '<span class="text-[10px] rounded px-1.5 py-0.5 font-semibold '+(f.enabled?'bg-green-100 text-green-700':'bg-gray-100 text-gray-500')+'">'+(f.enabled?'Aktiv':'Inaktiv')+'</span>';
+                    if(f.scope) h += '<span class="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">'+f.scope+'</span>';
+                    h += '</div>';
+                    if(f.rollout_percent !== null && f.rollout_percent !== undefined) h += '<p class="text-xs text-gray-500">Rollout: '+f.rollout_percent+'%</p>';
+                    h += '</div>';
+                    h += '<div class="flex items-center gap-2">';
+                    h += '<button onclick="ffToggle(\''+f.id+'\','+(!f.enabled)+')" class="px-3 py-1.5 text-xs font-semibold rounded-lg '+(f.enabled?'bg-red-50 text-red-600 hover:bg-red-100':'bg-green-50 text-green-600 hover:bg-green-100')+'">'+(f.enabled?'Deaktivieren':'Aktivieren')+'</button>';
+                    h += '<button onclick="ffEdit(\''+f.id+'\')" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100">Bearbeiten</button>';
+                    h += '</div></div>';
+                });
+                h += '</div>';
+                c.innerHTML = h;
+            } catch(err) { c.innerHTML = '<div class="text-center py-8 text-red-400">Fehler: '+err.message+'</div>'; }
+        }
+
+        async function renderEntwSystem() {
+            var c = document.getElementById('entwSystemContent');
+            if(!c) return;
+            // System tab: Backups + Portal-Nutzung
+            var h = '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">';
+            // Backup section
+            h += '<div><h3 class="text-lg font-bold text-gray-800 mb-4">💾 Backups</h3><div id="entwBackupContent"><div class="text-center py-8 text-gray-400">Wird geladen...</div></div></div>';
+            // Portal Nutzung section
+            h += '<div><h3 class="text-lg font-bold text-gray-800 mb-4">📊 Portal-Nutzung</h3><div id="entwNutzungContent"><div class="text-center py-8 text-gray-400">Wird geladen...</div></div></div>';
+            h += '</div>';
+            c.innerHTML = h;
+            // Load backup data
+            try {
+                var days = 7;
+                var since = new Date(Date.now() - days*86400000).toISOString();
+                var resp = await sb.from('backup_log').select('*').gte('started_at', since).order('started_at', {ascending: false}).limit(20);
+                var backups = resp.data || [];
+                var bc = document.getElementById('entwBackupContent');
+                if(!bc) return;
+                if(backups.length === 0) { bc.innerHTML = '<div class="text-center py-6 text-gray-400">Keine Backups in den letzten '+days+' Tagen</div>'; }
+                else {
+                    var bh = '<div class="space-y-2">';
+                    backups.forEach(function(b) {
+                        var st = b.status === 'completed' ? '✅' : b.status === 'failed' ? '❌' : '⏳';
+                        bh += '<div class="vit-card p-3 flex items-center gap-3"><span>'+st+'</span><div class="flex-1 min-w-0">';
+                        bh += '<p class="text-sm font-semibold text-gray-800">'+new Date(b.started_at).toLocaleString('de-DE')+'</p>';
+                        bh += '<p class="text-xs text-gray-500">'+(b.backup_type||'auto')+' • '+(b.tables_count||'?')+' Tabellen • '+(b.total_rows||'?')+' Rows</p>';
+                        bh += '</div></div>';
+                    });
+                    bh += '</div>';
+                    bh += '<button onclick="bkTriggerBackup()" class="mt-3 px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Backup jetzt starten</button>';
+                    bc.innerHTML = bh;
+                }
+            } catch(err) { var bc2=document.getElementById('entwBackupContent'); if(bc2) bc2.innerHTML='<div class="text-red-400 text-sm">'+err.message+'</div>'; }
+            // Portal-Nutzung: reuse existing if available
+            var nc = document.getElementById('entwNutzungContent');
+            if(nc) {
+                if(typeof renderDevNutzung === 'function') { renderDevNutzung('entwNutzungContent'); }
+                else { nc.innerHTML = '<div class="text-center py-6 text-gray-400">Portal-Nutzungsanalyse kommt bald</div>'; }
+            }
+        }
+
         function showIdeenTab(tab) {
             devCurrentTab = tab;
             document.querySelectorAll('.dev-tab-btn').forEach(function(b) {
                 var isActive = b.getAttribute('data-dtab') === tab;
                 b.className = 'dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold ' + (isActive ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500');
             });
-            document.querySelectorAll('#ideenboardView .ideen-tab-content').forEach(function(c) { c.style.display = 'none'; });
+            document.querySelectorAll('#entwicklungView .ideen-tab-content, #ideenboardView .ideen-tab-content').forEach(function(c) { c.style.display = 'none'; });
             var target = document.getElementById('ideenTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
             if(target) target.style.display = '';
             // Hide ideenboard stats on Entwicklung tab (it has its own)
@@ -16087,7 +16416,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         function renderModulStatus() {
-            var el = document.getElementById('modulStatusContent');
+            var el = document.getElementById('entwModulContent') || document.getElementById('modulStatusContent');
             if(!el) return;
             var h = '';
             var allModules = getAllModulesFlat();
@@ -16650,7 +16979,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             // Redirect 'home' to HQ Cockpit when in HQ mode
             if(v==='home' && currentRole==='hq') { v='hqCockpit'; }
             if(v==='home' && SESSION.account_level==='extern') { v='externHome'; }
-            if(v==='hqIdeen') { v='ideenboard'; }
+            if(v==='hqIdeen') { v='entwicklung'; showView('entwicklung'); return; }
             origShowView2(v);
             if(v==='externHome') renderExternHome();
             if(v==='onboarding') renderOnboardingView();
@@ -16689,7 +17018,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(v==='verkauf') { showVerkaufTab('pipeline'); }
             if(v==='kommunikation') { showKommTab('chat'); }
             if(v==='aktenschrank') { loadAktenFiles(); }
-            if(v==='devStatus') { renderDevStatus(); }
+            if(v==='devStatus') { showView('entwicklung'); setTimeout(function(){showEntwicklungTab('module')},50); return; }
         };
 
         // === MOBILE SIDEBAR ===
@@ -22504,7 +22833,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 {key:'wissen',label:'Wissen',icon:'📚',core:false},
                 {key:'support',label:'Support',icon:'🎫',core:false},
                 {key:'aktenschrank',label:'Aktenschrank',icon:'📁',core:false},
-                {key:'ideenboard',label:'Ideenboard',icon:'💡',core:false},
+                {key:'entwicklung',label:'Entwicklung',icon:'💻',core:false},
                 {key:'shop',label:'Shop',icon:'🛍️',core:false},
                 {key:'onboarding',label:'Onboarding',icon:'🎯',core:false}
             ];
@@ -24449,8 +24778,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 viewEl.style.display = 'block';
                 console.log('SUCCESS: Showed', viewId, '- offsetHeight:', viewEl.offsetHeight);
                 if(viewName === 'dashboards') initDashboardTabs();
-                if(viewName === 'hqFeatureFlags') loadFFView();
-                if(viewName === 'hqBackups') loadBkView();
+                if(viewName === 'hqFeatureFlags') { showView('entwicklung'); setTimeout(function(){showEntwicklungTab('flags')},50); return; }
+                if(viewName === 'hqBackups') { showView('entwicklung'); setTimeout(function(){showEntwicklungTab('system')},50); return; }
                 
                 var areaMap = {home:'allgemein',controlling:'controlling',verkauf:'verkauf',marketing:'marketing'};
                 var containerMap = {home:'trainerAreaHome',controlling:'trainerAreaControlling',verkauf:'trainerAreaVerkauf',marketing:'trainerAreaMarketing'};
@@ -31555,7 +31884,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     // ── Open / Close ──
     window.fbOpen = function(){
         // Zum neuen Ideenboard navigieren und Formular öffnen
-        showView('ideenboard');
+        showView('entwicklung');
         setTimeout(function(){
             var f = document.getElementById('devSubmitForm');
             if(f && f.classList.contains('hidden')) toggleDevSubmitForm();
