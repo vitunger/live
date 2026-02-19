@@ -578,30 +578,6 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="vit:bikes Portal">
 
-    <!-- Sentry Error Tracking -->
-    <script src="https://browser.sentry-cdn.com/8.53.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
-    <script>
-        if(typeof Sentry !== 'undefined') {
-            Sentry.init({
-                dsn: "https://cc19df181b02b2b54c9472b9e61857be@o4510913005879296.ingest.de.sentry.io/4510913053524048",
-                environment: window.location.hostname === 'localhost' ? 'development' : 'production',
-                tracesSampleRate: 0.2,
-                replaysOnErrorSampleRate: 0.5,
-                beforeSend: function(event) {
-                    if(event.request && event.request.headers) {
-                        delete event.request.headers['Authorization'];
-                    }
-                    return event;
-                },
-                ignoreErrors: [
-                    'ResizeObserver loop',
-                    'Network request failed',
-                    'Load failed',
-                    'Failed to fetch'
-                ]
-            });
-        }
-    </script>
 </head>
 <body class="bg-gray-50">
 
@@ -1025,6 +1001,11 @@
                             </button>
                             <button onclick="showView('hqAllgemein')" data-tooltip="HQ Allgemein" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <span>🏢</span><span class="sidebar-label">HQ Allgemein</span>
+                            </button>
+
+                            <button onclick="showView('hqFeatureFlags')" data-tooltip="Feature Flags" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                                <span>🚩</span><span class="sidebar-label">Feature Flags</span>
+                                <span class="sidebar-badge ml-auto text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
                             </button>
 
                             <button onclick="showView('hqVerkauf')" data-tooltip="Verkauf" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
@@ -6204,6 +6185,143 @@
                     </div>
                 </div>
 
+                <!-- ============================================ -->
+                <!-- HQ FEATURE FLAGS MANAGEMENT VIEW             -->
+                <!-- ============================================ -->
+                <div id="hqFeatureFlagsView" class="view" style="display:none">
+                    <div class="p-6 md:p-8 max-w-7xl mx-auto">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <p class="h2-headline text-vit-gray mb-1">HQ STEUERUNG</p>
+                                <h1 class="h1-headline">🚩 Feature Flags</h1>
+                                <p class="text-sm text-gray-500 mt-1">Beta-Features kontrolliert an Nutzer, Standorte oder Rollen ausrollen</p>
+                            </div>
+                            <button onclick="ffShowCreate()" class="px-4 py-2 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 flex items-center space-x-2">
+                                <span>+</span><span>Neuer Flag</span>
+                            </button>
+                        </div>
+
+                        <!-- Stats -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div class="vit-card p-4 text-center">
+                                <p class="text-2xl font-bold text-gray-800" id="ffStatTotal">0</p>
+                                <p class="text-xs text-gray-500">Gesamt</p>
+                            </div>
+                            <div class="vit-card p-4 text-center">
+                                <p class="text-2xl font-bold text-green-600" id="ffStatActive">0</p>
+                                <p class="text-xs text-gray-500">Aktiv</p>
+                            </div>
+                            <div class="vit-card p-4 text-center">
+                                <p class="text-2xl font-bold text-yellow-600" id="ffStatBeta">0</p>
+                                <p class="text-xs text-gray-500">Beta (mit Targeting)</p>
+                            </div>
+                            <div class="vit-card p-4 text-center">
+                                <p class="text-2xl font-bold text-gray-400" id="ffStatDisabled">0</p>
+                                <p class="text-xs text-gray-500">Deaktiviert</p>
+                            </div>
+                        </div>
+
+                        <!-- Flags List -->
+                        <div class="vit-card overflow-hidden">
+                            <div class="p-4 border-b flex items-center justify-between">
+                                <h3 class="font-bold text-gray-800">Alle Feature Flags</h3>
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="ffFilter('all')" class="ff-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white" data-f="all">Alle</button>
+                                    <button onclick="ffFilter('active')" class="ff-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="active">Aktiv</button>
+                                    <button onclick="ffFilter('beta')" class="ff-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="beta">Beta</button>
+                                    <button onclick="ffFilter('disabled')" class="ff-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="disabled">Aus</button>
+                                </div>
+                            </div>
+                            <div id="ffFlagsList" class="divide-y">
+                                <p class="p-6 text-center text-gray-400">Lade Feature Flags...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature Flag Create/Edit Modal -->
+                <div id="ffModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" style="display:none;">
+                    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                        <div class="p-6 border-b flex items-center justify-between">
+                            <h3 class="text-lg font-bold text-gray-800" id="ffModalTitle">Neuer Feature Flag</h3>
+                            <button onclick="ffCloseModal()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <input type="hidden" id="ffEditId" value="">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Flag Key *</label>
+                                    <input type="text" id="ffKey" placeholder="z.B. bwa_ai_insights" class="w-full border rounded-lg px-3 py-2 text-sm" pattern="[a-z0-9_]+">
+                                    <p class="text-[10px] text-gray-400 mt-1">Nur Kleinbuchstaben, Zahlen, Unterstriche</p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Name *</label>
+                                    <input type="text" id="ffName" placeholder="z.B. BWA KI-Analyse" class="w-full border rounded-lg px-3 py-2 text-sm">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Beschreibung</label>
+                                <textarea id="ffDesc" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Was macht dieses Feature?"></textarea>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Scope</label>
+                                    <select id="ffScope" class="w-full border rounded-lg px-3 py-2 text-sm">
+                                        <option value="feature">Feature</option>
+                                        <option value="modul">Modul</option>
+                                        <option value="tab">Tab</option>
+                                        <option value="widget">Widget</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Modul-Zuordnung</label>
+                                    <input type="text" id="ffModul" placeholder="z.B. controlling" class="w-full border rounded-lg px-3 py-2 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Rollout %</label>
+                                    <input type="number" id="ffRollout" value="100" min="0" max="100" class="w-full border rounded-lg px-3 py-2 text-sm">
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="checkbox" id="ffEnabled" class="w-4 h-4 text-vit-orange rounded">
+                                    <span class="text-sm font-semibold text-gray-700">Aktiviert</span>
+                                </label>
+                                <div class="flex-1">
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Ablaufdatum (optional)</label>
+                                    <input type="date" id="ffExpires" class="w-full border rounded-lg px-3 py-2 text-sm">
+                                </div>
+                            </div>
+                            <hr>
+                            <h4 class="font-semibold text-gray-700 text-sm">🎯 Targeting (leer = für alle)</h4>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Bestimmte Rollen</label>
+                                <div id="ffRolesSelector" class="flex flex-wrap gap-2">
+                                    <!-- populated dynamically -->
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Bestimmte Standorte</label>
+                                <select id="ffStandorte" multiple class="w-full border rounded-lg px-3 py-2 text-sm" size="4">
+                                    <!-- populated dynamically -->
+                                </select>
+                                <p class="text-[10px] text-gray-400 mt-1">Ctrl/Cmd+Klick für Mehrfachauswahl</p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Bestimmte Nutzer (Beta-Tester)</label>
+                                <select id="ffUsers" multiple class="w-full border rounded-lg px-3 py-2 text-sm" size="4">
+                                    <!-- populated dynamically -->
+                                </select>
+                                <p class="text-[10px] text-gray-400 mt-1">Ctrl/Cmd+Klick für Mehrfachauswahl</p>
+                            </div>
+                        </div>
+                        <div class="p-6 border-t flex justify-between">
+                            <button onclick="ffCloseModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800 font-semibold text-sm">Abbrechen</button>
+                            <button onclick="ffSave()" class="px-6 py-2 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Speichern</button>
+                        </div>
+                    </div>
+                </div>
+
             <!-- Video-Pipeline Modal (global) -->
             <div id="vpModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" style="display:none;">
                 <div id="vpModalContent" class="bg-white rounded-xl shadow-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6"></div>
@@ -6216,7 +6334,7 @@
         // ============================================
         // PORTAL VERSION – wird bei jedem Deploy erhoeht
         // ============================================
-        var PORTAL_VERSION = '7.9.1.0218';
+        var PORTAL_VERSION = '7.10.0.0219';
 
         // ============================================
         // SUPABASE CLIENT
@@ -6285,9 +6403,304 @@
         function applyFeatureFlags() {
             document.querySelectorAll('[data-feature]').forEach(function(el) {
                 var k = el.getAttribute('data-feature');
-                el.style.display = isFeatureEnabled(k) ? '' : 'none';
+                var result = isFeatureEnabled(k);
+                el.style.display = result ? '' : 'none';
+                if(typeof logFeatureFlagCheck === 'function') logFeatureFlagCheck(k, result);
             });
         }
+
+        // ============================================
+        // HQ FEATURE FLAGS MANAGEMENT
+        // ============================================
+        var ffCurrentFilter = 'all';
+        var ffAllFlags = [];
+        var ffAllStandorte = [];
+        var ffAllUsers = [];
+        var ffAvailableRoles = ['inhaber','geschaeftsleitung','verkaeufer','werkstatt','admin','hq_admin','hq_mitarbeiter'];
+
+        async function loadFFView() {
+            try {
+                var [flagsResp, standorteResp, usersResp] = await Promise.all([
+                    sb.from('feature_flags').select('*').order('created_at', {ascending: false}),
+                    sb.from('standorte').select('id, name, ort').order('name'),
+                    sb.from('users').select('id, vorname, nachname, email, standort_id').order('nachname')
+                ]);
+                if(flagsResp.error) throw flagsResp.error;
+                ffAllFlags = flagsResp.data || [];
+                ffAllStandorte = standorteResp.data || [];
+                ffAllUsers = usersResp.data || [];
+                ffUpdateStats();
+                ffRenderList();
+            } catch(err) {
+                console.error('[FF] Load error:', err);
+                document.getElementById('ffFlagsList').innerHTML = '<p class="p-6 text-center text-red-500">Fehler beim Laden: ' + err.message + '</p>';
+            }
+        }
+
+        function ffUpdateStats() {
+            var total = ffAllFlags.length;
+            var active = ffAllFlags.filter(function(f){ return f.enabled && !ffHasTargeting(f); }).length;
+            var beta = ffAllFlags.filter(function(f){ return f.enabled && ffHasTargeting(f); }).length;
+            var disabled = ffAllFlags.filter(function(f){ return !f.enabled; }).length;
+            document.getElementById('ffStatTotal').textContent = total;
+            document.getElementById('ffStatActive').textContent = active;
+            document.getElementById('ffStatBeta').textContent = beta;
+            document.getElementById('ffStatDisabled').textContent = disabled;
+        }
+
+        function ffHasTargeting(f) {
+            return (f.target_users && f.target_users.length > 0) ||
+                   (f.target_standorte && f.target_standorte.length > 0) ||
+                   (f.target_roles && f.target_roles.length > 0) ||
+                   (f.rollout_percent < 100);
+        }
+
+        function ffGetStatus(f) {
+            if(!f.enabled) return {label:'Deaktiviert', color:'bg-gray-100 text-gray-600', dot:'bg-gray-400'};
+            if(f.expires_at && new Date(f.expires_at) < new Date()) return {label:'Abgelaufen', color:'bg-red-100 text-red-600', dot:'bg-red-400'};
+            if(ffHasTargeting(f)) return {label:'Beta', color:'bg-purple-100 text-purple-700', dot:'bg-purple-500'};
+            return {label:'Aktiv (alle)', color:'bg-green-100 text-green-700', dot:'bg-green-500'};
+        }
+
+        function ffFilter(type) {
+            ffCurrentFilter = type;
+            document.querySelectorAll('.ff-filter').forEach(function(btn){
+                var isActive = btn.getAttribute('data-f') === type;
+                btn.className = 'ff-filter text-xs px-3 py-1.5 rounded-full font-semibold ' + (isActive ? 'bg-vit-orange text-white' : 'bg-gray-100 text-gray-600');
+            });
+            ffRenderList();
+        }
+
+        function ffRenderList() {
+            var filtered = ffAllFlags;
+            if(ffCurrentFilter === 'active') filtered = ffAllFlags.filter(function(f){ return f.enabled && !ffHasTargeting(f); });
+            else if(ffCurrentFilter === 'beta') filtered = ffAllFlags.filter(function(f){ return f.enabled && ffHasTargeting(f); });
+            else if(ffCurrentFilter === 'disabled') filtered = ffAllFlags.filter(function(f){ return !f.enabled; });
+
+            if(!filtered.length) {
+                document.getElementById('ffFlagsList').innerHTML = '<p class="p-6 text-center text-gray-400">Keine Feature Flags in dieser Kategorie</p>';
+                return;
+            }
+
+            var h = '';
+            filtered.forEach(function(f) {
+                var st = ffGetStatus(f);
+                var targeting = [];
+                if(f.target_roles && f.target_roles.length) targeting.push(f.target_roles.length + ' Rolle(n)');
+                if(f.target_standorte && f.target_standorte.length) targeting.push(f.target_standorte.length + ' Standort(e)');
+                if(f.target_users && f.target_users.length) targeting.push(f.target_users.length + ' User');
+                if(f.rollout_percent < 100) targeting.push(f.rollout_percent + '% Rollout');
+                var targetStr = targeting.length ? targeting.join(' · ') : 'Alle Nutzer';
+
+                h += '<div class="p-4 hover:bg-gray-50 flex items-center justify-between group">';
+                h += '<div class="flex items-center space-x-3 flex-1 min-w-0">';
+                h += '<div class="w-2.5 h-2.5 rounded-full flex-shrink-0 ' + st.dot + '"></div>';
+                h += '<div class="min-w-0">';
+                h += '<div class="flex items-center space-x-2">';
+                h += '<span class="font-semibold text-sm text-gray-800 truncate">' + (f.name || f.flag_key) + '</span>';
+                h += '<code class="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-mono">' + f.flag_key + '</code>';
+                if(f.scope !== 'feature') h += '<span class="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">' + f.scope + '</span>';
+                if(f.modul_key) h += '<span class="text-[10px] bg-gray-50 text-gray-500 px-1.5 py-0.5 rounded">' + f.modul_key + '</span>';
+                h += '</div>';
+                h += '<p class="text-xs text-gray-500 mt-0.5">' + targetStr + '</p>';
+                if(f.description) h += '<p class="text-xs text-gray-400 mt-0.5 truncate">' + f.description + '</p>';
+                h += '</div></div>';
+                h += '<div class="flex items-center space-x-3 flex-shrink-0">';
+                h += '<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full ' + st.color + '">' + st.label + '</span>';
+                h += '<label class="relative inline-flex items-center cursor-pointer">';
+                h += '<input type="checkbox" class="sr-only peer" ' + (f.enabled ? 'checked' : '') + ' onchange="ffToggle(\'' + f.id + '\', this.checked)">';
+                h += '<div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[\'\'] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-vit-orange"></div>';
+                h += '</label>';
+                h += '<button onclick="ffShowEdit(\'' + f.id + '\')" class="text-gray-400 hover:text-vit-orange text-sm opacity-0 group-hover:opacity-100 transition" title="Bearbeiten">✏️</button>';
+                h += '<button onclick="ffDelete(\'' + f.id + '\')" class="text-gray-400 hover:text-red-500 text-sm opacity-0 group-hover:opacity-100 transition" title="Löschen">🗑️</button>';
+                h += '</div></div>';
+            });
+            document.getElementById('ffFlagsList').innerHTML = h;
+        }
+
+        async function ffToggle(flagId, enabled) {
+            try {
+                var resp = await sb.from('feature_flags').update({enabled: enabled, updated_at: new Date().toISOString(), updated_by: sbUser ? sbUser.id : null}).eq('id', flagId);
+                if(resp.error) throw resp.error;
+                var f = ffAllFlags.find(function(x){ return x.id === flagId; });
+                if(f) f.enabled = enabled;
+                ffUpdateStats();
+                ffRenderList();
+                await loadFeatureFlags(); // refresh client-side flags
+                showToast(enabled ? '✅ Feature aktiviert' : '⏸️ Feature deaktiviert', 'success');
+            } catch(err) {
+                console.error('[FF] Toggle error:', err);
+                showToast('Fehler: ' + err.message, 'error');
+            }
+        }
+
+        async function ffDelete(flagId) {
+            if(!confirm('Feature Flag wirklich löschen?')) return;
+            try {
+                var resp = await sb.from('feature_flags').delete().eq('id', flagId);
+                if(resp.error) throw resp.error;
+                ffAllFlags = ffAllFlags.filter(function(x){ return x.id !== flagId; });
+                ffUpdateStats();
+                ffRenderList();
+                await loadFeatureFlags();
+                showToast('🗑️ Feature Flag gelöscht', 'success');
+            } catch(err) {
+                console.error('[FF] Delete error:', err);
+                showToast('Fehler: ' + err.message, 'error');
+            }
+        }
+
+        function ffShowCreate() {
+            document.getElementById('ffEditId').value = '';
+            document.getElementById('ffModalTitle').textContent = 'Neuer Feature Flag';
+            document.getElementById('ffKey').value = '';
+            document.getElementById('ffKey').disabled = false;
+            document.getElementById('ffName').value = '';
+            document.getElementById('ffDesc').value = '';
+            document.getElementById('ffScope').value = 'feature';
+            document.getElementById('ffModul').value = '';
+            document.getElementById('ffRollout').value = 100;
+            document.getElementById('ffEnabled').checked = false;
+            document.getElementById('ffExpires').value = '';
+            ffPopulateSelectors();
+            document.getElementById('ffModal').style.display = 'flex';
+        }
+
+        function ffShowEdit(flagId) {
+            var f = ffAllFlags.find(function(x){ return x.id === flagId; });
+            if(!f) return;
+            document.getElementById('ffEditId').value = f.id;
+            document.getElementById('ffModalTitle').textContent = 'Feature Flag bearbeiten';
+            document.getElementById('ffKey').value = f.flag_key;
+            document.getElementById('ffKey').disabled = true;
+            document.getElementById('ffName').value = f.name || '';
+            document.getElementById('ffDesc').value = f.description || '';
+            document.getElementById('ffScope').value = f.scope || 'feature';
+            document.getElementById('ffModul').value = f.modul_key || '';
+            document.getElementById('ffRollout').value = f.rollout_percent;
+            document.getElementById('ffEnabled').checked = f.enabled;
+            document.getElementById('ffExpires').value = f.expires_at ? f.expires_at.substring(0,10) : '';
+            ffPopulateSelectors(f);
+            document.getElementById('ffModal').style.display = 'flex';
+        }
+
+        function ffPopulateSelectors(flag) {
+            // Roles
+            var rolesHtml = '';
+            ffAvailableRoles.forEach(function(r) {
+                var checked = flag && flag.target_roles && flag.target_roles.indexOf(r) !== -1;
+                rolesHtml += '<label class="flex items-center space-x-1.5 text-xs bg-gray-100 rounded-full px-3 py-1.5 cursor-pointer hover:bg-gray-200">';
+                rolesHtml += '<input type="checkbox" class="ff-role-cb w-3 h-3" value="' + r + '"' + (checked ? ' checked' : '') + '>';
+                rolesHtml += '<span>' + r + '</span></label>';
+            });
+            document.getElementById('ffRolesSelector').innerHTML = rolesHtml;
+
+            // Standorte
+            var stHtml = '';
+            ffAllStandorte.forEach(function(s) {
+                var sel = flag && flag.target_standorte && flag.target_standorte.indexOf(s.id) !== -1;
+                stHtml += '<option value="' + s.id + '"' + (sel ? ' selected' : '') + '>' + s.name + (s.ort ? ' (' + s.ort + ')' : '') + '</option>';
+            });
+            document.getElementById('ffStandorte').innerHTML = stHtml;
+
+            // Users
+            var uHtml = '';
+            ffAllUsers.forEach(function(u) {
+                var sel = flag && flag.target_users && flag.target_users.indexOf(u.id) !== -1;
+                var label = (u.vorname || '') + ' ' + (u.nachname || '') + (u.email ? ' <' + u.email + '>' : '');
+                uHtml += '<option value="' + u.id + '"' + (sel ? ' selected' : '') + '>' + label.trim() + '</option>';
+            });
+            document.getElementById('ffUsers').innerHTML = uHtml;
+        }
+
+        function ffCloseModal() {
+            document.getElementById('ffModal').style.display = 'none';
+        }
+
+        async function ffSave() {
+            var editId = document.getElementById('ffEditId').value;
+            var flagKey = document.getElementById('ffKey').value.trim();
+            var name = document.getElementById('ffName').value.trim();
+            if(!flagKey || !name) { showToast('Flag Key und Name sind Pflichtfelder', 'error'); return; }
+            if(!editId && !/^[a-z0-9_]+$/.test(flagKey)) { showToast('Flag Key: nur Kleinbuchstaben, Zahlen, Unterstriche', 'error'); return; }
+
+            var selectedRoles = [];
+            document.querySelectorAll('.ff-role-cb:checked').forEach(function(cb){ selectedRoles.push(cb.value); });
+            var selectedStandorte = Array.from(document.getElementById('ffStandorte').selectedOptions).map(function(o){ return o.value; });
+            var selectedUsers = Array.from(document.getElementById('ffUsers').selectedOptions).map(function(o){ return o.value; });
+            var expiresVal = document.getElementById('ffExpires').value;
+
+            var data = {
+                name: name,
+                description: document.getElementById('ffDesc').value.trim() || null,
+                enabled: document.getElementById('ffEnabled').checked,
+                rollout_percent: parseInt(document.getElementById('ffRollout').value) || 100,
+                scope: document.getElementById('ffScope').value,
+                modul_key: document.getElementById('ffModul').value.trim() || null,
+                target_roles: selectedRoles,
+                target_standorte: selectedStandorte,
+                target_users: selectedUsers,
+                expires_at: expiresVal ? new Date(expiresVal + 'T23:59:59Z').toISOString() : null,
+                updated_at: new Date().toISOString(),
+                updated_by: sbUser ? sbUser.id : null
+            };
+
+            try {
+                var resp;
+                if(editId) {
+                    resp = await sb.from('feature_flags').update(data).eq('id', editId).select();
+                } else {
+                    data.flag_key = flagKey;
+                    data.created_by = sbUser ? sbUser.id : null;
+                    resp = await sb.from('feature_flags').insert(data).select();
+                }
+                if(resp.error) throw resp.error;
+                ffCloseModal();
+                await loadFFView();
+                await loadFeatureFlags();
+                showToast(editId ? '✅ Feature Flag aktualisiert' : '✅ Feature Flag erstellt', 'success');
+            } catch(err) {
+                console.error('[FF] Save error:', err);
+                showToast('Fehler: ' + err.message, 'error');
+            }
+        }
+
+        // ============================================
+        // FEATURE FLAG EVENT LOGGING
+        // ============================================
+        var ffLogQueue = [];
+        var ffLogTimer = null;
+
+        function logFeatureFlagCheck(flagKey, result) {
+            if(!sbUser) return;
+            ffLogQueue.push({
+                flag_key: flagKey,
+                user_id: sbUser.id,
+                standort_id: sbProfile ? sbProfile.standort_id : null,
+                action: 'check',
+                result: result,
+                metadata: {ua: navigator.userAgent.substring(0,100)},
+                created_at: new Date().toISOString()
+            });
+            if(!ffLogTimer) {
+                ffLogTimer = setTimeout(ffFlushLog, 5000); // batch every 5s
+            }
+        }
+
+        async function ffFlushLog() {
+            ffLogTimer = null;
+            if(!ffLogQueue.length) return;
+            var batch = ffLogQueue.splice(0, 50);
+            try {
+                await sb.from('feature_flag_events').insert(batch);
+            } catch(err) {
+                console.warn('[FF] Event log error:', err.message);
+            }
+        }
+
+        // Hook into showView to load FF management when navigated to
+        var _origShowView = typeof showView === 'function' ? showView : null;
+
 
         // Modul-Status aus Supabase laden und auf Sidebar anwenden
         async function loadModulStatus() {
@@ -7028,10 +7441,6 @@
             if(hqDateEl) hqDateEl.textContent = 'Willkommen zurueck · ' + dateStr;
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
-            // Sentry User Context
-            if(typeof Sentry !== 'undefined') {
-                try { Sentry.setUser({ id: currentUserId, email: currentUserEmail, username: currentUserName }); } catch(e){}
-            }
             try { updateUIForRole(); updatePremiumFeatures(); } catch(e) { console.warn(e); }
             // Apply saved language
             if(currentLang !== 'de') { setTimeout(function(){ switchLang(currentLang); }, 500); }
@@ -7197,7 +7606,6 @@
 
         async function handleLogout() {
             await sb.auth.signOut();
-            if(typeof Sentry !== 'undefined') { try { Sentry.setUser(null); } catch(e){} }
             sbUser = null; sbProfile = null; sbRollen = []; sbStandort = null;
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('mainApp').style.display = 'none';
@@ -20503,8 +20911,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var filter = currentKzMaFilter || 'all';
                 var list = users.filter(function(u){
                     var st = u.status || 'aktiv';
-                    // Gesperrte User nur zeigen wenn explizit gefiltert
-                    if(st === 'gesperrt' && filter !== 'gesperrt') return false;
                     if(filter!=='all' && st!==filter) return false;
                     var stdName = u.standorte ? u.standorte.name : 'HQ';
                     if(stdFilter!=='all' && stdName!==stdFilter) return false;
@@ -21567,17 +21973,24 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         // === MITARBEITER LÖSCHEN ===
         async function deleteMa(userId, userName) {
-            if(!confirm('Mitarbeiter "'+userName+'" wirklich deaktivieren?\n\nDer Account wird gesperrt und der Mitarbeiter kann sich nicht mehr anmelden.')) return;
+            if(!confirm('Mitarbeiter "'+userName+'" wirklich löschen?\n\nDies löscht den Account komplett (Auth + Profil + Rollen).')) return;
             try {
-                // 1. Rollen entfernen
+                // 1. Rollen löschen
                 await sb.from('user_rollen').delete().eq('user_id', userId);
-                // 2. Status auf gesperrt setzen (kein Hard-Delete wegen 40+ FK-Referenzen)
-                var upd = await sb.from('users').update({ status: 'gesperrt' }).eq('id', userId);
-                if(upd.error) throw upd.error;
-                showToast(userName+' wurde deaktiviert.', 'success');
+                // 2. User-Profil löschen
+                await sb.from('users').delete().eq('id', userId);
+                // 3. Auth-User löschen (via DB-Funktion)
+                await sb.rpc('delete_auth_user', { target_user_id: userId });
+                alert('\u2705 '+userName+' wurde gelöscht.');
                 renderKzMitarbeiter();
             } catch(err) {
-                alert('Fehler: '+(err.message||err));
+                // Auch bei Fehler beim Auth-Löschen: Profil ist bereits weg
+                if(err.message && err.message.includes('delete_auth_user')) {
+                    alert('\u2705 '+userName+' Profil gelöscht.\n\u26a0\ufe0f Auth-User muss manuell im Supabase Dashboard entfernt werden.');
+                    renderKzMitarbeiter();
+                } else {
+                    alert('Fehler: '+(err.message||err));
+                }
             }
         }
 
@@ -23786,6 +24199,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 viewEl.style.display = 'block';
                 console.log('SUCCESS: Showed', viewId, '- offsetHeight:', viewEl.offsetHeight);
                 if(viewName === 'dashboards') initDashboardTabs();
+                if(viewName === 'hqFeatureFlags') loadFFView();
                 
                 var areaMap = {home:'allgemein',controlling:'controlling',verkauf:'verkauf',marketing:'marketing'};
                 var containerMap = {home:'trainerAreaHome',controlling:'trainerAreaControlling',verkauf:'trainerAreaVerkauf',marketing:'trainerAreaMarketing'};
