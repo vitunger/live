@@ -4887,10 +4887,10 @@
                 <!-- ===== HQ NETZWERK-COCKPIT ===== -->
                 <!-- ═══ OFFICE VIEW (HQ only) ═══ -->
                 <div id="hqOfficeView" class="view" style="display: none;">
-                    <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
                         <div>
                             <h1 class="text-2xl font-bold" style="color:var(--c-text)">🏢 Office</h1>
-                            <p class="text-sm" style="color:var(--c-sub)">Büro Unterföhring · Jahnstr. 2 · 1. OG</p>
+                            <p class="text-sm" style="color:var(--c-sub)">Bürofläche OG · Unterföhring</p>
                         </div>
                         <div class="flex items-center gap-3">
                             <span id="officeStatsPills"></span>
@@ -4899,23 +4899,26 @@
                     </div>
                     
                     <!-- Tabs -->
-                    <div class="flex gap-2 mb-4">
-                        <button onclick="showOfficeTab('team')" id="officeTabTeam" class="px-4 py-2 rounded-lg text-sm font-semibold bg-vit-orange text-white">👥 Team</button>
-                        <button onclick="showOfficeTab('plan')" id="officeTabPlan" class="px-4 py-2 rounded-lg text-sm font-semibold" style="background:var(--c-bg3);color:var(--c-sub)">🗺️ Grundriss</button>
+                    <div class="flex gap-2 mb-4 flex-wrap">
+                        <button onclick="showOfficeTab('plan')" id="officeTabPlan" class="px-4 py-2 rounded-lg text-sm font-semibold bg-vit-orange text-white">🗺️ Grundriss</button>
+                        <button onclick="showOfficeTab('team')" id="officeTabTeam" class="px-4 py-2 rounded-lg text-sm font-semibold" style="background:var(--c-bg3);color:var(--c-sub)">👥 Team</button>
+                        <button onclick="showOfficeTab('planung')" id="officeTabPlanung" class="px-4 py-2 rounded-lg text-sm font-semibold" style="background:var(--c-bg3);color:var(--c-sub)">📅 Planung</button>
                     </div>
                     
                     <!-- My Status Bar -->
                     <div id="officeMyStatus" class="mb-4 p-3 rounded-lg text-sm font-semibold" style="display:none"></div>
                     
                     <!-- Tab Content -->
-                    <div id="officeTeamContent"></div>
-                    <div id="officePlanContent" style="display:none"></div>
+                    <div id="officePlanContent"></div>
+                    <div id="officeTeamContent" style="display:none"></div>
+                    <div id="officePlanungContent" style="display:none"></div>
                     
                     <!-- Check-in Dropdown -->
                     <div id="officeCheckinDropdown" class="fixed z-50" style="display:none"></div>
                     
-                    <!-- QR Modal -->
+                    <!-- Modals -->
                     <div id="officeQrModal" class="fixed inset-0 z-50" style="display:none"></div>
+                    <div id="officeBookingModal" class="fixed inset-0 z-50" style="display:none"></div>
                 </div>
 
                 <div id="hqCockpitView" class="view" style="display: none;">
@@ -33101,7 +33104,8 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
 })();
 </script>
 
-<!-- ==================== OFFICE MODUL ==================== -->
+
+<!-- ==================== OFFICE MODUL v2 ==================== -->
 <script>
 (function() {
     'use strict';
@@ -33109,8 +33113,10 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     var officeDesks = [];
     var officeCheckins = [];
     var officeCharging = [];
-    var officeCurrentTab = 'team';
+    var officeBookings = [];
+    var officeCurrentTab = 'plan';
     var officeInitDone = false;
+    var officePlanDate = new Date(); // Für Planung: welcher Tag
     
     // ===== INIT =====
     async function officeInit() {
@@ -33126,14 +33132,17 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     // ===== LOAD DATA =====
     async function officeLoadData() {
         try {
+            var today = new Date().toISOString().split('T')[0];
             var results = await Promise.all([
                 sb.from('office_desks').select('*').eq('active', true).order('nr'),
                 sb.from('v_office_status').select('*'),
-                sb.from('office_charging').select('*')
+                sb.from('office_charging').select('*'),
+                sb.from('v_office_bookings').select('*').gte('booking_date', today).order('booking_date')
             ]);
             officeDesks = results[0].data || [];
             officeCheckins = results[1].data || [];
             officeCharging = results[2].data || [];
+            officeBookings = results[3].data || [];
         } catch(err) {
             console.error('[Office] Load error:', err);
         }
@@ -33154,6 +33163,47 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
             if (officeCheckins[i].desk_nr === nr) return officeCheckins[i];
         }
         return null;
+    }
+    
+    function officeDeskBooking(nr, dateStr) {
+        for (var i = 0; i < officeBookings.length; i++) {
+            if (officeBookings[i].desk_nr === nr && officeBookings[i].booking_date === dateStr) return officeBookings[i];
+        }
+        return null;
+    }
+    
+    function officeMyBooking(dateStr) {
+        if (!window.sbUser) return null;
+        var uid = window.sbUser.id;
+        for (var i = 0; i < officeBookings.length; i++) {
+            if (officeBookings[i].user_id === uid && officeBookings[i].booking_date === dateStr) return officeBookings[i];
+        }
+        return null;
+    }
+    
+    function officeUserAvatar(checkin, size) {
+        size = size || 30;
+        var s = Math.round(size);
+        if (checkin.avatar_url) {
+            return '<img src="' + checkin.avatar_url + '" width="' + s + '" height="' + s + '" style="border-radius:50%;object-fit:cover" />';
+        }
+        var initials = '';
+        if (checkin.initials) initials = checkin.initials;
+        else if (checkin.vorname || checkin.nachname) initials = (checkin.vorname||'').charAt(0).toUpperCase() + (checkin.nachname||'').charAt(0).toUpperCase();
+        else if (checkin.name) { var parts = checkin.name.split(' '); initials = parts[0].charAt(0).toUpperCase() + (parts[1] ? parts[1].charAt(0).toUpperCase() : ''); }
+        return '<div style="width:' + s + 'px;height:' + s + 'px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:' + Math.round(s*0.38) + 'px;font-weight:800;color:#fff;background:#EF7D00">' + initials + '</div>';
+    }
+    
+    function officeAvatarUrl(user) {
+        if (user.avatar_url) return user.avatar_url;
+        var name = user.name || ((user.vorname||'') + ' ' + (user.nachname||'')).trim() || '?';
+        return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=EF7D00&color=fff&size=64';
+    }
+    
+    function officeFormatDate(dateStr) {
+        var d = new Date(dateStr + 'T00:00:00');
+        var days = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+        return days[d.getDay()] + ', ' + d.getDate() + '.' + (d.getMonth()+1) + '.';
     }
     
     // ===== RENDER =====
@@ -33202,27 +33252,164 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
         // Render active tab
         if (officeCurrentTab === 'team') officeRenderTeam(officeUsers, remoteUsers, freeCount);
         if (officeCurrentTab === 'plan') officeRenderPlan(officeUsers, remoteUsers);
+        if (officeCurrentTab === 'planung') officeRenderPlanung();
         
         officeUpdateBadge();
     }
     
-    function officeRenderTeam(officeUsers, remoteUsers, freeCount) {
+    // =====================================================
+    // GRUNDRISS - 1:1 nach echtem Büroplan
+    // =====================================================
+    function officeRenderPlan(officeUsers, remoteUsers) {
         var my = officeMyCheckin();
+        var html = '<div class="vit-card p-4" style="overflow-x:auto">';
+        html += '<div class="flex justify-between items-center mb-3"><span class="text-xs font-bold" style="color:var(--c-muted)">Bürofläche OG</span><div class="flex gap-3 text-[10px]" style="color:var(--c-dim)"><span>🟢 Frei</span><span>🟠 Belegt</span><span>🔵 Du</span><span style="color:#999">⬤ Besprechung</span></div></div>';
         
+        // SVG matching the real floor plan proportions (wide rectangle)
+        html += '<svg viewBox="0 0 900 420" style="width:100%;height:auto;min-width:700px" xmlns="http://www.w3.org/2000/svg">';
+        
+        // ===== OUTER WALLS =====
+        html += '<rect x="5" y="5" width="890" height="410" rx="2" fill="none" stroke="#ccc" stroke-width="2"/>';
+        
+        // ===== TOP ROW ROOMS =====
+        // GF Room (top-left)
+        html += '<rect x="5" y="5" width="100" height="170" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
+        html += '<text x="55" y="22" text-anchor="middle" font-size="9" fill="#bbb" font-weight="600">GF</text>';
+        
+        // Großraum (wide room)
+        html += '<rect x="105" y="5" width="215" height="170" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
+        html += '<text x="212" y="22" text-anchor="middle" font-size="9" fill="#bbb" font-weight="600">Großraum</text>';
+        
+        // Server-Raum (small)
+        html += '<rect x="320" y="5" width="70" height="170" fill="#f3f3f3" stroke="#ddd" stroke-width="1"/>';
+        html += '<text x="355" y="90" text-anchor="middle" font-size="8" fill="#ccc" font-weight="600">Server</text>';
+        html += '<text x="355" y="102" text-anchor="middle" font-size="8" fill="#ccc">Raum</text>';
+        
+        // Mitte Raum 
+        html += '<rect x="390" y="5" width="140" height="170" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
+        html += '<text x="460" y="22" text-anchor="middle" font-size="9" fill="#bbb" font-weight="600">♥</text>';
+        
+        // Expansion Raum
+        html += '<rect x="530" y="5" width="175" height="170" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
+        
+        // Rechts oben
+        html += '<rect x="705" y="5" width="190" height="170" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
+        
+        // ===== FLUR =====
+        html += '<rect x="5" y="175" width="890" height="55" fill="#f0f0f0" stroke="#ddd" stroke-width="1"/>';
+        html += '<text x="450" y="207" text-anchor="middle" font-size="10" fill="#ccc" font-weight="500">Bürofläche OG</text>';
+        
+        // ===== BOTTOM ROW ROOMS =====
+        // Treppe links
+        html += '<rect x="5" y="230" width="80" height="185" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/>';
+        html += '<text x="45" y="330" text-anchor="middle" font-size="8" fill="#ccc">Treppe</text>';
+        
+        // Unten-Links
+        html += '<rect x="85" y="230" width="100" height="185" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
+        
+        // Leerer Bereich / Gang
+        html += '<rect x="185" y="230" width="80" height="185" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/>';
+        
+        // Unten-Mitte 1
+        html += '<rect x="265" y="230" width="100" height="185" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
+        
+        // Unten-Mitte 2
+        html += '<rect x="365" y="230" width="140" height="185" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
+        
+        // Konferenz
+        html += '<rect x="505" y="230" width="140" height="185" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
+        html += '<text x="575" y="248" text-anchor="middle" font-size="8" fill="#ccc" font-weight="600">Konferenz</text>';
+        
+        // Besprechung / großer Raum
+        html += '<rect x="645" y="230" width="110" height="185" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/>';
+        
+        // Treppe rechts
+        html += '<rect x="755" y="230" width="50" height="185" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/>';
+        html += '<text x="780" y="330" text-anchor="middle" font-size="8" fill="#ccc">Treppe</text>';
+        
+        // Unten-Rechts
+        html += '<rect x="805" y="230" width="90" height="185" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
+        
+        // ===== DESK DOTS =====
+        officeDesks.forEach(function(d) {
+            var ci = officeDeskCheckin(d.nr);
+            var free = !ci;
+            var isMe = ci && window.sbUser && ci.user_id === window.sbUser.id;
+            var isConf = d.room === 'Konferenz';
+            var r = isConf ? 18 : 16;
+            
+            // Clickable if free and user not checked in
+            if (free && !my) {
+                html += '<g style="cursor:pointer" onclick="officeCheckinDesk(' + d.nr + ')">';
+            } else if (free) {
+                html += '<g>';
+            } else {
+                html += '<g>';
+            }
+            
+            if (isMe) {
+                // Blue ring for current user
+                html += '<circle cx="' + d.x + '" cy="' + d.y + '" r="' + (r+5) + '" fill="none" stroke="#3b82f6" stroke-width="2.5" opacity="0.6"/>';
+            }
+            
+            if (free) {
+                // Green free desk
+                html += '<circle cx="' + d.x + '" cy="' + d.y + '" r="' + r + '" fill="#22c55e20" stroke="#22c55e" stroke-width="1.5"/>';
+                html += '<text x="' + d.x + '" y="' + (d.y+4) + '" text-anchor="middle" font-size="9" font-weight="700" fill="#22c55e">' + d.nr + '</text>';
+            } else if (isConf) {
+                // Gray conference seat
+                html += '<circle cx="' + d.x + '" cy="' + d.y + '" r="' + r + '" fill="#e5e5e5" stroke="#ccc" stroke-width="1"/>';
+                if (ci) {
+                    html += '<image href="' + officeAvatarUrl(ci) + '" x="' + (d.x-r+3) + '" y="' + (d.y-r+3) + '" width="' + (r*2-6) + '" height="' + (r*2-6) + '" clip-path="circle(' + (r-3) + 'px)"/>';
+                }
+            } else {
+                // Occupied: show avatar
+                var col = isMe ? '#3b82f6' : '#EF7D00';
+                html += '<circle cx="' + d.x + '" cy="' + d.y + '" r="' + r + '" fill="' + col + '"/>';
+                // Profile picture via image
+                html += '<clipPath id="clip' + d.nr + '"><circle cx="' + d.x + '" cy="' + d.y + '" r="' + (r-2) + '"/></clipPath>';
+                html += '<image href="' + officeAvatarUrl(ci) + '" x="' + (d.x-r+2) + '" y="' + (d.y-r+2) + '" width="' + (r*2-4) + '" height="' + (r*2-4) + '" clip-path="url(#clip' + d.nr + ')"/>';
+                // Name label below
+                var shortName = (ci.vorname || ci.name.split(' ')[0] || '').substring(0,8);
+                html += '<text x="' + d.x + '" y="' + (d.y + r + 11) + '" text-anchor="middle" font-size="7" fill="#666" font-weight="600">' + shortName + '</text>';
+            }
+            
+            html += '</g>';
+        });
+        
+        html += '</svg></div>';
+        
+        // Remote users bar
+        if (remoteUsers.length > 0) {
+            html += '<div class="flex flex-wrap gap-2 mt-3 items-center">';
+            html += '<span class="text-xs font-bold" style="color:var(--c-muted)">🏠 Remote:</span>';
+            remoteUsers.forEach(function(c) {
+                html += '<div class="flex items-center gap-1.5 px-2 py-1 rounded-lg" style="background:#eff6ff">';
+                html += '<img src="' + officeAvatarUrl(c) + '" width="20" height="20" style="border-radius:50%">';
+                html += '<span class="text-xs font-semibold" style="color:#3b82f6">' + (c.name || '') + '</span>';
+                html += '<span class="text-[10px]" style="color:#93c5fd">seit ' + c.since + '</span>';
+                html += '</div>';
+            });
+            html += '</div>';
+        }
+        
+        document.getElementById('officePlanContent').innerHTML = html;
+    }
+    
+    // =====================================================
+    // TEAM-LISTE
+    // =====================================================
+    function officeRenderTeam(officeUsers, remoteUsers, freeCount) {
         var html = '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">';
         
-        // Left: People lists
+        // Left: People
         html += '<div>';
-        
-        // Office users
         html += '<h3 class="text-xs font-bold uppercase tracking-wider mb-3" style="color:var(--c-muted)">🏢 Im Büro (' + officeUsers.length + ')</h3>';
-        if (officeUsers.length === 0) {
-            html += '<p class="text-sm mb-4" style="color:var(--c-muted)">Noch niemand im Büro</p>';
-        }
+        if (officeUsers.length === 0) html += '<p class="text-sm mb-4" style="color:var(--c-muted)">Noch niemand im Büro</p>';
         officeUsers.forEach(function(c) {
             var isMe = window.sbUser && c.user_id === window.sbUser.id;
             html += '<div class="flex items-center space-x-3 p-2.5 rounded-lg mb-1.5" style="background:' + (isMe ? '#FFF4E6' : 'var(--c-bg3)') + '">';
-            html += '<div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-extrabold text-white" style="background:#EF7D00">' + (c.initials || '?') + '</div>';
+            html += '<img src="' + officeAvatarUrl(c) + '" width="36" height="36" style="border-radius:50%;object-fit:cover">';
             html += '<div class="flex-1 min-w-0"><div class="font-semibold text-sm truncate" style="color:var(--c-text)">' + c.name + (isMe ? ' <span class="text-vit-orange text-xs">(Du)</span>' : '') + '</div>';
             html += '<div class="text-[11px]" style="color:var(--c-muted)">' + (c.role || '') + '</div></div>';
             html += '<div class="text-right"><div class="text-xs font-bold text-vit-orange">#' + c.desk_nr + '</div>';
@@ -33230,24 +33417,20 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
             html += '</div>';
         });
         
-        // Remote users
         html += '<h3 class="text-xs font-bold uppercase tracking-wider mb-3 mt-4" style="color:var(--c-muted)">🏠 Remote (' + remoteUsers.length + ')</h3>';
-        if (remoteUsers.length === 0) {
-            html += '<p class="text-sm mb-4" style="color:var(--c-muted)">Niemand remote</p>';
-        }
+        if (remoteUsers.length === 0) html += '<p class="text-sm mb-4" style="color:var(--c-muted)">Niemand remote</p>';
         remoteUsers.forEach(function(c) {
             var isMe = window.sbUser && c.user_id === window.sbUser.id;
             html += '<div class="flex items-center space-x-3 p-2.5 rounded-lg mb-1.5" style="background:' + (isMe ? '#eff6ff' : 'var(--c-bg3)') + '">';
-            html += '<div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-extrabold text-white" style="background:#3b82f6">' + (c.initials || '?') + '</div>';
+            html += '<img src="' + officeAvatarUrl(c) + '" width="36" height="36" style="border-radius:50%;object-fit:cover">';
             html += '<div class="flex-1 min-w-0"><div class="font-semibold text-sm truncate" style="color:var(--c-text)">' + c.name + (isMe ? ' <span class="text-blue-500 text-xs">(Du)</span>' : '') + '</div>';
             html += '<div class="text-[11px]" style="color:var(--c-muted)">' + (c.role || '') + '</div></div>';
             html += '<div class="text-[10px]" style="color:var(--c-muted)">seit ' + c.since + '</div>';
             html += '</div>';
         });
-        
         html += '</div>';
         
-        // Right: Stats + QR
+        // Right: Stats + Ladesäulen + QR
         html += '<div>';
         html += '<div class="vit-card p-4 mb-3" style="background:#FFF4E6;border:1px solid rgba(239,125,0,0.12)">';
         html += '<div class="text-xs font-bold text-vit-orange mb-2">📊 ' + new Date().toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long'}) + '</div>';
@@ -33257,93 +33440,249 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
         html += '<div><div class="text-xl font-extrabold" style="color:#22c55e">' + freeCount + '</div><div class="text-[10px]" style="color:var(--c-muted)">Frei</div></div>';
         html += '</div></div>';
         
-        // Ladesäulen
         html += '<div class="vit-card p-4 mb-3">';
         html += '<div class="text-xs font-bold mb-2" style="color:var(--c-muted)">⚡ E-Ladesäulen</div>';
         officeCharging.forEach(function(ch) {
             var free = !ch.user_id;
-            html += '<div class="flex items-center justify-between py-1.5">';
-            html += '<span class="text-sm">' + ch.label + '</span>';
-            html += '<span class="text-xs font-bold px-2 py-0.5 rounded-full" style="background:' + (free ? '#f0fdf4' : '#fef2f2') + ';color:' + (free ? '#22c55e' : '#ef4444') + '">' + (free ? '✓ Frei' : '⚡ Belegt') + '</span>';
-            html += '</div>';
+            html += '<div class="flex items-center justify-between py-1.5"><span class="text-sm">' + ch.label + '</span>';
+            html += '<span class="text-xs font-bold px-2 py-0.5 rounded-full" style="background:' + (free ? '#f0fdf4' : '#fef2f2') + ';color:' + (free ? '#22c55e' : '#ef4444') + '">' + (free ? '✓ Frei' : '⚡ Belegt') + '</span></div>';
         });
         html += '</div>';
         
-        // QR Button
         html += '<button onclick="officeShowQr()" class="vit-card p-3 w-full text-center text-sm font-bold text-vit-orange hover:shadow-md transition">📱 QR-Codes für Plätze</button>';
         html += '</div></div>';
         
         document.getElementById('officeTeamContent').innerHTML = html;
     }
     
-    function officeRenderPlan(officeUsers, remoteUsers) {
-        var my = officeMyCheckin();
-        var html = '<div class="vit-card p-4">';
-        html += '<div class="flex justify-between items-center mb-2"><span class="text-xs" style="color:var(--c-muted)">1. OG · Büro Unterföhring</span><span class="text-[11px]" style="color:var(--c-dim)">Klick auf freien Platz = Check-in</span></div>';
-        html += '<svg viewBox="0 0 960 420" style="width:100%;height:auto">';
+    // =====================================================
+    // PLANUNG - Wochenübersicht + Vorausbuchung
+    // =====================================================
+    function officeRenderPlanung() {
+        var today = new Date();
+        today.setHours(0,0,0,0);
         
-        // Building outline
-        html += '<rect x="15" y="15" width="930" height="390" rx="3" fill="#fafafa" stroke="#ddd" stroke-width="1.5"/>';
-        
-        // Top rooms
-        var topRooms = [
-            {x:15, w:130, label:'GF'}, {x:145, w:180, label:'Sales'}, {x:325, w:180, label:'Marketing'},
-            {x:505, w:80, label:'Server', fill:'#f5f5f5'}, {x:585, w:170, label:'Akademie'}, {x:755, w:190, label:'Admin'}
-        ];
-        topRooms.forEach(function(r) {
-            html += '<rect x="' + r.x + '" y="15" width="' + r.w + '" height="180" fill="' + (r.fill||'#fcfcfc') + '" stroke="#e0e0e0" stroke-width="1"/>';
-            html += '<text x="' + (r.x + r.w/2) + '" y="50" text-anchor="middle" font-size="10" fill="#bbb" font-weight="600">' + r.label + '</text>';
-        });
-        
-        // Corridor
-        html += '<rect x="15" y="195" width="930" height="30" fill="#f0f0f0" stroke="#e0e0e0" stroke-width="1"/>';
-        html += '<text x="480" y="214" text-anchor="middle" font-size="9" fill="#ccc">Flur</text>';
-        
-        // Bottom rooms
-        var botRooms = [
-            {x:15, w:200, label:'Tech'}, {x:215, w:200, label:'Flex'}, {x:415, w:150, label:'Küche', fill:'#f8f8f8'},
-            {x:565, w:190, label:'Meeting 1', fill:'#f8f8f8'}, {x:755, w:190, label:'Meeting 2', fill:'#f8f8f8'}
-        ];
-        botRooms.forEach(function(r) {
-            html += '<rect x="' + r.x + '" y="225" width="' + r.w + '" height="180" fill="' + (r.fill||'#fcfcfc') + '" stroke="#e0e0e0" stroke-width="1"/>';
-            html += '<text x="' + (r.x + r.w/2) + '" y="260" text-anchor="middle" font-size="10" fill="#bbb" font-weight="600">' + r.label + '</text>';
-        });
-        
-        // Desk dots
-        officeDesks.forEach(function(d) {
-            var ci = officeDeskCheckin(d.nr);
-            var free = !ci;
-            var isMe = ci && window.sbUser && ci.user_id === window.sbUser.id;
-            
-            if (free && !my) {
-                html += '<g style="cursor:pointer" onclick="officeCheckinDesk(' + d.nr + ')">';
-            } else {
-                html += '<g>';
+        // Nächste 5 Werktage generieren
+        var days = [];
+        var d = new Date(today);
+        while (days.length < 5) {
+            if (d.getDay() !== 0 && d.getDay() !== 6) {
+                days.push(new Date(d));
             }
-            
-            if (isMe) html += '<circle cx="' + d.x + '" cy="' + d.y + '" r="20" fill="none" stroke="#EF7D00" stroke-width="2" opacity="0.4"/>';
-            html += '<circle cx="' + d.x + '" cy="' + d.y + '" r="' + (free ? 13 : 15) + '" fill="' + (free ? '#22c55e20' : (isMe ? '#EF7D00' : '#EF7D00CC')) + '" stroke="' + (free ? '#22c55e' : 'none') + '" stroke-width="' + (free ? 1.5 : 0) + '"/>';
-            html += '<text x="' + d.x + '" y="' + (d.y + (free ? 4 : 1)) + '" text-anchor="middle" font-size="' + (free ? 8 : 7) + '" font-weight="800" fill="' + (free ? '#22c55e' : '#fff') + '">' + (free ? d.nr : (ci.initials || '?')) + '</text>';
-            if (!free) html += '<text x="' + d.x + '" y="' + (d.y + 9) + '" text-anchor="middle" font-size="5" fill="#fff" opacity="0.6">' + d.nr + '</text>';
-            html += '</g>';
-        });
-        
-        html += '</svg></div>';
-        
-        // Remote bar
-        if (remoteUsers.length > 0) {
-            html += '<div class="flex flex-wrap gap-2 mt-3 items-center">';
-            html += '<span class="text-xs font-bold" style="color:var(--c-muted)">🏠 Remote:</span>';
-            remoteUsers.forEach(function(c) {
-                html += '<span class="px-2 py-1 rounded-md text-xs font-semibold" style="background:#eff6ff;color:#3b82f6">' + (c.initials||'?') + ' · ' + c.since + '</span>';
-            });
-            html += '</div>';
+            d.setDate(d.getDate() + 1);
         }
         
-        document.getElementById('officePlanContent').innerHTML = html;
+        var html = '<div class="vit-card p-4">';
+        html += '<div class="flex justify-between items-center mb-4">';
+        html += '<h3 class="text-sm font-bold" style="color:var(--c-text)">📅 Wochenplanung</h3>';
+        html += '<span class="text-xs" style="color:var(--c-muted)">Klick auf Tag → Platz reservieren oder Remote anmelden</span>';
+        html += '</div>';
+        
+        // Days header
+        html += '<div class="grid gap-3" style="grid-template-columns: 120px repeat(' + days.length + ', 1fr)">';
+        
+        // Header row
+        html += '<div></div>';
+        days.forEach(function(day) {
+            var dateStr = day.toISOString().split('T')[0];
+            var isToday = dateStr === today.toISOString().split('T')[0];
+            var dayNames = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+            html += '<div class="text-center p-2 rounded-lg" style="background:' + (isToday ? '#FFF4E6' : 'var(--c-bg3)') + '">';
+            html += '<div class="text-xs font-bold" style="color:' + (isToday ? '#EF7D00' : 'var(--c-text)') + '">' + dayNames[day.getDay()] + '</div>';
+            html += '<div class="text-[11px]" style="color:var(--c-muted)">' + day.getDate() + '.' + (day.getMonth()+1) + '.</div>';
+            html += '</div>';
+        });
+        
+        // Get all HQ users for rows
+        var allHqUsers = [];
+        var seenIds = {};
+        // First add users with bookings/checkins
+        officeBookings.forEach(function(b) { if (!seenIds[b.user_id]) { seenIds[b.user_id] = true; allHqUsers.push({user_id:b.user_id, name:b.name, vorname:b.vorname, nachname:b.nachname, avatar_url:b.avatar_url, role:b.role}); }});
+        officeCheckins.forEach(function(c) { if (!seenIds[c.user_id]) { seenIds[c.user_id] = true; allHqUsers.push({user_id:c.user_id, name:c.name, avatar_url:null, role:c.role}); }});
+        
+        // Current user always first
+        var myId = window.sbUser ? window.sbUser.id : null;
+        allHqUsers.sort(function(a,b) {
+            if (a.user_id === myId) return -1;
+            if (b.user_id === myId) return 1;
+            return (a.name||'').localeCompare(b.name||'');
+        });
+        
+        // If current user not in list, add them
+        if (myId && !seenIds[myId] && window.sbProfile) {
+            allHqUsers.unshift({user_id:myId, name:sbProfile.name, vorname:sbProfile.vorname, nachname:sbProfile.nachname, avatar_url:sbProfile.avatar_url, role:sbProfile.position});
+        }
+        
+        // User rows
+        allHqUsers.forEach(function(user) {
+            var isMe = user.user_id === myId;
+            // User label
+            html += '<div class="flex items-center gap-2 py-2">';
+            html += '<img src="' + officeAvatarUrl(user) + '" width="28" height="28" style="border-radius:50%;object-fit:cover">';
+            html += '<div class="text-xs font-semibold truncate" style="color:var(--c-text)">' + (user.vorname || user.name.split(' ')[0]) + (isMe ? ' (Du)' : '') + '</div>';
+            html += '</div>';
+            
+            // Day cells
+            days.forEach(function(day) {
+                var dateStr = day.toISOString().split('T')[0];
+                var isToday = dateStr === today.toISOString().split('T')[0];
+                var booking = null;
+                for (var i = 0; i < officeBookings.length; i++) {
+                    if (officeBookings[i].user_id === user.user_id && officeBookings[i].booking_date === dateStr) { booking = officeBookings[i]; break; }
+                }
+                
+                // For today, also check live checkins
+                var checkin = null;
+                if (isToday) {
+                    for (var j = 0; j < officeCheckins.length; j++) {
+                        if (officeCheckins[j].user_id === user.user_id) { checkin = officeCheckins[j]; break; }
+                    }
+                }
+                
+                var cellBg = 'var(--c-bg)';
+                var cellContent = '';
+                var cellBorder = 'var(--c-border)';
+                var clickable = isMe;
+                
+                if (checkin && isToday) {
+                    // Live checked in
+                    if (checkin.status === 'office') {
+                        cellBg = '#FFF4E6';
+                        cellBorder = '#EF7D00';
+                        cellContent = '<div class="text-[10px] font-bold text-vit-orange">🏢 #' + checkin.desk_nr + '</div><div class="text-[9px]" style="color:var(--c-muted)">Live</div>';
+                    } else {
+                        cellBg = '#eff6ff';
+                        cellBorder = '#3b82f6';
+                        cellContent = '<div class="text-[10px] font-bold" style="color:#3b82f6">🏠 Remote</div><div class="text-[9px]" style="color:var(--c-muted)">Live</div>';
+                    }
+                } else if (booking) {
+                    if (booking.status === 'office') {
+                        cellBg = '#FFF4E6';
+                        cellBorder = '#fdba74';
+                        cellContent = '<div class="text-[10px] font-bold text-vit-orange">🏢' + (booking.desk_nr ? ' #' + booking.desk_nr : '') + '</div>';
+                    } else {
+                        cellBg = '#eff6ff';
+                        cellBorder = '#93c5fd';
+                        cellContent = '<div class="text-[10px] font-bold" style="color:#3b82f6">🏠 Remote</div>';
+                    }
+                    if (isMe) cellContent += '<div class="text-[8px] mt-0.5" style="color:var(--c-muted);cursor:pointer" onclick="event.stopPropagation();officeDeleteBooking(\'' + booking.id + '\')">✕ stornieren</div>';
+                } else {
+                    // Empty
+                    if (isMe) {
+                        cellContent = '<div class="text-[10px]" style="color:var(--c-dim)">+</div>';
+                    } else {
+                        cellContent = '<div class="text-[10px]" style="color:var(--c-dim)">–</div>';
+                    }
+                }
+                
+                html += '<div class="text-center p-1.5 rounded-lg border" style="background:' + cellBg + ';border-color:' + cellBorder + ';min-height:44px;display:flex;align-items:center;justify-content:center;flex-direction:column' + (clickable && !checkin ? ';cursor:pointer' : '') + '"';
+                if (clickable && !booking && !checkin) html += ' onclick="officeShowBookingModal(\'' + dateStr + '\')"';
+                html += '>' + cellContent + '</div>';
+            });
+        });
+        
+        html += '</div></div>';
+        
+        // Summary per day
+        html += '<div class="grid gap-3 mt-3" style="grid-template-columns: 120px repeat(' + days.length + ', 1fr)">';
+        html += '<div class="text-xs font-bold py-2" style="color:var(--c-muted)">Gesamt</div>';
+        days.forEach(function(day) {
+            var dateStr = day.toISOString().split('T')[0];
+            var officeCount = 0, remoteCount = 0;
+            officeBookings.forEach(function(b) {
+                if (b.booking_date === dateStr) { if (b.status === 'office') officeCount++; else remoteCount++; }
+            });
+            html += '<div class="text-center py-2 rounded-lg" style="background:var(--c-bg3)">';
+            html += '<span class="text-[10px] font-bold text-vit-orange">' + officeCount + '🏢</span> ';
+            html += '<span class="text-[10px] font-bold" style="color:#3b82f6">' + remoteCount + '🏠</span>';
+            html += '</div>';
+        });
+        html += '</div>';
+        
+        document.getElementById('officePlanungContent').innerHTML = html;
     }
     
-    // ===== ACTIONS =====
+    // ===== BOOKING MODAL =====
+    window.officeShowBookingModal = function(dateStr) {
+        var freeDesks = officeDesks.filter(function(d) {
+            return !officeDeskBooking(d.nr, dateStr) && d.room !== 'Konferenz';
+        });
+        
+        var html = '<div style="background:rgba(0,0,0,0.5);position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999" onclick="officeCloseBookingModal()">';
+        html += '<div class="vit-card p-5" style="width:380px" onclick="event.stopPropagation()">';
+        html += '<div class="flex justify-between items-center mb-3"><h3 class="text-base font-bold" style="color:var(--c-text)">📅 Platz reservieren</h3><button onclick="officeCloseBookingModal()" class="w-7 h-7 rounded flex items-center justify-center" style="background:var(--c-bg3);color:var(--c-muted)">✕</button></div>';
+        html += '<p class="text-sm mb-3" style="color:var(--c-muted)">' + officeFormatDate(dateStr) + '</p>';
+        
+        // Remote option
+        html += '<button onclick="officeBookDay(\'' + dateStr + '\',\'remote\',null)" class="w-full p-3 rounded-lg text-left text-sm font-semibold mb-3 hover:shadow transition flex items-center gap-2" style="background:#eff6ff;color:#3b82f6"><span>🏠</span> Remote arbeiten</button>';
+        
+        // Desk selection
+        html += '<div class="text-xs font-bold mb-2" style="color:var(--c-muted)">🏢 Platz im Büro wählen:</div>';
+        
+        // Group by room
+        var rooms = {};
+        freeDesks.forEach(function(d) {
+            if (!rooms[d.room]) rooms[d.room] = [];
+            rooms[d.room].push(d);
+        });
+        
+        Object.keys(rooms).forEach(function(room) {
+            html += '<div class="text-[10px] font-bold mt-2 mb-1" style="color:var(--c-dim)">' + room + '</div>';
+            html += '<div class="flex flex-wrap gap-1">';
+            rooms[room].forEach(function(d) {
+                html += '<button onclick="officeBookDay(\'' + dateStr + '\',\'office\',' + d.nr + ')" class="px-2.5 py-1.5 rounded text-xs font-bold hover:shadow transition" style="background:#f0fdf4;color:#22c55e;border:1px solid #22c55e30">#' + d.nr + '</button>';
+            });
+            html += '</div>';
+        });
+        
+        if (freeDesks.length === 0) {
+            html += '<p class="text-xs mt-2" style="color:#ef4444">Alle Plätze für diesen Tag belegt.</p>';
+            html += '<button onclick="officeBookDay(\'' + dateStr + '\',\'office\',null)" class="w-full p-2 rounded-lg text-sm font-semibold mt-2" style="background:#FFF4E6;color:#EF7D00">🏢 Büro (ohne festen Platz)</button>';
+        }
+        
+        html += '</div></div>';
+        
+        var modal = document.getElementById('officeBookingModal');
+        modal.innerHTML = html;
+        modal.style.display = 'block';
+    };
+    
+    window.officeCloseBookingModal = function() {
+        document.getElementById('officeBookingModal').style.display = 'none';
+    };
+    
+    window.officeBookDay = async function(dateStr, status, deskNr) {
+        officeCloseBookingModal();
+        try {
+            var payload = {
+                user_id: window.sbUser.id,
+                booking_date: dateStr,
+                status: status,
+                desk_nr: deskNr
+            };
+            var res = await sb.from('office_bookings').upsert(payload, {onConflict: 'user_id,booking_date'});
+            if (res.error) throw res.error;
+            showToast((status === 'remote' ? '🏠 Remote' : '🏢 Platz #' + (deskNr || '?')) + ' gebucht für ' + officeFormatDate(dateStr), 'success');
+            await officeLoadData();
+            officeRender();
+        } catch(err) {
+            showToast('Fehler: ' + err.message, 'error');
+        }
+    };
+    
+    window.officeDeleteBooking = async function(bookingId) {
+        try {
+            var res = await sb.from('office_bookings').delete().eq('id', bookingId);
+            if (res.error) throw res.error;
+            showToast('Buchung storniert', 'success');
+            await officeLoadData();
+            officeRender();
+        } catch(err) {
+            showToast('Fehler: ' + err.message, 'error');
+        }
+    };
+    
+    // ===== ACTIONS (Check-in/out) =====
     window.officeToggleCheckin = function() {
         var my = officeMyCheckin();
         if (my) {
@@ -33358,34 +33697,38 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
         var rect = btn.getBoundingClientRect();
         var dd = document.getElementById('officeCheckinDropdown');
         
-        var freeDesks = officeDesks.filter(function(d) { return !officeDeskCheckin(d.nr); });
-        var html = '<div class="vit-card p-3 shadow-xl" style="width:280px">';
+        var freeDesks = officeDesks.filter(function(d) { return !officeDeskCheckin(d.nr) && d.room !== 'Konferenz'; });
+        var html = '<div class="vit-card p-3 shadow-xl" style="width:300px">';
         html += '<div class="text-xs font-bold mb-2" style="color:var(--c-muted)">Wo arbeitest du heute?</div>';
         html += '<button onclick="officeCheckinRemote()" class="w-full p-2.5 rounded-lg text-left text-sm font-semibold mb-2 hover:shadow transition" style="background:#eff6ff;color:#3b82f6">🏠 Remote</button>';
         html += '<div class="text-[10px] font-bold mb-1" style="color:var(--c-muted)">🏢 Platz wählen:</div>';
-        html += '<div class="grid grid-cols-5 gap-1 max-h-40 overflow-auto">';
-        freeDesks.forEach(function(d) {
-            html += '<button onclick="officeCheckinDesk(' + d.nr + ')" class="p-1.5 rounded text-xs font-bold text-center hover:shadow transition" style="background:#f0fdf4;color:#22c55e;border:1px solid #22c55e30">' + d.nr + '</button>';
+        
+        // Group by room
+        var rooms = {};
+        freeDesks.forEach(function(d) { if (!rooms[d.room]) rooms[d.room] = []; rooms[d.room].push(d); });
+        Object.keys(rooms).forEach(function(room) {
+            html += '<div class="text-[9px] font-bold mt-1.5 mb-0.5" style="color:var(--c-dim)">' + room + '</div>';
+            html += '<div class="flex flex-wrap gap-1">';
+            rooms[room].forEach(function(d) {
+                html += '<button onclick="officeCheckinDesk(' + d.nr + ')" class="px-2 py-1 rounded text-xs font-bold hover:shadow transition" style="background:#f0fdf4;color:#22c55e;border:1px solid #22c55e30">' + d.nr + '</button>';
+            });
+            html += '</div>';
         });
-        html += '</div>';
+        
         html += '<button onclick="officeCloseDropdown()" class="w-full mt-2 p-1.5 rounded text-xs text-center" style="color:var(--c-muted)">Abbrechen</button>';
         html += '</div>';
         
         dd.innerHTML = html;
         dd.style.display = 'block';
         dd.style.top = (rect.bottom + 4) + 'px';
-        dd.style.right = (window.innerWidth - rect.right) + 'px';
+        dd.style.right = Math.max(8, window.innerWidth - rect.right) + 'px';
         
-        setTimeout(function() {
-            document.addEventListener('click', officeCloseDropdownHandler);
-        }, 100);
+        setTimeout(function() { document.addEventListener('click', officeCloseDropdownHandler); }, 100);
     }
     
     function officeCloseDropdownHandler(e) {
         var dd = document.getElementById('officeCheckinDropdown');
-        if (dd && !dd.contains(e.target)) {
-            officeCloseDropdown();
-        }
+        if (dd && !dd.contains(e.target)) officeCloseDropdown();
     }
     
     window.officeCloseDropdown = function() {
@@ -33433,27 +33776,24 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     // ===== TABS =====
     window.showOfficeTab = function(tab) {
         officeCurrentTab = tab;
-        var teamBtn = document.getElementById('officeTabTeam');
-        var planBtn = document.getElementById('officeTabPlan');
-        var teamC = document.getElementById('officeTeamContent');
-        var planC = document.getElementById('officePlanContent');
-        if (tab === 'team') {
-            teamBtn.className = 'px-4 py-2 rounded-lg text-sm font-semibold bg-vit-orange text-white';
-            teamBtn.style.background = '';
-            planBtn.className = 'px-4 py-2 rounded-lg text-sm font-semibold';
-            planBtn.style.background = 'var(--c-bg3)';
-            planBtn.style.color = 'var(--c-sub)';
-            teamC.style.display = '';
-            planC.style.display = 'none';
-        } else {
-            planBtn.className = 'px-4 py-2 rounded-lg text-sm font-semibold bg-vit-orange text-white';
-            planBtn.style.background = '';
-            teamBtn.className = 'px-4 py-2 rounded-lg text-sm font-semibold';
-            teamBtn.style.background = 'var(--c-bg3)';
-            teamBtn.style.color = 'var(--c-sub)';
-            teamC.style.display = 'none';
-            planC.style.display = '';
-        }
+        var tabs = ['plan','team','planung'];
+        var labels = {plan:'🗺️ Grundriss', team:'👥 Team', planung:'📅 Planung'};
+        tabs.forEach(function(t) {
+            var btn = document.getElementById('officeTab' + t.charAt(0).toUpperCase() + t.slice(1));
+            var content = document.getElementById('office' + (t==='plan'?'Plan':t.charAt(0).toUpperCase()+t.slice(1)) + 'Content');
+            if (btn) {
+                if (t === tab) {
+                    btn.className = 'px-4 py-2 rounded-lg text-sm font-semibold bg-vit-orange text-white';
+                    btn.style.background = '';
+                    btn.style.color = '';
+                } else {
+                    btn.className = 'px-4 py-2 rounded-lg text-sm font-semibold';
+                    btn.style.background = 'var(--c-bg3)';
+                    btn.style.color = 'var(--c-sub)';
+                }
+            }
+            if (content) content.style.display = t === tab ? '' : 'none';
+        });
         officeRender();
     };
     
@@ -33465,16 +33805,15 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
         html += '<p class="text-xs mb-4" style="color:var(--c-muted)">Ausdrucken und an den Platz kleben. Scannen → sofort eingecheckt.</p>';
         html += '<div class="grid grid-cols-4 gap-2">';
         officeDesks.forEach(function(d) {
+            if (d.room === 'Konferenz') return;
             var url = window.location.origin + '/?office_desk_token=' + d.qr_token;
             html += '<div class="border rounded-lg p-3 text-center" style="border-color:var(--c-border)">';
-            html += '<div class="w-14 h-14 mx-auto mb-2 rounded-md flex items-center justify-center" style="background:var(--c-orange-tint,#FFF4E6);border:1px solid rgba(239,125,0,0.12)"><img src="https://api.qrserver.com/v1/create-qr-code/?data=' + encodeURIComponent(url) + '&size=56x56&format=svg" alt="QR" width="48" height="48"></div>';
+            html += '<div class="w-14 h-14 mx-auto mb-2 rounded-md flex items-center justify-center" style="background:#FFF4E6;border:1px solid rgba(239,125,0,0.12)"><img src="https://api.qrserver.com/v1/create-qr-code/?data=' + encodeURIComponent(url) + '&size=56x56&format=svg" alt="QR" width="48" height="48"></div>';
             html += '<div class="text-base font-extrabold text-vit-orange">#' + d.nr + '</div>';
             html += '<div class="text-[9px]" style="color:var(--c-muted)">' + d.room + '</div>';
             html += '</div>';
         });
-        html += '</div>';
-        html += '</div></div>';
-        
+        html += '</div></div></div>';
         document.getElementById('officeQrModal').innerHTML = html;
         document.getElementById('officeQrModal').style.display = 'block';
     };
@@ -33497,6 +33836,10 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     function officeSetupRealtime() {
         sb.channel('office-live')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'office_checkins' }, async function() {
+                await officeLoadData();
+                officeRender();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'office_bookings' }, async function() {
                 await officeLoadData();
                 officeRender();
             })
@@ -33542,7 +33885,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
         };
     }
     
-    // Badge: init data early for sidebar badge count
+    // Badge: init data early
     var officeWait = setInterval(function() {
         if (window.sb && window.sbUser) {
             clearInterval(officeWait);
