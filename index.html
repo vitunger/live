@@ -14274,7 +14274,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var statusLabel = devStatusLabels[s.status] || s.status;
                 var statusColor = devStatusColors[s.status] || 'bg-gray-100 text-gray-600';
 
-                h += '<div class="vit-card p-4 hover:shadow-md transition cursor-pointer" onclick="showDevDetail(\''+s.id+'\')">';
+                h += '<div class="vit-card p-4 hover:shadow-md transition cursor-pointer" onclick="openDevDetail(\''+s.id+'\')">';
                 h += '<div class="flex items-start justify-between">';
                 h += '<div class="flex-1 min-w-0">';
                 h += '<div class="flex items-center gap-2 mb-1 flex-wrap">';
@@ -14338,7 +14338,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 h += '<div class="space-y-2">';
                 items.slice(0,10).forEach(function(s) {
                     var statusLabel = devStatusLabels[s.status] || s.status;
-                    h += '<div class="bg-white rounded-lg p-3 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition" onclick="showDevDetail(\''+s.id+'\')">';
+                    h += '<div class="bg-white rounded-lg p-3 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition" onclick="openDevDetail(\''+s.id+'\')">';
                     h += '<p class="text-xs font-semibold text-gray-800 mb-1 line-clamp-2">'+(s.titel||s.beschreibung||s.kurz_notiz||s.transkription||'Kein Titel').substring(0,60)+'</p>';
                     h += '<div class="flex items-center gap-1 flex-wrap">';
                     h += '<span class="text-[9px] rounded px-1.5 py-0.5 '+(devStatusColors[s.status]||'bg-gray-100 text-gray-600')+'">'+statusLabel+'</span>';
