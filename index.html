@@ -2986,7 +2986,7 @@
                             <button onclick="filterModulStatus('widgets')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="widgets">Dashboard-Widgets</button>
                             <span class="border-l border-gray-300 h-5 mx-1"></span>
                             <button onclick="filterModulStatus('kiPrio')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="kiPrio">🤖 Priorität KI</button>
-                            <button onclick="filterModulStatus('hqPrio')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="hqPrio">🏢 Prio HQ</button>
+                            <button onclick="filterModulStatus('hqPrio')" class="ms-filter entw-hq-tab text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="hqPrio" style="display:none">🏢 Prio HQ</button>
                         </div>
                         <div id="entwModulContent"></div>
                     </div>
@@ -14278,24 +14278,32 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var statusColor = devStatusColors[s.status] || 'bg-gray-100 text-gray-600';
 
                 h += '<div class="vit-card p-4 hover:shadow-md transition cursor-pointer" onclick="openDevDetail(\''+s.id+'\')">';
-                h += '<div class="flex items-start justify-between">';
+                h += '<div class="flex items-start gap-3">';
+                // Vote button LEFT
+                h += '<div class="flex flex-col items-center flex-shrink-0 pt-1">';
+                h += '<button onclick="event.stopPropagation();toggleDevVote(\''+s.id+'\')" class="w-10 h-10 rounded-lg '+(hasVoted?'bg-vit-orange text-white shadow-md':'bg-gray-100 text-gray-400 hover:bg-vit-orange/20 hover:text-vit-orange')+' flex items-center justify-center text-lg font-bold transition">'+(hasVoted?'▲':'△')+'</button>';
+                h += '<span class="text-sm font-bold '+(hasVoted?'text-vit-orange':'text-gray-500')+' mt-0.5">'+votes+'</span>';
+                h += '</div>';
+                // Content
                 h += '<div class="flex-1 min-w-0">';
                 h += '<div class="flex items-center gap-2 mb-1 flex-wrap">';
                 h += '<span class="text-xs font-semibold rounded px-2 py-0.5 '+statusColor+'">'+statusLabel+'</span>';
                 h += scopeLabel;
                 if(s.kategorie) h += '<span class="text-[10px] bg-gray-50 text-gray-500 px-1.5 py-0.5 rounded">'+s.kategorie+'</span>';
+                if(ki && ki.aufwand_schaetzung) h += '<span class="text-[10px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded font-semibold">'+ki.aufwand_schaetzung+'</span>';
                 h += '</div>';
-                h += '<h3 class="font-semibold text-gray-800 text-sm truncate">'+((s.titel||s.beschreibung||s.kurz_notiz||s.transkription||'Kein Titel').substring(0,80))+'</h3>';
+                h += '<h3 class="font-semibold text-gray-800 text-sm">'+((s.titel||s.beschreibung||s.kurz_notiz||s.transkription||'Kein Titel').substring(0,80))+'</h3>';
                 if(s.eingabe_typ && s.eingabe_typ !== 'text') h += '<span class="text-[10px] text-gray-400 ml-1">'+(s.eingabe_typ==='audio'?'🎤 Audio':s.eingabe_typ==='screenshot'?'📸 Screenshot':s.eingabe_typ==='video'?'🖥️ Video':'📎 '+s.eingabe_typ)+'</span>';
                 if(!s.titel && !s.beschreibung && !s.kurz_notiz && s.eingabe_typ==='audio' && !s.transkription) h += '<p class="text-xs text-amber-500 mt-1">⏳ Audio wird transkribiert...</p>';
                 if(!s.ki_analysiert_at && s.status==='neu') h += '<p class="text-xs text-blue-400 mt-1">🤖 KI-Analyse ausstehend</p>';
                 if(ki && ki.zusammenfassung) h += '<p class="text-xs text-gray-500 mt-1 line-clamp-2">'+ki.zusammenfassung+'</p>';
                 h += '</div>';
-                h += '<div class="flex items-center gap-3 ml-4 shrink-0">';
-                h += '<button onclick="event.stopPropagation();toggleDevVote(\''+s.id+'\')" class="flex items-center gap-1 text-sm '+(hasVoted?'text-vit-orange font-bold':'text-gray-400 hover:text-vit-orange')+'">';
-                h += '<span>'+(hasVoted?'▲':'△')+'</span><span>'+votes+'</span></button>';
-                if(ki && ki.vision_fit_score) h += '<div class="text-center"><div class="text-lg font-bold '+(ki.vision_fit_score>=7?'text-green-600':ki.vision_fit_score>=4?'text-yellow-600':'text-red-500')+'">'+ki.vision_fit_score+'</div><div class="text-[9px] text-gray-400">Fit</div></div>';
-                h += '</div></div></div>';
+                // Vision Fit Score RIGHT (only if exists)
+                if(ki && ki.vision_fit_score != null) {
+                    var fitColor = ki.vision_fit_score>=70?'text-green-600':ki.vision_fit_score>=40?'text-yellow-600':'text-red-500';
+                    h += '<div class="text-center flex-shrink-0"><div class="text-xl font-bold '+fitColor+'">'+ki.vision_fit_score+'</div><div class="text-[9px] text-gray-400">Fit</div></div>';
+                }
+                h += '</div></div>';
             });
             h += '</div>';
             c.innerHTML = h;
@@ -15117,19 +15125,20 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         async function toggleDevVote(subId) {
             try {
-                // Check if already voted
                 var checkResp = await sb.from('dev_votes').select('id').eq('submission_id', subId).eq('user_id', sbUser.id);
                 if(checkResp.data && checkResp.data.length > 0) {
-                    // Un-vote
                     await sb.from('dev_votes').delete().eq('submission_id', subId).eq('user_id', sbUser.id);
                 } else {
-                    // Vote
-                    await sb.from('dev_votes').insert({ submission_id: subId, user_id: sbUser.id });
+                    var ins = await sb.from('dev_votes').insert({ submission_id: subId, user_id: sbUser.id }).select();
+                    if(ins.error) throw ins.error;
                 }
+                // Refresh whichever view is active
+                await loadDevSubmissions();
+                renderEntwIdeen();
                 renderDevPipeline();
             } catch(err) {
                 if(err.code === '23505') { /* already voted, ignore */ }
-                else console.error('Vote error:', err);
+                else { console.error('Vote error:', err); alert('Vote fehlgeschlagen: ' + (err.message||err)); }
             }
         }
 
