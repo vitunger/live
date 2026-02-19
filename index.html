@@ -2937,8 +2937,8 @@
                         </div>
                     </div>
 
-                    <!-- Stats -->
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+                    <!-- Stats (nur auf Ideenboard-Tabs, nicht auf Entwicklung) -->
+                    <div id="devStatsBar" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
                         <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-gray-800" id="devStatTotal">0</p><p class="text-[10px] text-gray-500">Gesamt</p></div>
                         <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-blue-600" id="devStatNeu">0</p><p class="text-[10px] text-gray-500">Neu / In Prüfung</p></div>
                         <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-purple-600" id="devStatBoard">0</p><p class="text-[10px] text-gray-500">Im Ideenboard</p></div>
@@ -7175,6 +7175,8 @@
             document.getElementById('homeView').style.display = 'none';
             document.getElementById('pendingScreen').style.display = 'none';
             document.getElementById('blockedScreen').style.display = 'none';
+            var fbw = document.getElementById('fbWidget'); if(fbw) fbw.style.display = 'none';
+            var fbctx = document.getElementById('fbContextPrompt'); if(fbctx) fbctx.style.display = 'none';
         }
 
         async function checkSession() {
@@ -13428,6 +13430,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             document.querySelectorAll('#ideenboardView .ideen-tab-content').forEach(function(c) { c.style.display = 'none'; });
             var target = document.getElementById('ideenTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
             if(target) target.style.display = '';
+            // Hide ideenboard stats on Entwicklung tab (it has its own)
+            var statsBar = document.getElementById('devStatsBar');
+            if(statsBar) statsBar.style.display = (tab === 'roadmap') ? 'none' : '';
             renderDevTab(tab);
         }
 
@@ -13744,17 +13749,19 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
             var h = '';
 
-            // Header mit Stats (klickbar als Filter)
-            h += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">';
+            // Header mit Stats (klickbar als Filter - ersetzt die separate Filter-Zeile)
+            h += '<div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">';
             var statCards = [
-                {filter:'alle', val:total, color:'text-gray-800', label:'Features gesamt'},
-                {filter:'ausgerollt', val:done, color:'text-green-600', label:'Ausgerollt ✅'},
+                {filter:'alle', val:total, color:'text-gray-800', label:'Gesamt'},
+                {filter:'geplant', val:planned, color:'text-gray-500', label:'Geplant 📅'},
                 {filter:'in_entwicklung', val:active, color:'text-blue-600', label:'In Arbeit 🔨'},
-                {filter:'geplant', val:planned, color:'text-gray-400', label:'Geplant 📅'}
+                {filter:'ausgerollt', val:done, color:'text-green-600', label:'Ausgerollt ✅'},
+                {filter:'verschoben', val:items.filter(function(r){ return r.status === 'verschoben'; }).length, color:'text-gray-400', label:'Verschoben ⏸'}
             ];
             statCards.forEach(function(sc) {
                 var isActive = devRoadmapFilter === sc.filter;
-                h += '<div onclick="devRoadmapFilter=\''+(sc.filter==='alle'&&devRoadmapFilter==='alle'?'alle':sc.filter===devRoadmapFilter?'alle':sc.filter)+'\';renderDevRoadmap()" class="vit-card p-3 text-center cursor-pointer transition-all '+(isActive&&sc.filter!=='alle'?'ring-2 ring-vit-orange bg-orange-50':'hover:shadow-md')+'"><p class="text-xl font-bold '+sc.color+'">'+sc.val+'</p><p class="text-[10px] text-gray-500">'+sc.label+'</p></div>';
+                var toggleTo = (sc.filter === devRoadmapFilter && sc.filter !== 'alle') ? 'alle' : sc.filter;
+                h += '<div onclick="devRoadmapFilter=\''+toggleTo+'\';renderDevRoadmap()" class="vit-card p-3 text-center cursor-pointer transition-all '+(isActive && sc.filter!=='alle'?'ring-2 ring-vit-orange bg-orange-50':'hover:shadow-md')+'"><p class="text-xl font-bold '+sc.color+'">'+sc.val+'</p><p class="text-[10px] text-gray-500">'+sc.label+'</p></div>';
             });
             h += '</div>';
 
@@ -13762,34 +13769,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var pct = total > 0 ? Math.round(done / total * 100) : 0;
             h += '<div class="mb-6"><div class="flex items-center justify-between mb-1"><span class="text-xs font-semibold text-gray-600">Gesamtfortschritt</span><span class="text-xs font-bold text-gray-800">'+pct+'%</span></div>';
             h += '<div class="h-3 bg-gray-100 rounded-full overflow-hidden"><div class="h-3 bg-gradient-to-r from-green-400 to-green-600 rounded-full transition-all" style="width:'+pct+'%"></div></div></div>';
-
-            // Filter
-            h += '<div class="flex flex-wrap gap-2 mb-5">';
-            var filters = [{k:'alle',l:'Alle'},{k:'geplant',l:'📅 Geplant'},{k:'in_entwicklung',l:'🔨 In Entwicklung'},{k:'ausgerollt',l:'✅ Ausgerollt'},{k:'verschoben',l:'⏸ Verschoben'}];
-            filters.forEach(function(f) {
-                var isActive = devRoadmapFilter === f.k;
-                h += '<button onclick="devRoadmapFilter=\''+f.k+'\';renderDevRoadmap()" class="px-3 py-1.5 rounded-full text-xs font-semibold '+(isActive?'bg-vit-orange text-white':'bg-gray-100 text-gray-600 hover:bg-gray-200')+'">'+f.l+'</button>';
-            });
-            h += '</div>';
-
-            // HQ: Neuen Eintrag hinzufügen
-            if(isHQ) {
-                h += '<div class="mb-4"><button onclick="toggleRoadmapForm()" class="px-3 py-1.5 bg-gray-700 text-white rounded-lg text-xs font-semibold hover:bg-gray-800">+ Roadmap-Eintrag</button></div>';
-                h += '<div id="roadmapAddForm" class="hidden vit-card p-4 mb-5 border border-gray-200">';
-                h += '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">';
-                h += '<input id="rmTitel" type="text" placeholder="Titel *" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">';
-                h += '<select id="rmKategorie" class="px-3 py-2 border border-gray-300 rounded-lg text-sm"><option value="feature">🚀 Feature</option><option value="verbesserung">🔧 Verbesserung</option><option value="bugfix">🐛 Bugfix</option><option value="infrastruktur">⚙️ Infrastruktur</option><option value="sicherheit">🔒 Sicherheit</option><option value="performance">⚡ Performance</option><option value="design">🎨 Design</option></select>';
-                h += '</div>';
-                h += '<textarea id="rmBeschreibung" placeholder="Beschreibung..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3" rows="2"></textarea>';
-                h += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">';
-                h += '<select id="rmPrio" class="px-3 py-2 border border-gray-300 rounded-lg text-sm"><option value="kritisch">🔴 Kritisch</option><option value="hoch">🟠 Hoch</option><option value="mittel" selected>🟡 Mittel</option><option value="niedrig">🟢 Niedrig</option></select>';
-                h += '<select id="rmAufwand" class="px-3 py-2 border border-gray-300 rounded-lg text-sm"><option value="XS">XS</option><option value="S">S</option><option value="M" selected>M</option><option value="L">L</option><option value="XL">XL</option></select>';
-                h += '<select id="rmQuartal" class="px-3 py-2 border border-gray-300 rounded-lg text-sm"><option value="Q1/2026">Q1/2026</option><option value="Q2/2026">Q2/2026</option><option value="Q3/2026">Q3/2026</option><option value="Q4/2026">Q4/2026</option><option value="Q1/2027">Q1/2027</option></select>';
-                h += '<input id="rmDatum" type="date" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">';
-                h += '</div>';
-                h += '<button onclick="addRoadmapItem()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Hinzufügen</button>';
-                h += '</div>';
-            }
 
             // Gruppiert nach Quartal
             quartale.forEach(function(q) {
