@@ -6220,6 +6220,64 @@
         var sbRollen = []; // role names array
         var sbStandort = null; // standorte row
         var sbModulStatus = {}; // {modul_key: 'aktiv'|'demo'|'in_bearbeitung'|'deaktiviert'}
+        var sbFeatureFlags = {}; // {flag_key: {enabled, rollout_percent, target_roles, target_standorte, target_users, scope, metadata, expires_at}}
+
+        // ============================================
+        // FEATURE FLAGS CLIENT
+        // ============================================
+        async function loadFeatureFlags() {
+            try {
+                var resp = await sb.from('feature_flags').select('flag_key, enabled, rollout_percent, target_roles, target_standorte, target_users, scope, metadata, expires_at');
+                if(resp.error) throw resp.error;
+                sbFeatureFlags = {};
+                (resp.data||[]).forEach(function(f) { sbFeatureFlags[f.flag_key] = f; });
+                console.log('[FeatureFlags] Loaded ' + Object.keys(sbFeatureFlags).length + ' flags');
+                applyFeatureFlags();
+            } catch(err) { console.error('[FeatureFlags] Load error:', err); }
+        }
+
+        function isFeatureEnabled(flagKey) {
+            var flag = sbFeatureFlags[flagKey];
+            if(!flag || !flag.enabled) return false;
+            if(flag.expires_at && new Date(flag.expires_at) < new Date()) return false;
+
+            var hasUserTargeting = flag.target_users && flag.target_users.length > 0;
+            if(hasUserTargeting && sbUser && flag.target_users.indexOf(sbUser.id) !== -1) return true;
+
+            var hasStandortTargeting = flag.target_standorte && flag.target_standorte.length > 0;
+            if(hasStandortTargeting) {
+                var uid = sbProfile ? sbProfile.standort_id : null;
+                if(uid && flag.target_standorte.indexOf(uid) !== -1) return true;
+            }
+
+            var hasRoleTargeting = flag.target_roles && flag.target_roles.length > 0;
+            if(hasRoleTargeting) {
+                var match = (sbRollen||[]).some(function(r){ return flag.target_roles.indexOf(r) !== -1; });
+                if(match) return true;
+            }
+
+            if(hasUserTargeting || hasStandortTargeting || hasRoleTargeting) return false;
+
+            if(flag.rollout_percent < 100) {
+                var h = 0, s = ((sbUser && sbUser.id)||'anon') + flagKey;
+                for(var i=0;i<s.length;i++){ h=((h<<5)-h)+s.charCodeAt(i); h|=0; }
+                return (Math.abs(h) % 100) < flag.rollout_percent;
+            }
+            return true;
+        }
+
+        function getFeatureMeta(flagKey, key, def) {
+            var f = sbFeatureFlags[flagKey];
+            if(!f || !f.metadata) return def !== undefined ? def : null;
+            return f.metadata[key] !== undefined ? f.metadata[key] : (def !== undefined ? def : null);
+        }
+
+        function applyFeatureFlags() {
+            document.querySelectorAll('[data-feature]').forEach(function(el) {
+                var k = el.getAttribute('data-feature');
+                el.style.display = isFeatureEnabled(k) ? '' : 'none';
+            });
+        }
 
         // Modul-Status aus Supabase laden und auf Sidebar anwenden
         async function loadModulStatus() {
@@ -6878,6 +6936,7 @@
                 await loadUserProfile(sbUser.id);
                 console.log('[Login] Profile loaded, roles:', currentRoles);
                 await loadModulStatus();
+                await loadFeatureFlags();
                 console.log('[Login] Entering app...');
                 enterApp();
                 try { await loadPipelineFromSupabase(); } catch(e) { console.warn('[Login] Pipeline load optional:', e); }
@@ -7162,6 +7221,7 @@
                     
                     await loadUserProfile(sbUser.id);
                     await loadModulStatus();
+                    await loadFeatureFlags();
                     enterApp();
                 } catch(e) { console.warn('Auto-login failed:', e); }
             }
@@ -20346,6 +20406,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 sbUser = resp.data.user;
                 await loadUserProfile(sbUser.id);
                 await loadModulStatus();
+                await loadFeatureFlags();
                 enterApp();
                 try { await loadPipelineFromSupabase(); } catch(e) {}
             } catch(err) {
