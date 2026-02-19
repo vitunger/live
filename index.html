@@ -6178,7 +6178,6 @@
                             <div class="p-4 border-b bg-gray-50 flex items-center justify-between">
                                 <h2 class="font-bold text-gray-800">Demo Module</h2>
                                 <div class="flex items-center space-x-3 text-xs text-gray-500">
-                                    <button onclick="setAllDemoStatus('aktiv')" class="px-2 py-1 rounded bg-green-100 text-green-700 hover:bg-green-200 font-semibold transition">Alle Aktiv</button>
                                     <button onclick="setAllDemoStatus('demo')" class="px-2 py-1 rounded bg-orange-100 text-orange-700 hover:bg-orange-200 font-semibold transition">Alle Demo</button>
                                     <button onclick="setAllDemoStatus('deaktiviert')" class="px-2 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 font-semibold transition">Alle Aus</button>
                                 </div>
@@ -23156,10 +23155,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var container = document.getElementById('demoModulStatusList');
             if(!container) return;
             try {
-                var resp = await sb.from('modul_status').select('id, modul_key, modul_name, kategorie, demo_status').order('reihenfolge');
+                var resp = await sb.from('modul_status').select('id, modul_key, modul_name, kategorie, demo_status, config').order('reihenfolge');
                 if(resp.error) throw resp.error;
                 var modules = resp.data || [];
-                var icons = {startseite:'🏠',kalender:'📅',aufgaben:'📋',kommunikation:'💬',dashboards:'📊',allgemein:'🏢',verkauf:'📈',einkauf:'🛒',marketing:'📣',controlling:'📊',wissen:'📚',support:'🎫',ideenboard:'💡',shop:'🛍️',onboarding:'🎯',mitarbeiter:'👥',aktenschrank:'📁',entwicklung:'</>',spiritus:'📝'};
+                var icons = {startseite:'🏠',kalender:'📅',aufgaben:'📋',kommunikation:'💬',dashboards:'📊',allgemein:'🏢',verkauf:'📈',einkauf:'🛒',marketing:'📣',controlling:'📊',wissen:'📚',support:'🎫',ideenboard:'💡',shop:'🛍️',onboarding:'🎯',mitarbeiter:'👥',aktenschrank:'📁',entwicklung:'&lt;/&gt;',spiritus:'📝'};
                 var katLabels = {basis:'Basis',dashboards:'Dashboards',fachbereiche:'Fachbereiche',tools:'Tools',hq:'HQ'};
                 var lastKat = '';
                 var html = '';
@@ -23169,17 +23168,81 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                         html += '<div class="px-5 py-2 bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider">' + (katLabels[m.kategorie]||m.kategorie) + '</div>';
                     }
                     var ds = m.demo_status || 'demo';
-                    html += '<div class="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition">';
-                    html += '<div class="flex items-center space-x-3"><span class="text-xl">' + (icons[m.modul_key]||'📦') + '</span>';
-                    html += '<span class="font-semibold text-sm text-gray-800">' + m.modul_name + '</span></div>';
-                    var btnBase = 'px-2.5 py-1.5 rounded-md text-[11px] font-semibold transition cursor-pointer';
+                    var hasTabs = MODULE_TABS[m.modul_key] && MODULE_TABS[m.modul_key].length > 0;
+                    var hasWidgets = MODULE_WIDGETS[m.modul_key] && MODULE_WIDGETS[m.modul_key].length > 0;
+                    var hasChildren = hasTabs || hasWidgets;
+                    var isExp = expandedModules['demo_'+m.modul_key] || false;
+
+                    html += '<div class="px-5 py-3 hover:bg-gray-50 transition">';
+                    html += '<div class="flex items-center justify-between">';
+                    html += '<div class="flex items-center space-x-3">';
+                    if(hasChildren) {
+                        html += '<button data-action="toggle-demo" data-key="' + m.modul_key + '" class="text-gray-400 hover:text-gray-700 text-sm" style="width:20px">' + (isExp?'▼':'▶') + '</button>';
+                    } else {
+                        html += '<span style="width:20px"></span>';
+                    }
+                    html += '<span class="text-xl">' + (icons[m.modul_key]||'📦') + '</span>';
+                    html += '<span class="font-semibold text-sm text-gray-800">' + m.modul_name + '</span>';
+                    if(hasTabs) html += '<span class="text-[10px] text-gray-400 ml-1">(' + MODULE_TABS[m.modul_key].length + ' Tabs)</span>';
+                    if(hasWidgets) html += '<span class="text-[10px] text-gray-400 ml-1">(' + MODULE_WIDGETS[m.modul_key].length + ' Widgets)</span>';
+                    html += '</div>';
+                    // Only Demo / Aus toggle
                     html += '<div class="flex items-center space-x-1 bg-gray-100 rounded-lg p-0.5">';
-                    html += '<button onclick="setDemoModulStatus(\'' + m.id + '\',\'' + m.modul_key + '\',\'aktiv\')" class="' + btnBase + ' ' + (ds==='aktiv'?'bg-green-500 text-white shadow-sm':'text-gray-500 hover:bg-gray-200') + '">✓ Aktiv</button>';
-                    html += '<button onclick="setDemoModulStatus(\'' + m.id + '\',\'' + m.modul_key + '\',\'demo\')" class="' + btnBase + ' ' + (ds==='demo'?'bg-orange-400 text-white shadow-sm':'text-gray-500 hover:bg-gray-200') + '">👁 Demo</button>';
-                    html += '<button onclick="setDemoModulStatus(\'' + m.id + '\',\'' + m.modul_key + '\',\'deaktiviert\')" class="' + btnBase + ' ' + (ds==='deaktiviert'?'bg-gray-500 text-white shadow-sm':'text-gray-500 hover:bg-gray-200') + '">✕ Aus</button>';
+                    html += '<button data-action="set-demo" data-id="' + m.id + '" data-mk="' + m.modul_key + '" data-st="demo" class="px-2.5 py-1.5 rounded-md text-[11px] font-semibold transition cursor-pointer ' + (ds!=='deaktiviert'?'bg-orange-400 text-white shadow-sm':'text-gray-500 hover:bg-gray-200') + '">👁 Demo</button>';
+                    html += '<button data-action="set-demo" data-id="' + m.id + '" data-mk="' + m.modul_key + '" data-st="deaktiviert" class="px-2.5 py-1.5 rounded-md text-[11px] font-semibold transition cursor-pointer ' + (ds==='deaktiviert'?'bg-gray-500 text-white shadow-sm':'text-gray-500 hover:bg-gray-200') + '">✕ Aus</button>';
                     html += '</div></div>';
+
+                    // Expandable tabs/widgets
+                    if(hasChildren && isExp) {
+                        var cfg = m.config || {};
+                        html += '<div class="ml-12 mt-3 mb-1 space-y-2">';
+                        if(hasTabs) {
+                            html += '<div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Tabs</div>';
+                            MODULE_TABS[m.modul_key].forEach(function(tab) {
+                                var ts = (cfg.demo_tabs && cfg.demo_tabs[tab.key]) || 'demo';
+                                html += '<div class="flex items-center justify-between py-1">';
+                                html += '<span class="text-xs text-gray-700">↳ ' + tab.label + '</span>';
+                                html += '<div class="flex items-center space-x-0.5 bg-gray-100 rounded p-0.5">';
+                                html += '<button data-action="set-demo-tab" data-mk="' + m.modul_key + '" data-tk="' + tab.key + '" data-st="demo" class="px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ' + (ts!=='deaktiviert'?'bg-orange-400 text-white':'text-gray-400 hover:bg-gray-200') + '">👁</button>';
+                                html += '<button data-action="set-demo-tab" data-mk="' + m.modul_key + '" data-tk="' + tab.key + '" data-st="deaktiviert" class="px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ' + (ts==='deaktiviert'?'bg-gray-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✕</button>';
+                                html += '</div></div>';
+                            });
+                        }
+                        if(hasWidgets) {
+                            html += '<div class="text-[10px] font-bold text-gray-400 uppercase mb-1 mt-2">Widgets</div>';
+                            MODULE_WIDGETS[m.modul_key].forEach(function(w) {
+                                var ws = (cfg.demo_widgets && cfg.demo_widgets[w.key]) || 'demo';
+                                html += '<div class="flex items-center justify-between py-1">';
+                                html += '<span class="text-xs text-gray-700">↳ ' + w.label + '</span>';
+                                html += '<div class="flex items-center space-x-0.5 bg-gray-100 rounded p-0.5">';
+                                html += '<button data-action="set-demo-widget" data-mk="' + m.modul_key + '" data-wk="' + w.key + '" data-st="demo" class="px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ' + (ws!=='deaktiviert'?'bg-orange-400 text-white':'text-gray-400 hover:bg-gray-200') + '">👁</button>';
+                                html += '<button data-action="set-demo-widget" data-mk="' + m.modul_key + '" data-wk="' + w.key + '" data-st="deaktiviert" class="px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ' + (ws==='deaktiviert'?'bg-gray-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✕</button>';
+                                html += '</div></div>';
+                            });
+                        }
+                        html += '</div>';
+                    }
+                    html += '</div>';
                 });
                 container.innerHTML = html;
+
+                // Event delegation for all buttons
+                container.onclick = function(e) {
+                    var btn = e.target.closest('[data-action]');
+                    if(!btn) return;
+                    var action = btn.getAttribute('data-action');
+                    if(action === 'set-demo') {
+                        setDemoModulStatus(btn.getAttribute('data-id'), btn.getAttribute('data-mk'), btn.getAttribute('data-st'));
+                    } else if(action === 'toggle-demo') {
+                        var k = 'demo_' + btn.getAttribute('data-key');
+                        expandedModules[k] = !expandedModules[k];
+                        renderDemoModulList();
+                    } else if(action === 'set-demo-tab') {
+                        setDemoTabStatus(btn.getAttribute('data-mk'), btn.getAttribute('data-tk'), btn.getAttribute('data-st'));
+                    } else if(action === 'set-demo-widget') {
+                        setDemoWidgetStatus(btn.getAttribute('data-mk'), btn.getAttribute('data-wk'), btn.getAttribute('data-st'));
+                    }
+                };
             } catch(err) { console.error('DemoModulList:', err); container.innerHTML = '<div class="p-4 text-center text-red-400">Fehler beim Laden</div>'; }
         }
 
@@ -23187,7 +23250,31 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             try {
                 var resp = await sb.from('modul_status').update({demo_status: newStatus}).eq('id', id);
                 if(resp.error) throw resp.error;
-                showToast(modulKey + ' → Demo: ' + newStatus, 'success');
+                showToast(modulKey + ' → ' + (newStatus==='deaktiviert'?'Aus':'Demo'), 'success');
+                renderDemoModulList();
+            } catch(err) { showToast('Fehler: ' + err.message, 'error'); }
+        }
+
+        async function setDemoTabStatus(modulKey, tabKey, newStatus) {
+            try {
+                var cfg = sbModulConfig[modulKey] || {};
+                if(!cfg.demo_tabs) cfg.demo_tabs = {};
+                cfg.demo_tabs[tabKey] = newStatus;
+                var resp = await sb.from('modul_status').update({config: cfg}).eq('modul_key', modulKey);
+                if(resp.error) throw resp.error;
+                sbModulConfig[modulKey] = cfg;
+                renderDemoModulList();
+            } catch(err) { showToast('Fehler: ' + err.message, 'error'); }
+        }
+
+        async function setDemoWidgetStatus(modulKey, widgetKey, newStatus) {
+            try {
+                var cfg = sbModulConfig[modulKey] || {};
+                if(!cfg.demo_widgets) cfg.demo_widgets = {};
+                cfg.demo_widgets[widgetKey] = newStatus;
+                var resp = await sb.from('modul_status').update({config: cfg}).eq('modul_key', modulKey);
+                if(resp.error) throw resp.error;
+                sbModulConfig[modulKey] = cfg;
                 renderDemoModulList();
             } catch(err) { showToast('Fehler: ' + err.message, 'error'); }
         }
@@ -23196,7 +23283,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             try {
                 var resp = await sb.from('modul_status').update({demo_status: newStatus}).neq('modul_key', 'dummy');
                 if(resp.error) throw resp.error;
-                showToast('Alle Module → Demo: ' + newStatus, 'success');
+                showToast('Alle Module → ' + (newStatus==='deaktiviert'?'Aus':'Demo'), 'success');
                 renderDemoModulList();
             } catch(err) { showToast('Fehler: ' + err.message, 'error'); }
         }
