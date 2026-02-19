@@ -5927,19 +5927,6 @@
 
                 <!-- ===== HQ IDEENBOARD → Redirect zum neuen Ideenboard ===== -->
                 <div id="hqIdeenView" class="view" style="display: none;">
-                    <script>
-                        // HQ-Ideenboard leitet jetzt auf das neue Ideenboard um
-                        (function() {
-                            var origShow = showView;
-                            var _hqCheck = setInterval(function() {
-                                var v = document.getElementById('hqIdeenView');
-                                if(v && v.style.display !== 'none') {
-                                    clearInterval(_hqCheck);
-                                    showView('ideenboard');
-                                }
-                            }, 100);
-                        })();
-                    </script>
                     <div class="text-center py-12 text-gray-400">Weiterleitung zum Ideenboard...</div>
                 </div>
 
@@ -15876,6 +15863,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             // Redirect 'home' to HQ Cockpit when in HQ mode
             if(v==='home' && currentRole==='hq') { v='hqCockpit'; }
             if(v==='home' && SESSION.account_level==='extern') { v='externHome'; }
+            if(v==='hqIdeen') { v='ideenboard'; }
             origShowView2(v);
             if(v==='externHome') renderExternHome();
             if(v==='onboarding') renderOnboardingView();
@@ -15899,7 +15887,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(v==='hqAuswertung') renderHqAuswertung();
             if(v==='hqWissen') renderHqWissen();
             if(v==='hqSupport') renderHqSupport();
-            if(v==='hqIdeen') { renderHqIdeen(); renderHqFeedbackInbox(); }
             if(v==='hqShop') renderHqShop();
             if(v==='hqBilling') { initBillingModule(); showBillingTab('overview'); }
             if(v==='hqBillingDetail') { /* opened via showBillingInvoice() */ }
