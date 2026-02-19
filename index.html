@@ -7097,8 +7097,12 @@
                 allgemein: '[id^="allgemeinTab-"]',
                 support: '[id^="supportTab-"]'
             };
-            Object.keys(sbModulConfig).forEach(function(modulKey) {
-                var cfg = sbModulConfig[modulKey];
+            var isHqForTabs = currentRole === 'hq' || (sbProfile && sbProfile.is_hq);
+            var activeConfigSource = isHqForTabs ? sbHqModulConfig : sbModulConfig;
+            Object.keys(activeConfigSource).forEach(function(modulKey) {
+                var cfg = activeConfigSource[modulKey];
+                // Fallback to partner config if hq_config has no tabs
+                if((!cfg || !cfg.tabs) && isHqForTabs) cfg = sbModulConfig[modulKey];
                 if(!cfg || !cfg.tabs) return;
                 Object.keys(cfg.tabs).forEach(function(tabKey) {
                     var tabStatus = cfg.tabs[tabKey];
@@ -7160,7 +7164,16 @@
             });
 
             // Apply widget-level status
-            var startCfg = sbModulConfig['startseite'];
+            // For HQ users, merge: start with partner config, overlay hq_config on top
+            var isHqUser = currentRole === 'hq' || (sbProfile && sbProfile.is_hq);
+            var partnerCfg = sbModulConfig['startseite'] || {};
+            var hqCfg = sbHqModulConfig['startseite'] || {};
+            var mergedWidgets = {};
+            // Start with partner widget config
+            if (partnerCfg.widgets) { Object.keys(partnerCfg.widgets).forEach(function(k) { mergedWidgets[k] = partnerCfg.widgets[k]; }); }
+            // For HQ users, overlay hq_config (overrides partner values)
+            if (isHqUser && hqCfg.widgets) { Object.keys(hqCfg.widgets).forEach(function(k) { mergedWidgets[k] = hqCfg.widgets[k]; }); }
+            var startCfg = { widgets: isHqUser ? mergedWidgets : (partnerCfg.widgets || {}) };
             if(startCfg && startCfg.widgets) {
                 Object.keys(startCfg.widgets).forEach(function(wKey) {
                     var wStatus = startCfg.widgets[wKey];
