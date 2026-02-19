@@ -33114,7 +33114,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
 (function() {
     'use strict';
     var D = [], CI = [], CH = [], BK = [], HQ_USERS = [];
-    var TAB = 'home', INIT = false, WEEK_OFFSET = 0;
+    var TAB = 'home', INIT = false, WEEK_OFFSET = 0, HOME_OFFSET = 0;
     var LADEN_MONTH = new Date(), LADEN_DAY = new Date();
     
     // ===== INIT =====
@@ -33209,20 +33209,30 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     function renderHome() {
         var el = document.getElementById('officeHomeContent');
         if(!el) return;
-        var days = workdays(0, 5);
+        var days = workdays(HOME_OFFSET, 5);
         var ci = myCI();
+        var weekStart = days[0], weekEnd = days[days.length-1];
         
-        var html = '<div class="grid gap-4" style="grid-template-columns:repeat('+days.length+',1fr);overflow-x:auto">';
+        // Week navigation
+        var html = '<div class="flex items-center gap-3 mb-4">';
+        html += '<button onclick="officeHomeNav(-1)" class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold" style="background:var(--c-bg3);color:var(--c-muted)">‹</button>';
+        html += '<span class="text-sm font-semibold" style="color:var(--c-text)">'+weekStart.getDate()+'.'+(weekStart.getMonth()+1)+'. – '+weekEnd.getDate()+'.'+(weekEnd.getMonth()+1)+'.'+(weekEnd.getFullYear())+'</span>';
+        html += '<button onclick="officeHomeNav(1)" class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold" style="background:var(--c-bg3);color:var(--c-muted)">›</button>';
+        if(HOME_OFFSET!==0) html += '<button onclick="officeHomeNav(0)" class="text-xs font-bold px-3 py-1 rounded-lg text-vit-orange" style="border:1px solid #EF7D00">Heute</button>';
+        html += '</div>';
+        
+        html += '<div class="grid gap-4" style="grid-template-columns:repeat('+days.length+',1fr);overflow-x:auto">';
         
         days.forEach(function(day) {
             var ds = day.toISOString().split('T')[0];
             var today = isToday(ds);
+            var past = new Date(ds+'T23:59:59') < new Date();
             var bk = myBK(ds);
             var dayBookings = dayBK(ds);
             var dayColleagues = dayBookings.filter(function(b){return b.user_id!==me()});
             
             // Card
-            html += '<div class="rounded-xl p-4 min-w-[180px]" style="background:var(--c-bg);border:' + (today ? '2px solid #EF7D00' : '1px solid var(--c-border)') + '">';
+            html += '<div class="rounded-xl p-4 min-w-[160px]" style="background:var(--c-bg);border:' + (today ? '2px solid #EF7D00' : '1px solid var(--c-border)') + (past&&!today?';opacity:0.6':'') + '">';
             
             // Date header
             if(today) html += '<div class="w-8 h-1 rounded-full bg-vit-orange mx-auto mb-2"></div>';
@@ -33235,9 +33245,11 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
             } else if(bk) {
                 var loc = bk.status==='office' ? '🏢 Büro'+(bk.desk_nr?' #'+bk.desk_nr:'') : '🏠 Remote';
                 html += '<div class="rounded-lg p-2.5 text-center text-sm font-semibold mb-3" style="background:'+(bk.status==='office'?'#FFF4E6':'#eff6ff')+';color:'+(bk.status==='office'?'#EF7D00':'#3b82f6')+';border:1px solid '+(bk.status==='office'?'rgba(239,125,0,0.2)':'rgba(59,130,246,0.2)')+'">'+loc+'</div>';
-                html += '<div class="text-[10px] text-center mb-2" style="color:var(--c-muted);cursor:pointer" onclick="officeDeleteBooking(\''+bk.id+'\')">✕ stornieren</div>';
-            } else {
+                if(!past) html += '<div class="text-[10px] text-center mb-2" style="color:var(--c-muted);cursor:pointer" onclick="officeDeleteBooking(\''+bk.id+'\')">✕ stornieren</div>';
+            } else if(!past) {
                 html += '<div class="rounded-lg p-2.5 text-center text-sm cursor-pointer mb-3 hover:shadow transition" style="background:var(--c-bg3);color:var(--c-sub);border:1px solid var(--c-border)" onclick="officeShowBookingModal(\''+ds+'\')">Dein Status?</div>';
+            } else {
+                html += '<div class="rounded-lg p-2.5 text-center text-[11px] mb-3" style="background:var(--c-bg3);color:var(--c-dim)">–</div>';
             }
             
             // Colleagues
@@ -33255,7 +33267,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
             }
             
             // Book button
-            if(!bk && !(today&&ci)) {
+            if(!bk && !past && !(today&&ci)) {
                 html += '<button onclick="officeShowBookingModal(\''+ds+'\')" class="w-full rounded-lg py-1.5 text-xs font-semibold text-center mt-1 transition hover:shadow" style="border:1px solid #EF7D00;color:#EF7D00;background:transparent">Buchen</button>';
             }
             
@@ -33264,29 +33276,31 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
         
         html += '</div>';
         
-        // Who is in the office today
-        var todayCI = CI.filter(function(c){return c.status==='office'});
-        var todayRemote = CI.filter(function(c){return c.status==='remote'});
-        if(todayCI.length>0 || todayRemote.length>0) {
-            html += '<div class="mt-6 vit-card p-4"><div class="text-xs font-bold mb-3" style="color:var(--c-muted)">📍 Heute im Büro</div>';
-            html += '<div class="flex flex-wrap gap-3">';
-            todayCI.forEach(function(c) {
-                var isMe = c.user_id===me();
-                html += '<div class="flex items-center gap-2 px-3 py-2 rounded-lg" style="background:'+(isMe?'#FFF4E6':'var(--c-bg3)')+'">';
-                html += '<img src="'+av(c,28)+'" width="28" height="28" style="border-radius:50%;object-fit:cover">';
-                html += '<div><div class="text-xs font-semibold" style="color:var(--c-text)">'+(c.name||'')+(isMe?' (Du)':'')+'</div>';
-                html += '<div class="text-[10px]" style="color:var(--c-muted)">#'+c.desk_nr+' · seit '+c.since+'</div></div>';
-                html += '</div>';
-            });
-            html += '</div>';
-            if(todayRemote.length>0) {
-                html += '<div class="text-xs font-bold mt-3 mb-2" style="color:var(--c-muted)">🏠 Remote</div><div class="flex flex-wrap gap-2">';
-                todayRemote.forEach(function(c) {
-                    html += '<div class="flex items-center gap-1.5 px-2 py-1 rounded-lg" style="background:#eff6ff"><img src="'+av(c,20)+'" width="20" height="20" style="border-radius:50%"><span class="text-[11px] font-semibold" style="color:#3b82f6">'+(c.vorname||c.name||'')+'</span></div>';
+        // Who is in the office today (only on current week)
+        if(HOME_OFFSET === 0) {
+            var todayCI = CI.filter(function(c){return c.status==='office'});
+            var todayRemote = CI.filter(function(c){return c.status==='remote'});
+            if(todayCI.length>0 || todayRemote.length>0) {
+                html += '<div class="mt-6 vit-card p-4"><div class="text-xs font-bold mb-3" style="color:var(--c-muted)">📍 Heute im Büro</div>';
+                html += '<div class="flex flex-wrap gap-3">';
+                todayCI.forEach(function(c) {
+                    var isMe = c.user_id===me();
+                    html += '<div class="flex items-center gap-2 px-3 py-2 rounded-lg" style="background:'+(isMe?'#FFF4E6':'var(--c-bg3)')+'">';
+                    html += '<img src="'+av(c,28)+'" width="28" height="28" style="border-radius:50%;object-fit:cover">';
+                    html += '<div><div class="text-xs font-semibold" style="color:var(--c-text)">'+(c.name||'')+(isMe?' (Du)':'')+'</div>';
+                    html += '<div class="text-[10px]" style="color:var(--c-muted)">#'+c.desk_nr+' · seit '+c.since+'</div></div>';
+                    html += '</div>';
                 });
                 html += '</div>';
+                if(todayRemote.length>0) {
+                    html += '<div class="text-xs font-bold mt-3 mb-2" style="color:var(--c-muted)">🏠 Remote</div><div class="flex flex-wrap gap-2">';
+                    todayRemote.forEach(function(c) {
+                        html += '<div class="flex items-center gap-1.5 px-2 py-1 rounded-lg" style="background:#eff6ff"><img src="'+av(c,20)+'" width="20" height="20" style="border-radius:50%"><span class="text-[11px] font-semibold" style="color:#3b82f6">'+(c.vorname||c.name||'')+'</span></div>';
+                    });
+                    html += '</div>';
+                }
+                html += '</div>';
             }
-            html += '</div>';
         }
         
         el.innerHTML = html;
@@ -33932,6 +33946,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     
     // ===== WEEK NAVIGATION =====
     window.officeWeekNav = function(dir) { if(dir===0) WEEK_OFFSET=0; else WEEK_OFFSET+=dir; render(); };
+    window.officeHomeNav = function(dir) { if(dir===0) HOME_OFFSET=0; else HOME_OFFSET+=dir; render(); };
     
     // ===== LADEN CALENDAR =====
     window.officeLadenMonthNav = function(dir) { LADEN_MONTH.setMonth(LADEN_MONTH.getMonth()+dir); render(); };
