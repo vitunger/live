@@ -4887,38 +4887,29 @@
                 <!-- ===== HQ NETZWERK-COCKPIT ===== -->
                 <!-- ═══ OFFICE VIEW (HQ only) ═══ -->
                 <div id="hqOfficeView" class="view" style="display: none;">
-                    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
-                        <div>
-                            <h1 class="text-2xl font-bold" style="color:var(--c-text)">🏢 Office</h1>
-                            <p class="text-sm" style="color:var(--c-sub)">Bürofläche OG · Unterföhring</p>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span id="officeStatsPills"></span>
-                            <button id="officeMainBtn" onclick="officeToggleCheckin()" class="px-4 py-2 rounded-lg font-bold text-sm"></button>
-                        </div>
-                    </div>
+                    <!-- Hero: Greeting + Status -->
+                    <div id="officeHero" class="mb-6"></div>
                     
                     <!-- Tabs -->
-                    <div class="flex gap-2 mb-4 flex-wrap">
-                        <button onclick="showOfficeTab('plan')" id="officeTabPlan" class="px-4 py-2 rounded-lg text-sm font-semibold bg-vit-orange text-white">🗺️ Grundriss</button>
-                        <button onclick="showOfficeTab('team')" id="officeTabTeam" class="px-4 py-2 rounded-lg text-sm font-semibold" style="background:var(--c-bg3);color:var(--c-sub)">👥 Team</button>
-                        <button onclick="showOfficeTab('planung')" id="officeTabPlanung" class="px-4 py-2 rounded-lg text-sm font-semibold" style="background:var(--c-bg3);color:var(--c-sub)">📅 Planung</button>
+                    <div class="flex gap-1 mb-4 flex-wrap border-b" style="border-color:var(--c-border)">
+                        <button onclick="showOfficeTab('home')" id="officeTabHome" class="px-4 py-2.5 text-sm font-semibold border-b-2" style="border-color:#EF7D00;color:#EF7D00">🏠 Übersicht</button>
+                        <button onclick="showOfficeTab('plan')" id="officeTabPlan" class="px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent" style="color:var(--c-sub)">🗺️ Grundriss</button>
+                        <button onclick="showOfficeTab('woche')" id="officeTabWoche" class="px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent" style="color:var(--c-sub)">📅 Woche</button>
+                        <button onclick="showOfficeTab('laden')" id="officeTabLaden" class="px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent" style="color:var(--c-sub)">⚡ Ladesäulen</button>
+                        <button onclick="showOfficeTab('analytics')" id="officeTabAnalytics" class="px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent" style="color:var(--c-sub)">📊 Analytics</button>
                     </div>
                     
-                    <!-- My Status Bar -->
-                    <div id="officeMyStatus" class="mb-4 p-3 rounded-lg text-sm font-semibold" style="display:none"></div>
-                    
-                    <!-- Tab Content -->
-                    <div id="officePlanContent"></div>
-                    <div id="officeTeamContent" style="display:none"></div>
-                    <div id="officePlanungContent" style="display:none"></div>
-                    
-                    <!-- Check-in Dropdown -->
-                    <div id="officeCheckinDropdown" class="fixed z-50" style="display:none"></div>
+                    <!-- Tab Contents -->
+                    <div id="officeHomeContent"></div>
+                    <div id="officePlanContent" style="display:none"></div>
+                    <div id="officeWocheContent" style="display:none"></div>
+                    <div id="officeLadenContent" style="display:none"></div>
+                    <div id="officeAnalyticsContent" style="display:none"></div>
                     
                     <!-- Modals -->
-                    <div id="officeQrModal" class="fixed inset-0 z-50" style="display:none"></div>
+                    <div id="officeCheckinDropdown" class="fixed z-50" style="display:none"></div>
                     <div id="officeBookingModal" class="fixed inset-0 z-50" style="display:none"></div>
+                    <div id="officeQrModal" class="fixed inset-0 z-50" style="display:none"></div>
                 </div>
 
                 <div id="hqCockpitView" class="view" style="display: none;">
@@ -33118,795 +33109,862 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
 </script>
 
 
-<!-- ==================== OFFICE MODUL v2 ==================== -->
+<!-- ==================== OFFICE MODUL v3 (deskbird-style) ==================== -->
 <script>
 (function() {
     'use strict';
-    
-    var officeDesks = [];
-    var officeCheckins = [];
-    var officeCharging = [];
-    var officeBookings = [];
-    var officeCurrentTab = 'plan';
-    var officeInitDone = false;
-    var officePlanDate = new Date(); // Für Planung: welcher Tag
+    var D = [], CI = [], CH = [], BK = [], HQ_USERS = [];
+    var TAB = 'home', INIT = false, WEEK_OFFSET = 0;
+    var LADEN_MONTH = new Date(), LADEN_DAY = new Date();
     
     // ===== INIT =====
-    async function officeInit() {
+    async function init() {
         if (!window.sb || !window.sbUser) return;
-        if (officeInitDone) return;
-        officeInitDone = true;
-        await officeLoadData();
-        officeRender();
-        officeSetupRealtime();
-        officeUpdateBadge();
+        if (INIT) { render(); return; }
+        INIT = true;
+        await load();
+        render();
+        setupRT();
+        updateBadge();
     }
     
-    // ===== LOAD DATA =====
-    async function officeLoadData() {
+    async function load() {
         try {
             var today = new Date().toISOString().split('T')[0];
-            var results = await Promise.all([
+            var r = await Promise.all([
                 sb.from('office_desks').select('*').eq('active', true).order('nr'),
                 sb.from('v_office_status').select('*'),
                 sb.from('office_charging').select('*'),
-                sb.from('v_office_bookings').select('*').gte('booking_date', today).order('booking_date')
+                sb.from('v_office_bookings').select('*').gte('booking_date', new Date(Date.now()-7*86400000).toISOString().split('T')[0]).order('booking_date'),
+                sb.from('users').select('id,name,vorname,nachname,avatar_url,position,is_hq').eq('is_hq', true)
             ]);
-            officeDesks = results[0].data || [];
-            officeCheckins = results[1].data || [];
-            officeCharging = results[2].data || [];
-            officeBookings = results[3].data || [];
-        } catch(err) {
-            console.error('[Office] Load error:', err);
-        }
+            D = r[0].data||[]; CI = r[1].data||[]; CH = r[2].data||[];
+            BK = r[3].data||[]; HQ_USERS = r[4].data||[];
+        } catch(e) { console.error('[Office]', e); }
     }
     
     // ===== HELPERS =====
-    function officeMyCheckin() {
-        if (!window.sbUser) return null;
-        var uid = window.sbUser.id;
-        for (var i = 0; i < officeCheckins.length; i++) {
-            if (officeCheckins[i].user_id === uid) return officeCheckins[i];
-        }
-        return null;
+    function me() { return window.sbUser ? window.sbUser.id : null; }
+    function myCI() { var u=me(); for(var i=0;i<CI.length;i++) if(CI[i].user_id===u) return CI[i]; return null; }
+    function deskCI(nr) { for(var i=0;i<CI.length;i++) if(CI[i].desk_nr===nr) return CI[i]; return null; }
+    function myBK(ds) { var u=me(); for(var i=0;i<BK.length;i++) if(BK[i].user_id===u&&BK[i].booking_date===ds) return BK[i]; return null; }
+    function deskBK(nr,ds) { for(var i=0;i<BK.length;i++) if(BK[i].desk_nr===nr&&BK[i].booking_date===ds) return BK[i]; return null; }
+    function dayBK(ds) { return BK.filter(function(b){return b.booking_date===ds}); }
+    function av(u,s) { s=s||32; if(u.avatar_url) return u.avatar_url; var n=u.name||((u.vorname||'')+' '+(u.nachname||'')).trim()||'?'; return 'https://ui-avatars.com/api/?name='+encodeURIComponent(n)+'&background=EF7D00&color=fff&size='+(s*2); }
+    function ini(u) { return ((u.vorname||u.name||'').charAt(0)+(u.nachname||'').charAt(0)).toUpperCase(); }
+    function fmtD(ds) { var d=new Date(ds+'T00:00:00'); return ['So','Mo','Di','Mi','Do','Fr','Sa'][d.getDay()]+', '+d.getDate()+'.'+(d.getMonth()+1)+'.'; }
+    function fmtDL(ds) { var d=new Date(ds+'T00:00:00'); var days=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag']; return days[d.getDay()]+', '+d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear(); }
+    function todayStr() { return new Date().toISOString().split('T')[0]; }
+    function isToday(ds) { return ds===todayStr(); }
+    function workdays(offset,count) {
+        var r=[],d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()+offset*7);
+        // Go to Monday of that week
+        var dow=d.getDay(); d.setDate(d.getDate()-(dow===0?6:dow-1));
+        for(var i=0;i<7&&r.length<count;i++){var nd=new Date(d);nd.setDate(d.getDate()+i);if(nd.getDay()!==0&&nd.getDay()!==6)r.push(nd);}
+        return r;
     }
-    
-    function officeDeskCheckin(nr) {
-        for (var i = 0; i < officeCheckins.length; i++) {
-            if (officeCheckins[i].desk_nr === nr) return officeCheckins[i];
-        }
-        return null;
-    }
-    
-    function officeDeskBooking(nr, dateStr) {
-        for (var i = 0; i < officeBookings.length; i++) {
-            if (officeBookings[i].desk_nr === nr && officeBookings[i].booking_date === dateStr) return officeBookings[i];
-        }
-        return null;
-    }
-    
-    function officeMyBooking(dateStr) {
-        if (!window.sbUser) return null;
-        var uid = window.sbUser.id;
-        for (var i = 0; i < officeBookings.length; i++) {
-            if (officeBookings[i].user_id === uid && officeBookings[i].booking_date === dateStr) return officeBookings[i];
-        }
-        return null;
-    }
-    
-    function officeUserAvatar(checkin, size) {
-        size = size || 30;
-        var s = Math.round(size);
-        if (checkin.avatar_url) {
-            return '<img src="' + checkin.avatar_url + '" width="' + s + '" height="' + s + '" style="border-radius:50%;object-fit:cover" />';
-        }
-        var initials = '';
-        if (checkin.initials) initials = checkin.initials;
-        else if (checkin.vorname || checkin.nachname) initials = (checkin.vorname||'').charAt(0).toUpperCase() + (checkin.nachname||'').charAt(0).toUpperCase();
-        else if (checkin.name) { var parts = checkin.name.split(' '); initials = parts[0].charAt(0).toUpperCase() + (parts[1] ? parts[1].charAt(0).toUpperCase() : ''); }
-        return '<div style="width:' + s + 'px;height:' + s + 'px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:' + Math.round(s*0.38) + 'px;font-weight:800;color:#fff;background:#EF7D00">' + initials + '</div>';
-    }
-    
-    function officeAvatarUrl(user) {
-        if (user.avatar_url) return user.avatar_url;
-        var name = user.name || ((user.vorname||'') + ' ' + (user.nachname||'')).trim() || '?';
-        return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=EF7D00&color=fff&size=64';
-    }
-    
-    function officeFormatDate(dateStr) {
-        var d = new Date(dateStr + 'T00:00:00');
-        var days = ['So','Mo','Di','Mi','Do','Fr','Sa'];
-        return days[d.getDay()] + ', ' + d.getDate() + '.' + (d.getMonth()+1) + '.';
-    }
+    function userName() { if(window.sbProfile) return window.sbProfile.vorname||window.sbProfile.name||''; return ''; }
     
     // ===== RENDER =====
-    function officeRender() {
-        var officeUsers = officeCheckins.filter(function(c) { return c.status === 'office'; });
-        var remoteUsers = officeCheckins.filter(function(c) { return c.status === 'remote'; });
-        var freeCount = officeDesks.length - officeUsers.length;
-        var my = officeMyCheckin();
-        
-        // Stats pills
-        var pills = document.getElementById('officeStatsPills');
-        if (pills) {
-            pills.innerHTML = '<span class="px-2 py-1 rounded-full text-xs font-bold" style="background:#f0fdf4;color:#22c55e">' + officeUsers.length + ' Büro</span> ' +
-                '<span class="px-2 py-1 rounded-full text-xs font-bold" style="background:#eff6ff;color:#3b82f6">' + remoteUsers.length + ' Remote</span> ' +
-                '<span class="px-2 py-1 rounded-full text-xs font-bold" style="background:#fafafa;color:#999">' + freeCount + ' Frei</span>';
-        }
-        
-        // Main button
-        var btn = document.getElementById('officeMainBtn');
-        if (btn) {
-            if (my) {
-                btn.textContent = '🚪 Auschecken';
-                btn.className = 'px-4 py-2 rounded-lg font-bold text-sm text-white';
-                btn.style.background = '#ef4444';
-            } else {
-                btn.textContent = '📍 Einchecken';
-                btn.className = 'px-4 py-2 rounded-lg font-bold text-sm text-white bg-vit-orange';
-                btn.style.background = '';
-            }
-        }
-        
-        // My status bar
-        var statusBar = document.getElementById('officeMyStatus');
-        if (statusBar) {
-            if (my) {
-                var loc = my.status === 'office' ? '🏢 Platz #' + my.desk_nr + ' (' + (my.room || '') + ')' : '🏠 Remote';
-                statusBar.innerHTML = '<div class="flex items-center justify-between"><span>' + loc + ' · seit ' + my.since + '</span><span class="text-xs" style="color:var(--c-muted)">Dein aktueller Status</span></div>';
-                statusBar.style.display = '';
-                statusBar.style.background = my.status === 'office' ? '#FFF4E6' : '#eff6ff';
-                statusBar.style.color = my.status === 'office' ? '#EF7D00' : '#3b82f6';
-            } else {
-                statusBar.style.display = 'none';
-            }
-        }
-        
-        // Render active tab
-        if (officeCurrentTab === 'team') officeRenderTeam(officeUsers, remoteUsers, freeCount);
-        if (officeCurrentTab === 'plan') officeRenderPlan(officeUsers, remoteUsers);
-        if (officeCurrentTab === 'planung') officeRenderPlanung();
-        
-        officeUpdateBadge();
+    function render() {
+        renderHero();
+        if(TAB==='home') renderHome();
+        if(TAB==='plan') renderPlan();
+        if(TAB==='woche') renderWoche();
+        if(TAB==='laden') renderLaden();
+        if(TAB==='analytics') renderAnalytics();
+        updateBadge();
     }
     
-    // =====================================================
-    // GRUNDRISS - 1:1 nach echtem Büroplan
-    // =====================================================
-    function officeRenderPlan(officeUsers, remoteUsers) {
-        var my = officeMyCheckin();
-        var html = '<div class="vit-card p-4" style="overflow-x:auto">';
-        html += '<div class="flex justify-between items-center mb-3"><span class="text-xs font-bold" style="color:var(--c-muted)">Bürofläche OG</span><div class="flex gap-3 text-[10px]" style="color:var(--c-dim)"><span>🟢 Frei</span><span>🟠 Belegt</span><span>🔵 Du</span><span style="color:#999">⬤ Besprechung</span></div></div>';
+    // ===== HERO =====
+    function renderHero() {
+        var h = document.getElementById('officeHero');
+        if(!h) return;
+        var ci = myCI();
+        var offU = CI.filter(function(c){return c.status==='office'}).length;
+        var remU = CI.filter(function(c){return c.status==='remote'}).length;
+        var free = D.filter(function(d){return d.room!=='Konferenz'}).length - offU;
         
-        // SVG matching the real floor plan proportions (wide rectangle)
-        html += '<svg viewBox="0 0 900 420" style="width:100%;height:auto;min-width:700px" xmlns="http://www.w3.org/2000/svg">';
+        var html = '<div class="flex items-center justify-between flex-wrap gap-4">';
+        html += '<div><h1 class="text-2xl font-bold" style="color:var(--c-text)">Hallo '+userName()+',</h1>';
+        html += '<p class="text-sm" style="color:var(--c-sub)">Wo bist du die nächsten Tage?</p></div>';
+        html += '<div class="flex items-center gap-3">';
+        html += '<div class="flex gap-2 text-xs">';
+        html += '<span class="px-2.5 py-1 rounded-full font-bold" style="background:#f0fdf4;color:#22c55e">'+offU+' Büro</span>';
+        html += '<span class="px-2.5 py-1 rounded-full font-bold" style="background:#eff6ff;color:#3b82f6">'+remU+' Remote</span>';
+        html += '<span class="px-2.5 py-1 rounded-full font-bold" style="background:#fafafa;color:#999">'+Math.max(0,free)+' Frei</span>';
+        html += '</div>';
+        if(ci) {
+            html += '<button onclick="officeDoCheckout()" class="px-4 py-2 rounded-lg text-sm font-bold text-white" style="background:#ef4444">🚪 Auschecken</button>';
+        } else {
+            html += '<button onclick="officeToggleCheckin()" class="px-4 py-2 rounded-lg text-sm font-bold text-white bg-vit-orange">📍 Einchecken</button>';
+        }
+        html += '</div></div>';
+        h.innerHTML = html;
+    }
+    
+    // ===============================================================
+    // TAB 1: HOME — "Where are you for the next few days?"
+    // ===============================================================
+    function renderHome() {
+        var el = document.getElementById('officeHomeContent');
+        if(!el) return;
+        var days = workdays(0, 5);
+        var ci = myCI();
         
-        // ===== OUTER WALLS =====
-        html += '<rect x="5" y="5" width="890" height="410" rx="2" fill="none" stroke="#ccc" stroke-width="2"/>';
+        var html = '<div class="grid gap-4" style="grid-template-columns:repeat('+days.length+',1fr);overflow-x:auto">';
         
-        // ===== TOP ROW ROOMS =====
-        // GF Room (top-left)
-        html += '<rect x="5" y="5" width="100" height="170" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
-        html += '<text x="55" y="22" text-anchor="middle" font-size="9" fill="#bbb" font-weight="600">GF</text>';
-        
-        // Großraum (wide room)
-        html += '<rect x="105" y="5" width="215" height="170" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
-        html += '<text x="212" y="22" text-anchor="middle" font-size="9" fill="#bbb" font-weight="600">Großraum</text>';
-        
-        // Server-Raum (small)
-        html += '<rect x="320" y="5" width="70" height="170" fill="#f3f3f3" stroke="#ddd" stroke-width="1"/>';
-        html += '<text x="355" y="90" text-anchor="middle" font-size="8" fill="#ccc" font-weight="600">Server</text>';
-        html += '<text x="355" y="102" text-anchor="middle" font-size="8" fill="#ccc">Raum</text>';
-        
-        // Mitte Raum 
-        html += '<rect x="390" y="5" width="140" height="170" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
-        html += '<text x="460" y="22" text-anchor="middle" font-size="9" fill="#bbb" font-weight="600">♥</text>';
-        
-        // Expansion Raum
-        html += '<rect x="530" y="5" width="175" height="170" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
-        
-        // Rechts oben
-        html += '<rect x="705" y="5" width="190" height="170" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
-        
-        // ===== FLUR =====
-        html += '<rect x="5" y="175" width="890" height="55" fill="#f0f0f0" stroke="#ddd" stroke-width="1"/>';
-        html += '<text x="450" y="207" text-anchor="middle" font-size="10" fill="#ccc" font-weight="500">Bürofläche OG</text>';
-        
-        // ===== BOTTOM ROW ROOMS =====
-        // Treppe links
-        html += '<rect x="5" y="230" width="80" height="185" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/>';
-        html += '<text x="45" y="330" text-anchor="middle" font-size="8" fill="#ccc">Treppe</text>';
-        
-        // Unten-Links
-        html += '<rect x="85" y="230" width="100" height="185" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
-        
-        // Leerer Bereich / Gang
-        html += '<rect x="185" y="230" width="80" height="185" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/>';
-        
-        // Unten-Mitte 1
-        html += '<rect x="265" y="230" width="100" height="185" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
-        
-        // Unten-Mitte 2
-        html += '<rect x="365" y="230" width="140" height="185" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
-        
-        // Konferenz
-        html += '<rect x="505" y="230" width="140" height="185" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
-        html += '<text x="575" y="248" text-anchor="middle" font-size="8" fill="#ccc" font-weight="600">Konferenz</text>';
-        
-        // Besprechung / großer Raum
-        html += '<rect x="645" y="230" width="110" height="185" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/>';
-        
-        // Treppe rechts
-        html += '<rect x="755" y="230" width="50" height="185" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/>';
-        html += '<text x="780" y="330" text-anchor="middle" font-size="8" fill="#ccc">Treppe</text>';
-        
-        // Unten-Rechts
-        html += '<rect x="805" y="230" width="90" height="185" fill="#fafafa" stroke="#ddd" stroke-width="1"/>';
-        
-        // ===== DESK DOTS =====
-        officeDesks.forEach(function(d) {
-            var ci = officeDeskCheckin(d.nr);
-            var free = !ci;
-            var isMe = ci && window.sbUser && ci.user_id === window.sbUser.id;
-            var isConf = d.room === 'Konferenz';
-            var r = isConf ? 18 : 16;
+        days.forEach(function(day) {
+            var ds = day.toISOString().split('T')[0];
+            var today = isToday(ds);
+            var bk = myBK(ds);
+            var dayBookings = dayBK(ds);
+            var dayColleagues = dayBookings.filter(function(b){return b.user_id!==me()});
             
-            // Clickable if free and user not checked in
-            if (free && !my) {
-                html += '<g style="cursor:pointer" onclick="officeCheckinDesk(' + d.nr + ')">';
-            } else if (free) {
-                html += '<g>';
+            // Card
+            html += '<div class="rounded-xl p-4 min-w-[180px]" style="background:var(--c-bg);border:' + (today ? '2px solid #EF7D00' : '1px solid var(--c-border)') + '">';
+            
+            // Date header
+            if(today) html += '<div class="w-8 h-1 rounded-full bg-vit-orange mx-auto mb-2"></div>';
+            html += '<div class="text-xs font-bold text-center mb-3" style="color:'+(today?'#EF7D00':'var(--c-muted)')+'">'+( today ? 'Heute' : fmtD(ds))+'</div>';
+            
+            // Status button
+            if(today && ci) {
+                var loc = ci.status==='office' ? '🏢 Büro #'+ci.desk_nr : '🏠 Remote';
+                html += '<div class="rounded-lg p-2.5 text-center text-sm font-semibold mb-3" style="background:#FFF4E6;color:#EF7D00;border:1px solid rgba(239,125,0,0.2)">'+loc+'</div>';
+            } else if(bk) {
+                var loc = bk.status==='office' ? '🏢 Büro'+(bk.desk_nr?' #'+bk.desk_nr:'') : '🏠 Remote';
+                html += '<div class="rounded-lg p-2.5 text-center text-sm font-semibold mb-3" style="background:'+(bk.status==='office'?'#FFF4E6':'#eff6ff')+';color:'+(bk.status==='office'?'#EF7D00':'#3b82f6')+';border:1px solid '+(bk.status==='office'?'rgba(239,125,0,0.2)':'rgba(59,130,246,0.2)')+'">'+loc+'</div>';
+                html += '<div class="text-[10px] text-center mb-2" style="color:var(--c-muted);cursor:pointer" onclick="officeDeleteBooking(\''+bk.id+'\')">✕ stornieren</div>';
             } else {
-                html += '<g>';
+                html += '<div class="rounded-lg p-2.5 text-center text-sm cursor-pointer mb-3 hover:shadow transition" style="background:var(--c-bg3);color:var(--c-sub);border:1px solid var(--c-border)" onclick="officeShowBookingModal(\''+ds+'\')">Dein Status?</div>';
             }
             
-            if (isMe) {
-                // Blue ring for current user
-                html += '<circle cx="' + d.x + '" cy="' + d.y + '" r="' + (r+5) + '" fill="none" stroke="#3b82f6" stroke-width="2.5" opacity="0.6"/>';
-            }
-            
-            if (free) {
-                // Green free desk
-                html += '<circle cx="' + d.x + '" cy="' + d.y + '" r="' + r + '" fill="#22c55e20" stroke="#22c55e" stroke-width="1.5"/>';
-                html += '<text x="' + d.x + '" y="' + (d.y+4) + '" text-anchor="middle" font-size="9" font-weight="700" fill="#22c55e">' + d.nr + '</text>';
-            } else if (isConf) {
-                // Gray conference seat
-                html += '<circle cx="' + d.x + '" cy="' + d.y + '" r="' + r + '" fill="#e5e5e5" stroke="#ccc" stroke-width="1"/>';
-                if (ci) {
-                    html += '<image href="' + officeAvatarUrl(ci) + '" x="' + (d.x-r+3) + '" y="' + (d.y-r+3) + '" width="' + (r*2-6) + '" height="' + (r*2-6) + '" clip-path="circle(' + (r-3) + 'px)"/>';
-                }
+            // Colleagues
+            if(dayColleagues.length > 0) {
+                html += '<div class="text-[10px] mb-1.5" style="color:var(--c-muted)">Kollegen anwesend:</div>';
+                html += '<div class="flex flex-wrap gap-1 mb-2">';
+                var show = dayColleagues.slice(0,4);
+                show.forEach(function(c) {
+                    html += '<img src="'+av(c,24)+'" width="24" height="24" style="border-radius:50%;object-fit:cover" title="'+(c.name||'')+'">';
+                });
+                if(dayColleagues.length > 4) html += '<span class="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold" style="background:var(--c-bg3);color:var(--c-muted)">+' + (dayColleagues.length-4) + '</span>';
+                html += '</div>';
             } else {
-                // Occupied: show avatar
-                var col = isMe ? '#3b82f6' : '#EF7D00';
-                html += '<circle cx="' + d.x + '" cy="' + d.y + '" r="' + r + '" fill="' + col + '"/>';
-                // Profile picture via image
-                html += '<clipPath id="clip' + d.nr + '"><circle cx="' + d.x + '" cy="' + d.y + '" r="' + (r-2) + '"/></clipPath>';
-                html += '<image href="' + officeAvatarUrl(ci) + '" x="' + (d.x-r+2) + '" y="' + (d.y-r+2) + '" width="' + (r*2-4) + '" height="' + (r*2-4) + '" clip-path="url(#clip' + d.nr + ')"/>';
-                // Name label below
-                var shortName = (ci.vorname || ci.name.split(' ')[0] || '').substring(0,8);
-                html += '<text x="' + d.x + '" y="' + (d.y + r + 11) + '" text-anchor="middle" font-size="7" fill="#666" font-weight="600">' + shortName + '</text>';
+                html += '<div class="text-[10px] mb-1.5" style="color:var(--c-dim)">Noch keine Buchungen</div>';
             }
             
-            html += '</g>';
+            // Book button
+            if(!bk && !(today&&ci)) {
+                html += '<button onclick="officeShowBookingModal(\''+ds+'\')" class="w-full rounded-lg py-1.5 text-xs font-semibold text-center mt-1 transition hover:shadow" style="border:1px solid #EF7D00;color:#EF7D00;background:transparent">Buchen</button>';
+            }
+            
+            html += '</div>';
         });
         
-        html += '</svg></div>';
+        html += '</div>';
         
-        // Remote users bar
-        if (remoteUsers.length > 0) {
-            html += '<div class="flex flex-wrap gap-2 mt-3 items-center">';
-            html += '<span class="text-xs font-bold" style="color:var(--c-muted)">🏠 Remote:</span>';
-            remoteUsers.forEach(function(c) {
-                html += '<div class="flex items-center gap-1.5 px-2 py-1 rounded-lg" style="background:#eff6ff">';
-                html += '<img src="' + officeAvatarUrl(c) + '" width="20" height="20" style="border-radius:50%">';
-                html += '<span class="text-xs font-semibold" style="color:#3b82f6">' + (c.name || '') + '</span>';
-                html += '<span class="text-[10px]" style="color:#93c5fd">seit ' + c.since + '</span>';
+        // Who is in the office today
+        var todayCI = CI.filter(function(c){return c.status==='office'});
+        var todayRemote = CI.filter(function(c){return c.status==='remote'});
+        if(todayCI.length>0 || todayRemote.length>0) {
+            html += '<div class="mt-6 vit-card p-4"><div class="text-xs font-bold mb-3" style="color:var(--c-muted)">📍 Heute im Büro</div>';
+            html += '<div class="flex flex-wrap gap-3">';
+            todayCI.forEach(function(c) {
+                var isMe = c.user_id===me();
+                html += '<div class="flex items-center gap-2 px-3 py-2 rounded-lg" style="background:'+(isMe?'#FFF4E6':'var(--c-bg3)')+'">';
+                html += '<img src="'+av(c,28)+'" width="28" height="28" style="border-radius:50%;object-fit:cover">';
+                html += '<div><div class="text-xs font-semibold" style="color:var(--c-text)">'+(c.name||'')+(isMe?' (Du)':'')+'</div>';
+                html += '<div class="text-[10px]" style="color:var(--c-muted)">#'+c.desk_nr+' · seit '+c.since+'</div></div>';
                 html += '</div>';
             });
             html += '</div>';
-        }
-        
-        document.getElementById('officePlanContent').innerHTML = html;
-    }
-    
-    // =====================================================
-    // TEAM-LISTE
-    // =====================================================
-    function officeRenderTeam(officeUsers, remoteUsers, freeCount) {
-        var html = '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">';
-        
-        // Left: People
-        html += '<div>';
-        html += '<h3 class="text-xs font-bold uppercase tracking-wider mb-3" style="color:var(--c-muted)">🏢 Im Büro (' + officeUsers.length + ')</h3>';
-        if (officeUsers.length === 0) html += '<p class="text-sm mb-4" style="color:var(--c-muted)">Noch niemand im Büro</p>';
-        officeUsers.forEach(function(c) {
-            var isMe = window.sbUser && c.user_id === window.sbUser.id;
-            html += '<div class="flex items-center space-x-3 p-2.5 rounded-lg mb-1.5" style="background:' + (isMe ? '#FFF4E6' : 'var(--c-bg3)') + '">';
-            html += '<img src="' + officeAvatarUrl(c) + '" width="36" height="36" style="border-radius:50%;object-fit:cover">';
-            html += '<div class="flex-1 min-w-0"><div class="font-semibold text-sm truncate" style="color:var(--c-text)">' + c.name + (isMe ? ' <span class="text-vit-orange text-xs">(Du)</span>' : '') + '</div>';
-            html += '<div class="text-[11px]" style="color:var(--c-muted)">' + (c.role || '') + '</div></div>';
-            html += '<div class="text-right"><div class="text-xs font-bold text-vit-orange">#' + c.desk_nr + '</div>';
-            html += '<div class="text-[10px]" style="color:var(--c-muted)">seit ' + c.since + '</div></div>';
-            html += '</div>';
-        });
-        
-        html += '<h3 class="text-xs font-bold uppercase tracking-wider mb-3 mt-4" style="color:var(--c-muted)">🏠 Remote (' + remoteUsers.length + ')</h3>';
-        if (remoteUsers.length === 0) html += '<p class="text-sm mb-4" style="color:var(--c-muted)">Niemand remote</p>';
-        remoteUsers.forEach(function(c) {
-            var isMe = window.sbUser && c.user_id === window.sbUser.id;
-            html += '<div class="flex items-center space-x-3 p-2.5 rounded-lg mb-1.5" style="background:' + (isMe ? '#eff6ff' : 'var(--c-bg3)') + '">';
-            html += '<img src="' + officeAvatarUrl(c) + '" width="36" height="36" style="border-radius:50%;object-fit:cover">';
-            html += '<div class="flex-1 min-w-0"><div class="font-semibold text-sm truncate" style="color:var(--c-text)">' + c.name + (isMe ? ' <span class="text-blue-500 text-xs">(Du)</span>' : '') + '</div>';
-            html += '<div class="text-[11px]" style="color:var(--c-muted)">' + (c.role || '') + '</div></div>';
-            html += '<div class="text-[10px]" style="color:var(--c-muted)">seit ' + c.since + '</div>';
-            html += '</div>';
-        });
-        html += '</div>';
-        
-        // Right: Stats + Ladesäulen + QR
-        html += '<div>';
-        html += '<div class="vit-card p-4 mb-3" style="background:#FFF4E6;border:1px solid rgba(239,125,0,0.12)">';
-        html += '<div class="text-xs font-bold text-vit-orange mb-2">📊 ' + new Date().toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long'}) + '</div>';
-        html += '<div class="grid grid-cols-3 gap-2 text-center">';
-        html += '<div><div class="text-xl font-extrabold" style="color:var(--c-text)">' + officeUsers.length + '</div><div class="text-[10px]" style="color:var(--c-muted)">Büro</div></div>';
-        html += '<div><div class="text-xl font-extrabold" style="color:#3b82f6">' + remoteUsers.length + '</div><div class="text-[10px]" style="color:var(--c-muted)">Remote</div></div>';
-        html += '<div><div class="text-xl font-extrabold" style="color:#22c55e">' + freeCount + '</div><div class="text-[10px]" style="color:var(--c-muted)">Frei</div></div>';
-        html += '</div></div>';
-        
-        html += '<div class="vit-card p-4 mb-3">';
-        html += '<div class="text-xs font-bold mb-2" style="color:var(--c-muted)">⚡ E-Ladesäulen</div>';
-        officeCharging.forEach(function(ch) {
-            var free = !ch.user_id;
-            html += '<div class="flex items-center justify-between py-1.5"><span class="text-sm">' + ch.label + '</span>';
-            html += '<span class="text-xs font-bold px-2 py-0.5 rounded-full" style="background:' + (free ? '#f0fdf4' : '#fef2f2') + ';color:' + (free ? '#22c55e' : '#ef4444') + '">' + (free ? '✓ Frei' : '⚡ Belegt') + '</span></div>';
-        });
-        html += '</div>';
-        
-        html += '<button onclick="officeShowQr()" class="vit-card p-3 w-full text-center text-sm font-bold text-vit-orange hover:shadow-md transition">📱 QR-Codes für Plätze</button>';
-        html += '</div></div>';
-        
-        document.getElementById('officeTeamContent').innerHTML = html;
-    }
-    
-    // =====================================================
-    // PLANUNG - Wochenübersicht + Vorausbuchung
-    // =====================================================
-    function officeRenderPlanung() {
-        var today = new Date();
-        today.setHours(0,0,0,0);
-        
-        // Nächste 5 Werktage generieren
-        var days = [];
-        var d = new Date(today);
-        while (days.length < 5) {
-            if (d.getDay() !== 0 && d.getDay() !== 6) {
-                days.push(new Date(d));
+            if(todayRemote.length>0) {
+                html += '<div class="text-xs font-bold mt-3 mb-2" style="color:var(--c-muted)">🏠 Remote</div><div class="flex flex-wrap gap-2">';
+                todayRemote.forEach(function(c) {
+                    html += '<div class="flex items-center gap-1.5 px-2 py-1 rounded-lg" style="background:#eff6ff"><img src="'+av(c,20)+'" width="20" height="20" style="border-radius:50%"><span class="text-[11px] font-semibold" style="color:#3b82f6">'+(c.vorname||c.name||'')+'</span></div>';
+                });
+                html += '</div>';
             }
-            d.setDate(d.getDate() + 1);
+            html += '</div>';
         }
         
-        var html = '<div class="vit-card p-4">';
-        html += '<div class="flex justify-between items-center mb-4">';
-        html += '<h3 class="text-sm font-bold" style="color:var(--c-text)">📅 Wochenplanung</h3>';
-        html += '<span class="text-xs" style="color:var(--c-muted)">Klick auf Tag → Platz reservieren oder Remote anmelden</span>';
-        html += '</div>';
+        el.innerHTML = html;
+    }
+    
+    // ===============================================================
+    // TAB 2: GRUNDRISS — Floor plan with real layout + colleague list
+    // ===============================================================
+    function renderPlan() {
+        var el = document.getElementById('officePlanContent');
+        if(!el) return;
+        var ci = myCI();
+        var offU = CI.filter(function(c){return c.status==='office'});
         
-        // Days header
-        html += '<div class="grid gap-3" style="grid-template-columns: 120px repeat(' + days.length + ', 1fr)">';
+        var html = '<div class="grid gap-4" style="grid-template-columns:280px 1fr">';
         
-        // Header row
-        html += '<div></div>';
-        days.forEach(function(day) {
-            var dateStr = day.toISOString().split('T')[0];
-            var isToday = dateStr === today.toISOString().split('T')[0];
-            var dayNames = ['So','Mo','Di','Mi','Do','Fr','Sa'];
-            html += '<div class="text-center p-2 rounded-lg" style="background:' + (isToday ? '#FFF4E6' : 'var(--c-bg3)') + '">';
-            html += '<div class="text-xs font-bold" style="color:' + (isToday ? '#EF7D00' : 'var(--c-text)') + '">' + dayNames[day.getDay()] + '</div>';
-            html += '<div class="text-[11px]" style="color:var(--c-muted)">' + day.getDate() + '.' + (day.getMonth()+1) + '.</div>';
-            html += '</div>';
+        // LEFT: Colleague list
+        html += '<div class="vit-card p-4" style="max-height:600px;overflow-y:auto">';
+        html += '<div class="text-xs font-bold mb-1" style="color:var(--c-muted)">📅 '+fmtDL(todayStr())+'</div>';
+        html += '<div class="text-xs mb-3" style="color:var(--c-dim)">1. OG · Büro Unterföhring</div>';
+        html += '<div class="text-[10px] font-bold mb-2" style="color:var(--c-muted)">'+offU.length+' Kollegen im Büro</div>';
+        
+        offU.forEach(function(c) {
+            var isMe = c.user_id===me();
+            html += '<div class="flex items-center gap-2.5 py-2 border-b" style="border-color:var(--c-border)">';
+            html += '<img src="'+av(c,32)+'" width="32" height="32" style="border-radius:50%;object-fit:cover">';
+            html += '<div class="flex-1"><div class="text-sm font-semibold" style="color:var(--c-text)">'+(c.name||'')+( isMe?' (Du)':'')+'</div>';
+            html += '<div class="text-[10px]" style="color:var(--c-muted)">'+(c.room||'Platz #'+c.desk_nr)+' · seit '+c.since+'</div></div></div>';
         });
         
-        // Get all HQ users for rows
-        var allHqUsers = [];
-        var seenIds = {};
-        // First add users with bookings/checkins
-        officeBookings.forEach(function(b) { if (!seenIds[b.user_id]) { seenIds[b.user_id] = true; allHqUsers.push({user_id:b.user_id, name:b.name, vorname:b.vorname, nachname:b.nachname, avatar_url:b.avatar_url, role:b.role}); }});
-        officeCheckins.forEach(function(c) { if (!seenIds[c.user_id]) { seenIds[c.user_id] = true; allHqUsers.push({user_id:c.user_id, name:c.name, avatar_url:null, role:c.role}); }});
+        if(offU.length===0) html += '<div class="text-sm py-4 text-center" style="color:var(--c-muted)">Noch niemand im Büro</div>';
+        html += '</div>';
         
-        // Current user always first
-        var myId = window.sbUser ? window.sbUser.id : null;
-        allHqUsers.sort(function(a,b) {
-            if (a.user_id === myId) return -1;
-            if (b.user_id === myId) return 1;
+        // RIGHT: Floor plan SVG
+        html += '<div class="vit-card p-3" style="overflow:auto">';
+        html += '<div class="text-xs font-bold mb-2" style="color:var(--c-muted)">1. OG · Büro Unterföhring</div>';
+        html += buildFloorplanSVG(ci);
+        html += '</div>';
+        
+        html += '</div>';
+        el.innerHTML = html;
+    }
+    
+    function buildFloorplanSVG(myCheckin) {
+        var h = '<svg viewBox="0 0 900 440" style="width:100%;height:auto;min-width:650px" xmlns="http://www.w3.org/2000/svg">';
+        
+        // Background
+        h += '<rect x="0" y="0" width="900" height="440" fill="#fafafa" rx="4"/>';
+        
+        // ===== OUTER WALLS =====
+        h += '<rect x="15" y="15" width="870" height="410" fill="none" stroke="#999" stroke-width="2.5" rx="1"/>';
+        
+        // ===== TOP ROW ROOMS (y: 15-185) =====
+        // GF (top-left corner)
+        h += '<rect x="15" y="15" width="95" height="170" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
+        h += '<text x="62" y="30" text-anchor="middle" font-size="8" fill="#999" font-weight="600">GF</text>';
+        
+        // Großraum
+        h += '<rect x="110" y="15" width="210" height="170" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
+        h += '<text x="215" y="30" text-anchor="middle" font-size="8" fill="#999" font-weight="600">Großraum</text>';
+        
+        // Server-Raum
+        h += '<rect x="320" y="15" width="65" height="170" fill="#f5f5f5" stroke="#bbb" stroke-width="1.5"/>';
+        h += '<text x="352" y="95" text-anchor="middle" font-size="7" fill="#ccc" font-weight="600">Server</text>';
+        h += '<text x="352" y="105" text-anchor="middle" font-size="7" fill="#ccc">Raum</text>';
+        
+        // Mitte (♥)
+        h += '<rect x="385" y="15" width="135" height="170" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
+        h += '<text x="452" y="30" text-anchor="middle" font-size="9" fill="#ddd">♥</text>';
+        
+        // Expansion
+        h += '<rect x="520" y="15" width="170" height="170" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
+        
+        // Rechts oben
+        h += '<rect x="690" y="15" width="195" height="170" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
+        
+        // ===== FLUR (y: 185-235) =====
+        h += '<rect x="15" y="185" width="870" height="50" fill="#f0f0f0" stroke="#bbb" stroke-width="1"/>';
+        h += '<text x="450" y="215" text-anchor="middle" font-size="10" fill="#ccc" font-weight="500">Bürofläche OG</text>';
+        
+        // ===== BOTTOM ROW (y: 235-425) =====
+        // Treppe links
+        h += '<rect x="15" y="235" width="70" height="190" fill="#f3f3f3" stroke="#bbb" stroke-width="1.5"/>';
+        h += '<line x1="25" y1="280" x2="75" y2="280" stroke="#ddd"/><line x1="25" y1="300" x2="75" y2="300" stroke="#ddd"/><line x1="25" y1="320" x2="75" y2="320" stroke="#ddd"/><line x1="25" y1="340" x2="75" y2="340" stroke="#ddd"/><line x1="25" y1="360" x2="75" y2="360" stroke="#ddd"/>';
+        
+        // Unten Links
+        h += '<rect x="85" y="235" width="105" height="190" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
+        
+        // Gang
+        h += '<rect x="190" y="235" width="75" height="190" fill="#f3f3f3" stroke="#bbb" stroke-width="1.5"/>';
+        
+        // Unten Mitte 1
+        h += '<rect x="265" y="235" width="105" height="190" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
+        
+        // Unten Mitte 2
+        h += '<rect x="370" y="235" width="130" height="190" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
+        
+        // Konferenz
+        h += '<rect x="500" y="235" width="130" height="190" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
+        h += '<text x="565" y="252" text-anchor="middle" font-size="7" fill="#ccc" font-weight="600">Konferenz</text>';
+        // Table
+        h += '<rect x="530" y="290" width="70" height="40" rx="4" fill="#e8e8e8" stroke="#ccc"/>';
+        
+        // Besprechung
+        h += '<rect x="630" y="235" width="100" height="190" fill="#f5f5f5" stroke="#bbb" stroke-width="1.5"/>';
+        
+        // Treppe rechts
+        h += '<rect x="730" y="235" width="50" height="190" fill="#f3f3f3" stroke="#bbb" stroke-width="1.5"/>';
+        h += '<line x1="740" y1="280" x2="770" y2="280" stroke="#ddd"/><line x1="740" y1="300" x2="770" y2="300" stroke="#ddd"/><line x1="740" y1="320" x2="770" y2="320" stroke="#ddd"/>';
+        
+        // Unten Rechts
+        h += '<rect x="780" y="235" width="105" height="190" fill="#fff" stroke="#bbb" stroke-width="1.5"/>';
+        
+        // ===== DESK DOTS =====
+        D.forEach(function(d) {
+            var c = deskCI(d.nr);
+            var free = !c;
+            var isMe = c && c.user_id===me();
+            var isConf = d.room==='Konferenz';
+            var r = isConf ? 16 : 14;
+            
+            if(free && !myCheckin) {
+                h += '<g style="cursor:pointer" onclick="officeCheckinDesk('+d.nr+')">';
+            } else { h += '<g>'; }
+            
+            if(free) {
+                // Green dot with desk icon
+                h += '<circle cx="'+d.x+'" cy="'+d.y+'" r="'+r+'" fill="#22c55e20" stroke="#22c55e" stroke-width="1.5"/>';
+                h += '<circle cx="'+(d.x-2)+'" cy="'+(d.y+1)+'" r="2" fill="#22c55e"/>';
+                h += '<line x1="'+(d.x-4)+'" y1="'+(d.y+4)+'" x2="'+(d.x+4)+'" y2="'+(d.y+4)+'" stroke="#22c55e" stroke-width="1.5"/>';
+            } else {
+                // Occupied: avatar circle
+                var col = isMe ? '#3b82f6' : '#EF7D00';
+                if(isConf) col = '#888';
+                
+                h += '<circle cx="'+d.x+'" cy="'+d.y+'" r="'+r+'" fill="'+col+'"/>';
+                h += '<clipPath id="cp'+d.nr+'"><circle cx="'+d.x+'" cy="'+d.y+'" r="'+(r-1.5)+'"/></clipPath>';
+                h += '<image href="'+av(c,r*2)+'" x="'+(d.x-r+1.5)+'" y="'+(d.y-r+1.5)+'" width="'+(r*2-3)+'" height="'+(r*2-3)+'" clip-path="url(#cp'+d.nr+')" preserveAspectRatio="xMidYMid slice"/>';
+                
+                // Name label
+                if(!isConf) {
+                    h += '<text x="'+d.x+'" y="'+(d.y+r+10)+'" text-anchor="middle" font-size="6.5" fill="#666" font-weight="600">'+ini(c)+'</text>';
+                }
+                
+                if(isMe) {
+                    h += '<circle cx="'+d.x+'" cy="'+d.y+'" r="'+(r+3)+'" fill="none" stroke="#3b82f6" stroke-width="2" opacity="0.6">';
+                    h += '<animate attributeName="r" values="'+(r+3)+';'+(r+5)+';'+(r+3)+'" dur="2s" repeatCount="indefinite"/></circle>';
+                }
+            }
+            h += '</g>';
+        });
+        
+        // Legend
+        h += '<g transform="translate(15,435)"><circle cx="5" cy="0" r="4" fill="#22c55e20" stroke="#22c55e" stroke-width="1"/><text x="13" y="3" font-size="7" fill="#999">Frei</text>';
+        h += '<circle cx="50" cy="0" r="4" fill="#EF7D00"/><text x="58" y="3" font-size="7" fill="#999">Belegt</text>';
+        h += '<circle cx="100" cy="0" r="4" fill="#3b82f6"/><text x="108" y="3" font-size="7" fill="#999">Du</text>';
+        h += '<circle cx="140" cy="0" r="4" fill="#888"/><text x="148" y="3" font-size="7" fill="#999">Konferenz</text></g>';
+        
+        h += '</svg>';
+        return h;
+    }
+    
+    // ===============================================================
+    // TAB 3: WOCHE — Week overview with all colleagues
+    // ===============================================================
+    function renderWoche() {
+        var el = document.getElementById('officeWocheContent');
+        if(!el) return;
+        var days = workdays(WEEK_OFFSET, 5);
+        
+        // Week navigation
+        var weekStart = days[0], weekEnd = days[days.length-1];
+        var html = '<div class="flex items-center gap-3 mb-4">';
+        html += '<span class="text-sm font-bold" style="color:var(--c-text)">Wochenübersicht</span>';
+        html += '<button onclick="officeWeekNav(-1)" class="w-7 h-7 rounded flex items-center justify-center" style="background:var(--c-bg3);color:var(--c-muted)">‹</button>';
+        html += '<span class="text-xs font-semibold" style="color:var(--c-muted)">'+weekStart.getDate()+'.'+(weekStart.getMonth()+1)+'. – '+weekEnd.getDate()+'.'+(weekEnd.getMonth()+1)+'.'+'</span>';
+        html += '<button onclick="officeWeekNav(1)" class="w-7 h-7 rounded flex items-center justify-center" style="background:var(--c-bg3);color:var(--c-muted)">›</button>';
+        if(WEEK_OFFSET!==0) html += '<button onclick="officeWeekNav(0)" class="text-xs font-bold text-vit-orange">Heute</button>';
+        html += '</div>';
+        
+        // Build user list (me first, then sorted)
+        var users = HQ_USERS.slice().sort(function(a,b) {
+            if(a.id===me()) return -1; if(b.id===me()) return 1;
             return (a.name||'').localeCompare(b.name||'');
         });
         
-        // If current user not in list, add them
-        if (myId && !seenIds[myId] && window.sbProfile) {
-            allHqUsers.unshift({user_id:myId, name:sbProfile.name, vorname:sbProfile.vorname, nachname:sbProfile.nachname, avatar_url:sbProfile.avatar_url, role:sbProfile.position});
-        }
+        // Grid: name col + day cols
+        html += '<div class="vit-card p-0 overflow-x-auto"><table style="width:100%;border-collapse:collapse;min-width:700px">';
+        
+        // Header row
+        html += '<thead><tr><th class="text-left p-3 text-xs font-bold" style="color:var(--c-muted);width:200px;border-bottom:2px solid var(--c-border)">Meine Woche</th>';
+        days.forEach(function(day) {
+            var ds = day.toISOString().split('T')[0];
+            var today = isToday(ds);
+            html += '<th class="p-3 text-center text-xs font-bold" style="color:'+(today?'#EF7D00':'var(--c-muted)')+';border-bottom:2px solid '+(today?'#EF7D00':'var(--c-border)')+'">';
+            html += (today?'Heute':['So','Mo','Di','Mi','Do','Fr','Sa'][day.getDay()])+', '+day.getDate()+'.'+(day.getMonth()+1)+'.';
+            html += '</th>';
+        });
+        html += '</tr></thead><tbody>';
         
         // User rows
-        allHqUsers.forEach(function(user) {
-            var isMe = user.user_id === myId;
-            // User label
-            html += '<div class="flex items-center gap-2 py-2">';
-            html += '<img src="' + officeAvatarUrl(user) + '" width="28" height="28" style="border-radius:50%;object-fit:cover">';
-            html += '<div class="text-xs font-semibold truncate" style="color:var(--c-text)">' + (user.vorname || user.name.split(' ')[0]) + (isMe ? ' (Du)' : '') + '</div>';
-            html += '</div>';
+        users.forEach(function(user,idx) {
+            var isMe = user.id===me();
+            html += '<tr style="border-bottom:1px solid var(--c-border);'+(isMe?'background:#FFF9F0':'')+'"><td class="p-3">';
+            html += '<div class="flex items-center gap-2">';
+            html += '<img src="'+av(user,28)+'" width="28" height="28" style="border-radius:50%;object-fit:cover">';
+            html += '<div><div class="text-sm font-semibold" style="color:var(--c-text)">'+(user.vorname||user.name||'')+(isMe?' (Du)':'')+'</div>';
+            html += '<div class="text-[10px]" style="color:var(--c-muted)">'+(user.position||'')+'</div></div>';
+            html += '</div></td>';
             
-            // Day cells
             days.forEach(function(day) {
-                var dateStr = day.toISOString().split('T')[0];
-                var isToday = dateStr === today.toISOString().split('T')[0];
-                var booking = null;
-                for (var i = 0; i < officeBookings.length; i++) {
-                    if (officeBookings[i].user_id === user.user_id && officeBookings[i].booking_date === dateStr) { booking = officeBookings[i]; break; }
-                }
+                var ds = day.toISOString().split('T')[0];
+                var today = isToday(ds);
+                var bk = null;
+                for(var i=0;i<BK.length;i++) if(BK[i].user_id===user.id&&BK[i].booking_date===ds){bk=BK[i];break;}
                 
-                // For today, also check live checkins
-                var checkin = null;
-                if (isToday) {
-                    for (var j = 0; j < officeCheckins.length; j++) {
-                        if (officeCheckins[j].user_id === user.user_id) { checkin = officeCheckins[j]; break; }
-                    }
-                }
+                // Today: also check live checkin
+                var liveCI = null;
+                if(today) { for(var j=0;j<CI.length;j++) if(CI[j].user_id===user.id){liveCI=CI[j];break;} }
                 
-                var cellBg = 'var(--c-bg)';
-                var cellContent = '';
-                var cellBorder = 'var(--c-border)';
-                var clickable = isMe;
+                html += '<td class="p-2 text-center" style="'+(today?'background:rgba(239,125,0,0.03)':'')+'">';
                 
-                if (checkin && isToday) {
-                    // Live checked in
-                    if (checkin.status === 'office') {
-                        cellBg = '#FFF4E6';
-                        cellBorder = '#EF7D00';
-                        cellContent = '<div class="text-[10px] font-bold text-vit-orange">🏢 #' + checkin.desk_nr + '</div><div class="text-[9px]" style="color:var(--c-muted)">Live</div>';
-                    } else {
-                        cellBg = '#eff6ff';
-                        cellBorder = '#3b82f6';
-                        cellContent = '<div class="text-[10px] font-bold" style="color:#3b82f6">🏠 Remote</div><div class="text-[9px]" style="color:var(--c-muted)">Live</div>';
-                    }
-                } else if (booking) {
-                    if (booking.status === 'office') {
-                        cellBg = '#FFF4E6';
-                        cellBorder = '#fdba74';
-                        cellContent = '<div class="text-[10px] font-bold text-vit-orange">🏢' + (booking.desk_nr ? ' #' + booking.desk_nr : '') + '</div>';
-                    } else {
-                        cellBg = '#eff6ff';
-                        cellBorder = '#93c5fd';
-                        cellContent = '<div class="text-[10px] font-bold" style="color:#3b82f6">🏠 Remote</div>';
-                    }
-                    if (isMe) cellContent += '<div class="text-[8px] mt-0.5" style="color:var(--c-muted);cursor:pointer" onclick="event.stopPropagation();officeDeleteBooking(\'' + booking.id + '\')">✕ stornieren</div>';
+                if(liveCI && today) {
+                    var icon = liveCI.status==='office' ? '🏢' : '🏠';
+                    var label = liveCI.status==='office' ? '#'+liveCI.desk_nr : 'Remote';
+                    var bg = liveCI.status==='office' ? '#FFF4E6' : '#eff6ff';
+                    var fg = liveCI.status==='office' ? '#EF7D00' : '#3b82f6';
+                    html += '<div class="inline-block rounded-lg px-2.5 py-1.5 text-[11px] font-bold" style="background:'+bg+';color:'+fg+'">'+icon+' '+label+'</div>';
+                    html += '<div class="text-[9px] mt-0.5" style="color:#22c55e">● Live</div>';
+                } else if(bk) {
+                    var icon = bk.status==='office' ? '🏢' : '🏠';
+                    var label = bk.status==='office' ? (bk.desk_nr?'#'+bk.desk_nr:'Büro') : 'Remote';
+                    var bg = bk.status==='office' ? '#FFF4E6' : '#eff6ff';
+                    var fg = bk.status==='office' ? '#EF7D00' : '#3b82f6';
+                    html += '<div class="inline-block rounded-lg px-2.5 py-1.5 text-[11px] font-bold" style="background:'+bg+';color:'+fg+'">'+icon+' '+label+'</div>';
+                    if(isMe) html += '<div class="text-[8px] mt-0.5 cursor-pointer" style="color:var(--c-muted)" onclick="officeDeleteBooking(\''+bk.id+'\')">✕</div>';
+                } else if(isMe) {
+                    html += '<div class="inline-block rounded-lg px-2.5 py-1.5 text-[11px] cursor-pointer hover:shadow transition" style="background:var(--c-bg3);color:var(--c-sub);border:1px dashed var(--c-border)" onclick="officeShowBookingModal(\''+ds+'\')">Dein Status?</div>';
                 } else {
-                    // Empty
-                    if (isMe) {
-                        cellContent = '<div class="text-[10px]" style="color:var(--c-dim)">+</div>';
-                    } else {
-                        cellContent = '<div class="text-[10px]" style="color:var(--c-dim)">–</div>';
-                    }
+                    html += '<span class="text-xs" style="color:var(--c-dim)">–</span>';
                 }
-                
-                html += '<div class="text-center p-1.5 rounded-lg border" style="background:' + cellBg + ';border-color:' + cellBorder + ';min-height:44px;display:flex;align-items:center;justify-content:center;flex-direction:column' + (clickable && !checkin ? ';cursor:pointer' : '') + '"';
-                if (clickable && !booking && !checkin) html += ' onclick="officeShowBookingModal(\'' + dateStr + '\')"';
-                html += '>' + cellContent + '</div>';
+                html += '</td>';
             });
+            html += '</tr>';
         });
         
-        html += '</div></div>';
-        
-        // Summary per day
-        html += '<div class="grid gap-3 mt-3" style="grid-template-columns: 120px repeat(' + days.length + ', 1fr)">';
-        html += '<div class="text-xs font-bold py-2" style="color:var(--c-muted)">Gesamt</div>';
+        // Summary row
+        html += '<tr style="background:var(--c-bg3)"><td class="p-3 text-xs font-bold" style="color:var(--c-muted)">Gesamt</td>';
         days.forEach(function(day) {
-            var dateStr = day.toISOString().split('T')[0];
-            var officeCount = 0, remoteCount = 0;
-            officeBookings.forEach(function(b) {
-                if (b.booking_date === dateStr) { if (b.status === 'office') officeCount++; else remoteCount++; }
-            });
-            html += '<div class="text-center py-2 rounded-lg" style="background:var(--c-bg3)">';
-            html += '<span class="text-[10px] font-bold text-vit-orange">' + officeCount + '🏢</span> ';
-            html += '<span class="text-[10px] font-bold" style="color:#3b82f6">' + remoteCount + '🏠</span>';
-            html += '</div>';
+            var ds = day.toISOString().split('T')[0];
+            var oc=0, rc=0;
+            BK.forEach(function(b){if(b.booking_date===ds){if(b.status==='office')oc++;else rc++;}});
+            html += '<td class="p-2 text-center"><span class="text-[10px] font-bold text-vit-orange">'+oc+'🏢</span> <span class="text-[10px] font-bold" style="color:#3b82f6">'+rc+'🏠</span></td>';
         });
-        html += '</div>';
+        html += '</tr></tbody></table></div>';
         
-        document.getElementById('officePlanungContent').innerHTML = html;
+        el.innerHTML = html;
     }
     
-    // ===== BOOKING MODAL =====
-    window.officeShowBookingModal = function(dateStr) {
-        var freeDesks = officeDesks.filter(function(d) {
-            return !officeDeskBooking(d.nr, dateStr) && d.room !== 'Konferenz';
-        });
+    // ===============================================================
+    // TAB 4: LADESÄULEN — Calendar + booking + visual
+    // ===============================================================
+    function renderLaden() {
+        var el = document.getElementById('officeLadenContent');
+        if(!el) return;
+        var ds = LADEN_DAY.toISOString().split('T')[0];
         
-        var html = '<div style="background:rgba(0,0,0,0.5);position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999" onclick="officeCloseBookingModal()">';
-        html += '<div class="vit-card p-5" style="width:380px" onclick="event.stopPropagation()">';
-        html += '<div class="flex justify-between items-center mb-3"><h3 class="text-base font-bold" style="color:var(--c-text)">📅 Platz reservieren</h3><button onclick="officeCloseBookingModal()" class="w-7 h-7 rounded flex items-center justify-center" style="background:var(--c-bg3);color:var(--c-muted)">✕</button></div>';
-        html += '<p class="text-sm mb-3" style="color:var(--c-muted)">' + officeFormatDate(dateStr) + '</p>';
+        var html = '<div class="grid gap-4" style="grid-template-columns:320px 1fr">';
         
-        // Remote option
-        html += '<button onclick="officeBookDay(\'' + dateStr + '\',\'remote\',null)" class="w-full p-3 rounded-lg text-left text-sm font-semibold mb-3 hover:shadow transition flex items-center gap-2" style="background:#eff6ff;color:#3b82f6"><span>🏠</span> Remote arbeiten</button>';
+        // LEFT: Calendar + Bookings
+        html += '<div>';
         
-        // Desk selection
-        html += '<div class="text-xs font-bold mb-2" style="color:var(--c-muted)">🏢 Platz im Büro wählen:</div>';
+        // Mini calendar
+        html += '<div class="vit-card p-4 mb-4">';
+        html += buildMiniCal(LADEN_MONTH, LADEN_DAY);
+        html += '</div>';
         
-        // Group by room
-        var rooms = {};
-        freeDesks.forEach(function(d) {
-            if (!rooms[d.room]) rooms[d.room] = [];
-            rooms[d.room].push(d);
-        });
+        // Bookings for selected day
+        html += '<div class="vit-card p-4">';
+        html += '<div class="text-xs font-bold mb-3" style="color:var(--c-muted)">Buchungen am '+fmtD(ds)+'</div>';
         
-        Object.keys(rooms).forEach(function(room) {
-            html += '<div class="text-[10px] font-bold mt-2 mb-1" style="color:var(--c-dim)">' + room + '</div>';
-            html += '<div class="flex flex-wrap gap-1">';
-            rooms[room].forEach(function(d) {
-                html += '<button onclick="officeBookDay(\'' + dateStr + '\',\'office\',' + d.nr + ')" class="px-2.5 py-1.5 rounded text-xs font-bold hover:shadow transition" style="background:#f0fdf4;color:#22c55e;border:1px solid #22c55e30">#' + d.nr + '</button>';
-            });
+        // Check charging bookings
+        var dayChargeBK = BK.filter(function(b){return b.booking_date===ds && b.status==='charging'});
+        CH.forEach(function(ch,idx) {
+            var booked = null;
+            for(var i=0;i<dayChargeBK.length;i++) { if(dayChargeBK[i].note==='charging_'+ch.id) booked=dayChargeBK[i]; }
+            html += '<div class="py-2.5 border-b flex items-center justify-between" style="border-color:var(--c-border)">';
+            html += '<div><div class="text-sm font-bold" style="color:var(--c-text)">⚡ '+ch.label+'</div>';
+            if(booked) {
+                html += '<div class="text-[10px]" style="color:#22c55e">✓ Gebucht: '+(booked.name||'')+'</div>';
+            } else {
+                html += '<div class="text-[10px]" style="color:var(--c-muted)">Verfügbar</div>';
+            }
+            html += '</div>';
+            if(!booked) {
+                html += '<button onclick="officeBookCharging(\''+ds+'\',\''+ch.id+'\')" class="text-xs font-bold px-3 py-1 rounded-lg" style="border:1px solid #EF7D00;color:#EF7D00">Buchen</button>';
+            } else if(booked.user_id===me()) {
+                html += '<button onclick="officeDeleteBooking(\''+booked.id+'\')" class="text-xs px-2 py-1 rounded" style="color:#ef4444">✕</button>';
+            }
             html += '</div>';
         });
         
-        if (freeDesks.length === 0) {
-            html += '<p class="text-xs mt-2" style="color:#ef4444">Alle Plätze für diesen Tag belegt.</p>';
-            html += '<button onclick="officeBookDay(\'' + dateStr + '\',\'office\',null)" class="w-full p-2 rounded-lg text-sm font-semibold mt-2" style="background:#FFF4E6;color:#EF7D00">🏢 Büro (ohne festen Platz)</button>';
-        }
-        
+        if(CH.length===0) html += '<div class="text-sm" style="color:var(--c-muted)">Keine Ladesäulen konfiguriert</div>';
         html += '</div></div>';
         
-        var modal = document.getElementById('officeBookingModal');
-        modal.innerHTML = html;
-        modal.style.display = 'block';
-    };
+        // RIGHT: Visual
+        html += '<div class="vit-card p-6 flex flex-col items-center justify-center" style="min-height:300px">';
+        html += '<div class="text-sm font-bold mb-4" style="color:var(--c-muted)">Ladesäulen · HQ Unterföhring</div>';
+        html += '<svg viewBox="0 0 400 240" style="max-width:400px;width:100%">';
+        
+        // Two charging stations
+        CH.forEach(function(ch,idx) {
+            var cx = idx===0 ? 120 : 280;
+            var booked = null;
+            for(var i=0;i<dayChargeBK.length;i++) { if(dayChargeBK[i].note==='charging_'+ch.id) booked=dayChargeBK[i]; }
+            var free = !booked;
+            
+            // P-pin
+            html += '<circle cx="'+cx+'" cy="20" r="16" fill="#EF7D00"/>';
+            html += '<text x="'+cx+'" y="26" text-anchor="middle" font-size="14" font-weight="900" fill="#fff">P</text>';
+            html += '<polygon points="'+(cx-4)+',36 '+(cx+4)+',36 '+cx+',44" fill="#EF7D00"/>';
+            
+            // Station body
+            html += '<rect x="'+(cx-30)+'" y="60" width="60" height="100" rx="6" fill="'+(free?'#f0fdf4':'#fef2f2')+'" stroke="'+(free?'#22c55e':'#ef4444')+'" stroke-width="2"/>';
+            // Plug icon
+            html += '<circle cx="'+cx+'" cy="110" r="15" fill="none" stroke="'+(free?'#22c55e':'#ef4444')+'" stroke-width="2"/>';
+            html += '<text x="'+cx+'" y="115" text-anchor="middle" font-size="14" fill="'+(free?'#22c55e':'#ef4444')+'">⚡</text>';
+            
+            // Label
+            html += '<text x="'+cx+'" y="185" text-anchor="middle" font-size="12" font-weight="700" fill="#EF7D00">'+(ch.label||('Ladeplatz '+(idx+1)))+'</text>';
+            html += '<text x="'+cx+'" y="200" text-anchor="middle" font-size="9" fill="'+(free?'#22c55e':'#ef4444')+'">'+(free?'✓ Verfügbar':'● Gebucht')+'</text>';
+            if(booked) html += '<text x="'+cx+'" y="215" text-anchor="middle" font-size="8" fill="#999">'+(booked.name||'')+'</text>';
+        });
+        
+        html += '</svg></div></div>';
+        el.innerHTML = html;
+    }
     
-    window.officeCloseBookingModal = function() {
-        document.getElementById('officeBookingModal').style.display = 'none';
-    };
-    
-    window.officeBookDay = async function(dateStr, status, deskNr) {
-        officeCloseBookingModal();
-        try {
-            var payload = {
-                user_id: window.sbUser.id,
-                booking_date: dateStr,
-                status: status,
-                desk_nr: deskNr
-            };
-            var res = await sb.from('office_bookings').upsert(payload, {onConflict: 'user_id,booking_date'});
-            if (res.error) throw res.error;
-            showToast((status === 'remote' ? '🏠 Remote' : '🏢 Platz #' + (deskNr || '?')) + ' gebucht für ' + officeFormatDate(dateStr), 'success');
-            await officeLoadData();
-            officeRender();
-        } catch(err) {
-            showToast('Fehler: ' + err.message, 'error');
+    function buildMiniCal(month, selected) {
+        var y = month.getFullYear(), m = month.getMonth();
+        var first = new Date(y,m,1);
+        var last = new Date(y,m+1,0);
+        var startDay = first.getDay()||7; // Mon=1
+        var selDs = selected.toISOString().split('T')[0];
+        
+        var mNames = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+        var h = '<div class="flex items-center justify-between mb-3">';
+        h += '<button onclick="officeLadenMonthNav(-1)" class="text-sm" style="color:var(--c-muted)">‹</button>';
+        h += '<span class="text-sm font-bold" style="color:var(--c-text)">'+mNames[m]+' '+y+'</span>';
+        h += '<button onclick="officeLadenMonthNav(1)" class="text-sm" style="color:var(--c-muted)">›</button></div>';
+        
+        h += '<div class="grid grid-cols-7 gap-0 text-center text-[10px] font-bold mb-1" style="color:var(--c-muted)"><span>M</span><span>D</span><span>M</span><span>D</span><span>F</span><span>S</span><span>S</span></div>';
+        h += '<div class="grid grid-cols-7 gap-0 text-center">';
+        
+        // Empty cells before first day
+        for(var i=1;i<startDay;i++) h+='<span></span>';
+        
+        for(var d=1;d<=last.getDate();d++) {
+            var ds = y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+            var isSel = ds===selDs;
+            var isT = ds===todayStr();
+            var hasBK = BK.some(function(b){return b.booking_date===ds && (b.status==='charging'||b.note&&b.note.startsWith('charging_'))});
+            
+            h += '<button onclick="officeLadenSelectDay(\''+ds+'\')" class="w-8 h-8 rounded-full text-xs font-semibold flex items-center justify-center mx-auto" style="';
+            if(isSel) h += 'background:#EF7D00;color:#fff';
+            else if(isT) h += 'border:2px solid #EF7D00;color:#EF7D00';
+            else if(hasBK) h += 'border:1px solid #EF7D00;color:#EF7D00';
+            else h += 'color:var(--c-text)';
+            h += '">'+d+'</button>';
         }
+        h += '</div>';
+        return h;
+    }
+    
+    // ===============================================================
+    // TAB 5: ANALYTICS — Occupancy charts & stats
+    // ===============================================================
+    function renderAnalytics() {
+        var el = document.getElementById('officeAnalyticsContent');
+        if(!el) return;
+        
+        var totalDesks = D.filter(function(d){return d.room!=='Konferenz'}).length;
+        var offU = CI.filter(function(c){return c.status==='office'}).length;
+        var remU = CI.filter(function(c){return c.status==='remote'}).length;
+        var pct = totalDesks>0?Math.round(offU/totalDesks*100):0;
+        
+        var html = '';
+        
+        // Top stats cards (like deskbird dashboard)
+        html += '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">';
+        
+        // Company
+        html += '<div class="vit-card p-4"><div class="text-xs" style="color:var(--c-muted)">Unternehmen</div><div class="text-lg font-extrabold mt-1" style="color:var(--c-text)">vit:bikes GmbH</div><div class="text-xs mt-1" style="color:var(--c-muted)">HQ Unterföhring</div></div>';
+        
+        // Current occupancy (donut)
+        html += '<div class="vit-card p-4 text-center">';
+        html += '<div class="text-xs mb-2" style="color:var(--c-muted)">Aktuelle Belegung</div>';
+        html += buildDonut(pct, '#8BC34A', '#e5e5e5', 70);
+        html += '<div class="text-lg font-extrabold" style="color:var(--c-text)">'+pct+'%</div>';
+        html += '<div class="text-[10px]" style="color:var(--c-muted)">belegt</div></div>';
+        
+        // Today's status (donut)
+        html += '<div class="vit-card p-4 text-center">';
+        html += '<div class="text-xs mb-2" style="color:var(--c-muted)">Heute im Büro</div>';
+        var totalU = HQ_USERS.length || 1;
+        html += buildDonut(Math.round(offU/totalU*100), '#666', '#e5e5e5', 70);
+        html += '<div class="text-lg font-extrabold" style="color:var(--c-text)">'+offU+'</div>';
+        html += '<div class="text-[10px]" style="color:var(--c-muted)">von '+totalU+' Mitarbeitern</div></div>';
+        
+        // Users total
+        html += '<div class="vit-card p-4"><div class="text-xs" style="color:var(--c-muted)">Mitarbeiter</div><div class="text-2xl font-extrabold mt-1" style="color:var(--c-text)">'+totalU+'</div><div class="text-xs mt-1" style="color:var(--c-muted)">gesamt registriert</div><div class="text-xs mt-1 font-bold" style="color:#22c55e">'+offU+' Büro · '+remU+' Remote</div></div>';
+        
+        html += '</div>';
+        
+        // Occupancy next 7 days (bar chart)
+        html += '<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">';
+        
+        // Bar chart: Occupancy next 7 days
+        html += '<div class="vit-card p-4">';
+        html += '<div class="text-sm font-bold mb-3" style="color:var(--c-text)">Belegung nächste 7 Tage</div>';
+        html += buildOccupancyBars(7, totalDesks);
+        html += '</div>';
+        
+        // Status next 7 days
+        html += '<div class="vit-card p-4">';
+        html += '<div class="text-sm font-bold mb-3" style="color:var(--c-text)">Status nächste 7 Tage</div>';
+        html += buildStatusBars(7);
+        html += '</div>';
+        
+        html += '</div>';
+        
+        // Occupancy by weekday
+        html += '<div class="vit-card p-4">';
+        html += '<div class="text-sm font-bold mb-3" style="color:var(--c-text)">Belegung nach Wochentag</div>';
+        html += buildWeekdayBars(totalDesks);
+        html += '</div>';
+        
+        el.innerHTML = html;
+    }
+    
+    function buildDonut(pct, col, bg, size) {
+        var r = size/2 - 8, c = 2*Math.PI*r;
+        var dash = c*pct/100;
+        return '<svg width="'+size+'" height="'+size+'" style="margin:0 auto;display:block"><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+bg+'" stroke-width="8"/><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="8" stroke-dasharray="'+dash+' '+(c-dash)+'" transform="rotate(-90 '+size/2+' '+size/2+')"/></svg>';
+    }
+    
+    function buildOccupancyBars(numDays, totalDesks) {
+        var days = []; var d = new Date(); d.setHours(0,0,0,0);
+        for(var i=0;i<numDays;i++){days.push(new Date(d));d.setDate(d.getDate()+1);}
+        var maxH = 120;
+        var h = '<div class="flex items-end gap-2" style="height:'+maxH+'px">';
+        days.forEach(function(day) {
+            var ds = day.toISOString().split('T')[0];
+            var booked = BK.filter(function(b){return b.booking_date===ds&&b.status==='office'}).length;
+            var free = Math.max(0,totalDesks-booked);
+            var bH = totalDesks>0?Math.max(4,Math.round(booked/totalDesks*maxH)):4;
+            var fH = totalDesks>0?Math.max(4,Math.round(free/totalDesks*maxH)):4;
+            var dn = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+            h += '<div class="flex-1 flex flex-col items-center gap-0.5">';
+            h += '<div class="text-[8px] font-bold" style="color:var(--c-muted)">'+free+'</div>';
+            h += '<div style="width:100%;height:'+fH+'px;background:#e8e8e8;border-radius:2px 2px 0 0"></div>';
+            h += '<div class="text-[8px] font-bold" style="color:#8BC34A">'+booked+'</div>';
+            h += '<div style="width:100%;height:'+bH+'px;background:#8BC34A;border-radius:0 0 2px 2px"></div>';
+            h += '<div class="text-[8px] mt-1" style="color:var(--c-muted)">'+dn[day.getDay()]+'<br>'+day.getDate()+'.'+(day.getMonth()+1)+'.</div>';
+            h += '</div>';
+        });
+        h += '</div>';
+        h += '<div class="flex gap-4 mt-2 text-[9px]" style="color:var(--c-muted)"><span>🟢 Belegt</span><span>⬜ Verfügbar</span></div>';
+        return h;
+    }
+    
+    function buildStatusBars(numDays) {
+        var days = []; var d = new Date(); d.setHours(0,0,0,0);
+        for(var i=0;i<numDays;i++){days.push(new Date(d));d.setDate(d.getDate()+1);}
+        var maxH = 120; var total = HQ_USERS.length||1;
+        var h = '<div class="flex items-end gap-2" style="height:'+maxH+'px">';
+        days.forEach(function(day) {
+            var ds = day.toISOString().split('T')[0];
+            var off = BK.filter(function(b){return b.booking_date===ds&&b.status==='office'}).length;
+            var rem = BK.filter(function(b){return b.booking_date===ds&&b.status==='remote'}).length;
+            var none = Math.max(0,total-off-rem);
+            var dn = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+            var oH = Math.max(2,Math.round(off/total*maxH));
+            var rH = Math.max(2,Math.round(rem/total*maxH));
+            var nH = Math.max(2,Math.round(none/total*maxH));
+            h += '<div class="flex-1 flex flex-col items-center">';
+            h += '<div class="text-[8px] font-bold" style="color:var(--c-muted)">'+none+'</div>';
+            h += '<div style="width:100%;height:'+nH+'px;background:#999;border-radius:2px 2px 0 0"></div>';
+            h += '<div style="width:100%;height:'+rH+'px;background:#93c5fd"></div>';
+            h += '<div style="width:100%;height:'+oH+'px;background:#666;border-radius:0 0 2px 2px"></div>';
+            h += '<div class="text-[8px] mt-1" style="color:var(--c-muted)">'+dn[day.getDay()]+'</div>';
+            h += '</div>';
+        });
+        h += '</div>';
+        h += '<div class="flex gap-3 mt-2 text-[9px]" style="color:var(--c-muted)"><span>⬛ Büro</span><span>🟦 Remote</span><span>⬜ Offen</span></div>';
+        return h;
+    }
+    
+    function buildWeekdayBars(totalDesks) {
+        var dayNames = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'];
+        var counts = [0,0,0,0,0], totals = [0,0,0,0,0];
+        BK.forEach(function(b) {
+            if(b.status!=='office') return;
+            var d = new Date(b.booking_date+'T00:00:00');
+            var dow = d.getDay(); // 1=Mon...5=Fri
+            if(dow>=1&&dow<=5) { counts[dow-1]++; totals[dow-1]++; }
+        });
+        BK.forEach(function(b) {
+            var d = new Date(b.booking_date+'T00:00:00');
+            var dow = d.getDay();
+            if(dow>=1&&dow<=5) totals[dow-1]++;
+        });
+        
+        var maxH = 100;
+        var h = '<div class="flex items-end gap-4" style="height:'+maxH+'px">';
+        dayNames.forEach(function(name, idx) {
+            var pct = totalDesks>0&&totals[idx]>0 ? Math.round(counts[idx]/totalDesks*100) : 0;
+            var bH = Math.max(4, Math.round(pct/100*maxH));
+            h += '<div class="flex-1 flex flex-col items-center">';
+            h += '<div class="text-[9px] font-bold" style="color:#8BC34A">'+pct+'%</div>';
+            h += '<div style="width:100%;height:'+bH+'px;background:#8BC34A;border-radius:3px"></div>';
+            h += '<div class="text-[10px] mt-1.5 font-semibold" style="color:var(--c-muted)">'+name.substring(0,2)+'</div>';
+            h += '</div>';
+        });
+        h += '</div>';
+        return h;
+    }
+    
+    // ===== TAB SWITCHING =====
+    window.showOfficeTab = function(tab) {
+        TAB = tab;
+        var tabs = ['home','plan','woche','laden','analytics'];
+        tabs.forEach(function(t) {
+            var btn = document.getElementById('officeTab'+t.charAt(0).toUpperCase()+t.slice(1));
+            var ct = document.getElementById('office'+t.charAt(0).toUpperCase()+t.slice(1)+'Content');
+            if(btn) {
+                if(t===tab) { btn.style.borderColor='#EF7D00'; btn.style.color='#EF7D00'; }
+                else { btn.style.borderColor='transparent'; btn.style.color='var(--c-sub)'; }
+            }
+            if(ct) ct.style.display = t===tab ? '' : 'none';
+        });
+        render();
     };
     
-    window.officeDeleteBooking = async function(bookingId) {
-        try {
-            var res = await sb.from('office_bookings').delete().eq('id', bookingId);
-            if (res.error) throw res.error;
-            showToast('Buchung storniert', 'success');
-            await officeLoadData();
-            officeRender();
-        } catch(err) {
-            showToast('Fehler: ' + err.message, 'error');
-        }
-    };
-    
-    // ===== ACTIONS (Check-in/out) =====
+    // ===== ACTIONS =====
     window.officeToggleCheckin = function() {
-        var my = officeMyCheckin();
-        if (my) {
-            officeDoCheckout();
-        } else {
-            officeShowCheckinDropdown();
-        }
+        var ci = myCI();
+        if(ci) officeDoCheckout(); else showCheckinDD();
     };
     
-    function officeShowCheckinDropdown() {
-        var btn = document.getElementById('officeMainBtn');
+    window.officeDoCheckout = async function() {
+        try {
+            var r = await sb.rpc('office_checkout');
+            if(r.error) throw r.error;
+            showToast('Ausgecheckt', 'success');
+            await load(); render();
+        } catch(e) { showToast('Fehler: '+e.message, 'error'); }
+    };
+    
+    function showCheckinDD() {
+        var btn = document.querySelector('[onclick="officeToggleCheckin()"]');
+        if(!btn) return;
         var rect = btn.getBoundingClientRect();
         var dd = document.getElementById('officeCheckinDropdown');
+        var freeD = D.filter(function(d){ return !deskCI(d.nr) && d.room!=='Konferenz'; });
         
-        var freeDesks = officeDesks.filter(function(d) { return !officeDeskCheckin(d.nr) && d.room !== 'Konferenz'; });
-        var html = '<div class="vit-card p-3 shadow-xl" style="width:300px">';
-        html += '<div class="text-xs font-bold mb-2" style="color:var(--c-muted)">Wo arbeitest du heute?</div>';
-        html += '<button onclick="officeCheckinRemote()" class="w-full p-2.5 rounded-lg text-left text-sm font-semibold mb-2 hover:shadow transition" style="background:#eff6ff;color:#3b82f6">🏠 Remote</button>';
-        html += '<div class="text-[10px] font-bold mb-1" style="color:var(--c-muted)">🏢 Platz wählen:</div>';
-        
-        // Group by room
+        var h = '<div class="vit-card p-3 shadow-xl" style="width:300px;max-height:400px;overflow-y:auto">';
+        h += '<div class="text-xs font-bold mb-2" style="color:var(--c-muted)">Wo arbeitest du heute?</div>';
+        h += '<button onclick="officeCheckinRemote()" class="w-full p-2.5 rounded-lg text-left text-sm font-semibold mb-2 hover:shadow transition" style="background:#eff6ff;color:#3b82f6">🏠 Remote</button>';
+        h += '<div class="text-[10px] font-bold mb-1" style="color:var(--c-muted)">🏢 Platz wählen:</div>';
         var rooms = {};
-        freeDesks.forEach(function(d) { if (!rooms[d.room]) rooms[d.room] = []; rooms[d.room].push(d); });
+        freeD.forEach(function(d){ if(!rooms[d.room]) rooms[d.room]=[]; rooms[d.room].push(d); });
         Object.keys(rooms).forEach(function(room) {
-            html += '<div class="text-[9px] font-bold mt-1.5 mb-0.5" style="color:var(--c-dim)">' + room + '</div>';
-            html += '<div class="flex flex-wrap gap-1">';
-            rooms[room].forEach(function(d) {
-                html += '<button onclick="officeCheckinDesk(' + d.nr + ')" class="px-2 py-1 rounded text-xs font-bold hover:shadow transition" style="background:#f0fdf4;color:#22c55e;border:1px solid #22c55e30">' + d.nr + '</button>';
-            });
-            html += '</div>';
+            h += '<div class="text-[9px] font-bold mt-1.5 mb-0.5" style="color:var(--c-dim)">'+room+'</div>';
+            h += '<div class="flex flex-wrap gap-1">';
+            rooms[room].forEach(function(d) { h += '<button onclick="officeCheckinDesk('+d.nr+')" class="px-2 py-1 rounded text-xs font-bold hover:shadow transition" style="background:#f0fdf4;color:#22c55e;border:1px solid #22c55e30">'+d.nr+'</button>'; });
+            h += '</div>';
         });
+        h += '<button onclick="officeCloseDD()" class="w-full mt-2 p-1.5 rounded text-xs text-center" style="color:var(--c-muted)">Abbrechen</button></div>';
         
-        html += '<button onclick="officeCloseDropdown()" class="w-full mt-2 p-1.5 rounded text-xs text-center" style="color:var(--c-muted)">Abbrechen</button>';
-        html += '</div>';
-        
-        dd.innerHTML = html;
+        dd.innerHTML = h;
         dd.style.display = 'block';
-        dd.style.top = (rect.bottom + 4) + 'px';
-        dd.style.right = Math.max(8, window.innerWidth - rect.right) + 'px';
-        
-        setTimeout(function() { document.addEventListener('click', officeCloseDropdownHandler); }, 100);
+        dd.style.top = (rect.bottom+4)+'px';
+        dd.style.right = Math.max(8,window.innerWidth-rect.right)+'px';
+        setTimeout(function(){ document.addEventListener('click', closeDDH); }, 100);
     }
-    
-    function officeCloseDropdownHandler(e) {
-        var dd = document.getElementById('officeCheckinDropdown');
-        if (dd && !dd.contains(e.target)) officeCloseDropdown();
-    }
-    
-    window.officeCloseDropdown = function() {
-        var dd = document.getElementById('officeCheckinDropdown');
-        if (dd) dd.style.display = 'none';
-        document.removeEventListener('click', officeCloseDropdownHandler);
-    };
+    function closeDDH(e) { var dd=document.getElementById('officeCheckinDropdown'); if(dd&&!dd.contains(e.target)) officeCloseDD(); }
+    window.officeCloseDD = function() { document.getElementById('officeCheckinDropdown').style.display='none'; document.removeEventListener('click',closeDDH); };
     
     window.officeCheckinDesk = async function(nr) {
-        officeCloseDropdown();
-        try {
-            var res = await sb.rpc('office_checkin', { p_status: 'office', p_desk_nr: nr });
-            if (res.error) throw res.error;
-            var data = res.data;
-            if (data && data.error) { showToast(data.error, 'error'); return; }
-            showToast('Eingecheckt an Platz #' + nr, 'success');
-            await officeLoadData();
-            officeRender();
-        } catch(err) { showToast('Fehler: ' + err.message, 'error'); }
+        officeCloseDD();
+        try { var r=await sb.rpc('office_checkin',{p_status:'office',p_desk_nr:nr}); if(r.error)throw r.error; if(r.data&&r.data.error){showToast(r.data.error,'error');return;} showToast('Eingecheckt an Platz #'+nr,'success'); await load(); render(); } catch(e){showToast('Fehler: '+e.message,'error');}
     };
-    
     window.officeCheckinRemote = async function() {
-        officeCloseDropdown();
-        try {
-            var res = await sb.rpc('office_checkin', { p_status: 'remote' });
-            if (res.error) throw res.error;
-            var data = res.data;
-            if (data && data.error) { showToast(data.error, 'error'); return; }
-            showToast('Remote eingecheckt', 'success');
-            await officeLoadData();
-            officeRender();
-        } catch(err) { showToast('Fehler: ' + err.message, 'error'); }
+        officeCloseDD();
+        try { var r=await sb.rpc('office_checkin',{p_status:'remote'}); if(r.error)throw r.error; if(r.data&&r.data.error){showToast(r.data.error,'error');return;} showToast('Remote eingecheckt','success'); await load(); render(); } catch(e){showToast('Fehler: '+e.message,'error');}
     };
     
-    async function officeDoCheckout() {
-        try {
-            var res = await sb.rpc('office_checkout');
-            if (res.error) throw res.error;
-            showToast('Ausgecheckt', 'success');
-            await officeLoadData();
-            officeRender();
-        } catch(err) { showToast('Fehler: ' + err.message, 'error'); }
-    }
-    
-    // ===== TABS =====
-    window.showOfficeTab = function(tab) {
-        officeCurrentTab = tab;
-        var tabs = ['plan','team','planung'];
-        var labels = {plan:'🗺️ Grundriss', team:'👥 Team', planung:'📅 Planung'};
-        tabs.forEach(function(t) {
-            var btn = document.getElementById('officeTab' + t.charAt(0).toUpperCase() + t.slice(1));
-            var content = document.getElementById('office' + (t==='plan'?'Plan':t.charAt(0).toUpperCase()+t.slice(1)) + 'Content');
-            if (btn) {
-                if (t === tab) {
-                    btn.className = 'px-4 py-2 rounded-lg text-sm font-semibold bg-vit-orange text-white';
-                    btn.style.background = '';
-                    btn.style.color = '';
-                } else {
-                    btn.className = 'px-4 py-2 rounded-lg text-sm font-semibold';
-                    btn.style.background = 'var(--c-bg3)';
-                    btn.style.color = 'var(--c-sub)';
-                }
-            }
-            if (content) content.style.display = t === tab ? '' : 'none';
+    // ===== BOOKING =====
+    window.officeShowBookingModal = function(ds) {
+        var freeD = D.filter(function(d){ return !deskBK(d.nr,ds) && d.room!=='Konferenz'; });
+        var h = '<div style="background:rgba(0,0,0,0.5);position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999" onclick="officeCloseModal()">';
+        h += '<div class="vit-card p-5" style="width:380px;max-height:80vh;overflow-y:auto" onclick="event.stopPropagation()">';
+        h += '<div class="flex justify-between items-center mb-3"><h3 class="text-base font-bold" style="color:var(--c-text)">📅 '+fmtDL(ds)+'</h3><button onclick="officeCloseModal()" class="w-7 h-7 rounded flex items-center justify-center" style="background:var(--c-bg3);color:var(--c-muted)">✕</button></div>';
+        h += '<button onclick="officeBookDay(\''+ds+'\',\'remote\',null)" class="w-full p-3 rounded-lg text-left text-sm font-semibold mb-3 hover:shadow transition" style="background:#eff6ff;color:#3b82f6">🏠 Remote arbeiten</button>';
+        h += '<div class="text-xs font-bold mb-2" style="color:var(--c-muted)">🏢 Platz im Büro:</div>';
+        var rooms = {};
+        freeD.forEach(function(d){ if(!rooms[d.room]) rooms[d.room]=[]; rooms[d.room].push(d); });
+        Object.keys(rooms).forEach(function(room) {
+            h += '<div class="text-[10px] font-bold mt-2 mb-1" style="color:var(--c-dim)">'+room+'</div><div class="flex flex-wrap gap-1">';
+            rooms[room].forEach(function(d) { h += '<button onclick="officeBookDay(\''+ds+'\',\'office\','+d.nr+')" class="px-2.5 py-1.5 rounded text-xs font-bold hover:shadow transition" style="background:#f0fdf4;color:#22c55e;border:1px solid #22c55e30">#'+d.nr+'</button>'; });
+            h += '</div>';
         });
-        officeRender();
+        if(freeD.length===0) h += '<p class="text-xs mt-2" style="color:#ef4444">Alle Plätze belegt</p>';
+        h += '</div></div>';
+        document.getElementById('officeBookingModal').innerHTML = h;
+        document.getElementById('officeBookingModal').style.display = 'block';
+    };
+    window.officeCloseModal = function() { document.getElementById('officeBookingModal').style.display='none'; };
+    
+    window.officeBookDay = async function(ds,status,nr) {
+        officeCloseModal();
+        try {
+            var r = await sb.from('office_bookings').upsert({user_id:me(),booking_date:ds,status:status,desk_nr:nr},{onConflict:'user_id,booking_date'});
+            if(r.error) throw r.error;
+            showToast((status==='remote'?'🏠 Remote':'🏢 Platz #'+(nr||'?'))+' gebucht für '+fmtD(ds),'success');
+            await load(); render();
+        } catch(e) { showToast('Fehler: '+e.message,'error'); }
     };
     
-    // ===== QR MODAL =====
-    window.officeShowQr = function() {
-        var html = '<div style="background:rgba(0,0,0,0.5);position:fixed;inset:0;display:flex;align-items:center;justify-content:center" onclick="officeCloseQr()">';
-        html += '<div class="vit-card p-6" style="width:500px;max-height:85vh;overflow:auto" onclick="event.stopPropagation()">';
-        html += '<div class="flex justify-between items-center mb-3"><h2 class="text-lg font-bold" style="color:var(--c-text)">📱 QR-Codes drucken</h2><button onclick="officeCloseQr()" class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:var(--c-bg3);color:var(--c-muted)">✕</button></div>';
-        html += '<p class="text-xs mb-4" style="color:var(--c-muted)">Ausdrucken und an den Platz kleben. Scannen → sofort eingecheckt.</p>';
-        html += '<div class="grid grid-cols-4 gap-2">';
-        officeDesks.forEach(function(d) {
-            if (d.room === 'Konferenz') return;
-            var url = window.location.origin + '/?office_desk_token=' + d.qr_token;
-            html += '<div class="border rounded-lg p-3 text-center" style="border-color:var(--c-border)">';
-            html += '<div class="w-14 h-14 mx-auto mb-2 rounded-md flex items-center justify-center" style="background:#FFF4E6;border:1px solid rgba(239,125,0,0.12)"><img src="https://api.qrserver.com/v1/create-qr-code/?data=' + encodeURIComponent(url) + '&size=56x56&format=svg" alt="QR" width="48" height="48"></div>';
-            html += '<div class="text-base font-extrabold text-vit-orange">#' + d.nr + '</div>';
-            html += '<div class="text-[9px]" style="color:var(--c-muted)">' + d.room + '</div>';
-            html += '</div>';
-        });
-        html += '</div></div></div>';
-        document.getElementById('officeQrModal').innerHTML = html;
-        document.getElementById('officeQrModal').style.display = 'block';
+    window.officeDeleteBooking = async function(id) {
+        try { var r=await sb.from('office_bookings').delete().eq('id',id); if(r.error) throw r.error; showToast('Buchung storniert','success'); await load(); render(); } catch(e) { showToast('Fehler: '+e.message,'error'); }
     };
     
-    window.officeCloseQr = function() {
-        document.getElementById('officeQrModal').style.display = 'none';
+    window.officeBookCharging = async function(ds,chId) {
+        try {
+            var r = await sb.from('office_bookings').insert({user_id:me(),booking_date:ds,status:'charging',note:'charging_'+chId});
+            if(r.error) throw r.error;
+            showToast('⚡ Ladeplatz gebucht','success');
+            await load(); render();
+        } catch(e) { showToast('Fehler: '+e.message,'error'); }
     };
+    
+    // ===== WEEK NAVIGATION =====
+    window.officeWeekNav = function(dir) { if(dir===0) WEEK_OFFSET=0; else WEEK_OFFSET+=dir; render(); };
+    
+    // ===== LADEN CALENDAR =====
+    window.officeLadenMonthNav = function(dir) { LADEN_MONTH.setMonth(LADEN_MONTH.getMonth()+dir); render(); };
+    window.officeLadenSelectDay = function(ds) { LADEN_DAY = new Date(ds+'T00:00:00'); render(); };
     
     // ===== BADGE =====
-    function officeUpdateBadge() {
-        var b = document.getElementById('officeOnlineBadge');
-        if (b) {
-            var count = officeCheckins.length;
-            b.textContent = count;
-            b.style.display = count > 0 ? 'inline' : 'none';
-        }
-    }
+    function updateBadge() { var b=document.getElementById('officeOnlineBadge'); if(b){var c=CI.length; b.textContent=c; b.style.display=c>0?'inline':'none';} }
     
     // ===== REALTIME =====
-    function officeSetupRealtime() {
+    function setupRT() {
         sb.channel('office-live')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'office_checkins' }, async function() {
-                await officeLoadData();
-                officeRender();
-            })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'office_bookings' }, async function() {
-                await officeLoadData();
-                officeRender();
-            })
+            .on('postgres_changes',{event:'*',schema:'public',table:'office_checkins'},async function(){await load();render();})
+            .on('postgres_changes',{event:'*',schema:'public',table:'office_bookings'},async function(){await load();render();})
             .subscribe();
     }
     
-    // ===== QR URL PARAM =====
-    function officeCheckUrlParams() {
-        var params = new URLSearchParams(window.location.search);
-        var token = params.get('office_desk_token');
-        if (token) {
-            window.history.replaceState({}, '', window.location.pathname);
-            var waitForAuth = setInterval(function() {
-                if (window.sb && window.sbUser) {
-                    clearInterval(waitForAuth);
-                    officeHandleQr(token);
-                }
-            }, 500);
-        }
+    // ===== QR URL =====
+    function checkQR() {
+        var p = new URLSearchParams(window.location.search);
+        var t = p.get('office_desk_token');
+        if(t) { window.history.replaceState({},'',window.location.pathname); var w=setInterval(function(){if(window.sb&&window.sbUser){clearInterval(w);handleQR(t);}},500); }
     }
-    
-    async function officeHandleQr(token) {
-        try {
-            var res = await sb.rpc('office_checkin', { p_status: 'office', p_qr_token: token });
-            if (res.error) throw res.error;
-            var data = res.data;
-            if (data && data.error) { showToast(data.error, 'error'); return; }
-            showToast('QR Check-in erfolgreich: Platz #' + (data.desk_nr || '?'), 'success');
-            if (typeof showView === 'function') showView('hqOffice');
-            await officeLoadData();
-            officeRender();
-        } catch(err) { showToast('QR Check-in Fehler: ' + err.message, 'error'); }
+    async function handleQR(token) {
+        try { var r=await sb.rpc('office_checkin',{p_status:'office',p_qr_token:token}); if(r.error) throw r.error; if(r.data&&r.data.error){showToast(r.data.error,'error');return;} showToast('QR Check-in: Platz #'+(r.data.desk_nr||'?'),'success'); if(typeof showView==='function') showView('hqOffice'); await load(); render(); } catch(e){showToast('QR Fehler: '+e.message,'error');}
     }
     
     // ===== STARTUP =====
-    var _origShowView = window.showView;
-    if (typeof _origShowView === 'function') {
-        window.showView = function(viewName) {
-            _origShowView(viewName);
-            if (viewName === 'hqOffice') {
-                officeInit().then(function() { officeRender(); });
-            }
-        };
+    var _sv = window.showView;
+    if(typeof _sv==='function') {
+        window.showView = function(v) { _sv(v); if(v==='hqOffice') init(); };
     }
-    
-    // Badge: init data early
-    var officeWait = setInterval(function() {
-        if (window.sb && window.sbUser) {
-            clearInterval(officeWait);
-            officeLoadData().then(function() { officeUpdateBadge(); });
-        }
-    }, 1000);
-    
-    officeCheckUrlParams();
+    var _w=setInterval(function(){if(window.sb&&window.sbUser){clearInterval(_w);load().then(function(){updateBadge();});}},1000);
+    checkQR();
 })();
 </script>
 
