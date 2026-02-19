@@ -2828,79 +2828,134 @@
                     </div>
                 </div>
 
-                <!-- ===== IDEENBOARD VIEW ===== -->
+                <!-- ===== IDEENBOARD VIEW (Dev Pipeline) ===== -->
                 <div id="ideenboardView" class="view" style="display: none;">
-                    <h1 class="h1-headline text-gray-800 mb-6" data-i18n="h_ideaboard">IDEENBOARD</h1>
-                    <p class="text-sm text-gray-500 mb-6">Hier koennt ihr Ideen, Wuensche und Verbesserungsvorschlaege einreichen – fuer das Portal, die Warenwirtschaft, den Einkauf und alles rund um vit:bikes. Jede Idee zaehlt!</p>
-
-                    <!-- Neue Idee Button + Filter -->
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="flex space-x-2">
-                            <button onclick="filterIdeen('all')" class="idee-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white" data-if="all">Alle</button>
-                            <button onclick="filterIdeen('neu')" class="idee-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-if="neu">Neu</button>
-                            <button onclick="filterIdeen('diskussion')" class="idee-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-if="diskussion">In Diskussion</button>
-                            <button onclick="filterIdeen('geplant')" class="idee-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-if="geplant">Geplant</button>
-                            <button onclick="filterIdeen('umgesetzt')" class="idee-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-if="umgesetzt">Umgesetzt</button>
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h1 class="h1-headline text-gray-800">IDEENBOARD</h1>
+                            <p class="text-sm text-gray-500 mt-1">Ideen einreichen, KI-Analyse, HQ-Freigabe, Entwicklungsplanung</p>
                         </div>
-                        <button onclick="document.getElementById('ideeCreate').classList.toggle('hidden')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">💡 Neue Idee einreichen</button>
+                        <button onclick="toggleDevSubmitForm()" class="px-4 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90 flex items-center space-x-2">
+                            <span>💡</span><span>Feedback geben</span>
+                        </button>
                     </div>
 
-                    <!-- Neue Idee Formular -->
-                    <div id="ideeCreate" class="hidden vit-card p-5 mb-6">
-                        <h3 class="font-semibold text-gray-800 mb-3">💡 Neue Idee einreichen</h3>
+                    <!-- Tab Navigation -->
+                    <div class="flex space-x-1 bg-gray-100 rounded-lg p-1 mb-5">
+                        <button onclick="showDevTab('meine')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold bg-white text-gray-800 shadow-sm" data-dtab="meine">📋 Meine Feedbacks</button>
+                        <button onclick="showDevTab('alle')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500" data-dtab="alle">🌐 Alle Ideen</button>
+                        <button onclick="showDevTab('board')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500" data-dtab="board" id="devTabBoard" style="display:none;">🎯 HQ-Ideenboard</button>
+                        <button onclick="showDevTab('planung')" class="dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500" data-dtab="planung" id="devTabPlanung" style="display:none;">📅 Planung</button>
+                    </div>
+
+                    <!-- ===== Submit Form (Toggle) ===== -->
+                    <div id="devSubmitForm" class="hidden vit-card p-5 mb-6 border-2 border-vit-orange/20">
+                        <h3 class="font-semibold text-gray-800 mb-1">💡 Feedback / Idee einreichen</h3>
+                        <p class="text-xs text-gray-400 mb-4">Audio, Bild, Screenshot oder einfach Text – die KI analysiert alles automatisch.</p>
+
+                        <!-- Eingabetyp-Buttons -->
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <button onclick="setDevInputType('text')" class="dev-input-type-btn px-3 py-2 rounded-lg text-sm font-semibold bg-vit-orange text-white" data-dit="text">✏️ Text</button>
+                            <button onclick="setDevInputType('audio')" class="dev-input-type-btn px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600" data-dit="audio">🎤 Audio</button>
+                            <button onclick="setDevInputType('screenshot')" class="dev-input-type-btn px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600" data-dit="screenshot">📸 Screenshot</button>
+                            <button onclick="setDevInputType('video')" class="dev-input-type-btn px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600" data-dit="video">🖥️ Bildschirmaufnahme</button>
+                            <button onclick="setDevInputType('datei')" class="dev-input-type-btn px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600" data-dit="datei">📎 Datei</button>
+                        </div>
+
+                        <!-- Audio-Aufnahme-Bereich -->
+                        <div id="devAudioRecordArea" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <button onclick="toggleDevAudioRecord()" id="devAudioRecBtn" class="w-12 h-12 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition text-xl">🎤</button>
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-800" id="devAudioStatus">Klick zum Starten</p>
+                                        <p class="text-xs text-gray-500" id="devAudioTimer">00:00</p>
+                                    </div>
+                                </div>
+                                <div id="devAudioPreview" class="hidden">
+                                    <audio id="devAudioPlayer" controls class="h-8"></audio>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bildschirmaufnahme-Bereich -->
+                        <div id="devScreenRecordArea" class="hidden mb-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center space-x-3">
+                                    <button onclick="toggleDevScreenRecord()" id="devScreenRecBtn" class="w-12 h-12 rounded-full bg-purple-500 text-white flex items-center justify-center hover:bg-purple-600 transition text-xl">🖥️</button>
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-800" id="devScreenStatus">Klick zum Starten</p>
+                                        <p class="text-xs text-gray-500" id="devScreenTimer">00:00</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <label class="flex items-center space-x-1 text-xs text-gray-600 cursor-pointer">
+                                        <input type="checkbox" id="devScreenWithMic" checked class="rounded border-gray-300">
+                                        <span>🎤 Mit Mikrofon</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div id="devScreenPreview" class="hidden mt-3">
+                                <video id="devScreenPlayer" controls class="w-full rounded-lg max-h-48 bg-black"></video>
+                            </div>
+                            <p class="text-[10px] text-gray-400 mt-1">Wähle Bildschirm/Fenster/Tab – die Aufnahme wird automatisch als Datei angehängt.</p>
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                            <select id="ideeKat" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                <option value="">Bereich waehlen...</option>
-                                <option>Portal / Funktionen</option>
-                                <option>Warenwirtschaft / Kasse</option>
-                                <option>Einkauf / Sortiment</option>
-                                <option>Marketing / Werbung</option>
-                                <option>Verkauf / Beratung</option>
-                                <option>Werkstatt / Service</option>
-                                <option>Kommunikation / Zusammenarbeit</option>
-                                <option>Sonstiges</option>
+                            <select id="devKategorie" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="feature">🚀 Neues Feature</option>
+                                <option value="verbesserung">🔧 Verbesserung</option>
+                                <option value="bug">🐛 Bug / Problem</option>
+                                <option value="prozess">📋 Prozess-Vorschlag</option>
+                                <option value="sonstiges">💬 Sonstiges</option>
                             </select>
-                            <select id="ideeTyp" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                <option value="">Typ waehlen...</option>
-                                <option>🚀 Neue Funktion</option>
-                                <option>🔧 Verbesserung</option>
-                                <option>🐛 Problem / Bug</option>
-                                <option>💬 Allgemeiner Vorschlag</option>
+                            <select id="devModul" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="">(Betroffenes Modul – optional)</option>
                             </select>
                         </div>
-                        <input id="ideeTitel" type="text" placeholder="Titel deiner Idee..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3">
-                        <textarea id="ideeBeschreibung" placeholder="Beschreibe deine Idee moeglichst konkret: Was genau soll verbessert werden? Warum waere das hilfreich? Wie koennte es aussehen?" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3" rows="4"></textarea>
+
+                        <input id="devTitel" type="text" placeholder="Titel (optional – KI generiert einen falls leer)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3">
+                        <textarea id="devBeschreibung" placeholder="Beschreibe deine Idee oder dein Problem möglichst konkret..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3" rows="4"></textarea>
+
+                        <!-- Datei-Upload -->
+                        <div id="devFileArea" class="mb-3">
+                            <input type="file" id="devFileInput" multiple class="hidden" onchange="handleDevFileSelect(event)">
+                            <button onclick="document.getElementById('devFileInput').click()" class="px-3 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-vit-orange hover:text-vit-orange w-full">
+                                📎 Dateien / Screenshots hinzufügen (optional)
+                            </button>
+                            <div id="devFileList" class="mt-2 space-y-1"></div>
+                        </div>
+
                         <div class="flex items-center justify-between">
-                            <span class="text-xs text-gray-400">Sichtbar fuer alle Partner & die Zentrale</span>
+                            <span class="text-xs text-gray-400">🤖 KI analysiert automatisch nach dem Einreichen</span>
                             <div class="flex space-x-2">
-                                <button onclick="document.getElementById('ideeCreate').classList.add('hidden')" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Abbrechen</button>
-                                <button onclick="submitIdee()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Idee einreichen</button>
+                                <button onclick="toggleDevSubmitForm()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Abbrechen</button>
+                                <button onclick="submitDevIdea()" id="devSubmitBtn" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">💡 Einreichen & KI starten</button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Ideen-Statistik -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div class="vit-card p-4 text-center">
-                            <p class="text-2xl font-bold text-gray-800" id="ideenTotal">0</p>
-                            <p class="text-xs text-gray-500">Ideen gesamt</p>
-                        </div>
-                        <div class="vit-card p-4 text-center">
-                            <p class="text-2xl font-bold text-blue-600" id="ideenNeu">0</p>
-                            <p class="text-xs text-gray-500">Neue Ideen</p>
-                        </div>
-                        <div class="vit-card p-4 text-center">
-                            <p class="text-2xl font-bold text-yellow-600" id="ideenGeplant">0</p>
-                            <p class="text-xs text-gray-500">Geplant</p>
-                        </div>
-                        <div class="vit-card p-4 text-center">
-                            <p class="text-2xl font-bold text-green-600" id="ideenUmgesetzt">0</p>
-                            <p class="text-xs text-gray-500">Umgesetzt</p>
-                        </div>
+                    <!-- Stats -->
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+                        <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-gray-800" id="devStatTotal">0</p><p class="text-[10px] text-gray-500">Gesamt</p></div>
+                        <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-blue-600" id="devStatNeu">0</p><p class="text-[10px] text-gray-500">Neu / In Prüfung</p></div>
+                        <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-purple-600" id="devStatBoard">0</p><p class="text-[10px] text-gray-500">Im Ideenboard</p></div>
+                        <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-yellow-600" id="devStatDev">0</p><p class="text-[10px] text-gray-500">In Entwicklung</p></div>
+                        <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-green-600" id="devStatDone">0</p><p class="text-[10px] text-gray-500">Ausgerollt</p></div>
                     </div>
 
-                    <!-- Ideen Liste -->
-                    <div id="ideenList" class="space-y-3"></div>
+                    <!-- Content Area (switched by tabs) -->
+                    <div id="devTabMeine" class="dev-tab-content"></div>
+                    <div id="devTabAlle" class="dev-tab-content" style="display:none;"></div>
+                    <div id="devTabBoard" class="dev-tab-content" style="display:none;"></div>
+                    <div id="devTabPlanung" class="dev-tab-content" style="display:none;"></div>
+
+                    <!-- Detail Modal -->
+                    <div id="devDetailModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-10 overflow-y-auto" onclick="if(event.target===this)closeDevDetail()">
+                        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 mb-10" onclick="event.stopPropagation()">
+                            <div id="devDetailContent" class="p-6"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="kommunikationView" class="view" style="display: none;">
@@ -13194,110 +13249,960 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         showView = function(v) {
             origShowView(v);
             if(v==='support') { renderTickets('all'); renderKontakte(); }
-            if(v==='ideenboard') { renderIdeen('all'); }
+            if(v==='ideenboard') { renderDevPipeline(); }
             if(v==='wissen') { renderWissenGlobal(); }
             if(v==='shop') { shopAllProducts=[]; shopVariants={}; renderShop(); }
         };
 
-        // === IDEENBOARD ===
-        async function renderIdeen(filter) {
-            var container = document.getElementById('ideenList');
-            if(!container) return;
-            try {
-                var query = sb.from('ideen').select('*, users(name)').order('votes', {ascending:false});
-                if(filter && filter!=='all') query = query.eq('status', filter);
-                var resp = await query;
-                if(resp.error) throw resp.error;
-                var ideas = resp.data || [];
-                // KPIs (immer alle zählen)
-                var allResp = await sb.from('ideen').select('status');
-                var allIdeas = allResp.data || [];
-                var ge=document.getElementById('ideenTotal');if(ge)ge.textContent=allIdeas.length;
-                var ne=document.getElementById('ideenNeu');if(ne)ne.textContent=allIdeas.filter(function(i){return i.status==='neu';}).length;
-                var gp=document.getElementById('ideenGeplant');if(gp)gp.textContent=allIdeas.filter(function(i){return i.status==='wird_geprueft'||i.status==='geplant'||i.status==='diskussion';}).length;
-                var um=document.getElementById('ideenUmgesetzt');if(um)um.textContent=allIdeas.filter(function(i){return i.status==='umgesetzt';}).length;
+        // === DEV PIPELINE (Ideenboard 2.0) ===
+        var devSubmissions = [];
+        var devCurrentTab = 'meine';
+        var devInputType = 'text';
+        var devSelectedFiles = [];
 
-                var html = '';
-                var statusColors = {neu:'bg-blue-100 text-blue-700',diskussion:'bg-yellow-100 text-yellow-700',wird_geprueft:'bg-yellow-100 text-yellow-700',geplant:'bg-purple-100 text-purple-700',umgesetzt:'bg-green-100 text-green-700',abgelehnt:'bg-red-100 text-red-700'};
-                var statusLabels = {neu:'Neu',diskussion:'In Diskussion',wird_geprueft:'Wird geprüft',geplant:'Geplant',umgesetzt:'Umgesetzt',abgelehnt:'Abgelehnt'};
-                ideas.forEach(function(i) {
-                    var authorName = i.users ? i.users.name : 'Unbekannt';
-                    var d = i.created_at ? new Date(i.created_at) : new Date();
-                    var datum = d.toLocaleDateString('de-DE');
-                    html += '<div class="vit-card p-5 hover:shadow-md transition">';
-                    html += '<div class="flex items-start space-x-4">';
-                    html += '<div class="text-center flex-shrink-0"><button onclick="voteIdee(\''+i.id+'\')" class="w-12 h-12 rounded-xl bg-gray-100 hover:bg-vit-orange hover:text-white flex items-center justify-center text-lg font-bold text-gray-600 transition">\u25b2</button><span class="text-sm font-bold text-gray-800 block mt-1">' + (i.votes||0) + '</span></div>';
-                    html += '<div class="flex-1">';
-                    html += '<div class="flex items-center space-x-2 mb-1"><span class="text-xs font-semibold rounded px-2 py-0.5 ' + (statusColors[i.status]||'bg-gray-100 text-gray-600') + '">' + (statusLabels[i.status]||i.status) + '</span></div>';
-                    html += '<h3 class="font-bold text-gray-800 mb-1">' + i.titel + '</h3>';
-                    if(i.beschreibung) html += '<p class="text-sm text-gray-600 mb-2">' + i.beschreibung + '</p>';
-                    html += '<span class="text-xs text-gray-400">' + authorName + ' \u00b7 ' + datum + '</span>';
-                    html += '</div></div></div>';
+        // Recording state
+        var devMediaRecorder = null;
+        var devRecordedChunks = [];
+        var devRecordingTimer = null;
+        var devRecordingSeconds = 0;
+        var devScreenStream = null;
+        var devMicStream = null;
+
+        function toggleDevSubmitForm() {
+            var f = document.getElementById('devSubmitForm');
+            if(f) f.classList.toggle('hidden');
+            // Stop any active recordings when closing
+            if(f && f.classList.contains('hidden')) {
+                stopDevRecording();
+            }
+            // Populate module dropdown
+            var sel = document.getElementById('devModul');
+            if(sel && sel.options.length <= 1) {
+                Object.keys(sbModulStatus).forEach(function(k) {
+                    if(sbModulStatus[k] !== 'deaktiviert') {
+                        var o = document.createElement('option');
+                        o.value = k; o.textContent = k;
+                        sel.appendChild(o);
+                    }
                 });
-                if(ideas.length===0) html = '<div class="text-center py-8 text-gray-400">Noch keine Ideen – sei der Erste! \ud83d\udca1</div>';
-                container.innerHTML = html;
-            } catch(err) { console.error('Ideen:', err); container.innerHTML='<div class="text-center py-4 text-red-400">Fehler: '+err.message+'</div>'; }
-        }
-
-        function filterIdeen(filter) {
-            document.querySelectorAll('.ideen-filter').forEach(function(b){b.className='ideen-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600';});
-            var btn=document.querySelector('.ideen-filter[data-f="'+filter+'"]');
-            if(btn) btn.className='ideen-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white';
-            renderIdeen(filter);
-        }
-
-        async function voteIdee(id) {
-            try {
-                // Check if it's own idea
-                var ideeResp = await sb.from('ideen').select('user_id,votes').eq('id',id).single();
-                if(ideeResp.data && ideeResp.data.user_id === sbUser.id) {
-                    alert('Du kannst deine eigene Idee nicht bewerten.');
-                    return;
-                }
-                // Check if already voted
-                var checkResp = await sb.from('ideen_votes').select('id').eq('idee_id',id).eq('user_id',sbUser.id);
-                if(checkResp.data && checkResp.data.length > 0) {
-                    alert(t('alert_already_voted'));
-                    return;
-                }
-                // Insert vote
-                var voteResp = await sb.from('ideen_votes').insert({idee_id:id, user_id:sbUser.id});
-                if(voteResp.error) throw voteResp.error;
-                // Increment votes count
-                var newVotes = (ideeResp.data.votes||0) + 1;
-                await sb.from('ideen').update({votes: newVotes}).eq('id',id);
-                renderIdeen('all');
-            } catch(err) { 
-                if(err.code==='23505') alert(t('alert_already_voted'));
-                else { console.error('Vote:', err); alert('Fehler: '+(err.message||err)); }
             }
         }
 
-        async function submitIdee() {
-            var titelEl = document.getElementById('ideeTitel');
-            var beschEl = document.getElementById('ideeBeschreibung');
-            var katEl = document.getElementById('ideeKat');
-            var typEl = document.getElementById('ideeTyp');
-            if(!titelEl || !titelEl.value.trim()) { alert(t('alert_enter_title')); return; }
+        function setDevInputType(typ) {
+            // Stop any active recording first
+            stopDevRecording();
+
+            devInputType = typ;
+            document.querySelectorAll('.dev-input-type-btn').forEach(function(b) {
+                var isActive = b.getAttribute('data-dit') === typ;
+                b.className = 'dev-input-type-btn px-3 py-2 rounded-lg text-sm font-semibold ' + (isActive ? 'bg-vit-orange text-white' : 'bg-gray-100 text-gray-600');
+            });
+
+            // Show/hide recording areas
+            var audioArea = document.getElementById('devAudioRecordArea');
+            var screenArea = document.getElementById('devScreenRecordArea');
+            if(audioArea) audioArea.style.display = typ === 'audio' ? '' : 'none';
+            if(screenArea) screenArea.style.display = typ === 'video' ? '' : 'none';
+        }
+
+        // ---- AUDIO RECORDING ----
+        async function toggleDevAudioRecord() {
+            if(devMediaRecorder && devMediaRecorder.state === 'recording') {
+                stopDevRecording();
+                return;
+            }
             try {
+                var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                devMicStream = stream;
+                devRecordedChunks = [];
+                devMediaRecorder = new MediaRecorder(stream, { mimeType: getSupportedMimeType('audio') });
+                devMediaRecorder.ondataavailable = function(e) { if(e.data.size > 0) devRecordedChunks.push(e.data); };
+                devMediaRecorder.onstop = function() { finalizeDevAudioRecording(); };
+                devMediaRecorder.start(1000);
+
+                // UI
+                var btn = document.getElementById('devAudioRecBtn');
+                if(btn) { btn.textContent = '⏹'; btn.className = 'w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700 transition text-xl animate-pulse'; }
+                var statusEl = document.getElementById('devAudioStatus');
+                if(statusEl) statusEl.textContent = '⏺ Aufnahme läuft...';
+                startDevTimer('devAudioTimer');
+            } catch(err) {
+                alert('Mikrofon-Zugriff nicht möglich: ' + (err.message||err));
+            }
+        }
+
+        function finalizeDevAudioRecording() {
+            var blob = new Blob(devRecordedChunks, { type: devRecordedChunks[0]?.type || 'audio/webm' });
+            var file = new File([blob], 'Sprachaufnahme_' + Date.now() + '.webm', { type: blob.type });
+            devSelectedFiles.push(file);
+            updateDevFileList();
+
+            // Show preview
+            var preview = document.getElementById('devAudioPreview');
+            var player = document.getElementById('devAudioPlayer');
+            if(preview && player) {
+                preview.style.display = '';
+                player.src = URL.createObjectURL(blob);
+            }
+
+            // Reset UI
+            var btn = document.getElementById('devAudioRecBtn');
+            if(btn) { btn.textContent = '🎤'; btn.className = 'w-12 h-12 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition text-xl'; }
+            var statusEl = document.getElementById('devAudioStatus');
+            if(statusEl) statusEl.textContent = '✅ Aufnahme gespeichert (' + Math.round(blob.size/1024) + ' KB)';
+        }
+
+        // ---- SCREEN RECORDING (mit optionalem Mikrofon) ----
+        async function toggleDevScreenRecord() {
+            if(devMediaRecorder && devMediaRecorder.state === 'recording') {
+                stopDevRecording();
+                return;
+            }
+            try {
+                // Screen-Stream holen
+                devScreenStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { cursor: 'always' },
+                    audio: true  // System-Audio (falls Browser es unterstützt)
+                });
+
+                var tracks = [...devScreenStream.getTracks()];
+
+                // Mikrofon-Audio dazumischen wenn gewünscht
+                var withMic = document.getElementById('devScreenWithMic');
+                if(withMic && withMic.checked) {
+                    try {
+                        devMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        tracks.push(...devMicStream.getAudioTracks());
+                    } catch(micErr) {
+                        console.warn('Mikrofon nicht verfügbar, fahre ohne fort:', micErr);
+                    }
+                }
+
+                // Kombinierten Stream erstellen
+                var combinedStream = new MediaStream(tracks);
+                devRecordedChunks = [];
+                devMediaRecorder = new MediaRecorder(combinedStream, { mimeType: getSupportedMimeType('video') });
+                devMediaRecorder.ondataavailable = function(e) { if(e.data.size > 0) devRecordedChunks.push(e.data); };
+                devMediaRecorder.onstop = function() { finalizeDevScreenRecording(); };
+
+                // Wenn der Nutzer den Screen-Share stoppt (über Browser-UI)
+                devScreenStream.getVideoTracks()[0].onended = function() {
+                    stopDevRecording();
+                };
+
+                devMediaRecorder.start(1000);
+
+                // UI
+                var btn = document.getElementById('devScreenRecBtn');
+                if(btn) { btn.textContent = '⏹'; btn.className = 'w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700 transition text-xl animate-pulse'; }
+                var statusEl = document.getElementById('devScreenStatus');
+                if(statusEl) statusEl.textContent = '⏺ Bildschirmaufnahme läuft...';
+                startDevTimer('devScreenTimer');
+            } catch(err) {
+                if(err.name === 'NotAllowedError') {
+                    // Nutzer hat abgebrochen – kein Fehler
+                    console.log('Screen recording cancelled by user');
+                } else {
+                    alert('Bildschirmaufnahme nicht möglich: ' + (err.message||err));
+                }
+            }
+        }
+
+        function finalizeDevScreenRecording() {
+            var mimeType = devRecordedChunks[0]?.type || 'video/webm';
+            var blob = new Blob(devRecordedChunks, { type: mimeType });
+            var ext = mimeType.includes('mp4') ? '.mp4' : '.webm';
+            var file = new File([blob], 'Bildschirmaufnahme_' + Date.now() + ext, { type: blob.type });
+            devSelectedFiles.push(file);
+            updateDevFileList();
+
+            // Show video preview
+            var preview = document.getElementById('devScreenPreview');
+            var player = document.getElementById('devScreenPlayer');
+            if(preview && player) {
+                preview.style.display = '';
+                player.src = URL.createObjectURL(blob);
+            }
+
+            // Reset UI
+            var btn = document.getElementById('devScreenRecBtn');
+            if(btn) { btn.textContent = '🖥️'; btn.className = 'w-12 h-12 rounded-full bg-purple-500 text-white flex items-center justify-center hover:bg-purple-600 transition text-xl'; }
+            var statusEl = document.getElementById('devScreenStatus');
+            if(statusEl) statusEl.textContent = '✅ Aufnahme gespeichert (' + Math.round(blob.size/1024/1024*10)/10 + ' MB)';
+        }
+
+        // ---- RECORDING HELPERS ----
+        function stopDevRecording() {
+            if(devMediaRecorder && devMediaRecorder.state === 'recording') {
+                devMediaRecorder.stop();
+            }
+            if(devScreenStream) { devScreenStream.getTracks().forEach(function(t){ t.stop(); }); devScreenStream = null; }
+            if(devMicStream) { devMicStream.getTracks().forEach(function(t){ t.stop(); }); devMicStream = null; }
+            stopDevTimer();
+        }
+
+        function getSupportedMimeType(kind) {
+            var types = kind === 'audio'
+                ? ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg', 'audio/mp4']
+                : ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'];
+            for(var i = 0; i < types.length; i++) {
+                if(MediaRecorder.isTypeSupported(types[i])) return types[i];
+            }
+            return '';
+        }
+
+        function startDevTimer(elId) {
+            devRecordingSeconds = 0;
+            stopDevTimer();
+            devRecordingTimer = setInterval(function() {
+                devRecordingSeconds++;
+                var min = Math.floor(devRecordingSeconds / 60).toString().padStart(2,'0');
+                var sec = (devRecordingSeconds % 60).toString().padStart(2,'0');
+                var el = document.getElementById(elId);
+                if(el) el.textContent = min + ':' + sec;
+            }, 1000);
+        }
+
+        function stopDevTimer() {
+            if(devRecordingTimer) { clearInterval(devRecordingTimer); devRecordingTimer = null; }
+        }
+
+        function updateDevFileList() {
+            var listEl = document.getElementById('devFileList');
+            if(listEl) {
+                listEl.innerHTML = devSelectedFiles.map(function(f, i) {
+                    var sizeStr = f.size > 1024*1024 ? (Math.round(f.size/1024/1024*10)/10+' MB') : (Math.round(f.size/1024)+' KB');
+                    var icon = f.type.startsWith('audio') ? '🎤' : f.type.startsWith('video') ? '🖥️' : '📎';
+                    return '<div class="flex items-center justify-between bg-gray-50 rounded px-3 py-1.5 text-xs"><span>'+icon+' '+f.name+' ('+sizeStr+')</span><button onclick="devSelectedFiles.splice('+i+',1);updateDevFileList()" class="text-red-400 hover:text-red-600 ml-2">✕</button></div>';
+                }).join('');
+            }
+        }
+
+        function handleDevFileSelect(e) {
+            var files = Array.from(e.target.files || []);
+            devSelectedFiles = devSelectedFiles.concat(files);
+            updateDevFileList();
+        }
+
+        function showDevTab(tab) {
+            devCurrentTab = tab;
+            document.querySelectorAll('.dev-tab-btn').forEach(function(b) {
+                var isActive = b.getAttribute('data-dtab') === tab;
+                b.className = 'dev-tab-btn px-4 py-2 rounded-md text-sm font-semibold ' + (isActive ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500');
+            });
+            document.querySelectorAll('.dev-tab-content').forEach(function(c) { c.style.display = 'none'; });
+            var target = document.getElementById('devTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            if(target) target.style.display = '';
+            renderDevTab(tab);
+        }
+
+        async function renderDevPipeline() {
+            // Show HQ tabs if HQ user
+            var isHQ = (sbRollen||[]).indexOf('hq') !== -1;
+            var boardTab = document.getElementById('devTabBoard');
+            var planTab = document.getElementById('devTabPlanung');
+            if(boardTab) boardTab.style.display = isHQ ? '' : 'none';
+            if(planTab) planTab.style.display = isHQ ? '' : 'none';
+
+            // Load all submissions
+            try {
+                var query = sb.from('dev_submissions').select('*, dev_ki_analysen(zusammenfassung, vision_fit_score, machbarkeit, aufwand_schaetzung), dev_votes(user_id)').order('created_at', {ascending: false});
+                var resp = await query;
+                if(resp.error) throw resp.error;
+                devSubmissions = resp.data || [];
+            } catch(err) {
+                console.error('DevPipeline load:', err);
+                devSubmissions = [];
+            }
+
+            // Update stats
+            var total = devSubmissions.length;
+            var neu = devSubmissions.filter(function(s){ return ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt'].indexOf(s.status) !== -1; }).length;
+            var board = devSubmissions.filter(function(s){ return ['im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1; }).length;
+            var dev = devSubmissions.filter(function(s){ return ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant'].indexOf(s.status) !== -1; }).length;
+            var done = devSubmissions.filter(function(s){ return s.status === 'ausgerollt'; }).length;
+
+            var e1=document.getElementById('devStatTotal');if(e1)e1.textContent=total;
+            var e2=document.getElementById('devStatNeu');if(e2)e2.textContent=neu;
+            var e3=document.getElementById('devStatBoard');if(e3)e3.textContent=board;
+            var e4=document.getElementById('devStatDev');if(e4)e4.textContent=dev;
+            var e5=document.getElementById('devStatDone');if(e5)e5.textContent=done;
+
+            renderDevTab(devCurrentTab);
+        }
+
+        function renderDevTab(tab) {
+            if(tab === 'meine') renderDevMeine();
+            else if(tab === 'alle') renderDevAlle();
+            else if(tab === 'board') renderDevBoard();
+            else if(tab === 'planung') renderDevPlanung();
+        }
+
+        var devStatusLabels = {
+            neu:'Neu eingereicht', ki_pruefung:'🤖 KI prüft...', ki_rueckfragen:'❓ KI Rückfragen',
+            konzept_erstellt:'📋 Konzept fertig', im_ideenboard:'🎯 Im Ideenboard', hq_rueckfragen:'❓ HQ Rückfragen',
+            freigegeben:'✅ Freigegeben', in_planung:'📅 In Planung', in_entwicklung:'🔨 In Entwicklung',
+            im_review:'🔍 Im Review', release_geplant:'🚀 Release geplant', ausgerollt:'✅ Ausgerollt',
+            abgelehnt:'❌ Abgelehnt', geparkt:'⏸ Geparkt'
+        };
+        var devStatusColors = {
+            neu:'bg-blue-100 text-blue-700', ki_pruefung:'bg-purple-100 text-purple-700 animate-pulse',
+            ki_rueckfragen:'bg-yellow-100 text-yellow-700', konzept_erstellt:'bg-indigo-100 text-indigo-700',
+            im_ideenboard:'bg-orange-100 text-orange-700', hq_rueckfragen:'bg-yellow-100 text-yellow-700',
+            freigegeben:'bg-green-100 text-green-700', in_planung:'bg-teal-100 text-teal-700',
+            in_entwicklung:'bg-blue-100 text-blue-700', im_review:'bg-purple-100 text-purple-700',
+            release_geplant:'bg-orange-100 text-orange-700', ausgerollt:'bg-green-100 text-green-700',
+            abgelehnt:'bg-red-100 text-red-700', geparkt:'bg-gray-100 text-gray-600'
+        };
+        var devKatIcons = {bug:'🐛',verbesserung:'🔧',feature:'🚀',prozess:'📋',sonstiges:'💬'};
+
+        function devCardHTML(s) {
+            var ki = s.dev_ki_analysen && s.dev_ki_analysen[0] ? s.dev_ki_analysen[0] : null;
+            var votes = s.dev_votes ? s.dev_votes.length : 0;
+            var hasVoted = s.dev_votes && sbUser ? s.dev_votes.some(function(v){return v.user_id===sbUser.id;}) : false;
+            var d = new Date(s.created_at).toLocaleDateString('de-DE');
+            var h = '<div class="vit-card p-4 hover:shadow-md transition cursor-pointer" onclick="openDevDetail(\''+s.id+'\')">';
+            h += '<div class="flex items-start space-x-3">';
+            // Vote button
+            h += '<div class="text-center flex-shrink-0"><button onclick="event.stopPropagation();toggleDevVote(\''+s.id+'\')" class="w-10 h-10 rounded-lg '+(hasVoted?'bg-vit-orange text-white':'bg-gray-100 text-gray-500 hover:bg-vit-orange/20')+' flex items-center justify-center text-sm font-bold transition">▲</button><span class="text-xs font-bold text-gray-700 block mt-0.5">'+votes+'</span></div>';
+            // Content
+            h += '<div class="flex-1 min-w-0">';
+            h += '<div class="flex items-center flex-wrap gap-1.5 mb-1">';
+            h += '<span class="text-xs font-semibold rounded px-2 py-0.5 '+devStatusColors[s.status]+'">'+devStatusLabels[s.status]+'</span>';
+            h += '<span class="text-xs text-gray-400">'+(devKatIcons[s.kategorie]||'')+ ' '+s.kategorie+'</span>';
+            if(s.geschaetzter_aufwand) h += '<span class="text-[10px] bg-gray-100 text-gray-600 rounded px-1.5 py-0.5 font-semibold">'+s.geschaetzter_aufwand+'</span>';
+            h += '</div>';
+            h += '<h3 class="font-semibold text-gray-800 text-sm truncate">'+(s.titel||'(Ohne Titel)')+'</h3>';
+            if(ki && ki.zusammenfassung) h += '<p class="text-xs text-gray-500 mt-0.5 line-clamp-2">'+ki.zusammenfassung+'</p>';
+            else if(s.beschreibung) h += '<p class="text-xs text-gray-500 mt-0.5 line-clamp-2">'+s.beschreibung+'</p>';
+            // KI Score bar
+            if(ki && ki.vision_fit_score != null) {
+                var score = ki.vision_fit_score;
+                var barColor = score >= 70 ? 'bg-green-500' : score >= 40 ? 'bg-yellow-500' : 'bg-red-500';
+                h += '<div class="flex items-center space-x-2 mt-2"><span class="text-[10px] text-gray-400 w-16">Vision-Fit</span><div class="flex-1 h-1.5 bg-gray-100 rounded-full"><div class="h-1.5 '+barColor+' rounded-full" style="width:'+score+'%"></div></div><span class="text-[10px] font-bold text-gray-600">'+score+'</span></div>';
+            }
+            h += '<span class="text-[10px] text-gray-400 mt-1 block">'+d+'</span>';
+            h += '</div></div></div>';
+            return h;
+        }
+
+        function renderDevMeine() {
+            var c = document.getElementById('devTabMeine');
+            if(!c) return;
+            var mine = devSubmissions.filter(function(s){ return s.user_id === (sbUser && sbUser.id); });
+            if(mine.length === 0) {
+                c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-3">💡</p><p>Du hast noch keine Ideen eingereicht.</p><p class="text-sm mt-1">Klick oben auf "Feedback geben" um loszulegen!</p></div>';
+                return;
+            }
+            c.innerHTML = '<div class="space-y-3">' + mine.map(devCardHTML).join('') + '</div>';
+        }
+
+        function renderDevAlle() {
+            var c = document.getElementById('devTabAlle');
+            if(!c) return;
+            // Show all except abgelehnt/geparkt unless explicitly asked
+            var visible = devSubmissions.filter(function(s) { return s.status !== 'abgelehnt' && s.status !== 'geparkt'; });
+            if(visible.length === 0) {
+                c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-3">🌐</p><p>Noch keine Ideen im System.</p></div>';
+                return;
+            }
+            c.innerHTML = '<div class="space-y-3">' + visible.map(devCardHTML).join('') + '</div>';
+        }
+
+        function renderDevBoard() {
+            var c = document.getElementById('devTabBoard');
+            if(!c) return;
+            var boardItems = devSubmissions.filter(function(s) {
+                return ['konzept_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1;
+            });
+            if(boardItems.length === 0) {
+                c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-3">🎯</p><p>Keine Ideen warten auf HQ-Entscheidung.</p></div>';
+                return;
+            }
+            var h = '<div class="space-y-3">';
+            boardItems.forEach(function(s) {
+                var ki = s.dev_ki_analysen && s.dev_ki_analysen[0] ? s.dev_ki_analysen[0] : null;
+                h += '<div class="vit-card p-5 border-l-4 border-vit-orange">';
+                h += '<div class="flex items-start justify-between">';
+                h += '<div class="flex-1 cursor-pointer" onclick="openDevDetail(\''+s.id+'\')">';
+                h += '<div class="flex items-center gap-2 mb-1"><span class="text-xs font-semibold rounded px-2 py-0.5 '+devStatusColors[s.status]+'">'+devStatusLabels[s.status]+'</span>';
+                if(ki) h += '<span class="text-xs bg-gray-100 rounded px-1.5 py-0.5">Machbarkeit: <b>'+(ki.machbarkeit||'-')+'</b></span>';
+                if(ki && ki.vision_fit_score) h += '<span class="text-xs bg-gray-100 rounded px-1.5 py-0.5">Vision: <b>'+ki.vision_fit_score+'/100</b></span>';
+                if(s.geschaetzter_aufwand) h += '<span class="text-xs bg-gray-100 rounded px-1.5 py-0.5">Aufwand: <b>'+s.geschaetzter_aufwand+'</b></span>';
+                h += '</div>';
+                h += '<h3 class="font-semibold text-gray-800">'+(s.titel||'(Ohne Titel)')+'</h3>';
+                if(ki && ki.zusammenfassung) h += '<p class="text-sm text-gray-500 mt-1">'+ki.zusammenfassung+'</p>';
+                h += '</div>';
+                // HQ Action buttons
+                h += '<div class="flex flex-col space-y-1 ml-4 flex-shrink-0">';
+                h += '<button onclick="event.stopPropagation();devHQDecision(\''+s.id+'\',\'freigabe\')" class="px-3 py-1.5 bg-green-500 text-white rounded text-xs font-semibold hover:bg-green-600">✅ Freigeben</button>';
+                h += '<button onclick="event.stopPropagation();devHQDecision(\''+s.id+'\',\'rueckfragen\')" class="px-3 py-1.5 bg-yellow-500 text-white rounded text-xs font-semibold hover:bg-yellow-600">❓ Rückfrage</button>';
+                h += '<button onclick="event.stopPropagation();devHQDecision(\''+s.id+'\',\'spaeter\')" class="px-3 py-1.5 bg-gray-300 text-gray-700 rounded text-xs font-semibold hover:bg-gray-400">⏸ Später</button>';
+                h += '<button onclick="event.stopPropagation();devHQDecision(\''+s.id+'\',\'ablehnung\')" class="px-3 py-1.5 bg-red-100 text-red-600 rounded text-xs font-semibold hover:bg-red-200">❌ Ablehnen</button>';
+                h += '</div></div></div>';
+            });
+            h += '</div>';
+            c.innerHTML = h;
+        }
+
+        function renderDevPlanung() {
+            var c = document.getElementById('devTabPlanung');
+            if(!c) return;
+            var planItems = devSubmissions.filter(function(s) {
+                return ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant'].indexOf(s.status) !== -1;
+            }).sort(function(a,b) { return (a.queue_position||9999) - (b.queue_position||9999); });
+            if(planItems.length === 0) {
+                c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-3">📅</p><p>Noch keine freigegebenen Ideen in der Planung.</p></div>';
+                return;
+            }
+            var h = '<div class="space-y-2">';
+            planItems.forEach(function(s, i) {
+                h += '<div class="vit-card p-4 flex items-center space-x-3 cursor-pointer hover:shadow-md" onclick="openDevDetail(\''+s.id+'\')">';
+                h += '<span class="text-lg font-bold text-gray-300 w-8 text-center">'+(s.queue_position||i+1)+'</span>';
+                h += '<div class="flex-1">';
+                h += '<div class="flex items-center gap-2"><span class="text-xs font-semibold rounded px-2 py-0.5 '+devStatusColors[s.status]+'">'+devStatusLabels[s.status]+'</span>';
+                if(s.geschaetzter_aufwand) h += '<span class="text-[10px] bg-gray-100 rounded px-1.5 py-0.5 font-semibold">'+s.geschaetzter_aufwand+'</span>';
+                h += '</div>';
+                h += '<h3 class="font-semibold text-gray-800 text-sm mt-0.5">'+(s.titel||'(Ohne Titel)')+'</h3>';
+                h += '</div>';
+                // Queue reorder buttons (HQ only)
+                h += '<div class="flex flex-col space-y-0.5">';
+                if(i > 0) h += '<button onclick="event.stopPropagation();moveDevQueue(\''+s.id+'\',-1)" class="text-gray-400 hover:text-gray-700 text-xs">▲</button>';
+                if(i < planItems.length-1) h += '<button onclick="event.stopPropagation();moveDevQueue(\''+s.id+'\',1)" class="text-gray-400 hover:text-gray-700 text-xs">▼</button>';
+                h += '</div></div>';
+            });
+            h += '</div>';
+            c.innerHTML = h;
+        }
+
+        async function submitDevIdea() {
+            var btn = document.getElementById('devSubmitBtn');
+            if(btn) { btn.disabled = true; btn.textContent = '⏳ Wird eingereicht...'; }
+            try {
+                var titel = (document.getElementById('devTitel').value || '').trim();
+                var beschreibung = (document.getElementById('devBeschreibung').value || '').trim();
+                var kategorie = document.getElementById('devKategorie').value;
+                var modul = document.getElementById('devModul').value || null;
+
+                if(!titel && !beschreibung) { alert('Bitte gib mindestens einen Titel oder eine Beschreibung ein.'); return; }
+
+                // Upload files to Supabase Storage
+                var attachments = [];
+                for(var i = 0; i < devSelectedFiles.length; i++) {
+                    var file = devSelectedFiles[i];
+                    var path = 'dev-submissions/' + sbUser.id + '/' + Date.now() + '_' + file.name;
+                    var upResp = await sb.storage.from('portal-uploads').upload(path, file);
+                    if(upResp.error) { console.error('Upload error:', upResp.error); continue; }
+                    var urlResp = sb.storage.from('portal-uploads').getPublicUrl(path);
+                    attachments.push({ url: urlResp.data.publicUrl, name: file.name, type: file.type, size: file.size, storage_path: path });
+                }
+
+                // Insert submission
                 var insertData = {
                     user_id: sbUser.id,
                     standort_id: sbStandort ? sbStandort.id : null,
-                    titel: titelEl.value.trim(),
-                    beschreibung: beschEl ? beschEl.value.trim() : '',
-                    kategorie: katEl ? katEl.value : null,
-                    status: 'neu',
-                    votes: 0
+                    titel: titel || null,
+                    beschreibung: beschreibung || null,
+                    kurz_notiz: beschreibung ? beschreibung.substring(0, 200) : null,
+                    eingabe_typ: devInputType,
+                    kategorie: kategorie,
+                    kategorie_quelle: 'user',
+                    modul_key: modul,
+                    attachments: attachments,
+                    status: 'neu'
                 };
-                var resp = await sb.from('ideen').insert(insertData);
+
+                var resp = await sb.from('dev_submissions').insert(insertData).select().single();
                 if(resp.error) throw resp.error;
-                if(titelEl) titelEl.value='';
-                if(beschEl) beschEl.value='';
-                if(katEl) katEl.selectedIndex=0;
-                if(typEl) typEl.selectedIndex=0;
-                document.getElementById('ideeCreate').classList.add('hidden');
-                renderIdeen('all');
-            } catch(err) { alert('Fehler: '+err.message); }
+
+                // Reset form
+                document.getElementById('devTitel').value = '';
+                document.getElementById('devBeschreibung').value = '';
+                devSelectedFiles = [];
+                var fl = document.getElementById('devFileList'); if(fl) fl.innerHTML = '';
+                toggleDevSubmitForm();
+
+                // Trigger KI-Analyse
+                try {
+                    if(btn) btn.textContent = '🤖 KI analysiert...';
+                    var kiResp = await sb.functions.invoke('dev-ki-analyse', {
+                        body: { submission_id: resp.data.id }
+                    });
+                    if(kiResp.error) console.warn('KI-Analyse gestartet, aber Fehler:', kiResp.error);
+                } catch(kiErr) { console.warn('KI-Analyse Fehler (wird nachgeholt):', kiErr); }
+
+                // Reload
+                renderDevPipeline();
+            } catch(err) {
+                alert('Fehler beim Einreichen: ' + (err.message||err));
+            } finally {
+                if(btn) { btn.disabled = false; btn.textContent = '💡 Einreichen & KI starten'; }
+            }
+        }
+
+        async function toggleDevVote(subId) {
+            try {
+                // Check if already voted
+                var checkResp = await sb.from('dev_votes').select('id').eq('submission_id', subId).eq('user_id', sbUser.id);
+                if(checkResp.data && checkResp.data.length > 0) {
+                    // Un-vote
+                    await sb.from('dev_votes').delete().eq('submission_id', subId).eq('user_id', sbUser.id);
+                } else {
+                    // Vote
+                    await sb.from('dev_votes').insert({ submission_id: subId, user_id: sbUser.id });
+                }
+                renderDevPipeline();
+            } catch(err) {
+                if(err.code === '23505') { /* already voted, ignore */ }
+                else console.error('Vote error:', err);
+            }
+        }
+
+        async function devHQDecision(subId, ergebnis) {
+            var kommentar = '';
+            var statusMap = { freigabe:'freigegeben', freigabe_mit_aenderungen:'freigegeben', rueckfragen:'hq_rueckfragen', ablehnung:'abgelehnt', spaeter:'geparkt' };
+
+            if(ergebnis === 'rueckfragen') {
+                kommentar = prompt('Welche Rückfragen hast du?');
+                if(!kommentar) return;
+            } else if(ergebnis === 'ablehnung') {
+                kommentar = prompt('Begründung für die Ablehnung:');
+                if(!kommentar) return;
+            }
+
+            try {
+                // Save decision
+                await sb.from('dev_entscheidungen').insert({
+                    submission_id: subId,
+                    entscheider_id: sbUser.id,
+                    ergebnis: ergebnis,
+                    kommentar: kommentar || null
+                });
+
+                // Update submission status
+                var newStatus = statusMap[ergebnis] || 'im_ideenboard';
+                var updates = { status: newStatus };
+                if(ergebnis === 'freigabe' || ergebnis === 'freigabe_mit_aenderungen') {
+                    updates.freigegeben_at = new Date().toISOString();
+                    updates.hq_entschieden_at = new Date().toISOString();
+                }
+
+                await sb.from('dev_submissions').update(updates).eq('id', subId);
+
+                // Add comment
+                if(kommentar) {
+                    await sb.from('dev_kommentare').insert({
+                        submission_id: subId,
+                        user_id: sbUser.id,
+                        typ: ergebnis === 'rueckfragen' ? 'rueckfrage' : 'kommentar',
+                        inhalt: kommentar
+                    });
+                }
+
+                renderDevPipeline();
+            } catch(err) { alert('Fehler: ' + (err.message||err)); }
+        }
+
+        async function moveDevQueue(subId, direction) {
+            // Find current item and swap positions
+            var planItems = devSubmissions.filter(function(s) {
+                return ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant'].indexOf(s.status) !== -1;
+            }).sort(function(a,b) { return (a.queue_position||9999) - (b.queue_position||9999); });
+
+            var idx = planItems.findIndex(function(s) { return s.id === subId; });
+            if(idx === -1) return;
+            var targetIdx = idx + direction;
+            if(targetIdx < 0 || targetIdx >= planItems.length) return;
+
+            try {
+                // Swap positions
+                var pos1 = planItems[idx].queue_position || idx + 1;
+                var pos2 = planItems[targetIdx].queue_position || targetIdx + 1;
+                await sb.from('dev_submissions').update({ queue_position: pos2 }).eq('id', planItems[idx].id);
+                await sb.from('dev_submissions').update({ queue_position: pos1 }).eq('id', planItems[targetIdx].id);
+                renderDevPipeline();
+            } catch(err) { console.error('Queue move error:', err); }
+        }
+
+        async function openDevDetail(subId) {
+            var modal = document.getElementById('devDetailModal');
+            var content = document.getElementById('devDetailContent');
+            if(!modal || !content) return;
+            content.innerHTML = '<div class="text-center py-8"><span class="animate-pulse text-gray-400">Lade Details...</span></div>';
+            modal.classList.remove('hidden');
+
+            try {
+                // Load full submission with relations
+                var resp = await sb.from('dev_submissions').select('*').eq('id', subId).single();
+                if(resp.error) throw resp.error;
+                var s = resp.data;
+
+                var kiResp = await sb.from('dev_ki_analysen').select('*').eq('submission_id', subId).order('version', {ascending: false}).limit(1);
+                var ki = kiResp.data && kiResp.data[0] ? kiResp.data[0] : null;
+
+                var konzResp = await sb.from('dev_konzepte').select('*').eq('submission_id', subId).order('version', {ascending: false}).limit(1);
+                var konzept = konzResp.data && konzResp.data[0] ? konzResp.data[0] : null;
+
+                var kommResp = await sb.from('dev_kommentare').select('*').eq('submission_id', subId).order('created_at');
+                var kommentare = kommResp.data || [];
+
+                var entschResp = await sb.from('dev_entscheidungen').select('*').eq('submission_id', subId).order('created_at', {ascending: false});
+                var entscheidungen = entschResp.data || [];
+
+                // Build detail HTML
+                var h = '';
+                h += '<div class="flex items-start justify-between mb-4">';
+                h += '<div><span class="text-xs font-semibold rounded px-2 py-1 '+devStatusColors[s.status]+'">'+devStatusLabels[s.status]+'</span>';
+                h += '<h2 class="text-xl font-bold text-gray-800 mt-2">'+(s.titel||'(Ohne Titel)')+'</h2>';
+                h += '<p class="text-xs text-gray-400 mt-1">'+(devKatIcons[s.kategorie]||'')+' '+s.kategorie+' · '+new Date(s.created_at).toLocaleDateString('de-DE')+'</p></div>';
+                h += '<button onclick="closeDevDetail()" class="text-gray-400 hover:text-gray-600 text-2xl">✕</button></div>';
+
+                // Original submission
+                if(s.beschreibung) {
+                    h += '<div class="bg-gray-50 rounded-lg p-4 mb-4"><h4 class="text-xs font-bold text-gray-500 uppercase mb-1">Beschreibung</h4>';
+                    h += '<p class="text-sm text-gray-700">'+s.beschreibung+'</p></div>';
+                }
+
+                // KI Analyse
+                if(ki) {
+                    h += '<div class="border border-purple-200 rounded-lg p-4 mb-4 bg-purple-50/50">';
+                    h += '<h4 class="text-xs font-bold text-purple-600 uppercase mb-2">🤖 KI-Analyse</h4>';
+                    if(ki.zusammenfassung) h += '<p class="text-sm text-gray-700 mb-3">'+ki.zusammenfassung+'</p>';
+                    h += '<div class="grid grid-cols-3 gap-3 mb-3">';
+                    h += '<div class="text-center"><p class="text-2xl font-bold '+(ki.vision_fit_score>=70?'text-green-600':ki.vision_fit_score>=40?'text-yellow-600':'text-red-600')+'">'+ki.vision_fit_score+'</p><p class="text-[10px] text-gray-500">Vision-Fit</p></div>';
+                    h += '<div class="text-center"><p class="text-sm font-bold text-gray-800">'+(ki.machbarkeit||'-')+'</p><p class="text-[10px] text-gray-500">Machbarkeit</p></div>';
+                    h += '<div class="text-center"><p class="text-sm font-bold text-gray-800">'+(ki.aufwand_schaetzung||'-')+'</p><p class="text-[10px] text-gray-500">Aufwand</p></div>';
+                    h += '</div>';
+                    if(ki.machbarkeit_details) h += '<p class="text-xs text-gray-600 mb-2"><b>Details:</b> '+ki.machbarkeit_details+'</p>';
+                    if(ki.risiken && ki.risiken.length > 0) {
+                        h += '<div class="mt-2"><p class="text-xs font-semibold text-gray-600 mb-1">Risiken:</p>';
+                        ki.risiken.forEach(function(r) {
+                            h += '<span class="inline-block text-[10px] rounded px-2 py-0.5 mr-1 mb-1 '+(r.schwere==='hoch'?'bg-red-100 text-red-700':'bg-yellow-100 text-yellow-700')+'">'+r.typ+': '+r.beschreibung+'</span>';
+                        });
+                        h += '</div>';
+                    }
+                    if(ki.rueckfragen && ki.rueckfragen.length > 0) {
+                        h += '<div class="mt-3 bg-yellow-50 rounded p-3"><p class="text-xs font-semibold text-yellow-700 mb-1">❓ Rückfragen der KI:</p>';
+                        ki.rueckfragen.forEach(function(q) {
+                            h += '<div class="text-xs text-gray-700 mb-1">• '+(q.frage||q)+'</div>';
+                        });
+                        h += '</div>';
+                    }
+                    h += '</div>';
+                }
+
+                // Konzept
+                if(konzept) {
+                    h += '<div class="border border-indigo-200 rounded-lg p-4 mb-4 bg-indigo-50/30">';
+                    h += '<h4 class="text-xs font-bold text-indigo-600 uppercase mb-2">📋 Entwicklungskonzept (v'+konzept.version+')</h4>';
+                    var sections = [
+                        {label:'Problem', val:konzept.problem_beschreibung},
+                        {label:'Ziel', val:konzept.ziel},
+                        {label:'Nutzen', val:konzept.nutzen},
+                        {label:'Scope (In)', val:konzept.scope_in},
+                        {label:'Scope (Out)', val:konzept.scope_out},
+                        {label:'UI/Frontend', val:konzept.loesungsvorschlag_ui},
+                        {label:'Backend', val:konzept.loesungsvorschlag_backend},
+                        {label:'Datenbank', val:konzept.loesungsvorschlag_db},
+                        {label:'Testplan', val:konzept.testplan},
+                        {label:'Rollout', val:konzept.rollout_strategie},
+                        {label:'Definition of Done', val:konzept.definition_of_done}
+                    ];
+                    sections.forEach(function(sec) {
+                        if(sec.val) h += '<div class="mb-2"><span class="text-[10px] font-bold text-gray-500 uppercase">'+sec.label+'</span><p class="text-xs text-gray-700">'+sec.val+'</p></div>';
+                    });
+                    if(konzept.akzeptanzkriterien && konzept.akzeptanzkriterien.length > 0) {
+                        h += '<div class="mb-2"><span class="text-[10px] font-bold text-gray-500 uppercase">Akzeptanzkriterien</span>';
+                        konzept.akzeptanzkriterien.forEach(function(a) {
+                            h += '<div class="text-xs text-gray-700">☐ '+(a.beschreibung||a)+'</div>';
+                        });
+                        h += '</div>';
+                    }
+                    h += '</div>';
+                }
+
+                // Entscheidungen
+                if(entscheidungen.length > 0) {
+                    h += '<div class="mb-4"><h4 class="text-xs font-bold text-gray-500 uppercase mb-2">HQ-Entscheidungen</h4>';
+                    entscheidungen.forEach(function(e) {
+                        var eColors = {freigabe:'text-green-700 bg-green-50',freigabe_mit_aenderungen:'text-orange-700 bg-orange-50',rueckfragen:'text-yellow-700 bg-yellow-50',ablehnung:'text-red-700 bg-red-50',spaeter:'text-gray-600 bg-gray-50'};
+                        var eLabels = {freigabe:'✅ Freigabe',freigabe_mit_aenderungen:'✅ Freigabe mit Änderungen',rueckfragen:'❓ Rückfrage',ablehnung:'❌ Abgelehnt',spaeter:'⏸ Später'};
+                        h += '<div class="rounded p-3 mb-2 '+(eColors[e.ergebnis]||'bg-gray-50')+'"><span class="text-xs font-bold '+(eColors[e.ergebnis]||'text-gray-600').split(' ')[0]+'">'+eLabels[e.ergebnis]+'</span>';
+                        if(e.kommentar) h += '<p class="text-xs text-gray-700 mt-1">'+e.kommentar+'</p>';
+                        h += '<span class="text-[10px] text-gray-400">'+new Date(e.created_at).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})+'</span></div>';
+                    });
+                    h += '</div>';
+                }
+
+                // Kommentare
+                if(kommentare.length > 0) {
+                    h += '<div class="mb-4"><h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Verlauf</h4><div class="space-y-2">';
+                    kommentare.forEach(function(k) {
+                        var isKI = k.typ === 'ki_nachricht';
+                        var isRF = k.typ === 'rueckfrage';
+                        var isAnt = k.typ === 'antwort';
+                        var bgClass = isKI ? 'bg-purple-50 border border-purple-100' : isRF ? 'bg-yellow-50 border border-yellow-100' : isAnt ? 'bg-green-50 border border-green-100' : 'bg-gray-50';
+                        var labelClass = isKI ? 'text-purple-600' : isRF ? 'text-yellow-700' : isAnt ? 'text-green-700' : 'text-gray-700';
+                        var label = isKI ? '🤖 KI' : isRF ? '❓ Rückfrage' : isAnt ? '💬 Antwort' : 'Kommentar';
+                        h += '<div class="rounded p-3 text-xs '+bgClass+'">';
+                        h += '<span class="font-semibold '+labelClass+'">'+label+'</span>';
+                        h += '<p class="text-gray-700 mt-0.5" style="white-space:pre-line">'+k.inhalt+'</p>';
+                        h += '<span class="text-[10px] text-gray-400">'+new Date(k.created_at).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'</span></div>';
+                    });
+                    h += '</div></div>';
+                }
+
+                // === RÜCKFRAGEN-ANTWORT-FORMULAR ===
+                if(s.status === 'ki_rueckfragen' || s.status === 'hq_rueckfragen') {
+                    var rfQuelle = s.status === 'ki_rueckfragen' ? 'KI' : 'HQ';
+                    h += '<div class="border-2 border-yellow-300 rounded-lg p-4 mb-4 bg-yellow-50">';
+                    h += '<h4 class="text-sm font-bold text-yellow-800 mb-2">💬 '+rfQuelle+' hat Rückfragen – bitte antworte:</h4>';
+                    // Zeige offene Rückfragen aus KI-Analyse
+                    if(s.status === 'ki_rueckfragen' && ki && ki.rueckfragen) {
+                        var offeneRF = ki.rueckfragen.filter(function(q) { return !q.beantwortet; });
+                        if(offeneRF.length > 0) {
+                            offeneRF.forEach(function(q, qi) {
+                                h += '<div class="bg-white rounded p-3 mb-2 border border-yellow-200">';
+                                h += '<p class="text-xs font-semibold text-gray-700 mb-1">❓ '+(q.frage||q)+'</p>';
+                                h += '<textarea id="devRFAntwort_'+qi+'" placeholder="Deine Antwort..." class="w-full px-2 py-1.5 border border-gray-200 rounded text-xs" rows="2"></textarea>';
+                                h += '</div>';
+                            });
+                        }
+                    }
+                    // Allgemeines Antwortfeld (für HQ-Rückfragen oder zusätzliche Infos)
+                    h += '<textarea id="devRFAntwortAllg" placeholder="Zusätzliche Informationen / Antwort..." class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm mb-3" rows="3"></textarea>';
+                    h += '<div class="flex space-x-2">';
+                    h += '<button onclick="submitDevRueckfragenAntwort(\''+s.id+'\',\''+s.status+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">✅ Antwort senden & KI neu analysieren</button>';
+                    h += '</div></div>';
+                }
+
+                // === HQ-AKTIONEN im Detail-Modal ===
+                var isHQ = (sbRollen||[]).indexOf('hq') !== -1;
+                if(isHQ && ['konzept_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1) {
+                    h += '<div class="border-2 border-vit-orange/30 rounded-lg p-4 mb-4 bg-orange-50">';
+                    h += '<h4 class="text-sm font-bold text-gray-800 mb-3">🎯 HQ-Entscheidung</h4>';
+                    h += '<div class="grid grid-cols-2 gap-2 mb-3">';
+                    h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'freigabe\')" class="px-3 py-2 bg-green-500 text-white rounded-lg text-sm font-semibold hover:bg-green-600">✅ Freigeben</button>';
+                    h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'freigabe_mit_aenderungen\')" class="px-3 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600">✏️ Freigabe mit Änderungen</button>';
+                    h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'rueckfragen\')" class="px-3 py-2 bg-yellow-500 text-white rounded-lg text-sm font-semibold hover:bg-yellow-600">❓ Rückfrage</button>';
+                    h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'ablehnung\')" class="px-3 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-semibold hover:bg-red-200">❌ Ablehnen</button>';
+                    h += '</div>';
+                    h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'spaeter\')" class="w-full px-3 py-1.5 bg-gray-200 text-gray-600 rounded-lg text-xs hover:bg-gray-300">⏸ Später</button>';
+                    h += '</div>';
+                }
+
+                // === KOMMENTAR SCHREIBEN (immer sichtbar) ===
+                h += '<div class="border-t border-gray-200 pt-4">';
+                h += '<div class="flex space-x-2">';
+                h += '<input type="text" id="devKommentarInput" placeholder="Kommentar schreiben..." class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm">';
+                h += '<button onclick="submitDevKommentar(\''+s.id+'\')" class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm font-semibold hover:bg-gray-800">Senden</button>';
+                h += '</div></div>';
+
+                content.innerHTML = h;
+            } catch(err) {
+                content.innerHTML = '<div class="text-center py-8 text-red-400">Fehler: '+err.message+'</div>';
+            }
+        }
+
+        // Rückfragen beantworten + KI neu analysieren
+        async function submitDevRueckfragenAntwort(subId, currentStatus) {
+            try {
+                var allgAntwort = (document.getElementById('devRFAntwortAllg')||{}).value || '';
+
+                // Einzelne Rückfragen-Antworten sammeln
+                var einzelAntworten = [];
+                for(var i = 0; i < 20; i++) {
+                    var el = document.getElementById('devRFAntwort_' + i);
+                    if(!el) break;
+                    if(el.value.trim()) einzelAntworten.push({ index: i, antwort: el.value.trim() });
+                }
+
+                if(!allgAntwort.trim() && einzelAntworten.length === 0) {
+                    alert('Bitte gib mindestens eine Antwort ein.');
+                    return;
+                }
+
+                // Antworten als Kommentare speichern
+                var antwortText = '';
+                if(einzelAntworten.length > 0) {
+                    antwortText = einzelAntworten.map(function(a) { return 'Antwort: ' + a.antwort; }).join('\n');
+                }
+                if(allgAntwort.trim()) {
+                    antwortText += (antwortText ? '\n\n' : '') + allgAntwort.trim();
+                }
+
+                await sb.from('dev_kommentare').insert({
+                    submission_id: subId,
+                    user_id: sbUser.id,
+                    typ: 'antwort',
+                    inhalt: antwortText
+                });
+
+                // KI-Rückfragen als beantwortet markieren (in der KI-Analyse)
+                if(einzelAntworten.length > 0) {
+                    var kiResp = await sb.from('dev_ki_analysen').select('id, rueckfragen')
+                        .eq('submission_id', subId).order('version', {ascending:false}).limit(1);
+                    if(kiResp.data && kiResp.data[0]) {
+                        var rfragen = kiResp.data[0].rueckfragen || [];
+                        einzelAntworten.forEach(function(a) {
+                            if(rfragen[a.index]) {
+                                rfragen[a.index].beantwortet = true;
+                                rfragen[a.index].antwort = a.antwort;
+                            }
+                        });
+                        await sb.from('dev_ki_analysen').update({ rueckfragen: rfragen }).eq('id', kiResp.data[0].id);
+                    }
+                }
+
+                // KI neu analysieren lassen (mit Kontext der Antworten)
+                var statusEl = document.getElementById('devDetailContent');
+                if(statusEl) {
+                    var loadingDiv = document.createElement('div');
+                    loadingDiv.className = 'fixed bottom-4 right-4 bg-purple-600 text-white px-4 py-3 rounded-lg shadow-lg z-[60] animate-pulse';
+                    loadingDiv.id = 'devReanalyseLoading';
+                    loadingDiv.textContent = '🤖 KI analysiert erneut...';
+                    document.body.appendChild(loadingDiv);
+                }
+
+                try {
+                    await sb.functions.invoke('dev-ki-analyse', {
+                        body: { submission_id: subId, mode: 'reanalyse' }
+                    });
+                } catch(kiErr) {
+                    console.warn('KI-Re-Analyse Fehler:', kiErr);
+                    // Fallback: Status manuell auf im_ideenboard setzen
+                    await sb.from('dev_submissions').update({ status: 'im_ideenboard' }).eq('id', subId);
+                }
+
+                // Loading entfernen
+                var loadEl = document.getElementById('devReanalyseLoading');
+                if(loadEl) loadEl.remove();
+
+                // Detail neu laden
+                openDevDetail(subId);
+                renderDevPipeline();
+            } catch(err) {
+                alert('Fehler: ' + (err.message||err));
+                var loadEl = document.getElementById('devReanalyseLoading');
+                if(loadEl) loadEl.remove();
+            }
+        }
+
+        // HQ-Entscheidung aus dem Detail-Modal (inkl. "Freigabe mit Änderungen")
+        async function devHQDecisionFromDetail(subId, ergebnis) {
+            var kommentar = '';
+            var aenderungswuensche = '';
+
+            if(ergebnis === 'freigabe_mit_aenderungen') {
+                aenderungswuensche = prompt('Welche Änderungen sollen am Konzept vorgenommen werden?');
+                if(!aenderungswuensche) return;
+                kommentar = prompt('Optionaler Kommentar zur Freigabe:') || '';
+            } else if(ergebnis === 'rueckfragen') {
+                kommentar = prompt('Welche Rückfragen hast du?');
+                if(!kommentar) return;
+            } else if(ergebnis === 'ablehnung') {
+                kommentar = prompt('Begründung für die Ablehnung:');
+                if(!kommentar) return;
+            }
+
+            var statusMap = {
+                freigabe: 'freigegeben',
+                freigabe_mit_aenderungen: 'freigegeben',
+                rueckfragen: 'hq_rueckfragen',
+                ablehnung: 'abgelehnt',
+                spaeter: 'geparkt'
+            };
+
+            try {
+                // Entscheidung speichern
+                await sb.from('dev_entscheidungen').insert({
+                    submission_id: subId,
+                    entscheider_id: sbUser.id,
+                    ergebnis: ergebnis,
+                    kommentar: kommentar || null,
+                    aenderungswuensche: aenderungswuensche || null
+                });
+
+                // Kommentar
+                if(kommentar) {
+                    await sb.from('dev_kommentare').insert({
+                        submission_id: subId,
+                        user_id: sbUser.id,
+                        typ: ergebnis === 'rueckfragen' ? 'rueckfrage' : 'kommentar',
+                        inhalt: kommentar
+                    });
+                }
+
+                // Bei "Freigabe mit Änderungen": KI Konzept überarbeiten lassen
+                if(ergebnis === 'freigabe_mit_aenderungen') {
+                    await sb.from('dev_kommentare').insert({
+                        submission_id: subId,
+                        user_id: sbUser.id,
+                        typ: 'kommentar',
+                        inhalt: '✏️ Änderungswünsche: ' + aenderungswuensche
+                    });
+
+                    // Status temporär setzen, dann KI-Update starten
+                    await sb.from('dev_submissions').update({
+                        status: 'ki_pruefung',
+                        hq_entschieden_at: new Date().toISOString()
+                    }).eq('id', subId);
+
+                    var loadingDiv = document.createElement('div');
+                    loadingDiv.className = 'fixed bottom-4 right-4 bg-purple-600 text-white px-4 py-3 rounded-lg shadow-lg z-[60] animate-pulse';
+                    loadingDiv.id = 'devReanalyseLoading';
+                    loadingDiv.textContent = '🤖 KI überarbeitet Konzept...';
+                    document.body.appendChild(loadingDiv);
+
+                    try {
+                        await sb.functions.invoke('dev-ki-analyse', {
+                            body: { submission_id: subId, mode: 'update_konzept' }
+                        });
+                    } catch(kiErr) {
+                        console.warn('KI-Konzept-Update Fehler:', kiErr);
+                        await sb.from('dev_submissions').update({ status: 'freigegeben' }).eq('id', subId);
+                    }
+
+                    var loadEl = document.getElementById('devReanalyseLoading');
+                    if(loadEl) loadEl.remove();
+                } else {
+                    // Normaler Status-Update
+                    var newStatus = statusMap[ergebnis] || 'im_ideenboard';
+                    var updates = { status: newStatus };
+                    if(ergebnis === 'freigabe') {
+                        updates.freigegeben_at = new Date().toISOString();
+                        updates.hq_entschieden_at = new Date().toISOString();
+                    }
+                    await sb.from('dev_submissions').update(updates).eq('id', subId);
+                }
+
+                openDevDetail(subId);
+                renderDevPipeline();
+            } catch(err) {
+                alert('Fehler: ' + (err.message||err));
+                var loadEl = document.getElementById('devReanalyseLoading');
+                if(loadEl) loadEl.remove();
+            }
+        }
+
+        // Kommentar schreiben
+        async function submitDevKommentar(subId) {
+            var input = document.getElementById('devKommentarInput');
+            if(!input || !input.value.trim()) return;
+            try {
+                await sb.from('dev_kommentare').insert({
+                    submission_id: subId,
+                    user_id: sbUser.id,
+                    typ: 'kommentar',
+                    inhalt: input.value.trim()
+                });
+                openDevDetail(subId);
+            } catch(err) { alert('Fehler: ' + (err.message||err)); }
+        }
+
+        function closeDevDetail() {
+            var modal = document.getElementById('devDetailModal');
+            if(modal) modal.classList.add('hidden');
         }
 
         // === HQ STANDORT-DATEN (Netzwerk-weite Kennzahlen) ===
