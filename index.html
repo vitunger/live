@@ -22996,10 +22996,14 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             einkauf: [{key:'sortiment',label:'Sortiment'},{key:'lieferanten',label:'Lieferanten'},{key:'zentralreg',label:'Zentralreg.'},{key:'ekStrategie',label:'Strategie'},{key:'ekWissen',label:'Wissen'}],
             controlling: [{key:'cockpit',label:'Cockpit'},{key:'bwa',label:'BWA-Analyse'},{key:'benchmark',label:'Benchmark'},{key:'planist',label:'Plan/Ist'},{key:'liquiditaet',label:'Liquidität'},{key:'ctrlWissen',label:'Wissen'}],
             allgemein: [{key:'uebersicht',label:'Übersicht'},{key:'jahresziele',label:'Jahresziele'},{key:'monatsplan',label:'Monatsplan'},{key:'journal',label:'Journal'},{key:'strategie',label:'Strategie'},{key:'wissen',label:'Wissen'}],
-            support: [{key:'tickets',label:'Tickets'},{key:'kontakte',label:'Kontakte'}]
+            support: [{key:'tickets',label:'Tickets'},{key:'kontakte',label:'Kontakte'}],
+            kommunikation: [{key:'chat',label:'Chat'},{key:'ankuendigungen',label:'Ankündigungen'},{key:'notifications',label:'Benachrichtigungen'}],
+            mitarbeiter: [{key:'team',label:'Team-Übersicht'},{key:'rollen',label:'Rollen'},{key:'einladungen',label:'Einladungen'}],
+            entwicklung: [{key:'ideen',label:'Ideen'},{key:'module',label:'Module'},{key:'releases',label:'Releases'},{key:'steuerung',label:'Steuerung'},{key:'featureflags',label:'Feature Flags'},{key:'system',label:'System'},{key:'nutzung',label:'Nutzung'}],
+            wissen: [{key:'artikel',label:'Artikel'},{key:'downloads',label:'Downloads'},{key:'schulungen',label:'Schulungen'}]
         };
         var MODULE_WIDGETS = {
-            startseite: [{key:'pipeline',label:'Pipeline'},{key:'success',label:'Verkaufserfolg'},{key:'termine',label:'Termine'},{key:'aufgaben',label:'Aufgaben'},{key:'marketing',label:'Marketing'},{key:'team',label:'Team'},{key:'controlling',label:'Controlling'},{key:'support',label:'Support'},{key:'wissen',label:'Wissen'},{key:'nachrichten',label:'Nachrichten'}]
+            startseite: [{key:'daily_focus',label:'Heute steuern'},{key:'health_score',label:'Health Score'},{key:'sales_momentum',label:'Sales Momentum'},{key:'bwa_deadline',label:'BWA-Deadline'},{key:'bwa_netzwerk',label:'BWA Netzwerk-Status'},{key:'kpi_feedback',label:'Monats-Feedback'},{key:'pipeline',label:'Pipeline'},{key:'success',label:'Verkaufserfolg'},{key:'termine',label:'Termine'},{key:'aufgaben',label:'Aufgaben'},{key:'marketing',label:'Marketing'},{key:'team',label:'Team'},{key:'controlling',label:'Controlling'},{key:'support',label:'Support'},{key:'wissen',label:'Wissen'},{key:'nachrichten',label:'Nachrichten'}]
         };
 
         // Persistent expanded state
@@ -23029,7 +23033,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                         lastKat = m.kategorie;
                         html += '<div class="px-5 py-2 bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider">' + (katLabels[m.kategorie]||m.kategorie) + '</div>';
                     }
-                    var icons = {startseite:'🏠',kalender:'📅',aufgaben:'📋',kommunikation:'💬',dashboards:'📊',allgemein:'🏢',verkauf:'📈',einkauf:'🛒',marketing:'📣',controlling:'📊',wissen:'📚',support:'🎫',ideenboard:'💡',shop:'🛍️',onboarding:'🎯',mitarbeiter:'👥',aktenschrank:'📁'};
+                    var icons = {startseite:'🏠',kalender:'📅',aufgaben:'📋',kommunikation:'💬',dashboards:'📊',allgemein:'🏢',verkauf:'📈',einkauf:'🛒',marketing:'📣',controlling:'📊',wissen:'📚',support:'🎫',ideenboard:'💡',shop:'🛍️',onboarding:'🎯',mitarbeiter:'👥',aktenschrank:'📁',entwicklung:'</>' ,spiritus:'📝'};
                     var hasTabs = MODULE_TABS[m.modul_key] && MODULE_TABS[m.modul_key].length > 0;
                     var hasWidgets = MODULE_WIDGETS[m.modul_key] && MODULE_WIDGETS[m.modul_key].length > 0;
                     var hasChildren = hasTabs || hasWidgets;
