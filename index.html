@@ -7465,6 +7465,7 @@
             _saveOrigState();
             // Switch to demo standort view
             currentRoles = ['inhaber'];
+            currentRole = 'inhaber';
             sbProfile = Object.assign({}, sbProfile, {
                 name: 'Demo Partner',
                 standort_id: '5a077c1a-5db2-4fde-949c-8e5e34dcd2c0'
@@ -7486,6 +7487,7 @@
                 if(roles.length === 0) roles = ['inhaber'];
 
                 currentRoles = roles;
+                currentRole = roles[0] || 'inhaber';
                 sbProfile = Object.assign({}, sbProfile, {
                     id: user.id,
                     name: user.name,
@@ -7541,7 +7543,10 @@
 
         function _restoreOrigState() {
             if(_impOrigProfile) sbProfile = _impOrigProfile;
-            if(_impOrigRoles) currentRoles = _impOrigRoles;
+            if(_impOrigRoles) {
+                currentRoles = _impOrigRoles;
+                currentRole = _impOrigRoles.indexOf('hq') >= 0 ? 'hq' : _impOrigRoles[0] || 'inhaber';
+            }
             if(_impOrigStandort !== null) currentStandortId = _impOrigStandort;
             if(_impOrigSession) Object.assign(SESSION, _impOrigSession);
         }
