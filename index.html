@@ -30198,12 +30198,12 @@ console.log('[3-Ebenen] Demo-System with password protection loaded.');
 // ═══════════════════════════════════════
 var hqFbCurrentFilter = 'alle';
 
-window.showIdeenTab = function(tab) {
+window.showHqFeedbackTab = function(tab) {
     document.querySelectorAll('.ideen-tab').forEach(function(b){
         var t = b.getAttribute('data-itab');
         b.className = 'ideen-tab whitespace-nowrap py-3 px-1 border-b-2 font-semibold text-sm ' + (t===tab ? 'border-vit-orange text-vit-orange' : 'border-transparent text-gray-500');
     });
-    document.querySelectorAll('.ideen-tab-content').forEach(function(c){ c.style.display = 'none'; });
+    document.querySelectorAll('.hq-fb-tab-content').forEach(function(c){ c.style.display = 'none'; });
     var el = document.getElementById(tab === 'ideen' ? 'ideenTabIdeen' : 'ideenTabFeedback');
     if(el) el.style.display = 'block';
     if(tab === 'feedback') renderHqFeedbackInbox();
