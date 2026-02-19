@@ -30713,7 +30713,14 @@ window.switchWissenTyp = function(typ) {
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+/* iPhone Notch/Dynamic Island: push header below safe area */
 @media (max-width: 768px) {
+    #mainApp > nav {
+        padding-top: env(safe-area-inset-top, 0px);
+    }
+    .sidebar-container {
+        padding-top: env(safe-area-inset-top, 0px);
+    }
     #pwaInstallBanner { bottom: 80px !important; }
 }
 </style>
