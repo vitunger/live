@@ -30735,6 +30735,9 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     // ── Init: show widget after login ──
     var fbInitInterval = setInterval(function(){
         if(typeof sbUser !== 'undefined' && sbUser && sbUser.id) {
+            // Don't show on login screen
+            var loginEl = document.getElementById('loginScreen');
+            if(loginEl && loginEl.style.display !== 'none') return;
             clearInterval(fbInitInterval);
             var w = document.getElementById('fbWidget');
             if(w) w.style.display = 'block';
