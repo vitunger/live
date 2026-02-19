@@ -6684,7 +6684,7 @@
 
         // Prüft ob der aktuelle User Zugriff auf eine View hat
         function hasAccess(viewName) {
-            if(currentRole === 'hq') return viewName.indexOf('hq')===0 || viewName==='kalender' || viewName==='todo' || viewName==='kommunikation' || viewName==='devStatus';
+            if(currentRole === 'hq') return viewName.indexOf('hq')===0 || viewName==='kalender' || viewName==='todo' || viewName==='kommunikation' || viewName==='devStatus' || viewName==='ideenboard';
             // Extern level: only allow specific views
             if(SESSION.account_level === 'extern') {
                 var externAllowed = ['externHome','onboarding','externWissen','wissen','kommunikation','support','notifications'];
@@ -13232,8 +13232,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             // Show/hide recording areas
             var audioArea = document.getElementById('devAudioRecordArea');
             var screenArea = document.getElementById('devScreenRecordArea');
-            if(audioArea) audioArea.style.display = typ === 'audio' ? '' : 'none';
-            if(screenArea) screenArea.style.display = typ === 'video' ? '' : 'none';
+            if(audioArea) { if(typ === 'audio') audioArea.classList.remove('hidden'); else audioArea.classList.add('hidden'); }
+            if(screenArea) { if(typ === 'video') screenArea.classList.remove('hidden'); else screenArea.classList.add('hidden'); }
         }
 
         // ---- AUDIO RECORDING ----
