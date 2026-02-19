@@ -8088,7 +8088,7 @@
             Object.keys(toolViews).forEach(function(viewName){
                 var btns = document.querySelectorAll('[onclick*=\"showView(\\\''+viewName+'\\\')\"]');
                 btns.forEach(function(btn){
-                    if(isHQ) { btn.classList.add('hidden'); return; }
+                    if(btn.closest('#hqMenu')) return; if(isHQ) { btn.classList.add('hidden'); return; }
                     var perms = toolViews[viewName];
                     var allowed = perms.indexOf('alle')>=0;
                     if(!allowed) perms.forEach(function(r){ if(hasRole(r)) allowed=true; });
