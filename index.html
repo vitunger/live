@@ -14114,35 +14114,39 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     h += '</div>';
                 }
 
-                // Konzept (nur HQ)
+                // Konzept (nur HQ) - prominent display
                 var isHQKonzept = (sbRollen||[]).indexOf('hq') !== -1;
                 if(isHQKonzept && konzept) {
-                    h += '<div class="border border-indigo-200 rounded-lg p-4 mb-4 bg-indigo-50/30">';
-                    h += '<h4 class="text-xs font-bold text-indigo-600 uppercase mb-2">📋 Entwicklungskonzept (v'+konzept.version+')</h4>';
+                    h += '<div class="border-2 border-indigo-300 rounded-lg mb-4 bg-indigo-50/30 overflow-hidden">';
+                    h += '<div class="bg-indigo-100 px-4 py-3 cursor-pointer flex items-center justify-between" onclick="var el=document.getElementById(\'devKonzeptBody\');el.style.display=el.style.display===\'none\'?\'block\':\'none\'">';
+                    h += '<h4 class="text-sm font-bold text-indigo-700">📋 KI-Entwicklungskonzept (v'+konzept.version+')</h4>';
+                    h += '<span class="text-indigo-400 text-xs">▼ auf/zuklappen</span>';
+                    h += '</div>';
+                    h += '<div id="devKonzeptBody" class="p-4">';
                     var sections = [
-                        {label:'Problem', val:konzept.problem_beschreibung},
-                        {label:'Ziel', val:konzept.ziel},
-                        {label:'Nutzen', val:konzept.nutzen},
-                        {label:'Scope (In)', val:konzept.scope_in},
-                        {label:'Scope (Out)', val:konzept.scope_out},
-                        {label:'UI/Frontend', val:konzept.loesungsvorschlag_ui},
-                        {label:'Backend', val:konzept.loesungsvorschlag_backend},
-                        {label:'Datenbank', val:konzept.loesungsvorschlag_db},
-                        {label:'Testplan', val:konzept.testplan},
-                        {label:'Rollout', val:konzept.rollout_strategie},
-                        {label:'Definition of Done', val:konzept.definition_of_done}
+                        {label:'🎯 Problem', val:konzept.problem_beschreibung},
+                        {label:'💡 Ziel', val:konzept.ziel},
+                        {label:'✅ Nutzen', val:konzept.nutzen},
+                        {label:'📦 Scope (In)', val:konzept.scope_in},
+                        {label:'🚫 Scope (Out)', val:konzept.scope_out},
+                        {label:'🖥️ UI/Frontend', val:konzept.loesungsvorschlag_ui},
+                        {label:'⚙️ Backend', val:konzept.loesungsvorschlag_backend},
+                        {label:'🗄️ Datenbank', val:konzept.loesungsvorschlag_db},
+                        {label:'🧪 Testplan', val:konzept.testplan},
+                        {label:'🚀 Rollout', val:konzept.rollout_strategie},
+                        {label:'✔️ Definition of Done', val:konzept.definition_of_done}
                     ];
                     sections.forEach(function(sec) {
-                        if(sec.val) h += '<div class="mb-2"><span class="text-[10px] font-bold text-gray-500 uppercase">'+sec.label+'</span><p class="text-xs text-gray-700">'+sec.val+'</p></div>';
+                        if(sec.val) h += '<div class="mb-3"><span class="text-xs font-bold text-indigo-600 uppercase">'+sec.label+'</span><p class="text-sm text-gray-700 mt-0.5 whitespace-pre-line">'+sec.val+'</p></div>';
                     });
                     if(konzept.akzeptanzkriterien && konzept.akzeptanzkriterien.length > 0) {
-                        h += '<div class="mb-2"><span class="text-[10px] font-bold text-gray-500 uppercase">Akzeptanzkriterien</span>';
+                        h += '<div class="mb-2"><span class="text-xs font-bold text-indigo-600 uppercase">📋 Akzeptanzkriterien</span>';
                         konzept.akzeptanzkriterien.forEach(function(a) {
-                            h += '<div class="text-xs text-gray-700">☐ '+(a.beschreibung||a)+'</div>';
+                            h += '<div class="text-sm text-gray-700 mt-0.5">☐ '+(a.beschreibung||a)+'</div>';
                         });
                         h += '</div>';
                     }
-                    h += '</div>';
+                    h += '</div></div>';
                 }
 
                 // Entscheidungen (nur HQ)
