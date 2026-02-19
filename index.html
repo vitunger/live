@@ -18967,13 +18967,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
 
         // === HQ KOMMUNIKATION ===
-        var hqAnnouncements = [
-            {id:1,title:'Fruehjahrs-Aktion 2026 – Materialien verfuegbar',date:'2026-02-12',author:'Lisa Zentrale',priority:'hoch',target:'alle',body:'Liebe Partner, die Materialien fuer die Fruehjahrs-Aktion stehen ab sofort im Content-Bereich bereit. Bitte bis 01.03. im Laden platzieren.',read:18,total:21},
-            {id:2,title:'Neue Einkaufsrichtlinie Q1/2026',date:'2026-02-10',author:'Thomas HQ',priority:'hoch',target:'alle',body:'Aktualisierte Margen-Empfehlung und Vororder-Deadlines fuer Q1 2026.',read:15,total:21},
-            {id:3,title:'Schulung: Bosch Smart System – 25.02.',date:'2026-02-08',author:'Lisa Zentrale',priority:'mittel',target:'alle',body:'Online-Schulung via Teams. Link wird per Mail versendet. Teilnahme empfohlen fuer alle Werkstatt-MA.',read:12,total:21},
-            {id:4,title:'Osteraktion: Fruehbucher-Rabatt auf E-MTBs',date:'2026-02-05',author:'Marketing HQ',priority:'mittel',target:'alle',body:'10% Fruehbucher-Rabatt auf alle Orbea Rise und Wild. Gilt 01.03.–15.04.',read:21,total:21},
-            {id:5,title:'Region Sued: Lagerbestand-Inventur bis 01.03.',date:'2026-02-03',author:'Thomas HQ',priority:'niedrig',target:'Region Süd',body:'Bitte Inventur durchfuehren und Ergebnisse in den Aktenschrank hochladen.',read:6,total:8}
-        ];
+        var hqAnnouncements = [];
         var hqForumTopics = [];
         var currentHqKommTab='announce';
         function showHqKommTab(tab){
@@ -19073,14 +19067,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         // === HQ KAMPAGNEN ===
-        var hqKampagnen = [
-            {id:1,name:'Fruehjahrs-Aktion 2026',type:'saisonal',start:'2026-03-01',end:'2026-04-15',status:'aktiv',standorte:21,umgesetzt:14,budget:25000,desc:'Fokus auf E-Bikes und Zubehoer. POS-Material + Online-Banner.'},
-            {id:2,name:'Orbea Rise Launch Event',type:'produkt',start:'2026-02-20',end:'2026-03-10',status:'aktiv',standorte:21,umgesetzt:8,budget:15000,desc:'Produktlaunch neues Orbea Rise 2026. Probefahrt-Events an allen Standorten.'},
-            {id:3,name:'Jobrad-Fruehjahr B2B',type:'event',start:'2026-03-15',end:'2026-05-31',status:'geplant',standorte:12,umgesetzt:0,budget:10000,desc:'B2B-Kampagne fuer Firmenkunden. Flyer + Akquise-Toolbox.'},
-            {id:4,name:'Social Media Push #BikeLife',type:'social',start:'2026-02-01',end:'2026-02-28',status:'aktiv',standorte:21,umgesetzt:16,budget:5000,desc:'Netzwerk-weiter Social Media Push mit Hashtag-Kampagne.'},
-            {id:5,name:'Black Friday Bikes',type:'saisonal',start:'2025-11-25',end:'2025-12-01',status:'beendet',standorte:21,umgesetzt:21,budget:20000,desc:'Abgeschlossene Saisonkampagne.'},
-            {id:6,name:'Weihnachts-Zubehoer',type:'saisonal',start:'2025-12-01',end:'2025-12-24',status:'beendet',standorte:21,umgesetzt:19,budget:8000,desc:'Zubehoer-Fokus im Weihnachtsgeschaeft.'}
-        ];
+        var hqKampagnen = [];
         function renderHqKampagnen(){
             var aktiv=hqKampagnen.filter(function(k){return k.status==='aktiv';}).length;
             var geplant=hqKampagnen.filter(function(k){return k.status==='geplant';}).length;
