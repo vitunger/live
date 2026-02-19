@@ -7458,6 +7458,7 @@
         var _impOrigRoles = null;
         var _impOrigStandort = null;
         var _impOrigSession = null;
+        var _impOrigSbStandort = null;
         var _impActive = false;
 
         function impersonateDemo() {
@@ -7466,10 +7467,13 @@
             // Switch to demo standort view
             currentRoles = ['inhaber'];
             currentRole = 'inhaber';
+            currentStandortId = '5a077c1a-5db2-4fde-949c-8e5e34dcd2c0';
             sbProfile = Object.assign({}, sbProfile, {
                 name: 'Demo Partner',
-                standort_id: '5a077c1a-5db2-4fde-949c-8e5e34dcd2c0'
+                standort_id: '5a077c1a-5db2-4fde-949c-8e5e34dcd2c0',
+                is_hq: false
             });
+            sbStandort = { id: '5a077c1a-5db2-4fde-949c-8e5e34dcd2c0', name: 'Demo-Standort' };
             SESSION.account_level = 'standort';
             _activateImpersonation('👁️ Demo-Standort');
         }
@@ -7488,14 +7492,16 @@
 
                 currentRoles = roles;
                 currentRole = roles[0] || 'inhaber';
+                currentStandortId = user.standort_id;
                 sbProfile = Object.assign({}, sbProfile, {
                     id: user.id,
                     name: user.name,
                     email: user.email,
-                    standort_id: user.standort_id
+                    standort_id: user.standort_id,
+                    is_hq: false
                 });
+                sbStandort = user.standorte ? { id: user.standort_id, name: user.standorte.name } : sbStandort;
                 SESSION.account_level = 'standort';
-                currentStandortId = user.standort_id;
                 var label = '🔄 ' + user.name + (user.standorte ? ' (' + user.standorte.name + ')' : '');
                 _activateImpersonation(label);
             } catch(err) {
@@ -7509,6 +7515,7 @@
                 _impOrigProfile = Object.assign({}, sbProfile);
                 _impOrigRoles = currentRoles.slice();
                 _impOrigStandort = typeof currentStandortId !== 'undefined' ? currentStandortId : null;
+                _impOrigSbStandort = sbStandort ? Object.assign({}, sbStandort) : null;
                 _impOrigSession = Object.assign({}, SESSION);
             }
         }
@@ -7548,7 +7555,9 @@
                 currentRole = _impOrigRoles.indexOf('hq') >= 0 ? 'hq' : _impOrigRoles[0] || 'inhaber';
             }
             if(_impOrigStandort !== null) currentStandortId = _impOrigStandort;
+            if(_impOrigSbStandort) sbStandort = _impOrigSbStandort;
             if(_impOrigSession) Object.assign(SESSION, _impOrigSession);
+            if(sbProfile) sbProfile.is_hq = currentRoles.indexOf('hq') >= 0;
         }
 
         function quickLogin(email) {
