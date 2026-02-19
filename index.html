@@ -13543,8 +13543,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         function renderDevAlle() {
             var c = document.getElementById('ideenTabAlle');
             if(!c) return;
-            // Show all except abgelehnt/geparkt unless explicitly asked
-            var visible = devSubmissions.filter(function(s) { return s.status !== 'abgelehnt' && s.status !== 'geparkt'; });
+            var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
+            // HQ sees everything, partners don't see abgelehnt/geparkt
+            var visible = isHQ ? devSubmissions : devSubmissions.filter(function(s) { return s.status !== 'abgelehnt' && s.status !== 'geparkt'; });
             if(visible.length === 0) {
                 c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-3">🌐</p><p>Noch keine Ideen im System.</p></div>';
                 return;
