@@ -15396,8 +15396,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     await sb.from('dev_submissions').update(updates).eq('id', subId);
                 }
 
-                openDevDetail(subId);
-                renderDevPipeline();
+                closeDevDetail();
+                renderDevPipeline(); if(typeof renderEntwIdeen==="function") renderEntwIdeen();
             } catch(err) {
                 alert('Fehler: ' + (err.message||err));
                 var loadEl = document.getElementById('devReanalyseLoading');
