@@ -578,6 +578,30 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="vit:bikes Portal">
 
+    <!-- Sentry Error Tracking -->
+    <script src="https://browser.sentry-cdn.com/8.53.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
+    <script>
+        if(typeof Sentry !== 'undefined') {
+            Sentry.init({
+                dsn: "https://cc19df181b02b2b54c9472b9e61857be@o4510913005879296.ingest.de.sentry.io/4510913053524048",
+                environment: window.location.hostname === 'localhost' ? 'development' : 'production',
+                tracesSampleRate: 0.2,
+                replaysOnErrorSampleRate: 0.5,
+                beforeSend: function(event) {
+                    if(event.request && event.request.headers) {
+                        delete event.request.headers['Authorization'];
+                    }
+                    return event;
+                },
+                ignoreErrors: [
+                    'ResizeObserver loop',
+                    'Network request failed',
+                    'Load failed',
+                    'Failed to fetch'
+                ]
+            });
+        }
+    </script>
 </head>
 <body class="bg-gray-50">
 
@@ -7004,6 +7028,10 @@
             if(hqDateEl) hqDateEl.textContent = 'Willkommen zurueck · ' + dateStr;
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
+            // Sentry User Context
+            if(typeof Sentry !== 'undefined') {
+                try { Sentry.setUser({ id: currentUserId, email: currentUserEmail, username: currentUserName }); } catch(e){}
+            }
             try { updateUIForRole(); updatePremiumFeatures(); } catch(e) { console.warn(e); }
             // Apply saved language
             if(currentLang !== 'de') { setTimeout(function(){ switchLang(currentLang); }, 500); }
@@ -7169,6 +7197,7 @@
 
         async function handleLogout() {
             await sb.auth.signOut();
+            if(typeof Sentry !== 'undefined') { try { Sentry.setUser(null); } catch(e){} }
             sbUser = null; sbProfile = null; sbRollen = []; sbStandort = null;
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('mainApp').style.display = 'none';
@@ -20474,6 +20503,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var filter = currentKzMaFilter || 'all';
                 var list = users.filter(function(u){
                     var st = u.status || 'aktiv';
+                    // Gesperrte User nur zeigen wenn explizit gefiltert
+                    if(st === 'gesperrt' && filter !== 'gesperrt') return false;
                     if(filter!=='all' && st!==filter) return false;
                     var stdName = u.standorte ? u.standorte.name : 'HQ';
                     if(stdFilter!=='all' && stdName!==stdFilter) return false;
@@ -21536,24 +21567,17 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         // === MITARBEITER LÖSCHEN ===
         async function deleteMa(userId, userName) {
-            if(!confirm('Mitarbeiter "'+userName+'" wirklich löschen?\n\nDies löscht den Account komplett (Auth + Profil + Rollen).')) return;
+            if(!confirm('Mitarbeiter "'+userName+'" wirklich deaktivieren?\n\nDer Account wird gesperrt und der Mitarbeiter kann sich nicht mehr anmelden.')) return;
             try {
-                // 1. Rollen löschen
+                // 1. Rollen entfernen
                 await sb.from('user_rollen').delete().eq('user_id', userId);
-                // 2. User-Profil löschen
-                await sb.from('users').delete().eq('id', userId);
-                // 3. Auth-User löschen (via DB-Funktion)
-                await sb.rpc('delete_auth_user', { target_user_id: userId });
-                alert('\u2705 '+userName+' wurde gelöscht.');
+                // 2. Status auf gesperrt setzen (kein Hard-Delete wegen 40+ FK-Referenzen)
+                var upd = await sb.from('users').update({ status: 'gesperrt' }).eq('id', userId);
+                if(upd.error) throw upd.error;
+                showToast(userName+' wurde deaktiviert.', 'success');
                 renderKzMitarbeiter();
             } catch(err) {
-                // Auch bei Fehler beim Auth-Löschen: Profil ist bereits weg
-                if(err.message && err.message.includes('delete_auth_user')) {
-                    alert('\u2705 '+userName+' Profil gelöscht.\n\u26a0\ufe0f Auth-User muss manuell im Supabase Dashboard entfernt werden.');
-                    renderKzMitarbeiter();
-                } else {
-                    alert('Fehler: '+(err.message||err));
-                }
+                alert('Fehler: '+(err.message||err));
             }
         }
 
