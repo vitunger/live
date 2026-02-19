@@ -2947,8 +2947,7 @@
                             </select>
                             <select id="entwFilterStatus" onchange="renderEntwIdeen()" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5">
                                 <option value="alle">Alle Status</option>
-                                <option value="neu">Neu / In Prüfung</option>
-                                <option value="board">Im Ideenboard</option>
+                                <option value="neu">In Prüfung</option>
                                 <option value="dev">In Entwicklung</option>
                                 <option value="done">Umgesetzt</option>
                             </select>
@@ -2968,10 +2967,9 @@
                             <span class="text-xs text-gray-400 ml-auto" id="entwIdeenCount"></span>
                         </div>
                         <!-- Stats -->
-                        <div id="entwStatsBar" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+                        <div id="entwStatsBar" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                             <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-gray-800" id="entwStatTotal">0</p><p class="text-[10px] text-gray-500">Gesamt</p></div>
-                            <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-blue-600" id="entwStatNeu">0</p><p class="text-[10px] text-gray-500">Neu / In Prüfung</p></div>
-                            <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-purple-600" id="entwStatBoard">0</p><p class="text-[10px] text-gray-500">Im Ideenboard</p></div>
+                            <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-blue-600" id="entwStatNeu">0</p><p class="text-[10px] text-gray-500">In Prüfung</p></div>
                             <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-yellow-600" id="entwStatDev">0</p><p class="text-[10px] text-gray-500">In Entwicklung</p></div>
                             <div class="vit-card p-3 text-center"><p class="text-xl font-bold text-green-600" id="entwStatDone">0</p><p class="text-[10px] text-gray-500">Ausgerollt</p></div>
                         </div>
@@ -14220,13 +14218,11 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             }
             // Update stats
             var total = devSubmissions.length;
-            var neu = devSubmissions.filter(function(s){ return ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt'].indexOf(s.status) !== -1; }).length;
-            var board = devSubmissions.filter(function(s){ return ['im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1; }).length;
+            var neu = devSubmissions.filter(function(s){ return ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1; }).length;
             var dev = devSubmissions.filter(function(s){ return ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant'].indexOf(s.status) !== -1; }).length;
             var done = devSubmissions.filter(function(s){ return s.status === 'ausgerollt'; }).length;
             var e1=document.getElementById('entwStatTotal');if(e1)e1.textContent=total;
             var e2=document.getElementById('entwStatNeu');if(e2)e2.textContent=neu;
-            var e3=document.getElementById('entwStatBoard');if(e3)e3.textContent=board;
             var e4=document.getElementById('entwStatDev');if(e4)e4.textContent=dev;
             var e5=document.getElementById('entwStatDone');if(e5)e5.textContent=done;
         }
@@ -14247,8 +14243,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
             var items = devSubmissions.filter(function(s) {
                 if(scope !== 'alle' && s.scope !== scope) return false;
-                if(status === 'neu' && ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt'].indexOf(s.status) === -1) return false;
-                if(status === 'board' && ['im_ideenboard','hq_rueckfragen'].indexOf(s.status) === -1) return false;
+                if(status === 'neu' && ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) === -1) return false;
                 if(status === 'dev' && ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant'].indexOf(s.status) === -1) return false;
                 if(status === 'done' && s.status !== 'ausgerollt') return false;
                 if(kat !== 'alle' && s.kategorie !== kat) return false;
@@ -14301,18 +14296,15 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         async function renderEntwReleases() {
             var c = document.getElementById('entwReleasesContent');
             if(!c) return;
-            // Use the existing hardcoded RELEASE_UPDATES renderer
             if(typeof RELEASE_UPDATES !== 'undefined' && RELEASE_UPDATES.length > 0) {
-                // Temporarily point renderReleaseUpdates to our container
+                // Temporarily give our container the ID that renderReleaseUpdates expects
                 var origEl = document.getElementById('releaseUpdatesContent');
-                var tempDiv = document.createElement('div');
-                tempDiv.id = 'releaseUpdatesContent';
-                tempDiv.style.display = 'none';
-                document.body.appendChild(tempDiv);
+                var origId = origEl ? origEl.id : null;
+                if(origEl) origEl.id = '_releaseUpdatesOrig';
+                c.id = 'releaseUpdatesContent';
                 renderReleaseUpdates();
-                c.innerHTML = tempDiv.innerHTML;
-                tempDiv.remove();
-                // Restore original if exists
+                c.id = 'entwReleasesContent';
+                if(origEl) origEl.id = 'releaseUpdatesContent';
             } else {
                 c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-2">🚀</p><p>Noch keine Releases vorhanden</p></div>';
             }
