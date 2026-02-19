@@ -6130,6 +6130,7 @@
                     <!-- Tab-Navigation -->
                     <div class="flex space-x-1 mb-6 border-b border-gray-200">
                         <button onclick="showSettingsTab('modulstatus')" class="settings-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-vit-orange text-vit-orange" data-tab="modulstatus">🔧 Modul-Status</button>
+                        <button onclick="showSettingsTab('demo')" class="settings-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="demo">🎭 Demo-Modus</button>
                         <button onclick="showSettingsTab('rechte')" class="settings-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="rechte">🔐 Rollen & Rechte</button>
                     </div>
 
@@ -6163,6 +6164,26 @@
                                 <hr class="my-3 border-gray-200">
                                 <p><strong>Tabs & Widgets:</strong> Klicke auf ▶ bei einem Modul, um einzelne Tabs und Dashboard-Widgets zu konfigurieren. Jeder Tab/Widget kann separat auf Aktiv, Demo oder Deaktiviert gesetzt werden.</p>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB DEMO: Demo-Modus Konfiguration -->
+                    <div id="settingsTabDemo" class="settings-tab-content" style="display:none;">
+                        <div class="vit-card p-5 mb-6 border-l-4 border-orange-400">
+                            <h3 class="font-bold text-gray-800 mb-2">🎭 Demo-Modus Konfiguration</h3>
+                            <p class="text-sm text-gray-600 mb-3">Steuere welche Module im Demo-Modus (Login-Demo auf der Startseite) sichtbar und nutzbar sind. Diese Einstellungen sind unabhängig vom normalen Modul-Status.</p>
+                            <p class="text-xs text-gray-400">Demo-User sehen nur die hier konfigurierten Status. „Aktiv" = mit Demo-Daten nutzbar, „Demo" = sichtbar mit Demo-Banner, „Aus" = nicht sichtbar.</p>
+                        </div>
+                        <div class="vit-card overflow-hidden">
+                            <div class="p-4 border-b bg-gray-50 flex items-center justify-between">
+                                <h2 class="font-bold text-gray-800">Demo Module</h2>
+                                <div class="flex items-center space-x-3 text-xs text-gray-500">
+                                    <button onclick="setAllDemoStatus('aktiv')" class="px-2 py-1 rounded bg-green-100 text-green-700 hover:bg-green-200 font-semibold transition">Alle Aktiv</button>
+                                    <button onclick="setAllDemoStatus('demo')" class="px-2 py-1 rounded bg-orange-100 text-orange-700 hover:bg-orange-200 font-semibold transition">Alle Demo</button>
+                                    <button onclick="setAllDemoStatus('deaktiviert')" class="px-2 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 font-semibold transition">Alle Aus</button>
+                                </div>
+                            </div>
+                            <div id="demoModulStatusList" class="divide-y divide-gray-100"></div>
                         </div>
                     </div>
 
@@ -7036,12 +7057,13 @@
         // Modul-Status aus Supabase laden und auf Sidebar anwenden
         async function loadModulStatus() {
             try {
-                var resp = await sb.from('modul_status').select('modul_key, status, config').order('reihenfolge');
+                var resp = await sb.from('modul_status').select('modul_key, status, demo_status, config').order('reihenfolge');
                 if(resp.error) throw resp.error;
                 sbModulStatus = {};
                 sbModulConfig = {};
+                var useDemo = isDemoMode || (sbProfile && (sbProfile.status === 'demo' || sbProfile.status === 'demo_active'));
                 (resp.data||[]).forEach(function(m) { 
-                    sbModulStatus[m.modul_key] = m.status;
+                    sbModulStatus[m.modul_key] = useDemo ? (m.demo_status || 'demo') : m.status;
                     sbModulConfig[m.modul_key] = m.config || {};
                 });
                 applyModulStatus();
@@ -22987,6 +23009,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             document.querySelectorAll('.settings-tab-content').forEach(function(c){ c.style.display = 'none'; });
             var content = document.getElementById('settingsTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
             if(content) content.style.display = '';
+            // Load tab-specific data
+            if(tab === 'demo') renderDemoModulList();
         }
 
         // Tab/Widget-Konfiguration pro Modul
@@ -23111,6 +23135,56 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         function toggleModuleExpand(key) {
             expandedModules[key] = !expandedModules[key];
             renderModulStatusList();
+        }
+
+        // ═══ DEMO-MODUS KONFIGURATION ═══
+        async function renderDemoModulList() {
+            var container = document.getElementById('demoModulStatusList');
+            if(!container) return;
+            try {
+                var resp = await sb.from('modul_status').select('id, modul_key, modul_name, kategorie, demo_status').order('reihenfolge');
+                if(resp.error) throw resp.error;
+                var modules = resp.data || [];
+                var icons = {startseite:'🏠',kalender:'📅',aufgaben:'📋',kommunikation:'💬',dashboards:'📊',allgemein:'🏢',verkauf:'📈',einkauf:'🛒',marketing:'📣',controlling:'📊',wissen:'📚',support:'🎫',ideenboard:'💡',shop:'🛍️',onboarding:'🎯',mitarbeiter:'👥',aktenschrank:'📁',entwicklung:'</>',spiritus:'📝'};
+                var katLabels = {basis:'Basis',dashboards:'Dashboards',fachbereiche:'Fachbereiche',tools:'Tools',hq:'HQ'};
+                var lastKat = '';
+                var html = '';
+                modules.forEach(function(m) {
+                    if(m.kategorie !== lastKat) {
+                        lastKat = m.kategorie;
+                        html += '<div class="px-5 py-2 bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider">' + (katLabels[m.kategorie]||m.kategorie) + '</div>';
+                    }
+                    var ds = m.demo_status || 'demo';
+                    html += '<div class="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition">';
+                    html += '<div class="flex items-center space-x-3"><span class="text-xl">' + (icons[m.modul_key]||'📦') + '</span>';
+                    html += '<span class="font-semibold text-sm text-gray-800">' + m.modul_name + '</span></div>';
+                    var btnBase = 'px-2.5 py-1.5 rounded-md text-[11px] font-semibold transition cursor-pointer';
+                    html += '<div class="flex items-center space-x-1 bg-gray-100 rounded-lg p-0.5">';
+                    html += '<button onclick="setDemoModulStatus(\'' + m.id + '\',\'' + m.modul_key + '\',\'aktiv\')" class="' + btnBase + ' ' + (ds==='aktiv'?'bg-green-500 text-white shadow-sm':'text-gray-500 hover:bg-gray-200') + '">✓ Aktiv</button>';
+                    html += '<button onclick="setDemoModulStatus(\'' + m.id + '\',\'' + m.modul_key + '\',\'demo\')" class="' + btnBase + ' ' + (ds==='demo'?'bg-orange-400 text-white shadow-sm':'text-gray-500 hover:bg-gray-200') + '">👁 Demo</button>';
+                    html += '<button onclick="setDemoModulStatus(\'' + m.id + '\',\'' + m.modul_key + '\',\'deaktiviert\')" class="' + btnBase + ' ' + (ds==='deaktiviert'?'bg-gray-500 text-white shadow-sm':'text-gray-500 hover:bg-gray-200') + '">✕ Aus</button>';
+                    html += '</div></div>';
+                });
+                container.innerHTML = html;
+            } catch(err) { console.error('DemoModulList:', err); container.innerHTML = '<div class="p-4 text-center text-red-400">Fehler beim Laden</div>'; }
+        }
+
+        async function setDemoModulStatus(id, modulKey, newStatus) {
+            try {
+                var resp = await sb.from('modul_status').update({demo_status: newStatus}).eq('id', id);
+                if(resp.error) throw resp.error;
+                showToast(modulKey + ' → Demo: ' + newStatus, 'success');
+                renderDemoModulList();
+            } catch(err) { showToast('Fehler: ' + err.message, 'error'); }
+        }
+
+        async function setAllDemoStatus(newStatus) {
+            try {
+                var resp = await sb.from('modul_status').update({demo_status: newStatus}).neq('modul_key', 'dummy');
+                if(resp.error) throw resp.error;
+                showToast('Alle Module → Demo: ' + newStatus, 'success');
+                renderDemoModulList();
+            } catch(err) { showToast('Fehler: ' + err.message, 'error'); }
         }
 
         async function setTabStatus(modulKey, tabKey, newStatus) {
