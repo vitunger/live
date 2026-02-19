@@ -2833,7 +2833,7 @@
                     <div class="flex items-center justify-between mb-4">
                         <div>
                             <h1 class="h1-headline text-gray-800">IDEENBOARD</h1>
-                            <p class="text-sm text-gray-500 mt-1">Ideen einreichen, KI-Analyse, HQ-Freigabe, Entwicklungsplanung</p>
+                            <p class="text-sm text-gray-500 mt-1">Ideen einreichen, automatische Analyse, HQ-Freigabe, Entwicklungsplanung</p>
                         </div>
                         <button onclick="toggleDevSubmitForm()" class="px-4 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90 flex items-center space-x-2">
                             <span>💡</span><span>Feedback geben</span>
@@ -2850,9 +2850,10 @@
                     </div>
 
                     <!-- ===== Submit Form (Toggle) ===== -->
-                    <div id="devSubmitForm" class="hidden vit-card p-5 mb-6 border-2 border-vit-orange/20">
+                    <div id="devSubmitForm" class="hidden vit-card p-5 mb-6 border-2 border-vit-orange/20 relative">
+                        <button onclick="toggleDevSubmitForm()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 text-lg transition">&times;</button>
                         <h3 class="font-semibold text-gray-800 mb-1">💡 Feedback / Idee einreichen</h3>
-                        <p class="text-xs text-gray-400 mb-4">Audio, Bild, Screenshot oder einfach Text – die KI analysiert alles automatisch.</p>
+                        <p class="text-xs text-gray-400 mb-4">Audio, Bild, Screenshot oder einfach Text – wir kümmern uns um den Rest.</p>
 
                         <!-- Eingabetyp-Buttons -->
                         <div class="flex flex-wrap gap-2 mb-4">
@@ -2915,7 +2916,7 @@
                             </select>
                         </div>
 
-                        <input id="devTitel" type="text" placeholder="Titel (optional – KI generiert einen falls leer)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3">
+                        <input id="devTitel" type="text" placeholder="Titel (optional – wird automatisch ergänzt)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3">
                         <textarea id="devBeschreibung" placeholder="Beschreibe deine Idee oder dein Problem möglichst konkret..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3" rows="4"></textarea>
 
                         <!-- Datei-Upload -->
@@ -2928,10 +2929,10 @@
                         </div>
 
                         <div class="flex items-center justify-between">
-                            <span class="text-xs text-gray-400">🤖 KI analysiert automatisch nach dem Einreichen</span>
+                            <span class="text-xs text-gray-400">Dein Feedback wird automatisch analysiert und priorisiert</span>
                             <div class="flex space-x-2">
                                 <button onclick="toggleDevSubmitForm()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Abbrechen</button>
-                                <button onclick="submitDevIdea()" id="devSubmitBtn" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">💡 Einreichen & KI starten</button>
+                                <button onclick="submitDevIdea()" id="devSubmitBtn" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">💡 Feedback einreichen</button>
                             </div>
                         </div>
                     </div>
@@ -13470,7 +13471,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         var devStatusLabels = {
-            neu:'Neu eingereicht', ki_pruefung:'🤖 KI prüft...', ki_rueckfragen:'❓ KI Rückfragen',
+            neu:'Neu eingereicht', ki_pruefung:'⏳ Wird analysiert...', ki_rueckfragen:'❓ Rückfragen',
             konzept_erstellt:'📋 Konzept fertig', im_ideenboard:'🎯 Im Ideenboard', hq_rueckfragen:'❓ HQ Rückfragen',
             freigegeben:'✅ Freigegeben', in_planung:'📅 In Planung', in_entwicklung:'🔨 In Entwicklung',
             im_review:'🔍 Im Review', release_geplant:'🚀 Release geplant', ausgerollt:'✅ Ausgerollt',
@@ -13506,8 +13507,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             h += '<h3 class="font-semibold text-gray-800 text-sm truncate">'+(s.titel||'(Ohne Titel)')+'</h3>';
             if(ki && ki.zusammenfassung) h += '<p class="text-xs text-gray-500 mt-0.5 line-clamp-2">'+ki.zusammenfassung+'</p>';
             else if(s.beschreibung) h += '<p class="text-xs text-gray-500 mt-0.5 line-clamp-2">'+s.beschreibung+'</p>';
-            // KI Score bar
-            if(ki && ki.vision_fit_score != null) {
+            // Score bar (nur HQ)
+            var isHQ = (sbRollen||[]).indexOf('hq') !== -1;
+            if(isHQ && ki && ki.vision_fit_score != null) {
                 var score = ki.vision_fit_score;
                 var barColor = score >= 70 ? 'bg-green-500' : score >= 40 ? 'bg-yellow-500' : 'bg-red-500';
                 h += '<div class="flex items-center space-x-2 mt-2"><span class="text-[10px] text-gray-400 w-16">Vision-Fit</span><div class="flex-1 h-1.5 bg-gray-100 rounded-full"><div class="h-1.5 '+barColor+' rounded-full" style="width:'+score+'%"></div></div><span class="text-[10px] font-bold text-gray-600">'+score+'</span></div>';
@@ -13798,7 +13800,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var kategorie = document.getElementById('devKategorie').value;
                 var modul = document.getElementById('devModul').value || null;
 
-                if(!titel && !beschreibung) { alert('Bitte gib mindestens einen Titel oder eine Beschreibung ein.'); return; }
+                if(!titel && !beschreibung && devSelectedFiles.length === 0) { alert('Bitte gib mindestens einen Titel, eine Beschreibung oder eine Aufnahme/Datei an.'); if(btn) { btn.disabled = false; btn.textContent = '💡 Feedback einreichen'; } return; }
 
                 // Upload files to Supabase Storage
                 var attachments = [];
@@ -13838,7 +13840,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
                 // Trigger KI-Analyse
                 try {
-                    if(btn) btn.textContent = '🤖 KI analysiert...';
+                    if(btn) btn.textContent = '⏳ Wird analysiert...';
                     var kiResp = await sb.functions.invoke('dev-ki-analyse', {
                         body: { submission_id: resp.data.id }
                     });
@@ -13850,7 +13852,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             } catch(err) {
                 alert('Fehler beim Einreichen: ' + (err.message||err));
             } finally {
-                if(btn) { btn.disabled = false; btn.textContent = '💡 Einreichen & KI starten'; }
+                if(btn) { btn.disabled = false; btn.textContent = '💡 Feedback einreichen'; }
             }
         }
 
@@ -13977,26 +13979,35 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     h += '<p class="text-sm text-gray-700">'+s.beschreibung+'</p></div>';
                 }
 
-                // KI Analyse
+                // Analyse
                 if(ki) {
+                    var isHQDetail = (sbRollen||[]).indexOf('hq') !== -1;
                     h += '<div class="border border-purple-200 rounded-lg p-4 mb-4 bg-purple-50/50">';
-                    h += '<h4 class="text-xs font-bold text-purple-600 uppercase mb-2">🤖 KI-Analyse</h4>';
+                    h += '<h4 class="text-xs font-bold text-purple-600 uppercase mb-2">📊 Analyse</h4>';
                     if(ki.zusammenfassung) h += '<p class="text-sm text-gray-700 mb-3">'+ki.zusammenfassung+'</p>';
-                    h += '<div class="grid grid-cols-3 gap-3 mb-3">';
-                    h += '<div class="text-center"><p class="text-2xl font-bold '+(ki.vision_fit_score>=70?'text-green-600':ki.vision_fit_score>=40?'text-yellow-600':'text-red-600')+'">'+ki.vision_fit_score+'</p><p class="text-[10px] text-gray-500">Vision-Fit</p></div>';
-                    h += '<div class="text-center"><p class="text-sm font-bold text-gray-800">'+(ki.machbarkeit||'-')+'</p><p class="text-[10px] text-gray-500">Machbarkeit</p></div>';
-                    h += '<div class="text-center"><p class="text-sm font-bold text-gray-800">'+(ki.aufwand_schaetzung||'-')+'</p><p class="text-[10px] text-gray-500">Aufwand</p></div>';
-                    h += '</div>';
-                    if(ki.machbarkeit_details) h += '<p class="text-xs text-gray-600 mb-2"><b>Details:</b> '+ki.machbarkeit_details+'</p>';
-                    if(ki.risiken && ki.risiken.length > 0) {
-                        h += '<div class="mt-2"><p class="text-xs font-semibold text-gray-600 mb-1">Risiken:</p>';
-                        ki.risiken.forEach(function(r) {
-                            h += '<span class="inline-block text-[10px] rounded px-2 py-0.5 mr-1 mb-1 '+(r.schwere==='hoch'?'bg-red-100 text-red-700':'bg-yellow-100 text-yellow-700')+'">'+r.typ+': '+r.beschreibung+'</span>';
-                        });
+                    if(isHQDetail) {
+                        h += '<div class="grid grid-cols-3 gap-3 mb-3">';
+                        h += '<div class="text-center"><p class="text-2xl font-bold '+(ki.vision_fit_score>=70?'text-green-600':ki.vision_fit_score>=40?'text-yellow-600':'text-red-600')+'">'+ki.vision_fit_score+'</p><p class="text-[10px] text-gray-500">Vision-Fit</p></div>';
+                        h += '<div class="text-center"><p class="text-sm font-bold text-gray-800">'+(ki.machbarkeit||'-')+'</p><p class="text-[10px] text-gray-500">Machbarkeit</p></div>';
+                        h += '<div class="text-center"><p class="text-sm font-bold text-gray-800">'+(ki.aufwand_schaetzung||'-')+'</p><p class="text-[10px] text-gray-500">Aufwand</p></div>';
+                        h += '</div>';
+                        if(ki.machbarkeit_details) h += '<p class="text-xs text-gray-600 mb-2"><b>Details:</b> '+ki.machbarkeit_details+'</p>';
+                        if(ki.risiken && ki.risiken.length > 0) {
+                            h += '<div class="mt-2"><p class="text-xs font-semibold text-gray-600 mb-1">Risiken:</p>';
+                            ki.risiken.forEach(function(r) {
+                                h += '<span class="inline-block text-[10px] rounded px-2 py-0.5 mr-1 mb-1 '+(r.schwere==='hoch'?'bg-red-100 text-red-700':'bg-yellow-100 text-yellow-700')+'">'+r.typ+': '+r.beschreibung+'</span>';
+                            });
+                            h += '</div>';
+                        }
+                    } else {
+                        // Partner sehen nur Status-Info
+                        h += '<div class="flex items-center space-x-3">';
+                        if(ki.aufwand_schaetzung) h += '<span class="text-xs bg-gray-100 rounded px-2 py-1 font-semibold text-gray-600">Aufwand: '+ki.aufwand_schaetzung+'</span>';
+                        if(ki.machbarkeit) h += '<span class="text-xs bg-gray-100 rounded px-2 py-1 font-semibold text-gray-600">Machbarkeit: '+ki.machbarkeit+'</span>';
                         h += '</div>';
                     }
                     if(ki.rueckfragen && ki.rueckfragen.length > 0) {
-                        h += '<div class="mt-3 bg-yellow-50 rounded p-3"><p class="text-xs font-semibold text-yellow-700 mb-1">❓ Rückfragen der KI:</p>';
+                        h += '<div class="mt-3 bg-yellow-50 rounded p-3"><p class="text-xs font-semibold text-yellow-700 mb-1">❓ Offene Rückfragen:</p>';
                         ki.rueckfragen.forEach(function(q) {
                             h += '<div class="text-xs text-gray-700 mb-1">• '+(q.frage||q)+'</div>';
                         });
@@ -14005,8 +14016,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     h += '</div>';
                 }
 
-                // Konzept
-                if(konzept) {
+                // Konzept (nur HQ)
+                var isHQKonzept = (sbRollen||[]).indexOf('hq') !== -1;
+                if(isHQKonzept && konzept) {
                     h += '<div class="border border-indigo-200 rounded-lg p-4 mb-4 bg-indigo-50/30">';
                     h += '<h4 class="text-xs font-bold text-indigo-600 uppercase mb-2">📋 Entwicklungskonzept (v'+konzept.version+')</h4>';
                     var sections = [
@@ -14035,8 +14047,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     h += '</div>';
                 }
 
-                // Entscheidungen
-                if(entscheidungen.length > 0) {
+                // Entscheidungen (nur HQ)
+                if(isHQKonzept && entscheidungen.length > 0) {
                     h += '<div class="mb-4"><h4 class="text-xs font-bold text-gray-500 uppercase mb-2">HQ-Entscheidungen</h4>';
                     entscheidungen.forEach(function(e) {
                         var eColors = {freigabe:'text-green-700 bg-green-50',freigabe_mit_aenderungen:'text-orange-700 bg-orange-50',rueckfragen:'text-yellow-700 bg-yellow-50',ablehnung:'text-red-700 bg-red-50',spaeter:'text-gray-600 bg-gray-50'};
@@ -14057,7 +14069,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                         var isAnt = k.typ === 'antwort';
                         var bgClass = isKI ? 'bg-purple-50 border border-purple-100' : isRF ? 'bg-yellow-50 border border-yellow-100' : isAnt ? 'bg-green-50 border border-green-100' : 'bg-gray-50';
                         var labelClass = isKI ? 'text-purple-600' : isRF ? 'text-yellow-700' : isAnt ? 'text-green-700' : 'text-gray-700';
-                        var label = isKI ? '🤖 KI' : isRF ? '❓ Rückfrage' : isAnt ? '💬 Antwort' : 'Kommentar';
+                        var label = isKI ? '🔔 System' : isRF ? '❓ Rückfrage' : isAnt ? '💬 Antwort' : 'Kommentar';
                         h += '<div class="rounded p-3 text-xs '+bgClass+'">';
                         h += '<span class="font-semibold '+labelClass+'">'+label+'</span>';
                         h += '<p class="text-gray-700 mt-0.5" style="white-space:pre-line">'+k.inhalt+'</p>';
@@ -14068,7 +14080,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
                 // === RÜCKFRAGEN-ANTWORT-FORMULAR ===
                 if(s.status === 'ki_rueckfragen' || s.status === 'hq_rueckfragen') {
-                    var rfQuelle = s.status === 'ki_rueckfragen' ? 'KI' : 'HQ';
+                    var rfQuelle = s.status === 'ki_rueckfragen' ? 'Unser System' : 'Das HQ';
                     h += '<div class="border-2 border-yellow-300 rounded-lg p-4 mb-4 bg-yellow-50">';
                     h += '<h4 class="text-sm font-bold text-yellow-800 mb-2">💬 '+rfQuelle+' hat Rückfragen – bitte antworte:</h4>';
                     // Zeige offene Rückfragen aus KI-Analyse
@@ -14086,7 +14098,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     // Allgemeines Antwortfeld (für HQ-Rückfragen oder zusätzliche Infos)
                     h += '<textarea id="devRFAntwortAllg" placeholder="Zusätzliche Informationen / Antwort..." class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm mb-3" rows="3"></textarea>';
                     h += '<div class="flex space-x-2">';
-                    h += '<button onclick="submitDevRueckfragenAntwort(\''+s.id+'\',\''+s.status+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">✅ Antwort senden & KI neu analysieren</button>';
+                    h += '<button onclick="submitDevRueckfragenAntwort(\''+s.id+'\',\''+s.status+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">✅ Antwort senden</button>';
                     h += '</div></div>';
                 }
 
@@ -14174,7 +14186,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     var loadingDiv = document.createElement('div');
                     loadingDiv.className = 'fixed bottom-4 right-4 bg-purple-600 text-white px-4 py-3 rounded-lg shadow-lg z-[60] animate-pulse';
                     loadingDiv.id = 'devReanalyseLoading';
-                    loadingDiv.textContent = '🤖 KI analysiert erneut...';
+                    loadingDiv.textContent = '⏳ Wird erneut analysiert...';
                     document.body.appendChild(loadingDiv);
                 }
 
@@ -14265,7 +14277,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     var loadingDiv = document.createElement('div');
                     loadingDiv.className = 'fixed bottom-4 right-4 bg-purple-600 text-white px-4 py-3 rounded-lg shadow-lg z-[60] animate-pulse';
                     loadingDiv.id = 'devReanalyseLoading';
-                    loadingDiv.textContent = '🤖 KI überarbeitet Konzept...';
+                    loadingDiv.textContent = '⏳ Konzept wird überarbeitet...';
                     document.body.appendChild(loadingDiv);
 
                     try {
@@ -30521,7 +30533,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     position:absolute; top:16px; right:16px; background:rgba(255,255,255,0.2);
     border:none; color:#fff; width:32px; height:32px; border-radius:50%;
     cursor:pointer; display:flex; align-items:center; justify-content:center;
-    transition: background 0.2s;
+    transition: background 0.2s; font-size:20px; line-height:1; z-index:10;
 }
 .fb-close:hover { background:rgba(255,255,255,0.35); }
 
@@ -30762,17 +30774,12 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
 
     // ── Open / Close ──
     window.fbOpen = function(){
-        document.getElementById('fbOverlay').classList.add('fb-open');
-        document.getElementById('fbContextPrompt').style.display = 'none';
-        // Reset form
-        document.getElementById('fbForm').style.display = 'block';
-        document.getElementById('fbSuccess').style.display = 'none';
-        document.getElementById('fbTitle').value = '';
-        document.getElementById('fbDesc').value = '';
-        fbState.attachments = [];
-        renderAttachments();
-        // Pre-fill route
-        fbState.currentRoute = typeof currentView !== 'undefined' ? currentView : window.location.pathname;
+        // Zum neuen Ideenboard navigieren und Formular öffnen
+        showView('ideenboard');
+        setTimeout(function(){
+            var f = document.getElementById('devSubmitForm');
+            if(f && f.classList.contains('hidden')) toggleDevSubmitForm();
+        }, 200);
     };
     window.fbClose = function(){
         document.getElementById('fbOverlay').classList.remove('fb-open');
