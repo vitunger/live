@@ -6501,7 +6501,14 @@
         // ============================================
         var SUPABASE_URL = 'https://lwwagbkxeofahhwebkab.supabase.co';
         var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3d2FnYmt4ZW9mYWhod2Via2FiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwMTM3NDAsImV4cCI6MjA4NjU4OTc0MH0.YBKO7grysp8RHzGWA6xSGpTVi0wG2PmeEWJHI25f7ks';
-        var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: true,
+                storage: window.localStorage
+            }
+        });
         window.sb = sb;
         var sbUser = null; // Supabase auth user
         var sbProfile = null; // users table row
