@@ -410,8 +410,9 @@
         /* Headline responsive */
         @media (max-width: 768px) {
             .h1-headline { font-size: 1.1rem !important; }
-            /* Flex containers that should stack on mobile */
-            .flex.items-center.justify-between { flex-wrap: wrap; gap: 8px; }
+            /* Flex containers that should stack on mobile — but NOT the main nav bar */
+            .flex.items-center.justify-between:not(nav > div) { flex-wrap: wrap; gap: 8px; }
+            nav > .flex { flex-wrap: nowrap !important; gap: 0 !important; }
             /* Version badge */
             #versionBadge { font-size: 9px !important; }
         }
@@ -697,12 +698,12 @@
     <div id="mainApp" style="display: none;">
         <!-- Top Navigation -->
         <nav class="bg-white shadow-md">
-            <div class="flex justify-between items-center px-4 md:px-6 py-3 md:py-4">
+            <div class="flex justify-between items-center px-3 md:px-6 py-2 md:py-4">
                 <!-- Left: Hamburger (mobile) + Logo + Location -->
-                <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-2 md:space-x-3 min-w-0">
                     <!-- Hamburger Menu Button (mobile only) -->
-                    <button onclick="toggleMobileSidebar()" class="topnav-mobile p-2 rounded-lg hover:bg-gray-100" style="display:none;">
-                        <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button onclick="toggleMobileSidebar()" class="topnav-mobile p-1.5 rounded-lg hover:bg-gray-100 flex-shrink-0" style="display:none;">
+                        <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
                     </button>
@@ -721,30 +722,28 @@
                         <span class="text-xs text-gray-500" id="userRoleDisplay">Partnerportal</span>
                     </div>
                     <!-- Mobile: compact location -->
-                    <div class="topnav-mobile" style="display:none;">
-                        <div>
-                            <span class="text-xs font-semibold text-gray-700" id="locationDisplayMobile">Standort</span>
-                        </div>
+                    <div class="topnav-mobile flex-shrink-0" style="display:none;">
+                        <span class="text-[11px] font-semibold text-gray-700 truncate" id="locationDisplayMobile">Standort</span>
                     </div>
                 </div>
                 
-                <div class="flex items-center space-x-4 md:space-x-6">
+                <div class="flex items-center space-x-2 md:space-x-6 flex-shrink-0">
                     <!-- Language Switcher -->
-                    <div class="flex items-center space-x-1">
-                        <button onclick="switchLang('de')" class="lang-flag text-lg hover:scale-125 transition-transform" title="Deutsch" data-lang="de">🇩🇪</button>
-                        <button onclick="switchLang('en')" class="lang-flag text-lg hover:scale-125 transition-transform opacity-40" title="English" data-lang="en">🇬🇧</button>
-                        <button onclick="switchLang('nl')" class="lang-flag text-lg hover:scale-125 transition-transform opacity-40" title="Nederlands" data-lang="nl">🇳🇱</button>
+                    <div class="flex items-center space-x-0.5 md:space-x-1">
+                        <button onclick="switchLang('de')" class="lang-flag text-sm md:text-lg hover:scale-125 transition-transform" title="Deutsch" data-lang="de">🇩🇪</button>
+                        <button onclick="switchLang('en')" class="lang-flag text-sm md:text-lg hover:scale-125 transition-transform opacity-40" title="English" data-lang="en">🇬🇧</button>
+                        <button onclick="switchLang('nl')" class="lang-flag text-sm md:text-lg hover:scale-125 transition-transform opacity-40" title="Nederlands" data-lang="nl">🇳🇱</button>
                     </div>
 
-                    <button onclick="showView('notifications'); return false;" class="relative">
-                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button onclick="showView('notifications'); return false;" class="relative flex-shrink-0">
+                        <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                         </svg>
-                        <span class="absolute -top-1 -right-1 bg-vit-orange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
+                        <span class="absolute -top-1 -right-1 bg-vit-orange text-white text-[9px] md:text-xs rounded-full w-4 h-4 md:w-5 md:h-5 flex items-center justify-center">3</span>
                     </button>
 
                     <!-- Mobile Profile Avatar -->
-                    <img id="userAvatarImgMobile" src="https://ui-avatars.com/api/?name=Demo+User&background=EF7D00&color=fff" class="topnav-mobile w-9 h-9 rounded-full ring-2 ring-transparent hover:ring-orange-300 cursor-pointer" style="display:none;" onclick="openProfilePanel()">
+                    <img id="userAvatarImgMobile" src="https://ui-avatars.com/api/?name=Demo+User&background=EF7D00&color=fff" class="topnav-mobile w-8 h-8 rounded-full ring-2 ring-transparent hover:ring-orange-300 cursor-pointer flex-shrink-0" style="display:none;" onclick="openProfilePanel()">
                     
                     <div class="flex items-center space-x-3 topnav-desktop cursor-pointer hover:opacity-80 transition-opacity" onclick="openProfilePanel()">
                         <img id="userAvatarImg" src="https://ui-avatars.com/api/?name=Demo+User&background=EF7D00&color=fff" class="w-10 h-10 rounded-full ring-2 ring-transparent hover:ring-orange-300 transition-all">
@@ -6439,15 +6438,76 @@
         // ============================================
         var SUPABASE_URL = 'https://lwwagbkxeofahhwebkab.supabase.co';
         var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3d2FnYmt4ZW9mYWhod2Via2FiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwMTM3NDAsImV4cCI6MjA4NjU4OTc0MH0.YBKO7grysp8RHzGWA6xSGpTVi0wG2PmeEWJHI25f7ks';
+        // Robust session storage: localStorage + IndexedDB backup (iOS Safari fix)
+        var idbSessionStore = {
+            _dbPromise: null,
+            _getDB: function() {
+                if(this._dbPromise) return this._dbPromise;
+                this._dbPromise = new Promise(function(resolve, reject) {
+                    try {
+                        var req = indexedDB.open('vb_auth', 1);
+                        req.onupgradeneeded = function(e) { e.target.result.createObjectStore('session'); };
+                        req.onsuccess = function(e) { resolve(e.target.result); };
+                        req.onerror = function() { resolve(null); };
+                    } catch(e) { resolve(null); }
+                });
+                return this._dbPromise;
+            },
+            setItem: function(key, val) {
+                try { localStorage.setItem(key, val); } catch(e) {}
+                this._getDB().then(function(db) {
+                    if(!db) return;
+                    try { var tx = db.transaction('session','readwrite'); tx.objectStore('session').put(val, key); } catch(e) {}
+                });
+            },
+            getItem: function(key) {
+                var lsVal = null;
+                try { lsVal = localStorage.getItem(key); } catch(e) {}
+                if(lsVal) return lsVal;
+                // Fallback: try IndexedDB (sync wrapper - returns promise-like for supabase)
+                return new Promise(function(resolve) {
+                    idbSessionStore._getDB().then(function(db) {
+                        if(!db) { resolve(null); return; }
+                        try {
+                            var tx = db.transaction('session','readonly');
+                            var req = tx.objectStore('session').get(key);
+                            req.onsuccess = function() {
+                                var val = req.result || null;
+                                if(val) { try { localStorage.setItem(key, val); } catch(e) {} }
+                                resolve(val);
+                            };
+                            req.onerror = function() { resolve(null); };
+                        } catch(e) { resolve(null); }
+                    });
+                });
+            },
+            removeItem: function(key) {
+                try { localStorage.removeItem(key); } catch(e) {}
+                this._getDB().then(function(db) {
+                    if(!db) return;
+                    try { var tx = db.transaction('session','readwrite'); tx.objectStore('session').delete(key); } catch(e) {}
+                });
+            }
+        };
+
         var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
             auth: {
                 persistSession: true,
                 autoRefreshToken: true,
                 detectSessionInUrl: true,
-                storage: window.localStorage
+                storage: idbSessionStore
             }
         });
         window.sb = sb;
+
+        // Keep session alive: listen for auth state changes and re-persist
+        sb.auth.onAuthStateChange(function(event, session) {
+            console.log('[Auth] State:', event);
+            if(session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+                try { idbSessionStore.setItem('sb-lwwagbkxeofahhwebkab-auth-token', JSON.stringify(session)); } catch(e) {}
+            }
+        });
+
         var sbUser = null; // Supabase auth user
         var sbProfile = null; // users table row
         var sbRollen = []; // role names array
@@ -31725,6 +31785,11 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
 }
 #fbWidget {
     position:fixed; top:0; left:50%; transform:translateX(-50%); z-index:9999; font-family:'Open Sans',sans-serif;
+}
+@media (max-width: 768px) {
+    #fbWidget { top:50%; left:auto; right:0; transform:translateY(-50%) translateX(0); }
+    #fbTrigger { border-radius:14px 0 0 14px !important; padding:10px 10px 10px 12px !important; writing-mode:vertical-rl; text-orientation:mixed; gap:5px !important; font-size:11px !important; }
+    #fbTrigger span { display:none; }
 }
 #fbTrigger {
     display:flex; align-items:center; gap:7px;
