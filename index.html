@@ -946,14 +946,14 @@
                         <!-- HQ-specific items (hidden by default) -->
                         <div id="hqMenu" class="space-y-2 hidden">
                             <!-- HQ Top-Level -->
-                            <button onclick="showView('hqCockpit')" data-tooltip="Netzwerk-Cockpit" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqCockpit')" data-hq-module="hqCockpit" data-tooltip="Netzwerk-Cockpit" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                                 <span class="sidebar-label" data-i18n="nav_hq_cockpit">Netzwerk-Cockpit</span>
                             </button>
 
-                            <button onclick="showView('hqKommando')" data-tooltip="Kommandozentrale" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqKommando')" data-hq-module="hqKommandozentrale" data-tooltip="Kommandozentrale" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -961,7 +961,7 @@
                                 <span class="sidebar-label" data-i18n="nav_hq_command">Kommandozentrale</span>
                             </button>
 
-                            <button onclick="showView('hqAktionen')" data-tooltip="Handlungsbedarf" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqAktionen')" data-hq-module="hqHandlungsbedarf" data-tooltip="Handlungsbedarf" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                                 </svg>
@@ -970,7 +970,7 @@
 
                             <hr class="border-gray-600 my-3">
 
-                            <button onclick="showView('hqOffice')" data-tooltip="Office" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqOffice')" data-hq-module="hqOffice" data-tooltip="Office" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                                 </svg>
@@ -996,40 +996,40 @@
                                 <span class="sidebar-label text-xs text-gray-400 uppercase font-semibold px-3" data-i18n="nav_hq_control">HQ Steuerung</span>
                             </div>
 
-                            <button onclick="showView('hqStandorte')" data-tooltip="Standorte" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqStandorte')" data-hq-module="hqStandorte" data-tooltip="Standorte" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                                 </svg>
                                 <span class="sidebar-label" data-i18n="nav_hq_locations">Standorte</span>
                             </button>
 
-                            <button onclick="showView('hqFinanzen')" data-tooltip="Finanzen" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqFinanzen')" data-hq-module="hqFinanzen" data-tooltip="Finanzen" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                                 <span class="sidebar-label" data-i18n="nav_hq_finance">Finanzen</span>
                             </button>
 
-                            <button onclick="showView('hqMarketing')" data-tooltip="Marketing" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqMarketing')" data-hq-module="hqMarketing" data-tooltip="Marketing" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
                                 </svg>
                                 <span class="sidebar-label" data-i18n="nav_marketing">Marketing</span>
                             </button>
 
-                            <button onclick="showView('hqEinkauf')" data-tooltip="Einkauf" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqEinkauf')" data-hq-module="hqEinkauf" data-tooltip="Einkauf" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
                                 </svg>
                                 <span class="sidebar-label" data-i18n="nav_purchasing">Einkauf</span>
                             </button>
-                            <button onclick="showView('hqAllgemein')" data-tooltip="Allgemein" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqAllgemein')" data-hq-module="hqStandorte" data-tooltip="Allgemein" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <span>🏢</span><span class="sidebar-label">Allgemein</span>
                             </button>
 
                             <!-- Feature Flags & Backups moved to Entwicklung -->
 
-                            <button onclick="showView('hqVerkauf')" data-tooltip="Verkauf" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqVerkauf')" data-hq-module="hqStandorte" data-tooltip="Verkauf" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                                 </svg>
@@ -1038,29 +1038,29 @@
 
                             <hr class="border-gray-600 my-3">
 
-                            <button onclick="showView('hqWissen')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqWissen')" data-hq-module="hqAkademie" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                                 <span class="sidebar-label" data-i18n="nav_knowledge">Wissen</span>
                             </button>
 
-                            <button onclick="showView('hqBilling')" data-tooltip="Abrechnung" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqBilling')" data-hq-module="hqBilling" data-tooltip="Abrechnung" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
                                 </svg>
                                 <span class="sidebar-label">Abrechnung</span>
                             </button>
 
-                            <button onclick="showView('hqSupport')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqSupport')" data-hq-module="hqSupport" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                                 <span class="sidebar-label" data-i18n="nav_support">Support</span>
                             </button>
 
-                            <button onclick="showView('entwicklung')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('entwicklung')" data-hq-module="hqEntwicklung" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
                                 <span class="sidebar-label">Entwicklung</span>
                             </button>
 
-                            <button onclick="showView('hqShop')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqShop')" data-hq-module="hqBilling" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                                 <span class="sidebar-label" data-i18n="nav_shop">Shop</span>
                             </button>
@@ -1068,13 +1068,13 @@
                             <hr class="border-gray-600 my-3">
 
                             
-                            <button onclick="showView('hqOnboarding')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqOnboarding')" data-hq-module="hqStandorte" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
                                 <span>Onboarding-Pipeline</span>
                                 <span class="ml-auto bg-vit-orange text-white text-[9px] rounded-full px-1.5 py-0.5 font-bold" id="hqOnbBadge">3</span>
                             </button>
                             
-                            <button onclick="showView('hqEinstellungen')" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <button onclick="showView('hqEinstellungen')" data-hq-module="hqEinstellungen" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                 <span>Einstellungen</span>
                             </button>
@@ -4939,11 +4939,11 @@
 
                     <!-- Schnellzugriffe HQ -->
                     <div class="grid grid-cols-3 md:grid-cols-6 gap-3 mb-6">
-                        <button onclick="showView('hqAktionen')" class="vit-card p-3 hover:shadow-md transition text-center"><p class="text-xl mb-1">🚨</p><p class="text-[10px] font-semibold text-gray-700">Handlungsbedarf</p></button>
+                        <button onclick="showView('hqAktionen')" data-hq-module="hqHandlungsbedarf" class="vit-card p-3 hover:shadow-md transition text-center"><p class="text-xl mb-1">🚨</p><p class="text-[10px] font-semibold text-gray-700">Handlungsbedarf</p></button>
                         <button onclick="showView('hqKommando');setTimeout(function(){showKommandoTab('kampagnen')},50)" class="vit-card p-3 hover:shadow-md transition text-center"><p class="text-xl mb-1">🎯</p><p class="text-[10px] font-semibold text-gray-700">Kampagnen</p></button>
                         <button onclick="showView('hqKommando');setTimeout(function(){showKommandoTab('kommunikation')},50)" class="vit-card p-3 hover:shadow-md transition text-center"><p class="text-xl mb-1">📢</p><p class="text-[10px] font-semibold text-gray-700">Kommunikation</p></button>
                         <button onclick="showView('hqKommando');setTimeout(function(){showKommandoTab('aufgaben')},50)" class="vit-card p-3 hover:shadow-md transition text-center"><p class="text-xl mb-1">📋</p><p class="text-[10px] font-semibold text-gray-700">Aufgaben</p></button>
-                        <button onclick="showView('hqKommando')" class="vit-card p-3 hover:shadow-md transition text-center"><p class="text-xl mb-1">⚙️</p><p class="text-[10px] font-semibold text-gray-700">Kommandozentrale</p></button>
+                        <button onclick="showView('hqKommando')" data-hq-module="hqKommandozentrale" class="vit-card p-3 hover:shadow-md transition text-center"><p class="text-xl mb-1">⚙️</p><p class="text-[10px] font-semibold text-gray-700">Kommandozentrale</p></button>
                         <button onclick="showView('hqAuswertung')" class="vit-card p-3 hover:shadow-md transition text-center"><p class="text-xl mb-1">📊</p><p class="text-[10px] font-semibold text-gray-700">Auswertung</p></button>
                     </div>
 
@@ -5691,7 +5691,7 @@
                 <!-- ===== HQ BILLING INVOICE DETAIL (Modal/Overlay) ===== -->
                 <div id="hqBillingDetailView" class="view" style="display: none;">
                     <div class="flex items-center mb-6">
-                        <button onclick="showView('hqBilling')" class="mr-3 p-2 rounded-lg hover:bg-gray-100">
+                        <button onclick="showView('hqBilling')" data-hq-module="hqBilling" class="mr-3 p-2 rounded-lg hover:bg-gray-100">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                         </button>
                         <div>
@@ -7912,6 +7912,21 @@
             }
             currentLocation = sbStandort ? sbStandort.slug : 'grafrath';
             isPremium = sbStandort ? sbStandort.is_premium : false;
+
+            // Load HQ module permissions for granular role access
+            if(sbProfile && sbProfile.is_hq) {
+                try {
+                    var rollenIds = (resp2.data || []).map(function(ur){ return ur.rollen && ur.rollen.id; }).filter(Boolean);
+                    // Get rolle IDs from names
+                    var rolleIdResp = await sb.from('rollen').select('id, name').in('name', currentRoles);
+                    var hqRolleIds = (rolleIdResp.data || []).map(function(r){ return r.id; });
+                    if(hqRolleIds.length > 0) {
+                        var permResp = await sb.from('modul_berechtigungen').select('modul, hat_zugriff').in('rolle_id', hqRolleIds).eq('hat_zugriff', true);
+                        window._hqModulPerms = {};
+                        (permResp.data || []).forEach(function(p){ window._hqModulPerms[p.modul] = true; });
+                    }
+                } catch(e) { console.warn('[HQ Perms] Could not load:', e.message); window._hqModulPerms = null; }
+            }
         }
 
 
@@ -8234,7 +8249,10 @@
                 'verkauf': 'Verkauf',
                 'werkstatt': 'Werkstatt',
                 'buchhaltung': 'Buchhaltung',
-                'hq': 'HQ'
+                'hq': 'HQ',
+                'hq_gf': 'GF', 'hq_sales': 'Sales', 'hq_marketing': 'Marketing',
+                'hq_einkauf': 'Einkauf', 'hq_support': 'Support', 'hq_akademie': 'Akademie',
+                'hq_hr': 'HR', 'hq_it': 'IT'
             };
 
             // Rollen-Anzeige zusammenbauen
@@ -8341,6 +8359,24 @@
             // HQ Menu
             var hqMenu = document.getElementById('hqMenu');
             if(hqMenu) hqMenu.classList.toggle('hidden', !isHQ);
+
+            // === HQ GRANULAR ROLE-BASED VISIBILITY ===
+            if(isHQ && hqMenu) {
+                var isLegacyHQ = hasRole('hq');
+                var isHqGF = hasRole('hq_gf');
+                var isHqIT = hasRole('hq_it');
+                var hasFullAccess = isLegacyHQ || isHqGF || isHqIT;
+
+                if(!hasFullAccess && window._hqModulPerms) {
+                    // Apply granular permissions from modul_berechtigungen
+                    hqMenu.querySelectorAll('[data-hq-module]').forEach(function(btn) {
+                        var mod = btn.getAttribute('data-hq-module');
+                        var allowed = window._hqModulPerms[mod] || false;
+                        btn.classList.toggle('hidden', !allowed);
+                    });
+                }
+                // Legacy HQ, GF, IT → show everything (no hiding)
+            }
 
             // HQ Impersonation buttons (show if real user is HQ or currently impersonating)
             var sidebarBtmHQ = document.getElementById('sidebarBottomHQ');
@@ -21618,8 +21654,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             return s;
         }
         function rolleBadge(r) {
-            var colors = {'inhaber':'bg-vit-orange text-white','verkauf':'bg-blue-100 text-blue-700','werkstatt':'bg-gray-200 text-gray-700','buchhaltung':'bg-purple-100 text-purple-700','hq':'bg-red-100 text-red-700'};
-            var labels = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung','hq':'HQ'};
+            var colors = {'inhaber':'bg-vit-orange text-white','verkauf':'bg-blue-100 text-blue-700','werkstatt':'bg-gray-200 text-gray-700','buchhaltung':'bg-purple-100 text-purple-700','hq':'bg-red-100 text-red-700',
+                'hq_gf':'bg-red-500 text-white','hq_sales':'bg-blue-500 text-white','hq_marketing':'bg-pink-500 text-white','hq_einkauf':'bg-green-500 text-white','hq_support':'bg-yellow-500 text-white','hq_akademie':'bg-indigo-500 text-white','hq_hr':'bg-purple-500 text-white','hq_it':'bg-gray-600 text-white'};
+            var labels = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung','hq':'HQ',
+                'hq_gf':'GF','hq_sales':'Sales','hq_marketing':'Marketing','hq_einkauf':'Einkauf','hq_support':'Support','hq_akademie':'Akademie','hq_hr':'HR','hq_it':'IT'};
             return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold '+(colors[r]||'bg-gray-100 text-gray-600')+'">'+(labels[r]||r)+'</span>';
         }
         function rollenBadges(rollen) {
@@ -21819,9 +21857,21 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             
             // HQ Rollen (initial hidden)
             html += '<div id="approveRollesHQ" style="display:none">';
-            html += '<label class="flex items-center space-x-3 p-2 rounded-lg border border-red-300 bg-red-50 mb-1.5 cursor-pointer hover:shadow-sm transition">';
-            html += '<input type="checkbox" id="approveRole_hq" class="rounded" style="accent-color:#EF7D00;" checked>';
-            html += '<span class="text-sm font-semibold text-gray-800">HQ</span></label>';
+            var hqRollenAppr = [
+                {key:'hq_gf',label:'👑 Geschäftsführung',color:'border-red-300 bg-red-50'},
+                {key:'hq_sales',label:'📊 Sales',color:'border-blue-300 bg-blue-50'},
+                {key:'hq_marketing',label:'📣 Marketing',color:'border-pink-300 bg-pink-50'},
+                {key:'hq_einkauf',label:'🛒 Einkauf',color:'border-green-300 bg-green-50'},
+                {key:'hq_support',label:'🎧 Support',color:'border-yellow-300 bg-yellow-50'},
+                {key:'hq_akademie',label:'🎓 Akademie',color:'border-indigo-300 bg-indigo-50'},
+                {key:'hq_hr',label:'👥 HR',color:'border-purple-300 bg-purple-50'},
+                {key:'hq_it',label:'🖥️ IT / Systemadmin',color:'border-gray-400 bg-gray-100'}
+            ];
+            hqRollenAppr.forEach(function(r){
+                html += '<label class="flex items-center space-x-3 p-2 rounded-lg border '+r.color+' mb-1.5 cursor-pointer hover:shadow-sm transition">';
+                html += '<input type="checkbox" id="approveRole_'+r.key+'" class="rounded approveHqRoleCheck" style="accent-color:#EF7D00;"'+(r.key==='hq_gf'?' checked':'')+' data-role="'+r.key+'">';
+                html += '<span class="text-sm font-semibold text-gray-800">'+r.label+'</span></label>';
+            });
             html += '</div>';
             
             // Standort Rollen (initial visible)
@@ -21880,6 +21930,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 if(rollesStd) rollesStd.style.display = 'none';
                 var hqChk = document.getElementById('approveRole_hq');
                 if(hqChk) hqChk.checked = true;
+                document.querySelectorAll('.approveHqRoleCheck').forEach(function(chk){
+                    chk.checked = (chk.getAttribute('data-role') === 'hq_gf');
+                });
                 ['inhaber','verkauf','werkstatt','buchhaltung'].forEach(function(r){
                     var chk = document.getElementById('approveRole_'+r);
                     if(chk) chk.checked = false;
@@ -21890,8 +21943,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 if(stdWrap) stdWrap.style.display = '';
                 if(rollesHQ) rollesHQ.style.display = 'none';
                 if(rollesStd) rollesStd.style.display = '';
-                var hqChk = document.getElementById('approveRole_hq');
-                if(hqChk) hqChk.checked = false;
+                document.querySelectorAll('.approveHqRoleCheck').forEach(function(chk){ chk.checked = false; });
             }
         }
 
@@ -21908,8 +21960,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var selected = [];
             var isHqUser = (approveEbene === 'hq');
             if(isHqUser) {
-                var hqChk = document.getElementById('approveRole_hq');
-                if(hqChk && hqChk.checked) selected.push('hq');
+                document.querySelectorAll('.approveHqRoleCheck:checked').forEach(function(chk){
+                    selected.push(chk.getAttribute('data-role'));
+                });
+                if(selected.length > 0 && selected.indexOf('hq') === -1) selected.push('hq');
             } else {
                 ['inhaber','verkauf','werkstatt','buchhaltung'].forEach(function(r){
                     var chk = document.getElementById('approveRole_'+r);
@@ -21964,7 +22018,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 }
                 
                 closeApproveModal();
-                var rollenLabels = {'hq':'HQ','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
+                var rollenLabels = {'hq':'HQ','hq_gf':'GF','hq_sales':'Sales','hq_marketing':'Marketing','hq_einkauf':'Einkauf','hq_support':'Support','hq_akademie':'Akademie','hq_hr':'HR','hq_it':'IT','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
                 alert('\u2705 User freigeschaltet!\nRollen: ' + selected.map(function(r){return rollenLabels[r]||r;}).join(', ') + '\n\nDer Mitarbeiter kann sich jetzt einloggen.');
                 renderKzMitarbeiter();
             } catch(err) {
@@ -22355,10 +22409,23 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
             // HQ Rollen (initial hidden)
             html += '<div id="newMaRollesHQ" style="display:none">';
-            html += '<label class="flex items-center space-x-3 p-2 rounded-lg border border-red-300 bg-red-50 mb-1.5 cursor-pointer hover:shadow-sm transition">';
-            html += '<input type="checkbox" id="newMaRole_hq" class="rounded" style="accent-color:#EF7D00;" checked>';
-            html += '<span class="text-sm font-semibold text-gray-800">HQ</span></label>';
-            html += '<p class="text-[10px] text-gray-400 ml-1 mb-2">Weitere HQ-Rollen kommen bald (z.B. HQ Marketing, HQ Finanzen)</p>';
+            var hqRollen = [
+                {key:'hq_gf',     label:'Geschäftsführung', color:'border-red-300 bg-red-50', icon:'👑', desc:'Vollzugriff auf alle HQ-Module'},
+                {key:'hq_sales',  label:'Sales',            color:'border-blue-300 bg-blue-50', icon:'📊', desc:'Standorte, Pipeline, Leads'},
+                {key:'hq_marketing',label:'Marketing',      color:'border-pink-300 bg-pink-50', icon:'📣', desc:'Kampagnen, Budget, Social Media'},
+                {key:'hq_einkauf',label:'Einkauf',          color:'border-green-300 bg-green-50', icon:'🛒', desc:'Lieferanten, Bestellungen'},
+                {key:'hq_support',label:'Support',          color:'border-yellow-300 bg-yellow-50', icon:'🎧', desc:'Tickets, Partner-Support'},
+                {key:'hq_akademie',label:'Akademie',        color:'border-indigo-300 bg-indigo-50', icon:'🎓', desc:'Wissen, Schulungen, Onboarding'},
+                {key:'hq_hr',     label:'HR',               color:'border-purple-300 bg-purple-50', icon:'👥', desc:'Personal, Tools, Abrechnung'},
+                {key:'hq_it',     label:'IT / Systemadmin', color:'border-gray-400 bg-gray-100', icon:'🖥️', desc:'Einstellungen, Features, System'}
+            ];
+            hqRollen.forEach(function(r){
+                html += '<label class="flex items-center space-x-3 p-2 rounded-lg border '+r.color+' mb-1.5 cursor-pointer hover:shadow-sm transition">';
+                html += '<input type="checkbox" id="newMaRole_'+r.key+'" class="rounded hqRoleCheck" style="accent-color:#EF7D00;"'+(r.key==='hq_gf'?' checked':'')+' data-role="'+r.key+'">';
+                html += '<div><span class="text-sm font-semibold text-gray-800">'+r.icon+' '+r.label+'</span>';
+                html += '<p class="text-[10px] text-gray-400">'+r.desc+'</p></div></label>';
+            });
+            html += '<p class="text-[10px] text-gray-400 ml-1 mb-2">💡 GF und IT haben automatisch Vollzugriff. Andere Rollen sehen nur freigegebene Module.</p>';
             html += '</div>';
 
             // Standort Rollen (initial visible)
@@ -22406,9 +22473,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 if(stdWrap) stdWrap.style.display = 'none';
                 if(rollesHQ) rollesHQ.style.display = '';
                 if(rollesStd) rollesStd.style.display = 'none';
-                // Auto-check HQ role
-                var hqChk = document.getElementById('newMaRole_hq');
-                if(hqChk) hqChk.checked = true;
+                // Auto-check GF role, uncheck others
+                document.querySelectorAll('.hqRoleCheck').forEach(function(chk){
+                    chk.checked = (chk.getAttribute('data-role') === 'hq_gf');
+                });
                 // Uncheck standort roles
                 ['inhaber','verkauf','werkstatt','buchhaltung'].forEach(function(r){
                     var chk = document.getElementById('newMaRole_'+r);
@@ -22420,9 +22488,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 if(stdWrap) stdWrap.style.display = '';
                 if(rollesHQ) rollesHQ.style.display = 'none';
                 if(rollesStd) rollesStd.style.display = '';
-                // Uncheck HQ role
-                var hqChk = document.getElementById('newMaRole_hq');
-                if(hqChk) hqChk.checked = false;
+                // Uncheck HQ roles
+                document.querySelectorAll('.hqRoleCheck').forEach(function(chk){ chk.checked = false; });
             }
         }
 
@@ -22482,8 +22549,12 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var selected = [];
             var isHqUser = (newMaEbene === 'hq');
             if(isHqUser) {
-                var hqChk = document.getElementById('newMaRole_hq');
-                if(hqChk && hqChk.checked) selected.push('hq');
+                // Collect all checked HQ role checkboxes
+                document.querySelectorAll('.hqRoleCheck:checked').forEach(function(chk){
+                    selected.push(chk.getAttribute('data-role'));
+                });
+                // Also always include legacy 'hq' so is_hq flag works
+                if(selected.length > 0 && selected.indexOf('hq') === -1) selected.push('hq');
             } else {
                 ['inhaber','verkauf','werkstatt','buchhaltung'].forEach(function(r){
                     var chk = document.getElementById('newMaRole_'+r);
@@ -22534,7 +22605,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 if(!response.ok) throw { message: result.error || 'User-Erstellung fehlgeschlagen' };
 
                 closeNeuerMaModal();
-                var rollenLabels = {'hq':'HQ','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
+                var rollenLabels = {'hq':'HQ','hq_gf':'GF','hq_sales':'Sales','hq_marketing':'Marketing','hq_einkauf':'Einkauf','hq_support':'Support','hq_akademie':'Akademie','hq_hr':'HR','hq_it':'IT','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
                 
                 // Also create employee record for tool tracking
                 if(!isHqUser && standortId) {
@@ -22611,11 +22682,22 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
                 // HQ Roles
                 html += '<div id="editMaRollesHQ" style="'+(isUserHQ?'':'display:none')+'">';
-                var hqChecked = userRollen.indexOf('hq') >= 0 ? ' checked' : '';
-                html += '<label class="flex items-center space-x-3 p-2 rounded-lg border border-red-300 bg-red-50 mb-1.5 cursor-pointer hover:shadow-sm transition">';
-                html += '<input type="checkbox" id="editMaRole_hq" class="rounded" style="accent-color:#EF7D00;"'+hqChecked+'>';
-                html += '<span class="text-sm font-semibold text-gray-800">HQ</span></label>';
-                html += '<p class="text-[10px] text-gray-400 ml-1 mb-2">Weitere HQ-Rollen kommen bald (z.B. HQ Marketing, HQ Finanzen)</p>';
+                var editHqRollen = [
+                    {key:'hq_gf',label:'👑 Geschäftsführung',color:'border-red-300 bg-red-50'},
+                    {key:'hq_sales',label:'📊 Sales',color:'border-blue-300 bg-blue-50'},
+                    {key:'hq_marketing',label:'📣 Marketing',color:'border-pink-300 bg-pink-50'},
+                    {key:'hq_einkauf',label:'🛒 Einkauf',color:'border-green-300 bg-green-50'},
+                    {key:'hq_support',label:'🎧 Support',color:'border-yellow-300 bg-yellow-50'},
+                    {key:'hq_akademie',label:'🎓 Akademie',color:'border-indigo-300 bg-indigo-50'},
+                    {key:'hq_hr',label:'👥 HR',color:'border-purple-300 bg-purple-50'},
+                    {key:'hq_it',label:'🖥️ IT / Systemadmin',color:'border-gray-400 bg-gray-100'}
+                ];
+                editHqRollen.forEach(function(r){
+                    var checked = userRollen.indexOf(r.key) >= 0 ? ' checked' : '';
+                    html += '<label class="flex items-center space-x-3 p-2 rounded-lg border '+r.color+' mb-1.5 cursor-pointer hover:shadow-sm transition">';
+                    html += '<input type="checkbox" id="editMaRole_'+r.key+'" class="rounded editHqRoleCheck" style="accent-color:#EF7D00;"'+checked+' data-role="'+r.key+'">';
+                    html += '<span class="text-sm font-semibold text-gray-800">'+r.label+'</span></label>';
+                });
                 html += '</div>';
 
                 // Standort Roles
@@ -22670,9 +22752,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 if(stdWrap) stdWrap.style.display = 'none';
                 if(rollesHQ) rollesHQ.style.display = '';
                 if(rollesStd) rollesStd.style.display = 'none';
-                // Auto-check HQ role
-                var hqChk = document.getElementById('editMaRole_hq');
-                if(hqChk) hqChk.checked = true;
+                // Auto-check GF role
+                document.querySelectorAll('.editHqRoleCheck').forEach(function(chk){
+                    if(!chk.checked) chk.checked = (chk.getAttribute('data-role') === 'hq_gf');
+                });
                 // Uncheck standort roles
                 ['inhaber','verkauf','werkstatt','buchhaltung'].forEach(function(r){
                     var chk = document.getElementById('editMaRole_'+r);
@@ -22684,9 +22767,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 if(stdWrap) stdWrap.style.display = '';
                 if(rollesHQ) rollesHQ.style.display = 'none';
                 if(rollesStd) rollesStd.style.display = '';
-                // Uncheck HQ role
-                var hqChk = document.getElementById('editMaRole_hq');
-                if(hqChk) hqChk.checked = false;
+                // Uncheck HQ roles
+                document.querySelectorAll('.editHqRoleCheck').forEach(function(chk){ chk.checked = false; });
             }
         }
 
@@ -22708,7 +22790,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             // Collect roles based on ebene
             var selected = [];
             if(isHQ) {
-                selected = ['hq'];
+                document.querySelectorAll('.editHqRoleCheck:checked').forEach(function(chk){
+                    selected.push(chk.getAttribute('data-role'));
+                });
+                if(selected.length > 0 && selected.indexOf('hq') === -1) selected.push('hq');
             } else {
                 ['inhaber','verkauf','werkstatt','buchhaltung'].forEach(function(r){
                     var chk = document.getElementById('editMaRole_'+r);
