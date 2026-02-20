@@ -23907,6 +23907,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         async function loadHqRechteMatrix() {
             try {
                 var resp = await sb.from('modul_berechtigungen').select('modul, hat_zugriff, rolle_id, rollen(name)').eq('hat_zugriff', true);
+                if(resp.error) { console.error('[HQ Matrix] Load error:', resp.error); }
                 window._hqRechteMatrix = {};
                 (resp.data || []).forEach(function(p){
                     var roleName = p.rollen ? p.rollen.name : null;
@@ -23914,29 +23915,31 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     if(!window._hqRechteMatrix[p.modul]) window._hqRechteMatrix[p.modul] = {};
                     window._hqRechteMatrix[p.modul][roleName] = true;
                 });
-            } catch(e) { console.warn('loadHqRechteMatrix error:', e); }
+                console.log('[HQ Matrix] Loaded:', JSON.stringify(window._hqRechteMatrix).substring(0, 200));
+            } catch(e) { console.warn('loadHqRechteMatrix error:', e); window._hqRechteMatrix = {}; }
         }
 
         async function toggleHqPermission(modKey, rolle) {
+            console.log('[HQ Toggle]', modKey, rolle);
             try {
                 var rolleResp = await sb.from('rollen').select('id').eq('name', rolle).single();
-                if(!rolleResp.data) return;
+                if(!rolleResp.data) { showToast('Rolle nicht gefunden: ' + rolle, 'error'); return; }
+                if(rolleResp.error) { showToast('DB-Fehler: ' + rolleResp.error.message, 'error'); return; }
                 var rolleId = rolleResp.data.id;
                 var isCurrentlyAllowed = window._hqRechteMatrix && window._hqRechteMatrix[modKey] && window._hqRechteMatrix[modKey][rolle];
                 if(isCurrentlyAllowed) {
-                    // Remove permission
-                    await sb.from('modul_berechtigungen').delete().eq('modul', modKey).eq('rolle_id', rolleId);
+                    var delResp = await sb.from('modul_berechtigungen').delete().eq('modul', modKey).eq('rolle_id', rolleId);
+                    if(delResp.error) { showToast('Löschen fehlgeschlagen: ' + delResp.error.message, 'error'); return; }
                     if(window._hqRechteMatrix[modKey]) delete window._hqRechteMatrix[modKey][rolle];
                 } else {
-                    // Add permission
-                    await sb.from('modul_berechtigungen').upsert({modul: modKey, rolle_id: rolleId, hat_zugriff: true}, {onConflict: 'modul,rolle_id'});
+                    var insResp = await sb.from('modul_berechtigungen').upsert({modul: modKey, rolle_id: rolleId, hat_zugriff: true}, {onConflict: 'modul,rolle_id'});
+                    if(insResp.error) { showToast('Speichern fehlgeschlagen: ' + insResp.error.message, 'error'); return; }
                     if(!window._hqRechteMatrix[modKey]) window._hqRechteMatrix[modKey] = {};
                     window._hqRechteMatrix[modKey][rolle] = true;
                 }
-                // Re-render
                 renderHqEinstellungen();
                 showToast(isCurrentlyAllowed ? '❌ Berechtigung entfernt' : '✅ Berechtigung aktiviert', isCurrentlyAllowed ? 'warning' : 'success');
-            } catch(e) { showToast('Fehler: ' + e.message, 'error'); }
+            } catch(e) { console.error('[HQ Toggle Error]', e); showToast('Fehler: ' + e.message, 'error'); }
         }
 
         function renderKommandozentrale() {
