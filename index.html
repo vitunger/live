@@ -3510,7 +3510,7 @@
                     
                     <div class="flex justify-between items-center mb-6">
                         <div>
-                            <p class="text-sm text-gray-500">Unternehmen / Standort: <strong>vit:bikes Grafrath</strong></p>
+                            <p class="text-sm text-gray-500">Unternehmen / Standort: <strong id="bwaStandortLabel">—</strong></p>
                             <p class="text-sm text-gray-500">Jahr: <strong>2026</strong></p>
                         </div>
                         <div class="flex space-x-2">
@@ -10612,6 +10612,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         async function loadBwaList() {
             var container = document.getElementById('bwaFileList');
             if(!container) return;
+            // Set standort label dynamically
+            var bwaLabel = document.getElementById('bwaStandortLabel');
+            var useDemo = isDemoMode || (sbProfile && (sbProfile.status === 'demo' || sbProfile.status === 'demo_active'));
+            if(bwaLabel) bwaLabel.textContent = useDemo ? 'vit:bikes Muster-Filiale' : ('vit:bikes ' + (sbProfile && sbProfile.standort_name ? sbProfile.standort_name : 'Standort'));
             try {
                 var stdId = sbProfile ? sbProfile.standort_id : null;
                 console.log('[BWA] loadBwaList() called, stdId:', stdId, 'is_hq:', sbProfile ? sbProfile.is_hq : 'no profile');
@@ -17269,24 +17273,94 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         // === PERFORMANCE COCKPIT ===
         var cockpitMonth = null;
+
+        function generateDemoBwaData() {
+            var currentYear = new Date().getFullYear();
+            var currentMonth = new Date().getMonth() + 1;
+            var bwas = [];
+            var vjBwas = [];
+            var baseUmsatz = [68000, 72000, 85000, 91000, 98000, 105000, 95000, 88000, 92000, 99000, 78000, 110000];
+            for (var m = 1; m <= Math.min(currentMonth, 12); m++) {
+                var u = baseUmsatz[m-1] + Math.round((Math.random()-0.5)*8000);
+                var we = Math.round(u * 0.58);
+                var roh = u - we;
+                var pk = Math.round(u * 0.18);
+                var sk = Math.round(u * 0.12);
+                var gk = pk + sk;
+                var erg = roh - gk;
+                bwas.push({
+                    id: 'demo-bwa-' + m,
+                    standort_id: 'demo',
+                    monat: m, jahr: currentYear,
+                    umsatzerloese: u,
+                    wareneinsatz: we,
+                    rohertrag: roh,
+                    personalkosten: pk,
+                    raumkosten: Math.round(u * 0.04),
+                    werbekosten: Math.round(u * 0.02),
+                    kfzkosten: Math.round(u * 0.015),
+                    abschreibungen: 1200,
+                    sonstige_kosten: Math.round(u * 0.03),
+                    gesamtkosten: gk,
+                    betriebsergebnis: erg,
+                    ergebnis_vor_steuern: erg - 400,
+                    rohertrag_prozent: Math.round(roh / u * 1000) / 10,
+                    personalkosten_prozent: Math.round(pk / u * 1000) / 10,
+                    created_at: new Date().toISOString()
+                });
+                // Vorjahr etwas niedriger
+                var vu = Math.round(u * 0.92);
+                var vwe = Math.round(vu * 0.6);
+                var vroh = vu - vwe;
+                var vpk = Math.round(vu * 0.19);
+                var vsk = Math.round(vu * 0.13);
+                var vgk = vpk + vsk;
+                var verg = vroh - vgk;
+                vjBwas.push({
+                    id: 'demo-vj-bwa-' + m,
+                    standort_id: 'demo',
+                    monat: m, jahr: currentYear - 1,
+                    umsatzerloese: vu,
+                    wareneinsatz: vwe,
+                    rohertrag: vroh,
+                    personalkosten: vpk,
+                    gesamtkosten: vgk,
+                    betriebsergebnis: verg,
+                    ergebnis_vor_steuern: verg - 350,
+                    rohertrag_prozent: Math.round(vroh / vu * 1000) / 10,
+                    personalkosten_prozent: Math.round(vpk / vu * 1000) / 10,
+                    created_at: new Date().toISOString()
+                });
+            }
+            return { bwas: bwas, vjBwas: vjBwas };
+        }
+
         async function renderPerformanceCockpit() {
             var el = document.getElementById('cockpitContent');
             if(!el) return;
             el.innerHTML = '<p class="text-sm text-gray-400 text-center py-8 animate-pulse">Lade Cockpit-Daten...</p>';
 
+            var useDemo = isDemoMode || (sbProfile && (sbProfile.status === 'demo' || sbProfile.status === 'demo_active'));
             var stdId = sbProfile ? sbProfile.standort_id : null;
-            console.log('[Cockpit] renderPerformanceCockpit() called, stdId:', stdId);
-            var stdName = sbProfile ? (sbProfile.standort_name || sbProfile.name || 'Mein Standort') : 'Mein Standort';
+            console.log('[Cockpit] renderPerformanceCockpit() called, stdId:', stdId, 'demo:', useDemo);
+            var stdName = useDemo ? 'Muster-Filiale' : (sbProfile ? (sbProfile.standort_name || sbProfile.name || 'Mein Standort') : 'Mein Standort');
             var currentYear = new Date().getFullYear();
             var pn = function(v) { return parseFloat(v) || 0; };
             var mLabels = {1:'Jan',2:'Feb',3:'Mär',4:'Apr',5:'Mai',6:'Jun',7:'Jul',8:'Aug',9:'Sep',10:'Okt',11:'Nov',12:'Dez'};
 
             try {
-                // Load BWAs for current + previous year
-                var bwaResp = await sb.from('bwa_daten').select('*').eq('standort_id', stdId).eq('jahr', currentYear).order('monat');
-                var bwas = (bwaResp.data || []);
-                var vjResp = await sb.from('bwa_daten').select('*').eq('standort_id', stdId).eq('jahr', currentYear - 1).order('monat');
-                var vjBwas = (vjResp.data || []);
+                var bwas, vjBwas;
+                if (useDemo) {
+                    var demoData = generateDemoBwaData();
+                    bwas = demoData.bwas;
+                    vjBwas = demoData.vjBwas;
+                } else {
+                    // Load BWAs for current + previous year
+                    var bwaResp = await sb.from('bwa_daten').select('*').eq('standort_id', stdId).eq('jahr', currentYear).order('monat');
+                    bwas = (bwaResp.data || []);
+                    var vjResp = await sb.from('bwa_daten').select('*').eq('standort_id', stdId).eq('jahr', currentYear - 1).order('monat');
+                    vjBwas = (vjResp.data || []);
+                }
 
                 if(bwas.length === 0) {
                     el.innerHTML = '<div class="text-center py-12"><p class="text-4xl mb-3">📊</p><p class="text-gray-500">Noch keine BWA-Daten für ' + currentYear + ' vorhanden.</p><p class="text-sm text-gray-400 mt-2">Lade eine BWA hoch, um das Performance Cockpit zu aktivieren.</p><button onclick="showControllingTab(\'bwa\')" class="mt-4 px-4 py-2 bg-vit-orange text-white rounded-lg text-sm hover:opacity-90">BWA hochladen →</button></div>';
@@ -17300,7 +17374,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
                 if(!bwa) { el.innerHTML = '<p class="text-sm text-gray-400 text-center py-8">Keine Daten für gewählten Monat.</p>'; return; }
 
-                // Correct values from detail positions if available
+                // Correct values from detail positions if available (skip in demo)
+                if (!useDemo) {
                 var detCockpit = await sb.from('bwa_detail_positionen').select('zeile,wert').eq('bwa_id', bwa.id).eq('ist_summenzeile', true).in('zeile', [1000,1040,1260,1300,1355]);
                 if(detCockpit.data && detCockpit.data.length > 0) {
                     var dm = {}; detCockpit.data.forEach(function(d){ dm[d.zeile] = pn(d.wert); });
@@ -17309,6 +17384,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     if(dm[1260]) bwa.gesamtkosten = dm[1260];
                     if(dm[1355]) bwa.ergebnis_vor_steuern = dm[1355];
                     else if(dm[1300]) bwa.ergebnis_vor_steuern = dm[1300];
+                }
                 }
 
                 // Extract values
@@ -22417,7 +22493,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
         function getStandortName() {
             if(currentLocation && locations[currentLocation]) return locations[currentLocation].name;
-            return 'Grafrath';
+            var useDemo = isDemoMode || (sbProfile && (sbProfile.status === 'demo' || sbProfile.status === 'demo_active'));
+            if(useDemo) return 'Muster-Filiale';
+            return sbProfile && sbProfile.standort_name ? sbProfile.standort_name : 'Mein Standort';
         }
 
         function getPartnerMitarbeiter() {
@@ -28211,7 +28289,7 @@ const fmt=v=>v.toLocaleString("de-DE");
 const fmtE=v=>fmt(v)+" \u20ac";
 const pct=(a,b)=>b?Math.round(a/b*100):0;
 const clp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const ST={name:"Grafrath",plz:"82284"},YR=2026,UZ=838000,OBM=1500,LBM=600;
+const ST=(function(){var dm=window.isDemoMode||(window.sbProfile&&(window.sbProfile.status==='demo'||window.sbProfile.status==='demo_active'));return{name:dm?'Muster-Filiale':(window.sbProfile&&window.sbProfile.standort_name?window.sbProfile.standort_name:'Mein Standort'),plz:dm?'12345':(window.sbProfile&&window.sbProfile.standort_plz?window.sbProfile.standort_plz:'')};})(),YR=2026,UZ=838000,OBM=1500,LBM=600;
 const MO=["Jan","Feb","M\u00e4r","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
 
 const SCORE={total:72,parts:[{n:"Google My Business",s:78,w:30,i:"\ud83d\udccd",c:"#2563eb"},{n:"Paid Reichweite",s:65,w:25,i:"\ud83c\udfaf",c:"#EF7D00"},{n:"Bewertungen",s:82,w:20,i:"\u2b50",c:"#ca8a04"},{n:"Organische Pr\u00e4senz",s:60,w:15,i:"\ud83d\udce1",c:"#9333ea"},{n:"Lokales Marketing",s:70,w:10,i:"\ud83c\udfea",c:"#16a34a"}],trend:[58,61,64,63,67,69,68,72],rank:12,ts:28,tips:[{a:"GMB Antwortrate auf 100%",p:4,e:"Einfach"},{a:"5 neue GMB-Fotos",p:3,e:"Einfach"},{a:"Lokales Event Q1",p:5,e:"Mittel"},{a:"Local Hero Video",p:4,e:"Mittel"}]};
