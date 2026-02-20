@@ -6179,6 +6179,22 @@
                             </div>
                         </div>
                         <div id="officeRoomsAdmin"></div>
+
+                        <!-- Floor plan reference with desk overlay -->
+                        <div id="officeRoomsPlanRef" class="mt-6 vit-card p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="text-sm font-bold text-gray-700">📐 Grundriss OG · Jahnstraße 2</div>
+                                <button onclick="officeToggleFloorplan()" class="text-xs font-semibold px-3 py-1 rounded-lg" style="border:1px solid #EF7D00;color:#EF7D00" id="officeFloorplanToggleBtn">Grundriss einblenden</button>
+                            </div>
+                            <div id="officeFloorplanWrap" style="display:none">
+                                <div id="officeFloorplanContainer" style="position:relative;overflow:auto">
+                                    <img src="grundriss_og.png" style="width:100%;min-width:700px;display:block;border-radius:8px;opacity:0.9" onload="officeRenderAdminDots()">
+                                    <div id="officeAdminDots" style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none"></div>
+                                </div>
+                                <div class="flex flex-wrap gap-2 mt-3" id="officeRoomLegend"></div>
+                                <div class="text-[10px] text-gray-400 mt-2">Tipp: Die farbigen Punkte zeigen welche Arbeitsplätze zu welchem Raum gehören. Benenne die Räume oben passend zum Grundriss.</div>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
@@ -22982,6 +22998,52 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         // ═══ OFFICE-RÄUME ADMIN ═══
+        var _officeFloorplanVisible = false;
+        window.officeToggleFloorplan = function() {
+            _officeFloorplanVisible = !_officeFloorplanVisible;
+            document.getElementById('officeFloorplanWrap').style.display = _officeFloorplanVisible ? '' : 'none';
+            document.getElementById('officeFloorplanToggleBtn').textContent = _officeFloorplanVisible ? 'Grundriss ausblenden' : 'Grundriss einblenden';
+            if(_officeFloorplanVisible) setTimeout(officeRenderAdminDots, 150);
+        };
+        
+        var _officeRoomColors = ['#EF7D00','#3b82f6','#22c55e','#a855f7','#ef4444','#eab308','#06b6d4','#ec4899','#64748b','#84cc16','#f97316','#8b5cf6'];
+        
+        window.officeRenderAdminDots = async function() {
+            var dotsEl = document.getElementById('officeAdminDots');
+            var legendEl = document.getElementById('officeRoomLegend');
+            if(!dotsEl) return;
+            try {
+                var dr = await sb.from('office_desks').select('nr,room,label,pct_x,pct_y,active').eq('active', true).order('nr');
+                var rr = await sb.from('office_rooms').select('id,name,sortierung').order('sortierung');
+                var desks = dr.data || [];
+                var rooms = rr.data || [];
+                
+                // Assign color per room
+                var roomColorMap = {};
+                rooms.forEach(function(r, i) { roomColorMap[r.name] = _officeRoomColors[i % _officeRoomColors.length]; });
+                
+                var html = '';
+                desks.forEach(function(d) {
+                    if(!d.pct_x || !d.pct_y) return;
+                    var col = roomColorMap[d.room] || '#999';
+                    var left = d.pct_x;
+                    var top = d.pct_y;
+                    html += '<div style="position:absolute;left:' + left + '%;top:' + top + '%;transform:translate(-50%,-50%);width:24px;height:24px;border-radius:50%;background:' + col + ';border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;pointer-events:auto;cursor:default" title="Platz #' + d.nr + ' · ' + (d.label||'') + ' · Raum: ' + (d.room||'?') + '">' + d.nr + '</div>';
+                });
+                dotsEl.innerHTML = html;
+                
+                // Legend
+                if(legendEl) {
+                    var lhtml = '';
+                    rooms.forEach(function(r, i) {
+                        var col = _officeRoomColors[i % _officeRoomColors.length];
+                        var count = desks.filter(function(d) { return d.room === r.name; }).length;
+                        lhtml += '<span class="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-semibold" style="background:' + col + '15;color:' + col + ';border:1px solid ' + col + '30"><span style="width:10px;height:10px;border-radius:50%;background:' + col + ';display:inline-block"></span>' + r.name + ' (' + count + ')</span>';
+                    });
+                    legendEl.innerHTML = lhtml;
+                }
+            } catch(e) { console.error('[AdminDots]', e); }
+        };
         async function renderOfficeRoomsAdmin() {
             var el = document.getElementById('officeRoomsAdmin');
             if(!el) return;
@@ -23122,12 +23184,12 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var maxSort = 0;
                 var rr = await sb.from('office_rooms').select('sortierung').order('sortierung', {ascending: false}).limit(1);
                 if(rr.data && rr.data.length) maxSort = rr.data[0].sortierung || 0;
-                var r = await sb.from('office_rooms').insert({ name: 'Neuer Raum', sortierung: maxSort + 1 }).select().single();
+                var r = await sb.from('office_rooms').insert([{ name: 'Neuer Raum', sortierung: maxSort + 1 }]).select();
                 if(r.error) throw r.error;
-                window._editingRoomId = r.data.id;
+                if(r.data && r.data.length) window._editingRoomId = r.data[0].id;
                 showToast('Raum angelegt – jetzt benennen', 'success');
                 renderOfficeRoomsAdmin();
-            } catch(e) { showToast('Fehler: ' + e.message, 'error'); }
+            } catch(e) { showToast('Fehler: ' + e.message, 'error'); console.error('[OfficeRoomAdd]', e); }
         };
         
         window.officeRoomToggle = async function(id, active) {
