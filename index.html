@@ -6118,16 +6118,16 @@
 
                     <!-- Rollen-Übersicht -->
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div class="vit-card p-4 text-center border-l-4 border-orange-500"><div class="text-2xl font-bold text-vit-orange">4</div><div class="text-xs text-gray-500">Standort-Rollen</div></div>
-                        <div class="vit-card p-4 text-center border-l-4 border-blue-500"><div class="text-2xl font-bold text-blue-600">12</div><div class="text-xs text-gray-500">Standort-Module</div></div>
+                        <div class="vit-card p-4 text-center border-l-4 border-orange-500"><div class="text-2xl font-bold text-vit-orange">4 + 8</div><div class="text-xs text-gray-500">Standort + HQ Rollen</div></div>
+                        <div class="vit-card p-4 text-center border-l-4 border-blue-500"><div class="text-2xl font-bold text-blue-600">16 + 18</div><div class="text-xs text-gray-500">Standort + HQ Module</div></div>
                         <div class="vit-card p-4 text-center border-l-4 border-green-500"><div class="text-2xl font-bold text-green-600" id="settingsMaCount">26</div><div class="text-xs text-gray-500">Mitarbeiter gesamt</div></div>
                         <div class="vit-card p-4 text-center border-l-4 border-purple-500"><div class="text-2xl font-bold text-purple-600">✓</div><div class="text-xs text-gray-500">Multi-Rollen aktiv</div></div>
                     </div>
 
-                    <!-- Rechte-Matrix -->
+                    <!-- Rechte-Matrix PARTNER -->
                     <div class="vit-card overflow-hidden mb-6">
                         <div class="p-4 border-b bg-gray-50 flex items-center justify-between">
-                            <h2 class="font-bold text-gray-800">Rechte-Matrix: Module × Rollen</h2>
+                            <h2 class="font-bold text-gray-800">🏪 Standort-Rechte: Module × Rollen</h2>
                             <span class="text-xs text-gray-400">Klicken zum Aktivieren/Deaktivieren</span>
                         </div>
                         <div class="overflow-x-auto">
@@ -6146,10 +6146,36 @@
                         </div>
                     </div>
 
+                    <!-- Rechte-Matrix HQ -->
+                    <div class="vit-card overflow-hidden mb-6">
+                        <div class="p-4 border-b bg-red-50 flex items-center justify-between">
+                            <h2 class="font-bold text-gray-800">🏢 HQ-Rechte: Module × Rollen</h2>
+                            <span class="text-xs text-gray-400">Klicken zum Aktivieren/Deaktivieren</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm" id="hqRechteMatrixTable">
+                                <thead class="bg-red-50/50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left font-semibold text-gray-600 min-w-[160px]">HQ-Modul</th>
+                                        <th class="px-4 py-3 text-center font-semibold text-red-600 min-w-[70px]">👑 GF</th>
+                                        <th class="px-4 py-3 text-center font-semibold text-blue-600 min-w-[70px]">📊 Sales</th>
+                                        <th class="px-4 py-3 text-center font-semibold text-pink-600 min-w-[70px]">📣 Mktg</th>
+                                        <th class="px-4 py-3 text-center font-semibold text-green-600 min-w-[70px]">🛒 Eink.</th>
+                                        <th class="px-4 py-3 text-center font-semibold text-yellow-600 min-w-[70px]">🎧 Supp.</th>
+                                        <th class="px-4 py-3 text-center font-semibold text-indigo-600 min-w-[70px]">🎓 Akad.</th>
+                                        <th class="px-4 py-3 text-center font-semibold text-purple-600 min-w-[70px]">👥 HR</th>
+                                        <th class="px-4 py-3 text-center font-semibold text-gray-600 min-w-[70px]">🖥️ IT</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="hqRechteMatrixBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
                     <!-- Rollen-Beschreibungen -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <div class="vit-card p-5">
-                            <h3 class="font-bold text-gray-800 mb-3">📋 Rollen-Beschreibungen</h3>
+                            <h3 class="font-bold text-gray-800 mb-3">🏪 Standort-Rollen</h3>
                             <div class="space-y-3">
                                 <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-vit-orange text-white mt-0.5">Geschäftsleitung</span><p class="text-xs text-gray-600">Vollzugriff auf alle Standort-Module inkl. Dashboards, Shop, Onboarding und Controlling.</p></div>
                                 <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700 mt-0.5">Verkauf</span><p class="text-xs text-gray-600">Zugang zu Verkauf, Marketing und allgemeinen Tools. Fokus auf Kundenberatung und Vertrieb.</p></div>
@@ -6158,13 +6184,26 @@
                             </div>
                         </div>
                         <div class="vit-card p-5">
-                            <h3 class="font-bold text-gray-800 mb-3">ℹ️ Hinweise</h3>
-                            <div class="space-y-2 text-xs text-gray-600">
-                                <p>• <strong>Kalender, Aufgaben & Kommunikation</strong> sind für alle Rollen verfügbar (nicht deaktivierbar).</p>
-                                <p>• <strong>Mehrfach-Rollen:</strong> Ein Mitarbeiter kann mehrere Rollen gleichzeitig haben – die Rechte werden addiert.</p>
-                                <p>• <strong>Rollenzuweisung:</strong> Rollen pro Mitarbeiter vergeben Sie unter Kommandozentrale → Mitarbeiter.</p>
-                                <p>• Änderungen an der Rechte-Matrix werden sofort für alle betroffenen Nutzer wirksam.</p>
+                            <h3 class="font-bold text-gray-800 mb-3">🏢 HQ-Rollen</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-red-500 text-white mt-0.5">GF</span><p class="text-xs text-gray-600">Vollzugriff auf alle HQ-Module inkl. Einstellungen, Feature Flags und Entwicklung.</p></div>
+                                <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-blue-500 text-white mt-0.5">Sales</span><p class="text-xs text-gray-600">Standortübersicht, Pipeline, Handlungsbedarf. Fokus auf Partnernetzwerk-Vertrieb.</p></div>
+                                <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-pink-500 text-white mt-0.5">Marketing</span><p class="text-xs text-gray-600">Kampagnen, Budgetsteuerung, Social Media, Video-Freigabe.</p></div>
+                                <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-green-500 text-white mt-0.5">Einkauf</span><p class="text-xs text-gray-600">Lieferanten, Bestellungen, Standort-Dokumente.</p></div>
+                                <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-yellow-500 text-white mt-0.5">Support</span><p class="text-xs text-gray-600">Ticketsystem, Trainermanagement, Partner-Support, Handlungsbedarf.</p></div>
+                                <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-indigo-500 text-white mt-0.5">Akademie</span><p class="text-xs text-gray-600">Wissensdatenbank, Schulungen, Onboarding-Inhalte verwalten.</p></div>
+                                <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-purple-500 text-white mt-0.5">HR</span><p class="text-xs text-gray-600">Mitarbeiterverwaltung, Tools & Lizenzen, Abrechnung. Optional aktivierbar.</p></div>
+                                <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-gray-600 text-white mt-0.5">IT</span><p class="text-xs text-gray-600">Vollzugriff wie GF. Systemadministration, Feature Flags, Backups.</p></div>
                             </div>
+                        </div>
+                    </div>
+                    <div class="vit-card p-5 mt-4">
+                        <h3 class="font-bold text-gray-800 mb-3">ℹ️ Hinweise</h3>
+                        <div class="space-y-2 text-xs text-gray-600">
+                            <p>• <strong>Basis-Module</strong> (Kalender, Aufgaben, Kommunikation, Office) sind für alle Rollen verfügbar.</p>
+                            <p>• <strong>Mehrfach-Rollen:</strong> Ein Mitarbeiter kann mehrere Rollen gleichzeitig haben – die Rechte werden addiert.</p>
+                            <p>• <strong>GF und IT</strong> haben automatisch Vollzugriff auf alle HQ-Module (nicht einschränkbar).</p>
+                            <p>• Änderungen an der Rechte-Matrix werden sofort für alle betroffenen Nutzer wirksam.</p>
                         </div>
                     </div>
                     </div><!-- /settingsTabRechte -->
@@ -23715,6 +23754,12 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             // Modul-Status Tab rendern
             renderModulStatusList();
 
+            // Load HQ permissions from DB (async, re-renders when done)
+            if(!window._hqRechteMatrix) {
+                loadHqRechteMatrix().then(function(){ renderHqEinstellungen(); });
+                return;
+            }
+
             // Rechte-Matrix rendern
             var modules = [
                 {key:'home',label:'Startseite',icon:'🏠',core:true},
@@ -23758,6 +23803,53 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             });
             body.innerHTML = h;
 
+            // ═══ HQ RECHTE-MATRIX ═══
+            var hqBody = document.getElementById('hqRechteMatrixBody');
+            if(hqBody) {
+                var hqModules = [
+                    {key:'hqCockpit',label:'Netzwerk-Cockpit',icon:'🌐',core:true},
+                    {key:'hqKalender',label:'Kalender',icon:'📅',core:true},
+                    {key:'hqAufgaben',label:'Aufgaben',icon:'📋',core:true},
+                    {key:'hqKommunikation',label:'Kommunikation',icon:'💬',core:true},
+                    {key:'hqOffice',label:'Office',icon:'🏢',core:true},
+                    {key:'hqStandorte',label:'Standorte',icon:'🏪',core:false},
+                    {key:'hqFinanzen',label:'Finanzen',icon:'💰',core:false},
+                    {key:'hqMarketing',label:'Marketing',icon:'📣',core:false},
+                    {key:'hqKampagnen',label:'Kampagnen',icon:'🎯',core:false},
+                    {key:'hqHandlungsbedarf',label:'Handlungsbedarf',icon:'🚨',core:false},
+                    {key:'hqKommandozentrale',label:'Kommandozentrale',icon:'⚙️',core:false},
+                    {key:'hqDokumente',label:'Dokumente',icon:'📄',core:false},
+                    {key:'hqPersonal',label:'Personal',icon:'👥',core:false},
+                    {key:'hqBilling',label:'Abrechnung',icon:'💳',core:false},
+                    {key:'hqAnalytics',label:'Portal-Analytics',icon:'📈',core:false},
+                    {key:'hqEinstellungen',label:'Einstellungen',icon:'⚙️',core:false},
+                    {key:'hqFeatureFlags',label:'Feature Flags',icon:'🚩',core:false},
+                    {key:'hqEntwicklung',label:'Entwicklung',icon:'💻',core:false}
+                ];
+                var hqRollen = ['hq_gf','hq_sales','hq_marketing','hq_einkauf','hq_support','hq_akademie','hq_hr','hq_it'];
+                var hqH = '';
+                hqModules.forEach(function(mod){
+                    var isCore = mod.core;
+                    var isFullAccess = (mod.key === 'hqCockpit'); // Cockpit always for all
+                    hqH += '<tr class="border-t border-gray-100 '+(isCore?'bg-green-50':'hover:bg-gray-50')+'">';
+                    hqH += '<td class="px-4 py-2.5 font-semibold text-gray-700 text-xs">'+mod.icon+' '+mod.label;
+                    if(isCore) hqH += ' <span class="text-[9px] text-green-600 font-normal">(Basis)</span>';
+                    hqH += '</td>';
+                    hqRollen.forEach(function(r){
+                        var isGfOrIt = (r==='hq_gf' || r==='hq_it');
+                        if(isCore || isGfOrIt) {
+                            hqH += '<td class="px-4 py-2.5 text-center"><span class="text-green-500 text-lg cursor-not-allowed" title="'+(isGfOrIt?'Vollzugriff (GF/IT)':'Basis-Modul')+'">✅</span></td>';
+                        } else {
+                            // Check from DB permissions
+                            var isAllowed = window._hqRechteMatrix && window._hqRechteMatrix[mod.key] && window._hqRechteMatrix[mod.key][r];
+                            hqH += '<td class="px-4 py-2.5 text-center"><button onclick="toggleHqPermission(\''+mod.key+'\',\''+r+'\')" class="text-lg transition hover:scale-125" title="Klicken zum Umschalten">'+(isAllowed?'✅':'❌')+'</button></td>';
+                        }
+                    });
+                    hqH += '</tr>';
+                });
+                hqBody.innerHTML = hqH;
+            }
+
             // Update MA count
             var cnt = document.getElementById('settingsMaCount');
             if(cnt) cnt.textContent = kzMitarbeiter.length;
@@ -23786,6 +23878,42 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             renderHqEinstellungen();
             // Also update sidebar immediately if user is logged in
             try { updateUIForRole(); } catch(e){}
+        }
+
+        // ═══ HQ RECHTE-MATRIX: Load & Toggle ═══
+        async function loadHqRechteMatrix() {
+            try {
+                var resp = await sb.from('modul_berechtigungen').select('modul, hat_zugriff, rolle_id, rollen(name)').eq('hat_zugriff', true);
+                window._hqRechteMatrix = {};
+                (resp.data || []).forEach(function(p){
+                    var roleName = p.rollen ? p.rollen.name : null;
+                    if(!roleName || !roleName.startsWith('hq_')) return;
+                    if(!window._hqRechteMatrix[p.modul]) window._hqRechteMatrix[p.modul] = {};
+                    window._hqRechteMatrix[p.modul][roleName] = true;
+                });
+            } catch(e) { console.warn('loadHqRechteMatrix error:', e); }
+        }
+
+        async function toggleHqPermission(modKey, rolle) {
+            try {
+                var rolleResp = await sb.from('rollen').select('id').eq('name', rolle).single();
+                if(!rolleResp.data) return;
+                var rolleId = rolleResp.data.id;
+                var isCurrentlyAllowed = window._hqRechteMatrix && window._hqRechteMatrix[modKey] && window._hqRechteMatrix[modKey][rolle];
+                if(isCurrentlyAllowed) {
+                    // Remove permission
+                    await sb.from('modul_berechtigungen').delete().eq('modul', modKey).eq('rolle_id', rolleId);
+                    if(window._hqRechteMatrix[modKey]) delete window._hqRechteMatrix[modKey][rolle];
+                } else {
+                    // Add permission
+                    await sb.from('modul_berechtigungen').upsert({modul: modKey, rolle_id: rolleId, hat_zugriff: true}, {onConflict: 'modul,rolle_id'});
+                    if(!window._hqRechteMatrix[modKey]) window._hqRechteMatrix[modKey] = {};
+                    window._hqRechteMatrix[modKey][rolle] = true;
+                }
+                // Re-render
+                renderHqEinstellungen();
+                showToast(isCurrentlyAllowed ? '❌ Berechtigung entfernt' : '✅ Berechtigung aktiviert', isCurrentlyAllowed ? 'warning' : 'success');
+            } catch(e) { showToast('Fehler: ' + e.message, 'error'); }
         }
 
         function renderKommandozentrale() {
