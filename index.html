@@ -6193,7 +6193,7 @@
                                 <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-yellow-500 text-white mt-0.5">Support</span><p class="text-xs text-gray-600">Ticketsystem, Trainermanagement, Partner-Support, Handlungsbedarf.</p></div>
                                 <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-indigo-500 text-white mt-0.5">Akademie</span><p class="text-xs text-gray-600">Wissensdatenbank, Schulungen, Onboarding-Inhalte verwalten.</p></div>
                                 <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-purple-500 text-white mt-0.5">HR</span><p class="text-xs text-gray-600">Mitarbeiterverwaltung, Tools & Lizenzen, Abrechnung. Optional aktivierbar.</p></div>
-                                <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-gray-600 text-white mt-0.5">IT</span><p class="text-xs text-gray-600">Vollzugriff wie GF. Systemadministration, Feature Flags, Backups.</p></div>
+                                <div class="flex items-start space-x-3"><span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-gray-600 text-white mt-0.5">IT</span><p class="text-xs text-gray-600">Systemadministration, Feature Flags, Backups. Rechte individuell konfigurierbar.</p></div>
                             </div>
                         </div>
                     </div>
@@ -6202,7 +6202,7 @@
                         <div class="space-y-2 text-xs text-gray-600">
                             <p>• <strong>Basis-Module</strong> (Kalender, Aufgaben, Kommunikation, Office) sind für alle Rollen verfügbar.</p>
                             <p>• <strong>Mehrfach-Rollen:</strong> Ein Mitarbeiter kann mehrere Rollen gleichzeitig haben – die Rechte werden addiert.</p>
-                            <p>• <strong>GF und IT</strong> haben automatisch Vollzugriff auf alle HQ-Module (nicht einschränkbar).</p>
+                            <p>• <strong>GF</strong> hat automatisch Vollzugriff auf alle HQ-Module (nicht einschränkbar). IT und alle anderen Rollen sind konfigurierbar.</p>
                             <p>• Änderungen an der Rechte-Matrix werden sofort für alle betroffenen Nutzer wirksam.</p>
                         </div>
                     </div>
@@ -7596,8 +7596,8 @@
             if(hasRole('hq') && !hasRole('hq_gf') && !hasRole('hq_sales') && !hasRole('hq_marketing') &&
                !hasRole('hq_einkauf') && !hasRole('hq_support') && !hasRole('hq_akademie') &&
                !hasRole('hq_hr') && !hasRole('hq_it')) return true;
-            // GF + IT always full access
-            if(hasRole('hq_gf') || hasRole('hq_it')) return true;
+            // GF always full access
+            if(hasRole('hq_gf')) return true;
             // Check DB-driven permissions first (action_* keys in modul_berechtigungen)
             var actionKey = 'action_' + action;
             if(window._hqRechteMatrix && window._hqRechteMatrix[actionKey]) {
@@ -8444,8 +8444,7 @@
             if(isHQ && hqMenu) {
                 var isLegacyHQ = hasRole('hq');
                 var isHqGF = hasRole('hq_gf');
-                var isHqIT = hasRole('hq_it');
-                var hasFullAccess = isLegacyHQ || isHqGF || isHqIT;
+                var hasFullAccess = isLegacyHQ || isHqGF;
 
                 if(!hasFullAccess && window._hqModulPerms) {
                     // Apply granular permissions from modul_berechtigungen
@@ -8455,7 +8454,7 @@
                         btn.classList.toggle('hidden', !allowed);
                     });
                 }
-                // Legacy HQ, GF, IT → show everything (no hiding)
+                // Legacy HQ, GF → show everything (no hiding)
             }
 
             // HQ Impersonation buttons (show if real user is HQ or currently impersonating)
@@ -22525,7 +22524,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 html += '<div><span class="text-sm font-semibold text-gray-800">'+r.icon+' '+r.label+'</span>';
                 html += '<p class="text-[10px] text-gray-400">'+r.desc+'</p></div></label>';
             });
-            html += '<p class="text-[10px] text-gray-400 ml-1 mb-2">💡 GF und IT haben automatisch Vollzugriff. Andere Rollen sehen nur freigegebene Module.</p>';
+            html += '<p class="text-[10px] text-gray-400 ml-1 mb-2">💡 GF hat automatisch Vollzugriff. Andere Rollen sehen nur freigegebene Module.</p>';
             html += '</div>';
 
             // Standort Rollen (initial visible)
@@ -23942,9 +23941,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 if(isCore) hqH += ' <span class="text-[9px] text-green-600 font-normal">(Basis)</span>';
                 hqH += '</td>';
                 hqRollen.forEach(function(r){
-                    var isGfOrIt = (r==='hq_gf' || r==='hq_it');
-                    if(isCore || isGfOrIt) {
-                        hqH += '<td class="px-4 py-2.5 text-center"><span class="text-green-500 text-lg cursor-not-allowed" title="'+(isGfOrIt?'Vollzugriff (GF/IT)':'Basis-Modul')+'">✅</span></td>';
+                    var isGf = (r==='hq_gf');
+                    if(isCore || isGf) {
+                        hqH += '<td class="px-4 py-2.5 text-center"><span class="text-green-500 text-lg cursor-not-allowed" title="'+(isGf?'Vollzugriff (GF)':'Basis-Modul')+'">✅</span></td>';
                     } else {
                         var isAllowed = window._hqRechteMatrix && window._hqRechteMatrix[mod.key] && window._hqRechteMatrix[mod.key][r];
                         hqH += '<td class="px-4 py-2.5 text-center"><button onclick="toggleHqPermission(\''+mod.key+'\',\''+r+'\')" class="text-lg transition hover:scale-125" title="Klicken zum Umschalten">'+(isAllowed?'✅':'❌')+'</button></td>';
@@ -23959,9 +23958,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 hqH += '<tr class="border-t border-gray-100 hover:bg-orange-50/50">';
                 hqH += '<td class="px-4 py-2.5 font-semibold text-gray-700 text-xs">'+act.icon+' '+act.label+'</td>';
                 hqRollen.forEach(function(r){
-                    var isGfOrIt = (r==='hq_gf' || r==='hq_it');
-                    if(isGfOrIt) {
-                        hqH += '<td class="px-4 py-2.5 text-center"><span class="text-green-500 text-lg cursor-not-allowed" title="Vollzugriff (GF/IT)">✅</span></td>';
+                    var isGf = (r==='hq_gf');
+                    if(isGf) {
+                        hqH += '<td class="px-4 py-2.5 text-center"><span class="text-green-500 text-lg cursor-not-allowed" title="Vollzugriff (GF)">✅</span></td>';
                     } else {
                         var isAllowed = window._hqRechteMatrix && window._hqRechteMatrix[act.key] && window._hqRechteMatrix[act.key][r];
                         hqH += '<td class="px-4 py-2.5 text-center"><button onclick="toggleHqPermission(\''+act.key+'\',\''+r+'\')" class="text-lg transition hover:scale-125" title="Klicken zum Umschalten">'+(isAllowed?'✅':'❌')+'</button></td>';
