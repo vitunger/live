@@ -15165,6 +15165,15 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var btn = document.getElementById('devSubmitBtn');
             if(btn) { btn.disabled = true; btn.textContent = '⏳ Wird eingereicht...'; }
             try {
+                // Demo mode: fake success
+                if(typeof DEMO_ACTIVE !== 'undefined' && DEMO_ACTIVE) {
+                    await new Promise(function(r){setTimeout(r,800)});
+                    showToast('Danke für dein Feedback! (Demo-Modus)', 'success');
+                    if(btn) { btn.disabled = false; btn.textContent = '💡 Feedback einreichen'; }
+                    document.getElementById('devTitel').value = '';
+                    document.getElementById('devBeschreibung').value = '';
+                    return;
+                }
                 var titel = (document.getElementById('devTitel').value || '').trim();
                 var beschreibung = (document.getElementById('devBeschreibung').value || '').trim();
                 var kategorie = document.getElementById('devKategorie').value;
@@ -15174,9 +15183,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
                 // Upload files to Supabase Storage
                 var attachments = [];
+                var userId = sbUser ? sbUser.id : 'demo-user';
                 for(var i = 0; i < devSelectedFiles.length; i++) {
                     var file = devSelectedFiles[i];
-                    var path = 'dev-submissions/' + sbUser.id + '/' + Date.now() + '_' + file.name;
+                    var path = 'dev-submissions/' + userId + '/' + Date.now() + '_' + file.name;
                     var upResp = await sb.storage.from('portal-uploads').upload(path, file);
                     if(upResp.error) { console.error('Upload error:', upResp.error); continue; }
                     var urlResp = sb.storage.from('portal-uploads').getPublicUrl(path);
@@ -15185,7 +15195,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
                 // Insert submission
                 var insertData = {
-                    user_id: sbUser.id,
+                    user_id: userId,
                     standort_id: sbStandort ? sbStandort.id : null,
                     titel: titel || null,
                     beschreibung: beschreibung || null,
