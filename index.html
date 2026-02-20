@@ -1163,7 +1163,7 @@
 
 
                         <!-- 🎯 TAGES-COCKPIT – Heute steuern -->
-                        <div id="dailyFocusBlock" class="mb-6">
+                        <div id="dailyFocusBlock" class="mb-6" data-widget="daily_focus">
                             <div class="vit-card p-5" style="border-left:4px solid #EF7D00;">
                                 <div class="flex items-center justify-between mb-4">
                                     <h3 class="text-sm font-bold text-gray-800">🎯 Heute steuern<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-daily')">i</button></h3><div class="widget-info-popup" id="info-daily">Dein tägliches Steuerungs-Cockpit. Zeigt die 5 wichtigsten Kennzahlen für heute: Umsatz, offene Leads, Aufgaben, BWA-Deadline und Termine. Klicke auf eine Kachel, um direkt ins Modul zu springen.</div>
@@ -1208,7 +1208,7 @@
 
 
                         <!-- 🏥 PERFORMANCE HEALTH SCORE -->
-                        <div id="healthScoreWidget" class="vit-card p-5 mb-6">
+                        <div id="healthScoreWidget" class="vit-card p-5 mb-6" data-widget="health_score">
                             <div class="flex items-center justify-between mb-3">
                                 <h3 class="text-sm font-bold text-gray-800">🏥 Performance Health Score<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-health')">i</button></h3><div class="widget-info-popup" id="info-health">Dein Gesamt-Score (0–100) zeigt, wie gut dein Standort performt. Er setzt sich zusammen aus: Controlling (25%), Verkauf (25%), Marketing (15%), Werkstatt (15%), Engagement (10%) und Disziplin (10%). 🟢 ab 75 = Gesund, 🟡 50–74 = Beobachtung, 🔴 unter 50 = Kritisch.</div>
                                 <div id="healthBadge"></div>
@@ -1576,7 +1576,7 @@
 
                     <!-- 🔥 Verkaufs-Momentum --><div style="position:relative">
                     <div id="trainerAreaVerkauf" class="mb-4"></div>
-                    <div id="salesMomentumBar" class="mb-6">
+                    <div id="salesMomentumBar" class="mb-6" data-widget="sales_momentum">
                         <div class="grid grid-cols-1 lg:grid-cols-4 gap-3">
                             <!-- Streak -->
                             <div class="vit-card p-4 flex items-center gap-3" style="border-left:3px solid #EF7D00;">
@@ -2282,7 +2282,7 @@
                     <div id="ctrlTabCockpit" class="ctrl-tab-content">
                         <!-- BWA Deadline Countdown + Motivation -->
                         <div id="trainerAreaControlling" class="mb-4"></div>
-                        <div id="bwaDeadlineWidget" class="vit-card p-5 mb-6">
+                        <div id="bwaDeadlineWidget" class="vit-card p-5 mb-6" data-widget="bwa_deadline">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-4">
                                     <div id="bwaCountdownRing" style="position:relative;width:64px;height:64px;flex-shrink:0">
@@ -2319,7 +2319,7 @@
                         </div>
 
                         <!-- Netzwerk-Vergleich: Wer hat schon eingereicht? -->
-                        <div id="bwaNetzwerkWidget" class="vit-card p-5 mb-6">
+                        <div id="bwaNetzwerkWidget" class="vit-card p-5 mb-6" data-widget="bwa_netzwerk">
                             <div class="flex items-center justify-between mb-3">
                                 <h2 class="text-sm font-bold text-gray-800">📊 BWA-Status im Netzwerk<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-bwa-nw')">i</button></h2><div class="widget-info-popup" id="info-bwa-nw">Wie viele der 21 Standorte haben ihre BWA bereits eingereicht? Gold = vor dem 8., OK = bis zum 15., Überfällig = nach dem 15. Je mehr Standorte einreichen, desto besser die Netzwerk-Analyse.</div>
                                 <span id="bwaNetzwerkProgress" class="text-xs font-semibold text-gray-500"></span>
@@ -2334,7 +2334,7 @@
                         </div>
 
                         <!-- KPI Sofort-Report (nach Upload sichtbar) -->
-                        <div id="bwaKpiReport" class="vit-card p-5 mb-6" style="display:none;border-left:4px solid #16a34a">
+                        <div id="bwaKpiReport" class="vit-card p-5 mb-6" data-widget="kpi_feedback" style="display:none;border-left:4px solid #16a34a">
                             <div class="flex items-center justify-between mb-4">
                                 <div>
                                     <h2 class="text-sm font-bold text-gray-800">✅ Dein Monats-Feedback<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-kpi')">i</button></h2><div class="widget-info-popup" id="info-kpi">Nach Einreichung deiner BWA erhältst du sofort ein Feedback mit KPIs und 1–3 konkreten Empfehlungen. Der Vergleich zum Netzwerk-Durchschnitt zeigt, wo du gut bist und wo Potenzial liegt.</div>
@@ -34306,18 +34306,23 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
         var dd = document.getElementById('officeCheckinDropdown');
         var freeD = D.filter(function(d){ return !deskCI(d.nr) && d.room!=='Konferenz'; });
         
-        var h = '<div class="vit-card p-3 shadow-xl" style="width:300px;max-height:400px;overflow-y:auto">';
+        var h = '<div class="vit-card p-3 shadow-xl" style="width:450px;max-height:500px;overflow-y:auto">';
         h += '<div class="text-xs font-bold mb-2" style="color:var(--c-muted)">Wo arbeitest du heute?</div>';
         h += '<button onclick="officeCheckinRemote()" class="w-full p-2.5 rounded-lg text-left text-sm font-semibold mb-2 hover:shadow transition" style="background:#eff6ff;color:#3b82f6">🏠 Remote</button>';
         h += '<div class="text-[10px] font-bold mb-1" style="color:var(--c-muted)">🏢 Platz wählen:</div>';
-        var rooms = {};
-        freeD.forEach(function(d){ if(!rooms[d.room]) rooms[d.room]=[]; rooms[d.room].push(d); });
-        Object.keys(rooms).forEach(function(room) {
-            h += '<div class="text-[9px] font-bold mt-1.5 mb-0.5" style="color:var(--c-dim)">'+room+'</div>';
-            h += '<div class="flex flex-wrap gap-1">';
-            rooms[room].forEach(function(d) { h += '<button onclick="officeCheckinDesk('+d.nr+')" class="px-2 py-1 rounded text-xs font-bold hover:shadow transition" style="background:#f0fdf4;color:#22c55e;border:1px solid #22c55e30">'+d.nr+'</button>'; });
-            h += '</div>';
+        // Mini floor plan
+        h += '<div style="position:relative;border-radius:6px;overflow:hidden;border:1px solid var(--c-border)">';
+        h += '<img src="grundriss_og.png" style="width:100%;display:block;opacity:0.9">';
+        D.forEach(function(d) {
+            if(!d.pct_x || !d.pct_y || d.room==='Konferenz') return;
+            var occupied = !!deskCI(d.nr);
+            var bg = occupied ? '#ef4444' : '#22c55e';
+            var cursor = occupied ? 'not-allowed' : 'pointer';
+            var click = occupied ? '' : 'onclick="officeCheckinDesk('+d.nr+')"';
+            h += '<div '+click+' style="position:absolute;left:'+d.pct_x+'%;top:'+d.pct_y+'%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:50%;background:'+bg+';border:1.5px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:800;color:#fff;cursor:'+cursor+';opacity:'+(occupied?'0.5':'1')+'" title="#'+d.nr+' '+(d.room||'')+'">'+d.nr+'</div>';
         });
+        h += '</div>';
+        h += '<div class="flex items-center gap-3 mt-1.5 text-[9px]" style="color:var(--c-muted)"><span>🟢 Frei</span><span>🔴 Belegt</span></div>';
         h += '<button onclick="officeCloseDD()" class="w-full mt-2 p-1.5 rounded text-xs text-center" style="color:var(--c-muted)">Abbrechen</button></div>';
         
         dd.innerHTML = h;
@@ -34341,18 +34346,32 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     // ===== BOOKING =====
     window.officeShowBookingModal = function(ds) {
         var freeD = D.filter(function(d){ return !deskBK(d.nr,ds) && d.room!=='Konferenz'; });
+        var bookedNrs = {};
+        BK.filter(function(b){return b.booking_date===ds}).forEach(function(b){if(b.desk_nr) bookedNrs[b.desk_nr]=b;});
+        
         var h = '<div style="background:rgba(0,0,0,0.5);position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999" onclick="officeCloseModal()">';
-        h += '<div class="vit-card p-5" style="width:380px;max-height:80vh;overflow-y:auto" onclick="event.stopPropagation()">';
+        h += '<div class="vit-card p-5" style="width:700px;max-width:95vw;max-height:90vh;overflow-y:auto" onclick="event.stopPropagation()">';
         h += '<div class="flex justify-between items-center mb-3"><h3 class="text-base font-bold" style="color:var(--c-text)">📅 '+fmtDL(ds)+'</h3><button onclick="officeCloseModal()" class="w-7 h-7 rounded flex items-center justify-center" style="background:var(--c-bg3);color:var(--c-muted)">✕</button></div>';
         h += '<button onclick="officeBookDay(\''+ds+'\',\'remote\',null)" class="w-full p-3 rounded-lg text-left text-sm font-semibold mb-3 hover:shadow transition" style="background:#eff6ff;color:#3b82f6">🏠 Remote arbeiten</button>';
-        h += '<div class="text-xs font-bold mb-2" style="color:var(--c-muted)">🏢 Platz im Büro:</div>';
-        var rooms = {};
-        freeD.forEach(function(d){ if(!rooms[d.room]) rooms[d.room]=[]; rooms[d.room].push(d); });
-        Object.keys(rooms).forEach(function(room) {
-            h += '<div class="text-[10px] font-bold mt-2 mb-1" style="color:var(--c-dim)">'+room+'</div><div class="flex flex-wrap gap-1">';
-            rooms[room].forEach(function(d) { h += '<button onclick="officeBookDay(\''+ds+'\',\'office\','+d.nr+')" class="px-2.5 py-1.5 rounded text-xs font-bold hover:shadow transition" style="background:#f0fdf4;color:#22c55e;border:1px solid #22c55e30">#'+d.nr+'</button>'; });
-            h += '</div>';
+        
+        // Floor plan with clickable desks
+        h += '<div class="text-xs font-bold mb-2" style="color:var(--c-muted)">🏢 Platz auf dem Grundriss wählen:</div>';
+        h += '<div style="position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--c-border)">';
+        h += '<img src="grundriss_og.png" style="width:100%;display:block;opacity:0.9">';
+        D.forEach(function(d) {
+            if(!d.pct_x || !d.pct_y || d.room==='Konferenz') return;
+            var isBooked = !!bookedNrs[d.nr];
+            var isFree = !isBooked;
+            var bg = isBooked ? '#ef4444' : '#22c55e';
+            var cursor = isFree ? 'pointer' : 'not-allowed';
+            var opacity = isFree ? '1' : '0.5';
+            var click = isFree ? 'onclick="officeBookDay(\''+ds+'\',\'office\','+d.nr+')"' : '';
+            var title = isFree ? 'Platz #'+d.nr+' buchen ('+d.room+')' : '#'+d.nr+' belegt von '+(bookedNrs[d.nr].user_name||'');
+            h += '<div '+click+' style="position:absolute;left:'+d.pct_x+'%;top:'+d.pct_y+'%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:'+bg+';border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;cursor:'+cursor+';opacity:'+opacity+';z-index:5" title="'+title+'">'+d.nr+'</div>';
         });
+        h += '</div>';
+        h += '<div class="flex items-center gap-4 mt-2 text-[10px]" style="color:var(--c-muted)"><span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#22c55e;vertical-align:middle"></span> Frei</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;vertical-align:middle"></span> Belegt</span></div>';
+        
         if(freeD.length===0) h += '<p class="text-xs mt-2" style="color:#ef4444">Alle Plätze belegt</p>';
         h += '</div></div>';
         document.getElementById('officeBookingModal').innerHTML = h;
