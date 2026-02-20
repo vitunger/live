@@ -21394,9 +21394,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     // Trigger LexOffice sync for this single invoice
                     try {
                         var session = await sb.auth.getSession();
-                        await fetch(sb.supabaseUrl + '/functions/v1/lexoffice-sync', {
+                        await fetch(SUPABASE_URL + '/functions/v1/lexoffice-sync', {
                             method: 'POST',
-                            headers: {'Content-Type':'application/json','Authorization':'Bearer '+(session.data.session?session.data.session.access_token:''),'apikey':sb.supabaseKey},
+                            headers: {'Content-Type':'application/json','Authorization':'Bearer '+(session.data.session?session.data.session.access_token:''),'apikey':SUPABASE_ANON_KEY},
                             body: JSON.stringify({action:'sync-all-finalized'})
                         });
                     } catch(syncErr) { console.warn('LexOffice sync:', syncErr); }
@@ -22984,12 +22984,12 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var session = await sb.auth.getSession();
                 if(!session.data.session) throw { message: 'Nicht eingeloggt' };
 
-                var response = await fetch(sb.supabaseUrl + '/functions/v1/create-user', {
+                var response = await fetch(SUPABASE_URL + '/functions/v1/create-user', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + session.data.session.access_token,
-                        'apikey': sb.supabaseKey
+                        'apikey': SUPABASE_ANON_KEY
                     },
                     body: JSON.stringify({
                         email: email.trim().toLowerCase(),
