@@ -5769,6 +5769,7 @@
                                             <label class="block text-xs font-semibold text-gray-600 mb-1">WaWi-System</label>
                                             <select id="wawiSystemTyp" class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2" onchange="wawiSystemChanged()">
                                                 <option value="approom">app-room / CYCLE</option>
+                                                <option value="velodata">velodata</option>
                                                 <option value="velo_plus">Velo Plus</option>
                                                 <option value="bc">Business Central</option>
                                                 <option value="custom">Andere (Custom)</option>
@@ -21842,8 +21843,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             return rollen.map(function(r){ return rolleBadge(r); }).join(' ');
         }
 
-        var WAWI_OPTIONS = ['tridata','veloport','HIW','app-room','Doitxp','E-vendo','Radfak'];
-        var WAWI_COLORS = {tridata:'bg-blue-100 text-blue-700',veloport:'bg-green-100 text-green-700',HIW:'bg-orange-100 text-orange-700','app-room':'bg-purple-100 text-purple-700',Doitxp:'bg-teal-100 text-teal-700','E-vendo':'bg-red-100 text-red-700',Radfak:'bg-yellow-100 text-yellow-700'};
+        var WAWI_OPTIONS = ['tridata','veloport','velodata','HIW','app-room','Doitxp','E-vendo','Radfak'];
+        var WAWI_COLORS = {tridata:'bg-blue-100 text-blue-700',veloport:'bg-green-100 text-green-700',velodata:'bg-cyan-100 text-cyan-700',HIW:'bg-orange-100 text-orange-700','app-room':'bg-purple-100 text-purple-700',Doitxp:'bg-teal-100 text-teal-700','E-vendo':'bg-red-100 text-red-700',Radfak:'bg-yellow-100 text-yellow-700'};
 
         async function renderKzStandorte() {
             var body=document.getElementById('kzStandorteBody');
@@ -21917,12 +21918,10 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 WAWI_OPTIONS.forEach(function(w){
                     var isActive = s.warenwirtschaft === w;
                     var cls = isActive ? 'border-vit-orange bg-orange-50 text-orange-700 ring-2 ring-orange-300' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300';
-                    html += '<button onclick="selectWawi(\''+stdId+'\',\''+w+'\',this)" class="wawi-opt px-2 py-2 rounded-lg border-2 text-xs font-semibold transition '+cls+'">'+w+(w==='HIW'?'<br><span class=\\"text-[9px] font-normal text-gray-400\\">+300 \u20ac/M</span>':'')+'</button>';
+                    html += '<button onclick="selectWawi(\''+stdId+'\',\''+w+'\',this)" class="wawi-opt px-2 py-2 rounded-lg border-2 text-xs font-semibold transition '+cls+'">'+w+'</button>';
                 });
                 var noneActive = !s.warenwirtschaft;
                 html += '<button onclick="selectWawi(\''+stdId+'\',null,this)" class="wawi-opt px-2 py-2 rounded-lg border-2 text-xs font-semibold transition '+(noneActive?'border-gray-400 bg-gray-50 text-gray-700 ring-2 ring-gray-300':'border-gray-200 bg-white text-gray-400 hover:border-gray-300')+'">keine</button>';
-                html += '</div>';
-                if(s.warenwirtschaft==='HIW') html += '<p class="text-[10px] text-orange-600 mt-1">\u2139\ufe0f HIW Grundgeb\u00fchr (300 \u20ac/Monat) wird automatisch abgerechnet.</p>';
                 html += '</div>';
 
                 // ═══ WaWi API Connection Section ═══
@@ -21937,8 +21936,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 html += '<div class="grid grid-cols-2 gap-3 mb-3">';
                 html += '<div><label class="block text-[10px] text-gray-500 mb-1">System</label>';
                 html += '<select id="stdWawiSystem" class="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5">';
-                ['approom','velo_plus','bc','custom'].forEach(function(t) {
-                    var labels = {approom:'app-room / CYCLE',velo_plus:'Velo Plus',bc:'Business Central',custom:'Andere'};
+                ['approom','velodata','velo_plus','bc','custom'].forEach(function(t) {
+                    var labels = {approom:'app-room / CYCLE',velodata:'velodata',velo_plus:'Velo Plus',bc:'Business Central',custom:'Andere'};
                     html += '<option value="'+t+'"'+(wawiConn && wawiConn.system_typ===t?' selected':'')+'>'+labels[t]+'</option>';
                 });
                 html += '</select></div>';
