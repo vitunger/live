@@ -7085,14 +7085,19 @@
                         btn.style.display = 'none';
                     }
                 } else if(status === 'in_bearbeitung') {
-                    btn.style.display = '';
-                    btn.style.opacity = '0.4';
-                    btn.style.pointerEvents = 'none';
-                    btn.style.cursor = 'not-allowed';
-                    var badge = document.createElement('span');
-                    badge.className = 'modul-wip-badge ml-auto text-[9px] bg-yellow-500 text-white rounded px-1 py-0.5 font-bold';
-                    badge.textContent = 'BALD';
-                    btn.appendChild(badge);
+                    // Non-HQ users: hide completely. HQ: show greyed out with BALD badge
+                    if(!sbProfile || !sbProfile.is_hq) {
+                        btn.style.display = 'none';
+                    } else {
+                        btn.style.display = '';
+                        btn.style.opacity = '0.4';
+                        btn.style.pointerEvents = 'none';
+                        btn.style.cursor = 'not-allowed';
+                        var badge = document.createElement('span');
+                        badge.className = 'modul-wip-badge ml-auto text-[9px] bg-yellow-500 text-white rounded px-1 py-0.5 font-bold';
+                        badge.textContent = 'BALD';
+                        btn.appendChild(badge);
+                    }
                 } else if(status === 'demo') {
                     btn.style.display = '';
                     btn.style.opacity = '';
