@@ -21899,6 +21899,9 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 var svcResp = await sb.from('standort_services').select('*, product:billing_products(name, default_amount)').eq('standort_id', stdId).eq('is_active', true);
                 var services = svcResp.data || [];
                 var empCount = await sb.from('employees').select('id', {count:'exact', head:true}).eq('standort_id', stdId).eq('status','aktiv');
+                // Load WaWi API connection for this standort
+                var connResp = await sb.from('wawi_connections').select('*').eq('standort_id', stdId).maybeSingle();
+                var wawiConn = connResp.data;
 
                 var html = '<div id="stdDetailOverlay" onclick="closeStdDetailModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
                 html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
@@ -21921,6 +21924,46 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 html += '</div>';
                 if(s.warenwirtschaft==='HIW') html += '<p class="text-[10px] text-orange-600 mt-1">\u2139\ufe0f HIW Grundgeb\u00fchr (300 \u20ac/Monat) wird automatisch abgerechnet.</p>';
                 html += '</div>';
+
+                // ═══ WaWi API Connection Section ═══
+                html += '<div class="mb-5 border-t border-gray-200 pt-4">';
+                html += '<label class="block text-xs font-semibold text-gray-600 mb-2">\ud83d\udd0c WaWi API-Anbindung';
+                if(wawiConn && wawiConn.ist_aktiv) {
+                    html += ' <span class="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">\u2705 Verbunden</span>';
+                } else if(wawiConn && wawiConn.fehler_count > 0) {
+                    html += ' <span class="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">\u274c Fehler</span>';
+                }
+                html += '</label>';
+                html += '<div class="grid grid-cols-2 gap-3 mb-3">';
+                html += '<div><label class="block text-[10px] text-gray-500 mb-1">System</label>';
+                html += '<select id="stdWawiSystem" class="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5">';
+                ['approom','velo_plus','bc','custom'].forEach(function(t) {
+                    var labels = {approom:'app-room / CYCLE',velo_plus:'Velo Plus',bc:'Business Central',custom:'Andere'};
+                    html += '<option value="'+t+'"'+(wawiConn && wawiConn.system_typ===t?' selected':'')+'>'+labels[t]+'</option>';
+                });
+                html += '</select></div>';
+                html += '<div><label class="block text-[10px] text-gray-500 mb-1">API-URL</label>';
+                html += '<input type="text" id="stdWawiUrl" value="'+(wawiConn ? wawiConn.api_url : '')+'" placeholder="https://erp.app-room.ch/api" class="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5"></div>';
+                html += '</div>';
+                html += '<div class="grid grid-cols-2 gap-3 mb-3">';
+                html += '<div><label class="block text-[10px] text-gray-500 mb-1">API-Key</label>';
+                html += '<input type="password" id="stdWawiKey" value="'+(wawiConn && wawiConn.api_key_encrypted ? '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' : '')+'" placeholder="cycle-api-key" class="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5"></div>';
+                html += '<div><label class="block text-[10px] text-gray-500 mb-1">Label (optional)</label>';
+                html += '<input type="text" id="stdWawiLabel" value="'+(wawiConn && wawiConn.system_label ? wawiConn.system_label : '')+'" placeholder="z.B. CYCLE '+s.name+'" class="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5"></div>';
+                html += '</div>';
+                html += '<div class="flex gap-2">';
+                html += '<button onclick="hqTestWawiConnection(\''+stdId+'\')" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200" id="hqWawiTestBtn">\ud83d\udd0d Testen</button>';
+                html += '<button onclick="hqSaveWawiConnection(\''+stdId+'\','+JSON.stringify(wawiConn ? wawiConn.id : null)+')" class="px-3 py-1.5 bg-vit-orange text-white rounded-lg text-xs font-semibold hover:bg-orange-600">\ud83d\udcbe Speichern</button>';
+                if(wawiConn && wawiConn.ist_aktiv) {
+                    html += '<button onclick="hqTriggerWawiSync(\''+wawiConn.id+'\',\''+stdId+'\')" class="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-semibold hover:bg-blue-100">\u26a1 Sync starten</button>';
+                }
+                html += '</div>';
+                html += '<div id="hqWawiTestResult" class="mt-2"></div>';
+                if(wawiConn && wawiConn.letzter_sync) {
+                    html += '<p class="text-[10px] text-gray-400 mt-2">Letzter Sync: '+new Date(wawiConn.letzter_sync).toLocaleString('de')+'</p>';
+                }
+                html += '</div>';
+
                 if(services.length > 0) {
                     html += '<div class="mb-4"><label class="block text-xs font-semibold text-gray-600 mb-2">Aktive Standort-Services</label><div class="flex flex-wrap gap-1">';
                     services.forEach(function(svc) {
@@ -21936,6 +21979,90 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             } catch(err) { alert('Fehler: '+err.message); }
         }
         function closeStdDetailModal() { var c=document.getElementById('stdDetailContainer'); if(c) c.remove(); }
+
+        // ═══ HQ WaWi Connection Management (in Standort Detail Modal) ═══
+        window.hqTestWawiConnection = async function(stdId) {
+            var btn = document.getElementById('hqWawiTestBtn');
+            var resEl = document.getElementById('hqWawiTestResult');
+            var apiUrl = document.getElementById('stdWawiUrl').value.trim();
+            var apiKey = document.getElementById('stdWawiKey').value.trim();
+            if(!apiUrl || !apiKey || apiKey === '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022') {
+                if(resEl) resEl.innerHTML = '<p class="text-[10px] text-red-600">\u26a0\ufe0f API-URL und API-Key eingeben</p>';
+                return;
+            }
+            if(btn) { btn.disabled = true; btn.textContent = '\u23f3 Teste...'; }
+            try {
+                var r = await sb.functions.invoke('wawi-sync', { body: {
+                    action: 'test_connection',
+                    api_url: apiUrl,
+                    api_key: apiKey,
+                    system_typ: document.getElementById('stdWawiSystem').value,
+                    standort_id: stdId
+                }});
+                var data = r.data;
+                if(data && data.success) {
+                    if(resEl) resEl.innerHTML = '<p class="text-[10px] text-green-600 font-semibold">\u2705 ' + (data.message || 'Verbindung erfolgreich!') + '</p>';
+                } else {
+                    if(resEl) resEl.innerHTML = '<p class="text-[10px] text-red-600">\u274c ' + (data && data.error ? data.error : 'Fehler') + '</p>';
+                }
+            } catch(e) {
+                if(resEl) resEl.innerHTML = '<p class="text-[10px] text-red-600">\u274c ' + e.message + '</p>';
+            }
+            if(btn) { btn.disabled = false; btn.textContent = '\ud83d\udd0d Testen'; }
+        };
+
+        window.hqSaveWawiConnection = async function(stdId, existingId) {
+            var apiUrl = document.getElementById('stdWawiUrl').value.trim();
+            var apiKey = document.getElementById('stdWawiKey').value.trim();
+            if(!apiUrl) { showToast('API-URL fehlt', 'error'); return; }
+
+            var payload = {
+                standort_id: stdId,
+                system_typ: document.getElementById('stdWawiSystem').value,
+                system_label: document.getElementById('stdWawiLabel').value.trim() || null,
+                api_url: apiUrl,
+                ist_aktiv: true
+            };
+            if(apiKey && apiKey !== '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022') {
+                payload.api_key_encrypted = apiKey;
+            }
+
+            try {
+                var r;
+                if(existingId && existingId !== 'null') {
+                    r = await sb.from('wawi_connections').update(payload).eq('id', existingId).select().single();
+                } else {
+                    if(!apiKey || apiKey === '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022') { showToast('API-Key fehlt', 'error'); return; }
+                    payload.api_key_encrypted = apiKey;
+                    r = await sb.from('wawi_connections').insert(payload).select().single();
+                }
+                if(r.error) throw r.error;
+                showToast('WaWi-Verbindung f\u00fcr Standort gespeichert \u2705', 'success');
+                closeStdDetailModal();
+                renderKzStandorte();
+            } catch(e) {
+                showToast('Fehler: ' + e.message, 'error');
+            }
+        };
+
+        window.hqTriggerWawiSync = async function(connectionId, stdId) {
+            showToast('Sync gestartet...', 'info');
+            try {
+                var r = await sb.functions.invoke('wawi-sync', { body: {
+                    action: 'sync_all',
+                    connection_id: connectionId,
+                    standort_id: stdId
+                }});
+                var data = r.data;
+                if(data && data.success) {
+                    showToast('\u2705 Sync abgeschlossen', 'success');
+                    closeStdDetailModal();
+                    openStandortDetailModal(stdId);
+                } else {
+                    showToast('\u274c ' + (data && data.error ? data.error : 'Fehler'), 'error');
+                }
+            } catch(e) { showToast('Sync-Fehler: ' + e.message, 'error'); }
+        };
 
         async function selectWawi(stdId, wawiValue, btn) {
             document.querySelectorAll('.wawi-opt').forEach(function(b){
