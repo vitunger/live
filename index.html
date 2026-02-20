@@ -32467,7 +32467,7 @@ function switchDemoAccount(level, stage) {
     var demoUserId = level === 'hq' ? 'dd000000-0000-0000-0000-000000000001' : 'dd000000-0000-0000-0000-000000000002';
     var demoEmail = level === 'hq' ? 'demo-hq@vitbikes.de' : 'demo-standort@vitbikes.de';
     window.sbUser = { id: demoUserId, email: demoEmail };
-    window.sbProfile = { id: demoUserId, email: demoEmail, name: 'Demo User', is_hq: level === 'hq' };
+    window.sbProfile = { id: demoUserId, email: demoEmail, name: 'Demo User', is_hq: level === 'hq', status: 'demo' };
 
     if(level === 'extern') {
         currentRole = 'external_owner';
@@ -32497,7 +32497,7 @@ function switchDemoAccount(level, stage) {
     fillDemoWidgets(level, stage);
 
     updateUIForRole();
-    try { applyModulStatus(); } catch(e) {}
+    try { loadModulStatus(); } catch(e) { try { applyModulStatus(); } catch(e2) {} }
     if(level === 'extern') showView('externHome');
     else if(level === 'hq') { switchViewMode('hq'); fillDemoHQ(); }
     else showView('home');
