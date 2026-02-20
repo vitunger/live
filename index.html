@@ -7311,9 +7311,10 @@
             if (isHqUser && hqCfg.widgets) { Object.keys(hqCfg.widgets).forEach(function(k) { mergedWidgets[k] = hqCfg.widgets[k]; }); }
             var startCfg = { widgets: isHqUser ? mergedWidgets : (partnerCfg.widgets || {}) };
             if(startCfg && startCfg.widgets) {
+                var homeView = document.getElementById('homeView');
                 Object.keys(startCfg.widgets).forEach(function(wKey) {
                     var wStatus = startCfg.widgets[wKey];
-                    var wEl = document.querySelector('[data-widget="'+wKey+'"]');
+                    var wEl = homeView ? homeView.querySelector('[data-widget="'+wKey+'"]') : document.querySelector('[data-widget="'+wKey+'"]');
                     if(!wEl) return;
                     // Remove old demo overlay
                     var oldOverlay = wEl.querySelector('.widget-demo-overlay');
