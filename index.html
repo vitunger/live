@@ -7588,6 +7588,35 @@
             return currentRoles.indexOf(role) >= 0;
         }
 
+        // HQ granulare Berechtigung prüfen
+        function hqCan(action) {
+            // Not HQ? Allow all (partner users don't need HQ permission checks)
+            if(!sbProfile || !sbProfile.is_hq) return true;
+            // Legacy HQ without granular roles = full access
+            if(hasRole('hq') && !hasRole('hq_gf') && !hasRole('hq_sales') && !hasRole('hq_marketing') &&
+               !hasRole('hq_einkauf') && !hasRole('hq_support') && !hasRole('hq_akademie') &&
+               !hasRole('hq_hr') && !hasRole('hq_it')) return true;
+            var perms = {
+                'impersonate':       ['hq_gf','hq_it'],
+                'delete_user':       ['hq_gf','hq_it'],
+                'edit_user':         ['hq_gf','hq_it','hq_hr'],
+                'create_user':       ['hq_gf','hq_it','hq_hr'],
+                'approve_user':      ['hq_gf','hq_it','hq_hr'],
+                'edit_standort':     ['hq_gf','hq_it','hq_sales'],
+                'delete_standort':   ['hq_gf','hq_it'],
+                'create_standort':   ['hq_gf','hq_it','hq_sales'],
+                'manage_billing':    ['hq_gf','hq_it','hq_hr'],
+                'manage_settings':   ['hq_gf','hq_it'],
+                'manage_features':   ['hq_gf','hq_it'],
+                'send_announcement': ['hq_gf','hq_it','hq_sales','hq_marketing','hq_support'],
+                'manage_campaigns':  ['hq_gf','hq_it','hq_marketing'],
+                'manage_documents':  ['hq_gf','hq_it','hq_marketing','hq_akademie','hq_hr']
+            };
+            var allowed = perms[action] || ['hq_gf','hq_it'];
+            for(var i=0;i<allowed.length;i++) { if(hasRole(allowed[i])) return true; }
+            return false;
+        }
+
         // Aktuelle Rollen (Array)
         var currentRoles = ['inhaber'];
 
