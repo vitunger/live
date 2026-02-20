@@ -15165,15 +15165,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var btn = document.getElementById('devSubmitBtn');
             if(btn) { btn.disabled = true; btn.textContent = '⏳ Wird eingereicht...'; }
             try {
-                // Demo mode: fake success
-                if(typeof DEMO_ACTIVE !== 'undefined' && DEMO_ACTIVE) {
-                    await new Promise(function(r){setTimeout(r,800)});
-                    showToast('Danke für dein Feedback! (Demo-Modus)', 'success');
-                    if(btn) { btn.disabled = false; btn.textContent = '💡 Feedback einreichen'; }
-                    document.getElementById('devTitel').value = '';
-                    document.getElementById('devBeschreibung').value = '';
-                    return;
-                }
                 var titel = (document.getElementById('devTitel').value || '').trim();
                 var beschreibung = (document.getElementById('devBeschreibung').value || '').trim();
                 var kategorie = document.getElementById('devKategorie').value;
@@ -15183,7 +15174,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
                 // Upload files to Supabase Storage
                 var attachments = [];
-                var userId = sbUser ? sbUser.id : 'demo-user';
+                var userId = sbUser ? sbUser.id : 'dd000000-0000-0000-0000-000000000002';
                 for(var i = 0; i < devSelectedFiles.length; i++) {
                     var file = devSelectedFiles[i];
                     var path = 'dev-submissions/' + userId + '/' + Date.now() + '_' + file.name;
@@ -31647,6 +31638,12 @@ function switchDemoAccount(level, stage) {
     SESSION.stage_status = 'active';
     SESSION.account_id = 'demo-'+level;
     SESSION.account_name = 'Demo '+level;
+
+    // Set sbUser so DB operations (feedback, etc.) work
+    var demoUserId = level === 'hq' ? 'dd000000-0000-0000-0000-000000000001' : 'dd000000-0000-0000-0000-000000000002';
+    var demoEmail = level === 'hq' ? 'demo-hq@vitbikes.de' : 'demo-standort@vitbikes.de';
+    window.sbUser = { id: demoUserId, email: demoEmail };
+    window.sbProfile = { id: demoUserId, email: demoEmail, name: 'Demo User', is_hq: level === 'hq' };
 
     if(level === 'extern') {
         currentRole = 'external_owner';
