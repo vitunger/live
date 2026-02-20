@@ -7232,19 +7232,23 @@
                 if(status === 'deaktiviert') {
                     // On QuickActions grid: gray out instead of hiding
                     if(btn.closest('#quickActionsGrid')) {
+                        btn.classList.remove('hidden');
                         btn.style.display = '';
                         btn.style.opacity = '0.35';
                         btn.style.pointerEvents = 'none';
                         btn.style.cursor = 'not-allowed';
                         btn.style.filter = 'grayscale(1)';
                     } else {
+                        btn.classList.add('hidden');
                         btn.style.display = 'none';
                     }
                 } else if(status === 'in_bearbeitung') {
                     // Non-HQ users: hide completely. HQ: show greyed out with BALD badge
                     if(!sbProfile || !sbProfile.is_hq) {
+                        btn.classList.add('hidden');
                         btn.style.display = 'none';
                     } else {
+                        btn.classList.remove('hidden');
                         btn.style.display = '';
                         btn.style.opacity = '0.4';
                         btn.style.pointerEvents = 'none';
@@ -7255,6 +7259,7 @@
                         btn.appendChild(badge);
                     }
                 } else if(status === 'demo') {
+                    btn.classList.remove('hidden');
                     btn.style.display = '';
                     btn.style.opacity = '';
                     btn.style.pointerEvents = '';
@@ -7264,6 +7269,7 @@
                     badge.textContent = 'DEMO';
                     btn.appendChild(badge);
                 } else {
+                    btn.classList.remove('hidden');
                     btn.style.display = '';
                     btn.style.opacity = '';
                     btn.style.pointerEvents = '';
@@ -32450,7 +32456,7 @@ function confirmDemoPw() {
 }
 
 // Quick-switch demo function for testing all account levels
-function switchDemoAccount(level, stage) {
+async function switchDemoAccount(level, stage) {
     var ls = document.getElementById('loginScreen');
     var ma = document.getElementById('mainApp');
     if(ls) ls.style.display = 'none';
@@ -32497,7 +32503,7 @@ function switchDemoAccount(level, stage) {
     fillDemoWidgets(level, stage);
 
     updateUIForRole();
-    try { loadModulStatus(); } catch(e) { try { applyModulStatus(); } catch(e2) {} }
+    try { await loadModulStatus(); } catch(e) { try { applyModulStatus(); } catch(e2) {} }
     if(level === 'extern') showView('externHome');
     else if(level === 'hq') { switchViewMode('hq'); fillDemoHQ(); }
     else showView('home');
