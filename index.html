@@ -640,15 +640,7 @@
                 <!-- Demo Quick-Switch (3-Ebenen Test) -->
                 <div class="mt-4 pt-4 border-t border-gray-100">
                     <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-2 text-center font-semibold">Demo</p>
-                    <!-- Password input (hidden by default) -->
-                    <div id="demoPwBox" style="display:none" class="mb-2">
-                        <div class="flex gap-2">
-                            <input type="password" id="demoPwInput" placeholder="Demo-Passwort" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-vit-orange focus:border-transparent" onkeydown="if(event.key==='Enter')confirmDemoPw()">
-                            <button onclick="confirmDemoPw()" class="px-3 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition">→</button>
-                        </div>
-                        <p id="demoPwError" class="text-[10px] text-red-500 mt-1" style="display:none">Falsches Passwort</p>
-                    </div>
-                    <button onclick="requestDemoAccess('standort','partner')" class="w-full py-2 rounded-lg text-[10px] font-semibold border border-green-200 text-green-600 hover:bg-green-50 transition">
+                    <button onclick="switchDemoAccount('standort','partner')" class="w-full py-2 rounded-lg text-[10px] font-semibold border border-green-200 text-green-600 hover:bg-green-50 transition">
                         🏆 Standort (Partner) – Demo starten
                     </button>
                 </div>
@@ -32508,30 +32500,6 @@ var _demoPendingLevel = null;
 var _demoPendingStage = null;
 var _demoAuthenticated = false;
 var DEMO_ACTIVE = false;
-
-function requestDemoAccess(level, stage) {
-    _demoPendingLevel = level;
-    _demoPendingStage = stage;
-    if (_demoAuthenticated) { switchDemoAccount(level, stage); return; }
-    var box = document.getElementById('demoPwBox');
-    var inp = document.getElementById('demoPwInput');
-    if (box) { box.style.display = 'block'; }
-    if (inp) { inp.value = ''; inp.focus(); }
-    document.getElementById('demoPwError').style.display = 'none';
-}
-
-function confirmDemoPw() {
-    var inp = document.getElementById('demoPwInput');
-    var pw = inp ? inp.value : '';
-    if (pw === 'sdvsv9r2r3') {
-        _demoAuthenticated = true;
-        document.getElementById('demoPwBox').style.display = 'none';
-        switchDemoAccount(_demoPendingLevel, _demoPendingStage);
-    } else {
-        document.getElementById('demoPwError').style.display = 'block';
-        if (inp) { inp.value = ''; inp.focus(); }
-    }
-}
 
 // Quick-switch demo function for testing all account levels
 async function switchDemoAccount(level, stage) {
