@@ -25208,6 +25208,11 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             'Mehr anzeigen':'Show more','Weniger anzeigen':'Show less',
             'Sortieren':'Sort','Exportieren':'Export','Drucken':'Print',
             'Ja':'Yes','Nein':'No','OK':'OK',
+            // HQ Marketing tabs & compound words with 'Ja' (must be in dict so longer match wins)
+            'Jahresgespräche':'Annual Reviews','Jahresgespraech':'Annual Review','Jahresbudget':'Annual Budget',
+            'Budget-Steuerung':'Budget Management','Lead Reporting':'Lead Reporting',
+            'Video-Freigabe':'Video Approval','Action Required':'Action Required',
+            'Übersicht':'Overview',
           },
           nl: {
             // Navigation & Menu
@@ -25289,6 +25294,11 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             'Mehr anzeigen':'Meer tonen','Weniger anzeigen':'Minder tonen',
             'Sortieren':'Sorteren','Exportieren':'Exporteren','Drucken':'Afdrukken',
             'Ja':'Ja','Nein':'Nee','OK':'OK',
+            // HQ Marketing tabs & compound words
+            'Jahresgespräche':'Jaargesprekken','Jahresgespraech':'Jaargesprek','Jahresbudget':'Jaarbudget',
+            'Budget-Steuerung':'Budgetbeheer','Lead Reporting':'Lead Rapportage',
+            'Video-Freigabe':'Video Goedkeuring','Action Required':'Actie vereist',
+            'Übersicht':'Overzicht',
           }
         };
 
@@ -25298,6 +25308,25 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var dict = rtDict[lang];
             // Sort keys by length descending to match longer phrases first
             var keys = Object.keys(dict).sort(function(a,b){ return b.length - a.length; });
+            
+            // Helper: replace text, using word-boundary for short keys (<=3 chars)
+            function rtReplace(txt) {
+                var changed = false;
+                for(var i = 0; i < keys.length; i++) {
+                    if(txt.indexOf(keys[i]) === -1) continue;
+                    if(keys[i].length <= 3 && /^[a-zA-ZäöüÄÖÜß]+$/.test(keys[i])) {
+                        // Word-boundary match for short alphabetic keys to prevent substring corruption
+                        var escaped = keys[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        var re = new RegExp('(?<![a-zA-ZäöüÄÖÜß])' + escaped + '(?![a-zA-ZäöüÄÖÜß])', 'g');
+                        var newTxt = txt.replace(re, dict[keys[i]]);
+                        if(newTxt !== txt) { txt = newTxt; changed = true; }
+                    } else {
+                        var parts = txt.split(keys[i]);
+                        if(parts.length > 1) { txt = parts.join(dict[keys[i]]); changed = true; }
+                    }
+                }
+                return changed ? txt : null;
+            }
             
             // Walk all text nodes
             var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
@@ -25309,35 +25338,18 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 if(!par || par.tagName === 'SCRIPT' || par.tagName === 'STYLE' || par.tagName === 'NOSCRIPT') continue;
                 // Skip elements handled separately (welcome text, date)
                 if(par.id === 'welcomeText' || par.id === 'welcomeDate' || par.hasAttribute('data-i18n-date')) continue;
-                var txt = node.nodeValue;
-                var changed = false;
-                for(var i = 0; i < keys.length; i++) {
-                    if(txt.indexOf(keys[i]) !== -1) {
-                        txt = txt.split(keys[i]).join(dict[keys[i]]);
-                        changed = true;
-                    }
-                }
-                if(changed) node.nodeValue = txt;
+                var result = rtReplace(node.nodeValue);
+                if(result !== null) node.nodeValue = result;
             }
             // Translate placeholders
             document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(function(el) {
-                var ph = el.placeholder;
-                for(var i = 0; i < keys.length; i++) {
-                    if(ph.indexOf(keys[i]) !== -1) {
-                        ph = ph.split(keys[i]).join(dict[keys[i]]);
-                    }
-                }
-                el.placeholder = ph;
+                var result = rtReplace(el.placeholder);
+                if(result !== null) el.placeholder = result;
             });
             // Translate title attributes
             document.querySelectorAll('[title]').forEach(function(el) {
-                var ti = el.title;
-                for(var i = 0; i < keys.length; i++) {
-                    if(ti.indexOf(keys[i]) !== -1) {
-                        ti = ti.split(keys[i]).join(dict[keys[i]]);
-                    }
-                }
-                el.title = ti;
+                var result = rtReplace(el.title);
+                if(result !== null) el.title = result;
             });
         }
 
