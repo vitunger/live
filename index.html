@@ -7596,23 +7596,35 @@
             if(hasRole('hq') && !hasRole('hq_gf') && !hasRole('hq_sales') && !hasRole('hq_marketing') &&
                !hasRole('hq_einkauf') && !hasRole('hq_support') && !hasRole('hq_akademie') &&
                !hasRole('hq_hr') && !hasRole('hq_it')) return true;
-            var perms = {
-                'impersonate':       ['hq_gf','hq_it'],
-                'delete_user':       ['hq_gf','hq_it'],
-                'edit_user':         ['hq_gf','hq_it','hq_hr'],
-                'create_user':       ['hq_gf','hq_it','hq_hr'],
-                'approve_user':      ['hq_gf','hq_it','hq_hr'],
-                'edit_standort':     ['hq_gf','hq_it','hq_sales'],
-                'delete_standort':   ['hq_gf','hq_it'],
-                'create_standort':   ['hq_gf','hq_it','hq_sales'],
-                'manage_billing':    ['hq_gf','hq_it','hq_hr'],
-                'manage_settings':   ['hq_gf','hq_it'],
-                'manage_features':   ['hq_gf','hq_it'],
-                'send_announcement': ['hq_gf','hq_it','hq_sales','hq_marketing','hq_support'],
-                'manage_campaigns':  ['hq_gf','hq_it','hq_marketing'],
-                'manage_documents':  ['hq_gf','hq_it','hq_marketing','hq_akademie','hq_hr']
+            // GF + IT always full access
+            if(hasRole('hq_gf') || hasRole('hq_it')) return true;
+            // Check DB-driven permissions first (action_* keys in modul_berechtigungen)
+            var actionKey = 'action_' + action;
+            if(window._hqRechteMatrix && window._hqRechteMatrix[actionKey]) {
+                var dbPerms = window._hqRechteMatrix[actionKey];
+                for(var i=0; i<currentRoles.length; i++) {
+                    if(dbPerms[currentRoles[i]]) return true;
+                }
+                return false;
+            }
+            // Fallback: hardcoded defaults (used until DB permissions are loaded)
+            var defaults = {
+                'impersonate':       [],
+                'delete_user':       [],
+                'edit_user':         ['hq_hr'],
+                'create_user':       ['hq_hr'],
+                'approve_user':      ['hq_hr'],
+                'edit_standort':     ['hq_sales'],
+                'delete_standort':   [],
+                'create_standort':   ['hq_sales'],
+                'manage_billing':    ['hq_hr'],
+                'manage_settings':   [],
+                'manage_features':   [],
+                'send_announcement': ['hq_sales','hq_marketing','hq_support'],
+                'manage_campaigns':  ['hq_marketing'],
+                'manage_documents':  ['hq_marketing','hq_akademie','hq_hr']
             };
-            var allowed = perms[action] || ['hq_gf','hq_it'];
+            var allowed = defaults[action] || [];
             for(var i=0;i<allowed.length;i++) { if(hasRole(allowed[i])) return true; }
             return false;
         }
@@ -23911,8 +23923,18 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 {key:'hqFeatureFlags',label:'Feature Flags',icon:'🚩',core:false},
                 {key:'hqEntwicklung',label:'Entwicklung',icon:'💻',core:false}
             ];
+            // Aktions-Berechtigungen (unterhalb der Module)
+            var hqActions = [
+                {key:'action_impersonate',label:'Anmelden als User',icon:'🔑',core:false},
+                {key:'action_delete_user',label:'User löschen',icon:'🗑️',core:false},
+                {key:'action_edit_user',label:'User bearbeiten',icon:'✏️',core:false},
+                {key:'action_create_user',label:'User anlegen',icon:'➕',core:false},
+                {key:'action_approve_user',label:'User freigeben',icon:'✅',core:false},
+                {key:'action_create_standort',label:'Standort anlegen',icon:'🏪',core:false}
+            ];
             var hqRollen = ['hq_gf','hq_sales','hq_marketing','hq_einkauf','hq_support','hq_akademie','hq_hr','hq_it'];
             var hqH = '';
+            // Module
             hqModules.forEach(function(mod){
                 var isCore = mod.core;
                 hqH += '<tr class="border-t border-gray-100 '+(isCore?'bg-green-50':'hover:bg-gray-50')+'">';
@@ -23926,6 +23948,23 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     } else {
                         var isAllowed = window._hqRechteMatrix && window._hqRechteMatrix[mod.key] && window._hqRechteMatrix[mod.key][r];
                         hqH += '<td class="px-4 py-2.5 text-center"><button onclick="toggleHqPermission(\''+mod.key+'\',\''+r+'\')" class="text-lg transition hover:scale-125" title="Klicken zum Umschalten">'+(isAllowed?'✅':'❌')+'</button></td>';
+                    }
+                });
+                hqH += '</tr>';
+            });
+            // Separator
+            hqH += '<tr class="bg-gray-100"><td colspan="9" class="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wide">⚡ Aktionen</td></tr>';
+            // Aktions-Berechtigungen
+            hqActions.forEach(function(act){
+                hqH += '<tr class="border-t border-gray-100 hover:bg-orange-50/50">';
+                hqH += '<td class="px-4 py-2.5 font-semibold text-gray-700 text-xs">'+act.icon+' '+act.label+'</td>';
+                hqRollen.forEach(function(r){
+                    var isGfOrIt = (r==='hq_gf' || r==='hq_it');
+                    if(isGfOrIt) {
+                        hqH += '<td class="px-4 py-2.5 text-center"><span class="text-green-500 text-lg cursor-not-allowed" title="Vollzugriff (GF/IT)">✅</span></td>';
+                    } else {
+                        var isAllowed = window._hqRechteMatrix && window._hqRechteMatrix[act.key] && window._hqRechteMatrix[act.key][r];
+                        hqH += '<td class="px-4 py-2.5 text-center"><button onclick="toggleHqPermission(\''+act.key+'\',\''+r+'\')" class="text-lg transition hover:scale-125" title="Klicken zum Umschalten">'+(isAllowed?'✅':'❌')+'</button></td>';
                     }
                 });
                 hqH += '</tr>';
