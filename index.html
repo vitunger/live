@@ -2385,6 +2385,8 @@
                                         <div class="p-4 bg-orange-50 rounded-lg text-center"><p class="text-xs text-gray-500">Gesamtkosten</p><p class="text-xl font-bold text-gray-800" id="bwaKpiKosten">—</p><p class="text-xs text-gray-400" id="bwaKpiKostenVj">&nbsp;</p></div>
                                         <div class="p-4 bg-purple-50 rounded-lg text-center"><p class="text-xs text-gray-500">Ergebnis</p><p class="text-xl font-bold text-gray-800" id="bwaKpiErgebnis">—</p><p class="text-xs text-gray-400" id="bwaKpiErgebnisMarge">&nbsp;</p></div>
                                     </div>
+                                    <!-- Validation Banner -->
+                                    <div id="bwaValidationBanner" class="hidden"></div>
                                     <!-- BWA Table -->
                                     <div class="overflow-x-auto">
                                         <table class="w-full text-sm" id="bwaDetailTable">
@@ -10699,6 +10701,47 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 loadBwaTrend(b.standort_id, b.jahr);
                 // Refresh file list highlight
                 loadBwaList();
+                
+                // Run and display validation
+                var valBanner = document.getElementById('bwaValidationBanner');
+                if(valBanner) {
+                    try {
+                        var valResp = await sb.rpc('validate_bwa', {p_bwa_id: bwaId});
+                        if(valResp.data) {
+                            var vd = valResp.data;
+                            var checks = vd.checks || [];
+                            var failed = checks.filter(function(c) { return c.pass === false; });
+                            var hasNotes = checks.filter(function(c) { return c.note; });
+                            
+                            if(failed.length === 0) {
+                                valBanner.className = 'mt-3 p-3 rounded-lg border text-xs';
+                                valBanner.style.background = '#f0fdf4';
+                                valBanner.style.borderColor = '#bbf7d0';
+                                valBanner.innerHTML = '<div class="flex items-center gap-2"><span class="text-green-600 font-bold">✅ Validierung bestanden</span><span class="text-gray-400">· ' + checks.length + ' Prüfungen OK</span></div>';
+                            } else {
+                                valBanner.className = 'mt-3 p-3 rounded-lg border text-xs';
+                                valBanner.style.background = vd.status === 'error' ? '#fef2f2' : '#fffbeb';
+                                valBanner.style.borderColor = vd.status === 'error' ? '#fecaca' : '#fde68a';
+                                var icon = vd.status === 'error' ? '❌' : '⚠️';
+                                var vh = '<div class="flex items-center gap-2 mb-2"><span class="font-bold" style="color:' + (vd.status === 'error' ? '#dc2626' : '#d97706') + '">' + icon + ' ' + failed.length + ' Abweichung' + (failed.length > 1 ? 'en' : '') + ' gefunden</span></div>';
+                                vh += '<div class="space-y-1">';
+                                failed.forEach(function(c) {
+                                    vh += '<div class="flex items-start gap-1.5">';
+                                    vh += '<span style="color:#d97706">⚠</span>';
+                                    vh += '<div><strong>' + c.check + '</strong>';
+                                    if(c.diff !== undefined) vh += ' — Differenz: ' + Number(c.diff).toLocaleString('de-DE') + ' €';
+                                    if(c.note) vh += '<div class="text-gray-500 mt-0.5">' + c.note + '</div>';
+                                    vh += '</div></div>';
+                                });
+                                vh += '</div>';
+                                valBanner.innerHTML = vh;
+                            }
+                        } else { valBanner.className = 'hidden'; }
+                    } catch(valErr) { 
+                        valBanner.className = 'hidden'; 
+                        console.warn('BWA Validation display error:', valErr);
+                    }
+                }
             } catch(err) { alert('Fehler: '+err.message); }
         }
 
@@ -10966,23 +11009,26 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 // Mapping: kontengruppe/bezeichnung → form field
                 var gruppenMap = {
                     'Umsatzerlöse': 'umsatzerloese',
+                    'Gesamtleistung': 'gesamtleistung',
                     'Materialaufwand': 'wareneinsatz',
                     'Rohertrag': 'rohertrag',
-                    'Betrieblicher Rohertrag': 'rohertrag',
+                    'Sonstige Erlöse': 'so_betr_erloese',
+                    'Betrieblicher Rohertrag': 'betrieblicher_rohertrag',
                     'Personalkosten': 'personalkosten',
                     'Raumkosten': 'raumkosten',
+                    'Steuern/Versicherungen': 'versicherungen',
+                    'Fahrzeugkosten': 'fahrzeugkosten',
                     'Werbe-/Reisekosten': 'werbekosten',
                     'Warenabgabekosten': 'kosten_warenabgabe',
                     'Abschreibungen': 'abschreibungen',
+                    'Instandhaltung': 'reparaturen_instandhaltung',
                     'Sonstige Kosten': 'sonstige_kosten',
                     'Gesamtkosten': 'gesamtkosten',
                     'Summe Aufwendungen': 'gesamtkosten',
-                    'Fahrzeugkosten': 'kfzkosten',
-                    'Steuern/Versicherungen': 'versicherungen',
                     'Betriebsergebnis': 'betriebsergebnis',
-                    'Ergebnis': 'ergebnis_vor_steuern',
                     'Zinsen': 'zinsaufwand',
-                    'Gesamtleistung': 'gesamtleistung'
+                    'Neutrales Ergebnis': 'neutraler_aufwand',
+                    'Ergebnis': 'ergebnis_vor_steuern'
                 };
                 
                 // Detail-Konten Mapping
@@ -11341,10 +11387,28 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         async function autoSaveBwa(data, filename) {
             var stdId = sbProfile ? sbProfile.standort_id : null;
             if(!stdId) throw new Error('Kein Standort');
-            var rohertrag = (data.umsatzerloese||0) + (data.wareneinsatz||0);
-            var gesamtkosten = (data.personalkosten||0) + (data.raumkosten||0) + (data.werbekosten||0) + (data.kosten_warenabgabe||0) + (data.abschreibungen||0) + (data.sonstige_kosten||0);
-            var betriebsergebnis = rohertrag + gesamtkosten;
-            var ergebnis = betriebsergebnis + (data.zinsaufwand||0);
+            
+            // Use parsed summation values if available, compute as fallback
+            var rohertrag = data.rohertrag || ((data.umsatzerloese||0) + (data.wareneinsatz||0));
+            
+            // Gesamtkosten: use parsed value or sum all cost categories
+            var gesamtkosten = data.gesamtkosten || (
+                (data.personalkosten||0) + (data.raumkosten||0) + (data.werbekosten||0) + 
+                (data.kosten_warenabgabe||0) + (data.abschreibungen||0) + (data.sonstige_kosten||0) +
+                (data.fahrzeugkosten||0) + (data.versicherungen||0) + 
+                (data.reparaturen_instandhaltung||0)
+            );
+            
+            // Betrieblicher Rohertrag = Rohertrag + So. betr. Erlöse
+            var betrRohertrag = data.betrieblicher_rohertrag || (rohertrag + (data.so_betr_erloese||0));
+            
+            // Betriebsergebnis: use parsed value, fallback = betr. Rohertrag + Gesamtkosten
+            var betriebsergebnis = data.betriebsergebnis || (betrRohertrag + gesamtkosten);
+            
+            // Ergebnis v.St.: use parsed value, fallback = BE + Zins + Neutral
+            var ergebnis = data.ergebnis_vor_steuern || (
+                betriebsergebnis + (data.zinsaufwand||0) + (data.neutraler_aufwand||0) + (data.neutraler_ertrag||0)
+            );
 
             var payload = {
                 standort_id: stdId,
@@ -11357,16 +11421,26 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 davon_skonti: data.davon_skonti || null,
                 wareneinsatz: data.wareneinsatz || 0,
                 rohertrag: rohertrag,
+                so_betr_erloese: data.so_betr_erloese || 0,
+                betrieblicher_rohertrag: betrRohertrag,
+                gesamtleistung: data.gesamtleistung || data.umsatzerloese || 0,
                 personalkosten: data.personalkosten || 0,
                 raumkosten: data.raumkosten || 0,
+                versicherungen: data.versicherungen || 0,
+                fahrzeugkosten: data.fahrzeugkosten || 0,
                 werbekosten: data.werbekosten || 0,
                 kosten_warenabgabe: data.kosten_warenabgabe || 0,
                 abschreibungen: data.abschreibungen || 0,
+                reparaturen_instandhaltung: data.reparaturen_instandhaltung || 0,
                 sonstige_kosten: data.sonstige_kosten || 0,
                 gesamtkosten: gesamtkosten,
                 betriebsergebnis: betriebsergebnis,
                 zinsaufwand: data.zinsaufwand || 0,
+                neutraler_aufwand: data.neutraler_aufwand || 0,
+                neutraler_ertrag: data.neutraler_ertrag || 0,
                 ergebnis_vor_steuern: ergebnis,
+                steuern: data.steuern || 0,
+                ergebnis_nach_steuern: data.ergebnis_nach_steuern || (ergebnis + (data.steuern||0)),
                 datei_name: filename,
                 format: data.quelle === 'ki' ? 'KI-Analyse' : 'Auto-Parser',
                 hochgeladen_von: sbUser ? sbUser.id : null,
@@ -11375,6 +11449,14 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
 
             var resp = await sb.from('bwa_daten').upsert(payload, {onConflict: 'standort_id,monat,jahr'}).select();
             if(resp.error) throw resp.error;
+            
+            // Run validation after save
+            if(resp.data && resp.data[0]) {
+                try {
+                    await sb.rpc('validate_bwa', {p_bwa_id: resp.data[0].id});
+                } catch(e) { console.warn('BWA Validation failed:', e); }
+            }
+            
             return resp.data;
         }
 
