@@ -6171,32 +6171,32 @@
 
                     <!-- TAB 5: Office-Räume -->
                     <div id="settingsTabOffice" class="settings-tab-content" style="display:none;">
-                        <div class="vit-card p-4 mb-6 border-l-4 border-blue-500">
+                        <div class="vit-card p-4 mb-4 border-l-4 border-blue-500">
                             <div class="flex items-center space-x-3">
                                 <span class="text-2xl">🏢</span>
                                 <div>
-                                    <h3 class="font-bold text-gray-800">Office-Räume verwalten</h3>
-                                    <p class="text-xs text-gray-500 mt-0.5">Räume benennen, Beschreibung hinzufügen und Sortierung ändern. Die Raumnamen werden im Office-Modul auf dem Grundriss und bei der Platzauswahl angezeigt.</p>
+                                    <h3 class="font-bold text-gray-800">Office-Räume & Plätze verwalten</h3>
+                                    <p class="text-xs text-gray-500 mt-0.5">Plätze auf dem Grundriss per Drag & Drop positionieren. Räume benennen und Plätze zuordnen.</p>
                                 </div>
                             </div>
                         </div>
-                        <div id="officeRoomsAdmin"></div>
 
-                        <!-- Floor plan reference with desk overlay -->
-                        <div id="officeRoomsPlanRef" class="mt-6 vit-card p-4">
+                        <!-- Floor plan ALWAYS visible on top with interactive desk positioning -->
+                        <div class="vit-card p-4 mb-4">
                             <div class="flex items-center justify-between mb-3">
                                 <div class="text-sm font-bold text-gray-700">📐 Grundriss OG · Jahnstraße 2</div>
-                                <button onclick="officeToggleFloorplan()" class="text-xs font-semibold px-3 py-1 rounded-lg" style="border:1px solid #EF7D00;color:#EF7D00" id="officeFloorplanToggleBtn">Grundriss einblenden</button>
+                                <label class="flex items-center gap-2 text-[11px] cursor-pointer"><input type="checkbox" id="officeAdminDragMode" onchange="officeToggleDragMode()" class="accent-orange-500"> <span style="color:#EF7D00;font-weight:700">Plätze verschieben</span></label>
                             </div>
-                            <div id="officeFloorplanWrap" style="display:none">
-                                <div id="officeFloorplanContainer" style="position:relative;overflow:auto">
-                                    <img src="grundriss_og.png" style="width:100%;min-width:700px;display:block;border-radius:8px;opacity:0.9" onload="officeRenderAdminDots()">
-                                    <div id="officeAdminDots" style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none"></div>
-                                </div>
-                                <div class="flex flex-wrap gap-2 mt-3" id="officeRoomLegend"></div>
-                                <div class="text-[10px] text-gray-400 mt-2">Tipp: Die farbigen Punkte zeigen welche Arbeitsplätze zu welchem Raum gehören. Benenne die Räume oben passend zum Grundriss.</div>
+                            <div id="officeFloorplanContainer" style="position:relative;overflow:auto">
+                                <img src="grundriss_og.png" style="width:100%;min-width:700px;display:block;border-radius:8px;opacity:0.92" onload="officeRenderAdminDots()">
+                                <div id="officeAdminDots" style="position:absolute;top:0;left:0;right:0;bottom:0"></div>
                             </div>
+                            <div class="flex flex-wrap gap-2 mt-3" id="officeRoomLegend"></div>
+                            <div class="text-[10px] text-gray-400 mt-1" id="officeAdminDragHint">Aktiviere "Plätze verschieben" um Dots per Drag & Drop auf dem Grundriss zu positionieren.</div>
                         </div>
+                        
+                        <!-- Room management below -->
+                        <div id="officeRoomsAdmin"></div>
                     </div>
 
                 </div>
@@ -23080,12 +23080,14 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         }
 
         // ═══ OFFICE-RÄUME ADMIN ═══
-        var _officeFloorplanVisible = false;
-        window.officeToggleFloorplan = function() {
-            _officeFloorplanVisible = !_officeFloorplanVisible;
-            document.getElementById('officeFloorplanWrap').style.display = _officeFloorplanVisible ? '' : 'none';
-            document.getElementById('officeFloorplanToggleBtn').textContent = _officeFloorplanVisible ? 'Grundriss ausblenden' : 'Grundriss einblenden';
-            if(_officeFloorplanVisible) setTimeout(officeRenderAdminDots, 150);
+        var _officeAdminDragMode = false;
+        var _officeDraggingDesk = null;
+        
+        window.officeToggleDragMode = function() {
+            _officeAdminDragMode = document.getElementById('officeAdminDragMode').checked;
+            var hint = document.getElementById('officeAdminDragHint');
+            if(hint) hint.textContent = _officeAdminDragMode ? '⚡ Drag-Modus aktiv – Ziehe die Punkte an die richtige Position. Änderungen werden sofort gespeichert.' : 'Aktiviere "Plätze verschieben" um Dots per Drag & Drop auf dem Grundriss zu positionieren.';
+            officeRenderAdminDots();
         };
         
         var _officeRoomColors = ['#EF7D00','#3b82f6','#22c55e','#a855f7','#ef4444','#eab308','#06b6d4','#ec4899','#64748b','#84cc16','#f97316','#8b5cf6'];
@@ -23095,12 +23097,11 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             var legendEl = document.getElementById('officeRoomLegend');
             if(!dotsEl) return;
             try {
-                var dr = await sb.from('office_desks').select('nr,room,label,pct_x,pct_y,active').eq('active', true).order('nr');
+                var dr = await sb.from('office_desks').select('nr,room,label,pct_x,pct_y,active').order('nr');
                 var rr = await sb.from('office_rooms').select('id,name,sortierung').order('sortierung');
                 var desks = dr.data || [];
                 var rooms = rr.data || [];
                 
-                // Assign color per room
                 var roomColorMap = {};
                 rooms.forEach(function(r, i) { roomColorMap[r.name] = _officeRoomColors[i % _officeRoomColors.length]; });
                 
@@ -23108,13 +23109,13 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 desks.forEach(function(d) {
                     if(!d.pct_x || !d.pct_y) return;
                     var col = roomColorMap[d.room] || '#999';
-                    var left = d.pct_x;
-                    var top = d.pct_y;
-                    html += '<div style="position:absolute;left:' + left + '%;top:' + top + '%;transform:translate(-50%,-50%);width:24px;height:24px;border-radius:50%;background:' + col + ';border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;pointer-events:auto;cursor:default" title="Platz #' + d.nr + ' · ' + (d.label||'') + ' · Raum: ' + (d.room||'?') + '">' + d.nr + '</div>';
+                    var opacity = d.active !== false ? '1' : '0.35';
+                    var cursor = _officeAdminDragMode ? 'grab' : 'default';
+                    var evts = _officeAdminDragMode ? 'onmousedown="officeStartDrag(event,' + d.nr + ')" ontouchstart="officeStartDrag(event,' + d.nr + ')"' : '';
+                    html += '<div ' + evts + ' data-desk-nr="' + d.nr + '" style="position:absolute;left:' + d.pct_x + '%;top:' + d.pct_y + '%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:' + col + ';border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;pointer-events:auto;cursor:' + cursor + ';opacity:' + opacity + ';z-index:10;user-select:none" title="#' + d.nr + ' ' + (d.label||'') + ' · ' + (d.room||'') + '">' + d.nr + '</div>';
                 });
                 dotsEl.innerHTML = html;
                 
-                // Legend
                 if(legendEl) {
                     var lhtml = '';
                     rooms.forEach(function(r, i) {
@@ -23125,6 +23126,55 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                     legendEl.innerHTML = lhtml;
                 }
             } catch(e) { console.error('[AdminDots]', e); }
+        };
+        
+        // Drag & Drop desk positioning
+        window.officeStartDrag = function(e, nr) {
+            e.preventDefault();
+            _officeDraggingDesk = nr;
+            var container = document.getElementById('officeFloorplanContainer');
+            if(!container) return;
+            
+            var dot = container.querySelector('[data-desk-nr="' + nr + '"]');
+            if(dot) { dot.style.cursor = 'grabbing'; dot.style.zIndex = '100'; dot.style.boxShadow = '0 0 0 3px #EF7D00, 0 2px 8px rgba(0,0,0,0.4)'; }
+            
+            function onMove(ev) {
+                if(!_officeDraggingDesk) return;
+                var touch = ev.touches ? ev.touches[0] : ev;
+                var img = container.querySelector('img');
+                if(!img) return;
+                var rect = img.getBoundingClientRect();
+                var x = ((touch.clientX - rect.left) / rect.width) * 100;
+                var y = ((touch.clientY - rect.top) / rect.height) * 100;
+                x = Math.max(1, Math.min(99, x));
+                y = Math.max(1, Math.min(99, y));
+                if(dot) { dot.style.left = x + '%'; dot.style.top = y + '%'; }
+            }
+            
+            async function onEnd(ev) {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onEnd);
+                document.removeEventListener('touchmove', onMove);
+                document.removeEventListener('touchend', onEnd);
+                if(!_officeDraggingDesk) return;
+                
+                // Get final position
+                if(dot) {
+                    var pctX = parseFloat(dot.style.left);
+                    var pctY = parseFloat(dot.style.top);
+                    try {
+                        await sb.from('office_desks').update({pct_x: Math.round(pctX*10)/10, pct_y: Math.round(pctY*10)/10}).eq('nr', _officeDraggingDesk);
+                        showToast('Platz #' + _officeDraggingDesk + ' verschoben', 'success');
+                    } catch(err) { showToast('Fehler: ' + err.message, 'error'); }
+                    dot.style.cursor = 'grab'; dot.style.zIndex = '10'; dot.style.boxShadow = '0 1px 4px rgba(0,0,0,0.3)';
+                }
+                _officeDraggingDesk = null;
+            }
+            
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onEnd);
+            document.addEventListener('touchmove', onMove, {passive:false});
+            document.addEventListener('touchend', onEnd);
         };
         async function renderOfficeRoomsAdmin() {
             var el = document.getElementById('officeRoomsAdmin');
@@ -31666,7 +31716,6 @@ function fillDemoWidgets(level, stage) {
 function fillDemoHQ() {
     // HQ demo data removed for production
 }
-}
 
 // ═══ DEMO: Override billing module for demo mode ═══
 function fillDemoBilling() {
@@ -34375,4 +34424,3 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
 
 </body>
 </html>
-/* mobile-header-fix: 1771542010 */
