@@ -89,6 +89,21 @@
         container.style.pointerEvents = _dragMode ? 'auto' : 'none';
 
         var html = '';
+
+        // ── Room Labels (positioned at center of room's desks) ──
+        _rooms.forEach(function(r) {
+            var roomDesks = _desks.filter(function(d) { return d.room_id === r.id; });
+            if (!roomDesks.length) return;
+            var avgX = roomDesks.reduce(function(s, d) { return s + (parseFloat(d.pct_x)||50); }, 0) / roomDesks.length;
+            var avgY = roomDesks.reduce(function(s, d) { return s + (parseFloat(d.pct_y)||50); }, 0) / roomDesks.length;
+            var col = roomColor(r.name);
+            html += '<div style="position:absolute;left:' + avgX + '%;top:' + (avgY - 5) + '%;transform:translate(-50%,-100%);' +
+                'background:' + col + ';color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;' +
+                'white-space:nowrap;pointer-events:none;z-index:5;box-shadow:0 1px 3px rgba(0,0,0,0.2);opacity:0.9">' +
+                esc(r.name) + ' <span style="opacity:0.7">(' + roomDesks.length + ')</span></div>';
+        });
+
+        // ── Desk Dots ──
         _desks.forEach(function(d) {
             var px = parseFloat(d.pct_x) || 50;
             var py = parseFloat(d.pct_y) || 50;
