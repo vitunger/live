@@ -554,12 +554,12 @@ export async function loadModulStatus() {
 }
 
 export function applyModulStatus() {
-    // Apply module-level status to sidebar
+    // Alle Sidebar-Buttons mit data-module durchgehen
     document.querySelectorAll('[data-module]').forEach(function(btn) {
         var key = btn.getAttribute('data-module');
         var status = sbModulStatus[key] || 'aktiv';
 
-        // Remove old badges
+        // Remove old badges first
         var oldBadge = btn.querySelector('.modul-wip-badge,.modul-demo-badge');
         if(oldBadge) oldBadge.remove();
 
@@ -570,9 +570,54 @@ export function applyModulStatus() {
                 btn.style.display = '';
                 btn.style.opacity = '0.35';
                 btn.style.pointerEvents = 'none';
-}
-}
-});
+            } else {
+                btn.style.display = 'none';
+            }
+        } else if(status === 'in_bearbeitung') {
+            btn.style.display = '';
+            btn.style.opacity = '0.4';
+            btn.style.pointerEvents = 'none';
+            btn.style.cursor = 'not-allowed';
+            if(!btn.querySelector('.modul-wip-badge')) {
+                var badge = document.createElement('span');
+                badge.className = 'modul-wip-badge ml-auto text-[9px] bg-yellow-500 text-white rounded px-1 py-0.5 font-bold';
+                badge.textContent = 'BALD';
+                btn.appendChild(badge);
+            }
+        } else if(status === 'demo') {
+            btn.style.display = '';
+            btn.style.opacity = '';
+            btn.style.pointerEvents = '';
+            btn.style.cursor = '';
+            if(!btn.querySelector('.modul-demo-badge')) {
+                var badge = document.createElement('span');
+                badge.className = 'modul-demo-badge ml-auto text-[9px] bg-orange-500 text-white rounded px-1 py-0.5 font-bold';
+                badge.textContent = 'DEMO';
+                btn.appendChild(badge);
+            }
+        } else {
+            // aktiv - reset everything
+            btn.style.display = '';
+            btn.style.opacity = '';
+            btn.style.pointerEvents = '';
+            btn.style.cursor = '';
+        }
+    });
+
+    // Wissen-Tabs in Fachbereichen ausblenden wenn Modul deaktiviert
+    var wissenStatus = sbModulStatus['wissen'] || 'aktiv';
+    var wissenDisabled = wissenStatus === 'deaktiviert';
+    var wissenTabSelectors = [
+        'button[data-tab="vkWissen"]', '#vkTabVkWissen',
+        'button[data-tab="mktWissen"]', '#marketingTabMktWissen',
+        'button[data-tab="ekWissen"]', '#ekTabEkWissen',
+        'button[data-tab="ctrlWissen"]', '#ctrlTabCtrlWissen',
+        'button[data-tab="wissen"]', '#allgTabWissen'
+    ];
+    wissenTabSelectors.forEach(function(sel) {
+        var el = document.querySelector(sel);
+        if(el) el.style.display = wissenDisabled ? 'none' : '';
+    });
 }
 
 
