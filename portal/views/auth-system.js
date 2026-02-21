@@ -739,7 +739,7 @@ if(currentRole !== 'hq' && SESSION.account_level !== 'extern') { if(typeof windo
 checkPendingApprovals();
 checkDemoMode();
 // Check BWA deadlines and create reminders
-checkBwaDeadlines();
+if(typeof window.checkBwaDeadlines==='function') window.checkBwaDeadlines();
 // Auto-impersonation from URL param (?imp=demo or ?imp=userId)
 var urlParams = new URLSearchParams(window.location.search);
 var impParam = urlParams.get('imp');

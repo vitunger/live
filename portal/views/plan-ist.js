@@ -776,14 +776,18 @@ export async function saveVtEntry() {
     }
 }
 
-// Load BWA on controlling tab open
-var origShowControllingTab = showControllingTab;
-showControllingTab = function(t) {
-    origShowControllingTab(t);
-    if(t === 'bwa') loadBwaList();
-    if(t === 'planist') renderPlanIst();
-    if(t === 'ctrlWissen') renderWissenTab('controlling','ctrlTabCtrlWissen');
-};
+// Load BWA on controlling tab open (deferred until controlling.js exports the function)
+window.addEventListener('vit:modules-ready', function() {
+    if (typeof window.showControllingTab === 'function') {
+        var origShowControllingTab = window.showControllingTab;
+        window.showControllingTab = function(t) {
+            origShowControllingTab(t);
+            if(t === 'bwa') loadBwaList();
+            if(t === 'planist') renderPlanIst();
+            if(t === 'ctrlWissen' && typeof window.renderWissenTab === 'function') window.renderWissenTab('controlling','ctrlTabCtrlWissen');
+        };
+    }
+});
 
 // === LEAD REPORTING DASHBOARD (computed from hqStandorte) ===
 export function getLeadData() {
