@@ -1209,7 +1209,7 @@ export function showSettingsTab(tab) {
     // Load tab-specific data
     if(tab === 'demo') renderDemoModulList();
     if(tab === 'hqmodule') renderHqModulStatusList();
-    if(tab === 'office') renderOfficeRoomsAdmin();
+    if(tab === 'office') { renderOfficeRoomsAdmin(); if(typeof window.officeRenderAdminDots === 'function') setTimeout(window.officeRenderAdminDots, 150); }
 }
 
 // Tab/Widget-Konfiguration pro Modul
