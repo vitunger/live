@@ -1568,6 +1568,7 @@ export async function renderOfficeRoomsAdmin() {
                             html += '<div class="flex items-center gap-1">';
                             html += '<button onclick="officeEditDesk(' + d.nr + ')" class="text-[10px] px-1.5 py-0.5 rounded" style="color:#3b82f6" title="Bearbeiten">✏️</button>';
                             html += '<button onclick="officeToggleDesk(' + d.nr + ', ' + (d.active !== false ? 'false' : 'true') + ')" class="text-[10px] px-1.5 py-0.5 rounded" style="color:' + (d.active !== false ? '#ef4444' : '#22c55e') + '" title="' + (d.active !== false ? 'Deaktivieren' : 'Aktivieren') + '">' + (d.active !== false ? '⏸' : '▶') + '</button>';
+                            if(d.active === false) html += '<button onclick="officeDeleteDesk(' + d.nr + ')" class="text-[10px] px-1.5 py-0.5 rounded" style="color:#ef4444" title="Endgültig löschen">🗑</button>';
                             html += '</div></div>';
                         });
                         html += '</div></div>';
@@ -1720,6 +1721,19 @@ window.officeToggleDesk = async function(nr, active) {
         var r = await _sb().from('office_desks').update({ active: active }).eq('nr', nr);
         if(r.error) throw r.error;
         _showToast('Platz #' + nr + (active ? ' aktiviert' : ' deaktiviert'), 'success');
+        renderOfficeRoomsAdmin();
+    } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
+};
+
+window.officeDeleteDesk = async function(nr) {
+    if(!confirm('Platz #' + nr + ' endgültig löschen? Das kann nicht rückgängig gemacht werden.')) return;
+    try {
+        // First remove any bookings/checkins referencing this desk
+        await _sb().from('office_bookings').delete().eq('desk_nr', nr);
+        await _sb().from('office_checkins').delete().eq('desk_nr', nr);
+        var r = await _sb().from('office_desks').delete().eq('nr', nr);
+        if(r.error) throw r.error;
+        _showToast('Platz #' + nr + ' gelöscht', 'success');
         renderOfficeRoomsAdmin();
     } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
 };
