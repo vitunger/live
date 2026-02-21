@@ -455,6 +455,7 @@ export function renderWeekViewFromDb() {
 
 
 // Strangler Fig
+window.verkaufData = verkaufData;
 const _exports = {renderWeekView,renderPipeline,moveLead,showNewLeadModal,addNewLead,renderJahresTabelle,showVerkaufTab,changeWeek,getMonday,getKW,loadWeekFromDb,renderWeekViewFromDb};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[verkauf.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
