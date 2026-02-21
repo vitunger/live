@@ -1898,13 +1898,15 @@ export function renderSmRanking() {
 export function showView(viewName) {
     console.log('showView called with:', viewName);
     
-    // Check module status - block 'bald' and 'deaktiviert' modules
-    var moduleStatusMap = {verkauf:'verkauf',controlling:'controlling',marketing:'marketing',werkstatt:'werkstatt',personal:'personal',office:'office',kalender:'kalender',nachrichten:'nachrichten',wissen:'wissen',support:'support'};
+    // Check module status - block 'in_bearbeitung' (bald) and 'deaktiviert' modules
+    var moduleStatusMap = {verkauf:'verkauf',controlling:'controlling',marketing:'marketing',werkstatt:'werkstatt',personal:'personal',office:'office',kalender:'kalender',nachrichten:'nachrichten',wissen:'wissen',support:'support',einkauf:'einkauf',dashboards:'dashboards',allgemein:'allgemein',shop:'shop',aktenschrank:'aktenschrank',mitarbeiter:'mitarbeiter'};
     var moduleKey = moduleStatusMap[viewName];
-    if(moduleKey && typeof sbModulConfig !== 'undefined' && sbModulConfig[moduleKey]) {
-        var mStatus = sbModulConfig[moduleKey].status;
-        if(mStatus === 'bald' || mStatus === 'deaktiviert') {
-            _showToast('Dieses Modul ist noch nicht verfügbar (' + (mStatus === 'bald' ? 'Kommt bald' : 'Deaktiviert') + ')', 'info');
+    var _modulStatus = window.sbModulStatus || {};
+    if(moduleKey && _modulStatus[moduleKey]) {
+        var mStatus = _modulStatus[moduleKey];
+        if(mStatus === 'in_bearbeitung' || mStatus === 'deaktiviert') {
+            if(typeof window._showToast === 'function') window._showToast('Dieses Modul ist noch nicht verf\u00fcgbar (' + (mStatus === 'in_bearbeitung' ? 'Kommt bald' : 'Deaktiviert') + ')', 'info');
+            else alert('Dieses Modul ist noch nicht verf\u00fcgbar (' + (mStatus === 'in_bearbeitung' ? 'Kommt bald' : 'Deaktiviert') + ')');
             return;
         }
     }
