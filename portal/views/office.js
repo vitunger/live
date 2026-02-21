@@ -17,6 +17,18 @@
     var _hqUsers = [];
     var _selectedDeskNr = null;
 
+    // ─── Reset (called on user switch / loginAs) ───
+    window._offResetState = function() {
+        _weekOffset = 0;
+        _rooms = null;
+        _desks = null;
+        _myCheckin = null;
+        _todayCheckins = [];
+        _todayBookings = [];
+        _hqUsers = [];
+        _selectedDeskNr = null;
+    };
+
     // ─── Helpers ───
     function esc(s) { return typeof escH === 'function' ? escH(s) : (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     function todayISO() { return fmtISO(new Date()); }

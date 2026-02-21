@@ -1067,6 +1067,8 @@ export async function loginAs(userId, email, userName) {
         await loadUserProfile(_sbUser().id);
         await loadModulStatus();
         await loadFeatureFlags();
+        // Reset cached module states (Office, etc.)
+        if(typeof window._offResetState === 'function') window._offResetState();
         enterApp();
         try { await loadPipelineFromSupabase(); } catch(e) {}
     } catch(err) {
