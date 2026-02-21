@@ -316,6 +316,10 @@ sbProfile = Object.assign({}, sbProfile, {
     is_hq: false
 });
 sbStandort = { id: '5a077c1a-5db2-4fde-949c-8e5e34dcd2c0', name: 'Demo-Standort' };
+window.sbProfile = sbProfile;
+window.currentRoles = currentRoles;
+window.currentRole = currentRole;
+window.sbStandort = sbStandort;
 SESSION.account_level = 'standort';
 _activateImpersonation('👁️ Demo-Standort');
 }
@@ -342,7 +346,11 @@ try {
         standort_id: user.standort_id,
         is_hq: false
     });
+    window.sbProfile = sbProfile;
+    window.currentRoles = currentRoles;
+    window.currentRole = currentRole;
     sbStandort = user.standorte ? { id: user.standort_id, name: user.standorte.name } : sbStandort;
+    window.sbStandort = sbStandort;
     SESSION.account_level = 'standort';
     var label = '🔄 ' + user.name + (user.standorte ? ' (' + user.standorte.name + ')' : '');
     _activateImpersonation(label);
@@ -399,7 +407,11 @@ if(_impOrigRoles) {
 if(_impOrigStandort !== null) currentStandortId = _impOrigStandort;
 if(_impOrigSbStandort) sbStandort = _impOrigSbStandort;
 if(_impOrigSession) Object.assign(SESSION, _impOrigSession);
-if(sbProfile) _sbProfile().is_hq = currentRoles.indexOf('hq') >= 0;
+if(sbProfile) sbProfile.is_hq = currentRoles.indexOf('hq') >= 0;
+window.sbProfile = sbProfile;
+window.currentRoles = currentRoles;
+window.currentRole = currentRole;
+window.sbStandort = sbStandort;
 }
 
 export function quickLogin(email) {
