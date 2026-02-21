@@ -538,28 +538,3 @@ export function renderHqEinkauf() {
 const _exports = {renderHqFinanzen,adsFmtEuro,adsFmtK,adsSetText,loadAdsData,renderAdsKpis,renderAdsChart,renderAdsKampagnenTabelle,filterAdsPlattform,renderAdsStandortVergleich,renderAdsSyncInfo,updateMktPerformanceFromAds,renderHqMarketing,showHqMktTab,renderHqMktBudget,renderHqMktLeadReport,renderHqMktJahresgespraeche,renderHqMktHandlungsbedarf,renderMktSpendingChart,renderMktLeadChart,renderHqEinkauf};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[hq-finanzen.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
-
-// === WINDOW REGISTRATION ===
-// Auto-register 21 exports on window for onclick compatibility
-window.renderHqFinanzen = renderHqFinanzen;
-window.adsFmtEuro = adsFmtEuro;
-window.adsFmtK = adsFmtK;
-window.adsSetText = adsSetText;
-window.loadAdsData = loadAdsData;
-window.renderAdsKpis = renderAdsKpis;
-window.renderAdsChart = renderAdsChart;
-window.renderAdsKampagnenTabelle = renderAdsKampagnenTabelle;
-window.filterAdsPlattform = filterAdsPlattform;
-window.renderAdsStandortVergleich = renderAdsStandortVergleich;
-window.renderAdsSyncInfo = renderAdsSyncInfo;
-window.updateMktPerformanceFromAds = updateMktPerformanceFromAds;
-window.renderHqMarketing = renderHqMarketing;
-window.showHqMktTab = showHqMktTab;
-window.renderHqMktBudget = renderHqMktBudget;
-window.renderHqMktLeadReport = renderHqMktLeadReport;
-window.renderHqMktJahresgespraeche = renderHqMktJahresgespraeche;
-window.renderHqMktHandlungsbedarf = renderHqMktHandlungsbedarf;
-window.renderMktSpendingChart = renderMktSpendingChart;
-window.renderMktLeadChart = renderMktLeadChart;
-window.renderHqEinkauf = renderHqEinkauf;
-// === END REGISTRATION ===

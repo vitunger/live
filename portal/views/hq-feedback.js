@@ -252,10 +252,3 @@ if(e.message && e.message.indexOf('ideas') >= 0) {
 const _exports = {renderHqFeedbackInbox,renderHqFbList,formatFbSize};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[hq-feedback.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
-
-// === WINDOW REGISTRATION ===
-// Auto-register 3 exports on window for onclick compatibility
-window.renderHqFeedbackInbox = renderHqFeedbackInbox;
-window.renderHqFbList = renderHqFbList;
-window.formatFbSize = formatFbSize;
-// === END REGISTRATION ===

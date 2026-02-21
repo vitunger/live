@@ -1314,27 +1314,3 @@ export async function saveBwaData() {
 const _exports = {showControllingTab,showBwaDetail,eur,eurColor,diffHtml,loadBwaList,downloadBwa,showBwaFromDb,loadBwaTrend,openBwaUploadModal,handleBwaFileSelect,parseBwaWithAI,parseBwaBatch,parseSingleBwaFileWithRetry,cleanCsvForKi,parseSingleBwaFile,autoSaveBwa,bwaApplyKiResult,closeBwaUploadModal,saveBwaData};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[controlling.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
-
-// === WINDOW REGISTRATION ===
-// Auto-register 20 exports on window for onclick compatibility
-window.showControllingTab = showControllingTab;
-window.showBwaDetail = showBwaDetail;
-window.eur = eur;
-window.eurColor = eurColor;
-window.diffHtml = diffHtml;
-window.loadBwaList = loadBwaList;
-window.downloadBwa = downloadBwa;
-window.showBwaFromDb = showBwaFromDb;
-window.loadBwaTrend = loadBwaTrend;
-window.openBwaUploadModal = openBwaUploadModal;
-window.handleBwaFileSelect = handleBwaFileSelect;
-window.parseBwaWithAI = parseBwaWithAI;
-window.parseBwaBatch = parseBwaBatch;
-window.parseSingleBwaFileWithRetry = parseSingleBwaFileWithRetry;
-window.cleanCsvForKi = cleanCsvForKi;
-window.parseSingleBwaFile = parseSingleBwaFile;
-window.autoSaveBwa = autoSaveBwa;
-window.bwaApplyKiResult = bwaApplyKiResult;
-window.closeBwaUploadModal = closeBwaUploadModal;
-window.saveBwaData = saveBwaData;
-// === END REGISTRATION ===

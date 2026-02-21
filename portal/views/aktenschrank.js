@@ -148,18 +148,3 @@ const _exports = {
 };
 Object.keys(_exports).forEach(k => { window[k] = _exports[k]; });
 console.log('[aktenschrank.js] ✅ ' + Object.keys(_exports).length + ' exports');
-
-// === WINDOW REGISTRATION ===
-// Auto-register 11 exports on window for onclick compatibility
-window.loadAktenFiles = loadAktenFiles;
-window.getFileIcon = getFileIcon;
-window.openDokUploadModal = openDokUploadModal;
-window.closeDokUpModal = closeDokUpModal;
-window.saveDokUpload = saveDokUpload;
-window.openAktenFolder = openAktenFolder;
-window.closeAktenFolder = closeAktenFolder;
-window.filterAkten = filterAkten;
-window.aktenFiles = aktenFiles;
-window.aktenLoaded = aktenLoaded;
-window.aktenFolderLabels = aktenFolderLabels;
-// === END REGISTRATION ===

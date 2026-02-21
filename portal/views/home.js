@@ -502,67 +502,8 @@ export function fillDemoWidgets(level, stage) {
 //  STRANGLER FIG: window.* registration for onclick compatibility
 // ═══════════════════════════════════════════════════════════════════
 
-const _exports = {
-    // Dashboard edit
-    toggleDashboardEdit,
-    addWidget,
-    // Dashboard tabs
-    initDashboardTabs,
-    showDashboardTab,
-    // Dashboard widgets
-    loadDashboardWidgets,
-    loadWidgetPipeline,
-    loadWidgetSuccess,
-    loadWidgetTermine,
-    loadWidgetAufgaben,
-    quickToggleTodo,
-    loadWidgetMarketing,
-    loadWidgetTeam,
-    loadWidgetControlling,
-    loadWidgetSupport,
-    loadWidgetWissen,
-    loadWidgetNachrichten,
-    // KW helpers
-    getKWnow,
-    getKWMonday,
-    getKWSunday,
-    // Home widgets
-    loadHomeWidgets,
-    // Extern home
-    renderExternHome,
-    // Widget info
-    toggleWidgetInfo,
-    // Demo
-    fillDemoWidgets,
-};
+const _exports = {addWidget,showDashboardTab,loadWidgetPipeline,loadWidgetSuccess,loadWidgetTermine,loadWidgetAufgaben,quickToggleTodo,loadWidgetMarketing,loadWidgetTeam,loadWidgetControlling,loadWidgetSupport,loadWidgetWissen,loadWidgetNachrichten,getKWMonday,getKWSunday};
 
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 
 console.log('[home.js] ✅ Module loaded – ' + Object.keys(_exports).length + ' exports registered');
-
-// === WINDOW REGISTRATION ===
-// Auto-register 23 exports on window for onclick compatibility
-window.toggleDashboardEdit = toggleDashboardEdit;
-window.addWidget = addWidget;
-window.initDashboardTabs = initDashboardTabs;
-window.showDashboardTab = showDashboardTab;
-window.loadDashboardWidgets = loadDashboardWidgets;
-window.loadWidgetPipeline = loadWidgetPipeline;
-window.loadWidgetSuccess = loadWidgetSuccess;
-window.getKWnow = getKWnow;
-window.getKWMonday = getKWMonday;
-window.getKWSunday = getKWSunday;
-window.loadWidgetTermine = loadWidgetTermine;
-window.loadWidgetAufgaben = loadWidgetAufgaben;
-window.quickToggleTodo = quickToggleTodo;
-window.loadWidgetMarketing = loadWidgetMarketing;
-window.loadWidgetTeam = loadWidgetTeam;
-window.loadWidgetControlling = loadWidgetControlling;
-window.loadWidgetSupport = loadWidgetSupport;
-window.loadWidgetWissen = loadWidgetWissen;
-window.loadWidgetNachrichten = loadWidgetNachrichten;
-window.loadHomeWidgets = loadHomeWidgets;
-window.renderExternHome = renderExternHome;
-window.toggleWidgetInfo = toggleWidgetInfo;
-window.fillDemoWidgets = fillDemoWidgets;
-// === END REGISTRATION ===

@@ -483,27 +483,3 @@ showVerkaufTab = function(t) { origShowVerkaufTab(t); if(t==='vkWissen') renderW
 const _exports = {showWissenTab,filterAkademie,renderAkademie,filterHbCat,filterHandbuecher,renderHandbuecher,filterBP,renderBP,filterFaqCat,filterFAQ,renderFAQ,toggleFaq,initDashboardTabs,showDashboardTab,renderWissenTab,switchWissenSub,renderWissenGlobal,filterWissenBereich,switchWissenTyp,filterWissenGlobal};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[wissen.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
-
-// === WINDOW REGISTRATION ===
-// Auto-register 20 exports on window for onclick compatibility
-window.showWissenTab = showWissenTab;
-window.filterAkademie = filterAkademie;
-window.renderAkademie = renderAkademie;
-window.filterHbCat = filterHbCat;
-window.filterHandbuecher = filterHandbuecher;
-window.renderHandbuecher = renderHandbuecher;
-window.filterBP = filterBP;
-window.renderBP = renderBP;
-window.filterFaqCat = filterFaqCat;
-window.filterFAQ = filterFAQ;
-window.renderFAQ = renderFAQ;
-window.toggleFaq = toggleFaq;
-window.initDashboardTabs = initDashboardTabs;
-window.showDashboardTab = showDashboardTab;
-window.renderWissenTab = renderWissenTab;
-window.switchWissenSub = switchWissenSub;
-window.renderWissenGlobal = renderWissenGlobal;
-window.filterWissenBereich = filterWissenBereich;
-window.switchWissenTyp = switchWissenTyp;
-window.filterWissenGlobal = filterWissenGlobal;
-// === END REGISTRATION ===

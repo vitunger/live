@@ -276,35 +276,6 @@ try {
 
 
 // Strangler Fig: window.* registration
-const _exports = {
-    // In-view notifications
-    filterNotif, renderNotifications,
-    // Push triggers
-    triggerPush, triggerPushStandort, triggerPushHQ,
-    // PWA install
-    showInstallBanner, installPWA, dismissInstall,
-    // Push setup & prefs
-    setupPushNotifications, showLocalNotification, updatePushUI,
-    checkPushStatus, loadNotificationPrefs, saveNotificationPrefs, unsubscribePush,
-};
+const _exports = {renderNotifications,triggerPushStandort,triggerPushHQ,installPWA,dismissInstall,showLocalNotification,updatePushUI,checkPushStatus,loadNotificationPrefs,saveNotificationPrefs,unsubscribePush};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[notifications.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
-
-// === WINDOW REGISTRATION ===
-// Auto-register 15 exports on window for onclick compatibility
-window.filterNotif = filterNotif;
-window.renderNotifications = renderNotifications;
-window.triggerPush = triggerPush;
-window.triggerPushStandort = triggerPushStandort;
-window.triggerPushHQ = triggerPushHQ;
-window.showInstallBanner = showInstallBanner;
-window.installPWA = installPWA;
-window.dismissInstall = dismissInstall;
-window.setupPushNotifications = setupPushNotifications;
-window.showLocalNotification = showLocalNotification;
-window.updatePushUI = updatePushUI;
-window.checkPushStatus = checkPushStatus;
-window.loadNotificationPrefs = loadNotificationPrefs;
-window.saveNotificationPrefs = saveNotificationPrefs;
-window.unsubscribePush = unsubscribePush;
-// === END REGISTRATION ===

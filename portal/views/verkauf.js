@@ -458,19 +458,3 @@ export function renderWeekViewFromDb() {
 const _exports = {renderWeekView,renderPipeline,moveLead,showNewLeadModal,addNewLead,renderJahresTabelle,showVerkaufTab,changeWeek,getMonday,getKW,loadWeekFromDb,renderWeekViewFromDb};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[verkauf.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
-
-// === WINDOW REGISTRATION ===
-// Auto-register 12 exports on window for onclick compatibility
-window.renderWeekView = renderWeekView;
-window.renderPipeline = renderPipeline;
-window.moveLead = moveLead;
-window.showNewLeadModal = showNewLeadModal;
-window.addNewLead = addNewLead;
-window.renderJahresTabelle = renderJahresTabelle;
-window.showVerkaufTab = showVerkaufTab;
-window.changeWeek = changeWeek;
-window.getMonday = getMonday;
-window.getKW = getKW;
-window.loadWeekFromDb = loadWeekFromDb;
-window.renderWeekViewFromDb = renderWeekViewFromDb;
-// === END REGISTRATION ===

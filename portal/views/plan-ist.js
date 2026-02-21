@@ -886,30 +886,3 @@ renderLeadDashboard();
 const _exports = {renderPlanIst,renderPlanUploadScreen,parsePlanFile,callFinanceKi,applyPlanKiResult,saveParsedPlan,saveManualPlan,renderPlanVergleich,buildPlanIstTable,showMonthDetail,editSelectedBwa,deleteBwa,loadVerkaufTracking,renderVerkaufFromDb,openVerkaufEntryModal,closeVtModal,loadAuswertung,renderAuswertung,saveVtEntry,getLeadData,getPerformanceColor,getPerformanceDot,renderLeadDashboard};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[plan-ist.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
-
-// === WINDOW REGISTRATION ===
-// Auto-register 23 exports on window for onclick compatibility
-window.renderPlanIst = renderPlanIst;
-window.renderPlanUploadScreen = renderPlanUploadScreen;
-window.parsePlanFile = parsePlanFile;
-window.callFinanceKi = callFinanceKi;
-window.applyPlanKiResult = applyPlanKiResult;
-window.saveParsedPlan = saveParsedPlan;
-window.saveManualPlan = saveManualPlan;
-window.renderPlanVergleich = renderPlanVergleich;
-window.buildPlanIstTable = buildPlanIstTable;
-window.showMonthDetail = showMonthDetail;
-window.editSelectedBwa = editSelectedBwa;
-window.deleteBwa = deleteBwa;
-window.loadVerkaufTracking = loadVerkaufTracking;
-window.renderVerkaufFromDb = renderVerkaufFromDb;
-window.openVerkaufEntryModal = openVerkaufEntryModal;
-window.closeVtModal = closeVtModal;
-window.loadAuswertung = loadAuswertung;
-window.renderAuswertung = renderAuswertung;
-window.saveVtEntry = saveVtEntry;
-window.getLeadData = getLeadData;
-window.getPerformanceColor = getPerformanceColor;
-window.getPerformanceDot = getPerformanceDot;
-window.renderLeadDashboard = renderLeadDashboard;
-// === END REGISTRATION ===

@@ -771,14 +771,3 @@ h = '<div class="text-center py-8 text-gray-400">Keine gesperrte Jahresstrategie
 const _exports = {showEmailNotification,fmtEur,fmtDate,statusBadge,billingCall,initBillingMonthSelect,generateSettlement};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[email-billing.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
-
-// === WINDOW REGISTRATION ===
-// Auto-register 7 exports on window for onclick compatibility
-window.showEmailNotification = showEmailNotification;
-window.fmtEur = fmtEur;
-window.fmtDate = fmtDate;
-window.statusBadge = statusBadge;
-window.billingCall = billingCall;
-window.initBillingMonthSelect = initBillingMonthSelect;
-window.generateSettlement = generateSettlement;
-// === END REGISTRATION ===

@@ -452,20 +452,6 @@ if(v==='devStatus') { _showView('entwicklung'); setTimeout(function(){showEntwic
 
 
 // Strangler Fig
-const _exports = {loadAktenFiles,getFileIcon,openDokUploadModal,closeDokUpModal,saveDokUpload,openAktenFolder,closeAktenFolder,filterAkten,generateDemoBwaData,renderPerformanceCockpit,kpiCard,planBar,kostenBar};
+const _exports = {loadAktenFiles,getFileIcon,openDokUploadModal,closeDokUpModal,saveDokUpload,openAktenFolder,closeAktenFolder,filterAkten,generateDemoBwaData,renderPerformanceCockpit};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[perf-cockpit.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
-
-// === WINDOW REGISTRATION ===
-// Auto-register 10 exports on window for onclick compatibility
-window.loadAktenFiles = loadAktenFiles;
-window.getFileIcon = getFileIcon;
-window.openDokUploadModal = openDokUploadModal;
-window.closeDokUpModal = closeDokUpModal;
-window.saveDokUpload = saveDokUpload;
-window.openAktenFolder = openAktenFolder;
-window.closeAktenFolder = closeAktenFolder;
-window.filterAkten = filterAkten;
-window.generateDemoBwaData = generateDemoBwaData;
-window.renderPerformanceCockpit = renderPerformanceCockpit;
-// === END REGISTRATION ===

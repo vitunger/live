@@ -357,28 +357,3 @@ if(t === 'cockpit') setTimeout(updateBwaDeadlineWidget, 100);
 
 // [Init moved to unified dispatcher]
 })();
-</script>
-
-
-<!-- ═══ TAGES-COCKPIT + VERKAUFS-STREAK SYSTEM ═══ -->
-
-// Strangler Fig
-const _exports = {getBwaMonth,getDeadline,getEskalationsStufe,getRating,daysUntil,ratingBadge,eskalationBadge,updateBwaDeadlineWidget,updateNetzwerkWidget,showKpiReport,setBenchmarkLock,renderHqBwaStatus,renderDailyFocus,renderSalesMomentum,sc,se,sl,renderHealthScore,renderHqHealth,toggleWidgetInfo,showEmailNotification,renderTrainerCard,loadTrainersForArea,_smartTriggerCheck,_evaluateTrigger};
-Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[cockpit-engine.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
-
-// === WINDOW REGISTRATION ===
-// Auto-register 12 exports on window for onclick compatibility
-window.getBwaMonth = getBwaMonth;
-window.getDeadline = getDeadline;
-window.getEskalationsStufe = getEskalationsStufe;
-window.getRating = getRating;
-window.daysUntil = daysUntil;
-window.ratingBadge = ratingBadge;
-window.eskalationBadge = eskalationBadge;
-window.updateBwaDeadlineWidget = updateBwaDeadlineWidget;
-window.updateNetzwerkWidget = updateNetzwerkWidget;
-window.showKpiReport = showKpiReport;
-window.setBenchmarkLock = setBenchmarkLock;
-window.renderHqBwaStatus = renderHqBwaStatus;
-// === END REGISTRATION ===

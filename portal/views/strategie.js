@@ -2277,48 +2277,6 @@ export function saveSalesData() {
 
 
 // Strangler Fig
-const _exports = {renderKommandozentrale,renderShop,shopSizeQty,shopSizeQtyInput,shopAddSelectedSizes,shopUpdateSizeCart,selectShopSize,updateCartQty,addToCartWithSize,addToCart,renderShopCart,filterShop,showShopTab,loadMyShopOrders,submitShopOrder,removeFromCart,updateShopCart,hqDrillDown,handleFileUpload,translateDOM,rtReplace,switchLang,t,switchSmSub,filterSmThemen,renderSmThemen,renderSmRanking,showView,showModuleVersionBadge,loadAsanaOnboarding,loadDemoTasks,groupTasksBySections,renderAsanaTasks,renderSection,getSectionIcon,renderTask,toggleTaskCompletion,updateSalesData,saveSalesData};
+const _exports = {renderKommandozentrale,renderShop,shopSizeQty,shopSizeQtyInput,shopAddSelectedSizes,shopUpdateSizeCart,selectShopSize,updateCartQty,addToCartWithSize,addToCart,renderShopCart,filterShop,showShopTab,loadMyShopOrders,submitShopOrder,removeFromCart,updateShopCart,hqDrillDown,handleFileUpload,translateDOM,switchLang,t,switchSmSub,filterSmThemen,renderSmThemen,renderSmRanking,showView,showModuleVersionBadge,loadAsanaOnboarding,loadDemoTasks,groupTasksBySections,renderAsanaTasks,renderSection,getSectionIcon,renderTask,toggleTaskCompletion,updateSalesData,saveSalesData};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[strategie.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
-
-// === WINDOW REGISTRATION ===
-// Auto-register 38 exports on window for onclick compatibility
-window.renderKommandozentrale = renderKommandozentrale;
-window.renderShop = renderShop;
-window.shopSizeQty = shopSizeQty;
-window.shopSizeQtyInput = shopSizeQtyInput;
-window.shopAddSelectedSizes = shopAddSelectedSizes;
-window.shopUpdateSizeCart = shopUpdateSizeCart;
-window.selectShopSize = selectShopSize;
-window.updateCartQty = updateCartQty;
-window.addToCartWithSize = addToCartWithSize;
-window.addToCart = addToCart;
-window.renderShopCart = renderShopCart;
-window.filterShop = filterShop;
-window.showShopTab = showShopTab;
-window.loadMyShopOrders = loadMyShopOrders;
-window.submitShopOrder = submitShopOrder;
-window.removeFromCart = removeFromCart;
-window.updateShopCart = updateShopCart;
-window.hqDrillDown = hqDrillDown;
-window.handleFileUpload = handleFileUpload;
-window.translateDOM = translateDOM;
-window.switchLang = switchLang;
-window.t = t;
-window.switchSmSub = switchSmSub;
-window.filterSmThemen = filterSmThemen;
-window.renderSmThemen = renderSmThemen;
-window.renderSmRanking = renderSmRanking;
-window.showView = showView;
-window.showModuleVersionBadge = showModuleVersionBadge;
-window.loadAsanaOnboarding = loadAsanaOnboarding;
-window.loadDemoTasks = loadDemoTasks;
-window.groupTasksBySections = groupTasksBySections;
-window.renderAsanaTasks = renderAsanaTasks;
-window.renderSection = renderSection;
-window.getSectionIcon = getSectionIcon;
-window.renderTask = renderTask;
-window.toggleTaskCompletion = toggleTaskCompletion;
-window.updateSalesData = updateSalesData;
-window.saveSalesData = saveSalesData;
-// === END REGISTRATION ===

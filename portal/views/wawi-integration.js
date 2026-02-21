@@ -565,7 +565,6 @@ export function renderParseCard(fileName, parsed, error) {
         +'</div></div></div>';
 }
 
-export function _escH(s) { var d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
 
 // ── Save All ──
 window.wawiSaveAll = async function() {
@@ -789,20 +788,6 @@ window.loadWawiLeasing = async function() {
 
 
 // Strangler Fig
-const _exports = {wawiPopulateForm,wawiRenderStatus,timeAgo,loadWawiSyncLog,loadWawiDataPreview,extractPdfText,parseEur,parseWawiText,renderParseCard,kpiCard};
+const _exports = {wawiPopulateForm,wawiRenderStatus,timeAgo,loadWawiSyncLog,loadWawiDataPreview,extractPdfText,parseEur,parseWawiText,renderParseCard};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[wawi-integration.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
-
-// === WINDOW REGISTRATION ===
-// Auto-register 10 exports on window for onclick compatibility
-window.wawiPopulateForm = wawiPopulateForm;
-window.wawiRenderStatus = wawiRenderStatus;
-window.timeAgo = timeAgo;
-window.loadWawiSyncLog = loadWawiSyncLog;
-window.loadWawiDataPreview = loadWawiDataPreview;
-window.extractPdfText = extractPdfText;
-window.parseEur = parseEur;
-window.parseWawiText = parseWawiText;
-window.renderParseCard = renderParseCard;
-window._escH = _escH;
-// === END REGISTRATION ===

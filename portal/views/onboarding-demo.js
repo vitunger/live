@@ -567,20 +567,3 @@ window.loadStandortCosts = function() { if(DEMO_ACTIVE) { fillDemoBilling(); ret
 const _exports = {renderExternHome,renderOnboardingView,toggleMilestone,showHqOnbTab,renderHqOnboarding,hqApprovePart1,switchDemoAccount,injectDemoBanner,exitDemoMode,fillDemoWidgets,fillDemoHQ,fillDemoBilling,showDemoInvoiceDetail};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[onboarding-demo.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
-
-// === WINDOW REGISTRATION ===
-// Auto-register 13 exports on window for onclick compatibility
-window.renderExternHome = renderExternHome;
-window.renderOnboardingView = renderOnboardingView;
-window.toggleMilestone = toggleMilestone;
-window.showHqOnbTab = showHqOnbTab;
-window.renderHqOnboarding = renderHqOnboarding;
-window.hqApprovePart1 = hqApprovePart1;
-window.switchDemoAccount = switchDemoAccount;
-window.injectDemoBanner = injectDemoBanner;
-window.exitDemoMode = exitDemoMode;
-window.fillDemoWidgets = fillDemoWidgets;
-window.fillDemoHQ = fillDemoHQ;
-window.fillDemoBilling = fillDemoBilling;
-window.showDemoInvoiceDetail = showDemoInvoiceDetail;
-// === END REGISTRATION ===

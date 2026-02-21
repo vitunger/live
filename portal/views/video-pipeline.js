@@ -808,28 +808,3 @@ if(window.sb) {
 }, 500);
 
 })();
-</script>
-
-
-<!-- ==================== OFFICE MODUL v3 (deskbird-style) ==================== -->
-<script>
-(function() {
-'use strict';
-
-// Strangler Fig
-const _exports = {vpBadge,vpDate,vpDateTime,vpFileSize,vpModal,vpAddFiles,vpRenderFileQueue,vpTagRow,vpSetupRealtime};
-Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[video-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
-
-// === WINDOW REGISTRATION ===
-// Auto-register 9 exports on window for onclick compatibility
-window.vpBadge = vpBadge;
-window.vpDate = vpDate;
-window.vpDateTime = vpDateTime;
-window.vpFileSize = vpFileSize;
-window.vpModal = vpModal;
-window.vpAddFiles = vpAddFiles;
-window.vpRenderFileQueue = vpRenderFileQueue;
-window.vpTagRow = vpTagRow;
-window.vpSetupRealtime = vpSetupRealtime;
-// === END REGISTRATION ===

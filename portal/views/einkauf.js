@@ -462,27 +462,3 @@ export function initEinkaufModule() {
 const _exports = {renderHQDash,renderHQLief,openLiefEditor,saveLief,closeModal,renderHQStrat,renderStSortiment,renderStLief,renderZR,renderStStrat,renderWissen,renderWIht,renderWParts,renderWDb1,renderWKern,renderWVo,reRenderEkTab,showEinkaufTab,showHqEkTab,initEinkaufModule};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[einkauf.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
-
-// === WINDOW REGISTRATION ===
-// Auto-register 20 exports on window for onclick compatibility
-window.renderHQDash = renderHQDash;
-window.renderHQLief = renderHQLief;
-window.openLiefEditor = openLiefEditor;
-window.saveLief = saveLief;
-window.closeModal = closeModal;
-window.renderHQStrat = renderHQStrat;
-window.renderStSortiment = renderStSortiment;
-window.renderStLief = renderStLief;
-window.renderZR = renderZR;
-window.renderStStrat = renderStStrat;
-window.renderWissen = renderWissen;
-window.renderWIht = renderWIht;
-window.renderWParts = renderWParts;
-window.renderWDb1 = renderWDb1;
-window.renderWKern = renderWKern;
-window.renderWVo = renderWVo;
-window.reRenderEkTab = reRenderEkTab;
-window.showEinkaufTab = showEinkaufTab;
-window.showHqEkTab = showHqEkTab;
-window.initEinkaufModule = initEinkaufModule;
-// === END REGISTRATION ===

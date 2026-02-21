@@ -896,32 +896,6 @@ showView = function(v) {
 
 
 // Strangler Fig
-const _exports = {renderHqVerkauf,renderHqAktionen,loadHqPrio,saveHqPrio,resetHqPrio,getAllModulesFlat,getAufwandBadge,getTypBadge,getStatusBadge,filterModulStatus,onPrioDragStart,onPrioDragOver,onPrioDragLeave,onPrioDrop,moveHqPrio,renderModulStatus,renderDevStatus,showDevTab,renderReleaseUpdates,renderDevNutzung,generateDemoBwaData,renderPerformanceCockpit,kpiCard,planBar,kostenBar};
+const _exports = {renderHqVerkauf,renderHqAktionen,loadHqPrio,saveHqPrio,resetHqPrio,getAllModulesFlat,getAufwandBadge,getTypBadge,getStatusBadge,filterModulStatus,onPrioDragStart,onPrioDragOver,onPrioDragLeave,onPrioDrop,moveHqPrio,renderModulStatus,renderDevStatus,showDevTab,renderReleaseUpdates,renderDevNutzung,generateDemoBwaData,renderPerformanceCockpit};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[hq-verkauf.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
-
-// === WINDOW REGISTRATION ===
-// Auto-register 22 exports on window for onclick compatibility
-window.renderHqVerkauf = renderHqVerkauf;
-window.renderHqAktionen = renderHqAktionen;
-window.loadHqPrio = loadHqPrio;
-window.saveHqPrio = saveHqPrio;
-window.resetHqPrio = resetHqPrio;
-window.getAllModulesFlat = getAllModulesFlat;
-window.getAufwandBadge = getAufwandBadge;
-window.getTypBadge = getTypBadge;
-window.getStatusBadge = getStatusBadge;
-window.filterModulStatus = filterModulStatus;
-window.onPrioDragStart = onPrioDragStart;
-window.onPrioDragOver = onPrioDragOver;
-window.onPrioDragLeave = onPrioDragLeave;
-window.onPrioDrop = onPrioDrop;
-window.moveHqPrio = moveHqPrio;
-window.renderModulStatus = renderModulStatus;
-window.renderDevStatus = renderDevStatus;
-window.showDevTab = showDevTab;
-window.renderReleaseUpdates = renderReleaseUpdates;
-window.renderDevNutzung = renderDevNutzung;
-window.generateDemoBwaData = generateDemoBwaData;
-window.renderPerformanceCockpit = renderPerformanceCockpit;
-// === END REGISTRATION ===

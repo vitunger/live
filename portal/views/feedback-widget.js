@@ -341,21 +341,3 @@ try {
     btn.disabled = false; btn.textContent = 'Feedback senden';
 }
 };
-
-</script>
-
-// Strangler Fig
-const _exports = {startRecording,updateRecInfo,formatSize,finalizeRecording,fbStopRecIfActive,resetRecUI,renderAttachments};
-Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[feedback-widget.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
-
-// === WINDOW REGISTRATION ===
-// Auto-register 7 exports on window for onclick compatibility
-window.startRecording = startRecording;
-window.updateRecInfo = updateRecInfo;
-window.formatSize = formatSize;
-window.finalizeRecording = finalizeRecording;
-window.fbStopRecIfActive = fbStopRecIfActive;
-window.resetRecUI = resetRecUI;
-window.renderAttachments = renderAttachments;
-// === END REGISTRATION ===
