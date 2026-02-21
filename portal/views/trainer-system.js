@@ -11,6 +11,12 @@ function _showToast(m,t) { if (typeof window.showToast === 'function') window.sh
 function _fmtN(n)        { return typeof window.fmtN === 'function' ? window.fmtN(n) : String(n); }
 function _triggerPush()  { if (typeof window.triggerPush === 'function') window.triggerPush.apply(null, arguments); }
 
+// Module-level state (from monolith globals)
+var HEALTH_CATS = window.HEALTH_CATS || [];
+var DEMO_STD = window.DEMO_STD || [];
+var MY = window.MY || null;
+var MY_TREND = window.MY_TREND || [];
+
 // ── TRAINERS ──
 var TRAINERS=[
 {id:'t1',module:'verkauf',title:'Nachfass-Systematik',desc:'Offene Angebote systematisch nachfassen. Abschlussquote +10-15%.',trigger:'Abschlussquote unter Netzwerk-Ø',dur:'5 Min',steps:['Offene Angebote prüfen','Follow-Up-Template wählen','Innerhalb 48h anrufen'],task:'3 älteste Angebote heute nachfassen'},

@@ -565,7 +565,7 @@ export function applyModulStatus() {
                 btn.style.pointerEvents = 'none';
 }
 }
-}
+});
 }
 
 
