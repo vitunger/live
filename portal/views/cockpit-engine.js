@@ -356,4 +356,8 @@ if(t === 'cockpit') setTimeout(updateBwaDeadlineWidget, 100);
 // [Hook 1 moved to unified dispatcher]
 
 // [Init moved to unified dispatcher]
-})();
+
+// Strangler Fig
+const _exports = {getBwaMonth,getDeadline,getEskalationsStufe,getRating,daysUntil,ratingBadge,eskalationBadge,updateBwaDeadlineWidget,updateNetzwerkWidget,showKpiReport,setBenchmarkLock,renderHqBwaStatus};
+Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
+console.log('[cockpit-engine.js] Module loaded – ' + Object.keys(_exports).length + ' exports registered');

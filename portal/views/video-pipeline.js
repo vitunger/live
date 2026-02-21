@@ -807,4 +807,7 @@ if(window.sb) {
 }
 }, 500);
 
-})();
+// Strangler Fig
+const _exports = {vpBadge,vpDate,vpDateTime,vpFileSize,vpModal,vpAddFiles,vpRenderFileQueue,vpTagRow,vpSetupRealtime};
+Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
+console.log('[video-pipeline.js] Module loaded – ' + Object.keys(_exports).length + ' exports registered');
