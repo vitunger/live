@@ -1937,6 +1937,12 @@ export function showView(viewName) {
             setTimeout(function(){ applyDarkModeInlineStyles(true); }, 150);
             setTimeout(function(){ applyDarkModeInlineStyles(true); }, 600);
         }
+        
+        // Fire event so modules can react to view changes
+        // This replaces fragile showView wrapper chains
+        window.dispatchEvent(new CustomEvent('vit:view-changed', { 
+            detail: { view: viewName, element: viewEl } 
+        }));
     } else {
         console.error('FAILED: View not found:', viewId);
     }
