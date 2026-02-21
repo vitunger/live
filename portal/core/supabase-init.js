@@ -70,12 +70,11 @@ var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 window.sb = sb;
 
-// Keep session alive: listen for auth state changes and re-persist
+// Listen for auth state changes (logging only)
+// NOTE: Session persistence is handled automatically by Supabase via storage option.
+// Previously, manual re-write here caused SIGNED_IN infinite loop.
 sb.auth.onAuthStateChange(function(event, session) {
     console.log('[Auth] State:', event);
-    if(session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
-        try { idbSessionStore.setItem('sb-lwwagbkxeofahhwebkab-auth-token', JSON.stringify(session)); } catch(e) {}
-    }
 });
 
 var sbUser = null; // Supabase auth user
