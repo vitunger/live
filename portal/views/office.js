@@ -66,10 +66,12 @@
     };
 
     // --- Init: Build the view HTML ---
-    window.initOfficeView = function() {
-        var container = document.getElementById('hqOfficeView');
-        if(!container || container.dataset.inited) return;
-        container.dataset.inited = '1';
+    // Registered as _mountVitSpaceOffice because view-router.js expects this name
+    window._mountVitSpaceOffice = function() {
+        // Use officeReactRoot container (replaces the old React version)
+        var container = document.getElementById('officeReactRoot') || document.getElementById('hqOfficeView');
+        if(!container || container.dataset.officeInited) return;
+        container.dataset.officeInited = '1';
 
         container.innerHTML = `
             <h1 class="text-xl font-bold text-gray-800 mb-4">
