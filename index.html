@@ -27101,6 +27101,68 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             }
         }
 
+        // ==================== POST-MODULE SHOWVIEW RE-HOOK ====================
+        // Problem: extracted ES6 modules (strategie.js via /portal/app.js) 
+        // overwrite window.showView AFTER our inline wrappers set it up.
+        // This causes render functions (renderHqCockpit etc.) to never fire.
+        // Fix: wait for modules to load, then re-wrap window.showView.
+        // This code runs inside the main script block so it has scope access
+        // to all render functions (renderHqCockpit, renderHqStandorte etc.)
+        
+        setTimeout(function _reHookShowView() {
+            var _moduleSV = window.showView;
+            if (typeof _moduleSV !== 'function') return;
+            
+            // Check if our hooks are already present (avoid double-wrapping)
+            if (_moduleSV._hasRenderHooks) return;
+            
+            window.showView = function(v) {
+                _moduleSV(v);
+                
+                // Only trigger renders if the view is actually displayed
+                var el = document.getElementById(v + 'View');
+                if (!el || el.style.display === 'none') return;
+                
+                try {
+                    // HQ Renders
+                    if(v==='hqCockpit') renderHqCockpit();
+                    if(v==='hqStandorte') renderHqStandorte();
+                    if(v==='hqFinanzen') renderHqFinanzen();
+                    if(v==='hqMarketing') { renderHqMarketing(); if(typeof showHqMktTab==='function') showHqMktTab('uebersicht'); }
+                    if(v==='hqVerkauf') renderHqVerkauf();
+                    if(v==='hqAuswertung') renderHqAuswertung();
+                    if(v==='hqWissen') renderHqWissen();
+                    if(v==='hqSupport') renderHqSupport();
+                    if(v==='hqShop') renderHqShop();
+                    if(v==='hqBilling') { initBillingModule(); showBillingTab('overview'); }
+                    if(v==='hqEinkauf') showHqEkTab('dash');
+                    if(v==='hqAktionen' && typeof renderHqAktionen==='function') renderHqAktionen();
+                    if(v==='hqAllgemein' && typeof renderHqAllgemein==='function') renderHqAllgemein(hqStandorte,[],[],[]);
+                    
+                    // Standort Renders
+                    if(v==='allgemein') loadAllgemeinData().then(function(){ showAllgemeinTab('uebersicht'); });
+                    if(v==='home') { if(typeof loadDashboardWidgets==='function') loadDashboardWidgets(); loadAllgemeinData(); }
+                    if(v==='einkauf' && typeof showEinkaufTab==='function') showEinkaufTab('sortiment');
+                    
+                    // Office React Mount
+                    if(v==='hqOffice') {
+                        setTimeout(function() {
+                            if(typeof window._mountVitSpaceOffice === 'function') window._mountVitSpaceOffice();
+                        }, 150);
+                    }
+                    
+                    // Onboarding
+                    if(v==='onboarding' && typeof renderOnboardingView==='function') renderOnboardingView();
+                    if(v==='hqOnboarding' && typeof renderHqOnboarding==='function') renderHqOnboarding();
+                    if(v==='externHome' && typeof renderExternHome==='function') renderExternHome();
+                } catch(err) {
+                    console.warn('[RenderHooks]', v, err.message);
+                }
+            };
+            window.showView._hasRenderHooks = true;
+            console.log('[RenderHooks] showView re-wrapped after module load');
+        }, 500); // 500ms delay ensures ES6 modules have loaded
+
 
 </script>
 
@@ -37120,5 +37182,16 @@ window._mountVitSpaceOffice = function() {
 </script>
 
 <script type="module" src="/portal/app.js"></script>
+
+<!-- Fallback: if setTimeout re-hook missed, this module script runs after app.js -->
+<script type="module">
+    // Double-check that render hooks are applied
+    if (window.showView && !window.showView._hasRenderHooks) {
+        console.warn('[PostModuleHooks] setTimeout hook missed, applying fallback');
+        // Trigger a re-hook attempt
+        var evt = new CustomEvent('rehook-showview');
+        window.dispatchEvent(evt);
+    }
+</script>
 </body>
 </html>
