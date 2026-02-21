@@ -14,6 +14,28 @@ function _triggerPush()  { if (typeof window.triggerPush === 'function') window.
 // === USER FREIGABE (mit Ebene-Logik) ===
 var approveEbene = 'standort';
 
+// Standort-Rechte: Welche Rollen dürfen welche Module sehen
+var rolePermissions = window.rolePermissions || {
+    'home':           ['alle'],
+    'kalender':       ['alle'],
+    'todo':           ['alle'],
+    'kommunikation':  ['alle'],
+    'dashboards':     ['inhaber'],
+    'allgemein':      ['inhaber','buchhaltung'],
+    'verkauf':        ['inhaber','verkauf','buchhaltung'],
+    'einkauf':        ['inhaber','werkstatt','buchhaltung'],
+    'marketing':      ['inhaber','verkauf'],
+    'controlling':    ['inhaber','buchhaltung'],
+    'wissen':         ['alle'],
+    'support':        ['alle'],
+    'aktenschrank':   ['inhaber','buchhaltung'],
+    'ideenboard':     ['alle'],
+    'shop':           ['inhaber'],
+    'onboarding':     ['inhaber'],
+    'mitarbeiter':    ['inhaber']
+};
+window.rolePermissions = rolePermissions;
+
 export async function approveUser(userId, userName) {
     if(!hqCan('approve_user')) { _showToast('Keine Berechtigung zur Freigabe', 'error'); return; }
     approveEbene = 'standort';
