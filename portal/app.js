@@ -66,6 +66,9 @@ const VIEW_MODULES = [
     'views/feedback-widget.js',
     'views/misc-views.js',
     
+    // Central render router - MUST be last (listens for vit:view-changed events)
+    'views/view-router.js',
+    
     // React (JSX - loaded separately)
     // 'views/react-components.js',  // Requires Babel/JSX transform
 ];
