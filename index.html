@@ -605,7 +605,13 @@
 <body class="bg-gray-50">
 
     <!-- LOGIN SCREEN -->
-    <div id="loginScreen" class="min-h-screen flex flex-col items-center justify-center vit-background relative" style="display:flex;">
+    <!-- Splash loader while checking session -->
+    <div id="appSplash" style="display:flex;position:fixed;inset:0;z-index:10000;background:#fff;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
+        <div style="font-size:28px;font-weight:800;color:#EF7D00;font-family:system-ui,sans-serif;letter-spacing:-0.5px;">vit:bikes</div>
+        <div style="width:120px;height:3px;background:#eee;border-radius:3px;overflow:hidden;"><div style="width:40%;height:100%;background:#EF7D00;border-radius:3px;animation:splashBar 1.2s ease-in-out infinite;"></div></div>
+        <style>@keyframes splashBar{0%{margin-left:0;width:40%}50%{margin-left:60%;width:40%}100%{margin-left:0;width:40%}}</style>
+    </div>
+    <div id="loginScreen" class="min-h-screen flex flex-col items-center justify-center vit-background relative" style="display:none;">
         <div class="w-full max-w-md">
             <div class="text-center mb-8">
                 <div class="inline-block mb-6">
