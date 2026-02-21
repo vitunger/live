@@ -636,6 +636,7 @@ var resp1 = await _sb().from('users').select('*, standorte(*)').eq('id', userId)
 if(resp1.error) { console.error('[Profile] Error:', resp1.error.message); throw resp1.error; }
 sbProfile = resp1.data;
 sbStandort = _sbProfile() ? _sbProfile().standorte : null;
+window.sbProfile = sbProfile;
 window.sbStandort = sbStandort;
 window.sbUser = sbUser;
 var resp2 = await _sb().from('user_rollen').select('rollen(name, label)').eq('user_id', userId);
@@ -670,6 +671,11 @@ if(_sbProfile() && _sbProfile().is_hq) {
         }
     } catch(e) { console.warn('[HQ Perms] Could not load:', e.message); window._hqModulPerms = null; }
 }
+// Sync all auth state to window for cross-module access
+window.sbUser = sbUser; window.sbProfile = sbProfile; window.sbRollen = sbRollen;
+window.sbStandort = sbStandort; window.currentRole = currentRole; window.currentRoles = currentRoles;
+window.currentStandortId = currentStandortId; window.currentLocation = currentLocation;
+window.isPremium = isPremium;
 }
 
 
@@ -716,17 +722,17 @@ document.getElementById('loginScreen').style.display = 'none';
 document.getElementById('mainApp').style.display = 'block';
 try { updateUIForRole(); updatePremiumFeatures(); } catch(e) { console.warn(e); }
 // Apply saved language
-if(currentLang !== 'de') { setTimeout(function(){ switchLang(currentLang); }, 500); }
+if(currentLang !== 'de') { setTimeout(function(){ if(typeof window.switchLang==='function') window.switchLang(currentLang); }, 500); }
 // Apply dark mode to all dynamically rendered content
 if(document.body.classList.contains('dark')) {
-    setTimeout(function(){ applyDarkModeInlineStyles(true); }, 800);
-    setTimeout(function(){ applyDarkModeInlineStyles(true); }, 2000);
-    setTimeout(function(){ applyDarkModeInlineStyles(true); }, 4000);
+    setTimeout(function(){ if(typeof window.applyDarkModeInlineStyles==='function') window.applyDarkModeInlineStyles(true); }, 800);
+    setTimeout(function(){ if(typeof window.applyDarkModeInlineStyles==='function') window.applyDarkModeInlineStyles(true); }, 2000);
+    setTimeout(function(){ if(typeof window.applyDarkModeInlineStyles==='function') window.applyDarkModeInlineStyles(true); }, 4000);
 }
 // Apply DEMO/BETA badges
 if(SESSION.account_level === 'extern') {
     _showView('externHome');
-} else if(currentRole === 'hq') { switchViewMode('hq'); } else { _showView('home'); }
+} else if(currentRole === 'hq') { if(typeof window.switchViewMode==='function') window.switchViewMode('hq'); } else { _showView('home'); }
 // Load dashboard widgets with live data
 if(currentRole !== 'hq' && SESSION.account_level !== 'extern') { if(typeof window.loadDashboardWidgets==='function') window.loadDashboardWidgets(); if(typeof window.loadAllgemeinData==='function') window.loadAllgemeinData(); }
 // Check for pending approvals (HQ + GF only)

@@ -5,6 +5,7 @@
 var sbFeatureFlags = window.sbFeatureFlags || {};
 var sbModulStatus = window.sbModulStatus || {};
 var sbHqModulStatus = window.sbHqModulStatus || {};
+var sbModulConfig = window.sbModulConfig || {};
 
 function _sb()           { return window.sb; }
 function _sbUser()       { return window.sbUser; }
@@ -578,6 +579,7 @@ export function applyModulStatus() {
 window.sbFeatureFlags = sbFeatureFlags;
 window.sbModulStatus = sbModulStatus;
 window.sbHqModulStatus = sbHqModulStatus;
+window.sbModulConfig = sbModulConfig;
 
 const _exports = {loadFeatureFlags,isFeatureEnabled,getFeatureMeta,applyFeatureFlags,loadFFView,ffUpdateStats,ffHasTargeting,ffGetStatus,ffFilter,ffRenderList,ffToggle,ffDelete,ffShowCreate,ffShowEdit,ffPopulateSelectors,ffCloseModal,ffSave,logFeatureFlagCheck,ffFlushLog,loadBkView,bkRenderStats,bkRenderHealth,bkRenderTable,bkTriggerBackup,loadModulStatus,applyModulStatus};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
