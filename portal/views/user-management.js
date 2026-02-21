@@ -2137,6 +2137,156 @@ export async function toggleHqPermission(modKey, rolle) {
 
 
 // Strangler Fig
-const _exports = {approveUser,switchApproveEbene,closeApproveModal,confirmApprove,rejectUser,openRollenModal,closeRollenModal,saveRollen,getStandortName,getPartnerMitarbeiter,filterPartnerMa,showMaTab,renderPartnerMitarbeiter,openEmployeeToolsModal,closeEmpToolsModal,saveEmployeeTools,openEditEmployeeModal,closeEditEmpModal,saveEditEmployee,renderMaToolsMatrix,renderMaKosten,deactivateMa,openNeuerMaModal,switchNewMaEbene,closeNeuerMaModal,switchNewMaEmailType,updateNewMaEmail,saveNeuerMa,openEditMaModal,switchEditEbene,closeEditMaModal,saveEditMa,loginAs,deleteMa,openNeuerStandortModal,closeNeuerStdModal,saveNeuerStandort,showSettingsTab,renderModulStatusList,renderHqModulStatusList,_renderModulRow,toggleModuleExpand,renderOfficeRoomsAdmin,renderDemoModulList,setDemoModulStatus,setDemoTabStatus,setDemoWidgetStatus,setAllDemoStatus,setTabStatus,setWidgetStatus,setModulStatus,setHqModulStatus,setHqTabStatus,setHqWidgetStatus,renderHqEinstellungen,togglePermission,renderHqRechteMatrixBody,loadHqRechteMatrix,toggleHqPermission};
+// === KOMMANDOZENTRALE TAB SWITCHING ===
+var currentKzStdFilter = 'all';
+var currentKzMaFilter = 'all';
+
+export function showKommandoTab(tab) {
+    document.querySelectorAll('.kommando-tab-content').forEach(function(el){el.style.display='none';});
+    document.querySelectorAll('.kommando-tab-btn').forEach(function(b){
+        b.className='kommando-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
+    });
+    var tabEl=document.getElementById('kommandoTab'+tab.charAt(0).toUpperCase()+tab.slice(1));
+    if(tabEl)tabEl.style.display='block';
+    var btn=document.querySelector('.kommando-tab-btn[data-ktab="'+tab+'"]');
+    if(btn)btn.className='kommando-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
+    if(tab==='standorte') renderKzStandorte();
+    if(tab==='mitarbeiter') renderKzMitarbeiter();
+    if(tab==='kommunikation' && typeof window.renderHqKomm==='function') window.renderHqKomm();
+    if(tab==='kampagnen' && typeof window.renderHqKampagnen==='function') window.renderHqKampagnen();
+    if(tab==='dokumente' && typeof window.loadNetzwerkDokumente==='function') window.loadNetzwerkDokumente();
+    if(tab==='kalender' && typeof window.loadHqKalTermine==='function') window.loadHqKalTermine();
+    if(tab==='aufgaben' && typeof window.renderHqAufgaben==='function') window.renderHqAufgaben();
+}
+
+export function filterKzStandorte(f) {
+    currentKzStdFilter=f;
+    document.querySelectorAll('.kz-std-filter').forEach(function(b){b.className='kz-std-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600';});
+    var btn=document.querySelector('.kz-std-filter[data-kzf="'+f+'"]');
+    if(btn)btn.className='kz-std-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white';
+    renderKzStandorte();
+}
+export function filterKzMa(f) {
+    currentKzMaFilter=f;
+    document.querySelectorAll('.kz-ma-filter').forEach(function(b){b.className='kz-ma-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600';});
+    var btn=document.querySelector('.kz-ma-filter[data-kzmf="'+f+'"]');
+    if(btn)btn.className='kz-ma-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white';
+    renderKzMitarbeiter();
+}
+
+function statusBadge(s) {
+    if(s==='aktiv') return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">\u{1F7E2} Aktiv</span>';
+    if(s==='demo') return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-red-100 text-red-700 animate-pulse">\u{1F534} Demo</span>';
+    if(s==='onboarding') return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">\u{1F535} Onboarding</span>';
+    if(s==='pending') return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-yellow-100 text-yellow-700">\u23F3 Wartet</span>';
+    if(s==='gesperrt') return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">\u{1F6AB} Gesperrt</span>';
+    if(s==='offboarding') return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">\u{1F534} Offboarding</span>';
+    return s;
+}
+function rolleBadge(r) {
+    var colors = {'inhaber':'bg-vit-orange text-white','verkauf':'bg-blue-100 text-blue-700','werkstatt':'bg-gray-200 text-gray-700','buchhaltung':'bg-purple-100 text-purple-700','hq':'bg-red-100 text-red-700'};
+    var labels = {'inhaber':'Gesch\u00e4ftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung','hq':'HQ'};
+    return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold '+(colors[r]||'bg-gray-100 text-gray-600')+'">'+(labels[r]||r)+'</span>';
+}
+function rollenBadges(rollen) {
+    return rollen.map(function(r){ return rolleBadge(r); }).join(' ');
+}
+
+export async function renderKzStandorte() {
+    var body=document.getElementById('kzStandorteBody');
+    if(!body)return;
+    try {
+        var resp = await _sb().from('standorte').select('*').order('name');
+        if(resp.error) throw resp.error;
+        var standorte = resp.data || [];
+        var countResp = await _sb().from('users').select('standort_id');
+        var userCounts = {};
+        (countResp.data||[]).forEach(function(u){ if(u.standort_id) userCounts[u.standort_id] = (userCounts[u.standort_id]||0)+1; });
+        var filter = currentKzStdFilter || 'all';
+        var h='';
+        standorte.forEach(function(s){
+            var st = s.status || 'aktiv';
+            if(filter!=='all' && st!==filter) return;
+            var d = s.created_at ? new Date(s.created_at) : new Date();
+            var beitritt = String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+            h+='<tr class="border-t border-gray-100 hover:bg-gray-50">';
+            h+='<td class="px-4 py-3 font-semibold text-gray-800">'+s.name+'</td>';
+            h+='<td class="px-4 py-3 text-gray-600">'+(s.adresse||s.region||'')+'</td>';
+            h+='<td class="px-4 py-3"><span class="text-xs px-2 py-0.5 rounded '+(s.is_premium?'bg-vit-orange text-white':'bg-gray-100 text-gray-600')+'">'+(s.is_premium?'Premium':'Standard')+'</span></td>';
+            h+='<td class="px-4 py-3 text-center">'+statusBadge(st)+'</td>';
+            h+='<td class="px-4 py-3 text-center font-semibold">'+(userCounts[s.id]||0)+'</td>';
+            h+='<td class="px-4 py-3 text-center text-gray-500 text-xs">'+beitritt+'</td>';
+            h+='<td class="px-4 py-3 text-center text-xs text-gray-500">'+(s.telefon||'\u2014')+'</td>';
+            h+='<td class="px-4 py-3 text-center"><button class="text-xs text-vit-orange hover:underline font-semibold" onclick="alert(\''+s.name+'\\nAdresse: '+(s.adresse||'\u2014')+'\\nTelefon: '+(s.telefon||'\u2014')+'\\nSlug: '+s.slug+'\')">Details \u2192</button></td>';
+            h+='</tr>';
+        });
+        if(standorte.length===0) h='<tr><td colspan="8" class="text-center py-8 text-gray-400">Keine Standorte.</td></tr>';
+        body.innerHTML=h;
+        var ge=document.getElementById('kzStandorteGesamt');if(ge)ge.textContent=standorte.length;
+        var ak=document.getElementById('kzStandorteAktiv');if(ak)ak.textContent=standorte.filter(function(s){return (s.status||'aktiv')==='aktiv';}).length;
+        var ob=document.getElementById('kzStandorteOnb');if(ob)ob.textContent=standorte.filter(function(s){return s.status==='onboarding';}).length;
+        var of2=document.getElementById('kzStandorteOff');if(of2)of2.textContent=standorte.filter(function(s){return s.status==='offboarding';}).length;
+    } catch(err) { console.error('Standorte:', err); body.innerHTML='<tr><td colspan="8" class="text-center py-4 text-red-400">Fehler: '+err.message+'</td></tr>'; }
+}
+
+export async function renderKzMitarbeiter() {
+    var body=document.getElementById('kzMaBody');
+    if(!body)return;
+    try {
+        var resp = await _sb().from('users').select('*, standorte(name), user_rollen(rollen(name,label))').order('name');
+        if(resp.error) throw resp.error;
+        var users = resp.data || [];
+        var stdFilter=(document.getElementById('kzMaStandortFilter')||{}).value||'all';
+        var filter = currentKzMaFilter || 'all';
+        var list = users.filter(function(u){
+            var st = u.status || 'aktiv';
+            if(filter!=='all' && st!==filter) return false;
+            var stdName = u.standorte ? u.standorte.name : 'HQ';
+            if(stdFilter!=='all' && stdName!==stdFilter) return false;
+            return true;
+        });
+        var h='';
+        list.forEach(function(u){
+            var stdName = u.standorte ? u.standorte.name : 'HQ';
+            var rollen = (u.user_rollen||[]).map(function(ur){ return ur.rollen ? ur.rollen.name : ''; }).filter(Boolean);
+            var st = u.status || 'aktiv';
+            var d = u.created_at ? new Date(u.created_at) : new Date();
+            var eintritt = String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+            var actionBtn = '';
+            if((st === 'onboarding' || st === 'pending') && rollen.length === 0) {
+                actionBtn = '<button class="text-xs px-3 py-1 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600" onclick="approveUser(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')">Freigeben</button>';
+            } else {
+                actionBtn = '<button class="text-xs text-vit-orange hover:underline font-semibold" onclick="openEditMaModal(\''+u.id+'\')">✏️</button>'
+                +' <button class="text-xs text-blue-500 hover:text-blue-700 hover:underline font-semibold ml-1" onclick="loginAs(\''+u.id+'\',\''+u.email+'\',\''+u.name.replace(/'/g,"\\'")+'\')">🔑</button>'
+                +' <button class="text-xs text-red-400 hover:text-red-600 hover:underline font-semibold ml-1" onclick="deleteMa(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')">🗑️</button>';
+            }
+            h+='<tr class="border-t border-gray-100 hover:bg-gray-50'+((st==='onboarding' || st==='pending') && rollen.length===0 ? ' bg-yellow-50':'')+'">';
+            h+='<td class="px-4 py-3"><div class="flex items-center space-x-2"><img src="https://ui-avatars.com/api/?name='+encodeURIComponent(u.name)+'&background=EF7D00&color=fff&size=28" class="w-7 h-7 rounded-full"><div><span class="font-semibold text-gray-800">'+u.name+'</span><p class="text-[10px] text-gray-400">'+u.email+'</p></div></div></td>';
+            h+='<td class="px-4 py-3 text-gray-600 text-xs">'+stdName+'</td>';
+            h+='<td class="px-4 py-3 text-center">'+(rollen.length > 0 ? rollenBadges(rollen) : '<span class="text-xs text-yellow-600 font-semibold">Wartet auf Freigabe</span>')+'</td>';
+            h+='<td class="px-4 py-3 text-center">'+statusBadge(st)+'</td>';
+            h+='<td class="px-4 py-3 text-center text-gray-500 text-xs">'+eintritt+'</td>';
+            h+='<td class="px-4 py-3 text-center"><span class="text-xs text-gray-400">'+(u.user_rollen||[]).map(function(ur){return ur.rollen?ur.rollen.label:'';}).filter(Boolean).join(', ')+'</span></td>';
+            h+='<td class="px-4 py-3 text-center">'+actionBtn+'</td>';
+            h+='</tr>';
+        });
+        if(list.length===0) h='<tr><td colspan="7" class="text-center py-8 text-gray-400">Keine Mitarbeiter gefunden.</td></tr>';
+        body.innerHTML=h;
+        var ge=document.getElementById('kzMaGesamt');if(ge)ge.textContent=users.length;
+        var ak=document.getElementById('kzMaAktiv');if(ak)ak.textContent=users.filter(function(u){return (u.status||'aktiv')==='aktiv';}).length;
+        var onbCount = users.filter(function(u){return u.status==='onboarding';}).length;
+        var ob=document.getElementById('kzMaOnb');if(ob)ob.textContent=onbCount;
+        var of2=document.getElementById('kzMaOff');if(of2)of2.textContent=users.filter(function(u){return u.status==='offboarding';}).length;
+        var ro=document.getElementById('kzRollen');if(ro)ro.textContent='4';
+        var sel=document.getElementById('kzMaStandortFilter');
+        if(sel && sel.options.length<=1){
+            var standorte=[];
+            users.forEach(function(u){ var sn=u.standorte?u.standorte.name:'HQ'; if(standorte.indexOf(sn)===-1)standorte.push(sn); });
+            standorte.sort().forEach(function(s){sel.innerHTML+='<option value="'+s+'">'+s+'</option>';});
+        }
+    } catch(err) { console.error('Mitarbeiter:', err); body.innerHTML='<tr><td colspan="7" class="text-center py-4 text-red-400">Fehler: '+err.message+'</td></tr>'; }
+}
+
+const _exports = {approveUser,switchApproveEbene,closeApproveModal,confirmApprove,rejectUser,openRollenModal,closeRollenModal,saveRollen,getStandortName,getPartnerMitarbeiter,filterPartnerMa,showMaTab,renderPartnerMitarbeiter,openEmployeeToolsModal,closeEmpToolsModal,saveEmployeeTools,openEditEmployeeModal,closeEditEmpModal,saveEditEmployee,renderMaToolsMatrix,renderMaKosten,deactivateMa,openNeuerMaModal,switchNewMaEbene,closeNeuerMaModal,switchNewMaEmailType,updateNewMaEmail,saveNeuerMa,openEditMaModal,switchEditEbene,closeEditMaModal,saveEditMa,loginAs,deleteMa,openNeuerStandortModal,closeNeuerStdModal,saveNeuerStandort,showSettingsTab,renderModulStatusList,renderHqModulStatusList,_renderModulRow,toggleModuleExpand,renderOfficeRoomsAdmin,renderDemoModulList,setDemoModulStatus,setDemoTabStatus,setDemoWidgetStatus,setAllDemoStatus,setTabStatus,setWidgetStatus,setModulStatus,setHqModulStatus,setHqTabStatus,setHqWidgetStatus,renderHqEinstellungen,togglePermission,renderHqRechteMatrixBody,loadHqRechteMatrix,toggleHqPermission,showKommandoTab,filterKzStandorte,filterKzMa,renderKzStandorte,renderKzMitarbeiter};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[user-management.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
