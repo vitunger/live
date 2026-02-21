@@ -14227,19 +14227,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         
         // ============================================================
         // showView() HOOKS – Diese 2 Zeilen in showView() ergänzen:
-        // ============================================================
-        // if(viewName === 'allgemein') loadAllgemeinData();
-        // if(viewName === 'hqAllgemein') loadHqAllgemeinData();
-        
-
-        var origShowView = showView;
-        showView = function(v) {
-            origShowView(v);
-            if(v==='support') { renderTickets('all'); renderKontakte(); }
-            if(v==='entwicklung') { renderEntwicklung(); }
-            if(v==='wissen') { renderWissenGlobal(); }
-            if(v==='shop') { shopAllProducts=[]; shopVariants={}; renderShop(); }
-        };
+        // View render triggers now handled by view-router.js module
 
         // === DEV PIPELINE (Ideenboard 2.0) ===
         var devSubmissions = [];
@@ -17521,58 +17509,8 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             }
         }
 
-        // Hook HQ views into showView
-        var origShowView2 = showView;
-        showView = function(v) {
-            // Rechteprüfung
-            if(!hasAccess(v)) {
-                alert('Kein Zugriff auf diesen Bereich mit deiner aktuellen Rolle.');
-                return;
-            }
-            // Redirect 'home' to HQ Cockpit when in HQ mode
-            if(v==='home' && currentRole==='hq') { v='hqCockpit'; }
-            if(v==='home' && SESSION.account_level==='extern') { v='externHome'; }
-            if(v==='hqIdeen') { v='entwicklung'; showView('entwicklung'); return; }
-            origShowView2(v);
-            if(v==='externHome') renderExternHome();
-            if(v==='onboarding') renderOnboardingView();
-            if(v==='hqOnboarding') renderHqOnboarding();
-            if(v==='hqCockpit') renderHqCockpit();
-            if(v==='hqStandorte') renderHqStandorte();
-            if(v==='hqFinanzen') renderHqFinanzen();
-            if(v==='hqMarketing') { renderHqMarketing(); showHqMktTab('uebersicht'); }
-            if(v==='allgemein') { loadAllgemeinData().then(function(){ showAllgemeinTab('uebersicht'); }); }
-            if(v==='home') { loadDashboardWidgets(); loadAllgemeinData(); }
-            if(v==='einkauf') { showEinkaufTab('sortiment'); }
-            if(v==='hqAllgemein') { renderHqAllgemein(hqStandorte, [], [], []); }
-            if(v==='hqEinkauf') { showHqEkTab('dash'); }
-            if(v==='hqVerkauf') renderHqVerkauf();
-            if(v==='hqAktionen') renderHqAktionen();
-            if(v==='hqKomm'){showView('hqKommando');showKommandoTab('kommunikation');return;}
-            if(v==='hqKampagnen'){showView('hqKommando');showKommandoTab('kampagnen');return;}
-            if(v==='hqDokumente'){showView('hqKommando');showKommandoTab('dokumente');return;}
-            if(v==='hqKalender'){showView('hqKommando');showKommandoTab('kalender');return;}
-            if(v==='hqAufgaben'){showView('hqKommando');showKommandoTab('aufgaben');return;}
-            if(v==='hqAuswertung') renderHqAuswertung();
-            if(v==='hqWissen') renderHqWissen();
-            if(v==='hqSupport') renderHqSupport();
-            if(v==='hqShop') renderHqShop();
-            if(v==='hqBilling') { initBillingModule(); showBillingTab('overview'); }
-            if(v==='hqBillingDetail') { /* opened via showBillingInvoice() */ }
-            if(v==='standortBilling') { initStandortBilling(); showStBillingTab('invoices'); }
-            if(v==='hqEinstellungen') renderHqEinstellungen();
-            if(v==='mitarbeiter') renderPartnerMitarbeiter();
-            if(v==='hqKommando') renderKommandozentrale();
-            if(v==='kalender') loadKalTermine();
-            if(v==='todo') loadTodos();
-            if(v==='notifications') renderNotifications('all');
-            // Auto-Loading for Standort-Views
-            if(v==='controlling') { showControllingTab('cockpit'); renderPerformanceCockpit(); loadBwaList(); }
-            if(v==='verkauf') { showVerkaufTab('pipeline'); }
-            if(v==='kommunikation') { showKommTab('chat'); }
-            if(v==='aktenschrank') { loadAktenFiles(); }
-            if(v==='devStatus') { showView('entwicklung'); setTimeout(function(){showEntwicklungTab('module')},50); return; }
-        };
+        // NOTE: HQ view render triggers and redirects are now handled by 
+        // view-router.js module via 'vit:view-changed' events.
 
         // === MOBILE SIDEBAR ===
         function toggleMobileSidebar() {
@@ -17618,12 +17556,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             if(sidebar) sidebar.classList.remove('mobile-open');
             if(overlay) overlay.classList.remove('active');
         }
-        // Auto-close sidebar on navigation (mobile)
-        var origShowViewMobile = showView;
-        showView = function(v) {
-            closeMobileSidebar();
-            origShowViewMobile(v);
-        };
+        // Mobile sidebar auto-close now handled by view-router.js
 
         // === VIEW MODE SWITCHER (Partner vs HQ) ===
         function switchViewMode(mode) {
@@ -27101,86 +27034,6 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
             }
         }
 
-        // ==================== POST-MODULE SHOWVIEW RENDER HOOKS ====================
-        // Problem: extracted ES6 modules (especially strategie.js) overwrite 
-        // window.showView when they register exports, losing all render triggers.
-        // Fix: listen for 'vit:modules-ready' event (fired by app.js after ALL 
-        // modules loaded) then re-wrap window.showView with render calls.
-        // This code is inside the main script block so it has closure access
-        // to renderHqCockpit, loadAllgemeinData etc.
-        
-        window.addEventListener('vit:modules-ready', function() {
-            var _modSV = window.showView;
-            if (typeof _modSV !== 'function') return;
-            if (_modSV._hasRenderHooks) return;
-            
-            window.showView = function(v) {
-                // Rechteprüfung
-                if(typeof hasAccess === 'function' && !hasAccess(v)) {
-                    alert('Kein Zugriff auf diesen Bereich.');
-                    return;
-                }
-                
-                // Redirects
-                if(v==='home' && typeof currentRole !== 'undefined' && currentRole==='hq') v = 'hqCockpit';
-                if(v==='home' && typeof SESSION !== 'undefined' && SESSION.account_level==='extern') v = 'externHome';
-                if(v==='hqKomm'){_modSV('hqKommando');if(typeof showKommandoTab==='function')setTimeout(function(){showKommandoTab('kommunikation')},50);return;}
-                if(v==='hqKampagnen'){_modSV('hqKommando');if(typeof showKommandoTab==='function')setTimeout(function(){showKommandoTab('kampagnen')},50);return;}
-                if(v==='hqDokumente'){_modSV('hqKommando');if(typeof showKommandoTab==='function')setTimeout(function(){showKommandoTab('dokumente')},50);return;}
-                if(v==='hqKalender'){_modSV('hqKommando');if(typeof showKommandoTab==='function')setTimeout(function(){showKommandoTab('kalender')},50);return;}
-                if(v==='hqAufgaben'){_modSV('hqKommando');if(typeof showKommandoTab==='function')setTimeout(function(){showKommandoTab('aufgaben')},50);return;}
-                
-                _modSV(v);
-                
-                // Render triggers - use window.* since modules register their exports there
-                try {
-                    if(v==='hqCockpit' && window.renderHqCockpit) window.renderHqCockpit();
-                    if(v==='hqStandorte' && window.renderHqStandorte) window.renderHqStandorte();
-                    if(v==='hqFinanzen' && window.renderHqFinanzen) window.renderHqFinanzen();
-                    if(v==='hqMarketing' && window.renderHqMarketing) { window.renderHqMarketing(); if(window.showHqMktTab) window.showHqMktTab('uebersicht'); }
-                    if(v==='hqVerkauf' && window.renderHqVerkauf) window.renderHqVerkauf();
-                    if(v==='hqAuswertung' && window.renderHqAuswertung) window.renderHqAuswertung();
-                    if(v==='hqWissen' && window.renderHqWissen) window.renderHqWissen();
-                    if(v==='hqSupport' && window.renderHqSupport) window.renderHqSupport();
-                    if(v==='hqShop' && window.renderHqShop) window.renderHqShop();
-                    if(v==='hqBilling' && window.initBillingModule) { window.initBillingModule(); if(window.showBillingTab) window.showBillingTab('overview'); }
-                    if(v==='hqEinkauf' && window.showHqEkTab) window.showHqEkTab('dash');
-                    if(v==='hqAktionen' && window.renderHqAktionen) window.renderHqAktionen();
-                    if(v==='hqAllgemein' && window.renderHqAllgemein) window.renderHqAllgemein(typeof hqStandorte!=='undefined'?hqStandorte:[],[],[],[]);
-                    if(v==='allgemein' && typeof loadAllgemeinData==='function') loadAllgemeinData().then(function(){ if(typeof showAllgemeinTab==='function') showAllgemeinTab('uebersicht'); });
-                    if(v==='home') { if(typeof loadDashboardWidgets==='function') loadDashboardWidgets(); if(typeof loadAllgemeinData==='function') loadAllgemeinData(); }
-                    if(v==='einkauf' && typeof showEinkaufTab==='function') showEinkaufTab('sortiment');
-                    if(v==='externHome' && window.renderExternHome) window.renderExternHome();
-                    if(v==='onboarding' && window.renderOnboardingView) window.renderOnboardingView();
-                    if(v==='hqOnboarding' && window.renderHqOnboarding) window.renderHqOnboarding();
-                    if(v==='hqOffice') {
-                        setTimeout(function() {
-                            if(window._mountVitSpaceOffice) window._mountVitSpaceOffice();
-                        }, 150);
-                    }
-                } catch(err) {
-                    console.warn('[RenderHooks]', v, err.message);
-                }
-            };
-            window.showView._hasRenderHooks = true;
-            console.log('[RenderHooks] ✅ showView wrapped with render triggers (post-module)');
-            
-            // Re-trigger current view if already on hqCockpit (initial load redirect)
-            var cockpitEl = document.getElementById('hqCockpitView');
-            if(cockpitEl && cockpitEl.style.display === 'block') {
-                console.log('[RenderHooks] Re-triggering hqCockpit render (was shown before hooks applied)');
-                if(window.renderHqCockpit) window.renderHqCockpit();
-            }
-        });
-        
-        // Fallback: if vit:modules-ready already fired before this listener was added
-        setTimeout(function() {
-            if(!window.showView || !window.showView._hasRenderHooks) {
-                console.warn('[RenderHooks] Fallback: dispatching modules-ready manually');
-                window.dispatchEvent(new CustomEvent('vit:modules-ready'));
-            }
-        }, 3000);
-
 
 </script>
 
@@ -29900,40 +29753,11 @@ setTimeout(function(){document.getElementById('groupcallPrepPanel').style.displa
 </script>
 
 
-<!-- ═══ UNIFIED VIEW DISPATCHER + AUTO-INIT ═══ -->
+<!-- ═══ AUTO-INIT on enterApp ═══ -->
 <script>
 (function(){
-    // Single hook on showView – calls ALL subsystems
-    var _baseShowView = window.showView;
-    if(_baseShowView) {
-        window.showView = function(v) {
-            _baseShowView(v);
-            setTimeout(function(){
-                // Startseite
-                if(v === 'home' || v === 'startseite') {
-                    if(typeof renderDailyFocus === 'function') renderDailyFocus();
-                    if(typeof renderHealthScore === 'function') renderHealthScore();
-                }
-                // Verkauf
-                if(v === 'verkauf') {
-                    if(typeof renderSalesMomentum === 'function') renderSalesMomentum();
-                }
-                // Controlling
-                if(v === 'controlling') {
-                    if(typeof updateBwaDeadlineWidget === 'function') updateBwaDeadlineWidget();
-                }
-                // HQ Finanzen
-                if(v === 'hqFinanzen') {
-                    if(typeof renderHqBwaStatus === 'function') renderHqBwaStatus();
-                }
-                // HQ Cockpit
-                if(v === 'hqCockpit') {
-                    if(typeof renderHqHealth === 'function') renderHqHealth();
-                }
-            }, 150);
-        };
-    }
-
+    // showView render triggers now handled by view-router.js module
+    
     // Auto-init for initial page load (homeView is display:block by default)
     // Wait for enterApp() to finish, then render everything
     var _baseEnterApp = window.enterApp;
@@ -31138,15 +30962,7 @@ window.switchWissenTyp = function(typ) {
         container.innerHTML = h;
     };
 
-    // ── Auto-init when view is shown ──
-    var origShowView = window.showView;
-    if (origShowView) {
-        window.showView = function(view) {
-            origShowView(view);
-            if (view === 'hqBilling') { initBillingMonthSelect(); loadBillingOverview(); }
-            if (view === 'standortBilling') { loadStandortInvoices(); }
-        };
-    }
+    // Billing auto-init now handled by view-router.js
 
 })();
 </script>
@@ -37164,49 +36980,6 @@ window._mountVitSpaceOffice = function() {
 };
 </script>
 
-<script>
-// Hook into showView to mount React Office when office view is shown
-(function() {
-    var _origShowView = window.showView;
-    if (typeof _origShowView === 'function') {
-        window.showView = function(v) {
-            _origShowView(v);
-            if (v === 'hqOffice') {
-                // Mount React office component
-                setTimeout(function() {
-                    if (typeof window._mountVitSpaceOffice === 'function') {
-                        window._mountVitSpaceOffice();
-                    }
-                }, 100);
-            }
-        };
-    }
-    
-    // Also try mounting after Babel compiles (may take a moment)
-    var _mountCheck = setInterval(function() {
-        if (typeof window._mountVitSpaceOffice === 'function') {
-            clearInterval(_mountCheck);
-            // Pre-mount if office view is already visible
-            var officeView = document.getElementById('hqOfficeView');
-            if (officeView && officeView.style.display !== 'none') {
-                window._mountVitSpaceOffice();
-            }
-        }
-    }, 500);
-    
-    // Clear check after 30 seconds
-    setTimeout(function() { clearInterval(_mountCheck); }, 30000);
-})();
-</script>
-
 <script type="module" src="/portal/app.js"></script>
-
-<!-- Safety net: if vit:modules-ready event was missed, re-dispatch -->
-<script type="module">
-    if (window.showView && !window.showView._hasRenderHooks) {
-        console.warn('[RenderHooks] Safety net: re-dispatching vit:modules-ready');
-        window.dispatchEvent(new CustomEvent('vit:modules-ready'));
-    }
-</script>
 </body>
 </html>
