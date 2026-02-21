@@ -1899,14 +1899,15 @@ export function showView(viewName) {
     console.log('showView called with:', viewName);
     
     // Check module status - block 'in_bearbeitung' (bald) and 'deaktiviert' modules
-    var moduleStatusMap = {verkauf:'verkauf',controlling:'controlling',marketing:'marketing',werkstatt:'werkstatt',personal:'personal',office:'office',kalender:'kalender',nachrichten:'nachrichten',wissen:'wissen',support:'support',einkauf:'einkauf',dashboards:'dashboards',allgemein:'allgemein',shop:'shop',aktenschrank:'aktenschrank',mitarbeiter:'mitarbeiter'};
+    var moduleStatusMap = {verkauf:'verkauf',controlling:'controlling',marketing:'marketing',werkstatt:'werkstatt',personal:'personal',office:'office',kalender:'kalender',nachrichten:'nachrichten',wissen:'wissen',support:'support',einkauf:'einkauf',dashboards:'dashboards',allgemein:'allgemein',shop:'shop',aktenschrank:'aktenschrank',mitarbeiter:'mitarbeiter',todo:'todo'};
     var moduleKey = moduleStatusMap[viewName];
     var _modulStatus = window.sbModulStatus || {};
-    if(moduleKey && _modulStatus[moduleKey]) {
+    console.log('[showView] moduleKey:', moduleKey, 'status:', moduleKey ? _modulStatus[moduleKey] : 'n/a', 'allStatus:', JSON.stringify(_modulStatus));
+    if(moduleKey) {
         var mStatus = _modulStatus[moduleKey];
-        if(mStatus === 'in_bearbeitung' || mStatus === 'deaktiviert') {
-            if(typeof window._showToast === 'function') window._showToast('Dieses Modul ist noch nicht verf\u00fcgbar (' + (mStatus === 'in_bearbeitung' ? 'Kommt bald' : 'Deaktiviert') + ')', 'info');
-            else alert('Dieses Modul ist noch nicht verf\u00fcgbar (' + (mStatus === 'in_bearbeitung' ? 'Kommt bald' : 'Deaktiviert') + ')');
+        if(!mStatus || mStatus === 'in_bearbeitung' || mStatus === 'deaktiviert') {
+            if(typeof window._showToast === 'function') window._showToast('Dieses Modul ist noch nicht verf\u00fcgbar (' + (mStatus === 'in_bearbeitung' ? 'Kommt bald' : mStatus === 'deaktiviert' ? 'Deaktiviert' : 'Nicht konfiguriert') + ')', 'info');
+            else alert('Dieses Modul ist noch nicht verf\u00fcgbar');
             return;
         }
     }
