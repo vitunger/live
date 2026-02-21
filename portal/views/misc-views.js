@@ -1463,11 +1463,6 @@ export function AgingBadge({deal}){
   return <div style={{display:"inline-flex",alignItems:"center",gap:3,background:u?"#FED7D7":"#FEFCBF",color:u?"#C53030":"#B7791F",fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:8,animation:u?"pulse 1s infinite":"none",fontFamily:"'Outfit',sans-serif"}}>{u?"🚨":"⏰"} {d}d</div>
 }
 
-
-/* ── Deal Card (Clean) ────────────────────────────── */
-export function Card({deal,onDrag,onClick,isNew}){
-
-
 // Strangler Fig
 const _exports = {loadHqPrio,saveHqPrio,resetHqPrio,getAllModulesFlat,getAufwandBadge,getTypBadge,getStatusBadge,filterModulStatus,onPrioDragStart,onPrioDragOver,onPrioDragLeave,onPrioDrop,moveHqPrio,renderModulStatus,renderDevStatus,showDevTab,renderReleaseUpdates,renderDevNutzung,toggleMobileSidebar,toggleSidebarCollapse,closeMobileSidebar,switchViewMode,initTrainingModule,getSimulatedResponse,generateEvaluation,startTraining,renderTrainingMessages,speakTraining,showTrainingWave,animateTrainingWave,hideTrainingWave,toggleTrainingMic,sendTrainingVoice,sendTrainingText,resetTrainingInput,processTrainingMessage,endTrainingSession,showTrainingEvaluation,restartTrainingScenario,backToTrainingMenu,mountReactPipeline,Particle,Heat,TodoBadge,AgingBadge,Card};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });

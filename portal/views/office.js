@@ -793,12 +793,6 @@ window.showView = function(v) { _sv(v); if(v==='hqOffice') init(); };
 }
 var _w=setInterval(function(){if(window.sb&&window.sbUser){clearInterval(_w);load().then(function(){updateBadge();});}},1000);
 checkQR();
-})();
-</script>
-
-</body>
-</html>
-
 
 // Strangler Fig
 const _exports = {init,load,me,myCI,deskCI,myBK,deskBK,dayBK,av,ini,fmtD,fmtDL,todayStr,isToday,workdays,userName,render,renderHero,renderHome,renderPlan,renderWoche,renderLaden,buildMiniCal,renderAnalytics,showCheckinDD,closeDDH,updateBadge,setupRT,checkQR,handleQR};

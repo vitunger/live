@@ -563,6 +563,10 @@ export function applyModulStatus() {
                 btn.style.display = '';
                 btn.style.opacity = '0.35';
                 btn.style.pointerEvents = 'none';
+}
+}
+}
+}
 
 
 // Strangler Fig

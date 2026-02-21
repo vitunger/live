@@ -762,6 +762,8 @@ if (tools?.length) {
 h += '</div>';
 } else {
 h = '<div class="text-center py-8 text-gray-400">Keine gesperrte Jahresstrategie vorhanden – Kostenberechnung nicht möglich.</div>';
+}
+}
 
 
 // Strangler Fig

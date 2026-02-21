@@ -341,13 +341,7 @@ try {
 }
 };
 
-})();
 </script>
-
-<!-- ===== VIDEO-PIPELINE MODULE (integriert in Marketing → Social Media + HQ Freigabe) ===== -->
-<script>
-(function(){
-
 
 // Strangler Fig
 const _exports = {startRecording,updateRecInfo,formatSize,finalizeRecording,fbStopRecIfActive,resetRecUI,renderAttachments};

@@ -1,3 +1,5 @@
+function checkSession() { return typeof window.sbUser !== "undefined" && window.sbUser; }
+
 /**
  * views/perf-cockpit.js - Performance Cockpit & Aktenschrank
  * @module views/perf-cockpit

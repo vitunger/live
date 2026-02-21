@@ -786,10 +786,9 @@ window.loadWawiLeasing = async function() {
     tableEl.innerHTML = h;
 };
 
-})();
 
 
 // Strangler Fig
-const _exports = {wawiPopulateForm,wawiRenderStatus,timeAgo,loadWawiSyncLog,loadWawiDataPreview,extractPdfText,parseEur,parseWawiText,renderParseCard,escH,kpiCard};
+const _exports = {wawiPopulateForm,wawiRenderStatus,timeAgo,loadWawiSyncLog,loadWawiDataPreview,extractPdfText,parseEur,parseWawiText,renderParseCard,kpiCard};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[wawi-integration.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');

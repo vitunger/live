@@ -815,11 +815,6 @@ if(window.sb) {
 <script>
 (function() {
 'use strict';
-var D = [], CI = [], CH = [], BK = [], HQ_USERS = [];
-var TAB = 'home', INIT = false, WEEK_OFFSET = 0, HOME_OFFSET = 0;
-var LADEN_MONTH = new Date(), LADEN_DAY = new Date();
-
-
 
 // Strangler Fig
 const _exports = {vpBadge,vpDate,vpDateTime,vpFileSize,vpModal,vpAddFiles,vpRenderFileQueue,vpTagRow,vpSetupRealtime};
