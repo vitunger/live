@@ -728,7 +728,7 @@ if(SESSION.account_level === 'extern') {
     _showView('externHome');
 } else if(currentRole === 'hq') { switchViewMode('hq'); } else { _showView('home'); }
 // Load dashboard widgets with live data
-if(currentRole !== 'hq' && SESSION.account_level !== 'extern') { loadDashboardWidgets(); loadAllgemeinData(); }
+if(currentRole !== 'hq' && SESSION.account_level !== 'extern') { if(typeof window.loadDashboardWidgets==='function') window.loadDashboardWidgets(); if(typeof window.loadAllgemeinData==='function') window.loadAllgemeinData(); }
 // Check for pending approvals (HQ + GF only)
 checkPendingApprovals();
 checkDemoMode();

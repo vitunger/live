@@ -4,6 +4,7 @@
  */
 var sbFeatureFlags = window.sbFeatureFlags || {};
 var sbModulStatus = window.sbModulStatus || {};
+var sbHqModulStatus = window.sbHqModulStatus || {};
 
 function _sb()           { return window.sb; }
 function _sbUser()       { return window.sbUser; }
@@ -576,6 +577,7 @@ export function applyModulStatus() {
 // Sync to window for cross-module access
 window.sbFeatureFlags = sbFeatureFlags;
 window.sbModulStatus = sbModulStatus;
+window.sbHqModulStatus = sbHqModulStatus;
 
 const _exports = {loadFeatureFlags,isFeatureEnabled,getFeatureMeta,applyFeatureFlags,loadFFView,ffUpdateStats,ffHasTargeting,ffGetStatus,ffFilter,ffRenderList,ffToggle,ffDelete,ffShowCreate,ffShowEdit,ffPopulateSelectors,ffCloseModal,ffSave,logFeatureFlagCheck,ffFlushLog,loadBkView,bkRenderStats,bkRenderHealth,bkRenderTable,bkTriggerBackup,loadModulStatus,applyModulStatus};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });

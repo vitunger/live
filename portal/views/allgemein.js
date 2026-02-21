@@ -59,10 +59,11 @@ export function showAllgemeinTab(tabName) {
 // ============================================================
 
 export async function loadAllgemeinData() {
+    if (!_sbProfile()) { console.warn('[allgemein] Profile not loaded yet, skipping'); return; }
     try {
         await Promise.all([loadJahresziele(), loadMonatsplan(), loadJournal()]);
         renderAllgemeinUebersicht();
-        loadHomeWidgets();
+        if(typeof window.loadHomeWidgets==='function') window.loadHomeWidgets();
     } catch (err) {
         console.error('Fehler loadAllgemeinData:', err);
     }
@@ -77,7 +78,7 @@ export async function loadJahresziele() {
         var query = _sb().from('partner_jahresziele').select('*')
             .eq('jahr', allgemeinJahr)
             .order('sortierung', {ascending: true});
-        if (!_sbProfile().is_hq) query = query.eq('standort_id', _sbProfile().standort_id);
+        if (_sbProfile() && !_sbProfile().is_hq) query = query.eq('standort_id', _sbProfile().standort_id);
         var res = await query;
         if (res.error) throw res.error;
         allgemeinJahresziele = res.data || [];
@@ -222,7 +223,7 @@ export async function toggleSoftTarget(id, checked) {
 export async function loadMonatsplan() {
     try {
         var query = _sb().from('partner_monatsplan').select('*').eq('jahr', allgemeinJahr).order('monat',{ascending:true});
-        if (!_sbProfile().is_hq) query = query.eq('standort_id', _sbProfile().standort_id);
+        if (_sbProfile() && !_sbProfile().is_hq) query = query.eq('standort_id', _sbProfile().standort_id);
         var res = await query;
         if (res.error) throw res.error;
         allgemeinMonatsplan = res.data || [];
@@ -330,7 +331,7 @@ export async function saveMonatsDetail() {
 export async function loadJournal() {
     try {
         var query = _sb().from('partner_journal').select('*').order('datum',{ascending:false});
-        if (!_sbProfile().is_hq) query = query.eq('standort_id', _sbProfile().standort_id);
+        if (_sbProfile() && !_sbProfile().is_hq) query = query.eq('standort_id', _sbProfile().standort_id);
         var res = await query;
         if (res.error) throw res.error;
         allgemeinJournal = res.data || [];
