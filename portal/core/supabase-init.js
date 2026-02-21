@@ -77,6 +77,14 @@ sb.auth.onAuthStateChange(function(event, session) {
     console.log('[Auth] State:', event);
 });
 
+// Auto-login: wait for all modules to be ready, then check session
+window.addEventListener('vit:modules-ready', function() {
+    if(typeof window.checkSession === 'function') {
+        console.log('[supabase-init] Modules ready, checking session...');
+        window.checkSession();
+    }
+});
+
 var sbUser = null; // Supabase auth user
 var sbProfile = null; // users table row
 var sbRollen = []; // role names array
