@@ -550,6 +550,12 @@ export async function loadModulStatus() {
             sbModulEbene[m.modul_key] = m.ebene || 'partner';
         });
         applyModulStatus();
+        // Re-sync to window (reassignment breaks reference)
+        window.sbModulStatus = sbModulStatus;
+        window.sbHqModulStatus = sbHqModulStatus;
+        window.sbModulConfig = sbModulConfig;
+        window.sbHqModulConfig = sbHqModulConfig;
+        window.sbModulEbene = sbModulEbene;
     } catch(err) { console.error('ModulStatus:', err); }
 }
 
