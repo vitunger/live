@@ -6278,10 +6278,10 @@
                         <div class="vit-card p-4 mb-4">
                             <div class="flex items-center justify-between mb-3">
                                 <div class="text-sm font-bold text-gray-700">📐 Grundriss OG · Jahnstraße 2</div>
-                                <label class="flex items-center gap-2 text-[11px] cursor-pointer"><input type="checkbox" id="officeAdminDragMode" onchange="officeToggleDragMode()" class="accent-orange-500"> <span style="color:#EF7D00;font-weight:700">Plätze verschieben</span></label>
+                                <label class="flex items-center gap-2 text-[11px] cursor-pointer"><input type="checkbox" id="officeAdminDragMode" onchange="if(typeof officeToggleDragMode==='function')officeToggleDragMode()" class="accent-orange-500"> <span style="color:#EF7D00;font-weight:700">Plätze verschieben</span></label>
                             </div>
                             <div id="officeFloorplanContainer" style="position:relative;overflow:auto">
-                                <img src="grundriss_og.png" style="width:100%;min-width:700px;display:block;border-radius:8px;opacity:0.92" onload="officeRenderAdminDots()">
+                                <img src="grundriss_og.png" style="width:100%;min-width:700px;display:block;border-radius:8px;opacity:0.92" onload="if(typeof officeRenderAdminDots==='function')officeRenderAdminDots()">
                                 <div id="officeAdminDots" style="position:absolute;top:0;left:0;right:0;bottom:0"></div>
                             </div>
                             <div class="flex flex-wrap gap-2 mt-3" id="officeRoomLegend"></div>
@@ -7678,10 +7678,12 @@ function PipelineApp(){
 // Register globally so mountReactPipeline() can find it
 window.__PIPELINE_APP = PipelineApp;
 
-// Auto-mount if already visible
-if(document.getElementById('react-pipeline-root') && document.getElementById('vkTabPipeline') && document.getElementById('vkTabPipeline').style.display !== 'none') {
-    mountReactPipeline();
-}
+// Auto-mount if already visible (deferred until module exports mountReactPipeline)
+window.addEventListener('vit:modules-ready', function() {
+    if(document.getElementById('react-pipeline-root') && typeof window.mountReactPipeline === 'function') {
+        mountReactPipeline();
+    }
+});
 </script>
 
 <!-- Jahresziel Modal -->
