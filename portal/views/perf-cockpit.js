@@ -396,58 +396,9 @@ try {
 }
 }
 
-// Hook HQ views into showView
-var origShowView2 = showView;
-showView = function(v) {
-// Rechteprüfung
-if(!hasAccess(v)) {
-    alert('Kein Zugriff auf diesen Bereich mit deiner aktuellen Rolle.');
-    return;
-}
-// Redirect 'home' to HQ Cockpit when in HQ mode
-if(v==='home' && currentRole==='hq') { v='hqCockpit'; }
-if(v==='home' && SESSION.account_level==='extern') { v='externHome'; }
-if(v==='hqIdeen') { v='entwicklung'; _showView('entwicklung'); return; }
-origShowView2(v);
-if(v==='externHome') renderExternHome();
-if(v==='onboarding') renderOnboardingView();
-if(v==='hqOnboarding') renderHqOnboarding();
-if(v==='hqCockpit') renderHqCockpit();
-if(v==='hqStandorte') renderHqStandorte();
-if(v==='hqFinanzen') renderHqFinanzen();
-if(v==='hqMarketing') { renderHqMarketing(); showHqMktTab('uebersicht'); }
-if(v==='allgemein') { loadAllgemeinData().then(function(){ showAllgemeinTab('uebersicht'); }); }
-if(v==='home') { loadDashboardWidgets(); loadAllgemeinData(); }
-if(v==='einkauf') { showEinkaufTab('sortiment'); }
-if(v==='hqAllgemein') { renderHqAllgemein(hqStandorte, [], [], []); }
-if(v==='hqEinkauf') { showHqEkTab('dash'); }
-if(v==='hqVerkauf') renderHqVerkauf();
-if(v==='hqAktionen') renderHqAktionen();
-if(v==='hqKomm'){_showView('hqKommando');showKommandoTab('kommunikation');return;}
-if(v==='hqKampagnen'){_showView('hqKommando');showKommandoTab('kampagnen');return;}
-if(v==='hqDokumente'){_showView('hqKommando');showKommandoTab('dokumente');return;}
-if(v==='hqKalender'){_showView('hqKommando');showKommandoTab('kalender');return;}
-if(v==='hqAufgaben'){_showView('hqKommando');showKommandoTab('aufgaben');return;}
-if(v==='hqAuswertung') renderHqAuswertung();
-if(v==='hqWissen') renderHqWissen();
-if(v==='hqSupport') renderHqSupport();
-if(v==='hqShop') renderHqShop();
-if(v==='hqBilling') { initBillingModule(); showBillingTab('overview'); }
-if(v==='hqBillingDetail') { /* opened via showBillingInvoice() */ }
-if(v==='standortBilling') { initStandortBilling(); showStBillingTab('invoices'); }
-if(v==='hqEinstellungen') renderHqEinstellungen();
-if(v==='mitarbeiter') renderPartnerMitarbeiter();
-if(v==='hqKommando') renderKommandozentrale();
-if(v==='kalender') loadKalTermine();
-if(v==='todo') loadTodos();
-if(v==='notifications') renderNotifications('all');
-// Auto-Loading for Standort-Views
-if(v==='controlling') { showControllingTab('cockpit'); renderPerformanceCockpit(); loadBwaList(); }
-if(v==='verkauf') { showVerkaufTab('pipeline'); }
-if(v==='kommunikation') { showKommTab('chat'); }
-if(v==='aktenschrank') { loadAktenFiles(); }
-if(v==='devStatus') { _showView('entwicklung'); setTimeout(function(){showEntwicklungTab('module')},50); return; }
-};
+// NOTE: Render triggers for all views are now handled by view-router.js
+// via the 'vit:view-changed' event system. The old showView wrapper chain
+// has been removed to prevent race conditions with module loading.
 
 
 
