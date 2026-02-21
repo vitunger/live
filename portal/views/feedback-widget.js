@@ -8,6 +8,7 @@ function _sbProfile()    { return window.sbProfile; }
 function _escH(s)        { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
 function _t(k)           { return typeof window.t === 'function' ? window.t(k) : k; }
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
+function _showView(v) { if (window.showView) window._showView(v); }
 function _fmtN(n)        { return typeof window.fmtN === 'function' ? window.fmtN(n) : String(n); }
 function _triggerPush()  { if (typeof window.triggerPush === 'function') window.triggerPush.apply(null, arguments); }
 
@@ -69,7 +70,7 @@ window.fbHideCtx = function(){ document.getElementById('fbContextPrompt').style.
 // ── Open / Close ──
 window.fbOpen = function(){
 // Zum neuen Ideenboard navigieren und Formular öffnen
-showView('entwicklung');
+_showView('entwicklung');
 setTimeout(function(){
     var f = document.getElementById('devSubmitForm');
     if(f && f.classList.contains('hidden')) toggleDevSubmitForm();
@@ -347,3 +348,14 @@ try {
 const _exports = {startRecording,updateRecInfo,formatSize,finalizeRecording,fbStopRecIfActive,resetRecUI,renderAttachments};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[feedback-widget.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === WINDOW REGISTRATION ===
+// Auto-register 7 exports on window for onclick compatibility
+window.startRecording = startRecording;
+window.updateRecInfo = updateRecInfo;
+window.formatSize = formatSize;
+window.finalizeRecording = finalizeRecording;
+window.fbStopRecIfActive = fbStopRecIfActive;
+window.resetRecUI = resetRecUI;
+window.renderAttachments = renderAttachments;
+// === END REGISTRATION ===

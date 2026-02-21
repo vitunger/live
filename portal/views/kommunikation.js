@@ -854,3 +854,36 @@ const _exports = {
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[kommunikation.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === WINDOW REGISTRATION ===
+// Auto-register 29 exports on window for onclick compatibility
+window.loadKommSidebar = loadKommSidebar;
+window.filterKommSidebar = filterKommSidebar;
+window.openKommConv = openKommConv;
+window.loadChannelMessages = loadChannelMessages;
+window.subscribeToChannel = subscribeToChannel;
+window.loadInboxConversation = loadInboxConversation;
+window.renderInboxBubbles = renderInboxBubbles;
+window.loadAnnouncements = loadAnnouncements;
+window.markAnkGelesen = markAnkGelesen;
+window.renderChatBubbles = renderChatBubbles;
+window.renderSingleBubble = renderSingleBubble;
+window.setReply = setReply;
+window.cancelReply = cancelReply;
+window.kommSendMessage = kommSendMessage;
+window.kommInputKeydown = kommInputKeydown;
+window.kommAutoResize = kommAutoResize;
+window.kommStartNewChat = kommStartNewChat;
+window.kommSelectNewRecipient = kommSelectNewRecipient;
+window.kommCreateKanal = kommCreateKanal;
+window.updateKommBadges = updateKommBadges;
+window.renderCommunityPosts = renderCommunityPosts;
+window.createCommunityPost = createCommunityPost;
+window.deactivateBrettPost = deactivateBrettPost;
+window.deleteForumPost = deleteForumPost;
+window.filterCommunity = filterCommunity;
+window.openForumDetail = openForumDetail;
+window.postForumComment = postForumComment;
+window.closeForumDetail = closeForumDetail;
+window.showKommTab = showKommTab;
+// === END REGISTRATION ===

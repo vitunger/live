@@ -44,3 +44,9 @@ setTheme(saved);
 const _exports = {toggleTheme,setTheme,openProfilePanel,closeProfilePanel,updateProfileThemeButtons,applyDarkModeInlineStyles,saveProfile,handleProfilePhoto,changePassword};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[profile-theme.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === WINDOW REGISTRATION ===
+// Auto-register 2 exports on window for onclick compatibility
+window.toggleTheme = toggleTheme;
+window.setTheme = setTheme;
+// === END REGISTRATION ===

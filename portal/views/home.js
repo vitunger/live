@@ -134,7 +134,7 @@ export async function loadWidgetPipeline() {
     try {
         var sb = _sb();
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
-        var q = sb.from('leads').select('id, status, wert').eq('archiviert', false);
+        var q = _sb().from('leads').select('id, status, wert').eq('archiviert', false);
         if (stdId) q = q.eq('standort_id', stdId);
         var res = await q;
         var leads = res.data || [];
@@ -161,7 +161,7 @@ export async function loadWidgetSuccess() {
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
         var mondayISO = getKWMonday(kw);
         var sundayISO = getKWSunday(kw);
-        var q = sb.from('verkauf_tracking').select('id, typ').gte('datum', mondayISO).lte('datum', sundayISO);
+        var q = _sb().from('verkauf_tracking').select('id, typ').gte('datum', mondayISO).lte('datum', sundayISO);
         if (stdId) q = q.eq('standort_id', stdId);
         var res = await q;
         var data = res.data || [];
@@ -205,7 +205,7 @@ export async function loadWidgetTermine() {
         var today = new Date().toISOString().split('T')[0];
         var tomorrow = new Date(Date.now() + 864e5).toISOString().split('T')[0];
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
-        var q = sb.from('termine').select('id, titel, beschreibung, start_zeit').gte('start_zeit', today + 'T00:00:00').lt('start_zeit', tomorrow + 'T00:00:00').order('start_zeit');
+        var q = _sb().from('termine').select('id, titel, beschreibung, start_zeit').gte('start_zeit', today + 'T00:00:00').lt('start_zeit', tomorrow + 'T00:00:00').order('start_zeit');
         if (stdId) q = q.eq('standort_id', stdId);
         var res = await q;
         var terme = res.data || [];
@@ -227,7 +227,7 @@ export async function loadWidgetAufgaben() {
         var sb = _sb();
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
         var userId = _sbProfile() ? _sbProfile().user_id : null;
-        var q = sb.from('todos').select('id, titel, erledigt, faellig_am, prio_sort').eq('erledigt', false).order('prio_sort').order('faellig_am').limit(5);
+        var q = _sb().from('todos').select('id, titel, erledigt, faellig_am, prio_sort').eq('erledigt', false).order('prio_sort').order('faellig_am').limit(5);
         if (userId) q = q.eq('user_id', userId);
         var res = await q;
         var aufgaben = res.data || [];
@@ -262,7 +262,7 @@ export async function loadWidgetTeam() {
     try {
         var sb = _sb();
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
-        var q = sb.from('users').select('id, vorname, nachname, status, rolle').eq('status', 'aktiv');
+        var q = _sb().from('users').select('id, vorname, nachname, status, rolle').eq('status', 'aktiv');
         if (stdId) q = q.eq('standort_id', stdId);
         var res = await q;
         var team = res.data || [];
@@ -281,7 +281,7 @@ export async function loadWidgetControlling() {
     try {
         var sb = _sb();
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
-        var q = sb.from('bwa_daten').select('monat, umsatz, rohertrag_pct, personalkosten_pct, ergebnis').order('monat', { ascending: false }).limit(1);
+        var q = _sb().from('bwa_daten').select('monat, umsatz, rohertrag_pct, personalkosten_pct, ergebnis').order('monat', { ascending: false }).limit(1);
         if (stdId) q = q.eq('standort_id', stdId);
         var res = await q;
         var bwa = (res.data || [])[0];
@@ -302,7 +302,7 @@ export async function loadWidgetSupport() {
     try {
         var sb = _sb();
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
-        var q = sb.from('support_tickets').select('id, titel, status, created_at').eq('status', 'offen').order('created_at', { ascending: false }).limit(3);
+        var q = _sb().from('support_tickets').select('id, titel, status, created_at').eq('status', 'offen').order('created_at', { ascending: false }).limit(3);
         if (stdId) q = q.eq('standort_id', stdId);
         var res = await q;
         var tickets = res.data || [];
@@ -328,7 +328,7 @@ export async function loadWidgetNachrichten() {
     var el = document.getElementById('wNachrichtenContent'); if (!el) return;
     try {
         var sb = _sb();
-        var res = await sb.from('ankuendigungen').select('id, titel, kategorie, created_at').order('created_at', { ascending: false }).limit(3);
+        var res = await _sb().from('ankuendigungen').select('id, titel, kategorie, created_at').order('created_at', { ascending: false }).limit(3);
         var news = res.data || [];
         if (!news.length) { el.innerHTML = '<p class="text-sm text-gray-400 text-center py-2">Keine Nachrichten</p>'; return; }
         var catColors = { wichtig: 'bg-red-50 border-red-400', info: 'bg-blue-50 border-blue-400', aktion: 'bg-orange-50 border-vit-orange', update: 'bg-green-50 border-green-400' };
@@ -539,3 +539,30 @@ const _exports = {
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 
 console.log('[home.js] ✅ Module loaded – ' + Object.keys(_exports).length + ' exports registered');
+
+// === WINDOW REGISTRATION ===
+// Auto-register 23 exports on window for onclick compatibility
+window.toggleDashboardEdit = toggleDashboardEdit;
+window.addWidget = addWidget;
+window.initDashboardTabs = initDashboardTabs;
+window.showDashboardTab = showDashboardTab;
+window.loadDashboardWidgets = loadDashboardWidgets;
+window.loadWidgetPipeline = loadWidgetPipeline;
+window.loadWidgetSuccess = loadWidgetSuccess;
+window.getKWnow = getKWnow;
+window.getKWMonday = getKWMonday;
+window.getKWSunday = getKWSunday;
+window.loadWidgetTermine = loadWidgetTermine;
+window.loadWidgetAufgaben = loadWidgetAufgaben;
+window.quickToggleTodo = quickToggleTodo;
+window.loadWidgetMarketing = loadWidgetMarketing;
+window.loadWidgetTeam = loadWidgetTeam;
+window.loadWidgetControlling = loadWidgetControlling;
+window.loadWidgetSupport = loadWidgetSupport;
+window.loadWidgetWissen = loadWidgetWissen;
+window.loadWidgetNachrichten = loadWidgetNachrichten;
+window.loadHomeWidgets = loadHomeWidgets;
+window.renderExternHome = renderExternHome;
+window.toggleWidgetInfo = toggleWidgetInfo;
+window.fillDemoWidgets = fillDemoWidgets;
+// === END REGISTRATION ===

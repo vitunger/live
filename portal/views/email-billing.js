@@ -8,6 +8,7 @@ function _sbProfile()    { return window.sbProfile; }
 function _escH(s)        { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
 function _t(k)           { return typeof window.t === 'function' ? window.t(k) : k; }
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
+function _showView(v) { if (window.showView) window._showView(v); }
 function _fmtN(n)        { return typeof window.fmtN === 'function' ? window.fmtN(n) : String(n); }
 function _triggerPush()  { if (typeof window.triggerPush === 'function') window.triggerPush.apply(null, arguments); }
 
@@ -371,7 +372,7 @@ loadBillingOverview();
 
 // ── HQ: Invoice Detail ──
 window.openBillingDetail = async function(invoiceId) {
-showView('hqBillingDetail');
+_showView('hqBillingDetail');
 var { data: inv } = await _sb().from('billing_invoices')
 .select('*, standort:standorte(name)').eq('id', invoiceId).single();
 if (!inv) return;
@@ -770,3 +771,14 @@ h = '<div class="text-center py-8 text-gray-400">Keine gesperrte Jahresstrategie
 const _exports = {showEmailNotification,fmtEur,fmtDate,statusBadge,billingCall,initBillingMonthSelect,generateSettlement};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[email-billing.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === WINDOW REGISTRATION ===
+// Auto-register 7 exports on window for onclick compatibility
+window.showEmailNotification = showEmailNotification;
+window.fmtEur = fmtEur;
+window.fmtDate = fmtDate;
+window.statusBadge = statusBadge;
+window.billingCall = billingCall;
+window.initBillingMonthSelect = initBillingMonthSelect;
+window.generateSettlement = generateSettlement;
+// === END REGISTRATION ===

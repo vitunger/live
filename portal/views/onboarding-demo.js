@@ -7,6 +7,7 @@ function _sbUser()       { return window.sbUser; }
 function _sbProfile()    { return window.sbProfile; }
 function _escH(s)        { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
+function _showView(v) { if (window.showView) window._showView(v); }
 
 export function renderExternHome() {
 var stage = SESSION.stage;
@@ -204,7 +205,7 @@ h += '<div><h2 class="text-xl font-bold">Voller Partnerstandort</h2>';
 h += '<p class="text-sm text-green-200">Alle Module und Features sind freigeschaltet.</p></div></div></div>';
 h += '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">';
 [['verkauf','\u{1F4C8}','Verkauf'],['controlling','\u{1F4CA}','Controlling'],['marketing','\u{1F4E2}','Marketing'],['wissen','\u{1F4DA}','Wissen']].forEach(function(v) {
-    h += '<button onclick="showView(\''+v[0]+'\')" class="vit-card p-4 hover:shadow-lg transition-shadow text-center"><p class="text-2xl mb-1">'+v[1]+'</p><p class="text-xs font-semibold text-gray-700">'+v[2]+'</p></button>';
+    h += '<button onclick="_showView(\''+v[0]+'\')" class="vit-card p-4 hover:shadow-lg transition-shadow text-center"><p class="text-2xl mb-1">'+v[1]+'</p><p class="text-xs font-semibold text-gray-700">'+v[2]+'</p></button>';
 });
 h += '</div>';
 }
@@ -212,9 +213,9 @@ h += '</div>';
 // Help
 h += '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">';
 h += '<div class="vit-card p-6"><h3 class="font-semibold text-gray-800 mb-4">\u{1F4DE} Brauchst du Hilfe?</h3>';
-h += '<button onclick="showView(\'support\')" class="w-full bg-vit-orange text-white py-2 rounded-lg hover:opacity-90 font-semibold text-sm">Support kontaktieren</button></div>';
+h += '<button onclick="_showView(\'support\')" class="w-full bg-vit-orange text-white py-2 rounded-lg hover:opacity-90 font-semibold text-sm">Support kontaktieren</button></div>';
 h += '<div class="vit-card p-6"><h3 class="font-semibold text-gray-800 mb-4">\u{1F4DA} Ressourcen</h3>';
-h += '<div class="space-y-2 text-sm"><a href="#" class="block text-vit-orange hover:underline" onclick="showView(\'wissen\');return false;">\u2192 Akademie</a>';
+h += '<div class="space-y-2 text-sm"><a href="#" class="block text-vit-orange hover:underline" onclick="_showView(\'wissen\');return false;">\u2192 Akademie</a>';
 h += '<a href="#" class="block text-vit-orange hover:underline">\u2192 FAQ</a></div></div></div>';
 
 container.innerHTML = h;
@@ -402,9 +403,9 @@ fillDemoWidgets(level, stage);
 
 updateUIForRole();
 try { await loadModulStatus(); } catch(e) { try { applyModulStatus(); } catch(e2) {} }
-if(level === 'extern') showView('externHome');
+if(level === 'extern') _showView('externHome');
 else if(level === 'hq') { switchViewMode('hq'); fillDemoHQ(); }
-else showView('home');
+else _showView('home');
 
 // Safety: re-fill demo data after any async DB calls settle
 if(level !== 'extern') {
@@ -566,3 +567,20 @@ window.loadStandortCosts = function() { if(DEMO_ACTIVE) { fillDemoBilling(); ret
 const _exports = {renderExternHome,renderOnboardingView,toggleMilestone,showHqOnbTab,renderHqOnboarding,hqApprovePart1,switchDemoAccount,injectDemoBanner,exitDemoMode,fillDemoWidgets,fillDemoHQ,fillDemoBilling,showDemoInvoiceDetail};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[onboarding-demo.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === WINDOW REGISTRATION ===
+// Auto-register 13 exports on window for onclick compatibility
+window.renderExternHome = renderExternHome;
+window.renderOnboardingView = renderOnboardingView;
+window.toggleMilestone = toggleMilestone;
+window.showHqOnbTab = showHqOnbTab;
+window.renderHqOnboarding = renderHqOnboarding;
+window.hqApprovePart1 = hqApprovePart1;
+window.switchDemoAccount = switchDemoAccount;
+window.injectDemoBanner = injectDemoBanner;
+window.exitDemoMode = exitDemoMode;
+window.fillDemoWidgets = fillDemoWidgets;
+window.fillDemoHQ = fillDemoHQ;
+window.fillDemoBilling = fillDemoBilling;
+window.showDemoInvoiceDetail = showDemoInvoiceDetail;
+// === END REGISTRATION ===

@@ -11,17 +11,18 @@
 function _sb()        { return window._supabase || window.sb; }
 function _sbProfile() { return window.sbProfile; }
 function _t(k)        { return typeof window.t === 'function' ? window.t(k) : k; }
+function _showView(v) { if (window.showView) window._showView(v); }
 
 // === NOTIFICATIONS DATA & LOGIC ===
 var notifications = [
-    {id:1,type:'hq',icon:'📢',title:'Neue Kampagne: Fruehjahrs-Aktion 2026',desc:'Das HQ hat eine neue Kampagne gestartet. Materialien stehen bereit.',time:'vor 15 Min.',read:false,action:'showView(\'marketing\')'},
-    {id:2,type:'system',icon:'⚠️',title:'Ticket #1042 eskaliert',desc:'Kunde Huber wartet seit 5 Tagen auf Rueckmeldung.',time:'vor 1 Std.',read:false,action:'showView(\'support\')'},
-    {id:3,type:'hq',icon:'🎬',title:'Neues Content-Thema verfuegbar',desc:'Thema C035: "Helmberatung" wurde im Local Hero Katalog ergaenzt.',time:'vor 3 Std.',read:false,action:'showView(\'marketing\');showMarketingTab(\'social\')'},
-    {id:4,type:'system',icon:'📊',title:'BWA Januar 2026 verfuegbar',desc:'Die BWA fuer Januar wurde hochgeladen und kann eingesehen werden.',time:'Gestern',read:true,action:'showView(\'controlling\')'},
-    {id:5,type:'hq',icon:'📋',title:'Neue Einkaufsrichtlinie',desc:'Aktualisierte Margen-Empfehlung fuer Q1 2026 verfuegbar.',time:'Gestern',read:true,action:'showView(\'einkauf\')'},
-    {id:6,type:'system',icon:'✅',title:'Onboarding: 70% abgeschlossen',desc:'Du hast 7 von 10 Onboarding-Schritten erledigt.',time:'vor 2 Tagen',read:true,action:'showView(\'onboarding\')'},
-    {id:7,type:'hq',icon:'🏆',title:'Verkaufs-Ranking: Platz 3!',desc:'Euer Standort ist im Netzwerk-Ranking auf Platz 3 geklettert.',time:'vor 3 Tagen',read:true,action:'showView(\'verkauf\')'},
-    {id:8,type:'system',icon:'🔔',title:'Termin morgen: Probefahrt Hr. Mueller',desc:'Morgen um 10:00 Uhr – Probefahrt E-MTB geplant.',time:'vor 3 Tagen',read:true,action:'showView(\'kalender\')'}
+    {id:1,type:'hq',icon:'📢',title:'Neue Kampagne: Fruehjahrs-Aktion 2026',desc:'Das HQ hat eine neue Kampagne gestartet. Materialien stehen bereit.',time:'vor 15 Min.',read:false,action:'_showView(\'marketing\')'},
+    {id:2,type:'system',icon:'⚠️',title:'Ticket #1042 eskaliert',desc:'Kunde Huber wartet seit 5 Tagen auf Rueckmeldung.',time:'vor 1 Std.',read:false,action:'_showView(\'support\')'},
+    {id:3,type:'hq',icon:'🎬',title:'Neues Content-Thema verfuegbar',desc:'Thema C035: "Helmberatung" wurde im Local Hero Katalog ergaenzt.',time:'vor 3 Std.',read:false,action:'_showView(\'marketing\');showMarketingTab(\'social\')'},
+    {id:4,type:'system',icon:'📊',title:'BWA Januar 2026 verfuegbar',desc:'Die BWA fuer Januar wurde hochgeladen und kann eingesehen werden.',time:'Gestern',read:true,action:'_showView(\'controlling\')'},
+    {id:5,type:'hq',icon:'📋',title:'Neue Einkaufsrichtlinie',desc:'Aktualisierte Margen-Empfehlung fuer Q1 2026 verfuegbar.',time:'Gestern',read:true,action:'_showView(\'einkauf\')'},
+    {id:6,type:'system',icon:'✅',title:'Onboarding: 70% abgeschlossen',desc:'Du hast 7 von 10 Onboarding-Schritten erledigt.',time:'vor 2 Tagen',read:true,action:'_showView(\'onboarding\')'},
+    {id:7,type:'hq',icon:'🏆',title:'Verkaufs-Ranking: Platz 3!',desc:'Euer Standort ist im Netzwerk-Ranking auf Platz 3 geklettert.',time:'vor 3 Tagen',read:true,action:'_showView(\'verkauf\')'},
+    {id:8,type:'system',icon:'🔔',title:'Termin morgen: Probefahrt Hr. Mueller',desc:'Morgen um 10:00 Uhr – Probefahrt E-MTB geplant.',time:'vor 3 Tagen',read:true,action:'_showView(\'kalender\')'}
 ];
 
 export function filterNotif(f) {
@@ -288,3 +289,22 @@ const _exports = {
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[notifications.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === WINDOW REGISTRATION ===
+// Auto-register 15 exports on window for onclick compatibility
+window.filterNotif = filterNotif;
+window.renderNotifications = renderNotifications;
+window.triggerPush = triggerPush;
+window.triggerPushStandort = triggerPushStandort;
+window.triggerPushHQ = triggerPushHQ;
+window.showInstallBanner = showInstallBanner;
+window.installPWA = installPWA;
+window.dismissInstall = dismissInstall;
+window.setupPushNotifications = setupPushNotifications;
+window.showLocalNotification = showLocalNotification;
+window.updatePushUI = updatePushUI;
+window.checkPushStatus = checkPushStatus;
+window.loadNotificationPrefs = loadNotificationPrefs;
+window.saveNotificationPrefs = saveNotificationPrefs;
+window.unsubscribePush = unsubscribePush;
+// === END REGISTRATION ===

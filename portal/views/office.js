@@ -8,6 +8,7 @@ function _sbProfile()    { return window.sbProfile; }
 function _escH(s)        { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
 function _t(k)           { return typeof window.t === 'function' ? window.t(k) : k; }
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
+function _showView(v) { if (window.showView) window._showView(v); }
 function _fmtN(n)        { return typeof window.fmtN === 'function' ? window.fmtN(n) : String(n); }
 function _triggerPush()  { if (typeof window.triggerPush === 'function') window.triggerPush.apply(null, arguments); }
 
@@ -783,7 +784,7 @@ var t = p.get('office_desk_token');
 if(t) { window.history.replaceState({},'',window.location.pathname); var w=setInterval(function(){if(window.sb&&window.sbUser){clearInterval(w);handleQR(t);}},500); }
 }
 export async function handleQR(token) {
-try { var r=await _sb().rpc('office_checkin',{p_status:'office',p_qr_token:token}); if(r.error) throw r.error; if(r.data&&r.data.error){_showToast(r.data.error,'error');return;} _showToast('QR Check-in: Platz #'+(r.data.desk_nr||'?'),'success'); if(typeof showView==='function') showView('hqOffice'); await load(); render(); } catch(e){_showToast('QR Fehler: '+e.message,'error');}
+try { var r=await _sb().rpc('office_checkin',{p_status:'office',p_qr_token:token}); if(r.error) throw r.error; if(r.data&&r.data.error){_showToast(r.data.error,'error');return;} _showToast('QR Check-in: Platz #'+(r.data.desk_nr||'?'),'success'); if(typeof showView==='function') _showView('hqOffice'); await load(); render(); } catch(e){_showToast('QR Fehler: '+e.message,'error');}
 }
 
 // ===== STARTUP =====
@@ -798,3 +799,37 @@ checkQR();
 const _exports = {init,load,me,myCI,deskCI,myBK,deskBK,dayBK,av,ini,fmtD,fmtDL,todayStr,isToday,workdays,userName,render,renderHero,renderHome,renderPlan,renderWoche,renderLaden,buildMiniCal,renderAnalytics,showCheckinDD,closeDDH,updateBadge,setupRT,checkQR,handleQR};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[office.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === WINDOW REGISTRATION ===
+// Auto-register 30 exports on window for onclick compatibility
+window.init = init;
+window.load = load;
+window.me = me;
+window.myCI = myCI;
+window.deskCI = deskCI;
+window.myBK = myBK;
+window.deskBK = deskBK;
+window.dayBK = dayBK;
+window.av = av;
+window.ini = ini;
+window.fmtD = fmtD;
+window.fmtDL = fmtDL;
+window.todayStr = todayStr;
+window.isToday = isToday;
+window.workdays = workdays;
+window.userName = userName;
+window.render = render;
+window.renderHero = renderHero;
+window.renderHome = renderHome;
+window.renderPlan = renderPlan;
+window.renderWoche = renderWoche;
+window.renderLaden = renderLaden;
+window.buildMiniCal = buildMiniCal;
+window.renderAnalytics = renderAnalytics;
+window.showCheckinDD = showCheckinDD;
+window.closeDDH = closeDDH;
+window.updateBadge = updateBadge;
+window.setupRT = setupRT;
+window.checkQR = checkQR;
+window.handleQR = handleQR;
+// === END REGISTRATION ===

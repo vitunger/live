@@ -1699,3 +1699,53 @@ export function closeDevDetail() {
 const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === WINDOW REGISTRATION ===
+// Auto-register 46 exports on window for onclick compatibility
+window.toggleDevSubmitForm = toggleDevSubmitForm;
+window.setDevInputType = setDevInputType;
+window.toggleDevAudioRecord = toggleDevAudioRecord;
+window.finalizeDevAudioRecording = finalizeDevAudioRecording;
+window.toggleDevScreenRecord = toggleDevScreenRecord;
+window.finalizeDevScreenRecording = finalizeDevScreenRecording;
+window.stopDevRecording = stopDevRecording;
+window.getSupportedMimeType = getSupportedMimeType;
+window.startDevTimer = startDevTimer;
+window.stopDevTimer = stopDevTimer;
+window.updateDevFileList = updateDevFileList;
+window.handleDevFileSelect = handleDevFileSelect;
+window.renderEntwicklung = renderEntwicklung;
+window.showEntwicklungTab = showEntwicklungTab;
+window.renderEntwTabContent = renderEntwTabContent;
+window.loadDevSubmissions = loadDevSubmissions;
+window.renderEntwIdeen = renderEntwIdeen;
+window.renderEntwReleases = renderEntwReleases;
+window.renderEntwSteuerung = renderEntwSteuerung;
+window.renderEntwFlags = renderEntwFlags;
+window.renderEntwSystem = renderEntwSystem;
+window.renderEntwNutzung = renderEntwNutzung;
+window.showIdeenTab = showIdeenTab;
+window.renderDevPipeline = renderDevPipeline;
+window.renderDevTab = renderDevTab;
+window.devCardHTML = devCardHTML;
+window.renderDevMeine = renderDevMeine;
+window.renderDevAlle = renderDevAlle;
+window.renderDevBoard = renderDevBoard;
+window.devBoardCardHTML = devBoardCardHTML;
+window.renderDevPlanung = renderDevPlanung;
+window.updateDevPlanStatus = updateDevPlanStatus;
+window.updateDevPlanField = updateDevPlanField;
+window.renderDevRoadmap = renderDevRoadmap;
+window.toggleRoadmapForm = toggleRoadmapForm;
+window.addRoadmapItem = addRoadmapItem;
+window.updateRoadmapStatus = updateRoadmapStatus;
+window.submitDevIdea = submitDevIdea;
+window.toggleDevVote = toggleDevVote;
+window.devHQDecision = devHQDecision;
+window.moveDevQueue = moveDevQueue;
+window.openDevDetail = openDevDetail;
+window.submitDevRueckfragenAntwort = submitDevRueckfragenAntwort;
+window.devHQDecisionFromDetail = devHQDecisionFromDetail;
+window.submitDevKommentar = submitDevKommentar;
+window.closeDevDetail = closeDevDetail;
+// === END REGISTRATION ===

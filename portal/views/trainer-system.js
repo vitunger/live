@@ -190,3 +190,9 @@ setTimeout(function(){document.getElementById('groupcallPrepPanel').style.displa
 const _exports = {renderHealthScore,renderHqHealth,toggleWidgetInfo};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[trainer-system.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === WINDOW REGISTRATION ===
+// Auto-register 2 exports on window for onclick compatibility
+window.renderHealthScore = renderHealthScore;
+window.renderHqHealth = renderHqHealth;
+// === END REGISTRATION ===

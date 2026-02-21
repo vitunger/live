@@ -122,7 +122,7 @@ window.wawiTestConnection = async function() {
     resEl.innerHTML = '<p class="text-sm text-gray-500">Verbindung wird getestet...</p>';
 
     try {
-        var r = await sb.functions.invoke('wawi-sync', { body: {
+        var r = await _sb().functions.invoke('wawi-sync', { body: {
             action: 'test_connection',
             api_url: apiUrl,
             api_key: apiKey,
@@ -195,7 +195,7 @@ window.wawiTriggerSync = async function(module) {
     if(!_wawiConnection) { _showToast('Keine Verbindung', 'error'); return; }
     _showToast('Sync ' + module + ' gestartet...', 'info');
     try {
-        var r = await sb.functions.invoke('wawi-sync', { body: {
+        var r = await _sb().functions.invoke('wawi-sync', { body: {
             action: 'sync',
             connection_id: _wawiConnection.id,
             standort_id: SESSION.standort_id,
@@ -216,7 +216,7 @@ window.wawiSyncAll = async function() {
     if(!_wawiConnection) { _showToast('Keine Verbindung', 'error'); return; }
     _showToast('Komplett-Sync gestartet...', 'info');
     try {
-        var r = await sb.functions.invoke('wawi-sync', { body: {
+        var r = await _sb().functions.invoke('wawi-sync', { body: {
             action: 'sync_all',
             connection_id: _wawiConnection.id,
             standort_id: SESSION.standort_id
@@ -580,7 +580,7 @@ window.wawiSaveAll = async function() {
         p.quell_datei_name = p.source_file;
 
         try {
-            var resp = await sb.rpc('upsert_wawi_beleg', { p_data: p });
+            var resp = await _sb().rpc('upsert_wawi_beleg', { p_data: p });
             if(resp.error) { errors++; console.error('WaWi save error:', resp.error); }
             else saved++;
         } catch(e) { errors++; console.error('WaWi save exception:', e); }
@@ -792,3 +792,17 @@ window.loadWawiLeasing = async function() {
 const _exports = {wawiPopulateForm,wawiRenderStatus,timeAgo,loadWawiSyncLog,loadWawiDataPreview,extractPdfText,parseEur,parseWawiText,renderParseCard,kpiCard};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[wawi-integration.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === WINDOW REGISTRATION ===
+// Auto-register 10 exports on window for onclick compatibility
+window.wawiPopulateForm = wawiPopulateForm;
+window.wawiRenderStatus = wawiRenderStatus;
+window.timeAgo = timeAgo;
+window.loadWawiSyncLog = loadWawiSyncLog;
+window.loadWawiDataPreview = loadWawiDataPreview;
+window.extractPdfText = extractPdfText;
+window.parseEur = parseEur;
+window.parseWawiText = parseWawiText;
+window.renderParseCard = renderParseCard;
+window._escH = _escH;
+// === END REGISTRATION ===

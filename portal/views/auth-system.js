@@ -8,6 +8,7 @@ function _sbProfile()    { return window.sbProfile; }
 function _escH(s)        { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
 function _t(k)           { return typeof window.t === 'function' ? window.t(k) : k; }
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
+function _showView(v) { if (window.showView) window._showView(v); }
 function _fmtN(n)        { return typeof window.fmtN === 'function' ? window.fmtN(n) : String(n); }
 function _triggerPush()  { if (typeof window.triggerPush === 'function') window.triggerPush.apply(null, arguments); }
 
@@ -136,7 +137,7 @@ if (targetStage === 'part1') {
     logOnboardingAction('promote_partner', { from: oldStage });
 }
 updateUIForRole();
-if (SESSION.account_level === 'extern') { showView('externHome'); } else { showView('onboarding'); }
+if (SESSION.account_level === 'extern') { _showView('externHome'); } else { _showView('onboarding'); }
 }
 
 // Apply for Part 1 (Extern action)
@@ -361,7 +362,7 @@ if(active) active.style.display = '';
 if(lbl) lbl.textContent = label;
 // Refresh sidebar & views
 if(typeof updateUIForRole === 'function') updateUIForRole();
-showView('home');
+_showView('home');
 }
 
 export function exitImpersonation() {
@@ -375,7 +376,7 @@ if(btns) btns.style.display = '';
 if(active) active.style.display = 'none';
 // Refresh sidebar & views
 if(typeof updateUIForRole === 'function') updateUIForRole();
-showView('home');
+_showView('home');
 }
 
 export function _restoreOrigState() {
@@ -713,8 +714,8 @@ if(document.body.classList.contains('dark')) {
 }
 // Apply DEMO/BETA badges
 if(SESSION.account_level === 'extern') {
-    showView('externHome');
-} else if(currentRole === 'hq') { switchViewMode('hq'); } else { showView('home'); }
+    _showView('externHome');
+} else if(currentRole === 'hq') { switchViewMode('hq'); } else { _showView('home'); }
 // Load dashboard widgets with live data
 if(currentRole !== 'hq' && SESSION.account_level !== 'extern') { loadDashboardWidgets(); loadAllgemeinData(); }
 // Check for pending approvals (HQ + GF only)
@@ -850,7 +851,7 @@ try {
         + '<div><p class="text-sm font-semibold text-yellow-800">' + pendingUsers.length + ' neue' + (pendingUsers.length===1?'r Mitarbeiter':' Mitarbeiter') + ' wartet auf Freigabe</p>'
         + '<p class="text-xs text-yellow-600">' + names + '</p></div></div>'
         + '<div class="flex items-center space-x-2">'
-        + '<button onclick="showView(\'kzMitarbeiter\');document.getElementById(\'approvalBanner\').remove();" class="px-3 py-1.5 bg-vit-orange text-white text-xs font-semibold rounded-lg hover:opacity-90">Jetzt freigeben</button>'
+        + '<button onclick="_showView(\'kzMitarbeiter\');document.getElementById(\'approvalBanner\').remove();" class="px-3 py-1.5 bg-vit-orange text-white text-xs font-semibold rounded-lg hover:opacity-90">Jetzt freigeben</button>'
         + '<button onclick="document.getElementById(\'approvalBanner\').remove();" class="text-yellow-400 hover:text-yellow-600 text-lg">\u2715</button>'
         + '</div></div>';
     document.body.appendChild(banner);
@@ -1048,7 +1049,7 @@ var sidebarViews = {
     'controlling': ['inhaber','buchhaltung']
 };
 Object.keys(sidebarViews).forEach(function(viewName){
-    var btns = document.querySelectorAll('[onclick*=\"showView(\\\''+viewName+'\\\')\"]');
+    var btns = document.querySelectorAll('[onclick*=\"_showView(\\\''+viewName+'\\\')\"]');
     btns.forEach(function(btn){
         var allowed = false;
         sidebarViews[viewName].forEach(function(r){ if(hasRole(r)) allowed=true; });
@@ -1065,7 +1066,7 @@ var toolViews = {
     'shop': ['inhaber']
 };
 Object.keys(toolViews).forEach(function(viewName){
-    var btns = document.querySelectorAll('[onclick*=\"showView(\\\''+viewName+'\\\')\"]');
+    var btns = document.querySelectorAll('[onclick*=\"_showView(\\\''+viewName+'\\\')\"]');
     btns.forEach(function(btn){
         if(btn.closest('#hqMenu')) return; if(isHQ) { btn.classList.add('hidden'); return; }
         var perms = toolViews[viewName];
@@ -1278,3 +1279,53 @@ if(tabName==='leads') { renderMktLeadChart(); }
 const _exports = {initMilestonesForStage,getMilestoneStatus,setMilestoneStatus,logOnboardingAction,evaluateTransitions,executeTransition,applyForPart1,updateLocationInfo,hasAccess,hasRole,hqCan,impersonateDemo,impersonateUser,_saveOrigState,_activateImpersonation,exitImpersonation,_restoreOrigState,quickLogin,showPasswordReset,closePwReset,submitPwReset,showRegistration,hideRegistration,submitRegistration,handleLogin,loadUserProfile,enterApp,getDateStr,checkDemoMode,showDemoBanner,removeDemoBanner,seedDemoData,clearDemoData,checkPendingApprovals,loadPipelineFromSupabase,handleLogout,checkSession,showChangePasswordModal,submitNewPassword,updateUIForRole,switchCommunicationTab,updatePremiumFeatures,showPremiumUpgradeModal,toggleDashboardEdit,addWidget,showMarketingTab};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[auth-system.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === WINDOW REGISTRATION ===
+// Auto-register 46 exports on window for onclick compatibility
+window.initMilestonesForStage = initMilestonesForStage;
+window.getMilestoneStatus = getMilestoneStatus;
+window.setMilestoneStatus = setMilestoneStatus;
+window.logOnboardingAction = logOnboardingAction;
+window.evaluateTransitions = evaluateTransitions;
+window.executeTransition = executeTransition;
+window.applyForPart1 = applyForPart1;
+window.updateLocationInfo = updateLocationInfo;
+window.hasAccess = hasAccess;
+window.hasRole = hasRole;
+window.hqCan = hqCan;
+window.impersonateDemo = impersonateDemo;
+window.impersonateUser = impersonateUser;
+window._saveOrigState = _saveOrigState;
+window._activateImpersonation = _activateImpersonation;
+window.exitImpersonation = exitImpersonation;
+window._restoreOrigState = _restoreOrigState;
+window.quickLogin = quickLogin;
+window.showPasswordReset = showPasswordReset;
+window.closePwReset = closePwReset;
+window.submitPwReset = submitPwReset;
+window.showRegistration = showRegistration;
+window.hideRegistration = hideRegistration;
+window.submitRegistration = submitRegistration;
+window.handleLogin = handleLogin;
+window.loadUserProfile = loadUserProfile;
+window.enterApp = enterApp;
+window.getDateStr = getDateStr;
+window.checkDemoMode = checkDemoMode;
+window.showDemoBanner = showDemoBanner;
+window.removeDemoBanner = removeDemoBanner;
+window.seedDemoData = seedDemoData;
+window.clearDemoData = clearDemoData;
+window.checkPendingApprovals = checkPendingApprovals;
+window.loadPipelineFromSupabase = loadPipelineFromSupabase;
+window.handleLogout = handleLogout;
+window.checkSession = checkSession;
+window.showChangePasswordModal = showChangePasswordModal;
+window.submitNewPassword = submitNewPassword;
+window.updateUIForRole = updateUIForRole;
+window.switchCommunicationTab = switchCommunicationTab;
+window.updatePremiumFeatures = updatePremiumFeatures;
+window.showPremiumUpgradeModal = showPremiumUpgradeModal;
+window.toggleDashboardEdit = toggleDashboardEdit;
+window.addWidget = addWidget;
+window.showMarketingTab = showMarketingTab;
+// === END REGISTRATION ===

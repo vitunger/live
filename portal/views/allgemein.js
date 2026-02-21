@@ -12,6 +12,7 @@ function _sb()           { return window.sb; }
 function _sbUser()       { return window.sbUser; }
 function _sbProfile()    { return window.sbProfile; }
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
+function _showView(v) { if (window.showView) window._showView(v); }
 
 // === ALLGEMEIN MODULE (Jahresziele, Monatsplan, Journal) ===
 // ╔══════════════════════════════════════════════════════════════╗
@@ -197,7 +198,7 @@ export async function saveJahresziel() {
         einheit: document.getElementById('jahreszielEinheit').value,
         status: 'aktiv', ist_abgehakt: false, sortierung: allgemeinJahresziele.length + 1
     };
-    if (!payload.titel) { alert(t('alert_enter_title')); return; }
+    if (!payload.titel) { alert(_t('alert_enter_title')); return; }
     try {
         var res = editId ? await _sb().from('partner_jahresziele').update(payload).eq('id', editId) : await _sb().from('partner_jahresziele').insert([payload]);
         if (res.error) throw res.error;
@@ -206,7 +207,7 @@ export async function saveJahresziel() {
 }
 
 export async function deleteJahresziel(id) {
-    if (!confirm(t('confirm_delete_goal'))) return;
+    if (!confirm(_t('confirm_delete_goal'))) return;
     try { var r = await _sb().from('partner_jahresziele').delete().eq('id', id); if (r.error) throw r.error; loadJahresziele(); } catch(e) { alert('Fehler: '+e.message); }
 }
 
@@ -454,7 +455,7 @@ export async function saveJournalEntry() {
         aktuelle_lage: document.getElementById('journalLage').value.trim(), wuensche_hq: wuensche, massnahmen: massnahmen,
         naechster_termin: document.getElementById('journalNaechsterTermin').value || null, erstellt_von: _sbUser().id
     };
-    if (!payload.datum) { alert(t('alert_enter_date')); return; }
+    if (!payload.datum) { alert(_t('alert_enter_date')); return; }
     try {
         var res = editId ? await _sb().from('partner_journal').update(payload).eq('id', editId) : await _sb().from('partner_journal').insert([payload]);
         if (res.error) throw res.error;
@@ -463,7 +464,7 @@ export async function saveJournalEntry() {
 }
 
 export async function deleteJournalEntry(id) {
-    if (!confirm(t('confirm_delete_protocol'))) return;
+    if (!confirm(_t('confirm_delete_protocol'))) return;
     try { var r = await _sb().from('partner_journal').delete().eq('id',id); if (r.error) throw r.error; loadJournal(); } catch(e) { alert('Fehler: '+e.message); }
 }
 
@@ -597,7 +598,7 @@ export function renderHqAllgemein(standorte, monatsplaene, journals, jahresziele
 export function viewPartnerDetails(standortId) { alert('Partner-Detail für Standort ' + standortId + ' – wird in nächster Iteration implementiert'); }
 
 // ============================================================
-// showView() HOOKS – Diese 2 Zeilen in showView() ergänzen:
+// _showView() HOOKS – Diese 2 Zeilen in _showView() ergänzen:
 // ============================================================
 // if(viewName === 'allgemein') loadAllgemeinData();
 // if(viewName === 'hqAllgemein') loadHqAllgemeinData();
@@ -618,3 +619,41 @@ showView = function(v) {
 const _exports = {showAllgemeinTab,loadAllgemeinData,loadJahresziele,renderJahresziele,openJahreszielModal,openJahreszielEdit,closeJahreszielModal,toggleJahreszielFelder,saveJahresziel,deleteJahresziel,toggleSoftTarget,loadMonatsplan,renderMonatsplan,openMonatsDetail,addMonatsMassnahme,closeMonatsDetail,saveMonatsDetail,loadJournal,renderJournal,openJournalModal,openJournalEdit,closeJournalModal,setJournalStimmung,updateThemaStyle,addJournalWunsch,addJournalMassnahme,saveJournalEntry,deleteJournalEntry,toggleJournalMassnahme,setStimmung,renderAllgemeinUebersicht,loadHqAllgemeinData,renderHqAllgemein,viewPartnerDetails};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[allgemein.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === WINDOW REGISTRATION ===
+// Auto-register 34 exports on window for onclick compatibility
+window.showAllgemeinTab = showAllgemeinTab;
+window.loadAllgemeinData = loadAllgemeinData;
+window.loadJahresziele = loadJahresziele;
+window.renderJahresziele = renderJahresziele;
+window.openJahreszielModal = openJahreszielModal;
+window.openJahreszielEdit = openJahreszielEdit;
+window.closeJahreszielModal = closeJahreszielModal;
+window.toggleJahreszielFelder = toggleJahreszielFelder;
+window.saveJahresziel = saveJahresziel;
+window.deleteJahresziel = deleteJahresziel;
+window.toggleSoftTarget = toggleSoftTarget;
+window.loadMonatsplan = loadMonatsplan;
+window.renderMonatsplan = renderMonatsplan;
+window.openMonatsDetail = openMonatsDetail;
+window.addMonatsMassnahme = addMonatsMassnahme;
+window.closeMonatsDetail = closeMonatsDetail;
+window.saveMonatsDetail = saveMonatsDetail;
+window.loadJournal = loadJournal;
+window.renderJournal = renderJournal;
+window.openJournalModal = openJournalModal;
+window.openJournalEdit = openJournalEdit;
+window.closeJournalModal = closeJournalModal;
+window.setJournalStimmung = setJournalStimmung;
+window.updateThemaStyle = updateThemaStyle;
+window.addJournalWunsch = addJournalWunsch;
+window.addJournalMassnahme = addJournalMassnahme;
+window.saveJournalEntry = saveJournalEntry;
+window.deleteJournalEntry = deleteJournalEntry;
+window.toggleJournalMassnahme = toggleJournalMassnahme;
+window.setStimmung = setStimmung;
+window.renderAllgemeinUebersicht = renderAllgemeinUebersicht;
+window.loadHqAllgemeinData = loadHqAllgemeinData;
+window.renderHqAllgemein = renderHqAllgemein;
+window.viewPartnerDetails = viewPartnerDetails;
+// === END REGISTRATION ===

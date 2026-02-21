@@ -10,6 +10,7 @@ function _sbProfile()    { return window.sbProfile; }
 function _escH(s)        { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
 function _t(k)           { return typeof window.t === 'function' ? window.t(k) : k; }
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
+function _showView(v) { if (window.showView) window._showView(v); }
 function _fmtN(n)        { return typeof window.fmtN === 'function' ? window.fmtN(n) : String(n); }
 function _triggerPush()  { if (typeof window.triggerPush === 'function') window.triggerPush.apply(null, arguments); }
 
@@ -406,7 +407,7 @@ if(!hasAccess(v)) {
 // Redirect 'home' to HQ Cockpit when in HQ mode
 if(v==='home' && currentRole==='hq') { v='hqCockpit'; }
 if(v==='home' && SESSION.account_level==='extern') { v='externHome'; }
-if(v==='hqIdeen') { v='entwicklung'; showView('entwicklung'); return; }
+if(v==='hqIdeen') { v='entwicklung'; _showView('entwicklung'); return; }
 origShowView2(v);
 if(v==='externHome') renderExternHome();
 if(v==='onboarding') renderOnboardingView();
@@ -422,11 +423,11 @@ if(v==='hqAllgemein') { renderHqAllgemein(hqStandorte, [], [], []); }
 if(v==='hqEinkauf') { showHqEkTab('dash'); }
 if(v==='hqVerkauf') renderHqVerkauf();
 if(v==='hqAktionen') renderHqAktionen();
-if(v==='hqKomm'){showView('hqKommando');showKommandoTab('kommunikation');return;}
-if(v==='hqKampagnen'){showView('hqKommando');showKommandoTab('kampagnen');return;}
-if(v==='hqDokumente'){showView('hqKommando');showKommandoTab('dokumente');return;}
-if(v==='hqKalender'){showView('hqKommando');showKommandoTab('kalender');return;}
-if(v==='hqAufgaben'){showView('hqKommando');showKommandoTab('aufgaben');return;}
+if(v==='hqKomm'){_showView('hqKommando');showKommandoTab('kommunikation');return;}
+if(v==='hqKampagnen'){_showView('hqKommando');showKommandoTab('kampagnen');return;}
+if(v==='hqDokumente'){_showView('hqKommando');showKommandoTab('dokumente');return;}
+if(v==='hqKalender'){_showView('hqKommando');showKommandoTab('kalender');return;}
+if(v==='hqAufgaben'){_showView('hqKommando');showKommandoTab('aufgaben');return;}
 if(v==='hqAuswertung') renderHqAuswertung();
 if(v==='hqWissen') renderHqWissen();
 if(v==='hqSupport') renderHqSupport();
@@ -445,7 +446,7 @@ if(v==='controlling') { showControllingTab('cockpit'); renderPerformanceCockpit(
 if(v==='verkauf') { showVerkaufTab('pipeline'); }
 if(v==='kommunikation') { showKommTab('chat'); }
 if(v==='aktenschrank') { loadAktenFiles(); }
-if(v==='devStatus') { showView('entwicklung'); setTimeout(function(){showEntwicklungTab('module')},50); return; }
+if(v==='devStatus') { _showView('entwicklung'); setTimeout(function(){showEntwicklungTab('module')},50); return; }
 };
 
 
@@ -454,3 +455,17 @@ if(v==='devStatus') { showView('entwicklung'); setTimeout(function(){showEntwick
 const _exports = {loadAktenFiles,getFileIcon,openDokUploadModal,closeDokUpModal,saveDokUpload,openAktenFolder,closeAktenFolder,filterAkten,generateDemoBwaData,renderPerformanceCockpit,kpiCard,planBar,kostenBar};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[perf-cockpit.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === WINDOW REGISTRATION ===
+// Auto-register 10 exports on window for onclick compatibility
+window.loadAktenFiles = loadAktenFiles;
+window.getFileIcon = getFileIcon;
+window.openDokUploadModal = openDokUploadModal;
+window.closeDokUpModal = closeDokUpModal;
+window.saveDokUpload = saveDokUpload;
+window.openAktenFolder = openAktenFolder;
+window.closeAktenFolder = closeAktenFolder;
+window.filterAkten = filterAkten;
+window.generateDemoBwaData = generateDemoBwaData;
+window.renderPerformanceCockpit = renderPerformanceCockpit;
+// === END REGISTRATION ===

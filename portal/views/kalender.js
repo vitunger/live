@@ -709,3 +709,36 @@ const _exports = {
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[kalender.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === WINDOW REGISTRATION ===
+// Auto-register 29 exports on window for onclick compatibility
+window.switchKalView = switchKalView;
+window.kalNav = kalNav;
+window.kalGoToday = kalGoToday;
+window.kalRenderActive = kalRenderActive;
+window.kalUpdateNavTitle = kalUpdateNavTitle;
+window.kalGetFiltered = kalGetFiltered;
+window.kalFmtDate = kalFmtDate;
+window.renderKalender = renderKalender;
+window.kalClickDay = kalClickDay;
+window.renderKalWeek = renderKalWeek;
+window.kalClickWeekCell = kalClickWeekCell;
+window.renderKalDay = renderKalDay;
+window.loadKalTermine = loadKalTermine;
+window.kalNavMonth = kalNavMonth;
+window.openKalDayModal = openKalDayModal;
+window.openTerminDetail = openTerminDetail;
+window.saveKalTermin = saveKalTermin;
+window.kalGenerateRepeatDates = kalGenerateRepeatDates;
+window.kalToggleRepeatEnd = kalToggleRepeatEnd;
+window.kalUpdateRepeatInfo = kalUpdateRepeatInfo;
+window.kalLoadTeilnehmerDropdown = kalLoadTeilnehmerDropdown;
+window.kalAddTeilnehmer = kalAddTeilnehmer;
+window.kalRemoveTeilnehmer = kalRemoveTeilnehmer;
+window.kalRenderTeilnehmerChips = kalRenderTeilnehmerChips;
+window.deleteKalTermin = deleteKalTermin;
+window.syncTerminToMs365 = syncTerminToMs365;
+window.pullMs365Events = pullMs365Events;
+window.typeColors = typeColors;
+window.typeLabels = typeLabels;
+// === END REGISTRATION ===

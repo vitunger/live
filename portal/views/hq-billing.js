@@ -8,6 +8,7 @@ function _sbProfile()    { return window.sbProfile; }
 function _escH(s)        { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
 function _t(k)           { return typeof window.t === 'function' ? window.t(k) : k; }
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
+function _showView(v) { if (window.showView) window._showView(v); }
 function _fmtN(n)        { return typeof window.fmtN === 'function' ? window.fmtN(n) : String(n); }
 function _triggerPush()  { if (typeof window.triggerPush === 'function') window.triggerPush.apply(null, arguments); }
 
@@ -151,7 +152,7 @@ export async function finalizeAllReady() {
 }
 
 export async function showBillingInvoice(invId) {
-    showView('hqBillingDetail');
+    _showView('hqBillingDetail');
     var content = document.getElementById('billingDetailContent');
     var title = document.getElementById('billingDetailTitle');
     var subtitle = document.getElementById('billingDetailSubtitle');
@@ -270,7 +271,7 @@ export async function editLineItem(lineId, currentAmount, currentDesc) {
     if (backBtn) {
         var invRow = document.querySelector('#billingDetailTitle');
         // Reload by finding the invoice ID from audit or just go back
-        showView('hqBilling'); loadBillingOverview();
+        _showView('hqBilling'); loadBillingOverview();
     }
 }
 
@@ -1180,3 +1181,46 @@ export function showKommandoTab(tab) {
 const _exports = {fmtEur,fmtDate,billingStatusBadge,billingApi,initBillingModule,loadBillingOverview,generateMonthlyDrafts,showQuarterlySettlementDialog,generateQuarterlySettlement,finalizeAllReady,showBillingInvoice,finalizeInvoice,markInvoicePaid,editLineItem,removeLineItem,addManualLineItem,showBillingTab,loadAllInvoices,loadAllStrategies,approveStrategy,lockStrategy,loadBillingProducts,loadBillingTools,toggleApprovalMode,updateApprovalModeUI,approvalBulkAction,loadApprovalQueue,approvalAction,generateAllDrafts,showStBillingTab,initStandortBilling,loadStandortInvoices,showStandortInvoiceDetail,loadStandortStrategy,submitStandortStrategy,loadStandortCosts,downloadInvoicePdf,loadStandortPayments,showKommandoTab};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[hq-billing.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === WINDOW REGISTRATION ===
+// Auto-register 39 exports on window for onclick compatibility
+window.fmtEur = fmtEur;
+window.fmtDate = fmtDate;
+window.billingStatusBadge = billingStatusBadge;
+window.billingApi = billingApi;
+window.initBillingModule = initBillingModule;
+window.loadBillingOverview = loadBillingOverview;
+window.generateMonthlyDrafts = generateMonthlyDrafts;
+window.showQuarterlySettlementDialog = showQuarterlySettlementDialog;
+window.generateQuarterlySettlement = generateQuarterlySettlement;
+window.finalizeAllReady = finalizeAllReady;
+window.showBillingInvoice = showBillingInvoice;
+window.finalizeInvoice = finalizeInvoice;
+window.markInvoicePaid = markInvoicePaid;
+window.editLineItem = editLineItem;
+window.removeLineItem = removeLineItem;
+window.addManualLineItem = addManualLineItem;
+window.showBillingTab = showBillingTab;
+window.loadAllInvoices = loadAllInvoices;
+window.loadAllStrategies = loadAllStrategies;
+window.approveStrategy = approveStrategy;
+window.lockStrategy = lockStrategy;
+window.loadBillingProducts = loadBillingProducts;
+window.loadBillingTools = loadBillingTools;
+window.toggleApprovalMode = toggleApprovalMode;
+window.updateApprovalModeUI = updateApprovalModeUI;
+window.approvalBulkAction = approvalBulkAction;
+window.loadApprovalQueue = loadApprovalQueue;
+window.approvalAction = approvalAction;
+window.generateAllDrafts = generateAllDrafts;
+window.showStBillingTab = showStBillingTab;
+window.initStandortBilling = initStandortBilling;
+window.loadStandortInvoices = loadStandortInvoices;
+window.showStandortInvoiceDetail = showStandortInvoiceDetail;
+window.loadStandortStrategy = loadStandortStrategy;
+window.submitStandortStrategy = submitStandortStrategy;
+window.loadStandortCosts = loadStandortCosts;
+window.downloadInvoicePdf = downloadInvoicePdf;
+window.loadStandortPayments = loadStandortPayments;
+window.showKommandoTab = showKommandoTab;
+// === END REGISTRATION ===

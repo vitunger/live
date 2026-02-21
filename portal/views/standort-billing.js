@@ -947,3 +947,38 @@ try {
 const _exports = {showHqShopTab,filterHqShopOrders,renderHqShop,renderHqShopOrders,renderHqShopProducts,getTrackingUrl,showPackingList,showTrackingModal,saveTracking,addHqShopProduct,showStBillingTab,initStandortBilling,loadStandortInvoices,showStandortInvoiceDetail,loadStandortStrategy,submitStandortStrategy,loadStandortCosts,downloadInvoicePdf,loadStandortPayments,showKommandoTab,applyKommandoPermissions,filterKzStandorte,filterKzMa,statusBadge,rolleBadge,rollenBadges,renderKzStandorte,openStandortDetailModal,closeStdDetailModal,selectWawi,renderKzMitarbeiter};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[standort-billing.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === WINDOW REGISTRATION ===
+// Auto-register 31 exports on window for onclick compatibility
+window.showHqShopTab = showHqShopTab;
+window.filterHqShopOrders = filterHqShopOrders;
+window.renderHqShop = renderHqShop;
+window.renderHqShopOrders = renderHqShopOrders;
+window.renderHqShopProducts = renderHqShopProducts;
+window.getTrackingUrl = getTrackingUrl;
+window.showPackingList = showPackingList;
+window.showTrackingModal = showTrackingModal;
+window.saveTracking = saveTracking;
+window.addHqShopProduct = addHqShopProduct;
+window.showStBillingTab = showStBillingTab;
+window.initStandortBilling = initStandortBilling;
+window.loadStandortInvoices = loadStandortInvoices;
+window.showStandortInvoiceDetail = showStandortInvoiceDetail;
+window.loadStandortStrategy = loadStandortStrategy;
+window.submitStandortStrategy = submitStandortStrategy;
+window.loadStandortCosts = loadStandortCosts;
+window.downloadInvoicePdf = downloadInvoicePdf;
+window.loadStandortPayments = loadStandortPayments;
+window.showKommandoTab = showKommandoTab;
+window.applyKommandoPermissions = applyKommandoPermissions;
+window.filterKzStandorte = filterKzStandorte;
+window.filterKzMa = filterKzMa;
+window.statusBadge = statusBadge;
+window.rolleBadge = rolleBadge;
+window.rollenBadges = rollenBadges;
+window.renderKzStandorte = renderKzStandorte;
+window.openStandortDetailModal = openStandortDetailModal;
+window.closeStdDetailModal = closeStdDetailModal;
+window.selectWawi = selectWawi;
+window.renderKzMitarbeiter = renderKzMitarbeiter;
+// === END REGISTRATION ===

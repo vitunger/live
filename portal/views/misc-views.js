@@ -8,6 +8,7 @@ function _sbProfile()    { return window.sbProfile; }
 function _escH(s)        { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
 function _t(k)           { return typeof window.t === 'function' ? window.t(k) : k; }
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
+function _showView(v) { if (window.showView) window._showView(v); }
 function _fmtN(n)        { return typeof window.fmtN === 'function' ? window.fmtN(n) : String(n); }
 function _triggerPush()  { if (typeof window.triggerPush === 'function') window.triggerPush.apply(null, arguments); }
 
@@ -575,9 +576,9 @@ export function switchViewMode(mode) {
     try { applyModulStatus(); } catch(e) { console.warn(e); }
 
     if(isHQ) {
-        showView('hqCockpit');
+        _showView('hqCockpit');
     } else {
-        showView('home');
+        _showView('home');
     }
 }
 
@@ -1467,3 +1468,52 @@ export function AgingBadge({deal}){
 const _exports = {loadHqPrio,saveHqPrio,resetHqPrio,getAllModulesFlat,getAufwandBadge,getTypBadge,getStatusBadge,filterModulStatus,onPrioDragStart,onPrioDragOver,onPrioDragLeave,onPrioDrop,moveHqPrio,renderModulStatus,renderDevStatus,showDevTab,renderReleaseUpdates,renderDevNutzung,toggleMobileSidebar,toggleSidebarCollapse,closeMobileSidebar,switchViewMode,initTrainingModule,getSimulatedResponse,generateEvaluation,startTraining,renderTrainingMessages,speakTraining,showTrainingWave,animateTrainingWave,hideTrainingWave,toggleTrainingMic,sendTrainingVoice,sendTrainingText,resetTrainingInput,processTrainingMessage,endTrainingSession,showTrainingEvaluation,restartTrainingScenario,backToTrainingMenu,mountReactPipeline,Particle,Heat,TodoBadge,AgingBadge,Card};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[misc-views.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === WINDOW REGISTRATION ===
+// Auto-register 45 exports on window for onclick compatibility
+window.loadHqPrio = loadHqPrio;
+window.saveHqPrio = saveHqPrio;
+window.resetHqPrio = resetHqPrio;
+window.getAllModulesFlat = getAllModulesFlat;
+window.getAufwandBadge = getAufwandBadge;
+window.getTypBadge = getTypBadge;
+window.getStatusBadge = getStatusBadge;
+window.filterModulStatus = filterModulStatus;
+window.onPrioDragStart = onPrioDragStart;
+window.onPrioDragOver = onPrioDragOver;
+window.onPrioDragLeave = onPrioDragLeave;
+window.onPrioDrop = onPrioDrop;
+window.moveHqPrio = moveHqPrio;
+window.renderModulStatus = renderModulStatus;
+window.renderDevStatus = renderDevStatus;
+window.showDevTab = showDevTab;
+window.renderReleaseUpdates = renderReleaseUpdates;
+window.renderDevNutzung = renderDevNutzung;
+window.toggleMobileSidebar = toggleMobileSidebar;
+window.toggleSidebarCollapse = toggleSidebarCollapse;
+window.closeMobileSidebar = closeMobileSidebar;
+window.switchViewMode = switchViewMode;
+window.initTrainingModule = initTrainingModule;
+window.getSimulatedResponse = getSimulatedResponse;
+window.generateEvaluation = generateEvaluation;
+window.startTraining = startTraining;
+window.renderTrainingMessages = renderTrainingMessages;
+window.speakTraining = speakTraining;
+window.showTrainingWave = showTrainingWave;
+window.animateTrainingWave = animateTrainingWave;
+window.hideTrainingWave = hideTrainingWave;
+window.toggleTrainingMic = toggleTrainingMic;
+window.sendTrainingVoice = sendTrainingVoice;
+window.sendTrainingText = sendTrainingText;
+window.resetTrainingInput = resetTrainingInput;
+window.processTrainingMessage = processTrainingMessage;
+window.endTrainingSession = endTrainingSession;
+window.showTrainingEvaluation = showTrainingEvaluation;
+window.restartTrainingScenario = restartTrainingScenario;
+window.backToTrainingMenu = backToTrainingMenu;
+window.mountReactPipeline = mountReactPipeline;
+window.Particle = Particle;
+window.Heat = Heat;
+window.TodoBadge = TodoBadge;
+window.AgingBadge = AgingBadge;
+// === END REGISTRATION ===

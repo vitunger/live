@@ -264,3 +264,17 @@ export function renderKontakte() {
 const _exports = {renderTickets,openTicketDetail,closeTicketDetail,changeTicketStatus,addTicketComment,filterTickets,sendTicket,submitTicketForm,showSupportTab,renderKontakte};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[support.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === WINDOW REGISTRATION ===
+// Auto-register 10 exports on window for onclick compatibility
+window.renderTickets = renderTickets;
+window.openTicketDetail = openTicketDetail;
+window.closeTicketDetail = closeTicketDetail;
+window.changeTicketStatus = changeTicketStatus;
+window.addTicketComment = addTicketComment;
+window.filterTickets = filterTickets;
+window.sendTicket = sendTicket;
+window.submitTicketForm = submitTicketForm;
+window.showSupportTab = showSupportTab;
+window.renderKontakte = renderKontakte;
+// === END REGISTRATION ===
