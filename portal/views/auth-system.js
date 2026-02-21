@@ -20,6 +20,7 @@ var sbStandort = window.sbStandort || null;
 var currentRole = window.currentRole || 'inhaber';
 var currentStandortId = window.currentStandortId || null;
 var currentLocation = window.currentLocation || 'grafrath';
+var currentLang = window.currentLang || 'de';
 var isPremium = window.isPremium || false;
 
 // === 3-EBENEN SYSTEM: HQ / Standort / Extern ===
@@ -1290,7 +1291,7 @@ if(tabName==='leads') { renderMktLeadChart(); }
 window.sbUser = sbUser; window.sbProfile = sbProfile; window.sbRollen = sbRollen;
 window.sbStandort = sbStandort; window.currentRole = currentRole; window.currentRoles = currentRoles;
 window.currentStandortId = currentStandortId; window.currentLocation = currentLocation;
-window.isPremium = isPremium; window.SESSION = SESSION;
+window.currentLang = currentLang; window.isPremium = isPremium; window.SESSION = SESSION;
 
 const _exports = {initMilestonesForStage,getMilestoneStatus,setMilestoneStatus,logOnboardingAction,evaluateTransitions,executeTransition,applyForPart1,updateLocationInfo,hasAccess,hasRole,hqCan,impersonateDemo,impersonateUser,_saveOrigState,_activateImpersonation,exitImpersonation,_restoreOrigState,quickLogin,showPasswordReset,closePwReset,submitPwReset,showRegistration,hideRegistration,submitRegistration,handleLogin,loadUserProfile,enterApp,checkDemoMode,showDemoBanner,removeDemoBanner,seedDemoData,clearDemoData,checkPendingApprovals,loadPipelineFromSupabase,handleLogout,checkSession,showChangePasswordModal,submitNewPassword,updateUIForRole,switchCommunicationTab,updatePremiumFeatures,showPremiumUpgradeModal,toggleDashboardEdit,addWidget,showMarketingTab};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });

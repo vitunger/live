@@ -2,6 +2,8 @@
  * views/strategie.js - Kommandozentrale Render, Strategie, Onboarding, HQ-Shop
  * @module views/strategie
  */
+var PORTAL_VERSION = window.PORTAL_VERSION || '7.2';
+
 function _sb()           { return window.sb; }
 function _sbUser()       { return window.sbUser; }
 function _sbProfile()    { return window.sbProfile; }
