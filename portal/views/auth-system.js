@@ -1131,9 +1131,10 @@ if(isHQ && hqMenu) {
     // Legacy HQ, GF → show everything (no hiding)
 }
 
-// HQ Impersonation buttons (show if real user is HQ or currently impersonating)
+// HQ Impersonation buttons (show if real user is HQ or currently impersonating, but NOT in demo mode)
 var sidebarBtmHQ = document.getElementById('sidebarBottomHQ');
-if(sidebarBtmHQ) sidebarBtmHQ.style.display = (isHQ || _impActive) ? '' : 'none';
+var isDemoActive = window.DEMO_ACTIVE || false;
+if(sidebarBtmHQ) sidebarBtmHQ.style.display = ((isHQ || _impActive) && !isDemoActive) ? '' : 'none';
 
 // ═══ EXTERN MENU ═══
 var isExtern = SESSION.account_level === 'extern';
