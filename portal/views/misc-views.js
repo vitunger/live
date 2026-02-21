@@ -230,7 +230,7 @@ export function renderDevStatus() {
     renderModulStatus();
     // Hide Portal-Nutzung tab for non-HQ users
     var nutzTab = document.getElementById('devStatusNutzungTab');
-    if(nutzTab) nutzTab.style.display = ((currentRoles||[]).indexOf('hq') !== -1) ? '' : 'none';
+    if(nutzTab) nutzTab.style.display = ((window.currentRoles||[]).indexOf('hq') !== -1) ? '' : 'none';
 }
 
 export function showDevTab(tab) {
@@ -556,17 +556,19 @@ export function closeMobileSidebar() {
 // === VIEW MODE SWITCHER (Partner vs HQ) ===
 export function switchViewMode(mode) {
     var isHQ = mode === 'hq';
+    var currentRoles = window.currentRoles || ['inhaber'];
 
     if(isHQ) {
-        currentRole = 'hq';
+        window.currentRole = 'hq';
         // Keep original roles but add hq
         if(currentRoles.indexOf('hq') < 0) currentRoles.push('hq');
     } else {
         // Remove hq from roles, restore original
         currentRoles = currentRoles.filter(function(r){ return r !== 'hq'; });
         if(currentRoles.length === 0) currentRoles = ['inhaber'];
-        currentRole = currentRoles[0];
+        window.currentRole = currentRoles[0];
     }
+    window.currentRoles = currentRoles;
 
     try { updateUIForRole(); } catch(e) { console.warn(e); }
     try { applyModulStatus(); } catch(e) { console.warn(e); }
@@ -578,8 +580,10 @@ export function switchViewMode(mode) {
     }
 }
 
-// Init: show partner mode by default
-switchViewMode('partner_grafrath');
+// Init: show partner mode by default (deferred until auth state is available)
+window.addEventListener('vit:modules-ready', function() {
+    if (typeof window.switchViewMode === 'function') switchViewMode('partner_grafrath');
+});
 
 // === SOCIAL MEDIA LOCAL HERO ===
 var smThemen = [

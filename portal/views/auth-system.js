@@ -12,6 +12,16 @@ function _showView(v) { if (window.showView) window.showView(v); }
 function _fmtN(n)        { return typeof window.fmtN === 'function' ? window.fmtN(n) : String(n); }
 function _triggerPush()  { if (typeof window.triggerPush === 'function') window.triggerPush.apply(null, arguments); }
 
+// === Shared auth state (module-scoped, exported to window via _exports) ===
+var sbUser = window.sbUser || null;
+var sbProfile = window.sbProfile || null;
+var sbRollen = window.sbRollen || [];
+var sbStandort = window.sbStandort || null;
+var currentRole = window.currentRole || 'inhaber';
+var currentStandortId = window.currentStandortId || null;
+var currentLocation = window.currentLocation || 'grafrath';
+var isPremium = window.isPremium || false;
+
 // === 3-EBENEN SYSTEM: HQ / Standort / Extern ===
 var SESSION = {
 account_level: 'standort', // 'hq' | 'standort' | 'extern'
@@ -1276,6 +1286,12 @@ if(tabName==='leads') { renderMktLeadChart(); }
 
 
 // Strangler Fig
+// Sync auth state to window for cross-module access
+window.sbUser = sbUser; window.sbProfile = sbProfile; window.sbRollen = sbRollen;
+window.sbStandort = sbStandort; window.currentRole = currentRole; window.currentRoles = currentRoles;
+window.currentStandortId = currentStandortId; window.currentLocation = currentLocation;
+window.isPremium = isPremium; window.SESSION = SESSION;
+
 const _exports = {initMilestonesForStage,getMilestoneStatus,setMilestoneStatus,logOnboardingAction,evaluateTransitions,executeTransition,applyForPart1,updateLocationInfo,hasAccess,hasRole,hqCan,impersonateDemo,impersonateUser,_saveOrigState,_activateImpersonation,exitImpersonation,_restoreOrigState,quickLogin,showPasswordReset,closePwReset,submitPwReset,showRegistration,hideRegistration,submitRegistration,handleLogin,loadUserProfile,enterApp,checkDemoMode,showDemoBanner,removeDemoBanner,seedDemoData,clearDemoData,checkPendingApprovals,loadPipelineFromSupabase,handleLogout,checkSession,showChangePasswordModal,submitNewPassword,updateUIForRole,switchCommunicationTab,updatePremiumFeatures,showPremiumUpgradeModal,toggleDashboardEdit,addWidget,showMarketingTab};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[auth-system.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');

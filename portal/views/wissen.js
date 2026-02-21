@@ -461,21 +461,31 @@ export function switchWissenTyp(t){
 }
 export function filterWissenGlobal(){ renderWissenGlobal(); }
 
-// Hook wissen rendering into tab switches
-var origShowAllgemeinTab = showAllgemeinTab;
-showAllgemeinTab = function(t) { origShowAllgemeinTab(t); if(t==='wissen') renderWissenTab('allgemein','allgTabWissen'); };
-
-var origShowMarketingTab = showMarketingTab;
-showMarketingTab = function(t) { origShowMarketingTab(t); if(t==='mktWissen') renderWissenTab('marketing','marketingTabMktWissen'); };
-
-var origShowEinkaufTab = showEinkaufTab;
-showEinkaufTab = function(t) { origShowEinkaufTab(t); if(t==='ekWissen') renderWissenTab('einkauf','ekTabEkWissen'); };
-
-
-var origShowVerkaufTab = showVerkaufTab;
-var ausLoaded = false;
-var vtLoaded = false;
-showVerkaufTab = function(t) { origShowVerkaufTab(t); if(t==='vkWissen') renderWissenTab('verkauf','vkTabVkWissen'); if(t==='auswertung' && !ausLoaded) { ausLoaded=true; loadAuswertung(); } if(t==='woche' && !vtLoaded) { vtLoaded=true; loadVerkaufTracking(); } if(t==='training') initTrainingModule(); };
+// Hook wissen rendering into tab switches (deferred until target functions exist)
+window.addEventListener('vit:modules-ready', function() {
+    // Wrap showAllgemeinTab
+    if (typeof window.showAllgemeinTab === 'function') {
+        var origShowAllgemeinTab = window.showAllgemeinTab;
+        window.showAllgemeinTab = function(t) { origShowAllgemeinTab(t); if(t==='wissen') renderWissenTab('allgemein','allgTabWissen'); };
+    }
+    // Wrap showMarketingTab
+    if (typeof window.showMarketingTab === 'function') {
+        var origShowMarketingTab = window.showMarketingTab;
+        window.showMarketingTab = function(t) { origShowMarketingTab(t); if(t==='mktWissen') renderWissenTab('marketing','marketingTabMktWissen'); };
+    }
+    // Wrap showEinkaufTab
+    if (typeof window.showEinkaufTab === 'function') {
+        var origShowEinkaufTab = window.showEinkaufTab;
+        window.showEinkaufTab = function(t) { origShowEinkaufTab(t); if(t==='ekWissen') renderWissenTab('einkauf','ekTabEkWissen'); };
+    }
+    // Wrap showVerkaufTab
+    if (typeof window.showVerkaufTab === 'function') {
+        var origShowVerkaufTab = window.showVerkaufTab;
+        var ausLoaded = false;
+        var vtLoaded = false;
+        window.showVerkaufTab = function(t) { origShowVerkaufTab(t); if(t==='vkWissen') renderWissenTab('verkauf','vkTabVkWissen'); if(t==='auswertung' && !ausLoaded) { ausLoaded=true; loadAuswertung(); } if(t==='woche' && !vtLoaded) { vtLoaded=true; loadVerkaufTracking(); } if(t==='training') initTrainingModule(); };
+    }
+});
 
 
 

@@ -787,6 +787,7 @@ showControllingTab = function(t) {
 
 // === LEAD REPORTING DASHBOARD (computed from hqStandorte) ===
 export function getLeadData() {
+    var hqStandorte = window.hqStandorte || [];
     // Standorte performance sorted
     var standorte = hqStandorte.map(function(s) {
         return { name: s.name, perf: s.leadPerf };
@@ -802,8 +803,8 @@ export function getLeadData() {
         { name: 'Nov', soll: 182.0 }, { name: 'Dez', soll: 108.2 }
     ];
     // Calculate actual totals from standorte
-    var totalIst = hqStandorte.reduce(function(a,s){ return a + s.umsatzIst; }, 0);
-    var totalLeads = hqStandorte.reduce(function(a,s){ return a + s.leads; }, 0);
+    var totalIst = (window.hqStandorte||[]).reduce(function(a,s){ return a + s.umsatzIst; }, 0);
+    var totalLeads = (window.hqStandorte||[]).reduce(function(a,s){ return a + s.leads; }, 0);
     var currentMonth = new Date().getMonth();
     if(currentMonth >= 0 && totalIst > 0) monate[0].ist = Math.round(totalIst * 0.4 / 1000);
     if(currentMonth >= 1 && totalIst > 0) monate[1].ist = Math.round(totalIst * 0.6 / 1000);
@@ -826,7 +827,7 @@ export function getPerformanceDot(perf) {
 }
 
 export async function renderLeadDashboard() {
-    try { if(hqStandorte.length === 0) await loadHqStandorte(); } catch(e) { console.warn('Lead dashboard: no HQ data'); }
+    try { if((window.hqStandorte||[]).length === 0 && typeof window.loadHqStandorte === 'function') await window.loadHqStandorte(); } catch(e) { console.warn('Lead dashboard: no HQ data'); }
     var leadData = getLeadData();
     if(!leadData || !leadData.monate) return;
     // Chart Bars
@@ -877,8 +878,10 @@ export async function renderLeadDashboard() {
     tbody.innerHTML = rowsHtml;
 }
 
-// Render on load
-renderLeadDashboard();
+// Render on load (deferred until HQ data might be available)
+window.addEventListener('vit:modules-ready', function() {
+    if (typeof window.renderLeadDashboard === 'function') renderLeadDashboard();
+});
 
 
 
