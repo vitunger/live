@@ -515,10 +515,10 @@ export async function renderEntwNutzung() {
     try {
         // Parallel load all relevant data
         var [usersResp, loginsResp, bwaResp, tasksResp, msgsResp, subsResp] = await Promise.all([
-            _sb().from('users').select('id, name, rolle, standort_id, last_login, created_at, standorte(name)').order('last_login', {ascending:false,nullsFirst:false}),
+            _sb().from('users').select('id, name, is_hq, standort_id, created_at, standorte(name), user_rollen(rollen(name,label))').order('updated_at', {ascending:false,nullsFirst:false}),
             _sb().from('audit_log').select('user_id, action, created_at').eq('action','login').gte('created_at', new Date(Date.now()-30*86400000).toISOString()).order('created_at',{ascending:false}).limit(500),
-            _sb().from('bwa_uploads').select('standort_id, created_at, monat, jahr').order('created_at',{ascending:false}).limit(100),
-            _sb().from('tasks').select('id, assignee_id, completed, created_at').gte('created_at', new Date(Date.now()-30*86400000).toISOString()),
+            _sb().from('bwa_daten').select('standort_id, created_at, monat, jahr').order('created_at',{ascending:false}).limit(100),
+            _sb().from('todos').select('id, zugewiesen_an, erledigt, created_at').gte('created_at', new Date(Date.now()-30*86400000).toISOString()),
             _sb().from('nachrichten').select('id, autor_id, created_at').gte('created_at', new Date(Date.now()-30*86400000).toISOString()).limit(500),
             _sb().from('dev_submissions').select('id, user_id, created_at, status')
         ]);
@@ -535,14 +535,18 @@ export async function renderEntwNutzung() {
         var loginsToday = logins.filter(function(l){ return new Date(l.created_at).toDateString() === new Date().toDateString(); }).length;
         var loginsWeek = logins.filter(function(l){ return Date.now() - new Date(l.created_at).getTime() < 7*86400000; }).length;
         var tasksCreated = tasks.length;
-        var tasksCompleted = tasks.filter(function(t){return t.completed}).length;
+        var tasksCompleted = tasks.filter(function(t){return t.erledigt}).length;
         var bwaCount = bwas.length;
         var msgCount = msgs.length;
         var feedbackCount = subs.length;
 
-        // Users by role
+        // Users by role (from user_rollen join)
         var roleCounts = {};
-        users.forEach(function(u) { roleCounts[u.rolle] = (roleCounts[u.rolle]||0) + 1; });
+        users.forEach(function(u) { 
+            var rollen = (u.user_rollen||[]).map(function(ur){return ur.rollen?ur.rollen.label:'';}).filter(Boolean);
+            if(rollen.length===0) rollen = [u.is_hq ? 'HQ' : 'Keine Rolle'];
+            rollen.forEach(function(r){ roleCounts[r] = (roleCounts[r]||0) + 1; });
+        });
 
         // Login heatmap (last 14 days)
         var dayLabels = [];
@@ -560,13 +564,17 @@ export async function renderEntwNutzung() {
         logins.forEach(function(l){ userLoginCount[l.user_id] = (userLoginCount[l.user_id]||0)+1; });
         var topUsers = Object.keys(userLoginCount).map(function(uid){
             var u = users.find(function(x){return x.id===uid});
-            return {name: u?u.name:'Unbekannt', standort: u&&u.standorte?u.standorte.name:'–', logins: userLoginCount[uid], rolle: u?u.rolle:'?'};
+            var rollen = u ? (u.user_rollen||[]).map(function(ur){return ur.rollen?ur.rollen.label:'';}).filter(Boolean).join(', ') : '?';
+            return {name: u?u.name:'Unbekannt', standort: u&&u.standorte?u.standorte.name:'–', logins: userLoginCount[uid], rolle: rollen||'?'};
         }).sort(function(a,b){return b.logins-a.logins}).slice(0,10);
 
-        // Never logged in
-        var neverLogged = users.filter(function(u){ return !u.last_login; });
-        // Inactive > 14 days
-        var inactive14d = users.filter(function(u){ return u.last_login && (Date.now() - new Date(u.last_login).getTime() > 14*86400000); });
+        // Never logged in (not in audit_log at all)
+        var loggedUserIds = new Set(logins.map(function(l){return l.user_id;}));
+        var neverLogged = users.filter(function(u){ return !loggedUserIds.has(u.id); });
+        // Inactive > 14 days (last login older than 14 days)
+        var lastLoginMap = {};
+        logins.forEach(function(l){ if(!lastLoginMap[l.user_id] || l.created_at > lastLoginMap[l.user_id]) lastLoginMap[l.user_id] = l.created_at; });
+        var inactive14d = users.filter(function(u){ return lastLoginMap[u.id] && (Date.now() - new Date(lastLoginMap[u.id]).getTime() > 14*86400000); });
 
         var h = '';
         // KPI Cards
@@ -656,7 +664,10 @@ export async function renderEntwNutzung() {
             if(neverLogged.length > 0) {
                 h += '<div class="vit-card p-4 border-l-4 border-red-400"><h4 class="text-sm font-bold text-red-600 mb-2">⚠️ Nie eingeloggt ('+neverLogged.length+')</h4>';
                 h += '<div class="space-y-1">';
-                neverLogged.slice(0,10).forEach(function(u) { h += '<p class="text-xs text-gray-600">'+u.name+' <span class="text-gray-400">('+(u.rolle||'?')+')</span></p>'; });
+                neverLogged.slice(0,10).forEach(function(u) { 
+                    var rLabel = (u.user_rollen||[]).map(function(ur){return ur.rollen?ur.rollen.label:'';}).filter(Boolean).join(', ') || '?';
+                    h += '<p class="text-xs text-gray-600">'+u.name+' <span class="text-gray-400">('+rLabel+')</span></p>'; 
+                });
                 if(neverLogged.length>10) h += '<p class="text-xs text-gray-400">... und '+(neverLogged.length-10)+' weitere</p>';
                 h += '</div></div>';
             }
@@ -664,8 +675,10 @@ export async function renderEntwNutzung() {
                 h += '<div class="vit-card p-4 border-l-4 border-yellow-400"><h4 class="text-sm font-bold text-yellow-700 mb-2">😴 Inaktiv >14 Tage ('+inactive14d.length+')</h4>';
                 h += '<div class="space-y-1">';
                 inactive14d.slice(0,10).forEach(function(u) {
-                    var days = Math.round((Date.now()-new Date(u.last_login).getTime())/86400000);
-                    h += '<p class="text-xs text-gray-600">'+u.name+' <span class="text-gray-400">('+days+' Tage, '+(u.rolle||'?')+')</span></p>';
+                    var lastLogin = lastLoginMap[u.id];
+                    var days = lastLogin ? Math.round((Date.now()-new Date(lastLogin).getTime())/86400000) : '?';
+                    var rLabel = (u.user_rollen||[]).map(function(ur){return ur.rollen?ur.rollen.label:'';}).filter(Boolean).join(', ') || '?';
+                    h += '<p class="text-xs text-gray-600">'+u.name+' <span class="text-gray-400">('+days+' Tage, '+rLabel+')</span></p>';
                 });
                 if(inactive14d.length>10) h += '<p class="text-xs text-gray-400">... und '+(inactive14d.length-10)+' weitere</p>';
                 h += '</div></div>';
