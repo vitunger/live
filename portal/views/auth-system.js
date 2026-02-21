@@ -697,6 +697,7 @@ window.isPremium = isPremium;
 // Module-Status: 'demo' = fake data (orange), 'teilweise'/'stub' = beta (purple), undefined = live
 
 export function enterApp() {
+var splash = document.getElementById('appSplash'); if(splash) splash.remove();
 var userName = _sbProfile() ? _sbProfile().name : 'Benutzer';
 var firstName = userName.split(' ')[0];
 var nameEl = document.querySelector('[data-user-name]');
@@ -915,6 +916,7 @@ export async function handleLogout() {
 await _sb().auth.signOut();
 sbUser = null; sbProfile = null; sbRollen = []; sbStandort = null;
 window.sbUser = null; window.sbProfile = null; window.sbRollen = []; window.sbStandort = null;
+var splash = document.getElementById('appSplash'); if(splash) splash.remove();
 document.getElementById('loginScreen').style.display = 'flex';
 document.getElementById('mainApp').style.display = 'none';
 document.getElementById('homeView').style.display = 'none';
@@ -946,6 +948,7 @@ if(resp.data.session && resp.data.session.user) {
         var profileResp = await _sb().from('users').select('status').eq('id', _sbUser().id).single();
         
         if(profileResp.data && (profileResp.data.status === 'pending' || profileResp.data.status === 'onboarding')) {
+            var _spl = document.getElementById('appSplash'); if(_spl) _spl.remove();
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('pendingScreen').style.display = 'flex';
             var pe = document.getElementById('pendingEmail');
@@ -953,6 +956,7 @@ if(resp.data.session && resp.data.session.user) {
             return;
         }
         if(profileResp.data && (profileResp.data.status === 'offboarding' || profileResp.data.status === 'gesperrt')) {
+            var _spl2 = document.getElementById('appSplash'); if(_spl2) _spl2.remove();
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('blockedScreen').style.display = 'flex';
             return;
@@ -962,8 +966,15 @@ if(resp.data.session && resp.data.session.user) {
         await loadModulStatus();
         await loadFeatureFlags();
         enterApp();
-    } catch(e) { console.warn('Auto-login failed:', e); }
+    } catch(e) { console.warn('Auto-login failed:', e); _showLogin(); }
+} else {
+    _showLogin();
 }
+}
+
+function _showLogin() {
+    var splash = document.getElementById('appSplash'); if(splash) splash.remove();
+    document.getElementById('loginScreen').style.display = 'flex';
 }
 
 export function showChangePasswordModal() {
