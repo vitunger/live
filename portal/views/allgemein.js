@@ -597,21 +597,8 @@ export function renderHqAllgemein(standorte, monatsplaene, journals, jahresziele
 
 export function viewPartnerDetails(standortId) { alert('Partner-Detail für Standort ' + standortId + ' – wird in nächster Iteration implementiert'); }
 
-// ============================================================
-// _showView() HOOKS – Diese 2 Zeilen in _showView() ergänzen:
-// ============================================================
-// if(viewName === 'allgemein') loadAllgemeinData();
-// if(viewName === 'hqAllgemein') loadHqAllgemeinData();
-
-
-var origShowView = showView;
-showView = function(v) {
-    origShowView(v);
-    if(v==='support') { renderTickets('all'); renderKontakte(); }
-    if(v==='entwicklung') { renderEntwicklung(); }
-    if(v==='wissen') { renderWissenGlobal(); }
-    if(v==='shop') { shopAllProducts=[]; shopVariants={}; renderShop(); }
-};
+// NOTE: View render triggers (support, entwicklung, wissen, shop) are now 
+// handled by view-router.js via 'vit:view-changed' events.
 
 
 
