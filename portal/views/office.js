@@ -1202,10 +1202,8 @@ export async function handleQR(token) {
 // ═══════════════════════════════════════════════════════════
 // STARTUP + Strangler Fig
 // ═══════════════════════════════════════════════════════════
-var _sv = window.showView;
-if (typeof _sv === 'function') {
-    window.showView = function(v) { _sv(v); if (v === 'hqOffice') init(); };
-}
+// NOTE: Office init on view switch is now handled by view-router.js
+// via 'vit:view-changed' event (hqOffice → _mountVitSpaceOffice).
 var _w = setInterval(function() {
     if (_sb() && _sbUser()) { clearInterval(_w); load().then(function() { updateBadge(); }); }
 }, 1000);
