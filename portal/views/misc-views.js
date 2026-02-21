@@ -550,12 +550,8 @@ export function closeMobileSidebar() {
     if(sidebar) sidebar.classList.remove('mobile-open');
     if(overlay) overlay.classList.remove('active');
 }
-// Auto-close sidebar on navigation (mobile)
-var origShowViewMobile = showView;
-showView = function(v) {
-    closeMobileSidebar();
-    origShowViewMobile(v);
-};
+// NOTE: Mobile sidebar auto-close on navigation is now handled by 
+// view-router.js via 'vit:view-changed' event listener.
 
 // === VIEW MODE SWITCHER (Partner vs HQ) ===
 export function switchViewMode(mode) {
