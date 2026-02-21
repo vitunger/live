@@ -688,7 +688,7 @@ if(welcomeEl) {
 // Dynamic date (language-aware)
 var dateEl = document.getElementById('welcomeDate');
 var now = new Date();
-export function getDateStr(lng) {
+function getDateStr(lng) {
     var dD = {de:['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'],en:['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],nl:['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag']};
     var mD = {de:['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'],en:['January','February','March','April','May','June','July','August','September','October','November','December'],nl:['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']};
     var pre = {de:'Heute ist ',en:'Today is ',nl:'Vandaag is '};
