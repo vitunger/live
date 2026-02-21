@@ -112,6 +112,8 @@ export function showDashboardTab(tabName) {
 // ═══════════════════════════════════════════════════════════════════
 
 export async function loadDashboardWidgets() {
+    // In demo mode, widgets are filled by fillDemoWidgets - skip DB queries
+    if (window.DEMO_ACTIVE) return;
     try {
         await Promise.all([
             loadWidgetPipeline(),
@@ -494,7 +496,162 @@ export function fillDemoWidgets(level, stage) {
     setTimeout(function() {
         var wt2 = document.getElementById('welcomeText');
         if (wt2) wt2.textContent = level === 'hq' ? 'Willkommen im HQ! 👋' : 'Willkommen! 👋';
+
+        if (level === 'hq') return; // HQ has own demo fill
+
+        // ── Pipeline Widget ──
+        var pip = document.getElementById('wPipelineContent');
+        var pipBadge = document.getElementById('wPipelineBadge');
+        if (pipBadge) pipBadge.textContent = '7 aktiv';
+        if (pip) pip.innerHTML = '<div class="space-y-3">'
+            + '<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Offene Leads</span><span class="font-bold text-blue-600">7</span></div>'
+            + '<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Angebote offen</span><span class="font-bold text-orange-600">3</span></div>'
+            + '<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Pipeline-Wert</span><span class="font-bold text-green-600">18.450 €</span></div>'
+            + '</div>';
+
+        // ── Verkaufserfolg Widget ──
+        var suc = document.getElementById('wSuccessContent');
+        var sucKW = document.getElementById('wSuccessKW');
+        if (sucKW) sucKW.textContent = 'KW 8';
+        if (suc) suc.innerHTML = '<div class="mb-3"><div class="flex items-center justify-between mb-1"><span class="text-sm text-gray-600">Verkaufsquote</span>'
+            + '<span class="text-2xl font-bold text-green-600">42%</span></div>'
+            + '<div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-green-500 h-2 rounded-full" style="width:42%"></div></div></div>'
+            + '<div class="grid grid-cols-2 gap-2 text-sm"><div><p class="text-gray-500">Verkäufe</p><p class="font-bold text-gray-800">5</p></div>'
+            + '<div><p class="text-gray-500">Beratungen</p><p class="font-bold text-gray-800">12</p></div></div>';
+
+        // ── Termine Heute Widget ──
+        var ter = document.getElementById('wTermineContent');
+        var terBadge = document.getElementById('wTermineCount');
+        if (terBadge) terBadge.textContent = '3';
+        if (ter) ter.innerHTML = '<div class="space-y-2">'
+            + '<div class="p-2.5 bg-blue-50 rounded-lg"><p class="text-sm font-semibold text-gray-800">09:00 - Werkstatt-Meeting</p><p class="text-xs text-gray-600">Wochenbesprechung Team</p></div>'
+            + '<div class="p-2.5 bg-purple-50 rounded-lg"><p class="text-sm font-semibold text-gray-800">11:30 - Kundenberatung E-Bike</p><p class="text-xs text-gray-600">Herr Müller, Cube Reaction Hybrid</p></div>'
+            + '<div class="p-2.5 bg-green-50 rounded-lg"><p class="text-sm font-semibold text-gray-800">14:00 - Lieferant Telefonat</p><p class="text-xs text-gray-600">Giant DE, Saison-Konditionen</p></div>'
+            + '</div>';
+
+        // ── Offene Aufgaben Widget ──
+        var auf = document.getElementById('wAufgabenContent');
+        var aufBadge = document.getElementById('wAufgabenCount');
+        if (aufBadge) aufBadge.textContent = '5+';
+        if (auf) auf.innerHTML = '<div class="space-y-2">'
+            + '<div class="flex items-start space-x-2"><input type="checkbox" class="mt-0.5 rounded border-gray-300 accent-orange-500" disabled><span class="text-sm text-red-600">BWA Februar hochladen ⏰</span></div>'
+            + '<div class="flex items-start space-x-2"><input type="checkbox" class="mt-0.5 rounded border-gray-300 accent-orange-500" disabled><span class="text-sm text-gray-700">Schaufenster-Deko Frühjahr</span></div>'
+            + '<div class="flex items-start space-x-2"><input type="checkbox" class="mt-0.5 rounded border-gray-300 accent-orange-500" disabled><span class="text-sm text-gray-700">Google-Bewertungen beantworten</span></div>'
+            + '<div class="flex items-start space-x-2"><input type="checkbox" class="mt-0.5 rounded border-gray-300 accent-orange-500" disabled><span class="text-sm text-gray-700">Inventur E-Bike-Akkus</span></div>'
+            + '<div class="flex items-start space-x-2"><input type="checkbox" class="mt-0.5 rounded border-gray-300 accent-orange-500" disabled><span class="text-sm text-gray-700">Werkstatt-Preisliste aktualisieren</span></div>'
+            + '</div>';
+
+        // ── Marketing Widget ──
+        var mkt = document.getElementById('wMarketingContent');
+        if (mkt) mkt.innerHTML = '<div class="space-y-3">'
+            + '<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Social Media Posts</span><span class="font-bold text-blue-600">12 / Monat</span></div>'
+            + '<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Google-Bewertung</span><span class="font-bold text-green-600">4.6 ⭐</span></div>'
+            + '<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Website-Besucher</span><span class="font-bold text-purple-600">847</span></div>'
+            + '</div>';
+
+        // ── Team Widget ──
+        var team = document.getElementById('wTeamContent');
+        if (team) team.innerHTML = '<div class="space-y-2">'
+            + '<div class="flex items-center justify-between"><div class="flex items-center space-x-2"><span>🏢</span><span class="text-sm font-semibold text-gray-800">Max M.</span></div><span class="text-xs text-green-600">● aktiv</span></div>'
+            + '<div class="flex items-center justify-between"><div class="flex items-center space-x-2"><span>💰</span><span class="text-sm font-semibold text-gray-800">Lisa K.</span></div><span class="text-xs text-green-600">● aktiv</span></div>'
+            + '<div class="flex items-center justify-between"><div class="flex items-center space-x-2"><span>🔧</span><span class="text-sm font-semibold text-gray-800">Tom S.</span></div><span class="text-xs text-green-600">● aktiv</span></div>'
+            + '<div class="flex items-center justify-between"><div class="flex items-center space-x-2"><span>🔧</span><span class="text-sm font-semibold text-gray-800">Sarah B.</span></div><span class="text-xs text-yellow-600">● Urlaub</span></div>'
+            + '</div>';
+
+        // ── Controlling Widget ──
+        var ctrl = document.getElementById('wControllingContent');
+        if (ctrl) ctrl.innerHTML = '<div class="space-y-3">'
+            + '<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Umsatz Jan</span><span class="font-bold text-gray-800">52.300 €</span></div>'
+            + '<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Rohertrag</span><span class="font-bold text-green-600">38,2%</span></div>'
+            + '<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Personalkosten</span><span class="font-bold text-orange-600">22,1%</span></div>'
+            + '<div class="w-full bg-gray-200 rounded-full h-1.5 mt-1"><div class="bg-green-500 h-1.5 rounded-full" style="width:65%"></div></div>'
+            + '<p class="text-[10px] text-gray-400 text-right">Ziel: 55.000 € (95%)</p>'
+            + '</div>';
+
+        // ── Support Widget ──
+        var sup = document.getElementById('wSupportContent');
+        var supBadge = document.getElementById('wSupportCount');
+        if (supBadge) supBadge.textContent = '2';
+        if (sup) sup.innerHTML = '<div class="space-y-2">'
+            + '<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Offene Tickets</span><span class="font-bold text-yellow-600">2</span></div>'
+            + '<div class="flex items-center justify-between"><span class="text-sm text-gray-600">Gelöst diese Woche</span><span class="font-bold text-green-600">3</span></div>'
+            + '<div class="p-2 bg-yellow-50 rounded-lg mt-1"><p class="text-xs text-gray-700">📨 WaWi-Import fehlerhaft – <span class="text-yellow-600 font-semibold">In Bearbeitung</span></p></div>'
+            + '</div>';
+
+        // ── Wissen Widget ──
+        var wis = document.getElementById('wWissenContent');
+        if (wis) wis.innerHTML = '<div class="space-y-2">'
+            + '<div class="p-2 bg-blue-50 rounded-lg"><p class="text-sm font-semibold text-gray-800">📖 E-Bike Verkaufsargumente 2026</p><p class="text-[10px] text-gray-500">Neu • vor 2 Tagen</p></div>'
+            + '<div class="p-2 bg-green-50 rounded-lg"><p class="text-sm font-semibold text-gray-800">🎥 Video: Frühjahrs-Check Workshop</p><p class="text-[10px] text-gray-500">Akademie • vor 5 Tagen</p></div>'
+            + '<div class="p-2 bg-purple-50 rounded-lg"><p class="text-sm font-semibold text-gray-800">📋 Checkliste Saison-Start</p><p class="text-[10px] text-gray-500">Best Practice • vor 1 Woche</p></div>'
+            + '</div>';
+
+        // ── Nachrichten HQ Widget ──
+        var msg = document.getElementById('wNachrichtenContent');
+        if (msg) msg.innerHTML = '<div class="space-y-2">'
+            + '<div class="p-2 bg-orange-50 rounded-lg"><p class="text-sm font-semibold text-gray-800">📢 Neue Saison-Konditionen Giant</p><p class="text-[10px] text-gray-500">HQ • vor 1 Tag</p></div>'
+            + '<div class="p-2 bg-blue-50 rounded-lg"><p class="text-sm font-semibold text-gray-800">📅 Inhaber-Call am 05.03.</p><p class="text-[10px] text-gray-500">HQ • vor 3 Tagen</p></div>'
+            + '</div>';
+
+        // ── Monatsfokus Widget ──
+        var mfContent = document.getElementById('homeMonatsfokusContent');
+        var mfMonat = document.getElementById('homeMonatsfokusMonat');
+        if (mfMonat) mfMonat.textContent = 'Februar 2026';
+        if (mfContent) mfContent.innerHTML = '<p class="font-bold text-gray-800">Frühjahrs-Offensive starten</p>'
+            + '<p class="text-xs text-gray-500 mt-1">Schaufenster umgestalten, E-Bike Probefahrt-Aktion, Social Media Push</p>';
+
+        // ── Jahresziele Widget ──
+        var jzContent = document.getElementById('homeJahreszieleContent');
+        var jzCount = document.getElementById('homeJahreszieleCount');
+        if (jzCount) jzCount.textContent = '3 Ziele';
+        if (jzContent) jzContent.innerHTML = ''
+            + '<div class="mb-2"><div class="flex justify-between text-xs"><span class="font-semibold text-gray-700 truncate">Umsatz 650.000 €</span><span>8%</span></div><div class="w-full bg-gray-200 rounded-full h-1.5 mt-0.5"><div class="bg-vit-orange h-1.5 rounded-full" style="width:8%"></div></div></div>'
+            + '<div class="mb-2"><div class="flex justify-between text-xs"><span class="font-semibold text-gray-700 truncate">Rohertrag ≥ 38%</span><span>100%</span></div><div class="w-full bg-gray-200 rounded-full h-1.5 mt-0.5"><div class="bg-green-500 h-1.5 rounded-full" style="width:100%"></div></div></div>';
+
+        // ── Journal Widget ──
+        var jContent = document.getElementById('homeJournalContent');
+        var jDatum = document.getElementById('homeJournalDatum');
+        if (jDatum) jDatum.textContent = '14.02.2026';
+        if (jContent) jContent.innerHTML = '<div class="flex items-center space-x-2 mb-1"><span>😊</span><span class="text-sm font-semibold">Partnergespräch</span></div>'
+            + '<p class="text-xs text-gray-500 line-clamp-2">Guter Start ins neue Jahr. Umsatz leicht über Plan, Werkstattauslastung steigt.</p>';
+
+        // ── Maßnahmen Widget ──
+        var maContent = document.getElementById('homeMassnahmenContent');
+        var maCount = document.getElementById('homeMassnahmenCount');
+        if (maCount) maCount.textContent = '2 offen';
+        if (maContent) maContent.innerHTML = '<p class="text-sm text-gray-700 mb-1">• Frühjahrs-Schaufenster bis KW 10</p>'
+            + '<p class="text-sm text-gray-700 mb-1">• Google Ads Budget erhöhen</p>';
+
+        // ── Kalender: inject demo events ──
+        _fillDemoKalender();
+
     }, 200);
+}
+
+function _fillDemoKalender() {
+    // If kalender module is loaded, inject demo termine
+    if (typeof window.kalTermine === 'undefined') window.kalTermine = [];
+    var today = new Date();
+    var y = today.getFullYear(), m = today.getMonth(), d = today.getDate();
+    var demoTermine = [
+        { id:'demo-1', title:'Werkstatt-Meeting', date:_dStr(y,m,d), time:'09:00', endTime:'09:45', type:'meeting', user:'all', notes:'Wochenbesprechung', ganztaegig:false },
+        { id:'demo-2', title:'Kundenberatung E-Bike', date:_dStr(y,m,d), time:'11:30', endTime:'12:15', type:'beratung', user:'all', notes:'Herr Müller, Cube Reaction Hybrid', ganztaegig:false },
+        { id:'demo-3', title:'Lieferant Giant DE', date:_dStr(y,m,d), time:'14:00', endTime:'14:30', type:'sonstig', user:'all', notes:'Saison-Konditionen besprechen', ganztaegig:false },
+        { id:'demo-4', title:'Probefahrt-Tag E-MTB', date:_dStr(y,m,d+2), time:'10:00', endTime:'17:00', type:'event', user:'all', notes:'Aktionstag mit Testbikes', ganztaegig:false },
+        { id:'demo-5', title:'BWA-Abgabe', date:_dStr(y,m,d+5), time:'00:00', endTime:null, type:'deadline', user:'all', notes:'Monatliche BWA an HQ', ganztaegig:true },
+        { id:'demo-6', title:'Inhaber-Call', date:_dStr(y,m,d+7), time:'10:00', endTime:'11:00', type:'meeting', user:'all', notes:'Monatlicher Netzwerk-Call', ganztaegig:false },
+        { id:'demo-7', title:'Frühjahrs-Aktion Start', date:_dStr(y,m,d+10), time:'00:00', endTime:null, type:'event', user:'all', notes:'Rabattaktion E-Bikes', ganztaegig:true }
+    ];
+    window.kalTermine = demoTermine;
+    // Re-render if kalender view is visible
+    if (typeof window.kalRenderActive === 'function') {
+        try { window.kalRenderActive(); } catch(e) {}
+    }
+}
+
+function _dStr(y, m, d) {
+    var dt = new Date(y, m, d);
+    return dt.toISOString().slice(0, 10);
 }
 
 
@@ -502,7 +659,7 @@ export function fillDemoWidgets(level, stage) {
 //  STRANGLER FIG: window.* registration for onclick compatibility
 // ═══════════════════════════════════════════════════════════════════
 
-const _exports = {addWidget,showDashboardTab,loadWidgetPipeline,loadWidgetSuccess,loadWidgetTermine,loadWidgetAufgaben,quickToggleTodo,loadWidgetMarketing,loadWidgetTeam,loadWidgetControlling,loadWidgetSupport,loadWidgetWissen,loadWidgetNachrichten,getKWMonday,getKWSunday};
+const _exports = {addWidget,showDashboardTab,loadDashboardWidgets,loadWidgetPipeline,loadWidgetSuccess,loadWidgetTermine,loadWidgetAufgaben,quickToggleTodo,loadWidgetMarketing,loadWidgetTeam,loadWidgetControlling,loadWidgetSupport,loadWidgetWissen,loadWidgetNachrichten,getKWMonday,getKWSunday,fillDemoWidgets};
 
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 

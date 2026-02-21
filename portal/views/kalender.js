@@ -377,6 +377,8 @@ export function renderKalDay(){
 }
 
 export async function loadKalTermine() {
+    // In demo mode, termine are injected by fillDemoWidgets
+    if (window.DEMO_ACTIVE) { kalRenderActive(); return; }
     try {
         var query = _sb().from('termine').select('*').order('start_zeit', {ascending:true});
         if(_sbProfile() && _sbProfile().standort_id && !_sbProfile().is_hq) query = query.eq('standort_id', _sbProfile().standort_id);
