@@ -6275,26 +6275,36 @@
                                 <span class="text-2xl">🏢</span>
                                 <div>
                                     <h3 class="font-bold text-gray-800">Office-Räume & Plätze verwalten</h3>
-                                    <p class="text-xs text-gray-500 mt-0.5">Plätze auf dem Grundriss per Drag & Drop positionieren. Räume benennen und Plätze zuordnen.</p>
+                                    <p class="text-xs text-gray-500 mt-0.5">Grundriss hochladen, Räume anlegen, Plätze per Drag & Drop positionieren.</p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Floor plan ALWAYS visible on top with interactive desk positioning -->
+                        <!-- Floor plan with interactive desk positioning -->
                         <div class="vit-card p-4 mb-4">
-                            <div class="flex items-center justify-between mb-3">
-                                <div class="text-sm font-bold text-gray-700">📐 Grundriss OG · Jahnstraße 2</div>
-                                <label class="flex items-center gap-2 text-[11px] cursor-pointer"><input type="checkbox" id="officeAdminDragMode" onchange="if(typeof officeToggleDragMode==='function')officeToggleDragMode()" class="accent-orange-500"> <span style="color:#EF7D00;font-weight:700">Plätze verschieben</span></label>
+                            <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+                                <div class="text-sm font-bold text-gray-700">📐 Grundriss</div>
+                                <div class="flex items-center gap-3">
+                                    <button onclick="if(typeof officeUploadGrundriss==='function')officeUploadGrundriss()" class="text-xs px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 font-semibold transition">📤 Grundriss hochladen</button>
+                                    <label class="flex items-center gap-2 text-[11px] cursor-pointer"><input type="checkbox" id="officeAdminDragMode" onchange="if(typeof officeToggleDragMode==='function')officeToggleDragMode()" class="accent-orange-500"> <span style="color:#EF7D00;font-weight:700">Plätze verschieben</span></label>
+                                </div>
                             </div>
                             <div id="officeFloorplanContainer" style="position:relative;overflow:auto">
-                                <img src="grundriss_og.png" style="width:100%;min-width:700px;display:block;border-radius:8px;opacity:0.92" onload="if(typeof officeRenderAdminDots==='function')officeRenderAdminDots()">
-                                <div id="officeAdminDots" style="position:absolute;top:0;left:0;right:0;bottom:0"></div>
+                                <img id="officeGrundrissImg" src="grundriss_og.png" style="width:100%;min-width:700px;display:block;border-radius:8px;opacity:0.92"
+                                     onload="this.dataset.loaded='1';if(typeof officeRenderAdminDots==='function')officeRenderAdminDots()"
+                                     onerror="this.style.display='none';document.getElementById('officeGrundrissPlaceholder').style.display='flex'">
+                                <div id="officeGrundrissPlaceholder" style="display:none;width:100%;min-height:400px;background:#f3f4f6;border-radius:8px;align-items:center;justify-content:center;flex-direction:column;gap:12px;border:2px dashed #d1d5db">
+                                    <span style="font-size:48px">🏢</span>
+                                    <p class="text-sm text-gray-400 font-semibold">Kein Grundriss vorhanden</p>
+                                    <button onclick="if(typeof officeUploadGrundriss==='function')officeUploadGrundriss()" class="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600">📤 Grundriss hochladen</button>
+                                </div>
+                                <div id="officeAdminDots" style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none"></div>
                             </div>
                             <div class="flex flex-wrap gap-2 mt-3" id="officeRoomLegend"></div>
                             <div class="text-[10px] text-gray-400 mt-1" id="officeAdminDragHint">Aktiviere "Plätze verschieben" um Dots per Drag & Drop auf dem Grundriss zu positionieren.</div>
                         </div>
                         
-                        <!-- Room management below -->
+                        <!-- Room & desk management below -->
                         <div id="officeRoomsAdmin"></div>
                     </div>
 
@@ -13978,7 +13988,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
 <!-- ==================== OFFICE MODUL v4 (VitSpace React) ==================== -->
 <!-- Legacy Office v3 replaced by React-based VitSpace Office -->
 <!-- Office React component removed - now loaded via /portal/views/office.js -->
-
+<script src="/portal/views/office-admin.js"></script>
 
 <script type="module" src="/portal/app.js"></script>
 </body>
