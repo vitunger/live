@@ -539,6 +539,7 @@ export function saveSalesData() {
 // ============================================================
 
 
-const _exports = {t,switchSmSub,filterSmThemen,renderSmThemen,renderSmRanking,showView,showModuleVersionBadge,loadAsanaOnboarding,loadDemoTasks,groupTasksBySections,renderAsanaTasks,renderSection,getSectionIcon,renderTask,toggleTaskCompletion,updateSalesData,saveSalesData};
+// showView + showModuleVersionBadge removed - provided by strategie.js
+const _exports = {t,switchSmSub,filterSmThemen,renderSmThemen,renderSmRanking,loadAsanaOnboarding,loadDemoTasks,groupTasksBySections,renderAsanaTasks,renderSection,getSectionIcon,renderTask,toggleTaskCompletion,updateSalesData,saveSalesData};
 Object.entries(_exports).forEach(([k,fn])=>{window[k]=fn;});
 console.log("[router.js] "+Object.keys(_exports).length+" exports");
