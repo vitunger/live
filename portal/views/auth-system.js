@@ -902,6 +902,7 @@ try {
 export async function handleLogout() {
 await _sb().auth.signOut();
 sbUser = null; sbProfile = null; sbRollen = []; sbStandort = null;
+window.sbUser = null; window.sbProfile = null; window.sbRollen = []; window.sbStandort = null;
 document.getElementById('loginScreen').style.display = 'flex';
 document.getElementById('mainApp').style.display = 'none';
 document.getElementById('homeView').style.display = 'none';
