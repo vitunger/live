@@ -697,6 +697,8 @@ window.isPremium = isPremium;
 // Module-Status: 'demo' = fake data (orange), 'teilweise'/'stub' = beta (purple), undefined = live
 
 export function enterApp() {
+// Guard: don't re-enter during impersonation or demo
+if(_impActive || window.DEMO_ACTIVE) return;
 var splash = document.getElementById('appSplash'); if(splash) splash.remove();
 var userName = _sbProfile() ? _sbProfile().name : 'Benutzer';
 var firstName = userName.split(' ')[0];
@@ -927,6 +929,9 @@ var fbctx = document.getElementById('fbContextPrompt'); if(fbctx) fbctx.style.di
 }
 
 export async function checkSession() {
+// Don't re-enter if impersonation or demo mode is active
+if(_impActive || window.DEMO_ACTIVE) return;
+
 // Detect password recovery from reset link
 var hash = window.location.hash;
 if (hash && hash.includes('type=recovery')) {
