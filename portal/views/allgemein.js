@@ -12,7 +12,7 @@ function _sb()           { return window.sb; }
 function _sbUser()       { return window.sbUser; }
 function _sbProfile()    { return window.sbProfile; }
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
-function _showView(v) { if (window.showView) window._showView(v); }
+function _showView(v) { if (window.showView) window.showView(v); }
 
 // === ALLGEMEIN MODULE (Jahresziele, Monatsplan, Journal) ===
 // ╔══════════════════════════════════════════════════════════════╗

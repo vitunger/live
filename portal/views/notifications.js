@@ -11,7 +11,7 @@
 function _sb()        { return window._supabase || window.sb; }
 function _sbProfile() { return window.sbProfile; }
 function _t(k)        { return typeof window.t === 'function' ? window.t(k) : k; }
-function _showView(v) { if (window.showView) window._showView(v); }
+function _showView(v) { if (window.showView) window.showView(v); }
 
 // === NOTIFICATIONS DATA & LOGIC ===
 var notifications = [

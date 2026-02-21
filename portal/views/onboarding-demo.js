@@ -7,7 +7,7 @@ function _sbUser()       { return window.sbUser; }
 function _sbProfile()    { return window.sbProfile; }
 function _escH(s)        { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
-function _showView(v) { if (window.showView) window._showView(v); }
+function _showView(v) { if (window.showView) window.showView(v); }
 
 export function renderExternHome() {
 var stage = SESSION.stage;

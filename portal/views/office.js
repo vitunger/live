@@ -11,7 +11,7 @@ function _showToast(m,t) { if (typeof window.showToast === 'function') window.sh
 
 // Module-level state
 var D = [], CI = [], CH = [], BK = [], HQ_USERS = [];
-function _showView(v) { if (window.showView) window._showView(v); }
+function _showView(v) { if (window.showView) window.showView(v); }
 function _fmtN(n)        { return typeof window.fmtN === 'function' ? window.fmtN(n) : String(n); }
 function _triggerPush()  { if (typeof window.triggerPush === 'function') window.triggerPush.apply(null, arguments); }
 
