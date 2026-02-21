@@ -541,7 +541,7 @@ export async function loadModulStatus() {
         sbModulConfig = {};
         sbHqModulConfig = {};
         sbModulEbene = {};
-        var useDemo = isDemoMode || (_sbProfile() && (_sbProfile().status === 'demo' || _sbProfile().status === 'demo_active'));
+        var useDemo = (typeof isDemoMode !== 'undefined' && isDemoMode) || window.isDemoMode || (_sbProfile() && (_sbProfile().status === 'demo' || _sbProfile().status === 'demo_active'));
         (resp.data||[]).forEach(function(m) { 
             sbModulStatus[m.modul_key] = useDemo ? (m.demo_status || 'demo') : m.status;
             sbHqModulStatus[m.modul_key] = m.hq_status || 'aktiv';
