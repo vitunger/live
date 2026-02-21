@@ -379,6 +379,19 @@ var lbl = document.getElementById('impersonationLabel');
 if(btns) btns.style.display = 'none';
 if(active) active.style.display = '';
 if(lbl) lbl.textContent = label;
+// Update name, avatar, welcome for impersonated user
+var impName = _sbProfile() ? _sbProfile().name : 'Benutzer';
+var impFirst = impName.split(' ')[0];
+var nameEl = document.querySelector('[data-user-name]');
+if(nameEl) nameEl.textContent = impName;
+var impAvatar = 'https://ui-avatars.com/api/?name='+encodeURIComponent(impName)+'&background=EF7D00&color=fff';
+if(_sbProfile() && _sbProfile().avatar_url) impAvatar = _sbProfile().avatar_url;
+var avatarEl = document.querySelector('.topnav-desktop img.rounded-full');
+if(avatarEl) avatarEl.src = impAvatar;
+var mobileAv = document.getElementById('userAvatarImgMobile');
+if(mobileAv) mobileAv.src = impAvatar;
+var welcomeEl = document.getElementById('welcomeText');
+if(welcomeEl) { welcomeEl.textContent = 'Willkommen zurück, ' + impFirst + '!'; welcomeEl.setAttribute('data-i18n-name', impFirst); }
 // Refresh sidebar & views
 if(typeof updateUIForRole === 'function') updateUIForRole();
 _showView('home');
@@ -393,9 +406,23 @@ var btns = document.getElementById('impersonationBtns');
 var active = document.getElementById('impersonationActive');
 if(btns) btns.style.display = '';
 if(active) active.style.display = 'none';
+// Restore original name, avatar, welcome
+var origName = _sbProfile() ? _sbProfile().name : 'Benutzer';
+var origFirst = origName.split(' ')[0];
+var nameEl = document.querySelector('[data-user-name]');
+if(nameEl) nameEl.textContent = origName;
+var origAvatar = 'https://ui-avatars.com/api/?name='+encodeURIComponent(origName)+'&background=EF7D00&color=fff';
+if(_sbProfile() && _sbProfile().avatar_url) origAvatar = _sbProfile().avatar_url;
+var avatarEl = document.querySelector('.topnav-desktop img.rounded-full');
+if(avatarEl) avatarEl.src = origAvatar;
+var mobileAv = document.getElementById('userAvatarImgMobile');
+if(mobileAv) mobileAv.src = origAvatar;
+var welcomeEl = document.getElementById('welcomeText');
+if(welcomeEl) { welcomeEl.textContent = 'Willkommen zurück, ' + origFirst + '!'; welcomeEl.setAttribute('data-i18n-name', origFirst); }
 // Refresh sidebar & views
 if(typeof updateUIForRole === 'function') updateUIForRole();
-_showView('home');
+if(currentRole === 'hq') { if(typeof window.switchViewMode === 'function') window.switchViewMode('hq'); }
+else _showView('home');
 }
 
 export function _restoreOrigState() {
