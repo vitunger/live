@@ -919,6 +919,7 @@ if (hash && hash.includes('type=recovery')) {
     var resp = await _sb().auth.getSession();
     if (resp.data.session) {
         sbUser = resp.data.session.user;
+        window.sbUser = sbUser;
         showChangePasswordModal();
         return;
     }
@@ -926,6 +927,7 @@ if (hash && hash.includes('type=recovery')) {
 var resp = await _sb().auth.getSession();
 if(resp.data.session && resp.data.session.user) {
     sbUser = resp.data.session.user;
+    window.sbUser = sbUser;
     try {
         // Status-Check vor dem App-Laden
         var profileResp = await _sb().from('users').select('status').eq('id', _sbUser().id).single();
