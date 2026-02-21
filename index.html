@@ -26051,6 +26051,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
         function t(key) {
             return (i18n[currentLang] && i18n[currentLang][key]) || (i18n.de[key]) || key;
         }
+        window.t = t;
 
         var currentSmFilter = 'all';
 
@@ -26249,6 +26250,7 @@ function renderWVo(){return '<div class="vc p-5"><h3 class="font-bold text-sm mb
                 console.error('FAILED: View not found:', viewId);
             }
         }
+        window.showView = showView;
 
         function showModuleVersionBadge(viewId) {
             var old = document.getElementById('moduleVersionBadge');
@@ -35331,5 +35333,6 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
 })();
 </script>
 
+<script type="module" src="/portal/app.js"></script>
 </body>
 </html>
