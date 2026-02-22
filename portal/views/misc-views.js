@@ -584,7 +584,12 @@ export function switchViewMode(mode) {
     try { updateUIForRole(); } catch(e) { console.warn(e); }
     try { applyModulStatus(); } catch(e) { console.warn(e); }
 
-    if(isHQ) {
+    // Restore last view from localStorage (if available), otherwise default
+    var lastView = null;
+    try { lastView = localStorage.getItem('vit:lastView'); } catch(e) {}
+    if(lastView && document.getElementById(lastView + 'View')) {
+        _showView(lastView);
+    } else if(isHQ) {
         _showView('hqCockpit');
     } else {
         _showView('home');
