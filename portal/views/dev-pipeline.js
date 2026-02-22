@@ -1910,7 +1910,95 @@ export async function openDevDetail(subId) {
                 }
             }
             h += '<button onclick="devAdvanceStatus(\''+s.id+'\',\'geparkt\')" class="px-2 py-1.5 bg-gray-200 text-gray-600 rounded-lg text-xs hover:bg-gray-300">⏸ Parken</button>';
+            h += '<button onclick="devShowFeedbackForm(\''+s.id+'\')" class="px-3 py-2 bg-amber-100 text-amber-800 rounded-lg text-sm font-semibold hover:bg-amber-200">🗳 Feedback einholen</button>';
             h += '</div></div>';
+        }
+
+        // === FEEDBACK-ANFRAGEN SECTION ===
+        if(isHQ || !isHQ) {
+            var _fbAnfragen = [];
+            try {
+                var _fbResp = await _sb().from('dev_feedback_anfragen')
+                    .select('*, users!dev_feedback_anfragen_erstellt_von_public_fkey(name), dev_feedback_antworten(id, user_id, auswahl, kommentar, users!dev_feedback_antworten_user_id_public_fkey(name))')
+                    .eq('submission_id', s.id)
+                    .eq('status', 'aktiv')
+                    .order('created_at', {ascending: false});
+                _fbAnfragen = _fbResp.data || [];
+            } catch(e) {}
+            
+            for(var _fbi=0; _fbi<_fbAnfragen.length; _fbi++) {
+                var _fb = _fbAnfragen[_fbi];
+                var _fbOptionen = _fb.optionen || [];
+                var _fbAntworten = _fb.dev_feedback_antworten || [];
+                var _fbDeadline = _fb.deadline ? new Date(_fb.deadline).toLocaleDateString('de-DE') : '';
+                var _fbErsteller = _fb.users ? _fb.users.name : '';
+                var _meineAntwort = _fbAntworten.find(function(a){ return _sbUser() && a.user_id === _sbUser().id; });
+                var _fbAbgelaufen = _fb.deadline && new Date(_fb.deadline) < new Date();
+                
+                h += '<div class="border-2 border-amber-200 rounded-lg p-4 mb-4 bg-amber-50">';
+                h += '<div class="flex justify-between items-start mb-3">';
+                h += '<h4 class="text-sm font-bold text-amber-800">🗳 Feedback-Anfrage</h4>';
+                h += '<div class="flex items-center gap-2">';
+                if(_fbDeadline) h += '<span class="text-[10px] rounded px-2 py-0.5 '+(_fbAbgelaufen?'bg-red-100 text-red-600':'bg-amber-100 text-amber-700')+'">⏰ '+_fbDeadline+'</span>';
+                h += '<span class="text-[10px] bg-amber-100 text-amber-700 rounded px-2 py-0.5">'+_fbAntworten.length+' Antworten</span>';
+                if(isHQ) h += '<button onclick="devCloseFeedbackAnfrage(\''+_fb.id+'\')" class="text-[10px] text-gray-400 hover:text-red-500" title="Anfrage schließen">✕</button>';
+                h += '</div></div>';
+                h += '<p class="text-sm text-gray-700 mb-3">'+_escH(_fb.frage)+'</p>';
+                
+                if(isHQ) {
+                    // HQ sieht Ergebnisse
+                    if(_fbOptionen.length > 0) {
+                        var _voteCounts = {};
+                        _fbAntworten.forEach(function(a){ if(a.auswahl !== null) _voteCounts[a.auswahl] = (_voteCounts[a.auswahl]||0)+1; });
+                        var _maxVotes = Math.max.apply(null, Object.values(_voteCounts).concat([1]));
+                        h += '<div class="space-y-1.5 mb-3">';
+                        _fbOptionen.forEach(function(opt, idx) {
+                            var cnt = _voteCounts[idx] || 0;
+                            var pct = _fbAntworten.length > 0 ? Math.round(cnt/_fbAntworten.length*100) : 0;
+                            h += '<div class="flex items-center gap-2"><div class="flex-1 bg-gray-100 rounded-full h-6 overflow-hidden">';
+                            h += '<div class="h-full bg-amber-400 rounded-full flex items-center px-2" style="width:'+Math.max(pct,5)+'%"><span class="text-[10px] font-bold text-amber-900 whitespace-nowrap">'+_escH(opt)+'</span></div>';
+                            h += '</div><span class="text-xs font-bold text-gray-600 w-12 text-right">'+cnt+' ('+pct+'%)</span></div>';
+                        });
+                        h += '</div>';
+                    }
+                    // Freitext-Antworten
+                    var _freitexte = _fbAntworten.filter(function(a){ return a.kommentar; });
+                    if(_freitexte.length > 0) {
+                        h += '<details class="group mb-2"><summary class="text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-700">💬 '+_freitexte.length+' Kommentare anzeigen</summary>';
+                        h += '<div class="mt-2 space-y-1.5 max-h-40 overflow-y-auto">';
+                        _freitexte.forEach(function(a) {
+                            var aName = a.users ? a.users.name : 'Anonym';
+                            h += '<div class="bg-white rounded p-2 border border-gray-100"><span class="text-xs font-semibold text-gray-700">'+_escH(aName)+':</span> <span class="text-xs text-gray-600">'+_escH(a.kommentar)+'</span></div>';
+                        });
+                        h += '</div></details>';
+                    }
+                    if(_fbErsteller) h += '<p class="text-[10px] text-gray-400">Erstellt von '+_escH(_fbErsteller)+'</p>';
+                } else {
+                    // Non-HQ: eigenes Feedback geben
+                    if(_meineAntwort) {
+                        h += '<div class="bg-green-50 border border-green-200 rounded-lg p-3"><p class="text-xs text-green-700 font-semibold">✅ Du hast bereits Feedback gegeben</p>';
+                        if(_meineAntwort.auswahl !== null && _fbOptionen[_meineAntwort.auswahl]) h += '<p class="text-xs text-gray-600 mt-1">Deine Wahl: <b>'+_escH(_fbOptionen[_meineAntwort.auswahl])+'</b></p>';
+                        if(_meineAntwort.kommentar) h += '<p class="text-xs text-gray-500 mt-1">"'+_escH(_meineAntwort.kommentar)+'"</p>';
+                        h += '</div>';
+                    } else if(_fbAbgelaufen) {
+                        h += '<p class="text-xs text-red-500 font-semibold">⏰ Deadline abgelaufen</p>';
+                    } else {
+                        // Formular zum Ausfüllen
+                        if(_fbOptionen.length > 0) {
+                            h += '<div class="space-y-1.5 mb-3" id="fbOptionen_'+_fb.id+'">';
+                            _fbOptionen.forEach(function(opt, idx) {
+                                h += '<label class="flex items-center gap-2 bg-white rounded-lg p-2 border border-gray-100 hover:border-amber-300 cursor-pointer transition">';
+                                h += '<input type="radio" name="fbChoice_'+_fb.id+'" value="'+idx+'" class="text-amber-500">';
+                                h += '<span class="text-sm">'+_escH(opt)+'</span></label>';
+                            });
+                            h += '</div>';
+                        }
+                        h += '<textarea id="fbKommentar_'+_fb.id+'" placeholder="Dein Kommentar (optional)..." class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm mb-2" rows="2"></textarea>';
+                        h += '<button onclick="devSubmitFeedbackAntwort(\''+_fb.id+'\')" class="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-semibold hover:bg-amber-600">📨 Feedback absenden</button>';
+                    }
+                }
+                h += '</div>';
+            }
         }
 
         // === BETA-FEEDBACK SECTION (bei beta_test Status) ===
@@ -2818,6 +2906,182 @@ export async function devToggleBetaTester(id, aktiv) {
 }
 
 // ============================================================
+// PHASE 5b: Feedback-Anfragen
+// ============================================================
+
+export async function devShowFeedbackForm(subId) {
+    // Load rollen for targeting
+    var rollenResp = await _sb().from('rollen').select('*').order('sortierung');
+    var rollen = rollenResp.data || [];
+    var usersResp = await _sb().from('users').select('id, name, email, is_hq').eq('status','active').order('name');
+    var allUsers = usersResp.data || [];
+    
+    var html = '<div id="devFeedbackFormOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10001;display:flex;align-items:center;justify-content:center" onclick="if(event.target===this)this.remove()">';
+    html += '<div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">';
+    html += '<div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold text-gray-800">🗳 Feedback einholen</h3>';
+    html += '<button onclick="document.getElementById(\'devFeedbackFormOverlay\').remove()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button></div>';
+    
+    // Frage
+    html += '<label class="block text-xs font-semibold text-gray-600 mb-1">Frage / Kontext</label>';
+    html += '<textarea id="fbFormFrage" placeholder="Was möchtest du wissen? z.B.: Wie bewertet ihr diese Feature-Idee?" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm mb-3" rows="2"></textarea>';
+    
+    // Multiple Choice Optionen
+    html += '<label class="block text-xs font-semibold text-gray-600 mb-1">Multiple-Choice Optionen <span class="text-gray-400 font-normal">(min. 2)</span></label>';
+    html += '<div id="fbFormOptionen" class="space-y-1.5 mb-1">';
+    html += '<input type="text" class="fb-option w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Option 1, z.B.: Sehr wichtig">';
+    html += '<input type="text" class="fb-option w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Option 2, z.B.: Nice to have">';
+    html += '<input type="text" class="fb-option w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Option 3 (optional)">';
+    html += '</div>';
+    html += '<button onclick="var d=document.getElementById(\'fbFormOptionen\');var inp=document.createElement(\'input\');inp.type=\'text\';inp.className=\'fb-option w-full px-3 py-2 border border-gray-200 rounded-lg text-sm\';inp.placeholder=\'Weitere Option...\';d.appendChild(inp)" class="text-xs text-amber-600 hover:text-amber-800 mb-3 block">+ Option hinzufügen</button>';
+    
+    // Zielgruppe: Rollen
+    html += '<label class="block text-xs font-semibold text-gray-600 mb-1">Zielgruppe: Rollen</label>';
+    html += '<div class="flex flex-wrap gap-1.5 mb-3" id="fbFormRollen">';
+    rollen.forEach(function(r) {
+        var icon = r.ebene === 'hq' ? '🏢' : '🏪';
+        html += '<label class="flex items-center gap-1 bg-gray-50 rounded-lg px-2 py-1 hover:bg-amber-50 cursor-pointer border border-gray-100 transition">';
+        html += '<input type="checkbox" value="'+r.name+'" class="fb-rolle text-amber-500 rounded">';
+        html += '<span class="text-xs">'+icon+' '+_escH(r.label)+'</span></label>';
+    });
+    html += '</div>';
+    
+    // Zielgruppe: Einzelne Personen
+    html += '<label class="block text-xs font-semibold text-gray-600 mb-1">Einzelne Personen <span class="text-gray-400 font-normal">(optional)</span></label>';
+    html += '<select id="fbFormUsers" multiple class="w-full border border-gray-200 rounded-lg text-sm mb-3 p-2" size="4">';
+    allUsers.forEach(function(u) {
+        var tag = u.is_hq ? ' [HQ]' : '';
+        html += '<option value="'+u.id+'">'+_escH(u.name)+' ('+_escH(u.email)+')'+tag+'</option>';
+    });
+    html += '</select>';
+    html += '<p class="text-[10px] text-gray-400 mb-3">Strg/Cmd gedrückt halten für Mehrfachauswahl</p>';
+    
+    // Deadline
+    html += '<label class="block text-xs font-semibold text-gray-600 mb-1">Deadline</label>';
+    var defaultDeadline = new Date(); defaultDeadline.setDate(defaultDeadline.getDate() + 7);
+    var dlStr = defaultDeadline.toISOString().split('T')[0];
+    html += '<input type="date" id="fbFormDeadline" value="'+dlStr+'" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm mb-4">';
+    
+    // Submit
+    html += '<button onclick="devCreateFeedbackAnfrage(\''+subId+'\')" class="w-full px-4 py-3 bg-amber-500 text-white rounded-lg font-semibold hover:bg-amber-600 transition">🗳 Feedback-Anfrage senden</button>';
+    html += '</div></div>';
+    
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+
+export async function devCreateFeedbackAnfrage(subId) {
+    try {
+        var frage = document.getElementById('fbFormFrage').value.trim();
+        if(!frage) { _showToast('Bitte Frage eingeben.', 'error'); return; }
+        
+        // Optionen sammeln
+        var optInputs = document.querySelectorAll('.fb-option');
+        var optionen = [];
+        optInputs.forEach(function(inp) { if(inp.value.trim()) optionen.push(inp.value.trim()); });
+        if(optionen.length < 2) { _showToast('Mindestens 2 Optionen angeben.', 'error'); return; }
+        
+        // Rollen sammeln
+        var rollenChecked = [];
+        document.querySelectorAll('.fb-rolle:checked').forEach(function(cb) { rollenChecked.push(cb.value); });
+        
+        // User IDs sammeln
+        var userSelect = document.getElementById('fbFormUsers');
+        var userIds = [];
+        for(var i=0; i<userSelect.selectedOptions.length; i++) {
+            userIds.push(userSelect.selectedOptions[i].value);
+        }
+        
+        if(rollenChecked.length === 0 && userIds.length === 0) {
+            _showToast('Bitte mindestens eine Rolle oder Person auswählen.', 'error'); return;
+        }
+        
+        var deadline = document.getElementById('fbFormDeadline').value || null;
+        
+        var resp = await _sb().from('dev_feedback_anfragen').insert({
+            submission_id: subId,
+            erstellt_von: _sbUser().id,
+            frage: frage,
+            optionen: optionen,
+            zielgruppe_rollen: rollenChecked,
+            zielgruppe_user_ids: userIds,
+            deadline: deadline
+        }).select().single();
+        
+        if(resp.error) throw resp.error;
+        
+        // Benachrichtigungen erstellen
+        var targetUsers = new Set(userIds);
+        if(rollenChecked.length > 0) {
+            var urResp = await _sb().from('user_rollen').select('user_id, rollen!inner(name)').in('rollen.name', rollenChecked);
+            (urResp.data || []).forEach(function(ur) { targetUsers.add(ur.user_id); });
+        }
+        
+        // Get submission title for notification
+        var sub = devSubmissions.find(function(s){ return s.id === subId; });
+        var titel = sub ? sub.titel : 'Idee';
+        
+        targetUsers.forEach(function(uid) {
+            _sb().from('dev_notifications').insert({
+                user_id: uid,
+                submission_id: subId,
+                typ: 'feedback_anfrage',
+                titel: '🗳 Feedback gefragt: ' + titel,
+                inhalt: frage,
+                link_to: subId
+            });
+        });
+        
+        _showToast('🗳 Feedback-Anfrage an ' + targetUsers.size + ' Personen gesendet!', 'success');
+        var overlay = document.getElementById('devFeedbackFormOverlay');
+        if(overlay) overlay.remove();
+        
+        // Reload detail
+        openDevDetail(subId);
+    } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
+}
+
+export async function devSubmitFeedbackAntwort(anfrageId) {
+    try {
+        var choiceEl = document.querySelector('input[name="fbChoice_'+anfrageId+'"]:checked');
+        var auswahl = choiceEl ? parseInt(choiceEl.value) : null;
+        var kommentar = (document.getElementById('fbKommentar_'+anfrageId) || {}).value || '';
+        
+        if(auswahl === null && !kommentar.trim()) {
+            _showToast('Bitte Option wählen oder Kommentar schreiben.', 'error'); return;
+        }
+        
+        var resp = await _sb().from('dev_feedback_antworten').insert({
+            anfrage_id: anfrageId,
+            user_id: _sbUser().id,
+            auswahl: auswahl,
+            kommentar: kommentar.trim() || null
+        });
+        
+        if(resp.error) throw resp.error;
+        _showToast('📨 Danke für dein Feedback!', 'success');
+        
+        // Reload current detail
+        var detailId = document.querySelector('#devDetailContent')?.dataset?.subId;
+        if(detailId) openDevDetail(detailId);
+    } catch(e) {
+        if(e.message && e.message.indexOf('unique') !== -1) {
+            _showToast('Du hast bereits Feedback gegeben.', 'info');
+        } else {
+            _showToast('Fehler: ' + e.message, 'error');
+        }
+    }
+}
+
+export async function devCloseFeedbackAnfrage(anfrageId) {
+    if(!confirm('Feedback-Anfrage schließen?')) return;
+    try {
+        await _sb().from('dev_feedback_anfragen').update({ status: 'abgeschlossen' }).eq('id', anfrageId);
+        _showToast('Anfrage geschlossen.', 'success');
+        var detailId = document.querySelector('#devDetailContent')?.dataset?.subId;
+        if(detailId) openDevDetail(detailId);
+    } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
+}
+
+// ============================================================
 // PHASE 6: Release-Docs anzeigen
 // ============================================================
 
@@ -2996,6 +3260,6 @@ async function devSendCodeChat(subId) {
 }
 
 
-const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat};
+const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
