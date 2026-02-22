@@ -1614,52 +1614,57 @@ var rtDict = {
 
 // Runtime DOM translator - walks the DOM and replaces German text
 export function translateDOM(lang) {
-    if(lang === 'de' || !rtDict[lang]) return; // German is source, no translation needed
+    if(lang === 'de' || !rtDict[lang]) return;
     var dict = rtDict[lang];
-    // Sort keys by length descending to match longer phrases first
+    // Build reverse map to skip already-translated text
+    var vals = {};
+    Object.keys(dict).forEach(function(k){ vals[dict[k]] = true; });
     var keys = Object.keys(dict).sort(function(a,b){ return b.length - a.length; });
     
-    // Helper: replace text, using word-boundary for short keys (<=3 chars)
     function rtReplace(txt) {
         var changed = false;
         for(var i = 0; i < keys.length; i++) {
             if(txt.indexOf(keys[i]) === -1) continue;
+            // Skip if the target value is already in the text (prevents Modul→Module→Modulee)
+            var target = dict[keys[i]];
+            if(target.indexOf(keys[i]) !== -1 && txt.indexOf(target) !== -1) continue;
             if(keys[i].length <= 3 && /^[a-zA-ZäöüÄÖÜß]+$/.test(keys[i])) {
-                // Word-boundary match for short alphabetic keys to prevent substring corruption
                 var escaped = keys[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                 var re = new RegExp('(?<![a-zA-ZäöüÄÖÜß])' + escaped + '(?![a-zA-ZäöüÄÖÜß])', 'g');
-                var newTxt = txt.replace(re, dict[keys[i]]);
+                var newTxt = txt.replace(re, target);
                 if(newTxt !== txt) { txt = newTxt; changed = true; }
             } else {
                 var parts = txt.split(keys[i]);
-                if(parts.length > 1) { txt = parts.join(dict[keys[i]]); changed = true; }
+                if(parts.length > 1) { txt = parts.join(target); changed = true; }
             }
         }
         return changed ? txt : null;
     }
     
-    // Walk all text nodes
     var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
     var node;
     while(node = walker.nextNode()) {
         if(!node.nodeValue || !node.nodeValue.trim()) continue;
-        // Skip script/style
         var par = node.parentElement;
         if(!par || par.tagName === 'SCRIPT' || par.tagName === 'STYLE' || par.tagName === 'NOSCRIPT') continue;
-        // Skip elements handled separately (welcome text, date)
         if(par.id === 'welcomeText' || par.id === 'welcomeDate' || par.hasAttribute('data-i18n-date')) continue;
+        // Skip already-translated elements
+        if(par.hasAttribute('data-translated')) continue;
         var result = rtReplace(node.nodeValue);
-        if(result !== null) node.nodeValue = result;
+        if(result !== null) {
+            node.nodeValue = result;
+            par.setAttribute('data-translated', lang);
+        }
     }
-    // Translate placeholders
     document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(function(el) {
+        if(el.hasAttribute('data-translated')) return;
         var result = rtReplace(el.placeholder);
-        if(result !== null) el.placeholder = result;
+        if(result !== null) { el.placeholder = result; el.setAttribute('data-translated', lang); }
     });
-    // Translate title attributes
     document.querySelectorAll('[title]').forEach(function(el) {
+        if(el.getAttribute('data-title-translated')) return;
         var result = rtReplace(el.title);
-        if(result !== null) el.title = result;
+        if(result !== null) { el.title = result; el.setAttribute('data-title-translated', lang); }
     });
 }
 
