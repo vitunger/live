@@ -2082,7 +2082,6 @@ export async function openDevDetail(subId) {
                 h += '</div>';
                 h += '<p class="text-[9px] text-gray-400 mt-1">Pusht die Code-Artifacts auf GitHub \u2192 Vercel baut automatisch.</p>';
                 h += '</div>';
-            }
             h += '</div>'; // END TAB CODE
         }
 
