@@ -441,57 +441,76 @@ export function renderEntwIdeen() {
 export async function renderEntwReleases() {
     var c = document.getElementById('entwReleasesContent');
     if(!c) return;
+    var isHQr = (currentRoles||[]).indexOf('hq') !== -1;
     c.innerHTML = '<div class="text-center py-8 text-gray-400">Lade Releases...</div>';
     try {
-        var resp = await _sb().from('dev_release_docs').select('*, dev_submissions(titel, status)').eq('status', 'freigegeben').order('created_at', {ascending: false});
+        var resp = await _sb().from('dev_release_docs').select('*, dev_submissions(titel, status)').eq('freigegeben', true).order('created_at', {ascending: false});
         var docs = resp.data || [];
-        // Also load pending docs
-        var respP = await _sb().from('dev_release_docs').select('*, dev_submissions(titel, status)').neq('status', 'freigegeben').order('created_at', {ascending: false});
+        var respP = await _sb().from('dev_release_docs').select('*, dev_submissions(titel, status)').eq('freigegeben', false).order('created_at', {ascending: false});
         var pending = respP.data || [];
+        
+        var h = '';
+        // HQ: Create button
+        if(isHQr) {
+            h += '<div class="flex justify-end mb-4">';
+            h += '<button onclick="devShowCreateRelease()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">+ Release erstellen</button>';
+            h += '</div>';
+            // Hidden create form
+            h += '<div id="devCreateReleaseForm" class="hidden vit-card p-4 mb-4 border-2 border-green-200 bg-green-50">';
+            h += '<h4 class="text-sm font-bold text-green-800 mb-3">📣 Neue Release-Note erstellen</h4>';
+            h += '<div class="grid grid-cols-2 gap-3 mb-3">';
+            h += '<select id="relTyp" class="text-sm border border-gray-200 rounded-lg px-3 py-2"><option value="release_note">📣 Release-Note</option><option value="wissensartikel">📚 Wissensartikel</option></select>';
+            h += '<input id="relVersion" type="text" placeholder="Version (z.B. v2.4)" class="text-sm border border-gray-200 rounded-lg px-3 py-2">';
+            h += '</div>';
+            h += '<input id="relTitel" type="text" placeholder="Titel der Release-Note" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 mb-3">';
+            h += '<textarea id="relInhalt" placeholder="Was wurde geändert / verbessert / gefixt?\n\nTipp: Nutze Aufzählungen für mehrere Punkte." class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 mb-3" rows="5"></textarea>';
+            h += '<div class="flex justify-end gap-2">';
+            h += '<button onclick="document.getElementById(\'devCreateReleaseForm\').classList.add(\'hidden\')" class="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700">Abbrechen</button>';
+            h += '<button onclick="devSaveRelease()" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700">💾 Veröffentlichen</button>';
+            h += '</div></div>';
+        }
+        
         if(docs.length === 0 && pending.length === 0) {
-            c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-2">🚀</p><p>Noch keine Release-Dokumentation vorhanden</p><p class="text-xs mt-1">Release-Notes und Wissensartikel werden automatisch bei Rollout generiert.</p></div>';
+            h += '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-2">🚀</p><p>Noch keine Release-Dokumentation vorhanden</p><p class="text-xs mt-1">Release-Notes und Wissensartikel werden automatisch bei Rollout generiert'+(isHQr?' — oder manuell über den Button oben.':'.')+'</p></div>';
+            c.innerHTML = h;
             return;
         }
-        var h = '';
-        // Stats
-        var notes = docs.filter(function(d){return d.typ==='release_note';}).length;
-        var articles = docs.filter(function(d){return d.typ==='wissensartikel';}).length;
-        h += '<div class="grid grid-cols-3 gap-3 mb-4">';
-        h += '<div class="vit-card p-3 text-center"><p class="text-xl font-bold text-green-600">'+notes+'</p><p class="text-[10px] text-gray-500">📣 Release-Notes</p></div>';
-        h += '<div class="vit-card p-3 text-center"><p class="text-xl font-bold text-blue-600">'+articles+'</p><p class="text-[10px] text-gray-500">📚 Wissensartikel</p></div>';
-        h += '<div class="vit-card p-3 text-center"><p class="text-xl font-bold text-orange-500">'+pending.length+'</p><p class="text-[10px] text-gray-500">⏳ Ausstehend</p></div>';
-        h += '</div>';
-        // Approved docs
+        
+        // Published docs
         if(docs.length > 0) {
-            h += '<h3 class="text-sm font-bold text-gray-700 mb-2">✅ Veröffentlicht</h3><div class="space-y-2 mb-4">';
+            h += '<div class="space-y-3 mb-6">';
             docs.forEach(function(d) {
                 var icon = d.typ === 'release_note' ? '📣' : '📚';
                 var feature = d.dev_submissions ? d.dev_submissions.titel : '';
                 var date = new Date(d.created_at).toLocaleDateString('de-DE');
-                h += '<div class="vit-card p-3">';
+                var version = d.version ? ' v'+d.version : '';
+                h += '<div class="vit-card p-4">';
                 h += '<div class="flex items-start justify-between">';
-                h += '<div class="flex-1"><div class="flex items-center gap-2 mb-1"><span class="text-sm">'+icon+'</span><span class="font-semibold text-sm text-gray-800">'+d.titel+'</span>';
-                h += '<span class="text-[10px] rounded px-1.5 py-0.5 '+(d.typ==='release_note'?'bg-green-100 text-green-700':'bg-blue-100 text-blue-700')+'">'+d.typ.replace('_',' ')+'</span></div>';
-                if(feature) h += '<p class="text-[10px] text-gray-400 mb-1">Feature: '+feature+'</p>';
-                h += '<p class="text-xs text-gray-600">'+d.inhalt+'</p>';
-                h += '<span class="text-[10px] text-gray-400">'+date+'</span>';
+                h += '<div class="flex-1"><div class="flex items-center gap-2 mb-1">';
+                h += '<span class="text-lg">'+icon+'</span>';
+                h += '<span class="font-semibold text-gray-800">'+_escH(d.titel)+'</span>';
+                if(version) h += '<span class="text-[10px] bg-gray-100 text-gray-600 rounded px-1.5 py-0.5 font-mono">'+version+'</span>';
+                h += '<span class="text-[10px] rounded px-1.5 py-0.5 '+(d.typ==='release_note'?'bg-green-100 text-green-700':'bg-blue-100 text-blue-700')+'">'+(d.typ==='release_note'?'Release':'Wissen')+'</span>';
+                h += '</div>';
+                if(feature) h += '<p class="text-[10px] text-gray-400 mb-1">Feature: '+_escH(feature)+'</p>';
+                h += '<p class="text-sm text-gray-600 whitespace-pre-line">'+_escH(d.inhalt)+'</p>';
+                h += '<span class="text-[10px] text-gray-400 mt-2 inline-block">'+date+'</span>';
                 h += '</div></div></div>';
             });
             h += '</div>';
         }
-        // Pending docs
-        if(pending.length > 0) {
-            var isHQr = (currentRoles||[]).indexOf('hq') !== -1;
-            h += '<h3 class="text-sm font-bold text-gray-500 mb-2">⏳ Ausstehend</h3><div class="space-y-2">';
+        // Pending docs (HQ only)
+        if(pending.length > 0 && isHQr) {
+            h += '<h3 class="text-sm font-bold text-gray-500 mb-2">⏳ Entwürfe ('+pending.length+')</h3><div class="space-y-2">';
             pending.forEach(function(d) {
                 var icon = d.typ === 'release_note' ? '📣' : '📚';
                 var feature = d.dev_submissions ? d.dev_submissions.titel : '';
                 h += '<div class="vit-card p-3 border-l-4 border-orange-300">';
-                h += '<div class="flex items-center gap-2 mb-1"><span class="text-sm">'+icon+'</span><span class="font-semibold text-sm text-gray-700">'+d.titel+'</span>';
-                h += '<span class="text-[10px] bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">'+d.status+'</span></div>';
-                if(feature) h += '<p class="text-[10px] text-gray-400">Feature: '+feature+'</p>';
-                h += '<p class="text-xs text-gray-500">'+d.inhalt+'</p>';
-                if(isHQr) h += '<button onclick="devApproveReleaseDoc(\''+d.id+'\',\''+d.submission_id+'\',\''+d.typ+'\',true)" class="mt-2 px-3 py-1 bg-green-500 text-white rounded text-xs font-semibold hover:bg-green-600">✅ Freigeben</button>';
+                h += '<div class="flex items-center gap-2 mb-1"><span class="text-sm">'+icon+'</span><span class="font-semibold text-sm text-gray-700">'+_escH(d.titel)+'</span>';
+                h += '<span class="text-[10px] bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">Entwurf</span></div>';
+                if(feature) h += '<p class="text-[10px] text-gray-400">Feature: '+_escH(feature)+'</p>';
+                h += '<p class="text-xs text-gray-500">'+_escH(d.inhalt)+'</p>';
+                h += '<button onclick="devApproveReleaseDoc(\''+d.id+'\',\''+d.submission_id+'\',\''+d.typ+'\',true)" class="mt-2 px-3 py-1 bg-green-500 text-white rounded text-xs font-semibold hover:bg-green-600">✅ Freigeben</button>';
                 h += '</div>';
             });
             h += '</div>';
@@ -2910,6 +2929,37 @@ export async function devToggleBetaTester(id, aktiv) {
     } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
 }
 
+export function devShowCreateRelease() {
+    var f = document.getElementById('devCreateReleaseForm');
+    if(f) f.classList.toggle('hidden');
+}
+
+export async function devSaveRelease() {
+    var typ = document.getElementById('relTyp').value;
+    var titel = (document.getElementById('relTitel').value || '').trim();
+    var inhalt = (document.getElementById('relInhalt').value || '').trim();
+    var version = (document.getElementById('relVersion').value || '').trim();
+    
+    if(!titel) { _showToast('Bitte Titel eingeben.', 'error'); return; }
+    if(!inhalt) { _showToast('Bitte Inhalt eingeben.', 'error'); return; }
+    
+    try {
+        var resp = await _sb().from('dev_release_docs').insert({
+            typ: typ,
+            titel: titel,
+            inhalt: inhalt,
+            version: version || null,
+            freigegeben: true,
+            freigegeben_von: _sbUser().id,
+            freigegeben_at: new Date().toISOString(),
+            ki_generiert: false
+        });
+        if(resp.error) throw resp.error;
+        _showToast('📣 Release-Note veröffentlicht!', 'success');
+        renderEntwReleases();
+    } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
+}
+
 // ============================================================
 // PHASE 5b: Feedback-Anfragen
 // ============================================================
@@ -3265,6 +3315,6 @@ async function devSendCodeChat(subId) {
 }
 
 
-const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat};
+const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
