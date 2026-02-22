@@ -37,7 +37,7 @@ const FALLBACK_SELLERS = [];
 const SELLER_COLORS = ["#667EEA","#E1306C","#38B2AC","#F7C948","#FF6B35","#764BA2","#2D3748","#E53E3E","#D69E2E","#319795"];
 
 const CELEB = ["🎉","🥳","🏆","💰","🔥","⭐","🎊","💎","👑","🚀"];
-const GOAL = 15000;
+const GOAL_DEFAULT = 15000;
 const NOW = Date.now();
 const ago = d => NOW - d * 864e5;
 const fmt = v => new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(v);
@@ -1048,6 +1048,7 @@ function PipelineApp(){
   const[rules,setRules]=useState(DEFAULT_RULES);
   const[LOCATIONS,setLocations]=useState(FALLBACK_LOCATIONS);
   const[SELLERS,setSellers]=useState(FALLBACK_SELLERS);
+  const[GOAL,setGOAL]=useState(GOAL_DEFAULT);
   const[dataReady,setDataReady]=useState(false);
 
   // Determine location from logged-in user profile
@@ -1106,6 +1107,20 @@ function PipelineApp(){
         // Load deals
         const loaded = await loadDeals();
         setDeals(loaded);
+
+        // Load monthly goal from jahresplaene
+        try {
+          const stdId = window.sbProfile?.standort_id;
+          if (stdId) {
+            const yr = new Date().getFullYear();
+            const mo = new Date().getMonth() + 1;
+            const { data: jp } = await sb.from("jahresplaene").select("plan_daten").eq("standort_id", stdId).eq("jahr", yr).single();
+            if (jp && jp.plan_daten) {
+              const mPlan = jp.plan_daten[String(mo)] || jp.plan_daten[mo];
+              if (mPlan && mPlan.umsatz) setGOAL(mPlan.umsatz);
+            }
+          }
+        } catch (e) { console.warn("[Pipeline] Jahresplan:", e.message); }
 
         // Load automations from DB (non-critical, wrap separately)
         try {
