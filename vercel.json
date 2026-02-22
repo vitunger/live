@@ -3,13 +3,25 @@
     {
       "source": "/portal/(.*).js",
       "headers": [
-        { "key": "Content-Type", "value": "application/javascript; charset=utf-8" },
-        { "key": "Cache-Control", "value": "public, max-age=3600" }
+        {
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=60, s-maxage=60"
+        }
       ]
     }
   ],
   "rewrites": [
-    { "source": "/portal/:path*", "destination": "/portal/:path*" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/portal/:path*",
+      "destination": "/portal/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
