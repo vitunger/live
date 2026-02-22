@@ -40,7 +40,7 @@ export function toggleDevSubmitForm() {
     }
     // Populate module dropdown
     var sel = document.getElementById('devModul');
-    if(sel && sel.options.length <= 1) {
+    if(sel && sel.tagName === 'SELECT' && sel.options.length <= 1) {
         Object.keys(sbModulStatus).forEach(function(k) {
             if(sbModulStatus[k] !== 'deaktiviert') {
                 var o = document.createElement('option');
