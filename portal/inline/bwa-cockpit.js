@@ -277,60 +277,144 @@
         }
     }
 
-    // ──── HQ-SICHT: BWA Netzwerk-Status ────
+    // ──── HQ-SICHT: BWA Netzwerk-Status (LIVE) ────
     window.renderHqBwaStatus = renderHqBwaStatus;
-    function renderHqBwaStatus() {
+    async function renderHqBwaStatus() {
         var bwaMo = getBwaMonth(new Date());
         var moName = MO_NAMES[bwaMo.m] + ' ' + bwaMo.y;
         var deadline = getDeadline(bwaMo);
         var today = new Date();
-
         var el = function(id){return document.getElementById(id);};
+
         if(el('hqBwaMonth')) el('hqBwaMonth').textContent = moName;
 
-        // Sort: gold first, then ok, then overdue, then missing
-        var order = {gold:0, ok:1, overdue:2, missing:3};
-        var sorted = STANDORTE_DEMO.slice().sort(function(a,b){return (order[a.rating]||3) - (order[b.rating]||3);});
-
-        var gold=0, ok=0, overdue=0, missing=0;
-        sorted.forEach(function(s){
-            if(s.rating==='gold') gold++;
-            else if(s.rating==='ok') ok++;
-            else if(s.rating==='overdue') overdue++;
-            else missing++;
-        });
-
-        var total = sorted.length;
-        var submitted = gold + ok + overdue;
-        var pct = Math.round(submitted/total*100);
-
-        if(el('hqBwaSubmitted')) el('hqBwaSubmitted').textContent = submitted;
-        if(el('hqBwaTotal')) el('hqBwaTotal').textContent = total;
-        if(el('hqBwaGold')) el('hqBwaGold').textContent = gold;
-        if(el('hqBwaOk')) el('hqBwaOk').textContent = ok;
-        if(el('hqBwaMissing')) el('hqBwaMissing').textContent = missing;
-        if(el('hqBwaOverdue')) el('hqBwaOverdue').textContent = overdue;
-        if(el('hqBwaPct')) el('hqBwaPct').textContent = pct + '%';
-        if(el('hqBwaBar')) el('hqBwaBar').style.width = pct + '%';
-
-        // Table
+        // Ladezustand
         var tbody = el('hqBwaTableBody');
-        if(!tbody) return;
+        if(tbody) tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-gray-400 text-sm">⏳ Lade echte Daten…</td></tr>';
 
-        tbody.innerHTML = sorted.map(function(s){
-            var stufe = s.rating === 'missing' ? getEskalationsStufe(today, bwaMo) : (s.rating==='overdue'?3:0);
-            var dl = daysUntil(deadline);
-            var daysText = s.submitted ? s.submitted.split('-').reverse().join('.') : (dl>0 ? 'noch '+dl+' Tage' : Math.abs(dl)+' Tage überfällig');
-            var daysColor = s.submitted ? '#16a34a' : (dl>0 ? '#9ca3af' : '#dc2626');
-            return '<tr class="text-sm">'+
-                '<td class="py-2.5 font-semibold text-gray-800">'+s.name+'</td>'+
-                '<td class="py-2.5">'+(s.submitted ? '<span class="text-green-600 text-xs font-semibold">✓ Eingereicht</span>' : '<span class="text-gray-400 text-xs">Ausstehend</span>')+'</td>'+
-                '<td class="py-2.5">'+ratingBadge(s.rating)+'</td>'+
-                '<td class="py-2.5 text-xs text-gray-500">'+(s.submitted||'—')+'</td>'+
-                '<td class="py-2.5">'+(s.rating==='missing'||s.rating==='overdue' ? eskalationBadge(stufe) : '<span class="text-xs text-gray-300">—</span>')+'</td>'+
-                '<td class="py-2.5 text-xs" style="color:'+daysColor+'">'+daysText+'</td>'+
-                '</tr>';
-        }).join('');
+        try {
+            // 1. Alle Standorte
+            var stdResp = await sb.from('standorte').select('id, name').order('name');
+            var standorte = stdResp.data || [];
+
+            // 2. BWA-Einreichungen für aktuellen BWA-Monat
+            var bwaResp = await sb.from('bwa_daten')
+                .select('standort_id, created_at')
+                .eq('monat', bwaMo.m + 1)
+                .eq('jahr', bwaMo.y);
+            var bwaMap = {};
+            (bwaResp.data || []).forEach(function(b) { bwaMap[b.standort_id] = b.created_at; });
+
+            // 3. WaWi-Belege per E-Mail – letzter Eingang + Anzahl pro Standort (aktueller Monat)
+            var wawiResp = await sb.from('wawi_email_log')
+                .select('standort_id, created_at, anhang_anzahl, status')
+                .eq('status', 'verarbeitet')
+                .gte('created_at', bwaMo.y + '-' + String(bwaMo.m + 1).padStart(2,'0') + '-01');
+            var wawiMap = {};
+            (wawiResp.data || []).forEach(function(w) {
+                if(!w.standort_id) return;
+                if(!wawiMap[w.standort_id]) wawiMap[w.standort_id] = {count: 0, last: null};
+                wawiMap[w.standort_id].count++;
+                if(!wawiMap[w.standort_id].last || w.created_at > wawiMap[w.standort_id].last)
+                    wawiMap[w.standort_id].last = w.created_at;
+            });
+
+            // 4. Standorte anreichern + Rating berechnen
+            var enriched = standorte.map(function(s) {
+                var bwaCreated = bwaMap[s.id] || null;
+                var rating = bwaCreated ? getRating(bwaCreated.split('T')[0], bwaMo) : 'missing';
+                return {
+                    id: s.id,
+                    name: s.name,
+                    submitted: bwaCreated ? bwaCreated.split('T')[0] : null,
+                    rating: rating,
+                    wawi: wawiMap[s.id] || null
+                };
+            });
+
+            // Sort: gold → ok → overdue → missing
+            var order = {gold:0, ok:1, overdue:2, missing:3};
+            enriched.sort(function(a,b){ return (order[a.rating]||3) - (order[b.rating]||3); });
+
+            // 5. KPI-Karten befüllen
+            var gold=0, ok=0, overdue=0, missing=0;
+            enriched.forEach(function(s){
+                if(s.rating==='gold') gold++;
+                else if(s.rating==='ok') ok++;
+                else if(s.rating==='overdue') overdue++;
+                else missing++;
+            });
+            var total = enriched.length;
+            var submitted = gold + ok + overdue;
+            var pct = Math.round(submitted / total * 100);
+
+            if(el('hqBwaSubmitted')) el('hqBwaSubmitted').textContent = submitted;
+            if(el('hqBwaTotal')) el('hqBwaTotal').textContent = total;
+            if(el('hqBwaGold')) el('hqBwaGold').textContent = gold;
+            if(el('hqBwaOk')) el('hqBwaOk').textContent = ok;
+            if(el('hqBwaMissing')) el('hqBwaMissing').textContent = missing;
+            if(el('hqBwaOverdue')) el('hqBwaOverdue').textContent = overdue;
+            if(el('hqBwaPct')) el('hqBwaPct').textContent = pct + '%';
+            if(el('hqBwaBar')) el('hqBwaBar').style.width = pct + '%';
+
+            // 6. Tabelle rendern
+            if(!tbody) return;
+
+            // Tabellen-Header um WaWi-Spalte erweitern
+            var thead = tbody.previousElementSibling;
+            if(thead && thead.tagName === 'THEAD') {
+                thead.innerHTML = '<tr class="text-left text-xs text-gray-400 border-b border-gray-200">'
+                    + '<th class="pb-2 font-semibold">Standort</th>'
+                    + '<th class="pb-2 font-semibold">BWA-Status</th>'
+                    + '<th class="pb-2 font-semibold">Rating</th>'
+                    + '<th class="pb-2 font-semibold">Eingereicht</th>'
+                    + '<th class="pb-2 font-semibold">Eskalation</th>'
+                    + '<th class="pb-2 font-semibold">Tage</th>'
+                    + '<th class="pb-2 font-semibold">WaWi-Belege</th>'
+                    + '</tr>';
+            }
+
+            tbody.innerHTML = enriched.map(function(s) {
+                var stufe = (s.rating === 'missing' || s.rating === 'overdue') ? getEskalationsStufe(today, bwaMo) : -1;
+                if(s.rating === 'overdue') stufe = 3;
+                var dl = daysUntil(deadline);
+                var daysText = s.submitted
+                    ? s.submitted.split('-').reverse().join('.')
+                    : (dl > 0 ? 'noch ' + dl + ' Tage' : Math.abs(dl) + ' Tage überfällig');
+                var daysColor = s.submitted ? '#16a34a' : (dl > 0 ? '#9ca3af' : '#dc2626');
+
+                // WaWi-Spalte
+                var wawiCell;
+                if(s.wawi) {
+                    var lastDate = new Date(s.wawi.last);
+                    var lastStr = lastDate.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'});
+                    var tageHer = Math.floor((Date.now() - lastDate.getTime()) / 86400000);
+                    var freshColor = tageHer <= 3 ? '#16a34a' : tageHer <= 14 ? '#ca8a04' : '#9ca3af';
+                    wawiCell = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;background:#f0fdf4;color:#16a34a;padding:2px 8px;border-radius:12px;font-weight:600">'
+                        + '📧 ' + s.wawi.count + ' Beleg' + (s.wawi.count !== 1 ? 'e' : '')
+                        + '</span>'
+                        + '<span style="font-size:10px;color:' + freshColor + ';margin-left:4px">zuletzt ' + lastStr + '</span>';
+                } else {
+                    wawiCell = '<span style="font-size:11px;color:#d1d5db">— kein Eingang</span>';
+                }
+
+                return '<tr class="text-sm border-b border-gray-50 hover:bg-gray-50">'
+                    + '<td class="py-2.5 font-semibold text-gray-800">' + s.name + '</td>'
+                    + '<td class="py-2.5">' + (s.submitted
+                        ? '<span class="text-green-600 text-xs font-semibold">✓ Eingereicht</span>'
+                        : '<span class="text-gray-400 text-xs">Ausstehend</span>') + '</td>'
+                    + '<td class="py-2.5">' + ratingBadge(s.rating) + '</td>'
+                    + '<td class="py-2.5 text-xs text-gray-500">' + (s.submitted || '—') + '</td>'
+                    + '<td class="py-2.5">' + (stufe >= 0 ? eskalationBadge(stufe) : '<span class="text-xs text-gray-300">—</span>') + '</td>'
+                    + '<td class="py-2.5 text-xs" style="color:' + daysColor + '">' + daysText + '</td>'
+                    + '<td class="py-2.5">' + wawiCell + '</td>'
+                    + '</tr>';
+            }).join('');
+
+        } catch(err) {
+            console.error('renderHqBwaStatus:', err);
+            if(tbody) tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-red-400 text-sm">⚠️ Fehler beim Laden: ' + err.message + '</td></tr>';
+        }
     }
 
     // ──── INIT ────
@@ -347,3 +431,4 @@
 
 // [Init moved to unified dispatcher]
 })();
+
