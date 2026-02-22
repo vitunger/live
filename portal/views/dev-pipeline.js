@@ -252,22 +252,6 @@ export async function renderEntwicklung() {
     var isOwner = (currentRoles||[]).indexOf('owner') !== -1;
 
     // Add notification bell to header (once)
-    var headerDiv = document.querySelector('#entwicklungView > div:first-child');
-    if(headerDiv && !document.getElementById('devNotifBtn')) {
-        var feedbackBtn = headerDiv.querySelector('button[onclick*="toggleDevSubmitForm"]');
-        if(feedbackBtn) {
-            var bellBtn = document.createElement('button');
-            bellBtn.id = 'devNotifBtn';
-            bellBtn.className = 'relative w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-lg transition ml-2';
-            bellBtn.onclick = function(){ toggleDevNotifications(); };
-            bellBtn.innerHTML = '🔔<span id="devNotifBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center" style="display:none">0</span>';
-            feedbackBtn.parentNode.insertBefore(bellBtn, feedbackBtn.nextSibling);
-        }
-    }
-
-    // Load notifications
-    loadDevNotifications();
-
     // Show/hide HQ-only tabs
     document.querySelectorAll('.entw-hq-tab, .entw-hq-sep').forEach(function(el) {
         el.style.display = isHQ ? '' : 'none';
