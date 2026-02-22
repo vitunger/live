@@ -419,7 +419,7 @@ export function renderEntwIdeen() {
         h += '<h3 class="font-semibold text-gray-800 text-sm">'+((s.titel||s.beschreibung||s.kurz_notiz||s.transkription||'Kein Titel').substring(0,80))+'</h3>';
         if(s.eingabe_typ && s.eingabe_typ !== 'text') h += '<span class="text-[10px] text-gray-400 ml-1">'+(s.eingabe_typ==='audio'?'🎤 Audio':s.eingabe_typ==='screenshot'?'📸 Screenshot':s.eingabe_typ==='video'?'🖥️ Video':'📎 '+s.eingabe_typ)+'</span>';
         if(!s.titel && !s.beschreibung && !s.kurz_notiz && s.eingabe_typ==='audio' && !s.transkription) h += '<p class="text-xs text-amber-500 mt-1">⏳ Audio wird transkribiert...</p>';
-        if(!s.ki_analysiert_at && s.status==='neu') h += '<p class="text-xs text-blue-400 mt-1">🤖 KI-Analyse ausstehend</p>';
+        if(!s.ki_analysiert_at && s.status==='neu') h += '<p class="text-xs text-blue-400 mt-1">' + ((currentRoles||[]).indexOf('hq')!==-1 ? '🤖 KI-Analyse ausstehend' : '⏳ Wird bearbeitet...') + '</p>';
         if(ki && ki.zusammenfassung) h += '<p class="text-xs text-gray-500 mt-1 line-clamp-2">'+ki.zusammenfassung+'</p>';
         h += '</div>';
         // Vision Fit Score RIGHT (only if exists)
@@ -509,19 +509,24 @@ export async function renderEntwSteuerung() {
     var totalVotes = devSubmissions.reduce(function(sum,s){ return sum + (s.dev_votes||[]).length; }, 0);
     var totalKomm = devSubmissions.reduce(function(sum,s){ return sum + (s.dev_kommentare||[]).length; }, 0);
 
-    // Stats dashboard
-    var h = '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">';
-    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold text-gray-800">'+total+'</p><p class="text-[10px] text-gray-500">Gesamt</p></div>';
-    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold text-red-600">'+bugs+'</p><p class="text-[10px] text-gray-500">🐛 Bugs</p></div>';
-    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold text-purple-600">'+features+'</p><p class="text-[10px] text-gray-500">✨ Features</p></div>';
-    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold text-blue-600">'+ideen+'</p><p class="text-[10px] text-gray-500">💡 Ideen</p></div>';
-    h += '</div>';
+    // Actionable KPIs
+    var unbearbeitet = devSubmissions.filter(function(s){ return ['neu','ki_pruefung'].indexOf(s.status) !== -1; }).length;
+    var blockiert = devSubmissions.filter(function(s){ return ['ki_rueckfragen','hq_rueckfragen'].indexOf(s.status) !== -1; }).length;
+    var inArbeit = devSubmissions.filter(function(s){ return ['in_entwicklung','beta_test','im_review'].indexOf(s.status) !== -1; }).length;
+    var erledigt = devSubmissions.filter(function(s){ return s.status === 'ausgerollt'; }).length;
+    var kritBugs = devSubmissions.filter(function(s){ return s.ki_typ === 'bug' && s.bug_schwere === 'kritisch' && s.status !== 'ausgerollt' && s.status !== 'abgelehnt'; }).length;
+    // This week stats
+    var weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+    var neuDieseWoche = devSubmissions.filter(function(s){ return new Date(s.created_at) >= weekAgo; }).length;
 
-    h += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">';
-    h += '<div class="vit-card p-3 text-center"><p class="text-lg font-bold text-gray-600">'+portal+' / '+netzwerk+'</p><p class="text-[10px] text-gray-500">💻 Portal / 🌐 Netzwerk</p></div>';
-    h += '<div class="vit-card p-3 text-center"><p class="text-lg font-bold text-orange-600">'+totalVotes+'</p><p class="text-[10px] text-gray-500">👍 Votes</p></div>';
-    h += '<div class="vit-card p-3 text-center"><p class="text-lg font-bold text-gray-600">'+totalKomm+'</p><p class="text-[10px] text-gray-500">💬 Kommentare</p></div>';
-    h += '<div class="vit-card p-3 text-center flex items-center justify-center"><button onclick="exportDevCSV()" class="w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-lg transition" title="CSV Export">📥</button></div>';
+    var h = '<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-4">';
+    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold '+(unbearbeitet > 3 ? 'text-red-600' : 'text-orange-500')+'">'+unbearbeitet+'</p><p class="text-[10px] text-gray-500">📥 Eingang</p></div>';
+    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold '+(blockiert > 0 ? 'text-yellow-600' : 'text-gray-400')+'">'+blockiert+'</p><p class="text-[10px] text-gray-500">⏳ Warten auf Antwort</p></div>';
+    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold text-blue-600">'+inArbeit+'</p><p class="text-[10px] text-gray-500">🔨 In Arbeit</p></div>';
+    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold text-green-600">'+erledigt+'</p><p class="text-[10px] text-gray-500">✅ Umgesetzt</p></div>';
+    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold '+(kritBugs > 0 ? 'text-red-600 animate-pulse' : 'text-gray-400')+'">'+kritBugs+'</p><p class="text-[10px] text-gray-500">🔴 Krit. Bugs</p></div>';
+    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold text-indigo-600">'+neuDieseWoche+'</p><p class="text-[10px] text-gray-500">📈 Diese Woche</p></div>';
+    h += '<div class="vit-card p-3 text-center flex items-center justify-center"><button onclick="exportDevCSV()" class="w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-lg transition" title="CSV Export">📥</button><span class="text-[10px] text-gray-400 ml-1">'+total+'</span></div>';
     h += '</div>';
 
     // Kanban board for HQ (6 Spalten lt. Plan)
@@ -868,8 +873,8 @@ export function renderDevTab(tab) {
 }
 
 var devStatusLabels = {
-    neu:'Neu eingereicht', ki_pruefung:'⏳ Wird analysiert...', ki_rueckfragen:'❓ Rückfragen',
-    konzept_erstellt:'📋 Konzept fertig', konzept_wird_erstellt:'⏳ Konzept wird erstellt...', im_ideenboard:'🎯 Im Ideenboard', hq_rueckfragen:'❓ HQ Rückfragen',
+    neu:'Neu eingereicht', ki_pruefung:'⏳ Wird geprüft...', ki_rueckfragen:'❓ Rückfragen',
+    konzept_erstellt:'📋 Konzept fertig', konzept_wird_erstellt:'⏳ Konzept wird erstellt...', im_ideenboard:'🎯 Im Ideenboard', hq_rueckfragen:'❓ Rückfragen',
     freigegeben:'✅ Freigegeben', in_planung:'📅 In Planung', in_entwicklung:'🔨 In Entwicklung',
     beta_test:'🧪 Beta-Test', im_review:'🔍 Im Review', release_geplant:'🚀 Release geplant', ausgerollt:'✅ Ausgerollt',
     abgelehnt:'❌ Abgelehnt', geparkt:'⏸ Geparkt'
@@ -927,7 +932,7 @@ export function devCardHTML(s) {
     var _komms = s.dev_kommentare || [];
     if(_komms.length > 0) {
         var _lastK = _komms[_komms.length - 1];
-        var _kName = _lastK.users && _lastK.users.name ? _lastK.users.name : (_lastK.typ === 'ki_nachricht' ? '🤖 KI' : '');
+        var _kName = _lastK.users && _lastK.users.name ? _lastK.users.name : (_lastK.typ === 'ki_nachricht' ? ((currentRoles||[]).indexOf('hq')!==-1 ? '🤖 KI' : 'vit:bikes Team') : '');
         var _kText = (_lastK.inhalt || '').substring(0, 60);
         if(_lastK.inhalt && _lastK.inhalt.length > 60) _kText += '...';
         h += '<div class="flex items-center gap-1 mt-1 bg-gray-50 rounded px-2 py-1"><span class="text-[10px] text-gray-500 truncate">💬 <b>'+_kName+':</b> '+_kText+'</span></div>';
@@ -1446,7 +1451,7 @@ export async function devHQDecision(subId, ergebnis) {
 
         // Trigger KI-Konzepterstellung bei Freigabe (fire-and-forget)
         if(ergebnis === 'freigabe') {
-            _showToast('✅ Freigegeben! KI erstellt Entwicklungskonzept...', 'success');
+            _showToast('✅ Freigegeben! Entwicklungskonzept wird erstellt...', 'success');
             _sb().functions.invoke('dev-ki-analyse', {
                 body: { submission_id: subId, mode: 'konzept' }
             }).then(function() {
@@ -1819,7 +1824,7 @@ export async function openDevDetail(subId) {
                 var isAnt = k.typ === 'antwort';
                 var bgClass = isKI ? 'bg-purple-50 border border-purple-100' : isRF ? 'bg-yellow-50 border border-yellow-100' : isAnt ? 'bg-green-50 border border-green-100' : 'bg-gray-50';
                 var labelClass = isKI ? 'text-purple-600' : isRF ? 'text-yellow-700' : isAnt ? 'text-green-700' : 'text-gray-700';
-                var label = isKI ? '🔔 System' : isRF ? '❓ Rückfrage' : isAnt ? '💬 ' + (k.users && k.users.name ? k.users.name : 'Antwort') : '💬 ' + (k.users && k.users.name ? k.users.name : 'Kommentar');
+                var label = isKI ? ((currentRoles||[]).indexOf('hq')!==-1 ? '🤖 KI-Analyse' : '📋 vit:bikes Team') : isRF ? '❓ Rückfrage' : isAnt ? '💬 ' + (k.users && k.users.name ? k.users.name : 'Antwort') : '💬 ' + (k.users && k.users.name ? k.users.name : 'Kommentar');
                 h += '<div class="rounded p-3 text-xs '+bgClass+'">';
                 h += '<span class="font-semibold '+labelClass+'">'+label+'</span>';
                 h += '<p class="text-gray-700 mt-0.5" style="white-space:pre-line">'+k.inhalt+'</p>';
@@ -1832,7 +1837,7 @@ export async function openDevDetail(subId) {
         var isHQUser = (currentRoles||[]).indexOf('hq') !== -1;
         var isSubmitter = sbUser && s.user_id === _sbUser().id;
         if((s.status === 'ki_rueckfragen' || s.status === 'hq_rueckfragen') && isSubmitter) {
-            var rfQuelle = s.status === 'ki_rueckfragen' ? 'Unser System' : 'Das HQ';
+            var rfQuelle = s.status === 'ki_rueckfragen' ? ((currentRoles||[]).indexOf('hq')!==-1 ? 'Die KI-Analyse' : 'Das vit:bikes Team') : 'Das HQ';
             h += '<div id="devRueckfragenForm" class="border-2 border-yellow-300 rounded-lg p-4 mb-4 bg-yellow-50">';
             h += '<h4 class="text-sm font-bold text-yellow-800 mb-2">💬 '+rfQuelle+' hat Rückfragen – bitte antworte:</h4>';
             // Zeige offene Rückfragen aus KI-Analyse
