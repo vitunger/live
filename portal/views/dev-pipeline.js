@@ -2319,8 +2319,10 @@ export async function devHQDecisionFromDetail(subId, ergebnis) {
         }
 
         closeDevDetail();
+        await loadDevSubmissions(true);
         renderDevPipeline(); if(typeof renderEntwIdeen==="function") renderEntwIdeen();
-        // Reload fresh data from DB after short delay
+        if(typeof renderEntwSteuerung === 'function') renderEntwSteuerung();
+        // Reload fresh data from DB after short delay (KI-Analyse etc.)
         setTimeout(function(){ loadDevSubmissions(); }, 1500);
     } catch(err) {
         alert('Fehler: ' + (err.message||err));
