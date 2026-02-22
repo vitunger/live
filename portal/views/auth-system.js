@@ -231,7 +231,7 @@ var rolePermissions = {
 
 // Prüft ob der aktuelle User Zugriff auf eine View hat
 export function hasAccess(viewName) {
-if(currentRole === 'hq') return viewName.indexOf('hq')===0 || viewName==='kalender' || viewName==='todo' || viewName==='kommunikation' || viewName==='entwicklung';
+if(currentRole === 'hq') return true; // HQ users have access to all views
 // Extern level: only allow specific views
 if(SESSION.account_level === 'extern') {
     var externAllowed = ['externHome','onboarding','externWissen','wissen','kommunikation','support','notifications'];
