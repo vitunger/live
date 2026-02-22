@@ -347,10 +347,12 @@ export function renderEntwIdeen() {
     var fStatus = document.getElementById('entwFilterStatus');
     var fKat = document.getElementById('entwFilterKat');
     var fQuelle = document.getElementById('entwFilterQuelle');
+    var fTyp = document.getElementById('entwFilterTyp');
     var scope = fScope ? fScope.value : 'alle';
     var status = fStatus ? fStatus.value : 'alle';
     var kat = fKat ? fKat.value : 'alle';
     var quelle = fQuelle ? fQuelle.value : 'alle';
+    var typ = fTyp ? fTyp.value : 'alle';
 
     var items = devSubmissions.filter(function(s) {
         if(scope !== 'alle' && s.scope !== scope) return false;
@@ -360,6 +362,7 @@ export function renderEntwIdeen() {
         if(kat !== 'alle' && s.kategorie !== kat) return false;
         if(quelle === 'meine' && s.user_id !== userId) return false;
         if(quelle === 'standort' && s.standort_id !== currentStandortId) return false;
+        if(typ !== 'alle' && s.ki_typ !== typ) return false;
         return true;
     });
 
@@ -369,6 +372,19 @@ export function renderEntwIdeen() {
     if(items.length === 0) {
         c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-2">💡</p><p>Keine Ideen mit diesen Filtern gefunden</p></div>';
         return;
+    }
+
+    // Sort by votes (most votes first), then by date
+    var fSort = document.getElementById('entwFilterSort');
+    var sortMode = fSort ? fSort.value : 'votes';
+    if(sortMode === 'votes') {
+        items.sort(function(a,b){ return (b.dev_votes||[]).length - (a.dev_votes||[]).length || new Date(b.created_at) - new Date(a.created_at); });
+    } else if(sortMode === 'newest') {
+        items.sort(function(a,b){ return new Date(b.created_at) - new Date(a.created_at); });
+    } else if(sortMode === 'oldest') {
+        items.sort(function(a,b){ return new Date(a.created_at) - new Date(b.created_at); });
+    } else if(sortMode === 'fit') {
+        items.sort(function(a,b){ var aFit = a.dev_ki_analysen && a.dev_ki_analysen[0] ? a.dev_ki_analysen[0].vision_fit_score||0 : 0; var bFit = b.dev_ki_analysen && b.dev_ki_analysen[0] ? b.dev_ki_analysen[0].vision_fit_score||0 : 0; return bFit - aFit; });
     }
 
     var h = '<div class="space-y-3">';
@@ -1253,20 +1269,28 @@ export async function submitDevIdea() {
 
 export async function toggleDevVote(subId) {
     try {
+        // Prevent voting on own submissions
+        var sub = devSubmissions.find(function(s){ return s.id === subId; });
+        if(sub && sub.user_id === _sbUser().id) {
+            _showToast('Du kannst deine eigene Idee nicht bewerten.', 'error');
+            return;
+        }
         var checkResp = await _sb().from('dev_votes').select('id').eq('submission_id', subId).eq('user_id', _sbUser().id);
         if(checkResp.data && checkResp.data.length > 0) {
             await _sb().from('dev_votes').delete().eq('submission_id', subId).eq('user_id', _sbUser().id);
+            _showToast('Vote zurückgezogen', 'info');
         } else {
             var ins = await _sb().from('dev_votes').insert({ submission_id: subId, user_id: _sbUser().id }).select();
             if(ins.error) throw ins.error;
+            _showToast('👍 Vote abgegeben!', 'success');
         }
         // Refresh whichever view is active
         await loadDevSubmissions();
         renderEntwIdeen();
         renderDevPipeline();
     } catch(err) {
-        if(err.code === '23505') { /* already voted, ignore */ }
-        else { console.error('Vote error:', err); alert('Vote fehlgeschlagen: ' + (err.message||err)); }
+        if(err.code === '23505') { _showToast('Bereits abgestimmt.', 'info'); }
+        else { console.error('Vote error:', err); _showToast('Vote fehlgeschlagen: ' + (err.message||err), 'error'); }
     }
 }
 
@@ -1383,6 +1407,9 @@ export async function openDevDetail(subId) {
 
         var entschResp = await _sb().from('dev_entscheidungen').select('*').eq('submission_id', subId).order('created_at', {ascending: false});
         var entscheidungen = entschResp.data || [];
+
+        var logResp = await _sb().from('dev_status_log').select('*, users:geaendert_von(name)').eq('submission_id', subId).order('created_at', {ascending: false});
+        var statusLog = logResp.data || [];
 
         // Build detail HTML
         var h = '';
@@ -1548,6 +1575,28 @@ export async function openDevDetail(subId) {
             h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'spaeter\')" class="w-full px-3 py-1.5 bg-gray-200 text-gray-600 rounded-lg text-xs hover:bg-gray-300">⏸ Später</button>';
             if(!isOwnerDetail) h += '<p class="text-xs text-gray-400 mt-2 italic">ℹ️ Freigabe & Ablehnung sind dem Owner vorbehalten.</p>';
             h += '</div>';
+        }
+
+        // === STATUS-LOG TIMELINE ===
+        if(statusLog.length > 0) {
+            h += '<div class="border-t border-gray-200 pt-4 mb-4">';
+            h += '<details class="group"><summary class="text-xs font-bold text-gray-500 uppercase mb-2 cursor-pointer hover:text-gray-700">📋 Status-Verlauf ('+statusLog.length+')</summary>';
+            h += '<div class="mt-2 space-y-1.5 max-h-48 overflow-y-auto">';
+            statusLog.forEach(function(log) {
+                var dt = new Date(log.created_at).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+                var userName = log.users ? log.users.name : 'System';
+                var fromLabel = devStatusLabels[log.alter_status] || log.alter_status || '–';
+                var toLabel = devStatusLabels[log.neuer_status] || log.neuer_status;
+                h += '<div class="flex items-center gap-2 text-[11px] text-gray-500">';
+                h += '<span class="text-gray-400 w-24 flex-shrink-0">'+dt+'</span>';
+                h += '<span class="text-gray-400">'+userName+':</span>';
+                h += '<span class="line-through opacity-50">'+fromLabel+'</span>';
+                h += '<span>→</span>';
+                h += '<span class="font-semibold text-gray-700">'+toLabel+'</span>';
+                if(log.grund) h += '<span class="text-gray-400 italic truncate max-w-[200px]" title="'+_escH(log.grund)+'">– '+log.grund+'</span>';
+                h += '</div>';
+            });
+            h += '</div></details></div>';
         }
 
         // === KOMMENTAR SCHREIBEN (immer sichtbar) ===
