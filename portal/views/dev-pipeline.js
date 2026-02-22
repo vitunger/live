@@ -1660,6 +1660,100 @@ export async function openDevDetail(subId) {
             }
         }
 
+
+        // === CODE-COPILOT SEKTION (Phase 4a) ===
+        if(isHQKonzept && konzept && ['freigegeben','in_planung','in_entwicklung','beta_test','release_geplant','ausgerollt'].indexOf(s.status) !== -1) {
+            // Lade Code-Artifacts
+            var codeArtsResp = await _sb().from('dev_code_artifacts').select('*').eq('submission_id', subId).order('dateiname').order('version', {ascending: false});
+            var codeArts = codeArtsResp.data || [];
+            // Nur neueste Version pro Datei
+            var seenFiles = {};
+            var uniqueArts = codeArts.filter(function(a) { if(seenFiles[a.dateiname]) return false; seenFiles[a.dateiname] = true; return true; });
+
+            h += '<div class="border-2 border-emerald-300 rounded-lg mb-4 bg-emerald-50/30 overflow-hidden">';
+            h += '<div class="bg-emerald-100 px-4 py-3 cursor-pointer flex items-center justify-between" onclick="var el=document.getElementById(\'devCodeBody\');el.style.display=el.style.display===\'none\'?\'block\':\'none\'">';
+            h += '<h4 class="text-sm font-bold text-emerald-700">💻 KI-Code-Copilot'+(uniqueArts.length > 0 ? ' <span class=\'text-xs font-normal bg-emerald-200 text-emerald-800 rounded-full px-2 py-0.5 ml-1\'>'+uniqueArts.length+' Datei'+(uniqueArts.length!==1?'en':'')+'</span>':'')+'</h4>';
+            h += '<span class="text-emerald-400 text-xs">▼ auf/zuklappen</span>';
+            h += '</div>';
+            h += '<div id="devCodeBody" class="p-4">';
+
+            // Generate Button
+            h += '<div class="flex items-center justify-between mb-3">';
+            h += '<p class="text-xs text-gray-500">Code basierend auf Konzept v'+konzept.version+' generieren</p>';
+            h += '<button onclick="devCodeGenerate(\''+s.id+'\')" id="devBtnCodeGen" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-semibold hover:bg-emerald-700">'+(uniqueArts.length > 0 ? '🔄 Neu generieren' : '🤖 Code generieren')+'</button>';
+            h += '</div>';
+
+            if(uniqueArts.length === 0) {
+                h += '<div class="bg-white border-2 border-dashed border-gray-200 rounded-lg p-6 text-center">';
+                h += '<p class="text-2xl mb-2">💻</p>';
+                h += '<p class="text-sm text-gray-500">Noch kein Code generiert</p>';
+                h += '<p class="text-xs text-gray-400 mt-1">Die KI erstellt production-ready Code basierend auf dem Konzept.</p></div>';
+            } else {
+                // Datei-Liste
+                h += '<div class="space-y-2 mb-4">';
+                uniqueArts.forEach(function(art) {
+                    var langColors = {javascript:'#f7df1e',sql:'#e97d0a',typescript:'#3178c6',html:'#e34c26',css:'#264de4'};
+                    var lc = langColors[art.sprache] || '#6b7280';
+                    var statusIcons = {entwurf:'📝',review:'🔍',ueberarbeitung:'🔄',final:'✅',deployed:'🚀'};
+                    var reviewIcons = {ausstehend:'⏳',geprueft:'✅',aenderungen_noetig:'🔄',freigegeben:'✅'};
+                    var si = statusIcons[art.status] || '📝';
+                    var ri = reviewIcons[art.review_status] || '⏳';
+
+                    h += '<div class="bg-white border border-gray-200 rounded-lg p-3 hover:border-gray-300 transition">';
+                    h += '<div class="flex items-center justify-between">';
+                    h += '<div class="flex items-center space-x-3 min-w-0">';
+                    h += '<span style="background:'+lc+';color:white;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;text-transform:uppercase">'+art.sprache+'</span>';
+                    h += '<div class="min-w-0"><p class="text-sm font-semibold text-gray-800 truncate">'+art.dateiname+'</p>';
+                    h += '<p class="text-xs text-gray-400">v'+art.version+' · '+(art.code_zeilen||'?')+' Zeilen · '+art.dateityp+'</p></div></div>';
+                    h += '<div class="flex items-center space-x-2 flex-shrink-0">';
+                    h += '<span class="text-xs" title="Status: '+art.status+'">'+si+'</span>';
+                    h += '<span class="text-xs" title="Review: '+art.review_status+'">'+ri+'</span>';
+                    h += '<button onclick="devCodeViewFile(\''+art.id+'\')" class="text-xs px-2 py-1 bg-gray-100 rounded hover:bg-gray-200 font-semibold" title="Code anzeigen">📄</button>';
+                    h += '<button onclick="devCodeReview(\''+art.id+'\',\''+s.id+'\')" class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 font-semibold" title="Review starten">🔍</button>';
+                    h += '</div></div>';
+
+                    // Review-Ergebnis (falls vorhanden)
+                    if(art.review_ergebnis) {
+                        var rv = art.review_ergebnis;
+                        var sc = rv.score || 0;
+                        var scC = sc >= 80 ? 'text-green-600 bg-green-50' : sc >= 60 ? 'text-yellow-600 bg-yellow-50' : 'text-red-600 bg-red-50';
+                        h += '<div class="mt-2 border-t border-gray-100 pt-2 flex items-center gap-3">';
+                        h += '<span class="text-sm font-bold '+scC+' rounded px-2 py-0.5">'+sc+'/100</span>';
+                        var cats = ['sicherheit','qualitaet','funktionalitaet','error_handling','performance'];
+                        var catIcons = {sicherheit:'🔒',qualitaet:'✨',funktionalitaet:'⚙️',error_handling:'🛡️',performance:'⚡'};
+                        cats.forEach(function(c) {
+                            if(rv[c] && rv[c].score != null) h += '<span class="text-[10px] text-gray-500" title="'+c+'">'+catIcons[c]+rv[c].score+'</span>';
+                        });
+                        h += '<span class="text-xs '+(rv.empfehlung==='freigegeben'?'text-green-600':'text-orange-600')+' font-semibold">'+(rv.empfehlung==='freigegeben'?'✅ Freigegeben':'🔄 Änderungen')+'</span>';
+                        if(rv.verbesserungen && rv.verbesserungen.length > 0) h += '<span class="text-[10px] text-gray-400">'+rv.verbesserungen.length+' Vorschläge</span>';
+                        h += '</div>';
+                    }
+                    h += '</div>';
+                });
+                h += '</div>';
+
+                // Code-Chat
+                h += '<div class="border border-emerald-200 rounded-lg p-3 bg-white">';
+                h += '<h5 class="text-xs font-bold text-emerald-600 uppercase mb-2">💬 Code-Chat</h5>';
+                h += '<div id="devCodeChatMsgs" class="max-h-48 overflow-y-auto space-y-2 mb-2"></div>';
+                h += '<div class="flex gap-2">';
+                h += '<select id="devCodeChatArtifact" class="text-xs border border-gray-200 rounded px-2 py-1.5">';
+                uniqueArts.forEach(function(a) { h += '<option value="'+a.id+'">'+a.dateiname+' (v'+a.version+')</option>'; });
+                h += '</select>';
+                h += '<input id="devCodeChatInput" type="text" placeholder="z.B. Mach die Tabelle sortierbar..." class="flex-1 px-3 py-1.5 border border-gray-200 rounded-lg text-sm" onkeypress="if(event.key===\'Enter\')devSendCodeChat(\''+s.id+'\')">';
+                h += '<button onclick="devSendCodeChat(\''+s.id+'\')" id="devBtnCodeChat" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-semibold hover:bg-emerald-700">💬</button>';
+                h += '</div>';
+                h += '<div class="flex gap-1 mt-2">';
+                h += '<button onclick="document.getElementById(\'devCodeChatInput\').value=\'Füge Error-Handling hinzu\'" class="text-[10px] px-2 py-0.5 bg-gray-100 rounded hover:bg-gray-200">+ Error-Handling</button>';
+                h += '<button onclick="document.getElementById(\'devCodeChatInput\').value=\'Optimiere die Performance\'" class="text-[10px] px-2 py-0.5 bg-gray-100 rounded hover:bg-gray-200">+ Performance</button>';
+                h += '<button onclick="document.getElementById(\'devCodeChatInput\').value=\'Füge Kommentare hinzu\'" class="text-[10px] px-2 py-0.5 bg-gray-100 rounded hover:bg-gray-200">+ Kommentare</button>';
+                h += '</div></div>';
+            }
+
+            h += '</div></div>';
+        }
+
+
         // Entscheidungen (nur HQ)
         if(isHQKonzept && entscheidungen.length > 0) {
             h += '<div class="mb-4"><h4 class="text-xs font-bold text-gray-500 uppercase mb-2">HQ-Entscheidungen</h4>';
@@ -2707,6 +2801,147 @@ export async function devApproveReleaseDoc(docId) {
 }
 
 
-const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc};
+
+// === CODE-COPILOT FUNCTIONS (Phase 4a) ===
+
+async function devCodeGenerate(subId) {
+    var btn = document.getElementById('devBtnCodeGen');
+    if(btn) { btn.disabled = true; btn.innerHTML = '<span class="animate-spin inline-block mr-1">⏳</span> KI generiert...'; }
+    try {
+        var resp = await _sb().functions.invoke('dev-ki-analyse', {
+            body: { submission_id: subId, mode: 'code_generate' }
+        });
+        if(resp.error) throw resp.error;
+        var d = resp.data;
+        if(d.error) throw new Error(d.error);
+        _showToast('✅ '+(d.artifacts?.length||0)+' Datei(en) generiert!', 'success');
+        openDevDetail(subId);
+    } catch(err) {
+        console.error('Code-Generate:', err);
+        _showToast('❌ '+err.message, 'error');
+        if(btn) { btn.disabled = false; btn.innerHTML = '🤖 Code generieren'; }
+    }
+}
+
+async function devCodeReview(artifactId, subId) {
+    _showToast('🔍 Review wird gestartet...', 'info');
+    try {
+        var resp = await _sb().functions.invoke('dev-ki-analyse', {
+            body: { submission_id: subId, mode: 'code_review', artifact_id: artifactId }
+        });
+        if(resp.error) throw resp.error;
+        var d = resp.data;
+        if(d.error) throw new Error(d.error);
+        _showToast('✅ Review fertig! Score: '+(d.score||'?')+'/100', 'success');
+        openDevDetail(subId);
+    } catch(err) {
+        console.error('Code-Review:', err);
+        _showToast('❌ '+err.message, 'error');
+    }
+}
+
+function devCodeViewFile(artifactId) {
+    // Code im Modal anzeigen
+    (async function() {
+        try {
+            var resp = await _sb().from('dev_code_artifacts').select('*').eq('id', artifactId).single();
+            if(resp.error) throw resp.error;
+            var art = resp.data;
+            var lines = (art.code_inhalt || '').split('\n');
+            var langColors = {javascript:'#f7df1e',sql:'#e97d0a',typescript:'#3178c6',html:'#e34c26',css:'#264de4'};
+            var lc = langColors[art.sprache] || '#6b7280';
+
+            // Einfaches Code-Viewer Modal
+            var overlay = document.createElement('div');
+            overlay.id = 'devCodeViewOverlay';
+            overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:20px';
+            overlay.onclick = function(e) { if(e.target === overlay) overlay.remove(); };
+
+            var box = document.createElement('div');
+            box.style.cssText = 'background:#1e1e1e;border-radius:12px;width:90%;max-width:900px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden';
+
+            // Toolbar
+            var toolbar = '<div style="background:#2d2d2d;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #404040">';
+            toolbar += '<div style="display:flex;align-items:center;gap:12px"><span style="background:'+lc+';color:white;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;text-transform:uppercase">'+art.sprache+'</span>';
+            toolbar += '<span style="color:#e0e0e0;font-size:13px;font-weight:600;font-family:monospace">'+art.dateiname+'</span>';
+            toolbar += '<span style="color:#858585;font-size:11px">v'+art.version+' · '+(art.code_zeilen||lines.length)+' Zeilen</span></div>';
+            toolbar += '<div style="display:flex;gap:8px"><button onclick="navigator.clipboard.writeText(document.getElementById(\'devCodeRaw\').textContent);this.textContent=\'✅ Kopiert\'" style="color:#ccc;background:#404040;border:none;padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer">📋 Kopieren</button>';
+            toolbar += '<button onclick="document.getElementById(\'devCodeViewOverlay\').remove()" style="color:#ccc;background:none;border:none;font-size:18px;cursor:pointer">✕</button></div></div>';
+
+            // Code
+            var codeHtml = '<div style="overflow:auto;flex:1;padding:0"><table style="border-collapse:collapse;width:100%"><tbody>';
+            lines.forEach(function(line, i) {
+                codeHtml += '<tr><td style="color:#858585;text-align:right;padding:0 12px 0 8px;border-right:1px solid #404040;user-select:none;white-space:nowrap;vertical-align:top;font-size:13px;line-height:1.6;font-family:monospace">'+(i+1)+'</td>';
+                codeHtml += '<td style="padding:0 16px;white-space:pre;overflow-x:auto;font-size:13px;line-height:1.6;font-family:monospace;color:#d4d4d4"><code>'+_escH(line||' ')+'</code></td></tr>';
+            });
+            codeHtml += '</tbody></table></div>';
+            codeHtml += '<pre id="devCodeRaw" style="display:none">'+_escH(art.code_inhalt)+'</pre>';
+
+            box.innerHTML = toolbar + codeHtml;
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
+        } catch(err) {
+            _showToast('❌ '+err.message, 'error');
+        }
+    })();
+}
+
+async function devSendCodeChat(subId) {
+    var artSelect = document.getElementById('devCodeChatArtifact');
+    var input = document.getElementById('devCodeChatInput');
+    var btn = document.getElementById('devBtnCodeChat');
+    if(!artSelect || !input) return;
+    var artifactId = artSelect.value;
+    var msg = input.value.trim();
+    if(!msg) return;
+
+    // User-Nachricht anzeigen
+    var chatDiv = document.getElementById('devCodeChatMsgs');
+    if(chatDiv) {
+        chatDiv.innerHTML += '<div style="margin-left:auto;max-width:85%;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 12px;font-size:12px"><span style="color:#6b7280">👤</span> '+_escH(msg)+'</div>';
+        chatDiv.innerHTML += '<div id="devCodeChatLoading" style="max-width:85%;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px;font-size:12px"><span class="animate-pulse" style="color:#9ca3af">🤖 KI denkt nach...</span></div>';
+        chatDiv.scrollTop = chatDiv.scrollHeight;
+    }
+    input.value = '';
+    if(btn) { btn.disabled = true; btn.textContent = '⏳'; }
+
+    try {
+        var resp = await _sb().functions.invoke('dev-ki-analyse', {
+            body: { submission_id: subId, mode: 'code_chat', artifact_id: artifactId, feedback: msg }
+        });
+        if(resp.error) throw resp.error;
+        var d = resp.data;
+        if(d.error) throw new Error(d.error);
+
+        // Loading entfernen
+        var ld = document.getElementById('devCodeChatLoading');
+        if(ld) ld.remove();
+
+        // KI-Antwort
+        var antwort = d.antwort || 'Keine Antwort.';
+        if(d.code_aktualisiert && d.new_artifact) {
+            antwort += '\n\n✅ Code aktualisiert → v'+d.new_artifact.version+' ('+d.new_artifact.zeilen+' Zeilen)';
+        }
+        if(chatDiv) {
+            chatDiv.innerHTML += '<div style="max-width:85%;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px;font-size:12px"><span style="color:#6b7280">🤖</span> '+_escH(antwort).replace(/\n/g,'<br>')+'</div>';
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+
+        // Bei Code-Update: Sektion nach 2s neu laden
+        if(d.code_aktualisiert) {
+            setTimeout(function() { openDevDetail(subId); }, 2000);
+        }
+    } catch(err) {
+        var ld = document.getElementById('devCodeChatLoading');
+        if(ld) ld.remove();
+        if(chatDiv) {
+            chatDiv.innerHTML += '<div style="max-width:85%;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 12px;font-size:12px">❌ '+_escH(err.message)+'</div>';
+        }
+    }
+    if(btn) { btn.disabled = false; btn.textContent = '💬'; }
+}
+
+
+const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
