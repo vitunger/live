@@ -524,34 +524,7 @@ export async function renderEntwSteuerung() {
     if(!c) return;
     await loadDevSubmissions();
 
-    var total = devSubmissions.length;
-    var bugs = devSubmissions.filter(function(s){ return s.ki_typ === 'bug'; }).length;
-    var features = devSubmissions.filter(function(s){ return s.ki_typ === 'feature'; }).length;
-    var ideen = devSubmissions.filter(function(s){ return s.ki_typ === 'idee'; }).length;
-    var portal = devSubmissions.filter(function(s){ return s.ki_bereich === 'portal'; }).length;
-    var netzwerk = devSubmissions.filter(function(s){ return s.ki_bereich === 'netzwerk'; }).length;
-    var totalVotes = devSubmissions.reduce(function(sum,s){ return sum + (s.dev_votes||[]).length; }, 0);
-    var totalKomm = devSubmissions.reduce(function(sum,s){ return sum + (s.dev_kommentare||[]).filter(function(k){return k.typ==='kommentar';}).length; }, 0);
-
-    // Actionable KPIs
-    var unbearbeitet = devSubmissions.filter(function(s){ return ['neu','ki_pruefung'].indexOf(s.status) !== -1; }).length;
-    var blockiert = devSubmissions.filter(function(s){ return ['ki_rueckfragen','hq_rueckfragen'].indexOf(s.status) !== -1; }).length;
-    var inArbeit = devSubmissions.filter(function(s){ return ['in_entwicklung','beta_test','im_review'].indexOf(s.status) !== -1; }).length;
-    var erledigt = devSubmissions.filter(function(s){ return s.status === 'ausgerollt'; }).length;
-    var kritBugs = devSubmissions.filter(function(s){ return s.ki_typ === 'bug' && s.bug_schwere === 'kritisch' && s.status !== 'ausgerollt' && s.status !== 'abgelehnt'; }).length;
-    // This week stats
-    var weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
-    var neuDieseWoche = devSubmissions.filter(function(s){ return new Date(s.created_at) >= weekAgo; }).length;
-
-    var h = '<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-4">';
-    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold '+(unbearbeitet > 3 ? 'text-red-600' : 'text-orange-500')+'">'+unbearbeitet+'</p><p class="text-[10px] text-gray-500">📥 Eingang</p></div>';
-    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold '+(blockiert > 0 ? 'text-yellow-600' : 'text-gray-400')+'">'+blockiert+'</p><p class="text-[10px] text-gray-500">⏳ Warten auf Antwort</p></div>';
-    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold text-blue-600">'+inArbeit+'</p><p class="text-[10px] text-gray-500">🔨 In Arbeit</p></div>';
-    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold text-green-600">'+erledigt+'</p><p class="text-[10px] text-gray-500">✅ Umgesetzt</p></div>';
-    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold '+(kritBugs > 0 ? 'text-red-600 animate-pulse' : 'text-gray-400')+'">'+kritBugs+'</p><p class="text-[10px] text-gray-500">🔴 Krit. Bugs</p></div>';
-    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold text-indigo-600">'+neuDieseWoche+'</p><p class="text-[10px] text-gray-500">📈 Diese Woche</p></div>';
-    h += '<div class="vit-card p-3 text-center flex items-center justify-center"><button onclick="exportDevCSV()" class="w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-lg transition" title="CSV Export">📥</button><span class="text-[10px] text-gray-400 ml-1">'+total+'</span></div>';
-    h += '</div>';
+    var h = '';
 
     // Kanban board for HQ (6 Spalten lt. Plan)
     var columns = [
