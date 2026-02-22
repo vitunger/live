@@ -741,12 +741,14 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
   const[todoTx,setTodoTx]=useState("");const[todoDays,setTodoDays]=useState(3);
   const[ef,setEf]=useState(null);const[ev,setEv]=useState("");
   const[showForm,setShowForm]=useState(null);
+  const[beratungOpen,setBeratungOpen]=useState(true);
   const st=STAGES.find(s=>s.id===deal.stage)||STAGES[0];
   const sales=deal.sales||{};const seller=SELLERS.find(s=>s.id===deal.seller);
   const openT=deal.todos.filter(t=>!t.done).length;
 
   const sav=(f,v)=>{onUpdateDeal(deal.id,f,v);setEf(null)};
   const uS=(k,v)=>onUpdateDeal(deal.id,"sales",{...sales,[k]:v});
+  const toggleSales=(k)=>uS(k,!sales[k]);
   const goAct=()=>{if(!tx.trim())return;onAct(deal.id,{type:at,text:tx.trim(),time:Date.now()});setTx("")};
   const goTodo=()=>{if(!todoTx.trim())return;onAddTodo(deal.id,{text:todoTx.trim(),due:Date.now()+todoDays*864e5,done:false,id:"t"+Date.now()});setTodoTx("")};
 
@@ -758,6 +760,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
     return <span onClick={()=>{setEf(f);setEv(v||"")}} style={{cursor:"pointer",borderBottom:"1px dashed #e5e7eb",...sx}} title="Klick zum Bearbeiten">{v||<span style={{color:"#d1d5db"}}>{ph}</span>}</span>
   };
   const dpInp={width:"100%",padding:"7px 9px",borderRadius:7,border:"1.5px solid #e5e7eb",fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box"};
+  const chipS=(active)=>({fontSize:10,padding:"3px 8px",borderRadius:6,border:active?"1.5px solid #667EEA":"1.5px solid #e5e7eb",background:active?"#EBF4FF":"#fff",color:active?"#667EEA":"#6b7280",cursor:"pointer",fontWeight:600,transition:"all .15s"});
 
   return <>
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.15)",zIndex:499,animation:"fadeIn .15s"}}/>
@@ -772,21 +775,39 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
             <div style={{fontSize:11,color:"#9ca3af",marginTop:1}}>{tAgo(deal.changed)}</div>
           </div>
           <div style={{textAlign:"right",flexShrink:0}}>
-            <div style={{fontSize:15,fontWeight:800,color:st.color}}><Edt f="value" v={String(deal.value)} tp="number" sx={{textAlign:"right",fontWeight:800,fontSize:14,width:80}}/>{ef!=="value"&&" \u20ac"}</div>
+            <div style={{fontSize:15,fontWeight:800,color:st.color}}><Edt f="value" v={String(deal.value)} tp="number" sx={{textAlign:"right",fontWeight:800,fontSize:14,width:80}}/>{ef!=="value"&&" €"}</div>
             <select value={deal.stage} onChange={e=>onChangeStage(deal.id,deal.stage,e.target.value)} style={{fontSize:10,fontWeight:700,border:"1.5px solid "+st.color,borderRadius:6,background:"#fff",color:st.color,cursor:"pointer",outline:"none",padding:"2px 6px",maxWidth:100,marginTop:4}}>{STAGES.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}</select>
           </div>
-          <button onClick={onClose} style={{background:"none",border:"none",fontSize:18,color:"#9ca3af",cursor:"pointer",marginLeft:6,flexShrink:0}}>\u2715</button>
+          <button onClick={onClose} style={{background:"none",border:"none",fontSize:18,color:"#9ca3af",cursor:"pointer",marginLeft:6,flexShrink:0}}>✕</button>
         </div>
         <div style={{display:"flex",gap:10,fontSize:11,color:"#6b7280",marginTop:8,paddingLeft:46}}>
-          <span>\ud83d\udcde <Edt f="phone" v={deal.phone} ph="Telefon" sx={{fontSize:11}}/></span>
-          <span>\u2709 <Edt f="email" v={deal.email} ph="E-Mail" sx={{fontSize:11}}/></span>
+          <span>📞 <Edt f="phone" v={deal.phone} ph="Telefon" sx={{fontSize:11}}/></span>
+          <span>✉ <Edt f="email" v={deal.email} ph="E-Mail" sx={{fontSize:11}}/></span>
           {seller&&<span style={{fontSize:10,fontWeight:700,color:seller.color,background:seller.color+"15",padding:"2px 6px",borderRadius:4}}>{seller.short}</span>}
+        </div>
+      </div>
+
+      {/* Status Buttons: Setting + Termin */}
+      <div style={{display:"flex",gap:8,padding:"10px 16px",borderBottom:"1px solid #f0f0f0",flexShrink:0}}>
+        <div onClick={()=>uS("settingDone",!sales.settingDone)} style={{flex:1,display:"flex",alignItems:"center",gap:8,padding:"8px 12px",borderRadius:8,border:sales.settingDone?"2px solid #16a34a":"2px solid #dc2626",background:sales.settingDone?"#f0fdf4":"#fff5f5",cursor:"pointer"}}>
+          <span style={{fontSize:16}}>📞</span>
+          <div>
+            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase"}}>Setting</div>
+            <span style={{fontSize:11,fontWeight:700,color:sales.settingDone?"#16a34a":"#dc2626"}}>{sales.settingDone?"✓ Erledigt":"✗ Ausstehend"}</span>
+          </div>
+        </div>
+        <div onClick={()=>uS("terminDone",!sales.terminDone)} style={{flex:1,display:"flex",alignItems:"center",gap:8,padding:"8px 12px",borderRadius:8,border:sales.terminDone?"2px solid #16a34a":"2px solid #dc2626",background:sales.terminDone?"#f0fdf4":"#fff5f5",cursor:"pointer"}}>
+          <span style={{fontSize:16}}>📅</span>
+          <div>
+            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase"}}>Beratungstermin</div>
+            <span style={{fontSize:11,fontWeight:700,color:sales.terminDone?"#16a34a":"#dc2626"}}>{sales.terminDone?"✓ Vereinbart":"✗ Kein Termin"}</span>
+          </div>
         </div>
       </div>
 
       {/* Tabs */}
       <div style={{display:"flex",borderBottom:"1px solid #f0f0f0",padding:"0 16px",flexShrink:0}}>
-        {[{id:"uebersicht",l:"\u00dcbersicht"},{id:"todos",l:"Todos",n:openT},{id:"log",l:"Log",n:deal.acts.length}].map(t=>
+        {[{id:"uebersicht",l:"Übersicht"},{id:"todos",l:"Todos",n:openT},{id:"log",l:"Log",n:deal.acts.length}].map(t=>
           <div key={t.id} onClick={()=>setTab(t.id)} style={{padding:"9px 12px",fontSize:12,fontWeight:600,color:tab===t.id?"#1a1a2e":"#9ca3af",cursor:"pointer",borderBottom:tab===t.id?"2px solid #667EEA":"2px solid transparent"}}>
             {t.l} {t.n>0&&<span style={{fontSize:9,fontWeight:700,background:"#f0f0f0",borderRadius:10,padding:"1px 5px"}}>{t.n}</span>}
           </div>)}
@@ -796,40 +817,80 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
       <div style={{flex:1,overflowY:"auto",padding:"14px 16px"}}>
 
         {tab==="uebersicht"&&<div>
+          {/* Beratung auf einen Blick */}
           <div style={{background:"#f8faff",borderRadius:8,padding:"12px 14px",marginBottom:14}}>
-            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:8}}>Beratung auf einen Blick</div>
-            {[{k:"nutzung",i:"\ud83d\udeb2",l:"Nutzung",ph:"Was macht der Kunde?"},{k:"ziel",i:"\ud83c\udfaf",l:"Ziel",ph:"Welches Ziel?"},{k:"budget",i:"\ud83d\udcb6",l:"Budget",ph:"Budget?"},{k:"next",i:"\ud83d\udc63",l:"N\u00e4chster Schritt",ph:"Was vereinbart?"},{k:"einwaende",i:"\u26a0\ufe0f",l:"Einw\u00e4nde",ph:"Bedenken?"}].map(f=>
-              <div key={f.k} style={{display:"flex",alignItems:"center",gap:6,padding:"5px 0",borderBottom:"1px solid #eef0f8"}}>
-                <span style={{fontSize:12,width:16,textAlign:"center",flexShrink:0}}>{f.i}</span>
-                <span style={{fontSize:11,fontWeight:700,color:"#374151",width:95,flexShrink:0}}>{f.l}</span>
-                <input value={sales[f.k]||""} onChange={e=>uS(f.k,e.target.value)} placeholder={f.ph} style={{flex:1,border:"none",background:"transparent",fontSize:12,color:"#374151",fontFamily:"inherit",outline:"none",padding:0}}/>
-              </div>)}
+            <div onClick={()=>setBeratungOpen(v=>!v)} style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:beratungOpen?8:0,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",userSelect:"none"}}>
+              Beratung auf einen Blick
+              <span style={{fontSize:10,color:"#9ca3af"}}>{beratungOpen?"▲":"▼"}</span>
+            </div>
+            {beratungOpen&&<div>
+              {[{k:"nutzung",i:"🚲",l:"Nutzung",ph:"Was macht der Kunde mit dem Rad?"},{k:"ziel",i:"🎯",l:"Ziel",ph:"Welches Ziel?"},{k:"budget",i:"💶",l:"Budget",ph:"Was kann investiert werden?"},{k:"next",i:"👣",l:"Nächster Schritt",ph:"Was wurde vereinbart?"},{k:"einwaende",i:"⚠️",l:"Einwände",ph:"Bedenken?"}].map(f=>
+                <div key={f.k} style={{display:"flex",alignItems:"center",gap:6,padding:"5px 0",borderBottom:"1px solid #eef0f8"}}>
+                  <span style={{fontSize:12,width:16,textAlign:"center",flexShrink:0}}>{f.i}</span>
+                  <span style={{fontSize:11,fontWeight:700,color:"#374151",width:95,flexShrink:0}}>{f.l}</span>
+                  <input value={sales[f.k]||""} onChange={e=>uS(f.k,e.target.value)} placeholder={f.ph} style={{flex:1,border:"none",background:"transparent",fontSize:12,color:"#374151",fontFamily:"inherit",outline:"none",padding:0}}/>
+                </div>)}
+              {/* Extended fields */}
+              <div style={{borderTop:"1px solid #e8eef8",marginTop:8,paddingTop:8}}>
+                {[{k:"modell",i:"🚲",l:"Modell",ph:"Welches Fahrrad?"},{k:"zeitrahmen",i:"⏱️",l:"Zeitrahmen",ph:"Wann soll gekauft werden?"},{k:"mitbewerber",i:"🏪",l:"Mitbewerber",ph:"Welche anderen Anbieter?"}].map(f=>
+                  <div key={f.k} style={{display:"flex",alignItems:"center",gap:6,padding:"5px 0",borderBottom:"1px solid #eef0f8"}}>
+                    <span style={{fontSize:12,width:16,textAlign:"center",flexShrink:0}}>{f.i}</span>
+                    <span style={{fontSize:11,fontWeight:700,color:"#374151",width:95,flexShrink:0}}>{f.l}</span>
+                    <input value={sales[f.k]||""} onChange={e=>uS(f.k,e.target.value)} placeholder={f.ph} style={{flex:1,border:"none",background:"transparent",fontSize:12,color:"#374151",fontFamily:"inherit",outline:"none",padding:0}}/>
+                  </div>)}
+                {/* Toggle chips */}
+                <div style={{display:"flex",gap:6,flexWrap:"wrap",paddingTop:8}}>
+                  <div onClick={()=>toggleSales("probefahrt")} style={chipS(sales.probefahrt)}>🚴 Probefahrt</div>
+                  <div onClick={()=>toggleSales("bikeSehen")} style={chipS(sales.bikeSehen)}>👀 Bike gesehen</div>
+                  <div onClick={()=>toggleSales("angebotGesendet")} style={chipS(sales.angebotGesendet)}>📄 Angebot gesendet</div>
+                </div>
+              </div>
+            </div>}
           </div>
 
+          {/* Freie Notiz */}
           <div style={{marginBottom:14}}>
             <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:4}}>Freie Notiz</div>
-            <textarea value={deal.note||""} onChange={e=>onUpdateDeal(deal.id,"note",e.target.value)} rows={3} placeholder="Freie Notizen..." style={{...dpInp,resize:"none",width:"100%"}}/>
+            <textarea value={deal.note||""} onChange={e=>onUpdateDeal(deal.id,"note",e.target.value)} rows={4} placeholder="Freie Notizen zum Kunden..." style={{...dpInp,resize:"none",width:"100%"}}/>
           </div>
 
-          <div style={{marginBottom:14}}>
-            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:4}}>Interesse</div>
-            <div style={{display:"flex",gap:4}}>{[1,2,3,4,5].map(i=><span key={i} onClick={()=>onHeat(deal.id,i)} style={{fontSize:18,cursor:"pointer",opacity:i<=deal.heat?1:.25,userSelect:"none"}}>\ud83d\udd25</span>)}</div>
-          </div>
-
-          <div style={{marginBottom:14}}>
-            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:4}}>Verk\u00e4ufer</div>
-            <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-              {SELLERS.filter(s=>s.loc===deal.loc||s.isHQ).map(s=><div key={s.id} onClick={()=>onUpdateDeal(deal.id,"seller",s.id)}
-                style={{padding:"3px 10px",borderRadius:6,border:"1.5px solid "+(deal.seller===s.id?"#667EEA":"#e5e7eb"),background:deal.seller===s.id?"#667EEA":"#fff",color:deal.seller===s.id?"#fff":"#374151",fontSize:11,fontWeight:700,cursor:"pointer"}}>{s.short}</div>)}
+          {/* Heat + Bezahlart side by side */}
+          <div style={{display:"flex",gap:16,marginBottom:14}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:4}}>Interesse</div>
+              <div style={{display:"flex",gap:4}}>
+                {[1,2,3,4,5].map(v=><span key={v} onClick={()=>onHeat(deal.id,v)} style={{cursor:"pointer",fontSize:18,filter:v<=deal.heat?"none":"grayscale(1) opacity(.3)",transition:"all .15s"}}>🔥</span>)}
+              </div>
+            </div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:4}}>Bezahlart</div>
+              <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                {[{k:"bar",l:"💶 Bar/EC"},{k:"finanz",l:"🏦 Finanzierung"},{k:"leasing",l:"📋 Leasing"}].map(b=>
+                  <div key={b.k} onClick={()=>uS("bezahlart",b.k)} style={chipS(sales.bezahlart===b.k)}>{b.l}</div>)}
+              </div>
+              {sales.bezahlart==="leasing"&&<div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:4}}>
+                {["JobRad","BusinessBike","Lease a Bike","Bikeleasing","Deutsche Leasing"].map(p=>
+                  <div key={p} onClick={()=>uS("leasingAnbieter",p)} style={{...chipS(sales.leasingAnbieter===p),fontSize:9}}>{p}</div>)}
+              </div>}
             </div>
           </div>
 
+          {/* Verkäufer */}
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:4}}>Verkäufer</div>
+            <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+              {SELLERS.map(s=><div key={s.id} onClick={()=>onUpdateDeal(deal.id,"seller",s.id)} style={{...chipS(deal.seller===s.id),background:deal.seller===s.id?s.color+"20":"#fff",borderColor:deal.seller===s.id?s.color:"#e5e7eb",color:deal.seller===s.id?s.color:"#6b7280"}}>{s.short}</div>)}
+            </div>
+          </div>
+
+          {/* Quelle */}
           <div style={{marginBottom:14}}>
             <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:4}}>Quelle</div>
-            <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-              {SOURCES.map(q=><div key={q} onClick={()=>onUpdateDeal(deal.id,"source",q)}
-                style={{padding:"4px 10px",borderRadius:6,border:"1.5px solid "+(deal.source===q?"#1a1a2e":"#e5e7eb"),background:deal.source===q?"#1a1a2e":"#fff",color:deal.source===q?"#fff":"#6b7280",fontSize:11,fontWeight:600,cursor:"pointer"}}>{q}</div>)}
+            <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+              {SOURCES.map(s=><div key={s} onClick={()=>onUpdateDeal(deal.id,"source",s)} style={chipS(deal.source===s)}>{s}</div>)}
             </div>
+          </div>
+        </div>}
           </div>
         </div>}
 
@@ -839,22 +900,22 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
             <select value={todoDays} onChange={e=>setTodoDays(+e.target.value)} style={{...dpInp,width:"auto",padding:"7px 6px",fontSize:11}}><option value={0}>Heute</option><option value={1}>Morgen</option><option value={3}>3d</option><option value={7}>1W</option><option value={14}>2W</option></select>
             <button onClick={goTodo} style={{padding:"7px 12px",borderRadius:7,border:"none",background:"#667EEA",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>+</button>
           </div>
-          {!deal.todos.length&&<div style={{color:"#d1d5db",fontSize:12,textAlign:"center",padding:20}}>Alles erledigt \u2728</div>}
+          {!deal.todos.length&&<div style={{color:"#d1d5db",fontSize:12,textAlign:"center",padding:20}}>Alles erledigt ✨</div>}
           {[...deal.todos].sort((a,b)=>a.done-b.done||a.due-b.due).map(t=>{const ov=!t.done&&t.due<NOW;return <div key={t.id} onClick={()=>onToggleTodo(deal.id,t.id)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 0",borderBottom:"1px solid #f5f5f5",cursor:"pointer"}}>
-            <div style={{width:16,height:16,borderRadius:4,border:"1.5px solid "+(t.done?"#16a34a":"#d1d5db"),flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,background:t.done?"#16a34a":"transparent",color:"#fff"}}>{t.done&&"\u2713"}</div>
-            <div style={{flex:1}}><div style={{fontSize:12,color:t.done?"#9ca3af":"#374151",textDecoration:t.done?"line-through":"none"}}>{t.text}</div><div style={{fontSize:10,color:ov?"#E53E3E":"#9ca3af"}}>{ov?"\u26a0\ufe0f \u00dcberf\u00e4llig \u00b7 ":""}F\u00e4llig {tAgo(t.due)}</div></div>
+            <div style={{width:16,height:16,borderRadius:4,border:"1.5px solid "+(t.done?"#16a34a":"#d1d5db"),flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,background:t.done?"#16a34a":"transparent",color:"#fff"}}>{t.done&&"✓"}</div>
+            <div style={{flex:1}}><div style={{fontSize:12,color:t.done?"#9ca3af":"#374151",textDecoration:t.done?"line-through":"none"}}>{t.text}</div><div style={{fontSize:10,color:ov?"#E53E3E":"#9ca3af"}}>{ov?"⚠️ Überfällig · ":""}Fällig {tAgo(t.due)}</div></div>
           </div>})}
         </div>}
 
         {tab==="log"&&<div>
           <div style={{display:"flex",gap:5,marginBottom:8,flexWrap:"wrap"}}>{ACT_TYPES.map(a=><div key={a.id} onClick={()=>setAt(a.id)} style={{padding:"4px 8px",borderRadius:6,fontSize:11,fontWeight:600,cursor:"pointer",background:at===a.id?a.color+"15":"#f5f5f7",color:at===a.id?a.color:"#9ca3af"}}>{a.label}</div>)}</div>
           <div style={{display:"flex",gap:6,marginBottom:12}}>
-            <input value={tx} onChange={e=>setTx(e.target.value)} placeholder="Aktivit\u00e4t eintragen..." onKeyDown={e=>e.key==="Enter"&&goAct()} style={{...dpInp,flex:1}}/>
+            <input value={tx} onChange={e=>setTx(e.target.value)} placeholder="Aktivität eintragen..." onKeyDown={e=>e.key==="Enter"&&goAct()} style={{...dpInp,flex:1}}/>
             <button onClick={goAct} style={{padding:"7px 12px",borderRadius:7,border:"none",background:"#667EEA",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>+</button>
           </div>
-          {!deal.acts.length&&<div style={{color:"#d1d5db",fontSize:12,textAlign:"center",padding:20}}>Noch keine Eintr\u00e4ge</div>}
+          {!deal.acts.length&&<div style={{color:"#d1d5db",fontSize:12,textAlign:"center",padding:20}}>Noch keine Einträge</div>}
           {deal.acts.map((a,i)=>{const t=ACT_TYPES.find(x=>x.id===a.type);return <div key={i} style={{padding:"6px 0",borderBottom:"1px solid #f5f5f5"}}>
-            <div style={{fontSize:12,color:"#374151"}}>{t?.label.split(" ")[0]||"\ud83d\udcdd"} {a.text}</div>
+            <div style={{fontSize:12,color:"#374151"}}>{t?.label.split(" ")[0]||"📝"} {a.text}</div>
             <div style={{fontSize:10,color:"#9ca3af",marginTop:1}}>{tAgo(a.time)}</div>
           </div>})}
         </div>}
@@ -862,9 +923,9 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
 
       {/* Footer */}
       <div style={{padding:"10px 16px",borderTop:"1px solid #f0f0f0",display:"flex",gap:6,flexShrink:0}}>
-        <button onClick={()=>setShowForm("interactive")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #e5e7eb",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#374151"}}>\ud83d\udcf1 Beratung</button>
-        <button onClick={()=>setShowForm("print")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #e5e7eb",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#374151"}}>\ud83d\udda8\ufe0f Drucken</button>
-        <button onClick={()=>setShowForm("scan")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #EF7D00",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#EF7D00"}}>\ud83d\udcf7 Scan</button>
+        <button onClick={()=>setShowForm("interactive")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #e5e7eb",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#374151"}}>📱 Beratung</button>
+        <button onClick={()=>setShowForm("print")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #e5e7eb",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#374151"}}>🖨️ Drucken</button>
+        <button onClick={()=>setShowForm("scan")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #EF7D00",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#EF7D00"}}>📷 Scan</button>
       </div>
 
       {showForm&&showForm!=="scan"&&<SalesForm deal={deal} sales={sales} seller={seller} onClose={()=>setShowForm(null)} onUpdateDeal={onUpdateDeal} mode={showForm}/>}
