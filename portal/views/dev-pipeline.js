@@ -1626,7 +1626,7 @@ export async function openDevDetail(subId) {
         if(ki) {
             var isHQDetail = (currentRoles||[]).indexOf('hq') !== -1;
             h += '<div class="border border-purple-200 rounded-lg p-4 mb-4 bg-purple-50/50">';
-            h += '<h4 class="text-xs font-bold text-purple-600 uppercase mb-2">📊 Analyse</h4>';
+            h += '<h4 onclick="var el=document.getElementById(\'devSec_analyse\');if(el){el.style.display=el.style.display===\'none\'?\'block\':\'none\';this.querySelector(\'.devSecArrow\').textContent=el.style.display===\'none\'?\'▶\':\'▼\'}" style="cursor:pointer;user-select:none" class="text-xs font-bold text-purple-600 uppercase mb-2">📊 Analyse <span class=\'devSecArrow text-gray-400 text-[10px] ml-1\'>▼</span></h4>';\n            h += '<div id="devSec_analyse">';';
             if(ki.zusammenfassung) h += '<p class="text-sm text-gray-700 mb-3">'+ki.zusammenfassung+'</p>';
             if(isHQDetail) {
                 h += '<div class="grid grid-cols-3 gap-3 mb-3">';
@@ -1664,7 +1664,7 @@ export async function openDevDetail(subId) {
         var isOwnerMeta = (currentRoles||[]).indexOf('owner') !== -1;
         if(isHQMeta && (s.bug_schwere || s.deadline || s.konzept_ma || s.entwickler_ma || ['freigegeben','in_planung','in_entwicklung'].indexOf(s.status) !== -1)) {
             h += '<div class="border border-gray-200 rounded-lg p-4 mb-4 bg-white">';
-            h += '<h4 class="text-xs font-bold text-gray-500 uppercase mb-3">📋 Planung & Zuweisung</h4>';
+            h += '</div>';\n            h += '<h4 onclick="var el=document.getElementById(\'devSec_planung\');if(el){el.style.display=el.style.display===\'none\'?\'block\':\'none\';this.querySelector(\'.devSecArrow\').textContent=el.style.display===\'none\'?\'▶\':\'▼\'}" style="cursor:pointer;user-select:none" class="text-xs font-bold text-gray-500 uppercase mb-3">📋 Planung & Zuweisung <span class=\'devSecArrow text-gray-400 text-[10px] ml-1\'>▼</span></h4>';\n            h += '<div id="devSec_planung">';';
             h += '<div class="grid grid-cols-2 gap-3 text-sm">';
             // Bug-Schwere
             if(s.bug_schwere) {
@@ -1711,7 +1711,7 @@ export async function openDevDetail(subId) {
             if(!ki) {
                 h += '<button onclick="reanalyseDevSubmission(\''+s.id+'\')" class="px-3 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg text-sm font-semibold hover:from-purple-600 hover:to-indigo-700 shadow-sm">🤖 KI-Analyse starten</button>';
             } else {
-                h += '<button onclick="reanalyseDevSubmission(\''+s.id+'\')" class="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-xs font-semibold hover:bg-purple-200">🔄 KI neu analysieren</button>';
+                h += '</div>';\n            h += '<button onclick="reanalyseDevSubmission(\''+s.id+'\')" class="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-xs font-semibold hover:bg-purple-200">🔄 KI neu analysieren</button>';
             }
             h += '</div>';
         }
@@ -1942,7 +1942,7 @@ export async function openDevDetail(subId) {
 
         // Entscheidungen (nur HQ)
         if(isHQKonzept && entscheidungen.length > 0) {
-            h += '<div class="mb-4"><h4 class="text-xs font-bold text-gray-500 uppercase mb-2">HQ-Entscheidungen</h4>';
+            h += '<div class="mb-4"><h4 onclick="var el=document.getElementById(\'devSec_hqentsch\');if(el){el.style.display=el.style.display===\'none\'?\'block\':\'none\';this.querySelector(\'.devSecArrow\').textContent=el.style.display===\'none\'?\'▶\':\'▼\'}" style="cursor:pointer;user-select:none" class="text-xs font-bold text-gray-500 uppercase mb-2">HQ-Entscheidungen <span class=\'devSecArrow text-gray-400 text-[10px] ml-1\'>▼</span></h4>';
             entscheidungen.forEach(function(e) {
                 var eColors = {freigabe:'text-green-700 bg-green-50',freigabe_mit_aenderungen:'text-orange-700 bg-orange-50',rueckfragen:'text-yellow-700 bg-yellow-50',ablehnung:'text-red-700 bg-red-50',spaeter:'text-gray-600 bg-gray-50'};
                 var eLabels = {freigabe:'✅ Freigabe',freigabe_mit_aenderungen:'✅ Freigabe mit Änderungen',rueckfragen:'❓ Rückfrage',ablehnung:'❌ Abgelehnt',spaeter:'⏸ Später'};
@@ -1955,7 +1955,7 @@ export async function openDevDetail(subId) {
 
         // Kommentare
         if(kommentare.length > 0) {
-            h += '<div class="mb-4"><h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Verlauf</h4><div class="space-y-2">';
+            h += '<div class="mb-4"><h4 onclick="var el=document.getElementById(\'devSec_verlauf\');if(el){el.style.display=el.style.display===\'none\'?\'block\':\'none\';this.querySelector(\'.devSecArrow\').textContent=el.style.display===\'none\'?\'▶\':\'▼\'}" style="cursor:pointer;user-select:none" class="text-xs font-bold text-gray-500 uppercase mb-2">Verlauf <span class=\'devSecArrow text-gray-400 text-[10px] ml-1\'>▼</span></h4><div class="space-y-2">';
             kommentare.forEach(function(k) {
                 var isKI = k.typ === 'ki_nachricht';
                 var isRF = k.typ === 'rueckfrage';
