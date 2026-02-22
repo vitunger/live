@@ -1675,6 +1675,27 @@ export async function openDevDetail(subId) {
         if(ki && ki.aufwand_schaetzung) h += '<span class="text-[10px] bg-gray-100 rounded px-1 py-0.5 flex-shrink-0">'+ki.aufwand_schaetzung+'</span>';
         h += '<h2 class="text-sm font-bold text-gray-800 truncate">'+(s.titel||'(Ohne Titel)')+'</h2>';
         h += '</div>';
+        // Workflow Actions (immer sichtbar im Header)
+        if(showWorkflow) {
+            var wfActions = {
+                'freigegeben': [{label:'Konzept erstellen',fn:'createDevKonzept',icon:'\uD83D\uDCCB',color:'indigo'},{label:'\u2192 Entwicklung',status:'in_entwicklung',icon:'\uD83D\uDCDD',color:'blue'}],
+                'in_planung': [{label:'\u2192 Entwicklung',status:'in_entwicklung',icon:'\u2699\uFE0F',color:'emerald'}],
+                'in_entwicklung': [{label:'\u2192 Beta-Test',status:'beta_test',icon:'\uD83E\uDDEA',color:'pink'}],
+                'beta_test': [{label:'\u2192 Review',status:'im_review',icon:'\uD83D\uDD0D',color:'purple'}],
+                'im_review': [{label:'\u2192 Release',status:'release_geplant',icon:'\uD83D\uDE80',color:'orange'}],
+                'release_geplant': [{label:'\u2192 Ausgerollt!',status:'ausgerollt',icon:'\u2705',color:'green'}]
+            };
+            var acts = wfActions[s.status] || [];
+            h += '<div class="flex gap-1 flex-shrink-0">';
+            acts.forEach(function(a) {
+                if(a.fn) {
+                    h += '<button onclick="'+a.fn+'(\''+s.id+'\')" class="px-2 py-1 bg-'+a.color+'-500 text-white rounded text-[10px] font-semibold hover:bg-'+a.color+'-600 whitespace-nowrap">'+a.icon+' '+a.label+'</button>';
+                } else {
+                    h += '<button onclick="updateDevStatus(\''+s.id+'\',\''+a.status+'\')" class="px-2 py-1 bg-'+a.color+'-500 text-white rounded text-[10px] font-semibold hover:bg-'+a.color+'-600 whitespace-nowrap">'+a.icon+' '+a.label+'</button>';
+                }
+            });
+            h += '</div>';
+        }
         h += '<button onclick="closeDevDetail()" class="text-gray-400 hover:text-gray-600 text-xl leading-none flex-shrink-0 ml-2">\u2715</button>';
         h += '</div>';
 
@@ -1853,30 +1874,6 @@ export async function openDevDetail(subId) {
             h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'geschlossen\')" class="flex-1 px-2 py-1 bg-slate-200 text-slate-600 rounded text-[10px] hover:bg-slate-300">\uD83D\uDD12 Schlie\u00DFen</button>';
             h += '</div>';
             h += '</div>';
-        }
-
-        // Workflow Actions (compact)
-        if(showWorkflow) {
-            h += '<div class="bg-blue-50 border border-blue-200 rounded-lg p-3">';
-            h += '<h4 class="text-[10px] font-bold text-gray-600 uppercase mb-2">\u26A1 Workflow</h4>';
-            h += '<div class="flex flex-wrap gap-1">';
-            var wfActions = {
-                'freigegeben': [{label:'Konzept erstellen',status:'konzept_wird_erstellt',fn:'createDevKonzept',icon:'\uD83D\uDCCB',color:'indigo'},{label:'\u2192 In Entwicklung',status:'in_entwicklung',icon:'\uD83D\uDCDD',color:'blue'}],
-                'in_planung': [{label:'\u2192 Entwicklung',status:'in_entwicklung',icon:'\u2699\uFE0F',color:'emerald'}],
-                'in_entwicklung': [{label:'\u2192 Beta-Test',status:'beta_test',icon:'\uD83E\uDDEA',color:'pink'}],
-                'beta_test': [{label:'\u2192 Review',status:'im_review',icon:'\uD83D\uDD0D',color:'purple'}],
-                'im_review': [{label:'\u2192 Release planen',status:'release_geplant',icon:'\uD83D\uDE80',color:'orange'}],
-                'release_geplant': [{label:'\u2192 Ausgerollt!',status:'ausgerollt',icon:'\u2705',color:'green'}]
-            };
-            var acts = wfActions[s.status] || [];
-            acts.forEach(function(a) {
-                if(a.fn) {
-                    h += '<button onclick="'+a.fn+'(\''+s.id+'\')" class="px-2 py-1 bg-'+a.color+'-500 text-white rounded text-[10px] font-semibold hover:bg-'+a.color+'-600">'+a.icon+' '+a.label+'</button>';
-                } else {
-                    h += '<button onclick="updateDevStatus(\''+s.id+'\',\''+a.status+'\')" class="px-2 py-1 bg-'+a.color+'-500 text-white rounded text-[10px] font-semibold hover:bg-'+a.color+'-600">'+a.icon+' '+a.label+'</button>';
-                }
-            });
-            h += '</div></div>';
         }
 
 
