@@ -1286,10 +1286,6 @@ function PipelineApp(){
           background:filter===f?"#667EEA":"#fff",fontSize:12,fontWeight:600,color:filter===f?"#fff":"#6b7280",cursor:"pointer",transition:"all .15s"}}>
         {f==="all"?"Alle":"Meine"}
       </div>)}
-      {isHqUser&&<select value={curLoc} onChange={e=>setCurLoc(e.target.value)}
-        style={{marginLeft:4,padding:"4px 10px",borderRadius:8,border:"1.5px solid #e5e7eb",fontSize:11,fontWeight:600,fontFamily:"inherit",color:"#374151",background:"#fff",cursor:"pointer",outline:"none"}}>
-        {LOCATIONS.map(l=><option key={l.id} value={l.id}>{l.label}</option>)}
-      </select>}
       <span style={{fontSize:10,color:"#9ca3af"}}>{filteredDeals.filter(d=>!["gold","lost"].includes(d.stage)).length} Deals</span>
       {aging>0&&<span style={{fontSize:10,color:"#E53E3E",fontWeight:700}}>⚠ {aging} Follow-Up</span>}
       {openTodos>0&&<span style={{fontSize:10,color:"#667EEA",fontWeight:700}}>☑ {openTodos} Todos</span>}
