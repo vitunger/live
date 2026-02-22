@@ -1734,10 +1734,7 @@ export async function openDevDetail(subId) {
                 h += '</div>';
             }
             if(ki.rueckfragen && ki.rueckfragen.length > 0) {
-                h += '<div class="mt-2 bg-yellow-50 rounded p-2">';
-                h += '<p class="text-[10px] font-semibold text-yellow-700 mb-1">\u2753 R\u00FCckfragen:</p>';
-                ki.rueckfragen.forEach(function(q) { h += '<p class="text-[10px] text-gray-600">\u2022 '+(q.frage||q)+'</p>'; });
-                h += '</div>';
+                h += '<div class="mt-2 text-[10px] text-yellow-600"><span class="font-semibold">\u2753 ' + ki.rueckfragen.length + ' R\u00FCckfrage' + (ki.rueckfragen.length > 1 ? 'n' : '') + '</span> \u2013 siehe Verlauf</div>';
             }
             h += '</div>'; // end collapsible content
             h += '</div>'; // close section wrapper
@@ -1921,8 +1918,17 @@ export async function openDevDetail(subId) {
         }
 
         // Verlauf
-        if(kommentare.length > 0) {
+        var _hasKIRueckfragen = ki && ki.rueckfragen && ki.rueckfragen.length > 0;
+        if(kommentare.length > 0 || _hasKIRueckfragen) {
             h += '<div class="mb-4"><h4 class="text-[10px] font-bold text-gray-500 uppercase mb-2">Verlauf</h4><div class="space-y-1.5">';
+            // KI-Rückfragen als Verlaufseinträge (ganz oben, chronologisch zuerst)
+            if(_hasKIRueckfragen) {
+                var _rfDate = ki.created_at ? new Date(ki.created_at).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+                h += '<div class="rounded p-2 text-xs border bg-yellow-50 border-yellow-200">';
+                h += '<div class="flex items-center gap-1 mb-1"><span class="font-semibold text-yellow-700">\u2753 R\u00FCckfragen</span><span class="text-[9px] text-gray-400">' + _rfDate + '</span></div>';
+                ki.rueckfragen.forEach(function(q) { h += '<p class="text-yellow-800 ml-1">\u2022 ' + (q.frage||q) + '</p>'; });
+                h += '</div>';
+            }
             kommentare.forEach(function(k) {
                 var isKI = k.typ === 'ki_nachricht';
                 var bgClass = isKI ? 'bg-purple-50 border-purple-100' : k.typ==='rueckfrage' ? 'bg-yellow-50 border-yellow-100' : k.typ==='antwort' ? 'bg-green-50 border-green-100' : 'bg-gray-50 border-gray-100';
@@ -2962,11 +2968,10 @@ export async function createDevKonzept(subId) {
 }
 
 export async function updateDevStatus(subId, newStatus) {
-    var btn = event ? event.target.closest('button') : null;
-    if(btn) { btn.disabled = true; btn.innerHTML = '\u23F3 ' + btn.textContent; }
+    var btn = window.event ? window.event.target.closest('button') : null;
+    if(btn) { btn.disabled = true; var _origText = btn.textContent; btn.innerHTML = '\u23F3 ' + _origText; }
     try {
         var updates = { status: newStatus };
-        if(newStatus === 'in_entwicklung') updates.entwicklung_start_at = new Date().toISOString();
         if(newStatus === 'beta_test') updates.beta_start_at = new Date().toISOString();
         if(newStatus === 'ausgerollt') updates.ausgerollt_at = new Date().toISOString();
         var resp = await _sb().from('dev_submissions').update(updates).eq('id', subId);
@@ -2976,7 +2981,7 @@ export async function updateDevStatus(subId, newStatus) {
         openDevDetail(subId);
     } catch(err) {
         _showToast('Fehler: ' + (err.message||err), 'error');
-        if(btn) { btn.disabled = false; }
+        if(btn) { btn.disabled = false; btn.textContent = _origText || ''; }
     }
 }
 
