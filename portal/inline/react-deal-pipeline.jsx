@@ -891,8 +891,6 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
             </div>
           </div>
         </div>}
-          </div>
-        </div>}
 
         {tab==="todos"&&<div>
           <div style={{display:"flex",gap:6,marginBottom:8}}>
