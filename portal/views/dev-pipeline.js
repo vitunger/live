@@ -1685,9 +1685,8 @@ export async function openDevDetail(subId) {
                 ki.rueckfragen.forEach(function(q) { h += '<p class="text-[10px] text-gray-600">\u2022 '+(q.frage||q)+'</p>'; });
                 h += '</div>';
             }
-            h += '</div>'; // end collapsible
-            h += '</div>';
-            h += '</div>'; // close collapsible wrapper
+            h += '</div>'; // end collapsible content
+            h += '</div>'; // close section wrapper
         }
 
         // Planung & Zuweisung (collapsible - eingeklappt wenn geplant, ausgeklappt wenn ungeplant)
@@ -1725,10 +1724,9 @@ export async function openDevDetail(subId) {
                 h += '<span class="font-semibold" id="devEntwicklerMAName">\u2013</span>';
             }
             h += '</div>';
-            h += '</div>'; // end collapsible
             h += '</div>'; // close space-y
-            h += '</div>'; // close collapsible wrapper
-            h += '</div>'; // close section
+            h += '</div>'; // close collapsible content
+            h += '</div>'; // close section wrapper
             setTimeout(function(){ _loadDevHQUsers(s); }, 50);
         }
 
