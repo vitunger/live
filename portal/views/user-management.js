@@ -3,6 +3,8 @@
  * @module views/user-management
  */
 function _sb()           { return window.sb; }
+var SUPABASE_URL = (window.sb && window.sb.supabaseUrl) || 'https://lwwagbkxeofahhwebkab.supabase.co';
+var SUPABASE_ANON_KEY = (window.sb && window.sb.supabaseKey) || '';
 function _sbUser()       { return window.sbUser; }
 function _sbProfile()    { return window.sbProfile; }
 function _escH(s)        { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
