@@ -2977,8 +2977,9 @@ export async function updateDevStatus(subId, newStatus) {
         var resp = await _sb().from('dev_submissions').update(updates).eq('id', subId);
         if(resp.error) throw resp.error;
         _showToast('\u2705 Status aktualisiert', 'success');
+        closeDevDetail();
         await loadDevSubmissions(true);
-        openDevDetail(subId);
+        refreshEntwicklungViews();
     } catch(err) {
         _showToast('Fehler: ' + (err.message||err), 'error');
         if(btn) { btn.disabled = false; btn.textContent = _origText || ''; }
