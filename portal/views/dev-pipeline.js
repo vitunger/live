@@ -558,9 +558,9 @@ export async function renderEntwSteuerung() {
 
     // Kanban board for HQ (6 Spalten lt. Plan)
     var columns = [
-        {key:'neu', label:'📥 Eingang', statuses:['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','konzept_wird_erstellt'], color:'blue'},
+        {key:'neu', label:'📥 Eingang', statuses:['neu','ki_pruefung','ki_rueckfragen'], color:'blue'},
         {key:'board', label:'🎯 Ideenboard', statuses:['im_ideenboard','hq_rueckfragen'], color:'purple'},
-        {key:'plan', label:'📅 Planung', statuses:['freigegeben','in_planung'], color:'teal'},
+        {key:'plan', label:'📅 Planung', statuses:['konzept_wird_erstellt','konzept_erstellt','freigegeben','in_planung'], color:'teal'},
         {key:'dev', label:'🔨 Entwicklung', statuses:['in_entwicklung','beta_test','im_review','release_geplant'], color:'yellow'},
         {key:'done', label:'✅ Umgesetzt', statuses:['ausgerollt'], color:'green'},
         {key:'parked', label:'⏸ Geparkt', statuses:['geparkt'], color:'gray'},
