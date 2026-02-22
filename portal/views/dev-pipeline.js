@@ -322,7 +322,7 @@ export async function renderEntwTabContent(tab) {
 
 export async function loadDevSubmissions() {
     try {
-        var query = _sb().from('dev_submissions').select('*, users!dev_submissions_user_id_fkey(name), dev_ki_analysen(zusammenfassung, vision_fit_score, machbarkeit, aufwand_schaetzung, bug_schwere, deadline_vorschlag, deadline_begruendung), dev_votes(user_id), dev_kommentare(id, typ, inhalt, created_at, users(name))').order('created_at', {ascending: false});
+        var query = _sb().from('dev_submissions').select('*, users!dev_submissions_user_id_public_fkey(name), dev_ki_analysen(zusammenfassung, vision_fit_score, machbarkeit, aufwand_schaetzung, bug_schwere, deadline_vorschlag, deadline_begruendung), dev_votes(user_id), dev_kommentare(id, typ, inhalt, created_at, users!dev_kommentare_user_id_public_fkey(name))').order('created_at', {ascending: false});
         var resp = await query;
         if(resp.error) throw resp.error;
         devSubmissions = resp.data || [];
@@ -834,7 +834,7 @@ export async function renderDevPipeline() {
 
     // Load all submissions
     try {
-        var query = _sb().from('dev_submissions').select('*, users!dev_submissions_user_id_fkey(name), dev_ki_analysen(zusammenfassung, vision_fit_score, machbarkeit, aufwand_schaetzung, bug_schwere, deadline_vorschlag, deadline_begruendung), dev_votes(user_id), dev_kommentare(id, typ, inhalt, created_at, users(name))').order('created_at', {ascending: false});
+        var query = _sb().from('dev_submissions').select('*, users!dev_submissions_user_id_public_fkey(name), dev_ki_analysen(zusammenfassung, vision_fit_score, machbarkeit, aufwand_schaetzung, bug_schwere, deadline_vorschlag, deadline_begruendung), dev_votes(user_id), dev_kommentare(id, typ, inhalt, created_at, users!dev_kommentare_user_id_public_fkey(name))').order('created_at', {ascending: false});
         var resp = await query;
         if(resp.error) throw resp.error;
         devSubmissions = resp.data || [];
