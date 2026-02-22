@@ -332,6 +332,7 @@
             var days=[]; for(var i=0;i<5;i++){var d=new Date(monday);d.setDate(monday.getDate()+i);days.push(d);}
             var kw=getKW(monday), monISO=fmtISO(monday), friISO=fmtISO(days[4]);
             await loadHQUsers();
+            await Promise.all([loadDesks(), loadRooms()]);
             var bkRes=await sb.from('office_bookings').select('*').gte('booking_date',monISO).lte('booking_date',friISO);
             var bookings=bkRes.data||[];
             var bMap={}; bookings.forEach(function(b){bMap[b.user_id+'_'+b.booking_date]=b;});
@@ -373,15 +374,36 @@
                     var ds=fmtISO(d), key=u.id+'_'+ds, b=bMap[key], st=b?b.status:'';
                     var isT=ds===todayISO();
                     if(isMe) {
+                        // Find which desks are booked by others on this day
+                        var dayBookedDesks=[];
+                        bookings.forEach(function(bk){if(bk.booking_date===ds && bk.status==='office' && bk.desk_nr && bk.user_id!==sbUser.id) dayBookedDesks.push(bk.desk_nr);});
+                        var myDesk=b?b.desk_nr:null;
+                        
                         html+='<td class="text-center p-2'+(isT?' bg-orange-50':'')+'">'+
                             '<select onchange="window._offSetDay(\''+ds+'\',this.value)" class="text-xs border border-gray-200 rounded-lg px-1 py-1.5 bg-white text-center font-semibold cursor-pointer w-full focus:ring-2 focus:ring-vit-orange">'+
                                 '<option value=""'+(!st?' selected':'')+'>\u2014</option>'+
                                 '<option value="office"'+(st==='office'?' selected':'')+'>\ud83c\udfe2 B\u00fcro</option>'+
                                 '<option value="remote"'+(st==='remote'?' selected':'')+'>\ud83c\udfe0 Remote</option>'+
                                 '<option value="absent"'+(st==='absent'?' selected':'')+'>\u2796 Abwesend</option>'+
-                            '</select>'+
-                            (b&&b.desk_nr?'<div class="text-[10px] text-gray-400 mt-0.5">P'+b.desk_nr+'</div>':'')+
-                        '</td>';
+                            '</select>';
+                        if(st==='office' && _desks && _desks.length) {
+                            html+='<select onchange="window._offSetDesk(\''+ds+'\',this.value)" class="text-[10px] border border-gray-100 rounded px-0.5 py-0.5 mt-1 w-full text-center text-gray-500 cursor-pointer">';
+                            html+='<option value=""'+(myDesk?'':' selected')+'>Platz w\u00e4hlen\u2026</option>';
+                            (_rooms||[]).forEach(function(room){
+                                var rd=(_desks||[]).filter(function(dd){return (dd.room_id===room.id||dd.room===room.name) && dd.is_bookable!==false;});
+                                if(!rd.length) return;
+                                html+='<optgroup label="'+esc(room.name)+'">';
+                                rd.forEach(function(dd){
+                                    var taken=dayBookedDesks.indexOf(dd.nr)>=0;
+                                    html+='<option value="'+dd.nr+'"'+(myDesk===dd.nr?' selected':'')+(taken?' disabled':'')+'>P'+dd.nr+(dd.label?' \u2013 '+esc(dd.label):'')+(taken?' (belegt)':'')+'</option>';
+                                });
+                                html+='</optgroup>';
+                            });
+                            html+='</select>';
+                        } else if(st==='office' && myDesk) {
+                            html+='<div class="text-[10px] text-gray-400 mt-0.5">P'+myDesk+'</div>';
+                        }
+                        html+='</td>';
                     } else {
                         var badge='<span class="text-gray-300">\u2014</span>';
                         if(st==='office') badge='<span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">B\u00fcro</span>';
@@ -430,15 +452,26 @@
                 },{onConflict:'user_id,booking_date'});
                 if(r.error) throw r.error;
             }
-            // Subtle feedback without full re-render
-            var sel=event&&event.target;
-            if(sel) {
-                sel.style.boxShadow='0 0 0 2px #22c55e';
-                setTimeout(function(){sel.style.boxShadow='';},600);
-            }
+            // Re-render to show/hide desk picker
+            renderWochenplan();
         } catch(err) {
             console.error('[Office] SetDay error:',err);
-            notify('Fehler: '+err.message,'error');
+            if(typeof showToast==='function') showToast('Fehler: '+err.message,'error');
+        }
+    };
+
+    // Set desk for a specific day
+    window._offSetDesk = async function(dateStr, deskNr) {
+        try {
+            var nr=deskNr?parseInt(deskNr):null;
+            var r=await sb.from('office_bookings').update({desk_nr:nr,updated_at:new Date().toISOString()}).eq('user_id',sbUser.id).eq('booking_date',dateStr);
+            if(r.error) throw r.error;
+            var sel=event&&event.target;
+            if(sel){sel.style.boxShadow='0 0 0 2px #22c55e';setTimeout(function(){sel.style.boxShadow='';},600);}
+            if(nr && typeof showToast==='function') showToast('\u2705 P'+nr+' gebucht f\u00fcr '+dateStr,'success');
+        } catch(err) {
+            console.error('[Office] SetDesk error:',err);
+            if(typeof showToast==='function') showToast('Fehler: '+err.message,'error');
         }
     };
 
