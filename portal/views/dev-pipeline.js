@@ -1686,6 +1686,7 @@ export async function openDevDetail(subId) {
             }
             h += '</div>'; // end collapsible
             h += '</div>';
+            h += '</div>'; // close collapsible wrapper
         }
 
         // Planung & Zuweisung (collapsible - eingeklappt wenn geplant, ausgeklappt wenn ungeplant)
@@ -1724,7 +1725,9 @@ export async function openDevDetail(subId) {
             }
             h += '</div>';
             h += '</div>'; // end collapsible
-            h += '</div></div>';
+            h += '</div>'; // close space-y
+            h += '</div>'; // close collapsible wrapper
+            h += '</div>'; // close section
             setTimeout(function(){ _loadDevHQUsers(s); }, 50);
         }
 
