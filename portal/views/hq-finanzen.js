@@ -101,7 +101,9 @@ async function loadHqFinData() {
         hqFinStandorte = standorte.map(function(s) {
             var sBwa = bwaData.filter(function(b) { return b.standort_id === s.id; });
             var bwaUmsatz = sBwa.reduce(function(a, b) { return a + (parseFloat(b.umsatzerloese) || 0); }, 0);
-            var avgRohertrag = sBwa.length ? (sBwa.reduce(function(a, b) { return a + (parseFloat(b.rohertrag) || 0); }, 0) / sBwa.length) : 0;
+            // Rohertrag: absolute value in DB, need to calculate percentage
+            var totalRohertragAbs = sBwa.reduce(function(a, b) { return a + (parseFloat(b.rohertrag) || 0); }, 0);
+            var rohertragPct = bwaUmsatz > 0 ? (totalRohertragAbs / bwaUmsatz * 100) : 0;
             var bwaMonate = sBwa.length;
 
             // WaWi as fallback
@@ -143,7 +145,7 @@ async function loadHqFinData() {
                 umsatzWawi: wawiUmsatz,
                 umsatzPlan: planUmsatzYtd,
                 datenquelle: datenquelle,
-                rohertrag: parseFloat(avgRohertrag.toFixed(1)),
+                rohertrag: parseFloat(rohertragPct.toFixed(1)),
                 bwaMonate: bwaMonate,
                 bwaEingereicht: bwaEingereicht,
                 bwaDate: bwaDate,
