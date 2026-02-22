@@ -1454,8 +1454,11 @@ export async function submitDevIdea() {
         var fl = document.getElementById('devFileList'); if(fl) fl.innerHTML = '';
         toggleDevSubmitForm();
 
-        // Sofort anzeigen
-        renderDevPipeline();
+        _showToast('\uD83D\uDCA1 Idee eingereicht! KI analysiert im Hintergrund...', 'success');
+
+        // Sofort anzeigen: Daten neu laden + rendern
+        await loadDevSubmissions(true);
+        refreshEntwicklungViews();
 
         // Trigger KI-Analyse (fire-and-forget, im Hintergrund)
         var submissionId = resp.data.id;
@@ -1465,7 +1468,7 @@ export async function submitDevIdea() {
             if(kiResp.error) console.warn('KI-Analyse Fehler:', kiResp.error);
             else console.log('KI-Analyse fertig für:', submissionId);
             // Nach Analyse nochmal neu laden um Ergebnis zu zeigen
-            renderDevPipeline();
+            loadDevSubmissions(true).then(function(){ refreshEntwicklungViews(); });
         });
     } catch(err) {
         alert('Fehler beim Einreichen: ' + (err.message||err));
@@ -2253,6 +2256,8 @@ export async function submitDevRueckfragenAntwort(subId, currentStatus) {
 
 // HQ-Entscheidung aus dem Detail-Modal (inkl. "Freigabe mit Änderungen")
 export async function devHQDecisionFromDetail(subId, ergebnis) {
+    // Alle Decision-Buttons sofort disablen
+    document.querySelectorAll('[onclick*="devHQDecisionFromDetail"]').forEach(function(b){ b.disabled = true; b.style.opacity = '0.5'; });
     // Owner-Check: Nur Owner darf freigeben oder ablehnen
     var isOwner = (currentRoles||[]).indexOf('owner') !== -1;
     if(!isOwner && ['freigabe','freigabe_mit_aenderungen','ablehnung'].indexOf(ergebnis) !== -1) {
@@ -2905,6 +2910,75 @@ export async function uploadDevAttachment(subId) {
 // ============================================================
 // PHASE 3d/5: Workflow Status Advancement
 // ============================================================
+
+// Generische Loading-Anzeige für KI-Aktionen im Detail-Modal
+function _showDevActionLoading(title, subtitle) {
+    var wfBox = document.querySelector('.bg-blue-50.border-blue-200');
+    if(wfBox) {
+        wfBox.innerHTML = '<div class="flex items-center gap-3">' +
+            '<div class="w-7 h-7 rounded-full bg-purple-600 flex items-center justify-center animate-pulse"><span class="text-white text-xs">\uD83E\uDD16</span></div>' +
+            '<div class="flex-1"><h4 class="font-semibold text-purple-800 text-xs">' + title + '</h4>' +
+            '<p class="text-[10px] text-purple-500" id="_devLoadText">' + subtitle + '</p></div></div>' +
+            '<div class="w-full bg-purple-100 rounded-full h-1.5 mt-2 overflow-hidden">' +
+            '<div id="_devLoadBar" class="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-1000" style="width:15%"></div></div>';
+    }
+}
+
+function _animateDevLoadBar(steps) {
+    var i = 0;
+    return setInterval(function() {
+        if(i >= steps.length) return;
+        var bar = document.getElementById('_devLoadBar');
+        var txt = document.getElementById('_devLoadText');
+        if(bar) bar.style.width = steps[i].pct;
+        if(txt) txt.textContent = steps[i].text;
+        i++;
+    }, 3000);
+}
+
+export async function createDevKonzept(subId) {
+    _showDevActionLoading('\uD83D\uDCCB Konzept wird erstellt...', 'Feature wird analysiert...');
+    var timer = _animateDevLoadBar([
+        {pct:'30%',text:'Anforderungen werden erfasst...'},
+        {pct:'50%',text:'L\u00F6sungsvorschl\u00E4ge werden erarbeitet...'},
+        {pct:'70%',text:'Akzeptanzkriterien definieren...'},
+        {pct:'85%',text:'Konzept wird finalisiert...'}
+    ]);
+    try {
+        var resp = await _sb().functions.invoke('dev-ki-analyse', {
+            body: { submission_id: subId, mode: 'konzept' }
+        });
+        clearInterval(timer);
+        if(resp.error) throw resp.error;
+        if(resp.data && resp.data.error) throw new Error(resp.data.error);
+        _showToast('\uD83D\uDCCB Konzept erstellt!', 'success');
+        await loadDevSubmissions(true);
+        openDevDetail(subId);
+    } catch(err) {
+        clearInterval(timer);
+        _showToast('Fehler: ' + (err.message||err), 'error');
+        openDevDetail(subId);
+    }
+}
+
+export async function updateDevStatus(subId, newStatus) {
+    var btn = event ? event.target.closest('button') : null;
+    if(btn) { btn.disabled = true; btn.innerHTML = '\u23F3 ' + btn.textContent; }
+    try {
+        var updates = { status: newStatus };
+        if(newStatus === 'in_entwicklung') updates.entwicklung_start_at = new Date().toISOString();
+        if(newStatus === 'beta_test') updates.beta_start_at = new Date().toISOString();
+        if(newStatus === 'ausgerollt') updates.ausgerollt_at = new Date().toISOString();
+        var resp = await _sb().from('dev_submissions').update(updates).eq('id', subId);
+        if(resp.error) throw resp.error;
+        _showToast('\u2705 Status aktualisiert', 'success');
+        await loadDevSubmissions(true);
+        openDevDetail(subId);
+    } catch(err) {
+        _showToast('Fehler: ' + (err.message||err), 'error');
+        if(btn) { btn.disabled = false; }
+    }
+}
 
 export async function devAdvanceStatus(subId, newStatus) {
     var labels = {in_entwicklung:'In Entwicklung nehmen',beta_test:'Beta-Test starten',release_geplant:'Release freigeben',in_planung:'In Planung',geparkt:'Parken',ausgerollt:'Ausrollen'};
@@ -4118,7 +4192,7 @@ export async function devMockupShowVersion(mockupId) {
 }
 
 const _exports = {
-    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachFiles,devMockupChatAttachImage,devMockupChatMic,devDeployCode,loadDeployHistory,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devKIReleaseVorschlag,devTogglePartnerSichtbar,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,
+    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachFiles,devMockupChatAttachImage,devMockupChatMic,devDeployCode,loadDeployHistory,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devKIReleaseVorschlag,devTogglePartnerSichtbar,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,createDevKonzept,updateDevStatus,
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
