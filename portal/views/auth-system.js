@@ -780,20 +780,28 @@ if(SESSION.account_level === 'extern') {
     try { _savedView = localStorage.getItem('vit_lastView'); } catch(e) {}
     
     if(currentRole === 'hq') {
+        window._vitRestoringView = true; // Flag to prevent showView from overwriting localStorage
         if(typeof window.switchViewMode==='function') window.switchViewMode('hq');
+        window._vitRestoringView = false;
         // After HQ mode switch, restore saved view if it exists
-        if(_savedView && _savedView !== 'home') {
-            setTimeout(function() {
+        if(_savedView && _savedView !== 'home' && _savedView !== 'hqCockpit') {
+            var _restoreAttempt = 0;
+            var _tryRestore = function() {
+                _restoreAttempt++;
                 _showView(_savedView);
                 // Also restore Entwicklung sub-tab if applicable
                 if(_savedView === 'entwicklung') {
                     var _savedTab = null;
                     try { _savedTab = localStorage.getItem('vit_lastEntwicklungTab'); } catch(e) {}
                     if(_savedTab && typeof window.showEntwicklungTab === 'function') {
-                        setTimeout(function() { window.showEntwicklungTab(_savedTab); }, 100);
+                        setTimeout(function() { window.showEntwicklungTab(_savedTab); }, 150);
+                    } else if(_savedTab && _restoreAttempt < 5) {
+                        // Module not loaded yet, retry
+                        setTimeout(_tryRestore, 300);
                     }
                 }
-            }, 200);
+            };
+            setTimeout(_tryRestore, 400);
         }
     } else {
         _showView(_savedView || 'home');
