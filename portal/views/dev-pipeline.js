@@ -2729,8 +2729,41 @@ export async function updateDevDeadline(subId) {
 
 // === Re-analyse submission (re-score with current vision) ===
 export async function reanalyseDevSubmission(subId) {
-    if(!confirm('Idee erneut durch die KI analysieren? (Vision-Fit, Klassifizierung usw. werden neu berechnet)')) return;
-    _showToast('🔄 KI-Neuanalyse gestartet...', 'info');
+    // Find the button and replace with status indicator
+    var btn = event ? event.target.closest('button') : null;
+    var container = btn ? btn.parentElement : null;
+
+    if(container) {
+        container.innerHTML = '<div id="devKiStatus" class="w-full">' +
+            '<div class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4">' +
+            '<div class="flex items-center gap-3 mb-3">' +
+            '<div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center animate-pulse"><span class="text-white text-sm">🤖</span></div>' +
+            '<div><h4 class="font-bold text-purple-800 text-sm">KI-Analyse läuft...</h4>' +
+            '<p class="text-xs text-purple-500" id="devKiStatusText">Beschreibung wird gelesen...</p></div>' +
+            '</div>' +
+            '<div class="w-full bg-purple-100 rounded-full h-2 overflow-hidden">' +
+            '<div id="devKiProgress" class="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-1000" style="width:10%"></div>' +
+            '</div>' +
+            '</div></div>';
+    }
+
+    // Animate progress steps
+    var steps = [
+        { pct: '25%', text: 'Portal-Module werden geprüft...' },
+        { pct: '45%', text: 'Vision-Fit wird berechnet...' },
+        { pct: '65%', text: 'Machbarkeit & Aufwand schätzen...' },
+        { pct: '80%', text: 'Empfehlung wird erstellt...' },
+    ];
+    var stepIdx = 0;
+    var stepTimer = setInterval(function() {
+        if(stepIdx >= steps.length) { clearInterval(stepTimer); return; }
+        var bar = document.getElementById('devKiProgress');
+        var txt = document.getElementById('devKiStatusText');
+        if(bar) bar.style.width = steps[stepIdx].pct;
+        if(txt) txt.textContent = steps[stepIdx].text;
+        stepIdx++;
+    }, 3000);
+
     try {
         var token = (await _sb().auth.getSession()).data.session.access_token;
         var resp = await fetch(_sbUrl() + '/functions/v1/dev-ki-analyse', {
@@ -2739,11 +2772,43 @@ export async function reanalyseDevSubmission(subId) {
             body: JSON.stringify({ submission_id: subId, mode: 'reanalyse' })
         });
         var data = await resp.json();
+        clearInterval(stepTimer);
         if(data.error) throw new Error(data.error);
-        _showToast('✅ Neuanalyse abgeschlossen – Vision-Fit: ' + (data.vision_fit || '?'), 'success');
-        openDevDetail(subId);
+
+        // Show success
+        var bar = document.getElementById('devKiProgress');
+        var txt = document.getElementById('devKiStatusText');
+        if(bar) bar.style.width = '100%';
+        if(txt) txt.textContent = '✅ Analyse abgeschlossen!';
+
+        var statusDiv = document.getElementById('devKiStatus');
+        if(statusDiv) {
+            var vf = data.vision_fit || '?';
+            var typ = data.ki_typ === 'bug' ? '🐛 Bug' : data.ki_typ === 'feature' ? '✨ Feature' : '💡 Idee';
+            statusDiv.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-xl p-4">' +
+                '<div class="flex items-center gap-3 mb-2">' +
+                '<span class="text-2xl">✅</span>' +
+                '<div><h4 class="font-bold text-green-800 text-sm">KI-Analyse abgeschlossen!</h4>' +
+                '<p class="text-xs text-green-600">' + typ + ' · Vision-Fit: ' + vf + '/100</p></div>' +
+                '</div>' +
+                '<button onclick="openDevDetail(\'' + subId + '\')" class="mt-2 w-full py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700">📋 Ergebnis anzeigen</button>' +
+                '</div>';
+        }
+        _showToast('✅ KI-Analyse fertig – Vision-Fit: ' + (data.vision_fit || '?'), 'success');
     } catch(e) {
-        _showToast('Fehler bei Neuanalyse: ' + e.message, 'error');
+        clearInterval(stepTimer);
+        var statusDiv = document.getElementById('devKiStatus');
+        if(statusDiv) {
+            statusDiv.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-xl p-4">' +
+                '<div class="flex items-center gap-3">' +
+                '<span class="text-2xl">❌</span>' +
+                '<div><h4 class="font-bold text-red-800 text-sm">Analyse fehlgeschlagen</h4>' +
+                '<p class="text-xs text-red-600">' + e.message + '</p></div>' +
+                '</div>' +
+                '<button onclick="reanalyseDevSubmission(\'' + subId + '\')" class="mt-2 w-full py-2 bg-red-100 text-red-700 rounded-lg text-sm font-semibold hover:bg-red-200">🔄 Erneut versuchen</button>' +
+                '</div>';
+        }
+        _showToast('Fehler: ' + e.message, 'error');
     }
 }
 
