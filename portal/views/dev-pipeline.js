@@ -1841,8 +1841,34 @@ export async function openDevDetail(subId) {
 
                 // Feedback/Refine input
                 h += '<div class="flex gap-2">';
-                h += '<input type="text" id="devMockupFeedback" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Feedback zum Mockup eingeben... (z.B. &quot;Button groesser&quot;, &quot;andere Farbe&quot;)">';
-                h += '<button onclick="devMockupRefine(\''+s.id+'\')" class="px-3 py-2 bg-pink-600 text-white rounded-lg text-xs font-semibold hover:bg-pink-700 whitespace-nowrap">✏️ Ueberarbeiten</button>';
+                h += '</div>';
+
+                // === MOCKUP CHAT ===
+                h += '<div class="mt-4 border-t border-pink-200 pt-3">';
+                h += '<h5 class="text-xs font-bold text-pink-600 uppercase mb-2">💬 Design-Chat</h5>';
+                
+                // Chat-Verlauf Container
+                h += '<div id="devMockupChatHistory" class="max-h-64 overflow-y-auto mb-3 space-y-2 scroll-smooth">';
+                h += '<p class="text-xs text-gray-400 text-center py-2">Chat-Verlauf wird geladen...</p>';
+                h += '</div>';
+                
+                // Attachments preview
+                h += '<div id="devMockupChatAttachments" class="hidden mb-2 flex flex-wrap gap-2"></div>';
+                
+                // Input area
+                h += '<div class="flex items-end gap-2">';
+                // Attach button (image)
+                h += '<label class="cursor-pointer flex-shrink-0">';
+                h += '<input type="file" accept="image/*" onchange="devMockupChatAttachImage(this)" class="hidden">';
+                h += '<span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-500 text-sm" title="Bild hochladen">📷</span>';
+                h += '</label>';
+                // Mic button
+                h += '<button onclick="devMockupChatMic(this)" id="devMockupMicBtn" class="flex-shrink-0 w-9 h-9 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-500 text-sm" title="Sprachnotiz">🎤</button>';
+                // Text input
+                h += '<textarea id="devMockupChatInput" rows="1" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:border-pink-400 focus:ring-1 focus:ring-pink-200" placeholder="Beschreibe deine Idee..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();devMockupChatSend(\''+s.id+'\')}" oninput="this.style.height=\'auto\';this.style.height=Math.min(this.scrollHeight,120)+\'px\'"></textarea>';
+                // Send button
+                h += '<button onclick="devMockupChatSend(\''+s.id+'\')" id="devMockupChatSendBtn" class="flex-shrink-0 w-9 h-9 rounded-lg bg-pink-600 hover:bg-pink-700 text-white text-sm font-bold" title="Senden">➤</button>';
+                h += '</div>';
                 h += '</div>';
 
                 // Version history
@@ -3636,6 +3662,218 @@ export async function saveDevNotizen(subId) {
     }
 }
 
+
+// === MOCKUP CHAT FUNCTIONS ===
+var _mockupChatAttachments = [];
+var _mockupChatMediaRecorder = null;
+var _mockupChatAudioChunks = [];
+
+export async function loadMockupChatHistory(subId) {
+    var container = document.getElementById('devMockupChatHistory');
+    if (!container) return;
+    try {
+        var resp = await _sb().from('dev_mockup_chat').select('*').eq('submission_id', subId).order('created_at', {ascending: true});
+        var msgs = resp.data || [];
+        if (msgs.length === 0) {
+            container.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">Starte einen Chat ueber das Design — die KI hilft dir beim Mockup!</p>';
+            return;
+        }
+        var html = '';
+        msgs.forEach(function(m) {
+            var isUser = m.rolle === 'user';
+            var align = isUser ? 'justify-end' : 'justify-start';
+            var bg = isUser ? 'bg-pink-50 border-pink-200' : 'bg-white border-gray-200';
+            var icon = isUser ? '👤' : '🤖';
+            var time = new Date(m.created_at).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+            html += '<div class="flex '+align+'">';
+            html += '<div class="max-w-[85%] border rounded-lg px-3 py-2 '+bg+'">';
+            html += '<div class="flex items-center gap-1 mb-1"><span class="text-xs">'+icon+'</span><span class="text-[10px] text-gray-400">'+time+'</span>';
+            if (m.mockup_version) html += '<span class="text-[10px] bg-pink-200 text-pink-700 px-1.5 rounded-full ml-1">Mockup v'+m.mockup_version+'</span>';
+            html += '</div>';
+            // Show attachments
+            if (m.attachments && m.attachments.length > 0) {
+                m.attachments.forEach(function(a) {
+                    if (a.type && a.type.startsWith('image/')) {
+                        html += '<img src="'+a.url+'" class="max-w-[200px] rounded mb-1 cursor-pointer" onclick="window.open(this.src)" />';
+                    } else if (a.type && a.type.startsWith('audio/')) {
+                        html += '<div class="text-xs text-gray-500 mb-1">🎤 Sprachnotiz</div>';
+                    }
+                });
+            }
+            html += '<p class="text-sm text-gray-700 whitespace-pre-wrap">'+m.nachricht+'</p>';
+            html += '</div></div>';
+        });
+        container.innerHTML = html;
+        container.scrollTop = container.scrollHeight;
+    } catch(e) {
+        console.warn('loadMockupChat error:', e);
+        container.innerHTML = '<p class="text-xs text-red-400 text-center py-2">Fehler beim Laden</p>';
+    }
+}
+
+export async function devMockupChatSend(subId) {
+    var input = document.getElementById('devMockupChatInput');
+    var btn = document.getElementById('devMockupChatSendBtn');
+    if (!input) return;
+    var text = input.value.trim();
+    if (!text && _mockupChatAttachments.length === 0) return;
+    
+    // Disable input
+    input.disabled = true;
+    if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+    
+    // Add user message to chat immediately
+    var container = document.getElementById('devMockupChatHistory');
+    if (container) {
+        var placeholder = container.querySelector('.text-gray-400');
+        if (placeholder && placeholder.textContent.includes('Starte')) placeholder.remove();
+        var msgDiv = document.createElement('div');
+        msgDiv.className = 'flex justify-end';
+        var attHtml = '';
+        _mockupChatAttachments.forEach(function(a) {
+            if (a.type.startsWith('image/')) attHtml += '<img src="'+a.url+'" class="max-w-[200px] rounded mb-1" />';
+            if (a.type.startsWith('audio/')) attHtml += '<div class="text-xs text-gray-500 mb-1">🎤 Sprachnotiz</div>';
+        });
+        msgDiv.innerHTML = '<div class="max-w-[85%] border border-pink-200 rounded-lg px-3 py-2 bg-pink-50"><div class="flex items-center gap-1 mb-1"><span class="text-xs">👤</span><span class="text-[10px] text-gray-400">jetzt</span></div>'+attHtml+'<p class="text-sm text-gray-700 whitespace-pre-wrap">'+(text||'[Sprache/Bild]')+'</p></div>';
+        container.appendChild(msgDiv);
+        container.scrollTop = container.scrollHeight;
+    }
+    
+    // Add "typing" indicator
+    var typingDiv = document.createElement('div');
+    typingDiv.className = 'flex justify-start';
+    typingDiv.id = 'devMockupTyping';
+    typingDiv.innerHTML = '<div class="border border-gray-200 rounded-lg px-3 py-2 bg-white"><span class="text-xs">🤖</span> <span class="text-sm text-gray-400 animate-pulse">denkt nach...</span></div>';
+    if (container) { container.appendChild(typingDiv); container.scrollTop = container.scrollHeight; }
+    
+    try {
+        var payload = { submission_id: subId, mode: 'mockup_chat', feedback: text || '[Attachment]', attachments: _mockupChatAttachments };
+        var resp = await fetch(_sb().supabaseUrl + '/functions/v1/dev-ki-analyse', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token },
+            body: JSON.stringify(payload)
+        });
+        var data = await resp.json();
+        if (data.error) throw new Error(data.error);
+        
+        // Remove typing indicator
+        var typing = document.getElementById('devMockupTyping');
+        if (typing) typing.remove();
+        
+        // Add KI response
+        if (container && data.antwort) {
+            var kiDiv = document.createElement('div');
+            kiDiv.className = 'flex justify-start';
+            var mockupBadge = data.mockup_version ? '<span class="text-[10px] bg-pink-200 text-pink-700 px-1.5 rounded-full ml-1">Mockup v'+data.mockup_version+'</span>' : '';
+            kiDiv.innerHTML = '<div class="max-w-[85%] border border-gray-200 rounded-lg px-3 py-2 bg-white"><div class="flex items-center gap-1 mb-1"><span class="text-xs">🤖</span><span class="text-[10px] text-gray-400">jetzt</span>'+mockupBadge+'</div><p class="text-sm text-gray-700 whitespace-pre-wrap">'+data.antwort+'</p></div>';
+            container.appendChild(kiDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // If new mockup was generated, update iframe
+        if (data.neues_mockup && data.mockup_version) {
+            // Reload the submission detail to get new mockup
+            var mResp = await _sb().from('dev_mockups').select('html_content').eq('submission_id', subId).order('version', {ascending: false}).limit(1);
+            if (mResp.data && mResp.data[0]) {
+                var frame = document.getElementById('devMockupFrame');
+                if (frame) {
+                    frame.srcdoc = mResp.data[0].html_content;
+                }
+            }
+        }
+    } catch(e) {
+        var typing = document.getElementById('devMockupTyping');
+        if (typing) typing.innerHTML = '<div class="border border-red-200 rounded-lg px-3 py-2 bg-red-50"><span class="text-xs">❌</span> <span class="text-sm text-red-600">Fehler: '+e.message+'</span></div>';
+    }
+    
+    // Reset
+    input.value = '';
+    input.style.height = 'auto';
+    input.disabled = false;
+    if (btn) { btn.disabled = false; btn.textContent = '➤'; }
+    _mockupChatAttachments = [];
+    var attContainer = document.getElementById('devMockupChatAttachments');
+    if (attContainer) { attContainer.innerHTML = ''; attContainer.classList.add('hidden'); }
+    input.focus();
+}
+
+export async function devMockupChatAttachImage(fileInput) {
+    var file = fileInput.files[0];
+    if (!file) return;
+    
+    // Upload to Supabase storage
+    var ext = file.name.split('.').pop() || 'png';
+    var path = 'mockup-chat/' + Date.now() + '.' + ext;
+    var { data, error } = await _sb().storage.from('dev-attachments').upload(path, file);
+    if (error) { console.warn('Upload error:', error); return; }
+    var url = _sb().storage.from('dev-attachments').getPublicUrl(path).data.publicUrl;
+    
+    _mockupChatAttachments.push({ type: file.type, url: url, name: file.name });
+    
+    // Show preview
+    var container = document.getElementById('devMockupChatAttachments');
+    if (container) {
+        container.classList.remove('hidden');
+        var preview = document.createElement('div');
+        preview.className = 'relative';
+        preview.innerHTML = '<img src="'+url+'" class="w-16 h-16 object-cover rounded border" /><button onclick="this.parentElement.remove();window._mockupChatAttachments=window._mockupChatAttachments||[];window._mockupChatAttachments=window._mockupChatAttachments.filter(function(a){return a.url!==\''+url+'\';})" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center">×</button>';
+        container.appendChild(preview);
+    }
+    fileInput.value = '';
+}
+
+export async function devMockupChatMic(btn) {
+    // Toggle recording
+    if (_mockupChatMediaRecorder && _mockupChatMediaRecorder.state === 'recording') {
+        _mockupChatMediaRecorder.stop();
+        btn.textContent = '🎤';
+        btn.classList.remove('bg-red-100', 'text-red-600', 'animate-pulse');
+        btn.classList.add('bg-gray-100', 'text-gray-500');
+        return;
+    }
+    
+    try {
+        var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        _mockupChatAudioChunks = [];
+        _mockupChatMediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        
+        _mockupChatMediaRecorder.ondataavailable = function(e) {
+            if (e.data.size > 0) _mockupChatAudioChunks.push(e.data);
+        };
+        
+        _mockupChatMediaRecorder.onstop = async function() {
+            stream.getTracks().forEach(function(t) { t.stop(); });
+            var blob = new Blob(_mockupChatAudioChunks, { type: 'audio/webm' });
+            
+            // Upload audio
+            var path = 'mockup-chat/' + Date.now() + '.webm';
+            var { data, error } = await _sb().storage.from('dev-attachments').upload(path, blob);
+            if (error) { console.warn('Audio upload error:', error); return; }
+            var url = _sb().storage.from('dev-attachments').getPublicUrl(path).data.publicUrl;
+            
+            _mockupChatAttachments.push({ type: 'audio/webm', url: url, name: 'Sprachnotiz' });
+            
+            // Show indicator
+            var container = document.getElementById('devMockupChatAttachments');
+            if (container) {
+                container.classList.remove('hidden');
+                var preview = document.createElement('div');
+                preview.className = 'flex items-center gap-1 bg-gray-100 rounded px-2 py-1 text-xs';
+                preview.innerHTML = '🎤 Sprachnotiz <button onclick="this.parentElement.remove()" class="text-red-400 ml-1">×</button>';
+                container.appendChild(preview);
+            }
+        };
+        
+        _mockupChatMediaRecorder.start();
+        btn.textContent = '⏹';
+        btn.classList.remove('bg-gray-100', 'text-gray-500');
+        btn.classList.add('bg-red-100', 'text-red-600', 'animate-pulse');
+    } catch(e) {
+        console.warn('Mic error:', e);
+        alert('Mikrofon nicht verfuegbar');
+    }
+}
+
 // === MOCKUP FUNCTIONS ===
 export async function devMockupGenerate(subId, isRefine) {
     var btn = document.getElementById('devBtnMockGen');
@@ -3740,7 +3978,7 @@ export async function devMockupShowVersion(mockupId) {
 }
 
 const _exports = {
-    saveDevNotizen,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,
+    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachImage,devMockupChatMic,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
