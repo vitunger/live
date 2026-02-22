@@ -2752,7 +2752,8 @@
                     </div>
 
                     <!-- Submit Form (same as before, toggled) -->
-                    <div id="devSubmitForm" class="hidden vit-card p-5 mb-6 border-2 border-vit-orange/20 relative">
+                    <div id="devSubmitForm" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center;padding:1rem" onclick="if(event.target===this)toggleDevSubmitForm()">
+                        <div class="bg-white rounded-2xl shadow-2xl p-5 w-full max-w-2xl max-h-[90vh] overflow-y-auto relative" onclick="event.stopPropagation()">
                         <button onclick="toggleDevSubmitForm()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 text-lg transition">&times;</button>
                         <h3 class="font-semibold text-gray-800 mb-1">💡 Feedback / Idee einreichen</h3>
                         <p class="text-xs text-gray-400 mb-4">Audio, Bild, Screenshot oder einfach Text – wir kümmern uns um den Rest.</p>
@@ -2826,6 +2827,7 @@
                                 <button onclick="toggleDevSubmitForm()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Abbrechen</button>
                                 <button onclick="submitDevIdea()" id="devSubmitBtn" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">💡 Feedback einreichen</button>
                             </div>
+                        </div>
                         </div>
                     </div>
 
