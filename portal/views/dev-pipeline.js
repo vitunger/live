@@ -880,11 +880,12 @@ export function devBoardCardHTML(s, showActions) {
     if(ki && ki.zusammenfassung) h += '<p class="text-sm text-gray-500 mt-1 line-clamp-2">'+ki.zusammenfassung+'</p>';
     h += '</div>';
     if(showActions) {
+        var _isOwner = (currentRoles||[]).indexOf('owner') !== -1;
         h += '<div class="flex flex-col space-y-1 ml-4 flex-shrink-0">';
-        h += '<button onclick="event.stopPropagation();devHQDecision(\''+s.id+'\',\'freigabe\')" class="px-3 py-1.5 bg-green-500 text-white rounded text-xs font-semibold hover:bg-green-600">✅ Freigeben</button>';
+        if(_isOwner) h += '<button onclick="event.stopPropagation();devHQDecision(\''+s.id+'\',\'freigabe\')" class="px-3 py-1.5 bg-green-500 text-white rounded text-xs font-semibold hover:bg-green-600">✅ Freigeben</button>';
         h += '<button onclick="event.stopPropagation();devHQDecision(\''+s.id+'\',\'rueckfragen\')" class="px-3 py-1.5 bg-yellow-500 text-white rounded text-xs font-semibold hover:bg-yellow-600">❓ Rückfrage</button>';
         h += '<button onclick="event.stopPropagation();devHQDecision(\''+s.id+'\',\'spaeter\')" class="px-3 py-1.5 bg-gray-300 text-gray-700 rounded text-xs font-semibold hover:bg-gray-400">⏸ Später</button>';
-        h += '<button onclick="event.stopPropagation();devHQDecision(\''+s.id+'\',\'ablehnung\')" class="px-3 py-1.5 bg-red-100 text-red-600 rounded text-xs font-semibold hover:bg-red-200">❌ Ablehnen</button>';
+        if(_isOwner) h += '<button onclick="event.stopPropagation();devHQDecision(\''+s.id+'\',\'ablehnung\')" class="px-3 py-1.5 bg-red-100 text-red-600 rounded text-xs font-semibold hover:bg-red-200">❌ Ablehnen</button>';
         h += '</div>';
     }
     h += '</div></div>';
@@ -1237,6 +1238,12 @@ export async function toggleDevVote(subId) {
 }
 
 export async function devHQDecision(subId, ergebnis) {
+    // Owner-Check: Nur Owner darf freigeben oder ablehnen
+    var isOwner = (currentRoles||[]).indexOf('owner') !== -1;
+    if(!isOwner && ['freigabe','freigabe_mit_aenderungen','ablehnung'].indexOf(ergebnis) !== -1) {
+        _showToast('Nur der Owner kann Ideen freigeben oder ablehnen.', 'error');
+        return;
+    }
     var kommentar = '';
     var statusMap = { freigabe:'freigegeben', freigabe_mit_aenderungen:'freigegeben', rueckfragen:'hq_rueckfragen', ablehnung:'abgelehnt', spaeter:'geparkt' };
 
@@ -1475,16 +1482,22 @@ export async function openDevDetail(subId) {
 
         // === HQ-AKTIONEN im Detail-Modal ===
         var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
+        var isOwnerDetail = (currentRoles||[]).indexOf('owner') !== -1;
         if(isHQ && ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1) {
             h += '<div class="border-2 border-vit-orange/30 rounded-lg p-4 mb-4 bg-orange-50">';
             h += '<h4 class="text-sm font-bold text-gray-800 mb-3">🎯 HQ-Entscheidung</h4>';
             h += '<div class="grid grid-cols-2 gap-2 mb-3">';
-            h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'freigabe\')" class="px-3 py-2 bg-green-500 text-white rounded-lg text-sm font-semibold hover:bg-green-600">✅ Freigeben</button>';
-            h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'freigabe_mit_aenderungen\')" class="px-3 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600">✏️ Freigabe mit Änderungen</button>';
+            if(isOwnerDetail) {
+                h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'freigabe\')" class="px-3 py-2 bg-green-500 text-white rounded-lg text-sm font-semibold hover:bg-green-600">✅ Freigeben</button>';
+                h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'freigabe_mit_aenderungen\')" class="px-3 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600">✏️ Freigabe mit Änderungen</button>';
+            }
             h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'rueckfragen\')" class="px-3 py-2 bg-yellow-500 text-white rounded-lg text-sm font-semibold hover:bg-yellow-600">❓ Rückfrage</button>';
-            h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'ablehnung\')" class="px-3 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-semibold hover:bg-red-200">❌ Ablehnen</button>';
+            if(isOwnerDetail) {
+                h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'ablehnung\')" class="px-3 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-semibold hover:bg-red-200">❌ Ablehnen</button>';
+            }
             h += '</div>';
             h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'spaeter\')" class="w-full px-3 py-1.5 bg-gray-200 text-gray-600 rounded-lg text-xs hover:bg-gray-300">⏸ Später</button>';
+            if(!isOwnerDetail) h += '<p class="text-xs text-gray-400 mt-2 italic">ℹ️ Freigabe & Ablehnung sind dem Owner vorbehalten.</p>';
             h += '</div>';
         }
 
@@ -1576,6 +1589,12 @@ export async function submitDevRueckfragenAntwort(subId, currentStatus) {
 
 // HQ-Entscheidung aus dem Detail-Modal (inkl. "Freigabe mit Änderungen")
 export async function devHQDecisionFromDetail(subId, ergebnis) {
+    // Owner-Check: Nur Owner darf freigeben oder ablehnen
+    var isOwner = (currentRoles||[]).indexOf('owner') !== -1;
+    if(!isOwner && ['freigabe','freigabe_mit_aenderungen','ablehnung'].indexOf(ergebnis) !== -1) {
+        _showToast('Nur der Owner kann Ideen freigeben oder ablehnen.', 'error');
+        return;
+    }
     var kommentar = '';
     var aenderungswuensche = '';
 
