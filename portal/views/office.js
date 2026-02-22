@@ -1,5 +1,5 @@
 // ============================================================
-// vit:bikes Partner Portal — vit:space Office Module (HQ only)
+// vit:bikes Partner Portal — Office Module (HQ only)
 // Complete rewrite 2026-02-21
 // Uses global: sb, sbUser, sbProfile, escH, showNotification
 // ============================================================
@@ -42,8 +42,8 @@
         return 1+Math.round(((t-w1)/864e5-3+(w1.getDay()+6)%7)/7);
     }
     function getMonday(off) {
-        var n=new Date(),day=n.getDay()||7,m=new Date(n);
-        m.setDate(n.getDate()-day+1+(off*7)); m.setHours(0,0,0,0); return m;
+        var n=new Date(),m=new Date(n);
+        m.setDate(n.getDate()+(off*7)); m.setHours(0,0,0,0); return m;
     }
     function initials(u) { return ((u.vorname||'?')[0]+(u.nachname||'?')[0]).toUpperCase(); }
     function fullName(u) { return (u.vorname||'')+' '+(u.nachname||''); }
@@ -103,7 +103,7 @@
             '<div class="flex items-center justify-between mb-4">'+
                 '<h1 class="text-xl font-bold text-gray-800">'+
                     '<svg class="w-6 h-6 inline-block mr-2 -mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>'+
-                    'vit:space <span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full ml-2">BETA</span>'+
+                    'Office'+
                 '</h1>'+
                 '<div id="officeHeaderAction"></div>'+
             '</div>'+
