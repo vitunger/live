@@ -249,6 +249,24 @@ var entwCurrentTab = 'ideen';
 export async function renderEntwicklung() {
     var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
     var isOwner = (currentRoles||[]).indexOf('owner') !== -1;
+
+    // Add notification bell to header (once)
+    var headerDiv = document.querySelector('#entwicklungView > div:first-child');
+    if(headerDiv && !document.getElementById('devNotifBtn')) {
+        var feedbackBtn = headerDiv.querySelector('button[onclick*="toggleDevSubmitForm"]');
+        if(feedbackBtn) {
+            var bellBtn = document.createElement('button');
+            bellBtn.id = 'devNotifBtn';
+            bellBtn.className = 'relative w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-lg transition ml-2';
+            bellBtn.onclick = function(){ toggleDevNotifications(); };
+            bellBtn.innerHTML = '🔔<span id="devNotifBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center" style="display:none">0</span>';
+            feedbackBtn.parentNode.insertBefore(bellBtn, feedbackBtn.nextSibling);
+        }
+    }
+
+    // Load notifications
+    loadDevNotifications();
+
     // Show/hide HQ-only tabs
     document.querySelectorAll('.entw-hq-tab, .entw-hq-sep').forEach(function(el) {
         el.style.display = isHQ ? '' : 'none';
@@ -1283,6 +1301,14 @@ export async function toggleDevVote(subId) {
             var ins = await _sb().from('dev_votes').insert({ submission_id: subId, user_id: _sbUser().id }).select();
             if(ins.error) throw ins.error;
             _showToast('👍 Vote abgegeben!', 'success');
+            // Notify submitter
+            if(sub && sub.user_id !== _sbUser().id) {
+                _sb().from('dev_notifications').insert({
+                    user_id: sub.user_id, submission_id: subId,
+                    typ: 'vote', titel: '👍 Jemand hat für deine Idee gestimmt',
+                    inhalt: sub.titel || '(Ohne Titel)'
+                }).catch(function(){}); // fire-and-forget
+            }
         }
         // Refresh whichever view is active
         await loadDevSubmissions();
@@ -1824,6 +1850,19 @@ export async function submitDevKommentar(subId) {
             inhalt: text
         });
         if(resp.error) throw resp.error;
+
+        // Notify submitter if commenter is different
+        var sub = devSubmissions.find(function(s){ return s.id === subId; });
+        if(sub && sub.user_id !== _sbUser().id) {
+            await _sb().from('dev_notifications').insert({
+                user_id: sub.user_id,
+                submission_id: subId,
+                typ: 'kommentar',
+                titel: '💬 Neuer Kommentar zu deiner Idee',
+                inhalt: text.substring(0, 100) + (text.length > 100 ? '...' : '')
+            }).catch(function(){}); // fire-and-forget
+        }
+
         await openDevDetail(subId);
     } catch(err) {
         console.error('Comment error:', err);
@@ -1927,6 +1966,116 @@ export async function saveDevVision() {
     }
 }
 
-const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision};
+// ============================================
+// DEV NOTIFICATIONS
+// ============================================
+var devNotifications = [];
+var devNotifOpen = false;
+
+export async function loadDevNotifications() {
+    try {
+        var resp = await _sb().from('dev_notifications')
+            .select('*, dev_submissions(titel)')
+            .eq('user_id', _sbUser().id)
+            .order('created_at', {ascending: false})
+            .limit(20);
+        devNotifications = resp.data || [];
+        updateDevNotifBadge();
+    } catch(err) { console.warn('Notif load:', err); }
+}
+
+function updateDevNotifBadge() {
+    var unread = devNotifications.filter(function(n){ return !n.gelesen; }).length;
+    var badge = document.getElementById('devNotifBadge');
+    if(badge) {
+        badge.textContent = unread > 9 ? '9+' : unread;
+        badge.style.display = unread > 0 ? '' : 'none';
+    }
+}
+
+export function toggleDevNotifications() {
+    devNotifOpen = !devNotifOpen;
+    var panel = document.getElementById('devNotifPanel');
+    if(!panel) {
+        // Create panel dynamically
+        panel = document.createElement('div');
+        panel.id = 'devNotifPanel';
+        panel.className = 'fixed top-14 right-4 w-80 max-h-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-[55] overflow-hidden';
+        panel.style.display = 'none';
+        document.body.appendChild(panel);
+        // Close on click outside
+        document.addEventListener('click', function(e) {
+            if(devNotifOpen && !panel.contains(e.target) && e.target.id !== 'devNotifBtn' && !e.target.closest('#devNotifBtn')) {
+                devNotifOpen = false;
+                panel.style.display = 'none';
+            }
+        });
+    }
+    if(devNotifOpen) {
+        renderDevNotifPanel();
+        panel.style.display = '';
+    } else {
+        panel.style.display = 'none';
+    }
+}
+
+function renderDevNotifPanel() {
+    var panel = document.getElementById('devNotifPanel');
+    if(!panel) return;
+    var unread = devNotifications.filter(function(n){ return !n.gelesen; }).length;
+    var h = '<div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">';
+    h += '<h3 class="text-sm font-bold text-gray-800">🔔 Benachrichtigungen</h3>';
+    if(unread > 0) h += '<button onclick="markAllDevNotifsRead()" class="text-xs text-vit-orange hover:underline">Alle gelesen</button>';
+    h += '</div>';
+    if(devNotifications.length === 0) {
+        h += '<div class="text-center py-8 text-gray-400"><p class="text-2xl mb-1">🔔</p><p class="text-xs">Keine Benachrichtigungen</p></div>';
+    } else {
+        h += '<div class="max-h-72 overflow-y-auto">';
+        devNotifications.forEach(function(n) {
+            var dt = new Date(n.created_at);
+            var ago = _timeAgo(dt);
+            h += '<div onclick="openDevNotif(\''+n.id+'\',\''+n.submission_id+'\')" class="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 '+(n.gelesen?'opacity-60':'')+'">';
+            h += '<div class="flex items-start gap-2">';
+            if(!n.gelesen) h += '<span class="w-2 h-2 rounded-full bg-vit-orange flex-shrink-0 mt-1.5"></span>';
+            else h += '<span class="w-2 h-2 flex-shrink-0"></span>';
+            h += '<div class="flex-1 min-w-0">';
+            h += '<p class="text-sm font-semibold text-gray-800 truncate">'+n.titel+'</p>';
+            if(n.inhalt) h += '<p class="text-xs text-gray-500 truncate">'+n.inhalt+'</p>';
+            h += '<p class="text-[10px] text-gray-400 mt-0.5">'+ago+'</p>';
+            h += '</div></div></div>';
+        });
+        h += '</div>';
+    }
+    panel.innerHTML = h;
+}
+
+export async function openDevNotif(notifId, subId) {
+    // Mark as read
+    await _sb().from('dev_notifications').update({gelesen: true}).eq('id', notifId);
+    devNotifications.forEach(function(n){ if(n.id === notifId) n.gelesen = true; });
+    updateDevNotifBadge();
+    toggleDevNotifications(); // close panel
+    if(subId) openDevDetail(subId);
+}
+
+export async function markAllDevNotifsRead() {
+    var unreadIds = devNotifications.filter(function(n){ return !n.gelesen; }).map(function(n){ return n.id; });
+    if(unreadIds.length === 0) return;
+    await _sb().from('dev_notifications').update({gelesen: true}).in('id', unreadIds);
+    devNotifications.forEach(function(n){ n.gelesen = true; });
+    updateDevNotifBadge();
+    renderDevNotifPanel();
+}
+
+function _timeAgo(date) {
+    var s = Math.floor((Date.now() - date.getTime()) / 1000);
+    if(s < 60) return 'gerade eben';
+    if(s < 3600) return Math.floor(s/60) + ' Min.';
+    if(s < 86400) return Math.floor(s/3600) + ' Std.';
+    if(s < 604800) return Math.floor(s/86400) + ' Tage';
+    return date.toLocaleDateString('de-DE');
+}
+
+const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
