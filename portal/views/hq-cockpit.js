@@ -50,7 +50,9 @@ export async function loadHqStandorte() {
         hqStandorte = standorte.map(function(s) {
             var sBwa = bwaData.filter(function(b) { return b.standort_id === s.id; });
             var totalUmsatz = sBwa.reduce(function(a, b) { return a + (parseFloat(b.umsatzerloese) || 0); }, 0);
-            var avgRohertrag = sBwa.length ? (sBwa.reduce(function(a, b) { return a + (parseFloat(b.rohertrag) || 0); }, 0) / sBwa.length) : 0;
+            // Rohertrag: absolute value in DB → calculate percentage
+            var totalRohertragAbs = sBwa.reduce(function(a, b) { return a + (parseFloat(b.rohertrag) || 0); }, 0);
+            var avgRohertrag = totalUmsatz > 0 ? (totalRohertragAbs / totalUmsatz * 100) : 0;
             var sTickets = tickets.filter(function(t) { return t.standort_id === s.id; }).length;
             var sLeads = leads.filter(function(l) { return l.standort_id === s.id; });
             var sVt = vtData.filter(function(v) { return v.standort_id === s.id; });
