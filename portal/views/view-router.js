@@ -140,6 +140,9 @@ function installRedirectInterceptor() {
             return;
         }
         
+        // Persist current view for reload restoration
+        try { localStorage.setItem('vit_lastView', v); } catch(e) {}
+        
         // Role-based redirects
         if (v === 'home' && window.currentRole === 'hq') v = 'hqCockpit';
         if (v === 'home' && window.SESSION && window.SESSION.account_level === 'extern') v = 'externHome';
