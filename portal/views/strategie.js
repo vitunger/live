@@ -1970,6 +1970,9 @@ export function showView(viewName) {
             setTimeout(function(){ applyDarkModeInlineStyles(true); }, 600);
         }
         
+        // Merke aktuelle View für Reload-Persistence
+        try { localStorage.setItem('vit:lastView', viewName); } catch(e) {}
+        
         // Fire event so modules can react to view changes
         // This replaces fragile showView wrapper chains
         window.dispatchEvent(new CustomEvent('vit:view-changed', { 
