@@ -319,7 +319,7 @@ export async function renderEntwTabContent(tab) {
 
 export async function loadDevSubmissions() {
     try {
-        var query = _sb().from('dev_submissions').select('*, dev_ki_analysen(zusammenfassung, vision_fit_score, machbarkeit, aufwand_schaetzung), dev_votes(user_id)').order('created_at', {ascending: false});
+        var query = _sb().from('dev_submissions').select('*, dev_ki_analysen(zusammenfassung, vision_fit_score, machbarkeit, aufwand_schaetzung), dev_votes(user_id), dev_kommentare(id)').order('created_at', {ascending: false});
         var resp = await query;
         if(resp.error) throw resp.error;
         devSubmissions = resp.data || [];
@@ -394,6 +394,8 @@ export function renderEntwIdeen() {
         h += scopeLabel;
         if(s.kategorie) h += '<span class="text-[10px] bg-gray-50 text-gray-500 px-1.5 py-0.5 rounded">'+s.kategorie+'</span>';
         if(ki && ki.aufwand_schaetzung) h += '<span class="text-[10px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded font-semibold">'+ki.aufwand_schaetzung+'</span>';
+        var _eKom = (s.dev_kommentare||[]).length;
+        if(_eKom > 0) h += '<span class="text-[10px] bg-gray-50 text-gray-500 px-1.5 py-0.5 rounded">💬 '+_eKom+'</span>';
         h += '</div>';
         h += '<h3 class="font-semibold text-gray-800 text-sm">'+((s.titel||s.beschreibung||s.kurz_notiz||s.transkription||'Kein Titel').substring(0,80))+'</h3>';
         if(s.eingabe_typ && s.eingabe_typ !== 'text') h += '<span class="text-[10px] text-gray-400 ml-1">'+(s.eingabe_typ==='audio'?'🎤 Audio':s.eingabe_typ==='screenshot'?'📸 Screenshot':s.eingabe_typ==='video'?'🖥️ Video':'📎 '+s.eingabe_typ)+'</span>';
@@ -741,7 +743,7 @@ export async function renderDevPipeline() {
 
     // Load all submissions
     try {
-        var query = _sb().from('dev_submissions').select('*, dev_ki_analysen(zusammenfassung, vision_fit_score, machbarkeit, aufwand_schaetzung), dev_votes(user_id)').order('created_at', {ascending: false});
+        var query = _sb().from('dev_submissions').select('*, dev_ki_analysen(zusammenfassung, vision_fit_score, machbarkeit, aufwand_schaetzung), dev_votes(user_id), dev_kommentare(id)').order('created_at', {ascending: false});
         var resp = await query;
         if(resp.error) throw resp.error;
         devSubmissions = resp.data || [];
@@ -809,6 +811,8 @@ export function devCardHTML(s) {
     if(s.ki_bereich) { h += '<span class="text-[10px] rounded px-1.5 py-0.5 '+(s.ki_bereich==='portal'?'bg-gray-100 text-gray-600':'bg-green-50 text-green-700')+'">'+(s.ki_bereich==='portal'?'💻':'🌐')+' '+s.ki_bereich+'</span>'; }
     h += '<span class="text-xs text-gray-400">'+(devKatIcons[s.kategorie]||'')+ ' '+s.kategorie+'</span>';
     if(s.geschaetzter_aufwand) h += '<span class="text-[10px] bg-gray-100 text-gray-600 rounded px-1.5 py-0.5 font-semibold">'+s.geschaetzter_aufwand+'</span>';
+    var _komCount = s.dev_kommentare ? s.dev_kommentare.length : 0;
+    if(_komCount > 0) h += '<span class="text-[10px] bg-gray-50 text-gray-500 rounded px-1.5 py-0.5">💬 '+_komCount+'</span>';
     h += '</div>';
     h += '<h3 class="font-semibold text-gray-800 text-sm truncate">'+(s.titel||'(Ohne Titel)')+'</h3>';
     if(ki && ki.zusammenfassung) h += '<p class="text-xs text-gray-500 mt-0.5 line-clamp-2">'+ki.zusammenfassung+'</p>';
@@ -902,6 +906,8 @@ export function devBoardCardHTML(s, showActions) {
     if(ki && ki.vision_fit_score) h += '<span class="text-xs bg-blue-50 text-blue-700 rounded px-1.5 py-0.5">Vision: <b>'+ki.vision_fit_score+'/100</b></span>';
     if(ki && ki.aufwand_schaetzung) h += '<span class="text-xs bg-gray-100 rounded px-1.5 py-0.5">Aufwand: <b>'+ki.aufwand_schaetzung+'</b></span>';
     if(votes > 0) h += '<span class="text-xs bg-orange-50 text-orange-600 rounded px-1.5 py-0.5">▲ '+votes+'</span>';
+    var _bKom = s.dev_kommentare ? s.dev_kommentare.length : 0;
+    if(_bKom > 0) h += '<span class="text-xs bg-gray-50 text-gray-500 rounded px-1.5 py-0.5">💬 '+_bKom+'</span>';
     h += '</div>';
     h += '<h3 class="font-semibold text-gray-800">'+(s.titel||'(Ohne Titel)')+'</h3>';
     if(ki && ki.zusammenfassung) h += '<p class="text-sm text-gray-500 mt-1 line-clamp-2">'+ki.zusammenfassung+'</p>';
@@ -1546,10 +1552,10 @@ export async function openDevDetail(subId) {
 
         // === KOMMENTAR SCHREIBEN (immer sichtbar) ===
         h += '<div class="border-t border-gray-200 pt-4">';
-        h += '<div class="flex space-x-2">';
-        h += '<input type="text" id="devKommentarInput" placeholder="Kommentar schreiben..." class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" onkeydown="if(event.key===\'Enter\'){event.preventDefault();submitDevKommentar(\''+s.id+'\')}">';
-        h += '<button id="devKommentarBtn" onclick="submitDevKommentar(\''+s.id+'\')" class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm font-semibold hover:bg-gray-800">Senden</button>';
-        h += '</div></div>';
+        h += '<h4 class="text-xs font-bold text-gray-500 uppercase mb-2">💬 Kommentar</h4>';
+        h += '<textarea id="devKommentarInput" placeholder="Kommentar schreiben... (Shift+Enter für Zeilenumbruch)" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm mb-2 resize-none" rows="2" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();submitDevKommentar(\''+s.id+'\')}"></textarea>';
+        h += '<div class="flex justify-end"><button id="devKommentarBtn" onclick="submitDevKommentar(\''+s.id+'\')" class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm font-semibold hover:bg-gray-800">💬 Senden</button></div>';
+        h += '</div>';
 
         content.innerHTML = h;
     } catch(err) {
