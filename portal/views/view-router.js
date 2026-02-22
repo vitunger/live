@@ -134,14 +134,14 @@ function installRedirectInterceptor() {
     if (!_baseShowView || _baseShowView._hasRedirects) return;
     
     window.showView = function(v) {
-        // Access check
-        if (typeof window.hasAccess === 'function' && !window.hasAccess(v)) {
+        // Access check (skip if auth not yet loaded or during view restoration)
+        if (typeof window.hasAccess === 'function' && window.currentRole && !window._vitRestoringView && !window.hasAccess(v)) {
             alert('Kein Zugriff auf diesen Bereich mit deiner aktuellen Rolle.');
             return;
         }
         
-        // Persist current view for reload restoration
-        try { localStorage.setItem('vit_lastView', v); } catch(e) {}
+        // Persist current view for reload restoration (skip during switchViewMode)
+        if(!window._vitRestoringView) { try { localStorage.setItem('vit_lastView', v); } catch(e) {} }
         
         // Role-based redirects
         if (v === 'home' && window.currentRole === 'hq') v = 'hqCockpit';
