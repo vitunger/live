@@ -7,6 +7,7 @@
 // SUPABASE CLIENT
 // ============================================
 var SUPABASE_URL = 'https://lwwagbkxeofahhwebkab.supabase.co';
+window.SUPABASE_URL = SUPABASE_URL;
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3d2FnYmt4ZW9mYWhod2Via2FiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwMTM3NDAsImV4cCI6MjA4NjU4OTc0MH0.YBKO7grysp8RHzGWA6xSGpTVi0wG2PmeEWJHI25f7ks';
 // Robust session storage: localStorage + IndexedDB backup (iOS Safari fix)
 var idbSessionStore = {

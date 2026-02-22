@@ -10,7 +10,7 @@ function _t(k)           { return typeof window.t === 'function' ? window.t(k) :
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
 function _fmtN(n)        { return typeof window.fmtN === 'function' ? window.fmtN(n) : String(n); }
 function _triggerPush()  { if (typeof window.triggerPush === 'function') window.triggerPush.apply(null, arguments); }
-function _sbUrl()        { return window.SUPABASE_URL || 'https://lwwagbkxeofahhwebkab.supabase.co'; }
+function _sbUrl()        { return window.SUPABASE_URL || window._sb?.()?.supabaseUrl || 'https://lwwagbkxeofahhwebkab.supabase.co'; }
 
 // === DEV PIPELINE (Ideenboard 2.0) ===
 var devSubmissions = [];
