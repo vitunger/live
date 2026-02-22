@@ -73,7 +73,7 @@ window.fbOpen = function(){
 _showView('entwicklung');
 setTimeout(function(){
     var f = document.getElementById('devSubmitForm');
-    if(f && f.classList.contains('hidden')) toggleDevSubmitForm();
+    if(f && f.classList.contains('hidden') && typeof window.toggleDevSubmitForm === 'function') window.toggleDevSubmitForm();
 }, 200);
 };
 window.fbClose = function(){
