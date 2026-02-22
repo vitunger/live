@@ -1154,12 +1154,22 @@ function PipelineApp(){
   // Load locations + sellers + deals on mount
   useEffect(() => {
     const init = async () => {
-      const sb = window.sb;
-      if (!sb) { console.warn("[Pipeline] No Supabase client"); setDataReady(true); return; }
+      // Wait for Supabase client to be available (may lag behind Babel compile)
+      let sb = window.sb;
+      if (!sb) {
+        let retries = 0;
+        while (!sb && retries < 20) {
+          await new Promise(r => setTimeout(r, 250));
+          sb = window.sb;
+          retries++;
+        }
+      }
+      if (!sb) { console.warn("[Pipeline] No Supabase client after retries"); setDataReady(true); return; }
 
       try {
         // Load standorte
-        const { data: standorte } = await sb.from("standorte").select("id, name, slug").order("name");
+        const { data: standorte, error: e1 } = await sb.from("standorte").select("id, name, slug").order("name");
+        if (e1) console.warn("[Pipeline] Standorte error:", e1.message);
         if (standorte && standorte.length) {
           setLocations([
             { id: "hq", label: "🏢 HQ (Alle)", isHQ: true },
@@ -1168,7 +1178,8 @@ function PipelineApp(){
         }
 
         // Load active users as sellers
-        const { data: users } = await sb.from("users").select("id, vorname, nachname, name, standort_id, is_hq").eq("status", "aktiv");
+        const { data: users, error: e2 } = await sb.from("users").select("id, vorname, nachname, name, standort_id, is_hq").eq("status", "aktiv");
+        if (e2) console.warn("[Pipeline] Users error:", e2.message);
         if (users && users.length) {
           setSellers(users.map((u, i) => {
             const vn = u.vorname || u.name?.split(" ")[0] || "?";
@@ -1189,21 +1200,23 @@ function PipelineApp(){
         const loaded = await loadDeals();
         setDeals(loaded);
 
-        // Load automations from DB
-        const { data: autoRules } = await sb.from("lead_automations").select("*").eq("enabled", true);
-        if (autoRules && autoRules.length) {
-          setRules(autoRules.map(r => ({
-            id: r.id,
-            from: r.from_stage === "*" ? "*" : (DB_TO_STAGE[r.from_stage] || r.from_stage || "*"),
-            to: DB_TO_STAGE[r.to_stage] || r.to_stage || "angebot",
-            action: r.action,
-            text: r.action_text,
-            days: r.days_offset || 0,
-            actType: r.action_type || "note",
-            enabled: true,
-            scope: r.is_global ? "hq" : (r.standort_id || "hq")
-          })));
-        }
+        // Load automations from DB (non-critical, wrap separately)
+        try {
+          const { data: autoRules } = await sb.from("lead_automations").select("*").eq("enabled", true);
+          if (autoRules && autoRules.length) {
+            setRules(autoRules.map(r => ({
+              id: r.id,
+              from: r.from_stage === "*" ? "*" : (DB_TO_STAGE[r.from_stage] || r.from_stage || "*"),
+              to: DB_TO_STAGE[r.to_stage] || r.to_stage || "angebot",
+              action: r.action,
+              text: r.action_text,
+              days: r.days_offset || 0,
+              actType: r.action_type || "note",
+              enabled: true,
+              scope: r.is_global ? "hq" : (r.standort_id || "hq")
+            })));
+          }
+        } catch (autoErr) { console.warn("[Pipeline] Automations load skipped:", autoErr.message); }
       } catch (err) {
         console.error("[Pipeline] Init error:", err);
       }
@@ -1215,12 +1228,6 @@ function PipelineApp(){
   const nid=useRef(100);
 
   const filteredDeals = curLoc === "hq" ? deals : deals.filter(d => d.loc === curLoc);
-
-  // Loading state
-  if (!dataReady) return <div style={{fontFamily:"'Outfit',sans-serif",textAlign:"center",padding:60}}>
-    <div style={{fontSize:32,marginBottom:12}}>🚴</div>
-    <div style={{fontSize:14,fontWeight:700,color:"#667EEA"}}>Pipeline wird geladen...</div>
-  </div>;
 
   const msg=useCallback(m=>{setToast(m);setTimeout(()=>setToast(null),2500)},[]);
   const pop=useCallback((x,y)=>{const np=Array.from({length:14},(_,i)=>({id:Date.now()+i,x:x+(Math.random()-.5)*120,y:y+(Math.random()-.5)*80,emoji:CELEB[Math.floor(Math.random()*CELEB.length)],delay:i*.04}));setParts(p=>[...p,...np]);setTimeout(()=>setParts(p=>p.filter(pp=>!np.find(n=>n.id===pp.id))),2000)},[]);
@@ -1338,6 +1345,12 @@ function PipelineApp(){
   const main=STAGES.filter(s=>!["lost","gold"].includes(s.id));
   const aging=filteredDeals.filter(d=>!["verkauft","lost","gold"].includes(d.stage)&&dSince(d.changed)>=(AGING[d.stage]||5)).length;
   const openTodos=filteredDeals.reduce((s,d)=>s+d.todos.filter(t=>!t.done).length,0);
+
+  // Loading state - MUST be after all hooks (Rules of Hooks)
+  if (!dataReady) return <div style={{fontFamily:"'Outfit',sans-serif",textAlign:"center",padding:60}}>
+    <div style={{fontSize:32,marginBottom:12}}>🚴</div>
+    <div style={{fontSize:14,fontWeight:700,color:"#667EEA"}}>Pipeline wird geladen...</div>
+  </div>;
 
   return <div style={{fontFamily:"'Outfit',sans-serif"}}>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
