@@ -12,7 +12,7 @@
     var _dragTarget = null;
 
     function esc(s) { return typeof escH === 'function' ? escH(s) : (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-    function notify(msg, type) { if (typeof showNotification === 'function') showNotification(msg, type||'success'); }
+    function notify(msg, type) { if (typeof showToast === 'function') showToast(msg, type||'success'); else if (typeof showNotification === 'function') showNotification(msg, type||'success'); else alert(msg); }
     function gv(id) { return (document.getElementById(id)||{}).value||''; }
     function gc(id) { return (document.getElementById(id)||{}).checked||false; }
 
@@ -272,10 +272,16 @@
             async function() {
                 var nr = parseInt(gv('oaDN'));
                 if (!nr||nr<1) { notify('Platz-Nr muss > 0 sein','error'); return; }
-                var existing = await sb.from('office_desks').select('nr').eq('nr',nr).maybeSingle();
-                if (existing.data) { notify('P'+nr+' existiert bereits!','error'); return; }
+                var existing = await sb.from('office_desks').select('nr,active').eq('nr',nr).maybeSingle();
+                if (existing.data && existing.data.active) { notify('P'+nr+' existiert bereits!','error'); return; }
                 try {
-                    var r = await sb.from('office_desks').insert({nr:nr,room:roomName,room_id:roomId,desk_type:gv('oaDT')||'standard',has_monitor:gc('oaDM'),has_docking:gc('oaDD'),is_bookable:gc('oaDB'),label:gv('oaDL')||null,pct_x:50,pct_y:50,x:0,y:0}).select().single();
+                    var r;
+                    if (existing.data && !existing.data.active) {
+                        // Reactivate inactive desk with new data
+                        r = await sb.from('office_desks').update({active:true,room:roomName,room_id:roomId,desk_type:gv('oaDT')||'standard',has_monitor:gc('oaDM'),has_docking:gc('oaDD'),is_bookable:gc('oaDB'),label:gv('oaDL')||null,pct_x:50,pct_y:50}).eq('nr',nr).select().single();
+                    } else {
+                        r = await sb.from('office_desks').insert({nr:nr,room:roomName,room_id:roomId,desk_type:gv('oaDT')||'standard',has_monitor:gc('oaDM'),has_docking:gc('oaDD'),is_bookable:gc('oaDB'),label:gv('oaDL')||null,pct_x:50,pct_y:50,x:0,y:0}).select().single();
+                    }
                     if (r.error) throw r.error;
                     notify('✅ P'+nr+' angelegt — Drag-Modus zum Positionieren!');
                     cModal();
