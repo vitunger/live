@@ -47,24 +47,31 @@ export async function renderHqFinanzen() {
 async function loadHqFinData() {
     try {
         var currentYear = new Date().getFullYear();
+        console.log('[hq-finanzen] Loading data for year', currentYear);
 
         // 1. Standorte
         var sResp = await _sb().from('standorte').select('*').order('name');
+        if(sResp.error) throw sResp.error;
         var standorte = sResp.data || [];
+        console.log('[hq-finanzen] Standorte:', standorte.length);
 
         // 2. BWA data (all months current year) – THIS IS PRIORITY
         var bwaResp = await _sb().from('bwa_daten')
             .select('standort_id, monat, jahr, umsatzerloese, rohertrag, wareneinsatz, gesamtkosten, ergebnis_vor_steuern, personalkosten, raumkosten, created_at, datei_name, datei_url, format')
             .eq('jahr', currentYear);
+        if(bwaResp.error) { console.warn('[hq-finanzen] BWA query error:', bwaResp.error); }
         var bwaData = bwaResp.data || [];
+        console.log('[hq-finanzen] BWA entries:', bwaData.length);
 
         // 3. Jahresplaene
         var planResp = await _sb().from('jahresplaene')
             .select('standort_id, jahr, plan_daten, updated_at')
             .eq('jahr', currentYear);
+        if(planResp.error) { console.warn('[hq-finanzen] Plan query error:', planResp.error); }
         var planData = planResp.data || [];
         hqFinPlanMap = {};
         planData.forEach(function(p) { hqFinPlanMap[p.standort_id] = p; });
+        console.log('[hq-finanzen] Plans:', planData.length);
 
         // 4. WaWi Belege (Fallback if no BWA)
         var wawiResp = await _sb().from('wawi_belege')
@@ -72,18 +79,23 @@ async function loadHqFinData() {
             .eq('status', 'neu')
             .gte('datum', currentYear + '-01-01')
             .lte('datum', currentYear + '-12-31');
+        if(wawiResp.error) { console.warn('[hq-finanzen] WaWi query error:', wawiResp.error); }
         var wawiData = wawiResp.data || [];
+        console.log('[hq-finanzen] WaWi entries:', wawiData.length);
 
         // 5. BWA submissions for current BWA month (for status)
         var bwaMo = getBwaMonthHqFin(new Date());
+        console.log('[hq-finanzen] BWA month check:', bwaMo);
         var bwaStatusResp = await _sb().from('bwa_daten')
             .select('standort_id, created_at')
             .eq('monat', bwaMo.m + 1)
             .eq('jahr', bwaMo.y);
+        if(bwaStatusResp.error) { console.warn('[hq-finanzen] BWA status query error:', bwaStatusResp.error); }
         hqFinBwaMap = {};
         (bwaStatusResp.data || []).forEach(function(b) {
             hqFinBwaMap[b.standort_id] = b.created_at;
         });
+        console.log('[hq-finanzen] BWA submitted this month:', Object.keys(hqFinBwaMap).length);
 
         // Build enriched array
         hqFinStandorte = standorte.map(function(s) {
@@ -142,8 +154,9 @@ async function loadHqFinData() {
         });
 
         hqFinLoaded = true;
+        console.log('[hq-finanzen] ✅ Loaded', hqFinStandorte.length, 'standorte. Active:', hqFinStandorte.filter(function(s){return s.umsatzIst>0;}).length);
     } catch(err) {
-        console.error('[hq-finanzen] Load error:', err);
+        console.error('[hq-finanzen] ❌ Load error:', err.message || err, err);
         hqFinStandorte = [];
     }
 }
@@ -220,6 +233,11 @@ export function showHqFinTab(tab) {
 function renderHqFinUebersicht() {
     var el = document.getElementById('hqFinMainTable');
     if (!el) return;
+
+    if (!hqFinStandorte.length) {
+        el.innerHTML = '<p class="text-sm text-gray-400 py-8 text-center">Keine Standortdaten verfügbar. Bitte Seite neu laden oder Konsole prüfen.</p>';
+        return;
+    }
 
     // Sort
     var sorted = hqFinStandorte.slice().sort(function(a, b) {
