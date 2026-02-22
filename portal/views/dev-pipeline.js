@@ -782,6 +782,8 @@ export function devCardHTML(s) {
     h += '<div class="flex-1 min-w-0">';
     h += '<div class="flex items-center flex-wrap gap-1.5 mb-1">';
     h += '<span class="text-xs font-semibold rounded px-2 py-0.5 '+devStatusColors[s.status]+'">'+devStatusLabels[s.status]+'</span>';
+    if(s.ki_typ) { var _typC = s.ki_typ==='bug'?'bg-red-100 text-red-700':s.ki_typ==='feature'?'bg-purple-100 text-purple-700':'bg-blue-100 text-blue-700'; var _typI = s.ki_typ==='bug'?'🐛':s.ki_typ==='feature'?'✨':'💡'; h += '<span class="text-[10px] font-semibold rounded px-1.5 py-0.5 '+_typC+'">'+_typI+' '+s.ki_typ+'</span>'; }
+    if(s.ki_bereich) { h += '<span class="text-[10px] rounded px-1.5 py-0.5 '+(s.ki_bereich==='portal'?'bg-gray-100 text-gray-600':'bg-green-50 text-green-700')+'">'+(s.ki_bereich==='portal'?'💻':'🌐')+' '+s.ki_bereich+'</span>'; }
     h += '<span class="text-xs text-gray-400">'+(devKatIcons[s.kategorie]||'')+ ' '+s.kategorie+'</span>';
     if(s.geschaetzter_aufwand) h += '<span class="text-[10px] bg-gray-100 text-gray-600 rounded px-1.5 py-0.5 font-semibold">'+s.geschaetzter_aufwand+'</span>';
     h += '</div>';
@@ -871,6 +873,8 @@ export function devBoardCardHTML(s, showActions) {
     h += '<div class="flex items-start justify-between">';
     h += '<div class="flex-1 cursor-pointer" onclick="openDevDetail(\''+s.id+'\')">';
     h += '<div class="flex items-center gap-2 mb-1 flex-wrap"><span class="text-xs font-semibold rounded px-2 py-0.5 '+devStatusColors[s.status]+'">'+devStatusLabels[s.status]+'</span>';
+    if(s.ki_typ) { var _tC = s.ki_typ==='bug'?'bg-red-100 text-red-700':s.ki_typ==='feature'?'bg-purple-100 text-purple-700':'bg-blue-100 text-blue-700'; var _tI = s.ki_typ==='bug'?'🐛':s.ki_typ==='feature'?'✨':'💡'; h += '<span class="text-xs font-semibold rounded px-1.5 py-0.5 '+_tC+'">'+_tI+' '+s.ki_typ+'</span>'; }
+    if(s.ki_bereich) { h += '<span class="text-xs rounded px-1.5 py-0.5 '+(s.ki_bereich==='portal'?'bg-gray-100 text-gray-600':'bg-green-50 text-green-700')+'">'+(s.ki_bereich==='portal'?'💻':'🌐')+' '+s.ki_bereich+'</span>'; }
     if(ki && ki.machbarkeit) h += '<span class="text-xs bg-gray-100 rounded px-1.5 py-0.5">Machbarkeit: <b>'+ki.machbarkeit+'</b></span>';
     if(ki && ki.vision_fit_score) h += '<span class="text-xs bg-blue-50 text-blue-700 rounded px-1.5 py-0.5">Vision: <b>'+ki.vision_fit_score+'/100</b></span>';
     if(ki && ki.aufwand_schaetzung) h += '<span class="text-xs bg-gray-100 rounded px-1.5 py-0.5">Aufwand: <b>'+ki.aufwand_schaetzung+'</b></span>';
@@ -1341,6 +1345,8 @@ export async function openDevDetail(subId) {
         var h = '';
         h += '<div class="flex items-start justify-between mb-4">';
         h += '<div><span class="text-xs font-semibold rounded px-2 py-1 '+devStatusColors[s.status]+'">'+devStatusLabels[s.status]+'</span>';
+        if(s.ki_typ) { var _dtC = s.ki_typ==='bug'?'bg-red-100 text-red-700':s.ki_typ==='feature'?'bg-purple-100 text-purple-700':'bg-blue-100 text-blue-700'; var _dtI = s.ki_typ==='bug'?'🐛 Bug':s.ki_typ==='feature'?'✨ Feature':'💡 Idee'; h += ' <span class="text-xs font-semibold rounded px-2 py-1 '+_dtC+'">'+_dtI+'</span>'; }
+        if(s.ki_bereich) { h += ' <span class="text-xs rounded px-2 py-1 '+(s.ki_bereich==='portal'?'bg-gray-100 text-gray-600':'bg-green-50 text-green-700')+'">'+(s.ki_bereich==='portal'?'💻 Portal':'🌐 Netzwerk')+'</span>'; }
         h += '<h2 class="text-xl font-bold text-gray-800 mt-2">'+(s.titel||'(Ohne Titel)')+'</h2>';
         h += '<p class="text-xs text-gray-400 mt-1">'+(devKatIcons[s.kategorie]||'')+' '+s.kategorie+' · '+new Date(s.created_at).toLocaleDateString('de-DE')+'</p></div>';
         h += '<button onclick="closeDevDetail()" class="text-gray-400 hover:text-gray-600 text-2xl">✕</button></div>';
