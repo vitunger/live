@@ -3953,7 +3953,13 @@ export async function devMockupChatSend(subId) {
             var kiDiv = document.createElement('div');
             kiDiv.className = 'flex justify-start';
             var mockupBadge = data.mockup_version ? '<span class="text-[10px] bg-pink-200 text-pink-700 px-1.5 rounded-full ml-1">Mockup v'+data.mockup_version+'</span>' : '';
-            kiDiv.innerHTML = '<div class="max-w-[85%] border border-gray-200 rounded-lg px-3 py-2 bg-white"><div class="flex items-center gap-1 mb-1"><span class="text-xs">🤖</span><span class="text-[10px] text-gray-400">jetzt</span>'+mockupBadge+'</div><p class="text-sm text-gray-700 whitespace-pre-wrap">'+data.antwort+'</p></div>';
+            // Clean up any JSON artifacts in the response
+            var _antwort = data.antwort;
+            if(_antwort.indexOf('```json') !== -1 || _antwort.indexOf('"antwort"') !== -1) {
+                try { var _parsed = JSON.parse(_antwort.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim()); _antwort = _parsed.antwort || _antwort; } catch(e) {}
+                _antwort = _antwort.replace(/```json\n?/g,'').replace(/```\n?/g,'').replace(/^\s*\{[^}]*"antwort"\s*:\s*"/,'').replace(/",\s*"neues_mockup".*$/s,'').replace(/"\s*\}\s*$/,'');
+            }
+            kiDiv.innerHTML = '<div class="max-w-[85%] border border-gray-200 rounded-lg px-3 py-2 bg-white"><div class="flex items-center gap-1 mb-1"><span class="text-xs">\uD83E\uDD16</span><span class="text-[10px] text-gray-400">jetzt</span>'+mockupBadge+'</div><p class="text-sm text-gray-700 whitespace-pre-wrap">'+_antwort+'</p></div>';
             container.appendChild(kiDiv);
             container.scrollTop = container.scrollHeight;
         }
