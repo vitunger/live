@@ -5950,7 +5950,111 @@
                 </div>
 
                 <!-- ===== HQ SHOP-VERWALTUNG ===== -->
-                <div id="hqShopView" class="view" style="display: none;">
+                
+                <!-- =============== ENTWICKLUNG VIEW =============== -->
+                <div id="entwicklungView" class="view" style="display: none;">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h1 class="h1-headline text-gray-800 mb-1">ENTWICKLUNG</h1>
+                            <p class="text-sm text-gray-500">Feedback, Moduluebersicht, Releases & Steuerung</p>
+                        </div>
+                        <button onclick="toggleDevSubmitForm()" class="px-5 py-2.5 bg-vit-orange text-white rounded-lg font-semibold hover:bg-orange-600 shadow-sm flex items-center gap-2">
+                            <span>💡</span> Feedback geben
+                        </button>
+                    </div>
+
+                    <!-- Tab Navigation -->
+                    <div id="entwicklungTabs" class="flex items-center gap-1 mb-4 bg-gray-100 p-1 rounded-lg w-fit">
+                        <button class="entw-tab-btn px-4 py-2 rounded-md text-sm font-semibold bg-white text-gray-800 shadow-sm whitespace-nowrap" data-etab="ideen" onclick="showEntwicklungTab('ideen')">💡 Ideen</button>
+                        <button class="entw-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="module" onclick="showEntwicklungTab('module')">📦 Module</button>
+                        <button class="entw-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="releases" onclick="showEntwicklungTab('releases')">🚀 Releases</button>
+                        <button class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="steuerung" onclick="showEntwicklungTab('steuerung')" style="display:none;">⚙️ Steuerung</button>
+                        <button class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="flags" onclick="showEntwicklungTab('flags')" style="display:none;">🚩 Flags</button>
+                        <button class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="nutzung" onclick="showEntwicklungTab('nutzung')" style="display:none;">📊 Nutzung</button>
+                        <button class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="system" onclick="showEntwicklungTab('system')" style="display:none;">🛡️ System</button>
+                    </div>
+
+                    <!-- Stats Bar -->
+                    <div id="entwStatsBar"></div>
+
+                    <!-- Tab: Ideen -->
+                    <div id="entwTabIdeen" class="entw-tab-content">
+                        <!-- Filters -->
+                        <div class="flex flex-wrap gap-2 mb-4 items-center">
+                            <select id="entwFilterScope" onchange="renderEntwIdeen()" class="text-sm border border-gray-200 rounded-lg px-3 py-2">
+                                <option value="alle">Alle Bereiche</option>
+                                <option value="portal">Portal</option>
+                                <option value="netzwerk">Netzwerk</option>
+                            </select>
+                            <select id="entwFilterStatus" onchange="renderEntwIdeen()" class="text-sm border border-gray-200 rounded-lg px-3 py-2">
+                                <option value="alle">Alle Status</option>
+                                <option value="neu">Neu / Eingang</option>
+                                <option value="dev">In Entwicklung</option>
+                                <option value="done">Erledigt</option>
+                            </select>
+                            <select id="entwFilterKat" onchange="renderEntwIdeen()" class="text-sm border border-gray-200 rounded-lg px-3 py-2">
+                                <option value="alle">Alle Kategorien</option>
+                                <option value="bug">Bug</option>
+                                <option value="verbesserung">Verbesserung</option>
+                                <option value="feature">Feature</option>
+                                <option value="prozess">Prozess</option>
+                                <option value="sonstiges">Sonstiges</option>
+                            </select>
+                            <select id="entwFilterQuelle" onchange="renderEntwIdeen()" class="text-sm border border-gray-200 rounded-lg px-3 py-2">
+                                <option value="alle">Alle Quellen</option>
+                                <option value="meine">Meine</option>
+                                <option value="standort">Mein Standort</option>
+                            </select>
+                            <select id="entwFilterTyp" onchange="renderEntwIdeen()" class="text-sm border border-gray-200 rounded-lg px-3 py-2">
+                                <option value="alle">Alle Typen</option>
+                                <option value="bug">🐛 Bug</option>
+                                <option value="feature">✨ Feature</option>
+                                <option value="idee">💡 Idee</option>
+                            </select>
+                            <select id="entwFilterSort" onchange="renderEntwIdeen()" class="text-sm border border-gray-200 rounded-lg px-3 py-2">
+                                <option value="votes">▲ Meiste Votes</option>
+                                <option value="newest">🕐 Neueste</option>
+                                <option value="oldest">🕐 Aelteste</option>
+                                <option value="fit">🎯 Vision-Fit</option>
+                            </select>
+                            <span id="entwIdeenCount" class="text-xs text-gray-400 ml-2"></span>
+                        </div>
+                        <div id="entwIdeenContent"></div>
+                    </div>
+
+                    <!-- Tab: Module -->
+                    <div id="entwTabModule" class="entw-tab-content" style="display:none;">
+                        <div id="modulStatusContent"></div>
+                    </div>
+
+                    <!-- Tab: Releases -->
+                    <div id="entwTabReleases" class="entw-tab-content" style="display:none;">
+                        <div id="entwReleasesContent"></div>
+                    </div>
+
+                    <!-- Tab: Steuerung (HQ) -->
+                    <div id="entwTabSteuerung" class="entw-tab-content" style="display:none;">
+                        <div id="entwSteuerungContent"></div>
+                    </div>
+
+                    <!-- Tab: Flags (HQ) -->
+                    <div id="entwTabFlags" class="entw-tab-content" style="display:none;">
+                        <div id="entwFlagsContent"></div>
+                    </div>
+
+                    <!-- Tab: Nutzung (HQ) -->
+                    <div id="entwTabNutzung" class="entw-tab-content" style="display:none;">
+                        <div id="entwNutzungContent"></div>
+                    </div>
+
+                    <!-- Tab: System (HQ) -->
+                    <div id="entwTabSystem" class="entw-tab-content" style="display:none;">
+                        <div id="entwSystemContent"></div>
+                        <div id="entwBackupContent" class="mt-4"></div>
+                    </div>
+                </div>
+
+<div id="hqShopView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-2">🛍️ SHOP – VERWALTUNG</h1>
                     <p class="text-sm text-gray-500 mb-6">Bestellungen bearbeiten, Packlisten drucken, Versand tracken.</p>
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="hqShopKpis">
