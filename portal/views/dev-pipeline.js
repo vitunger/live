@@ -556,6 +556,17 @@ export async function renderEntwSteuerung() {
 
     var h = '';
 
+    // KI-Priorisierung Button (HQ only)
+    var isHQ = _sbProfile() && (_sbProfile().role === 'geschaeftsleitung' || _sbProfile().role === 'hq_admin' || _sbProfile().is_hq);
+    if(isHQ) {
+        h += '<div class="flex items-center justify-between mb-4 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-100">';
+        h += '<div><h3 class="text-sm font-bold text-purple-700">🤖 KI-Priorisierung</h3>';
+        h += '<p class="text-xs text-purple-500">KI analysiert alle offenen Ideen und empfiehlt die optimale Reihenfolge</p></div>';
+        h += '<button onclick="runDevKIPrioritize()" id="btnDevPrio" class="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg text-sm font-semibold hover:from-purple-600 hover:to-indigo-700 shadow-sm flex items-center gap-2">';
+        h += '<span>🧠</span><span>Priorisierung starten</span></button></div>';
+        h += '<div id="devPrioResult" class="hidden mb-4"></div>';
+    }
+
     // Kanban board for HQ (6 Spalten lt. Plan)
     var columns = [
         {key:'neu', label:'📥 Eingang', statuses:['neu','ki_pruefung','ki_rueckfragen'], color:'blue'},
