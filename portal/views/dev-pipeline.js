@@ -1654,11 +1654,11 @@ export async function openDevDetail(subId) {
             h += '</div>';
         }
 
-        // Analyse (kompakt, collapsible - default eingeklappt)
+        // Analyse (kompakt, collapsible - default AUFGEKLAPPT)
         if(ki) {
             h += '<div class="bg-purple-50/50 border border-purple-200 rounded-lg p-3">';
-            h += '<h4 onclick="this.nextElementSibling.classList.toggle(\'hidden\');this.querySelector(\'span\').textContent=this.nextElementSibling.classList.contains(\'hidden\')?\'+\':\'\u2212\'" class="text-[10px] font-bold text-purple-600 uppercase mb-1 cursor-pointer select-none flex items-center justify-between hover:text-purple-800"><span class="flex items-center gap-1">\uD83D\uDCCA Analyse</span><span class="text-xs text-purple-400">+</span></h4>';
-            h += '<div class="hidden">';
+            h += '<h4 onclick="this.nextElementSibling.classList.toggle(\'hidden\');this.querySelector(\'span:last-child\').textContent=this.nextElementSibling.classList.contains(\'hidden\')?\'+\':\'\u2212\'" class="text-[10px] font-bold text-purple-600 uppercase mb-1 cursor-pointer select-none flex items-center justify-between hover:text-purple-800"><span class="flex items-center gap-1">\uD83D\uDCCA Analyse</span><span class="text-xs text-purple-400">\u2212</span></h4>';
+            h += '<div class="">';
             if(ki.zusammenfassung) h += '<p class="text-xs text-gray-600 mb-2">'+ki.zusammenfassung+'</p>';
             if(isHQ) {
                 h += '<div class="grid grid-cols-3 gap-2 text-center">';
@@ -1792,7 +1792,7 @@ export async function openDevDetail(subId) {
             h += '<h4 class="text-[10px] font-bold text-gray-600 uppercase mb-2">\u26A1 Workflow</h4>';
             h += '<div class="flex flex-wrap gap-1">';
             var wfActions = {
-                'freigegeben': [{label:'Konzept erstellen',status:'konzept_wird_erstellt',fn:'createDevKonzept',icon:'\uD83D\uDCCB',color:'indigo'},{label:'\u2192 In Planung',status:'in_planung',icon:'\uD83D\uDCDD',color:'blue'}],
+                'freigegeben': [{label:'Konzept erstellen',status:'konzept_wird_erstellt',fn:'createDevKonzept',icon:'\uD83D\uDCCB',color:'indigo'},{label:'\u2192 In Entwicklung',status:'in_entwicklung',icon:'\uD83D\uDCDD',color:'blue'}],
                 'in_planung': [{label:'\u2192 Entwicklung',status:'in_entwicklung',icon:'\u2699\uFE0F',color:'emerald'}],
                 'in_entwicklung': [{label:'\u2192 Beta-Test',status:'beta_test',icon:'\uD83E\uDDEA',color:'pink'}],
                 'beta_test': [{label:'\u2192 Review',status:'im_review',icon:'\uD83D\uDD0D',color:'purple'}],
