@@ -325,7 +325,7 @@ export async function renderEntwTabContent(tab) {
     }
 }
 
-export async function loadDevSubmissions() {
+export async function loadDevSubmissions(force) {
     try {
         var query = _sb().from('dev_submissions').select('*, users!dev_submissions_user_id_public_fkey(name), dev_ki_analysen(zusammenfassung, vision_fit_score, machbarkeit, aufwand_schaetzung, bug_schwere, deadline_vorschlag, deadline_begruendung), dev_votes(user_id), dev_kommentare(id, typ, inhalt, created_at, users!dev_kommentare_user_id_public_fkey(name))').order('created_at', {ascending: false});
         var resp = await query;
@@ -2744,7 +2744,16 @@ export async function devAdvanceStatus(subId, newStatus) {
         }
 
         _showToast('\u2705 Status: ' + (labels[newStatus]||newStatus), 'success');
-        openDevDetail(subId);
+        // Close detail modal and refresh board
+        closeDevDetail();
+        await loadDevSubmissions(true);
+        // Re-render current view
+        var activeTab = document.querySelector('.entw-tab-btn.border-vit-orange, .entw-tab-btn[style*="border-color"]');
+        if(document.getElementById('entwTabSteuerung') && document.getElementById('entwTabSteuerung').style.display !== 'none') {
+            renderEntwSteuerung();
+        } else if(document.getElementById('entwTabIdeen') && document.getElementById('entwTabIdeen').style.display !== 'none') {
+            renderEntwIdeen();
+        }
     } catch(e) {
         _showToast('Fehler: ' + e.message, 'error');
     }
