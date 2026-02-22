@@ -603,9 +603,15 @@ export async function renderEntwSteuerung() {
         items.forEach(function(s) {
             var statusLabel = devStatusLabels[s.status] || s.status;
             h += '<div class="bg-white rounded-lg p-3 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition" onclick="openDevDetail(\''+s.id+'\')">';
+            var _typ = s.ki_typ || (s.kategorie === 'feature' ? 'feature' : s.kategorie === 'bug' ? 'bug' : 'idee');
+            var _typColor = _typ==='bug'?'bg-red-100 text-red-700':_typ==='feature'?'bg-purple-100 text-purple-700':'bg-blue-100 text-blue-700';
+            var _typLabel = _typ==='bug'?'\uD83D\uDC1B Bug':_typ==='feature'?'\\u2728 Feature':'\\uD83D\\uDCA1 Idee';
+            h += '<div class="flex items-center gap-1 mb-1"><span class="text-[9px] font-semibold rounded px-1.5 py-0.5 '+_typColor+'">'+_typLabel+'</span></div>';
             h += '<p class="text-xs font-semibold text-gray-800 mb-1 line-clamp-2">'+(s.titel||s.beschreibung||s.kurz_notiz||s.transkription||'Kein Titel').substring(0,60)+'</p>';
             h += '<div class="flex items-center gap-1 flex-wrap">';
             h += '<span class="text-[9px] rounded px-1.5 py-0.5 '+(devStatusColors[s.status]||'bg-gray-100 text-gray-600')+'">'+statusLabel+'</span>';
+            var _einreicher = s.users && s.users.name ? s.users.name : '';
+            if(_einreicher) h += '<span class="text-[9px] text-gray-400">\uD83D\uDC64 '+_escH(_einreicher)+'</span>';
             var votes = (s.dev_votes||[]).length;
             if(votes) h += '<span class="text-[9px] text-gray-400">▲'+votes+'</span>';
             h += '</div></div>';
