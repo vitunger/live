@@ -316,7 +316,7 @@ export async function renderEntwTabContent(tab) {
         await loadDevSubmissions();
         renderEntwIdeen();
     } else if(tab === 'module') {
-        renderModulStatus();
+        if(typeof window.renderModulStatus === 'function') window.renderModulStatus(); else console.warn('[dev-pipeline] renderModulStatus not found');
     } else if(tab === 'releases') {
         await renderEntwReleases();
     } else if(tab === 'steuerung') {
