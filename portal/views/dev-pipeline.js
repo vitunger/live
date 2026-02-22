@@ -494,10 +494,12 @@ export async function renderEntwReleases() {
             h += '</div>';
             h += '<input id="relTitel" type="text" placeholder="Titel der Release-Note" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 mb-3">';
             h += '<textarea id="relInhalt" placeholder="Was wurde geändert / verbessert / gefixt?\n\nTipp: Nutze Aufzählungen für mehrere Punkte." class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 mb-3" rows="5"></textarea>';
-            h += '<div class="flex justify-end gap-2">';
+            h += '<div class="flex justify-between items-center">';
+            h += '<button onclick="devKIReleaseVorschlag()" id="btnKIRelease" class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg text-xs font-semibold hover:from-purple-600 hover:to-indigo-700 flex items-center gap-1.5"><span>🧠</span><span>KI-Vorschlag generieren</span></button>';
+            h += '<div class="flex gap-2">';
             h += '<button onclick="document.getElementById(\'devCreateReleaseForm\').classList.add(\'hidden\')" class="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700">Abbrechen</button>';
             h += '<button onclick="devSaveRelease()" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700">💾 Veröffentlichen</button>';
-            h += '</div></div>';
+            h += '</div></div></div>';
         }
         
         if(docs.length === 0 && pending.length === 0) {
@@ -3077,6 +3079,59 @@ export async function devToggleBetaTester(id, aktiv) {
     } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
 }
 
+export async function devKIReleaseVorschlag() {
+    var btn = document.getElementById('btnKIRelease');
+    if(btn) { btn.disabled = true; btn.innerHTML = '<span class="animate-spin">🧠</span><span>KI denkt nach...</span>'; }
+    
+    try {
+        // Sammle alle kürzlich umgesetzten + release-geplanten Submissions
+        var relevant = devSubmissions.filter(function(s) {
+            return ['ausgerollt','release_geplant','im_review','in_entwicklung'].indexOf(s.status) !== -1;
+        });
+        
+        if(relevant.length === 0) {
+            _showToast('Keine umgesetzten Features/Bugs gefunden.', 'error');
+            if(btn) { btn.disabled = false; btn.innerHTML = '<span>🧠</span><span>KI-Vorschlag generieren</span>'; }
+            return;
+        }
+        
+        var zusammenfassung = relevant.map(function(s) {
+            var typ = s.ki_typ === 'bug' ? 'Bug-Fix' : s.ki_typ === 'feature' ? 'Feature' : 'Verbesserung';
+            var titel = s.titel || s.beschreibung || s.kurz_notiz || 'Kein Titel';
+            var analyse = s.dev_ki_analysen && s.dev_ki_analysen[0] ? s.dev_ki_analysen[0].zusammenfassung : '';
+            return typ + ': ' + titel + (analyse ? ' – ' + analyse : '');
+        }).join('\n');
+        
+        var resp = await _sb().functions.invoke('dev-ki-analyse', {
+            body: { 
+                mode: 'release_notes', 
+                context: zusammenfassung,
+                count: relevant.length
+            }
+        });
+        
+        if(resp.error) throw resp.error;
+        var d = resp.data;
+        if(d.error) throw new Error(d.error);
+        
+        var vorschlag = d.release_notes || d.antwort || d.text || '';
+        if(vorschlag) {
+            var titelField = document.getElementById('relTitel');
+            var inhaltField = document.getElementById('relInhalt');
+            if(d.titel && titelField && !titelField.value) titelField.value = d.titel;
+            if(inhaltField) inhaltField.value = vorschlag;
+            _showToast('🧠 KI-Vorschlag eingefügt! Bitte prüfen und anpassen.', 'success');
+        } else {
+            _showToast('KI hat keinen Vorschlag generiert.', 'error');
+        }
+    } catch(err) {
+        console.error('KI Release error:', err);
+        _showToast('KI-Fehler: ' + (err.message || err), 'error');
+    }
+    
+    if(btn) { btn.disabled = false; btn.innerHTML = '<span>🧠</span><span>KI-Vorschlag generieren</span>'; }
+}
+
 export function devShowCreateRelease() {
     var f = document.getElementById('devCreateReleaseForm');
     if(f) f.classList.toggle('hidden');
@@ -4027,7 +4082,7 @@ export async function devMockupShowVersion(mockupId) {
 }
 
 const _exports = {
-    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachFiles,devMockupChatAttachImage,devMockupChatMic,devDeployCode,loadDeployHistory,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,
+    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachFiles,devMockupChatAttachImage,devMockupChatMic,devDeployCode,loadDeployHistory,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devKIReleaseVorschlag,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
