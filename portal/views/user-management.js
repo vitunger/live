@@ -3,8 +3,6 @@
  * @module views/user-management
  */
 function _sb()           { return window.sb; }
-var SUPABASE_URL = (window.sb && window.sb.supabaseUrl) || 'https://lwwagbkxeofahhwebkab.supabase.co';
-var SUPABASE_ANON_KEY = (window.sb && window.sb.supabaseKey) || '';
 function _sbUser()       { return window.sbUser; }
 function _sbProfile()    { return window.sbProfile; }
 function _escH(s)        { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
@@ -797,12 +795,12 @@ export async function saveNeuerMa() {
         var session = await _sb().auth.getSession();
         if(!session.data.session) throw { message: 'Nicht eingeloggt' };
 
-        var response = await fetch(SUPABASE_URL + '/functions/v1/create-user', {
+        var response = await fetch((window.SUPABASE_URL || 'https://lwwagbkxeofahhwebkab.supabase.co') + '/functions/v1/create-user', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + session.data.session.access_token,
-                'apikey': SUPABASE_ANON_KEY
+                'apikey': (window.SUPABASE_ANON_KEY || '')
             },
             body: JSON.stringify({
                 email: email.trim().toLowerCase(),
