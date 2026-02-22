@@ -1,6 +1,6 @@
 // ============================================================
 // vit:bikes Partner Portal — Office Admin (Settings Tab)
-// v3 — 2026-02-22 — Fixed loadData bug + improved CRUD UI
+// v4 — 2026-02-22 — Draggable room labels + saved positions
 // Depends on globals: sb, escH, showNotification, showSettingsTab
 // ============================================================
 (function(){
@@ -75,16 +75,26 @@
     // ═══════════════════════════════════════════════════════
     //  DOTS ON FLOORPLAN
     // ═══════════════════════════════════════════════════════
+    var _labelDragTarget = null;
+
     function renderDots() {
         var c = document.getElementById('officeAdminDots'); if(!c) return;
         c.style.pointerEvents = _dragMode ? 'auto' : 'none';
         var h = '';
         _rooms.forEach(function(r) {
-            var rd = _desks.filter(function(d){return d.room_id===r.id;}); if(!rd.length) return;
-            var ax = rd.reduce(function(s,d){return s+(parseFloat(d.pct_x)||50);},0)/rd.length;
-            var ay = rd.reduce(function(s,d){return s+(parseFloat(d.pct_y)||50);},0)/rd.length;
+            var rd = _desks.filter(function(d){return d.room_id===r.id;});
+            // Use saved label position, or fallback to computed average of desks
+            var lx = parseFloat(r.label_pct_x);
+            var ly = parseFloat(r.label_pct_y);
+            if(isNaN(lx) || isNaN(ly)) {
+                if(!rd.length) return;
+                lx = rd.reduce(function(s,d){return s+(parseFloat(d.pct_x)||50);},0)/rd.length;
+                ly = rd.reduce(function(s,d){return s+(parseFloat(d.pct_y)||50);},0)/rd.length - 5;
+            }
             var col = roomColor(r.name);
-            h += '<div style="position:absolute;left:'+ax+'%;top:'+(ay-5)+'%;transform:translate(-50%,-100%);background:'+col+';color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;white-space:nowrap;pointer-events:none;z-index:5;box-shadow:0 1px 3px rgba(0,0,0,.2);opacity:.9">'+esc(r.name)+' <span style="opacity:.7">('+rd.length+')</span></div>';
+            var cursor = _dragMode ? 'grab' : 'default';
+            var outline = _dragMode ? 'outline:2px dashed rgba(255,255,255,.5);outline-offset:2px;' : '';
+            h += '<div class="office-label" data-room-id="'+r.id+'" style="position:absolute;left:'+lx+'%;top:'+ly+'%;transform:translate(-50%,-100%);background:'+col+';color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;white-space:nowrap;pointer-events:'+(_dragMode?'auto':'none')+';z-index:15;box-shadow:0 1px 3px rgba(0,0,0,.2);opacity:.9;cursor:'+cursor+';'+outline+'">'+esc(r.name)+' <span style="opacity:.7">('+rd.length+')</span></div>';
         });
         _desks.forEach(function(d) {
             var px=parseFloat(d.pct_x)||50, py=parseFloat(d.pct_y)||50;
@@ -93,9 +103,37 @@
             h += '<div class="office-admin-dot" data-nr="'+d.nr+'" title="'+esc(tt)+'" style="position:absolute;left:'+px+'%;top:'+py+'%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:50%;background:'+col+';border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,.3);cursor:'+(_dragMode?'grab':'default')+';z-index:10;display:flex;align-items:center;justify-content:center;font-size:7px;color:white;font-weight:700">'+d.nr+'</div>';
         });
         c.innerHTML = h;
-        if(_dragMode) c.querySelectorAll('.office-admin-dot').forEach(function(dot){
-            dot.addEventListener('mousedown',startDrag); dot.addEventListener('touchstart',startDragTouch,{passive:false});
-        });
+        if(_dragMode) {
+            c.querySelectorAll('.office-admin-dot').forEach(function(dot){
+                dot.addEventListener('mousedown',startDrag); dot.addEventListener('touchstart',startDragTouch,{passive:false});
+            });
+            c.querySelectorAll('.office-label').forEach(function(lbl){
+                lbl.addEventListener('mousedown',startLabelDrag); lbl.addEventListener('touchstart',startLabelDragTouch,{passive:false});
+            });
+        }
+    }
+
+    // ── Label drag handlers ──
+    function startLabelDrag(e){if(!_dragMode)return;e.preventDefault();e.stopPropagation();_labelDragTarget=e.currentTarget;_labelDragTarget.style.cursor='grabbing';_labelDragTarget.style.zIndex='100';_labelDragTarget.style.opacity='1';document.addEventListener('mousemove',onLabelDrag);document.addEventListener('mouseup',endLabelDrag);}
+    function startLabelDragTouch(e){if(!_dragMode)return;e.preventDefault();e.stopPropagation();_labelDragTarget=e.currentTarget;_labelDragTarget.style.zIndex='100';document.addEventListener('touchmove',onLabelDragTouch,{passive:false});document.addEventListener('touchend',endLabelDragTouch);}
+    function onLabelDrag(e){if(_labelDragTarget)moveLabelDot(e.clientX,e.clientY);}
+    function onLabelDragTouch(e){if(_labelDragTarget&&e.touches[0]){e.preventDefault();moveLabelDot(e.touches[0].clientX,e.touches[0].clientY);}}
+    function moveLabelDot(cx,cy){var img=document.getElementById('officeGrundrissImg');if(!img||!_labelDragTarget)return;var r=img.getBoundingClientRect();_labelDragTarget.style.left=Math.max(0,Math.min(100,((cx-r.left)/r.width)*100))+'%';_labelDragTarget.style.top=Math.max(0,Math.min(100,((cy-r.top)/r.height)*100))+'%';}
+    async function endLabelDrag(){document.removeEventListener('mousemove',onLabelDrag);document.removeEventListener('mouseup',endLabelDrag);await saveLabelPos();}
+    async function endLabelDragTouch(){document.removeEventListener('touchmove',onLabelDragTouch);document.removeEventListener('touchend',endLabelDragTouch);await saveLabelPos();}
+    async function saveLabelPos(){
+        if(!_labelDragTarget)return;
+        var roomId=_labelDragTarget.dataset.roomId;
+        var l=parseFloat(_labelDragTarget.style.left);
+        var t=parseFloat(_labelDragTarget.style.top);
+        _labelDragTarget.style.cursor='grab';_labelDragTarget.style.zIndex='15';_labelDragTarget=null;
+        try{
+            var r=await sb.from('office_rooms').update({label_pct_x:l.toFixed(2),label_pct_y:t.toFixed(2)}).eq('id',roomId);
+            if(r.error)throw r.error;
+            var rm=_rooms.find(function(rm){return rm.id===roomId;});
+            if(rm){rm.label_pct_x=l.toFixed(2);rm.label_pct_y=t.toFixed(2);}
+            notify('📌 Label verschoben','success');
+        }catch(e){notify('Label speichern fehlgeschlagen','error');}
     }
 
     function startDrag(e){if(!_dragMode)return;e.preventDefault();_dragTarget=e.currentTarget;_dragTarget.style.cursor='grabbing';_dragTarget.style.zIndex='100';document.addEventListener('mousemove',onDrag);document.addEventListener('mouseup',endDrag);}
@@ -107,7 +145,7 @@
     async function endDragTouch(){document.removeEventListener('touchmove',onDragTouch);document.removeEventListener('touchend',endDragTouch);await saveDotPos();}
     async function saveDotPos(){if(!_dragTarget)return;var nr=parseInt(_dragTarget.dataset.nr),l=parseFloat(_dragTarget.style.left),t=parseFloat(_dragTarget.style.top);_dragTarget.style.cursor='grab';_dragTarget.style.zIndex='10';_dragTarget=null;try{var r=await sb.from('office_desks').update({pct_x:l.toFixed(2),pct_y:t.toFixed(2)}).eq('nr',nr);if(r.error)throw r.error;var d=_desks.find(function(d){return d.nr===nr;});if(d){d.pct_x=l.toFixed(2);d.pct_y=t.toFixed(2);}}catch(e){notify('Position speichern fehlgeschlagen','error');}}
 
-    window.officeToggleDragMode = function(){var cb=document.getElementById('officeAdminDragMode');_dragMode=cb?cb.checked:false;var h=document.getElementById('officeAdminDragHint');if(h)h.innerHTML=_dragMode?'<span class="text-orange-600 font-semibold">⚡ Drag-Modus aktiv!</span> Ziehe die Punkte an die richtige Position.':'Aktiviere "Plätze verschieben" um Dots per Drag & Drop auf dem Grundriss zu positionieren.';renderDots();};
+    window.officeToggleDragMode = function(){var cb=document.getElementById('officeAdminDragMode');_dragMode=cb?cb.checked:false;var h=document.getElementById('officeAdminDragHint');if(h)h.innerHTML=_dragMode?'<span class="text-orange-600 font-semibold">⚡ Drag-Modus aktiv!</span> Ziehe Punkte <b>und Raumnamen</b> an die richtige Position.':'Aktiviere "Plätze verschieben" um Dots und Raumnamen per Drag & Drop auf dem Grundriss zu positionieren.';renderDots();};
 
     function renderLegend(){var el=document.getElementById('officeRoomLegend');if(!el)return;var h='';_rooms.forEach(function(r){var cnt=_desks.filter(function(d){return d.room_id===r.id;}).length;h+='<span class="flex items-center gap-1.5 text-[11px] text-gray-600 px-2 py-1 bg-gray-50 rounded-full"><span class="w-2.5 h-2.5 rounded-full" style="background:'+roomColor(r.name)+'"></span>'+esc(r.name)+' <span class="font-bold">('+cnt+')</span></span>';});el.innerHTML=h;}
 
@@ -311,5 +349,5 @@
         if (tab === 'office') setTimeout(officeRenderAdminDots, 150);
     };
 
-    console.log('[OfficeAdmin] Module v3 loaded ✓');
+    console.log('[OfficeAdmin] Module v4 loaded ✓');
 })();
