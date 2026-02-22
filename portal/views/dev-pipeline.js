@@ -1454,10 +1454,10 @@ export async function openDevDetail(subId) {
             h += '</div></div>';
         }
 
-        // === RÜCKFRAGEN-ANTWORT-FORMULAR (nur für Einreicher, nicht HQ) ===
+        // === RÜCKFRAGEN-ANTWORT-FORMULAR (NUR für Einreicher) ===
         var isHQUser = (currentRoles||[]).indexOf('hq') !== -1;
         var isSubmitter = sbUser && s.user_id === _sbUser().id;
-        if((s.status === 'ki_rueckfragen' || s.status === 'hq_rueckfragen') && (isSubmitter || !isHQUser)) {
+        if((s.status === 'ki_rueckfragen' || s.status === 'hq_rueckfragen') && isSubmitter) {
             var rfQuelle = s.status === 'ki_rueckfragen' ? 'Unser System' : 'Das HQ';
             h += '<div id="devRueckfragenForm" class="border-2 border-yellow-300 rounded-lg p-4 mb-4 bg-yellow-50">';
             h += '<h4 class="text-sm font-bold text-yellow-800 mb-2">💬 '+rfQuelle+' hat Rückfragen – bitte antworte:</h4>';
@@ -1517,6 +1517,12 @@ export async function openDevDetail(subId) {
 // Rückfragen beantworten + KI neu analysieren
 export async function submitDevRueckfragenAntwort(subId, currentStatus) {
     try {
+        // Nur der Einreicher darf Rückfragen beantworten
+        var subResp = await _sb().from('dev_submissions').select('user_id').eq('id', subId).single();
+        if(!subResp.data || subResp.data.user_id !== _sbUser().id) {
+            _showToast('Nur der Einreicher kann Rückfragen beantworten.', 'error');
+            return;
+        }
         var allgAntwort = (document.getElementById('devRFAntwortAllg')||{}).value || '';
 
         // Einzelne Rückfragen-Antworten sammeln
