@@ -287,6 +287,7 @@ export async function renderEntwicklung() {
 
 export function showEntwicklungTab(tab) {
     entwCurrentTab = tab;
+    try { localStorage.setItem('vit:lastEntwTab', tab); } catch(e) {}
     // Update tab buttons
     document.querySelectorAll('.entw-tab-btn').forEach(function(b) {
         var isActive = b.getAttribute('data-etab') === tab;
@@ -852,6 +853,7 @@ export async function renderEntwNutzung() {
 }
 
 export function showIdeenTab(tab) {
+    try { localStorage.setItem('vit:lastIdeenTab', tab); } catch(e) {}
     devCurrentTab = tab;
     document.querySelectorAll('.dev-tab-btn').forEach(function(b) {
         var isActive = b.getAttribute('data-dtab') === tab;
