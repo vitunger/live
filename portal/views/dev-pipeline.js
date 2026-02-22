@@ -418,7 +418,7 @@ export function renderEntwIdeen() {
         h += scopeLabel;
         if(s.kategorie) h += '<span class="text-[10px] bg-gray-50 text-gray-500 px-1.5 py-0.5 rounded">'+s.kategorie+'</span>';
         if(ki && ki.aufwand_schaetzung) h += '<span class="text-[10px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded font-semibold">'+ki.aufwand_schaetzung+'</span>';
-        var _eKom = (s.dev_kommentare||[]).filter(function(k){return k.typ!=='ki_nachricht';}).length;
+        var _eKom = (s.dev_kommentare||[]).filter(function(k){return k.typ==='kommentar';}).length;
         if(_eKom > 0) h += '<span class="text-[10px] bg-gray-50 text-gray-500 px-1.5 py-0.5 rounded">💬 '+_eKom+'</span>';
         h += '</div>';
         h += '<h3 class="font-semibold text-gray-800 text-sm">'+((s.titel||s.beschreibung||s.kurz_notiz||s.transkription||'Kein Titel').substring(0,80))+'</h3>';
@@ -512,7 +512,7 @@ export async function renderEntwSteuerung() {
     var portal = devSubmissions.filter(function(s){ return s.ki_bereich === 'portal'; }).length;
     var netzwerk = devSubmissions.filter(function(s){ return s.ki_bereich === 'netzwerk'; }).length;
     var totalVotes = devSubmissions.reduce(function(sum,s){ return sum + (s.dev_votes||[]).length; }, 0);
-    var totalKomm = devSubmissions.reduce(function(sum,s){ return sum + (s.dev_kommentare||[]).filter(function(k){return k.typ!=='ki_nachricht';}).length; }, 0);
+    var totalKomm = devSubmissions.reduce(function(sum,s){ return sum + (s.dev_kommentare||[]).filter(function(k){return k.typ==='kommentar';}).length; }, 0);
 
     // Actionable KPIs
     var unbearbeitet = devSubmissions.filter(function(s){ return ['neu','ki_pruefung'].indexOf(s.status) !== -1; }).length;
@@ -915,7 +915,7 @@ export function devCardHTML(s) {
     if(s.geschaetzter_aufwand) h += '<span class="text-[10px] bg-gray-100 text-gray-600 rounded px-1.5 py-0.5 font-semibold">'+s.geschaetzter_aufwand+'</span>';
     if(s.bug_schwere) { var _bsC = s.bug_schwere==='kritisch'?'bg-red-200 text-red-800':s.bug_schwere==='mittel'?'bg-yellow-100 text-yellow-800':'bg-green-100 text-green-700'; h += '<span class="text-[10px] font-semibold rounded px-1.5 py-0.5 '+_bsC+'">'+(s.bug_schwere==='kritisch'?'🔴':s.bug_schwere==='mittel'?'🟡':'🟢')+' '+s.bug_schwere+'</span>'; }
     if(s.deadline) h += '<span class="text-[10px] bg-indigo-50 text-indigo-600 rounded px-1.5 py-0.5">📅 '+new Date(s.deadline).toLocaleDateString('de-DE')+'</span>';
-    var _komCount = s.dev_kommentare ? s.dev_kommentare.filter(function(k){return k.typ!=='ki_nachricht';}).length : 0;
+    var _komCount = s.dev_kommentare ? s.dev_kommentare.filter(function(k){return k.typ==='kommentar';}).length : 0;
     if(_komCount > 0) h += '<span class="text-[10px] bg-gray-50 text-gray-500 rounded px-1.5 py-0.5">💬 '+_komCount+'</span>';
     h += '</div>';
     h += '<h3 class="font-semibold text-gray-800 text-sm truncate">'+(s.titel||'(Ohne Titel)')+'</h3>';
@@ -937,7 +937,7 @@ export function devCardHTML(s) {
     else h += '<span class="text-[10px] text-gray-400 mt-1 block">'+d+'</span>';
     // Last comment preview (skip KI messages for non-HQ)
     var _komms = s.dev_kommentare || [];
-    var _userKomms = _komms.filter(function(k){return k.typ!=='ki_nachricht';});
+    var _userKomms = _komms.filter(function(k){return k.typ==='kommentar';});
     var _previewKomms = isHQCard ? _komms : _userKomms;
     if(_previewKomms.length > 0) {
         var _lastK = _previewKomms[_previewKomms.length - 1];
@@ -1029,7 +1029,7 @@ export function devBoardCardHTML(s, showActions) {
     if(ki && ki.vision_fit_score) h += '<span class="text-xs bg-blue-50 text-blue-700 rounded px-1.5 py-0.5">Vision: <b>'+ki.vision_fit_score+'/100</b></span>';
     if(ki && ki.aufwand_schaetzung) h += '<span class="text-xs bg-gray-100 rounded px-1.5 py-0.5">Aufwand: <b>'+ki.aufwand_schaetzung+'</b></span>';
     if(votes > 0) h += '<span class="text-xs bg-orange-50 text-orange-600 rounded px-1.5 py-0.5">▲ '+votes+'</span>';
-    var _bKom = s.dev_kommentare ? s.dev_kommentare.filter(function(k){return k.typ!=='ki_nachricht';}).length : 0;
+    var _bKom = s.dev_kommentare ? s.dev_kommentare.filter(function(k){return k.typ==='kommentar';}).length : 0;
     if(_bKom > 0) h += '<span class="text-xs bg-gray-50 text-gray-500 rounded px-1.5 py-0.5">💬 '+_bKom+'</span>';
     h += '</div>';
     h += '<h3 class="font-semibold text-gray-800">'+(s.titel||'(Ohne Titel)')+'</h3>';
@@ -1720,8 +1720,8 @@ export async function openDevDetail(subId) {
         }
 
 
-        // === CODE-COPILOT SEKTION (Phase 4a) ===
-        if(isHQKonzept && konzept && ['freigegeben','in_planung','in_entwicklung','beta_test','release_geplant','ausgerollt'].indexOf(s.status) !== -1) {
+        // === CODE-COPILOT SEKTION (Phase 4a) - erst ab in_entwicklung ===
+        if(isHQKonzept && konzept && ['in_entwicklung','beta_test','im_review','release_geplant','ausgerollt'].indexOf(s.status) !== -1) {
             // Lade Code-Artifacts
             var codeArtsResp = await _sb().from('dev_code_artifacts').select('*').eq('submission_id', subId).order('dateiname').order('version', {ascending: false});
             var codeArts = codeArtsResp.data || [];
