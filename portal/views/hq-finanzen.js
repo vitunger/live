@@ -58,6 +58,9 @@ export async function renderHqFinanzen() {
         });
         rr.innerHTML = rrh;
     }
+
+    // === WAWI NETZWERK-UMSATZ ===
+    if (typeof window.renderHqWawiUmsatz === 'function') window.renderHqWawiUmsatz();
 }
 
 
@@ -538,3 +541,4 @@ export function renderHqEinkauf() {
 const _exports = {renderHqFinanzen,adsFmtEuro,adsFmtK,adsSetText,loadAdsData,renderAdsKpis,renderAdsChart,renderAdsKampagnenTabelle,filterAdsPlattform,renderAdsStandortVergleich,renderAdsSyncInfo,updateMktPerformanceFromAds,renderHqMarketing,showHqMktTab,renderHqMktBudget,renderHqMktLeadReport,renderHqMktJahresgespraeche,renderHqMktHandlungsbedarf,renderMktSpendingChart,renderMktLeadChart,renderHqEinkauf};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[hq-finanzen.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
