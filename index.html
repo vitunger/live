@@ -2805,20 +2805,10 @@
                             <p class="text-[10px] text-gray-400 mt-1">Wähle Bildschirm/Fenster/Tab – die Aufnahme wird automatisch als Datei angehängt.</p>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                            <select id="devKategorie" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                <option value="feature">🚀 Neues Feature</option>
-                                <option value="verbesserung">🔧 Verbesserung</option>
-                                <option value="bug">🐛 Bug / Problem</option>
-                                <option value="prozess">📋 Prozess-Vorschlag</option>
-                                <option value="sonstiges">💬 Sonstiges</option>
-                            </select>
-                            <select id="devModul" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                <option value="">(Betroffenes Modul – optional)</option>
-                            </select>
-                        </div>
-
-                        <input id="devTitel" type="text" placeholder="Titel (optional – wird automatisch ergänzt)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3">
+                        <!-- Art, Modul und Titel werden automatisch von der KI bestimmt -->
+                        <input id="devKategorie" type="hidden" value="sonstiges">
+                        <input id="devModul" type="hidden" value="">
+                        <input id="devTitel" type="hidden" value="">
                         <textarea id="devBeschreibung" placeholder="Beschreibe deine Idee oder dein Problem möglichst konkret..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3" rows="4"></textarea>
 
                         <!-- Datei-Upload -->
