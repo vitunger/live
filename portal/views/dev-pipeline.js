@@ -329,7 +329,7 @@ export async function loadDevSubmissions() {
     }
     // Update stats
     var total = devSubmissions.length;
-    var neu = devSubmissions.filter(function(s){ return ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1; }).length;
+    var neu = devSubmissions.filter(function(s){ return ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','konzept_wird_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1; }).length;
     var dev = devSubmissions.filter(function(s){ return ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant'].indexOf(s.status) !== -1; }).length;
     var done = devSubmissions.filter(function(s){ return s.status === 'ausgerollt'; }).length;
     var e1=document.getElementById('entwStatTotal');if(e1)e1.textContent=total;
@@ -354,7 +354,7 @@ export function renderEntwIdeen() {
 
     var items = devSubmissions.filter(function(s) {
         if(scope !== 'alle' && s.scope !== scope) return false;
-        if(status === 'neu' && ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) === -1) return false;
+        if(status === 'neu' && ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','konzept_wird_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) === -1) return false;
         if(status === 'dev' && ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant'].indexOf(s.status) === -1) return false;
         if(status === 'done' && s.status !== 'ausgerollt') return false;
         if(kat !== 'alle' && s.kategorie !== kat) return false;
@@ -435,7 +435,7 @@ export async function renderEntwSteuerung() {
     await loadDevSubmissions();
     // Kanban board for HQ
     var columns = [
-        {key:'neu', label:'📥 Eingang', statuses:['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt'], color:'blue'},
+        {key:'neu', label:'📥 Eingang', statuses:['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','konzept_wird_erstellt'], color:'blue'},
         {key:'board', label:'🎯 Ideenboard', statuses:['im_ideenboard','hq_rueckfragen'], color:'purple'},
         {key:'dev', label:'🔨 Entwicklung', statuses:['freigegeben','in_planung','in_entwicklung','im_review','release_geplant'], color:'yellow'},
         {key:'done', label:'✅ Umgesetzt', statuses:['ausgerollt'], color:'green'},
@@ -752,7 +752,7 @@ export async function renderDevPipeline() {
 
     // Update stats
     var total = devSubmissions.length;
-    var neu = devSubmissions.filter(function(s){ return ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt'].indexOf(s.status) !== -1; }).length;
+    var neu = devSubmissions.filter(function(s){ return ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','konzept_wird_erstellt'].indexOf(s.status) !== -1; }).length;
     var board = devSubmissions.filter(function(s){ return ['im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1; }).length;
     var dev = devSubmissions.filter(function(s){ return ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant'].indexOf(s.status) !== -1; }).length;
     var done = devSubmissions.filter(function(s){ return s.status === 'ausgerollt'; }).length;
@@ -776,14 +776,14 @@ export function renderDevTab(tab) {
 
 var devStatusLabels = {
     neu:'Neu eingereicht', ki_pruefung:'⏳ Wird analysiert...', ki_rueckfragen:'❓ Rückfragen',
-    konzept_erstellt:'📋 Konzept fertig', im_ideenboard:'🎯 Im Ideenboard', hq_rueckfragen:'❓ HQ Rückfragen',
+    konzept_erstellt:'📋 Konzept fertig', konzept_wird_erstellt:'⏳ Konzept wird erstellt...', im_ideenboard:'🎯 Im Ideenboard', hq_rueckfragen:'❓ HQ Rückfragen',
     freigegeben:'✅ Freigegeben', in_planung:'📅 In Planung', in_entwicklung:'🔨 In Entwicklung',
     im_review:'🔍 Im Review', release_geplant:'🚀 Release geplant', ausgerollt:'✅ Ausgerollt',
     abgelehnt:'❌ Abgelehnt', geparkt:'⏸ Geparkt'
 };
 var devStatusColors = {
     neu:'bg-blue-100 text-blue-700', ki_pruefung:'bg-purple-100 text-purple-700 animate-pulse',
-    ki_rueckfragen:'bg-yellow-100 text-yellow-700', konzept_erstellt:'bg-indigo-100 text-indigo-700',
+    ki_rueckfragen:'bg-yellow-100 text-yellow-700', konzept_erstellt:'bg-indigo-100 text-indigo-700', konzept_wird_erstellt:'bg-purple-100 text-purple-700',
     im_ideenboard:'bg-orange-100 text-orange-700', hq_rueckfragen:'bg-yellow-100 text-yellow-700',
     freigegeben:'bg-green-100 text-green-700', in_planung:'bg-teal-100 text-teal-700',
     in_entwicklung:'bg-blue-100 text-blue-700', im_review:'bg-purple-100 text-purple-700',
@@ -1297,6 +1297,8 @@ export async function devHQDecision(subId, ergebnis) {
         if(ergebnis === 'freigabe' || ergebnis === 'freigabe_mit_aenderungen') {
             updates.freigegeben_at = new Date().toISOString();
             updates.hq_entschieden_at = new Date().toISOString();
+            // For freigabe: set temporary status, KI will create konzept
+            if(ergebnis === 'freigabe') updates.status = 'konzept_wird_erstellt';
         }
 
         await _sb().from('dev_submissions').update(updates).eq('id', subId);
@@ -1308,6 +1310,18 @@ export async function devHQDecision(subId, ergebnis) {
                 user_id: _sbUser().id,
                 typ: ergebnis === 'rueckfragen' ? 'rueckfrage' : 'kommentar',
                 inhalt: kommentar
+            });
+        }
+
+        // Trigger KI-Konzepterstellung bei Freigabe (fire-and-forget)
+        if(ergebnis === 'freigabe') {
+            _showToast('✅ Freigegeben! KI erstellt Entwicklungskonzept...', 'success');
+            _sb().functions.invoke('dev-ki-analyse', {
+                body: { submission_id: subId, mode: 'konzept' }
+            }).then(function() {
+                renderDevPipeline();
+            }).catch(function(err) {
+                console.warn('KI-Konzept Fehler:', err);
             });
         }
 
@@ -1512,7 +1526,7 @@ export async function openDevDetail(subId) {
         // === HQ-AKTIONEN im Detail-Modal ===
         var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
         var isOwnerDetail = (currentRoles||[]).indexOf('owner') !== -1;
-        if(isHQ && ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1) {
+        if(isHQ && ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','konzept_wird_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1) {
             h += '<div class="border-2 border-vit-orange/30 rounded-lg p-4 mb-4 bg-orange-50">';
             h += '<h4 class="text-sm font-bold text-gray-800 mb-3">🎯 HQ-Entscheidung</h4>';
             h += '<div class="grid grid-cols-2 gap-2 mb-3">';
@@ -1712,8 +1726,21 @@ export async function devHQDecisionFromDetail(subId, ergebnis) {
             if(ergebnis === 'freigabe') {
                 updates.freigegeben_at = new Date().toISOString();
                 updates.hq_entschieden_at = new Date().toISOString();
+                updates.status = 'konzept_wird_erstellt';
             }
             await _sb().from('dev_submissions').update(updates).eq('id', subId);
+
+            // Trigger KI-Konzepterstellung bei Freigabe
+            if(ergebnis === 'freigabe') {
+                _showToast('✅ Freigegeben! KI erstellt Entwicklungskonzept...', 'success');
+                _sb().functions.invoke('dev-ki-analyse', {
+                    body: { submission_id: subId, mode: 'konzept' }
+                }).then(function() {
+                    renderDevPipeline(); if(typeof renderEntwIdeen==="function") renderEntwIdeen();
+                }).catch(function(err) {
+                    console.warn('KI-Konzept Fehler:', err);
+                });
+            }
         }
 
         closeDevDetail();
