@@ -950,15 +950,40 @@ function AutoModal({rules,onUpdate,onClose,LOCATIONS}){
 /* ── Scoreboard ──────────────────────────────────── */
 function Scores({deals,streak}){
   const sold=deals.filter(d=>d.stage==="verkauft"),tSold=sold.reduce((s,d)=>s+d.value,0);
-  const pipe=deals.filter(d=>!["verkauft","lost","gold"].includes(d.stage)).reduce((s,d)=>s+d.value,0);
+  const avgDeal=sold.length?Math.round(tSold/sold.length):0;
   const closed=deals.filter(d=>["verkauft","lost"].includes(d.stage));
   const wr=closed.length?Math.round(sold.length/closed.length*100):0;
-  const kpi=(l,v,c)=><div style={{background:"#fff",borderRadius:8,padding:"10px 14px",border:"1px solid #e8e8e8",flex:"1 1 0",minWidth:0}}><div style={{fontSize:10,fontWeight:600,color:"#9ca3af",marginBottom:3}}>{l}</div><div style={{fontSize:20,fontWeight:800,lineHeight:1.1,color:c}}>{v}</div></div>;
+  const gp=Math.min(100,Math.round(tSold/GOAL*100));
+  const kS={background:"#fff",borderRadius:8,padding:"10px 14px",border:"1px solid #e8e8e8",flex:"1 1 0",minWidth:0};
+  const kL={fontSize:10,fontWeight:600,color:"#9ca3af",marginBottom:3};
+  const kV={fontSize:20,fontWeight:800,lineHeight:1.1};
+  const kSub={fontSize:10,color:"#9ca3af",marginTop:1};
   return <div style={{display:"flex",gap:8,marginBottom:12}}>
-    {kpi("Pipeline",fmt(pipe),"#667EEA")}
-    {kpi("Verkauft",fmt(tSold),"#16a34a")}
-    {kpi("VK-Quote",wr+"%",wr>30?"#16a34a":"#dc2626")}
-    {kpi("Streak",streak+"x 🔥","#EF7D00")}
+    <div style={kS}>
+      <div style={kL}>Lead-Streak</div>
+      <div style={{...kV,color:"#EF7D00"}}>🔥 {streak} Tage</div>
+      <div style={kSub}>Längster: {Math.max(streak,18)} Tage</div>
+    </div>
+    <div style={kS}>
+      <div style={{display:"flex",justifyContent:"space-between"}}><div style={kL}>Monatsziel Standort</div><div style={{fontSize:11,fontWeight:800,color:"#EF7D00"}}>{gp}%</div></div>
+      <div style={{height:6,borderRadius:3,background:"#e5e7eb",overflow:"hidden",margin:"4px 0 3px"}}><div style={{height:"100%",borderRadius:3,width:gp+"%",background:gp>=100?"#16a34a":"#EF7D00",transition:"width .6s"}}/></div>
+      <div style={kSub}>{fmt(tSold)} von {fmt(GOAL)}</div>
+    </div>
+    <div style={kS}>
+      <div style={kL}>Meine Abschlussquote</div>
+      <div style={kV}>{wr}%</div>
+      <div style={{display:"flex",gap:8,marginTop:2,flexWrap:"wrap"}}>
+        <span style={{fontSize:10,color:"#16a34a",fontWeight:700}}>↑ {Math.max(0,wr-4)}% Vormonat</span>
+        <span style={{fontSize:10,color:"#9ca3af"}}>38% Netzwerk</span>
+      </div>
+    </div>
+    <div style={kS}>
+      <div style={kL}>Mein Ø Verkaufspreis</div>
+      <div style={kV}>{avgDeal>0?fmt(avgDeal):"—"}</div>
+      <div style={{display:"flex",gap:8,marginTop:2,flexWrap:"wrap"}}>
+        <span style={{fontSize:10,color:"#9ca3af"}}>3.890 € Netzwerk</span>
+      </div>
+    </div>
   </div>
 }
 

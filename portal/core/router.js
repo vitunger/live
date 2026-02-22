@@ -162,7 +162,7 @@ export function showView(viewName) {
     if(!window._vitRestoringView) { try { localStorage.setItem('vit_lastView', viewName); } catch(e) {} }
     
     // Check module status - block 'bald' and 'deaktiviert' modules
-    var moduleStatusMap = {verkauf:'verkauf',controlling:'controlling',marketing:'marketing',werkstatt:'werkstatt',personal:'personal',office:'office',kalender:'kalender',nachrichten:'nachrichten',wissen:'wissen',support:'support'};
+    var moduleStatusMap = {controlling:'controlling',marketing:'marketing',werkstatt:'werkstatt',personal:'personal',office:'office',kalender:'kalender',nachrichten:'nachrichten',wissen:'wissen',support:'support'};
     var moduleKey = moduleStatusMap[viewName];
     if(moduleKey && typeof sbModulConfig !== 'undefined' && sbModulConfig[moduleKey]) {
         var mStatus = sbModulConfig[moduleKey].status;
