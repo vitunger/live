@@ -805,7 +805,6 @@ export async function saveVtEntry() {
             uebergabe: vi('vtUebergabe'),
             umsatz: vf('vtUmsatz'),
             notizen: (document.getElementById('vtNotizen')||{}).value || null,
-            erfasst_von: _sbUser() ? _sbUser().id : null,
             updated_at: new Date().toISOString()
         };
         var resp = await _sb().from('verkauf_tracking').upsert(data, {onConflict:'standort_id,datum,verkaeufer_name'}).select();
