@@ -402,7 +402,7 @@
                             html+='<select onchange="window._offSetDesk(\''+ds+'\',this.value)" class="text-[10px] border border-gray-100 rounded px-0.5 py-0.5 mt-1 w-full text-center text-gray-500 cursor-pointer">';
                             html+='<option value=""'+(myDesk?'':' selected')+'>Platz w\u00e4hlen\u2026</option>';
                             (_rooms||[]).forEach(function(room){
-                                var rd=(_desks||[]).filter(function(dd){return (dd.room_id===room.id||dd.room===room.name) && dd.is_bookable!==false;});
+                                var rd=(_desks||[]).filter(function(dd){return (dd.room_id===room.id||dd.room===room.name) && dd.is_bookable!==false && dd.desk_type!=='parkplatz' && dd.desk_type!=='e-lade';});
                                 if(!rd.length) return;
                                 html+='<optgroup label="'+esc(room.name)+'">';
                                 rd.forEach(function(dd){
@@ -426,6 +426,51 @@
                 });
                 html+='</tr>';
             });
+
+            // ── Parking row for current user ──
+            var parkingDesks=(_desks||[]).filter(function(d){return d.desk_type==='parkplatz'||d.desk_type==='e-lade';});
+            if(parkingDesks.length) {
+                html+='<tr class="border-b bg-blue-50/30">';
+                html+='<td class="p-3 font-medium text-sm text-gray-500">\ud83c\udd7f\ufe0f Parkplatz</td>';
+                days.forEach(function(d){
+                    var ds=fmtISO(d), key=sbUser.id+'_'+ds, b=bMap[key];
+                    var myParking=b?b.parking_nr:null;
+                    var isT=ds===todayISO();
+                    // Find which parking spots are taken by others
+                    var dayBookedParking=[];
+                    bookings.forEach(function(bk){if(bk.booking_date===ds && bk.parking_nr && bk.user_id!==sbUser.id) dayBookedParking.push(bk.parking_nr);});
+
+                    html+='<td class="text-center p-2'+(isT?' bg-orange-50':'')+'">';
+                    if(b && b.status) {
+                        html+='<select onchange="window._offSetParking(\''+ds+'\',this.value)" class="text-[10px] border border-gray-100 rounded px-0.5 py-0.5 w-full text-center text-gray-500 cursor-pointer">';
+                        html+='<option value="">kein Parkplatz</option>';
+                        var eLade=parkingDesks.filter(function(p){return p.desk_type==='e-lade';}); 
+                        var pool=parkingDesks.filter(function(p){return p.desk_type==='parkplatz';});
+                        if(eLade.length) {
+                            html+='<optgroup label="\u26a1 E-Ladeplatz">';
+                            eLade.forEach(function(p){
+                                var taken=dayBookedParking.indexOf(p.nr)>=0;
+                                html+='<option value="'+p.nr+'"'+(myParking===p.nr?' selected':'')+(taken?' disabled':'')+'>P'+p.nr+(p.label?' \u2013 '+esc(p.label):'')+(taken?' (belegt)':'')+'</option>';
+                            });
+                            html+='</optgroup>';
+                        }
+                        if(pool.length) {
+                            html+='<optgroup label="\ud83c\udd7f\ufe0f Pool">';
+                            pool.forEach(function(p){
+                                var taken=dayBookedParking.indexOf(p.nr)>=0;
+                                html+='<option value="'+p.nr+'"'+(myParking===p.nr?' selected':'')+(taken?' disabled':'')+'>P'+p.nr+(p.label?' \u2013 '+esc(p.label):'')+(taken?' (belegt)':'')+'</option>';
+                            });
+                            html+='</optgroup>';
+                        }
+                        html+='</select>';
+                    } else {
+                        html+='<span class="text-gray-300 text-xs">\u2014</span>';
+                    }
+                    html+='</td>';
+                });
+                html+='</tr>';
+            }
+
             html+='</tbody></table></div>';
 
             // Day summaries bar
@@ -483,6 +528,21 @@
             if(nr && typeof showToast==='function') showToast('\u2705 P'+nr+' gebucht f\u00fcr '+dateStr,'success');
         } catch(err) {
             console.error('[Office] SetDesk error:',err);
+            if(typeof showToast==='function') showToast('Fehler: '+err.message,'error');
+        }
+    };
+
+    // Set parking for a specific day
+    window._offSetParking = async function(dateStr, parkNr) {
+        try {
+            var nr=parkNr?parseInt(parkNr):null;
+            var r=await sb.from('office_bookings').update({parking_nr:nr,updated_at:new Date().toISOString()}).eq('user_id',sbUser.id).eq('booking_date',dateStr);
+            if(r.error) throw r.error;
+            var sel=event&&event.target;
+            if(sel){sel.style.boxShadow='0 0 0 2px #22c55e';setTimeout(function(){sel.style.boxShadow='';},600);}
+            if(nr && typeof showToast==='function') showToast('\ud83c\udd7f\ufe0f P'+nr+' Parkplatz gebucht','success');
+        } catch(err) {
+            console.error('[Office] SetParking error:',err);
             if(typeof showToast==='function') showToast('Fehler: '+err.message,'error');
         }
     };
