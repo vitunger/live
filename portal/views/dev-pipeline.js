@@ -1360,7 +1360,7 @@ export async function submitDevIdea() {
             else console.log('KI-Analyse fertig für:', submissionId);
             // Nach Analyse nochmal neu laden um Ergebnis zu zeigen
             renderDevPipeline();
-        }).catch(function(kiErr) { console.warn('KI-Analyse Fehler (wird nachgeholt):', kiErr); });
+        }));
     } catch(err) {
         alert('Fehler beim Einreichen: ' + (err.message||err));
     } finally {
@@ -1390,7 +1390,7 @@ export async function toggleDevVote(subId) {
                     user_id: sub.user_id, submission_id: subId,
                     typ: 'vote', titel: '👍 Jemand hat für deine Idee gestimmt',
                     inhalt: sub.titel || '(Ohne Titel)'
-                }).catch(function(){}); // fire-and-forget
+                });
             }
         }
         // Refresh whichever view is active
@@ -1455,13 +1455,11 @@ export async function devHQDecision(subId, ergebnis) {
         // Trigger KI-Konzepterstellung bei Freigabe (fire-and-forget)
         if(ergebnis === 'freigabe') {
             _showToast('✅ Freigegeben! Entwicklungskonzept wird erstellt...', 'success');
-            _sb().functions.invoke('dev-ki-analyse', {
+            try { _sb().functions.invoke('dev-ki-analyse', {
                 body: { submission_id: subId, mode: 'konzept' }
             }).then(function() {
                 renderDevPipeline();
-            }).catch(function(err) {
-                console.warn('KI-Konzept Fehler:', err);
-            });
+            }); } catch(_e) {}
 
             // Auto-create roadmap entry
             var sub2 = devSubmissions.find(function(s){ return s.id === subId; });
@@ -1479,7 +1477,7 @@ export async function devHQDecision(subId, ergebnis) {
                     status: 'geplant', prioritaet: sub2.ki_typ === 'bug' ? 'hoch' : 'mittel',
                     aufwand: sub2.geschaetzter_aufwand || 'M',
                     ziel_quartal: q2, submission_id: subId, sortierung: 999
-                }).catch(function(){}); // fire-and-forget
+                });
             }
         }
 
@@ -2238,9 +2236,7 @@ export async function devHQDecisionFromDetail(subId, ergebnis) {
                     body: { submission_id: subId, mode: 'konzept' }
                 }).then(function() {
                     renderDevPipeline(); if(typeof renderEntwIdeen==="function") renderEntwIdeen();
-                }).catch(function(err) {
-                    console.warn('KI-Konzept Fehler:', err);
-                });
+                }));
 
                 // Auto-create roadmap entry
                 var sub = devSubmissions.find(function(s){ return s.id === subId; });
@@ -2261,7 +2257,7 @@ export async function devHQDecisionFromDetail(subId, ergebnis) {
                         ziel_quartal: quarter,
                         submission_id: subId,
                         sortierung: 999
-                    }).catch(function(err){ console.warn('Roadmap auto-create:', err); });
+                    }));
                 }
             }
         }
@@ -2302,7 +2298,7 @@ export async function submitDevKommentar(subId) {
                 typ: 'kommentar',
                 titel: '💬 Neuer Kommentar zu deiner Idee',
                 inhalt: text.substring(0, 100) + (text.length > 100 ? '...' : '')
-            }).catch(function(){}); // fire-and-forget
+            });
         }
 
         await openDevDetail(subId);
