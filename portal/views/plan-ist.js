@@ -609,12 +609,12 @@ export function openVerkaufEntryModal() {
         (async function(){
             try {
                 var stdId = _sbProfile().standort_id;
-                var q = _sb().from('profiles').select('name').eq('aktiv', true);
+                var q = _sb().from('users').select('vorname, nachname, name').eq('status', 'aktiv');
                 if(stdId && !_sbProfile().is_hq) q = q.eq('standort_id', stdId);
                 var r = await q.order('name');
                 if(r.data && r.data.length) {
                     var sel = document.getElementById('vtSeller');
-                    if(sel) { sel.innerHTML = ''; r.data.forEach(function(p){ var o=document.createElement('option'); o.value=p.name; o.textContent=p.name; if(p.name===currentUser) o.selected=true; sel.appendChild(o); }); }
+                    if(sel) { sel.innerHTML = ''; r.data.forEach(function(p){ var nm = (p.vorname && p.nachname) ? (p.vorname+' '+p.nachname) : (p.name||'?'); var o=document.createElement('option'); o.value=nm; o.textContent=nm; if(nm===currentUser) o.selected=true; sel.appendChild(o); }); }
                 }
             } catch(e) { console.warn('Could not load sellers:', e); }
         })();

@@ -1572,45 +1572,8 @@
                 <div id="verkaufView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-6" data-i18n="h_sales">VERKAUF</h1>
 
-                    <!-- 🔥 Verkaufs-Momentum --><div style="position:relative">
+                    <!-- 🔥 Verkaufs-Momentum (jetzt in React Pipeline KPIs) --><div style="position:relative">
                     <div id="trainerAreaVerkauf" class="mb-4"></div>
-                    <div id="salesMomentumBar" class="mb-6" data-widget="sales_momentum">
-                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-3">
-                            <!-- Streak -->
-                            <div class="vit-card p-4 flex items-center gap-3" style="border-left:3px solid #EF7D00;">
-                                <div style="font-size:28px" id="streakEmoji">🔥</div>
-                                <div>
-                                    <p class="text-xs text-gray-400">Lead-Streak<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-streak')">i</button></p><div class="widget-info-popup" id="info-streak">Dein Lead-Streak zählt, wie viele Tage in Folge du mindestens 1 Lead-Aktivität hattest. Dazu kommen Monatsziel-Fortschritt, Abschlussquote und durchschnittlicher Deal-Wert im Vergleich zum Netzwerk.</div>
-                                    <p class="text-xl font-bold text-gray-800"><span id="streakDays">12</span> Tage</p>
-                                    <p class="text-[10px] text-vit-orange font-semibold">Längster: 18 Tage</p>
-                                </div>
-                            </div>
-                            <!-- Monatsziel -->
-                            <div class="vit-card p-4">
-                                <div class="flex items-center justify-between mb-1">
-                                    <p class="text-xs text-gray-400">Monatsziel</p>
-                                    <span id="goalPct" class="text-xs font-bold text-green-600">72%</span>
-                                </div>
-                                <div class="bg-gray-200 rounded-full h-2.5 mb-2"><div id="goalBar" class="h-2.5 rounded-full bg-green-500 transition-all" style="width:72%"></div></div>
-                                <div class="flex justify-between text-[10px] text-gray-500">
-                                    <span><span id="goalIst" class="font-bold text-gray-800">86.400 €</span> erreicht</span>
-                                    <span>Ziel: <span id="goalSoll">120.000 €</span></span>
-                                </div>
-                            </div>
-                            <!-- Abschlussquote -->
-                            <div class="vit-card p-4 text-center">
-                                <p class="text-xs text-gray-400">Abschlussquote</p>
-                                <p class="text-2xl font-bold text-gray-800" id="closeRate">34%</p>
-                                <p class="text-[10px] text-green-500 font-semibold">↑ +4% ggü. Vormonat</p>
-                            </div>
-                            <!-- Durchschn. Dealwert -->
-                            <div class="vit-card p-4 text-center">
-                                <p class="text-xs text-gray-400">Ø Deal-Wert</p>
-                                <p class="text-2xl font-bold text-gray-800" id="avgDeal">4.320 €</p>
-                                <p class="text-[10px] text-gray-500">Netzwerk Ø: 3.890 €</p>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Tab Navigation -->
                     <div class="mb-6 border-b border-gray-200">
