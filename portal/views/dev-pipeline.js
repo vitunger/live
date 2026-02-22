@@ -2066,6 +2066,23 @@ export async function openDevDetail(subId) {
                 h += '<button onclick="devSendCodeChat(\''+s.id+'\')" id="devBtnCodeChat" class="px-3 py-1 bg-emerald-600 text-white rounded text-xs font-semibold">\uD83D\uDCAC</button>';
                 h += '</div></div>';
             }
+            // Deploy section
+                h += '<div class="mt-4 border-t border-emerald-200 pt-3">';
+                h += '<div class="flex items-center justify-between mb-2">';
+                h += '<h5 class="text-xs font-bold text-emerald-600 uppercase">\uD83D\uDE80 Deployment</h5>';
+                h += '<div class="flex gap-1">';
+                h += '<select id="devDeployBranch" class="text-[10px] border border-gray-200 rounded px-2 py-0.5"><option value="main">main</option><option value="dev-pipeline">dev-pipeline (feature)</option></select>';
+                h += '</div></div>';
+                // Deployment History
+                h += '<div id="devDeployHistory" class="mb-2"></div>';
+                // Deploy button
+                h += '<div class="flex gap-2">';
+                h += '<button onclick="devDeployCode(\''+s.id+'\',false)" id="devBtnDeploy" class="flex-1 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg text-sm font-bold hover:from-emerald-600 hover:to-teal-700 shadow-sm disabled:opacity-50" title="Alle finalen Dateien auf GitHub pushen">\uD83D\uDE80 Auf GitHub pushen</button>';
+                h += '<button onclick="devDeployCode(\''+s.id+'\',true)" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs hover:bg-gray-200" title="Nur ausgewaehlte Dateien">\u2699\uFE0F Auswahl</button>';
+                h += '</div>';
+                h += '<p class="text-[9px] text-gray-400 mt-1">Pusht die Code-Artifacts auf GitHub \u2192 Vercel baut automatisch.</p>';
+                h += '</div>';
+            }
             h += '</div>'; // END TAB CODE
         }
 
@@ -2075,6 +2092,7 @@ export async function openDevDetail(subId) {
 
         content.innerHTML = h;
         if(document.getElementById('devMockupChatHistory')) loadMockupChatHistory(subId);
+        if(document.getElementById('devDeployHistory')) loadDeployHistory(subId);
     } catch(err) {
         content.innerHTML = '<div class="text-center py-8 text-red-400">Fehler: '+err.message+'</div>';
     }
@@ -3508,6 +3526,107 @@ export async function saveDevNotizen(subId) {
 }
 
 
+
+// === DEPLOY FUNCTIONS ===
+export async function devDeployCode(subId, selectMode) {
+    var btn = document.getElementById('devBtnDeploy');
+    var branch = document.getElementById('devDeployBranch');
+    var targetBranch = branch ? branch.value : 'main';
+    
+    // Load artifacts
+    var resp = await _sb().from('dev_code_artifacts').select('*').eq('submission_id', subId).order('dateiname').order('version', {ascending: false});
+    var arts = resp.data || [];
+    // Unique latest per file
+    var seen = {};
+    var unique = arts.filter(function(a) { if(seen[a.dateiname]) return false; seen[a.dateiname] = true; return true; });
+    
+    if(unique.length === 0) { alert('Keine Code-Artifacts vorhanden.'); return; }
+    
+    var toDeploy = unique;
+    
+    if(selectMode) {
+        // Show selection dialog
+        var fileList = unique.map(function(a) {
+            return a.dateiname + ' (v' + a.version + ', ' + (a.status || 'entwurf') + ')';
+        }).join('\n');
+        var selected = prompt('Welche Dateien deployen? (Nummern kommagetrennt)\n\n' + unique.map(function(a, i) { return (i+1) + '. ' + a.dateiname + ' (v' + a.version + ')'; }).join('\n'));
+        if(!selected) return;
+        var indices = selected.split(',').map(function(s) { return parseInt(s.trim()) - 1; });
+        toDeploy = indices.filter(function(i) { return i >= 0 && i < unique.length; }).map(function(i) { return unique[i]; });
+        if(toDeploy.length === 0) { alert('Keine gueltige Auswahl.'); return; }
+    }
+    
+    var fileNames = toDeploy.map(function(a) { return a.dateiname; }).join(', ');
+    if(!confirm('\uD83D\uDE80 Deployment auf "' + targetBranch + '"\n\n' + toDeploy.length + ' Datei(en):\n' + fileNames + '\n\nFortsetzung? Vercel baut nach dem Push automatisch.')) return;
+    
+    if(btn) { btn.disabled = true; btn.textContent = '\u23F3 Pushe auf GitHub...'; }
+    
+    try {
+        var payload = {
+            submission_id: subId,
+            mode: 'deploy',
+            artifact_ids: toDeploy.map(function(a) { return a.id; }),
+            branch: targetBranch
+        };
+        var res = await fetch(_sb().supabaseUrl + '/functions/v1/dev-deploy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token },
+            body: JSON.stringify(payload)
+        });
+        var data = await res.json();
+        if(data.error) throw new Error(data.error);
+        
+        // Success
+        var commitLink = data.commit_url ? '<a href="' + data.commit_url + '" target="_blank" class="text-blue-600 underline">' + data.commit_sha.substring(0, 8) + '</a>' : data.commit_sha.substring(0, 8);
+        
+        var histDiv = document.getElementById('devDeployHistory');
+        if(histDiv) {
+            histDiv.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-lg p-3 text-xs">' +
+                '<span class="font-bold text-green-700">\u2705 Deployment erfolgreich!</span>' +
+                '<p class="text-gray-600 mt-1">' + data.files_pushed + ' Datei(en) auf <b>' + data.branch + '</b> gepusht</p>' +
+                '<p class="text-gray-500 mt-0.5">Commit: ' + commitLink + '</p>' +
+                '<p class="text-gray-400 mt-0.5">Vercel baut automatisch...</p>' +
+                '</div>';
+        }
+        
+        if(btn) { btn.textContent = '\u2705 Deployed!'; btn.className = btn.className.replace('from-emerald-500 to-teal-600','from-green-400 to-green-500'); }
+        
+        // Reload detail after 2s
+        setTimeout(function() { openDevDetail(subId); }, 2000);
+        
+    } catch(e) {
+        alert('\u274C Deployment fehlgeschlagen: ' + e.message);
+        if(btn) { btn.disabled = false; btn.textContent = '\uD83D\uDE80 Auf GitHub pushen'; }
+    }
+}
+
+export async function loadDeployHistory(subId) {
+    var container = document.getElementById('devDeployHistory');
+    if(!container) return;
+    try {
+        var resp = await fetch(_sb().supabaseUrl + '/functions/v1/dev-deploy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token },
+            body: JSON.stringify({ submission_id: subId, mode: 'status' })
+        });
+        var data = await resp.json();
+        if(!data.deployments || data.deployments.length === 0) {
+            container.innerHTML = '<p class="text-[10px] text-gray-400">Noch kein Deployment.</p>';
+            return;
+        }
+        var html = '<div class="space-y-1">';
+        data.deployments.forEach(function(d) {
+            var statusIcon = d.status === 'deployed' ? '\u2705' : d.status === 'rolled_back' ? '\u26A0\uFE0F' : d.status === 'failed' ? '\u274C' : '\u23F3';
+            html += '<div class="flex items-center justify-between text-[10px] bg-gray-50 rounded px-2 py-1">';
+            html += '<span>'+statusIcon+' '+d.branch+' · '+(d.commit_sha?d.commit_sha.substring(0,8):'...')+'</span>';
+            html += '<span class="text-gray-400">'+new Date(d.deployed_at).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'</span>';
+            html += '</div>';
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    } catch(e) { container.innerHTML = ''; }
+}
+
 // === MOCKUP CHAT FUNCTIONS ===
 var _mockupChatAttachments = [];
 var _mockupChatMediaRecorder = null;
@@ -3823,7 +3942,7 @@ export async function devMockupShowVersion(mockupId) {
 }
 
 const _exports = {
-    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachImage,devMockupChatMic,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,
+    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachImage,devMockupChatMic,devDeployCode,loadDeployHistory,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
