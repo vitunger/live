@@ -780,28 +780,13 @@ export function showHqMktTab(tabName) {
 export function renderHqMktBudget() {
     var tb=document.getElementById('hqMktBudgetTable');
     if(!tb||tb.children.length>0) return;
-    var data=[
-        {name:'Berlin-Brandenburg',plz:'14513',st:'Aktiv',gBud:2800,gAusg:539,gHoch:-944,mBud:700,mAusg:56,mHoch:-97},
-        {name:'Garching a.d. Alz',plz:'84518',st:'Aktiv',gBud:1152,gAusg:397,gHoch:-695,mBud:288,mAusg:57,mHoch:-99},
-        {name:'Grafrath',plz:'82284',st:'Aktiv',gBud:1152,gAusg:302,gHoch:-529,mBud:280,mAusg:111,mHoch:-195},
-        {name:'Gunzenhausen',plz:'91710',st:'Aktiv',gBud:1382,gAusg:0,gHoch:0,mBud:346,mAusg:0,mHoch:0},
-        {name:'Hamburg',plz:'22761',st:'Aktiv',gBud:3072,gAusg:801,gHoch:-1500,mBud:768,mAusg:113,mHoch:-188},
-        {name:'Hann Muenden',plz:'34346',st:'Aktiv',gBud:1152,gAusg:260,gHoch:-455,mBud:280,mAusg:0,mHoch:0},
-        {name:'Holzkirchen',plz:'83607',st:'Aktiv',gBud:1536,gAusg:410,gHoch:-734,mBud:384,mAusg:111,mHoch:-194},
-        {name:'Karlsdorf-Neuthard',plz:'76689',st:'Aktiv',gBud:1042,gAusg:567,gHoch:-993,mBud:261,mAusg:113,mHoch:-198},
-        {name:'Limburg',plz:'65552',st:'Aktiv',gBud:1382,gAusg:419,gHoch:-734,mBud:346,mAusg:0,mHoch:0},
-        {name:'Muenchen TK',plz:'81379',st:'Aktiv',gBud:1200,gAusg:273,gHoch:-479,mBud:300,mAusg:22,mHoch:-38},
-        {name:'Muenster',plz:'48159',st:'Aktiv',gBud:1536,gAusg:331,gHoch:-579,mBud:384,mAusg:146,mHoch:-255},
-        {name:'Pfaffenhofen a.d. Ilm',plz:'85276',st:'Aktiv',gBud:2074,gAusg:521,gHoch:-912,mBud:518,mAusg:110,mHoch:-192},
-        {name:'Reutlingen',plz:'72793',st:'Aktiv',gBud:922,gAusg:209,gHoch:-366,mBud:230,mAusg:114,mHoch:-199},
-        {name:'Rottweil',plz:'78628',st:'Aktiv',gBud:1152,gAusg:225,gHoch:-994,mBud:288,mAusg:182,mHoch:-318},
-        {name:'Witten',plz:'58455',st:'Aktiv',gBud:2304,gAusg:513,gHoch:-887,mBud:576,mAusg:111,mHoch:-194}
-    ];
+    // Budget-Daten aus hqStandorte (live aus DB)
+    var data = hqStandorte.filter(function(s){ return s.budget > 0; }).sort(function(a,b){ return b.budget - a.budget; });
+    if(!data.length) { tb.innerHTML='<tr><td colspan="8" class="py-6 text-center text-gray-400 text-sm">Noch keine Budget-Daten vorhanden. Marketing-Budgets werden über Standort-Einstellungen gepflegt.</td></tr>'; return; }
     var h='';
-    data.forEach(function(r,i){
-        h+='<tr class="border-b'+(i%2?' bg-gray-50':'')+'"><td class="py-1.5 px-2 font-semibold">'+r.name+'<br><span class="text-gray-400">'+r.plz+'</span></td><td class="py-1.5 px-2 text-center"><span class="px-1.5 py-0.5 rounded-full text-[10px] bg-green-100 text-green-700">'+r.st+'</span></td><td class="py-1.5 px-2 text-right font-semibold text-yellow-600">'+fmt(r.gBud)+' €</td><td class="py-1.5 px-2 text-right">'+fmt(r.gAusg)+' €</td><td class="py-1.5 px-2 text-right text-red-500">'+fmt(r.gHoch)+'</td><td class="py-1.5 px-2 text-right font-semibold text-blue-600">'+fmt(r.mBud)+' €</td><td class="py-1.5 px-2 text-right">'+fmt(r.mAusg)+' €</td><td class="py-1.5 px-2 text-right text-red-500">'+fmt(r.mHoch)+'</td></tr>';
+    data.forEach(function(s,i){
+        h+='<tr class="border-b'+(i%2?' bg-gray-50':'')+'"><td class="py-1.5 px-2 font-semibold">'+s.name+'</td><td class="py-1.5 px-2 text-center"><span class="px-1.5 py-0.5 rounded-full text-[10px] bg-green-100 text-green-700">Aktiv</span></td><td class="py-1.5 px-2 text-right font-semibold text-yellow-600">'+fmt(s.budget)+' €/Mo</td><td class="py-1.5 px-2 text-right text-gray-400">—</td><td class="py-1.5 px-2 text-right text-gray-400">—</td><td class="py-1.5 px-2 text-right text-gray-400">—</td><td class="py-1.5 px-2 text-right text-gray-400">—</td><td class="py-1.5 px-2 text-right text-gray-400">—</td></tr>';
     });
-    h+='<tr class="bg-gray-100 border-t-2 font-bold"><td class="py-2 px-2">Summe Februar</td><td></td><td class="py-2 px-2 text-right text-yellow-600">29.960 €</td><td class="py-2 px-2 text-right">8.133 €</td><td class="py-2 px-2 text-right text-red-500">-14.232 €</td><td class="py-2 px-2 text-right text-blue-600">7.490 €</td><td class="py-2 px-2 text-right">1.966 €</td><td class="py-2 px-2 text-right text-red-500">-3.441 €</td></tr>';
     tb.innerHTML=h;
 }
 
@@ -820,23 +805,17 @@ export function renderHqMktLeadReport() {
 export function renderHqMktJahresgespraeche() {
     var el=document.getElementById('hqMktJgTable');
     if(!el||el.children.length>0) return;
-    var data=[
-        {standort:'Grafrath',inhaber:'Sandra E.',ap:'Michael Stenzel',budget:1500,mix:'Meta+Google',crm:'✅',status:'done'},
-        {standort:'Holzkirchen',inhaber:'Dirk Kolditz',ap:'Michael Stenzel',budget:2000,mix:'Meta+Google+Events',crm:'✅',status:'done'},
-        {standort:'Hamburg',inhaber:'Thorsten B.',ap:'Michael Stenzel',budget:3072,mix:'Meta+Google',crm:'✅',status:'done'},
-        {standort:'Muenster',inhaber:'Wolfgang P.',ap:'Michael Stenzel',budget:1536,mix:'Meta+Google',crm:'—',status:'done'},
-        {standort:'Witten',inhaber:'Monique S.',ap:'Michael Stenzel',budget:2304,mix:'Meta+Google',crm:'✅',status:'done'},
-        {standort:'Pfaffenhofen',inhaber:'Sabrina H.',ap:'Michael Stenzel',budget:2074,mix:'Meta+Google',crm:'✅',status:'done'},
-        {standort:'Berlin-Brandenb.',inhaber:'Sven T.',ap:'Michael Stenzel',budget:2800,mix:'Meta+Google',crm:'—',status:'done'},
-        {standort:'Kalkar',inhaber:'—',ap:'Michael Stenzel',budget:0,mix:'—',crm:'—',status:'missing'},
-        {standort:'Wesel',inhaber:'—',ap:'Michael Stenzel',budget:0,mix:'—',crm:'—',status:'missing'},
-        {standort:'Zell',inhaber:'—',ap:'Michael Stenzel',budget:0,mix:'—',crm:'—',status:'missing'}
-    ];
+    // Live aus hqStandorte - Strategie-Status kommt aus DB
+    var data = hqStandorte.slice().sort(function(a,b){
+        var o={done:0,partial:1,pending:2,missing:3};
+        return (o[a.strategieStatus]||3) - (o[b.strategieStatus]||3);
+    });
+    if(!data.length) { el.innerHTML='<tr><td colspan="7" class="py-6 text-center text-gray-400 text-sm">Noch keine Standortdaten vorhanden.</td></tr>'; return; }
     var h='';
-    data.forEach(function(r,i){
-        var sc={done:'bg-green-100 text-green-700',partial:'bg-yellow-100 text-yellow-700',missing:'bg-red-100 text-red-700'};
-        var sl={done:'✅ Vereinbart',partial:'🔶 In Abstimmung',missing:'❌ Ausstehend'};
-        h+='<tr class="border-b'+(i%2?' bg-gray-50':'')+'"><td class="py-1.5 px-2 font-semibold">'+r.standort+'</td><td class="py-1.5 px-2">'+r.inhaber+'</td><td class="py-1.5 px-2">'+r.ap+'</td><td class="py-1.5 px-2 text-right font-semibold">'+(r.budget?fmt(r.budget)+' €':'—')+'</td><td class="py-1.5 px-2">'+r.mix+'</td><td class="py-1.5 px-2 text-center">'+r.crm+'</td><td class="py-1.5 px-2 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold '+(sc[r.status]||sc.missing)+'">'+(sl[r.status]||'?')+'</span></td></tr>';
+    var sc={done:'bg-green-100 text-green-700',partial:'bg-yellow-100 text-yellow-700',pending:'bg-gray-100 text-gray-500',missing:'bg-red-100 text-red-700'};
+    var sl={done:'✅ Vereinbart',partial:'🔶 In Abstimmung',pending:'⏳ Ausstehend',missing:'❌ Ausstehend'};
+    data.forEach(function(s,i){
+        h+='<tr class="border-b'+(i%2?' bg-gray-50':'')+'"><td class="py-1.5 px-2 font-semibold">'+s.name+'</td><td class="py-1.5 px-2 text-sm text-gray-500">'+s.inhaber+'</td><td class="py-1.5 px-2 text-sm text-gray-400">—</td><td class="py-1.5 px-2 text-right font-semibold">'+(s.budget?fmt(s.budget)+' €':'—')+'</td><td class="py-1.5 px-2 text-gray-400">—</td><td class="py-1.5 px-2 text-center">—</td><td class="py-1.5 px-2 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold '+(sc[s.strategieStatus]||sc.missing)+'">'+(sl[s.strategieStatus]||'⏳ Ausstehend')+'</span></td></tr>';
     });
     el.innerHTML=h;
 }
@@ -850,9 +829,6 @@ export function renderHqMktHandlungsbedarf() {
         else if(s.leadPerf<50) alerts.push({prio:'warnung',icon:'🟡',title:s.name+' – '+s.leadPerf+'% Lead-Performance',desc:'Unter Ziel. Budget-Optimierung pruefen. CPT: '+s.cpt+' €',color:'bg-yellow-50 border-yellow-200'});
         if(s.strategieStatus==='missing') alerts.push({prio:'kritisch',icon:'📋',title:s.name+' – Keine Marketing-Strategie vereinbart',desc:'Jahresgespraech muss noch terminiert werden',color:'bg-red-50 border-red-200'});
     });
-    alerts.push({prio:'info',icon:'💰',title:'3 Standorte über Budget im Februar',desc:'Grafrath (+224€), Rottweil (+318€), Lohmar (+342€) – Channel-Split prüfen',color:'bg-blue-50 border-blue-200'});
-    alerts.push({prio:'info',icon:'🎬',title:'13 Standorte ohne Local Hero Video',desc:'Social-Media-Aktivierung pushen. Naechster Content-Drop: KW 9',color:'bg-blue-50 border-blue-200'});
-    var h='';
     alerts.sort(function(a,b){var p={kritisch:0,warnung:1,info:2};return (p[a.prio]||9)-(p[b.prio]||9);});
     alerts.forEach(function(a){
         h+='<div class="p-4 rounded-lg border '+a.color+'"><div class="flex items-start space-x-3"><span class="text-lg">'+a.icon+'</span><div><p class="text-sm font-semibold text-gray-800">'+a.title+'</p><p class="text-xs text-gray-500 mt-1">'+a.desc+'</p></div></div></div>';
