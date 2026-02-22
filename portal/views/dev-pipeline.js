@@ -1642,6 +1642,18 @@ export async function openDevDetail(subId) {
                 h += '</div>';
             }
             h += '</div></div>';
+            // === KI-KONZEPT-CHAT (HQ-MA kann Konzept mit KI verfeinern) ===
+            if(['freigegeben','in_planung','konzept_erstellt'].indexOf(s.status) !== -1) {
+                h += '<div class="border border-indigo-200 rounded-lg p-4 mb-4 bg-indigo-50/20">';
+                h += '<h4 class="text-xs font-bold text-indigo-600 uppercase mb-2">💬 Konzept mit KI verfeinern</h4>';
+                h += '<div id="devKonzeptChatHistory" class="max-h-48 overflow-y-auto space-y-2 mb-3"></div>';
+                h += '<div class="flex gap-2">';
+                h += '<textarea id="devKonzeptChatInput" placeholder="z.B. &quot;Mach den UI-Teil einfacher&quot; oder &quot;Berücksichtige auch Modul X&quot;..." class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none" rows="2" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendDevKonzeptChat(\''+s.id+'\')}"></textarea>';
+                h += '<button id="devKonzeptChatBtn" onclick="sendDevKonzeptChat(\''+s.id+'\')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 self-end">💬</button>';
+                h += '</div>';
+                h += '<p class="text-[10px] text-gray-400 mt-1">Die KI überarbeitet das Konzept basierend auf deinem Feedback.</p>';
+                h += '</div>';
+            }
         }
 
         // Entscheidungen (nur HQ)
@@ -2247,6 +2259,55 @@ export function exportDevCSV() {
 }
 
 // === Load HQ users into MA selects ===
+// === KI-Konzept-Chat: iterativ Konzept verfeinern ===
+export async function sendDevKonzeptChat(subId) {
+    var input = document.getElementById('devKonzeptChatInput');
+    var btn = document.getElementById('devKonzeptChatBtn');
+    var history = document.getElementById('devKonzeptChatHistory');
+    if(!input || !input.value.trim()) return;
+    var feedback = input.value.trim();
+    input.value = '';
+    if(btn) { btn.disabled = true; btn.textContent = '⏳'; }
+
+    // Show user message in chat
+    if(history) {
+        history.innerHTML += '<div class="bg-white rounded p-2 text-xs border border-gray-200"><span class="font-semibold text-gray-700">Du:</span> '+_escH(feedback)+'</div>';
+        history.scrollTop = history.scrollHeight;
+    }
+
+    try {
+        // Save feedback as comment
+        await _sb().from('dev_kommentare').insert({
+            submission_id: subId, user_id: _sbUser().id, typ: 'kommentar',
+            inhalt: '💬 Konzept-Feedback: ' + feedback
+        });
+
+        // Call EF with konzept_chat mode
+        var token = (await _sb().auth.getSession()).data.session.access_token;
+        var resp = await fetch(_sbUrl() + '/functions/v1/dev-ki-analyse', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ submission_id: subId, mode: 'konzept_chat', feedback: feedback })
+        });
+        var data = await resp.json();
+        if(data.error) throw new Error(data.error);
+
+        // Show KI response
+        if(history) {
+            history.innerHTML += '<div class="bg-purple-50 rounded p-2 text-xs border border-purple-100"><span class="font-semibold text-purple-700">KI:</span> '+(data.antwort || 'Konzept wurde aktualisiert.')+'</div>';
+            history.scrollTop = history.scrollHeight;
+        }
+        _showToast('✅ Konzept aktualisiert (v' + (data.version || '?') + ')', 'success');
+    } catch(e) {
+        if(history) {
+            history.innerHTML += '<div class="bg-red-50 rounded p-2 text-xs border border-red-100"><span class="text-red-600">❌ Fehler: '+_escH(e.message)+'</span></div>';
+        }
+        _showToast('Fehler: ' + e.message, 'error');
+    } finally {
+        if(btn) { btn.disabled = false; btn.textContent = '💬'; }
+    }
+}
+
 async function _loadDevHQUsers(sub) {
     try {
         var resp = await _sb().from('users').select('id, name').eq('is_hq', true).order('name');
@@ -2362,6 +2423,6 @@ export async function uploadDevAttachment(subId) {
     }
 }
 
-const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment};
+const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
