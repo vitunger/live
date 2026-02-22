@@ -180,7 +180,12 @@ function renderHqFinKpis() {
     var totalU = hqFinStandorte.reduce(function(a, s) { return a + s.umsatzIst; }, 0);
     var totalP = hqFinStandorte.reduce(function(a, s) { return a + s.umsatzPlan; }, 0);
     var avgRoh = active.length ? (active.reduce(function(a, s) { return a + s.rohertrag; }, 0) / active.length).toFixed(1) : 0;
-    var bwaQuote = hqFinStandorte.length ? Math.round(hqFinStandorte.filter(function(s) { return s.bwaEingereicht; }).length / hqFinStandorte.length * 100) : 0;
+    // BWA quote: only relevant if deadline has passed
+    var nowKpi = new Date();
+    var bwaKpiMonth = getBwaMonthHqFin(nowKpi);
+    var bwaDeadline = new Date(bwaKpiMonth.y, bwaKpiMonth.m + 1, 10);
+    var bwaOverdue = nowKpi > bwaDeadline;
+    var bwaQuote = (hqFinStandorte.length && bwaOverdue) ? Math.round(hqFinStandorte.filter(function(s) { return s.bwaEingereicht; }).length / hqFinStandorte.length * 100) : null;
     var ohnePlan = hqFinStandorte.filter(function(s) { return !s.planVorhanden; }).length;
     var planAbw = totalP > 0 ? Math.round((totalU / totalP - 1) * 100) : null;
 
@@ -199,8 +204,12 @@ function renderHqFinKpis() {
 
         + '<div class="vit-card p-5 cursor-pointer hover:ring-2 hover:ring-vit-orange/30" onclick="showHqFinTab(\'bwa\')">'
         + '<p class="text-xs text-gray-400 uppercase tracking-wide">BWA-Quote aktuell</p>'
-        + '<p class="text-2xl font-bold ' + (bwaQuote >= 80 ? 'text-green-600' : bwaQuote >= 50 ? 'text-yellow-600' : 'text-red-500') + '">' + bwaQuote + '%</p>'
-        + '<p class="text-xs text-gray-400">' + hqFinStandorte.filter(function(s) { return s.bwaEingereicht; }).length + ' von ' + hqFinStandorte.length + ' eingereicht</p></div>'
+        + (bwaQuote !== null
+            ? '<p class="text-2xl font-bold ' + (bwaQuote >= 80 ? 'text-green-600' : bwaQuote >= 50 ? 'text-yellow-600' : 'text-red-500') + '">' + bwaQuote + '%</p>'
+              + '<p class="text-xs text-gray-400">' + hqFinStandorte.filter(function(s) { return s.bwaEingereicht; }).length + ' von ' + hqFinStandorte.length + ' eingereicht</p>'
+            : '<p class="text-2xl font-bold text-gray-300">—</p>'
+              + '<p class="text-xs text-gray-400">Noch nicht fällig</p>'
+        ) + '</div>'
 
         + '<div class="vit-card p-5 cursor-pointer hover:ring-2 hover:ring-vit-orange/30" onclick="showHqFinTab(\'upload\')">'
         + '<p class="text-xs text-gray-400 uppercase tracking-wide">Fehlende Pläne</p>'
@@ -279,9 +288,23 @@ function renderHqFinUebersicht() {
             : s.datenquelle === 'wawi'
             ? '<span class="text-[10px] px-1.5 py-0.5 rounded font-semibold bg-green-50 text-green-600">WaWi</span>'
             : '<span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-400">—</span>';
-        var bwaIcon = s.bwaEingereicht
-            ? '<span class="text-green-500 text-xs">✓</span>'
-            : '<span class="text-red-400 text-xs">✕</span>';
+        // BWA deadline logic:
+        // BWA for month X is due by the 10th of month X+1
+        // Current BWA month from getBwaMonthHqFin determines which month we're checking
+        // Only show ✕/⚠️ if the deadline has passed (today > 10th of following month)
+        var now = new Date();
+        var bwaCheckMonth = getBwaMonthHqFin(now); // {m: 0-based, y: year}
+        var deadlineDate = new Date(bwaCheckMonth.y, bwaCheckMonth.m + 1, 10); // 10th of next month
+        var isOverdue = now > deadlineDate;
+        
+        var bwaIcon;
+        if (s.bwaEingereicht) {
+            bwaIcon = '<span class="text-green-500 text-xs">✓</span>';
+        } else if (isOverdue) {
+            bwaIcon = '<span class="text-red-400 text-xs font-bold">✕</span>';
+        } else {
+            bwaIcon = '<span class="text-gray-300 text-xs">—</span>';
+        }
         var planIcon = s.planVorhanden
             ? '<span class="text-green-500 text-xs">✓</span>'
             : '<span class="text-gray-300 text-xs">—</span>';
@@ -392,8 +415,12 @@ function renderHqFinBwaQuickList() {
     var el = document.getElementById('hqFinBwaQuickList');
     if (!el) return;
     el.innerHTML = hqFinStandorte.map(function(s) {
-        var icon = s.bwaEingereicht ? '🟢' : '🔴';
-        var text = s.bwaEingereicht ? 'Eingereicht' : 'Ausstehend';
+        var now2 = new Date();
+        var bwaCk2 = getBwaMonthHqFin(now2);
+        var dl2 = new Date(bwaCk2.y, bwaCk2.m + 1, 10);
+        var overdue2 = now2 > dl2;
+        var icon = s.bwaEingereicht ? '🟢' : (overdue2 ? '🔴' : '⚪');
+        var text = s.bwaEingereicht ? 'Eingereicht' : (overdue2 ? 'Überfällig' : 'Noch nicht fällig');
         return '<div class="flex items-center justify-between py-1 px-2 rounded hover:bg-gray-50">'
             + '<span class="text-xs text-gray-700">' + icon + ' ' + _escH(s.name) + '</span>'
             + '<span class="text-[10px] text-gray-400">' + text + '</span></div>';
