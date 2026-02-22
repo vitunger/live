@@ -597,14 +597,39 @@ export function openVerkaufEntryModal() {
     html += '</div>';
     html += '<div class="grid grid-cols-2 gap-3 mb-4">';
     html += '<div><label class="block text-xs text-gray-600 mb-1">Uebergaben</label><input id="vtUebergabe" type="number" min="0" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-center" value="0"></div>';
-    html += '<div><label class="block text-xs text-gray-600 mb-1">Umsatz (€) <span class="text-gray-400 font-normal">autom. aus WaWi</span></label><input id="vtUmsatz" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-right bg-gray-50 text-gray-400" placeholder="—" readonly></div>';
+    html += '<div><label class="block text-xs text-gray-600 mb-1">Umsatz (€) <span class="text-gray-400 font-normal">aus WaWi</span></label><input id="vtUmsatz" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-right" placeholder="0"></div>';
     html += '</div>';
     html += '<div class="mb-3"><label class="block text-xs text-gray-600 mb-1">Notizen</label><textarea id="vtNotizen" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" rows="2" placeholder="z.B. Kunde kommt naechste Woche wieder..."></textarea></div>';
     html += '<div id="vtError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mb-3"></div>';
     html += '<button onclick="saveVtEntry()" id="vtSaveBtn" class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Speichern</button>';
     html += '</div></div>';
     var c = document.createElement('div'); c.id = 'vtEntryContainer'; c.innerHTML = html; document.body.appendChild(c);
-    // If GF: load team members into seller dropdown
+    // Auto-prefill Umsatz from WaWi data for selected seller + date
+    async function prefillWawiUmsatz() {
+        try {
+            var seller = (document.getElementById('vtSeller')||{}).value;
+            var datum = (document.getElementById('vtDate')||{}).value;
+            if(!seller || !datum) return;
+            var stdId = _sbProfile() ? _sbProfile().standort_id : null;
+            var q = _sb().from('wawi_belege').select('endbetrag').eq('verkaeufer', seller).eq('datum', datum);
+            if(stdId) q = q.eq('standort_id', stdId);
+            var resp = await q;
+            if(resp.data && resp.data.length) {
+                var total = resp.data.reduce(function(s,b){ return s + (parseFloat(b.endbetrag)||0); }, 0);
+                var el = document.getElementById('vtUmsatz');
+                if(el && !el._userEdited) { el.value = total.toFixed(2); }
+            }
+        } catch(e) { console.warn('WaWi prefill:', e); }
+    }
+    setTimeout(function(){
+        prefillWawiUmsatz();
+        var dateEl = document.getElementById('vtDate');
+        var sellerEl = document.getElementById('vtSeller');
+        if(dateEl) dateEl.addEventListener('change', function(){ prefillWawiUmsatz(); });
+        if(sellerEl) sellerEl.addEventListener('change', function(){ prefillWawiUmsatz(); });
+        var umsatzEl = document.getElementById('vtUmsatz');
+        if(umsatzEl) umsatzEl.addEventListener('input', function(){ umsatzEl._userEdited = true; });
+    }, 300);
     if(isGF) {
         (async function(){
             try {
