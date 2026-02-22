@@ -1884,7 +1884,7 @@ export async function renderKzStandorte() {
             h+='<tr class="border-t border-gray-100 hover:bg-gray-50">';
             h+='<td class="px-4 py-3 font-semibold text-gray-800">'+s.name+'</td>';
             h+='<td class="px-4 py-3 text-gray-600">'+(s.adresse||s.region||'')+'</td>';
-            h+='<td class="px-4 py-3"><span class="text-xs px-2 py-0.5 rounded '+(s.is_premium?'bg-vit-orange text-white':'bg-gray-100 text-gray-600')+'">'+(s.is_premium?'Premium':'Standard')+'</span></td>';
+            h+='<td class="px-4 py-3 text-center"><span class="text-xs px-2 py-0.5 rounded '+(s.warenwirtschaft?'bg-blue-100 text-blue-700':'bg-gray-100 text-gray-400')+'">'+(s.warenwirtschaft||'—')+'</span></td>';
             h+='<td class="px-4 py-3 text-center">'+statusBadge(st)+'</td>';
             h+='<td class="px-4 py-3 text-center font-semibold">'+(userCounts[s.id]||0)+'</td>';
             h+='<td class="px-4 py-3 text-center text-gray-500 text-xs">'+beitritt+'</td>';
