@@ -253,6 +253,11 @@ export function handleDevFileSelect(e) {
 var entwCurrentTab = 'ideen';
 
 export async function renderEntwicklung() {
+    // Restore last active tab
+    var _savedTab; try { _savedTab = localStorage.getItem('vit:lastEntwTab'); } catch(e) {}
+    if(_savedTab && ['ideen','module','releases','steuerung','flags','nutzung','system','vision'].indexOf(_savedTab) !== -1) {
+        entwCurrentTab = _savedTab;
+    }
     var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
     var isOwner = (currentRoles||[]).indexOf('owner') !== -1;
 
