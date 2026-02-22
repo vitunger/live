@@ -1627,7 +1627,7 @@ export async function openDevDetail(subId) {
             var isHQDetail = (currentRoles||[]).indexOf('hq') !== -1;
             h += '<div class="border border-purple-200 rounded-lg p-4 mb-4 bg-purple-50/50">';
             h += '<h4 onclick="var el=document.getElementById(\'devSec_analyse\');if(el){el.style.display=el.style.display===\'none\'?\'block\':\'none\';this.querySelector(\'.devSecArrow\').textContent=el.style.display===\'none\'?\'▶\':\'▼\'}" style="cursor:pointer;user-select:none" class="text-xs font-bold text-purple-600 uppercase mb-2">📊 Analyse <span class=\'devSecArrow text-gray-400 text-[10px] ml-1\'>▼</span></h4>';
-            h += '<div id="devSec_analyse">';';
+            h += '<div id="devSec_analyse">';
             if(ki.zusammenfassung) h += '<p class="text-sm text-gray-700 mb-3">'+ki.zusammenfassung+'</p>';
             if(isHQDetail) {
                 h += '<div class="grid grid-cols-3 gap-3 mb-3">';
@@ -1667,7 +1667,7 @@ export async function openDevDetail(subId) {
             h += '<div class="border border-gray-200 rounded-lg p-4 mb-4 bg-white">';
             h += '</div>';
             h += '<h4 onclick="var el=document.getElementById(\'devSec_planung\');if(el){el.style.display=el.style.display===\'none\'?\'block\':\'none\';this.querySelector(\'.devSecArrow\').textContent=el.style.display===\'none\'?\'▶\':\'▼\'}" style="cursor:pointer;user-select:none" class="text-xs font-bold text-gray-500 uppercase mb-3">📋 Planung & Zuweisung <span class=\'devSecArrow text-gray-400 text-[10px] ml-1\'>▼</span></h4>';
-            h += '<div id="devSec_planung">';';
+            h += '<div id="devSec_planung">';
             h += '<div class="grid grid-cols-2 gap-3 text-sm">';
             // Bug-Schwere
             if(s.bug_schwere) {
