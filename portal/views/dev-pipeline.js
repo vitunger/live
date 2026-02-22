@@ -469,6 +469,31 @@ export async function renderEntwSteuerung() {
     var c = document.getElementById('entwSteuerungContent');
     if(!c) return;
     await loadDevSubmissions();
+
+    var total = devSubmissions.length;
+    var bugs = devSubmissions.filter(function(s){ return s.ki_typ === 'bug'; }).length;
+    var features = devSubmissions.filter(function(s){ return s.ki_typ === 'feature'; }).length;
+    var ideen = devSubmissions.filter(function(s){ return s.ki_typ === 'idee'; }).length;
+    var portal = devSubmissions.filter(function(s){ return s.ki_bereich === 'portal'; }).length;
+    var netzwerk = devSubmissions.filter(function(s){ return s.ki_bereich === 'netzwerk'; }).length;
+    var totalVotes = devSubmissions.reduce(function(sum,s){ return sum + (s.dev_votes||[]).length; }, 0);
+    var totalKomm = devSubmissions.reduce(function(sum,s){ return sum + (s.dev_kommentare||[]).length; }, 0);
+
+    // Stats dashboard
+    var h = '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">';
+    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold text-gray-800">'+total+'</p><p class="text-[10px] text-gray-500">Gesamt</p></div>';
+    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold text-red-600">'+bugs+'</p><p class="text-[10px] text-gray-500">🐛 Bugs</p></div>';
+    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold text-purple-600">'+features+'</p><p class="text-[10px] text-gray-500">✨ Features</p></div>';
+    h += '<div class="vit-card p-3 text-center"><p class="text-2xl font-bold text-blue-600">'+ideen+'</p><p class="text-[10px] text-gray-500">💡 Ideen</p></div>';
+    h += '</div>';
+
+    h += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">';
+    h += '<div class="vit-card p-3 text-center"><p class="text-lg font-bold text-gray-600">'+portal+' / '+netzwerk+'</p><p class="text-[10px] text-gray-500">💻 Portal / 🌐 Netzwerk</p></div>';
+    h += '<div class="vit-card p-3 text-center"><p class="text-lg font-bold text-orange-600">'+totalVotes+'</p><p class="text-[10px] text-gray-500">👍 Votes</p></div>';
+    h += '<div class="vit-card p-3 text-center"><p class="text-lg font-bold text-gray-600">'+totalKomm+'</p><p class="text-[10px] text-gray-500">💬 Kommentare</p></div>';
+    h += '<div class="vit-card p-3 text-center"><button onclick="exportDevCSV()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90 w-full">📥 CSV Export</button></div>';
+    h += '</div>';
+
     // Kanban board for HQ
     var columns = [
         {key:'neu', label:'📥 Eingang', statuses:['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','konzept_wird_erstellt'], color:'blue'},
@@ -477,7 +502,7 @@ export async function renderEntwSteuerung() {
         {key:'done', label:'✅ Umgesetzt', statuses:['ausgerollt'], color:'green'},
         {key:'parked', label:'⏸ Geparkt/Abgelehnt', statuses:['abgelehnt','geparkt'], color:'gray'}
     ];
-    var h = '<div class="grid grid-cols-1 md:grid-cols-5 gap-4" style="min-height:400px">';
+    h += '<div class="grid grid-cols-1 md:grid-cols-5 gap-4" style="min-height:400px">';
     columns.forEach(function(col) {
         var items = devSubmissions.filter(function(s) { return col.statuses.indexOf(s.status) !== -1; });
         h += '<div class="bg-gray-50 rounded-xl p-3">';
@@ -1146,6 +1171,7 @@ export async function renderDevRoadmap() {
             h += '</div>';
             h += '<h4 class="font-semibold text-sm text-gray-800 '+(r.status==='ausgerollt'?'line-through':'')+'">'+ r.titel+'</h4>';
             if(r.beschreibung) h += '<p class="text-xs text-gray-500 truncate">'+r.beschreibung+'</p>';
+            if(r.submission_id) h += '<span onclick="event.stopPropagation();openDevDetail(\''+r.submission_id+'\')" class="text-[10px] text-vit-orange hover:underline cursor-pointer">🔗 Verknüpfte Idee</span> ';
             if(r.ziel_datum) h += '<span class="text-[10px] text-gray-400">Ziel: '+new Date(r.ziel_datum).toLocaleDateString('de-DE')+'</span>';
             h += '</div>';
 
@@ -1379,6 +1405,25 @@ export async function devHQDecision(subId, ergebnis) {
             }).catch(function(err) {
                 console.warn('KI-Konzept Fehler:', err);
             });
+
+            // Auto-create roadmap entry
+            var sub2 = devSubmissions.find(function(s){ return s.id === subId; });
+            if(sub2) {
+                var now2 = new Date();
+                var qM = now2.getMonth() + 3;
+                var qY = now2.getFullYear() + (qM > 11 ? 1 : 0);
+                qM = qM > 11 ? qM - 12 : qM;
+                var q2 = 'Q' + (Math.floor(qM/3)+1) + ' ' + qY;
+                _sb().from('dev_roadmap').insert({
+                    titel: sub2.titel || sub2.beschreibung || 'Freigegebene Idee',
+                    beschreibung: sub2.beschreibung || '',
+                    kategorie: sub2.kategorie || 'feature',
+                    modul_key: sub2.modul_key || null,
+                    status: 'geplant', prioritaet: sub2.ki_typ === 'bug' ? 'hoch' : 'mittel',
+                    aufwand: sub2.geschaetzter_aufwand || 'M',
+                    ziel_quartal: q2, submission_id: subId, sortierung: 999
+                }).catch(function(){}); // fire-and-forget
+            }
         }
 
         renderDevPipeline();
@@ -1821,6 +1866,28 @@ export async function devHQDecisionFromDetail(subId, ergebnis) {
                 }).catch(function(err) {
                     console.warn('KI-Konzept Fehler:', err);
                 });
+
+                // Auto-create roadmap entry
+                var sub = devSubmissions.find(function(s){ return s.id === subId; });
+                if(sub) {
+                    var now = new Date();
+                    var qMonth = now.getMonth() + 3; // target ~1 quarter out
+                    var qYear = now.getFullYear() + (qMonth > 11 ? 1 : 0);
+                    qMonth = qMonth > 11 ? qMonth - 12 : qMonth;
+                    var quarter = 'Q' + (Math.floor(qMonth/3)+1) + ' ' + qYear;
+                    _sb().from('dev_roadmap').insert({
+                        titel: sub.titel || sub.beschreibung || 'Freigegebene Idee',
+                        beschreibung: sub.beschreibung || '',
+                        kategorie: sub.kategorie || 'feature',
+                        modul_key: sub.modul_key || null,
+                        status: 'geplant',
+                        prioritaet: sub.ki_typ === 'bug' ? 'hoch' : 'mittel',
+                        aufwand: sub.geschaetzter_aufwand || 'M',
+                        ziel_quartal: quarter,
+                        submission_id: subId,
+                        sortierung: 999
+                    }).catch(function(err){ console.warn('Roadmap auto-create:', err); });
+                }
             }
         }
 
@@ -2076,6 +2143,35 @@ function _timeAgo(date) {
     return date.toLocaleDateString('de-DE');
 }
 
-const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead};
+// CSV Export
+export function exportDevCSV() {
+    if(!devSubmissions || devSubmissions.length === 0) { _showToast('Keine Daten zum Exportieren', 'error'); return; }
+    var header = ['Titel','Status','KI-Typ','KI-Bereich','Kategorie','Aufwand','Votes','Kommentare','Erstellt','Beschreibung'];
+    var rows = devSubmissions.map(function(s) {
+        return [
+            '"'+(s.titel||'').replace(/"/g,'""')+'"',
+            s.status || '',
+            s.ki_typ || '',
+            s.ki_bereich || '',
+            s.kategorie || '',
+            s.geschaetzter_aufwand || '',
+            (s.dev_votes||[]).length,
+            (s.dev_kommentare||[]).length,
+            s.created_at ? new Date(s.created_at).toLocaleDateString('de-DE') : '',
+            '"'+(s.beschreibung||'').replace(/"/g,'""').substring(0,200)+'"'
+        ].join(';');
+    });
+    var csv = '\uFEFF' + header.join(';') + '\n' + rows.join('\n');
+    var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'dev-pipeline-export-'+new Date().toISOString().split('T')[0]+'.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    _showToast('📥 CSV exportiert ('+devSubmissions.length+' Einträge)', 'success');
+}
+
+const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
