@@ -2043,7 +2043,7 @@ export async function openDevDetail(subId) {
             h += '<p class="text-xs text-gray-400 text-center py-2">Chat wird geladen...</p></div>';
             h += '<div id="devMockupChatAttachments" class="hidden mb-2 flex flex-wrap gap-2"></div>';
             h += '<div class="flex items-end gap-2">';
-            h += '<label class="cursor-pointer flex-shrink-0"><input type="file" accept="image/*" onchange="devMockupChatAttachImage(this)" class="hidden"><span class="inline-flex items-center justify-center w-8 h-8 rounded bg-gray-100 hover:bg-gray-200 text-gray-500 text-sm">\uD83D\uDCF7</span></label>';
+            h += '<label class="cursor-pointer flex-shrink-0"><input type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv" multiple onchange="devMockupChatAttachFiles(this)" class="hidden"><span class="inline-flex items-center justify-center w-8 h-8 rounded bg-gray-100 hover:bg-gray-200 text-gray-500 text-sm">\uD83D\uDCCE</span></label>';
             h += '<button onclick="devMockupChatMic(this)" id="devMockupMicBtn" class="flex-shrink-0 w-8 h-8 rounded bg-gray-100 hover:bg-gray-200 text-gray-500 text-sm">\uD83C\uDFA4</button>';
             h += '<textarea id="devMockupChatInput" rows="1" class="flex-1 px-3 py-1.5 border border-gray-200 rounded text-sm resize-none focus:border-pink-400" placeholder="Design-Idee beschreiben..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();devMockupChatSend(\''+s.id+'\')}" oninput="this.style.height=\'auto\';this.style.height=Math.min(this.scrollHeight,100)+\'px\'"></textarea>';
             h += '<button onclick="devMockupChatSend(\''+s.id+'\')" id="devMockupChatSendBtn" class="flex-shrink-0 w-8 h-8 rounded bg-pink-600 hover:bg-pink-700 text-white text-sm font-bold">\u27A4</button>';
@@ -3797,6 +3797,38 @@ export async function devMockupChatSend(subId) {
     input.focus();
 }
 
+export async function devMockupChatAttachFiles(fileInput) {
+    var files = Array.from(fileInput.files);
+    if (!files.length) return;
+    
+    for (var file of files) {
+        var ext = file.name.split('.').pop() || 'bin';
+        var path = 'mockup-chat/' + Date.now() + '-' + Math.random().toString(36).slice(2,6) + '.' + ext;
+        var { data, error } = await _sb().storage.from('dev-attachments').upload(path, file);
+        if (error) { console.warn('Upload error:', error, file.name); continue; }
+        var url = _sb().storage.from('dev-attachments').getPublicUrl(path).data.publicUrl;
+        
+        _mockupChatAttachments.push({ type: file.type, url: url, name: file.name });
+        
+        var container = document.getElementById('devMockupChatAttachments');
+        if (container) {
+            container.classList.remove('hidden');
+            var preview = document.createElement('div');
+            preview.className = 'relative';
+            var isImage = file.type.startsWith('image/');
+            var safeUrl = url.replace(/'/g, "\\'");
+            if (isImage) {
+                preview.innerHTML = '<img src="'+url+'" class="w-16 h-16 object-cover rounded border" /><button onclick="this.parentElement.remove();window._mockupChatAttachments=(window._mockupChatAttachments||[]).filter(function(a){return a.url!==\''+safeUrl+'\'})" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center">\u00d7</button>';
+            } else {
+                var icon = ext === 'pdf' ? '\uD83D\uDCC4' : ext.match(/^(doc|docx)$/) ? '\uD83D\uDCC3' : ext.match(/^(xls|xlsx|csv)$/) ? '\uD83D\uDCCA' : '\uD83D\uDCCE';
+                preview.innerHTML = '<div class="w-16 h-16 rounded border bg-gray-50 flex flex-col items-center justify-center text-[10px] text-gray-600"><span class="text-xl">'+icon+'</span><span class="truncate max-w-[56px] mt-0.5">'+_escH(file.name)+'</span></div><button onclick="this.parentElement.remove();window._mockupChatAttachments=(window._mockupChatAttachments||[]).filter(function(a){return a.url!==\''+safeUrl+'\'})" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center">\u00d7</button>';
+            }
+            container.appendChild(preview);
+        }
+    }
+    fileInput.value = '';
+}
+
 export async function devMockupChatAttachImage(fileInput) {
     var file = fileInput.files[0];
     if (!file) return;
@@ -3978,7 +4010,7 @@ export async function devMockupShowVersion(mockupId) {
 }
 
 const _exports = {
-    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachImage,devMockupChatMic,devDeployCode,loadDeployHistory,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,
+    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachFiles,devMockupChatAttachImage,devMockupChatMic,devDeployCode,loadDeployHistory,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
