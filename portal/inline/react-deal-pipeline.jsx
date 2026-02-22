@@ -2,15 +2,15 @@
 const { useState, useRef, useCallback, useEffect } = React;
 
 const STAGES = [
-  { id: "lead", label: "🎯 Leads", color: "#FF6B35", bg: "#FFF3ED", emoji: "🎣" },
-  { id: "angebot", label: "📝 Angebot", color: "#667EEA", bg: "#EBF4FF", emoji: "💌" },
-  { id: "schwebend", label: "⏳ Schwebend", color: "#F7C948", bg: "#FFFBEA", emoji: "🎈" },
-  { id: "verkauft", label: "🎉 Verkauft", color: "#38B2AC", bg: "#E6FFFA", emoji: "🏆" },
-  { id: "gold", label: "🗄️ Schrank der Hoffnung", color: "#D69E2E", bg: "#FFFFF0", emoji: "✨" },
-  { id: "lost", label: "💀 Verloren", color: "#E53E3E", bg: "#FFF5F5", emoji: "😭" },
+  { id: "lead", label: "Eingang", color: "#667EEA", bg: "#EBF4FF" },
+  { id: "angebot", label: "Angebot", color: "#3182CE", bg: "#EBF8FF" },
+  { id: "schwebend", label: "Schwebend", color: "#D97706", bg: "#FEF3C7" },
+  { id: "verkauft", label: "Verkauft", color: "#16A34A", bg: "#DCFCE7" },
+  { id: "gold", label: "Schrank der Hoffnung", color: "#D69E2E", bg: "#FFFFF0" },
+  { id: "lost", label: "Verloren", color: "#E53E3E", bg: "#FFF5F5" },
 ];
 const PIPELINE = ["lead", "angebot", "schwebend", "verkauft"];
-const AGING = { lead: 3, angebot: 5, schwebend: 7 };
+const AGING = { lead: 7, angebot: 5, schwebend: 5 };
 const AVATARS = ["👤","👩","👨","👩‍💼","👨‍💼","👩‍🎨","👨‍🔧","👩‍⚕️","👨‍🍳","👩‍💻","🧑‍🎓","👴"];
 const ACT_TYPES = [
   { id: "call", label: "📞 Anruf", color: "#667EEA" },
@@ -261,92 +261,77 @@ function AgingBadge({deal}){
 }
 
 
-/* ── Deal Card (Clean) ────────────────────────────── */
+/* ── Deal Card (Preview7 HubSpot-style) ──────────── */
 function Card({deal,onDrag,onClick,isNew,SELLERS}){
   const st=STAGES.find(s=>s.id===deal.stage);
   const d=dSince(deal.changed),w=AGING[deal.stage]||999,aging=d>=w&&!["verkauft","lost","gold"].includes(deal.stage);
   const urgent=d>=w*2;
+  const bc=aging?(urgent?"#E53E3E":"#ECC94B"):st.color;
   const openT=deal.todos.filter(t=>!t.done).length;
   const overdue=deal.todos.some(t=>!t.done&&t.due<NOW);
   const seller=SELLERS.find(s=>s.id===deal.seller);
-  return <div draggable onDragStart={e=>{e.dataTransfer.setData("id",deal.id);e.dataTransfer.effectAllowed="move";onDrag(deal.id)}} onClick={()=>onClick(deal)} style={{background:"var(--c-bg)",borderRadius:12,padding:"11px 13px",cursor:"grab",borderLeft:`3px solid ${aging?(urgent?"#E53E3E":"#ECC94B"):st.color}`,boxShadow:"0 1px 3px rgba(0,0,0,.04)",transition:"all .15s",animation:isNew?"appear .4s ease":"none",userSelect:"none"}}>
-    <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:5}}>
-      <div style={{width:30,height:30,borderRadius:9,background:st.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{deal.avatar}</div>
-      <div style={{flex:1,minWidth:0}}>
-        <div style={{fontWeight:700,fontSize:13,color:"#1a202c",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{deal.name}</div>
-        <div style={{fontSize:10,color:"#A0AEC0",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{deal.note}</div>
-      </div>
+  return <div draggable onDragStart={e=>{e.dataTransfer.setData("id",deal.id);e.dataTransfer.effectAllowed="move";onDrag(deal.id)}} onClick={()=>onClick(deal)} style={{background:"#fff",borderRadius:8,padding:"10px 11px",cursor:"grab",marginBottom:5,borderLeft:"3px solid "+bc,boxShadow:isNew?"0 0 0 2px #667EEA":"0 1px 2px rgba(0,0,0,.04)",transition:"box-shadow .2s",animation:isNew?"appear .3s ease":"none",userSelect:"none"}}>
+    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+      <div style={{width:26,height:26,borderRadius:7,background:st.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0}}>{deal.avatar}</div>
+      <div style={{fontWeight:700,fontSize:13,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",flex:1,color:"#1a1a2e"}}>{deal.name}</div>
+      <div style={{fontSize:13,fontWeight:800,color:st.color,flexShrink:0}}>{fmt(deal.value)}</div>
     </div>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-      <span style={{fontWeight:800,fontSize:14,color:st.color}}>{fmt(deal.value)}</span>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",paddingLeft:34}}>
+      <div style={{display:"flex",gap:2}}>{[1,2,3,4,5].map(i=><div key={i} style={{width:5,height:5,borderRadius:"50%",background:i<=deal.heat?(deal.heat>=4?"#FF6B35":deal.heat>=2?"#F7C948":"#CBD5E0"):"#EDF2F7"}}/>)}</div>
       <div style={{display:"flex",alignItems:"center",gap:4}}>
-        {seller&&<span style={{fontSize:9,fontWeight:700,color:seller.color,background:seller.color+"10",padding:"1px 5px",borderRadius:4}}>{seller.short}</span>}
-        {openT>0&&<span style={{fontSize:9,fontWeight:700,color:overdue?"#E53E3E":"#667EEA",background:overdue?"#FED7D7":"#EBF4FF",padding:"1px 5px",borderRadius:4}}>{overdue?"❗":"☑"}{openT}</span>}
-        {aging&&<span style={{fontSize:9,fontWeight:700,color:urgent?"#E53E3E":"#B7791F",background:urgent?"#FED7D7":"#FEFCBF",padding:"1px 5px",borderRadius:4}}>{urgent?"🚨":"⏰"}{d}d</span>}
-        <div style={{display:"flex",gap:1}}>{[1,2,3,4,5].map(i=><div key={i} style={{width:5,height:5,borderRadius:"50%",background:i<=deal.heat?(deal.heat>=4?"#FF6B35":deal.heat>=2?"#F7C948":"#CBD5E0"):"#EDF2F7"}}/>)}</div>
+        {seller&&<span style={{fontSize:9,fontWeight:700,color:seller.color,background:seller.color+"15",padding:"1px 5px",borderRadius:4}}>{seller.short}</span>}
+        {overdue&&<span style={{fontSize:9,fontWeight:700,color:"#E53E3E",background:"#FED7D7",padding:"1px 5px",borderRadius:4}}>{openT} überfällig</span>}
+        {aging&&!overdue&&<span style={{fontSize:9,fontWeight:700,color:urgent?"#E53E3E":"#B7791F",background:urgent?"#FED7D7":"#FEFCBF",padding:"1px 5px",borderRadius:4}}>{d}d</span>}
       </div>
     </div>
+    {deal.note&&<div style={{paddingLeft:34,marginTop:3,fontSize:10,color:"#9ca3af",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{deal.note}</div>}
   </div>
 }
 
-/* ── Column (Clean) ──────────────────────────────── */
+/* ── Column (Preview7 HubSpot-style) ─────────────── */
 function Col({stage,deals,onDrop,onDrag,onClick,newId,SELLERS}){
   const[dg,setDg]=useState(false);
   const tv=deals.reduce((s,d)=>s+d.value,0);
-  return <div onDragOver={e=>{e.preventDefault();setDg(true)}} onDragLeave={()=>setDg(false)} onDrop={e=>{e.preventDefault();setDg(false);onDrop(+e.dataTransfer.getData("id"),stage.id)}} style={{flex:"1 1 0",minWidth:180,display:"flex",flexDirection:"column",gap:6,background:dg?`${stage.color}08`:"transparent",borderRadius:14,padding:8,transition:"all .2s",border:`2px dashed ${dg?stage.color:"transparent"}`}}>
-    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 4px 2px"}}>
-      <div style={{display:"flex",alignItems:"center",gap:6}}>
-        <div style={{width:8,height:8,borderRadius:"50%",background:stage.color}}/>
-        <span style={{fontWeight:700,fontSize:12,color:"#2D3748"}}>{stage.label}</span>
-        <span style={{fontSize:10,fontWeight:600,color:"#A0AEC0"}}>{deals.length}</span>
-      </div>
-      <span style={{fontWeight:700,fontSize:11,color:stage.color}}>{fmt(tv)}</span>
+  return <div style={{display:"flex",flexDirection:"column",flex:"1 1 0",minWidth:175,background:"#e8e8ec",borderRadius:10,overflow:"hidden"}}>
+    <div style={{padding:"8px 12px 7px",display:"flex",alignItems:"center",gap:6}}>
+      <div style={{width:7,height:7,borderRadius:"50%",background:stage.color,flexShrink:0}}/>
+      <span style={{fontSize:12,fontWeight:700,color:"#374151"}}>{stage.label}</span>
+      <span style={{fontSize:11,fontWeight:600,color:"#9ca3af"}}>{deals.length}</span>
     </div>
-    <div style={{display:"flex",flexDirection:"column",gap:5,flex:1,minHeight:80}}>
+    <div onDragOver={e=>{e.preventDefault();setDg(true)}} onDragLeave={()=>setDg(false)} onDrop={e=>{e.preventDefault();setDg(false);onDrop(+e.dataTransfer.getData("id"),stage.id)}} style={{flex:1,overflowY:"auto",padding:"0 6px",transition:"background .15s",display:"flex",flexDirection:"column",background:dg?"#dde8f8":"transparent",minHeight:80}}>
       {deals.map(d=><Card key={d.id} deal={d} onDrag={onDrag} onClick={onClick} isNew={d.id===newId} SELLERS={SELLERS||[]}/>)}
-      {!deals.length&&<div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",color:"#E2E8F0",fontSize:24,opacity:dg?1:.3}}>{stage.emoji}</div>}
+      {!deals.length&&<div style={{textAlign:"center",color:"#d1d5db",fontSize:11,padding:"20px 0"}}>—</div>}
+    </div>
+    <div style={{padding:"6px 12px 8px",borderTop:"1px solid #dcdce0"}}>
+      <span style={{fontSize:11,fontWeight:700,color:"#6b7280"}}>Volumen: <span style={{color:"#374151"}}>{fmt(tv)}</span></span>
     </div>
   </div>
 }
 
-/* ── Add Modal ───────────────────────────────────── */
+/* ── Add Modal (Preview7 Clean) ───────────────────── */
 function AddModal({onClose,onAdd,currentLoc,LOCATIONS,SELLERS}){
   const[n,setN]=useState("");const[v,setV]=useState("");const[no,setNo]=useState("");const[ph,setPh]=useState("");const[em,setEm]=useState("");const[av,setAv]=useState("👤");
   const locs=LOCATIONS.filter(l=>!l.isHQ);
   const[loc,setLoc]=useState(currentLoc==="hq"?(locs[0]?.id||""):currentLoc);const[seller,setSeller]=useState("");
-  const availSellers=SELLERS.filter(s=>s.loc===loc);
-  const go=()=>{if(!n||!v)return;onAdd({name:n,value:+v,note:no||"Neuer Kontakt",avatar:av,heat:3,stage:"lead",phone:ph,email:em,acts:[],todos:[],created:Date.now(),changed:Date.now(),loc,seller:seller||availSellers[0]?.id||""})};
-  const ip={width:"100%",padding:"10px 14px",borderRadius:12,border:"2px solid #E2E8F0",fontSize:14,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box"};
-  return <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.4)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,animation:"fadeIn .2s"}}>
-    <div onClick={e=>e.stopPropagation()} style={{background:"var(--c-bg)",borderRadius:24,padding:28,width:420,maxWidth:"92vw",maxHeight:"90vh",overflowY:"auto",boxShadow:"0 25px 60px rgba(0,0,0,.15)",animation:"pop .3s cubic-bezier(.34,1.56,.64,1)"}}>
-      <h2 style={{margin:"0 0 20px",fontFamily:"'Outfit',sans-serif",fontWeight:800,fontSize:22}}>🚀 Neuer Kontakt</h2>
-      <div style={{display:"flex",flexDirection:"column",gap:14}}>
-        <div><label style={{fontSize:11,fontWeight:700,color:"#718096",fontFamily:"'Outfit',sans-serif",display:"block",marginBottom:4}}>Name *</label><input style={ip} placeholder="z.B. Anna Müller" value={n} onChange={e=>setN(e.target.value)} autoFocus/></div>
-        <div style={{display:"flex",gap:12}}>
-          <div style={{flex:1}}><label style={{fontSize:11,fontWeight:700,color:"#718096",fontFamily:"'Outfit',sans-serif",display:"block",marginBottom:4}}>Wert (€) *</label><input style={ip} type="number" placeholder="2500" value={v} onChange={e=>setV(e.target.value)}/></div>
-          <div style={{flex:1}}><label style={{fontSize:11,fontWeight:700,color:"#718096",fontFamily:"'Outfit',sans-serif",display:"block",marginBottom:4}}>Standort</label>
-            <select value={loc} onChange={e=>{setLoc(e.target.value);setSeller("")}} style={{...ip,cursor:"pointer",background:"var(--c-bg)"}}>{locs.map(l=><option key={l.id} value={l.id}>{l.label}</option>)}</select>
-          </div>
-        </div>
-        <div style={{display:"flex",gap:12}}>
-          <div style={{flex:1}}><label style={{fontSize:11,fontWeight:700,color:"#718096",fontFamily:"'Outfit',sans-serif",display:"block",marginBottom:4}}>Verkäufer</label>
-            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{availSellers.map(s=><div key={s.id} onClick={()=>setSeller(s.id)} style={{padding:"6px 12px",borderRadius:10,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif",background:seller===s.id?s.color+"20":"#F7FAFC",color:seller===s.id?s.color:"#A0AEC0",border:`2px solid ${seller===s.id?s.color:"transparent"}`,transition:"all .2s",display:"flex",alignItems:"center",gap:5}}>
-              <span style={{width:22,height:22,borderRadius:7,background:s.color,color:"#fff",display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:900}}>{s.short}</span>{s.name}
-            </div>)}{!availSellers.length&&<span style={{fontSize:12,color:"#CBD5E0"}}>Kein Verkäufer für diesen Standort</span>}</div>
-          </div>
-        </div>
-        <div style={{display:"flex",gap:12}}>
-          <div style={{flex:1}}><label style={{fontSize:11,fontWeight:700,color:"#718096",fontFamily:"'Outfit',sans-serif",display:"block",marginBottom:4}}>Telefon</label><input style={ip} placeholder="0176 ..." value={ph} onChange={e=>setPh(e.target.value)}/></div>
-          <div style={{flex:1}}><label style={{fontSize:11,fontWeight:700,color:"#718096",fontFamily:"'Outfit',sans-serif",display:"block",marginBottom:4}}>E-Mail</label><input style={{...ip}} type="email" placeholder="anna@mail.de" value={em} onChange={e=>setEm(e.target.value)}/></div>
-        </div>
-        <div><label style={{fontSize:11,fontWeight:700,color:"#718096",fontFamily:"'Outfit',sans-serif",display:"block",marginBottom:4}}>Notiz</label><input style={ip} placeholder="Interesse an..." value={no} onChange={e=>setNo(e.target.value)}/></div>
-        <div><label style={{fontSize:11,fontWeight:700,color:"#718096",fontFamily:"'Outfit',sans-serif",display:"block",marginBottom:4}}>Avatar</label>
-          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{AVATARS.map(a=><div key={a} onClick={()=>setAv(a)} style={{width:38,height:38,borderRadius:10,border:`2px solid ${av===a?"#667EEA":"#E2E8F0"}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,cursor:"pointer",background:av===a?"#EBF4FF":"#fff",transform:av===a?"scale(1.1)":"scale(1)",transition:"all .2s"}}>{a}</div>)}</div>
-        </div>
-        <div style={{display:"flex",gap:12,marginTop:4}}>
-          <button onClick={onClose} style={{flex:1,padding:"11px 18px",borderRadius:12,border:"2px solid #E2E8F0",background:"var(--c-bg)",fontSize:14,fontWeight:700,color:"#718096",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Abbrechen</button>
-          <button onClick={go} style={{flex:2,padding:"11px 18px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#667EEA,#764BA2)",fontSize:14,fontWeight:700,color:"#fff",cursor:"pointer",fontFamily:"'Outfit',sans-serif",boxShadow:"0 4px 15px rgba(102,126,234,.4)",opacity:n&&v?1:.5}}>🚀 Hinzufügen</button>
-        </div>
+  const availSellers=SELLERS.filter(s=>s.loc===loc||s.isHQ);
+  const go=()=>{if(!n.trim())return;onAdd({name:n,value:+v||0,note:no||"",avatar:av,heat:3,stage:"lead",phone:ph,email:em,acts:[],todos:[],created:Date.now(),changed:Date.now(),loc,seller:seller||availSellers[0]?.id||"",source:"Walk-In",sales:{}})};
+  const inp={width:"100%",padding:"8px 10px",borderRadius:7,border:"1.5px solid #e5e7eb",fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box"};
+  const fl={fontSize:10,fontWeight:700,color:"#6b7280",display:"block",marginBottom:3};
+  return <div onClick={e=>{if(e.target===e.currentTarget)onClose()}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.35)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,animation:"fadeIn .15s"}}>
+    <div style={{background:"#fff",borderRadius:14,padding:22,width:360,maxWidth:"92vw",boxShadow:"0 16px 40px rgba(0,0,0,.12)",animation:"pop .2s ease"}} onClick={e=>e.stopPropagation()}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+        <div style={{fontSize:14,fontWeight:800}}>Neuer Lead</div>
+        <button onClick={onClose} style={{background:"none",border:"none",fontSize:17,color:"#9ca3af",cursor:"pointer"}}>✕</button>
+      </div>
+      <div style={{marginBottom:9}}><label style={fl}>Avatar</label>
+        <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{AVATARS.slice(0,8).map((a,i)=><div key={i} onClick={()=>setAv(a)} style={{width:28,height:28,borderRadius:7,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,cursor:"pointer",background:av===a?"#EBF4FF":"#f5f5f7",border:av===a?"2px solid #667EEA":"2px solid transparent"}}>{a}</div>)}</div>
+      </div>
+      <div style={{marginBottom:9}}><label style={fl}>Name *</label><input style={inp} value={n} onChange={e=>setN(e.target.value)} placeholder="z.B. Anna Müller" autoFocus onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+      <div style={{marginBottom:9}}><label style={fl}>Notiz</label><input style={inp} value={no} onChange={e=>setNo(e.target.value)} placeholder="Interesse, Quelle..."/></div>
+      <div style={{marginBottom:16}}><label style={fl}>Geschätzter Wert (€)</label><input style={inp} value={v} onChange={e=>setV(e.target.value)} type="number" placeholder="3000"/></div>
+      <div style={{display:"flex",gap:8}}>
+        <button onClick={onClose} style={{flex:1,padding:8,borderRadius:7,border:"1.5px solid #e5e7eb",background:"#fff",fontWeight:700,cursor:"pointer",fontFamily:"inherit",fontSize:12}}>Abbrechen</button>
+        <button onClick={go} style={{flex:2,padding:8,borderRadius:7,border:"none",background:"#667EEA",color:"#fff",fontWeight:700,cursor:"pointer",fontFamily:"inherit",fontSize:12}}>+ Hinzufügen</button>
       </div>
     </div>
   </div>
@@ -751,12 +736,12 @@ function ScanUploadModal({deal,sales,onClose,onUpdateDeal}){
 }
 
 function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateDeal,onChangeStage,SELLERS}){
-  const[tab,setTab]=useState("overview");
+  const[tab,setTab]=useState("uebersicht");
   const[at,setAt]=useState("call");const[tx,setTx]=useState("");
   const[todoTx,setTodoTx]=useState("");const[todoDays,setTodoDays]=useState(3);
   const[ef,setEf]=useState(null);const[ev,setEv]=useState("");
-  const[showForm,setShowForm]=useState(null); // null | "interactive" | "print"
-  const st=STAGES.find(s=>s.id===deal.stage);
+  const[showForm,setShowForm]=useState(null);
+  const st=STAGES.find(s=>s.id===deal.stage)||STAGES[0];
   const sales=deal.sales||{};const seller=SELLERS.find(s=>s.id===deal.seller);
   const openT=deal.todos.filter(t=>!t.done).length;
 
@@ -769,227 +754,123 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
     if(ef===f)return <input value={ev} onChange={e=>setEv(e.target.value)} type={tp||"text"} autoFocus
       onKeyDown={e=>{if(e.key==="Enter")sav(f,tp==="number"?+ev:ev);if(e.key==="Escape")setEf(null)}}
       onBlur={()=>sav(f,tp==="number"?+ev:ev)}
-      style={{padding:"4px 8px",borderRadius:6,border:"1.5px solid #667EEA",fontSize:"inherit",fontFamily:"inherit",outline:"none",background:"#EBF4FF",width:"100%",boxSizing:"border-box",...sx}}/>;
-    return <span onClick={()=>{setEf(f);setEv(v||"")}} style={{cursor:"pointer",borderBottom:"1px dashed #E2E8F0",...sx}}>{v||<span style={{color:"#CBD5E0"}}>{ph}</span>}</span>
+      style={{padding:"2px 6px",borderRadius:5,border:"1.5px solid #667EEA",fontSize:"inherit",fontFamily:"inherit",outline:"none",background:"#EBF4FF",width:"100%",boxSizing:"border-box",...sx}}/>;
+    return <span onClick={()=>{setEf(f);setEv(v||"")}} style={{cursor:"pointer",borderBottom:"1px dashed #e5e7eb",...sx}} title="Klick zum Bearbeiten">{v||<span style={{color:"#d1d5db"}}>{ph}</span>}</span>
   };
+  const dpInp={width:"100%",padding:"7px 9px",borderRadius:7,border:"1.5px solid #e5e7eb",fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box"};
 
-  const Lbl=({children})=><div style={{fontSize:10,fontWeight:700,color:"#A0AEC0",textTransform:"uppercase",letterSpacing:".06em",marginBottom:6}}>{children}</div>;
-  const Chip=({on,color,onClick,children})=><div onClick={onClick} style={{padding:"5px 11px",borderRadius:8,fontSize:11,fontWeight:600,cursor:"pointer",background:on?(color||"#667EEA"):on===false?"#F7FAFC":"#F7FAFC",color:on?"#fff":"#718096",transition:"all .12s"}}>{children}</div>;
+  return <>
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.15)",zIndex:499,animation:"fadeIn .15s"}}/>
+    <div style={{position:"fixed",top:0,right:0,width:380,maxWidth:"96vw",height:"100vh",background:"#fff",borderLeft:"1px solid #e5e7eb",zIndex:500,display:"flex",flexDirection:"column",overflow:"hidden",boxShadow:"-8px 0 30px rgba(0,0,0,.08)",animation:"slideIn .25s ease"}} onClick={e=>e.stopPropagation()}>
 
-  const tabList=[{id:"overview",l:"Übersicht"},{id:"sales",l:"Gespräch"},{id:"log",l:"Log",n:deal.acts.length},{id:"todos",l:"Todos",n:openT}];
-
-  return <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.3)",backdropFilter:"blur(5px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,animation:"fadeIn .15s"}}>
-    <div onClick={e=>e.stopPropagation()} style={{background:"var(--c-bg)",borderRadius:18,width:560,maxWidth:"94vw",maxHeight:"88vh",display:"flex",flexDirection:"column",boxShadow:"0 16px 48px rgba(0,0,0,.1)",animation:"pop .2s cubic-bezier(.34,1.56,.64,1)",overflow:"hidden"}}>
-
-      {/* ── Header ── */}
-      <div style={{padding:"20px 24px 14px",background:`linear-gradient(135deg,${st.color}08,${st.color}03)`}}>
-        <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
-          <div style={{width:44,height:44,borderRadius:12,background:"var(--c-bg)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0,boxShadow:"0 1px 4px rgba(0,0,0,.06)"}}>{deal.avatar}</div>
+      {/* Header */}
+      <div style={{padding:"14px 16px 10px",borderBottom:"1px solid #f0f0f0",flexShrink:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{width:36,height:36,borderRadius:10,background:st.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{deal.avatar}</div>
           <div style={{flex:1,minWidth:0}}>
-            <div style={{fontWeight:800,fontSize:17,color:"#1a202c"}}><Edt f="name" v={deal.name} ph="Name"/></div>
-            <div style={{fontSize:12,color:"#718096",marginTop:1}}><Edt f="note" v={deal.note} ph="Notiz..."/></div>
+            <div style={{fontSize:15,fontWeight:800,color:"#1a1a2e"}}><Edt f="name" v={deal.name} ph="Name"/></div>
+            <div style={{fontSize:11,color:"#9ca3af",marginTop:1}}>{tAgo(deal.changed)}</div>
           </div>
           <div style={{textAlign:"right",flexShrink:0}}>
-            <div style={{fontWeight:800,fontSize:18,color:st.color}}><Edt f="value" v={String(deal.value)} tp="number" sx={{textAlign:"right",fontWeight:800,fontSize:16,width:100}}/>{ef!=="value"&&" €"}</div>
-            <select value={deal.stage} onChange={e=>onChangeStage(deal.id,deal.stage,e.target.value)} style={{marginTop:3,padding:"3px 8px",borderRadius:7,border:"none",fontSize:10,fontWeight:700,color:st.color,background:st.bg,cursor:"pointer",outline:"none"}}>{STAGES.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}</select>
+            <div style={{fontSize:15,fontWeight:800,color:st.color}}><Edt f="value" v={String(deal.value)} tp="number" sx={{textAlign:"right",fontWeight:800,fontSize:14,width:80}}/>{ef!=="value"&&" \u20ac"}</div>
+            <select value={deal.stage} onChange={e=>onChangeStage(deal.id,deal.stage,e.target.value)} style={{fontSize:10,fontWeight:700,border:"1.5px solid "+st.color,borderRadius:6,background:"#fff",color:st.color,cursor:"pointer",outline:"none",padding:"2px 6px",maxWidth:100,marginTop:4}}>{STAGES.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}</select>
           </div>
+          <button onClick={onClose} style={{background:"none",border:"none",fontSize:18,color:"#9ca3af",cursor:"pointer",marginLeft:6,flexShrink:0}}>\u2715</button>
         </div>
-        <div style={{display:"flex",gap:6,marginTop:10,flexWrap:"wrap",alignItems:"center",fontSize:11,color:"#718096"}}>
-          <span style={{background:"var(--c-bg)",borderRadius:6,padding:"3px 8px",border:"1px solid #F0F0F0"}}>📞 <Edt f="phone" v={deal.phone} ph="Telefon" sx={{fontSize:11}}/></span>
-          <span style={{background:"var(--c-bg)",borderRadius:6,padding:"3px 8px",border:"1px solid #F0F0F0"}}>📧 <Edt f="email" v={deal.email} ph="E-Mail" sx={{fontSize:11}}/></span>
-          {seller&&<span style={{background:seller.color+"10",color:seller.color,borderRadius:6,padding:"3px 8px",fontWeight:700,fontSize:10}}>{seller.short} {seller.name.split(" ")[0]}</span>}
-          <span style={{marginLeft:"auto",fontSize:10,color:"#CBD5E0"}}>{tAgo(deal.created)}</span>
+        <div style={{display:"flex",gap:10,fontSize:11,color:"#6b7280",marginTop:8,paddingLeft:46}}>
+          <span>\ud83d\udcde <Edt f="phone" v={deal.phone} ph="Telefon" sx={{fontSize:11}}/></span>
+          <span>\u2709 <Edt f="email" v={deal.email} ph="E-Mail" sx={{fontSize:11}}/></span>
+          {seller&&<span style={{fontSize:10,fontWeight:700,color:seller.color,background:seller.color+"15",padding:"2px 6px",borderRadius:4}}>{seller.short}</span>}
         </div>
       </div>
 
-      {/* ── Tabs ── */}
-      <div style={{display:"flex",borderBottom:"1px solid #F0F0F0",padding:"0 24px"}}>
-        {tabList.map(t=><div key={t.id} onClick={()=>setTab(t.id)} style={{padding:"10px 14px",fontSize:12,fontWeight:tab===t.id?700:600,cursor:"pointer",color:tab===t.id?"#667EEA":"#A0AEC0",borderBottom:tab===t.id?"2px solid #667EEA":"2px solid transparent",transition:"all .12s"}}>{t.l}{t.n>0?<span style={{marginLeft:4,fontSize:9,background:tab===t.id?"#667EEA":"#EDF2F7",color:tab===t.id?"#fff":"#A0AEC0",padding:"1px 5px",borderRadius:8,fontWeight:700}}>{t.n}</span>:""}</div>)}
+      {/* Tabs */}
+      <div style={{display:"flex",borderBottom:"1px solid #f0f0f0",padding:"0 16px",flexShrink:0}}>
+        {[{id:"uebersicht",l:"\u00dcbersicht"},{id:"todos",l:"Todos",n:openT},{id:"log",l:"Log",n:deal.acts.length}].map(t=>
+          <div key={t.id} onClick={()=>setTab(t.id)} style={{padding:"9px 12px",fontSize:12,fontWeight:600,color:tab===t.id?"#1a1a2e":"#9ca3af",cursor:"pointer",borderBottom:tab===t.id?"2px solid #667EEA":"2px solid transparent"}}>
+            {t.l} {t.n>0&&<span style={{fontSize:9,fontWeight:700,background:"#f0f0f0",borderRadius:10,padding:"1px 5px"}}>{t.n}</span>}
+          </div>)}
       </div>
 
-      {/* ── Content ── */}
-      <div style={{padding:24,overflowY:"auto",flex:1}}>
+      {/* Content */}
+      <div style={{flex:1,overflowY:"auto",padding:"14px 16px"}}>
 
-        {tab==="overview"&&<div style={{display:"grid",gap:20}}>
-
-          {/* Beratungs-Summary – das Wichtigste zuerst */}
-          <div style={{background:"#F8F9FB",borderRadius:10,padding:14}}>
-            <Lbl>Beratung auf einen Blick</Lbl>
-            <div style={{display:"grid",gap:8}}>
-              {[{k:"nutzung",l:"🚲 Nutzung",ph:"Was macht der Kunde mit dem Rad?"},{k:"ziel",l:"🎯 Ziel",ph:"Welches Ziel?"},{k:"budget",l:"💶 Budget",ph:"Was kann investiert werden?"},{k:"next",l:"👣 Nächster Schritt",ph:"Was wurde vereinbart?"},{k:"einwaende",l:"⚠️ Einwände",ph:"Bedenken?"}].map(f=>{
-                const val=sales[f.k];
-                return <div key={f.k} style={{display:"flex",gap:8,alignItems:"flex-start"}}>
-                  <span style={{fontSize:11,fontWeight:700,color:"#718096",minWidth:110,paddingTop:2}}>{f.l}</span>
-                  <div style={{flex:1,fontSize:12,color:val?"#2D3748":"#CBD5E0",fontWeight:val?600:400,lineHeight:1.4,cursor:"pointer",borderBottom:"1px dashed #EDF2F7",padding:"2px 0"}} onClick={()=>setTab("sales")}>{val||f.ph}</div>
-                </div>
-              })}
-              {sales.gekauftesRad&&<div style={{display:"flex",gap:8,alignItems:"flex-start"}}>
-                <span style={{fontSize:11,fontWeight:700,color:"#718096",minWidth:110,paddingTop:2}}>🚲 Rad</span>
-                <span style={{fontSize:12,fontWeight:600,color:"#2D3748"}}>{sales.gekauftesRad}</span>
-              </div>}
-              {(sales.distanz||sales.haeufigkeit||sales.zeitrahmen)&&<div style={{display:"flex",gap:12,flexWrap:"wrap",marginTop:2}}>
-                {sales.distanz&&<span style={{fontSize:10,color:"#718096"}}>📏 {sales.distanz}</span>}
-                {sales.haeufigkeit&&<span style={{fontSize:10,color:"#718096"}}>🔄 {sales.haeufigkeit}</span>}
-                {sales.zeitrahmen&&<span style={{fontSize:10,color:"#718096"}}>⏰ {sales.zeitrahmen}</span>}
-              </div>}
-            </div>
-            <div style={{marginTop:8,textAlign:"right"}}><span onClick={()=>setTab("sales")} style={{fontSize:10,color:"#667EEA",fontWeight:600,cursor:"pointer"}}>Alle Felder bearbeiten →</span></div>
-          </div>
-
-          {/* Bezahlart */}
-          <div><Lbl>Bezahlart</Lbl>
-            <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-              {PAY_METHODS.map(p=><Chip key={p.id} on={sales.payment===p.id} onClick={()=>uS("payment",sales.payment===p.id?"":p.id)}>{p.icon} {p.id}</Chip>)}
-            </div>
-            {sales.payment==="Leasing"&&<div style={{marginTop:10}}>
-              <div style={{fontSize:10,fontWeight:600,color:"#A0AEC0",marginBottom:5}}>Anbieter</div>
-              <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-                {LEASING_PROVIDERS.map(lp=><Chip key={lp} on={sales.leasingProvider===lp} color="#D69E2E" onClick={()=>uS("leasingProvider",lp)}>{lp}</Chip>)}
-              </div>
-              {sales.leasingProvider&&<input value={sales.leasingRef||""} onChange={e=>uS("leasingRef",e.target.value)} placeholder="Vorgangsnr..." style={{marginTop:8,width:"100%",padding:"7px 10px",borderRadius:8,border:"1.5px solid #EDF2F7",fontSize:12,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box"}} onFocus={e=>e.target.style.borderColor="#D69E2E"} onBlur={e=>e.target.style.borderColor="#EDF2F7"}/>}
-            </div>}
-          </div>
-
-          {/* Interesse + Verkäufer in einer Zeile */}
-          <div style={{display:"flex",gap:20,flexWrap:"wrap"}}>
-            <div style={{flex:"1 1 120px"}}><Lbl>Interesse</Lbl>
-              <div style={{display:"flex",gap:3}}>{[1,2,3,4,5].map(h=><div key={h} onClick={()=>onHeat(deal.id,h)} style={{width:34,height:26,borderRadius:7,background:h<=deal.heat?(deal.heat>=4?"#FF6B3520":deal.heat>=2?"#F7C94820":"#EDF2F7"):"#FAFAFA",border:`1.5px solid ${h<=deal.heat?"transparent":"#F0F0F0"}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",transition:"all .12s",fontSize:12}}>{h<=deal.heat?"🔥":""}</div>)}</div>
-            </div>
-            <div style={{flex:"1 1 200px"}}><Lbl>Verkäufer</Lbl>
-              <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{SELLERS.filter(s=>s.loc===deal.loc).map(s=><Chip key={s.id} on={deal.seller===s.id} color={s.color} onClick={()=>onUpdateDeal(deal.id,"seller",s.id)}>{s.name}</Chip>)}</div>
-            </div>
-          </div>
-
-          {/* Quelle */}
-          <div><Lbl>Quelle</Lbl>
-            <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{SOURCES.map(src=><Chip key={src} on={deal.source===src} onClick={()=>onUpdateDeal(deal.id,"source",src)}>{src}</Chip>)}</div>
-          </div>
-
-          {/* Social Quick */}
-          {deal.email&&<div><Lbl>Social finden</Lbl>
-            <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-              {[{l:"LinkedIn",u:`https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(deal.name)}`,c:"#0077B5"},{l:"Instagram",u:`https://www.instagram.com/${(deal.email.split("@")[0]||"").replace(/[._]/g,"")}`,c:"#E1306C"},{l:"Facebook",u:`https://www.facebook.com/search/top?q=${encodeURIComponent(deal.name)}`,c:"#1877F2"},{l:"XING",u:`https://www.xing.com/search/members?keywords=${encodeURIComponent(deal.name)}`,c:"#00605E"},{l:"Google",u:`https://www.google.com/search?q="${encodeURIComponent(deal.name)}"`,c:"#4285F4"}].map(s=><a key={s.l} href={s.u} target="_blank" rel="noopener" style={{fontSize:11,background:s.c+"10",color:s.c,padding:"5px 10px",borderRadius:7,textDecoration:"none",fontWeight:600}}>{s.l}</a>)}
-            </div>
-          </div>}
-        </div>}
-
-        {tab==="sales"&&<div style={{display:"grid",gap:20}}>
-          {/* Bedarfsanalyse */}
-          <div>
-            <div style={{fontSize:13,fontWeight:700,color:"#2D3748",marginBottom:10}}>🎯 Bedarfsanalyse</div>
-            {[
-              {k:"nutzung",l:"Nutzung",p:"Was machst du mit dem Fahrrad?"},
-              {k:"ziel",l:"Ziel",p:"Welches Ziel verfolgst du mit dem Radfahren?"},
-              {k:"distanz",l:"Distanzen",p:"Welche Distanzen willst du zurücklegen?"},
-              {k:"haeufigkeit",l:"Häufigkeit",p:"Wie oft / wie viel Zeit pro Woche?"},
-              {k:"erfahrung",l:"E-Bike Erfahrung",p:"Welche Erfahrungen mit E-Bike?"},
-              {k:"lagerung",l:"Lagerung & Transport",p:"Wo wird das Rad gelagert / transportiert?"},
-              {k:"aufladen",l:"Aufladen",p:"Wo kannst du das Rad aufladen?"},
-              {k:"zeitrahmen",l:"Wann einsatzfähig",p:"Wann muss das Rad einsatzfähig sein?"},
-              {k:"wichtig",l:"Wichtig am Rad",p:"Was ist dir an deinem Rad wichtig?"},
-              {k:"budget",l:"Budget",p:"Was kannst du investieren? (Wie kam das Budget zustande?)"},
-              {k:"akku",l:"Akku-Ladezeit",p:"Ist schnelle Akku-Ladezeit wichtig?"},
-              {k:"dreiPunkte",l:"3 Kaufkriterien",p:"Welche 3 Punkte muss das Rad haben, damit du es heute kaufst?"},
-            ].map(f=><div key={f.k} style={{marginBottom:8}}>
-              <div style={{fontSize:10,fontWeight:700,color:"#A0AEC0",textTransform:"uppercase",letterSpacing:".04em",marginBottom:3}}>{f.l}</div>
-              <input value={sales[f.k]||""} onChange={e=>uS(f.k,e.target.value)} placeholder={f.p} style={{width:"100%",padding:"7px 10px",borderRadius:8,border:"1.5px solid #EDF2F7",fontSize:12,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box"}} onFocus={e=>e.target.style.borderColor="#667EEA"} onBlur={e=>e.target.style.borderColor="#EDF2F7"}/>
-            </div>)}
-          </div>
-
-          {/* Einwände & Nächster Schritt */}
-          <div>
-            <div style={{fontSize:13,fontWeight:700,color:"#2D3748",marginBottom:10}}>💬 Gespräch</div>
-            {[
-              {k:"einwaende",l:"Einwände / Bedenken",p:"Welche Bedenken hat der Kunde?",big:1},
-              {k:"next",l:"Nächster Schritt",p:"Was wurde vereinbart?"},
-              {k:"notizen",l:"Sonstige Notizen",p:"Weitere Infos zum Gespräch...",big:1},
-            ].map(f=><div key={f.k} style={{marginBottom:8}}>
-              <div style={{fontSize:10,fontWeight:700,color:"#A0AEC0",textTransform:"uppercase",letterSpacing:".04em",marginBottom:3}}>{f.l}</div>
-              {f.big?<textarea value={sales[f.k]||""} onChange={e=>uS(f.k,e.target.value)} placeholder={f.p} rows={2} style={{width:"100%",padding:"7px 10px",borderRadius:8,border:"1.5px solid #EDF2F7",fontSize:12,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box",resize:"vertical"}} onFocus={e=>e.target.style.borderColor="#667EEA"} onBlur={e=>e.target.style.borderColor="#EDF2F7"}/>
-              :<input value={sales[f.k]||""} onChange={e=>uS(f.k,e.target.value)} placeholder={f.p} style={{width:"100%",padding:"7px 10px",borderRadius:8,border:"1.5px solid #EDF2F7",fontSize:12,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box"}} onFocus={e=>e.target.style.borderColor="#667EEA"} onBlur={e=>e.target.style.borderColor="#EDF2F7"}/>}
-            </div>)}
-          </div>
-
-          {/* Ergodaten */}
-          <div>
-            <div style={{fontSize:13,fontWeight:700,color:"#2D3748",marginBottom:10}}>📐 Ergodaten</div>
-            <div style={{display:"flex",gap:5,marginBottom:10}}>
-              {["Bodyscanner","Smartfit"].map(m=><Chip key={m} on={sales.ergoMethod===m} onClick={()=>uS("ergoMethod",sales.ergoMethod===m?"":m)}>{m}</Chip>)}
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-              {[{k:"sattelhoehe",l:"Sattelhöhe"},{k:"sattelversatz",l:"Sattelversatz"},{k:"abstandLenker",l:"Abstand Sattel-Lenker"},{k:"lenkerhoehe",l:"Lenkerhöhe"},{k:"sitzknochen",l:"Sitzknochen"},{k:"griffgroesse",l:"Griffgrösse"}].map(f=><div key={f.k}>
-                <div style={{fontSize:9,fontWeight:600,color:"#A0AEC0",marginBottom:2}}>{f.l}</div>
-                <input value={sales[f.k]||""} onChange={e=>uS(f.k,e.target.value)} placeholder="—" style={{width:"100%",padding:"5px 8px",borderRadius:6,border:"1.5px solid #EDF2F7",fontSize:11,fontFamily:"monospace",outline:"none",boxSizing:"border-box"}} onFocus={e=>e.target.style.borderColor="#667EEA"} onBlur={e=>e.target.style.borderColor="#EDF2F7"}/>
+        {tab==="uebersicht"&&<div>
+          <div style={{background:"#f8faff",borderRadius:8,padding:"12px 14px",marginBottom:14}}>
+            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:8}}>Beratung auf einen Blick</div>
+            {[{k:"nutzung",i:"\ud83d\udeb2",l:"Nutzung",ph:"Was macht der Kunde?"},{k:"ziel",i:"\ud83c\udfaf",l:"Ziel",ph:"Welches Ziel?"},{k:"budget",i:"\ud83d\udcb6",l:"Budget",ph:"Budget?"},{k:"next",i:"\ud83d\udc63",l:"N\u00e4chster Schritt",ph:"Was vereinbart?"},{k:"einwaende",i:"\u26a0\ufe0f",l:"Einw\u00e4nde",ph:"Bedenken?"}].map(f=>
+              <div key={f.k} style={{display:"flex",alignItems:"center",gap:6,padding:"5px 0",borderBottom:"1px solid #eef0f8"}}>
+                <span style={{fontSize:12,width:16,textAlign:"center",flexShrink:0}}>{f.i}</span>
+                <span style={{fontSize:11,fontWeight:700,color:"#374151",width:95,flexShrink:0}}>{f.l}</span>
+                <input value={sales[f.k]||""} onChange={e=>uS(f.k,e.target.value)} placeholder={f.ph} style={{flex:1,border:"none",background:"transparent",fontSize:12,color:"#374151",fontFamily:"inherit",outline:"none",padding:0}}/>
               </div>)}
+          </div>
+
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:4}}>Freie Notiz</div>
+            <textarea value={deal.note||""} onChange={e=>onUpdateDeal(deal.id,"note",e.target.value)} rows={3} placeholder="Freie Notizen..." style={{...dpInp,resize:"none",width:"100%"}}/>
+          </div>
+
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:4}}>Interesse</div>
+            <div style={{display:"flex",gap:4}}>{[1,2,3,4,5].map(i=><span key={i} onClick={()=>onHeat(deal.id,i)} style={{fontSize:18,cursor:"pointer",opacity:i<=deal.heat?1:.25,userSelect:"none"}}>\ud83d\udd25</span>)}</div>
+          </div>
+
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:4}}>Verk\u00e4ufer</div>
+            <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+              {SELLERS.filter(s=>s.loc===deal.loc||s.isHQ).map(s=><div key={s.id} onClick={()=>onUpdateDeal(deal.id,"seller",s.id)}
+                style={{padding:"3px 10px",borderRadius:6,border:"1.5px solid "+(deal.seller===s.id?"#667EEA":"#e5e7eb"),background:deal.seller===s.id?"#667EEA":"#fff",color:deal.seller===s.id?"#fff":"#374151",fontSize:11,fontWeight:700,cursor:"pointer"}}>{s.short}</div>)}
             </div>
           </div>
 
-          {/* Gekauftes Rad */}
-          <div>
-            <div style={{fontSize:13,fontWeight:700,color:"#2D3748",marginBottom:10}}>🚲 Rad & Auftrag</div>
-            <div style={{display:"grid",gap:8}}>
-              <div>
-                <div style={{fontSize:10,fontWeight:700,color:"#A0AEC0",textTransform:"uppercase",letterSpacing:".04em",marginBottom:3}}>Gekauftes Rad</div>
-                <input value={sales.gekauftesRad||""} onChange={e=>uS("gekauftesRad",e.target.value)} placeholder="Modell / Marke / Farbe / Grösse" style={{width:"100%",padding:"7px 10px",borderRadius:8,border:"1.5px solid #EDF2F7",fontSize:12,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box"}} onFocus={e=>e.target.style.borderColor="#667EEA"} onBlur={e=>e.target.style.borderColor="#EDF2F7"}/>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                <div>
-                  <div style={{fontSize:9,fontWeight:600,color:"#A0AEC0",marginBottom:2}}>Nr. Teilekiste</div>
-                  <input value={sales.nrTeilekiste||""} onChange={e=>uS("nrTeilekiste",e.target.value)} placeholder="—" style={{width:"100%",padding:"5px 8px",borderRadius:6,border:"1.5px solid #EDF2F7",fontSize:11,fontFamily:"monospace",outline:"none",boxSizing:"border-box"}} onFocus={e=>e.target.style.borderColor="#667EEA"} onBlur={e=>e.target.style.borderColor="#EDF2F7"}/>
-                </div>
-                <div>
-                  <div style={{fontSize:9,fontWeight:600,color:"#A0AEC0",marginBottom:2}}>Nr. Auftrag</div>
-                  <input value={sales.nrAuftrag||""} onChange={e=>uS("nrAuftrag",e.target.value)} placeholder="—" style={{width:"100%",padding:"5px 8px",borderRadius:6,border:"1.5px solid #EDF2F7",fontSize:11,fontFamily:"monospace",outline:"none",boxSizing:"border-box"}} onFocus={e=>e.target.style.borderColor="#667EEA"} onBlur={e=>e.target.style.borderColor="#EDF2F7"}/>
-                </div>
-              </div>
-              <div>
-                <div style={{fontSize:10,fontWeight:700,color:"#A0AEC0",textTransform:"uppercase",letterSpacing:".04em",marginBottom:5}}>Nach dem Kauf</div>
-                <div style={{display:"grid",gap:4}}>
-                  {[{k:"todoZubehoer",l:"Zubehörteile bestellt"},{k:"todoRadBestellt",l:"Fahrrad bestellt / ist lagernd"},{k:"todoKiste",l:"Kiste gepackt"},{k:"todoLeasing",l:"Leasing-Anfrage gestellt"},{k:"todoFinanzierung",l:"Finanzierung: Unterlagen angefordert & kopiert"},{k:"todoWertgarantie",l:"Wertgarantie"}].map(c=><div key={c.k} onClick={()=>uS(c.k,!sales[c.k])} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 8px",borderRadius:7,background:sales[c.k]?"#E6FFFA":"#FAFAFA",cursor:"pointer",transition:"all .12s"}}>
-                    <div style={{width:16,height:16,borderRadius:4,border:`1.5px solid ${sales[c.k]?"#38B2AC":"#CBD5E0"}`,background:sales[c.k]?"#38B2AC":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{sales[c.k]&&<span style={{color:"#fff",fontSize:9,fontWeight:900}}>✓</span>}</div>
-                    <span style={{fontSize:11,fontWeight:600,color:sales[c.k]?"#2D3748":"#718096"}}>{c.l}</span>
-                  </div>)}
-                </div>
-              </div>
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:4}}>Quelle</div>
+            <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+              {SOURCES.map(q=><div key={q} onClick={()=>onUpdateDeal(deal.id,"source",q)}
+                style={{padding:"4px 10px",borderRadius:6,border:"1.5px solid "+(deal.source===q?"#1a1a2e":"#e5e7eb"),background:deal.source===q?"#1a1a2e":"#fff",color:deal.source===q?"#fff":"#6b7280",fontSize:11,fontWeight:600,cursor:"pointer"}}>{q}</div>)}
             </div>
           </div>
-        </div>}
-
-        {tab==="log"&&<div>
-          <div style={{display:"flex",gap:5,marginBottom:8}}>{ACT_TYPES.map(a=><div key={a.id} onClick={()=>setAt(a.id)} style={{padding:"5px 10px",borderRadius:7,fontSize:11,fontWeight:600,cursor:"pointer",background:at===a.id?a.color+"15":"#FAFAFA",color:at===a.id?a.color:"#A0AEC0",transition:"all .12s"}}>{a.label}</div>)}</div>
-          <div style={{display:"flex",gap:6,marginBottom:16}}><input value={tx} onChange={e=>setTx(e.target.value)} placeholder="Was wurde besprochen?" onKeyDown={e=>e.key==="Enter"&&goAct()} style={{flex:1,padding:"8px 10px",borderRadius:8,border:"1.5px solid #EDF2F7",fontSize:12,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box"}} onFocus={e=>e.target.style.borderColor="#667EEA"} onBlur={e=>e.target.style.borderColor="#EDF2F7"}/><button onClick={goAct} style={{padding:"8px 16px",borderRadius:8,border:"none",background:"#667EEA",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",opacity:tx.trim()?1:.35}}>+</button></div>
-          {!deal.acts.length&&<div style={{color:"#CBD5E0",fontSize:12,textAlign:"center",padding:20}}>Noch keine Einträge</div>}
-          {deal.acts.map((a,i)=>{const t=ACT_TYPES.find(x=>x.id===a.type);return <div key={i} style={{display:"flex",gap:10,padding:"9px 0",borderBottom:i<deal.acts.length-1?"1px solid #F7FAFC":"none"}}>
-            <div style={{width:26,height:26,borderRadius:7,background:(t?.color||"#aaa")+"10",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,flexShrink:0}}>{t?.label.split(" ")[0]}</div>
-            <div><div style={{fontSize:12,color:"#2D3748",fontWeight:600}}>{a.text}</div><div style={{fontSize:10,color:"#A0AEC0",marginTop:1}}>{tAgo(a.time)}</div></div>
-          </div>})}
         </div>}
 
         {tab==="todos"&&<div>
-          <div style={{display:"flex",gap:5,marginBottom:14}}><input value={todoTx} onChange={e=>setTodoTx(e.target.value)} placeholder="Neues Todo..." onKeyDown={e=>e.key==="Enter"&&goTodo()} style={{flex:1,padding:"8px 10px",borderRadius:8,border:"1.5px solid #EDF2F7",fontSize:12,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box"}} onFocus={e=>e.target.style.borderColor="#667EEA"} onBlur={e=>e.target.style.borderColor="#EDF2F7"}/><select value={todoDays} onChange={e=>setTodoDays(+e.target.value)} style={{padding:"8px 8px",borderRadius:8,border:"1.5px solid #EDF2F7",fontSize:11,background:"var(--c-bg)",cursor:"pointer",outline:"none"}}><option value={0}>Heute</option><option value={1}>Morgen</option><option value={3}>3d</option><option value={7}>1W</option><option value={14}>2W</option><option value={30}>30d</option></select><button onClick={goTodo} style={{padding:"8px 16px",borderRadius:8,border:"none",background:"#667EEA",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",opacity:todoTx.trim()?1:.35}}>+</button></div>
-          {!deal.todos.length&&<div style={{color:"#CBD5E0",fontSize:12,textAlign:"center",padding:20}}>Alles erledigt ✨</div>}
-          {[...deal.todos].sort((a,b)=>a.done-b.done||a.due-b.due).map(t=>{const ov=!t.done&&t.due<NOW;return <div key={t.id} onClick={()=>onToggleTodo(deal.id,t.id)} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 10px",marginBottom:3,borderRadius:8,background:t.done?"#FAFAFA":ov?"#FFF5F5":"#fff",border:`1px solid ${ov?"#FEB2B2":"#F0F0F0"}`,cursor:"pointer",transition:"all .12s"}}>
-            <div style={{width:18,height:18,borderRadius:5,border:`2px solid ${t.done?"#38B2AC":ov?"#E53E3E":"#CBD5E0"}`,background:t.done?"#38B2AC":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{t.done&&<span style={{color:"#fff",fontSize:9,fontWeight:900}}>✓</span>}</div>
-            <div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:t.done?"#A0AEC0":"#2D3748",textDecoration:t.done?"line-through":"none"}}>{t.text}</div><div style={{fontSize:10,color:ov?"#E53E3E":"#A0AEC0"}}>{ov?"⚠️ Überfällig · ":""}Fällig {tAgo(t.due)}</div></div>
+          <div style={{display:"flex",gap:6,marginBottom:8}}>
+            <input value={todoTx} onChange={e=>setTodoTx(e.target.value)} placeholder="Neue Aufgabe..." onKeyDown={e=>e.key==="Enter"&&goTodo()} style={{...dpInp,flex:1}}/>
+            <select value={todoDays} onChange={e=>setTodoDays(+e.target.value)} style={{...dpInp,width:"auto",padding:"7px 6px",fontSize:11}}><option value={0}>Heute</option><option value={1}>Morgen</option><option value={3}>3d</option><option value={7}>1W</option><option value={14}>2W</option></select>
+            <button onClick={goTodo} style={{padding:"7px 12px",borderRadius:7,border:"none",background:"#667EEA",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>+</button>
+          </div>
+          {!deal.todos.length&&<div style={{color:"#d1d5db",fontSize:12,textAlign:"center",padding:20}}>Alles erledigt \u2728</div>}
+          {[...deal.todos].sort((a,b)=>a.done-b.done||a.due-b.due).map(t=>{const ov=!t.done&&t.due<NOW;return <div key={t.id} onClick={()=>onToggleTodo(deal.id,t.id)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 0",borderBottom:"1px solid #f5f5f5",cursor:"pointer"}}>
+            <div style={{width:16,height:16,borderRadius:4,border:"1.5px solid "+(t.done?"#16a34a":"#d1d5db"),flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,background:t.done?"#16a34a":"transparent",color:"#fff"}}>{t.done&&"\u2713"}</div>
+            <div style={{flex:1}}><div style={{fontSize:12,color:t.done?"#9ca3af":"#374151",textDecoration:t.done?"line-through":"none"}}>{t.text}</div><div style={{fontSize:10,color:ov?"#E53E3E":"#9ca3af"}}>{ov?"\u26a0\ufe0f \u00dcberf\u00e4llig \u00b7 ":""}F\u00e4llig {tAgo(t.due)}</div></div>
           </div>})}
         </div>}
 
+        {tab==="log"&&<div>
+          <div style={{display:"flex",gap:5,marginBottom:8,flexWrap:"wrap"}}>{ACT_TYPES.map(a=><div key={a.id} onClick={()=>setAt(a.id)} style={{padding:"4px 8px",borderRadius:6,fontSize:11,fontWeight:600,cursor:"pointer",background:at===a.id?a.color+"15":"#f5f5f7",color:at===a.id?a.color:"#9ca3af"}}>{a.label}</div>)}</div>
+          <div style={{display:"flex",gap:6,marginBottom:12}}>
+            <input value={tx} onChange={e=>setTx(e.target.value)} placeholder="Aktivit\u00e4t eintragen..." onKeyDown={e=>e.key==="Enter"&&goAct()} style={{...dpInp,flex:1}}/>
+            <button onClick={goAct} style={{padding:"7px 12px",borderRadius:7,border:"none",background:"#667EEA",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>+</button>
+          </div>
+          {!deal.acts.length&&<div style={{color:"#d1d5db",fontSize:12,textAlign:"center",padding:20}}>Noch keine Eintr\u00e4ge</div>}
+          {deal.acts.map((a,i)=>{const t=ACT_TYPES.find(x=>x.id===a.type);return <div key={i} style={{padding:"6px 0",borderBottom:"1px solid #f5f5f5"}}>
+            <div style={{fontSize:12,color:"#374151"}}>{t?.label.split(" ")[0]||"\ud83d\udcdd"} {a.text}</div>
+            <div style={{fontSize:10,color:"#9ca3af",marginTop:1}}>{tAgo(a.time)}</div>
+          </div>})}
+        </div>}
       </div>
 
-      {/* ── Footer ── */}
-      <div style={{padding:"10px 24px",borderTop:"1px solid #F0F0F0",display:"flex",gap:6,justifyContent:"space-between",flexWrap:"wrap"}}>
-        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-          <button onClick={()=>setShowForm("interactive")} style={{padding:"9px 14px",borderRadius:8,border:"1.5px solid #667EEA",background:"var(--c-bg)",fontSize:11,fontWeight:700,color:"#667EEA",cursor:"pointer"}}>📋 Beratung digital</button>
-          <button onClick={()=>setShowForm("print")} style={{padding:"9px 14px",borderRadius:8,border:"1.5px solid #A0AEC0",background:"var(--c-bg)",fontSize:11,fontWeight:700,color:"#718096",cursor:"pointer"}}>🖨️ Druckformular</button>
-          <button onClick={()=>setShowForm("scan")} style={{padding:"9px 14px",borderRadius:8,border:"1.5px solid #FF6B35",background:"var(--c-bg)",fontSize:11,fontWeight:700,color:"#FF6B35",cursor:"pointer"}}>📷 Scan hochladen</button>
-        </div>
-        <button onClick={onClose} style={{padding:"9px 24px",borderRadius:8,border:"none",background:"#F7FAFC",fontSize:12,fontWeight:700,color:"#718096",cursor:"pointer"}}>Schliessen</button>
+      {/* Footer */}
+      <div style={{padding:"10px 16px",borderTop:"1px solid #f0f0f0",display:"flex",gap:6,flexShrink:0}}>
+        <button onClick={()=>setShowForm("interactive")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #e5e7eb",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#374151"}}>\ud83d\udcf1 Beratung</button>
+        <button onClick={()=>setShowForm("print")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #e5e7eb",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#374151"}}>\ud83d\udda8\ufe0f Drucken</button>
+        <button onClick={()=>setShowForm("scan")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #EF7D00",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#EF7D00"}}>\ud83d\udcf7 Scan</button>
       </div>
 
       {showForm&&showForm!=="scan"&&<SalesForm deal={deal} sales={sales} seller={seller} onClose={()=>setShowForm(null)} onUpdateDeal={onUpdateDeal} mode={showForm}/>}
       {showForm==="scan"&&<ScanUploadModal deal={deal} sales={sales} onClose={()=>setShowForm(null)} onUpdateDeal={onUpdateDeal}/>}
     </div>
-  </div>
+  </>
 }
 /* ── Automations Settings Modal ──────────────────── */
 function AutoModal({rules,onUpdate,onClose,LOCATIONS}){
@@ -1072,18 +953,12 @@ function Scores({deals,streak}){
   const pipe=deals.filter(d=>!["verkauft","lost","gold"].includes(d.stage)).reduce((s,d)=>s+d.value,0);
   const closed=deals.filter(d=>["verkauft","lost"].includes(d.stage));
   const wr=closed.length?Math.round(sold.length/closed.length*100):0;
-  const gp=Math.min(100,Math.round(tSold/GOAL*100));
-  const items=[{l:"Pipeline",v:fmt(pipe),c:"#667EEA"},{l:"Verkauft",v:fmt(tSold),c:"#38B2AC"},{l:"Win-Rate",v:wr+"%",c:"#F7C948"},{l:"Streak",v:streak+"x",c:"#FF6B35"}];
-  return <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"stretch"}}>
-    {items.map(s=><div key={s.l} style={{flex:"1 1 100px",background:"var(--c-bg)",borderRadius:12,padding:"10px 14px",border:"1px solid #F0F0F0"}}>
-      <div style={{fontSize:10,color:"#A0AEC0",fontWeight:600,textTransform:"uppercase",letterSpacing:".04em"}}>{s.l}</div>
-      <div style={{fontSize:17,fontWeight:800,color:s.c,marginTop:2}}>{s.v}</div>
-    </div>)}
-    <div style={{flex:"1 1 180px",background:"var(--c-bg)",borderRadius:12,padding:"10px 14px",border:"1px solid #F0F0F0"}}>
-      <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontSize:10,color:"#A0AEC0",fontWeight:600,textTransform:"uppercase"}}>Monatsziel</span><span style={{fontSize:12,fontWeight:800,color:gp>=100?"#38B2AC":"#667EEA"}}>{gp}%</span></div>
-      <div style={{height:6,borderRadius:3,background:"#EDF2F7",overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,width:gp+"%",background:gp>=100?"#38B2AC":"#667EEA",transition:"width .6s"}}/></div>
-      <div style={{display:"flex",justifyContent:"space-between",marginTop:3}}><span style={{fontSize:9,color:"#CBD5E0"}}>{fmt(tSold)}</span><span style={{fontSize:9,color:"#CBD5E0"}}>{fmt(GOAL)}</span></div>
-    </div>
+  const kpi=(l,v,c)=><div style={{background:"#fff",borderRadius:8,padding:"10px 14px",border:"1px solid #e8e8e8",flex:"1 1 0",minWidth:0}}><div style={{fontSize:10,fontWeight:600,color:"#9ca3af",marginBottom:3}}>{l}</div><div style={{fontSize:20,fontWeight:800,lineHeight:1.1,color:c}}>{v}</div></div>;
+  return <div style={{display:"flex",gap:8,marginBottom:12}}>
+    {kpi("Pipeline",fmt(pipe),"#667EEA")}
+    {kpi("Verkauft",fmt(tSold),"#16a34a")}
+    {kpi("VK-Quote",wr+"%",wr>30?"#16a34a":"#dc2626")}
+    {kpi("Streak",streak+"x 🔥","#EF7D00")}
   </div>
 }
 
@@ -1119,13 +994,16 @@ function Badges({deals,streak,unlocked}){
 /* ── Drop Zone (Clean) ────────────────────────────── */
 function DropZone({sid,label,sub,bc,tc,cc,deals,onDrop,onDrag}){
   const[dg,setDg]=useState(false);
-  if(!deals.length&&!dg)return null;
-  return <div style={{padding:"0 0 8px"}}><div onDragOver={e=>{e.preventDefault();setDg(true)}} onDragLeave={()=>setDg(false)} onDrop={e=>{e.preventDefault();setDg(false);onDrop(+e.dataTransfer.getData("id"),sid)}} style={{background:"var(--c-bg)",borderRadius:12,padding:12,border:`1.5px dashed ${dg?bc:bc+"50"}`,transition:"all .2s"}}>
-    <div style={{fontSize:11,fontWeight:700,color:tc,marginBottom:6}}>{label} <span style={{fontWeight:500,color:"#A0AEC0",fontSize:10}}>– {sub}</span></div>
-    <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{deals.map(d=><div key={d.id} draggable onDragStart={e=>{e.dataTransfer.setData("id",d.id);onDrag(d.id)}} style={{background:"#F8F9FB",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:600,color:cc,cursor:"grab",border:`1px solid ${bc}30`,display:"flex",alignItems:"center",gap:4}}>
-      {d.avatar} {d.name} <span style={{color:"#A0AEC0",fontSize:10}}>{fmt(d.value)}</span>
-    </div>)}</div>
-  </div></div>
+  return <div onDragOver={e=>{e.preventDefault();setDg(true)}} onDragLeave={()=>setDg(false)} onDrop={e=>{e.preventDefault();setDg(false);onDrop(+e.dataTransfer.getData("id"),sid)}} style={{flex:1,borderRadius:8,border:"1px dashed "+(dg?bc:"#d1d5db"),padding:"7px 12px",background:dg?"#EBF4FF":"#fff",minHeight:36,transition:"background .15s"}}>
+    <span style={{fontSize:11,fontWeight:600,color:tc}}>{label}</span>
+    <span style={{fontSize:10,color:"#d1d5db"}}> · {sub}</span>
+    {deals.length>0&&<div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:5}}>
+      {deals.map(d=><div key={d.id} draggable onDragStart={e=>{e.dataTransfer.setData("id",d.id);onDrag(d.id)}}
+        style={{fontSize:11,fontWeight:600,padding:"2px 8px",borderRadius:5,background:"#f5f5f7",cursor:"grab",border:"1px solid #e5e7eb",color:cc}}>
+        {d.avatar} {d.name} <span style={{color:"#9ca3af",fontSize:10}}>{fmt(d.value)}</span>
+      </div>)}
+    </div>}
+  </div>
 }
 
 /* ── MAIN APP ────────────────────────────────────── */
@@ -1141,6 +1019,7 @@ function PipelineApp(){
   const[unlocked,setUnlocked]=useState([]);
   const[showIn,setShowIn]=useState(false);
   const[showAuto,setShowAuto]=useState(false);
+  const[filter,setFilter]=useState("all");
   const[rules,setRules]=useState(DEFAULT_RULES);
   const[LOCATIONS,setLocations]=useState(FALLBACK_LOCATIONS);
   const[SELLERS,setSellers]=useState(FALLBACK_SELLERS);
@@ -1230,7 +1109,9 @@ function PipelineApp(){
 
   const nid=useRef(100);
 
-  const filteredDeals = curLoc === "hq" ? deals : deals.filter(d => d.loc === curLoc);
+  const locFiltered = curLoc === "hq" ? deals : deals.filter(d => d.loc === curLoc);
+  const userId = window.sbUser?.id || "";
+  const filteredDeals = filter === "mine" ? locFiltered.filter(d => d.seller === userId) : locFiltered;
 
   const msg=useCallback(m=>{setToast(m);setTimeout(()=>setToast(null),2500)},[]);
   const pop=useCallback((x,y)=>{const np=Array.from({length:14},(_,i)=>({id:Date.now()+i,x:x+(Math.random()-.5)*120,y:y+(Math.random()-.5)*80,emoji:CELEB[Math.floor(Math.random()*CELEB.length)],delay:i*.04}));setParts(p=>[...p,...np]);setTimeout(()=>setParts(p=>p.filter(pp=>!np.find(n=>n.id===pp.id))),2000)},[]);
@@ -1363,44 +1244,50 @@ function PipelineApp(){
       @keyframes fadeIn{from{opacity:0}to{opacity:1}}
       @keyframes pop{0%{opacity:0;transform:scale(.9) translateY(12px)}100%{opacity:1;transform:scale(1) translateY(0)}}
       @keyframes toastIn{0%{opacity:0;transform:translateY(-16px)}100%{opacity:1;transform:translateY(0)}}
+      @keyframes slideIn{0%{transform:translateX(100%)}100%{transform:translateX(0)}}
       @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
       *{box-sizing:border-box}
     `}</style>
     {parts.map(p=><Particle key={p.id} {...p}/>)}
-    {toast&&<div style={{position:"fixed",top:20,left:"50%",transform:"translateX(-50%)",background:"#1a202c",color:"#fff",padding:"10px 20px",borderRadius:10,fontWeight:700,fontSize:13,zIndex:9999,boxShadow:"0 4px 20px rgba(0,0,0,.15)",animation:"toastIn .2s ease"}}>{toast}</div>}
+    {toast&&<div style={{position:"fixed",top:14,left:"50%",transform:"translateX(-50%)",background:"#1a1a2e",color:"#fff",padding:"7px 16px",borderRadius:7,fontWeight:700,fontSize:12,zIndex:9999,animation:"toastIn .2s ease",pointerEvents:"none"}}>{toast}</div>}
 
-    {/* Header */}
-    <div style={{padding:"0 0 10px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
-      <div>
-        <h1 style={{margin:0,fontSize:22,fontWeight:800,color:"#1a202c",letterSpacing:"-.02em"}}>Deal Flow</h1>
-        <div style={{fontSize:11,color:"#A0AEC0",fontWeight:600,marginTop:2}}>
-          {aging>0&&<span style={{color:"#E53E3E"}}>⚠ {aging} Follow-Up  </span>}{openTodos>0&&<span style={{color:"#667EEA"}}>☑ {openTodos} Todos  </span>}{!aging&&!openTodos&&"Alles im Griff"}
-        </div>
-      </div>
-      <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
-        {isHqUser&&<div style={{display:"flex",background:"var(--c-bg)",borderRadius:8,border:"1px solid #EDF2F7",overflow:"hidden"}}>
-          {LOCATIONS.map(l=><div key={l.id} onClick={()=>setCurLoc(l.id)} style={{padding:"6px 12px",fontSize:11,fontWeight:600,cursor:"pointer",background:curLoc===l.id?"#667EEA":"transparent",color:curLoc===l.id?"#fff":"#718096",transition:"all .15s",whiteSpace:"nowrap"}}>{l.label}</div>)}
-        </div>}
-        <button onClick={()=>setShowAuto(true)} style={{padding:"7px 12px",borderRadius:8,border:"1px solid #EDF2F7",background:"var(--c-bg)",fontSize:12,fontWeight:600,color:"#718096",cursor:"pointer"}}>⚡</button>
-        <button onClick={()=>setShowIn(v=>!v)} style={{padding:"7px 12px",borderRadius:8,border:"1px solid #EDF2F7",background:showIn?"#EBF4FF":"#fff",fontSize:12,fontWeight:600,color:showIn?"#667EEA":"#718096",cursor:"pointer"}}>📊</button>
-        <button onClick={()=>setShowAdd(true)} style={{padding:"7px 16px",borderRadius:8,border:"none",background:"#667EEA",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>+ Kontakt</button>
+    {/* KPI Strip */}
+    <Scores deals={filteredDeals} streak={streak}/>
+
+    {/* Filter + Actions */}
+    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:10,flexWrap:"wrap"}}>
+      {["all","mine"].map(f=><div key={f} onClick={()=>setFilter(f)}
+        style={{padding:"4px 12px",borderRadius:20,border:"1.5px solid "+(filter===f?"#667EEA":"#e5e7eb"),
+          background:filter===f?"#667EEA":"#fff",fontSize:12,fontWeight:600,color:filter===f?"#fff":"#6b7280",cursor:"pointer",transition:"all .15s"}}>
+        {f==="all"?"Alle":"Meine"}
+      </div>)}
+      {isHqUser&&<select value={curLoc} onChange={e=>setCurLoc(e.target.value)}
+        style={{marginLeft:4,padding:"4px 10px",borderRadius:8,border:"1.5px solid #e5e7eb",fontSize:11,fontWeight:600,fontFamily:"inherit",color:"#374151",background:"#fff",cursor:"pointer",outline:"none"}}>
+        {LOCATIONS.map(l=><option key={l.id} value={l.id}>{l.label}</option>)}
+      </select>}
+      <span style={{fontSize:10,color:"#9ca3af"}}>{filteredDeals.filter(d=>!["gold","lost"].includes(d.stage)).length} Deals</span>
+      {aging>0&&<span style={{fontSize:10,color:"#E53E3E",fontWeight:700}}>⚠ {aging} Follow-Up</span>}
+      {openTodos>0&&<span style={{fontSize:10,color:"#667EEA",fontWeight:700}}>☑ {openTodos} Todos</span>}
+      <div style={{marginLeft:"auto",display:"flex",gap:6}}>
+        <button onClick={()=>setShowAuto(true)} style={{padding:"5px 10px",borderRadius:7,border:"1px solid #e5e7eb",background:"#fff",fontSize:11,fontWeight:600,color:"#6b7280",cursor:"pointer"}}>⚡</button>
+        <button onClick={()=>setShowIn(v=>!v)} style={{padding:"5px 10px",borderRadius:7,border:"1px solid #e5e7eb",background:showIn?"#EBF4FF":"#fff",fontSize:11,fontWeight:600,color:showIn?"#667EEA":"#6b7280",cursor:"pointer"}}>🏅</button>
+        <button onClick={()=>setShowAdd(true)} style={{padding:"5px 12px",borderRadius:7,border:"none",background:"#EF7D00",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>+ Lead</button>
       </div>
     </div>
 
-    <div style={{padding:"0 0 12px"}}><Scores deals={filteredDeals} streak={streak}/></div>
+    {/* Badges (togglable) */}
+    {showIn&&<div style={{marginBottom:12,animation:"appear .3s"}}><Badges deals={filteredDeals} streak={streak} unlocked={unlocked}/></div>}
 
-    {showIn&&<div style={{padding:"0 0 12px",display:"flex",gap:12,flexWrap:"wrap",animation:"appear .3s"}}>
-      <div style={{flex:"1 1 300px"}}><Funnel deals={filteredDeals}/></div>
-      <div style={{flex:"1 1 380px"}}><Badges deals={filteredDeals} streak={streak} unlocked={unlocked}/></div>
-    </div>}
-
-    <div style={{padding:"0 0 12px",display:"flex",gap:4,overflowX:"auto",minHeight:320}}>
+    {/* Kanban Board */}
+    <div style={{display:"flex",gap:8,marginBottom:8,overflowX:"auto",minHeight:300}}>
       {main.map(s=><Col key={s.id} stage={s} deals={filteredDeals.filter(d=>d.stage===s.id)} onDrop={drop} onDrag={setDragId} onClick={setSel} newId={newId} SELLERS={SELLERS}/>)}
     </div>
 
-    <DropZone sid="gold" label="🗄️ Schrank der Hoffnung" sub="Wertvolle Kontakte, die noch reifen" bc="#D69E2E" tc="#B7791F" cc="#B7791F" deals={filteredDeals.filter(d=>d.stage==="gold")} onDrop={drop} onDrag={setDragId}/>
-    <DropZone sid="lost" label="💀 Verloren" sub="Jederzeit wiederbelebbar" bc="#FEB2B2" tc="#E53E3E" cc="#A0AEC0" deals={filteredDeals.filter(d=>d.stage==="lost")} onDrop={drop} onDrag={setDragId}/>
-    <div style={{height:32}}/>
+    {/* Side Zones (inline, side by side) */}
+    <div style={{display:"flex",gap:8,marginTop:8}}>
+      <DropZone sid="gold" label="🗄 Schrank der Hoffnung" sub="Reift noch" bc="#D69E2E" tc="#B7791F" cc="#B7791F" deals={filteredDeals.filter(d=>d.stage==="gold")} onDrop={drop} onDrag={setDragId}/>
+      <DropZone sid="lost" label="💀 Verloren" sub="Wiederbelebbar" bc="#FEB2B2" tc="#E53E3E" cc="#9ca3af" deals={filteredDeals.filter(d=>d.stage==="lost")} onDrop={drop} onDrag={setDragId}/>
+    </div>
 
     {showAdd&&<AddModal onClose={()=>setShowAdd(false)} onAdd={addDeal} currentLoc={curLoc} LOCATIONS={LOCATIONS} SELLERS={SELLERS}/>}
     {sel&&<DetailModal deal={sel} onClose={()=>setSel(null)} onAct={addAct} onHeat={setHeat} onToggleTodo={toggleTodo} onAddTodo={addTodo} onUpdateDeal={updateDeal} onChangeStage={changeStage} SELLERS={SELLERS}/>}
