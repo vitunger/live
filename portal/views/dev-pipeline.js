@@ -389,7 +389,7 @@ export function renderEntwIdeen() {
         if(scope !== 'alle' && s.scope !== scope) return false;
         if(status === 'neu' && ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','konzept_wird_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) === -1) return false;
         if(status === 'dev' && ['freigegeben','in_planung','in_entwicklung','beta_test','im_review','release_geplant'].indexOf(s.status) === -1) return false;
-        if(status === 'done' && s.status !== 'ausgerollt') return false;
+        if(status === 'done' && s.status !== 'ausgerollt' && s.status !== 'geschlossen') return false;
         if(kat !== 'alle' && s.kategorie !== kat) return false;
         if(quelle === 'meine' && s.user_id !== userId) return false;
         if(quelle === 'standort' && s.standort_id !== currentStandortId) return false;
@@ -557,7 +557,8 @@ export async function renderEntwSteuerung() {
         {key:'dev', label:'🔨 Entwicklung', statuses:['in_entwicklung','beta_test','im_review','release_geplant'], color:'yellow'},
         {key:'done', label:'✅ Umgesetzt', statuses:['ausgerollt'], color:'green'},
         {key:'parked', label:'⏸ Geparkt', statuses:['geparkt'], color:'gray'},
-        {key:'rejected', label:'❌ Abgelehnt', statuses:['abgelehnt'], color:'red'}
+        {key:'rejected', label:'❌ Abgelehnt', statuses:['abgelehnt'], color:'red'},
+        {key:'closed', label:'🔒 Geschlossen', statuses:['geschlossen'], color:'slate'}
     ];
     h += '<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3" style="min-height:400px">';
     columns.forEach(function(col) {
@@ -913,7 +914,7 @@ var devStatusLabels = {
     konzept_erstellt:'📋 Konzept fertig', konzept_wird_erstellt:'⏳ Konzept wird erstellt...', im_ideenboard:'🎯 Im Ideenboard', hq_rueckfragen:'❓ Rückfragen',
     freigegeben:'✅ Freigegeben', in_planung:'📅 In Planung', in_entwicklung:'🔨 In Entwicklung',
     beta_test:'🧪 Beta-Test', im_review:'🔍 Im Review', release_geplant:'🚀 Release geplant', ausgerollt:'✅ Ausgerollt',
-    abgelehnt:'❌ Abgelehnt', geparkt:'⏸ Geparkt'
+    abgelehnt:'❌ Abgelehnt', geparkt:'⏸ Geparkt', geschlossen:'🔒 Geschlossen'
 };
 var devStatusColors = {
     neu:'bg-blue-100 text-blue-700', ki_pruefung:'bg-purple-100 text-purple-700 animate-pulse',
@@ -924,6 +925,7 @@ var devStatusColors = {
     im_review:'bg-purple-100 text-purple-700',
     release_geplant:'bg-orange-100 text-orange-700', ausgerollt:'bg-green-100 text-green-700',
     abgelehnt:'bg-red-100 text-red-700', geparkt:'bg-gray-100 text-gray-600'
+, geschlossen:'bg-slate-100 text-slate-600'
 };
 var devKatIcons = {bug:'🐛',verbesserung:'🔧',feature:'🚀',prozess:'📋',sonstiges:'💬'};
 
@@ -1100,7 +1102,8 @@ export function renderDevPlanung() {
         { key: 'freigegeben', label: '✅ Freigegeben (noch nicht geplant)', items: [] },
         { key: 'im_review', label: '🔍 Im Review', items: [] },
         { key: 'release_geplant', label: '🚀 Release geplant', items: [] },
-        { key: 'geparkt', label: '⏸ Geparkt', items: [] }
+        { key: 'geparkt', label: '⏸ Geparkt', items: [] },
+        { key: 'geschlossen', label: '🔒 Geschlossen', items: [] }
     ];
     planItems.forEach(function(s) {
         var g = groups.find(function(gr){ return gr.key === s.status; });
