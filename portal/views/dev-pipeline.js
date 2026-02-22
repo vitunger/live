@@ -1664,45 +1664,63 @@ export async function openDevDetail(subId) {
         var showHQDecision = isHQ && ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','konzept_wird_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1;
 
         var h = '';
+        content.dataset.subId = s.id;
 
-        // === HEADER (full width) ===
-        h += '<div class="flex items-start justify-between mb-4 pb-3 border-b border-gray-200">';
-        h += '<div>';
-        h += '<span class="text-xs font-semibold rounded px-2 py-1 '+devStatusColors[s.status]+'">'+devStatusLabels[s.status]+'</span>';
-        if(s.ki_typ) { var _dtC = s.ki_typ==='bug'?'bg-red-100 text-red-700':s.ki_typ==='feature'?'bg-purple-100 text-purple-700':'bg-blue-100 text-blue-700'; var _dtI = s.ki_typ==='bug'?'\uD83D\uDC1B Bug':s.ki_typ==='feature'?'\u2728 Feature':'\uD83D\uDCA1 Idee'; h += ' <span class="text-xs font-semibold rounded px-2 py-1 '+_dtC+'">'+_dtI+'</span>'; }
-        if(s.ki_bereich) { h += ' <span class="text-xs rounded px-2 py-1 '+(s.ki_bereich==='portal'?'bg-gray-100 text-gray-600':'bg-green-50 text-green-700')+'">'+(s.ki_bereich==='portal'?'\uD83D\uDCBB Portal':'\uD83C\uDF10 Netzwerk')+'</span>'; }
-        h += '<h2 class="text-lg font-bold text-gray-800 mt-1">'+(s.titel||'(Ohne Titel)')+'</h2>';
-        var _submitterName = s.users ? s.users.name : null;
-        var _quelle = s.quelle || 'portal';
-        h += '<p class="text-xs text-gray-400 mt-0.5">';
-        if(_submitterName) h += '\uD83D\uDC64 ' + _escH(_submitterName) + ' \u00B7 ';
-        h += (devKatIcons[s.kategorie]||'') + ' ' + s.kategorie + ' \u00B7 ' + new Date(s.created_at).toLocaleDateString('de-DE');
-        h += '</p>';
+        // === COMPACT HEADER ===
+        h += '<div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-200">';
+        h += '<div class="flex items-center gap-2 min-w-0 flex-1">';
+        h += '<span class="text-[10px] font-semibold rounded px-1.5 py-0.5 flex-shrink-0 '+devStatusColors[s.status]+'">'+devStatusLabels[s.status]+'</span>';
+        if(s.ki_typ) { var _dtC = s.ki_typ==='bug'?'bg-red-100 text-red-700':s.ki_typ==='feature'?'bg-purple-100 text-purple-700':'bg-blue-100 text-blue-700'; var _dtI = s.ki_typ==='bug'?'\uD83D\uDC1B':s.ki_typ==='feature'?'\u2728':'\uD83D\uDCA1'; h += '<span class="text-[10px] font-semibold rounded px-1.5 py-0.5 flex-shrink-0 '+_dtC+'">'+_dtI+'</span>'; }
+        if(ki) h += '<span class="text-[10px] font-bold flex-shrink-0 '+(ki.vision_fit_score>=70?'text-green-600':ki.vision_fit_score>=40?'text-yellow-600':'text-red-600')+'">'+ki.vision_fit_score+'</span>';
+        if(ki && ki.aufwand_schaetzung) h += '<span class="text-[10px] bg-gray-100 rounded px-1 py-0.5 flex-shrink-0">'+ki.aufwand_schaetzung+'</span>';
+        h += '<h2 class="text-sm font-bold text-gray-800 truncate">'+(s.titel||'(Ohne Titel)')+'</h2>';
         h += '</div>';
-        h += '<button onclick="closeDevDetail()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">\u2715</button>';
+        h += '<button onclick="closeDevDetail()" class="text-gray-400 hover:text-gray-600 text-xl leading-none flex-shrink-0 ml-2">\u2715</button>';
         h += '</div>';
 
-        // === PARTNER-SICHTBARKEIT TOGGLE (nur für HQ) ===
+        // === PARTNER-SICHTBARKEIT (kompakt, nur HQ) ===
         if(isHQ) {
             var _pSichtbar = s.partner_sichtbar !== false;
-            h += '<div class="flex items-center gap-3 mb-3 px-3 py-2 rounded-lg ' + (_pSichtbar ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200') + '">';
+            h += '<div class="flex items-center gap-2 mb-2">';
             h += '<label class="relative inline-flex items-center cursor-pointer">';
             h += '<input type="checkbox" ' + (_pSichtbar ? 'checked' : '') + ' onchange="devTogglePartnerSichtbar(\'' + s.id + '\', this.checked)" class="sr-only peer">';
-            h += '<div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[\'\'] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>';
+            h += '<div class="w-8 h-4 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[\'\'] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-500"></div>';
             h += '</label>';
-            h += '<span class="text-xs text-gray-600">' + (_pSichtbar ? '\uD83D\uDC41 Sichtbar f\u00FCr Partner' : '\uD83D\uDD12 Nur f\u00FCr HQ sichtbar') + '</span>';
+            h += '<span class="text-[10px] text-gray-500">' + (_pSichtbar ? '\uD83D\uDC41 Partner' : '\uD83D\uDD12 HQ') + '</span>';
             h += '</div>';
         }
 
-        // === SPLIT LAYOUT ===
-        h += '<div class="flex gap-6" style="min-height:500px">';
+        // === TAB BAR ===
+        var tabs = [];
+        tabs.push({id:'uebersicht',label:'\uD83D\uDCCB \u00DCbersicht'});
+        tabs.push({id:'entwicklung',label:'\uD83D\uDCAC Entwicklung'});
+        if(hasKonzept) tabs.push({id:'konzept',label:'\uD83D\uDCDD Konzept'});
+        if(showMockup) tabs.push({id:'mockup',label:'\uD83C\uDFA8 Mockup'});
+        if(showCode) tabs.push({id:'code',label:'\uD83D\uDCBB Code'});
 
-        // === LEFT COLUMN (Meta) ===
-        h += '<div class="w-80 flex-shrink-0 space-y-4 overflow-y-auto pr-3" style="max-height:calc(80vh - 120px)">';
+        h += '<div class="flex border-b border-gray-200 mb-3 gap-0.5" id="devDetailTabBar">';
+        tabs.forEach(function(t, ti) {
+            h += '<button onclick="devSwitchTab(\''+t.id+'\')" data-tab="'+t.id+'" class="px-3 py-2 text-xs font-semibold border-b-2 whitespace-nowrap '+(ti===0?'border-orange-500 text-gray-800':'border-transparent text-gray-400 hover:text-gray-600')+'">'+t.label+'</button>';
+        });
+        h += '</div>';
+
+        // === TAB CONTENT ===
+        h += '<div class="overflow-y-auto" style="max-height:calc(80vh - 130px)">';
+
+        // === TAB: ÜBERSICHT ===
+        h += '<div data-devtab id="devTab_uebersicht">';
+
+        // Meta-Info
+        var _submitterName = s.users ? s.users.name : null;
+        h += '<p class="text-[10px] text-gray-400 mb-3">';
+        if(_submitterName) h += '\uD83D\uDC64 ' + _escH(_submitterName) + ' \u00B7 ';
+        h += (devKatIcons[s.kategorie]||'') + ' ' + s.kategorie + ' \u00B7 ' + new Date(s.created_at).toLocaleDateString('de-DE');
+        if(s.ki_bereich) h += ' \u00B7 ' + (s.ki_bereich==='portal'?'\uD83D\uDCBB Portal':'\uD83C\uDF10 Netzwerk');
+        h += '</p>';
 
         // Beschreibung
         if(s.beschreibung) {
-            h += '<div class="bg-gray-50 rounded-lg p-3">';
+            h += '<div class="bg-gray-50 rounded-lg p-3 mb-3">';
             h += '<h4 class="text-[10px] font-bold text-gray-500 uppercase mb-1">Beschreibung</h4>';
             h += '<p class="text-sm text-gray-700">'+s.beschreibung+'</p>';
             h += '</div>';
@@ -1861,33 +1879,8 @@ export async function openDevDetail(subId) {
             h += '</div></div>';
         }
 
-        h += '</div>'; // END LEFT COLUMN
 
-        // === RIGHT COLUMN (Tabs) ===
-        h += '<div class="flex-1 min-w-0 flex flex-col overflow-hidden">';
-
-        // Tab bar
-        var tabs = [];
-        tabs.push({id:'uebersicht',label:'\uD83D\uDCCB \u00DCbersicht',active:true});
-        if(hasKonzept) tabs.push({id:'konzept',label:'\uD83D\uDCDD Konzept'});
-        if(showMockup) tabs.push({id:'mockup',label:'\uD83C\uDFA8 Mockup'+(function(){ try { var m = arguments; } catch(e){} return ''; })()});
-        if(showCode) tabs.push({id:'code',label:'\uD83D\uDCBB Code'});
-
-        if(tabs.length > 1) {
-            h += '<div class="flex border-b border-gray-200 mb-4 -mx-1">';
-            tabs.forEach(function(t, ti) {
-                h += '<button onclick="document.querySelectorAll(\'[data-devtab]\').forEach(function(el){el.style.display=\'none\'});document.getElementById(\'devTab_'+t.id+'\').style.display=\'block\';this.parentElement.querySelectorAll(\'button\').forEach(function(b){b.className=\'px-3 py-2 text-xs font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-600\'});this.className=\'px-3 py-2 text-xs font-semibold border-b-2 border-orange-500 text-gray-800\'" class="px-3 py-2 text-xs font-semibold border-b-2 '+(ti===0?'border-orange-500 text-gray-800':'border-transparent text-gray-400 hover:text-gray-600')+'">'+t.label+'</button>';
-            });
-            h += '</div>';
-        }
-
-        // Tab content wrapper
-        h += '<div class="flex-1 overflow-y-auto pr-1" style="max-height:calc(80vh - 180px)">';
-
-        // === TAB: ÜBERSICHT ===
-        h += '<div data-devtab id="devTab_uebersicht">';
-
-        // R\u00FCckfragen-Formular
+                // R\u00FCckfragen-Formular
         if((s.status === 'ki_rueckfragen' || s.status === 'hq_rueckfragen') && isSubmitter) {
             var rfQuelle = s.status === 'ki_rueckfragen' ? (isHQ ? 'Die KI-Analyse' : 'Das vit:bikes Team') : 'Das HQ';
             h += '<div class="border-2 border-yellow-300 rounded-lg p-4 mb-4 bg-yellow-50">';
@@ -2169,12 +2162,26 @@ export async function openDevDetail(subId) {
             h += '</div>'; // END TAB CODE
         }
 
+        // === TAB: ENTWICKLUNG (Chat) ===
+        h += '<div data-devtab id="devTab_entwicklung" style="display:none">';
+        h += '<div class="flex flex-col" style="height:calc(80vh - 180px)">';
+        h += '<div id="devEntwicklungChatHistory" class="flex-1 overflow-y-auto space-y-2 scroll-smooth mb-3 pr-1">';
+        h += '<p class="text-xs text-gray-400 text-center py-4">Chat wird geladen...</p></div>';
+        h += '<div id="devEntwicklungAttachments" class="hidden mb-2 flex flex-wrap gap-2"></div>';
+        h += '<div class="flex items-end gap-2 border-t border-gray-200 pt-3">';
+        h += '<label class="cursor-pointer flex-shrink-0"><input type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv" multiple onchange="devMockupChatAttachFiles(this)" class="hidden"><span class="inline-flex items-center justify-center w-8 h-8 rounded bg-gray-100 hover:bg-gray-200 text-gray-500 text-sm">\uD83D\uDCCE</span></label>';
+        h += '<button onclick="devMockupChatMic(this)" id="devEntwicklungMicBtn" class="flex-shrink-0 w-8 h-8 rounded bg-gray-100 hover:bg-gray-200 text-gray-500 text-sm">\uD83C\uDFA4</button>';
+        h += '<textarea id="devEntwicklungChatInput" rows="1" class="flex-1 px-3 py-1.5 border border-gray-200 rounded text-sm resize-none focus:border-orange-400" placeholder="Problem beschreiben, L\u00F6sung diskutieren..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();devEntwicklungChatSend(\''+s.id+'\')}" oninput="this.style.height=\'auto\';this.style.height=Math.min(this.scrollHeight,100)+\'px\'"></textarea>';
+        h += '<button onclick="devEntwicklungChatSend(\''+s.id+'\')" id="devEntwicklungChatSendBtn" class="flex-shrink-0 w-8 h-8 rounded bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold">\u27A4</button>';
+        h += '</div></div>';
+        h += '</div>'; // END TAB ENTWICKLUNG
+
         h += '</div>'; // END tab content wrapper
-        h += '</div>'; // END RIGHT COLUMN
-        h += '</div>'; // END SPLIT LAYOUT
 
         content.innerHTML = h;
+        // Load chat histories
         if(document.getElementById('devMockupChatHistory')) loadMockupChatHistory(subId);
+        if(document.getElementById('devEntwicklungChatHistory')) loadEntwicklungChatHistory(subId);
         if(document.getElementById('devDeployHistory')) loadDeployHistory(subId);
     } catch(err) {
         content.innerHTML = '<div class="text-center py-8 text-red-400">Fehler: '+err.message+'</div>';
@@ -3855,6 +3862,127 @@ export async function loadDeployHistory(subId) {
 var _mockupChatAttachments = [];
 var _mockupChatMediaRecorder = null;
 var _mockupChatAudioChunks = [];
+
+// === Tab Switching ===
+window.devSwitchTab = function(tabId) {
+    document.querySelectorAll('[data-devtab]').forEach(function(el){ el.style.display = 'none'; });
+    var tab = document.getElementById('devTab_' + tabId);
+    if(tab) tab.style.display = 'block';
+    var bar = document.getElementById('devDetailTabBar');
+    if(bar) {
+        bar.querySelectorAll('button').forEach(function(b){
+            if(b.dataset.tab === tabId) {
+                b.className = 'px-3 py-2 text-xs font-semibold border-b-2 whitespace-nowrap border-orange-500 text-gray-800';
+            } else {
+                b.className = 'px-3 py-2 text-xs font-semibold border-b-2 whitespace-nowrap border-transparent text-gray-400 hover:text-gray-600';
+            }
+        });
+    }
+};
+
+// === Entwicklung Chat (uses same backend as Design-Chat: mockup_chat mode) ===
+export async function loadEntwicklungChatHistory(subId) {
+    var container = document.getElementById('devEntwicklungChatHistory');
+    if (!container) return;
+    try {
+        var resp = await _sb().from('dev_mockup_chat').select('*').eq('submission_id', subId).order('created_at', {ascending: true});
+        var msgs = resp.data || [];
+        if (msgs.length === 0) {
+            container.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">Diskutiere Probleme, Bugs und L\u00F6sungen \u2014 die KI kennt den vollen Kontext dieser Idee.</p>';
+            return;
+        }
+        var html = '';
+        msgs.forEach(function(m) {
+            if (m.rolle === 'user') {
+                html += '<div class="flex justify-end"><div class="max-w-[85%] bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">';
+                html += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + m.nachricht + '</p>';
+                if (m.attachments && m.attachments.length > 0) {
+                    m.attachments.forEach(function(a) {
+                        if (a.type && a.type.startsWith('image/')) {
+                            html += '<img src="' + a.url + '" class="mt-1 max-h-32 rounded border border-gray-200">';
+                        }
+                    });
+                }
+                html += '<p class="text-[9px] text-gray-400 mt-1">' + new Date(m.created_at).toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</p>';
+                html += '</div></div>';
+            } else {
+                var mockupBadge = m.mockup_version ? '<span class="text-[10px] bg-pink-200 text-pink-700 px-1.5 rounded-full ml-1">Mockup v' + m.mockup_version + '</span>' : '';
+                html += '<div class="flex justify-start"><div class="max-w-[85%] border border-gray-200 rounded-lg px-3 py-2 bg-white">';
+                html += '<div class="flex items-center gap-1 mb-1"><span class="text-xs">\uD83E\uDD16</span><span class="text-[10px] text-gray-400">' + new Date(m.created_at).toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>' + mockupBadge + '</div>';
+                html += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + m.nachricht + '</p></div></div>';
+            }
+        });
+        container.innerHTML = html;
+        container.scrollTop = container.scrollHeight;
+    } catch (e) {
+        container.innerHTML = '<p class="text-xs text-red-400 text-center">Fehler: ' + e.message + '</p>';
+    }
+}
+window.loadEntwicklungChatHistory = loadEntwicklungChatHistory;
+
+export async function devEntwicklungChatSend(subId) {
+    var input = document.getElementById('devEntwicklungChatInput');
+    var text = (input ? input.value.trim() : '');
+    if (!text && _mockupChatAttachments.length === 0) return;
+    var container = document.getElementById('devEntwicklungChatHistory');
+    var sendBtn = document.getElementById('devEntwicklungChatSendBtn');
+    if (sendBtn) { sendBtn.disabled = true; sendBtn.innerHTML = '\u23F3'; }
+    // Show user msg
+    if (container && text) {
+        var userDiv = document.createElement('div');
+        userDiv.className = 'flex justify-end';
+        userDiv.innerHTML = '<div class="max-w-[85%] bg-orange-50 border border-orange-200 rounded-lg px-3 py-2"><p class="text-sm text-gray-700 whitespace-pre-wrap">' + text + '</p></div>';
+        container.appendChild(userDiv);
+        container.scrollTop = container.scrollHeight;
+    }
+    if (input) input.value = '';
+    // Typing indicator
+    if (container) {
+        var typing = document.createElement('div');
+        typing.id = 'devEntwicklungTyping';
+        typing.className = 'flex justify-start';
+        typing.innerHTML = '<div class="border border-gray-200 rounded-lg px-3 py-2 bg-white"><span class="text-xs text-gray-400 animate-pulse">\uD83E\uDD16 denkt nach...</span></div>';
+        container.appendChild(typing);
+        container.scrollTop = container.scrollHeight;
+    }
+    try {
+        var payload = { submission_id: subId, mode: 'mockup_chat', feedback: text || '[Attachment]', attachments: _mockupChatAttachments };
+        var resp = await fetch((window._supabaseUrl || 'https://lwwagbkxeofahhwebkab.supabase.co') + '/functions/v1/dev-ki-analyse', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token }, body: JSON.stringify(payload)
+        });
+        var data = await resp.json();
+        if (data.error) throw new Error(data.error);
+        var typingEl = document.getElementById('devEntwicklungTyping');
+        if (typingEl) typingEl.remove();
+        if (container && data.antwort) {
+            var kiDiv = document.createElement('div');
+            kiDiv.className = 'flex justify-start';
+            var mockupBadge = data.mockup_version ? '<span class="text-[10px] bg-pink-200 text-pink-700 px-1.5 rounded-full ml-1">Mockup v' + data.mockup_version + '</span>' : '';
+            var _antwort = data.antwort;
+            if(_antwort.indexOf('```json') !== -1 || _antwort.indexOf('"antwort"') !== -1) {
+                try { var _parsed = JSON.parse(_antwort.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim()); _antwort = _parsed.antwort || _antwort; } catch(e) {}
+                _antwort = _antwort.replace(/```json\n?/g,'').replace(/```\n?/g,'').replace(/^\s*\{[^}]*"antwort"\s*:\s*"/,'').replace(/",\s*"neues_mockup".*$/s,'').replace(/"\s*\}\s*$/,'');
+            }
+            kiDiv.innerHTML = '<div class="max-w-[85%] border border-gray-200 rounded-lg px-3 py-2 bg-white"><div class="flex items-center gap-1 mb-1"><span class="text-xs">\uD83E\uDD16</span><span class="text-[10px] text-gray-400">jetzt</span>' + mockupBadge + '</div><p class="text-sm text-gray-700 whitespace-pre-wrap">' + _antwort + '</p></div>';
+            container.appendChild(kiDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+        // If new mockup, switch to mockup tab
+        if (data.neues_mockup && data.mockup_version) {
+            var subId2 = document.querySelector('#devDetailContent')?.dataset?.subId;
+            if(subId2) {
+                _showToast('Mockup v' + data.mockup_version + ' erstellt!', 'success');
+                setTimeout(function(){ openDevDetail(subId2); setTimeout(function(){ devSwitchTab('mockup'); }, 100); }, 500);
+            }
+        }
+    } catch(e) {
+        var typingEl2 = document.getElementById('devEntwicklungTyping');
+        if (typingEl2) typingEl2.innerHTML = '<div class="border border-red-200 rounded-lg px-3 py-2 bg-red-50"><span class="text-xs">\u274C</span> <span class="text-sm text-red-600">Fehler: ' + e.message + '</span></div>';
+    }
+    _mockupChatAttachments = [];
+    if (sendBtn) { sendBtn.disabled = false; sendBtn.innerHTML = '\u27A4'; }
+}
+window.devEntwicklungChatSend = devEntwicklungChatSend;
 
 export async function loadMockupChatHistory(subId) {
     var container = document.getElementById('devMockupChatHistory');
