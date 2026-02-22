@@ -338,7 +338,7 @@ export async function renderEntwTabContent(tab) {
 
 export async function loadDevSubmissions() {
     try {
-        var query = _sb().from('dev_submissions').select('*, dev_ki_analysen(zusammenfassung, vision_fit_score, machbarkeit, aufwand_schaetzung, bug_schwere, deadline_vorschlag, deadline_begruendung), dev_votes(user_id), dev_kommentare(id)').order('created_at', {ascending: false});
+        var query = _sb().from('dev_submissions').select('*, users!dev_submissions_user_id_fkey(name), dev_ki_analysen(zusammenfassung, vision_fit_score, machbarkeit, aufwand_schaetzung, bug_schwere, deadline_vorschlag, deadline_begruendung), dev_votes(user_id), dev_kommentare(id, typ, inhalt, created_at, users(name))').order('created_at', {ascending: false});
         var resp = await query;
         if(resp.error) throw resp.error;
         devSubmissions = resp.data || [];
@@ -452,18 +452,63 @@ export function renderEntwIdeen() {
 export async function renderEntwReleases() {
     var c = document.getElementById('entwReleasesContent');
     if(!c) return;
-    if(typeof RELEASE_UPDATES !== 'undefined' && RELEASE_UPDATES.length > 0) {
-        // Temporarily give our container the ID that renderReleaseUpdates expects
-        var origEl = document.getElementById('releaseUpdatesContent');
-        var origId = origEl ? origEl.id : null;
-        if(origEl) origEl.id = '_releaseUpdatesOrig';
-        c.id = 'releaseUpdatesContent';
-        renderReleaseUpdates();
-        c.id = 'entwReleasesContent';
-        if(origEl) origEl.id = 'releaseUpdatesContent';
-    } else {
-        c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-2">🚀</p><p>Noch keine Releases vorhanden</p></div>';
-    }
+    c.innerHTML = '<div class="text-center py-8 text-gray-400">Lade Releases...</div>';
+    try {
+        var resp = await _sb().from('dev_release_docs').select('*, dev_submissions(titel, status)').eq('status', 'freigegeben').order('created_at', {ascending: false});
+        var docs = resp.data || [];
+        // Also load pending docs
+        var respP = await _sb().from('dev_release_docs').select('*, dev_submissions(titel, status)').neq('status', 'freigegeben').order('created_at', {ascending: false});
+        var pending = respP.data || [];
+        if(docs.length === 0 && pending.length === 0) {
+            c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-2">🚀</p><p>Noch keine Release-Dokumentation vorhanden</p><p class="text-xs mt-1">Release-Notes und Wissensartikel werden automatisch bei Rollout generiert.</p></div>';
+            return;
+        }
+        var h = '';
+        // Stats
+        var notes = docs.filter(function(d){return d.typ==='release_note';}).length;
+        var articles = docs.filter(function(d){return d.typ==='wissensartikel';}).length;
+        h += '<div class="grid grid-cols-3 gap-3 mb-4">';
+        h += '<div class="vit-card p-3 text-center"><p class="text-xl font-bold text-green-600">'+notes+'</p><p class="text-[10px] text-gray-500">📣 Release-Notes</p></div>';
+        h += '<div class="vit-card p-3 text-center"><p class="text-xl font-bold text-blue-600">'+articles+'</p><p class="text-[10px] text-gray-500">📚 Wissensartikel</p></div>';
+        h += '<div class="vit-card p-3 text-center"><p class="text-xl font-bold text-orange-500">'+pending.length+'</p><p class="text-[10px] text-gray-500">⏳ Ausstehend</p></div>';
+        h += '</div>';
+        // Approved docs
+        if(docs.length > 0) {
+            h += '<h3 class="text-sm font-bold text-gray-700 mb-2">✅ Veröffentlicht</h3><div class="space-y-2 mb-4">';
+            docs.forEach(function(d) {
+                var icon = d.typ === 'release_note' ? '📣' : '📚';
+                var feature = d.dev_submissions ? d.dev_submissions.titel : '';
+                var date = new Date(d.created_at).toLocaleDateString('de-DE');
+                h += '<div class="vit-card p-3">';
+                h += '<div class="flex items-start justify-between">';
+                h += '<div class="flex-1"><div class="flex items-center gap-2 mb-1"><span class="text-sm">'+icon+'</span><span class="font-semibold text-sm text-gray-800">'+d.titel+'</span>';
+                h += '<span class="text-[10px] rounded px-1.5 py-0.5 '+(d.typ==='release_note'?'bg-green-100 text-green-700':'bg-blue-100 text-blue-700')+'">'+d.typ.replace('_',' ')+'</span></div>';
+                if(feature) h += '<p class="text-[10px] text-gray-400 mb-1">Feature: '+feature+'</p>';
+                h += '<p class="text-xs text-gray-600">'+d.inhalt+'</p>';
+                h += '<span class="text-[10px] text-gray-400">'+date+'</span>';
+                h += '</div></div></div>';
+            });
+            h += '</div>';
+        }
+        // Pending docs
+        if(pending.length > 0) {
+            var isHQr = (currentRoles||[]).indexOf('hq') !== -1;
+            h += '<h3 class="text-sm font-bold text-gray-500 mb-2">⏳ Ausstehend</h3><div class="space-y-2">';
+            pending.forEach(function(d) {
+                var icon = d.typ === 'release_note' ? '📣' : '📚';
+                var feature = d.dev_submissions ? d.dev_submissions.titel : '';
+                h += '<div class="vit-card p-3 border-l-4 border-orange-300">';
+                h += '<div class="flex items-center gap-2 mb-1"><span class="text-sm">'+icon+'</span><span class="font-semibold text-sm text-gray-700">'+d.titel+'</span>';
+                h += '<span class="text-[10px] bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">'+d.status+'</span></div>';
+                if(feature) h += '<p class="text-[10px] text-gray-400">Feature: '+feature+'</p>';
+                h += '<p class="text-xs text-gray-500">'+d.inhalt+'</p>';
+                if(isHQr) h += '<button onclick="devApproveReleaseDoc(\''+d.id+'\',\''+d.submission_id+'\',\''+d.typ+'\',true)" class="mt-2 px-3 py-1 bg-green-500 text-white rounded text-xs font-semibold hover:bg-green-600">✅ Freigeben</button>';
+                h += '</div>';
+            });
+            h += '</div>';
+        }
+        c.innerHTML = h;
+    } catch(err) { c.innerHTML = '<div class="text-center py-8 text-red-400">Fehler: '+err.message+'</div>'; }
 }
 
 export async function renderEntwSteuerung() {
@@ -492,7 +537,7 @@ export async function renderEntwSteuerung() {
     h += '<div class="vit-card p-3 text-center"><p class="text-lg font-bold text-gray-600">'+portal+' / '+netzwerk+'</p><p class="text-[10px] text-gray-500">💻 Portal / 🌐 Netzwerk</p></div>';
     h += '<div class="vit-card p-3 text-center"><p class="text-lg font-bold text-orange-600">'+totalVotes+'</p><p class="text-[10px] text-gray-500">👍 Votes</p></div>';
     h += '<div class="vit-card p-3 text-center"><p class="text-lg font-bold text-gray-600">'+totalKomm+'</p><p class="text-[10px] text-gray-500">💬 Kommentare</p></div>';
-    h += '<div class="vit-card p-3 text-center"><button onclick="exportDevCSV()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90 w-full">📥 CSV Export</button></div>';
+    h += '<div class="vit-card p-3 text-center flex items-center justify-center"><button onclick="exportDevCSV()" class="w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-lg transition" title="CSV Export">📥</button></div>';
     h += '</div>';
 
     // Kanban board for HQ (6 Spalten lt. Plan)
@@ -502,9 +547,10 @@ export async function renderEntwSteuerung() {
         {key:'plan', label:'📅 Planung', statuses:['freigegeben','in_planung'], color:'teal'},
         {key:'dev', label:'🔨 Entwicklung', statuses:['in_entwicklung','beta_test','im_review','release_geplant'], color:'yellow'},
         {key:'done', label:'✅ Umgesetzt', statuses:['ausgerollt'], color:'green'},
-        {key:'parked', label:'⏸ Geparkt', statuses:['abgelehnt','geparkt'], color:'gray'}
+        {key:'parked', label:'⏸ Geparkt', statuses:['geparkt'], color:'gray'},
+        {key:'rejected', label:'❌ Abgelehnt', statuses:['abgelehnt'], color:'red'}
     ];
-    h += '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3" style="min-height:400px">';
+    h += '<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3" style="min-height:400px">';
     columns.forEach(function(col) {
         var items = devSubmissions.filter(function(s) { return col.statuses.indexOf(s.status) !== -1; });
         h += '<div class="bg-gray-50 rounded-xl p-3">';
@@ -804,7 +850,7 @@ export async function renderDevPipeline() {
 
     // Load all submissions
     try {
-        var query = _sb().from('dev_submissions').select('*, dev_ki_analysen(zusammenfassung, vision_fit_score, machbarkeit, aufwand_schaetzung, bug_schwere, deadline_vorschlag, deadline_begruendung), dev_votes(user_id), dev_kommentare(id)').order('created_at', {ascending: false});
+        var query = _sb().from('dev_submissions').select('*, users!dev_submissions_user_id_fkey(name), dev_ki_analysen(zusammenfassung, vision_fit_score, machbarkeit, aufwand_schaetzung, bug_schwere, deadline_vorschlag, deadline_begruendung), dev_votes(user_id), dev_kommentare(id, typ, inhalt, created_at, users(name))').order('created_at', {ascending: false});
         var resp = await query;
         if(resp.error) throw resp.error;
         devSubmissions = resp.data || [];
@@ -888,7 +934,20 @@ export function devCardHTML(s) {
         var barColor = score >= 70 ? 'bg-green-500' : score >= 40 ? 'bg-yellow-500' : 'bg-red-500';
         h += '<div class="flex items-center space-x-2 mt-2"><span class="text-[10px] text-gray-400 w-16">Vision-Fit</span><div class="flex-1 h-1.5 bg-gray-100 rounded-full"><div class="h-1.5 '+barColor+' rounded-full" style="width:'+score+'%"></div></div><span class="text-[10px] font-bold text-gray-600">'+score+'</span></div>';
     }
-    h += '<span class="text-[10px] text-gray-400 mt-1 block">'+d+'</span>';
+    // Submitter name (HQ only)
+    var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
+    var submitterName = s.users && s.users.name ? s.users.name : '';
+    if(isHQ && submitterName) h += '<span class="text-[10px] text-gray-400 mt-1 inline-block">👤 '+submitterName+' · '+d+'</span>';
+    else h += '<span class="text-[10px] text-gray-400 mt-1 block">'+d+'</span>';
+    // Last comment preview
+    var _komms = s.dev_kommentare || [];
+    if(_komms.length > 0) {
+        var _lastK = _komms[_komms.length - 1];
+        var _kName = _lastK.users && _lastK.users.name ? _lastK.users.name : (_lastK.typ === 'ki_nachricht' ? '🤖 KI' : '');
+        var _kText = (_lastK.inhalt || '').substring(0, 60);
+        if(_lastK.inhalt && _lastK.inhalt.length > 60) _kText += '...';
+        h += '<div class="flex items-center gap-1 mt-1 bg-gray-50 rounded px-2 py-1"><span class="text-[10px] text-gray-500 truncate">💬 <b>'+_kName+':</b> '+_kText+'</span></div>';
+    }
     h += '</div></div></div>';
     return h;
 }
