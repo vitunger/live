@@ -184,12 +184,15 @@
             }
 
             // ── KPIs ──
+            var remoteCount=_todayBookings.filter(function(b){return b.status==='remote';}).length;
+            var absentCount=_todayBookings.filter(function(b){return b.status==='absent';}).length;
+            var bookedCount=_todayBookings.filter(function(b){return b.status==='office';}).length;
             html+='<div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">'+
                 '<div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600">'+occ+'</div><div class="text-xs text-gray-500">Im B\u00fcro</div></div>'+
-                '<div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-blue-600">'+(_hqUsers.length-occ)+'</div><div class="text-xs text-gray-500">Remote / Frei</div></div>'+
+                '<div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-blue-600">'+remoteCount+'</div><div class="text-xs text-gray-500">Remote</div></div>'+
+                '<div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-gray-400">'+absentCount+'</div><div class="text-xs text-gray-500">Abwesend</div></div>'+
                 '<div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-gray-700">'+total+'</div><div class="text-xs text-gray-500">Pl\u00e4tze</div></div>'+
                 '<div class="vit-card p-4 text-center"><div class="text-2xl font-bold '+(pct>80?'text-red-600':'text-vit-orange')+'">'+pct+'%</div><div class="text-xs text-gray-500">Auslastung</div></div>'+
-                '<div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-purple-600">'+_todayBookings.filter(function(b){return b.status==='office';}).length+'</div><div class="text-xs text-gray-500">Gebucht</div></div>'+
             '</div>';
 
             // ── Team lists ──
@@ -213,26 +216,35 @@
                 });
             }
             var remoteUsers=_hqUsers.filter(function(u){return !checkedInIds[u.id];});
-            var remoteHtml='';
-            if(!remoteUsers.length) {
-                remoteHtml='<p class="text-green-500 text-sm py-4">Alle im B\u00fcro! \ud83c\udf89</p>';
-            } else {
-                remoteUsers.forEach(function(u){
+            var remoteList=[], absentList=[], unknownList=[];
+            remoteUsers.forEach(function(u){
+                var bk=_todayBookings.find(function(b){return b.user_id===u.id;});
+                if(bk && bk.status==='absent') absentList.push(u);
+                else if(bk && bk.status==='remote') remoteList.push(u);
+                else unknownList.push(u);
+            });
+            // Unknown users (no booking) go into remote list
+            remoteList=remoteList.concat(unknownList);
+
+            function renderUserList(users, emptyMsg, dotClass) {
+                if(!users.length) return '<p class="text-gray-400 text-sm py-4">'+emptyMsg+'</p>';
+                var h='';
+                users.forEach(function(u){
                     var bk=_todayBookings.find(function(b){return b.user_id===u.id;});
-                    var lbl=bk?(bk.status==='remote'?'Remote':'Abwesend'):'';
-                    remoteHtml+='<div class="flex items-center justify-between py-1.5">'+
+                    h+='<div class="flex items-center justify-between py-1.5">'+
                         '<div class="flex items-center space-x-2">'+
-                            '<span class="w-2 h-2 rounded-full '+(bk&&bk.status==='remote'?'bg-blue-400':'bg-gray-300')+'"></span>'+
+                            '<span class="w-2 h-2 rounded-full '+(dotClass||'bg-gray-300')+'"></span>'+
                             '<span class="text-sm">'+esc(shortName(u))+'</span>'+
                         '</div>'+
-                        (lbl?'<span class="text-xs px-2 py-0.5 rounded-full '+(bk.status==='remote'?'bg-blue-50 text-blue-600':'bg-gray-100 text-gray-500')+'">'+lbl+'</span>':'')+
                     '</div>';
                 });
+                return h;
             }
 
-            html+='<div class="grid md:grid-cols-2 gap-6 mb-6">'+
+            html+='<div class="grid md:grid-cols-3 gap-6 mb-6">'+
                 '<div class="vit-card p-5"><h3 class="font-bold text-gray-800 mb-3">\ud83d\udfe2 Im B\u00fcro <span class="text-sm font-normal text-gray-400">('+_todayCheckins.length+')</span></h3>'+teamHtml+'</div>'+
-                '<div class="vit-card p-5"><h3 class="font-bold text-gray-800 mb-3">\ud83d\udcbb Remote <span class="text-sm font-normal text-gray-400">('+remoteUsers.length+')</span></h3>'+remoteHtml+'</div>'+
+                '<div class="vit-card p-5"><h3 class="font-bold text-gray-800 mb-3">\ud83c\udfe0 Remote <span class="text-sm font-normal text-gray-400">('+remoteList.length+')</span></h3>'+renderUserList(remoteList,'Niemand remote','bg-blue-400')+'</div>'+
+                '<div class="vit-card p-5"><h3 class="font-bold text-gray-800 mb-3">\u2796 Abwesend <span class="text-sm font-normal text-gray-400">('+absentList.length+')</span></h3>'+renderUserList(absentList,'Niemand abwesend','bg-gray-300')+'</div>'+
             '</div>';
 
             // ── Mini Map ──
