@@ -569,20 +569,24 @@ export function renderVerkaufFromDb() {
 export function openVerkaufEntryModal() {
     var now = new Date();
     var today = now.toISOString().slice(0,10);
+    var isGF = _sbProfile() && (_sbProfile().rolle === 'geschaeftsfuehrung' || _sbProfile().rolle === 'geschaeftsleitung' || _sbProfile().is_hq);
+    var currentUser = _sbProfile() ? _sbProfile().name : '';
     var html = '<div id="vtEntryOverlay" onclick="closeVtModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
     html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
     html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">💰 Verkaufserfolg eintragen</h3><button onclick="closeVtModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div>';
     html += '<div class="grid grid-cols-2 gap-3 mb-4">';
     html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Datum</label><input id="vtDate" type="date" value="'+today+'" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"></div>';
-    html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Verkaeufer</label><input id="vtSeller" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Name" value="'+(_sbProfile() ?_sbProfile().name:'')+'"></div>';
+    if(isGF) {
+        html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Verkaeufer</label><select id="vtSeller" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="'+currentUser+'">'+currentUser+'</option></select></div>';
+    } else {
+        html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Verkaeufer</label><input id="vtSeller" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50" value="'+currentUser+'" readonly></div>';
+    }
     html += '</div>';
     html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Beratungen</p>';
     html += '<div class="grid grid-cols-2 gap-3 mb-4">';
     var vtFields = [
-        {id:'vtPlan',label:'Plan-Termine',ph:'0'},
         {id:'vtGeplant',label:'Geplant',ph:'0'},
         {id:'vtSpontan',label:'Spontan',ph:'0'},
-        {id:'vtOnline',label:'Online',ph:'0'},
         {id:'vtErgo',label:'Ergo-Beratung',ph:'0'},
         {id:'vtVerkauft',label:'Verkauft ✅',ph:'0'}
     ];
@@ -593,13 +597,28 @@ export function openVerkaufEntryModal() {
     html += '</div>';
     html += '<div class="grid grid-cols-2 gap-3 mb-4">';
     html += '<div><label class="block text-xs text-gray-600 mb-1">Uebergaben</label><input id="vtUebergabe" type="number" min="0" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-center" value="0"></div>';
-    html += '<div><label class="block text-xs text-gray-600 mb-1">Umsatz (€)</label><input id="vtUmsatz" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-right" placeholder="0"></div>';
+    html += '<div><label class="block text-xs text-gray-600 mb-1">Umsatz (€) <span class="text-gray-400 font-normal">autom. aus WaWi</span></label><input id="vtUmsatz" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-right bg-gray-50 text-gray-400" placeholder="—" readonly></div>';
     html += '</div>';
     html += '<div class="mb-3"><label class="block text-xs text-gray-600 mb-1">Notizen</label><textarea id="vtNotizen" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" rows="2" placeholder="z.B. Kunde kommt naechste Woche wieder..."></textarea></div>';
     html += '<div id="vtError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mb-3"></div>';
     html += '<button onclick="saveVtEntry()" id="vtSaveBtn" class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Speichern</button>';
     html += '</div></div>';
     var c = document.createElement('div'); c.id = 'vtEntryContainer'; c.innerHTML = html; document.body.appendChild(c);
+    // If GF: load team members into seller dropdown
+    if(isGF) {
+        (async function(){
+            try {
+                var stdId = _sbProfile().standort_id;
+                var q = _sb().from('profiles').select('name').eq('aktiv', true);
+                if(stdId && !_sbProfile().is_hq) q = q.eq('standort_id', stdId);
+                var r = await q.order('name');
+                if(r.data && r.data.length) {
+                    var sel = document.getElementById('vtSeller');
+                    if(sel) { sel.innerHTML = ''; r.data.forEach(function(p){ var o=document.createElement('option'); o.value=p.name; o.textContent=p.name; if(p.name===currentUser) o.selected=true; sel.appendChild(o); }); }
+                }
+            } catch(e) { console.warn('Could not load sellers:', e); }
+        })();
+    }
 }
 
 export function closeVtModal() { var c = document.getElementById('vtEntryContainer'); if(c) c.remove(); }
@@ -752,10 +771,10 @@ export async function saveVtEntry() {
             standort_id: stdId,
             datum: datum,
             verkaeufer_name: seller.trim(),
-            plan_termine: vi('vtPlan'),
+            plan_termine: 0,
             geplant: vi('vtGeplant'),
             spontan: vi('vtSpontan'),
-            online: vi('vtOnline'),
+            online: 0,
             ergo: vi('vtErgo'),
             verkauft: vi('vtVerkauft'),
             uebergabe: vi('vtUebergabe'),
