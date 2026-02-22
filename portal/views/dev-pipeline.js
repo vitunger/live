@@ -1544,7 +1544,9 @@ export async function devHQDecision(subId, ergebnis) {
             }
         }
 
+        await loadDevSubmissions(true);
         renderDevPipeline();
+        if(typeof renderEntwSteuerung === 'function') renderEntwSteuerung();
     } catch(err) { alert('Fehler: ' + (err.message||err)); }
 }
 
@@ -1636,10 +1638,11 @@ export async function openDevDetail(subId) {
             h += '</div>';
         }
 
-        // Analyse (kompakt)
+        // Analyse (kompakt, collapsible - default eingeklappt)
         if(ki) {
             h += '<div class="bg-purple-50/50 border border-purple-200 rounded-lg p-3">';
-            h += '<h4 class="text-[10px] font-bold text-purple-600 uppercase mb-2">\uD83D\uDCCA Analyse</h4>';
+            h += '<h4 onclick="this.nextElementSibling.classList.toggle(\'hidden\');this.querySelector(\'span\').textContent=this.nextElementSibling.classList.contains(\'hidden\')?\'+\':\'\u2212\'" class="text-[10px] font-bold text-purple-600 uppercase mb-1 cursor-pointer select-none flex items-center justify-between hover:text-purple-800"><span class="flex items-center gap-1">\uD83D\uDCCA Analyse</span><span class="text-xs text-purple-400">+</span></h4>';
+            h += '<div class="hidden">';
             if(ki.zusammenfassung) h += '<p class="text-xs text-gray-600 mb-2">'+ki.zusammenfassung+'</p>';
             if(isHQ) {
                 h += '<div class="grid grid-cols-3 gap-2 text-center">';
@@ -1666,13 +1669,16 @@ export async function openDevDetail(subId) {
                 ki.rueckfragen.forEach(function(q) { h += '<p class="text-[10px] text-gray-600">\u2022 '+(q.frage||q)+'</p>'; });
                 h += '</div>';
             }
+            h += '</div>'; // end collapsible
             h += '</div>';
         }
 
-        // Planung & Zuweisung
+        // Planung & Zuweisung (collapsible - eingeklappt wenn geplant, ausgeklappt wenn ungeplant)
         if(isHQ && (s.bug_schwere || s.deadline || s.konzept_ma || s.entwickler_ma || ['freigegeben','in_planung','in_entwicklung'].indexOf(s.status) !== -1)) {
+            var _planFilled = s.deadline || s.konzept_ma || s.entwickler_ma;
             h += '<div class="bg-white border border-gray-200 rounded-lg p-3">';
-            h += '<h4 class="text-[10px] font-bold text-gray-500 uppercase mb-2">\uD83D\uDCCB Planung</h4>';
+            h += '<h4 onclick="this.nextElementSibling.classList.toggle(\'hidden\');this.querySelector(\'span:last-child\').textContent=this.nextElementSibling.classList.contains(\'hidden\')?\'+\':\'\u2212\'" class="text-[10px] font-bold text-gray-500 uppercase mb-1 cursor-pointer select-none flex items-center justify-between hover:text-gray-700"><span class="flex items-center gap-1">\uD83D\uDCCB Planung</span><span class="text-xs text-gray-400">'+(_planFilled?'+':'\u2212')+'</span></h4>';
+            h += '<div class="'+(_planFilled?'hidden':'')+'">'; 
             h += '<div class="space-y-2 text-xs">';
             if(s.bug_schwere) {
                 var bsColors = {kritisch:'text-red-700',mittel:'text-yellow-700',niedrig:'text-green-700'};
@@ -1702,6 +1708,7 @@ export async function openDevDetail(subId) {
                 h += '<span class="font-semibold" id="devEntwicklerMAName">\u2013</span>';
             }
             h += '</div>';
+            h += '</div>'; // end collapsible
             h += '</div></div>';
             setTimeout(function(){ _loadDevHQUsers(s); }, 50);
         }
