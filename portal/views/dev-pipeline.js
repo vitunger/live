@@ -1557,7 +1557,7 @@ export async function openDevDetail(subId) {
 
     try {
         // Load full submission with relations
-        var resp = await _sb().from('dev_submissions').select('*').eq('id', subId).single();
+        var resp = await _sb().from('dev_submissions').select('*, users!dev_submissions_user_id_public_fkey(name, email)').eq('id', subId).single();
         if(resp.error) throw resp.error;
         var s = resp.data;
 
@@ -1583,7 +1583,13 @@ export async function openDevDetail(subId) {
         if(s.ki_typ) { var _dtC = s.ki_typ==='bug'?'bg-red-100 text-red-700':s.ki_typ==='feature'?'bg-purple-100 text-purple-700':'bg-blue-100 text-blue-700'; var _dtI = s.ki_typ==='bug'?'🐛 Bug':s.ki_typ==='feature'?'✨ Feature':'💡 Idee'; h += ' <span class="text-xs font-semibold rounded px-2 py-1 '+_dtC+'">'+_dtI+'</span>'; }
         if(s.ki_bereich) { h += ' <span class="text-xs rounded px-2 py-1 '+(s.ki_bereich==='portal'?'bg-gray-100 text-gray-600':'bg-green-50 text-green-700')+'">'+(s.ki_bereich==='portal'?'💻 Portal':'🌐 Netzwerk')+'</span>'; }
         h += '<h2 class="text-xl font-bold text-gray-800 mt-2">'+(s.titel||'(Ohne Titel)')+'</h2>';
-        h += '<p class="text-xs text-gray-400 mt-1">'+(devKatIcons[s.kategorie]||'')+' '+s.kategorie+' · '+new Date(s.created_at).toLocaleDateString('de-DE')+'</p></div>';
+        var _submitterName = s.users ? s.users.name : null;
+        var _quelle = s.quelle || 'portal';
+        var _quelleLabel = _quelle === 'portal' ? '💻 Portal' : _quelle === 'sprache' ? '🎙️ Sprache' : _quelle === 'system' ? '⚙️ System' : '💻 ' + _quelle;
+        h += '<p class="text-xs text-gray-400 mt-1">';
+        if(_submitterName) h += '👤 ' + _escH(_submitterName) + ' · ';
+        h += (devKatIcons[s.kategorie]||'') + ' ' + s.kategorie + ' · ' + _quelleLabel + ' · ' + new Date(s.created_at).toLocaleDateString('de-DE');
+        h += '</p></div>';
         h += '<button onclick="closeDevDetail()" class="text-gray-400 hover:text-gray-600 text-2xl">✕</button></div>';
 
         // Original submission
