@@ -2230,6 +2230,8 @@ export async function openDevDetail(subId) {
         h += '</div>';
 
         content.innerHTML = h;
+        // Auto-load mockup chat history
+        if(document.getElementById('devMockupChatHistory')) loadMockupChatHistory(subId);
     } catch(err) {
         content.innerHTML = '<div class="text-center py-8 text-red-400">Fehler: '+err.message+'</div>';
     }
