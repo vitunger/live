@@ -28,10 +28,15 @@ var devMicStream = null;
 
 export function toggleDevSubmitForm() {
     var f = document.getElementById('devSubmitForm');
-    if(f) f.classList.toggle('hidden');
-    // Stop any active recordings when closing
-    if(f && f.classList.contains('hidden')) {
+    if(!f) return;
+    var isVisible = f.style.display === 'flex';
+    if(isVisible) {
+        f.style.display = 'none';
+        f.classList.add('hidden');
         stopDevRecording();
+    } else {
+        f.classList.remove('hidden');
+        f.style.display = 'flex';
     }
     // Populate module dropdown
     var sel = document.getElementById('devModul');
