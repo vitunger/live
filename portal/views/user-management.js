@@ -2039,6 +2039,7 @@ export async function toggleHqPermission(modKey, rolle) {
 // === KOMMANDOZENTRALE TAB SWITCHING ===
 var currentKzStdFilter = 'all';
 var currentKzMaFilter = 'all';
+var kzMitarbeiter = [];
 
 export function showKommandoTab(tab) {
     document.querySelectorAll('.kommando-tab-content').forEach(function(el){el.style.display='none';});
@@ -2144,6 +2145,7 @@ export async function renderKzMitarbeiter() {
             if(stdFilter!=='all' && stdName!==stdFilter) return false;
             return true;
         });
+        kzMitarbeiter = list;
         var h='';
         list.forEach(function(u){
             var stdName = u.standorte ? u.standorte.name : 'HQ';
