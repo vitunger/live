@@ -262,7 +262,7 @@ function AgingBadge({deal}){
 
 
 /* ── Deal Card (Clean) ────────────────────────────── */
-function Card({deal,onDrag,onClick,isNew}){
+function Card({deal,onDrag,onClick,isNew,SELLERS}){
   const st=STAGES.find(s=>s.id===deal.stage);
   const d=dSince(deal.changed),w=AGING[deal.stage]||999,aging=d>=w&&!["verkauft","lost","gold"].includes(deal.stage);
   const urgent=d>=w*2;
@@ -290,7 +290,7 @@ function Card({deal,onDrag,onClick,isNew}){
 }
 
 /* ── Column (Clean) ──────────────────────────────── */
-function Col({stage,deals,onDrop,onDrag,onClick,newId}){
+function Col({stage,deals,onDrop,onDrag,onClick,newId,SELLERS}){
   const[dg,setDg]=useState(false);
   const tv=deals.reduce((s,d)=>s+d.value,0);
   return <div onDragOver={e=>{e.preventDefault();setDg(true)}} onDragLeave={()=>setDg(false)} onDrop={e=>{e.preventDefault();setDg(false);onDrop(+e.dataTransfer.getData("id"),stage.id)}} style={{flex:"1 1 0",minWidth:180,display:"flex",flexDirection:"column",gap:6,background:dg?`${stage.color}08`:"transparent",borderRadius:14,padding:8,transition:"all .2s",border:`2px dashed ${dg?stage.color:"transparent"}`}}>
@@ -303,7 +303,7 @@ function Col({stage,deals,onDrop,onDrag,onClick,newId}){
       <span style={{fontWeight:700,fontSize:11,color:stage.color}}>{fmt(tv)}</span>
     </div>
     <div style={{display:"flex",flexDirection:"column",gap:5,flex:1,minHeight:80}}>
-      {deals.map(d=><Card key={d.id} deal={d} onDrag={onDrag} onClick={onClick} isNew={d.id===newId}/>)}
+      {deals.map(d=><Card key={d.id} deal={d} onDrag={onDrag} onClick={onClick} isNew={d.id===newId} SELLERS={SELLERS||[]}/>)}
       {!deals.length&&<div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",color:"#E2E8F0",fontSize:24,opacity:dg?1:.3}}>{stage.emoji}</div>}
     </div>
   </div>
@@ -1395,7 +1395,7 @@ function PipelineApp(){
     </div>}
 
     <div style={{padding:"0 0 12px",display:"flex",gap:4,overflowX:"auto",minHeight:320}}>
-      {main.map(s=><Col key={s.id} stage={s} deals={filteredDeals.filter(d=>d.stage===s.id)} onDrop={drop} onDrag={setDragId} onClick={setSel} newId={newId}/>)}
+      {main.map(s=><Col key={s.id} stage={s} deals={filteredDeals.filter(d=>d.stage===s.id)} onDrop={drop} onDrag={setDragId} onClick={setSel} newId={newId} SELLERS={SELLERS}/>)}
     </div>
 
     <DropZone sid="gold" label="🗄️ Schrank der Hoffnung" sub="Wertvolle Kontakte, die noch reifen" bc="#D69E2E" tc="#B7791F" cc="#B7791F" deals={filteredDeals.filter(d=>d.stage==="gold")} onDrop={drop} onDrag={setDragId}/>
