@@ -1112,6 +1112,22 @@ export function renderDevPlanung() {
     });
 
     var h = '';
+    // KI-Priorisierung Button (HQ only)
+    if(isHQ) {
+        h += '<div id="devPrioContainer" class="mb-6">';
+        h += '<div class="flex items-center justify-between mb-3">';
+        h += '<div>';
+        h += '<h3 class="text-sm font-bold text-gray-500 uppercase">🤖 KI-Priorisierung</h3>';
+        h += '<p class="text-xs text-gray-400">Welche Idee sollte HQ als nächstes bearbeiten?</p>';
+        h += '</div>';
+        h += '<button onclick="runDevKIPrioritize()" id="btnDevPrio" class="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg text-sm font-semibold hover:from-purple-600 hover:to-indigo-700 shadow-sm flex items-center gap-2">';
+        h += '<span>🧠</span><span>Priorisierung starten</span>';
+        h += '</button>';
+        h += '</div>';
+        h += '<div id="devPrioResult" class="hidden"></div>';
+        h += '</div>';
+    }
+
     groups.forEach(function(group) {
         if(group.items.length === 0) return;
         h += '<div class="mb-6">';
@@ -3346,6 +3362,108 @@ async function devSendCodeChat(subId) {
 }
 
 
-const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat};
+
+// ========== KI PRIORISIERUNG ==========
+export async function runDevKIPrioritize() {
+    var btn = document.getElementById('btnDevPrio');
+    var resultDiv = document.getElementById('devPrioResult');
+    if(!btn || !resultDiv) return;
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="animate-spin">⏳</span><span>KI analysiert...</span>';
+    resultDiv.className = 'hidden';
+
+    try {
+        var session = await window.supabase.auth.getSession();
+        var token = session?.data?.session?.access_token;
+        if(!token) throw new Error('Nicht angemeldet');
+
+        var resp = await fetch(window.SUPABASE_URL + '/functions/v1/dev-ki-analyse', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ mode: 'prioritize' })
+        });
+        var data = await resp.json();
+        if(!resp.ok || !data.success) throw new Error(data.error || 'Fehler');
+
+        // Render result
+        var h = '';
+        if(data.zusammenfassung) {
+            h += '<div class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4 mb-4">';
+            h += '<div class="flex items-start gap-3">';
+            h += '<span class="text-2xl">🧠</span>';
+            h += '<div>';
+            h += '<h4 class="font-bold text-gray-800 text-sm mb-1">KI-Empfehlung</h4>';
+            h += '<p class="text-sm text-gray-600">'+data.zusammenfassung+'</p>';
+            h += '</div>';
+            h += '</div>';
+            h += '</div>';
+        }
+
+        if(data.empfehlung && data.empfehlung.length > 0) {
+            h += '<div class="space-y-2">';
+            data.empfehlung.forEach(function(e, i) {
+                var actionColors = {
+                    'sofort_starten': 'bg-red-100 text-red-700 border-red-200',
+                    'einplanen': 'bg-blue-100 text-blue-700 border-blue-200',
+                    'spaeter': 'bg-gray-100 text-gray-600 border-gray-200',
+                    'pruefen': 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                };
+                var actionLabels = {
+                    'sofort_starten': '🔥 Sofort starten',
+                    'einplanen': '📅 Einplanen',
+                    'spaeter': '⏸ Später',
+                    'pruefen': '🔍 Prüfen'
+                };
+                var impactIcons = { 'hoch': '🔴', 'mittel': '🟡', 'niedrig': '🟢' };
+                var borderClass = i === 0 ? 'border-2 border-purple-300 shadow-md' : 'border border-gray-200';
+                var bgClass = i === 0 ? 'bg-purple-50' : 'bg-white';
+
+                h += '<div class="'+bgClass+' '+borderClass+' rounded-lg p-3 cursor-pointer hover:shadow-md transition-shadow" onclick="openDevDetail(\''+e.submission_id+'\')">';
+                h += '<div class="flex items-center gap-3">';
+                h += '<div class="flex-shrink-0 w-8 h-8 rounded-full '+(i===0?'bg-purple-600':'bg-gray-400')+' text-white flex items-center justify-center text-sm font-bold">'+e.rang+'</div>';
+                h += '<div class="flex-1 min-w-0">';
+                h += '<div class="flex items-center gap-2 flex-wrap">';
+                h += '<h4 class="font-semibold text-gray-800 text-sm truncate">'+e.titel+'</h4>';
+                var ac = actionColors[e.empfohlene_aktion] || 'bg-gray-100 text-gray-600';
+                h += '<span class="text-[10px] font-semibold rounded-full px-2 py-0.5 '+ac+'">'+(actionLabels[e.empfohlene_aktion]||e.empfohlene_aktion)+'</span>';
+                h += '<span class="text-[10px] text-gray-400">'+(impactIcons[e.geschaetzter_impact]||'')+' Impact: '+e.geschaetzter_impact+'</span>';
+                h += '</div>';
+                h += '<p class="text-xs text-gray-500 mt-0.5">'+e.begruendung+'</p>';
+                h += '</div>';
+                h += '<div class="flex-shrink-0 text-right">';
+                h += '<div class="text-lg font-bold '+(e.priority_score >= 80?'text-purple-600':e.priority_score >= 60?'text-blue-600':'text-gray-500')+'">'+e.priority_score+'</div>';
+                h += '<div class="text-[9px] text-gray-400 uppercase">Score</div>';
+                h += '</div>';
+                h += '</div>';
+                h += '</div>';
+            });
+            h += '</div>';
+        }
+
+        if(data.quick_wins && data.quick_wins.length > 0) {
+            h += '<div class="mt-3 flex items-center gap-2 text-xs text-gray-500">';
+            h += '<span>⚡ Quick Wins: '+data.quick_wins.length+' Ideen mit hohem Impact bei niedrigem Aufwand</span>';
+            h += '</div>';
+        }
+
+        resultDiv.innerHTML = h;
+        resultDiv.className = '';
+        btn.innerHTML = '<span>🧠</span><span>Erneut priorisieren</span>';
+        btn.disabled = false;
+        if(typeof _showToast === 'function') _showToast('KI-Priorisierung abgeschlossen!', 'success');
+    } catch(err) {
+        console.error('KI-Prio error:', err);
+        btn.innerHTML = '<span>🧠</span><span>Priorisierung starten</span>';
+        btn.disabled = false;
+        if(typeof _showToast === 'function') _showToast('Fehler: ' + err.message, 'error');
+    }
+}
+
+const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat    runDevKIPrioritize,
+};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
