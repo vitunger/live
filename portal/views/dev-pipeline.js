@@ -1783,6 +1783,70 @@ export async function openDevDetail(subId) {
         }
 
 
+        // === MOCKUP SEKTION - Wireframe aus Konzept generieren ===
+        if(isHQKonzept && konzept && ['freigegeben','in_planung','in_entwicklung','beta_test','im_review'].indexOf(s.status) !== -1) {
+            // Lade Mockups
+            var mockupsResp = await _sb().from('dev_mockups').select('*').eq('submission_id', subId).order('version', {ascending: false});
+            var mockups = mockupsResp.data || [];
+            var latestMockup = mockups[0] || null;
+
+            h += '<div class="border-2 border-pink-300 rounded-lg mb-4 bg-pink-50/30 overflow-hidden">';
+            h += '<div class="bg-pink-100 px-4 py-3 cursor-pointer flex items-center justify-between" onclick="var el=document.getElementById(\'devMockupBody\'); el.style.display=el.style.display===\'none\'?\'block\':\'none\'">';
+            h += '<h4 class="text-sm font-bold text-pink-700">🎨 UI-Mockup'+(latestMockup ? ' <span class=\'text-xs font-normal bg-pink-200 px-2 py-0.5 rounded-full\'>v'+latestMockup.version+'</span>' : '')+'</h4>';
+            h += '<span class="text-pink-400 text-xs">▼ auf/zuklappen</span>';
+            h += '</div>';
+            h += '<div id="devMockupBody" class="p-4">';
+
+            // Generate/Refine buttons
+            h += '<div class="flex items-center justify-between mb-3">';
+            if(!latestMockup) {
+                h += '<p class="text-xs text-gray-500">Wireframe basierend auf Konzept v'+konzept.version+' generieren</p>';
+                h += '<button onclick="devMockupGenerate(\''+s.id+'\',false)" id="devBtnMockGen" class="px-3 py-1.5 bg-pink-600 text-white rounded-lg text-xs font-semibold hover:bg-pink-700">🎨 Mockup generieren</button>';
+            } else {
+                h += '<p class="text-xs text-gray-500">Mockup v'+latestMockup.version+' · '+(latestMockup.html_length||latestMockup.html_content.length)+' Zeichen</p>';
+                h += '<button onclick="devMockupGenerate(\''+s.id+'\',false)" class="px-3 py-1.5 bg-pink-100 text-pink-700 rounded-lg text-xs font-semibold hover:bg-pink-200 mr-2">🔄 Neu generieren</button>';
+            }
+            h += '</div>';
+
+            if(!latestMockup) {
+                h += '<div class="bg-white border-2 border-dashed border-gray-200 rounded-lg p-6 text-center">';
+                h += '<p class="text-2xl mb-2">🎨</p>';
+                h += '<p class="text-sm text-gray-500">Noch kein Mockup generiert</p>';
+                h += '<p class="text-xs text-gray-400 mt-1">Die KI erstellt ein interaktives HTML-Wireframe basierend auf dem Konzept.</p></div>';
+            } else {
+                // Mockup Preview in iframe
+                h += '<div class="border border-gray-200 rounded-lg overflow-hidden mb-3">';
+                h += '<div class="bg-gray-100 px-3 py-1.5 flex items-center justify-between">';
+                h += '<span class="text-xs text-gray-500">📱 Preview</span>';
+                h += '<div class="flex gap-2">';
+                h += '<button onclick="devMockupResize(\'mobile\')" class="text-xs px-2 py-0.5 bg-gray-200 rounded hover:bg-gray-300">📱</button>';
+                h += '<button onclick="devMockupResize(\'tablet\')" class="text-xs px-2 py-0.5 bg-gray-200 rounded hover:bg-gray-300">📋</button>';
+                h += '<button onclick="devMockupResize(\'desktop\')" class="text-xs px-2 py-0.5 bg-gray-200 rounded hover:bg-gray-300">🖥️</button>';
+                h += '<button onclick="devMockupFullscreen()" class="text-xs px-2 py-0.5 bg-pink-200 rounded hover:bg-pink-300 text-pink-700">⛶ Vollbild</button>';
+                h += '</div></div>';
+                h += '<iframe id="devMockupFrame" sandbox="allow-scripts" style="width:100%;height:500px;border:none;background:white;" srcdoc="'+latestMockup.html_content.replace(/"/g,'&quot;').replace(/'/g,'&#39;')+'"></iframe>';
+                h += '</div>';
+
+                // Feedback/Refine input
+                h += '<div class="flex gap-2">';
+                h += '<input type="text" id="devMockupFeedback" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Feedback zum Mockup eingeben... (z.B. &quot;Button groesser&quot;, &quot;andere Farbe&quot;)">';
+                h += '<button onclick="devMockupRefine(\''+s.id+'\')" class="px-3 py-2 bg-pink-600 text-white rounded-lg text-xs font-semibold hover:bg-pink-700 whitespace-nowrap">✏️ Ueberarbeiten</button>';
+                h += '</div>';
+
+                // Version history
+                if(mockups.length > 1) {
+                    h += '<div class="mt-3 text-xs text-gray-400">';
+                    h += '<span class="font-semibold">Versionen:</span> ';
+                    mockups.forEach(function(m) {
+                        h += '<button onclick="devMockupShowVersion(\''+m.id+'\')" class="ml-1 px-2 py-0.5 rounded '+(m.id===latestMockup.id?'bg-pink-200 text-pink-700':'bg-gray-100 hover:bg-gray-200 text-gray-600')+'">v'+m.version+'</button>';
+                    });
+                    h += '</div>';
+                }
+            }
+
+            h += '</div></div>';
+        }
+
         // === CODE-COPILOT SEKTION (Phase 4a) - erst ab in_entwicklung ===
         if(isHQKonzept && konzept && ['in_entwicklung','beta_test','im_review','release_geplant','ausgerollt'].indexOf(s.status) !== -1) {
             // Lade Code-Artifacts
@@ -3546,7 +3610,112 @@ export async function runDevKIPrioritize() {
     }
 }
 
-const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,
+
+// === MOCKUP FUNCTIONS ===
+export async function devMockupGenerate(subId, isRefine) {
+    var btn = document.getElementById('devBtnMockGen');
+    var body = document.getElementById('devMockupBody');
+    if(body) {
+        body.innerHTML = '<div class="w-full"><div class="bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-xl p-4">' +
+            '<div class="flex items-center gap-3 mb-3">' +
+            '<div class="w-8 h-8 rounded-full bg-pink-600 flex items-center justify-center animate-pulse"><span class="text-white text-sm">🎨</span></div>' +
+            '<div><h4 class="font-bold text-pink-800 text-sm">Mockup wird generiert...</h4>' +
+            '<p class="text-xs text-pink-500" id="devMockupStatusText">UI-Konzept wird analysiert...</p></div></div>' +
+            '<div class="w-full bg-pink-100 rounded-full h-2 overflow-hidden">' +
+            '<div id="devMockupProgress" class="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-full transition-all duration-1000" style="width:10%"></div>' +
+            '</div></div></div>';
+    }
+    var steps = [
+        {pct:'25%',text:'Tailwind-Layout wird designt...'},
+        {pct:'50%',text:'Interaktive Elemente werden erstellt...'},
+        {pct:'70%',text:'Beispieldaten werden eingefuegt...'},
+        {pct:'85%',text:'Responsive Design wird optimiert...'}
+    ];
+    var si=0;
+    var st = setInterval(function(){
+        if(si>=steps.length){clearInterval(st);return;}
+        var bar=document.getElementById('devMockupProgress');
+        var txt=document.getElementById('devMockupStatusText');
+        if(bar)bar.style.width=steps[si].pct;
+        if(txt)txt.textContent=steps[si].text;
+        si++;
+    },4000);
+    try {
+        var token = (await _sb().auth.getSession()).data.session.access_token;
+        var resp = await fetch(_sbUrl()+'/functions/v1/dev-ki-analyse', {
+            method:'POST',
+            headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+            body:JSON.stringify({submission_id:subId, mode:'mockup'})
+        });
+        var data = await resp.json();
+        clearInterval(st);
+        if(data.error) throw new Error(data.error);
+        _showToast('🎨 Mockup v'+data.version+' erstellt!','success');
+        openDevDetail(subId);
+    } catch(e) {
+        clearInterval(st);
+        if(body) body.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-xl p-4 text-center"><p class="text-red-600 text-sm">❌ '+e.message+'</p><button onclick="devMockupGenerate(\''+subId+'\',false)" class="mt-2 px-3 py-1 bg-red-100 text-red-700 rounded text-xs">🔄 Erneut</button></div>';
+        _showToast('Fehler: '+e.message,'error');
+    }
+}
+
+export async function devMockupRefine(subId) {
+    var fb = document.getElementById('devMockupFeedback');
+    var feedback = fb ? fb.value.trim() : '';
+    if(!feedback) { _showToast('Bitte Feedback eingeben','error'); return; }
+    var body = document.getElementById('devMockupBody');
+    if(body) {
+        body.innerHTML = '<div class="w-full"><div class="bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-xl p-4">' +
+            '<div class="flex items-center gap-3 mb-3">' +
+            '<div class="w-8 h-8 rounded-full bg-pink-600 flex items-center justify-center animate-pulse"><span class="text-white text-sm">✏️</span></div>' +
+            '<div><h4 class="font-bold text-pink-800 text-sm">Mockup wird ueberarbeitet...</h4>' +
+            '<p class="text-xs text-pink-500">Feedback: '+feedback.substring(0,60)+(feedback.length>60?'...':'')+'</p></div></div>' +
+            '<div class="w-full bg-pink-100 rounded-full h-2 overflow-hidden">' +
+            '<div class="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-full animate-pulse" style="width:60%"></div>' +
+            '</div></div></div>';
+    }
+    try {
+        var token = (await _sb().auth.getSession()).data.session.access_token;
+        var resp = await fetch(_sbUrl()+'/functions/v1/dev-ki-analyse', {
+            method:'POST',
+            headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+            body:JSON.stringify({submission_id:subId, mode:'mockup_refine', feedback:feedback})
+        });
+        var data = await resp.json();
+        if(data.error) throw new Error(data.error);
+        _showToast('✏️ Mockup v'+data.version+' ueberarbeitet!','success');
+        openDevDetail(subId);
+    } catch(e) {
+        _showToast('Fehler: '+e.message,'error');
+        openDevDetail(subId);
+    }
+}
+
+export function devMockupResize(size) {
+    var frame = document.getElementById('devMockupFrame');
+    if(!frame) return;
+    if(size==='mobile') { frame.style.width='375px'; frame.style.height='667px'; frame.style.margin='0 auto'; frame.style.display='block'; }
+    else if(size==='tablet') { frame.style.width='768px'; frame.style.height='500px'; frame.style.margin='0 auto'; frame.style.display='block'; }
+    else { frame.style.width='100%'; frame.style.height='500px'; frame.style.margin=''; }
+}
+
+export function devMockupFullscreen() {
+    var frame = document.getElementById('devMockupFrame');
+    if(!frame) return;
+    if(frame.requestFullscreen) frame.requestFullscreen();
+    else if(frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
+}
+
+export async function devMockupShowVersion(mockupId) {
+    var resp = await _sb().from('dev_mockups').select('html_content').eq('id', mockupId).single();
+    if(resp.data) {
+        var frame = document.getElementById('devMockupFrame');
+        if(frame) frame.srcdoc = resp.data.html_content;
+    }
+}
+
+const _exports = {
+    devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
