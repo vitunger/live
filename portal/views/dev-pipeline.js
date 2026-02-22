@@ -337,7 +337,7 @@ export async function renderEntwTabContent(tab) {
 
 export async function loadDevSubmissions() {
     try {
-        var query = _sb().from('dev_submissions').select('*, dev_ki_analysen(zusammenfassung, vision_fit_score, machbarkeit, aufwand_schaetzung), dev_votes(user_id), dev_kommentare(id)').order('created_at', {ascending: false});
+        var query = _sb().from('dev_submissions').select('*, dev_ki_analysen(zusammenfassung, vision_fit_score, machbarkeit, aufwand_schaetzung, bug_schwere, deadline_vorschlag, deadline_begruendung), dev_votes(user_id), dev_kommentare(id)').order('created_at', {ascending: false});
         var resp = await query;
         if(resp.error) throw resp.error;
         devSubmissions = resp.data || [];
@@ -802,7 +802,7 @@ export async function renderDevPipeline() {
 
     // Load all submissions
     try {
-        var query = _sb().from('dev_submissions').select('*, dev_ki_analysen(zusammenfassung, vision_fit_score, machbarkeit, aufwand_schaetzung), dev_votes(user_id), dev_kommentare(id)').order('created_at', {ascending: false});
+        var query = _sb().from('dev_submissions').select('*, dev_ki_analysen(zusammenfassung, vision_fit_score, machbarkeit, aufwand_schaetzung, bug_schwere, deadline_vorschlag, deadline_begruendung), dev_votes(user_id), dev_kommentare(id)').order('created_at', {ascending: false});
         var resp = await query;
         if(resp.error) throw resp.error;
         devSubmissions = resp.data || [];
@@ -870,6 +870,8 @@ export function devCardHTML(s) {
     if(s.ki_bereich) { h += '<span class="text-[10px] rounded px-1.5 py-0.5 '+(s.ki_bereich==='portal'?'bg-gray-100 text-gray-600':'bg-green-50 text-green-700')+'">'+(s.ki_bereich==='portal'?'💻':'🌐')+' '+s.ki_bereich+'</span>'; }
     h += '<span class="text-xs text-gray-400">'+(devKatIcons[s.kategorie]||'')+ ' '+s.kategorie+'</span>';
     if(s.geschaetzter_aufwand) h += '<span class="text-[10px] bg-gray-100 text-gray-600 rounded px-1.5 py-0.5 font-semibold">'+s.geschaetzter_aufwand+'</span>';
+    if(s.bug_schwere) { var _bsC = s.bug_schwere==='kritisch'?'bg-red-200 text-red-800':s.bug_schwere==='mittel'?'bg-yellow-100 text-yellow-800':'bg-green-100 text-green-700'; h += '<span class="text-[10px] font-semibold rounded px-1.5 py-0.5 '+_bsC+'">'+(s.bug_schwere==='kritisch'?'🔴':s.bug_schwere==='mittel'?'🟡':'🟢')+' '+s.bug_schwere+'</span>'; }
+    if(s.deadline) h += '<span class="text-[10px] bg-indigo-50 text-indigo-600 rounded px-1.5 py-0.5">📅 '+new Date(s.deadline).toLocaleDateString('de-DE')+'</span>';
     var _komCount = s.dev_kommentare ? s.dev_kommentare.length : 0;
     if(_komCount > 0) h += '<span class="text-[10px] bg-gray-50 text-gray-500 rounded px-1.5 py-0.5">💬 '+_komCount+'</span>';
     h += '</div>';
@@ -1535,6 +1537,78 @@ export async function openDevDetail(subId) {
             h += '</div>';
         }
 
+        // === BUG-SCHWERE + DEADLINE + MA-ZUWEISUNG (HQ/Owner only) ===
+        var isHQMeta = (currentRoles||[]).indexOf('hq') !== -1;
+        var isOwnerMeta = (currentRoles||[]).indexOf('owner') !== -1;
+        if(isHQMeta && (s.bug_schwere || s.deadline || s.konzept_ma || s.entwickler_ma || ['freigegeben','in_planung','in_entwicklung'].indexOf(s.status) !== -1)) {
+            h += '<div class="border border-gray-200 rounded-lg p-4 mb-4 bg-white">';
+            h += '<h4 class="text-xs font-bold text-gray-500 uppercase mb-3">📋 Planung & Zuweisung</h4>';
+            h += '<div class="grid grid-cols-2 gap-3 text-sm">';
+            // Bug-Schwere
+            if(s.bug_schwere) {
+                var bsColors = {kritisch:'text-red-700',mittel:'text-yellow-700',niedrig:'text-green-700'};
+                var bsIcons = {kritisch:'🔴',mittel:'🟡',niedrig:'🟢'};
+                h += '<div><span class="text-xs text-gray-400">Bug-Schwere</span><p class="font-semibold '+(bsColors[s.bug_schwere]||'text-gray-700')+'">'+bsIcons[s.bug_schwere]+' '+s.bug_schwere+'</p></div>';
+            }
+            // Deadline
+            h += '<div><span class="text-xs text-gray-400">Deadline</span>';
+            if(isOwnerMeta) {
+                h += '<input type="date" id="devDeadlineInput" value="'+(s.deadline||'')+'" onchange="updateDevDeadline(\''+s.id+'\')" class="block w-full mt-0.5 px-2 py-1 border border-gray-200 rounded text-sm">';
+            } else {
+                h += '<p class="font-semibold text-gray-700">'+(s.deadline ? new Date(s.deadline).toLocaleDateString('de-DE') : '–')+'</p>';
+            }
+            h += '</div>';
+            // Konzept-MA
+            h += '<div><span class="text-xs text-gray-400">Konzept-MA</span>';
+            if(isOwnerMeta) {
+                h += '<select id="devKonzeptMASelect" onchange="updateDevMA(\''+s.id+'\',\'konzept_ma\')" class="block w-full mt-0.5 px-2 py-1 border border-gray-200 rounded text-sm">';
+                h += '<option value="">– nicht zugewiesen –</option>';
+                h += '</select><span class="devMASelectSub" data-field="konzept_ma" data-current="'+(s.konzept_ma||'')+'"></span>';
+            } else {
+                h += '<p class="font-semibold text-gray-700" id="devKonzeptMAName">–</p>';
+            }
+            h += '</div>';
+            // Entwickler-MA
+            h += '<div><span class="text-xs text-gray-400">Entwickler</span>';
+            if(isOwnerMeta) {
+                h += '<select id="devEntwicklerMASelect" onchange="updateDevMA(\''+s.id+'\',\'entwickler_ma\')" class="block w-full mt-0.5 px-2 py-1 border border-gray-200 rounded text-sm">';
+                h += '<option value="">– nicht zugewiesen –</option>';
+                h += '</select><span class="devMASelectSub" data-field="entwickler_ma" data-current="'+(s.entwickler_ma||'')+'"></span>';
+            } else {
+                h += '<p class="font-semibold text-gray-700" id="devEntwicklerMAName">–</p>';
+            }
+            h += '</div>';
+            h += '</div></div>';
+            // Load HQ users into selects after render
+            setTimeout(function(){ _loadDevHQUsers(s); }, 50);
+        }
+
+        // === NEU-ANALYSIEREN / SCORES NEU BERECHNEN (Owner only) ===
+        if(isOwnerMeta && ki && s.status !== 'ki_pruefung') {
+            h += '<div class="flex gap-2 mb-4">';
+            h += '<button onclick="reanalyseDevSubmission(\''+s.id+'\')" class="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-xs font-semibold hover:bg-purple-200">🔄 KI neu analysieren</button>';
+            h += '</div>';
+        }
+
+        // === ANHÄNGE an bestehende Idee (Einreicher + HQ) ===
+        var canAttach = (sbUser && s.user_id === _sbUser().id) || isHQMeta;
+        if(canAttach) {
+            var hasAttachments = s.attachments && s.attachments.length > 0;
+            h += '<div class="mb-4">';
+            if(hasAttachments) {
+                h += '<details class="group"><summary class="text-xs font-bold text-gray-500 uppercase mb-2 cursor-pointer hover:text-gray-700">📎 Anhänge ('+s.attachments.length+')</summary>';
+                h += '<div class="mt-1 space-y-1">';
+                s.attachments.forEach(function(att) {
+                    var url = att.url || att.publicUrl || '#';
+                    h += '<a href="'+url+'" target="_blank" class="flex items-center gap-2 text-xs text-blue-600 hover:underline"><span>📄</span><span>'+_escH(att.name||'Datei')+'</span></a>';
+                });
+                h += '</div></details>';
+            }
+            h += '<div class="mt-2"><input type="file" id="devAttachInput" multiple class="hidden" onchange="uploadDevAttachment(\''+s.id+'\')">';
+            h += '<button onclick="document.getElementById(\'devAttachInput\').click()" class="text-xs text-gray-500 hover:text-gray-700 border border-dashed border-gray-300 rounded px-3 py-1.5 hover:border-gray-400">📎 Anhang hinzufügen</button></div>';
+            h += '</div>';
+        }
+
         // Konzept (nur HQ) - prominent display
         var isHQKonzept = (currentRoles||[]).indexOf('hq') !== -1;
         if(isHQKonzept && konzept) {
@@ -2172,6 +2246,122 @@ export function exportDevCSV() {
     _showToast('📥 CSV exportiert ('+devSubmissions.length+' Einträge)', 'success');
 }
 
-const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV};
+// === Load HQ users into MA selects ===
+async function _loadDevHQUsers(sub) {
+    try {
+        var resp = await _sb().from('users').select('id, name').eq('is_hq', true).order('name');
+        var users = resp.data || [];
+        ['devKonzeptMASelect','devEntwicklerMASelect'].forEach(function(selId) {
+            var sel = document.getElementById(selId);
+            if(!sel) return;
+            var field = selId === 'devKonzeptMASelect' ? 'konzept_ma' : 'entwickler_ma';
+            var currentVal = sub[field] || '';
+            users.forEach(function(u) {
+                var opt = document.createElement('option');
+                opt.value = u.id;
+                opt.textContent = u.name;
+                if(u.id === currentVal) opt.selected = true;
+                sel.appendChild(opt);
+            });
+        });
+        // For non-owner view, show names
+        if(sub.konzept_ma) {
+            var km = users.find(function(u){return u.id===sub.konzept_ma;});
+            var kmEl = document.getElementById('devKonzeptMAName');
+            if(kmEl && km) kmEl.textContent = km.name;
+        }
+        if(sub.entwickler_ma) {
+            var em = users.find(function(u){return u.id===sub.entwickler_ma;});
+            var emEl = document.getElementById('devEntwicklerMAName');
+            if(emEl && em) emEl.textContent = em.name;
+        }
+    } catch(e) { console.warn('HQ users load error', e); }
+}
+
+// === Update MA assignment (Owner only) ===
+export async function updateDevMA(subId, field) {
+    var selId = field === 'konzept_ma' ? 'devKonzeptMASelect' : 'devEntwicklerMASelect';
+    var sel = document.getElementById(selId);
+    if(!sel) return;
+    var val = sel.value || null;
+    try {
+        var upd = {}; upd[field] = val;
+        var resp = await _sb().from('dev_submissions').update(upd).eq('id', subId);
+        if(resp.error) throw resp.error;
+        _showToast(field === 'konzept_ma' ? 'Konzept-MA zugewiesen' : 'Entwickler zugewiesen', 'success');
+    } catch(e) {
+        _showToast('Fehler: ' + e.message, 'error');
+    }
+}
+
+// === Update deadline (Owner only) ===
+export async function updateDevDeadline(subId) {
+    var el = document.getElementById('devDeadlineInput');
+    if(!el) return;
+    var val = el.value || null;
+    try {
+        var resp = await _sb().from('dev_submissions').update({ deadline: val }).eq('id', subId);
+        if(resp.error) throw resp.error;
+        _showToast('Deadline ' + (val ? 'gesetzt: ' + new Date(val).toLocaleDateString('de-DE') : 'entfernt'), 'success');
+    } catch(e) {
+        _showToast('Fehler: ' + e.message, 'error');
+    }
+}
+
+// === Re-analyse submission (re-score with current vision) ===
+export async function reanalyseDevSubmission(subId) {
+    if(!confirm('Idee erneut durch die KI analysieren? (Vision-Fit, Klassifizierung usw. werden neu berechnet)')) return;
+    _showToast('🔄 KI-Neuanalyse gestartet...', 'info');
+    try {
+        var token = (await _sb().auth.getSession()).data.session.access_token;
+        var resp = await fetch(_sbUrl() + '/functions/v1/dev-ki-analyse', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ submission_id: subId, mode: 'reanalyse' })
+        });
+        var data = await resp.json();
+        if(data.error) throw new Error(data.error);
+        _showToast('✅ Neuanalyse abgeschlossen – Vision-Fit: ' + (data.vision_fit || '?'), 'success');
+        openDevDetail(subId);
+    } catch(e) {
+        _showToast('Fehler bei Neuanalyse: ' + e.message, 'error');
+    }
+}
+
+// === Upload attachment to existing submission ===
+export async function uploadDevAttachment(subId) {
+    var input = document.getElementById('devAttachInput');
+    if(!input || !input.files || input.files.length === 0) return;
+    _showToast('📎 Lade Anhänge hoch...', 'info');
+    try {
+        // Get current attachments
+        var subResp = await _sb().from('dev_submissions').select('attachments').eq('id', subId).single();
+        var currentAttachments = (subResp.data && subResp.data.attachments) || [];
+        var newAttachments = [];
+        for(var i = 0; i < input.files.length; i++) {
+            var file = input.files[i];
+            if(file.size > 10 * 1024 * 1024) { _showToast('Datei zu groß (max 10MB): ' + file.name, 'error'); continue; }
+            var ts = Date.now();
+            var safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+            var path = subId + '/' + ts + '_' + safeName;
+            var upResp = await _sb().storage.from('dev-attachments').upload(path, file, { contentType: file.type, upsert: false });
+            if(upResp.error) { console.error('Upload error:', upResp.error); continue; }
+            var pubUrl = _sb().storage.from('dev-attachments').getPublicUrl(path).data.publicUrl;
+            newAttachments.push({ name: file.name, type: file.type, size: file.size, url: pubUrl, uploaded_at: new Date().toISOString() });
+        }
+        if(newAttachments.length > 0) {
+            var allAttachments = currentAttachments.concat(newAttachments);
+            var updResp = await _sb().from('dev_submissions').update({ attachments: allAttachments }).eq('id', subId);
+            if(updResp.error) throw updResp.error;
+            _showToast('📎 ' + newAttachments.length + ' Anhang/Anhänge hochgeladen', 'success');
+            openDevDetail(subId);
+        }
+        input.value = '';
+    } catch(e) {
+        _showToast('Fehler beim Upload: ' + e.message, 'error');
+    }
+}
+
+const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
