@@ -1365,17 +1365,26 @@ export function backToTrainingMenu() {
 
 // === REACT PIPELINE MOUNT FUNCTION ===
 var pipelineMounted = false;
+var pipelineRetries = 0;
 export function mountReactPipeline() {
     var root = document.getElementById('react-pipeline-root');
-    if(!root) return;
-    if(pipelineMounted) return; // Already mounted
-    // Wait for Babel to compile
+    if(!root) { console.warn('[Pipeline] No react-pipeline-root element'); return; }
+    if(pipelineMounted) { console.log('[Pipeline] Already mounted'); return; }
     if(typeof window.__PIPELINE_APP === 'function') {
-        ReactDOM.createRoot(root).render(React.createElement(window.__PIPELINE_APP));
-        pipelineMounted = true;
+        try {
+            ReactDOM.createRoot(root).render(React.createElement(window.__PIPELINE_APP));
+            pipelineMounted = true;
+            console.log('[Pipeline] ✅ Mounted successfully');
+        } catch(err) {
+            console.error('[Pipeline] ❌ Mount error:', err);
+        }
     } else {
-        // Retry after Babel has compiled
-        setTimeout(mountReactPipeline, 200);
+        pipelineRetries++;
+        if(pipelineRetries < 50) {
+            setTimeout(mountReactPipeline, 300);
+        } else {
+            console.error('[Pipeline] ❌ Babel did not compile __PIPELINE_APP after 50 retries (15s)');
+        }
     }
 }
 
