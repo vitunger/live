@@ -774,7 +774,31 @@ if(document.body.classList.contains('dark')) {
 // Apply DEMO/BETA badges
 if(SESSION.account_level === 'extern') {
     _showView('externHome');
-} else if(currentRole === 'hq') { if(typeof window.switchViewMode==='function') window.switchViewMode('hq'); } else { _showView('home'); }
+} else {
+    // Restore last view from localStorage (if available)
+    var _savedView = null;
+    try { _savedView = localStorage.getItem('vit_lastView'); } catch(e) {}
+    
+    if(currentRole === 'hq') {
+        if(typeof window.switchViewMode==='function') window.switchViewMode('hq');
+        // After HQ mode switch, restore saved view if it exists
+        if(_savedView && _savedView !== 'home') {
+            setTimeout(function() {
+                _showView(_savedView);
+                // Also restore Entwicklung sub-tab if applicable
+                if(_savedView === 'entwicklung') {
+                    var _savedTab = null;
+                    try { _savedTab = localStorage.getItem('vit_lastEntwicklungTab'); } catch(e) {}
+                    if(_savedTab && typeof window.showEntwicklungTab === 'function') {
+                        setTimeout(function() { window.showEntwicklungTab(_savedTab); }, 100);
+                    }
+                }
+            }, 200);
+        }
+    } else {
+        _showView(_savedView || 'home');
+    }
+}
 // Load dashboard widgets with live data
 if(currentRole !== 'hq' && SESSION.account_level !== 'extern') { if(typeof window.loadDashboardWidgets==='function') window.loadDashboardWidgets(); if(typeof window.loadAllgemeinData==='function') window.loadAllgemeinData(); }
 // Check for pending approvals (HQ + GF only)
