@@ -3657,7 +3657,7 @@ export async function runDevKIPrioritize() {
         var token = session?.data?.session?.access_token;
         if(!token) throw new Error('Nicht angemeldet');
 
-        var resp = await fetch(window.SUPABASE_URL + '/functions/v1/dev-ki-analyse', {
+        var resp = await fetch(_sbUrl() + '/functions/v1/dev-ki-analyse', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -3799,7 +3799,7 @@ export async function devDeployCode(subId, selectMode) {
             artifact_ids: toDeploy.map(function(a) { return a.id; }),
             branch: targetBranch
         };
-        var res = await fetch(_sb().supabaseUrl + '/functions/v1/dev-deploy', {
+        var res = await fetch(_sbUrl() + '/functions/v1/dev-deploy', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token },
             body: JSON.stringify(payload)
@@ -3835,7 +3835,7 @@ export async function loadDeployHistory(subId) {
     var container = document.getElementById('devDeployHistory');
     if(!container) return;
     try {
-        var resp = await fetch(_sb().supabaseUrl + '/functions/v1/dev-deploy', {
+        var resp = await fetch(_sbUrl() + '/functions/v1/dev-deploy', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token },
             body: JSON.stringify({ submission_id: subId, mode: 'status' })
@@ -3947,7 +3947,7 @@ export async function devEntwicklungChatSend(subId) {
     }
     try {
         var payload = { submission_id: subId, mode: 'mockup_chat', feedback: text || '[Attachment]', attachments: _mockupChatAttachments };
-        var resp = await fetch((window._supabaseUrl || 'https://lwwagbkxeofahhwebkab.supabase.co') + '/functions/v1/dev-ki-analyse', {
+        var resp = await fetch(_sbUrl() + '/functions/v1/dev-ki-analyse', {
             method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token }, body: JSON.stringify(payload)
         });
         var data = await resp.json();
@@ -4064,7 +4064,7 @@ export async function devMockupChatSend(subId) {
     
     try {
         var payload = { submission_id: subId, mode: 'mockup_chat', feedback: text || '[Attachment]', attachments: _mockupChatAttachments };
-        var resp = await fetch(_sb().supabaseUrl + '/functions/v1/dev-ki-analyse', {
+        var resp = await fetch(_sbUrl() + '/functions/v1/dev-ki-analyse', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token },
             body: JSON.stringify(payload)
