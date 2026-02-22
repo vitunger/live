@@ -1469,6 +1469,14 @@ export async function toggleDevVote(subId) {
     }
 }
 
+
+// Helper: refresh all active Entwicklung views after status change
+function refreshEntwicklungViews() {
+    renderDevPipeline();
+    if(typeof renderEntwSteuerung === 'function') renderEntwSteuerung();
+    if(typeof renderEntwIdeen === 'function') renderEntwIdeen();
+}
+
 export async function devHQDecision(subId, ergebnis) {
     // Owner-Check: Nur Owner darf freigeben oder ablehnen
     var isOwner = (currentRoles||[]).indexOf('owner') !== -1;
@@ -1527,8 +1535,8 @@ export async function devHQDecision(subId, ergebnis) {
         // Update local cache
         var _ls = devSubmissions.find(function(s){ return s.id === subId; });
         if(_ls) { var _sm2 = {freigabe:'konzept_wird_erstellt',freigabe_mit_aenderungen:'ki_pruefung',rueckfragen:'hq_rueckfragen',ablehnung:'abgelehnt',spaeter:'geparkt',geschlossen:'geschlossen'}; _ls.status = _sm2[ergebnis] || _ls.status; }
-                renderDevPipeline();
-        setTimeout(function(){ loadDevSubmissions(); }, 1500);
+                refreshEntwicklungViews();
+        setTimeout(function(){ loadDevSubmissions().then(function(){ refreshEntwicklungViews(); }); }, 1500);
             }); } catch(_e) {}
 
             // Auto-create roadmap entry
@@ -2290,7 +2298,7 @@ export async function devHQDecisionFromDetail(subId, ergebnis) {
                 _sb().functions.invoke('dev-ki-analyse', {
                     body: { submission_id: subId, mode: 'konzept' }
                 }).then(function() {
-                    renderDevPipeline(); if(typeof renderEntwIdeen==="function") renderEntwIdeen();
+                    refreshEntwicklungViews();
                 });
 
                 // Auto-create roadmap entry
@@ -2327,7 +2335,7 @@ export async function devHQDecisionFromDetail(subId, ergebnis) {
 
         closeDevDetail();
         await loadDevSubmissions(true);
-        renderDevPipeline(); if(typeof renderEntwIdeen==="function") renderEntwIdeen();
+        refreshEntwicklungViews();
         if(typeof renderEntwSteuerung === 'function') renderEntwSteuerung();
         // Reload fresh data from DB after short delay (KI-Analyse etc.)
         setTimeout(function(){ loadDevSubmissions(); }, 1500);
