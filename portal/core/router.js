@@ -158,6 +158,8 @@ export function renderSmRanking() {
 
 export function showView(viewName) {
     console.log('showView called with:', viewName);
+    // Persist current view for reload restoration
+    try { localStorage.setItem('vit_lastView', viewName); } catch(e) {}
     
     // Check module status - block 'bald' and 'deaktiviert' modules
     var moduleStatusMap = {verkauf:'verkauf',controlling:'controlling',marketing:'marketing',werkstatt:'werkstatt',personal:'personal',office:'office',kalender:'kalender',nachrichten:'nachrichten',wissen:'wissen',support:'support'};
