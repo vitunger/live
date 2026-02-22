@@ -335,15 +335,38 @@ export async function loadDevSubmissions(force) {
         console.error('DevSubmissions load:', err);
         devSubmissions = [];
     }
-    // Update stats
-    var total = devSubmissions.length;
-    var neu = devSubmissions.filter(function(s){ return ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','konzept_wird_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1; }).length;
-    var dev = devSubmissions.filter(function(s){ return ['freigegeben','in_planung','in_entwicklung','beta_test','im_review','release_geplant'].indexOf(s.status) !== -1; }).length;
-    var done = devSubmissions.filter(function(s){ return s.status === 'ausgerollt'; }).length;
-    var e1=document.getElementById('entwStatTotal');if(e1)e1.textContent=total;
-    var e2=document.getElementById('entwStatNeu');if(e2)e2.textContent=neu;
-    var e4=document.getElementById('entwStatDev');if(e4)e4.textContent=dev;
-    var e5=document.getElementById('entwStatDone');if(e5)e5.textContent=done;
+    // Render actionable KPIs into entwStatsBar
+    var bar = document.getElementById('entwStatsBar');
+    if(bar) {
+        var eingang = devSubmissions.filter(function(s){ return ['neu','ki_pruefung'].indexOf(s.status) !== -1; }).length;
+        var warten = devSubmissions.filter(function(s){ return ['ki_rueckfragen','hq_rueckfragen'].indexOf(s.status) !== -1; }).length;
+        var aktiv = devSubmissions.filter(function(s){ return ['in_entwicklung','beta_test','im_review'].indexOf(s.status) !== -1; }).length;
+        var done = devSubmissions.filter(function(s){ return s.status === 'ausgerollt'; }).length;
+        var bugs = devSubmissions.filter(function(s){ return s.ki_typ === 'bug' && ['abgelehnt','ausgerollt','geparkt'].indexOf(s.status) === -1; }).length;
+        var week = devSubmissions.filter(function(s){ return (Date.now() - new Date(s.created_at).getTime()) < 7*86400000; }).length;
+        var total = devSubmissions.length;
+        var kh = '<div class="grid grid-cols-3 md:grid-cols-7 gap-2 mb-4">';
+        kh += '<div class="vit-card p-2 text-center'+(eingang>3?' ring-2 ring-red-300':'')+'">';
+        kh += '<p class="text-lg font-bold '+(eingang>3?'text-red-600':'text-gray-800')+'">'+eingang+'</p>';
+        kh += '<p class="text-[9px] text-gray-500">📥 Eingang</p></div>';
+        kh += '<div class="vit-card p-2 text-center'+(warten>0?' ring-2 ring-yellow-300':'')+'">';
+        kh += '<p class="text-lg font-bold '+(warten>0?'text-yellow-600':'text-gray-800')+'">'+warten+'</p>';
+        kh += '<p class="text-[9px] text-gray-500">⏳ Warten</p></div>';
+        kh += '<div class="vit-card p-2 text-center"><p class="text-lg font-bold text-blue-600">'+aktiv+'</p>';
+        kh += '<p class="text-[9px] text-gray-500">🔨 In Arbeit</p></div>';
+        kh += '<div class="vit-card p-2 text-center"><p class="text-lg font-bold text-green-600">'+done+'</p>';
+        kh += '<p class="text-[9px] text-gray-500">✅ Umgesetzt</p></div>';
+        kh += '<div class="vit-card p-2 text-center'+(bugs>0?' ring-2 ring-red-300':'')+'">';
+        kh += '<p class="text-lg font-bold '+(bugs>0?'text-red-600 animate-pulse':'text-gray-800')+'">'+bugs+'</p>';
+        kh += '<p class="text-[9px] text-gray-500">🔴 Bugs</p></div>';
+        kh += '<div class="vit-card p-2 text-center"><p class="text-lg font-bold text-purple-600">'+week+'</p>';
+        kh += '<p class="text-[9px] text-gray-500">📈 Woche</p></div>';
+        kh += '<div class="vit-card p-2 text-center cursor-pointer hover:shadow-md" onclick="exportDevCSV()">';
+        kh += '<p class="text-lg font-bold text-gray-600">'+total+'</p>';
+        kh += '<p class="text-[9px] text-gray-500">📥 Gesamt</p></div>';
+        kh += '</div>';
+        bar.innerHTML = kh;
+    }
 }
 
 export function renderEntwIdeen() {
@@ -2231,7 +2254,7 @@ export async function devHQDecisionFromDetail(subId, ergebnis) {
 
             // Trigger KI-Konzepterstellung bei Freigabe
             if(ergebnis === 'freigabe') {
-                _showToast('✅ Freigegeben! KI erstellt Entwicklungskonzept...', 'success');
+                _showToast('✅ Freigegeben! Entwicklungskonzept wird erstellt...', 'success');
                 _sb().functions.invoke('dev-ki-analyse', {
                     body: { submission_id: subId, mode: 'konzept' }
                 }).then(function() {
