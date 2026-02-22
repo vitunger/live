@@ -31,20 +31,10 @@ const ACHIEVEMENTS = [
   { id: "golddig", label: "Hoffnungsträger", icon: "⛏️", desc: "3 Hoffnungs-Kontakte", check: s => s.gold >= 3 },
   { id: "active", label: "Aktiver Seller", icon: "🏃", desc: "20 Aktivitäten", check: s => s.acts >= 20 },
 ];
-const LOCATIONS = [
-  { id: "hq", label: "🏢 HQ (Alle)", isHQ: true },
-  { id: "berlin", label: "📍 Berlin" },
-  { id: "muenchen", label: "📍 München" },
-  { id: "hamburg", label: "📍 Hamburg" },
-];
-
-const SELLERS = [
-  { id: "max", name: "Max Weber", short: "MW", color: "#667EEA", loc: "berlin" },
-  { id: "julia", name: "Julia Braun", short: "JB", color: "#E1306C", loc: "berlin" },
-  { id: "alex", name: "Alex Krüger", short: "AK", color: "#38B2AC", loc: "muenchen" },
-  { id: "nina", name: "Nina Hoffmann", short: "NH", color: "#F7C948", loc: "muenchen" },
-  { id: "tom", name: "Tom Richter", short: "TR", color: "#FF6B35", loc: "hamburg" },
-];
+// LOCATIONS + SELLERS: loaded dynamically from Supabase in PipelineApp
+const FALLBACK_LOCATIONS = [{ id: "hq", label: "🏢 HQ (Alle)", isHQ: true }];
+const FALLBACK_SELLERS = [];
+const SELLER_COLORS = ["#667EEA","#E1306C","#38B2AC","#F7C948","#FF6B35","#764BA2","#2D3748","#E53E3E","#D69E2E","#319795"];
 
 const CELEB = ["🎉","🥳","🏆","💰","🔥","⭐","🎊","💎","👑","🚀"];
 const GOAL = 15000;
@@ -63,14 +53,188 @@ const DEFAULT_RULES = [
   { id: "r6", from: "lead", to: "angebot", action: "activity", actType: "call", text: "Beratungstermin vereinbaren", enabled: true, scope: "berlin" },
 ];
 
-const INIT = [
-  { id:1, name:"Anna Müller", value:2400, stage:"lead", avatar:"👩", heat:3, note:"Interesse Premium-Paket", phone:"0176 123 4567", email:"anna.mueller@mail.de", acts:[{type:"call",text:"Erstgespräch geführt",time:ago(1)}], todos:[{text:"Angebot vorbereiten",due:ago(-1),done:false,id:"t1"}], created:ago(2), changed:ago(2), loc:"berlin", seller:"max" },
-  { id:2, name:"Thomas Schmidt", value:4500, stage:"angebot", avatar:"👨", heat:5, note:"Jahresabo Angebot gesendet", phone:"0151 234 5678", email:"t.schmidt@web.de", acts:[{type:"email",text:"Angebot versendet",time:ago(0)},{type:"call",text:"Nachgefasst",time:ago(2)}], todos:[{text:"Angebot nachfassen",due:ago(-2),done:false,id:"t2"}], created:ago(5), changed:ago(1), loc:"berlin", seller:"julia" },
-  { id:3, name:"Sarah Weber", value:1800, stage:"schwebend", avatar:"👩‍💼", heat:4, note:"Wartet auf Partner-Rückmeldung", phone:"0171 345 6789", email:"sarah.weber@gmail.com", acts:[{type:"meeting",text:"Beratung vor Ort",time:ago(3)}], todos:[], created:ago(8), changed:ago(3), loc:"muenchen", seller:"alex" },
-  { id:4, name:"Marco Fischer", value:3200, stage:"angebot", avatar:"👨‍💼", heat:4, note:"Vergleicht Angebote", phone:"0162 456 7890", email:"marco.fischer@outlook.de", acts:[{type:"whatsapp",text:"Nachricht gesendet",time:ago(6)}], todos:[{text:"Konkurrenzvergleich senden",due:ago(1),done:true,id:"t3"}], created:ago(10), changed:ago(6), loc:"muenchen", seller:"nina" },
-  { id:5, name:"Lisa Bauer", value:950, stage:"lead", avatar:"👩‍🎨", heat:2, note:"Via Empfehlung", phone:"0157 567 8901", email:"lisa.bauer@mail.de", acts:[], todos:[], created:ago(1), changed:ago(1), loc:"hamburg", seller:"tom" },
-  { id:6, name:"Peter Klein", value:5000, stage:"gold", avatar:"👨‍🔧", heat:3, note:"Budget erst Q2", phone:"0173 678 9012", email:"peter.klein@gmx.de", acts:[{type:"note",text:"Meldet sich März",time:ago(4)}], todos:[{text:"In 30 Tagen erneut kontaktieren",due:ago(-26),done:false,id:"t4"}], created:ago(15), changed:ago(4), loc:"hamburg", seller:"tom" },
-];
+// INIT data removed – loaded from Supabase in PipelineApp
+const INIT = [];
+
+// ── Stage Mapping: React ↔ DB ──
+const STAGE_TO_DB = { lead: "neu", angebot: "angebot", schwebend: "schwebend", verkauft: "gewonnen", gold: "gold", lost: "verloren" };
+const DB_TO_STAGE = { neu: "lead", kontaktiert: "lead", angebot: "angebot", verhandlung: "schwebend", schwebend: "schwebend", gewonnen: "verkauft", verloren: "lost", gold: "gold" };
+
+// ── Quelle Mapping: React ↔ DB ──
+const SOURCE_TO_DB = { "Empfehlung": "empfehlung", "Google": "google", "Instagram": "instagram", "Facebook": "facebook", "Messe": "messe", "Walk-In": "walk_in", "Website": "website", "Flyer": "flyer", "TikTok": "tiktok", "Andere": "sonstige" };
+const DB_TO_SOURCE = Object.fromEntries(Object.entries(SOURCE_TO_DB).map(([k,v])=>[v,k]));
+
+// ── Supabase Data Layer ──
+function useSupabase(currentLoc, SELLERS) {
+  const sb = window.sb;
+  const profile = window.sbProfile;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Convert DB row → React deal object
+  const dbToDeal = useCallback((row, todos, acts) => ({
+    id: row.id,  // uuid from DB
+    name: ((row.vorname || "") + " " + (row.nachname || "")).trim() || "Unbekannt",
+    value: parseFloat(row.geschaetzter_wert) || 0,
+    stage: DB_TO_STAGE[row.status] || "lead",
+    avatar: row.avatar || "👤",
+    heat: row.heat || 3,
+    note: row.notizen || "",
+    phone: row.telefon || "",
+    email: row.email || "",
+    seller: row.zugewiesen_an || "",
+    source: DB_TO_SOURCE[row.quelle] || "",
+    loc: row.standort_id || "",
+    sales: row.sales || {},
+    created: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
+    changed: row.updated_at ? new Date(row.updated_at).getTime() : Date.now(),
+    todos: (todos || []).map(t => ({
+      id: t.id,
+      text: t.text,
+      done: t.done || false,
+      due: t.due ? new Date(t.due).getTime() : Date.now() + 7 * 864e5
+    })),
+    acts: (acts || []).map(a => ({
+      type: a.typ || "note",
+      text: a.beschreibung || "",
+      time: a.created_at ? new Date(a.created_at).getTime() : Date.now()
+    })),
+    _db: row // keep original for reference
+  }), []);
+
+  // Load all deals + todos + activities
+  const loadDeals = useCallback(async () => {
+    if (!sb) return [];
+    setLoading(true);
+    try {
+      // Load leads
+      let q = sb.from("leads").select("*").order("created_at", { ascending: false });
+      const { data: leads, error: e1 } = await q;
+      if (e1) throw e1;
+      if (!leads || !leads.length) { setLoading(false); return []; }
+
+      // Load all todos for these leads
+      const leadIds = leads.map(l => l.id);
+      const { data: allTodos } = await sb.from("lead_todos").select("*").in("lead_id", leadIds).order("created_at", { ascending: false });
+      
+      // Load all activities for these leads
+      const { data: allActs } = await sb.from("lead_aktivitaeten").select("*").in("lead_id", leadIds).order("created_at", { ascending: false });
+
+      // Group by lead_id
+      const todoMap = {};
+      (allTodos || []).forEach(t => { if (!todoMap[t.lead_id]) todoMap[t.lead_id] = []; todoMap[t.lead_id].push(t); });
+      const actMap = {};
+      (allActs || []).forEach(a => { if (!actMap[a.lead_id]) actMap[a.lead_id] = []; actMap[a.lead_id].push(a); });
+
+      const deals = leads.map(l => dbToDeal(l, todoMap[l.id], actMap[l.id]));
+      setLoading(false);
+      return deals;
+    } catch (err) {
+      console.error("[Pipeline] Load error:", err);
+      setError(err.message);
+      setLoading(false);
+      return [];
+    }
+  }, [sb, dbToDeal]);
+
+  // Save deal field to DB
+  const saveDeal = useCallback(async (dealId, field, value) => {
+    if (!sb) return;
+    const updates = {};
+    switch (field) {
+      case "name": {
+        const parts = String(value).trim().split(" ");
+        updates.vorname = parts[0] || "";
+        updates.nachname = parts.slice(1).join(" ") || "";
+        break;
+      }
+      case "value": updates.geschaetzter_wert = value; break;
+      case "stage": updates.status = STAGE_TO_DB[value] || "neu"; break;
+      case "heat": updates.heat = value; break;
+      case "avatar": updates.avatar = value; break;
+      case "note": updates.notizen = value; break;
+      case "phone": updates.telefon = value; break;
+      case "email": updates.email = value; break;
+      case "seller": updates.zugewiesen_an = value || null; break;
+      case "source": updates.quelle = SOURCE_TO_DB[value] || "sonstige"; break;
+      case "sales": updates.sales = value; break;
+      default: return; // Unknown field, skip
+    }
+    try {
+      const { error: err } = await sb.from("leads").update(updates).eq("id", dealId);
+      if (err) console.error("[Pipeline] Save error:", err);
+    } catch (e) { console.error("[Pipeline] Save exception:", e); }
+  }, [sb]);
+
+  // Create new deal
+  const createDeal = useCallback(async (deal) => {
+    if (!sb || !profile) return null;
+    const nameParts = (deal.name || "").trim().split(" ");
+    try {
+      const { data, error: err } = await sb.from("leads").insert({
+        standort_id: deal.loc || profile.standort_id,
+        erstellt_von: window.sbUser?.id || null,
+        zugewiesen_an: deal.seller || null,
+        vorname: nameParts[0] || "Neu",
+        nachname: nameParts.slice(1).join(" ") || "",
+        email: deal.email || null,
+        telefon: deal.phone || null,
+        status: STAGE_TO_DB[deal.stage] || "neu",
+        quelle: SOURCE_TO_DB[deal.source] || "walk_in",
+        interesse: deal.note || "",
+        notizen: deal.note || "",
+        geschaetzter_wert: deal.value || 0,
+        heat: deal.heat || 3,
+        avatar: deal.avatar || "👤",
+        sales: deal.sales || {}
+      }).select().single();
+      if (err) throw err;
+      return data;
+    } catch (e) { console.error("[Pipeline] Create error:", e); return null; }
+  }, [sb, profile]);
+
+  // Save todo
+  const saveTodo = useCallback(async (leadId, todo) => {
+    if (!sb) return null;
+    try {
+      const { data, error: err } = await sb.from("lead_todos").insert({
+        lead_id: leadId,
+        text: todo.text,
+        done: todo.done || false,
+        due: todo.due ? new Date(todo.due).toISOString() : null,
+        created_by: window.sbUser?.id || null
+      }).select().single();
+      if (err) throw err;
+      return data;
+    } catch (e) { console.error("[Pipeline] Todo create error:", e); return null; }
+  }, [sb]);
+
+  // Toggle todo done
+  const toggleTodo = useCallback(async (todoId, done) => {
+    if (!sb) return;
+    try {
+      await sb.from("lead_todos").update({ done }).eq("id", todoId);
+    } catch (e) { console.error("[Pipeline] Todo toggle error:", e); }
+  }, [sb]);
+
+  // Add activity
+  const addActivity = useCallback(async (leadId, act) => {
+    if (!sb) return null;
+    try {
+      const { data, error: err } = await sb.from("lead_aktivitaeten").insert({
+        lead_id: leadId,
+        user_id: window.sbUser?.id || null,
+        typ: act.type || "note",
+        beschreibung: act.text || "",
+        metadata: {}
+      }).select().single();
+      if (err) throw err;
+      return data;
+    } catch (e) { console.error("[Pipeline] Activity create error:", e); return null; }
+  }, [sb]);
+
+  return { loading, error, loadDeals, saveDeal, createDeal, saveTodo, toggleTodo, addActivity };
+}
 
 /* ── Tiny Components ─────────────────────────────── */
 function Particle({x,y,emoji,delay}){return <div style={{position:"fixed",left:x,top:y,fontSize:"2rem",pointerEvents:"none",zIndex:9999,animation:`fly 1.2s ease-out ${delay}s forwards`,opacity:0}}>{emoji}</div>}
@@ -143,12 +307,13 @@ function Col({stage,deals,onDrop,onDrag,onClick,newId}){
 }
 
 /* ── Add Modal ───────────────────────────────────── */
-function AddModal({onClose,onAdd,currentLoc}){
-  const[n,setN]=useState("");const[v,setV]=useState("");const[no,setNo]=useState("");const[ph,setPh]=useState("");const[em,setEm]=useState("");const[av,setAv]=useState("👤");const[loc,setLoc]=useState(currentLoc==="hq"?"berlin":currentLoc);const[seller,setSeller]=useState("");
+function AddModal({onClose,onAdd,currentLoc,LOCATIONS,SELLERS}){
+  const[n,setN]=useState("");const[v,setV]=useState("");const[no,setNo]=useState("");const[ph,setPh]=useState("");const[em,setEm]=useState("");const[av,setAv]=useState("👤");
+  const locs=LOCATIONS.filter(l=>!l.isHQ);
+  const[loc,setLoc]=useState(currentLoc==="hq"?(locs[0]?.id||""):currentLoc);const[seller,setSeller]=useState("");
   const availSellers=SELLERS.filter(s=>s.loc===loc);
   const go=()=>{if(!n||!v)return;onAdd({name:n,value:+v,note:no||"Neuer Kontakt",avatar:av,heat:3,stage:"lead",phone:ph,email:em,acts:[],todos:[],created:Date.now(),changed:Date.now(),loc,seller:seller||availSellers[0]?.id||""})};
   const ip={width:"100%",padding:"10px 14px",borderRadius:12,border:"2px solid #E2E8F0",fontSize:14,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box"};
-  const locs=LOCATIONS.filter(l=>!l.isHQ);
   return <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.4)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,animation:"fadeIn .2s"}}>
     <div onClick={e=>e.stopPropagation()} style={{background:"var(--c-bg)",borderRadius:24,padding:28,width:420,maxWidth:"92vw",maxHeight:"90vh",overflowY:"auto",boxShadow:"0 25px 60px rgba(0,0,0,.15)",animation:"pop .3s cubic-bezier(.34,1.56,.64,1)"}}>
       <h2 style={{margin:"0 0 20px",fontFamily:"'Outfit',sans-serif",fontWeight:800,fontSize:22}}>🚀 Neuer Kontakt</h2>
@@ -582,7 +747,7 @@ function ScanUploadModal({deal,sales,onClose,onUpdateDeal}){
   </div>
 }
 
-function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateDeal,onChangeStage}){
+function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateDeal,onChangeStage,SELLERS}){
   const[tab,setTab]=useState("overview");
   const[at,setAt]=useState("call");const[tx,setTx]=useState("");
   const[todoTx,setTodoTx]=useState("");const[todoDays,setTodoDays]=useState(3);
@@ -824,7 +989,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
   </div>
 }
 /* ── Automations Settings Modal ──────────────────── */
-function AutoModal({rules,onUpdate,onClose}){
+function AutoModal({rules,onUpdate,onClose,LOCATIONS}){
   const[rs,setRs]=useState(rules);
   const[nFrom,setNFrom]=useState("*");const[nTo,setNTo]=useState("angebot");const[nAct,setNAct]=useState("todo");const[nTx,setNTx]=useState("");const[nDays,setNDays]=useState(3);const[nActType,setNActType]=useState("note");const[nScope,setNScope]=useState("hq");
   const[filterScope,setFilterScope]=useState("all");
@@ -962,7 +1127,7 @@ function DropZone({sid,label,sub,bc,tc,cc,deals,onDrop,onDrag}){
 
 /* ── MAIN APP ────────────────────────────────────── */
 function PipelineApp(){
-  const[deals,setDeals]=useState(INIT);
+  const[deals,setDeals]=useState([]);
   const[dragId,setDragId]=useState(null);
   const[showAdd,setShowAdd]=useState(false);
   const[sel,setSel]=useState(null);
@@ -974,18 +1139,88 @@ function PipelineApp(){
   const[showIn,setShowIn]=useState(false);
   const[showAuto,setShowAuto]=useState(false);
   const[rules,setRules]=useState(DEFAULT_RULES);
+  const[LOCATIONS,setLocations]=useState(FALLBACK_LOCATIONS);
+  const[SELLERS,setSellers]=useState(FALLBACK_SELLERS);
+  const[dataReady,setDataReady]=useState(false);
+
   // Determine location from logged-in user profile
   const isHqUser = window.sbProfile && window.sbProfile.is_hq;
-  const userStandortSlug = (function() {
-    // Map standort_id to a loc slug - for now use demo mapping
-    // TODO: Replace with real standort lookup from DB
-    if(!window.sbProfile || window.sbProfile.is_hq) return "hq";
-    return "berlin"; // Default for non-HQ users until DB mapping exists
-  })();
-  const[curLoc,setCurLoc]=useState(isHqUser ? "hq" : userStandortSlug);
+  const userStandortId = window.sbProfile?.standort_id || "";
+  const[curLoc,setCurLoc]=useState(isHqUser ? "hq" : userStandortId);
+
+  // Supabase data layer
+  const { loading, error: dbError, loadDeals, saveDeal, createDeal, saveTodo, toggleTodo: dbToggleTodo, addActivity } = useSupabase(curLoc, SELLERS);
+
+  // Load locations + sellers + deals on mount
+  useEffect(() => {
+    const init = async () => {
+      const sb = window.sb;
+      if (!sb) { console.warn("[Pipeline] No Supabase client"); setDataReady(true); return; }
+
+      try {
+        // Load standorte
+        const { data: standorte } = await sb.from("standorte").select("id, name, slug").order("name");
+        if (standorte && standorte.length) {
+          setLocations([
+            { id: "hq", label: "🏢 HQ (Alle)", isHQ: true },
+            ...standorte.map(s => ({ id: s.id, label: "📍 " + s.name, slug: s.slug }))
+          ]);
+        }
+
+        // Load active users as sellers
+        const { data: users } = await sb.from("users").select("id, vorname, nachname, name, standort_id, is_hq").eq("status", "aktiv");
+        if (users && users.length) {
+          setSellers(users.map((u, i) => {
+            const vn = u.vorname || u.name?.split(" ")[0] || "?";
+            const nn = u.nachname || u.name?.split(" ").slice(1).join(" ") || "";
+            const short = (vn[0] || "") + (nn[0] || "");
+            return {
+              id: u.id,
+              name: (vn + " " + nn).trim(),
+              short: short.toUpperCase(),
+              color: SELLER_COLORS[i % SELLER_COLORS.length],
+              loc: u.standort_id || "",
+              isHQ: u.is_hq || false
+            };
+          }));
+        }
+
+        // Load deals
+        const loaded = await loadDeals();
+        setDeals(loaded);
+
+        // Load automations from DB
+        const { data: autoRules } = await sb.from("lead_automations").select("*").eq("enabled", true);
+        if (autoRules && autoRules.length) {
+          setRules(autoRules.map(r => ({
+            id: r.id,
+            from: r.from_stage === "*" ? "*" : (DB_TO_STAGE[r.from_stage] || r.from_stage || "*"),
+            to: DB_TO_STAGE[r.to_stage] || r.to_stage || "angebot",
+            action: r.action,
+            text: r.action_text,
+            days: r.days_offset || 0,
+            actType: r.action_type || "note",
+            enabled: true,
+            scope: r.is_global ? "hq" : (r.standort_id || "hq")
+          })));
+        }
+      } catch (err) {
+        console.error("[Pipeline] Init error:", err);
+      }
+      setDataReady(true);
+    };
+    init();
+  }, []);
+
   const nid=useRef(100);
 
   const filteredDeals = curLoc === "hq" ? deals : deals.filter(d => d.loc === curLoc);
+
+  // Loading state
+  if (!dataReady) return <div style={{fontFamily:"'Outfit',sans-serif",textAlign:"center",padding:60}}>
+    <div style={{fontSize:32,marginBottom:12}}>🚴</div>
+    <div style={{fontSize:14,fontWeight:700,color:"#667EEA"}}>Pipeline wird geladen...</div>
+  </div>;
 
   const msg=useCallback(m=>{setToast(m);setTimeout(()=>setToast(null),2500)},[]);
   const pop=useCallback((x,y)=>{const np=Array.from({length:14},(_,i)=>({id:Date.now()+i,x:x+(Math.random()-.5)*120,y:y+(Math.random()-.5)*80,emoji:CELEB[Math.floor(Math.random()*CELEB.length)],delay:i*.04}));setParts(p=>[...p,...np]);setTimeout(()=>setParts(p=>p.filter(pp=>!np.find(n=>n.id===pp.id))),2000)},[]);
@@ -1019,30 +1254,86 @@ function PipelineApp(){
     if(!deal||deal.stage===ns)return;
     const oldStage=deal.stage;
     setDeals(p=>p.map(x=>x.id===id?{...x,stage:ns,changed:Date.now()}:x));
+    // Persist to DB
+    saveDeal(id, "stage", ns);
     // Trigger automations
     setTimeout(()=>applyRules(id,oldStage,ns),100);
     if(ns==="verkauft"){setStreak(s=>s+1);msg(`🏆 ${deal.name} verkauft! ${fmt(deal.value)}`);pop(innerWidth/2,innerHeight/2)}
     else if(ns==="lost"){setStreak(0);msg(`💀 ${deal.name} verloren...`)}
     else if(ns==="gold"){msg(`💎 ${deal.name} → Schrank der Hoffnung`)}
     setDragId(null);
-  },[deals,pop,msg,applyRules]);
+  },[deals,pop,msg,applyRules,saveDeal]);
 
-  const addDeal=useCallback(d=>{const id=nid.current++;setDeals(p=>[...p,{...d,id}]);setNewId(id);setShowAdd(false);msg(`🎯 ${d.name} hinzugefügt!`);setTimeout(()=>setNewId(null),600)},[msg]);
-  const addAct=useCallback((id,a)=>{setDeals(p=>p.map(d=>d.id===id?{...d,acts:[a,...d.acts]}:d));setSel(p=>p&&p.id===id?{...p,acts:[a,...p.acts]}:p)},[]);
-  const setHeat=useCallback((id,h)=>{setDeals(p=>p.map(d=>d.id===id?{...d,heat:h}:d));setSel(p=>p&&p.id===id?{...p,heat:h}:p)},[]);
-  const toggleTodo=useCallback((did,tid)=>{setDeals(p=>p.map(d=>d.id===did?{...d,todos:d.todos.map(t=>t.id===tid?{...t,done:!t.done}:t)}:d));setSel(p=>p&&p.id===did?{...p,todos:p.todos.map(t=>t.id===tid?{...t,done:!t.done}:t)}:p)},[]);
-  const addTodo=useCallback((did,todo)=>{setDeals(p=>p.map(d=>d.id===did?{...d,todos:[todo,...d.todos]}:d));setSel(p=>p&&p.id===did?{...p,todos:[todo,...p.todos]}:p)},[]);
-  const updateDeal=useCallback((did,field,val)=>{setDeals(p=>p.map(d=>d.id===did?{...d,[field]:val}:d));setSel(p=>p&&p.id===did?{...p,[field]:val}:p)},[]);
+  const addDeal=useCallback(async(d)=>{
+    // Create in DB first, get UUID back
+    const dbRow = await createDeal(d);
+    if (dbRow) {
+      const newDeal = { ...d, id: dbRow.id, created: Date.now(), changed: Date.now(), todos: [], acts: [] };
+      setDeals(p=>[newDeal,...p]);
+      setNewId(dbRow.id);
+      setShowAdd(false);
+      msg(`🎯 ${d.name} hinzugefügt!`);
+      setTimeout(()=>setNewId(null),600);
+    } else {
+      // Fallback: add locally with temp id
+      const id=nid.current++;
+      setDeals(p=>[{...d,id},...p]);
+      setNewId(id);
+      setShowAdd(false);
+      msg(`🎯 ${d.name} hinzugefügt (offline)`);
+      setTimeout(()=>setNewId(null),600);
+    }
+  },[msg,createDeal]);
+  const addAct=useCallback((id,a)=>{
+    setDeals(p=>p.map(d=>d.id===id?{...d,acts:[a,...d.acts]}:d));
+    setSel(p=>p&&p.id===id?{...p,acts:[a,...p.acts]}:p);
+    addActivity(id, a);
+  },[addActivity]);
+  const setHeat=useCallback((id,h)=>{
+    setDeals(p=>p.map(d=>d.id===id?{...d,heat:h}:d));
+    setSel(p=>p&&p.id===id?{...p,heat:h}:p);
+    saveDeal(id, "heat", h);
+  },[saveDeal]);
+  const toggleTodo=useCallback((did,tid)=>{
+    // Find current done state first
+    const deal = deals.find(d => d.id === did);
+    const todo = deal?.todos.find(t => t.id === tid);
+    const newDone = !(todo?.done);
+    setDeals(p=>p.map(d=>d.id===did?{...d,todos:d.todos.map(t=>t.id===tid?{...t,done:newDone}:t)}:d));
+    setSel(p=>p&&p.id===did?{...p,todos:p.todos.map(t=>t.id===tid?{...t,done:newDone}:t)}:p);
+    dbToggleTodo(tid, newDone);
+  },[deals,dbToggleTodo]);
+  const addTodo=useCallback(async(did,todo)=>{
+    // Optimistic update with temp id
+    const tempTodo = {...todo, id: todo.id || "t"+Date.now()};
+    setDeals(p=>p.map(d=>d.id===did?{...d,todos:[tempTodo,...d.todos]}:d));
+    setSel(p=>p&&p.id===did?{...p,todos:[tempTodo,...p.todos]}:p);
+    // Persist and get real UUID
+    const dbTodo = await saveTodo(did, todo);
+    if (dbTodo) {
+      // Replace temp id with real id
+      setDeals(p=>p.map(d=>d.id===did?{...d,todos:d.todos.map(t=>t.id===tempTodo.id?{...t,id:dbTodo.id}:t)}:d));
+      setSel(p=>p&&p.id===did?{...p,todos:p.todos.map(t=>t.id===tempTodo.id?{...t,id:dbTodo.id}:t)}:p);
+    }
+  },[saveTodo]);
+  const updateDeal=useCallback((did,field,val)=>{
+    setDeals(p=>p.map(d=>d.id===did?{...d,[field]:val}:d));
+    setSel(p=>p&&p.id===did?{...p,[field]:val}:p);
+    // Persist to DB (debounced for text fields would be nice, but for now direct)
+    saveDeal(did, field, val);
+  },[saveDeal]);
   const changeStage=useCallback((did,fromStage,toStage)=>{
     if(fromStage===toStage)return;
     const deal=deals.find(d=>d.id===did);
     setDeals(p=>p.map(d=>d.id===did?{...d,stage:toStage,changed:Date.now()}:d));
     setSel(p=>p&&p.id===did?{...p,stage:toStage,changed:Date.now()}:p);
+    // Persist to DB
+    saveDeal(did, "stage", toStage);
     setTimeout(()=>applyRules(did,fromStage,toStage),100);
     if(toStage==="verkauft"){setStreak(s=>s+1);msg(`🏆 ${deal?.name} verkauft! ${fmt(deal?.value||0)}`);pop(innerWidth/2,innerHeight/2)}
     else if(toStage==="lost"){setStreak(0);msg(`💀 ${deal?.name} verloren...`)}
     else if(toStage==="gold"){msg(`🗄️ ${deal?.name} → Schrank der Hoffnung`)}
-  },[deals,applyRules,msg,pop]);
+  },[deals,applyRules,msg,pop,saveDeal]);
 
   const main=STAGES.filter(s=>!["lost","gold"].includes(s.id));
   const aging=filteredDeals.filter(d=>!["verkauft","lost","gold"].includes(d.stage)&&dSince(d.changed)>=(AGING[d.stage]||5)).length;
@@ -1095,9 +1386,9 @@ function PipelineApp(){
     <DropZone sid="lost" label="💀 Verloren" sub="Jederzeit wiederbelebbar" bc="#FEB2B2" tc="#E53E3E" cc="#A0AEC0" deals={filteredDeals.filter(d=>d.stage==="lost")} onDrop={drop} onDrag={setDragId}/>
     <div style={{height:32}}/>
 
-    {showAdd&&<AddModal onClose={()=>setShowAdd(false)} onAdd={addDeal} currentLoc={curLoc}/>}
-    {sel&&<DetailModal deal={sel} onClose={()=>setSel(null)} onAct={addAct} onHeat={setHeat} onToggleTodo={toggleTodo} onAddTodo={addTodo} onUpdateDeal={updateDeal} onChangeStage={changeStage}/>}
-    {showAuto&&<AutoModal rules={rules} onUpdate={setRules} onClose={()=>setShowAuto(false)}/>}
+    {showAdd&&<AddModal onClose={()=>setShowAdd(false)} onAdd={addDeal} currentLoc={curLoc} LOCATIONS={LOCATIONS} SELLERS={SELLERS}/>}
+    {sel&&<DetailModal deal={sel} onClose={()=>setSel(null)} onAct={addAct} onHeat={setHeat} onToggleTodo={toggleTodo} onAddTodo={addTodo} onUpdateDeal={updateDeal} onChangeStage={changeStage} SELLERS={SELLERS}/>}
+    {showAuto&&<AutoModal rules={rules} onUpdate={setRules} onClose={()=>setShowAuto(false)} LOCATIONS={LOCATIONS}/>}
   </div>
 }
 
