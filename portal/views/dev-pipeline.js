@@ -2986,7 +2986,7 @@ export async function devShowFeedbackForm(subId) {
     // Load rollen for targeting
     var rollenResp = await _sb().from('rollen').select('*').order('sortierung');
     var rollen = rollenResp.data || [];
-    var usersResp = await _sb().from('users').select('id, name, email, is_hq').eq('status','active').order('name');
+    var usersResp = await _sb().from('users').select('id, name, email, is_hq').eq('status','aktiv').order('name');
     var allUsers = usersResp.data || [];
     
     var html = '<div id="devFeedbackFormOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10001;display:flex;align-items:center;justify-content:center" onclick="if(event.target===this)this.remove()">';
