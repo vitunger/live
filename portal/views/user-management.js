@@ -80,7 +80,7 @@ export async function approveUser(userId, userName) {
     ];
     hqRollenAppr.forEach(function(r){
         html += '<label class="flex items-center space-x-3 p-2 rounded-lg border '+r.color+' mb-1.5 cursor-pointer hover:shadow-sm transition">';
-        html += '<input type="checkbox" id="approveRole_'+r.key+'" class="rounded approveHqRoleCheck" style="accent-color:#EF7D00;"'+(r.key==='hq_gf'?' checked':'')+' data-role="'+r.key+'">';
+        html += '<input type="checkbox" id="approveRole_'+r.key+'" class="rounded approveHqRoleCheck" style="accent-color:#EF7D00;"'+' data-role="'+r.key+'">';
         html += '<span class="text-sm font-semibold text-gray-800">'+r.label+'</span></label>';
     });
     html += '</div>';
@@ -142,7 +142,7 @@ export function switchApproveEbene(ebene) {
         var hqChk = document.getElementById('approveRole_hq');
         if(hqChk) hqChk.checked = true;
         document.querySelectorAll('.approveHqRoleCheck').forEach(function(chk){
-            chk.checked = (chk.getAttribute('data-role') === 'hq_gf');
+            chk.checked = false;
         });
         ['inhaber','verkauf','werkstatt','buchhaltung'].forEach(function(r){
             var chk = document.getElementById('approveRole_'+r);
@@ -635,7 +635,7 @@ export function openNeuerMaModal() {
     ];
     hqRollen.forEach(function(r){
         html += '<label class="flex items-center space-x-3 p-2 rounded-lg border '+r.color+' mb-1.5 cursor-pointer hover:shadow-sm transition">';
-        html += '<input type="checkbox" id="newMaRole_'+r.key+'" class="rounded hqRoleCheck" style="accent-color:#EF7D00;"'+(r.key==='hq_gf'?' checked':'')+' data-role="'+r.key+'">';
+        html += '<input type="checkbox" id="newMaRole_'+r.key+'" class="rounded hqRoleCheck" style="accent-color:#EF7D00;"'+' data-role="'+r.key+'">';
         html += '<div><span class="text-sm font-semibold text-gray-800">'+r.icon+' '+r.label+'</span>';
         html += '<p class="text-[10px] text-gray-400">'+r.desc+'</p></div></label>';
     });
@@ -689,7 +689,7 @@ export function switchNewMaEbene(ebene) {
         if(rollesStd) rollesStd.style.display = 'none';
         // Auto-check GF role, uncheck others
         document.querySelectorAll('.hqRoleCheck').forEach(function(chk){
-            chk.checked = (chk.getAttribute('data-role') === 'hq_gf');
+            chk.checked = false;
         });
         // Uncheck standort roles
         ['inhaber','verkauf','werkstatt','buchhaltung'].forEach(function(r){
@@ -969,7 +969,7 @@ export function switchEditEbene(ebene) {
         if(rollesStd) rollesStd.style.display = 'none';
         // Auto-check GF role
         document.querySelectorAll('.editHqRoleCheck').forEach(function(chk){
-            if(!chk.checked) chk.checked = (chk.getAttribute('data-role') === 'hq_gf');
+            if(!chk.checked) chk.checked = false;
         });
         // Uncheck standort roles
         ['inhaber','verkauf','werkstatt','buchhaltung'].forEach(function(r){
