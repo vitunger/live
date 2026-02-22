@@ -4921,6 +4921,40 @@
                             <div id="hqFinRohertrag" class="space-y-2"></div>
                         </div>
                     </div>
+
+                    <!-- WaWi Netzwerk-Umsatz -->
+                    <div class="mt-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <p class="text-xs text-gray-400 uppercase tracking-widest mb-1">WaWi-BELEGE</p>
+                                <h2 class="text-xl font-bold text-gray-800">Netzwerk-Umsatz aus Belegen<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-wawi')">i</button></h2>
+                                <div class="widget-info-popup" id="info-hq-wawi">Umsatzdaten direkt aus den WaWi-Belegen der Standorte – automatisch per E-Mail eingegangen und geparst. Quelle "WaWi" = direkt aus Belegen, "BWA" = manuell hochgeladen. Zeigt auch wie aktuell die Daten sind und wer Leasing nutzt.</div>
+                            </div>
+                            <span class="text-xs text-gray-400 bg-green-50 text-green-600 px-3 py-1 rounded-full font-semibold">🔄 Live aus WaWi</span>
+                        </div>
+
+                        <!-- WaWi KPI Cards -->
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="hqWawiKpis"></div>
+
+                        <!-- WaWi Standort-Tabelle -->
+                        <div class="vit-card p-6 mb-6">
+                            <h3 class="text-sm font-semibold text-gray-700 mb-4">📋 Umsatz & Belege pro Standort</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm" id="hqWawiTabelle"></table>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="vit-card p-6">
+                                <h3 class="text-sm font-semibold text-gray-700 mb-4">🚴 Leasing-Quote pro Standort</h3>
+                                <div id="hqWawiLeasing" class="space-y-1"></div>
+                            </div>
+                            <div class="vit-card p-6">
+                                <h3 class="text-sm font-semibold text-gray-700 mb-4">⚠️ Fehlende / veraltete Belege</h3>
+                                <div id="hqWawiAlerts" class="space-y-2"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- ===== HQ MARKETING ===== -->
@@ -7260,3 +7294,4 @@
 <script type="module" src="/portal/app.js?v=1771794600"></script>
 </body>
 </html>
+
