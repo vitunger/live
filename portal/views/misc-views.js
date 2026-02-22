@@ -586,7 +586,7 @@ export function switchViewMode(mode) {
 
     // Restore last view from localStorage (if available), otherwise default
     var lastView = null;
-    try { lastView = localStorage.getItem('vit:lastView'); } catch(e) {}
+    try { lastView = localStorage.getItem('vit_lastView'); } catch(e) {}
     if(lastView && document.getElementById(lastView + 'View')) {
         _showView(lastView);
     } else if(isHQ) {
