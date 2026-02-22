@@ -10,6 +10,7 @@ function _t(k)           { return typeof window.t === 'function' ? window.t(k) :
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
 function _fmtN(n)        { return typeof window.fmtN === 'function' ? window.fmtN(n) : String(n); }
 function _triggerPush()  { if (typeof window.triggerPush === 'function') window.triggerPush.apply(null, arguments); }
+function _sbUrl()        { return window.SUPABASE_URL || 'https://lwwagbkxeofahhwebkab.supabase.co'; }
 
 // === DEV PIPELINE (Ideenboard 2.0) ===
 var devSubmissions = [];
@@ -348,7 +349,7 @@ export async function loadDevSubmissions() {
     // Update stats
     var total = devSubmissions.length;
     var neu = devSubmissions.filter(function(s){ return ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','konzept_wird_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1; }).length;
-    var dev = devSubmissions.filter(function(s){ return ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant'].indexOf(s.status) !== -1; }).length;
+    var dev = devSubmissions.filter(function(s){ return ['freigegeben','in_planung','in_entwicklung','beta_test','im_review','release_geplant'].indexOf(s.status) !== -1; }).length;
     var done = devSubmissions.filter(function(s){ return s.status === 'ausgerollt'; }).length;
     var e1=document.getElementById('entwStatTotal');if(e1)e1.textContent=total;
     var e2=document.getElementById('entwStatNeu');if(e2)e2.textContent=neu;
@@ -375,7 +376,7 @@ export function renderEntwIdeen() {
     var items = devSubmissions.filter(function(s) {
         if(scope !== 'alle' && s.scope !== scope) return false;
         if(status === 'neu' && ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','konzept_wird_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) === -1) return false;
-        if(status === 'dev' && ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant'].indexOf(s.status) === -1) return false;
+        if(status === 'dev' && ['freigegeben','in_planung','in_entwicklung','beta_test','im_review','release_geplant'].indexOf(s.status) === -1) return false;
         if(status === 'done' && s.status !== 'ausgerollt') return false;
         if(kat !== 'alle' && s.kategorie !== kat) return false;
         if(quelle === 'meine' && s.user_id !== userId) return false;
@@ -494,15 +495,16 @@ export async function renderEntwSteuerung() {
     h += '<div class="vit-card p-3 text-center"><button onclick="exportDevCSV()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90 w-full">📥 CSV Export</button></div>';
     h += '</div>';
 
-    // Kanban board for HQ
+    // Kanban board for HQ (6 Spalten lt. Plan)
     var columns = [
         {key:'neu', label:'📥 Eingang', statuses:['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','konzept_wird_erstellt'], color:'blue'},
         {key:'board', label:'🎯 Ideenboard', statuses:['im_ideenboard','hq_rueckfragen'], color:'purple'},
-        {key:'dev', label:'🔨 Entwicklung', statuses:['freigegeben','in_planung','in_entwicklung','im_review','release_geplant'], color:'yellow'},
+        {key:'plan', label:'📅 Planung', statuses:['freigegeben','in_planung'], color:'teal'},
+        {key:'dev', label:'🔨 Entwicklung', statuses:['in_entwicklung','beta_test','im_review','release_geplant'], color:'yellow'},
         {key:'done', label:'✅ Umgesetzt', statuses:['ausgerollt'], color:'green'},
-        {key:'parked', label:'⏸ Geparkt/Abgelehnt', statuses:['abgelehnt','geparkt'], color:'gray'}
+        {key:'parked', label:'⏸ Geparkt', statuses:['abgelehnt','geparkt'], color:'gray'}
     ];
-    h += '<div class="grid grid-cols-1 md:grid-cols-5 gap-4" style="min-height:400px">';
+    h += '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3" style="min-height:400px">';
     columns.forEach(function(col) {
         var items = devSubmissions.filter(function(s) { return col.statuses.indexOf(s.status) !== -1; });
         h += '<div class="bg-gray-50 rounded-xl p-3">';
@@ -815,7 +817,7 @@ export async function renderDevPipeline() {
     var total = devSubmissions.length;
     var neu = devSubmissions.filter(function(s){ return ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','konzept_wird_erstellt'].indexOf(s.status) !== -1; }).length;
     var board = devSubmissions.filter(function(s){ return ['im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1; }).length;
-    var dev = devSubmissions.filter(function(s){ return ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant'].indexOf(s.status) !== -1; }).length;
+    var dev = devSubmissions.filter(function(s){ return ['freigegeben','in_planung','in_entwicklung','beta_test','im_review','release_geplant'].indexOf(s.status) !== -1; }).length;
     var done = devSubmissions.filter(function(s){ return s.status === 'ausgerollt'; }).length;
 
     var e1=document.getElementById('devStatTotal');if(e1)e1.textContent=total;
@@ -839,7 +841,7 @@ var devStatusLabels = {
     neu:'Neu eingereicht', ki_pruefung:'⏳ Wird analysiert...', ki_rueckfragen:'❓ Rückfragen',
     konzept_erstellt:'📋 Konzept fertig', konzept_wird_erstellt:'⏳ Konzept wird erstellt...', im_ideenboard:'🎯 Im Ideenboard', hq_rueckfragen:'❓ HQ Rückfragen',
     freigegeben:'✅ Freigegeben', in_planung:'📅 In Planung', in_entwicklung:'🔨 In Entwicklung',
-    im_review:'🔍 Im Review', release_geplant:'🚀 Release geplant', ausgerollt:'✅ Ausgerollt',
+    beta_test:'🧪 Beta-Test', im_review:'🔍 Im Review', release_geplant:'🚀 Release geplant', ausgerollt:'✅ Ausgerollt',
     abgelehnt:'❌ Abgelehnt', geparkt:'⏸ Geparkt'
 };
 var devStatusColors = {
@@ -847,7 +849,8 @@ var devStatusColors = {
     ki_rueckfragen:'bg-yellow-100 text-yellow-700', konzept_erstellt:'bg-indigo-100 text-indigo-700', konzept_wird_erstellt:'bg-purple-100 text-purple-700',
     im_ideenboard:'bg-orange-100 text-orange-700', hq_rueckfragen:'bg-yellow-100 text-yellow-700',
     freigegeben:'bg-green-100 text-green-700', in_planung:'bg-teal-100 text-teal-700',
-    in_entwicklung:'bg-blue-100 text-blue-700', im_review:'bg-purple-100 text-purple-700',
+    in_entwicklung:'bg-blue-100 text-blue-700', beta_test:'bg-pink-100 text-pink-700',
+    im_review:'bg-purple-100 text-purple-700',
     release_geplant:'bg-orange-100 text-orange-700', ausgerollt:'bg-green-100 text-green-700',
     abgelehnt:'bg-red-100 text-red-700', geparkt:'bg-gray-100 text-gray-600'
 };
@@ -991,7 +994,7 @@ export function renderDevPlanung() {
     if(!c) return;
     var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
     var planItems = devSubmissions.filter(function(s) {
-        return ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant','geparkt'].indexOf(s.status) !== -1;
+        return ['freigegeben','in_planung','in_entwicklung','beta_test','im_review','release_geplant','geparkt'].indexOf(s.status) !== -1;
     }).sort(function(a,b) { return (a.queue_position||9999) - (b.queue_position||9999); });
     if(planItems.length === 0) {
         c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-3">📅</p><p>Noch keine freigegebenen Ideen in der Planung.</p></div>';
@@ -1001,6 +1004,7 @@ export function renderDevPlanung() {
     // Group by status
     var groups = [
         { key: 'in_entwicklung', label: '🔨 In Entwicklung', items: [] },
+        { key: 'beta_test', label: '🧪 Beta-Test', items: [] },
         { key: 'in_planung', label: '📅 In Planung', items: [] },
         { key: 'freigegeben', label: '✅ Freigegeben (noch nicht geplant)', items: [] },
         { key: 'im_review', label: '🔍 Im Review', items: [] },
@@ -1047,7 +1051,7 @@ export function renderDevPlanung() {
                 h += '<div class="flex items-center gap-1 flex-shrink-0">';
                 // Status change dropdown
                 h += '<select onchange="updateDevPlanStatus(\''+s.id+'\',this.value)" class="text-xs border border-gray-200 rounded px-1.5 py-1 bg-white">';
-                var planStatuses = ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant','geparkt'];
+                var planStatuses = ['freigegeben','in_planung','in_entwicklung','beta_test','im_review','release_geplant','geparkt'];
                 planStatuses.forEach(function(st) {
                     h += '<option value="'+st+'"'+(s.status===st?' selected':'')+'>'+devStatusLabels[st]+'</option>';
                 });
@@ -1435,7 +1439,7 @@ export async function devHQDecision(subId, ergebnis) {
 export async function moveDevQueue(subId, direction) {
     // Find current item and swap positions
     var planItems = devSubmissions.filter(function(s) {
-        return ['freigegeben','in_planung','in_entwicklung','im_review','release_geplant'].indexOf(s.status) !== -1;
+        return ['freigegeben','in_planung','in_entwicklung','beta_test','im_review','release_geplant'].indexOf(s.status) !== -1;
     }).sort(function(a,b) { return (a.queue_position||9999) - (b.queue_position||9999); });
 
     var idx = planItems.findIndex(function(s) { return s.id === subId; });
@@ -1733,6 +1737,58 @@ export async function openDevDetail(subId) {
             if(!isOwnerDetail) h += '<p class="text-xs text-gray-400 mt-2 italic">ℹ️ Freigabe & Ablehnung sind dem Owner vorbehalten.</p>';
             h += '</div>';
         }
+
+        // === WORKFLOW-AKTIONEN: Planung → Entwicklung → Beta → Rollout ===
+        if(isHQ && ['freigegeben','in_planung','in_entwicklung','beta_test','im_review','release_geplant'].indexOf(s.status) !== -1) {
+            h += '<div class="border-2 border-blue-200 rounded-lg p-4 mb-4 bg-blue-50">';
+            h += '<h4 class="text-sm font-bold text-gray-800 mb-3">⚡ Workflow</h4>';
+            h += '<div class="flex flex-wrap gap-2">';
+            if(s.status === 'freigegeben' || s.status === 'in_planung') {
+                h += '<button onclick="devAdvanceStatus(\''+s.id+'\',\'in_entwicklung\')" class="px-3 py-2 bg-blue-500 text-white rounded-lg text-sm font-semibold hover:bg-blue-600">🔨 In Entwicklung nehmen</button>';
+            }
+            if(s.status === 'in_entwicklung') {
+                h += '<button onclick="devAdvanceStatus(\''+s.id+'\',\'beta_test\')" class="px-3 py-2 bg-pink-500 text-white rounded-lg text-sm font-semibold hover:bg-pink-600">🧪 Beta-Test starten</button>';
+            }
+            if(s.status === 'beta_test') {
+                h += '<button onclick="devShowBetaFeedbackSummary(\''+s.id+'\')" class="px-3 py-2 bg-purple-100 text-purple-700 rounded-lg text-sm font-semibold hover:bg-purple-200">📊 Beta-Feedback</button>';
+                if(isOwnerDetail) {
+                    h += '<button onclick="devAdvanceStatus(\''+s.id+'\',\'release_geplant\')" class="px-3 py-2 bg-green-500 text-white rounded-lg text-sm font-semibold hover:bg-green-600">🚀 Release freigeben</button>';
+                    h += '<button onclick="devAdvanceStatus(\''+s.id+'\',\'in_entwicklung\')" class="px-3 py-2 bg-yellow-100 text-yellow-700 rounded-lg text-sm font-semibold hover:bg-yellow-200">↩ Zurück in Entwicklung</button>';
+                }
+            }
+            if(s.status === 'release_geplant' || s.status === 'im_review') {
+                if(isOwnerDetail) {
+                    h += '<button onclick="devRollout(\''+s.id+'\')" class="px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700">🚀 Jetzt ausrollen</button>';
+                }
+            }
+            h += '<button onclick="devAdvanceStatus(\''+s.id+'\',\'geparkt\')" class="px-2 py-1.5 bg-gray-200 text-gray-600 rounded-lg text-xs hover:bg-gray-300">⏸ Parken</button>';
+            h += '</div></div>';
+        }
+
+        // === BETA-FEEDBACK SECTION (bei beta_test Status) ===
+        if(s.status === 'beta_test') {
+            h += '<div class="border-2 border-pink-200 rounded-lg p-4 mb-4 bg-pink-50">';
+            h += '<h4 class="text-sm font-bold text-pink-700 mb-3">🧪 Beta-Feedback geben</h4>';
+            h += '<div class="flex gap-1 mb-2" id="devBetaStars">';
+            for(var _star=1;_star<=5;_star++) h += '<button onclick="document.getElementById(\'devBetaRating\').value='+_star+';document.querySelectorAll(\'#devBetaStars button\').forEach(function(b,i){b.className=i<'+_star+'?\'text-2xl text-yellow-400\':\'text-2xl text-gray-300\';})" class="text-2xl text-gray-300">★</button>';
+            h += '</div><input type="hidden" id="devBetaRating" value="0">';
+            h += '<textarea id="devBetaText" placeholder="Wie läuft das Feature? Was fällt dir auf?" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm mb-2" rows="2"></textarea>';
+            h += '<textarea id="devBetaBugs" placeholder="Bugs gefunden? Beschreibe sie hier..." class="w-full px-3 py-2 border border-red-100 rounded-lg text-sm mb-2" rows="1"></textarea>';
+            h += '<button onclick="submitDevBetaFeedback(\''+s.id+'\')" class="px-4 py-2 bg-pink-500 text-white rounded-lg text-sm font-semibold hover:bg-pink-600">📨 Feedback senden</button>';
+            h += '</div>';
+        }
+
+
+
+
+        // === RELEASE-DOCS (bei ausgerollt/release_geplant) ===
+        if(['ausgerollt','release_geplant'].indexOf(s.status) !== -1) {
+            try {
+                var rdHtml = await renderDevReleaseDocs(s.id);
+                if(rdHtml) h += rdHtml;
+            } catch(e) {}
+        }
+
 
         // === STATUS-LOG TIMELINE ===
         if(statusLog.length > 0) {
@@ -2423,6 +2479,234 @@ export async function uploadDevAttachment(subId) {
     }
 }
 
-const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat};
+
+// ============================================================
+// PHASE 3d/5: Workflow Status Advancement
+// ============================================================
+
+export async function devAdvanceStatus(subId, newStatus) {
+    var labels = {in_entwicklung:'In Entwicklung nehmen',beta_test:'Beta-Test starten',release_geplant:'Release freigeben',in_planung:'In Planung',geparkt:'Parken',ausgerollt:'Ausrollen'};
+    if(!confirm((labels[newStatus]||newStatus) + '?')) return;
+    try {
+        var updates = { status: newStatus };
+        if(newStatus === 'beta_test') updates.beta_start_at = new Date().toISOString();
+        if(newStatus === 'ausgerollt') updates.ausgerollt_at = new Date().toISOString();
+        var resp = await _sb().from('dev_submissions').update(updates).eq('id', subId);
+        if(resp.error) throw resp.error;
+
+        // If moving to beta: auto-link feature flag
+        if(newStatus === 'beta_test') {
+            var subResp = await _sb().from('dev_submissions').select('feature_flag_key, titel').eq('id', subId).single();
+            var sub = subResp.data;
+            if(sub && sub.feature_flag_key) {
+                // Enable flag for beta testers
+                await _sb().from('feature_flags').upsert({
+                    flag_key: sub.feature_flag_key,
+                    enabled: true,
+                    scope: 'beta_tester',
+                    rollout_percent: 0,
+                    beschreibung: 'Beta-Test: ' + (sub.titel || subId)
+                }, { onConflict: 'flag_key' });
+            }
+        }
+
+        _showToast('\u2705 Status: ' + (labels[newStatus]||newStatus), 'success');
+        openDevDetail(subId);
+    } catch(e) {
+        _showToast('Fehler: ' + e.message, 'error');
+    }
+}
+
+// ============================================================
+// PHASE 5: Beta-Feedback
+// ============================================================
+
+export async function submitDevBetaFeedback(subId) {
+    var rating = parseInt((document.getElementById('devBetaRating')||{}).value || '0');
+    var feedback = (document.getElementById('devBetaText')||{}).value || '';
+    var bugs = (document.getElementById('devBetaBugs')||{}).value || '';
+    if(!rating && !feedback.trim() && !bugs.trim()) { _showToast('Bitte gib eine Bewertung oder Feedback ein.', 'error'); return; }
+    try {
+        var resp = await _sb().from('dev_beta_feedback').insert({
+            submission_id: subId, user_id: _sbUser().id,
+            bewertung: rating || null, feedback: feedback.trim() || null, bugs: bugs.trim() || null
+        });
+        if(resp.error) throw resp.error;
+        // Also add as comment for visibility
+        await _sb().from('dev_kommentare').insert({
+            submission_id: subId, user_id: _sbUser().id, typ: 'kommentar',
+            inhalt: '\U0001f9ea Beta-Feedback: ' + (rating ? rating + '/5\u2b50 ' : '') + (feedback || '') + (bugs ? '\n\U0001f41b Bugs: ' + bugs : '')
+        });
+        _showToast('\U0001f4e8 Beta-Feedback gespeichert!', 'success');
+        openDevDetail(subId);
+    } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
+}
+
+export async function devShowBetaFeedbackSummary(subId) {
+    try {
+        var resp = await _sb().from('dev_beta_feedback').select('*, users:user_id(name)').eq('submission_id', subId).order('created_at', {ascending: false});
+        var feedbacks = resp.data || [];
+        if(feedbacks.length === 0) { _showToast('Noch kein Beta-Feedback vorhanden.', 'info'); return; }
+        var avgRating = feedbacks.filter(function(f){return f.bewertung;}).reduce(function(a,f){return a+f.bewertung;},0) / (feedbacks.filter(function(f){return f.bewertung;}).length || 1);
+        var bugsCount = feedbacks.filter(function(f){return f.bugs;}).length;
+        var html = '<div class="fixed inset-0 z-[70] bg-black/40 flex items-center justify-center p-4" onclick="this.remove()">';
+        html += '<div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto p-6" onclick="event.stopPropagation()">';
+        html += '<h3 class="text-lg font-bold mb-4">\U0001f4ca Beta-Feedback (' + feedbacks.length + ')</h3>';
+        html += '<div class="grid grid-cols-3 gap-3 mb-4">';
+        html += '<div class="text-center p-3 bg-yellow-50 rounded-lg"><p class="text-2xl font-bold text-yellow-600">' + avgRating.toFixed(1) + '</p><p class="text-xs text-gray-500">\u00d8 Bewertung</p></div>';
+        html += '<div class="text-center p-3 bg-blue-50 rounded-lg"><p class="text-2xl font-bold text-blue-600">' + feedbacks.length + '</p><p class="text-xs text-gray-500">Feedbacks</p></div>';
+        html += '<div class="text-center p-3 bg-red-50 rounded-lg"><p class="text-2xl font-bold text-red-600">' + bugsCount + '</p><p class="text-xs text-gray-500">Bug-Meldungen</p></div>';
+        html += '</div><div class="space-y-3">';
+        feedbacks.forEach(function(f) {
+            var name = f.users ? f.users.name : 'Unbekannt';
+            var dt = new Date(f.created_at).toLocaleDateString('de-DE');
+            html += '<div class="border border-gray-100 rounded-lg p-3">';
+            html += '<div class="flex justify-between items-center mb-1"><span class="text-sm font-semibold">' + _escH(name) + '</span><span class="text-xs text-gray-400">' + dt + '</span></div>';
+            if(f.bewertung) html += '<p class="text-sm">' + '\u2b50'.repeat(f.bewertung) + '\u2606'.repeat(5-f.bewertung) + '</p>';
+            if(f.feedback) html += '<p class="text-sm text-gray-700 mt-1">' + _escH(f.feedback) + '</p>';
+            if(f.bugs) html += '<p class="text-sm text-red-600 mt-1">\U0001f41b ' + _escH(f.bugs) + '</p>';
+            html += '</div>';
+        });
+        html += '</div><button onclick="this.closest(\'.fixed\').remove()" class="mt-4 w-full px-4 py-2 bg-gray-200 rounded-lg text-sm font-semibold hover:bg-gray-300">Schlie\u00dfen</button>';
+        html += '</div></div>';
+        document.body.insertAdjacentHTML('beforeend', html);
+    } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
+}
+
+// ============================================================
+// PHASE 6: Rollout mit Auto-Release-Note + Wissensartikel
+// ============================================================
+
+export async function devRollout(subId) {
+    if(!confirm('Feature jetzt f\u00fcr alle User ausrollen?\n\nDie KI generiert automatisch eine Release-Note und pr\u00fcft, ob ein Wissensartikel n\u00f6tig ist.')) return;
+    _showToast('\U0001f680 Rollout l\u00e4uft + KI generiert Dokumentation...', 'info');
+    try {
+        // 1. Update status
+        await _sb().from('dev_submissions').update({
+            status: 'ausgerollt', ausgerollt_at: new Date().toISOString()
+        }).eq('id', subId);
+
+        // 2. Enable feature flag for all (100%)
+        var subResp = await _sb().from('dev_submissions').select('feature_flag_key').eq('id', subId).single();
+        if(subResp.data && subResp.data.feature_flag_key) {
+            await _sb().from('feature_flags').update({
+                scope: 'alle', rollout_percent: 100, enabled: true
+            }).eq('flag_key', subResp.data.feature_flag_key);
+        }
+
+        // 3. Generate release docs via EF
+        var token = (await _sb().auth.getSession()).data.session.access_token;
+        var resp = await fetch(_sbUrl() + '/functions/v1/dev-ki-analyse', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ submission_id: subId, mode: 'release_docs' })
+        });
+        var data = await resp.json();
+        if(data.error) console.warn('Release docs generation error:', data.error);
+        else _showToast('\u2705 Ausgerollt! Release-Note generiert.', 'success');
+
+        openDevDetail(subId);
+    } catch(e) {
+        _showToast('Status aktualisiert, Doku-Fehler: ' + e.message, 'error');
+        openDevDetail(subId);
+    }
+}
+
+// ============================================================
+// PHASE 5: Beta-Tester Verwaltung (im System-Tab)
+// ============================================================
+
+export async function renderDevBetaTester() {
+    var c = document.getElementById('devBetaTesterContent');
+    if(!c) return;
+    try {
+        var resp = await _sb().from('dev_beta_tester').select('*, users:user_id(name, email)').order('created_at');
+        var testers = resp.data || [];
+        var h = '<div class="flex justify-between items-center mb-4">';
+        h += '<h3 class="text-sm font-bold text-gray-700">\U0001f9ea Beta-Tester (' + testers.filter(function(t){return t.aktiv;}).length + ' aktiv)</h3>';
+        h += '<button onclick="devAddBetaTester()" class="px-3 py-1.5 bg-pink-500 text-white rounded-lg text-xs font-semibold hover:bg-pink-600">+ Tester hinzuf\u00fcgen</button>';
+        h += '</div>';
+        if(testers.length === 0) {
+            h += '<p class="text-sm text-gray-400 text-center py-6">Noch keine Beta-Tester definiert.</p>';
+        } else {
+            h += '<div class="space-y-2">';
+            testers.forEach(function(t) {
+                var name = t.users ? t.users.name : 'Unbekannt';
+                var email = t.users ? t.users.email : '';
+                h += '<div class="flex items-center justify-between bg-white rounded-lg p-3 border border-gray-100">';
+                h += '<div><p class="text-sm font-semibold">' + _escH(name) + '</p><p class="text-xs text-gray-400">' + _escH(email) + '</p></div>';
+                h += '<div class="flex items-center gap-2">';
+                h += '<span class="text-xs rounded px-2 py-0.5 ' + (t.aktiv ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500') + '">' + (t.aktiv ? 'Aktiv' : 'Inaktiv') + '</span>';
+                h += '<button onclick="devToggleBetaTester(\'' + t.id + '\',' + (!t.aktiv) + ')" class="text-xs px-2 py-1 rounded ' + (t.aktiv ? 'bg-gray-100 hover:bg-gray-200' : 'bg-green-100 hover:bg-green-200') + '">' + (t.aktiv ? 'Deaktivieren' : 'Aktivieren') + '</button>';
+                h += '</div></div>';
+            });
+            h += '</div>';
+        }
+        c.innerHTML = h;
+    } catch(e) { c.innerHTML = '<p class="text-red-400 text-sm">Fehler: ' + e.message + '</p>'; }
+}
+
+export async function devAddBetaTester() {
+    var email = prompt('E-Mail des neuen Beta-Testers:');
+    if(!email) return;
+    try {
+        var userResp = await _sb().from('users').select('id, name').eq('email', email.trim()).single();
+        if(!userResp.data) { _showToast('Kein User mit dieser E-Mail gefunden.', 'error'); return; }
+        var resp = await _sb().from('dev_beta_tester').upsert({
+            user_id: userResp.data.id, aktiv: true, hinzugefuegt_von: _sbUser().id
+        }, { onConflict: 'user_id' });
+        if(resp.error) throw resp.error;
+        _showToast('\u2705 ' + userResp.data.name + ' als Beta-Tester hinzugef\u00fcgt!', 'success');
+        renderDevBetaTester();
+    } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
+}
+
+export async function devToggleBetaTester(id, aktiv) {
+    try {
+        await _sb().from('dev_beta_tester').update({ aktiv: aktiv }).eq('id', id);
+        _showToast(aktiv ? 'Beta-Tester aktiviert' : 'Beta-Tester deaktiviert', 'success');
+        renderDevBetaTester();
+    } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
+}
+
+// ============================================================
+// PHASE 6: Release-Docs anzeigen
+// ============================================================
+
+export async function renderDevReleaseDocs(subId) {
+    try {
+        var resp = await _sb().from('dev_release_docs').select('*').eq('submission_id', subId).order('created_at');
+        var docs = resp.data || [];
+        if(docs.length === 0) return '';
+        var h = '<div class="border-2 border-green-200 rounded-lg p-4 mb-4 bg-green-50">';
+        h += '<h4 class="text-sm font-bold text-green-700 mb-3">\U0001f4dd Release-Dokumentation</h4>';
+        docs.forEach(function(d) {
+            var icon = d.typ === 'release_note' ? '\U0001f4e3' : '\U0001f4da';
+            var label = d.typ === 'release_note' ? 'Release-Note' : 'Wissensartikel';
+            h += '<div class="bg-white rounded-lg p-3 border border-green-100 mb-2">';
+            h += '<div class="flex justify-between items-center mb-1">';
+            h += '<span class="text-xs font-semibold">' + icon + ' ' + label + (d.freigegeben ? ' \u2705' : ' (Entwurf)') + '</span>';
+            if(!d.freigegeben) h += '<button onclick="devApproveReleaseDoc(\'' + d.id + '\')" class="text-xs px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600">Freigeben</button>';
+            h += '</div>';
+            h += '<p class="text-sm font-semibold text-gray-800">' + _escH(d.titel) + '</p>';
+            h += '<p class="text-xs text-gray-600 mt-1 whitespace-pre-wrap">' + _escH(d.inhalt).substring(0, 300) + (d.inhalt.length > 300 ? '...' : '') + '</p>';
+            h += '</div>';
+        });
+        h += '</div>';
+        return h;
+    } catch(e) { return ''; }
+}
+
+export async function devApproveReleaseDoc(docId) {
+    try {
+        await _sb().from('dev_release_docs').update({
+            freigegeben: true, freigegeben_von: _sbUser().id, freigegeben_at: new Date().toISOString()
+        }).eq('id', docId);
+        _showToast('\u2705 Dokument freigegeben!', 'success');
+    } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
+}
+
+
+const _exports = {toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
