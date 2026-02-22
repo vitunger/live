@@ -291,6 +291,7 @@ export async function renderEntwicklung() {
 }
 
 export function showEntwicklungTab(tab) {
+    try { localStorage.setItem('vit_lastEntwicklungTab', tab); } catch(e) {}
     entwCurrentTab = tab;
     try { localStorage.setItem('vit:lastEntwTab', tab); } catch(e) {}
     // Update tab buttons
