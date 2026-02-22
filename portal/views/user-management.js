@@ -1856,8 +1856,8 @@ function statusBadge(s) {
     return s;
 }
 function rolleBadge(r) {
-    var colors = {'inhaber':'bg-vit-orange text-white','verkauf':'bg-blue-100 text-blue-700','werkstatt':'bg-gray-200 text-gray-700','buchhaltung':'bg-purple-100 text-purple-700','hq':'bg-red-100 text-red-700'};
-    var labels = {'inhaber':'Gesch\u00e4ftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung','hq':'HQ'};
+    var colors = {'inhaber':'bg-vit-orange text-white','verkauf':'bg-blue-100 text-blue-700','werkstatt':'bg-gray-200 text-gray-700','buchhaltung':'bg-purple-100 text-purple-700','hq':'bg-red-100 text-red-700','hq_gf':'bg-yellow-100 text-yellow-800','hq_sales':'bg-blue-100 text-blue-700','hq_marketing':'bg-pink-100 text-pink-700','hq_einkauf':'bg-cyan-100 text-cyan-700','hq_support':'bg-purple-100 text-purple-700','hq_akademie':'bg-emerald-100 text-emerald-700','hq_hr':'bg-rose-100 text-rose-700','hq_it':'bg-slate-200 text-slate-700','owner':'bg-amber-100 text-amber-800'};
+    var labels = {'inhaber':'Gesch\u00e4ftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung','hq':'HQ','hq_gf':'Gesch\u00e4ftsf\u00fchrung','hq_sales':'Sales','hq_marketing':'Marketing','hq_einkauf':'Einkauf','hq_support':'Support','hq_akademie':'Akademie','hq_hr':'HR','hq_it':'IT / Systemadmin','owner':'Owner'};
     return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold '+(colors[r]||'bg-gray-100 text-gray-600')+'">'+(labels[r]||r)+'</span>';
 }
 function rollenBadges(rollen) {
