@@ -1360,7 +1360,7 @@ export async function submitDevIdea() {
             else console.log('KI-Analyse fertig für:', submissionId);
             // Nach Analyse nochmal neu laden um Ergebnis zu zeigen
             renderDevPipeline();
-        }));
+        });
     } catch(err) {
         alert('Fehler beim Einreichen: ' + (err.message||err));
     } finally {
@@ -2236,7 +2236,7 @@ export async function devHQDecisionFromDetail(subId, ergebnis) {
                     body: { submission_id: subId, mode: 'konzept' }
                 }).then(function() {
                     renderDevPipeline(); if(typeof renderEntwIdeen==="function") renderEntwIdeen();
-                }));
+                });
 
                 // Auto-create roadmap entry
                 var sub = devSubmissions.find(function(s){ return s.id === subId; });
@@ -2257,7 +2257,7 @@ export async function devHQDecisionFromDetail(subId, ergebnis) {
                         ziel_quartal: quarter,
                         submission_id: subId,
                         sortierung: 999
-                    }));
+                    });
                 }
             }
         }
