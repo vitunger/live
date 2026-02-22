@@ -1732,6 +1732,14 @@ export async function openDevDetail(subId) {
             }
             h += '<div class="mt-2"><input type="file" id="devAttachInput" multiple class="hidden" onchange="uploadDevAttachment(\''+s.id+'\')">';
             h += '<button onclick="document.getElementById(\'devAttachInput\').click()" class="text-xs text-gray-500 hover:text-gray-700 border border-dashed border-gray-300 rounded px-3 py-1.5 hover:border-gray-400">📎 Anhang hinzufügen</button></div>';
+
+            // === FREIE NOTIZEN ===
+            h += '<div class="mt-4 mb-4">';
+            h += '<h4 onclick="var el=document.getElementById(\'devSec_notizen\');if(el){el.style.display=el.style.display===\'none\'?\'block\':\'none\';this.querySelector(\'.devSecArrow\').textContent=el.style.display===\'none\'?\'\u25B6\':\'\u25BC\'}" style="cursor:pointer;user-select:none" class="text-xs font-bold text-gray-500 uppercase mb-2">\u270D\uFE0F Notizen <span class=\'devSecArrow text-gray-400 text-[10px] ml-1\'>\u25BC</span></h4>';
+            h += '<div id="devSec_notizen">';
+            h += '<textarea id="devNotizen" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-y focus:border-orange-400 focus:ring-1 focus:ring-orange-200" placeholder="Freie Notizen zu dieser Idee..." onblur="saveDevNotizen(\''+s.id+'\')">'+(s.notizen||'')+'</textarea>';
+            h += '</div></div>';
+
             h += '</div>';
         }
 
@@ -3611,6 +3619,19 @@ export async function runDevKIPrioritize() {
 }
 
 
+
+// === NOTIZEN SAVE ===
+export async function saveDevNotizen(subId) {
+    var textarea = document.getElementById('devNotizen');
+    if(!textarea) return;
+    var notizen = textarea.value;
+    try {
+        await _sb().from('dev_submissions').update({ notizen: notizen }).eq('id', subId);
+    } catch(e) {
+        console.warn('Notizen save error:', e);
+    }
+}
+
 // === MOCKUP FUNCTIONS ===
 export async function devMockupGenerate(subId, isRefine) {
     var btn = document.getElementById('devBtnMockGen');
@@ -3715,7 +3736,7 @@ export async function devMockupShowVersion(mockupId) {
 }
 
 const _exports = {
-    devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,
+    saveDevNotizen,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
