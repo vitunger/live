@@ -2867,6 +2867,18 @@
                                 <option value="meine">Meine</option>
                                 <option value="standort">Mein Standort</option>
                             </select>
+                            <select id="entwFilterTyp" onchange="renderEntwIdeen()" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5">
+                                <option value="alle">Alle Typen</option>
+                                <option value="bug">🐛 Bugs</option>
+                                <option value="feature">✨ Features</option>
+                                <option value="idee">💡 Ideen</option>
+                            </select>
+                            <select id="entwFilterSort" onchange="renderEntwIdeen()" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5">
+                                <option value="votes">▲ Meiste Votes</option>
+                                <option value="newest">🕐 Neueste</option>
+                                <option value="oldest">🕐 Älteste</option>
+                                <option value="fit">🎯 Vision-Fit</option>
+                            </select>
                             <span class="text-xs text-gray-400 ml-auto" id="entwIdeenCount"></span>
                         </div>
                         <!-- Stats -->
