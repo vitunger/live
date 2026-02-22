@@ -1702,9 +1702,13 @@ export async function openDevDetail(subId) {
         }
 
         // === NEU-ANALYSIEREN / SCORES NEU BERECHNEN (Owner only) ===
-        if(isOwnerMeta && ki && s.status !== 'ki_pruefung') {
+        if(isOwnerMeta && s.status !== 'ki_pruefung') {
             h += '<div class="flex gap-2 mb-4">';
-            h += '<button onclick="reanalyseDevSubmission(\''+s.id+'\')" class="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-xs font-semibold hover:bg-purple-200">🔄 KI neu analysieren</button>';
+            if(!ki) {
+                h += '<button onclick="reanalyseDevSubmission(\''+s.id+'\')" class="px-3 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg text-sm font-semibold hover:from-purple-600 hover:to-indigo-700 shadow-sm">🤖 KI-Analyse starten</button>';
+            } else {
+                h += '<button onclick="reanalyseDevSubmission(\''+s.id+'\')" class="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-xs font-semibold hover:bg-purple-200">🔄 KI neu analysieren</button>';
+            }
             h += '</div>';
         }
 
