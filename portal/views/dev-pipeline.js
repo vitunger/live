@@ -338,6 +338,14 @@ export async function loadDevSubmissions(force) {
         var resp = await query;
         if(resp.error) throw resp.error;
         devSubmissions = resp.data || [];
+        // Partner sehen nur eigene + partner_sichtbar Submissions
+        var _isHQUser = (currentRoles||[]).indexOf('hq') !== -1;
+        if(!_isHQUser) {
+            var _uid = _sbUser() ? _sbUser().id : null;
+            devSubmissions = devSubmissions.filter(function(s) {
+                return s.partner_sichtbar !== false || s.user_id === _uid;
+            });
+        }
     } catch(err) {
         console.error('DevSubmissions load:', err);
         devSubmissions = [];
@@ -1432,7 +1440,8 @@ export async function submitDevIdea() {
             kategorie_quelle: 'user',
             modul_key: modul,
             attachments: attachments,
-            status: 'neu'
+            status: 'neu',
+            partner_sichtbar: (currentRoles||[]).indexOf('hq') === -1
         };
 
         var resp = await _sb().from('dev_submissions').insert(insertData).select().single();
@@ -1669,6 +1678,18 @@ export async function openDevDetail(subId) {
         h += '</div>';
         h += '<button onclick="closeDevDetail()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">\u2715</button>';
         h += '</div>';
+
+        // === PARTNER-SICHTBARKEIT TOGGLE (nur für HQ) ===
+        if(isHQ) {
+            var _pSichtbar = s.partner_sichtbar !== false;
+            h += '<div class="flex items-center gap-3 mb-3 px-3 py-2 rounded-lg ' + (_pSichtbar ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200') + '">';
+            h += '<label class="relative inline-flex items-center cursor-pointer">';
+            h += '<input type="checkbox" ' + (_pSichtbar ? 'checked' : '') + ' onchange="devTogglePartnerSichtbar(\'' + s.id + '\', this.checked)" class="sr-only peer">';
+            h += '<div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[\'\'] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>';
+            h += '</label>';
+            h += '<span class="text-xs text-gray-600">' + (_pSichtbar ? '\uD83D\uDC41 Sichtbar f\u00FCr Partner' : '\uD83D\uDD12 Nur f\u00FCr HQ sichtbar') + '</span>';
+            h += '</div>';
+        }
 
         // === SPLIT LAYOUT ===
         h += '<div class="flex gap-6" style="min-height:500px">';
@@ -3079,6 +3100,21 @@ export async function devToggleBetaTester(id, aktiv) {
     } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
 }
 
+export async function devTogglePartnerSichtbar(subId, visible) {
+    try {
+        var resp = await _sb().from('dev_submissions').update({ partner_sichtbar: visible }).eq('id', subId);
+        if(resp.error) throw resp.error;
+        _showToast(visible ? '\uD83D\uDC41 F\u00FCr Partner sichtbar' : '\uD83D\uDD12 Nur f\u00FCr HQ sichtbar', 'success');
+        // Update local data
+        var sub = devSubmissions.find(function(s){ return s.id === subId; });
+        if(sub) sub.partner_sichtbar = visible;
+        // Refresh detail to update toggle styling
+        openDevDetail(subId);
+    } catch(err) {
+        _showToast('Fehler: ' + err.message, 'error');
+    }
+}
+
 export async function devKIReleaseVorschlag() {
     var btn = document.getElementById('btnKIRelease');
     if(btn) { btn.disabled = true; btn.innerHTML = '<span class="animate-spin">🧠</span><span>KI denkt nach...</span>'; }
@@ -3530,7 +3566,7 @@ export async function runDevKIPrioritize() {
     resultDiv.className = 'hidden';
 
     try {
-        var session = await window.supabase.auth.getSession();
+        var session = await _sb().auth.getSession();
         var token = session?.data?.session?.access_token;
         if(!token) throw new Error('Nicht angemeldet');
 
@@ -4082,7 +4118,7 @@ export async function devMockupShowVersion(mockupId) {
 }
 
 const _exports = {
-    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachFiles,devMockupChatAttachImage,devMockupChatMic,devDeployCode,loadDeployHistory,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devKIReleaseVorschlag,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,
+    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachFiles,devMockupChatAttachImage,devMockupChatMic,devDeployCode,loadDeployHistory,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devKIReleaseVorschlag,devTogglePartnerSichtbar,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
