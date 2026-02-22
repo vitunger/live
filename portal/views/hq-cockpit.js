@@ -38,6 +38,14 @@ export async function loadHqStandorte() {
         var vtResp = await _sb().from('verkauf_tracking').select('standort_id, beratungen, verkauft, umsatz');
         var vtData = vtResp.data || [];
 
+        // Load WaWi Belege (Rechnungen aktuelles Jahr) – neue Datenquelle
+        var wawiResp = await _sb().from('wawi_belege')
+            .select('standort_id, beleg_typ, endbetrag, ist_leasing, datum, created_at')
+            .eq('status', 'neu')
+            .gte('datum', currentYear + '-01-01')
+            .lte('datum', currentYear + '-12-31');
+        var wawiData = wawiResp.data || [];
+
         // Build hqStandorte array matching old structure
         hqStandorte = standorte.map(function(s) {
             var sBwa = bwaData.filter(function(b) { return b.standort_id === s.id; });
@@ -48,22 +56,39 @@ export async function loadHqStandorte() {
             var sVt = vtData.filter(function(v) { return v.standort_id === s.id; });
             var totalBeratungen = sVt.reduce(function(a, v) { return a + (v.beratungen || 0); }, 0);
             var totalVerkauft = sVt.reduce(function(a, v) { return a + (v.verkauft || 0); }, 0);
-            var leadPerf = s.umsatz_plan_ytd ? Math.round(totalUmsatz / s.umsatz_plan_ytd * 100) : 0;
+
+            // WaWi Belege Auswertung
+            var sWawi = wawiData.filter(function(b) { return b.standort_id === s.id; });
+            var sRechnungen = sWawi.filter(function(b) { return b.beleg_typ === 'rechnung'; });
+            var wawiUmsatz = sRechnungen.reduce(function(a, b) { return a + (parseFloat(b.endbetrag) || 0); }, 0);
+            var wawiAnzahl = sWawi.length;
+            var wawiLeasingAnzahl = sWawi.filter(function(b) { return b.ist_leasing; }).length;
+            var wawiLeasingQuote = wawiAnzahl > 0 ? Math.round(wawiLeasingAnzahl / wawiAnzahl * 100) : 0;
+            var wawiLetzer = sWawi.length > 0 ? sWawi.sort(function(a,b){return b.created_at>a.created_at?1:-1;})[0].created_at : null;
+            var wawiTageOhne = wawiLetzer ? Math.floor((Date.now() - new Date(wawiLetzer).getTime()) / 86400000) : 999;
+
+            // umsatzIst: BWA hat Priorität, WaWi als Fallback wenn BWA fehlt
+            var umsatzIstFinal = totalUmsatz > 0 ? totalUmsatz : wawiUmsatz;
+            var leadPerf = s.umsatz_plan_ytd ? Math.round(umsatzIstFinal / s.umsatz_plan_ytd * 100) : 0;
 
             var auffaellig = null;
             if(avgRohertrag > 0 && avgRohertrag < 34) auffaellig = 'Rohertrag unter 34%';
             if(leadPerf < 50 && leadPerf > 0) auffaellig = (auffaellig ? auffaellig + ', ' : '') + 'Umsatz ' + leadPerf + '% unter Plan';
+            if(wawiTageOhne > 14 && wawiAnzahl === 0) auffaellig = (auffaellig ? auffaellig + ', ' : '') + 'Keine WaWi-Belege';
 
             return {
                 id: s.id,
                 name: s.name || 'Unbekannt',
                 inhaber: s.inhaber_name || '(unbekannt)',
                 umsatzPlan: s.umsatz_plan_ytd || 0,
-                umsatzIst: totalUmsatz,
+                umsatzIst: umsatzIstFinal,
+                umsatzBwa: totalUmsatz,
+                umsatzWawi: wawiUmsatz,
+                umsatzQuelle: totalUmsatz > 0 ? 'bwa' : (wawiUmsatz > 0 ? 'wawi' : 'keine'),
                 rohertrag: parseFloat(avgRohertrag.toFixed(1)),
                 leadPerf: leadPerf,
                 leads: sLeads.length,
-                cpt: sLeads.length > 0 ? Math.round(totalUmsatz / sLeads.length) : 0,
+                cpt: sLeads.length > 0 ? Math.round(umsatzIstFinal / sLeads.length) : 0,
                 budget: s.marketing_budget || 0,
                 vororderStatus: s.vororder_status || 'open',
                 vororderBikes: s.vororder_bikes || 0,
@@ -73,7 +98,12 @@ export async function loadHqStandorte() {
                 offeneTickets: sTickets,
                 strategieStatus: s.strategie_status || 'pending',
                 bwaAuffaellig: auffaellig,
-                region: s.region || ''
+                region: s.region || '',
+                wawiAnzahl: wawiAnzahl,
+                wawiUmsatz: wawiUmsatz,
+                wawiLeasingQuote: wawiLeasingQuote,
+                wawiLeasingAnzahl: wawiLeasingAnzahl,
+                wawiTageOhne: wawiTageOhne
             };
         });
     } catch(err) {
@@ -307,8 +337,122 @@ export async function renderHqFinanzen() {
         });
         rr.innerHTML = rrh;
     }
+
+    // === WAWI NETZWERK-UMSATZ ===
+    renderHqWawiUmsatz();
 }
 
+
+// === HQ WAWI NETZWERK-UMSATZ ===
+export function renderHqWawiUmsatz() {
+    // KPI Karten
+    var kpiEl = document.getElementById('hqWawiKpis');
+    if (kpiEl) {
+        var mitBelegen = hqStandorte.filter(function(s){ return s.wawiAnzahl > 0; }).length;
+        var totalWawiU = hqStandorte.reduce(function(a,s){ return a + s.wawiUmsatz; }, 0);
+        var totalBelege = hqStandorte.reduce(function(a,s){ return a + s.wawiAnzahl; }, 0);
+        var avgLeasing = mitBelegen > 0
+            ? Math.round(hqStandorte.filter(function(s){return s.wawiAnzahl>0;}).reduce(function(a,s){return a+s.wawiLeasingQuote;},0) / mitBelegen)
+            : 0;
+        var ohneBeleg = hqStandorte.filter(function(s){ return s.wawiAnzahl === 0; }).length;
+
+        kpiEl.innerHTML = ''
+            + '<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase tracking-wide">Umsatz aus Belegen</p>'
+            + '<p class="text-2xl font-bold text-gray-800">' + fmt(totalWawiU) + ' €</p>'
+            + '<p class="text-xs text-gray-400">' + totalBelege + ' Rechnungen YTD</p></div>'
+
+            + '<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase tracking-wide">Standorte mit Belegen</p>'
+            + '<p class="text-2xl font-bold ' + (mitBelegen >= hqStandorte.length * 0.8 ? 'text-green-600' : 'text-yellow-600') + '">' + mitBelegen + ' / ' + hqStandorte.length + '</p>'
+            + '<p class="text-xs ' + (ohneBeleg > 0 ? 'text-red-500' : 'text-green-500') + '">' + (ohneBeleg > 0 ? ohneBeleg + ' ohne Eingang' : '✅ Alle aktiv') + '</p></div>'
+
+            + '<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase tracking-wide">Ø Leasing-Quote</p>'
+            + '<p class="text-2xl font-bold text-vit-orange">' + avgLeasing + '%</p>'
+            + '<p class="text-xs text-gray-400">aller erfassten Verkäufe</p></div>'
+
+            + '<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase tracking-wide">Datenquelle</p>'
+            + '<p class="text-sm font-bold text-gray-700 mt-1">🔄 WaWi-Belege</p>'
+            + '<p class="text-xs text-gray-400">automatisch per E-Mail</p></div>';
+    }
+
+    // Standort-Tabelle
+    var tbEl = document.getElementById('hqWawiTabelle');
+    if (tbEl) {
+        var sorted = hqStandorte.slice().sort(function(a,b){ return b.wawiUmsatz - a.wawiUmsatz; });
+        var rows = sorted.map(function(s) {
+            var freshIcon = s.wawiTageOhne <= 3 ? '🟢' : s.wawiTageOhne <= 14 ? '🟡' : s.wawiAnzahl === 0 ? '🔴' : '⚠️';
+            var freshText = s.wawiAnzahl === 0 ? 'Kein Eingang'
+                : s.wawiTageOhne === 0 ? 'Heute'
+                : s.wawiTageOhne === 1 ? 'Gestern'
+                : 'vor ' + s.wawiTageOhne + ' Tagen';
+            var quelleTag = s.umsatzQuelle === 'bwa'
+                ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-600">BWA</span>'
+                : s.umsatzQuelle === 'wawi'
+                ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-600">WaWi</span>'
+                : '<span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-400">—</span>';
+            return '<tr class="border-b border-gray-100 hover:bg-gray-50">'
+                + '<td class="py-2 px-3 text-sm font-semibold text-gray-800">' + _escH(s.name) + '</td>'
+                + '<td class="py-2 px-3 text-sm text-right font-bold ' + (s.wawiUmsatz > 0 ? 'text-gray-800' : 'text-gray-300') + '">' + (s.wawiUmsatz > 0 ? fmt(s.wawiUmsatz) + ' €' : '—') + '</td>'
+                + '<td class="py-2 px-3 text-sm text-right text-gray-600">' + (s.wawiAnzahl || '—') + '</td>'
+                + '<td class="py-2 px-3 text-sm text-right">' + (s.wawiAnzahl > 0 ? '<span class="font-semibold text-vit-orange">' + s.wawiLeasingQuote + '%</span>' : '—') + '</td>'
+                + '<td class="py-2 px-3 text-sm text-center">' + quelleTag + '</td>'
+                + '<td class="py-2 px-3 text-sm text-right text-gray-500">' + freshIcon + ' ' + freshText + '</td>'
+                + '</tr>';
+        }).join('');
+
+        tbEl.innerHTML = '<thead><tr class="border-b-2 border-gray-200">'
+            + '<th class="text-left py-2 px-3 text-xs text-gray-500 font-semibold">Standort</th>'
+            + '<th class="text-right py-2 px-3 text-xs text-gray-500 font-semibold">Umsatz (Rechnungen)</th>'
+            + '<th class="text-right py-2 px-3 text-xs text-gray-500 font-semibold">Belege</th>'
+            + '<th class="text-right py-2 px-3 text-xs text-gray-500 font-semibold">Leasing %</th>'
+            + '<th class="text-center py-2 px-3 text-xs text-gray-500 font-semibold">Quelle</th>'
+            + '<th class="text-right py-2 px-3 text-xs text-gray-500 font-semibold">Letzter Eingang</th>'
+            + '</tr></thead><tbody>' + rows + '</tbody>';
+    }
+
+    // Leasing-Ranking Chart
+    var lrEl = document.getElementById('hqWawiLeasing');
+    if (lrEl) {
+        var lrh = '';
+        var mitLeasing = hqStandorte.filter(function(s){ return s.wawiAnzahl > 0; })
+            .sort(function(a,b){ return b.wawiLeasingQuote - a.wawiLeasingQuote; });
+        if (!mitLeasing.length) {
+            lrh = '<p class="text-sm text-gray-400 text-center py-4">Noch keine Beleg-Daten vorhanden</p>';
+        } else {
+            var maxQ = mitLeasing[0].wawiLeasingQuote || 1;
+            mitLeasing.forEach(function(s) {
+                var w = Math.max(4, Math.round(s.wawiLeasingQuote / Math.max(maxQ, 100) * 100));
+                lrh += '<div class="flex items-center space-x-2 py-1">'
+                    + '<span class="text-xs w-28 truncate text-gray-700">' + _escH(s.name) + '</span>'
+                    + '<div class="flex-1 bg-gray-100 rounded-full h-3"><div class="h-3 rounded-full bg-vit-orange opacity-80" style="width:' + w + '%"></div></div>'
+                    + '<span class="text-xs font-bold w-10 text-right text-vit-orange">' + s.wawiLeasingQuote + '%</span>'
+                    + '<span class="text-xs text-gray-400 w-12 text-right">(' + s.wawiLeasingAnzahl + ')</span>'
+                    + '</div>';
+            });
+        }
+        lrEl.innerHTML = lrh;
+    }
+
+    // Keine-Belege Alerts
+    var alertEl = document.getElementById('hqWawiAlerts');
+    if (alertEl) {
+        var alertH = '';
+        hqStandorte.filter(function(s){ return s.wawiAnzahl === 0; }).forEach(function(s) {
+            alertH += '<div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">'
+                + '<div><p class="text-sm font-semibold text-red-700">🔴 ' + _escH(s.name) + '</p>'
+                + '<p class="text-xs text-red-500">Noch keine WaWi-Belege eingegangen</p></div>'
+                + '<span class="text-xs text-gray-400">Einrichtung prüfen</span>'
+                + '</div>';
+        });
+        hqStandorte.filter(function(s){ return s.wawiAnzahl > 0 && s.wawiTageOhne > 14; }).forEach(function(s) {
+            alertH += '<div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">'
+                + '<div><p class="text-sm font-semibold text-yellow-700">⚠️ ' + _escH(s.name) + '</p>'
+                + '<p class="text-xs text-yellow-600">Letzter Beleg vor ' + s.wawiTageOhne + ' Tagen – WaWi-Weiterleitung prüfen</p></div>'
+                + '<span class="text-xs text-gray-400">' + s.wawiAnzahl + ' Belege gesamt</span>'
+                + '</div>';
+        });
+        alertEl.innerHTML = alertH || '<p class="text-sm text-green-600">✅ Alle Standorte senden Belege</p>';
+    }
+}
 
 // === ADS / MARKETING PERFORMANCE ===
 var adsCurrentContext = 'standort'; // 'standort' oder 'hq'
@@ -784,6 +928,7 @@ export function renderHqEinkauf() {
 
 
 // Strangler Fig
-const _exports = {loadHqStandorte,perfColor,perfBg,perfDot,fmt,stratBadge,renderHqCockpit,renderHqStandorte,renderHqFinanzen,adsFmtEuro,adsFmtK,adsSetText,loadAdsData,renderAdsKpis,renderAdsChart,renderAdsKampagnenTabelle,filterAdsPlattform,renderAdsStandortVergleich,renderAdsSyncInfo,updateMktPerformanceFromAds,renderHqMarketing,showHqMktTab,renderHqMktBudget,renderHqMktLeadReport,renderHqMktJahresgespraeche,renderHqMktHandlungsbedarf,renderMktSpendingChart,renderMktLeadChart,renderHqEinkauf};
+const _exports = {loadHqStandorte,perfColor,perfBg,perfDot,fmt,stratBadge,renderHqCockpit,renderHqStandorte,renderHqFinanzen,renderHqWawiUmsatz,adsFmtEuro,adsFmtK,adsSetText,loadAdsData,renderAdsKpis,renderAdsChart,renderAdsKampagnenTabelle,filterAdsPlattform,renderAdsStandortVergleich,renderAdsSyncInfo,updateMktPerformanceFromAds,renderHqMarketing,showHqMktTab,renderHqMktBudget,renderHqMktLeadReport,renderHqMktJahresgespraeche,renderHqMktHandlungsbedarf,renderMktSpendingChart,renderMktLeadChart,renderHqEinkauf};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[hq-cockpit.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
