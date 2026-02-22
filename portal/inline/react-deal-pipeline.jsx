@@ -170,9 +170,12 @@ function useSupabase(currentLoc, SELLERS) {
   const createDeal = useCallback(async (deal) => {
     if (!sb || !profile) return null;
     const nameParts = (deal.name || "").trim().split(" ");
+    // Ensure standort_id is never null (NOT NULL constraint in DB)
+    const standortId = deal.loc || profile?.standort_id;
+    if (!standortId) { console.error("[Pipeline] Cannot create deal: no standort_id"); return null; }
     try {
       const { data, error: err } = await sb.from("leads").insert({
-        standort_id: deal.loc || profile.standort_id,
+        standort_id: standortId,
         erstellt_von: window.sbUser?.id || null,
         zugewiesen_an: deal.seller || null,
         vorname: nameParts[0] || "Neu",
