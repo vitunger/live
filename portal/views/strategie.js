@@ -1673,13 +1673,35 @@ var rtDictReverse = {};
 });
 
 export function switchLang(lang) {
-    // If switching FROM a non-DE lang, first restore German
+    // If switching FROM a non-DE lang, first restore German DOM, then apply new lang
     if(currentLang !== 'de' && lang !== currentLang) {
-        // Reload is safest way to restore
-        currentLang = lang;
-        try { localStorage.setItem('vit-lang', lang); } catch(e){}
-        location.reload();
-        return;
+        // Restore DE first without reload
+        currentLang = 'de';
+        document.querySelectorAll('[data-i18n]').forEach(function(el){
+            var key = el.getAttribute('data-i18n');
+            if(i18n.de && i18n.de[key]) {
+                var txt = i18n.de[key];
+                var uname = el.getAttribute('data-i18n-name');
+                if(uname) txt = txt.replace('{name}', uname);
+                el.textContent = txt;
+            }
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el){
+            var key = el.getAttribute('data-i18n-placeholder');
+            if(i18n.de && i18n.de[key]) el.placeholder = i18n.de[key];
+        });
+        translateDOM('de');
+        // If target is DE, we're done
+        if(lang === 'de') {
+            try { localStorage.setItem('vit-lang', 'de'); } catch(e){}
+            document.documentElement.lang = 'de';
+            document.querySelectorAll('.lang-flag').forEach(function(f){
+                f.classList.toggle('opacity-40', f.getAttribute('data-lang')!=='de');
+                f.classList.toggle('opacity-100', f.getAttribute('data-lang')==='de');
+            });
+            return;
+        }
+        // Fall through to apply new lang below
     }
     currentLang = lang;
     try { localStorage.setItem('vit-lang', lang); } catch(e){}
