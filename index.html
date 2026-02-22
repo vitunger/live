@@ -4815,107 +4815,103 @@
 
                 <!-- ===== HQ FINANZEN ===== -->
                 <div id="hqFinanzenView" class="view" style="display: none;">
-                    <!-- BWA Network Status Dashboard (Spec Section 5) -->
-                    <div id="hqBwaStatusDashboard" class="mb-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <p class="h2-headline text-vit-gray mb-1">NETZWERK</p>
-                                <h1 class="h1-headline">BWA-Status Übersicht<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-bwa')">i</button></h1><div class="widget-info-popup" id="info-hq-bwa">Überblick über BWA-Einreichungen aller Standorte. Gold = vor dem 8. eingereicht, OK = bis zum 15., Überfällig = nach Deadline. Bei Stufe 3 werden automatisch Eskalationsmails an Inhaber versendet. Sortierung: Gold → OK → Ausstehend → Überfällig.</div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <p class="h2-headline text-vit-gray mb-1">NETZWERK</p>
+                            <h1 class="h1-headline">Finanzen<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-fin-main')">i</button></h1>
+                            <div class="widget-info-popup" id="info-hq-fin-main">Gesamtüberblick über Umsatz, Rohertrag und BWA-Status aller Standorte. BWA-Daten haben Priorität – solange keine BWA vorliegt, werden WaWi-Daten als Fallback angezeigt. Über den Upload-Tab können BWAs und Pläne im Namen von Standorten hochgeladen werden.</div>
+                        </div>
+                    </div>
+
+                    <!-- KPI Cards -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="hqFinKpisNew"></div>
+
+                    <!-- Tab Navigation -->
+                    <div class="mb-6 border-b border-gray-200">
+                        <nav class="-mb-px flex space-x-8 overflow-x-auto">
+                            <button onclick="showHqFinTab('uebersicht')" class="hqfin-tab-btn whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-hqfin="uebersicht">📊 Übersicht</button>
+                            <button onclick="showHqFinTab('bwa')" class="hqfin-tab-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-hqfin="bwa">📋 BWA-Status</button>
+                            <button onclick="showHqFinTab('upload')" class="hqfin-tab-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-hqfin="upload">⬆️ Upload & Pläne</button>
+                        </nav>
+                    </div>
+
+                    <!-- TAB 1: Übersicht -->
+                    <div id="hqFinTab_uebersicht" class="hqfin-tab-content">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="lg:col-span-2">
+                                <div class="vit-card p-5">
+                                    <h2 class="text-sm font-bold text-gray-800 mb-3">Umsatz & Status pro Standort</h2>
+                                    <div class="overflow-x-auto" id="hqFinMainTable">
+                                        <p class="text-sm text-gray-400 py-6 text-center">Lade Daten…</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-3">
+                            <div>
+                                <div class="vit-card p-5">
+                                    <h2 class="text-sm font-bold text-gray-800 mb-3">📈 Rohertrag-Ranking</h2>
+                                    <div id="hqFinRohertragNew" class="space-y-1">
+                                        <p class="text-sm text-gray-400 text-center py-4">Lade…</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: BWA-Status (reuses existing bwa-cockpit elements) -->
+                    <div id="hqFinTab_bwa" class="hqfin-tab-content" style="display:none;">
+                        <div id="hqBwaStatusDashboard" class="mb-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h2 class="text-lg font-bold text-gray-800">BWA-Status Übersicht<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-bwa2')">i</button></h2>
+                                    <div class="widget-info-popup" id="info-hq-bwa2">Überblick über BWA-Einreichungen aller Standorte. Gold = vor dem 8. eingereicht, OK = bis zum 15., Überfällig = nach Deadline.</div>
+                                </div>
                                 <div class="text-right">
                                     <p class="text-xs text-gray-400">Aktueller Monat</p>
                                     <p id="hqBwaMonth" class="text-sm font-bold text-gray-800">—</p>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- KPI Cards -->
-                        <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
-                            <div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">Eingereicht</p><p id="hqBwaSubmitted" class="text-2xl font-bold text-green-600">—</p><p class="text-xs text-gray-400">von <span id="hqBwaTotal">—</span></p></div>
-                            <div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">🥇 Gold</p><p id="hqBwaGold" class="text-2xl font-bold text-yellow-500">—</p><p class="text-xs text-gray-400">vor dem 8.</p></div>
-                            <div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">✅ OK</p><p id="hqBwaOk" class="text-2xl font-bold text-green-600">—</p><p class="text-xs text-gray-400">bis zum 15.</p></div>
-                            <div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">⏳ Ausstehend</p><p id="hqBwaMissing" class="text-2xl font-bold text-gray-400">—</p><p class="text-xs text-gray-400">noch Zeit</p></div>
-                            <div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">🚨 Überfällig</p><p id="hqBwaOverdue" class="text-2xl font-bold text-red-500">—</p><p class="text-xs text-gray-400">Stufe 3</p></div>
-                        </div>
-
-                        <!-- Progress Bar -->
-                        <div class="vit-card p-4 mb-4">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs font-semibold text-gray-600">Netzwerk-Fortschritt<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-progress')">i</button></span><div class="widget-info-popup" id="info-hq-progress">Prozentualer Anteil der Standorte, die ihre BWA für den aktuellen Monat eingereicht haben. Ziel: 100% bis zum 15. des Folgemonats.</div>
-                                <span id="hqBwaPct" class="text-xs font-bold text-vit-orange">—%</span>
+                            <!-- BWA KPI Cards -->
+                            <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+                                <div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">Eingereicht</p><p id="hqBwaSubmitted" class="text-2xl font-bold text-green-600">—</p><p class="text-xs text-gray-400">von <span id="hqBwaTotal">—</span></p></div>
+                                <div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">🥇 Gold</p><p id="hqBwaGold" class="text-2xl font-bold text-yellow-500">—</p><p class="text-xs text-gray-400">vor dem 8.</p></div>
+                                <div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">✅ OK</p><p id="hqBwaOk" class="text-2xl font-bold text-green-600">—</p><p class="text-xs text-gray-400">bis zum 15.</p></div>
+                                <div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">⏳ Ausstehend</p><p id="hqBwaMissing" class="text-2xl font-bold text-gray-400">—</p><p class="text-xs text-gray-400">noch Zeit</p></div>
+                                <div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">🚨 Überfällig</p><p id="hqBwaOverdue" class="text-2xl font-bold text-red-500">—</p><p class="text-xs text-gray-400">Stufe 3</p></div>
                             </div>
-                            <div class="bg-gray-200 rounded-full h-3"><div id="hqBwaBar" class="h-3 rounded-full transition-all" style="width:0%;background:linear-gradient(90deg,#EF7D00,#F59E0B)"></div></div>
-                        </div>
 
-                        <!-- Standort-Tabelle -->
-                        <div class="vit-card p-4">
-                            <table class="w-full text-sm">
-                                <thead>
-                                    <tr class="text-left text-xs text-gray-400 border-b border-gray-200">
-                                        <th class="pb-2 font-semibold">Standort</th>
-                                        <th class="pb-2 font-semibold">Status</th>
-                                        <th class="pb-2 font-semibold">Rating</th>
-                                        <th class="pb-2 font-semibold">Eingereicht</th>
-                                        <th class="pb-2 font-semibold">Eskalation</th>
-                                        <th class="pb-2 font-semibold">Tage</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="hqBwaTableBody" class="divide-y divide-gray-100"></tbody>
-                            </table>
+                            <!-- Progress Bar -->
+                            <div class="vit-card p-4 mb-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-semibold text-gray-600">Netzwerk-Fortschritt</span>
+                                    <span id="hqBwaPct" class="text-xs font-bold text-vit-orange">—%</span>
+                                </div>
+                                <div class="bg-gray-200 rounded-full h-3"><div id="hqBwaBar" class="h-3 rounded-full transition-all" style="width:0%;background:linear-gradient(90deg,#EF7D00,#F59E0B)"></div></div>
+                            </div>
+
+                            <!-- BWA Standort-Tabelle -->
+                            <div class="vit-card p-4">
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="text-left text-xs text-gray-400 border-b border-gray-200">
+                                            <th class="pb-2 font-semibold">Standort</th>
+                                            <th class="pb-2 font-semibold">Status</th>
+                                            <th class="pb-2 font-semibold">Rating</th>
+                                            <th class="pb-2 font-semibold">Eingereicht</th>
+                                            <th class="pb-2 font-semibold">Eskalation</th>
+                                            <th class="pb-2 font-semibold">Tage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="hqBwaTableBody" class="divide-y divide-gray-100"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
-                    <h1 class="h1-headline text-gray-800 mb-6">FINANZEN – NETZWERK</h1>
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="hqFinKpis"></div>
-                    <div class="vit-card p-6 mb-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Umsatz & Rohertrag pro Standort</h2>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm" id="hqFinTable"></table>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div class="vit-card p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">⚠️ BWA-Auffaelligkeiten</h2>
-                            <div id="hqFinAlerts" class="space-y-2"></div>
-                        </div>
-                        <div class="vit-card p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">📈 Rohertrag-Ranking</h2>
-                            <div id="hqFinRohertrag" class="space-y-2"></div>
-                        </div>
-                    </div>
-
-                    <!-- WaWi Netzwerk-Umsatz -->
-                    <div class="mt-8">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <p class="text-xs text-gray-400 uppercase tracking-widest mb-1">WaWi-BELEGE</p>
-                                <h2 class="text-xl font-bold text-gray-800">Netzwerk-Umsatz aus Belegen<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-hq-wawi')">i</button></h2>
-                                <div class="widget-info-popup" id="info-hq-wawi">Umsatzdaten direkt aus den WaWi-Belegen der Standorte – automatisch per E-Mail eingegangen und geparst. Quelle "WaWi" = direkt aus Belegen, "BWA" = manuell hochgeladen. Zeigt auch wie aktuell die Daten sind und wer Leasing nutzt.</div>
-                            </div>
-                            <span class="text-xs text-gray-400 bg-green-50 text-green-600 px-3 py-1 rounded-full font-semibold">🔄 Live aus WaWi</span>
-                        </div>
-
-                        <!-- WaWi KPI Cards -->
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="hqWawiKpis"></div>
-
-                        <!-- WaWi Standort-Tabelle -->
-                        <div class="vit-card p-6 mb-6">
-                            <h3 class="text-sm font-semibold text-gray-700 mb-4">📋 Umsatz & Belege pro Standort</h3>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-sm" id="hqWawiTabelle"></table>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div class="vit-card p-6">
-                                <h3 class="text-sm font-semibold text-gray-700 mb-4">🚴 Leasing-Quote pro Standort</h3>
-                                <div id="hqWawiLeasing" class="space-y-1"></div>
-                            </div>
-                            <div class="vit-card p-6">
-                                <h3 class="text-sm font-semibold text-gray-700 mb-4">⚠️ Fehlende / veraltete Belege</h3>
-                                <div id="hqWawiAlerts" class="space-y-2"></div>
-                            </div>
+                    <!-- TAB 3: Upload & Pläne -->
+                    <div id="hqFinTab_upload" class="hqfin-tab-content" style="display:none;">
+                        <div id="hqFinUploadContent">
+                            <p class="text-sm text-gray-400 py-6 text-center">Lade Upload-Bereich…</p>
                         </div>
                     </div>
                 </div>
