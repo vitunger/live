@@ -562,10 +562,26 @@ export async function renderEntwSteuerung() {
     h += '<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3" style="min-height:400px">';
     columns.forEach(function(col) {
         var items = devSubmissions.filter(function(s) { return col.statuses.indexOf(s.status) !== -1; });
+        // Smart sort: critical bugs first, then by effort (quick wins up), then votes
+        var aufwandOrder = {'XS':0,'S':1,'M':2,'L':3,'XL':4};
+        items.sort(function(a,b) {
+            // Bugs before features
+            var aIsBug = a.ki_typ === 'bug' ? 0 : 1;
+            var bIsBug = b.ki_typ === 'bug' ? 0 : 1;
+            if(aIsBug !== bIsBug) return aIsBug - bIsBug;
+            // Smaller effort first (quick wins)
+            var aE = aufwandOrder[a.geschaetzter_aufwand] !== undefined ? aufwandOrder[a.geschaetzter_aufwand] : 2;
+            var bE = aufwandOrder[b.geschaetzter_aufwand] !== undefined ? aufwandOrder[b.geschaetzter_aufwand] : 2;
+            if(aE !== bE) return aE - bE;
+            // More votes first
+            var aV = (a.dev_votes||[]).length;
+            var bV = (b.dev_votes||[]).length;
+            return bV - aV;
+        });
         h += '<div class="bg-gray-50 rounded-xl p-3">';
         h += '<div class="flex items-center justify-between mb-3"><h3 class="text-sm font-bold text-gray-700">'+col.label+'</h3><span class="text-xs bg-'+col.color+'-100 text-'+col.color+'-700 rounded-full px-2 py-0.5 font-semibold">'+items.length+'</span></div>';
-        h += '<div class="space-y-2">';
-        items.slice(0,10).forEach(function(s) {
+        h += '<div class="space-y-2 max-h-[600px] overflow-y-auto">';
+        items.forEach(function(s) {
             var statusLabel = devStatusLabels[s.status] || s.status;
             h += '<div class="bg-white rounded-lg p-3 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition" onclick="openDevDetail(\''+s.id+'\')">';
             h += '<p class="text-xs font-semibold text-gray-800 mb-1 line-clamp-2">'+(s.titel||s.beschreibung||s.kurz_notiz||s.transkription||'Kein Titel').substring(0,60)+'</p>';
@@ -575,7 +591,7 @@ export async function renderEntwSteuerung() {
             if(votes) h += '<span class="text-[9px] text-gray-400">▲'+votes+'</span>';
             h += '</div></div>';
         });
-        if(items.length > 10) h += '<p class="text-xs text-gray-400 text-center mt-2">+'+(items.length-10)+' weitere</p>';
+
         if(items.length === 0) h += '<p class="text-xs text-gray-300 text-center py-4">Keine Einträge</p>';
         h += '</div></div>';
     });
@@ -1914,6 +1930,7 @@ export async function openDevDetail(subId) {
             }
             if(s.status === 'in_entwicklung') {
                 h += '<button onclick="devAdvanceStatus(\''+s.id+'\',\'beta_test\')" class="px-3 py-2 bg-pink-500 text-white rounded-lg text-sm font-semibold hover:bg-pink-600">🧪 Beta-Test starten</button>';
+                h += '<button onclick="devAdvanceStatus(\''+s.id+'\',\'im_review\')" class="px-3 py-2 bg-blue-500 text-white rounded-lg text-sm font-semibold hover:bg-blue-600">⏭️ Direkt weiter (ohne Beta)</button>';
             }
             if(s.status === 'beta_test') {
                 h += '<button onclick="devShowBetaFeedbackSummary(\''+s.id+'\')" class="px-3 py-2 bg-purple-100 text-purple-700 rounded-lg text-sm font-semibold hover:bg-purple-200">📊 Beta-Feedback</button>';
