@@ -923,10 +923,12 @@ export function devCardHTML(s) {
         var barColor = score >= 70 ? 'bg-green-500' : score >= 40 ? 'bg-yellow-500' : 'bg-red-500';
         h += '<div class="flex items-center space-x-2 mt-2"><span class="text-[10px] text-gray-400 w-16">Vision-Fit</span><div class="flex-1 h-1.5 bg-gray-100 rounded-full"><div class="h-1.5 '+barColor+' rounded-full" style="width:'+score+'%"></div></div><span class="text-[10px] font-bold text-gray-600">'+score+'</span></div>';
     }
-    // Submitter name (HQ only)
-    var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
+    // Submitter name (HQ sees all, Standort sees own name or "Partner-Idee")
+    var isHQCard = (currentRoles||[]).indexOf('hq') !== -1;
     var submitterName = s.users && s.users.name ? s.users.name : '';
-    if(isHQ && submitterName) h += '<span class="text-[10px] text-gray-400 mt-1 inline-block">👤 '+submitterName+' · '+d+'</span>';
+    var isOwn = _sbUser() && s.user_id === _sbUser().id;
+    if(isHQCard && submitterName) h += '<span class="text-[10px] text-gray-400 mt-1 inline-block">👤 '+submitterName+' · '+d+'</span>';
+    else if(!isHQCard && !isOwn) h += '<span class="text-[10px] text-gray-400 mt-1 inline-block">👤 Partner-Idee · '+d+'</span>';
     else h += '<span class="text-[10px] text-gray-400 mt-1 block">'+d+'</span>';
     // Last comment preview
     var _komms = s.dev_kommentare || [];
@@ -957,8 +959,10 @@ export function renderDevAlle() {
     var c = document.getElementById('ideenTabAlle');
     if(!c) return;
     var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
-    // HQ sees everything, partners don't see abgelehnt/geparkt
-    var visible = isHQ ? devSubmissions : devSubmissions.filter(function(s) { return s.status !== 'abgelehnt' && s.status !== 'geparkt'; });
+    // HQ sees everything, partners see own + all public (im_ideenboard+)
+    var visible = isHQ ? devSubmissions : devSubmissions.filter(function(s) { 
+        return s.status !== 'abgelehnt' && s.status !== 'geparkt' && s.status !== 'ki_pruefung' && s.status !== 'neu';
+    });
     if(visible.length === 0) {
         c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-3">🌐</p><p>Noch keine Ideen im System.</p></div>';
         return;
