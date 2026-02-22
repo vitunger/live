@@ -137,10 +137,19 @@ export function moveHqPrio(idx, dir) {
 export function renderModulStatus() {
     var el = document.getElementById('entwModulContent') || document.getElementById('modulStatusContent');
     if(!el) return;
+    // Hide HQ-only buttons for non-HQ users
+    var _isHQ = (window.currentRoles||[]).indexOf('hq') !== -1;
+    document.querySelectorAll('.ms-filter').forEach(function(b) {
+        var fVal = b.getAttribute('data-f');
+        if(fVal === 'hq' || fVal === 'kiPrio' || fVal === 'hqPrio') {
+            b.style.display = _isHQ ? '' : 'none';
+        }
+    });
     var h = '';
     var allModules = getAllModulesFlat();
+    var _countModules = _isHQ ? allModules : allModules.filter(function(m){ return m.typ !== 'hq'; });
     var counts = {live:0, teilweise:0, demo:0, stub:0};
-    allModules.forEach(function(m) { counts[m.status] = (counts[m.status]||0)+1; });
+    _countModules.forEach(function(m) { counts[m.status] = (counts[m.status]||0)+1; });
     var sumEl = document.getElementById('modulStatusSummary');
     if(sumEl) {
         sumEl.innerHTML = '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-semibold">🟢 '+counts.live+' Live</span>'
@@ -209,7 +218,9 @@ export function renderModulStatus() {
     }
 
     // NORMAL FILTER (alle / standort / hq / widgets)
-    var modules = currentModulFilter === 'alle' ? allModules : (MODUL_DATEN[currentModulFilter] || allModules.filter(function(m){ return m.typ === currentModulFilter; }));
+    var _isHQu = (window.currentRoles||[]).indexOf('hq') !== -1;
+    var _visibleModules = _isHQu ? allModules : allModules.filter(function(m){ return m.typ !== 'hq'; });
+    var modules = currentModulFilter === 'alle' ? _visibleModules : (currentModulFilter === 'hq' && !_isHQu ? [] : (MODUL_DATEN[currentModulFilter] || _visibleModules.filter(function(m){ return m.typ === currentModulFilter; })));
     h += '<div class="overflow-x-auto"><table class="w-full text-sm">';
     h += '<thead><tr class="border-b border-gray-200"><th class="text-left py-2 px-3 text-xs font-bold text-gray-500">Modul</th><th class="text-left py-2 px-3 text-xs font-bold text-gray-500">Version</th><th class="text-left py-2 px-3 text-xs font-bold text-gray-500">Status</th><th class="text-left py-2 px-3 text-xs font-bold text-gray-500">Typ</th><th class="text-left py-2 px-3 text-xs font-bold text-gray-500">Details</th></tr></thead><tbody>';
     modules.forEach(function(m) {
