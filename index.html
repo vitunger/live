@@ -2726,202 +2726,6 @@
                     </div>
                 </div>
 
-                <!-- ===== IDEENBOARD VIEW (Dev Pipeline) ===== -->
-                <div id="entwicklungView" class="view" style="display: none;">
-                    <div class="flex items-center justify-between mb-4">
-                        <div>
-                            <h1 class="h1-headline text-gray-800">ENTWICKLUNG</h1>
-                            <p class="text-sm text-gray-500 mt-1">Feedback, Modulübersicht, Releases & Steuerung</p>
-                        </div>
-                        <button onclick="toggleDevSubmitForm()" class="px-4 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90 flex items-center space-x-2">
-                            <span>💡</span><span>Feedback geben</span>
-                        </button>
-                    </div>
-
-                    <!-- Unified Tab Navigation -->
-                    <div class="flex items-center space-x-1 bg-gray-100 rounded-lg p-1 mb-5 overflow-x-auto" id="entwicklungTabs">
-                        <button onclick="showEntwicklungTab('ideen')" class="entw-tab-btn px-4 py-2 rounded-md text-sm font-semibold bg-white text-gray-800 shadow-sm whitespace-nowrap" data-etab="ideen">💡 Ideen</button>
-                        <button onclick="showEntwicklungTab('module')" class="entw-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="module">📦 Module</button>
-                        <button onclick="showEntwicklungTab('releases')" class="entw-tab-btn px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="releases">🚀 Releases</button>
-                        <!-- HQ-only tabs -->
-                        <span class="entw-hq-sep border-l border-gray-300 h-5 mx-1" style="display:none"></span>
-                        <button onclick="showEntwicklungTab('steuerung')" class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="steuerung" style="display:none">🎯 Steuerung</button>
-
-                        <button onclick="showEntwicklungTab('nutzung')" class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="nutzung" style="display:none">📊 Nutzung</button>
-                        <button onclick="showEntwicklungTab('system')" class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="system" style="display:none">⚙️ System</button>
-                    </div>
-
-                    <!-- Submit Form (same as before, toggled) -->
-                    <div id="devSubmitForm" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center;padding:1rem" onclick="if(event.target===this)toggleDevSubmitForm()">
-                        <div class="bg-white rounded-2xl shadow-2xl p-5 w-full max-w-2xl max-h-[90vh] overflow-y-auto relative" onclick="event.stopPropagation()">
-                        <button onclick="toggleDevSubmitForm()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 text-lg transition">&times;</button>
-                        <h3 class="font-semibold text-gray-800 mb-1">💡 Feedback / Idee einreichen</h3>
-                        <p class="text-xs text-gray-400 mb-4">Audio, Bild, Screenshot oder einfach Text – wir kümmern uns um den Rest.</p>
-
-                        <!-- Eingabetyp-Buttons -->
-                        <div class="flex flex-wrap gap-2 mb-4">
-                            <button onclick="setDevInputType('text')" class="dev-input-type-btn px-3 py-2 rounded-lg text-sm font-semibold bg-vit-orange text-white" data-dit="text">✏️ Text</button>
-                            <button onclick="setDevInputType('audio')" class="dev-input-type-btn px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600" data-dit="audio">🎤 Audio</button>
-                            <button onclick="setDevInputType('screenshot')" class="dev-input-type-btn px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600" data-dit="screenshot">📸 Screenshot</button>
-                            <button onclick="setDevInputType('video')" class="dev-input-type-btn px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600" data-dit="video">🖥️ Bildschirmaufnahme</button>
-                            <button onclick="setDevInputType('datei')" class="dev-input-type-btn px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600" data-dit="datei">📎 Datei</button>
-                        </div>
-
-                        <!-- Audio-Aufnahme-Bereich -->
-                        <div id="devAudioRecordArea" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
-                                    <button onclick="toggleDevAudioRecord()" id="devAudioRecBtn" class="w-12 h-12 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition text-xl">🎤</button>
-                                    <div>
-                                        <p class="text-sm font-semibold text-gray-800" id="devAudioStatus">Klick zum Starten</p>
-                                        <p class="text-xs text-gray-500" id="devAudioTimer">00:00</p>
-                                    </div>
-                                </div>
-                                <div id="devAudioPreview" class="hidden">
-                                    <audio id="devAudioPlayer" controls class="h-8"></audio>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Bildschirmaufnahme-Bereich -->
-                        <div id="devScreenRecordArea" class="hidden mb-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                            <div class="flex items-center justify-between mb-2">
-                                <div class="flex items-center space-x-3">
-                                    <button onclick="toggleDevScreenRecord()" id="devScreenRecBtn" class="w-12 h-12 rounded-full bg-purple-500 text-white flex items-center justify-center hover:bg-purple-600 transition text-xl">🖥️</button>
-                                    <div>
-                                        <p class="text-sm font-semibold text-gray-800" id="devScreenStatus">Klick zum Starten</p>
-                                        <p class="text-xs text-gray-500" id="devScreenTimer">00:00</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <label class="flex items-center space-x-1 text-xs text-gray-600 cursor-pointer">
-                                        <input type="checkbox" id="devScreenWithMic" checked class="rounded border-gray-300">
-                                        <span>🎤 Mit Mikrofon</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div id="devScreenPreview" class="hidden mt-3">
-                                <video id="devScreenPlayer" controls class="w-full rounded-lg max-h-48 bg-black"></video>
-                            </div>
-                            <p class="text-[10px] text-gray-400 mt-1">Wähle Bildschirm/Fenster/Tab – die Aufnahme wird automatisch als Datei angehängt.</p>
-                        </div>
-
-                        <!-- Art, Modul und Titel werden automatisch von der KI bestimmt -->
-                        <input id="devKategorie" type="hidden" value="sonstiges">
-                        <input id="devModul" type="hidden" value="">
-                        <input id="devTitel" type="hidden" value="">
-                        <textarea id="devBeschreibung" placeholder="Beschreibe deine Idee oder dein Problem möglichst konkret..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3" rows="4"></textarea>
-
-                        <!-- Datei-Upload -->
-                        <div id="devFileArea" class="mb-3">
-                            <input type="file" id="devFileInput" multiple class="hidden" onchange="handleDevFileSelect(event)">
-                            <button onclick="document.getElementById('devFileInput').click()" class="px-3 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-vit-orange hover:text-vit-orange w-full">
-                                📎 Dateien / Screenshots hinzufügen (optional)
-                            </button>
-                            <div id="devFileList" class="mt-2 space-y-1"></div>
-                        </div>
-
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs text-gray-400">Dein Feedback wird automatisch analysiert und priorisiert</span>
-                            <div class="flex space-x-2">
-                                <button onclick="toggleDevSubmitForm()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Abbrechen</button>
-                                <button onclick="submitDevIdea()" id="devSubmitBtn" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">💡 Feedback einreichen</button>
-                            </div>
-                        </div>
-                        </div>
-                    </div>
-
-                    <!-- ===== TAB: Ideen ===== -->
-                    <div id="entwTabIdeen" class="entw-tab-content">
-                        <!-- Filter Bar -->
-                        <div class="flex flex-wrap items-center gap-2 mb-4">
-                            <select id="entwFilterScope" onchange="renderEntwIdeen()" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5">
-                                <option value="alle">Alle Bereiche</option>
-                                <option value="portal">Portal</option>
-                                <option value="netzwerk">Netzwerk</option>
-                            </select>
-                            <select id="entwFilterStatus" onchange="renderEntwIdeen()" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5">
-                                <option value="alle">Alle Status</option>
-                                <option value="neu">In Prüfung</option>
-                                <option value="dev">In Entwicklung</option>
-                                <option value="done">Umgesetzt</option>
-                            </select>
-                            <select id="entwFilterKat" onchange="renderEntwIdeen()" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5">
-                                <option value="alle">Alle Kategorien</option>
-                                <option value="feature">Feature</option>
-                                <option value="bug">Bug</option>
-                                <option value="verbesserung">Verbesserung</option>
-                                <option value="design">Design</option>
-                                <option value="sonstiges">Sonstiges</option>
-                            </select>
-                            <select id="entwFilterQuelle" onchange="renderEntwIdeen()" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5">
-                                <option value="alle">Alle Quellen</option>
-                                <option value="meine">Meine</option>
-                                <option value="standort">Mein Standort</option>
-                            </select>
-                            <select id="entwFilterTyp" onchange="renderEntwIdeen()" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5">
-                                <option value="alle">Alle Typen</option>
-                                <option value="bug">🐛 Bugs</option>
-                                <option value="feature">✨ Features</option>
-                                <option value="idee">💡 Ideen</option>
-                            </select>
-                            <select id="entwFilterSort" onchange="renderEntwIdeen()" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5">
-                                <option value="votes">▲ Meiste Votes</option>
-                                <option value="newest">🕐 Neueste</option>
-                                <option value="oldest">🕐 Älteste</option>
-                                <option value="fit">🎯 Vision-Fit</option>
-                            </select>
-                            <span class="text-xs text-gray-400 ml-auto" id="entwIdeenCount"></span>
-                        </div>
-                        <!-- Stats rendered dynamically by JS -->
-                        <div id="entwStatsBar"></div>
-                        <div id="entwIdeenContent"></div>
-                    </div>
-
-                    <!-- ===== TAB: Module ===== -->
-                    <div id="entwTabModule" class="entw-tab-content" style="display:none;">
-                        <div class="flex flex-wrap items-center gap-2 mb-6">
-                            <button onclick="filterModulStatus('alle')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white" data-f="alle">Alle</button>
-                            <button onclick="filterModulStatus('standort')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="standort">Standort-Module</button>
-                            <button onclick="filterModulStatus('hq')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="hq">HQ-Module</button>
-                            <button onclick="filterModulStatus('widgets')" class="ms-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="widgets">Dashboard-Widgets</button>
-                            <span class="border-l border-gray-300 h-5 mx-1"></span>
-                            <button onclick="filterModulStatus('kiPrio')" class="ms-filter entw-hq-tab text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="kiPrio" style="display:none">🤖 Priorität KI</button>
-                            <button onclick="filterModulStatus('hqPrio')" class="ms-filter entw-hq-tab text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-f="hqPrio" style="display:none">🏢 Prio HQ</button>
-                        </div>
-                        <div id="entwModulContent"></div>
-                    </div>
-
-                    <!-- ===== TAB: Releases ===== -->
-                    <div id="entwTabReleases" class="entw-tab-content" style="display:none;">
-                        <div id="entwReleasesContent"></div>
-                    </div>
-
-                    <!-- ===== TAB: Steuerung (HQ only) ===== -->
-                    <div id="entwTabSteuerung" class="entw-tab-content" style="display:none;">
-                        <div id="entwSteuerungContent"></div>
-                    </div>
-
-                    <!-- ===== TAB: Feature Flags (HQ only) ===== -->
-
-
-                    <!-- ===== TAB: Nutzung (HQ only) ===== -->
-                    <div id="entwTabNutzung" class="entw-tab-content" style="display:none;">
-                        <div id="entwNutzungContent"></div>
-                    </div>
-
-                    <!-- ===== TAB: System (HQ only) ===== -->
-                    <div id="entwTabSystem" class="entw-tab-content" style="display:none;">
-                        <div id="entwSystemContent"></div>
-                    </div>
-
-                    <!-- Detail Modal -->
-                    <div id="devDetailModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-10 overflow-y-auto" onclick="if(event.target===this)closeDevDetail()">
-                        <div class="bg-white rounded-xl shadow-2xl w-full max-w-7xl mx-4 mb-10" onclick="event.stopPropagation()">
-                            <div id="devDetailContent" class="p-6"></div>
-                        </div>
-                    </div>
-                </div>
 
                 <div id="kommunikationView" class="view" style="display: none;">
                     <!-- Top Tab Navigation (compact) -->
@@ -6052,6 +5856,93 @@
                         <div id="entwSystemContent"></div>
                         <div id="entwBackupContent" class="mt-4"></div>
                     </div>
+                    <!-- Submit Form (moved from old Standort view) -->
+                    <div id="devSubmitForm" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center;padding:1rem" onclick="if(event.target===this)toggleDevSubmitForm()">
+                        <div class="bg-white rounded-2xl shadow-2xl p-5 w-full max-w-2xl max-h-[90vh] overflow-y-auto relative" onclick="event.stopPropagation()">
+                        <button onclick="toggleDevSubmitForm()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 text-lg transition">&times;</button>
+                        <h3 class="font-semibold text-gray-800 mb-1">💡 Feedback / Idee einreichen</h3>
+                        <p class="text-xs text-gray-400 mb-4">Audio, Bild, Screenshot oder einfach Text – wir kümmern uns um den Rest.</p>
+
+                        <!-- Eingabetyp-Buttons -->
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <button onclick="setDevInputType('text')" class="dev-input-type-btn px-3 py-2 rounded-lg text-sm font-semibold bg-vit-orange text-white" data-dit="text">✏️ Text</button>
+                            <button onclick="setDevInputType('audio')" class="dev-input-type-btn px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600" data-dit="audio">🎤 Audio</button>
+                            <button onclick="setDevInputType('screenshot')" class="dev-input-type-btn px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600" data-dit="screenshot">📸 Screenshot</button>
+                            <button onclick="setDevInputType('video')" class="dev-input-type-btn px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600" data-dit="video">🖥️ Bildschirmaufnahme</button>
+                            <button onclick="setDevInputType('datei')" class="dev-input-type-btn px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600" data-dit="datei">📎 Datei</button>
+                        </div>
+
+                        <!-- Audio-Aufnahme-Bereich -->
+                        <div id="devAudioRecordArea" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <button onclick="toggleDevAudioRecord()" id="devAudioRecBtn" class="w-12 h-12 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition text-xl">🎤</button>
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-800" id="devAudioStatus">Klick zum Starten</p>
+                                        <p class="text-xs text-gray-500" id="devAudioTimer">00:00</p>
+                                    </div>
+                                </div>
+                                <div id="devAudioPreview" class="hidden">
+                                    <audio id="devAudioPlayer" controls class="h-8"></audio>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bildschirmaufnahme-Bereich -->
+                        <div id="devScreenRecordArea" class="hidden mb-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center space-x-3">
+                                    <button onclick="toggleDevScreenRecord()" id="devScreenRecBtn" class="w-12 h-12 rounded-full bg-purple-500 text-white flex items-center justify-center hover:bg-purple-600 transition text-xl">🖥️</button>
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-800" id="devScreenStatus">Klick zum Starten</p>
+                                        <p class="text-xs text-gray-500" id="devScreenTimer">00:00</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <label class="flex items-center space-x-1 text-xs text-gray-600 cursor-pointer">
+                                        <input type="checkbox" id="devScreenWithMic" checked class="rounded border-gray-300">
+                                        <span>🎤 Mit Mikrofon</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div id="devScreenPreview" class="hidden mt-3">
+                                <video id="devScreenPlayer" controls class="w-full rounded-lg max-h-48 bg-black"></video>
+                            </div>
+                            <p class="text-[10px] text-gray-400 mt-1">Wähle Bildschirm/Fenster/Tab – die Aufnahme wird automatisch als Datei angehängt.</p>
+                        </div>
+
+                        <!-- Art, Modul und Titel werden automatisch von der KI bestimmt -->
+                        <input id="devKategorie" type="hidden" value="sonstiges">
+                        <input id="devModul" type="hidden" value="">
+                        <input id="devTitel" type="hidden" value="">
+                        <textarea id="devBeschreibung" placeholder="Beschreibe deine Idee oder dein Problem möglichst konkret..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3" rows="4"></textarea>
+
+                        <!-- Datei-Upload -->
+                        <div id="devFileArea" class="mb-3">
+                            <input type="file" id="devFileInput" multiple class="hidden" onchange="handleDevFileSelect(event)">
+                            <button onclick="document.getElementById('devFileInput').click()" class="px-3 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-vit-orange hover:text-vit-orange w-full">
+                                📎 Dateien / Screenshots hinzufügen (optional)
+                            </button>
+                            <div id="devFileList" class="mt-2 space-y-1"></div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-400">Dein Feedback wird automatisch analysiert und priorisiert</span>
+                            <div class="flex space-x-2">
+                                <button onclick="toggleDevSubmitForm()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Abbrechen</button>
+                                <button onclick="submitDevIdea()" id="devSubmitBtn" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">💡 Feedback einreichen</button>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+
+                    <!-- Detail Modal -->
+                    <div id="devDetailModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-10 overflow-y-auto" onclick="if(event.target===this)closeDevDetail()">
+                        <div class="bg-white rounded-xl shadow-2xl w-full max-w-7xl mx-4 mb-10" onclick="event.stopPropagation()">
+                            <div id="devDetailContent" class="p-6"></div>
+                        </div>
+                    </div>
+
                 </div>
 
 <div id="hqShopView" class="view" style="display: none;">
