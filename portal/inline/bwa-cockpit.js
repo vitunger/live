@@ -233,7 +233,7 @@
     }
 
     // ──── KPI REPORT (Sofort-Nutzen nach Upload) ────
-    function showKpiReport(bwaMo, rating) {
+    async function showKpiReport(bwaMo, rating) {
         var report = document.getElementById('bwaKpiReport');
         if(!report) return;
         report.style.display = '';
@@ -242,25 +242,115 @@
         document.getElementById('bwaKpiReportMonth').textContent = moName;
         document.getElementById('bwaKpiRating').innerHTML = ratingBadge(rating);
 
-        // Demo KPIs
-        var kpis = [
-            {l:'Umsatz', v:'68.400 €', c:'+4.2%', co:'#16a34a'},
-            {l:'Rohertrag', v:'24.100 €', c:'36.7%', co:'#2563eb'},
-            {l:'Personalkosten', v:'13.600 €', c:'19.9%', co:'#ca8a04'},
-            {l:'Ergebnis', v:'3.200 €', c:'+12%', co:'#16a34a'}
-        ];
         var grid = document.getElementById('bwaKpiReportGrid');
-        grid.innerHTML = kpis.map(function(k){
-            return '<div style="padding:12px;background:var(--c-bg2);border-radius:10px;text-align:center"><p style="font-size:9px;color:var(--c-muted);text-transform:uppercase">'+k.l+'</p><p style="font-size:18px;font-weight:800;color:var(--c-text);margin-top:2px">'+k.v+'</p><p style="font-size:10px;font-weight:600;color:'+k.co+'">'+k.c+'</p></div>';
-        }).join('');
+        var recList = document.getElementById('bwaKpiRecList');
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--c-muted);font-size:12px;padding:8px">⏳ Lade echte Zahlen…</div>';
 
-        // Insights
-        var recs = [
-            'Rohertragsmarge +2.5 Pp über Netzwerk-Durchschnitt – starke Performance! 💪',
-            'Personalkosten leicht über Schnitt (19.9% vs. 18.5%) – Arbeitszeitplanung prüfen.',
-            'Werkstatt-Umsatz +8% ggü. Vorjahr – Trend beibehalten mit proaktiver Service-Ansprache.'
-        ];
-        document.getElementById('bwaKpiRecList').innerHTML = recs.map(function(r){return '<li>→ '+r+'</li>';}).join('');
+        try {
+            var standortId = (typeof sbProfile !== 'undefined' && sbProfile) ? sbProfile.standort_id : null;
+            if(!standortId) throw new Error('Kein Standort');
+
+            // Echte BWA-Daten für diesen Monat
+            var bwaResp = await sb.from('bwa_daten')
+                .select('umsatzerloese, rohertrag, wareneinsatz, gesamtkosten, ergebnis_vor_steuern')
+                .eq('standort_id', standortId)
+                .eq('monat', bwaMo.m + 1)
+                .eq('jahr', bwaMo.y)
+                .limit(1);
+            var b = (bwaResp.data && bwaResp.data[0]) || null;
+
+            // Vormonat für Vergleich
+            var vmMonat = bwaMo.m === 0 ? 12 : bwaMo.m;
+            var vmJahr  = bwaMo.m === 0 ? bwaMo.y - 1 : bwaMo.y;
+            var vmResp = await sb.from('bwa_daten')
+                .select('umsatzerloese, rohertrag, gesamtkosten, ergebnis_vor_steuern')
+                .eq('standort_id', standortId)
+                .eq('monat', vmMonat)
+                .eq('jahr', vmJahr)
+                .limit(1);
+            var vm = (vmResp.data && vmResp.data[0]) || null;
+
+            // Plan für diesen Monat aus plan_bwa_daten
+            var monatKol = ['jan','feb','mrz','apr','mai','jun','jul','aug','sep','okt','nov','dez'][bwaMo.m];
+            var planResp = await sb.from('plan_bwa_daten')
+                .select('kontengruppe, ' + monatKol)
+                .eq('standort_id', standortId);
+            var planMap = {};
+            (planResp.data || []).forEach(function(p) { planMap[p.kontengruppe] = parseFloat(p[monatKol]) || 0; });
+
+            if(!b) throw new Error('Keine BWA-Daten für ' + moName);
+
+            var umsatz   = parseFloat(b.umsatzerloese) || 0;
+            var rohertrag = parseFloat(b.rohertrag) || 0;
+            var personal = parseFloat(b.gesamtkosten) || 0; // Gesamtkosten als Näherung
+            var ergebnis = parseFloat(b.ergebnis_vor_steuern) || 0;
+            var rohmarge = umsatz > 0 ? (rohertrag / umsatz * 100) : 0;
+            var personalQ = umsatz > 0 ? (personal / umsatz * 100) : 0;
+
+            // Vormonat-Delta
+            function delta(neu, alt) {
+                if(!alt || alt === 0) return null;
+                return ((neu - alt) / Math.abs(alt) * 100).toFixed(1);
+            }
+            function fmtEur(n) { return Math.abs(n) >= 1000 ? (n/1000).toFixed(1).replace('.',',')+'k €' : n.toFixed(0)+' €'; }
+            function fmtDelta(d, invert) {
+                if(d === null) return '';
+                var pos = invert ? d < 0 : d > 0;
+                return (pos ? '+' : '') + d + '%';
+            }
+            function deltaColor(d, invert) {
+                if(d === null) return '#9ca3af';
+                var good = invert ? parseFloat(d) < 0 : parseFloat(d) > 0;
+                return good ? '#16a34a' : '#dc2626';
+            }
+
+            var vmUmsatz = vm ? parseFloat(vm.umsatzerloese) || 0 : 0;
+            var vmErgebnis = vm ? parseFloat(vm.ergebnis_vor_steuern) || 0 : 0;
+            var dU = delta(umsatz, vmUmsatz);
+            var dE = delta(ergebnis, vmErgebnis);
+
+            // Plan-Abweichung
+            var planUmsatz = planMap['Umsatzerlöse'] || planMap['Umsatzerloese'] || 0;
+            var planRoh    = planMap['Rohertrag'] || 0;
+            var planErg    = planMap['Betriebsergebnis'] || 0;
+            var planUAbw   = planUmsatz > 0 ? ((umsatz - planUmsatz) / planUmsatz * 100).toFixed(1) : null;
+            var planEAbw   = planErg !== 0 ? ((ergebnis - planErg) / Math.abs(planErg) * 100).toFixed(1) : null;
+
+            var kpis = [
+                {l:'Umsatz',        v: fmtEur(umsatz),   c: planUmsatz > 0 ? (planUAbw >= 0 ? '+' : '') + planUAbw + '% vs. Plan' : fmtDelta(dU, false), co: deltaColor(planUAbw || dU, false)},
+                {l:'Rohertrag',     v: fmtEur(rohertrag), c: rohmarge.toFixed(1) + '% Marge' + (planRoh > 0 ? ' (Plan: ' + (planRoh/1000).toFixed(0) + 'k)' : ''), co: rohmarge >= 36 ? '#16a34a' : '#ca8a04'},
+                {l:'Gesamtkosten',  v: fmtEur(personal),  c: personalQ.toFixed(1) + '% vom Umsatz', co: personalQ <= 20 ? '#16a34a' : '#ca8a04'},
+                {l:'Ergebnis',      v: fmtEur(ergebnis),  c: planErg !== 0 ? (planEAbw >= 0 ? '+' : '') + planEAbw + '% vs. Plan' : fmtDelta(dE, false), co: ergebnis >= 0 ? '#16a34a' : '#dc2626'}
+            ];
+
+            grid.innerHTML = kpis.map(function(k){
+                return '<div style="padding:12px;background:var(--c-bg2);border-radius:10px;text-align:center">'
+                    + '<p style="font-size:9px;color:var(--c-muted);text-transform:uppercase">'+k.l+'</p>'
+                    + '<p style="font-size:18px;font-weight:800;color:var(--c-text);margin-top:2px">'+k.v+'</p>'
+                    + '<p style="font-size:10px;font-weight:600;color:'+k.co+'">'+k.c+'</p>'
+                    + '</div>';
+            }).join('');
+
+            // Echte Insights
+            var recs = [];
+            if(rohmarge >= 38) recs.push('Rohertragsmarge ' + rohmarge.toFixed(1) + '% – über dem Netzwerk-Ziel von 38% 💪');
+            else recs.push('Rohertragsmarge ' + rohmarge.toFixed(1) + '% – Ziel 38%, Produktmix & Rabatte prüfen.');
+            if(planUmsatz > 0) {
+                if(parseFloat(planUAbw) >= 0) recs.push('Umsatz ' + planUAbw + '% über Plan – gut! 🎯');
+                else recs.push('Umsatz ' + Math.abs(planUAbw) + '% unter Plan – Vertriebsaktivitäten prüfen.');
+            }
+            if(ergebnis < 0) recs.push('Ergebnis negativ (' + fmtEur(ergebnis) + ') – Saisoneffekt oder Kostendruck?');
+            else recs.push('Positives Ergebnis ' + fmtEur(ergebnis) + ' – solide Basis für den Monat.');
+            if(dU !== null) recs.push('Umsatz vs. Vormonat: ' + (parseFloat(dU) > 0 ? '+' : '') + dU + '%');
+
+            recList.innerHTML = recs.map(function(r){ return '<li>→ ' + r + '</li>'; }).join('');
+
+        } catch(err) {
+            console.warn('showKpiReport:', err);
+            // Fallback auf statische Demo-Daten wenn Supabase nicht verfügbar
+            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#9ca3af;font-size:12px;padding:8px">⚠️ ' + err.message + '</div>';
+            recList.innerHTML = '<li>→ Daten konnten nicht geladen werden</li>';
+        }
     }
 
     // ──── BENCHMARK LOCK ────
@@ -431,4 +521,5 @@
 
 // [Init moved to unified dispatcher]
 })();
+
 
