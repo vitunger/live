@@ -212,9 +212,11 @@ export async function callFinanceKi(type, fileBase64, mediaType, rawText, meta) 
     if(fileBase64) { payload.file_base64 = fileBase64; payload.media_type = mediaType || 'application/pdf'; }
     if(rawText) { payload.raw_text = rawText; }
     if(meta) { payload.meta = meta; }
-    var resp = await fetch(SUPABASE_URL + '/functions/v1/analyze-finance', {
+    var _SURL = (typeof SUPABASE_URL !== 'undefined') ? SUPABASE_URL : window.SUPABASE_URL;
+    var _SKEY = (typeof SUPABASE_ANON_KEY !== 'undefined') ? SUPABASE_ANON_KEY : window.SUPABASE_ANON_KEY;
+    var resp = await fetch(_SURL + '/functions/v1/analyze-finance', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (token||''), 'apikey': SUPABASE_ANON_KEY },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (token||''), 'apikey': _SKEY },
         body: JSON.stringify(payload)
     });
     if(!resp.ok) { var errB=''; try { var eD=await resp.json(); errB=eD.error||eD.details||''; } catch(e2) {} throw new Error('KI-API Fehler ' + resp.status + (errB ? ': '+errB.substring(0,150) : '')); }
@@ -589,7 +591,7 @@ export function openVerkaufEntryModal() {
         {id:'vtGeplant',label:'Geplant',ph:'0'},
         {id:'vtSpontan',label:'Spontan',ph:'0'},
         {id:'vtErgo',label:'Ergo-Beratung',ph:'0'},
-        {id:'vtVerkauft',label:'Verkauft',ph:'0'}
+        {id:'vtVerkauft',label:'Verkauft ✅',ph:'0'}
     ];
     vtFields.forEach(function(f) {
         html += '<div><label class="block text-xs text-gray-600 mb-1">'+f.label+'</label>';
