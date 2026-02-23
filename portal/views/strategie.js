@@ -1784,6 +1784,7 @@ export function switchSmSub(sub) {
     if(btn) btn.className='sm-sub-btn px-4 py-2 rounded-full text-sm font-semibold bg-vit-orange text-white';
     if(sub==='themen') renderSmThemen();
     if(sub==='ranking') renderSmRanking();
+    if(sub==='kanaele' && window.updateSocialMediaCards) updateSocialMediaCards();
     if(sub==='pipeline' && window.vpRenderPipelineDashboard) vpRenderPipelineDashboard();
     if(sub==='consents' && window.vpRenderConsents) vpRenderConsents();
     if(sub==='upload' && window.vpInitUpload) vpInitUpload();

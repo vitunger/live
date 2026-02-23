@@ -1414,7 +1414,7 @@ if (activeBtn) {
 }
 
 // Init Social Media themen on first open
-if(tabName==='social') { renderSmThemen(); }
+if(tabName==='social') { renderSmThemen(); if(window.updateSocialMediaCards) updateSocialMediaCards(); }
 if(tabName==='budget') { renderMktSpendingChart(); }
 if(tabName==='leads') { renderMktLeadChart(); }
 }
