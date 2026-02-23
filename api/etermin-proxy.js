@@ -66,12 +66,14 @@ module.exports = async function(req, res) {
     const action = req.query.action || "test";
 
     if (action === "test") {
-      const data = await eterminFetch("/calendars", pub, priv);
-      return res.json({ ok: true, message: "Verbindung erfolgreich", calendars: Array.isArray(data) ? data.length : 0, data });
+      // Use /workingtimes as a simple connectivity test (documented endpoint)
+      const data = await eterminFetch("/workingtimes", pub, priv);
+      return res.json({ ok: true, message: "Verbindung erfolgreich", data });
     }
 
     if (action === "calendars") {
-      return res.json({ ok: true, data: await eterminFetch("/calendars", pub, priv) });
+      const data = await eterminFetch("/workingtimes", pub, priv);
+      return res.json({ ok: true, data });
     }
 
     if (action === "appointments") {
