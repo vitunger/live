@@ -160,22 +160,42 @@ async function parsePlanFileLocal(file, statusEl, resultEl) {
                 console.log('[Plan-Local] plan_bwa rows:', result.plan_bwa.length);
                 console.log('[Plan-Local] First 3 rows raw:', JSON.stringify(result.plan_bwa.slice(0,3)));
                 var mn = ['jan','feb','mrz','apr','mai','jun','jul','aug','sep','okt','nov','dez'];
-                function findRow(patterns) {
+                
+                // Find summary rows by konto number first, then by kontengruppe/bezeichnung with highest values
+                function findSummaryRow(kontoNrs, patterns) {
+                    // 1. Try exact konto number match (summary rows like 1020, 1060, 1080)
+                    for(var k=0; k<kontoNrs.length; k++) {
+                        var found = result.plan_bwa.find(function(r) { return r.konto === kontoNrs[k]; });
+                        if(found && (found.jan || found.feb || found.mrz)) return found;
+                    }
+                    // 2. Find rows without konto number (=Summenzeilen) matching kontengruppe
                     for(var p=0; p<patterns.length; p++) {
                         var pat = patterns[p].toLowerCase();
-                        var found = result.plan_bwa.find(function(r) {
-                            var kg = (r.kontengruppe||'').toLowerCase();
-                            var bez = (r.bezeichnung||'').toLowerCase();
-                            return kg.includes(pat) || bez.includes(pat);
+                        var found2 = result.plan_bwa.find(function(r) {
+                            return !r.konto && ((r.kontengruppe||'').toLowerCase().includes(pat) || (r.bezeichnung||'').toLowerCase().includes(pat));
                         });
-                        if(found) return found;
+                        if(found2 && (found2.jan || found2.feb || found2.mrz)) return found2;
+                    }
+                    // 3. Fallback: any matching row with highest summe
+                    var candidates = [];
+                    for(var p2=0; p2<patterns.length; p2++) {
+                        var pat2 = patterns[p2].toLowerCase();
+                        result.plan_bwa.forEach(function(r) {
+                            if((r.kontengruppe||'').toLowerCase().includes(pat2) || (r.bezeichnung||'').toLowerCase().includes(pat2)) {
+                                candidates.push(r);
+                            }
+                        });
+                    }
+                    if(candidates.length > 0) {
+                        candidates.sort(function(a,b) { return Math.abs(b.summe||0) - Math.abs(a.summe||0); });
+                        return candidates[0];
                     }
                     return null;
                 }
-                var umsatzRow = findRow(['umsatzerlöse','umsatzerloese','umsatz','gesamtleistung','erlöse','erloese']);
-                var weRow = findRow(['wareneinsatz','materialaufwand','material-/wareneinkauf','waren']);
-                var pkRow = findRow(['personalkosten','personal','löhne','loehne','gehälter','gehaelter']);
-                var rkRow = findRow(['raumkosten','raum','miete']);
+                var umsatzRow = findSummaryRow(['1020'], ['umsatzerlöse','umsatzerloese','gesamtleistung']);
+                var weRow = findSummaryRow(['1060'], ['material-/wareneinkauf','wareneinsatz','materialaufwand']);
+                var pkRow = findSummaryRow(['1100','1120'], ['personalkosten','löhne und gehälter','loehne']);
+                var rkRow = findSummaryRow(['1140'], ['raumkosten','miete']);
                 
                 console.log('[Plan-Local] Found rows:', {
                     umsatz: umsatzRow ? (umsatzRow.bezeichnung + ' → jan=' + umsatzRow.jan) : 'NOT FOUND',
