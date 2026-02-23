@@ -236,18 +236,18 @@ try {
     var sid = (typeof sbStandort === 'object' && sbStandort) ? sbStandort.id 
         : (window.sbProfile && window.sbProfile.standort_id) ? window.sbProfile.standort_id
         : null;
+    var isHq = (window.sbProfile && window.sbProfile.is_hq) || false;
     if(!sid) {
         // Try DB lookup
         try {
             var uid = _sbUser()?.id;
             if(uid) {
                 var {data:u} = await _sb().from('users').select('standort_id, is_hq').eq('id', uid).single();
-                if(u) { sid = u.standort_id; }
+                if(u) { sid = u.standort_id; if(u.is_hq) isHq = true; }
             }
         } catch(e) {}
     }
     // HQ without standort: show all videos
-    var isHq = (window.sbProfile && window.sbProfile.is_hq) || false;
     var query = _sb().from('videos').select('*').order('created_at',{ascending:false});
     if(sid) {
         query = query.eq('standort_id', sid);
