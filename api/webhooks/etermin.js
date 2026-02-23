@@ -89,12 +89,18 @@ module.exports = async function(req, res) {
     // Check if exists
     const existing = await sbGet("termine", "etermin_uid=eq." + uid + "&limit=1");
     let tId;
+    let tErr = null;
     if (existing && existing.length > 0) {
       await sbUpdate("termine", payload, "id=eq." + existing[0].id);
       tId = existing[0].id;
     } else {
       const ins = await sbInsert("termine", payload);
-      tId = ins && ins[0] ? ins[0].id : null;
+      if (ins && ins[0] && ins[0].id) {
+        tId = ins[0].id;
+      } else {
+        tErr = JSON.stringify(ins).slice(0, 300);
+        console.error("[etermin-wh] termine insert result:", tErr);
+      }
     }
 
     // Lead (only CREATED + Beratungstermin)
@@ -114,7 +120,7 @@ module.exports = async function(req, res) {
       }
     }
 
-    return res.json({ ok: true, action: cmd.toLowerCase(), termin_id: tId, lead_created: lc });
+    return res.json({ ok: true, action: cmd.toLowerCase(), termin_id: tId, termin_error: tErr, lead_created: lc });
   } catch (e) {
     console.error("[etermin-wh]", e);
     return res.status(500).json({ error: e.message });
