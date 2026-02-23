@@ -27,9 +27,25 @@ Object.defineProperty(window, 'planIstYear', {
     configurable: true
 });
 
+var forceUploadScreen = false;
+
+// Expose for inline onclick
+Object.defineProperty(window, 'forceUploadScreen', {
+    get: function() { return forceUploadScreen; },
+    set: function(v) { forceUploadScreen = v; },
+    configurable: true
+});
+
 export async function renderPlanIst() {
     var el = document.getElementById('planIstContent');
     if(!el) return;
+
+    // If user explicitly wants upload screen, show it directly
+    if(forceUploadScreen) {
+        forceUploadScreen = false;
+        renderPlanUploadScreen(el);
+        return;
+    }
 
     // Try load plan from DB
     try {
@@ -354,7 +370,7 @@ export async function renderPlanVergleich(el) {
     h += '<select id="planIstYearSel" onchange="planIstYear=parseInt(this.value);currentPlan=null;renderPlanIst()" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm">';
     for(var yy=2026;yy>=2024;yy--) h += '<option value="'+yy+'"'+(yy===planIstYear?' selected':'')+'>'+yy+'</option>';
     h += '</select></div>';
-    h += '<button onclick="currentPlan=null;renderPlanIst()" class="text-xs text-vit-orange font-semibold hover:underline">📄 Neuen Plan hochladen</button>';
+    h += '<button onclick="forceUploadScreen=true;currentPlan=null;renderPlanIst()" class="text-xs text-vit-orange font-semibold hover:underline">📄 Neuen Plan hochladen</button>';
     h += '</div>';
 
     // KPIs
