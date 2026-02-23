@@ -69,9 +69,9 @@
             var me = (await sb.auth.getUser()).data.user?.id;
             var sid = sbProfile ? sbProfile.standort_id : null;
             if (!sid || !me) return;
-            var { data: users } = await sb.from('user_profiles').select('user_id').eq('standort_id', sid);
+            var { data: users } = await sb.from('users').select('id').eq('standort_id', sid);
             if (!users) return;
-            var ids = users.map(function(u) { return u.user_id; }).filter(function(id) { return id !== me; });
+            var ids = users.map(function(u) { return u.id; }).filter(function(id) { return id !== me; });
             await triggerPush(ids, title, body, url, prefKey);
         } catch(e) { console.log('[Push] standort trigger:', e.message); }
     }
@@ -80,9 +80,9 @@
         try {
             var sb = window._supabase;
             var me = (await sb.auth.getUser()).data.user?.id;
-            var { data: hqUsers } = await sb.from('user_profiles').select('user_id').eq('is_hq', true);
+            var { data: hqUsers } = await sb.from('users').select('id').eq('is_hq', true);
             if (!hqUsers) return;
-            var ids = hqUsers.map(function(u) { return u.user_id; }).filter(function(id) { return id !== me; });
+            var ids = hqUsers.map(function(u) { return u.id; }).filter(function(id) { return id !== me; });
             await triggerPush(ids, title, body, url, prefKey);
         } catch(e) { console.log('[Push] HQ trigger:', e.message); }
     }

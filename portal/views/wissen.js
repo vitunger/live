@@ -493,3 +493,6 @@ window.addEventListener('vit:modules-ready', function() {
 const _exports = {showWissenTab,filterAkademie,renderAkademie,filterHbCat,filterHandbuecher,renderHandbuecher,filterBP,renderBP,filterFaqCat,filterFAQ,renderFAQ,toggleFaq,initDashboardTabs,showDashboardTab,renderWissenTab,switchWissenSub,renderWissenGlobal,filterWissenBereich,switchWissenTyp,filterWissenGlobal};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[wissen.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === Window Exports (onclick handlers) ===
+window.filterWissenGlobal = filterWissenGlobal;

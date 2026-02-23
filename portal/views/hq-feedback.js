@@ -216,7 +216,7 @@ desc += '📅 Datum: ' + new Date(fb.created_at).toLocaleString('de-DE') + '\n';
 if((fb.attachments||[]).length) desc += '📎 Anhänge: ' + fb.attachments.length + ' Dateien\n';
 
 try {
-var resp = await _sb().from('ideas').insert({
+var resp = await _sb().from('ideen').insert({
     standort_id: fb.standort_id,
     user_id: fb.user_id,
     titel: title.substring(0,200),

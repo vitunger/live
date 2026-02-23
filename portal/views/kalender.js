@@ -701,3 +701,14 @@ export async function pullMs365Events() {
 const _exports = {switchKalView,kalNav,kalGoToday,kalRenderActive,kalUpdateNavTitle,kalGetFiltered,kalFmtDate,renderKalender,renderKalWeek,renderKalDay,loadKalTermine,kalClickDay,kalNavMonth,kalClickWeekCell,openKalDayModal,openTerminDetail,saveKalTermin,deleteKalTermin,kalGenerateRepeatDates,kalToggleRepeatEnd,kalUpdateRepeatInfo,kalLoadTeilnehmerDropdown,kalAddTeilnehmer,kalRemoveTeilnehmer,kalRenderTeilnehmerChips,syncTerminToMs365,pullMs365Events};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[kalender.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === Window Exports (onclick handlers) ===
+window.deleteKalTermin = deleteKalTermin;
+window.kalAddTeilnehmer = kalAddTeilnehmer;
+window.kalGoToday = kalGoToday;
+window.kalNav = kalNav;
+window.kalToggleRepeatEnd = kalToggleRepeatEnd;
+window.kalUpdateRepeatInfo = kalUpdateRepeatInfo;
+window.openKalDayModal = openKalDayModal;
+window.saveKalTermin = saveKalTermin;
+window.switchKalView = switchKalView;

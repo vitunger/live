@@ -910,7 +910,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     if((fb.attachments||[]).length) desc += '📎 Anhänge: ' + fb.attachments.length + ' Dateien\n';
 
     try {
-        var resp = await sb.from('ideas').insert({
+        var resp = await sb.from('ideen').insert({
             standort_id: fb.standort_id,
             user_id: fb.user_id,
             titel: title.substring(0,200),

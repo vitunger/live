@@ -264,3 +264,22 @@ export function renderKontakte() {
 const _exports = {renderTickets,openTicketDetail,closeTicketDetail,changeTicketStatus,addTicketComment,filterTickets,sendTicket,submitTicketForm,showSupportTab,renderKontakte};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[support.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === Window Exports (onclick handlers) ===
+window.filterTickets = filterTickets;
+window.showSupportTab = showSupportTab;
+window.submitTicketForm = submitTicketForm;
+
+// === Stub-Funktionen für Support-Interceptor (TODO: vollständig implementieren) ===
+window.acceptInterceptor = function() {
+    var modal = document.getElementById('supportInterceptorModal');
+    if(modal) modal.style.display = 'none';
+    if(window.showToast) window.showToast('Lösung wird ausprobiert...', 'info');
+};
+window.skipInterceptor = function() {
+    var modal = document.getElementById('supportInterceptorModal');
+    if(modal) modal.style.display = 'none';
+    // Direkt zum Ticket-Formular
+    var form = document.getElementById('newTicketForm');
+    if(form) form.style.display = '';
+};

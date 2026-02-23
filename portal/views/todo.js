@@ -845,3 +845,8 @@ Object.keys(exports).forEach(function(key) {
 });
 
 console.log('[todo.js] ✅ Module loaded – ' + Object.keys(exports).length + ' exports registered');
+
+// === Window Exports (onclick handlers) ===
+window.todoSearchChanged = todoSearchChanged;
+window.todoSetFilter = todoSetFilter;
+window.todoSetView = todoSetView;

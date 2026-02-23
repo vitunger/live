@@ -462,3 +462,6 @@ export function initEinkaufModule() {
 const _exports = {renderHQDash,renderHQLief,openLiefEditor,saveLief,closeModal,renderHQStrat,renderStSortiment,renderStLief,renderZR,renderStStrat,renderWissen,renderWIht,renderWParts,renderWDb1,renderWKern,renderWVo,reRenderEkTab,showEinkaufTab,showHqEkTab,initEinkaufModule};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[einkauf.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === Window Exports (onclick handlers) ===
+window.showHqEkTab = showHqEkTab;

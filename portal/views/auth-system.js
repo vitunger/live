@@ -1431,3 +1431,14 @@ window.currentLang = currentLang; window.isPremium = isPremium; window.SESSION =
 const _exports = {initMilestonesForStage,getMilestoneStatus,setMilestoneStatus,logOnboardingAction,evaluateTransitions,executeTransition,applyForPart1,updateLocationInfo,hasAccess,hasRole,hqCan,impersonateDemo,impersonateUser,_saveOrigState,_activateImpersonation,exitImpersonation,_restoreOrigState,quickLogin,showPasswordReset,closePwReset,submitPwReset,showRegistration,hideRegistration,submitRegistration,handleLogin,loadUserProfile,enterApp,checkDemoMode,showDemoBanner,removeDemoBanner,seedDemoData,clearDemoData,checkPendingApprovals,loadPipelineFromSupabase,handleLogout,checkSession,showChangePasswordModal,submitNewPassword,updateUIForRole,switchCommunicationTab,updatePremiumFeatures,showPremiumUpgradeModal,toggleDashboardEdit,addWidget,showMarketingTab};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[auth-system.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === Window Exports (onclick handlers) ===
+window.addWidget = addWidget;
+window.exitImpersonation = exitImpersonation;
+window.handleLogin = handleLogin;
+window.handleLogout = handleLogout;
+window.impersonateUser = impersonateUser;
+window.showPasswordReset = showPasswordReset;
+window.showRegistration = showRegistration;
+window.switchCommunicationTab = switchCommunicationTab;
+window.toggleDashboardEdit = toggleDashboardEdit;

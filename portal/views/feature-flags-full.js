@@ -734,3 +734,11 @@ window.sbModulEbene = sbModulEbene;
 const _exports = {loadFeatureFlags,isFeatureEnabled,getFeatureMeta,applyFeatureFlags,loadFFView,ffUpdateStats,ffHasTargeting,ffGetStatus,ffFilter,ffRenderList,ffToggle,ffDelete,ffShowCreate,ffShowEdit,ffPopulateSelectors,ffCloseModal,ffSave,logFeatureFlagCheck,ffFlushLog,loadBkView,bkRenderStats,bkRenderHealth,bkRenderTable,bkTriggerBackup,loadModulStatus,applyModulStatus};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[feature-flags-full.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === Window Exports (onclick handlers) ===
+window.bkTriggerBackup = bkTriggerBackup;
+window.ffCloseModal = ffCloseModal;
+window.ffFilter = ffFilter;
+window.ffSave = ffSave;
+window.ffShowCreate = ffShowCreate;
+window.loadBkView = loadBkView;

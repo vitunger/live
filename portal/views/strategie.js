@@ -2349,3 +2349,10 @@ export function saveSalesData() {
 const _exports = {renderKommandozentrale,renderShop,shopSizeQty,shopSizeQtyInput,shopAddSelectedSizes,shopUpdateSizeCart,selectShopSize,updateCartQty,addToCartWithSize,addToCart,renderShopCart,filterShop,showShopTab,loadMyShopOrders,submitShopOrder,removeFromCart,updateShopCart,hqDrillDown,handleFileUpload,translateDOM,switchLang,t,switchSmSub,filterSmThemen,renderSmThemen,renderSmRanking,showView,showModuleVersionBadge,loadAsanaOnboarding,loadDemoTasks,groupTasksBySections,renderAsanaTasks,renderSection,getSectionIcon,renderTask,toggleTaskCompletion,updateSalesData,saveSalesData};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[strategie.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === Window Exports (onclick handlers) ===
+window.filterShop = filterShop;
+window.filterSmThemen = filterSmThemen;
+window.showShopTab = showShopTab;
+window.submitShopOrder = submitShopOrder;
+window.switchSmSub = switchSmSub;

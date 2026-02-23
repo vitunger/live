@@ -1173,3 +1173,24 @@ var kzStandorte = []; // loaded from Supabase
 const _exports = {showHqKommTab,openAnkuendigungModal,closeAnkModal,saveAnkuendigung,renderHqKomm,renderHqKampagnen,addHqKampagne,filterHqDok,loadNetzwerkDokumente,renderHqDokumente,formatFileSize,downloadDokument,deleteNetzwerkDok,loadHqKalTermine,filterHqKal,renderHqKalender,addHqKalTermin,filterHqTasks,renderHqAufgaben,addHqTask,calculateBwaAge,countFeaturesUsed,calculateActivityScore,loadPortalNutzungData,renderHqAuswertung,renderHqWissen,addHqWissen,renderHqSupport,renderHqIdeen,filterHqIdeen,renderKiAnalyseHtml,toggleKiPanel,analysiereIdee,analysierAlleNeuen,updateIdeeStatus,showHqShopTab,filterHqShopOrders,renderHqShop,renderHqShopOrders,renderHqShopProducts,getTrackingUrl,showPackingList,showTrackingModal,saveTracking,addHqShopProduct};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[hq-kommando.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === Window Exports (onclick handlers) ===
+window.addHqKalTermin = addHqKalTermin;
+window.addHqKampagne = addHqKampagne;
+window.addHqShopProduct = addHqShopProduct;
+window.addHqTask = addHqTask;
+window.addHqWissen = addHqWissen;
+window.filterHqDok = filterHqDok;
+window.filterHqKal = filterHqKal;
+window.filterHqShopOrders = filterHqShopOrders;
+window.filterHqTasks = filterHqTasks;
+window.saveTracking = saveTracking;
+window.showHqKommTab = showHqKommTab;
+window.showHqShopTab = showHqShopTab;
+
+// === Stub: openDokUploadModal (TODO: vollständig implementieren) ===
+window.openDokUploadModal = function() {
+    if(window.showToast) window.showToast('Dokument-Upload wird vorbereitet...', 'info');
+    // TODO: Modal für Netzwerk-Dokument-Upload implementieren
+    console.warn('openDokUploadModal: noch nicht implementiert');
+};

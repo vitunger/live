@@ -2088,3 +2088,14 @@ export async function removeBetaUser(betaId, modulKey, modulName) {
 const _exports = {approveUser,switchApproveEbene,closeApproveModal,confirmApprove,rejectUser,openRollenModal,closeRollenModal,saveRollen,getStandortName,getPartnerMitarbeiter,filterPartnerMa,showMaTab,renderPartnerMitarbeiter,openEmployeeToolsModal,closeEmpToolsModal,saveEmployeeTools,openEditEmployeeModal,closeEditEmpModal,saveEditEmployee,renderMaToolsMatrix,renderMaKosten,deactivateMa,openNeuerMaModal,switchNewMaEbene,closeNeuerMaModal,switchNewMaEmailType,updateNewMaEmail,saveNeuerMa,openEditMaModal,switchEditEbene,closeEditMaModal,saveEditMa,loginAs,deleteMa,openNeuerStandortModal,closeNeuerStdModal,saveNeuerStandort,showSettingsTab,renderModulStatusList,renderHqModulStatusList,_renderModulRow,toggleModuleExpand,renderOfficeRoomsAdmin,renderDemoModulList,setDemoModulStatus,setDemoTabStatus,setDemoWidgetStatus,setAllDemoStatus,setTabStatus,setWidgetStatus,setModulStatus,setHqModulStatus,setHqTabStatus,setHqWidgetStatus,renderHqEinstellungen,togglePermission,renderHqRechteMatrixBody,loadHqRechteMatrix,toggleHqPermission,showKommandoTab,filterKzStandorte,filterKzMa,renderKzStandorte,renderKzMitarbeiter,openBetaUsersModal,filterBetaUserList,addBetaUser,removeBetaUser};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[user-management.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === Window Exports (onclick handlers) ===
+window.filterPartnerMa = filterPartnerMa;
+window.openNeuerMaModal = openNeuerMaModal;
+window.openNeuerStandortModal = openNeuerStandortModal;
+window.setAllDemoStatus = setAllDemoStatus;
+window.showMaTab = showMaTab;
+window.showKommandoTab = showKommandoTab;
+window.filterKzMa = filterKzMa;
+window.filterKzStandorte = filterKzStandorte;
+window.renderKzMitarbeiter = renderKzMitarbeiter;

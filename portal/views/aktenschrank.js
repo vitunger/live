@@ -362,3 +362,7 @@ export function loadAktenschrank(){console.log('[aktenschrank.js] loadAktenschra
 const _exports={loadAktenschrank,loadAktenFiles,getFileIcon,openAktenFolder,closeAktenFolder,filterAkten,showAktenInbox,closeAktenInbox,openAktenReview,closeAktenReview,confirmAktenDoc,rejectAktenDoc,openAktenUpload,closeAktenUpload,handleAktenDrop,handleAktenFileSelect,startAktenUpload,removeFromAktenQueue,downloadAktenDoc,viewAktenDoc,closeAktenPreview};
 Object.keys(_exports).forEach(k=>{window[k]=_exports[k];});
 console.log('[aktenschrank.js] \u2705 v2 loaded \u2013 '+Object.keys(_exports).length+' exports (DB-driven, KI-ready)');
+
+// === Window Exports (onclick handlers) ===
+window.closeAktenFolder = closeAktenFolder;
+window.openAktenFolder = openAktenFolder;

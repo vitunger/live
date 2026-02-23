@@ -567,3 +567,6 @@ window.loadStandortCosts = function() { if(DEMO_ACTIVE) { fillDemoBilling(); ret
 const _exports = {renderExternHome,renderOnboardingView,toggleMilestone,showHqOnbTab,renderHqOnboarding,hqApprovePart1,switchDemoAccount,injectDemoBanner,exitDemoMode,fillDemoWidgets,fillDemoHQ,fillDemoBilling,showDemoInvoiceDetail};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[onboarding-demo.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === Window Exports (onclick handlers) ===
+window.switchDemoAccount = switchDemoAccount;

@@ -607,3 +607,19 @@ export function viewPartnerDetails(standortId) { alert('Partner-Detail für Stan
 const _exports = {showAllgemeinTab,loadAllgemeinData,loadJahresziele,renderJahresziele,openJahreszielModal,openJahreszielEdit,closeJahreszielModal,toggleJahreszielFelder,saveJahresziel,deleteJahresziel,toggleSoftTarget,loadMonatsplan,renderMonatsplan,openMonatsDetail,addMonatsMassnahme,closeMonatsDetail,saveMonatsDetail,loadJournal,renderJournal,openJournalModal,openJournalEdit,closeJournalModal,setJournalStimmung,updateThemaStyle,addJournalWunsch,addJournalMassnahme,saveJournalEntry,deleteJournalEntry,toggleJournalMassnahme,setStimmung,renderAllgemeinUebersicht,loadHqAllgemeinData,renderHqAllgemein,viewPartnerDetails};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[allgemein.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === Window Exports (onclick handlers) ===
+window.addJournalMassnahme = addJournalMassnahme;
+window.addJournalWunsch = addJournalWunsch;
+window.addMonatsMassnahme = addMonatsMassnahme;
+window.closeJahreszielModal = closeJahreszielModal;
+window.closeJournalModal = closeJournalModal;
+window.closeMonatsDetail = closeMonatsDetail;
+window.openJahreszielModal = openJahreszielModal;
+window.openJournalModal = openJournalModal;
+window.saveJahresziel = saveJahresziel;
+window.saveJournalEntry = saveJournalEntry;
+window.saveMonatsDetail = saveMonatsDetail;
+window.setJournalStimmung = setJournalStimmung;
+window.setStimmung = setStimmung;
+window.toggleJahreszielFelder = toggleJahreszielFelder;

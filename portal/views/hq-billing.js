@@ -1181,3 +1181,8 @@ export function showKommandoTab(tab) {
 const _exports = {fmtEur,fmtDate,billingStatusBadge,billingApi,initBillingModule,loadBillingOverview,generateMonthlyDrafts,showQuarterlySettlementDialog,generateQuarterlySettlement,finalizeAllReady,showBillingInvoice,finalizeInvoice,markInvoicePaid,editLineItem,removeLineItem,addManualLineItem,showBillingTab,loadAllInvoices,loadAllStrategies,approveStrategy,lockStrategy,loadBillingProducts,loadBillingTools,toggleApprovalMode,updateApprovalModeUI,approvalBulkAction,loadApprovalQueue,approvalAction,generateAllDrafts,showStBillingTab,initStandortBilling,loadStandortInvoices,showStandortInvoiceDetail,loadStandortStrategy,submitStandortStrategy,loadStandortCosts,downloadInvoicePdf,loadStandortPayments,showKommandoTab};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[hq-billing.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === Window Exports (onclick handlers) ===
+window.approvalBulkAction = approvalBulkAction;
+window.generateAllDrafts = generateAllDrafts;
+window.toggleApprovalMode = toggleApprovalMode;

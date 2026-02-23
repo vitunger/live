@@ -85,9 +85,9 @@ try {
     var me = (await sb.auth.getUser()).data.user?.id;
     var sid = _sbProfile() ? _sbProfile().standort_id : null;
     if (!sid || !me) return;
-    var { data: users } = await _sb().from('user_profiles').select('user_id').eq('standort_id', sid);
+    var { data: users } = await _sb().from('users').select('id').eq('standort_id', sid);
     if (!users) return;
-    var ids = users.map(function(u) { return u.user_id; }).filter(function(id) { return id !== me; });
+    var ids = users.map(function(u) { return u.id; }).filter(function(id) { return id !== me; });
     await triggerPush(ids, title, body, url, prefKey);
 } catch(e) { console.log('[Push] standort trigger:', e.message); }
 }
@@ -96,9 +96,9 @@ export async function triggerPushHQ(title, body, url, prefKey) {
 try {
     var sb = window._supabase;
     var me = (await sb.auth.getUser()).data.user?.id;
-    var { data: hqUsers } = await _sb().from('user_profiles').select('user_id').eq('is_hq', true);
+    var { data: hqUsers } = await _sb().from('users').select('id').eq('is_hq', true);
     if (!hqUsers) return;
-    var ids = hqUsers.map(function(u) { return u.user_id; }).filter(function(id) { return id !== me; });
+    var ids = hqUsers.map(function(u) { return u.id; }).filter(function(id) { return id !== me; });
     await triggerPush(ids, title, body, url, prefKey);
 } catch(e) { console.log('[Push] HQ trigger:', e.message); }
 }
@@ -279,3 +279,6 @@ try {
 const _exports = {renderNotifications,triggerPushStandort,triggerPushHQ,installPWA,dismissInstall,showLocalNotification,updatePushUI,checkPushStatus,loadNotificationPrefs,saveNotificationPrefs,unsubscribePush};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[notifications.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === Window Exports (onclick handlers) ===
+window.filterNotif = filterNotif;

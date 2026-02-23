@@ -1257,3 +1257,8 @@ window.addEventListener('vit:modules-ready', function() {
 const _exports = {renderPlanIst,renderPlanUploadScreen,parsePlanFile,callFinanceKi,applyPlanKiResult,saveParsedPlan,saveManualPlan,renderPlanVergleich,buildPlanIstTable,showMonthDetail,editSelectedBwa,deleteBwa,loadVerkaufTracking,renderVerkaufFromDb,openVerkaufEntryModal,closeVtModal,loadAuswertung,renderAuswertung,saveVtEntry,getLeadData,getPerformanceColor,getPerformanceDot,renderLeadDashboard,showPlanAssistent,planAssistentNext,savePlanAssistent,downloadPlanVorlage,showPlanUploadForm};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[plan-ist.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === Window Exports (onclick handlers) ===
+window.deleteBwa = deleteBwa;
+window.editSelectedBwa = editSelectedBwa;
+window.openVerkaufEntryModal = openVerkaufEntryModal;

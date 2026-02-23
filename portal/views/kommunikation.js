@@ -498,7 +498,7 @@ export async function kommSendMessage() {
                     inhalt: text, kategorie: 'news', wichtig: false
                 });
                 if(resp.error) throw resp.error;
-                (async function() { try { var { data: au } = await _sb().from('user_profiles').select('user_id'); if(au) { var ids = au.map(function(u){return u.user_id;}).filter(function(id){return id!==_sbUser().id;}); _triggerPush(ids, '📢 Ankündigung', text.split('\n')[0].substring(0,60), '/?view=kommunikation', 'push_ankuendigung'); } } catch(e){} })();
+                (async function() { try { var { data: au } = await _sb().from('users').select('id'); if(au) { var ids = au.map(function(u){return u.id;}).filter(function(id){return id!==_sbUser().id;}); _triggerPush(ids, '📢 Ankündigung', text.split('\n')[0].substring(0,60), '/?view=kommunikation', 'push_ankuendigung'); } } catch(e){} })();
                 await loadAnnouncements();
             }
         }
@@ -842,3 +842,15 @@ export function showKommTab(tabName) {
 const _exports = {loadKommSidebar,filterKommSidebar,openKommConv,loadChannelMessages,subscribeToChannel,loadInboxConversation,renderInboxBubbles,loadAnnouncements,markAnkGelesen,renderChatBubbles,renderSingleBubble,setReply,cancelReply,kommSendMessage,kommInputKeydown,kommAutoResize,kommStartNewChat,kommSelectNewRecipient,kommCreateKanal,updateKommBadges,renderCommunityPosts,createCommunityPost,deactivateBrettPost,deleteForumPost,filterCommunity,openForumDetail,postForumComment,closeForumDetail,showKommTab};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[kommunikation.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === Window Exports (onclick handlers) ===
+window.cancelReply = cancelReply;
+window.closeForumDetail = closeForumDetail;
+window.createCommunityPost = createCommunityPost;
+window.filterCommunity = filterCommunity;
+window.filterKommSidebar = filterKommSidebar;
+window.kommAutoResize = kommAutoResize;
+window.kommSendMessage = kommSendMessage;
+window.kommStartNewChat = kommStartNewChat;
+window.postForumComment = postForumComment;
+window.showKommTab = showKommTab;

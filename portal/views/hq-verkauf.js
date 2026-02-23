@@ -1057,3 +1057,6 @@ showView = function(v) {
 const _exports = {renderHqVerkauf,renderHqAktionen,loadHqPrio,saveHqPrio,resetHqPrio,getAllModulesFlat,getAufwandBadge,getTypBadge,getStatusBadge,filterModulStatus,onPrioDragStart,onPrioDragOver,onPrioDragLeave,onPrioDrop,moveHqPrio,renderModulStatus,renderDevStatus,showDevTab,renderReleaseUpdates,renderDevNutzung,generateDemoBwaData,renderPerformanceCockpit};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[hq-verkauf.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === Window Export: loadHqVerkaufData (alias für renderHqVerkauf) ===
+window.loadHqVerkaufData = renderHqVerkauf;

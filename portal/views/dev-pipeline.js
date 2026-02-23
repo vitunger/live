@@ -4413,3 +4413,12 @@ Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
 
 /* deploy test 1771793151 */
+
+// === Window Exports (onclick handlers) ===
+window.closeDevDetail = closeDevDetail;
+window.handleDevFileSelect = handleDevFileSelect;
+window.renderEntwIdeen = renderEntwIdeen;
+window.setDevInputType = setDevInputType;
+window.submitDevIdea = submitDevIdea;
+window.toggleDevAudioRecord = toggleDevAudioRecord;
+window.toggleDevScreenRecord = toggleDevScreenRecord;
