@@ -501,6 +501,11 @@ function SalesForm({deal,sales,seller,onClose,onUpdateDeal,mode}){
         </Q>
       </div>
 
+      <div style={{padding:"0 28px 8px"}}>
+        <div style={{fontWeight:700,fontSize:14,color:"#1a202c",marginBottom:6}}>Notizen</div>
+        <textarea value={form.notizen||""} onChange={e=>u("notizen",e.target.value)} placeholder="Freitext-Notizen zur Beratung..." style={{width:"100%",minHeight:80,padding:12,borderRadius:12,border:"1.5px solid #E8E8E8",fontSize:13,fontFamily:"inherit",resize:"vertical",outline:"none",boxSizing:"border-box"}}/>
+      </div>
+
       <div style={{padding:"14px 28px",borderTop:"1px solid #EFEFEF",flexShrink:0}}>
         <button onClick={e=>{e.stopPropagation();saveAndClose()}} style={{width:"100%",padding:"12px",borderRadius:12,border:"none",background:"#1a202c",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>Speichern</button>
       </div>
@@ -869,17 +874,11 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
                   <div key={b.k} onClick={()=>uS("bezahlart",b.k)} style={chipS(sales.bezahlart===b.k)}>{b.l}</div>)}
               </div>
               {sales.bezahlart==="leasing"&&<div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:4}}>
-                {["JobRad","BusinessBike","Lease a Bike","Bikeleasing","Deutsche Leasing"].map(p=>
-                  <div key={p} onClick={()=>uS("leasingAnbieter",p)} style={{...chipS(sales.leasingAnbieter===p),fontSize:9}}>{p}</div>)}
+                {sales.leasingAnbieter
+                  ? <><div style={{...chipS(true),fontSize:9}}>{sales.leasingAnbieter}</div><div onClick={()=>uS("leasingAnbieter",null)} style={{...chipS(false),fontSize:9,cursor:"pointer"}}>✕</div></>
+                  : ["JobRad","BusinessBike","Lease a Bike","Bikeleasing","Deutsche Leasing"].map(p=>
+                  <div key={p} onClick={()=>uS("leasingAnbieter",p)} style={{...chipS(false),fontSize:9}}>{p}</div>)}
               </div>}
-            </div>
-          </div>
-
-          {/* Verkäufer */}
-          <div style={{marginBottom:14}}>
-            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:4}}>Verkäufer</div>
-            <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-              {SELLERS.map(s=><div key={s.id} onClick={()=>onUpdateDeal(deal.id,"seller",s.id)} style={{...chipS(deal.seller===s.id),background:deal.seller===s.id?s.color+"20":"#fff",borderColor:deal.seller===s.id?s.color:"#e5e7eb",color:deal.seller===s.id?s.color:"#6b7280"}}>{s.short}</div>)}
             </div>
           </div>
 
