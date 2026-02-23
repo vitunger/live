@@ -397,7 +397,28 @@ try {
         html += '<div class="mb-4"><div class="rounded-lg overflow-hidden bg-black">';
         html += '<video id="vpDetailPlayer" controls preload="metadata" crossorigin="anonymous" class="w-full max-h-[400px]" style="max-height:400px;">';
         html += '<source src="'+signedUrl+'" type="video/'+((v.filename||'').toLowerCase().endsWith('.mov')?'quicktime':'mp4')+'">';
-        html += '</video></div></div>';
+        html += '</video></div>';
+        // Quick actions bar under video (HQ only)
+        var isHqUserQA = (window.sbProfile && window.sbProfile.is_hq) || false;
+        if(isHqUserQA) {
+            html += '<div class="flex items-center justify-between mt-2 px-1">';
+            html += '<div class="flex gap-2">';
+            if(v.pipeline_status==='uploaded') html += '<button onclick="vpTriggerAnalysis(\''+v.id+'\')" class="px-3 py-1.5 bg-vit-orange text-white rounded-lg text-sm hover:bg-orange-600">🔬 Analysieren</button>';
+            if(v.pipeline_status==='consent_check'||v.pipeline_status==='consent_blocked') {
+                html += '<button onclick="vpTriggerConsent(\''+v.id+'\')" class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600">🔍 Consent</button>';
+                html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'cutting\')" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300">⏩ Skip</button>';
+            }
+            if(v.pipeline_status==='cutting') html += '<button onclick="vpTriggerReels(\''+v.id+'\')" class="px-3 py-1.5 bg-purple-500 text-white rounded-lg text-sm hover:bg-purple-600">🎬 Reels</button>';
+            if(v.pipeline_status==='review') {
+                html += '<button onclick="vpHqApprove(\''+v.id+'\')" class="px-3 py-1.5 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600">✅ Freigeben</button>';
+                html += '<button onclick="vpHqReject(\''+v.id+'\')" class="px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600">❌ Ablehnen</button>';
+            }
+            if(v.pipeline_status==='approved') html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'publishing\')" class="px-3 py-1.5 bg-purple-500 text-white rounded-lg text-sm hover:bg-purple-600">🚀 Publish</button>';
+            html += '</div>';
+            html += '<span class="text-xs text-gray-400">'+vpBadge(v.pipeline_status)+'</span>';
+            html += '</div>';
+        }
+        html += '</div>';
     } else {
         html += '<div class="mb-4 p-6 bg-gray-100 rounded-lg text-center text-gray-400"><div class="text-3xl mb-2">🎬</div><p class="text-sm">Video-Vorschau nicht verfügbar</p></div>';
     }
