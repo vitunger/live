@@ -76,7 +76,7 @@ export function renderWeekView() {
         html += '<thead><tr class="bg-gray-50 text-xs"><th class="py-2 px-3 text-left text-gray-500">Tag</th><th class="py-2 px-3 text-center text-gray-500">Plan</th><th class="py-2 px-3 text-center text-blue-600">Geplant</th><th class="py-2 px-3 text-center text-purple-600">Spontan</th><th class="py-2 px-3 text-center text-cyan-600">Online</th><th class="py-2 px-3 text-center text-pink-600">Ergo</th><th class="py-2 px-3 text-center font-bold text-gray-700">Gesamt</th><th class="py-2 px-3 text-center text-green-600">Verkauft</th><th class="py-2 px-3 text-center text-gray-500">Uebergabe</th><th class="py-2 px-3 text-right text-vit-orange">Umsatz</th></tr></thead>';
         html += '<tbody>';
         s.daily.forEach(function(d) {
-            var total = d.geplant + d.spontan + d.online + d.ergo;
+            var total = d.geplant + d.spontan + d.online;
             var hasData = d.plan > 0 || total > 0 || d.umsatz > 0;
             html += '<tr class="border-b ' + (hasData ? '' : 'text-gray-300') + '">';
             html += '<td class="py-2 px-3 font-semibold">' + d.day + '</td>';
@@ -219,7 +219,7 @@ export async function renderJahresTabelle() {
             resp.data.forEach(function(r) {
                 var m = new Date(r.datum).getMonth();
                 if(!trackingData[m]) trackingData[m] = {beratungen:0, verkauft:0, umsatz:0};
-                trackingData[m].beratungen += (r.geplant||0) + (r.spontan||0) + (r.ergo||0);
+                trackingData[m].beratungen += (r.geplant||0) + (r.spontan||0);
                 trackingData[m].verkauft += (r.verkauft||0);
                 trackingData[m].umsatz += parseFloat(r.umsatz||0);
             });
@@ -424,7 +424,7 @@ export function renderWeekViewFromDb() {
         totalPlan += s.plan_soll;
         weekDays.forEach(function(dn) {
             var dd = s.days[dn];
-            if(dd) { totalGesamt += dd.geplant+dd.spontan+dd.online+dd.ergo; totalVerkauft += dd.verkauft; totalUmsatz += dd.umsatz; }
+            if(dd) { totalGesamt += dd.geplant+dd.spontan+dd.online; totalVerkauft += dd.verkauft; totalUmsatz += dd.umsatz; }
         });
     });
     var el;
@@ -443,7 +443,7 @@ export function renderWeekViewFromDb() {
     var html = '';
     filtered.forEach(function(s) {
         var sUmsatz=0, sGesamt=0, sVerkauft=0;
-        weekDays.forEach(function(dn) { var dd=s.days[dn]; if(dd) { sUmsatz+=dd.umsatz; sGesamt+=dd.geplant+dd.spontan+dd.online+dd.ergo; sVerkauft+=dd.verkauft; } });
+        weekDays.forEach(function(dn) { var dd=s.days[dn]; if(dd) { sUmsatz+=dd.umsatz; sGesamt+=dd.geplant+dd.spontan+dd.online; sVerkauft+=dd.verkauft; } });
         var sQuote = sGesamt > 0 ? Math.round((sVerkauft/sGesamt)*100) : 0;
         html += '<div class="vit-card overflow-hidden">';
         html += '<div class="flex items-center justify-between p-4 bg-gray-50 border-b">';
@@ -460,7 +460,7 @@ export function renderWeekViewFromDb() {
         html += '<tbody>';
         weekDays.forEach(function(dn) {
             var dd = s.days[dn] || {plan:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0};
-            var total = dd.geplant+dd.spontan+dd.online+dd.ergo;
+            var total = dd.geplant+dd.spontan+dd.online;
             var hasData = dd.plan>0 || total>0 || dd.umsatz>0;
             html += '<tr class="border-b '+(hasData?'':'text-gray-300')+'">';
             html += '<td class="py-2 px-3 font-semibold">'+dn+'</td>';

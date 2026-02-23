@@ -854,7 +854,7 @@ export function renderVerkaufFromDb() {
         var dayNames = ['So','Mo','Di','Mi','Do','Fr','Sa'];
         var dayName = dayNames[d.getDay()];
         s.daily[dayName] = entry;
-        var gesamt = (entry.geplant||0) + (entry.spontan||0) + (entry.online||0) + (entry.ergo||0);
+        var gesamt = (entry.geplant||0) + (entry.spontan||0) + (entry.online||0);
         s.total += gesamt;
         s.verkauft += (entry.verkauft||0);
         s.umsatz += parseFloat(entry.umsatz)||0;
@@ -986,7 +986,7 @@ export function renderAuswertung(data, year) {
     var sellerMap = {};
     data.forEach(function(d){
         var dm = new Date(d.datum).getMonth()+1;
-        var ges = (d.geplant||0)+(d.spontan||0)+(d.online||0)+(d.ergo||0);
+        var ges = (d.geplant||0)+(d.spontan||0)+(d.online||0);
         months[dm].beratungen += ges;
         months[dm].verkauft += (d.verkauft||0);
         months[dm].umsatz += parseFloat(d.umsatz)||0;
