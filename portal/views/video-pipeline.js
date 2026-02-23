@@ -999,8 +999,8 @@ try {
         html += '<div class="vit-card p-8 text-center text-gray-400"><div class="text-4xl mb-2">✅</div><p>Keine Videos warten auf Bearbeitung.</p></div>';
     }
 
-    // Template-Verwaltung Button
-    html += '<div class="flex justify-end mb-4"><button onclick="vpShowTemplates()" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200">🎨 Reel-Templates verwalten</button></div>';
+    // Template + Learnings Verwaltung
+    html += '<div class="flex justify-end gap-2 mb-4"><button onclick="vpShowLearnings()" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200">🧠 KI-Learnings</button><button onclick="vpShowTemplates()" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200">🎨 Reel-Templates</button></div>';
 
     // ── UPLOADED: Analyse starten ──
     if(uploaded.length>0) {
@@ -1102,15 +1102,269 @@ try {
 };
 
 window.vpHqReject = async function(videoId) {
-var reason = prompt('Ablehnungsgrund:');
-if(reason===null) return;
+// Strukturiertes Ablehnen mit Lerneffekt
+var {data:v} = await _sb().from('videos').select('filename,category').eq('id',videoId).single();
+
+var html = '<div class="flex justify-between items-center mb-4"><h2 class="text-lg font-bold text-gray-800">❌ Video ablehnen</h2><button onclick="vpCloseModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button></div>';
+html += '<p class="text-sm text-gray-500 mb-4">'+(v?v.filename:'Video')+'</p>';
+
+html += '<div class="space-y-3">';
+html += '<div><p class="text-xs font-medium text-gray-500 mb-2 uppercase">Ablehnungsgründe</p>';
+html += '<div class="flex flex-wrap gap-1.5" id="vpRejectTags">';
+var rejectReasons = [
+    {tag:'quality',label:'📹 Qualität zu schlecht'},
+    {tag:'shaky',label:'🤝 Verwackelt'},
+    {tag:'dark',label:'🌑 Zu dunkel'},
+    {tag:'audio',label:'🔇 Ton-Probleme'},
+    {tag:'branding',label:'🏷️ Branding fehlt'},
+    {tag:'consent',label:'👤 Consent-Problem'},
+    {tag:'content',label:'📝 Inhalt unpassend'},
+    {tag:'length',label:'⏱️ Falsche Länge'},
+    {tag:'music',label:'🎵 Musik ungeeignet'},
+    {tag:'duplicate',label:'🔄 Duplikat'}
+];
+rejectReasons.forEach(function(r) {
+    html += '<button onclick="vpToggleRejectTag(this)" class="vp-reject-tag px-2 py-1 text-xs border border-gray-300 rounded-full hover:bg-red-50 hover:border-red-300 cursor-pointer" data-tag="'+r.tag+'" data-active="false">'+r.label+'</button>';
+});
+html += '</div></div>';
+
+html += '<div><label class="text-xs font-medium text-gray-500">Details / Begründung</label>';
+html += '<textarea id="vpRejectReason" class="w-full mt-1 p-3 border rounded-lg text-sm" rows="3" placeholder="Was genau ist das Problem? Je genauer, desto besser lernt die KI..."></textarea></div>';
+
+html += '<div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">';
+html += '<label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="vpRejectLearn" checked class="rounded text-vit-orange"><span class="text-sm text-blue-700">🤖 KI soll daraus lernen (Regel wird automatisch erstellt)</span></label>';
+html += '</div>';
+
+html += '<div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">';
+html += '<label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="vpRejectExample" class="rounded text-vit-orange"><span class="text-sm text-yellow-700">📌 Als Negativ-Beispiel markieren (KI nutzt es als Referenz)</span></label>';
+html += '</div>';
+
+html += '</div>';
+html += '<div class="flex gap-2 mt-4 pt-4 border-t">';
+html += '<button onclick="vpConfirmReject(\''+videoId+'\')" class="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 font-medium">❌ Ablehnen & speichern</button>';
+html += '<button onclick="vpCloseModal()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">Abbrechen</button>';
+html += '</div>';
+
+vpModal(html);
+};
+
+window.vpToggleRejectTag = function(btn) {
+    var active = btn.getAttribute('data-active') === 'true';
+    btn.setAttribute('data-active', !active);
+    btn.className = !active
+        ? 'vp-reject-tag px-2 py-1 text-xs border border-red-400 rounded-full bg-red-100 text-red-700 cursor-pointer'
+        : 'vp-reject-tag px-2 py-1 text-xs border border-gray-300 rounded-full hover:bg-red-50 hover:border-red-300 cursor-pointer';
+};
+
+window.vpConfirmReject = async function(videoId) {
+var tags = [];
+document.querySelectorAll('.vp-reject-tag[data-active="true"]').forEach(function(t) { tags.push(t.dataset.tag); });
+var reason = (document.getElementById('vpRejectReason').value||'').trim();
+var shouldLearn = document.getElementById('vpRejectLearn').checked;
+var markExample = document.getElementById('vpRejectExample').checked;
+
+if(!tags.length && !reason) { alert('Bitte mindestens einen Grund angeben.'); return; }
+
+var tagLabels = [];
+document.querySelectorAll('.vp-reject-tag[data-active="true"]').forEach(function(t) { tagLabels.push(t.textContent.trim()); });
+var fullReason = (tagLabels.length ? tagLabels.join(', ') : '') + (reason ? (tagLabels.length ? ' – ' : '') + reason : '');
+
 try {
-    await _sb().from('videos').update({pipeline_status:'rejected',pipeline_status_detail:'HQ: '+reason}).eq('id',videoId);
-    await _sb().from('review_tasks').update({completed_at:new Date().toISOString(),decision:'rejected',checklist:{reason:reason}}).eq('video_id',videoId).is('completed_at',null);
-    await _sb().from('reels').update({status:'rejected',review_notes:reason}).eq('video_id',videoId).eq('status','generated');
+    // 1. Video ablehnen
+    await _sb().from('videos').update({pipeline_status:'rejected',pipeline_status_detail:'HQ: '+fullReason}).eq('id',videoId);
+    await _sb().from('review_tasks').update({completed_at:new Date().toISOString(),decision:'rejected',checklist:{tags:tags,reason:reason}}).eq('video_id',videoId).is('completed_at',null);
+    await _sb().from('reels').update({status:'rejected',review_notes:fullReason}).eq('video_id',videoId).eq('status','generated');
+
+    // 2. KI-Learning erstellen
+    if(shouldLearn && (reason || tags.length)) {
+        var {data:v} = await _sb().from('videos').select('category').eq('id',videoId).single();
+        var learningRules = [];
+        if(tags.includes('shaky')) learningRules.push({cat:'quality',rule:'Verwackelte Aufnahmen vermeiden – Stativ oder Stabilisierung nutzen'});
+        if(tags.includes('dark')) learningRules.push({cat:'quality',rule:'Auf ausreichende Beleuchtung achten – dunkle Szenen rausschneiden'});
+        if(tags.includes('audio')) learningRules.push({cat:'audio',rule:'Tonqualität prüfen – Hintergrundgeräusche, Wind oder Rauschen vermeiden'});
+        if(tags.includes('branding')) learningRules.push({cat:'branding',rule:'vit:bikes Branding (Logo, Farben) muss sichtbar sein'});
+        if(tags.includes('music')) learningRules.push({cat:'audio',rule:'Musikauswahl prüfen – muss zur Marke und Zielgruppe passen'});
+        if(tags.includes('length')) learningRules.push({cat:'quality',rule:'Video-Länge muss zum Template passen – nicht zu lang, nicht zu kurz'});
+        // Custom learning from freetext
+        if(reason && reason.length > 10) {
+            learningRules.push({cat:v?v.category:'general', rule: reason});
+        }
+        for(var i=0; i<learningRules.length; i++) {
+            await _sb().from('video_ki_learnings').insert({
+                category: learningRules[i].cat,
+                learning_type: 'rejection',
+                source_video_id: videoId,
+                rule: learningRules[i].rule,
+                context: fullReason,
+                priority: 7,
+                created_by: _sbUser().id
+            });
+        }
+    }
+
+    // 3. Als Negativ-Beispiel markieren
+    if(markExample) {
+        var {data:v2} = await _sb().from('videos').select('category').eq('id',videoId).single();
+        await _sb().from('video_ki_examples').insert({
+            video_id: videoId,
+            example_type: 'bad',
+            category: v2?v2.category:'general',
+            description: 'Abgelehnt: ' + fullReason,
+            tags: tags,
+            created_by: _sbUser().id
+        });
+    }
+
+    // 4. Log
+    await _sb().from('pipeline_log').insert({video_id:videoId, phase:'review', action:'rejected', details:{tags:tags,reason:reason,learned:shouldLearn,example:markExample}});
+
+    vpCloseModal();
     vpRenderHqReview();
     vpUpdateHqBadge();
 } catch(e) { alert('Fehler: '+e.message); }
+};
+
+// ==================== APPROVE MIT LEARNING ====================
+// Erweitere Approve: Bei Freigabe optional als Positiv-Beispiel markieren
+window.vpHqApproveWithLearning = async function(videoId) {
+var {data:v} = await _sb().from('videos').select('filename,category').eq('id',videoId).single();
+var html = '<div class="flex justify-between items-center mb-4"><h2 class="text-lg font-bold text-gray-800">✅ Video freigeben</h2><button onclick="vpCloseModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button></div>';
+html += '<p class="text-sm text-gray-500 mb-4">'+(v?v.filename:'Video')+'</p>';
+html += '<div class="p-3 bg-green-50 border border-green-200 rounded-lg mb-3">';
+html += '<label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="vpApproveExample" class="rounded text-green-500"><span class="text-sm text-green-700">⭐ Als Positiv-Beispiel markieren (KI lernt: "So soll es aussehen")</span></label>';
+html += '</div>';
+html += '<textarea id="vpApproveNote" class="w-full p-3 border rounded-lg text-sm mb-3" rows="2" placeholder="Optional: Was ist besonders gut an diesem Video?"></textarea>';
+html += '<div class="flex gap-2">';
+html += '<button onclick="vpConfirmApprove(\''+videoId+'\')" class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium">✅ Freigeben</button>';
+html += '<button onclick="vpCloseModal()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">Abbrechen</button>';
+html += '</div>';
+vpModal(html);
+};
+
+window.vpConfirmApprove = async function(videoId) {
+var markExample = document.getElementById('vpApproveExample').checked;
+var note = (document.getElementById('vpApproveNote').value||'').trim();
+try {
+    await _sb().from('videos').update({pipeline_status:'approved',pipeline_status_detail:'Freigegeben von HQ'+(note?' – '+note:'')}).eq('id',videoId);
+    await _sb().from('review_tasks').update({completed_at:new Date().toISOString(),decision:'approved'}).eq('video_id',videoId).is('completed_at',null);
+    await _sb().from('reels').update({status:'approved',approved_by:_sbUser().id,approved_at:new Date().toISOString()}).eq('video_id',videoId).eq('status','generated');
+
+    if(markExample) {
+        var {data:v} = await _sb().from('videos').select('category').eq('id',videoId).single();
+        await _sb().from('video_ki_examples').insert({
+            video_id: videoId,
+            example_type: 'good',
+            category: v?v.category:'general',
+            description: note || 'Freigegeben als Positiv-Beispiel',
+            created_by: _sbUser().id
+        });
+        if(note && note.length > 10) {
+            await _sb().from('video_ki_learnings').insert({
+                category: v?v.category:'general',
+                learning_type: 'approval',
+                source_video_id: videoId,
+                rule: note,
+                priority: 6,
+                created_by: _sbUser().id
+            });
+        }
+    }
+
+    vpCloseModal();
+    vpRenderHqReview();
+    vpUpdateHqBadge();
+} catch(e) { alert('Fehler: '+e.message); }
+};
+
+// ==================== KI-LEARNINGS VERWALTEN ====================
+window.vpShowLearnings = async function() {
+vpModal('<div class="flex justify-center py-8"><div class="animate-spin w-8 h-8 border-4 border-vit-orange border-t-transparent rounded-full"></div></div>');
+try {
+    var {data:learnings} = await _sb().from('video_ki_learnings').select('*').eq('is_active',true).order('priority',{ascending:false});
+    var {data:examples} = await _sb().from('video_ki_examples').select('*, videos(filename)').eq('is_active',true).order('created_at',{ascending:false});
+    learnings = learnings||[]; examples = examples||[];
+
+    var catIcons = {quality:'📹',branding:'🏷️',audio:'🔊',werkstatt:'🔧',probefahrt:'🚲',event:'🎉',consent:'👤',general:'⚡'};
+    var typeColors = {rejection:'bg-red-100 text-red-700',approval:'bg-green-100 text-green-700',feedback:'bg-yellow-100 text-yellow-700',manual:'bg-blue-100 text-blue-700'};
+
+    var html = '<div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-gray-800">🧠 KI-Learnings & Beispiele</h2><div class="flex gap-2"><button onclick="vpAddLearning()" class="px-3 py-1.5 bg-vit-orange text-white rounded-lg text-sm hover:bg-orange-600">+ Neue Regel</button><button onclick="vpCloseModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button></div></div>';
+
+    // Learnings
+    html += '<h3 class="font-semibold text-gray-700 mb-2 flex items-center gap-2">📋 Regeln <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">'+learnings.length+'</span></h3>';
+    if(!learnings.length) {
+        html += '<p class="text-gray-400 text-sm mb-4">Noch keine Regeln. Werden automatisch aus Feedback und Ablehnungen erstellt.</p>';
+    } else {
+        html += '<div class="space-y-2 mb-6 max-h-60 overflow-y-auto">';
+        learnings.forEach(function(l) {
+            var tc = typeColors[l.learning_type]||'bg-gray-100 text-gray-600';
+            html += '<div class="flex items-start gap-2 p-2 bg-gray-50 rounded-lg text-sm">';
+            html += '<span>'+(catIcons[l.category]||'⚡')+'</span>';
+            html += '<div class="flex-1 min-w-0"><div class="text-gray-800">'+l.rule+'</div>';
+            html += '<div class="flex items-center gap-2 mt-1"><span class="text-xs px-1.5 py-0.5 rounded '+tc+'">'+l.learning_type+'</span><span class="text-xs text-gray-400">Priorität: '+l.priority+'/10</span>'+(l.applied_count?'<span class="text-xs text-gray-400">· '+l.applied_count+'x angewendet</span>':'')+'</div></div>';
+            html += '<button onclick="vpDeleteLearning(\''+l.id+'\')" class="text-gray-300 hover:text-red-500 text-xs">✕</button>';
+            html += '</div>';
+        });
+        html += '</div>';
+    }
+
+    // Beispiele
+    html += '<h3 class="font-semibold text-gray-700 mb-2 flex items-center gap-2 mt-4">📌 Beispiel-Videos <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">'+examples.length+'</span></h3>';
+    if(!examples.length) {
+        html += '<p class="text-gray-400 text-sm">Noch keine Beispiele. Markiere Videos beim Freigeben/Ablehnen als Beispiel.</p>';
+    } else {
+        html += '<div class="space-y-2 max-h-40 overflow-y-auto">';
+        examples.forEach(function(ex) {
+            var typeColor = ex.example_type==='good'?'bg-green-100 text-green-700':'bg-red-100 text-red-700';
+            var typeIcon = ex.example_type==='good'?'✅':'❌';
+            html += '<div class="flex items-start gap-2 p-2 bg-gray-50 rounded-lg text-sm">';
+            html += '<span>'+typeIcon+'</span>';
+            html += '<div class="flex-1"><div class="text-gray-800">'+(ex.videos?ex.videos.filename:'Video gelöscht')+'</div>';
+            html += '<div class="text-xs text-gray-500">'+ex.description+'</div>';
+            html += '<span class="text-xs px-1.5 py-0.5 rounded '+typeColor+'">'+ex.example_type+'</span></div>';
+            html += '<button onclick="vpDeleteExample(\''+ex.id+'\')" class="text-gray-300 hover:text-red-500 text-xs">✕</button>';
+            html += '</div>';
+        });
+        html += '</div>';
+    }
+
+    vpModal(html);
+} catch(e) { vpModal('<p class="text-red-600">Fehler: '+e.message+'</p>'); }
+};
+
+window.vpAddLearning = function() {
+var html = '<div class="flex justify-between items-center mb-4"><h2 class="text-lg font-bold text-gray-800">+ Neue KI-Regel</h2><button onclick="vpShowLearnings()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button></div>';
+html += '<div class="space-y-3">';
+html += '<div><label class="text-xs font-medium text-gray-500">Kategorie</label><select id="vlCat" class="w-full mt-1 p-2 border rounded-lg text-sm"><option value="general">Allgemein</option><option value="quality">Qualität</option><option value="branding">Branding</option><option value="audio">Audio/Musik</option><option value="werkstatt">Werkstatt</option><option value="probefahrt">Probefahrt</option><option value="event">Event</option><option value="consent">Consent</option></select></div>';
+html += '<div><label class="text-xs font-medium text-gray-500">Regel</label><textarea id="vlRule" class="w-full mt-1 p-2 border rounded-lg text-sm" rows="2" placeholder="z.B. Immer den Standort-Namen im Intro einblenden"></textarea></div>';
+html += '<div><label class="text-xs font-medium text-gray-500">Priorität (1-10)</label><input id="vlPrio" type="number" min="1" max="10" value="7" class="w-full mt-1 p-2 border rounded-lg text-sm"></div>';
+html += '</div>';
+html += '<div class="flex gap-2 mt-4"><button onclick="vpSaveLearning()" class="flex-1 px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 font-medium">💾 Speichern</button><button onclick="vpShowLearnings()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">Abbrechen</button></div>';
+vpModal(html);
+};
+
+window.vpSaveLearning = async function() {
+var rule = (document.getElementById('vlRule').value||'').trim();
+if(!rule) { alert('Bitte Regel eingeben.'); return; }
+try {
+    await _sb().from('video_ki_learnings').insert({
+        category: document.getElementById('vlCat').value,
+        learning_type: 'manual',
+        rule: rule,
+        priority: parseInt(document.getElementById('vlPrio').value)||7,
+        created_by: _sbUser().id
+    });
+    vpShowLearnings();
+} catch(e) { alert('Fehler: '+e.message); }
+};
+
+window.vpDeleteLearning = async function(id) {
+if(!confirm('Regel deaktivieren?')) return;
+try { await _sb().from('video_ki_learnings').update({is_active:false}).eq('id',id); vpShowLearnings(); } catch(e) { alert('Fehler: '+e.message); }
+};
+
+window.vpDeleteExample = async function(id) {
+if(!confirm('Beispiel entfernen?')) return;
+try { await _sb().from('video_ki_examples').update({is_active:false}).eq('id',id); vpShowLearnings(); } catch(e) { alert('Fehler: '+e.message); }
 };
 
 // ==================== BADGE UPDATES ====================
