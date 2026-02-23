@@ -108,128 +108,42 @@ export async function parsePlanFile() {
 
     var isPdf = file.name.match(/\.pdf$/i);
 
-    if(statusEl) statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">🤖 KI analysiert deine Plan-Datei...</span></div>';
+    if(statusEl) statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">📊 Plan wird analysiert...</span></div>';
 
     try {
-        var kiPayload = {};
         if(isPdf) {
-            // PDF → send as base64
+            // PDF → nur KI
+            if(statusEl) statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">🤖 PDF wird mit KI analysiert...</span></div>';
             var base64 = await new Promise(function(resolve, reject) {
                 var reader = new FileReader();
                 reader.onload = function(e) { resolve(e.target.result.split(',')[1]); };
                 reader.onerror = function() { reject(new Error('Datei konnte nicht gelesen werden')); };
                 reader.readAsDataURL(file);
             });
-            kiPayload = { fileBase64: base64, mediaType: 'application/pdf' };
-        } else {
-            // Excel → build smart extract with only relevant columns for KI
+            var kiResult = await callFinanceKi('jahresplan', base64, 'application/pdf', null, {jahr: planIstYear});
+            applyPlanKiResult(kiResult, statusEl, resultEl);
+            return;
+        }
+
+        // Excel → lokaler Parser first
+        var localOk = false;
+        try {
+            await parsePlanFileLocal(file, statusEl, resultEl);
+            localOk = true;
+        } catch(localErr) {
+            console.warn('[Plan] Lokaler Parser:', localErr.message, '→ KI-Fallback');
+        }
+
+        if(!localOk) {
+            if(statusEl) statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">🤖 KI-Analyse...</span></div>';
             var arrayBuf = await file.arrayBuffer();
             var wb = XLSX.read(arrayBuf, { type: 'array' });
-            var rawText = '';
-            var totalMonthCols = 0;
-            
-            // Prioritize sheets with BWA/Standort in name
-            var sheetOrder = wb.SheetNames.slice().sort(function(a, b) {
-                var al = a.toLowerCase(), bl = b.toLowerCase();
-                var aS = al.includes('bwa') ? 0 : al.includes('standort') ? 1 : al.includes('plan') ? 2 : 3;
-                var bS = bl.includes('bwa') ? 0 : bl.includes('standort') ? 1 : bl.includes('plan') ? 2 : 3;
-                return aS - bS;
-            });
-            
-            for(var si2 = 0; si2 < sheetOrder.length && totalMonthCols < 10; si2++) {
-                var sn = sheetOrder[si2];
-                var ws = wb.Sheets[sn];
-                if(!ws || !ws['!ref']) continue;
-                var range = XLSX.utils.decode_range(ws['!ref']);
-                
-                // Find the header row with 10-12 consecutive month-like columns
-                var monthCols = [];
-                var monthPatterns = ['jan','feb','mär','mar','mrz','apr','mai','jun','jul','aug','sep','okt','oct','nov','dez'];
-                
-                for(var hr=0; hr<=Math.min(8, range.e.r); hr++) {
-                    var rowCols = [];
-                    for(var cc=0; cc<=range.e.c; cc++) {
-                        var addr = XLSX.utils.encode_cell({r:hr, c:cc});
-                        var cell = ws[addr];
-                        if(!cell) continue;
-                        
-                        var isMonth = false;
-                        // Check formatted display value (e.g. "Jan 26", "Feb 26")
-                        var wv = String(cell.w || '').toLowerCase().trim();
-                        for(var mp=0; mp<monthPatterns.length; mp++) {
-                            if(wv.startsWith(monthPatterns[mp])) { isMonth = true; break; }
-                        }
-                        // Check string cell value
-                        if(!isMonth && typeof cell.v === 'string') {
-                            var sv = cell.v.toLowerCase().trim();
-                            for(var mp2=0; mp2<monthPatterns.length; mp2++) {
-                                if(sv.startsWith(monthPatterns[mp2])) { isMonth = true; break; }
-                            }
-                        }
-                        // Check Date objects
-                        if(!isMonth && cell.v instanceof Date) { isMonth = true; }
-                        // Check Excel date serials (2025-2027)
-                        if(!isMonth && cell.t === 'n' && cell.v >= 45658 && cell.v <= 46752) { isMonth = true; }
-                        
-                        if(isMonth) rowCols.push(cc);
-                    }
-                    if(rowCols.length >= 10 && rowCols.length <= 14) {
-                        monthCols = rowCols.slice(0, 12);
-                        break;
-                    }
-                }
-                
-                if(monthCols.length < 10) continue; // Skip this sheet
-                
-                // Build extract: Konto columns (B-D) + month columns
-                var keyCols = [1, 2, 3]; // B, C, D = KontoNR, Konto, Bezeichnung
-                monthCols.forEach(function(mc) { if(keyCols.indexOf(mc) === -1) keyCols.push(mc); });
-                keyCols.sort(function(a,b){return a-b;});
-                
-                rawText += '=== Sheet: ' + sn + ' ===\nSpalten: KontoNR;Konto;Bezeichnung;Jan;Feb;Mär;Apr;Mai;Jun;Jul;Aug;Sep;Okt;Nov;Dez\n';
-                
-                for(var r=0; r<=range.e.r; r++) {
-                    var vals = [];
-                    for(var ki=0; ki<keyCols.length; ki++) {
-                        var ca = XLSX.utils.encode_cell({r:r, c:keyCols[ki]});
-                        var cv = ws[ca];
-                        vals.push(cv ? String(cv.w || cv.v || '').replace(/[\r\n€]+/g,'').trim() : '');
-                    }
-                    if(vals.some(function(v){return v !== '' && v !== '0';})) {
-                        rawText += vals.join(';') + '\n';
-                    }
-                }
-                rawText += '\n';
-                totalMonthCols = monthCols.length;
-            }
-            
-            // Fallback if no sheets with month columns
-            if(totalMonthCols < 10) {
-                console.warn('[Plan] No month columns detected, using full CSV');
-                rawText = cleanCsvForKi(wb);
-            }
-            
-            console.log('[Plan] Extract: length=' + rawText.length + ', monthCols=' + totalMonthCols + ', preview:', rawText.substring(0, 300));
-            kiPayload = { rawText: rawText.substring(0, 15000) };
+            var rawText = cleanCsvForKi(wb);
+            var kiResult2 = await callFinanceKi('jahresplan', null, null, rawText.substring(0, 15000), {jahr: planIstYear});
+            applyPlanKiResult(kiResult2, statusEl, resultEl);
         }
-
-        var kiResult = await callFinanceKi('jahresplan', kiPayload.fileBase64 || null, kiPayload.mediaType || null, kiPayload.rawText || null, {jahr: planIstYear});
-        applyPlanKiResult(kiResult, statusEl, resultEl);
-
-    } catch(kiErr) {
-        console.warn('[Plan] KI-Analyse fehlgeschlagen, versuche lokalen Parser:', kiErr.message);
-        
-        // Fallback: lokaler Parser (nur für Excel)
-        if(!isPdf) {
-            if(statusEl) statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">KI nicht verfügbar – lokaler Parser...</span></div>';
-            try {
-                await parsePlanFileLocal(file, statusEl, resultEl);
-            } catch(localErr) {
-                if(statusEl) statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Analyse fehlgeschlagen: ' + _escH(kiErr.message||'KI nicht erreichbar') + '</p>';
-            }
-        } else {
-            if(statusEl) statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ KI-Analyse fehlgeschlagen: ' + _escH(kiErr.message||'Unbekannt') + '</p>';
-        }
+    } catch(err) {
+        if(statusEl) statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Analyse fehlgeschlagen: ' + _escH(err.message||'Unbekannt') + '</p>';
     }
 }
 
