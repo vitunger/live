@@ -196,9 +196,10 @@ function renderHqFinKpis() {
     // Last completed month name
     var lastMonth = new Date().getMonth(); // 0=Jan means last completed = Dec of prev year
     // Actually: current month is Feb (index 1), last completed = Jan (index 0)
-    var currentMonth0 = new Date().getMonth(); // 0-based, Feb=1
-    var lastCompletedMonth = currentMonth0; // Jan=0 when we're in Feb
-    if (lastCompletedMonth === 0) lastCompletedMonth = 0; // Jan
+    // Last completed month: if we're in Feb (index 1), last completed = Jan (index 0)
+    var currentMonth0 = new Date().getMonth(); // 0-based
+    var lastCompletedMonth = currentMonth0 > 0 ? currentMonth0 - 1 : 11;
+    var lastCompletedYear = currentMonth0 > 0 ? new Date().getFullYear() : new Date().getFullYear() - 1;
     var monatName = _hqFinMonatLabels[lastCompletedMonth] || '?';
 
     // Standorte with data (BWA or WaWi)
@@ -220,7 +221,7 @@ function renderHqFinKpis() {
         + '<div class="vit-card p-5">'
         + '<p class="text-xs text-gray-400 uppercase tracking-wide">BWAs eingereicht</p>'
         + '<p class="text-2xl font-bold ' + (mitBwa >= hqFinStandorte.length * 0.8 ? 'text-green-600' : mitBwa >= hqFinStandorte.length * 0.4 ? 'text-yellow-600' : mitBwa > 0 ? 'text-red-500' : 'text-gray-300') + '">' + mitBwa + ' / ' + hqFinStandorte.length + '</p>'
-        + '<p class="text-xs text-gray-400">für ' + monatName + ' ' + new Date().getFullYear() + '</p></div>'
+        + '<p class="text-xs text-gray-400">für ' + monatName + ' ' + lastCompletedYear + '</p></div>'
 
         + '<div class="vit-card p-5">'
         + '<p class="text-xs text-gray-400 uppercase tracking-wide">Datenquellen</p>'
@@ -680,6 +681,24 @@ export function renderMktLeadChart() {
     el.innerHTML='<p class="text-sm text-gray-400 text-center py-8">Noch keine Lead-Daten vorhanden.</p>';
 }
 
+// === BWA FILE DOWNLOAD (from Supabase Storage) ===
+export async function hqFinDownloadBwa(storagePath, fileName) {
+    try {
+        var resp = await _sb().storage.from('bwa-dateien').download(storagePath);
+        if (resp.error) throw resp.error;
+        var url = URL.createObjectURL(resp.data);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function() { URL.revokeObjectURL(url); a.remove(); }, 100);
+    } catch(err) {
+        console.error('[hq-finanzen] Download error:', err);
+        _showToast('Download fehlgeschlagen: ' + (err.message || err), 'error');
+    }
+}
+
 // === BWA POPUP (per Standort) ===
 
 export function hqFinShowBwaPopup(standortId) {
@@ -786,8 +805,8 @@ export function hqFinShowBwaDetail(standortId, monat) {
     
     // Download button
     if (bwa.datei_url) {
-        h += '<a href="' + _escH(bwa.datei_url) + '" target="_blank" class="flex items-center justify-center gap-2 w-full py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-100 transition">';
-        h += '⬇️ ' + _escH(bwa.datei_name || 'BWA herunterladen') + '</a>';
+        h += '<button onclick="hqFinDownloadBwa(\'' + _escH(bwa.datei_url) + '\',\'' + _escH(bwa.datei_name || 'BWA_' + _hqFinMonatLabels[monat-1] + '_' + new Date().getFullYear() + '.csv') + '\')" class="flex items-center justify-center gap-2 w-full py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-100 transition cursor-pointer">';
+        h += '⬇️ ' + _escH(bwa.datei_name || 'BWA herunterladen') + '</button>';
     }
     h += '</div>';
     
@@ -937,6 +956,6 @@ export function renderHqEinkauf() {
 }
 
 // Strangler Fig
-const _exports = {renderHqFinanzen,showHqFinTab,hqFinSort,hqFinOpenBwaUpload,hqFinParsePlan,hqFinShowBwaPopup,hqFinShowBwaDetail,hqFinShowPlanPopup,hqFinOpenPlanUpload,hqFinParsePlanFromModal,adsFmtEuro,adsFmtK,adsSetText,loadAdsData,renderAdsKpis,renderAdsChart,renderAdsKampagnenTabelle,filterAdsPlattform,renderAdsStandortVergleich,renderAdsSyncInfo,updateMktPerformanceFromAds,renderHqMarketing,showHqMktTab,renderHqMktBudget,renderHqMktLeadReport,renderHqMktJahresgespraeche,renderHqMktHandlungsbedarf,renderMktSpendingChart,renderMktLeadChart,renderHqEinkauf};
+const _exports = {renderHqFinanzen,showHqFinTab,hqFinSort,hqFinOpenBwaUpload,hqFinParsePlan,hqFinShowBwaPopup,hqFinShowBwaDetail,hqFinDownloadBwa,hqFinShowPlanPopup,hqFinOpenPlanUpload,hqFinParsePlanFromModal,adsFmtEuro,adsFmtK,adsSetText,loadAdsData,renderAdsKpis,renderAdsChart,renderAdsKampagnenTabelle,filterAdsPlattform,renderAdsStandortVergleich,renderAdsSyncInfo,updateMktPerformanceFromAds,renderHqMarketing,showHqMktTab,renderHqMktBudget,renderHqMktLeadReport,renderHqMktJahresgespraeche,renderHqMktHandlungsbedarf,renderMktSpendingChart,renderMktLeadChart,renderHqEinkauf};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[hq-finanzen.js] Module loaded (v2 redesign) - ' + Object.keys(_exports).length + ' exports registered');
