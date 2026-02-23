@@ -4,6 +4,7 @@
  */
 
 const crypto = require("crypto");
+const fetch = require("node-fetch");
 
 const ETERMIN = "https://www.etermin.net/api";
 
