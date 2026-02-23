@@ -147,9 +147,11 @@ async function loadHqFinData() {
                 datenquelle: datenquelle,
                 rohertrag: parseFloat(rohertragPct.toFixed(1)),
                 bwaMonate: bwaMonate,
+                bwaMonateDetail: sBwa.map(function(b) { return { monat: b.monat, umsatz: parseFloat(b.umsatzerloese) || 0, rohertrag: parseFloat(b.rohertrag) || 0, datum: b.created_at }; }),
                 bwaEingereicht: bwaEingereicht,
                 bwaDate: bwaDate,
                 planVorhanden: !!plan,
+                planDaten: plan && plan.plan_daten ? plan.plan_daten : null,
                 wawiAnzahl: wawiAnzahl,
                 wawiLeasingQuote: wawiLeasingQuote
             };
@@ -202,7 +204,7 @@ function renderHqFinKpis() {
         + '<p class="text-2xl font-bold ' + (avgRoh >= 38 ? 'text-green-600' : avgRoh > 0 ? 'text-red-500' : 'text-gray-300') + '">' + (avgRoh > 0 ? avgRoh + '%' : '—') + '</p>'
         + '<p class="text-xs text-gray-400">Ziel: ≥ 38%</p></div>'
 
-        + '<div class="vit-card p-5 cursor-pointer hover:ring-2 hover:ring-vit-orange/30" onclick="showHqFinTab(\'bwa\')">'
+        + '<div class="vit-card p-5">'
         + '<p class="text-xs text-gray-400 uppercase tracking-wide">BWA-Quote aktuell</p>'
         + (bwaQuote !== null
             ? '<p class="text-2xl font-bold ' + (bwaQuote >= 80 ? 'text-green-600' : bwaQuote >= 50 ? 'text-yellow-600' : 'text-red-500') + '">' + bwaQuote + '%</p>'
@@ -236,7 +238,6 @@ export function showHqFinTab(tab) {
 
     // Render tab content
     if (tab === 'uebersicht') renderHqFinUebersicht();
-    else if (tab === 'bwa') renderHqFinBwaStatus();
     else if (tab === 'upload') renderHqFinUpload();
 }
 
@@ -316,8 +317,8 @@ function renderHqFinUebersicht() {
         html += '<td class="py-2.5 px-3 text-right font-semibold ' + (abw === null ? 'text-gray-300' : abw >= 0 ? 'text-green-600' : 'text-red-500') + '">' + (abw === null ? '—' : (abw >= 0 ? '+' : '') + abw + '%') + '</td>';
         html += '<td class="py-2.5 px-3 text-right ' + (s.rohertrag >= 38 ? 'text-green-600' : s.rohertrag > 0 ? 'text-red-500' : 'text-gray-300') + '">' + (s.rohertrag > 0 ? s.rohertrag + '%' : '—') + '</td>';
         html += '<td class="py-2.5 px-3 text-center">' + quelleBadge + '</td>';
-        html += '<td class="py-2.5 px-3 text-center">' + bwaIcon + '</td>';
-        html += '<td class="py-2.5 px-3 text-center">' + planIcon + '</td>';
+        html += '<td class="py-2.5 px-3 text-center cursor-pointer hover:bg-blue-50 rounded transition" onclick="hqFinShowBwaPopup(\'' + s.id + '\')" title="BWA-Details anzeigen">' + bwaIcon + '</td>';
+        html += '<td class="py-2.5 px-3 text-center cursor-pointer hover:bg-blue-50 rounded transition" onclick="hqFinShowPlanPopup(\'' + s.id + '\')" title="Plan-Details anzeigen">' + planIcon + '</td>';
         html += '</tr>';
     });
     html += '</tbody></table>';
@@ -687,6 +688,122 @@ export function renderMktLeadChart() {
     el.innerHTML='<p class="text-sm text-gray-400 text-center py-8">Noch keine Lead-Daten vorhanden.</p>';
 }
 
+// === BWA POPUP (per Standort) ===
+var _hqFinMonatLabels = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+
+export function hqFinShowBwaPopup(standortId) {
+    var s = hqFinStandorte.find(function(x) { return x.id === standortId; });
+    if (!s) return;
+    
+    var year = new Date().getFullYear();
+    var currentMonth = new Date().getMonth(); // 0-based
+    var bwaByMonth = {};
+    (s.bwaMonateDetail || []).forEach(function(b) { bwaByMonth[b.monat] = b; });
+    
+    var h = '<div style="position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;" onclick="if(event.target===this)this.remove()" id="hqFinBwaPopup">';
+    h += '<div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg mx-4" onclick="event.stopPropagation()">';
+    h += '<div class="flex items-center justify-between mb-4">';
+    h += '<h3 class="text-lg font-bold text-gray-800">BWA-Status: ' + _escH(s.name) + '</h3>';
+    h += '<button onclick="document.getElementById(\'hqFinBwaPopup\').remove()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button></div>';
+    h += '<p class="text-sm text-gray-500 mb-4">Jahr ' + year + ' · ' + s.bwaMonate + ' von 12 Monaten eingereicht</p>';
+    
+    // 12-month grid
+    h += '<div class="grid grid-cols-4 gap-2 mb-5">';
+    for (var m = 1; m <= 12; m++) {
+        var bwa = bwaByMonth[m];
+        var isPast = m <= currentMonth; // month has passed (can be submitted)
+        var isFuture = m > currentMonth + 1; // month hasn't started
+        var isDue = m <= currentMonth; // BWA for this month should be submitted by 10th of next month
+        var deadlinePassed = new Date() > new Date(year, m, 10); // past the 10th of month after
+        
+        var bgCol, textCol, icon, label;
+        if (bwa) {
+            bgCol = 'bg-green-50 border-green-200';
+            textCol = 'text-green-700';
+            icon = '✓';
+            label = hqFinFmtE(bwa.umsatz);
+        } else if (deadlinePassed) {
+            bgCol = 'bg-red-50 border-red-200';
+            textCol = 'text-red-600';
+            icon = '✕';
+            label = 'Überfällig';
+        } else if (isPast) {
+            bgCol = 'bg-yellow-50 border-yellow-200';
+            textCol = 'text-yellow-600';
+            icon = '⏳';
+            label = 'Noch Zeit';
+        } else {
+            bgCol = 'bg-gray-50 border-gray-100';
+            textCol = 'text-gray-400';
+            icon = '';
+            label = '—';
+        }
+        h += '<div class="border rounded-lg p-2 text-center ' + bgCol + '">';
+        h += '<p class="text-xs font-semibold ' + textCol + '">' + _hqFinMonatLabels[m-1] + ' ' + icon + '</p>';
+        h += '<p class="text-[10px] ' + textCol + ' mt-0.5">' + label + '</p></div>';
+    }
+    h += '</div>';
+    
+    // Upload button
+    h += '<button class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition" ';
+    h += 'onclick="document.getElementById(\'hqFinBwaPopup\').remove(); hqFinOpenBwaUpload(\'' + standortId + '\')">';
+    h += '📄 BWA hochladen für ' + _escH(s.name) + '</button>';
+    h += '</div></div>';
+    
+    document.body.insertAdjacentHTML('beforeend', h);
+}
+
+// === PLAN POPUP (per Standort) ===
+export function hqFinShowPlanPopup(standortId) {
+    var s = hqFinStandorte.find(function(x) { return x.id === standortId; });
+    if (!s) return;
+    
+    var year = new Date().getFullYear();
+    
+    var h = '<div style="position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;" onclick="if(event.target===this)this.remove()" id="hqFinPlanPopup">';
+    h += '<div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg mx-4" onclick="event.stopPropagation()">';
+    h += '<div class="flex items-center justify-between mb-4">';
+    h += '<h3 class="text-lg font-bold text-gray-800">Jahresplan: ' + _escH(s.name) + '</h3>';
+    h += '<button onclick="document.getElementById(\'hqFinPlanPopup\').remove()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button></div>';
+    
+    if (s.planVorhanden && s.planDaten) {
+        h += '<p class="text-sm text-green-600 font-semibold mb-3">✓ Plan ' + year + ' vorhanden</p>';
+        h += '<div class="grid grid-cols-4 gap-2 mb-5">';
+        for (var m = 1; m <= 12; m++) {
+            var pd = s.planDaten[m] || s.planDaten[String(m)] || {};
+            var umsatz = pd.umsatz || 0;
+            h += '<div class="border rounded-lg p-2 text-center ' + (umsatz > 0 ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-100') + '">';
+            h += '<p class="text-xs font-semibold ' + (umsatz > 0 ? 'text-blue-700' : 'text-gray-400') + '">' + _hqFinMonatLabels[m-1] + '</p>';
+            h += '<p class="text-[10px] ' + (umsatz > 0 ? 'text-blue-600' : 'text-gray-400') + ' mt-0.5">' + (umsatz > 0 ? hqFinFmtE(umsatz) : '—') + '</p></div>';
+        }
+        h += '</div>';
+    } else {
+        h += '<div class="text-center py-6">';
+        h += '<p class="text-3xl mb-2">📋</p>';
+        h += '<p class="text-sm text-gray-500">Noch kein Jahresplan ' + year + ' hinterlegt</p></div>';
+    }
+    
+    // Upload button
+    h += '<button class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition" ';
+    h += 'onclick="document.getElementById(\'hqFinPlanPopup\').remove(); hqFinOpenPlanUpload(\'' + standortId + '\')">';
+    h += '📊 Plan hochladen für ' + _escH(s.name) + '</button>';
+    h += '</div></div>';
+    
+    document.body.insertAdjacentHTML('beforeend', h);
+}
+
+// === PLAN UPLOAD (via HQ for standort) ===
+export function hqFinOpenPlanUpload(standortId) {
+    var s = hqFinStandorte.find(function(x) { return x.id === standortId; });
+    if (!s) return;
+    // Switch to Upload tab and pre-select standort
+    showHqFinTab('upload');
+    setTimeout(function() {
+        var sel = document.getElementById('hqFinPlanStandort');
+        if (sel) { sel.value = standortId; }
+    }, 100);
+}
+
 export function renderHqEinkauf() {
     /* This is preserved from the original and uses hqStandorte from hq-cockpit.js */
     if (typeof window.hqStandorte === 'undefined' || !window.hqStandorte) return;
@@ -695,6 +812,6 @@ export function renderHqEinkauf() {
 }
 
 // Strangler Fig
-const _exports = {renderHqFinanzen,showHqFinTab,hqFinSort,hqFinOpenBwaUpload,hqFinParsePlan,adsFmtEuro,adsFmtK,adsSetText,loadAdsData,renderAdsKpis,renderAdsChart,renderAdsKampagnenTabelle,filterAdsPlattform,renderAdsStandortVergleich,renderAdsSyncInfo,updateMktPerformanceFromAds,renderHqMarketing,showHqMktTab,renderHqMktBudget,renderHqMktLeadReport,renderHqMktJahresgespraeche,renderHqMktHandlungsbedarf,renderMktSpendingChart,renderMktLeadChart,renderHqEinkauf};
+const _exports = {renderHqFinanzen,showHqFinTab,hqFinSort,hqFinOpenBwaUpload,hqFinParsePlan,hqFinShowBwaPopup,hqFinShowPlanPopup,hqFinOpenPlanUpload,adsFmtEuro,adsFmtK,adsSetText,loadAdsData,renderAdsKpis,renderAdsChart,renderAdsKampagnenTabelle,filterAdsPlattform,renderAdsStandortVergleich,renderAdsSyncInfo,updateMktPerformanceFromAds,renderHqMarketing,showHqMktTab,renderHqMktBudget,renderHqMktLeadReport,renderHqMktJahresgespraeche,renderHqMktHandlungsbedarf,renderMktSpendingChart,renderMktLeadChart,renderHqEinkauf};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[hq-finanzen.js] Module loaded (v2 redesign) - ' + Object.keys(_exports).length + ' exports registered');
