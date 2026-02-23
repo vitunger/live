@@ -171,9 +171,17 @@ async function parsePlanFileLocal(file, statusEl, resultEl) {
                     return null;
                 }
                 var umsatzRow = findRow(['umsatzerlöse','umsatzerloese','umsatz','gesamtleistung','erlöse','erloese']);
-                var weRow = findRow(['wareneinsatz','materialaufwand','waren']);
+                var weRow = findRow(['wareneinsatz','materialaufwand','material-/wareneinkauf','waren']);
                 var pkRow = findRow(['personalkosten','personal','löhne','loehne','gehälter','gehaelter']);
                 var rkRow = findRow(['raumkosten','raum','miete']);
+                
+                console.log('[Plan-Local] Found rows:', {
+                    umsatz: umsatzRow ? (umsatzRow.bezeichnung + ' → jan=' + umsatzRow.jan) : 'NOT FOUND',
+                    wareneinsatz: weRow ? (weRow.bezeichnung + ' → jan=' + weRow.jan) : 'NOT FOUND',
+                    personal: pkRow ? (pkRow.bezeichnung + ' → jan=' + pkRow.jan) : 'NOT FOUND',
+                    raum: rkRow ? (rkRow.bezeichnung + ' → jan=' + rkRow.jan) : 'NOT FOUND'
+                });
+                console.log('[Plan-Local] Available kontengruppen:', result.plan_bwa.slice(0,10).map(function(r) { return r.kontengruppe + '|' + r.bezeichnung + '|jan=' + r.jan; }));
                 
                 for(var m=0; m<12; m++) {
                     var mKey = mn[m];
