@@ -207,8 +207,9 @@ for(var i=0; i<total; i++) {
         if(fStatus) fStatus.innerHTML = '<span class="text-green-600">✅ Fertig</span>';
         done++;
 
-        // Auto-trigger analysis in background
-        if(insertedRow && insertedRow.id) {
+        // Auto-trigger analysis in background (HQ only)
+        var _isHq = (window.sbProfile && window.sbProfile.is_hq) || false;
+        if(insertedRow && insertedRow.id && _isHq) {
             vpAutoAnalyze(insertedRow.id, file.name, fStatus);
         }
     } catch(e) {
@@ -220,7 +221,7 @@ for(var i=0; i<total; i++) {
 
 bar.style.width = '100%';
 if(errors.length === 0) {
-    statusText.textContent = '✅ Alle ' + total + ' Videos hochgeladen! Analyse startet automatisch...';
+    statusText.textContent = '✅ Alle ' + total + ' Videos hochgeladen!' + ((window.sbProfile && window.sbProfile.is_hq) ? ' Analyse startet automatisch...' : ' Das HQ übernimmt ab hier.');
     bar.className = 'bg-green-500 h-2 rounded-full transition-all';
     vpSelectedFiles = [];
     setTimeout(function(){ switchSmSub('pipeline'); }, 4000);
@@ -453,10 +454,14 @@ try {
     var isHqUser = (window.sbProfile && window.sbProfile.is_hq) || (window.currentRoles && window.currentRoles.indexOf('hq') !== -1) || false;
 
     if(v.pipeline_status==='uploaded') {
-        html += '<div class="mt-4 pt-4 border-t flex gap-2">';
-        html += '<button onclick="vpTriggerAnalysis(\''+v.id+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 transition font-medium">🔬 Analyse starten</button>';
-        if(isHqUser) html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'analyzing\')" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm">⏩ Manuell weiter</button>';
-        html += '</div>';
+        if(isHqUser) {
+            html += '<div class="mt-4 pt-4 border-t flex gap-2">';
+            html += '<button onclick="vpTriggerAnalysis(\''+v.id+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 transition font-medium">🔬 Analyse starten</button>';
+            html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'analyzing\')" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm">⏩ Manuell weiter</button>';
+            html += '</div>';
+        } else {
+            html += '<div class="mt-4 pt-4 border-t"><div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">📤 Danke fürs Hochladen! Das HQ-Team übernimmt ab hier – du wirst über den Fortschritt informiert.</div></div>';
+        }
     }
 
     if(v.pipeline_status==='consent_check' || v.pipeline_status==='consent_blocked') {
