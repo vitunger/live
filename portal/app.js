@@ -61,6 +61,7 @@ const VIEW_MODULES = [
     'views/strategie.js',
     'views/profile-theme.js',
     'views/perf-cockpit.js',
+    'views/aktenschrank.js',    // Aktenschrank v2 – BWA-Ordner, KI-Klassifikation (DO NOT REMOVE)
     'views/onboarding-demo.js',
     'views/office.js',
     'views/wawi-integration.js',
