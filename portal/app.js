@@ -33,6 +33,7 @@ const VIEW_MODULES = [
     'views/verkauf.js',
     'views/einkauf.js',
     'views/controlling.js',
+    'views/aktenschrank.js',
     'views/support.js',
     'views/allgemein.js',
     'views/plan-ist.js',
