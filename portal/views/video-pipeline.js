@@ -127,7 +127,8 @@ var projectId = 'lwwagbkxeofahhwebkab';
 for(var i=0; i<total; i++) {
     var file = vpSelectedFiles[i];
     var fStatus = document.getElementById('vpFileStatus_'+i);
-    var storagePath = sbStandort.id + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    var standortId = (window.sbStandort && window.sbStandort.id) ? window.sbStandort.id : 'hq';
+    var storagePath = standortId + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
 
     pct.textContent = (i+1) + ' / ' + total;
     statusText.textContent = 'Hochladen: ' + file.name;
@@ -174,7 +175,7 @@ for(var i=0; i<total; i++) {
         if(fStatus) fStatus.innerHTML = '<span class="text-yellow-500">💾 Speichern...</span>';
 
         var insertData = {
-            standort_id: sbStandort.id,
+            standort_id: standortId !== 'hq' ? standortId : null,
             uploaded_by: _sbUser().id,
             storage_path: storagePath,
             filename: file.name,
@@ -447,7 +448,7 @@ try {
     var {error} = await _sb().from('consents').insert({
         person_name: name,
         person_email: document.getElementById('vpConsentEmail').value.trim()||null,
-        standort_id: sbStandort.id,
+        standort_id: (window.sbStandort && window.sbStandort.id) || null,
         consent_type: document.getElementById('vpConsentType').value,
         valid_from: document.getElementById('vpConsentFrom').value,
         valid_until: document.getElementById('vpConsentUntil').value||null,

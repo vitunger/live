@@ -1910,7 +1910,7 @@ export function renderSmThemen() {
 export function renderSmRanking() {
     var el = document.getElementById('smRankingList');
     if(!el) return;
-    var sorted = smRankingData.slice().sort(function(a,b){return b.count-a.count;});
+    var sorted = (window.smRankingData||[]).slice().sort(function(a,b){return b.count-a.count;});
     var maxCount = sorted[0]?sorted[0].count:1;
     var h = '';
     sorted.forEach(function(s,i){

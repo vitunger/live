@@ -850,7 +850,7 @@ window.smThemen = [
     }
 ];
 
-var smRankingData = [
+window.smRankingData = [
     {name:'Pfaffenhofen',count:7},{name:'Witten',count:6},{name:'Berlin',count:6},
     {name:'Weilheim',count:4},{name:'Grafrath',count:4},{name:'Wachtendonk',count:3},
     {name:'Teisendorf',count:1},{name:'Warendorf',count:1},{name:'Muenster',count:1},{name:'Lohmar',count:1},
