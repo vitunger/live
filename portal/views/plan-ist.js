@@ -15,6 +15,18 @@ function _triggerPush()  { if (typeof window.triggerPush === 'function') window.
 var currentPlan = null; // { jahr, monate: [{monat, umsatz, wareneinsatz, personal, raum, werbe, abschreibung, sonstige, zins, ...}] }
 var planIstYear = new Date().getFullYear();
 
+// Expose for inline onclick handlers
+Object.defineProperty(window, 'currentPlan', {
+    get: function() { return currentPlan; },
+    set: function(v) { currentPlan = v; },
+    configurable: true
+});
+Object.defineProperty(window, 'planIstYear', {
+    get: function() { return planIstYear; },
+    set: function(v) { planIstYear = v; },
+    configurable: true
+});
+
 export async function renderPlanIst() {
     var el = document.getElementById('planIstContent');
     if(!el) return;
