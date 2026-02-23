@@ -12,6 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
+const CACHE_BUST = '?v=1771838200';
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
@@ -83,7 +84,7 @@ async function loadModules() {
     // Phase 1: Core (sequential - order matters)
     for (const mod of CORE_MODULES) {
         try {
-            await import(`${MODULE_BASE}/${mod}`);
+            await import(`${MODULE_BASE}/${mod}${CACHE_BUST}`);
             loaded++;
         } catch (e) {
             console.error(`[app.js] ❌ Core module failed: ${mod}`, e.message);
@@ -95,7 +96,7 @@ async function loadModules() {
     // Phase 2: Views (parallel - independent modules)
     const results = await Promise.allSettled(
         VIEW_MODULES.map(mod => 
-            import(`${MODULE_BASE}/${mod}`)
+            import(`${MODULE_BASE}/${mod}${CACHE_BUST}`)
                 .then(() => { loaded++; })
                 .catch(e => {
                     console.error(`[app.js] ❌ ${mod}:`, e.message);
