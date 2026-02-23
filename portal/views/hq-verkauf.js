@@ -1060,3 +1060,5 @@ console.log('[hq-verkauf.js] Module loaded - ' + Object.keys(_exports).length + 
 
 // === Window Export: loadHqVerkaufData (alias für renderHqVerkauf) ===
 window.loadHqVerkaufData = renderHqVerkauf;
+window.renderHqAktionen = renderHqAktionen;
+window.renderHqVerkauf = renderHqVerkauf;

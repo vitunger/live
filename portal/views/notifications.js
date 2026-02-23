@@ -282,3 +282,4 @@ console.log('[notifications.js] Module loaded - ' + Object.keys(_exports).length
 
 // === Window Exports (onclick handlers) ===
 window.filterNotif = filterNotif;
+window.renderNotifications = renderNotifications;

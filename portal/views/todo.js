@@ -850,3 +850,4 @@ console.log('[todo.js] ✅ Module loaded – ' + Object.keys(exports).length + '
 window.todoSearchChanged = todoSearchChanged;
 window.todoSetFilter = todoSetFilter;
 window.todoSetView = todoSetView;
+window.loadTodos = loadTodos;

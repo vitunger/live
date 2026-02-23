@@ -366,3 +366,23 @@ console.log('[aktenschrank.js] \u2705 v2 loaded \u2013 '+Object.keys(_exports).l
 // === Window Exports (onclick handlers) ===
 window.closeAktenFolder = closeAktenFolder;
 window.openAktenFolder = openAktenFolder;
+
+// === Window Exports (view-router + onclick handlers) ===
+window.loadAktenschrank = loadAktenschrank;
+window.loadAktenFiles = loadAktenFiles;
+window.filterAkten = filterAkten;
+window.showAktenInbox = showAktenInbox;
+window.closeAktenInbox = closeAktenInbox;
+window.openAktenReview = openAktenReview;
+window.closeAktenReview = closeAktenReview;
+window.confirmAktenDoc = confirmAktenDoc;
+window.rejectAktenDoc = rejectAktenDoc;
+window.openAktenUpload = openAktenUpload;
+window.closeAktenUpload = closeAktenUpload;
+window.handleAktenDrop = handleAktenDrop;
+window.handleAktenFileSelect = handleAktenFileSelect;
+window.removeFromAktenQueue = removeFromAktenQueue;
+window.startAktenUpload = startAktenUpload;
+window.viewAktenDoc = viewAktenDoc;
+window.closeAktenPreview = closeAktenPreview;
+window.downloadAktenDoc = downloadAktenDoc;

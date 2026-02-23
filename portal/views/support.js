@@ -283,3 +283,5 @@ window.skipInterceptor = function() {
     var form = document.getElementById('newTicketForm');
     if(form) form.style.display = '';
 };
+window.renderKontakte = renderKontakte;
+window.renderTickets = renderTickets;

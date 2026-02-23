@@ -623,3 +623,4 @@ window.saveMonatsDetail = saveMonatsDetail;
 window.setJournalStimmung = setJournalStimmung;
 window.setStimmung = setStimmung;
 window.toggleJahreszielFelder = toggleJahreszielFelder;
+window.renderHqAllgemein = renderHqAllgemein;

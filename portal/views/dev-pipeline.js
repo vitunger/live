@@ -4422,3 +4422,4 @@ window.setDevInputType = setDevInputType;
 window.submitDevIdea = submitDevIdea;
 window.toggleDevAudioRecord = toggleDevAudioRecord;
 window.toggleDevScreenRecord = toggleDevScreenRecord;
+window.renderEntwicklung = renderEntwicklung;

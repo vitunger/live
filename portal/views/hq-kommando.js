@@ -1194,3 +1194,7 @@ window.openDokUploadModal = function() {
     // TODO: Modal für Netzwerk-Dokument-Upload implementieren
     console.warn('openDokUploadModal: noch nicht implementiert');
 };
+window.renderHqAuswertung = renderHqAuswertung;
+window.renderHqShop = renderHqShop;
+window.renderHqSupport = renderHqSupport;
+window.renderHqWissen = renderHqWissen;

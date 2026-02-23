@@ -2099,3 +2099,5 @@ window.showKommandoTab = showKommandoTab;
 window.filterKzMa = filterKzMa;
 window.filterKzStandorte = filterKzStandorte;
 window.renderKzMitarbeiter = renderKzMitarbeiter;
+window.renderHqEinstellungen = renderHqEinstellungen;
+window.renderPartnerMitarbeiter = renderPartnerMitarbeiter;

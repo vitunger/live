@@ -280,3 +280,6 @@ try {
 const _exports = {generateDemoBwaData,renderPerformanceCockpit};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[perf-cockpit.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === Window Exports (view-router) ===
+window.renderPerformanceCockpit = renderPerformanceCockpit;

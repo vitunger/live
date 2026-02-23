@@ -712,3 +712,4 @@ window.kalUpdateRepeatInfo = kalUpdateRepeatInfo;
 window.openKalDayModal = openKalDayModal;
 window.saveKalTermin = saveKalTermin;
 window.switchKalView = switchKalView;
+window.loadKalTermine = loadKalTermine;

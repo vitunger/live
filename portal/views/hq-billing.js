@@ -1186,3 +1186,4 @@ console.log('[hq-billing.js] Module loaded - ' + Object.keys(_exports).length + 
 window.approvalBulkAction = approvalBulkAction;
 window.generateAllDrafts = generateAllDrafts;
 window.toggleApprovalMode = toggleApprovalMode;
+window.initBillingModule = initBillingModule;

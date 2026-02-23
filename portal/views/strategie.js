@@ -2356,3 +2356,5 @@ window.filterSmThemen = filterSmThemen;
 window.showShopTab = showShopTab;
 window.submitShopOrder = submitShopOrder;
 window.switchSmSub = switchSmSub;
+window.renderKommandozentrale = renderKommandozentrale;
+window.renderShop = renderShop;

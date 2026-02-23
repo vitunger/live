@@ -1432,3 +1432,6 @@ Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // BwaParser needed by plan-ist.js
 window.BwaParser = BwaParser;
 console.log('[controlling.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+
+// === Window Exports (view-router) ===
+window.loadBwaList = loadBwaList;
