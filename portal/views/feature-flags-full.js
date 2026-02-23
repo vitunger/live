@@ -550,14 +550,11 @@ export async function loadModulStatus() {
             sbModulEbene[m.modul_key] = m.ebene || 'partner';
         });
         // Load beta user assignments for current user
-        window._betaModules = [];
+        window._isBetaUser = false;
         try {
-            var userId = _sbUser() ? _sbUser().id : null;
-            if(userId) {
-                var {data:betaData} = await _sb().from('modul_beta_users').select('modul_key').eq('user_id', userId);
-                window._betaModules = (betaData||[]).map(function(b){ return b.modul_key; });
-            }
-        } catch(e) { console.warn('[beta] Could not load beta modules:', e.message); }
+            var profile = _sbProfile();
+            if(profile && profile.is_beta) window._isBetaUser = true;
+        } catch(e) { /* ignore */ }
         
         applyModulStatus();
         // Re-sync to window (reassignment breaks reference)
@@ -590,10 +587,9 @@ export function applyModulStatus() {
                 btn.style.display = 'none';
             }
         } else if(status === 'beta') {
-            // Beta: only visible for assigned beta users + HQ
+            // Beta: only visible for beta users + HQ
             var isHqUser = (window.sbProfile && window.sbProfile.is_hq) || (window.currentRoles && window.currentRoles.indexOf('hq') !== -1);
-            var isBetaUser = (window._betaModules||[]).indexOf(key) !== -1;
-            if(isHqUser || isBetaUser) {
+            if(isHqUser || window._isBetaUser) {
                 // Show with beta badge
                 btn.style.display = '';
                 btn.style.opacity = '';

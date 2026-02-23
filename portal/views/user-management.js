@@ -890,6 +890,16 @@ export async function openEditMaModal(userId) {
         html += '<option value="onboarding"'+(u.status==='onboarding'?' selected':'')+'>Onboarding</option>';
         html += '<option value="offboarding"'+(u.status==='offboarding'?' selected':'')+'>Offboarding</option>';
         html += '</select></div>';
+
+        // === BETA TESTER ===
+        var isBeta = u.is_beta || false;
+        html += '<div class="flex items-center justify-between p-3 rounded-lg border '+(isBeta?'border-purple-300 bg-purple-50':'border-gray-200 bg-gray-50')+'">';
+        html += '<div><span class="text-sm font-semibold '+(isBeta?'text-purple-700':'text-gray-700')+'">🧪 Beta-Tester</span>';
+        html += '<p class="text-[10px] '+(isBeta?'text-purple-500':'text-gray-400')+'">Sieht Module im Beta-Status</p></div>';
+        html += '<label class="relative inline-flex items-center cursor-pointer">';
+        html += '<input type="checkbox" id="editMaBeta" class="sr-only peer"'+(isBeta?' checked':'')+'>';
+        html += '<div class="w-9 h-5 bg-gray-200 peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-purple-500 after:content-[\'\'] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>';
+        html += '</label></div>';
         html += '</div>';
 
         // === ROLLEN (dynamic based on Ebene) ===
@@ -1022,11 +1032,13 @@ export async function saveEditMa(userId) {
 
     try {
         // 1. Users-Tabelle updaten
+        var isBetaChecked = document.getElementById('editMaBeta') ? document.getElementById('editMaBeta').checked : false;
         var upd = await _sb().from('users').update({
             name: name.trim(),
             email: email.trim().toLowerCase(),
             standort_id: isHQ ? null : standortId,
             is_hq: isHQ,
+            is_beta: isBetaChecked,
             status: status
         }).eq('id', userId);
         if(upd.error) throw upd.error;
@@ -1342,10 +1354,6 @@ export function _renderModulRow(m, currentStatus, ebene) {
     html += '<button onclick="' + setFn + '(\'' + m.id + '\',\'in_bearbeitung\')" class="' + btnBase + ' ' + (currentStatus==='in_bearbeitung' ? 'bg-yellow-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">🔧 Bald</button>';
     html += '<button onclick="' + setFn + '(\'' + m.id + '\',\'deaktiviert\')" class="' + btnBase + ' ' + (currentStatus==='deaktiviert' ? 'bg-gray-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">✕ Aus</button>';
     html += '</div>';
-    // Beta user manage icon (only shown when status is beta)
-    if(currentStatus === 'beta') {
-        html += '<button onclick="openBetaUsersModal(\'' + m.modul_key + '\',\'' + m.modul_name + '\')" class="ml-1 p-1.5 hover:bg-purple-50 rounded text-purple-500 hover:text-purple-700 transition" title="Beta-Tester verwalten">👥</button>';
-    }
     html += '</div>';
 
     // Expandable children
@@ -1944,7 +1952,7 @@ export async function renderKzMitarbeiter() {
             h+='<tr class="border-t border-gray-100 hover:bg-gray-50'+((st==='onboarding' || st==='pending') && rollen.length===0 ? ' bg-yellow-50':'')+'">';
             h+='<td class="px-4 py-3"><div class="flex items-center space-x-2"><img src="https://ui-avatars.com/api/?name='+encodeURIComponent(u.name)+'&background=EF7D00&color=fff&size=28" class="w-7 h-7 rounded-full"><div><span class="font-semibold text-gray-800">'+u.name+'</span><p class="text-[10px] text-gray-400">'+u.email+'</p></div></div></td>';
             h+='<td class="px-4 py-3 text-gray-600 text-xs">'+stdName+'</td>';
-            h+='<td class="px-4 py-3 text-center">'+(rollen.length > 0 ? rollenBadges(rollen) : '<span class="text-xs text-yellow-600 font-semibold">Wartet auf Freigabe</span>')+'</td>';
+            h+='<td class="px-4 py-3 text-center">'+(rollen.length > 0 ? rollenBadges(rollen) : '<span class="text-xs text-yellow-600 font-semibold">Wartet auf Freigabe</span>')+(u.is_beta ? ' <span class="text-[9px] bg-purple-500 text-white rounded px-1 py-0.5 font-bold">BETA</span>' : '')+'</td>';
             h+='<td class="px-4 py-3 text-center">'+statusBadge(st)+'</td>';
             h+='<td class="px-4 py-3 text-center text-gray-500 text-xs">'+eintritt+'</td>';
             h+='<td class="px-4 py-3 text-center"><span class="text-xs text-gray-400">'+(u.user_rollen||[]).map(function(ur){return ur.rollen?ur.rollen.label:'';}).filter(Boolean).join(', ')+'</span></td>';
