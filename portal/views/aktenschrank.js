@@ -8,6 +8,7 @@
  * 
  * Dependencies: sb, sbUser, sbProfile
  */
+console.log('[aktenschrank.js] Module parsing started...');
 
 function _sb()        { return window.sb; }
 function _sbUser()    { return window.sbUser; }
@@ -310,7 +311,7 @@ export function filterAkten(){
 }
 
 // INIT
-export function loadAktenschrank(){renderMainView();loadAktenFiles();}
+export function loadAktenschrank(){console.log('[aktenschrank.js] loadAktenschrank called, aktenschrankView exists:', !!document.getElementById('aktenschrankView'));renderMainView();loadAktenFiles();}
 
 // WINDOW REGISTRATION
 const _exports={loadAktenschrank,loadAktenFiles,getFileIcon,openAktenFolder,closeAktenFolder,filterAkten,showAktenInbox,closeAktenInbox,openAktenReview,closeAktenReview,confirmAktenDoc,rejectAktenDoc,openAktenUpload,closeAktenUpload,handleAktenDrop,handleAktenFileSelect,startAktenUpload,removeFromAktenQueue,downloadAktenDoc};
