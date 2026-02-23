@@ -434,11 +434,11 @@ function renderHqFinPlanQuickList() {
 }
 
 // === UPLOAD ACTIONS ===
-export function hqFinOpenBwaUpload() {
-    var stdSelect = document.getElementById('hqFinBwaStandort');
-    if (!stdSelect) return;
-    var stdId = stdSelect.value;
-    var stdName = stdSelect.options[stdSelect.selectedIndex].text;
+export function hqFinOpenBwaUpload(standortId) {
+    // If called with standortId (from popup), use it directly
+    var stdId = standortId;
+    var s = hqFinStandorte.find(function(x) { return x.id === stdId; });
+    var stdName = s ? s.name : 'Standort';
 
     // Temporarily override the profile standort_id for the BWA upload modal
     window._hqBwaUploadStandortId = stdId;
@@ -448,14 +448,13 @@ export function hqFinOpenBwaUpload() {
     if (typeof window.openBwaUploadModal === 'function') {
         window.openBwaUploadModal();
 
-        // Inject standort selector into the modal after a brief delay
+        // Inject standort indicator into the modal after a brief delay
         setTimeout(function() {
             var overlay = document.getElementById('bwaUploadOverlay');
             if (!overlay) return;
             var modalContent = overlay.querySelector('div > div');
             if (!modalContent) return;
 
-            // Add a standort indicator at the top
             var indicator = document.createElement('div');
             indicator.className = 'mb-4 p-3 bg-blue-50 rounded-lg flex items-center gap-2';
             indicator.innerHTML = '<span class="text-sm">📍</span><span class="text-sm font-semibold text-blue-700">Upload für: ' + _escH(stdName) + '</span>';
@@ -838,12 +837,96 @@ export function hqFinShowPlanPopup(standortId) {
 export function hqFinOpenPlanUpload(standortId) {
     var s = hqFinStandorte.find(function(x) { return x.id === standortId; });
     if (!s) return;
-    // Switch to Upload tab and pre-select standort
-    showHqFinTab('upload');
-    setTimeout(function() {
-        var sel = document.getElementById('hqFinPlanStandort');
-        if (sel) { sel.value = standortId; }
-    }, 100);
+    var year = new Date().getFullYear();
+    
+    var h = '<div style="position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;" onclick="if(event.target===this)this.remove()" id="hqFinPlanUploadModal">';
+    h += '<div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4" onclick="event.stopPropagation()">';
+    h += '<div class="flex items-center justify-between mb-4">';
+    h += '<h3 class="text-lg font-bold text-gray-800">📋 Jahresplan hochladen</h3>';
+    h += '<button onclick="document.getElementById(\'hqFinPlanUploadModal\').remove()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button></div>';
+    
+    h += '<p class="text-sm text-gray-500 mb-4">Plan-Datei für <strong>' + _escH(s.name) + '</strong> hochladen oder manuell eingeben</p>';
+    
+    h += '<div class="mb-3"><label class="text-xs font-semibold text-gray-500 block mb-1">Standort</label>';
+    h += '<div class="bg-gray-100 rounded-lg px-3 py-2 text-sm font-semibold text-gray-700">' + _escH(s.name) + '</div></div>';
+    
+    h += '<div class="mb-3"><label class="text-xs font-semibold text-gray-500 block mb-1">Jahr</label>';
+    h += '<select id="hqFinPlanJahrModal" class="w-full border rounded-lg px-3 py-2 text-sm">';
+    h += '<option value="' + year + '">' + year + '</option>';
+    h += '<option value="' + (year - 1) + '">' + (year - 1) + '</option></select></div>';
+    
+    h += '<div class="mb-4"><label class="text-xs font-semibold text-gray-500 block mb-1">Excel-Datei (.xlsx/.xls/.csv) mit Monats-Planwerten</label>';
+    h += '<input type="file" id="hqFinPlanFileModal" accept=".xlsx,.xls,.csv" class="w-full text-sm border rounded-lg p-2"></div>';
+    
+    h += '<button onclick="hqFinParsePlanFromModal(\'' + standortId + '\')" class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition">';
+    h += '📋 Plan auslesen & speichern</button>';
+    
+    h += '<div id="hqFinPlanModalStatus" class="mt-2"></div>';
+    h += '</div></div>';
+    
+    document.body.insertAdjacentHTML('beforeend', h);
+}
+
+// Parse plan from the modal
+export async function hqFinParsePlanFromModal(standortId) {
+    var jahrSelect = document.getElementById('hqFinPlanJahrModal');
+    var fileInput = document.getElementById('hqFinPlanFileModal');
+    var statusEl = document.getElementById('hqFinPlanModalStatus');
+    
+    var jahr = parseInt(jahrSelect.value);
+    var s = hqFinStandorte.find(function(x) { return x.id === standortId; });
+    var stdName = s ? s.name : 'Standort';
+    
+    if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+        if (statusEl) statusEl.innerHTML = '<p class="text-sm text-red-500 mt-2">Bitte eine Plan-Datei auswählen.</p>';
+        return;
+    }
+    
+    if (statusEl) statusEl.innerHTML = '<div class="flex items-center gap-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">Plan wird ausgelesen...</span></div>';
+    
+    var origStdId = null;
+    try {
+        origStdId = _sbProfile() ? _sbProfile().standort_id : null;
+        if (_sbProfile()) _sbProfile().standort_id = standortId;
+        
+        window.planIstYear = jahr;
+        if (typeof window.parsePlanFile === 'function') {
+            // Create temp planFileInput
+            var tempInput = document.createElement('input');
+            tempInput.type = 'file';
+            tempInput.id = 'planFileInput';
+            tempInput.style.display = 'none';
+            document.body.appendChild(tempInput);
+            
+            var dt = new DataTransfer();
+            for (var i = 0; i < fileInput.files.length; i++) dt.items.add(fileInput.files[i]);
+            tempInput.files = dt.files;
+            
+            await window.parsePlanFile();
+            
+            if (tempInput.parentNode) tempInput.remove();
+            if (_sbProfile()) _sbProfile().standort_id = origStdId;
+            
+            if (statusEl) statusEl.innerHTML = '<p class="text-sm text-green-600 mt-2">✅ Plan für ' + _escH(stdName) + ' (' + jahr + ') gespeichert!</p>';
+            
+            // Refresh data
+            hqFinLoaded = false;
+            await loadHqFinData();
+            renderHqFinKpis();
+            renderHqFinUebersicht();
+            
+            // Close modal after short delay
+            setTimeout(function() {
+                var modal = document.getElementById('hqFinPlanUploadModal');
+                if (modal) modal.remove();
+            }, 1500);
+        } else {
+            if (statusEl) statusEl.innerHTML = '<p class="text-sm text-red-500 mt-2">Plan-Parser nicht verfügbar.</p>';
+        }
+    } catch(err) {
+        if (statusEl) statusEl.innerHTML = '<p class="text-sm text-red-500 mt-2">Fehler: ' + (err.message || err) + '</p>';
+        if (_sbProfile() && origStdId) _sbProfile().standort_id = origStdId;
+    }
 }
 
 export function renderHqEinkauf() {
@@ -854,6 +937,6 @@ export function renderHqEinkauf() {
 }
 
 // Strangler Fig
-const _exports = {renderHqFinanzen,showHqFinTab,hqFinSort,hqFinOpenBwaUpload,hqFinParsePlan,hqFinShowBwaPopup,hqFinShowBwaDetail,hqFinShowPlanPopup,hqFinOpenPlanUpload,adsFmtEuro,adsFmtK,adsSetText,loadAdsData,renderAdsKpis,renderAdsChart,renderAdsKampagnenTabelle,filterAdsPlattform,renderAdsStandortVergleich,renderAdsSyncInfo,updateMktPerformanceFromAds,renderHqMarketing,showHqMktTab,renderHqMktBudget,renderHqMktLeadReport,renderHqMktJahresgespraeche,renderHqMktHandlungsbedarf,renderMktSpendingChart,renderMktLeadChart,renderHqEinkauf};
+const _exports = {renderHqFinanzen,showHqFinTab,hqFinSort,hqFinOpenBwaUpload,hqFinParsePlan,hqFinShowBwaPopup,hqFinShowBwaDetail,hqFinShowPlanPopup,hqFinOpenPlanUpload,hqFinParsePlanFromModal,adsFmtEuro,adsFmtK,adsSetText,loadAdsData,renderAdsKpis,renderAdsChart,renderAdsKampagnenTabelle,filterAdsPlattform,renderAdsStandortVergleich,renderAdsSyncInfo,updateMktPerformanceFromAds,renderHqMarketing,showHqMktTab,renderHqMktBudget,renderHqMktLeadReport,renderHqMktJahresgespraeche,renderHqMktHandlungsbedarf,renderMktSpendingChart,renderMktLeadChart,renderHqEinkauf};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[hq-finanzen.js] Module loaded (v2 redesign) - ' + Object.keys(_exports).length + ' exports registered');
