@@ -26,6 +26,7 @@ export function showControllingTab(tabName) {
     if (el) el.style.display = 'block';
     var btn = document.querySelector('.ctrl-tab-btn[data-tab="' + tabName + '"]');
     if (btn) btn.className = 'ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
+    if (tabName === 'benchmark' && typeof renderBenchmarks === 'function') renderBenchmarks();
 }
 
 export function showBwaDetail(id) {
@@ -1322,8 +1323,117 @@ export async function saveBwaData() {
 
 
 
+// ── Benchmarks (dynamisch aus DB) ──
+export async function renderBenchmarks() {
+    var el = document.getElementById('benchmarkDynamic');
+    if(!el) return;
+    var stdId = _sbProfile() ? _sbProfile().standort_id : null;
+    if(!stdId) { el.innerHTML = '<p class="text-center text-gray-400 py-8">Kein Standort zugeordnet.</p>'; return; }
+    
+    try {
+        // Latest BWA for this location
+        var ownResp = await _sb().from('bwa_daten').select('monat,jahr,umsatzerloese,wareneinsatz,rohertrag,rohertrag_pct,personalkosten,personalkosten_pct,raumkosten,ergebnis_vor_steuern,betriebsergebnis').eq('standort_id', stdId).order('jahr',{ascending:false}).order('monat',{ascending:false}).limit(1);
+        var own = (ownResp.data && ownResp.data[0]) ? ownResp.data[0] : null;
+        if(!own) { el.innerHTML = '<p class="text-center text-gray-400 py-8">Noch keine BWA-Daten vorhanden. Lade eine BWA hoch um den Benchmark zu sehen.</p>'; return; }
+        
+        // All BWAs for same month/year (Netzwerk)
+        var netzResp = await _sb().from('bwa_daten').select('standort_id,umsatzerloese,wareneinsatz,rohertrag,rohertrag_pct,personalkosten,personalkosten_pct,raumkosten,ergebnis_vor_steuern,betriebsergebnis').eq('monat', own.monat).eq('jahr', own.jahr);
+        var netz = netzResp.data || [];
+        
+        var mLabels = ['','Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+        var nCount = netz.length;
+        
+        // Calculate averages
+        function netzAvg(field) {
+            if(nCount < 1) return 0;
+            var sum = 0; netz.forEach(function(b){ sum += (parseFloat(b[field])||0); });
+            return sum / nCount;
+        }
+        
+        var ownU = parseFloat(own.umsatzerloese)||0;
+        var ownRohPct = parseFloat(own.rohertrag_pct) || (ownU ? ((parseFloat(own.rohertrag)||0)/ownU*100) : 0);
+        var ownPkPct = parseFloat(own.personalkosten_pct) || (ownU ? (Math.abs(parseFloat(own.personalkosten)||0)/ownU*100) : 0);
+        var ownRkPct = ownU ? (Math.abs(parseFloat(own.raumkosten)||0)/ownU*100) : 0;
+        var ownErgPct = ownU ? ((parseFloat(own.ergebnis_vor_steuern)||parseFloat(own.betriebsergebnis)||0)/ownU*100) : 0;
+        
+        // Netzwerk averages
+        var netzU = netzAvg('umsatzerloese');
+        var netzRoh = []; netz.forEach(function(b) {
+            var u = parseFloat(b.umsatzerloese)||0;
+            var r = parseFloat(b.rohertrag_pct) || (u ? ((parseFloat(b.rohertrag)||0)/u*100) : 0);
+            netzRoh.push(r);
+        });
+        var netzRohPct = netzRoh.length ? netzRoh.reduce(function(a,b){return a+b;},0)/netzRoh.length : 0;
+        
+        var netzPk = []; netz.forEach(function(b) {
+            var u = parseFloat(b.umsatzerloese)||0;
+            var p = parseFloat(b.personalkosten_pct) || (u ? (Math.abs(parseFloat(b.personalkosten)||0)/u*100) : 0);
+            netzPk.push(p);
+        });
+        var netzPkPct = netzPk.length ? netzPk.reduce(function(a,b){return a+b;},0)/netzPk.length : 0;
+        
+        var netzRk = []; netz.forEach(function(b) {
+            var u = parseFloat(b.umsatzerloese)||0;
+            netzRk.push(u ? (Math.abs(parseFloat(b.raumkosten)||0)/u*100) : 0);
+        });
+        var netzRkPct = netzRk.length ? netzRk.reduce(function(a,b){return a+b;},0)/netzRk.length : 0;
+        
+        var netzErg = []; netz.forEach(function(b) {
+            var u = parseFloat(b.umsatzerloese)||0;
+            netzErg.push(u ? ((parseFloat(b.ergebnis_vor_steuern)||parseFloat(b.betriebsergebnis)||0)/u*100) : 0);
+        });
+        var netzErgPct = netzErg.length ? netzErg.reduce(function(a,b){return a+b;},0)/netzErg.length : 0;
+        
+        // Build KPI cards
+        var kpis = [
+            { label:'Umsatz', own: ownU, netz: netzU, fmt:'eur', higher_better:true },
+            { label:'Rohertragsmarge', own: ownRohPct, netz: netzRohPct, fmt:'pct', higher_better:true },
+            { label:'Personalkostenquote', own: ownPkPct, netz: netzPkPct, fmt:'pct', higher_better:false },
+            { label:'Raumkostenquote', own: ownRkPct, netz: netzRkPct, fmt:'pct', higher_better:false },
+            { label:'Ergebnismarge', own: ownErgPct, netz: netzErgPct, fmt:'pct', higher_better:true }
+        ];
+        
+        var h = '<h2 class="text-lg font-semibold text-gray-800 mb-2">Standort-Vergleich</h2>';
+        h += '<p class="text-sm text-gray-500 mb-6">Dein Standort vs. Netzwerk-Durchschnitt ('+mLabels[own.monat]+' '+own.jahr+') · '+nCount+' Standorte</p>';
+        h += '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">';
+        
+        kpis.forEach(function(k) {
+            var diff, diffLabel;
+            if(k.fmt === 'pct') {
+                diff = k.own - k.netz;
+                diffLabel = (diff>=0?'+':'')+diff.toFixed(1)+' Pp';
+            } else {
+                diff = k.netz ? ((k.own/k.netz-1)*100) : 0;
+                diffLabel = (diff>=0?'+':'')+Math.round(diff)+'%';
+            }
+            var isGood = k.higher_better ? (k.own >= k.netz) : (k.own <= k.netz);
+            var color = isGood ? 'green' : (Math.abs(diff) < 3 ? 'orange' : 'red');
+            
+            var ownStr, netzStr;
+            if(k.fmt === 'eur') { ownStr = Math.round(k.own).toLocaleString('de-DE')+' EUR'; netzStr = Math.round(k.netz).toLocaleString('de-DE')+' EUR'; }
+            else { ownStr = k.own.toFixed(1)+'%'; netzStr = k.netz.toFixed(1)+'%'; }
+            
+            var barPct = k.netz ? Math.min(100, Math.round(k.own/k.netz*50+25)) : 50;
+            
+            h += '<div class="p-5 border border-gray-200 rounded-xl">';
+            h += '<p class="text-sm text-gray-500 mb-1">'+k.label+'</p>';
+            h += '<div class="flex items-end justify-between"><div><p class="text-2xl font-bold text-'+color+'-600">'+ownStr+'</p><p class="text-xs text-gray-500">Dein Standort</p></div>';
+            h += '<div class="text-right"><p class="text-lg font-semibold text-gray-400">'+netzStr+'</p><p class="text-xs text-gray-400">Netzwerk Avg</p></div></div>';
+            h += '<div class="mt-3 bg-gray-200 rounded-full h-2.5"><div class="bg-'+color+'-500 h-2.5 rounded-full" style="width:'+barPct+'%"></div></div>';
+            h += '<p class="text-xs text-'+color+'-600 mt-1 font-semibold">'+diffLabel+(isGood?' besser':' schlechter')+' als Netzwerk</p>';
+            h += '</div>';
+        });
+        
+        h += '</div>';
+        el.innerHTML = h;
+    } catch(e) {
+        console.error('[Benchmarks]', e);
+        el.innerHTML = '<p class="text-center text-red-400 py-8">Fehler beim Laden: '+_escH(e.message)+'</p>';
+    }
+}
+
 // Strangler Fig
-const _exports = {showControllingTab,showBwaDetail,eur,eurColor,diffHtml,loadBwaList,downloadBwa,showBwaFromDb,loadBwaTrend,openBwaUploadModal,handleBwaFileSelect,parseBwaWithAI,parseBwaBatch,parseSingleBwaFileWithRetry,cleanCsvForKi,parseSingleBwaFile,autoSaveBwa,bwaApplyKiResult,closeBwaUploadModal,saveBwaData};
+const _exports = {showControllingTab,showBwaDetail,eur,eurColor,diffHtml,loadBwaList,downloadBwa,showBwaFromDb,loadBwaTrend,openBwaUploadModal,handleBwaFileSelect,parseBwaWithAI,parseBwaBatch,parseSingleBwaFileWithRetry,cleanCsvForKi,parseSingleBwaFile,autoSaveBwa,bwaApplyKiResult,closeBwaUploadModal,saveBwaData,renderBenchmarks};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // BwaParser needed by plan-ist.js
 window.BwaParser = BwaParser;
