@@ -1313,4 +1313,6 @@ export async function saveBwaData() {
 // Strangler Fig
 const _exports = {showControllingTab,showBwaDetail,eur,eurColor,diffHtml,loadBwaList,downloadBwa,showBwaFromDb,loadBwaTrend,openBwaUploadModal,handleBwaFileSelect,parseBwaWithAI,parseBwaBatch,parseSingleBwaFileWithRetry,cleanCsvForKi,parseSingleBwaFile,autoSaveBwa,bwaApplyKiResult,closeBwaUploadModal,saveBwaData};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
+// BwaParser needed by plan-ist.js
+window.BwaParser = BwaParser;
 console.log('[controlling.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
