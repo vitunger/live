@@ -20,7 +20,7 @@ var EMAIL_LOG = []; // In-memory log (prod: notifications_log table)
 window.sendEmail = async function(template, to, data) {
 // Anti-spam check
 var key = template + '|' + to + '|' + (data.context_id || '');
-var cooldowns = {welcome:Infinity, employee_welcome:Infinity, employee_invite:Infinity, bwa_escalation:30*86400000, lead_stale:7*86400000, deal_status:0, trainer_ignored:48*3600000, groupcall_reminder:24*3600000};
+var cooldowns = {welcome:Infinity, employee_welcome:Infinity, employee_invite:Infinity, bwa_escalation:30*86400000, lead_stale:7*86400000, deal_status:0};
 var cd = cooldowns[template] || 86400000;
 if(cd > 0) {
 var existing = EMAIL_LOG.find(function(l){return l.key===key && (Date.now()-l.ts)<cd;});
@@ -68,9 +68,7 @@ employee_welcome: '📧 Willkommens-Mail an Mitarbeiter gesendet',
 employee_invite: '✉️ Einladungs-Mail an Mitarbeiter gesendet',
 bwa_escalation: '⚠️ BWA-Eskalationsmail gesendet',
 lead_stale: '📧 Lead-Erinnerung gesendet',
-deal_status: '📧 Deal-Status-Mail gesendet',
-trainer_ignored: '📧 Trainer-Erinnerung gesendet',
-groupcall_reminder: '📧 Gruppencall-Erinnerung gesendet'
+deal_status: '📧 Deal-Status-Mail gesendet'
 };
 var msg = names[template] || '📧 E-Mail gesendet';
 var toast = document.createElement('div');
@@ -161,43 +159,10 @@ sendEmail('deal_status', kundeEmail, {
 }
 };
 
-// ════════════════════════════════════════════════
-// TRIGGER 5: Trainer ignoriert (48h)
-// ════════════════════════════════════════════════
-var _origSnooze = window.snoozeTrainer;
-var snoozeCount = {};
-window.snoozeTrainer = function() {
-if(typeof currentTrainer !== 'undefined' && currentTrainer) {
-var tid = currentTrainer.id;
-snoozeCount[tid] = (snoozeCount[tid] || 0) + 1;
-if(snoozeCount[tid] >= 2) {
-    // 2x ignoriert → E-Mail
-    var email = (typeof sbProfile !== 'undefined' && sbProfile) ? _sbProfile().email : 'demo@vitbikes.de';
-    sendEmail('trainer_ignored', email, {
-        trainerTitle: currentTrainer.title,
-        module: currentTrainer.module,
-        context_id: 'trainer_' + tid
-    });
-}
-}
-if(_origSnooze) _origSnooze();
-else if(document.getElementById('trainerCardOverlay')) document.getElementById('trainerCardOverlay').style.display='none';
-};
 
 // ════════════════════════════════════════════════
-// TRIGGER 6: Gruppencall-Erinnerung (24h vorher)
+// TRIGGER 5+6: (Trainer/Gruppencall removed – new module pending)
 // ════════════════════════════════════════════════
-window.triggerGroupcallReminder = function(callTitle, callDate, callTime, zoomLink, participants) {
-participants.forEach(function(p){
-sendEmail('groupcall_reminder', p.email, {
-    callTitle: callTitle,
-    date: callDate,
-    time: callTime,
-    link: zoomLink,
-    context_id: 'call_' + callDate + '_' + callTitle
-});
-});
-};
 
 // ════════════════════════════════════════════════
 // EMAIL LOG VIEWER (HQ feature)
