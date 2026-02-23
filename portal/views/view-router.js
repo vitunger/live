@@ -174,6 +174,8 @@ window.addEventListener('vit:view-changed', function(event) {
             if (v === 'controlling' && window.updateBwaDeadlineWidget) window.updateBwaDeadlineWidget();
             // hqFinanzen BWA status is now rendered via tab system in showHqFinTab
             if (v === 'hqCockpit') { /* trainer/health hooks removed */ }
+            // Re-apply tab-level visibility after any view renders
+            if (window.applyModulStatus) window.applyModulStatus();
         } catch(e) { console.warn('[view-router] supplementary render:', e.message); }
     }, 150);
 });
