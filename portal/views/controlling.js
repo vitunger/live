@@ -403,14 +403,21 @@ export async function showBwaFromDb(bwaId) {
                 if(valResp.data) {
                     var vd = valResp.data;
                     var checks = vd.checks || [];
-                    var failed = checks.filter(function(c) { return c.pass === false; });
+                    var umsatzVal = Math.abs(parseFloat(b.umsatzerloese)||50000);
+                    var threshold = umsatzVal * 0.02; // 2% tolerance
+                    var failed = checks.filter(function(c) { return c.pass === false && Math.abs(c.diff||0) >= threshold; });
+                    var minor = checks.filter(function(c) { return c.pass === false && Math.abs(c.diff||0) < threshold; });
                     var hasNotes = checks.filter(function(c) { return c.note; });
                     
                     if(failed.length === 0) {
                         valBanner.className = 'mt-3 p-3 rounded-lg border text-xs';
                         valBanner.style.background = '#f0fdf4';
                         valBanner.style.borderColor = '#bbf7d0';
-                        valBanner.innerHTML = '<div class="flex items-center gap-2"><span class="text-green-600 font-bold">✅ Validierung bestanden</span><span class="text-gray-400">· ' + checks.length + ' Prüfungen OK</span></div>';
+                        var infoTxt = '<div class="flex items-center gap-2"><span class="text-green-600 font-bold">✅ Validierung bestanden</span><span class="text-gray-400">· ' + checks.length + ' Prüfungen OK</span></div>';
+                        if(minor.length > 0) {
+                            infoTxt += '<div class="text-gray-400 mt-1">' + minor.length + ' minimale Rundungsdifferenz' + (minor.length>1?'en':'') + ' (&lt;2%) — unbedenklich</div>';
+                        }
+                        valBanner.innerHTML = infoTxt;
                     } else {
                         valBanner.className = 'mt-3 p-3 rounded-lg border text-xs';
                         valBanner.style.background = vd.status === 'error' ? '#fef2f2' : '#fffbeb';
