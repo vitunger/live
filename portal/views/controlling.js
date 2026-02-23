@@ -1338,61 +1338,26 @@ export async function renderBenchmarks() {
         var own = (ownResp.data && ownResp.data[0]) ? ownResp.data[0] : null;
         if(!own) { el.innerHTML = '<p class="text-center text-gray-400 py-8">Noch keine BWA-Daten vorhanden. Lade eine BWA hoch um den Benchmark zu sehen.</p>'; return; }
         
-        // All BWAs for same month/year (Netzwerk)
-        var netzResp = await _sb().from('bwa_daten').select('standort_id,umsatzerloese,wareneinsatz,rohertrag,personalkosten,raumkosten,ergebnis_vor_steuern,betriebsergebnis').eq('monat', own.monat).eq('jahr', own.jahr);
-        var netz = netzResp.data || [];
+        // All BWAs for same month/year (Netzwerk) - via RPC to bypass RLS
+        var netzResp = await _sb().rpc('get_benchmark_averages', { p_monat: own.monat, p_jahr: own.jahr });
+        console.log('[Benchmarks] RPC result:', netzResp.error ? netzResp.error.message : JSON.stringify(netzResp.data));
+        var nAvg = (netzResp.data && typeof netzResp.data === 'object') ? netzResp.data : {};
+        var nCount = nAvg.anzahl_standorte || 1;
         
         var mLabels = ['','Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-        var nCount = netz.length;
-        
-        // Calculate averages
-        function netzAvg(field) {
-            if(nCount < 1) return 0;
-            var sum = 0; netz.forEach(function(b){ sum += (parseFloat(b[field])||0); });
-            return sum / nCount;
-        }
         
         var ownU = parseFloat(own.umsatzerloese)||0;
-        var ownRohPct = (ownU ? ((parseFloat(own.rohertrag)||0)/ownU*100) : 0);
-        var ownPkPct = (ownU ? (Math.abs(parseFloat(own.personalkosten)||0)/ownU*100) : 0);
+        var ownRohPct = ownU ? ((parseFloat(own.rohertrag)||0)/ownU*100) : 0;
+        var ownPkPct = ownU ? (Math.abs(parseFloat(own.personalkosten)||0)/ownU*100) : 0;
         var ownRkPct = ownU ? (Math.abs(parseFloat(own.raumkosten)||0)/ownU*100) : 0;
         var ownErgPct = ownU ? ((parseFloat(own.ergebnis_vor_steuern)||parseFloat(own.betriebsergebnis)||0)/ownU*100) : 0;
         
-        // Netzwerk averages
-        var netzU = netzAvg('umsatzerloese');
-        var netzRoh = []; netz.forEach(function(b) {
-            var u = parseFloat(b.umsatzerloese)||0;
-            var r = (u ? ((parseFloat(b.rohertrag)||0)/u*100) : 0);
-            netzRoh.push(r);
-        });
-        var netzRohPct = netzRoh.length ? netzRoh.reduce(function(a,b){return a+b;},0)/netzRoh.length : 0;
-        
-        var netzPk = []; netz.forEach(function(b) {
-            var u = parseFloat(b.umsatzerloese)||0;
-            var p = (u ? (Math.abs(parseFloat(b.personalkosten)||0)/u*100) : 0);
-            netzPk.push(p);
-        });
-        var netzPkPct = netzPk.length ? netzPk.reduce(function(a,b){return a+b;},0)/netzPk.length : 0;
-        
-        var netzRk = []; netz.forEach(function(b) {
-            var u = parseFloat(b.umsatzerloese)||0;
-            netzRk.push(u ? (Math.abs(parseFloat(b.raumkosten)||0)/u*100) : 0);
-        });
-        var netzRkPct = netzRk.length ? netzRk.reduce(function(a,b){return a+b;},0)/netzRk.length : 0;
-        
-        var netzErg = []; netz.forEach(function(b) {
-            var u = parseFloat(b.umsatzerloese)||0;
-            netzErg.push(u ? ((parseFloat(b.ergebnis_vor_steuern)||parseFloat(b.betriebsergebnis)||0)/u*100) : 0);
-        });
-        var netzErgPct = netzErg.length ? netzErg.reduce(function(a,b){return a+b;},0)/netzErg.length : 0;
-        
-        // Build KPI cards
         var kpis = [
-            { label:'Umsatz', own: ownU, netz: netzU, fmt:'eur', higher_better:true },
-            { label:'Rohertragsmarge', own: ownRohPct, netz: netzRohPct, fmt:'pct', higher_better:true },
-            { label:'Personalkostenquote', own: ownPkPct, netz: netzPkPct, fmt:'pct', higher_better:false },
-            { label:'Raumkostenquote', own: ownRkPct, netz: netzRkPct, fmt:'pct', higher_better:false },
-            { label:'Ergebnismarge', own: ownErgPct, netz: netzErgPct, fmt:'pct', higher_better:true }
+            { label:'Umsatz', own: ownU, netz: parseFloat(nAvg.avg_umsatz)||0, fmt:'eur', higher_better:true },
+            { label:'Rohertragsmarge', own: ownRohPct, netz: parseFloat(nAvg.avg_rohertrag_pct)||0, fmt:'pct', higher_better:true },
+            { label:'Personalkostenquote', own: ownPkPct, netz: parseFloat(nAvg.avg_personalkosten_pct)||0, fmt:'pct', higher_better:false },
+            { label:'Raumkostenquote', own: ownRkPct, netz: parseFloat(nAvg.avg_raumkosten_pct)||0, fmt:'pct', higher_better:false },
+            { label:'Ergebnismarge', own: ownErgPct, netz: parseFloat(nAvg.avg_ergebnis_pct)||0, fmt:'pct', higher_better:true }
         ];
         
         var h = '<h2 class="text-lg font-semibold text-gray-800 mb-2">Standort-Vergleich</h2>';
