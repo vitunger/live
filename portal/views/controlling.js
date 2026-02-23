@@ -61,6 +61,18 @@ function parseFile(file,callback){var filename=file.name;var meta=extractMJ(file
 var bwaCache = [];
 var selectedBwaId = null;
 
+// Expose for cross-module access (plan-ist.js needs these)
+Object.defineProperty(window, 'selectedBwaId', {
+    get: function() { return selectedBwaId; },
+    set: function(v) { selectedBwaId = v; },
+    configurable: true
+});
+Object.defineProperty(window, 'bwaCache', {
+    get: function() { return bwaCache; },
+    set: function(v) { bwaCache = v; },
+    configurable: true
+});
+
 var monatNamen = ['','Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 
 export function eur(val) {
