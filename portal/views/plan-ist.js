@@ -122,10 +122,61 @@ export async function parsePlanFile() {
             });
             kiPayload = { fileBase64: base64, mediaType: 'application/pdf' };
         } else {
-            // Excel → convert to text for KI
+            // Excel → build smart extract with only relevant columns for KI
             var arrayBuf = await file.arrayBuffer();
-            var wb = XLSX.read(arrayBuf, { type: 'array' });
-            var rawText = cleanCsvForKi(wb);
+            var wb = XLSX.read(arrayBuf, { type: 'array', cellDates: true });
+            var rawText = '';
+            
+            wb.SheetNames.forEach(function(sn) {
+                var ws = wb.Sheets[sn];
+                if(!ws['!ref']) return;
+                var range = XLSX.utils.decode_range(ws['!ref']);
+                
+                // Find month columns by scanning headers (rows 1-5)
+                var monthCols = [];
+                var monthPatterns = ['jan','feb','mär','mar','mrz','apr','mai','may','jun','jul','aug','sep','okt','oct','nov','dez','dec'];
+                for(var hr=0; hr<=Math.min(5, range.e.r); hr++) {
+                    for(var cc=0; cc<=range.e.c; cc++) {
+                        var addr = XLSX.utils.encode_cell({r:hr, c:cc});
+                        var cell = ws[addr];
+                        if(cell) {
+                            var val = String(cell.w || cell.v || '').toLowerCase().trim();
+                            for(var mp=0; mp<monthPatterns.length; mp++) {
+                                if(val.startsWith(monthPatterns[mp]) && monthCols.length < 12) {
+                                    monthCols.push(cc);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if(monthCols.length >= 12) break;
+                }
+                
+                // Key columns: A (row nr), B-D (Konto/Bezeichnung), + month columns
+                var keyCols = [0, 1, 2, 3];
+                monthCols.forEach(function(mc) { if(keyCols.indexOf(mc) === -1) keyCols.push(mc); });
+                keyCols.sort(function(a,b){return a-b;});
+                
+                rawText += '=== Sheet: ' + sn + ' (Spalten: Konto, Bezeichnung';
+                if(monthCols.length > 0) rawText += ', Jan-Dez ' + planIstYear;
+                rawText += ') ===\n';
+                
+                for(var r=0; r<=range.e.r; r++) {
+                    var rowVals = [];
+                    for(var ki=0; ki<keyCols.length; ki++) {
+                        var ca = XLSX.utils.encode_cell({r:r, c:keyCols[ki]});
+                        var cv = ws[ca];
+                        rowVals.push(cv ? String(cv.w || cv.v || '').replace(/[\r\n]+/g,' ').trim() : '');
+                    }
+                    // Skip empty rows
+                    if(rowVals.some(function(v){return v !== '';})) {
+                        rawText += rowVals.join(';') + '\n';
+                    }
+                }
+                rawText += '\n';
+            });
+            
+            console.log('[Plan] Smart extract length:', rawText.length, 'month cols found:', monthCols ? monthCols.length : 0);
             kiPayload = { rawText: rawText.substring(0, 15000) };
         }
 
