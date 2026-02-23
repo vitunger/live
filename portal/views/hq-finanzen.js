@@ -918,6 +918,10 @@ export async function hqFinParsePlanFromModal(standortId) {
         var rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
         
         console.log('[hq-finanzen] Plan Excel rows:', rows.length, 'Sheet:', wb.SheetNames[0]);
+        // Debug: show first 5 rows
+        for (var dbg = 0; dbg < Math.min(rows.length, 5); dbg++) {
+            console.log('[hq-finanzen] Row ' + dbg + ':', JSON.stringify((rows[dbg] || []).slice(0, 15)));
+        }
         
         // Try to find monthly plan data
         var planMonths = {};
@@ -994,15 +998,19 @@ export async function hqFinParsePlanFromModal(standortId) {
         
         // Strategy 3: KI-Fallback if still not enough months
         if (Object.keys(planMonths).length < 3 && typeof window.callFinanceKi === 'function') {
-            if (statusEl) statusEl.innerHTML = '<div class="flex items-center gap-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">🤖 KI-Analyse...</span></div>';
-            var csvText = XLSX.utils.sheet_to_csv(ws).substring(0, 15000);
-            var kiResult = await window.callFinanceKi('jahresplan', null, null, csvText, { jahr: jahr });
-            if (kiResult && kiResult.monate) {
-                planMonths = {};
-                for (var km in kiResult.monate) {
-                    var kd = kiResult.monate[km];
-                    if (kd && kd.umsatz) planMonths[km] = { umsatz: kd.umsatz };
+            try {
+                if (statusEl) statusEl.innerHTML = '<div class="flex items-center gap-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">🤖 KI-Analyse...</span></div>';
+                var csvText = XLSX.utils.sheet_to_csv(ws).substring(0, 15000);
+                var kiResult = await window.callFinanceKi('jahresplan', null, null, csvText, { jahr: jahr });
+                if (kiResult && kiResult.monate) {
+                    planMonths = {};
+                    for (var km in kiResult.monate) {
+                        var kd = kiResult.monate[km];
+                        if (kd && kd.umsatz) planMonths[km] = { umsatz: kd.umsatz };
+                    }
                 }
+            } catch(kiErr) {
+                console.warn('[hq-finanzen] KI fallback failed:', kiErr.message || kiErr);
             }
         }
         
