@@ -567,7 +567,7 @@ async function loadEterminOverview() {
     } catch (e) { console.warn('[schnittstellen] loadEterminOverview:', e); }
 }
 
-window.testConnector = function(id) {
+window.testConnector = async function(id) {
     var el = document.getElementById('connTestResult_' + id);
     if (el) el.innerHTML = '<span class="text-xs text-gray-400 animate-pulse">⏳ Teste Verbindung...</span>';
     addLog(id, 'info', 'Verbindungstest gestartet');
@@ -578,8 +578,10 @@ window.testConnector = function(id) {
         var stdId = stdSelect ? stdSelect.value : (_sbProfile() ? _sbProfile().standort_id : '');
         var url = '/api/etermin-proxy?action=test';
         if (stdId) url += '&standort_id=' + stdId;
+        var token = '';
+        try { var s = await _sb().auth.getSession(); token = s.data.session.access_token; } catch(e) {}
         fetch(url, {
-            headers: { 'Authorization': 'Bearer ' + (window.sbSession && window.sbSession.access_token || '') }
+            headers: { 'Authorization': 'Bearer ' + token }
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
