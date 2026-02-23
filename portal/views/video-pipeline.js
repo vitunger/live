@@ -923,44 +923,85 @@ if(!c) return;
 c.innerHTML = '<div class="flex justify-center py-12"><div class="animate-spin w-8 h-8 border-4 border-vit-orange border-t-transparent rounded-full"></div></div>';
 
 try {
-    // HQ sieht Videos ALLER Standorte im Status review
-    var {data:videos,error} = await _sb().from('videos').select('*, standorte(name)').eq('pipeline_status','review').order('created_at',{ascending:true});
+    // HQ sieht ALLE Videos die Aktion brauchen
+    var {data:allVideos,error} = await _sb().from('videos').select('*, standorte(name)').in('pipeline_status',['uploaded','consent_check','consent_blocked','cutting','review']).order('created_at',{ascending:true});
     if(error) throw error;
-    videos = videos || [];
+    allVideos = allVideos || [];
 
-    // Also load all that need review but are approved already
-    var {data:approved} = await _sb().from('videos').select('*, standorte(name)').eq('pipeline_status','approved').order('updated_at',{ascending:false}).limit(10);
-    var {data:reels} = await _sb().from('reels').select('*').eq('status','generated');
+    var uploaded = allVideos.filter(function(v){ return v.pipeline_status==='uploaded'; });
+    var consent = allVideos.filter(function(v){ return v.pipeline_status==='consent_check'||v.pipeline_status==='consent_blocked'; });
+    var cutting = allVideos.filter(function(v){ return v.pipeline_status==='cutting'; });
+    var review = allVideos.filter(function(v){ return v.pipeline_status==='review'; });
+
+    var {data:approved} = await _sb().from('videos').select('*, standorte(name)').in('pipeline_status',['approved','published']).order('updated_at',{ascending:false}).limit(10);
 
     var html = '';
 
     // Stats
-    html += '<div class="grid grid-cols-3 gap-4 mb-6">';
-    html += '<div class="vit-card p-4 text-center '+(videos.length>0?'ring-2 ring-orange-400':'')+'"><div class="text-3xl font-bold text-orange-600">'+videos.length+'</div><div class="text-xs text-gray-500">Warten auf Freigabe</div></div>';
-    html += '<div class="vit-card p-4 text-center"><div class="text-3xl font-bold text-green-600">'+(approved||[]).length+'</div><div class="text-xs text-gray-500">Kürzlich freigegeben</div></div>';
-    html += '<div class="vit-card p-4 text-center"><div class="text-3xl font-bold text-blue-600">'+(reels||[]).length+'</div><div class="text-xs text-gray-500">Reels bereit</div></div>';
+    html += '<div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">';
+    html += '<div class="vit-card p-4 text-center '+(uploaded.length>0?'ring-2 ring-yellow-400':'')+'"><div class="text-2xl font-bold text-yellow-600">'+uploaded.length+'</div><div class="text-xs text-gray-500">Neu hochgeladen</div></div>';
+    html += '<div class="vit-card p-4 text-center '+(consent.length>0?'ring-2 ring-blue-400':'')+'"><div class="text-2xl font-bold text-blue-600">'+consent.length+'</div><div class="text-xs text-gray-500">Consent prüfen</div></div>';
+    html += '<div class="vit-card p-4 text-center '+(cutting.length>0?'ring-2 ring-purple-400':'')+'"><div class="text-2xl font-bold text-purple-600">'+cutting.length+'</div><div class="text-xs text-gray-500">Schnitt/Reels</div></div>';
+    html += '<div class="vit-card p-4 text-center '+(review.length>0?'ring-2 ring-orange-400':'')+'"><div class="text-2xl font-bold text-orange-600">'+review.length+'</div><div class="text-xs text-gray-500">Freigabe</div></div>';
+    html += '<div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600">'+(approved||[]).length+'</div><div class="text-xs text-gray-500">Erledigt</div></div>';
     html += '</div>';
 
-    if(videos.length===0) {
-        html += '<div class="vit-card p-8 text-center text-gray-400"><div class="text-4xl mb-2">✅</div><p>Keine Videos warten auf Freigabe.</p></div>';
-    } else {
-        html += '<div class="space-y-4">';
-        videos.forEach(function(v){
-            var standortName = v.standorte?v.standorte.name:'Unbekannt';
-            var videoReels = (reels||[]).filter(function(r){return r.video_id===v.id;});
+    if(allVideos.length===0) {
+        html += '<div class="vit-card p-8 text-center text-gray-400"><div class="text-4xl mb-2">✅</div><p>Keine Videos warten auf Bearbeitung.</p></div>';
+    }
 
+    // ── UPLOADED: Analyse starten ──
+    if(uploaded.length>0) {
+        html += '<div class="mb-6"><h3 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">📤 Neu hochgeladen <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">'+uploaded.length+'</span></h3><div class="space-y-3">';
+        uploaded.forEach(function(v){
+            var sn = v.standorte?v.standorte.name:'Unbekannt';
+            html += '<div class="vit-card p-4"><div class="flex justify-between items-center"><div><span class="font-medium text-gray-800">'+v.filename+'</span><span class="text-xs ml-2 text-gray-400">📍 '+sn+' · '+vpFileSize(v.file_size_bytes)+' · '+vpDateTime(v.created_at)+'</span></div><div class="flex gap-2">';
+            html += '<button onclick="vpTriggerAnalysis(\''+v.id+'\')" class="px-3 py-1.5 bg-vit-orange text-white rounded-lg text-sm hover:bg-orange-600 font-medium">🔬 Analysieren</button>';
+            html += '<button onclick="vpShowVideoDetail(\''+v.id+'\')" class="px-3 py-1.5 border rounded-lg text-gray-500 text-sm hover:bg-gray-50">Details</button>';
+            html += '</div></div></div>';
+        });
+        html += '</div></div>';
+    }
+
+    // ── CONSENT CHECK ──
+    if(consent.length>0) {
+        html += '<div class="mb-6"><h3 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">🔍 Consent prüfen <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">'+consent.length+'</span></h3><div class="space-y-3">';
+        consent.forEach(function(v){
+            var sn = v.standorte?v.standorte.name:'Unbekannt';
+            var persons = v.analysis_result?v.analysis_result.persons_detected:0;
+            html += '<div class="vit-card p-4"><div class="flex justify-between items-center"><div><span class="font-medium text-gray-800">'+v.filename+'</span><span class="text-xs ml-2 text-gray-400">📍 '+sn+' · 👥 '+persons+' Person(en)</span>';
+            if(v.pipeline_status==='consent_blocked') html += ' <span class="text-xs px-1.5 py-0.5 bg-red-100 text-red-600 rounded">Blockiert</span>';
+            html += '</div><div class="flex gap-2">';
+            html += '<button onclick="vpTriggerConsent(\''+v.id+'\')" class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 font-medium">🔍 Prüfen</button>';
+            html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'cutting\')" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200">⏩ Überspringen</button>';
+            html += '<button onclick="vpShowVideoDetail(\''+v.id+'\')" class="px-3 py-1.5 border rounded-lg text-gray-500 text-sm hover:bg-gray-50">Details</button>';
+            html += '</div></div></div>';
+        });
+        html += '</div></div>';
+    }
+
+    // ── CUTTING: Reels generieren ──
+    if(cutting.length>0) {
+        html += '<div class="mb-6"><h3 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">✂️ Schnitt & Reels <span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">'+cutting.length+'</span></h3><div class="space-y-3">';
+        cutting.forEach(function(v){
+            var sn = v.standorte?v.standorte.name:'Unbekannt';
+            html += '<div class="vit-card p-4"><div class="flex justify-between items-center"><div><span class="font-medium text-gray-800">'+v.filename+'</span><span class="text-xs ml-2 text-gray-400">📍 '+sn+' · '+(vpCategoryLabels[v.category]||v.category)+'</span></div><div class="flex gap-2">';
+            html += '<button onclick="vpTriggerReels(\''+v.id+'\')" class="px-3 py-1.5 bg-purple-500 text-white rounded-lg text-sm hover:bg-purple-600 font-medium">🎬 Reels generieren</button>';
+            html += '<button onclick="vpShowVideoDetail(\''+v.id+'\')" class="px-3 py-1.5 border rounded-lg text-gray-500 text-sm hover:bg-gray-50">Details</button>';
+            html += '</div></div></div>';
+        });
+        html += '</div></div>';
+    }
+
+    // ── REVIEW: Freigabe ──
+    if(review.length>0) {
+        html += '<div class="mb-6"><h3 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">✅ Freigabe <span class="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">'+review.length+'</span></h3><div class="space-y-3">';
+        review.forEach(function(v){
+            var sn = v.standorte?v.standorte.name:'Unbekannt';
             html += '<div class="vit-card p-5">';
-            html += '<div class="flex justify-between items-start mb-3"><div><div class="flex items-center gap-2"><h4 class="font-semibold text-gray-800">'+v.filename+'</h4><span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full">📍 '+standortName+'</span></div><p class="text-xs text-gray-500 mt-1">'+(vpCategoryLabels[v.category]||v.category)+' · '+vpFileSize(v.file_size_bytes)+' · '+vpDateTime(v.created_at)+'</p></div>'+vpBadge('review')+'</div>';
-
+            html += '<div class="flex justify-between items-start mb-3"><div><div class="flex items-center gap-2"><h4 class="font-semibold text-gray-800">'+v.filename+'</h4><span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full">📍 '+sn+'</span></div><p class="text-xs text-gray-500 mt-1">'+(vpCategoryLabels[v.category]||v.category)+' · '+vpFileSize(v.file_size_bytes)+' · '+vpDateTime(v.created_at)+'</p></div>'+vpBadge('review')+'</div>';
             if(v.pipeline_status_detail) html += '<div class="mb-3 p-2 bg-gray-50 rounded text-xs text-gray-600">💬 '+v.pipeline_status_detail+'</div>';
 
-            if(videoReels.length>0) {
-                html += '<div class="space-y-2 mb-3">';
-                videoReels.forEach(function(r){ html += '<div class="p-3 bg-gray-50 rounded-lg text-sm">🎞️ '+(r.caption||'Reel')+' <span class="text-xs text-gray-400">('+r.format+', '+(r.duration_seconds||'?')+'s)</span></div>'; });
-                html += '</div>';
-            }
-
-            // Checklist
             html += '<div class="border-t pt-3 mt-3"><p class="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wider">Prüfcheckliste</p>';
             html += '<div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm" id="vpChecklist_'+v.id+'">';
             ['consent_ok:Datenschutz/Consent','legal_ok:Rechtlich ok','brand_ok:Markenkonform','quality_ok:Qualität ok','platform_ok:Plattform-Regeln','music_ok:Musik lizenziert'].forEach(function(item){
@@ -975,14 +1016,14 @@ try {
             html += '<button onclick="vpShowVideoDetail(\''+v.id+'\')" class="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50 text-sm">Details</button>';
             html += '</div></div>';
         });
-        html += '</div>';
+        html += '</div></div>';
     }
 
-    // Recently approved
+    // ── Kürzlich erledigt ──
     if(approved && approved.length>0) {
-        html += '<div class="mt-6"><h3 class="font-semibold text-gray-700 mb-3">Kürzlich freigegeben</h3><div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="text-left p-3">Video</th><th class="text-left p-3">Standort</th><th class="text-left p-3">Freigegeben</th></tr></thead><tbody>';
+        html += '<div class="mt-6"><h3 class="font-semibold text-gray-700 mb-3">Kürzlich erledigt</h3><div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="text-left p-3">Video</th><th class="text-left p-3">Standort</th><th class="text-left p-3">Status</th><th class="text-left p-3">Datum</th></tr></thead><tbody>';
         approved.forEach(function(v){
-            html += '<tr class="border-t border-gray-100 hover:bg-gray-50 cursor-pointer" onclick="vpShowVideoDetail(\''+v.id+'\')"><td class="p-3 font-medium">'+v.filename+'</td><td class="p-3 text-gray-500">'+(v.standorte?v.standorte.name:'–')+'</td><td class="p-3 text-gray-500">'+vpDateTime(v.updated_at)+'</td></tr>';
+            html += '<tr class="border-t border-gray-100 hover:bg-gray-50 cursor-pointer" onclick="vpShowVideoDetail(\''+v.id+'\')"><td class="p-3 font-medium">'+v.filename+'</td><td class="p-3 text-gray-500">'+(v.standorte?v.standorte.name:'–')+'</td><td class="p-3">'+vpBadge(v.pipeline_status)+'</td><td class="p-3 text-gray-500">'+vpDateTime(v.updated_at)+'</td></tr>';
         });
         html += '</tbody></table></div></div>';
     }
@@ -1022,7 +1063,7 @@ try {
 // ==================== BADGE UPDATES ====================
 window.vpUpdateHqBadge = async function() {
 try {
-    var {count} = await _sb().from('videos').select('*',{count:'exact',head:true}).eq('pipeline_status','review');
+    var {count} = await _sb().from('videos').select('*',{count:'exact',head:true}).in('pipeline_status',['uploaded','consent_check','consent_blocked','cutting','review']);
     var b = document.getElementById('hqVpReviewBadge');
     if(b) { b.textContent = count||0; b.style.display = count>0?'inline':'none'; }
 } catch(e) {}
