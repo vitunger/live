@@ -40,8 +40,8 @@ export async function renderHqFinanzen() {
     // Render KPIs
     renderHqFinKpis();
 
-    // Default: show Übersicht tab
-    showHqFinTab(hqFinActiveTab);
+    // Render table directly (no tabs)
+    renderHqFinUebersicht();
 }
 
 // === DATA LOADING ===
@@ -216,7 +216,7 @@ function renderHqFinKpis() {
         + '<p class="text-2xl font-bold ' + (mitBwa >= hqFinStandorte.length * 0.8 ? 'text-green-600' : mitBwa >= hqFinStandorte.length * 0.4 ? 'text-yellow-600' : mitBwa > 0 ? 'text-red-500' : 'text-gray-300') + '">' + mitBwa + ' / ' + hqFinStandorte.length + '</p>'
         + '<p class="text-xs text-gray-400">für ' + monatName + ' ' + new Date().getFullYear() + '</p></div>'
 
-        + '<div class="vit-card p-5 cursor-pointer hover:ring-2 hover:ring-vit-orange/30" onclick="showHqFinTab(\'upload\')">'
+        + '<div class="vit-card p-5">'
         + '<p class="text-xs text-gray-400 uppercase tracking-wide">Datenquellen</p>'
         + '<p class="text-sm font-bold text-gray-800 mt-1">'
         + '<span class="text-blue-600">' + hqFinStandorte.filter(function(s){return s.datenquelle==='bwa';}).length + ' BWA</span>'
