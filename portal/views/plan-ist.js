@@ -944,12 +944,12 @@ export function openVerkaufEntryModal() {
         (async function(){
             try {
                 var stdId = _sbProfile().standort_id;
-                var q = _sb().from('users').select('vorname, nachname, name').eq('status', 'aktiv');
+                var q = _sb().from('users').select('id, vorname, nachname, name').eq('status', 'aktiv');
                 if(stdId && !_sbProfile().is_hq) q = q.eq('standort_id', stdId);
                 var r = await q.order('name');
                 if(r.data && r.data.length) {
                     var sel = document.getElementById('vtSeller');
-                    if(sel) { sel.innerHTML = ''; r.data.forEach(function(p){ var nm = (p.vorname && p.nachname) ? (p.vorname+' '+p.nachname) : (p.name||'?'); var o=document.createElement('option'); o.value=nm; o.textContent=nm; if(nm===currentUser) o.selected=true; sel.appendChild(o); }); }
+                    if(sel) { sel.innerHTML = ''; r.data.forEach(function(p){ var nm = (p.vorname && p.nachname) ? (p.vorname+' '+p.nachname) : (p.name||'?'); var o=document.createElement('option'); o.value=nm; o.textContent=nm; if(p.id) o.dataset.uid=p.id; if(nm===currentUser) o.selected=true; sel.appendChild(o); }); }
                 }
             } catch(e) { console.warn('Could not load sellers:', e); }
         })();
@@ -1098,6 +1098,16 @@ export async function saveVtEntry() {
     if(!datum || !seller.trim()) { if(errEl){errEl.textContent='Bitte Datum und Verkaeufer eingeben.';errEl.style.display='block';} return; }
     var vi = function(id) { return parseInt((document.getElementById(id)||{}).value) || 0; };
     var vf = function(id) { return parseFloat((document.getElementById(id)||{}).value) || 0; };
+    // Get verkaeufer_id from selected option
+    var sellerEl = document.getElementById('vtSeller');
+    var sellerUid = null;
+    if(sellerEl && sellerEl.selectedOptions && sellerEl.selectedOptions[0]) {
+        sellerUid = sellerEl.selectedOptions[0].dataset.uid || null;
+    }
+    if(!sellerUid) {
+        // Fallback: use current user ID
+        sellerUid = _sbUser() ? _sbUser().id : null;
+    }
 
     if(btn) { btn.disabled=true; btn.textContent='Wird gespeichert...'; }
     try {
@@ -1105,6 +1115,7 @@ export async function saveVtEntry() {
         var data = {
             standort_id: stdId,
             datum: datum,
+            verkaeufer_id: sellerUid,
             verkaeufer_name: seller.trim(),
             plan_termine: 0,
             geplant: vi('vtGeplant'),
@@ -1117,7 +1128,7 @@ export async function saveVtEntry() {
             notizen: (document.getElementById('vtNotizen')||{}).value || null,
             updated_at: new Date().toISOString()
         };
-        var resp = await _sb().from('verkauf_tracking').upsert(data, {onConflict:'standort_id,datum,verkaeufer_name'}).select();
+        var resp = await _sb().from('verkauf_tracking').upsert(data, {onConflict:'standort_id,verkaeufer_id,datum'}).select();
         if(resp.error) throw resp.error;
         closeVtModal();
         alert('✅ Verkaufsdaten gespeichert!');
