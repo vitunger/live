@@ -75,6 +75,19 @@ window.sb = sb;
 // Previously, manual re-write here caused SIGNED_IN infinite loop.
 sb.auth.onAuthStateChange(function(event, session) {
     console.log('[Auth] State:', event);
+    if(event === 'PASSWORD_RECOVERY') {
+        console.log('[Auth] Password recovery detected - showing change password modal');
+        // Wait for modules to be ready, then show modal
+        function _showPwModal() {
+            if(typeof window.showChangePasswordModal === 'function') {
+                if(session && session.user) { window.sbUser = session.user; }
+                window.showChangePasswordModal();
+            } else {
+                setTimeout(_showPwModal, 300);
+            }
+        }
+        _showPwModal();
+    }
 });
 
 // Auto-login: wait for all modules to be ready, then check session
