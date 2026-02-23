@@ -108,161 +108,136 @@ export async function parsePlanFile() {
 
     var isPdf = file.name.match(/\.pdf$/i);
 
-    // PDF → direkt KI-Analyse
-    if(isPdf) {
-        if(statusEl) statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">🤖 PDF wird mit KI analysiert...</span></div>';
-        try {
-            var reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    var base64 = e.target.result.split(',')[1];
-                    var kiResult = await callFinanceKi('jahresplan', base64, 'application/pdf', null, {jahr: planIstYear});
-                    applyPlanKiResult(kiResult, statusEl, resultEl);
-                } catch(err) {
-                    if(statusEl) statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ KI-Analyse fehlgeschlagen: ' + _escH(err.message||'Unbekannt') + '</p>';
-                }
-            };
-            reader.readAsDataURL(file);
-        } catch(pdfErr) {
-            if(statusEl) statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Fehler: ' + _escH(pdfErr.message||pdfErr) + '</p>';
+    if(statusEl) statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">🤖 KI analysiert deine Plan-Datei...</span></div>';
+
+    try {
+        var kiPayload = {};
+        if(isPdf) {
+            // PDF → send as base64
+            var base64 = await new Promise(function(resolve, reject) {
+                var reader = new FileReader();
+                reader.onload = function(e) { resolve(e.target.result.split(',')[1]); };
+                reader.onerror = function() { reject(new Error('Datei konnte nicht gelesen werden')); };
+                reader.readAsDataURL(file);
+            });
+            kiPayload = { fileBase64: base64, mediaType: 'application/pdf' };
+        } else {
+            // Excel → convert to text for KI
+            var arrayBuf = await file.arrayBuffer();
+            var wb = XLSX.read(arrayBuf, { type: 'array' });
+            var rawText = cleanCsvForKi(wb);
+            kiPayload = { rawText: rawText.substring(0, 15000) };
         }
-        return;
+
+        var kiResult = await callFinanceKi('jahresplan', kiPayload.fileBase64 || null, kiPayload.mediaType || null, kiPayload.rawText || null, {jahr: planIstYear});
+        applyPlanKiResult(kiResult, statusEl, resultEl);
+
+    } catch(kiErr) {
+        console.warn('[Plan] KI-Analyse fehlgeschlagen, versuche lokalen Parser:', kiErr.message);
+        
+        // Fallback: lokaler Parser (nur für Excel)
+        if(!isPdf) {
+            if(statusEl) statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">KI nicht verfügbar – lokaler Parser...</span></div>';
+            try {
+                await parsePlanFileLocal(file, statusEl, resultEl);
+            } catch(localErr) {
+                if(statusEl) statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Analyse fehlgeschlagen: ' + _escH(kiErr.message||'KI nicht erreichbar') + '</p>';
+            }
+        } else {
+            if(statusEl) statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ KI-Analyse fehlgeschlagen: ' + _escH(kiErr.message||'Unbekannt') + '</p>';
+        }
     }
+}
 
-    if(statusEl) statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">Excel wird analysiert...</span></div>';
-
-    // Try BwaParser first for structured Planung files
+// Local parser fallback (when KI is unavailable)
+async function parsePlanFileLocal(file, statusEl, resultEl) {
     if (typeof BwaParser === 'undefined' && typeof window.BwaParser !== 'undefined') { var BwaParser = window.BwaParser; }
-    BwaParser.parseFile(file, async function(err, result) {
-        if(err) {
-            // KI-Fallback bei Parse-Fehler
-            if(statusEl) statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">🤖 Parser fehlgeschlagen – KI-Analyse...</span></div>';
-            try {
-                var arrayBuf = await file.arrayBuffer();
-                var wb = XLSX.read(arrayBuf, { type: 'array' });
-                var rawText = cleanCsvForKi(wb);
-                var kiResult = await callFinanceKi('jahresplan', null, null, rawText.substring(0, 15000), {jahr: planIstYear});
-                applyPlanKiResult(kiResult, statusEl, resultEl);
-            } catch(kiErr) {
-                if(statusEl) statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Auch KI-Analyse fehlgeschlagen: ' + _escH(kiErr.message||kiErr) + '</p>';
-            }
-            return;
-        }
+    return new Promise(function(resolve, reject) {
+        BwaParser.parseFile(file, async function(err, result) {
+            if(err) { reject(err); return; }
+            var planMonths = {};
+            var meta = result.meta;
 
-        var planMonths = {};
-        var meta = result.meta;
-
-        // If it's a structured Planung file with plan_bwa data
-        if(result.plan_bwa && result.plan_bwa.length > 0) {
-            var mn = ['jan','feb','mrz','apr','mai','jun','jul','aug','sep','okt','nov','dez'];
-            // Find key BWA rows - robust matching with multiple patterns
-            function findRow(patterns) {
-                for(var p=0; p<patterns.length; p++) {
-                    var pat = patterns[p].toLowerCase();
-                    var found = result.plan_bwa.find(function(r) {
-                        var kg = (r.kontengruppe||'').toLowerCase();
-                        var bez = (r.bezeichnung||'').toLowerCase();
-                        return kg.includes(pat) || bez.includes(pat);
-                    });
-                    if(found) return found;
-                }
-                return null;
-            }
-            var umsatzRow = findRow(['umsatzerlöse','umsatzerloese','umsatz','gesamtleistung','erlöse','erloese']);
-            var weRow = findRow(['wareneinsatz','materialaufwand','waren']);
-            var pkRow = findRow(['personalkosten','personal','löhne','loehne','gehälter','gehaelter']);
-            var rkRow = findRow(['raumkosten','raum','miete']);
-            
-            for(var m=0; m<12; m++) {
-                var mKey = mn[m];
-                planMonths[m+1] = {
-                    monat: m+1,
-                    umsatz: umsatzRow ? (umsatzRow[mKey]||0) : 0,
-                    wareneinsatz: weRow ? (weRow[mKey]||0) : 0,
-                    personalkosten: pkRow ? (pkRow[mKey]||0) : 0,
-                    raumkosten: rkRow ? (rkRow[mKey]||0) : 0
-                };
-                // Calculate rohertrag + ergebnis
-                var pm = planMonths[m+1];
-                pm.rohertrag = pm.umsatz + pm.wareneinsatz;
-                pm.ergebnis = pm.rohertrag + pm.personalkosten + pm.raumkosten;
-            }
-            
-            // Check if we actually found meaningful data (not all zeros)
-            var hasData = Object.values(planMonths).some(function(pm) { return pm.umsatz !== 0 || pm.wareneinsatz !== 0; });
-            if(hasData) {
-                if(statusEl) statusEl.innerHTML = '<p class="text-xs text-green-600 mt-2">✅ Planung erkannt! ('+result.plan_bwa.length+' Konten, Format: '+meta.format+')</p>';
-            } else {
-                // Parser matched format but couldn't extract values → log available kontengruppen for debugging
-                var kgs = {};
-                result.plan_bwa.forEach(function(r) { if(r.kontengruppe) kgs[r.kontengruppe] = (kgs[r.kontengruppe]||0) + 1; });
-                console.warn('[Plan-Parser] Available kontengruppen:', Object.keys(kgs));
-                console.warn('[Plan-Parser] First 5 rows:', result.plan_bwa.slice(0,5).map(function(r) { return r.kontengruppe + ' / ' + r.bezeichnung + ' → jan=' + r.jan; }));
-                console.warn('[Plan-Parser] Planung format detected but all values zero, falling back to KI');
-                planMonths = {};
-            }
-        } 
-        // Fallback: old parsing logic for simple plan files
-        else {
-            try {
-                var arrayBuf = await file.arrayBuffer();
-                var wb = XLSX.read(arrayBuf, { type: 'array' });
-                var sheet = wb.Sheets[wb.SheetNames[0]];
-                var rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-                var mNamen = {januar:1,jan:1,february:2,februar:2,feb:2,maerz:3,märz:3,mar:3,april:4,apr:4,mai:5,may:5,juni:6,jun:6,juli:7,jul:7,august:8,aug:8,september:9,sep:9,oktober:10,okt:10,oct:10,november:11,nov:11,dezember:12,dez:12,dec:12};
-                rows.forEach(function(row) {
-                    if(!row || row.length < 2) return;
-                    var label = String(row[0]||'').trim().toLowerCase().replace(/[^a-zäöü]/g,'');
-                    var monat = mNamen[label];
-                    if(!monat) return;
-                    var nums = [];
-                    for(var c=1; c<row.length; c++) {
-                        var v = typeof row[c]==='number' ? row[c] : parseFloat(String(row[c]).replace(/\./g,'').replace(',','.').replace(/[€%\s]/g,''));
-                        if(!isNaN(v)) nums.push(v);
+            if(result.plan_bwa && result.plan_bwa.length > 0) {
+                var mn = ['jan','feb','mrz','apr','mai','jun','jul','aug','sep','okt','nov','dez'];
+                function findRow(patterns) {
+                    for(var p=0; p<patterns.length; p++) {
+                        var pat = patterns[p].toLowerCase();
+                        var found = result.plan_bwa.find(function(r) {
+                            var kg = (r.kontengruppe||'').toLowerCase();
+                            var bez = (r.bezeichnung||'').toLowerCase();
+                            return kg.includes(pat) || bez.includes(pat);
+                        });
+                        if(found) return found;
                     }
-                    if(nums.length > 0) planMonths[monat] = {monat:monat,umsatz:nums[0]||0,wareneinsatz:nums[1]||0,rohertrag:nums[2]||0,personalkosten:nums[3]||0,raumkosten:nums[4]||0,ergebnis:nums[7]||0};
-                });
-                if(statusEl) statusEl.innerHTML = '<p class="text-xs text-green-600 mt-2">✅ '+Object.keys(planMonths).length+' Monate erkannt!</p>';
-            } catch(e2) {
-                if(statusEl) statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Fehler: '+(e2.message||e2)+'</p>';
-                return;
+                    return null;
+                }
+                var umsatzRow = findRow(['umsatzerlöse','umsatzerloese','umsatz','gesamtleistung','erlöse','erloese']);
+                var weRow = findRow(['wareneinsatz','materialaufwand','waren']);
+                var pkRow = findRow(['personalkosten','personal','löhne','loehne','gehälter','gehaelter']);
+                var rkRow = findRow(['raumkosten','raum','miete']);
+                
+                for(var m=0; m<12; m++) {
+                    var mKey = mn[m];
+                    planMonths[m+1] = {
+                        monat: m+1,
+                        umsatz: umsatzRow ? (umsatzRow[mKey]||0) : 0,
+                        wareneinsatz: weRow ? (weRow[mKey]||0) : 0,
+                        personalkosten: pkRow ? (pkRow[mKey]||0) : 0,
+                        raumkosten: rkRow ? (rkRow[mKey]||0) : 0
+                    };
+                    var pm = planMonths[m+1];
+                    pm.rohertrag = pm.umsatz + pm.wareneinsatz;
+                    pm.ergebnis = pm.rohertrag + pm.personalkosten + pm.raumkosten;
+                }
+                
+                var hasData = Object.values(planMonths).some(function(pm) { return pm.umsatz !== 0 || pm.wareneinsatz !== 0; });
+                if(!hasData) { reject(new Error('Konten nicht zuordenbar')); return; }
+                if(statusEl) statusEl.innerHTML = '<p class="text-xs text-green-600 mt-2">✅ Planung erkannt (lokaler Parser, '+result.plan_bwa.length+' Konten)</p>';
+            } else {
+                // Simple row-based parsing
+                try {
+                    var arrayBuf = await file.arrayBuffer();
+                    var wb = XLSX.read(arrayBuf, { type: 'array' });
+                    var sheet = wb.Sheets[wb.SheetNames[0]];
+                    var rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+                    var mNamen = {januar:1,jan:1,february:2,februar:2,feb:2,maerz:3,märz:3,mar:3,april:4,apr:4,mai:5,may:5,juni:6,jun:6,juli:7,jul:7,august:8,aug:8,september:9,sep:9,oktober:10,okt:10,oct:10,november:11,nov:11,dezember:12,dez:12,dec:12};
+                    rows.forEach(function(row) {
+                        if(!row || row.length < 2) return;
+                        var label = String(row[0]||'').trim().toLowerCase().replace(/[^a-zäöü]/g,'');
+                        var monat = mNamen[label];
+                        if(!monat) return;
+                        var nums = [];
+                        for(var c=1; c<row.length; c++) {
+                            var v = typeof row[c]==='number' ? row[c] : parseFloat(String(row[c]).replace(/\./g,'').replace(',','.').replace(/[€%\s]/g,''));
+                            if(!isNaN(v)) nums.push(v);
+                        }
+                        if(nums.length > 0) planMonths[monat] = {monat:monat,umsatz:nums[0]||0,wareneinsatz:nums[1]||0,rohertrag:nums[2]||0,personalkosten:nums[3]||0,raumkosten:nums[4]||0,ergebnis:nums[7]||0};
+                    });
+                    if(statusEl) statusEl.innerHTML = '<p class="text-xs text-green-600 mt-2">✅ '+Object.keys(planMonths).length+' Monate erkannt (lokaler Parser)</p>';
+                } catch(e2) { reject(e2); return; }
             }
-        }
 
-        var count = Object.keys(planMonths).length;
-        if(count < 1) {
-            // Try KI fallback
-            if(statusEl) statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">🤖 Konten nicht zuordenbar – KI-Analyse wird gestartet...</span></div>';
-            try {
-                var arrayBuf2 = await file.arrayBuffer();
-                var wb2 = XLSX.read(arrayBuf2, { type: 'array' });
-                var rawText2 = cleanCsvForKi(wb2);
-                var kiResult2 = await callFinanceKi('jahresplan', null, null, rawText2.substring(0, 15000), {jahr: planIstYear});
-                applyPlanKiResult(kiResult2, statusEl, resultEl);
-            } catch(kiErr2) {
-                if(statusEl) statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Keine Monatsdaten erkannt und KI-Analyse fehlgeschlagen: ' + _escH(kiErr2.message||kiErr2) + '</p>';
+            var count = Object.keys(planMonths).length;
+            if(count < 1) { reject(new Error('Keine Monatsdaten erkannt')); return; }
+
+            var mLabels = ['','Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+            var ph = '<div class="bg-green-50 border border-green-200 rounded-lg p-3 mt-3">';
+            ph += '<p class="text-xs font-semibold text-green-700 mb-2">Erkannte Plan-Werte:</p>';
+            ph += '<div class="grid grid-cols-6 gap-1 text-[10px]">';
+            for(var mm=1;mm<=12;mm++) {
+                var pd = planMonths[mm];
+                ph += '<div class="text-center p-1 '+(pd?'bg-white rounded':'text-gray-300')+'"><div class="font-semibold">'+mLabels[mm]+'</div>';
+                ph += '<div>'+(pd ? Math.round(pd.umsatz).toLocaleString('de-DE') : '—')+'</div></div>';
             }
-            return;
-        }
-
-        // Show preview
-        var mLabels = ['','Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
-        var ph = '<div class="bg-green-50 border border-green-200 rounded-lg p-3 mt-3">';
-        ph += '<p class="text-xs font-semibold text-green-700 mb-2">Erkannte Plan-Werte:</p>';
-        ph += '<div class="grid grid-cols-6 gap-1 text-[10px]">';
-        for(var mm=1;mm<=12;mm++) {
-            var pd = planMonths[mm];
-            ph += '<div class="text-center p-1 '+(pd?'bg-white rounded':'text-gray-300')+'"><div class="font-semibold">'+mLabels[mm]+'</div>';
-            ph += '<div>'+(pd ? Math.round(pd.umsatz).toLocaleString('de-DE') : '—')+'</div></div>';
-        }
-        ph += '</div>';
-        ph += '<button onclick="saveParsedPlan()" class="w-full mt-3 py-2 bg-green-600 text-white rounded-lg text-xs font-semibold hover:opacity-90">✅ Plan für '+planIstYear+' speichern</button>';
-        ph += '</div>';
-        if(resultEl) resultEl.innerHTML = ph;
-        if(resultEl) resultEl.classList.remove('hidden');
-
-        // Store for saving
-        window._parsedPlanMonths = planMonths;
+            ph += '</div>';
+            ph += '<button onclick="saveParsedPlan()" class="w-full mt-3 py-2 bg-green-600 text-white rounded-lg text-xs font-semibold hover:opacity-90">✅ Plan für '+planIstYear+' speichern</button>';
+            ph += '</div>';
+            if(resultEl) resultEl.innerHTML = ph;
+            if(resultEl) resultEl.classList.remove('hidden');
+            window._parsedPlanMonths = planMonths;
+            resolve();
+        });
     });
 }
 
