@@ -223,8 +223,8 @@
                 else if(bk && bk.status==='remote') remoteList.push(u);
                 else unknownList.push(u);
             });
-            // Unknown users (no booking) go into remote list
-            remoteList=remoteList.concat(unknownList);
+            // Unknown users (no booking, no checkin) are not shown as remote
+            // Only explicitly booked remote users appear in remote list
 
             function renderUserList(users, emptyMsg, dotClass) {
                 if(!users.length) return '<p class="text-gray-400 text-sm py-4">'+emptyMsg+'</p>';
@@ -297,6 +297,10 @@
     // ─── CHECK-IN / CHECK-OUT ───
     window._offCheckIn = async function(deskNr) {
         try {
+            if(_myCheckin) {
+                notify('\u2705 Du bist bereits eingecheckt','info');
+                return;
+            }
             if(!deskNr) {
                 var myBk=_todayBookings.find(function(b){return b.user_id===sbUser.id&&b.status==='office';});
                 if(myBk&&myBk.desk_nr) deskNr=myBk.desk_nr;
@@ -310,7 +314,14 @@
                 user_id:sbUser.id, desk_nr:deskNr||null, status:'office',
                 checked_in_at:new Date().toISOString(), source:'manual'
             }).select().single();
-            if(r.error) throw r.error;
+            if(r.error) {
+                if(r.error.code === '23505') {
+                    await loadTodayCheckins(); renderDashboard();
+                    notify('\u2705 Bereits eingecheckt','info');
+                    return;
+                }
+                throw r.error;
+            }
             notify('\u2705 Eingecheckt'+(deskNr?' auf Platz '+deskNr:''),'success');
             await loadTodayCheckins(); renderDashboard();
         } catch(err) {
