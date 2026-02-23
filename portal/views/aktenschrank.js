@@ -87,24 +87,24 @@ function ensureReviewOverlay(){
 // ═══════════════════════════════════════════════════════════
 
 export async function loadAktenFiles(){
-    if(_akten.loaded){renderFolders();return;}
+    if(_akten.loaded && _akten.ordner.length>0){renderFolders();updateStats();updateInboxBadge();return;}
     try{
-        var s=_sb(),p=_sbProfile();
-        if(!s){console.warn('[aktenschrank] Supabase not ready, waiting...');await new Promise(function(r){setTimeout(r,1000);});s=_sb();}
-        if(!s){console.error('[aktenschrank] Supabase still not ready!');renderFoldersDemo();return;}
+        var s=_sb();
+        if(!s){await new Promise(function(r){setTimeout(r,1500);});s=_sb();}
+        if(!s){console.warn('[aktenschrank] Supabase not ready');renderFoldersDemo();return;}
+        var p=_sbProfile();
         var [oR,tR,dR]=await Promise.all([
             s.from('dokument_ordner').select('*').eq('ist_aktiv',true).order('sort_order'),
             s.from('dokument_typen').select('*').eq('ist_aktiv',true).order('sort_order'),
             (function(){var q=s.from('dokumente').select('*, dokument_typen(name,icon,key), dokument_ordner(name,key,icon,farbe)').order('created_at',{ascending:false});if(p&&p.standort_id&&!p.is_hq)q=q.eq('standort_id',p.standort_id);return q;})()
         ]);
-        console.log('[aktenschrank] DB results:', {ordner:oR.error||oR.data?.length, typen:tR.error||tR.data?.length, docs:dR.error||dR.data?.length});
         if(!oR.error)_akten.ordner=oR.data||[];
         if(!tR.error)_akten.typen=tR.data||[];
         if(!dR.error)_akten.dokumente=dR.data||[];
-        _akten.loaded=true; aktenLoaded=true;
+        if(_akten.ordner.length>0){_akten.loaded=true;aktenLoaded=true;}
         aktenFolderLabels={};_akten.ordner.forEach(function(o){aktenFolderLabels[o.key]=o.name;});
         renderFolders();updateStats();updateInboxBadge();
-    }catch(err){console.error('[aktenschrank] Load error:',err);renderFoldersDemo();}
+    }catch(err){console.warn('[aktenschrank] Load error:',err);renderFoldersDemo();}
 }
 
 // RENDER FOLDERS
