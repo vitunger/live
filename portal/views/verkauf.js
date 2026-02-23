@@ -12,83 +12,11 @@ function _t(k)        { return typeof window.t === 'function' ? window.t(k) : k;
 function _showToast(m,t){ if (typeof window.showToast === 'function') window.showToast(m,t); }
 
 // === VERKAUF MODULE ===
+// All data now loaded from DB (verkauf_tracking, leads, jahresplaene)
 var verkaufData = {
-    sellers: [
-        {
-            name: 'Sandra', plan_soll: 10, gesamt_ist: 2, verkauft: 1, umsatz_kw: 7091, umsatz_jahr: 16192, vk_jahr: 6,
-            daily: [
-                {day:'Mo',plan:0,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0},
-                {day:'Di',plan:2,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0},
-                {day:'Mi',plan:2,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:1,umsatz:5024},
-                {day:'Do',plan:2,gesamt:1,geplant:0,spontan:0,online:1,ergo:0,verkauft:1,uebergabe:0,umsatz:2067},
-                {day:'Fr',plan:2,gesamt:1,geplant:0,spontan:1,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0},
-                {day:'Sa',plan:2,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0}
-            ]
-        },
-        {
-            name: 'Thomas', plan_soll: 0, gesamt_ist: 0, verkauft: 0, umsatz_kw: 0, umsatz_jahr: 17419, vk_jahr: 4,
-            daily: [
-                {day:'Mo',plan:0,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0},
-                {day:'Di',plan:0,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0},
-                {day:'Mi',plan:0,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0},
-                {day:'Do',plan:0,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0},
-                {day:'Fr',plan:0,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0},
-                {day:'Sa',plan:0,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0}
-            ]
-        },
-        {
-            name: 'Dirk', plan_soll: 15, gesamt_ist: 2, verkauft: 0, umsatz_kw: 8569, umsatz_jahr: 36629, vk_jahr: 6,
-            daily: [
-                {day:'Mo',plan:0,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0},
-                {day:'Di',plan:3,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:253},
-                {day:'Mi',plan:3,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:4801},
-                {day:'Do',plan:3,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:1,umsatz:59},
-                {day:'Fr',plan:3,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:1,umsatz:3456},
-                {day:'Sa',plan:3,gesamt:2,geplant:0,spontan:2,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0}
-            ]
-        },
-        {
-            name: 'Max', plan_soll: 0, gesamt_ist: 0, verkauft: 0, umsatz_kw: 1396, umsatz_jahr: 3813, vk_jahr: 0,
-            daily: [
-                {day:'Mo',plan:0,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0},
-                {day:'Di',plan:0,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0},
-                {day:'Mi',plan:0,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:737},
-                {day:'Do',plan:0,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0},
-                {day:'Fr',plan:0,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0},
-                {day:'Sa',plan:0,gesamt:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:659}
-            ]
-        }
-    ],
-    jahres: [
-        {monat:'Januar',plan:57025,ist:57025,termine_soll:24,termine_ist:12,verkauft:11,quote:92,avg:5184},
-        {monat:'Februar',plan:77734,ist:17057,termine_soll:32,termine_ist:8,verkauft:5,quote:63,avg:3411},
-        {monat:'Maerz',plan:150406,ist:0,termine_soll:62,termine_ist:0,verkauft:0,quote:0,avg:0},
-        {monat:'April',plan:121269,ist:0,termine_soll:50,termine_ist:0,verkauft:0,quote:0,avg:0},
-        {monat:'Mai',plan:163470,ist:0,termine_soll:68,termine_ist:0,verkauft:0,quote:0,avg:0},
-        {monat:'Juni',plan:157808,ist:0,termine_soll:65,termine_ist:0,verkauft:0,quote:0,avg:0},
-        {monat:'Juli',plan:138764,ist:0,termine_soll:57,termine_ist:0,verkauft:0,quote:0,avg:0},
-        {monat:'August',plan:76258,ist:0,termine_soll:32,termine_ist:0,verkauft:0,quote:0,avg:0},
-        {monat:'September',plan:86544,ist:0,termine_soll:36,termine_ist:0,verkauft:0,quote:0,avg:0},
-        {monat:'Oktober',plan:73018,ist:0,termine_soll:30,termine_ist:0,verkauft:0,quote:0,avg:0},
-        {monat:'November',plan:40796,ist:0,termine_soll:17,termine_ist:0,verkauft:0,quote:0,avg:0},
-        {monat:'Dezember',plan:24597,ist:0,termine_soll:10,termine_ist:0,verkauft:0,quote:0,avg:0}
-    ],
-    pipeline: [
-        {id:1,name:'Fam. Mueller',type:'E-Bike Trekking',seller:'Sandra',value:4500,stage:'termin',date:'17.02.'},
-        {id:2,name:'Hr. Schneider',type:'E-Bike MTB',seller:'Dirk',value:5200,stage:'beratung',date:'15.02.'},
-        {id:3,name:'Fr. Weber',type:'E-Bike City',seller:'Sandra',value:3200,stage:'angebot',date:'14.02.'},
-        {id:4,name:'Hr. Becker',type:'Rennrad',seller:'Thomas',value:2800,stage:'angebot',date:'13.02.'},
-        {id:5,name:'Fam. Schmidt',type:'E-Bike Cargo',seller:'Dirk',value:6500,stage:'lead',date:'16.02.'},
-        {id:6,name:'Fr. Klein',type:'E-Bike Trekking',seller:'Sandra',value:3800,stage:'termin',date:'18.02.'},
-        {id:7,name:'Hr. Wagner',type:'MTB',seller:'Thomas',value:1900,stage:'lead',date:'16.02.'},
-        {id:8,name:'Fr. Hoffmann',type:'E-Bike City',seller:'Dirk',value:3400,stage:'beratung',date:'14.02.'},
-        {id:9,name:'Hr. Braun',type:'E-Bike Trekking',seller:'Sandra',value:4200,stage:'verkauft',date:'12.02.'},
-        {id:10,name:'Fr. Richter',type:'E-Bike MTB',seller:'Dirk',value:5800,stage:'verkauft',date:'11.02.'},
-        {id:11,name:'Hr. Wolf',type:'E-Bike City',seller:'Thomas',value:2900,stage:'verkauft',date:'10.02.'},
-        {id:12,name:'Fam. Koch',type:'E-Bike Trekking',seller:'Dirk',value:4100,stage:'uebergabe',date:'08.02.'},
-        {id:13,name:'Hr. Neumann',type:'Rennrad',seller:'Thomas',value:3200,stage:'verloren',date:'09.02.'},
-        {id:14,name:'Fr. Schwarz',type:'E-Bike City',seller:'Sandra',value:2700,stage:'verloren',date:'07.02.'}
-    ]
+    sellers: [],
+    jahres: [],
+    pipeline: []
 };
 
 var pipelineStages = [
