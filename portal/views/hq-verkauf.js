@@ -13,41 +13,199 @@ function _fmtN(n)        { return typeof window.fmtN === 'function' ? window.fmt
 function _triggerPush()  { if (typeof window.triggerPush === 'function') window.triggerPush.apply(null, arguments); }
 
 // === HQ VERKAUF ===
-export function renderHqVerkauf() {
-    var totalVK = hqStandorte.reduce(function(a,s){return a+s.verkauftKW;},0);
-    var totalBer = hqStandorte.reduce(function(a,s){return a+s.beratungenKW;},0);
-    var conversion = totalBer ? Math.round(totalVK/totalBer*100) : 0;
-    var active = hqStandorte.filter(function(s){return s.verkauftKW>0;}).length;
-
-    var kpi = document.getElementById('hqVkKpis');
-    if(kpi) kpi.innerHTML = '<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Verkaeufe KW 7</p><p class="text-2xl font-bold">'+totalVK+'</p><p class="text-xs text-gray-500">Netzwerk-weit</p></div>'
-        +'<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Beratungen KW 7</p><p class="text-2xl font-bold">'+totalBer+'</p></div>'
-        +'<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Conversion</p><p class="text-2xl font-bold '+(conversion>=40?'text-green-600':'text-yellow-600')+'">'+conversion+'%</p></div>'
-        +'<div class="vit-card p-5"><p class="text-xs text-gray-400 uppercase">Aktive Standorte</p><p class="text-2xl font-bold">'+active+' / '+hqStandorte.length+'</p></div>';
-
-    var t = document.getElementById('hqVkTable');
-    if(t) {
-        var th = '<thead><tr class="border-b-2 border-gray-200"><th class="text-left py-2 px-2 text-xs text-gray-500">Standort</th><th class="text-right py-2 px-2 text-xs text-gray-500">Beratungen</th><th class="text-right py-2 px-2 text-xs text-gray-500">Verkauft</th><th class="text-right py-2 px-2 text-xs text-gray-500">Conversion</th><th class="text-right py-2 px-2 text-xs text-gray-500">Umsatz YTD</th></tr></thead><tbody>';
-        hqStandorte.slice().sort(function(a,b){return b.verkauftKW-a.verkauftKW;}).forEach(function(s){
-            var conv = s.beratungenKW ? Math.round(s.verkauftKW/s.beratungenKW*100) : 0;
-            th += '<tr class="border-b border-gray-100 hover:bg-gray-50"><td class="py-2 px-2 text-sm font-semibold">'+s.name+'</td><td class="py-2 px-2 text-sm text-right">'+s.beratungenKW+'</td><td class="py-2 px-2 text-sm text-right font-bold">'+s.verkauftKW+'</td><td class="py-2 px-2 text-sm text-right '+(conv>=40?'text-green-600':conv>=25?'text-yellow-600':'text-red-500')+'">'+conv+'%</td><td class="py-2 px-2 text-sm text-right">'+fmt(s.umsatzIst)+' €</td></tr>';
+export async function renderHqVerkauf() {
+    var sb = window.sb || window.supabase;
+    if(!sb) return;
+    
+    // Load standorte
+    var standorte = [];
+    try {
+        var r = await sb.from('standorte').select('id, name, slug').order('name');
+        if(r.data) standorte = r.data;
+    } catch(e) {}
+    
+    // Load verkauf_tracking this week
+    var now = new Date();
+    var dayOfWeek = now.getDay() || 7;
+    var monday = new Date(now); monday.setDate(now.getDate() - dayOfWeek + 1); monday.setHours(0,0,0,0);
+    var mondayStr = monday.toISOString().split('T')[0];
+    var sundayStr = new Date(monday.getTime() + 6*86400000).toISOString().split('T')[0];
+    
+    var trackByStd = {};
+    try {
+        var tr = await sb.from('verkauf_tracking').select('standort_id, geplant, spontan, ergo, verkauft, umsatz').gte('datum', mondayStr).lte('datum', sundayStr);
+        if(tr.data) tr.data.forEach(function(d) {
+            var sid = d.standort_id;
+            if(!trackByStd[sid]) trackByStd[sid] = {beratungen:0,verkauft:0,umsatz:0};
+            trackByStd[sid].beratungen += (d.geplant||0) + (d.spontan||0) + (d.ergo||0);
+            trackByStd[sid].verkauft += (d.verkauft||0);
+            trackByStd[sid].umsatz += parseFloat(d.umsatz||0);
         });
-        th += '</tbody>';
-        t.innerHTML = th;
+    } catch(e) {}
+    
+    // Load leads count per standort
+    var leadsByStd = {};
+    try {
+        var lr = await sb.from('leads').select('standort_id, id').in('status', ['lead','angebot','schwebend']);
+        if(lr.data) lr.data.forEach(function(d) {
+            leadsByStd[d.standort_id] = (leadsByStd[d.standort_id]||0) + 1;
+        });
+    } catch(e) {}
+    
+    // KPI totals
+    var totBer = 0, totVK = 0, totUms = 0, totLeads = 0;
+    Object.values(trackByStd).forEach(function(v) { totBer += v.beratungen; totVK += v.verkauft; totUms += v.umsatz; });
+    Object.values(leadsByStd).forEach(function(v) { totLeads += v; });
+    var quote = totBer > 0 ? Math.round(totVK/totBer*100) : 0;
+    
+    var el = function(id,txt) { var e = document.getElementById(id); if(e) e.textContent = txt; };
+    el('hqVkBeratKW', totBer || '—');
+    el('hqVkSalesKW', totVK || '—');
+    el('hqVkUmsatzKW', totUms > 0 ? Math.round(totUms).toLocaleString('de-DE') + ' €' : '—');
+    el('hqVkQuote', quote > 0 ? quote + '%' : '—');
+    el('hqVkLeads', totLeads || '—');
+    
+    // Standort table
+    var tbody = document.getElementById('hqVkTableBody');
+    if(tbody) {
+        var html = '';
+        var rows = standorte.map(function(s) {
+            var t = trackByStd[s.id] || {beratungen:0,verkauft:0,umsatz:0};
+            var leads = leadsByStd[s.id] || 0;
+            var q = t.beratungen > 0 ? Math.round(t.verkauft/t.beratungen*100) : 0;
+            var avg = t.verkauft > 0 ? Math.round(t.umsatz/t.verkauft) : 0;
+            return {name:s.name.replace('vit:bikes ',''), b:t.beratungen, v:t.verkauft, q:q, u:t.umsatz, avg:avg, leads:leads};
+        }).sort(function(a,b) { return b.u - a.u; });
+        
+        rows.forEach(function(r) {
+            html += '<tr class="border-b border-gray-100 hover:bg-gray-50">';
+            html += '<td class="py-2.5 px-3 text-sm font-semibold">' + r.name + '</td>';
+            html += '<td class="text-right py-2.5 px-3 text-sm">' + (r.b || '—') + '</td>';
+            html += '<td class="text-right py-2.5 px-3 text-sm font-bold text-green-600">' + (r.v || '—') + '</td>';
+            html += '<td class="text-right py-2.5 px-3 text-sm ' + (r.q >= 40 ? 'text-green-600' : r.q > 0 ? 'text-orange-500' : '') + '">' + (r.q > 0 ? r.q + '%' : '—') + '</td>';
+            html += '<td class="text-right py-2.5 px-3 text-sm">' + (r.u > 0 ? Math.round(r.u).toLocaleString('de-DE') + ' €' : '—') + '</td>';
+            html += '<td class="text-right py-2.5 px-3 text-sm">' + (r.avg > 0 ? r.avg.toLocaleString('de-DE') + ' €' : '—') + '</td>';
+            html += '<td class="text-right py-2.5 px-3 text-sm text-purple-600">' + (r.leads || '—') + '</td>';
+            html += '</tr>';
+        });
+        tbody.innerHTML = html || '<tr><td colspan="7" class="text-center py-6 text-gray-400">Noch keine Daten diese Woche</td></tr>';
     }
-
-    var al = document.getElementById('hqVkAlerts');
-    if(al) {
-        var alh = '';
-        hqStandorte.filter(function(s){return s.verkauftKW===0;}).forEach(function(s){
-            alh += '<div class="p-3 bg-red-50 rounded-lg mb-2"><span class="text-sm font-semibold text-red-700">🔴 '+s.name+' – 0 Verkaeufe in KW 7</span></div>';
+    
+    // Alerts
+    var alerts = document.getElementById('hqVkAlerts');
+    if(alerts) {
+        var ah = '';
+        standorte.forEach(function(s) {
+            var t = trackByStd[s.id] || {beratungen:0,verkauft:0,umsatz:0};
+            var nm = s.name.replace('vit:bikes ','');
+            if(t.beratungen === 0 && t.verkauft === 0) {
+                ah += '<div class="p-3 bg-red-50 rounded-lg"><span class="text-sm font-semibold text-red-700">🔴 '+nm+' – Keine Einträge diese Woche</span></div>';
+            } else if(t.beratungen > 0 && t.verkauft === 0) {
+                ah += '<div class="p-3 bg-yellow-50 rounded-lg"><span class="text-sm font-semibold text-yellow-700">⚠️ '+nm+' – '+t.beratungen+' Beratungen, 0 Verkäufe</span></div>';
+            }
         });
-        hqStandorte.filter(function(s){return s.beratungenKW>0 && s.verkauftKW>0 && (s.verkauftKW/s.beratungenKW)<0.2;}).forEach(function(s){
-            alh += '<div class="p-3 bg-yellow-50 rounded-lg mb-2"><span class="text-sm font-semibold text-yellow-700">⚠️ '+s.name+' – Conversion unter 20%</span><p class="text-xs text-yellow-600">'+s.beratungenKW+' Beratungen, nur '+s.verkauftKW+' Abschluesse. Verkaufsschulung empfohlen.</p></div>';
-        });
-        al.innerHTML = alh || '<p class="text-sm text-green-600">✅ Alle Standorte verkaufen aktiv</p>';
+        alerts.innerHTML = ah || '<p class="text-sm text-green-600">✅ Alle Standorte verkaufen aktiv</p>';
     }
+    
+    // Load automations
+    loadHqAutomations();
 }
+
+async function loadHqAutomations() {
+    var sb = window.sb || window.supabase;
+    if(!sb) return;
+    var container = document.getElementById('hqAutoRulesList');
+    if(!container) return;
+    
+    var stageLabels = {'*':'Beliebig','lead':'Eingang','angebot':'Angebot','schwebend':'Schwebend','verkauft':'Verkauft','gold':'Schrank d. Hoffnung','lost':'Verloren'};
+    var DB_TO_STAGE = {anfrage:'lead',angebot:'angebot',schwebend:'schwebend',verkauft:'verkauft',gold:'gold',verloren:'lost'};
+    
+    try {
+        var r = await sb.from('lead_automations').select('*').order('created_at');
+        if(!r.data || !r.data.length) { container.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">Noch keine Automationen angelegt.</p>'; return; }
+        
+        var html = '';
+        r.data.forEach(function(rule) {
+            var from = stageLabels[DB_TO_STAGE[rule.from_stage] || rule.from_stage] || rule.from_stage || 'Beliebig';
+            var to = stageLabels[DB_TO_STAGE[rule.to_stage] || rule.to_stage] || rule.to_stage;
+            var action = rule.action === 'todo' ? '✅ Todo' : '📁 Aktivität';
+            var enabled = rule.enabled !== false;
+            html += '<div class="flex items-center justify-between p-3 rounded-xl border ' + (enabled ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100 opacity-60') + '">';
+            html += '<div class="flex items-center gap-2 flex-wrap">';
+            html += '<span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-bold">' + from + '</span>';
+            html += '<span class="text-gray-400">→</span>';
+            html += '<span class="px-2 py-0.5 bg-green-50 text-green-700 rounded text-xs font-bold">' + to + '</span>';
+            html += '<span class="text-gray-400 text-xs">dann</span>';
+            html += '<span class="px-2 py-0.5 bg-gray-100 rounded text-xs font-semibold">' + action + '</span>';
+            if(rule.action_text) html += '<span class="text-xs text-gray-500">"' + rule.action_text + '"</span>';
+            if(rule.days_offset) html += '<span class="text-xs text-gray-400">(in ' + rule.days_offset + 'd)</span>';
+            html += '</div>';
+            html += '<div class="flex items-center gap-2">';
+            html += '<button onclick="toggleHqAuto(\'' + rule.id + '\',' + !enabled + ')" class="text-xs px-2 py-1 rounded ' + (enabled ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500') + '">' + (enabled ? 'Aktiv' : 'Aus') + '</button>';
+            html += '<button onclick="deleteHqAuto(\'' + rule.id + '\')" class="text-red-400 hover:text-red-600 text-sm">✕</button>';
+            html += '</div></div>';
+        });
+        container.innerHTML = html;
+    } catch(e) { container.innerHTML = '<p class="text-sm text-red-400">Fehler: ' + e.message + '</p>'; }
+}
+
+window.showHqVkTab = function(tab) {
+    document.querySelectorAll('.hqvk-content').forEach(function(el) { el.style.display = 'none'; });
+    document.querySelectorAll('.hqvk-tab').forEach(function(btn) {
+        btn.className = 'hqvk-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700';
+    });
+    var tabEl = document.getElementById('hqVkTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+    if(tabEl) tabEl.style.display = 'block';
+    var btn = document.querySelector('.hqvk-tab[data-tab="' + tab + '"]');
+    if(btn) btn.className = 'hqvk-tab whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
+    if(tab === 'automationen') loadHqAutomations();
+};
+
+window.showAddAutomationForm = function() {
+    document.getElementById('hqAutoAddForm').style.display = 'block';
+};
+
+window.saveHqAutomation = async function() {
+    var sb = window.sb || window.supabase;
+    if(!sb) return;
+    var STAGE_TO_DB = {lead:'anfrage',angebot:'angebot',schwebend:'schwebend',verkauft:'verkauft',gold:'gold',lost:'verloren'};
+    var from = document.getElementById('hqAutoFrom').value;
+    var to = document.getElementById('hqAutoTo').value;
+    var action = document.getElementById('hqAutoAction').value;
+    var days = parseInt(document.getElementById('hqAutoDays').value) || 0;
+    var text = document.getElementById('hqAutoText').value;
+    if(!text) { alert('Bitte Text eingeben'); return; }
+    
+    var resp = await sb.from('lead_automations').insert({
+        from_stage: from === '*' ? '*' : (STAGE_TO_DB[from] || from),
+        to_stage: STAGE_TO_DB[to] || to,
+        action: action,
+        action_text: text,
+        days_offset: days,
+        action_type: action === 'todo' ? 'todo' : 'note',
+        enabled: true,
+        is_global: true
+    });
+    if(resp.error) { alert('Fehler: ' + resp.error.message); return; }
+    document.getElementById('hqAutoAddForm').style.display = 'none';
+    document.getElementById('hqAutoText').value = '';
+    loadHqAutomations();
+};
+
+window.toggleHqAuto = async function(id, enabled) {
+    var sb = window.sb || window.supabase;
+    if(!sb) return;
+    await sb.from('lead_automations').update({enabled: enabled}).eq('id', id);
+    loadHqAutomations();
+};
+
+window.deleteHqAuto = async function(id) {
+    if(!confirm('Automation wirklich löschen?')) return;
+    var sb = window.sb || window.supabase;
+    if(!sb) return;
+    await sb.from('lead_automations').delete().eq('id', id);
+    loadHqAutomations();
+};
 
 // === HQ HANDLUNGSBEDARF (konsolidiert) ===
 export function renderHqAktionen() {

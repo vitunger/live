@@ -4927,14 +4927,104 @@
 
                 <div id="hqVerkaufView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-6">VERKAUF – NETZWERK</h1>
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="hqVkKpis"></div>
-                    <div class="vit-card p-6 mb-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">📊 Verkaufsleistung pro Standort (KW 7)</h2>
-                        <div class="overflow-x-auto"><table class="w-full text-sm" id="hqVkTable"></table></div>
+                    
+                    <!-- KPI Cards -->
+                    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6" id="hqVkKpis">
+                        <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Beratungen (KW)</p><p class="text-2xl font-bold text-gray-800" id="hqVkBeratKW">—</p></div>
+                        <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Verkäufe (KW)</p><p class="text-2xl font-bold text-green-600" id="hqVkSalesKW">—</p></div>
+                        <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Umsatz (KW)</p><p class="text-2xl font-bold text-vit-orange" id="hqVkUmsatzKW">—</p></div>
+                        <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Ø VK-Quote Netzwerk</p><p class="text-2xl font-bold text-blue-600" id="hqVkQuote">—</p></div>
+                        <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Aktive Leads</p><p class="text-2xl font-bold text-purple-600" id="hqVkLeads">—</p></div>
                     </div>
-                    <div class="vit-card p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">⚠️ Handlungsbedarf Verkauf</h2>
-                        <div id="hqVkAlerts" class="space-y-2"></div>
+
+                    <!-- Tabs -->
+                    <div class="mb-6 border-b border-gray-200">
+                        <nav class="-mb-px flex space-x-6">
+                            <button onclick="showHqVkTab('standorte')" class="hqvk-tab whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="standorte">📊 Standort-Vergleich</button>
+                            <button onclick="showHqVkTab('pipeline')" class="hqvk-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700" data-tab="pipeline">🔄 Pipeline-Übersicht</button>
+                            <button onclick="showHqVkTab('automationen')" class="hqvk-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700" data-tab="automationen">⚡ Automationen</button>
+                            <button onclick="showHqVkTab('alerts')" class="hqvk-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700" data-tab="alerts">⚠️ Handlungsbedarf</button>
+                        </nav>
+                    </div>
+
+                    <!-- Tab: Standort-Vergleich -->
+                    <div id="hqVkTabStandorte" class="hqvk-content">
+                        <div class="vit-card p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-lg font-semibold text-gray-800">Verkaufsleistung pro Standort</h2>
+                                <select id="hqVkPeriod" onchange="loadHqVerkaufData()" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm">
+                                    <option value="week">Diese Woche</option>
+                                    <option value="month">Dieser Monat</option>
+                                    <option value="year">Dieses Jahr</option>
+                                </select>
+                            </div>
+                            <div class="overflow-x-auto"><table class="w-full text-sm" id="hqVkTable">
+                                <thead><tr class="bg-gray-50">
+                                    <th class="text-left py-2.5 px-3 font-semibold text-gray-600">Standort</th>
+                                    <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Beratungen</th>
+                                    <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Verkauft</th>
+                                    <th class="text-right py-2.5 px-3 font-semibold text-gray-600">VK-Quote</th>
+                                    <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Umsatz</th>
+                                    <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Ø Preis</th>
+                                    <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Leads</th>
+                                </tr></thead>
+                                <tbody id="hqVkTableBody"><tr><td colspan="7" class="text-center py-6 text-gray-400">Lade...</td></tr></tbody>
+                            </table></div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Pipeline-Übersicht -->
+                    <div id="hqVkTabPipeline" class="hqvk-content" style="display:none;">
+                        <div class="vit-card p-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Pipeline alle Standorte</h2>
+                            <div id="hqVkPipelineContent" class="text-sm text-gray-400 text-center py-6">Lade Pipeline-Daten...</div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Automationen -->
+                    <div id="hqVkTabAutomationen" class="hqvk-content" style="display:none;">
+                        <div class="vit-card p-6">
+                            <div class="flex items-center justify-between mb-2">
+                                <h2 class="text-lg font-semibold text-gray-800">⚡ Pipeline-Automationen</h2>
+                                <button onclick="showAddAutomationForm()" class="px-3 py-1.5 bg-vit-orange text-white text-sm font-bold rounded-lg hover:opacity-90">+ Neue Regel</button>
+                            </div>
+                            <p class="text-xs text-gray-500 mb-4">HQ-Regeln gelten netzwerkweit für alle Standorte. Wenn ein Lead die Stufe wechselt, werden automatisch Todos oder Aktivitäten erstellt.</p>
+                            <div id="hqAutoRulesList" class="space-y-3">Lade...</div>
+                            <div id="hqAutoAddForm" style="display:none" class="mt-4 p-4 border-2 border-dashed border-gray-200 rounded-xl">
+                                <h3 class="font-bold text-sm mb-3">Neue Automation</h3>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                    <div><label class="text-xs text-gray-500">Wenn Stufe wechselt von</label>
+                                        <select id="hqAutoFrom" class="w-full mt-1 px-2 py-1.5 border rounded-lg text-sm">
+                                            <option value="*">Beliebig</option><option value="lead">Eingang</option><option value="angebot">Angebot</option><option value="schwebend">Schwebend</option>
+                                        </select></div>
+                                    <div><label class="text-xs text-gray-500">nach</label>
+                                        <select id="hqAutoTo" class="w-full mt-1 px-2 py-1.5 border rounded-lg text-sm">
+                                            <option value="angebot">Angebot</option><option value="schwebend">Schwebend</option><option value="verkauft">Verkauft</option><option value="gold">Schrank d. Hoffnung</option><option value="lost">Verloren</option>
+                                        </select></div>
+                                    <div><label class="text-xs text-gray-500">Dann</label>
+                                        <select id="hqAutoAction" class="w-full mt-1 px-2 py-1.5 border rounded-lg text-sm">
+                                            <option value="todo">✅ Todo erstellen</option><option value="activity">📁 Aktivität erstellen</option>
+                                        </select></div>
+                                    <div><label class="text-xs text-gray-500">Fällig in</label>
+                                        <select id="hqAutoDays" class="w-full mt-1 px-2 py-1.5 border rounded-lg text-sm">
+                                            <option value="0">Sofort</option><option value="1">1 Tag</option><option value="3">3 Tage</option><option value="5">5 Tage</option><option value="7">7 Tage</option><option value="14">14 Tage</option><option value="30">30 Tage</option>
+                                        </select></div>
+                                </div>
+                                <div class="flex gap-3">
+                                    <input id="hqAutoText" placeholder="Text der Aktion..." class="flex-1 px-3 py-2 border rounded-lg text-sm"/>
+                                    <button onclick="saveHqAutomation()" class="px-4 py-2 bg-gray-800 text-white text-sm font-bold rounded-lg">Speichern</button>
+                                    <button onclick="document.getElementById('hqAutoAddForm').style.display='none'" class="px-3 py-2 text-sm text-gray-500">Abbrechen</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Handlungsbedarf -->
+                    <div id="hqVkTabAlerts" class="hqvk-content" style="display:none;">
+                        <div class="vit-card p-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">⚠️ Handlungsbedarf Verkauf</h2>
+                            <div id="hqVkAlerts" class="space-y-2"><p class="text-sm text-gray-400 text-center py-4">Keine Alerts vorhanden.</p></div>
+                        </div>
                     </div>
                 </div>
 
