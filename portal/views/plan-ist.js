@@ -124,7 +124,7 @@ export async function parsePlanFile() {
         } else {
             // Excel → build smart extract with only relevant columns for KI
             var arrayBuf = await file.arrayBuffer();
-            var wb = XLSX.read(arrayBuf, { type: 'array', cellDates: true });
+            var wb = XLSX.read(arrayBuf, { type: 'array' });
             var rawText = '';
             var totalMonthCols = 0;
             
@@ -136,18 +136,37 @@ export async function parsePlanFile() {
                 // Find month columns by scanning headers (rows 1-5)
                 var monthCols = [];
                 var monthPatterns = ['jan','feb','mär','mar','mrz','apr','mai','may','jun','jul','aug','sep','okt','oct','nov','dez','dec'];
+                var monthNames = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
                 for(var hr=0; hr<=Math.min(5, range.e.r); hr++) {
                     for(var cc=0; cc<=range.e.c; cc++) {
                         var addr = XLSX.utils.encode_cell({r:hr, c:cc});
                         var cell = ws[addr];
-                        if(cell) {
-                            var val = String(cell.w || cell.v || '').toLowerCase().trim();
+                        if(!cell) continue;
+                        var matched = false;
+                        
+                        // Check formatted value first (e.g. "Jan 26")
+                        var wVal = (cell.w || '').toLowerCase().trim();
+                        if(wVal) {
                             for(var mp=0; mp<monthPatterns.length; mp++) {
-                                if(val.startsWith(monthPatterns[mp]) && monthCols.length < 12) {
-                                    monthCols.push(cc);
-                                    break;
-                                }
+                                if(wVal.startsWith(monthPatterns[mp])) { matched = true; break; }
                             }
+                        }
+                        
+                        // Check if it's a date (serial number > 40000 = Excel dates)
+                        if(!matched && typeof cell.v === 'number' && cell.v > 40000 && cell.v < 60000) {
+                            matched = true; // It's an Excel date serial
+                        }
+                        
+                        // Check string value
+                        if(!matched && typeof cell.v === 'string') {
+                            var sVal = cell.v.toLowerCase().trim();
+                            for(var mp2=0; mp2<monthPatterns.length; mp2++) {
+                                if(sVal.startsWith(monthPatterns[mp2])) { matched = true; break; }
+                            }
+                        }
+                        
+                        if(matched && monthCols.length < 12) {
+                            monthCols.push(cc);
                         }
                     }
                     if(monthCols.length >= 12) break;
@@ -179,6 +198,13 @@ export async function parsePlanFile() {
             });
             
             console.log('[Plan] Smart extract length:', rawText.length, 'month cols found:', totalMonthCols);
+            
+            // If no month columns found, fall back to full CSV extract
+            if(totalMonthCols === 0) {
+                console.warn('[Plan] No month columns detected, using full CSV extract');
+                rawText = cleanCsvForKi(wb);
+            }
+            
             kiPayload = { rawText: rawText.substring(0, 15000) };
         }
 
