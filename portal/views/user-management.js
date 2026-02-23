@@ -1290,7 +1290,7 @@ export async function renderHqModulStatusList() {
         if(resp.error) throw resp.error;
         var modules = (resp.data || []).filter(function(m) { return m.ebene === 'hq' || m.ebene === 'beide'; });
         var html = '';
-        var katLabels = {basis:'Basis (Shared)',hq:'HQ-Intern',dashboards:'Dashboards',fachbereiche:'Fachbereiche',tools:'Tools'};
+        var katLabels = {basis:'Basis (Shared)',hq:'HQ-Intern',hq_steuerung:'HQ-Steuerung',hq_netzwerk:'HQ-Netzwerk',hq_admin:'HQ-Admin',dashboards:'Dashboards',fachbereiche:'Fachbereiche',tools:'Tools'};
         var lastKat = '';
         var counts = {aktiv:0, demo:0, in_bearbeitung:0, deaktiviert:0};
 
@@ -1317,7 +1317,7 @@ export async function renderHqModulStatusList() {
 
 // Shared renderer for both Partner and HQ module lists
 export function _renderModulRow(m, currentStatus, ebene) {
-    var icons = {startseite:'🏠',kalender:'📅',aufgaben:'📋',kommunikation:'💬',dashboards:'📊',allgemein:'🏢',verkauf:'📈',einkauf:'🛒',marketing:'📣',controlling:'📊',wissen:'📚',support:'🎫',ideenboard:'💡',shop:'🛍️',onboarding:'🎯',mitarbeiter:'👥',aktenschrank:'📁',entwicklung:'</>',spiritus:'📝',abrechnung:'💰',office:'🏢'};
+    var icons = {startseite:'🏠',kalender:'📅',aufgaben:'📋',kommunikation:'💬',dashboards:'📊',allgemein:'🏢',verkauf:'📈',einkauf:'🛒',marketing:'📣',controlling:'📊',wissen:'📚',support:'🎫',ideenboard:'💡',shop:'🛍️',onboarding:'🎯',mitarbeiter:'👥',aktenschrank:'📁',entwicklung:'</>',spiritus:'📝',abrechnung:'💰',office:'🏢',standortBilling:'💳',hqCockpit:'🌐',hqKommandozentrale:'⚙️',hqHandlungsbedarf:'🚨',hqStandorte:'🏪',hqFinanzen:'💶',hqMarketing:'📣',hqEinkauf:'🛒',hqSupport:'🎫',hqAkademie:'📚',hqEinstellungen:'⚙️',hqEntwicklung:'</>'};
     var isHq = ebene === 'hq';
     var expandKey = (isHq ? 'hq_' : '') + m.modul_key;
     var cfg = isHq ? (m.hq_config || {}) : (m.config || {});

@@ -570,7 +570,9 @@ export function applyModulStatus() {
     var isHqUser = (window.sbProfile && window.sbProfile.is_hq) || (window.currentRoles && window.currentRoles.indexOf('hq') !== -1);
     
     // Map from data-hq-module attribute to modul_key in DB
-    var hqKeyMap = {hqOffice:'office',hqBilling:'abrechnung',hqCockpit:'dashboards',hqKommandozentrale:'dashboards',hqHandlungsbedarf:'dashboards',hqFinanzen:'controlling',hqMarketing:'marketing',hqEinkauf:'einkauf',hqStandorte:'allgemein',hqSupport:'support',hqEntwicklung:'entwicklung',hqEinstellungen:'allgemein',hqAkademie:'wissen'};
+    // HQ-Module haben jetzt eigene Einträge in modul_status (hqCockpit, hqKommandozentrale, etc.)
+    // Fallback-Map nur für Module die keinen eigenen Eintrag haben
+    var hqKeyMap = {hqOffice:'office',hqBilling:'abrechnung'};
 
     // Helper: apply status to a sidebar button
     function applyToBtn(btn, status, key) {
@@ -650,7 +652,10 @@ export function applyModulStatus() {
     // HQ sidebar buttons (data-hq-module)
     document.querySelectorAll('[data-hq-module]').forEach(function(btn) {
         var hqKey = btn.getAttribute('data-hq-module');
-        var dbKey = hqKeyMap[hqKey] || hqKey.replace('hq','').toLowerCase();
+        // 1) Direkt-Lookup: hqKey ist selbst ein modul_key in der DB (z.B. "hqCockpit")
+        // 2) Fallback: alte Map für office/abrechnung
+        // 3) Letzter Fallback: hq prefix entfernen
+        var dbKey = (sbHqModulStatus||{})[hqKey] !== undefined ? hqKey : (hqKeyMap[hqKey] || hqKey.replace('hq','').toLowerCase());
         var status = (sbHqModulStatus||{})[dbKey] || 'aktiv';
         applyToBtn(btn, status, dbKey);
     });
