@@ -624,6 +624,51 @@ export function applyModulStatus() {
         var el = document.querySelector(sel);
         if(el) el.style.display = wissenDisabled ? 'none' : '';
     });
+
+    // ── Tab-level enforcement ──
+    // Hide/disable individual tabs within modules based on config.tabs
+    var TAB_BTN_CLASSES = {
+        marketing: 'marketing-tab-btn',
+        verkauf: 'vk-tab-btn',
+        einkauf: 'ek-tab-btn',
+        controlling: 'ctrl-tab-btn',
+        allgemein: 'allg-tab-btn',
+        kommunikation: 'komm-tab-btn',
+        support: 'support-tab-btn'
+    };
+    // Legacy config key → actual HTML data-tab attribute mapping
+    var TAB_KEY_REMAP = {
+        'performance': 'cockpit',
+        'leads': 'kampagnen'
+    };
+    Object.keys(TAB_BTN_CLASSES).forEach(function(modulKey) {
+        var cfg = window.sbModulConfig && window.sbModulConfig[modulKey];
+        if (!cfg || !cfg.tabs) return;
+        var btnClass = TAB_BTN_CLASSES[modulKey];
+        var tabs = cfg.tabs;
+        Object.keys(tabs).forEach(function(tabKey) {
+            var status = tabs[tabKey];
+            // Remap legacy keys
+            var htmlTab = TAB_KEY_REMAP[tabKey] || tabKey;
+            // Find tab button by class + data-tab
+            var btn = document.querySelector('.' + btnClass + '[data-tab="' + htmlTab + '"]');
+            if (!btn) return;
+            // Find content div (e.g. marketingTabBudget, vkTabPipeline)
+            var prefix = modulKey === 'verkauf' ? 'vk' : modulKey === 'einkauf' ? 'ek' : modulKey === 'controlling' ? 'ctrl' : modulKey === 'allgemein' ? 'allg' : modulKey === 'kommunikation' ? 'komm' : modulKey;
+            var contentId = prefix + 'Tab' + htmlTab.charAt(0).toUpperCase() + htmlTab.slice(1);
+            // Marketing uses different ID pattern
+            if (modulKey === 'marketing') contentId = 'marketingTab' + htmlTab.charAt(0).toUpperCase() + htmlTab.slice(1);
+            var content = document.getElementById(contentId);
+
+            if (status === 'deaktiviert') {
+                btn.style.display = 'none';
+                if (content) content.style.display = 'none';
+            } else {
+                // Reset (aktiv or demo)
+                btn.style.display = '';
+            }
+        });
+    });
 }
 
 
