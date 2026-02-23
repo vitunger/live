@@ -100,7 +100,7 @@ async function loadModules() {
             import(`${MODULE_BASE}/${mod}${CB}`)
                 .then(() => { loaded++; })
                 .catch(e => {
-                    console.error(`[app.js] ❌ ${mod}:`, e.message);
+                    console.error(`[app.js] ❌ ${mod}:`, e.message, e);
                     failed++;
                 })
         )
