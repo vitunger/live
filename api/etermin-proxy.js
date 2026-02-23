@@ -1,16 +1,8 @@
 /**
  * /api/etermin-proxy.js – eTermin API Proxy
- * 
- * Portal calls this to interact with eTermin API.
- * Handles HMAC-SHA256 signing server-side (private key never in browser).
- *
- * Query: ?action=test|calendars|appointments|timeslots
- *        &from=YYYYMMDD&to=YYYYMMDD&calendarid=X&date=YYYYMMDD
- *
- * Env: SUPABASE_URL, SUPABASE_SERVICE_KEY
+ * Uses direct Supabase REST API (no supabase-js dependency needed)
  */
 
-const { createClient } = require("@supabase/supabase-js");
 const crypto = require("crypto");
 
 const ETERMIN = "https://www.etermin.net/api";
@@ -21,7 +13,23 @@ function sign(privKey) {
   return { salt, sig };
 }
 
-async function apiFetch(path, pub, priv) {
+async function sbQuery(table, params = "") {
+  const url = process.env.SUPABASE_URL + "/rest/v1/" + table + "?select=*&" + params;
+  const r = await fetch(url, {
+    headers: {
+      "apikey": process.env.SUPABASE_SERVICE_KEY,
+      "Authorization": "Bearer " + process.env.SUPABASE_SERVICE_KEY,
+      "Content-Type": "application/json"
+    }
+  });
+  if (!r.ok) {
+    const t = await r.text();
+    throw new Error("Supabase " + r.status + ": " + t.slice(0, 200));
+  }
+  return r.json();
+}
+
+async function eterminFetch(path, pub, priv) {
   const { salt, sig } = sign(priv);
   const r = await fetch(ETERMIN + path, {
     headers: { publickey: pub, salt, signature: sig, Accept: "application/json" }
@@ -31,53 +39,38 @@ async function apiFetch(path, pub, priv) {
 }
 
 module.exports = async function(req, res) {
-  // CORS
-  res.setHeader("Access-Control-Allow-Origin", "https://cockpit.vitbikes.de");
+  res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
-
-  // No auth check needed - API keys are loaded from DB via service_role
-  // The proxy only forwards to eTermin API, no user data exposed
-
   try {
-    // Load keys from DB (per standort or first active)
-    let query = sb.from("etermin_config").select("public_key, private_key, standort_id").eq("is_active", true);
+    // Load keys via direct REST API
+    let filter = "is_active=eq.true&limit=1";
     if (req.query.standort_id) {
-      query = query.eq("standort_id", req.query.standort_id);
+      filter += "&standort_id=eq." + req.query.standort_id;
     }
-    const { data: cfg, error: dbErr } = await query.limit(1).maybeSingle();
     
-    // Debug mode
-    if (req.query.action === "debug") {
-      return res.json({ 
-        has_url: !!process.env.SUPABASE_URL,
-        has_key: !!process.env.SUPABASE_SERVICE_KEY,
-        key_prefix: (process.env.SUPABASE_SERVICE_KEY || "").slice(0, 20) + "...",
-        url: process.env.SUPABASE_URL || "MISSING",
-        db_error: dbErr ? dbErr.message : null,
-        cfg_found: !!cfg,
-        standort_filter: req.query.standort_id || "none"
-      });
-    }
+    const rows = await sbQuery("etermin_config", filter);
+    const cfg = rows && rows[0];
     
     if (!cfg || !cfg.public_key || !cfg.private_key) {
-      return res.status(400).json({ error: "eTermin nicht konfiguriert. API-Keys in Einstellungen hinterlegen." });
+      return res.status(400).json({ 
+        error: "eTermin nicht konfiguriert. API-Keys in Einstellungen hinterlegen.",
+        debug: { rows_found: rows ? rows.length : 0, filter }
+      });
     }
 
     const { public_key: pub, private_key: priv } = cfg;
     const action = req.query.action || "test";
 
     if (action === "test") {
-      const data = await apiFetch("/calendars", pub, priv);
+      const data = await eterminFetch("/calendars", pub, priv);
       return res.json({ ok: true, message: "Verbindung erfolgreich", calendars: Array.isArray(data) ? data.length : 0, data });
     }
 
     if (action === "calendars") {
-      const data = await apiFetch("/calendars", pub, priv);
-      return res.json({ ok: true, data });
+      return res.json({ ok: true, data: await eterminFetch("/calendars", pub, priv) });
     }
 
     if (action === "appointments") {
@@ -85,14 +78,14 @@ module.exports = async function(req, res) {
       if (req.query.from) p += "datefrom=" + req.query.from + "&";
       if (req.query.to) p += "dateto=" + req.query.to + "&";
       if (req.query.calendarid) p += "calendarid=" + req.query.calendarid + "&";
-      return res.json({ ok: true, data: await apiFetch(p, pub, priv) });
+      return res.json({ ok: true, data: await eterminFetch(p, pub, priv) });
     }
 
     if (action === "timeslots") {
       if (!req.query.date) return res.status(400).json({ error: "date required" });
       let p = "/timeslots?date=" + req.query.date;
       if (req.query.calendarid) p += "&calendarid=" + req.query.calendarid;
-      return res.json({ ok: true, data: await apiFetch(p, pub, priv) });
+      return res.json({ ok: true, data: await eterminFetch(p, pub, priv) });
     }
 
     return res.status(400).json({ error: "Unknown action: " + action });
