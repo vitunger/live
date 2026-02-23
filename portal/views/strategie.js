@@ -1798,6 +1798,7 @@ export function filterSmThemen(filter) {
 }
 
 export function renderSmThemen() {
+    var smThemen = window.smThemen || [];
     var search = (document.getElementById('smThemenSearch')||{}).value||'';
     var list = smThemen.filter(function(t){
         if(currentSmFilter==='neu' && t.done) return false;
@@ -1898,7 +1899,7 @@ export function renderSmThemen() {
     // Populate upload select
     var sel = document.getElementById('smUploadThema');
     if(sel && sel.options.length<=1) {
-        smThemen.filter(function(t){return !t.done;}).forEach(function(t){
+        (window.smThemen||[]).filter(function(t){return !t.done;}).forEach(function(t){
             sel.innerHTML += '<option value="'+t.id+'">'+t.id.toUpperCase()+' – '+t.thema+'</option>';
         });
         sel.innerHTML += '<option value="0000">0000 – Eigener Vorschlag</option>';

@@ -602,7 +602,7 @@ window.addEventListener('vit:modules-ready', function() {
 });
 
 // === SOCIAL MEDIA LOCAL HERO ===
-var smThemen = [
+window.smThemen = [
     {id:'c001',thema:'Eure Kundenstories',kat:'Story',schwierig:'leicht',done:false,
         beispiel:null,
         hook:['„Was hat euch am meisten ueberrascht nach dem Kauf?"','„Unser Kunde faehrt jetzt jeden Tag mit dem Rad zur Arbeit – und hat uns das geschrieben:"'],
