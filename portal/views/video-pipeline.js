@@ -450,37 +450,65 @@ try {
         html += '</div></div>';
     }
 
+    var isHqUser = (window.sbProfile && window.sbProfile.is_hq) || (window.currentRoles && window.currentRoles.indexOf('hq') !== -1) || false;
+
     if(v.pipeline_status==='uploaded') {
         html += '<div class="mt-4 pt-4 border-t flex gap-2">';
         html += '<button onclick="vpTriggerAnalysis(\''+v.id+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 transition font-medium">🔬 Analyse starten</button>';
-        html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'analyzing\')" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm">⏩ Manuell weiter</button>';
+        if(isHqUser) html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'analyzing\')" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm">⏩ Manuell weiter</button>';
         html += '</div>';
     }
 
     if(v.pipeline_status==='consent_check' || v.pipeline_status==='consent_blocked') {
-        html += '<div class="mt-4 pt-4 border-t flex gap-2">';
-        html += '<button onclick="vpCloseModal();vpShowTagging(\''+v.id+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 transition font-medium">👥 Personen taggen</button>';
-        html += '<button onclick="vpTriggerConsent(\''+v.id+'\')" class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm">🔍 Consent prüfen</button>';
-        html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'cutting\')" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm">⏩ Überspringen</button>';
-        html += '</div>';
+        if(isHqUser) {
+            html += '<div class="mt-4 pt-4 border-t"><div class="flex gap-2 flex-wrap">';
+            html += '<button onclick="vpCloseModal();vpShowTagging(\''+v.id+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 transition font-medium">👥 Personen taggen</button>';
+            html += '<button onclick="vpTriggerConsent(\''+v.id+'\')" class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm">🔍 Consent prüfen</button>';
+            html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'cutting\')" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm">⏩ Überspringen</button>';
+            html += '</div></div>';
+        } else {
+            html += '<div class="mt-4 pt-4 border-t"><div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">⏳ Das HQ prüft die Einwilligungen der erkannten Personen. Du wirst benachrichtigt, sobald es weitergeht.</div></div>';
+        }
     }
 
     if(v.pipeline_status==='cutting') {
-        html += '<div class="mt-4 pt-4 border-t flex gap-2">';
-        html += '<button onclick="vpTriggerReels(\''+v.id+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 transition font-medium">🎬 Reels generieren</button>';
-        html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'review\')" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm">⏩ Zur Freigabe</button>';
-        html += '</div>';
+        if(isHqUser) {
+            html += '<div class="mt-4 pt-4 border-t flex gap-2">';
+            html += '<button onclick="vpTriggerReels(\''+v.id+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 transition font-medium">🎬 Reels generieren</button>';
+            html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'review\')" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm">⏩ Zur Freigabe</button>';
+            html += '</div>';
+        } else {
+            html += '<div class="mt-4 pt-4 border-t"><div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">✂️ Das HQ kümmert sich um den Schnitt. Du wirst benachrichtigt, sobald dein Reel fertig ist.</div></div>';
+        }
     }
 
     if(v.pipeline_status==='review') {
-        html += '<div class="mt-4 pt-4 border-t flex gap-2">';
-        html += '<button onclick="vpApproveVideo(\''+v.id+'\')" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-medium">✅ Freigeben</button>';
-        html += '<button onclick="vpRejectVideo(\''+v.id+'\')" class="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition text-sm">❌ Ablehnen</button>';
-        html += '</div>';
+        if(isHqUser) {
+            html += '<div class="mt-4 pt-4 border-t flex gap-2">';
+            html += '<button onclick="vpApproveVideo(\''+v.id+'\')" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-medium">✅ Freigeben</button>';
+            html += '<button onclick="vpRejectVideo(\''+v.id+'\')" class="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition text-sm">❌ Ablehnen</button>';
+            html += '</div>';
+        } else {
+            html += '<div class="mt-4 pt-4 border-t"><div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-700">👀 Dein Video wird vom HQ-Team geprüft. Du erhältst eine Benachrichtigung zur Freigabe.</div></div>';
+        }
     }
 
     if(v.pipeline_status==='approved') {
-        html += '<div class="mt-4 pt-4 border-t"><button onclick="vpManualAdvance(\''+v.id+'\',\'publishing\')" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition font-medium">🚀 Veröffentlichen</button></div>';
+        if(isHqUser) {
+            html += '<div class="mt-4 pt-4 border-t"><button onclick="vpManualAdvance(\''+v.id+'\',\'publishing\')" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition font-medium">🚀 Veröffentlichen</button></div>';
+        } else {
+            html += '<div class="mt-4 pt-4 border-t"><div class="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">✅ Freigegeben! Dein Video wird in Kürze veröffentlicht.</div></div>';
+        }
+    }
+
+    if(v.pipeline_status==='published') {
+        html += '<div class="mt-4 pt-4 border-t"><div class="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">🎉 Dein Video wurde veröffentlicht!</div></div>';
+    }
+
+    if(v.pipeline_status==='rejected') {
+        html += '<div class="mt-4 pt-4 border-t"><div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">❌ Video wurde abgelehnt: '+(v.pipeline_status_detail||'Kein Grund angegeben')+'</div>';
+        if(isHqUser) html += '<div class="mt-2"><button onclick="vpManualAdvance(\''+v.id+'\',\'uploaded\')" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm">🔄 Zurücksetzen</button></div>';
+        html += '</div>';
     }
 
     vpModal(html);
