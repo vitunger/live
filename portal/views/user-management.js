@@ -1210,6 +1210,7 @@ export function showSettingsTab(tab) {
     if(tab === 'demo') renderDemoModulList();
     if(tab === 'hqmodule') renderHqModulStatusList();
     if(tab === 'office') { setTimeout(function(){ if(typeof window.officeRenderAdminDots === 'function') window.officeRenderAdminDots(); }, 150); }
+    if(tab === 'schnittstellen') { setTimeout(function(){ if(typeof window.renderSchnittstellen === 'function') window.renderSchnittstellen(); }, 100); }
 }
 
 // Tab/Widget-Konfiguration pro Modul
