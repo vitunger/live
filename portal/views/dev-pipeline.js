@@ -483,6 +483,8 @@ export async function renderEntwReleases() {
     c.innerHTML = '<div class="text-center py-8 text-gray-400">Lade Releases...</div>';
     try {
         var resp = await _sb().from('dev_release_docs').select('*, dev_submissions(titel, status)').eq('freigegeben', true).order('created_at', {ascending: false});
+        console.log('[Releases] Query result:', {data: resp.data?.length, error: resp.error});
+        if(resp.error) console.error('[Releases] Error:', resp.error);
         var docs = resp.data || [];
         var respP = await _sb().from('dev_release_docs').select('*, dev_submissions(titel, status)').eq('freigegeben', false).order('created_at', {ascending: false});
         var pending = respP.data || [];
