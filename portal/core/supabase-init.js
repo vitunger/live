@@ -101,3 +101,7 @@ var sbFeatureFlags = {}; // {flag_key: {enabled, rollout_percent, target_roles, 
 
 
 console.log("[supabase-init.js] Client ready");
+
+// Expose for cross-module access (ES module scope isolation)
+window.SUPABASE_URL = SUPABASE_URL;
+window.SUPABASE_ANON_KEY = SUPABASE_ANON_KEY;
