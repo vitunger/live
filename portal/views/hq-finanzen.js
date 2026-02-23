@@ -34,15 +34,17 @@ function hqFinFmtE(n) {
 }
 
 // === MAIN RENDER ===
+var _hqFinRendering = false;
 export async function renderHqFinanzen() {
-    // Always reload fresh data when entering the view
-    await loadHqFinData();
-
-    // Render KPIs
-    renderHqFinKpis();
-
-    // Render table directly (no tabs)
-    renderHqFinUebersicht();
+    if (_hqFinRendering) return;
+    _hqFinRendering = true;
+    try {
+        await loadHqFinData();
+        renderHqFinKpis();
+        renderHqFinUebersicht();
+    } finally {
+        _hqFinRendering = false;
+    }
 }
 
 // === DATA LOADING ===
@@ -70,7 +72,8 @@ async function loadHqFinData() {
             .select('standort_id, jahr, plan_daten, updated_at')
             .in('jahr', [currentYear, currentYear - 1])
             .order('jahr', { ascending: false });
-        if(planResp.error) { console.warn('[hq-finanzen] Plan query error:', planResp.error); }
+        if(planResp.error) { console.warn('[hq-finanzen] Plan query error:', JSON.stringify(planResp.error)); }
+        if(planResp.status) { console.log('[hq-finanzen] Plan query status:', planResp.status, planResp.statusText); }
         var planData = planResp.data || [];
         hqFinPlanMap = {};
         // Current year takes priority, fallback to previous year
