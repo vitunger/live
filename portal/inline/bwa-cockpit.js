@@ -77,14 +77,17 @@
         return Math.ceil((deadline - now) / (1000*60*60*24));
     }
 
-    function ratingBadge(rating) {
+    function ratingBadge(rating, isSubmitted) {
         var map = {
             gold: {t:'🥇 GOLD', c:'#ca8a04', bg:'rgba(202,138,4,0.1)'},
             ok: {t:'✅ OK', c:'#16a34a', bg:'rgba(22,163,74,0.1)'},
             overdue: {t:'🚨 ÜBERFÄLLIG', c:'#dc2626', bg:'rgba(220,38,38,0.1)'},
+            late: {t:'⚠️ VERSPÄTET', c:'#ea580c', bg:'rgba(234,88,12,0.1)'},
             missing: {t:'⏳ AUSSTEHEND', c:'#9ca3af', bg:'rgba(156,163,175,0.1)'}
         };
-        var m = map[rating] || map.missing;
+        // If submitted but after deadline → show "VERSPÄTET" instead of "ÜBERFÄLLIG"
+        var key = (rating === 'overdue' && isSubmitted) ? 'late' : rating;
+        var m = map[key] || map.missing;
         return '<span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:6px;color:'+m.c+';background:'+m.bg+'">'+m.t+'</span>';
     }
 
@@ -133,7 +136,7 @@
             // Already submitted
             titleEl.textContent = 'BWA für ' + moName + ' eingereicht';
             subEl.textContent = 'Eingereicht am ' + submitted.split('-').reverse().join('.');
-            badgeEl.innerHTML = ratingBadge(rating);
+            badgeEl.innerHTML = ratingBadge(rating, true);
             badgeEl.style.display = '';
             ctaEl.style.display = 'none';
             daysEl.textContent = '✓';
@@ -240,7 +243,7 @@
 
         var moName = MO_NAMES[bwaMo.m] + ' ' + bwaMo.y;
         document.getElementById('bwaKpiReportMonth').textContent = moName;
-        document.getElementById('bwaKpiRating').innerHTML = ratingBadge(rating);
+        document.getElementById('bwaKpiRating').innerHTML = ratingBadge(rating, true);
 
         var grid = document.getElementById('bwaKpiReportGrid');
         var recList = document.getElementById('bwaKpiRecList');
@@ -493,7 +496,7 @@
                     + '<td class="py-2.5">' + (s.submitted
                         ? '<span class="text-green-600 text-xs font-semibold">✓ Eingereicht</span>'
                         : '<span class="text-gray-400 text-xs">Ausstehend</span>') + '</td>'
-                    + '<td class="py-2.5">' + ratingBadge(s.rating) + '</td>'
+                    + '<td class="py-2.5">' + ratingBadge(s.rating, !!s.submitted) + '</td>'
                     + '<td class="py-2.5 text-xs text-gray-500">' + (s.submitted || '—') + '</td>'
                     + '<td class="py-2.5">' + (stufe >= 0 ? eskalationBadge(stufe) : '<span class="text-xs text-gray-300">—</span>') + '</td>'
                     + '<td class="py-2.5 text-xs" style="color:' + daysColor + '">' + daysText + '</td>'
