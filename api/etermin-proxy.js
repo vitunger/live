@@ -47,9 +47,12 @@ module.exports = async function(req, res) {
   }
 
   try {
-    // Load keys from DB
-    const { data: cfg } = await sb.from("etermin_config")
-      .select("public_key, private_key").eq("is_active", true).limit(1).maybeSingle();
+    // Load keys from DB (per standort or first active)
+    let query = sb.from("etermin_config").select("public_key, private_key, standort_id").eq("is_active", true);
+    if (req.query.standort_id) {
+      query = query.eq("standort_id", req.query.standort_id);
+    }
+    const { data: cfg } = await query.limit(1).maybeSingle();
     if (!cfg || !cfg.public_key || !cfg.private_key) {
       return res.status(400).json({ error: "eTermin nicht konfiguriert. API-Keys in Einstellungen hinterlegen." });
     }
