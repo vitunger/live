@@ -126,6 +126,7 @@ export async function parsePlanFile() {
             var arrayBuf = await file.arrayBuffer();
             var wb = XLSX.read(arrayBuf, { type: 'array', cellDates: true });
             var rawText = '';
+            var totalMonthCols = 0;
             
             wb.SheetNames.forEach(function(sn) {
                 var ws = wb.Sheets[sn];
@@ -174,9 +175,10 @@ export async function parsePlanFile() {
                     }
                 }
                 rawText += '\n';
+                totalMonthCols = Math.max(totalMonthCols, monthCols.length);
             });
             
-            console.log('[Plan] Smart extract length:', rawText.length, 'month cols found:', monthCols ? monthCols.length : 0);
+            console.log('[Plan] Smart extract length:', rawText.length, 'month cols found:', totalMonthCols);
             kiPayload = { rawText: rawText.substring(0, 15000) };
         }
 
