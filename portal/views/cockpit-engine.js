@@ -218,12 +218,12 @@ updateNetzwerkWidget();
 
 // ──── NETZWERK WIDGET (Standort-Sicht) ────
 export async function updateNetzwerkWidget() {
-var gold = 0, ok = 0, missing = 0, late = 0, total = 21;
+var gold = 0, ok = 0, missing = 0, late = 0, total = 30;
 if(typeof sb !== 'undefined') {
 try {
     var bwaMo = getBwaMonth(new Date());
-    var stdResp = await _sb().from('standorte').select('id,name').eq('aktiv', true);
-    total = (stdResp.data || []).length || 21;
+    var stdResp = await _sb().from('standorte').select('id,name');
+    total = (stdResp.data || []).length || 30;
     var bwaResp = await _sb().from('bwa_daten').select('standort_id,created_at').eq('monat', bwaMo.m + 1).eq('jahr', bwaMo.y);
     (bwaResp.data || []).forEach(function(b) {
         var subDay = new Date(b.created_at).getDate();
