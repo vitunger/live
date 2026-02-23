@@ -1364,17 +1364,29 @@ export function backToTrainingMenu() {
 }
 
 // === REACT PIPELINE MOUNT FUNCTION ===
-var pipelineMounted = false;
+var _pipelineReactRoot = null;
+var _pipelineDomNode = null;
 var pipelineRetries = 0;
 export function mountReactPipeline() {
     var root = document.getElementById('react-pipeline-root');
-    if(!root) { console.warn('[Pipeline] No react-pipeline-root element'); return; }
-    if(pipelineMounted) { console.log('[Pipeline] Already mounted'); return; }
+    if(!root) { console.warn('[Pipeline] No root element'); return; }
+    // If same DOM node already has content, skip
+    if(_pipelineDomNode === root && root.childNodes.length > 0) {
+        console.log('[Pipeline] Already mounted on this root');
+        return;
+    }
+    // Reset retries for new mount attempts
+    if(_pipelineDomNode !== root) pipelineRetries = 0;
     if(typeof window.__PIPELINE_APP === 'function') {
         try {
-            ReactDOM.createRoot(root).render(React.createElement(window.__PIPELINE_APP));
-            pipelineMounted = true;
-            console.log('[Pipeline] ✅ Mounted successfully');
+            // Unmount old root if it exists on a different DOM node
+            if(_pipelineReactRoot && _pipelineDomNode !== root) {
+                try { _pipelineReactRoot.unmount(); } catch(e) {}
+            }
+            _pipelineReactRoot = ReactDOM.createRoot(root);
+            _pipelineReactRoot.render(React.createElement(window.__PIPELINE_APP));
+            _pipelineDomNode = root;
+            console.log('[Pipeline] ✅ Mounted');
         } catch(err) {
             console.error('[Pipeline] ❌ Mount error:', err);
         }
@@ -1383,7 +1395,7 @@ export function mountReactPipeline() {
         if(pipelineRetries < 50) {
             setTimeout(mountReactPipeline, 300);
         } else {
-            console.error('[Pipeline] ❌ Babel did not compile __PIPELINE_APP after 50 retries (15s)');
+            console.error('[Pipeline] ❌ Babel timeout after 50 retries');
         }
     }
 }
