@@ -65,36 +65,293 @@ export async function renderPlanIst() {
 
 export function renderPlanUploadScreen(el) {
     var h = '';
-    h += '<div class="text-center py-8">';
-    h += '<div class="max-w-lg mx-auto">';
-    h += '<div class="text-6xl mb-4">📋</div>';
-    h += '<h2 class="text-xl font-bold text-gray-800 mb-2">Jahresplan '+planIstYear+' hochladen</h2>';
-    h += '<p class="text-sm text-gray-500 mb-6">Um den Plan/Ist-Vergleich nutzen zu können, lade zuerst deinen Jahresplan als Excel-Datei hoch. Das Portal liest die monatlichen Plan-Werte automatisch aus.</p>';
-    h += '<div class="vit-card p-6 text-left">';
-    h += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Schritt 1: Plan-Datei hochladen</p>';
+    h += '<div class="py-6">';
+    h += '<div class="max-w-2xl mx-auto text-center mb-6">';
+    h += '<div class="text-5xl mb-3">📋</div>';
+    h += '<h2 class="text-xl font-bold text-gray-800 mb-2">Jahresplan '+planIstYear+'</h2>';
+    h += '<p class="text-sm text-gray-500">Erstelle deinen Jahresplan für den Plan/Ist-Vergleich. Wähle eine der drei Optionen:</p>';
+    h += '</div>';
+
+    // 3 Options Grid
+    h += '<div class="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">';
+
+    // Option 1: Planungsassistent (primary)
+    h += '<div class="vit-card p-5 text-center cursor-pointer hover:shadow-lg transition-shadow border-2 border-vit-orange" onclick="showPlanAssistent()">';
+    h += '<div class="text-3xl mb-2">🧙‍♂️</div>';
+    h += '<h3 class="font-bold text-gray-800 text-sm mb-1">Planungsassistent</h3>';
+    h += '<p class="text-[11px] text-gray-500">Schritt für Schritt deinen Jahresplan erstellen. Umsatz, Kosten, Saisonalität – einfach & schnell.</p>';
+    h += '<div class="mt-3 py-1.5 bg-vit-orange text-white rounded-lg text-xs font-semibold">Starten →</div>';
+    h += '</div>';
+
+    // Option 2: Excel-Vorlage
+    h += '<div class="vit-card p-5 text-center cursor-pointer hover:shadow-lg transition-shadow" onclick="downloadPlanVorlage()">';
+    h += '<div class="text-3xl mb-2">📥</div>';
+    h += '<h3 class="font-bold text-gray-800 text-sm mb-1">Excel-Vorlage</h3>';
+    h += '<p class="text-[11px] text-gray-500">Standardisierte Vorlage herunterladen, ausfüllen, und hier wieder hochladen.</p>';
+    h += '<div class="mt-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold">Vorlage laden</div>';
+    h += '</div>';
+
+    // Option 3: Eigene Datei hochladen
+    h += '<div class="vit-card p-5 text-center cursor-pointer hover:shadow-lg transition-shadow" onclick="showPlanUploadForm()">';
+    h += '<div class="text-3xl mb-2">📄</div>';
+    h += '<h3 class="font-bold text-gray-800 text-sm mb-1">Datei hochladen</h3>';
+    h += '<p class="text-[11px] text-gray-500">Eigenen Jahresplan als Excel oder PDF hochladen. KI versucht die Werte zu erkennen.</p>';
+    h += '<div class="mt-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold">Hochladen</div>';
+    h += '</div>';
+
+    h += '</div>';
+
+    // Content area (filled by sub-functions)
+    h += '<div id="planWizardContent" class="max-w-2xl mx-auto"></div>';
+    h += '</div>';
+    el.innerHTML = h;
+}
+
+// ── Planungsassistent ──
+var planAssistentData = {};
+Object.defineProperty(window, 'planAssistentData', {
+    get: function() { return planAssistentData; },
+    set: function(v) { planAssistentData = v; },
+    configurable: true
+});
+window.renderPlanStep = renderPlanStep;
+
+export function showPlanAssistent() {
+    planAssistentData = { step: 1, umsatzJahr: 0, saisonalitaet: 'fahrrad', wePct: 65, pkMonat: 0, rkMonat: 0, sonstigeMonat: 0, monate: {} };
+    renderPlanStep();
+}
+
+function renderPlanStep() {
+    var el = document.getElementById('planWizardContent');
+    if(!el) return;
+    var d = planAssistentData;
+    var h = '';
+
+    if(d.step === 1) {
+        // Step 1: Gesamtumsatz
+        h += '<div class="vit-card p-6">';
+        h += '<div class="flex items-center justify-between mb-4"><span class="text-xs text-gray-400">Schritt 1/4</span><div class="flex-1 mx-3 h-1.5 bg-gray-100 rounded-full"><div class="h-1.5 bg-vit-orange rounded-full" style="width:25%"></div></div></div>';
+        h += '<h3 class="font-bold text-gray-800 mb-1">💰 Geplanter Jahresumsatz</h3>';
+        h += '<p class="text-xs text-gray-500 mb-4">Wie hoch ist dein geplanter Gesamtumsatz für '+planIstYear+'?</p>';
+        h += '<input id="paUmsatzJahr" type="number" value="'+(d.umsatzJahr||'')+'" placeholder="z.B. 1200000" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-lg text-right font-bold focus:border-vit-orange outline-none">';
+        h += '<p class="text-[11px] text-gray-400 mt-1">Brutto-Umsatzerlöse inkl. Räder, Teile, Zubehör, Service</p>';
+        h += '<div class="flex justify-end mt-4"><button onclick="planAssistentNext()" class="px-6 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Weiter →</button></div>';
+        h += '</div>';
+    }
+    else if(d.step === 2) {
+        // Step 2: Saisonalität
+        h += '<div class="vit-card p-6">';
+        h += '<div class="flex items-center justify-between mb-4"><span class="text-xs text-gray-400">Schritt 2/4</span><div class="flex-1 mx-3 h-1.5 bg-gray-100 rounded-full"><div class="h-1.5 bg-vit-orange rounded-full" style="width:50%"></div></div></div>';
+        h += '<h3 class="font-bold text-gray-800 mb-1">📈 Saisonale Verteilung</h3>';
+        h += '<p class="text-xs text-gray-500 mb-4">Wie verteilt sich dein Umsatz über das Jahr?</p>';
+        var profiles = {
+            fahrrad: {label:'🚲 Typisch Fahrrad', desc:'Peak März–August, schwach Dez–Feb', weights:[4,5,9,10,12,13,12,11,9,7,5,3]},
+            gleichmaessig: {label:'📊 Gleichmäßig', desc:'Relativ konstant über alle Monate', weights:[8,8,8,8,9,9,9,9,8,8,8,8]},
+            ebike: {label:'⚡ E-Bike-lastig', desc:'Peak April–Juli, moderate Nebensaison', weights:[3,5,8,12,14,14,12,10,8,6,5,3]},
+            custom: {label:'✏️ Eigene Verteilung', desc:'Monatswerte manuell festlegen', weights:null}
+        };
+        Object.keys(profiles).forEach(function(key) {
+            var p = profiles[key];
+            var sel = d.saisonalitaet === key ? 'border-vit-orange bg-orange-50' : 'border-gray-200 hover:border-gray-300';
+            h += '<div class="p-3 border-2 rounded-lg mb-2 cursor-pointer '+sel+'" onclick="planAssistentData.saisonalitaet=\''+key+'\';renderPlanStep()">';
+            h += '<div class="flex items-center justify-between">';
+            h += '<div><span class="text-sm font-semibold text-gray-800">'+p.label+'</span><span class="text-[11px] text-gray-500 ml-2">'+p.desc+'</span></div>';
+            if(d.saisonalitaet === key) h += '<span class="text-vit-orange">✓</span>';
+            h += '</div>';
+            if(key !== 'custom' && d.saisonalitaet === key && d.umsatzJahr > 0) {
+                var total = p.weights.reduce(function(a,b){return a+b;},0);
+                h += '<div class="grid grid-cols-12 gap-1 mt-2">';
+                var mL = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+                for(var i=0;i<12;i++) {
+                    var val = Math.round(d.umsatzJahr * p.weights[i] / total);
+                    var pct = Math.round(p.weights[i]/total*100);
+                    h += '<div class="text-center"><div class="text-[8px] text-gray-400">'+mL[i]+'</div><div class="bg-vit-orange/20 rounded" style="height:'+Math.max(8,pct*2)+'px"></div><div class="text-[8px] font-medium mt-0.5">'+(val/1000).toFixed(0)+'k</div></div>';
+                }
+                h += '</div>';
+            }
+            h += '</div>';
+        });
+        if(d.saisonalitaet === 'custom') {
+            h += '<div class="grid grid-cols-4 gap-2 mt-2 p-3 bg-gray-50 rounded-lg">';
+            var mN2 = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+            for(var cm=0;cm<12;cm++) {
+                h += '<div><label class="text-[10px] text-gray-500">'+mN2[cm]+'</label><input id="paCustom_'+cm+'" type="number" value="'+((d.monate[cm+1]||{}).umsatz||'')+'" placeholder="Umsatz" class="w-full px-2 py-1 border border-gray-200 rounded text-xs text-right"></div>';
+            }
+            h += '</div>';
+        }
+        h += '<div class="flex justify-between mt-4"><button onclick="planAssistentData.step=1;renderPlanStep()" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">← Zurück</button><button onclick="planAssistentNext()" class="px-6 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Weiter →</button></div>';
+        h += '</div>';
+    }
+    else if(d.step === 3) {
+        // Step 3: Kosten
+        h += '<div class="vit-card p-6">';
+        h += '<div class="flex items-center justify-between mb-4"><span class="text-xs text-gray-400">Schritt 3/4</span><div class="flex-1 mx-3 h-1.5 bg-gray-100 rounded-full"><div class="h-1.5 bg-vit-orange rounded-full" style="width:75%"></div></div></div>';
+        h += '<h3 class="font-bold text-gray-800 mb-1">📦 Kostenstruktur</h3>';
+        h += '<p class="text-xs text-gray-500 mb-4">Gib deine wichtigsten Kostenpositionen an.</p>';
+        h += '<div class="space-y-3">';
+        h += '<div><label class="text-xs font-semibold text-gray-600">Wareneinsatz (% vom Umsatz)</label>';
+        h += '<input id="paWePct" type="number" value="'+(d.wePct||65)+'" min="0" max="100" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-right" placeholder="65">';
+        h += '<p class="text-[10px] text-gray-400 mt-0.5">Branchenüblich Fahrrad: 60–70%</p></div>';
+        h += '<div><label class="text-xs font-semibold text-gray-600">Personalkosten (monatlich, €)</label>';
+        h += '<input id="paPkMonat" type="number" value="'+(d.pkMonat||'')+'" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-right" placeholder="z.B. 12000"></div>';
+        h += '<div><label class="text-xs font-semibold text-gray-600">Raumkosten / Miete (monatlich, €)</label>';
+        h += '<input id="paRkMonat" type="number" value="'+(d.rkMonat||'')+'" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-right" placeholder="z.B. 3500"></div>';
+        h += '<div><label class="text-xs font-semibold text-gray-600">Sonstige Kosten (monatlich, €)</label>';
+        h += '<input id="paSonstige" type="number" value="'+(d.sonstigeMonat||'')+'" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-right" placeholder="z.B. 2000">';
+        h += '<p class="text-[10px] text-gray-400 mt-0.5">Versicherungen, Marketing, IT, Fuhrpark etc.</p></div>';
+        h += '</div>';
+        h += '<div class="flex justify-between mt-4"><button onclick="planAssistentData.step=2;renderPlanStep()" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">← Zurück</button><button onclick="planAssistentNext()" class="px-6 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Vorschau →</button></div>';
+        h += '</div>';
+    }
+    else if(d.step === 4) {
+        // Step 4: Vorschau & Speichern
+        h += '<div class="vit-card p-6">';
+        h += '<div class="flex items-center justify-between mb-4"><span class="text-xs text-gray-400">Schritt 4/4</span><div class="flex-1 mx-3 h-1.5 bg-gray-100 rounded-full"><div class="h-1.5 bg-vit-orange rounded-full" style="width:100%"></div></div></div>';
+        h += '<h3 class="font-bold text-gray-800 mb-1">✅ Dein Jahresplan '+planIstYear+'</h3>';
+        h += '<p class="text-xs text-gray-500 mb-4">Prüfe die Werte und speichere deinen Plan.</p>';
+        
+        var mNames = ['','Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+        var totalU=0, totalWe=0, totalPk=0, totalRk=0;
+        h += '<div class="overflow-x-auto"><table class="w-full text-xs">';
+        h += '<thead><tr class="text-gray-500 border-b"><th class="py-1 text-left">Monat</th><th class="py-1 text-right">Umsatz</th><th class="py-1 text-right">WE</th><th class="py-1 text-right">Rohertrag</th><th class="py-1 text-right">Personal</th><th class="py-1 text-right">Raum</th><th class="py-1 text-right font-bold">Ergebnis</th></tr></thead><tbody>';
+        for(var m2=1;m2<=12;m2++) {
+            var pm = d.monate[m2] || {};
+            var roh = (pm.umsatz||0) - Math.abs(pm.wareneinsatz||0);
+            var erg = roh - Math.abs(pm.personalkosten||0) - Math.abs(pm.raumkosten||0) - Math.abs(pm.sonstige||0);
+            totalU += (pm.umsatz||0); totalWe += Math.abs(pm.wareneinsatz||0); totalPk += Math.abs(pm.personalkosten||0); totalRk += Math.abs(pm.raumkosten||0);
+            var ergClass = erg >= 0 ? 'text-green-600' : 'text-red-500';
+            h += '<tr class="border-b border-gray-50"><td class="py-1.5 font-medium">'+mNames[m2]+'</td>';
+            h += '<td class="py-1.5 text-right">'+(pm.umsatz||0).toLocaleString('de-DE')+'</td>';
+            h += '<td class="py-1.5 text-right text-red-400">'+Math.abs(pm.wareneinsatz||0).toLocaleString('de-DE')+'</td>';
+            h += '<td class="py-1.5 text-right">'+roh.toLocaleString('de-DE')+'</td>';
+            h += '<td class="py-1.5 text-right">'+Math.abs(pm.personalkosten||0).toLocaleString('de-DE')+'</td>';
+            h += '<td class="py-1.5 text-right">'+Math.abs(pm.raumkosten||0).toLocaleString('de-DE')+'</td>';
+            h += '<td class="py-1.5 text-right font-bold '+ergClass+'">'+Math.round(erg).toLocaleString('de-DE')+'</td></tr>';
+        }
+        var totalRoh = totalU - totalWe;
+        var totalErg = totalRoh - totalPk - totalRk;
+        h += '<tr class="font-bold border-t-2 border-gray-300"><td class="py-2">GESAMT</td><td class="py-2 text-right">'+totalU.toLocaleString('de-DE')+'</td><td class="py-2 text-right text-red-400">'+totalWe.toLocaleString('de-DE')+'</td><td class="py-2 text-right">'+totalRoh.toLocaleString('de-DE')+'</td><td class="py-2 text-right">'+totalPk.toLocaleString('de-DE')+'</td><td class="py-2 text-right">'+totalRk.toLocaleString('de-DE')+'</td><td class="py-2 text-right '+(totalErg>=0?'text-green-600':'text-red-500')+'">'+Math.round(totalErg).toLocaleString('de-DE')+'</td></tr>';
+        h += '</tbody></table></div>';
+
+        // KPIs
+        var rohPct = totalU ? Math.round((totalRoh/totalU)*100) : 0;
+        var pkPct = totalU ? Math.round((totalPk/totalU)*100) : 0;
+        h += '<div class="grid grid-cols-3 gap-3 mt-4">';
+        h += '<div class="bg-blue-50 rounded-lg p-3 text-center"><p class="text-[10px] text-blue-500">Rohertragsmarge</p><p class="text-lg font-bold text-blue-700">'+rohPct+'%</p></div>';
+        h += '<div class="bg-purple-50 rounded-lg p-3 text-center"><p class="text-[10px] text-purple-500">Personalkostenquote</p><p class="text-lg font-bold text-purple-700">'+pkPct+'%</p></div>';
+        h += '<div class="'+(totalErg>=0?'bg-green-50':'bg-red-50')+' rounded-lg p-3 text-center"><p class="text-[10px] '+(totalErg>=0?'text-green-500':'text-red-500')+'">Plan-Ergebnis</p><p class="text-lg font-bold '+(totalErg>=0?'text-green-700':'text-red-600')+'">'+Math.round(totalErg).toLocaleString('de-DE')+' €</p></div>';
+        h += '</div>';
+
+        h += '<div class="flex justify-between mt-5"><button onclick="planAssistentData.step=3;renderPlanStep()" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">← Zurück</button><button onclick="savePlanAssistent()" class="px-8 py-3 bg-green-600 text-white rounded-lg text-sm font-bold hover:opacity-90">✅ Plan für '+planIstYear+' speichern</button></div>';
+        h += '</div>';
+    }
+    el.innerHTML = h;
+}
+
+export function planAssistentNext() {
+    var d = planAssistentData;
+    if(d.step === 1) {
+        d.umsatzJahr = parseFloat((document.getElementById('paUmsatzJahr')||{}).value) || 0;
+        if(d.umsatzJahr < 1000) { alert('Bitte einen Jahresumsatz eingeben.'); return; }
+        d.step = 2;
+    }
+    else if(d.step === 2) {
+        // Calculate monthly distribution
+        var profiles = {
+            fahrrad: [4,5,9,10,12,13,12,11,9,7,5,3],
+            gleichmaessig: [8,8,8,8,9,9,9,9,8,8,8,8],
+            ebike: [3,5,8,12,14,14,12,10,8,6,5,3]
+        };
+        if(d.saisonalitaet === 'custom') {
+            for(var cm=0;cm<12;cm++) {
+                var cv = parseFloat((document.getElementById('paCustom_'+cm)||{}).value) || 0;
+                d.monate[cm+1] = d.monate[cm+1] || {};
+                d.monate[cm+1].umsatz = cv;
+            }
+        } else {
+            var weights = profiles[d.saisonalitaet] || profiles.fahrrad;
+            var wTotal = weights.reduce(function(a,b){return a+b;},0);
+            for(var wm=0;wm<12;wm++) {
+                d.monate[wm+1] = d.monate[wm+1] || {};
+                d.monate[wm+1].umsatz = Math.round(d.umsatzJahr * weights[wm] / wTotal);
+            }
+        }
+        d.step = 3;
+    }
+    else if(d.step === 3) {
+        d.wePct = parseFloat((document.getElementById('paWePct')||{}).value) || 65;
+        d.pkMonat = parseFloat((document.getElementById('paPkMonat')||{}).value) || 0;
+        d.rkMonat = parseFloat((document.getElementById('paRkMonat')||{}).value) || 0;
+        d.sonstigeMonat = parseFloat((document.getElementById('paSonstige')||{}).value) || 0;
+        // Apply costs to all months
+        for(var km=1;km<=12;km++) {
+            if(!d.monate[km]) d.monate[km] = {};
+            var mu = d.monate[km].umsatz || 0;
+            d.monate[km].wareneinsatz = -Math.round(mu * d.wePct / 100);
+            d.monate[km].personalkosten = -d.pkMonat;
+            d.monate[km].raumkosten = -d.rkMonat;
+            d.monate[km].sonstige = -d.sonstigeMonat;
+        }
+        d.step = 4;
+    }
+    renderPlanStep();
+}
+
+export async function savePlanAssistent() {
+    var planMonths = {};
+    for(var sm=1;sm<=12;sm++) {
+        var md = planAssistentData.monate[sm] || {};
+        planMonths[sm] = {
+            monat: sm,
+            umsatz: md.umsatz || 0,
+            wareneinsatz: md.wareneinsatz || 0,
+            personalkosten: md.personalkosten || 0,
+            raumkosten: md.raumkosten || 0,
+            rohertrag: (md.umsatz||0) + (md.wareneinsatz||0),
+            ergebnis: (md.umsatz||0) + (md.wareneinsatz||0) + (md.personalkosten||0) + (md.raumkosten||0) + (md.sonstige||0)
+        };
+    }
+    window._parsedPlanMonths = planMonths;
+    await saveParsedPlan();
+}
+
+// ── Excel-Vorlage Download ──
+export function downloadPlanVorlage() {
+    var mNamen = ['Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+    var rows = [
+        ['vit:bikes Jahresplan ' + planIstYear],
+        [],
+        ['Position', 'Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez','GESAMT'],
+        ['Umsatzerlöse', 0,0,0,0,0,0,0,0,0,0,0,0, {t:'n',f:'SUM(B4:M4)'}],
+        ['Wareneinsatz', 0,0,0,0,0,0,0,0,0,0,0,0, {t:'n',f:'SUM(B5:M5)'}],
+        ['Rohertrag', {t:'n',f:'B4+B5'},{t:'n',f:'C4+C5'},{t:'n',f:'D4+D5'},{t:'n',f:'E4+E5'},{t:'n',f:'F4+F5'},{t:'n',f:'G4+G5'},{t:'n',f:'H4+H5'},{t:'n',f:'I4+I5'},{t:'n',f:'J4+J5'},{t:'n',f:'K4+K5'},{t:'n',f:'L4+L5'},{t:'n',f:'M4+M5'},{t:'n',f:'SUM(B6:M6)'}],
+        ['Personalkosten', 0,0,0,0,0,0,0,0,0,0,0,0, {t:'n',f:'SUM(B7:M7)'}],
+        ['Raumkosten', 0,0,0,0,0,0,0,0,0,0,0,0, {t:'n',f:'SUM(B8:M8)'}],
+        ['Sonstige Kosten', 0,0,0,0,0,0,0,0,0,0,0,0, {t:'n',f:'SUM(B9:M9)'}],
+        ['Ergebnis', {t:'n',f:'B6+B7+B8+B9'},{t:'n',f:'C6+C7+C8+C9'},{t:'n',f:'D6+D7+D8+D9'},{t:'n',f:'E6+E7+E8+E9'},{t:'n',f:'F6+F7+F8+F9'},{t:'n',f:'G6+G7+G8+G9'},{t:'n',f:'H6+H7+H8+H9'},{t:'n',f:'I6+I7+I8+I9'},{t:'n',f:'J6+J7+J8+J9'},{t:'n',f:'K6+K7+K8+K9'},{t:'n',f:'L6+L7+L8+L9'},{t:'n',f:'M6+M7+M8+M9'},{t:'n',f:'SUM(B10:M10)'}]
+    ];
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{wch:18},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:14}];
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Jahresplan');
+    XLSX.writeFile(wb, 'vit-bikes_Jahresplan_'+planIstYear+'.xlsx');
+}
+
+// ── Upload Form (existing functionality) ──
+export function showPlanUploadForm() {
+    var el = document.getElementById('planWizardContent');
+    if(!el) return;
+    var h = '<div class="vit-card p-6">';
+    h += '<h3 class="font-bold text-gray-800 mb-1">📄 Plan-Datei hochladen</h3>';
+    h += '<p class="text-xs text-gray-500 mb-4">Excel oder PDF mit Monatszeilen und Spalten für Umsatz, Wareneinsatz, etc.</p>';
     h += '<div class="p-4 border-2 border-dashed border-vit-orange/40 rounded-lg bg-orange-50/50 mb-4">';
-    h += '<p class="text-xs text-gray-500 mb-2">Erwartetes Format: Excel oder PDF mit Monatszeilen und Spalten für Umsatz, Wareneinsatz, Personalkosten, etc.</p>';
     h += '<input type="file" id="planFileInput" accept=".xlsx,.xls,.csv,.pdf" class="text-xs" onchange="document.getElementById(\'planParseBtn\').disabled=!this.files.length">';
     h += '</div>';
     h += '<button id="planParseBtn" onclick="parsePlanFile()" disabled class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed mb-3">📊 Plan auslesen & speichern</button>';
     h += '<div id="planParseStatus" class="hidden"></div>';
     h += '<div id="planParseResult" class="hidden"></div>';
+    h += '<p class="text-[10px] text-gray-400 mt-3 text-center">Datei nicht erkannt? Nutze stattdessen den <a href="#" onclick="showPlanAssistent();return false" class="text-vit-orange underline">Planungsassistenten</a> oder die <a href="#" onclick="downloadPlanVorlage();return false" class="text-vit-orange underline">Excel-Vorlage</a>.</p>';
     h += '</div>';
-    // Manual entry option
-    h += '<details class="vit-card p-6 text-left mt-4"><summary class="text-xs font-semibold text-gray-500 cursor-pointer">Alternativ: Plan manuell eingeben</summary>';
-    h += '<div class="mt-4 space-y-2">';
-    var mNamen = ['','Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-    for(var m=1;m<=12;m++) {
-        h += '<div class="flex items-center space-x-2"><label class="text-xs text-gray-600 w-24 flex-shrink-0">'+mNamen[m]+'</label>';
-        h += '<input id="planM_umsatz_'+m+'" type="number" placeholder="Umsatz" class="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs text-right">';
-        h += '<input id="planM_we_'+m+'" type="number" placeholder="Wareneins." class="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs text-right">';
-        h += '<input id="planM_pk_'+m+'" type="number" placeholder="Personal" class="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs text-right">';
-        h += '<input id="planM_rk_'+m+'" type="number" placeholder="Raum" class="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs text-right">';
-        h += '</div>';
-    }
-    h += '<button onclick="saveManualPlan()" class="w-full mt-3 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Plan speichern</button>';
-    h += '</div></details>';
-    h += '</div></div>';
     el.innerHTML = h;
 }
 
@@ -1023,6 +1280,6 @@ window.addEventListener('vit:modules-ready', function() {
 
 
 // Strangler Fig
-const _exports = {renderPlanIst,renderPlanUploadScreen,parsePlanFile,callFinanceKi,applyPlanKiResult,saveParsedPlan,saveManualPlan,renderPlanVergleich,buildPlanIstTable,showMonthDetail,editSelectedBwa,deleteBwa,loadVerkaufTracking,renderVerkaufFromDb,openVerkaufEntryModal,closeVtModal,loadAuswertung,renderAuswertung,saveVtEntry,getLeadData,getPerformanceColor,getPerformanceDot,renderLeadDashboard};
+const _exports = {renderPlanIst,renderPlanUploadScreen,parsePlanFile,callFinanceKi,applyPlanKiResult,saveParsedPlan,saveManualPlan,renderPlanVergleich,buildPlanIstTable,showMonthDetail,editSelectedBwa,deleteBwa,loadVerkaufTracking,renderVerkaufFromDb,openVerkaufEntryModal,closeVtModal,loadAuswertung,renderAuswertung,saveVtEntry,getLeadData,getPerformanceColor,getPerformanceDot,renderLeadDashboard,showPlanAssistent,planAssistentNext,savePlanAssistent,downloadPlanVorlage,showPlanUploadForm};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[plan-ist.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
