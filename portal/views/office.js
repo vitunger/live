@@ -316,8 +316,18 @@
             }).select().single();
             if(r.error) {
                 if(r.error.code === '23505') {
+                    // Duplicate: stale checkin exists, clean up old ones and retry
+                    console.log('[Office] Stale checkin detected, cleaning up...');
+                    await sb.from('office_checkins').delete()
+                        .eq('user_id', sbUser.id).is('checked_out_at', null);
+                    // Retry insert
+                    var r2=await sb.from('office_checkins').insert({
+                        user_id:sbUser.id, desk_nr:deskNr||null, status:'office',
+                        checked_in_at:new Date().toISOString(), source:'manual'
+                    }).select().single();
+                    if(r2.error) throw r2.error;
+                    notify('\u2705 Eingecheckt'+(deskNr?' auf Platz '+deskNr:''),'success');
                     await loadTodayCheckins(); renderDashboard();
-                    notify('\u2705 Bereits eingecheckt','info');
                     return;
                 }
                 throw r.error;
