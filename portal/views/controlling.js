@@ -1332,14 +1332,14 @@ export async function renderBenchmarks() {
     
     try {
         // Latest BWA for this location
-        var ownResp = await _sb().from('bwa_daten').select('monat,jahr,umsatzerloese,wareneinsatz,rohertrag,rohertrag_pct,personalkosten,personalkosten_pct,raumkosten,ergebnis_vor_steuern,betriebsergebnis').eq('standort_id', stdId).order('jahr',{ascending:false}).order('monat',{ascending:false}).limit(1);
+        var ownResp = await _sb().from('bwa_daten').select('monat,jahr,umsatzerloese,wareneinsatz,rohertrag,personalkosten,raumkosten,ergebnis_vor_steuern,betriebsergebnis').eq('standort_id', stdId).order('jahr',{ascending:false}).order('monat',{ascending:false}).limit(1);
         console.log('[Benchmarks] stdId:', stdId, 'ownResp:', ownResp.error ? ownResp.error.message : (ownResp.data ? ownResp.data.length + ' rows' : 'no data'));
         if(ownResp.error) { el.innerHTML = '<p class="text-center text-red-400 py-8">DB-Fehler: '+_escH(ownResp.error.message)+'</p>'; return; }
         var own = (ownResp.data && ownResp.data[0]) ? ownResp.data[0] : null;
         if(!own) { el.innerHTML = '<p class="text-center text-gray-400 py-8">Noch keine BWA-Daten vorhanden. Lade eine BWA hoch um den Benchmark zu sehen.</p>'; return; }
         
         // All BWAs for same month/year (Netzwerk)
-        var netzResp = await _sb().from('bwa_daten').select('standort_id,umsatzerloese,wareneinsatz,rohertrag,rohertrag_pct,personalkosten,personalkosten_pct,raumkosten,ergebnis_vor_steuern,betriebsergebnis').eq('monat', own.monat).eq('jahr', own.jahr);
+        var netzResp = await _sb().from('bwa_daten').select('standort_id,umsatzerloese,wareneinsatz,rohertrag,personalkosten,raumkosten,ergebnis_vor_steuern,betriebsergebnis').eq('monat', own.monat).eq('jahr', own.jahr);
         var netz = netzResp.data || [];
         
         var mLabels = ['','Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
@@ -1353,8 +1353,8 @@ export async function renderBenchmarks() {
         }
         
         var ownU = parseFloat(own.umsatzerloese)||0;
-        var ownRohPct = parseFloat(own.rohertrag_pct) || (ownU ? ((parseFloat(own.rohertrag)||0)/ownU*100) : 0);
-        var ownPkPct = parseFloat(own.personalkosten_pct) || (ownU ? (Math.abs(parseFloat(own.personalkosten)||0)/ownU*100) : 0);
+        var ownRohPct = (ownU ? ((parseFloat(own.rohertrag)||0)/ownU*100) : 0);
+        var ownPkPct = (ownU ? (Math.abs(parseFloat(own.personalkosten)||0)/ownU*100) : 0);
         var ownRkPct = ownU ? (Math.abs(parseFloat(own.raumkosten)||0)/ownU*100) : 0;
         var ownErgPct = ownU ? ((parseFloat(own.ergebnis_vor_steuern)||parseFloat(own.betriebsergebnis)||0)/ownU*100) : 0;
         
@@ -1362,14 +1362,14 @@ export async function renderBenchmarks() {
         var netzU = netzAvg('umsatzerloese');
         var netzRoh = []; netz.forEach(function(b) {
             var u = parseFloat(b.umsatzerloese)||0;
-            var r = parseFloat(b.rohertrag_pct) || (u ? ((parseFloat(b.rohertrag)||0)/u*100) : 0);
+            var r = (u ? ((parseFloat(b.rohertrag)||0)/u*100) : 0);
             netzRoh.push(r);
         });
         var netzRohPct = netzRoh.length ? netzRoh.reduce(function(a,b){return a+b;},0)/netzRoh.length : 0;
         
         var netzPk = []; netz.forEach(function(b) {
             var u = parseFloat(b.umsatzerloese)||0;
-            var p = parseFloat(b.personalkosten_pct) || (u ? (Math.abs(parseFloat(b.personalkosten)||0)/u*100) : 0);
+            var p = (u ? (Math.abs(parseFloat(b.personalkosten)||0)/u*100) : 0);
             netzPk.push(p);
         });
         var netzPkPct = netzPk.length ? netzPk.reduce(function(a,b){return a+b;},0)/netzPk.length : 0;
