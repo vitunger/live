@@ -1953,6 +1953,7 @@ export function showView(viewName) {
         viewEl.style.display = 'block';
         console.log('SUCCESS: Showed', viewId, '- offsetHeight:', viewEl.offsetHeight);
         if(viewName === 'dashboards') initDashboardTabs();
+        if(viewName === 'aktenschrank' && window.loadAktenschrank) window.loadAktenschrank();
         if(viewName === 'hqFeatureFlags') { showView('entwicklung'); setTimeout(function(){showEntwicklungTab('flags')},50); return; }
         if(viewName === 'hqBackups') { showView('entwicklung'); setTimeout(function(){showEntwicklungTab('system')},50); return; }
         
