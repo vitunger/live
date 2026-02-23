@@ -1932,7 +1932,10 @@ export function showView(viewName) {
     console.log('[showView] moduleKey:', moduleKey, 'status:', moduleKey ? _modulStatus[moduleKey] : 'n/a', 'allStatus:', JSON.stringify(_modulStatus));
     if(moduleKey) {
         var mStatus = _modulStatus[moduleKey];
-        if(!mStatus || mStatus === 'in_bearbeitung' || mStatus === 'deaktiviert') {
+        // Only block if status is explicitly set to blocked values
+        // Don't block when status map is empty (not loaded yet)
+        var statusLoaded = Object.keys(_modulStatus).length > 0;
+        if(statusLoaded && (!mStatus || mStatus === 'in_bearbeitung' || mStatus === 'deaktiviert')) {
             if(typeof window._showToast === 'function') window._showToast('Dieses Modul ist noch nicht verf\u00fcgbar (' + (mStatus === 'in_bearbeitung' ? 'Kommt bald' : mStatus === 'deaktiviert' ? 'Deaktiviert' : 'Nicht konfiguriert') + ')', 'info');
             else alert('Dieses Modul ist noch nicht verf\u00fcgbar');
             return;
