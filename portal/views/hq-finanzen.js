@@ -20,6 +20,7 @@ var hqFinPlanMap = {};   // standort_id → plan data
 var hqFinSortCol = 'name';
 var hqFinSortAsc = true;
 var hqFinLoaded = false;
+var _hqFinMonatLabels = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
 
 // ── Helpers ──
 function hqFinFmt(n) {
@@ -182,21 +183,27 @@ function renderHqFinKpis() {
     var totalU = hqFinStandorte.reduce(function(a, s) { return a + s.umsatzIst; }, 0);
     var totalP = hqFinStandorte.reduce(function(a, s) { return a + s.umsatzPlan; }, 0);
     var avgRoh = active.length ? (active.reduce(function(a, s) { return a + s.rohertrag; }, 0) / active.length).toFixed(1) : 0;
-    // BWA quote: only relevant if deadline has passed
-    var nowKpi = new Date();
-    var bwaKpiMonth = getBwaMonthHqFin(nowKpi);
-    var bwaDeadline = new Date(bwaKpiMonth.y, bwaKpiMonth.m + 1, 10);
-    var bwaOverdue = nowKpi > bwaDeadline;
-    var bwaQuote = (hqFinStandorte.length && bwaOverdue) ? Math.round(hqFinStandorte.filter(function(s) { return s.bwaEingereicht; }).length / hqFinStandorte.length * 100) : null;
-    var ohnePlan = hqFinStandorte.filter(function(s) { return !s.planVorhanden; }).length;
     var planAbw = totalP > 0 ? Math.round((totalU / totalP - 1) * 100) : null;
+
+    // BWA count: how many standorte have at least 1 BWA this year
+    var mitBwa = hqFinStandorte.filter(function(s) { return s.bwaMonate > 0; }).length;
+    // Last completed month name
+    var lastMonth = new Date().getMonth(); // 0=Jan means last completed = Dec of prev year
+    // Actually: current month is Feb (index 1), last completed = Jan (index 0)
+    var currentMonth0 = new Date().getMonth(); // 0-based, Feb=1
+    var lastCompletedMonth = currentMonth0; // Jan=0 when we're in Feb
+    if (lastCompletedMonth === 0) lastCompletedMonth = 0; // Jan
+    var monatName = _hqFinMonatLabels[lastCompletedMonth] || '?';
+
+    // Standorte with data (BWA or WaWi)
+    var mitDaten = hqFinStandorte.filter(function(s) { return s.datenquelle !== 'keine'; }).length;
 
     el.innerHTML = ''
         + '<div class="vit-card p-5">'
         + '<p class="text-xs text-gray-400 uppercase tracking-wide">Netzwerk-Umsatz YTD</p>'
         + '<p class="text-2xl font-bold text-gray-800">' + hqFinFmtE(totalU) + '</p>'
         + '<p class="text-xs ' + (planAbw === null ? 'text-gray-400' : planAbw >= 0 ? 'text-green-600' : 'text-red-500') + '">'
-        + (planAbw === null ? 'Kein Plan hinterlegt' : 'Plan: ' + hqFinFmtE(totalP) + ' (' + (planAbw >= 0 ? '+' : '') + planAbw + '%)')
+        + (planAbw === null ? mitDaten + ' von ' + hqFinStandorte.length + ' mit Daten' : 'Plan: ' + hqFinFmtE(totalP) + ' (' + (planAbw >= 0 ? '+' : '') + planAbw + '%)')
         + '</p></div>'
 
         + '<div class="vit-card p-5">'
@@ -205,18 +212,17 @@ function renderHqFinKpis() {
         + '<p class="text-xs text-gray-400">Ziel: ≥ 35%</p></div>'
 
         + '<div class="vit-card p-5">'
-        + '<p class="text-xs text-gray-400 uppercase tracking-wide">BWA-Quote aktuell</p>'
-        + (bwaQuote !== null
-            ? '<p class="text-2xl font-bold ' + (bwaQuote >= 80 ? 'text-green-600' : bwaQuote >= 50 ? 'text-yellow-600' : 'text-red-500') + '">' + bwaQuote + '%</p>'
-              + '<p class="text-xs text-gray-400">' + hqFinStandorte.filter(function(s) { return s.bwaEingereicht; }).length + ' von ' + hqFinStandorte.length + ' eingereicht</p>'
-            : '<p class="text-2xl font-bold text-gray-300">—</p>'
-              + '<p class="text-xs text-gray-400">Noch nicht fällig</p>'
-        ) + '</div>'
+        + '<p class="text-xs text-gray-400 uppercase tracking-wide">BWAs eingereicht</p>'
+        + '<p class="text-2xl font-bold ' + (mitBwa >= hqFinStandorte.length * 0.8 ? 'text-green-600' : mitBwa >= hqFinStandorte.length * 0.4 ? 'text-yellow-600' : mitBwa > 0 ? 'text-red-500' : 'text-gray-300') + '">' + mitBwa + ' / ' + hqFinStandorte.length + '</p>'
+        + '<p class="text-xs text-gray-400">für ' + monatName + ' ' + new Date().getFullYear() + '</p></div>'
 
         + '<div class="vit-card p-5 cursor-pointer hover:ring-2 hover:ring-vit-orange/30" onclick="showHqFinTab(\'upload\')">'
-        + '<p class="text-xs text-gray-400 uppercase tracking-wide">Fehlende Pläne</p>'
-        + '<p class="text-2xl font-bold ' + (ohnePlan === 0 ? 'text-green-600' : ohnePlan <= 5 ? 'text-yellow-600' : 'text-red-500') + '">' + ohnePlan + '</p>'
-        + '<p class="text-xs text-gray-400">von ' + hqFinStandorte.length + ' Standorten</p></div>';
+        + '<p class="text-xs text-gray-400 uppercase tracking-wide">Datenquellen</p>'
+        + '<p class="text-sm font-bold text-gray-800 mt-1">'
+        + '<span class="text-blue-600">' + hqFinStandorte.filter(function(s){return s.datenquelle==='bwa';}).length + ' BWA</span>'
+        + ' · <span class="text-green-600">' + hqFinStandorte.filter(function(s){return s.datenquelle==='wawi';}).length + ' WaWi</span>'
+        + ' · <span class="text-gray-400">' + hqFinStandorte.filter(function(s){return s.datenquelle==='keine';}).length + ' keine</span></p>'
+        + '<p class="text-xs text-gray-400">BWA hat Vorrang vor WaWi</p></div>';
 }
 
 // === TAB SYSTEM ===
@@ -670,7 +676,6 @@ export function renderMktLeadChart() {
 }
 
 // === BWA POPUP (per Standort) ===
-var _hqFinMonatLabels = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
 
 export function hqFinShowBwaPopup(standortId) {
     var s = hqFinStandorte.find(function(x) { return x.id === standortId; });
