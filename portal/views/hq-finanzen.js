@@ -862,171 +862,105 @@ export function hqFinOpenPlanUpload(standortId) {
     if (!s) return;
     var year = new Date().getFullYear();
     
-    var h = '<div style="position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;" onclick="if(event.target===this)this.remove()" id="hqFinPlanUploadModal">';
-    h += '<div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4" onclick="event.stopPropagation()">';
+    // Override profile for plan-ist.js functions
+    var origStdId = _sbProfile() ? _sbProfile().standort_id : null;
+    if (_sbProfile()) _sbProfile().standort_id = standortId;
+    window.planIstYear = year;
+    
+    // Build modal with the EXACT same DOM elements that parsePlanFile() expects
+    var h = '<div style="position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;overflow-y:auto;" onclick="if(event.target===this){this.remove();}" id="hqFinPlanUploadModal">';
+    h += '<div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg mx-4 my-8" onclick="event.stopPropagation()">';
     h += '<div class="flex items-center justify-between mb-4">';
     h += '<h3 class="text-lg font-bold text-gray-800">📋 Jahresplan hochladen</h3>';
     h += '<button onclick="document.getElementById(\'hqFinPlanUploadModal\').remove()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button></div>';
     
-    h += '<p class="text-sm text-gray-500 mb-4">Plan-Datei für <strong>' + _escH(s.name) + '</strong> hochladen oder manuell eingeben</p>';
+    h += '<div class="mb-3 p-3 bg-blue-50 rounded-lg flex items-center gap-2">';
+    h += '<span class="text-sm">📍</span><span class="text-sm font-semibold text-blue-700">' + _escH(s.name) + ' · ' + year + '</span></div>';
     
-    h += '<div class="mb-3"><label class="text-xs font-semibold text-gray-500 block mb-1">Standort</label>';
-    h += '<div class="bg-gray-100 rounded-lg px-3 py-2 text-sm font-semibold text-gray-700">' + _escH(s.name) + '</div></div>';
+    // Same structure as renderPlanUploadScreen
+    h += '<div class="mb-4">';
+    h += '<p class="text-xs text-gray-500 mb-3">Excel oder PDF mit Monatszeilen und Spalten für Umsatz, Wareneinsatz, Personalkosten, etc.</p>';
+    h += '<div class="p-4 border-2 border-dashed border-vit-orange/40 rounded-lg bg-orange-50/50 mb-4">';
+    h += '<input type="file" id="planFileInput" accept=".xlsx,.xls,.csv,.pdf" class="text-xs" onchange="document.getElementById(\'planParseBtn\').disabled=!this.files.length">';
+    h += '</div>';
+    h += '<button id="planParseBtn" onclick="parsePlanFile()" disabled class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed mb-3">📊 Plan auslesen</button>';
+    h += '<div id="planParseStatus" class="hidden"></div>';
+    h += '<div id="planParseResult" class="hidden"></div>';
+    h += '</div>';
     
-    h += '<div class="mb-3"><label class="text-xs font-semibold text-gray-500 block mb-1">Jahr</label>';
-    h += '<select id="hqFinPlanJahrModal" class="w-full border rounded-lg px-3 py-2 text-sm">';
-    h += '<option value="' + year + '">' + year + '</option>';
-    h += '<option value="' + (year - 1) + '">' + (year - 1) + '</option></select></div>';
-    
-    h += '<div class="mb-4"><label class="text-xs font-semibold text-gray-500 block mb-1">Excel-Datei (.xlsx/.xls/.csv) mit Monats-Planwerten</label>';
-    h += '<input type="file" id="hqFinPlanFileModal" accept=".xlsx,.xls,.csv" class="w-full text-sm border rounded-lg p-2"></div>';
-    
-    h += '<button onclick="hqFinParsePlanFromModal(\'' + standortId + '\')" class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition">';
-    h += '📋 Plan auslesen & speichern</button>';
-    
-    h += '<div id="hqFinPlanModalStatus" class="mt-2"></div>';
     h += '</div></div>';
     
+    // Remove any existing planFileInput to avoid ID conflicts
+    var existingInput = document.getElementById('planFileInput');
+    if (existingInput && existingInput.closest('#ctrlTabPlanist')) {
+        existingInput.id = 'planFileInput_orig';
+    }
+    var existingStatus = document.getElementById('planParseStatus');
+    if (existingStatus && existingStatus.closest('#ctrlTabPlanist')) {
+        existingStatus.id = 'planParseStatus_orig';
+    }
+    var existingResult = document.getElementById('planParseResult');
+    if (existingResult && existingResult.closest('#ctrlTabPlanist')) {
+        existingResult.id = 'planParseResult_orig';
+    }
+    
     document.body.insertAdjacentHTML('beforeend', h);
+    
+    // Intercept saveParsedPlan to use correct standort_id and refresh HQ view
+    var origSaveParsedPlan = window.saveParsedPlan;
+    window.saveParsedPlan = async function() {
+        var planMonths = window._parsedPlanMonths;
+        if (!planMonths) return;
+        try {
+            var payload = {
+                standort_id: standortId,
+                jahr: year,
+                plan_daten: planMonths,
+                updated_at: new Date().toISOString()
+            };
+            var resp = await _sb().from('jahresplaene').upsert(payload, { onConflict: 'standort_id,jahr' }).select();
+            if (resp.error) throw resp.error;
+            
+            var count = Object.keys(planMonths).length;
+            alert('✅ Jahresplan ' + year + ' für ' + s.name + ' gespeichert! (' + count + ' Monate)');
+            
+            // Close modal
+            var modal = document.getElementById('hqFinPlanUploadModal');
+            if (modal) modal.remove();
+            
+            // Restore
+            window.saveParsedPlan = origSaveParsedPlan;
+            if (_sbProfile()) _sbProfile().standort_id = origStdId;
+            _hqFinRestorePlanIstIds();
+            
+            // Refresh HQ view
+            await loadHqFinData();
+            renderHqFinKpis();
+            renderHqFinUebersicht();
+        } catch(err) {
+            alert('Fehler: ' + (err.message || err));
+        }
+    };
+    
+    // Cleanup when modal is removed
+    var observer = new MutationObserver(function(mutations) {
+        if (!document.getElementById('hqFinPlanUploadModal')) {
+            window.saveParsedPlan = origSaveParsedPlan;
+            if (_sbProfile()) _sbProfile().standort_id = origStdId;
+            _hqFinRestorePlanIstIds();
+            observer.disconnect();
+        }
+    });
+    observer.observe(document.body, { childList: true });
 }
 
-// Parse plan from the modal - uses existing parsePlanFile infrastructure
-export async function hqFinParsePlanFromModal(standortId) {
-    var jahrSelect = document.getElementById('hqFinPlanJahrModal');
-    var fileInput = document.getElementById('hqFinPlanFileModal');
-    var statusEl = document.getElementById('hqFinPlanModalStatus');
-    
-    var jahr = parseInt(jahrSelect.value);
-    var s = hqFinStandorte.find(function(x) { return x.id === standortId; });
-    var stdName = s ? s.name : 'Standort';
-    
-    if (!fileInput || !fileInput.files || !fileInput.files[0]) {
-        if (statusEl) statusEl.innerHTML = '<p class="text-sm text-red-500 mt-2">Bitte eine Plan-Datei auswählen.</p>';
-        return;
-    }
-    
-    if (statusEl) statusEl.innerHTML = '<div class="flex items-center gap-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">Plan wird analysiert...</span></div>';
-    
-    // Override profile standort_id temporarily
-    var origStdId = _sbProfile() ? _sbProfile().standort_id : null;
-    if (_sbProfile()) _sbProfile().standort_id = standortId;
-    window.planIstYear = jahr;
-    
-    try {
-        // Create the DOM elements that parsePlanFile expects
-        var container = document.createElement('div');
-        container.style.display = 'none';
-        container.innerHTML = '<input type="file" id="planFileInput"><div id="planParseStatus"></div><div id="planParseResult" class="hidden"></div>';
-        document.body.appendChild(container);
-        
-        // Copy file to the planFileInput
-        var tempInput = container.querySelector('#planFileInput');
-        var dt = new DataTransfer();
-        for (var i = 0; i < fileInput.files.length; i++) dt.items.add(fileInput.files[i]);
-        tempInput.files = dt.files;
-        
-        // Call parsePlanFile - it's callback-based, so we need to poll for results
-        if (typeof window.parsePlanFile === 'function') {
-            window.parsePlanFile();
-            
-            // Poll for _parsedPlanMonths (set by applyPlanKiResult or the parser callback)
-            var origParsed = window._parsedPlanMonths;
-            window._parsedPlanMonths = null;
-            
-            var maxWait = 60000; // 60s timeout for KI analysis
-            var waited = 0;
-            var interval = 500;
-            
-            await new Promise(function(resolve) {
-                var timer = setInterval(function() {
-                    waited += interval;
-                    
-                    // Check parse status from the hidden elements
-                    var parseStatus = container.querySelector('#planParseStatus');
-                    var parseResult = container.querySelector('#planParseResult');
-                    var statusText = parseStatus ? parseStatus.textContent : '';
-                    
-                    // Update visible status
-                    if (statusText && statusEl) {
-                        if (statusText.indexOf('KI') >= 0) {
-                            statusEl.innerHTML = '<div class="flex items-center gap-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">🤖 ' + statusText + '</span></div>';
-                        }
-                    }
-                    
-                    // Check if parsed
-                    if (window._parsedPlanMonths) {
-                        clearInterval(timer);
-                        resolve();
-                        return;
-                    }
-                    
-                    // Check for error
-                    if (statusText.indexOf('❌') >= 0 || statusText.indexOf('Fehler') >= 0) {
-                        clearInterval(timer);
-                        resolve();
-                        return;
-                    }
-                    
-                    // Check for success (plan preview visible)
-                    if (parseResult && !parseResult.classList.contains('hidden') && parseResult.innerHTML.indexOf('saveParsedPlan') >= 0) {
-                        clearInterval(timer);
-                        resolve();
-                        return;
-                    }
-                    
-                    if (waited >= maxWait) {
-                        clearInterval(timer);
-                        resolve();
-                    }
-                }, interval);
-            });
-            
-            // Check result
-            if (window._parsedPlanMonths && Object.keys(window._parsedPlanMonths).length > 0) {
-                // Auto-save the parsed plan (same as saveParsedPlan but for specific standort)
-                var planPayload = {
-                    standort_id: standortId,
-                    jahr: jahr,
-                    plan_daten: window._parsedPlanMonths,
-                    updated_at: new Date().toISOString()
-                };
-                var resp = await _sb().from('jahresplaene').upsert(planPayload, { onConflict: 'standort_id,jahr' }).select();
-                if (resp.error) throw new Error(resp.error.message);
-                
-                var monthCount = Object.keys(window._parsedPlanMonths).length;
-                if (statusEl) statusEl.innerHTML = '<p class="text-sm text-green-600 mt-2">✅ Plan für ' + _escH(stdName) + ' (' + jahr + ') gespeichert! ' + monthCount + ' Monate erkannt.</p>';
-                
-                // Refresh
-                await loadHqFinData();
-                renderHqFinKpis();
-                renderHqFinUebersicht();
-                
-                setTimeout(function() {
-                    var modal = document.getElementById('hqFinPlanUploadModal');
-                    if (modal) modal.remove();
-                }, 2000);
-            } else {
-                // Check if there was an error message
-                var parseStatus = container.querySelector('#planParseStatus');
-                var errorMsg = parseStatus ? parseStatus.textContent : 'Keine Monatsdaten erkannt';
-                if (statusEl) statusEl.innerHTML = '<p class="text-sm text-red-500 mt-2">' + _escH(errorMsg) + '</p>';
-            }
-            
-            window._parsedPlanMonths = origParsed;
-        } else {
-            if (statusEl) statusEl.innerHTML = '<p class="text-sm text-red-500 mt-2">Plan-Parser nicht verfügbar.</p>';
-        }
-        
-        // Cleanup
-        if (container.parentNode) container.remove();
-        
-    } catch(err) {
-        console.error('[hq-finanzen] Plan upload error:', err);
-        if (statusEl) statusEl.innerHTML = '<p class="text-sm text-red-500 mt-2">Fehler: ' + (err.message || err) + '</p>';
-    } finally {
-        // Restore profile
-        if (_sbProfile()) _sbProfile().standort_id = origStdId;
-    }
+function _hqFinRestorePlanIstIds() {
+    var origInput = document.getElementById('planFileInput_orig');
+    if (origInput) origInput.id = 'planFileInput';
+    var origStatus = document.getElementById('planParseStatus_orig');
+    if (origStatus) origStatus.id = 'planParseStatus';
+    var origResult = document.getElementById('planParseResult_orig');
+    if (origResult) origResult.id = 'planParseResult';
 }
 
 export function renderHqEinkauf() {
@@ -1037,6 +971,6 @@ export function renderHqEinkauf() {
 }
 
 // Strangler Fig
-const _exports = {renderHqFinanzen,showHqFinTab,hqFinSort,hqFinOpenBwaUpload,hqFinParsePlan,hqFinShowBwaPopup,hqFinShowBwaDetail,hqFinDownloadBwa,hqFinShowPlanPopup,hqFinOpenPlanUpload,hqFinParsePlanFromModal,adsFmtEuro,adsFmtK,adsSetText,loadAdsData,renderAdsKpis,renderAdsChart,renderAdsKampagnenTabelle,filterAdsPlattform,renderAdsStandortVergleich,renderAdsSyncInfo,updateMktPerformanceFromAds,renderHqMarketing,showHqMktTab,renderHqMktBudget,renderHqMktLeadReport,renderHqMktJahresgespraeche,renderHqMktHandlungsbedarf,renderMktSpendingChart,renderMktLeadChart,renderHqEinkauf};
+const _exports = {renderHqFinanzen,showHqFinTab,hqFinSort,hqFinOpenBwaUpload,hqFinParsePlan,hqFinShowBwaPopup,hqFinShowBwaDetail,hqFinDownloadBwa,hqFinShowPlanPopup,hqFinOpenPlanUpload,adsFmtEuro,adsFmtK,adsSetText,loadAdsData,renderAdsKpis,renderAdsChart,renderAdsKampagnenTabelle,filterAdsPlattform,renderAdsStandortVergleich,renderAdsSyncInfo,updateMktPerformanceFromAds,renderHqMarketing,showHqMktTab,renderHqMktBudget,renderHqMktLeadReport,renderHqMktJahresgespraeche,renderHqMktHandlungsbedarf,renderMktSpendingChart,renderMktLeadChart,renderHqEinkauf};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[hq-finanzen.js] Module loaded (v2 redesign) - ' + Object.keys(_exports).length + ' exports registered');
