@@ -35,7 +35,8 @@ function hqFinFmtE(n) {
 
 // === MAIN RENDER ===
 export async function renderHqFinanzen() {
-    if (!hqFinLoaded) await loadHqFinData();
+    // Always reload fresh data when entering the view
+    await loadHqFinData();
 
     // Render KPIs
     renderHqFinKpis();
