@@ -18,7 +18,7 @@ function _showToast(m,t) { if (typeof window.showToast === 'function') window.sh
 var currentConnView = 'hq';
 
 // GF permissions per connector (persisted to Supabase later)
-var gfPermissions = { etermin: false, google: false, meta: false, wawi: false };
+var gfPermissions = { etermin: false, google: false, meta: false, wawi: false, approom: false };
 
 // Connector definitions
 var CONNECTORS = {
@@ -70,19 +70,31 @@ var CONNECTORS = {
         category: 'active', status: 'unknown', statusLabel: 'Pro Standort',
         isStandortLevel: true,
         logs: []
+    },
+    approom: {
+        id: 'approom', name: 'app-room / CYCLE', icon: '🚲', iconBg: '#fef3c7',
+        desc: 'Cloud-WaWi für Fahrradhändler. Veloconnect, JobRad-API, SPODAS. Umsatz, Lager & Belege.',
+        category: 'active', status: 'unknown', statusLabel: 'Prüfe Status...',
+        readonlyFields: [
+            { key: 'system_typ', label: 'System', value: 'app-room / CYCLE' },
+            { key: 'connected_count', label: 'Verbundene Standorte', value: '—' },
+            { key: 'last_sync', label: 'Letzter Sync', value: '—' },
+        ],
+        logs: []
     }
 };
 
 var PLANNED = [
     { name: 'Personio', icon: '👥', desc: 'HR & Personalverwaltung', color: '#8b5cf6' },
     { name: 'Creditreform', icon: '🏦', desc: 'Bonitätsprüfung', color: '#6366f1' },
-    { name: 'Tridata WaWi', icon: '📊', desc: 'Warenwirtschaft', color: '#14b8a6' },
-    { name: 'velo.port', icon: '🚲', desc: 'Warenwirtschaft', color: '#f59e0b' },
-    { name: 'e-vendo', icon: '🛒', desc: 'Warenwirtschaft', color: '#ef4444' },
+    { name: 'HIW / BIKE&CO WIN', icon: '🏪', desc: 'WaWi (Veloconnect + velo.API)', color: '#14b8a6' },
+    { name: 'Tridata / TriBike', icon: '📊', desc: 'WaWi (velo.API)', color: '#f59e0b' },
+    { name: 'velo.port', icon: '🚲', desc: 'WaWi (Veloconnect)', color: '#ef4444' },
+    { name: 'e-vendo', icon: '🛒', desc: 'WaWi (Veloconnect + Platform API)', color: '#ec4899' },
     { name: 'Microsoft 365', icon: '📧', desc: 'Kalender & Mail', color: '#3b82f6' },
 ];
 
-var openCards = { etermin: true, google: false, meta: false, wawi: false };
+var openCards = { etermin: true, google: false, meta: false, wawi: false, approom: false };
 
 // ═══════════════════════════════════════════════════════
 // MAIN RENDER
@@ -137,6 +149,8 @@ async function loadWawiStatus() {
         var res = await sb.from('wawi_connections').select('id, standort_id, system_typ, status, letzter_sync, standorte(name)');
         if (res.error) throw res.error;
         var conns = res.data || [];
+
+        // General WaWi connector
         var c = CONNECTORS.wawi;
         if (conns.length === 0) {
             c.status = 'disconnected'; c.statusLabel = 'Keine Standorte verbunden';
@@ -146,6 +160,30 @@ async function loadWawiStatus() {
             c.statusLabel = connected.length + '/' + conns.length + ' Standorte verbunden';
             c.wawiConnections = conns;
         }
+
+        // app-room / CYCLE specific connector
+        var ar = CONNECTORS.approom;
+        var arConns = conns.filter(function(x) { return x.system_typ === 'approom' || x.system_typ === 'cycle'; });
+        if (arConns.length === 0) {
+            ar.status = 'disconnected'; ar.statusLabel = 'Nicht verbunden';
+        } else {
+            var arConnected = arConns.filter(function(x) { return x.status === 'connected' || x.status === 'aktiv'; });
+            ar.status = arConnected.length > 0 ? 'connected' : 'disconnected';
+            ar.statusLabel = arConnected.length + '/' + arConns.length + ' Standorte';
+            ar.approomStandorte = arConns.map(function(x) {
+                return { name: (x.standorte && x.standorte.name) || 'Standort', status: x.status, letzter_sync: x.letzter_sync };
+            });
+            if (ar.readonlyFields) {
+                ar.readonlyFields.forEach(function(f) {
+                    if (f.key === 'connected_count') f.value = arConnected.length + ' von ' + arConns.length;
+                    if (f.key === 'last_sync') {
+                        var latest = arConns.filter(function(x){return x.letzter_sync;}).sort(function(a,b){return new Date(b.letzter_sync)-new Date(a.letzter_sync);})[0];
+                        f.value = latest ? timeAgo(latest.letzter_sync) : '—';
+                    }
+                });
+            }
+        }
+
         renderStatusGrid();
         renderActiveCards();
     } catch (e) { console.warn('[schnittstellen] loadWawiStatus:', e); }
@@ -175,7 +213,7 @@ window.showConnView = function(view) {
 function renderStatusGrid() {
     var el = document.getElementById('connStatusGrid');
     if (!el) return;
-    var ids = ['etermin', 'google', 'meta', 'wawi'];
+    var ids = ['etermin', 'approom', 'google', 'meta', 'wawi'];
     el.innerHTML = ids.map(function(id) {
         var c = CONNECTORS[id];
         var sc = c.status === 'connected' ? '#16a34a' : c.status === 'error' ? '#dc2626' : c.status === 'disconnected' ? '#dc2626' : '#9ca3af';
@@ -196,7 +234,7 @@ function renderStatusGrid() {
 function renderActiveCards() {
     var el = document.getElementById('connActiveCards');
     if (!el) return;
-    el.innerHTML = ['etermin', 'google', 'meta', 'wawi'].map(function(id) {
+    el.innerHTML = ['etermin', 'approom', 'google', 'meta', 'wawi'].map(function(id) {
         return renderConnectorCard(id);
     }).join('');
 }
@@ -261,6 +299,34 @@ function renderConnectorCard(id) {
         }
         body += '<div class="flex gap-2 pt-1">'
             + '<button onclick="window.manualSync(\'' + id + '\')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition">🔄 Manuell synchronisieren</button>'
+            + '</div>';
+        body += '<div id="connTestResult_' + id + '" class="mt-2"></div>';
+        body += '</div>';
+    }
+
+    // ── app-room / CYCLE body ──
+    if (id === 'approom') {
+        body += '<div class="pt-4 space-y-3">';
+        body += renderGfToggle(id);
+        if (c.readonlyFields) {
+            c.readonlyFields.forEach(function(f) {
+                body += '<div class="flex items-center gap-3"><span class="text-xs text-gray-500 w-36">' + f.label + '</span><span class="text-xs font-semibold text-gray-800">' + _escH(f.value) + '</span></div>';
+            });
+        }
+        if (c.approomStandorte && c.approomStandorte.length > 0) {
+            body += '<div class="mt-2 space-y-1">';
+            c.approomStandorte.forEach(function(s) {
+                var isOk = s.status === 'connected' || s.status === 'aktiv';
+                body += '<div class="flex items-center gap-2 py-1.5 border-b border-gray-100">'
+                    + '<span style="width:8px;height:8px;border-radius:50%;background:' + (isOk ? '#16a34a' : '#dc2626') + ';flex-shrink:0"></span>'
+                    + '<span class="text-xs font-semibold text-gray-700 flex-1">' + _escH(s.name) + '</span>'
+                    + '<span class="text-[10px] text-gray-400">' + (s.letzter_sync ? timeAgo(s.letzter_sync) : 'Kein Sync') + '</span>'
+                    + '</div>';
+            });
+            body += '</div>';
+        }
+        body += '<div class="flex gap-2 pt-2">'
+            + '<button onclick="window.manualSync(\'approom\')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition">🔄 Alle Standorte synchronisieren</button>'
             + '</div>';
         body += '<div id="connTestResult_' + id + '" class="mt-2"></div>';
         body += '</div>';
@@ -340,7 +406,7 @@ function renderPlannedGrid() {
 function renderPartnerCards() {
     var el = document.getElementById('connPartnerCards');
     if (!el) return;
-    var ids = ['etermin', 'google', 'meta', 'wawi'];
+    var ids = ['etermin', 'approom', 'google', 'meta', 'wawi'];
     el.innerHTML = ids.map(function(id) {
         var c = CONNECTORS[id];
         if (c.status === 'planned' || c.status === 'unknown') return '';
