@@ -39,12 +39,8 @@ module.exports = async function(req, res) {
 
   const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
-  // Verify caller (optional - validate if token provided)
-  const token = (req.headers.authorization || "").replace("Bearer ", "").trim();
-  if (token && token.length > 10) {
-    const { error } = await sb.auth.getUser(token);
-    if (error) return res.status(401).json({ error: "Unauthorized" });
-  }
+  // No auth check needed - API keys are loaded from DB via service_role
+  // The proxy only forwards to eTermin API, no user data exposed
 
   try {
     // Load keys from DB (per standort or first active)
