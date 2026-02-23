@@ -31,13 +31,6 @@ var CONNECTORS = {
             { key: 'private_key', label: 'Private API Key', type: 'password', placeholder: '••••••••••••' },
         ],
         webhook: 'https://cockpit.vitbikes.de/api/webhooks/etermin',
-        hasMapping: true,
-        mappings: [
-            { standort: 'Grafrath', kalenderId: '' },
-            { standort: 'München City', kalenderId: '' },
-            { standort: 'Augsburg', kalenderId: '' },
-            { standort: 'Starnberg', kalenderId: '' },
-        ],
         logs: [
             { time: '23.02.2026 11:30', type: 'info', msg: 'Schnittstelle erstellt' },
         ]
@@ -81,62 +74,6 @@ var CONNECTORS = {
             { key: 'last_sync', label: 'Letzter Sync', value: '—' },
         ],
         logs: []
-    },
-    instagram: {
-        id: 'instagram', name: 'Instagram', icon: '📸', iconBg: 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)',
-        desc: 'Follower, Beiträge & Engagement via Meta Graph API. Nutzt euren bestehenden Meta Business Account.',
-        category: 'social', status: 'disconnected', statusLabel: 'Nicht verbunden',
-        fields: [
-            { key: 'account_id', label: 'Instagram Business Account ID', type: 'text', placeholder: 'z.B. 17841400123456789' },
-            { key: 'api_key', label: 'Meta Access Token (Page Token)', type: 'password', placeholder: 'Gleicher Token wie Meta Ads oder eigener Page Token' },
-        ],
-        readonlyFields: [
-            { key: 'handle', label: 'Handle', value: '@vitbikes' },
-            { key: 'followers', label: 'Follower', value: '—' },
-            { key: 'posts', label: 'Beiträge', value: '—' },
-            { key: 'engagement', label: 'Engagement', value: '—' },
-            { key: 'last_sync', label: 'Letzter Sync', value: '—' },
-        ],
-        logs: []
-    },
-    youtube: {
-        id: 'youtube', name: 'YouTube', icon: '▶️', iconBg: '#fee2e2',
-        desc: 'Abonnenten, Videos & Aufrufe via YouTube Data API v3. Kostenloser API Key reicht.',
-        category: 'social', status: 'disconnected', statusLabel: 'Nicht verbunden',
-        fields: [
-            { key: 'api_key', label: 'YouTube Data API Key', type: 'password', placeholder: 'AIza...' },
-            { key: 'account_id', label: 'Channel ID (optional)', type: 'text', placeholder: 'UC... oder leer = Suche nach Handle' },
-        ],
-        readonlyFields: [
-            { key: 'handle', label: 'Kanal', value: 'vit:bikes' },
-            { key: 'followers', label: 'Abonnenten', value: '—' },
-            { key: 'posts', label: 'Videos', value: '—' },
-            { key: 'views', label: 'Aufrufe', value: '—' },
-            { key: 'last_sync', label: 'Letzter Sync', value: '—' },
-        ],
-        logs: []
-    },
-    tiktok: {
-        id: 'tiktok', name: 'TikTok', icon: '🎵', iconBg: '#f3f4f6',
-        desc: 'Follower, Videos & Likes. TikTok Research API oder manuelle Eingabe.',
-        category: 'social', status: 'disconnected', statusLabel: 'Nicht verbunden',
-        fields: [
-            { key: 'api_key', label: 'TikTok API Token (optional)', type: 'password', placeholder: 'Leer = manuelle Eingabe' },
-            { key: 'account_handle', label: 'TikTok Handle', type: 'text', placeholder: '@vitbikes' },
-        ],
-        manualFields: [
-            { key: 'follower_count', label: 'Follower', type: 'number', placeholder: '0' },
-            { key: 'posts_count', label: 'Videos', type: 'number', placeholder: '0' },
-            { key: 'total_likes', label: 'Likes gesamt', type: 'number', placeholder: '0' },
-        ],
-        readonlyFields: [
-            { key: 'handle', label: 'Handle', value: '@vitbikes' },
-            { key: 'followers', label: 'Follower', value: '—' },
-            { key: 'posts', label: 'Videos', value: '—' },
-            { key: 'likes', label: 'Likes', value: '—' },
-            { key: 'last_sync', label: 'Letzter Sync', value: '—' },
-        ],
-        logs: []
     }
 };
 
@@ -150,24 +87,28 @@ var PLANNED = [
     { name: 'Microsoft 365', icon: '📧', desc: 'Kalender & Mail', color: '#3b82f6' },
 ];
 
-var openCards = { etermin: true, google: false, meta: false, wawi: false, approom: false, instagram: false, youtube: false, tiktok: false };
-
-// Social media DB data cache
-var socialConnections = {};
-var socialStats = {};
+var openCards = { etermin: true, google: false, meta: false, wawi: false, approom: false };
 
 // ═══════════════════════════════════════════════════════
 // MAIN RENDER
 // ═══════════════════════════════════════════════════════
 
-export function renderSchnittstellen() {
+export async function renderSchnittstellen() {
+    // Load standorte for HQ dropdown
+    try {
+        var sb = _sb();
+        if (sb && _sbProfile() && _sbProfile().is_hq) {
+            var { data: stds } = await sb.from('standorte').select('id, name').order('name');
+            window._allStandorte = stds || [];
+        }
+    } catch (e) {}
     loadAdsAccountData();
     loadWawiStatus();
-    loadSocialMediaData();
     renderStatusGrid();
     renderActiveCards();
     renderPlannedGrid();
     renderPartnerCards();
+    loadEterminOverview();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -251,84 +192,6 @@ async function loadWawiStatus() {
 }
 
 // ═══════════════════════════════════════════════════════
-// SOCIAL MEDIA DATA LOADING
-// ═══════════════════════════════════════════════════════
-
-async function loadSocialMediaData() {
-    try {
-        var sb = _sb(); if (!sb) return;
-
-        // Load connections (credentials/config)
-        var { data: conns } = await sb.from('social_media_connections').select('*');
-        if (conns) {
-            conns.forEach(function(c) {
-                socialConnections[c.plattform] = c;
-            });
-        }
-
-        // Load stats
-        var { data: stats } = await sb.from('social_media_stats').select('*');
-        if (stats) {
-            stats.forEach(function(s) {
-                socialStats[s.plattform] = s;
-            });
-        }
-
-        // Update CONNECTORS with real data
-        ['instagram', 'youtube', 'tiktok'].forEach(function(plattform) {
-            var conn = socialConnections[plattform];
-            var stat = socialStats[plattform];
-            var c = CONNECTORS[plattform];
-            if (!c) return;
-
-            // Connection status
-            if (conn && conn.ist_aktiv) {
-                if (conn.sync_status === 'success') {
-                    c.status = 'connected'; c.statusLabel = 'Verbunden';
-                } else if (conn.sync_status === 'error') {
-                    c.status = 'error'; c.statusLabel = 'Fehler';
-                } else {
-                    c.status = 'connected'; c.statusLabel = 'Konfiguriert';
-                }
-            } else {
-                c.status = 'disconnected'; c.statusLabel = 'Nicht verbunden';
-            }
-
-            // Populate readonly fields from stats
-            if (stat && c.readonlyFields) {
-                c.readonlyFields.forEach(function(f) {
-                    if (f.key === 'handle') f.value = stat.account_handle || conn?.account_handle || '—';
-                    if (f.key === 'followers') f.value = fmtNum(stat.follower_count);
-                    if (f.key === 'posts') f.value = fmtNum(stat.posts_count);
-                    if (f.key === 'engagement') f.value = (stat.engagement_rate || 0) + '%';
-                    if (f.key === 'views') f.value = fmtNum(stat.total_views);
-                    if (f.key === 'likes') f.value = fmtNum(stat.total_likes);
-                    if (f.key === 'last_sync') f.value = stat.letzter_sync ? timeAgo(stat.letzter_sync) : '—';
-                });
-            }
-
-            // Populate field values from connection
-            if (conn && c.fields) {
-                c.fields.forEach(function(f) {
-                    f._value = conn[f.key] || '';
-                });
-            }
-
-            // Logs
-            if (conn && conn.letzter_sync) {
-                c.logs = [{ time: fmtDT(conn.letzter_sync), type: conn.sync_status === 'success' ? 'ok' : 'err', msg: 'Sync ' + (conn.sync_status === 'success' ? 'erfolgreich' : 'fehlgeschlagen: ' + (conn.sync_fehler || '')) }];
-            }
-        });
-
-        renderStatusGrid();
-        renderActiveCards();
-        renderPartnerCards();
-        // Also update Social Media Kanäle cards if visible
-        updateSocialMediaCards();
-    } catch (e) { console.warn('[schnittstellen] loadSocialMediaData:', e); }
-}
-
-// ═══════════════════════════════════════════════════════
 // VIEW TOGGLE
 // ═══════════════════════════════════════════════════════
 
@@ -352,7 +215,7 @@ window.showConnView = function(view) {
 function renderStatusGrid() {
     var el = document.getElementById('connStatusGrid');
     if (!el) return;
-    var ids = ['etermin', 'approom', 'google', 'meta', 'wawi', 'instagram', 'youtube', 'tiktok'];
+    var ids = ['etermin', 'approom', 'google', 'meta', 'wawi'];
     el.innerHTML = ids.map(function(id) {
         var c = CONNECTORS[id];
         var sc = c.status === 'connected' ? '#16a34a' : c.status === 'error' ? '#dc2626' : c.status === 'disconnected' ? '#dc2626' : '#9ca3af';
@@ -373,10 +236,9 @@ function renderStatusGrid() {
 function renderActiveCards() {
     var el = document.getElementById('connActiveCards');
     if (!el) return;
-    el.innerHTML = '<h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">📡 Geschäftssysteme</h3>'
-        + ['etermin', 'approom', 'google', 'meta', 'wawi'].map(function(id) { return renderConnectorCard(id); }).join('')
-        + '<h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 mt-6">📱 Social Media Kanäle</h3>'
-        + ['instagram', 'youtube', 'tiktok'].map(function(id) { return renderConnectorCard(id); }).join('');
+    el.innerHTML = ['etermin', 'approom', 'google', 'meta', 'wawi'].map(function(id) {
+        return renderConnectorCard(id);
+    }).join('');
 }
 
 function renderConnectorCard(id) {
@@ -400,30 +262,44 @@ function renderConnectorCard(id) {
         body += '<div class="pt-4 space-y-4">';
         // GF permission toggle
         body += renderGfToggle(id);
+        // Standort selector (HQ only)
+        var isHQ = _sbProfile() && _sbProfile().is_hq;
+        if (isHQ) {
+            body += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">📍 Standort auswählen</label>'
+                + '<select id="conn_etermin_standort" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:border-blue-400 outline-none" onchange="window.loadEterminConfig&&loadEterminConfig(this.value)">'
+                + '<option value="">— Standort wählen —</option>';
+            if (window._allStandorte) {
+                window._allStandorte.forEach(function(s) {
+                    body += '<option value="' + s.id + '">' + _escH(s.name) + '</option>';
+                });
+            }
+            body += '</select></div>';
+        }
         // Fields
         c.fields.forEach(function(f) {
             body += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">' + f.label + '</label>'
                 + '<input type="' + f.type + '" id="conn_' + id + '_' + f.key + '" placeholder="' + f.placeholder + '" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 outline-none transition">'
                 + '</div>';
         });
+        // Calendar name for mapping
+        body += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">📅 eTermin Kalender-Name</label>'
+            + '<input type="text" id="conn_etermin_cal_name" placeholder="z.B. Grafrath, München City..." class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:border-blue-400 outline-none">'
+            + '<p class="text-[10px] text-gray-400 mt-1">Name des Kalenders in eTermin → wird dem Standort zugeordnet</p></div>';
         // Webhook
         body += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Webhook-URL</label>'
             + '<div style="display:flex;gap:6px;align-items:center"><input type="text" value="' + c.webhook + '" readonly class="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-500 font-mono text-xs">'
             + '<button onclick="window.copyConnWebhook(\'' + id + '\')" id="connCopyBtn_' + id + '" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-200 transition flex-shrink-0">📋 Kopieren</button></div></div>';
-        // Kalender-Mapping
-        body += '<div><label class="block text-xs font-semibold text-gray-600 mb-2">📍 Kalender-Mapping</label>';
-        body += '<div class="space-y-2">';
-        c.mappings.forEach(function(m, i) {
-            body += '<div class="flex items-center gap-3"><span class="text-xs text-gray-600 w-32 truncate">' + _escH(m.standort) + '</span>'
-                + '<input type="text" id="conn_etermin_map_' + i + '" placeholder="Kalender-ID" value="' + _escH(m.kalenderId) + '" class="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:border-blue-400 outline-none">'
-                + '</div>';
-        });
-        body += '</div></div>';
+        // Info: per-standort
+        body += '<div class="bg-blue-50 border border-blue-200 rounded-lg p-3">'
+            + '<p class="text-xs text-blue-700">ℹ️ <strong>Jeder Standort hat seinen eigenen eTermin-Account.</strong> '
+            + 'Wähle oben den Standort, trage die API-Keys ein und speichere. Wiederhole für jeden Standort.</p></div>';
         // Buttons
         body += '<div class="flex gap-2 pt-1">'
             + '<button onclick="window.testConnector(\'etermin\')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition">🔍 Verbindung testen</button>'
             + '<button onclick="window.saveConnector(\'etermin\')" class="px-4 py-2 bg-blue-500 text-white rounded-lg text-xs font-semibold hover:bg-blue-600 transition">💾 Speichern</button>'
             + '</div>';
+        // Connected standorte overview
+        body += '<div id="connEterminOverview" class="mt-3"></div>';
         body += '<div id="connTestResult_' + id + '" class="mt-2"></div>';
         body += '</div>';
     }
@@ -467,63 +343,6 @@ function renderConnectorCard(id) {
         }
         body += '<div class="flex gap-2 pt-2">'
             + '<button onclick="window.manualSync(\'approom\')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition">🔄 Alle Standorte synchronisieren</button>'
-            + '</div>';
-        body += '<div id="connTestResult_' + id + '" class="mt-2"></div>';
-        body += '</div>';
-    }
-
-    // ── Social Media bodies (Instagram, YouTube, TikTok) ──
-    if (id === 'instagram' || id === 'youtube' || id === 'tiktok') {
-        var conn = socialConnections[id] || {};
-        var stat = socialStats[id] || {};
-        body += '<div class="pt-4 space-y-4">';
-
-        // Current stats if available
-        if (stat.follower_count > 0) {
-            body += '<div class="grid grid-cols-3 gap-3 mb-2">';
-            if (id === 'instagram') {
-                body += _statBox(fmtNum(stat.follower_count), 'Follower') + _statBox(fmtNum(stat.posts_count), 'Beiträge') + _statBox((stat.engagement_rate || 0) + '%', 'Engagement');
-            } else if (id === 'youtube') {
-                body += _statBox(fmtNum(stat.follower_count), 'Abonnenten') + _statBox(fmtNum(stat.posts_count), 'Videos') + _statBox(fmtNum(stat.total_views), 'Aufrufe');
-            } else if (id === 'tiktok') {
-                body += _statBox(fmtNum(stat.follower_count), 'Follower') + _statBox(fmtNum(stat.posts_count), 'Videos') + _statBox(fmtNum(stat.total_likes), 'Likes');
-            }
-            body += '</div>';
-            if (stat.letzter_sync) {
-                body += '<p class="text-[10px] text-gray-400">Letzter Sync: ' + timeAgo(stat.letzter_sync) + '</p>';
-            }
-        }
-
-        // Config fields
-        body += '<div class="pt-2 border-t border-gray-100">';
-        body += '<p class="text-xs font-semibold text-gray-600 mb-2">⚙️ API-Konfiguration</p>';
-        if (c.fields) {
-            c.fields.forEach(function(f) {
-                var val = f._value || conn[f.key] || '';
-                body += '<div class="mb-2"><label class="block text-[10px] font-semibold text-gray-500 mb-1">' + f.label + '</label>'
-                    + '<input type="' + f.type + '" id="conn_' + id + '_' + f.key + '" value="' + _escH(val) + '" placeholder="' + f.placeholder + '" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 outline-none transition">'
-                    + '</div>';
-            });
-        }
-
-        // Manual input for TikTok
-        if (id === 'tiktok' && c.manualFields) {
-            body += '<p class="text-[10px] text-gray-400 mt-2 mb-1">Ohne API-Token: Werte manuell eintragen</p>';
-            body += '<div class="grid grid-cols-3 gap-2">';
-            c.manualFields.forEach(function(f) {
-                var val = stat[f.key] || '';
-                body += '<div><label class="block text-[10px] font-semibold text-gray-500 mb-1">' + f.label + '</label>'
-                    + '<input type="' + f.type + '" id="conn_' + id + '_manual_' + f.key + '" value="' + _escH(val) + '" placeholder="' + f.placeholder + '" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:border-blue-400 outline-none">'
-                    + '</div>';
-            });
-            body += '</div>';
-        }
-        body += '</div>';
-
-        // Buttons
-        body += '<div class="flex gap-2 pt-1">'
-            + '<button onclick="window.saveSocialConnector(\'' + id + '\')" class="px-4 py-2 bg-blue-500 text-white rounded-lg text-xs font-semibold hover:bg-blue-600 transition">💾 Speichern</button>'
-            + '<button onclick="window.syncSocialMedia(\'' + id + '\')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition">🔄 Jetzt synchronisieren</button>'
             + '</div>';
         body += '<div id="connTestResult_' + id + '" class="mt-2"></div>';
         body += '</div>';
@@ -603,7 +422,7 @@ function renderPlannedGrid() {
 function renderPartnerCards() {
     var el = document.getElementById('connPartnerCards');
     if (!el) return;
-    var ids = ['etermin', 'approom', 'google', 'meta', 'wawi', 'instagram', 'youtube', 'tiktok'];
+    var ids = ['etermin', 'approom', 'google', 'meta', 'wawi'];
     el.innerHTML = ids.map(function(id) {
         var c = CONNECTORS[id];
         if (c.status === 'planned' || c.status === 'unknown') return '';
@@ -681,15 +500,80 @@ window.copyConnWebhook = function(id) {
     }
 };
 
+// ── Load eTermin config for a specific standort ──
+window.loadEterminConfig = async function(standortId) {
+    if (!standortId) {
+        document.getElementById('conn_etermin_public_key').value = '';
+        document.getElementById('conn_etermin_private_key').value = '';
+        var calN = document.getElementById('conn_etermin_cal_name');
+        if (calN) calN.value = '';
+        return;
+    }
+    try {
+        var sb = _sb(); if (!sb) return;
+        var { data: cfg } = await sb.from('etermin_config')
+            .select('public_key, private_key').eq('standort_id', standortId).maybeSingle();
+        var pubEl = document.getElementById('conn_etermin_public_key');
+        var privEl = document.getElementById('conn_etermin_private_key');
+        if (pubEl) pubEl.value = cfg ? cfg.public_key : '';
+        if (privEl) privEl.value = cfg ? cfg.private_key : '';
+        // Load calendar mapping
+        var { data: mapData } = await sb.from('etermin_calendar_map')
+            .select('calendar_name').eq('standort_id', standortId).maybeSingle();
+        var calN = document.getElementById('conn_etermin_cal_name');
+        if (calN) calN.value = mapData ? mapData.calendar_name : '';
+    } catch (e) { console.warn('[schnittstellen] loadEterminConfig:', e); }
+};
+
+// ── Load overview of all configured standorte ──
+async function loadEterminOverview() {
+    var el = document.getElementById('connEterminOverview');
+    if (!el) return;
+    try {
+        var sb = _sb(); if (!sb) return;
+        var { data: configs } = await sb.from('etermin_config')
+            .select('standort_id, is_active, updated_at, standorte(name)').order('updated_at', { ascending: false });
+        if (!configs || configs.length === 0) {
+            el.innerHTML = '<p class="text-xs text-gray-400">Noch keine Standorte konfiguriert.</p>';
+            // Update connector status
+            CONNECTORS.etermin.status = 'disconnected';
+            CONNECTORS.etermin.statusLabel = 'Nicht konfiguriert';
+            return;
+        }
+        var h = '<div class="border border-gray-200 rounded-lg overflow-hidden"><table class="w-full text-xs">'
+            + '<thead class="bg-gray-50"><tr><th class="text-left px-3 py-2 font-semibold text-gray-600">Standort</th>'
+            + '<th class="text-left px-3 py-2 font-semibold text-gray-600">Status</th>'
+            + '<th class="text-left px-3 py-2 font-semibold text-gray-600">Zuletzt aktualisiert</th></tr></thead><tbody>';
+        configs.forEach(function(c) {
+            var name = (c.standorte && c.standorte.name) || 'Unbekannt';
+            var dot = c.is_active ? '#16a34a' : '#9ca3af';
+            var label = c.is_active ? 'Aktiv' : 'Inaktiv';
+            h += '<tr class="border-t border-gray-100"><td class="px-3 py-2 font-semibold">' + _escH(name) + '</td>'
+                + '<td class="px-3 py-2"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + dot + ';margin-right:4px;vertical-align:middle"></span>' + label + '</td>'
+                + '<td class="px-3 py-2 text-gray-400">' + (c.updated_at ? timeAgo(c.updated_at) : '—') + '</td></tr>';
+        });
+        h += '</tbody></table></div>';
+        el.innerHTML = h;
+        // Update connector status
+        var active = configs.filter(function(c) { return c.is_active; });
+        CONNECTORS.etermin.status = active.length > 0 ? 'connected' : 'disconnected';
+        CONNECTORS.etermin.statusLabel = active.length + '/' + configs.length + ' Standorte';
+        renderStatusGrid();
+    } catch (e) { console.warn('[schnittstellen] loadEterminOverview:', e); }
+}
+
 window.testConnector = function(id) {
     var el = document.getElementById('connTestResult_' + id);
     if (el) el.innerHTML = '<span class="text-xs text-gray-400 animate-pulse">⏳ Teste Verbindung...</span>';
     addLog(id, 'info', 'Verbindungstest gestartet');
 
     if (id === 'etermin') {
-        // Real API test via proxy
-        var token = _sb() && _sb().auth && _sb().auth.session ? _sb().auth.session().access_token : '';
-        fetch('/api/etermin-proxy?action=test', {
+        // Get selected standort
+        var stdSelect = document.getElementById('conn_etermin_standort');
+        var stdId = stdSelect ? stdSelect.value : (_sbProfile() ? _sbProfile().standort_id : '');
+        var url = '/api/etermin-proxy?action=test';
+        if (stdId) url += '&standort_id=' + stdId;
+        fetch(url, {
             headers: { 'Authorization': 'Bearer ' + (window.sbSession && window.sbSession.access_token || '') }
         })
         .then(function(r) { return r.json(); })
@@ -734,8 +618,18 @@ window.saveConnector = async function(id) {
         }
         try {
             var sb = _sb(); if (!sb) throw new Error('Nicht eingeloggt');
-            var { data: existing } = await sb.from('etermin_config').select('id').limit(1).maybeSingle();
+            var prof = _sbProfile();
+            var stdId = prof ? prof.standort_id : null;
+            // HQ: if a standort selector exists, use that
+            var stdSelect = document.getElementById('conn_etermin_standort');
+            if (stdSelect && stdSelect.value) stdId = stdSelect.value;
+
+            if (!stdId) throw new Error('Kein Standort ausgewählt');
+
+            var { data: existing } = await sb.from('etermin_config')
+                .select('id').eq('standort_id', stdId).maybeSingle();
             var payload = {
+                standort_id: stdId,
                 public_key: pubKey.value.trim(),
                 private_key: privKey.value.trim(),
                 webhook_url: 'https://cockpit.vitbikes.de/api/webhooks/etermin',
@@ -749,21 +643,16 @@ window.saveConnector = async function(id) {
                 var r = await sb.from('etermin_config').insert(payload);
                 if (r.error) throw r.error;
             }
-            addLog(id, 'ok', 'API-Keys gespeichert');
-            // Save calendar mappings
-            var mappingEls = document.querySelectorAll('[data-etermin-cal]');
-            for (var mel of mappingEls) {
-                var stdName = mel.getAttribute('data-etermin-cal');
-                var calId = mel.value.trim();
-                if (!calId) continue;
-                var { data: std } = await sb.from('standorte').select('id').ilike('name', '%' + stdName + '%').maybeSingle();
-                if (std) {
-                    await sb.from('etermin_calendar_map').upsert({
-                        calendar_name: stdName, calendar_id: calId, standort_id: std.id
-                    }, { onConflict: 'calendar_name' });
-                }
+            addLog(id, 'ok', 'API-Keys gespeichert für Standort');
+            // Save calendar mapping for this standort
+            var calNameInput = document.getElementById('conn_etermin_cal_name');
+            if (calNameInput && calNameInput.value.trim()) {
+                await sb.from('etermin_calendar_map').upsert({
+                    calendar_name: calNameInput.value.trim(),
+                    standort_id: stdId
+                }, { onConflict: 'calendar_name' });
+                addLog(id, 'ok', 'Kalender-Mapping gespeichert');
             }
-            addLog(id, 'ok', 'Kalender-Mapping gespeichert');
             _showToast('eTermin Konfiguration gespeichert', 'success');
         } catch (err) {
             addLog(id, 'err', 'Speichern fehlgeschlagen: ' + err.message);
@@ -824,135 +713,6 @@ function fmtDT(iso) {
         return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
             + ' ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
     } catch (e) { return '—'; }
-}
-
-// ═══════════════════════════════════════════════════════
-// SOCIAL MEDIA ACTIONS
-// ═══════════════════════════════════════════════════════
-
-window.saveSocialConnector = async function(plattform) {
-    try {
-        var sb = _sb(); if (!sb) throw new Error('Nicht eingeloggt');
-        var c = CONNECTORS[plattform];
-        var update = { ist_aktiv: true, updated_at: new Date().toISOString() };
-
-        // Get field values from inputs
-        if (c.fields) {
-            c.fields.forEach(function(f) {
-                var el = document.getElementById('conn_' + plattform + '_' + f.key);
-                if (el && el.value.trim()) update[f.key] = el.value.trim();
-            });
-        }
-
-        var { error } = await sb.from('social_media_connections').update(update).eq('plattform', plattform);
-        if (error) throw error;
-
-        // If TikTok manual fields, save directly to stats
-        if (plattform === 'tiktok') {
-            var manualUpdate = { updated_at: new Date().toISOString() };
-            var hasManual = false;
-            ['follower_count', 'posts_count', 'total_likes'].forEach(function(key) {
-                var el = document.getElementById('conn_tiktok_manual_' + key);
-                if (el && el.value) { manualUpdate[key] = parseInt(el.value) || 0; hasManual = true; }
-            });
-            if (hasManual) {
-                manualUpdate.letzter_sync = new Date().toISOString();
-                manualUpdate.sync_status = 'success';
-                await sb.from('social_media_stats').update(manualUpdate).eq('plattform', 'tiktok');
-            }
-        }
-
-        addLog(plattform, 'ok', 'Konfiguration gespeichert');
-        _showToast(c.name + ' Konfiguration gespeichert', 'success');
-        await loadSocialMediaData();
-    } catch (err) {
-        addLog(plattform, 'err', 'Speichern fehlgeschlagen: ' + err.message);
-        _showToast('Fehler: ' + err.message, 'error');
-    }
-};
-
-window.syncSocialMedia = async function(plattform) {
-    var el = document.getElementById('connTestResult_' + plattform);
-    if (el) el.innerHTML = '<span class="text-xs text-gray-400 animate-pulse">🔄 Synchronisiere ' + CONNECTORS[plattform].name + '...</span>';
-    addLog(plattform, 'info', 'Manueller Sync gestartet');
-
-    try {
-        var sb = _sb(); if (!sb) throw new Error('Nicht eingeloggt');
-        var session = await sb.auth.getSession();
-        var token = session?.data?.session?.access_token;
-        if (!token) throw new Error('Kein Auth-Token');
-
-        var resp = await fetch((window.SUPABASE_URL || 'https://lwwagbkxeofahhwebkab.supabase.co') + '/functions/v1/sync-social-stats', {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ plattform: plattform })
-        });
-        var result = await resp.json();
-
-        if (result.ok) {
-            var platResult = (result.results || []).find(function(r) { return r.plattform === plattform; });
-            if (platResult && platResult.status === 'ok') {
-                if (el) el.innerHTML = '<span class="text-xs text-green-600 font-semibold">✅ Sync erfolgreich! ' + fmtNum(platResult.followers) + ' Follower</span>';
-                addLog(plattform, 'ok', 'Sync erfolgreich – ' + fmtNum(platResult.followers) + ' Follower');
-            } else if (platResult && platResult.status === 'error') {
-                if (el) el.innerHTML = '<span class="text-xs text-red-500 font-semibold">❌ ' + (platResult.error || 'Unbekannter Fehler') + '</span>';
-                addLog(plattform, 'err', platResult.error || 'Sync fehlgeschlagen');
-            } else {
-                if (el) el.innerHTML = '<span class="text-xs text-yellow-600 font-semibold">⚠️ ' + (result.msg || 'Keine Daten') + '</span>';
-            }
-        } else {
-            throw new Error(result.error || 'Sync fehlgeschlagen');
-        }
-
-        await loadSocialMediaData();
-        setTimeout(function() { if (el) el.innerHTML = ''; }, 6000);
-    } catch (err) {
-        if (el) el.innerHTML = '<span class="text-xs text-red-500 font-semibold">❌ ' + err.message + '</span>';
-        addLog(plattform, 'err', 'Sync-Fehler: ' + err.message);
-    }
-};
-
-// Update Social Media Kanäle-Karten im Marketing-Tab
-async function updateSocialMediaCards() {
-    // Load from DB if not yet cached
-    if (!socialStats.instagram && !socialStats.youtube && !socialStats.tiktok) {
-        try {
-            var sb = _sb(); if (!sb) return;
-            var { data: stats } = await sb.from('social_media_stats').select('*');
-            if (stats) stats.forEach(function(s) { socialStats[s.plattform] = s; });
-        } catch(e) { console.warn('[social] Stats load failed:', e); }
-    }
-    var map = {
-        instagram: { els: ['smIgFollower', 'smIgPosts', 'smIgEngagement'], keys: ['follower_count', 'posts_count', 'engagement_rate'], suffix: ['', '', '%'] },
-        youtube: { els: ['smYtSubs', 'smYtVideos', 'smYtViews'], keys: ['follower_count', 'posts_count', 'total_views'], suffix: ['', '', ''] },
-        tiktok: { els: ['smTtFollower', 'smTtVideos', 'smTtLikes'], keys: ['follower_count', 'posts_count', 'total_likes'], suffix: ['', '', ''] }
-    };
-    Object.keys(map).forEach(function(plattform) {
-        var stat = socialStats[plattform];
-        if (!stat) return;
-        var m = map[plattform];
-        m.els.forEach(function(elId, i) {
-            var el = document.getElementById(elId);
-            if (el) {
-                var val = stat[m.keys[i]];
-                el.textContent = (val && val > 0) ? fmtNum(val) + m.suffix[i] : '—';
-            }
-        });
-    });
-}
-// Make globally accessible
-window.updateSocialMediaCards = updateSocialMediaCards;
-
-function _statBox(value, label) {
-    return '<div class="text-center p-2 bg-gray-50 rounded-lg"><p class="text-sm font-bold text-gray-800">' + value + '</p><p class="text-[10px] text-gray-400">' + label + '</p></div>';
-}
-
-function fmtNum(n) {
-    if (!n && n !== 0) return '—';
-    n = parseInt(n) || 0;
-    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
-    if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
-    return n.toString();
 }
 
 // ═══════════════════════════════════════════════════════
