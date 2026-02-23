@@ -915,8 +915,7 @@ try {
 
 export async function checkPendingApprovals() {
 var isHQ = currentRoles.indexOf('hq') >= 0 || (_sbProfile() && _sbProfile().is_hq);
-var isGF = currentRoles.indexOf('inhaber') >= 0;
-if(!isHQ && !isGF) return;
+if(!isHQ) return;
 try {
     var query = _sb().from('users').select('id,name,email,created_at').in('status',['onboarding','pending']);
     // GF: nur eigener Standort
