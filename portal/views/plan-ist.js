@@ -646,15 +646,19 @@ export async function renderPlanVergleich(el) {
     h += '<div class="vit-card p-6 mb-6">';
     h += '<h3 class="font-semibold text-gray-800 mb-3">Monatsübersicht '+planIstYear+'</h3>';
     h += '<div class="overflow-x-auto"><table class="w-full text-sm">';
-    h += '<thead><tr class="bg-gray-50"><th class="text-left py-2.5 px-3 font-semibold text-gray-600">Monat</th><th class="text-right py-2.5 px-3 font-semibold text-blue-600">Plan Umsatz</th><th class="text-right py-2.5 px-3 font-semibold text-vit-orange">Ist Umsatz</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Abweichung</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Erfüllung</th><th class="text-center py-2.5 px-3 font-semibold text-gray-600">Status</th></tr></thead>';
+    h += '<thead><tr class="bg-gray-50"><th class="text-left py-2.5 px-3 font-semibold text-gray-600">Monat</th><th class="text-right py-2.5 px-3 font-semibold text-blue-600">Plan Umsatz</th><th class="text-right py-2.5 px-3 font-semibold text-vit-orange">Ist Umsatz</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Abw.</th><th class="text-right py-2.5 px-3 font-semibold text-blue-600">Plan Rohertrag</th><th class="text-right py-2.5 px-3 font-semibold text-vit-orange">Ist Rohertrag</th><th class="text-right py-2.5 px-3 font-semibold text-blue-600">Plan Ergebnis</th><th class="text-right py-2.5 px-3 font-semibold text-vit-orange">Ist Ergebnis</th><th class="text-right py-2.5 px-3 font-semibold text-gray-600">Erfüllung</th><th class="text-center py-2.5 px-3 font-semibold text-gray-600">Status</th></tr></thead>';
     h += '<tbody>';
-    var sumPlan=0,sumIst=0;
+    var sumPlan=0,sumIst=0,sumPlanRoh=0,sumIstRoh=0,sumPlanErg=0,sumIstErg=0;
     for(var m=1;m<=12;m++) {
         var p = plan[String(m)] || plan[m] || {};
         var b = bwaByMonth[m];
         var pu = p.umsatz || 0;
         var iu = b ? (parseFloat(b.umsatzerloese)||0) : 0;
-        sumPlan += pu; sumIst += iu;
+        var pRoh = (p.umsatz||0) + (p.wareneinsatz||0);
+        var iRoh = b ? (parseFloat(b.rohertrag)||0) : 0;
+        var pErg = p.ergebnis || ((p.umsatz||0)+(p.wareneinsatz||0)+(p.personalkosten||0)+(p.raumkosten||0));
+        var iErg = b ? (parseFloat(b.ergebnis_vor_steuern)||parseFloat(b.betriebsergebnis)||0) : 0;
+        sumPlan += pu; sumIst += iu; sumPlanRoh += pRoh; sumIstRoh += iRoh; sumPlanErg += pErg; sumIstErg += iErg;
         var diff = iu - pu;
         var pct = pu ? Math.round(iu/pu*100) : 0;
         var hasBwa = !!b;
@@ -666,7 +670,11 @@ export async function renderPlanVergleich(el) {
         h += '<td class="py-2.5 px-3 font-semibold">'+mLabels[m]+(isCurrent?' <span class="text-[10px] text-blue-500">(aktuell)</span>':'')+'</td>';
         h += '<td class="text-right py-2.5 px-3 text-blue-600">'+pu.toLocaleString('de-DE')+'</td>';
         h += '<td class="text-right py-2.5 px-3 font-bold '+(hasBwa?'text-vit-orange':'')+'">'+( hasBwa ? iu.toLocaleString('de-DE') : '—')+'</td>';
-        h += '<td class="text-right py-2.5 px-3 '+(hasBwa?(diff>=0?'text-green-600 font-semibold':'text-red-600 font-semibold'):'')+'">'+( hasBwa ? (diff>=0?'+':'')+diff.toLocaleString('de-DE') : '—')+'</td>';
+        h += '<td class="text-right py-2.5 px-3 text-xs '+(hasBwa?(diff>=0?'text-green-600':'text-red-600'):'')+'">'+( hasBwa ? (diff>=0?'+':'')+diff.toLocaleString('de-DE') : '—')+'</td>';
+        h += '<td class="text-right py-2.5 px-3 text-blue-500 text-xs">'+pRoh.toLocaleString('de-DE')+'</td>';
+        h += '<td class="text-right py-2.5 px-3 '+(hasBwa?'font-semibold':'')+'">'+( hasBwa ? iRoh.toLocaleString('de-DE') : '—')+'</td>';
+        h += '<td class="text-right py-2.5 px-3 text-xs '+(pErg>=0?'text-blue-500':'text-blue-400')+'">'+Math.round(pErg).toLocaleString('de-DE')+'</td>';
+        h += '<td class="text-right py-2.5 px-3 '+(hasBwa?(iErg>=0?'text-green-600 font-semibold':'text-red-500 font-semibold'):'')+'">'+( hasBwa ? Math.round(iErg).toLocaleString('de-DE') : '—')+'</td>';
         h += '<td class="text-right py-2.5 px-3 '+(hasBwa?(pct>=100?'text-green-600 font-bold':'text-red-600 font-bold'):'')+'">'+( hasBwa ? pct+'%' : '—')+'</td>';
         h += '<td class="text-center py-2.5 px-3">'+status+'</td>';
         h += '</tr>';
@@ -675,7 +683,11 @@ export async function renderPlanVergleich(el) {
     h += '<tr class="bg-gray-100 border-t-2"><td class="py-3 px-3 font-bold">GESAMT '+planIstYear+'</td>';
     h += '<td class="text-right py-3 px-3 font-bold text-blue-600">'+sumPlan.toLocaleString('de-DE')+'</td>';
     h += '<td class="text-right py-3 px-3 font-bold text-vit-orange">'+sumIst.toLocaleString('de-DE')+'</td>';
-    h += '<td class="text-right py-3 px-3 font-bold '+(totalDiff>=0?'text-green-600':'text-red-600')+'">'+(totalDiff>=0?'+':'')+totalDiff.toLocaleString('de-DE')+'</td>';
+    h += '<td class="text-right py-3 px-3 font-bold text-xs '+(totalDiff>=0?'text-green-600':'text-red-600')+'">'+(totalDiff>=0?'+':'')+totalDiff.toLocaleString('de-DE')+'</td>';
+    h += '<td class="text-right py-3 px-3 font-bold text-blue-500">'+sumPlanRoh.toLocaleString('de-DE')+'</td>';
+    h += '<td class="text-right py-3 px-3 font-bold">'+sumIstRoh.toLocaleString('de-DE')+'</td>';
+    h += '<td class="text-right py-3 px-3 font-bold '+(sumPlanErg>=0?'text-blue-600':'text-red-400')+'">'+Math.round(sumPlanErg).toLocaleString('de-DE')+'</td>';
+    h += '<td class="text-right py-3 px-3 font-bold '+(sumIstErg>=0?'text-green-600':'text-red-500')+'">'+Math.round(sumIstErg).toLocaleString('de-DE')+'</td>';
     h += '<td class="text-right py-3 px-3 font-bold">'+totalPct+'%</td><td class="text-center">📊</td></tr>';
     h += '</tbody></table></div></div>';
 
