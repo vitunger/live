@@ -48,7 +48,7 @@ const VIEW_RENDER_MAP = {
     'controlling':   { fn: 'showControllingTab', args: ['cockpit'], chain: [{ fn: 'renderPerformanceCockpit' }, { fn: 'loadBwaList' }] },
     'verkauf':       { fn: 'showVerkaufTab', args: ['pipeline'] },
     'kommunikation': { fn: 'showKommTab', args: ['chat'] },
-    'aktenschrank':  { fn: 'loadAktenFiles' },
+    'aktenschrank':  { fn: 'loadAktenschrank' },
     'kalender':      { fn: 'loadKalTermine' },
     'todo':          { fn: 'loadTodos' },
     'notifications': { fn: 'renderNotifications', args: ['all'] },
