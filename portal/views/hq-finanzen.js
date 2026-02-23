@@ -890,7 +890,7 @@ export function hqFinOpenPlanUpload(standortId) {
     document.body.insertAdjacentHTML('beforeend', h);
 }
 
-// Parse plan from the modal - direct implementation without parsePlanFile dependency
+// Parse plan from the modal - uses existing parsePlanFile infrastructure
 export async function hqFinParsePlanFromModal(standortId) {
     var jahrSelect = document.getElementById('hqFinPlanJahrModal');
     var fileInput = document.getElementById('hqFinPlanFileModal');
@@ -905,172 +905,127 @@ export async function hqFinParsePlanFromModal(standortId) {
         return;
     }
     
-    if (statusEl) statusEl.innerHTML = '<div class="flex items-center gap-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">Plan wird ausgelesen...</span></div>';
+    if (statusEl) statusEl.innerHTML = '<div class="flex items-center gap-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">Plan wird analysiert...</span></div>';
+    
+    // Override profile standort_id temporarily
+    var origStdId = _sbProfile() ? _sbProfile().standort_id : null;
+    if (_sbProfile()) _sbProfile().standort_id = standortId;
+    window.planIstYear = jahr;
     
     try {
-        var file = fileInput.files[0];
-        var arrayBuf = await file.arrayBuffer();
+        // Create the DOM elements that parsePlanFile expects
+        var container = document.createElement('div');
+        container.style.display = 'none';
+        container.innerHTML = '<input type="file" id="planFileInput"><div id="planParseStatus"></div><div id="planParseResult" class="hidden"></div>';
+        document.body.appendChild(container);
         
-        // Parse Excel with XLSX (SheetJS)
-        if (typeof XLSX === 'undefined') throw new Error('XLSX Bibliothek nicht geladen');
-        var wb = XLSX.read(arrayBuf, { type: 'array' });
-        var ws = wb.Sheets[wb.SheetNames[0]];
-        var rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        // Copy file to the planFileInput
+        var tempInput = container.querySelector('#planFileInput');
+        var dt = new DataTransfer();
+        for (var i = 0; i < fileInput.files.length; i++) dt.items.add(fileInput.files[i]);
+        tempInput.files = dt.files;
         
-        console.log('[hq-finanzen] Plan Excel rows:', rows.length, 'Sheet:', wb.SheetNames[0]);
-        // Debug: show first 5 rows
-        for (var dbg = 0; dbg < Math.min(rows.length, 5); dbg++) {
-            console.log('[hq-finanzen] Row ' + dbg + ':', JSON.stringify((rows[dbg] || []).slice(0, 15)));
-        }
-        
-        // Try to find monthly plan data
-        var planMonths = {};
-        var monatKeywords = [
-            ['jan', 'januar', '01', '1'],
-            ['feb', 'februar', '02', '2'],
-            ['mär', 'mrz', 'maerz', 'märz', 'march', '03', '3'],
-            ['apr', 'april', '04', '4'],
-            ['mai', 'may', '05', '5'],
-            ['jun', 'juni', 'june', '06', '6'],
-            ['jul', 'juli', 'july', '07', '7'],
-            ['aug', 'august', '08', '8'],
-            ['sep', 'sept', 'september', '09', '9'],
-            ['okt', 'oct', 'oktober', 'october', '10'],
-            ['nov', 'november', '11'],
-            ['dez', 'dec', 'dezember', 'december', '12']
-        ];
-        
-        // Strategy 1: Header row has month names, data in rows below
-        var headerRow = -1;
-        var monthCols = {};
-        for (var r = 0; r < Math.min(rows.length, 10); r++) {
-            var row = rows[r] || [];
-            var foundMonths = 0;
-            for (var c = 0; c < row.length; c++) {
-                var cell = String(row[c] || '').toLowerCase().trim();
-                for (var mi = 0; mi < 12; mi++) {
-                    if (monatKeywords[mi].some(function(kw) { return cell.indexOf(kw) === 0 || cell === kw; })) {
-                        if (!monthCols[mi + 1]) { monthCols[mi + 1] = c; foundMonths++; }
-                    }
-                }
-            }
-            if (foundMonths >= 6) { headerRow = r; break; }
-        }
-        
-        if (headerRow >= 0) {
-            console.log('[hq-finanzen] Found month headers at row', headerRow, monthCols);
-            // Look for Umsatz row
-            for (var r2 = headerRow + 1; r2 < rows.length; r2++) {
-                var row2 = rows[r2] || [];
-                var label = String(row2[0] || '').toLowerCase();
-                if (label.indexOf('umsatz') >= 0 || label.indexOf('erlös') >= 0 || label.indexOf('revenue') >= 0 || label.indexOf('gesamtleistung') >= 0) {
-                    for (var m2 in monthCols) {
-                        var val = parseFloat(String(row2[monthCols[m2]] || '0').replace(/[^\d,.-]/g, '').replace(',', '.'));
-                        if (val > 0) planMonths[m2] = { umsatz: val };
-                    }
-                    break;
-                }
-            }
-            // If no umsatz label found, try first data row
-            if (Object.keys(planMonths).length === 0 && rows[headerRow + 1]) {
-                var dataRow = rows[headerRow + 1] || [];
-                for (var m3 in monthCols) {
-                    var val3 = parseFloat(String(dataRow[monthCols[m3]] || '0').replace(/[^\d,.-]/g, '').replace(',', '.'));
-                    if (val3 > 0) planMonths[m3] = { umsatz: val3 };
-                }
-            }
-        }
-        
-        // Strategy 2: Months in first column, values in second
-        if (Object.keys(planMonths).length < 6) {
-            planMonths = {};
-            for (var r3 = 0; r3 < rows.length; r3++) {
-                var row3 = rows[r3] || [];
-                var cellLabel = String(row3[0] || '').toLowerCase().trim();
-                for (var mi2 = 0; mi2 < 12; mi2++) {
-                    if (monatKeywords[mi2].some(function(kw) { return cellLabel.indexOf(kw) === 0 || cellLabel === kw; })) {
-                        var val2 = parseFloat(String(row3[1] || '0').replace(/[^\d,.-]/g, '').replace(',', '.'));
-                        if (val2 > 0) planMonths[mi2 + 1] = { umsatz: val2 };
-                    }
-                }
-            }
-        }
-        
-        // Strategy 3: KI-Fallback if still not enough months
-        if (Object.keys(planMonths).length < 6) {
-            try {
-                if (statusEl) statusEl.innerHTML = '<div class="flex items-center gap-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">🤖 KI-Analyse läuft...</span></div>';
-                // Send ALL sheets to KI for better analysis
-                var allCsv = '';
-                wb.SheetNames.forEach(function(sn) {
-                    allCsv += '=== Sheet: ' + sn + ' ===\n';
-                    allCsv += XLSX.utils.sheet_to_csv(wb.Sheets[sn]) + '\n';
-                });
-                allCsv = allCsv.substring(0, 15000);
-                
-                var supabaseUrl = _sb().supabaseUrl || 'https://lwagbkxeofaihwebkab.supabase.co';
-                var session = (await _sb().auth.getSession()).data.session;
-                var kiResp = await fetch(supabaseUrl + '/functions/v1/analyze-finance', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + (session ? session.access_token : '')
-                    },
-                    body: JSON.stringify({ type: 'jahresplan', text_content: allCsv, context: { jahr: jahr } })
-                });
-                if (kiResp.ok) {
-                    var kiResult = await kiResp.json();
-                    console.log('[hq-finanzen] KI result:', kiResult);
-                    if (kiResult && kiResult.monate) {
-                        planMonths = {};
-                        for (var km in kiResult.monate) {
-                            var kd = kiResult.monate[km];
-                            if (kd && kd.umsatz) planMonths[km] = { umsatz: kd.umsatz };
+        // Call parsePlanFile - it's callback-based, so we need to poll for results
+        if (typeof window.parsePlanFile === 'function') {
+            window.parsePlanFile();
+            
+            // Poll for _parsedPlanMonths (set by applyPlanKiResult or the parser callback)
+            var origParsed = window._parsedPlanMonths;
+            window._parsedPlanMonths = null;
+            
+            var maxWait = 60000; // 60s timeout for KI analysis
+            var waited = 0;
+            var interval = 500;
+            
+            await new Promise(function(resolve) {
+                var timer = setInterval(function() {
+                    waited += interval;
+                    
+                    // Check parse status from the hidden elements
+                    var parseStatus = container.querySelector('#planParseStatus');
+                    var parseResult = container.querySelector('#planParseResult');
+                    var statusText = parseStatus ? parseStatus.textContent : '';
+                    
+                    // Update visible status
+                    if (statusText && statusEl) {
+                        if (statusText.indexOf('KI') >= 0) {
+                            statusEl.innerHTML = '<div class="flex items-center gap-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">🤖 ' + statusText + '</span></div>';
                         }
                     }
-                } else {
-                    console.warn('[hq-finanzen] KI response not ok:', kiResp.status, await kiResp.text());
-                }
-            } catch(kiErr) {
-                console.warn('[hq-finanzen] KI fallback failed:', kiErr.message || kiErr);
+                    
+                    // Check if parsed
+                    if (window._parsedPlanMonths) {
+                        clearInterval(timer);
+                        resolve();
+                        return;
+                    }
+                    
+                    // Check for error
+                    if (statusText.indexOf('❌') >= 0 || statusText.indexOf('Fehler') >= 0) {
+                        clearInterval(timer);
+                        resolve();
+                        return;
+                    }
+                    
+                    // Check for success (plan preview visible)
+                    if (parseResult && !parseResult.classList.contains('hidden') && parseResult.innerHTML.indexOf('saveParsedPlan') >= 0) {
+                        clearInterval(timer);
+                        resolve();
+                        return;
+                    }
+                    
+                    if (waited >= maxWait) {
+                        clearInterval(timer);
+                        resolve();
+                    }
+                }, interval);
+            });
+            
+            // Check result
+            if (window._parsedPlanMonths && Object.keys(window._parsedPlanMonths).length > 0) {
+                // Auto-save the parsed plan (same as saveParsedPlan but for specific standort)
+                var planPayload = {
+                    standort_id: standortId,
+                    jahr: jahr,
+                    plan_daten: window._parsedPlanMonths,
+                    updated_at: new Date().toISOString()
+                };
+                var resp = await _sb().from('jahresplaene').upsert(planPayload, { onConflict: 'standort_id,jahr' }).select();
+                if (resp.error) throw new Error(resp.error.message);
+                
+                var monthCount = Object.keys(window._parsedPlanMonths).length;
+                if (statusEl) statusEl.innerHTML = '<p class="text-sm text-green-600 mt-2">✅ Plan für ' + _escH(stdName) + ' (' + jahr + ') gespeichert! ' + monthCount + ' Monate erkannt.</p>';
+                
+                // Refresh
+                await loadHqFinData();
+                renderHqFinKpis();
+                renderHqFinUebersicht();
+                
+                setTimeout(function() {
+                    var modal = document.getElementById('hqFinPlanUploadModal');
+                    if (modal) modal.remove();
+                }, 2000);
+            } else {
+                // Check if there was an error message
+                var parseStatus = container.querySelector('#planParseStatus');
+                var errorMsg = parseStatus ? parseStatus.textContent : 'Keine Monatsdaten erkannt';
+                if (statusEl) statusEl.innerHTML = '<p class="text-sm text-red-500 mt-2">' + _escH(errorMsg) + '</p>';
             }
+            
+            window._parsedPlanMonths = origParsed;
+        } else {
+            if (statusEl) statusEl.innerHTML = '<p class="text-sm text-red-500 mt-2">Plan-Parser nicht verfügbar.</p>';
         }
         
-        var monthCount = Object.keys(planMonths).length;
-        console.log('[hq-finanzen] Parsed plan months:', monthCount, planMonths);
-        
-        if (monthCount === 0) {
-            if (statusEl) statusEl.innerHTML = '<p class="text-sm text-red-500 mt-2">❌ Keine Monatsdaten erkannt. Bitte prüfe das Format der Excel-Datei.</p>';
-            return;
-        }
-        
-        // Save to DB
-        var payload = {
-            standort_id: standortId,
-            jahr: jahr,
-            plan_daten: planMonths,
-            updated_at: new Date().toISOString()
-        };
-        
-        var resp = await _sb().from('jahresplaene').upsert(payload, { onConflict: 'standort_id,jahr' }).select();
-        if (resp.error) throw new Error(resp.error.message || JSON.stringify(resp.error));
-        
-        console.log('[hq-finanzen] Plan saved:', resp.data);
-        if (statusEl) statusEl.innerHTML = '<p class="text-sm text-green-600 mt-2">✅ Plan für ' + _escH(stdName) + ' (' + jahr + ') gespeichert! ' + monthCount + ' Monate erkannt.</p>';
-        
-        // Refresh
-        await loadHqFinData();
-        renderHqFinKpis();
-        renderHqFinUebersicht();
-        
-        setTimeout(function() {
-            var modal = document.getElementById('hqFinPlanUploadModal');
-            if (modal) modal.remove();
-        }, 2000);
+        // Cleanup
+        if (container.parentNode) container.remove();
         
     } catch(err) {
         console.error('[hq-finanzen] Plan upload error:', err);
         if (statusEl) statusEl.innerHTML = '<p class="text-sm text-red-500 mt-2">Fehler: ' + (err.message || err) + '</p>';
+    } finally {
+        // Restore profile
+        if (_sbProfile()) _sbProfile().standort_id = origStdId;
     }
 }
 
