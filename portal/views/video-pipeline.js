@@ -201,11 +201,16 @@ for(var i=0; i<total; i++) {
         };
         if(groupId) { insertData.group_id = groupId; insertData.group_label = groupLabel; }
 
-        var {error:dbErr} = await _sb().from('videos').insert(insertData);
+        var {data:insertedRow, error:dbErr} = await _sb().from('videos').insert(insertData).select('id').single();
         if(dbErr) throw dbErr;
 
         if(fStatus) fStatus.innerHTML = '<span class="text-green-600">✅ Fertig</span>';
         done++;
+
+        // Auto-trigger analysis in background
+        if(insertedRow && insertedRow.id) {
+            vpAutoAnalyze(insertedRow.id, file.name, fStatus);
+        }
     } catch(e) {
         var errMsg = e.message || e.toString();
         errors.push(file.name + ': ' + errMsg);
@@ -215,16 +220,38 @@ for(var i=0; i<total; i++) {
 
 bar.style.width = '100%';
 if(errors.length === 0) {
-    statusText.textContent = '✅ Alle ' + total + ' Videos hochgeladen!';
+    statusText.textContent = '✅ Alle ' + total + ' Videos hochgeladen! Analyse startet automatisch...';
     bar.className = 'bg-green-500 h-2 rounded-full transition-all';
     vpSelectedFiles = [];
-    setTimeout(function(){ switchSmSub('pipeline'); }, 2000);
+    setTimeout(function(){ switchSmSub('pipeline'); }, 4000);
 } else {
     statusText.textContent = done + ' von ' + total + ' hochgeladen, ' + errors.length + ' Fehler';
     bar.className = 'bg-yellow-500 h-2 rounded-full transition-all';
 }
 btn.disabled = false;
 };
+
+// ==================== AUTO-ANALYSE NACH UPLOAD ====================
+async function vpAutoAnalyze(videoId, filename, statusEl) {
+    try {
+        if(statusEl) statusEl.innerHTML = '<span class="text-blue-500">🔬 Analyse läuft...</span>';
+        var {data, error} = await _sb().functions.invoke('analyze-video', {
+            body: { video_id: videoId }
+        });
+        if(error) throw error;
+        if(data && data.success) {
+            var persons = data.analysis?.persons_detected || 0;
+            var quality = data.analysis?.quality_score || '–';
+            if(statusEl) statusEl.innerHTML = '<span class="text-green-600">✅ Analysiert (👥' + persons + ' · ⭐' + quality + '/100)</span>';
+            console.log('[Pipeline] Auto-Analyse OK für ' + filename + ':', data.analysis);
+        } else {
+            throw new Error(data?.error || 'Analyse fehlgeschlagen');
+        }
+    } catch(e) {
+        console.warn('[Pipeline] Auto-Analyse Fehler für ' + filename + ':', e.message);
+        if(statusEl) statusEl.innerHTML = '<span class="text-yellow-500">⚠️ Hochgeladen (Analyse manuell starten)</span>';
+    }
+}
 
 // ==================== PIPELINE DASHBOARD (Standort: "Meine Videos") ====================
 window.vpRenderPipelineDashboard = async function() {
