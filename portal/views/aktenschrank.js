@@ -170,9 +170,10 @@ function renderRow(d){
     var h='<tr class="border-b hover:bg-gray-50 cursor-pointer" onclick="openAktenReview(\''+d.id+'\')">';
     h+='<td class="py-3 px-4"><div class="flex items-center space-x-3">'+getFileIcon(ext)+'<div><span class="font-medium text-gray-800 block">'+esc(d.titel)+'</span>';
     if(d.datei_name)h+='<span class="text-xs text-gray-400">'+esc(d.datei_name)+'</span>';
-    h+='</div></div></td><td class="py-3 px-4 text-gray-500 text-xs">'+esc(typN)+'</td><td class="py-3 px-4">'+statusBadge(d.status)+'</td><td class="py-3 px-4 text-gray-500 text-xs">'+fmtDate(d.created_at)+'</td><td class="py-3 px-4">'+quelleBadge(d.quelle)+'</td><td class="py-3 px-4 text-right">';
-    if(d.datei_url)h+='<button onclick="event.stopPropagation();downloadAktenDoc(\''+d.id+'\')" class="text-vit-orange hover:underline text-xs font-semibold mr-2">\u2B07</button>';
-    h+='<button onclick="event.stopPropagation();openAktenReview(\''+d.id+'\')" class="text-blue-600 hover:underline text-xs font-semibold">Details</button></td></tr>';
+    h+='</div></div></td><td class="py-3 px-4 text-gray-500 text-xs">'+esc(typN)+'</td><td class="py-3 px-4">'+statusBadge(d.status)+'</td><td class="py-3 px-4 text-gray-500 text-xs">'+fmtDate(d.created_at)+'</td><td class="py-3 px-4">'+quelleBadge(d.quelle)+'</td><td class="py-3 px-4 text-right whitespace-nowrap">';
+    if(d.datei_url)h+='<button onclick="event.stopPropagation();viewAktenDoc(\''+d.id+'\')" class="text-blue-600 hover:text-blue-800 text-xs font-semibold mr-3" title="Ansehen">\uD83D\uDC41 Ansehen</button>';
+    if(d.datei_url)h+='<button onclick="event.stopPropagation();downloadAktenDoc(\''+d.id+'\')" class="text-vit-orange hover:text-orange-700 text-xs font-semibold mr-3" title="Download">\u2B07 Download</button>';
+    h+='<button onclick="event.stopPropagation();openAktenReview(\''+d.id+'\')" class="text-gray-400 hover:text-gray-600 text-xs font-semibold" title="Details">\u2699 Details</button></td></tr>';
     return h;
 }
 
@@ -223,13 +224,21 @@ export async function openAktenReview(dokId){
     var felder=(!fR.error&&fR.data)?fR.data:[];var audit=(!aR.error&&aR.data)?aR.data:[];
     var typN=dok.dokument_typen?dok.dokument_typen.name:(dok.ki_typ_vorschlag||'Unbekannt');
     document.getElementById('aktenReviewTitle').textContent=dok.titel;
-    var html='<div class="grid grid-cols-2 gap-4 mb-6"><div><p class="text-xs text-gray-400 mb-1">Dokumenttyp</p><p class="text-sm font-semibold text-gray-800">'+esc(typN)+'</p></div><div><p class="text-xs text-gray-400 mb-1">Status</p>'+statusBadge(dok.status)+'</div><div><p class="text-xs text-gray-400 mb-1">Quelle</p>'+quelleBadge(dok.quelle)+'</div><div><p class="text-xs text-gray-400 mb-1">Hochgeladen</p><p class="text-sm text-gray-600">'+fmtDate(dok.created_at)+'</p></div></div>';
+
+    // File info header with preview/download buttons
+    var ext=(dok.datei_name||'').split('.').pop().toLowerCase();
+    var html='<div class="bg-gray-50 rounded-lg p-4 mb-6 flex items-center justify-between"><div class="flex items-center space-x-3">'+getFileIcon(ext.toUpperCase())+'<div><p class="text-sm font-semibold text-gray-800">'+esc(dok.datei_name||dok.titel)+'</p><p class="text-xs text-gray-400">'+fmtBytes(dok.datei_groesse||0)+' \u2022 '+esc(ext.toUpperCase())+'</p></div></div><div class="flex items-center space-x-2">';
+    if(dok.datei_url)html+='<button onclick="viewAktenDoc(\''+dokId+'\')" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 flex items-center space-x-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg><span>Ansehen</span></button>';
+    if(dok.datei_url)html+='<button onclick="downloadAktenDoc(\''+dokId+'\')" class="px-3 py-2 bg-vit-orange text-white rounded-lg text-xs font-semibold hover:opacity-90 flex items-center space-x-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><span>Download</span></button>';
+    html+='</div></div>';
+
+    // Metadata grid
+    html+='<div class="grid grid-cols-2 gap-4 mb-6"><div><p class="text-xs text-gray-400 mb-1">Dokumenttyp</p><p class="text-sm font-semibold text-gray-800">'+esc(typN)+'</p></div><div><p class="text-xs text-gray-400 mb-1">Status</p>'+statusBadge(dok.status)+'</div><div><p class="text-xs text-gray-400 mb-1">Quelle</p>'+quelleBadge(dok.quelle)+'</div><div><p class="text-xs text-gray-400 mb-1">Hochgeladen</p><p class="text-sm text-gray-600">'+fmtDate(dok.created_at)+'</p></div></div>';
     if(dok.ki_confidence){var p=Math.round(dok.ki_confidence*100);html+='<div class="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-6"><div class="flex items-center justify-between mb-1"><span class="text-xs font-semibold text-blue-800">\uD83E\uDD16 KI-Konfidenz</span><span class="text-xs font-bold text-blue-700">'+p+'%</span></div><div class="w-full bg-blue-200 rounded-full h-2"><div class="bg-blue-600 h-2 rounded-full" style="width:'+p+'%"></div></div></div>';}
     if(felder.length>0){html+='<div class="mb-6"><h4 class="text-sm font-bold text-gray-800 mb-3">\uD83D\uDCCA Extrahierte Daten</h4><div class="bg-gray-50 rounded-lg overflow-hidden"><table class="w-full text-sm">';felder.forEach(function(f){var cb='';if(f.confidence){var cp=Math.round(f.confidence*100);var cc=cp>=80?'text-green-600':cp>=50?'text-yellow-600':'text-red-600';cb='<span class="'+cc+' text-xs font-mono">'+cp+'%</span>';}var cor=f.manuell_korrigiert?' <span class="text-xs text-purple-600">\u270F\uFE0F</span>':'';html+='<tr class="border-b border-gray-200"><td class="py-2 px-3 text-gray-500 font-medium text-xs w-1/3">'+esc(f.feld_label||f.feld_name)+'</td><td class="py-2 px-3 text-gray-800 font-semibold text-xs">'+esc(f.feld_wert||'\u2014')+cor+'</td><td class="py-2 px-3 text-right">'+cb+'</td></tr>';});html+='</table></div></div>';}
     if(audit.length>0){var aL={'hochgeladen':'\uD83D\uDCE4 Hochgeladen','ki_klassifiziert':'\uD83E\uDD16 KI klassifiziert','ki_extrahiert':'\uD83E\uDD16 Felder extrahiert','manuell_geprueft':'\u2705 Gepr\u00fcft','typ_geaendert':'\uD83D\uDD04 Typ ge\u00e4ndert','feld_korrigiert':'\u270F\uFE0F Korrigiert','status_geaendert':'\uD83D\uDD00 Status','archiviert':'\uD83D\uDCE6 Archiviert','auto_sync':'\uD83D\uDD17 Auto-Sync'};html+='<div class="mb-6"><h4 class="text-sm font-bold text-gray-800 mb-3">\uD83D\uDCCB Verlauf</h4><div class="space-y-2">';audit.forEach(function(a){var desc=a.details&&a.details.beschreibung?a.details.beschreibung:'';html+='<div class="flex items-start space-x-3 text-xs"><span class="text-gray-400 whitespace-nowrap">'+fmtDateTime(a.created_at)+'</span><span class="font-medium text-gray-700">'+(aL[a.aktion]||a.aktion)+'</span>';if(desc)html+='<span class="text-gray-400">'+esc(desc)+'</span>';html+='</div>';});html+='</div></div>';}
     html+='<div class="flex items-center space-x-3 border-t border-gray-200 pt-4">';
     if(dok.status==='ki_verarbeitet'||dok.status==='eingegangen'){html+='<button onclick="confirmAktenDoc(\''+dokId+'\')" class="flex-1 py-2.5 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700">\u2705 Best\u00e4tigen</button><button onclick="rejectAktenDoc(\''+dokId+'\')" class="px-4 py-2.5 bg-red-50 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-100 border border-red-200">Ablehnen</button>';}
-    if(dok.datei_url)html+='<button onclick="downloadAktenDoc(\''+dokId+'\')" class="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200">\u2B07 Download</button>';
     html+='</div>';
     document.getElementById('aktenReviewContent').innerHTML=html;
     document.getElementById('aktenReviewOverlay').classList.remove('hidden');
@@ -307,10 +316,51 @@ function updateStats(){
     if(el('aktenStatSync'))el('aktenStatSync').textContent=d.filter(function(x){return x.quelle==='controlling';}).length;
 }
 
+// VIEW / PREVIEW
+export async function viewAktenDoc(dokId){
+    var dok=_akten.dokumente.find(function(d){return d.id===dokId;});if(!dok)return;
+    var url=dok.datei_url;
+    // For controlling-synced BWAs without file: open controlling module
+    if(!url && dok.quelle==='controlling'){
+        if(typeof window.showView==='function')window.showView('buchhaltung');
+        aktenToast('\uD83D\uDCCA BWA im Controlling-Modul \u00f6ffnen');return;
+    }
+    if(!url){aktenToast('\u26A0\uFE0F Keine Datei verf\u00fcgbar');return;}
+    // Get signed URL if Supabase storage path
+    var viewUrl=url;
+    if(!url.startsWith('http')){try{var r=await _sb().storage.from('dokumente').createSignedUrl(url,3600);if(r.data&&r.data.signedUrl)viewUrl=r.data.signedUrl;}catch(e){console.error('View URL error:',e);}}
+    var ext=(dok.datei_name||url).split('.').pop().toLowerCase();
+    // Show preview overlay
+    var overlay=document.getElementById('aktenPreviewOverlay');
+    if(!overlay){overlay=document.createElement('div');overlay.id='aktenPreviewOverlay';overlay.className='hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60]';overlay.onclick=function(e){if(e.target===overlay)closeAktenPreview();};document.body.appendChild(overlay);}
+    var html='<div class="bg-white rounded-xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl" onclick="event.stopPropagation()">';
+    html+='<div class="flex items-center justify-between px-5 py-3 border-b border-gray-200"><div class="flex items-center space-x-2">'+getFileIcon(ext.toUpperCase())+'<span class="font-semibold text-gray-800 text-sm truncate max-w-md">'+esc(dok.titel)+'</span></div><div class="flex items-center space-x-2">';
+    html+='<button onclick="downloadAktenDoc(\''+dokId+'\')" class="px-3 py-1.5 bg-vit-orange text-white rounded-lg text-xs font-semibold hover:opacity-90">\u2B07 Download</button>';
+    html+='<a href="'+esc(viewUrl)+'" target="_blank" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200">\u2197 Neues Tab</a>';
+    html+='<button onclick="closeAktenPreview()" class="text-gray-400 hover:text-gray-600 text-xl ml-2">&times;</button></div></div>';
+    html+='<div class="flex-1 overflow-auto p-1 bg-gray-100 min-h-[400px]">';
+    if(ext==='pdf'){html+='<iframe src="'+esc(viewUrl)+'" class="w-full h-full min-h-[75vh] rounded" frameborder="0"></iframe>';}
+    else if(['jpg','jpeg','png','gif','webp','svg'].indexOf(ext)>=0){html+='<div class="flex items-center justify-center p-4"><img src="'+esc(viewUrl)+'" class="max-w-full max-h-[75vh] rounded shadow" alt="'+esc(dok.titel)+'"></div>';}
+    else if(['xlsx','xls','csv','docx','doc'].indexOf(ext)>=0){html+='<div class="flex flex-col items-center justify-center py-16 text-gray-500"><span class="text-5xl mb-4">'+getFileIcon(ext.toUpperCase())+'</span><p class="text-sm font-medium mb-2">'+esc(dok.datei_name||dok.titel)+'</p><p class="text-xs text-gray-400 mb-4">Vorschau f\u00fcr diesen Dateityp nicht verf\u00fcgbar</p><button onclick="downloadAktenDoc(\''+dokId+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">\u2B07 Herunterladen zum Ansehen</button></div>';}
+    else{html+='<div class="flex flex-col items-center justify-center py-16 text-gray-500"><span class="text-5xl mb-4">\uD83D\uDCC1</span><p class="text-xs text-gray-400 mb-4">Vorschau nicht m\u00f6glich</p><a href="'+esc(viewUrl)+'" target="_blank" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">Im Browser \u00f6ffnen</a></div>';}
+    html+='</div></div>';
+    overlay.innerHTML=html;overlay.classList.remove('hidden');
+}
+
+export function closeAktenPreview(){var o=document.getElementById('aktenPreviewOverlay');if(o)o.classList.add('hidden');}
+
 export async function downloadAktenDoc(dokId){
-    var dok=_akten.dokumente.find(function(d){return d.id===dokId;});if(!dok||!dok.datei_url)return;
-    try{if(dok.datei_url.startsWith('http')){window.open(dok.datei_url,'_blank');}else{var r=await _sb().storage.from('dokumente').createSignedUrl(dok.datei_url,3600);if(r.data&&r.data.signedUrl)window.open(r.data.signedUrl,'_blank');}}
-    catch(err){console.error('Download error:',err);aktenToast('\u274C Download fehlgeschlagen');}
+    var dok=_akten.dokumente.find(function(d){return d.id===dokId;});if(!dok)return;
+    // For controlling-synced BWAs without file: show toast
+    if(!dok.datei_url && dok.quelle==='controlling'){aktenToast('\uD83D\uDCCA BWA-Daten sind im Controlling-Modul verf\u00fcgbar');return;}
+    if(!dok.datei_url){aktenToast('\u26A0\uFE0F Keine Datei zum Download');return;}
+    try{
+        var url=dok.datei_url;
+        if(!url.startsWith('http')){var r=await _sb().storage.from('dokumente').createSignedUrl(url,3600);if(r.data&&r.data.signedUrl)url=r.data.signedUrl;}
+        // Force download with anchor trick
+        var a=document.createElement('a');a.href=url;a.download=dok.datei_name||dok.titel||'dokument';a.target='_blank';document.body.appendChild(a);a.click();document.body.removeChild(a);
+        aktenToast('\u2B07 Download gestartet');
+    }catch(err){console.error('Download error:',err);aktenToast('\u274C Download fehlgeschlagen');}
 }
 
 export function filterAkten(){
@@ -322,6 +372,6 @@ export function filterAkten(){
 export function loadAktenschrank(){console.log('[aktenschrank.js] loadAktenschrank called, aktenschrankView exists:', !!document.getElementById('aktenschrankView'));renderMainView();loadAktenFiles();}
 
 // WINDOW REGISTRATION
-const _exports={loadAktenschrank,loadAktenFiles,getFileIcon,openAktenFolder,closeAktenFolder,filterAkten,showAktenInbox,closeAktenInbox,openAktenReview,closeAktenReview,confirmAktenDoc,rejectAktenDoc,openAktenUpload,closeAktenUpload,handleAktenDrop,handleAktenFileSelect,startAktenUpload,removeFromAktenQueue,downloadAktenDoc};
+const _exports={loadAktenschrank,loadAktenFiles,getFileIcon,openAktenFolder,closeAktenFolder,filterAkten,showAktenInbox,closeAktenInbox,openAktenReview,closeAktenReview,confirmAktenDoc,rejectAktenDoc,openAktenUpload,closeAktenUpload,handleAktenDrop,handleAktenFileSelect,startAktenUpload,removeFromAktenQueue,downloadAktenDoc,viewAktenDoc,closeAktenPreview};
 Object.keys(_exports).forEach(k=>{window[k]=_exports[k];});
 console.log('[aktenschrank.js] \u2705 v2 loaded \u2013 '+Object.keys(_exports).length+' exports (DB-driven, KI-ready)');
