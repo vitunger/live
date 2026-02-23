@@ -371,198 +371,217 @@ try {
     var {data:reels} = await _sb().from('reels').select('*, reel_publications(*)').eq('video_id',videoId);
     var {data:logs} = await _sb().from('pipeline_log').select('*').eq('video_id',videoId).order('created_at',{ascending:true});
 
-    var html = '<div class="flex justify-between items-start mb-4"><div><h2 class="text-xl font-bold text-gray-800">'+v.filename+'</h2><p class="text-sm text-gray-500">'+(vpCategoryLabels[v.category]||v.category)+' · '+vpFileSize(v.file_size_bytes)+' · '+vpDateTime(v.created_at)+'</p></div><div class="flex items-center gap-2">'+vpBadge(v.pipeline_status)+'<button onclick="vpCloseModal()" class="text-gray-400 hover:text-gray-600 text-2xl ml-2">&times;</button></div></div>';
+    var isHqUser = (window.sbProfile && window.sbProfile.is_hq) || (window.currentRoles && window.currentRoles.indexOf('hq') !== -1) || false;
 
+    // HEADER
+    var html = '<div class="flex justify-between items-start mb-3"><div><h2 class="text-lg font-bold text-gray-800">'+v.filename+'</h2><p class="text-xs text-gray-500">'+(vpCategoryLabels[v.category]||v.category)+' \u00b7 '+vpFileSize(v.file_size_bytes)+' \u00b7 '+vpDateTime(v.created_at)+'</p></div><div class="flex items-center gap-2">'+vpBadge(v.pipeline_status)+'<button onclick="vpCloseModal()" class="text-gray-400 hover:text-gray-600 text-2xl ml-2">&times;</button></div></div>';
+
+    // Progress bar
     var stages = ['uploaded','analyzing','consent_check','cutting','review','approved','published'];
     var currentIdx = stages.indexOf(v.pipeline_status);
     if(currentIdx===-1) currentIdx = stages.indexOf({consent_blocked:'consent_check',rejected:'review',failed:'uploaded'}[v.pipeline_status]||'uploaded');
-    html += '<div class="flex items-center gap-0.5 mb-6">';
+    html += '<div class="flex items-center gap-0.5 mb-4">';
     stages.forEach(function(s,i){
         var cls = i<currentIdx?'bg-green-400':i===currentIdx?'bg-vit-orange':'bg-gray-200';
-        html += '<div class="flex-1 h-2 rounded-full '+cls+'" title="'+(vpStatusLabels[s]||s)+'"></div>';
+        html += '<div class="flex-1 h-1.5 rounded-full '+cls+'" title="'+(vpStatusLabels[s]||s)+'"></div>';
     });
     html += '</div>';
 
-    if(v.pipeline_status_detail) html += '<div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">ℹ️ '+v.pipeline_status_detail+'</div>';
+    if(v.pipeline_status_detail) html += '<div class="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg text-xs text-yellow-800">\u2139\ufe0f '+v.pipeline_status_detail+'</div>';
 
-    // Get signed URL for video player + frame extraction
+    // Get signed URL
     var signedUrl = null;
     try {
         var {data:signData} = await _sb().storage.from('videos').createSignedUrl(v.storage_path, 600);
         if(signData && signData.signedUrl) signedUrl = signData.signedUrl;
     } catch(e) { console.warn('Signed URL failed:', e); }
 
-    // Video Player
+    // SPLIT LAYOUT
+    html += '<div class="grid grid-cols-1 lg:grid-cols-5 gap-4">';
+
+    // LEFT: Video + Meta (3 cols)
+    html += '<div class="lg:col-span-3">';
+
     if(signedUrl) {
-        html += '<div class="mb-4"><div class="rounded-lg overflow-hidden bg-black">';
-        html += '<video id="vpDetailPlayer" controls preload="metadata" class="w-full max-h-[400px]" style="max-height:400px;">';
+        html += '<div class="rounded-lg overflow-hidden bg-black mb-3">';
+        html += '<video id="vpDetailPlayer" controls preload="metadata" class="w-full" style="max-height:360px;">';
         html += '<source src="'+signedUrl+'" type="video/mp4">';
         html += '<source src="'+signedUrl+'" type="video/quicktime">';
-        html += '<p class="text-white p-4">Video kann nicht abgespielt werden. <a href="'+signedUrl+'" target="_blank" class="underline text-blue-300">Herunterladen</a></p>';
-        html += '</video>';
-        html += '<a href="'+signedUrl+'" target="_blank" download class="inline-block mt-1 text-xs text-gray-400 hover:text-vit-orange">⬇️ Video herunterladen</a>';
-        html += '</div>';
-        // Quick actions bar under video (HQ only)
-        var isHqUserQA = (window.sbProfile && window.sbProfile.is_hq) || false;
-        if(isHqUserQA) {
-            html += '<div class="flex items-center justify-between mt-2 px-1">';
-            html += '<div class="flex gap-2">';
-            if(v.pipeline_status==='uploaded') html += '<button onclick="vpTriggerAnalysis(\''+v.id+'\')" class="px-3 py-1.5 bg-vit-orange text-white rounded-lg text-sm hover:bg-orange-600">🔬 Analysieren</button>';
-            if(v.pipeline_status==='consent_check'||v.pipeline_status==='consent_blocked') {
-                html += '<button onclick="vpTriggerConsent(\''+v.id+'\')" class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600">🔍 Consent</button>';
-                html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'cutting\')" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300">⏩ Skip</button>';
-            }
-            if(v.pipeline_status==='cutting') html += '<button onclick="vpTriggerReels(\''+v.id+'\')" class="px-3 py-1.5 bg-purple-500 text-white rounded-lg text-sm hover:bg-purple-600">🎬 Reels</button>';
-            if(v.pipeline_status==='review') {
-                html += '<button onclick="vpHqApprove(\''+v.id+'\')" class="px-3 py-1.5 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600">✅ Freigeben</button>';
-                html += '<button onclick="vpShowFeedback(\''+v.id+'\')" class="px-3 py-1.5 bg-yellow-400 text-white rounded-lg text-sm hover:bg-yellow-500">💬 Feedback</button>';
-                html += '<button onclick="vpHqReject(\''+v.id+'\')" class="px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600">❌ Ablehnen</button>';
-            }
-            if(v.pipeline_status==='approved') html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'publishing\')" class="px-3 py-1.5 bg-purple-500 text-white rounded-lg text-sm hover:bg-purple-600">🚀 Publish</button>';
-            html += '</div>';
-            html += '<span class="text-xs text-gray-400">'+vpBadge(v.pipeline_status)+'</span>';
-            html += '</div>';
+        html += '</video></div>';
+        html += '<a href="'+signedUrl+'" target="_blank" download class="text-xs text-gray-400 hover:text-vit-orange">\u2b07\ufe0f Herunterladen</a>';
+    } else {
+        html += '<div class="p-8 bg-gray-100 rounded-lg text-center text-gray-400 mb-3"><div class="text-3xl mb-2">\ud83c\udfac</div><p class="text-sm">Video nicht verf\u00fcgbar</p></div>';
+    }
+
+    // Quick Actions (HQ)
+    if(isHqUser) {
+        html += '<div class="flex flex-wrap gap-2 mt-2 mb-3">';
+        if(v.pipeline_status==='uploaded') {
+            html += '<button onclick="vpTriggerAnalysis(\''+v.id+'\')" class="px-3 py-1.5 bg-vit-orange text-white rounded-lg text-xs hover:bg-orange-600">\ud83d\udd2c Analysieren</button>';
+            html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'analyzing\')" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs hover:bg-gray-200">\u23e9 Weiter</button>';
         }
+        if(v.pipeline_status==='consent_check'||v.pipeline_status==='consent_blocked') {
+            html += '<button onclick="vpCloseModal();vpShowTagging(\''+v.id+'\')" class="px-3 py-1.5 bg-vit-orange text-white rounded-lg text-xs hover:bg-orange-600">\ud83d\udc65 Taggen</button>';
+            html += '<button onclick="vpTriggerConsent(\''+v.id+'\')" class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs hover:bg-blue-600">\ud83d\udd0d Consent</button>';
+            html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'cutting\')" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs hover:bg-gray-200">\u23e9 Skip</button>';
+        }
+        if(v.pipeline_status==='cutting') {
+            html += '<button onclick="vpTriggerReels(\''+v.id+'\')" class="px-3 py-1.5 bg-purple-500 text-white rounded-lg text-xs hover:bg-purple-600">\ud83c\udfac Reels</button>';
+            html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'review\')" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs hover:bg-gray-200">\u23e9 Freigabe</button>';
+        }
+        if(v.pipeline_status==='review') {
+            html += '<button onclick="vpHqApprove(\''+v.id+'\')" class="px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs hover:bg-green-600">\u2705 Freigeben</button>';
+            html += '<button onclick="vpHqReject(\''+v.id+'\')" class="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs hover:bg-red-600">\u274c Ablehnen</button>';
+        }
+        if(v.pipeline_status==='approved') html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'publishing\')" class="px-3 py-1.5 bg-purple-500 text-white rounded-lg text-xs hover:bg-purple-600">\ud83d\ude80 Publish</button>';
+        if(v.pipeline_status==='rejected') html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'uploaded\')" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs hover:bg-gray-200">\ud83d\udd04 Reset</button>';
         html += '</div>';
     } else {
-        html += '<div class="mb-4 p-6 bg-gray-100 rounded-lg text-center text-gray-400"><div class="text-3xl mb-2">🎬</div><p class="text-sm">Video-Vorschau nicht verfügbar</p></div>';
+        var statusMsgs = {uploaded:'\ud83d\udce4 HQ \u00fcbernimmt ab hier.',consent_check:'\u23f3 HQ pr\u00fcft Einwilligungen.',cutting:'\u2702\ufe0f HQ k\u00fcmmert sich um den Schnitt.',review:'\ud83d\udc40 Wird vom HQ gepr\u00fcft.',approved:'\u2705 Freigegeben!',published:'\ud83c\udf89 Ver\u00f6ffentlicht!',rejected:'\u274c Abgelehnt: '+(v.pipeline_status_detail||'')};
+        html += '<div class="p-2 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700 mt-2 mb-3">'+(statusMsgs[v.pipeline_status]||'')+'</div>';
     }
 
+    // Personen (compact pills, click to jump in video)
     if(persons && persons.length>0) {
-        html += '<div class="mb-4"><h3 class="font-semibold text-gray-700 mb-2">👥 Erkannte Personen ('+persons.length+')</h3>';
-        html += '<div class="grid gap-3" id="vpPersonsList">';
-        persons.forEach(function(p, idx){
-            var statusCls = p.consent_status==='cleared'?'border-green-400 bg-green-50':p.consent_status==='missing'?'border-red-400 bg-red-50':'border-yellow-400 bg-yellow-50';
-            var statusIcon = p.consent_status==='cleared'?'✅':p.consent_status==='missing'?'❌':'⚠️';
-            var statusLabel = p.consent_status==='cleared'?'Einwilligung OK':p.consent_status==='missing'?'Einwilligung fehlt':'Ausstehend';
+        html += '<div class="mb-3"><h3 class="text-sm font-semibold text-gray-600 mb-2">\ud83d\udc65 Personen ('+persons.length+')</h3>';
+        html += '<div class="flex flex-wrap gap-2">';
+        persons.forEach(function(p) {
+            var statusIcon = p.consent_status==='cleared'?'\u2705':p.consent_status==='missing'?'\u274c':'\u26a0\ufe0f';
+            var bg = p.consent_status==='cleared'?'bg-green-50 border-green-300':p.consent_status==='missing'?'bg-red-50 border-red-300':'bg-yellow-50 border-yellow-300';
             var timestamps = p.scene_timestamps || [];
-            var firstAppear = (timestamps[0] && timestamps[0].start) || 0;
-            
-            html += '<div class="flex items-start gap-3 p-3 rounded-lg border-2 '+statusCls+'">';
-            // Frame thumbnail placeholder
-            html += '<div class="flex-shrink-0 w-20 h-20 rounded-lg bg-gray-200 overflow-hidden relative" id="vpFrame_'+idx+'" data-timestamp="'+firstAppear+'">';
-            html += '<div class="flex items-center justify-center w-full h-full text-gray-400 text-xs" id="vpFrameLoading_'+idx+'"><div class="animate-spin w-5 h-5 border-2 border-gray-300 border-t-gray-500 rounded-full"></div></div>';
+            var firstSec = (timestamps[0] && timestamps[0].start) || 0;
+            html += '<div class="flex items-center gap-2 px-3 py-2 rounded-lg border '+bg+' cursor-pointer hover:shadow-sm" onclick="vpJumpTo('+firstSec+')">';
+            html += '<span>'+statusIcon+'</span><span class="text-sm font-medium">'+p.person_label+'</span>';
+            html += '<span class="text-xs text-gray-400">'+vpFormatTime(firstSec)+'</span>';
             html += '</div>';
-            // Person info
-            html += '<div class="flex-1 min-w-0">';
-            html += '<div class="flex items-center gap-2 mb-1"><span class="text-lg">'+statusIcon+'</span><span class="font-semibold text-gray-800">'+p.person_label+'</span></div>';
-            html += '<div class="text-xs text-gray-500">'+statusLabel+'</div>';
-            if(timestamps.length > 0) {
-                html += '<div class="flex flex-wrap gap-1 mt-1.5">';
-                timestamps.forEach(function(ts, ti) {
-                    var startSec = ts.start || 0;
-                    var endSec = ts.end || 0;
-                    html += '<button onclick="vpSeekFrame('+startSec+','+idx+')" class="text-xs px-2 py-0.5 bg-white border border-gray-300 rounded hover:bg-gray-100 cursor-pointer" title="Frame bei '+vpFormatTime(startSec)+' anzeigen">📍 '+vpFormatTime(startSec)+' – '+vpFormatTime(endSec)+'</button>';
-                });
-                html += '</div>';
-            }
-            html += '</div></div>';
         });
         html += '</div></div>';
-
-        // Hidden canvas for frame extraction (video player is now visible above)
-        if(signedUrl) {
-            html += '<canvas id="vpFrameCanvas" style="display:none;"></canvas>';
-        }
     }
 
+    // Reels (compact)
     if(reels && reels.length>0) {
-        html += '<div class="mb-4"><h3 class="font-semibold text-gray-700 mb-2">🎞️ Reels ('+reels.length+')</h3><div class="grid gap-2">';
-        reels.forEach(function(r){
-            html += '<div class="p-3 bg-gray-50 rounded-lg"><div class="flex justify-between items-center"><span class="font-medium text-sm">'+(r.caption?r.caption.substring(0,60)+'...':'Reel')+'</span>'+vpBadge(r.status)+'</div>';
-            if(r.reel_publications && r.reel_publications.length>0) {
-                html += '<div class="flex gap-2 mt-2">';
-                r.reel_publications.forEach(function(pub){ html += '<span class="text-xs px-2 py-1 rounded '+(pub.is_published?'bg-green-100 text-green-700':'bg-gray-100 text-gray-600')+'">'+pub.platform.replace('_',' ')+(pub.is_published?' ✓':'')+'</span>'; });
-                html += '</div>';
-            }
-            html += '</div>';
+        html += '<div class="mb-3"><h3 class="text-sm font-semibold text-gray-600 mb-2">\ud83c\udfde\ufe0f Reels ('+reels.length+')</h3>';
+        reels.forEach(function(r) {
+            html += '<div class="flex justify-between items-center p-2 bg-gray-50 rounded text-xs mb-1"><span>'+(r.caption?r.caption.substring(0,50):'Reel')+'</span>'+vpBadge(r.status)+'</div>';
         });
-        html += '</div></div>';
-    }
-
-    if(logs && logs.length>0) {
-        html += '<div class="mb-4"><h3 class="font-semibold text-gray-700 mb-2">📋 Pipeline-Log</h3><div class="space-y-1 max-h-48 overflow-y-auto">';
-        logs.forEach(function(l){ html += '<div class="flex gap-2 text-xs text-gray-500"><span class="whitespace-nowrap">'+vpDateTime(l.created_at)+'</span><span class="font-medium text-gray-600">['+l.phase+']</span><span>'+l.action+'</span></div>'; });
-        html += '</div></div>';
-    }
-
-    var isHqUser = (window.sbProfile && window.sbProfile.is_hq) || (window.currentRoles && window.currentRoles.indexOf('hq') !== -1) || false;
-
-    if(v.pipeline_status==='uploaded') {
-        if(isHqUser) {
-            html += '<div class="mt-4 pt-4 border-t flex gap-2">';
-            html += '<button onclick="vpTriggerAnalysis(\''+v.id+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 transition font-medium">🔬 Analyse starten</button>';
-            html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'analyzing\')" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm">⏩ Manuell weiter</button>';
-            html += '</div>';
-        } else {
-            html += '<div class="mt-4 pt-4 border-t"><div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">📤 Danke fürs Hochladen! Das HQ-Team übernimmt ab hier – du wirst über den Fortschritt informiert.</div></div>';
-        }
-    }
-
-    if(v.pipeline_status==='consent_check' || v.pipeline_status==='consent_blocked') {
-        if(isHqUser) {
-            html += '<div class="mt-4 pt-4 border-t"><div class="flex gap-2 flex-wrap">';
-            html += '<button onclick="vpCloseModal();vpShowTagging(\''+v.id+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 transition font-medium">👥 Personen taggen</button>';
-            html += '<button onclick="vpTriggerConsent(\''+v.id+'\')" class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm">🔍 Consent prüfen</button>';
-            html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'cutting\')" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm">⏩ Überspringen</button>';
-            html += '</div></div>';
-        } else {
-            html += '<div class="mt-4 pt-4 border-t"><div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">⏳ Das HQ prüft die Einwilligungen der erkannten Personen. Du wirst benachrichtigt, sobald es weitergeht.</div></div>';
-        }
-    }
-
-    if(v.pipeline_status==='cutting') {
-        if(isHqUser) {
-            html += '<div class="mt-4 pt-4 border-t flex gap-2">';
-            html += '<button onclick="vpTriggerReels(\''+v.id+'\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 transition font-medium">🎬 Reels generieren</button>';
-            html += '<button onclick="vpManualAdvance(\''+v.id+'\',\'review\')" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm">⏩ Zur Freigabe</button>';
-            html += '</div>';
-        } else {
-            html += '<div class="mt-4 pt-4 border-t"><div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">✂️ Das HQ kümmert sich um den Schnitt. Du wirst benachrichtigt, sobald dein Reel fertig ist.</div></div>';
-        }
-    }
-
-    if(v.pipeline_status==='review') {
-        if(isHqUser) {
-            html += '<div class="mt-4 pt-4 border-t flex gap-2">';
-            html += '<button onclick="vpApproveVideo(\''+v.id+'\')" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-medium">✅ Freigeben</button>';
-            html += '<button onclick="vpRejectVideo(\''+v.id+'\')" class="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition text-sm">❌ Ablehnen</button>';
-            html += '</div>';
-        } else {
-            html += '<div class="mt-4 pt-4 border-t"><div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-700">👀 Dein Video wird vom HQ-Team geprüft. Du erhältst eine Benachrichtigung zur Freigabe.</div></div>';
-        }
-    }
-
-    if(v.pipeline_status==='approved') {
-        if(isHqUser) {
-            html += '<div class="mt-4 pt-4 border-t"><button onclick="vpManualAdvance(\''+v.id+'\',\'publishing\')" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition font-medium">🚀 Veröffentlichen</button></div>';
-        } else {
-            html += '<div class="mt-4 pt-4 border-t"><div class="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">✅ Freigegeben! Dein Video wird in Kürze veröffentlicht.</div></div>';
-        }
-    }
-
-    if(v.pipeline_status==='published') {
-        html += '<div class="mt-4 pt-4 border-t"><div class="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">🎉 Dein Video wurde veröffentlicht!</div></div>';
-    }
-
-    if(v.pipeline_status==='rejected') {
-        html += '<div class="mt-4 pt-4 border-t"><div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">❌ Video wurde abgelehnt: '+(v.pipeline_status_detail||'Kein Grund angegeben')+'</div>';
-        if(isHqUser) html += '<div class="mt-2"><button onclick="vpManualAdvance(\''+v.id+'\',\'uploaded\')" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm">🔄 Zurücksetzen</button></div>';
         html += '</div>';
     }
+
+    // Pipeline-Log (collapsible)
+    if(logs && logs.length>0) {
+        html += '<details class="mb-3"><summary class="text-sm font-semibold text-gray-600 cursor-pointer hover:text-gray-800">\ud83d\udccb Pipeline-Log ('+logs.length+')</summary>';
+        html += '<div class="space-y-0.5 max-h-32 overflow-y-auto mt-2">';
+        logs.forEach(function(l){ html += '<div class="flex gap-2 text-[10px] text-gray-500"><span class="whitespace-nowrap">'+vpDateTime(l.created_at)+'</span><span class="font-medium text-gray-600">['+l.phase+']</span><span>'+l.action+'</span></div>'; });
+        html += '</div></details>';
+    }
+
+    html += '</div>'; // end left
+
+    // RIGHT: KI-Feedback Chat (2 cols)
+    html += '<div class="lg:col-span-2 flex flex-col">';
+
+    if(isHqUser) {
+        html += '<div class="bg-gray-50 rounded-xl border border-gray-200 flex flex-col" style="height:100%;min-height:400px;">';
+        html += '<div class="flex items-center gap-2 px-4 py-3 border-b bg-white rounded-t-xl"><span class="text-lg">\ud83e\udd16</span><div><div class="font-semibold text-sm text-gray-800">KI-Feedback</div><div class="text-[10px] text-gray-400">Sag der KI was du \u00e4ndern willst</div></div></div>';
+
+        html += '<div id="vpChatMessages" class="flex-1 overflow-y-auto px-4 py-3 space-y-3" style="max-height:350px;">';
+
+        var feedbackLogs = (logs||[]).filter(function(l){ return l.phase==='feedback' || l.action==='hq_feedback'; });
+        if(feedbackLogs.length > 0) {
+            feedbackLogs.forEach(function(l) {
+                var d = l.details || {};
+                html += '<div class="flex gap-2"><div class="w-6 h-6 rounded-full bg-vit-orange text-white flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">HQ</div><div class="bg-white rounded-lg rounded-tl-sm px-3 py-2 text-xs shadow-sm max-w-[90%]">'+(d.feedback||l.action)+'<div class="text-[10px] text-gray-300 mt-1">'+vpDateTime(l.created_at)+'</div></div></div>';
+            });
+        }
+        if(reels) {
+            reels.forEach(function(r) {
+                if(r.feedback_summary) html += '<div class="flex gap-2 justify-end"><div class="bg-blue-50 rounded-lg rounded-tr-sm px-3 py-2 text-xs shadow-sm max-w-[90%]"><div class="text-[10px] font-medium text-blue-600 mb-1">\ud83e\udd16 KI</div>'+r.feedback_summary+'</div><div class="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">KI</div></div>';
+                if(r.review_notes && r.status==='rejected') html += '<div class="flex gap-2"><div class="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">HQ</div><div class="bg-red-50 rounded-lg rounded-tl-sm px-3 py-2 text-xs shadow-sm">\u274c '+r.review_notes+'</div></div>';
+            });
+        }
+        if(feedbackLogs.length===0 && !(reels||[]).some(function(r){return r.feedback_summary||r.review_notes;})) {
+            html += '<div class="text-center text-gray-300 text-xs py-8"><p>\ud83d\udcac Noch kein Feedback</p><p class="mt-1">Nutze die Tags oder schreib frei</p></div>';
+        }
+        html += '</div>';
+
+        html += '<div class="px-3 py-2 border-t bg-white rounded-b-xl"><div class="flex flex-wrap gap-1 mb-2">';
+        ['K\u00fcrzer','L\u00e4nger','Mehr Action','Anderer CTA','Untertitel','Intro','Outro','Ton','Branding','Schnitt'].forEach(function(tag) {
+            html += '<button onclick="vpChatAddTag(this)" class="vp-chat-tag text-[10px] px-2 py-0.5 border border-gray-200 rounded-full hover:bg-vit-orange hover:text-white hover:border-vit-orange transition cursor-pointer" data-active="false">'+tag+'</button>';
+        });
+        html += '</div>';
+        html += '<div class="flex gap-2">';
+        html += '<input id="vpChatInput" class="flex-1 px-3 py-2 border rounded-lg text-xs" placeholder="z.B. Ab 0:12 rausschneiden..." onkeydown="if(event.key===\'Enter\')vpChatSend(\''+v.id+'\')">';
+        html += '<button onclick="vpChatSend(\''+v.id+'\')" class="px-3 py-2 bg-vit-orange text-white rounded-lg text-xs hover:bg-orange-600 flex-shrink-0">\u27a1\ufe0f</button>';
+        html += '</div></div>';
+        html += '</div>';
+    } else {
+        html += '<div class="bg-gray-50 rounded-xl border border-gray-200 p-6 text-center text-gray-400"><div class="text-3xl mb-2">\ud83e\udd16</div><p class="text-sm">KI-Feedback wird vom HQ gesteuert</p></div>';
+    }
+
+    html += '</div>'; // end right
+    html += '</div>'; // end grid
 
     vpModal(html);
 
-    // Extract frames from video for person thumbnails
-    if(signedUrl && persons && persons.length > 0) {
-        setTimeout(function() { vpExtractPersonFrames(persons); }, 300);
-    }
-} catch(e) {
-    vpModal('<p class="text-red-600">Fehler: '+e.message+'</p><button onclick="vpCloseModal()" class="mt-4 text-gray-500">Schließen</button>');
-}
 };
 
 // ==================== FRAME EXTRACTION ====================
+// ==================== CHAT HELPERS ====================
+window.vpJumpTo = function(sec) {
+    var v = document.getElementById('vpDetailPlayer');
+    if(v) { v.currentTime = sec; v.play(); }
+};
+
+window.vpChatAddTag = function(btn) {
+    var active = btn.getAttribute('data-active') === 'true';
+    btn.setAttribute('data-active', !active);
+    btn.className = !active
+        ? 'vp-chat-tag text-[10px] px-2 py-0.5 border border-vit-orange rounded-full bg-vit-orange text-white cursor-pointer'
+        : 'vp-chat-tag text-[10px] px-2 py-0.5 border border-gray-200 rounded-full hover:bg-vit-orange hover:text-white hover:border-vit-orange transition cursor-pointer';
+};
+
+window.vpChatSend = async function(videoId) {
+    var tags = [];
+    document.querySelectorAll('.vp-chat-tag[data-active="true"]').forEach(function(t) { tags.push(t.textContent.trim()); });
+    var input = document.getElementById('vpChatInput');
+    var text = (input ? input.value : '').trim();
+    if(!text && !tags.length) return;
+
+    var msg = (tags.length ? '['+tags.join(', ')+'] ' : '') + text;
+
+    // Add message to chat UI immediately
+    var chatEl = document.getElementById('vpChatMessages');
+    if(chatEl) {
+        chatEl.innerHTML += '<div class="flex gap-2"><div class="w-6 h-6 rounded-full bg-vit-orange text-white flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">HQ</div><div class="bg-white rounded-lg rounded-tl-sm px-3 py-2 text-xs shadow-sm max-w-[90%]">'+msg+'<div class="text-[10px] text-gray-300 mt-1">gerade eben</div></div></div>';
+        chatEl.innerHTML += '<div id="vpChatTyping" class="flex gap-2 justify-end"><div class="bg-blue-50 rounded-lg px-3 py-2 text-xs text-blue-400"><span class="animate-pulse">KI denkt nach...</span></div><div class="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">KI</div></div>';
+        chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    // Clear input + tags
+    if(input) input.value = '';
+    document.querySelectorAll('.vp-chat-tag[data-active="true"]').forEach(function(t) { vpChatAddTag(t); });
+
+    try {
+        // Save feedback
+        await _sb().from('pipeline_log').insert({ video_id: videoId, phase: 'feedback', action: 'hq_feedback', details: { feedback: msg, tags: tags } });
+
+        // Try Edge Function
+        var res = await _sb().functions.invoke('review-feedback', { body: { video_id: videoId, feedback: msg } });
+        var typing = document.getElementById('vpChatTyping');
+
+        if(res.data && res.data.success) {
+            var reply = res.data.message || 'Feedback verarbeitet. Revision wird vorbereitet.';
+            if(typing) typing.outerHTML = '<div class="flex gap-2 justify-end"><div class="bg-blue-50 rounded-lg rounded-tr-sm px-3 py-2 text-xs shadow-sm max-w-[90%]"><div class="text-[10px] font-medium text-blue-600 mb-1">🤖 KI</div>'+reply+'</div><div class="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">KI</div></div>';
+        } else {
+            if(typing) typing.outerHTML = '<div class="flex gap-2 justify-end"><div class="bg-gray-100 rounded-lg px-3 py-2 text-xs text-gray-500">📝 Feedback gespeichert (KI-Revision später)</div><div class="w-6 h-6 rounded-full bg-gray-400 text-white flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">KI</div></div>';
+        }
+    } catch(e) {
+        var typing = document.getElementById('vpChatTyping');
+        if(typing) typing.outerHTML = '<div class="flex gap-2 justify-end"><div class="bg-gray-100 rounded-lg px-3 py-2 text-xs text-gray-500">📝 Gespeichert (Edge Function offline)</div><div class="w-6 h-6 rounded-full bg-gray-400 text-white flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">KI</div></div>';
+    }
+    if(chatEl) chatEl.scrollTop = chatEl.scrollHeight;
+};
+
 function vpFormatTime(sec) {
     var m = Math.floor(sec / 60);
     var s = Math.floor(sec % 60);
