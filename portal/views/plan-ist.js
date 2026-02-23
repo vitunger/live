@@ -265,25 +265,40 @@ export async function parsePlanFile() {
 // Shared KI-Finance helper
 export async function callFinanceKi(type, fileBase64, mediaType, rawText, meta) {
     var _sb2 = (typeof sb !== 'undefined') ? sb : _sb();
-    var session = await _sb2.auth.getSession();
-    var token = (session && session.data && session.data.session) ? session.data.session.access_token : '';
-    if(!token) {
-        console.warn('[callFinanceKi] No auth token found, trying refresh...');
-        var refresh = await _sb2.auth.refreshSession();
-        token = (refresh && refresh.data && refresh.data.session) ? refresh.data.session.access_token : '';
-    }
+    var _SURL = (typeof SUPABASE_URL !== 'undefined') ? SUPABASE_URL : window.SUPABASE_URL;
+    var _SKEY = (typeof SUPABASE_ANON_KEY !== 'undefined') ? SUPABASE_ANON_KEY : window.SUPABASE_ANON_KEY;
+    
+    // Get user token, fallback to anon key
+    var token = _SKEY; // default to anon key
+    try {
+        var session = await _sb2.auth.getSession();
+        if(session && session.data && session.data.session && session.data.session.access_token) {
+            token = session.data.session.access_token;
+        }
+    } catch(e) { console.warn('[callFinanceKi] Session error, using anon key:', e); }
+    
     var payload = { type: type };
     if(fileBase64) { payload.file_base64 = fileBase64; payload.media_type = mediaType || 'application/pdf'; }
     if(rawText) { payload.raw_text = rawText; }
     if(meta) { payload.meta = meta; }
-    var _SURL = (typeof SUPABASE_URL !== 'undefined') ? SUPABASE_URL : window.SUPABASE_URL;
-    var _SKEY = (typeof SUPABASE_ANON_KEY !== 'undefined') ? SUPABASE_ANON_KEY : window.SUPABASE_ANON_KEY;
-    console.log('[callFinanceKi] Calling analyze-finance, type:', type, 'hasToken:', !!token);
+    
+    console.log('[callFinanceKi] Calling analyze-finance, type:', type);
     var resp = await fetch(_SURL + '/functions/v1/analyze-finance', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (token||''), 'apikey': _SKEY },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': _SKEY },
         body: JSON.stringify(payload)
     });
+    
+    // If 401 with user token, retry with anon key
+    if(resp.status === 401 && token !== _SKEY) {
+        console.warn('[callFinanceKi] User token 401, retrying with anon key');
+        resp = await fetch(_SURL + '/functions/v1/analyze-finance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _SKEY, 'apikey': _SKEY },
+            body: JSON.stringify(payload)
+        });
+    }
+    
     if(!resp.ok) { var errB=''; try { var eD=await resp.json(); errB=eD.error||eD.details||''; } catch(e2) {} throw new Error('KI-API Fehler ' + resp.status + (errB ? ': '+errB.substring(0,150) : '')); }
     var data = await resp.json();
     if(!data.result) throw new Error('Keine Ergebnisse');
