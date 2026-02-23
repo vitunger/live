@@ -64,6 +64,7 @@ const VIEW_MODULES = [
     'views/onboarding-demo.js',
     'views/office.js',
     'views/wawi-integration.js',
+    'views/schnittstellen.js',
     'views/video-pipeline.js',
     'views/feedback-widget.js',
     'views/misc-views.js',
