@@ -107,211 +107,152 @@ export function renderPlanUploadScreen(el) {
     el.innerHTML = h;
 }
 
-// ── Planungsassistent ──
+// -- Planungsassistent --
 var planAssistentData = {};
-Object.defineProperty(window, 'planAssistentData', {
-    get: function() { return planAssistentData; },
-    set: function(v) { planAssistentData = v; },
-    configurable: true
-});
-window.renderPlanStep = renderPlanStep;
+Object.defineProperty(window, 'planAssistentData', { get: function() { return planAssistentData; }, set: function(v) { planAssistentData = v; }, configurable: true });
+var DEFAULT_SAISON = [5.5, 6.5, 9.5, 10.5, 11.5, 12.0, 11.0, 10.5, 8.5, 6.5, 4.5, 3.5];
 
-export function showPlanAssistent() {
-    planAssistentData = { step: 1, umsatzJahr: 0, saisonalitaet: 'fahrrad', wePct: 65, pkMonat: 0, rkMonat: 0, sonstigeMonat: 0, monate: {} };
+export async function showPlanAssistent() {
+    var stdId = _sbProfile() ? _sbProfile().standort_id : null;
+    var vorjahr = planIstYear - 1;
+    var vorjahrData = null, netzwerkSaison = null;
+    try {
+        var bwaResp = await _sb().from('bwa_daten').select('monat,umsatzerloese,wareneinsatz,rohertrag,personalkosten,raumkosten,ergebnis').eq('standort_id', stdId).eq('jahr', vorjahr).order('monat');
+        if(bwaResp.data && bwaResp.data.length >= 3) {
+            vorjahrData = { monate: {} };
+            var tU = 0, tWe = 0, tPk = 0, tRk = 0;
+            bwaResp.data.forEach(function(b) {
+                var u = parseFloat(b.umsatzerloese)||0;
+                vorjahrData.monate[b.monat] = { umsatz: u, wareneinsatz: parseFloat(b.wareneinsatz)||0, personalkosten: parseFloat(b.personalkosten)||0, raumkosten: parseFloat(b.raumkosten)||0 };
+                tU += u; tWe += Math.abs(parseFloat(b.wareneinsatz)||0); tPk += Math.abs(parseFloat(b.personalkosten)||0); tRk += Math.abs(parseFloat(b.raumkosten)||0);
+            });
+            vorjahrData.totalUmsatz = tU;
+            vorjahrData.wePct = tU ? Math.round(tWe/tU*100) : 65;
+            vorjahrData.pkMonat = Math.round(tPk / bwaResp.data.length);
+            vorjahrData.rkMonat = Math.round(tRk / bwaResp.data.length);
+            if(tU > 0) { vorjahrData.saison = []; for(var s=1;s<=12;s++) vorjahrData.saison.push(Math.round(((vorjahrData.monate[s]||{}).umsatz||0)/tU*1000)/10); }
+        }
+        var nR = await _sb().from('bwa_daten').select('monat,umsatzerloese').eq('jahr', vorjahr);
+        if(nR.data && nR.data.length > 20) {
+            var nM={}, nT=0; nR.data.forEach(function(b){ var u=parseFloat(b.umsatzerloese)||0; if(u>0){nM[b.monat]=(nM[b.monat]||0)+u;nT+=u;}});
+            if(nT>0){ netzwerkSaison=[]; for(var n=1;n<=12;n++) netzwerkSaison.push(Math.round((nM[n]||0)/nT*1000)/10); }
+        }
+    } catch(e) { console.warn('[PlanAssistent]', e.message); }
+    planAssistentData = {
+        step:1, vorjahr:vorjahrData, vorjahrJahr:vorjahr, netzwerkSaison:netzwerkSaison||DEFAULT_SAISON,
+        vorjahrUmsatz: vorjahrData?vorjahrData.totalUmsatz:0, wachstumPct:10,
+        saison: (vorjahrData&&vorjahrData.saison?vorjahrData.saison:(netzwerkSaison||DEFAULT_SAISON)).slice(),
+        saisonSource: vorjahrData&&vorjahrData.saison?'vorjahr':'netzwerk',
+        wePct: vorjahrData?vorjahrData.wePct:65, pkMonat: vorjahrData?vorjahrData.pkMonat:0, rkMonat: vorjahrData?vorjahrData.rkMonat:0, monate:{}
+    };
     renderPlanStep();
 }
 
 function renderPlanStep() {
-    var el = document.getElementById('planWizardContent');
-    if(!el) return;
-    var d = planAssistentData;
-    var h = '';
-
+    var el = document.getElementById('planWizardContent'); if(!el) return;
+    var d = planAssistentData, h = '';
     if(d.step === 1) {
-        // Step 1: Gesamtumsatz
         h += '<div class="vit-card p-6">';
-        h += '<div class="flex items-center justify-between mb-4"><span class="text-xs text-gray-400">Schritt 1/4</span><div class="flex-1 mx-3 h-1.5 bg-gray-100 rounded-full"><div class="h-1.5 bg-vit-orange rounded-full" style="width:25%"></div></div></div>';
-        h += '<h3 class="font-bold text-gray-800 mb-1">💰 Geplanter Jahresumsatz</h3>';
-        h += '<p class="text-xs text-gray-500 mb-4">Wie hoch ist dein geplanter Gesamtumsatz für '+planIstYear+'?</p>';
-        h += '<input id="paUmsatzJahr" type="number" value="'+(d.umsatzJahr||'')+'" placeholder="z.B. 1200000" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-lg text-right font-bold focus:border-vit-orange outline-none">';
-        h += '<p class="text-[11px] text-gray-400 mt-1">Brutto-Umsatzerlöse inkl. Räder, Teile, Zubehör, Service</p>';
-        h += '<div class="flex justify-end mt-4"><button onclick="planAssistentNext()" class="px-6 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Weiter →</button></div>';
-        h += '</div>';
+        h += '<div class="flex items-center justify-between mb-4"><span class="text-xs text-gray-400">Schritt 1/3</span><div class="flex-1 mx-3 h-1.5 bg-gray-100 rounded-full"><div class="h-1.5 bg-vit-orange rounded-full" style="width:33%"></div></div></div>';
+        h += '<h3 class="font-bold text-gray-800 mb-1">Vorjahr & Wachstumsziel</h3>';
+        if(d.vorjahr) {
+            h += '<div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-4"><p class="text-xs font-semibold text-green-700">BWA-Daten '+d.vorjahrJahr+' geladen</p>';
+            h += '<p class="text-[11px] text-green-600 mt-1">Umsatz: <strong>'+Math.round(d.vorjahr.totalUmsatz).toLocaleString('de-DE')+' Euro</strong> | WE: '+d.vorjahr.wePct+'% | Personal: '+d.vorjahr.pkMonat.toLocaleString('de-DE')+' Euro/Monat | Miete: '+d.vorjahr.rkMonat.toLocaleString('de-DE')+' Euro/Monat</p></div>';
+        } else {
+            h += '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4"><p class="text-xs font-semibold text-yellow-700">Keine BWA-Daten fuer '+d.vorjahrJahr+'</p><p class="text-[11px] text-yellow-600">Vorjahr-Umsatz bitte manuell eingeben.</p></div>';
+        }
+        h += '<div class="space-y-4"><div><label class="text-xs font-semibold text-gray-600">Gesamtumsatz '+d.vorjahrJahr+'</label>';
+        h += '<input id="paVorjahrUmsatz" type="number" value="'+(d.vorjahrUmsatz||'')+'" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-lg text-right font-bold focus:border-vit-orange outline-none" placeholder="z.B. 1200000"></div>';
+        h += '<div><label class="text-xs font-semibold text-gray-600">Wachstumsziel '+planIstYear+' (%)</label>';
+        h += '<div class="flex items-center space-x-3"><input id="paWachstum" type="range" min="-20" max="50" value="'+(d.wachstumPct||10)+'" class="flex-1" style="accent-color:#f58220" oninput="document.getElementById(\'paWachstumNum\').value=this.value">';
+        h += '<input id="paWachstumNum" type="number" value="'+(d.wachstumPct||10)+'" class="w-20 px-2 py-2 border border-gray-200 rounded-lg text-sm text-right" oninput="document.getElementById(\'paWachstum\').value=this.value"></div></div></div>';
+        h += '<div class="flex justify-end mt-5"><button onclick="planAssistentNext()" class="px-6 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Weiter</button></div></div>';
     }
     else if(d.step === 2) {
-        // Step 2: Saisonalität
+        var zU = d.vorjahrUmsatz*(1+d.wachstumPct/100);
         h += '<div class="vit-card p-6">';
-        h += '<div class="flex items-center justify-between mb-4"><span class="text-xs text-gray-400">Schritt 2/4</span><div class="flex-1 mx-3 h-1.5 bg-gray-100 rounded-full"><div class="h-1.5 bg-vit-orange rounded-full" style="width:50%"></div></div></div>';
-        h += '<h3 class="font-bold text-gray-800 mb-1">📈 Saisonale Verteilung</h3>';
-        h += '<p class="text-xs text-gray-500 mb-4">Wie verteilt sich dein Umsatz über das Jahr?</p>';
-        var profiles = {
-            fahrrad: {label:'🚲 Typisch Fahrrad', desc:'Peak März–August, schwach Dez–Feb', weights:[4,5,9,10,12,13,12,11,9,7,5,3]},
-            gleichmaessig: {label:'📊 Gleichmäßig', desc:'Relativ konstant über alle Monate', weights:[8,8,8,8,9,9,9,9,8,8,8,8]},
-            ebike: {label:'⚡ E-Bike-lastig', desc:'Peak April–Juli, moderate Nebensaison', weights:[3,5,8,12,14,14,12,10,8,6,5,3]},
-            custom: {label:'✏️ Eigene Verteilung', desc:'Monatswerte manuell festlegen', weights:null}
-        };
-        Object.keys(profiles).forEach(function(key) {
-            var p = profiles[key];
-            var sel = d.saisonalitaet === key ? 'border-vit-orange bg-orange-50' : 'border-gray-200 hover:border-gray-300';
-            h += '<div class="p-3 border-2 rounded-lg mb-2 cursor-pointer '+sel+'" onclick="planAssistentData.saisonalitaet=\''+key+'\';renderPlanStep()">';
-            h += '<div class="flex items-center justify-between">';
-            h += '<div><span class="text-sm font-semibold text-gray-800">'+p.label+'</span><span class="text-[11px] text-gray-500 ml-2">'+p.desc+'</span></div>';
-            if(d.saisonalitaet === key) h += '<span class="text-vit-orange">✓</span>';
-            h += '</div>';
-            if(key !== 'custom' && d.saisonalitaet === key && d.umsatzJahr > 0) {
-                var total = p.weights.reduce(function(a,b){return a+b;},0);
-                h += '<div class="grid grid-cols-12 gap-1 mt-2">';
-                var mL = ['J','F','M','A','M','J','J','A','S','O','N','D'];
-                for(var i=0;i<12;i++) {
-                    var val = Math.round(d.umsatzJahr * p.weights[i] / total);
-                    var pct = Math.round(p.weights[i]/total*100);
-                    h += '<div class="text-center"><div class="text-[8px] text-gray-400">'+mL[i]+'</div><div class="bg-vit-orange/20 rounded" style="height:'+Math.max(8,pct*2)+'px"></div><div class="text-[8px] font-medium mt-0.5">'+(val/1000).toFixed(0)+'k</div></div>';
-                }
-                h += '</div>';
-            }
-            h += '</div>';
-        });
-        if(d.saisonalitaet === 'custom') {
-            h += '<div class="grid grid-cols-4 gap-2 mt-2 p-3 bg-gray-50 rounded-lg">';
-            var mN2 = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
-            for(var cm=0;cm<12;cm++) {
-                h += '<div><label class="text-[10px] text-gray-500">'+mN2[cm]+'</label><input id="paCustom_'+cm+'" type="number" value="'+((d.monate[cm+1]||{}).umsatz||'')+'" placeholder="Umsatz" class="w-full px-2 py-1 border border-gray-200 rounded text-xs text-right"></div>';
-            }
-            h += '</div>';
-        }
-        h += '<div class="flex justify-between mt-4"><button onclick="planAssistentData.step=1;renderPlanStep()" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">← Zurück</button><button onclick="planAssistentNext()" class="px-6 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Weiter →</button></div>';
+        h += '<div class="flex items-center justify-between mb-4"><span class="text-xs text-gray-400">Schritt 2/3</span><div class="flex-1 mx-3 h-1.5 bg-gray-100 rounded-full"><div class="h-1.5 bg-vit-orange rounded-full" style="width:66%"></div></div></div>';
+        h += '<h3 class="font-bold text-gray-800 mb-1">Verteilung & Kosten</h3>';
+        h += '<p class="text-xs text-gray-500 mb-3">Ziel '+planIstYear+': <strong>'+Math.round(zU).toLocaleString('de-DE')+' Euro</strong> ('+(d.wachstumPct>=0?'+':'')+d.wachstumPct+'%)</p>';
+        h += '<label class="text-xs font-semibold text-gray-600 mb-1 block">Saisonschluessel</label><div class="flex space-x-2 mb-3">';
+        if(d.vorjahr&&d.vorjahr.saison) h += '<button onclick="planAssistentData.saisonSource=\'vorjahr\';planAssistentData.saison=planAssistentData.vorjahr.saison.slice();renderPlanStep()" class="px-3 py-1.5 text-xs rounded-lg font-medium '+(d.saisonSource==='vorjahr'?'bg-vit-orange text-white':'bg-gray-100 text-gray-600')+'">Eigenes Vorjahr</button>';
+        h += '<button onclick="planAssistentData.saisonSource=\'netzwerk\';planAssistentData.saison=planAssistentData.netzwerkSaison.slice();renderPlanStep()" class="px-3 py-1.5 text-xs rounded-lg font-medium '+(d.saisonSource==='netzwerk'?'bg-vit-orange text-white':'bg-gray-100 text-gray-600')+'">Netzwerk</button>';
+        h += '<button onclick="planAssistentData.saisonSource=\'custom\';renderPlanStep()" class="px-3 py-1.5 text-xs rounded-lg font-medium '+(d.saisonSource==='custom'?'bg-vit-orange text-white':'bg-gray-100 text-gray-600')+'">Individuell</button></div>';
+        var mL=['Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+        var sS=d.saison.reduce(function(a,b){return a+b;},0)||100;
+        h += '<div class="grid grid-cols-12 gap-1 mb-4">';
+        for(var i=0;i<12;i++){var p=d.saison[i],mv=Math.round(zU*p/sS),bH=Math.max(6,Math.round(p*4));
+            h+='<div class="text-center"><div class="text-[8px] text-gray-400">'+mL[i]+'</div><div class="bg-vit-orange/30 rounded mx-auto" style="width:14px;height:'+bH+'px"></div>';
+            if(d.saisonSource==='custom')h+='<input id="paSaison_'+i+'" type="number" value="'+p+'" class="w-full text-[9px] text-center border border-gray-200 rounded mt-1 p-0.5" step="0.5">';
+            else h+='<div class="text-[9px] font-medium mt-0.5">'+p+'%</div>';
+            h+='<div class="text-[8px] text-gray-400">'+(mv/1000).toFixed(0)+'k</div></div>';}
         h += '</div>';
+        h += '<div class="border-t pt-3"><label class="text-xs font-semibold text-gray-600 mb-2 block">Kostenstruktur'+(d.vorjahr?' <span class="font-normal text-gray-400">(aus VJ)</span>':'')+'</label>';
+        h += '<div class="grid grid-cols-3 gap-3">';
+        h += '<div><label class="text-[10px] text-gray-500">Wareneinsatz %</label><input id="paWePct" type="number" value="'+(d.wePct||65)+'" class="w-full px-2 py-1.5 border border-gray-200 rounded text-xs text-right"></div>';
+        h += '<div><label class="text-[10px] text-gray-500">Personal mtl.</label><input id="paPkMonat" type="number" value="'+(d.pkMonat||'')+'" class="w-full px-2 py-1.5 border border-gray-200 rounded text-xs text-right"></div>';
+        h += '<div><label class="text-[10px] text-gray-500">Miete mtl.</label><input id="paRkMonat" type="number" value="'+(d.rkMonat||'')+'" class="w-full px-2 py-1.5 border border-gray-200 rounded text-xs text-right"></div>';
+        h += '</div></div>';
+        h += '<div class="flex justify-between mt-5"><button onclick="planAssistentData.step=1;renderPlanStep()" class="px-4 py-2 text-sm text-gray-600">Zurueck</button><button onclick="planAssistentNext()" class="px-6 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Vorschau</button></div></div>';
     }
     else if(d.step === 3) {
-        // Step 3: Kosten
         h += '<div class="vit-card p-6">';
-        h += '<div class="flex items-center justify-between mb-4"><span class="text-xs text-gray-400">Schritt 3/4</span><div class="flex-1 mx-3 h-1.5 bg-gray-100 rounded-full"><div class="h-1.5 bg-vit-orange rounded-full" style="width:75%"></div></div></div>';
-        h += '<h3 class="font-bold text-gray-800 mb-1">📦 Kostenstruktur</h3>';
-        h += '<p class="text-xs text-gray-500 mb-4">Gib deine wichtigsten Kostenpositionen an.</p>';
-        h += '<div class="space-y-3">';
-        h += '<div><label class="text-xs font-semibold text-gray-600">Wareneinsatz (% vom Umsatz)</label>';
-        h += '<input id="paWePct" type="number" value="'+(d.wePct||65)+'" min="0" max="100" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-right" placeholder="65">';
-        h += '<p class="text-[10px] text-gray-400 mt-0.5">Branchenüblich Fahrrad: 60–70%</p></div>';
-        h += '<div><label class="text-xs font-semibold text-gray-600">Personalkosten (monatlich, €)</label>';
-        h += '<input id="paPkMonat" type="number" value="'+(d.pkMonat||'')+'" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-right" placeholder="z.B. 12000"></div>';
-        h += '<div><label class="text-xs font-semibold text-gray-600">Raumkosten / Miete (monatlich, €)</label>';
-        h += '<input id="paRkMonat" type="number" value="'+(d.rkMonat||'')+'" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-right" placeholder="z.B. 3500"></div>';
-        h += '<div><label class="text-xs font-semibold text-gray-600">Sonstige Kosten (monatlich, €)</label>';
-        h += '<input id="paSonstige" type="number" value="'+(d.sonstigeMonat||'')+'" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-right" placeholder="z.B. 2000">';
-        h += '<p class="text-[10px] text-gray-400 mt-0.5">Versicherungen, Marketing, IT, Fuhrpark etc.</p></div>';
-        h += '</div>';
-        h += '<div class="flex justify-between mt-4"><button onclick="planAssistentData.step=2;renderPlanStep()" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">← Zurück</button><button onclick="planAssistentNext()" class="px-6 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Vorschau →</button></div>';
-        h += '</div>';
-    }
-    else if(d.step === 4) {
-        // Step 4: Vorschau & Speichern
-        h += '<div class="vit-card p-6">';
-        h += '<div class="flex items-center justify-between mb-4"><span class="text-xs text-gray-400">Schritt 4/4</span><div class="flex-1 mx-3 h-1.5 bg-gray-100 rounded-full"><div class="h-1.5 bg-vit-orange rounded-full" style="width:100%"></div></div></div>';
-        h += '<h3 class="font-bold text-gray-800 mb-1">✅ Dein Jahresplan '+planIstYear+'</h3>';
-        h += '<p class="text-xs text-gray-500 mb-4">Prüfe die Werte und speichere deinen Plan.</p>';
-        
-        var mNames = ['','Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
-        var totalU=0, totalWe=0, totalPk=0, totalRk=0;
-        h += '<div class="overflow-x-auto"><table class="w-full text-xs">';
-        h += '<thead><tr class="text-gray-500 border-b"><th class="py-1 text-left">Monat</th><th class="py-1 text-right">Umsatz</th><th class="py-1 text-right">WE</th><th class="py-1 text-right">Rohertrag</th><th class="py-1 text-right">Personal</th><th class="py-1 text-right">Raum</th><th class="py-1 text-right font-bold">Ergebnis</th></tr></thead><tbody>';
-        for(var m2=1;m2<=12;m2++) {
-            var pm = d.monate[m2] || {};
-            var roh = (pm.umsatz||0) - Math.abs(pm.wareneinsatz||0);
-            var erg = roh - Math.abs(pm.personalkosten||0) - Math.abs(pm.raumkosten||0) - Math.abs(pm.sonstige||0);
-            totalU += (pm.umsatz||0); totalWe += Math.abs(pm.wareneinsatz||0); totalPk += Math.abs(pm.personalkosten||0); totalRk += Math.abs(pm.raumkosten||0);
-            var ergClass = erg >= 0 ? 'text-green-600' : 'text-red-500';
-            h += '<tr class="border-b border-gray-50"><td class="py-1.5 font-medium">'+mNames[m2]+'</td>';
-            h += '<td class="py-1.5 text-right">'+(pm.umsatz||0).toLocaleString('de-DE')+'</td>';
-            h += '<td class="py-1.5 text-right text-red-400">'+Math.abs(pm.wareneinsatz||0).toLocaleString('de-DE')+'</td>';
-            h += '<td class="py-1.5 text-right">'+roh.toLocaleString('de-DE')+'</td>';
-            h += '<td class="py-1.5 text-right">'+Math.abs(pm.personalkosten||0).toLocaleString('de-DE')+'</td>';
-            h += '<td class="py-1.5 text-right">'+Math.abs(pm.raumkosten||0).toLocaleString('de-DE')+'</td>';
-            h += '<td class="py-1.5 text-right font-bold '+ergClass+'">'+Math.round(erg).toLocaleString('de-DE')+'</td></tr>';
-        }
-        var totalRoh = totalU - totalWe;
-        var totalErg = totalRoh - totalPk - totalRk;
-        h += '<tr class="font-bold border-t-2 border-gray-300"><td class="py-2">GESAMT</td><td class="py-2 text-right">'+totalU.toLocaleString('de-DE')+'</td><td class="py-2 text-right text-red-400">'+totalWe.toLocaleString('de-DE')+'</td><td class="py-2 text-right">'+totalRoh.toLocaleString('de-DE')+'</td><td class="py-2 text-right">'+totalPk.toLocaleString('de-DE')+'</td><td class="py-2 text-right">'+totalRk.toLocaleString('de-DE')+'</td><td class="py-2 text-right '+(totalErg>=0?'text-green-600':'text-red-500')+'">'+Math.round(totalErg).toLocaleString('de-DE')+'</td></tr>';
-        h += '</tbody></table></div>';
-
-        // KPIs
-        var rohPct = totalU ? Math.round((totalRoh/totalU)*100) : 0;
-        var pkPct = totalU ? Math.round((totalPk/totalU)*100) : 0;
-        h += '<div class="grid grid-cols-3 gap-3 mt-4">';
-        h += '<div class="bg-blue-50 rounded-lg p-3 text-center"><p class="text-[10px] text-blue-500">Rohertragsmarge</p><p class="text-lg font-bold text-blue-700">'+rohPct+'%</p></div>';
-        h += '<div class="bg-purple-50 rounded-lg p-3 text-center"><p class="text-[10px] text-purple-500">Personalkostenquote</p><p class="text-lg font-bold text-purple-700">'+pkPct+'%</p></div>';
-        h += '<div class="'+(totalErg>=0?'bg-green-50':'bg-red-50')+' rounded-lg p-3 text-center"><p class="text-[10px] '+(totalErg>=0?'text-green-500':'text-red-500')+'">Plan-Ergebnis</p><p class="text-lg font-bold '+(totalErg>=0?'text-green-700':'text-red-600')+'">'+Math.round(totalErg).toLocaleString('de-DE')+' €</p></div>';
-        h += '</div>';
-
-        h += '<div class="flex justify-between mt-5"><button onclick="planAssistentData.step=3;renderPlanStep()" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">← Zurück</button><button onclick="savePlanAssistent()" class="px-8 py-3 bg-green-600 text-white rounded-lg text-sm font-bold hover:opacity-90">✅ Plan für '+planIstYear+' speichern</button></div>';
-        h += '</div>';
+        h += '<div class="flex items-center justify-between mb-4"><span class="text-xs text-gray-400">Schritt 3/3</span><div class="flex-1 mx-3 h-1.5 bg-gray-100 rounded-full"><div class="h-1.5 bg-vit-orange rounded-full" style="width:100%"></div></div></div>';
+        h += '<h3 class="font-bold text-gray-800 mb-1">Jahresplan '+planIstYear+'</h3>';
+        var mN=['','Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+        var tU=0,tWe=0,tPk=0,tRk=0,tRoh=0,tErg=0;
+        var hasVJ=d.vorjahr&&Object.keys(d.vorjahr.monate).length>0;
+        h+='<div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="text-gray-500 border-b"><th class="py-1 text-left">Monat</th><th class="py-1 text-right">Umsatz</th>';
+        if(hasVJ) h+='<th class="py-1 text-right text-gray-400">VJ</th>';
+        h+='<th class="py-1 text-right">WE</th><th class="py-1 text-right">Rohertrag</th><th class="py-1 text-right">Personal</th><th class="py-1 text-right">Miete</th><th class="py-1 text-right font-bold">Ergebnis</th></tr></thead><tbody>';
+        for(var m=1;m<=12;m++){var pm=d.monate[m]||{},ro=(pm.umsatz||0)+(pm.wareneinsatz||0),er=ro+(pm.personalkosten||0)+(pm.raumkosten||0);
+            tU+=(pm.umsatz||0);tWe+=Math.abs(pm.wareneinsatz||0);tPk+=Math.abs(pm.personalkosten||0);tRk+=Math.abs(pm.raumkosten||0);tRoh+=ro;tErg+=er;
+            h+='<tr class="border-b border-gray-50"><td class="py-1.5 font-medium">'+mN[m]+'</td><td class="py-1.5 text-right font-semibold">'+Math.round(pm.umsatz||0).toLocaleString('de-DE')+'</td>';
+            if(hasVJ){var vU=(d.vorjahr.monate[m]||{}).umsatz||0;h+='<td class="py-1.5 text-right text-gray-400 text-[10px]">'+Math.round(vU).toLocaleString('de-DE')+'</td>';}
+            h+='<td class="py-1.5 text-right text-red-400">'+Math.abs(pm.wareneinsatz||0).toLocaleString('de-DE')+'</td>';
+            h+='<td class="py-1.5 text-right">'+Math.round(ro).toLocaleString('de-DE')+'</td>';
+            h+='<td class="py-1.5 text-right">'+Math.abs(pm.personalkosten||0).toLocaleString('de-DE')+'</td>';
+            h+='<td class="py-1.5 text-right">'+Math.abs(pm.raumkosten||0).toLocaleString('de-DE')+'</td>';
+            h+='<td class="py-1.5 text-right font-bold '+(er>=0?'text-green-600':'text-red-500')+'">'+Math.round(er).toLocaleString('de-DE')+'</td></tr>';}
+        h+='<tr class="font-bold border-t-2"><td class="py-2">GESAMT</td><td class="py-2 text-right">'+tU.toLocaleString('de-DE')+'</td>';
+        if(hasVJ)h+='<td class="py-2 text-right text-gray-400 text-[10px]">'+Math.round(d.vorjahr.totalUmsatz).toLocaleString('de-DE')+'</td>';
+        h+='<td class="py-2 text-right text-red-400">'+tWe.toLocaleString('de-DE')+'</td><td class="py-2 text-right">'+tRoh.toLocaleString('de-DE')+'</td><td class="py-2 text-right">'+tPk.toLocaleString('de-DE')+'</td><td class="py-2 text-right">'+tRk.toLocaleString('de-DE')+'</td><td class="py-2 text-right '+(tErg>=0?'text-green-600':'text-red-500')+'">'+Math.round(tErg).toLocaleString('de-DE')+'</td></tr></tbody></table></div>';
+        var rP=tU?Math.round(tRoh/tU*100):0,pP=tU?Math.round(tPk/tU*100):0,wP=d.vorjahrUmsatz?Math.round((tU/d.vorjahrUmsatz-1)*100):0;
+        h+='<div class="grid grid-cols-4 gap-2 mt-4">';
+        h+='<div class="bg-orange-50 rounded-lg p-2.5 text-center"><p class="text-[10px] text-orange-500">Wachstum</p><p class="text-lg font-bold text-vit-orange">'+(wP>=0?'+':'')+wP+'%</p></div>';
+        h+='<div class="bg-blue-50 rounded-lg p-2.5 text-center"><p class="text-[10px] text-blue-500">Rohertrag</p><p class="text-lg font-bold text-blue-700">'+rP+'%</p></div>';
+        h+='<div class="bg-purple-50 rounded-lg p-2.5 text-center"><p class="text-[10px] text-purple-500">Personal</p><p class="text-lg font-bold text-purple-700">'+pP+'%</p></div>';
+        h+='<div class="'+(tErg>=0?'bg-green-50':'bg-red-50')+' rounded-lg p-2.5 text-center"><p class="text-[10px] '+(tErg>=0?'text-green-500':'text-red-500')+'">Ergebnis</p><p class="text-lg font-bold '+(tErg>=0?'text-green-700':'text-red-600')+'">'+Math.round(tErg).toLocaleString('de-DE')+' Euro</p></div>';
+        h+='</div>';
+        h+='<div class="flex justify-between mt-5"><button onclick="planAssistentData.step=2;renderPlanStep()" class="px-4 py-2 text-sm text-gray-600">Zurueck</button><button onclick="savePlanAssistent()" class="px-8 py-3 bg-green-600 text-white rounded-lg text-sm font-bold hover:opacity-90">Plan fuer '+planIstYear+' speichern</button></div></div>';
     }
     el.innerHTML = h;
 }
+window.renderPlanStep = renderPlanStep;
 
 export function planAssistentNext() {
     var d = planAssistentData;
     if(d.step === 1) {
-        d.umsatzJahr = parseFloat((document.getElementById('paUmsatzJahr')||{}).value) || 0;
-        if(d.umsatzJahr < 1000) { alert('Bitte einen Jahresumsatz eingeben.'); return; }
+        d.vorjahrUmsatz = parseFloat((document.getElementById('paVorjahrUmsatz')||{}).value)||0;
+        d.wachstumPct = parseFloat((document.getElementById('paWachstumNum')||{}).value)||0;
+        if(d.vorjahrUmsatz < 1000) { alert('Bitte einen Vorjahr-Umsatz eingeben.'); return; }
         d.step = 2;
-    }
-    else if(d.step === 2) {
-        // Calculate monthly distribution
-        var profiles = {
-            fahrrad: [4,5,9,10,12,13,12,11,9,7,5,3],
-            gleichmaessig: [8,8,8,8,9,9,9,9,8,8,8,8],
-            ebike: [3,5,8,12,14,14,12,10,8,6,5,3]
-        };
-        if(d.saisonalitaet === 'custom') {
-            for(var cm=0;cm<12;cm++) {
-                var cv = parseFloat((document.getElementById('paCustom_'+cm)||{}).value) || 0;
-                d.monate[cm+1] = d.monate[cm+1] || {};
-                d.monate[cm+1].umsatz = cv;
-            }
-        } else {
-            var weights = profiles[d.saisonalitaet] || profiles.fahrrad;
-            var wTotal = weights.reduce(function(a,b){return a+b;},0);
-            for(var wm=0;wm<12;wm++) {
-                d.monate[wm+1] = d.monate[wm+1] || {};
-                d.monate[wm+1].umsatz = Math.round(d.umsatzJahr * weights[wm] / wTotal);
-            }
-        }
+    } else if(d.step === 2) {
+        if(d.saisonSource==='custom'){for(var c=0;c<12;c++) d.saison[c]=parseFloat((document.getElementById('paSaison_'+c)||{}).value)||0;}
+        d.wePct = parseFloat((document.getElementById('paWePct')||{}).value)||65;
+        d.pkMonat = parseFloat((document.getElementById('paPkMonat')||{}).value)||0;
+        d.rkMonat = parseFloat((document.getElementById('paRkMonat')||{}).value)||0;
+        var zU=d.vorjahrUmsatz*(1+d.wachstumPct/100), sS=d.saison.reduce(function(a,b){return a+b;},0)||100;
+        for(var k=1;k<=12;k++){var mu=Math.round(zU*d.saison[k-1]/sS);d.monate[k]={umsatz:mu,wareneinsatz:-Math.round(mu*d.wePct/100),personalkosten:-d.pkMonat,raumkosten:-d.rkMonat};}
         d.step = 3;
-    }
-    else if(d.step === 3) {
-        d.wePct = parseFloat((document.getElementById('paWePct')||{}).value) || 65;
-        d.pkMonat = parseFloat((document.getElementById('paPkMonat')||{}).value) || 0;
-        d.rkMonat = parseFloat((document.getElementById('paRkMonat')||{}).value) || 0;
-        d.sonstigeMonat = parseFloat((document.getElementById('paSonstige')||{}).value) || 0;
-        // Apply costs to all months
-        for(var km=1;km<=12;km++) {
-            if(!d.monate[km]) d.monate[km] = {};
-            var mu = d.monate[km].umsatz || 0;
-            d.monate[km].wareneinsatz = -Math.round(mu * d.wePct / 100);
-            d.monate[km].personalkosten = -d.pkMonat;
-            d.monate[km].raumkosten = -d.rkMonat;
-            d.monate[km].sonstige = -d.sonstigeMonat;
-        }
-        d.step = 4;
     }
     renderPlanStep();
 }
 
 export async function savePlanAssistent() {
-    var planMonths = {};
-    for(var sm=1;sm<=12;sm++) {
-        var md = planAssistentData.monate[sm] || {};
-        planMonths[sm] = {
-            monat: sm,
-            umsatz: md.umsatz || 0,
-            wareneinsatz: md.wareneinsatz || 0,
-            personalkosten: md.personalkosten || 0,
-            raumkosten: md.raumkosten || 0,
-            rohertrag: (md.umsatz||0) + (md.wareneinsatz||0),
-            ergebnis: (md.umsatz||0) + (md.wareneinsatz||0) + (md.personalkosten||0) + (md.raumkosten||0) + (md.sonstige||0)
-        };
-    }
-    window._parsedPlanMonths = planMonths;
+    var pm = {};
+    for(var s=1;s<=12;s++){var m=planAssistentData.monate[s]||{};pm[s]={monat:s,umsatz:m.umsatz||0,wareneinsatz:m.wareneinsatz||0,personalkosten:m.personalkosten||0,raumkosten:m.raumkosten||0,rohertrag:(m.umsatz||0)+(m.wareneinsatz||0),ergebnis:(m.umsatz||0)+(m.wareneinsatz||0)+(m.personalkosten||0)+(m.raumkosten||0)};}
+    window._parsedPlanMonths = pm;
     await saveParsedPlan();
 }
 
