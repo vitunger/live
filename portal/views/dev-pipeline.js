@@ -537,7 +537,14 @@ export async function renderEntwReleases() {
                 if(feature) h += '<p class="text-[10px] text-gray-400 mb-1">Feature: '+_escH(feature)+'</p>';
                 h += '<p class="text-sm text-gray-600 whitespace-pre-line">'+_escH(d.inhalt)+'</p>';
                 h += '<span class="text-[10px] text-gray-400 mt-2 inline-block">'+date+'</span>';
-                h += '</div></div></div>';
+                h += '</div>';
+                if(isHQr) {
+                    h += '<div class="flex gap-1 ml-2 shrink-0">';
+                    h += '<button onclick="devEditReleaseDoc(\''+d.id+'\')" class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Bearbeiten">✏️</button>';
+                    h += '<button onclick="devDeleteReleaseDoc(\''+d.id+'\')" class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Löschen">🗑️</button>';
+                    h += '</div>';
+                }
+                h += '</div></div>';
             });
             h += '</div>';
         }
@@ -3295,7 +3302,62 @@ export async function devSaveRelease() {
         });
         if(resp.error) throw resp.error;
         _showToast('📣 Release-Note veröffentlicht!', 'success');
-        renderEntwReleases();
+        // Formular leeren und schließen
+        document.getElementById('relTitel').value = '';
+        document.getElementById('relInhalt').value = '';
+        document.getElementById('relVersion').value = '';
+        var form = document.getElementById('devCreateReleaseForm');
+        if(form) form.classList.add('hidden');
+        // Sofort neu rendern
+        await renderEntwReleases();
+    } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
+}
+
+export async function devEditReleaseDoc(docId) {
+    try {
+        var resp = await _sb().from('dev_release_docs').select('*').eq('id', docId).single();
+        if(resp.error) throw resp.error;
+        var d = resp.data;
+        var overlay = document.createElement('div');
+        overlay.id = 'devEditReleaseOverlay';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10001;display:flex;align-items:center;justify-content:center';
+        overlay.onclick = function(e) { if(e.target === overlay) overlay.remove(); };
+        overlay.innerHTML = '<div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">'
+            + '<div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold text-gray-800">✏️ Release bearbeiten</h3>'
+            + '<button onclick="document.getElementById(\'devEditReleaseOverlay\').remove()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button></div>'
+            + '<input id="editRelTitel" type="text" value="' + _escH(d.titel).replace(/"/g,'&quot;') + '" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 mb-3" placeholder="Titel">'
+            + '<input id="editRelVersion" type="text" value="' + _escH(d.version || '').replace(/"/g,'&quot;') + '" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 mb-3" placeholder="Version (z.B. v2.4)">'
+            + '<textarea id="editRelInhalt" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 mb-4" rows="8" placeholder="Inhalt">' + _escH(d.inhalt) + '</textarea>'
+            + '<div class="flex justify-end gap-2">'
+            + '<button onclick="document.getElementById(\'devEditReleaseOverlay\').remove()" class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700">Abbrechen</button>'
+            + '<button onclick="devSaveEditRelease(\'' + docId + '\')" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">💾 Speichern</button>'
+            + '</div></div>';
+        document.body.appendChild(overlay);
+    } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
+}
+
+export async function devSaveEditRelease(docId) {
+    var titel = (document.getElementById('editRelTitel').value || '').trim();
+    var inhalt = (document.getElementById('editRelInhalt').value || '').trim();
+    var version = (document.getElementById('editRelVersion').value || '').trim();
+    if(!titel || !inhalt) { _showToast('Titel und Inhalt erforderlich.', 'error'); return; }
+    try {
+        var resp = await _sb().from('dev_release_docs').update({ titel: titel, inhalt: inhalt, version: version || null }).eq('id', docId);
+        if(resp.error) throw resp.error;
+        _showToast('✅ Release aktualisiert!', 'success');
+        var overlay = document.getElementById('devEditReleaseOverlay');
+        if(overlay) overlay.remove();
+        await renderEntwReleases();
+    } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
+}
+
+export async function devDeleteReleaseDoc(docId) {
+    if(!confirm('Release-Dokument wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
+    try {
+        var resp = await _sb().from('dev_release_docs').delete().eq('id', docId);
+        if(resp.error) throw resp.error;
+        _showToast('🗑️ Release gelöscht.', 'success');
+        await renderEntwReleases();
     } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
 }
 
@@ -4345,7 +4407,7 @@ export async function devMockupShowVersion(mockupId) {
 }
 
 const _exports = {
-    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachFiles,devMockupChatAttachImage,devMockupChatMic,devDeployCode,loadDeployHistory,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devKIReleaseVorschlag,devTogglePartnerSichtbar,devSaveRelease,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,createDevKonzept,updateDevStatus,
+    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachFiles,devMockupChatAttachImage,devMockupChatMic,devDeployCode,loadDeployHistory,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devKIReleaseVorschlag,devTogglePartnerSichtbar,devSaveRelease,devEditReleaseDoc,devSaveEditRelease,devDeleteReleaseDoc,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,createDevKonzept,updateDevStatus,
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
