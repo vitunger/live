@@ -3206,6 +3206,10 @@ export async function devKIReleaseVorschlag() {
     if(btn) { btn.disabled = true; btn.innerHTML = '<span class="animate-spin">🧠</span><span>KI denkt nach...</span>'; }
     
     try {
+        // Submissions laden falls noch nicht geladen
+        if(!devSubmissions || devSubmissions.length === 0) {
+            await loadDevSubmissions();
+        }
         // Sammle alle umgesetzten + in Arbeit befindlichen Submissions
         var relevant = devSubmissions.filter(function(s) {
             return ['ausgerollt','release_geplant','im_review','in_entwicklung','geschlossen'].indexOf(s.status) !== -1;
