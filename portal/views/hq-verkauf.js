@@ -813,7 +813,7 @@ export async function renderPerformanceCockpit() {
     if(!el) return;
     el.innerHTML = '<p class="text-sm text-gray-400 text-center py-8 animate-pulse">Lade Cockpit-Daten...</p>';
 
-    var useDemo = isDemoMode || (_sbProfile() && (_sbProfile().status === 'demo' || _sbProfile().status === 'demo_active'));
+    var useDemo = (typeof isDemoMode !== 'undefined' && isDemoMode) || window.isDemoMode || (_sbProfile() && (_sbProfile().status === 'demo' || _sbProfile().status === 'demo_active'));
     var stdId = _sbProfile() ? _sbProfile().standort_id : null;
     console.log('[Cockpit] renderPerformanceCockpit() called, stdId:', stdId, 'demo:', useDemo);
     var stdName = useDemo ? 'Muster-Filiale' : (_sbProfile() ? (_sbProfile().standort_name || _sbProfile().name || 'Mein Standort') : 'Mein Standort');
