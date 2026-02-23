@@ -385,12 +385,22 @@ try {
 
     if(v.pipeline_status_detail) html += '<div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">ℹ️ '+v.pipeline_status_detail+'</div>';
 
-    // Get signed URL for frame extraction
+    // Get signed URL for video player + frame extraction
     var signedUrl = null;
     try {
         var {data:signData} = await _sb().storage.from('videos').createSignedUrl(v.storage_path, 600);
         if(signData && signData.signedUrl) signedUrl = signData.signedUrl;
     } catch(e) { console.warn('Signed URL failed:', e); }
+
+    // Video Player
+    if(signedUrl) {
+        html += '<div class="mb-4"><div class="rounded-lg overflow-hidden bg-black">';
+        html += '<video id="vpDetailPlayer" controls preload="metadata" crossorigin="anonymous" class="w-full max-h-[400px]" style="max-height:400px;">';
+        html += '<source src="'+signedUrl+'" type="video/'+((v.filename||'').toLowerCase().endsWith('.mov')?'quicktime':'mp4')+'">';
+        html += '</video></div></div>';
+    } else {
+        html += '<div class="mb-4 p-6 bg-gray-100 rounded-lg text-center text-gray-400"><div class="text-3xl mb-2">🎬</div><p class="text-sm">Video-Vorschau nicht verfügbar</p></div>';
+    }
 
     if(persons && persons.length>0) {
         html += '<div class="mb-4"><h3 class="font-semibold text-gray-700 mb-2">👥 Erkannte Personen ('+persons.length+')</h3>';
@@ -424,9 +434,8 @@ try {
         });
         html += '</div></div>';
 
-        // Hidden video element for frame extraction
+        // Hidden canvas for frame extraction (video player is now visible above)
         if(signedUrl) {
-            html += '<video id="vpFrameVideo" src="'+signedUrl+'" crossorigin="anonymous" preload="metadata" style="display:none;width:0;height:0;"></video>';
             html += '<canvas id="vpFrameCanvas" style="display:none;"></canvas>';
         }
     }
@@ -535,7 +544,7 @@ function vpFormatTime(sec) {
 }
 
 function vpExtractPersonFrames(persons) {
-    var video = document.getElementById('vpFrameVideo');
+    var video = document.getElementById('vpDetailPlayer');
     var canvas = document.getElementById('vpFrameCanvas');
     if(!video || !canvas) return;
 
@@ -601,7 +610,7 @@ function vpExtractPersonFrames(persons) {
 
 // Seek to a specific timestamp and update the frame
 window.vpSeekFrame = function(timestamp, personIdx) {
-    var video = document.getElementById('vpFrameVideo');
+    var video = document.getElementById('vpDetailPlayer');
     var canvas = document.getElementById('vpFrameCanvas');
     if(!video || !canvas) return;
 
