@@ -933,6 +933,12 @@ try {
     var existing = document.getElementById('approvalBanner');
     if(existing) existing.remove();
     var names = pendingUsers.map(function(u){return u.name;}).join(', ');
+    var btnAction;
+    if(pendingUsers.length === 1) {
+        btnAction = 'approveUser(\'' + pendingUsers[0].id + '\',\'' + (pendingUsers[0].name||'').replace(/'/g,"\\'") + '\');document.getElementById(\'approvalBanner\').remove();';
+    } else {
+        btnAction = 'showView(\'mitarbeiter\');document.getElementById(\'approvalBanner\').remove();';
+    }
     var banner = document.createElement('div');
     banner.id = 'approvalBanner';
     banner.innerHTML = '<div style="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:9000;max-width:600px;width:90%;" class="bg-yellow-50 border border-yellow-300 rounded-xl shadow-lg px-5 py-3 flex items-center justify-between">'
@@ -941,7 +947,7 @@ try {
         + '<div><p class="text-sm font-semibold text-yellow-800">' + pendingUsers.length + ' neue' + (pendingUsers.length===1?'r Mitarbeiter':' Mitarbeiter') + ' wartet auf Freigabe</p>'
         + '<p class="text-xs text-yellow-600">' + names + '</p></div></div>'
         + '<div class="flex items-center space-x-2">'
-        + '<button onclick="_showView(\'kzMitarbeiter\');document.getElementById(\'approvalBanner\').remove();" class="px-3 py-1.5 bg-vit-orange text-white text-xs font-semibold rounded-lg hover:opacity-90">Jetzt freigeben</button>'
+        + '<button onclick="' + btnAction + '" class="px-3 py-1.5 bg-vit-orange text-white text-xs font-semibold rounded-lg hover:opacity-90">Jetzt freigeben</button>'
         + '<button onclick="document.getElementById(\'approvalBanner\').remove();" class="text-yellow-400 hover:text-yellow-600 text-lg">\u2715</button>'
         + '</div></div>';
     document.body.appendChild(banner);
