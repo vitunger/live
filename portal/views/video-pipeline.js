@@ -219,6 +219,7 @@ c.innerHTML = '<div class="flex justify-center py-12"><div class="animate-spin w
 
 try {
     var sid = sbStandort?.id;
+    if(!sid) { c.innerHTML = '<div class="vit-card p-8 text-center text-gray-400"><div class="text-4xl mb-2">🎬</div><p>Kein Standort zugeordnet.</p></div>'; return; }
     var {data:videos,error} = await _sb().from('videos').select('*').eq('standort_id',sid).order('created_at',{ascending:false});
     if(error) throw error;
     videos = videos || [];
@@ -398,6 +399,7 @@ c.innerHTML = '<div class="flex justify-center py-8"><div class="animate-spin w-
 
 try {
     var sid = sbStandort?.id;
+    if(!sid) { c.innerHTML = '<div class="vit-card p-8 text-center text-gray-400"><div class="text-4xl mb-2">✅</div><p>Kein Standort zugeordnet.</p></div>'; return; }
     var {data:consents,error} = await _sb().from('consents').select('*').eq('standort_id',sid).order('created_at',{ascending:false});
     if(error) throw error;
     consents = consents || [];
