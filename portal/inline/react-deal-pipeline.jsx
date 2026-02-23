@@ -1364,7 +1364,7 @@ function PipelineApp(){
       {aging>0&&<span style={{fontSize:10,color:"#E53E3E",fontWeight:700}}>⚠ {aging} Follow-Up</span>}
       {openTodos>0&&<span style={{fontSize:10,color:"#667EEA",fontWeight:700}}>☑ {openTodos} Todos</span>}
       <div style={{marginLeft:"auto",display:"flex",gap:6}}>
-        <button onClick={()=>setShowAuto(true)} style={{padding:"5px 10px",borderRadius:7,border:"1px solid #e5e7eb",background:"#fff",fontSize:11,fontWeight:600,color:"#6b7280",cursor:"pointer"}}>⚡</button>
+        {isHqUser&&<button onClick={()=>setShowAuto(true)} style={{padding:"5px 10px",borderRadius:7,border:"1px solid #e5e7eb",background:"#fff",fontSize:11,fontWeight:600,color:"#6b7280",cursor:"pointer"}}>⚡</button>}
         <button onClick={()=>setShowIn(v=>!v)} style={{padding:"5px 10px",borderRadius:7,border:"1px solid #e5e7eb",background:showIn?"#EBF4FF":"#fff",fontSize:11,fontWeight:600,color:showIn?"#667EEA":"#6b7280",cursor:"pointer"}}>🏅</button>
         <button onClick={()=>setShowAdd(true)} style={{padding:"5px 12px",borderRadius:7,border:"none",background:"#EF7D00",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>+ Lead</button>
       </div>

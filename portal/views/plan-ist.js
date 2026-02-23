@@ -589,7 +589,7 @@ export function openVerkaufEntryModal() {
         {id:'vtGeplant',label:'Geplant',ph:'0'},
         {id:'vtSpontan',label:'Spontan',ph:'0'},
         {id:'vtErgo',label:'Ergo-Beratung',ph:'0'},
-        {id:'vtVerkauft',label:'Verkauft ✅',ph:'0'}
+        {id:'vtVerkauft',label:'Verkauft',ph:'0'}
     ];
     vtFields.forEach(function(f) {
         html += '<div><label class="block text-xs text-gray-600 mb-1">'+f.label+'</label>';
