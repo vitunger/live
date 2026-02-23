@@ -593,23 +593,70 @@ window.wawiSaveAll = async function() {
     parsedQueue = [];
 };
 
+// ── Demo Belege ──
+var _demoBelege = [
+    {id:'demo-b1',beleg_typ:'Auftrag',beleg_nr:'940175',datum:'2026-02-23',kunde_name:'Thomas Günther',verkaeufer:'Justus Zimpel',endbetrag:9001.96,ist_leasing:false,leasing_anbieter:null,status:'neu',kunden_nr:'10482'},
+    {id:'demo-b2',beleg_typ:'Rechnung',beleg_nr:'940112',datum:'2026-02-21',kunde_name:'Sabine Krause',verkaeufer:'Justus Zimpel',endbetrag:4299.00,ist_leasing:true,leasing_anbieter:'JobRad',status:'neu',kunden_nr:'10355'},
+    {id:'demo-b3',beleg_typ:'Auftrag',beleg_nr:'940098',datum:'2026-02-20',kunde_name:'Michael Bauer',verkaeufer:'Anna Schreiber',endbetrag:3459.95,ist_leasing:false,leasing_anbieter:null,status:'neu',kunden_nr:'10501'},
+    {id:'demo-b4',beleg_typ:'Rechnung',beleg_nr:'940065',datum:'2026-02-18',kunde_name:'Firma Logistik Meyer GmbH',verkaeufer:'Justus Zimpel',endbetrag:12750.00,ist_leasing:true,leasing_anbieter:'BusinessBike',status:'neu',kunden_nr:'10220'},
+    {id:'demo-b5',beleg_typ:'Angebot',beleg_nr:'940201',datum:'2026-02-22',kunde_name:'Dr. Petra Hoffmann',verkaeufer:'Anna Schreiber',endbetrag:6890.00,ist_leasing:false,leasing_anbieter:null,status:'neu',kunden_nr:'10544'},
+    {id:'demo-b6',beleg_typ:'Auftrag',beleg_nr:'940033',datum:'2026-02-17',kunde_name:'Jörg Weidemann',verkaeufer:'Justus Zimpel',endbetrag:2199.00,ist_leasing:true,leasing_anbieter:'Bikeleasing',status:'neu',kunden_nr:'10388'},
+    {id:'demo-b7',beleg_typ:'Rechnung',beleg_nr:'939987',datum:'2026-02-15',kunde_name:'Stefan & Anja Richter',verkaeufer:'Anna Schreiber',endbetrag:7850.00,ist_leasing:false,leasing_anbieter:null,status:'neu',kunden_nr:'10412'},
+    {id:'demo-b8',beleg_typ:'Auftrag',beleg_nr:'939955',datum:'2026-02-14',kunde_name:'Claudia Winkler',verkaeufer:'Justus Zimpel',endbetrag:5399.00,ist_leasing:true,leasing_anbieter:'JobRad',status:'neu',kunden_nr:'10299'}
+];
+var _demoBelegDetails = {
+    'demo-b1':{kunde_anrede:'Herr',kunde_strasse:'Am Domplatz 14',kunde_plz:'48143',kunde_ort:'Münster',zahlungsbedingung:'30 Tage netto',netto:7564.67,mwst_satz:19,mwst_betrag:1437.29,endbetrag:9001.96,belegrabatt:0,
+        items:[{art_nr:'1098983',bezeichnung:'Pfau-Tec Movi CX blassgrün matt inkl. 800Wh Akku, Ergon. Premiumsitz, Enviolo Automatic',menge:1,einzelpreis:8703,gesamtpreis:8703},{art_nr:'1072639',bezeichnung:'vit:bikes Service AW Montage Rückspiegel',menge:1,einzelpreis:10,gesamtpreis:10},{art_nr:'1072639',bezeichnung:'Rückspiegel für Lenker Montage',menge:1,einzelpreis:39.95,gesamtpreis:39.95},{art_nr:'1019789',bezeichnung:'Abus Anschließkette IvyTex ACH IVY 6KS 130 cm',menge:1,einzelpreis:49.95,gesamtpreis:49.95},{art_nr:'1067211',bezeichnung:'Bosch Display Kiox 500 (BHU3700) Schwarz',menge:1,einzelpreis:159,gesamtpreis:159},{art_nr:'1053957',bezeichnung:'Bosch LED Remote (BRC3600)',menge:1,einzelpreis:119,gesamtpreis:119},{art_nr:'1070907',bezeichnung:'Bosch Purion 200, 22,2 mm Schwarz (Rückgabe)',menge:-1,einzelpreis:188.95,gesamtpreis:-188.95}]},
+    'demo-b2':{kunde_anrede:'Frau',kunde_strasse:'Wolbecker Str. 78',kunde_plz:'48155',kunde_ort:'Münster',zahlungsbedingung:'Leasing',netto:3612.61,mwst_satz:19,mwst_betrag:686.39,endbetrag:4299.00,belegrabatt:0,
+        items:[{art_nr:'1087234',bezeichnung:'Cube Kathmandu Hybrid SLT 750 2026 grey´n´orange',menge:1,einzelpreis:4099,gesamtpreis:4099},{art_nr:'1072639',bezeichnung:'vit:bikes Service AW Ergonomie-Anpassung',menge:1,einzelpreis:50,gesamtpreis:50},{art_nr:'1045122',bezeichnung:'Ergon GP1 BioKork Griffe L',menge:1,einzelpreis:39.95,gesamtpreis:39.95},{art_nr:'1031455',bezeichnung:'SKS Bluemels 75 U Schutzblechset 28"',menge:1,einzelpreis:54.95,gesamtpreis:54.95},{art_nr:'1072639',bezeichnung:'vit:bikes Erstinspektion Gutschein',menge:1,einzelpreis:55.10,gesamtpreis:55.10}]},
+    'demo-b3':{kunde_anrede:'Herr',kunde_strasse:'Hansaring 22',kunde_plz:'48268',kunde_ort:'Greven',zahlungsbedingung:'14 Tage 2% Skonto',netto:2907.52,mwst_satz:19,mwst_betrag:552.43,endbetrag:3459.95,belegrabatt:0,skonto_prozent:2,
+        items:[{art_nr:'1091456',bezeichnung:'Bergamont E-Horizon Expert 2026 anthracite',menge:1,einzelpreis:3299,gesamtpreis:3299},{art_nr:'1072639',bezeichnung:'vit:bikes Service AW Montage Gepäckträger-Tasche',menge:1,einzelpreis:15,gesamtpreis:15},{art_nr:'1055678',bezeichnung:'Ortlieb Back-Roller City QL1 Paar schwarz',menge:1,einzelpreis:89.95,gesamtpreis:89.95},{art_nr:'1072639',bezeichnung:'vit:bikes Erstinspektion Gutschein',menge:1,einzelpreis:56,gesamtpreis:56}]},
+    'demo-b4':{kunde_anrede:'Firma',kunde_strasse:'Industrieweg 5',kunde_plz:'48157',kunde_ort:'Münster',zahlungsbedingung:'Leasing Sammelrechnung',netto:10714.29,mwst_satz:19,mwst_betrag:2035.71,endbetrag:12750.00,belegrabatt:0,
+        items:[{art_nr:'1088901',bezeichnung:'Riese & Müller Multicharger2 GT vario 750 utility grey',menge:3,einzelpreis:4250,gesamtpreis:12750}]},
+    'demo-b5':{kunde_anrede:'Frau',kunde_strasse:'Promenade 88',kunde_plz:'48143',kunde_ort:'Münster',zahlungsbedingung:'Angebot gültig 30 Tage',netto:5790.76,mwst_satz:19,mwst_betrag:1099.24,endbetrag:6890.00,belegrabatt:0,
+        items:[{art_nr:'1095544',bezeichnung:'Specialized Turbo Vado 5.0 Step-Through 2026 cast umber',menge:1,einzelpreis:5999,gesamtpreis:5999},{art_nr:'1072639',bezeichnung:'vit:bikes Ergonomie-Beratung Premium',menge:1,einzelpreis:89,gesamtpreis:89},{art_nr:'1044890',bezeichnung:'SQlab 621 Ergolux active Sattel',menge:1,einzelpreis:149.95,gesamtpreis:149.95},{art_nr:'1072639',bezeichnung:'vit:bikes Erstinspektion Gutschein',menge:1,einzelpreis:56,gesamtpreis:56},{art_nr:'1032111',bezeichnung:'Rabatt Angebotspaket',menge:1,einzelpreis:-403.95,gesamtpreis:-403.95}]}
+};
+
 // ── Load Belege List ──
 window.loadWawiBelege = async function() {
     var container = document.getElementById('wawiListContainer');
     if(!container) return;
     container.innerHTML = '<div class="p-6 text-center text-gray-400"><div class="animate-pulse">Lade Belege...</div></div>';
 
-    var q = _sb().from('wawi_belege').select('id,beleg_typ,beleg_nr,datum,kunde_name,verkaeufer,endbetrag,ist_leasing,leasing_anbieter,status,kunden_nr').order('datum',{ascending:false}).limit(100);
+    var data = null;
+    var useDemo = false;
+    try {
+        var q = _sb().from('wawi_belege').select('id,beleg_typ,beleg_nr,datum,kunde_name,verkaeufer,endbetrag,ist_leasing,leasing_anbieter,status,kunden_nr').order('datum',{ascending:false}).limit(100);
 
-    var fTyp = document.getElementById('wawiFilterTyp');
-    if(fTyp && fTyp.value) q = q.eq('beleg_typ', fTyp.value);
-    var fL = document.getElementById('wawiFilterLeasing');
-    if(fL && fL.value) q = q.eq('ist_leasing', fL.value==='true');
-    var fS = document.getElementById('wawiFilterSearch');
-    if(fS && fS.value.length >= 2) q = q.or('beleg_nr.ilike.%'+fS.value+'%,kunde_name.ilike.%'+fS.value+'%');
+        var fTyp = document.getElementById('wawiFilterTyp');
+        if(fTyp && fTyp.value) q = q.eq('beleg_typ', fTyp.value);
+        var fL = document.getElementById('wawiFilterLeasing');
+        if(fL && fL.value) q = q.eq('ist_leasing', fL.value==='true');
+        var fS = document.getElementById('wawiFilterSearch');
+        if(fS && fS.value.length >= 2) q = q.or('beleg_nr.ilike.%'+fS.value+'%,kunde_name.ilike.%'+fS.value+'%');
 
-    var {data, error} = await q;
-    if(error){ container.innerHTML='<div class="p-4 text-red-500 text-sm">Fehler: '+error.message+'</div>'; return; }
+        var result = await q;
+        if(!result.error && result.data && result.data.length > 0) {
+            data = result.data;
+        } else {
+            useDemo = true;
+        }
+    } catch(e) {
+        console.warn('[WaWi Belege] DB-Fehler, nutze Demo-Daten:', e);
+        useDemo = true;
+    }
+
+    if(useDemo) {
+        data = _demoBelege;
+        // Apply filters on demo data
+        var fTyp = document.getElementById('wawiFilterTyp');
+        if(fTyp && fTyp.value) data = data.filter(function(b){ return b.beleg_typ === fTyp.value; });
+        var fL = document.getElementById('wawiFilterLeasing');
+        if(fL && fL.value) data = data.filter(function(b){ return b.ist_leasing === (fL.value==='true'); });
+        var fS = document.getElementById('wawiFilterSearch');
+        if(fS && fS.value.length >= 2) { var sv = fS.value.toLowerCase(); data = data.filter(function(b){ return (b.beleg_nr||'').toLowerCase().indexOf(sv)>=0 || (b.kunde_name||'').toLowerCase().indexOf(sv)>=0; }); }
+    }
+
     if(!data || data.length===0){ container.innerHTML='<div class="p-8 text-center text-gray-400"><div class="text-3xl mb-2">📭</div><p>Noch keine Belege importiert</p><p class="text-xs mt-1">Lade PDFs im Upload-Tab hoch</p></div>'; return; }
 
     var typColors = {Angebot:'blue',Auftrag:'orange',Rechnung:'green'};
@@ -642,10 +689,30 @@ window.showWawiBelegDetail = async function(id) {
     modal.style.display = 'flex';
     detail.innerHTML = '<div class="text-center p-6"><div class="animate-pulse text-gray-400">Lade Beleg...</div></div>';
 
-    var {data:b} = await _sb().from('wawi_belege').select('*').eq('id',id).single();
-    if(!b){ detail.innerHTML='<p class="text-red-500">Beleg nicht gefunden</p>'; return; }
-    var {data:pos} = await _sb().from('wawi_beleg_positionen').select('*').eq('beleg_id',id).order('sortierung');
-    pos = pos || [];
+    var b = null;
+    var pos = [];
+    // Demo check
+    if(id.startsWith('demo-')) {
+        var demoBase = _demoBelege.find(function(x){ return x.id === id; });
+        var demoDetail = _demoBelegDetails[id];
+        if(demoBase && demoDetail) {
+            b = Object.assign({}, demoBase, demoDetail);
+            pos = (demoDetail.items||[]).map(function(it, idx){ return {art_nr:it.art_nr,bezeichnung:it.bezeichnung,menge:it.menge,einzelpreis:it.einzelpreis,gesamtpreis:it.gesamtpreis,seriennummer:null,sortierung:idx+1,ist_hauptprodukt:(it.einzelpreis||0)>500}; });
+        }
+    }
+    if(!b) {
+        var r = await _sb().from('wawi_belege').select('*').eq('id',id).single();
+        b = r.data;
+        if(!b){ detail.innerHTML='<p class="text-red-500">Beleg nicht gefunden</p>'; return; }
+        var {data:dbPos} = await _sb().from('wawi_beleg_positionen').select('*').eq('beleg_id',id).order('sortierung');
+        pos = dbPos || [];
+        // Fallback: Positionen aus raw_json wenn keine separaten Einträge
+        if(pos.length === 0 && b.raw_json && b.raw_json.items && b.raw_json.items.length > 0) {
+            pos = b.raw_json.items.map(function(it, idx) {
+                return { art_nr: it.art_nr, bezeichnung: it.bezeichnung, menge: it.menge, einzelpreis: it.einzelpreis, gesamtpreis: it.gesamtpreis, seriennummer: it.seriennummer || null, sortierung: idx+1, ist_hauptprodukt: (it.einzelpreis||0) > 500 };
+            });
+        }
+    }
 
     var typColors = {Angebot:'blue',Auftrag:'orange',Rechnung:'green'};
     var tc = typColors[b.beleg_typ]||'gray';
@@ -702,8 +769,12 @@ window.loadWawiDashboard = async function() {
     if(!kpiEl) return;
 
     // Summary query
-    var {data:belege} = await _sb().from('wawi_belege').select('beleg_typ,endbetrag,ist_leasing,datum').eq('status','neu');
-    belege = belege || [];
+    var belege = null;
+    try {
+        var r = await _sb().from('wawi_belege').select('beleg_typ,endbetrag,ist_leasing,datum').eq('status','neu');
+        if(r.data && r.data.length > 0) belege = r.data;
+    } catch(e) {}
+    if(!belege || belege.length === 0) belege = _demoBelege;
 
     var total=0, countA=0, countR=0, countAng=0, leasingSum=0;
     belege.forEach(function(b){
