@@ -392,29 +392,39 @@ async function parsePlanFileLocal(file, statusEl, resultEl) {
                 }
                 var umsatzRow = findSummaryRow(['1020'], ['umsatzerlöse','umsatzerloese','gesamtleistung']);
                 var weRow = findSummaryRow(['1060'], ['material-/wareneinkauf','wareneinsatz','materialaufwand']);
-                var pkRow = findSummaryRow(['1100','1120'], ['personalkosten','löhne und gehälter','loehne']);
-                var rkRow = findSummaryRow(['1140'], ['raumkosten','miete']);
+                var pkRow = findSummaryRow(['1100'], ['personalkosten']);
+                var rkRow = findSummaryRow(['1120','1140'], ['raumkosten','miete']);
+                var ergRow = findSummaryRow(['1290','1300'], ['betriebsergebnis','vorsteuer-ergebnis','ergebnis']);
+                var werbeRow = findSummaryRow(['1200'], ['werbe','reisekosten']);
+                var abschrRow = findSummaryRow(['1240'], ['abschreibung']);
+                var sonstRow = findSummaryRow(['1260'], ['sonstige kosten','sonstige']);
+                var gesamtkRow = findSummaryRow(['1270'], ['gesamtkosten']);
                 
                 console.log('[Plan-Local] Found rows:', {
-                    umsatz: umsatzRow ? (umsatzRow.bezeichnung + ' → jan=' + umsatzRow.jan) : 'NOT FOUND',
-                    wareneinsatz: weRow ? (weRow.bezeichnung + ' → jan=' + weRow.jan) : 'NOT FOUND',
-                    personal: pkRow ? (pkRow.bezeichnung + ' → jan=' + pkRow.jan) : 'NOT FOUND',
-                    raum: rkRow ? (rkRow.bezeichnung + ' → jan=' + rkRow.jan) : 'NOT FOUND'
+                    umsatz: umsatzRow ? (umsatzRow.bezeichnung + ' konto=' + umsatzRow.konto + ' jan=' + umsatzRow.jan) : 'NOT FOUND',
+                    wareneinsatz: weRow ? (weRow.bezeichnung + ' konto=' + weRow.konto + ' jan=' + weRow.jan) : 'NOT FOUND',
+                    personal: pkRow ? (pkRow.bezeichnung + ' konto=' + pkRow.konto + ' jan=' + pkRow.jan) : 'NOT FOUND',
+                    raum: rkRow ? (rkRow.bezeichnung + ' konto=' + rkRow.konto + ' jan=' + rkRow.jan) : 'NOT FOUND',
+                    ergebnis: ergRow ? (ergRow.bezeichnung + ' konto=' + ergRow.konto + ' jan=' + ergRow.jan) : 'NOT FOUND'
                 });
-                console.log('[Plan-Local] Available kontengruppen:', result.plan_bwa.slice(0,10).map(function(r) { return r.kontengruppe + '|' + r.bezeichnung + '|jan=' + r.jan; }));
+                console.log('[Plan-Local] Available kontengruppen:', result.plan_bwa.slice(0,10).map(function(r) { return r.kontengruppe + '|' + r.bezeichnung + '|konto=' + r.konto + '|jan=' + r.jan; }));
                 
                 for(var m=0; m<12; m++) {
                     var mKey = mn[m];
                     planMonths[m+1] = {
                         monat: m+1,
-                        umsatz: umsatzRow ? (umsatzRow[mKey]||0) : 0,
-                        wareneinsatz: weRow ? (weRow[mKey]||0) : 0,
-                        personalkosten: pkRow ? (pkRow[mKey]||0) : 0,
-                        raumkosten: rkRow ? (rkRow[mKey]||0) : 0
+                        umsatz: umsatzRow ? Math.round(umsatzRow[mKey]||0) : 0,
+                        wareneinsatz: weRow ? Math.round(weRow[mKey]||0) : 0,
+                        personalkosten: pkRow ? Math.round(pkRow[mKey]||0) : 0,
+                        raumkosten: rkRow ? Math.round(rkRow[mKey]||0) : 0,
+                        werbekosten: werbeRow ? Math.round(werbeRow[mKey]||0) : 0,
+                        abschreibungen: abschrRow ? Math.round(abschrRow[mKey]||0) : 0,
+                        sonstige: sonstRow ? Math.round(sonstRow[mKey]||0) : 0,
+                        gesamtkosten: gesamtkRow ? Math.round(gesamtkRow[mKey]||0) : 0
                     };
                     var pm = planMonths[m+1];
                     pm.rohertrag = pm.umsatz + pm.wareneinsatz;
-                    pm.ergebnis = pm.rohertrag + pm.personalkosten + pm.raumkosten;
+                    pm.ergebnis = ergRow ? Math.round(ergRow[mKey]||0) : (pm.rohertrag + pm.personalkosten + pm.raumkosten);
                 }
                 
                 var hasData = Object.values(planMonths).some(function(pm) { return pm.umsatz !== 0 || pm.wareneinsatz !== 0; });
