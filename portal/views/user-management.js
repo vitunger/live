@@ -1383,6 +1383,7 @@ export function _renderModulRow(m, currentStatus, ebene) {
                 html += '<div class="flex items-center space-x-0.5 bg-gray-100 rounded p-0.5">';
                 var wbtn = 'px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer';
                 html += '<button onclick="' + setWidgetFn + '(\'' + m.modul_key + '\',\'' + w.key + '\',\'aktiv\')" class="' + wbtn + ' ' + (wStatus==='aktiv'?'bg-green-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✓</button>';
+                html += '<button onclick="' + setWidgetFn + '(\'' + m.modul_key + '\',\'' + w.key + '\',\'beta\')" class="' + wbtn + ' ' + (wStatus==='beta'?'bg-purple-500 text-white':'text-gray-400 hover:bg-gray-200') + '">🧪</button>';
                 html += '<button onclick="' + setWidgetFn + '(\'' + m.modul_key + '\',\'' + w.key + '\',\'demo\')" class="' + wbtn + ' ' + (wStatus==='demo'?'bg-orange-400 text-white':'text-gray-400 hover:bg-gray-200') + '">👁</button>';
                 html += '<button onclick="' + setWidgetFn + '(\'' + m.modul_key + '\',\'' + w.key + '\',\'deaktiviert\')" class="' + wbtn + ' ' + (wStatus==='deaktiviert'?'bg-gray-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✕</button>';
                 html += '</div></div>';
