@@ -12,7 +12,6 @@
  */
 
 const MODULE_BASE = '/portal';
-const CB = '?v=' + Date.now();
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
@@ -34,7 +33,6 @@ const VIEW_MODULES = [
     'views/verkauf.js',
     'views/einkauf.js',
     'views/controlling.js',
-    'views/aktenschrank.js',
     'views/support.js',
     'views/allgemein.js',
     'views/plan-ist.js',
@@ -85,7 +83,7 @@ async function loadModules() {
     // Phase 1: Core (sequential - order matters)
     for (const mod of CORE_MODULES) {
         try {
-            await import(`${MODULE_BASE}/${mod}${CB}`);
+            await import(`${MODULE_BASE}/${mod}`);
             loaded++;
         } catch (e) {
             console.error(`[app.js] ❌ Core module failed: ${mod}`, e.message);
@@ -97,10 +95,10 @@ async function loadModules() {
     // Phase 2: Views (parallel - independent modules)
     const results = await Promise.allSettled(
         VIEW_MODULES.map(mod => 
-            import(`${MODULE_BASE}/${mod}${CB}`)
+            import(`${MODULE_BASE}/${mod}`)
                 .then(() => { loaded++; })
                 .catch(e => {
-                    console.error(`[app.js] ❌ ${mod}:`, e.message, e);
+                    console.error(`[app.js] ❌ ${mod}:`, e.message);
                     failed++;
                 })
         )
@@ -117,4 +115,4 @@ async function loadModules() {
 
 // ── Boot ──
 loadModules();
-/* pro deploy 1771794700 */
+/* pro deploy 1771838200 */
