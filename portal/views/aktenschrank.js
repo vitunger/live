@@ -175,7 +175,9 @@ export function closeAktenFolder(){
 }
 
 // INBOX
-export function showAktenInbox(){
+export async function showAktenInbox(){
+    // Force reload to get fresh KI status
+    _akten.loaded=false; await loadAktenFiles();
     var inbox=_akten.dokumente.filter(function(d){return d.status==='eingegangen'||d.status==='ki_verarbeitet';});
     var c=document.getElementById('aktenInboxList');if(!c)return;
     if(inbox.length===0){c.innerHTML='<div class="text-center py-12 text-gray-400"><span class="text-4xl block mb-2">\u2705</span><p class="text-sm">Alle Dokumente gepr\u00fcft \u2014 nichts zu tun!</p></div>';}
