@@ -85,7 +85,7 @@ export async function loadBwaList() {
     if(!container) return;
     // Set standort label dynamically
     var bwaLabel = document.getElementById('bwaStandortLabel');
-    var useDemo = isDemoMode || (_sbProfile() && (_sbProfile().status === 'demo' || _sbProfile().status === 'demo_active'));
+    var useDemo = (typeof isDemoMode !== 'undefined' && isDemoMode) || (_sbProfile() && (_sbProfile().status === 'demo' || _sbProfile().status === 'demo_active'));
     if(bwaLabel) bwaLabel.textContent = useDemo ? 'vit:bikes Muster-Filiale' : ('vit:bikes ' + (_sbProfile() && _sbProfile().standort_name ? _sbProfile().standort_name : 'Standort'));
     try {
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
