@@ -127,7 +127,21 @@ var projectId = 'lwwagbkxeofahhwebkab';
 for(var i=0; i<total; i++) {
     var file = vpSelectedFiles[i];
     var fStatus = document.getElementById('vpFileStatus_'+i);
-    var standortId = (window.sbStandort && window.sbStandort.id) ? window.sbStandort.id : 'hq';
+    var standortId = (window.sbStandort && window.sbStandort.id) 
+        || (window.sbProfile && window.sbProfile.standort_id)
+        || (window.currentStandortId)
+        || null;
+    if(!standortId) {
+        // Try to get from profile in DB
+        try {
+            var uid = _sbUser()?.id;
+            if(uid) {
+                var {data:u} = await _sb().from('users').select('standort_id').eq('id', uid).single();
+                if(u && u.standort_id) standortId = u.standort_id;
+            }
+        } catch(e) {}
+    }
+    if(!standortId) { alert('Kein Standort zugewiesen. Bitte Profil prüfen.'); btn.disabled = false; return; }
     var storagePath = standortId + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
 
     pct.textContent = (i+1) + ' / ' + total;
@@ -175,7 +189,7 @@ for(var i=0; i<total; i++) {
         if(fStatus) fStatus.innerHTML = '<span class="text-yellow-500">💾 Speichern...</span>';
 
         var insertData = {
-            standort_id: standortId !== 'hq' ? standortId : null,
+            standort_id: standortId,
             uploaded_by: _sbUser().id,
             storage_path: storagePath,
             filename: file.name,
