@@ -549,6 +549,16 @@ export async function loadModulStatus() {
             sbHqModulConfig[m.modul_key] = m.hq_config || {};
             sbModulEbene[m.modul_key] = m.ebene || 'partner';
         });
+        // Load beta user assignments for current user
+        window._betaModules = [];
+        try {
+            var userId = _sbUser() ? _sbUser().id : null;
+            if(userId) {
+                var {data:betaData} = await _sb().from('modul_beta_users').select('modul_key').eq('user_id', userId);
+                window._betaModules = (betaData||[]).map(function(b){ return b.modul_key; });
+            }
+        } catch(e) { console.warn('[beta] Could not load beta modules:', e.message); }
+        
         applyModulStatus();
         // Re-sync to window (reassignment breaks reference)
         window.sbModulStatus = sbModulStatus;
@@ -566,7 +576,7 @@ export function applyModulStatus() {
         var status = sbModulStatus[key] || 'aktiv';
 
         // Remove old badges first
-        var oldBadge = btn.querySelector('.modul-wip-badge,.modul-demo-badge');
+        var oldBadge = btn.querySelector('.modul-wip-badge,.modul-demo-badge,.modul-beta-badge');
         if(oldBadge) oldBadge.remove();
 
         if(status === 'deaktiviert') {
@@ -577,6 +587,26 @@ export function applyModulStatus() {
                 btn.style.opacity = '0.35';
                 btn.style.pointerEvents = 'none';
             } else {
+                btn.style.display = 'none';
+            }
+        } else if(status === 'beta') {
+            // Beta: only visible for assigned beta users + HQ
+            var isHqUser = (window.sbProfile && window.sbProfile.is_hq) || (window.currentRoles && window.currentRoles.indexOf('hq') !== -1);
+            var isBetaUser = (window._betaModules||[]).indexOf(key) !== -1;
+            if(isHqUser || isBetaUser) {
+                // Show with beta badge
+                btn.style.display = '';
+                btn.style.opacity = '';
+                btn.style.pointerEvents = '';
+                btn.style.cursor = '';
+                if(!btn.querySelector('.modul-beta-badge')) {
+                    var badge = document.createElement('span');
+                    badge.className = 'modul-beta-badge ml-auto text-[9px] bg-purple-500 text-white rounded px-1 py-0.5 font-bold';
+                    badge.textContent = 'BETA';
+                    btn.appendChild(badge);
+                }
+            } else {
+                // Not a beta user → hide completely
                 btn.style.display = 'none';
             }
         } else if(status === 'in_bearbeitung') {

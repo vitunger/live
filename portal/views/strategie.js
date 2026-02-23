@@ -1958,6 +1958,15 @@ export function showView(viewName) {
             else alert('Dieses Modul ist noch nicht verf\u00fcgbar');
             return;
         }
+        // Beta check: only HQ or assigned beta users may access
+        if(statusLoaded && mStatus === 'beta') {
+            var isHqUser = (window.sbProfile && window.sbProfile.is_hq) || (window.currentRoles && window.currentRoles.indexOf('hq') !== -1);
+            var isBetaUser = (window._betaModules||[]).indexOf(moduleKey) !== -1;
+            if(!isHqUser && !isBetaUser) {
+                if(typeof window._showToast === 'function') window._showToast('Dieses Modul ist in der Beta-Phase. Zugang nur f\u00fcr freigeschaltete Tester.', 'info');
+                return;
+            }
+        }
     }
     
     // Verstecke ALLE Views automatisch (per Klasse statt hardcoded Liste)

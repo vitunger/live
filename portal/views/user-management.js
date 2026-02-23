@@ -1337,10 +1337,16 @@ export function _renderModulRow(m, currentStatus, ebene) {
     html += '<div class="flex items-center space-x-1 bg-gray-100 rounded-lg p-0.5">';
     var btnBase = 'px-2.5 py-1.5 rounded-md text-[11px] font-semibold transition cursor-pointer';
     html += '<button onclick="' + setFn + '(\'' + m.id + '\',\'aktiv\')" class="' + btnBase + ' ' + (currentStatus==='aktiv' ? 'bg-green-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">✓ Aktiv</button>';
+    html += '<button onclick="' + setFn + '(\'' + m.id + '\',\'beta\')" class="' + btnBase + ' ' + (currentStatus==='beta' ? 'bg-purple-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">🧪 Beta</button>';
     html += '<button onclick="' + setFn + '(\'' + m.id + '\',\'demo\')" class="' + btnBase + ' ' + (currentStatus==='demo' ? 'bg-orange-400 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">👁 Demo</button>';
     html += '<button onclick="' + setFn + '(\'' + m.id + '\',\'in_bearbeitung\')" class="' + btnBase + ' ' + (currentStatus==='in_bearbeitung' ? 'bg-yellow-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">🔧 Bald</button>';
     html += '<button onclick="' + setFn + '(\'' + m.id + '\',\'deaktiviert\')" class="' + btnBase + ' ' + (currentStatus==='deaktiviert' ? 'bg-gray-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">✕ Aus</button>';
-    html += '</div></div>';
+    html += '</div>';
+    // Beta user manage icon (only shown when status is beta)
+    if(currentStatus === 'beta') {
+        html += '<button onclick="openBetaUsersModal(\'' + m.modul_key + '\',\'' + m.modul_name + '\')" class="ml-1 p-1.5 hover:bg-purple-50 rounded text-purple-500 hover:text-purple-700 transition" title="Beta-Tester verwalten">👥</button>';
+    }
+    html += '</div>';
 
     // Expandable children
     if(hasChildren && isExpanded) {
@@ -1354,6 +1360,7 @@ export function _renderModulRow(m, currentStatus, ebene) {
                 html += '<div class="flex items-center space-x-0.5 bg-gray-100 rounded p-0.5">';
                 var tbtn = 'px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer';
                 html += '<button onclick="' + setTabFn + '(\'' + m.modul_key + '\',\'' + tab.key + '\',\'aktiv\')" class="' + tbtn + ' ' + (tabStatus==='aktiv'?'bg-green-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✓</button>';
+                html += '<button onclick="' + setTabFn + '(\'' + m.modul_key + '\',\'' + tab.key + '\',\'beta\')" class="' + tbtn + ' ' + (tabStatus==='beta'?'bg-purple-500 text-white':'text-gray-400 hover:bg-gray-200') + '">🧪</button>';
                 html += '<button onclick="' + setTabFn + '(\'' + m.modul_key + '\',\'' + tab.key + '\',\'demo\')" class="' + tbtn + ' ' + (tabStatus==='demo'?'bg-orange-400 text-white':'text-gray-400 hover:bg-gray-200') + '">👁</button>';
                 html += '<button onclick="' + setTabFn + '(\'' + m.modul_key + '\',\'' + tab.key + '\',\'deaktiviert\')" class="' + tbtn + ' ' + (tabStatus==='deaktiviert'?'bg-gray-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✕</button>';
                 html += '</div></div>';
@@ -1961,6 +1968,114 @@ export async function renderKzMitarbeiter() {
     } catch(err) { console.error('Mitarbeiter:', err); body.innerHTML='<tr><td colspan="7" class="text-center py-4 text-red-400">Fehler: '+err.message+'</td></tr>'; }
 }
 
-const _exports = {approveUser,switchApproveEbene,closeApproveModal,confirmApprove,rejectUser,openRollenModal,closeRollenModal,saveRollen,getStandortName,getPartnerMitarbeiter,filterPartnerMa,showMaTab,renderPartnerMitarbeiter,openEmployeeToolsModal,closeEmpToolsModal,saveEmployeeTools,openEditEmployeeModal,closeEditEmpModal,saveEditEmployee,renderMaToolsMatrix,renderMaKosten,deactivateMa,openNeuerMaModal,switchNewMaEbene,closeNeuerMaModal,switchNewMaEmailType,updateNewMaEmail,saveNeuerMa,openEditMaModal,switchEditEbene,closeEditMaModal,saveEditMa,loginAs,deleteMa,openNeuerStandortModal,closeNeuerStdModal,saveNeuerStandort,showSettingsTab,renderModulStatusList,renderHqModulStatusList,_renderModulRow,toggleModuleExpand,renderOfficeRoomsAdmin,renderDemoModulList,setDemoModulStatus,setDemoTabStatus,setDemoWidgetStatus,setAllDemoStatus,setTabStatus,setWidgetStatus,setModulStatus,setHqModulStatus,setHqTabStatus,setHqWidgetStatus,renderHqEinstellungen,togglePermission,renderHqRechteMatrixBody,loadHqRechteMatrix,toggleHqPermission,showKommandoTab,filterKzStandorte,filterKzMa,renderKzStandorte,renderKzMitarbeiter};
+// ==================== BETA USER MANAGEMENT ====================
+
+var _betaUsersCache = {};
+
+export async function openBetaUsersModal(modulKey, modulName) {
+    var modal = document.getElementById('approveModal');
+    if(!modal) return;
+    modal.style.display = 'flex';
+    var inner = modal.querySelector('.modal-inner') || modal.querySelector('[class*="bg-white"]') || modal;
+    if(inner === modal) {
+        modal.innerHTML = '<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto p-6 modal-inner"></div></div>';
+        inner = modal.querySelector('.modal-inner');
+    }
+    inner.innerHTML = '<div class="flex justify-center py-8"><div class="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full"></div></div>';
+
+    try {
+        var s = _sb();
+        // Load current beta users for this module
+        var {data:betaUsers, error:e1} = await s.from('modul_beta_users').select('*, user:user_id(id, email, raw_user_meta_data)').eq('modul_key', modulKey);
+        if(e1) throw e1;
+        // Load all users for selection
+        var {data:allUsers, error:e2} = await s.from('users').select('id, vorname, nachname, email, standort_id, standorte(name)').eq('status','active').order('nachname');
+        if(e2) throw e2;
+
+        var betaUserIds = (betaUsers||[]).map(function(b){ return b.user_id; });
+
+        var html = '<div class="flex items-center justify-between mb-4">';
+        html += '<div><h2 class="text-lg font-bold text-gray-800">🧪 Beta-Tester: ' + modulName + '</h2>';
+        html += '<p class="text-xs text-gray-500">' + (betaUsers||[]).length + ' User haben Beta-Zugang</p></div>';
+        html += '<button onclick="document.getElementById(\'approveModal\').style.display=\'none\'" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button></div>';
+
+        // Current beta users
+        if(betaUsers && betaUsers.length) {
+            html += '<div class="mb-4"><div class="text-xs font-bold text-purple-600 uppercase mb-2">Aktive Beta-Tester</div>';
+            html += '<div class="space-y-1">';
+            betaUsers.forEach(function(b) {
+                var meta = (b.user && b.user.raw_user_meta_data) || {};
+                var name = (meta.vorname||'') + ' ' + (meta.nachname||b.user_id);
+                var email = b.user ? b.user.email : '';
+                html += '<div class="flex items-center gap-2 p-2 bg-purple-50 rounded-lg">';
+                html += '<div class="w-7 h-7 rounded-full bg-purple-200 text-purple-700 flex items-center justify-center text-xs font-bold">' + (name.charAt(0)||'?') + '</div>';
+                html += '<div class="flex-1 min-w-0"><span class="text-sm font-medium text-gray-800">' + name.trim() + '</span>';
+                if(email) html += '<span class="text-[10px] text-gray-400 ml-2">' + email + '</span>';
+                html += '</div>';
+                html += '<button onclick="removeBetaUser(\'' + b.id + '\',\'' + modulKey + '\',\'' + modulName.replace(/'/g,"") + '\')" class="text-red-400 hover:text-red-600 text-xs px-2 py-1 hover:bg-red-50 rounded">✕ Entfernen</button>';
+                html += '</div>';
+            });
+            html += '</div></div>';
+        }
+
+        // Add new beta users
+        html += '<div class="border-t pt-3"><div class="text-xs font-bold text-gray-600 uppercase mb-2">User hinzufügen</div>';
+        html += '<input type="text" id="betaUserSearch" placeholder="Name oder Email suchen..." class="w-full border rounded-lg px-3 py-2 text-sm mb-2" oninput="filterBetaUserList(\'' + modulKey + '\')">';
+        html += '<div id="betaUserList" class="max-h-48 overflow-y-auto space-y-1">';
+        (allUsers||[]).forEach(function(u) {
+            var isBeta = betaUserIds.indexOf(u.id) !== -1;
+            if(isBeta) return; // Schon Beta
+            var name = (u.vorname||'') + ' ' + (u.nachname||'');
+            var standort = u.standorte ? u.standorte.name : 'HQ';
+            html += '<div class="beta-user-option flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer" data-name="' + name.toLowerCase() + '" data-email="' + (u.email||'').toLowerCase() + '" onclick="addBetaUser(\'' + u.id + '\',\'' + modulKey + '\',\'' + modulName.replace(/'/g,"") + '\')">';
+            html += '<div class="w-7 h-7 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-xs font-bold">' + (name.charAt(0)||'?') + '</div>';
+            html += '<div class="flex-1"><span class="text-sm text-gray-700">' + name.trim() + '</span>';
+            html += '<span class="text-[10px] text-gray-400 ml-2">' + standort + '</span></div>';
+            html += '<span class="text-purple-500 text-xs">+ Hinzufügen</span>';
+            html += '</div>';
+        });
+        html += '</div></div>';
+
+        inner.innerHTML = html;
+    } catch(e) {
+        inner.innerHTML = '<p class="text-red-600 p-4">Fehler: ' + e.message + '</p>';
+    }
+}
+
+export function filterBetaUserList() {
+    var search = (document.getElementById('betaUserSearch')||{}).value||'';
+    search = search.toLowerCase();
+    document.querySelectorAll('.beta-user-option').forEach(function(el) {
+        var name = el.getAttribute('data-name') || '';
+        var email = el.getAttribute('data-email') || '';
+        el.style.display = (!search || name.indexOf(search) !== -1 || email.indexOf(search) !== -1) ? '' : 'none';
+    });
+}
+
+export async function addBetaUser(userId, modulKey, modulName) {
+    try {
+        var {error} = await _sb().from('modul_beta_users').insert({
+            modul_key: modulKey,
+            user_id: userId,
+            granted_by: _sbUser() ? _sbUser().id : null
+        });
+        if(error) throw error;
+        openBetaUsersModal(modulKey, modulName); // Refresh
+    } catch(e) { 
+        if(e.message && e.message.indexOf('duplicate') !== -1) { alert('User ist bereits Beta-Tester'); }
+        else { alert('Fehler: ' + e.message); }
+    }
+}
+
+export async function removeBetaUser(betaId, modulKey, modulName) {
+    if(!confirm('Beta-Zugang entfernen?')) return;
+    try {
+        var {error} = await _sb().from('modul_beta_users').delete().eq('id', betaId);
+        if(error) throw error;
+        openBetaUsersModal(modulKey, modulName); // Refresh
+    } catch(e) { alert('Fehler: ' + e.message); }
+}
+
+const _exports = {approveUser,switchApproveEbene,closeApproveModal,confirmApprove,rejectUser,openRollenModal,closeRollenModal,saveRollen,getStandortName,getPartnerMitarbeiter,filterPartnerMa,showMaTab,renderPartnerMitarbeiter,openEmployeeToolsModal,closeEmpToolsModal,saveEmployeeTools,openEditEmployeeModal,closeEditEmpModal,saveEditEmployee,renderMaToolsMatrix,renderMaKosten,deactivateMa,openNeuerMaModal,switchNewMaEbene,closeNeuerMaModal,switchNewMaEmailType,updateNewMaEmail,saveNeuerMa,openEditMaModal,switchEditEbene,closeEditMaModal,saveEditMa,loginAs,deleteMa,openNeuerStandortModal,closeNeuerStdModal,saveNeuerStandort,showSettingsTab,renderModulStatusList,renderHqModulStatusList,_renderModulRow,toggleModuleExpand,renderOfficeRoomsAdmin,renderDemoModulList,setDemoModulStatus,setDemoTabStatus,setDemoWidgetStatus,setAllDemoStatus,setTabStatus,setWidgetStatus,setModulStatus,setHqModulStatus,setHqTabStatus,setHqWidgetStatus,renderHqEinstellungen,togglePermission,renderHqRechteMatrixBody,loadHqRechteMatrix,toggleHqPermission,showKommandoTab,filterKzStandorte,filterKzMa,renderKzStandorte,renderKzMitarbeiter,openBetaUsersModal,filterBetaUserList,addBetaUser,removeBetaUser};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[user-management.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
