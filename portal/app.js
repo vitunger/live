@@ -58,6 +58,7 @@ const VIEW_MODULES = [
     
     // Specialized
     'views/dev-pipeline.js',
+    'views/aktenschrank.js',
     'views/strategie.js',
     'views/profile-theme.js',
     'views/perf-cockpit.js',
