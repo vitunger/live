@@ -233,9 +233,28 @@ if(!c) return;
 c.innerHTML = '<div class="flex justify-center py-12"><div class="animate-spin w-8 h-8 border-4 border-vit-orange border-t-transparent rounded-full"></div></div>';
 
 try {
-    var sid = (typeof sbStandort === 'object' && sbStandort) ? sbStandort.id : null;
-    if(!sid || sid === 'undefined') { c.innerHTML = '<div class="vit-card p-8 text-center text-gray-400"><div class="text-4xl mb-2">🎬</div><p>Kein Standort zugeordnet.</p></div>'; return; }
-    var {data:videos,error} = await _sb().from('videos').select('*').eq('standort_id',sid).order('created_at',{ascending:false});
+    var sid = (typeof sbStandort === 'object' && sbStandort) ? sbStandort.id 
+        : (window.sbProfile && window.sbProfile.standort_id) ? window.sbProfile.standort_id
+        : null;
+    if(!sid) {
+        // Try DB lookup
+        try {
+            var uid = _sbUser()?.id;
+            if(uid) {
+                var {data:u} = await _sb().from('users').select('standort_id, is_hq').eq('id', uid).single();
+                if(u) { sid = u.standort_id; }
+            }
+        } catch(e) {}
+    }
+    // HQ without standort: show all videos
+    var isHq = (window.sbProfile && window.sbProfile.is_hq) || false;
+    var query = _sb().from('videos').select('*').order('created_at',{ascending:false});
+    if(sid) {
+        query = query.eq('standort_id', sid);
+    } else if(!isHq) {
+        c.innerHTML = '<div class="vit-card p-8 text-center text-gray-400"><div class="text-4xl mb-2">🎬</div><p>Kein Standort zugeordnet.</p></div>'; return;
+    }
+    var {data:videos,error} = await query;
     if(error) throw error;
     videos = videos || [];
 
@@ -413,8 +432,16 @@ if(!c) return;
 c.innerHTML = '<div class="flex justify-center py-8"><div class="animate-spin w-8 h-8 border-4 border-vit-orange border-t-transparent rounded-full"></div></div>';
 
 try {
-    var sid = (typeof sbStandort === 'object' && sbStandort) ? sbStandort.id : null;
-    if(!sid || sid === 'undefined') { c.innerHTML = '<div class="vit-card p-8 text-center text-gray-400"><div class="text-4xl mb-2">✅</div><p>Kein Standort zugeordnet.</p></div>'; return; }
+    var sid = (typeof sbStandort === 'object' && sbStandort) ? sbStandort.id 
+        : (window.sbProfile && window.sbProfile.standort_id) ? window.sbProfile.standort_id
+        : null;
+    if(!sid) {
+        try {
+            var uid = _sbUser()?.id;
+            if(uid) { var {data:u} = await _sb().from('users').select('standort_id').eq('id', uid).single(); if(u) sid = u.standort_id; }
+        } catch(e) {}
+    }
+    if(!sid) { c.innerHTML = '<div class="vit-card p-8 text-center text-gray-400"><div class="text-4xl mb-2">✅</div><p>Kein Standort zugeordnet.</p></div>'; return; }
     var {data:consents,error} = await _sb().from('consents').select('*').eq('standort_id',sid).order('created_at',{ascending:false});
     if(error) throw error;
     consents = consents || [];
