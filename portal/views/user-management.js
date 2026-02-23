@@ -1216,7 +1216,7 @@ export function showSettingsTab(tab) {
 // Tab/Widget-Konfiguration pro Modul
 var MODULE_TABS = {
     verkauf: [{key:'pipeline',label:'Pipeline'},{key:'woche',label:'Wochenansicht'},{key:'auswertung',label:'Auswertung'},{key:'training',label:'KI-Trainer'},{key:'vkWissen',label:'Wissen'}],
-    marketing: [{key:'performance',label:'Performance'},{key:'budget',label:'Budget'},{key:'leads',label:'Leads'},{key:'social',label:'Social Media'},{key:'mktStrategie',label:'Strategie'},{key:'mktWissen',label:'Wissen'}],
+    marketing: [{key:'cockpit',label:'Cockpit'},{key:'budget',label:'Budget'},{key:'kampagnen',label:'Kampagnen'},{key:'reichweite',label:'Reichweite'},{key:'social',label:'Social Media'},{key:'mktStrategie',label:'Strategie'},{key:'mktWissen',label:'Wissen'}],
     einkauf: [{key:'sortiment',label:'Sortiment'},{key:'lieferanten',label:'Lieferanten'},{key:'zentralreg',label:'Zentralreg.'},{key:'ekStrategie',label:'Strategie'},{key:'ekWissen',label:'Wissen'}],
     controlling: [{key:'cockpit',label:'Cockpit'},{key:'bwa',label:'BWA-Analyse'},{key:'benchmark',label:'Benchmark'},{key:'planist',label:'Plan/Ist'},{key:'liquiditaet',label:'Liquidität'},{key:'ctrlWissen',label:'Wissen'}],
     allgemein: [{key:'uebersicht',label:'Übersicht'},{key:'jahresziele',label:'Jahresziele'},{key:'monatsplan',label:'Monatsplan'},{key:'journal',label:'Journal'},{key:'strategie',label:'Strategie'},{key:'wissen',label:'Wissen'}],
