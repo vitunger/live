@@ -218,7 +218,7 @@ updateNetzwerkWidget();
 
 // ──── NETZWERK WIDGET (Standort-Sicht) ────
 export async function updateNetzwerkWidget() {
-var gold = 0, ok = 0, missing = 0, overdue = 0, total = 21;
+var gold = 0, ok = 0, missing = 0, late = 0, total = 21;
 if(typeof sb !== 'undefined') {
 try {
     var bwaMo = getBwaMonth(new Date());
@@ -227,12 +227,12 @@ try {
     var bwaResp = await _sb().from('bwa_daten').select('standort_id,created_at').eq('monat', bwaMo.m + 1).eq('jahr', bwaMo.y);
     (bwaResp.data || []).forEach(function(b) {
         var subDay = new Date(b.created_at).getDate();
-        if(subDay <= 8) gold++; else if(subDay <= 15) ok++; else overdue++;
+        if(subDay <= 8) gold++; else if(subDay <= 15) ok++; else late++;
     });
-    missing = total - gold - ok - overdue;
+    missing = total - gold - ok - late;
 } catch(e) { console.warn('Netzwerk widget:', e); missing = total; }
 } else { missing = total; }
-var submitted = gold + ok + overdue;
+var submitted = gold + ok + late;
 var pct = Math.round(submitted / total * 100);
 
 var el = function(id) { return document.getElementById(id); };
@@ -241,7 +241,7 @@ if(el('bwaNetzwerkBar')) el('bwaNetzwerkBar').style.width = pct + '%';
 if(el('bwaNwGold')) el('bwaNwGold').textContent = '🥇 Gold: ' + gold;
 if(el('bwaNwOk')) el('bwaNwOk').textContent = '✅ OK: ' + ok;
 if(el('bwaNwMissing')) el('bwaNwMissing').textContent = '⏳ Ausstehend: ' + missing;
-if(el('bwaNwOverdue')) el('bwaNwOverdue').textContent = '🚨 Überfällig: ' + overdue;
+if(el('bwaNwOverdue')) el('bwaNwOverdue').textContent = (late > 0 ? '⚠️ Verspätet: ' + late : '');
 }
 
 // ──── KPI REPORT (Sofort-Nutzen nach Upload) ────
