@@ -1,5 +1,4 @@
 /* ── vit:bikes Deal Flow Pipeline ─────────────────── */
-console.log('[Pipeline JSX] ✅ Babel compiled this file at', new Date().toLocaleTimeString());
 const { useState, useRef, useCallback, useEffect } = React;
 
 const STAGES = [
@@ -1008,7 +1007,8 @@ function AutoModal({rules,onUpdate,onClose,LOCATIONS}){
 }
 
 /* ── Scoreboard ──────────────────────────────────── */
-function Scores({deals,streak}){
+function Scores({deals,streak,goal}){
+  const GOAL=goal||15000;
   const sold=deals.filter(d=>d.stage==="verkauft"),tSold=sold.reduce((s,d)=>s+d.value,0);
   const avgDeal=sold.length?Math.round(tSold/sold.length):0;
   const closed=deals.filter(d=>["verkauft","lost"].includes(d.stage));
@@ -1352,7 +1352,7 @@ function PipelineApp(){
     {toast&&<div style={{position:"fixed",top:14,left:"50%",transform:"translateX(-50%)",background:"#1a1a2e",color:"#fff",padding:"7px 16px",borderRadius:7,fontWeight:700,fontSize:12,zIndex:9999,animation:"toastIn .2s ease",pointerEvents:"none"}}>{toast}</div>}
 
     {/* KPI Strip */}
-    <Scores deals={filteredDeals} streak={streak}/>
+    <Scores deals={filteredDeals} streak={streak} goal={GOAL}/>
 
     {/* Filter + Actions */}
     <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:10,flexWrap:"wrap"}}>
