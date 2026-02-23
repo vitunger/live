@@ -22,7 +22,7 @@
         // Einkauf: Rohertrag?
         if(MY.s.controlling < 50 || MY.s.verkauf < 50) triggers.push({module:'einkauf', trainerId:'t6', reason:'Rohertrag potentiell unter Schnitt'});
 
-        console.log('[KPI Trigger Engine] '+triggers.length+' triggers found:', triggers.map(function(t){return t.module;}).join(', '));
+        // [prod] log removed
         return triggers;
     };
 
@@ -52,7 +52,7 @@
         // In production: store in Supabase, cron checks after 7 days
         var checkDate = new Date(startDate);
         checkDate.setDate(checkDate.getDate() + 7);
-        console.log('[Impact Check] Scheduled for trainer '+trainerId+' on '+checkDate.toISOString().split('T')[0]);
+        // [prod] log removed
         // Store locally for demo
         try {
             var checks = JSON.parse(localStorage.getItem('vit_impact_checks') || '[]');
@@ -67,7 +67,7 @@
             var today = new Date();
             var due = checks.filter(function(c) { return !c.resolved && new Date(c.checkDate) <= today; });
             if(due.length > 0) {
-                console.log('[Impact Check] '+due.length+' checks due!');
+                // [prod] log removed
                 // In production: compare KPI before/after, show result
             }
         } catch(e){}
@@ -87,7 +87,7 @@
     window.completeOnboardingPhase = function(phaseNum) {
         if(phaseNum >= 3) {
             try { localStorage.setItem('vit_onb_phase', 'done'); } catch(e){}
-            console.log('[Onboarding] Completed! Switching to Performance trainers.');
+            // [prod] log removed
         } else {
             try { localStorage.setItem('vit_onb_phase', JSON.stringify({phase: phaseNum+1, label: phaseNum===1?'Woche 1':'Woche 2-3', progress: phaseNum*33})); } catch(e){}
         }

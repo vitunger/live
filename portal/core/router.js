@@ -174,7 +174,7 @@ export function renderSmRanking() {
 // showAllgemeinTab - replaced by new allgemein module (see below)
 
 export function showView(viewName) {
-    console.log('showView called with:', viewName);
+    // [prod] log removed
     // Persist current view for reload restoration (skip during switchViewMode)
     if(!window._vitRestoringView) { try { localStorage.setItem('vit_lastView', viewName); } catch(e) {} }
     
@@ -191,7 +191,7 @@ export function showView(viewName) {
     
     // Verstecke ALLE Views automatisch (per Klasse statt hardcoded Liste)
     var allViews = document.querySelectorAll('.view');
-    console.log('Found', allViews.length, 'views to hide');
+    // [prod] log removed
     for(var i = 0; i < allViews.length; i++) {
         allViews[i].style.display = 'none';
     }
@@ -201,7 +201,7 @@ export function showView(viewName) {
     var viewEl = document.getElementById(viewId);
     if(viewEl) {
         viewEl.style.display = 'block';
-        console.log('SUCCESS: Showed', viewId, '- offsetHeight:', viewEl.offsetHeight);
+        // [prod] log removed
         if(viewName === 'dashboards') initDashboardTabs();
         if(viewName === 'aktenschrank' && window.loadAktenschrank) window.loadAktenschrank();
         if(viewName === 'hqFeatureFlags') { showView('entwicklung'); setTimeout(function(){showEntwicklungTab('flags')},50); return; }
@@ -562,4 +562,4 @@ export function saveSalesData() {
 // showView + showModuleVersionBadge removed - provided by strategie.js
 const _exports = {t,switchSmSub,filterSmThemen,renderSmThemen,renderSmRanking,loadAsanaOnboarding,loadDemoTasks,groupTasksBySections,renderAsanaTasks,renderSection,getSectionIcon,renderTask,toggleTaskCompletion,updateSalesData,saveSalesData};
 Object.entries(_exports).forEach(([k,fn])=>{window[k]=fn;});
-console.log("[router.js] "+Object.keys(_exports).length+" exports");
+// [prod] log removed

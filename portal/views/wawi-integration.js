@@ -486,7 +486,7 @@ export function parseWawiText(text, fileName) {
 
 // ── File Handler ──
 window.wawiHandleFiles = async function(files) {
-    console.log('[WaWi Parser v2.0] Processing', files.length, 'files');
+    // [prod] log removed
     var container = document.getElementById('wawiParseResults');
     if(!container) return;
     parsedQueue = [];
@@ -502,9 +502,9 @@ window.wawiHandleFiles = async function(files) {
 
         try {
             var text = await extractPdfText(file);
-            console.log('[WaWi] Extracted text from', file.name, '– length:', text.length, '– first 200:', text.substring(0,200));
+            // [prod] log removed
             var parsed = parseWawiText(text, file.name);
-            console.log('[WaWi] Parsed result:', JSON.stringify(parsed.header), 'items:', parsed.items.length);
+            // [prod] log removed
 
             if(!parsed.header.beleg_nr && !parsed.header.beleg_typ) {
                 card.innerHTML = renderParseCard(file.name, null, 'Beleg konnte nicht erkannt werden');
@@ -796,4 +796,4 @@ window.loadWawiLeasing = async function() {
 // Strangler Fig
 const _exports = {wawiPopulateForm,wawiRenderStatus,timeAgo,loadWawiSyncLog,loadWawiDataPreview,extractPdfText,parseEur,parseWawiText,renderParseCard};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[wawi-integration.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed

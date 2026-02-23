@@ -748,7 +748,7 @@ export function renderHqEinkauf() {
 // Strangler Fig
 const _exports = {loadHqStandorte,perfColor,perfBg,perfDot,fmt,stratBadge,renderHqCockpit,renderHqStandorte,adsFmtEuro,adsFmtK,adsSetText,loadAdsData,renderAdsKpis,renderAdsChart,renderAdsKampagnenTabelle,filterAdsPlattform,renderAdsStandortVergleich,renderAdsSyncInfo,updateMktPerformanceFromAds,renderHqMarketing,showHqMktTab,renderHqMktBudget,renderHqMktLeadReport,renderHqMktJahresgespraeche,renderHqMktHandlungsbedarf,renderMktSpendingChart,renderMktLeadChart,renderHqEinkauf};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[hq-cockpit.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed
 
 
 // === Window Exports (onclick handlers) ===

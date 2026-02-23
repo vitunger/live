@@ -319,7 +319,7 @@
             if(r.error) {
                 if(r.error.code === '23505') {
                     // Duplicate: stale checkin exists, close old ones and retry
-                    console.log('[Office] Stale checkin detected, closing old ones...');
+                    // [prod] log removed
                     await sb.from('office_checkins').update({checked_out_at: new Date().toISOString()})
                         .eq('user_id', sbUser.id).is('checked_out_at', null);
                     // Retry insert

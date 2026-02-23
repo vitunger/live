@@ -8,7 +8,7 @@
  * 
  * Dependencies: sb, sbUser, sbProfile
  */
-console.log('[aktenschrank.js] Module parsing started...');
+// [prod] log removed
 
 function _sb()        { return window.sb; }
 function _sbUser()    { return window.sbUser; }
@@ -285,7 +285,7 @@ async function triggerKiClassification(dokId){
         var resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({dokument_id:dokId})});
         var data=await resp.json();
         if(data.success){
-            console.log('[Aktenschrank] KI: '+data.typ+' ('+Math.round(data.confidence*100)+'%) - '+data.felder_count+' Felder');
+            // [prod] log removed
             var dok=_akten.dokumente.find(function(d){return d.id===dokId;});
             if(dok){dok.status='ki_verarbeitet';dok.ki_typ_vorschlag=data.typ;dok.ki_confidence=data.confidence;if(data.titel)dok.titel=data.titel;}
             renderFolders();updateStats();updateInboxBadge();
@@ -361,7 +361,7 @@ export function loadAktenschrank(){console.log('[aktenschrank.js] loadAktenschra
 // WINDOW REGISTRATION
 const _exports={loadAktenschrank,loadAktenFiles,getFileIcon,openAktenFolder,closeAktenFolder,filterAkten,showAktenInbox,closeAktenInbox,openAktenReview,closeAktenReview,confirmAktenDoc,rejectAktenDoc,openAktenUpload,closeAktenUpload,handleAktenDrop,handleAktenFileSelect,startAktenUpload,removeFromAktenQueue,downloadAktenDoc,viewAktenDoc,closeAktenPreview};
 Object.keys(_exports).forEach(k=>{window[k]=_exports[k];});
-console.log('[aktenschrank.js] \u2705 v2 loaded \u2013 '+Object.keys(_exports).length+' exports (DB-driven, KI-ready)');
+// [prod] log removed
 
 // === Window Exports (onclick handlers) ===
 window.closeAktenFolder = closeAktenFolder;

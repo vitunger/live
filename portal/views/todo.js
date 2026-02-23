@@ -844,7 +844,7 @@ Object.keys(exports).forEach(function(key) {
     window[key] = exports[key];
 });
 
-console.log('[todo.js] ✅ Module loaded – ' + Object.keys(exports).length + ' exports registered');
+// [prod] log removed
 
 // === Window Exports (onclick handlers) ===
 window.todoSearchChanged = todoSearchChanged;

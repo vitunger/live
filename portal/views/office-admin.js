@@ -355,5 +355,5 @@
         if (tab === 'office') setTimeout(officeRenderAdminDots, 150);
     };
 
-    console.log('[OfficeAdmin] Module v4 loaded ✓');
+    // [prod] log removed
 })();

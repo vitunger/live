@@ -93,7 +93,7 @@ async function loadModules() {
             failed++;
         }
     }
-    console.log(`[app.js] Core: ${loaded} loaded`);
+    // [prod] log removed
 
     // Phase 2: Views (parallel - independent modules)
     const results = await Promise.allSettled(
@@ -108,7 +108,7 @@ async function loadModules() {
     );
 
     const dt = (performance.now() - t0).toFixed(0);
-    console.log(`[app.js] ✅ ${loaded} modules loaded, ${failed} failed (${dt}ms)`);
+    // [prod] log removed
     
     // Signal that all modules are ready
     window.dispatchEvent(new CustomEvent('vit:modules-ready', { 

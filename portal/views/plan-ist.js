@@ -355,8 +355,8 @@ async function parsePlanFileLocal(file, statusEl, resultEl) {
             var meta = result.meta;
 
             if(result.plan_bwa && result.plan_bwa.length > 0) {
-                console.log('[Plan-Local] plan_bwa rows:', result.plan_bwa.length);
-                console.log('[Plan-Local] First 3 rows raw:', JSON.stringify(result.plan_bwa.slice(0,3)));
+                // [prod] log removed
+                // [prod] log removed
                 var mn = ['jan','feb','mrz','apr','mai','jun','jul','aug','sep','okt','nov','dez'];
                 
                 // Find summary rows by konto number first, then by kontengruppe/bezeichnung with highest values
@@ -407,7 +407,7 @@ async function parsePlanFileLocal(file, statusEl, resultEl) {
                     raum: rkRow ? (rkRow.bezeichnung + ' konto=' + rkRow.konto + ' jan=' + rkRow.jan) : 'NOT FOUND',
                     ergebnis: ergRow ? (ergRow.bezeichnung + ' konto=' + ergRow.konto + ' jan=' + ergRow.jan) : 'NOT FOUND'
                 });
-                console.log('[Plan-Local] Available kontengruppen:', result.plan_bwa.slice(0,10).map(function(r) { return r.kontengruppe + '|' + r.bezeichnung + '|konto=' + r.konto + '|jan=' + r.jan; }));
+                // [prod] log removed
                 
                 for(var m=0; m<12; m++) {
                     var mKey = mn[m];
@@ -497,7 +497,7 @@ export async function callFinanceKi(type, fileBase64, mediaType, rawText, meta) 
     if(rawText) { payload.raw_text = rawText; }
     if(meta) { payload.meta = meta; }
     
-    console.log('[callFinanceKi] Calling analyze-finance, type:', type);
+    // [prod] log removed
     var resp = await fetch(_SURL + '/functions/v1/analyze-finance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': _SKEY },
@@ -1256,7 +1256,7 @@ window.addEventListener('vit:modules-ready', function() {
 // Strangler Fig
 const _exports = {renderPlanIst,renderPlanUploadScreen,parsePlanFile,callFinanceKi,applyPlanKiResult,saveParsedPlan,saveManualPlan,renderPlanVergleich,buildPlanIstTable,showMonthDetail,editSelectedBwa,deleteBwa,loadVerkaufTracking,renderVerkaufFromDb,openVerkaufEntryModal,closeVtModal,loadAuswertung,renderAuswertung,saveVtEntry,getLeadData,getPerformanceColor,getPerformanceDot,renderLeadDashboard,showPlanAssistent,planAssistentNext,savePlanAssistent,downloadPlanVorlage,showPlanUploadForm};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[plan-ist.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed
 
 // === Window Exports (onclick handlers) ===
 window.deleteBwa = deleteBwa;

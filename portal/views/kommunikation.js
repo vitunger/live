@@ -841,7 +841,7 @@ export function showKommTab(tabName) {
 // Strangler Fig: window.* registration
 const _exports = {loadKommSidebar,filterKommSidebar,openKommConv,loadChannelMessages,subscribeToChannel,loadInboxConversation,renderInboxBubbles,loadAnnouncements,markAnkGelesen,renderChatBubbles,renderSingleBubble,setReply,cancelReply,kommSendMessage,kommInputKeydown,kommAutoResize,kommStartNewChat,kommSelectNewRecipient,kommCreateKanal,updateKommBadges,renderCommunityPosts,createCommunityPost,deactivateBrettPost,deleteForumPost,filterCommunity,openForumDetail,postForumComment,closeForumDetail,showKommTab};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[kommunikation.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed
 
 // === Window Exports (onclick handlers) ===
 window.cancelReply = cancelReply;

@@ -7,4 +7,4 @@
 // Strangler Fig - no-op exports
 const _exports = {};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[trainer-system.js] Module cleared – awaiting new Trainer module');
+// [prod] log removed

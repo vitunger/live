@@ -251,4 +251,4 @@ if(e.message && e.message.indexOf('ideas') >= 0) {
 // Strangler Fig
 const _exports = {renderHqFeedbackInbox,renderHqFbList,formatFbSize};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[hq-feedback.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed

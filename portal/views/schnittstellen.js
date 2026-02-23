@@ -720,4 +720,4 @@ function fmtDT(iso) {
 
 const _exports = { renderSchnittstellen };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[schnittstellen.js] Module loaded – ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed

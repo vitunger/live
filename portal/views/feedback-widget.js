@@ -345,4 +345,4 @@ try {
 // Strangler Fig
 const _exports = {startRecording,updateRecInfo,formatSize,finalizeRecording,fbStopRecIfActive,resetRecUI,renderAttachments};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[feedback-widget.js] Module loaded – ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed

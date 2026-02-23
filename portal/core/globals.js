@@ -24,4 +24,4 @@ export function fmtN(n) { return (!n && n !== 0) ? '0' : Number(n).toLocaleStrin
 
 window.escH = escH;
 window.fmtN = fmtN;
-console.log("[globals.js] Helpers registered");
+// [prod] log removed

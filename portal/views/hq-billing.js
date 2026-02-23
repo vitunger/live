@@ -1173,14 +1173,12 @@ var kzMitarbeiter = []; // loaded from Supabase
 var currentKzStdFilter = 'all';
 var currentKzMaFilter = 'all';
 
-export function showKommandoTab(tab) {
-  // placeholder
-}
+// showKommandoTab: definiert in user-management.js (hier entfernt um Placeholder-Überschreibung zu verhindern)
 
 // Strangler Fig
-const _exports = {fmtEur,fmtDate,billingStatusBadge,billingApi,initBillingModule,loadBillingOverview,generateMonthlyDrafts,showQuarterlySettlementDialog,generateQuarterlySettlement,finalizeAllReady,showBillingInvoice,finalizeInvoice,markInvoicePaid,editLineItem,removeLineItem,addManualLineItem,showBillingTab,loadAllInvoices,loadAllStrategies,approveStrategy,lockStrategy,loadBillingProducts,loadBillingTools,toggleApprovalMode,updateApprovalModeUI,approvalBulkAction,loadApprovalQueue,approvalAction,generateAllDrafts,showStBillingTab,initStandortBilling,loadStandortInvoices,showStandortInvoiceDetail,loadStandortStrategy,submitStandortStrategy,loadStandortCosts,downloadInvoicePdf,loadStandortPayments,showKommandoTab};
+const _exports = {fmtEur,fmtDate,billingStatusBadge,billingApi,initBillingModule,loadBillingOverview,generateMonthlyDrafts,showQuarterlySettlementDialog,generateQuarterlySettlement,finalizeAllReady,showBillingInvoice,finalizeInvoice,markInvoicePaid,editLineItem,removeLineItem,addManualLineItem,showBillingTab,loadAllInvoices,loadAllStrategies,approveStrategy,lockStrategy,loadBillingProducts,loadBillingTools,toggleApprovalMode,updateApprovalModeUI,approvalBulkAction,loadApprovalQueue,approvalAction,generateAllDrafts,showStBillingTab,initStandortBilling,loadStandortInvoices,showStandortInvoiceDetail,loadStandortStrategy,submitStandortStrategy,loadStandortCosts,downloadInvoicePdf,loadStandortPayments};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[hq-billing.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed
 
 // === Window Exports (onclick handlers) ===
 window.approvalBulkAction = approvalBulkAction;

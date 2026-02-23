@@ -43,4 +43,4 @@ setTheme(saved);
 // Strangler Fig
 const _exports = {toggleTheme,setTheme};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[profile-theme.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed

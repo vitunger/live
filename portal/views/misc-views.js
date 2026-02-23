@@ -606,7 +606,7 @@ window.addEventListener('vit:modules-ready', function() {
 // Hardcoded Array nur noch als Fallback, falls DB nicht erreichbar
 if(!window.smThemen || !window.smThemen.length) {
     window.smThemen = []; // Wird von vpLoadThemen() aus DB befüllt
-    console.log('[misc-views] smThemen: Waiting for DB load from video-pipeline.js');
+    // [prod] log removed
 };
 
 
@@ -1129,7 +1129,7 @@ export function mountReactPipeline() {
     var root = document.getElementById('react-pipeline-root');
     if(!root) { console.warn('[Pipeline] No root element'); return; }
     if(typeof window.__PIPELINE_APP !== 'function') {
-        console.log('[Pipeline] Waiting for Babel...');
+        // [prod] log removed
         setTimeout(mountReactPipeline, 300);
         return;
     }
@@ -1138,7 +1138,7 @@ export function mountReactPipeline() {
             _pipelineReactRoot = ReactDOM.createRoot(root);
         }
         _pipelineReactRoot.render(React.createElement(window.__PIPELINE_APP));
-        console.log('[Pipeline] ✅ Rendered');
+        // [prod] log removed
     } catch(err) {
         console.error('[Pipeline] ❌ Error:', err);
         // If createRoot fails (already has root), try unmount first
@@ -1154,7 +1154,7 @@ export function mountReactPipeline() {
 // Strangler Fig
 const _exports = {loadHqPrio,saveHqPrio,resetHqPrio,getAllModulesFlat,getAufwandBadge,getTypBadge,getStatusBadge,filterModulStatus,onPrioDragStart,onPrioDragOver,onPrioDragLeave,onPrioDrop,moveHqPrio,renderModulStatus,renderDevStatus,showDevTab,renderReleaseUpdates,renderDevNutzung,toggleMobileSidebar,toggleSidebarCollapse,closeMobileSidebar,switchViewMode,initTrainingModule,getSimulatedResponse,generateEvaluation,startTraining,renderTrainingMessages,speakTraining,showTrainingWave,animateTrainingWave,hideTrainingWave,toggleTrainingMic,sendTrainingVoice,sendTrainingText,resetTrainingInput,processTrainingMessage,endTrainingSession,showTrainingEvaluation,restartTrainingScenario,backToTrainingMenu,mountReactPipeline};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[misc-views.js] Module loaded – ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed
 
 // === Window Exports (onclick handlers) ===
 window.backToTrainingMenu = backToTrainingMenu;

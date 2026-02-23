@@ -125,7 +125,7 @@ if (!deferredPrompt) return;
 deferredPrompt.prompt();
 deferredPrompt.userChoice.then(function(result) {
     if (result.outcome === 'accepted') {
-        console.log('[PWA] App installed');
+        // [prod] log removed
     }
     deferredPrompt = null;
     var b = document.getElementById('pwaInstallBanner');
@@ -187,7 +187,7 @@ try {
 
     if (error) throw error;
 
-    console.log('[Push] Subscription saved successfully');
+    // [prod] log removed
     updatePushUI(true, deviceName);
     showLocalNotification('🔔 Push aktiviert!', 'Du erhältst jetzt Benachrichtigungen für Nachrichten, Leads, Aufgaben & mehr.');
 } catch(err) {
@@ -267,7 +267,7 @@ try {
         await sub.unsubscribe();
         var sba = _sb();
         await sba.from('push_subscriptions').delete().eq('endpoint', endpoint);
-        console.log('[Push] Unsubscribed');
+        // [prod] log removed
     }
     updatePushUI(false);
 } catch(e) { console.error('[Push] Unsubscribe error:', e); }
@@ -278,7 +278,7 @@ try {
 // Strangler Fig: window.* registration
 const _exports = {renderNotifications,triggerPushStandort,triggerPushHQ,installPWA,dismissInstall,showLocalNotification,updatePushUI,checkPushStatus,loadNotificationPrefs,saveNotificationPrefs,unsubscribePush};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[notifications.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed
 
 // === Window Exports (onclick handlers) ===
 window.filterNotif = filterNotif;

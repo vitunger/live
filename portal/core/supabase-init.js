@@ -74,9 +74,9 @@ window.sb = sb;
 // NOTE: Session persistence is handled automatically by Supabase via storage option.
 // Previously, manual re-write here caused SIGNED_IN infinite loop.
 sb.auth.onAuthStateChange(function(event, session) {
-    console.log('[Auth] State:', event);
+    // [prod] log removed
     if(event === 'PASSWORD_RECOVERY') {
-        console.log('[Auth] Password recovery detected - showing change password modal');
+        // [prod] log removed
         // Wait for modules to be ready, then show modal
         function _showPwModal() {
             if(typeof window.showChangePasswordModal === 'function') {
@@ -93,7 +93,7 @@ sb.auth.onAuthStateChange(function(event, session) {
 // Auto-login: wait for all modules to be ready, then check session
 window.addEventListener('vit:modules-ready', function() {
     if(typeof window.checkSession === 'function') {
-        console.log('[supabase-init] Modules ready, checking session...');
+        // [prod] log removed
         window.checkSession();
     }
 });
@@ -113,7 +113,7 @@ var sbFeatureFlags = {}; // {flag_key: {enabled, rollout_percent, target_roles, 
 // ============================================
 
 
-console.log("[supabase-init.js] Client ready");
+// [prod] log removed
 
 // Expose for cross-module access (ES module scope isolation)
 window.SUPABASE_URL = SUPABASE_URL;

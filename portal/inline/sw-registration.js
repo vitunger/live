@@ -7,12 +7,12 @@
         window.addEventListener('load', function() {
             navigator.serviceWorker.register('/sw.js')
                 .then(function(reg) {
-                    console.log('[PWA] Service Worker registered, scope:', reg.scope);
+                    // [prod] log removed
                     // Check for updates periodically
                     setInterval(function(){ reg.update(); }, 60 * 60 * 1000); // hourly
                 })
                 .catch(function(err) {
-                    console.log('[PWA] SW registration failed:', err);
+                    // [prod] log removed
                 });
         });
 
@@ -27,7 +27,7 @@
                 }
             }
             if (event.data && event.data.type === 'PUSH_SUBSCRIPTION_CHANGED') {
-                console.log('[Push] Subscription changed, re-subscribing...');
+                // [prod] log removed
                 if (typeof setupPushNotifications === 'function') setupPushNotifications();
             }
         });
@@ -109,7 +109,7 @@
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then(function(result) {
             if (result.outcome === 'accepted') {
-                console.log('[PWA] App installed');
+                // [prod] log removed
             }
             deferredPrompt = null;
             var b = document.getElementById('pwaInstallBanner');
@@ -170,7 +170,7 @@
 
             if (error) throw error;
 
-            console.log('[Push] Subscription saved successfully');
+            // [prod] log removed
             updatePushUI(true, deviceName);
             showLocalNotification('🔔 Push aktiviert!', 'Du erhältst jetzt Benachrichtigungen für Nachrichten, Leads, Aufgaben & mehr.');
         } catch(err) {
@@ -249,7 +249,7 @@
                 await sub.unsubscribe();
                 var sba = window._supabase || window.sb;
                 await sba.from('push_subscriptions').delete().eq('endpoint', endpoint);
-                console.log('[Push] Unsubscribed');
+                // [prod] log removed
             }
             updatePushUI(false);
         } catch(e) { console.error('[Push] Unsubscribe error:', e); }
@@ -270,7 +270,7 @@
 
     // ── App-installed detection ──
     window.addEventListener('appinstalled', function() {
-        console.log('[PWA] App was installed');
+        // [prod] log removed
         var b = document.getElementById('pwaInstallBanner');
         if (b) b.remove();
     });
@@ -278,6 +278,6 @@
     // ── Detect standalone mode ──
     if (window.matchMedia('(display-mode: standalone)').matches) {
         document.body.classList.add('pwa-standalone');
-        console.log('[PWA] Running as installed app');
+        // [prod] log removed
     }
 })();

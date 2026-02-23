@@ -41,7 +41,7 @@
                 return res;
             } catch(e) { logEntry.status = 'failed'; console.error('[Email]', e); }
         } else {
-            console.log('[Email][Demo] Would send:', template, 'to', to, data);
+            // [prod] log removed
         }
 
         // Show notification in portal

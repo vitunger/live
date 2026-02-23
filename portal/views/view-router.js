@@ -192,11 +192,11 @@ window.addEventListener('vit:modules-ready', function() {
     // If a view is already shown (initial load), trigger its render
     var cockpitEl = document.getElementById('hqCockpitView');
     if (cockpitEl && cockpitEl.style.display === 'block' && window.renderHqCockpit) {
-        console.log('[view-router] Late init: triggering hqCockpit render');
+        // [prod] log removed
         window.renderHqCockpit();
     }
     
-    console.log('[view-router] ✅ Redirect interceptor installed');
+    // [prod] log removed
 });
 
 // Also handle mobile sidebar close
@@ -209,4 +209,4 @@ window.addEventListener('vit:view-changed', function() {
 // ── Exports ──
 const _exports = { VIEW_RENDER_MAP, VIEW_REDIRECTS };
 Object.entries(_exports).forEach(([k, v]) => { window[k] = v; });
-console.log('[view-router.js] Module loaded - central render router active');
+// [prod] log removed

@@ -815,7 +815,7 @@ export async function renderPerformanceCockpit() {
 
     var useDemo = (typeof isDemoMode !== 'undefined' && isDemoMode) || window.isDemoMode || (_sbProfile() && (_sbProfile().status === 'demo' || _sbProfile().status === 'demo_active'));
     var stdId = _sbProfile() ? _sbProfile().standort_id : null;
-    console.log('[Cockpit] renderPerformanceCockpit() called, stdId:', stdId, 'demo:', useDemo);
+    // [prod] log removed
     var stdName = useDemo ? 'Muster-Filiale' : (_sbProfile() ? (_sbProfile().standort_name || _sbProfile().name || 'Mein Standort') : 'Mein Standort');
     var currentYear = new Date().getFullYear();
     var pn = function(v) { return parseFloat(v) || 0; };
@@ -1054,9 +1054,9 @@ showView = function(v) {
 
 
 // Strangler Fig
-const _exports = {renderHqVerkauf,renderHqAktionen,loadHqPrio,saveHqPrio,resetHqPrio,getAllModulesFlat,getAufwandBadge,getTypBadge,getStatusBadge,filterModulStatus,onPrioDragStart,onPrioDragOver,onPrioDragLeave,onPrioDrop,moveHqPrio,renderModulStatus,renderDevStatus,showDevTab,renderReleaseUpdates,renderDevNutzung,generateDemoBwaData,renderPerformanceCockpit};
+const _exports = {renderHqVerkauf,renderHqAktionen,loadHqPrio,getAllModulesFlat,getAufwandBadge,getTypBadge,getStatusBadge,filterModulStatus,onPrioDragStart,onPrioDragOver,onPrioDragLeave,onPrioDrop,moveHqPrio,renderDevStatus,renderDevNutzung,generateDemoBwaData};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[hq-verkauf.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed
 
 // === Window Export: loadHqVerkaufData (alias für renderHqVerkauf) ===
 window.loadHqVerkaufData = renderHqVerkauf;

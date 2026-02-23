@@ -52,7 +52,7 @@ try {
     return res;
 } catch(e) { logEntry.status = 'failed'; console.error('[Email]', e); }
 } else {
-console.log('[Email][Demo] Would send:', template, 'to', to, data);
+// [prod] log removed
 }
 
 // Show notification in portal
@@ -735,4 +735,4 @@ h = '<div class="text-center py-8 text-gray-400">Keine gesperrte Jahresstrategie
 // Strangler Fig
 const _exports = {showEmailNotification,fmtEur,fmtDate,statusBadge,billingCall,initBillingMonthSelect,generateSettlement};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[email-billing.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed

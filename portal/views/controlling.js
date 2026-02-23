@@ -102,7 +102,7 @@ export async function loadBwaList() {
     if(bwaLabel) bwaLabel.textContent = useDemo ? 'vit:bikes Muster-Filiale' : ('vit:bikes ' + (_sbProfile() && _sbProfile().standort_name ? _sbProfile().standort_name : 'Standort'));
     try {
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
-        console.log('[BWA] loadBwaList() called, stdId:', stdId, 'is_hq:', _sbProfile() ? _sbProfile().is_hq : 'no profile');
+        // [prod] log removed
         var query = _sb().from('bwa_daten').select('id,monat,jahr,umsatzerloese,rohertrag,ergebnis_vor_steuern,datei_name,datei_url,created_at').order('jahr', {ascending:false}).order('monat', {ascending:false});
         if(stdId && !_sbProfile().is_hq) query = query.eq('standort_id', stdId);
         var resp = await query;
@@ -277,7 +277,7 @@ export async function showBwaFromDb(bwaId) {
                     if(betriebsErg) detKosten = betriebsErg - detRohertrag;
                 }
             }
-            console.log('[BWA] Gesamtkosten-Berechnung:', {z1250:sumMap[1250]?sumMap[1250].wert:'n/a', z1260:sumMap[1260]?sumMap[1260].wert:'n/a', berechnet:detKosten});
+            // [prod] log removed
             // Override KPIs with corrected values
             var detMarge = detUmsatz > 0 ? ((detRohertrag/detUmsatz)*100).toFixed(1) : 0;
             var detErgMarge = detUmsatz > 0 ? ((detErgebnis/detUmsatz)*100).toFixed(1) : 0;
@@ -289,7 +289,7 @@ export async function showBwaFromDb(bwaId) {
             ergEl2.textContent = eur(detErgebnis) + ' €';
             ergEl2.className = 'text-xl font-bold ' + (detErgebnis >= 0 ? 'text-green-600' : 'text-red-600');
             document.getElementById('bwaKpiErgebnisMarge').textContent = 'Marge: '+detErgMarge+'%';
-            console.log('[BWA] KPIs recalculated from detail positions:', {umsatz:detUmsatz, rohertrag:detRohertrag, kosten:detKosten, ergebnis:detErgebnis});
+            // [prod] log removed
             // Permanently fix wrong values in bwa_daten
             if(Math.abs(detErgebnis - (parseFloat(b.ergebnis_vor_steuern)||0)) > 1) {
                 var fixData = {ergebnis_vor_steuern: detErgebnis, rohertrag: detRohertrag, umsatzerloese: detUmsatz};
@@ -637,7 +637,7 @@ export async function parseBwaWithAI() {
         // Check if Material/Wareneinkauf (1060) is positive - if so, this is DATEV format where costs are positive
         var we = bwaRows.find(function(x) { return x.zeile === 1060 && x.ist_summenzeile; });
         if(we && we.wert > 0) {
-            console.log('[BWA] DATEV Sign Inversion: inverting cost lines');
+            // [prod] log removed
             bwaRows.forEach(function(row) {
                 if(row.zeile && negZeilen[row.zeile] && row.ist_summenzeile) {
                     if(row.wert > 0) row.wert = -row.wert;
@@ -980,7 +980,7 @@ export async function parseSingleBwaFileWithRetry(file, attempt) {
     } catch(err) {
         if(err.message && err.message.includes('429') && attempt < 4) {
             var wait = attempt * 5000; // 5s, 10s, 15s
-            console.log('Rate limited, retry ' + attempt + ' in ' + (wait/1000) + 's for', file.name);
+            // [prod] log removed
             await new Promise(function(r){ setTimeout(r, wait); });
             return parseSingleBwaFileWithRetry(file, attempt + 1);
         }
@@ -1196,7 +1196,7 @@ export function bwaApplyKiResult(result) {
             filled++;
         }
     });
-    console.log('[BWA KI] ' + filled + ' Felder befüllt, Konfidenz: ' + (result.confidence||'?'));
+    // [prod] log removed
 }
 
 export function closeBwaUploadModal() { var c = document.getElementById('bwaUploadContainer'); if(c) c.remove(); }
@@ -1311,7 +1311,7 @@ export async function saveBwaData() {
                 var detResp = await _sb().from('bwa_detail_positionen').insert(batch);
                 if(detResp.error) console.warn('Detail insert batch error:', detResp.error);
             }
-            console.log('✅ ' + details.length + ' Detail-Positionen gespeichert');
+            // [prod] log removed
         }
 
         // Cleanup temp vars
@@ -1340,14 +1340,14 @@ export async function renderBenchmarks() {
     try {
         // Latest BWA for this location
         var ownResp = await _sb().from('bwa_daten').select('monat,jahr,umsatzerloese,wareneinsatz,rohertrag,personalkosten,raumkosten,ergebnis_vor_steuern,betriebsergebnis').eq('standort_id', stdId).order('jahr',{ascending:false}).order('monat',{ascending:false}).limit(1);
-        console.log('[Benchmarks] stdId:', stdId, 'ownResp:', ownResp.error ? ownResp.error.message : (ownResp.data ? ownResp.data.length + ' rows' : 'no data'));
+        // [prod] log removed
         if(ownResp.error) { el.innerHTML = '<p class="text-center text-red-400 py-8">DB-Fehler: '+_escH(ownResp.error.message)+'</p>'; return; }
         var own = (ownResp.data && ownResp.data[0]) ? ownResp.data[0] : null;
         if(!own) { el.innerHTML = '<p class="text-center text-gray-400 py-8">Noch keine BWA-Daten vorhanden. Lade eine BWA hoch um den Benchmark zu sehen.</p>'; return; }
         
         // All BWAs for same month/year (Netzwerk) - via RPC to bypass RLS
         var netzResp = await _sb().rpc('get_benchmark_averages', { p_monat: own.monat, p_jahr: own.jahr });
-        console.log('[Benchmarks] RPC result:', netzResp.error ? netzResp.error.message : JSON.stringify(netzResp.data));
+        // [prod] log removed
         var nAvg = (netzResp.data && typeof netzResp.data === 'object') ? netzResp.data : {};
         var nCount = nAvg.anzahl_standorte || 1;
         
@@ -1431,7 +1431,7 @@ const _exports = {showControllingTab,showBwaDetail,eur,eurColor,diffHtml,loadBwa
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // BwaParser needed by plan-ist.js
 window.BwaParser = BwaParser;
-console.log('[controlling.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed
 
 // === Window Exports (view-router) ===
 window.loadBwaList = loadBwaList;

@@ -486,7 +486,7 @@ export function renderWeekViewFromDb() {
 window.verkaufData = verkaufData;
 const _exports = {renderWeekView,renderPipeline,moveLead,showNewLeadModal,addNewLead,renderJahresTabelle,showVerkaufTab,changeWeek,getMonday,getKW,loadWeekFromDb,renderWeekViewFromDb};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[verkauf.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed
 
 // === Window Exports (onclick handlers) ===
 window.changeWeek = changeWeek;

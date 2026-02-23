@@ -52,13 +52,13 @@ export async function renderHqFinanzen() {
 async function loadHqFinData() {
     try {
         var currentYear = new Date().getFullYear();
-        console.log('[hq-finanzen] Loading data for year', currentYear);
+        // [prod] log removed
 
         // 1. Standorte
         var sResp = await _sb().from('standorte').select('*').order('name');
         if(sResp.error) throw sResp.error;
         var standorte = sResp.data || [];
-        console.log('[hq-finanzen] Standorte:', standorte.length);
+        // [prod] log removed
 
         // 2. BWA data (all months current year) – THIS IS PRIORITY
         var bwaResp = await _sb().from('bwa_daten')
@@ -66,7 +66,7 @@ async function loadHqFinData() {
             .eq('jahr', currentYear);
         if(bwaResp.error) { console.warn('[hq-finanzen] BWA query error:', bwaResp.error); }
         var bwaData = bwaResp.data || [];
-        console.log('[hq-finanzen] BWA entries:', bwaData.length);
+        // [prod] log removed
 
         // 3. Jahresplaene (current year + previous year as fallback)
         var planResp = await _sb().from('jahresplaene')
@@ -83,7 +83,7 @@ async function loadHqFinData() {
                 hqFinPlanMap[p.standort_id] = p; 
             }
         });
-        console.log('[hq-finanzen] Plans:', planData.length, '(current year:', planData.filter(function(p){return p.jahr===currentYear;}).length, ', prev year:', planData.filter(function(p){return p.jahr===currentYear-1;}).length, ')');
+        // [prod] log removed
 
         // 4. WaWi Belege (Fallback if no BWA)
         var wawiResp = await _sb().from('wawi_belege')
@@ -93,11 +93,11 @@ async function loadHqFinData() {
             .lte('datum', currentYear + '-12-31');
         if(wawiResp.error) { console.warn('[hq-finanzen] WaWi query error:', wawiResp.error); }
         var wawiData = wawiResp.data || [];
-        console.log('[hq-finanzen] WaWi entries:', wawiData.length);
+        // [prod] log removed
 
         // 5. BWA submissions for current BWA month (for status)
         var bwaMo = getBwaMonthHqFin(new Date());
-        console.log('[hq-finanzen] BWA month check:', bwaMo);
+        // [prod] log removed
         var bwaStatusResp = await _sb().from('bwa_daten')
             .select('standort_id, created_at')
             .eq('monat', bwaMo.m + 1)
@@ -107,7 +107,7 @@ async function loadHqFinData() {
         (bwaStatusResp.data || []).forEach(function(b) {
             hqFinBwaMap[b.standort_id] = b.created_at;
         });
-        console.log('[hq-finanzen] BWA submitted this month:', Object.keys(hqFinBwaMap).length);
+        // [prod] log removed
 
         // Build enriched array
         hqFinStandorte = standorte.map(function(s) {
@@ -170,7 +170,7 @@ async function loadHqFinData() {
         });
 
         hqFinLoaded = true;
-        console.log('[hq-finanzen] ✅ Loaded', hqFinStandorte.length, 'standorte. Active:', hqFinStandorte.filter(function(s){return s.umsatzIst>0;}).length);
+        // [prod] log removed
     } catch(err) {
         console.error('[hq-finanzen] ❌ Load error:', err.message || err, err);
         hqFinStandorte = [];
@@ -1040,7 +1040,7 @@ export function renderHqEinkauf() {
 // Strangler Fig
 const _exports = {renderHqFinanzen,showHqFinTab,hqFinSort,hqFinChangeMonth,hqFinOpenBwaUpload,hqFinParsePlan,hqFinShowBwaPopup,hqFinShowBwaDetail,hqFinDownloadBwa,hqFinShowPlanPopup,hqFinOpenPlanUpload,adsFmtEuro,adsFmtK,adsSetText,loadAdsData,renderAdsKpis,renderAdsChart,renderAdsKampagnenTabelle,filterAdsPlattform,renderAdsStandortVergleich,renderAdsSyncInfo,updateMktPerformanceFromAds,renderHqMarketing,showHqMktTab,renderHqMktBudget,renderHqMktLeadReport,renderHqMktJahresgespraeche,renderHqMktHandlungsbedarf,renderMktSpendingChart,renderMktLeadChart,renderHqEinkauf};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[hq-finanzen.js] Module loaded (v2 redesign) - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed
 
 // === Window Exports (view-router) ===
 window.renderHqFinanzen = renderHqFinanzen;

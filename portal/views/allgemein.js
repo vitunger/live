@@ -606,7 +606,7 @@ export function viewPartnerDetails(standortId) { alert('Partner-Detail für Stan
 // Strangler Fig
 const _exports = {showAllgemeinTab,loadAllgemeinData,loadJahresziele,renderJahresziele,openJahreszielModal,openJahreszielEdit,closeJahreszielModal,toggleJahreszielFelder,saveJahresziel,deleteJahresziel,toggleSoftTarget,loadMonatsplan,renderMonatsplan,openMonatsDetail,addMonatsMassnahme,closeMonatsDetail,saveMonatsDetail,loadJournal,renderJournal,openJournalModal,openJournalEdit,closeJournalModal,setJournalStimmung,updateThemaStyle,addJournalWunsch,addJournalMassnahme,saveJournalEntry,deleteJournalEntry,toggleJournalMassnahme,setStimmung,renderAllgemeinUebersicht,loadHqAllgemeinData,renderHqAllgemein,viewPartnerDetails};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[allgemein.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed
 
 // === Window Exports (onclick handlers) ===
 window.addJournalMassnahme = addJournalMassnahme;

@@ -24,7 +24,7 @@ export async function loadFeatureFlags() {
         if(resp.error) throw resp.error;
         sbFeatureFlags = {};
         (resp.data||[]).forEach(function(f) { sbFeatureFlags[f.flag_key] = f; });
-        console.log('[FeatureFlags] Loaded ' + Object.keys(sbFeatureFlags).length + ' flags');
+        // [prod] log removed
         applyFeatureFlags();
     } catch(err) { console.error('[FeatureFlags] Load error:', err); }
 }
@@ -733,7 +733,7 @@ window.sbModulEbene = sbModulEbene;
 
 const _exports = {loadFeatureFlags,isFeatureEnabled,getFeatureMeta,applyFeatureFlags,loadFFView,ffUpdateStats,ffHasTargeting,ffGetStatus,ffFilter,ffRenderList,ffToggle,ffDelete,ffShowCreate,ffShowEdit,ffPopulateSelectors,ffCloseModal,ffSave,logFeatureFlagCheck,ffFlushLog,loadBkView,bkRenderStats,bkRenderHealth,bkRenderTable,bkTriggerBackup,loadModulStatus,applyModulStatus};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[feature-flags-full.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed
 
 // === Window Exports (onclick handlers) ===
 window.bkTriggerBackup = bkTriggerBackup;

@@ -244,7 +244,7 @@ async function vpAutoAnalyze(videoId, filename, statusEl) {
             var persons = data.analysis?.persons_detected || 0;
             var quality = data.analysis?.quality_score || '–';
             if(statusEl) statusEl.innerHTML = '<span class="text-green-600">✅ Analysiert (👥' + persons + ' · ⭐' + quality + '/100)</span>';
-            console.log('[Pipeline] Auto-Analyse OK für ' + filename + ':', data.analysis);
+            // [prod] log removed
         } else {
             throw new Error(data?.error || 'Analyse fehlgeschlagen');
         }
@@ -1861,7 +1861,7 @@ window.vpLoadThemen = async function() {
                 });
             }
         }
-        console.log('[vpLoadThemen] Loaded', window.smThemen.length, 'themen from DB');
+        // [prod] log removed
         // Refresh Themen-Liste falls Tab schon offen
         if(typeof renderSmThemen === 'function') { try { renderSmThemen(); } catch(e){} }
         else if(window.renderSmThemen) { try { window.renderSmThemen(); } catch(e){} }
@@ -2111,4 +2111,4 @@ window.vpThemenSetStatus = async function(themaDbId, standortId, newStatus) {
 // Strangler Fig
 const _exports = {vpBadge,vpDate,vpDateTime,vpFileSize,vpModal,vpAddFiles,vpRenderFileQueue,vpTagRow,vpSetupRealtime};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[video-pipeline.js] Module loaded – ' + Object.keys(_exports).length + ' exports + themen management');
+// [prod] log removed

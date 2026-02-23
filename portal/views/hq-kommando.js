@@ -1172,7 +1172,7 @@ var kzStandorte = []; // loaded from Supabase
 // Strangler Fig
 const _exports = {showHqKommTab,openAnkuendigungModal,closeAnkModal,saveAnkuendigung,renderHqKomm,renderHqKampagnen,addHqKampagne,filterHqDok,loadNetzwerkDokumente,renderHqDokumente,formatFileSize,downloadDokument,deleteNetzwerkDok,loadHqKalTermine,filterHqKal,renderHqKalender,addHqKalTermin,filterHqTasks,renderHqAufgaben,addHqTask,calculateBwaAge,countFeaturesUsed,calculateActivityScore,loadPortalNutzungData,renderHqAuswertung,renderHqWissen,addHqWissen,renderHqSupport,renderHqIdeen,filterHqIdeen,renderKiAnalyseHtml,toggleKiPanel,analysiereIdee,analysierAlleNeuen,updateIdeeStatus,showHqShopTab,filterHqShopOrders,renderHqShop,renderHqShopOrders,renderHqShopProducts,getTrackingUrl,showPackingList,showTrackingModal,saveTracking,addHqShopProduct};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[hq-kommando.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed
 
 // === Window Exports (onclick handlers) ===
 window.addHqKalTermin = addHqKalTermin;

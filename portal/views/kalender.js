@@ -686,13 +686,13 @@ export async function syncTerminToMs365(terminId) {
     // Placeholder: will be implemented via Supabase Edge Function
     var t = kalTermine.find(function(x){ return x.id == terminId; });
     if(!t) return;
-    console.log('[MS365 Sync] Would sync termin:', t.title, 'to MS365');
+    // [prod] log removed
     // Future: await _sb().functions.invoke('ms365-calendar-sync', { body: { action: 'push', termin_id: terminId } });
 }
 
 export async function pullMs365Events() {
     // Placeholder: pull events from MS365 and merge into termine table
-    console.log('[MS365 Sync] Would pull events from MS365');
+    // [prod] log removed
     // Future: var resp = await _sb().functions.invoke('ms365-calendar-sync', { body: { action: 'pull' } });
 }
 
@@ -700,7 +700,7 @@ export async function pullMs365Events() {
 // Strangler Fig: window.* registration for onclick compatibility
 const _exports = {switchKalView,kalNav,kalGoToday,kalRenderActive,kalUpdateNavTitle,kalGetFiltered,kalFmtDate,renderKalender,renderKalWeek,renderKalDay,loadKalTermine,kalClickDay,kalNavMonth,kalClickWeekCell,openKalDayModal,openTerminDetail,saveKalTermin,deleteKalTermin,kalGenerateRepeatDates,kalToggleRepeatEnd,kalUpdateRepeatInfo,kalLoadTeilnehmerDropdown,kalAddTeilnehmer,kalRemoveTeilnehmer,kalRenderTeilnehmerChips,syncTerminToMs365,pullMs365Events};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[kalender.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed
 
 // === Window Exports (onclick handlers) ===
 window.deleteKalTermin = deleteKalTermin;

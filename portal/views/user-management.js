@@ -1787,7 +1787,7 @@ export async function loadHqRechteMatrix() {
             if(!window._hqRechteMatrix[p.modul]) window._hqRechteMatrix[p.modul] = {};
             window._hqRechteMatrix[p.modul][roleName] = true;
         });
-        console.log('[HQ Matrix] Loaded:', JSON.stringify(window._hqRechteMatrix).substring(0, 200));
+        // [prod] log removed
     } catch(e) { console.warn('loadHqRechteMatrix error:', e); window._hqRechteMatrix = {}; }
 }
 
@@ -1795,7 +1795,7 @@ var _hqToggling = false;
 export async function toggleHqPermission(modKey, rolle) {
     if(_hqToggling) return;
     _hqToggling = true;
-    console.log('[HQ Toggle]', modKey, rolle);
+    // [prod] log removed
     try {
         var rolleResp = await _sb().from('rollen').select('id').eq('name', rolle).single();
         if(!rolleResp.data) { _showToast('Rolle nicht gefunden: ' + rolle, 'error'); _hqToggling=false; return; }
@@ -1814,7 +1814,7 @@ export async function toggleHqPermission(modKey, rolle) {
             window._hqRechteMatrix[modKey][rolle] = true;
             _showToast('✅ ' + modKey + ' → ' + rolle + ' aktiviert', 'success');
         }
-        console.log('[HQ Toggle] Success:', modKey, rolle, isCurrentlyAllowed ? 'removed' : 'added');
+        // [prod] log removed
         // Re-render the matrix only (not full settings)
         var hqBody = document.getElementById('hqRechteMatrixBody');
         if(hqBody) renderHqRechteMatrixBody(hqBody);
@@ -2087,7 +2087,7 @@ export async function removeBetaUser(betaId, modulKey, modulName) {
 
 const _exports = {approveUser,switchApproveEbene,closeApproveModal,confirmApprove,rejectUser,openRollenModal,closeRollenModal,saveRollen,getStandortName,getPartnerMitarbeiter,filterPartnerMa,showMaTab,renderPartnerMitarbeiter,openEmployeeToolsModal,closeEmpToolsModal,saveEmployeeTools,openEditEmployeeModal,closeEditEmpModal,saveEditEmployee,renderMaToolsMatrix,renderMaKosten,deactivateMa,openNeuerMaModal,switchNewMaEbene,closeNeuerMaModal,switchNewMaEmailType,updateNewMaEmail,saveNeuerMa,openEditMaModal,switchEditEbene,closeEditMaModal,saveEditMa,loginAs,deleteMa,openNeuerStandortModal,closeNeuerStdModal,saveNeuerStandort,showSettingsTab,renderModulStatusList,renderHqModulStatusList,_renderModulRow,toggleModuleExpand,renderOfficeRoomsAdmin,renderDemoModulList,setDemoModulStatus,setDemoTabStatus,setDemoWidgetStatus,setAllDemoStatus,setTabStatus,setWidgetStatus,setModulStatus,setHqModulStatus,setHqTabStatus,setHqWidgetStatus,renderHqEinstellungen,togglePermission,renderHqRechteMatrixBody,loadHqRechteMatrix,toggleHqPermission,showKommandoTab,filterKzStandorte,filterKzMa,renderKzStandorte,renderKzMitarbeiter,openBetaUsersModal,filterBetaUserList,addBetaUser,removeBetaUser};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[user-management.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed
 
 // === Window Exports (onclick handlers) ===
 window.filterPartnerMa = filterPartnerMa;

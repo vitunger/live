@@ -1941,13 +1941,13 @@ export function renderSmRanking() {
 // showAllgemeinTab - replaced by new allgemein module (see below)
 
 export function showView(viewName) {
-    console.log('showView called with:', viewName);
+    // [prod] log removed
     
     // Check module status - block 'in_bearbeitung' (bald) and 'deaktiviert' modules
     var moduleStatusMap = {verkauf:'verkauf',controlling:'controlling',marketing:'marketing',werkstatt:'werkstatt',personal:'personal',office:'office',kalender:'kalender',nachrichten:'nachrichten',wissen:'wissen',support:'support',einkauf:'einkauf',dashboards:'dashboards',allgemein:'allgemein',shop:'shop',aktenschrank:'aktenschrank',mitarbeiter:'mitarbeiter',todo:'todo'};
     var moduleKey = moduleStatusMap[viewName];
     var _modulStatus = window.sbModulStatus || {};
-    console.log('[showView] moduleKey:', moduleKey, 'status:', moduleKey ? _modulStatus[moduleKey] : 'n/a', 'allStatus:', JSON.stringify(_modulStatus));
+    // [prod] log removed
     if(moduleKey) {
         var mStatus = _modulStatus[moduleKey];
         // Only block if status is explicitly set to blocked values
@@ -1970,7 +1970,7 @@ export function showView(viewName) {
     
     // Verstecke ALLE Views automatisch (per Klasse statt hardcoded Liste)
     var allViews = document.querySelectorAll('.view');
-    console.log('Found', allViews.length, 'views to hide');
+    // [prod] log removed
     for(var i = 0; i < allViews.length; i++) {
         allViews[i].style.display = 'none';
     }
@@ -1980,7 +1980,7 @@ export function showView(viewName) {
     var viewEl = document.getElementById(viewId);
     if(viewEl) {
         viewEl.style.display = 'block';
-        console.log('SUCCESS: Showed', viewId, '- offsetHeight:', viewEl.offsetHeight);
+        // [prod] log removed
         if(viewName === 'dashboards') initDashboardTabs();
         if(viewName === 'aktenschrank') { if(window.loadAktenschrank) window.loadAktenschrank(); else setTimeout(function(){ if(window.loadAktenschrank) window.loadAktenschrank(); }, 500); }
         if(viewName === 'hqFeatureFlags') { showView('entwicklung'); setTimeout(function(){showEntwicklungTab('flags')},50); return; }
@@ -2348,7 +2348,7 @@ export function saveSalesData() {
 // Strangler Fig
 const _exports = {renderKommandozentrale,renderShop,shopSizeQty,shopSizeQtyInput,shopAddSelectedSizes,shopUpdateSizeCart,selectShopSize,updateCartQty,addToCartWithSize,addToCart,renderShopCart,filterShop,showShopTab,loadMyShopOrders,submitShopOrder,removeFromCart,updateShopCart,hqDrillDown,handleFileUpload,translateDOM,switchLang,t,switchSmSub,filterSmThemen,renderSmThemen,renderSmRanking,showView,showModuleVersionBadge,loadAsanaOnboarding,loadDemoTasks,groupTasksBySections,renderAsanaTasks,renderSection,getSectionIcon,renderTask,toggleTaskCompletion,updateSalesData,saveSalesData};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[strategie.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed
 
 // === Window Exports (onclick handlers) ===
 window.filterShop = filterShop;

@@ -164,7 +164,7 @@ export async function toggleDevScreenRecord() {
     } catch(err) {
         if(err.name === 'NotAllowedError') {
             // Nutzer hat abgebrochen – kein Fehler
-            console.log('Screen recording cancelled by user');
+            // [prod] log removed
         } else {
             alert('Bildschirmaufnahme nicht möglich: ' + (err.message||err));
         }
@@ -483,7 +483,7 @@ export async function renderEntwReleases() {
     c.innerHTML = '<div class="text-center py-8 text-gray-400">Lade Releases...</div>';
     try {
         var resp = await _sb().from('dev_release_docs').select('*, dev_submissions!dev_release_docs_submission_id_fkey(titel, status)').eq('freigegeben', true).order('created_at', {ascending: false});
-        console.log('[Releases] Query result:', {data: resp.data?.length, error: resp.error});
+        // [prod] log removed
         if(resp.error) console.error('[Releases] Error:', resp.error);
         var docs = resp.data || [];
         var respP = await _sb().from('dev_release_docs').select('*, dev_submissions!dev_release_docs_submission_id_fkey(titel, status)').eq('freigegeben', false).order('created_at', {ascending: false});
@@ -4410,7 +4410,7 @@ const _exports = {
     saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachFiles,devMockupChatAttachImage,devMockupChatMic,devDeployCode,loadDeployHistory,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devKIReleaseVorschlag,devTogglePartnerSichtbar,devSaveRelease,devEditReleaseDoc,devSaveEditRelease,devDeleteReleaseDoc,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,createDevKonzept,updateDevStatus,
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[dev-pipeline.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed
 
 /* deploy test 1771793151 */
 

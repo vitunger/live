@@ -1256,4 +1256,4 @@ else window.addEventListener("load",initMkt);
 // Strangler Fig
 const _exports = {Col,AddModal,SalesForm,ScanUploadModal,DetailModal,AutoModal,Scores,Funnel,Badges,DropZone,PipelineApp,reducer,Bar,Bdg,SBdg,Ring,Cockpit,Budget,Kampagnen,Reichweite,MktApp,mountMktTab};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[react-components.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed

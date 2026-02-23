@@ -93,7 +93,7 @@ onboardingActionsLog.push({
     actor: _sbProfile() ? _sbProfile().email : 'demo',
     created_at: new Date().toISOString()
 });
-console.log('[Onboarding] Action logged:', actionType, payload);
+// [prod] log removed
 }
 
 // Evaluate stage transitions
@@ -614,16 +614,16 @@ var errEl = document.getElementById('loginError');
 if(errEl) errEl.style.display = 'none';
 
 try {
-    console.log('[Login] Signing in...');
+    // [prod] log removed
     var resp = await _sb().auth.signInWithPassword({ email: email, password: pw });
     if(resp.error) throw resp.error;
     sbUser = resp.data.user;
     window.sbUser = sbUser;
-    console.log('[Login] Auth OK, user:', _sbUser().id);
+    // [prod] log removed
     
     // Status-Check: Was darf der User sehen?
     var profileResp = await _sb().from('users').select('status').eq('id', _sbUser().id).single();
-    console.log('[Login] Profile status:', profileResp.data ? profileResp.data.status : 'no profile', profileResp.error ? profileResp.error.message : '');
+    // [prod] log removed
     
     if(profileResp.data && (profileResp.data.status === 'pending' || profileResp.data.status === 'onboarding')) {
         // Pending-Screen zeigen statt Fehlermeldung
@@ -652,12 +652,12 @@ try {
         return false;
     }
     
-    console.log('[Login] Loading profile...');
+    // [prod] log removed
     await loadUserProfile(_sbUser().id);
-    console.log('[Login] Profile loaded, roles:', currentRoles);
+    // [prod] log removed
     await loadModulStatus();
     await loadFeatureFlags();
-    console.log('[Login] Entering app...');
+    // [prod] log removed
     enterApp();
     try { await loadPipelineFromSupabase(); } catch(e) { console.warn('[Login] Pipeline load optional:', e); }
 } catch(err) {
@@ -892,7 +892,7 @@ try {
         {standort_id:stId,erstellt_von:_sbUser().id,titel:'Marketing-Material Q2 anfordern',beschreibung:'Brauche neue Plakate und Flyer für Frühjahrsaktion.',prio:'mittel',status:'offen',kategorie:'Marketing',demo_data:true}
     ];
     await _sb().from('support_tickets').insert(demoTickets);
-    console.log('[Demo] Demo data seeded');
+    // [prod] log removed
 } catch(err) {
     console.warn('[Demo] Seed error:', err);
 }
@@ -907,7 +907,7 @@ try {
     await _sb().from('leads').delete().eq('standort_id', stId).eq('demo_data', true);
     await _sb().from('termine').delete().eq('standort_id', stId).eq('demo_data', true);
     await _sb().from('support_tickets').delete().eq('standort_id', stId).eq('demo_data', true);
-    console.log('[Demo] Demo data cleared');
+    // [prod] log removed
 } catch(err) {
     console.warn('[Demo] Clear error:', err);
 }
@@ -1430,7 +1430,7 @@ window.currentLang = currentLang; window.isPremium = isPremium; window.SESSION =
 
 const _exports = {initMilestonesForStage,getMilestoneStatus,setMilestoneStatus,logOnboardingAction,evaluateTransitions,executeTransition,applyForPart1,updateLocationInfo,hasAccess,hasRole,hqCan,impersonateDemo,impersonateUser,_saveOrigState,_activateImpersonation,exitImpersonation,_restoreOrigState,quickLogin,showPasswordReset,closePwReset,submitPwReset,showRegistration,hideRegistration,submitRegistration,handleLogin,loadUserProfile,enterApp,checkDemoMode,showDemoBanner,removeDemoBanner,seedDemoData,clearDemoData,checkPendingApprovals,loadPipelineFromSupabase,handleLogout,checkSession,showChangePasswordModal,submitNewPassword,updateUIForRole,switchCommunicationTab,updatePremiumFeatures,showPremiumUpgradeModal,toggleDashboardEdit,addWidget,showMarketingTab};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-console.log('[auth-system.js] Module loaded - ' + Object.keys(_exports).length + ' exports registered');
+// [prod] log removed
 
 // === Window Exports (onclick handlers) ===
 window.addWidget = addWidget;

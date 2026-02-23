@@ -698,7 +698,7 @@ function fillDemoHQTools() {
         +'</tbody></table></div>';
 }
 
-console.log('[3-Ebenen] Demo-System with password protection loaded.');
+// [prod] log removed
 
 // ═══════════════════════════════════════
 // HQ FEEDBACK INBOX + IDEENBOARD INTEGRATION
