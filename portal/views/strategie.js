@@ -1960,9 +1960,7 @@ export function showView(viewName) {
         if(viewName === 'hqFeatureFlags') { showView('entwicklung'); setTimeout(function(){showEntwicklungTab('flags')},50); return; }
         if(viewName === 'hqBackups') { showView('entwicklung'); setTimeout(function(){showEntwicklungTab('system')},50); return; }
         
-        var areaMap = {home:'allgemein',controlling:'controlling',verkauf:'verkauf',marketing:'marketing'};
-        var containerMap = {home:'trainerAreaHome',controlling:'trainerAreaControlling',verkauf:'trainerAreaVerkauf',marketing:'trainerAreaMarketing'};
-        if(areaMap[viewName] && window.showTrainerForArea) window.showTrainerForArea(areaMap[viewName], containerMap[viewName]);
+        // Trainer area hooks removed – new module pending
         
         // Version badge anzeigen
         showModuleVersionBadge(viewName + 'View');
