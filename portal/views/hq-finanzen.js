@@ -378,7 +378,11 @@ function renderHqFinUebersicht() {
         var isOverdue = now > deadlineDate;
         
         var bwaIcon;
-        if (s.bwaEingereicht) {
+        if (sel !== 'ytd') {
+            // Single month: check if BWA exists for this specific month
+            var hasBwaForMonth = s.bwaMonateDetail.some(function(b) { return b.monat == sel; });
+            bwaIcon = hasBwaForMonth ? '<span class="text-green-500 text-xs">✓</span>' : '<span class="text-gray-300 text-xs">—</span>';
+        } else if (s.bwaEingereicht) {
             bwaIcon = '<span class="text-green-500 text-xs">✓</span>';
         } else if (isOverdue) {
             bwaIcon = '<span class="text-red-400 text-xs font-bold">✕</span>';
