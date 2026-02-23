@@ -40,6 +40,7 @@ const VIEW_MODULES = [
     
     // HQ
     'views/hq-cockpit.js',
+    'views/hq-verkauf.js',
     'views/hq-finanzen.js',
     'views/hq-kommando.js',
     'views/hq-billing.js',
