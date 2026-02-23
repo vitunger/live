@@ -570,7 +570,15 @@ export function applyModulStatus() {
     // Alle Sidebar-Buttons mit data-module durchgehen
     document.querySelectorAll('[data-module]').forEach(function(btn) {
         var key = btn.getAttribute('data-module');
-        var status = sbModulStatus[key] || 'aktiv';
+        var isHqUser = (window.sbProfile && window.sbProfile.is_hq) || (window.currentRoles && window.currentRoles.indexOf('hq') !== -1);
+        var ebene = (window.sbModulEbene||{})[key] || 'partner';
+        // HQ-User sehen hq_status für HQ-Module und "beide"-Module
+        var status;
+        if(isHqUser && (ebene === 'hq' || ebene === 'beide')) {
+            status = (sbHqModulStatus||{})[key] || sbModulStatus[key] || 'aktiv';
+        } else {
+            status = sbModulStatus[key] || 'aktiv';
+        }
 
         // Remove old badges first
         var oldBadge = btn.querySelector('.modul-wip-badge,.modul-demo-badge,.modul-beta-badge');
@@ -587,9 +595,9 @@ export function applyModulStatus() {
                 btn.style.display = 'none';
             }
         } else if(status === 'beta') {
-            // Beta: only visible for beta users + HQ
-            var isHqUser = (window.sbProfile && window.sbProfile.is_hq) || (window.currentRoles && window.currentRoles.indexOf('hq') !== -1);
-            if(isHqUser || window._isBetaUser) {
+            // Beta: only visible for assigned beta users + HQ
+            var isBetaUser = (window._betaModules||[]).indexOf(key) !== -1;
+            if(isHqUser || isBetaUser) {
                 // Show with beta badge
                 btn.style.display = '';
                 btn.style.opacity = '';
