@@ -1775,6 +1775,22 @@ export function t(key) {
 
 var currentSmFilter = 'all';
 
+function _callOrWait(fnName, containerId, maxRetries) {
+    maxRetries = maxRetries || 20;
+    if (window[fnName]) { window[fnName](); return; }
+    var c = containerId ? document.getElementById(containerId) : null;
+    if (c) c.innerHTML = '<div class="flex justify-center py-12"><div class="animate-spin w-8 h-8 border-4 border-vit-orange border-t-transparent rounded-full"></div></div>';
+    var attempts = 0;
+    var timer = setInterval(function() {
+        attempts++;
+        if (window[fnName]) { clearInterval(timer); window[fnName](); }
+        else if (attempts >= maxRetries) {
+            clearInterval(timer);
+            if (c) c.innerHTML = '<div class="vit-card p-6 text-center text-gray-400"><p>Modul wird geladen… bitte Seite neu laden falls das Problem bestehen bleibt.</p></div>';
+        }
+    }, 250);
+}
+
 export function switchSmSub(sub) {
     document.querySelectorAll('.sm-sub-content').forEach(function(el){el.style.display='none';});
     document.querySelectorAll('.sm-sub-btn').forEach(function(b){b.className='sm-sub-btn px-4 py-2 rounded-full text-sm font-semibold bg-gray-100 text-gray-600';});
@@ -1785,8 +1801,8 @@ export function switchSmSub(sub) {
     if(sub==='themen') renderSmThemen();
     if(sub==='ranking') renderSmRanking();
     if(sub==='kanaele' && window.updateSocialMediaCards) updateSocialMediaCards();
-    if(sub==='pipeline' && window.vpRenderPipelineDashboard) vpRenderPipelineDashboard();
-    if(sub==='consents' && window.vpRenderConsents) vpRenderConsents();
+    if(sub==='pipeline') { _callOrWait('vpRenderPipelineDashboard', 'vpDashboardContent'); }
+    if(sub==='consents') { _callOrWait('vpRenderConsents', 'vpConsentsContent'); }
     if(sub==='upload' && window.vpInitUpload) vpInitUpload();
 }
 
