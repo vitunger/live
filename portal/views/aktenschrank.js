@@ -125,13 +125,15 @@ function renderFolders(){
 
 function renderFoldersDemo(){
     var demo=[
-        {icon:'\uD83D\uDCB0',name:'Finanzen & Controlling',desc:'BWA, Jahrespl\u00e4ne, Steuerdokumente',color:'#059669'},
-        {icon:'\uD83D\uDCCB',name:'Vertr\u00e4ge',desc:'Lieferanten-, Miet-, Servicevertr\u00e4ge',color:'#2563EB'},
-        {icon:'\uD83D\uDEE1\uFE0F',name:'Versicherungen',desc:'Policen, Schadensmeldungen',color:'#7C3AED'},
-        {icon:'\u26A1',name:'Energie & Nebenkosten',desc:'Strom-, Gas-, Wasserrechnungen',color:'#D97706'},
-        {icon:'\uD83D\uDC65',name:'Personal & HR',desc:'Arbeitsvertr\u00e4ge, Zeugnisse',color:'#DC2626'},
-        {icon:'\uD83D\uDCE2',name:'Marketing & Werbung',desc:'Kampagnen, Druckfreigaben',color:'#EC4899'},
-        {icon:'\uD83D\uDD27',name:'Werkstatt & Technik',desc:'Zertifikate, Schulungen',color:'#6366F1'},
+        {icon:'\uD83D\uDCB0',name:'Umsatz & Erl\u00f6se',desc:'Kundenrechnungen, Gutschriften, Provisionen',color:'#059669'},
+        {icon:'\uD83D\uDC65',name:'Personalkosten',desc:'Lohn, Gehalt, SV-Beitr\u00e4ge, Fortbildung',color:'#DC2626'},
+        {icon:'\uD83C\uDFE0',name:'Raumkosten & Nebenkosten',desc:'Miete, Strom, Gas, Wasser, Telefon',color:'#D97706'},
+        {icon:'\uD83D\uDEE1\uFE0F',name:'Versicherungen & Beitr\u00e4ge',desc:'Haftpflicht, IHK, BG',color:'#7C3AED'},
+        {icon:'\uD83D\uDCE2',name:'Werbe- & Reisekosten',desc:'Werbung, Messen, Bewirtung',color:'#EC4899'},
+        {icon:'\uD83D\uDCE6',name:'Wareneinsatz & Lieferanten',desc:'Lieferantenrechnungen, Einkauf',color:'#2563EB'},
+        {icon:'\uD83D\uDE97',name:'Fahrzeuge & Betriebsbedarf',desc:'Kfz, IT, B\u00fcromaterial, Porto',color:'#6366F1'},
+        {icon:'\uD83D\uDCC9',name:'Abschreibungen & Leasing',desc:'AfA, Leasing, Investitionen',color:'#0891B2'},
+        {icon:'\uD83D\uDCCA',name:'BWA & Steuern',desc:'BWA, DATEV, Steuerbescheide',color:'#4F46E5'},
         {icon:'\uD83D\uDCCE',name:'Sonstiges',desc:'Nicht zugeordnete Dokumente',color:'#6B7280'}
     ];
     var c=document.getElementById('aktenFolders');if(!c)return;var html='';
