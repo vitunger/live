@@ -52,18 +52,22 @@ module.exports = async function(req, res) {
     console.log("[etermin-wh]", cmd, uid, cal, fn, ln, answers);
     if (!uid) return res.status(400).json({ error: "Missing APPOINTMENTUID" });
 
-    // Resolve calendar → standort_id
-    let stdId = null;
-    if (cal) {
+    // Resolve standort_id from URL param (each standort gets unique webhook URL)
+    // e.g. /api/webhooks/etermin?sid=<standort-uuid>
+    let stdId = req.query.sid || req.query.standort_id || null;
+    
+    // Fallback: match via calendar_map
+    if (!stdId && cal) {
       const { data: m } = await sb.from("etermin_calendar_map")
         .select("standort_id").ilike("calendar_name", "%" + cal + "%")
         .limit(1).maybeSingle();
       if (m) stdId = m.standort_id;
     }
-    // Fallback: if only one config exists, use that standort
+    
+    // Fallback: if only one config, use that
     if (!stdId) {
       const { data: configs } = await sb.from("etermin_config")
-        .select("standort_id").eq("is_active", true).limit(2);
+        .select("standort_id").eq("is_active", true);
       if (configs && configs.length === 1 && configs[0].standort_id) {
         stdId = configs[0].standort_id;
       }
