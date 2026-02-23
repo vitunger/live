@@ -990,14 +990,33 @@ export async function checkSession() {
 // Don't re-enter if impersonation or demo mode is active
 if(_impActive || window.DEMO_ACTIVE) return;
 
-// Detect password recovery from reset link
+// Detect password recovery from reset link (supports both hash fragments and PKCE query params)
 var hash = window.location.hash;
-if (hash && hash.includes('type=recovery')) {
-    // Supabase will auto-set session from hash
+var search = window.location.search;
+var isRecovery = (hash && hash.includes('type=recovery')) || (search && search.includes('type=recovery'));
+if (isRecovery) {
+    // PKCE flow: exchange token_hash via verifyOtp
+    var params = new URLSearchParams(search || hash.replace('#','?'));
+    var tokenHash = params.get('token_hash');
+    if (tokenHash) {
+        try {
+            var verifyResp = await _sb().auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' });
+            if (verifyResp.data && verifyResp.data.session) {
+                sbUser = verifyResp.data.session.user;
+                window.sbUser = sbUser;
+                // Clean URL
+                window.history.replaceState({}, '', window.location.pathname);
+                showChangePasswordModal();
+                return;
+            }
+        } catch(e) { console.warn('Recovery token verify failed:', e); }
+    }
+    // Legacy implicit flow fallback
     var resp = await _sb().auth.getSession();
     if (resp.data.session) {
         sbUser = resp.data.session.user;
         window.sbUser = sbUser;
+        window.history.replaceState({}, '', window.location.pathname);
         showChangePasswordModal();
         return;
     }
