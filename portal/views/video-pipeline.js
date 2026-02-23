@@ -384,13 +384,50 @@ try {
 
     if(v.pipeline_status_detail) html += '<div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">ℹ️ '+v.pipeline_status_detail+'</div>';
 
+    // Get signed URL for frame extraction
+    var signedUrl = null;
+    try {
+        var {data:signData} = await _sb().storage.from('videos').createSignedUrl(v.storage_path, 600);
+        if(signData && signData.signedUrl) signedUrl = signData.signedUrl;
+    } catch(e) { console.warn('Signed URL failed:', e); }
+
     if(persons && persons.length>0) {
-        html += '<div class="mb-4"><h3 class="font-semibold text-gray-700 mb-2">👥 Getaggte Personen ('+persons.length+')</h3><div class="space-y-1">';
-        persons.forEach(function(p){
-            var statusCls = p.consent_status==='valid'?'text-green-600':p.consent_status==='missing'?'text-red-600':'text-yellow-600';
-            html += '<div class="flex items-center gap-2 text-sm"><span class="'+statusCls+'">'+(p.consent_status==='valid'?'✅':p.consent_status==='missing'?'❌':'⚠️')+'</span><span class="font-medium">'+p.person_label+'</span><span class="text-gray-400">'+(p.consent_status||'–')+'</span></div>';
+        html += '<div class="mb-4"><h3 class="font-semibold text-gray-700 mb-2">👥 Erkannte Personen ('+persons.length+')</h3>';
+        html += '<div class="grid gap-3" id="vpPersonsList">';
+        persons.forEach(function(p, idx){
+            var statusCls = p.consent_status==='cleared'?'border-green-400 bg-green-50':p.consent_status==='missing'?'border-red-400 bg-red-50':'border-yellow-400 bg-yellow-50';
+            var statusIcon = p.consent_status==='cleared'?'✅':p.consent_status==='missing'?'❌':'⚠️';
+            var statusLabel = p.consent_status==='cleared'?'Einwilligung OK':p.consent_status==='missing'?'Einwilligung fehlt':'Ausstehend';
+            var timestamps = p.scene_timestamps || [];
+            var firstAppear = (timestamps[0] && timestamps[0].start) || 0;
+            
+            html += '<div class="flex items-start gap-3 p-3 rounded-lg border-2 '+statusCls+'">';
+            // Frame thumbnail placeholder
+            html += '<div class="flex-shrink-0 w-20 h-20 rounded-lg bg-gray-200 overflow-hidden relative" id="vpFrame_'+idx+'" data-timestamp="'+firstAppear+'">';
+            html += '<div class="flex items-center justify-center w-full h-full text-gray-400 text-xs" id="vpFrameLoading_'+idx+'"><div class="animate-spin w-5 h-5 border-2 border-gray-300 border-t-gray-500 rounded-full"></div></div>';
+            html += '</div>';
+            // Person info
+            html += '<div class="flex-1 min-w-0">';
+            html += '<div class="flex items-center gap-2 mb-1"><span class="text-lg">'+statusIcon+'</span><span class="font-semibold text-gray-800">'+p.person_label+'</span></div>';
+            html += '<div class="text-xs text-gray-500">'+statusLabel+'</div>';
+            if(timestamps.length > 0) {
+                html += '<div class="flex flex-wrap gap-1 mt-1.5">';
+                timestamps.forEach(function(ts, ti) {
+                    var startSec = ts.start || 0;
+                    var endSec = ts.end || 0;
+                    html += '<button onclick="vpSeekFrame('+startSec+','+idx+')" class="text-xs px-2 py-0.5 bg-white border border-gray-300 rounded hover:bg-gray-100 cursor-pointer" title="Frame bei '+vpFormatTime(startSec)+' anzeigen">📍 '+vpFormatTime(startSec)+' – '+vpFormatTime(endSec)+'</button>';
+                });
+                html += '</div>';
+            }
+            html += '</div></div>';
         });
         html += '</div></div>';
+
+        // Hidden video element for frame extraction
+        if(signedUrl) {
+            html += '<video id="vpFrameVideo" src="'+signedUrl+'" crossorigin="anonymous" preload="metadata" style="display:none;width:0;height:0;"></video>';
+            html += '<canvas id="vpFrameCanvas" style="display:none;"></canvas>';
+        }
     }
 
     if(reels && reels.length>0) {
@@ -447,9 +484,114 @@ try {
     }
 
     vpModal(html);
+
+    // Extract frames from video for person thumbnails
+    if(signedUrl && persons && persons.length > 0) {
+        setTimeout(function() { vpExtractPersonFrames(persons); }, 300);
+    }
 } catch(e) {
     vpModal('<p class="text-red-600">Fehler: '+e.message+'</p><button onclick="vpCloseModal()" class="mt-4 text-gray-500">Schließen</button>');
 }
+};
+
+// ==================== FRAME EXTRACTION ====================
+function vpFormatTime(sec) {
+    var m = Math.floor(sec / 60);
+    var s = Math.floor(sec % 60);
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+function vpExtractPersonFrames(persons) {
+    var video = document.getElementById('vpFrameVideo');
+    var canvas = document.getElementById('vpFrameCanvas');
+    if(!video || !canvas) return;
+
+    var ctx = canvas.getContext('2d');
+    var queue = [];
+    persons.forEach(function(p, idx) {
+        var timestamps = p.scene_timestamps || [];
+        var firstAppear = (timestamps[0] && timestamps[0].start) || 0;
+        // Offset slightly into the scene for a better frame
+        queue.push({ idx: idx, time: firstAppear + 1 });
+    });
+
+    var currentQ = 0;
+
+    function captureNext() {
+        if(currentQ >= queue.length) return;
+        var item = queue[currentQ];
+        video.currentTime = item.time;
+    }
+
+    video.addEventListener('loadedmetadata', function() {
+        canvas.width = 160;
+        canvas.height = 160;
+        captureNext();
+    });
+
+    video.addEventListener('seeked', function() {
+        if(currentQ >= queue.length) return;
+        var item = queue[currentQ];
+        try {
+            // Calculate crop to center-square
+            var vw = video.videoWidth;
+            var vh = video.videoHeight;
+            var size = Math.min(vw, vh);
+            var sx = (vw - size) / 2;
+            var sy = (vh - size) / 2;
+            ctx.drawImage(video, sx, sy, size, size, 0, 0, 160, 160);
+            var dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+            var container = document.getElementById('vpFrame_' + item.idx);
+            if(container) {
+                container.innerHTML = '<img src="' + dataUrl + '" class="w-full h-full object-cover" alt="Frame"/>';
+            }
+        } catch(e) {
+            console.warn('Frame capture failed:', e.message);
+            var loading = document.getElementById('vpFrameLoading_' + item.idx);
+            if(loading) loading.innerHTML = '<span class="text-xs">🎬</span>';
+        }
+        currentQ++;
+        if(currentQ < queue.length) {
+            setTimeout(captureNext, 100);
+        }
+    });
+
+    video.addEventListener('error', function() {
+        console.warn('Video load error for frame extraction');
+        persons.forEach(function(p, idx) {
+            var loading = document.getElementById('vpFrameLoading_' + idx);
+            if(loading) loading.innerHTML = '<span class="text-2xl">👤</span>';
+        });
+    });
+}
+
+// Seek to a specific timestamp and update the frame
+window.vpSeekFrame = function(timestamp, personIdx) {
+    var video = document.getElementById('vpFrameVideo');
+    var canvas = document.getElementById('vpFrameCanvas');
+    if(!video || !canvas) return;
+
+    var ctx = canvas.getContext('2d');
+
+    function onSeeked() {
+        video.removeEventListener('seeked', onSeeked);
+        try {
+            var vw = video.videoWidth;
+            var vh = video.videoHeight;
+            var size = Math.min(vw, vh);
+            var sx = (vw - size) / 2;
+            var sy = (vh - size) / 2;
+            canvas.width = 160; canvas.height = 160;
+            ctx.drawImage(video, sx, sy, size, size, 0, 0, 160, 160);
+            var dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            var container = document.getElementById('vpFrame_' + personIdx);
+            if(container) container.innerHTML = '<img src="' + dataUrl + '" class="w-full h-full object-cover" alt="Frame"/>';
+        } catch(e) { console.warn('Seek frame failed:', e); }
+    }
+
+    video.addEventListener('seeked', onSeeked);
+    video.currentTime = timestamp + 0.5;
 };
 
 // ==================== CONSENTS (Standort) ====================
