@@ -66,9 +66,9 @@ module.exports = async function(req, res) {
     const action = req.query.action || "test";
 
     if (action === "test") {
-      // Use /workingtimes as a simple connectivity test (documented endpoint)
-      const data = await eterminFetch("/workingtimes", pub, priv);
-      return res.json({ ok: true, message: "Verbindung erfolgreich", data });
+      // Use /appointment as connectivity test (returns appointments or empty list)
+      const data = await eterminFetch("/appointment", pub, priv);
+      return res.json({ ok: true, message: "Verbindung erfolgreich", appointments: Array.isArray(data) ? data.length : 0 });
     }
 
     if (action === "calendars") {
