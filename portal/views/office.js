@@ -302,13 +302,15 @@
                 return;
             }
             if(!deskNr) {
-                var myBk=_todayBookings.find(function(b){return b.user_id===sbUser.id&&b.status==='office';});
-                if(myBk&&myBk.desk_nr) deskNr=myBk.desk_nr;
-                else {
+                var myBk=_todayBookings.find(function(b){return b.user_id===sbUser.id;});
+                if(myBk&&myBk.status==='office'&&myBk.desk_nr) deskNr=myBk.desk_nr;
+                else if(!myBk||myBk.status==='office') {
+                    // Only auto-assign desk if no booking or booked as office
                     var occ=_todayCheckins.map(function(c){return c.desk_nr;});
                     var free=(_desks||[]).find(function(d){return d.is_bookable!==false&&occ.indexOf(d.nr)===-1;});
                     if(free) deskNr=free.nr;
                 }
+                // If booked as remote/absent: no desk assigned, just check in without desk
             }
             var r=await sb.from('office_checkins').insert({
                 user_id:sbUser.id, desk_nr:deskNr||null, status:'office',
