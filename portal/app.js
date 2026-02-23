@@ -12,7 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1771838900";
+const CACHE_BUST = "?v=1771839000";
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
@@ -61,7 +61,6 @@ const VIEW_MODULES = [
     'views/strategie.js',
     'views/profile-theme.js',
     'views/perf-cockpit.js',
-    'views/aktenschrank.js',    // Aktenschrank v2 - BWA-Ordner, KI-Klassifikation
     'views/onboarding-demo.js',
     'views/office.js',
     'views/wawi-integration.js',
