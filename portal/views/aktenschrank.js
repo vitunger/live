@@ -150,7 +150,10 @@ export async function openAktenFolder(ordnerId){
     _akten.currentFolder=ordnerId;
     var o=_akten.ordner.find(function(x){return x.id===ordnerId;});
     var docs=_akten.dokumente.filter(function(d){return d.ordner_id===ordnerId;});
-    document.getElementById('aktenFolderTitle').textContent=(o?o.icon+' ':'')+(o?o.name:'Ordner');
+    // Fallback: if folder not found in loaded data, try to get name from DOM
+    var folderName=o?((o.icon||'')+' '+o.name):'Ordner';
+    if(!o){var el=document.querySelector('[data-ordner][onclick*="'+ordnerId+'"]');if(el){var h3=el.querySelector('h3');if(h3)folderName=h3.textContent;}}
+    document.getElementById('aktenFolderTitle').textContent=folderName;
     document.getElementById('aktenFolderCount').textContent=docs.length+' Dokument'+(docs.length!==1?'e':'');
     var tb=document.getElementById('aktenFileList'),em=document.getElementById('aktenFileEmpty');
     if(docs.length===0){tb.innerHTML='';em.classList.remove('hidden');}
