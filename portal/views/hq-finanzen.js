@@ -154,7 +154,7 @@ async function loadHqFinData() {
                 datenquelle: datenquelle,
                 rohertrag: parseFloat(rohertragPct.toFixed(1)),
                 bwaMonate: bwaMonate,
-                bwaMonateDetail: sBwa.map(function(b) { return { monat: b.monat, umsatz: parseFloat(b.umsatzerloese) || 0, rohertrag: parseFloat(b.rohertrag) || 0, datum: b.created_at }; }),
+                bwaMonateDetail: sBwa.map(function(b) { return { monat: b.monat, umsatz: parseFloat(b.umsatzerloese) || 0, rohertrag: parseFloat(b.rohertrag) || 0, rohertragAbs: parseFloat(b.rohertrag) || 0, wareneinsatz: parseFloat(b.wareneinsatz) || 0, personalkosten: parseFloat(b.personalkosten) || 0, ergebnis: parseFloat(b.ergebnis_vor_steuern) || 0, datum: b.created_at, datei_url: b.datei_url || null, datei_name: b.datei_name || null }; }),
                 bwaEingereicht: bwaEingereicht,
                 bwaDate: bwaDate,
                 planVorhanden: !!plan,
@@ -700,20 +700,19 @@ export function hqFinShowBwaPopup(standortId) {
     h += '<p class="text-sm text-gray-500 mb-4">Jahr ' + year + ' · ' + s.bwaMonate + ' von 12 Monaten eingereicht</p>';
     
     // 12-month grid
-    h += '<div class="grid grid-cols-4 gap-2 mb-5">';
+    h += '<div class="grid grid-cols-4 gap-2 mb-4" id="hqFinBwaGrid">';
     for (var m = 1; m <= 12; m++) {
         var bwa = bwaByMonth[m];
-        var isPast = m <= currentMonth; // month has passed (can be submitted)
-        var isFuture = m > currentMonth + 1; // month hasn't started
-        var isDue = m <= currentMonth; // BWA for this month should be submitted by 10th of next month
-        var deadlinePassed = new Date() > new Date(year, m, 10); // past the 10th of month after
+        var deadlinePassed = new Date() > new Date(year, m, 10);
+        var isPast = m <= currentMonth;
         
-        var bgCol, textCol, icon, label;
+        var bgCol, textCol, icon, label, clickable = false;
         if (bwa) {
-            bgCol = 'bg-green-50 border-green-200';
+            bgCol = 'bg-green-50 border-green-200 hover:ring-2 hover:ring-green-300 cursor-pointer';
             textCol = 'text-green-700';
             icon = '✓';
             label = hqFinFmtE(bwa.umsatz);
+            clickable = true;
         } else if (deadlinePassed) {
             bgCol = 'bg-red-50 border-red-200';
             textCol = 'text-red-600';
@@ -730,11 +729,18 @@ export function hqFinShowBwaPopup(standortId) {
             icon = '';
             label = '—';
         }
-        h += '<div class="border rounded-lg p-2 text-center ' + bgCol + '">';
+        h += '<div class="border rounded-lg p-2 text-center transition ' + bgCol + '"';
+        if (clickable) {
+            h += ' onclick="hqFinShowBwaDetail(\'' + standortId + '\',' + m + ')"';
+        }
+        h += '>';
         h += '<p class="text-xs font-semibold ' + textCol + '">' + _hqFinMonatLabels[m-1] + ' ' + icon + '</p>';
         h += '<p class="text-[10px] ' + textCol + ' mt-0.5">' + label + '</p></div>';
     }
     h += '</div>';
+    
+    // Detail area (filled when clicking a month)
+    h += '<div id="hqFinBwaDetailArea" class="mb-4"></div>';
     
     // Upload button
     h += '<button class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition" ';
@@ -743,6 +749,50 @@ export function hqFinShowBwaPopup(standortId) {
     h += '</div></div>';
     
     document.body.insertAdjacentHTML('beforeend', h);
+    
+    // Auto-show latest BWA detail
+    var latestMonth = Object.keys(bwaByMonth).map(Number).sort(function(a,b){return b-a;})[0];
+    if (latestMonth) hqFinShowBwaDetail(standortId, latestMonth);
+}
+
+// Show BWA detail for a specific month inside the popup
+export function hqFinShowBwaDetail(standortId, monat) {
+    var s = hqFinStandorte.find(function(x) { return x.id === standortId; });
+    if (!s) return;
+    var bwa = (s.bwaMonateDetail || []).find(function(b) { return b.monat === monat; });
+    if (!bwa) return;
+    
+    var el = document.getElementById('hqFinBwaDetailArea');
+    if (!el) return;
+    
+    var rohPct = bwa.umsatz > 0 ? (bwa.rohertragAbs / bwa.umsatz * 100).toFixed(1) : '—';
+    var uploadDate = bwa.datum ? new Date(bwa.datum).toLocaleDateString('de-DE') : '—';
+    
+    var h = '<div class="bg-gray-50 rounded-xl p-4 border border-gray-200">';
+    h += '<div class="flex items-center justify-between mb-3">';
+    h += '<p class="text-sm font-bold text-gray-800">' + _hqFinMonatLabels[monat - 1] + ' ' + new Date().getFullYear() + '</p>';
+    h += '<span class="text-[10px] text-gray-400">Hochgeladen: ' + uploadDate + '</span></div>';
+    
+    // Key figures grid
+    h += '<div class="grid grid-cols-2 gap-2 mb-3">';
+    h += '<div class="bg-white rounded-lg p-2.5 border"><p class="text-[10px] text-gray-400 uppercase">Umsatzerlöse</p><p class="text-sm font-bold text-gray-800">' + hqFinFmtE(bwa.umsatz) + '</p></div>';
+    h += '<div class="bg-white rounded-lg p-2.5 border"><p class="text-[10px] text-gray-400 uppercase">Rohertrag</p><p class="text-sm font-bold ' + (parseFloat(rohPct) >= 35 ? 'text-green-600' : parseFloat(rohPct) >= 30 ? 'text-yellow-600' : 'text-red-500') + '">' + rohPct + '%</p></div>';
+    h += '<div class="bg-white rounded-lg p-2.5 border"><p class="text-[10px] text-gray-400 uppercase">Wareneinsatz</p><p class="text-sm font-bold text-gray-800">' + hqFinFmtE(bwa.wareneinsatz) + '</p></div>';
+    h += '<div class="bg-white rounded-lg p-2.5 border"><p class="text-[10px] text-gray-400 uppercase">Personalkosten</p><p class="text-sm font-bold text-gray-800">' + hqFinFmtE(bwa.personalkosten) + '</p></div>';
+    h += '</div>';
+    
+    // Ergebnis
+    h += '<div class="bg-white rounded-lg p-2.5 border mb-3"><p class="text-[10px] text-gray-400 uppercase">Ergebnis vor Steuern</p>';
+    h += '<p class="text-sm font-bold ' + (bwa.ergebnis >= 0 ? 'text-green-600' : 'text-red-500') + '">' + hqFinFmtE(bwa.ergebnis) + '</p></div>';
+    
+    // Download button
+    if (bwa.datei_url) {
+        h += '<a href="' + _escH(bwa.datei_url) + '" target="_blank" class="flex items-center justify-center gap-2 w-full py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-100 transition">';
+        h += '⬇️ ' + _escH(bwa.datei_name || 'BWA herunterladen') + '</a>';
+    }
+    h += '</div>';
+    
+    el.innerHTML = h;
 }
 
 // === PLAN POPUP (per Standort) ===
@@ -804,6 +854,6 @@ export function renderHqEinkauf() {
 }
 
 // Strangler Fig
-const _exports = {renderHqFinanzen,showHqFinTab,hqFinSort,hqFinOpenBwaUpload,hqFinParsePlan,hqFinShowBwaPopup,hqFinShowPlanPopup,hqFinOpenPlanUpload,adsFmtEuro,adsFmtK,adsSetText,loadAdsData,renderAdsKpis,renderAdsChart,renderAdsKampagnenTabelle,filterAdsPlattform,renderAdsStandortVergleich,renderAdsSyncInfo,updateMktPerformanceFromAds,renderHqMarketing,showHqMktTab,renderHqMktBudget,renderHqMktLeadReport,renderHqMktJahresgespraeche,renderHqMktHandlungsbedarf,renderMktSpendingChart,renderMktLeadChart,renderHqEinkauf};
+const _exports = {renderHqFinanzen,showHqFinTab,hqFinSort,hqFinOpenBwaUpload,hqFinParsePlan,hqFinShowBwaPopup,hqFinShowBwaDetail,hqFinShowPlanPopup,hqFinOpenPlanUpload,adsFmtEuro,adsFmtK,adsSetText,loadAdsData,renderAdsKpis,renderAdsChart,renderAdsKampagnenTabelle,filterAdsPlattform,renderAdsStandortVergleich,renderAdsSyncInfo,updateMktPerformanceFromAds,renderHqMarketing,showHqMktTab,renderHqMktBudget,renderHqMktLeadReport,renderHqMktJahresgespraeche,renderHqMktHandlungsbedarf,renderMktSpendingChart,renderMktLeadChart,renderHqEinkauf};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[hq-finanzen.js] Module loaded (v2 redesign) - ' + Object.keys(_exports).length + ' exports registered');
