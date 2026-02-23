@@ -12,7 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1771838500";
+const CACHE_BUST = "?v=1771838600";
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
@@ -58,7 +58,6 @@ const VIEW_MODULES = [
     
     // Specialized
     'views/dev-pipeline.js',
-    'views/aktenschrank.js',
     'views/strategie.js',
     'views/profile-theme.js',
     'views/perf-cockpit.js',
