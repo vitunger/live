@@ -3238,6 +3238,10 @@ export async function devKIReleaseVorschlag() {
         
         var vorschlag = d.release_notes || d.antwort || d.text || '';
         if(vorschlag) {
+            // Strip intro/greeting lines (Partneransprache entfernen)
+            vorschlag = vorschlag.replace(/^(Liebe\s+Partner[^\n]*\n+|Hallo[^\n]*\n+|Sehr\s+geehrte[^\n]*\n+|Dieses\s+Release\s+bringt[^\n]*\n+|Diese[sr]?\s+(Release|Update|Version)\s+[^\n]*\n+)/gi, '').trim();
+            // Strip trailing greetings
+            vorschlag = vorschlag.replace(/\n+(Viele\s+Gr[uü][sß]e[^\n]*|Euer\s+[^\n]*|Beste\s+Gr[uü][sß]e[^\n]*|Mit\s+freundlichen[^\n]*)$/gi, '').trim();
             var titelField = document.getElementById('relTitel');
             var inhaltField = document.getElementById('relInhalt');
             if(d.titel && titelField && !titelField.value) titelField.value = d.titel;
