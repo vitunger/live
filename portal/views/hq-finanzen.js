@@ -201,8 +201,8 @@ function renderHqFinKpis() {
 
         + '<div class="vit-card p-5">'
         + '<p class="text-xs text-gray-400 uppercase tracking-wide">Ø Rohertrag</p>'
-        + '<p class="text-2xl font-bold ' + (avgRoh >= 38 ? 'text-green-600' : avgRoh > 0 ? 'text-red-500' : 'text-gray-300') + '">' + (avgRoh > 0 ? avgRoh + '%' : '—') + '</p>'
-        + '<p class="text-xs text-gray-400">Ziel: ≥ 38%</p></div>'
+        + '<p class="text-2xl font-bold ' + (avgRoh >= 35 ? 'text-green-600' : avgRoh >= 30 ? 'text-yellow-600' : avgRoh > 0 ? 'text-red-500' : 'text-gray-300') + '">' + (avgRoh > 0 ? avgRoh + '%' : '—') + '</p>'
+        + '<p class="text-xs text-gray-400">Ziel: ≥ 35%</p></div>'
 
         + '<div class="vit-card p-5">'
         + '<p class="text-xs text-gray-400 uppercase tracking-wide">BWA-Quote aktuell</p>'
@@ -315,7 +315,7 @@ function renderHqFinUebersicht() {
         html += '<td class="py-2.5 px-3 text-right font-bold ' + (s.umsatzIst > 0 ? 'text-gray-800' : 'text-gray-300') + '">' + (s.umsatzIst > 0 ? hqFinFmtE(s.umsatzIst) : '—') + '</td>';
         html += '<td class="py-2.5 px-3 text-right text-gray-400">' + (s.umsatzPlan > 0 ? hqFinFmtE(s.umsatzPlan) : '—') + '</td>';
         html += '<td class="py-2.5 px-3 text-right font-semibold ' + (abw === null ? 'text-gray-300' : abw >= 0 ? 'text-green-600' : 'text-red-500') + '">' + (abw === null ? '—' : (abw >= 0 ? '+' : '') + abw + '%') + '</td>';
-        html += '<td class="py-2.5 px-3 text-right ' + (s.rohertrag >= 38 ? 'text-green-600' : s.rohertrag > 0 ? 'text-red-500' : 'text-gray-300') + '">' + (s.rohertrag > 0 ? s.rohertrag + '%' : '—') + '</td>';
+        html += '<td class="py-2.5 px-3 text-right font-semibold ' + (s.rohertrag >= 35 ? 'text-green-600' : s.rohertrag >= 30 ? 'text-yellow-600' : s.rohertrag > 0 ? 'text-red-500' : 'text-gray-300') + '">' + (s.rohertrag > 0 ? s.rohertrag + '%' : '—') + '</td>';
         html += '<td class="py-2.5 px-3 text-center">' + quelleBadge + '</td>';
         html += '<td class="py-2.5 px-3 text-center cursor-pointer hover:bg-blue-50 rounded transition" onclick="hqFinShowBwaPopup(\'' + s.id + '\')" title="BWA-Details anzeigen">' + bwaIcon + '</td>';
         html += '<td class="py-2.5 px-3 text-center cursor-pointer hover:bg-blue-50 rounded transition" onclick="hqFinShowPlanPopup(\'' + s.id + '\')" title="Plan-Details anzeigen">' + planIcon + '</td>';
@@ -323,25 +323,6 @@ function renderHqFinUebersicht() {
     });
     html += '</tbody></table>';
     el.innerHTML = html;
-
-    // Rohertrag Ranking (sidebar)
-    var rrEl = document.getElementById('hqFinRohertragNew');
-    if (rrEl) {
-        var rrItems = hqFinStandorte.filter(function(s) { return s.rohertrag > 0; }).sort(function(a, b) { return b.rohertrag - a.rohertrag; });
-        if (!rrItems.length) {
-            rrEl.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">Noch keine Rohertrags-Daten</p>';
-        } else {
-            var maxRoh = rrItems[0].rohertrag || 1;
-            rrEl.innerHTML = rrItems.slice(0, 10).map(function(s) {
-                var w = Math.max(5, Math.round(s.rohertrag / Math.max(maxRoh, 50) * 100));
-                var col = s.rohertrag >= 38 ? '#16a34a' : s.rohertrag >= 34 ? '#ca8a04' : '#dc2626';
-                return '<div class="flex items-center gap-2 py-1">'
-                    + '<span class="text-xs w-28 truncate text-gray-600">' + _escH(s.name) + '</span>'
-                    + '<div class="flex-1 bg-gray-100 rounded-full h-3"><div class="h-3 rounded-full" style="width:' + w + '%;background:' + col + '"></div></div>'
-                    + '<span class="text-xs font-bold w-12 text-right" style="color:' + col + '">' + s.rohertrag + '%</span></div>';
-            }).join('');
-        }
-    }
 }
 
 // === TAB 2: BWA-STATUS ===
