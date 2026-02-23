@@ -1333,6 +1333,8 @@ export async function renderBenchmarks() {
     try {
         // Latest BWA for this location
         var ownResp = await _sb().from('bwa_daten').select('monat,jahr,umsatzerloese,wareneinsatz,rohertrag,rohertrag_pct,personalkosten,personalkosten_pct,raumkosten,ergebnis_vor_steuern,betriebsergebnis').eq('standort_id', stdId).order('jahr',{ascending:false}).order('monat',{ascending:false}).limit(1);
+        console.log('[Benchmarks] stdId:', stdId, 'ownResp:', ownResp.error ? ownResp.error.message : (ownResp.data ? ownResp.data.length + ' rows' : 'no data'));
+        if(ownResp.error) { el.innerHTML = '<p class="text-center text-red-400 py-8">DB-Fehler: '+_escH(ownResp.error.message)+'</p>'; return; }
         var own = (ownResp.data && ownResp.data[0]) ? ownResp.data[0] : null;
         if(!own) { el.innerHTML = '<p class="text-center text-gray-400 py-8">Noch keine BWA-Daten vorhanden. Lade eine BWA hoch um den Benchmark zu sehen.</p>'; return; }
         
