@@ -76,13 +76,13 @@ export async function parsePlanFile() {
     var file = fileInput.files[0];
     var statusEl = document.getElementById('planParseStatus');
     var resultEl = document.getElementById('planParseResult');
-    statusEl.classList.remove('hidden');
+    if(statusEl) statusEl.classList.remove('hidden');
 
     var isPdf = file.name.match(/\.pdf$/i);
 
     // PDF → direkt KI-Analyse
     if(isPdf) {
-        statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">🤖 PDF wird mit KI analysiert...</span></div>';
+        if(statusEl) statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">🤖 PDF wird mit KI analysiert...</span></div>';
         try {
             var reader = new FileReader();
             reader.onload = async function(e) {
@@ -91,23 +91,23 @@ export async function parsePlanFile() {
                     var kiResult = await callFinanceKi('jahresplan', base64, 'application/pdf', null, {jahr: planIstYear});
                     applyPlanKiResult(kiResult, statusEl, resultEl);
                 } catch(err) {
-                    statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ KI-Analyse fehlgeschlagen: ' + _escH(err.message||'Unbekannt') + '</p>';
+                    if(statusEl) statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ KI-Analyse fehlgeschlagen: ' + _escH(err.message||'Unbekannt') + '</p>';
                 }
             };
             reader.readAsDataURL(file);
         } catch(pdfErr) {
-            statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Fehler: ' + _escH(pdfErr.message||pdfErr) + '</p>';
+            if(statusEl) statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Fehler: ' + _escH(pdfErr.message||pdfErr) + '</p>';
         }
         return;
     }
 
-    statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">Excel wird analysiert...</span></div>';
+    if(statusEl) statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">Excel wird analysiert...</span></div>';
 
     // Try BwaParser first for structured Planung files
     BwaParser.parseFile(file, async function(err, result) {
         if(err) {
             // KI-Fallback bei Parse-Fehler
-            statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">🤖 Parser fehlgeschlagen – KI-Analyse...</span></div>';
+            if(statusEl) statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">🤖 Parser fehlgeschlagen – KI-Analyse...</span></div>';
             try {
                 var arrayBuf = await file.arrayBuffer();
                 var wb = XLSX.read(arrayBuf, { type: 'array' });
@@ -115,7 +115,7 @@ export async function parsePlanFile() {
                 var kiResult = await callFinanceKi('jahresplan', null, null, rawText.substring(0, 15000), {jahr: planIstYear});
                 applyPlanKiResult(kiResult, statusEl, resultEl);
             } catch(kiErr) {
-                statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Auch KI-Analyse fehlgeschlagen: ' + _escH(kiErr.message||kiErr) + '</p>';
+                if(statusEl) statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Auch KI-Analyse fehlgeschlagen: ' + _escH(kiErr.message||kiErr) + '</p>';
             }
             return;
         }
@@ -147,7 +147,7 @@ export async function parsePlanFile() {
                 pm.rohertrag = pm.umsatz + pm.wareneinsatz;
                 pm.ergebnis = pm.rohertrag + pm.personalkosten + pm.raumkosten;
             }
-            statusEl.innerHTML = '<p class="text-xs text-green-600 mt-2">✅ Planung erkannt! ('+result.plan_bwa.length+' Konten, Format: '+meta.format+')</p>';
+            if(statusEl) statusEl.innerHTML = '<p class="text-xs text-green-600 mt-2">✅ Planung erkannt! ('+result.plan_bwa.length+' Konten, Format: '+meta.format+')</p>';
         } 
         // Fallback: old parsing logic for simple plan files
         else {
@@ -169,16 +169,16 @@ export async function parsePlanFile() {
                     }
                     if(nums.length > 0) planMonths[monat] = {monat:monat,umsatz:nums[0]||0,wareneinsatz:nums[1]||0,rohertrag:nums[2]||0,personalkosten:nums[3]||0,raumkosten:nums[4]||0,ergebnis:nums[7]||0};
                 });
-                statusEl.innerHTML = '<p class="text-xs text-green-600 mt-2">✅ '+Object.keys(planMonths).length+' Monate erkannt!</p>';
+                if(statusEl) statusEl.innerHTML = '<p class="text-xs text-green-600 mt-2">✅ '+Object.keys(planMonths).length+' Monate erkannt!</p>';
             } catch(e2) {
-                statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Fehler: '+(e2.message||e2)+'</p>';
+                if(statusEl) statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Fehler: '+(e2.message||e2)+'</p>';
                 return;
             }
         }
 
         var count = Object.keys(planMonths).length;
         if(count < 1) {
-            statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Keine Monatsdaten erkannt. Bitte prüfe das Format deiner Excel-Datei.</p>';
+            if(statusEl) statusEl.innerHTML = '<p class="text-xs text-red-600 mt-2">❌ Keine Monatsdaten erkannt. Bitte prüfe das Format deiner Excel-Datei.</p>';
             return;
         }
 
@@ -195,8 +195,8 @@ export async function parsePlanFile() {
         ph += '</div>';
         ph += '<button onclick="saveParsedPlan()" class="w-full mt-3 py-2 bg-green-600 text-white rounded-lg text-xs font-semibold hover:opacity-90">✅ Plan für '+planIstYear+' speichern</button>';
         ph += '</div>';
-        resultEl.innerHTML = ph;
-        resultEl.classList.remove('hidden');
+        if(resultEl) resultEl.innerHTML = ph;
+        if(resultEl) resultEl.classList.remove('hidden');
 
         // Store for saving
         window._parsedPlanMonths = planMonths;
@@ -243,7 +243,7 @@ export function applyPlanKiResult(result, statusEl, resultEl) {
     var count = Object.keys(planMonths).length;
     if(count < 1) throw new Error('Keine Monatsdaten erkannt');
 
-    statusEl.innerHTML = '<p class="text-xs text-green-600 mt-2">✅ KI-Analyse: ' + count + ' Monate erkannt' + (result.confidence ? ' (Konfidenz: ' + Math.round(result.confidence * 100) + '%)' : '') + '</p>';
+    if(statusEl) statusEl.innerHTML = '<p class="text-xs text-green-600 mt-2">✅ KI-Analyse: ' + count + ' Monate erkannt' + (result.confidence ? ' (Konfidenz: ' + Math.round(result.confidence * 100) + '%)' : '') + '</p>';
 
     // Show preview (same format as normal parser)
     var mLabels = ['','Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
@@ -262,8 +262,8 @@ export function applyPlanKiResult(result, statusEl, resultEl) {
     ph += '<p class="mt-2 text-[10px] text-purple-400">Bitte Werte vor dem Speichern kontrollieren.</p>';
     ph += '<button onclick="saveParsedPlan()" class="w-full mt-3 py-2 bg-green-600 text-white rounded-lg text-xs font-semibold hover:opacity-90">✅ Plan für '+planIstYear+' speichern</button>';
     ph += '</div>';
-    resultEl.innerHTML = ph;
-    resultEl.classList.remove('hidden');
+    if(resultEl) resultEl.innerHTML = ph;
+    if(resultEl) resultEl.classList.remove('hidden');
 
     window._parsedPlanMonths = planMonths;
 }
