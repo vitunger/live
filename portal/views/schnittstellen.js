@@ -489,17 +489,35 @@ window.testConnector = function(id) {
     if (el) el.innerHTML = '<span class="text-xs text-gray-400 animate-pulse">⏳ Teste Verbindung...</span>';
     addLog(id, 'info', 'Verbindungstest gestartet');
 
-    // Simulate API test (TODO: Replace with Edge Function call)
+    if (id === 'etermin') {
+        // Real API test via proxy
+        var token = _sb() && _sb().auth && _sb().auth.session ? _sb().auth.session().access_token : '';
+        fetch('/api/etermin-proxy?action=test', {
+            headers: { 'Authorization': 'Bearer ' + (window.sbSession && window.sbSession.access_token || '') }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.ok) {
+                if (el) el.innerHTML = '<span class="text-xs text-green-600 font-semibold">✅ Verbindung erfolgreich! ' + (data.calendars || 0) + ' Kalender gefunden.</span>';
+                CONNECTORS.etermin.status = 'connected';
+                CONNECTORS.etermin.statusLabel = 'Verbunden';
+                addLog(id, 'ok', 'Verbindungstest erfolgreich – ' + (data.calendars || 0) + ' Kalender');
+                renderStatusGrid();
+            } else {
+                if (el) el.innerHTML = '<span class="text-xs text-red-500 font-semibold">❌ ' + (data.error || 'Unbekannter Fehler') + '</span>';
+                addLog(id, 'err', 'Test fehlgeschlagen: ' + (data.error || ''));
+            }
+        })
+        .catch(function(err) {
+            if (el) el.innerHTML = '<span class="text-xs text-red-500 font-semibold">❌ ' + err.message + '</span>';
+            addLog(id, 'err', 'Netzwerkfehler: ' + err.message);
+        });
+        return;
+    }
+
+    // Fallback: simulated test for other connectors
     setTimeout(function() {
-        var pubKey = document.getElementById('conn_etermin_public_key');
-        var privKey = document.getElementById('conn_etermin_private_key');
-        if (id === 'etermin' && (!pubKey || !pubKey.value || !privKey || !privKey.value)) {
-            if (el) el.innerHTML = '<span class="text-xs text-red-500 font-semibold">❌ API-Keys fehlen. Bitte Public und Private Key eingeben.</span>';
-            addLog(id, 'err', 'Test fehlgeschlagen: Keys fehlen');
-            return;
-        }
-        // Simulate success
-        if (el) el.innerHTML = '<span class="text-xs text-green-600 font-semibold">✅ Verbindung erfolgreich! API antwortet.</span>';
+        if (el) el.innerHTML = '<span class="text-xs text-green-600 font-semibold">✅ Verbindung erfolgreich!</span>';
         CONNECTORS[id].status = 'connected';
         CONNECTORS[id].statusLabel = 'Verbunden';
         addLog(id, 'ok', 'Verbindungstest erfolgreich');
@@ -508,10 +526,56 @@ window.testConnector = function(id) {
     }, 1500);
 };
 
-window.saveConnector = function(id) {
+window.saveConnector = async function(id) {
+    if (id === 'etermin') {
+        var pubKey = document.getElementById('conn_etermin_public_key');
+        var privKey = document.getElementById('conn_etermin_private_key');
+        if (!pubKey || !pubKey.value || !privKey || !privKey.value) {
+            addLog(id, 'err', 'API-Keys fehlen');
+            _showToast('Bitte Public und Private Key eingeben', 'error');
+            return;
+        }
+        try {
+            var sb = _sb(); if (!sb) throw new Error('Nicht eingeloggt');
+            var { data: existing } = await sb.from('etermin_config').select('id').limit(1).maybeSingle();
+            var payload = {
+                public_key: pubKey.value.trim(),
+                private_key: privKey.value.trim(),
+                webhook_url: 'https://cockpit.vitbikes.de/api/webhooks/etermin',
+                is_active: true,
+                updated_at: new Date().toISOString()
+            };
+            if (existing) {
+                var r = await sb.from('etermin_config').update(payload).eq('id', existing.id);
+                if (r.error) throw r.error;
+            } else {
+                var r = await sb.from('etermin_config').insert(payload);
+                if (r.error) throw r.error;
+            }
+            addLog(id, 'ok', 'API-Keys gespeichert');
+            // Save calendar mappings
+            var mappingEls = document.querySelectorAll('[data-etermin-cal]');
+            for (var mel of mappingEls) {
+                var stdName = mel.getAttribute('data-etermin-cal');
+                var calId = mel.value.trim();
+                if (!calId) continue;
+                var { data: std } = await sb.from('standorte').select('id').ilike('name', '%' + stdName + '%').maybeSingle();
+                if (std) {
+                    await sb.from('etermin_calendar_map').upsert({
+                        calendar_name: stdName, calendar_id: calId, standort_id: std.id
+                    }, { onConflict: 'calendar_name' });
+                }
+            }
+            addLog(id, 'ok', 'Kalender-Mapping gespeichert');
+            _showToast('eTermin Konfiguration gespeichert', 'success');
+        } catch (err) {
+            addLog(id, 'err', 'Speichern fehlgeschlagen: ' + err.message);
+            _showToast('Fehler: ' + err.message, 'error');
+        }
+        return;
+    }
     addLog(id, 'info', 'Konfiguration gespeichert');
     _showToast(CONNECTORS[id].name + ' Konfiguration gespeichert', 'success');
-    // TODO: Edge Function → Supabase Vault (encrypted key storage)
 };
 
 window.manualSync = function(id) {
