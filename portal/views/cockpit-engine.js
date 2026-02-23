@@ -224,11 +224,13 @@ try {
     var bwaMo = getBwaMonth(new Date());
     var stdResp = await _sb().from('standorte').select('id,name');
     total = (stdResp.data || []).length || 30;
-    var bwaResp = await _sb().from('bwa_daten').select('standort_id,created_at').eq('monat', bwaMo.m + 1).eq('jahr', bwaMo.y);
-    (bwaResp.data || []).forEach(function(b) {
-        var subDay = new Date(b.created_at).getDate();
-        if(subDay <= 8) gold++; else if(subDay <= 15) ok++; else late++;
-    });
+    var netzResp = await _sb().rpc('get_bwa_network_status', { p_monat: bwaMo.m + 1, p_jahr: bwaMo.y });
+    if(netzResp.data && typeof netzResp.data === 'object') {
+        gold = netzResp.data.gold || 0;
+        ok = netzResp.data.ok || 0;
+        late = netzResp.data.late || 0;
+        total = netzResp.data.total_standorte || total;
+    }
     missing = total - gold - ok - late;
 } catch(e) { console.warn('Netzwerk widget:', e); missing = total; }
 } else { missing = total; }
