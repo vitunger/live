@@ -64,15 +64,21 @@ async function loadHqFinData() {
         var bwaData = bwaResp.data || [];
         console.log('[hq-finanzen] BWA entries:', bwaData.length);
 
-        // 3. Jahresplaene
+        // 3. Jahresplaene (current year + previous year as fallback)
         var planResp = await _sb().from('jahresplaene')
             .select('standort_id, jahr, plan_daten, updated_at')
-            .eq('jahr', currentYear);
+            .in('jahr', [currentYear, currentYear - 1])
+            .order('jahr', { ascending: false });
         if(planResp.error) { console.warn('[hq-finanzen] Plan query error:', planResp.error); }
         var planData = planResp.data || [];
         hqFinPlanMap = {};
-        planData.forEach(function(p) { hqFinPlanMap[p.standort_id] = p; });
-        console.log('[hq-finanzen] Plans:', planData.length);
+        // Current year takes priority, fallback to previous year
+        planData.forEach(function(p) { 
+            if (!hqFinPlanMap[p.standort_id] || p.jahr === currentYear) {
+                hqFinPlanMap[p.standort_id] = p; 
+            }
+        });
+        console.log('[hq-finanzen] Plans:', planData.length, '(current year:', planData.filter(function(p){return p.jahr===currentYear;}).length, ', prev year:', planData.filter(function(p){return p.jahr===currentYear-1;}).length, ')');
 
         // 4. WaWi Belege (Fallback if no BWA)
         var wawiResp = await _sb().from('wawi_belege')
