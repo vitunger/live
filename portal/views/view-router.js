@@ -169,11 +169,11 @@ window.addEventListener('vit:view-changed', function(event) {
     if (!v) return;
     setTimeout(function() {
         try {
-            if ((v === 'home' || v === 'startseite') && window.renderDailyFocus) { window.renderDailyFocus(); if(window.renderHealthScore) window.renderHealthScore(); }
+            if ((v === 'home' || v === 'startseite') && window.renderDailyFocus) { window.renderDailyFocus(); }
             if (v === 'verkauf' && window.renderSalesMomentum) window.renderSalesMomentum();
             if (v === 'controlling' && window.updateBwaDeadlineWidget) window.updateBwaDeadlineWidget();
             // hqFinanzen BWA status is now rendered via tab system in showHqFinTab
-            if (v === 'hqCockpit' && window.renderHqHealth) window.renderHqHealth();
+            if (v === 'hqCockpit') { /* trainer/health hooks removed */ }
         } catch(e) { console.warn('[view-router] supplementary render:', e.message); }
     }, 150);
 });
