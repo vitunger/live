@@ -48,7 +48,21 @@ module.exports = async function(req, res) {
     if (req.query.standort_id) {
       query = query.eq("standort_id", req.query.standort_id);
     }
-    const { data: cfg } = await query.limit(1).maybeSingle();
+    const { data: cfg, error: dbErr } = await query.limit(1).maybeSingle();
+    
+    // Debug mode
+    if (req.query.action === "debug") {
+      return res.json({ 
+        has_url: !!process.env.SUPABASE_URL,
+        has_key: !!process.env.SUPABASE_SERVICE_KEY,
+        key_prefix: (process.env.SUPABASE_SERVICE_KEY || "").slice(0, 20) + "...",
+        url: process.env.SUPABASE_URL || "MISSING",
+        db_error: dbErr ? dbErr.message : null,
+        cfg_found: !!cfg,
+        standort_filter: req.query.standort_id || "none"
+      });
+    }
+    
     if (!cfg || !cfg.public_key || !cfg.private_key) {
       return res.status(400).json({ error: "eTermin nicht konfiguriert. API-Keys in Einstellungen hinterlegen." });
     }
