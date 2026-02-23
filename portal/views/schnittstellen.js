@@ -282,13 +282,12 @@ function renderConnectorCard(id) {
                 + '</div>';
         });
         // Calendar name for mapping
-        body += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">📅 eTermin Kalender-Name</label>'
-            + '<input type="text" id="conn_etermin_cal_name" placeholder="z.B. Grafrath, München City..." class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:border-blue-400 outline-none">'
-            + '<p class="text-[10px] text-gray-400 mt-1">Name des Kalenders in eTermin → wird dem Standort zugeordnet</p></div>';
-        // Webhook
-        body += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Webhook-URL</label>'
-            + '<div style="display:flex;gap:6px;align-items:center"><input type="text" value="' + c.webhook + '" readonly class="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-500 font-mono text-xs">'
-            + '<button onclick="window.copyConnWebhook(\'' + id + '\')" id="connCopyBtn_' + id + '" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-200 transition flex-shrink-0">📋 Kopieren</button></div></div>';
+        // (not needed when each standort has its own eTermin account)
+        // Webhook – dynamisch pro Standort
+        body += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Webhook-URL <span class="text-gray-400 font-normal">(in eTermin eintragen)</span></label>'
+            + '<div style="display:flex;gap:6px;align-items:center"><input type="text" id="conn_etermin_webhook_url" value="' + c.webhook + '" readonly class="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-500 font-mono text-xs">'
+            + '<button onclick="window.copyConnWebhook(\'' + id + '\')" id="connCopyBtn_' + id + '" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-200 transition flex-shrink-0">📋 Kopieren</button></div>'
+            + '<p class="text-[10px] text-gray-400 mt-1">Jeder Standort bekommt eine eigene URL mit ?sid=... – wird beim Speichern automatisch generiert.</p></div>';
         // Info: per-standort
         body += '<div class="bg-blue-50 border border-blue-200 rounded-lg p-3">'
             + '<p class="text-xs text-blue-700">ℹ️ <strong>Jeder Standort hat seinen eigenen eTermin-Account.</strong> '
@@ -491,9 +490,10 @@ window.toggleGFEdit = function(id) {
 };
 
 window.copyConnWebhook = function(id) {
-    var c = CONNECTORS[id];
-    if (c && c.webhook) {
-        navigator.clipboard.writeText(c.webhook).then(function() {
+    var urlEl = document.getElementById('conn_etermin_webhook_url');
+    var url = urlEl ? urlEl.value : (CONNECTORS[id] && CONNECTORS[id].webhook || '');
+    if (url) {
+        navigator.clipboard.writeText(url).then(function() {
             var btn = document.getElementById('connCopyBtn_' + id);
             if (btn) { btn.textContent = '✅ Kopiert!'; setTimeout(function() { btn.textContent = '📋 Kopieren'; }, 2000); }
         });
@@ -502,11 +502,18 @@ window.copyConnWebhook = function(id) {
 
 // ── Load eTermin config for a specific standort ──
 window.loadEterminConfig = async function(standortId) {
+    // Update webhook URL with standort ID
+    var whEl = document.getElementById('conn_etermin_webhook_url');
+    if (whEl) {
+        whEl.value = standortId 
+            ? 'https://cockpit.vitbikes.de/api/webhooks/etermin?sid=' + standortId
+            : 'https://cockpit.vitbikes.de/api/webhooks/etermin';
+    }
     if (!standortId) {
-        document.getElementById('conn_etermin_public_key').value = '';
-        document.getElementById('conn_etermin_private_key').value = '';
-        var calN = document.getElementById('conn_etermin_cal_name');
-        if (calN) calN.value = '';
+        var p = document.getElementById('conn_etermin_public_key');
+        var k = document.getElementById('conn_etermin_private_key');
+        if (p) p.value = '';
+        if (k) k.value = '';
         return;
     }
     try {
@@ -517,11 +524,6 @@ window.loadEterminConfig = async function(standortId) {
         var privEl = document.getElementById('conn_etermin_private_key');
         if (pubEl) pubEl.value = cfg ? cfg.public_key : '';
         if (privEl) privEl.value = cfg ? cfg.private_key : '';
-        // Load calendar mapping
-        var { data: mapData } = await sb.from('etermin_calendar_map')
-            .select('calendar_name').eq('standort_id', standortId).maybeSingle();
-        var calN = document.getElementById('conn_etermin_cal_name');
-        if (calN) calN.value = mapData ? mapData.calendar_name : '';
     } catch (e) { console.warn('[schnittstellen] loadEterminConfig:', e); }
 };
 
@@ -543,13 +545,16 @@ async function loadEterminOverview() {
         var h = '<div class="border border-gray-200 rounded-lg overflow-hidden"><table class="w-full text-xs">'
             + '<thead class="bg-gray-50"><tr><th class="text-left px-3 py-2 font-semibold text-gray-600">Standort</th>'
             + '<th class="text-left px-3 py-2 font-semibold text-gray-600">Status</th>'
-            + '<th class="text-left px-3 py-2 font-semibold text-gray-600">Zuletzt aktualisiert</th></tr></thead><tbody>';
+            + '<th class="text-left px-3 py-2 font-semibold text-gray-600">Webhook-URL</th>'
+            + '<th class="text-left px-3 py-2 font-semibold text-gray-600">Aktualisiert</th></tr></thead><tbody>';
         configs.forEach(function(c) {
             var name = (c.standorte && c.standorte.name) || 'Unbekannt';
             var dot = c.is_active ? '#16a34a' : '#9ca3af';
             var label = c.is_active ? 'Aktiv' : 'Inaktiv';
+            var whUrl = 'https://cockpit.vitbikes.de/api/webhooks/etermin?sid=' + c.standort_id;
             h += '<tr class="border-t border-gray-100"><td class="px-3 py-2 font-semibold">' + _escH(name) + '</td>'
                 + '<td class="px-3 py-2"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + dot + ';margin-right:4px;vertical-align:middle"></span>' + label + '</td>'
+                + '<td class="px-3 py-2"><code class="text-[9px] text-gray-400 select-all">' + whUrl.slice(-50) + '</code></td>'
                 + '<td class="px-3 py-2 text-gray-400">' + (c.updated_at ? timeAgo(c.updated_at) : '—') + '</td></tr>';
         });
         h += '</tbody></table></div>';
@@ -644,16 +649,8 @@ window.saveConnector = async function(id) {
                 if (r.error) throw r.error;
             }
             addLog(id, 'ok', 'API-Keys gespeichert für Standort');
-            // Save calendar mapping for this standort
-            var calNameInput = document.getElementById('conn_etermin_cal_name');
-            if (calNameInput && calNameInput.value.trim()) {
-                await sb.from('etermin_calendar_map').upsert({
-                    calendar_name: calNameInput.value.trim(),
-                    standort_id: stdId
-                }, { onConflict: 'calendar_name' });
-                addLog(id, 'ok', 'Kalender-Mapping gespeichert');
-            }
             _showToast('eTermin Konfiguration gespeichert', 'success');
+            loadEterminOverview();
         } catch (err) {
             addLog(id, 'err', 'Speichern fehlgeschlagen: ' + err.message);
             _showToast('Fehler: ' + err.message, 'error');
