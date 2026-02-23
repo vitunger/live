@@ -2450,8 +2450,153 @@
                 </div>
 
 
-                <div id="aktenschrankView" class="view" style="display: none;"></div>
+                <div id="aktenschrankView" class="view" style="display: none;">
+                    <h1 class="h1-headline text-gray-800 mb-6" data-i18n="h_filingcab">AKTENSCHRANK</h1>
 
+                    <!-- Search & Upload Bar -->
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center space-x-3 flex-1">
+                            <div class="relative flex-1 max-w-md">
+                                <input type="text" id="aktenSearch" onkeyup="filterAkten()" placeholder="Dokument suchen..." class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-vit-orange">
+                                <svg class="absolute left-3 top-3 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            </div>
+                        </div>
+                        <button onclick="document.getElementById('aktenUploadModal').classList.remove('hidden')" class="px-4 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">+ Dokument hochladen</button>
+                    </div>
+
+                    <!-- Folder Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8" id="aktenFolders">
+
+                        <!-- 1. Vertraege & Recht -->
+                        <div class="akten-folder vit-card p-5 cursor-pointer hover:shadow-lg transition group" onclick="openAktenFolder('vertraege')">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="p-3 bg-blue-100 rounded-xl group-hover:bg-blue-200 transition">
+                                    <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                </div>
+                                <span class="text-xs font-bold bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">8</span>
+                            </div>
+                            <h3 class="font-bold text-gray-800 mb-1">Vertraege &amp; Recht</h3>
+                            <p class="text-xs text-gray-500">Miet-, Franchise-, Arbeitsvertraege, Versicherungen</p>
+                            <p class="text-xs text-gray-400 mt-2">Zuletzt: 15.01.2026</p>
+                        </div>
+
+                        <!-- 2. Finanzen & Buchhaltung -->
+                        <div class="akten-folder vit-card p-5 cursor-pointer hover:shadow-lg transition group" onclick="openAktenFolder('finanzen')">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="p-3 bg-green-100 rounded-xl group-hover:bg-green-200 transition">
+                                    <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                </div>
+                                <span class="text-xs font-bold bg-green-100 text-green-700 rounded-full px-2 py-0.5">14</span>
+                            </div>
+                            <h3 class="font-bold text-gray-800 mb-1">Finanzen &amp; Buchhaltung</h3>
+                            <p class="text-xs text-gray-500">BWAs, Jahresabschluesse, Steuerbescheide, Rechnungen</p>
+                            <p class="text-xs text-gray-400 mt-2">Zuletzt: 05.02.2026</p>
+                        </div>
+
+                        <!-- 3. Personal & HR -->
+                        <div class="akten-folder vit-card p-5 cursor-pointer hover:shadow-lg transition group" onclick="openAktenFolder('personal')">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="p-3 bg-purple-100 rounded-xl group-hover:bg-purple-200 transition">
+                                    <svg class="w-7 h-7 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                </div>
+                                <span class="text-xs font-bold bg-purple-100 text-purple-700 rounded-full px-2 py-0.5">11</span>
+                            </div>
+                            <h3 class="font-bold text-gray-800 mb-1">Personal &amp; HR</h3>
+                            <p class="text-xs text-gray-500">Arbeitsvertraege, Lohn, Urlaub, Fortbildungen</p>
+                            <p class="text-xs text-gray-400 mt-2">Zuletzt: 31.01.2026</p>
+                        </div>
+
+                        <!-- 4. Standort & Betrieb -->
+                        <div class="akten-folder vit-card p-5 cursor-pointer hover:shadow-lg transition group" onclick="openAktenFolder('standort')">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="p-3 bg-orange-100 rounded-xl group-hover:bg-orange-200 transition">
+                                    <svg class="w-7 h-7 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                </div>
+                                <span class="text-xs font-bold bg-orange-100 text-orange-700 rounded-full px-2 py-0.5">6</span>
+                            </div>
+                            <h3 class="font-bold text-gray-800 mb-1">Standort &amp; Betrieb</h3>
+                            <p class="text-xs text-gray-500">Grundrisse, Genehmigungen, Inventar, Wartung</p>
+                            <p class="text-xs text-gray-400 mt-2">Zuletzt: 10.12.2025</p>
+                        </div>
+
+                        <!-- 5. Marketing & Branding -->
+                        <div class="akten-folder vit-card p-5 cursor-pointer hover:shadow-lg transition group" onclick="openAktenFolder('marketing')">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="p-3 bg-pink-100 rounded-xl group-hover:bg-pink-200 transition">
+                                    <svg class="w-7 h-7 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-4 12v4m-4-4v4m8-12V8a4 4 0 00-8 0v4m-2 0h12a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2z"/></svg>
+                                </div>
+                                <span class="text-xs font-bold bg-pink-100 text-pink-700 rounded-full px-2 py-0.5">9</span>
+                            </div>
+                            <h3 class="font-bold text-gray-800 mb-1">Marketing &amp; Branding</h3>
+                            <p class="text-xs text-gray-500">Brand Guidelines, Vorlagen, Druckdaten, Fotos</p>
+                            <p class="text-xs text-gray-400 mt-2">Zuletzt: 03.02.2026</p>
+                        </div>
+
+                        <!-- 6. Lieferanten & Einkauf -->
+                        <div class="akten-folder vit-card p-5 cursor-pointer hover:shadow-lg transition group" onclick="openAktenFolder('lieferanten')">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="p-3 bg-cyan-100 rounded-xl group-hover:bg-cyan-200 transition">
+                                    <svg class="w-7 h-7 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                                </div>
+                                <span class="text-xs font-bold bg-cyan-100 text-cyan-700 rounded-full px-2 py-0.5">7</span>
+                            </div>
+                            <h3 class="font-bold text-gray-800 mb-1">Lieferanten &amp; Einkauf</h3>
+                            <p class="text-xs text-gray-500">Rahmenvertraege, Preislisten, Konditionen</p>
+                            <p class="text-xs text-gray-400 mt-2">Zuletzt: 20.01.2026</p>
+                        </div>
+
+                        <!-- 7. Diverses -->
+                        <div class="akten-folder vit-card p-5 cursor-pointer hover:shadow-lg transition group" onclick="openAktenFolder('diverses')">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="p-3 bg-gray-100 rounded-xl group-hover:bg-gray-200 transition">
+                                    <svg class="w-7 h-7 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                                </div>
+                                <span class="text-xs font-bold bg-gray-200 text-gray-700 rounded-full px-2 py-0.5">3</span>
+                            </div>
+                            <h3 class="font-bold text-gray-800 mb-1">Diverses</h3>
+                            <p class="text-xs text-gray-500">Sonstiges, Notizen, Protokolle, Temporaeres</p>
+                            <p class="text-xs text-gray-400 mt-2">Zuletzt: 08.02.2026</p>
+                        </div>
+
+                    </div>
+
+                    <!-- Folder Detail View (hidden by default) -->
+                    <div id="aktenFolderDetail" class="hidden">
+                        <div class="flex items-center space-x-3 mb-4">
+                            <button onclick="closeAktenFolder()" class="p-2 rounded-lg border border-gray-300 hover:bg-gray-100 text-gray-600">&#9664; Zurueck</button>
+                            <h2 class="text-lg font-semibold text-gray-800" id="aktenFolderTitle">Ordner</h2>
+                        </div>
+                        <div class="vit-card overflow-hidden">
+                            <table class="w-full text-sm">
+                                <thead><tr class="bg-gray-50"><th class="text-left py-2.5 px-4 font-semibold text-gray-600">Dokument</th><th class="text-left py-2.5 px-4 font-semibold text-gray-600">Typ</th><th class="text-left py-2.5 px-4 font-semibold text-gray-600">Hochgeladen</th><th class="text-left py-2.5 px-4 font-semibold text-gray-600">Groesse</th><th class="text-right py-2.5 px-4 font-semibold text-gray-600">Aktion</th></tr></thead>
+                                <tbody id="aktenFileList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Upload Modal -->
+                    <div id="aktenUploadModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-semibold">Dokument hochladen</h3>
+                                <button onclick="document.getElementById('aktenUploadModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+                            </div>
+                            <div class="space-y-3">
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                    <option>Vertraege &amp; Recht</option><option>Finanzen &amp; Buchhaltung</option><option>Personal &amp; HR</option>
+                                    <option>Standort &amp; Betrieb</option><option>Marketing &amp; Branding</option><option>Lieferanten &amp; Einkauf</option><option>Diverses</option>
+                                </select>
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-vit-orange transition cursor-pointer">
+                                    <svg class="w-10 h-10 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                                    <p class="text-sm text-gray-500">Datei hierher ziehen oder <span class="text-vit-orange font-semibold">durchsuchen</span></p>
+                                    <p class="text-xs text-gray-400 mt-1">PDF, XLSX, DOCX, JPG – max. 25 MB</p>
+                                </div>
+                                <input type="text" placeholder="Beschreibung (optional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                <button onclick="document.getElementById('aktenUploadModal').classList.add('hidden')" class="w-full bg-vit-orange text-white py-2 rounded-lg font-semibold hover:opacity-90">Hochladen</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div id="supportView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-6" data-i18n="h_support">SUPPORT</h1>
@@ -7117,7 +7262,7 @@
 <!-- Office React component removed - now loaded via /portal/views/office.js -->
 <script src="/portal/views/office-admin.js?v=2"></script>
 
-<script type="module" src="/portal/app.js?v=1771838900"></script>
+<script type="module" src="/portal/app.js?v=1771838500"></script>
 </body>
 </html>
 
