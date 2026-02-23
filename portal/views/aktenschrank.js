@@ -267,7 +267,7 @@ export async function startAktenUpload(){
         if(!insR.error&&insR.data){await s.from('dokument_audit').insert({dokument_id:insR.data.id,aktion:'hochgeladen',details:{datei_name:file.name,datei_groesse:file.size},user_id:u?u.id:null});_akten.dokumente.unshift(insR.data);
         // KI-Klassifikation asynchron starten
         triggerKiClassification(insR.data.id);
-        }}}catch(err){console.error('Upload err:',file.name,err);aktenToast('\u274C Fehler: '+file.name);}}
+        }}catch(err){console.error('Upload err:',file.name,err);aktenToast('\u274C Fehler: '+file.name);}}
     bar.style.width='100%';stat.textContent='\u2705 Hochgeladen! \uD83E\uDD16 KI analysiert...';
     setTimeout(function(){closeAktenUpload();_akten.uploadQueue=[];renderFolders();updateStats();updateInboxBadge();aktenToast('\u2705 '+total+' Dokument'+(total>1?'e':'')+' hochgeladen');},800);
 }
