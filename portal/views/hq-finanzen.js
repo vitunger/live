@@ -726,6 +726,7 @@ export function showHqMktTab(tab) {
     if (tab === 'leadreport') renderHqMktLeadReport();
     if (tab === 'jahresgespraeche') renderHqMktJahresgespraeche();
     if (tab === 'handlungsbedarf') renderHqMktHandlungsbedarf();
+    if (tab === 'videoFreigabe' && window.vpRenderHqReview) vpRenderHqReview();
 }
 
 export function renderHqMktBudget() { /* preserved from original - delegates to hqStandorte */ }
