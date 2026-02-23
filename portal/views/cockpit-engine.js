@@ -87,14 +87,16 @@ var now = new Date();
 return Math.ceil((deadline - now) / (1000*60*60*24));
 }
 
-export function ratingBadge(rating) {
+export function ratingBadge(rating, isSubmitted) {
 var map = {
 gold: {t:'🥇 GOLD', c:'#ca8a04', bg:'rgba(202,138,4,0.1)'},
 ok: {t:'✅ OK', c:'#16a34a', bg:'rgba(22,163,74,0.1)'},
 overdue: {t:'🚨 ÜBERFÄLLIG', c:'#dc2626', bg:'rgba(220,38,38,0.1)'},
+late: {t:'⚠️ VERSPÄTET', c:'#ea580c', bg:'rgba(234,88,12,0.1)'},
 missing: {t:'⏳ AUSSTEHEND', c:'#9ca3af', bg:'rgba(156,163,175,0.1)'}
 };
-var m = map[rating] || map.missing;
+var key = (rating === 'overdue' && isSubmitted) ? 'late' : rating;
+var m = map[key] || map.missing;
 return '<span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:6px;color:'+m.c+';background:'+m.bg+'">'+m.t+'</span>';
 }
 
@@ -143,7 +145,7 @@ if(submitted && rating !== 'missing') {
 // Already submitted
 titleEl.textContent = 'BWA für ' + moName + ' eingereicht';
 subEl.textContent = 'Eingereicht am ' + submitted.split('-').reverse().join('.');
-badgeEl.innerHTML = ratingBadge(rating);
+badgeEl.innerHTML = ratingBadge(rating, true);
 badgeEl.style.display = '';
 ctaEl.style.display = 'none';
 daysEl.textContent = '✓';
@@ -244,33 +246,22 @@ if(el('bwaNwOverdue')) el('bwaNwOverdue').textContent = '🚨 Überfällig: ' + 
 
 // ──── KPI REPORT (Sofort-Nutzen nach Upload) ────
 export function showKpiReport(bwaMo, rating) {
+// Delegate to the live async version from bwa-cockpit.js if available
+// This stub only exists as fallback – bwa-cockpit.js should have already
+// registered the real async function on window.showKpiReport
+if(window._bwaCockpitShowKpiReport) {
+window._bwaCockpitShowKpiReport(bwaMo, rating);
+return;
+}
+// Minimal fallback: show loading state (the real function will overwrite this)
 var report = document.getElementById('bwaKpiReport');
 if(!report) return;
 report.style.display = '';
-
 var moName = MO_NAMES[bwaMo.m] + ' ' + bwaMo.y;
 document.getElementById('bwaKpiReportMonth').textContent = moName;
 document.getElementById('bwaKpiRating').innerHTML = ratingBadge(rating);
-
-// Demo KPIs
-var kpis = [
-{l:'Umsatz', v:'68.400 €', c:'+4.2%', co:'#16a34a'},
-{l:'Rohertrag', v:'24.100 €', c:'36.7%', co:'#2563eb'},
-{l:'Personalkosten', v:'13.600 €', c:'19.9%', co:'#ca8a04'},
-{l:'Ergebnis', v:'3.200 €', c:'+12%', co:'#16a34a'}
-];
 var grid = document.getElementById('bwaKpiReportGrid');
-grid.innerHTML = kpis.map(function(k){
-return '<div style="padding:12px;background:var(--c-bg2);border-radius:10px;text-align:center"><p style="font-size:9px;color:var(--c-muted);text-transform:uppercase">'+k.l+'</p><p style="font-size:18px;font-weight:800;color:var(--c-text);margin-top:2px">'+k.v+'</p><p style="font-size:10px;font-weight:600;color:'+k.co+'">'+k.c+'</p></div>';
-}).join('');
-
-// Insights
-var recs = [
-'Rohertragsmarge +2.5 Pp über Netzwerk-Durchschnitt – starke Performance! 💪',
-'Personalkosten leicht über Schnitt (19.9% vs. 18.5%) – Arbeitszeitplanung prüfen.',
-'Werkstatt-Umsatz +8% ggü. Vorjahr – Trend beibehalten mit proaktiver Service-Ansprache.'
-];
-document.getElementById('bwaKpiRecList').innerHTML = recs.map(function(r){return '<li>→ '+r+'</li>';}).join('');
+if(grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--c-muted);font-size:12px;padding:8px">⏳ Lade echte Zahlen…</div>';
 }
 
 // ──── BENCHMARK LOCK ────
@@ -335,7 +326,7 @@ var daysColor = s.submitted ? '#16a34a' : (dl>0 ? '#9ca3af' : '#dc2626');
 return '<tr class="text-sm">'+
     '<td class="py-2.5 font-semibold text-gray-800">'+s.name+'</td>'+
     '<td class="py-2.5">'+(s.submitted ? '<span class="text-green-600 text-xs font-semibold">✓ Eingereicht</span>' : '<span class="text-gray-400 text-xs">Ausstehend</span>')+'</td>'+
-    '<td class="py-2.5">'+ratingBadge(s.rating)+'</td>'+
+    '<td class="py-2.5">'+ratingBadge(s.rating, !!s.submitted)+'</td>'+
     '<td class="py-2.5 text-xs text-gray-500">'+(s.submitted||'—')+'</td>'+
     '<td class="py-2.5">'+(s.rating==='missing'||s.rating==='overdue' ? eskalationBadge(stufe) : '<span class="text-xs text-gray-300">—</span>')+'</td>'+
     '<td class="py-2.5 text-xs" style="color:'+daysColor+'">'+daysText+'</td>'+
