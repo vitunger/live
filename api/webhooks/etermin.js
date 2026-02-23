@@ -60,6 +60,14 @@ module.exports = async function(req, res) {
         .limit(1).maybeSingle();
       if (m) stdId = m.standort_id;
     }
+    // Fallback: if only one config exists, use that standort
+    if (!stdId) {
+      const { data: configs } = await sb.from("etermin_config")
+        .select("standort_id").eq("is_active", true).limit(2);
+      if (configs && configs.length === 1 && configs[0].standort_id) {
+        stdId = configs[0].standort_id;
+      }
+    }
 
     // DELETE
     if (cmd === "DELETED") {
