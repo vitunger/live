@@ -567,25 +567,18 @@ export async function loadModulStatus() {
 }
 
 export function applyModulStatus() {
-    // Alle Sidebar-Buttons mit data-module durchgehen
-    document.querySelectorAll('[data-module]').forEach(function(btn) {
-        var key = btn.getAttribute('data-module');
-        var isHqUser = (window.sbProfile && window.sbProfile.is_hq) || (window.currentRoles && window.currentRoles.indexOf('hq') !== -1);
-        var ebene = (window.sbModulEbene||{})[key] || 'partner';
-        // HQ-User sehen hq_status für HQ-Module und "beide"-Module
-        var status;
-        if(isHqUser && (ebene === 'hq' || ebene === 'beide')) {
-            status = (sbHqModulStatus||{})[key] || sbModulStatus[key] || 'aktiv';
-        } else {
-            status = sbModulStatus[key] || 'aktiv';
-        }
+    var isHqUser = (window.sbProfile && window.sbProfile.is_hq) || (window.currentRoles && window.currentRoles.indexOf('hq') !== -1);
+    
+    // Map from data-hq-module attribute to modul_key in DB
+    var hqKeyMap = {hqOffice:'office',hqBilling:'abrechnung',hqCockpit:'dashboards',hqKommandozentrale:'dashboards',hqHandlungsbedarf:'dashboards',hqFinanzen:'controlling',hqMarketing:'marketing',hqEinkauf:'einkauf',hqStandorte:'allgemein',hqSupport:'support',hqEntwicklung:'entwicklung',hqEinstellungen:'allgemein',hqAkademie:'wissen'};
 
+    // Helper: apply status to a sidebar button
+    function applyToBtn(btn, status, key) {
         // Remove old badges first
         var oldBadge = btn.querySelector('.modul-wip-badge,.modul-demo-badge,.modul-beta-badge');
         if(oldBadge) oldBadge.remove();
 
         if(status === 'deaktiviert') {
-            // On QuickActions grid: gray out instead of hiding
             if(btn.closest('#quickActionsGrid')) {
                 btn.classList.remove('hidden');
                 btn.style.display = '';
@@ -595,10 +588,8 @@ export function applyModulStatus() {
                 btn.style.display = 'none';
             }
         } else if(status === 'beta') {
-            // Beta: only visible for assigned beta users + HQ
             var isBetaUser = (window._betaModules||[]).indexOf(key) !== -1;
             if(isHqUser || isBetaUser) {
-                // Show with beta badge
                 btn.style.display = '';
                 btn.style.opacity = '';
                 btn.style.pointerEvents = '';
@@ -610,7 +601,6 @@ export function applyModulStatus() {
                     btn.appendChild(badge);
                 }
             } else {
-                // Not a beta user → hide completely
                 btn.style.display = 'none';
             }
         } else if(status === 'in_bearbeitung') {
@@ -642,6 +632,27 @@ export function applyModulStatus() {
             btn.style.pointerEvents = '';
             btn.style.cursor = '';
         }
+    }
+
+    // Partner/Shared sidebar buttons (data-module)
+    document.querySelectorAll('[data-module]').forEach(function(btn) {
+        var key = btn.getAttribute('data-module');
+        var ebene = (window.sbModulEbene||{})[key] || 'partner';
+        var status;
+        if(isHqUser && (ebene === 'hq' || ebene === 'beide')) {
+            status = (sbHqModulStatus||{})[key] || sbModulStatus[key] || 'aktiv';
+        } else {
+            status = sbModulStatus[key] || 'aktiv';
+        }
+        applyToBtn(btn, status, key);
+    });
+
+    // HQ sidebar buttons (data-hq-module)
+    document.querySelectorAll('[data-hq-module]').forEach(function(btn) {
+        var hqKey = btn.getAttribute('data-hq-module');
+        var dbKey = hqKeyMap[hqKey] || hqKey.replace('hq','').toLowerCase();
+        var status = (sbHqModulStatus||{})[dbKey] || 'aktiv';
+        applyToBtn(btn, status, dbKey);
     });
 
     // Wissen-Tabs in Fachbereichen ausblenden wenn Modul deaktiviert
