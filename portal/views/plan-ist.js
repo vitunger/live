@@ -193,7 +193,11 @@ export async function parsePlanFile() {
             if(hasData) {
                 if(statusEl) statusEl.innerHTML = '<p class="text-xs text-green-600 mt-2">✅ Planung erkannt! ('+result.plan_bwa.length+' Konten, Format: '+meta.format+')</p>';
             } else {
-                // Parser matched format but couldn't extract values → KI fallback
+                // Parser matched format but couldn't extract values → log available kontengruppen for debugging
+                var kgs = {};
+                result.plan_bwa.forEach(function(r) { if(r.kontengruppe) kgs[r.kontengruppe] = (kgs[r.kontengruppe]||0) + 1; });
+                console.warn('[Plan-Parser] Available kontengruppen:', Object.keys(kgs));
+                console.warn('[Plan-Parser] First 5 rows:', result.plan_bwa.slice(0,5).map(function(r) { return r.kontengruppe + ' / ' + r.bezeichnung + ' → jan=' + r.jan; }));
                 console.warn('[Plan-Parser] Planung format detected but all values zero, falling back to KI');
                 planMonths = {};
             }
