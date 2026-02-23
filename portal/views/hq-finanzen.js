@@ -20,6 +20,7 @@ var hqFinPlanMap = {};   // standort_id → plan data
 var hqFinSortCol = 'name';
 var hqFinSortAsc = true;
 var hqFinLoaded = false;
+var hqFinSelectedMonth = 'ytd'; // 'ytd' or 1-12
 var _hqFinMonatLabels = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
 
 // ── Helpers ──
@@ -189,29 +190,58 @@ function renderHqFinKpis() {
     var el = document.getElementById('hqFinKpisNew');
     if (!el) return;
 
-    var active = hqFinStandorte.filter(function(s) { return s.umsatzIst > 0; });
-    var totalU = hqFinStandorte.reduce(function(a, s) { return a + s.umsatzIst; }, 0);
-    var totalP = hqFinStandorte.reduce(function(a, s) { return a + s.umsatzPlan; }, 0);
-    var avgRoh = active.length ? (active.reduce(function(a, s) { return a + s.rohertrag; }, 0) / active.length).toFixed(1) : 0;
+    var currentMonth1 = new Date().getMonth() + 1; // 1-based
+    var sel = hqFinSelectedMonth;
+    
+    // Build month selector
+    var selHtml = '<div class="flex items-center gap-3 mb-4"><span class="text-xs text-gray-500 font-semibold">Zeitraum:</span>';
+    selHtml += '<select onchange="hqFinChangeMonth(this.value)" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-vit-orange focus:border-vit-orange">';
+    selHtml += '<option value="ytd"' + (sel === 'ytd' ? ' selected' : '') + '>Gesamt YTD (Jan – ' + _hqFinMonatLabels[currentMonth1-1] + ')</option>';
+    for (var mm = 1; mm <= currentMonth1; mm++) {
+        selHtml += '<option value="' + mm + '"' + (sel == mm ? ' selected' : '') + '>' + _hqFinMonatLabels[mm-1] + ' ' + new Date().getFullYear() + '</option>';
+    }
+    selHtml += '</select></div>';
+
+    // Calculate values based on selection
+    var getIst = function(s) {
+        if (sel === 'ytd') return s.umsatzIst;
+        var monatBwa = s.bwaMonateDetail.find(function(b) { return b.monat == sel; });
+        return monatBwa ? monatBwa.umsatz : 0;
+    };
+    var getRoh = function(s) {
+        if (sel === 'ytd') return s.rohertrag;
+        var monatBwa = s.bwaMonateDetail.find(function(b) { return b.monat == sel; });
+        if (!monatBwa || !monatBwa.umsatz) return 0;
+        return monatBwa.rohertrag / monatBwa.umsatz * 100;
+    };
+    var getPlan = function(s) {
+        if (!s.planDaten) return 0;
+        if (sel === 'ytd') return s.umsatzPlan;
+        var pd = s.planDaten;
+        var mp = pd[sel] || pd[String(sel)];
+        return mp ? (mp.umsatz || 0) : 0;
+    };
+
+    var active = hqFinStandorte.filter(function(s) { return getIst(s) > 0; });
+    var totalU = hqFinStandorte.reduce(function(a, s) { return a + getIst(s); }, 0);
+    var totalP = hqFinStandorte.reduce(function(a, s) { return a + getPlan(s); }, 0);
+    var avgRoh = active.length ? (active.reduce(function(a, s) { return a + getRoh(s); }, 0) / active.length).toFixed(1) : 0;
     var planAbw = totalP > 0 ? Math.round((totalU / totalP - 1) * 100) : null;
 
-    // BWA count: how many standorte have at least 1 BWA this year
+    var zeitraumLabel = sel === 'ytd' ? 'YTD' : _hqFinMonatLabels[sel-1];
+
+    // BWA count
     var mitBwa = hqFinStandorte.filter(function(s) { return s.bwaMonate > 0; }).length;
-    // Last completed month name
-    var lastMonth = new Date().getMonth(); // 0=Jan means last completed = Dec of prev year
-    // Actually: current month is Feb (index 1), last completed = Jan (index 0)
-    // Last completed month: if we're in Feb (index 1), last completed = Jan (index 0)
-    var currentMonth0 = new Date().getMonth(); // 0-based
+    var currentMonth0 = new Date().getMonth();
     var lastCompletedMonth = currentMonth0 > 0 ? currentMonth0 - 1 : 11;
     var lastCompletedYear = currentMonth0 > 0 ? new Date().getFullYear() : new Date().getFullYear() - 1;
     var monatName = _hqFinMonatLabels[lastCompletedMonth] || '?';
-
-    // Standorte with data (BWA or WaWi)
     var mitDaten = hqFinStandorte.filter(function(s) { return s.datenquelle !== 'keine'; }).length;
 
-    el.innerHTML = ''
+    el.innerHTML = selHtml
+        + '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">'
         + '<div class="vit-card p-5">'
-        + '<p class="text-xs text-gray-400 uppercase tracking-wide">Netzwerk-Umsatz YTD</p>'
+        + '<p class="text-xs text-gray-400 uppercase tracking-wide">Netzwerk-Umsatz ' + zeitraumLabel + '</p>'
         + '<p class="text-2xl font-bold text-gray-800">' + hqFinFmtE(totalU) + '</p>'
         + '<p class="text-xs ' + (planAbw === null ? 'text-gray-400' : planAbw >= 0 ? 'text-green-600' : 'text-red-500') + '">'
         + (planAbw === null ? mitDaten + ' von ' + hqFinStandorte.length + ' mit Daten' : 'Plan: ' + hqFinFmtE(totalP) + ' (' + (planAbw >= 0 ? '+' : '') + planAbw + '%)')
@@ -233,7 +263,15 @@ function renderHqFinKpis() {
         + '<span class="text-blue-600">' + hqFinStandorte.filter(function(s){return s.datenquelle==='bwa';}).length + ' BWA</span>'
         + ' · <span class="text-green-600">' + hqFinStandorte.filter(function(s){return s.datenquelle==='wawi';}).length + ' WaWi</span>'
         + ' · <span class="text-gray-400">' + hqFinStandorte.filter(function(s){return s.datenquelle==='keine';}).length + ' keine</span></p>'
-        + '<p class="text-xs text-gray-400">BWA hat Vorrang vor WaWi</p></div>';
+        + '<p class="text-xs text-gray-400">BWA hat Vorrang vor WaWi</p></div>'
+        + '</div>';
+}
+
+// Month change handler
+export function hqFinChangeMonth(val) {
+    hqFinSelectedMonth = val === 'ytd' ? 'ytd' : parseInt(val);
+    renderHqFinKpis();
+    renderHqFinUebersicht();
 }
 
 // === TAB SYSTEM ===
@@ -268,14 +306,35 @@ function renderHqFinUebersicht() {
         return;
     }
 
+    // Helper functions for month-filtered values
+    var sel = hqFinSelectedMonth;
+    var getIst = function(s) {
+        if (sel === 'ytd') return s.umsatzIst;
+        var monatBwa = s.bwaMonateDetail.find(function(b) { return b.monat == sel; });
+        return monatBwa ? monatBwa.umsatz : 0;
+    };
+    var getRoh = function(s) {
+        if (sel === 'ytd') return s.rohertrag;
+        var monatBwa = s.bwaMonateDetail.find(function(b) { return b.monat == sel; });
+        if (!monatBwa || !monatBwa.umsatz) return 0;
+        return parseFloat((monatBwa.rohertrag / monatBwa.umsatz * 100).toFixed(1));
+    };
+    var getPlan = function(s) {
+        if (!s.planDaten) return 0;
+        if (sel === 'ytd') return s.umsatzPlan;
+        var pd = s.planDaten;
+        var mp = pd[sel] || pd[String(sel)];
+        return mp ? (mp.umsatz || 0) : 0;
+    };
+
     // Sort
     var sorted = hqFinStandorte.slice().sort(function(a, b) {
         var va, vb;
         switch (hqFinSortCol) {
-            case 'umsatzIst': va = a.umsatzIst; vb = b.umsatzIst; break;
-            case 'plan': va = a.umsatzPlan; vb = b.umsatzPlan; break;
-            case 'abw': va = a.umsatzPlan ? (a.umsatzIst / a.umsatzPlan) : -999; vb = b.umsatzPlan ? (b.umsatzIst / b.umsatzPlan) : -999; break;
-            case 'rohertrag': va = a.rohertrag; vb = b.rohertrag; break;
+            case 'umsatzIst': va = getIst(a); vb = getIst(b); break;
+            case 'plan': va = getPlan(a); vb = getPlan(b); break;
+            case 'abw': va = getPlan(a) ? (getIst(a) / getPlan(a)) : -999; vb = getPlan(b) ? (getIst(b) / getPlan(b)) : -999; break;
+            case 'rohertrag': va = getRoh(a); vb = getRoh(b); break;
             default: va = a.name.toLowerCase(); vb = b.name.toLowerCase();
         }
         if (typeof va === 'string') return hqFinSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
@@ -300,7 +359,10 @@ function renderHqFinUebersicht() {
     html += '</tr></thead><tbody>';
 
     sorted.forEach(function(s) {
-        var abw = s.umsatzPlan > 0 ? Math.round((s.umsatzIst / s.umsatzPlan - 1) * 100) : null;
+        var sIst = getIst(s);
+        var sPlan = getPlan(s);
+        var sRoh = getRoh(s);
+        var abw = sPlan > 0 ? Math.round((sIst / sPlan - 1) * 100) : null;
         var quelleBadge = s.datenquelle === 'bwa'
             ? '<span class="text-[10px] px-1.5 py-0.5 rounded font-semibold bg-blue-50 text-blue-600">BWA</span>'
             : s.datenquelle === 'wawi'
@@ -329,10 +391,10 @@ function renderHqFinUebersicht() {
 
         html += '<tr class="border-b border-gray-100 hover:bg-gray-50">';
         html += '<td class="py-2.5 px-3 font-semibold text-gray-800">' + _escH(s.name) + '</td>';
-        html += '<td class="py-2.5 px-3 text-right font-bold ' + (s.umsatzIst > 0 ? 'text-gray-800' : 'text-gray-300') + '">' + (s.umsatzIst > 0 ? hqFinFmtE(s.umsatzIst) : '—') + '</td>';
-        html += '<td class="py-2.5 px-3 text-right text-gray-400">' + (s.umsatzPlan > 0 ? hqFinFmtE(s.umsatzPlan) : '—') + '</td>';
+        html += '<td class="py-2.5 px-3 text-right font-bold ' + (sIst > 0 ? 'text-gray-800' : 'text-gray-300') + '">' + (sIst > 0 ? hqFinFmtE(sIst) : '—') + '</td>';
+        html += '<td class="py-2.5 px-3 text-right text-gray-400">' + (sPlan > 0 ? hqFinFmtE(sPlan) : '—') + '</td>';
         html += '<td class="py-2.5 px-3 text-right font-semibold ' + (abw === null ? 'text-gray-300' : abw >= 0 ? 'text-green-600' : 'text-red-500') + '">' + (abw === null ? '—' : (abw >= 0 ? '+' : '') + abw + '%') + '</td>';
-        html += '<td class="py-2.5 px-3 text-right font-semibold ' + (s.rohertrag >= 35 ? 'text-green-600' : s.rohertrag >= 30 ? 'text-yellow-600' : s.rohertrag > 0 ? 'text-red-500' : 'text-gray-300') + '">' + (s.rohertrag > 0 ? s.rohertrag + '%' : '—') + '</td>';
+        html += '<td class="py-2.5 px-3 text-right font-semibold ' + (sRoh >= 35 ? 'text-green-600' : sRoh >= 30 ? 'text-yellow-600' : sRoh > 0 ? 'text-red-500' : 'text-gray-300') + '">' + (sRoh > 0 ? sRoh + '%' : '—') + '</td>';
         html += '<td class="py-2.5 px-3 text-center">' + quelleBadge + '</td>';
         html += '<td class="py-2.5 px-3 text-center cursor-pointer hover:bg-blue-50 rounded transition" onclick="hqFinShowBwaPopup(\'' + s.id + '\')" title="BWA-Details anzeigen">' + bwaIcon + '</td>';
         html += '<td class="py-2.5 px-3 text-center cursor-pointer hover:bg-blue-50 rounded transition" onclick="hqFinShowPlanPopup(\'' + s.id + '\')" title="Plan-Details anzeigen">' + planIcon + '</td>';
@@ -971,6 +1033,6 @@ export function renderHqEinkauf() {
 }
 
 // Strangler Fig
-const _exports = {renderHqFinanzen,showHqFinTab,hqFinSort,hqFinOpenBwaUpload,hqFinParsePlan,hqFinShowBwaPopup,hqFinShowBwaDetail,hqFinDownloadBwa,hqFinShowPlanPopup,hqFinOpenPlanUpload,adsFmtEuro,adsFmtK,adsSetText,loadAdsData,renderAdsKpis,renderAdsChart,renderAdsKampagnenTabelle,filterAdsPlattform,renderAdsStandortVergleich,renderAdsSyncInfo,updateMktPerformanceFromAds,renderHqMarketing,showHqMktTab,renderHqMktBudget,renderHqMktLeadReport,renderHqMktJahresgespraeche,renderHqMktHandlungsbedarf,renderMktSpendingChart,renderMktLeadChart,renderHqEinkauf};
+const _exports = {renderHqFinanzen,showHqFinTab,hqFinSort,hqFinChangeMonth,hqFinOpenBwaUpload,hqFinParsePlan,hqFinShowBwaPopup,hqFinShowBwaDetail,hqFinDownloadBwa,hqFinShowPlanPopup,hqFinOpenPlanUpload,adsFmtEuro,adsFmtK,adsSetText,loadAdsData,renderAdsKpis,renderAdsChart,renderAdsKampagnenTabelle,filterAdsPlattform,renderAdsStandortVergleich,renderAdsSyncInfo,updateMktPerformanceFromAds,renderHqMarketing,showHqMktTab,renderHqMktBudget,renderHqMktLeadReport,renderHqMktJahresgespraeche,renderHqMktHandlungsbedarf,renderMktSpendingChart,renderMktLeadChart,renderHqEinkauf};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 console.log('[hq-finanzen.js] Module loaded (v2 redesign) - ' + Object.keys(_exports).length + ' exports registered');
