@@ -1365,37 +1365,28 @@ export function backToTrainingMenu() {
 
 // === REACT PIPELINE MOUNT FUNCTION ===
 var _pipelineReactRoot = null;
-var _pipelineDomNode = null;
-var pipelineRetries = 0;
 export function mountReactPipeline() {
     var root = document.getElementById('react-pipeline-root');
     if(!root) { console.warn('[Pipeline] No root element'); return; }
-    // If same DOM node already has content, skip
-    if(_pipelineDomNode === root && root.childNodes.length > 0) {
-        console.log('[Pipeline] Already mounted on this root');
+    if(typeof window.__PIPELINE_APP !== 'function') {
+        console.log('[Pipeline] Waiting for Babel...');
+        setTimeout(mountReactPipeline, 300);
         return;
     }
-    // Reset retries for new mount attempts
-    if(_pipelineDomNode !== root) pipelineRetries = 0;
-    if(typeof window.__PIPELINE_APP === 'function') {
+    try {
+        if(!_pipelineReactRoot) {
+            _pipelineReactRoot = ReactDOM.createRoot(root);
+        }
+        _pipelineReactRoot.render(React.createElement(window.__PIPELINE_APP));
+        console.log('[Pipeline] ✅ Rendered');
+    } catch(err) {
+        console.error('[Pipeline] ❌ Error:', err);
+        // If createRoot fails (already has root), try unmount first
         try {
-            // Unmount old root if it exists on a different DOM node
-            if(_pipelineReactRoot && _pipelineDomNode !== root) {
-                try { _pipelineReactRoot.unmount(); } catch(e) {}
-            }
             _pipelineReactRoot = ReactDOM.createRoot(root);
             _pipelineReactRoot.render(React.createElement(window.__PIPELINE_APP));
-            _pipelineDomNode = root;
-            console.log('[Pipeline] ✅ Mounted');
-        } catch(err) {
-            console.error('[Pipeline] ❌ Mount error:', err);
-        }
-    } else {
-        pipelineRetries++;
-        if(pipelineRetries < 50) {
-            setTimeout(mountReactPipeline, 300);
-        } else {
-            console.error('[Pipeline] ❌ Babel timeout after 50 retries');
+        } catch(e2) {
+            console.error('[Pipeline] ❌ Retry also failed:', e2);
         }
     }
 }
