@@ -997,17 +997,33 @@ export async function hqFinParsePlanFromModal(standortId) {
         }
         
         // Strategy 3: KI-Fallback if still not enough months
-        if (Object.keys(planMonths).length < 3 && typeof window.callFinanceKi === 'function') {
+        if (Object.keys(planMonths).length < 3) {
             try {
                 if (statusEl) statusEl.innerHTML = '<div class="flex items-center gap-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">🤖 KI-Analyse...</span></div>';
                 var csvText = XLSX.utils.sheet_to_csv(ws).substring(0, 15000);
-                var kiResult = await window.callFinanceKi('jahresplan', null, null, csvText, { jahr: jahr });
-                if (kiResult && kiResult.monate) {
-                    planMonths = {};
-                    for (var km in kiResult.monate) {
-                        var kd = kiResult.monate[km];
-                        if (kd && kd.umsatz) planMonths[km] = { umsatz: kd.umsatz };
+                // Direct edge function call
+                var supabaseUrl = _sb().supabaseUrl || 'https://lwagbkxeofaihwebkab.supabase.co';
+                var session = (await _sb().auth.getSession()).data.session;
+                var kiResp = await fetch(supabaseUrl + '/functions/v1/analyze-finance', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + (session ? session.access_token : '')
+                    },
+                    body: JSON.stringify({ type: 'jahresplan', text_content: csvText, context: { jahr: jahr } })
+                });
+                if (kiResp.ok) {
+                    var kiResult = await kiResp.json();
+                    console.log('[hq-finanzen] KI result:', kiResult);
+                    if (kiResult && kiResult.monate) {
+                        planMonths = {};
+                        for (var km in kiResult.monate) {
+                            var kd = kiResult.monate[km];
+                            if (kd && kd.umsatz) planMonths[km] = { umsatz: kd.umsatz };
+                        }
                     }
+                } else {
+                    console.warn('[hq-finanzen] KI response not ok:', kiResp.status);
                 }
             } catch(kiErr) {
                 console.warn('[hq-finanzen] KI fallback failed:', kiErr.message || kiErr);
