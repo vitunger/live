@@ -3206,13 +3206,19 @@ export async function devKIReleaseVorschlag() {
     if(btn) { btn.disabled = true; btn.innerHTML = '<span class="animate-spin">🧠</span><span>KI denkt nach...</span>'; }
     
     try {
-        // Sammle alle kürzlich umgesetzten + release-geplanten Submissions
+        // Sammle alle umgesetzten + in Arbeit befindlichen Submissions
         var relevant = devSubmissions.filter(function(s) {
-            return ['ausgerollt','release_geplant','im_review','in_entwicklung'].indexOf(s.status) !== -1;
+            return ['ausgerollt','release_geplant','im_review','in_entwicklung','geschlossen'].indexOf(s.status) !== -1;
         });
-        
+        // Fallback: wenn nichts gefunden, nehme alle nicht-abgelehnten der letzten 30 Tage
         if(relevant.length === 0) {
-            _showToast('Keine umgesetzten Features/Bugs gefunden.', 'error');
+            var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
+            relevant = devSubmissions.filter(function(s) {
+                return s.status !== 'abgelehnt' && s.status !== 'geparkt' && new Date(s.created_at) > cutoff;
+            }).slice(0, 20);
+        }
+        if(relevant.length === 0) {
+            _showToast('Keine Features/Bugs für Release-Note gefunden.', 'error');
             if(btn) { btn.disabled = false; btn.innerHTML = '<span>🧠</span><span>KI-Vorschlag generieren</span>'; }
             return;
         }
