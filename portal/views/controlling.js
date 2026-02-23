@@ -1361,7 +1361,27 @@ export async function renderBenchmarks() {
         ];
         
         var h = '<h2 class="text-lg font-semibold text-gray-800 mb-2">Standort-Vergleich</h2>';
-        h += '<p class="text-sm text-gray-500 mb-6">Dein Standort vs. Netzwerk-Durchschnitt ('+mLabels[own.monat]+' '+own.jahr+') · '+nCount+' Standorte</p>';
+        h += '<p class="text-sm text-gray-500 mb-4">Dein Standort vs. Netzwerk-Durchschnitt ('+mLabels[own.monat]+' '+own.jahr+')</p>';
+        
+        // Netzwerk-Status Anzeige
+        h += '<div class="flex items-center space-x-3 mb-6 p-3 rounded-lg '+(nCount >= 5 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200')+'">';
+        h += '<div class="text-2xl font-bold '+(nCount >= 5 ? 'text-green-600' : 'text-yellow-600')+'">'+nCount+'</div>';
+        h += '<div><p class="text-sm font-semibold '+(nCount >= 5 ? 'text-green-700' : 'text-yellow-700')+'">Standorte mit BWA im Netzwerk</p>';
+        if(nCount < 5) {
+            h += '<p class="text-xs text-yellow-600">Benchmark wird ab 5 eingereichten BWAs freigeschaltet. Noch '+(5 - nCount)+' fehlend.</p>';
+        } else {
+            h += '<p class="text-xs text-green-600">Ausreichend Daten fuer aussagekraeftigen Vergleich.</p>';
+        }
+        h += '</div></div>';
+        
+        if(nCount < 5) {
+            h += '<div class="text-center py-8"><div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-3"><span class="text-2xl">🔒</span></div>';
+            h += '<p class="text-gray-500 text-sm">Der Netzwerk-Benchmark wird freigeschaltet sobald mindestens <strong>5 Standorte</strong> ihre BWA fuer '+mLabels[own.monat]+' '+own.jahr+' eingereicht haben.</p>';
+            h += '<p class="text-xs text-gray-400 mt-2">So stellen wir sicher, dass einzelne Standorte nicht identifizierbar sind.</p></div>';
+            el.innerHTML = h;
+            return;
+        }
+        
         h += '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">';
         
         kpis.forEach(function(k) {
