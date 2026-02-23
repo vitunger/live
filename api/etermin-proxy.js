@@ -35,8 +35,11 @@ async function eterminFetch(path, pub, priv) {
   const r = await fetch(ETERMIN + path, {
     headers: { publickey: pub, salt, signature: sig, Accept: "application/json" }
   });
-  if (!r.ok) throw new Error("eTermin " + r.status + ": " + (await r.text()).slice(0, 200));
-  return r.json();
+  const text = await r.text();
+  if (!r.ok) throw new Error("eTermin " + r.status + ": " + text.slice(0, 200));
+  // eTermin returns empty body for empty results
+  if (!text || text.trim() === "") return [];
+  try { return JSON.parse(text); } catch(e) { return text; }
 }
 
 module.exports = async function(req, res) {
