@@ -91,7 +91,7 @@ export async function loadAktenFiles(){
     try{
         var s=_sb();
         if(!s){await new Promise(function(r){setTimeout(r,1500);});s=_sb();}
-        if(!s){console.warn('[aktenschrank] Supabase not ready');renderFoldersDemo();return;}
+        if(!s){console.warn('[aktenschrank] Supabase not ready');renderFoldersEmpty();return;}
         var p=_sbProfile();
         var [oR,tR,dR]=await Promise.all([
             s.from('dokument_ordner').select('*').eq('ist_aktiv',true).order('sort_order'),
@@ -104,13 +104,13 @@ export async function loadAktenFiles(){
         if(_akten.ordner.length>0){_akten.loaded=true;aktenLoaded=true;}
         aktenFolderLabels={};_akten.ordner.forEach(function(o){aktenFolderLabels[o.key]=o.name;});
         renderFolders();updateStats();updateInboxBadge();
-    }catch(err){console.warn('[aktenschrank] Load error:',err);renderFoldersDemo();}
+    }catch(err){console.warn('[aktenschrank] Load error:',err);renderFoldersEmpty();}
 }
 
 // RENDER FOLDERS
 function renderFolders(){
     var c=document.getElementById('aktenFolders');if(!c)return;
-    if(_akten.ordner.length===0){renderFoldersDemo();return;}
+    if(_akten.ordner.length===0){renderFoldersEmpty();return;}
     var html='';
     _akten.ordner.forEach(function(o){
         var cnt=_akten.dokumente.filter(function(d){return d.ordner_id===o.id;}).length;
@@ -126,22 +126,9 @@ function renderFolders(){
     c.innerHTML=html;
 }
 
-function renderFoldersDemo(){
-    var demo=[
-        {icon:'\uD83D\uDCB0',name:'Umsatz & Erl\u00f6se',desc:'Kundenrechnungen, Gutschriften, Provisionen',color:'#059669'},
-        {icon:'\uD83D\uDC65',name:'Personalkosten',desc:'Lohn, Gehalt, SV-Beitr\u00e4ge, Fortbildung',color:'#DC2626'},
-        {icon:'\uD83C\uDFE0',name:'Raumkosten & Nebenkosten',desc:'Miete, Strom, Gas, Wasser, Telefon',color:'#D97706'},
-        {icon:'\uD83D\uDEE1\uFE0F',name:'Versicherungen & Beitr\u00e4ge',desc:'Haftpflicht, IHK, BG',color:'#7C3AED'},
-        {icon:'\uD83D\uDCE2',name:'Werbe- & Reisekosten',desc:'Werbung, Messen, Bewirtung',color:'#EC4899'},
-        {icon:'\uD83D\uDCE6',name:'Wareneinsatz & Lieferanten',desc:'Lieferantenrechnungen, Einkauf',color:'#2563EB'},
-        {icon:'\uD83D\uDE97',name:'Fahrzeuge & Betriebsbedarf',desc:'Kfz, IT, B\u00fcromaterial, Porto',color:'#6366F1'},
-        {icon:'\uD83D\uDCC9',name:'Abschreibungen & Leasing',desc:'AfA, Leasing, Investitionen',color:'#0891B2'},
-        {icon:'\uD83D\uDCCA',name:'BWA & Steuern',desc:'BWA, DATEV, Steuerbescheide',color:'#4F46E5'},
-        {icon:'\uD83D\uDCCE',name:'Sonstiges',desc:'Nicht zugeordnete Dokumente',color:'#6B7280'}
-    ];
-    var c=document.getElementById('aktenFolders');if(!c)return;var html='';
-    demo.forEach(function(o){html+='<div class="akten-folder vit-card p-5 hover:shadow-lg transition group"><div class="flex items-start justify-between mb-3"><div class="p-3 rounded-xl" style="background:'+o.color+'15"><span class="text-2xl">'+o.icon+'</span></div></div><h3 class="font-bold text-gray-800 mb-1">'+o.name+'</h3><p class="text-xs text-gray-500">'+o.desc+'</p><p class="text-xs text-gray-400 mt-2">Noch keine Dokumente</p></div>';});
-    c.innerHTML=html;
+function renderFoldersEmpty(){
+    var c=document.getElementById('aktenFolders');if(!c)return;
+    c.innerHTML='<div class="col-span-full text-center py-12"><div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4"><span class="text-3xl">\uD83D\uDCC2</span></div><h3 class="font-bold text-gray-800 mb-2">Noch keine Ordner angelegt</h3><p class="text-sm text-gray-500">Ordner werden in der Datenbank unter <strong>dokument_ordner</strong> verwaltet.</p></div>';
 }
 
 // FOLDER DETAIL
