@@ -1099,8 +1099,20 @@ try {
         checkSession();
     }, 1500);
 } catch(e) {
+    var errMsg = e.message || 'Unbekannter Fehler';
+    // Translate common Supabase Auth errors to German
+    var translations = {
+        'Password should be at least 6 characters': 'Passwort muss mindestens 6 Zeichen haben.',
+        'Password should be at least 8 characters': 'Passwort muss mindestens 8 Zeichen haben.',
+        'New password should be different from the old password': 'Das neue Passwort muss sich vom alten unterscheiden.',
+        'Auth session missing': 'Sitzung abgelaufen. Bitte fordere einen neuen Reset-Link an.',
+        'User not found': 'Benutzer nicht gefunden.',
+        'Password is too short': 'Passwort ist zu kurz.',
+        'Password is too weak': 'Passwort ist zu schwach. Verwende Gross-/Kleinbuchstaben, Zahlen und Sonderzeichen.'
+    };
+    for(var eng in translations) { if(errMsg.toLowerCase().indexOf(eng.toLowerCase()) >= 0) { errMsg = translations[eng]; break; } }
     msg.className='text-sm rounded-lg p-3 mb-3 bg-red-50 border border-red-200 text-red-600';
-    msg.textContent='Fehler: '+e.message; msg.style.display='block';
+    msg.textContent=errMsg; msg.style.display='block';
     btn.disabled=false; btn.textContent='Passwort speichern';
 }
 }

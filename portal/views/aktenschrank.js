@@ -261,9 +261,30 @@ export async function startAktenUpload(){
     for(var i=0;i<total;i++){var file=_akten.uploadQueue[i];bar.style.width=Math.round((i/total)*100)+'%';stat.textContent=file.name+' ('+(i+1)+'/'+total+')';
         try{var path=(sid||'unknown')+'/inbox/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');var upR=await s.storage.from('dokumente').upload(path,file,{upsert:true});var fileUrl=path;if(!upR.error){var urlR=s.storage.from('dokumente').getPublicUrl(path);fileUrl=urlR.data?urlR.data.publicUrl:path;}var titel=file.name.replace(/\.[^.]+$/,'').replace(/[_-]/g,' ');
         var insR=await s.from('dokumente').insert({standort_id:sid,titel:titel,datei_url:fileUrl,datei_name:file.name,datei_groesse:file.size,datei_typ:file.type,status:'eingegangen',quelle:'upload',hochgeladen_von:u?u.id:null}).select().single();
-        if(!insR.error&&insR.data){await s.from('dokument_audit').insert({dokument_id:insR.data.id,aktion:'hochgeladen',details:{datei_name:file.name,datei_groesse:file.size},user_id:u?u.id:null});_akten.dokumente.unshift(insR.data);}}catch(err){console.error('Upload err:',file.name,err);aktenToast('\u274C Fehler: '+file.name);}}
-    bar.style.width='100%';stat.textContent='\u2705 Fertig!';
+        if(!insR.error&&insR.data){await s.from('dokument_audit').insert({dokument_id:insR.data.id,aktion:'hochgeladen',details:{datei_name:file.name,datei_groesse:file.size},user_id:u?u.id:null});_akten.dokumente.unshift(insR.data);
+        // KI-Klassifikation asynchron starten
+        triggerKiClassification(insR.data.id);
+        }}}catch(err){console.error('Upload err:',file.name,err);aktenToast('\u274C Fehler: '+file.name);}}
+    bar.style.width='100%';stat.textContent='\u2705 Hochgeladen! \uD83E\uDD16 KI analysiert...';
     setTimeout(function(){closeAktenUpload();_akten.uploadQueue=[];renderFolders();updateStats();updateInboxBadge();aktenToast('\u2705 '+total+' Dokument'+(total>1?'e':'')+' hochgeladen');},800);
+}
+
+// KI CLASSIFICATION
+async function triggerKiClassification(dokId){
+    try{
+        var s=_sb(),sess=await s.auth.getSession();
+        var token=sess.data&&sess.data.session?sess.data.session.access_token:'';
+        var url=(window.SUPABASE_URL||'https://lwwagbkxeofahhwebkab.supabase.co')+'/functions/v1/classify-document';
+        var resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({dokument_id:dokId})});
+        var data=await resp.json();
+        if(data.success){
+            console.log('[Aktenschrank] KI: '+data.typ+' ('+Math.round(data.confidence*100)+'%) - '+data.felder_count+' Felder');
+            var dok=_akten.dokumente.find(function(d){return d.id===dokId;});
+            if(dok){dok.status='ki_verarbeitet';dok.ki_typ_vorschlag=data.typ;dok.ki_confidence=data.confidence;if(data.titel)dok.titel=data.titel;}
+            renderFolders();updateStats();updateInboxBadge();
+            aktenToast('\uD83E\uDD16 KI: '+data.typ+' erkannt ('+Math.round(data.confidence*100)+'%)');
+        }else{console.warn('[Aktenschrank] KI-Fehler:',data.error);}
+    }catch(err){console.warn('[Aktenschrank] KI-Klassifikation fehlgeschlagen:',err);}
 }
 
 // STATS & UTILS
