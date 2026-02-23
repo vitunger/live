@@ -104,6 +104,7 @@ export async function parsePlanFile() {
     if(statusEl) statusEl.innerHTML = '<div class="flex items-center space-x-2 mt-2"><div class="w-4 h-4 border-2 border-vit-orange border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-600">Excel wird analysiert...</span></div>';
 
     // Try BwaParser first for structured Planung files
+    if (typeof BwaParser === 'undefined' && typeof window.BwaParser !== 'undefined') { var BwaParser = window.BwaParser; }
     BwaParser.parseFile(file, async function(err, result) {
         if(err) {
             // KI-Fallback bei Parse-Fehler
