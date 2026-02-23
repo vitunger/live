@@ -157,6 +157,8 @@ async function parsePlanFileLocal(file, statusEl, resultEl) {
             var meta = result.meta;
 
             if(result.plan_bwa && result.plan_bwa.length > 0) {
+                console.log('[Plan-Local] plan_bwa rows:', result.plan_bwa.length);
+                console.log('[Plan-Local] First 3 rows raw:', JSON.stringify(result.plan_bwa.slice(0,3)));
                 var mn = ['jan','feb','mrz','apr','mai','jun','jul','aug','sep','okt','nov','dez'];
                 function findRow(patterns) {
                     for(var p=0; p<patterns.length; p++) {
