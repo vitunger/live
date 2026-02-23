@@ -533,6 +533,7 @@ try {
 
     vpModal(html);
 
+} catch(e) { vpModal('<p class="text-red-600 p-4">Fehler beim Laden: '+e.message+'</p>'); console.error('[vpShowVideoDetail]',e); }
 };
 
 // ==================== FRAME EXTRACTION ====================
