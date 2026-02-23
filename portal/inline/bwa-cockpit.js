@@ -99,6 +99,7 @@
 
     // ──── STANDORT-SICHT: Cockpit Widget ────
     window.updateBwaDeadlineWidget = updateBwaDeadlineWidget;
+    window._bwaCockpitShowKpiReport = showKpiReport;
     async function updateBwaDeadlineWidget() {
         var today = new Date();
         var bwaMo = getBwaMonth(today);
@@ -255,7 +256,7 @@
 
             // Echte BWA-Daten für diesen Monat
             var bwaResp = await sb.from('bwa_daten')
-                .select('umsatzerloese, rohertrag, wareneinsatz, gesamtkosten, ergebnis_vor_steuern')
+                .select('umsatzerloese, rohertrag, wareneinsatz, personalkosten, gesamtkosten, ergebnis_vor_steuern')
                 .eq('standort_id', standortId)
                 .eq('monat', bwaMo.m + 1)
                 .eq('jahr', bwaMo.y)
@@ -285,7 +286,8 @@
 
             var umsatz   = parseFloat(b.umsatzerloese) || 0;
             var rohertrag = parseFloat(b.rohertrag) || 0;
-            var personal = parseFloat(b.gesamtkosten) || 0; // Gesamtkosten als Näherung
+            var personal = parseFloat(b.personalkosten) || 0;
+            var geskosten = parseFloat(b.gesamtkosten) || 0;
             var ergebnis = parseFloat(b.ergebnis_vor_steuern) || 0;
             var rohmarge = umsatz > 0 ? (rohertrag / umsatz * 100) : 0;
             var personalQ = umsatz > 0 ? (personal / umsatz * 100) : 0;
