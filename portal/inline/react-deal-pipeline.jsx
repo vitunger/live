@@ -1,4 +1,5 @@
 /* ── vit:bikes Deal Flow Pipeline ─────────────────── */
+console.log('[Pipeline JSX] ✅ Babel compiled this file at', new Date().toLocaleTimeString());
 const { useState, useRef, useCallback, useEffect } = React;
 
 const STAGES = [
