@@ -395,9 +395,13 @@ try {
     // Video Player
     if(signedUrl) {
         html += '<div class="mb-4"><div class="rounded-lg overflow-hidden bg-black">';
-        html += '<video id="vpDetailPlayer" controls preload="metadata" crossorigin="anonymous" class="w-full max-h-[400px]" style="max-height:400px;">';
-        html += '<source src="'+signedUrl+'" type="video/'+((v.filename||'').toLowerCase().endsWith('.mov')?'quicktime':'mp4')+'">';
-        html += '</video></div>';
+        html += '<video id="vpDetailPlayer" controls preload="metadata" class="w-full max-h-[400px]" style="max-height:400px;">';
+        html += '<source src="'+signedUrl+'" type="video/mp4">';
+        html += '<source src="'+signedUrl+'" type="video/quicktime">';
+        html += '<p class="text-white p-4">Video kann nicht abgespielt werden. <a href="'+signedUrl+'" target="_blank" class="underline text-blue-300">Herunterladen</a></p>';
+        html += '</video>';
+        html += '<a href="'+signedUrl+'" target="_blank" download class="inline-block mt-1 text-xs text-gray-400 hover:text-vit-orange">⬇️ Video herunterladen</a>';
+        html += '</div>';
         // Quick actions bar under video (HQ only)
         var isHqUserQA = (window.sbProfile && window.sbProfile.is_hq) || false;
         if(isHqUserQA) {
@@ -567,61 +571,75 @@ function vpFormatTime(sec) {
 function vpExtractPersonFrames(persons) {
     var video = document.getElementById('vpDetailPlayer');
     var canvas = document.getElementById('vpFrameCanvas');
-    if(!video || !canvas) return;
+    if(!video || !canvas) {
+        // No player — show fallback icons
+        persons.forEach(function(p, idx) {
+            var loading = document.getElementById('vpFrameLoading_' + idx);
+            if(loading) loading.innerHTML = '<span class="text-2xl">👤</span>';
+        });
+        return;
+    }
 
     var ctx = canvas.getContext('2d');
     var queue = [];
     persons.forEach(function(p, idx) {
         var timestamps = p.scene_timestamps || [];
         var firstAppear = (timestamps[0] && timestamps[0].start) || 0;
-        // Offset slightly into the scene for a better frame
         queue.push({ idx: idx, time: firstAppear + 1 });
     });
 
     var currentQ = 0;
+    var canCapture = true;
 
     function captureNext() {
-        if(currentQ >= queue.length) return;
+        if(currentQ >= queue.length || !canCapture) return;
         var item = queue[currentQ];
         video.currentTime = item.time;
     }
 
-    video.addEventListener('loadedmetadata', function() {
-        canvas.width = 160;
-        canvas.height = 160;
-        captureNext();
-    });
-
-    video.addEventListener('seeked', function() {
+    function doCapture() {
         if(currentQ >= queue.length) return;
         var item = queue[currentQ];
         try {
-            // Calculate crop to center-square
             var vw = video.videoWidth;
             var vh = video.videoHeight;
+            if(!vw || !vh) throw new Error('No dimensions');
             var size = Math.min(vw, vh);
             var sx = (vw - size) / 2;
             var sy = (vh - size) / 2;
+            canvas.width = 160; canvas.height = 160;
             ctx.drawImage(video, sx, sy, size, size, 0, 0, 160, 160);
+            // Test if canvas is tainted
             var dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-
             var container = document.getElementById('vpFrame_' + item.idx);
-            if(container) {
-                container.innerHTML = '<img src="' + dataUrl + '" class="w-full h-full object-cover" alt="Frame"/>';
-            }
+            if(container) container.innerHTML = '<img src="' + dataUrl + '" class="w-full h-full object-cover" alt="Frame"/>';
         } catch(e) {
-            console.warn('Frame capture failed:', e.message);
-            var loading = document.getElementById('vpFrameLoading_' + item.idx);
-            if(loading) loading.innerHTML = '<span class="text-xs">🎬</span>';
+            // Tainted canvas or other error — stop trying
+            console.warn('Frame capture failed (CORS):', e.message);
+            canCapture = false;
+            persons.forEach(function(p, idx) {
+                var loading = document.getElementById('vpFrameLoading_' + idx);
+                if(loading) loading.innerHTML = '<span class="text-2xl">👤</span>';
+            });
+            return;
         }
         currentQ++;
-        if(currentQ < queue.length) {
-            setTimeout(captureNext, 100);
-        }
+        if(currentQ < queue.length) setTimeout(captureNext, 100);
+    }
+
+    video.addEventListener('loadedmetadata', function onMeta() {
+        video.removeEventListener('loadedmetadata', onMeta);
+        captureNext();
+    });
+    // If already loaded
+    if(video.readyState >= 1) captureNext();
+
+    video.addEventListener('seeked', function onSeek() {
+        if(!canCapture) { video.removeEventListener('seeked', onSeek); return; }
+        doCapture();
     });
 
     video.addEventListener('error', function() {
-        console.warn('Video load error for frame extraction');
         persons.forEach(function(p, idx) {
             var loading = document.getElementById('vpFrameLoading_' + idx);
             if(loading) loading.innerHTML = '<span class="text-2xl">👤</span>';
