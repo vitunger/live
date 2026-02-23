@@ -4827,27 +4827,13 @@
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="hqFinKpisNew"></div>
 
                     <!-- Tab Navigation -->
-                    <div class="mb-6 border-b border-gray-200">
-                        <nav class="-mb-px flex space-x-8 overflow-x-auto">
-                            <button onclick="showHqFinTab('uebersicht')" class="hqfin-tab-btn whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-hqfin="uebersicht">📊 Übersicht</button>
-                            <button onclick="showHqFinTab('upload')" class="hqfin-tab-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-hqfin="upload">⬆️ Upload & Pläne</button>
-                        </nav>
-                    </div>
-
-                    <!-- TAB 1: Übersicht -->
-                    <div id="hqFinTab_uebersicht" class="hqfin-tab-content">
+                    <!-- Übersicht (single view, no tabs) -->
+                    <div id="hqFinTab_uebersicht">
                         <div class="vit-card p-5">
                             <h2 class="text-sm font-bold text-gray-800 mb-3">Umsatz & Status pro Standort</h2>
                             <div class="overflow-x-auto" id="hqFinMainTable">
                                 <p class="text-sm text-gray-400 py-6 text-center">Lade Daten…</p>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- TAB 2: Upload & Pläne -->
-                    <div id="hqFinTab_upload" class="hqfin-tab-content" style="display:none;">
-                        <div id="hqFinUploadContent">
-                            <p class="text-sm text-gray-400 py-6 text-center">Lade Upload-Bereich…</p>
                         </div>
                     </div>
                 </div>
