@@ -1668,7 +1668,7 @@ export async function openDevDetail(subId) {
         var canAttach = isSubmitter || isHQ;
         var hasKonzept = isHQ && konzept;
         var showMockup = hasKonzept && ['freigegeben','in_planung','in_entwicklung','beta_test','im_review'].indexOf(s.status) !== -1;
-        var showCode = hasKonzept && ['in_entwicklung','beta_test','im_review','release_geplant','ausgerollt'].indexOf(s.status) !== -1;
+        var showPrompt = hasKonzept && ['freigegeben','in_planung','in_entwicklung','beta_test','im_review','release_geplant','ausgerollt'].indexOf(s.status) !== -1;
         var showWorkflow = isHQ && ['freigegeben','in_planung','in_entwicklung','beta_test','im_review','release_geplant'].indexOf(s.status) !== -1;
         var showHQDecision = isHQ && ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','konzept_wird_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) !== -1;
 
@@ -1726,7 +1726,7 @@ export async function openDevDetail(subId) {
         tabs.push({id:'entwicklung',label:'\uD83D\uDCAC Entwicklung'});
         if(hasKonzept) tabs.push({id:'konzept',label:'\uD83D\uDCDD Konzept'});
         if(showMockup) tabs.push({id:'mockup',label:'\uD83C\uDFA8 Mockup'});
-        if(showCode) tabs.push({id:'code',label:'\uD83D\uDCBB Code'});
+        if(showPrompt) tabs.push({id:'prompt',label:'\uD83D\uDCCB Prompt'});
 
         h += '<div class="flex border-b border-gray-200 mb-3 gap-0.5" id="devDetailTabBar">';
         tabs.forEach(function(t, ti) {
@@ -2101,72 +2101,92 @@ export async function openDevDetail(subId) {
             h += '</div>'; // END TAB MOCKUP
         }
 
-        // === TAB: CODE ===
-        if(showCode) {
-            var codeArtsResp = await _sb().from('dev_code_artifacts').select('*').eq('submission_id', subId).order('dateiname').order('version', {ascending: false});
-            var codeArts = codeArtsResp.data || [];
-            var seenFiles = {};
-            var uniqueArts = codeArts.filter(function(a) { if(seenFiles[a.dateiname]) return false; seenFiles[a.dateiname] = true; return true; });
+        // === TAB: PROMPT ===
+        if(showPrompt) {
+            var mockupsForPrompt = [];
+            try { var _mfp = await _sb().from('dev_mockups').select('version,html_content').eq('submission_id', subId).order('version', {ascending: false}).limit(1); mockupsForPrompt = _mfp.data || []; } catch(_e){}
+            var latestMockupForPrompt = mockupsForPrompt[0] || null;
 
-            h += '<div data-devtab id="devTab_code" style="display:none">';
+            h += '<div data-devtab id="devTab_prompt" style="display:none">';
             h += '<div class="flex items-center justify-between mb-3">';
-            h += '<span class="text-xs text-gray-500">'+uniqueArts.length+' Datei'+(uniqueArts.length!==1?'en':'')+'</span>';
-            h += '<button onclick="devCodeGenerate(\''+s.id+'\')" id="devBtnCodeGen" class="px-3 py-1.5 bg-emerald-600 text-white rounded text-xs font-semibold hover:bg-emerald-700">'+(uniqueArts.length > 0 ? '\uD83D\uDD04 Neu generieren' : '\uD83E\uDD16 Code generieren')+'</button>';
+            h += '<div><h3 class="text-sm font-bold text-gray-800">\uD83D\uDCCB Prompt f\u00FCr Claude</h3>';
+            h += '<p class="text-[10px] text-gray-400">Konzept + Mockup + Kontext \u2013 kopieren und in Claude einf\u00FCgen</p></div>';
+            h += '<button onclick="devCopyPrompt()" class="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg text-xs font-semibold hover:from-orange-600 hover:to-amber-600 shadow-sm flex items-center gap-1">\uD83D\uDCCB Kopieren</button>';
             h += '</div>';
 
-            if(uniqueArts.length === 0) {
-                h += '<div class="bg-white border-2 border-dashed border-gray-200 rounded-lg p-8 text-center">';
-                h += '<p class="text-3xl mb-2">\uD83D\uDCBB</p><p class="text-sm text-gray-500">Noch kein Code</p></div>';
-            } else {
-                h += '<div class="space-y-2 mb-4">';
-                uniqueArts.forEach(function(art) {
-                    var langColors = {javascript:'#f7df1e',sql:'#e97d0a',typescript:'#3178c6'};
-                    var lc = langColors[art.sprache] || '#6b7280';
-                    h += '<div class="bg-white border border-gray-200 rounded-lg p-3 hover:border-gray-300">';
-                    h += '<div class="flex items-center justify-between">';
-                    h += '<div class="flex items-center gap-2 min-w-0"><span style="background:'+lc+';color:white;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600">'+art.sprache+'</span>';
-                    h += '<div class="min-w-0"><p class="text-sm font-semibold text-gray-800 truncate">'+art.dateiname+'</p>';
-                    h += '<p class="text-[10px] text-gray-400">v'+art.version+' \u00B7 '+(art.code_zeilen||'?')+' Zeilen</p></div></div>';
-                    h += '<div class="flex gap-1">';
-                    h += '<button onclick="devCodeViewFile(\''+art.id+'\')" class="text-xs px-2 py-1 bg-gray-100 rounded hover:bg-gray-200">\uD83D\uDCC4</button>';
-                    h += '<button onclick="devCodeReview(\''+art.id+'\',\''+s.id+'\')" class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200">\uD83D\uDD0D</button>';
-                    h += '</div></div>';
-                    if(art.review_ergebnis) {
-                        var rv = art.review_ergebnis;
-                        h += '<div class="mt-1 flex items-center gap-2 text-[10px]"><span class="font-bold '+(rv.score>=80?'text-green-600':'text-orange-600')+'">'+rv.score+'/100</span> <span class="'+(rv.empfehlung==='freigegeben'?'text-green-600':'text-orange-600')+'">'+(rv.empfehlung==='freigegeben'?'\u2705':'\uD83D\uDD04')+'</span></div>';
-                    }
-                    h += '</div>';
-                });
-                h += '</div>';
-                // Code-Chat
-                h += '<div class="border border-emerald-200 rounded-lg p-3 bg-white">';
-                h += '<h5 class="text-xs font-bold text-emerald-600 uppercase mb-2">\uD83D\uDCAC Code-Chat</h5>';
-                h += '<div id="devCodeChatMsgs" class="max-h-40 overflow-y-auto space-y-1 mb-2"></div>';
-                h += '<div class="flex gap-2">';
-                h += '<select id="devCodeChatArtifact" class="text-xs border border-gray-200 rounded px-2 py-1">';
-                uniqueArts.forEach(function(a) { h += '<option value="'+a.id+'">'+a.dateiname+'</option>'; });
-                h += '</select>';
-                h += '<input id="devCodeChatInput" type="text" placeholder="Frage zum Code..." class="flex-1 px-2 py-1 border border-gray-200 rounded text-xs" onkeypress="if(event.key===\'Enter\')devSendCodeChat(\''+s.id+'\')">';
-                h += '<button onclick="devSendCodeChat(\''+s.id+'\')" id="devBtnCodeChat" class="px-3 py-1 bg-emerald-600 text-white rounded text-xs font-semibold">\uD83D\uDCAC</button>';
-                h += '</div></div>';
+            // Build prompt content
+            var promptParts = [];
+            promptParts.push('# Aufgabe: ' + (s.titel || 'Feature-Entwicklung'));
+            promptParts.push('');
+            if(s.beschreibung) { promptParts.push('## Beschreibung'); promptParts.push(s.beschreibung); promptParts.push(''); }
+            if(s.ki_typ) promptParts.push('**Typ:** ' + (s.ki_typ==='bug'?'\uD83D\uDC1B Bug':s.ki_typ==='feature'?'\u2728 Feature':'\uD83D\uDCA1 Idee') + (s.bug_schwere ? ' (Schwere: '+s.bug_schwere+')' : ''));
+            if(s.modul_key) promptParts.push('**Modul:** ' + s.modul_key);
+            if(ki) {
+                promptParts.push('**Aufwand:** ' + (ki.aufwand_schaetzung||'-') + ' | **Machbarkeit:** ' + (ki.machbarkeit||'-') + ' | **Vision-Fit:** ' + (ki.vision_fit_score||'-') + '/100');
             }
-            // Deploy section
-                h += '<div class="mt-4 border-t border-emerald-200 pt-3">';
-                h += '<div class="flex items-center justify-between mb-2">';
-                h += '<h5 class="text-xs font-bold text-emerald-600 uppercase">\uD83D\uDE80 Deployment</h5>';
-                h += '<div class="flex gap-1">';
-                h += '<select id="devDeployBranch" class="text-[10px] border border-gray-200 rounded px-2 py-0.5"><option value="main">main</option><option value="dev-pipeline">dev-pipeline (feature)</option></select>';
-                h += '</div></div>';
-                // Deployment History
-                h += '<div id="devDeployHistory" class="mb-2"></div>';
-                // Deploy button
-                h += '<div class="flex gap-2">';
-                h += '<button onclick="devDeployCode(\''+s.id+'\',false)" id="devBtnDeploy" class="flex-1 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg text-sm font-bold hover:from-emerald-600 hover:to-teal-700 shadow-sm disabled:opacity-50" title="Alle finalen Dateien auf GitHub pushen">\uD83D\uDE80 Auf GitHub pushen</button>';
-                h += '<button onclick="devDeployCode(\''+s.id+'\',true)" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs hover:bg-gray-200" title="Nur ausgewaehlte Dateien">\u2699\uFE0F Auswahl</button>';
-                h += '</div>';
-                h += '<p class="text-[9px] text-gray-400 mt-1">Pusht die Code-Artifacts auf GitHub \u2192 Vercel baut automatisch.</p>';
-                h += '</div>';
-            h += '</div>'; // END TAB CODE
+            promptParts.push('');
+
+            // Konzept
+            if(konzept) {
+                promptParts.push('## Konzept (v' + konzept.version + ')');
+                if(konzept.problem_beschreibung) { promptParts.push('### Problem'); promptParts.push(konzept.problem_beschreibung); }
+                if(konzept.ziel) { promptParts.push('### Ziel'); promptParts.push(konzept.ziel); }
+                if(konzept.nutzen) { promptParts.push('### Nutzen'); promptParts.push(konzept.nutzen); }
+                if(konzept.scope_in) { promptParts.push('### Scope (In)'); promptParts.push(konzept.scope_in); }
+                if(konzept.scope_out) { promptParts.push('### Scope (Out)'); promptParts.push(konzept.scope_out); }
+                if(konzept.loesungsvorschlag_ui) { promptParts.push('### UI/Frontend'); promptParts.push(konzept.loesungsvorschlag_ui); }
+                if(konzept.loesungsvorschlag_backend) { promptParts.push('### Backend'); promptParts.push(konzept.loesungsvorschlag_backend); }
+                if(konzept.loesungsvorschlag_db) { promptParts.push('### Datenbank'); promptParts.push(konzept.loesungsvorschlag_db); }
+                if(konzept.akzeptanzkriterien && konzept.akzeptanzkriterien.length > 0) {
+                    promptParts.push('### Akzeptanzkriterien');
+                    konzept.akzeptanzkriterien.forEach(function(a) { promptParts.push('- ' + (a.beschreibung||a)); });
+                }
+                if(konzept.testplan) { promptParts.push('### Testplan'); promptParts.push(konzept.testplan); }
+                if(konzept.rollout_strategie) { promptParts.push('### Rollout'); promptParts.push(konzept.rollout_strategie); }
+                if(konzept.definition_of_done) { promptParts.push('### Definition of Done'); promptParts.push(konzept.definition_of_done); }
+                if(konzept.feature_flag_key) promptParts.push('**Feature-Flag:** ' + konzept.feature_flag_key);
+                promptParts.push('');
+            }
+
+            // Mockup
+            if(latestMockupForPrompt) {
+                promptParts.push('## Mockup (v' + latestMockupForPrompt.version + ')');
+                promptParts.push('```html');
+                promptParts.push(latestMockupForPrompt.html_content);
+                promptParts.push('```');
+                promptParts.push('');
+            }
+
+            // Tech context
+            promptParts.push('## Tech-Stack & Kontext');
+            promptParts.push('- **Framework:** Vanilla JavaScript (ES6 Module in portal/views/*.js)');
+            promptParts.push('- **Backend:** Supabase (PostgreSQL + RLS + Edge Functions)');
+            promptParts.push('- **Styling:** Tailwind CSS, Prim\u00E4rfarbe Orange (#f97316)');
+            promptParts.push('- **Architektur:** Single Page Application, Module werden per ES6 import geladen');
+            promptParts.push('- **Deployment:** GitHub \u2192 Vercel (auto-deploy bei Push auf main)');
+            promptParts.push('- **Repo:** github.com/vitunger/live');
+            promptParts.push('');
+            promptParts.push('Bitte setze dieses Feature gem\u00E4\u00DF dem Konzept um. Achte auf das bestehende Design-System und die Modulstruktur.');
+
+            var fullPrompt = promptParts.join('\n');
+
+            // Show preview
+            h += '<div class="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-[60vh] overflow-y-auto">';
+            h += '<pre id="devPromptContent" class="text-xs text-gray-700 whitespace-pre-wrap font-mono leading-relaxed">' + _escH(promptParts.join('\n')) + '</pre>';
+            h += '</div>';
+
+            // Options
+            h += '<div class="flex items-center justify-between mt-3">';
+            h += '<div class="flex items-center gap-3">';
+            h += '<label class="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer"><input type="checkbox" id="devPromptIncludeMockup" checked onchange="devRegeneratePrompt(\''+s.id+'\')"> Mockup einf\u00FCgen</label>';
+            h += '<label class="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer"><input type="checkbox" id="devPromptIncludeKontext" checked onchange="devRegeneratePrompt(\''+s.id+'\')"> Tech-Kontext</label>';
+            h += '</div>';
+            h += '<div class="flex gap-2">';
+            h += '<span id="devPromptCharCount" class="text-[10px] text-gray-400">' + fullPrompt.length + ' Zeichen</span>';
+            h += '<button onclick="devCopyPrompt()" class="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg text-sm font-bold hover:from-orange-600 hover:to-amber-600 shadow-sm">\uD83D\uDCCB In Zwischenablage kopieren</button>';
+            h += '</div></div>';
+
+            h += '</div>'; // END TAB PROMPT
         }
 
         // === TAB: ENTWICKLUNG (Chat) ===
@@ -2189,7 +2209,7 @@ export async function openDevDetail(subId) {
         // Load chat histories
         if(document.getElementById('devMockupChatHistory')) loadMockupChatHistory(subId);
         if(document.getElementById('devEntwicklungChatHistory')) loadEntwicklungChatHistory(subId);
-        if(document.getElementById('devDeployHistory')) loadDeployHistory(subId);
+
     } catch(err) {
         content.innerHTML = '<div class="text-center py-8 text-red-400">Fehler: '+err.message+'</div>';
     }
@@ -3596,145 +3616,6 @@ export async function devApproveReleaseDoc(docId) {
 
 // === CODE-COPILOT FUNCTIONS (Phase 4a) ===
 
-async function devCodeGenerate(subId) {
-    var btn = document.getElementById('devBtnCodeGen');
-    if(btn) { btn.disabled = true; btn.innerHTML = '<span class="animate-spin inline-block mr-1">⏳</span> KI generiert...'; }
-    try {
-        var resp = await _sb().functions.invoke('dev-ki-analyse', {
-            body: { submission_id: subId, mode: 'code_generate' }
-        });
-        if(resp.error) throw resp.error;
-        var d = resp.data;
-        if(d.error) throw new Error(d.error);
-        _showToast('✅ '+(d.artifacts?.length||0)+' Datei(en) generiert!', 'success');
-        openDevDetail(subId);
-    } catch(err) {
-        console.error('Code-Generate:', err);
-        _showToast('❌ '+err.message, 'error');
-        if(btn) { btn.disabled = false; btn.innerHTML = '🤖 Code generieren'; }
-    }
-}
-
-async function devCodeReview(artifactId, subId) {
-    _showToast('🔍 Review wird gestartet...', 'info');
-    try {
-        var resp = await _sb().functions.invoke('dev-ki-analyse', {
-            body: { submission_id: subId, mode: 'code_review', artifact_id: artifactId }
-        });
-        if(resp.error) throw resp.error;
-        var d = resp.data;
-        if(d.error) throw new Error(d.error);
-        _showToast('✅ Review fertig! Score: '+(d.score||'?')+'/100', 'success');
-        openDevDetail(subId);
-    } catch(err) {
-        console.error('Code-Review:', err);
-        _showToast('❌ '+err.message, 'error');
-    }
-}
-
-function devCodeViewFile(artifactId) {
-    // Code im Modal anzeigen
-    (async function() {
-        try {
-            var resp = await _sb().from('dev_code_artifacts').select('*').eq('id', artifactId).single();
-            if(resp.error) throw resp.error;
-            var art = resp.data;
-            var lines = (art.code_inhalt || '').split('\n');
-            var langColors = {javascript:'#f7df1e',sql:'#e97d0a',typescript:'#3178c6',html:'#e34c26',css:'#264de4'};
-            var lc = langColors[art.sprache] || '#6b7280';
-
-            // Einfaches Code-Viewer Modal
-            var overlay = document.createElement('div');
-            overlay.id = 'devCodeViewOverlay';
-            overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:20px';
-            overlay.onclick = function(e) { if(e.target === overlay) overlay.remove(); };
-
-            var box = document.createElement('div');
-            box.style.cssText = 'background:#1e1e1e;border-radius:12px;width:90%;max-width:900px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden';
-
-            // Toolbar
-            var toolbar = '<div style="background:#2d2d2d;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #404040">';
-            toolbar += '<div style="display:flex;align-items:center;gap:12px"><span style="background:'+lc+';color:white;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;text-transform:uppercase">'+art.sprache+'</span>';
-            toolbar += '<span style="color:#e0e0e0;font-size:13px;font-weight:600;font-family:monospace">'+art.dateiname+'</span>';
-            toolbar += '<span style="color:#858585;font-size:11px">v'+art.version+' · '+(art.code_zeilen||lines.length)+' Zeilen</span></div>';
-            toolbar += '<div style="display:flex;gap:8px"><button onclick="navigator.clipboard.writeText(document.getElementById(\'devCodeRaw\').textContent);this.textContent=\'✅ Kopiert\'" style="color:#ccc;background:#404040;border:none;padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer">📋 Kopieren</button>';
-            toolbar += '<button onclick="document.getElementById(\'devCodeViewOverlay\').remove()" style="color:#ccc;background:none;border:none;font-size:18px;cursor:pointer">✕</button></div></div>';
-
-            // Code
-            var codeHtml = '<div style="overflow:auto;flex:1;padding:0"><table style="border-collapse:collapse;width:100%"><tbody>';
-            lines.forEach(function(line, i) {
-                codeHtml += '<tr><td style="color:#858585;text-align:right;padding:0 12px 0 8px;border-right:1px solid #404040;user-select:none;white-space:nowrap;vertical-align:top;font-size:13px;line-height:1.6;font-family:monospace">'+(i+1)+'</td>';
-                codeHtml += '<td style="padding:0 16px;white-space:pre;overflow-x:auto;font-size:13px;line-height:1.6;font-family:monospace;color:#d4d4d4"><code>'+_escH(line||' ')+'</code></td></tr>';
-            });
-            codeHtml += '</tbody></table></div>';
-            codeHtml += '<pre id="devCodeRaw" style="display:none">'+_escH(art.code_inhalt)+'</pre>';
-
-            box.innerHTML = toolbar + codeHtml;
-            overlay.appendChild(box);
-            document.body.appendChild(overlay);
-        } catch(err) {
-            _showToast('❌ '+err.message, 'error');
-        }
-    })();
-}
-
-async function devSendCodeChat(subId) {
-    var artSelect = document.getElementById('devCodeChatArtifact');
-    var input = document.getElementById('devCodeChatInput');
-    var btn = document.getElementById('devBtnCodeChat');
-    if(!artSelect || !input) return;
-    var artifactId = artSelect.value;
-    var msg = input.value.trim();
-    if(!msg) return;
-
-    // User-Nachricht anzeigen
-    var chatDiv = document.getElementById('devCodeChatMsgs');
-    if(chatDiv) {
-        chatDiv.innerHTML += '<div style="margin-left:auto;max-width:85%;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 12px;font-size:12px"><span style="color:#6b7280">👤</span> '+_escH(msg)+'</div>';
-        chatDiv.innerHTML += '<div id="devCodeChatLoading" style="max-width:85%;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px;font-size:12px"><span class="animate-pulse" style="color:#9ca3af">🤖 KI denkt nach...</span></div>';
-        chatDiv.scrollTop = chatDiv.scrollHeight;
-    }
-    input.value = '';
-    if(btn) { btn.disabled = true; btn.textContent = '⏳'; }
-
-    try {
-        var resp = await _sb().functions.invoke('dev-ki-analyse', {
-            body: { submission_id: subId, mode: 'code_chat', artifact_id: artifactId, feedback: msg }
-        });
-        if(resp.error) throw resp.error;
-        var d = resp.data;
-        if(d.error) throw new Error(d.error);
-
-        // Loading entfernen
-        var ld = document.getElementById('devCodeChatLoading');
-        if(ld) ld.remove();
-
-        // KI-Antwort
-        var antwort = d.antwort || 'Keine Antwort.';
-        if(d.code_aktualisiert && d.new_artifact) {
-            antwort += '\n\n✅ Code aktualisiert → v'+d.new_artifact.version+' ('+d.new_artifact.zeilen+' Zeilen)';
-        }
-        if(chatDiv) {
-            chatDiv.innerHTML += '<div style="max-width:85%;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px;font-size:12px"><span style="color:#6b7280">🤖</span> '+_escH(antwort).replace(/\n/g,'<br>')+'</div>';
-            chatDiv.scrollTop = chatDiv.scrollHeight;
-        }
-
-        // Bei Code-Update: Sektion nach 2s neu laden
-        if(d.code_aktualisiert) {
-            setTimeout(function() { openDevDetail(subId); }, 2000);
-        }
-    } catch(err) {
-        var ld = document.getElementById('devCodeChatLoading');
-        if(ld) ld.remove();
-        if(chatDiv) {
-            chatDiv.innerHTML += '<div style="max-width:85%;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 12px;font-size:12px">❌ '+_escH(err.message)+'</div>';
-        }
-    }
-    if(btn) { btn.disabled = false; btn.textContent = '💬'; }
-}
-
-
-
 // ========== KI PRIORISIERUNG ==========
 export async function runDevKIPrioritize() {
     var btn = document.getElementById('btnDevPrio');
@@ -3852,104 +3733,102 @@ export async function saveDevNotizen(subId) {
 
 
 // === DEPLOY FUNCTIONS ===
-export async function devDeployCode(subId, selectMode) {
-    var btn = document.getElementById('devBtnDeploy');
-    var branch = document.getElementById('devDeployBranch');
-    var targetBranch = branch ? branch.value : 'main';
-    
-    // Load artifacts
-    var resp = await _sb().from('dev_code_artifacts').select('*').eq('submission_id', subId).order('dateiname').order('version', {ascending: false});
-    var arts = resp.data || [];
-    // Unique latest per file
-    var seen = {};
-    var unique = arts.filter(function(a) { if(seen[a.dateiname]) return false; seen[a.dateiname] = true; return true; });
-    
-    if(unique.length === 0) { alert('Keine Code-Artifacts vorhanden.'); return; }
-    
-    var toDeploy = unique;
-    
-    if(selectMode) {
-        // Show selection dialog
-        var fileList = unique.map(function(a) {
-            return a.dateiname + ' (v' + a.version + ', ' + (a.status || 'entwurf') + ')';
-        }).join('\n');
-        var selected = prompt('Welche Dateien deployen? (Nummern kommagetrennt)\n\n' + unique.map(function(a, i) { return (i+1) + '. ' + a.dateiname + ' (v' + a.version + ')'; }).join('\n'));
-        if(!selected) return;
-        var indices = selected.split(',').map(function(s) { return parseInt(s.trim()) - 1; });
-        toDeploy = indices.filter(function(i) { return i >= 0 && i < unique.length; }).map(function(i) { return unique[i]; });
-        if(toDeploy.length === 0) { alert('Keine gueltige Auswahl.'); return; }
-    }
-    
-    var fileNames = toDeploy.map(function(a) { return a.dateiname; }).join(', ');
-    if(!confirm('\uD83D\uDE80 Deployment auf "' + targetBranch + '"\n\n' + toDeploy.length + ' Datei(en):\n' + fileNames + '\n\nFortsetzung? Vercel baut nach dem Push automatisch.')) return;
-    
-    if(btn) { btn.disabled = true; btn.textContent = '\u23F3 Pushe auf GitHub...'; }
-    
-    try {
-        var payload = {
-            submission_id: subId,
-            mode: 'deploy',
-            artifact_ids: toDeploy.map(function(a) { return a.id; }),
-            branch: targetBranch
-        };
-        var res = await fetch(_sbUrl() + '/functions/v1/dev-deploy', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token },
-            body: JSON.stringify(payload)
-        });
-        var data = await res.json();
-        if(data.error) throw new Error(data.error);
-        
-        // Success
-        var commitLink = data.commit_url ? '<a href="' + data.commit_url + '" target="_blank" class="text-blue-600 underline">' + data.commit_sha.substring(0, 8) + '</a>' : data.commit_sha.substring(0, 8);
-        
-        var histDiv = document.getElementById('devDeployHistory');
-        if(histDiv) {
-            histDiv.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-lg p-3 text-xs">' +
-                '<span class="font-bold text-green-700">\u2705 Deployment erfolgreich!</span>' +
-                '<p class="text-gray-600 mt-1">' + data.files_pushed + ' Datei(en) auf <b>' + data.branch + '</b> gepusht</p>' +
-                '<p class="text-gray-500 mt-0.5">Commit: ' + commitLink + '</p>' +
-                '<p class="text-gray-400 mt-0.5">Vercel baut automatisch...</p>' +
-                '</div>';
-        }
-        
-        if(btn) { btn.textContent = '\u2705 Deployed!'; btn.className = btn.className.replace('from-emerald-500 to-teal-600','from-green-400 to-green-500'); }
-        
-        // Reload detail after 2s
-        setTimeout(function() { openDevDetail(subId); }, 2000);
-        
-    } catch(e) {
-        alert('\u274C Deployment fehlgeschlagen: ' + e.message);
-        if(btn) { btn.disabled = false; btn.textContent = '\uD83D\uDE80 Auf GitHub pushen'; }
-    }
+export function devCopyPrompt() {
+    var pre = document.getElementById('devPromptContent');
+    if(!pre) return;
+    var text = pre.textContent || pre.innerText;
+    navigator.clipboard.writeText(text).then(function() {
+        _showToast('\uD83D\uDCCB Prompt in Zwischenablage kopiert!', 'success');
+    }).catch(function() {
+        // Fallback: select text
+        var range = document.createRange();
+        range.selectNodeContents(pre);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        document.execCommand('copy');
+        _showToast('\uD83D\uDCCB Prompt kopiert!', 'success');
+    });
 }
+window.devCopyPrompt = devCopyPrompt;
 
-export async function loadDeployHistory(subId) {
-    var container = document.getElementById('devDeployHistory');
-    if(!container) return;
-    try {
-        var resp = await fetch(_sbUrl() + '/functions/v1/dev-deploy', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token },
-            body: JSON.stringify({ submission_id: subId, mode: 'status' })
-        });
-        var data = await resp.json();
-        if(!data.deployments || data.deployments.length === 0) {
-            container.innerHTML = '<p class="text-[10px] text-gray-400">Noch kein Deployment.</p>';
-            return;
+export async function devRegeneratePrompt(subId) {
+    // Rebuild prompt based on checkbox state
+    var includeMockup = document.getElementById('devPromptIncludeMockup');
+    var includeKontext = document.getElementById('devPromptIncludeKontext');
+    var wantMockup = includeMockup ? includeMockup.checked : true;
+    var wantKontext = includeKontext ? includeKontext.checked : true;
+
+    var s = devSubmissions.find(function(x){ return x.id === subId; });
+    if(!s) return;
+
+    var kiResp = await _sb().from('dev_ki_analysen').select('*').eq('submission_id', subId).order('version', {ascending: false}).limit(1);
+    var ki = (kiResp.data||[])[0] || null;
+    var kResp = await _sb().from('dev_konzepte').select('*').eq('submission_id', subId).order('version', {ascending: false}).limit(1);
+    var konzept = (kResp.data||[])[0] || null;
+
+    var parts = [];
+    parts.push('# Aufgabe: ' + (s.titel || 'Feature-Entwicklung'));
+    parts.push('');
+    if(s.beschreibung) { parts.push('## Beschreibung'); parts.push(s.beschreibung); parts.push(''); }
+    if(s.ki_typ) parts.push('**Typ:** ' + (s.ki_typ==='bug'?'\uD83D\uDC1B Bug':s.ki_typ==='feature'?'\u2728 Feature':'\uD83D\uDCA1 Idee') + (s.bug_schwere ? ' (Schwere: '+s.bug_schwere+')' : ''));
+    if(s.modul_key) parts.push('**Modul:** ' + s.modul_key);
+    if(ki) parts.push('**Aufwand:** ' + (ki.aufwand_schaetzung||'-') + ' | **Machbarkeit:** ' + (ki.machbarkeit||'-') + ' | **Vision-Fit:** ' + (ki.vision_fit_score||'-') + '/100');
+    parts.push('');
+
+    if(konzept) {
+        parts.push('## Konzept (v' + konzept.version + ')');
+        if(konzept.problem_beschreibung) { parts.push('### Problem'); parts.push(konzept.problem_beschreibung); }
+        if(konzept.ziel) { parts.push('### Ziel'); parts.push(konzept.ziel); }
+        if(konzept.nutzen) { parts.push('### Nutzen'); parts.push(konzept.nutzen); }
+        if(konzept.scope_in) { parts.push('### Scope (In)'); parts.push(konzept.scope_in); }
+        if(konzept.scope_out) { parts.push('### Scope (Out)'); parts.push(konzept.scope_out); }
+        if(konzept.loesungsvorschlag_ui) { parts.push('### UI/Frontend'); parts.push(konzept.loesungsvorschlag_ui); }
+        if(konzept.loesungsvorschlag_backend) { parts.push('### Backend'); parts.push(konzept.loesungsvorschlag_backend); }
+        if(konzept.loesungsvorschlag_db) { parts.push('### Datenbank'); parts.push(konzept.loesungsvorschlag_db); }
+        if(konzept.akzeptanzkriterien && konzept.akzeptanzkriterien.length > 0) {
+            parts.push('### Akzeptanzkriterien');
+            konzept.akzeptanzkriterien.forEach(function(a) { parts.push('- ' + (a.beschreibung||a)); });
         }
-        var html = '<div class="space-y-1">';
-        data.deployments.forEach(function(d) {
-            var statusIcon = d.status === 'deployed' ? '\u2705' : d.status === 'rolled_back' ? '\u26A0\uFE0F' : d.status === 'failed' ? '\u274C' : '\u23F3';
-            html += '<div class="flex items-center justify-between text-[10px] bg-gray-50 rounded px-2 py-1">';
-            html += '<span>'+statusIcon+' '+d.branch+' · '+(d.commit_sha?d.commit_sha.substring(0,8):'...')+'</span>';
-            html += '<span class="text-gray-400">'+new Date(d.deployed_at).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'</span>';
-            html += '</div>';
-        });
-        html += '</div>';
-        container.innerHTML = html;
-    } catch(e) { container.innerHTML = ''; }
+        if(konzept.testplan) { parts.push('### Testplan'); parts.push(konzept.testplan); }
+        if(konzept.rollout_strategie) { parts.push('### Rollout'); parts.push(konzept.rollout_strategie); }
+        if(konzept.definition_of_done) { parts.push('### Definition of Done'); parts.push(konzept.definition_of_done); }
+        if(konzept.feature_flag_key) parts.push('**Feature-Flag:** ' + konzept.feature_flag_key);
+        parts.push('');
+    }
+
+    if(wantMockup) {
+        var mResp = await _sb().from('dev_mockups').select('version,html_content').eq('submission_id', subId).order('version', {ascending: false}).limit(1);
+        var mockup = (mResp.data||[])[0] || null;
+        if(mockup) {
+            parts.push('## Mockup (v' + mockup.version + ')');
+            parts.push('```html');
+            parts.push(mockup.html_content);
+            parts.push('```');
+            parts.push('');
+        }
+    }
+
+    if(wantKontext) {
+        parts.push('## Tech-Stack & Kontext');
+        parts.push('- **Framework:** Vanilla JavaScript (ES6 Module in portal/views/*.js)');
+        parts.push('- **Backend:** Supabase (PostgreSQL + RLS + Edge Functions)');
+        parts.push('- **Styling:** Tailwind CSS, Prim\u00E4rfarbe Orange (#f97316)');
+        parts.push('- **Architektur:** Single Page Application, Module werden per ES6 import geladen');
+        parts.push('- **Deployment:** GitHub \u2192 Vercel (auto-deploy bei Push auf main)');
+        parts.push('- **Repo:** github.com/vitunger/live');
+        parts.push('');
+    }
+
+    parts.push('Bitte setze dieses Feature gem\u00E4\u00DF dem Konzept um. Achte auf das bestehende Design-System und die Modulstruktur.');
+
+    var fullText = parts.join('\n');
+    var pre = document.getElementById('devPromptContent');
+    if(pre) pre.textContent = fullText;
+    var counter = document.getElementById('devPromptCharCount');
+    if(counter) counter.textContent = fullText.length + ' Zeichen';
 }
+window.devRegeneratePrompt = devRegeneratePrompt;
 
 // === MOCKUP CHAT FUNCTIONS ===
 var _mockupChatAttachments = [];
@@ -4425,7 +4304,7 @@ export async function devMockupShowVersion(mockupId) {
 }
 
 const _exports = {
-    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachFiles,devMockupChatAttachImage,devMockupChatMic,devDeployCode,loadDeployHistory,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devKIReleaseVorschlag,devTogglePartnerSichtbar,devSaveRelease,devEditReleaseDoc,devSaveEditRelease,devDeleteReleaseDoc,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,devCodeGenerate,devCodeReview,devCodeViewFile,devSendCodeChat,runDevKIPrioritize,createDevKonzept,updateDevStatus,
+    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachFiles,devMockupChatAttachImage,devMockupChatMic,devCopyPrompt,devRegeneratePrompt,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devKIReleaseVorschlag,devTogglePartnerSichtbar,devSaveRelease,devEditReleaseDoc,devSaveEditRelease,devDeleteReleaseDoc,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,runDevKIPrioritize,createDevKonzept,updateDevStatus,
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // [prod] log removed
