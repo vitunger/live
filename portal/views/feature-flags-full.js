@@ -551,9 +551,17 @@ export async function loadModulStatus() {
         });
         // Load beta user assignments for current user
         window._isBetaUser = false;
+        window._betaModules = [];
         try {
             var profile = _sbProfile();
             if(profile && profile.is_beta) window._isBetaUser = true;
+            if(profile && profile.id) {
+                var betaResp = await _sb().from('modul_beta_users').select('modul_key').eq('user_id', profile.id);
+                if(betaResp.data && betaResp.data.length > 0) {
+                    window._betaModules = betaResp.data.map(function(r){ return r.modul_key; });
+                    window._isBetaUser = true;
+                }
+            }
         } catch(e) { /* ignore */ }
         
         applyModulStatus();
