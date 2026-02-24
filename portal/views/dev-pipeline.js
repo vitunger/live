@@ -15,6 +15,7 @@ function _sbUrl()        { return window.SUPABASE_URL || window._sb?.()?.supabas
 // === DEV PIPELINE (Ideenboard 2.0) ===
 var devSubmissions = [];
 var devFilterMirZugewiesen = false;
+var devKPIActiveFilter = '';
 var devCurrentTab = 'meine';
 var devInputType = 'text';
 var devSelectedFiles = [];
@@ -361,26 +362,30 @@ export async function loadDevSubmissions(force) {
         var bugs = devSubmissions.filter(function(s){ return s.ki_typ === 'bug' && ['abgelehnt','ausgerollt','geparkt'].indexOf(s.status) === -1; }).length;
         var week = devSubmissions.filter(function(s){ return (Date.now() - new Date(s.created_at).getTime()) < 7*86400000; }).length;
         var total = devSubmissions.length;
+        var _af = devKPIActiveFilter || '';
         var kh = '<div class="grid grid-cols-3 md:grid-cols-7 gap-2 mb-4">';
-        kh += '<div class="vit-card p-2 text-center'+(eingang>3?' ring-2 ring-red-300':'')+'">';
+        kh += '<div class="vit-card p-2 text-center cursor-pointer hover:shadow-md transition'+(_af==='eingang'?' ring-2 ring-orange-400':eingang>3?' ring-2 ring-red-300':'')+'" onclick="devKPIFilter(\'eingang\')">';
         kh += '<p class="text-lg font-bold '+(eingang>3?'text-red-600':'text-gray-800')+'">'+eingang+'</p>';
-        kh += '<p class="text-[9px] text-gray-500">📥 Eingang</p></div>';
-        kh += '<div class="vit-card p-2 text-center'+(warten>0?' ring-2 ring-yellow-300':'')+'">';
+        kh += '<p class="text-[9px] text-gray-500">\u{1F4E5} Eingang</p></div>';
+        kh += '<div class="vit-card p-2 text-center cursor-pointer hover:shadow-md transition'+(_af==='warten'?' ring-2 ring-orange-400':warten>0?' ring-2 ring-yellow-300':'')+'" onclick="devKPIFilter(\'warten\')">';
         kh += '<p class="text-lg font-bold '+(warten>0?'text-yellow-600':'text-gray-800')+'">'+warten+'</p>';
-        kh += '<p class="text-[9px] text-gray-500">⏳ Warten</p></div>';
-        kh += '<div class="vit-card p-2 text-center"><p class="text-lg font-bold text-blue-600">'+aktiv+'</p>';
-        kh += '<p class="text-[9px] text-gray-500">🔨 In Arbeit</p></div>';
-        kh += '<div class="vit-card p-2 text-center"><p class="text-lg font-bold text-green-600">'+done+'</p>';
-        kh += '<p class="text-[9px] text-gray-500">✅ Umgesetzt</p></div>';
-        kh += '<div class="vit-card p-2 text-center'+(bugs>0?' ring-2 ring-red-300':'')+'">';
+        kh += '<p class="text-[9px] text-gray-500">\u23F3 Warten</p></div>';
+        kh += '<div class="vit-card p-2 text-center cursor-pointer hover:shadow-md transition'+(_af==='aktiv'?' ring-2 ring-orange-400':'')+'" onclick="devKPIFilter(\'aktiv\')">';
+        kh += '<p class="text-lg font-bold text-blue-600">'+aktiv+'</p>';
+        kh += '<p class="text-[9px] text-gray-500">\u{1F528} In Arbeit</p></div>';
+        kh += '<div class="vit-card p-2 text-center cursor-pointer hover:shadow-md transition'+(_af==='done'?' ring-2 ring-orange-400':'')+'" onclick="devKPIFilter(\'done\')">';
+        kh += '<p class="text-lg font-bold text-green-600">'+done+'</p>';
+        kh += '<p class="text-[9px] text-gray-500">\u2705 Umgesetzt</p></div>';
+        kh += '<div class="vit-card p-2 text-center cursor-pointer hover:shadow-md transition'+(_af==='bugs'?' ring-2 ring-orange-400':bugs>0?' ring-2 ring-red-300':'')+'" onclick="devKPIFilter(\'bugs\')">';
         kh += '<p class="text-lg font-bold '+(bugs>0?'text-red-600 animate-pulse':'text-gray-800')+'">'+bugs+'</p>';
-        kh += '<p class="text-[9px] text-gray-500">🔴 Bugs</p></div>';
-        kh += '<div class="vit-card p-2 text-center"><p class="text-lg font-bold text-purple-600">'+week+'</p>';
-        kh += '<p class="text-[9px] text-gray-500">📈 Woche</p></div>';
-        kh += '<div class="vit-card p-2 text-center cursor-pointer hover:shadow-md" onclick="exportDevCSV()">';
+        kh += '<p class="text-[9px] text-gray-500">\u{1F534} Bugs</p></div>';
+        kh += '<div class="vit-card p-2 text-center cursor-pointer hover:shadow-md transition'+(_af==='woche'?' ring-2 ring-orange-400':'')+'" onclick="devKPIFilter(\'woche\')">';
+        kh += '<p class="text-lg font-bold text-purple-600">'+week+'</p>';
+        kh += '<p class="text-[9px] text-gray-500">\u{1F4C8} Woche</p></div>';
+        kh += '<div class="vit-card p-2 text-center cursor-pointer hover:shadow-md transition'+(_af==='gesamt'?' ring-2 ring-orange-400':'')+'" onclick="devKPIFilter(\'gesamt\')">';
         kh += '<p class="text-lg font-bold text-gray-600">'+total+'</p>';
-        kh += '<p class="text-[9px] text-gray-500">📥 Gesamt</p></div>';
-        kh += '</div>';
+        kh += '<p class="text-[9px] text-gray-500">\u{1F4E5} Gesamt</p></div>';
+
         bar.innerHTML = kh;
     }
 }
@@ -400,8 +405,24 @@ export function renderEntwIdeen() {
     var kat = fKat ? fKat.value : 'alle';
     var quelle = fQuelle ? fQuelle.value : 'alle';
     var typ = fTyp ? fTyp.value : 'alle';
+    // Clear KPI filter if any dropdown is manually changed
+    if(scope !== 'alle' || status !== 'alle' || kat !== 'alle' || quelle !== 'alle' || typ !== 'alle') {
+        if(devKPIActiveFilter) { devKPIActiveFilter = ''; renderEntwicklung(); }
+    }
 
     var items = devSubmissions.filter(function(s) {
+        // KPI filter takes priority when active
+        if(devKPIActiveFilter) {
+            var kf = devKPIActiveFilter;
+            if(kf === 'eingang' && ['neu','ki_pruefung'].indexOf(s.status) === -1) return false;
+            if(kf === 'warten' && ['ki_rueckfragen','hq_rueckfragen'].indexOf(s.status) === -1) return false;
+            if(kf === 'aktiv' && ['in_entwicklung','beta_test','im_review'].indexOf(s.status) === -1) return false;
+            if(kf === 'done' && s.status !== 'ausgerollt') return false;
+            if(kf === 'bugs' && (s.ki_typ !== 'bug' || ['abgelehnt','ausgerollt','geparkt'].indexOf(s.status) !== -1)) return false;
+            if(kf === 'woche' && (Date.now() - new Date(s.created_at).getTime()) >= 7*86400000) return false;
+            // gesamt = no additional filter
+            return true;
+        }
         if(scope !== 'alle' && s.scope !== scope) return false;
         if(status === 'neu' && ['neu','ki_pruefung','ki_rueckfragen','konzept_erstellt','konzept_wird_erstellt','im_ideenboard','hq_rueckfragen'].indexOf(s.status) === -1) return false;
         if(status === 'dev' && ['freigegeben','in_planung','in_entwicklung','beta_test','im_review','release_geplant'].indexOf(s.status) === -1) return false;
@@ -3748,6 +3769,32 @@ export async function saveDevNotizen(subId) {
 
 
 // === DEPLOY FUNCTIONS ===
+export function devKPIFilter(filterKey) {
+    // Toggle: click same KPI again = reset
+    if(devKPIActiveFilter === filterKey) {
+        devKPIActiveFilter = '';
+    } else {
+        devKPIActiveFilter = filterKey;
+    }
+    // Switch to Ideen tab and re-render
+    showEntwicklungTab('ideen');
+    // Reset dropdown filters when KPI is active
+    if(devKPIActiveFilter) {
+        var fStatus = document.getElementById('entwFilterStatus');
+        var fTyp = document.getElementById('entwFilterTyp');
+        var fKat = document.getElementById('entwFilterKat');
+        var fQuelle = document.getElementById('entwFilterQuelle');
+        if(fStatus) fStatus.value = 'alle';
+        if(fTyp) fTyp.value = 'alle';
+        if(fKat) fKat.value = 'alle';
+        if(fQuelle) fQuelle.value = 'alle';
+    }
+    renderEntwIdeen();
+    // Re-render KPIs to update active highlight
+    renderEntwicklung();
+}
+window.devKPIFilter = devKPIFilter;
+
 export function devToggleMirZugewiesen() {
     devFilterMirZugewiesen = !devFilterMirZugewiesen;
     renderDevPlanung();
@@ -4325,7 +4372,7 @@ export async function devMockupShowVersion(mockupId) {
 }
 
 const _exports = {
-    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachFiles,devMockupChatAttachImage,devMockupChatMic,devCopyPrompt,devRegeneratePrompt,devToggleMirZugewiesen,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devKIReleaseVorschlag,devTogglePartnerSichtbar,devSaveRelease,devEditReleaseDoc,devSaveEditRelease,devDeleteReleaseDoc,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,runDevKIPrioritize,createDevKonzept,updateDevStatus,
+    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachFiles,devMockupChatAttachImage,devMockupChatMic,devCopyPrompt,devRegeneratePrompt,devToggleMirZugewiesen,devKPIFilter,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devKIReleaseVorschlag,devTogglePartnerSichtbar,devSaveRelease,devEditReleaseDoc,devSaveEditRelease,devDeleteReleaseDoc,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,runDevKIPrioritize,createDevKonzept,updateDevStatus,
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // [prod] log removed
