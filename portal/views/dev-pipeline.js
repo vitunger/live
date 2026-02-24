@@ -2371,7 +2371,8 @@ export async function devHQDecisionFromDetail(subId, ergebnis) {
             }
             if(ergebnis === 'ideenboard') {
                 updates.partner_sichtbar = true;
-                _showToast('\uD83C\uDFAF Ins Ideenboard gestellt \u2013 Partner k\u00F6nnen jetzt voten!', 'success');
+                updates.status = 'konzept_wird_erstellt';
+                _showToast('\uD83C\uDFAF Konzept wird erstellt & ins Ideenboard gestellt...', 'success');
             }
             await _sb().from('dev_submissions').update(updates).eq('id', subId);
 
@@ -2406,12 +2407,23 @@ export async function devHQDecisionFromDetail(subId, ergebnis) {
                     });
                 }
             }
+
+            // Trigger KI-Konzepterstellung bei Ideenboard (mit target_status)
+            if(ergebnis === 'ideenboard') {
+                _sb().functions.invoke('dev-ki-analyse', {
+                    body: { submission_id: subId, mode: 'konzept', target_status: 'im_ideenboard' }
+                }).then(function() {
+                    refreshEntwicklungViews();
+                    setTimeout(function(){ loadDevSubmissions(true).then(function(){ refreshEntwicklungViews(); }); }, 1500);
+                });
+            }
         }
 
         // Update local cache so UI reflects change immediately
         var localSub = devSubmissions.find(function(s){ return s.id === subId; });
         if(localSub) {
             if(ergebnis === 'freigabe') localSub.status = 'konzept_wird_erstellt';
+            else if(ergebnis === 'ideenboard') localSub.status = 'konzept_wird_erstellt';
             else if(ergebnis === 'geschlossen') localSub.status = 'geschlossen';
             else { var _sm = {freigabe_mit_aenderungen:'ki_pruefung',ideenboard:'im_ideenboard',rueckfragen:'hq_rueckfragen',ablehnung:'abgelehnt',spaeter:'geparkt'}; localSub.status = _sm[ergebnis] || localSub.status; }
         }
