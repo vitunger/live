@@ -1537,7 +1537,7 @@ export async function devHQDecision(subId, ergebnis) {
         return;
     }
     var kommentar = '';
-    var statusMap = { freigabe:'freigegeben', freigabe_mit_aenderungen:'freigegeben', rueckfragen:'hq_rueckfragen', ablehnung:'abgelehnt', spaeter:'geparkt', geschlossen:'geschlossen' };
+    var statusMap = { freigabe:'freigegeben', freigabe_mit_aenderungen:'freigegeben', ideenboard:'im_ideenboard', rueckfragen:'hq_rueckfragen', ablehnung:'abgelehnt', spaeter:'geparkt', geschlossen:'geschlossen' };
 
     if(ergebnis === 'rueckfragen') {
         kommentar = prompt('Welche Rückfragen hast du?');
@@ -1875,6 +1875,7 @@ export async function openDevDetail(subId) {
             }
             h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'rueckfragen\')" class="px-2 py-1.5 bg-yellow-500 text-white rounded text-[10px] font-semibold hover:bg-yellow-600">\u2753 R\u00FCckfrage</button>';
             if(isOwner) {
+                h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'ideenboard\')" class="px-2 py-1.5 bg-purple-500 text-white rounded text-[10px] font-semibold hover:bg-purple-600">\uD83C\uDFAF Ins Ideenboard</button>';
                 h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'ablehnung\')" class="px-2 py-1.5 bg-red-100 text-red-700 rounded text-[10px] font-semibold hover:bg-red-200">\u274C Ablehnen</button>';
             }
             h += '</div>';
@@ -2301,6 +2302,7 @@ export async function devHQDecisionFromDetail(subId, ergebnis) {
     var statusMap = {
         freigabe: 'freigegeben',
         freigabe_mit_aenderungen: 'freigegeben',
+        ideenboard: 'im_ideenboard',
         rueckfragen: 'hq_rueckfragen',
         ablehnung: 'abgelehnt',
         spaeter: 'geparkt', geschlossen: 'geschlossen'
@@ -2367,6 +2369,10 @@ export async function devHQDecisionFromDetail(subId, ergebnis) {
                 updates.hq_entschieden_at = new Date().toISOString();
                 updates.status = 'konzept_wird_erstellt';
             }
+            if(ergebnis === 'ideenboard') {
+                updates.partner_sichtbar = true;
+                _showToast('\uD83C\uDFAF Ins Ideenboard gestellt \u2013 Partner k\u00F6nnen jetzt voten!', 'success');
+            }
             await _sb().from('dev_submissions').update(updates).eq('id', subId);
 
             // Trigger KI-Konzepterstellung bei Freigabe
@@ -2407,7 +2413,7 @@ export async function devHQDecisionFromDetail(subId, ergebnis) {
         if(localSub) {
             if(ergebnis === 'freigabe') localSub.status = 'konzept_wird_erstellt';
             else if(ergebnis === 'geschlossen') localSub.status = 'geschlossen';
-            else { var _sm = {freigabe_mit_aenderungen:'ki_pruefung',rueckfragen:'hq_rueckfragen',ablehnung:'abgelehnt',spaeter:'geparkt'}; localSub.status = _sm[ergebnis] || localSub.status; }
+            else { var _sm = {freigabe_mit_aenderungen:'ki_pruefung',ideenboard:'im_ideenboard',rueckfragen:'hq_rueckfragen',ablehnung:'abgelehnt',spaeter:'geparkt'}; localSub.status = _sm[ergebnis] || localSub.status; }
         }
 
         closeDevDetail();
