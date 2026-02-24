@@ -14,6 +14,7 @@ function _sbUrl()        { return window.SUPABASE_URL || window._sb?.()?.supabas
 
 // === DEV PIPELINE (Ideenboard 2.0) ===
 var devSubmissions = [];
+var devFilterMirZugewiesen = false;
 var devCurrentTab = 'meine';
 var devInputType = 'text';
 var devSelectedFiles = [];
@@ -1144,8 +1145,17 @@ export function renderDevPlanung() {
     var planItems = devSubmissions.filter(function(s) {
         return ['freigegeben','in_planung','in_entwicklung','beta_test','im_review','release_geplant','geparkt'].indexOf(s.status) !== -1;
     }).sort(function(a,b) { return (a.queue_position||9999) - (b.queue_position||9999); });
+
+    // Apply "Mir zugewiesen" filter
+    if(devFilterMirZugewiesen && _sbUser()) {
+        var myId = _sbUser().id;
+        planItems = planItems.filter(function(s) {
+            return s.konzept_ma === myId || s.entwickler_ma === myId;
+        });
+    }
+
     if(planItems.length === 0) {
-        c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-3">📅</p><p>Noch keine freigegebenen Ideen in der Planung.</p></div>';
+        c.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-3">' + (devFilterMirZugewiesen ? '👤' : '📅') + '</p><p>' + (devFilterMirZugewiesen ? 'Dir sind noch keine Ideen zugewiesen.' : 'Noch keine freigegebenen Ideen in der Planung.') + '</p></div>';
         return;
     }
 
@@ -1167,7 +1177,7 @@ export function renderDevPlanung() {
     });
 
     var h = '';
-    // KI-Priorisierung Button (HQ only)
+    // KI-Priorisierung Button + Filter (HQ only)
     if(isHQ) {
         h += '<div id="devPrioContainer" class="mb-6">';
         h += '<div class="flex items-center justify-between mb-3">';
@@ -1175,9 +1185,14 @@ export function renderDevPlanung() {
         h += '<h3 class="text-sm font-bold text-gray-500 uppercase">🤖 KI-Priorisierung</h3>';
         h += '<p class="text-xs text-gray-400">Welche Idee sollte HQ als nächstes bearbeiten?</p>';
         h += '</div>';
+        h += '<div class="flex items-center gap-2">';
+        h += '<button onclick="devToggleMirZugewiesen()" id="btnDevMirZugewiesen" class="px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5 transition '+(devFilterMirZugewiesen ? 'bg-orange-500 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')+'">';
+        h += '<span>👤</span><span>Mir zugewiesen</span>';
+        h += '</button>';
         h += '<button onclick="runDevKIPrioritize()" id="btnDevPrio" class="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg text-sm font-semibold hover:from-purple-600 hover:to-indigo-700 shadow-sm flex items-center gap-2">';
         h += '<span>🧠</span><span>Priorisierung starten</span>';
         h += '</button>';
+        h += '</div>';
         h += '</div>';
         h += '<div id="devPrioResult" class="hidden"></div>';
         h += '</div>';
@@ -3733,6 +3748,12 @@ export async function saveDevNotizen(subId) {
 
 
 // === DEPLOY FUNCTIONS ===
+export function devToggleMirZugewiesen() {
+    devFilterMirZugewiesen = !devFilterMirZugewiesen;
+    renderDevPlanung();
+}
+window.devToggleMirZugewiesen = devToggleMirZugewiesen;
+
 export function devCopyPrompt() {
     var pre = document.getElementById('devPromptContent');
     if(!pre) return;
@@ -4304,7 +4325,7 @@ export async function devMockupShowVersion(mockupId) {
 }
 
 const _exports = {
-    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachFiles,devMockupChatAttachImage,devMockupChatMic,devCopyPrompt,devRegeneratePrompt,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devKIReleaseVorschlag,devTogglePartnerSichtbar,devSaveRelease,devEditReleaseDoc,devSaveEditRelease,devDeleteReleaseDoc,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,runDevKIPrioritize,createDevKonzept,updateDevStatus,
+    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachFiles,devMockupChatAttachImage,devMockupChatMic,devCopyPrompt,devRegeneratePrompt,devToggleMirZugewiesen,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devKIReleaseVorschlag,devTogglePartnerSichtbar,devSaveRelease,devEditReleaseDoc,devSaveEditRelease,devDeleteReleaseDoc,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,runDevKIPrioritize,createDevKonzept,updateDevStatus,
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // [prod] log removed
