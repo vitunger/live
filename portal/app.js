@@ -12,7 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1771911023";
+const CACHE_BUST = "?v=1772030563";
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
@@ -118,4 +118,4 @@ async function loadModules() {
 
 // ── Boot ──
 loadModules();
-/* pro deploy 1771846481 */
+/* pro deploy 1772030563 */
