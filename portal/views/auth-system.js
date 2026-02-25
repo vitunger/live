@@ -237,6 +237,8 @@ if(SESSION.account_level === 'extern') {
     var externAllowed = ['externHome','onboarding','externWissen','wissen','kommunikation','support','notifications'];
     return externAllowed.indexOf(viewName) >= 0;
 }
+// Standort-User dürfen keine HQ-Views öffnen (Sicherheits-Boundary)
+if(viewName.indexOf('hq') === 0) return false;
 var perms = rolePermissions[viewName];
 if(!perms) return true;
 if(perms.indexOf('alle') >= 0) return true;
@@ -779,6 +781,13 @@ if(SESSION.account_level === 'extern') {
     var _savedView = null;
     try { _savedView = localStorage.getItem('vit_lastView'); } catch(e) {}
     
+    // Sanitize: Nicht-HQ-User dürfen keine HQ-Views aus localStorage laden
+    if(_savedView && _savedView.indexOf('hq') === 0 && currentRole !== 'hq') {
+        console.warn('[enterApp] Sanitized saved HQ view for non-HQ user:', _savedView);
+        _savedView = null;
+        try { localStorage.removeItem('vit_lastView'); } catch(e) {}
+    }
+    
     if(currentRole === 'hq') {
         window._vitRestoringView = true; // Flag to prevent showView from overwriting localStorage
         if(typeof window.switchViewMode==='function') window.switchViewMode('hq');
@@ -1163,10 +1172,11 @@ if (premiumBadge) {
 }
 
 var isInhaber = hasRole('inhaber');
+var isRealHQ = _sbProfile() && _sbProfile().is_hq === true;
 
-// HQ Toggle anzeigen für Inhaber
+// HQ Toggle NUR für echte HQ-User anzeigen (is_hq=true in DB)
 var hqToggle = document.getElementById('hqToggleSection');
-if(hqToggle) hqToggle.classList.toggle('hidden', !isInhaber);
+if(hqToggle) hqToggle.classList.toggle('hidden', !isRealHQ);
 var btnStandort = document.getElementById('btnModeStandort');
 var btnHQ = document.getElementById('btnModeHQ');
 if(btnStandort) btnStandort.className = 'flex-1 py-2 px-3 rounded-md text-xs font-bold transition ' + (isHQ ? 'text-white/60 hover:text-white' : 'bg-white text-gray-800');
