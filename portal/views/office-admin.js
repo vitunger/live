@@ -51,25 +51,45 @@
     // ═══════════════════════════════════════════════════════
     //  GRUNDRISS UPLOAD
     // ═══════════════════════════════════════════════════════
-    window.officeUploadGrundriss = async function() {
+    // ═══════════════════════════════════════════════════════
+    //  GRUNDRISS UPLOAD PRO RAUM
+    // ═══════════════════════════════════════════════════════
+    window.officeUploadGrundriss = function(roomId) {
         var input = document.createElement('input');
-        input.type = 'file'; input.accept = 'image/png,image/jpeg,image/webp,image/svg+xml';
+        input.type = 'file';
+        input.accept = 'image/png,image/jpeg,image/webp';
         input.onchange = async function() {
-            var file = input.files[0]; if (!file) return;
-            if (file.size > 10*1024*1024) { notify('Max 10 MB','error'); return; }
+            var file = input.files[0];
+            if (!file) return;
+            if (file.size > 20*1024*1024) { notify('Max 20 MB','error'); return; }
+            var room = _rooms.find(function(r){return r.id===roomId;});
+            if (!room) return;
+            notify('Wird hochgeladen...','info');
             try {
-                var fn = 'grundriss_'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'');
-                var r = await sb.storage.from('office-grundrisse').upload(fn, file, {cacheControl:'3600',upsert:false});
-                if (r.error) throw r.error;
+                var fn = 'grundriss_'+roomId+'_'+Date.now()+'.'+file.name.split('.').pop();
+                var up = await sb.storage.from('office-grundrisse').upload(fn, file, {cacheControl:'3600',upsert:false});
+                if (up.error) throw up.error;
                 var url = sb.storage.from('office-grundrisse').getPublicUrl(fn).data.publicUrl;
-                var img = document.getElementById('officeGrundrissImg');
-                var ph = document.getElementById('officeGrundrissPlaceholder');
-                if (img) { img.src = url; img.style.display = 'block'; img.onload = function(){ renderDots(); }; }
-                if (ph) ph.style.display = 'none';
-                notify('✅ Grundriss hochgeladen!');
+                var upd = await sb.from('office_rooms').update({grundriss_url: url}).eq('id', roomId);
+                if (upd.error) throw upd.error;
+                room.grundriss_url = url;
+                notify('✅ Grundriss für "'+room.name+'" hochgeladen!');
+                await officeRenderAdminDots();
             } catch(err) { notify('Upload fehlgeschlagen: '+err.message,'error'); }
         };
         input.click();
+    };
+
+    window.officeDeleteGrundriss = async function(roomId) {
+        if (!confirm('Grundriss-Bild löschen?')) return;
+        try {
+            var upd = await sb.from('office_rooms').update({grundriss_url: null}).eq('id', roomId);
+            if (upd.error) throw upd.error;
+            var room = _rooms.find(function(r){return r.id===roomId;});
+            if (room) room.grundriss_url = null;
+            notify('Grundriss entfernt');
+            await officeRenderAdminDots();
+        } catch(err) { notify('Fehler: '+err.message,'error'); }
     };
 
     // ═══════════════════════════════════════════════════════
@@ -193,7 +213,34 @@
                 h += '<p class="text-gray-400 text-xs py-2 italic">Keine Plätze — füge den ersten hinzu ↓</p>';
             }
 
-            h += '<button onclick="officeAddDesk(\''+room.id+'\',\''+esc(room.name).replace(/'/g,"\\'")+'\')" class="mt-3 text-xs px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 font-semibold">+ Platz hinzufügen</button></div>';
+            // Grundriss Preview + Upload
+            h += '<div class="mt-4 border-t border-gray-100 pt-3">';
+            h += '<div class="flex items-center justify-between mb-2">';
+            h += '<span class="text-xs font-semibold text-gray-600">&#127760; Grundriss</span>';
+            if(room.grundriss_url) {
+                h += '<div class="flex gap-1">';
+                h += '<button onclick="officeUploadGrundriss(\''+room.id+'\')" class="text-xs px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">&#8634; Ersetzen</button>';
+                h += '<button onclick="officeDeleteGrundriss(\''+room.id+'\')" class="text-xs px-2.5 py-1 bg-red-50 text-red-500 rounded-lg hover:bg-red-100">&#128465;</button>';
+                h += '</div>';
+            } else {
+                h += '<button onclick="officeUploadGrundriss(\''+room.id+'\')" class="text-xs px-3 py-1.5 bg-vit-orange text-white rounded-lg hover:opacity-90 font-semibold">&#8679; Bild hochladen</button>';
+            }
+            h += '</div>';
+            if(room.grundriss_url) {
+                h += '<div class="relative rounded-lg overflow-hidden border border-gray-200" style="max-height:180px">';
+                h += '<img src="'+room.grundriss_url+'" style="width:100%;height:auto;object-fit:contain;max-height:180px;display:block;" />';
+                h += '<div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/20 transition-opacity">';
+                h += '<button onclick="officeUploadGrundriss(\''+room.id+'\')" class="px-3 py-1.5 bg-white text-gray-700 rounded-lg text-xs font-semibold shadow">Bild ersetzen</button>';
+                h += '</div></div>';
+                h += '<p class="text-xs text-green-600 mt-1.5">&#10003; Grundriss vorhanden &middot; Pl&auml;tze im Admin-Grundriss per Drag&amp;Drop positionieren</p>';
+            } else {
+                h += '<div class="border-2 border-dashed border-gray-200 rounded-lg py-4 text-center">';
+                h += '<p class="text-xs text-gray-400">&#128247; PNG oder JPG hochladen (max 20 MB)</p>';
+                h += '</div>';
+            }
+            h += '</div>';
+
+            h += '<button onclick="officeAddDesk(\''+room.id+'\',\''+esc(room.name).replace(/'/g,"\\'")+'\')" class="mt-3 text-xs px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 font-semibold">+ Platz hinzuf\u00fcgen</button></div>';
         });
 
         // Orphans
