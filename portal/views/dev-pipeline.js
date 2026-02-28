@@ -1690,8 +1690,9 @@ export async function openDevDetail(subId) {
         var s = resp.data;
         var kiResp = await _sb().from('dev_ki_analysen').select('*').eq('submission_id', subId).order('version', {ascending: false}).limit(1);
         var ki = kiResp.data && kiResp.data[0] ? kiResp.data[0] : null;
-        var konzResp = await _sb().from('dev_konzepte').select('*').eq('submission_id', subId).order('version', {ascending: false}).limit(1);
-        var konzept = konzResp.data && konzResp.data[0] ? konzResp.data[0] : null;
+        var konzResp = await _sb().from('dev_konzepte').select('*').eq('submission_id', subId).order('version', {ascending: false});
+        var alleKonzepte = konzResp.data || [];
+        var konzept = alleKonzepte[0] || null;
         var kommResp = await _sb().from('dev_kommentare').select('*, users(name)').eq('submission_id', subId).order('created_at');
         var kommentare = kommResp.data || [];
         var entschResp = await _sb().from('dev_entscheidungen').select('*').eq('submission_id', subId).order('created_at', {ascending: false});
@@ -1718,7 +1719,11 @@ export async function openDevDetail(subId) {
         if(s.ki_typ) { var _dtC = s.ki_typ==='bug'?'bg-red-100 text-red-700':s.ki_typ==='feature'?'bg-purple-100 text-purple-700':'bg-blue-100 text-blue-700'; var _dtI = s.ki_typ==='bug'?'\uD83D\uDC1B':s.ki_typ==='feature'?'\u2728':'\uD83D\uDCA1'; h += '<span class="text-[10px] font-semibold rounded px-1.5 py-0.5 flex-shrink-0 '+_dtC+'">'+_dtI+'</span>'; }
         if(ki) h += '<span class="text-[10px] font-bold flex-shrink-0 '+(ki.vision_fit_score>=70?'text-green-600':ki.vision_fit_score>=40?'text-yellow-600':'text-red-600')+'">'+ki.vision_fit_score+'</span>';
         if(ki && ki.aufwand_schaetzung) h += '<span class="text-[10px] bg-gray-100 rounded px-1 py-0.5 flex-shrink-0">'+ki.aufwand_schaetzung+'</span>';
-        h += '<h2 class="text-sm font-bold text-gray-800 truncate">'+(s.titel||'(Ohne Titel)')+'</h2>';
+        if(isHQ) {
+            h += '<h2 class="text-sm font-bold text-gray-800 truncate cursor-pointer hover:text-indigo-600" title="Klicken zum Bearbeiten" onclick="devEditTitle(\''+s.id+'\',this)">'+(s.titel||'(Ohne Titel)')+'</h2>';
+        } else {
+            h += '<h2 class="text-sm font-bold text-gray-800 truncate">'+(s.titel||'(Ohne Titel)')+'</h2>';
+        }
         h += '</div>';
         // Workflow Actions (immer sichtbar im Header)
         if(showWorkflow) {
@@ -2062,7 +2067,13 @@ export async function openDevDetail(subId) {
                 {label:'\uD83D\uDE80 Rollout', val:konzept.rollout_strategie},
                 {label:'\u2714\uFE0F DoD', val:konzept.definition_of_done}
             ];
-            h += '<div class="mb-3 flex items-center justify-between"><span class="text-xs font-bold text-indigo-700">\uD83D\uDCDD Konzept v'+konzept.version+'</span>';
+            h += '<div class="mb-3 flex items-center justify-between"><div class="flex items-center gap-2"><span class="text-xs font-bold text-indigo-700">\uD83D\uDCDD Konzept v'+konzept.version+'</span>';
+            if(alleKonzepte.length > 1) {
+                alleKonzepte.forEach(function(kv) {
+                    h += '<button onclick="devShowKonzeptVersion(\''+subId+'\','+kv.version+')" class="px-1.5 py-0.5 rounded text-[10px] '+(kv.version===konzept.version?'bg-indigo-200 text-indigo-700 font-bold':'bg-gray-100 text-gray-500 hover:bg-gray-200')+'">v'+kv.version+'</button>';
+                });
+            }
+            h += '</div>';
             if(konzept.feature_flag_key) h += '<span class="text-[10px] bg-gray-100 rounded px-2 py-0.5">\uD83D\uDEA9 '+konzept.feature_flag_key+'</span>';
             h += '</div>';
             sections.forEach(function(sec) {
@@ -2114,12 +2125,14 @@ export async function openDevDetail(subId) {
             }
             h += '</div>';
 
+            h += '<div id="devMockupBody">';
             if(!latestMockup) {
                 h += '<div class="bg-white border-2 border-dashed border-gray-200 rounded-lg p-8 text-center">';
                 h += '<p class="text-3xl mb-2">\uD83C\uDFA8</p><p class="text-sm text-gray-500">Noch kein Mockup</p></div>';
             } else {
                 h += '<iframe id="devMockupFrame" sandbox="allow-scripts" style="width:100%;height:400px;border:1px solid #e5e7eb;border-radius:8px;background:white;" srcdoc="'+latestMockup.html_content.replace(/"/g,'&quot;').replace(/'/g,'&#39;')+'"></iframe>';
             }
+            h += '</div>'; // close devMockupBody
 
             // Design-Chat
             h += '<div class="mt-4 border-t border-pink-200 pt-3">';
@@ -4268,10 +4281,84 @@ export async function devMockupChatMic(btn) {
     }
 }
 
+// === INLINE TITLE EDIT ===
+export async function devEditTitle(subId, el) {
+    var current = el.textContent.trim();
+    if(current === '(Ohne Titel)') current = '';
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.value = current;
+    input.className = 'text-sm font-bold text-gray-800 border border-indigo-300 rounded px-2 py-0.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400';
+    input.placeholder = 'Titel eingeben...';
+    el.replaceWith(input);
+    input.focus();
+    input.select();
+    var save = async function() {
+        var val = input.value.trim();
+        if(!val) { val = current || '(Ohne Titel)'; }
+        if(val !== current && val !== '(Ohne Titel)') {
+            await _sb().from('dev_submissions').update({titel: val}).eq('id', subId);
+            _showToast('Titel gespeichert','success');
+        }
+        var h2 = document.createElement('h2');
+        h2.className = 'text-sm font-bold text-gray-800 truncate cursor-pointer hover:text-indigo-600';
+        h2.title = 'Klicken zum Bearbeiten';
+        h2.textContent = val || '(Ohne Titel)';
+        h2.onclick = function(){ devEditTitle(subId, h2); };
+        input.replaceWith(h2);
+    };
+    input.addEventListener('blur', save);
+    input.addEventListener('keydown', function(e) {
+        if(e.key === 'Enter') { e.preventDefault(); input.blur(); }
+        if(e.key === 'Escape') { input.value = current; input.blur(); }
+    });
+}
+
+// === KONZEPT VERSION SWITCHER ===
+export async function devShowKonzeptVersion(subId, version) {
+    var konzResp = await _sb().from('dev_konzepte').select('*').eq('submission_id', subId).order('version', {ascending: false});
+    var alle = konzResp.data || [];
+    var k = alle.find(function(kv){ return kv.version === version; });
+    if(!k) { _showToast('Konzept v'+version+' nicht gefunden','error'); return; }
+    var tab = document.getElementById('devTab_konzept');
+    if(!tab) return;
+    var h = '';
+    h += '<div class="mb-3 flex items-center justify-between"><div class="flex items-center gap-2"><span class="text-xs font-bold text-indigo-700">\uD83D\uDCDD Konzept v'+k.version+'</span>';
+    alle.forEach(function(kv) {
+        h += '<button onclick="devShowKonzeptVersion(\''+subId+'\','+kv.version+')" class="px-1.5 py-0.5 rounded text-[10px] '+(kv.version===k.version?'bg-indigo-200 text-indigo-700 font-bold':'bg-gray-100 text-gray-500 hover:bg-gray-200')+'">v'+kv.version+'</button>';
+    });
+    h += '</div>';
+    if(k.feature_flag_key) h += '<span class="text-[10px] bg-gray-100 rounded px-2 py-0.5">\uD83D\uDEA9 '+k.feature_flag_key+'</span>';
+    h += '</div>';
+    var sections = [
+        {label:'\uD83C\uDFAF Problem', val:k.problem_beschreibung},
+        {label:'\uD83D\uDCA1 Ziel', val:k.ziel},
+        {label:'\u2705 Nutzen', val:k.nutzen},
+        {label:'\uD83D\uDCE6 Scope (In)', val:k.scope_in},
+        {label:'\uD83D\uDEAB Scope (Out)', val:k.scope_out},
+        {label:'\uD83D\uDDA5\uFE0F UI/Frontend', val:k.loesungsvorschlag_ui},
+        {label:'\u2699\uFE0F Backend', val:k.loesungsvorschlag_backend},
+        {label:'\uD83D\uDDC4\uFE0F Datenbank', val:k.loesungsvorschlag_db},
+        {label:'\uD83E\uDDEA Testplan', val:k.testplan},
+        {label:'\uD83D\uDE80 Rollout', val:k.rollout_strategie},
+        {label:'\u2714\uFE0F DoD', val:k.definition_of_done}
+    ];
+    sections.forEach(function(sec) {
+        if(sec.val) h += '<div class="mb-3"><span class="text-[10px] font-bold text-indigo-600 uppercase">'+sec.label+'</span><p class="text-sm text-gray-700 mt-0.5 whitespace-pre-line">'+sec.val+'</p></div>';
+    });
+    if(k.akzeptanzkriterien && k.akzeptanzkriterien.length > 0) {
+        h += '<div class="mb-3"><span class="text-[10px] font-bold text-indigo-600 uppercase">\uD83D\uDCCB Akzeptanzkriterien</span>';
+        k.akzeptanzkriterien.forEach(function(a) { h += '<div class="text-sm text-gray-700 mt-0.5">\u2610 '+(a.beschreibung||a)+'</div>'; });
+        h += '</div>';
+    }
+    tab.innerHTML = h;
+}
+
 // === MOCKUP FUNCTIONS ===
 export async function devMockupGenerate(subId, isRefine) {
     var btn = document.getElementById('devBtnMockGen');
     var body = document.getElementById('devMockupBody');
+    if(btn) { btn.disabled = true; btn.textContent = '⏳ Wird generiert...'; btn.classList.add('opacity-50','cursor-wait'); }
     if(body) {
         body.innerHTML = '<div class="w-full"><div class="bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-xl p-4">' +
             '<div class="flex items-center gap-3 mb-3">' +
@@ -4372,7 +4459,7 @@ export async function devMockupShowVersion(mockupId) {
 }
 
 const _exports = {
-    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachFiles,devMockupChatAttachImage,devMockupChatMic,devCopyPrompt,devRegeneratePrompt,devToggleMirZugewiesen,devKPIFilter,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devKIReleaseVorschlag,devTogglePartnerSichtbar,devSaveRelease,devEditReleaseDoc,devSaveEditRelease,devDeleteReleaseDoc,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,runDevKIPrioritize,createDevKonzept,updateDevStatus,
+    saveDevNotizen,loadMockupChatHistory,devMockupChatSend,devMockupChatAttachFiles,devMockupChatAttachImage,devMockupChatMic,devCopyPrompt,devRegeneratePrompt,devToggleMirZugewiesen,devKPIFilter,devEditTitle,devShowKonzeptVersion,devMockupGenerate,devMockupRefine,devMockupResize,devMockupFullscreen,devMockupShowVersion,toggleDevSubmitForm,setDevInputType,toggleDevAudioRecord,finalizeDevAudioRecording,toggleDevScreenRecord,finalizeDevScreenRecording,stopDevRecording,getSupportedMimeType,startDevTimer,stopDevTimer,updateDevFileList,handleDevFileSelect,renderEntwicklung,showEntwicklungTab,renderEntwTabContent,loadDevSubmissions,renderEntwIdeen,renderEntwReleases,renderEntwSteuerung,renderEntwFlags,renderEntwSystem,renderEntwNutzung,showIdeenTab,renderDevPipeline,renderDevTab,devCardHTML,renderDevMeine,renderDevAlle,renderDevBoard,devBoardCardHTML,renderDevPlanung,updateDevPlanStatus,updateDevPlanField,renderDevRoadmap,toggleRoadmapForm,addRoadmapItem,updateRoadmapStatus,submitDevIdea,toggleDevVote,devHQDecision,moveDevQueue,openDevDetail,submitDevRueckfragenAntwort,devHQDecisionFromDetail,submitDevKommentar,closeDevDetail,renderDevVision,saveDevVision,loadDevNotifications,toggleDevNotifications,openDevNotif,markAllDevNotifsRead,exportDevCSV,updateDevMA,updateDevDeadline,reanalyseDevSubmission,uploadDevAttachment,sendDevKonzeptChat,devAdvanceStatus,submitDevBetaFeedback,devShowBetaFeedbackSummary,devRollout,renderDevBetaTester,devAddBetaTester,devToggleBetaTester,renderDevReleaseDocs,devApproveReleaseDoc,devShowCreateRelease,devKIReleaseVorschlag,devTogglePartnerSichtbar,devSaveRelease,devEditReleaseDoc,devSaveEditRelease,devDeleteReleaseDoc,devShowFeedbackForm,devCreateFeedbackAnfrage,devSubmitFeedbackAntwort,devCloseFeedbackAnfrage,runDevKIPrioritize,createDevKonzept,updateDevStatus,
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // [prod] log removed
