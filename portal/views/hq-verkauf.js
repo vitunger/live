@@ -998,9 +998,11 @@ export async function renderPerformanceCockpit() {
     }
 }
 
-// Hook HQ views into showView
-var origShowView2 = showView;
-showView = function(v) {
+// Hook HQ views into showView (deferred until available)
+function _hookShowView() {
+    if (typeof showView === 'undefined' || !window.showView) return;
+    var origShowView2 = window.showView;
+    window.showView = function(v) {
     // Rechteprüfung
     if(!hasAccess(v)) {
         alert('Kein Zugriff auf diesen Bereich mit deiner aktuellen Rolle.');
@@ -1050,6 +1052,12 @@ showView = function(v) {
     if(v==='aktenschrank') { loadAktenFiles(); }
     if(v==='devStatus') { _showView('entwicklung'); setTimeout(function(){showEntwicklungTab('module')},50); return; }
 };
+}
+// Try immediately, retry after modules-ready event
+_hookShowView();
+if (!window._showViewHooked) {
+    window.addEventListener('vit:modules-ready', function() { _hookShowView(); });
+}
 
 
 
