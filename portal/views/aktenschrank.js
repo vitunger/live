@@ -160,7 +160,6 @@ function renderRow(d){
     h+='</div></div></td><td class="py-3 px-4 text-gray-500 text-xs">'+esc(typN)+'</td><td class="py-3 px-4">'+statusBadge(d.status)+'</td><td class="py-3 px-4 text-gray-500 text-xs">'+fmtDate(d.created_at)+'</td><td class="py-3 px-4">'+quelleBadge(d.quelle)+'</td><td class="py-3 px-4 text-right whitespace-nowrap">';
     if(d.datei_url)h+='<button onclick="event.stopPropagation();viewAktenDoc(\''+d.id+'\')" class="text-blue-600 hover:text-blue-800 text-xs font-semibold mr-3" title="Ansehen">\uD83D\uDC41 Ansehen</button>';
     if(d.datei_url)h+='<button onclick="event.stopPropagation();downloadAktenDoc(\''+d.id+'\')" class="text-vit-orange hover:text-orange-700 text-xs font-semibold mr-3" title="Download">\u2B07 Download</button>';
-    if(!d.datei_url && d.quelle==='controlling')h+='<button onclick="event.stopPropagation();viewAktenDoc(\''+d.id+'\')" class="text-blue-600 hover:text-blue-800 text-xs font-semibold mr-3" title="Im Controlling öffnen">\uD83D\uDCCA Controlling</button>';
     h+='<button onclick="event.stopPropagation();openAktenReview(\''+d.id+'\')" class="text-gray-400 hover:text-gray-600 text-xs font-semibold mr-3" title="Details">\u2699 Details</button>';
     h+='<button onclick="event.stopPropagation();deleteAktenDoc(\''+d.id+'\',\''+esc(d.titel).replace(/'/g,"\\'")+'\')" class="text-red-400 hover:text-red-600 text-xs font-semibold" title="Löschen">\uD83D\uDDD1</button>';
     h+='</td></tr>';
