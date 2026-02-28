@@ -160,7 +160,10 @@ function renderRow(d){
     h+='</div></div></td><td class="py-3 px-4 text-gray-500 text-xs">'+esc(typN)+'</td><td class="py-3 px-4">'+statusBadge(d.status)+'</td><td class="py-3 px-4 text-gray-500 text-xs">'+fmtDate(d.created_at)+'</td><td class="py-3 px-4">'+quelleBadge(d.quelle)+'</td><td class="py-3 px-4 text-right whitespace-nowrap">';
     if(d.datei_url)h+='<button onclick="event.stopPropagation();viewAktenDoc(\''+d.id+'\')" class="text-blue-600 hover:text-blue-800 text-xs font-semibold mr-3" title="Ansehen">\uD83D\uDC41 Ansehen</button>';
     if(d.datei_url)h+='<button onclick="event.stopPropagation();downloadAktenDoc(\''+d.id+'\')" class="text-vit-orange hover:text-orange-700 text-xs font-semibold mr-3" title="Download">\u2B07 Download</button>';
-    h+='<button onclick="event.stopPropagation();openAktenReview(\''+d.id+'\')" class="text-gray-400 hover:text-gray-600 text-xs font-semibold" title="Details">\u2699 Details</button></td></tr>';
+    if(!d.datei_url && d.quelle==='controlling')h+='<button onclick="event.stopPropagation();viewAktenDoc(\''+d.id+'\')" class="text-blue-600 hover:text-blue-800 text-xs font-semibold mr-3" title="Im Controlling öffnen">\uD83D\uDCCA Controlling</button>';
+    h+='<button onclick="event.stopPropagation();openAktenReview(\''+d.id+'\')" class="text-gray-400 hover:text-gray-600 text-xs font-semibold mr-3" title="Details">\u2699 Details</button>';
+    h+='<button onclick="event.stopPropagation();deleteAktenDoc(\''+d.id+'\',\''+esc(d.titel).replace(/'/g,"\\'")+'\')" class="text-red-400 hover:text-red-600 text-xs font-semibold" title="Löschen">\uD83D\uDDD1</button>';
+    h+='</td></tr>';
     return h;
 }
 
@@ -283,6 +286,7 @@ export async function openAktenReview(dokId){
         html+='<button onclick="saveAndConfirmAktenDoc(\''+dokId+'\')" class="flex-1 py-2.5 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700">\u2705 Speichern & Best\u00e4tigen</button>';
         if(dok.status!=='geprueft')html+='<button onclick="saveAktenDraft(\''+dokId+'\')" class="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 border border-gray-200">Speichern</button>';
         html+='<button onclick="rejectAktenDoc(\''+dokId+'\')" class="px-4 py-2.5 bg-red-50 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-100 border border-red-200">Ablehnen</button>';
+        html+='<button onclick="deleteAktenDoc(\''+dokId+'\',\''+esc(dok.titel||'').replace(/'/g,"\\'")+'\')" class="px-4 py-2.5 bg-white text-red-500 rounded-lg text-sm font-semibold hover:bg-red-50 border border-red-200" title="Endgültig löschen">\uD83D\uDDD1</button>';
     }
     html+='</div>';
     document.getElementById('aktenReviewContent').innerHTML=html;
@@ -338,6 +342,33 @@ export async function saveAndConfirmAktenDoc(dokId){
 export function closeAktenReview(){document.getElementById('aktenReviewOverlay').classList.add('hidden');}
 
 export async function rejectAktenDoc(dokId){if(!confirm('Dokument wirklich ablehnen?'))return;try{var u=_sbUser();await _sb().from('dokumente').update({status:'abgelehnt'}).eq('id',dokId);await _sb().from('dokument_audit').insert({dokument_id:dokId,aktion:'status_geaendert',details:{beschreibung:'Abgelehnt',neuer_status:'abgelehnt'},user_id:u.id});var d=_akten.dokumente.find(function(x){return x.id===dokId;});if(d)d.status='abgelehnt';closeAktenReview();updateStats();updateInboxBadge();aktenToast('\u274C Dokument abgelehnt');}catch(e){console.error('Reject err:',e);}}
+
+// DELETE DOCUMENT
+export async function deleteAktenDoc(dokId, titel){
+    if(!confirm('Dokument "'+titel+'" wirklich endgültig löschen?\n\nDies kann nicht rückgängig gemacht werden.'))return;
+    try{
+        var s=_sb();
+        var dok=_akten.dokumente.find(function(d){return d.id===dokId;});
+        // Delete storage file if exists
+        if(dok && dok.datei_url && !dok.datei_url.startsWith('http')){
+            try{await s.storage.from('dokumente').remove([dok.datei_url]);}catch(e){console.warn('Storage delete err:',e);}
+        } else if(dok && dok.datei_url && dok.datei_url.includes('/storage/v1/object/public/dokumente/')){
+            var path=dok.datei_url.split('/storage/v1/object/public/dokumente/')[1];
+            if(path)try{await s.storage.from('dokumente').remove([path]);}catch(e){console.warn('Storage delete err:',e);}
+        }
+        // Delete related records first
+        await s.from('dokument_felder').delete().eq('dokument_id',dokId);
+        await s.from('dokument_audit').delete().eq('dokument_id',dokId);
+        // Delete document
+        var delR=await s.from('dokumente').delete().eq('id',dokId);
+        if(delR.error){aktenToast('\u274C Fehler: '+delR.error.message);return;}
+        // Remove from local state
+        _akten.dokumente=_akten.dokumente.filter(function(d){return d.id!==dokId;});
+        closeAktenReview();renderFolders();updateStats();updateInboxBadge();
+        if(_akten.currentFolder)openAktenFolder(_akten.currentFolder);
+        aktenToast('\uD83D\uDDD1 Dokument gelöscht');
+    }catch(e){console.error('Delete err:',e);aktenToast('\u274C Fehler beim Löschen');}
+}
 
 // UPLOAD
 export function openAktenUpload(){_akten.uploadQueue=[];var fi=document.getElementById('aktenFileInput');if(fi)fi.value='';var fq=document.getElementById('aktenFileQueue');if(fq){fq.innerHTML='';fq.classList.add('hidden');}var up=document.getElementById('aktenUploadProgress');if(up)up.classList.add('hidden');var ub=document.getElementById('aktenUploadBtn');if(ub)ub.classList.add('hidden');document.getElementById('aktenUploadOverlay').classList.remove('hidden');}
@@ -461,7 +492,7 @@ export function filterAkten(){
 export function loadAktenschrank(){console.log('[aktenschrank.js] loadAktenschrank called, aktenschrankView exists:', !!document.getElementById('aktenschrankView'));renderMainView();loadAktenFiles();}
 
 // WINDOW REGISTRATION
-const _exports={loadAktenschrank,loadAktenFiles,getFileIcon,openAktenFolder,closeAktenFolder,filterAkten,showAktenInbox,closeAktenInbox,openAktenReview,closeAktenReview,selectAktenOrdner,saveAktenDraft,saveAndConfirmAktenDoc,rejectAktenDoc,openAktenUpload,closeAktenUpload,handleAktenDrop,handleAktenFileSelect,startAktenUpload,removeFromAktenQueue,downloadAktenDoc,viewAktenDoc,closeAktenPreview};
+const _exports={loadAktenschrank,loadAktenFiles,getFileIcon,openAktenFolder,closeAktenFolder,filterAkten,showAktenInbox,closeAktenInbox,openAktenReview,closeAktenReview,selectAktenOrdner,saveAktenDraft,saveAndConfirmAktenDoc,rejectAktenDoc,deleteAktenDoc,openAktenUpload,closeAktenUpload,handleAktenDrop,handleAktenFileSelect,startAktenUpload,removeFromAktenQueue,downloadAktenDoc,viewAktenDoc,closeAktenPreview};
 Object.keys(_exports).forEach(k=>{window[k]=_exports[k];});
 // [prod] log removed
 
@@ -477,6 +508,7 @@ window.selectAktenOrdner = selectAktenOrdner;
 window.saveAktenDraft = saveAktenDraft;
 window.saveAndConfirmAktenDoc = saveAndConfirmAktenDoc;
 window.rejectAktenDoc = rejectAktenDoc;
+window.deleteAktenDoc = deleteAktenDoc;
 window.openAktenUpload = openAktenUpload;
 window.closeAktenUpload = closeAktenUpload;
 window.handleAktenDrop = handleAktenDrop;
