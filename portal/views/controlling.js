@@ -14,6 +14,9 @@ function _escH(s)     { return typeof window.escH === 'function' ? window.escH(s
 function _t(k)        { return typeof window.t === 'function' ? window.t(k) : k; }
 function _showToast(m,t){ if (typeof window.showToast === 'function') window.showToast(m,t); }
 function _fmtN(n)     { return typeof window.fmtN === 'function' ? window.fmtN(n) : String(n); }
+function _el(id)      { return document.getElementById(id); }
+function _setTxt(id,v){ var e=_el(id); if(e) e.textContent=v; }
+function _setDisp(id,v){ var e=_el(id); if(e) e.style.display=v; }
 
 // === CONTROLLING TABS ===
 export function showControllingTab(tabName) {
@@ -229,22 +232,21 @@ export async function showBwaFromDb(bwaId) {
         if(resp.error) throw resp.error;
         var b = resp.data;
         // Update title
-        document.getElementById('bwaTitle').textContent = 'BWA ' + monatNamen[b.monat] + ' ' + b.jahr;
-        document.getElementById('bwaEditBtn').style.display = '';
-        document.getElementById('bwaDeleteBtn').style.display = '';
+        _setTxt('bwaTitle', 'BWA ' + monatNamen[b.monat] + ' ' + b.jahr);
+        _setDisp('bwaEditBtn', '');
+        _setDisp('bwaDeleteBtn', '');
         // KPIs
         var marge = parseFloat(b.umsatzerloese) > 0 ? ((parseFloat(b.rohertrag)/parseFloat(b.umsatzerloese))*100).toFixed(1) : 0;
         var ergMarge = parseFloat(b.umsatzerloese) > 0 ? ((parseFloat(b.ergebnis_vor_steuern)/parseFloat(b.umsatzerloese))*100).toFixed(1) : 0;
-        document.getElementById('bwaKpiUmsatz').textContent = eur(b.umsatzerloese) + ' €';
-        document.getElementById('bwaKpiUmsatzVj').textContent = b.plan_umsatz ? 'Plan: '+eur(b.plan_umsatz)+' €' : '';
-        document.getElementById('bwaKpiRohertrag').textContent = eur(b.rohertrag) + ' €';
-        document.getElementById('bwaKpiMarge').textContent = 'Marge: '+marge+'%';
-        document.getElementById('bwaKpiKosten').textContent = eur(b.gesamtkosten) + ' €';
-        document.getElementById('bwaKpiKostenVj').textContent = b.plan_gesamtkosten ? 'Plan: '+eur(b.plan_gesamtkosten)+' €' : '';
-        var ergEl = document.getElementById('bwaKpiErgebnis');
-        ergEl.textContent = eur(b.ergebnis_vor_steuern) + ' €';
-        ergEl.className = 'text-xl font-bold ' + (parseFloat(b.ergebnis_vor_steuern) >= 0 ? 'text-green-600' : 'text-red-600');
-        document.getElementById('bwaKpiErgebnisMarge').textContent = 'Marge: '+ergMarge+'%';
+        _setTxt('bwaKpiUmsatz', eur(b.umsatzerloese) + ' €');
+        _setTxt('bwaKpiUmsatzVj', b.plan_umsatz ? 'Plan: '+eur(b.plan_umsatz)+' €' : '');
+        _setTxt('bwaKpiRohertrag', eur(b.rohertrag) + ' €');
+        _setTxt('bwaKpiMarge', 'Marge: '+marge+'%');
+        _setTxt('bwaKpiKosten', eur(b.gesamtkosten) + ' €');
+        _setTxt('bwaKpiKostenVj', b.plan_gesamtkosten ? 'Plan: '+eur(b.plan_gesamtkosten)+' €' : '');
+        var ergEl = _el('bwaKpiErgebnis');
+        if(ergEl) { ergEl.textContent = eur(b.ergebnis_vor_steuern) + ' €'; ergEl.className = 'text-xl font-bold ' + (parseFloat(b.ergebnis_vor_steuern) >= 0 ? 'text-green-600' : 'text-red-600'); }
+        _setTxt('bwaKpiErgebnisMarge', 'Marge: '+ergMarge+'%');
 
         // Detail table - try loading from bwa_detail_positionen first
         var detailResp = await _sb().from('bwa_detail_positionen').select('*').eq('bwa_id', bwaId).order('sortierung');
@@ -281,14 +283,13 @@ export async function showBwaFromDb(bwaId) {
             // Override KPIs with corrected values
             var detMarge = detUmsatz > 0 ? ((detRohertrag/detUmsatz)*100).toFixed(1) : 0;
             var detErgMarge = detUmsatz > 0 ? ((detErgebnis/detUmsatz)*100).toFixed(1) : 0;
-            document.getElementById('bwaKpiUmsatz').textContent = eur(detUmsatz) + ' €';
-            document.getElementById('bwaKpiRohertrag').textContent = eur(detRohertrag) + ' €';
-            document.getElementById('bwaKpiMarge').textContent = 'Marge: '+detMarge+'%';
-            if(detKosten) document.getElementById('bwaKpiKosten').textContent = eur(detKosten) + ' €';
-            var ergEl2 = document.getElementById('bwaKpiErgebnis');
-            ergEl2.textContent = eur(detErgebnis) + ' €';
-            ergEl2.className = 'text-xl font-bold ' + (detErgebnis >= 0 ? 'text-green-600' : 'text-red-600');
-            document.getElementById('bwaKpiErgebnisMarge').textContent = 'Marge: '+detErgMarge+'%';
+            _setTxt('bwaKpiUmsatz', eur(detUmsatz) + ' €');
+            _setTxt('bwaKpiRohertrag', eur(detRohertrag) + ' €');
+            _setTxt('bwaKpiMarge', 'Marge: '+detMarge+'%');
+            if(detKosten) _setTxt('bwaKpiKosten', eur(detKosten) + ' €');
+            var ergEl2 = _el('bwaKpiErgebnis');
+            if(ergEl2) { ergEl2.textContent = eur(detErgebnis) + ' €'; ergEl2.className = 'text-xl font-bold ' + (detErgebnis >= 0 ? 'text-green-600' : 'text-red-600'); }
+            _setTxt('bwaKpiErgebnisMarge', 'Marge: '+detErgMarge+'%');
             // [prod] log removed
             // Permanently fix wrong values in bwa_daten
             if(Math.abs(detErgebnis - (parseFloat(b.ergebnis_vor_steuern)||0)) > 1) {
@@ -449,9 +450,10 @@ export async function loadBwaTrend(stdId, jahr) {
     var sec = document.getElementById('bwaTrendSection');
     var cards = document.getElementById('bwaTrendCards');
     if(!sec||!cards) return;
+    // HQ-User ohne Standort: Trend ausblenden statt alle Standorte zu mischen
+    if(!stdId) { sec.style.display = 'none'; return; }
     try {
-        var query = _sb().from('bwa_daten').select('monat,umsatzerloese,rohertrag,gesamtkosten,ergebnis_vor_steuern').eq('jahr', jahr).order('monat');
-        if(stdId) query = query.eq('standort_id', stdId);
+        var query = _sb().from('bwa_daten').select('monat,umsatzerloese,rohertrag,gesamtkosten,ergebnis_vor_steuern').eq('jahr', jahr).eq('standort_id', stdId).order('monat');
         var resp = await query;
         if(resp.error || !resp.data || resp.data.length < 2) { sec.style.display = 'none'; return; }
         sec.style.display = '';
@@ -629,6 +631,14 @@ export async function parseBwaWithAI() {
     }
 
     statusText.textContent = '📊 Datei wird analysiert...';
+
+    // Check XLSX library availability
+    if(typeof XLSX === 'undefined' && typeof window.XLSX === 'undefined') {
+        statusEl.querySelector('.animate-spin').style.display = 'none';
+        statusText.textContent = '❌ Excel-Bibliothek (SheetJS) nicht geladen. Bitte Seite neu laden.';
+        if(parseBtn) parseBtn.disabled = false;
+        return;
+    }
 
     // === DATEV Sign Inversion Fix ===
     var negZeilen = {1060:1,1100:1,1120:1,1140:1,1150:1,1155:1,1160:1,1170:1,1175:1,1180:1,1190:1,1200:1,1210:1,1220:1,1240:1,1250:1,1260:1,1280:1,1290:1,1310:1,1312:1,1320:1,1355:1};
@@ -1427,7 +1437,31 @@ export async function renderBenchmarks() {
 }
 
 // Strangler Fig
-const _exports = {showControllingTab,showBwaDetail,eur,eurColor,diffHtml,loadBwaList,downloadBwa,showBwaFromDb,loadBwaTrend,openBwaUploadModal,handleBwaFileSelect,parseBwaWithAI,parseBwaBatch,parseSingleBwaFileWithRetry,cleanCsvForKi,parseSingleBwaFile,autoSaveBwa,bwaApplyKiResult,closeBwaUploadModal,saveBwaData,renderBenchmarks};
+// === DELETE BWA (extracted from index.html) ===
+export async function deleteBwa() {
+    if(!selectedBwaId) return;
+    if(!confirm('BWA wirklich löschen?')) return;
+    try {
+        // Fix 4: Detail-Positionen zuerst löschen (FK-Constraint)
+        await _sb().from('bwa_detail_positionen').delete().eq('bwa_id', selectedBwaId);
+        var resp = await _sb().from('bwa_daten').delete().eq('id', selectedBwaId);
+        if(resp.error) throw resp.error;
+        selectedBwaId = null;
+        _setTxt('bwaTitle', 'BWA auswählen');
+        var body = _el('bwaDetailBody');
+        if(body) body.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-400">BWA gelöscht.</td></tr>';
+        _setDisp('bwaEditBtn', 'none');
+        _setDisp('bwaDeleteBtn', 'none');
+        _setDisp('bwaTrendSection', 'none');
+        _setTxt('bwaKpiUmsatz', '—');
+        _setTxt('bwaKpiRohertrag', '—');
+        _setTxt('bwaKpiKosten', '—');
+        _setTxt('bwaKpiErgebnis', '—');
+        loadBwaList();
+    } catch(err) { alert('Fehler: '+err.message); }
+}
+
+const _exports = {showControllingTab,showBwaDetail,eur,eurColor,diffHtml,loadBwaList,downloadBwa,showBwaFromDb,loadBwaTrend,openBwaUploadModal,handleBwaFileSelect,parseBwaWithAI,parseBwaBatch,parseSingleBwaFileWithRetry,cleanCsvForKi,parseSingleBwaFile,autoSaveBwa,bwaApplyKiResult,closeBwaUploadModal,saveBwaData,renderBenchmarks,deleteBwa};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // BwaParser needed by plan-ist.js
 window.BwaParser = BwaParser;
