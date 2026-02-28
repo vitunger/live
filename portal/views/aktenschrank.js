@@ -210,30 +210,130 @@ export async function openAktenReview(dokId){
     var [fR,aR]=await Promise.all([s.from('dokument_felder').select('*').eq('dokument_id',dokId).order('created_at'),s.from('dokument_audit').select('*').eq('dokument_id',dokId).order('created_at',{ascending:false}).limit(10)]);
     var felder=(!fR.error&&fR.data)?fR.data:[];var audit=(!aR.error&&aR.data)?aR.data:[];
     var typN=dok.dokument_typen?dok.dokument_typen.name:(dok.ki_typ_vorschlag||'Unbekannt');
-    document.getElementById('aktenReviewTitle').textContent=dok.titel;
+    var kiV=dok.ki_vorschlag||{};
+    var canEdit=(dok.status==='ki_verarbeitet'||dok.status==='eingegangen'||dok.status==='geprueft');
+    document.getElementById('aktenReviewTitle').textContent=dok.titel||'Dokument prüfen';
 
-    // File info header with preview/download buttons
+    // File info header
     var ext=(dok.datei_name||'').split('.').pop().toLowerCase();
     var html='<div class="bg-gray-50 rounded-lg p-4 mb-6 flex items-center justify-between"><div class="flex items-center space-x-3">'+getFileIcon(ext.toUpperCase())+'<div><p class="text-sm font-semibold text-gray-800">'+esc(dok.datei_name||dok.titel)+'</p><p class="text-xs text-gray-400">'+fmtBytes(dok.datei_groesse||0)+' \u2022 '+esc(ext.toUpperCase())+'</p></div></div><div class="flex items-center space-x-2">';
     if(dok.datei_url)html+='<button onclick="viewAktenDoc(\''+dokId+'\')" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 flex items-center space-x-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg><span>Ansehen</span></button>';
     if(dok.datei_url)html+='<button onclick="downloadAktenDoc(\''+dokId+'\')" class="px-3 py-2 bg-vit-orange text-white rounded-lg text-xs font-semibold hover:opacity-90 flex items-center space-x-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><span>Download</span></button>';
     html+='</div></div>';
 
-    // Metadata grid
-    html+='<div class="grid grid-cols-2 gap-4 mb-6"><div><p class="text-xs text-gray-400 mb-1">Dokumenttyp</p><p class="text-sm font-semibold text-gray-800">'+esc(typN)+'</p></div><div><p class="text-xs text-gray-400 mb-1">Status</p>'+statusBadge(dok.status)+'</div><div><p class="text-xs text-gray-400 mb-1">Quelle</p>'+quelleBadge(dok.quelle)+'</div><div><p class="text-xs text-gray-400 mb-1">Hochgeladen</p><p class="text-sm text-gray-600">'+fmtDate(dok.created_at)+'</p></div></div>';
-    if(dok.ki_confidence){var p=Math.round(dok.ki_confidence*100);html+='<div class="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-6"><div class="flex items-center justify-between mb-1"><span class="text-xs font-semibold text-blue-800">\uD83E\uDD16 KI-Konfidenz</span><span class="text-xs font-bold text-blue-700">'+p+'%</span></div><div class="w-full bg-blue-200 rounded-full h-2"><div class="bg-blue-600 h-2 rounded-full" style="width:'+p+'%"></div></div></div>';}
+    // === KI SUGGESTION BOX (if ki_verarbeitet or eingegangen) ===
+    if(kiV.zusammenfassung && canEdit){
+        var conf=dok.ki_confidence?Math.round(dok.ki_confidence*100):0;
+        var confColor=conf>=70?'bg-green-100 text-green-700':conf>=40?'bg-yellow-100 text-yellow-700':'bg-red-100 text-red-700';
+        var sugOrdner=_akten.ordner.find(function(o){return o.key===(kiV.ordner_key||'');});
+        html+='<div class="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-4 mb-6">';
+        html+='<div class="flex items-start space-x-3"><div class="flex-shrink-0 w-8 h-8 bg-vit-orange rounded-full flex items-center justify-center"><span class="text-white text-sm">\uD83E\uDD16</span></div>';
+        html+='<div class="flex-1"><div class="flex items-center justify-between mb-2"><h4 class="text-sm font-bold text-gray-800">KI-Empfehlung</h4>';
+        html+='<span class="px-2 py-0.5 rounded-full text-xs font-bold '+confColor+'">'+conf+'%</span></div>';
+        html+='<p class="text-xs text-gray-600 mb-2">'+esc(kiV.zusammenfassung)+'</p>';
+        if(sugOrdner)html+='<div class="flex items-center gap-2 text-xs"><span class="text-gray-500">Ordner:</span><span class="font-semibold" style="color:'+sugOrdner.farbe+'">'+(sugOrdner.icon||'\uD83D\uDCC1')+' '+esc(sugOrdner.name)+'</span></div>';
+        if(kiV.typ_name)html+='<div class="flex items-center gap-2 text-xs mt-1"><span class="text-gray-500">Typ:</span><span class="font-semibold text-gray-700">'+esc(kiV.typ_name)+'</span></div>';
+        html+='</div></div></div>';
+    }
+
+    // === EDITABLE FIELDS ===
+    if(canEdit){
+        // Titel
+        html+='<div class="mb-4"><label class="block text-xs font-semibold text-gray-600 mb-1">Dokumententitel</label>';
+        html+='<input type="text" id="aktenReviewTitel" value="'+esc(dok.titel||'')+'" maxlength="150" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-vit-orange focus:border-transparent" placeholder="Titel eingeben...">';
+        if(kiV.titel_vorschlag && kiV.titel_vorschlag!==dok.titel)html+='<p class="text-xs text-blue-500 mt-1 cursor-pointer hover:underline" onclick="document.getElementById(\'aktenReviewTitel\').value=\''+esc(kiV.titel_vorschlag).replace(/'/g,'\\\'')+'\'">KI-Vorschlag: '+esc(kiV.titel_vorschlag).substring(0,80)+'</p>';
+        html+='</div>';
+
+        // Beschreibung / Notizen
+        html+='<div class="mb-4"><label class="block text-xs font-semibold text-gray-600 mb-1">Beschreibung / Notizen</label>';
+        html+='<textarea id="aktenReviewNotizen" rows="3" maxlength="500" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-vit-orange focus:border-transparent resize-none" placeholder="Beschreibung oder Notizen...">'+(dok.notizen||kiV.zusammenfassung||'')+'</textarea></div>';
+
+        // Ordnerzuweisung
+        html+='<div class="mb-6"><label class="block text-xs font-semibold text-gray-600 mb-1">Ordnerzuweisung *</label>';
+        html+='<div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="aktenOrdnerGrid">';
+        _akten.ordner.forEach(function(o){
+            var isSelected=dok.ordner_id===o.id;
+            var isKiSuggested=kiV.ordner_key&&o.key===kiV.ordner_key;
+            var ring=isSelected?'ring-2 ring-vit-orange bg-orange-50':'hover:bg-gray-50';
+            var kiBadge=isKiSuggested&&!isSelected?' <span class="text-[9px] bg-blue-100 text-blue-600 px-1 rounded">KI</span>':'';
+            html+='<button type="button" onclick="selectAktenOrdner(\''+o.id+'\',this)" data-ordner-id="'+o.id+'" class="akten-ordner-btn flex items-center gap-2 p-2 rounded-lg border border-gray-200 text-left transition '+ring+'">';
+            html+='<span class="text-lg">'+(o.icon||'\uD83D\uDCC1')+'</span>';
+            html+='<span class="text-xs font-medium text-gray-700 truncate">'+esc(o.name)+kiBadge+'</span></button>';
+        });
+        html+='</div>';
+        html+='<input type="hidden" id="aktenReviewOrdnerId" value="'+(dok.ordner_id||'')+'">';
+        html+='</div>';
+    } else {
+        // Read-only metadata for already processed docs
+        html+='<div class="grid grid-cols-2 gap-4 mb-6"><div><p class="text-xs text-gray-400 mb-1">Dokumenttyp</p><p class="text-sm font-semibold text-gray-800">'+esc(typN)+'</p></div><div><p class="text-xs text-gray-400 mb-1">Status</p>'+statusBadge(dok.status)+'</div><div><p class="text-xs text-gray-400 mb-1">Quelle</p>'+quelleBadge(dok.quelle)+'</div><div><p class="text-xs text-gray-400 mb-1">Hochgeladen</p><p class="text-sm text-gray-600">'+fmtDate(dok.created_at)+'</p></div></div>';
+    }
+
+    // KI Confidence bar (always show if present)
+    if(dok.ki_confidence && !canEdit){var p=Math.round(dok.ki_confidence*100);html+='<div class="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-6"><div class="flex items-center justify-between mb-1"><span class="text-xs font-semibold text-blue-800">\uD83E\uDD16 KI-Konfidenz</span><span class="text-xs font-bold text-blue-700">'+p+'%</span></div><div class="w-full bg-blue-200 rounded-full h-2"><div class="bg-blue-600 h-2 rounded-full" style="width:'+p+'%"></div></div></div>';}
+
+    // Extracted fields
     if(felder.length>0){html+='<div class="mb-6"><h4 class="text-sm font-bold text-gray-800 mb-3">\uD83D\uDCCA Extrahierte Daten</h4><div class="bg-gray-50 rounded-lg overflow-hidden"><table class="w-full text-sm">';felder.forEach(function(f){var cb='';if(f.confidence){var cp=Math.round(f.confidence*100);var cc=cp>=80?'text-green-600':cp>=50?'text-yellow-600':'text-red-600';cb='<span class="'+cc+' text-xs font-mono">'+cp+'%</span>';}var cor=f.manuell_korrigiert?' <span class="text-xs text-purple-600">\u270F\uFE0F</span>':'';html+='<tr class="border-b border-gray-200"><td class="py-2 px-3 text-gray-500 font-medium text-xs w-1/3">'+esc(f.feld_label||f.feld_name)+'</td><td class="py-2 px-3 text-gray-800 font-semibold text-xs">'+esc(f.feld_wert||'\u2014')+cor+'</td><td class="py-2 px-3 text-right">'+cb+'</td></tr>';});html+='</table></div></div>';}
+
+    // Audit log
     if(audit.length>0){var aL={'hochgeladen':'\uD83D\uDCE4 Hochgeladen','ki_klassifiziert':'\uD83E\uDD16 KI klassifiziert','ki_extrahiert':'\uD83E\uDD16 Felder extrahiert','manuell_geprueft':'\u2705 Gepr\u00fcft','typ_geaendert':'\uD83D\uDD04 Typ ge\u00e4ndert','feld_korrigiert':'\u270F\uFE0F Korrigiert','status_geaendert':'\uD83D\uDD00 Status','archiviert':'\uD83D\uDCE6 Archiviert','auto_sync':'\uD83D\uDD17 Auto-Sync'};html+='<div class="mb-6"><h4 class="text-sm font-bold text-gray-800 mb-3">\uD83D\uDCCB Verlauf</h4><div class="space-y-2">';audit.forEach(function(a){var desc=a.details&&a.details.beschreibung?a.details.beschreibung:'';html+='<div class="flex items-start space-x-3 text-xs"><span class="text-gray-400 whitespace-nowrap">'+fmtDateTime(a.created_at)+'</span><span class="font-medium text-gray-700">'+(aL[a.aktion]||a.aktion)+'</span>';if(desc)html+='<span class="text-gray-400">'+esc(desc)+'</span>';html+='</div>';});html+='</div></div>';}
+
+    // Action buttons
     html+='<div class="flex items-center space-x-3 border-t border-gray-200 pt-4">';
-    if(dok.status==='ki_verarbeitet'||dok.status==='eingegangen'){html+='<button onclick="confirmAktenDoc(\''+dokId+'\')" class="flex-1 py-2.5 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700">\u2705 Best\u00e4tigen</button><button onclick="rejectAktenDoc(\''+dokId+'\')" class="px-4 py-2.5 bg-red-50 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-100 border border-red-200">Ablehnen</button>';}
+    if(canEdit){
+        html+='<button onclick="saveAndConfirmAktenDoc(\''+dokId+'\')" class="flex-1 py-2.5 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700">\u2705 Speichern & Best\u00e4tigen</button>';
+        if(dok.status!=='geprueft')html+='<button onclick="saveAktenDraft(\''+dokId+'\')" class="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 border border-gray-200">Speichern</button>';
+        html+='<button onclick="rejectAktenDoc(\''+dokId+'\')" class="px-4 py-2.5 bg-red-50 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-100 border border-red-200">Ablehnen</button>';
+    }
     html+='</div>';
     document.getElementById('aktenReviewContent').innerHTML=html;
     document.getElementById('aktenReviewOverlay').classList.remove('hidden');
 }
 
-export function closeAktenReview(){document.getElementById('aktenReviewOverlay').classList.add('hidden');}
+// FOLDER SELECTOR
+export function selectAktenOrdner(ordnerId, btn){
+    document.querySelectorAll('.akten-ordner-btn').forEach(function(b){b.classList.remove('ring-2','ring-vit-orange','bg-orange-50');b.classList.add('hover:bg-gray-50');});
+    btn.classList.add('ring-2','ring-vit-orange','bg-orange-50');btn.classList.remove('hover:bg-gray-50');
+    document.getElementById('aktenReviewOrdnerId').value=ordnerId;
+}
 
-export async function confirmAktenDoc(dokId){try{var u=_sbUser();await _sb().from('dokumente').update({status:'geprueft',geprueft_von:u.id,geprueft_am:new Date().toISOString()}).eq('id',dokId);await _sb().from('dokument_audit').insert({dokument_id:dokId,aktion:'manuell_geprueft',details:{beschreibung:'Manuell best\u00e4tigt'},user_id:u.id});var d=_akten.dokumente.find(function(x){return x.id===dokId;});if(d)d.status='geprueft';closeAktenReview();updateStats();updateInboxBadge();if(_akten.currentFolder)openAktenFolder(_akten.currentFolder);aktenToast('\u2705 Dokument best\u00e4tigt');}catch(e){console.error('Confirm err:',e);}}
+// SAVE DRAFT (without confirming)
+export async function saveAktenDraft(dokId){
+    try{
+        var titel=(document.getElementById('aktenReviewTitel')||{}).value||'';
+        var notizen=(document.getElementById('aktenReviewNotizen')||{}).value||'';
+        var ordnerId=(document.getElementById('aktenReviewOrdnerId')||{}).value||null;
+        var upd={};
+        if(titel.trim())upd.titel=titel.trim();
+        if(notizen.trim())upd.notizen=notizen.trim();
+        if(ordnerId)upd.ordner_id=ordnerId;
+        if(Object.keys(upd).length===0){aktenToast('\u26A0\uFE0F Keine \u00C4nderungen');return;}
+        await _sb().from('dokumente').update(upd).eq('id',dokId);
+        var d=_akten.dokumente.find(function(x){return x.id===dokId;});
+        if(d){if(upd.titel)d.titel=upd.titel;if(upd.notizen)d.notizen=upd.notizen;if(upd.ordner_id)d.ordner_id=upd.ordner_id;}
+        aktenToast('\uD83D\uDCBE Gespeichert');
+    }catch(e){console.error('Draft save err:',e);aktenToast('\u274C Fehler beim Speichern');}
+}
+
+// SAVE & CONFIRM
+export async function saveAndConfirmAktenDoc(dokId){
+    try{
+        var titel=(document.getElementById('aktenReviewTitel')||{}).value||'';
+        var notizen=(document.getElementById('aktenReviewNotizen')||{}).value||'';
+        var ordnerId=(document.getElementById('aktenReviewOrdnerId')||{}).value||null;
+        if(!ordnerId){aktenToast('\u26A0\uFE0F Bitte Ordner ausw\u00e4hlen');return;}
+        if(!titel.trim()){aktenToast('\u26A0\uFE0F Bitte Titel eingeben');return;}
+        var u=_sbUser();
+        var upd={titel:titel.trim(),ordner_id:ordnerId,status:'geprueft',geprueft_von:u.id,geprueft_am:new Date().toISOString()};
+        if(notizen.trim())upd.notizen=notizen.trim();
+        await _sb().from('dokumente').update(upd).eq('id',dokId);
+        await _sb().from('dokument_audit').insert({dokument_id:dokId,aktion:'manuell_geprueft',details:{beschreibung:'Gepr\u00fcft mit Ordnerzuweisung',ordner_id:ordnerId,titel:titel.trim()},user_id:u.id});
+        var d=_akten.dokumente.find(function(x){return x.id===dokId;});
+        if(d){d.status='geprueft';d.titel=titel.trim();d.ordner_id=ordnerId;if(notizen.trim())d.notizen=notizen.trim();}
+        closeAktenReview();renderFolders();updateStats();updateInboxBadge();
+        if(_akten.currentFolder)openAktenFolder(_akten.currentFolder);
+        aktenToast('\u2705 Dokument gepr\u00fcft & zugewiesen');
+    }catch(e){console.error('Confirm err:',e);aktenToast('\u274C Fehler beim Speichern');}
+}
 
 export async function rejectAktenDoc(dokId){if(!confirm('Dokument wirklich ablehnen?'))return;try{var u=_sbUser();await _sb().from('dokumente').update({status:'abgelehnt'}).eq('id',dokId);await _sb().from('dokument_audit').insert({dokument_id:dokId,aktion:'status_geaendert',details:{beschreibung:'Abgelehnt',neuer_status:'abgelehnt'},user_id:u.id});var d=_akten.dokumente.find(function(x){return x.id===dokId;});if(d)d.status='abgelehnt';closeAktenReview();updateStats();updateInboxBadge();aktenToast('\u274C Dokument abgelehnt');}catch(e){console.error('Reject err:',e);}}
 
@@ -359,13 +459,9 @@ export function filterAkten(){
 export function loadAktenschrank(){console.log('[aktenschrank.js] loadAktenschrank called, aktenschrankView exists:', !!document.getElementById('aktenschrankView'));renderMainView();loadAktenFiles();}
 
 // WINDOW REGISTRATION
-const _exports={loadAktenschrank,loadAktenFiles,getFileIcon,openAktenFolder,closeAktenFolder,filterAkten,showAktenInbox,closeAktenInbox,openAktenReview,closeAktenReview,confirmAktenDoc,rejectAktenDoc,openAktenUpload,closeAktenUpload,handleAktenDrop,handleAktenFileSelect,startAktenUpload,removeFromAktenQueue,downloadAktenDoc,viewAktenDoc,closeAktenPreview};
+const _exports={loadAktenschrank,loadAktenFiles,getFileIcon,openAktenFolder,closeAktenFolder,filterAkten,showAktenInbox,closeAktenInbox,openAktenReview,closeAktenReview,selectAktenOrdner,saveAktenDraft,saveAndConfirmAktenDoc,rejectAktenDoc,openAktenUpload,closeAktenUpload,handleAktenDrop,handleAktenFileSelect,startAktenUpload,removeFromAktenQueue,downloadAktenDoc,viewAktenDoc,closeAktenPreview};
 Object.keys(_exports).forEach(k=>{window[k]=_exports[k];});
 // [prod] log removed
-
-// === Window Exports (onclick handlers) ===
-window.closeAktenFolder = closeAktenFolder;
-window.openAktenFolder = openAktenFolder;
 
 // === Window Exports (view-router + onclick handlers) ===
 window.loadAktenschrank = loadAktenschrank;
@@ -375,7 +471,9 @@ window.showAktenInbox = showAktenInbox;
 window.closeAktenInbox = closeAktenInbox;
 window.openAktenReview = openAktenReview;
 window.closeAktenReview = closeAktenReview;
-window.confirmAktenDoc = confirmAktenDoc;
+window.selectAktenOrdner = selectAktenOrdner;
+window.saveAktenDraft = saveAktenDraft;
+window.saveAndConfirmAktenDoc = saveAndConfirmAktenDoc;
 window.rejectAktenDoc = rejectAktenDoc;
 window.openAktenUpload = openAktenUpload;
 window.closeAktenUpload = closeAktenUpload;
