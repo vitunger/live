@@ -1658,7 +1658,7 @@
         el.innerHTML = h;
     }
 
-    function _mbRenderDetail(iso) {
+function _mbRenderDetail(iso) {
         var det = document.getElementById('mbDetail');
         if (!det) return;
 
@@ -1666,63 +1666,73 @@
         var label = iso === todayISO() ? 'Heute' :
             new Date(iso + 'T12:00:00').toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
         var isPast = iso < todayISO();
+        var deskBk = dayBkgs.find(function(b){return b.desk_nr;});
+        var parkBk = dayBkgs.find(function(b){return b.parking_nr;});
 
+        // Header
+        var h = '<div class="flex items-center justify-between mb-4">' +
+            '<div>' +
+                '<p class="font-bold text-gray-800 text-base">' + label + '</p>';
+        if (deskBk) {
+            var deskObj = (_desks||[]).find(function(d){return d.nr===deskBk.desk_nr;});
+            var timeStr = deskBk.time_from ? deskBk.time_from.substring(0,5)+' \u2013 '+(deskBk.time_to||'').substring(0,5) : 'Ganzer Tag';
+            h += '<p class="text-sm text-gray-500">Platz ' + deskBk.desk_nr +
+                (deskObj&&deskObj.room?' \u00b7 '+esc(deskObj.room):'') + ' \u00b7 ' + timeStr + '</p>';
+        }
+        if (parkBk && parkBk.parking_nr) {
+            var pL = parkBk.parking_nr<=2?'P'+parkBk.parking_nr+' Elektro':parkBk.parking_nr<=4?'P'+parkBk.parking_nr+' Gast':'Parkplatz P'+parkBk.parking_nr;
+            h += '<p class="text-sm text-blue-500">\ud83c\udd7f\ufe0f ' + pL + '</p>';
+        }
+        if (!dayBkgs.length) { h += '<p class="text-sm text-gray-400">Keine Buchungen</p>'; }
+        h += '</div><div class="flex gap-2">';
+        if (!isPast) {
+            h += '<button onclick="window.showOfficeTab(\'buchen\');setTimeout(function(){if(window._buchSelectDate)_buchSelectDate(\''+iso+'\');},200)" class="px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg text-xs font-semibold hover:bg-orange-100 transition">\u270f\ufe0f Bearbeiten</button>';
+            if (deskBk) h += '<button onclick="window._mbCancelDesk(\''+deskBk.id+'\')" class="px-3 py-1.5 bg-red-50 text-red-500 rounded-lg text-xs font-semibold hover:bg-red-100 transition">Stornieren</button>';
+        }
+        h += '</div></div>';
+
+        // Empty state
         if (!dayBkgs.length) {
-            det.innerHTML =
-                '<div class="text-center py-8">' +
-                    '<p class="text-3xl mb-2">📭</p>' +
-                    '<p class="font-semibold text-gray-600">' + label + '</p>' +
-                    '<p class="text-sm text-gray-400 mt-1">Keine Buchungen</p>' +
-                    (!isPast ? '<button onclick="window.showOfficeTab(\'buchen\');window._buchSelectDate&&_buchSelectDate(\''+iso+'\')" class="mt-4 px-4 py-2 bg-vit-orange text-white rounded-xl text-sm font-semibold hover:opacity-90">+ Jetzt buchen</button>' : '') +
-                '</div>';
+            h += '<div class="text-center py-16 text-gray-300"><p class="text-5xl mb-3">\ud83d\udced</p><p class="text-sm">Keine Buchungen</p>';
+            if (!isPast) h += '<button onclick="window.showOfficeTab(\'buchen\');setTimeout(function(){if(window._buchSelectDate)_buchSelectDate(\''+iso+'\');},200)" class="mt-4 px-4 py-2 bg-vit-orange text-white rounded-xl text-sm font-semibold hover:opacity-90 block mx-auto">+ Jetzt buchen</button>';
+            h += '</div>';
+            det.innerHTML = h;
             return;
         }
 
-        var h = '<div class="flex items-center justify-between mb-5">' +
-            '<div>' +
-                '<p class="font-bold text-gray-800 text-lg">' + label + '</p>' +
-                '<p class="text-xs text-gray-400">' + dayBkgs.length + ' Buchung' + (dayBkgs.length > 1 ? 'en' : '') + '</p>' +
-            '</div>' +
-            (!isPast ? '<button onclick="window.showOfficeTab(\'buchen\');window._buchSelectDate&&_buchSelectDate(\''+iso+'\')" class="px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg text-xs font-semibold hover:bg-orange-100">✏️ Bearbeiten</button>' : '') +
+        // Grundriss mit Dots
+        var allDesks = (_desks||[]).filter(function(d){return d.active!==false&&d.desk_type==='standard';});
+        var dotsHtml = allDesks.map(function(d) {
+            var px = parseFloat(d.pct_x)||50, py = parseFloat(d.pct_y)||50;
+            var isMine = deskBk && d.nr === deskBk.desk_nr;
+            var col = isMine ? '#F97316' : '#D1D5DB';
+            var sz = isMine ? 30 : 22;
+            var ring = isMine ? 'box-shadow:0 0 0 3px rgba(249,115,22,.4),0 2px 8px rgba(0,0,0,.2)' : 'box-shadow:0 1px 3px rgba(0,0,0,.1)';
+            var lbl = isMine ? 'Du' : String(d.nr);
+            var fz = isMine ? '10' : '8';
+            var opacity = isMine ? '1' : '0.4';
+            return '<div title="Platz '+d.nr+(isMine?' \u2013 Deine Buchung':'')+'" '+
+                'style="position:absolute;left:'+px+'%;top:'+py+'%;transform:translate(-50%,-50%);'+
+                'width:'+sz+'px;height:'+sz+'px;border-radius:50%;background:'+col+';'+
+                'border:2px solid white;'+ring+';opacity:'+opacity+';'+
+                'z-index:10;display:flex;align-items:center;justify-content:center;'+
+                'font-size:'+fz+'px;color:white;font-weight:700;user-select:none">'+lbl+'</div>';
+        }).join('');
+
+        h += '<div style="position:relative;display:inline-block;width:100%">' +
+            '<img src="grundriss_og.png" style="width:100%;display:block;border-radius:8px" alt="Grundriss OG">' +
+            '<div style="position:absolute;top:0;left:0;width:100%;height:100%">' + dotsHtml + '</div>' +
         '</div>';
 
-        dayBkgs.forEach(function(b) {
-            var desk = b.desk_nr ? (_desks||[]).find(function(d){return d.nr===b.desk_nr;}) : null;
-            var timeStr = b.time_from ? b.time_from.substring(0,5) + ' – ' + (b.time_to||'').substring(0,5) : 'Ganzer Tag';
-
-            h += '<div class="border border-gray-100 rounded-xl p-4 mb-3 hover:border-orange-200 transition">';
-
-            if (b.desk_nr) {
-                h += '<div class="flex items-start gap-3">' +
-                    '<span class="text-2xl mt-0.5">🪑</span>' +
-                    '<div class="flex-1">' +
-                        '<p class="font-bold text-gray-800">Platz ' + b.desk_nr + (desk&&desk.room ? '<span class="text-sm font-normal text-gray-400 ml-2">' + esc(desk.room) + '</span>' : '') + '</p>' +
-                        '<p class="text-sm text-gray-500 mt-0.5">' + timeStr + '</p>' +
-                        (desk && (desk.has_monitor || desk.has_docking) ?
-                            '<div class="flex gap-2 mt-2">' +
-                                (desk.has_monitor ? '<span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">🖥️ Monitor</span>' : '') +
-                                (desk.has_docking ? '<span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">🔌 Docking</span>' : '') +
-                            '</div>' : '') +
-                        (!isPast ? '<button onclick="window._mbCancelDesk(\'' + b.id + '\')" class="mt-3 text-xs text-red-400 hover:text-red-600 font-semibold">Stornieren</button>' : '') +
-                    '</div>' +
-                '</div>';
-            }
-
-            if (b.parking_nr) {
-                var pLabel = b.parking_nr<=2 ? '⚡ P'+b.parking_nr+' Elektro' : b.parking_nr<=4 ? '🚗 P'+b.parking_nr+' Gast' : '🅿️ Parkplatz';
-                var pTime = b.desk_nr ? '' : ('<p class="text-sm text-gray-500 mt-0.5">' + timeStr + '</p>');
-                h += '<div class="flex items-start gap-3' + (b.desk_nr ? ' mt-3 pt-3 border-t border-gray-100' : '') + '">' +
-                    '<span class="text-2xl mt-0.5">🅿️</span>' +
-                    '<div class="flex-1">' +
-                        '<p class="font-bold text-gray-800">' + pLabel + '</p>' +
-                        pTime +
-                        (!isPast ? '<button onclick="window._mbCancelParking(\'' + b.id + '\')" class="mt-3 text-xs text-red-400 hover:text-red-600 font-semibold">Parkplatz stornieren</button>' : '') +
-                    '</div>' +
-                '</div>';
-            }
-
-            h += '</div>';
-        });
+        // Parkplatz-Info unter Grundriss
+        if (parkBk && parkBk.parking_nr) {
+            var pLbl = parkBk.parking_nr<=2?'P'+parkBk.parking_nr+' Elektro':parkBk.parking_nr<=4?'P'+parkBk.parking_nr+' Gast':'Parkplatz P'+parkBk.parking_nr;
+            h += '<div class="flex items-center justify-between mt-3 px-3 py-2 bg-blue-50 rounded-xl">' +
+                '<div class="flex items-center gap-2"><span class="text-lg">\ud83c\udd7f\ufe0f</span>' +
+                '<span class="text-sm font-semibold text-blue-700">' + pLbl + '</span></div>' +
+                (!isPast ? '<button onclick="window._mbCancelParking(\''+parkBk.id+'\')" class="text-xs text-red-400 hover:text-red-600 font-semibold">Stornieren</button>' : '') +
+            '</div>';
+        }
 
         det.innerHTML = h;
     }
