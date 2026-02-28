@@ -494,7 +494,7 @@ export function filterAkten(){
 }
 
 // INIT
-export function loadAktenschrank(){console.log('[aktenschrank.js] loadAktenschrank called, aktenschrankView exists:', !!document.getElementById('aktenschrankView'));renderMainView();loadAktenFiles();}
+export function loadAktenschrank(){if(_akten._loading)return;_akten._loading=true;renderMainView();loadAktenFiles().finally(function(){_akten._loading=false;});}
 
 // WINDOW REGISTRATION
 const _exports={loadAktenschrank,loadAktenFiles,getFileIcon,openAktenFolder,closeAktenFolder,filterAkten,showAktenInbox,closeAktenInbox,openAktenReview,closeAktenReview,selectAktenOrdner,saveAktenDraft,saveAndConfirmAktenDoc,rejectAktenDoc,deleteAktenDoc,openAktenUpload,closeAktenUpload,handleAktenDrop,handleAktenFileSelect,startAktenUpload,removeFromAktenQueue,downloadAktenDoc,viewAktenDoc,closeAktenPreview};
