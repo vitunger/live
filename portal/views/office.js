@@ -1028,6 +1028,7 @@
     var _buchRoomId = null;
     var _buchBookings = [];    // Buchungen für gewähltes Datum
     var _buchCheckins = [];    // Checkins für gewähltes Datum (nur heute)
+    var _buchParkBookings = []; // Parkplatz-Buchungen für gewähltes Datum
 
     async function renderBuchen() {
         var el=document.getElementById('officeTab_buchen');
@@ -1039,6 +1040,7 @@
             _buildBuchenUI(el);
             await _buchLoadData();
             _buchRenderFloor();
+            _buchRenderParking();
         } catch(err) {
             console.error('[Office] Buchen error:',err);
             el.innerHTML='<div class="vit-card p-6 text-center text-red-500">Fehler: '+esc(err.message)+'</div>';
@@ -1099,14 +1101,17 @@
                     '<div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-vit-orange"></div>'+
                 '</div>'+
             '</div>'+
+            '<div id="buchParkingArea" class="vit-card p-4 mt-4"></div>'+
             '<div id="buchDeskDetail" style="display:none" class="vit-card p-5 mt-4"></div>';
     }
 
 
     async function _buchLoadData() {
         var td=todayISO();
-        var bRes=await sb.from('office_bookings').select('id,user_id,desk_nr,status,time_from,time_to,note').eq('booking_date',_buchDate).eq('status','office');
-        _buchBookings=bRes.data||[];
+        var bRes=await sb.from('office_bookings').select('id,user_id,desk_nr,parking_nr,status,time_from,time_to,note').eq('booking_date',_buchDate);
+        var allBkgs=bRes.data||[];
+        _buchBookings=allBkgs.filter(function(b){return b.status==='office'&&b.desk_nr;});
+        _buchParkBookings=allBkgs.filter(function(b){return b.parking_nr!=null;});
         if(_buchDate===td) {
             var cRes=await sb.from('office_checkins').select('id,user_id,desk_nr,checked_in_at').gte('checked_in_at',td+'T00:00:00').is('checked_out_at',null);
             _buchCheckins=cRes.data||[];
@@ -1312,5 +1317,147 @@
             notify('Fehler: '+err.message,'error');
         }
     };
+
+    // ═══════════════════════════════════════════════════════
+    // PARKPLATZ-BUCHUNG im Buchen-Tab
+    // P1+P2 = Elektro ⚡, P3+P4 = Gäste 🚗, P5-P12 = Standard
+    // ═══════════════════════════════════════════════════════
+    function _buchRenderParking() {
+        var area=document.getElementById('buchParkingArea');
+        if(!area) return;
+
+        var userMap={}; (_hqUsers||[]).forEach(function(u){userMap[u.id]=u;});
+        var myParkBk=_buchParkBookings.find(function(b){return b.user_id===sbUser.id;});
+        var myParkNr=myParkBk?myParkBk.parking_nr:null;
+        var parkMap={};
+        _buchParkBookings.forEach(function(b){if(b.parking_nr) parkMap[b.parking_nr]=b;});
+
+        var dateLabel=_buchDate===todayISO()?'Heute':new Date(_buchDate+'T12:00:00').toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'short'});
+        var total=_buchParkBookings.length;
+
+        // Helper: build one named slot (Elektro / Gast)
+        function namedSlot(nr, icon, shortLabel) {
+            var bk=parkMap[nr];
+            var isMe=myParkNr===nr;
+            var isTaken=!!bk&&!isMe;
+            var u=bk?userMap[bk.user_id]:null;
+            var initials=u?((u.vorname||'')[0]+(u.nachname||'')[0]).toUpperCase():'?';
+            var wrapBase='display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;border-radius:12px;border:2px solid;min-width:70px;transition:.12s;';
+            if(isMe) {
+                return '<div data-parkid="'+myParkBk.id+'" onclick="_buchCancelParking(this.dataset.parkid)" title="Klick zum Stornieren" style="'+wrapBase+'border-color:#FB923C;background:#FFF7ED;cursor:pointer;box-shadow:0 0 0 3px rgba(251,146,60,.25)">'+
+                    '<span style="font-size:20px">'+icon+'</span>'+
+                    '<span style="font-size:10px;font-weight:700;color:#EA580C;margin-top:3px">P'+nr+'</span>'+
+                    '<span style="font-size:10px;color:#F97316;font-weight:600">Du ✓</span>'+
+                    '<span style="font-size:8px;color:#9CA3AF;margin-top:1px">stornieren</span>'+
+                '</div>';
+            } else if(isTaken) {
+                return '<div title="Belegt:'+(u?u.vorname+' '+u.nachname:'jemand')+'" style="'+wrapBase+'border-color:#E5E7EB;background:#F9FAFB;opacity:.55">'+
+                    '<span style="font-size:20px">'+icon+'</span>'+
+                    '<span style="font-size:10px;font-weight:700;color:#6B7280;margin-top:3px">P'+nr+'</span>'+
+                    '<span style="width:22px;height:22px;border-radius:50%;background:#9CA3AF;display:flex;align-items:center;justify-content:center;color:white;font-size:8px;font-weight:700;margin-top:2px">'+initials+'</span>'+
+                '</div>';
+            } else {
+                var canBook=!myParkNr;
+                return '<div '+(canBook?'onclick="_buchBookParking('+nr+')" title="P'+nr+' '+shortLabel+' buchen"':'title="P'+nr+' '+shortLabel+'"')+' style="'+wrapBase+'border-color:'+(icon==='⚡'?'#FDE68A':'#BFDBFE')+';background:'+(icon==='⚡'?'#FFFBEB':'#EFF6FF')+';cursor:'+(canBook?'pointer':'default')+'">'+
+                    '<span style="font-size:20px">'+icon+'</span>'+
+                    '<span style="font-size:10px;font-weight:700;color:#374151;margin-top:3px">P'+nr+'</span>'+
+                    '<span style="font-size:9px;color:#16A34A;font-weight:600">frei</span>'+
+                '</div>';
+            }
+        }
+
+        // Standard block P5–P12
+        function standardBlock() {
+            var takenNrs=_buchParkBookings.map(function(b){return b.parking_nr;});
+            var freeCount=0;
+            for(var i=5;i<=12;i++){if(takenNrs.indexOf(i)<0) freeCount++;}
+            var isMyStd=myParkNr!=null&&myParkNr>=5&&myParkNr<=12;
+            var wrapBase='display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;border-radius:12px;border:2px solid;min-width:110px;transition:.12s;';
+            if(isMyStd) {
+                return '<div data-parkid="'+myParkBk.id+'" onclick="_buchCancelParking(this.dataset.parkid)" title="Klick zum Stornieren" style="'+wrapBase+'border-color:#FB923C;background:#FFF7ED;cursor:pointer;box-shadow:0 0 0 3px rgba(251,146,60,.25)">'+
+                    '<span style="font-size:26px">🅿️</span>'+
+                    '<span style="font-size:12px;font-weight:700;color:#EA580C;margin-top:4px">Standard</span>'+
+                    '<span style="font-size:10px;color:#F97316;font-weight:600">Gebucht ✓</span>'+
+                    '<span style="font-size:8px;color:#9CA3AF;margin-top:2px">klicken zum Stornieren</span>'+
+                '</div>';
+            }
+            var canBook=freeCount>0&&!myParkNr;
+            return '<div '+(canBook?'onclick="_buchBookParking(0)" title="Parkplatz buchen"':'')+' style="'+wrapBase+'border-color:'+(canBook?'#BBF7D0':'#E5E7EB')+';background:'+(canBook?'#F0FDF4':'#F9FAFB')+';cursor:'+(canBook?'pointer':'default')+'">'+
+                '<span style="font-size:26px">🅿️</span>'+
+                '<span style="font-size:12px;font-weight:700;color:#374151;margin-top:4px">Standard</span>'+
+                '<span style="font-size:10px;color:'+(freeCount>0?'#16A34A':'#EF4444')+';font-weight:600">'+freeCount+' frei &bull; '+(8-freeCount)+' belegt</span>'+
+                (canBook?'<span style="font-size:8px;color:#6B7280;margin-top:2px">klicken zum Buchen</span>':'')+
+            '</div>';
+        }
+
+        area.innerHTML=
+            '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">'+
+                '<div style="display:flex;align-items:center;gap:8px">'+
+                    '<span style="font-size:18px">🅿️</span>'+
+                    '<span style="font-weight:700;color:#1F2937;font-size:14px">Parkplatz</span>'+
+                    '<span style="font-size:11px;color:#9CA3AF">'+dateLabel+'</span>'+
+                '</div>'+
+                (myParkNr?
+                    '<span style="font-size:11px;color:#EA580C;font-weight:600;background:#FFF7ED;padding:3px 10px;border-radius:20px">✓ P'+myParkNr+' gebucht · Klick zum Stornieren</span>':
+                    '<span style="font-size:11px;color:#9CA3AF">'+total+' von 12 belegt</span>'
+                )+
+            '</div>'+
+            '<div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px">'+
+                namedSlot(1,'⚡','Elektro')+
+                namedSlot(2,'⚡','Elektro')+
+                namedSlot(3,'🚗','Gast')+
+                namedSlot(4,'🚗','Gast')+
+                standardBlock()+
+            '</div>'+
+            (total>=12?'<p style="font-size:11px;color:#EF4444;text-align:center;margin-top:8px">Alle Parkplätze belegt</p>':'');
+    }
+
+    window._buchBookParking = function(nr) {
+        (async function(){
+            try {
+                var assignNr=nr;
+                if(nr===0){
+                    var taken=_buchParkBookings.map(function(b){return b.parking_nr;});
+                    for(var i=5;i<=12;i++){if(taken.indexOf(i)<0){assignNr=i;break;}}
+                    if(!assignNr){notify('Keine Standard-Parkplätze frei','info');return;}
+                }
+                if(_buchParkBookings.find(function(b){return b.parking_nr===assignNr;})){notify('Dieser Platz ist bereits belegt','info');return;}
+                if(_buchParkBookings.find(function(b){return b.user_id===sbUser.id;})){notify('Du hast bereits einen Parkplatz gebucht','info');return;}
+                // Add to existing desk booking or create standalone
+                var deskBk=_buchBookings.find(function(b){return b.user_id===sbUser.id;});
+                var res;
+                if(deskBk){
+                    res=await sb.from('office_bookings').update({parking_nr:assignNr,updated_at:new Date().toISOString()}).eq('id',deskBk.id);
+                } else {
+                    res=await sb.from('office_bookings').insert({user_id:sbUser.id,booking_date:_buchDate,status:'parking',parking_nr:assignNr,updated_at:new Date().toISOString()});
+                }
+                if(res.error) throw res.error;
+                var lbl=assignNr<=2?'⚡ P'+assignNr+' Elektro':assignNr<=4?'🚗 P'+assignNr+' Gast':'🅿️ Parkplatz P'+assignNr;
+                notify(lbl+' gebucht!','success');
+                await _buchLoadData();
+                _buchRenderParking();
+            } catch(e){console.error('[Office] BookParking:',e);notify('Fehler: '+e.message,'error');}
+        })();
+    };
+
+    window._buchCancelParking = function(bookingId) {
+        (async function(){
+            try {
+                var bk=_buchParkBookings.find(function(b){return b.id===bookingId;});
+                if(!bk) return;
+                var res;
+                if(bk.desk_nr){
+                    res=await sb.from('office_bookings').update({parking_nr:null,updated_at:new Date().toISOString()}).eq('id',bookingId);
+                } else {
+                    res=await sb.from('office_bookings').delete().eq('id',bookingId);
+                }
+                if(res.error) throw res.error;
+                notify('Parkplatz-Buchung storniert','success');
+                await _buchLoadData();
+                _buchRenderParking();
+            } catch(e){console.error('[Office] CancelParking:',e);notify('Fehler: '+e.message,'error');}
+        })();
+    };
+
 
 })();
