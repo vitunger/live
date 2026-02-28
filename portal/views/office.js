@@ -1319,7 +1319,7 @@
     };
 
     // ═══════════════════════════════════════════════════════
-    // PARKPLATZ-BUCHUNG im Buchen-Tab
+    // PARKPLATZ-BUCHUNG im Buchen-Tab (status='parking' jetzt in DB erlaubt)
     // P1+P2 = Elektro ⚡, P3+P4 = Gäste 🚗, P5-P12 = Standard
     // ═══════════════════════════════════════════════════════
     function _buchRenderParking() {
