@@ -1102,6 +1102,19 @@
             '<div id="buchDeskDetail" style="display:none" class="vit-card p-5 mt-4"></div>';
     }
 
+
+    async function _buchLoadData() {
+        var td=todayISO();
+        var bRes=await sb.from('office_bookings').select('id,user_id,desk_nr,status,time_from,time_to,note').eq('booking_date',_buchDate).eq('status','office');
+        _buchBookings=bRes.data||[];
+        if(_buchDate===td) {
+            var cRes=await sb.from('office_checkins').select('id,user_id,desk_nr,checked_in_at').gte('checked_in_at',td+'T00:00:00').is('checked_out_at',null);
+            _buchCheckins=cRes.data||[];
+        } else {
+            _buchCheckins=[];
+        }
+    }
+
     function _buchRenderFloor() {
         var area=document.getElementById('buchFloorplanArea');
         if(!area) return;
