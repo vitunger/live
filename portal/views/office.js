@@ -90,7 +90,7 @@
         var el=document.getElementById('officeTab_'+tab); if(el) el.style.display='block';
         var btn=document.querySelector('.office-tab-btn[data-tab="'+tab+'"]');
         if(btn) btn.className='office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold bg-white text-gray-800 shadow-sm border-b-2 border-vit-orange transition';
-        var fns={dashboard:renderDashboard,wochenplan:renderWochenplan,grundriss:renderGrundriss,gaeste:renderGaeste,statistik:renderStatistik};
+        var fns={dashboard:renderDashboard,wochenplan:renderWochenplan,grundriss:renderGrundriss,buchen:renderBuchen,gaeste:renderGaeste,statistik:renderStatistik};
         if(fns[tab]) fns[tab]();
     };
 
@@ -111,12 +111,14 @@
                 '<button onclick="showOfficeTab(\'dashboard\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold bg-white text-gray-800 shadow-sm border-b-2 border-vit-orange transition" data-tab="dashboard">Dashboard</button>'+
                 '<button onclick="showOfficeTab(\'wochenplan\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="wochenplan">Wochenplan</button>'+
                 '<button onclick="showOfficeTab(\'grundriss\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="grundriss">Grundriss</button>'+
+                '<button onclick="showOfficeTab(\'buchen\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="buchen">📅 Buchen</button>'+
                 '<button onclick="showOfficeTab(\'gaeste\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="gaeste">G\u00e4ste</button>'+
                 '<button onclick="showOfficeTab(\'statistik\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="statistik">Statistik</button>'+
             '</div>'+
             '<div id="officeTab_dashboard" class="office-tab-content"></div>'+
             '<div id="officeTab_wochenplan" class="office-tab-content" style="display:none"></div>'+
             '<div id="officeTab_grundriss" class="office-tab-content" style="display:none"></div>'+
+            '<div id="officeTab_buchen" class="office-tab-content" style="display:none"></div>'+
             '<div id="officeTab_gaeste" class="office-tab-content" style="display:none"></div>'+
             '<div id="officeTab_statistik" class="office-tab-content" style="display:none"></div>';
         renderDashboard();
@@ -1015,4 +1017,322 @@
     }
 
 })();
+
+    // ═══════════════════════════════════════════════════════
+    // TAB BUCHEN: Interaktive Desk-Buchung mit Grundriss
+    // ═══════════════════════════════════════════════════════
+    var _buchDate = null;      // ausgewähltes Datum ISO
+    var _buchFrom = '08:00';
+    var _buchTo   = '17:00';
+    var _buchAllDay = true;
+    var _buchRoomId = null;
+    var _buchBookings = [];    // Buchungen für gewähltes Datum
+    var _buchCheckins = [];    // Checkins für gewähltes Datum (nur heute)
+
+    async function renderBuchen() {
+        var el=document.getElementById('officeTab_buchen');
+        if(!el) return;
+        el.innerHTML='<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-vit-orange"></div></div>';
+        try {
+            await Promise.all([loadRooms(),loadDesks(),loadHQUsers()]);
+            if(!_buchDate) _buchDate=todayISO();
+            _buchRoomId=_buchRoomId||(_rooms&&_rooms[0]?_rooms[0].id:null);
+            _buildBuchenUI(el);
+            await _buchLoadData();
+            _buchRenderFloor();
+        } catch(err) {
+            console.error('[Office] Buchen error:',err);
+            el.innerHTML='<div class="vit-card p-6 text-center text-red-500">Fehler: '+esc(err.message)+'</div>';
+        }
+    }
+
+    function _buildBuchenUI(el) {
+        // Datumsstreifen: heute + 13 Tage
+        var days=[];
+        var d=new Date();
+        var dayNames=['So','Mo','Di','Mi','Do','Fr','Sa'];
+        for(var i=0;i<14;i++){
+            var dt=new Date(d);
+            dt.setDate(d.getDate()+i);
+            days.push({iso:fmtISO(dt),day:dayNames[dt.getDay()],date:dt.getDate(),month:dt.getMonth()+1,isToday:i===0,isWeekend:dt.getDay()===0||dt.getDay()===6});
+        }
+        var dateStrip=days.map(function(dy){
+            var active=dy.iso===_buchDate;
+            var base='flex flex-col items-center px-3 py-2 rounded-xl cursor-pointer transition min-w-[52px] select-none ';
+            var cls=active?base+'bg-vit-orange text-white shadow-md':(dy.isWeekend?base+'text-gray-400 hover:bg-gray-100':base+'text-gray-700 hover:bg-orange-50');
+            return '<div class="'+cls+'" onclick="window._buchSelectDate(\''+dy.iso+'\')">'+
+                '<span class="text-xs font-semibold">'+(dy.isToday?'Heute':dy.day)+'</span>'+
+                '<span class="text-lg font-bold">'+dy.date+'</span>'+
+                '<span class="text-xs opacity-70">'+(dy.isToday?'':dy.month+'.')+'</span>'+
+            '</div>';
+        }).join('');
+
+        // Zeitauswahl
+        var timeRow='<div class="flex items-center gap-3 mt-4 flex-wrap">'+
+            '<label class="flex items-center gap-1.5 cursor-pointer text-sm text-gray-600">'+
+                '<input type="checkbox" id="buchAllDay" onchange="window._buchToggleAllDay()" '+(_buchAllDay?'checked':'')+' class="accent-vit-orange">'+
+                'Ganzer Tag'+
+            '</label>'+
+            '<div id="buchTimeFields" class="flex items-center gap-2 '+(_buchAllDay?'hidden':'')+'" style="'+(_buchAllDay?'display:none':'')+'">'+
+                '<input type="time" id="buchFrom" value="'+_buchFrom+'" onchange="window._buchTimeChanged()" class="border rounded-lg px-2 py-1.5 text-sm font-semibold">'+
+                '<span class="text-gray-400">–</span>'+
+                '<input type="time" id="buchTo" value="'+_buchTo+'" onchange="window._buchTimeChanged()" class="border rounded-lg px-2 py-1.5 text-sm font-semibold">'+
+            '</div>'+
+        '</div>';
+
+        // Raum-Auswahl
+        var roomOpts=(_rooms||[]).map(function(r){
+            return '<option value="'+r.id+'"'+(_buchRoomId===r.id?' selected':'')+'>'+esc(r.name)+(r.floor_label?' ('+esc(r.floor_label)+')':'')+'</option>';
+        }).join('');
+        var roomRow='<div class="flex items-center gap-3 mt-4 flex-wrap">'+
+            '<span class="text-sm font-semibold text-gray-700">📍 Raum:</span>'+
+            '<select id="buchRoomSelect" onchange="window._buchRoomChanged()" class="border rounded-lg px-3 py-2 text-sm font-semibold flex-1 min-w-[180px]">'+roomOpts+'</select>'+
+            '<div class="flex items-center gap-3 text-xs text-gray-500 ml-auto">'+
+                '<span><span class="inline-block w-3 h-3 rounded-full bg-green-500 mr-1"></span>Frei</span>'+
+                '<span><span class="inline-block w-3 h-3 rounded-full bg-blue-500 mr-1"></span>Gebucht</span>'+
+                '<span><span class="inline-block w-3 h-3 rounded-full bg-red-500 mr-1"></span>Belegt</span>'+
+                '<span><span class="inline-block w-3 h-3 rounded-full bg-orange-500 mr-1"></span>Deine Buchung</span>'+
+            '</div>'+
+        '</div>';
+
+        el.innerHTML=
+            '<div class="vit-card p-5 mb-4">'+
+                '<div class="flex items-center gap-2 mb-3">'+
+                    '<span class="text-xl">📅</span>'+
+                    '<h2 class="text-lg font-bold text-gray-800">Arbeitsplatz buchen</h2>'+
+                '</div>'+
+                // Datumsstreifen scrollbar
+                '<div class="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">'+dateStrip+'</div>'+
+                timeRow+
+                roomRow+
+            '</div>'+
+            // Grundriss
+            '<div class="vit-card p-4" id="buchFloorWrap">'+
+                '<div id="buchFloorplanArea" class="min-h-[350px] flex items-center justify-center">'+
+                    '<div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-vit-orange"></div>'+
+                '</div>'+
+            '</div>'+
+            // Buchungs-Detail Panel
+            '<div id="buchDeskDetail" style="display:none" class="vit-card p-5 mt-4"></div>';
+    }
+
+    async function _buchLoadData() {
+        var td=todayISO();
+        var bRes=await sb.from('office_bookings').select('id,user_id,desk_nr,status,time_from,time_to,note').eq('booking_date',_buchDate).eq('status','office');
+        _buchBookings=bRes.data||[];
+        // Checkins nur für heute sinnvoll
+        if(_buchDate===td) {
+            var cRes=await sb.from('office_checkins').select('id,user_id,desk_nr,checked_in_at').gte('checked_in_at',td+'T00:00:00').is('checked_out_at',null);
+            _buchCheckins=cRes.data||[];
+        } else {
+            _buchCheckins=[];
+        }
+    }
+
+    function _buchRenderFloor() {
+        var area=document.getElementById('buchFloorplanArea');
+        if(!area) return;
+
+        var room=(_rooms||[]).find(function(r){return r.id===_buchRoomId;});
+        if(!room){area.innerHTML='<p class="text-gray-400 text-center py-8">Kein Raum ausgewählt</p>';return;}
+
+        var roomDesks=(_desks||[]).filter(function(d){return d.room_id===room.id||d.room===room.name;});
+        if(!roomDesks.length){area.innerHTML='<p class="text-gray-400 text-center py-8">Keine Plätze in diesem Raum</p>';return;}
+
+        var viewBox=room.svg_viewbox||'0 0 100 70';
+        var imgOp=room.image_opacity||0.3;
+        var bgImg=room.grundriss_url?'<image href="'+room.grundriss_url+'" x="0" y="0" width="100%" height="100%" opacity="'+imgOp+'"/>':'';
+
+        var userMap={}; (_hqUsers||[]).forEach(function(u){userMap[u.id]=u;});
+        var bookByDesk={}; _buchBookings.forEach(function(b){if(b.desk_nr) bookByDesk[b.desk_nr]=b;});
+        var checkinByDesk={}; _buchCheckins.forEach(function(c){if(c.desk_nr) checkinByDesk[c.desk_nr]=c;});
+
+        var svgDesks=roomDesks.map(function(d){
+            var cx=parseFloat(d.pct_x)||50, cy=parseFloat(d.pct_y)||50;
+            var bk=bookByDesk[d.nr];
+            var ci=checkinByDesk[d.nr];
+            var isMyBooking=bk&&bk.user_id===sbUser.id;
+            var isBusy=!!ci;
+            var isBooked=!!bk&&!isMyBooking;
+            var isFree=!bk&&!ci;
+
+            var col=isBusy?'#EF4444':(isMyBooking?'#F97316':(isBooked?'#3B82F6':'#22C55E'));
+            var r=isMyBooking?3.5:2.5;
+            var bookable=isFree&&!ci&&d.is_bookable!==false&&d.desk_type==='standard';
+
+            var tooltip='Platz '+d.nr;
+            if(ci){var u=userMap[ci.user_id]; tooltip+=' • '+(u?shortName(u):'eingecheckt');}
+            else if(isMyBooking) tooltip+=' • Deine Buchung';
+            else if(bk){var u2=userMap[bk.user_id]; tooltip+=' • gebucht'+(u2?' ('+shortName(u2)+')':'');}
+            else tooltip+=' • frei – klicken zum Buchen';
+
+            var pulse=isMyBooking?'<circle cx="'+cx+'" cy="'+cy+'" r="'+(r+1.5)+'" fill="none" stroke="#F97316" stroke-width="0.5" stroke-dasharray="1.5,0.7" opacity="0.8"/>':'';
+            var cursor=bookable?'cursor:pointer':'cursor:default';
+
+            var s='<g style="'+cursor+'" onclick="window._buchSelectDesk('+d.nr+')">';
+            s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(r+2)+'" fill="transparent"/>';  // larger hit area
+            s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+col+'" stroke="white" stroke-width="0.5" opacity="0.92"><title>'+esc(tooltip)+'</title></circle>';
+            s+=pulse;
+            s+='<text x="'+cx+'" y="'+(cy+0.8)+'" text-anchor="middle" dominant-baseline="middle" font-size="1.8" fill="white" font-weight="700">'+d.nr+'</text>';
+            s+='</g>';
+            return s;
+        }).join('');
+
+        // Raumbezeichnung im SVG
+        var labelX=parseFloat(room.label_pct_x)||50, labelY=parseFloat(room.label_pct_y)||10;
+        var roomLabel=room.label_pct_x?'<text x="'+labelX+'" y="'+labelY+'" text-anchor="middle" font-size="2.8" fill="#374151" font-weight="700" opacity="0.6">'+esc(room.name)+'</text>':'';
+
+        // Buchungsübersicht Leiste
+        var myBookCount=_buchBookings.filter(function(b){return b.user_id===sbUser.id;}).length;
+        var totalBooked=_buchBookings.length;
+        var totalFree=roomDesks.filter(function(d){return !bookByDesk[d.nr]&&!checkinByDesk[d.nr]&&d.is_bookable!==false&&d.desk_type==='standard';}).length;
+        var dateLabel=_buchDate===todayISO()?'Heute':new Date(_buchDate+'T12:00:00').toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
+
+        area.innerHTML=
+            '<div class="flex items-center justify-between mb-3 flex-wrap gap-2">'+
+                '<div>'+
+                    '<p class="text-sm font-bold text-gray-700">'+esc(room.name)+'</p>'+
+                    '<p class="text-xs text-gray-400">'+dateLabel+' · '+(_buchAllDay?'Ganzer Tag':_buchFrom+' – '+_buchTo)+'</p>'+
+                '</div>'+
+                '<div class="flex gap-4 text-xs text-gray-500">'+
+                    '<span class="font-semibold text-green-600">'+totalFree+' frei</span>'+
+                    '<span class="font-semibold text-blue-600">'+totalBooked+' gebucht</span>'+
+                    (myBookCount?'<span class="font-semibold text-orange-500">✓ Du hast gebucht</span>':'')+
+                '</div>'+
+            '</div>'+
+            '<svg viewBox="'+viewBox+'" class="w-full border rounded-xl bg-gray-50" style="max-height:520px">'+
+                bgImg+roomLabel+svgDesks+
+            '</svg>'+
+            '<p class="text-xs text-gray-400 mt-2 text-center">'+roomDesks.length+' Plätze · Klick auf einen freien Platz zum Buchen</p>';
+    }
+
+    window._buchSelectDate = function(iso) {
+        _buchDate=iso;
+        // Re-render the date strip and reload
+        var el=document.getElementById('officeTab_buchen');
+        if(!el) return;
+        _buildBuchenUI(el);
+        _buchLoadData().then(function(){_buchRenderFloor();});
+    };
+
+    window._buchToggleAllDay = function() {
+        _buchAllDay=document.getElementById('buchAllDay').checked;
+        var tf=document.getElementById('buchTimeFields');
+        if(tf) tf.style.display=_buchAllDay?'none':'flex';
+    };
+
+    window._buchTimeChanged = function() {
+        _buchFrom=(document.getElementById('buchFrom')||{}).value||'08:00';
+        _buchTo=(document.getElementById('buchTo')||{}).value||'17:00';
+    };
+
+    window._buchRoomChanged = function() {
+        var sel=document.getElementById('buchRoomSelect');
+        if(sel) _buchRoomId=sel.value;
+        _buchRenderFloor();
+        var det=document.getElementById('buchDeskDetail'); if(det) det.style.display='none';
+    };
+
+    window._buchSelectDesk = function(nr) {
+        var det=document.getElementById('buchDeskDetail');
+        if(!det) return;
+        var desk=(_desks||[]).find(function(d){return d.nr===nr;});
+        if(!desk){det.style.display='none';return;}
+
+        var bk=_buchBookings.find(function(b){return b.desk_nr===nr;});
+        var ci=_buchCheckins.find(function(c){return c.desk_nr===nr;});
+        var userMap={}; (_hqUsers||[]).forEach(function(u){userMap[u.id]=u;});
+
+        var isMyBooking=bk&&bk.user_id===sbUser.id;
+        var isFree=!bk&&!ci;
+        var isToday=_buchDate===todayISO();
+
+        var statusHtml='';
+        if(ci){
+            var u=userMap[ci.user_id]||{vorname:'?',nachname:'?'};
+            statusHtml='<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-red-500 flex-shrink-0"></span><span class="font-semibold text-red-600">Eingecheckt</span><span class="text-sm text-gray-500">von '+esc(fullName(u))+'</span></div>';
+        } else if(isMyBooking) {
+            var tf=bk.time_from?bk.time_from.substring(0,5):null;
+            var tt=bk.time_to?bk.time_to.substring(0,5):null;
+            statusHtml='<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-orange-500 flex-shrink-0"></span><span class="font-semibold text-orange-600">✓ Deine Buchung</span>'+(tf&&tt?'<span class="text-sm text-gray-500">'+tf+' – '+tt+'</span>':'<span class="text-sm text-gray-500">Ganzer Tag</span>')+'</div>';
+        } else if(bk) {
+            var u2=userMap[bk.user_id]||{vorname:'?',nachname:'?'};
+            statusHtml='<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-blue-500 flex-shrink-0"></span><span class="font-semibold text-blue-600">Gebucht</span><span class="text-sm text-gray-500">'+esc(fullName(u2))+'</span></div>';
+        } else {
+            statusHtml='<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-green-500 flex-shrink-0"></span><span class="font-semibold text-green-600">Frei</span></div>';
+        }
+
+        var features='';
+        if(desk.has_monitor) features+='<span class="px-2 py-1 bg-gray-100 rounded-lg text-xs">🖥️ Monitor</span>';
+        if(desk.has_docking) features+='<span class="px-2 py-1 bg-gray-100 rounded-lg text-xs">🔌 Docking</span>';
+        if(desk.zone) features+='<span class="px-2 py-1 bg-gray-100 rounded-lg text-xs">📍 '+esc(desk.zone)+'</span>';
+
+        var actions='';
+        if(isFree && desk.is_bookable!==false && desk.desk_type==='standard') {
+            actions='<div class="flex gap-2 mt-4 flex-wrap">'+
+                '<button onclick="window._buchBook('+nr+')" class="px-5 py-2.5 bg-vit-orange text-white rounded-xl text-sm font-bold hover:opacity-90 shadow-sm transition">📅 Buchen</button>'+
+                (isToday?'<button onclick="window._offCheckIn('+nr+')" class="px-5 py-2.5 bg-green-500 text-white rounded-xl text-sm font-bold hover:opacity-90 shadow-sm transition">✅ Direkt einchecken</button>':'')+
+            '</div>';
+        } else if(isMyBooking) {
+            actions='<div class="flex gap-2 mt-4 flex-wrap">'+
+                (isToday?'<button onclick="window._offCheckIn('+nr+')" class="px-5 py-2.5 bg-green-500 text-white rounded-xl text-sm font-bold hover:opacity-90 shadow-sm transition">✅ Einchecken</button>':'')+
+                '<button onclick="window._buchCancel(\''+bk.id+'\')" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-semibold hover:bg-red-50 hover:text-red-600 transition">Stornieren</button>'+
+            '</div>';
+        }
+
+        det.style.display='block';
+        det.innerHTML=
+            '<div class="flex items-start justify-between">'+
+                '<div>'+
+                    '<div class="flex items-center gap-3">'+
+                        '<span class="text-2xl font-black text-gray-800">Platz '+nr+'</span>'+
+                        '<span class="text-sm text-gray-400">'+esc(desk.room||'')+(desk.label?' · '+esc(desk.label):'')+'</span>'+
+                    '</div>'+
+                '</div>'+
+                '<button onclick="document.getElementById(\'buchDeskDetail\').style.display=\'none\'" class="text-gray-300 hover:text-gray-600 text-2xl leading-none">×</button>'+
+            '</div>'+
+            '<div class="mt-3">'+statusHtml+'</div>'+
+            (features?'<div class="flex flex-wrap gap-2 mt-3">'+features+'</div>':'')+
+            actions;
+
+        det.scrollIntoView({behavior:'smooth',block:'nearest'});
+    };
+
+    window._buchBook = async function(deskNr) {
+        try {
+            var tf=_buchAllDay?null:_buchFrom+':00';
+            var tt=_buchAllDay?null:_buchTo+':00';
+            // Prüfen ob User bereits für dieses Datum gebucht hat
+            var existing=_buchBookings.find(function(b){return b.user_id===sbUser.id;});
+            if(existing&&existing.desk_nr!==deskNr){
+                notify('Du hast bereits Platz '+existing.desk_nr+' gebucht. Erst stornieren?','info');
+                return;
+            }
+            var payload={user_id:sbUser.id,booking_date:_buchDate,status:'office',desk_nr:deskNr,time_from:tf,time_to:tt,updated_at:new Date().toISOString()};
+            var r=await sb.from('office_bookings').upsert(payload,{onConflict:'user_id,booking_date'});
+            if(r.error) throw r.error;
+            notify('✅ Platz '+deskNr+' gebucht für '+_buchDate+(tf?' ('+_buchFrom+' – '+_buchTo+')':'')+'!','success');
+            await _buchLoadData();
+            _buchRenderFloor();
+            window._buchSelectDesk(deskNr);
+        } catch(err) {
+            console.error('[Office] Buchung error:',err);
+            notify('Fehler: '+err.message,'error');
+        }
+    };
+
+    window._buchCancel = async function(bookingId) {
+        try {
+            var r=await sb.from('office_bookings').delete().eq('id',bookingId);
+            if(r.error) throw r.error;
+            notify('Buchung storniert','success');
+            await _buchLoadData();
+            _buchRenderFloor();
+            var det=document.getElementById('buchDeskDetail'); if(det) det.style.display='none';
+        } catch(err) {
+            console.error('[Office] Cancel error:',err);
+            notify('Fehler: '+err.message,'error');
+        }
+    };
+
 
