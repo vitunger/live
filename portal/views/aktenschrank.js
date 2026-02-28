@@ -335,6 +335,8 @@ export async function saveAndConfirmAktenDoc(dokId){
     }catch(e){console.error('Confirm err:',e);aktenToast('\u274C Fehler beim Speichern');}
 }
 
+export function closeAktenReview(){document.getElementById('aktenReviewOverlay').classList.add('hidden');}
+
 export async function rejectAktenDoc(dokId){if(!confirm('Dokument wirklich ablehnen?'))return;try{var u=_sbUser();await _sb().from('dokumente').update({status:'abgelehnt'}).eq('id',dokId);await _sb().from('dokument_audit').insert({dokument_id:dokId,aktion:'status_geaendert',details:{beschreibung:'Abgelehnt',neuer_status:'abgelehnt'},user_id:u.id});var d=_akten.dokumente.find(function(x){return x.id===dokId;});if(d)d.status='abgelehnt';closeAktenReview();updateStats();updateInboxBadge();aktenToast('\u274C Dokument abgelehnt');}catch(e){console.error('Reject err:',e);}}
 
 // UPLOAD
