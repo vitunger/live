@@ -90,7 +90,7 @@
         var el=document.getElementById('officeTab_'+tab); if(el) el.style.display='block';
         var btn=document.querySelector('.office-tab-btn[data-tab="'+tab+'"]');
         if(btn) btn.className='office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold bg-white text-gray-800 shadow-sm border-b-2 border-vit-orange transition';
-        var fns={dashboard:renderDashboard,wochenplan:renderWochenplan,grundriss:renderGrundriss,buchen:renderBuchen,gaeste:renderGaeste,statistik:renderStatistik};
+        var fns={dashboard:renderDashboard,wochenplan:renderWochenplan,grundriss:renderGrundriss,buchen:renderBuchen,meinebuchungen:renderMeineBuchungen,gaeste:renderGaeste,statistik:renderStatistik};
         if(fns[tab]) fns[tab]();
     };
 
@@ -112,6 +112,7 @@
                 '<button onclick="showOfficeTab(\'wochenplan\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="wochenplan">Wochenplan</button>'+
                 '<button onclick="showOfficeTab(\'grundriss\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="grundriss">Grundriss</button>'+
                 '<button onclick="showOfficeTab(\'buchen\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="buchen">📅 Buchen</button>'+
+                '<button onclick="showOfficeTab(\'meinebuchungen\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="meinebuchungen">📋 Meine Buchungen</button>'+
                 '<button onclick="showOfficeTab(\'gaeste\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="gaeste">G\u00e4ste</button>'+
                 '<button onclick="showOfficeTab(\'statistik\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="statistik">Statistik</button>'+
             '</div>'+
@@ -119,6 +120,7 @@
             '<div id="officeTab_wochenplan" class="office-tab-content" style="display:none"></div>'+
             '<div id="officeTab_grundriss" class="office-tab-content" style="display:none"></div>'+
             '<div id="officeTab_buchen" class="office-tab-content" style="display:none"></div>'+
+            '<div id="officeTab_meinebuchungen" class="office-tab-content" style="display:none"></div>'+
             '<div id="officeTab_gaeste" class="office-tab-content" style="display:none"></div>'+
             '<div id="officeTab_statistik" class="office-tab-content" style="display:none"></div>';
         renderDashboard();
@@ -1457,6 +1459,318 @@
                 _buchRenderParking();
             } catch(e){console.error('[Office] CancelParking:',e);notify('Fehler: '+e.message,'error');}
         })();
+    };
+
+
+    // ═══════════════════════════════════════════════════════
+    // TAB: MEINE BUCHUNGEN – Kalender + Detail
+    // ═══════════════════════════════════════════════════════
+    var _mbYear = null;
+    var _mbMonth = null;
+    var _mbSelDate = null;
+    var _mbBookings = []; // alle Buchungen des Users (desk + parking)
+
+    async function renderMeineBuchungen() {
+        var el = document.getElementById('officeTab_meinebuchungen');
+        if (!el) return;
+        el.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-vit-orange"></div></div>';
+        try {
+            // Init date state
+            var now = new Date();
+            if (!_mbYear) _mbYear = now.getFullYear();
+            if (!_mbMonth) _mbMonth = now.getMonth(); // 0-based
+            if (!_mbSelDate) _mbSelDate = fmtISO(now);
+
+            // Load all bookings for this user (past + future, 6 months back, 3 months ahead)
+            var from = new Date(now); from.setMonth(from.getMonth() - 6);
+            var to = new Date(now); to.setMonth(to.getMonth() + 3);
+            var res = await sb.from('office_bookings')
+                .select('id,booking_date,status,desk_nr,parking_nr,time_from,time_to,note')
+                .eq('user_id', sbUser.id)
+                .gte('booking_date', fmtISO(from))
+                .lte('booking_date', fmtISO(to))
+                .order('booking_date', {ascending: true});
+            if (res.error) throw res.error;
+            _mbBookings = res.data || [];
+
+            await loadDesks();
+            _mbBuildUI(el);
+        } catch(err) {
+            console.error('[MeineBuchungen]', err);
+            el.innerHTML = '<div class="vit-card p-6 text-center text-red-500">Fehler: ' + esc(err.message) + '</div>';
+        }
+    }
+
+    function _mbBuildUI(el) {
+        el.innerHTML =
+            '<div class="grid grid-cols-1 md:grid-cols-[340px_1fr] gap-4">' +
+                '<div>' +
+                    '<div id="mbCalendar" class="vit-card p-4 mb-4"></div>' +
+                    '<div id="mbDayList" class="vit-card p-4 min-h-[120px]"></div>' +
+                '</div>' +
+                '<div id="mbDetail" class="vit-card p-5 min-h-[300px] flex items-center justify-center text-gray-300">' +
+                    '<div class="text-center"><p class="text-4xl mb-2">&#128197;</p><p class="text-sm">Tag im Kalender auswählen</p></div>' +
+                '</div>' +
+            '</div>';
+        _mbRenderCalendar();
+        _mbRenderDayList();
+    }
+
+    function _mbRenderCalendar() {
+        var cal = document.getElementById('mbCalendar');
+        if (!cal) return;
+
+        var monthNames = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+        var dayNames = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+
+        // Build set of dates that have bookings
+        var bookedDates = {};
+        _mbBookings.forEach(function(b) {
+            if (!bookedDates[b.booking_date]) bookedDates[b.booking_date] = [];
+            bookedDates[b.booking_date].push(b);
+        });
+
+        var today = todayISO();
+        var firstDay = new Date(_mbYear, _mbMonth, 1);
+        var lastDay = new Date(_mbYear, _mbMonth + 1, 0);
+
+        // Day of week for first day (0=Mon...6=Sun)
+        var startDow = (firstDay.getDay() + 6) % 7;
+
+        var h = '';
+
+        // Header with month/year + nav
+        h += '<div class="flex items-center justify-between mb-4">' +
+            '<button onclick="window._mbNavMonth(-1)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-600 font-bold text-lg">&lsaquo;</button>' +
+            '<span class="font-bold text-gray-800">' + monthNames[_mbMonth] + ' ' + _mbYear + '</span>' +
+            '<button onclick="window._mbNavMonth(1)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-600 font-bold text-lg">&rsaquo;</button>' +
+        '</div>';
+
+        // Day name headers
+        h += '<div class="grid grid-cols-7 mb-1">';
+        dayNames.forEach(function(d) {
+            h += '<div class="text-center text-[11px] font-semibold text-gray-400 py-1">' + d + '</div>';
+        });
+        h += '</div>';
+
+        // Calendar grid
+        h += '<div class="grid grid-cols-7 gap-0.5">';
+
+        // Empty cells before first day
+        for (var i = 0; i < startDow; i++) {
+            h += '<div></div>';
+        }
+
+        // Days
+        for (var d = 1; d <= lastDay.getDate(); d++) {
+            var iso = _mbYear + '-' + String(_mbMonth + 1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+            var isToday = iso === today;
+            var isSel = iso === _mbSelDate;
+            var bkgs = bookedDates[iso] || [];
+            var hasDesk = bkgs.some(function(b){return b.desk_nr;});
+            var hasPark = bkgs.some(function(b){return b.parking_nr && !b.desk_nr;});
+            var isPast = iso < today;
+            var dow = (new Date(iso).getDay() + 6) % 7;
+            var isWeekend = dow >= 5;
+
+            var baseStyle = 'relative flex flex-col items-center justify-center rounded-lg cursor-pointer transition py-1.5 ';
+            var cls = '';
+            if (isSel) {
+                cls = baseStyle + 'bg-vit-orange text-white shadow-md';
+            } else if (isToday) {
+                cls = baseStyle + 'bg-orange-100 text-orange-700 font-bold ring-2 ring-vit-orange ring-offset-1';
+            } else if (isWeekend) {
+                cls = baseStyle + 'text-gray-300 hover:bg-gray-50';
+            } else if (isPast) {
+                cls = baseStyle + 'text-gray-400 hover:bg-gray-50';
+            } else {
+                cls = baseStyle + 'text-gray-700 hover:bg-orange-50';
+            }
+
+            h += '<div class="' + cls + '" onclick="window._mbSelectDate(\'' + iso + '\')">';
+            h += '<span class="text-sm font-semibold leading-none">' + d + '</span>';
+
+            // Dot indicators
+            if (bkgs.length > 0) {
+                h += '<div class="flex gap-0.5 mt-0.5">';
+                if (hasDesk) h += '<span class="w-1.5 h-1.5 rounded-full ' + (isSel ? 'bg-white' : 'bg-vit-orange') + '"></span>';
+                if (hasPark || bkgs.some(function(b){return b.parking_nr;})) h += '<span class="w-1.5 h-1.5 rounded-full ' + (isSel ? 'bg-orange-200' : 'bg-blue-400') + '"></span>';
+                h += '</div>';
+            }
+            h += '</div>';
+        }
+
+        h += '</div>';
+
+        // Legend
+        h += '<div class="flex gap-4 mt-3 pt-3 border-t border-gray-100 text-xs text-gray-400">' +
+            '<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-vit-orange inline-block"></span> Desk</span>' +
+            '<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-400 inline-block"></span> Parkplatz</span>' +
+        '</div>';
+
+        cal.innerHTML = h;
+    }
+
+    function _mbRenderDayList() {
+        var el = document.getElementById('mbDayList');
+        if (!el) return;
+
+        // Show upcoming bookings (next 14 days) as a quick list
+        var today = todayISO();
+        var upcoming = _mbBookings
+            .filter(function(b){ return b.booking_date >= today; })
+            .slice(0, 8);
+
+        if (!upcoming.length) {
+            el.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">Keine bevorstehenden Buchungen</p>';
+            return;
+        }
+
+        var h = '<p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Nächste Buchungen</p>';
+        var lastDate = '';
+        upcoming.forEach(function(b) {
+            if (b.booking_date !== lastDate) {
+                var label = b.booking_date === today ? 'Heute' :
+                    new Date(b.booking_date + 'T12:00:00').toLocaleDateString('de-DE', {weekday:'short', day:'numeric', month:'short'});
+                h += '<p class="text-[11px] font-bold text-gray-400 mt-2 mb-1">' + label + '</p>';
+                lastDate = b.booking_date;
+            }
+            var icon = b.parking_nr && !b.desk_nr ? '🅿️' : b.desk_nr ? '🪑' : '📅';
+            var desc = '';
+            if (b.desk_nr) {
+                var desk = (_desks||[]).find(function(d){return d.nr===b.desk_nr;});
+                desc = 'Platz ' + b.desk_nr + (desk&&desk.room?' · '+desk.room:'');
+            }
+            if (b.parking_nr) {
+                var pLabel = b.parking_nr<=2?'⚡ P'+b.parking_nr+' Elektro':b.parking_nr<=4?'🚗 P'+b.parking_nr+' Gast':'🅿️ Parkplatz';
+                desc = desc ? desc + ' + ' + pLabel : pLabel;
+            }
+            var timeStr = b.time_from ? b.time_from.substring(0,5)+' – '+(b.time_to||'').substring(0,5) : 'Ganzer Tag';
+            h += '<div onclick="window._mbSelectDate(\'' + b.booking_date + '\')" class="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-orange-50 cursor-pointer transition">' +
+                '<span class="text-base">' + icon + '</span>' +
+                '<div class="flex-1 min-w-0">' +
+                    '<p class="text-xs font-semibold text-gray-700 truncate">' + esc(desc) + '</p>' +
+                    '<p class="text-[10px] text-gray-400">' + timeStr + '</p>' +
+                '</div>' +
+            '</div>';
+        });
+
+        el.innerHTML = h;
+    }
+
+    function _mbRenderDetail(iso) {
+        var det = document.getElementById('mbDetail');
+        if (!det) return;
+
+        var dayBkgs = _mbBookings.filter(function(b){ return b.booking_date === iso; });
+        var label = iso === todayISO() ? 'Heute' :
+            new Date(iso + 'T12:00:00').toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+        var isPast = iso < todayISO();
+
+        if (!dayBkgs.length) {
+            det.innerHTML =
+                '<div class="text-center py-8">' +
+                    '<p class="text-3xl mb-2">📭</p>' +
+                    '<p class="font-semibold text-gray-600">' + label + '</p>' +
+                    '<p class="text-sm text-gray-400 mt-1">Keine Buchungen</p>' +
+                    (!isPast ? '<button onclick="window.showOfficeTab(\'buchen\');window._buchSelectDate&&_buchSelectDate(\''+iso+'\')" class="mt-4 px-4 py-2 bg-vit-orange text-white rounded-xl text-sm font-semibold hover:opacity-90">+ Jetzt buchen</button>' : '') +
+                '</div>';
+            return;
+        }
+
+        var h = '<div class="flex items-center justify-between mb-5">' +
+            '<div>' +
+                '<p class="font-bold text-gray-800 text-lg">' + label + '</p>' +
+                '<p class="text-xs text-gray-400">' + dayBkgs.length + ' Buchung' + (dayBkgs.length > 1 ? 'en' : '') + '</p>' +
+            '</div>' +
+            (!isPast ? '<button onclick="window.showOfficeTab(\'buchen\');window._buchSelectDate&&_buchSelectDate(\''+iso+'\')" class="px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg text-xs font-semibold hover:bg-orange-100">✏️ Bearbeiten</button>' : '') +
+        '</div>';
+
+        dayBkgs.forEach(function(b) {
+            var desk = b.desk_nr ? (_desks||[]).find(function(d){return d.nr===b.desk_nr;}) : null;
+            var timeStr = b.time_from ? b.time_from.substring(0,5) + ' – ' + (b.time_to||'').substring(0,5) : 'Ganzer Tag';
+
+            h += '<div class="border border-gray-100 rounded-xl p-4 mb-3 hover:border-orange-200 transition">';
+
+            if (b.desk_nr) {
+                h += '<div class="flex items-start gap-3">' +
+                    '<span class="text-2xl mt-0.5">🪑</span>' +
+                    '<div class="flex-1">' +
+                        '<p class="font-bold text-gray-800">Platz ' + b.desk_nr + (desk&&desk.room ? '<span class="text-sm font-normal text-gray-400 ml-2">' + esc(desk.room) + '</span>' : '') + '</p>' +
+                        '<p class="text-sm text-gray-500 mt-0.5">' + timeStr + '</p>' +
+                        (desk && (desk.has_monitor || desk.has_docking) ?
+                            '<div class="flex gap-2 mt-2">' +
+                                (desk.has_monitor ? '<span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">🖥️ Monitor</span>' : '') +
+                                (desk.has_docking ? '<span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">🔌 Docking</span>' : '') +
+                            '</div>' : '') +
+                        (!isPast ? '<button onclick="window._mbCancelDesk(\'' + b.id + '\')" class="mt-3 text-xs text-red-400 hover:text-red-600 font-semibold">Stornieren</button>' : '') +
+                    '</div>' +
+                '</div>';
+            }
+
+            if (b.parking_nr) {
+                var pLabel = b.parking_nr<=2 ? '⚡ P'+b.parking_nr+' Elektro' : b.parking_nr<=4 ? '🚗 P'+b.parking_nr+' Gast' : '🅿️ Parkplatz';
+                var pTime = b.desk_nr ? '' : ('<p class="text-sm text-gray-500 mt-0.5">' + timeStr + '</p>');
+                h += '<div class="flex items-start gap-3' + (b.desk_nr ? ' mt-3 pt-3 border-t border-gray-100' : '') + '">' +
+                    '<span class="text-2xl mt-0.5">🅿️</span>' +
+                    '<div class="flex-1">' +
+                        '<p class="font-bold text-gray-800">' + pLabel + '</p>' +
+                        pTime +
+                        (!isPast ? '<button onclick="window._mbCancelParking(\'' + b.id + '\')" class="mt-3 text-xs text-red-400 hover:text-red-600 font-semibold">Parkplatz stornieren</button>' : '') +
+                    '</div>' +
+                '</div>';
+            }
+
+            h += '</div>';
+        });
+
+        det.innerHTML = h;
+    }
+
+    window._mbNavMonth = function(dir) {
+        _mbMonth += dir;
+        if (_mbMonth > 11) { _mbMonth = 0; _mbYear++; }
+        if (_mbMonth < 0) { _mbMonth = 11; _mbYear--; }
+        _mbRenderCalendar();
+    };
+
+    window._mbSelectDate = function(iso) {
+        _mbSelDate = iso;
+        _mbRenderCalendar();
+        _mbRenderDetail(iso);
+    };
+
+    window._mbCancelDesk = async function(bookingId) {
+        if (!confirm('Buchung stornieren?')) return;
+        try {
+            var bk = _mbBookings.find(function(b){return b.id===bookingId;});
+            var res;
+            if (bk && bk.parking_nr) {
+                // Has parking too - just clear desk
+                res = await sb.from('office_bookings').update({desk_nr:null,status:'parking'}).eq('id',bookingId);
+            } else {
+                res = await sb.from('office_bookings').delete().eq('id',bookingId);
+            }
+            if (res.error) throw res.error;
+            notify('Buchung storniert','success');
+            await renderMeineBuchungen();
+        } catch(e) { notify('Fehler: '+e.message,'error'); }
+    };
+
+    window._mbCancelParking = async function(bookingId) {
+        if (!confirm('Parkplatz-Buchung stornieren?')) return;
+        try {
+            var bk = _mbBookings.find(function(b){return b.id===bookingId;});
+            var res;
+            if (bk && bk.desk_nr) {
+                res = await sb.from('office_bookings').update({parking_nr:null}).eq('id',bookingId);
+            } else {
+                res = await sb.from('office_bookings').delete().eq('id',bookingId);
+            }
+            if (res.error) throw res.error;
+            notify('Parkplatz storniert','success');
+            await renderMeineBuchungen();
+        } catch(e) { notify('Fehler: '+e.message,'error'); }
     };
 
 
