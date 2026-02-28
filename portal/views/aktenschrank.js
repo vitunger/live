@@ -293,6 +293,12 @@ export async function openAktenReview(dokId){
     document.getElementById('aktenReviewOverlay').classList.remove('hidden');
 }
 
+// REFRESH INBOX if currently visible
+function refreshInboxIfOpen(){
+    var iv=document.getElementById('aktenInboxView');
+    if(iv && !iv.classList.contains('hidden')){showAktenInbox();}
+}
+
 // FOLDER SELECTOR
 export function selectAktenOrdner(ordnerId, btn){
     document.querySelectorAll('.akten-ordner-btn').forEach(function(b){b.classList.remove('ring-2','ring-vit-orange','bg-orange-50');b.classList.add('hover:bg-gray-50');});
@@ -333,7 +339,7 @@ export async function saveAndConfirmAktenDoc(dokId){
         await _sb().from('dokument_audit').insert({dokument_id:dokId,aktion:'manuell_geprueft',details:{beschreibung:'Gepr\u00fcft mit Ordnerzuweisung',ordner_id:ordnerId,titel:titel.trim()},user_id:u.id});
         var d=_akten.dokumente.find(function(x){return x.id===dokId;});
         if(d){d.status='geprueft';d.titel=titel.trim();d.ordner_id=ordnerId;if(notizen.trim())d.notizen=notizen.trim();}
-        closeAktenReview();renderFolders();updateStats();updateInboxBadge();
+        closeAktenReview();renderFolders();updateStats();updateInboxBadge();refreshInboxIfOpen();
         if(_akten.currentFolder)openAktenFolder(_akten.currentFolder);
         aktenToast('\u2705 Dokument gepr\u00fcft & zugewiesen');
     }catch(e){console.error('Confirm err:',e);aktenToast('\u274C Fehler beim Speichern');}
@@ -341,7 +347,7 @@ export async function saveAndConfirmAktenDoc(dokId){
 
 export function closeAktenReview(){document.getElementById('aktenReviewOverlay').classList.add('hidden');}
 
-export async function rejectAktenDoc(dokId){if(!confirm('Dokument wirklich ablehnen?'))return;try{var u=_sbUser();await _sb().from('dokumente').update({status:'abgelehnt'}).eq('id',dokId);await _sb().from('dokument_audit').insert({dokument_id:dokId,aktion:'status_geaendert',details:{beschreibung:'Abgelehnt',neuer_status:'abgelehnt'},user_id:u.id});var d=_akten.dokumente.find(function(x){return x.id===dokId;});if(d)d.status='abgelehnt';closeAktenReview();updateStats();updateInboxBadge();aktenToast('\u274C Dokument abgelehnt');}catch(e){console.error('Reject err:',e);}}
+export async function rejectAktenDoc(dokId){if(!confirm('Dokument wirklich ablehnen?'))return;try{var u=_sbUser();await _sb().from('dokumente').update({status:'abgelehnt'}).eq('id',dokId);await _sb().from('dokument_audit').insert({dokument_id:dokId,aktion:'status_geaendert',details:{beschreibung:'Abgelehnt',neuer_status:'abgelehnt'},user_id:u.id});var d=_akten.dokumente.find(function(x){return x.id===dokId;});if(d)d.status='abgelehnt';closeAktenReview();renderFolders();updateStats();updateInboxBadge();refreshInboxIfOpen();aktenToast('\u274C Dokument abgelehnt');}catch(e){console.error('Reject err:',e);}}
 
 // DELETE DOCUMENT
 export async function deleteAktenDoc(dokId, titel){
@@ -364,7 +370,7 @@ export async function deleteAktenDoc(dokId, titel){
         if(delR.error){aktenToast('\u274C Fehler: '+delR.error.message);return;}
         // Remove from local state
         _akten.dokumente=_akten.dokumente.filter(function(d){return d.id!==dokId;});
-        closeAktenReview();renderFolders();updateStats();updateInboxBadge();
+        closeAktenReview();renderFolders();updateStats();updateInboxBadge();refreshInboxIfOpen();
         if(_akten.currentFolder)openAktenFolder(_akten.currentFolder);
         aktenToast('\uD83D\uDDD1 Dokument gelöscht');
     }catch(e){console.error('Delete err:',e);aktenToast('\u274C Fehler beim Löschen');}
