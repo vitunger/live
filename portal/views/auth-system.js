@@ -396,6 +396,9 @@ var welcomeEl = document.getElementById('welcomeText');
 if(welcomeEl) { welcomeEl.textContent = 'Willkommen zurück, ' + impFirst + '!'; welcomeEl.setAttribute('data-i18n-name', impFirst); }
 // Refresh sidebar & views
 if(typeof updateUIForRole === 'function') updateUIForRole();
+// Reload module status & feature flags for impersonated user
+if(typeof loadModulStatus === 'function') loadModulStatus();
+if(typeof loadFeatureFlags === 'function') loadFeatureFlags();
 _showView('home');
 }
 
@@ -423,6 +426,9 @@ var welcomeEl = document.getElementById('welcomeText');
 if(welcomeEl) { welcomeEl.textContent = 'Willkommen zurück, ' + origFirst + '!'; welcomeEl.setAttribute('data-i18n-name', origFirst); }
 // Refresh sidebar & views
 if(typeof updateUIForRole === 'function') updateUIForRole();
+// Reload module status & feature flags for original user
+if(typeof loadModulStatus === 'function') loadModulStatus();
+if(typeof loadFeatureFlags === 'function') loadFeatureFlags();
 if(currentRole === 'hq') { if(typeof window.switchViewMode === 'function') window.switchViewMode('hq'); }
 else _showView('home');
 }
