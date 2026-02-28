@@ -1112,7 +1112,6 @@
         var allBkgs=bRes.data||[];
         _buchBookings=allBkgs.filter(function(b){return b.status==='office'&&b.desk_nr;});
         _buchParkBookings=allBkgs.filter(function(b){return b.parking_nr!=null;});
-        console.log('[Parking] _buchLoadData: allBkgs=',allBkgs.length,'parkBkgs=',_buchParkBookings.length);
         if(_buchDate===td) {
             var cRes=await sb.from('office_checkins').select('id,user_id,desk_nr,checked_in_at').gte('checked_in_at',td+'T00:00:00').is('checked_out_at',null);
             _buchCheckins=cRes.data||[];
@@ -1196,7 +1195,7 @@
         var el=document.getElementById('officeTab_buchen');
         if(!el) return;
         _buildBuchenUI(el);
-        _buchLoadData().then(function(){_buchRenderFloor();});
+        _buchLoadData().then(function(){_buchRenderFloor();_buchRenderParking();});
     };
 
     window._buchToggleAllDay = function() {
@@ -1324,7 +1323,6 @@
     // P1+P2 = Elektro ⚡, P3+P4 = Gäste 🚗, P5-P12 = Standard
     // ═══════════════════════════════════════════════════════
     function _buchRenderParking() {
-        console.log('[Parking] called, area:', document.getElementById('buchParkingArea'), '_buchParkBookings:', (_buchParkBookings||[]).length);
         var area=document.getElementById('buchParkingArea');
         if(!area) return;
 
