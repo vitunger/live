@@ -265,8 +265,17 @@
 
     function buildMiniMap() {
         if(!_desks||!_desks.length) return '<p class="text-gray-400 text-sm text-center py-4">Keine Tische</p>';
-        var svg='<svg viewBox="0 0 100 60" style="width:100%;height:auto" class="rounded-lg">';
-        svg+='<rect x="0" y="0" width="100" height="60" fill="#f9fafb" rx="3"/>';
+        // Dynamisch viewBox aus echten pct_x/pct_y-Werten berechnen
+        var allX=_desks.map(function(d){return parseFloat(d.pct_x)||50;});
+        var allY=_desks.map(function(d){return parseFloat(d.pct_y)||50;});
+        var minX=Math.min.apply(null,allX),maxX=Math.max.apply(null,allX);
+        var minY=Math.min.apply(null,allY),maxY=Math.max.apply(null,allY);
+        var padX=5,padY=6;
+        var vbX=Math.max(0,minX-padX),vbY=Math.max(0,minY-padY);
+        var vbW=Math.min(100,maxX+padX)-vbX,vbH=Math.min(100,maxY+padY)-vbY;
+        var vb=vbX+' '+vbY+' '+vbW+' '+vbH;
+        var svg='<svg viewBox="'+vb+'" style="width:100%;height:auto" class="rounded-lg">';
+        svg+='<rect x="'+vbX+'" y="'+vbY+'" width="'+vbW+'" height="'+vbH+'" fill="#f9fafb" rx="3"/>';
         var bounds={};
         _desks.forEach(function(d){
             var r=d.room||'?';
@@ -275,10 +284,14 @@
             if(px<bounds[r].minX) bounds[r].minX=px; if(py<bounds[r].minY) bounds[r].minY=py;
             if(px>bounds[r].maxX) bounds[r].maxX=px; if(py>bounds[r].maxY) bounds[r].maxY=py;
         });
-        var clr={GF:'#FEF3C7','Coworking 1':'#DBEAFE',Mitte:'#D1FAE5',Expansion:'#EDE9FE','Rechts-Oben':'#FCE7F3',Finanzen:'#FEE2E2',IT:'#E0E7FF',HR:'#CCFBF1'};
-        Object.keys(bounds).forEach(function(r){
-            var b=bounds[r],c=clr[r]||'#F3F4F6';
-            svg+='<rect x="'+(b.minX-3)+'" y="'+(b.minY-4)+'" width="'+(b.maxX-b.minX+6)+'" height="'+(b.maxY-b.minY+8)+'" fill="'+c+'" rx="1.5" opacity="0.5"/>';
+        // Farb-Palette: rotierend fuer alle Raumnamen dynamisch
+        var palette=['#DBEAFE','#D1FAE5','#FEE2E2','#EDE9FE','#FEF3C7','#CCFBF1','#FCE7F3','#E0E7FF','#FEF9C3','#DCFCE7'];
+        var roomNames=Object.keys(bounds);
+        var clrMap={};
+        roomNames.forEach(function(r,i){clrMap[r]=palette[i%palette.length];});
+        roomNames.forEach(function(r){
+            var b=bounds[r],c=clrMap[r];
+            svg+='<rect x="'+(b.minX-3)+'" y="'+(b.minY-4)+'" width="'+(b.maxX-b.minX+6)+'" height="'+(b.maxY-b.minY+8)+'" fill="'+c+'" rx="1.5" opacity="0.6"/>';
             svg+='<text x="'+(b.minX-2)+'" y="'+(b.minY-1)+'" font-size="2.2" fill="#6B7280" font-weight="600">'+esc(r)+'</text>';
         });
         _desks.forEach(function(d){
@@ -1002,3 +1015,4 @@
     }
 
 })();
+
