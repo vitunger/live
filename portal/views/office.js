@@ -1123,6 +1123,8 @@
     var _buchBookings = [];    // Buchungen für gewähltes Datum
     var _buchCheckins = [];    // Checkins für gewähltes Datum (nur heute)
     var _buchParkBookings = []; // Parkplatz-Buchungen für gewähltes Datum
+    var _buchAllBookingsForDay = []; // Alle Buchungen für gewähltes Datum
+    var _buchFavoriteDesk = null;    // Lieblingsplatz des Users
 
     async function renderBuchen() {
         var el=document.getElementById('officeTab_buchen');
@@ -1130,6 +1132,13 @@
         el.innerHTML='<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-vit-orange"></div></div>';
         try {
             await Promise.all([loadRooms(),loadDesks(),loadHQUsers()]);
+            // Load favorite desk from user profile
+            if (!_buchFavoriteDesk) {
+                var profRes = await sb.from('users').select('office_favorite_desk').eq('id', sbUser.id).single();
+                if (profRes.data && profRes.data.office_favorite_desk) {
+                    _buchFavoriteDesk = profRes.data.office_favorite_desk;
+                }
+            }
             if(!_buchDate) _buchDate=todayISO();
             _buildBuchenUI(el);
             await _buchLoadData();
@@ -1238,11 +1247,14 @@
                     '<span><span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500 mr-1"></span>'+totalFree+' frei</span>'+
                     '<span><span class="inline-block w-2.5 h-2.5 rounded-full bg-blue-500 mr-1"></span>'+totalBooked+' gebucht</span>'+
                     (myBookCount?'<span class="font-semibold text-orange-500">&#10003; Du hast gebucht</span>':'')+
+                    (_buchFavoriteDesk&&!myBookCount?'<span class="text-green-600 text-xs">♥ Platz '+_buchFavoriteDesk+' ist dein Lieblingsplatz</span>':'')+
                 '</div>'+
             '</div>';
 
         // Dots als absolut positionierte Divs über dem Grundriss-Bild
-        var dotsHtml=allDesks.map(function(d){
+        // Sort: favorite desk first so it renders on top
+        var allDesksSorted = allDesks.slice().sort(function(a,b){ return (b.nr===_buchFavoriteDesk?1:0)-(a.nr===_buchFavoriteDesk?1:0); });
+        var dotsHtml=allDesksSorted.map(function(d){
             var px=parseFloat(d.pct_x)||50, py=parseFloat(d.pct_y)||50;
             var bk=bookByDesk[d.nr];
             var ci=checkinByDesk[d.nr];
@@ -1250,13 +1262,15 @@
             var isBusy=!!ci;
             var isFree=!bk&&!ci;
             var bookable=isFree&&d.is_bookable!==false&&d.desk_type==='standard';
-            var col=isBusy?'#EF4444':(isMyBooking?'#F97316':(bk?'#3B82F6':'#22C55E'));
-            var sz=isMyBooking?30:24;
-            var ring=isMyBooking?'box-shadow:0 0 0 3px rgba(249,115,22,.4),0 2px 8px rgba(0,0,0,.3)':'box-shadow:0 2px 6px rgba(0,0,0,.25)';
+            var isFavorite=d.nr===_buchFavoriteDesk;
+            var col=isBusy?'#EF4444':(isMyBooking?'#F97316':(bk?'#3B82F6':(isFavorite&&!bk?'#16A34A':'#22C55E')));
+            var sz=isMyBooking?30:(isFavorite&&!bk&&!isMyBooking?28:24);
+            var ring=isMyBooking?'box-shadow:0 0 0 3px rgba(249,115,22,.4),0 2px 8px rgba(0,0,0,.3)':(isFavorite&&!bk?'box-shadow:0 0 0 3px rgba(22,163,74,.4),0 2px 8px rgba(0,0,0,.2)':'box-shadow:0 2px 6px rgba(0,0,0,.25)');
             var lbl='';
             if(ci){var u=userMap[ci.user_id];lbl=u?(u.vorname||'?')[0].toUpperCase()+(u.nachname||'?')[0].toUpperCase():'&#9679;';}
             else if(isMyBooking){lbl='Du';}
             else if(bk){var u2=userMap[bk.user_id];lbl=u2?(u2.vorname||'?')[0].toUpperCase():'B';}
+            else if(d.nr===_buchFavoriteDesk){lbl='♥';}
             else{lbl=String(d.nr);}
             var tip='Platz '+d.nr;
             if(ci){var uu=userMap[ci.user_id];tip+=' \u2013 '+(uu?uu.vorname+' '+uu.nachname:'belegt');}
@@ -1388,6 +1402,19 @@
         }, 300);
     };
 
+
+    window._buchSetFavorite = async function(nr) {
+        try {
+            var r = await sb.from('users').update({office_favorite_desk: nr===_buchFavoriteDesk ? null : nr}).eq('id', sbUser.id);
+            if (r.error) throw r.error;
+            _buchFavoriteDesk = nr===_buchFavoriteDesk ? null : nr;
+            notify(_buchFavoriteDesk ? '♥ Platz '+nr+' als Lieblingsplatz gesetzt' : '♡ Lieblingsplatz entfernt', 'success');
+            _buchRenderFloor();
+            // Re-render detail panel to update button
+            window._buchSelectDesk(nr);
+        } catch(err) { notify('Fehler: '+err.message,'error'); }
+    };
+
     window._buchSelectDate = function(iso) {
         _buchDate=iso; window._buchDate=iso;
         // Re-render the date strip and reload
@@ -1415,7 +1442,7 @@
         var det=document.getElementById('buchDeskDetail'); if(det) det.style.display='none';
     };
 
-    window._buchSelectDesk = function(nr) {
+    window._buchSelectDesk = function(nr, fromFavorite) {
         var det=document.getElementById('buchDeskDetail');
         if(!det) return;
         var desk=(_desks||[]).find(function(d){return d.nr===nr;});
