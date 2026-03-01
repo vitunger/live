@@ -943,12 +943,14 @@
             if(email) {
                 var dateStr=new Date(date+'T12:00:00').toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
                 try {
-                    await sb.functions.invoke('send-email', {body:{
+                    var sess=await sb.auth.getSession();
+                    var accessToken=(sess.data&&sess.data.session)?sess.data.session.access_token:null;
+                    var invokeOpts={body:{
                         template:'guest-invitation',
                         to: email,
                         data: {
                             guest_name: name,
-                            host_name: me.vorname+' '+me.nachname,
+                            host_name: (me.vorname||'')+' '+(me.nachname||''),
                             visit_date: dateStr,
                             visit_time: time||'',
                             visit_time_end: timeEnd||'',
@@ -957,9 +959,11 @@
                             notes: notes||'',
                             needs_parking: parking,
                             parking_type: parkType,
-                            address: 'Jahnstraße 2c, 85774 Unterföhring'
+                            address: 'Jahnstrasse 2c, 85774 Unterfoehring'
                         }
-                    }});
+                    }};
+                    if(accessToken) invokeOpts.headers={'Authorization':'Bearer '+accessToken};
+                    await sb.functions.invoke('send-email', invokeOpts);
                     notify('\ud83d\udc64 Gast eingeladen & E-Mail gesendet!','success');
                 } catch(mailErr) {
                     console.warn('[Office] Email send failed:', mailErr);
