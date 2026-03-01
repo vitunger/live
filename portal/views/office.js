@@ -90,7 +90,7 @@
         var el=document.getElementById('officeTab_'+tab); if(el) el.style.display='block';
         var btn=document.querySelector('.office-tab-btn[data-tab="'+tab+'"]');
         if(btn) btn.className='office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold bg-white text-gray-800 shadow-sm border-b-2 border-vit-orange transition';
-        var fns={dashboard:renderDashboard,wochenplan:renderWochenplan,grundriss:renderGrundriss,buchen:renderBuchen,meinebuchungen:renderMeineBuchungen,gaeste:renderGaeste,statistik:renderStatistik};
+        var fns={dashboard:renderDashboard,buchen:renderBuchen,meinebuchungen:renderMeineBuchungen,gaeste:renderGaeste,statistik:renderStatistik};
         if(fns[tab]) fns[tab]();
     };
 
@@ -109,16 +109,12 @@
             '</div>'+
             '<div class="flex space-x-1 bg-gray-100 rounded-lg p-1 mb-6 overflow-x-auto">'+
                 '<button onclick="showOfficeTab(\'dashboard\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold bg-white text-gray-800 shadow-sm border-b-2 border-vit-orange transition" data-tab="dashboard">Dashboard</button>'+
-                '<button onclick="showOfficeTab(\'wochenplan\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="wochenplan">Wochenplan</button>'+
-                '<button onclick="showOfficeTab(\'grundriss\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="grundriss">Grundriss</button>'+
                 '<button onclick="showOfficeTab(\'buchen\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="buchen">📅 Buchen</button>'+
                 '<button onclick="showOfficeTab(\'meinebuchungen\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="meinebuchungen">📋 Meine Buchungen</button>'+
                 '<button onclick="showOfficeTab(\'gaeste\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="gaeste">G\u00e4ste</button>'+
                 '<button onclick="showOfficeTab(\'statistik\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="statistik">Statistik</button>'+
             '</div>'+
             '<div id="officeTab_dashboard" class="office-tab-content"></div>'+
-            '<div id="officeTab_wochenplan" class="office-tab-content" style="display:none"></div>'+
-            '<div id="officeTab_grundriss" class="office-tab-content" style="display:none"></div>'+
             '<div id="officeTab_buchen" class="office-tab-content" style="display:none"></div>'+
             '<div id="officeTab_meinebuchungen" class="office-tab-content" style="display:none"></div>'+
             '<div id="officeTab_gaeste" class="office-tab-content" style="display:none"></div>'+
