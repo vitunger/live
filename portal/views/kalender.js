@@ -13,7 +13,7 @@
 function _sb()        { return window.sb; }
 function _sbUser()    { return window.sbUser; }
 function _sbProfile() { return window.sbProfile; }
-function _escH(s)     { return typeof window.escH === 'function' ? window._escH(s) : String(s); }
+function _escH(s)     { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
 function _t(k)        { return typeof window.t === 'function' ? window.t(k) : k; }
 
 // === KALENDER DATA & LOGIC (DB-backed) ===
