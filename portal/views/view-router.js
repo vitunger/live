@@ -136,8 +136,8 @@ function installRedirectInterceptor() {
     window.showView = function(v) {
         // Access check (skip if auth not yet loaded or during view restoration)
         if (typeof window.hasAccess === 'function' && window.currentRole && !window._vitRestoringView && !window.hasAccess(v)) {
-            alert('Kein Zugriff auf diesen Bereich mit deiner aktuellen Rolle.');
-            return;
+            console.warn('[view-router] Kein Zugriff auf', v, 'mit Rolle', window.currentRole);
+            if(window.currentRole === 'hq') { v = 'hqCockpit'; } else { v = 'home'; }
         }
         
         // Persist current view for reload restoration (skip during switchViewMode)
