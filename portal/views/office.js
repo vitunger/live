@@ -849,7 +849,7 @@
                         '<button onclick="document.getElementById(\'officeGuestModal\').style.display=\'none\'" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button>'+
                     '</div>'+
                     '<div class="space-y-3">'+
-                        '<div><label class="block text-sm font-semibold text-gray-600 mb-1">Name *</label><input id="offGuestName" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Max Mustermann"></div>'+
+                        '<div><label class="block text-sm font-semibold text-gray-600 mb-1">Name *</label><input id="offGuestName" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Max Mustermann"></div>'+
                         '<div><label class="block text-sm font-semibold text-gray-600 mb-1">Firma</label><input id="offGuestCompany" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Firma GmbH"></div>'+
                         '<div><label class="block text-sm font-semibold text-gray-600 mb-1">E-Mail</label><input id="offGuestEmail" type="email" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="max@firma.de"></div>'+
                         '<div class="grid grid-cols-3 gap-2">'+
@@ -904,7 +904,7 @@
         var parkType=parkTypeEl?parkTypeEl.value:'none';
         var parking=parkType!=='none';
         var notes=(document.getElementById('offGuestNotes')||{}).value;
-        if(!name||!date){notify('Name und Datum sind Pflichtfelder','error');return;}
+        if(!name||!date){alert('Bitte Name und Datum ausfüllen!');return;}
         var btn=document.getElementById('offGuestSaveBtn');
         if(btn){btn.disabled=true;btn.textContent='Wird gespeichert...';}
         try {
