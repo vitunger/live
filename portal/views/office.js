@@ -90,7 +90,7 @@
         var el=document.getElementById('officeTab_'+tab); if(el) el.style.display='block';
         var btn=document.querySelector('.office-tab-btn[data-tab="'+tab+'"]');
         if(btn) btn.className='office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold bg-white text-gray-800 shadow-sm border-b-2 border-vit-orange transition';
-        var fns={dashboard:renderDashboard,buchen:renderBuchen,meinebuchungen:renderMeineBuchungen,gaeste:renderGaeste,statistik:renderStatistik};
+        var fns={dashboard:renderDashboard,buchen:renderBuchen,meinebuchungen:renderMeineBuchungen,werImOffice:renderWerImOffice,gaeste:renderGaeste,statistik:renderStatistik};
         if(fns[tab]) fns[tab]();
     };
 
@@ -111,12 +111,14 @@
                 '<button onclick="showOfficeTab(\'dashboard\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold bg-white text-gray-800 shadow-sm border-b-2 border-vit-orange transition" data-tab="dashboard">Dashboard</button>'+
                 '<button onclick="showOfficeTab(\'buchen\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="buchen">📅 Buchen</button>'+
                 '<button onclick="showOfficeTab(\'meinebuchungen\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="meinebuchungen">📋 Meine Buchungen</button>'+
+                '<button onclick="showOfficeTab(\'werImOffice\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="werImOffice">👥 Wer ist im Office?</button>'+
                 '<button onclick="showOfficeTab(\'gaeste\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="gaeste">G\u00e4ste</button>'+
                 '<button onclick="showOfficeTab(\'statistik\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="statistik">Statistik</button>'+
             '</div>'+
             '<div id="officeTab_dashboard" class="office-tab-content"></div>'+
             '<div id="officeTab_buchen" class="office-tab-content" style="display:none"></div>'+
             '<div id="officeTab_meinebuchungen" class="office-tab-content" style="display:none"></div>'+
+            '<div id="officeTab_werImOffice" class="office-tab-content" style="display:none"></div>'+
             '<div id="officeTab_gaeste" class="office-tab-content" style="display:none"></div>'+
             '<div id="officeTab_statistik" class="office-tab-content" style="display:none"></div>';
         renderDashboard();
@@ -1815,6 +1817,248 @@
             notify('Parkplatz storniert','success');
             await renderMeineBuchungen();
         } catch(e){notify('Fehler: '+e.message,'error');}
+    };
+
+
+    // ═══════════════════════════════════════════════════════
+    // TAB: WER IST IM OFFICE
+    // Links: Datum + Filter + Personenliste
+    // Rechts: Grundriss mit Initialen-Dots
+    // ═══════════════════════════════════════════════════════
+    var _wioDate = null;
+    var _wioSearch = '';
+    var _wioBookings = [];
+    var _wioCheckins = [];
+
+    async function renderWerImOffice() {
+        var el = document.getElementById('officeTab_werImOffice');
+        if (!el) return;
+        el.innerHTML = '<div class="flex items-center justify-center py-12"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-vit-orange"></div></div>';
+        try {
+            if (!_wioDate) _wioDate = todayISO();
+            await Promise.all([loadDesks(), loadHQUsers()]);
+            await _wioLoad();
+            _wioBuildUI(el);
+        } catch(err) {
+            console.error('[WerImOffice]', err);
+            el.innerHTML = '<div class="vit-card p-6 text-red-500">Fehler: '+esc(err.message)+'</div>';
+        }
+    }
+
+    async function _wioLoad() {
+        var td = todayISO();
+        // Bookings for selected date
+        var bRes = await sb.from('office_bookings')
+            .select('id,user_id,desk_nr,status,time_from,time_to,note')
+            .eq('booking_date', _wioDate)
+            .eq('status', 'office')
+            .not('desk_nr', 'is', null);
+        _wioBookings = bRes.data || [];
+
+        // Checkins: only for today (can only be checked in today)
+        if (_wioDate === td) {
+            var cRes = await sb.from('office_checkins')
+                .select('id,user_id,desk_nr,checked_in_at')
+                .gte('checked_in_at', td+'T00:00:00')
+                .is('checked_out_at', null);
+            _wioCheckins = cRes.data || [];
+        } else {
+            _wioCheckins = [];
+        }
+    }
+
+    function _wioBuildUI(el) {
+        var userMap = {};
+        (_hqUsers||[]).forEach(function(u){ userMap[u.id] = u; });
+
+        // Build per-user data: merge bookings + checkins
+        var userDataMap = {};
+
+        _wioBookings.forEach(function(b) {
+            if (!userDataMap[b.user_id]) userDataMap[b.user_id] = {bookings:[], checkins:[], deskNr:null};
+            userDataMap[b.user_id].bookings.push(b);
+            if (!userDataMap[b.user_id].deskNr) userDataMap[b.user_id].deskNr = b.desk_nr;
+        });
+        _wioCheckins.forEach(function(c) {
+            if (!userDataMap[c.user_id]) userDataMap[c.user_id] = {bookings:[], checkins:[], deskNr:null};
+            userDataMap[c.user_id].checkins.push(c);
+            if (!userDataMap[c.user_id].deskNr) userDataMap[c.user_id].deskNr = c.desk_nr;
+        });
+
+        // Filter + sort
+        var entries = Object.keys(userDataMap).map(function(uid) {
+            return {uid: uid, user: userMap[uid], data: userDataMap[uid]};
+        }).filter(function(e) { return !!e.user; });
+
+        var search = (_wioSearch||'').toLowerCase().trim();
+        if (search) {
+            entries = entries.filter(function(e) {
+                var n = ((e.user.vorname||'')+' '+(e.user.nachname||'')).toLowerCase();
+                return n.indexOf(search) >= 0;
+            });
+        }
+        entries.sort(function(a,b) {
+            return ((a.user.nachname||'')+(a.user.vorname||'')).localeCompare((b.user.nachname||'')+(b.user.vorname||''));
+        });
+
+        var isToday = _wioDate === todayISO();
+        var dateLabel = isToday ? 'Heute, '+new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}) :
+            new Date(_wioDate+'T12:00:00').toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric'});
+
+        // ── Sidebar ──
+        var sidebar = '';
+
+        // Date pill (like screenshot: "Mo., 02.03.2026" with calendar icon)
+        sidebar += '<div style="display:flex;align-items:center;gap:8px;border:1px solid #E5E7EB;border-radius:10px;padding:10px 14px;margin-bottom:12px;cursor:pointer;background:white" onclick="window._wioOpenDatePicker()">'+
+            '<span style="font-size:16px">📅</span>'+
+            '<span style="font-size:13px;font-weight:600;color:#374151">'+esc(isToday ? 'Mo., '+new Date(_wioDate+'T12:00:00').toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}) : new Date(_wioDate+'T12:00:00').toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric'}))+'</span>'+
+            '<input type="date" id="wioDateInput" value="'+_wioDate+'" onchange="window._wioChangeDate(this.value)" style="position:absolute;opacity:0;width:1px;height:1px">'+
+        '</div>';
+
+        // Location dropdown (static for now)
+        sidebar += '<div style="display:flex;align-items:center;justify-content:space-between;border:1px solid #E5E7EB;border-radius:10px;padding:10px 14px;margin-bottom:8px;background:white">'+
+            '<span style="font-size:13px;color:#374151">HQ Unterföhring</span>'+
+            '<span style="color:#9CA3AF;font-size:14px">&#8964;</span>'+
+        '</div>';
+
+        // Floor dropdown (static)
+        sidebar += '<div style="display:flex;align-items:center;justify-content:space-between;border:1px solid #E5E7EB;border-radius:10px;padding:10px 14px;margin-bottom:12px;background:white">'+
+            '<span style="font-size:13px;color:#374151">1. OG – Büro Unterföhring</span>'+
+            '<span style="color:#9CA3AF;font-size:14px">&#8964;</span>'+
+        '</div>';
+
+        // Search
+        sidebar += '<div style="position:relative;margin-bottom:10px">'+
+            '<input type="text" id="wioSearch" placeholder="Suche nach Personen" value="'+esc(_wioSearch)+'" '+
+            'oninput="window._wioSearchChange(this.value)" '+
+            'style="width:100%;box-sizing:border-box;border:1px solid #E5E7EB;border-radius:10px;padding:10px 14px;font-size:13px;outline:none;background:white">'+
+        '</div>';
+
+        // Count
+        sidebar += '<p style="font-size:11px;color:#9CA3AF;margin-bottom:8px">'+entries.length+' Kolleg*innen</p>';
+
+        // People list
+        if (!entries.length) {
+            sidebar += '<div style="text-align:center;padding:24px 0;color:#9CA3AF;font-size:13px">Keine Buchungen für diesen Tag</div>';
+        }
+
+        entries.forEach(function(e) {
+            var u = e.user;
+            var data = e.data;
+            var isCheckedIn = data.checkins.length > 0;
+            var initials = ((u.vorname||'')[0]+(u.nachname||'')[0]).toUpperCase();
+            var hasAvatar = !!u.avatar_url;
+
+            // Main booking time
+            var mainBk = data.bookings[0];
+            var mainTime = mainBk ? (mainBk.time_from ? mainBk.time_from.substring(0,5)+' – '+(mainBk.time_to||'').substring(0,5) : '08:00 – 17:00') : '';
+
+            // Avatar
+            var avatarHtml = hasAvatar ?
+                '<img src="'+esc(u.avatar_url)+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid '+(isCheckedIn?'#F97316':'#E5E7EB')+'">':
+                '<div style="width:36px;height:36px;border-radius:50%;background:#F97316;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:700;flex-shrink:0;border:2px solid '+(isCheckedIn?'white':'transparent')+'">'+initials+'</div>';
+
+            sidebar += '<div style="padding:10px;border-radius:10px;margin-bottom:4px;background:'+(isCheckedIn?'#FFF7ED':'#F9FAFB')+';cursor:default">';
+            // Row 1: avatar + name + time
+            sidebar += '<div style="display:flex;align-items:center;gap:10px">'+
+                avatarHtml+
+                '<div style="flex:1;min-width:0">'+
+                    '<p style="font-size:13px;font-weight:700;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(u.vorname+' '+u.nachname)+'</p>'+
+                    (isCheckedIn ? '<p style="font-size:11px;color:#F97316;font-weight:600">● Eingecheckt</p>' : '')+
+                '</div>'+
+                (mainTime ? '<span style="font-size:11px;color:#6B7280;white-space:nowrap">'+esc(mainTime)+'</span>' : '')+
+            '</div>';
+
+            // Sub-rows: individual booking slots (desk name + time)
+            data.bookings.forEach(function(b) {
+                var desk = (_desks||[]).find(function(d){return d.nr===b.desk_nr;});
+                var timeStr = b.time_from ? b.time_from.substring(0,5)+' – '+(b.time_to||'').substring(0,5) : '08:00 – 17:00';
+                var label = desk ? (desk.room||'Platz '+b.desk_nr) : 'Platz '+(b.desk_nr||'?');
+                sidebar += '<div style="display:flex;align-items:center;gap:6px;margin-top:6px;padding-left:46px">'+
+                    '<span style="font-size:12px">🪑</span>'+
+                    '<span style="font-size:12px;font-weight:600;color:#374151;flex:1">'+esc(label)+'</span>'+
+                    '<span style="font-size:11px;color:#9CA3AF">'+esc(timeStr)+'</span>'+
+                '</div>';
+            });
+
+            sidebar += '</div>';
+        });
+
+        // ── Floor plan ──
+        var floorHtml = '<p style="font-size:13px;font-weight:600;color:#374151;margin-bottom:12px">1. OG – Büro Unterföhring</p>';
+
+        // Build desk → person map
+        var deskPersonMap = {};
+        _wioCheckins.forEach(function(c) {
+            if (c.desk_nr) deskPersonMap[c.desk_nr] = {uid: c.user_id, type:'checkin'};
+        });
+        _wioBookings.forEach(function(b) {
+            if (b.desk_nr && !deskPersonMap[b.desk_nr]) deskPersonMap[b.desk_nr] = {uid: b.user_id, type:'booking'};
+        });
+
+        var dotsHtml = '';
+        (_desks||[]).forEach(function(d) {
+            if (!d.pct_x || !d.pct_y || d.desk_type !== 'standard') return;
+            var px = parseFloat(d.pct_x), py = parseFloat(d.pct_y);
+            var entry = deskPersonMap[d.nr];
+            if (!entry) return; // only show occupied desks
+
+            var u = userMap[entry.uid];
+            if (!u) return;
+            var isCheckedIn = entry.type === 'checkin';
+            var initials = ((u.vorname||'')[0]+(u.nachname||'')[0]).toUpperCase();
+            var hasAvatar = !!u.avatar_url;
+            var sz = isCheckedIn ? 38 : 32;
+            var ring = isCheckedIn ? 'box-shadow:0 0 0 3px rgba(249,115,22,.5),0 3px 10px rgba(0,0,0,.25)' : 'box-shadow:0 2px 6px rgba(0,0,0,.2)';
+
+            var innerHtml = hasAvatar ?
+                '<img src="'+esc(u.avatar_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">' :
+                initials;
+
+            dotsHtml += '<div title="'+esc(u.vorname+' '+u.nachname+(isCheckedIn?' (eingecheckt)':' (gebucht)'))+'" '+
+                'style="position:absolute;left:'+px+'%;top:'+py+'%;transform:translate(-50%,-50%);'+
+                'width:'+sz+'px;height:'+sz+'px;border-radius:50%;'+
+                'background:'+(isCheckedIn?'#F97316':'#4B5563')+';'+
+                'border:2px solid white;'+ring+';'+
+                'z-index:10;display:flex;align-items:center;justify-content:center;'+
+                'font-size:'+(sz<=32?'10':'12')+'px;color:white;font-weight:700;overflow:hidden;'+
+                'cursor:default">'+
+                innerHtml+
+            '</div>';
+        });
+
+        floorHtml += '<div style="position:relative;display:inline-block;width:100%">'+
+            '<img src="grundriss_og.png" style="width:100%;height:auto;display:block;border:1px solid #E5E7EB;border-radius:8px">'+
+            dotsHtml+
+        '</div>';
+
+        // Assemble
+        el.innerHTML =
+            '<div style="display:grid;grid-template-columns:300px 1fr;gap:16px;min-height:500px">'+
+                '<div style="overflow-y:auto;max-height:80vh">'+sidebar+'</div>'+
+                '<div class="vit-card p-4">'+floorHtml+'</div>'+
+            '</div>';
+    }
+
+    window._wioOpenDatePicker = function() {
+        var inp = document.getElementById('wioDateInput');
+        if (inp) inp.showPicker ? inp.showPicker() : inp.click();
+    };
+
+    window._wioChangeDate = async function(iso) {
+        _wioDate = iso;
+        var el = document.getElementById('officeTab_werImOffice');
+        if (!el) return;
+        try {
+            await _wioLoad();
+            _wioBuildUI(el);
+        } catch(e) { notify('Fehler: '+e.message,'error'); }
+    };
+
+    window._wioSearchChange = function(val) {
+        _wioSearch = val;
+        var el = document.getElementById('officeTab_werImOffice');
+        if (el) _wioBuildUI(el);
     };
 
 
