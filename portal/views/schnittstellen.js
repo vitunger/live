@@ -297,8 +297,18 @@ function renderConnectorCard(id) {
             + '<button onclick="window.testConnector(\'etermin\')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition">🔍 Verbindung testen</button>'
             + '<button onclick="window.saveConnector(\'etermin\')" class="px-4 py-2 bg-blue-500 text-white rounded-lg text-xs font-semibold hover:bg-blue-600 transition">💾 Speichern</button>'
             + '</div>';
-        // Connected standorte overview
-        body += '<div id="connEterminOverview" class="mt-3"></div>';
+        // Connected standorte overview (prominent!)
+        body += '<div id="connEterminOverview" class="mt-4"></div>';
+        // Setup-Anleitung (klappbar)
+        body += '<details class="mt-3 border border-gray-200 rounded-lg"><summary class="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50 transition">📖 Anleitung: eTermin API-Keys finden</summary>'
+            + '<div class="px-3 pb-3 text-xs text-gray-600 space-y-2 border-t border-gray-100 pt-2">'
+            + '<p><strong>Schritt 1:</strong> Logge dich bei <a href="https://www.etermin.net" target="_blank" class="text-blue-600 underline">etermin.net</a> mit dem Account des jeweiligen Standorts ein.</p>'
+            + '<p><strong>Schritt 2:</strong> Gehe zu <em>Einstellungen → Schnittstellen → API</em>.</p>'
+            + '<p><strong>Schritt 3:</strong> Kopiere den <strong>Public Key</strong> und den <strong>Private Key</strong> (ggf. erst \"Generieren\" klicken).</p>'
+            + '<p><strong>Schritt 4:</strong> Trage beide Keys hier oben ein und klicke \"Speichern\".</p>'
+            + '<p><strong>Schritt 5:</strong> Kopiere die <strong>Webhook-URL</strong> (wird automatisch pro Standort generiert) und trage sie in eTermin ein unter <em>Einstellungen → Schnittstellen → Webhooks</em>.</p>'
+            + '<p class="text-gray-400 pt-1">Tipp: Wenn du den Private Key nicht siehst, klicke auf \"Generieren\" – der Key wird nur einmal angezeigt.</p>'
+            + '</div></details>';
         body += '<div id="connTestResult_' + id + '" class="mt-2"></div>';
         body += '</div>';
     }
@@ -535,35 +545,62 @@ async function loadEterminOverview() {
         var sb = _sb(); if (!sb) return;
         var { data: configs } = await sb.from('etermin_config')
             .select('standort_id, is_active, updated_at, standorte(name)').order('updated_at', { ascending: false });
-        if (!configs || configs.length === 0) {
-            el.innerHTML = '<p class="text-xs text-gray-400">Noch keine Standorte konfiguriert.</p>';
-            // Update connector status
+        configs = configs || [];
+
+        // Load all standorte to show which are NOT yet connected
+        var allStandorte = window._allStandorte || [];
+        var configuredIds = configs.map(function(c) { return c.standort_id; });
+        var active = configs.filter(function(c) { return c.is_active; });
+
+        // Update connector status
+        if (configs.length === 0 && allStandorte.length === 0) {
             CONNECTORS.etermin.status = 'disconnected';
             CONNECTORS.etermin.statusLabel = 'Nicht konfiguriert';
+            el.innerHTML = '<p class="text-xs text-gray-400">Noch keine Standorte konfiguriert.</p>';
             return;
         }
-        var h = '<div class="border border-gray-200 rounded-lg overflow-hidden"><table class="w-full text-xs">'
+
+        CONNECTORS.etermin.status = active.length > 0 ? 'connected' : 'disconnected';
+        CONNECTORS.etermin.statusLabel = active.length + '/' + (allStandorte.length || configs.length) + ' Standorte';
+        renderStatusGrid();
+
+        // Build table with ALL standorte
+        var h = '<p class="text-xs font-bold text-gray-700 mb-2">Verbindungsstatus aller Standorte</p>'
+            + '<div class="border border-gray-200 rounded-lg overflow-hidden"><table class="w-full text-xs">'
             + '<thead class="bg-gray-50"><tr><th class="text-left px-3 py-2 font-semibold text-gray-600">Standort</th>'
-            + '<th class="text-left px-3 py-2 font-semibold text-gray-600">Status</th>'
+            + '<th class="text-center px-3 py-2 font-semibold text-gray-600">Status</th>'
             + '<th class="text-left px-3 py-2 font-semibold text-gray-600">Webhook-URL</th>'
-            + '<th class="text-left px-3 py-2 font-semibold text-gray-600">Aktualisiert</th></tr></thead><tbody>';
+            + '<th class="text-right px-3 py-2 font-semibold text-gray-600">Zuletzt</th></tr></thead><tbody>';
+
+        // Show connected standorte first
         configs.forEach(function(c) {
             var name = (c.standorte && c.standorte.name) || 'Unbekannt';
-            var dot = c.is_active ? '#16a34a' : '#9ca3af';
-            var label = c.is_active ? 'Aktiv' : 'Inaktiv';
             var whUrl = 'https://cockpit.vitbikes.de/api/webhooks/etermin?sid=' + c.standort_id;
-            h += '<tr class="border-t border-gray-100"><td class="px-3 py-2 font-semibold">' + _escH(name) + '</td>'
-                + '<td class="px-3 py-2"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + dot + ';margin-right:4px;vertical-align:middle"></span>' + label + '</td>'
-                + '<td class="px-3 py-2"><code class="text-[9px] text-gray-400 select-all">' + whUrl.slice(-50) + '</code></td>'
-                + '<td class="px-3 py-2 text-gray-400">' + (c.updated_at ? timeAgo(c.updated_at) : '—') + '</td></tr>';
+            if (c.is_active) {
+                h += '<tr class="border-t border-gray-100 bg-green-50/50"><td class="px-3 py-2 font-semibold">' + _escH(name) + '</td>'
+                    + '<td class="px-3 py-2 text-center"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700">✅ Verbunden</span></td>'
+                    + '<td class="px-3 py-2"><code class="text-[9px] text-gray-400 select-all">' + whUrl.slice(-50) + '</code></td>'
+                    + '<td class="px-3 py-2 text-right text-gray-400">' + (c.updated_at ? timeAgo(c.updated_at) : '—') + '</td></tr>';
+            } else {
+                h += '<tr class="border-t border-gray-100"><td class="px-3 py-2 font-semibold">' + _escH(name) + '</td>'
+                    + '<td class="px-3 py-2 text-center"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-100 text-yellow-700">⏸️ Inaktiv</span></td>'
+                    + '<td class="px-3 py-2"><code class="text-[9px] text-gray-400">' + whUrl.slice(-50) + '</code></td>'
+                    + '<td class="px-3 py-2 text-right text-gray-400">' + (c.updated_at ? timeAgo(c.updated_at) : '—') + '</td></tr>';
+            }
         });
+
+        // Show NOT-yet-connected standorte
+        allStandorte.forEach(function(s) {
+            if (configuredIds.indexOf(s.id) === -1) {
+                h += '<tr class="border-t border-gray-100"><td class="px-3 py-2 font-semibold text-gray-400">' + _escH(s.name) + '</td>'
+                    + '<td class="px-3 py-2 text-center"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500">⬚ Nicht eingerichtet</span></td>'
+                    + '<td class="px-3 py-2 text-gray-300 text-[10px]">—</td>'
+                    + '<td class="px-3 py-2 text-right text-gray-300">—</td></tr>';
+            }
+        });
+
         h += '</tbody></table></div>';
         el.innerHTML = h;
-        // Update connector status
-        var active = configs.filter(function(c) { return c.is_active; });
-        CONNECTORS.etermin.status = active.length > 0 ? 'connected' : 'disconnected';
-        CONNECTORS.etermin.statusLabel = active.length + '/' + configs.length + ' Standorte';
-        renderStatusGrid();
     } catch (e) { console.warn('[schnittstellen] loadEterminOverview:', e); }
 }
 
