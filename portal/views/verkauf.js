@@ -20,13 +20,12 @@ var verkaufData = {
 };
 
 var pipelineStages = [
-    {id:'lead',label:'Lead',color:'bg-gray-100 border-gray-300'},
-    {id:'termin',label:'Termin gebucht',color:'bg-blue-50 border-blue-300'},
-    {id:'beratung',label:'In Beratung',color:'bg-yellow-50 border-yellow-300'},
-    {id:'angebot',label:'Angebot',color:'bg-purple-50 border-purple-300'},
+    {id:'lead',label:'Eingang',color:'bg-gray-100 border-gray-300'},
+    {id:'termin',label:'Termin gebucht',color:'bg-purple-50 border-purple-300'},
+    {id:'angebot',label:'Angebot',color:'bg-blue-50 border-blue-300'},
+    {id:'schwebend',label:'Schwebend',color:'bg-yellow-50 border-yellow-300'},
     {id:'verkauft',label:'Verkauft',color:'bg-green-50 border-green-300'},
-    {id:'uebergabe',label:'Uebergabe',color:'bg-emerald-50 border-emerald-300'},
-    {id:'verloren',label:'Nicht gekauft',color:'bg-red-50 border-red-300'}
+    {id:'verloren',label:'Verloren',color:'bg-red-50 border-red-300'}
 ];
 
 export function renderWeekView() {

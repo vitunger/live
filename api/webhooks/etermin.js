@@ -122,15 +122,15 @@ module.exports = async function(req, res) {
       }
     }
 
-    // Lead (only CREATED + Beratungstermin)
+    // Lead (only CREATED + Beratungstermin → goes straight to "Termin gebucht" stage)
     let lc = false;
-    if (cmd === "CREATED" && isLeadTrigger(answers, notes)) {
+    if (cmd === "CREATED" && (mappedTyp === "beratung" || isLeadTrigger(answers, notes))) {
       const exL = await sbGet("leads", "etermin_uid=eq." + uid + "&limit=1");
       if (!exL || exL.length === 0) {
         await sbInsert("leads", {
           standort_id: stdId, vorname: fn||"Unbekannt", nachname: ln||"",
           email: email||null, telefon: phone||null,
-          status: "neu", quelle: "etermin", interesse: answers||"Beratungstermin",
+          status: "kontaktiert", quelle: "etermin", interesse: answers||"Beratungstermin",
           notizen: "Via eTermin gebucht\n"+(notes?"Notiz: "+notes+"\n":"")+"Termin: "+(startL||startU||"?"),
           geschaetzter_wert: 3000, heat: 3, avatar: "📅",
           etermin_uid: uid, termin_id: tId

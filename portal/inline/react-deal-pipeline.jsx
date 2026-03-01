@@ -3,14 +3,15 @@ const { useState, useRef, useCallback, useEffect } = React;
 
 const STAGES = [
   { id: "lead", label: "Eingang", color: "#667EEA", bg: "#EBF4FF" },
+  { id: "termin", label: "Termin gebucht", color: "#8B5CF6", bg: "#F5F3FF" },
   { id: "angebot", label: "Angebot", color: "#3182CE", bg: "#EBF8FF" },
   { id: "schwebend", label: "Schwebend", color: "#D97706", bg: "#FEF3C7" },
   { id: "verkauft", label: "Verkauft", color: "#16A34A", bg: "#DCFCE7" },
   { id: "gold", label: "Schrank der Hoffnung", color: "#D69E2E", bg: "#FFFFF0" },
   { id: "lost", label: "Verloren", color: "#E53E3E", bg: "#FFF5F5" },
 ];
-const PIPELINE = ["lead", "angebot", "schwebend", "verkauft"];
-const AGING = { lead: 7, angebot: 5, schwebend: 5 };
+const PIPELINE = ["lead", "termin", "angebot", "schwebend", "verkauft"];
+const AGING = { lead: 7, termin: 3, angebot: 5, schwebend: 5 };
 const AVATARS = ["👤","👩","👨","👩‍💼","👨‍💼","👩‍🎨","👨‍🔧","👩‍⚕️","👨‍🍳","👩‍💻","🧑‍🎓","👴"];
 const ACT_TYPES = [
   { id: "call", label: "📞 Anruf", color: "#667EEA" },
@@ -57,8 +58,8 @@ const DEFAULT_RULES = [
 const INIT = [];
 
 // ── Stage Mapping: React ↔ DB ──
-const STAGE_TO_DB = { lead: "neu", angebot: "angebot", schwebend: "schwebend", verkauft: "gewonnen", gold: "gold", lost: "verloren" };
-const DB_TO_STAGE = { neu: "lead", kontaktiert: "lead", angebot: "angebot", verhandlung: "schwebend", schwebend: "schwebend", gewonnen: "verkauft", verloren: "lost", gold: "gold" };
+const STAGE_TO_DB = { lead: "neu", termin: "kontaktiert", angebot: "angebot", schwebend: "schwebend", verkauft: "gewonnen", gold: "gold", lost: "verloren" };
+const DB_TO_STAGE = { neu: "lead", kontaktiert: "termin", angebot: "angebot", verhandlung: "schwebend", schwebend: "schwebend", gewonnen: "verkauft", verloren: "lost", gold: "gold" };
 
 // ── Quelle Mapping: React ↔ DB ──
 const SOURCE_TO_DB = { "Empfehlung": "empfehlung", "Google": "google", "Instagram": "instagram", "Facebook": "facebook", "Messe": "messe", "Walk-In": "walk_in", "Website": "website", "Flyer": "flyer", "TikTok": "tiktok", "Andere": "sonstige" };

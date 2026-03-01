@@ -975,7 +975,7 @@ try {
     var _vd = (typeof verkaufData !== 'undefined') ? verkaufData : window.verkaufData;
     var resp = await _sb().from('leads').select('*').order('created_at', { ascending: false });
     if(resp.error) throw resp.error;
-    var stageMap = { 'neu':'lead','kontaktiert':'termin','angebot':'angebot','verhandlung':'beratung','gewonnen':'verkauft','verloren':'verloren' };
+    var stageMap = { 'neu':'lead','kontaktiert':'termin','angebot':'angebot','verhandlung':'schwebend','schwebend':'schwebend','gewonnen':'verkauft','verloren':'verloren','gold':'gold' };
     _vd.pipeline = (resp.data||[]).map(function(l,i) {
         var d = new Date(l.created_at);
         return {
