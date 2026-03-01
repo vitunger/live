@@ -803,8 +803,8 @@
             var todayGuests=todayRes.data||[], futureGuests=futureRes.data||[];
 
             function badge(g) {
-                if(g.status==='checked_out'||g.checked_in_at&&g.status==='done') return '<span class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-500">Ausgecheckt</span>';
-                if(g.checked_in_at) return '<span class="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">Eingecheckt</span>';
+                if(g.status==='ausgecheckt') return '<span class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-500">Ausgecheckt</span>';
+                if(g.status==='eingecheckt') return '<span class="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">Eingecheckt</span>';
                 return '<span class="px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700">Erwartet</span>';
             }
 
@@ -814,7 +814,7 @@
                 var actions='';
                 if(!g.checked_in_at) {
                     actions='<button onclick="window._offGuestCheckIn(\''+g.id+'\')" class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 ml-2">Einchecken</button>';
-                } else if(!g.status||g.status!=='done') {
+                } else if(!g.status||g.status!=='ausgecheckt') {
                     actions='<button onclick="window._offGuestCheckOut(\''+g.id+'\')" class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 ml-2">Auschecken</button>';
                 }
                 return '<div class="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0">'+
@@ -866,9 +866,14 @@
                             (_rooms||[]).map(function(r){return '<option value="'+esc(r.name)+'">'+esc(r.name)+'</option>';}).join('')+
                             '</select>'+
                         '</div>'+
-                        '<div class="flex items-center space-x-2">'+
-                            '<input id="offGuestParking" type="checkbox" class="rounded border-gray-300">'+
-                            '<label for="offGuestParking" class="text-sm text-gray-600">Parkplatz ben\u00f6tigt</label>'+
+                        '<div>'+
+                            '<label class="block text-sm font-semibold text-gray-600 mb-2">Parkplatz</label>'+
+                            '<div class="flex flex-col gap-2">'+
+                                '<label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="offGuestParkType" id="offGuestParkNone" value="none" checked class="text-vit-orange"><span class="text-sm text-gray-700">Kein Parkplatz n\u00f6tig</span></label>'+
+                                '<label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="offGuestParkType" id="offGuestParkStd" value="standard"><span class="text-sm text-gray-700">🅿️ Standard-Parkplatz (P5–P12)</span></label>'+
+                                '<label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="offGuestParkType" id="offGuestParkGuest" value="guest"><span class="text-sm text-gray-700">🚗 Gästeparkplatz (P3/P4)</span></label>'+
+                                '<label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="offGuestParkType" id="offGuestParkElec" value="electric"><span class="text-sm text-gray-700">⚡ Elektro-Ladeplatz (P1/P2)</span></label>'+
+                            '</div>'+
                         '</div>'+
                         '<div><label class="block text-sm font-semibold text-gray-600 mb-1">Notizen</label><textarea id="offGuestNotes" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Anlass, besondere W\u00fcnsche..."></textarea></div>'+
                     '</div>'+
@@ -899,7 +904,9 @@
         var time=(document.getElementById('offGuestTime')||{}).value;
         var timeEnd=(document.getElementById('offGuestTimeEnd')||{}).value;
         var room=(document.getElementById('offGuestRoom')||{}).value;
-        var parking=(document.getElementById('offGuestParking')||{}).checked;
+        var parkTypeEl=document.querySelector('input[name="offGuestParkType"]:checked');
+        var parkType=parkTypeEl?parkTypeEl.value:'none';
+        var parking=parkType!=='none';
         var notes=(document.getElementById('offGuestNotes')||{}).value;
         if(!name||!date){notify('Name und Datum sind Pflichtfelder','error');return;}
         var btn=document.getElementById('offGuestSaveBtn');
@@ -912,24 +919,27 @@
                 host_user_id:sbUser.id, name:name, company:company||null,
                 email:email||null, visit_date:date, visit_time:time||null,
                 room:room||null, needs_parking:parking, notes:notes||null,
-                status:'expected'
+                status:'erwartet'
             }).select().single();
             if(r.error) throw r.error;
             var guestId=r.data.id;
 
             // Auto-book parking if requested
             if(parking) {
-                // Find a free guest parking slot (P3 or P4)
-                var parkRes=await sb.from('office_bookings').select('parking_nr').eq('booking_date',date).in('parking_nr',[3,4]);
+                var slots=parkType==='electric'?[1,2]:(parkType==='guest'?[3,4]:[5,6,7,8,9,10,11,12]);
+                var parkLabel=parkType==='electric'?'⚡ Elektro':(parkType==='guest'?'🚗 Gast':'🅿️ Standard');
+                var parkRes=await sb.from('office_bookings').select('parking_nr').eq('booking_date',date).in('parking_nr',slots);
                 var takenPark=(parkRes.data||[]).map(function(b){return b.parking_nr;});
-                var freePark=[3,4].find(function(n){return takenPark.indexOf(n)===-1;});
+                var freePark=slots.find(function(n){return takenPark.indexOf(n)===-1;});
                 if(freePark) {
                     await sb.from('office_bookings').insert({
                         user_id:sbUser.id, booking_date:date, status:'parking',
                         parking_nr:freePark,
                         time_from:time||'08:00', time_to:timeEnd||'18:00',
-                        note:'Gast: '+name+(company?' ('+company+')':'')
+                        note:'Gast: '+name+(company?' ('+company+')':'')+' ('+parkLabel+')'
                     });
+                } else {
+                    notify('⚠️ Kein freier '+parkLabel+'-Platz mehr für dieses Datum','warning');
                 }
             }
 
@@ -949,6 +959,7 @@
                             company: company||'',
                             notes: notes||'',
                             needs_parking: parking,
+                            parking_type: parkType,
                             address: 'Jahnstraße 2, 85774 Unterföhring'
                         }
                     }});
@@ -975,7 +986,7 @@
 
     window._offGuestCheckIn = async function(id) {
         try {
-            var r=await sb.from('office_guests').update({checked_in_at:new Date().toISOString(),status:'checked_in'}).eq('id',id);
+            var r=await sb.from('office_guests').update({checked_in_at:new Date().toISOString(),status:'eingecheckt'}).eq('id',id);
             if(r.error) throw r.error;
             notify('Gast eingecheckt','success'); renderGaeste();
         } catch(err) { notify('Fehler: '+err.message,'error'); }
@@ -983,7 +994,7 @@
 
     window._offGuestCheckOut = async function(id) {
         try {
-            var r=await sb.from('office_guests').update({status:'done'}).eq('id',id);
+            var r=await sb.from('office_guests').update({status:'ausgecheckt'}).eq('id',id);
             if(r.error) throw r.error;
             notify('Gast ausgecheckt','success'); renderGaeste();
         } catch(err) { notify('Fehler: '+err.message,'error'); }
