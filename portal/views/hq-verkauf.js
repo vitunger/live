@@ -1004,9 +1004,9 @@ function _hookShowView() {
     var origShowView2 = window.showView;
     window.showView = function(v) {
     // Rechteprüfung
-    if(!hasAccess(v)) {
-        alert('Kein Zugriff auf diesen Bereich mit deiner aktuellen Rolle.');
-        return;
+    if(typeof hasAccess === 'function' && !hasAccess(v)) {
+        console.warn('[hq-verkauf] Kein Zugriff auf', v, 'mit Rolle', window.currentRole);
+        if(window.currentRole === 'hq') { v = 'hqCockpit'; } else { v = 'home'; }
     }
     // Redirect 'home' to HQ Cockpit when in HQ mode
     if(v==='home' && currentRole==='hq') { v='hqCockpit'; }
