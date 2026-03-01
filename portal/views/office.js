@@ -589,7 +589,7 @@
             renderWochenplan();
         } catch(err) {
             console.error('[Office] SetDay error:',err);
-            if(typeof showToast==='function') showToast('Fehler: '+err.message,'error');
+            notify('Fehler: '+err.message,'error');
         }
     };
 
@@ -599,12 +599,10 @@
             var nr=deskNr?parseInt(deskNr):null;
             var r=await sb.from('office_bookings').update({desk_nr:nr,updated_at:new Date().toISOString()}).eq('user_id',sbUser.id).eq('booking_date',dateStr);
             if(r.error) throw r.error;
-            var sel=event&&event.target;
-            if(sel){sel.style.boxShadow='0 0 0 2px #22c55e';setTimeout(function(){sel.style.boxShadow='';},600);}
-            if(nr && typeof showToast==='function') showToast('\u2705 P'+nr+' gebucht f\u00fcr '+dateStr,'success');
+            notify('\u2705 P'+nr+' gebucht f\u00fcr '+dateStr,'success');
         } catch(err) {
             console.error('[Office] SetDesk error:',err);
-            if(typeof showToast==='function') showToast('Fehler: '+err.message,'error');
+            notify('Fehler: '+err.message,'error');
         }
     };
 
@@ -614,12 +612,10 @@
             var nr=parkNr?parseInt(parkNr):null;
             var r=await sb.from('office_bookings').update({parking_nr:nr,updated_at:new Date().toISOString()}).eq('user_id',sbUser.id).eq('booking_date',dateStr);
             if(r.error) throw r.error;
-            var sel=event&&event.target;
-            if(sel){sel.style.boxShadow='0 0 0 2px #22c55e';setTimeout(function(){sel.style.boxShadow='';},600);}
-            if(nr && typeof showToast==='function') showToast('\ud83c\udd7f\ufe0f P'+nr+' Parkplatz gebucht','success');
+            notify('\ud83c\udd7f\ufe0f P'+nr+' Parkplatz gebucht','success');
         } catch(err) {
             console.error('[Office] SetParking error:',err);
-            if(typeof showToast==='function') showToast('Fehler: '+err.message,'error');
+            notify('Fehler: '+err.message,'error');
         }
     };
 
@@ -1871,7 +1867,7 @@
             if (b.desk_nr) {
                 // Name + time
                 h += '<div style="display:flex;align-items:center;justify-content:space-between">'+
-                    '<span style="font-size:13px;font-weight:700;color:#374151">'+esc(me.vorname)+' / '+esc(me.vorname)+'</span>'+
+                    '<span style="font-size:13px;font-weight:700;color:#374151">'+esc(me.vorname+' '+me.nachname)+'</span>'+
                     '<span style="font-size:11px;color:#6B7280">'+timeStr+'</span>'+
                 '</div>';
                 // Equipment
