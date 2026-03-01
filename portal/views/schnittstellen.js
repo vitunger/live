@@ -571,6 +571,7 @@ window.loadEterminConfig = async function(standortId) {
 // ── Load overview of all configured standorte ──
 async function loadEterminOverview() {
     var el = document.getElementById('connEterminOverview');
+    console.log('[eTermin] loadOverview called, el:', !!el, 'profile:', !!_sbProfile(), 'is_hq:', _sbProfile() && _sbProfile().is_hq);
     if (!el) return;
     try {
         var sb = _sb(); if (!sb) return;
@@ -644,6 +645,7 @@ var PORTAL_TYPEN = [
 
 async function loadEterminMapping() {
     var el = document.getElementById('connEterminMapping');
+    console.log('[eTermin] loadMapping called, el:', !!el, 'profile:', !!_sbProfile(), 'is_hq:', _sbProfile() && _sbProfile().is_hq);
     if (!el) return;
     try {
         // Load all mappings
