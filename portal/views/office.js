@@ -1298,11 +1298,13 @@
         }).join('');
 
         area.innerHTML=statsBar+
-            '<div style="position:relative;overflow:auto;border-radius:12px;border:1px solid #e2e8f0;background:#f8fafc;" id="buchFloorImgWrap">'+
+            '<div style="overflow-x:auto;border-radius:12px;border:1px solid #e2e8f0;background:#f8fafc;" id="buchFloorImgWrap">'+
+                '<div style="position:relative;min-width:700px;display:inline-block;width:100%">'+
                 '<img src="grundriss_og.png" id="buchFloorImg" '+
-                    'style="width:100%;min-width:700px;display:block;border-radius:12px;" '+
+                    'style="width:100%;display:block;border-radius:12px;" '+
                     'onerror="this.style.opacity=\'0.2\'" />'+
                 dotsHtml+
+                '</div>'+
             '</div>'+
             '<p class="text-xs text-gray-400 mt-2 text-center">'+allDesks.length+' Pl\u00e4tze &middot; Klick auf einen freien Platz zum Buchen</p>';
     }
@@ -1928,8 +1930,9 @@
         var h = '<p style="font-size:13px;font-weight:600;color:#374151;margin-bottom:12px">'+esc(locationTitle)+'</p>';
 
         // Floor plan container
-        h += '<div style="position:relative;display:inline-block;width:100%;max-width:900px">';
-        h += '<img src="grundriss_og.png" style="width:100%;height:auto;display:block;border:1px solid #E5E7EB;border-radius:8px" onerror="this.style.display=\'none\'">';
+        h += '<div style="overflow-x:auto;border:1px solid #E5E7EB;border-radius:8px">';
+        h += '<div style="position:relative;display:inline-block;min-width:700px;width:100%">';
+        h += '<img src="grundriss_og.png" style="width:100%;height:auto;display:block;border-radius:8px" onerror="this.style.display=\'none\'">';
 
         // Only show dot for my booked desk
         if (myDesk && myDesk.pct_x && myDesk.pct_y) {
@@ -1945,7 +1948,7 @@
             '</div>';
         }
 
-        h += '</div>';
+        h += '</div></div>';
 
         if (!myDeskNr) {
             var iso2 = iso;
@@ -2230,8 +2233,9 @@
             '</div>';
         });
 
-        floorHtml += '<div style="position:relative;display:inline-block;width:100%">'+
-            '<img src="grundriss_og.png" style="width:100%;height:auto;display:block;border:1px solid #E5E7EB;border-radius:8px">'+
+        floorHtml += '<div style="overflow-x:auto;border:1px solid #E5E7EB;border-radius:8px">'+
+            '<div style="position:relative;display:inline-block;min-width:700px;width:100%">'+
+            '<img src="grundriss_og.png" style="width:100%;height:auto;display:block;border-radius:8px">'+
             dotsHtml+
         '</div>';
 
