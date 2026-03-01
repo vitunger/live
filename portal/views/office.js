@@ -81,9 +81,7 @@
 
     // ─── Tab Navigation ───
     window.showOfficeTab = function(tab) {
-        ['dashboard','wochenplan','grundriss','gaeste','statistik'].forEach(function(t){
-            var c=document.getElementById('officeTab_'+t); if(c) c.style.display='none';
-        });
+        document.querySelectorAll('.office-tab-content').forEach(function(c){ c.style.display='none'; });
         document.querySelectorAll('.office-tab-btn').forEach(function(b){
             b.className='office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition';
         });
