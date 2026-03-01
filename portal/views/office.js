@@ -1828,6 +1828,7 @@
     var _wioDate = null;
     var _wioSearch = '';
     var _wioBookings = [];
+    var _wioParkBookings = [];
     var _wioCheckins = [];
 
     async function renderWerImOffice() {
@@ -1847,13 +1848,14 @@
 
     async function _wioLoad() {
         var td = todayISO();
-        // Bookings for selected date
+        // All bookings for selected date (desk + parking)
         var bRes = await sb.from('office_bookings')
-            .select('id,user_id,desk_nr,status,time_from,time_to,note')
+            .select('id,user_id,desk_nr,parking_nr,status,time_from,time_to,note')
             .eq('booking_date', _wioDate)
-            .eq('status', 'office')
-            .not('desk_nr', 'is', null);
-        _wioBookings = bRes.data || [];
+            .or('status.eq.office,status.eq.parking');
+        var allBkgs = bRes.data || [];
+        _wioBookings = allBkgs.filter(function(b){ return b.desk_nr; });
+        _wioParkBookings = allBkgs.filter(function(b){ return b.parking_nr; });
 
         // Checkins: only for today (can only be checked in today)
         if (_wioDate === td) {
@@ -1878,6 +1880,10 @@
             if (!userDataMap[b.user_id]) userDataMap[b.user_id] = {bookings:[], checkins:[], deskNr:null};
             userDataMap[b.user_id].bookings.push(b);
             if (!userDataMap[b.user_id].deskNr) userDataMap[b.user_id].deskNr = b.desk_nr;
+        });
+        // Also include users who only have parking (no desk booking)
+        _wioParkBookings.forEach(function(b) {
+            if (!userDataMap[b.user_id]) userDataMap[b.user_id] = {bookings:[], checkins:[], deskNr:null};
         });
         _wioCheckins.forEach(function(c) {
             if (!userDataMap[c.user_id]) userDataMap[c.user_id] = {bookings:[], checkins:[], deskNr:null};
@@ -1969,7 +1975,7 @@
                 (mainTime ? '<span style="font-size:11px;color:#6B7280;white-space:nowrap">'+esc(mainTime)+'</span>' : '')+
             '</div>';
 
-            // Sub-rows: individual booking slots (desk name + time)
+            // Sub-rows: desk bookings
             data.bookings.forEach(function(b) {
                 var desk = (_desks||[]).find(function(d){return d.nr===b.desk_nr;});
                 var timeStr = b.time_from ? b.time_from.substring(0,5)+' – '+(b.time_to||'').substring(0,5) : '08:00 – 17:00';
@@ -1977,6 +1983,17 @@
                 sidebar += '<div style="display:flex;align-items:center;gap:6px;margin-top:6px;padding-left:46px">'+
                     '<span style="font-size:12px">🪑</span>'+
                     '<span style="font-size:12px;font-weight:600;color:#374151;flex:1">'+esc(label)+'</span>'+
+                    '<span style="font-size:11px;color:#9CA3AF">'+esc(timeStr)+'</span>'+
+                '</div>';
+            });
+            // Sub-rows: parking bookings
+            _wioParkBookings.filter(function(b){return b.user_id===e.uid;}).forEach(function(b) {
+                var pNr = b.parking_nr;
+                var pLabel = pNr<=2?'⚡ Ladeplatz '+pNr:pNr<=4?'🚗 Gästeparkplatz P'+pNr:'🅿️ Parkplatz';
+                var timeStr = b.time_from ? b.time_from.substring(0,5)+' – '+(b.time_to||'').substring(0,5) : '08:00 – 17:00';
+                sidebar += '<div style="display:flex;align-items:center;gap:6px;margin-top:4px;padding-left:46px">'+
+                    '<span style="font-size:12px">'+(pNr<=2?'⚡':pNr<=4?'🚗':'🅿️')+'</span>'+
+                    '<span style="font-size:12px;font-weight:600;color:#6B7280;flex:1">'+esc(pLabel)+'</span>'+
                     '<span style="font-size:11px;color:#9CA3AF">'+esc(timeStr)+'</span>'+
                 '</div>';
             });
@@ -2031,6 +2048,54 @@
             '<img src="grundriss_og.png" style="width:100%;height:auto;display:block;border:1px solid #E5E7EB;border-radius:8px">'+
             dotsHtml+
         '</div>';
+
+        // Parking section below floor plan
+        if (_wioParkBookings.length > 0) {
+            floorHtml += '<div style="margin-top:16px;border-top:1px solid #F3F4F6;padding-top:16px">';
+            floorHtml += '<p style="font-size:12px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">🅿️ Parkplätze</p>';
+            floorHtml += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+
+            // P1+P2 Elektro, P3+P4 Gäste, P5-P12 Standard
+            var parkSlots = [
+                {nrs:[1,2], icon:'⚡', label:'Elektro', bg:'#FFFBEB', border:'#FDE68A'},
+                {nrs:[3,4], icon:'🚗', label:'Gast',    bg:'#EFF6FF', border:'#BFDBFE'},
+                {nrs:[5,6,7,8,9,10,11,12], icon:'🅿️', label:'Standard', bg:'#F0FDF4', border:'#BBF7D0'}
+            ];
+
+            parkSlots.forEach(function(grp) {
+                grp.nrs.forEach(function(nr) {
+                    var bk = _wioParkBookings.find(function(b){return b.parking_nr===nr;});
+                    if (!bk && grp.nrs.length > 4) return; // standard: skip empty
+                    var u = bk ? userMap[bk.user_id] : null;
+                    var initials = u ? ((u.vorname||'')[0]+(u.nachname||'')[0]).toUpperCase() : null;
+                    var timeStr = bk && bk.time_from ? bk.time_from.substring(0,5)+'-'+(bk.time_to||'').substring(0,5) : '';
+                    if (grp.nrs.length > 4 && !bk) return;
+                    floorHtml += '<div style="display:flex;flex-direction:column;align-items:center;padding:10px 14px;border-radius:10px;border:1px solid '+(bk?'#F97316':grp.border)+';background:'+(bk?'#FFF7ED':grp.bg)+';min-width:80px;text-align:center">';
+                    floorHtml += '<span style="font-size:18px">'+grp.icon+'</span>';
+                    if (grp.nrs.length <= 4) {
+                        floorHtml += '<span style="font-size:11px;font-weight:700;color:#374151;margin-top:2px">P'+nr+'</span>';
+                    } else {
+                        floorHtml += '<span style="font-size:11px;font-weight:700;color:#374151;margin-top:2px">'+grp.label+'</span>';
+                    }
+                    if (bk && u) {
+                        floorHtml += '<div style="width:24px;height:24px;border-radius:50%;background:#F97316;display:flex;align-items:center;justify-content:center;color:white;font-size:9px;font-weight:700;margin-top:4px">'+initials+'</div>';
+                        floorHtml += '<span style="font-size:9px;color:#9CA3AF;margin-top:2px">'+esc(u.vorname)+'</span>';
+                        if (timeStr) floorHtml += '<span style="font-size:9px;color:#9CA3AF">'+timeStr+'</span>';
+                    } else if (!bk) {
+                        floorHtml += '<span style="font-size:10px;color:#16A34A;font-weight:600;margin-top:4px">frei</span>';
+                    }
+                    floorHtml += '</div>';
+                });
+            });
+
+            // Standard pool summary if any standard spots booked
+            var stdBooked = _wioParkBookings.filter(function(b){return b.parking_nr>=5&&b.parking_nr<=12;});
+            if (stdBooked.length > 0) {
+                // Already rendered individually above - but show summary
+            }
+
+            floorHtml += '</div></div>';
+        }
 
         // Assemble
         el.innerHTML =
