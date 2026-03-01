@@ -144,8 +144,8 @@ async function loadAdsAccountData() {
             }
         });
         renderStatusGrid();
-        renderActiveCards();
-        renderPartnerCards();
+        // Note: renderActiveCards intentionally NOT called here to avoid
+        // destroying eTermin overview/mapping content. Status grid updates are enough.
     } catch (e) { console.warn('[schnittstellen] loadAdsAccountData:', e); }
 }
 
@@ -191,7 +191,7 @@ async function loadWawiStatus() {
         }
 
         renderStatusGrid();
-        renderActiveCards();
+        // Note: renderActiveCards intentionally NOT called here
     } catch (e) { console.warn('[schnittstellen] loadWawiStatus:', e); }
 }
 
