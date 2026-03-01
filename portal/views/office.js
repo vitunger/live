@@ -951,12 +951,13 @@
                             host_name: me.vorname+' '+me.nachname,
                             visit_date: dateStr,
                             visit_time: time||'',
+                            visit_time_end: timeEnd||'',
                             room: room||'',
                             company: company||'',
                             notes: notes||'',
                             needs_parking: parking,
                             parking_type: parkType,
-                            address: 'Jahnstraße 2, 85774 Unterföhring'
+                            address: 'Jahnstraße 2c, 85774 Unterföhring'
                         }
                     }});
                     notify('\ud83d\udc64 Gast eingeladen & E-Mail gesendet!','success');
