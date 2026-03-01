@@ -13,6 +13,25 @@ function isLeadTrigger(a, n) {
   return LEAD_TRIGGERS.some(t => c.includes(t));
 }
 
+// Map eTermin service names to portal termin types
+const TYPE_RULES = [
+  { match: ["inspektion","jahresinspektion"], typ: "inspektion" },
+  { match: ["reparatur","werkstatt"], typ: "reparatur" },
+  { match: ["abholtermin","abholung"], typ: "abholung" },
+  { match: ["abgabe-termin","abgabe"], typ: "abgabe" },
+  { match: ["beratung","kaufberatung","beratungstermin","beratungsgespräch","beratungsgespraech"], typ: "beratung" },
+  { match: ["probefahrt","testfahrt"], typ: "probefahrt" },
+  { match: ["online beratung","video","telefon"], typ: "online_beratung" },
+];
+
+function mapTerminTyp(answers, notes) {
+  const c = ((answers||"")+" "+(notes||"")).toLowerCase();
+  for (const rule of TYPE_RULES) {
+    if (rule.match.some(m => c.includes(m))) return rule.typ;
+  }
+  return "sonstig";
+}
+
 function parseDT(s) {
   if (!s || s.length < 15) return null;
   const d = s.replace(/\s+/g,"");
@@ -80,7 +99,7 @@ module.exports = async function(req, res) {
       etermin_uid: uid,
       titel: (name || "eTermin Buchung") + (answers ? " – " + answers : ""),
       start_zeit: startL || startU, end_zeit: endL || endU,
-      typ: "etermin", ganztaegig: false, quelle: "etermin",
+      typ: mapTerminTyp(answers, notes), ganztaegig: false, quelle: "etermin",
       beschreibung: [answers&&"Terminart: "+answers, notes&&"Notizen: "+notes, email&&"E-Mail: "+email, phone&&"Tel: "+phone, town&&"Ort: "+town].filter(Boolean).join("\n"),
       ort: cal || null, standort_id: stdId,
       kontakt_name: name || null, kontakt_email: email || null, kontakt_telefon: phone || null
