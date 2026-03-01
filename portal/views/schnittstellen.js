@@ -499,10 +499,23 @@ function renderPartnerCards() {
 // ACTIONS
 // ═══════════════════════════════════════════════════════
 
-window.toggleConnCard = function(id) {
+window.toggleConnCard = async function(id) {
     openCards[id] = !openCards[id];
+    
+    // For eTermin: ensure profile & standorte are loaded before rendering
+    if (id === 'etermin' && openCards[id]) {
+        for (var i = 0; i < 50 && !_sbProfile(); i++) await new Promise(function(r){setTimeout(r,100);});
+        if (_sbProfile() && _sbProfile().is_hq && (!window._allStandorte || window._allStandorte.length === 0)) {
+            try {
+                var { data: stds } = await _sb().from('standorte').select('id, name').order('name');
+                window._allStandorte = stds || [];
+            } catch(e) {}
+        }
+    }
+    
     renderActiveCards();
-    // Load eTermin data when card opens
+    
+    // Load eTermin dynamic content after DOM is ready
     if (id === 'etermin' && openCards[id]) {
         loadEterminOverview();
         if (_sbProfile() && _sbProfile().is_hq) loadEterminMapping();
