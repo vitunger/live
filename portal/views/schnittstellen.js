@@ -598,8 +598,12 @@ async function loadEterminOverview() {
         renderStatusGrid();
 
         // Build table with ALL standorte
-        var h = '<p class="text-xs font-bold text-gray-700 mb-2">Verbindungsstatus aller Standorte</p>'
-            + '<div class="border border-gray-200 rounded-lg overflow-hidden"><table class="w-full text-xs">'
+        var h = '<details class="border border-gray-200 rounded-lg">'
+            + '<summary class="px-3 py-2 text-xs font-semibold text-gray-700 cursor-pointer hover:bg-gray-50 transition flex items-center gap-2">'
+            + '📡 Verbindungsstatus aller Standorte'
+            + '<span class="ml-auto text-[10px] px-2 py-0.5 rounded-full font-bold ' + (active.length > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500') + '">' + active.length + '/' + (allStandorte.length || configs.length) + ' verbunden</span>'
+            + '</summary>'
+            + '<div class="border-t border-gray-100"><table class="w-full text-xs">'
             + '<thead class="bg-gray-50"><tr><th class="text-left px-3 py-2 font-semibold text-gray-600">Standort</th>'
             + '<th class="text-center px-3 py-2 font-semibold text-gray-600">Status</th>'
             + '<th class="text-left px-3 py-2 font-semibold text-gray-600">Webhook-URL</th>'
@@ -632,7 +636,7 @@ async function loadEterminOverview() {
             }
         });
 
-        h += '</tbody></table></div>';
+        h += '</tbody></table></div></details>';
         el.innerHTML = h;
     } catch (e) { console.warn('[schnittstellen] loadEterminOverview:', e); }
 }
