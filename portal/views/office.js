@@ -247,14 +247,7 @@
                 '<div class="vit-card p-5"><h3 class="font-bold text-gray-800 mb-3">\u2796 Abwesend <span class="text-sm font-normal text-gray-400">('+absentList.length+')</span></h3>'+renderUserList(absentList,'Niemand abwesend','bg-gray-300')+'</div>'+
             '</div>';
 
-            // ── Mini Map ──
-            html+='<div class="vit-card p-5">'+
-                '<div class="flex items-center justify-between mb-3">'+
-                    '<h3 class="font-bold text-gray-800">\ud83d\uddfa\ufe0f Belegung</h3>'+
-                    '<button onclick="showOfficeTab(\'grundriss\')" class="text-xs text-vit-orange hover:underline">Vollansicht \u2192</button>'+
-                '</div>'+
-                '<div class="bg-gray-50 rounded-xl p-2" style="max-height:280px;overflow:hidden">'+buildMiniMap()+'</div>'+
-            '</div>';
+
 
             el.innerHTML=html;
         } catch(err) {
