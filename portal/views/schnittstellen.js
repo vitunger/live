@@ -94,6 +94,9 @@ var openCards = { etermin: true, google: false, meta: false, wawi: false, approo
 // ═══════════════════════════════════════════════════════
 
 export async function renderSchnittstellen() {
+    // Wait for profile if not yet loaded (max 3s)
+    for (var i = 0; i < 30 && !_sbProfile(); i++) await new Promise(function(r){setTimeout(r,100);});
+    
     // Load standorte for HQ dropdown
     try {
         var sb = _sb();
