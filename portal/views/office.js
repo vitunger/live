@@ -319,42 +319,89 @@
                 return;
             }
             if(!deskNr) {
-                var myBk=_todayBookings.find(function(b){return b.user_id===sbUser.id;});
-                if(myBk&&myBk.status==='office'&&myBk.desk_nr) deskNr=myBk.desk_nr;
-                else if(!myBk||myBk.status==='office') {
-                    // Only auto-assign desk if no booking or booked as office
-                    var occ=_todayCheckins.map(function(c){return c.desk_nr;});
-                    var free=(_desks||[]).find(function(d){return d.is_bookable!==false&&occ.indexOf(d.nr)===-1;});
-                    if(free) deskNr=free.nr;
+                // Check if user has a booking for today with a desk
+                var myBk=(_todayBookings||[]).find(function(b){return b.user_id===sbUser.id&&b.status==='office'&&b.desk_nr;});
+                if(myBk&&myBk.desk_nr) {
+                    deskNr=myBk.desk_nr;
+                } else {
+                    // No booking → show desk selection modal
+                    await loadDesks();
+                    var occ=(_todayCheckins||[]).map(function(c){return c.desk_nr;});
+                    var freeDesks=(_desks||[]).filter(function(d){return d.is_bookable!==false&&d.desk_type==='standard'&&occ.indexOf(d.nr)===-1;});
+                    _offShowDeskModal(freeDesks);
+                    return;
                 }
-                // If booked as remote/absent: no desk assigned, just check in without desk
             }
+            await window._offDoCheckIn(deskNr);
+        } catch(err) {
+            console.error('[Office] Check-in error:',err);
+            notify('Fehler: '+err.message,'error');
+        }
+    };
+
+    // Modal: Platz auswählen beim Check-in ohne Buchung
+    window._offShowDeskModal = function(freeDesks) {
+        // Remove existing modal
+        var old=document.getElementById('offDeskModal');if(old) old.remove();
+
+        var opts='';
+        freeDesks.forEach(function(d){
+            opts+='<div onclick="window._offModalSelectDesk('+d.nr+')" style="display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid #E5E7EB;border-radius:10px;cursor:pointer;transition:.12s" '+
+                'onmouseover="this.style.background=\'#FFF7ED\'" '+
+                'onmouseout="this.style.background=\'white\'">'+
+                '<div style="width:36px;height:36px;border-radius:50%;background:#22C55E;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;flex-shrink:0">'+d.nr+'</div>'+
+                '<div>'+
+                    '<p style="font-size:13px;font-weight:600;color:#374151">Platz '+d.nr+'</p>'+
+                    '<p style="font-size:11px;color:#9CA3AF">'+esc(d.room||'')+(d.has_monitor?' &middot; Monitor':'')+(d.has_docking?' &middot; Docking':'')+'</p>'+
+                '</div>'+
+            '</div>';
+        });
+
+        var modal=document.createElement('div');
+        modal.id='offDeskModal';
+        modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+        modal.innerHTML=
+            '<div style="background:white;border-radius:16px;padding:24px;max-width:420px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">'+
+                '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'+
+                    '<h3 style="font-size:16px;font-weight:700;color:#374151">Platz wählen</h3>'+
+                    '<button onclick="var m=document.getElementById(\'offDeskModal\');if(m)m.remove()" style="width:28px;height:28px;border:none;background:#F3F4F6;border-radius:50%;cursor:pointer;font-size:16px;color:#6B7280">&#215;</button>'+
+                '</div>'+
+                '<p style="font-size:12px;color:#9CA3AF;margin-bottom:12px">Du hast heute keinen Platz gebucht. Wähle einen freien Platz zum Einchecken:</p>'+
+                '<div style="display:flex;flex-direction:column;gap:8px">'+opts+'</div>'+
+                (freeDesks.length===0?'<p style="color:#EF4444;text-align:center;padding:16px;font-size:13px">Keine freien Plätze verfügbar</p>':'')+
+                '<button onclick="window._offDoCheckIn(null);var _m=document.getElementById(\'offDeskModal\');if(_m)_m.remove()" style="margin-top:16px;width:100%;padding:10px;background:#F3F4F6;border:none;border-radius:10px;cursor:pointer;font-size:13px;color:#6B7280">Ohne Platz einchecken</button>'+
+            '</div>';
+        modal.addEventListener('click',function(e){if(e.target===modal) modal.remove();});
+        document.body.appendChild(modal);
+    };
+
+    window._offModalSelectDesk = function(deskNr) {
+        var m=document.getElementById('offDeskModal'); if(m) m.remove();
+        (async function(){
+            // Re-call _offCheckIn with selected desk number
+            var saved=_myCheckin;_myCheckin=null; // ensure not blocked by stale state
+            await window._offDoCheckIn(deskNr);
+        })();
+    };
+
+    window._offDoCheckIn = async function(deskNr) {
+        try {
+            if(_myCheckin){notify('\u2705 Bereits eingecheckt','info');return;}
             var r=await sb.from('office_checkins').insert({
                 user_id:sbUser.id, desk_nr:deskNr||null, status:'office',
                 checked_in_at:new Date().toISOString(), source:'manual'
             }).select().single();
-            if(r.error) {
-                if(r.error.code === '23505') {
-                    // Duplicate: stale checkin exists, close old ones and retry
-                    // [prod] log removed
-                    await sb.from('office_checkins').update({checked_out_at: new Date().toISOString()})
-                        .eq('user_id', sbUser.id).is('checked_out_at', null);
-                    // Retry insert
-                    var r2=await sb.from('office_checkins').insert({
-                        user_id:sbUser.id, desk_nr:deskNr||null, status:'office',
-                        checked_in_at:new Date().toISOString(), source:'manual'
-                    }).select().single();
+            if(r.error){
+                if(r.error.code==='23505'){
+                    await sb.from('office_checkins').update({checked_out_at:new Date().toISOString()}).eq('user_id',sbUser.id).is('checked_out_at',null);
+                    var r2=await sb.from('office_checkins').insert({user_id:sbUser.id,desk_nr:deskNr||null,status:'office',checked_in_at:new Date().toISOString(),source:'manual'}).select().single();
                     if(r2.error) throw r2.error;
-                    notify('\u2705 Eingecheckt'+(deskNr?' auf Platz '+deskNr:''),'success');
-                    await loadTodayCheckins(); renderDashboard();
-                    return;
-                }
-                throw r.error;
+                } else throw r.error;
             }
             notify('\u2705 Eingecheckt'+(deskNr?' auf Platz '+deskNr:''),'success');
             await loadTodayCheckins(); renderDashboard();
-        } catch(err) {
-            console.error('[Office] Check-in error:',err);
+        } catch(err){
+            console.error('[Office] CheckIn:',err);
             notify('Fehler: '+err.message,'error');
         }
     };
