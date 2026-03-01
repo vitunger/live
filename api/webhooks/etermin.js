@@ -13,22 +13,21 @@ function isLeadTrigger(a, n) {
   return LEAD_TRIGGERS.some(t => c.includes(t));
 }
 
-// Map eTermin service names to portal termin types
-const TYPE_RULES = [
-  { match: ["inspektion","jahresinspektion"], typ: "inspektion" },
-  { match: ["reparatur","werkstatt"], typ: "reparatur" },
-  { match: ["abholtermin","abholung"], typ: "abholung" },
-  { match: ["abgabe-termin","abgabe"], typ: "abgabe" },
-  { match: ["beratung","kaufberatung","beratungstermin","beratungsgespräch","beratungsgespraech"], typ: "beratung" },
-  { match: ["probefahrt","testfahrt"], typ: "probefahrt" },
-  { match: ["online beratung","video","telefon"], typ: "online_beratung" },
-];
-
-function mapTerminTyp(answers, notes) {
-  const c = ((answers||"")+" "+(notes||"")).toLowerCase();
-  for (const rule of TYPE_RULES) {
-    if (rule.match.some(m => c.includes(m))) return rule.typ;
-  }
+// Map eTermin service names to portal termin types via DB mapping
+async function mapTerminTyp(standortId, answers, notes) {
+  if (!standortId || !answers) return "sonstig";
+  try {
+    const rows = await sbGet("etermin_typ_mapping", 
+      "standort_id=eq." + standortId + "&etermin_service=eq." + encodeURIComponent(answers.trim()));
+    if (rows && rows.length > 0) return rows[0].portal_typ;
+    // Auto-insert unknown service as 'sonstig' so HQ can map it later
+    await sbInsert("etermin_typ_mapping", {
+      standort_id: standortId,
+      etermin_service: answers.trim(),
+      portal_typ: "sonstig"
+    });
+    console.log("[etermin-wh] new unmapped service:", answers.trim(), "for standort", standortId);
+  } catch(e) { console.warn("[etermin-wh] mapping lookup failed:", e); }
   return "sonstig";
 }
 
@@ -95,11 +94,12 @@ module.exports = async function(req, res) {
 
     // CREATE / MODIFY
     const name = (fn + " " + ln).trim();
+    const mappedTyp = await mapTerminTyp(stdId, answers, notes);
     const payload = {
       etermin_uid: uid,
       titel: (name || "eTermin Buchung") + (answers ? " – " + answers : ""),
       start_zeit: startL || startU, end_zeit: endL || endU,
-      typ: mapTerminTyp(answers, notes), ganztaegig: false, quelle: "etermin",
+      typ: mappedTyp, ganztaegig: false, quelle: "etermin",
       beschreibung: [answers&&"Terminart: "+answers, notes&&"Notizen: "+notes, email&&"E-Mail: "+email, phone&&"Tel: "+phone, town&&"Ort: "+town].filter(Boolean).join("\n"),
       ort: cal || null, standort_id: stdId,
       kontakt_name: name || null, kontakt_email: email || null, kontakt_telefon: phone || null

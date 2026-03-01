@@ -109,6 +109,7 @@ export async function renderSchnittstellen() {
     renderPlannedGrid();
     renderPartnerCards();
     loadEterminOverview();
+    if (_sbProfile() && _sbProfile().is_hq) loadEterminMapping();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -299,6 +300,10 @@ function renderConnectorCard(id) {
             + '</div>';
         // Connected standorte overview (prominent!)
         body += '<div id="connEterminOverview" class="mt-4"></div>';
+        // Terminart-Mapping (HQ only)
+        if (_sbProfile() && _sbProfile().is_hq) {
+            body += '<div id="connEterminMapping" class="mt-4"></div>';
+        }
         // Setup-Anleitung (klappbar)
         body += '<details class="mt-3 border border-gray-200 rounded-lg"><summary class="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50 transition">📖 Anleitung: eTermin API-Keys &amp; Webhook einrichten</summary>'
             + '<div class="px-3 pb-3 text-xs text-gray-600 space-y-2 border-t border-gray-100 pt-2">'
@@ -608,6 +613,109 @@ async function loadEterminOverview() {
         el.innerHTML = h;
     } catch (e) { console.warn('[schnittstellen] loadEterminOverview:', e); }
 }
+
+// Portal standard types for mapping dropdown
+var PORTAL_TYPEN = [
+    {v:'beratung',l:'Beratung'},{v:'serviceannahme',l:'Serviceannahme'},{v:'abholung',l:'Abholung'},
+    {v:'ergonomieberatung',l:'Ergonomieberatung'},{v:'ergocheck',l:'Ergo-Check'},
+    {v:'fahrspasscheck',l:'Fahrspaßcheck'},{v:'sonstig',l:'Sonstiges'}
+];
+
+async function loadEterminMapping() {
+    var el = document.getElementById('connEterminMapping');
+    if (!el) return;
+    try {
+        // Load all mappings
+        var resp = await _sb().from('etermin_typ_mapping').select('*, standorte(name)').order('standort_id');
+        var mappings = (resp.data || []);
+        // Load standorte with active etermin configs
+        var cfgResp = await _sb().from('etermin_config').select('standort_id, standorte(name)').eq('is_active', true);
+        var configs = (cfgResp.data || []);
+
+        var h = '<details class="border border-gray-200 rounded-lg" id="eterminMappingDetails">'
+            + '<summary class="px-3 py-2 text-xs font-semibold text-gray-700 cursor-pointer hover:bg-gray-50 transition flex items-center gap-2">'
+            + '🔀 Terminarten-Mapping <span class="text-[10px] font-normal text-gray-400">(eTermin-Services → Portal-Typen)</span>'
+            + '<span class="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">' + mappings.length + ' Regeln</span>'
+            + '</summary>';
+        h += '<div class="px-3 pb-3 pt-2 border-t border-gray-100 space-y-3">';
+        h += '<p class="text-[10px] text-gray-500">Hier ordnest du zu, welcher eTermin-Service welchem Portal-Termintyp entspricht. Jeder Standort kann eigene Service-Namen in eTermin haben.</p>';
+
+        // Group by standort
+        var byStd = {};
+        mappings.forEach(function(m) {
+            var sid = m.standort_id;
+            if (!byStd[sid]) byStd[sid] = { name: (m.standorte && m.standorte.name) || 'Unbekannt', items: [] };
+            byStd[sid].items.push(m);
+        });
+
+        // Dropdown options for portal types
+        var optHtml = PORTAL_TYPEN.map(function(t) { return '<option value="' + t.v + '">' + t.l + '</option>'; }).join('');
+
+        Object.keys(byStd).forEach(function(sid) {
+            var std = byStd[sid];
+            h += '<div class="border border-gray-100 rounded-lg p-2">';
+            h += '<p class="text-xs font-bold text-gray-700 mb-2">📍 ' + _escH(std.name) + '</p>';
+            h += '<table class="w-full text-xs"><thead><tr class="text-[10px] text-gray-500 border-b border-gray-100">'
+                + '<th class="text-left px-2 py-1">eTermin-Service</th>'
+                + '<th class="text-left px-2 py-1">→ Portal-Typ</th>'
+                + '<th class="px-2 py-1 w-8"></th></tr></thead><tbody>';
+            std.items.forEach(function(m) {
+                h += '<tr class="border-t border-gray-50 hover:bg-gray-50">';
+                h += '<td class="px-2 py-1.5 text-gray-700 font-mono text-[11px]">' + _escH(m.etermin_service) + '</td>';
+                h += '<td class="px-2 py-1.5"><select onchange="window.updateEterminMapping(\'' + m.id + '\',this.value)" class="text-xs border border-gray-200 rounded px-2 py-1 w-full">'
+                    + PORTAL_TYPEN.map(function(t) { return '<option value="' + t.v + '"' + (t.v === m.portal_typ ? ' selected' : '') + '>' + t.l + '</option>'; }).join('')
+                    + '</select></td>';
+                h += '<td class="px-2 py-1.5 text-center"><button onclick="window.deleteEterminMapping(\'' + m.id + '\')" class="text-gray-400 hover:text-red-500 text-[10px]" title="Löschen">🗑️</button></td>';
+                h += '</tr>';
+            });
+            h += '</tbody></table></div>';
+        });
+
+        // Add-new mapping form
+        if (configs.length > 0) {
+            h += '<div class="border border-dashed border-gray-300 rounded-lg p-2 bg-gray-50">';
+            h += '<p class="text-[10px] font-semibold text-gray-600 mb-2">➕ Neue Zuordnung</p>';
+            h += '<div class="flex gap-2 items-end flex-wrap">';
+            h += '<div class="flex-1 min-w-[120px]"><label class="text-[10px] text-gray-500">Standort</label>'
+                + '<select id="mappingNewStandort" class="w-full text-xs border border-gray-200 rounded px-2 py-1">'
+                + configs.map(function(c) { return '<option value="' + c.standort_id + '">' + _escH((c.standorte && c.standorte.name) || c.standort_id) + '</option>'; }).join('')
+                + '</select></div>';
+            h += '<div class="flex-1 min-w-[150px]"><label class="text-[10px] text-gray-500">eTermin-Service (exakter Name)</label>'
+                + '<input type="text" id="mappingNewService" placeholder="z.B. Große Jahresinspektion" class="w-full text-xs border border-gray-200 rounded px-2 py-1"></div>';
+            h += '<div class="flex-1 min-w-[120px]"><label class="text-[10px] text-gray-500">Portal-Typ</label>'
+                + '<select id="mappingNewTyp" class="w-full text-xs border border-gray-200 rounded px-2 py-1">' + optHtml + '</select></div>';
+            h += '<button onclick="window.addEterminMapping()" class="px-3 py-1 bg-blue-500 text-white text-xs rounded font-semibold hover:bg-blue-600">Hinzufügen</button>';
+            h += '</div></div>';
+        }
+
+        h += '</div></details>';
+        el.innerHTML = h;
+    } catch (e) { console.warn('[schnittstellen] loadEterminMapping:', e); }
+}
+
+window.updateEterminMapping = async function(id, newTyp) {
+    await _sb().from('etermin_typ_mapping').update({ portal_typ: newTyp, updated_at: new Date().toISOString() }).eq('id', id);
+    loadEterminMapping();
+};
+
+window.deleteEterminMapping = async function(id) {
+    if (!confirm('Mapping wirklich löschen?')) return;
+    await _sb().from('etermin_typ_mapping').delete().eq('id', id);
+    loadEterminMapping();
+};
+
+window.addEterminMapping = async function() {
+    var sid = document.getElementById('mappingNewStandort').value;
+    var svc = (document.getElementById('mappingNewService').value || '').trim();
+    var typ = document.getElementById('mappingNewTyp').value;
+    if (!svc) { alert('Bitte eTermin-Service-Name eingeben'); return; }
+    var resp = await _sb().from('etermin_typ_mapping').upsert({
+        standort_id: sid, etermin_service: svc, portal_typ: typ, updated_at: new Date().toISOString()
+    }, { onConflict: 'standort_id,etermin_service' });
+    if (resp.error) { alert('Fehler: ' + resp.error.message); return; }
+    document.getElementById('mappingNewService').value = '';
+    loadEterminMapping();
+};
 
 window.testConnector = async function(id) {
     var el = document.getElementById('connTestResult_' + id);
