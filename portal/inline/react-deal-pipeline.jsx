@@ -87,6 +87,9 @@ function useSupabase(currentLoc, SELLERS) {
     source: DB_TO_SOURCE[row.quelle] || "",
     loc: row.standort_id || "",
     sales: row.sales || {},
+    autoImport: row.auto_import || false,
+    lastEvent: row.letztes_event || null,
+    wawiKundenNr: row.wawi_kunden_nr || null,
     created: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
     changed: row.updated_at ? new Date(row.updated_at).getTime() : Date.now(),
     todos: (todos || []).map(t => ({
@@ -279,7 +282,10 @@ function Card({deal,onDrag,onClick,isNew,SELLERS}){
       <div style={{fontSize:13,fontWeight:800,color:st.color,flexShrink:0}}>{fmt(deal.value)}</div>
     </div>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",paddingLeft:34}}>
-      <div style={{display:"flex",gap:2}}>{[1,2,3,4,5].map(i=><div key={i} style={{width:5,height:5,borderRadius:"50%",background:i<=deal.heat?(deal.heat>=4?"#FF6B35":deal.heat>=2?"#F7C948":"#CBD5E0"):"#EDF2F7"}}/>)}</div>
+      <div style={{display:"flex",gap:2,alignItems:"center"}}>
+        {deal.autoImport&&<span title="Auto-Import" style={{fontSize:9,fontWeight:700,color:"#667EEA",background:"#EBF4FF",padding:"1px 5px",borderRadius:4}}>🤖</span>}
+        {[1,2,3,4,5].map(i=><div key={i} style={{width:5,height:5,borderRadius:"50%",background:i<=deal.heat?(deal.heat>=4?"#FF6B35":deal.heat>=2?"#F7C948":"#CBD5E0"):"#EDF2F7"}}/>)}
+      </div>
       <div style={{display:"flex",alignItems:"center",gap:4}}>
         {seller&&<span style={{fontSize:9,fontWeight:700,color:seller.color,background:seller.color+"15",padding:"1px 5px",borderRadius:4}}>{seller.short}</span>}
         {overdue&&<span style={{fontSize:9,fontWeight:700,color:"#E53E3E",background:"#FED7D7",padding:"1px 5px",borderRadius:4}}>{openT} überfällig</span>}
@@ -871,9 +877,19 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
   const[ef,setEf]=useState(null);const[ev,setEv]=useState("");
   const[showForm,setShowForm]=useState(null);
   const[beratungOpen,setBeratungOpen]=useState(true);
+  const[events,setEvents]=useState([]);
   const st=STAGES.find(s=>s.id===deal.stage)||STAGES[0];
   const sales=deal.sales||{};const seller=SELLERS.find(s=>s.id===deal.seller);
   const openT=deal.todos.filter(t=>!t.done).length;
+
+  // Load pipeline events
+  useEffect(()=>{
+    if(!deal.id||typeof deal.id==="number")return;
+    const sb=window._sb&&window._sb();
+    if(!sb)return;
+    sb.from("lead_events").select("*").eq("lead_id",deal.id).order("created_at",{ascending:false}).limit(20)
+      .then(({data})=>setEvents(data||[]));
+  },[deal.id]);
 
   const sav=(f,v)=>{onUpdateDeal(deal.id,f,v);setEf(null)};
   const uS=(k,v)=>onUpdateDeal(deal.id,"sales",{...sales,[k]:v});
@@ -936,7 +952,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
 
       {/* Tabs */}
       <div style={{display:"flex",borderBottom:"1px solid #f0f0f0",padding:"0 16px",flexShrink:0}}>
-        {[{id:"uebersicht",l:"Übersicht"},{id:"todos",l:"Todos",n:openT},{id:"log",l:"Log",n:deal.acts.length}].map(t=>
+        {[{id:"uebersicht",l:"Übersicht"},{id:"todos",l:"Todos",n:openT},{id:"log",l:"Log",n:deal.acts.length},{id:"events",l:"🤖 Events",n:events.length}].map(t=>
           <div key={t.id} onClick={()=>setTab(t.id)} style={{padding:"9px 12px",fontSize:12,fontWeight:600,color:tab===t.id?"#1a1a2e":"#9ca3af",cursor:"pointer",borderBottom:tab===t.id?"2px solid #667EEA":"2px solid transparent"}}>
             {t.l} {t.n>0&&<span style={{fontSize:9,fontWeight:700,background:"#f0f0f0",borderRadius:10,padding:"1px 5px"}}>{t.n}</span>}
           </div>)}
@@ -1029,6 +1045,36 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
         </div>}
 
         {tab==="log"&&<div>
+          {/* Pipeline-Events (Auto) */}
+          {events.length>0&&<div style={{marginBottom:14}}>
+            <div style={{fontSize:10,fontWeight:700,color:"#667EEA",textTransform:"uppercase",letterSpacing:".06em",marginBottom:6}}>🤖 Pipeline-Events</div>
+            {events.map((ev,i)=>{
+              const ico={etermin_buchung:"📅",wawi_angebot:"📄",wawi_auftrag:"✅",wawi_rechnung:"💰"}[ev.event_typ]||"⚡";
+              const label={lead_erstellt:"Automatisch erstellt",status_geaendert:"Status geändert",lead_verknuepft:"Lead verknüpft"}[ev.aktion]||ev.aktion;
+              const detail=ev.details||{};
+              return <div key={ev.id||i} style={{display:"flex",gap:8,padding:"6px 0",borderBottom:"1px solid #f0f0f5"}}>
+                <span style={{fontSize:14,flexShrink:0,marginTop:1}}>{ico}</span>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#374151"}}>{label}</div>
+                  <div style={{fontSize:10,color:"#6b7280"}}>
+                    {ev.alter_status&&ev.neuer_status&&<span>{ev.alter_status} → {ev.neuer_status} · </span>}
+                    {!ev.alter_status&&ev.neuer_status&&<span>→ {ev.neuer_status} · </span>}
+                    {detail.beleg_nr&&<span>Beleg {detail.beleg_nr} · </span>}
+                    {detail.endbetrag&&<span>{Number(detail.endbetrag).toLocaleString("de")}€ · </span>}
+                    <span style={{color:"#9ca3af"}}>{ev.match_typ==="email"?"📧":""}
+                    {ev.match_typ==="telefon"?"📞":""}
+                    {ev.match_typ==="neu_erstellt"?"🆕":""}
+                    {ev.match_typ==="etermin_uid"?"🔗":""}
+                    {ev.match_typ==="name_standort"?"👤":""} {ev.event_source}</span>
+                  </div>
+                  <div style={{fontSize:9,color:"#c0c0c0",marginTop:1}}>{new Date(ev.created_at).toLocaleString("de-DE")}</div>
+                </div>
+              </div>
+            })}
+          </div>}
+
+          {/* Manuelle Aktivitäten */}
+          <div style={{fontSize:10,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".06em",marginBottom:6}}>Aktivitäten</div>
           <div style={{display:"flex",gap:5,marginBottom:8,flexWrap:"wrap"}}>{ACT_TYPES.map(a=><div key={a.id} onClick={()=>setAt(a.id)} style={{padding:"4px 8px",borderRadius:6,fontSize:11,fontWeight:600,cursor:"pointer",background:at===a.id?a.color+"15":"#f5f5f7",color:at===a.id?a.color:"#9ca3af"}}>{a.label}</div>)}</div>
           <div style={{display:"flex",gap:6,marginBottom:12}}>
             <input value={tx} onChange={e=>setTx(e.target.value)} placeholder="Aktivität eintragen..." onKeyDown={e=>e.key==="Enter"&&goAct()} style={{...dpInp,flex:1}}/>
@@ -1039,6 +1085,50 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
             <div style={{fontSize:12,color:"#374151"}}>{t?.label.split(" ")[0]||"📝"} {a.text}</div>
             <div style={{fontSize:10,color:"#9ca3af",marginTop:1}}>{tAgo(a.time)}</div>
           </div>})}
+        </div>}
+
+        {tab==="events"&&<div>
+          {deal.autoImport&&<div style={{background:"#EBF4FF",borderRadius:8,padding:"10px 12px",marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:18}}>🤖</span>
+            <div>
+              <div style={{fontSize:11,fontWeight:700,color:"#667EEA"}}>Auto-Import Lead</div>
+              <div style={{fontSize:10,color:"#6b7280"}}>Dieser Lead wurde automatisch erstellt und wird durch externe Events (eTermin, WaWi) durch die Pipeline bewegt.</div>
+            </div>
+          </div>}
+          {events.length===0&&<div style={{color:"#d1d5db",fontSize:12,textAlign:"center",padding:30}}>Keine Pipeline-Events vorhanden</div>}
+          {events.map((ev,i)=>{
+            const ico={etermin_buchung:"📅",wawi_angebot:"📄",wawi_auftrag:"✅",wawi_rechnung:"💰"}[ev.event_typ]||"⚡";
+            const label={lead_erstellt:"Lead automatisch erstellt",status_geaendert:"Pipeline-Status geändert",lead_verknuepft:"Mit bestehendem Lead verknüpft"}[ev.aktion]||ev.aktion;
+            const srcLabel={etermin_webhook:"eTermin Buchung",wawi_sync:"WaWi-Sync",backfill:"Backfill (historisch)",manuell:"Manuell"}[ev.event_source]||ev.event_source;
+            const detail=ev.details||{};
+            const stageLabel=(s)=>({neu:"Eingang",kontaktiert:"Termin gebucht",angebot:"Schwebend",verhandlung:"Zusage",gewonnen:"Verkauft",verloren:"Verloren",gold:"Schrank d.H."}[s]||s);
+            return <div key={ev.id||i} style={{position:"relative",paddingLeft:28,paddingBottom:16,borderLeft:i<events.length-1?"2px solid #e5e7eb":"2px solid transparent",marginLeft:8}}>
+              <div style={{position:"absolute",left:-9,top:0,width:18,height:18,borderRadius:"50%",background:"#fff",border:"2px solid #667EEA",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10}}>{ico}</div>
+              <div>
+                <div style={{fontSize:12,fontWeight:700,color:"#1a1a2e"}}>{label}</div>
+                {ev.alter_status&&ev.neuer_status&&<div style={{display:"inline-flex",alignItems:"center",gap:4,marginTop:3,fontSize:10}}>
+                  <span style={{padding:"2px 6px",borderRadius:4,background:"#f5f5f7",color:"#6b7280",fontWeight:600}}>{stageLabel(ev.alter_status)}</span>
+                  <span style={{color:"#9ca3af"}}>→</span>
+                  <span style={{padding:"2px 6px",borderRadius:4,background:"#EBF4FF",color:"#667EEA",fontWeight:700}}>{stageLabel(ev.neuer_status)}</span>
+                </div>}
+                {!ev.alter_status&&ev.neuer_status&&<div style={{display:"inline-flex",alignItems:"center",gap:4,marginTop:3,fontSize:10}}>
+                  <span style={{padding:"2px 6px",borderRadius:4,background:"#EBF4FF",color:"#667EEA",fontWeight:700}}>→ {stageLabel(ev.neuer_status)}</span>
+                </div>}
+                <div style={{fontSize:10,color:"#6b7280",marginTop:4}}>
+                  {detail.beleg_nr&&<span>📋 Beleg {detail.beleg_nr} · </span>}
+                  {detail.beleg_typ&&<span>{detail.beleg_typ} · </span>}
+                  {detail.endbetrag&&<span>💶 {Number(detail.endbetrag).toLocaleString("de-DE")}€ · </span>}
+                  <span>{srcLabel}</span>
+                </div>
+                <div style={{fontSize:10,color:"#9ca3af",marginTop:2}}>
+                  {ev.match_typ&&<span style={{marginRight:6}}>
+                    {{email:"📧 E-Mail",telefon:"📞 Telefon",etermin_uid:"🔗 eTermin-ID",name_standort:"👤 Name",neu_erstellt:"🆕 Neu erstellt"}[ev.match_typ]||ev.match_typ}
+                  </span>}
+                  <span>{new Date(ev.created_at).toLocaleString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})}</span>
+                </div>
+              </div>
+            </div>
+          })}
         </div>}
       </div>
 
@@ -1334,7 +1424,7 @@ function PipelineApp(){
 
   const locFiltered = curLoc === "hq" ? deals : deals.filter(d => d.loc === curLoc);
   const userId = window.sbUser?.id || "";
-  const filteredDeals = filter === "mine" ? locFiltered.filter(d => d.seller === userId) : locFiltered;
+  const filteredDeals = filter === "mine" ? locFiltered.filter(d => d.seller === userId) : filter === "auto" ? locFiltered.filter(d => d.autoImport) : filter === "manual" ? locFiltered.filter(d => !d.autoImport) : locFiltered;
 
   const msg=useCallback(m=>{setToast(m);setTimeout(()=>setToast(null),2500)},[]);
   const pop=useCallback((x,y)=>{const np=Array.from({length:14},(_,i)=>({id:Date.now()+i,x:x+(Math.random()-.5)*120,y:y+(Math.random()-.5)*80,emoji:CELEB[Math.floor(Math.random()*CELEB.length)],delay:i*.04}));setParts(p=>[...p,...np]);setTimeout(()=>setParts(p=>p.filter(pp=>!np.find(n=>n.id===pp.id))),2000)},[]);
@@ -1479,10 +1569,10 @@ function PipelineApp(){
 
     {/* Filter + Actions */}
     <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:10,flexWrap:"wrap"}}>
-      {["all","mine"].map(f=><div key={f} onClick={()=>setFilter(f)}
+      {["all","mine","auto","manual"].map(f=><div key={f} onClick={()=>setFilter(f)}
         style={{padding:"4px 12px",borderRadius:20,border:"1.5px solid "+(filter===f?"#667EEA":"#e5e7eb"),
           background:filter===f?"#667EEA":"#fff",fontSize:12,fontWeight:600,color:filter===f?"#fff":"#6b7280",cursor:"pointer",transition:"all .15s"}}>
-        {f==="all"?"Alle":"Meine"}
+        {f==="all"?"Alle":f==="mine"?"Meine":f==="auto"?"🤖 Auto":"✋ Manuell"}
       </div>)}
       <span style={{fontSize:10,color:"#9ca3af"}}>{filteredDeals.filter(d=>!["gold","lost"].includes(d.stage)).length} Deals</span>
       {aging>0&&<span style={{fontSize:10,color:"#E53E3E",fontWeight:700}}>⚠ {aging} Follow-Up</span>}
