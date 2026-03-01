@@ -60,6 +60,20 @@ async function sbInsert(table, data) { return sbRest("POST", table, data, null);
 async function sbUpdate(table, data, filter) { return sbRest("PATCH", table, data, filter); }
 async function sbDelete(table, filter) { return sbRest("DELETE", table, null, filter); }
 
+async function sbRPC(fnName, params) {
+  const url = process.env.SUPABASE_URL + "/rest/v1/rpc/" + fnName;
+  const r = await fetch(url, {
+    method: "POST",
+    headers: {
+      "apikey": process.env.SUPABASE_SERVICE_KEY,
+      "Authorization": "Bearer " + process.env.SUPABASE_SERVICE_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(params)
+  });
+  return r.json();
+}
+
 module.exports = async function(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
@@ -122,20 +136,23 @@ module.exports = async function(req, res) {
       }
     }
 
-    // Lead (only CREATED + Beratungstermin → goes straight to "Termin gebucht" stage)
+    // Lead (only CREATED + Beratungstermin → auto-pipeline via DB function)
     let lc = false;
     if (cmd === "CREATED" && (mappedTyp === "beratung" || isLeadTrigger(answers, notes))) {
-      const exL = await sbGet("leads", "etermin_uid=eq." + uid + "&limit=1");
-      if (!exL || exL.length === 0) {
-        await sbInsert("leads", {
-          standort_id: stdId, vorname: fn||"Unbekannt", nachname: ln||"",
-          email: email||null, telefon: phone||null,
-          status: "kontaktiert", quelle: "etermin", interesse: answers||"Beratungstermin",
-          notizen: "Via eTermin gebucht\n"+(notes?"Notiz: "+notes+"\n":"")+"Termin: "+(startL||startU||"?"),
-          geschaetzter_wert: 3000, heat: 3, avatar: "📅",
-          etermin_uid: uid, termin_id: tId
+      try {
+        const rpcRes = await sbRPC("process_etermin_lead", {
+          p_termin_id: tId || null,
+          p_standort_id: stdId,
+          p_name: name || "Unbekannt",
+          p_email: email || null,
+          p_telefon: phone || null,
+          p_etermin_uid: uid,
+          p_termin_typ: "beratung"
         });
-        lc = true;
+        lc = !!rpcRes;
+        console.log("[etermin-wh] process_etermin_lead result:", rpcRes);
+      } catch(le) {
+        console.error("[etermin-wh] lead processing error:", le.message);
       }
     }
 
