@@ -502,6 +502,11 @@ function renderPartnerCards() {
 window.toggleConnCard = function(id) {
     openCards[id] = !openCards[id];
     renderActiveCards();
+    // Load eTermin data when card opens
+    if (id === 'etermin' && openCards[id]) {
+        loadEterminOverview();
+        if (_sbProfile() && _sbProfile().is_hq) loadEterminMapping();
+    }
 };
 
 window.toggleGFEdit = function(id) {
