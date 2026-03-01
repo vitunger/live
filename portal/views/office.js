@@ -856,9 +856,10 @@
                         '<div><label class="block text-sm font-semibold text-gray-600 mb-1">Name *</label><input id="offGuestName" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Max Mustermann"></div>'+
                         '<div><label class="block text-sm font-semibold text-gray-600 mb-1">Firma</label><input id="offGuestCompany" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Firma GmbH"></div>'+
                         '<div><label class="block text-sm font-semibold text-gray-600 mb-1">E-Mail</label><input id="offGuestEmail" type="email" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="max@firma.de"></div>'+
-                        '<div class="grid grid-cols-2 gap-3">'+
+                        '<div class="grid grid-cols-3 gap-2">'+
                             '<div><label class="block text-sm font-semibold text-gray-600 mb-1">Datum *</label><input id="offGuestDate" type="date" class="w-full border rounded-lg px-3 py-2 text-sm" value="'+todayISO()+'"></div>'+
-                            '<div><label class="block text-sm font-semibold text-gray-600 mb-1">Uhrzeit</label><input id="offGuestTime" type="time" class="w-full border rounded-lg px-3 py-2 text-sm" value="10:00"></div>'+
+                            '<div><label class="block text-sm font-semibold text-gray-600 mb-1">Von</label><input id="offGuestTime" type="time" class="w-full border rounded-lg px-3 py-2 text-sm" value="10:00"></div>'+
+                            '<div><label class="block text-sm font-semibold text-gray-600 mb-1">Bis</label><input id="offGuestTimeEnd" type="time" class="w-full border rounded-lg px-3 py-2 text-sm" value="17:00"></div>'+
                         '</div>'+
                         '<div><label class="block text-sm font-semibold text-gray-600 mb-1">Raum</label>'+
                             '<select id="offGuestRoom" class="w-full border rounded-lg px-3 py-2 text-sm"><option value="">-- Kein Raum --</option>'+
@@ -872,7 +873,7 @@
                         '<div><label class="block text-sm font-semibold text-gray-600 mb-1">Notizen</label><textarea id="offGuestNotes" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Anlass, besondere W\u00fcnsche..."></textarea></div>'+
                     '</div>'+
                     '<div class="flex gap-3 mt-5">'+
-                        '<button onclick="window._offSaveGuest()" class="flex-1 px-4 py-2 bg-vit-orange text-white rounded-lg font-semibold hover:opacity-90">Speichern</button>'+
+                        '<button id="offGuestSaveBtn" onclick="window._offSaveGuest()" class="flex-1 px-4 py-2 bg-vit-orange text-white rounded-lg font-semibold hover:opacity-90">Einladung senden</button>'+
                         '<button onclick="document.getElementById(\'officeGuestModal\').style.display=\'none\'" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-semibold hover:bg-gray-200">Abbrechen</button>'+
                     '</div>'+
                 '</div>'+
@@ -896,11 +897,17 @@
         var email=(document.getElementById('offGuestEmail')||{}).value;
         var date=(document.getElementById('offGuestDate')||{}).value;
         var time=(document.getElementById('offGuestTime')||{}).value;
+        var timeEnd=(document.getElementById('offGuestTimeEnd')||{}).value;
         var room=(document.getElementById('offGuestRoom')||{}).value;
         var parking=(document.getElementById('offGuestParking')||{}).checked;
         var notes=(document.getElementById('offGuestNotes')||{}).value;
         if(!name||!date){notify('Name und Datum sind Pflichtfelder','error');return;}
+        var btn=document.getElementById('offGuestSaveBtn');
+        if(btn){btn.disabled=true;btn.textContent='Wird gespeichert...';}
         try {
+            // Get host user info for email
+            var me=(_hqUsers||[]).find(function(u){return u.id===sbUser.id;})||{vorname:'',nachname:''};
+
             var r=await sb.from('office_guests').insert({
                 host_user_id:sbUser.id, name:name, company:company||null,
                 email:email||null, visit_date:date, visit_time:time||null,
@@ -908,12 +915,61 @@
                 status:'expected'
             }).select().single();
             if(r.error) throw r.error;
-            notify('\ud83d\udc64 Gast '+esc(name)+' eingeladen!','success');
-            document.getElementById('officeGuestModal').style.display='none';
-            renderGaeste();
+            var guestId=r.data.id;
+
+            // Auto-book parking if requested
+            if(parking) {
+                // Find a free guest parking slot (P3 or P4)
+                var parkRes=await sb.from('office_bookings').select('parking_nr').eq('booking_date',date).in('parking_nr',[3,4]);
+                var takenPark=(parkRes.data||[]).map(function(b){return b.parking_nr;});
+                var freePark=[3,4].find(function(n){return takenPark.indexOf(n)===-1;});
+                if(freePark) {
+                    await sb.from('office_bookings').insert({
+                        user_id:sbUser.id, booking_date:date, status:'parking',
+                        parking_nr:freePark,
+                        time_from:time||'08:00', time_to:timeEnd||'18:00',
+                        note:'Gast: '+name+(company?' ('+company+')':'')
+                    });
+                }
+            }
+
+            // Send invitation email if email provided
+            if(email) {
+                var dateStr=new Date(date+'T12:00:00').toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+                try {
+                    await sb.functions.invoke('send-email', {body:{
+                        template:'guest-invitation',
+                        to: email,
+                        data: {
+                            guest_name: name,
+                            host_name: me.vorname+' '+me.nachname,
+                            visit_date: dateStr,
+                            visit_time: time||'',
+                            room: room||'',
+                            company: company||'',
+                            notes: notes||'',
+                            needs_parking: parking,
+                            address: 'Jahnstraße 2, 85774 Unterföhring'
+                        }
+                    }});
+                    notify('\ud83d\udc64 Gast eingeladen & E-Mail gesendet!','success');
+                } catch(mailErr) {
+                    console.warn('[Office] Email send failed:', mailErr);
+                    notify('\ud83d\udc64 Gast gespeichert (E-Mail-Versand fehlgeschlagen)','success');
+                }
+            } else {
+                notify('\ud83d\udc64 Gast '+name+' eingeladen!','success');
+            }
+
+            var modal=document.getElementById('officeGuestModal');
+            if(modal) modal.style.display='none';
+            // Refresh whichever tab is showing
+            if(document.getElementById('officeTab_gaeste')&&document.getElementById('officeTab_gaeste').style.display!=='none') renderGaeste();
         } catch(err) {
             console.error('[Office] SaveGuest error:',err);
             notify('Fehler: '+err.message,'error');
+        } finally {
+            if(btn){btn.disabled=false;btn.textContent='Einladung senden';}
         }
     };
 
@@ -1079,6 +1135,7 @@
             await _buchLoadData();
             _buchRenderFloor();
             _buchRenderParking();
+            _buchRenderRemote();
         } catch(err) {
             console.error('[Office] Buchen error:',err);
             el.innerHTML='<div class="vit-card p-6 text-center text-red-500">Fehler: '+esc(err.message)+'</div>';
@@ -1140,6 +1197,7 @@
                 '</div>'+
             '</div>'+
             '<div id="buchParkingArea" class="vit-card p-4 mt-4"></div>'+
+            '<div id="buchRemoteArea" class="mt-4"></div>'+
             '<div id="buchDeskDetail" style="display:none" class="vit-card p-5 mt-4"></div>';
     }
 
@@ -1148,6 +1206,7 @@
         var td=todayISO();
         var bRes=await sb.from('office_bookings').select('id,user_id,desk_nr,parking_nr,status,time_from,time_to,note').eq('booking_date',_buchDate);
         var allBkgs=bRes.data||[];
+        _buchAllBookingsForDay=allBkgs;
         _buchBookings=allBkgs.filter(function(b){return b.status==='office'&&b.desk_nr;});
         _buchParkBookings=allBkgs.filter(function(b){return b.parking_nr!=null;});
         if(_buchDate===td) {
@@ -1227,13 +1286,115 @@
             '<p class="text-xs text-gray-400 mt-2 text-center">'+allDesks.length+' Pl\u00e4tze &middot; Klick auf einen freien Platz zum Buchen</p>';
     }
 
+
+    function _buchRenderRemote() {
+        var area = document.getElementById('buchRemoteArea');
+        if (!area) return;
+
+        // Check if user already has a booking for this date
+        var myDesk = _buchBookings.find(function(b){return b.user_id===sbUser.id;});
+        var myRemote = (_buchAllBookingsForDay||[]).find(function(b){return b.user_id===sbUser.id&&b.status==='remote';});
+
+        var remoteBooked = !!myRemote;
+        var deskBooked = !!myDesk;
+        var isToday = _buchDate === todayISO();
+
+        var h = '<div class="vit-card p-5">';
+        h += '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">';
+
+        // Left: title + description
+        h += '<div style="display:flex;align-items:center;gap:14px">';
+        h += '<div style="width:48px;height:48px;border-radius:12px;background:'+(remoteBooked?'#F97316':'#F3F4F6')+';display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">🏠</div>';
+        h += '<div>';
+        h += '<p style="font-size:15px;font-weight:700;color:#374151">Remote arbeiten</p>';
+        h += '<p style="font-size:12px;color:#9CA3AF">Kein Bürobesuch – von zuhause oder unterwegs</p>';
+        h += '</div></div>';
+
+        // Right: action
+        if (remoteBooked) {
+            h += '<div style="display:flex;align-items:center;gap:10px">';
+            h += '<span style="font-size:12px;font-weight:600;color:#F97316;background:#FFF7ED;padding:6px 14px;border-radius:20px">✓ Als Remote gebucht</span>';
+            h += '<button data-rid="'+myRemote.id+'" onclick="window._buchCancelRemote(this.dataset.rid)" style="font-size:12px;color:#EF4444;background:none;border:none;cursor:pointer;padding:4px 8px">Stornieren</button>';
+            h += '</div>';
+        } else if (deskBooked) {
+            h += '<span style="font-size:12px;color:#9CA3AF;font-style:italic">Du hast bereits einen Desk gebucht</span>';
+        } else {
+            h += '<button onclick="window._buchBookRemote()" style="padding:10px 24px;background:#374151;color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">🏠 Remote buchen</button>';
+        }
+
+        h += '</div>';
+
+        // Also: Gast einladen shortcut
+        h += '<div style="border-top:1px solid #F3F4F6;margin-top:14px;padding-top:14px;display:flex;align-items:center;justify-content:space-between">';
+        h += '<div style="display:flex;align-items:center;gap:12px">';
+        h += '<div style="width:40px;height:40px;border-radius:10px;background:#F3F4F6;display:flex;align-items:center;justify-content:center;font-size:20px">👤</div>';
+        h += '<div><p style="font-size:14px;font-weight:600;color:#374151">Gast einladen</p><p style="font-size:12px;color:#9CA3AF">Externer Besucher – Einladung per E-Mail</p></div>';
+        h += '</div>';
+        h += '<button onclick="window._offGuestModalForDate(window._buchDate)" style="padding:8px 20px;background:#F97316;color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">+ Gast einladen</button>';
+        h += '</div>';
+
+        h += '</div>';
+        area.innerHTML = h;
+    }
+
+    window._buchBookRemote = async function() {
+        try {
+            var timeFrom = _buchAllDay ? null : _buchFrom;
+            var timeTo   = _buchAllDay ? null : _buchTo;
+            var r = await sb.from('office_bookings').insert({
+                user_id: sbUser.id,
+                booking_date: _buchDate,
+                status: 'remote',
+                time_from: timeFrom||'08:00',
+                time_to: timeTo||'17:00'
+            }).select().single();
+            if (r.error) throw r.error;
+            if (!_buchAllBookingsForDay) _buchAllBookingsForDay = [];
+            _buchAllBookingsForDay.push(r.data);
+            notify('🏠 Remote gebucht für '+_buchDate,'success');
+            _buchRenderRemote();
+        } catch(err) {
+            console.error('[Office] BookRemote:', err);
+            notify('Fehler: '+err.message,'error');
+        }
+    };
+
+    window._buchCancelRemote = async function(id) {
+        if (!confirm('Remote-Buchung stornieren?')) return;
+        try {
+            var r = await sb.from('office_bookings').delete().eq('id', id);
+            if (r.error) throw r.error;
+            if (_buchAllBookingsForDay) _buchAllBookingsForDay = _buchAllBookingsForDay.filter(function(b){return b.id!==id;});
+            notify('Remote-Buchung storniert','success');
+            _buchRenderRemote();
+        } catch(err) { notify('Fehler: '+err.message,'error'); }
+    };
+
+    window._offGuestModalForDate = function(date) {
+        // Open guest modal (from Gaeste tab or inline)
+        var existing = document.getElementById('officeGuestModal');
+        if (existing) {
+            existing.style.display = 'flex';
+            var dateInput = document.getElementById('offGuestDate');
+            if (dateInput && date) dateInput.value = date;
+            return;
+        }
+        // If we're in Buchen tab, show inline modal
+        showOfficeTab('gaeste');
+        setTimeout(function(){
+            window._offGuestModal();
+            var di = document.getElementById('offGuestDate');
+            if (di && date) di.value = date;
+        }, 300);
+    };
+
     window._buchSelectDate = function(iso) {
-        _buchDate=iso;
+        _buchDate=iso; window._buchDate=iso;
         // Re-render the date strip and reload
         var el=document.getElementById('officeTab_buchen');
         if(!el) return;
         _buildBuchenUI(el);
-        _buchLoadData().then(function(){_buchRenderFloor();_buchRenderParking();});
+        _buchLoadData().then(function(){_buchRenderFloor();_buchRenderParking();_buchRenderRemote();});
     };
 
     window._buchToggleAllDay = function() {
