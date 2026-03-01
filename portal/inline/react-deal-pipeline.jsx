@@ -62,7 +62,7 @@ const STAGE_TO_DB = { lead: "neu", termin: "kontaktiert", angebot: "angebot", sc
 const DB_TO_STAGE = { neu: "lead", kontaktiert: "termin", angebot: "angebot", verhandlung: "schwebend", schwebend: "schwebend", gewonnen: "verkauft", verloren: "lost", gold: "gold" };
 
 // ── Quelle Mapping: React ↔ DB ──
-const SOURCE_TO_DB = { "Empfehlung": "empfehlung", "Google": "google", "Instagram": "instagram", "Facebook": "facebook", "Messe": "messe", "Walk-In": "walk_in", "Website": "website", "Flyer": "flyer", "TikTok": "tiktok", "Andere": "sonstige" };
+const SOURCE_TO_DB = { "Empfehlung": "empfehlung", "Google": "google", "Instagram": "instagram", "Facebook": "facebook", "Messe": "messe", "Walk-In": "walk_in", "Website": "website", "Flyer": "flyer", "TikTok": "tiktok", "Andere": "sonstige", "walk_in":"walk_in","telefon":"telefon","website":"website","etermin":"etermin","empfehlung":"empfehlung","google":"google","instagram":"instagram","facebook":"facebook","tiktok":"tiktok","messe":"messe","flyer":"flyer","sonstige":"sonstige","social_media":"social_media" };
 const DB_TO_SOURCE = Object.fromEntries(Object.entries(SOURCE_TO_DB).map(([k,v])=>[v,k]));
 
 // ── Supabase Data Layer ──
@@ -185,7 +185,8 @@ function useSupabase(currentLoc, SELLERS) {
         telefon: deal.phone || null,
         status: STAGE_TO_DB[deal.stage] || "neu",
         quelle: SOURCE_TO_DB[deal.source] || "walk_in",
-        interesse: deal.note || "",
+        prioritaet: deal.prioritaet || "mittel",
+        interesse: deal.interesse || deal.note || "",
         notizen: deal.note || "",
         geschaetzter_wert: deal.value || 0,
         heat: deal.heat || 3,
@@ -309,30 +310,152 @@ function Col({stage,deals,onDrop,onDrag,onClick,newId,SELLERS}){
   </div>
 }
 
-/* ── Add Modal (Preview7 Clean) ───────────────────── */
+/* ── Add Modal (Ausführliches Lead-Formular) ───────────────────── */
 function AddModal({onClose,onAdd,currentLoc,LOCATIONS,SELLERS}){
-  const[n,setN]=useState("");const[v,setV]=useState("");const[no,setNo]=useState("");const[ph,setPh]=useState("");const[em,setEm]=useState("");const[av,setAv]=useState("👤");
+  const[n,setN]=useState("");const[v,setV]=useState("3000");const[no,setNo]=useState("");
+  const[ph,setPh]=useState("");const[em,setEm]=useState("");const[av,setAv]=useState("👤");
+  const[src,setSrc]=useState("walk_in");const[heat,setHeat]=useState(3);
+  const[prio,setPrio]=useState("mittel");const[interesse,setInteresse]=useState("");
   const locs=LOCATIONS.filter(l=>!l.isHQ);
-  const[loc,setLoc]=useState(currentLoc==="hq"?(locs[0]?.id||""):currentLoc);const[seller,setSeller]=useState("");
+  const[loc,setLoc]=useState(currentLoc==="hq"?(locs[0]?.id||""):currentLoc);
+  const[seller,setSeller]=useState("");
+  const[section,setSection]=useState("basis"); // basis | detail
   const availSellers=SELLERS.filter(s=>s.loc===loc||s.isHQ);
-  const go=()=>{if(!n.trim())return;onAdd({name:n,value:+v||0,note:no||"",avatar:av,heat:3,stage:"lead",phone:ph,email:em,acts:[],todos:[],created:Date.now(),changed:Date.now(),loc,seller:seller||availSellers[0]?.id||"",source:"Walk-In",sales:{}})};
+
+  // Sales fields
+  const[nutzung,setNutzung]=useState("");const[ziel,setZiel]=useState("");
+  const[budget,setBudget]=useState("");const[modell,setModell]=useState("");
+
+  const go=()=>{if(!n.trim())return;onAdd({name:n,value:+v||0,note:no||"",avatar:av,heat,stage:"lead",phone:ph,email:em,acts:[],todos:[],created:Date.now(),changed:Date.now(),loc,seller:seller||availSellers[0]?.id||"",source:src,interesse,prioritaet:prio,sales:{nutzung,ziel,budget,modell}})};
+
   const inp={width:"100%",padding:"8px 10px",borderRadius:7,border:"1.5px solid #e5e7eb",fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box"};
   const fl={fontSize:10,fontWeight:700,color:"#6b7280",display:"block",marginBottom:3};
+  const sel={...inp,appearance:"auto",cursor:"pointer",background:"#fff"};
+  const tabBtn=(id,label)=>({fontSize:11,fontWeight:600,padding:"6px 12px",cursor:"pointer",borderBottom:section===id?"2px solid #667EEA":"2px solid transparent",color:section===id?"#1a1a2e":"#9ca3af",background:"none",border:"none",borderBottom:section===id?"2px solid #667EEA":"2px solid transparent"});
+
+  const QUELLEN=[
+    {v:"walk_in",l:"🚶 Walk-In"},{v:"telefon",l:"📞 Telefon"},{v:"website",l:"🌐 Website"},
+    {v:"etermin",l:"📅 eTermin"},{v:"empfehlung",l:"🤝 Empfehlung"},{v:"google",l:"🔍 Google"},
+    {v:"instagram",l:"📸 Instagram"},{v:"facebook",l:"📘 Facebook"},{v:"tiktok",l:"🎵 TikTok"},
+    {v:"messe",l:"🎪 Messe"},{v:"flyer",l:"📄 Flyer"},{v:"sonstige",l:"📌 Sonstige"}
+  ];
+
   return <div onClick={e=>{if(e.target===e.currentTarget)onClose()}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.35)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,animation:"fadeIn .15s"}}>
-    <div style={{background:"#fff",borderRadius:14,padding:22,width:360,maxWidth:"92vw",boxShadow:"0 16px 40px rgba(0,0,0,.12)",animation:"pop .2s ease"}} onClick={e=>e.stopPropagation()}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-        <div style={{fontSize:14,fontWeight:800}}>Neuer Lead</div>
-        <button onClick={onClose} style={{background:"none",border:"none",fontSize:17,color:"#9ca3af",cursor:"pointer"}}>✕</button>
+    <div style={{background:"#fff",borderRadius:14,padding:0,width:440,maxWidth:"94vw",maxHeight:"90vh",boxShadow:"0 16px 40px rgba(0,0,0,.12)",animation:"pop .2s ease",display:"flex",flexDirection:"column"}} onClick={e=>e.stopPropagation()}>
+
+      {/* Header */}
+      <div style={{padding:"16px 20px 0",flexShrink:0}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <div style={{fontSize:16,fontWeight:800}}>Neuer Lead</div>
+          <button onClick={onClose} style={{background:"none",border:"none",fontSize:17,color:"#9ca3af",cursor:"pointer"}}>✕</button>
+        </div>
+
+        {/* Tabs */}
+        <div style={{display:"flex",gap:0,borderBottom:"1px solid #f0f0f0",marginLeft:-20,marginRight:-20,paddingLeft:20}}>
+          <div onClick={()=>setSection("basis")} style={tabBtn("basis","Basis")}>Basis</div>
+          <div onClick={()=>setSection("detail")} style={tabBtn("detail","Details")}>Details & Beratung</div>
+        </div>
       </div>
-      <div style={{marginBottom:9}}><label style={fl}>Avatar</label>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{AVATARS.slice(0,8).map((a,i)=><div key={i} onClick={()=>setAv(a)} style={{width:28,height:28,borderRadius:7,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,cursor:"pointer",background:av===a?"#EBF4FF":"#f5f5f7",border:av===a?"2px solid #667EEA":"2px solid transparent"}}>{a}</div>)}</div>
+
+      {/* Scrollable Content */}
+      <div style={{flex:1,overflowY:"auto",padding:"14px 20px 16px"}}>
+
+        {section==="basis"&&<>
+          {/* Avatar */}
+          <div style={{marginBottom:10}}><label style={fl}>Avatar</label>
+            <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{AVATARS.slice(0,8).map((a,i)=><div key={i} onClick={()=>setAv(a)} style={{width:30,height:30,borderRadius:7,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,cursor:"pointer",background:av===a?"#EBF4FF":"#f5f5f7",border:av===a?"2px solid #667EEA":"2px solid transparent",transition:"all .15s"}}>{a}</div>)}</div>
+          </div>
+
+          {/* Name */}
+          <div style={{marginBottom:10}}><label style={fl}>Name *</label>
+            <input style={inp} value={n} onChange={e=>setN(e.target.value)} placeholder="z.B. Anna Müller" autoFocus onKeyDown={e=>e.key==="Enter"&&go()}/>
+          </div>
+
+          {/* Telefon + Email nebeneinander */}
+          <div style={{display:"flex",gap:8,marginBottom:10}}>
+            <div style={{flex:1}}><label style={fl}>📞 Telefon</label>
+              <input style={inp} value={ph} onChange={e=>setPh(e.target.value)} placeholder="0151 12345678" type="tel"/>
+            </div>
+            <div style={{flex:1}}><label style={fl}>✉️ E-Mail</label>
+              <input style={inp} value={em} onChange={e=>setEm(e.target.value)} placeholder="anna@beispiel.de" type="email"/>
+            </div>
+          </div>
+
+          {/* Quelle */}
+          <div style={{marginBottom:10}}><label style={fl}>Quelle</label>
+            <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+              {QUELLEN.map(q=><div key={q.v} onClick={()=>setSrc(q.v)} style={{fontSize:10,padding:"4px 8px",borderRadius:6,border:src===q.v?"1.5px solid #667EEA":"1.5px solid #e5e7eb",background:src===q.v?"#EBF4FF":"#fff",color:src===q.v?"#667EEA":"#6b7280",cursor:"pointer",fontWeight:600,transition:"all .12s"}}>{q.l}</div>)}
+            </div>
+          </div>
+
+          {/* Interesse */}
+          <div style={{marginBottom:10}}><label style={fl}>Interesse</label>
+            <input style={inp} value={interesse} onChange={e=>setInteresse(e.target.value)} placeholder="z.B. E-Bike, Lastenrad, Rennrad..."/>
+          </div>
+
+          {/* Wert + Priorität nebeneinander */}
+          <div style={{display:"flex",gap:8,marginBottom:10}}>
+            <div style={{flex:1}}><label style={fl}>Geschätzter Wert (€)</label>
+              <input style={inp} value={v} onChange={e=>setV(e.target.value)} type="number" placeholder="3000"/>
+            </div>
+            <div style={{flex:1}}><label style={fl}>Priorität</label>
+              <select style={sel} value={prio} onChange={e=>setPrio(e.target.value)}>
+                <option value="niedrig">🟢 Niedrig</option>
+                <option value="mittel">🟡 Mittel</option>
+                <option value="hoch">🔴 Hoch</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Heat */}
+          <div style={{marginBottom:10}}><label style={fl}>Interesse-Level</label>
+            <div style={{display:"flex",gap:2,alignItems:"center"}}>
+              {[1,2,3,4,5].map(i=><span key={i} onClick={()=>setHeat(i)} style={{fontSize:20,cursor:"pointer",opacity:i<=heat?1:.2,transition:"opacity .12s",userSelect:"none"}}>🔥</span>)}
+              <span style={{fontSize:10,color:"#9ca3af",marginLeft:6}}>{heat}/5</span>
+            </div>
+          </div>
+
+          {/* Verkäufer (nur wenn HQ) */}
+          {availSellers.length>1&&<div style={{marginBottom:10}}><label style={fl}>Verkäufer</label>
+            <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+              {availSellers.map(s=><div key={s.id} onClick={()=>setSeller(s.id)} style={{padding:"4px 10px",borderRadius:6,border:seller===s.id?"1.5px solid "+s.color:"1.5px solid #e5e7eb",background:seller===s.id?s.color+"15":"#fff",color:seller===s.id?s.color:"#6b7280",fontSize:11,fontWeight:600,cursor:"pointer",transition:"all .12s"}}>{s.short}</div>)}
+            </div>
+          </div>}
+
+          {/* Notiz */}
+          <div style={{marginBottom:6}}><label style={fl}>Notiz</label>
+            <textarea style={{...inp,resize:"vertical",minHeight:50}} value={no} onChange={e=>setNo(e.target.value)} placeholder="Freitext-Notiz zum Kunden..." rows={2}/>
+          </div>
+        </>}
+
+        {section==="detail"&&<>
+          <div style={{background:"#f8faff",borderRadius:8,padding:"14px 14px",marginBottom:14}}>
+            <div style={{fontSize:10,fontWeight:700,color:"#667EEA",textTransform:"uppercase",letterSpacing:".08em",marginBottom:10}}>Beratung auf einen Blick</div>
+            {[
+              {val:nutzung,set:setNutzung,i:"🚲",l:"Nutzung",ph:"Was macht der Kunde mit dem Rad?"},
+              {val:ziel,set:setZiel,i:"🎯",l:"Ziel",ph:"Welches Ziel hat der Kunde?"},
+              {val:budget,set:setBudget,i:"💶",l:"Budget",ph:"Budget-Vorstellung?"},
+              {val:modell,set:setModell,i:"🚲",l:"Modell",ph:"Welches Fahrrad?"}
+            ].map((f,idx)=>
+              <div key={idx} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 0",borderBottom:"1px solid #eef0f8"}}>
+                <span style={{fontSize:13,width:18,textAlign:"center",flexShrink:0}}>{f.i}</span>
+                <span style={{fontSize:11,fontWeight:700,color:"#374151",width:70,flexShrink:0}}>{f.l}</span>
+                <input value={f.val} onChange={e=>f.set(e.target.value)} placeholder={f.ph} style={{flex:1,border:"none",background:"transparent",fontSize:12,color:"#374151",fontFamily:"inherit",outline:"none",padding:"2px 0"}}/>
+              </div>
+            )}
+          </div>
+          <p style={{fontSize:10,color:"#9ca3af",textAlign:"center",margin:"20px 0 0"}}>
+            Weitere Details (Probefahrt, Einwände, Bezahlart etc.) können nach dem Anlegen im Detail-Panel bearbeitet werden.
+          </p>
+        </>}
       </div>
-      <div style={{marginBottom:9}}><label style={fl}>Name *</label><input style={inp} value={n} onChange={e=>setN(e.target.value)} placeholder="z.B. Anna Müller" autoFocus onKeyDown={e=>e.key==="Enter"&&go()}/></div>
-      <div style={{marginBottom:9}}><label style={fl}>Notiz</label><input style={inp} value={no} onChange={e=>setNo(e.target.value)} placeholder="Interesse, Quelle..."/></div>
-      <div style={{marginBottom:16}}><label style={fl}>Geschätzter Wert (€)</label><input style={inp} value={v} onChange={e=>setV(e.target.value)} type="number" placeholder="3000"/></div>
-      <div style={{display:"flex",gap:8}}>
-        <button onClick={onClose} style={{flex:1,padding:8,borderRadius:7,border:"1.5px solid #e5e7eb",background:"#fff",fontWeight:700,cursor:"pointer",fontFamily:"inherit",fontSize:12}}>Abbrechen</button>
-        <button onClick={go} style={{flex:2,padding:8,borderRadius:7,border:"none",background:"#667EEA",color:"#fff",fontWeight:700,cursor:"pointer",fontFamily:"inherit",fontSize:12}}>+ Hinzufügen</button>
+
+      {/* Footer */}
+      <div style={{padding:"12px 20px 16px",borderTop:"1px solid #f0f0f0",flexShrink:0}}>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={onClose} style={{flex:1,padding:10,borderRadius:8,border:"1.5px solid #e5e7eb",background:"#fff",fontWeight:700,cursor:"pointer",fontFamily:"inherit",fontSize:12}}>Abbrechen</button>
+          <button onClick={go} disabled={!n.trim()} style={{flex:2,padding:10,borderRadius:8,border:"none",background:n.trim()?"#667EEA":"#c7d0ea",color:"#fff",fontWeight:700,cursor:n.trim()?"pointer":"not-allowed",fontFamily:"inherit",fontSize:13,transition:"background .15s"}}>+ Lead anlegen</button>
+        </div>
       </div>
     </div>
   </div>
