@@ -1463,300 +1463,291 @@
 
 
     // ═══════════════════════════════════════════════════════
-    // TAB: MEINE BUCHUNGEN – Kalender + Detail
+    // ═══════════════════════════════════════════════════════
+    // TAB: MEINE BUCHUNGEN – 1:1 Layout wie Screenshot
+    // Links: Kalender + Tagesliste | Rechts: Grundriss mit eigenem Platz
     // ═══════════════════════════════════════════════════════
     var _mbYear = null;
     var _mbMonth = null;
     var _mbSelDate = null;
-    var _mbBookings = []; // alle Buchungen des Users (desk + parking)
+    var _mbBookings = [];
 
     async function renderMeineBuchungen() {
         var el = document.getElementById('officeTab_meinebuchungen');
         if (!el) return;
-        el.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-vit-orange"></div></div>';
+        el.innerHTML = '<div class="flex items-center justify-center py-12"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-vit-orange"></div></div>';
         try {
-            // Init date state
             var now = new Date();
-            if (!_mbYear) _mbYear = now.getFullYear();
-            if (!_mbMonth) _mbMonth = now.getMonth(); // 0-based
-            if (!_mbSelDate) _mbSelDate = fmtISO(now);
+            if (!_mbYear)  _mbYear  = now.getFullYear();
+            if (!_mbMonth) _mbMonth = now.getMonth();
+            if (!_mbSelDate) _mbSelDate = todayISO();
 
-            // Load all bookings for this user (past + future, 6 months back, 3 months ahead)
-            var from = new Date(now); from.setMonth(from.getMonth() - 6);
-            var to = new Date(now); to.setMonth(to.getMonth() + 3);
+            await loadDesks();
+            await loadHQUsers();
+
+            // Load bookings: 6 months back, 3 months ahead
+            var from = new Date(now); from.setMonth(from.getMonth()-6);
+            var to   = new Date(now); to.setMonth(to.getMonth()+3);
             var res = await sb.from('office_bookings')
                 .select('id,booking_date,status,desk_nr,parking_nr,time_from,time_to,note')
                 .eq('user_id', sbUser.id)
                 .gte('booking_date', fmtISO(from))
                 .lte('booking_date', fmtISO(to))
-                .order('booking_date', {ascending: true});
+                .order('booking_date', {ascending:true});
             if (res.error) throw res.error;
             _mbBookings = res.data || [];
 
-            await loadDesks();
             _mbBuildUI(el);
         } catch(err) {
             console.error('[MeineBuchungen]', err);
-            el.innerHTML = '<div class="vit-card p-6 text-center text-red-500">Fehler: ' + esc(err.message) + '</div>';
+            el.innerHTML = '<div class="vit-card p-6 text-red-500">Fehler: '+esc(err.message)+'</div>';
         }
     }
 
     function _mbBuildUI(el) {
+        // Layout: left sidebar fixed width, right = floor plan
         el.innerHTML =
-            '<div class="grid grid-cols-1 md:grid-cols-[340px_1fr] gap-4">' +
-                '<div>' +
-                    '<div id="mbCalendar" class="vit-card p-4 mb-4"></div>' +
-                    '<div id="mbDayList" class="vit-card p-4 min-h-[120px]"></div>' +
-                '</div>' +
-                '<div id="mbDetail" class="vit-card p-5 min-h-[300px] flex items-center justify-center text-gray-300">' +
-                    '<div class="text-center"><p class="text-4xl mb-2">&#128197;</p><p class="text-sm">Tag im Kalender auswählen</p></div>' +
-                '</div>' +
+            '<div style="display:grid;grid-template-columns:340px 1fr;gap:16px;min-height:600px">'+
+                '<div>'+
+                    '<div class="vit-card p-4 mb-3">'+
+                        // Dropdown header (static label like screenshot)
+                        '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid #E5E7EB;border-radius:10px;margin-bottom:16px;cursor:default">'+
+                            '<span style="font-size:14px;font-weight:600;color:#374151">Meine Buchungen</span>'+
+                            '<span style="color:#9CA3AF">&#8964;</span>'+
+                        '</div>'+
+                        // Calendar
+                        '<div id="mbCal"></div>'+
+                    '</div>'+
+                    '<div class="vit-card p-4" id="mbDayPanel"></div>'+
+                '</div>'+
+                '<div class="vit-card p-4" id="mbFloorPanel">'+
+                    '<p style="color:#9CA3AF;font-size:13px;text-align:center;margin-top:40px">Tag im Kalender auswählen</p>'+
+                '</div>'+
             '</div>';
-        _mbRenderCalendar();
-        _mbRenderDayList();
+
+        _mbRenderCal();
+        _mbRenderDay(_mbSelDate);
+        _mbRenderFloor(_mbSelDate);
     }
 
-    function _mbRenderCalendar() {
-        var cal = document.getElementById('mbCalendar');
+    function _mbRenderCal() {
+        var cal = document.getElementById('mbCal');
         if (!cal) return;
 
-        var monthNames = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-        var dayNames = ['Mo','Di','Mi','Do','Fr','Sa','So'];
-
-        // Build set of dates that have bookings
-        var bookedDates = {};
-        _mbBookings.forEach(function(b) {
-            if (!bookedDates[b.booking_date]) bookedDates[b.booking_date] = [];
-            bookedDates[b.booking_date].push(b);
-        });
-
         var today = todayISO();
-        var firstDay = new Date(_mbYear, _mbMonth, 1);
-        var lastDay = new Date(_mbYear, _mbMonth + 1, 0);
+        var DAY_NAMES = ['M','D','D','F','S','S','S'];
+        var MONTH_NAMES = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 
-        // Day of week for first day (0=Mon...6=Sun)
-        var startDow = (firstDay.getDay() + 6) % 7;
+        // Build set of booked dates
+        var bookedSet = {};
+        _mbBookings.forEach(function(b){ bookedSet[b.booking_date] = true; });
+
+        var firstDay = new Date(_mbYear, _mbMonth, 1);
+        var lastDay  = new Date(_mbYear, _mbMonth+1, 0);
+        var startDow = (firstDay.getDay()+6)%7; // 0=Mon
 
         var h = '';
 
-        // Header with month/year + nav
-        h += '<div class="flex items-center justify-between mb-4">' +
-            '<button onclick="window._mbNavMonth(-1)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-600 font-bold text-lg">&lsaquo;</button>' +
-            '<span class="font-bold text-gray-800">' + monthNames[_mbMonth] + ' ' + _mbYear + '</span>' +
-            '<button onclick="window._mbNavMonth(1)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-600 font-bold text-lg">&rsaquo;</button>' +
+        // Month nav
+        h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'+
+            '<button onclick="window._mbNav(-1)" style="width:28px;height:28px;border:none;background:none;cursor:pointer;font-size:18px;color:#6B7280;border-radius:6px;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background=\'#F3F4F6\'" onmouseout="this.style.background=\'none\'">&#8249;</button>'+
+            '<span style="font-size:14px;font-weight:700;color:#374151">'+MONTH_NAMES[_mbMonth]+' '+_mbYear+'</span>'+
+            '<button onclick="window._mbNav(1)" style="width:28px;height:28px;border:none;background:none;cursor:pointer;font-size:18px;color:#6B7280;border-radius:6px;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background=\'#F3F4F6\'" onmouseout="this.style.background=\'none\'">&#8250;</button>'+
         '</div>';
 
-        // Day name headers
-        h += '<div class="grid grid-cols-7 mb-1">';
-        dayNames.forEach(function(d) {
-            h += '<div class="text-center text-[11px] font-semibold text-gray-400 py-1">' + d + '</div>';
+        // Day headers
+        h += '<div style="display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px">';
+        ['M','D','D','F','S','S','S'].forEach(function(d){
+            h += '<div style="text-align:center;font-size:11px;font-weight:600;color:#9CA3AF;padding:4px 0">'+d+'</div>';
         });
         h += '</div>';
 
-        // Calendar grid
-        h += '<div class="grid grid-cols-7 gap-0.5">';
+        // Grid
+        h += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">';
 
-        // Empty cells before first day
-        for (var i = 0; i < startDow; i++) {
-            h += '<div></div>';
-        }
+        // Empty cells
+        for (var i=0; i<startDow; i++) h += '<div></div>';
 
-        // Days
-        for (var d = 1; d <= lastDay.getDate(); d++) {
-            var iso = _mbYear + '-' + String(_mbMonth + 1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-            var isToday = iso === today;
-            var isSel = iso === _mbSelDate;
-            var bkgs = bookedDates[iso] || [];
-            var hasDesk = bkgs.some(function(b){return b.desk_nr;});
-            var hasPark = bkgs.some(function(b){return b.parking_nr && !b.desk_nr;});
-            var isPast = iso < today;
-            var dow = (new Date(iso).getDay() + 6) % 7;
-            var isWeekend = dow >= 5;
+        for (var d=1; d<=lastDay.getDate(); d++) {
+            var iso = _mbYear+'-'+String(_mbMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+            var isToday = iso===today;
+            var isSel   = iso===_mbSelDate;
+            var hasBook = bookedSet[iso];
+            var dow     = (new Date(iso).getDay()+6)%7;
+            var isWknd  = dow>=5;
 
-            var baseStyle = 'relative flex flex-col items-center justify-center rounded-lg cursor-pointer transition py-1.5 ';
-            var cls = '';
+            var bg='transparent', fg=isWknd?'#D1D5DB':'#374151', fw='400', border='none', ring='';
+
             if (isSel) {
-                cls = baseStyle + 'bg-vit-orange text-white shadow-md';
+                bg='#F97316'; fg='white'; fw='700'; border='none';
+            } else if (isToday && hasBook) {
+                bg='#FFF7ED'; fg='#EA580C'; fw='700'; border='2px solid #F97316';
             } else if (isToday) {
-                cls = baseStyle + 'bg-orange-100 text-orange-700 font-bold ring-2 ring-vit-orange ring-offset-1';
-            } else if (isWeekend) {
-                cls = baseStyle + 'text-gray-300 hover:bg-gray-50';
-            } else if (isPast) {
-                cls = baseStyle + 'text-gray-400 hover:bg-gray-50';
-            } else {
-                cls = baseStyle + 'text-gray-700 hover:bg-orange-50';
+                bg='#FFF7ED'; fg='#EA580C'; fw='700';
+            } else if (hasBook) {
+                bg='#FFF7ED'; fg='#EA580C'; fw='600';
             }
 
-            h += '<div class="' + cls + '" onclick="window._mbSelectDate(\'' + iso + '\')">';
-            h += '<span class="text-sm font-semibold leading-none">' + d + '</span>';
-
-            // Dot indicators
-            if (bkgs.length > 0) {
-                h += '<div class="flex gap-0.5 mt-0.5">';
-                if (hasDesk) h += '<span class="w-1.5 h-1.5 rounded-full ' + (isSel ? 'bg-white' : 'bg-vit-orange') + '"></span>';
-                if (hasPark || bkgs.some(function(b){return b.parking_nr;})) h += '<span class="w-1.5 h-1.5 rounded-full ' + (isSel ? 'bg-orange-200' : 'bg-blue-400') + '"></span>';
-                h += '</div>';
-            }
-            h += '</div>';
+            h += '<div onclick="window._mbSel(\''+iso+'\')" '+
+                'style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;'+
+                'width:36px;height:36px;border-radius:50%;cursor:pointer;background:'+bg+';color:'+fg+';font-weight:'+fw+';'+
+                'font-size:13px;transition:.1s;border:'+border+';margin:auto" '+
+                'onmouseover="this.style.background=\''+(isSel?'#F97316':'#FFF7ED')+'\';" '+
+                'onmouseout="this.style.background=\''+bg+'\';">'+
+                d+
+                // Small dot at bottom if booked but not selected
+                (hasBook&&!isSel ? '<span style="position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:'+(isToday||isSel?'white':'#F97316')+'"></span>' : '')+
+            '</div>';
         }
 
         h += '</div>';
-
-        // Legend
-        h += '<div class="flex gap-4 mt-3 pt-3 border-t border-gray-100 text-xs text-gray-400">' +
-            '<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-vit-orange inline-block"></span> Desk</span>' +
-            '<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-400 inline-block"></span> Parkplatz</span>' +
-        '</div>';
-
         cal.innerHTML = h;
     }
 
-    function _mbRenderDayList() {
-        var el = document.getElementById('mbDayList');
+    function _mbRenderDay(iso) {
+        var el = document.getElementById('mbDayPanel');
         if (!el) return;
 
-        // Show upcoming bookings (next 14 days) as a quick list
-        var today = todayISO();
-        var upcoming = _mbBookings
-            .filter(function(b){ return b.booking_date >= today; })
-            .slice(0, 8);
+        var dayBkgs = _mbBookings.filter(function(b){ return b.booking_date===iso; });
+        var userMap = {}; (_hqUsers||[]).forEach(function(u){userMap[u.id]=u;});
+        var me = userMap[sbUser.id] || {vorname:'?', nachname:''};
 
-        if (!upcoming.length) {
-            el.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">Keine bevorstehenden Buchungen</p>';
+        var dateStr = new Date(iso+'T12:00:00').toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+        var h = '<p style="font-size:13px;font-weight:700;color:#374151;margin-bottom:12px">Alle Buchungen am '+dateStr+'</p>';
+
+        if (!dayBkgs.length) {
+            h += '<p style="font-size:12px;color:#9CA3AF;text-align:center;padding:16px 0">Keine Buchungen</p>';
+            el.innerHTML = h;
             return;
         }
 
-        var h = '<p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Nächste Buchungen</p>';
-        var lastDate = '';
-        upcoming.forEach(function(b) {
-            if (b.booking_date !== lastDate) {
-                var label = b.booking_date === today ? 'Heute' :
-                    new Date(b.booking_date + 'T12:00:00').toLocaleDateString('de-DE', {weekday:'short', day:'numeric', month:'short'});
-                h += '<p class="text-[11px] font-bold text-gray-400 mt-2 mb-1">' + label + '</p>';
-                lastDate = b.booking_date;
-            }
-            var icon = b.parking_nr && !b.desk_nr ? '🅿️' : b.desk_nr ? '🪑' : '📅';
-            var desc = '';
+        dayBkgs.forEach(function(b) {
+            var desk = b.desk_nr ? (_desks||[]).find(function(d){return d.nr===b.desk_nr;}) : null;
+            var timeStr = b.time_from ? b.time_from.substring(0,5)+' – '+(b.time_to||'').substring(0,5) : '08:00 – 17:00';
+            var isPast = iso < todayISO();
+
+            h += '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px;border-radius:10px;background:#F9FAFB;margin-bottom:8px">';
+
+            // Orange dot
+            h += '<div style="width:10px;height:10px;border-radius:50%;background:#F97316;margin-top:4px;flex-shrink:0"></div>';
+
+            h += '<div style="flex:1">';
+
             if (b.desk_nr) {
-                var desk = (_desks||[]).find(function(d){return d.nr===b.desk_nr;});
-                desc = 'Platz ' + b.desk_nr + (desk&&desk.room?' · '+desk.room:'');
+                // Name + time
+                h += '<div style="display:flex;align-items:center;justify-content:space-between">'+
+                    '<span style="font-size:13px;font-weight:700;color:#374151">'+esc(me.vorname)+' / '+esc(me.vorname)+'</span>'+
+                    '<span style="font-size:11px;color:#6B7280">'+timeStr+'</span>'+
+                '</div>';
+                // Equipment
+                var feats = [];
+                if (desk&&desk.has_monitor) feats.push('Widescreen Monitor');
+                if (desk&&desk.has_docking) feats.push('Docking');
+                if (feats.length) h += '<p style="font-size:11px;color:#6B7280;margin-top:2px">'+esc(feats.join(', '))+'</p>';
+                // Location
+                if (desk&&desk.room) h += '<p style="font-size:11px;color:#9CA3AF;margin-top:1px">HQ Unterföhring, 1. OG, '+esc(desk.room)+'</p>';
+                // Check-in status
+                var isToday = iso===todayISO();
+                if (isToday) {
+                    h += '<p style="font-size:11px;color:#16A34A;margin-top:4px;display:flex;align-items:center;gap:4px">'+
+                        '<span>&#10003;</span> Check-in: Buchung bestätigt</p>';
+                }
+                if (!isPast) {
+                    h += '<button onclick="window._mbCancelDesk(\''+b.id+'\')" style="font-size:10px;color:#EF4444;background:none;border:none;cursor:pointer;padding:0;margin-top:4px">Stornieren</button>';
+                }
             }
+
             if (b.parking_nr) {
-                var pLabel = b.parking_nr<=2?'⚡ P'+b.parking_nr+' Elektro':b.parking_nr<=4?'🚗 P'+b.parking_nr+' Gast':'🅿️ Parkplatz';
-                desc = desc ? desc + ' + ' + pLabel : pLabel;
+                var pLabel = b.parking_nr<=2?'Ladeplatz '+b.parking_nr:b.parking_nr<=4?'Gäste P'+b.parking_nr:'Parkplatz';
+                if (!b.desk_nr) {
+                    // Standalone parking
+                    h += '<div style="display:flex;align-items:center;justify-content:space-between">'+
+                        '<span style="font-size:13px;font-weight:700;color:#374151">'+esc(pLabel)+'</span>'+
+                        '<span style="font-size:11px;color:#6B7280">'+timeStr+'</span>'+
+                    '</div>';
+                } else {
+                    // Parking attached to desk - second row
+                    h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;padding-top:6px;border-top:1px solid #E5E7EB">'+
+                        '<span style="font-size:12px;font-weight:600;color:#6B7280">'+esc(pLabel)+'</span>'+
+                        '<span style="font-size:11px;color:#6B7280">'+timeStr+'</span>'+
+                    '</div>';
+                }
+                if (!isPast) {
+                    h += '<button onclick="window._mbCancelParking(\''+b.id+'\')" style="font-size:10px;color:#EF4444;background:none;border:none;cursor:pointer;padding:0;margin-top:4px">Stornieren</button>';
+                }
             }
-            var timeStr = b.time_from ? b.time_from.substring(0,5)+' – '+(b.time_to||'').substring(0,5) : 'Ganzer Tag';
-            h += '<div onclick="window._mbSelectDate(\'' + b.booking_date + '\')" class="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-orange-50 cursor-pointer transition">' +
-                '<span class="text-base">' + icon + '</span>' +
-                '<div class="flex-1 min-w-0">' +
-                    '<p class="text-xs font-semibold text-gray-700 truncate">' + esc(desc) + '</p>' +
-                    '<p class="text-[10px] text-gray-400">' + timeStr + '</p>' +
-                '</div>' +
-            '</div>';
+
+            h += '</div></div>';
         });
 
         el.innerHTML = h;
     }
 
-function _mbRenderDetail(iso) {
-        var det = document.getElementById('mbDetail');
-        if (!det) return;
+    function _mbRenderFloor(iso) {
+        var fp = document.getElementById('mbFloorPanel');
+        if (!fp) return;
 
-        var dayBkgs = _mbBookings.filter(function(b){ return b.booking_date === iso; });
-        var label = iso === todayISO() ? 'Heute' :
-            new Date(iso + 'T12:00:00').toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
-        var isPast = iso < todayISO();
-        var deskBk = dayBkgs.find(function(b){return b.desk_nr;});
-        var parkBk = dayBkgs.find(function(b){return b.parking_nr;});
+        var dayBkgs = _mbBookings.filter(function(b){ return b.booking_date===iso&&b.desk_nr; });
+        var myDeskNr = dayBkgs.length ? dayBkgs[0].desk_nr : null;
+        var myDesk = myDeskNr ? (_desks||[]).find(function(d){return d.nr===myDeskNr;}) : null;
 
-        // Header
-        var h = '<div class="flex items-center justify-between mb-4">' +
-            '<div>' +
-                '<p class="font-bold text-gray-800 text-base">' + label + '</p>';
-        if (deskBk) {
-            var deskObj = (_desks||[]).find(function(d){return d.nr===deskBk.desk_nr;});
-            var timeStr = deskBk.time_from ? deskBk.time_from.substring(0,5)+' \u2013 '+(deskBk.time_to||'').substring(0,5) : 'Ganzer Tag';
-            h += '<p class="text-sm text-gray-500">Platz ' + deskBk.desk_nr +
-                (deskObj&&deskObj.room?' \u00b7 '+esc(deskObj.room):'') + ' \u00b7 ' + timeStr + '</p>';
-        }
-        if (parkBk && parkBk.parking_nr) {
-            var pL = parkBk.parking_nr<=2?'P'+parkBk.parking_nr+' Elektro':parkBk.parking_nr<=4?'P'+parkBk.parking_nr+' Gast':'Parkplatz P'+parkBk.parking_nr;
-            h += '<p class="text-sm text-blue-500">\ud83c\udd7f\ufe0f ' + pL + '</p>';
-        }
-        if (!dayBkgs.length) { h += '<p class="text-sm text-gray-400">Keine Buchungen</p>'; }
-        h += '</div><div class="flex gap-2">';
-        if (!isPast) {
-            h += '<button onclick="window.showOfficeTab(\'buchen\');setTimeout(function(){if(window._buchSelectDate)_buchSelectDate(\''+iso+'\');},200)" class="px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg text-xs font-semibold hover:bg-orange-100 transition">\u270f\ufe0f Bearbeiten</button>';
-            if (deskBk) h += '<button onclick="window._mbCancelDesk(\''+deskBk.id+'\')" class="px-3 py-1.5 bg-red-50 text-red-500 rounded-lg text-xs font-semibold hover:bg-red-100 transition">Stornieren</button>';
-        }
-        h += '</div></div>';
+        var locationTitle = '1. OG – Büro Unterföhring';
 
-        // Empty state
-        if (!dayBkgs.length) {
-            h += '<div class="text-center py-16 text-gray-300"><p class="text-5xl mb-3">\ud83d\udced</p><p class="text-sm">Keine Buchungen</p>';
-            if (!isPast) h += '<button onclick="window.showOfficeTab(\'buchen\');setTimeout(function(){if(window._buchSelectDate)_buchSelectDate(\''+iso+'\');},200)" class="mt-4 px-4 py-2 bg-vit-orange text-white rounded-xl text-sm font-semibold hover:opacity-90 block mx-auto">+ Jetzt buchen</button>';
-            h += '</div>';
-            det.innerHTML = h;
-            return;
-        }
+        // Title
+        var h = '<p style="font-size:13px;font-weight:600;color:#374151;margin-bottom:12px">'+esc(locationTitle)+'</p>';
 
-        // Grundriss mit Dots
-        var allDesks = (_desks||[]).filter(function(d){return d.active!==false&&d.desk_type==='standard';});
-        var dotsHtml = allDesks.map(function(d) {
-            var px = parseFloat(d.pct_x)||50, py = parseFloat(d.pct_y)||50;
-            var isMine = deskBk && d.nr === deskBk.desk_nr;
-            var col = isMine ? '#F97316' : '#D1D5DB';
-            var sz = isMine ? 30 : 22;
-            var ring = isMine ? 'box-shadow:0 0 0 3px rgba(249,115,22,.4),0 2px 8px rgba(0,0,0,.2)' : 'box-shadow:0 1px 3px rgba(0,0,0,.1)';
-            var lbl = isMine ? 'Du' : String(d.nr);
-            var fz = isMine ? '10' : '8';
-            var opacity = isMine ? '1' : '0.4';
-            return '<div title="Platz '+d.nr+(isMine?' \u2013 Deine Buchung':'')+'" '+
-                'style="position:absolute;left:'+px+'%;top:'+py+'%;transform:translate(-50%,-50%);'+
-                'width:'+sz+'px;height:'+sz+'px;border-radius:50%;background:'+col+';'+
-                'border:2px solid white;'+ring+';opacity:'+opacity+';'+
-                'z-index:10;display:flex;align-items:center;justify-content:center;'+
-                'font-size:'+fz+'px;color:white;font-weight:700;user-select:none">'+lbl+'</div>';
-        }).join('');
+        // Floor plan container
+        h += '<div style="position:relative;display:inline-block;width:100%;max-width:900px">';
+        h += '<img src="grundriss_og.png" style="width:100%;height:auto;display:block;border:1px solid #E5E7EB;border-radius:8px" onerror="this.style.display=\'none\'">';
 
-        h += '<div style="position:relative;display:inline-block;width:100%">' +
-            '<img src="grundriss_og.png" style="width:100%;display:block;border-radius:8px" alt="Grundriss OG">' +
-            '<div style="position:absolute;top:0;left:0;width:100%;height:100%">' + dotsHtml + '</div>' +
-        '</div>';
-
-        // Parkplatz-Info unter Grundriss
-        if (parkBk && parkBk.parking_nr) {
-            var pLbl = parkBk.parking_nr<=2?'P'+parkBk.parking_nr+' Elektro':parkBk.parking_nr<=4?'P'+parkBk.parking_nr+' Gast':'Parkplatz P'+parkBk.parking_nr;
-            h += '<div class="flex items-center justify-between mt-3 px-3 py-2 bg-blue-50 rounded-xl">' +
-                '<div class="flex items-center gap-2"><span class="text-lg">\ud83c\udd7f\ufe0f</span>' +
-                '<span class="text-sm font-semibold text-blue-700">' + pLbl + '</span></div>' +
-                (!isPast ? '<button onclick="window._mbCancelParking(\''+parkBk.id+'\')" class="text-xs text-red-400 hover:text-red-600 font-semibold">Stornieren</button>' : '') +
+        // Only show dot for my booked desk
+        if (myDesk && myDesk.pct_x && myDesk.pct_y) {
+            var px = parseFloat(myDesk.pct_x);
+            var py = parseFloat(myDesk.pct_y);
+            // Heart-style orange dot (like screenshot: orange circle with ♥)
+            h += '<div style="position:absolute;left:'+px+'%;top:'+py+'%;transform:translate(-50%,-50%);'+
+                'width:36px;height:36px;border-radius:50%;background:#F97316;'+
+                'border:3px solid white;box-shadow:0 0 0 3px rgba(249,115,22,.4),0 4px 12px rgba(0,0,0,.3);'+
+                'display:flex;align-items:center;justify-content:center;'+
+                'font-size:16px;z-index:10;cursor:default" title="Platz '+myDeskNr+' – Deine Buchung">'+
+                '&#9829;'+
             '</div>';
         }
 
-        det.innerHTML = h;
+        h += '</div>';
+
+        if (!myDeskNr) {
+            var iso2 = iso;
+            h = '<p style="font-size:13px;font-weight:600;color:#374151;margin-bottom:12px">'+esc(locationTitle)+'</p>'+
+                '<div style="display:flex;align-items:center;justify-content:center;min-height:300px;flex-direction:column;gap:12px">'+
+                '<p style="font-size:13px;color:#9CA3AF">Kein Desk gebucht für diesen Tag</p>'+
+                '<button onclick="showOfficeTab(\'buchen\')" style="padding:8px 20px;background:#F97316;color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">+ Jetzt buchen</button>'+
+                '</div>';
+        }
+
+        fp.innerHTML = h;
     }
 
-    window._mbNavMonth = function(dir) {
+    window._mbNav = function(dir) {
         _mbMonth += dir;
-        if (_mbMonth > 11) { _mbMonth = 0; _mbYear++; }
-        if (_mbMonth < 0) { _mbMonth = 11; _mbYear--; }
-        _mbRenderCalendar();
+        if (_mbMonth>11){_mbMonth=0;_mbYear++;}
+        if (_mbMonth<0) {_mbMonth=11;_mbYear--;}
+        _mbRenderCal();
     };
 
-    window._mbSelectDate = function(iso) {
+    window._mbSel = function(iso) {
         _mbSelDate = iso;
-        _mbRenderCalendar();
-        _mbRenderDetail(iso);
+        _mbRenderCal();
+        _mbRenderDay(iso);
+        _mbRenderFloor(iso);
     };
 
     window._mbCancelDesk = async function(bookingId) {
-        if (!confirm('Buchung stornieren?')) return;
+        if (!confirm('Desk-Buchung stornieren?')) return;
         try {
             var bk = _mbBookings.find(function(b){return b.id===bookingId;});
             var res;
-            if (bk && bk.parking_nr) {
-                // Has parking too - just clear desk
+            if (bk&&bk.parking_nr) {
                 res = await sb.from('office_bookings').update({desk_nr:null,status:'parking'}).eq('id',bookingId);
             } else {
                 res = await sb.from('office_bookings').delete().eq('id',bookingId);
@@ -1764,7 +1755,7 @@ function _mbRenderDetail(iso) {
             if (res.error) throw res.error;
             notify('Buchung storniert','success');
             await renderMeineBuchungen();
-        } catch(e) { notify('Fehler: '+e.message,'error'); }
+        } catch(e){notify('Fehler: '+e.message,'error');}
     };
 
     window._mbCancelParking = async function(bookingId) {
@@ -1772,7 +1763,7 @@ function _mbRenderDetail(iso) {
         try {
             var bk = _mbBookings.find(function(b){return b.id===bookingId;});
             var res;
-            if (bk && bk.desk_nr) {
+            if (bk&&bk.desk_nr) {
                 res = await sb.from('office_bookings').update({parking_nr:null}).eq('id',bookingId);
             } else {
                 res = await sb.from('office_bookings').delete().eq('id',bookingId);
@@ -1780,7 +1771,7 @@ function _mbRenderDetail(iso) {
             if (res.error) throw res.error;
             notify('Parkplatz storniert','success');
             await renderMeineBuchungen();
-        } catch(e) { notify('Fehler: '+e.message,'error'); }
+        } catch(e){notify('Fehler: '+e.message,'error');}
     };
 
 
