@@ -4,8 +4,8 @@ const { useState, useRef, useCallback, useEffect } = React;
 const STAGES = [
   { id: "lead", label: "Eingang", color: "#667EEA", bg: "#EBF4FF" },
   { id: "termin", label: "Termin gebucht", color: "#8B5CF6", bg: "#F5F3FF" },
-  { id: "angebot", label: "Angebot", color: "#3182CE", bg: "#EBF8FF" },
-  { id: "schwebend", label: "Schwebend", color: "#D97706", bg: "#FEF3C7" },
+  { id: "angebot", label: "Schwebend", color: "#3182CE", bg: "#EBF8FF" },
+  { id: "schwebend", label: "Zusage", color: "#D97706", bg: "#FEF3C7" },
   { id: "verkauft", label: "Verkauft", color: "#16A34A", bg: "#DCFCE7" },
   { id: "gold", label: "Schrank der Hoffnung", color: "#D69E2E", bg: "#FFFFF0" },
   { id: "lost", label: "Verloren", color: "#E53E3E", bg: "#FFF5F5" },
@@ -46,9 +46,9 @@ const dSince = ts => Math.floor((NOW - ts) / 864e5);
 const tAgo = ts => { const d = dSince(ts); return d === 0 ? "Heute" : d === 1 ? "Gestern" : `vor ${d}d`; };
 
 const DEFAULT_RULES = [
-  { id: "r1", from: "lead", to: "angebot", action: "todo", text: "Angebot nachfassen", days: 3, enabled: true, scope: "hq" },
+  { id: "r1", from: "lead", to: "angebot", action: "todo", text: "Lead nachfassen", days: 3, enabled: true, scope: "hq" },
   { id: "r2", from: "angebot", to: "schwebend", action: "todo", text: "Nachfragen ob Entscheidung gefallen", days: 5, enabled: true, scope: "hq" },
-  { id: "r3", from: "lead", to: "angebot", action: "activity", actType: "note", text: "Angebot wurde erstellt", enabled: true, scope: "hq" },
+  { id: "r3", from: "lead", to: "angebot", action: "activity", actType: "note", text: "Lead auf Schwebend gesetzt", enabled: true, scope: "hq" },
   { id: "r4", from: "*", to: "verkauft", action: "todo", text: "Willkommens-Mail senden", days: 0, enabled: true, scope: "hq" },
   { id: "r5", from: "*", to: "gold", action: "todo", text: "In 30 Tagen erneut kontaktieren", days: 30, enabled: true, scope: "hq" },
   { id: "r6", from: "lead", to: "angebot", action: "activity", actType: "call", text: "Beratungstermin vereinbaren", enabled: true, scope: "berlin" },

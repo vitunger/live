@@ -22,8 +22,8 @@ var verkaufData = {
 var pipelineStages = [
     {id:'lead',label:'Eingang',color:'bg-gray-100 border-gray-300'},
     {id:'termin',label:'Termin gebucht',color:'bg-purple-50 border-purple-300'},
-    {id:'angebot',label:'Angebot',color:'bg-blue-50 border-blue-300'},
-    {id:'schwebend',label:'Schwebend',color:'bg-yellow-50 border-yellow-300'},
+    {id:'angebot',label:'Schwebend',color:'bg-blue-50 border-blue-300'},
+    {id:'schwebend',label:'Zusage',color:'bg-yellow-50 border-yellow-300'},
     {id:'verkauft',label:'Verkauft',color:'bg-green-50 border-green-300'},
     {id:'verloren',label:'Verloren',color:'bg-red-50 border-red-300'}
 ];
