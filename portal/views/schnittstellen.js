@@ -574,9 +574,10 @@ async function loadEterminOverview() {
     console.log('[eTermin] loadOverview called, el:', !!el, 'profile:', !!_sbProfile(), 'is_hq:', _sbProfile() && _sbProfile().is_hq);
     if (!el) return;
     try {
-        var sb = _sb(); if (!sb) return;
-        var { data: configs } = await sb.from('etermin_config')
+        var sb = _sb(); if (!sb) { console.warn('[eTermin] no sb client'); return; }
+        var { data: configs, error: cfgErr } = await sb.from('etermin_config')
             .select('standort_id, is_active, updated_at, standorte(name)').order('updated_at', { ascending: false });
+        console.log('[eTermin] configs:', configs, 'error:', cfgErr);
         configs = configs || [];
 
         // Load all standorte to show which are NOT yet connected
@@ -650,9 +651,11 @@ async function loadEterminMapping() {
     try {
         // Load all mappings
         var resp = await _sb().from('etermin_typ_mapping').select('*, standorte(name)').order('standort_id');
+        console.log('[eTermin] mappings:', resp.data, 'error:', resp.error);
         var mappings = (resp.data || []);
         // Load standorte with active etermin configs
         var cfgResp = await _sb().from('etermin_config').select('standort_id, standorte(name)').eq('is_active', true);
+        console.log('[eTermin] mapping configs:', cfgResp.data, 'error:', cfgResp.error);
         var configs = (cfgResp.data || []);
 
         var h = '<details class="border border-gray-200 rounded-lg" id="eterminMappingDetails">'
