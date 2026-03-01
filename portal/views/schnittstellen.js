@@ -300,14 +300,19 @@ function renderConnectorCard(id) {
         // Connected standorte overview (prominent!)
         body += '<div id="connEterminOverview" class="mt-4"></div>';
         // Setup-Anleitung (klappbar)
-        body += '<details class="mt-3 border border-gray-200 rounded-lg"><summary class="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50 transition">📖 Anleitung: eTermin API-Keys finden</summary>'
+        body += '<details class="mt-3 border border-gray-200 rounded-lg"><summary class="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50 transition">📖 Anleitung: eTermin API-Keys &amp; Webhook einrichten</summary>'
             + '<div class="px-3 pb-3 text-xs text-gray-600 space-y-2 border-t border-gray-100 pt-2">'
-            + '<p><strong>Schritt 1:</strong> Logge dich bei <a href="https://www.etermin.net" target="_blank" class="text-blue-600 underline">etermin.net</a> mit dem Account des jeweiligen Standorts ein.</p>'
-            + '<p><strong>Schritt 2:</strong> Gehe zu <em>Einstellungen → Schnittstellen → API</em>.</p>'
-            + '<p><strong>Schritt 3:</strong> Kopiere den <strong>Public Key</strong> und den <strong>Private Key</strong> (ggf. erst \"Generieren\" klicken).</p>'
-            + '<p><strong>Schritt 4:</strong> Trage beide Keys hier oben ein und klicke \"Speichern\".</p>'
-            + '<p><strong>Schritt 5:</strong> Kopiere die <strong>Webhook-URL</strong> (wird automatisch pro Standort generiert) und trage sie in eTermin ein unter <em>Einstellungen → Schnittstellen → Webhooks</em>.</p>'
-            + '<p class="text-gray-400 pt-1">Tipp: Wenn du den Private Key nicht siehst, klicke auf \"Generieren\" – der Key wird nur einmal angezeigt.</p>'
+            + '<p class="font-bold text-gray-700">API-Keys holen:</p>'
+            + '<p><strong>1.</strong> Logge dich bei <a href="https://www.etermin.net" target="_blank" class="text-blue-600 underline">etermin.net</a> mit dem Account des jeweiligen Standorts ein.</p>'
+            + '<p><strong>2.</strong> Gehe zu <em>API Schnittstellen → API &amp; Web Push</em>.</p>'
+            + '<p><strong>3.</strong> Kopiere den <strong>Public Key</strong> und den <strong>Private Key</strong> (ggf. erst „Generieren" klicken).</p>'
+            + '<p><strong>4.</strong> Trage beide Keys hier oben ein und klicke „Speichern".</p>'
+            + '<p class="font-bold text-gray-700 pt-2">Webhook einrichten:</p>'
+            + '<p><strong>5.</strong> Bleibe in eTermin unter <em>API &amp; Web Push</em>.</p>'
+            + '<p><strong>6.</strong> Aktiviere <strong>„Send Web Push"</strong> (Häkchen setzen).</p>'
+            + '<p><strong>7.</strong> Trage die <strong>Webhook-URL</strong> von oben in das Feld „Send to the following URL" ein.</p>'
+            + '<p><strong>8.</strong> Wähle als Format <strong>JSON</strong> und klicke Speichern.</p>'
+            + '<p class="text-gray-400 pt-1">💡 Tipp: Teste den Webhook über den Button „Send Web Push (Created) with test values" in eTermin.</p>'
             + '</div></details>';
         body += '<div id="connTestResult_' + id + '" class="mt-2"></div>';
         body += '</div>';
