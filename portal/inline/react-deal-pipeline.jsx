@@ -1239,18 +1239,29 @@ function PipelineApp(){
     window.openReactNewLead=()=>quickCreateAndOpen();
     window.openReactDealById=(id)=>{
       const found = deals.find(d=>d.id===id);
-      if(found) { setSel(found); }
-      else {
-        // Deal not in current state — force load from DB then open
-        const sb = window._sb && window._sb();
-        if(!sb) return;
-        sb.from('leads').select('*').eq('id',id).maybeSingle().then(({data})=>{
-          if(data) { const d = dbToDeal(data,[],[]); setDeals(p=>[d,...p]); setTimeout(()=>setSel(d),100); }
-        });
-      }
+      if(found) { setSel(found); return; }
+      // Deal not in current state — force load from DB then open
+      const sb = window._sb && window._sb();
+      if(!sb) return;
+      sb.from('leads').select('*').eq('id',id).maybeSingle().then(({data:row})=>{
+        if(!row) return;
+        const d = {
+          id:row.id, name:((row.vorname||"")+" "+(row.nachname||"")).trim()||"Unbekannt",
+          value:parseFloat(row.geschaetzter_wert)||0, stage:DB_TO_STAGE[row.status]||"lead",
+          avatar:row.avatar||"👤", heat:row.heat||3, note:row.notizen||"",
+          phone:row.telefon||"", email:row.email||"", seller:row.zugewiesen_an||"",
+          source:DB_TO_SOURCE[row.quelle]||"", loc:row.standort_id||"",
+          sales:row.sales||{}, eterminUid:row.etermin_uid||null, terminId:row.termin_id||null,
+          created:row.created_at?new Date(row.created_at).getTime():Date.now(),
+          changed:row.updated_at?new Date(row.updated_at).getTime():Date.now(),
+          todos:[], acts:[], _db:row
+        };
+        setDeals(p=>[d,...p]);
+        setTimeout(()=>setSel(d),100);
+      });
     };
     return ()=>{delete window.openReactNewLead; delete window.openReactDealById;};
-  },[quickCreateAndOpen, deals, dbToDeal]);
+  },[quickCreateAndOpen, deals]);
 
   // Determine location from logged-in user profile
   const isHqUser = window.sbProfile && window.sbProfile.is_hq;
