@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 02.03.2026 (global.d.ts + tsconfig.json hinzugefügt)
+> Letzte Aktualisierung: 02.03.2026 (User-Registration unified, delete_auth_user fix, View-Restore fix)
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -156,6 +156,7 @@ Diese Funktionen sind nach Core-Loading global verfügbar:
 _sb()         → window.sb          // Supabase client
 _sbUser()     → window.sbUser      // Auth user object
 _sbProfile()  → window.sbProfile   // User profile (users-Tabelle)
+_sbStandort() → window.sbStandort  // Aktueller Standort {id, name}
 _escH(s)      → window.escH(s)     // XSS-Escape für HTML
 _t(k)         → window.t(k)        // i18n Translation
 _showToast()  → window.showToast() // Toast Notifications
@@ -205,7 +206,7 @@ _fmtN(n)      → window.fmtN(n)    // Zahlenformat (de-DE)
 
 | Function | Zweck |
 |----------|-------|
-| `create-user` | HQ User-Erstellung |
+| `create-user` | Unified User-Erstellung (3 Wege: register/invite-HQ/invite-GF) – verify_jwt=false |
 | `feedback-analyst` | KI-Analyse: Partner-Ideen + Dev-Submissions |
 | `analyze-finance` | KI BWA/Jahresplan (v3, Multi-Upload) |
 | `analyze-scan` | KI Beratungsbogen (Verkaufstrainer) |
@@ -311,6 +312,10 @@ claude/db-schema-xyz            – Datenbank-Änderungen
 | Problem | Schwere | Status |
 |---------|---------|--------|
 | RLS "Database error" bei neuen Usern | Kritisch | Workaround: SECURITY DEFINER |
+| User-Registration inkonsistent (3 Wege) | Kritisch | ✅ Behoben – unified create-user Edge Function |
+| User-Löschung ließ auth.users-Einträge zurück | Kritisch | ✅ Behoben – delete_auth_user RPC gefixt (Paramname) |
+| Standort-Dropdown leer bei Registrierung | Mittel | ✅ Behoben – get_standorte_public() RPC |
+| View-Restore nach Reload (HQ → Netzwerk-Cockpit) | Mittel | ✅ Behoben – vit:modules-ready überschrieb View |
 | Edge Functions `verify_jwt = false` (einige) | Mittel | JWT-Audit offen |
 | HQ Einkauf nur UI (keine DB) | Niedrig | DB-Anbindung ausstehend |
 | MS365 SSO | Geplant | Stubs vorhanden |
