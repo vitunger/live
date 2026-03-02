@@ -516,14 +516,14 @@ c.id = 'regContainer';
 c.innerHTML = html;
 document.body.appendChild(c);
 
-// Load standorte into dropdown
+// Load standorte into dropdown (RPC bypasses RLS for unauthenticated users)
 setTimeout(async function(){
     try {
-        var stdResp = await _sb().from('standorte').select('id,name').order('name');
+        var stdResp = await _sb().rpc('get_standorte_public');
         var sel = document.getElementById('regStandort');
         if(sel && stdResp.data) {
             sel.innerHTML = '<option value="">— Standort wählen —</option>';
-            stdResp.data.forEach(function(s){ sel.innerHTML += '<option value="'+s.id+'">'+s.name+'</option>'; });
+            stdResp.data.forEach(function(s){ sel.innerHTML += '<option value="'+s.id+'">'+_escH(s.name)+'</option>'; });
         }
     } catch(e){ console.error(e); }
 }, 100);
