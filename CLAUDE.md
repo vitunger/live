@@ -1,0 +1,424 @@
+# CLAUDE.md – vit:bikes Partner Portal
+
+> Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
+> Letzte Aktualisierung: 02.03.2026
+>
+> 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
+> (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
+
+---
+
+## Projekt-Überblick
+
+**Was:** cockpit.vitbikes.de – ein Franchise-Netzwerk-Portal ("Allzweckwaffe") für ~50 Fahrrad-Standorte (Ziel: 200–500).
+**Wer:** vit:bikes GmbH (Markus Unger & Matthias Fellner). ~2.500 tägliche Nutzer.
+**Ziel:** Kein anderes Softwaretool mehr nötig. Weniger Personal durch Automatisierung.
+
+**Repo:** `vitunger/live` auf GitHub, Branch `main` → Vercel Auto-Deploy.
+**Supabase-Projekt:** `lwwagbkxeofahhwebkab` (eu-central-1 Frankfurt).
+**Live-URL:** https://cockpit.vitbikes.de
+
+---
+
+## Tech-Stack
+
+| Schicht | Technologie |
+|---------|-------------|
+| Frontend | Vanilla JS (ES Modules), HTML, Tailwind CSS (CDN) |
+| Backend/DB | Supabase (PostgreSQL + Auth + Storage + Edge Functions + Realtime) |
+| Hosting | Vercel (statisch, GitHub-connected) |
+| Auth | Supabase Auth + `users`-Tabelle + `user_rollen` (5 Rollen) |
+| KI | Anthropic Claude via Supabase Edge Functions (claude-sonnet-4-20250514) |
+| E-Mail | Resend API (send-push Edge Function + Inbound) |
+| Billing | Supabase + LexOffice (3 Edge Functions) |
+| PDF-Parsing | pdf.js (Browser-seitig, WaWi-Belege) |
+| Excel-Parsing | SheetJS (BWA/Plan-Dateien) |
+| Push | Web Push API (VAPID, Service Worker) |
+| Externe APIs | Google Ads, Meta Ads, LexOffice, eTermin, Creatomate, Replicate |
+
+---
+
+## Dateistruktur
+
+```
+index.html                  – Haupt-HTML: Views, Sidebar, Modals (~7.100 Zeilen)
+manifest.json               – PWA Manifest
+sw.js                       – Service Worker
+portal/
+├── app.js                  – Module Loader (Strangler Fig, Cache-Bust)
+├── MODULE_MAP.md           – Modul-Dokumentation
+├── core/                   – 3 Module, ~710 Zeilen (sequentiell geladen)
+│   ├── globals.js          – showToast, escH, fmtN, Theme Toggle
+│   ├── supabase-init.js    – createClient, IDB Session, Auth Listener
+│   └── router.js           – showView(), i18n t(), View Switching
+├── views/                  – 40 Module, ~36.000 Zeilen (parallel geladen)
+│   ├── home.js             – Dashboard, Widgets, Quick Actions
+│   ├── verkauf.js          – Verkäufer-Performance, Pipeline
+│   ├── controlling.js      – BWA Upload/Parse/AI (13+ Formate)
+│   ├── dev-pipeline.js     – Ideenboard, Roadmap, KI-Analyse [261KB – AUFSPALTUNG PRIO]
+│   ├── office.js           – Check-in, Desk Booking [143KB – AUFSPALTUNG PRIO]
+│   ├── user-management.js  – User CRUD, Rollen [141KB – AUFSPALTUNG PRIO]
+│   ├── view-router.js      – MUSS LETZTES View-Modul sein (vit:view-changed Events)
+│   └── ...                 – Weitere Module (siehe MODULE_MAP.md)
+├── inline/                 – 19 Module, ~7.000 Zeilen (Script-Tags in index.html)
+│   ├── react-deal-pipeline.jsx  – React Kanban Pipeline
+│   ├── react-marketing.jsx      – React Marketing Dashboard
+│   ├── global-search.js         – Globale Suche + Deeplinks
+│   └── ...
+api/
+├── etermin-proxy.js        – Vercel Serverless Function
+└── webhooks/               – Webhook-Handler
+docs/
+├── CLAUDE_KONTEXT.md       – Ausführlicher Projekt-Kontext
+└── etermin-migration.sql
+```
+
+---
+
+## Architektur-Pattern
+
+### Strangler Fig Pattern
+
+Das Portal wurde von einer 37.000-Zeilen monolithischen HTML-Datei in 62 ES-Module migriert. Die Module exportieren auf `window.*` für Abwärtskompatibilität mit bestehenden `onclick=""`-Handlern.
+
+```
+┌─────────────┐    sequentiell    ┌──────────────┐    parallel    ┌──────────────┐
+│  index.html  │ ──────────────→ │  core/*.js    │ ────────────→ │  views/*.js  │
+│  (HTML/CSS)  │                  │  (globals,    │               │  (40 Module) │
+│              │                  │   supabase,   │               │              │
+│              │                  │   router)     │               │  view-router │
+│              │                  │               │               │  IMMER LETZT │
+└─────────────┘                  └──────────────┘               └──────────────┘
+                                                                        │
+                                                                  vit:modules-ready
+                                                                   CustomEvent
+```
+
+### Module-Loading (app.js)
+
+1. **Core** lädt sequentiell (Reihenfolge kritisch: globals → supabase → router)
+2. **Views** laden parallel via `Promise.allSettled()`
+3. Nach Abschluss: `vit:modules-ready` Event
+4. `view-router.js` MUSS immer letztes View-Modul sein
+
+### IIFE + Window-Exports
+
+Jedes Modul folgt diesem Pattern:
+
+```javascript
+// views/example.js
+(function() {
+    'use strict';
+
+    async function renderExample() {
+        const sb = window.sb;         // Supabase client
+        const user = window.sbUser;   // Auth user
+        const profile = window.sbProfile; // User profile
+        // ...
+    }
+
+    // Window-Export für onclick="" Kompatibilität
+    window.renderExample = renderExample;
+})();
+```
+
+### Race Conditions: _callOrWait Pattern
+
+Bei Abhängigkeiten zwischen Modulen:
+
+```javascript
+function _callOrWait(fnName, args, maxWait = 5000) {
+    if (typeof window[fnName] === 'function') {
+        return window[fnName](...args);
+    }
+    return new Promise((resolve, reject) => {
+        const start = Date.now();
+        const interval = setInterval(() => {
+            if (typeof window[fnName] === 'function') {
+                clearInterval(interval);
+                resolve(window[fnName](...args));
+            } else if (Date.now() - start > maxWait) {
+                clearInterval(interval);
+                reject(new Error(`${fnName} not available after ${maxWait}ms`));
+            }
+        }, 100);
+    });
+}
+```
+
+---
+
+## Safe Helpers (modulübergreifend)
+
+Diese Funktionen sind nach Core-Loading global verfügbar:
+
+```javascript
+_sb()         → window.sb          // Supabase client
+_sbUser()     → window.sbUser      // Auth user object
+_sbProfile()  → window.sbProfile   // User profile (users-Tabelle)
+_escH(s)      → window.escH(s)     // XSS-Escape für HTML
+_t(k)         → window.t(k)        // i18n Translation
+_showToast()  → window.showToast() // Toast Notifications
+_fmtN(n)      → window.fmtN(n)    // Zahlenformat (de-DE)
+```
+
+---
+
+## Datenbank (Supabase)
+
+### Kennzahlen
+
+| Metrik | Wert |
+|--------|------|
+| Tabellen (public) | ~111 |
+| Views | 54 |
+| RLS Policies | 257 |
+| Indizes | 269 |
+| Edge Functions | 9 aktiv |
+| Auth-User | ~14 |
+| Standorte | 32 (angelegt) |
+
+### Wichtige Tabellen
+
+| Tabelle | Zweck |
+|---------|-------|
+| `users` | Portal-User (Profil, standort_id, is_hq, status) |
+| `user_rollen` | User ↔ Rolle Mapping (user_id + rolle_id) |
+| `rollen` | Rollen-Definitionen (hq, inhaber, verkauf, werkstatt, buchhaltung) |
+| `standorte` | Franchise-Standorte |
+| `sales` | Leads/Deals (Pipeline) – Status-ENUM: neu/kontaktiert/angebot/verhandlung/schwebend/gewonnen/verloren/gold |
+| `termine` | Kalender-Termine (start_zeit, etermin_uid) |
+| `todos` | Aufgaben |
+| `bwa_daten` | BWA-Finanzdaten (monatlich pro Standort) |
+| `verkauf_tracking` | Verkäufer-Tagesperformance |
+| `modul_status` | 18 Module – Aktivierung pro Standort |
+| `feature_flags` | 7 Feature-Flags mit granularem Targeting |
+| `netzwerk_dokumente` | Kampagnen, Anleitungen, Vorlagen |
+
+### Rollen-IDs
+
+| Rolle | UUID |
+|-------|------|
+| verkauf | `a8439c42-a42a-4abd-b268-8557bb281897` |
+
+### Edge Functions (9)
+
+| Function | Zweck |
+|----------|-------|
+| `create-user` | HQ User-Erstellung |
+| `feedback-analyst` | KI-Analyse: Partner-Ideen + Dev-Submissions |
+| `analyze-finance` | KI BWA/Jahresplan (v3, Multi-Upload) |
+| `analyze-scan` | KI Beratungsbogen (Verkaufstrainer) |
+| `billing` | Rechnungs-Drafts/Finalisierung |
+| `lexoffice-sync` | Kontakte + Rechnungen an LexOffice |
+| `lexoffice-pdf` | PDF via LexOffice |
+| `send-push` | Push-Notifications (8 Trigger-Punkte) |
+| `db-backup` | Datenbank-Backup |
+
+### RLS-Prinzipien
+
+- **Jede neue Tabelle braucht RLS**
+- Partner-User sehen nur ihren `standort_id`
+- HQ-User (`is_hq: true`, `standort_id: null`) sehen alles
+- Für Cross-Location-Analytics: RPC-Funktionen mit `SECURITY DEFINER`
+- **Wichtig:** Frontend-Filter NIE als Ersatz für RLS verwenden
+
+---
+
+## 3-Tier Account-System
+
+| Tier | Zugriff | `is_hq` | `standort_id` |
+|------|---------|---------|---------------|
+| **HQ** | Netzwerk-weit, alle Standorte | `true` | `null` |
+| **Partner** | Eigener Franchise-Standort | `false` | UUID |
+| **Extern/Lite** (geplant) | Eingeschränkt (BikeBoost) | `false` | UUID |
+
+---
+
+## Module nach Größe (Aufspaltungs-Priorität)
+
+Die größten Module sollten bei der TypeScript-Migration aufgespalten werden:
+
+| # | Modul | Größe | Aufspaltung |
+|---|-------|-------|-------------|
+| 1 | `dev-pipeline.js` | 261 KB | → dev-kanban, dev-modules, dev-flags, dev-video, dev-feedback |
+| 2 | `office.js` | 143 KB | → office-checkin, office-booking, office-analytics |
+| 3 | `user-management.js` | 141 KB | → user-list, user-edit, user-roles |
+| 4 | `strategie.js` | 137 KB | → strategie-onboarding, strategie-kommando |
+| 5 | `video-pipeline.js` | 131 KB | → video-upload, video-consent, video-tagging |
+| 6 | `controlling.js` | 108 KB | → bwa-parser, bwa-display, bwa-ai-analysis |
+| 7 | `misc-views.js` | 89 KB | → moduluebersicht, social-media, verkaufstraining |
+
+**Kleine Dateien zuerst migrieren** (core/globals.js, core/router.js, inline-Module).
+
+---
+
+## TypeScript-Migration
+
+### Strategie
+
+Legacy wird **dateiweise** auf TypeScript umgestellt mit `allowJs: true` – typisierte und untypisierte Dateien koexistieren.
+
+### Regeln
+
+1. **Output bleibt .js** – Vercel und Browser brauchen .js
+2. **Window-Exports bleiben** für Abwärtskompatibilität
+3. **Kleine Dateien zuerst** – core/*.ts, dann inline/*.ts
+4. **Große Dateien aufspalten** bei Migration (siehe Tabelle oben)
+5. **Keine Breaking Changes** – bestehende `onclick=""` Handler müssen weiterhin funktionieren
+6. **tsconfig.json** mit `strict: true`, `allowJs: true`, `outDir: dist/`
+7. **Typen-Dateien** in `portal/types/` ablegen
+
+### Migration-Status
+
+| Phase | Status |
+|-------|--------|
+| tsconfig.json + Build-Pipeline | ⬜ TODO |
+| core/globals.ts | ⬜ TODO |
+| core/router.ts | ⬜ TODO |
+| core/supabase-init.ts | ⬜ TODO |
+| inline/ Module | ⬜ TODO |
+| views/ (kleine zuerst) | ⬜ TODO |
+| views/ (große aufspalten) | ⬜ TODO |
+
+---
+
+## Branch-Konvention & Aufgabenverteilung
+
+### Zwei KI-Agenten
+
+| Agent | Branch | Aufgaben |
+|-------|--------|----------|
+| **Windsurf** | `main` | Features, Bugfixes, UI-Arbeit, Live-Deployments |
+| **Claude** | `claude/*` | TypeScript-Migration, Modul-Aufspaltung, DB-Design, Code-Review, Security |
+
+### Workflow
+
+1. Claude liefert Dateien auf `claude/feature-name` Branch
+2. Markus prüft + testet
+3. Merge in `main` → automatisches Vercel-Deploy
+4. Cache-Bust in `app.js` bumpen (`CACHE_BUST` Parameter)
+
+### Branch-Naming
+
+```
+claude/ts-migrate-globals       – TypeScript-Migration
+claude/split-dev-pipeline       – Modul-Aufspaltung
+claude/security-rls-audit       – Security-Verbesserungen
+claude/db-schema-xyz            – Datenbank-Änderungen
+```
+
+---
+
+## Bekannte Probleme
+
+| Problem | Schwere | Status |
+|---------|---------|--------|
+| RLS "Database error" bei neuen Usern | Kritisch | Workaround: SECURITY DEFINER |
+| Edge Functions `verify_jwt = false` (einige) | Mittel | JWT-Audit offen |
+| HQ Einkauf nur UI (keine DB) | Niedrig | DB-Anbindung ausstehend |
+| MS365 SSO | Geplant | Stubs vorhanden |
+| BWA-Banner bleibt nach Logout sichtbar | Mittel | State-Cleanup fehlt |
+| `URIError: URI malformed` in content.js | Niedrig | encodeURIComponent-Bug |
+| Environment-Variablen nicht externalisiert | Mittel | Noch im Code |
+| Sicherheitsaudit (28 Maßnahmen) | Hoch | Teilweise umgesetzt |
+
+---
+
+## Konventionen
+
+### Code-Stil
+
+1. **Deutsch im UI** – alle Labels, Texte, Toast-Messages auf Deutsch
+2. **Mobile-responsive** – Tailwind-Klassen, immer testen
+3. **KI nur via Edge Functions** – nie Client-seitige API-Keys
+4. **Keine externen Dependencies** (außer Tailwind CDN, Supabase, pdf.js, SheetJS)
+5. **Encoding: UTF-8** – nach jeder Änderung auf ä/ö/ü prüfen
+6. **Braces + Funktions-Check** nach jedem Edit
+
+### Deployment
+
+1. Commit auf `main` → automatisches Vercel-Deploy
+2. **Cache-Bust bumpen** in `portal/app.js` (`CACHE_BUST` Parameter)
+3. Inline-Module: Versions-Parameter in `index.html` Script-Tags bumpen (z.B. `?v=8`)
+4. **Inkrementell deployen** – sofort testen statt Batch-Changes
+
+### Neue Module anlegen
+
+1. Datei in `portal/views/` erstellen
+2. In `portal/app.js` → `VIEW_MODULES` Array eintragen
+3. Exports auf `window.*` registrieren
+4. `view-router.js` bleibt IMMER letztes Modul
+
+### Daten-Hierarchie
+
+- **BWA-Daten** haben Vorrang vor WaWi-Daten
+- WaWi dient als Fallback für fehlende BWA-Einträge
+
+### DB-Arbeit
+
+- Tabellen analysieren: `SELECT * FROM information_schema.columns WHERE table_name = '...'`
+- Status-Verteilungen prüfen: `SELECT status, COUNT(*) FROM ... GROUP BY status`
+- Neue Tabellen: RLS sofort einrichten
+- Edge Functions: Secrets in Supabase Secrets, **nie** im Code
+
+---
+
+## Wichtige IDs & Konfiguration
+
+```
+Supabase-Projekt:    lwwagbkxeofahhwebkab
+Supabase-Region:     eu-central-1 (Frankfurt)
+GitHub-Repo:         vitunger/live
+Vercel-Projekt:      cockpit.vitbikes.de
+Brand-Farbe:         #f97316 (orange)
+Tailwind-Klasse:     bg-vit-orange / text-vit-orange
+```
+
+---
+
+## Für KI-Agenten: So arbeitest du mit diesem Projekt
+
+### Erste Schritte
+
+```bash
+# Repo klonen (Token aus Umgebung oder User-Upload)
+git clone https://<GITHUB_TOKEN>@github.com/vitunger/live.git
+
+# Struktur verstehen
+cat portal/app.js           # Module Loader
+cat portal/MODULE_MAP.md    # Modul-Dokumentation
+cat docs/CLAUDE_KONTEXT.md  # Ausführlicher Projekt-Kontext
+```
+
+### Do's
+
+- ✅ `CLAUDE_KONTEXT.md` und `MODULE_MAP.md` lesen vor Änderungen
+- ✅ Inkrementelle Commits mit klarer Beschreibung
+- ✅ Cache-Bust bumpen nach jeder Dateiänderung
+- ✅ RLS für jede neue Tabelle
+- ✅ Window-Exports für Abwärtskompatibilität
+- ✅ UTF-8 Encoding prüfen (ä/ö/ü)
+- ✅ `_callOrWait` bei modulübergreifenden Abhängigkeiten
+- ✅ MODUL_DATEN Versionsnummer hochzählen nach Edits
+
+### Don'ts
+
+- ❌ Externe npm-Dependencies hinzufügen (Ausnahme: Tailwind CDN)
+- ❌ API-Keys oder Secrets in Client-Code
+- ❌ Frontend-Filter als Ersatz für RLS
+- ❌ `view-router.js` Position in VIEW_MODULES ändern
+- ❌ Core-Module-Reihenfolge ändern (globals → supabase → router)
+- ❌ Batch-Deployments (immer inkrementell)
+- ❌ Englische UI-Texte (alles Deutsch)
+
+### Commit-Format
+
+```
+feat: Neue Funktion beschrieben
+fix: Bug-Beschreibung behoben
+refactor: Modul XY aufgespalten/migriert
+chore: Cache-Bust, Cleanup
+docs: Dokumentation aktualisiert
+security: RLS/JWT/Auth-Verbesserung
+```

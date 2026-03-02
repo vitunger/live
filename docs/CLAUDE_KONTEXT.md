@@ -1,5 +1,8 @@
 # vit:bikes – Projekt-Kontext für Claude
-**Stand: Februar 2026 (aktualisiert 27.02.2026)**
+**Stand: März 2026 (aktualisiert 02.03.2026)**
+
+> 🔧 **Technische Arbeitsanweisung für KI-Agenten:** [`CLAUDE.md`](../CLAUDE.md) im Repo-Root
+> (Tech-Stack, Architektur-Pattern, TypeScript-Migration, Branch-Konvention, Do's/Don'ts)
 
 ---
 
