@@ -1876,10 +1876,11 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
             var timeStr = b.time_from ? b.time_from.substring(0,5)+' – '+(b.time_to||'').substring(0,5) : '08:00 – 17:00';
             var isPast = iso < todayISO();
 
-            h += '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px;border-radius:10px;background:#F9FAFB;margin-bottom:8px">';
+var dotColor = b.status==='remote' ? '#3B82F6' : '#F97316';
+            h += '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px;border-radius:10px;background:'+(b.status==='remote'?'#EFF6FF':'#F9FAFB')+';margin-bottom:8px">';
 
-            // Orange dot
-            h += '<div style="width:10px;height:10px;border-radius:50%;background:#F97316;margin-top:4px;flex-shrink:0"></div>';
+            // Colored dot (blue for remote, orange for office)
+            h += '<div style="width:10px;height:10px;border-radius:50%;background:'+dotColor+';margin-top:4px;flex-shrink:0"></div>';
 
             h += '<div style="flex:1">';
 
