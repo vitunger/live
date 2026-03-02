@@ -143,6 +143,8 @@ function useSupabase(currentLoc, SELLERS) {
   // Save deal field to DB
   const saveDeal = useCallback(async (dealId, field, value) => {
     if (!sb) return;
+    // Skip save for temporary offline deals (numeric IDs, not UUIDs)
+    if (typeof dealId === "number") return;
     const updates = {};
     switch (field) {
       case "name": {
@@ -173,8 +175,9 @@ function useSupabase(currentLoc, SELLERS) {
   const createDeal = useCallback(async (deal) => {
     if (!sb || !profile) return null;
     const nameParts = (deal.name || "").trim().split(" ");
-    // Ensure standort_id is never null (NOT NULL constraint in DB)
-    const standortId = deal.loc || profile?.standort_id;
+    // Ensure standort_id is a valid UUID (not "hq" string)
+    const rawLoc = deal.loc && deal.loc !== "hq" ? deal.loc : null;
+    const standortId = rawLoc || profile?.standort_id;
     if (!standortId) { console.error("[Pipeline] Cannot create deal: no standort_id"); return null; }
     try {
       const { data, error: err } = await sb.from("leads").insert({
