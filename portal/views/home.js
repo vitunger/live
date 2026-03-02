@@ -163,12 +163,12 @@ export async function loadWidgetSuccess() {
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
         var mondayISO = getKWMonday(kw);
         var sundayISO = getKWSunday(kw);
-        var q = _sb().from('verkauf_tracking').select('id, typ').gte('datum', mondayISO).lte('datum', sundayISO);
+        var q = _sb().from('verkauf_tracking').select('id, geplant, spontan, verkauft, beratungen').gte('datum', mondayISO).lte('datum', sundayISO);
         if (stdId) q = q.eq('standort_id', stdId);
         var res = await q;
         var data = res.data || [];
-        var verkauft = data.filter(function(d) { return d.typ === 'verkauf'; }).length;
-        var beratung = data.filter(function(d) { return d.typ === 'beratung'; }).length;
+        var verkauft = data.reduce(function(s, d) { return s + (d.verkauft || 0); }, 0);
+        var beratung = data.reduce(function(s, d) { return s + (d.geplant || 0) + (d.spontan || 0) + (d.beratungen || 0); }, 0);
         var quote = beratung > 0 ? Math.round(verkauft / beratung * 100) : 0;
         el.innerHTML = '<div class="mb-3"><div class="flex items-center justify-between mb-1"><span class="text-sm text-gray-600">Verkaufsquote</span>'
             + '<span class="text-2xl font-bold ' + (quote >= 40 ? 'text-green-600' : quote >= 20 ? 'text-yellow-600' : 'text-red-500') + '">' + quote + '%</span></div>'
@@ -264,14 +264,21 @@ export async function loadWidgetTeam() {
     try {
         var sb = _sb();
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
-        var q = _sb().from('users').select('id, vorname, nachname, status, rolle').eq('status', 'aktiv');
+        var q = _sb().from('users').select('id, vorname, nachname, status').eq('status', 'aktiv');
         if (stdId) q = q.eq('standort_id', stdId);
         var res = await q;
         var team = res.data || [];
         if (!team.length) { el.innerHTML = '<p class="text-sm text-gray-400">Keine Mitarbeiter</p>'; return; }
+        // Load roles from user_rollen + rollen
+        var rollenMap = {};
+        try {
+            var rr = await _sb().from('user_rollen').select('user_id, rollen(name)');
+            if (rr.data) rr.data.forEach(function(ur) { if (ur.rollen) rollenMap[ur.user_id] = ur.rollen.name; });
+        } catch(e) {}
         var rolleIcons = { admin: '👑', geschaeftsfuehrer: '🏢', standortleiter: '⭐', verkauf: '💰', werkstatt: '🔧', mitarbeiter: '👤' };
         el.innerHTML = '<div class="space-y-2">' + team.slice(0, 5).map(function(u) {
-            var icon = rolleIcons[u.rolle] || '👤';
+            var rolle = rollenMap[u.id] || 'mitarbeiter';
+            var icon = rolleIcons[rolle] || '👤';
             return '<div class="flex items-center justify-between"><div class="flex items-center space-x-2"><span>' + icon + '</span><span class="text-sm font-semibold text-gray-800">' + _escH((u.vorname || '') + ' ' + (u.nachname || '').charAt(0) + '.') + '</span></div><span class="text-xs text-green-600">● aktiv</span></div>';
         }).join('') + (team.length > 5 ? '<p class="text-xs text-gray-400 text-center">+' + (team.length - 5) + ' weitere</p>' : '') + '</div>';
     } catch (e) { el.innerHTML = '<p class="text-sm text-gray-400">Fehler beim Laden</p>'; }
@@ -283,16 +290,17 @@ export async function loadWidgetControlling() {
     try {
         var sb = _sb();
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
-        var q = _sb().from('bwa_daten').select('monat, umsatz, rohertrag_pct, personalkosten_pct, ergebnis').order('monat', { ascending: false }).limit(1);
+        var q = _sb().from('bwa_daten').select('monat, umsatzerloese, rohertrag, gesamtkosten, ergebnis_vor_steuern').order('monat', { ascending: false }).limit(1);
         if (stdId) q = q.eq('standort_id', stdId);
         var res = await q;
         var bwa = (res.data || [])[0];
         if (!bwa) { el.innerHTML = '<p class="text-sm text-gray-400 text-center py-2">Noch keine BWA hochgeladen</p>'; return; }
+        var rohertragPct = bwa.umsatzerloese ? (bwa.rohertrag / bwa.umsatzerloese * 100) : 0;
         el.innerHTML = '<div class="space-y-3">'
-            + '<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Umsatz</span><span class="font-bold text-gray-800">' + _fmtN(bwa.umsatz || 0) + ' €</span></div>'
-            + '<div><div class="flex justify-between mb-1"><span class="text-sm text-gray-600">Rohertrag</span><span class="text-sm font-semibold ' + (bwa.rohertrag_pct >= 35 ? 'text-green-600' : 'text-red-500') + '">' + (bwa.rohertrag_pct || 0).toFixed(1) + '%</span></div>'
-            + '<div class="w-full bg-gray-200 rounded-full h-2"><div class="' + (bwa.rohertrag_pct >= 35 ? 'bg-green-500' : 'bg-red-500') + ' h-2 rounded-full" style="width:' + Math.min(bwa.rohertrag_pct || 0, 60) / 60 * 100 + '%"></div></div></div>'
-            + '<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Ergebnis</span><span class="font-bold ' + ((bwa.ergebnis || 0) >= 0 ? 'text-green-600' : 'text-red-500') + '">' + _fmtN(bwa.ergebnis || 0) + ' €</span></div>'
+            + '<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Umsatz</span><span class="font-bold text-gray-800">' + _fmtN(bwa.umsatzerloese || 0) + ' €</span></div>'
+            + '<div><div class="flex justify-between mb-1"><span class="text-sm text-gray-600">Rohertrag</span><span class="text-sm font-semibold ' + (rohertragPct >= 35 ? 'text-green-600' : 'text-red-500') + '">' + rohertragPct.toFixed(1) + '%</span></div>'
+            + '<div class="w-full bg-gray-200 rounded-full h-2"><div class="' + (rohertragPct >= 35 ? 'bg-green-500' : 'bg-red-500') + ' h-2 rounded-full" style="width:' + Math.min(rohertragPct, 60) / 60 * 100 + '%"></div></div></div>'
+            + '<div class="flex justify-between items-center"><span class="text-sm text-gray-600">Ergebnis</span><span class="font-bold ' + ((bwa.ergebnis_vor_steuern || 0) >= 0 ? 'text-green-600' : 'text-red-500') + '">' + _fmtN(bwa.ergebnis_vor_steuern || 0) + ' €</span></div>'
             + '<p class="text-[10px] text-gray-400">Letzte BWA: ' + _escH(bwa.monat || '') + '</p>'
             + '</div>';
     } catch (e) { el.innerHTML = '<p class="text-sm text-gray-400">Fehler beim Laden</p>'; }
