@@ -140,16 +140,22 @@
             var html='';
 
             // ── Check-in Status Card ──
-            if(_myCheckin) {
+if(_myCheckin) {
                 var desk=_desks.find(function(d){return d.nr===_myCheckin.desk_nr;});
                 var mins=minutesSince(_myCheckin.checked_in_at),h=Math.floor(mins/60),m=mins%60;
+                var isRemoteCheckin=_myCheckin.status==='remote';
                 html+=
-                    '<div class="vit-card p-6 mb-6 border-l-4 border-green-500">'+
+                    '<div class="vit-card p-6 mb-6 border-l-4 '+(isRemoteCheckin?'border-blue-500':'border-green-500')+'">'+
                         '<div class="flex items-center justify-between flex-wrap gap-4">'+
                             '<div>'+
                                 '<p class="text-xs text-gray-400 uppercase font-semibold">'+esc(dateLabel)+'</p>'+
-                                '<p class="text-2xl font-bold text-green-600 mt-1">\u2705 Im B\u00fcro</p>'+
-                                '<p class="text-sm text-gray-600 mt-1">Platz '+(_myCheckin.desk_nr||'?')+(desk?' \u00b7 '+esc(desk.room):'')+(desk&&desk.has_monitor?' \u00b7 \ud83d\udda5\ufe0f Monitor':'')+'</p>'+
+                                (isRemoteCheckin?
+                                    '<p class="text-2xl font-bold text-blue-600 mt-1">\ud83c\udfe0 Remote</p>'+
+                                    '<p class="text-sm text-gray-600 mt-1">Von zuhause oder unterwegs</p>'
+                                :
+                                    '<p class="text-2xl font-bold text-green-600 mt-1">\u2705 Im B\u00fcro</p>'+
+                                    '<p class="text-sm text-gray-600 mt-1">Platz '+(_myCheckin.desk_nr||'?')+(desk?' \u00b7 '+esc(desk.room):'')+(desk&&desk.has_monitor?' \u00b7 \ud83d\udda5\ufe0f Monitor':'')+'</p>'
+                                )+
                                 '<p class="text-xs text-gray-400 mt-1">Seit '+hhmm(_myCheckin.checked_in_at)+' ('+(h>0?h+'h ':'')+m+' Min.)</p>'+
                             '</div>'+
                             '<button onclick="window._offCheckOut()" class="px-5 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 shadow-lg transition">Auschecken</button>'+
@@ -175,20 +181,23 @@
             // ── Header check-in button ──
             var hdr=document.getElementById('officeHeaderAction');
             if(hdr) {
-                if(_myCheckin) {
+if(_myCheckin) {
                     var m2=minutesSince(_myCheckin.checked_in_at),h2=Math.floor(m2/60),mm2=m2%60;
-                    hdr.innerHTML='<button onclick="window._offCheckOut()" class="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-semibold hover:bg-red-600">Auschecken <span class="text-xs opacity-75">'+(h2>0?h2+'h ':'')+mm2+'m</span></button>';
-                } else {
-                    hdr.innerHTML='<button onclick="window._offCheckIn()" class="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-semibold hover:bg-green-600">\u2705 Einchecken</button>';
+                    var isRem2=_myCheckin.status==='remote';
+                    hdr.innerHTML=(isRem2?'<span class="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-semibold mr-2">\ud83c\udfe0 Remote</span>':'')+
+                        '<button onclick="window._offCheckOut()" class="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-semibold hover:bg-red-600">Auschecken <span class="text-xs opacity-75">'+(h2>0?h2+'h ':'')+mm2+'m</span></button>';
                 }
             }
 
             // ── KPIs ──
+var remoteCheckins=_todayCheckins.filter(function(c){return c.status==='remote';}).length;
+            var officeCheckins=_todayCheckins.filter(function(c){return c.status!=='remote';}).length;
             var remoteCount=_todayBookings.filter(function(b){return b.status==='remote';}).length;
+            // Nicht doppelt zählen: Remote-Checkins sind schon in remoteCount über Bookings
             var absentCount=_todayBookings.filter(function(b){return b.status==='absent';}).length;
             var bookedCount=_todayBookings.filter(function(b){return b.status==='office';}).length;
             html+='<div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">'+
-                '<div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600">'+occ+'</div><div class="text-xs text-gray-500">Im B\u00fcro</div></div>'+
+'<div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600">'+officeCheckins+'</div><div class="text-xs text-gray-500">Im B\u00fcro</div></div>'+
                 '<div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-blue-600">'+remoteCount+'</div><div class="text-xs text-gray-500">Remote</div></div>'+
                 '<div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-gray-400">'+absentCount+'</div><div class="text-xs text-gray-500">Abwesend</div></div>'+
                 '<div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-gray-700">'+total+'</div><div class="text-xs text-gray-500">Pl\u00e4tze</div></div>'+
@@ -196,12 +205,13 @@
             '</div>';
 
             // ── Team lists ──
-            var checkedInIds={}; _todayCheckins.forEach(function(c){checkedInIds[c.user_id]=true;});
+var checkedInIds={}; _todayCheckins.forEach(function(c){checkedInIds[c.user_id]=c.status||'office';});
             var teamHtml='';
-            if(!_todayCheckins.length) {
+var officeOnlyCheckins=_todayCheckins.filter(function(c){return c.status!=='remote';});
+            if(!officeOnlyCheckins.length) {
                 teamHtml='<p class="text-gray-400 text-sm py-4">Noch niemand eingecheckt</p>';
             } else {
-                _todayCheckins.forEach(function(c){
+                officeOnlyCheckins.forEach(function(c){
                     var u=userMap[c.user_id]||{vorname:'?',nachname:'?'};
                     var desk=_desks.find(function(d){return d.nr===c.desk_nr;});
                     var isMe=c.user_id===sbUser.id;
@@ -215,9 +225,13 @@
                     '</div>';
                 });
             }
-            var remoteUsers=_hqUsers.filter(function(u){return !checkedInIds[u.id];});
-            var remoteList=[], absentList=[], unknownList=[];
-            remoteUsers.forEach(function(u){
+var remoteList=[], absentList=[], unknownList=[];
+            // Zuerst: Remote-Checkins direkt in remoteList
+            _hqUsers.forEach(function(u){
+                var ciStatus=checkedInIds[u.id];
+                if(ciStatus==='remote') { remoteList.push(u); return; }
+                if(ciStatus&&ciStatus!=='remote') return; // im Büro eingecheckt, skip
+                // Nicht eingecheckt: aus Bookings ableiten
                 var bk=_todayBookings.find(function(b){return b.user_id===u.id;});
                 if(bk && bk.status==='absent') absentList.push(u);
                 else if(bk && bk.status==='remote') remoteList.push(u);
@@ -242,7 +256,7 @@
             }
 
             html+='<div class="grid md:grid-cols-3 gap-6 mb-6">'+
-                '<div class="vit-card p-5"><h3 class="font-bold text-gray-800 mb-3">\ud83d\udfe2 Im B\u00fcro <span class="text-sm font-normal text-gray-400">('+_todayCheckins.length+')</span></h3>'+teamHtml+'</div>'+
+'<div class="vit-card p-5"><h3 class="font-bold text-gray-800 mb-3">\ud83d\udfe2 Im B\u00fcro <span class="text-sm font-normal text-gray-400">('+officeOnlyCheckins.length+')</span></h3>'+teamHtml+'</div>'+
                 '<div class="vit-card p-5"><h3 class="font-bold text-gray-800 mb-3">\ud83c\udfe0 Remote <span class="text-sm font-normal text-gray-400">('+remoteList.length+')</span></h3>'+renderUserList(remoteList,'Niemand remote','bg-blue-400')+'</div>'+
                 '<div class="vit-card p-5"><h3 class="font-bold text-gray-800 mb-3">\u2796 Abwesend <span class="text-sm font-normal text-gray-400">('+absentList.length+')</span></h3>'+renderUserList(absentList,'Niemand abwesend','bg-gray-300')+'</div>'+
             '</div>';
@@ -2116,9 +2130,10 @@ var dotColor = b.status==='remote' ? '#3B82F6' : '#F97316';
         _wioParkBookings.forEach(function(b) {
             if (!userDataMap[b.user_id]) userDataMap[b.user_id] = {bookings:[], checkins:[], deskNr:null};
         });
-        _wioCheckins.forEach(function(c) {
-            if (!userDataMap[c.user_id]) userDataMap[c.user_id] = {bookings:[], checkins:[], deskNr:null};
+_wioCheckins.forEach(function(c) {
+            if (!userDataMap[c.user_id]) userDataMap[c.user_id] = {bookings:[], checkins:[], deskNr:null, isRemote:false};
             userDataMap[c.user_id].checkins.push(c);
+            if(c.status==='remote') userDataMap[c.user_id].isRemote=true;
             if (!userDataMap[c.user_id].deskNr) userDataMap[c.user_id].deskNr = c.desk_nr;
         });
 
@@ -2201,7 +2216,7 @@ var dotColor = b.status==='remote' ? '#3B82F6' : '#F97316';
                 avatarHtml+
                 '<div style="flex:1;min-width:0">'+
                     '<p style="font-size:13px;font-weight:700;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(u.vorname+' '+u.nachname)+'</p>'+
-                    (isCheckedIn ? '<p style="font-size:11px;color:#F97316;font-weight:600">● Eingecheckt</p>' : '')+
+(isCheckedIn ? '<p style="font-size:11px;color:'+(data.isRemote?'#3B82F6':'#F97316')+';font-weight:600">'+(data.isRemote?'\ud83c\udfe0 Remote eingecheckt':'● Eingecheckt')+'</p>' : '')+
                 '</div>'+
                 (mainTime ? '<span style="font-size:11px;color:#6B7280;white-space:nowrap">'+esc(mainTime)+'</span>' : '')+
             '</div>';
