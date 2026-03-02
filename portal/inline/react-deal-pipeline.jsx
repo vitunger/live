@@ -730,7 +730,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
   const sales=deal.sales||{};const seller=SELLERS.find(s=>s.id===deal.seller);
   const openT=deal.todos.filter(t=>!t.done).length;
 
-  // Load pipeline events
+  // Load pipeline events + auto-progress based on external events
   useEffect(()=>{
     if(!deal.id||typeof deal.id==="number")return;
     const sb=window._sb&&window._sb();
@@ -738,9 +738,26 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
     sb.from("lead_events").select("*").eq("lead_id",deal.id).order("created_at",{ascending:false}).limit(20)
       .then(({data})=>{
         setEvents(data||[]);
+        if(!data||!data.length)return;
+        const types=data.map(ev=>ev.event_typ);
+
         // Auto-activate terminDone if eTermin booking event exists
-        if(data&&data.some(ev=>ev.event_typ==="etermin_buchung")&&!sales.terminDone){
+        if(types.includes("etermin_buchung")&&!sales.terminDone){
           onUpdateDeal(deal.id,"sales",{...sales,terminDone:true});
+        }
+
+        // WaWi auto-progression: only move forward, never backward
+        const WAWI_PROGRESSION={wawi_rechnung:"verkauft",wawi_auftrag:"schwebend",wawi_angebot:"angebot"};
+        const STAGE_ORDER=["lead","angebot","schwebend","verkauft"];
+        const curIdx=STAGE_ORDER.indexOf(deal.stage);
+        for(const[evTyp,targetStage]of Object.entries(WAWI_PROGRESSION)){
+          if(types.includes(evTyp)){
+            const targetIdx=STAGE_ORDER.indexOf(targetStage);
+            if(targetIdx>curIdx){
+              onChangeStage(deal.id,deal.stage,targetStage);
+              break; // highest wins
+            }
+          }
         }
       });
   },[deal.id]);
