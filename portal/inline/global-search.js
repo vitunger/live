@@ -174,19 +174,20 @@
   // ── Render dropdown results ──
   function renderResults(results, loading) {
     const dropdown = document.getElementById('searchDropdown');
-    if (!dropdown) return;
+    const dropdownMobile = document.getElementById('searchDropdownMobile');
+    const targets = [dropdown, dropdownMobile].filter(Boolean);
+    if (!targets.length) return;
 
     if (!results.length && !loading) {
-      const input = document.getElementById('searchInput');
+      const input = document.getElementById('searchInput') || document.getElementById('searchInputMobile');
       const q = input?.value?.trim() || '';
-      dropdown.innerHTML = q.length >= 2 
+      const emptyHtml = q.length >= 2 
         ? '<div style="padding:16px;text-align:center;color:#9ca3af;font-size:12px;">Keine Treffer</div>'
         : '';
-      dropdown.style.display = q.length >= 2 ? 'block' : 'none';
+      targets.forEach(t => { t.innerHTML = emptyHtml; if (t.id === 'searchDropdown') t.style.display = q.length >= 2 ? 'block' : 'none'; });
       return;
     }
 
-    dropdown.style.display = 'block';
     selectedIndex = -1;
     let html = '';
     
@@ -207,7 +208,10 @@
       </div>`;
     });
 
-    dropdown.innerHTML = html;
+    targets.forEach(t => { 
+      t.innerHTML = html; 
+      if (t.id === 'searchDropdown') t.style.display = 'block';
+    });
   }
 
   function escHtml(s) {
@@ -228,17 +232,23 @@
     if (input) input.value = '';
     searchResults = [];
     searchOpen = false;
+    // Close mobile overlay if open
+    const overlay = document.getElementById('searchOverlay');
+    if (overlay) overlay.style.display = 'none';
   }
 
   function toggleMode() {
     searchMode = searchMode === 'all' ? 'page' : 'all';
     const btn = document.getElementById('searchModeBtn');
-    if (btn) {
-      btn.textContent = searchMode === 'all' ? '🌐 Alles' : '📄 Seite';
-      btn.title = searchMode === 'all' ? 'Sucht im gesamten Cockpit' : 'Sucht nur auf dieser Seite';
-    }
-    // Re-search
-    const input = document.getElementById('searchInput');
+    const btn2 = document.getElementById('searchModeBtnMobile');
+    [btn, btn2].forEach(b => {
+      if (b) {
+        b.textContent = searchMode === 'all' ? '🌐 Alles' : '📄 Seite';
+        b.title = searchMode === 'all' ? 'Sucht im gesamten Cockpit' : 'Sucht nur auf dieser Seite';
+      }
+    });
+    // Re-search from whichever input is active
+    const input = document.getElementById('searchInput') || document.getElementById('searchInputMobile');
     if (input && input.value.trim().length >= 2) doSearch(input.value.trim());
   }
 
@@ -261,6 +271,52 @@
     }
   }
 
+  function isMobile() {
+    return window.innerWidth < 768;
+  }
+
+  // ── Open mobile search overlay ──
+  function openMobileSearch() {
+    let overlay = document.getElementById('searchOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'searchOverlay';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:9999;display:flex;flex-direction:column;';
+      overlay.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid #e5e7eb;">
+          <button onclick="window._closeMobileSearch()" style="border:none;background:none;font-size:20px;cursor:pointer;padding:4px;color:#6b7280;">✕</button>
+          <button id="searchModeBtnMobile" onclick="window._toggleSearchMode()" 
+            style="font-size:10px;padding:4px 8px;border:none;background:#f3f4f6;cursor:pointer;border-radius:5px;color:#6b7280;font-weight:600;white-space:nowrap;"
+            title="Sucht im gesamten Cockpit">🌐 Alles</button>
+          <div style="position:relative;flex:1;">
+            <input id="searchInputMobile" type="text" placeholder="Suchen..." autofocus
+              style="width:100%;padding:8px 10px 8px 32px;border:1.5px solid #f97316;border-radius:8px;font-size:14px;background:#fff;outline:none;font-family:inherit;">
+            <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+        </div>
+        <div id="searchDropdownMobile" style="flex:1;overflow-y:auto;"></div>
+      `;
+      document.body.appendChild(overlay);
+
+      const mobileInput = document.getElementById('searchInputMobile');
+      mobileInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => doSearch(e.target.value.trim()), 250);
+      });
+      mobileInput.addEventListener('keydown', handleSearchKeydown);
+    } else {
+      overlay.style.display = 'flex';
+    }
+    // Sync mode button
+    const btn2 = document.getElementById('searchModeBtnMobile');
+    if (btn2) btn2.textContent = searchMode === 'all' ? '🌐 Alles' : '📄 Seite';
+    setTimeout(() => { const inp = document.getElementById('searchInputMobile'); if (inp) inp.focus(); }, 100);
+  }
+
+  window._closeMobileSearch = function() {
+    closeSearch();
+  };
+
   // ── Init: inject HTML into header ──
   function initSearch() {
     // Find the notifications button to insert before it
@@ -271,8 +327,11 @@
     const wrapper = document.createElement('div');
     wrapper.id = 'globalSearchWrapper';
     wrapper.style.cssText = 'position:relative;display:flex;align-items:center;';
+
+    // Desktop: inline search bar
+    // Mobile: just a magnifying glass icon
     wrapper.innerHTML = `
-      <div style="display:flex;align-items:center;background:#f3f4f6;border-radius:8px;padding:2px 4px;gap:2px;">
+      <div class="gsearch-desktop" style="display:flex;align-items:center;background:#f3f4f6;border-radius:8px;padding:2px 4px;gap:2px;">
         <button id="searchModeBtn" onclick="window._toggleSearchMode()" 
           style="font-size:10px;padding:3px 6px;border:none;background:transparent;cursor:pointer;border-radius:5px;color:#6b7280;font-weight:600;white-space:nowrap;" 
           title="Sucht im gesamten Cockpit">🌐 Alles</button>
@@ -284,12 +343,34 @@
           <svg style="position:absolute;left:7px;top:50%;transform:translateY(-50%);pointer-events:none;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </div>
       </div>
+      <button class="gsearch-mobile" onclick="window._openMobileSearch()" 
+        style="display:none;border:none;background:#f3f4f6;border-radius:8px;padding:6px 8px;cursor:pointer;" 
+        title="Suchen">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
       <div id="searchDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;min-width:320px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.12);margin-top:6px;max-height:400px;overflow-y:auto;z-index:999;"></div>
     `;
 
     bellBtn.parentNode.insertBefore(wrapper, bellBtn);
 
-    // Event listeners
+    // Apply responsive visibility
+    function applyResponsive() {
+      const desktop = wrapper.querySelector('.gsearch-desktop');
+      const mobile = wrapper.querySelector('.gsearch-mobile');
+      if (isMobile()) {
+        if (desktop) desktop.style.display = 'none';
+        if (mobile) mobile.style.display = 'flex';
+      } else {
+        if (desktop) desktop.style.display = 'flex';
+        if (mobile) mobile.style.display = 'none';
+      }
+    }
+    applyResponsive();
+    window.addEventListener('resize', applyResponsive);
+
+    window._openMobileSearch = openMobileSearch;
+
+    // Event listeners for desktop input
     const input = document.getElementById('searchInput');
     input.addEventListener('input', (e) => {
       clearTimeout(searchTimeout);
@@ -299,14 +380,18 @@
 
     // Click outside to close
     document.addEventListener('click', (e) => {
-      if (!wrapper.contains(e.target)) closeSearch();
+      if (!wrapper.contains(e.target)) {
+        const overlay = document.getElementById('searchOverlay');
+        if (!overlay || !overlay.contains(e.target)) closeSearch();
+      }
     });
 
     // Ctrl+K shortcut
     document.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        input.focus();
+        if (isMobile()) { openMobileSearch(); }
+        else { input.focus(); }
       }
     });
 
