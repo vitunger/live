@@ -1371,12 +1371,17 @@ function PipelineApp(){
 
   // Quick-create: skip AddModal, create empty lead and open DetailModal directly
   const quickCreateAndOpen=useCallback(async()=>{
-    // Resolve a real standort_id (HQ users have curLoc="hq" which is not a UUID)
+    // Resolve standort_id: user's own standort, or for HQ first from list
     let dealLoc = curLoc;
     if(!dealLoc || dealLoc==="hq"){
-      const realLocs = LOCATIONS.filter(l=>!l.isHQ&&l.id!=="hq");
-      dealLoc = realLocs.length ? realLocs[0].id : "";
+      // HQ user: try profile.standort_id, then first real location
+      dealLoc = window.sbProfile?.standort_id || "";
+      if(!dealLoc){
+        const realLocs = LOCATIONS.filter(l=>!l.isHQ&&l.id!=="hq");
+        dealLoc = realLocs.length ? realLocs[0].id : "";
+      }
     }
+    if(!dealLoc){ msg("⚠ Kein Standort zugeordnet"); return; }
     const emptyDeal={name:"Neuer Kunde",value:0,note:"",avatar:"👤",heat:3,stage:"lead",phone:"",email:"",acts:[],todos:[],created:Date.now(),changed:Date.now(),loc:dealLoc,seller:"",source:"walk_in",interesse:"",prioritaet:"mittel",sales:{}};
     const dbRow = await createDeal(emptyDeal);
     if (dbRow) {
