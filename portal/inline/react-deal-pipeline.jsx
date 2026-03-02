@@ -492,7 +492,7 @@ function SalesForm({deal,sales,seller,onClose,onUpdateDeal,mode}){
 }
 
 /* ── Detail Modal (Clean) ─────────────────────────── */
-const SOURCES=["Empfehlung","Google","Instagram","Facebook","Messe","Walk-In","Website","Flyer","TikTok","Andere"];
+const SOURCES=["Empfehlung","Google","Instagram","Facebook","Messe","Walk-In","Website","Flyer","TikTok","eTermin","Andere"];
 const LEASING_PROVIDERS=["JobRad","BLS (Bikeleasing-Service)","BusinessBike","Leasing/Divers"];
 const PAY_METHODS=[{id:"Bar/EC",icon:"💶"},{id:"Finanzierung",icon:"🏦"},{id:"Leasing",icon:"📋"}];
 
@@ -736,7 +736,13 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
     const sb=window._sb&&window._sb();
     if(!sb)return;
     sb.from("lead_events").select("*").eq("lead_id",deal.id).order("created_at",{ascending:false}).limit(20)
-      .then(({data})=>setEvents(data||[]));
+      .then(({data})=>{
+        setEvents(data||[]);
+        // Auto-activate terminDone if eTermin booking event exists
+        if(data&&data.some(ev=>ev.event_typ==="etermin_buchung")&&!sales.terminDone){
+          onUpdateDeal(deal.id,"sales",{...sales,terminDone:true});
+        }
+      });
   },[deal.id]);
 
   const sav=(f,v)=>{onUpdateDeal(deal.id,f,v);setEf(null)};
