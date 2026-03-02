@@ -845,9 +845,9 @@ export async function saveNeuerMa() {
             } catch(empErr) { console.warn('Employee record creation:', empErr); }
         }
         
-        alert('✅ Mitarbeiter eingeladen!\n'+vorname.trim()+' '+nachname.trim()+'\nRollen: '+selected.map(function(r){return rollenLabels[r]||r;}).join(', ')+'\n\n📧 Eine E-Mail mit dem Link zur Passwortvergabe wurde an '+email.trim()+' gesendet.');
-        renderPartnerMitarbeiter();
-        renderKzMitarbeiter();
+        _showToast('✅ ' + vorname.trim() + ' ' + nachname.trim() + ' eingeladen! E-Mail an ' + email.trim() + ' gesendet.', 'success');
+        await renderPartnerMitarbeiter();
+        await renderKzMitarbeiter();
     } catch(err) {
         if(errEl){errEl.textContent='Fehler: '+(err.message||err);errEl.style.display='block';}
         if(btn) { btn.disabled=false; btn.textContent='✉️ Einladen'; }
