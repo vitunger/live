@@ -422,3 +422,16 @@ chore: Cache-Bust, Cleanup
 docs: Dokumentation aktualisiert
 security: RLS/JWT/Auth-Verbesserung
 ```
+
+---
+
+## Pflege dieser Datei
+
+> **An alle KI-Agenten:** Wenn du Code-Änderungen am Repo machst, prüfe ob diese Datei aktualisiert werden muss. Aktualisiere sie im selben Commit wenn:
+> - Module hinzugefügt, umbenannt oder aufgespalten wurden
+> - Bekannte Probleme gelöst oder neue entdeckt wurden
+> - Sich Konventionen oder Architektur-Pattern geändert haben
+> - Die TypeScript-Migration fortgeschritten ist (Status-Tabelle updaten)
+> - Neue Edge Functions oder DB-Tabellen hinzugekommen sind
+>
+> **Datum oben aktualisieren** bei jeder inhaltlichen Änderung.
