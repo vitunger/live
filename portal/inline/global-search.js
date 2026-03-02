@@ -31,17 +31,57 @@
     { table: 'users', fields: ['vorname','nachname','email'], icon: '👤', label: 'Mitarbeiter',
       format: r => ((r.vorname||'')+' '+(r.nachname||'')).trim(),
       sub: r => r.email || '',
-      action: r => { showView('mitarbeiter'); }
+      action: r => {
+        showView('mitarbeiter');
+        // Open detail modal after view loads – use HQ or Partner modal depending on context
+        let tries = 0;
+        const tryOpen = () => {
+          const profile = window.sbProfile;
+          const isHq = profile && profile.is_hq;
+          if (isHq && window.openEditMaModal) {
+            window.openEditMaModal(r.id);
+          } else if (window.openEditEmployeeModal) {
+            window.openEditEmployeeModal(r.id);
+          } else if (tries++ < 15) {
+            setTimeout(tryOpen, 300);
+          }
+        };
+        setTimeout(tryOpen, 600);
+      }
     },
     { table: 'termine', fields: ['titel','kontakt_name','kontakt_email','beschreibung'], icon: '📅', label: 'Termin',
       format: r => r.titel || r.kontakt_name || 'Termin',
       sub: r => r.start_zeit ? new Date(r.start_zeit).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '',
-      action: r => { showView('kalender'); }
+      action: r => {
+        showView('kalender');
+        // Open termin detail after kalender view loads
+        let tries = 0;
+        const tryOpen = () => {
+          if (window.openTerminDetail) { window.openTerminDetail(r.id); }
+          else if (tries++ < 15) { setTimeout(tryOpen, 300); }
+        };
+        setTimeout(tryOpen, 600);
+      }
     },
     { table: 'standorte', fields: ['name','adresse','inhaber_name'], icon: '📍', label: 'Standort',
       format: r => r.name,
       sub: r => r.inhaber_name || r.adresse || '',
-      action: r => { /* could navigate to standort detail */ }
+      action: r => {
+        // HQ users: open standort detail modal; Partner users: navigate to dashboard
+        const profile = window.sbProfile;
+        const isHq = profile && profile.is_hq;
+        if (isHq) {
+          showView('kommandozentrale');
+          let tries = 0;
+          const tryOpen = () => {
+            if (window.openStandortDetailModal) { window.openStandortDetailModal(r.id); }
+            else if (tries++ < 15) { setTimeout(tryOpen, 300); }
+          };
+          setTimeout(tryOpen, 600);
+        } else {
+          showView('dashboard');
+        }
+      }
     }
   ];
 
