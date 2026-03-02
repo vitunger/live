@@ -563,46 +563,39 @@ var vorname = nameParts[0] || '';
 var nachname = nameParts.slice(1).join(' ') || '';
 
 try {
-    // Auth-User erstellen via Standard signUp()
-    // Der DB-Trigger handle_new_auth_user() erstellt automatisch:
-    // - public.users Eintrag mit status='pending'
-    // - HQ-Todo Notification
-    // - Email-Queue Eintrag
-    var authResp = await _sb().auth.signUp({ 
-        email: email.trim().toLowerCase(), 
-        password: pw,
-        options: { 
-            data: { 
-                vorname: vorname,
-                nachname: nachname
-            } 
-        }
+    // Unified: Edge Function create-user mit mode='register'
+    // Erstellt Auth-User + public.users + sendet E-Mail via Resend
+    // Kein signUp() mehr → kein Supabase Confirmation-Mail, kein Trigger-Abhängigkeit
+    var response = await fetch((window.SUPABASE_URL || 'https://lwwagbkxeofahhwebkab.supabase.co') + '/functions/v1/create-user', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'apikey': (window.SUPABASE_ANON_KEY || '')
+        },
+        body: JSON.stringify({
+            email: email.trim().toLowerCase(),
+            vorname: vorname,
+            nachname: nachname,
+            password: pw,
+            standort_id: standortId || null,
+            is_hq: false,
+            status: 'pending',
+            mode: 'register',
+            portalUrl: window.location.origin + window.location.pathname
+        })
     });
-    if(authResp.error) throw authResp.error;
-    var newUserId = authResp.data.user ? authResp.data.user.id : null;
-    
-    // Optionalen Standort-Hinweis nachträglich setzen (hilft HQ bei Zuordnung)
-    if(standortId && newUserId) {
-        // Kurz warten damit der Trigger den User in public.users erstellt hat
-        await new Promise(function(resolve){ setTimeout(resolve, 1500); });
-        try {
-            await _sb().from('users').update({ standort_id: standortId }).eq('id', newUserId);
-        } catch(e) { console.warn('Standort-Hinweis konnte nicht gesetzt werden:', e); }
-    }
-    
-    // Sofort ausloggen (signUp loggt automatisch ein)
-    await _sb().auth.signOut();
+
+    var result = await response.json();
+    if(!response.ok) throw { message: result.error || 'Registrierung fehlgeschlagen' };
     
     if(sucEl) {
-        sucEl.innerHTML = '\u2705 <strong>Registrierung erfolgreich!</strong><br>Dein Account wartet auf Freigabe durch das HQ. Du wirst benachrichtigt, sobald dein Zugang freigeschaltet wurde.';
+        sucEl.innerHTML = '\u2705 <strong>Registrierung erfolgreich!</strong><br>Dein Account wartet auf Freigabe durch das HQ. Du wirst per E-Mail benachrichtigt, sobald dein Zugang freigeschaltet wurde.';
         sucEl.style.display = 'block';
     }
     if(btn) { btn.style.display = 'none'; }
 } catch(err) {
-    // Auch ausloggen falls teilweise erfolgreich
-    try { await _sb().auth.signOut(); } catch(e){}
     var msg = 'Fehler: ' + (err.message||err);
-    if(err.message && err.message.includes('already registered')) {
+    if(err.message && (err.message.includes('already registered') || err.message.includes('bereits registriert') || err.message.includes('bereits existiert'))) {
         msg = 'Diese E-Mail-Adresse ist bereits registriert. Bitte anmelden.';
     }
     if(errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
