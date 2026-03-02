@@ -808,7 +808,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
             <select value={deal.stage} onChange={e=>onChangeStage(deal.id,deal.stage,e.target.value)} style={{fontSize:10,fontWeight:700,border:"1.5px solid "+st.color,borderRadius:6,background:"#fff",color:st.color,cursor:"pointer",outline:"none",padding:"2px 6px",maxWidth:100,marginTop:4}}>{STAGES.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}</select>
             <select value={deal.seller||""} onChange={e=>onUpdateDeal(deal.id,"seller",e.target.value)} style={{display:"block",fontSize:10,fontWeight:700,border:"1.5px solid "+(seller?seller.color:"#d1d5db"),borderRadius:6,background:seller?seller.color+"10":"#f9fafb",color:seller?seller.color:"#9ca3af",cursor:"pointer",outline:"none",padding:"2px 6px",maxWidth:160,marginTop:3,marginLeft:"auto"}}>
               <option value="">– kein Verkäufer –</option>
-              {SELLERS.filter(s=>s.loc===deal.loc||s.isHQ).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
+              {SELLERS.filter(s=>s.loc===deal.loc).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
           <button onClick={onClose} style={{background:"none",border:"none",fontSize:18,color:"#9ca3af",cursor:"pointer",marginLeft:6,flexShrink:0}}>✕</button>
