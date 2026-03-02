@@ -89,6 +89,8 @@ function useSupabase(currentLoc, SELLERS) {
     autoImport: row.auto_import || false,
     lastEvent: row.letztes_event || null,
     wawiKundenNr: row.wawi_kunden_nr || null,
+    eterminUid: row.etermin_uid || null,
+    terminId: row.termin_id || null,
     created: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
     changed: row.updated_at ? new Date(row.updated_at).getTime() : Date.now(),
     todos: (todos || []).map(t => ({
@@ -748,7 +750,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
   useEffect(()=>{
     const sb=window._sb&&window._sb();
     if(!sb)return;
-    const eid=deal._db?.etermin_uid, tid=deal._db?.termin_id;
+    const eid=deal.eterminUid, tid=deal.terminId;
     if(!eid&&!tid)return;
     let q=sb.from("termine").select("start_zeit,end_zeit,titel,etermin_uid");
     if(tid) q=q.eq("id",tid);
@@ -1034,7 +1036,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
       </div>
 
       {/* eTermin Link */}
-      {(deal._db?.etermin_uid||termin)&&<div style={{padding:"6px 16px",borderTop:"1px solid #f0f0f0",flexShrink:0}}>
+      {(deal.eterminUid||termin)&&<div style={{padding:"6px 16px",borderTop:"1px solid #f0f0f0",flexShrink:0}}>
         <a href={"https://www.etermin.net/admin#!/booking"} target="_blank" rel="noopener noreferrer" style={{display:"flex",alignItems:"center",gap:6,fontSize:11,fontWeight:600,color:"#3182CE",textDecoration:"none",padding:"5px 0"}}>
           <span>📅</span> Termin in eTermin bearbeiten <span style={{fontSize:9}}>↗</span>
         </a>
@@ -1428,7 +1430,7 @@ function PipelineApp(){
     const emptyDeal={name:"Neuer Kunde",value:0,note:"",avatar:"👤",heat:3,stage:"lead",phone:"",email:"",acts:[],todos:[],created:Date.now(),changed:Date.now(),loc:dealLoc,seller:"",source:"walk_in",interesse:"",prioritaet:"mittel",sales:{}};
     const dbRow = await createDeal(emptyDeal);
     if (dbRow) {
-      const newDeal = { ...emptyDeal, id: dbRow.id };
+      const newDeal = { ...emptyDeal, id: dbRow.id, _db: dbRow, eterminUid: dbRow.etermin_uid||null, terminId: dbRow.termin_id||null };
       setDeals(p=>[newDeal,...p]);
       setNewId(dbRow.id);
       msg("🎯 Lead angelegt – Details ausfüllen");
