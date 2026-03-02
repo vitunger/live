@@ -739,9 +739,22 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
   const[showForm,setShowForm]=useState(null);
   const[beratungOpen,setBeratungOpen]=useState(true);
   const[events,setEvents]=useState([]);
+  const[termin,setTermin]=useState(null);
   const st=STAGES.find(s=>s.id===deal.stage)||STAGES[0];
   const sales=deal.sales||{};const seller=SELLERS.find(s=>s.id===deal.seller);
   const openT=deal.todos.filter(t=>!t.done).length;
+
+  // Load linked termin data
+  useEffect(()=>{
+    const sb=window._sb&&window._sb();
+    if(!sb)return;
+    const eid=deal._db?.etermin_uid, tid=deal._db?.termin_id;
+    if(!eid&&!tid)return;
+    let q=sb.from("termine").select("start_zeit,end_zeit,titel,etermin_uid");
+    if(tid) q=q.eq("id",tid);
+    else q=q.eq("etermin_uid",eid);
+    q.maybeSingle().then(({data})=>{if(data)setTermin(data)});
+  },[deal.id]);
 
   // Load pipeline events + auto-progress based on external events
   useEffect(()=>{
@@ -832,7 +845,8 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
           <span style={{fontSize:16}}>📅</span>
           <div>
             <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase"}}>Beratungstermin</div>
-            <span style={{fontSize:11,fontWeight:700,color:sales.terminDone?"#16a34a":"#dc2626"}}>{sales.terminDone?"✓ Vereinbart":"✗ Kein Termin"}</span>
+            {termin&&termin.start_zeit?<span style={{fontSize:11,fontWeight:700,color:sales.terminDone?"#16a34a":"#dc2626"}}>{new Date(termin.start_zeit).toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit"})}{" "}{new Date(termin.start_zeit).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})} Uhr</span>
+            :<span style={{fontSize:11,fontWeight:700,color:sales.terminDone?"#16a34a":"#dc2626"}}>{sales.terminDone?"✓ Vereinbart":"✗ Kein Termin"}</span>}
           </div>
         </div>
       </div>
@@ -1019,7 +1033,14 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
         </div>}
       </div>
 
-      {/* Footer */}
+      {/* eTermin Link */}
+      {(deal._db?.etermin_uid||termin)&&<div style={{padding:"6px 16px",borderTop:"1px solid #f0f0f0",flexShrink:0}}>
+        <a href={"https://www.etermin.net/admin#!/booking"} target="_blank" rel="noopener noreferrer" style={{display:"flex",alignItems:"center",gap:6,fontSize:11,fontWeight:600,color:"#3182CE",textDecoration:"none",padding:"5px 0"}}>
+          <span>📅</span> Termin in eTermin bearbeiten <span style={{fontSize:9}}>↗</span>
+        </a>
+      </div>}
+
+      {/* Footer: Actions */}
       <div style={{padding:"10px 16px",borderTop:"1px solid #f0f0f0",display:"flex",gap:6,flexShrink:0}}>
         <button onClick={()=>setShowForm("interactive")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #e5e7eb",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#374151"}}>📱 Beratung</button>
         <button onClick={()=>setShowForm("print")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #e5e7eb",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#374151"}}>🖨️ Drucken</button>
