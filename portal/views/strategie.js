@@ -1353,7 +1353,7 @@ export async function submitShopOrder() {
             try {
                 var syncResp = await fetch(SUPABASE_URL + '/functions/v1/lexoffice-sync', {
                     method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token, 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' },
+                    headers: { 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token, 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'sync-invoice', invoice_id: inv.id })
                 });
                 var syncData = await syncResp.json();
