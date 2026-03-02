@@ -301,27 +301,38 @@
     }
 
     // ─── CHECK-IN / CHECK-OUT ───
-    window._offCheckIn = async function(deskNr) {
+ window._offCheckIn = async function(deskNr) {
         try {
             if(_myCheckin) {
                 notify('\u2705 Du bist bereits eingecheckt','info');
                 return;
             }
-            if(!deskNr) {
-                // Check if user has a booking for today with a desk
-                var myBk=(_todayBookings||[]).find(function(b){return b.user_id===sbUser.id&&b.status==='office'&&b.desk_nr;});
-                if(myBk&&myBk.desk_nr) {
-                    deskNr=myBk.desk_nr;
-                } else {
-                    // No booking → show desk selection modal
-                    await loadDesks();
-                    var occ=(_todayCheckins||[]).map(function(c){return c.desk_nr;});
-                    var freeDesks=(_desks||[]).filter(function(d){return d.is_bookable!==false&&d.desk_type==='standard'&&occ.indexOf(d.nr)===-1;});
-                    _offShowDeskModal(freeDesks);
+
+            // Fix: Prüfe ob für heute eine Buchung existiert (egal welcher Status)
+            var myBk=(_todayBookings||[]).find(function(b){return b.user_id===sbUser.id;});
+
+            if(!deskNr && myBk) {
+                if(myBk.status==='remote') {
+                    // Remote gebucht → direkt Remote einchecken, KEIN Desk-Picker
+                    await window._offDoCheckIn(null, 'remote');
                     return;
                 }
+                if(myBk.status==='office' && myBk.desk_nr) {
+                    // Büro mit Platz gebucht → gebuchten Platz verwenden
+                    deskNr=myBk.desk_nr;
+                }
             }
-            await window._offDoCheckIn(deskNr);
+
+            if(!deskNr) {
+                // Keine Buchung oder Büro ohne Platz → Desk-Picker anzeigen
+                await loadDesks();
+                var occ=(_todayCheckins||[]).map(function(c){return c.desk_nr;});
+                var freeDesks=(_desks||[]).filter(function(d){return d.is_bookable!==false&&d.desk_type==='standard'&&occ.indexOf(d.nr)===-1;});
+                _offShowDeskModal(freeDesks);
+                return;
+            }
+
+            await window._offDoCheckIn(deskNr, 'office');
         } catch(err) {
             console.error('[Office] Check-in error:',err);
             notify('Fehler: '+err.message,'error');
@@ -369,15 +380,16 @@
         (async function(){
             // Re-call _offCheckIn with selected desk number
             var saved=_myCheckin;_myCheckin=null; // ensure not blocked by stale state
-            await window._offDoCheckIn(deskNr);
+            await window._offDoCheckIn(deskNr, 'office');
         })();
     };
 
-    window._offDoCheckIn = async function(deskNr) {
+ window._offDoCheckIn = async function(deskNr, checkinStatus) {
         try {
             if(_myCheckin){notify('\u2705 Bereits eingecheckt','info');return;}
+            var finalStatus = checkinStatus || 'office';
             var r=await sb.from('office_checkins').insert({
-                user_id:sbUser.id, desk_nr:deskNr||null, status:'office',
+                user_id:sbUser.id, desk_nr:deskNr||null, status:finalStatus,
                 checked_in_at:new Date().toISOString(), source:'manual'
             }).select().single();
             if(r.error){
@@ -387,7 +399,7 @@
                     if(r2.error) throw r2.error;
                 } else throw r.error;
             }
-            notify('\u2705 Eingecheckt'+(deskNr?' auf Platz '+deskNr:''),'success');
+notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingecheckt'+(deskNr?' auf Platz '+deskNr:''),'success');
             await loadTodayCheckins(); renderDashboard();
         } catch(err){
             console.error('[Office] CheckIn:',err);
