@@ -65,11 +65,13 @@ serve(async (req) => {
           { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      // Verify the caller's JWT
-      const callerClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
-        global: { headers: { Authorization: authHeader } },
+      // Verify the caller's JWT using the service client
+      // Extract JWT from "Bearer <token>"
+      const jwt = authHeader.replace(/^Bearer\s+/i, "");
+      const adminForVerify = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+        auth: { autoRefreshToken: false, persistSession: false },
       });
-      const { data: { user: caller }, error: callerError } = await callerClient.auth.getUser();
+      const { data: { user: caller }, error: callerError } = await adminForVerify.auth.getUser(jwt);
       if (callerError || !caller) {
         return new Response(
           JSON.stringify({ error: "Ungültige Sitzung. Bitte erneut einloggen." }),
