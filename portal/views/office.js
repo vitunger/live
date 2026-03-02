@@ -1884,11 +1884,26 @@ var dotColor = b.status==='remote' ? '#3B82F6' : '#F97316';
 
             h += '<div style="flex:1">';
 
-            if (b.desk_nr) {
+          if (b.status==='remote') {
+                // Remote-Buchung anzeigen
+                h += '<div style="display:flex;align-items:center;justify-content:space-between">'+
+                    '<span style="font-size:13px;font-weight:700;color:#374151">'+esc(me.vorname+' '+me.nachname)+'</span>'+
+                    '<span style="font-size:11px;color:#6B7280">'+timeStr+'</span>'+
+                '</div>';
+                h += '<div style="display:flex;align-items:center;gap:6px;margin-top:6px">'+
+                    '<span style="font-size:16px">🏠</span>'+
+                    '<span style="font-size:13px;font-weight:600;color:#3B82F6">Remote</span>'+
+                '</div>';
+                h += '<p style="font-size:11px;color:#9CA3AF;margin-top:2px">Von zuhause oder unterwegs</p>';
+                if (!isPast) {
+                    h += '<button onclick="window._mbCancelDesk(\''+b.id+'\')" style="font-size:10px;color:#EF4444;background:none;border:none;cursor:pointer;padding:0;margin-top:4px">Stornieren</button>';
+                }
+            } else if (b.desk_nr) {
                 // Name + time
                 h += '<div style="display:flex;align-items:center;justify-content:space-between">'+
                     '<span style="font-size:13px;font-weight:700;color:#374151">'+esc(me.vorname+' '+me.nachname)+'</span>'+
                     '<span style="font-size:11px;color:#6B7280">'+timeStr+'</span>'+
+                '</div>';
                 '</div>';
                 // Equipment
                 var feats = [];
@@ -1968,13 +1983,22 @@ var dotColor = b.status==='remote' ? '#3B82F6' : '#F97316';
 
         h += '</div></div>';
 
-        if (!myDeskNr) {
-            var iso2 = iso;
-            h = '<p style="font-size:13px;font-weight:600;color:#374151;margin-bottom:12px">'+esc(locationTitle)+'</p>'+
-                '<div style="display:flex;align-items:center;justify-content:center;min-height:300px;flex-direction:column;gap:12px">'+
-                '<p style="font-size:13px;color:#9CA3AF">Kein Desk gebucht für diesen Tag</p>'+
-                '<button onclick="showOfficeTab(\'buchen\')" style="padding:8px 20px;background:#F97316;color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">+ Jetzt buchen</button>'+
-                '</div>';
+       if (!myDeskNr) {
+            var hasRemote = _mbBookings.filter(function(b){return b.booking_date===iso&&b.status==='remote';}).length > 0;
+            if (hasRemote) {
+                h = '<p style="font-size:13px;font-weight:600;color:#374151;margin-bottom:12px">'+esc(locationTitle)+'</p>'+
+                    '<div style="display:flex;align-items:center;justify-content:center;min-height:300px;flex-direction:column;gap:16px">'+
+                    '<div style="width:80px;height:80px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:40px">🏠</div>'+
+                    '<p style="font-size:18px;font-weight:700;color:#3B82F6">Remote-Tag</p>'+
+                    '<p style="font-size:13px;color:#9CA3AF;text-align:center">Du arbeitest heute von zuhause<br>oder unterwegs – kein Bürobesuch geplant.</p>'+
+                    '</div>';
+            } else {
+                h = '<p style="font-size:13px;font-weight:600;color:#374151;margin-bottom:12px">'+esc(locationTitle)+'</p>'+
+                    '<div style="display:flex;align-items:center;justify-content:center;min-height:300px;flex-direction:column;gap:12px">'+
+                    '<p style="font-size:13px;color:#9CA3AF">Kein Desk gebucht für diesen Tag</p>'+
+                    '<button onclick="showOfficeTab(\'buchen\')" style="padding:8px 20px;background:#F97316;color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">+ Jetzt buchen</button>'+
+                    '</div>';
+            }
         }
 
         fp.innerHTML = h;
