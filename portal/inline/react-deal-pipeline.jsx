@@ -1483,15 +1483,17 @@ function PipelineApp(){
       setNewId(dbRow.id);
       setShowAdd(false);
       msg(`🎯 ${d.name} hinzugefügt!`);
-      setTimeout(()=>setNewId(null),600);
+      // Auto-open DetailModal so user can immediately print/consult/scan
+      setTimeout(()=>{setNewId(null);setSel(newDeal);},600);
     } else {
       // Fallback: add locally with temp id
       const id=nid.current++;
-      setDeals(p=>[{...d,id},...p]);
+      const newDeal = {...d,id,todos:[],acts:[]};
+      setDeals(p=>[newDeal,...p]);
       setNewId(id);
       setShowAdd(false);
       msg(`🎯 ${d.name} hinzugefügt (offline)`);
-      setTimeout(()=>setNewId(null),600);
+      setTimeout(()=>{setNewId(null);setSel(newDeal);},600);
     }
   },[msg,createDeal]);
   const addAct=useCallback((id,a)=>{
