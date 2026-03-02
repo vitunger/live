@@ -1308,7 +1308,6 @@ function DropZone({sid,label,sub,bc,tc,cc,deals,onDrop,onDrag}){
 function PipelineApp(){
   const[deals,setDeals]=useState([]);
   const[dragId,setDragId]=useState(null);
-  const[showAdd,setShowAdd]=useState(false);
   const[sel,setSel]=useState(null);
   const[parts,setParts]=useState([]);
   const[streak,setStreak]=useState(0);
@@ -1324,11 +1323,11 @@ function PipelineApp(){
   const[GOAL,setGOAL]=useState(GOAL_DEFAULT);
   const[dataReady,setDataReady]=useState(false);
 
-  // Expose global function so Dashboard "Neuer Lead" button can open the React AddModal
+  // Expose global function so Dashboard "Neuer Lead" button can quick-create and open DetailModal
   useEffect(()=>{
-    window.openReactNewLead=()=>setShowAdd(true);
+    window.openReactNewLead=()=>quickCreateAndOpen();
     return ()=>{delete window.openReactNewLead;};
-  },[]);
+  },[quickCreateAndOpen]);
 
   // Determine location from logged-in user profile
   const isHqUser = window.sbProfile && window.sbProfile.is_hq;
@@ -1481,21 +1480,37 @@ function PipelineApp(){
       const newDeal = { ...d, id: dbRow.id, created: Date.now(), changed: Date.now(), todos: [], acts: [] };
       setDeals(p=>[newDeal,...p]);
       setNewId(dbRow.id);
-      setShowAdd(false);
       msg(`🎯 ${d.name} hinzugefügt!`);
-      // Auto-open DetailModal so user can immediately print/consult/scan
       setTimeout(()=>{setNewId(null);setSel(newDeal);},600);
     } else {
-      // Fallback: add locally with temp id
       const id=nid.current++;
       const newDeal = {...d,id,todos:[],acts:[]};
       setDeals(p=>[newDeal,...p]);
       setNewId(id);
-      setShowAdd(false);
       msg(`🎯 ${d.name} hinzugefügt (offline)`);
       setTimeout(()=>{setNewId(null);setSel(newDeal);},600);
     }
   },[msg,createDeal]);
+
+  // Quick-create: skip AddModal, create empty lead and open DetailModal directly
+  const quickCreateAndOpen=useCallback(async()=>{
+    const emptyDeal={name:"Neuer Kunde",value:0,note:"",avatar:"👤",heat:3,stage:"lead",phone:"",email:"",acts:[],todos:[],created:Date.now(),changed:Date.now(),loc:curLoc,seller:"",source:"walk_in",interesse:"",prioritaet:"mittel",sales:{}};
+    const dbRow = await createDeal(emptyDeal);
+    if (dbRow) {
+      const newDeal = { ...emptyDeal, id: dbRow.id };
+      setDeals(p=>[newDeal,...p]);
+      setNewId(dbRow.id);
+      msg("🎯 Lead angelegt – Details ausfüllen");
+      setTimeout(()=>{setNewId(null);setSel(newDeal);},400);
+    } else {
+      const id=nid.current++;
+      const newDeal = {...emptyDeal,id};
+      setDeals(p=>[newDeal,...p]);
+      setNewId(id);
+      msg("🎯 Lead angelegt (offline)");
+      setTimeout(()=>{setNewId(null);setSel(newDeal);},400);
+    }
+  },[msg,createDeal,curLoc]);
   const addAct=useCallback((id,a)=>{
     setDeals(p=>p.map(d=>d.id===id?{...d,acts:[a,...d.acts]}:d));
     setSel(p=>p&&p.id===id?{...p,acts:[a,...p.acts]}:p);
@@ -1588,7 +1603,7 @@ function PipelineApp(){
       <div style={{marginLeft:"auto",display:"flex",gap:6}}>
         {isHqUser&&<button onClick={()=>setShowAuto(true)} style={{padding:"5px 10px",borderRadius:7,border:"1px solid #e5e7eb",background:"#fff",fontSize:11,fontWeight:600,color:"#6b7280",cursor:"pointer"}}>⚡</button>}
         <button onClick={()=>setShowIn(v=>!v)} style={{padding:"5px 10px",borderRadius:7,border:"1px solid #e5e7eb",background:showIn?"#EBF4FF":"#fff",fontSize:11,fontWeight:600,color:showIn?"#667EEA":"#6b7280",cursor:"pointer"}}>🏅</button>
-        <button onClick={()=>setShowAdd(true)} style={{padding:"5px 12px",borderRadius:7,border:"none",background:"#EF7D00",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>+ Lead</button>
+        <button onClick={quickCreateAndOpen} style={{padding:"5px 12px",borderRadius:7,border:"none",background:"#EF7D00",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>+ Lead</button>
       </div>
     </div>
 
@@ -1606,7 +1621,6 @@ function PipelineApp(){
       <DropZone sid="lost" label="💀 Verloren" sub="Wiederbelebbar" bc="#FEB2B2" tc="#E53E3E" cc="#9ca3af" deals={filteredDeals.filter(d=>d.stage==="lost")} onDrop={drop} onDrag={setDragId}/>
     </div>
 
-    {showAdd&&<AddModal onClose={()=>setShowAdd(false)} onAdd={addDeal} currentLoc={curLoc} LOCATIONS={LOCATIONS} SELLERS={SELLERS}/>}
     {sel&&<DetailModal deal={sel} onClose={()=>setSel(null)} onAct={addAct} onHeat={setHeat} onToggleTodo={toggleTodo} onAddTodo={addTodo} onUpdateDeal={updateDeal} onChangeStage={changeStage} SELLERS={SELLERS}/>}
     {showAuto&&<AutoModal rules={rules} onUpdate={setRules} onClose={()=>setShowAuto(false)} LOCATIONS={LOCATIONS}/>}
   </div>
