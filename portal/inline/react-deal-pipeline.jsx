@@ -1237,8 +1237,20 @@ function PipelineApp(){
   // Expose global function so Dashboard "Neuer Lead" button can quick-create and open DetailModal
   useEffect(()=>{
     window.openReactNewLead=()=>quickCreateAndOpen();
-    return ()=>{delete window.openReactNewLead;};
-  },[quickCreateAndOpen]);
+    window.openReactDealById=(id)=>{
+      const found = deals.find(d=>d.id===id);
+      if(found) { setSel(found); }
+      else {
+        // Deal not in current state — force load from DB then open
+        const sb = window._sb && window._sb();
+        if(!sb) return;
+        sb.from('leads').select('*').eq('id',id).maybeSingle().then(({data})=>{
+          if(data) { const d = dbToDeal(data,[],[]); setDeals(p=>[d,...p]); setTimeout(()=>setSel(d),100); }
+        });
+      }
+    };
+    return ()=>{delete window.openReactNewLead; delete window.openReactDealById;};
+  },[quickCreateAndOpen, deals, dbToDeal]);
 
   // Determine location from logged-in user profile
   const isHqUser = window.sbProfile && window.sbProfile.is_hq;

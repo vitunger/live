@@ -17,7 +17,16 @@
     { table: 'leads', fields: ['vorname','nachname','email','telefon','notizen'], icon: '🎯', label: 'Lead', 
       format: r => ((r.vorname||'')+ ' ' +(r.nachname||'')).trim() || 'Unbekannt',
       sub: r => [r.email, r.telefon].filter(Boolean).join(' · ') || 'Kein Kontakt',
-      action: r => { showView('verkauf'); setTimeout(()=>{ if(window.openReactDealById) window.openReactDealById(r.id); },300); }
+      action: r => {
+        showView('verkauf');
+        // Retry until React pipeline is mounted and exposes openReactDealById
+        let tries = 0;
+        const tryOpen = () => {
+          if (window.openReactDealById) { window.openReactDealById(r.id); }
+          else if (tries++ < 15) { setTimeout(tryOpen, 300); }
+        };
+        setTimeout(tryOpen, 600);
+      }
     },
     { table: 'users', fields: ['vorname','nachname','email'], icon: '👤', label: 'Mitarbeiter',
       format: r => ((r.vorname||'')+' '+(r.nachname||'')).trim(),
