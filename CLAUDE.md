@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 02.03.2026
+> Letzte Aktualisierung: 02.03.2026 (global.d.ts + tsconfig.json hinzugefügt)
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -269,17 +269,13 @@ Legacy wird **dateiweise** auf TypeScript umgestellt mit `allowJs: true` – typ
 6. **tsconfig.json** mit `strict: true`, `allowJs: true`, `outDir: dist/`
 7. **Typen-Dateien** in `portal/types/` ablegen
 
-### Migration-Status
+### Aktueller Stand
 
-| Phase | Status |
-|-------|--------|
-| tsconfig.json + Build-Pipeline | ⬜ TODO |
-| core/globals.ts | ⬜ TODO |
-| core/router.ts | ⬜ TODO |
-| core/supabase-init.ts | ⬜ TODO |
-| inline/ Module | ⬜ TODO |
-| views/ (kleine zuerst) | ⬜ TODO |
-| views/ (große aufspalten) | ⬜ TODO |
+| Schritt | Status |
+|---------|--------|
+| `portal/types/global.d.ts` – Window-Exports & Domain-Typen | ✅ DONE |
+| `tsconfig.json` – IDE-Support (`noEmit: true`) | ✅ DONE |
+| Volle TypeScript-Migration (.ts-Dateien) | ⬜ Phase 2 (später) |
 
 ---
 
