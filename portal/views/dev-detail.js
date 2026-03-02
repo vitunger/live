@@ -267,6 +267,9 @@ export async function openDevDetail(subId) {
                 h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'ablehnung\')" class="px-2 py-1.5 bg-red-100 text-red-700 rounded text-[10px] font-semibold hover:bg-red-200">\u274C Ablehnen</button>';
             }
             h += '</div>';
+            if(isOwner) {
+                h += '<button onclick="updateDevStatus(\''+s.id+'\',\'ausgerollt\')" class="col-span-2 px-2 py-1.5 bg-emerald-600 text-white rounded text-[10px] font-semibold hover:bg-emerald-700 mt-0.5">\u2705 Umgesetzt</button>';
+            }
             h += '<div class="flex gap-1 mt-1.5">';
             h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'spaeter\')" class="flex-1 px-2 py-1 bg-gray-200 text-gray-600 rounded text-[10px] hover:bg-gray-300">\u23F8 Sp\u00E4ter</button>';
             h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'geschlossen\')" class="flex-1 px-2 py-1 bg-slate-200 text-slate-600 rounded text-[10px] hover:bg-slate-300">\uD83D\uDD12 Schlie\u00DFen</button>';
