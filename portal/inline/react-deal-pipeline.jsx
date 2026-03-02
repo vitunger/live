@@ -1371,7 +1371,13 @@ function PipelineApp(){
 
   // Quick-create: skip AddModal, create empty lead and open DetailModal directly
   const quickCreateAndOpen=useCallback(async()=>{
-    const emptyDeal={name:"Neuer Kunde",value:0,note:"",avatar:"👤",heat:3,stage:"lead",phone:"",email:"",acts:[],todos:[],created:Date.now(),changed:Date.now(),loc:curLoc,seller:"",source:"walk_in",interesse:"",prioritaet:"mittel",sales:{}};
+    // Resolve a real standort_id (HQ users have curLoc="hq" which is not a UUID)
+    let dealLoc = curLoc;
+    if(!dealLoc || dealLoc==="hq"){
+      const realLocs = LOCATIONS.filter(l=>!l.isHQ&&l.id!=="hq");
+      dealLoc = realLocs.length ? realLocs[0].id : "";
+    }
+    const emptyDeal={name:"Neuer Kunde",value:0,note:"",avatar:"👤",heat:3,stage:"lead",phone:"",email:"",acts:[],todos:[],created:Date.now(),changed:Date.now(),loc:dealLoc,seller:"",source:"walk_in",interesse:"",prioritaet:"mittel",sales:{}};
     const dbRow = await createDeal(emptyDeal);
     if (dbRow) {
       const newDeal = { ...emptyDeal, id: dbRow.id };
@@ -1387,7 +1393,7 @@ function PipelineApp(){
       msg("🎯 Lead angelegt (offline)");
       setTimeout(()=>{setNewId(null);setSel(newDeal);},400);
     }
-  },[msg,createDeal,curLoc]);
+  },[msg,createDeal,curLoc,LOCATIONS]);
   const addAct=useCallback((id,a)=>{
     setDeals(p=>p.map(d=>d.id===id?{...d,acts:[a,...d.acts]}:d));
     setSel(p=>p&&p.id===id?{...p,acts:[a,...p.acts]}:p);
