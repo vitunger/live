@@ -247,7 +247,7 @@ export async function renderEntwSteuerung() {
         {key:'rejected', label:'❌ Abgelehnt', statuses:['abgelehnt'], color:'red'},
         {key:'closed', label:'🔒 Geschlossen', statuses:['geschlossen'], color:'slate'}
     ];
-    h += '<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3" style="min-height:400px">';
+    h += '<div class="flex gap-3 overflow-x-auto pb-2" style="min-height:400px">';
     columns.forEach(function(col) {
         var items = _devSubs().filter(function(s) { return col.statuses.indexOf(s.status) !== -1; });
         // Smart sort: critical bugs first, then by effort (quick wins up), then votes
@@ -266,7 +266,7 @@ export async function renderEntwSteuerung() {
             var bV = (b.dev_votes||[]).length;
             return bV - aV;
         });
-        h += '<div class="bg-gray-50 rounded-xl p-3">';
+        h += '<div class="bg-gray-50 rounded-xl p-3 flex-shrink-0" style="min-width:200px;width:calc((100% - 7*0.75rem)/8)">';
         h += '<div class="flex items-center justify-between mb-3"><h3 class="text-sm font-bold text-gray-700">'+col.label+'</h3><span class="text-xs bg-'+col.color+'-100 text-'+col.color+'-700 rounded-full px-2 py-0.5 font-semibold">'+items.length+'</span></div>';
         h += '<div class="space-y-2 max-h-[600px] overflow-y-auto">';
         items.forEach(function(s) {
