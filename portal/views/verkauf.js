@@ -152,7 +152,14 @@ export function moveLead(id, newStage) {
 }
 
 export function showNewLeadModal() {
-    document.getElementById('newLeadModal').classList.remove('hidden');
+    // Redirect to React Pipeline AddModal
+    if(typeof window.openReactNewLead === 'function') {
+        window.openReactNewLead();
+    } else {
+        // Fallback: open pipeline tab, React will mount, then open modal
+        showVerkaufTab('pipeline');
+        setTimeout(function(){ if(typeof window.openReactNewLead === 'function') window.openReactNewLead(); }, 500);
+    }
 }
 
 export async function addNewLead() {

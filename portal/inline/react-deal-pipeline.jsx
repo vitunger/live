@@ -1324,6 +1324,12 @@ function PipelineApp(){
   const[GOAL,setGOAL]=useState(GOAL_DEFAULT);
   const[dataReady,setDataReady]=useState(false);
 
+  // Expose global function so Dashboard "Neuer Lead" button can open the React AddModal
+  useEffect(()=>{
+    window.openReactNewLead=()=>setShowAdd(true);
+    return ()=>{delete window.openReactNewLead;};
+  },[]);
+
   // Determine location from logged-in user profile
   const isHqUser = window.sbProfile && window.sbProfile.is_hq;
   const userStandortId = window.sbProfile?.standort_id || "";

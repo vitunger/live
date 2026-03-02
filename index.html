@@ -1120,7 +1120,7 @@
                     <div class="mb-8">
                         <!-- Schnellzugriff Aktionen -->
                         <div id="quickActionsGrid" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
-                            <button onclick="showView('verkauf')" data-module="verkauf" class="vit-card p-4 hover:shadow-lg transition-shadow text-center">
+                            <button onclick="showView('verkauf'); setTimeout(function(){ if(typeof window.openReactNewLead==='function') window.openReactNewLead(); },400);" data-module="verkauf" class="vit-card p-4 hover:shadow-lg transition-shadow text-center">
                                 <div class="bg-vit-orange p-3 rounded-lg inline-block mb-2">
                                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
