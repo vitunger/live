@@ -596,8 +596,11 @@ export function switchViewMode(mode) {
     }
 }
 
-// Init: show partner mode by default (deferred until auth state is available)
+// Init: show partner mode by default (only if enterApp hasn't already handled it)
 window.addEventListener('vit:modules-ready', function() {
+    // Skip if enterApp has already set the role (authenticated user)
+    if(window.currentRole && window.currentRole !== 'inhaber') return;
+    if(window.sbUser) return; // User is logged in, enterApp handles view
     if (typeof window.switchViewMode === 'function') switchViewMode('partner_grafrath');
 });
 
