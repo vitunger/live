@@ -354,6 +354,27 @@ export async function renderPartnerMitarbeiter() {
         var empResp = await empQ;
         if(empResp.error) throw empResp.error;
         var emps = empResp.data || [];
+
+        // Auto-Check: Gekündigte MA mit abgelaufenem Austrittsdatum → ausgeschieden + Account sperren
+        var today = new Date().toISOString().slice(0,10);
+        for(var ai = 0; ai < emps.length; ai++) {
+            var ae = emps[ai];
+            if(ae.status === 'gekündigt' && ae.austrittsdatum && ae.austrittsdatum <= today) {
+                try {
+                    await _sb().from('employees').update({ status: 'ausgeschieden', updated_at: new Date().toISOString() }).eq('id', ae.id);
+                    ae.status = 'ausgeschieden';
+                    // Account sperren
+                    if(ae.email) {
+                        var uResp = await _sb().from('users').select('id').eq('email', ae.email).single();
+                        if(uResp.data) await _sb().from('users').update({ status: 'offboarding' }).eq('id', uResp.data.id);
+                    }
+                    // Tools deaktivieren
+                    await _sb().from('employee_tools').update({ is_active: false, deactivated_at: today, updated_at: new Date().toISOString() }).eq('employee_id', ae.id).eq('is_active', true);
+                    _showToast(ae.vorname + ' ' + ae.nachname + ' ist ausgeschieden – Account gesperrt', 'warning');
+                } catch(autoErr) { console.warn('Auto-Offboard fehlgeschlagen:', autoErr); }
+            }
+        }
+
         _empCache = emps;
         var prodResp = await _sb().from('billing_products').select('*').eq('is_per_employee',true).eq('active',true).order('name');
         _toolProductsCache = (prodResp.data||[]);
@@ -473,31 +494,123 @@ export async function openEditEmployeeModal(empId) {
     if(!emp) return;
     var html='<div id="editEmpOverlay" onclick="closeEditEmpModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
     html+='<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:460px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
-    html+='<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">\u270f\ufe0f Mitarbeiter bearbeiten</h3><button onclick="closeEditEmpModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
+    html+='<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">✏️ Mitarbeiter bearbeiten</h3><button onclick="closeEditEmpModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div>';
     html+='<div class="space-y-3">';
-    html+='<div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold text-gray-600 mb-1">Vorname</label><input id="editEmpVorname" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+emp.vorname+'"></div>';
-    html+='<div><label class="block text-xs font-semibold text-gray-600 mb-1">Nachname</label><input id="editEmpNachname" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+emp.nachname+'"></div></div>';
-    html+='<div><label class="block text-xs font-semibold text-gray-600 mb-1">E-Mail</label><input id="editEmpEmail" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+(emp.email||'')+'"></div>';
-    html+='<div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold text-gray-600 mb-1">Position</label><input id="editEmpPosition" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+(emp.position||'')+'"></div>';
+    html+='<div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold text-gray-600 mb-1">Vorname</label><input id="editEmpVorname" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+_escH(emp.vorname)+'"></div>';
+    html+='<div><label class="block text-xs font-semibold text-gray-600 mb-1">Nachname</label><input id="editEmpNachname" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+_escH(emp.nachname)+'"></div></div>';
+    html+='<div><label class="block text-xs font-semibold text-gray-600 mb-1">E-Mail</label><input id="editEmpEmail" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+_escH(emp.email||'')+'"></div>';
+    html+='<div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold text-gray-600 mb-1">Position</label><input id="editEmpPosition" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+_escH(emp.position||'')+'"></div>';
     html+='<div><label class="block text-xs font-semibold text-gray-600 mb-1">Abteilung</label><select id="editEmpAbt" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="Verkauf"'+(emp.abteilung==='Verkauf'?' selected':'')+'>Verkauf</option><option value="Werkstatt"'+(emp.abteilung==='Werkstatt'?' selected':'')+'>Werkstatt</option><option value="Verwaltung"'+(emp.abteilung==='Verwaltung'?' selected':'')+'>Verwaltung</option><option value="Sonstiges"'+(emp.abteilung==='Sonstiges'?' selected':'')+'>Sonstiges</option></select></div></div>';
-    html+='<div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold text-gray-600 mb-1">Status</label><select id="editEmpStatus" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="aktiv"'+(emp.status==='aktiv'?' selected':'')+'>Aktiv</option><option value="inaktiv"'+(emp.status==='inaktiv'?' selected':'')+'>Inaktiv</option><option value="gek\u00fcndigt"'+(emp.status==='gek\u00fcndigt'?' selected':'')+'>Gek\u00fcndigt</option><option value="ausgeschieden"'+(emp.status==='ausgeschieden'?' selected':'')+'>Ausgeschieden</option></select></div>';
+    // Status (ohne "inaktiv" – wird durch Löschen ersetzt)
+    html+='<div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold text-gray-600 mb-1">Status</label><select id="editEmpStatus" onchange="window._onEmpStatusChange()" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">';
+    html+='<option value="aktiv"'+(emp.status==='aktiv'?' selected':'')+'>Aktiv</option>';
+    var isGekuendigt = (emp.status==='gekündigt');
+    html+='<option value="gekündigt"'+(isGekuendigt?' selected':'')+'>Gekündigt</option>';
+    html+='<option value="ausgeschieden"'+(emp.status==='ausgeschieden'?' selected':'')+'>Ausgeschieden</option>';
+    html+='</select></div>';
     html+='<div><label class="block text-xs font-semibold text-gray-600 mb-1">Anstelldatum</label><input id="editEmpStart" type="date" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+(emp.anstelldatum||'')+'"></div></div>';
-    html+='<div><label class="block text-xs font-semibold text-gray-600 mb-1">Austrittsdatum</label><input id="editEmpEnd" type="date" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" value="'+(emp.austrittsdatum||'')+'"></div>';
+    // Kündigungs-Block (sichtbar bei gekündigt)
+    var today = new Date().toISOString().slice(0,10);
+    html+='<div id="editEmpKuendigungBlock" style="display:'+(isGekuendigt?'block':'none')+'" class="bg-red-50 border border-red-200 rounded-lg p-3 space-y-2">';
+    html+='<p class="text-xs font-bold text-red-700">⚠️ Kündigung</p>';
+    html+='<div><label class="block text-xs font-semibold text-red-600 mb-1">Letzter Arbeitstag *</label>';
+    html+='<input id="editEmpEnd" type="date" class="w-full px-3 py-2 border border-red-300 rounded-lg text-sm bg-white" value="'+(emp.austrittsdatum||'')+'" min="'+today+'"></div>';
+    // Aktive Tools anzeigen
+    var activeTools = (emp.employee_tools||[]).filter(function(t){return t.is_active;});
+    if(activeTools.length > 0) {
+        html+='<p class="text-[10px] text-red-600 font-semibold">'+activeTools.length+' aktive Tool(s) werden zum Austrittsdatum gekündigt:</p>';
+        html+='<div class="flex flex-wrap gap-1">';
+        activeTools.forEach(function(t){ html+='<span class="text-[9px] bg-red-100 text-red-700 rounded px-1.5 py-0.5">'+_escH(t.product_key)+'</span>'; });
+        html+='</div>';
+    }
+    html+='<p class="text-[10px] text-red-500">Am letzten Arbeitstag wird der Account automatisch gesperrt.</p>';
     html+='</div>';
+    // Info bei ausgeschieden
+    if(emp.status === 'ausgeschieden') {
+        html+='<div class="bg-gray-100 border border-gray-200 rounded-lg p-3">';
+        html+='<p class="text-xs text-gray-500">🔒 Ausgeschieden am: <strong>'+(emp.austrittsdatum ? new Date(emp.austrittsdatum).toLocaleDateString('de-DE') : 'unbekannt')+'</strong></p>';
+        html+='</div>';
+    }
+    html+='</div>';
+    html+='<div id="editEmpError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mt-3"></div>';
     html+='<div class="flex space-x-3 mt-4"><button onclick="saveEditEmployee(\''+empId+'\')" id="saveEditEmpBtn" class="flex-1 py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Speichern</button>';
     html+='<button onclick="closeEditEmpModal()" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-semibold text-sm hover:bg-gray-200">Abbrechen</button></div>';
     html+='</div></div>';
     var c=document.createElement('div');c.id='editEmpContainer';c.innerHTML=html;document.body.appendChild(c);
 }
+// Toggle Kündigungsblock bei Statuswechsel
+window._onEmpStatusChange = function() {
+    var status = (document.getElementById('editEmpStatus')||{}).value;
+    var block = document.getElementById('editEmpKuendigungBlock');
+    if(block) block.style.display = (status === 'gekündigt') ? 'block' : 'none';
+};
 export function closeEditEmpModal(){var c=document.getElementById('editEmpContainer');if(c)c.remove();}
 export async function saveEditEmployee(empId){
     var btn=document.getElementById('saveEditEmpBtn');
+    var errEl=document.getElementById('editEmpError');
     if(btn){btn.disabled=true;btn.textContent='Speichern...';}
+    if(errEl) errEl.style.display='none';
+    var newStatus = document.getElementById('editEmpStatus').value;
+    var austrittsdatum = (document.getElementById('editEmpEnd')||{}).value || null;
+    // Validierung: Gekündigt braucht Austrittsdatum
+    if(newStatus === 'gekündigt' && !austrittsdatum) {
+        if(errEl){errEl.textContent='Bitte den letzten Arbeitstag eintragen.';errEl.style.display='block';}
+        if(btn){btn.disabled=false;btn.textContent='Speichern';}
+        return;
+    }
     try{
-        await _sb().from('employees').update({vorname:document.getElementById('editEmpVorname').value.trim(),nachname:document.getElementById('editEmpNachname').value.trim(),email:document.getElementById('editEmpEmail').value.trim()||null,position:document.getElementById('editEmpPosition').value.trim()||null,abteilung:document.getElementById('editEmpAbt').value,status:document.getElementById('editEmpStatus').value,anstelldatum:document.getElementById('editEmpStart').value||null,austrittsdatum:document.getElementById('editEmpEnd').value||null,updated_at:new Date().toISOString()}).eq('id',empId);
-        closeEditEmpModal(); renderPartnerMitarbeiter();
-    }catch(err){alert('Fehler: '+err.message);if(btn){btn.disabled=false;btn.textContent='Speichern';}}
+        var emp = _empCache.find(function(e){return e.id===empId;});
+        // 1. Employee-Record updaten
+        await _sb().from('employees').update({
+            vorname: document.getElementById('editEmpVorname').value.trim(),
+            nachname: document.getElementById('editEmpNachname').value.trim(),
+            email: document.getElementById('editEmpEmail').value.trim()||null,
+            position: document.getElementById('editEmpPosition').value.trim()||null,
+            abteilung: document.getElementById('editEmpAbt').value,
+            status: newStatus,
+            anstelldatum: document.getElementById('editEmpStart').value||null,
+            austrittsdatum: austrittsdatum,
+            updated_at: new Date().toISOString()
+        }).eq('id', empId);
+        // 2. Bei Kündigung: Alle aktiven Tools zum Austrittsdatum kündigen
+        if(newStatus === 'gekündigt' && austrittsdatum) {
+            var toolsResp = await _sb().from('employee_tools')
+                .select('id, product_key, is_active, cancellation_requested_at')
+                .eq('employee_id', empId).eq('is_active', true);
+            var activeTools = (toolsResp.data || []).filter(function(t){ return !t.cancellation_requested_at; });
+            if(activeTools.length > 0) {
+                var today = new Date().toISOString().slice(0,10);
+                for(var i = 0; i < activeTools.length; i++) {
+                    await _sb().from('employee_tools').update({
+                        cancellation_requested_at: today,
+                        cancellation_effective_at: austrittsdatum,
+                        cancelled_by: _sbUser() ? _sbUser().id : null,
+                        updated_at: new Date().toISOString()
+                    }).eq('id', activeTools[i].id);
+                }
+                _showToast(activeTools.length + ' Tool(s) zum ' + new Date(austrittsdatum).toLocaleDateString('de-DE') + ' gekündigt', 'info');
+            }
+        }
+        // 3. Bei Ausgeschieden: Account sperren + alle Tools deaktivieren
+        if(newStatus === 'ausgeschieden' && emp && emp.email) {
+            var userResp = await _sb().from('users').select('id').eq('email', emp.email).single();
+            if(userResp.data) {
+                await _sb().from('users').update({ status: 'offboarding', updated_at: new Date().toISOString() }).eq('id', userResp.data.id);
+                _showToast('Account von ' + emp.vorname + ' ' + emp.nachname + ' gesperrt', 'warning');
+            }
+            await _sb().from('employee_tools').update({
+                is_active: false, deactivated_at: new Date().toISOString().slice(0,10), updated_at: new Date().toISOString()
+            }).eq('employee_id', empId).eq('is_active', true);
+        }
+        closeEditEmpModal();
+        await renderPartnerMitarbeiter();
+        _showToast('✅ Mitarbeiter aktualisiert', 'success');
+    }catch(err){
+        if(errEl){errEl.textContent='Fehler: '+(err.message||err);errEl.style.display='block';}
+        if(btn){btn.disabled=false;btn.textContent='Speichern';}
+    }
 }
+
 
 // ---- Tools Matrix (Tab 2) ----
 export function renderMaToolsMatrix(){
