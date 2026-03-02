@@ -265,7 +265,7 @@ export async function openDevDetail(subId) {
             if(isOwner) {
                 h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'ideenboard\')" class="px-2 py-1.5 bg-purple-500 text-white rounded text-[10px] font-semibold hover:bg-purple-600">\uD83C\uDFAF Ins Ideenboard</button>';
                 h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'ablehnung\')" class="px-2 py-1.5 bg-red-100 text-red-700 rounded text-[10px] font-semibold hover:bg-red-200">\u274C Ablehnen</button>';
-                h += '<button onclick="updateDevStatus(\''+s.id+'\',\'ausgerollt\')" class="col-span-2 px-2 py-1.5 rounded text-[10px] font-semibold text-white hover:opacity-90" style="background:#16a34a">\u2705 Umgesetzt</button>';
+                h += '<button onclick="updateDevStatus(\''+s.id+'\',\'ausgerollt\')" class="px-2 py-1.5 rounded text-[10px] font-semibold text-white hover:opacity-90" style="background:#16a34a">\u2705 Umgesetzt</button>';
             }
             h += '<div class="flex gap-1 mt-1.5">';
             h += '<button onclick="devHQDecisionFromDetail(\''+s.id+'\',\'spaeter\')" class="flex-1 px-2 py-1 bg-gray-200 text-gray-600 rounded text-[10px] hover:bg-gray-300">\u23F8 Sp\u00E4ter</button>';
