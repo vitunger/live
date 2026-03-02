@@ -5,6 +5,7 @@
 function _sb()           { return window.sb; }
 function _sbUser()       { return window.sbUser; }
 function _sbProfile()    { return window.sbProfile; }
+function _sbStandort()   { return window.sbStandort; }
 function _escH(s)        { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
 function _t(k)           { return typeof window.t === 'function' ? window.t(k) : k; }
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
@@ -346,7 +347,7 @@ export async function renderPartnerMitarbeiter() {
     var container=document.getElementById('maCardList');
     if(!container) return;
     try {
-        var stdId = (sbStandort&&sbStandort.id) ? sbStandort.id : null;
+        var stdId = (_sbStandort()&&_sbStandort().id) ? _sbStandort().id : null;
         var isHQ = currentRoles.indexOf('hq')>=0||(_sbProfile() &&_sbProfile().is_hq);
         var empQ = _sb().from('employees').select('*, employee_tools(*, product:billing_products(name, key, default_amount))').order('nachname');
         if(stdId && !isHQ) empQ = empQ.eq('standort_id', stdId);
@@ -532,7 +533,7 @@ export async function renderMaKosten(){
     var el=document.getElementById('maKostenContent'); if(!el)return;
     el.innerHTML='<div class="text-center py-8 text-gray-400">Lade Kosten\u00fcbersicht...</div>';
     try{
-        var stdId=(sbStandort&&sbStandort.id)?sbStandort.id:null;
+        var stdId=(_sbStandort()&&_sbStandort().id)?_sbStandort().id:null;
         if(!stdId){el.innerHTML='<div class="text-center py-8 text-gray-400">Standort-Kontext ben\u00f6tigt.</div>';return;}
         var resp=await sb.rpc('calculate_monthly_billing',{p_standort_id:stdId});
         if(resp.error) throw resp.error;
@@ -569,10 +570,23 @@ export function deactivateMa(idx) {
 // Neuer Mitarbeiter Modal
 var newMaEbene = 'standort'; // tracks current ebene selection in create modal
 
-export function openNeuerMaModal() {
+export async function openNeuerMaModal() {
     var isHQ = currentRoles.indexOf('hq') >= 0 || (_sbProfile() && _sbProfile().is_hq);
     if(isHQ && !hqCan('create_user')) { _showToast('Keine Berechtigung zum Anlegen von Mitarbeitern', 'error'); return; }
     newMaEbene = 'standort';
+
+    // Ensure sbStandort is set for GF/Partner users
+    if(!_sbStandort() && _sbProfile() && _sbProfile().standort_id) {
+        // Try from joined data first, then fetch from DB
+        if(_sbProfile().standorte && _sbProfile().standorte.name) {
+            window.sbStandort = { id: _sbProfile().standort_id, name: _sbProfile().standorte.name };
+        } else {
+            try {
+                var stResp = await _sb().from('standorte').select('id,name').eq('id', _sbProfile().standort_id).single();
+                if(stResp.data) window.sbStandort = { id: stResp.data.id, name: stResp.data.name };
+            } catch(e) { console.warn('Standort-Lookup fehlgeschlagen:', e); }
+        }
+    }
 
     var html = '<div id="neuerMaOverlay" onclick="closeNeuerMaModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
     html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:460px;max-width:90vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
@@ -612,8 +626,8 @@ export function openNeuerMaModal() {
         html += '<div id="newMaStandortWrap"><label class="block text-xs font-semibold text-gray-600 mb-1">Standort *</label><select id="newMaStandort" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="">Wird geladen...</option></select></div>';
     } else {
         // GF: Standort ist fix der eigene
-        var stdName = sbStandort ? sbStandort.name : 'Dein Standort';
-        var stdId = sbStandort ? sbStandort.id : '';
+        var stdName = _sbStandort() ? _sbStandort().name : 'Dein Standort';
+        var stdId = _sbStandort() ? _sbStandort().id : '';
         html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Standort</label><input type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500" value="'+stdName+'" disabled><input type="hidden" id="newMaStandort" value="'+stdId+'"></div>';
     }
     html += '</div>';
