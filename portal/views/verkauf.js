@@ -1,341 +1,16 @@
 /**
- * views/verkauf.js - Partner-Portal Verkauf Module
+ * views/verkauf.js - Verkauf Module (Wochenansicht + Auswertung)
  *
- * Handles: Week view (Verkäufer-Performance), Pipeline, Leads, Jahrestabelle
+ * Pipeline/CRM lives entirely in /portal/inline/react-deal-pipeline.jsx
+ * This module handles: Tab switching, Wochenansicht, Jahrestabelle/Auswertung
  *
  * @module views/verkauf
  */
 function _sb()        { return window.sb; }
 function _sbProfile() { return window.sbProfile; }
-function _escH(s)     { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
 function _t(k)        { return typeof window.t === 'function' ? window.t(k) : k; }
-function _showToast(m,t){ if (typeof window.showToast === 'function') window.showToast(m,t); }
 
-// === VERKAUF MODULE ===
-// All data now loaded from DB (verkauf_tracking, leads, jahresplaene)
-var verkaufData = {
-    sellers: [],
-    jahres: [],
-    pipeline: []
-};
-
-var pipelineStages = [
-    {id:'lead',label:'Eingang',color:'bg-gray-100 border-gray-300'},
-    {id:'angebot',label:'Schwebend (Angebot)',color:'bg-blue-50 border-blue-300'},
-    {id:'schwebend',label:'Zusage (Auftrag)',color:'bg-yellow-50 border-yellow-300'},
-    {id:'verkauft',label:'Verkauft (Rechnung)',color:'bg-green-50 border-green-300'},
-    {id:'verloren',label:'Verloren',color:'bg-red-50 border-red-300'}
-];
-
-export function renderWeekView() {
-    var filter = document.getElementById('weekSellerFilter').value;
-    var sellers = filter === 'all' ? verkaufData.sellers : verkaufData.sellers.filter(function(s){return s.name === filter;});
-    
-    // Calculate KPIs
-    var totalPlan = 0, totalGesamt = 0, totalVerkauft = 0, totalUmsatz = 0;
-    sellers.forEach(function(s) {
-        totalPlan += s.plan_soll;
-        s.daily.forEach(function(d) {
-            totalGesamt += d.gesamt;
-            totalVerkauft += d.verkauft;
-            totalUmsatz += d.umsatz;
-        });
-    });
-    document.getElementById('wkPlan').textContent = totalPlan;
-    document.getElementById('wkGesamt').textContent = totalGesamt;
-    document.getElementById('wkVerkauft').textContent = totalVerkauft;
-    document.getElementById('wkUmsatz').textContent = totalUmsatz.toLocaleString('de-DE') + ' \u20AC';
-    var quoteVal = totalGesamt > 0 ? Math.round((totalVerkauft/totalGesamt)*100) : 0;
-    var quoteEl = document.getElementById('wkQuote');
-    quoteEl.textContent = quoteVal + '%';
-    quoteEl.className = 'text-2xl font-bold ' + (quoteVal >= 70 ? 'text-green-600' : quoteVal >= 40 ? 'text-orange-600' : 'text-red-600');
-
-    // Render seller tables
-    var container = document.getElementById('weekSellerTables');
-    var html = '';
-    sellers.forEach(function(s) {
-        var sUmsatz = 0, sGesamt = 0, sVerkauft = 0;
-        s.daily.forEach(function(d) { sUmsatz += d.umsatz; sGesamt += d.gesamt; sVerkauft += d.verkauft; });
-        var sQuote = sGesamt > 0 ? Math.round((sVerkauft/sGesamt)*100) : 0;
-
-        html += '<div class="vit-card overflow-hidden">';
-        html += '<div class="flex items-center justify-between p-4 bg-gray-50 border-b">';
-        html += '<div class="flex items-center space-x-3"><div class="w-8 h-8 bg-vit-orange rounded-full flex items-center justify-center text-white font-bold text-sm">' + s.name.charAt(0) + '</div>';
-        html += '<div><p class="font-semibold text-gray-800">' + s.name + '</p><p class="text-xs text-gray-500">Plan: ' + s.plan_soll + ' Termine</p></div></div>';
-        html += '<div class="flex space-x-4 text-center">';
-        html += '<div><p class="text-xs text-gray-500">Beratungen</p><p class="font-bold text-blue-600">' + sGesamt + '</p></div>';
-        html += '<div><p class="text-xs text-gray-500">Verkauft</p><p class="font-bold text-green-600">' + sVerkauft + '</p></div>';
-        html += '<div><p class="text-xs text-gray-500">Umsatz</p><p class="font-bold text-vit-orange">' + sUmsatz.toLocaleString('de-DE') + ' \u20AC</p></div>';
-        html += '<div><p class="text-xs text-gray-500">Quote</p><p class="font-bold ' + (sQuote >= 70 ? 'text-green-600' : sQuote >= 40 ? 'text-orange-600' : 'text-red-600') + '">' + sQuote + '%</p></div>';
-        html += '</div></div>';
-
-        // Daily table
-        html += '<div class="overflow-x-auto"><table class="w-full text-sm">';
-        html += '<thead><tr class="bg-gray-50 text-xs"><th class="py-2 px-3 text-left text-gray-500">Tag</th><th class="py-2 px-3 text-center text-gray-500">Plan</th><th class="py-2 px-3 text-center text-blue-600">Geplant</th><th class="py-2 px-3 text-center text-purple-600">Spontan</th><th class="py-2 px-3 text-center text-cyan-600">Online</th><th class="py-2 px-3 text-center text-pink-600">Ergo</th><th class="py-2 px-3 text-center font-bold text-gray-700">Gesamt</th><th class="py-2 px-3 text-center text-green-600">Verkauft</th><th class="py-2 px-3 text-center text-gray-500">Uebergabe</th><th class="py-2 px-3 text-right text-vit-orange">Umsatz</th></tr></thead>';
-        html += '<tbody>';
-        s.daily.forEach(function(d) {
-            var total = d.geplant + d.spontan + d.online;
-            var hasData = d.plan > 0 || total > 0 || d.umsatz > 0;
-            html += '<tr class="border-b ' + (hasData ? '' : 'text-gray-300') + '">';
-            html += '<td class="py-2 px-3 font-semibold">' + d.day + '</td>';
-            html += '<td class="py-2 px-3 text-center">' + (d.plan || '-') + '</td>';
-            html += '<td class="py-2 px-3 text-center text-blue-600">' + (d.geplant || '-') + '</td>';
-            html += '<td class="py-2 px-3 text-center text-purple-600">' + (d.spontan || '-') + '</td>';
-            html += '<td class="py-2 px-3 text-center text-cyan-600">' + (d.online || '-') + '</td>';
-            html += '<td class="py-2 px-3 text-center text-pink-600">' + (d.ergo || '-') + '</td>';
-            html += '<td class="py-2 px-3 text-center font-bold">' + (total || '-') + '</td>';
-            html += '<td class="py-2 px-3 text-center text-green-600 font-bold">' + (d.verkauft || '-') + '</td>';
-            html += '<td class="py-2 px-3 text-center">' + (d.uebergabe || '-') + '</td>';
-            html += '<td class="py-2 px-3 text-right font-semibold ' + (d.umsatz > 0 ? 'text-vit-orange' : '') + '">' + (d.umsatz > 0 ? d.umsatz.toLocaleString('de-DE') + ' \u20AC' : '-') + '</td>';
-            html += '</tr>';
-        });
-        html += '</tbody></table></div></div>';
-    });
-    container.innerHTML = html;
-}
-
-export function renderPipeline() {
-    var filterEl = document.getElementById('pipelineFilter');
-    if(!filterEl) return; // React pipeline active, skip legacy render
-    var filter = filterEl.value;
-    var leads = filter === 'all' ? verkaufData.pipeline : verkaufData.pipeline.filter(function(l){return l.seller === filter;});
-    var board = document.getElementById('kanbanBoard');
-    var html = '';
-
-    pipelineStages.forEach(function(stage) {
-        var stageLeads = leads.filter(function(l){return l.stage === stage.id;});
-        var stageValue = 0;
-        stageLeads.forEach(function(l){stageValue += l.value;});
-
-        html += '<div class="min-w-[220px] flex-shrink-0">';
-        html += '<div class="mb-3 flex items-center justify-between">';
-        html += '<h3 class="font-semibold text-gray-700 text-sm">' + stage.label + '</h3>';
-        html += '<span class="text-xs font-bold bg-gray-200 text-gray-600 rounded-full px-2 py-0.5">' + stageLeads.length + '</span>';
-        html += '</div>';
-        html += '<div class="space-y-2 min-h-[100px] p-2 rounded-lg border-2 border-dashed ' + stage.color + '">';
-
-        stageLeads.forEach(function(lead) {
-            html += '<div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition">';
-            html += '<div class="flex items-center justify-between mb-1"><p class="font-semibold text-gray-800 text-sm">' + lead.name + '</p></div>';
-            html += '<p class="text-xs text-gray-500">' + lead.type + '</p>';
-            html += '<div class="flex items-center justify-between mt-2">';
-            html += '<span class="text-xs text-gray-400">' + lead.seller + ' · ' + lead.date + '</span>';
-            html += '<span class="text-sm font-bold text-vit-orange">' + lead.value.toLocaleString('de-DE') + ' \u20AC</span>';
-            html += '</div>';
-            // Stage move buttons
-            var stageIdx = -1;
-            for(var si=0;si<pipelineStages.length;si++){if(pipelineStages[si].id===lead.stage)stageIdx=si;}
-            html += '<div class="flex space-x-1 mt-2">';
-            if(stageIdx > 0) html += '<button onclick="moveLead('+lead.id+',\'' + pipelineStages[stageIdx-1].id + '\')" class="flex-1 text-xs py-1 bg-gray-100 rounded hover:bg-gray-200">&#9664;</button>';
-            if(stageIdx < pipelineStages.length-1) html += '<button onclick="moveLead('+lead.id+',\'' + pipelineStages[stageIdx+1].id + '\')" class="flex-1 text-xs py-1 bg-gray-100 rounded hover:bg-gray-200">&#9654;</button>';
-            html += '</div>';
-            html += '</div>';
-        });
-
-        if(stageLeads.length > 0) {
-            html += '<div class="text-center text-xs text-gray-400 mt-2 pt-2 border-t border-gray-200">' + stageValue.toLocaleString('de-DE') + ' \u20AC</div>';
-        }
-        html += '</div></div>';
-    });
-    board.innerHTML = html;
-}
-
-export function moveLead(id, newStage) {
-    for(var i=0; i<verkaufData.pipeline.length; i++) {
-        if(verkaufData.pipeline[i].id === id) {
-            verkaufData.pipeline[i].stage = newStage;
-            break;
-        }
-    }
-    renderPipeline();
-}
-
-export function showNewLeadModal() {
-    // Redirect to React Pipeline AddModal
-    if(typeof window.openReactNewLead === 'function') {
-        window.openReactNewLead();
-    } else {
-        // Fallback: open pipeline tab, React will mount, then open modal
-        showVerkaufTab('pipeline');
-        setTimeout(function(){ if(typeof window.openReactNewLead === 'function') window.openReactNewLead(); }, 500);
-    }
-}
-
-export async function addNewLead() {
-    var nameVal = document.getElementById('leadName').value || 'Neuer Kunde';
-    var type = document.getElementById('leadType').value;
-    var value = parseInt(document.getElementById('leadValue').value) || 3000;
-    var notes = document.getElementById('leadNotes') ? document.getElementById('leadNotes').value : '';
-
-    if(!sbUser) { alert('Nicht eingeloggt.'); return; }
-
-    var nameParts = nameVal.trim().split(' ');
-    var vorname = nameParts[0] || nameVal;
-    var nachname = nameParts.slice(1).join(' ') || '';
-
-    try {
-        var resp = await _sb().from('leads').insert({
-            standort_id: _sbProfile().standort_id,
-            erstellt_von: sbUser.id,
-            vorname: vorname,
-            nachname: nachname,
-            interesse: type,
-            geschaetzter_wert: value,
-            notizen: notes,
-            status: 'neu',
-            quelle: 'walk_in',
-            prioritaet: 'mittel'
-        });
-        if(resp.error) throw resp.error;
-        triggerPushStandort('🎯 Neuer Lead', vorname + ' ' + nachname + ' – ' + (type||'Interesse'), '/?view=verkauf', 'push_lead_aktivitaet');
-
-        document.getElementById('newLeadModal').classList.add('hidden');
-        document.getElementById('leadName').value = '';
-        document.getElementById('leadValue').value = '';
-        if(document.getElementById('leadNotes')) document.getElementById('leadNotes').value = '';
-        await loadPipelineFromSupabase();
-    } catch(err) {
-        alert('Fehler: ' + err.message);
-    }
-}
-
-export async function renderJahresTabelle() {
-    var tbody = document.getElementById('jahresTabelle');
-    if(!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-400">Lade Daten...</td></tr>';
-    
-    var sb = window.sb || window.supabase;
-    var profile = window.sbProfile;
-    if(!sb || !profile) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-400">Keine Verbindung</td></tr>'; return; }
-    
-    var stdId = profile.standort_id;
-    var yr = new Date().getFullYear();
-    var curMonth = new Date().getMonth(); // 0-indexed
-    var monatsNamen = ['Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-    
-    // Load verkauf_tracking for this year + standort
-    var trackingData = {};
-    try {
-        var q = sb.from('verkauf_tracking').select('datum, geplant, spontan, ergo, verkauft, umsatz')
-            .gte('datum', yr + '-01-01').lte('datum', yr + '-12-31');
-        if(stdId && !profile.is_hq) q = q.eq('standort_id', stdId);
-        var resp = await q;
-        if(resp.data) {
-            resp.data.forEach(function(r) {
-                var m = new Date(r.datum).getMonth();
-                if(!trackingData[m]) trackingData[m] = {beratungen:0, verkauft:0, umsatz:0};
-                trackingData[m].beratungen += (r.geplant||0) + (r.spontan||0);
-                trackingData[m].verkauft += (r.verkauft||0);
-                trackingData[m].umsatz += parseFloat(r.umsatz||0);
-            });
-        }
-    } catch(e) { console.warn('[Auswertung] Tracking error:', e); }
-    
-    // Load jahresplan for plan data
-    var planData = {};
-    try {
-        if(stdId) {
-            var jpResp = await sb.from('jahresplaene').select('plan_daten').eq('standort_id', stdId).eq('jahr', yr).single();
-            if(jpResp.data && jpResp.data.plan_daten) {
-                for(var i = 1; i <= 12; i++) {
-                    var mp = jpResp.data.plan_daten[String(i)] || jpResp.data.plan_daten[i] || {};
-                    planData[i-1] = { umsatz: mp.umsatz || 0 };
-                }
-            }
-        }
-    } catch(e) { console.warn('[Auswertung] Jahresplan error:', e); }
-    
-    // Render table
-    var html = '';
-    var totals = {beratungen:0, verkauft:0, umsatz:0, plan:0};
-    
-    for(var i = 0; i < 12; i++) {
-        var td = trackingData[i] || {beratungen:0, verkauft:0, umsatz:0};
-        var plan = planData[i] ? planData[i].umsatz : 0;
-        var isCurrent = (i === curMonth);
-        var isFuture = i > curMonth && td.beratungen === 0 && td.verkauft === 0;
-        var quote = td.beratungen > 0 ? Math.round((td.verkauft / td.beratungen) * 100) : 0;
-        var avg = td.verkauft > 0 ? Math.round(td.umsatz / td.verkauft) : 0;
-        
-        totals.beratungen += td.beratungen;
-        totals.verkauft += td.verkauft;
-        totals.umsatz += td.umsatz;
-        totals.plan += plan;
-        
-        html += '<tr class="border-b ' + (isCurrent ? 'bg-blue-50 border-l-4 border-blue-400' : '') + ' ' + (isFuture ? 'text-gray-400' : '') + '">';
-        html += '<td class="py-2.5 px-3 font-semibold">' + monatsNamen[i] + '</td>';
-        html += '<td class="text-right py-2.5 px-3">' + (td.beratungen > 0 ? td.beratungen : '\u2014') + '</td>';
-        html += '<td class="text-right py-2.5 px-3 font-bold text-green-600">' + (td.verkauft > 0 ? td.verkauft : '\u2014') + '</td>';
-        html += '<td class="text-right py-2.5 px-3 ' + (quote >= 70 ? 'text-green-600' : quote > 0 ? 'text-orange-600' : '') + '">' + (quote > 0 ? quote + '%' : '\u2014') + '</td>';
-        html += '<td class="text-right py-2.5 px-3">' + (td.umsatz > 0 ? Math.round(td.umsatz).toLocaleString('de-DE') + ' \u20AC' : '\u2014') + '</td>';
-        html += '<td class="text-right py-2.5 px-3">' + (avg > 0 ? avg.toLocaleString('de-DE') + ' \u20AC' : '\u2014') + '</td>';
-        html += '</tr>';
-    }
-    
-    // Totals row
-    var totalQuote = totals.beratungen > 0 ? Math.round((totals.verkauft / totals.beratungen) * 100) : 0;
-    var totalAvg = totals.verkauft > 0 ? Math.round(totals.umsatz / totals.verkauft) : 0;
-    html += '<tr class="bg-gray-100 border-t-2"><td class="py-3 px-3 font-bold">GESAMT</td>';
-    html += '<td class="text-right py-3 px-3 font-bold">' + (totals.beratungen > 0 ? totals.beratungen : '\u2014') + '</td>';
-    html += '<td class="text-right py-3 px-3 font-bold text-green-600">' + (totals.verkauft > 0 ? totals.verkauft : '\u2014') + '</td>';
-    html += '<td class="text-right py-3 px-3 font-bold">' + (totalQuote > 0 ? totalQuote + '%' : '\u2014') + '</td>';
-    html += '<td class="text-right py-3 px-3 font-bold">' + (totals.umsatz > 0 ? Math.round(totals.umsatz).toLocaleString('de-DE') + ' \u20AC' : '\u2014') + '</td>';
-    html += '<td class="text-right py-3 px-3 font-bold">' + (totalAvg > 0 ? totalAvg.toLocaleString('de-DE') + ' \u20AC' : '\u2014') + '</td>';
-    html += '</tr>';
-    
-    tbody.innerHTML = html;
-    
-    // Update KPI cards
-    var elPlan = document.getElementById('ausJahresPlan');
-    var elYTD = document.getElementById('ausUmsatzYTD');
-    var elVK = document.getElementById('ausVerkauft');
-    var elQuote = document.getElementById('ausQuote');
-    var elAvg = document.getElementById('ausAvgPreis');
-    if(elPlan) elPlan.textContent = totals.plan > 0 ? totals.plan.toLocaleString('de-DE') + ' \u20AC' : '\u2014';
-    if(elYTD) elYTD.textContent = totals.umsatz > 0 ? Math.round(totals.umsatz).toLocaleString('de-DE') + ' \u20AC' : '0 \u20AC';
-    if(elVK) elVK.textContent = totals.verkauft;
-    if(elQuote) elQuote.textContent = totalQuote > 0 ? totalQuote + '%' : '0%';
-    if(elAvg) elAvg.textContent = totalAvg > 0 ? totalAvg.toLocaleString('de-DE') + ' \u20AC' : '0 \u20AC';
-    
-    // Simple chart
-    renderAuswertungChart(trackingData, planData);
-}
-
-function renderAuswertungChart(trackingData, planData) {
-    var container = document.getElementById('ausChartContainer');
-    if(!container) return;
-    var maxVal = 1;
-    for(var i = 0; i < 12; i++) {
-        var td = trackingData[i] || {};
-        var pd = planData[i] || {};
-        if((td.umsatz||0) > maxVal) maxVal = td.umsatz;
-        if((pd.umsatz||0) > maxVal) maxVal = pd.umsatz;
-    }
-    var months = ['Jan','Feb','Mrz','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
-    var w = container.clientWidth || 800;
-    var h = 180;
-    var barW = Math.floor((w - 40) / 12) - 4;
-    
-    var svg = '<svg viewBox="0 0 '+w+' '+(h+30)+'" style="width:100%;height:100%">';
-    // Grid lines
-    for(var g = 0; g <= 4; g++) {
-        var gy = h - (g/4)*h;
-        svg += '<line x1="40" y1="'+gy+'" x2="'+w+'" y2="'+gy+'" stroke="#f0f0f0" stroke-width="1"/>';
-        svg += '<text x="36" y="'+(gy+4)+'" text-anchor="end" fill="#9ca3af" font-size="10">' + Math.round(maxVal*g/4/1000) + '</text>';
-    }
-    // Bars
-    for(var i = 0; i < 12; i++) {
-        var td = trackingData[i] || {};
-        var x = 44 + i * (barW + 4);
-        var val = td.umsatz || 0;
-        var barH = maxVal > 0 ? (val / maxVal) * h : 0;
-        svg += '<rect x="'+x+'" y="'+(h-barH)+'" width="'+barW+'" height="'+barH+'" rx="3" fill="'+(val > 0 ? '#EF7D00' : '#f0f0f0')+'"/>';
-        svg += '<text x="'+(x+barW/2)+'" y="'+(h+18)+'" text-anchor="middle" fill="#9ca3af" font-size="10">'+months[i]+'</text>';
-    }
-    svg += '</svg>';
-    container.innerHTML = svg;
-}
-
+// ── Tab Switching ──────────────────────────────────
 export function showVerkaufTab(tabName) {
     document.querySelectorAll('.vk-tab-content').forEach(function(t){t.style.display='none';});
     document.querySelectorAll('.vk-tab-btn').forEach(function(b){
@@ -351,6 +26,23 @@ export function showVerkaufTab(tabName) {
     if(tabName==='auswertung') renderJahresTabelle();
 }
 
+// ── Legacy redirect: showNewLeadModal → React quickCreate ──
+export function showNewLeadModal() {
+    if(typeof window.openReactNewLead === 'function') {
+        window.openReactNewLead();
+    } else {
+        showVerkaufTab('pipeline');
+        setTimeout(function(){ if(typeof window.openReactNewLead === 'function') window.openReactNewLead(); }, 500);
+    }
+}
+
+// ── Wochenansicht ──────────────────────────────────
+var currentWeekStart = null;
+var weekDbData = null;
+
+export function getMonday(d) { var day = d.getDay(); var diff = d.getDate() - day + (day === 0 ? -6 : 1); var m = new Date(d); m.setDate(diff); m.setHours(0,0,0,0); return m; }
+export function getKW(d) { var t = new Date(d.getFullYear(), 0, 1); var dn = ((d - t) / 86400000); return Math.ceil((dn + t.getDay() + 1) / 7); }
+
 export function changeWeek(dir) {
     if(!currentWeekStart) { currentWeekStart = getMonday(new Date()); }
     var d = new Date(currentWeekStart);
@@ -358,18 +50,13 @@ export function changeWeek(dir) {
     currentWeekStart = d;
     loadWeekFromDb();
 }
-export function getMonday(d) { var day = d.getDay(); var diff = d.getDate() - day + (day === 0 ? -6 : 1); var m = new Date(d); m.setDate(diff); m.setHours(0,0,0,0); return m; }
-export function getKW(d) { var t = new Date(d.getFullYear(), 0, 1); var dn = ((d - t) / 86400000); return Math.ceil((dn + t.getDay() + 1) / 7); }
-var currentWeekStart = null;
-var weekDbData = null;
 
 export async function loadWeekFromDb() {
     if(!currentWeekStart) currentWeekStart = getMonday(new Date());
     var mon = currentWeekStart;
-    var sun = new Date(mon); sun.setDate(mon.getDate() + 5); // Mo-Sa
+    var sun = new Date(mon); sun.setDate(mon.getDate() + 5);
     var monStr = mon.toISOString().slice(0,10);
     var sunStr = sun.toISOString().slice(0,10);
-    // Update header
     var kw = getKW(mon);
     var fmt = function(d) { return d.getDate().toString().padStart(2,'0') + '.' + (d.getMonth()+1).toString().padStart(2,'0') + '.'; };
     var titleEl = document.getElementById('weekTitle');
@@ -390,7 +77,6 @@ export function renderWeekViewFromDb() {
     var data = weekDbData || [];
     var dayNames = ['So','Mo','Di','Mi','Do','Fr','Sa'];
     var weekDays = ['Mo','Di','Mi','Do','Fr','Sa'];
-    // Group by seller
     var sellerMap = {};
     data.forEach(function(entry) {
         var name = entry.verkaeufer_name;
@@ -412,7 +98,7 @@ export function renderWeekViewFromDb() {
         sellerMap[name].plan_soll += (entry.plan_termine || 0);
     });
     var sellers = Object.values(sellerMap);
-    // Update filter dropdown dynamically
+
     var filterEl = document.getElementById('weekSellerFilter');
     if(filterEl) {
         var curVal = filterEl.value;
@@ -423,7 +109,6 @@ export function renderWeekViewFromDb() {
     var filter = filterEl ? filterEl.value : 'all';
     var filtered = filter === 'all' ? sellers : sellers.filter(function(s){return s.name === filter;});
 
-    // KPIs
     var totalPlan=0, totalGesamt=0, totalVerkauft=0, totalUmsatz=0;
     filtered.forEach(function(s) {
         totalPlan += s.plan_soll;
@@ -441,7 +126,6 @@ export function renderWeekViewFromDb() {
     el = document.getElementById('wkQuote');
     if(el) { el.textContent = quoteVal + '%'; el.className = 'text-2xl font-bold ' + (quoteVal >= 70 ? 'text-green-600' : quoteVal >= 40 ? 'text-orange-600' : 'text-red-600'); }
 
-    // Seller tables
     var container = document.getElementById('weekSellerTables');
     if(!container) return;
     if(filtered.length === 0) { container.innerHTML = '<div class="vit-card p-8 text-center text-gray-400"><p class="text-lg mb-2">'+_t('sales_no_data')+'</p><p class="text-sm">'+_t('sales_add_entry')+'</p></div>'; return; }
@@ -485,14 +169,131 @@ export function renderWeekViewFromDb() {
     container.innerHTML = html;
 }
 
+// ── Auswertung / Jahrestabelle ─────────────────────
+export async function renderJahresTabelle() {
+    var tbody = document.getElementById('jahresTabelle');
+    if(!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-400">Lade Daten...</td></tr>';
 
+    var sb = window.sb || window.supabase;
+    var profile = window.sbProfile;
+    if(!sb || !profile) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-400">Keine Verbindung</td></tr>'; return; }
 
-// Strangler Fig
-window.verkaufData = verkaufData;
-const _exports = {renderWeekView,renderPipeline,moveLead,showNewLeadModal,addNewLead,renderJahresTabelle,showVerkaufTab,changeWeek,getMonday,getKW,loadWeekFromDb,renderWeekViewFromDb};
+    var stdId = profile.standort_id;
+    var yr = new Date().getFullYear();
+    var curMonth = new Date().getMonth();
+    var monatsNamen = ['Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+    var trackingData = {};
+    try {
+        var q = sb.from('verkauf_tracking').select('datum, geplant, spontan, ergo, verkauft, umsatz')
+            .gte('datum', yr + '-01-01').lte('datum', yr + '-12-31');
+        if(stdId && !profile.is_hq) q = q.eq('standort_id', stdId);
+        var resp = await q;
+        if(resp.data) {
+            resp.data.forEach(function(r) {
+                var m = new Date(r.datum).getMonth();
+                if(!trackingData[m]) trackingData[m] = {beratungen:0, verkauft:0, umsatz:0};
+                trackingData[m].beratungen += (r.geplant||0) + (r.spontan||0);
+                trackingData[m].verkauft += (r.verkauft||0);
+                trackingData[m].umsatz += parseFloat(r.umsatz||0);
+            });
+        }
+    } catch(e) { console.warn('[Auswertung] Tracking error:', e); }
+
+    var planData = {};
+    try {
+        if(stdId) {
+            var jpResp = await sb.from('jahresplaene').select('plan_daten').eq('standort_id', stdId).eq('jahr', yr).single();
+            if(jpResp.data && jpResp.data.plan_daten) {
+                for(var i = 1; i <= 12; i++) {
+                    var mp = jpResp.data.plan_daten[String(i)] || jpResp.data.plan_daten[i] || {};
+                    planData[i-1] = { umsatz: mp.umsatz || 0 };
+                }
+            }
+        }
+    } catch(e) { console.warn('[Auswertung] Jahresplan error:', e); }
+
+    var html = '';
+    var totals = {beratungen:0, verkauft:0, umsatz:0, plan:0};
+
+    for(var i = 0; i < 12; i++) {
+        var td = trackingData[i] || {beratungen:0, verkauft:0, umsatz:0};
+        var plan = planData[i] ? planData[i].umsatz : 0;
+        var isCurrent = (i === curMonth);
+        var isFuture = i > curMonth && td.beratungen === 0 && td.verkauft === 0;
+        var quote = td.beratungen > 0 ? Math.round((td.verkauft / td.beratungen) * 100) : 0;
+        var avg = td.verkauft > 0 ? Math.round(td.umsatz / td.verkauft) : 0;
+        totals.beratungen += td.beratungen; totals.verkauft += td.verkauft; totals.umsatz += td.umsatz; totals.plan += plan;
+
+        html += '<tr class="border-b ' + (isCurrent ? 'bg-blue-50 border-l-4 border-blue-400' : '') + ' ' + (isFuture ? 'text-gray-400' : '') + '">';
+        html += '<td class="py-2.5 px-3 font-semibold">' + monatsNamen[i] + '</td>';
+        html += '<td class="text-right py-2.5 px-3">' + (td.beratungen > 0 ? td.beratungen : '\u2014') + '</td>';
+        html += '<td class="text-right py-2.5 px-3 font-bold text-green-600">' + (td.verkauft > 0 ? td.verkauft : '\u2014') + '</td>';
+        html += '<td class="text-right py-2.5 px-3 ' + (quote >= 70 ? 'text-green-600' : quote > 0 ? 'text-orange-600' : '') + '">' + (quote > 0 ? quote + '%' : '\u2014') + '</td>';
+        html += '<td class="text-right py-2.5 px-3">' + (td.umsatz > 0 ? Math.round(td.umsatz).toLocaleString('de-DE') + ' \u20AC' : '\u2014') + '</td>';
+        html += '<td class="text-right py-2.5 px-3">' + (avg > 0 ? avg.toLocaleString('de-DE') + ' \u20AC' : '\u2014') + '</td>';
+        html += '</tr>';
+    }
+
+    var totalQuote = totals.beratungen > 0 ? Math.round((totals.verkauft / totals.beratungen) * 100) : 0;
+    var totalAvg = totals.verkauft > 0 ? Math.round(totals.umsatz / totals.verkauft) : 0;
+    html += '<tr class="bg-gray-100 border-t-2"><td class="py-3 px-3 font-bold">GESAMT</td>';
+    html += '<td class="text-right py-3 px-3 font-bold">' + (totals.beratungen > 0 ? totals.beratungen : '\u2014') + '</td>';
+    html += '<td class="text-right py-3 px-3 font-bold text-green-600">' + (totals.verkauft > 0 ? totals.verkauft : '\u2014') + '</td>';
+    html += '<td class="text-right py-3 px-3 font-bold">' + (totalQuote > 0 ? totalQuote + '%' : '\u2014') + '</td>';
+    html += '<td class="text-right py-3 px-3 font-bold">' + (totals.umsatz > 0 ? Math.round(totals.umsatz).toLocaleString('de-DE') + ' \u20AC' : '\u2014') + '</td>';
+    html += '<td class="text-right py-3 px-3 font-bold">' + (totalAvg > 0 ? totalAvg.toLocaleString('de-DE') + ' \u20AC' : '\u2014') + '</td>';
+    html += '</tr>';
+    tbody.innerHTML = html;
+
+    var elPlan = document.getElementById('ausJahresPlan');
+    var elYTD = document.getElementById('ausUmsatzYTD');
+    var elVK = document.getElementById('ausVerkauft');
+    var elQuote = document.getElementById('ausQuote');
+    var elAvg = document.getElementById('ausAvgPreis');
+    if(elPlan) elPlan.textContent = totals.plan > 0 ? totals.plan.toLocaleString('de-DE') + ' \u20AC' : '\u2014';
+    if(elYTD) elYTD.textContent = totals.umsatz > 0 ? Math.round(totals.umsatz).toLocaleString('de-DE') + ' \u20AC' : '0 \u20AC';
+    if(elVK) elVK.textContent = totals.verkauft;
+    if(elQuote) elQuote.textContent = totalQuote > 0 ? totalQuote + '%' : '0%';
+    if(elAvg) elAvg.textContent = totalAvg > 0 ? totalAvg.toLocaleString('de-DE') + ' \u20AC' : '0 \u20AC';
+
+    renderAuswertungChart(trackingData, planData);
+}
+
+function renderAuswertungChart(trackingData, planData) {
+    var container = document.getElementById('ausChartContainer');
+    if(!container) return;
+    var maxVal = 1;
+    for(var i = 0; i < 12; i++) {
+        var td = trackingData[i] || {};
+        var pd = planData[i] || {};
+        if((td.umsatz||0) > maxVal) maxVal = td.umsatz;
+        if((pd.umsatz||0) > maxVal) maxVal = pd.umsatz;
+    }
+    var months = ['Jan','Feb','Mrz','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+    var w = container.clientWidth || 800;
+    var h = 180;
+    var barW = Math.floor((w - 40) / 12) - 4;
+
+    var svg = '<svg viewBox="0 0 '+w+' '+(h+30)+'" style="width:100%;height:100%">';
+    for(var g = 0; g <= 4; g++) {
+        var gy = h - (g/4)*h;
+        svg += '<line x1="40" y1="'+gy+'" x2="'+w+'" y2="'+gy+'" stroke="#f0f0f0" stroke-width="1"/>';
+        svg += '<text x="36" y="'+(gy+4)+'" text-anchor="end" fill="#9ca3af" font-size="10">' + Math.round(maxVal*g/4/1000) + '</text>';
+    }
+    for(var i = 0; i < 12; i++) {
+        var td = trackingData[i] || {};
+        var x = 44 + i * (barW + 4);
+        var val = td.umsatz || 0;
+        var barH = maxVal > 0 ? (val / maxVal) * h : 0;
+        svg += '<rect x="'+x+'" y="'+(h-barH)+'" width="'+barW+'" height="'+barH+'" rx="3" fill="'+(val > 0 ? '#EF7D00' : '#f0f0f0')+'"/>';
+        svg += '<text x="'+(x+barW/2)+'" y="'+(h+18)+'" text-anchor="middle" fill="#9ca3af" font-size="10">'+months[i]+'</text>';
+    }
+    svg += '</svg>';
+    container.innerHTML = svg;
+}
+
+// ── Strangler Fig: Window Exports ──────────────────
+const _exports = {showNewLeadModal,renderJahresTabelle,showVerkaufTab,changeWeek,getMonday,getKW,loadWeekFromDb,renderWeekViewFromDb};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-// [prod] log removed
-
-// === Window Exports (onclick handlers) ===
-window.changeWeek = changeWeek;
-window.renderWeekViewFromDb = renderWeekViewFromDb;
