@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 02.03.2026
+> Letzte Aktualisierung: 03.03.2026
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -51,11 +51,24 @@ portal/
 │   ├── globals.js          – showToast, escH, fmtN, Theme Toggle
 │   ├── supabase-init.js    – createClient, IDB Session, Auth Listener
 │   └── router.js           – showView(), i18n t(), View Switching
-├── views/                  – 40 Module, ~36.000 Zeilen (parallel geladen)
+├── views/                  – 53 Module, ~36.000 Zeilen (parallel geladen)
 │   ├── home.js             – Dashboard, Widgets, Quick Actions
 │   ├── verkauf.js          – Verkäufer-Performance, Pipeline
 │   ├── controlling.js      – BWA Upload/Parse/AI (13+ Formate)
-│   ├── dev-pipeline.js     – Ideenboard, Roadmap, KI-Analyse [261KB – AUFSPALTUNG PRIO]
+│   ├── dev-pipeline.js     – Orchestrator: State, Tabs, loadDevSubmissions (✅ aufgespalten)
+│   ├── dev-recording.js    – Audio/Video-Recording, Datei-Upload
+│   ├── dev-tabs.js         – Tab-Renderer: Ideen, Releases, Steuerung, Flags, System, Nutzung
+│   ├── dev-kanban.js       – Kanban-Board: Meine, Alle, Board, Planung
+│   ├── dev-roadmap.js      – Quartals-Roadmap
+│   ├── dev-ideas.js        – Idee einreichen, Voting, HQ-Entscheidung
+│   ├── dev-detail.js       – Detail-Modal (größtes Sub-Modul)
+│   ├── dev-vision.js       – Owner-Vision-Editor
+│   ├── dev-notifications.js – Notification-Bell und Panel
+│   ├── dev-utils.js        – CSV-Export, KI-Chat, HQ-User, MA-Zuweisung
+│   ├── dev-workflow.js     – Status-Advancement, Beta-Test, Rollout
+│   ├── dev-release.js      – Release-Docs, Feedback-Surveys
+│   ├── dev-ki.js           – KI-Priorisierung, Notizen, KPI-Filter
+│   ├── dev-mockup.js       – Mockup-Chat, Generation, Refinement
 │   ├── office.js           – Check-in, Desk Booking [143KB – AUFSPALTUNG PRIO]
 │   ├── user-management.js  – User CRUD, Rollen [141KB – AUFSPALTUNG PRIO]
 │   ├── view-router.js      – MUSS LETZTES View-Modul sein (vit:view-changed Events)
@@ -79,12 +92,12 @@ docs/
 
 ### Strangler Fig Pattern
 
-Das Portal wurde von einer 37.000-Zeilen monolithischen HTML-Datei in 62 ES-Module migriert. Die Module exportieren auf `window.*` für Abwärtskompatibilität mit bestehenden `onclick=""`-Handlern.
+Das Portal wurde von einer 37.000-Zeilen monolithischen HTML-Datei in 75 ES-Module migriert. Die Module exportieren auf `window.*` für Abwärtskompatibilität mit bestehenden `onclick=""`-Handlern.
 
 ```
 ┌─────────────┐    sequentiell    ┌──────────────┐    parallel    ┌──────────────┐
 │  index.html  │ ──────────────→ │  core/*.js    │ ────────────→ │  views/*.js  │
-│  (HTML/CSS)  │                  │  (globals,    │               │  (40 Module) │
+│  (HTML/CSS)  │                  │  (globals,    │               │  (53 Module) │
 │              │                  │   supabase,   │               │              │
 │              │                  │   router)     │               │  view-router │
 │              │                  │               │               │  IMMER LETZT │
@@ -241,7 +254,7 @@ Die größten Module sollten bei der TypeScript-Migration aufgespalten werden:
 
 | # | Modul | Größe | Aufspaltung |
 |---|-------|-------|-------------|
-| 1 | `dev-pipeline.js` | 261 KB | → dev-kanban, dev-modules, dev-flags, dev-video, dev-feedback |
+| 1 | `dev-pipeline.js` | 261 KB | ✅ Aufgespalten → 14 Sub-Module (dev-recording, dev-tabs, dev-kanban, dev-roadmap, dev-ideas, dev-detail, dev-vision, dev-notifications, dev-utils, dev-workflow, dev-release, dev-ki, dev-mockup) |
 | 2 | `office.js` | 143 KB | → office-checkin, office-booking, office-analytics |
 | 3 | `user-management.js` | 141 KB | → user-list, user-edit, user-roles |
 | 4 | `strategie.js` | 137 KB | → strategie-onboarding, strategie-kommando |

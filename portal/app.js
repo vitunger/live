@@ -12,7 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1772385563";
+const CACHE_BUST = "?v=1772385600";
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
@@ -57,8 +57,23 @@ const VIEW_MODULES = [
     'views/standort-billing.js',
     'views/trainer-system.js',
     
-    // Specialized
+    // Entwicklung (dev-pipeline split into 14 sub-modules)
     'views/dev-pipeline.js',
+    'views/dev-recording.js',
+    'views/dev-tabs.js',
+    'views/dev-kanban.js',
+    'views/dev-roadmap.js',
+    'views/dev-ideas.js',
+    'views/dev-detail.js',
+    'views/dev-vision.js',
+    'views/dev-notifications.js',
+    'views/dev-utils.js',
+    'views/dev-workflow.js',
+    'views/dev-release.js',
+    'views/dev-ki.js',
+    'views/dev-mockup.js',
+
+    // Specialized
     'views/strategie.js',
     'views/profile-theme.js',
     'views/perf-cockpit.js',
