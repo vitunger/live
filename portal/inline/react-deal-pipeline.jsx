@@ -1261,6 +1261,7 @@ function PipelineApp(){
 
         // Load deals
         const loaded = await loadDeals();
+        console.log("[Pipeline] Loaded", loaded.length, "deals. Standorte:", [...new Set(loaded.map(d=>d.loc))]);
         setDeals(loaded);
 
         // Load monthly goal from jahresplaene
@@ -1305,6 +1306,7 @@ function PipelineApp(){
   const nid=useRef(100);
 
   const locFiltered = curLoc === "hq" ? deals : deals.filter(d => d.loc === curLoc);
+  if(deals.length>0&&locFiltered.length===0) console.warn("[Pipeline] All deals filtered out! curLoc:", curLoc, "deal locs:", [...new Set(deals.map(d=>d.loc))]);
   const userId = window.sbUser?.id || "";
   const filteredDeals = filter === "mine" ? locFiltered.filter(d => d.seller === userId) : filter === "auto" ? locFiltered.filter(d => d.autoImport) : filter === "manual" ? locFiltered.filter(d => !d.autoImport) : locFiltered;
 
@@ -1384,9 +1386,11 @@ function PipelineApp(){
     if(!dealLoc){ msg("⚠ Kein Standort zugeordnet"); return; }
     const emptyDeal={name:"Neuer Kunde",value:0,note:"",avatar:"👤",heat:3,stage:"lead",phone:"",email:"",acts:[],todos:[],created:Date.now(),changed:Date.now(),loc:dealLoc,seller:"",source:"walk_in",interesse:"",prioritaet:"mittel",sales:{}};
     const dbRow = await createDeal(emptyDeal);
+    console.log("[Pipeline] quickCreate result:", dbRow, "dealLoc:", dealLoc);
     if (dbRow) {
       const newDeal = { ...emptyDeal, id: dbRow.id };
-      setDeals(p=>[newDeal,...p]);
+      console.log("[Pipeline] Adding deal to state:", newDeal.id, newDeal.name, newDeal.loc, newDeal.stage);
+      setDeals(p=>{console.log("[Pipeline] deals before add:", p.length); return [newDeal,...p];});
       setNewId(dbRow.id);
       msg("🎯 Lead angelegt – Details ausfüllen");
       setTimeout(()=>{setNewId(null);setSel(newDeal);},400);
