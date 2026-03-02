@@ -1251,11 +1251,20 @@ function PipelineApp(){
           ]);
         }
 
-        // Load active users as sellers
-        const { data: users, error: e2 } = await sb.from("users").select("id, vorname, nachname, name, standort_id, is_hq").eq("status", "aktiv");
-        if (e2) console.warn("[Pipeline] Users error:", e2.message);
-        if (users && users.length) {
-          setSellers(users.map((u, i) => {
+        // Load users with role "verkauf" as sellers
+        const { data: verkaufRolle } = await sb.from("rollen").select("id").eq("name", "verkauf").single();
+        let sellerUsers = [];
+        if (verkaufRolle) {
+          const { data: roleLinks } = await sb.from("user_rollen").select("user_id").eq("rolle_id", verkaufRolle.id);
+          if (roleLinks && roleLinks.length) {
+            const sellerIds = roleLinks.map(r => r.user_id);
+            const { data: users, error: e2 } = await sb.from("users").select("id, vorname, nachname, name, standort_id, is_hq").eq("status", "aktiv").in("id", sellerIds);
+            if (e2) console.warn("[Pipeline] Users error:", e2.message);
+            sellerUsers = users || [];
+          }
+        }
+        if (sellerUsers.length) {
+          setSellers(sellerUsers.map((u, i) => {
             const vn = u.vorname || u.name?.split(" ")[0] || "?";
             const nn = u.nachname || u.name?.split(" ").slice(1).join(" ") || "";
             const short = (vn[0] || "") + (nn[0] || "");
