@@ -171,6 +171,16 @@ function useSupabase(currentLoc, SELLERS) {
     } catch (e) { console.error("[Pipeline] Save exception:", e); }
   }, [sb]);
 
+  // Delete deal
+  const deleteDeal = useCallback(async (dealId) => {
+    if (!sb || typeof dealId === "number") return false;
+    try {
+      const { error: err } = await sb.from("leads").delete().eq("id", dealId);
+      if (err) { console.error("[Pipeline] Delete error:", err); return false; }
+      return true;
+    } catch (e) { console.error("[Pipeline] Delete exception:", e); return false; }
+  }, [sb]);
+
   // Create new deal
   const createDeal = useCallback(async (deal) => {
     if (!sb || !profile) return null;
@@ -243,7 +253,7 @@ function useSupabase(currentLoc, SELLERS) {
     } catch (e) { console.error("[Pipeline] Activity create error:", e); return null; }
   }, [sb]);
 
-  return { loading, error, loadDeals, saveDeal, createDeal, saveTodo, toggleTodo, addActivity };
+  return { loading, error, loadDeals, saveDeal, deleteDeal, createDeal, saveTodo, toggleTodo, addActivity };
 }
 
 /* ── Tiny Components ─────────────────────────────── */
@@ -721,7 +731,7 @@ function ScanUploadModal({deal,sales,onClose,onUpdateDeal}){
   </div>
 }
 
-function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateDeal,onChangeStage,SELLERS}){
+function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateDeal,onChangeStage,onDelete,SELLERS}){
   const[tab,setTab]=useState("uebersicht");
   const[at,setAt]=useState("call");const[tx,setTx]=useState("");
   const[todoTx,setTodoTx]=useState("");const[todoDays,setTodoDays]=useState(3);
@@ -1014,6 +1024,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
         <button onClick={()=>setShowForm("interactive")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #e5e7eb",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#374151"}}>📱 Beratung</button>
         <button onClick={()=>setShowForm("print")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #e5e7eb",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#374151"}}>🖨️ Drucken</button>
         <button onClick={()=>setShowForm("scan")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #EF7D00",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#EF7D00"}}>📷 Scan</button>
+        <button onClick={()=>{if(confirm("Lead \""+deal.name+"\" wirklich löschen?"))onDelete(deal.id)}} style={{padding:"7px 8px",borderRadius:7,border:"1.5px solid #fca5a5",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#dc2626"}} title="Lead löschen">🗑️</button>
       </div>
 
       {showForm&&showForm!=="scan"&&<SalesForm deal={deal} sales={sales} seller={seller} onClose={()=>setShowForm(null)} onUpdateDeal={onUpdateDeal} mode={showForm}/>}
@@ -1212,7 +1223,7 @@ function PipelineApp(){
   const[curLoc,setCurLoc]=useState(isHqUser ? "hq" : userStandortId);
 
   // Supabase data layer
-  const { loading, error: dbError, loadDeals, saveDeal, createDeal, saveTodo, toggleTodo: dbToggleTodo, addActivity } = useSupabase(curLoc, SELLERS);
+  const { loading, error: dbError, loadDeals, saveDeal, deleteDeal, createDeal, saveTodo, toggleTodo: dbToggleTodo, addActivity } = useSupabase(curLoc, SELLERS);
 
   // Load locations + sellers + deals on mount
   useEffect(() => {
@@ -1452,6 +1463,16 @@ function PipelineApp(){
     else if(toStage==="gold"){msg(`🗄️ ${deal?.name} → Schrank der Hoffnung`)}
   },[deals,applyRules,msg,pop,saveDeal]);
 
+  const handleDelete=useCallback(async(did)=>{
+    const deal=deals.find(d=>d.id===did);
+    const ok=await deleteDeal(did);
+    if(ok){
+      setDeals(p=>p.filter(d=>d.id!==did));
+      setSel(null);
+      msg(`🗑️ ${deal?.name||"Lead"} gelöscht`);
+    } else { msg("⚠ Löschen fehlgeschlagen"); }
+  },[deals,deleteDeal,msg]);
+
   const main=STAGES.filter(s=>!["lost","gold"].includes(s.id));
   const aging=filteredDeals.filter(d=>!["verkauft","lost","gold"].includes(d.stage)&&dSince(d.changed)>=(AGING[d.stage]||5)).length;
   const openTodos=filteredDeals.reduce((s,d)=>s+d.todos.filter(t=>!t.done).length,0);
@@ -1511,7 +1532,7 @@ function PipelineApp(){
       <DropZone sid="lost" label="💀 Verloren" sub="Wiederbelebbar" bc="#FEB2B2" tc="#E53E3E" cc="#9ca3af" deals={filteredDeals.filter(d=>d.stage==="lost")} onDrop={drop} onDrag={setDragId}/>
     </div>
 
-    {sel&&<DetailModal deal={sel} onClose={()=>setSel(null)} onAct={addAct} onHeat={setHeat} onToggleTodo={toggleTodo} onAddTodo={addTodo} onUpdateDeal={updateDeal} onChangeStage={changeStage} SELLERS={SELLERS}/>}
+    {sel&&<DetailModal deal={sel} onClose={()=>setSel(null)} onAct={addAct} onHeat={setHeat} onToggleTodo={toggleTodo} onAddTodo={addTodo} onUpdateDeal={updateDeal} onChangeStage={changeStage} onDelete={handleDelete} SELLERS={SELLERS}/>}
     {showAuto&&<AutoModal rules={rules} onUpdate={setRules} onClose={()=>setShowAuto(false)} LOCATIONS={LOCATIONS}/>}
   </div>
 }
