@@ -1121,7 +1121,7 @@ export async function deleteMa(userId, userName) {
         // 2. User-Profil löschen
         await _sb().from('users').delete().eq('id', userId);
         // 3. Auth-User löschen (via DB-Funktion)
-        await sb.rpc('delete_auth_user', { target_user_id: userId });
+        await _sb().rpc('delete_auth_user', { target_user_id: userId });
         alert('\u2705 '+userName+' wurde gelöscht.');
         renderKzMitarbeiter();
     } catch(err) {
