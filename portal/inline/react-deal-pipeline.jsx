@@ -3,15 +3,14 @@ const { useState, useRef, useCallback, useEffect } = React;
 
 const STAGES = [
   { id: "lead", label: "Eingang", color: "#667EEA", bg: "#EBF4FF" },
-  { id: "termin", label: "Termin gebucht", color: "#8B5CF6", bg: "#F5F3FF" },
-  { id: "angebot", label: "Schwebend", color: "#3182CE", bg: "#EBF8FF" },
-  { id: "schwebend", label: "Zusage", color: "#D97706", bg: "#FEF3C7" },
-  { id: "verkauft", label: "Verkauft", color: "#16A34A", bg: "#DCFCE7" },
+  { id: "angebot", label: "Schwebend (Angebot)", color: "#3182CE", bg: "#EBF8FF" },
+  { id: "schwebend", label: "Zusage (Auftrag)", color: "#D97706", bg: "#FEF3C7" },
+  { id: "verkauft", label: "Verkauft (Rechnung)", color: "#16A34A", bg: "#DCFCE7" },
   { id: "gold", label: "Schrank der Hoffnung", color: "#D69E2E", bg: "#FFFFF0" },
   { id: "lost", label: "Verloren", color: "#E53E3E", bg: "#FFF5F5" },
 ];
-const PIPELINE = ["lead", "termin", "angebot", "schwebend", "verkauft"];
-const AGING = { lead: 7, termin: 3, angebot: 5, schwebend: 5 };
+const PIPELINE = ["lead", "angebot", "schwebend", "verkauft"];
+const AGING = { lead: 7, angebot: 5, schwebend: 5 };
 const AVATARS = ["👤","👩","👨","👩‍💼","👨‍💼","👩‍🎨","👨‍🔧","👩‍⚕️","👨‍🍳","👩‍💻","🧑‍🎓","👴"];
 const ACT_TYPES = [
   { id: "call", label: "📞 Anruf", color: "#667EEA" },
@@ -58,8 +57,8 @@ const DEFAULT_RULES = [
 const INIT = [];
 
 // ── Stage Mapping: React ↔ DB ──
-const STAGE_TO_DB = { lead: "neu", termin: "kontaktiert", angebot: "angebot", schwebend: "schwebend", verkauft: "gewonnen", gold: "gold", lost: "verloren" };
-const DB_TO_STAGE = { neu: "lead", kontaktiert: "termin", angebot: "angebot", verhandlung: "schwebend", schwebend: "schwebend", gewonnen: "verkauft", verloren: "lost", gold: "gold" };
+const STAGE_TO_DB = { lead: "neu", angebot: "angebot", schwebend: "schwebend", verkauft: "gewonnen", gold: "gold", lost: "verloren" };
+const DB_TO_STAGE = { neu: "lead", kontaktiert: "lead", angebot: "angebot", verhandlung: "schwebend", schwebend: "schwebend", gewonnen: "verkauft", verloren: "lost", gold: "gold" };
 
 // ── Quelle Mapping: React ↔ DB ──
 const SOURCE_TO_DB = { "Empfehlung": "empfehlung", "Google": "google", "Instagram": "instagram", "Facebook": "facebook", "Messe": "messe", "Walk-In": "walk_in", "Website": "website", "Flyer": "flyer", "TikTok": "tiktok", "Andere": "sonstige", "walk_in":"walk_in","telefon":"telefon","website":"website","etermin":"etermin","empfehlung":"empfehlung","google":"google","instagram":"instagram","facebook":"facebook","tiktok":"tiktok","messe":"messe","flyer":"flyer","sonstige":"sonstige","social_media":"social_media" };
@@ -1101,7 +1100,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
             const label={lead_erstellt:"Lead automatisch erstellt",status_geaendert:"Pipeline-Status geändert",lead_verknuepft:"Mit bestehendem Lead verknüpft"}[ev.aktion]||ev.aktion;
             const srcLabel={etermin_webhook:"eTermin Buchung",wawi_sync:"WaWi-Sync",backfill:"Backfill (historisch)",manuell:"Manuell"}[ev.event_source]||ev.event_source;
             const detail=ev.details||{};
-            const stageLabel=(s)=>({neu:"Eingang",kontaktiert:"Termin gebucht",angebot:"Schwebend",verhandlung:"Zusage",gewonnen:"Verkauft",verloren:"Verloren",gold:"Schrank d.H."}[s]||s);
+            const stageLabel=(s)=>({neu:"Eingang",kontaktiert:"Eingang",angebot:"Schwebend (Angebot)",verhandlung:"Zusage (Auftrag)",gewonnen:"Verkauft (Rechnung)",verloren:"Verloren",gold:"Schrank d.H."}[s]||s);
             return <div key={ev.id||i} style={{position:"relative",paddingLeft:28,paddingBottom:16,borderLeft:i<events.length-1?"2px solid #e5e7eb":"2px solid transparent",marginLeft:8}}>
               <div style={{position:"absolute",left:-9,top:0,width:18,height:18,borderRadius:"50%",background:"#fff",border:"2px solid #667EEA",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10}}>{ico}</div>
               <div>
