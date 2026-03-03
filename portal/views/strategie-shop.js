@@ -57,7 +57,7 @@ export async function renderShop() {
 
             html += '<div class="vit-card p-5 hover:shadow-md transition flex flex-col">';
             if (p.image_url) {
-                html += '<div class="w-full h-40 rounded-lg mb-3 overflow-hidden bg-gray-50"><img src="'+p.image_url+'" alt="'+p.name+'" class="w-full h-full object-contain" onerror="this.parentNode.innerHTML=\'<div class=\\\'flex items-center justify-center h-full text-5xl\\\'>'+(catIcons[p.category]||'\ud83d\udecd\ufe0f')+'</div>\'"></div>';
+                html += '<div class="w-full h-40 rounded-lg mb-3 overflow-hidden bg-gray-50"><img src="'+_escH(p.image_url)+'" alt="'+_escH(p.name)+'" class="w-full h-full object-contain" onerror="this.parentNode.innerHTML=\'<div class=\\\'flex items-center justify-center h-full text-5xl\\\'>'+(catIcons[p.category]||'\ud83d\udecd\ufe0f')+'</div>\'"></div>';
             } else {
                 html += '<div class="w-full h-40 bg-gradient-to-br from-gray-50 to-orange-50 rounded-lg mb-3 flex items-center justify-center text-5xl">' + (catIcons[p.category]||'\ud83d\udecd\ufe0f') + '</div>';
             }
@@ -127,7 +127,7 @@ export async function renderShop() {
         if(products.length===0) html = '<div class="col-span-3 text-center py-8 text-gray-400">Keine Produkte in dieser Kategorie.</div>';
         container.innerHTML = html;
         renderShopCart();
-    } catch(err) { console.error('Shop:', err); container.innerHTML = '<p class="text-center text-red-400 py-8">Fehler: '+err.message+'</p>'; }
+    } catch(err) { console.error('Shop:', err); container.innerHTML = '<p class="text-center text-red-400 py-8">Fehler: '+_escH(err.message)+'</p>'; }
 }
 
 export function shopSizeQty(productId, variantId, variantName, delta, price) {
@@ -393,7 +393,7 @@ export async function loadMyShopOrders() {
         h += '</div>';
     });
     el.innerHTML = h;
-    } catch(err) { console.error('Shop orders:', err); el.innerHTML = '<p class="text-center text-gray-400 py-8">Fehler beim Laden: '+err.message+'</p>'; }
+    } catch(err) { console.error('Shop orders:', err); el.innerHTML = '<p class="text-center text-gray-400 py-8">Fehler beim Laden: '+_escH(err.message)+'</p>'; }
 }
 
 export async function submitShopOrder() {

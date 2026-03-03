@@ -144,7 +144,7 @@ export async function devMockupChatSend(subId) {
         }
     } catch(e) {
         var typing = document.getElementById('devMockupTyping');
-        if (typing) typing.innerHTML = '<div class="border border-red-200 rounded-lg px-3 py-2 bg-red-50"><span class="text-xs">❌</span> <span class="text-sm text-red-600">Fehler: '+e.message+'</span></div>';
+        if (typing) typing.innerHTML = '<div class="border border-red-200 rounded-lg px-3 py-2 bg-red-50"><span class="text-xs">❌</span> <span class="text-sm text-red-600">Fehler: '+_escH(e.message)+'</span></div>';
     }
 
     // Reset
@@ -179,7 +179,7 @@ export async function devMockupChatAttachFiles(fileInput) {
             var isImage = file.type.startsWith('image/');
             var safeUrl = url.replace(/'/g, "\\'");
             if (isImage) {
-                preview.innerHTML = '<img src="'+url+'" class="w-16 h-16 object-cover rounded border" /><button onclick="this.parentElement.remove();window._mockupChatAttachments=(window._mockupChatAttachments||[]).filter(function(a){return a.url!==\''+safeUrl+'\'})" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center">\u00d7</button>';
+                preview.innerHTML = '<img src="'+_escH(url)+'" class="w-16 h-16 object-cover rounded border" /><button onclick="this.parentElement.remove();window._mockupChatAttachments=(window._mockupChatAttachments||[]).filter(function(a){return a.url!==\''+safeUrl+'\'})" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center">\u00d7</button>';
             } else {
                 var icon = ext === 'pdf' ? '\uD83D\uDCC4' : ext.match(/^(doc|docx)$/) ? '\uD83D\uDCC3' : ext.match(/^(xls|xlsx|csv)$/) ? '\uD83D\uDCCA' : '\uD83D\uDCCE';
                 preview.innerHTML = '<div class="w-16 h-16 rounded border bg-gray-50 flex flex-col items-center justify-center text-[10px] text-gray-600"><span class="text-xl">'+icon+'</span><span class="truncate max-w-[56px] mt-0.5">'+_escH(file.name)+'</span></div><button onclick="this.parentElement.remove();window._mockupChatAttachments=(window._mockupChatAttachments||[]).filter(function(a){return a.url!==\''+safeUrl+'\'})" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center">\u00d7</button>';
@@ -209,7 +209,7 @@ export async function devMockupChatAttachImage(fileInput) {
         container.classList.remove('hidden');
         var preview = document.createElement('div');
         preview.className = 'relative';
-        preview.innerHTML = '<img src="'+url+'" class="w-16 h-16 object-cover rounded border" /><button onclick="this.parentElement.remove();window._mockupChatAttachments=window._mockupChatAttachments||[];window._mockupChatAttachments=window._mockupChatAttachments.filter(function(a){return a.url!==\''+url+'\';})" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center">×</button>';
+        preview.innerHTML = '<img src="'+_escH(url)+'" class="w-16 h-16 object-cover rounded border" /><button onclick="this.parentElement.remove();window._mockupChatAttachments=window._mockupChatAttachments||[];window._mockupChatAttachments=window._mockupChatAttachments.filter(function(a){return a.url!==\''+url+'\';})" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center">×</button>';
         container.appendChild(preview);
     }
     fileInput.value = '';
@@ -384,7 +384,7 @@ export async function devMockupGenerate(subId, isRefine) {
         openDevDetail(subId);
     } catch(e) {
         clearInterval(st);
-        if(body) body.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-xl p-4 text-center"><p class="text-red-600 text-sm">❌ '+e.message+'</p><button onclick="devMockupGenerate(\''+subId+'\',false)" class="mt-2 px-3 py-1 bg-red-100 text-red-700 rounded text-xs">🔄 Erneut</button></div>';
+        if(body) body.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-xl p-4 text-center"><p class="text-red-600 text-sm">❌ '+_escH(e.message)+'</p><button onclick="devMockupGenerate(\''+subId+'\',false)" class="mt-2 px-3 py-1 bg-red-100 text-red-700 rounded text-xs">🔄 Erneut</button></div>';
         _showToast('Fehler: '+e.message,'error');
     }
 }

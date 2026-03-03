@@ -146,7 +146,7 @@ async function loadHqAutomations() {
             html += '</div></div>';
         });
         container.innerHTML = html;
-    } catch(e) { container.innerHTML = '<p class="text-sm text-red-400">Fehler: ' + e.message + '</p>'; }
+    } catch(e) { container.innerHTML = '<p class="text-sm text-red-400">Fehler: ' + _escH(e.message) + '</p>'; }
 }
 
 window.showHqVkTab = function(tab) {
@@ -994,7 +994,7 @@ export async function renderPerformanceCockpit() {
         el.innerHTML = h;
     } catch(err) {
         console.error('[COCKPIT]', err);
-        el.innerHTML = '<div class="text-center py-8"><p class="text-red-400 text-sm">Fehler beim Laden: ' + err.message + '</p><button onclick="renderPerformanceCockpit()" class="mt-2 text-sm text-vit-orange underline">Erneut versuchen</button></div>';
+        el.innerHTML = '<div class="text-center py-8"><p class="text-red-400 text-sm">Fehler beim Laden: ' + _escH(err.message) + '</p><button onclick="renderPerformanceCockpit()" class="mt-2 text-sm text-vit-orange underline">Erneut versuchen</button></div>';
     }
 }
 

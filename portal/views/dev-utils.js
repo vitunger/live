@@ -233,7 +233,7 @@ export async function reanalyseDevSubmission(subId) {
                 '<div class="flex items-center gap-3">' +
                 '<span class="text-2xl">❌</span>' +
                 '<div><h4 class="font-bold text-red-800 text-sm">Analyse fehlgeschlagen</h4>' +
-                '<p class="text-xs text-red-600">' + e.message + '</p></div>' +
+                '<p class="text-xs text-red-600">' + _escH(e.message) + '</p></div>' +
                 '</div>' +
                 '<button onclick="reanalyseDevSubmission(\'' + subId + '\')" class="mt-2 w-full py-2 bg-red-100 text-red-700 rounded-lg text-sm font-semibold hover:bg-red-200">🔄 Erneut versuchen</button>' +
                 '</div>';

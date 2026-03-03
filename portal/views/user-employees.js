@@ -188,7 +188,7 @@ export async function renderPartnerMitarbeiter() {
         });
         if(list.length===0) h='<div class="vit-card p-8 text-center text-gray-400">Keine Mitarbeiter gefunden.</div>';
         container.innerHTML=h;
-    } catch(err) { console.error('MA:', err); container.innerHTML='<div class="text-red-400 p-4">Fehler: '+err.message+'</div>'; }
+    } catch(err) { console.error('MA:', err); container.innerHTML='<div class="text-red-400 p-4">Fehler: '+_escH(err.message)+'</div>'; }
 }
 
 // ---- Tool Assignment Modal ----
@@ -443,7 +443,7 @@ export async function renderMaKosten(){
             h+='</tbody></table></div>';
         }
         el.innerHTML=h;
-    }catch(err){el.innerHTML='<div class="text-red-400 p-4">Fehler: '+err.message+'</div>';}
+    }catch(err){el.innerHTML='<div class="text-red-400 p-4">Fehler: '+_escH(err.message)+'</div>';}
 }
 
 export function deactivateMa(idx) {

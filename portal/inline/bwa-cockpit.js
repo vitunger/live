@@ -355,7 +355,7 @@
         } catch(err) {
             console.warn('showKpiReport:', err);
             // Fallback auf statische Demo-Daten wenn Supabase nicht verfügbar
-            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#9ca3af;font-size:12px;padding:8px">⚠️ ' + err.message + '</div>';
+            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#9ca3af;font-size:12px;padding:8px">⚠️ ' + (window.escH||String)(err.message) + '</div>';
             recList.innerHTML = '<li>→ Daten konnten nicht geladen werden</li>';
         }
     }
@@ -510,7 +510,7 @@
 
         } catch(err) {
             console.error('renderHqBwaStatus:', err);
-            if(tbody) tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-red-400 text-sm">⚠️ Fehler beim Laden: ' + err.message + '</td></tr>';
+            if(tbody) tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-red-400 text-sm">⚠️ Fehler beim Laden: ' + (window.escH||String)(err.message) + '</td></tr>';
         }
     }
 

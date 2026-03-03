@@ -54,7 +54,7 @@ if(tabBadge) { tabBadge.textContent = neuCount; tabBadge.style.display = neuCoun
 
 renderHqFbList(items);
 } catch(err) {
-list.innerHTML = '<div class="p-8 text-center text-red-400">Fehler: '+err.message+'</div>';
+list.innerHTML = '<div class="p-8 text-center text-red-400">Fehler: '+_escH(err.message)+'</div>';
 }
 }
 

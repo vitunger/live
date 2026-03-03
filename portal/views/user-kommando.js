@@ -87,7 +87,7 @@ export async function renderKzStandorte() {
         var ak=document.getElementById('kzStandorteAktiv');if(ak)ak.textContent=standorte.filter(function(s){return (s.status||'aktiv')==='aktiv';}).length;
         var ob=document.getElementById('kzStandorteOnb');if(ob)ob.textContent=standorte.filter(function(s){return s.status==='onboarding';}).length;
         var of2=document.getElementById('kzStandorteOff');if(of2)of2.textContent=standorte.filter(function(s){return s.status==='offboarding';}).length;
-    } catch(err) { console.error('Standorte:', err); body.innerHTML='<tr><td colspan="8" class="text-center py-4 text-red-400">Fehler: '+err.message+'</td></tr>'; }
+    } catch(err) { console.error('Standorte:', err); body.innerHTML='<tr><td colspan="8" class="text-center py-4 text-red-400">Fehler: '+_escH(err.message)+'</td></tr>'; }
 }
 
 export async function renderKzMitarbeiter() {
@@ -147,7 +147,7 @@ export async function renderKzMitarbeiter() {
             users.forEach(function(u){ var sn=u.standorte?u.standorte.name:'HQ'; if(standorte.indexOf(sn)===-1)standorte.push(sn); });
             standorte.sort().forEach(function(s){sel.innerHTML+='<option value="'+s+'">'+s+'</option>';});
         }
-    } catch(err) { console.error('Mitarbeiter:', err); body.innerHTML='<tr><td colspan="7" class="text-center py-4 text-red-400">Fehler: '+err.message+'</td></tr>'; }
+    } catch(err) { console.error('Mitarbeiter:', err); body.innerHTML='<tr><td colspan="7" class="text-center py-4 text-red-400">Fehler: '+_escH(err.message)+'</td></tr>'; }
 }
 
 // ==================== BETA USER MANAGEMENT ====================
@@ -220,7 +220,7 @@ export async function openBetaUsersModal(modulKey, modulName) {
 
         inner.innerHTML = html;
     } catch(e) {
-        inner.innerHTML = '<p class="text-red-600 p-4">Fehler: ' + e.message + '</p>';
+        inner.innerHTML = '<p class="text-red-600 p-4">Fehler: ' + _escH(e.message) + '</p>';
     }
 }
 

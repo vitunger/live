@@ -247,7 +247,7 @@ export async function renderDevBetaTester() {
             h += '</div>';
         }
         c.innerHTML = h;
-    } catch(e) { c.innerHTML = '<p class="text-red-400 text-sm">Fehler: ' + e.message + '</p>'; }
+    } catch(e) { c.innerHTML = '<p class="text-red-400 text-sm">Fehler: ' + _escH(e.message) + '</p>'; }
 }
 
 export async function devAddBetaTester() {

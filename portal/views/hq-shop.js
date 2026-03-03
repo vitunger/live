@@ -42,7 +42,7 @@ function _renderImagePreview(containerId, currentUrl) {
     var el = document.getElementById(containerId);
     if(!el) return;
     if(currentUrl) {
-        el.innerHTML = '<div class="flex items-center space-x-3"><img src="'+currentUrl+'" class="w-16 h-16 rounded-lg object-contain bg-gray-50 border" onerror="this.src=\'\'"><span class="text-xs text-gray-400 truncate max-w-[200px]">'+currentUrl.split('/').pop()+'</span></div>';
+        el.innerHTML = '<div class="flex items-center space-x-3"><img src="'+_escH(currentUrl)+'" class="w-16 h-16 rounded-lg object-contain bg-gray-50 border" onerror="this.src=\'\'"><span class="text-xs text-gray-400 truncate max-w-[200px]">'+currentUrl.split('/').pop()+'</span></div>';
     } else {
         el.innerHTML = '<span class="text-xs text-gray-400">Kein Bild</span>';
     }
@@ -175,7 +175,7 @@ export async function renderHqShopOrders() {
             h += '</div></div>';
         });
         oEl.innerHTML = h;
-    } catch(err) { console.error('renderHqShopOrders:', err); oEl.innerHTML = '<p class="text-center text-red-400 py-4">Fehler: '+err.message+'</p>'; }
+    } catch(err) { console.error('renderHqShopOrders:', err); oEl.innerHTML = '<p class="text-center text-red-400 py-4">Fehler: '+_escH(err.message)+'</p>'; }
 }
 
 // ===== CANCEL ORDER (NEW) =====
@@ -302,7 +302,7 @@ export async function renderHqShopProducts() {
             h += '</div>';
         });
         pEl.innerHTML = h || '<p class="text-center text-gray-400 py-8">Keine Produkte angelegt.</p>';
-    } catch(err) { console.error('renderHqShopProducts:', err); pEl.innerHTML = '<p class="text-center text-red-400 py-4">Fehler: '+err.message+'</p>'; }
+    } catch(err) { console.error('renderHqShopProducts:', err); pEl.innerHTML = '<p class="text-center text-red-400 py-4">Fehler: '+_escH(err.message)+'</p>'; }
 }
 
 // ===== TOGGLE PRODUCT ACTIVE =====
@@ -499,7 +499,7 @@ async function loadVariantList(productId) {
     if(!el) return;
     el.innerHTML = '<div class="text-center py-4 text-xs text-gray-400">Laden...</div>';
     var { data: variants, error } = await _sb().from('shop_product_variants').select('*').eq('product_id', productId).order('sort_index');
-    if(error) { el.innerHTML = '<p class="text-red-400 text-xs">Fehler: '+error.message+'</p>'; return; }
+    if(error) { el.innerHTML = '<p class="text-red-400 text-xs">Fehler: '+_escH(error.message)+'</p>'; return; }
     if(!variants || !variants.length) { el.innerHTML = '<p class="text-gray-400 text-xs text-center py-4">Keine Varianten vorhanden.</p>'; return; }
     var h = '';
     variants.forEach(function(v, idx) {

@@ -158,7 +158,7 @@ export async function loadKommSidebar() {
 
     } catch(err) {
         console.error('Sidebar laden:', err);
-        container.innerHTML = '<div class="p-4 text-xs text-red-400">Fehler: ' + err.message + '</div>';
+        container.innerHTML = '<div class="p-4 text-xs text-red-400">Fehler: ' + _escH(err.message) + '</div>';
     }
 }
 
@@ -233,7 +233,7 @@ export async function loadChannelMessages(kanalId) {
         container.innerHTML = renderChatBubbles(messages, 'channel');
         container.scrollTop = container.scrollHeight;
     } catch(err) {
-        container.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">Fehler: ' + err.message + '</div>';
+        container.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">Fehler: ' + _escH(err.message) + '</div>';
     }
 }
 
@@ -285,7 +285,7 @@ export async function loadInboxConversation(partnerId) {
         container.innerHTML = renderInboxBubbles(msgs);
         container.scrollTop = container.scrollHeight;
     } catch(err) {
-        container.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">Fehler: ' + err.message + '</div>';
+        container.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">Fehler: ' + _escH(err.message) + '</div>';
     }
 }
 
@@ -363,7 +363,7 @@ export async function loadAnnouncements() {
         if(anns.length === 0) html = '<div class="flex items-center justify-center h-full text-gray-400 text-sm">Keine Ankündigungen</div>';
         container.innerHTML = html;
     } catch(err) {
-        container.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">Fehler: ' + err.message + '</div>';
+        container.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">Fehler: ' + _escH(err.message) + '</div>';
     }
 }
 
@@ -708,7 +708,7 @@ export async function renderCommunityPosts(cat) {
 
         container.innerHTML = html;
     } catch(err) {
-        container.innerHTML = '<div class="text-center py-4 text-red-400 text-sm">Fehler: ' + err.message + '</div>';
+        container.innerHTML = '<div class="text-center py-4 text-red-400 text-sm">Fehler: ' + _escH(err.message) + '</div>';
     }
 }
 
@@ -800,7 +800,7 @@ export async function openForumDetail(postId) {
             cHtml += '<p class="text-sm text-gray-700 mt-0.5">' + _escH(c.inhalt) + '</p></div></div>';
         });
         commentsEl.innerHTML = cHtml;
-    } catch(err) { contentEl.innerHTML = '<div class="text-red-400">Fehler: ' + err.message + '</div>'; }
+    } catch(err) { contentEl.innerHTML = '<div class="text-red-400">Fehler: ' + _escH(err.message) + '</div>'; }
 }
 
 export async function postForumComment() {

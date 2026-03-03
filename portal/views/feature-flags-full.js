@@ -98,7 +98,7 @@ export async function loadFFView() {
         ffRenderList();
     } catch(err) {
         console.error('[FF] Load error:', err);
-        document.getElementById('ffFlagsList').innerHTML = '<p class="p-6 text-center text-red-500">Fehler beim Laden: ' + err.message + '</p>';
+        document.getElementById('ffFlagsList').innerHTML = '<p class="p-6 text-center text-red-500">Fehler beim Laden: ' + _escH(err.message) + '</p>';
     }
 }
 

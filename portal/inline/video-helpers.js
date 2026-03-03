@@ -292,7 +292,7 @@
             }
             c.innerHTML = html;
         } catch(e) {
-            c.innerHTML = '<div class="vit-card p-6 text-red-600">Fehler beim Laden: '+e.message+'</div>';
+            c.innerHTML = '<div class="vit-card p-6 text-red-600">Fehler beim Laden: '+(window.escH||String)(e.message)+'</div>';
         }
     };
 
@@ -383,7 +383,7 @@
 
             vpModal(html);
         } catch(e) {
-            vpModal('<p class="text-red-600">Fehler: '+e.message+'</p><button onclick="vpCloseModal()" class="mt-4 text-gray-500">Schließen</button>');
+            vpModal('<p class="text-red-600">Fehler: '+(window.escH||String)(e.message)+'</p><button onclick="vpCloseModal()" class="mt-4 text-gray-500">Schließen</button>');
         }
     };
 
@@ -418,7 +418,7 @@
             }
             c.innerHTML = html;
         } catch(e) {
-            c.innerHTML = '<div class="text-red-600 p-4">Fehler: '+e.message+'</div>';
+            c.innerHTML = '<div class="text-red-600 p-4">Fehler: '+(window.escH||String)(e.message)+'</div>';
         }
     };
 
@@ -482,7 +482,7 @@
             window._vpTagConsents = consents;
             window._vpTagRowCount = (existingPersons&&existingPersons.length)||1;
             vpModal(html);
-        } catch(e) { vpModal('<p class="text-red-600">Fehler: '+e.message+'</p>'); }
+        } catch(e) { vpModal('<p class="text-red-600">Fehler: '+(window.escH||String)(e.message)+'</p>'); }
     };
 
     function vpTagRow(idx,consents,existing) {
@@ -740,7 +740,7 @@
 
             c.innerHTML = html;
         } catch(e) {
-            c.innerHTML = '<div class="vit-card p-6 text-red-600">Fehler: '+e.message+'</div>';
+            c.innerHTML = '<div class="vit-card p-6 text-red-600">Fehler: '+(window.escH||String)(e.message)+'</div>';
         }
     };
 

@@ -593,7 +593,7 @@ export async function hqFinParsePlan() {
             renderHqFinPlanQuickList();
         }
     } catch(err) {
-        if (statusEl) statusEl.innerHTML = '<p class="text-sm text-red-500 mt-2">Fehler: ' + (err.message || err) + '</p>';
+        if (statusEl) statusEl.innerHTML = '<p class="text-sm text-red-500 mt-2">Fehler: ' + _escH(err.message || err) + '</p>';
         if (_sbProfile()) _sbProfile().standort_id = origStdId;
     }
 }

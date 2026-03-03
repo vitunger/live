@@ -130,7 +130,7 @@ window.wawiTestConnection = async function() {
             resEl.innerHTML = '<div class="p-3 bg-red-50 border border-red-200 rounded-lg"><p class="text-sm text-red-700">❌ ' + (data && data.error ? data.error : 'Unbekannter Fehler') + '</p></div>';
         }
     } catch(e) {
-        resEl.innerHTML = '<div class="p-3 bg-red-50 border border-red-200 rounded-lg"><p class="text-sm text-red-700">❌ Fehler: ' + e.message + '</p></div>';
+        resEl.innerHTML = '<div class="p-3 bg-red-50 border border-red-200 rounded-lg"><p class="text-sm text-red-700">❌ Fehler: ' + _escH(e.message) + '</p></div>';
     }
     btn.disabled = false; btn.textContent = '🔍 Verbindung testen';
 };
@@ -491,7 +491,7 @@ window.wawiHandleFiles = async function(files) {
 
         var card = document.createElement('div');
         card.className = 'vit-card p-4';
-        card.innerHTML = '<div class="flex items-center gap-3"><div class="animate-pulse w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-vit-orange">⏳</div><div><p class="font-semibold text-sm text-gray-800">'+file.name+'</p><p class="text-xs text-gray-400">Wird verarbeitet...</p></div></div>';
+        card.innerHTML = '<div class="flex items-center gap-3"><div class="animate-pulse w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-vit-orange">⏳</div><div><p class="font-semibold text-sm text-gray-800">'+_escH(file.name)+'</p><p class="text-xs text-gray-400">Wird verarbeitet...</p></div></div>';
         container.appendChild(card);
 
         try {
@@ -513,7 +513,7 @@ window.wawiHandleFiles = async function(files) {
             card.innerHTML = renderParseCard(file.name, parsed, null);
         } catch(err) {
             console.error('[WaWi] PDF parse error for', file.name, err);
-            card.innerHTML = renderParseCard(file.name, null, 'Fehler: ' + (err.message || String(err)));
+            card.innerHTML = renderParseCard(file.name, null, 'Fehler: ' + _escH(err.message || String(err)));
             // Also show debug for errors
             var dbgErr = document.createElement('details');
             dbgErr.style.cssText = 'padding:8px 12px';
@@ -536,7 +536,7 @@ window.wawiHandleFiles = async function(files) {
 
 export function renderParseCard(fileName, parsed, error) {
     if(error) {
-        return '<div class="flex items-center gap-3"><div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center text-red-500">✗</div><div><p class="font-semibold text-sm text-gray-800">'+fileName+'</p><p class="text-xs text-red-500">'+error+'</p></div></div>';
+        return '<div class="flex items-center gap-3"><div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center text-red-500">✗</div><div><p class="font-semibold text-sm text-gray-800">'+_escH(fileName)+'</p><p class="text-xs text-red-500">'+_escH(error)+'</p></div></div>';
     }
     var typColors = {Angebot:'blue',Auftrag:'orange',Rechnung:'green'};
     var tc = typColors[parsed.header.beleg_typ]||'gray';
@@ -544,10 +544,10 @@ export function renderParseCard(fileName, parsed, error) {
     return '<div class="flex items-start gap-3"><div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 flex-shrink-0 mt-0.5">✓</div>'
         +'<div class="flex-1 min-w-0">'
         +'<div class="flex items-center gap-2 flex-wrap"><p class="font-semibold text-sm text-gray-800">'+_escH(fileName)+'</p>'
-        +'<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-'+tc+'-100 text-'+tc+'-700 font-semibold">'+parsed.header.beleg_typ+'</span>'
+        +'<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-'+tc+'-100 text-'+tc+'-700 font-semibold">'+_escH(parsed.header.beleg_typ)+'</span>'
         +leasing+'</div>'
         +'<div class="flex gap-4 mt-1 text-xs text-gray-500">'
-        +'<span>Nr. <strong>'+parsed.header.beleg_nr+'</strong></span>'
+        +'<span>Nr. <strong>'+_escH(parsed.header.beleg_nr)+'</strong></span>'
         +'<span>'+_escH(parsed.customer.name||'–')+'</span>'
         +'<span>'+parsed.items.filter(function(x){return !x.hinweis}).length+' Positionen</span>'
         +'<span class="font-bold text-gray-800">'+(parsed.totals.endbetrag||0).toLocaleString('de-DE',{style:'currency',currency:'EUR'})+'</span>'
@@ -603,7 +603,7 @@ window.loadWawiBelege = async function() {
     if(fS && fS.value.length >= 2) q = q.or('beleg_nr.ilike.%'+fS.value+'%,kunde_name.ilike.%'+fS.value+'%');
 
     var {data, error} = await q;
-    if(error){ container.innerHTML='<div class="p-4 text-red-500 text-sm">Fehler: '+error.message+'</div>'; return; }
+    if(error){ container.innerHTML='<div class="p-4 text-red-500 text-sm">Fehler: '+_escH(error.message)+'</div>'; return; }
     if(!data || data.length===0){ container.innerHTML='<div class="p-8 text-center text-gray-400"><div class="text-3xl mb-2">📭</div><p>Noch keine Belege importiert</p><p class="text-xs mt-1">Lade PDFs im Upload-Tab hoch oder sende Belege per E-Mail</p></div>'; return; }
 
     var typColors = {Angebot:'blue',Auftrag:'orange',Rechnung:'green'};

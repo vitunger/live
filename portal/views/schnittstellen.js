@@ -795,7 +795,7 @@ window.testConnector = async function(id) {
             }
         })
         .catch(function(err) {
-            if (el) el.innerHTML = '<span class="text-xs text-red-500 font-semibold">❌ ' + err.message + '</span>';
+            if (el) el.innerHTML = '<span class="text-xs text-red-500 font-semibold">❌ ' + _escH(err.message) + '</span>';
             addLog(id, 'err', 'Netzwerkfehler: ' + err.message);
         });
         return;

@@ -67,7 +67,7 @@ export async function renderDevVision() {
             ta.addEventListener('input', function() { cc.textContent = ta.value.length + ' Zeichen'; });
         }
     } catch(err) {
-        c.innerHTML = '<div class="text-center py-8 text-red-500">Fehler: '+(err.message||err)+'</div>';
+        c.innerHTML = '<div class="text-center py-8 text-red-500">Fehler: '+_escH(err.message||err)+'</div>';
     }
 }
 

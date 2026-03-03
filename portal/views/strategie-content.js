@@ -154,7 +154,7 @@ export function renderSmThemen() {
     var sel = document.getElementById('smUploadThema');
     if(sel && sel.options.length<=1) {
         (window.smThemen||[]).filter(function(t){return !t.done;}).forEach(function(t){
-            sel.innerHTML += '<option value="'+t.id+'">'+t.id.toUpperCase()+' – '+t.thema+'</option>';
+            sel.innerHTML += '<option value="'+t.id+'">'+t.id.toUpperCase()+' – '+_escH(t.thema)+'</option>';
         });
         sel.innerHTML += '<option value="0000">0000 – Eigener Vorschlag</option>';
     }

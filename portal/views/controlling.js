@@ -159,7 +159,7 @@ export async function loadBwaList() {
             h += '</div></div>';
         });
         container.innerHTML = h;
-    } catch(err) { console.error('[BWA] loadBwaList error:', err); container.innerHTML = '<p class="text-sm text-red-400 text-center py-4">Fehler: '+err.message+'</p><button onclick="loadBwaList()" class="text-xs text-vit-orange underline mt-2">Erneut versuchen</button>'; }
+    } catch(err) { console.error('[BWA] loadBwaList error:', err); container.innerHTML = '<p class="text-sm text-red-400 text-center py-4">Fehler: '+_escH(err.message)+'</p><button onclick="loadBwaList()" class="text-xs text-vit-orange underline mt-2">Erneut versuchen</button>'; }
 }
 
 export async function downloadBwa(bwaId) {

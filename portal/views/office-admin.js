@@ -386,7 +386,7 @@
         m.id = 'officeAdminModal';
         m.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4';
         m.style.backdropFilter = 'blur(2px)';
-        m.innerHTML = '<div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"><div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">'+title+'</h3><button onclick="cModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div><div>'+body+'</div><div class="flex gap-3 mt-5"><button id="oaModalSave" class="flex-1 px-4 py-2.5 text-white rounded-lg font-semibold hover:opacity-90" style="background:#EF7D00">Speichern</button><button onclick="cModal()" class="px-4 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-semibold hover:bg-gray-200">Abbrechen</button></div></div>';
+        m.innerHTML = '<div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"><div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">'+_escH(title)+'</h3><button onclick="cModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div><div>'+body+'</div><div class="flex gap-3 mt-5"><button id="oaModalSave" class="flex-1 px-4 py-2.5 text-white rounded-lg font-semibold hover:opacity-90" style="background:#EF7D00">Speichern</button><button onclick="cModal()" class="px-4 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-semibold hover:bg-gray-200">Abbrechen</button></div></div>';
         document.body.appendChild(m);
         m.addEventListener('click', function(e){if(e.target===m)cModal();});
         var escH2 = function(e){if(e.key==='Escape'){cModal();document.removeEventListener('keydown',escH2);}};

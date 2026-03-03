@@ -626,7 +626,7 @@ export async function loadApprovalQueue() {
             h += '</div></div>';
         });
         container.innerHTML = h;
-    } catch(err) { container.innerHTML = '<div class="text-red-400 p-4">Fehler: '+err.message+'</div>'; }
+    } catch(err) { container.innerHTML = '<div class="text-red-400 p-4">Fehler: '+_escH(err.message)+'</div>'; }
 }
 
 export async function approvalAction(invId, action) {

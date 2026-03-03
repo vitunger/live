@@ -690,7 +690,7 @@ try {
     var ak=document.getElementById('kzStandorteAktiv');if(ak)ak.textContent=standorte.filter(function(s){return (s.status||'aktiv')==='aktiv';}).length;
     var ob=document.getElementById('kzStandorteOnb');if(ob)ob.textContent=standorte.filter(function(s){return s.status==='onboarding';}).length;
     var of2=document.getElementById('kzStandorteOff');if(of2)of2.textContent=standorte.filter(function(s){return s.status==='offboarding';}).length;
-} catch(err) { console.error('Standorte:', err); body.innerHTML='<tr><td colspan="6" class="text-center py-4 text-red-400">Fehler: '+err.message+'</td></tr>'; }
+} catch(err) { console.error('Standorte:', err); body.innerHTML='<tr><td colspan="6" class="text-center py-4 text-red-400">Fehler: '+_escH(err.message)+'</td></tr>'; }
 }
 
 export async function openStandortDetailModal(stdId) {
@@ -806,7 +806,7 @@ try {
         if(resEl) resEl.innerHTML = '<p class="text-[10px] text-red-600">\u274c ' + (data && data.error ? data.error : 'Fehler') + '</p>';
     }
 } catch(e) {
-    if(resEl) resEl.innerHTML = '<p class="text-[10px] text-red-600">\u274c ' + e.message + '</p>';
+    if(resEl) resEl.innerHTML = '<p class="text-[10px] text-red-600">\u274c ' + _escH(e.message) + '</p>';
 }
 if(btn) { btn.disabled = false; btn.textContent = '\ud83d\udd0d Testen'; }
 };
@@ -938,7 +938,7 @@ try {
         users.forEach(function(u){ var sn=u.standorte?u.standorte.name:'HQ'; if(standorte.indexOf(sn)===-1)standorte.push(sn); });
         standorte.sort().forEach(function(s){sel.innerHTML+='<option value="'+s+'">'+s+'</option>';});
     }
-} catch(err) { console.error('Mitarbeiter:', err); body.innerHTML='<tr><td colspan="7" class="text-center py-4 text-red-400">Fehler: '+err.message+'</td></tr>'; }
+} catch(err) { console.error('Mitarbeiter:', err); body.innerHTML='<tr><td colspan="7" class="text-center py-4 text-red-400">Fehler: '+_escH(err.message)+'</td></tr>'; }
 }
 
 

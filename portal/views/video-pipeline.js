@@ -358,7 +358,7 @@ try {
     }
     c.innerHTML = html;
 } catch(e) {
-    c.innerHTML = '<div class="vit-card p-6 text-red-600">Fehler beim Laden: '+e.message+'</div>';
+    c.innerHTML = '<div class="vit-card p-6 text-red-600">Fehler beim Laden: '+_escH(e.message)+'</div>';
 }
 };
 
@@ -533,7 +533,7 @@ try {
 
     vpModal(html);
 
-} catch(e) { vpModal('<p class="text-red-600 p-4">Fehler beim Laden: '+e.message+'</p>'); console.error('[vpShowVideoDetail]',e); }
+} catch(e) { vpModal('<p class="text-red-600 p-4">Fehler beim Laden: '+_escH(e.message)+'</p>'); console.error('[vpShowVideoDetail]',e); }
 };
 
 // ==================== FRAME EXTRACTION ====================
@@ -746,7 +746,7 @@ try {
     }
     c.innerHTML = html;
 } catch(e) {
-    c.innerHTML = '<div class="text-red-600 p-4">Fehler: '+e.message+'</div>';
+    c.innerHTML = '<div class="text-red-600 p-4">Fehler: '+_escH(e.message)+'</div>';
 }
 };
 
@@ -810,7 +810,7 @@ try {
     window._vpTagConsents = consents;
     window._vpTagRowCount = (existingPersons&&existingPersons.length)||1;
     vpModal(html);
-} catch(e) { vpModal('<p class="text-red-600">Fehler: '+e.message+'</p>'); }
+} catch(e) { vpModal('<p class="text-red-600">Fehler: '+_escH(e.message)+'</p>'); }
 };
 
 export function vpTagRow(idx,consents,existing) {
@@ -1113,7 +1113,7 @@ try {
 
     c.innerHTML = html;
 } catch(e) {
-    c.innerHTML = '<div class="vit-card p-6 text-red-600">Fehler: '+e.message+'</div>';
+    c.innerHTML = '<div class="vit-card p-6 text-red-600">Fehler: '+_escH(e.message)+'</div>';
 }
 };
 
@@ -1358,7 +1358,7 @@ try {
     }
 
     vpModal(html);
-} catch(e) { vpModal('<p class="text-red-600">Fehler: '+e.message+'</p>'); }
+} catch(e) { vpModal('<p class="text-red-600">Fehler: '+_escH(e.message)+'</p>'); }
 };
 
 window.vpAddLearning = function() {
@@ -1435,7 +1435,7 @@ try {
         html += '</div>';
     }
     vpModal(html);
-} catch(e) { vpModal('<p class="text-red-600">Fehler: '+e.message+'</p>'); }
+} catch(e) { vpModal('<p class="text-red-600">Fehler: '+_escH(e.message)+'</p>'); }
 };
 
 window.vpNewTemplate = function() { vpEditTemplate(null); };
@@ -1548,7 +1548,7 @@ try {
     html += '</div></div></div>';
 
     vpModal(html);
-} catch(e) { vpModal('<p class="text-red-600">Fehler: '+e.message+'</p>'); }
+} catch(e) { vpModal('<p class="text-red-600">Fehler: '+_escH(e.message)+'</p>'); }
 };
 
 window.vpAddFeedbackTag = function(btn) {
@@ -1636,7 +1636,7 @@ try {
     html += '</div>';
 
     vpModal(html);
-} catch(e) { vpModal('<p class="text-red-600">Fehler: '+e.message+'</p>'); }
+} catch(e) { vpModal('<p class="text-red-600">Fehler: '+_escH(e.message)+'</p>'); }
 };
 
 window.vpSubAddRow = function() {
@@ -1880,7 +1880,7 @@ window.vpHqManageThemen = async function() {
         window._vpStandorte = standorte || [];
         window._vpThemenStatus = allStatus || [];
         vpRenderThemenManager();
-    } catch(e) { vpModal('<p class="text-red-600 p-4">Fehler: '+e.message+'</p>'); }
+    } catch(e) { vpModal('<p class="text-red-600 p-4">Fehler: '+_escH(e.message)+'</p>'); }
 };
 
 function vpRenderThemenManager() {

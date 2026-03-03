@@ -215,7 +215,7 @@ export async function renderEntwReleases() {
             h += '</div>';
         }
         c.innerHTML = h;
-    } catch(err) { c.innerHTML = '<div class="text-center py-8 text-red-400">Fehler: '+err.message+'</div>'; }
+    } catch(err) { c.innerHTML = '<div class="text-center py-8 text-red-400">Fehler: '+_escH(err.message)+'</div>'; }
 }
 
 export async function renderEntwSteuerung() {
@@ -326,7 +326,7 @@ export async function renderEntwFlags() {
         });
         h += '</div>';
         c.innerHTML = h;
-    } catch(err) { c.innerHTML = '<div class="text-center py-8 text-red-400">Fehler: '+err.message+'</div>'; }
+    } catch(err) { c.innerHTML = '<div class="text-center py-8 text-red-400">Fehler: '+_escH(err.message)+'</div>'; }
 }
 
 export async function renderEntwSystem() {
@@ -356,7 +356,7 @@ export async function renderEntwSystem() {
             bh += '<button onclick="bkTriggerBackup()" class="mt-4 px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Backup jetzt starten</button>';
             bc.innerHTML = bh;
         }
-    } catch(err) { var bc2=document.getElementById('entwBackupContent'); if(bc2) bc2.innerHTML='<div class="text-red-400 text-sm">'+err.message+'</div>'; }
+    } catch(err) { var bc2=document.getElementById('entwBackupContent'); if(bc2) bc2.innerHTML='<div class="text-red-400 text-sm">'+_escH(err.message)+'</div>'; }
 }
 
 export async function renderEntwNutzung() {
@@ -539,7 +539,7 @@ export async function renderEntwNutzung() {
 
         c.innerHTML = h;
     } catch(err) {
-        c.innerHTML = '<div class="text-center py-8"><p class="text-red-400 text-sm">Fehler beim Laden: '+err.message+'</p></div>';
+        c.innerHTML = '<div class="text-center py-8"><p class="text-red-400 text-sm">Fehler beim Laden: '+_escH(err.message)+'</p></div>';
         console.error('renderEntwNutzung error:', err);
     }
 }

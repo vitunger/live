@@ -607,7 +607,7 @@ export async function openDevDetail(subId) {
         if(document.getElementById('devEntwicklungChatHistory')) loadEntwicklungChatHistory(subId);
 
     } catch(err) {
-        content.innerHTML = '<div class="text-center py-8 text-red-400">Fehler: '+err.message+'</div>';
+        content.innerHTML = '<div class="text-center py-8 text-red-400">Fehler: '+_escH(err.message)+'</div>';
     }
 }
 
@@ -957,7 +957,7 @@ export async function loadEntwicklungChatHistory(subId) {
         container.innerHTML = html;
         container.scrollTop = container.scrollHeight;
     } catch (e) {
-        container.innerHTML = '<p class="text-xs text-red-400 text-center">Fehler: ' + e.message + '</p>';
+        container.innerHTML = '<p class="text-xs text-red-400 text-center">Fehler: ' + _escH(e.message) + '</p>';
     }
 }
 window.loadEntwicklungChatHistory = loadEntwicklungChatHistory;
@@ -1019,7 +1019,7 @@ export async function devEntwicklungChatSend(subId) {
         }
     } catch(e) {
         var typingEl2 = document.getElementById('devEntwicklungTyping');
-        if (typingEl2) typingEl2.innerHTML = '<div class="border border-red-200 rounded-lg px-3 py-2 bg-red-50"><span class="text-xs">\u274C</span> <span class="text-sm text-red-600">Fehler: ' + e.message + '</span></div>';
+        if (typingEl2) typingEl2.innerHTML = '<div class="border border-red-200 rounded-lg px-3 py-2 bg-red-50"><span class="text-xs">\u274C</span> <span class="text-sm text-red-600">Fehler: ' + _escH(e.message) + '</span></div>';
     }
     window._mockupChatAttachments = [];
     if (sendBtn) { sendBtn.disabled = false; sendBtn.innerHTML = '\u27A4'; }
