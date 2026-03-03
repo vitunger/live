@@ -174,7 +174,7 @@ window.saveHqAutomation = async function() {
     var action = document.getElementById('hqAutoAction').value;
     var days = parseInt(document.getElementById('hqAutoDays').value) || 0;
     var text = document.getElementById('hqAutoText').value;
-    if(!text) { alert('Bitte Text eingeben'); return; }
+    if(!text) { _showToast('Bitte Text eingeben', 'error'); return; }
     
     var resp = await _sb().from('lead_automations').insert({
         from_stage: from === '*' ? '*' : (STAGE_TO_DB[from] || from),
@@ -186,7 +186,7 @@ window.saveHqAutomation = async function() {
         enabled: true,
         is_global: true
     });
-    if(resp.error) { alert('Fehler: ' + resp.error.message); return; }
+    if(resp.error) { _showToast('Fehler: ' + resp.error.message, 'error'); return; }
     document.getElementById('hqAutoAddForm').style.display = 'none';
     document.getElementById('hqAutoText').value = '';
     loadHqAutomations();

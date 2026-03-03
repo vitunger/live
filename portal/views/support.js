@@ -123,7 +123,7 @@ export async function openTicketDetail(ticketId) {
 
         html += '</div></div></div>';
         var c = document.createElement('div'); c.id = 'ticketDetailContainer'; c.innerHTML = html; document.body.appendChild(c);
-    } catch(err) { console.error('Ticket detail:', err); alert('Fehler beim Laden des Tickets.'); }
+    } catch(err) { console.error('Ticket detail:', err); _showToast('Fehler beim Laden des Tickets.', 'error'); }
 }
 
 export function closeTicketDetail() { var c = document.getElementById('ticketDetailContainer'); if(c) c.remove(); }
@@ -135,7 +135,7 @@ export async function changeTicketStatus(ticketId, newStatus) {
         closeTicketDetail();
         await openTicketDetail(ticketId);
         renderTickets('all');
-    } catch(err) { alert('Fehler: '+err.message); }
+    } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
 }
 
 export async function addTicketComment(ticketId) {
@@ -149,7 +149,7 @@ export async function addTicketComment(ticketId) {
         (async function() { try { var { data: t } = await _sb().from('support_tickets').select('erstellt_von,titel').eq('id',ticketId).single(); if(t&&t.erstellt_von&&t.erstellt_von!==_sbUser().id) _triggerPush([t.erstellt_von],'💬 Ticket-Kommentar',(_sbProfile() ?_sbProfile().name:'Jemand')+' zu: '+(t.titel||'').substring(0,50),'/?view=support','push_support_update'); } catch(e){} })();
         closeTicketDetail();
         await openTicketDetail(ticketId);
-    } catch(err) { alert('Fehler: '+err.message); }
+    } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
 }
 
 export function filterTickets(filter) {
@@ -169,7 +169,7 @@ export async function sendTicket() {
         if(title) title.value=''; if(desc) desc.value='';
         var form=document.getElementById('newTicketForm'); if(form) form.classList.add('hidden');
         renderTickets('all');
-    } catch(err) { alert('Fehler: '+err.message); }
+    } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
 }
 
 export async function submitTicketForm() {
@@ -177,7 +177,7 @@ export async function submitTicketForm() {
     var beschreibung = (document.getElementById('ticketBeschreibungInput')||{}).value;
     var kategorie = (document.getElementById('ticketCatInput')||{}).value || 'allgemein';
     var prioritaet = (document.getElementById('ticketPrioInput')||{}).value || 'mittel';
-    if(!titel || !titel.trim()) { alert(_t('alert_enter_subject')); return; }
+    if(!titel || !titel.trim()) { _showToast(_t('alert_enter_subject'), 'error'); return; }
     try {
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
         var resp = await _sb().from('support_tickets').insert({
@@ -190,9 +190,9 @@ export async function submitTicketForm() {
         document.getElementById('ticketCreate').classList.add('hidden');
         document.getElementById('ticketTitelInput').value = '';
         document.getElementById('ticketBeschreibungInput').value = '';
-        alert('\u2705 Ticket erstellt!');
+        _showToast('\u2705 Ticket erstellt!', 'success');
         renderTickets('all');
-    } catch(err) { alert('Fehler: ' + err.message); }
+    } catch(err) { _showToast('Fehler: ' + err.message, 'error'); }
 }
 
 var zentraleKontakte = [

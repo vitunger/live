@@ -154,7 +154,7 @@ export function toggleRoadmapForm() {
 
 export async function addRoadmapItem() {
     var titel = (document.getElementById('rmTitel')||{}).value;
-    if(!titel || !titel.trim()) { alert('Bitte Titel eingeben.'); return; }
+    if(!titel || !titel.trim()) { _showToast('Bitte Titel eingeben.', 'error'); return; }
     try {
         var maxSort = devRoadmapItems.reduce(function(m, r){ return Math.max(m, r.sortierung||0); }, 0);
         await _sb().from('dev_roadmap').insert({
@@ -172,7 +172,7 @@ export async function addRoadmapItem() {
         document.getElementById('rmBeschreibung').value = '';
         toggleRoadmapForm();
         renderDevRoadmap();
-    } catch(err) { alert('Fehler: '+(err.message||err)); }
+    } catch(err) { _showToast('Fehler: '+(err.message||err, 'error')); }
 }
 
 export async function updateRoadmapStatus(id, newStatus) {

@@ -154,7 +154,7 @@ if (SESSION.account_level === 'extern') { _showView('externHome'); } else { _sho
 // Apply for Part 1 (Extern action)
 export function applyForPart1() {
 logOnboardingAction('apply_part1', { account_name: SESSION.account_name });
-alert('Deine Bewerbung für die Trainingsphase Part 1 wurde eingereicht! ✅\n\nDas vit:bikes Team wird sich in Kürze bei dir melden.');
+_showToast('✅ Bewerbung für die Trainingsphase Part 1 eingereicht! Das vit:bikes Team meldet sich in Kürze.', 'success');
 renderOnboardingView();
 }
 
@@ -357,7 +357,7 @@ try {
     var label = '🔄 ' + user.name + (user.standorte ? ' (' + user.standorte.name + ')' : '');
     _activateImpersonation(label);
 } catch(err) {
-    alert('Impersonation fehlgeschlagen: ' + err.message);
+    _showToast('Impersonation fehlgeschlagen: ' + err.message, 'error');
     _restoreOrigState();
 }
 }
@@ -607,7 +607,7 @@ export async function handleLogin(event) {
 if(event) { event.preventDefault(); event.stopPropagation(); }
 var email = (document.getElementById('loginEmail')||{}).value||'';
 var pw = (document.getElementById('loginPassword')||{}).value||'';
-if(!email || !pw) { alert(_t('alert_enter_email_pw')); return false; }
+if(!email || !pw) { _showToast(_t('alert_enter_email_pw'), 'error'); return false; }
 
 var loginBtn = document.querySelector('#loginScreen form button[type="submit"]');
 if(loginBtn) { loginBtn.disabled = true; loginBtn.textContent = _t('ui_signing_in'); }
@@ -664,7 +664,7 @@ try {
 } catch(err) {
     console.error('[Login] ERROR:', err);
     if(errEl) { errEl.textContent = err.message || 'Login fehlgeschlagen'; errEl.style.display = 'block'; }
-    else alert('Login fehlgeschlagen: ' + (err.message||err));
+    else _showToast('Login fehlgeschlagen: ' + (err.message||err, 'error'));
 } finally {
     if(loginBtn) { loginBtn.disabled = false; loginBtn.textContent = _t('ui_sign_in'); }
 }
@@ -1365,7 +1365,7 @@ premiumFeatures.forEach(feature => {
 
 // Show premium upgrade modal
 export function showPremiumUpgradeModal() {
-alert('🔒 Premium Feature\n\nDiese Funktion ist nur für vit:bikes Franchisenehmer verfügbar.\n\n✨ Werde vit:bikes Partner und erhalte Zugang zu:\n• Marketing-Materialien vom HQ\n• Best Practice Forum\n• Einkaufsvorteile\n• Schulungen & Support\n\nInteresse? Kontaktiere uns unter: partner@vitbikes.de');
+_showToast('🔒 Premium Feature – nur für vit:bikes Franchisenehmer. Kontakt: partner@vitbikes.de', 'info');
 }
 
 // Show specific view

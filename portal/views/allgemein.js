@@ -199,17 +199,17 @@ export async function saveJahresziel() {
         einheit: document.getElementById('jahreszielEinheit').value,
         status: 'aktiv', ist_abgehakt: false, sortierung: allgemeinJahresziele.length + 1
     };
-    if (!payload.titel) { alert(_t('alert_enter_title')); return; }
+    if (!payload.titel) { _showToast(_t('alert_enter_title'), 'error'); return; }
     try {
         var res = editId ? await _sb().from('partner_jahresziele').update(payload).eq('id', editId) : await _sb().from('partner_jahresziele').insert([payload]);
         if (res.error) throw res.error;
         closeJahreszielModal(); loadJahresziele();
-    } catch(e) { alert('Fehler: '+e.message); }
+    } catch(e) { _showToast('Fehler: '+e.message, 'error'); }
 }
 
 export async function deleteJahresziel(id) {
     if (!confirm(_t('confirm_delete_goal'))) return;
-    try { var r = await _sb().from('partner_jahresziele').delete().eq('id', id); if (r.error) throw r.error; loadJahresziele(); } catch(e) { alert('Fehler: '+e.message); }
+    try { var r = await _sb().from('partner_jahresziele').delete().eq('id', id); if (r.error) throw r.error; loadJahresziele(); } catch(e) { _showToast('Fehler: '+e.message, 'error'); }
 }
 
 export async function toggleSoftTarget(id, checked) {
@@ -321,7 +321,7 @@ export async function saveMonatsDetail() {
         var res = existing && existing.id ? await _sb().from('partner_monatsplan').update(payload).eq('id', existing.id) : await _sb().from('partner_monatsplan').insert([payload]);
         if (res.error) throw res.error;
         closeMonatsDetail(); loadMonatsplan();
-    } catch(e) { alert('Fehler: '+e.message); }
+    } catch(e) { _showToast('Fehler: '+e.message, 'error'); }
 }
 
 // ============================================================
@@ -456,17 +456,17 @@ export async function saveJournalEntry() {
         aktuelle_lage: document.getElementById('journalLage').value.trim(), wuensche_hq: wuensche, massnahmen: massnahmen,
         naechster_termin: document.getElementById('journalNaechsterTermin').value || null, erstellt_von: _sbUser().id
     };
-    if (!payload.datum) { alert(_t('alert_enter_date')); return; }
+    if (!payload.datum) { _showToast(_t('alert_enter_date'), 'error'); return; }
     try {
         var res = editId ? await _sb().from('partner_journal').update(payload).eq('id', editId) : await _sb().from('partner_journal').insert([payload]);
         if (res.error) throw res.error;
         closeJournalModal(); loadJournal();
-    } catch(e) { alert('Fehler: '+e.message); }
+    } catch(e) { _showToast('Fehler: '+e.message, 'error'); }
 }
 
 export async function deleteJournalEntry(id) {
     if (!confirm(_t('confirm_delete_protocol'))) return;
-    try { var r = await _sb().from('partner_journal').delete().eq('id',id); if (r.error) throw r.error; loadJournal(); } catch(e) { alert('Fehler: '+e.message); }
+    try { var r = await _sb().from('partner_journal').delete().eq('id',id); if (r.error) throw r.error; loadJournal(); } catch(e) { _showToast('Fehler: '+e.message, 'error'); }
 }
 
 export async function toggleJournalMassnahme(journalId, massnahmeText, checked) {
@@ -596,7 +596,7 @@ export function renderHqAllgemein(standorte, monatsplaene, journals, jahresziele
     }).join('');
 }
 
-export function viewPartnerDetails(standortId) { alert('Partner-Detail für Standort ' + standortId + ' – wird in nächster Iteration implementiert'); }
+export function viewPartnerDetails(standortId) { _showToast('Partner-Detail für Standort ' + standortId + ' – wird in nächster Iteration implementiert', 'info'); }
 
 // NOTE: View render triggers (support, entwicklung, wissen, shop) are now 
 // handled by view-router.js via 'vit:view-changed' events.

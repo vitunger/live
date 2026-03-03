@@ -54,7 +54,7 @@ export async function saveAnkuendigung() {
         });
         if(resp.error) throw resp.error;
         closeAnkModal();
-        alert('\u2705 Ankuendigung veroeffentlicht!');
+        _showToast('\u2705 Ankuendigung veroeffentlicht!', 'info');
         renderAnnouncements();
     } catch(err) {
         if(errEl){errEl.textContent='Fehler: '+err.message;errEl.style.display='block';}
@@ -66,7 +66,7 @@ export function renderHqKomm(){
     var el=document.getElementById('hqKommContent');if(!el)return;
     var h='';
     if(currentHqKommTab==='announce'){
-        h+='<div class="flex justify-end mb-4"><button onclick="alert(\'Neue Ankuendigung erstellen (Demo)\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">+ Neue Ankuendigung</button></div>';
+        h+='<div class="flex justify-end mb-4"><button onclick="_showToast(\'Neue Ankuendigung erstellen (Demo, 'info')\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">+ Neue Ankuendigung</button></div>';
         hqAnnouncements.forEach(function(a){
             var prioBg=a.priority==='hoch'?'border-l-4 border-red-500':a.priority==='mittel'?'border-l-4 border-yellow-400':'border-l-4 border-gray-300';
             var readPct=Math.round(a.read/a.total*100);
@@ -104,7 +104,7 @@ export function renderHqKomm(){
             if(f.pinned) h+='<span class="text-vit-orange text-sm">📌</span>'; else h+='<span class="text-gray-300 text-sm">💬</span>';
             h+='<div class="flex-1 min-w-0"><p class="font-semibold text-sm text-gray-800 truncate">'+f.title+'</p><p class="text-xs text-gray-500">'+f.author+' · '+f.date+'</p></div>';
             h+='<div class="text-right flex-shrink-0"><span class="text-xs font-bold text-gray-600">'+f.replies+' Antworten</span></div>';
-            h+='<button onclick="alert(\'Beitrag '+(f.pinned?'loesen':'pinnen')+' (Demo)\')" class="text-xs px-2 py-1 rounded border border-gray-200 text-gray-500 hover:bg-gray-50">'+(f.pinned?'Loesen':'Pinnen')+'</button>';
+            h+='<button onclick="_showToast(\'Beitrag '+(f.pinned?'loesen':'pinnen', 'info')+' (Demo)\')" class="text-xs px-2 py-1 rounded border border-gray-200 text-gray-500 hover:bg-gray-50">'+(f.pinned?'Loesen':'Pinnen')+'</button>';
             h+='</div>';
         });
     }
@@ -142,13 +142,13 @@ export function renderHqKampagnen(){
         h+='<div class="flex items-center space-x-4">';
         h+='<div class="flex-1"><p class="text-xs text-gray-500 mb-1">Umsetzung: '+k.umgesetzt+'/'+k.standorte+' Standorte ('+pct+'%)</p>';
         h+='<div class="w-full bg-gray-100 rounded-full h-2.5"><div class="h-2.5 rounded-full '+(pct>=80?'bg-green-500':pct>=50?'bg-yellow-500':'bg-red-500')+'" style="width:'+pct+'%"></div></div></div>';
-        if(k.status!=='beendet') h+='<button onclick="alert(\'Kampagne bearbeiten (Demo)\')" class="text-xs px-3 py-1.5 bg-gray-100 rounded-lg text-gray-600 hover:bg-gray-200">Bearbeiten</button>';
+        if(k.status!=='beendet') h+='<button onclick="_showToast(\'Kampagne bearbeiten (Demo, 'info')\')" class="text-xs px-3 py-1.5 bg-gray-100 rounded-lg text-gray-600 hover:bg-gray-200">Bearbeiten</button>';
         h+='</div></div>';
     });
     el.innerHTML=h;
 }
 export function addHqKampagne(){
-    var n=document.getElementById('hqKampName').value;if(!n){alert(_t('alert_enter_name'));return;}
+    var n=document.getElementById('hqKampName').value;if(!n){_showToast(_t('alert_enter_name'), 'error');return;}
     hqKampagnen.unshift({id:hqKampagnen.length+1,name:n,type:document.getElementById('hqKampType').value,start:document.getElementById('hqKampStart').value||'2026-03-01',end:document.getElementById('hqKampEnd').value||'2026-04-30',status:'geplant',standorte:21,umgesetzt:0,budget:0,desc:document.getElementById('hqKampDesc').value||''});
     document.getElementById('hqKampModal').classList.add('hidden');document.getElementById('hqKampName').value='';
     renderHqKampagnen();
@@ -230,7 +230,7 @@ export function renderHqDokumente(){
             if(isHQ) h+='<button onclick="deleteNetzwerkDok(\''+d.id+'\')" class="text-xs px-2 py-1 text-gray-300 hover:text-red-500">\u2715</button>';
         } else {
             h+='<span class="text-xs text-gray-400">'+(d.downloads||0)+'x \u2193</span>';
-            h+='<button onclick="alert(\'Download fuer '+name+' wird vorbereitet...\')" class="text-xs px-3 py-1 bg-vit-orange text-white rounded-lg hover:opacity-90">\u2193</button>';
+            h+='<button onclick="_showToast(\'Download fuer '+name+' wird vorbereitet...\', 'info')" class="text-xs px-3 py-1 bg-vit-orange text-white rounded-lg hover:opacity-90">\u2193</button>';
         }
         h+='</div>';
     });
@@ -250,7 +250,7 @@ export async function downloadDokument(path) {
         var resp = await _sb().storage.from('dokumente').createSignedUrl(path, 3600);
         if(resp.error) throw resp.error;
         window.open(resp.data.signedUrl, '_blank');
-    } catch(err) { alert('Download-Fehler: '+err.message); }
+    } catch(err) { _showToast('Download-Fehler: '+err.message, 'error'); }
 }
 
 export async function deleteNetzwerkDok(id) {
@@ -262,7 +262,7 @@ export async function deleteNetzwerkDok(id) {
         }
         await _sb().from('netzwerk_dokumente').delete().eq('id',id);
         await loadNetzwerkDokumente();
-    } catch(err) { alert('Fehler: '+err.message); }
+    } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
 }
 
 // === HQ KALENDER (DB-backed) ===
@@ -334,7 +334,7 @@ export function renderHqKalender(){
     el.innerHTML=h;
 }
 export async function addHqKalTermin(){
-    var title=document.getElementById('hqKalTitle').value;if(!title){alert(_t('alert_enter_title'));return;}
+    var title=document.getElementById('hqKalTitle').value;if(!title){_showToast(_t('alert_enter_title'), 'error');return;}
     var date=document.getElementById('hqKalDate').value||new Date().toISOString().slice(0,10);
     var time=document.getElementById('hqKalTime').value||'09:00';
     var type=document.getElementById('hqKalType').value;
@@ -352,7 +352,7 @@ export async function addHqKalTermin(){
         document.getElementById('hqKalModal').classList.add('hidden');
         document.getElementById('hqKalTitle').value='';
         await loadHqKalTermine();
-    }catch(err){alert('Fehler: '+(err.message||err));}
+    }catch(err){_showToast('Fehler: '+(err.message||err, 'error'));}
 }
 
 // === HQ AUFGABEN ===
@@ -418,7 +418,7 @@ export function renderHqAufgaben(){
     el.innerHTML=h;
 }
 export function addHqTask(){
-    var title=document.getElementById('hqTaskTitle').value;if(!title){alert(_t('alert_enter_task'));return;}
+    var title=document.getElementById('hqTaskTitle').value;if(!title){_showToast(_t('alert_enter_task'), 'error');return;}
     var target=document.getElementById('hqTaskTarget').value;
     var total=target==='alle'?21:target==='region_sued'?8:target==='region_nord'?5:target==='region_west'?5:3;
     hqTasks.unshift({id:hqTasks.length+1,title:title,deadline:document.getElementById('hqTaskDeadline').value||'2026-03-31',prio:document.getElementById('hqTaskPrio').value,target:target==='alle'?'alle':target.replace('region_','Region '),status:'offen',done:0,total:total,kat:'HQ'});
@@ -741,7 +741,7 @@ export function renderHqWissen(){
 export function addHqWissen(){
     var t=document.getElementById('hqWissenTitel');
     var k=document.getElementById('hqWissenKat');
-    if(!t||!t.value.trim()){alert(_t('alert_enter_title'));return;}
+    if(!t||!t.value.trim()){_showToast(_t('alert_enter_title'), 'error');return;}
     hqWissenItems.unshift({titel:t.value.trim(),kat:k.value,bereich:document.getElementById('hqWissenBereich').value,datum:new Date().toLocaleDateString('de-DE'),status:'live'});
     t.value='';document.getElementById('hqWissenInhalt').value='';
     renderHqWissen();
@@ -938,13 +938,13 @@ export async function analysiereIdee(ideeId, btnEl) {
 
 export async function analysierAlleNeuen() {
     var { data: ideen } = await _sb().from('ideen').select('id, titel').is('ki_analyse', null);
-    if(!ideen || !ideen.length) { alert('Alle Ideen sind bereits analysiert!'); return; }
+    if(!ideen || !ideen.length) { _showToast('Alle Ideen sind bereits analysiert!', 'info'); return; }
     if(!confirm(ideen.length + ' Ideen ohne KI-Analyse gefunden. Alle jetzt analysieren?')) return;
     for(var i = 0; i < ideen.length; i++) {
         try { await analysiereIdee(ideen[i].id, null); } catch(e) { console.error('Batch error:', e); }
         if(i < ideen.length - 1) await new Promise(function(r){setTimeout(r, 2000);});
     }
-    alert('Fertig! ' + ideen.length + ' Ideen analysiert.');
+    _showToast('Fertig! ' + ideen.length + ' Ideen analysiert.', 'info');
     renderHqIdeen('all');
 }
 export async function updateIdeeStatus(ideeId, newStatus) {
@@ -952,11 +952,11 @@ export async function updateIdeeStatus(ideeId, newStatus) {
         var resp = await _sb().from('ideen').update({status: newStatus}).eq('id', ideeId).select();
         if(resp.error) throw resp.error;
         if(!resp.data || resp.data.length === 0) {
-            alert('Status konnte nicht geändert werden – keine Berechtigung.');
+            _showToast('Status konnte nicht geändert werden – keine Berechtigung.', 'info');
             return;
         }
         renderHqIdeen('all');
-    } catch(err) { alert('Fehler: '+err.message); }
+    } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
 }
 
 
@@ -1130,7 +1130,7 @@ export async function saveTracking() {
     var orderId = document.getElementById('trackingOrderId').value;
     var carrier = document.getElementById('trackingCarrier').value;
     var number = document.getElementById('trackingNumber').value.trim();
-    if(!number) { alert('Bitte Tracking-Nummer eingeben.'); return; }
+    if(!number) { _showToast('Bitte Tracking-Nummer eingeben.', 'error'); return; }
     var trackUrl = getTrackingUrl(carrier, number);
     await _sb().from('shop_orders').update({
         status: 'shipped',
@@ -1175,7 +1175,7 @@ window.updateShopOrderStatus = async function(orderId, newStatus) {
 export function addHqShopProduct(){
     var n=document.getElementById('hqShopName');
     var p=document.getElementById('hqShopPreis');
-    if(!n||!n.value.trim()){alert('Produktname eingeben');return;}
+    if(!n||!n.value.trim()){_showToast('Produktname eingeben', 'error');return;}
     _sb().from('shop_products').insert({
         name: n.value.trim(),
         category: document.getElementById('hqShopKat')?.value || 'print',

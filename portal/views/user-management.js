@@ -231,7 +231,7 @@ export async function confirmApprove(userId) {
         
         closeApproveModal();
         var rollenLabels = {'hq':'HQ','hq_gf':'GF','hq_sales':'Sales','hq_marketing':'Marketing','hq_einkauf':'Einkauf','hq_support':'Support','hq_akademie':'Akademie','hq_hr':'HR','hq_it':'IT','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
-        alert('\u2705 User freigeschaltet!\nRollen: ' + selected.map(function(r){return rollenLabels[r]||r;}).join(', ') + '\n\nDer Mitarbeiter kann sich jetzt einloggen.');
+        _showToast('\u2705 User freigeschaltet!\nRollen: ' + selected.map(function(r, 'success'){return rollenLabels[r]||r;}).join(', ') + '\n\nDer Mitarbeiter kann sich jetzt einloggen.');
         await renderKzMitarbeiter();
     } catch(err) {
         if(errEl) { errEl.textContent = 'Fehler: ' + err.message; errEl.style.display = 'block'; }
@@ -244,9 +244,9 @@ export async function rejectUser(userId) {
     try {
         await _sb().from('users').update({status: 'gesperrt'}).eq('id', userId);
         closeApproveModal();
-        alert('User abgelehnt und gesperrt.');
+        _showToast('User abgelehnt und gesperrt.', 'info');
         await renderKzMitarbeiter();
-    } catch(err) { alert('Fehler: ' + err.message); }
+    } catch(err) { _showToast('Fehler: ' + err.message, 'error'); }
 }
 
 // === ROLLEN-MODAL ===
@@ -290,14 +290,14 @@ export function saveRollen(maIdx) {
         var chk = document.getElementById('roleChk_'+r);
         if(chk && chk.checked) selected.push(r);
     });
-    if(selected.length===0) { alert('Mindestens eine Rolle muss zugewiesen werden.'); return; }
+    if(selected.length===0) { _showToast('Mindestens eine Rolle muss zugewiesen werden.', 'info'); return; }
     kzMitarbeiter[maIdx].rollen = selected;
     closeRollenModal();
     await renderKzMitarbeiter();
 
     var labels = {'hq':'HQ','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
     var names = selected.map(function(r){return labels[r];}).join(', ');
-    alert('✅ Rollen für '+kzMitarbeiter[maIdx].name+' gespeichert:\n'+names);
+    _showToast('✅ Rollen für '+kzMitarbeiter[maIdx].name+' gespeichert:\n'+names, 'success');
 }
 
 // === PARTNER MITARBEITER-VERWALTUNG (GF-Ebene) ===
@@ -1087,7 +1087,7 @@ export async function openEditMaModal(userId) {
                 }
             } catch(e){}
         }, 100);
-    } catch(err) { alert('Fehler: '+err.message); }
+    } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
 }
 
 var editMaEbene = 'standort'; // tracks current ebene selection in edit modal
@@ -1194,7 +1194,7 @@ export async function saveEditMa(userId) {
         }
 
         closeEditMaModal();
-        alert('\u2705 Mitarbeiter aktualisiert!');
+        _showToast('\u2705 Mitarbeiter aktualisiert!', 'success');
         await renderKzMitarbeiter();
         // If this user's status changed, re-check demo mode
         if(_sbProfile() && userId === _sbProfile().id) {
@@ -1233,7 +1233,7 @@ export async function loginAs(userId, email, userName) {
         enterApp();
         try { await loadPipelineFromSupabase(); } catch(e) {}
     } catch(err) {
-        alert('Login fehlgeschlagen: '+(err.message||err)+'\n\nSeite wird neu geladen.');
+        _showToast('Login fehlgeschlagen: '+(err.message||err, 'error')+'\n\nSeite wird neu geladen.');
         location.reload();
     }
 }
@@ -1249,15 +1249,15 @@ export async function deleteMa(userId, userName) {
         await _sb().from('users').delete().eq('id', userId);
         // 3. Auth-User löschen (via DB-Funktion)
         await _sb().rpc('delete_auth_user', { target_user_id: userId });
-        alert('\u2705 '+userName+' wurde gelöscht.');
+        _showToast('\u2705 '+userName+' wurde gelöscht.', 'info');
         await renderKzMitarbeiter();
     } catch(err) {
         // Auch bei Fehler beim Auth-Löschen: Profil ist bereits weg
         if(err.message && err.message.includes('delete_auth_user')) {
-            alert('\u2705 '+userName+' Profil gelöscht.\n\u26a0\ufe0f Auth-User muss manuell im Supabase Dashboard entfernt werden.');
+            _showToast('\u2705 '+userName+' Profil gelöscht.\n\u26a0\ufe0f Auth-User muss manuell im Supabase Dashboard entfernt werden.', 'info');
             await renderKzMitarbeiter();
         } else {
-            alert('Fehler: '+(err.message||err));
+            _showToast('Fehler: '+(err.message||err, 'error'));
         }
     }
 }
@@ -1308,7 +1308,7 @@ export async function saveNeuerStandort() {
     var telefon = (document.getElementById('newStdTelefon')||{}).value||'';
     var premium = (document.getElementById('newStdPremium')||{}).checked||false;
 
-    if(!name.trim() || !slug.trim()) { alert(_t('misc_enter_name_slug')); return; }
+    if(!name.trim() || !slug.trim()) { _showToast(_t('misc_enter_name_slug'), 'error'); return; }
     slug = slug.toLowerCase().replace(/[^a-z0-9-]/g,'');
 
     var btn = document.querySelector('#neuerStdContainer .bg-vit-orange');
@@ -1327,10 +1327,10 @@ export async function saveNeuerStandort() {
         if(resp.error) throw resp.error;
 
         closeNeuerStdModal();
-        alert('\u2705 Standort angelegt!\n'+name.trim()+'\nSlug: '+slug+'\nStatus: '+status);
+        _showToast('\u2705 Standort angelegt!\n'+name.trim(, 'info')+'\nSlug: '+slug+'\nStatus: '+status);
         renderKzStandorte();
     } catch(err) {
-        alert('Fehler: ' + err.message);
+        _showToast('Fehler: ' + err.message, 'error');
         if(btn) { btn.disabled=false; btn.textContent='Anlegen'; }
     }
 }
@@ -1709,7 +1709,7 @@ export async function setModulStatus(id, newStatus) {
         if(resp.error) throw resp.error;
         await loadModulStatus();
         renderModulStatusList();
-    } catch(err) { alert('Fehler: ' + err.message); }
+    } catch(err) { _showToast('Fehler: ' + err.message, 'error'); }
 }
 
 export async function setHqModulStatus(id, newStatus) {
@@ -1718,7 +1718,7 @@ export async function setHqModulStatus(id, newStatus) {
         if(resp.error) throw resp.error;
         await loadModulStatus();
         renderHqModulStatusList();
-    } catch(err) { alert('Fehler: ' + err.message); }
+    } catch(err) { _showToast('Fehler: ' + err.message, 'error'); }
 }
 
 export async function setHqTabStatus(modulKey, tabKey, newStatus) {
@@ -2033,7 +2033,7 @@ export async function renderKzStandorte() {
             h+='<td class="px-4 py-3 text-center font-semibold">'+(userCounts[s.id]||0)+'</td>';
             h+='<td class="px-4 py-3 text-center text-gray-500 text-xs">'+beitritt+'</td>';
             h+='<td class="px-4 py-3 text-center text-xs text-gray-500">'+(s.telefon||'\u2014')+'</td>';
-            h+='<td class="px-4 py-3 text-center"><button class="text-xs text-vit-orange hover:underline font-semibold" onclick="alert(\''+s.name+'\\nAdresse: '+(s.adresse||'\u2014')+'\\nTelefon: '+(s.telefon||'\u2014')+'\\nSlug: '+s.slug+'\')">Details \u2192</button></td>';
+            h+='<td class="px-4 py-3 text-center"><button class="text-xs text-vit-orange hover:underline font-semibold" onclick="_showToast(\''+s.name+'\\nAdresse: '+(s.adresse||'\u2014', 'error')+'\\nTelefon: '+(s.telefon||'\u2014')+'\\nSlug: '+s.slug+'\')">Details \u2192</button></td>';
             h+='</tr>';
         });
         if(standorte.length===0) h='<tr><td colspan="8" class="text-center py-8 text-gray-400">Keine Standorte.</td></tr>';
@@ -2198,8 +2198,8 @@ export async function addBetaUser(userId, modulKey, modulName) {
         if(error) throw error;
         openBetaUsersModal(modulKey, modulName); // Refresh
     } catch(e) { 
-        if(e.message && e.message.indexOf('duplicate') !== -1) { alert('User ist bereits Beta-Tester'); }
-        else { alert('Fehler: ' + e.message); }
+        if(e.message && e.message.indexOf('duplicate') !== -1) { _showToast('User ist bereits Beta-Tester', 'info'); }
+        else { _showToast('Fehler: ' + e.message, 'error'); }
     }
 }
 
@@ -2209,7 +2209,7 @@ export async function removeBetaUser(betaId, modulKey, modulName) {
         var {error} = await _sb().from('modul_beta_users').delete().eq('id', betaId);
         if(error) throw error;
         openBetaUsersModal(modulKey, modulName); // Refresh
-    } catch(e) { alert('Fehler: ' + e.message); }
+    } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
 }
 
 const _exports = {approveUser,switchApproveEbene,closeApproveModal,confirmApprove,rejectUser,openRollenModal,closeRollenModal,saveRollen,getStandortName,getPartnerMitarbeiter,filterPartnerMa,showMaTab,renderPartnerMitarbeiter,openEmployeeToolsModal,closeEmpToolsModal,saveEmployeeTools,openEditEmployeeModal,closeEditEmpModal,saveEditEmployee,renderMaToolsMatrix,renderMaKosten,deactivateMa,openNeuerMaModal,switchNewMaEbene,closeNeuerMaModal,switchNewMaEmailType,updateNewMaEmail,saveNeuerMa,openEditMaModal,switchEditEbene,closeEditMaModal,saveEditMa,loginAs,deleteMa,openNeuerStandortModal,closeNeuerStdModal,saveNeuerStandort,showSettingsTab,renderModulStatusList,renderHqModulStatusList,_renderModulRow,toggleModuleExpand,renderOfficeRoomsAdmin,renderDemoModulList,setDemoModulStatus,setDemoTabStatus,setDemoWidgetStatus,setAllDemoStatus,setTabStatus,setWidgetStatus,setModulStatus,setHqModulStatus,setHqTabStatus,setHqWidgetStatus,renderHqEinstellungen,togglePermission,renderHqRechteMatrixBody,loadHqRechteMatrix,toggleHqPermission,showKommandoTab,filterKzStandorte,filterKzMa,renderKzStandorte,renderKzMitarbeiter,openBetaUsersModal,filterBetaUserList,addBetaUser,removeBetaUser};

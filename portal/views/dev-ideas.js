@@ -27,7 +27,7 @@ export async function submitDevIdea() {
         var kategorie = document.getElementById('devKategorie').value;
         var modul = document.getElementById('devModul').value || null;
 
-        if(!titel && !beschreibung && (window._devState ? window._devState.selectedFiles : []).length === 0) { alert('Bitte gib mindestens einen Titel, eine Beschreibung oder eine Aufnahme/Datei an.'); if(btn) { btn.disabled = false; btn.textContent = '💡 Feedback einreichen'; } return; }
+        if(!titel && !beschreibung && (window._devState ? window._devState.selectedFiles : []).length === 0) { _showToast('Bitte gib mindestens einen Titel, eine Beschreibung oder eine Aufnahme/Datei an.', 'error'); if(btn) { btn.disabled = false; btn.textContent = '💡 Feedback einreichen'; } return; }
 
         // Upload files to Supabase Storage
         var attachments = [];
@@ -85,7 +85,7 @@ export async function submitDevIdea() {
             loadDevSubmissions(true).then(function(){ refreshEntwicklungViews(); });
         });
     } catch(err) {
-        alert('Fehler beim Einreichen: ' + (err.message||err));
+        _showToast('Fehler beim Einreichen: ' + (err.message||err, 'error'));
     } finally {
         if(btn) { btn.disabled = false; btn.textContent = '💡 Feedback einreichen'; }
     }
@@ -211,7 +211,7 @@ export async function devHQDecision(subId, ergebnis) {
         await loadDevSubmissions(true);
         if(typeof window.renderDevPipeline === 'function') window.renderDevPipeline();
         if(typeof window.renderEntwSteuerung === 'function') window.renderEntwSteuerung();
-    } catch(err) { alert('Fehler: ' + (err.message||err)); }
+    } catch(err) { _showToast('Fehler: ' + (err.message||err, 'error')); }
 }
 
 export async function moveDevQueue(subId, direction) {

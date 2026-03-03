@@ -1,3 +1,4 @@
+function _toast(msg, type) { if(typeof window.showToast==='function') window.showToast(msg, type||'info'); }
 // vit:bikes — Profile Panel + Settings
 // Extracted from index.html lines 8134-8408
 function openProfilePanel() {
@@ -236,13 +237,13 @@ async function saveProfile() {
             if(topAvatar) topAvatar.src = avatarUrl;
             var mobileAvatar = document.getElementById('userAvatarImgMobile');
             if(mobileAvatar) mobileAvatar.src = avatarUrl;
-            alert('✅ Profil gespeichert!');
+            _toast('✅ Profil gespeichert!', 'success');
         } catch(e) {
             console.error('Profile save error:', e);
-            alert('Fehler beim Speichern: ' + (e.message||e));
+            _toast('Fehler beim Speichern: ' + (e.message||e), 'error');
         }
     } else {
-        alert('✅ Profil gespeichert! (Demo-Modus)');
+        _toast('✅ Profil gespeichert! (Demo-Modus)', 'success');
     }
 }
 
@@ -263,13 +264,13 @@ function handleProfilePhoto(input) {
 
 function changePassword() {
     var newPw = prompt('Neues Passwort eingeben (min. 8 Zeichen):');
-    if(!newPw || newPw.length < 8) { if(newPw !== null) alert('Passwort muss mindestens 8 Zeichen haben.'); return; }
+    if(!newPw || newPw.length < 8) { if(newPw !== null) _toast('Passwort muss mindestens 8 Zeichen haben.', 'info'); return; }
     if(typeof sb !== 'undefined') {
         sb.auth.updateUser({ password: newPw }).then(function(res){
-            if(res.error) alert('Fehler: ' + res.error.message);
-            else alert(t('alert_pw_changed'));
+            if(res.error) _toast('Fehler: ' + res.error.message, 'error');
+            else _toast(t('alert_pw_changed'), 'info');
         });
     } else {
-        alert(t('alert_pw_changed'));
+        _toast(t('alert_pw_changed'), 'info');
     }
 }

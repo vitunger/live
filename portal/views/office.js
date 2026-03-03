@@ -931,7 +931,7 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
         var parkType=parkTypeEl?parkTypeEl.value:'none';
         var parking=parkType!=='none';
         var notes=(document.getElementById('offGuestNotes')||{}).value;
-        if(!name||!date){alert('Bitte Name und Datum ausfüllen!');return;}
+        if(!name||!date){(typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})('Bitte Name und Datum ausfüllen!', 'error');return;}
         var btn=document.getElementById('offGuestSaveBtn');
         if(btn){btn.disabled=true;btn.textContent='Wird gespeichert...';}
         try {

@@ -3,6 +3,8 @@
 // ============================================================
 (function(){
     'use strict';
+    function _toast(msg, type) { if(typeof window.showToast==='function') window.showToast(msg, type||'info'); }
+
 
     // ==================== HELPERS ====================
     var vpStatusLabels = {
@@ -58,7 +60,7 @@
         for(var i=0; i<fileList.length; i++) {
             var f = fileList[i];
             if(!f.type.startsWith('video/')) continue;
-            if(f.size > 2147483648) { alert(f.name + ': zu gross (max. 2 GB)'); continue; }
+            if(f.size > 2147483648) { _toast(f.name + ': zu gross (max. 2 GB)', 'info'); continue; }
             if(vpSelectedFiles.some(function(sf){ return sf.name===f.name && sf.size===f.size; })) continue;
             vpSelectedFiles.push(f);
         }
@@ -113,7 +115,7 @@
         // Get session for auth token
         var sessionResp = await sb.auth.getSession();
         var accessToken = sessionResp?.data?.session?.access_token;
-        if(!accessToken) { alert('Nicht eingeloggt!'); btn.disabled = false; return; }
+        if(!accessToken) { _toast('Nicht eingeloggt!', 'info'); btn.disabled = false; return; }
 
         var projectId = 'lwwagbkxeofahhwebkab';
 
@@ -433,7 +435,7 @@
 
     window.vpSaveConsent = async function() {
         var name = document.getElementById('vpConsentName').value.trim();
-        if(!name) { alert('Name ist erforderlich.'); return; }
+        if(!name) { _toast('Name ist erforderlich.', 'info'); return; }
         try {
             var {error} = await sb.from('consents').insert({
                 person_name: name,
@@ -448,7 +450,7 @@
             if(error) throw error;
             vpCloseModal();
             vpRenderConsents();
-        } catch(e) { alert('Fehler: '+e.message); }
+        } catch(e) { _toast('Fehler: '+e.message, 'error'); }
     };
 
     window.vpRevokeConsent = async function(id) {
@@ -456,7 +458,7 @@
         try {
             await sb.from('consents').update({revoked_at:new Date().toISOString()}).eq('id',id);
             vpRenderConsents();
-        } catch(e) { alert('Fehler: '+e.message); }
+        } catch(e) { _toast('Fehler: '+e.message, 'error'); }
     };
 
     // ==================== TAGGING ====================
@@ -506,7 +508,7 @@
             if(!label) return;
             tags.push({ video_id:videoId, person_label:label, consent_id:row.querySelector('.vp-tag-consent').value||null, is_employee:row.querySelector('.vp-tag-employee').checked, tagged_by:sbUser.id });
         });
-        if(tags.length===0) { alert('Mindestens eine Person taggen.'); return; }
+        if(tags.length===0) { _toast('Mindestens eine Person taggen.', 'info'); return; }
         try {
             await sb.from('video_persons').delete().eq('video_id',videoId);
             var {error} = await sb.from('video_persons').insert(tags);
@@ -516,13 +518,13 @@
             var check = result&&result[0]?result[0]:{all_cleared:false};
             if(check.all_cleared) {
                 await sb.from('videos').update({pipeline_status:'cutting',consent_cleared:true,pipeline_status_detail:'Alle Consents gültig'}).eq('id',videoId);
-                vpCloseModal(); alert('✅ Alle Consents gültig! Video geht in den Schnitt.');
+                vpCloseModal(); _toast('✅ Alle Consents gültig! Video geht in den Schnitt.', 'success');
             } else {
                 await sb.from('videos').update({pipeline_status:'consent_blocked',pipeline_status_detail:'Consent fehlt für '+(check.blocked_persons||[]).map(function(p){return p.person}).join(', ')}).eq('id',videoId);
-                vpCloseModal(); alert('⚠️ Consent fehlt für: '+(check.blocked_persons||[]).map(function(p){return p.person+' ('+p.reason+')'}).join(', '));
+                vpCloseModal(); _toast('⚠️ Consent fehlt für: '+(check.blocked_persons||[]).map(function(p){return p.person+' ('+p.reason+')'}).join(', '), 'info');
             }
             vpRenderPipelineDashboard();
-        } catch(e) { alert('Fehler: '+e.message); }
+        } catch(e) { _toast('Fehler: '+e.message, 'error'); }
     };
 
     // ==================== PIPELINE TRIGGERS ====================
@@ -542,14 +544,14 @@
                 msg += '📊 Qualität: ' + (data.analysis?.quality_score || '–') + '/100\n';
                 msg += '📁 Kategorie: ' + (data.analysis?.suggested_category || '–');
                 vpCloseModal();
-                alert(msg);
+                _toast(msg, 'info');
             } else {
                 throw new Error(data?.error || 'Unbekannter Fehler');
             }
             vpRenderPipelineDashboard();
         } catch(e) {
             vpCloseModal();
-            alert('❌ Analyse fehlgeschlagen: ' + e.message);
+            _toast('❌ Analyse fehlgeschlagen: ' + e.message, 'error');
             vpRenderPipelineDashboard();
         }
     };
@@ -564,10 +566,10 @@
             vpCloseModal();
             if(data && data.success) {
                 if(data.consent_result === 'all_cleared' || data.consent_result === 'auto_cleared') {
-                    alert('✅ Consent OK! ' + (data.cleared||0) + ' Person(en) geprüft.\nVideo geht in den Schnitt.');
+                    _toast('✅ Consent OK! ' + (data.cleared||0) + ' Person(en) geprüft. Video geht in den Schnitt.', 'success');
                 } else {
                     var missing = (data.details||[]).filter(function(d){return d.consent_status==='missing';});
-                    alert('⚠️ Consent fehlt für ' + missing.length + ' Person(en):\n' + missing.map(function(m){return '- ' + m.person_label + ': ' + m.reason;}).join('\n'));
+                    _toast('⚠️ Consent fehlt für ' + missing.length + ' Person(en)', 'warning');
                 }
             } else {
                 throw new Error(data?.error || 'Unbekannter Fehler');
@@ -575,7 +577,7 @@
             vpRenderPipelineDashboard();
         } catch(e) {
             vpCloseModal();
-            alert('❌ Consent-Check fehlgeschlagen: ' + e.message);
+            _toast('❌ Consent-Check fehlgeschlagen: ' + e.message, 'error');
         }
     };
 
@@ -593,14 +595,14 @@
                 msg += 'Template: ' + (data.template?.name || '–') + '\n';
                 msg += 'Clips: ' + (data.cut_list?.length || 0) + '\n\n';
                 msg += 'Das Video steht jetzt zur Freigabe bereit.';
-                alert(msg);
+                _toast(msg, 'info');
             } else {
                 throw new Error(data?.error || 'Unbekannter Fehler');
             }
             vpRenderPipelineDashboard();
         } catch(e) {
             vpCloseModal();
-            alert('❌ Reel-Generierung fehlgeschlagen: ' + e.message);
+            _toast('❌ Reel-Generierung fehlgeschlagen: ' + e.message, 'error');
         }
     };
 
@@ -619,10 +621,10 @@
                 actor:sbUser?.id||'unknown', details:{approved_by:sbUser?.name||'–'}
             });
             vpCloseModal();
-            alert('✅ Video freigegeben!');
+            _toast('✅ Video freigegeben!', 'success');
             vpRenderPipelineDashboard();
             if(window.vpRenderHqReview) vpRenderHqReview();
-        } catch(e) { alert('Fehler: '+e.message); }
+        } catch(e) { _toast('Fehler: '+e.message, 'error'); }
     };
 
     window.vpRejectVideo = async function(videoId) {
@@ -639,10 +641,10 @@
                 actor:sbUser?.id||'unknown', details:{reason:reason}
             });
             vpCloseModal();
-            alert('Video abgelehnt.');
+            _toast('Video abgelehnt.', 'info');
             vpRenderPipelineDashboard();
             if(window.vpRenderHqReview) vpRenderHqReview();
-        } catch(e) { alert('Fehler: '+e.message); }
+        } catch(e) { _toast('Fehler: '+e.message, 'error'); }
     };
 
     window.vpManualAdvance = async function(videoId, targetStatus) {
@@ -660,7 +662,7 @@
             });
             vpCloseModal();
             vpRenderPipelineDashboard();
-        } catch(e) { alert('Fehler: '+e.message); }
+        } catch(e) { _toast('Fehler: '+e.message, 'error'); }
     };
 
     // ==================== HQ VIDEO-FREIGABE ====================
@@ -751,7 +753,7 @@
             await sb.from('reels').update({status:'approved',approved_by:sbUser.id,approved_at:new Date().toISOString()}).eq('video_id',videoId).eq('status','generated');
             vpRenderHqReview();
             vpUpdateHqBadge();
-        } catch(e) { alert('Fehler: '+e.message); }
+        } catch(e) { _toast('Fehler: '+e.message, 'error'); }
     };
 
     window.vpHqReject = async function(videoId) {
@@ -763,7 +765,7 @@
             await sb.from('reels').update({status:'rejected',review_notes:reason}).eq('video_id',videoId).eq('status','generated');
             vpRenderHqReview();
             vpUpdateHqBadge();
-        } catch(e) { alert('Fehler: '+e.message); }
+        } catch(e) { _toast('Fehler: '+e.message, 'error'); }
     };
 
     // ==================== BADGE UPDATES ====================

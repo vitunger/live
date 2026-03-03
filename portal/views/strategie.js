@@ -1085,7 +1085,7 @@ export function shopAddSelectedSizes(productId, productName) {
         });
         added += qty;
     });
-    if(added === 0) { alert('Bitte w\u00e4hle mindestens eine Gr\u00f6\u00dfe aus.'); return; }
+    if(added === 0) { _showToast('Bitte w\u00e4hle mindestens eine Gr\u00f6\u00dfe aus.', 'error'); return; }
     renderShop();
 }
 
@@ -1152,12 +1152,12 @@ export function addToCartWithSize(productId, name, preis) {
     // Check stock
     var variants = shopVariants[productId] || [];
     var variant = variants.find(function(v){return v.id===sel.variant_id});
-    if (!variant || variant.stock <= 0) { alert('Diese Größe ist leider ausverkauft.'); return; }
+    if (!variant || variant.stock <= 0) { _showToast('Diese Größe ist leider ausverkauft.', 'info'); return; }
     
     var cartKey = productId + '_' + sel.variant_id;
     var existing = shopCart.find(function(c){return c.cartKey===cartKey});
     if (existing) {
-        if (existing.menge >= variant.stock) { alert('Maximal ' + variant.stock + ' verfügbar in Größe ' + sel.variant_name + '.'); return; }
+        if (existing.menge >= variant.stock) { _showToast('Maximal ' + variant.stock + ' verfügbar in Größe ' + sel.variant_name + '.', 'info'); return; }
         existing.menge++;
     } else {
         shopCart.push({ cartKey: cartKey, id: productId, variant_id: sel.variant_id, variant_name: sel.variant_name, name: name + ' (' + sel.variant_name + ')', preis: preis, menge: 1 });
@@ -1282,7 +1282,7 @@ export async function submitShopOrder() {
         var taxAmount = Math.round(subtotal * 0.19 * 100) / 100;
         var total = Math.round((subtotal + taxAmount) * 100) / 100;
         var stId = sbStandort ? sbStandort.id : null;
-        if(!stId) { alert('Kein Standort zugeordnet.'); return; }
+        if(!stId) { _showToast('Kein Standort zugeordnet.', 'info'); return; }
 
         // 1. Create shop order
         var orderNum = 'SHOP-' + new Date().getFullYear() + '-' + Date.now().toString(36).toUpperCase();
@@ -1382,7 +1382,7 @@ export async function submitShopOrder() {
             '<p class="text-sm text-gray-500 mb-3">Betrag: <strong>' + fmtEur(total) + ' (brutto)</strong></p>' +
             '<p class="text-xs text-gray-400">Die Rechnung findest du unter Buchhaltung → Meine Rechnungen.</p></div>';
         renderShop();
-    } catch(err) { alert('Fehler bei Bestellung: '+err.message); console.error(err); }
+    } catch(err) { _showToast('Fehler bei Bestellung: '+err.message, 'error'); console.error(err); }
 }
 
 export function removeFromCart(cartKey) {
@@ -1397,7 +1397,7 @@ export function updateShopCart(cartKey, delta) {
     if (delta > 0 && item.variant_id) {
         var variants = shopVariants[item.id] || [];
         var variant = variants.find(function(v){return v.id===item.variant_id});
-        if (variant && item.menge >= variant.stock) { alert('Maximal ' + variant.stock + ' verfügbar.'); return; }
+        if (variant && item.menge >= variant.stock) { _showToast('Maximal ' + variant.stock + ' verfügbar.', 'info'); return; }
     }
     item.menge += delta;
     if(item.menge <= 0) shopCart = shopCart.filter(function(c){return c.cartKey!==cartKey;});
@@ -1964,7 +1964,7 @@ export function showView(viewName) {
         var statusLoaded = Object.keys(_modulStatus).length > 0;
         if(statusLoaded && (!mStatus || mStatus === 'in_bearbeitung' || mStatus === 'deaktiviert')) {
             if(typeof window._showToast === 'function') window._showToast('Dieses Modul ist noch nicht verf\u00fcgbar (' + (mStatus === 'in_bearbeitung' ? 'Kommt bald' : mStatus === 'deaktiviert' ? 'Deaktiviert' : 'Nicht konfiguriert') + ')', 'info');
-            else alert('Dieses Modul ist noch nicht verf\u00fcgbar');
+            else _showToast('Dieses Modul ist noch nicht verf\u00fcgbar', 'info');
             return;
         }
         // Beta check: only HQ or assigned beta users may access

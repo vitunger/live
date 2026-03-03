@@ -13,7 +13,7 @@
     var _dragTarget = null;
 
     function esc(s) { return typeof escH === 'function' ? escH(s) : (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-    function notify(msg, type) { if (typeof showToast === 'function') showToast(msg, type||'success'); else if (typeof showNotification === 'function') showNotification(msg, type||'success'); else alert(msg); }
+    function notify(msg, type) { if (typeof showToast === 'function') showToast(msg, type||'success'); else if (typeof showNotification === 'function') showNotification(msg, type||'success'); else showToast(msg, 'info'); }
     function gv(id) { return (document.getElementById(id)||{}).value||''; }
     function gc(id) { return (document.getElementById(id)||{}).checked||false; }
 

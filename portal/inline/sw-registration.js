@@ -1,3 +1,4 @@
+function _toast(msg, type) { if(typeof window.showToast==='function') window.showToast(msg, type||'info'); }
 // vit:bikes Partner Portal — Service Worker Registration + Cache
 // Extracted from index.html lines 11306-11587
 // ============================================================
@@ -126,13 +127,13 @@
     // ── Push Notifications Setup ──
     window.setupPushNotifications = async function() {
         if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-            alert(t('alert_push_unsupported'));
+            _toast(t('alert_push_unsupported'), 'info');
             return;
         }
         
         var permission = await Notification.requestPermission();
         if (permission !== 'granted') {
-            alert(t('alert_push_denied'));
+            _toast(t('alert_push_denied'), 'info');
             return;
         }
 
@@ -155,7 +156,7 @@
             var sub = subscription.toJSON();
             var sba = window._supabase || window.sb;
             var user = (await sba.auth.getUser()).data.user;
-            if (!user) { alert('Nicht eingeloggt'); return; }
+            if (!user) { _toast('Nicht eingeloggt', 'info'); return; }
 
             var deviceName = navigator.userAgent.indexOf('Mobile') > -1 ? 'Mobilgerät' : 'Desktop';
             deviceName += ' – ' + (navigator.userAgent.match(/(Chrome|Firefox|Safari|Edge)[\/\s](\d+)/)||[])[0] || 'Browser';
@@ -175,7 +176,7 @@
             showLocalNotification('🔔 Push aktiviert!', 'Du erhältst jetzt Benachrichtigungen für Nachrichten, Leads, Aufgaben & mehr.');
         } catch(err) {
             console.error('[Push] Setup error:', err);
-            alert('Push-Aktivierung fehlgeschlagen: ' + err.message);
+            _toast('Push-Aktivierung fehlgeschlagen: ' + err.message, 'error');
         }
     };
 
@@ -228,7 +229,7 @@
         try {
             var sba = window._supabase || window.sb;
             var userId = (await sba.auth.getUser()).data.user?.id;
-            if (!userId) { alert('Nicht eingeloggt'); return; }
+            if (!userId) { _toast('Nicht eingeloggt', 'info'); return; }
             var prefs = { user_id: userId, updated_at: new Date().toISOString() };
             document.querySelectorAll('.notif-toggle').forEach(function(cb) {
                 var key = cb.dataset.pref;
@@ -236,8 +237,8 @@
             });
             var { error } = await sba.from('notification_preferences').upsert(prefs, { onConflict: 'user_id' });
             if (error) throw error;
-            alert('✅ Push-Einstellungen gespeichert!');
-        } catch(e) { alert('Fehler: ' + e.message); }
+            _toast('✅ Push-Einstellungen gespeichert!', 'success');
+        } catch(e) { _toast('Fehler: ' + e.message, 'error'); }
     }
 
     window.unsubscribePush = async function() {

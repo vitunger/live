@@ -1,3 +1,4 @@
+function _toast(msg, type) { if(typeof window.showToast==='function') window.showToast(msg, type||'info'); }
 // vit:bikes Partner Portal — 3-Ebenen Render System + Demo Mode
 // Extracted from index.html lines 11610-12562
 // ============================================================
@@ -340,7 +341,7 @@ function hqApprovePart1(accountId) {
     account.progress = 0;
     logOnboardingAction('invite_part1', { account: account.name });
     renderHqOnboarding();
-    alert('\u2705 ' + account.name + ' wurde zur Trainingsphase Part 1 eingeladen!');
+    _toast('\u2705 ' + account.name + ' wurde zur Trainingsphase Part 1 eingeladen!', 'info');
 }
 
 // ═══ DEMO SYSTEM: Password Protection + Frontend Demo Data ═══
@@ -888,7 +889,7 @@ window.updateFbStatus = async function(id, status) {
         await sb.from('portal_feedback').update({ status: status, updated_at: new Date().toISOString() }).eq('id', id);
         document.getElementById('hqFbDetailModal').style.display = 'none';
         renderHqFeedbackInbox();
-    } catch(e) { alert('Fehler: '+e.message); }
+    } catch(e) { _toast('Fehler: '+e.message, 'error'); }
 };
 
 // ── Ideenboard Integration ──
@@ -923,18 +924,18 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
 
         // Mark feedback as linked
         await sb.from('portal_feedback').update({ status: 'gesehen' }).eq('id', fbId);
-        alert('✅ Idee wurde ins Ideenboard übernommen!');
+        _toast('✅ Idee wurde ins Ideenboard übernommen!', 'success');
         document.getElementById('hqFbDetailModal').style.display = 'none';
         renderHqFeedbackInbox();
     } catch(e) {
         // If ideas table doesn't exist yet, fall back gracefully
         if(e.message && e.message.indexOf('ideas') >= 0) {
-            alert('💡 Ideenboard-Tabelle noch nicht vorhanden. Feedback wurde als "gesehen" markiert.');
+            _toast('💡 Ideenboard-Tabelle noch nicht vorhanden. Feedback wurde als "gesehen" markiert.', 'info');
             await sb.from('portal_feedback').update({ status: 'gesehen' }).eq('id', fbId);
             document.getElementById('hqFbDetailModal').style.display = 'none';
             renderHqFeedbackInbox();
         } else {
-            alert('Fehler: ' + e.message);
+            _toast('Fehler: ' + e.message, 'error');
         }
     }
 };

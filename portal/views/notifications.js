@@ -143,13 +143,13 @@ try { localStorage.setItem('vit-pwa-dismissed', '1'); } catch(e){}
 
 export async function setupPushNotifications() {
 if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-    alert(_t('alert_push_unsupported'));
+    (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})(_t('alert_push_unsupported', 'info'));
     return;
 }
 
 var permission = await Notification.requestPermission();
 if (permission !== 'granted') {
-    alert(_t('alert_push_denied'));
+    (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})(_t('alert_push_denied', 'info'));
     return;
 }
 
@@ -172,7 +172,7 @@ try {
     var sub = subscription.toJSON();
     var sba = _sb();
     var user = (await sba.auth.getUser()).data.user;
-    if (!user) { alert('Nicht eingeloggt'); return; }
+    if (!user) { (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})('Nicht eingeloggt', 'info'); return; }
 
     var deviceName = navigator.userAgent.indexOf('Mobile') > -1 ? 'Mobilgerät' : 'Desktop';
     deviceName += ' – ' + (navigator.userAgent.match(/(Chrome|Firefox|Safari|Edge)[\/\s](\d+)/)||[])[0] || 'Browser';
@@ -192,7 +192,7 @@ try {
     showLocalNotification('🔔 Push aktiviert!', 'Du erhältst jetzt Benachrichtigungen für Nachrichten, Leads, Aufgaben & mehr.');
 } catch(err) {
     console.error('[Push] Setup error:', err);
-    alert('Push-Aktivierung fehlgeschlagen: ' + err.message);
+    (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})('Push-Aktivierung fehlgeschlagen: ' + err.message, 'error');
 }
 };
 
@@ -246,7 +246,7 @@ export async function saveNotificationPrefs() {
 try {
     var sba = _sb();
     var userId = (await sba.auth.getUser()).data.user?.id;
-    if (!userId) { alert('Nicht eingeloggt'); return; }
+    if (!userId) { (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})('Nicht eingeloggt', 'info'); return; }
     var prefs = { user_id: userId, updated_at: new Date().toISOString() };
     document.querySelectorAll('.notif-toggle').forEach(function(cb) {
         var key = cb.dataset.pref;
@@ -254,8 +254,8 @@ try {
     });
     var { error } = await sba.from('notification_preferences').upsert(prefs, { onConflict: 'user_id' });
     if (error) throw error;
-    alert('✅ Push-Einstellungen gespeichert!');
-} catch(e) { alert('Fehler: ' + e.message); }
+    (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})('✅ Push-Einstellungen gespeichert!', 'success');
+} catch(e) { (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})('Fehler: ' + e.message, 'error'); }
 }
 
 export async function unsubscribePush() {

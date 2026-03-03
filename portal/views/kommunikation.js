@@ -503,7 +503,7 @@ export async function kommSendMessage() {
             }
         }
     } catch(err) {
-        alert('Senden fehlgeschlagen: ' + err.message);
+        _showToast('Senden fehlgeschlagen: ' + err.message, 'error');
         input.value = text;
     } finally {
         input.disabled = false;
@@ -579,7 +579,7 @@ export async function kommCreateKanal() {
         });
         if(resp.error) throw resp.error;
         await loadKommSidebar();
-    } catch(err) { alert('Fehler: ' + err.message); }
+    } catch(err) { _showToast('Fehler: ' + err.message, 'error'); }
 }
 
 export function updateKommBadges() {
@@ -716,7 +716,7 @@ export async function createCommunityPost() {
     var titel = (document.getElementById('forumNewTitle')||{}).value;
     var body = (document.getElementById('forumNewBody')||{}).value;
     var kat = (document.getElementById('forumNewCat')||{}).value || 'allgemein';
-    if(!titel||!titel.trim()) { alert(_t('alert_enter_subject')); return; }
+    if(!titel||!titel.trim()) { _showToast(_t('alert_enter_subject'), 'error'); return; }
 
     var isMarkt = communityMarktplatzCats.indexOf(kat) !== -1;
     try {
@@ -727,7 +727,7 @@ export async function createCommunityPost() {
             });
             if(resp.error) throw resp.error;
         } else {
-            if(!body||!body.trim()) { alert(_t('alert_enter_message')); return; }
+            if(!body||!body.trim()) { _showToast(_t('alert_enter_message'), 'error'); return; }
             var resp = await _sb().from('forum_beitraege').insert({
                 user_id: _sbUser().id, standort_id: _sbProfile() ? _sbProfile().standort_id : null,
                 titel: titel.trim(), inhalt: body.trim(), kategorie: kat
@@ -739,12 +739,12 @@ export async function createCommunityPost() {
         document.getElementById('forumNewPost').classList.add('hidden');
         triggerPushStandort('💬 Neuer Beitrag', (_sbProfile() ?_sbProfile().name:'Jemand') + ': ' + titel.trim().substring(0,60), '/?view=forum', 'push_neue_nachricht');
         renderCommunityPosts('all');
-    } catch(err) { alert('Fehler: ' + err.message); }
+    } catch(err) { _showToast('Fehler: ' + err.message, 'error'); }
 }
 
 export async function deactivateBrettPost(id) {
     if(!confirm(_t('confirm_delete_entry'))) return;
-    try { await _sb().from('brett_eintraege').update({aktiv:false}).eq('id',id); renderCommunityPosts('all'); } catch(err) { alert('Fehler: '+err.message); }
+    try { await _sb().from('brett_eintraege').update({aktiv:false}).eq('id',id); renderCommunityPosts('all'); } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
 }
 
 export async function deleteForumPost(id) {
@@ -753,7 +753,7 @@ export async function deleteForumPost(id) {
         await _sb().from('forum_kommentare').delete().eq('beitrag_id', id);
         await _sb().from('forum_beitraege').delete().eq('id', id);
         renderCommunityPosts('all');
-    } catch(err) { alert('Fehler: ' + err.message); }
+    } catch(err) { _showToast('Fehler: ' + err.message, 'error'); }
 }
 
 export function filterCommunity(cat) {
@@ -806,13 +806,13 @@ export async function openForumDetail(postId) {
 export async function postForumComment() {
     var input = document.getElementById('forumCommentInput');
     var text = input ? input.value.trim() : '';
-    if(!text||!kommState.currentForumPost) { alert(_t('alert_enter_comment')); return; }
+    if(!text||!kommState.currentForumPost) { _showToast(_t('alert_enter_comment'), 'error'); return; }
     try {
         var resp = await _sb().from('forum_kommentare').insert({ beitrag_id: kommState.currentForumPost, user_id: _sbUser().id, inhalt: text });
         if(resp.error) throw resp.error;
         input.value = '';
         openForumDetail(kommState.currentForumPost);
-    } catch(err) { alert('Fehler: ' + err.message); }
+    } catch(err) { _showToast('Fehler: ' + err.message, 'error'); }
 }
 
 export function closeForumDetail() {

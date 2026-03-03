@@ -989,7 +989,7 @@ export function hqFinOpenPlanUpload(standortId) {
             if (resp.error) throw resp.error;
             
             var count = Object.keys(planMonths).length;
-            alert('✅ Jahresplan ' + year + ' für ' + s.name + ' gespeichert! (' + count + ' Monate)');
+            _showToast('✅ Jahresplan ' + year + ' für ' + s.name + ' gespeichert! (' + count + ' Monate, 'success')');
             
             // Close modal
             var modal = document.getElementById('hqFinPlanUploadModal');
@@ -1005,7 +1005,7 @@ export function hqFinOpenPlanUpload(standortId) {
             renderHqFinKpis();
             renderHqFinUebersicht();
         } catch(err) {
-            alert('Fehler: ' + (err.message || err));
+            _showToast('Fehler: ' + (err.message || err, 'error'));
         }
     };
     

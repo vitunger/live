@@ -181,7 +181,7 @@ export async function saveTracking() {
 var orderId = document.getElementById('trackingOrderId').value;
 var carrier = document.getElementById('trackingCarrier').value;
 var number = document.getElementById('trackingNumber').value.trim();
-if(!number) { alert('Bitte Tracking-Nummer eingeben.'); return; }
+if(!number) { _showToast('Bitte Tracking-Nummer eingeben.', 'error'); return; }
 var trackUrl = getTrackingUrl(carrier, number);
 await _sb().from('shop_orders').update({
     status: 'shipped',
@@ -206,7 +206,7 @@ renderHqShop();
 export function addHqShopProduct(){
 var n=document.getElementById('hqShopName');
 var p=document.getElementById('hqShopPreis');
-if(!n||!n.value.trim()){alert('Produktname eingeben');return;}
+if(!n||!n.value.trim()){_showToast('Produktname eingeben', 'error');return;}
 _sb().from('shop_products').insert({
     name: n.value.trim(),
     category: document.getElementById('hqShopKat')?.value || 'print',
@@ -359,7 +359,7 @@ export async function submitStandortStrategy(year) {
 var revenue = parseFloat(document.getElementById('stStratRevenue').value);
 var marketing = parseFloat(document.getElementById('stStratMarketing').value);
 var notes = document.getElementById('stStratNotes').value;
-if (!revenue || revenue <= 0) { alert(_t('bill_valid_revenue')); return; }
+if (!revenue || revenue <= 0) { _showToast(_t('bill_valid_revenue'), 'info'); return; }
 
 // Get current version
 var { data: existing } = await _sb().from('billing_annual_strategy').select('version').eq('standort_id', _sbProfile().standort_id).eq('year', year).order('version', { ascending: false }).limit(1);
@@ -376,8 +376,8 @@ var { error } = await _sb().from('billing_annual_strategy').insert({
     notes: notes || null
 });
 
-if (error) { alert('Fehler: ' + error.message); return; }
-alert(_t('bill_strategy_submitted') + ' (v' + newVersion + ')');
+if (error) { _showToast('Fehler: ' + error.message, 'error'); return; }
+_showToast(_t('bill_strategy_submitted') + ' (v' + newVersion + ')', 'info');
 loadStandortStrategy();
 }
 
@@ -496,7 +496,7 @@ try {
     w.document.close();
     setTimeout(function() { w.print(); }, 500);
 } catch (err) {
-    alert(_t('alert_error') + err.message);
+    _showToast(_t('alert_error') + err.message, 'error');
 }
 }
 
@@ -776,7 +776,7 @@ try {
     html += '<div class="flex space-x-3 mt-4"><button onclick="closeStdDetailModal()" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-semibold text-sm hover:bg-gray-200">Schlie\u00dfen</button></div>';
     html += '</div></div>';
     var c = document.createElement('div'); c.id='stdDetailContainer'; c.innerHTML=html; document.body.appendChild(c);
-} catch(err) { alert('Fehler: '+err.message); }
+} catch(err) { _showToast('Fehler: '+err.message, 'error'); }
 }
 export function closeStdDetailModal() { var c=document.getElementById('stdDetailContainer'); if(c) c.remove(); }
 
@@ -876,7 +876,7 @@ try {
     if(resp.error) throw resp.error;
     closeStdDetailModal();
     renderKzStandorte();
-} catch(err) { alert('Fehler beim Speichern: '+err.message); }
+} catch(err) { _showToast('Fehler beim Speichern: '+err.message, 'error'); }
 }
 
 export async function renderKzMitarbeiter() {

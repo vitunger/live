@@ -97,7 +97,7 @@ try {
     startRecording(stream, 'audio');
     document.getElementById('fbBtnAudio').classList.add('recording');
     document.getElementById('fbAudioLabel').textContent = '⏹ Aufnahme stoppen';
-} catch(e) { alert('Mikrofon-Zugriff nicht möglich: ' + e.message); }
+} catch(e) { _showToast('Mikrofon-Zugriff nicht möglich: ' + e.message, 'error'); }
 };
 
 // ── Screen Recording ──
@@ -111,7 +111,7 @@ try {
     document.getElementById('fbScreenLabel').textContent = '⏹ Aufnahme stoppen';
     // Handle user stopping share via browser UI
     stream.getVideoTracks()[0].onended = function(){ fbStopRec(); };
-} catch(e) { if(e.name !== 'AbortError') alert('Bildschirmaufnahme nicht möglich: ' + e.message); }
+} catch(e) { if(e.name !== 'AbortError') _showToast('Bildschirmaufnahme nicht möglich: ' + e.message, 'error'); }
 };
 
 export function startRecording(stream, type) {
@@ -226,11 +226,11 @@ var maxSize = 10 * 1024 * 1024; // 10MB per file
 for(var i = 0; i < input.files.length; i++) {
     var file = input.files[i];
     if(file.size > maxSize) {
-        alert('Datei "' + file.name + '" ist zu groß (max. 10 MB).');
+        _showToast('Datei "' + file.name + '" ist zu groß (max. 10 MB, 'info').');
         continue;
     }
     if(fbState.attachments.length >= 5) {
-        alert('Maximal 5 Anhänge möglich.');
+        _showToast('Maximal 5 Anhänge möglich.', 'info');
         break;
     }
     fbState.attachments.push({
@@ -337,7 +337,7 @@ try {
 
 } catch(err) {
     console.error('Feedback submit error:', err);
-    alert('Fehler beim Senden: ' + (err.message || err));
+    _showToast('Fehler beim Senden: ' + (err.message || err, 'error'));
     btn.disabled = false; btn.textContent = 'Feedback senden';
 }
 };

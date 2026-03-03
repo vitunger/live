@@ -477,7 +477,7 @@ export async function saveKalTermin(){
     var ganztaegig=document.getElementById('kalNewGanztaegig').checked;
     var repeat=document.getElementById('kalNewRepeat').value||'';
     var repeatEnd=document.getElementById('kalNewRepeatEnd').value||null;
-    if(!title||!date){alert(_t('misc_enter_title_date'));return;}
+    if(!title||!date){(typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})(_t('misc_enter_title_date', 'error'));return;}
 
     var startZeit = date+'T'+time+':00';
     var endZeit = endTime ? date+'T'+endTime+':00' : null;
@@ -510,7 +510,7 @@ export async function saveKalTermin(){
                     p.end_zeit = endTime ? d + 'T' + endTime + ':00' : null;
                     return p;
                 });
-                if(inserts.length > 100) { alert(_t('misc_max_repeat')); return; }
+                if(inserts.length > 100) { (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})(_t('misc_max_repeat', 'info')); return; }
                 var resp = await _sb().from('termine').insert(inserts);
                 if(resp.error) throw resp.error;
             } else {
@@ -522,7 +522,7 @@ export async function saveKalTermin(){
         kalEditId = null;
         kalSelectedTeilnehmer = [];
         await loadKalTermine();
-    } catch(err) { alert('Fehler: '+(err.message||err)); }
+    } catch(err) { (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})('Fehler: '+(err.message||err, 'error')); }
 }
 
 // Generate repeat dates array
@@ -646,7 +646,7 @@ export async function deleteKalTermin() {
             document.getElementById('kalNewModal').classList.add('hidden');
             kalEditId = null;
             await loadKalTermine();
-        } catch(err) { alert('Fehler: '+(err.message||err)); }
+        } catch(err) { (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})('Fehler: '+(err.message||err, 'error')); }
     } else {
         if(!confirm(_t('confirm_delete_event'))) return;
         try {
@@ -656,7 +656,7 @@ export async function deleteKalTermin() {
             document.getElementById('kalNewModal').classList.add('hidden');
             kalEditId = null;
             await loadKalTermine();
-        } catch(err) { alert('Fehler: '+(err.message||err)); }
+        } catch(err) { (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})('Fehler: '+(err.message||err, 'error')); }
     }
 }
 

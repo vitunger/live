@@ -711,7 +711,7 @@ export async function todoAddSecPrompt() {
         }).select();
         if (resp.error) throw resp.error;
         if (resp.data && resp.data[0]) todoState.sections.push(resp.data[0]);
-    } catch (e) { alert('Fehler: ' + e.message); }
+    } catch (e) { (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})('Fehler: ' + e.message, 'error'); }
     todoRender();
 }
 
@@ -772,7 +772,7 @@ export async function todoAddComment(taskId) {
         if (r.data && r.data[0]) todoState.comments[taskId].push(r.data[0]);
         inp.value = '';
         todoLoadComments(taskId);
-    } catch (e) { alert('Fehler: ' + e.message); }
+    } catch (e) { (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})('Fehler: ' + e.message, 'error'); }
 }
 
 // ═══════════════════════════════════════════════════════════════

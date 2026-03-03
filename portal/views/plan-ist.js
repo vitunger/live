@@ -235,7 +235,7 @@ export function planAssistentNext() {
     if(d.step === 1) {
         d.vorjahrUmsatz = parseFloat((document.getElementById('paVorjahrUmsatz')||{}).value)||0;
         d.wachstumPct = parseFloat((document.getElementById('paWachstumNum')||{}).value)||0;
-        if(d.vorjahrUmsatz < 1000) { alert('Bitte einen Vorjahr-Umsatz eingeben.'); return; }
+        if(d.vorjahrUmsatz < 1000) { _showToast('Bitte einen Vorjahr-Umsatz eingeben.', 'error'); return; }
         d.step = 2;
     } else if(d.step === 2) {
         if(d.saisonSource==='custom'){for(var c=0;c<12;c++) d.saison[c]=parseFloat((document.getElementById('paSaison_'+c)||{}).value)||0;}
@@ -581,9 +581,9 @@ export async function saveParsedPlan() {
         var resp = await _sb().from('jahresplaene').upsert(payload, {onConflict:'standort_id,jahr'}).select();
         if(resp.error) throw resp.error;
         currentPlan = resp.data[0] || payload;
-        alert('✅ Jahresplan '+planIstYear+' gespeichert!');
+        _showToast('✅ Jahresplan '+planIstYear+' gespeichert!', 'success');
         renderPlanIst();
-    } catch(err) { alert('Fehler: '+(err.message||err)); }
+    } catch(err) { _showToast('Fehler: '+(err.message||err, 'error')); }
 }
 
 export async function saveManualPlan() {
@@ -597,7 +597,7 @@ export async function saveManualPlan() {
             planMonths[m] = { monat:m, umsatz:u, wareneinsatz:we, personalkosten:pk, raumkosten:rk };
         }
     }
-    if(Object.keys(planMonths).length < 1) { alert(_t('misc_min_month')); return; }
+    if(Object.keys(planMonths).length < 1) { _showToast(_t('misc_min_month'), 'info'); return; }
     window._parsedPlanMonths = planMonths;
     await saveParsedPlan();
 }
@@ -816,7 +816,7 @@ export async function deleteBwa() {
         document.getElementById('bwaKpiKosten').textContent = '—';
         document.getElementById('bwaKpiErgebnis').textContent = '—';
         loadBwaList();
-    } catch(err) { alert('Fehler: '+err.message); }
+    } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
 }
 
 // =============================================
@@ -1131,7 +1131,7 @@ export async function saveVtEntry() {
         var resp = await _sb().from('verkauf_tracking').upsert(data, {onConflict:'standort_id,verkaeufer_id,datum'}).select();
         if(resp.error) throw resp.error;
         closeVtModal();
-        alert('✅ Verkaufsdaten gespeichert!');
+        _showToast('✅ Verkaufsdaten gespeichert!', 'success');
         loadVerkaufTracking();
         loadWeekFromDb();
     } catch(err) {

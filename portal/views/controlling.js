@@ -221,7 +221,7 @@ export async function downloadBwa(bwaId) {
         URL.revokeObjectURL(url);
     } catch(err) {
         console.error('[BWA Download]', err);
-        alert('Download fehlgeschlagen: ' + err.message);
+        _showToast('Download fehlgeschlagen: ' + err.message, 'error');
     }
 }
 
@@ -443,7 +443,7 @@ export async function showBwaFromDb(bwaId) {
                 console.warn('BWA Validation display error:', valErr);
             }
         }
-    } catch(err) { alert('Fehler: '+err.message); }
+    } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
 }
 
 export async function loadBwaTrend(stdId, jahr) {
@@ -1331,7 +1331,7 @@ export async function saveBwaData() {
         closeBwaUploadModal();
         await loadBwaList();
         if(bwaId) showBwaFromDb(bwaId);
-        alert('✅ BWA '+monatNamen[month]+' '+year+' gespeichert!');
+        _showToast('✅ BWA '+monatNamen[month]+' '+year+' gespeichert!', 'success');
     } catch(err) {
         if(errEl){errEl.textContent='Fehler: '+err.message;errEl.style.display='block';}
         if(btn) { btn.disabled=false; btn.textContent=_t('ui_save_bwa'); }
@@ -1564,7 +1564,7 @@ export async function deleteBwa() {
         _setTxt('bwaKpiKosten', '—');
         _setTxt('bwaKpiErgebnis', '—');
         loadBwaList();
-    } catch(err) { alert('Fehler: '+err.message); }
+    } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
 }
 
 const _exports = {showControllingTab,showBwaDetail,eur,eurColor,diffHtml,loadBwaList,downloadBwa,showBwaFromDb,loadBwaTrend,openBwaUploadModal,handleBwaFileSelect,parseBwaWithAI,parseBwaBatch,parseSingleBwaFileWithRetry,cleanCsvForKi,parseSingleBwaFile,autoSaveBwa,bwaApplyKiResult,closeBwaUploadModal,saveBwaData,renderBenchmarks,deleteBwa};

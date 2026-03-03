@@ -1,3 +1,4 @@
+function _toast(msg, type) { if(typeof window.showToast==='function') window.showToast(msg, type||'info'); }
 // vit:bikes Partner Portal — Portal Guide / Onboarding Tour
 // Extracted from index.html lines 9593-9897
 // ============================================================
@@ -249,7 +250,7 @@ window.enrollKurs = function(id) {
 };
 
 window.requestKiContent = function(kursId) {
-    alert('🤖 KI-Aufbereitung gestartet!\n\nIn Produktion: Die Anthropic API generiert automatisch:\n• Zusammenfassungen pro Kapitel\n• Quiz-Fragen zur Wissensüberprüfung\n• Praxis-Aufgaben aus euren echten Daten\n• Handouts als PDF\n\nDies wird über die Claude API (Sonnet) realisiert.');
+    _toast('🤖 KI-Aufbereitung gestartet! Zusammenfassungen, Quiz-Fragen und Praxis-Aufgaben werden generiert.', 'info');
 };
 
 // ═══ RENDER: Onboarding ═══

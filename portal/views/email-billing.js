@@ -297,8 +297,8 @@ if (!confirm('Monats-Drafts für ' + month + ' generieren?')) return;
 var btn = event.target; btn.disabled = true; btn.textContent = '⏳ Wird generiert...';
 var data = await billingCall('generate-monthly-drafts', { month: month });
 btn.disabled = false; btn.textContent = _t('bill_generate_drafts');
-if (data.error) { alert('Fehler: ' + data.error); return; }
-alert('✅ ' + data.created + ' Drafts erstellt, ' + data.skipped + ' übersprungen');
+if (data.error) { _showToast('Fehler: ' + data.error, 'error'); return; }
+_showToast('✅ ' + data.created + ' Drafts erstellt, ' + data.skipped + ' übersprungen', 'success');
 loadBillingOverview();
 };
 
@@ -314,8 +314,8 @@ generateSettlement(parseInt(y), parseInt(q));
 };
 export async function generateSettlement(year, quarter) {
 var data = await billingCall('generate-quarterly-settlement', { year: year, quarter: quarter });
-if (data.error) { alert('Fehler: ' + data.error); return; }
-alert('✅ ' + data.created + ' Settlements erstellt');
+if (data.error) { _showToast('Fehler: ' + data.error, 'error'); return; }
+_showToast('✅ ' + data.created + ' Settlements erstellt', 'success');
 loadBillingOverview();
 }
 
@@ -325,13 +325,13 @@ if (!confirm('Alle Drafts des aktuellen Monats finalisieren?')) return;
 var month = document.getElementById('billingMonthSelect')?.value;
 var { data: invoices } = await _sb().from('billing_invoices')
 .select('id').eq('status', 'draft').eq('period_start', month);
-if (!invoices?.length) { alert('Keine Drafts zum Finalisieren'); return; }
+if (!invoices?.length) { _showToast('Keine Drafts zum Finalisieren', 'info'); return; }
 var count = 0;
 for (var inv of invoices) {
 await billingCall('finalize-invoice', { invoice_id: inv.id, user_id: _sbUser().id });
 count++;
 }
-alert('✅ ' + count + ' Rechnungen finalisiert');
+_showToast('✅ ' + count + ' Rechnungen finalisiert', 'success');
 loadBillingOverview();
 };
 
@@ -453,8 +453,8 @@ openBillingDetail(invoiceId);
 window.finalizeInvoice = async function(invoiceId) {
 if (!confirm(_t('bill_finalize'))) return;
 var data = await billingCall('finalize-invoice', { invoice_id: invoiceId, user_id: _sbUser().id });
-if (data.error) { alert('Fehler: ' + data.error); return; }
-alert('✅ Rechnung finalisiert' + (data.message ? '\n' + data.message : ''));
+if (data.error) { _showToast('Fehler: ' + data.error, 'error'); return; }
+_showToast('✅ Rechnung finalisiert' + (data.message ? '\n' + data.message : '', 'success'));
 openBillingDetail(invoiceId);
 };
 
@@ -561,7 +561,7 @@ el.innerHTML = h;
 window.downloadLexofficePdf = async function(invoiceId, invoiceNumber) {
 try {
 var session = (await _sb().auth.getSession()).data.session;
-if (!session) { alert('Bitte erneut einloggen.'); return; }
+if (!session) { _showToast('Bitte erneut einloggen.', 'error'); return; }
 var btn = event.target;
 btn.textContent = '⏳ Lade...';
 btn.disabled = true;
@@ -591,7 +591,7 @@ URL.revokeObjectURL(url);
 btn.textContent = '✅ Heruntergeladen';
 setTimeout(function(){ btn.textContent = '📥 PDF herunterladen'; btn.disabled = false; }, 2000);
 } catch(err) {
-alert('PDF Download fehlgeschlagen: ' + err.message);
+_showToast('PDF Download fehlgeschlagen: ' + err.message, 'error');
 if(event.target) { event.target.textContent = '📥 PDF herunterladen'; event.target.disabled = false; }
 }
 };
@@ -668,7 +668,7 @@ window.submitStrategy = async function() {
 var stId = _sbProfile().standort_id;
 var rev = parseFloat(document.getElementById('stStratRevenue')?.value);
 var mkt = parseFloat(document.getElementById('stStratMarketing')?.value);
-if (!rev || isNaN(rev)) { alert(_t('misc_enter_revenue')); return; }
+if (!rev || isNaN(rev)) { _showToast(_t('misc_enter_revenue'), 'error'); return; }
 // Get current max version
 var { data: existing } = await _sb().from('billing_annual_strategy')
 .select('version').eq('standort_id', stId).eq('year', new Date().getFullYear())
@@ -680,7 +680,7 @@ planned_revenue_year: rev, planned_marketing_year: mkt || 0,
 submitted_at: new Date().toISOString(), submitted_by: _sbUser().id,
 version: newVersion
 });
-alert('✅ Jahresstrategie eingereicht (v' + newVersion + ')');
+_showToast('✅ Jahresstrategie eingereicht (v' + newVersion + ', 'success')');
 loadStandortStrategy();
 };
 

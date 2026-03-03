@@ -6,6 +6,8 @@
 // ═══════════════════════════════════════
 (function(){
     'use strict';
+    function _toast(msg, type) { if(typeof window.showToast==='function') window.showToast(msg, type||'info'); }
+
 
     // ── State ──
     var fbState = {
@@ -92,7 +94,7 @@
             startRecording(stream, 'audio');
             document.getElementById('fbBtnAudio').classList.add('recording');
             document.getElementById('fbAudioLabel').textContent = '⏹ Aufnahme stoppen';
-        } catch(e) { alert('Mikrofon-Zugriff nicht möglich: ' + e.message); }
+        } catch(e) { _toast('Mikrofon-Zugriff nicht möglich: ' + e.message, 'error'); }
     };
 
     // ── Screen Recording ──
@@ -106,7 +108,7 @@
             document.getElementById('fbScreenLabel').textContent = '⏹ Aufnahme stoppen';
             // Handle user stopping share via browser UI
             stream.getVideoTracks()[0].onended = function(){ fbStopRec(); };
-        } catch(e) { if(e.name !== 'AbortError') alert('Bildschirmaufnahme nicht möglich: ' + e.message); }
+        } catch(e) { if(e.name !== 'AbortError') _toast('Bildschirmaufnahme nicht möglich: ' + e.message, 'error'); }
     };
 
     function startRecording(stream, type) {
@@ -221,11 +223,11 @@
         for(var i = 0; i < input.files.length; i++) {
             var file = input.files[i];
             if(file.size > maxSize) {
-                alert('Datei "' + file.name + '" ist zu groß (max. 10 MB).');
+                _toast('Datei "' + file.name + '" ist zu groß (max. 10 MB).', 'warning');
                 continue;
             }
             if(fbState.attachments.length >= 5) {
-                alert('Maximal 5 Anhänge möglich.');
+                _toast('Maximal 5 Anhänge möglich.', 'warning');
                 break;
             }
             fbState.attachments.push({
@@ -332,7 +334,7 @@
 
         } catch(err) {
             console.error('Feedback submit error:', err);
-            alert('Fehler beim Senden: ' + (err.message || err));
+            _toast('Fehler beim Senden: ' + (err.message || err), 'error');
             btn.disabled = false; btn.textContent = 'Feedback senden';
         }
     };

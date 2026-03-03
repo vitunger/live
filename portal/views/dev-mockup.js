@@ -263,7 +263,7 @@ export async function devMockupChatMic(btn) {
         btn.classList.add('bg-red-100', 'text-red-600', 'animate-pulse');
     } catch(e) {
         console.warn('Mic error:', e);
-        alert('Mikrofon nicht verfuegbar');
+        _showToast('Mikrofon nicht verfuegbar', 'info');
     }
 }
 

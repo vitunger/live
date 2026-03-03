@@ -118,8 +118,8 @@ export async function generateMonthlyDrafts() {
     btn.disabled = true; btn.textContent = '⏳ Generiere...';
     var result = await billingApi('generate-monthly-drafts', { month: currentBillingMonth });
     btn.disabled = false; btn.textContent = _t('bill_generate_drafts');
-    if (result.error) { alert('Fehler: ' + result.error); return; }
-    alert('✅ ' + result.created + ' Drafts erstellt, ' + result.skipped + ' übersprungen');
+    if (result.error) { _showToast('Fehler: ' + result.error, 'error'); return; }
+    _showToast('✅ ' + result.created + ' Drafts erstellt, ' + result.skipped + ' übersprungen', 'success');
     loadBillingOverview();
 }
 
@@ -134,8 +134,8 @@ export function showQuarterlySettlementDialog() {
 
 export async function generateQuarterlySettlement(year, quarter) {
     var result = await billingApi('generate-quarterly-settlement', { year: year, quarter: quarter });
-    if (result.error) { alert('Fehler: ' + result.error); return; }
-    alert('✅ ' + result.created + ' Settlements erstellt');
+    if (result.error) { _showToast('Fehler: ' + result.error, 'error'); return; }
+    _showToast('✅ ' + result.created + ' Settlements erstellt', 'success');
     loadBillingOverview();
 }
 
@@ -147,7 +147,7 @@ export async function finalizeAllReady() {
         var r = await billingApi('finalize-invoice', { invoice_id: drafts[i].invoice.id, user_id: SESSION.user_id });
         if (!r.error) count++;
     }
-    alert('✅ ' + count + ' Rechnungen finalisiert');
+    _showToast('✅ ' + count + ' Rechnungen finalisiert', 'success');
     loadBillingOverview();
 }
 
@@ -250,14 +250,14 @@ export async function showBillingInvoice(invId) {
 export async function finalizeInvoice(invId) {
     if (!confirm(_t('bill_finalize'))) return;
     var r = await billingApi('finalize-invoice', { invoice_id: invId, user_id: SESSION.user_id });
-    if (r.error) { alert('Fehler: ' + r.error); return; }
+    if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
     showBillingInvoice(invId);
 }
 
 export async function markInvoicePaid(invId) {
     if (!confirm(_t('bill_mark_paid'))) return;
     var r = await billingApi('mark-paid', { invoice_id: invId, user_id: SESSION.user_id });
-    if (r.error) { alert('Fehler: ' + r.error); return; }
+    if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
     showBillingInvoice(invId);
 }
 
@@ -265,7 +265,7 @@ export async function editLineItem(lineId, currentAmount, currentDesc) {
     var newAmount = prompt('Neuer Betrag (aktuell: ' + fmtEur(currentAmount) + '):', currentAmount);
     if (newAmount === null) return;
     var r = await billingApi('update-line-item', { line_item_id: lineId, amount: parseFloat(newAmount), user_id: SESSION.user_id });
-    if (r.error) { alert('Fehler: ' + r.error); return; }
+    if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
     // Reload current invoice
     var backBtn = document.querySelector('#billingDetailContent');
     if (backBtn) {
@@ -278,7 +278,7 @@ export async function editLineItem(lineId, currentAmount, currentDesc) {
 export async function removeLineItem(lineId, invId) {
     if (!confirm(_t('bill_remove_line'))) return;
     var r = await billingApi('remove-line-item', { line_item_id: lineId, user_id: SESSION.user_id });
-    if (r.error) { alert('Fehler: ' + r.error); return; }
+    if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
     showBillingInvoice(invId);
 }
 
@@ -288,7 +288,7 @@ export async function addManualLineItem(invId) {
     var amount = prompt(_t('bill_new_amount'));
     if (amount === null) return;
     var r = await billingApi('add-line-item', { invoice_id: invId, description: desc, amount: parseFloat(amount), user_id: SESSION.user_id });
-    if (r.error) { alert('Fehler: ' + r.error); return; }
+    if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
     showBillingInvoice(invId);
 }
 
@@ -381,14 +381,14 @@ export async function loadAllStrategies() {
 
 export async function approveStrategy(stratId) {
     var r = await billingApi('approve-strategy', { strategy_id: stratId, user_id: SESSION.user_id });
-    if (r.error) { alert('Fehler: ' + r.error); return; }
+    if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
     loadAllStrategies();
 }
 
 export async function lockStrategy(stratId) {
     if (!confirm(_t('bill_strategy_lock'))) return;
     var r = await billingApi('lock-strategy', { strategy_id: stratId, user_id: SESSION.user_id });
-    if (r.error) { alert('Fehler: ' + r.error); return; }
+    if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
     loadAllStrategies();
 }
 
@@ -495,7 +495,7 @@ export async function approvalBulkAction(action) {
     if(action === 'approveAll') {
         var resp = await _sb().from('billing_invoices').select('id, invoice_number').in('status', ['draft','review']);
         var drafts = resp.data || [];
-        if(drafts.length === 0) { alert('Keine Rechnungen zum Freigeben.'); return; }
+        if(drafts.length === 0) { _showToast('Keine Rechnungen zum Freigeben.', 'info'); return; }
         if(!confirm('Alle '+drafts.length+' Rechnungen auf einmal freigeben?\n\nDas überspringt die Einzelprüfung.')) return;
         for(var i=0; i<drafts.length; i++) {
             await _sb().from('billing_invoices').update({
@@ -512,7 +512,7 @@ export async function approvalBulkAction(action) {
                 notes: 'Sammelfreigabe ('+drafts.length+' Rechnungen)'
             });
         }
-        alert('\u2705 '+drafts.length+' Rechnungen freigegeben.');
+        _showToast('\u2705 '+drafts.length+' Rechnungen freigegeben.', 'info');
         loadApprovalQueue();
     }
 }
@@ -657,9 +657,9 @@ export async function approvalAction(invId, action) {
             // Show validation result
             var diff = Number(val.difference);
             if(Math.abs(diff) < 0.01) {
-                alert('\u2705 Validierung OK!\n\nExpected: '+Number(val.expected_total).toLocaleString('de-DE')+' \u20ac\nAktuell:  '+Number(val.actual_total).toLocaleString('de-DE')+' \u20ac\nDifferenz: 0 \u20ac\n\nRechnung ist in Pr\u00fcfung.');
+                _showToast('\u2705 Validierung OK!\n\nExpected: '+Number(val.expected_total, 'info').toLocaleString('de-DE')+' \u20ac\nAktuell:  '+Number(val.actual_total).toLocaleString('de-DE')+' \u20ac\nDifferenz: 0 \u20ac\n\nRechnung ist in Pr\u00fcfung.');
             } else {
-                alert('\u26a0\ufe0f Abweichung festgestellt!\n\nExpected: '+Number(val.expected_total).toLocaleString('de-DE')+' \u20ac\nAktuell:  '+Number(val.actual_total).toLocaleString('de-DE')+' \u20ac\nDifferenz: '+diff.toLocaleString('de-DE')+' \u20ac\n\nBitte pr\u00fcfen und ggf. korrigieren.');
+                _showToast('\u26a0\ufe0f Abweichung festgestellt!\n\nExpected: '+Number(val.expected_total, 'error').toLocaleString('de-DE')+' \u20ac\nAktuell:  '+Number(val.actual_total).toLocaleString('de-DE')+' \u20ac\nDifferenz: '+diff.toLocaleString('de-DE')+' \u20ac\n\nBitte pr\u00fcfen und ggf. korrigieren.');
             }
 
         } else if(action === 'approve') {
@@ -734,7 +734,7 @@ export async function approvalAction(invId, action) {
         }
 
         loadApprovalQueue();
-    } catch(err) { alert('Fehler: '+err.message); }
+    } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
 }
 
 export async function generateAllDrafts() {
@@ -810,9 +810,9 @@ export async function generateAllDrafts() {
             }
         }
 
-        alert('\u2705 Fertig!\n\n'+created+' Rechnungsentw\u00fcrfe erstellt\n'+skipped+' \u00fcbersprungen (bereits vorhanden oder keine Positionen)');
+        _showToast('\u2705 Fertig!\n\n'+created+' Rechnungsentw\u00fcrfe erstellt\n'+skipped+' \u00fcbersprungen (bereits vorhanden oder keine Positionen, 'success')');
         loadApprovalQueue();
-    } catch(err) { alert('Fehler: '+err.message); }
+    } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
 }
 
 // ============================================================
@@ -957,7 +957,7 @@ export async function submitStandortStrategy(year) {
     var revenue = parseFloat(document.getElementById('stStratRevenue').value);
     var marketing = parseFloat(document.getElementById('stStratMarketing').value);
     var notes = document.getElementById('stStratNotes').value;
-    if (!revenue || revenue <= 0) { alert(_t('bill_valid_revenue')); return; }
+    if (!revenue || revenue <= 0) { _showToast(_t('bill_valid_revenue'), 'info'); return; }
 
     // Get current version
     var { data: existing } = await _sb().from('billing_annual_strategy').select('version').eq('standort_id', _sbProfile().standort_id).eq('year', year).order('version', { ascending: false }).limit(1);
@@ -974,8 +974,8 @@ export async function submitStandortStrategy(year) {
         notes: notes || null
     });
 
-    if (error) { alert('Fehler: ' + error.message); return; }
-    alert(_t('bill_strategy_submitted') + ' (v' + newVersion + ')');
+    if (error) { _showToast('Fehler: ' + error.message, 'error'); return; }
+    _showToast(_t('bill_strategy_submitted') + ' (v' + newVersion + ')', 'info');
     loadStandortStrategy();
 }
 
@@ -1094,7 +1094,7 @@ export async function downloadInvoicePdf(invId) {
         w.document.close();
         setTimeout(function() { w.print(); }, 500);
     } catch (err) {
-        alert(_t('alert_error') + err.message);
+        _showToast(_t('alert_error') + err.message, 'error');
     }
 }
 

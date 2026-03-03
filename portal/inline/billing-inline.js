@@ -1,3 +1,4 @@
+function _toast(msg, type) { if(typeof window.showToast==='function') window.showToast(msg, type||'info'); }
 // vit:bikes Partner Portal — Billing Functions (Invoice/SEPA)
 // Extracted from index.html lines 9900-10518
 // ============================================================
@@ -132,8 +133,8 @@
         var btn = event.target; btn.disabled = true; btn.textContent = '⏳ Wird generiert...';
         var data = await billingCall('generate-monthly-drafts', { month: month });
         btn.disabled = false; btn.textContent = t('bill_generate_drafts');
-        if (data.error) { alert('Fehler: ' + data.error); return; }
-        alert('✅ ' + data.created + ' Drafts erstellt, ' + data.skipped + ' übersprungen');
+        if (data.error) { _toast('Fehler: ' + data.error, 'error'); return; }
+        _toast('✅ ' + data.created + ' Drafts erstellt, ' + data.skipped + ' übersprungen', 'success');
         loadBillingOverview();
     };
 
@@ -149,8 +150,8 @@
     };
     async function generateSettlement(year, quarter) {
         var data = await billingCall('generate-quarterly-settlement', { year: year, quarter: quarter });
-        if (data.error) { alert('Fehler: ' + data.error); return; }
-        alert('✅ ' + data.created + ' Settlements erstellt');
+        if (data.error) { _toast('Fehler: ' + data.error, 'error'); return; }
+        _toast('✅ ' + data.created + ' Settlements erstellt', 'success');
         loadBillingOverview();
     }
 
@@ -160,13 +161,13 @@
         var month = document.getElementById('billingMonthSelect')?.value;
         var { data: invoices } = await sb.from('billing_invoices')
             .select('id').eq('status', 'draft').eq('period_start', month);
-        if (!invoices?.length) { alert('Keine Drafts zum Finalisieren'); return; }
+        if (!invoices?.length) { _toast('Keine Drafts zum Finalisieren', 'warning'); return; }
         var count = 0;
         for (var inv of invoices) {
             await billingCall('finalize-invoice', { invoice_id: inv.id, user_id: sbUser.id });
             count++;
         }
-        alert('✅ ' + count + ' Rechnungen finalisiert');
+        _toast('✅ ' + count + ' Rechnungen finalisiert', 'success');
         loadBillingOverview();
     };
 
@@ -288,8 +289,8 @@
     window.finalizeInvoice = async function(invoiceId) {
         if (!confirm(t('bill_finalize'))) return;
         var data = await billingCall('finalize-invoice', { invoice_id: invoiceId, user_id: sbUser.id });
-        if (data.error) { alert('Fehler: ' + data.error); return; }
-        alert('✅ Rechnung finalisiert' + (data.message ? '\n' + data.message : ''));
+        if (data.error) { _toast('Fehler: ' + data.error, 'error'); return; }
+        _toast('✅ Rechnung finalisiert' + (data.message ? ' – ' + data.message : ''), 'success');
         openBillingDetail(invoiceId);
     };
 
@@ -396,7 +397,7 @@
     window.downloadLexofficePdf = async function(invoiceId, invoiceNumber) {
         try {
             var session = (await sb.auth.getSession()).data.session;
-            if (!session) { alert('Bitte erneut einloggen.'); return; }
+            if (!session) { _toast('Bitte erneut einloggen.', 'warning'); return; }
             var btn = event.target;
             btn.textContent = '⏳ Lade...';
             btn.disabled = true;
@@ -426,7 +427,7 @@
             btn.textContent = '✅ Heruntergeladen';
             setTimeout(function(){ btn.textContent = '📥 PDF herunterladen'; btn.disabled = false; }, 2000);
         } catch(err) {
-            alert('PDF Download fehlgeschlagen: ' + err.message);
+            _toast('PDF Download fehlgeschlagen: ' + err.message, 'error');
             if(event.target) { event.target.textContent = '📥 PDF herunterladen'; event.target.disabled = false; }
         }
     };
@@ -503,7 +504,7 @@
         var stId = sbProfile.standort_id;
         var rev = parseFloat(document.getElementById('stStratRevenue')?.value);
         var mkt = parseFloat(document.getElementById('stStratMarketing')?.value);
-        if (!rev || isNaN(rev)) { alert(t('misc_enter_revenue')); return; }
+        if (!rev || isNaN(rev)) { _toast(t('misc_enter_revenue'), 'info'); return; }
         // Get current max version
         var { data: existing } = await sb.from('billing_annual_strategy')
             .select('version').eq('standort_id', stId).eq('year', new Date().getFullYear())
@@ -515,7 +516,7 @@
             submitted_at: new Date().toISOString(), submitted_by: sbUser.id,
             version: newVersion
         });
-        alert('✅ Jahresstrategie eingereicht (v' + newVersion + ')');
+        _toast('✅ Jahresstrategie eingereicht (v' + newVersion + ')', 'success');
         loadStandortStrategy();
     };
 

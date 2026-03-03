@@ -194,7 +194,7 @@ try {
 await _sb().from('portal_feedback').update({ status: status, updated_at: new Date().toISOString() }).eq('id', id);
 document.getElementById('hqFbDetailModal').style.display = 'none';
 renderHqFeedbackInbox();
-} catch(e) { alert('Fehler: '+e.message); }
+} catch(e) { _showToast('Fehler: '+e.message, 'error'); }
 };
 
 // ── Ideenboard Integration ──
@@ -229,18 +229,18 @@ if(resp.error) throw resp.error;
 
 // Mark feedback as linked
 await _sb().from('portal_feedback').update({ status: 'gesehen' }).eq('id', fbId);
-alert('✅ Idee wurde ins Ideenboard übernommen!');
+_showToast('✅ Idee wurde ins Ideenboard übernommen!', 'success');
 document.getElementById('hqFbDetailModal').style.display = 'none';
 renderHqFeedbackInbox();
 } catch(e) {
 // If ideas table doesn't exist yet, fall back gracefully
 if(e.message && e.message.indexOf('ideas') >= 0) {
-    alert('💡 Ideenboard-Tabelle noch nicht vorhanden. Feedback wurde als "gesehen" markiert.');
+    _showToast('💡 Ideenboard-Tabelle noch nicht vorhanden. Feedback wurde als "gesehen" markiert.', 'info');
     await _sb().from('portal_feedback').update({ status: 'gesehen' }).eq('id', fbId);
     document.getElementById('hqFbDetailModal').style.display = 'none';
     renderHqFeedbackInbox();
 } else {
-    alert('Fehler: ' + e.message);
+    _showToast('Fehler: ' + e.message, 'error');
 }
 }
 };

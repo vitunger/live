@@ -345,7 +345,7 @@ account.due = d.toISOString().split('T')[0];
 account.progress = 0;
 logOnboardingAction('invite_part1', { account: account.name });
 renderHqOnboarding();
-alert('\u2705 ' + account.name + ' wurde zur Trainingsphase Part 1 eingeladen!');
+_showToast('\u2705 ' + account.name + ' wurde zur Trainingsphase Part 1 eingeladen!', 'success');
 }
 
 // ═══ DEMO SYSTEM: Password Protection + Frontend Demo Data ═══

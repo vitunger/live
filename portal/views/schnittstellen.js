@@ -738,11 +738,11 @@ window.addEterminMapping = async function() {
     var sid = document.getElementById('mappingNewStandort').value;
     var svc = (document.getElementById('mappingNewService').value || '').trim();
     var typ = document.getElementById('mappingNewTyp').value;
-    if (!svc) { alert('Bitte eTermin-Service-Name eingeben'); return; }
+    if (!svc) { _showToast('Bitte eTermin-Service-Name eingeben', 'error'); return; }
     var resp = await _sb().from('etermin_typ_mapping').upsert({
         standort_id: sid, etermin_service: svc, portal_typ: typ, updated_at: new Date().toISOString()
     }, { onConflict: 'standort_id,etermin_service' });
-    if (resp.error) { alert('Fehler: ' + resp.error.message); return; }
+    if (resp.error) { _showToast('Fehler: ' + resp.error.message, 'error'); return; }
     document.getElementById('mappingNewService').value = '';
     loadEterminMapping();
 };
