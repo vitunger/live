@@ -384,6 +384,11 @@ export function renderWissenGlobal() {
         items.forEach(function(fq,i){
             h+='<div class="vit-card p-4 hover:shadow-md transition cursor-pointer" onclick="var fa=this.querySelector(\'.faq-a\');fa.style.display=fa.style.display===\'none\'?\'block\':\'none\'"><div class="flex items-center space-x-2 mb-1"><span class="text-xs px-2 py-0.5 bg-gray-100 rounded-full">'+bereichIcons[fq._bereich]+'</span><span class="font-semibold text-sm">'+fq.frage+'</span></div><div class="faq-a text-xs text-gray-500 mt-2" style="display:none;">'+fq.antwort+'</div></div>';
         });
+    } else if(currentWissenTyp==='portal' || currentWissenTyp==='kurse' || currentWissenTyp==='onboarding'){
+        // Delegate to portal-guide.js renderers
+        if(currentWissenTyp==='portal' && typeof window.renderPortalGuide==='function') { window.renderPortalGuide(); return; }
+        if(currentWissenTyp==='kurse' && typeof window.renderKurse==='function') { window.renderKurse(); return; }
+        if(currentWissenTyp==='onboarding' && typeof window.renderOnboarding==='function') { window.renderOnboarding(); return; }
     }
 
     if(!h) h='<div class="text-center text-gray-400 py-8"><p class="text-lg mb-2">🔍</p><p class="text-sm">Keine Eintraege gefunden.</p></div>';

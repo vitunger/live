@@ -66,7 +66,7 @@ const VIEW_RENDER_MAP = {
     // From allgemein.js wrapper
     'support':       { fn: 'renderTickets', args: ['all'], chain: [{ fn: 'renderKontakte' }] },
     'entwicklung':   { fn: 'renderEntwicklung' },
-    'wissen':        { fn: 'renderPortalGuide' },
+    'wissen':        { fn: 'renderWissenGlobal' },
     'shop':          { fn: 'renderShop', before: function() { window.shopAllProducts = []; window.shopVariants = {}; } },
 };
 
