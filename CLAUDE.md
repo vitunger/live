@@ -41,17 +41,17 @@
 ## Dateistruktur
 
 ```
-index.html                  – Haupt-HTML: Views, Sidebar, Modals (~6.560 Zeilen)))
+index.html                  – Haupt-HTML: Views, Sidebar, Modals (~6.560 Zeilen)
 manifest.json               – PWA Manifest
 sw.js                       – Service Worker
 portal/
 ├── app.js                  – Module Loader (Strangler Fig, Cache-Bust)
 ├── MODULE_MAP.md           – Modul-Dokumentation
-├── core/                   – 3 Module, ~710 Zeilen (sequentiell geladen)
-│   ├── globals.js          – showToast, escH, fmtN, fmtEur, fmtDate, timeAgo
+├── core/                   – 3 Module, ~770 Zeilen (sequentiell geladen)
+│   ├── globals.js          – showToast, escH, fmtN, fmtEur, fmtDate, timeAgo, sbUrl
 │   ├── supabase-init.js    – createClient, IDB Session, Auth Listener
 │   └── router.js           – showView(), i18n t(), View Switching
-├── views/                  – 68 Module, ~36.000 Zeilen (parallel geladen)
+├── views/                  – 68 Module, ~37.400 Zeilen (parallel geladen)
 │   ├── home.js             – Dashboard, Widgets, Quick Actions
 │   ├── verkauf.js          – Verkäufer-Performance, Pipeline
 │   ├── controlling.js      – BWA Upload/Parse/AI (13+ Formate)
@@ -91,7 +91,7 @@ portal/
 │   ├── strategie-onboarding.js – Asana-Onboarding, Demo-Tasks, Sales-Daten
 │   ├── view-router.js      – MUSS LETZTES View-Modul sein (vit:view-changed Events)
 │   └── ...                 – Weitere Module (siehe MODULE_MAP.md)
-├── inline/                 – 19 Module, ~7.000 Zeilen (Script-Tags in index.html)
+├── inline/                 – 18 Module, ~7.600 Zeilen (Script-Tags in index.html)
 │   ├── react-deal-pipeline.jsx  – React Kanban Pipeline
 │   ├── react-marketing.jsx      – React Marketing Dashboard
 │   ├── global-search.js         – Globale Suche + Deeplinks
