@@ -1056,7 +1056,7 @@ window.saveLexofficeConfig = async function() {
         CONNECTORS.lexoffice.status = 'connected';
         CONNECTORS.lexoffice.statusLabel = 'Verbunden';
         addLog('lexoffice', 'ok', 'API Key gespeichert');
-        _showToast('lexoffice API Key gespeichert! Vergiss nicht, den Key auch im Supabase Dashboard zu aktualisieren.', 'success');
+        _showToast('lexoffice API Key gespeichert!', 'success');
     } catch(err) {
         addLog('lexoffice', 'err', 'Speichern fehlgeschlagen: ' + err.message);
         _showToast('Fehler: ' + err.message, 'error');
