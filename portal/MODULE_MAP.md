@@ -36,7 +36,7 @@ _triggerPush()  → window.triggerPush() (Push notifications)
 ## Core (3 modules, ~750 lines)
 | Module | Lines | Purpose |
 |--------|-------|---------|
-| `core/globals.js` | 27 | showToast, escH, fmtN, theme toggle |
+| `core/globals.js` | 44 | showToast, escH, fmtN, fmtEur, fmtDate, timeAgo |
 | `core/supabase-init.js` | 158 | createClient, IDB session, auth listener, cookie helpers |
 | `core/router.js` | 565 | showView(), i18n t(), view switching, language support |
 
@@ -186,3 +186,4 @@ IIFEs und nicht-modulare Skripte die parallel geladen werden.
 7. `alert()` verboten → `_showToast()` oder `_toast()` nutzen
 8. Bare `sb.` verboten → immer `_sb().` nutzen
 9. UTF-8: Nach Änderungen auf ä/ö/ü prüfen
+10. Shared Utils (fmtEur, fmtDate, timeAgo): In globals.js definiert → window.* nutzen, nicht lokal neu implementieren

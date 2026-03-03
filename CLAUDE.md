@@ -41,14 +41,14 @@
 ## Dateistruktur
 
 ```
-index.html                  – Haupt-HTML: Views, Sidebar, Modals (~6.700 Zeilen))
+index.html                  – Haupt-HTML: Views, Sidebar, Modals (~6.560 Zeilen)))
 manifest.json               – PWA Manifest
 sw.js                       – Service Worker
 portal/
 ├── app.js                  – Module Loader (Strangler Fig, Cache-Bust)
 ├── MODULE_MAP.md           – Modul-Dokumentation
 ├── core/                   – 3 Module, ~710 Zeilen (sequentiell geladen)
-│   ├── globals.js          – showToast, escH, fmtN, Theme Toggle
+│   ├── globals.js          – showToast, escH, fmtN, fmtEur, fmtDate, timeAgo
 │   ├── supabase-init.js    – createClient, IDB Session, Auth Listener
 │   └── router.js           – showView(), i18n t(), View Switching
 ├── views/                  – 68 Module, ~36.000 Zeilen (parallel geladen)
@@ -192,6 +192,9 @@ _escH(s)      → window.escH(s)     // XSS-Escape für HTML
 _t(k)         → window.t(k)        // i18n Translation
 _showToast()  → window.showToast() // Toast Notifications
 _fmtN(n)      → window.fmtN(n)    // Zahlenformat (de-DE)
+fmtEur(n)     → window.fmtEur(n)  // EUR-Format (Intl.NumberFormat)
+fmtDate(d)    → window.fmtDate(d) // Datum de-DE
+timeAgo(d)    → window.timeAgo(d) // 'vor X Min.' Relative Zeit
 ```
 
 ---
