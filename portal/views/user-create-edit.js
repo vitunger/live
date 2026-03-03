@@ -254,7 +254,7 @@ export async function saveNeuerMa() {
         var session = await _sb().auth.getSession();
         if(!session.data.session) throw { message: 'Nicht eingeloggt' };
 
-        var response = await fetch((window.sbUrl ? window.sbUrl() : 'https://lwwagbkxeofahhwebkab.supabase.co') + '/functions/v1/create-user', {
+        var response = await fetch(window.SUPABASE_URL + '/functions/v1/create-user', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

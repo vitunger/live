@@ -566,7 +566,7 @@ try {
     // Unified: Edge Function create-user mit mode='register'
     // Erstellt Auth-User + public.users + sendet E-Mail via Resend
     // Kein signUp() mehr → kein Supabase Confirmation-Mail, kein Trigger-Abhängigkeit
-    var response = await fetch((window.sbUrl ? window.sbUrl() : 'https://lwwagbkxeofahhwebkab.supabase.co') + '/functions/v1/create-user', {
+    var response = await fetch(window.SUPABASE_URL + '/functions/v1/create-user', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
