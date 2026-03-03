@@ -50,6 +50,7 @@ export async function renderPlanIst() {
     // Try load plan from DB
     try {
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
+        if(!stdId) return;
         var resp = await _sb().from('jahresplaene').select('*').eq('jahr', planIstYear).eq('standort_id', stdId).single();
         if(!resp.error && resp.data) {
             currentPlan = resp.data;
@@ -117,6 +118,7 @@ export async function showPlanAssistent() {
     var vorjahr = planIstYear - 1;
     var vorjahrData = null, netzwerkSaison = null;
     try {
+        if(!stdId) return;
         var bwaResp = await _sb().from('bwa_daten').select('monat,umsatzerloese,wareneinsatz,rohertrag,personalkosten,raumkosten,ergebnis_vor_steuern').eq('standort_id', stdId).eq('jahr', vorjahr).order('monat');
         if(bwaResp.data && bwaResp.data.length >= 3) {
             vorjahrData = { monate: {} };
@@ -605,6 +607,7 @@ export async function saveManualPlan() {
 export async function renderPlanVergleich(el) {
     // Load all BWAs for this year
     var stdId = _sbProfile() ? _sbProfile().standort_id : null;
+    if(!stdId) return;
     var bwaResp = await _sb().from('bwa_daten').select('*').eq('standort_id', stdId).eq('jahr', planIstYear).order('monat');
     var bwas = bwaResp.data || [];
     var bwaByMonth = {};
