@@ -16,7 +16,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const RESEND_FROM = Deno.env.get("RESEND_FROM") || "vit:bikes Portal <portal@vitbikes.de>";
+const RESEND_FROM = Deno.env.get("RESEND_FROM") || "vit:bikes Cockpit <portal@vitbikes.de>";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -222,7 +222,7 @@ serve(async (req) => {
               body: JSON.stringify({
                 from: RESEND_FROM,
                 to: [cleanEmail],
-                subject: "🚴 Willkommen bei vit:bikes – Dein Portal-Zugang",
+                subject: "🚴 Willkommen bei vit:bikes – Dein Cockpit-Zugang",
                 html: buildInviteEmail(vorname.trim(), resetUrl, portalUrl),
               }),
             });
@@ -331,7 +331,7 @@ function buildInviteEmail(name: string, resetUrl: string, portalUrl: string): st
   <div style="padding:32px;">
     <p style="font-size:16px;color:#1f2937;">Hallo <strong>${name}</strong>,</p>
     <p style="font-size:14px;color:#4b5563;line-height:1.6;">
-      Du wurdest zum vit:bikes Partner-Portal eingeladen. Klicke auf den Button, um dein Passwort zu setzen und dich anzumelden.
+      Du wurdest zum vit:bikes Cockpit eingeladen. Klicke auf den Button, um dein Passwort zu setzen und dich anzumelden.
     </p>
     <div style="text-align:center;margin:32px 0;">
       <a href="${resetUrl}" style="display:inline-block;background:#EF7D00;color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;">
@@ -344,7 +344,7 @@ function buildInviteEmail(name: string, resetUrl: string, portalUrl: string): st
     </p>
     <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
     <p style="font-size:12px;color:#9ca3af;text-align:center;">
-      Portal: <a href="${portalUrl}" style="color:#EF7D00;">${portalUrl}</a><br>
+      Cockpit: <a href="${portalUrl}" style="color:#EF7D00;">${portalUrl}</a><br>
       Diese E-Mail wurde automatisch versendet.
     </p>
   </div>
@@ -364,7 +364,7 @@ function buildRegistrationConfirmEmail(name: string, portalUrl: string): string 
   <div style="padding:32px;">
     <p style="font-size:16px;color:#1f2937;">Hallo <strong>${name}</strong>,</p>
     <p style="font-size:14px;color:#4b5563;line-height:1.6;">
-      Deine Registrierung im vit:bikes Partner-Portal wurde erfolgreich angelegt.
+      Deine Registrierung im vit:bikes Cockpit wurde erfolgreich angelegt.
       Dein Account wartet jetzt auf die <strong>Freigabe durch das HQ-Team</strong>.
     </p>
     <p style="font-size:14px;color:#4b5563;line-height:1.6;">
@@ -377,7 +377,7 @@ function buildRegistrationConfirmEmail(name: string, portalUrl: string): string 
     </div>
     <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
     <p style="font-size:12px;color:#9ca3af;text-align:center;">
-      Portal: <a href="${portalUrl}" style="color:#EF7D00;">${portalUrl}</a>
+      Cockpit: <a href="${portalUrl}" style="color:#EF7D00;">${portalUrl}</a>
     </p>
   </div>
 </div>
@@ -396,11 +396,11 @@ function buildHqNotifyEmail(name: string, email: string, portalUrl: string): str
   <div style="padding:32px;">
     <p style="font-size:14px;color:#4b5563;line-height:1.6;">
       <strong>${name}</strong> (<a href="mailto:${email}" style="color:#EF7D00;">${email}</a>)
-      hat sich im Portal registriert und wartet auf Freigabe.
+      hat sich im Cockpit registriert und wartet auf Freigabe.
     </p>
     <div style="text-align:center;margin:24px 0;">
       <a href="${portalUrl}" style="display:inline-block;background:#EF7D00;color:#fff;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
-        Im Portal freigeben →
+        Im Cockpit freigeben →
       </a>
     </div>
   </div>

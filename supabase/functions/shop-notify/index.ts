@@ -15,7 +15,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const RESEND_FROM = "vit:bikes Shop <shop@vitbikes.de>";
-const PORTAL_URL = "https://cockpit.vitbikes.de";
+const COCKPIT_URL = "https://cockpit.vitbikes.de";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -140,8 +140,8 @@ function wrapTemplate(title: string, content: string): string {
   </td></tr>
   <!-- Footer -->
   <tr><td style="padding:16px 32px;background:#fafafa;border-top:1px solid #eee;">
-    <p style="margin:0;font-size:11px;color:#999;">Diese E-Mail wurde automatisch vom vit:bikes Partner Portal versendet.</p>
-    <p style="margin:4px 0 0;font-size:11px;color:#999;"><a href="${PORTAL_URL}" style="color:#EF7D00;">Portal öffnen</a></p>
+    <p style="margin:0;font-size:11px;color:#999;">Diese E-Mail wurde automatisch vom vit:bikes Cockpit versendet.</p>
+    <p style="margin:4px 0 0;font-size:11px;color:#999;"><a href="${COCKPIT_URL}" style="color:#EF7D00;">Cockpit öffnen</a></p>
   </td></tr>
 </table>
 </td></tr></table></body></html>`;
@@ -182,7 +182,7 @@ async function handleNewOrder(sb: any, orderId: string) {
     </table>
     ${renderItemsTable(order.items || [])}
     <div style="margin:20px 0;">
-      <a href="${PORTAL_URL}/#hqShop" style="display:inline-block;background:#EF7D00;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">📋 Bestellung bearbeiten</a>
+      <a href="${COCKPIT_URL}/#hqShop" style="display:inline-block;background:#EF7D00;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">📋 Bestellung bearbeiten</a>
     </div>
     <p style="font-size:12px;color:#999;">Lieferadresse: ${order.standort?.strasse || ""}, ${order.standort?.plz || ""} ${order.standort?.stadt || ""}</p>
   `;
@@ -211,7 +211,7 @@ async function handleStatusChange(sb: any, orderId: string, newStatus: string) {
     delivered: {
       emoji: "✅",
       title: "Bestellung zugestellt",
-      message: "Euer Paket wurde zugestellt. Die Rechnung findet ihr im Portal unter Buchhaltung → Meine Rechnungen.",
+      message: "Euer Paket wurde zugestellt. Die Rechnung findet ihr im Cockpit unter Buchhaltung → Meine Rechnungen.",
     },
     cancelled: {
       emoji: "❌",
@@ -249,7 +249,7 @@ async function handleStatusChange(sb: any, orderId: string, newStatus: string) {
     ${renderItemsTable(order.items || [])}
     ${trackingHtml}
     <div style="margin:20px 0;">
-      <a href="${PORTAL_URL}/#shop" style="display:inline-block;background:#EF7D00;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">📦 Meine Bestellungen ansehen</a>
+      <a href="${COCKPIT_URL}/#shop" style="display:inline-block;background:#EF7D00;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">📦 Meine Bestellungen ansehen</a>
     </div>
   `;
 
