@@ -142,7 +142,7 @@ async function updateBwaDeadlineWidget() {
     var badgeEl = document.getElementById('bwaRatingBadge');
     var eskBanner = document.getElementById('bwaEskalationBanner');
 
-    if(!titleEl) return;
+    if(!titleEl || !ctaEl || !badgeEl || !daysEl || !ringEl || !eskBanner) return;
 
     if(submitted && rating !== 'missing') {
         // Already submitted
@@ -166,7 +166,8 @@ async function updateBwaDeadlineWidget() {
         ctaEl.style.display = '';
         badgeEl.style.display = 'none';
         setBenchmarkLock(true);
-        document.getElementById('bwaKpiReport').style.display = 'none';
+        var kpiReport = document.getElementById('bwaKpiReport');
+        if(kpiReport) kpiReport.style.display = 'none';
 
         if(days > 0) {
             titleEl.textContent = 'Noch ' + days + ' Tage bis zur BWA-Deadline';
@@ -201,7 +202,8 @@ async function updateBwaDeadlineWidget() {
             eskBanner.style.display = '';
             var eskText = document.getElementById('bwaEskText');
             var eskSub = document.getElementById('bwaEskSub');
-            if(stufe === 2) {
+            if(!eskText || !eskSub) { /* elements missing for this role */ }
+            else if(stufe === 2) {
                 eskText.textContent = 'Eskalationsstufe 2 – Nur noch ' + Math.max(0,days) + ' Tage!';
                 eskSub.textContent = 'Reiche jetzt ein, um Stufe 3 und HQ-Benachrichtigung zu vermeiden.';
             } else {
