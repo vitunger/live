@@ -51,29 +51,34 @@ export function handleFileUpload(input) {
 }
 
 export function showView(viewName) {
-    // Check module status - block 'in_bearbeitung' (bald) and 'deaktiviert' modules
-    var moduleStatusMap = {verkauf:'verkauf',controlling:'controlling',marketing:'marketing',werkstatt:'werkstatt',personal:'personal',office:'office',kalender:'kalender',nachrichten:'nachrichten',wissen:'wissen',support:'support',einkauf:'einkauf',dashboards:'dashboards',allgemein:'allgemein',shop:'shop',aktenschrank:'aktenschrank',mitarbeiter:'mitarbeiter',todo:'todo'};
+    // Check module status - block 'bald' and 'inaktiv' modules (5-value system)
+    var moduleStatusMap = {verkauf:'verkauf',controlling:'controlling',marketing:'marketing',werkstatt:'werkstatt',personal:'personal',office:'office',kalender:'kalender',nachrichten:'kommunikation',wissen:'wissen',support:'support',einkauf:'einkauf',dashboards:'dashboards',allgemein:'allgemein',shop:'shop',aktenschrank:'aktenschrank',mitarbeiter:'mitarbeiter',todo:'aufgaben',home:'startseite',kommunikation:'kommunikation',onboarding:'onboarding',standortBilling:'standortBilling'};
     var moduleKey = moduleStatusMap[viewName];
     var _modulStatus = window.sbModulStatus || {};
     if(moduleKey) {
         var mStatus = _modulStatus[moduleKey];
-        // Only block if status is explicitly set to blocked values
-        // Don't block when status map is empty (not loaded yet)
         var statusLoaded = Object.keys(_modulStatus).length > 0;
-        if(statusLoaded && (!mStatus || mStatus === 'in_bearbeitung' || mStatus === 'deaktiviert')) {
-            if(typeof window._showToast === 'function') window._showToast('Dieses Modul ist noch nicht verf\u00fcgbar (' + (mStatus === 'in_bearbeitung' ? 'Kommt bald' : mStatus === 'deaktiviert' ? 'Deaktiviert' : 'Nicht konfiguriert') + ')', 'info');
-            else _showToast('Dieses Modul ist noch nicht verfügbar','warning');
+        // If status not loaded yet or module has no entry → allow through
+        if(!statusLoaded || !mStatus) { /* pass through */ }
+        // inaktiv: nobody gets in (silent)
+        else if(mStatus === 'inaktiv') {
             return;
         }
-        // Beta check: only HQ or assigned beta users may access
-        if(statusLoaded && mStatus === 'beta') {
+        // bald: visible in sidebar but cannot open
+        else if(mStatus === 'bald') {
+            _showToast('Dieses Modul kommt bald!', 'info');
+            return;
+        }
+        // beta: only beta users and HQ can open
+        else if(mStatus === 'beta') {
             var isHqUser = (window.sbProfile && window.sbProfile.is_hq) || (window.currentRoles && window.currentRoles.indexOf('hq') !== -1);
             var isBetaForModule = window._isBetaUser || (window._betaModules && window._betaModules.indexOf(moduleKey) !== -1);
             if(!isHqUser && !isBetaForModule) {
-                if(typeof window._showToast === 'function') window._showToast('Dieses Modul ist in der Beta-Phase. Zugang nur f\u00fcr freigeschaltete Tester.', 'info');
+                _showToast('Dieses Modul ist in der Beta-Phase. Zugang nur für freigeschaltete Tester.', 'info');
                 return;
             }
         }
+        // demo + aktiv: everyone can open → pass through
     }
 
     // Verstecke ALLE Views automatisch (per Klasse statt hardcoded Liste)
