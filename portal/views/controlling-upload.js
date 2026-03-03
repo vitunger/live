@@ -118,9 +118,10 @@ export async function parseBwaWithAI() {
                     var base64 = e.target.result.split(',')[1];
                     var session = await _sb().auth.getSession();
                     var token = session?.data?.session?.access_token;
+                    if (!token) { _showToast('Bitte erneut einloggen.', 'error'); return; }
                     var resp = await fetch(SUPABASE_URL + '/functions/v1/analyze-finance', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (token||''), 'apikey': SUPABASE_ANON_KEY },
+                        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_ANON_KEY },
                         body: JSON.stringify({ type: 'bwa', file_base64: base64, media_type: 'application/pdf' })
                     });
                     if(!resp.ok) throw new Error('API Fehler ' + resp.status);
@@ -192,9 +193,10 @@ export async function parseBwaWithAI() {
                 var rawText = cleanCsvForKi(wb);
                 var session = await _sb().auth.getSession();
                 var token = session?.data?.session?.access_token;
+                if (!token) { _showToast('Bitte erneut einloggen.', 'error'); return; }
                 var resp = await fetch(SUPABASE_URL + '/functions/v1/analyze-finance', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (token||''), 'apikey': SUPABASE_ANON_KEY },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_ANON_KEY },
                     body: JSON.stringify({ type: 'bwa', raw_text: rawText.substring(0, 15000) })
                 });
                 if(!resp.ok) { var errB=''; try { var eD=await resp.json(); errB=eD.error||eD.details||''; } catch(e2) {} throw new Error('KI-API Fehler ' + resp.status + (errB ? ': '+errB.substring(0,150) : '')); }

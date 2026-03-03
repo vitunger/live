@@ -279,7 +279,7 @@ if (s.invoice && s.invoice.status === 'draft') {
     action = '<span class="text-xs text-gray-400">Warte auf Draft</span>';
 }
 h += '<tr class="border-b hover:bg-gray-50">'
-    +'<td class="p-3"><p class="font-semibold text-sm">'+s.name+'</p><p class="text-xs text-gray-400">'+(s.inhaber_name||'')+'</p></td>'
+    +'<td class="p-3"><p class="font-semibold text-sm">'+_escH(s.name)+'</p><p class="text-xs text-gray-400">'+_escH(s.inhaber_name||'')+'</p></td>'
     +'<td class="p-3 text-center">'+stratBadge+'</td>'
     +'<td class="p-3 text-center">'+sepaBadge+'</td>'
     +'<td class="p-3 text-right font-mono text-sm">'+invTotal+'</td>'
@@ -429,7 +429,9 @@ document.getElementById('billingDetailContent').innerHTML = h;
 window.editLineItem = async function(lineId, currentAmount, currentDesc) {
 var newAmt = prompt('Neuer Betrag:', currentAmount);
 if (newAmt === null) return;
-await billingCall('update-line-item', { line_item_id: lineId, amount: parseFloat(newAmt), user_id: _sbUser().id });
+var parsedAmt = parseFloat(newAmt);
+if (isNaN(parsedAmt) || parsedAmt < 0 || parsedAmt > 999999) { _showToast('Ungültiger Betrag.', 'error'); return; }
+await billingCall('update-line-item', { line_item_id: lineId, amount: parsedAmt, user_id: _sbUser().id });
 // Reload the current invoice detail
 var invId = document.querySelector('[onclick*="finalizeInvoice"]')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
 if (invId) openBillingDetail(invId);
@@ -566,7 +568,7 @@ var btn = event.target;
 btn.textContent = '⏳ Lade...';
 btn.disabled = true;
 
-var resp = await fetch(SUPABASE_URL + '/functions/v1/lexoffice-pdf?invoice_id=' + invoiceId, {
+var resp = await fetch(SUPABASE_URL + '/functions/v1/lexoffice-pdf?invoice_id=' + encodeURIComponent(invoiceId), {
     headers: {
         'Authorization': 'Bearer ' + session.access_token,
         'apikey': SUPABASE_ANON

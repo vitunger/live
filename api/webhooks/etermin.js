@@ -94,7 +94,7 @@ module.exports = async function(req, res) {
     const startU = parseDT(b.STARTDATETIMEUTC);
     const endU = parseDT(b.ENDDATETIMEUTC);
 
-    console.log("[etermin-wh]", cmd, uid, fn, ln, answers);
+    console.log("[etermin-wh]", cmd, uid);
     if (!uid) return res.status(400).json({ error: "Missing APPOINTMENTUID" });
 
     // Resolve standort from URL param

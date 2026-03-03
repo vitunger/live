@@ -52,16 +52,15 @@ module.exports = async function(req, res) {
     // Load keys via direct REST API
     let filter = "is_active=eq.true&limit=1";
     if (req.query.standort_id) {
-      filter += "&standort_id=eq." + req.query.standort_id;
+      filter += "&standort_id=eq." + encodeURIComponent(req.query.standort_id);
     }
     
     const rows = await sbQuery("etermin_config", filter);
     const cfg = rows && rows[0];
     
     if (!cfg || !cfg.public_key || !cfg.private_key) {
-      return res.status(400).json({ 
-        error: "eTermin nicht konfiguriert. API-Keys in Einstellungen hinterlegen.",
-        debug: { rows_found: rows ? rows.length : 0, filter }
+      return res.status(400).json({
+        error: "eTermin nicht konfiguriert. API-Keys in Einstellungen hinterlegen."
       });
     }
 

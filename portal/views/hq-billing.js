@@ -264,7 +264,9 @@ export async function markInvoicePaid(invId) {
 export async function editLineItem(lineId, currentAmount, currentDesc) {
     var newAmount = prompt('Neuer Betrag (aktuell: ' + _fmtEur(currentAmount) + '):', currentAmount);
     if (newAmount === null) return;
-    var r = await billingApi('update-line-item', { line_item_id: lineId, amount: parseFloat(newAmount), user_id: SESSION.user_id });
+    var parsed = parseFloat(newAmount);
+    if (isNaN(parsed) || parsed < 0 || parsed > 999999) { _showToast('Ungültiger Betrag.', 'error'); return; }
+    var r = await billingApi('update-line-item', { line_item_id: lineId, amount: parsed, user_id: SESSION.user_id });
     if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
     // Reload current invoice
     var backBtn = document.querySelector('#billingDetailContent');
@@ -285,9 +287,12 @@ export async function removeLineItem(lineId, invId) {
 export async function addManualLineItem(invId) {
     var desc = prompt(_t('bill_new_desc'));
     if (!desc) return;
+    desc = desc.substring(0, 500);
     var amount = prompt(_t('bill_new_amount'));
     if (amount === null) return;
-    var r = await billingApi('add-line-item', { invoice_id: invId, description: desc, amount: parseFloat(amount), user_id: SESSION.user_id });
+    var parsedAmt = parseFloat(amount);
+    if (isNaN(parsedAmt) || parsedAmt < 0 || parsedAmt > 999999) { _showToast('Ungültiger Betrag.', 'error'); return; }
+    var r = await billingApi('add-line-item', { invoice_id: invId, description: desc, amount: parsedAmt, user_id: SESSION.user_id });
     if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
     showBillingInvoice(invId);
 }
@@ -663,7 +668,7 @@ export async function approvalAction(invId, action) {
             }
 
         } else if(action === 'approve') {
-            var note = prompt('Freigabenotiz (optional):','');
+            var note = (prompt('Freigabenotiz (optional):','') || '').substring(0, 1000);
             await _sb().from('billing_invoices').update({
                 status: 'approved',
                 approved_by: _sbProfile() ? _sbProfile().id : null,
@@ -681,6 +686,7 @@ export async function approvalAction(invId, action) {
         } else if(action === 'reject') {
             var reason = prompt('Grund f\u00fcr Zur\u00fcckweisung:');
             if(!reason) return;
+            reason = reason.substring(0, 1000);
             await _sb().from('billing_invoices').update({
                 status: 'rejected',
                 rejection_reason: reason,
@@ -713,7 +719,7 @@ export async function approvalAction(invId, action) {
                 var session = await _sb().auth.getSession();
                 await fetch(SUPABASE_URL + '/functions/v1/lexoffice-sync', {
                     method: 'POST',
-                    headers: {'Content-Type':'application/json','Authorization':'Bearer '+(session.data.session?session.data.session.access_token:''),'apikey':SUPABASE_ANON_KEY},
+                    headers: {'Content-Type':'application/json','Authorization':'Bearer '+(session.data.session&&session.data.session.access_token?session.data.session.access_token:''),'apikey':SUPABASE_ANON_KEY},
                     body: JSON.stringify({action:'sync-all-finalized'})
                 });
             } catch(syncErr) { console.warn('LexOffice sync:', syncErr); }

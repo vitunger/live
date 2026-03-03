@@ -57,7 +57,7 @@ self.addEventListener('notificationclick', function(event) {
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
             for (const client of clientList) {
-                if (client.url.includes(self.location.origin) && 'focus' in client) {
+                if (new URL(client.url).origin === self.location.origin && 'focus' in client) {
                     client.focus();
                     if (url !== '/') {
                         client.postMessage({ type: 'PUSH_NAVIGATE', url: url });
