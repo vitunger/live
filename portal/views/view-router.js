@@ -45,7 +45,7 @@ const VIEW_RENDER_MAP = {
     'allgemein':     { fn: 'loadAllgemeinData', async: true, chain: [{ fn: 'showAllgemeinTab', args: ['uebersicht'] }] },
     'home':          { fn: 'loadDashboardWidgets', chain: [{ fn: 'loadAllgemeinData' }] },
     'einkauf':       { fn: 'showEinkaufTab', args: ['sortiment'] },
-    'controlling':   { fn: 'showControllingTab', args: ['cockpit'], chain: [{ fn: 'renderPerformanceCockpit' }, { fn: 'loadBwaList' }] },
+    'controlling':   { fn: 'showControllingTab', args: ['cockpit'], chain: [{ fn: 'renderPerformanceCockpit' }, { fn: 'loadBwaList' }, { fn: 'renderBenchmarks' }] },
     'verkauf':       { fn: 'showVerkaufTab', args: ['pipeline'] },
     'kommunikation': { fn: 'showKommTab', args: ['chat'] },
     'aktenschrank':  { fn: 'loadAktenschrank' },
