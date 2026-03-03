@@ -65,7 +65,7 @@ export function vpAddFiles(fileList) {
 for(var i=0; i<fileList.length; i++) {
     var f = fileList[i];
     if(!f.type.startsWith('video/')) continue;
-    if(f.size > 2147483648) { _showToast(f.name + ': zu gross (max. 2 GB, 'info')'); continue; }
+    if(f.size > 2147483648) { _showToast(f.name + ': zu gross (max. 2 GB)', 'info'); continue; }
     if(vpSelectedFiles.some(function(sf){ return sf.name===f.name && sf.size===f.size; })) continue;
     vpSelectedFiles.push(f);
 }
@@ -899,7 +899,7 @@ try {
             _showToast('✅ Consent OK! ' + (data.cleared||0, 'success') + ' Person(en) geprüft.\nVideo geht in den Schnitt.');
         } else {
             var missing = (data.details||[]).filter(function(d){return d.consent_status==='missing';});
-            _showToast('⚠️ Consent fehlt für ' + missing.length + ' Person(en, 'warning'):\n' + missing.map(function(m){return '- ' + m.person_label + ': ' + m.reason;}).join('\n'));
+            _showToast('⚠️ Consent fehlt für ' + missing.length + ' Person(en):\n' + missing.map(function(m){return '- ' + m.person_label + ': ' + m.reason;}).join('\n'), 'warning');
         }
     } else {
         throw new Error(data?.error || 'Unbekannter Fehler');

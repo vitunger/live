@@ -231,7 +231,7 @@ export async function confirmApprove(userId) {
         
         closeApproveModal();
         var rollenLabels = {'hq':'HQ','hq_gf':'GF','hq_sales':'Sales','hq_marketing':'Marketing','hq_einkauf':'Einkauf','hq_support':'Support','hq_akademie':'Akademie','hq_hr':'HR','hq_it':'IT','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
-        _showToast('\u2705 User freigeschaltet!\nRollen: ' + selected.map(function(r, 'success'){return rollenLabels[r]||r;}).join(', ') + '\n\nDer Mitarbeiter kann sich jetzt einloggen.');
+        _showToast('\u2705 User freigeschaltet!\nRollen: ' + selected.map(function(r){return rollenLabels[r]||r;}).join(', ') + '\n\nDer Mitarbeiter kann sich jetzt einloggen.', 'success');
         await renderKzMitarbeiter();
     } catch(err) {
         if(errEl) { errEl.textContent = 'Fehler: ' + err.message; errEl.style.display = 'block'; }
@@ -283,7 +283,7 @@ export function closeRollenModal() {
     var c = document.getElementById('rollenModalContainer');
     if(c) c.remove();
 }
-export function saveRollen(maIdx) {
+export async function saveRollen(maIdx) {
     var allRollen = ['hq','inhaber','verkauf','werkstatt','buchhaltung'];
     var selected = [];
     allRollen.forEach(function(r){
@@ -315,7 +315,7 @@ export function getPartnerMitarbeiter() {
     return kzMitarbeiter.filter(function(m){ return m.standort === sName; });
 }
 
-export function filterPartnerMa(f) {
+export async function filterPartnerMa(f) {
     currentPartnerMaFilter = f;
     document.querySelectorAll('.p-ma-filter').forEach(function(b){
         b.className='p-ma-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600';
@@ -1327,7 +1327,7 @@ export async function saveNeuerStandort() {
         if(resp.error) throw resp.error;
 
         closeNeuerStdModal();
-        _showToast('\u2705 Standort angelegt!\n'+name.trim(, 'info')+'\nSlug: '+slug+'\nStatus: '+status);
+        _showToast('\u2705 Standort angelegt!\n'+name.trim()+'\nSlug: '+slug+'\nStatus: '+status, 'info');
         renderKzStandorte();
     } catch(err) {
         _showToast('Fehler: ' + err.message, 'error');
@@ -1957,7 +1957,7 @@ var currentKzStdFilter = 'all';
 var currentKzMaFilter = 'all';
 var kzMitarbeiter = [];
 
-export function showKommandoTab(tab) {
+export async function showKommandoTab(tab) {
     document.querySelectorAll('.kommando-tab-content').forEach(function(el){el.style.display='none';});
     document.querySelectorAll('.kommando-tab-btn').forEach(function(b){
         b.className='kommando-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
@@ -1982,7 +1982,7 @@ export function filterKzStandorte(f) {
     if(btn)btn.className='kz-std-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white';
     renderKzStandorte();
 }
-export function filterKzMa(f) {
+export async function filterKzMa(f) {
     currentKzMaFilter=f;
     document.querySelectorAll('.kz-ma-filter').forEach(function(b){b.className='kz-ma-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600';});
     var btn=document.querySelector('.kz-ma-filter[data-kzmf="'+f+'"]');

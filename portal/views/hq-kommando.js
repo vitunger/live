@@ -66,7 +66,7 @@ export function renderHqKomm(){
     var el=document.getElementById('hqKommContent');if(!el)return;
     var h='';
     if(currentHqKommTab==='announce'){
-        h+='<div class="flex justify-end mb-4"><button onclick="_showToast(\'Neue Ankuendigung erstellen (Demo, 'info')\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">+ Neue Ankuendigung</button></div>';
+        h+='<div class="flex justify-end mb-4"><button onclick="_showToast(&quot;Neue Ankuendigung erstellen (Demo)&quot;, &quot;info&quot;)" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">+ Neue Ankuendigung</button></div>';
         hqAnnouncements.forEach(function(a){
             var prioBg=a.priority==='hoch'?'border-l-4 border-red-500':a.priority==='mittel'?'border-l-4 border-yellow-400':'border-l-4 border-gray-300';
             var readPct=Math.round(a.read/a.total*100);
@@ -142,7 +142,7 @@ export function renderHqKampagnen(){
         h+='<div class="flex items-center space-x-4">';
         h+='<div class="flex-1"><p class="text-xs text-gray-500 mb-1">Umsetzung: '+k.umgesetzt+'/'+k.standorte+' Standorte ('+pct+'%)</p>';
         h+='<div class="w-full bg-gray-100 rounded-full h-2.5"><div class="h-2.5 rounded-full '+(pct>=80?'bg-green-500':pct>=50?'bg-yellow-500':'bg-red-500')+'" style="width:'+pct+'%"></div></div></div>';
-        if(k.status!=='beendet') h+='<button onclick="_showToast(\'Kampagne bearbeiten (Demo, 'info')\')" class="text-xs px-3 py-1.5 bg-gray-100 rounded-lg text-gray-600 hover:bg-gray-200">Bearbeiten</button>';
+        if(k.status!=='beendet') h+='<button onclick="_showToast(&quot;Kampagne bearbeiten (Demo)&quot;, &quot;info&quot;)" class="text-xs px-3 py-1.5 bg-gray-100 rounded-lg text-gray-600 hover:bg-gray-200">Bearbeiten</button>';
         h+='</div></div>';
     });
     el.innerHTML=h;
@@ -230,7 +230,7 @@ export function renderHqDokumente(){
             if(isHQ) h+='<button onclick="deleteNetzwerkDok(\''+d.id+'\')" class="text-xs px-2 py-1 text-gray-300 hover:text-red-500">\u2715</button>';
         } else {
             h+='<span class="text-xs text-gray-400">'+(d.downloads||0)+'x \u2193</span>';
-            h+='<button onclick="_showToast(\'Download fuer '+name+' wird vorbereitet...\', 'info')" class="text-xs px-3 py-1 bg-vit-orange text-white rounded-lg hover:opacity-90">\u2193</button>';
+            h+='<button onclick="_showToast(&quot;Download fuer '+name+' wird vorbereitet...&quot;, &quot;info&quot;)" class="text-xs px-3 py-1 bg-vit-orange text-white rounded-lg hover:opacity-90">\u2193</button>';
         }
         h+='</div>';
     });

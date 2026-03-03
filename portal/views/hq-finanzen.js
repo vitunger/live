@@ -989,7 +989,7 @@ export function hqFinOpenPlanUpload(standortId) {
             if (resp.error) throw resp.error;
             
             var count = Object.keys(planMonths).length;
-            _showToast('✅ Jahresplan ' + year + ' für ' + s.name + ' gespeichert! (' + count + ' Monate, 'success')');
+            _showToast('✅ Jahresplan ' + year + ' für ' + s.name + ' gespeichert! (' + count + ' Monate)', 'success');
             
             // Close modal
             var modal = document.getElementById('hqFinPlanUploadModal');

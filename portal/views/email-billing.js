@@ -680,7 +680,7 @@ planned_revenue_year: rev, planned_marketing_year: mkt || 0,
 submitted_at: new Date().toISOString(), submitted_by: _sbUser().id,
 version: newVersion
 });
-_showToast('✅ Jahresstrategie eingereicht (v' + newVersion + ', 'success')');
+_showToast('✅ Jahresstrategie eingereicht (v' + newVersion + ')', 'success');
 loadStandortStrategy();
 };
 

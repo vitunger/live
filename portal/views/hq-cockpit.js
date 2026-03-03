@@ -167,7 +167,7 @@ export async function renderHqCockpit() {
     if(b5) {
         var bh = '';
         sorted.slice(-5).reverse().forEach(function(s){
-            bh += '<div class="flex items-center space-x-3 p-3 bg-red-50 rounded-lg"><span class="text-lg">⚠️</span><div class="flex-1"><p class="text-sm font-semibold text-red-700">'+s.name+'</p><p class="text-xs text-red-500">'+(s.bwaAuffaellig||'Lead-Performance kritisch')+'</p></div><div class="text-right"><p class="font-bold text-red-600">'+s.leadPerf+'%</p><button class="text-[10px] px-2 py-1 bg-red-600 text-white rounded mt-1" onclick="_showToast(\'Standort '+s.name+' wird geoeffnet\', 'error')">Details →</button></div></div>';
+            bh += '<div class="flex items-center space-x-3 p-3 bg-red-50 rounded-lg"><span class="text-lg">⚠️</span><div class="flex-1"><p class="text-sm font-semibold text-red-700">'+s.name+'</p><p class="text-xs text-red-500">'+(s.bwaAuffaellig||'Lead-Performance kritisch')+'</p></div><div class="text-right"><p class="font-bold text-red-600">'+s.leadPerf+'%</p><button class="text-[10px] px-2 py-1 bg-red-600 text-white rounded mt-1" onclick="_showToast(this.textContent, &quot;info&quot;)">Details →</button></div></div>';
         });
         b5.innerHTML = bh;
     }
@@ -177,7 +177,7 @@ export async function renderHqCockpit() {
     if(grid) {
         var gh = '';
         sorted.forEach(function(s){
-            gh += '<div class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:shadow-md transition" onclick="_showToast(\'Standort '+s.name+' oeffnen\', 'error')">'
+            gh += '<div class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:shadow-md transition" onclick="_showToast(this.textContent, &quot;info&quot;)">'
                 +'<div class="flex items-center justify-center space-x-1 mb-1"><span style="width:10px;height:10px;border-radius:50%;background:'+perfDot(s.leadPerf)+';display:inline-block;"></span><span class="text-xs font-semibold text-gray-700 truncate">'+s.name+'</span></div>'
                 +'<span class="text-sm font-bold text-gray-800">'+s.leadPerf+'%</span>'
                 +'</div>';

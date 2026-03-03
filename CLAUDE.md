@@ -339,6 +339,9 @@ claude/db-schema-xyz            – Datenbank-Änderungen
 | 400-Fehler `bwa_daten.ergebnis` (plan-ist.js) | Mittel | ✅ Behoben – Spalte heißt `ergebnis_vor_steuern` |
 | 400-Fehler `users.rolle` (kalender.js) | Mittel | ✅ Behoben – Spalte existiert nicht, Join über `user_rollen` |
 | Status `'active'` statt `'aktiv'` (user-management.js) | Niedrig | ✅ Behoben – englischer Wert gab leere Ergebnisse |
+| 8 Module SyntaxError: _showToast Migration kaputt | Kritisch | ✅ Behoben – `'success'`/`'info'` in Strings statt als 2. Arg |
+| `await` in nicht-async Funktionen (user-management.js) | Mittel | ✅ Behoben – 3 Funktionen auf async gestellt |
+| cockpit-engine.js null-Zugriff (bwaDeadlineWidget) | Mittel | ✅ Behoben – Null-Guards ergänzt |
 | Deprecated Trigger `on_auth_user_created` | Mittel | ✅ Behoben – Trigger entfernt, create-user EF übernimmt |
 | Fehlende FK-Indizes (leads, lead_events) | Niedrig | ✅ Behoben – 7 Indizes erstellt |
 | Fehlende Unique Constraints | Mittel | ✅ Behoben – user_rollen + employees |

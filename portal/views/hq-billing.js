@@ -810,7 +810,7 @@ export async function generateAllDrafts() {
             }
         }
 
-        _showToast('\u2705 Fertig!\n\n'+created+' Rechnungsentw\u00fcrfe erstellt\n'+skipped+' \u00fcbersprungen (bereits vorhanden oder keine Positionen, 'success')');
+        _showToast('\u2705 Fertig!\n\n'+created+' Rechnungsentw\u00fcrfe erstellt\n'+skipped+' \u00fcbersprungen (bereits vorhanden oder keine Positionen)', 'success');
         loadApprovalQueue();
     } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
 }

@@ -226,7 +226,7 @@ var maxSize = 10 * 1024 * 1024; // 10MB per file
 for(var i = 0; i < input.files.length; i++) {
     var file = input.files[i];
     if(file.size > maxSize) {
-        _showToast('Datei "' + file.name + '" ist zu groß (max. 10 MB, 'info').');
+        _showToast('Datei "' + file.name + '" ist zu groß (max. 10 MB)', 'info');
         continue;
     }
     if(fbState.attachments.length >= 5) {
