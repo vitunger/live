@@ -315,7 +315,7 @@ sbUrl()       → window.sbUrl()   // Supabase Project URL (zentralisiert)
 | V2 | User-Accounts einrichten | ⬜ Offen |
 | V3 | eTermin-Rollout | ⬜ Offen |
 | V4 | Feedback-Kanal einrichten | ⬜ Offen |
-| V5 | Schulungsunterlagen | ⬜ Offen |
+| V5 | Schulungsunterlagen (8 Portal-Anleitungen im Wissensmodul, Tab Portal-Guide) | ✅ Done |
 | V6 | Monitoring aufsetzen | ⬜ Offen |
 
 ### Rollen-IDs
