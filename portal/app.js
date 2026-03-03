@@ -69,6 +69,10 @@ const VIEW_MODULES = [
     'views/extern-home.js',
     'views/onboarding-system.js',
     'views/demo-mode.js',
+    'views/global-search.js',
+    'views/feedback-prod.js',
+    'views/portal-guide.js',
+    'views/profile-panel.js',
     'views/email-billing.js',
     'views/standort-billing.js',
     

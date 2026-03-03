@@ -1,4 +1,13 @@
-function _toast(msg, type) { if(typeof window.showToast==='function') window.showToast(msg, type||'info'); }
+// vit:bikes - Profile Panel
+// Migrated from inline
+
+// Safe Helpers
+function _sb()       { return window.sb; }
+function _sbUser()   { return window.sbUser; }
+function _sbProfile(){ return window.sbProfile; }
+function _escH(s)    { return window.escH ? window.escH(s) : String(s); }
+function _showToast(m,t){ if(window.showToast) window.showToast(m,t||'info'); }
+
 // vit:bikes — Profile Panel + Settings
 // Extracted from index.html lines 8134-8408
 function openProfilePanel() {
