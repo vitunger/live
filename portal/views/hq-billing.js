@@ -1061,23 +1061,24 @@ export async function downloadInvoicePdf(invId) {
 
         // Generate PDF using browser print
         var w = window.open('', '_blank');
-        w.document.write('<!DOCTYPE html><html><head><title>' + (inv.invoice_number || 'Rechnung') + '</title>');
+        var esc = function(s) { return _escH(String(s || '')); };
+        w.document.write('<!DOCTYPE html><html><head><title>' + esc(inv.invoice_number || 'Rechnung') + '</title>');
         w.document.write('<style>body{font-family:Arial,sans-serif;margin:40px;color:#333;font-size:13px} .logo{font-size:24px;font-weight:bold;color:#EF7D00} table{width:100%;border-collapse:collapse;margin:20px 0} th{text-align:left;padding:8px 4px;border-bottom:2px solid #333;font-size:11px;text-transform:uppercase;color:#666} td{padding:8px 4px;border-bottom:1px solid #eee} .right{text-align:right} .bold{font-weight:bold} .total-row td{border-top:2px solid #333;font-weight:bold;font-size:16px} .formula{font-size:10px;color:#2563eb;font-family:monospace} .footer{margin-top:40px;padding-top:20px;border-top:1px solid #ddd;font-size:10px;color:#999} .header{display:flex;justify-content:space-between;margin-bottom:40px} .addr{font-size:12px;line-height:1.6} .badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:10px;font-weight:bold} @media print{body{margin:20px}}</style>');
         w.document.write('</head><body>');
         w.document.write('<div class="header"><div><div class="logo">vit:bikes</div><p style="font-size:10px;color:#999">vit:bikes Franchise GmbH · Musterstraße 1 · 80331 München</p></div>');
-        w.document.write('<div style="text-align:right"><h2 style="margin:0;color:#EF7D00">RECHNUNG</h2><p style="font-size:14px;font-weight:bold">' + (inv.invoice_number || '') + '</p></div></div>');
-        
+        w.document.write('<div style="text-align:right"><h2 style="margin:0;color:#EF7D00">RECHNUNG</h2><p style="font-size:14px;font-weight:bold">' + esc(inv.invoice_number) + '</p></div></div>');
+
         if (std) {
-            w.document.write('<div class="addr"><strong>' + (std.name || '') + '</strong><br>' + (std.strasse || '') + '<br>' + (std.plz || '') + ' ' + (std.ort || '') + '</div>');
+            w.document.write('<div class="addr"><strong>' + esc(std.name) + '</strong><br>' + esc(std.strasse) + '<br>' + esc(std.plz) + ' ' + esc(std.ort) + '</div>');
         }
-        
+
         w.document.write('<p style="margin:20px 0"><strong>Rechnungsdatum:</strong> ' + (inv.finalized_at ? new Date(inv.finalized_at).toLocaleDateString('de-DE') : new Date().toLocaleDateString('de-DE')) + '<br>');
-        w.document.write('<strong>Leistungszeitraum:</strong> ' + (inv.period_start || '') + ' bis ' + (inv.period_end || '') + '</p>');
-        
+        w.document.write('<strong>Leistungszeitraum:</strong> ' + esc(inv.period_start) + ' bis ' + esc(inv.period_end) + '</p>');
+
         w.document.write('<table><thead><tr><th>Position</th><th>Menge</th><th class="right">Einzelpreis</th><th class="right">Betrag</th></tr></thead><tbody>');
         (lines || []).forEach(function(li) {
-            w.document.write('<tr><td>' + li.description);
-            if (li.meta && li.meta.formula) w.document.write('<br><span class="formula">📐 ' + li.meta.formula + '</span>');
+            w.document.write('<tr><td>' + esc(li.description));
+            if (li.meta && li.meta.formula) w.document.write('<br><span class="formula">📐 ' + esc(li.meta.formula) + '</span>');
             w.document.write('</td><td>' + (li.quantity || 1) + '</td><td class="right">' + _fmtEur(li.unit_price) + '</td><td class="right">' + _fmtEur(li.amount) + '</td></tr>');
         });
         w.document.write('</tbody></table>');

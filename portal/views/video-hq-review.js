@@ -127,7 +127,7 @@ try {
 
     c.innerHTML = html;
 } catch(e) {
-    c.innerHTML = '<div class="vit-card p-6 text-red-600">Fehler: '+e.message+'</div>';
+    c.innerHTML = '<div class="vit-card p-6 text-red-600">Fehler: '+_escH(e.message)+'</div>';
 }
 };
 

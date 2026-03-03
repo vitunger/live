@@ -133,7 +133,7 @@ try {
     }
     c.innerHTML = html;
 } catch(e) {
-    c.innerHTML = '<div class="vit-card p-6 text-red-600">Fehler beim Laden: '+e.message+'</div>';
+    c.innerHTML = '<div class="vit-card p-6 text-red-600">Fehler beim Laden: '+_escH(e.message)+'</div>';
 }
 };
 

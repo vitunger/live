@@ -57,7 +57,7 @@ export async function renderShop() {
 
             html += '<div class="vit-card p-5 hover:shadow-md transition flex flex-col">';
             if (p.image_url) {
-                html += '<div class="w-full h-40 rounded-lg mb-3 overflow-hidden bg-gray-50"><img src="'+_escH(p.image_url)+'" alt="'+_escH(p.name)+'" class="w-full h-full object-contain" onerror="this.parentNode.innerHTML=\'<div class=\\\'flex items-center justify-center h-full text-5xl\\\'>'+(catIcons[p.category]||'\ud83d\udecd\ufe0f')+'</div>\'"></div>';
+                html += '<div class="w-full h-40 rounded-lg mb-3 overflow-hidden bg-gray-50"><img src="'+_escH(p.image_url)+'" alt="'+_escH(p.name)+'" class="w-full h-full object-contain" onerror="this.style.display=\'none\';this.parentNode.classList.add(\'flex\',\'items-center\',\'justify-center\',\'text-5xl\');this.parentNode.textContent=\''+(catIcons[p.category]||'\ud83d\udecd\ufe0f')+'\'"></div>';
             } else {
                 html += '<div class="w-full h-40 bg-gradient-to-br from-gray-50 to-orange-50 rounded-lg mb-3 flex items-center justify-center text-5xl">' + (catIcons[p.category]||'\ud83d\udecd\ufe0f') + '</div>';
             }

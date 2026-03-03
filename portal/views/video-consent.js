@@ -49,7 +49,7 @@ try {
     }
     c.innerHTML = html;
 } catch(e) {
-    c.innerHTML = '<div class="text-red-600 p-4">Fehler: '+e.message+'</div>';
+    c.innerHTML = '<div class="text-red-600 p-4">Fehler: '+_escH(e.message)+'</div>';
 }
 };
 
