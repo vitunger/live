@@ -42,7 +42,7 @@ function _renderImagePreview(containerId, currentUrl) {
     var el = document.getElementById(containerId);
     if(!el) return;
     if(currentUrl) {
-        el.innerHTML = '<div class="flex items-center space-x-3"><img src="'+_escH(currentUrl)+'" class="w-16 h-16 rounded-lg object-contain bg-gray-50 border" onerror="this.src=\'\'"><span class="text-xs text-gray-400 truncate max-w-[200px]">'+currentUrl.split('/').pop()+'</span></div>';
+        el.innerHTML = '<div class="flex items-center space-x-3"><img src="'+currentUrl+'" class="w-16 h-16 rounded-lg object-contain bg-gray-50 border" onerror="this.src=\'\'"><span class="text-xs text-gray-400 truncate max-w-[200px]">'+currentUrl.split('/').pop()+'</span></div>';
     } else {
         el.innerHTML = '<span class="text-xs text-gray-400">Kein Bild</span>';
     }
@@ -116,7 +116,7 @@ export async function renderHqShopOrders() {
     if(!oEl) return;
     oEl.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-vit-orange"></div></div>';
     try {
-        var { data: orders, error } = await _sb().from('shop_orders').select('*, standort:standorte(name, ort), items:shop_order_items(*, product:shop_products(name))').order('created_at', {ascending:false}).limit(50);
+        var { data: orders, error } = await _sb().from('shop_orders').select('*, standort:standorte(name, adresse), items:shop_order_items(*, product:shop_products(name))').order('created_at', {ascending:false}).limit(50);
         if(error) throw error;
         if(!orders || !orders.length) { oEl.innerHTML = '<p class="text-center text-gray-400 py-8">Noch keine Bestellungen eingegangen.</p>'; return; }
 
@@ -138,7 +138,7 @@ export async function renderHqShopOrders() {
             h += '<div class="flex items-center space-x-3"><span class="font-mono text-sm font-bold text-gray-700">'+o.order_number+'</span>';
             h += '<span class="text-xs px-2 py-0.5 rounded-full font-semibold '+(statusC[o.status]||'')+'">'+( statusL[o.status]||o.status)+'</span></div>';
             h += '<span class="text-lg font-bold text-gray-800">'+fmtEur(o.total)+'</span></div>';
-            h += '<p class="text-sm text-gray-600 mb-1">📍 <strong>'+(o.standort?.name||'?')+'</strong>'+(o.standort?.ort?' · '+o.standort.ort:'')+'</p>';
+            h += '<p class="text-sm text-gray-600 mb-1">📍 <strong>'+(o.standort?.name||'?')+'</strong>'+(o.standort?.adresse?' · '+o.standort.adresse:'')+'</p>';
             h += '<p class="text-xs text-gray-500 mb-2">'+itemList+'</p>';
             if(o.notes) h += '<p class="text-xs text-gray-400 italic mb-2">💬 '+_escH(o.notes)+'</p>';
             h += '<p class="text-xs text-gray-400 mb-3">Bestellt: '+fmtDate(o.created_at)+'</p>';
@@ -175,7 +175,7 @@ export async function renderHqShopOrders() {
             h += '</div></div>';
         });
         oEl.innerHTML = h;
-    } catch(err) { console.error('renderHqShopOrders:', err); oEl.innerHTML = '<p class="text-center text-red-400 py-4">Fehler: '+_escH(err.message)+'</p>'; }
+    } catch(err) { console.error('renderHqShopOrders:', err); oEl.innerHTML = '<p class="text-center text-red-400 py-4">Fehler: '+err.message+'</p>'; }
 }
 
 // ===== CANCEL ORDER (NEW) =====
@@ -302,7 +302,7 @@ export async function renderHqShopProducts() {
             h += '</div>';
         });
         pEl.innerHTML = h || '<p class="text-center text-gray-400 py-8">Keine Produkte angelegt.</p>';
-    } catch(err) { console.error('renderHqShopProducts:', err); pEl.innerHTML = '<p class="text-center text-red-400 py-4">Fehler: '+_escH(err.message)+'</p>'; }
+    } catch(err) { console.error('renderHqShopProducts:', err); pEl.innerHTML = '<p class="text-center text-red-400 py-4">Fehler: '+err.message+'</p>'; }
 }
 
 // ===== TOGGLE PRODUCT ACTIVE =====
@@ -499,7 +499,7 @@ async function loadVariantList(productId) {
     if(!el) return;
     el.innerHTML = '<div class="text-center py-4 text-xs text-gray-400">Laden...</div>';
     var { data: variants, error } = await _sb().from('shop_product_variants').select('*').eq('product_id', productId).order('sort_index');
-    if(error) { el.innerHTML = '<p class="text-red-400 text-xs">Fehler: '+_escH(error.message)+'</p>'; return; }
+    if(error) { el.innerHTML = '<p class="text-red-400 text-xs">Fehler: '+error.message+'</p>'; return; }
     if(!variants || !variants.length) { el.innerHTML = '<p class="text-gray-400 text-xs text-center py-4">Keine Varianten vorhanden.</p>'; return; }
     var h = '';
     variants.forEach(function(v, idx) {
@@ -629,7 +629,7 @@ export function getTrackingUrl(carrier, number) {
 export async function showPackingList(orderId) {
     var fmtEur = window.fmtEur || function(n){ return parseFloat(n).toFixed(2)+' €'; };
     var fmtDate = window.fmtDate || function(d){ return new Date(d).toLocaleDateString('de-DE'); };
-    var { data: order } = await _sb().from('shop_orders').select('*, standort:standorte(name, strasse, plz, ort), items:shop_order_items(*, product:shop_products(name, sku))').eq('id', orderId).single();
+    var { data: order } = await _sb().from('shop_orders').select('*, standort:standorte(name, adresse), items:shop_order_items(*, product:shop_products(name, sku))').eq('id', orderId).single();
     if(!order) return;
     var h = '<div style="font-family:monospace;font-size:12px;">';
     h += '<div style="text-align:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:12px;">';
@@ -637,8 +637,8 @@ export async function showPackingList(orderId) {
     h += '<p style="margin:4px 0 0;">'+order.order_number+' · '+fmtDate(order.created_at)+'</p></div>';
     h += '<div style="margin-bottom:12px;"><strong>Lieferadresse:</strong><br>';
     h += (order.standort?.name||'')+'<br>';
-    h += (order.standort?.strasse||'')+'<br>';
-    h += (order.standort?.plz||'')+' '+(order.standort?.ort||'')+'</div>';
+    h += (order.standort?.adresse||'')+'<br>';
+    h += (order.standort?.adresse||'')+'</div>';
     h += '<table style="width:100%;border-collapse:collapse;">';
     h += '<tr style="border-bottom:1px solid #000;"><th style="text-align:left;padding:4px;">✓</th><th style="text-align:left;padding:4px;">Menge</th><th style="text-align:left;padding:4px;">Artikel</th><th style="text-align:left;padding:4px;">SKU</th><th style="text-align:left;padding:4px;">Größe</th></tr>';
     (order.items||[]).forEach(function(it) {
