@@ -365,6 +365,98 @@ export function switchWissenSub(containerId, sub) {
 }
 
 // === GLOBAL WISSEN VIEW ===
+// --- PORTAL-GUIDE DATA (Schulungsunterlagen V5) ---
+var portalGuides = [
+    {
+        id: 'home', modul: 'Startseite / Home', icon: '🏠', pflicht: true, lesezeit: '3 Min.',
+        intro: 'Dein persoenliches Dashboard – hier siehst du auf einen Blick, was heute wichtig ist.',
+        schritte: [
+            {title:'Dashboard oeffnen', text:'Nach dem Login landest du automatisch auf der Startseite. Hier siehst du alle wichtigen Kennzahlen als Widgets: offene Aufgaben, naechste Termine, Verkaufsleistung und mehr.'},
+            {title:'Widgets anpassen', text:'Klicke oben rechts auf das Zahnrad-Symbol, um Widgets ein- oder auszublenden. Du kannst selbst entscheiden, welche Informationen du auf deinem Dashboard sehen moechtest.'},
+            {title:'Quick Actions nutzen', text:'Unterhalb der Widgets findest du Schnellzugriffe: Neuen Lead erfassen, Termin anlegen, Aufgabe erstellen – alles mit einem Klick erreichbar.'},
+            {title:'Tipp', text:'Schau morgens kurz auf dein Dashboard – so hast du in 30 Sekunden den Ueberblick ueber deinen Tag.'}
+        ]
+    },
+    {
+        id: 'verkauf', modul: 'Verkauf / Pipeline', icon: '💰', pflicht: true, lesezeit: '5 Min.',
+        intro: 'Deine Verkaufs-Pipeline – vom ersten Kontakt bis zum Abschluss, alles an einem Ort.',
+        schritte: [
+            {title:'Pipeline oeffnen', text:'Klicke in der Sidebar auf "Verkauf". Du siehst ein Kanban-Board mit Spalten fuer jede Verkaufsphase: Lead, Beratung, Angebot, Verhandlung, Gewonnen.'},
+            {title:'Neuen Lead erfassen', text:'Klicke auf "+ Neuer Lead" oben rechts. Gib den Namen des Kunden, sein Interesse (z.B. E-Bike Trekking) und den geschaetzten Wert ein. Der Lead erscheint in der Spalte "Lead".'},
+            {title:'Lead verschieben', text:'Ziehe eine Karte per Drag & Drop in die naechste Spalte, wenn sich der Status aendert. Beispiel: Kunde war zur Probefahrt → verschiebe von "Lead" nach "Beratung".'},
+            {title:'Details bearbeiten', text:'Klicke auf eine Lead-Karte, um Details zu sehen und zu bearbeiten: Notizen hinzufuegen, Wiedervorlage setzen, Wert anpassen.'},
+            {title:'Wochenansicht', text:'Wechsle zum Tab "Woche", um zu sehen welche Deals diese Woche Aktivitaet brauchen.'},
+            {title:'Tipp', text:'Pflege deine Pipeline taeglich – nur aktuelle Daten ermoeglichen echte Verkaufsanalysen. Ziel: Jeder Kundenkontakt wird erfasst.'}
+        ]
+    },
+    {
+        id: 'kalender', modul: 'Kalender / Termine', icon: '📅', pflicht: true, lesezeit: '4 Min.',
+        intro: 'Alle Termine deines Standorts – eTermin-Buchungen und manuelle Termine an einem Ort.',
+        schritte: [
+            {title:'Kalender oeffnen', text:'Klicke in der Sidebar auf "Kalender". Du siehst eine Wochen- oder Monatsansicht mit allen Terminen deines Standorts.'},
+            {title:'Termine aus eTermin', text:'Kunden-Buchungen ueber eure Website erscheinen automatisch im Kalender (blaue Markierung). Diese werden alle 15 Minuten synchronisiert.'},
+            {title:'Manuellen Termin anlegen', text:'Klicke auf einen freien Zeitslot oder auf "+ Neuer Termin". Waehle Typ (Beratung, Werkstatt, Abholung), trage Kunde und Uhrzeit ein.'},
+            {title:'Termin bearbeiten', text:'Klicke auf einen bestehenden Termin, um Details zu aendern, Notizen hinzuzufuegen oder den Termin zu verschieben.'},
+            {title:'Tipp', text:'Nutze den Kalender auch fuer interne Termine wie Team-Meetings oder Lieferanten-Besuche – so hat das ganze Team den Ueberblick.'}
+        ]
+    },
+    {
+        id: 'aufgaben', modul: 'Aufgaben (Todos)', icon: '✅', pflicht: true, lesezeit: '4 Min.',
+        intro: 'Aufgabenverwaltung im Todoist-Stil – fuer dich und dein Team.',
+        schritte: [
+            {title:'Aufgaben oeffnen', text:'Klicke in der Sidebar auf "Aufgaben". Du siehst deine persoenliche Aufgabenliste mit den Filtern: Heute, Demnachst, Alle.'},
+            {title:'Neue Aufgabe erstellen', text:'Klicke auf "+ Neue Aufgabe". Gib einen Titel ein, setze optional ein Faelligkeitsdatum und waehle eine Prioritaet (P1=dringend bis P4=niedrig).'},
+            {title:'Aufgabe delegieren', text:'Waehle im Aufgaben-Detail unter "Zugewiesen an" einen Mitarbeiter aus. Der Mitarbeiter sieht die Aufgabe in seiner eigenen Liste.'},
+            {title:'Aufgabe erledigen', text:'Klicke auf den Kreis links neben der Aufgabe, um sie als erledigt zu markieren. Erledigte Aufgaben verschwinden aus der aktiven Liste.'},
+            {title:'Sektionen nutzen', text:'Erstelle Sektionen (z.B. "Werkstatt", "Bestellungen", "Marketing"), um deine Aufgaben thematisch zu gruppieren.'},
+            {title:'Tipp', text:'Erstelle dir eine Morgenroutine: Aufgaben-Tab oeffnen, "Heute"-Filter waehlen, von oben nach unten abarbeiten.'}
+        ]
+    },
+    {
+        id: 'controlling', modul: 'Controlling / BWA', icon: '📊', pflicht: true, lesezeit: '5 Min.',
+        intro: 'Deine Finanzen im Blick – BWA hochladen, KI-Analyse erhalten, Plan vs. Ist vergleichen.',
+        schritte: [
+            {title:'Controlling oeffnen', text:'Klicke in der Sidebar auf "Controlling". Du siehst eine Uebersicht deiner aktuellen Finanzkennzahlen.'},
+            {title:'BWA hochladen', text:'Klicke auf "BWA hochladen" und waehle deine BWA-Datei (Excel oder PDF vom Steuerberater). Das System erkennt automatisch das Format – es werden 6+ verschiedene Steuerberater-Formate unterstuetzt.'},
+            {title:'KI-Analyse starten', text:'Nach dem Upload analysiert die KI automatisch deine BWA. Du erhaeltst: Umsatzentwicklung, Rohertragsmarge, Kostenstruktur, Auffaelligkeiten und konkrete Handlungsempfehlungen.'},
+            {title:'Plan/Ist-Vergleich', text:'Wechsle zum Tab "Plan vs. Ist", um deine Planzahlen mit den tatsaechlichen Ergebnissen zu vergleichen. Abweichungen werden farblich hervorgehoben (gruen = besser als Plan, rot = unter Plan).'},
+            {title:'Jahresplan hochladen', text:'Unter "Plan hochladen" kannst du deinen Jahresplan als Excel-Datei hochladen. Dieser bildet die Basis fuer den Plan/Ist-Vergleich.'},
+            {title:'Tipp', text:'Lade deine BWA monatlich hoch – idealerweise direkt wenn sie vom Steuerberater kommt (bis zum 15. des Folgemonats). So bleibst du immer am Puls deiner Zahlen.'}
+        ]
+    },
+    {
+        id: 'aktenschrank', modul: 'Aktenschrank', icon: '🗄️', pflicht: false, lesezeit: '2 Min.',
+        intro: 'Dein digitaler Aktenschrank – alle wichtigen Dokumente zentral gespeichert.',
+        schritte: [
+            {title:'Aktenschrank oeffnen', text:'Klicke in der Sidebar auf "Aktenschrank". Du siehst eine Ordnerstruktur fuer deine Dokumente.'},
+            {title:'Dokument hochladen', text:'Oeffne einen Ordner und klicke auf "Datei hochladen". Waehle dein Dokument (PDF, Word, Excel, Bilder). Die Datei wird sicher in der Cloud gespeichert.'},
+            {title:'Dokument finden', text:'Nutze die Suchfunktion oben oder navigiere ueber die Ordnerstruktur. Ordner werden vom HQ vorgegeben, du kannst eigene Unterordner anlegen.'},
+            {title:'Tipp', text:'Lege Vertraege, Versicherungspolicen und wichtige Korrespondenz hier ab – so hast du alles griffbereit, auch von unterwegs.'}
+        ]
+    },
+    {
+        id: 'allgemein', modul: 'Allgemein (Ziele & Journal)', icon: '🎯', pflicht: false, lesezeit: '4 Min.',
+        intro: 'Deine Jahresziele, Monatplaene und das Partner-Journal – die strategische Steuerung deines Standorts.',
+        schritte: [
+            {title:'Allgemein oeffnen', text:'Klicke in der Sidebar auf "Allgemein". Du siehst Tabs fuer Jahresziele, Monatsplan und Journal.'},
+            {title:'Jahresziele definieren', text:'Im Tab "Jahresziele" legst du deine strategischen Ziele fest: Umsatzziel, Margen-Ziel, Mitarbeiter-Entwicklung, Marketing-Fokus. Diese werden gemeinsam mit deinem Trainer/HQ besprochen.'},
+            {title:'Monatsplan fuehren', text:'Im Tab "Monatsplan" planst du konkrete Massnahmen fuer den aktuellen Monat. Was steht an? Welche Aktionen? Wer ist verantwortlich?'},
+            {title:'Journal pflegen', text:'Nach jedem Gespraech mit deinem Trainer oder HQ kannst du im Journal ein Protokoll anlegen: Was wurde besprochen? Welche Aufgaben ergeben sich? Was braucht das HQ?'},
+            {title:'Tipp', text:'Fuehre das Journal konsequent – es hilft dir und dem HQ, den Ueberblick zu behalten und Fortschritte sichtbar zu machen.'}
+        ]
+    },
+    {
+        id: 'support', modul: 'Support', icon: '🎫', pflicht: false, lesezeit: '2 Min.',
+        intro: 'Brauchst du Hilfe? Erstelle ein Support-Ticket und wir kuemmern uns darum.',
+        schritte: [
+            {title:'Support oeffnen', text:'Klicke in der Sidebar auf "Support". Du siehst eine Uebersicht deiner bestehenden Tickets.'},
+            {title:'Neues Ticket erstellen', text:'Klicke auf "+ Neues Ticket". Waehle eine Kategorie (IT, Einkauf, Marketing, Allgemein), beschreibe dein Anliegen und setze eine Prioritaet.'},
+            {title:'Ticket verfolgen', text:'Jedes Ticket hat einen Status: Offen, In Bearbeitung, Erledigt. Du wirst benachrichtigt, wenn sich der Status aendert oder wenn das HQ eine Rueckfrage hat.'},
+            {title:'Tipp', text:'Je genauer du das Problem beschreibst (inkl. Screenshots), desto schneller koennen wir helfen. Nutze das Feedback-Widget (rechts unten) fuer schnelle Bug-Meldungen.'}
+        ]
+    }
+];
+
 var currentWissenBereich = 'all';
 window.currentWissenBereich = currentWissenBereich;
 var currentWissenTyp = 'akademie';
@@ -437,6 +529,49 @@ export function renderWissenGlobal() {
         items.forEach(function(fq,i){
             h+='<div class="vit-card p-4 hover:shadow-md transition cursor-pointer" onclick="var fa=this.querySelector(\'.faq-a\');fa.style.display=fa.style.display===\'none\'?\'block\':\'none\'"><div class="flex items-center space-x-2 mb-1"><span class="text-xs px-2 py-0.5 bg-gray-100 rounded-full">'+bereichIcons[fq._bereich]+'</span><span class="font-semibold text-sm">'+fq.frage+'</span></div><div class="faq-a text-xs text-gray-500 mt-2" style="display:none;">'+fq.antwort+'</div></div>';
         });
+    } else if(currentWissenTyp==='portal'){
+        // Portal-Guide: Schulungsunterlagen fuer jedes Go-Live Modul
+        var guides = portalGuides;
+        var search2=(document.getElementById('wissenSearch')||{}).value||'';
+        if(search2){
+            var s2=search2.toLowerCase();
+            guides=guides.filter(function(g){return g.modul.toLowerCase().indexOf(s2)>-1 || g.intro.toLowerCase().indexOf(s2)>-1 || g.schritte.some(function(st){return st.title.toLowerCase().indexOf(s2)>-1||st.text.toLowerCase().indexOf(s2)>-1;});});
+        }
+        if(!guides.length){
+            h='<div class="text-center text-gray-400 py-8"><p class="text-lg mb-2">🔍</p><p class="text-sm">Keine Anleitungen gefunden.</p></div>';
+        } else {
+            h+='<div class="mb-6 p-4 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl"><div class="flex items-center space-x-3"><span class="text-2xl">📱</span><div><p class="font-bold text-gray-800">Portal-Anleitungen</p><p class="text-xs text-gray-500">Kurze Schritt-fuer-Schritt-Anleitungen fuer alle Module. Klicke auf ein Modul, um die Anleitung zu oeffnen.</p></div></div></div>';
+            guides.forEach(function(g){
+                var stepsHtml='';
+                g.schritte.forEach(function(st,si){
+                    var isTipp=st.title==='Tipp';
+                    if(isTipp){
+                        stepsHtml+='<div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg"><p class="text-xs"><span class="font-bold text-amber-700">💡 Tipp:</span> <span class="text-amber-800">'+_escH(st.text)+'</span></p></div>';
+                    } else {
+                        stepsHtml+='<div class="flex space-x-3 py-2'+(si>0?' border-t border-gray-100':'')+'"><div class="flex-shrink-0 w-6 h-6 rounded-full bg-vit-orange text-white flex items-center justify-center text-xs font-bold">'+(si+1)+'</div><div><p class="text-sm font-semibold text-gray-800">'+_escH(st.title)+'</p><p class="text-xs text-gray-600 mt-0.5 leading-relaxed">'+_escH(st.text)+'</p></div></div>';
+                    }
+                });
+                var pflichtBadge=g.pflicht?'<span class="text-[10px] px-2 py-0.5 bg-red-100 text-red-600 rounded-full font-bold">Pflicht-Modul</span>':'<span class="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full font-bold">Optional</span>';
+                h+='<div class="vit-card overflow-hidden hover:shadow-md transition">'+
+                    '<div class="p-4 cursor-pointer flex items-center justify-between" onclick="var det=document.getElementById(\'pg_'+g.id+'\');det.style.display=det.style.display===\'none\'?\'block\':\'none\';this.querySelector(\'.pg-chevron\').classList.toggle(\'rotate-180\')">'+
+                        '<div class="flex items-center space-x-3">'+
+                            '<span class="text-2xl">'+g.icon+'</span>'+
+                            '<div>'+
+                                '<div class="flex items-center space-x-2"><span class="font-semibold text-gray-800">'+_escH(g.modul)+'</span>'+pflichtBadge+'</div>'+
+                                '<p class="text-xs text-gray-500 mt-0.5">'+_escH(g.intro)+'</p>'+
+                            '</div>'+
+                        '</div>'+
+                        '<div class="flex items-center space-x-3">'+
+                            '<span class="text-xs text-gray-400">'+g.lesezeit+'</span>'+
+                            '<svg class="pg-chevron w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>'+
+                        '</div>'+
+                    '</div>'+
+                    '<div id="pg_'+g.id+'" style="display:none" class="px-4 pb-4 border-t border-gray-100">'+
+                        '<div class="pt-3">'+stepsHtml+'</div>'+
+                    '</div>'+
+                '</div>';
+            });
+        }
     }
 
     if(!h) h='<div class="text-center text-gray-400 py-8"><p class="text-lg mb-2">🔍</p><p class="text-sm">Keine Eintraege gefunden.</p></div>';
