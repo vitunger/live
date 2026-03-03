@@ -31,6 +31,20 @@ export async function renderBenchmarks(forceMonat, forceJahr) {
         if(resp.error) throw resp.error;
         var d = resp.data;
         if(!d || d.error === 'no_data') { el.innerHTML = '<p class="text-center text-gray-400 py-8">Noch keine BWA-Daten vorhanden. Lade eine BWA hoch, um den Benchmark zu sehen.</p>'; return; }
+        if(d.error === 'insufficient_data') {
+            var cnt = d.anzahl_standorte || 0;
+            var minReq = d.minimum_required || 5;
+            el.innerHTML = '<div class="vit-card p-8 text-center vit-dashed">'
+                + '<div class="text-5xl mb-3">📊</div>'
+                + '<h2 class="text-lg font-bold text-gray-800 mb-2">Benchmark noch nicht verf\u00fcgbar</h2>'
+                + '<p class="text-sm text-gray-500 mb-4">F\u00fcr einen aussagekr\u00e4ftigen Netzwerk-Vergleich werden mindestens <strong>' + minReq + ' Standorte</strong> mit BWA-Daten ben\u00f6tigt.</p>'
+                + '<div class="inline-flex items-center gap-2 bg-orange-50 text-vit-orange px-4 py-2 rounded-lg font-semibold text-sm">'
+                + '<span>' + cnt + ' von ' + minReq + ' Standorten</span>'
+                + '</div>'
+                + '<p class="text-xs text-gray-400 mt-4">Sobald gen\u00fcgend BWA-Daten vorliegen, wird der Benchmark automatisch freigeschaltet.</p>'
+                + '</div>';
+            return;
+        }
 
         var own = d.own || {};
         var netz = d.netzwerk || {};
