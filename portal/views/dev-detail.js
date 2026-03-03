@@ -973,7 +973,7 @@ export async function devEntwicklungChatSend(subId) {
     if (container && text) {
         var userDiv = document.createElement('div');
         userDiv.className = 'flex justify-end';
-        userDiv.innerHTML = '<div class="max-w-[85%] bg-orange-50 border border-orange-200 rounded-lg px-3 py-2"><p class="text-sm text-gray-700 whitespace-pre-wrap">' + text + '</p></div>';
+        userDiv.innerHTML = '<div class="max-w-[85%] bg-orange-50 border border-orange-200 rounded-lg px-3 py-2"><p class="text-sm text-gray-700 whitespace-pre-wrap">' + _escH(text) + '</p></div>';
         container.appendChild(userDiv);
         container.scrollTop = container.scrollHeight;
     }
@@ -1005,7 +1005,7 @@ export async function devEntwicklungChatSend(subId) {
                 try { var _parsed = JSON.parse(_antwort.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim()); _antwort = _parsed.antwort || _antwort; } catch(e) {}
                 _antwort = _antwort.replace(/```json\n?/g,'').replace(/```\n?/g,'').replace(/^\s*\{[^}]*"antwort"\s*:\s*"/,'').replace(/",\s*"neues_mockup".*$/s,'').replace(/"\s*\}\s*$/,'');
             }
-            kiDiv.innerHTML = '<div class="max-w-[85%] border border-gray-200 rounded-lg px-3 py-2 bg-white"><div class="flex items-center gap-1 mb-1"><span class="text-xs">\uD83E\uDD16</span><span class="text-[10px] text-gray-400">jetzt</span>' + mockupBadge + '</div><p class="text-sm text-gray-700 whitespace-pre-wrap">' + _antwort + '</p></div>';
+            kiDiv.innerHTML = '<div class="max-w-[85%] border border-gray-200 rounded-lg px-3 py-2 bg-white"><div class="flex items-center gap-1 mb-1"><span class="text-xs">\uD83E\uDD16</span><span class="text-[10px] text-gray-400">jetzt</span>' + mockupBadge + '</div><p class="text-sm text-gray-700 whitespace-pre-wrap">' + _escH(_antwort) + '</p></div>';
             container.appendChild(kiDiv);
             container.scrollTop = container.scrollHeight;
         }

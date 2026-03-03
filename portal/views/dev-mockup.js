@@ -89,7 +89,7 @@ export async function devMockupChatSend(subId) {
             if (a.type.startsWith('image/')) attHtml += '<img src="'+a.url+'" class="max-w-[200px] rounded mb-1" />';
             if (a.type.startsWith('audio/')) attHtml += '<div class="text-xs text-gray-500 mb-1">🎤 Sprachnotiz</div>';
         });
-        msgDiv.innerHTML = '<div class="max-w-[85%] border border-pink-200 rounded-lg px-3 py-2 bg-pink-50"><div class="flex items-center gap-1 mb-1"><span class="text-xs">👤</span><span class="text-[10px] text-gray-400">jetzt</span></div>'+attHtml+'<p class="text-sm text-gray-700 whitespace-pre-wrap">'+(text||'[Sprache/Bild]')+'</p></div>';
+        msgDiv.innerHTML = '<div class="max-w-[85%] border border-pink-200 rounded-lg px-3 py-2 bg-pink-50"><div class="flex items-center gap-1 mb-1"><span class="text-xs">👤</span><span class="text-[10px] text-gray-400">jetzt</span></div>'+attHtml+'<p class="text-sm text-gray-700 whitespace-pre-wrap">'+_escH(text||'[Sprache/Bild]')+'</p></div>';
         container.appendChild(msgDiv);
         container.scrollTop = container.scrollHeight;
     }
@@ -126,7 +126,7 @@ export async function devMockupChatSend(subId) {
                 try { var _parsed = JSON.parse(_antwort.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim()); _antwort = _parsed.antwort || _antwort; } catch(e) {}
                 _antwort = _antwort.replace(/```json\n?/g,'').replace(/```\n?/g,'').replace(/^\s*\{[^}]*"antwort"\s*:\s*"/,'').replace(/",\s*"neues_mockup".*$/s,'').replace(/"\s*\}\s*$/,'');
             }
-            kiDiv.innerHTML = '<div class="max-w-[85%] border border-gray-200 rounded-lg px-3 py-2 bg-white"><div class="flex items-center gap-1 mb-1"><span class="text-xs">\uD83E\uDD16</span><span class="text-[10px] text-gray-400">jetzt</span>'+mockupBadge+'</div><p class="text-sm text-gray-700 whitespace-pre-wrap">'+_antwort+'</p></div>';
+            kiDiv.innerHTML = '<div class="max-w-[85%] border border-gray-200 rounded-lg px-3 py-2 bg-white"><div class="flex items-center gap-1 mb-1"><span class="text-xs">\uD83E\uDD16</span><span class="text-[10px] text-gray-400">jetzt</span>'+mockupBadge+'</div><p class="text-sm text-gray-700 whitespace-pre-wrap">'+_escH(_antwort)+'</p></div>';
             container.appendChild(kiDiv);
             container.scrollTop = container.scrollHeight;
         }

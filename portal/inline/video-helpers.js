@@ -191,7 +191,7 @@
             } catch(e) {
                 var errMsg = e.message || e.toString();
                 errors.push(file.name + ': ' + errMsg);
-                if(fStatus) fStatus.innerHTML = '<span class="text-red-500">❌ ' + errMsg.substring(0,40) + '</span>';
+                if(fStatus) fStatus.innerHTML = '<span class="text-red-500">❌ ' + _escH(errMsg.substring(0,40)) + '</span>';
             }
         }
 

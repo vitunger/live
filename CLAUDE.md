@@ -374,7 +374,7 @@ claude/db-schema-xyz            – Datenbank-Änderungen
 | HTML-Nesting: Views außerhalb `<main>` (Cleanup-Folgeschaden) | Kritisch | ✅ Behoben – orphaned `</div>` Tags entfernt, controllingView closing tag ergänzt |
 | Login-Fehlermeldung englisch ("Invalid login credentials") | Mittel | ✅ Behoben – Deutsche UX-Texte für alle Fehlertypen |
 | Duplikat-Module (pdf-wawi, billing-inline, feedback in render-system) | Mittel | ✅ Behoben – 3 Module konsolidiert, ~1.660 Zeilen entfernt |
-| innerHTML XSS: err.message + User-Daten ohne escH | Hoch | ✅ Behoben – 50x err.message + 8x User-Daten escaped (27 Dateien) |
+| innerHTML XSS: err.message + User-Daten ohne escH | Hoch | ✅ Behoben – Audit 03.03: 22 kritische Stellen in 12 Dateien gefixt (error msgs, chat text, Dateinamen, DB-Daten) |
 
 ---
 

@@ -145,7 +145,7 @@ export async function renderKzMitarbeiter() {
         if(sel && sel.options.length<=1){
             var standorte=[];
             users.forEach(function(u){ var sn=u.standorte?u.standorte.name:'HQ'; if(standorte.indexOf(sn)===-1)standorte.push(sn); });
-            standorte.sort().forEach(function(s){sel.innerHTML+='<option value="'+s+'">'+s+'</option>';});
+            standorte.sort().forEach(function(s){sel.innerHTML+='<option value="'+_escH(s)+'">'+_escH(s)+'</option>';});
         }
     } catch(err) { console.error('Mitarbeiter:', err); body.innerHTML='<tr><td colspan="7" class="text-center py-4 text-red-400">Fehler: '+_escH(err.message)+'</td></tr>'; }
 }

@@ -86,7 +86,7 @@ export function wawiRenderStatus(conn) {
         el.innerHTML = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">✅ Verbunden' +
             (conn.letzter_sync ? ' • Letzter Sync: ' + ago : '') + '</span>';
     } else if(conn && conn.fehler_count > 0) {
-        el.innerHTML = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">❌ Fehler: ' + (conn.letzter_fehler || 'Unbekannt').substring(0,50) + '</span>';
+        el.innerHTML = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">❌ Fehler: ' + _escH((conn.letzter_fehler || 'Unbekannt').substring(0,50)) + '</span>';
     } else {
         el.innerHTML = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">⚪ Nicht verbunden</span>';
     }
@@ -125,9 +125,9 @@ window.wawiTestConnection = async function() {
         }});
         var data = r.data;
         if(data && data.success) {
-            resEl.innerHTML = '<div class="p-3 bg-green-50 border border-green-200 rounded-lg"><p class="text-sm text-green-700 font-semibold">✅ ' + (data.message || 'Verbindung erfolgreich!') + '</p></div>';
+            resEl.innerHTML = '<div class="p-3 bg-green-50 border border-green-200 rounded-lg"><p class="text-sm text-green-700 font-semibold">✅ ' + _escH(data.message || 'Verbindung erfolgreich!') + '</p></div>';
         } else {
-            resEl.innerHTML = '<div class="p-3 bg-red-50 border border-red-200 rounded-lg"><p class="text-sm text-red-700">❌ ' + (data && data.error ? data.error : 'Unbekannter Fehler') + '</p></div>';
+            resEl.innerHTML = '<div class="p-3 bg-red-50 border border-red-200 rounded-lg"><p class="text-sm text-red-700">❌ ' + _escH(data && data.error ? data.error : 'Unbekannter Fehler') + '</p></div>';
         }
     } catch(e) {
         resEl.innerHTML = '<div class="p-3 bg-red-50 border border-red-200 rounded-lg"><p class="text-sm text-red-700">❌ Fehler: ' + _escH(e.message) + '</p></div>';

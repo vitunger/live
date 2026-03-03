@@ -801,9 +801,9 @@ try {
     }});
     var data = r.data;
     if(data && data.success) {
-        if(resEl) resEl.innerHTML = '<p class="text-[10px] text-green-600 font-semibold">\u2705 ' + (data.message || 'Verbindung erfolgreich!') + '</p>';
+        if(resEl) resEl.innerHTML = '<p class="text-[10px] text-green-600 font-semibold">\u2705 ' + _escH(data.message || 'Verbindung erfolgreich!') + '</p>';
     } else {
-        if(resEl) resEl.innerHTML = '<p class="text-[10px] text-red-600">\u274c ' + (data && data.error ? data.error : 'Fehler') + '</p>';
+        if(resEl) resEl.innerHTML = '<p class="text-[10px] text-red-600">\u274c ' + _escH(data && data.error ? data.error : 'Fehler') + '</p>';
     }
 } catch(e) {
     if(resEl) resEl.innerHTML = '<p class="text-[10px] text-red-600">\u274c ' + _escH(e.message) + '</p>';
@@ -936,7 +936,7 @@ try {
     if(sel && sel.options.length<=1){
         var standorte=[];
         users.forEach(function(u){ var sn=u.standorte?u.standorte.name:'HQ'; if(standorte.indexOf(sn)===-1)standorte.push(sn); });
-        standorte.sort().forEach(function(s){sel.innerHTML+='<option value="'+s+'">'+s+'</option>';});
+        standorte.sort().forEach(function(s){sel.innerHTML+='<option value="'+_escH(s)+'">'+_escH(s)+'</option>';});
     }
 } catch(err) { console.error('Mitarbeiter:', err); body.innerHTML='<tr><td colspan="7" class="text-center py-4 text-red-400">Fehler: '+_escH(err.message)+'</td></tr>'; }
 }

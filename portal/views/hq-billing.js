@@ -73,7 +73,7 @@ export async function loadBillingOverview() {
     if (tbl) tbl.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-400"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></td></tr>';
 
     var result = await billingApi('billing-overview', { month: currentBillingMonth });
-    if (result.error) { if (tbl) tbl.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">Fehler: ' + result.error + '</td></tr>'; return; }
+    if (result.error) { if (tbl) tbl.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">Fehler: ' + _escH(result.error) + '</td></tr>'; return; }
 
     billingData.overview = result.standorte || [];
     var ov = billingData.overview;

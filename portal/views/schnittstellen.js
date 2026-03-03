@@ -790,8 +790,8 @@ window.testConnector = async function(id) {
                 addLog(id, 'ok', 'Verbindungstest erfolgreich – ' + (data.calendars || 0) + ' Kalender');
                 renderStatusGrid();
             } else {
-                if (el) el.innerHTML = '<span class="text-xs text-red-500 font-semibold">❌ ' + (data.error || 'Unbekannter Fehler') + '</span>';
-                addLog(id, 'err', 'Test fehlgeschlagen: ' + (data.error || ''));
+                if (el) el.innerHTML = '<span class="text-xs text-red-500 font-semibold">❌ ' + _escH(data.error || 'Unbekannter Fehler') + '</span>';
+                addLog(id, 'err', 'Test fehlgeschlagen: ' + _escH(data.error || ''));
             }
         })
         .catch(function(err) {

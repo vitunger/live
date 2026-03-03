@@ -215,7 +215,7 @@ for(var i=0; i<total; i++) {
     } catch(e) {
         var errMsg = e.message || e.toString();
         errors.push(file.name + ': ' + errMsg);
-        if(fStatus) fStatus.innerHTML = '<span class="text-red-500">❌ ' + errMsg.substring(0,40) + '</span>';
+        if(fStatus) fStatus.innerHTML = '<span class="text-red-500">❌ ' + _escH(errMsg.substring(0,40)) + '</span>';
     }
 }
 
@@ -563,7 +563,7 @@ window.vpChatSend = async function(videoId) {
     // Add message to chat UI immediately
     var chatEl = document.getElementById('vpChatMessages');
     if(chatEl) {
-        chatEl.innerHTML += '<div class="flex gap-2"><div class="w-6 h-6 rounded-full bg-vit-orange text-white flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">HQ</div><div class="bg-white rounded-lg rounded-tl-sm px-3 py-2 text-xs shadow-sm max-w-[90%]">'+msg+'<div class="text-[10px] text-gray-300 mt-1">gerade eben</div></div></div>';
+        chatEl.innerHTML += '<div class="flex gap-2"><div class="w-6 h-6 rounded-full bg-vit-orange text-white flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">HQ</div><div class="bg-white rounded-lg rounded-tl-sm px-3 py-2 text-xs shadow-sm max-w-[90%]">'+_escH(msg)+'<div class="text-[10px] text-gray-300 mt-1">gerade eben</div></div></div>';
         chatEl.innerHTML += '<div id="vpChatTyping" class="flex gap-2 justify-end"><div class="bg-blue-50 rounded-lg px-3 py-2 text-xs text-blue-400"><span class="animate-pulse">KI denkt nach...</span></div><div class="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">KI</div></div>';
         chatEl.scrollTop = chatEl.scrollHeight;
     }
@@ -643,7 +643,7 @@ function vpExtractPersonFrames(persons) {
             // Test if canvas is tainted
             var dataUrl = canvas.toDataURL('image/jpeg', 0.7);
             var container = document.getElementById('vpFrame_' + item.idx);
-            if(container) container.innerHTML = '<img src="' + dataUrl + '" class="w-full h-full object-cover" alt="Frame"/>';
+            if(container) container.innerHTML = '<img src="' + _escH(dataUrl) + '" class="w-full h-full object-cover" alt="Frame"/>';
         } catch(e) {
             // Tainted canvas or other error — stop trying
             console.warn('Frame capture failed (CORS):', e.message);
@@ -698,7 +698,7 @@ window.vpSeekFrame = function(timestamp, personIdx) {
             ctx.drawImage(video, sx, sy, size, size, 0, 0, 160, 160);
             var dataUrl = canvas.toDataURL('image/jpeg', 0.7);
             var container = document.getElementById('vpFrame_' + personIdx);
-            if(container) container.innerHTML = '<img src="' + dataUrl + '" class="w-full h-full object-cover" alt="Frame"/>';
+            if(container) container.innerHTML = '<img src="' + _escH(dataUrl) + '" class="w-full h-full object-cover" alt="Frame"/>';
         } catch(e) { console.warn('Seek frame failed:', e); }
     }
 

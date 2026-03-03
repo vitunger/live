@@ -45,7 +45,7 @@ export function handleFileUpload(input) {
         var parent = input.closest('[onclick]') || input.parentElement;
         if(parent) {
             var origHTML = parent.innerHTML;
-            parent.innerHTML = '<div class="py-4"><p class="text-green-600 font-semibold text-sm">✅ '+name+'</p><p class="text-xs text-gray-400">'+size+' KB hochgeladen</p></div>';
+            parent.innerHTML = '<div class="py-4"><p class="text-green-600 font-semibold text-sm">✅ '+_escH(name)+'</p><p class="text-xs text-gray-400">'+size+' KB hochgeladen</p></div>';
         }
     }
 }
