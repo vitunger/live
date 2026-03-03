@@ -329,6 +329,13 @@ sbUrl()       → window.sbUrl()   // Supabase Project URL (zentralisiert)
 | DB-Migration todo_features_v2 | — | 3 neue Tabellen + 6 Spalten + Storage Bucket + RLS + Indices |
 | Edge Function todo-cron | — | Cron: Erinnerungen (Email via Resend) + wiederkehrende Tasks klonen |
 
+**Offene Aufgaben (aus heutiger Session):**
+
+| Aufgabe | Status | Notizen |
+|---------|--------|---------|
+| Kostenaufschlüsselung-Tab (Buchhaltung) | ⬜ Offen | JS refactored (nutzt jetzt plan_umsatz + plan_werbekosten + HQ-Rechnungen statt billing_annual_strategy). Tab temporär ausgeblendet bis Jahresplan + Marketing-Strategie Daten verfügbar sind. |
+| Jahresstrategie-Tab (Buchhaltung) | ❌ Entfernt | Ersetzt durch Daten aus Finanzen/Jahresplan + Marketing-Strategie |
+
 ### Rollen-IDs
 
 | Rolle | UUID |
