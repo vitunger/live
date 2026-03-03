@@ -24,11 +24,15 @@ const todoState = {
     sections: [],
     labels: [],
     comments: {},
+    teamMembers: [],
+    templates: [],
+    attachments: {},
     filter: 'all',
-    view: 'list',
+    view: 'list',    // 'list' | 'board' | 'stats'
     search: '',
     selectedId: null,
-    collapsedSecs: {}
+    collapsedSecs: {},
+    dragId: null      // for list drag & drop
 };
 
 const TODO_TODAY = new Date().toISOString().slice(0, 10);
@@ -62,6 +66,7 @@ function _sbUser()    { return window.sbUser; }
 function _sbProfile() { return window.sbProfile; }
 function _escH(s)     { return (window.escH || window.escapeHtml || (x => x))(s); }
 function _t(key)      { return (window.t || (k => k))(key); }
+function _showToast(m, type) { return (window.showToast || function(msg){console.warn(msg);})(m, type); }
 
 // ═══════════════════════════════════════════════════════════════
 // DATA LOADING
@@ -72,7 +77,7 @@ export async function loadTodos() {
         var sid = _sbProfile() ? _sbProfile().standort_id : null;
         var isHQ = _sbProfile() && _sbProfile().is_hq;
 
-        // Todos
+        // Todos (with new fields)
         var q = _sb().from('todos').select('*, zugewiesen:zugewiesen_an(name)')
             .order('prio_sort', { ascending: true })
             .order('faellig_am', { ascending: true, nullsFirst: false });
@@ -97,6 +102,21 @@ export async function loadTodos() {
         if (sid && !isHQ) lq = lq.or('standort_id.eq.' + sid + ',standort_id.is.null');
         var lr = await lq;
         todoState.labels = (!lr.error && lr.data) ? lr.data : [];
+
+        // Team Members (for assignee dropdown)
+        try {
+            var tq = _sb().from('users').select('id, name, vorname, nachname').eq('status', 'aktiv');
+            if (sid && !isHQ) tq = tq.eq('standort_id', sid);
+            var tr = await tq;
+            todoState.teamMembers = (!tr.error && tr.data) ? tr.data : [];
+        } catch(e) { todoState.teamMembers = []; }
+
+        // Templates
+        try {
+            var tmq = _sb().from('todo_templates').select('*, todo_template_items(*)').order('name');
+            var tmr = await tmq;
+            todoState.templates = (!tmr.error && tmr.data) ? tmr.data : [];
+        } catch(e) { todoState.templates = []; }
 
         // Store info in sidebar
         var sbI = document.getElementById('todoSbInitials');
@@ -145,8 +165,15 @@ export function todoSetView(v) {
     todoState.view = v;
     var lb = document.getElementById('todoViewListBtn');
     var bb = document.getElementById('todoViewBoardBtn');
-    if (lb) lb.className = 'px-2 py-1 rounded-md text-[11px] ' + (v === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700');
-    if (bb) bb.className = 'px-2 py-1 rounded-md text-[11px] ' + (v === 'board' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700');
+    var sb = document.getElementById('todoViewStatsBtn');
+    var activeClass = 'px-2 py-1 rounded-md text-[11px] bg-white text-gray-900 shadow-sm';
+    var inactiveClass = 'px-2 py-1 rounded-md text-[11px] text-gray-500 hover:text-gray-700';
+    if (lb) lb.className = v === 'list' ? activeClass : inactiveClass;
+    if (bb) bb.className = v === 'board' ? activeClass : inactiveClass;
+    if (sb) sb.className = v === 'stats' ? activeClass : inactiveClass;
+    // Hide quick-add in stats view
+    var qa = document.getElementById('todoQuickAddArea');
+    if (qa) qa.style.display = v === 'stats' ? 'none' : '';
     todoRender();
 }
 
@@ -195,11 +222,12 @@ export function todoRender() {
     var qa = document.getElementById('todoQuickAddArea');
     if (qa) qa.innerHTML = todoQuickAddHTML();
 
-    // List or Board
+    // List or Board or Stats
     var area = document.getElementById('todoListArea');
     if (!area) return;
     if (todoState.view === 'list') area.innerHTML = todoListHTML();
-    else area.innerHTML = todoBoardHTML();
+    else if (todoState.view === 'board') area.innerHTML = todoBoardHTML();
+    else if (todoState.view === 'stats') area.innerHTML = todoStatsHTML();
 
     // Detail panel
     todoRenderDetail();
@@ -324,9 +352,10 @@ export function todoRowHTML(task, depth) {
     var assigneeName = task.zugewiesen && task.zugewiesen.name ? task.zugewiesen.name : null;
     var fmtD = task.faellig_am ? task.faellig_am.slice(8) + '.' + task.faellig_am.slice(5, 7) + '.' : '';
     var lbls = (task.labels || []).map(function(lid) { return todoState.labels.find(function(l) { return l.id === lid; }); }).filter(Boolean);
+    var isBlocked = task.blocked_by && !todoState.todos.find(function(t) { return t.id === task.blocked_by && t.erledigt; });
 
     var h = '<div style="margin-left:' + (depth > 0 ? 28 : 0) + 'px">';
-    h += '<div class="group flex items-start space-x-2 px-3 py-2 rounded-lg cursor-pointer ' + (isSel ? 'bg-yellow-50' : 'hover:bg-gray-50') + ' ' + (task.erledigt ? 'opacity-40' : '') + '" ' + (isSel ? 'style="box-shadow:0 0 0 1px #fed7aa"' : '') + ' onclick="todoSelect(\'' + task.id + '\')">';
+    h += '<div draggable="true" ondragstart="todoListDragStart(event,\'' + task.id + '\')" ondragover="todoListDragOver(event)" ondrop="todoListDrop(event,\'' + task.id + '\')" class="group flex items-start space-x-2 px-3 py-2 rounded-lg cursor-pointer ' + (isSel ? 'bg-yellow-50' : 'hover:bg-gray-50') + ' ' + (task.erledigt ? 'opacity-40' : '') + ' ' + (isBlocked ? 'border-l-2 border-red-300' : '') + '" ' + (isSel ? 'style="box-shadow:0 0 0 1px #fed7aa"' : '') + ' onclick="todoSelect(\'' + task.id + '\')">';
 
     // Checkbox
     h += '<button onclick="event.stopPropagation();todoToggle(\'' + task.id + '\')" class="mt-1 flex-shrink-0 w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center ' + (task.erledigt ? p.bg + ' border-transparent' : p.border) + '">';
@@ -358,6 +387,8 @@ export function todoRowHTML(task, depth) {
     lbls.forEach(function(l) { h += '<span class="font-semibold px-1 rounded-full text-[9px]" style="background:' + l.color + '18;color:' + l.color + '">' + _escH(l.name) + '</span>'; });
     if (subs.length > 0) h += '<span class="text-gray-400 text-[10px]">☑ ' + doneSubs + '/' + subs.length + '</span>';
     if (assigneeName) h += '<span class="text-gray-400 text-[10px]">👤 ' + _escH(assigneeName) + '</span>';
+    if (task.wiederkehrend) h += '<span class="text-blue-400 text-[10px]">🔄 ' + ({taeglich:'Tägl.',woechentlich:'Wöch.',monatlich:'Mon.',jaehrlich:'Jährl.'}[task.wiederkehrend]||'') + '</span>';
+    if (isBlocked) h += '<span class="text-red-400 text-[10px] font-semibold">🔒 Blockiert</span>';
     h += '</div></div>';
 
     // Hover actions
@@ -511,6 +542,46 @@ export function todoRenderDetail() {
     h += '<option value="">—</option>';
     todoState.sections.forEach(function(s) { h += '<option value="' + s.id + '"' + (task.section_id === s.id ? ' selected' : '') + '>' + _escH(s.name) + '</option>'; });
     h += '</select></div>';
+    // Zugewiesen an (Mitarbeiter-Dropdown)
+    h += '<div><label class="font-bold text-gray-400 uppercase text-[9px]" style="letter-spacing:0.05em">Zugewiesen an</label>';
+    h += '<select onchange="todoUpdateField(\'' + task.id + '\',\'zugewiesen_an\',this.value||null)" class="mt-1 w-full px-2 py-1 text-xs border border-gray-200 rounded-lg outline-none focus:border-vit-orange/50">';
+    h += '<option value="">— niemand —</option>';
+    (todoState.teamMembers || []).forEach(function(u) { h += '<option value="' + u.id + '"' + (task.zugewiesen_an === u.id ? ' selected' : '') + '>👤 ' + _escH(u.name || (u.vorname + ' ' + u.nachname)) + '</option>'; });
+    h += '</select></div>';
+    // Wiederkehrend
+    h += '<div><label class="font-bold text-gray-400 uppercase text-[9px]" style="letter-spacing:0.05em">Wiederkehrend</label>';
+    h += '<select onchange="todoUpdateField(\'' + task.id + '\',\'wiederkehrend\',this.value||null)" class="mt-1 w-full px-2 py-1 text-xs border border-gray-200 rounded-lg outline-none focus:border-vit-orange/50">';
+    h += '<option value=""' + (!task.wiederkehrend ? ' selected' : '') + '>— einmalig —</option>';
+    h += '<option value="taeglich"' + (task.wiederkehrend === 'taeglich' ? ' selected' : '') + '>🔄 Täglich</option>';
+    h += '<option value="woechentlich"' + (task.wiederkehrend === 'woechentlich' ? ' selected' : '') + '>🔄 Wöchentlich</option>';
+    h += '<option value="monatlich"' + (task.wiederkehrend === 'monatlich' ? ' selected' : '') + '>🔄 Monatlich</option>';
+    h += '<option value="jaehrlich"' + (task.wiederkehrend === 'jaehrlich' ? ' selected' : '') + '>🔄 Jährlich</option>';
+    h += '</select></div>';
+    h += '</div>';
+
+    // Blocked by (Abhängigkeit)
+    var blockedTask = task.blocked_by ? todoState.todos.find(function(t) { return t.id === task.blocked_by; }) : null;
+    h += '<div><label class="font-bold text-gray-400 uppercase text-[9px]" style="letter-spacing:0.05em">Blockiert durch</label>';
+    if (blockedTask && !blockedTask.erledigt) {
+        h += '<div class="mt-1 flex items-center space-x-2 p-2 bg-red-50 rounded-lg border border-red-100"><span class="text-red-500 text-xs">🔒</span><span class="text-xs text-red-700 font-medium">' + _escH(blockedTask.titel) + '</span>';
+        h += '<button onclick="todoUpdateField(\'' + task.id + '\',\'blocked_by\',null)" class="ml-auto text-red-400 hover:text-red-600 text-xs">✕</button></div>';
+    } else if (blockedTask && blockedTask.erledigt) {
+        h += '<div class="mt-1 flex items-center space-x-2 p-2 bg-green-50 rounded-lg"><span class="text-xs text-green-600">✅ ' + _escH(blockedTask.titel) + ' (erledigt)</span>';
+        h += '<button onclick="todoUpdateField(\'' + task.id + '\',\'blocked_by\',null)" class="ml-auto text-gray-400 hover:text-gray-600 text-xs">✕</button></div>';
+    } else {
+        h += '<select onchange="todoUpdateField(\'' + task.id + '\',\'blocked_by\',this.value||null)" class="mt-1 w-full px-2 py-1 text-xs border border-gray-200 rounded-lg outline-none focus:border-vit-orange/50">';
+        h += '<option value="">— keine Abhängigkeit —</option>';
+        todoState.todos.filter(function(t) { return t.id !== task.id && !t.parent_id; }).forEach(function(t) {
+            h += '<option value="' + t.id + '">' + (t.erledigt ? '✅ ' : '') + _escH(t.titel.substring(0, 40)) + '</option>';
+        });
+        h += '</select>';
+    }
+    h += '</div>';
+
+    // Erinnerung
+    h += '<div class="flex items-center space-x-3 py-1">';
+    h += '<label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" ' + (task.erinnerung_push ? 'checked' : '') + ' onchange="todoUpdateField(\'' + task.id + '\',\'erinnerung_push\',this.checked)" class="accent-orange-500 rounded"><span class="text-xs text-gray-600">🔔 Push-Erinnerung</span></label>';
+    h += '<label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" ' + (task.erinnerung_email_faellig ? 'checked' : '') + ' onchange="todoUpdateField(\'' + task.id + '\',\'erinnerung_email_faellig\',this.checked)" class="accent-orange-500 rounded"><span class="text-xs text-gray-600">📧 E-Mail</span></label>';
     h += '</div>';
 
     // Labels
@@ -560,8 +631,17 @@ export function todoRenderDetail() {
         h += '<p class="text-gray-600 text-xs">' + _escH(c.inhalt) + '</p></div>';
     });
     h += '</div>';
-    h += '<div class="flex space-x-2 mt-2"><input id="todoCommentInput" placeholder="Kommentar..." class="flex-1 px-2 py-1 border border-gray-200 rounded-lg outline-none focus:border-vit-orange/30 text-xs" onkeydown="if(event.key===\'Enter\')todoAddComment(\'' + task.id + '\')">';
+    h += '<div class="flex space-x-2 mt-2"><input id="todoCommentInput" placeholder="Kommentar... (@Name für Erwähnung)" class="flex-1 px-2 py-1 border border-gray-200 rounded-lg outline-none focus:border-vit-orange/30 text-xs" onkeydown="if(event.key===\'Enter\')todoAddCommentWithMentions(\'' + task.id + '\')">';
     h += '</div></div>';
+
+    // Attachments
+    h += '<div><label class="font-bold text-gray-400 uppercase text-[9px]" style="letter-spacing:0.05em">Anhänge</label>';
+    h += '<div class="mt-2 space-y-1" id="todoDetailAttachments"><p class="text-xs text-gray-400 italic">Wird geladen...</p></div>';
+    h += '<label class="mt-2 flex items-center space-x-2 cursor-pointer text-xs text-vit-orange hover:underline">';
+    h += '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>';
+    h += '<span>Datei anhängen</span>';
+    h += '<input type="file" class="hidden" onchange="todoUploadAttachment(\'' + task.id + '\',this)">';
+    h += '</label></div>';
 
     h += '</div></div>';
 
@@ -574,8 +654,9 @@ export function todoRenderDetail() {
     h += '</div>';
 
     panel.innerHTML = h;
-    // Load comments async
+    // Load comments and attachments async
     todoLoadComments(task.id);
+    todoLoadAttachments(task.id).then(function() { todoRenderAttachments(task.id); });
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -776,6 +857,484 @@ export async function todoAddComment(taskId) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// @MENTIONS IN COMMENTS
+// ═══════════════════════════════════════════════════════════════
+
+export async function todoAddCommentWithMentions(taskId) {
+    var inp = document.getElementById('todoCommentInput');
+    var text = inp ? inp.value.trim() : '';
+    if (!text) return;
+    // Parse @mentions - find @Name patterns and match to team members
+    var mentions = [];
+    var mentionRegex = /@(\S+(?:\s\S+)?)/g;
+    var match;
+    while ((match = mentionRegex.exec(text)) !== null) {
+        var mName = match[1].toLowerCase();
+        var found = todoState.teamMembers.find(function(u) {
+            var fullName = (u.name || (u.vorname + ' ' + u.nachname)).toLowerCase();
+            return fullName.indexOf(mName) === 0 || (u.vorname && u.vorname.toLowerCase() === mName);
+        });
+        if (found) mentions.push(found.id);
+    }
+    try {
+        var r = await _sb().from('todo_comments').insert({
+            todo_id: taskId,
+            user_id: _sbUser() ? _sbUser().id : null,
+            inhalt: text,
+            mentions: mentions.length ? mentions : []
+        }).select('*, users(name)');
+        if (r.error) throw r.error;
+        if (!todoState.comments[taskId]) todoState.comments[taskId] = [];
+        if (r.data && r.data[0]) todoState.comments[taskId].push(r.data[0]);
+        inp.value = '';
+        todoLoadComments(taskId);
+        // Send push notifications to mentioned users
+        if (mentions.length && window.triggerPush) {
+            var task = todoState.todos.find(function(t) { return t.id === taskId; });
+            window.triggerPush(mentions, '💬 Du wurdest erwähnt', (_sbProfile() ? _sbProfile().name : 'Jemand') + ' in "' + (task ? task.titel.substring(0, 50) : 'Aufgabe') + '"', '/?view=todo', 'push_todo_mention');
+        }
+    } catch (e) { (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})('Fehler: ' + e.message, 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LIST DRAG & DROP (Sortierung)
+// ═══════════════════════════════════════════════════════════════
+
+export function todoListDragStart(e, id) {
+    todoState.dragId = id;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', id);
+    e.target.closest('[draggable]').style.opacity = '0.5';
+}
+
+export function todoListDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+
+export async function todoListDrop(e, targetId) {
+    e.preventDefault();
+    e.stopPropagation();
+    var dragId = todoState.dragId;
+    if (!dragId || dragId === targetId) return;
+    var dragTask = todoState.todos.find(function(t) { return t.id === dragId; });
+    var targetTask = todoState.todos.find(function(t) { return t.id === targetId; });
+    if (!dragTask || !targetTask) return;
+    // Move to same section as target
+    dragTask.section_id = targetTask.section_id;
+    // Reorder: put dragged task right after target
+    var secTasks = todoState.todos.filter(function(t) { return t.section_id === targetTask.section_id && !t.parent_id; });
+    var targetIdx = secTasks.indexOf(targetTask);
+    // Update sort_order for all tasks in section
+    secTasks.forEach(function(t, i) { t.sort_order = i * 10; });
+    dragTask.sort_order = (targetTask.sort_order || 0) + 5;
+    todoState.dragId = null;
+    todoRender();
+    try {
+        await _sb().from('todos').update({ section_id: dragTask.section_id, sort_order: dragTask.sort_order }).eq('id', dragId);
+    } catch(e) { console.warn(e); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TEMPLATES (Vorlagen)
+// ═══════════════════════════════════════════════════════════════
+
+export function todoShowTemplates() {
+    var overlay = document.createElement('div');
+    overlay.id = 'todoTemplateOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+    var h = '<div onclick="event.stopPropagation()" style="background:white;border-radius:16px;padding:24px;width:520px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+    h += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">📋 Aufgaben-Vorlagen</h3><button onclick="document.getElementById(\'todoTemplateOverlay\').remove()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div>';
+
+    if (todoState.templates.length) {
+        todoState.templates.forEach(function(tmpl) {
+            var items = tmpl.todo_template_items || [];
+            h += '<div class="border border-gray-200 rounded-xl p-4 mb-3 hover:border-vit-orange/50 transition">';
+            h += '<div class="flex items-center justify-between mb-2">';
+            h += '<div><h4 class="font-semibold text-gray-800">' + _escH(tmpl.name) + '</h4>';
+            if (tmpl.beschreibung) h += '<p class="text-xs text-gray-500">' + _escH(tmpl.beschreibung) + '</p>';
+            h += '</div>';
+            h += '<div class="flex space-x-1">';
+            h += '<button onclick="todoApplyTemplate(\'' + tmpl.id + '\')" class="px-3 py-1 text-xs font-semibold text-white bg-vit-orange rounded-lg hover:opacity-90">Anwenden</button>';
+            h += '<button onclick="todoDeleteTemplate(\'' + tmpl.id + '\')" class="px-2 py-1 text-xs text-red-400 hover:text-red-600 rounded-lg hover:bg-red-50">✕</button>';
+            h += '</div></div>';
+            if (items.length) {
+                h += '<div class="ml-2 space-y-1">';
+                items.sort(function(a,b) { return (a.sort_order||0)-(b.sort_order||0); }).forEach(function(item) {
+                    h += '<div class="flex items-center space-x-2 text-xs text-gray-600"><span class="w-3 h-3 rounded-full border-2 border-gray-300 flex-shrink-0"></span><span>' + _escH(item.titel) + '</span>';
+                    if (item.relative_faelligkeit !== null) h += '<span class="text-gray-400">(+' + item.relative_faelligkeit + ' Tage)</span>';
+                    h += '</div>';
+                });
+                h += '</div>';
+            }
+            h += '</div>';
+        });
+    } else {
+        h += '<p class="text-gray-400 text-sm text-center py-8">Noch keine Vorlagen erstellt.</p>';
+    }
+
+    h += '<div class="mt-4 border-t pt-4"><h4 class="font-semibold text-gray-700 text-sm mb-3">Neue Vorlage erstellen</h4>';
+    h += '<input id="tmplName" placeholder="Name der Vorlage" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm mb-2">';
+    h += '<input id="tmplDesc" placeholder="Beschreibung (optional)" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm mb-2">';
+    h += '<div id="tmplItems" class="space-y-1 mb-2"></div>';
+    h += '<div class="flex space-x-2"><button onclick="todoTmplAddItem()" class="text-xs text-vit-orange hover:underline">+ Aufgabe hinzufügen</button></div>';
+    h += '<button onclick="todoCreateTemplate()" class="mt-3 w-full py-2 text-sm font-semibold text-white bg-vit-orange rounded-lg hover:opacity-90">Vorlage speichern</button>';
+    h += '</div></div>';
+    overlay.innerHTML = h;
+    document.body.appendChild(overlay);
+}
+
+var _tmplItemCount = 0;
+export function todoTmplAddItem() {
+    var container = document.getElementById('tmplItems');
+    if (!container) return;
+    _tmplItemCount++;
+    var d = document.createElement('div');
+    d.className = 'flex items-center space-x-2';
+    d.innerHTML = '<input placeholder="Aufgabentitel" class="tmpl-item-title flex-1 px-2 py-1 border border-gray-200 rounded text-xs">' +
+        '<input type="number" placeholder="Tage" class="tmpl-item-days w-16 px-2 py-1 border border-gray-200 rounded text-xs" title="Fällig nach X Tagen">' +
+        '<button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 text-xs">✕</button>';
+    container.appendChild(d);
+}
+
+export async function todoCreateTemplate() {
+    var name = (document.getElementById('tmplName') || {}).value;
+    if (!name || !name.trim()) { _showToast('Name erforderlich', 'warning'); return; }
+    var desc = (document.getElementById('tmplDesc') || {}).value || null;
+    var items = [];
+    document.querySelectorAll('#tmplItems > div').forEach(function(row) {
+        var title = row.querySelector('.tmpl-item-title');
+        var days = row.querySelector('.tmpl-item-days');
+        if (title && title.value.trim()) {
+            items.push({ titel: title.value.trim(), relative_faelligkeit: days && days.value ? parseInt(days.value) : null });
+        }
+    });
+    try {
+        var r = await _sb().from('todo_templates').insert({
+            name: name.trim(), beschreibung: desc,
+            standort_id: _sbProfile() ? _sbProfile().standort_id : null,
+            erstellt_von: _sbUser() ? _sbUser().id : null
+        }).select();
+        if (r.error) throw r.error;
+        if (r.data && r.data[0] && items.length) {
+            var tmplId = r.data[0].id;
+            var inserts = items.map(function(item, i) {
+                return { template_id: tmplId, titel: item.titel, relative_faelligkeit: item.relative_faelligkeit, sort_order: i, prio: 'normal', kategorie: 'sonstig' };
+            });
+            await _sb().from('todo_template_items').insert(inserts);
+        }
+        _showToast('Vorlage gespeichert!', 'success');
+        var ol = document.getElementById('todoTemplateOverlay');
+        if (ol) ol.remove();
+        await loadTodos();
+    } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
+}
+
+export async function todoApplyTemplate(templateId) {
+    var tmpl = todoState.templates.find(function(t) { return t.id === templateId; });
+    if (!tmpl) return;
+    var items = (tmpl.todo_template_items || []).sort(function(a,b) { return (a.sort_order||0)-(b.sort_order||0); });
+    if (!items.length) { _showToast('Vorlage hat keine Aufgaben', 'warning'); return; }
+    var sid = _sbProfile() ? _sbProfile().standort_id : null;
+    var uid = _sbUser() ? _sbUser().id : null;
+    var inbox = todoState.sections.find(function(s) { return s.name === 'Eingang'; });
+    var secId = inbox ? inbox.id : null;
+    var today = new Date();
+    try {
+        var inserts = items.map(function(item) {
+            var due = null;
+            if (item.relative_faelligkeit !== null) {
+                var d = new Date(today);
+                d.setDate(d.getDate() + item.relative_faelligkeit);
+                due = d.toISOString().slice(0, 10);
+            }
+            return {
+                standort_id: sid, erstellt_von: uid, titel: item.titel,
+                beschreibung: item.beschreibung || null, prio: item.prio || 'normal',
+                prio_sort: (TODO_PRIO[item.prio] || TODO_PRIO.normal).sort,
+                kategorie: item.kategorie || 'sonstig', section_id: secId,
+                faellig_am: due, erledigt: false, template_id: templateId
+            };
+        });
+        var r = await _sb().from('todos').insert(inserts).select('*, zugewiesen:zugewiesen_an(name)');
+        if (r.error) throw r.error;
+        if (r.data) r.data.forEach(function(t) { todoState.todos.unshift(t); });
+        _showToast(items.length + ' Aufgaben aus "' + _escH(tmpl.name) + '" erstellt!', 'success');
+        var ol = document.getElementById('todoTemplateOverlay');
+        if (ol) ol.remove();
+        todoRender();
+    } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
+}
+
+export async function todoDeleteTemplate(templateId) {
+    if (!confirm('Vorlage wirklich löschen?')) return;
+    try {
+        await _sb().from('todo_template_items').delete().eq('template_id', templateId);
+        await _sb().from('todo_templates').delete().eq('id', templateId);
+        todoState.templates = todoState.templates.filter(function(t) { return t.id !== templateId; });
+        _showToast('Vorlage gelöscht', 'success');
+        var ol = document.getElementById('todoTemplateOverlay');
+        if (ol) ol.remove();
+        todoShowTemplates();
+    } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ATTACHMENTS (Datei-Anhänge)
+// ═══════════════════════════════════════════════════════════════
+
+export async function todoLoadAttachments(taskId) {
+    try {
+        var r = await _sb().from('todo_attachments').select('*').eq('todo_id', taskId).order('created_at', { ascending: false });
+        todoState.attachments[taskId] = (!r.error && r.data) ? r.data : [];
+    } catch(e) { todoState.attachments[taskId] = []; }
+}
+
+export async function todoUploadAttachment(taskId, fileInput) {
+    if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
+    var file = fileInput.files[0];
+    if (file.size > 10 * 1024 * 1024) { _showToast('Max. 10 MB pro Datei', 'warning'); return; }
+    var sid = _sbProfile() ? _sbProfile().standort_id : 'unknown';
+    var path = sid + '/' + taskId + '/' + Date.now() + '_' + file.name;
+    try {
+        var upload = await _sb().storage.from('todo-attachments').upload(path, file);
+        if (upload.error) throw upload.error;
+        var r = await _sb().from('todo_attachments').insert({
+            todo_id: taskId, user_id: _sbUser() ? _sbUser().id : null,
+            dateiname: file.name, dateipfad: path,
+            dateigroesse: file.size, mime_type: file.type
+        }).select();
+        if (r.error) throw r.error;
+        if (!todoState.attachments[taskId]) todoState.attachments[taskId] = [];
+        if (r.data && r.data[0]) todoState.attachments[taskId].unshift(r.data[0]);
+        _showToast('📎 ' + file.name + ' hochgeladen', 'success');
+        todoRenderAttachments(taskId);
+    } catch(e) { _showToast('Upload-Fehler: ' + e.message, 'error'); }
+}
+
+export async function todoDeleteAttachment(taskId, attachId, path) {
+    try {
+        await _sb().storage.from('todo-attachments').remove([path]);
+        await _sb().from('todo_attachments').delete().eq('id', attachId);
+        todoState.attachments[taskId] = (todoState.attachments[taskId] || []).filter(function(a) { return a.id !== attachId; });
+        todoRenderAttachments(taskId);
+        _showToast('Anhang gelöscht', 'success');
+    } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
+}
+
+export function todoRenderAttachments(taskId) {
+    var el = document.getElementById('todoDetailAttachments');
+    if (!el) return;
+    var atts = todoState.attachments[taskId] || [];
+    var h = '';
+    atts.forEach(function(a) {
+        var sizeStr = a.dateigroesse < 1024 ? a.dateigroesse + ' B' : (a.dateigroesse / 1024).toFixed(1) + ' KB';
+        var icon = (a.mime_type || '').indexOf('image') === 0 ? '🖼️' : (a.mime_type || '').indexOf('pdf') !== -1 ? '📄' : '📎';
+        h += '<div class="flex items-center space-x-2 py-1 group">';
+        h += '<span class="text-sm">' + icon + '</span>';
+        h += '<button onclick="todoDownloadAttachment(\'' + _escH(a.dateipfad) + '\')" class="text-xs text-blue-600 hover:underline flex-1 truncate text-left">' + _escH(a.dateiname) + '</button>';
+        h += '<span class="text-gray-400 text-[9px]">' + sizeStr + '</span>';
+        h += '<button onclick="todoDeleteAttachment(\'' + taskId + '\',\'' + a.id + '\',\'' + _escH(a.dateipfad) + '\')" class="text-gray-400 hover:text-red-500 text-xs opacity-0 group-hover:opacity-100">✕</button>';
+        h += '</div>';
+    });
+    if (!atts.length) h = '<p class="text-xs text-gray-400 italic">Keine Anhänge.</p>';
+    el.innerHTML = h;
+}
+
+export async function todoDownloadAttachment(path) {
+    try {
+        var r = await _sb().storage.from('todo-attachments').createSignedUrl(path, 300);
+        if (r.error) throw r.error;
+        window.open(r.data.signedUrl, '_blank');
+    } catch(e) { _showToast('Download-Fehler: ' + e.message, 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STATISTICS / REPORT VIEW
+// ═══════════════════════════════════════════════════════════════
+
+export function todoStatsHTML() {
+    var all = todoState.todos.filter(function(t) { return !t.parent_id; });
+    var done = all.filter(function(t) { return t.erledigt; });
+    var open = all.filter(function(t) { return !t.erledigt; });
+    var overdue = open.filter(function(t) { return t.faellig_am && t.faellig_am < TODO_TODAY; });
+
+    // Erledigte pro KW (letzte 8 Wochen)
+    var weekStats = {};
+    var now = new Date();
+    for (var w = 7; w >= 0; w--) {
+        var d = new Date(now);
+        d.setDate(d.getDate() - w * 7);
+        var kwStart = new Date(d);
+        kwStart.setDate(kwStart.getDate() - kwStart.getDay() + 1);
+        var kwEnd = new Date(kwStart);
+        kwEnd.setDate(kwEnd.getDate() + 6);
+        var kwKey = 'KW' + getWeekNumber(kwStart);
+        var kwStartISO = kwStart.toISOString().slice(0, 10);
+        var kwEndISO = kwEnd.toISOString().slice(0, 10);
+        weekStats[kwKey] = done.filter(function(t) {
+            return t.erledigt_am && t.erledigt_am.slice(0, 10) >= kwStartISO && t.erledigt_am.slice(0, 10) <= kwEndISO;
+        }).length;
+    }
+
+    // Durchschnittliche Bearbeitungszeit (Tage)
+    var durationDays = [];
+    done.forEach(function(t) {
+        if (t.created_at && t.erledigt_am) {
+            var diff = (new Date(t.erledigt_am) - new Date(t.created_at)) / (1000 * 60 * 60 * 24);
+            if (diff >= 0 && diff < 365) durationDays.push(diff);
+        }
+    });
+    var avgDuration = durationDays.length ? (durationDays.reduce(function(a,b){return a+b;}, 0) / durationDays.length).toFixed(1) : '—';
+
+    // Pro Mitarbeiter
+    var byMember = {};
+    done.forEach(function(t) {
+        var name = t.zugewiesen && t.zugewiesen.name ? t.zugewiesen.name : 'Nicht zugewiesen';
+        byMember[name] = (byMember[name] || 0) + 1;
+    });
+    var memberArr = Object.keys(byMember).map(function(k) { return { name: k, count: byMember[k] }; })
+        .sort(function(a,b) { return b.count - a.count; });
+
+    // Pro Kategorie
+    var byCat = {};
+    all.forEach(function(t) {
+        var cat = (TODO_CAT[t.kategorie] || TODO_CAT.sonstig).label;
+        byCat[cat] = (byCat[cat] || 0) + 1;
+    });
+
+    var h = '<div class="space-y-4 mt-3">';
+
+    // Top KPIs
+    h += '<div class="grid grid-cols-4 gap-3">';
+    h += _statsCard('Gesamt', all.length, '📊', 'gray');
+    h += _statsCard('Erledigt', done.length, '✅', 'green');
+    h += _statsCard('Offen', open.length, '📋', 'yellow');
+    h += _statsCard('Überfällig', overdue.length, '🔴', 'red');
+    h += '</div>';
+
+    h += '<div class="grid grid-cols-2 gap-3">';
+    h += _statsCard('Ø Bearbeitungszeit', avgDuration + ' Tage', '⏱️', 'blue');
+    h += _statsCard('Erledigungsrate', all.length ? Math.round(done.length / all.length * 100) + '%' : '—', '📈', 'green');
+    h += '</div>';
+
+    // Wochenübersicht (einfaches Balkendiagramm)
+    h += '<div class="bg-white rounded-xl border border-gray-200 p-4">';
+    h += '<h4 class="font-bold text-gray-700 text-sm mb-3">Erledigte Aufgaben pro Woche</h4>';
+    var maxWeek = Math.max.apply(null, Object.values(weekStats).concat([1]));
+    h += '<div class="flex items-end space-x-2" style="height:120px">';
+    Object.keys(weekStats).forEach(function(kw) {
+        var val = weekStats[kw];
+        var pct = Math.round(val / maxWeek * 100);
+        h += '<div class="flex-1 flex flex-col items-center">';
+        h += '<span class="text-[10px] text-gray-600 font-semibold mb-1">' + val + '</span>';
+        h += '<div class="w-full bg-vit-orange/80 rounded-t" style="height:' + Math.max(pct, 4) + '%;min-height:4px;transition:height 0.3s"></div>';
+        h += '<span class="text-[9px] text-gray-400 mt-1">' + kw + '</span>';
+        h += '</div>';
+    });
+    h += '</div></div>';
+
+    // Top Erlediger
+    if (memberArr.length) {
+        h += '<div class="bg-white rounded-xl border border-gray-200 p-4">';
+        h += '<h4 class="font-bold text-gray-700 text-sm mb-3">🏆 Top Erlediger</h4>';
+        memberArr.slice(0, 5).forEach(function(m, i) {
+            var pct = Math.round(m.count / (memberArr[0].count || 1) * 100);
+            h += '<div class="flex items-center space-x-3 mb-2">';
+            h += '<span class="text-xs font-semibold text-gray-500 w-4">' + (i + 1) + '.</span>';
+            h += '<span class="text-xs font-medium text-gray-700 w-32 truncate">' + _escH(m.name) + '</span>';
+            h += '<div class="flex-1 bg-gray-100 rounded-full h-2"><div class="h-full bg-vit-orange rounded-full" style="width:' + pct + '%"></div></div>';
+            h += '<span class="text-xs font-bold text-gray-600 w-8 text-right">' + m.count + '</span>';
+            h += '</div>';
+        });
+        h += '</div>';
+    }
+
+    // Pro Kategorie
+    h += '<div class="bg-white rounded-xl border border-gray-200 p-4">';
+    h += '<h4 class="font-bold text-gray-700 text-sm mb-3">Aufgaben nach Kategorie</h4>';
+    h += '<div class="flex flex-wrap gap-3">';
+    Object.keys(byCat).forEach(function(cat) {
+        h += '<div class="text-center"><span class="block text-xl font-bold text-gray-700">' + byCat[cat] + '</span><span class="text-[10px] text-gray-500">' + cat + '</span></div>';
+    });
+    h += '</div></div>';
+
+    h += '</div>';
+    return h;
+}
+
+function _statsCard(label, value, icon, color) {
+    var bgMap = { gray:'bg-gray-50', green:'bg-green-50', yellow:'bg-yellow-50', red:'bg-red-50', blue:'bg-blue-50' };
+    var textMap = { gray:'text-gray-700', green:'text-green-700', yellow:'text-yellow-700', red:'text-red-700', blue:'text-blue-700' };
+    return '<div class="' + (bgMap[color]||'bg-gray-50') + ' rounded-xl p-3 text-center"><span class="text-lg">' + icon + '</span><p class="text-xl font-bold ' + (textMap[color]||'') + '">' + value + '</p><p class="text-[10px] text-gray-500">' + label + '</p></div>';
+}
+
+function getWeekNumber(d) {
+    var date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+    var yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CREATE TODO FROM OTHER MODULES
+// ═══════════════════════════════════════════════════════════════
+
+export async function createTodoFromModule(opts) {
+    // opts: { titel, beschreibung, referenz_typ, referenz_id, kategorie, prio, faellig_am, typ }
+    if (!opts || !opts.titel) return null;
+    var sid = _sbProfile() ? _sbProfile().standort_id : null;
+    var uid = _sbUser() ? _sbUser().id : null;
+    var inbox = todoState.sections.find(function(s) { return s.name === 'Eingang'; });
+    var prio = opts.prio || 'normal';
+    try {
+        var r = await _sb().from('todos').insert({
+            standort_id: sid, erstellt_von: uid,
+            titel: opts.titel, beschreibung: opts.beschreibung || null,
+            referenz_typ: opts.referenz_typ || null, referenz_id: opts.referenz_id || null,
+            kategorie: opts.kategorie || 'sonstig', prio: prio,
+            prio_sort: (TODO_PRIO[prio] || TODO_PRIO.normal).sort,
+            faellig_am: opts.faellig_am || null,
+            typ: opts.typ || 'system',
+            section_id: inbox ? inbox.id : null,
+            erledigt: false
+        }).select('*, zugewiesen:zugewiesen_an(name)');
+        if (r.error) throw r.error;
+        if (r.data && r.data[0]) {
+            todoState.todos.unshift(r.data[0]);
+            _showToast('📋 Aufgabe erstellt: ' + opts.titel.substring(0, 40), 'success');
+            return r.data[0];
+        }
+    } catch(e) { console.error('createTodoFromModule:', e); }
+    return null;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// KALENDER INTEGRATION
+// ═══════════════════════════════════════════════════════════════
+
+export function todoGetCalendarEvents(year, month) {
+    // Returns array of { date, title, prio, id } for the kalender module
+    return todoState.todos.filter(function(t) {
+        if (!t.faellig_am || t.erledigt || t.parent_id) return false;
+        var d = t.faellig_am;
+        var y = parseInt(d.slice(0, 4));
+        var m = parseInt(d.slice(5, 7));
+        return y === year && m === month;
+    }).map(function(t) {
+        return {
+            date: t.faellig_am,
+            title: '📋 ' + t.titel,
+            prio: t.prio,
+            id: t.id,
+            type: 'todo',
+            color: t.prio === 'dringend' ? '#ef4444' : t.prio === 'hoch' ? '#f97316' : '#6b7280'
+        };
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════
 // BACKWARDS COMPATIBILITY
 // ═══════════════════════════════════════════════════════════════
 
@@ -814,6 +1373,7 @@ const exports = {
     todoBoardHTML,
     todoBoardDrop,
     todoRenderDetail,
+    todoStatsHTML,
     // Actions
     todoSelect,
     todoCloseDetail,
@@ -830,9 +1390,30 @@ const exports = {
     // Sections
     todoAddSecPrompt,
     todoDeleteSec,
-    // Comments
+    // Comments + @Mentions
     todoLoadComments,
     todoAddComment,
+    todoAddCommentWithMentions,
+    // List Drag & Drop
+    todoListDragStart,
+    todoListDragOver,
+    todoListDrop,
+    // Templates
+    todoShowTemplates,
+    todoTmplAddItem,
+    todoCreateTemplate,
+    todoApplyTemplate,
+    todoDeleteTemplate,
+    // Attachments
+    todoLoadAttachments,
+    todoUploadAttachment,
+    todoDeleteAttachment,
+    todoRenderAttachments,
+    todoDownloadAttachment,
+    // Cross-module
+    createTodoFromModule,
+    // Calendar integration
+    todoGetCalendarEvents,
     // Backwards compat
     filterTodos,
     renderTodos,

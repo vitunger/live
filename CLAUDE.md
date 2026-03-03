@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 03.03.2026 (BugFix: strategie.js showView Gate auf 5-Werte-System migriert, todo→aufgaben Key-Mapping, nachrichten→kommunikation)
+> Letzte Aktualisierung: 03.03.2026 (Todo v2: 11 neue Features – Zuweisungs-Dropdown, Wiederkehrend, Templates, Attachments, Stats, @Mentions, List-DnD, Blockiert, Erinnerungen, createTodoFromModule, Kalender-Integration. Edge Function todo-cron deployed. DB: todo_templates, todo_template_items, todo_attachments + 6 neue Spalten auf todos)
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
