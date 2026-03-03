@@ -524,3 +524,4 @@ security: RLS/JWT/Auth-Verbesserung
 
 
 - 2026-03-03: BWA Detail-Panel HTML restored. Null-guards in controlling-display.js. renderBenchmarks added to view-router chain.
+- 2026-03-03: Demo-Standort aus allen BWA-Auswertungen/Benchmarks/KPIs entfernt. is_demo Flag auf standorte-Tabelle. 4 RPC-Funktionen aktualisiert: get_benchmark_data, get_benchmark_averages, get_bwa_network_status, get_bwa_status_overview. BWA Detail-Panel display fix in showBwaFromDb (war faelschlicherweise in downloadBwa). Benchmark-Content in eigenen ctrlTabBenchmark Tab verschoben.
