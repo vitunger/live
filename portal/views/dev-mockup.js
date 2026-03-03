@@ -10,7 +10,7 @@ function _t(k)           { return typeof window.t === 'function' ? window.t(k) :
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
 function _fmtN(n)        { return typeof window.fmtN === 'function' ? window.fmtN(n) : String(n); }
 function _triggerPush()  { if (typeof window.triggerPush === 'function') window.triggerPush.apply(null, arguments); }
-function _sbUrl() { return window.SUPABASE_URL; }
+
 
 // Shared state access
 function _devSubs() { return window._devState ? window._devState.submissions : []; }
@@ -103,7 +103,7 @@ export async function devMockupChatSend(subId) {
 
     try {
         var payload = { submission_id: subId, mode: 'mockup_chat', feedback: text || '[Attachment]', attachments: window._mockupChatAttachments };
-        var resp = await fetch(_sbUrl() + '/functions/v1/dev-ki-analyse', {
+        var resp = await fetch(window.SUPABASE_URL + '/functions/v1/dev-ki-analyse', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token },
             body: JSON.stringify(payload)
@@ -373,7 +373,7 @@ export async function devMockupGenerate(subId, isRefine) {
     },4000);
     try {
         var token = (await _sb().auth.getSession()).data.session.access_token;
-        var resp = await fetch(_sbUrl()+'/functions/v1/dev-ki-analyse', {
+        var resp = await fetch(window.SUPABASE_URL+'/functions/v1/dev-ki-analyse', {
             method:'POST',
             headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
             body:JSON.stringify({submission_id:subId, mode:'mockup'})
@@ -407,7 +407,7 @@ export async function devMockupRefine(subId) {
     }
     try {
         var token = (await _sb().auth.getSession()).data.session.access_token;
-        var resp = await fetch(_sbUrl()+'/functions/v1/dev-ki-analyse', {
+        var resp = await fetch(window.SUPABASE_URL+'/functions/v1/dev-ki-analyse', {
             method:'POST',
             headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
             body:JSON.stringify({submission_id:subId, mode:'mockup_refine', feedback:feedback})

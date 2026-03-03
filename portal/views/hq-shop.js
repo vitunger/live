@@ -13,7 +13,6 @@ function _showToast(m,t) { if (typeof window.showToast === 'function') window.sh
 var SUPABASE_URL = '';
 var SUPABASE_ANON_KEY = '';
 function _ensureConfig() {
-    if (!SUPABASE_URL && typeof window.sbUrl === 'function') SUPABASE_URL = window.sbUrl();
     if (!SUPABASE_URL) SUPABASE_URL = window.SUPABASE_URL || '';
     if (!SUPABASE_ANON_KEY) SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || '';
 }

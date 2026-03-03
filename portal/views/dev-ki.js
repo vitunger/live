@@ -10,7 +10,7 @@ function _t(k)           { return typeof window.t === 'function' ? window.t(k) :
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
 function _fmtN(n)        { return typeof window.fmtN === 'function' ? window.fmtN(n) : String(n); }
 function _triggerPush()  { if (typeof window.triggerPush === 'function') window.triggerPush.apply(null, arguments); }
-function _sbUrl() { return window.SUPABASE_URL; }
+
 
 // Shared state access
 function _devSubs() { return window._devState ? window._devState.submissions : []; }
@@ -33,7 +33,7 @@ export async function runDevKIPrioritize() {
         var token = session?.data?.session?.access_token;
         if(!token) throw new Error('Nicht angemeldet');
 
-        var resp = await fetch(_sbUrl() + '/functions/v1/dev-ki-analyse', {
+        var resp = await fetch(window.SUPABASE_URL + '/functions/v1/dev-ki-analyse', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

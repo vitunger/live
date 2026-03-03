@@ -43,6 +43,4 @@ window.fmtDate = fmtDate;
 window.timeAgo = timeAgo;
 // [prod] log removed
 
-// ═══ SUPABASE URL HELPER ═══
-export function sbUrl() { return window.SUPABASE_URL; }
-window.sbUrl = sbUrl;
+
