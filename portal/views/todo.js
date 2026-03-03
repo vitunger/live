@@ -278,6 +278,7 @@ export async function todoSubmitQuickAdd() {
     var prio = (document.getElementById('todoQAPrio') || {}).value || 'normal';
     var secId = (document.getElementById('todoQASec') || {}).value || null;
     var prioSort = (TODO_PRIO[prio] || {}).sort || 1;
+    var newId = null;
     try {
         var resp = await _sb().from('todos').insert({
             standort_id: _sbProfile() ? _sbProfile().standort_id : null,
@@ -286,9 +287,13 @@ export async function todoSubmitQuickAdd() {
             kategorie: 'sonstig', section_id: secId, erledigt: false
         }).select('*, zugewiesen:zugewiesen_an(name)');
         if (resp.error) throw resp.error;
-        if (resp.data && resp.data[0]) todoState.todos.unshift(resp.data[0]);
+        if (resp.data && resp.data[0]) {
+            todoState.todos.unshift(resp.data[0]);
+            newId = resp.data[0].id;
+        }
     } catch (e) { console.error('QA add:', e); }
     todoCloseQuickAdd();
+    if (newId) todoState.selectedId = newId;
     todoRender();
 }
 
