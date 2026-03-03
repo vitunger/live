@@ -732,6 +732,55 @@ h = '<div class="text-center py-8 text-gray-400">Keine gesperrte Jahresstrategie
 }
 
 
+// ── Standort Payments Overview ──
+window.loadStandortPayments = async function() {
+    var stId = _sbProfile() && _sbProfile().standort_id;
+    if (!stId) return;
+    var container = document.getElementById('stBillingPaymentsContent');
+    if (!container) return;
+    container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
+
+    var { data: invoices } = await _sb().from('billing_invoices')
+        .select('id, invoice_number, period_start, period_end, total, status, finalized_at, paid_at, created_at')
+        .eq('standort_id', stId)
+        .order('period_start', { ascending: false });
+
+    var totalPaid = 0, totalOpen = 0, countPaid = 0, countOpen = 0;
+    (invoices || []).forEach(function(inv) {
+        if (inv.status === 'paid') { totalPaid += parseFloat(inv.total)||0; countPaid++; }
+        else if (['finalized','sent'].indexOf(inv.status) >= 0) { totalOpen += parseFloat(inv.total)||0; countOpen++; }
+    });
+
+    var h = '<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">';
+    h += '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Bezahlt</p><p class="text-2xl font-bold text-green-600">' + _fmtEur(totalPaid) + '</p><p class="text-xs text-gray-400">' + countPaid + ' Rechnungen</p></div>';
+    h += '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Offen</p><p class="text-2xl font-bold text-amber-500">' + _fmtEur(totalOpen) + '</p><p class="text-xs text-gray-400">' + countOpen + ' Rechnungen</p></div>';
+    h += '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Gesamt ' + new Date().getFullYear() + '</p><p class="text-2xl font-bold text-gray-800">' + _fmtEur(totalPaid + totalOpen) + '</p><p class="text-xs text-gray-400">' + (invoices || []).length + ' Rechnungen</p></div>';
+    h += '</div>';
+
+    h += '<div class="vit-card p-6"><h3 class="font-bold text-sm mb-4">📋 Zahlungsverlauf</h3>';
+    if (!invoices || invoices.length === 0) {
+        h += '<p class="text-gray-400 text-center py-4">Noch keine Zahlungsdaten vorhanden</p>';
+    } else {
+        h += '<div class="space-y-3">';
+        (invoices || []).forEach(function(inv) {
+            var sc = inv.status === 'paid' ? 'green' : inv.status === 'finalized' || inv.status === 'sent' ? 'amber' : 'gray';
+            var si = inv.status === 'paid' ? '✅' : inv.status === 'finalized' ? '📬' : inv.status === 'sent' ? '📨' : inv.status === 'draft' ? '📝' : '⏳';
+            var st = inv.status === 'paid' ? 'Bezahlt' : inv.status === 'finalized' ? 'Finalisiert' : inv.status === 'sent' ? 'Versendet' : inv.status === 'draft' ? 'Entwurf' : inv.status;
+            h += '<div class="flex items-center gap-4 p-3 rounded-lg bg-'+sc+'-50 border border-'+sc+'-100">';
+            h += '<div class="text-xl">'+si+'</div>';
+            h += '<div class="flex-1 min-w-0">';
+            h += '<div class="flex items-center justify-between"><span class="font-mono text-xs font-semibold text-gray-700">'+(inv.invoice_number||'—')+'</span><span class="font-bold text-'+sc+'-700">'+_fmtEur(inv.total)+'</span></div>';
+            h += '<div class="flex items-center justify-between mt-1"><span class="text-xs text-gray-500">'+(inv.period_start||'')+' – '+(inv.period_end||'')+'</span>';
+            h += '<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-'+sc+'-100 text-'+sc+'-700">'+st+'</span>';
+            h += '</div></div></div>';
+        });
+        h += '</div>';
+    }
+    h += '</div>';
+    container.innerHTML = h;
+};
+
+
 // Strangler Fig
 const _exports = {showEmailNotification,fmtEur,fmtDate,statusBadge,billingCall,initBillingMonthSelect,generateSettlement};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
