@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 03.03.2026 (DHL Config-UI, BWA GF-Fix, shop-notify, DHL OAuth2, Shop Duplikat-Fix, misc-views Split, controlling Split, video-pipeline Split, Shop Go-Live, Duplikat-Module zusammengeführt, dev-pipeline Split, user-management/office/strategie Split)
+> Letzte Aktualisierung: 03.03.2026 (XSS-Audit 28 Fixes, Supabase-URL zentralisiert, DHL Config-UI, BWA GF-Fix, shop-notify, DHL OAuth2, misc-views Split, controlling Split, video-pipeline Split)
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -390,10 +390,10 @@ claude/db-schema-xyz            – Datenbank-Änderungen
 | Deprecated Trigger `on_auth_user_created` | Mittel | ✅ Behoben – Trigger entfernt, create-user EF übernimmt |
 | Fehlende FK-Indizes (leads, lead_events) | Niedrig | ✅ Behoben – 7 Indizes erstellt |
 | Fehlende Unique Constraints | Mittel | ✅ Behoben – user_rollen + employees |
-| Environment-Variablen nicht externalisiert | Mittel | Noch im Code |
+| Environment-Variablen nicht externalisiert | Mittel | ✅ Behoben – Supabase-URL in 22 Dateien zentralisiert auf window.SUPABASE_URL |
 | create-user CORS: * | Mittel | ✅ Behoben – Origin-Whitelist |
 | create-user Invite ohne Rollen-Check | Mittel | ✅ Behoben – HQ/Inhaber-Prüfung |
-| Sicherheitsaudit (28 Maßnahmen) | Hoch | Teilweise umgesetzt |
+| Sicherheitsaudit (28 Maßnahmen) | Hoch | Großteil umgesetzt – XSS (28 Fixes in 18 Dateien), URL-Zentralisierung |
 | HTML-Nesting: Views außerhalb `<main>` (Cleanup-Folgeschaden) | Kritisch | ✅ Behoben – orphaned `</div>` Tags entfernt, controllingView closing tag ergänzt |
 | Login-Fehlermeldung englisch ("Invalid login credentials") | Mittel | ✅ Behoben – Deutsche UX-Texte für alle Fehlertypen |
 | Duplikat-Module (pdf-wawi, billing-inline, feedback in render-system) | Mittel | ✅ Behoben – 3 Module konsolidiert, ~1.660 Zeilen entfernt |
