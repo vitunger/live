@@ -367,6 +367,12 @@
 .vit-settings-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;cursor:pointer;font-size:12px;color:var(--c-sub)}
 .vit-settings-row-lg{display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:var(--c-sub)}
 .vit-gradient{background:linear-gradient(135deg,#EF7D00,#dc6b00)}
+.vit-dashed{border:2px dashed var(--c-border)}
+.vit-profile-heading{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--c-muted);font-weight:600;margin-bottom:16px}
+.vit-micro{font-size:9px;color:var(--c-muted)}
+.vit-profile-btn{flex:1;padding:12px;border-radius:10px;cursor:pointer;text-align:center}
+.vit-small-btn{padding:8px;background:none;border-radius:8px;font-size:11px;cursor:pointer;font-family:Outfit,sans-serif}
+.vit-profile-slider{position:absolute;top:0;right:0;bottom:0;width:380px;max-width:100vw;background:var(--c-bg);box-shadow:-8px 0 30px rgba(0,0,0,0.15);transform:translateX(100%);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);overflow-y:auto}
 .dt{width:100%;border-collapse:collapse;font-size:12.5px}.dt th{background:var(--c-bg2);font-weight:600;color:#666;padding:9px 12px;text-align:left;border-bottom:1.5px solid #eee}.dt td{padding:8px 12px;border-bottom:1px solid #f3f3f3}.dt tr:hover td{background:var(--c-bg2)}
 .wn{padding:7px 14px;border-radius:9px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s;border:1.5px solid transparent}.wn.on{background:#EF7D00;color:#fff;border-color:#EF7D00}.wn:not(.on){background:var(--c-bg);color:var(--c-sub);border-color:var(--c-border)}.wn:not(.on):hover{border-color:#EF7D00;color:#EF7D00}
 .mc{transition:all .2s}.mc:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.1)}
@@ -696,7 +702,7 @@
             </div>
         </nav>
 
-        <div class="flex" style="height: calc(100vh - 3.5rem); height: calc(100dvh - 3.5rem); overflow: hidden;">
+        <div class="flex h-[calc(100dvh-3.5rem)] overflow-hidden">
             <!-- Sidebar Overlay (mobile) -->
             <div id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
             <!-- Sidebar -->
@@ -830,7 +836,7 @@
 
                         <!-- ═══ EXTERN (BikeEngine) SIDEBAR ═══ -->
                         <div id="externMenu" class="space-y-1 hidden">
-                            <div class="mb-3 px-3 py-2 rounded-lg" style="background: linear-gradient(135deg, rgba(239,125,0,0.15), rgba(239,125,0,0.05));">
+                            <div class="mb-3 px-3 py-2 rounded-lg bg-gradient-to-br from-orange-500/15 to-orange-500/5">
                                 <div class="flex items-center space-x-2 mb-1">
                                     <span class="text-lg">⚡</span>
                                     <span class="text-sm font-bold text-vit-orange">BikeEngine</span>
@@ -896,7 +902,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                                 </svg>
                                 <span class="sidebar-label">Office</span>
-                                <span class="sidebar-badge ml-auto text-[9px] rounded-full px-1.5 py-0.5 font-bold" id="officeOnlineBadge" style="background:#22c55e;color:white;display:none">0</span>
+                                <span class="sidebar-badge ml-auto text-[9px] rounded-full px-1.5 py-0.5 font-bold bg-green-500 text-white" id="officeOnlineBadge" style="display:none">0</span>
                             </button>
 
                             <button onclick="showView('kalender')" data-module="kalender" data-tooltip="Kalender" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
@@ -1021,7 +1027,7 @@
             </aside>
 
             <!-- Main Content Area -->
-            <main class="main-content-area flex-1 overflow-y-auto p-4 md:p-8 vit-background" style="min-height: 0; min-width: 0;">
+            <main class="main-content-area flex-1 overflow-y-auto p-4 md:p-8 vit-background min-h-0 min-w-0">
                 <!-- Startseite View (für ALLE) -->
                 <div id="homeView" class="view" style="display: block;">
                     <!-- Header mit Willkommen + Dashboard anpassen -->
@@ -1440,7 +1446,7 @@
                     <div id="vkTabAuswertung" class="vk-tab-content" style="display:none;">
                         <!-- Soft Lock: Pipeline Insights -->
                         <div id="pipelineInsightLock" style="display:none;">
-                            <div class="vit-card p-6 text-center mb-4" style="border:2px dashed var(--c-border)">
+                            <div class="vit-card p-6 text-center mb-4 vit-dashed">
                                 <div class="text-4xl mb-2">📊</div>
                                 <h3 class="text-base font-bold text-gray-800 mb-1">Erweiterte Pipeline-Auswertung</h3>
                             </div>
@@ -1457,7 +1463,7 @@
                         <!-- Umsatz-Verlauf Chart -->
                         <div class="vit-card p-6 mb-6">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">Umsatz-Verlauf 2026</h2>
-                            <div id="ausChartContainer" class="w-full" style="height:200px;position:relative;"></div>
+                            <div id="ausChartContainer" class="w-full h-[200px] relative"></div>
                         </div>
 
                         <!-- Monthly Overview Table -->
@@ -1518,16 +1524,16 @@
                                 <button id="tEndBtn" onclick="endTrainingSession()" disabled class="text-xs px-4 py-2 border-2 border-vit-orange text-vit-orange rounded-lg font-bold hover:bg-orange-50 transition disabled:opacity-40">Beenden &amp; Bewerten</button>
                             </div>
                             <div class="p-3 rounded-lg text-xs text-center text-white font-semibold vit-gradient">💡 <span id="tSessionHint"></span></div>
-                            <div id="tChatMessages" class="space-y-3 mt-4" style="min-height:200px;max-height:400px;overflow-y:auto"></div>
+                            <div id="tChatMessages" class="space-y-3 mt-4 min-h-[200px] max-h-[400px] overflow-y-auto"></div>
                             <div id="tThinking" class="hidden p-3 text-center text-xs text-gray-400"><div class="inline-flex items-center gap-2"><div class="flex gap-1"><span class="w-2 h-2 bg-gray-300 rounded-full" style="animation:tpulse 1s infinite"></span><span class="w-2 h-2 bg-gray-300 rounded-full" style="animation:tpulse 1s infinite 0.2s"></span><span class="w-2 h-2 bg-gray-300 rounded-full" style="animation:tpulse 1s infinite 0.4s"></span></div> Kunde überlegt...</div></div>
-                            <div id="tWaveform" class="hidden p-3 rounded-lg mt-2"><div id="tWaveBars" class="flex items-center justify-center gap-0.5" style="height:32px"></div><p id="tWaveLabel" class="text-[10px] font-semibold text-center mt-1 text-vit-orange">🎤 Hört zu...</p></div>
+                            <div id="tWaveform" class="hidden p-3 rounded-lg mt-2"><div id="tWaveBars" class="flex items-center justify-center gap-0.5 h-8"></div><p id="tWaveLabel" class="text-[10px] font-semibold text-center mt-1 text-vit-orange">🎤 Hört zu...</p></div>
                             <p id="tTranscript" class="hidden text-xs text-vit-orange italic text-center mt-2"></p>
                             <div class="mt-3">
                                 <div class="flex gap-2">
                                     <input id="tTextInput" type="text" placeholder="Oder hier tippen..." class="flex-1 p-2.5 border border-gray-200 rounded-lg text-sm" onkeydown="if(event.key==='Enter')sendTrainingText()">
                                     <button id="tMicBtn" onclick="toggleTrainingMic()" class="w-12 h-12 rounded-full text-white text-xl flex items-center justify-center vit-gradient shadow-[0_4px_15px_rgba(239,125,0,0.3)]">🎤</button>
                                     <button id="tSendMicBtn" onclick="sendTrainingVoice()" class="hidden w-12 h-12 rounded-full bg-green-500 text-white text-xl flex items-center justify-center font-bold">✓</button>
-                                    <button id="tSendTextBtn" onclick="sendTrainingText()" class="hidden w-10 h-10 rounded-full text-white text-sm flex items-center justify-center" style="background:#EF7D00">↑</button>
+                                    <button id="tSendTextBtn" onclick="sendTrainingText()" class="hidden w-10 h-10 rounded-full text-white text-sm flex items-center justify-center bg-vit-orange">↑</button>
                                 </div>
                                 <p id="tInputHint" class="text-center text-[10px] text-gray-400 mt-2">Drücke 🎤 oder tippe deine Antwort</p>
                             </div>
@@ -1543,8 +1549,8 @@
                                 <div id="tCriteriaDetails" class="space-y-2 mb-6"></div>
                             </div>
                             <div class="grid grid-cols-2 gap-4 mb-6">
-                                <div class="p-3 rounded-lg" style="background:#f0fdf4"><p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color:#059669">💪 Stärken</p><div id="tStrengths"></div></div>
-                                <div class="p-3 rounded-lg" style="background:var(--c-yellow-tint,#fffbeb)"><p class="text-[10px] font-bold uppercase tracking-wider mb-2 text-vit-orange">💡 Tipps</p><div id="tImprovements"></div></div>
+                                <div class="p-3 rounded-lg bg-green-50"><p class="text-[10px] font-bold uppercase tracking-wider mb-2 text-emerald-600">💪 Stärken</p><div id="tStrengths"></div></div>
+                                <div class="p-3 rounded-lg bg-[var(--c-yellow-tint,#fffbeb)]"><p class="text-[10px] font-bold uppercase tracking-wider mb-2 text-vit-orange">💡 Tipps</p><div id="tImprovements"></div></div>
                             </div>
                             <div class="flex justify-center gap-3">
                                 <button onclick="restartTrainingScenario()" class="px-6 py-2.5 rounded-lg text-white text-sm font-bold vit-gradient">🔄 Nochmal üben</button>
@@ -1638,7 +1644,7 @@
                     <div class="vit-card p-6 mb-6">
                         <h2 class="text-lg font-semibold text-gray-800 mb-4">📊 Monatliche Uebersicht</h2>
                         <div class="flex items-center space-x-4 mb-4">
-                            <div id="monthlyChart" style="width:100%; height:280px; position:relative;">
+                            <div id="monthlyChart" class="w-full h-[280px] relative">
                                 <div class="flex items-end justify-between h-64 px-2" id="chartBars"></div>
                                 <div class="flex justify-between px-2 mt-2 text-xs text-gray-500" id="chartLabels"></div>
                             </div>
@@ -2059,7 +2065,7 @@
                             <!-- Eskalation-Banner (Stufe 2+3) -->
                             <div id="bwaEskalationBanner" style="display:none;margin-top:12px;padding:12px 16px;border-radius:10px;background:#fef2f2;border:1px solid #fecaca;">
                                 <div class="flex items-center gap-3">
-                                    <span style="font-size:20px">⚠️</span>
+                                    <span class="text-xl">⚠️</span>
                                     <div>
                                         <p id="bwaEskText" class="text-sm font-semibold text-red-700"></p>
                                         <p id="bwaEskSub" class="text-xs text-red-500 mt-0.5"></p>
@@ -2103,7 +2109,7 @@
                             <div class="lg:col-span-2">
                         <!-- Feature Lock Overlay -->
                         <div id="benchmarkLockOverlay" style="display:none;">
-                            <div class="vit-card p-8 text-center mb-6" style="border:2px dashed var(--c-border)">
+                            <div class="vit-card p-8 text-center mb-6 vit-dashed">
                                 <div class="text-5xl mb-3">🔒</div>
                                 <h2 class="text-lg font-bold text-gray-800 mb-2">Benchmark-Vergleich gesperrt</h2>
                                 <p class="text-sm text-gray-500 mb-4">Ohne aktuelle BWA-Daten ist kein Netzwerk-Vergleich möglich.<br>Reiche deine BWA ein, um die Benchmarks freizuschalten.</p>
@@ -2178,7 +2184,7 @@
                                                         <!-- Auto-Support Interceptor -->
                             <div id="ticketInterceptor" style="display:none" class="mb-4 p-4 rounded-xl border-2 border-orange-200 bg-orange-50">
                                 <div class="flex items-center gap-3 mb-3">
-                                    <span style="font-size:24px">🤖</span>
+                                    <span class="text-2xl">🤖</span>
                                     <div><p class="text-sm font-bold text-gray-800">Bevor du ein Ticket erstellst...</p><p class="text-xs text-gray-500">Wir haben möglicherweise eine sofortige Lösung!</p></div>
                                 </div>
                                 <div class="flex gap-2">
@@ -3819,7 +3825,7 @@
                                 <div id="kalWeekHead6" class="py-2 text-center text-xs font-semibold text-gray-600 text-orange-400"></div>
                             </div>
                             <!-- Scrollable time grid -->
-                            <div id="kalWeekGrid" class="overflow-y-auto" style="max-height:calc(100vh - 320px); min-height:500px;"></div>
+                            <div id="kalWeekGrid" class="overflow-y-auto max-h-[calc(100vh-320px)] min-h-[500px]"></div>
                         </div>
                     </div>
 
@@ -3835,7 +3841,7 @@
                                 </div>
                                 <!-- Hour grid -->
                                 <div class="vit-card overflow-hidden">
-                                    <div id="kalDayGrid" class="overflow-y-auto" style="max-height:calc(100vh - 320px); min-height:500px;"></div>
+                                    <div id="kalDayGrid" class="overflow-y-auto max-h-[calc(100vh-320px)] min-h-[500px]"></div>
                                 </div>
                             </div>
                             <!-- Day sidebar (right 1/3) -->
@@ -5272,7 +5278,7 @@
                         <div id="entwBackupContent" class="mt-4"></div>
                     </div>
                     <!-- Submit Form (moved from old Standort view) -->
-                    <div id="devSubmitForm" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center;padding:1rem" onclick="if(event.target===this)toggleDevSubmitForm()">
+                    <div id="devSubmitForm" class="hidden fixed inset-0 bg-black/50 z-[9999] items-center justify-center p-4" style="display:none" onclick="if(event.target===this)toggleDevSubmitForm()">
                         <div class="bg-white rounded-2xl shadow-2xl p-5 w-full max-w-2xl max-h-[90vh] overflow-y-auto relative" onclick="event.stopPropagation()">
                         <button onclick="toggleDevSubmitForm()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 text-lg transition">&times;</button>
                         <h3 class="font-semibold text-gray-800 mb-1">💡 Feedback / Idee einreichen</h3>
@@ -5673,15 +5679,15 @@
                                 <div class="text-sm font-bold text-gray-700">📐 Grundriss</div>
                                 <div class="flex items-center gap-3">
                                     <button onclick="if(typeof officeUploadGrundriss==='function')officeUploadGrundriss()" class="text-xs px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 font-semibold transition">📤 Grundriss hochladen</button>
-                                    <label class="flex items-center gap-2 text-[11px] cursor-pointer"><input type="checkbox" id="officeAdminDragMode" onchange="if(typeof officeToggleDragMode==='function')officeToggleDragMode()" class="accent-orange-500"> <span style="color:#EF7D00;font-weight:700">Plätze verschieben</span></label>
+                                    <label class="flex items-center gap-2 text-[11px] cursor-pointer"><input type="checkbox" id="officeAdminDragMode" onchange="if(typeof officeToggleDragMode==='function')officeToggleDragMode()" class="accent-orange-500"> <span class="text-vit-orange font-bold">Plätze verschieben</span></label>
                                 </div>
                             </div>
                             <div id="officeFloorplanContainer" class="relative overflow-auto">
-                                <img id="officeGrundrissImg" src="grundriss_og.png" style="width:100%;min-width:700px;display:block;border-radius:8px;opacity:0.92"
+                                <img id="officeGrundrissImg" src="grundriss_og.png" class="w-full min-w-[700px] block rounded-lg opacity-[0.92]"
                                      onload="this.dataset.loaded='1';if(typeof officeRenderAdminDots==='function')officeRenderAdminDots()"
                                      onerror="this.style.display='none';document.getElementById('officeGrundrissPlaceholder').style.display='flex'">
                                 <div id="officeGrundrissPlaceholder" style="display:none;width:100%;min-height:400px;background:#f3f4f6;border-radius:8px;align-items:center;justify-content:center;flex-direction:column;gap:12px;border:2px dashed #d1d5db">
-                                    <span style="font-size:48px">🏢</span>
+                                    <span class="text-5xl">🏢</span>
                                     <p class="text-sm text-gray-400 font-semibold">Kein Grundriss vorhanden</p>
                                     <button onclick="if(typeof officeUploadGrundriss==='function')officeUploadGrundriss()" class="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600">📤 Grundriss hochladen</button>
                                 </div>
@@ -6061,30 +6067,30 @@
 <!-- ═══ NUTZERPROFIL SLIDE-OVER PANEL ═══ -->
 <div id="profilePanel" style="display:none;position:fixed;inset:0;z-index:9999;">
     <!-- Backdrop -->
-    <div onclick="closeProfilePanel()" style="position:absolute;inset:0;background:rgba(0,0,0,0.4);transition:opacity 0.3s;" id="profileBackdrop"></div>
+    <div onclick="closeProfilePanel()" class="absolute inset-0 bg-black/40 transition-opacity duration-300" id="profileBackdrop"></div>
     <!-- Panel -->
-    <div id="profileSlider" style="position:absolute;top:0;right:0;bottom:0;width:380px;max-width:100vw;background:var(--c-bg);box-shadow:-8px 0 30px rgba(0,0,0,0.15);transform:translateX(100%);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);overflow-y:auto;">
+    <div id="profileSlider" class="vit-profile-slider">
 
         <!-- Header -->
         <div style="padding:24px 24px 0;padding-top:max(24px, env(safe-area-inset-top, 24px));position:relative;">
             <button onclick="closeProfilePanel()" style="position:absolute;top:max(16px, env(safe-area-inset-top, 16px));right:16px;background:none;border:none;font-size:24px;cursor:pointer;color:var(--c-muted);padding:8px;z-index:10;">✕</button>
-            <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--c-muted);font-weight:600;margin-bottom:16px;">Mein Profil</p>
+            <p class="vit-profile-heading">Mein Profil</p>
 
             <!-- Avatar + Name -->
             <div class="text-center mb-6">
-                <div style="position:relative;display:inline-block;">
+                <div class="relative inline-block">
                     <img id="profileAvatarImg" src="https://ui-avatars.com/api/?name=Demo+User&background=EF7D00&color=fff" class="w-20 h-20 rounded-full border-[3px] border-vit-orange">
-                    <label for="profilePhotoUpload" style="position:absolute;bottom:0;right:0;width:26px;height:26px;border-radius:50%;background:#EF7D00;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid white;font-size:12px;" title="Foto ändern">📷</label>
+                    <label for="profilePhotoUpload" class="absolute bottom-0 right-0 w-[26px] h-[26px] rounded-full bg-vit-orange flex items-center justify-center cursor-pointer border-2 border-white text-xs" title="Foto ändern">📷</label>
                     <input type="file" id="profilePhotoUpload" accept="image/*" style="display:none;" onchange="handleProfilePhoto(this)">
                 </div>
-                <h2 id="profileNameDisplay" style="font-size:20px;font-weight:800;margin-top:10px;color:var(--c-text);">Demo User</h2>
-                <p id="profileRoleDisplay" style="font-size:12px;color:var(--c-muted);">Inhaber</p>
-                <p id="profileStandortDisplay" style="font-size:11px;color:var(--c-muted);margin-top:2px;">📍 Grafrath</p>
+                <h2 id="profileNameDisplay" class="text-xl font-extrabold mt-2.5 text-[var(--c-text)]">Demo User</h2>
+                <p id="profileRoleDisplay" class="text-xs text-[var(--c-muted)]">Inhaber</p>
+                <p id="profileStandortDisplay" class="text-[11px] text-[var(--c-muted)] mt-0.5">📍 Grafrath</p>
             </div>
         </div>
 
         <!-- Persönliche Daten -->
-        <div style="padding:0 24px 24px;">
+        <div class="px-6 pb-6">
             <div class="vit-section-card">
                 <p class="vit-section-header">Persönliche Daten</p>
 
@@ -6100,8 +6106,8 @@
 
                 <div class="mb-3">
                     <label class="vit-label">E-Mail</label>
-                    <input id="profileEmail" type="email"  disabled style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:8px;font-size:13px;background:var(--c-bg3);color:var(--c-sub);font-family:Outfit,sans-serif;">
-                    <p style="font-size:9px;color:var(--c-muted);margin-top:2px;">Wird vom HQ verwaltet</p>
+                    <input id="profileEmail" type="email"  disabled class="vit-input bg-[var(--c-bg3)] text-[var(--c-sub)]">
+                    <p class="vit-micro mt-0.5">Wird vom HQ verwaltet</p>
                 </div>
 
                 <div class="mb-3">
@@ -6109,7 +6115,7 @@
                     <input id="profileTelefon" type="tel" value="" placeholder="+49 ..." class="vit-input" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='var(--c-border)'">
                 </div>
 
-                <div style="margin-bottom:0;">
+                <div class="mb-0">
                     <label class="vit-label">Position / Rolle</label>
                     <input id="profilePosition" type="text" value="" placeholder="z.B. Geschäftsführer, Werkstattleiter..." class="vit-input" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='var(--c-border)'">
                 </div>
@@ -6119,26 +6125,26 @@
             <div class="vit-section-card">
                 <p class="vit-section-header">Erscheinungsbild</p>
                 <div style="display:flex;gap:8px;">
-                    <button onclick="setTheme('light')" id="profileThemeLight" style="flex:1;padding:12px;border-radius:10px;border:2px solid #EF7D00;background:var(--c-bg2);cursor:pointer;text-align:center;">
+                    <button onclick="setTheme('light')" id="profileThemeLight" class="vit-profile-btn border-2 border-vit-orange bg-[var(--c-bg2)]">
                         <span class="text-xl">☀️</span>
-                        <p style="font-size:11px;font-weight:600;color:var(--c-text);margin-top:4px;">Light</p>
+                        <p class="text-[11px] font-semibold text-[var(--c-text)] mt-1">Light</p>
                     </button>
-                    <button onclick="setTheme('dark')" id="profileThemeDark" style="flex:1;padding:12px;border-radius:10px;border:2px solid transparent;background:var(--c-border);cursor:pointer;text-align:center;">
+                    <button onclick="setTheme('dark')" id="profileThemeDark" class="vit-profile-btn border-2 border-transparent bg-[var(--c-border)]">
                         <span class="text-xl">🌙</span>
-                        <p style="font-size:11px;font-weight:600;color:var(--c-muted);margin-top:4px;">Dark</p>
+                        <p class="text-[11px] font-semibold text-[var(--c-muted)] mt-1">Dark</p>
                     </button>
                 </div>
             </div>
 
             <!-- Speichern -->
-            <button onclick="saveProfile()" style="width:100%;padding:12px;background:#EF7D00;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;margin-bottom:12px;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+            <button onclick="saveProfile()" class="w-full p-3 bg-vit-orange text-white border-none rounded-[10px] text-sm font-bold cursor-pointer font-[Outfit,sans-serif] mb-3 transition-opacity" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
                 Änderungen speichern
             </button>
 
             <!-- Passwort / Abmelden -->
             <div style="display:flex;gap:8px;">
-                <button onclick="changePassword()" style="flex:1;padding:8px;background:none;border:1px solid var(--c-border);border-radius:8px;font-size:11px;color:var(--c-sub);cursor:pointer;font-family:Outfit,sans-serif;">🔒 Passwort ändern</button>
-                <button onclick="handleLogout()" style="flex:1;padding:8px;background:none;border:1px solid #fecaca;border-radius:8px;font-size:11px;color:#dc2626;cursor:pointer;font-family:Outfit,sans-serif;">🚪 Abmelden</button>
+                <button onclick="changePassword()" class="vit-small-btn flex-1 border border-[var(--c-border)] text-[var(--c-sub)]">🔒 Passwort ändern</button>
+                <button onclick="handleLogout()" class="vit-small-btn flex-1 border border-red-200 text-red-600">🚪 Abmelden</button>
             </div>
 
             <!-- Meta -->
@@ -6159,20 +6165,20 @@
                     <span>📞 Gruppencall-Erinnerungen</span>
                     <input type="checkbox" checked id="prefCalls" class="vit-checkbox">
                 </label>
-                <div style="border-top:1px solid var(--c-border);margin-top:8px;padding-top:8px;">
+                <div class="border-t border-[var(--c-border)] mt-2 pt-2">
                     <div id="pushSettingsSection">
                         <div id="pushActivateArea">
-                            <button id="pushToggleBtn" onclick="setupPushNotifications()" style="width:100%;padding:10px;background:#EF7D00;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+                            <button id="pushToggleBtn" onclick="setupPushNotifications()" class="w-full py-2.5 bg-vit-orange text-white border-none rounded-lg text-xs font-bold cursor-pointer flex items-center justify-center gap-1.5">
                                 🔔 Push-Benachrichtigungen aktivieren
                             </button>
-                            <p style="font-size:9px;color:var(--c-muted);margin-top:4px;text-align:center">Erhalte Benachrichtigungen direkt auf dein Gerät</p>
+                            <p class="vit-micro mt-1 text-center">Erhalte Benachrichtigungen direkt auf dein Gerät</p>
                         </div>
                         <div id="pushActiveArea" style="display:none;">
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                                <span style="font-size:11px;font-weight:700;color:#059669;">✅ Push aktiv</span>
-                                <button onclick="unsubscribePush()" style="font-size:10px;color:#ef4444;background:none;border:none;cursor:pointer;text-decoration:underline;">Deaktivieren</button>
+                                <span class="text-[11px] font-bold text-emerald-600">✅ Push aktiv</span>
+                                <button onclick="unsubscribePush()" class="text-[10px] text-red-500 bg-transparent border-none cursor-pointer underline">Deaktivieren</button>
                             </div>
-                            <p style="font-size:10px;font-weight:600;color:var(--c-sub);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Push-Benachrichtigungen</p>
+                            <p class="text-[10px] font-semibold text-[var(--c-sub)] mb-1.5 uppercase tracking-wide">Push-Benachrichtigungen</p>
                             <label class="notif-toggle-wrap vit-settings-row">
                                 <span>💬 Neue Nachrichten</span>
                                 <input type="checkbox" checked class="notif-toggle vit-checkbox" data-pref="push_neue_nachricht">
@@ -6197,14 +6203,14 @@
                                 <span>🆘 Support-Updates</span>
                                 <input type="checkbox" checked class="notif-toggle vit-checkbox" data-pref="push_support_update">
                             </label>
-                            <button onclick="saveNotificationPrefs()" style="width:100%;margin-top:8px;padding:7px;background:var(--c-bg3);border:1px solid #d1d5db;border-radius:6px;font-size:11px;font-weight:600;color:var(--c-text2);cursor:pointer;">💾 Push-Einstellungen speichern</button>
+                            <button onclick="saveNotificationPrefs()" class="w-full mt-2 py-1.5 bg-[var(--c-bg3)] border border-gray-300 rounded-md text-[11px] font-semibold text-[var(--c-text2)] cursor-pointer">💾 Push-Einstellungen speichern</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div style="margin-top:16px;padding:12px;background:var(--c-bg2);border-radius:8px;text-align:center;">
-                <p style="font-size:9px;color:var(--c-muted);">vit:bikes cockpit v7.0 · Mitglied seit Jan 2025</p>
+            <div class="mt-4 p-3 bg-[var(--c-bg2)] rounded-lg text-center">
+                <p class="vit-micro">vit:bikes cockpit v7.0 · Mitglied seit Jan 2025</p>
             </div>
         </div>
     </div>
@@ -6496,7 +6502,7 @@
                 <label>Kategorie</label>
             </div>
             <div class="fb-field">
-                <label>Titel <span style="font-weight:400;text-transform:none;color:var(--c-muted)">(optional)</span></label>
+                <label>Titel <span class="font-normal normal-case text-[var(--c-muted)]">(optional)</span></label>
                 <input type="text" id="fbTitle" placeholder="Kurze Zusammenfassung...">
             </div>
             <div class="fb-field">
@@ -6528,9 +6534,9 @@
             <div id="fbRecInfo" class="fb-rec-info" style="display:none">
                 <div class="fb-rec-dot"></div>
                 <span id="fbRecTime">00:00</span>
-                <span style="color:var(--c-muted)">•</span>
+                <span class="text-[var(--c-muted)]">•</span>
                 <span id="fbRecSize">0 KB</span>
-                <button onclick="fbStopRec()" style="margin-left:auto;background:#ef4444;color:#fff;border:none;padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">⏹ Stopp</button>
+                <button onclick="fbStopRec()" class="ml-auto bg-red-500 text-white border-none px-3 py-1 rounded-md text-[11px] font-bold cursor-pointer">⏹ Stopp</button>
             </div>
 
             <div class="fb-attachments" id="fbAttachments"></div>
@@ -6544,16 +6550,16 @@
             <div class="fb-check">🎉</div>
             <h3>Danke für dein Feedback!</h3>
             <p>Wir schauen uns das an und melden uns, wenn wir Rückfragen haben. Dein Input hilft uns, das Portal für alle Partner besser zu machen.</p>
-            <div style="margin-top:20px;padding:16px;background:var(--c-orange-tint,#fff7ed);border-radius:12px;text-align:left">
-                <p style="font-size:11px;font-weight:700;color:#EF7D00;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.05em">✅ Letzte Verbesserungen dank Partner-Feedback</p>
-                <ul style="font-size:12px;color:var(--c-text2);margin:0;padding:0 0 0 16px;line-height:1.8">
+            <div class="mt-5 p-4 bg-[var(--c-orange-tint,#fff7ed)] rounded-xl text-left">
+                <p class="text-[11px] font-bold text-vit-orange mb-2 uppercase tracking-wide">✅ Letzte Verbesserungen dank Partner-Feedback</p>
+                <ul class="text-xs text-[var(--c-text2)] m-0 pl-4 leading-[1.8]">
                     <li>BWA-Parser: 13+ DATEV-Formate erkannt</li>
                     <li>Mitarbeiter-Onboarding mit E-Mail-Einladung</li>
                     <li>WaWi Belege in Buchhaltung integriert</li>
                     <li>Dark Mode für alle Module</li>
                 </ul>
             </div>
-            <button onclick="fbClose()" style="margin-top:16px;padding:10px 28px;border:none;border-radius:10px;background:var(--c-bg3);color:var(--c-text2);font-weight:600;cursor:pointer;font-size:13px">Schließen</button>
+            <button onclick="fbClose()" class="mt-4 px-7 py-2.5 border-none rounded-[10px] bg-[var(--c-bg3)] text-[var(--c-text2)] font-semibold cursor-pointer text-[13px]">Schließen</button>
         </div>
     </div>
 </div>
