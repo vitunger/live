@@ -128,7 +128,7 @@ IIFEs und nicht-modulare Skripte die parallel geladen werden.
 | Module | Lines | Purpose |
 |--------|-------|---------|
 | `inline/react-deal-pipeline.jsx` | 1.603 | React Deal Pipeline (Kanban, Drag&Drop) |
-| `inline/render-system.js` | 956 | Render-System, View-Lifecycle |
+| `inline/render-system.js` (**GELOESCHT** -> views/extern-home.js + onboarding-system.js + demo-mode.js) | 956 | Render-System, View-Lifecycle |
 | `inline/video-helpers.js` (**GELÖSCHT** – war bereits toter Code) | 805 | Video-Processing, Consent, Thumbnails |
 | ~~`inline/pdf-wawi.js`~~ | – | GELÖSCHT: Duplikat von `views/wawi-integration.js` |
 | ~~`inline/billing-inline.js`~~ | – | GELÖSCHT: Duplikat von `views/email-billing.js` |

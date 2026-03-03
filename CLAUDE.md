@@ -98,7 +98,7 @@ portal/
 │   ├── misc-training.js    – KI-Verkaufstrainer: Szenarien, Speech, TTS, Evaluation
 │   ├── view-router.js      – MUSS LETZTES View-Modul sein (vit:view-changed Events)
 │   └── ...                 – Weitere Module (siehe MODULE_MAP.md)
-├── inline/                 – 12 Module, ~3.700 Zeilen (Script-Tags in index.html)
+├── inline/                 – 111 Module, ~2.150 Zeilen (Script-Tags in index.html)
 │   ├── react-deal-pipeline.jsx  – React Kanban Pipeline
 │   ├── react-marketing.jsx      – React Marketing Dashboard
 │   ├── global-search.js         – Globale Suche + Deeplinks

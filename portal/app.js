@@ -66,6 +66,9 @@ const VIEW_MODULES = [
     'views/feature-flags-full.js',
     'views/cockpit-engine.js',
     'views/bwa-cockpit.js',
+    'views/extern-home.js',
+    'views/onboarding-system.js',
+    'views/demo-mode.js',
     'views/email-billing.js',
     'views/standort-billing.js',
     
