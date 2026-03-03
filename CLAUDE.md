@@ -195,6 +195,7 @@ _fmtN(n)      → window.fmtN(n)    // Zahlenformat (de-DE)
 fmtEur(n)     → window.fmtEur(n)  // EUR-Format (Intl.NumberFormat)
 fmtDate(d)    → window.fmtDate(d) // Datum de-DE
 timeAgo(d)    → window.timeAgo(d) // 'vor X Min.' Relative Zeit
+sbUrl()       → window.sbUrl()   // Supabase Project URL (zentralisiert)
 ```
 
 ---

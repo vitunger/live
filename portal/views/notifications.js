@@ -71,7 +71,7 @@ try {
     var { data: session } = await _sb().auth.getSession();
     var token = session?.session?.access_token;
     if (!token) return;
-    await fetch('https://lwwagbkxeofahhwebkab.supabase.co/functions/v1/send-push', {
+    await fetch((window.sbUrl ? window.sbUrl() : 'https://lwwagbkxeofahhwebkab.supabase.co') + '/functions/v1/send-push', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_ids: userIds, title: title, body: body, url: url || '/', icon: '/icon-192.png' })

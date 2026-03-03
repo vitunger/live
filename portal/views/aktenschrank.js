@@ -419,7 +419,7 @@ async function triggerKiClassification(dokId){
     try{
         var s=_sb(),sess=await s.auth.getSession();
         var token=sess.data&&sess.data.session?sess.data.session.access_token:'';
-        var url=(window.SUPABASE_URL||'https://lwwagbkxeofahhwebkab.supabase.co')+'/functions/v1/classify-document';
+        var url=(window.sbUrl ? window.sbUrl() : 'https://lwwagbkxeofahhwebkab.supabase.co')+'/functions/v1/classify-document';
         var resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({dokument_id:dokId})});
         var data=await resp.json();
         if(data.success){

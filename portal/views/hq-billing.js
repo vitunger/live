@@ -16,7 +16,7 @@ function _triggerPush()  { if (typeof window.triggerPush === 'function') window.
 
 // === HQ BILLING / ABRECHNUNG MODULE ===
 // ============================================================
-var BILLING_FN = 'https://lwwagbkxeofahhwebkab.supabase.co/functions/v1/billing';
+var BILLING_FN = (window.sbUrl ? window.sbUrl() : 'https://lwwagbkxeofahhwebkab.supabase.co') + '/functions/v1/billing';
 var billingData = { invoices: [], products: [], strategies: [], tools: [], overview: [] };
 var currentBillingMonth = '';
 

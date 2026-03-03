@@ -5,7 +5,7 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
 (function(){
     function _sb() { return window.sb; }
 
-    const BILLING_FN = 'https://lwwagbkxeofahhwebkab.supabase.co/functions/v1/billing';
+    const BILLING_FN = (window.sbUrl ? window.sbUrl() : 'https://lwwagbkxeofahhwebkab.supabase.co') + '/functions/v1/billing';
     
     // ── Helpers ──
     function fmtEur(n) { return window.fmtEur ? window.fmtEur(n) : (n||0)+' €'; }

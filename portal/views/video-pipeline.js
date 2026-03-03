@@ -122,7 +122,7 @@ var sessionResp = await _sb().auth.getSession();
 var accessToken = sessionResp?.data?.session?.access_token;
 if(!accessToken) { _showToast('Nicht eingeloggt!', 'info'); btn.disabled = false; return; }
 
-var projectId = 'lwwagbkxeofahhwebkab';
+var projectId = (window.SUPABASE_URL || 'https://lwwagbkxeofahhwebkab.supabase.co').split('//')[1].split('.')[0];
 
 for(var i=0; i<total; i++) {
     var file = vpSelectedFiles[i];
