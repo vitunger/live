@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 03.03.2026 (user-management/office/strategie Split, dev-pipeline Split, User-Registration unified, delete_auth_user fix, View-Restore fix)
+> Letzte Aktualisierung: 03.03.2026 (Duplikat-Module zusammengeführt: pdf-wawi→wawi-integration, feedback→hq-feedback, billing-inline→email-billing)
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -51,7 +51,7 @@ portal/
 │   ├── globals.js          – showToast, escH, fmtN, fmtEur, fmtDate, timeAgo, sbUrl
 │   ├── supabase-init.js    – createClient, IDB Session, Auth Listener
 │   └── router.js           – showView(), i18n t(), View Switching
-├── views/                  – 68 Module, ~37.400 Zeilen (parallel geladen)
+├── views/                  – 68 Module, ~37.500 Zeilen (parallel geladen)
 │   ├── home.js             – Dashboard, Widgets, Quick Actions
 │   ├── verkauf.js          – Verkäufer-Performance, Pipeline
 │   ├── controlling.js      – BWA Upload/Parse/AI (13+ Formate)
@@ -91,7 +91,7 @@ portal/
 │   ├── strategie-onboarding.js – Asana-Onboarding, Demo-Tasks, Sales-Daten
 │   ├── view-router.js      – MUSS LETZTES View-Modul sein (vit:view-changed Events)
 │   └── ...                 – Weitere Module (siehe MODULE_MAP.md)
-├── inline/                 – 18 Module, ~7.600 Zeilen (Script-Tags in index.html)
+├── inline/                 – 14 Module, ~4.200 Zeilen (Script-Tags in index.html)
 │   ├── react-deal-pipeline.jsx  – React Kanban Pipeline
 │   ├── react-marketing.jsx      – React Marketing Dashboard
 │   ├── global-search.js         – Globale Suche + Deeplinks
@@ -371,6 +371,7 @@ claude/db-schema-xyz            – Datenbank-Änderungen
 | create-user CORS: * | Mittel | ✅ Behoben – Origin-Whitelist |
 | create-user Invite ohne Rollen-Check | Mittel | ✅ Behoben – HQ/Inhaber-Prüfung |
 | Sicherheitsaudit (28 Maßnahmen) | Hoch | Teilweise umgesetzt |
+| Duplikat-Module (pdf-wawi, billing-inline, feedback in render-system) | Mittel | ✅ Behoben – 3 Module konsolidiert, ~1.660 Zeilen entfernt |
 
 ---
 
