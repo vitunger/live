@@ -162,11 +162,15 @@ export async function renderHqShopOrders() {
             }
             if(o.status==='pending'||o.status==='confirmed') {
                 h += '<button onclick="showPackingList(\''+o.id+'\')" class="text-xs px-3 py-1.5 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700">🖨️ Packliste</button>';
-                h += '<button onclick="showTrackingModal(\''+o.id+'\')" class="text-xs px-3 py-1.5 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600">📦 Versenden</button>';
+                h += '<button id="dhlBtn_'+o.id+'" onclick="createDhlLabel(\''+o.id+'\')" class="text-xs px-3 py-1.5 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600">📦 DHL Label</button>';
+                h += '<button onclick="showTrackingModal(\''+o.id+'\')" class="text-xs px-3 py-1.5 bg-blue-400 text-white rounded-lg font-semibold hover:bg-blue-500 opacity-70" title="Manuell Tracking eingeben">✏️ Manuell</button>';
                 h += '<button onclick="cancelShopOrder(\''+o.id+'\')" class="text-xs px-3 py-1.5 bg-red-100 text-red-700 rounded-lg font-semibold hover:bg-red-200">✕ Stornieren</button>';
             }
             if(o.status==='shipped') {
                 h += '<button onclick="updateShopOrderStatus(\''+o.id+'\',\'delivered\')" class="text-xs px-3 py-1.5 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600">✅ Zugestellt</button>';
+                if(o.tracking_carrier==='DHL') {
+                    h += '<button onclick="downloadDhlLabel(\''+o.id+'\')" class="text-xs px-3 py-1.5 bg-yellow-100 text-yellow-700 rounded-lg font-semibold hover:bg-yellow-200">🏷️ Label drucken</button>';
+                }
             }
             h += '</div></div>';
         });
@@ -690,6 +694,82 @@ export async function saveTracking() {
     renderHqShop();
 }
 
+
+// ===== DHL INTEGRATION =====
+export async function createDhlLabel(orderId) {
+    if(!confirm('DHL Versandlabel erstellen? Die Bestellung wird automatisch auf \"Versendet\" gesetzt.')) return;
+    
+    _ensureConfig();
+    var btn = document.getElementById('dhlBtn_' + orderId);
+    if(btn) { btn.disabled = true; btn.textContent = '⏳ Label wird erstellt...'; }
+    
+    try {
+        var session = await _sb().auth.getSession();
+        var token = session?.data?.session?.access_token;
+        if(!token) throw new Error('Nicht eingeloggt');
+        
+        var resp = await fetch(SUPABASE_URL + '/functions/v1/dhl-shipping', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'apikey': SUPABASE_ANON_KEY,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ mode: 'create_label', order_id: orderId })
+        });
+        
+        var data = await resp.json();
+        if(!resp.ok || !data.success) throw new Error(data.error || 'DHL-Fehler');
+        
+        // Show label PDF
+        if(data.label_b64) {
+            var byteChars = atob(data.label_b64);
+            var byteNumbers = new Array(byteChars.length);
+            for(var i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+            var blob = new Blob([new Uint8Array(byteNumbers)], {type: 'application/pdf'});
+            var url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+        }
+        
+        _showToast('DHL Label erstellt! Tracking: ' + data.tracking_number + (data.sandbox ? ' (SANDBOX)' : ''), 'success');
+        renderHqShop();
+    } catch(err) {
+        _showToast('DHL-Fehler: ' + err.message, 'error');
+        console.error('DHL:', err);
+        if(btn) { btn.disabled = false; btn.textContent = '📦 DHL Label erstellen'; }
+    }
+}
+
+export async function downloadDhlLabel(orderId) {
+    _ensureConfig();
+    try {
+        var session = await _sb().auth.getSession();
+        var token = session?.data?.session?.access_token;
+        
+        var resp = await fetch(SUPABASE_URL + '/functions/v1/dhl-shipping', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'apikey': SUPABASE_ANON_KEY,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ mode: 'get_label', order_id: orderId })
+        });
+        
+        var data = await resp.json();
+        if(!resp.ok || !data.success) throw new Error(data.error || 'Fehler');
+        
+        if(data.label_b64) {
+            var byteChars = atob(data.label_b64);
+            var byteNumbers = new Array(byteChars.length);
+            for(var i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+            var blob = new Blob([new Uint8Array(byteNumbers)], {type: 'application/pdf'});
+            var url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+        }
+    } catch(err) { _showToast('Fehler: ' + err.message, 'error'); }
+}
+
 // ===== ORDER NOTES =====
 export function toggleOrderNotes(orderId) {
     var el = document.getElementById('orderNotes_' + orderId);
@@ -716,8 +796,10 @@ const _exports = {
     openStockModal, saveStockAdjustment,
     openVariantManager, addVariant, addBulkVariants, deleteVariant, updateVariantSort,
     toggleOrderNotes, saveOrderNote,
+    createDhlLabel, downloadDhlLabel,
     uploadShopImage
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
+
 
 
