@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 03.03.2026 (HTML-Nesting-Fix, Login-UX deutsch, SyntaxError-Fixes 8 Module, controllingView closing tag)
+> Letzte Aktualisierung: 03.03.2026 (HQ-Shop Modul-Extraktion, Produkt-Edit, Varianten-Mgmt, Stock, Stornierung)
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -51,7 +51,7 @@ portal/
 │   ├── globals.js          – showToast, escH, fmtN, fmtEur, fmtDate, timeAgo, sbUrl
 │   ├── supabase-init.js    – createClient, IDB Session, Auth Listener
 │   └── router.js           – showView(), i18n t(), View Switching
-├── views/                  – 68 Module, ~38.000 Zeilen (parallel geladen)
+├── views/                  – 69 Module, ~38.500 Zeilen (parallel geladen)
 │   ├── home.js             – Dashboard, Widgets, Quick Actions
 │   ├── verkauf.js          – Verkäufer-Performance, Pipeline
 │   ├── controlling.js      – BWA Upload/Parse/AI (13+ Formate)
@@ -283,6 +283,7 @@ Die größten Module sollten bei der TypeScript-Migration aufgespalten werden:
 | 2 | `office.js` | 143 KB | ✅ Aufgespalten → 9 Sub-Module (office-checkin, office-weekly, office-floorplan, office-guests, office-booking, office-mybookings, office-whoishere, office-stats) |
 | 3 | `user-management.js` | 141 KB | ✅ Aufgespalten → 6 Sub-Module (user-approval, user-employees, user-create-edit, user-modules, user-kommando) |
 | 4 | `strategie.js` | 137 KB | ✅ Aufgespalten → 5 Sub-Module (strategie-shop, strategie-i18n, strategie-content, strategie-onboarding) |
+| — | `hq-kommando.js` | ~64 KB | ✅ Shop-Code extrahiert → hq-shop.js (Produkte, Varianten, Bestand, Stornierung) |
 | 5 | `video-pipeline.js` | 131 KB | → video-upload, video-consent, video-tagging |
 | 6 | `controlling.js` | 108 KB | → bwa-parser, bwa-display, bwa-ai-analysis |
 | 7 | `misc-views.js` | 89 KB | → moduluebersicht, social-media, verkaufstraining |
@@ -486,3 +487,4 @@ security: RLS/JWT/Auth-Verbesserung
 > - Neue Edge Functions oder DB-Tabellen hinzugekommen sind
 >
 > **Datum oben aktualisieren** bei jeder inhaltlichen Änderung.
+
