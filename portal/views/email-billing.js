@@ -38,7 +38,7 @@ try {
     if(res.error) { logEntry.status = 'failed'; console.error('[Email] Error:', res.error); }
     else { console.log('[Email] Sent:', template, 'to', to); }
     // Log to DB
-    if(sb.from) {
+    if(_sb().from) {
         await _sb().from('notifications_log').insert({
             location_id: data.location_id || null,
             user_id: data.user_id || null,

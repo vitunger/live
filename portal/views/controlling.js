@@ -400,7 +400,7 @@ export async function showBwaFromDb(bwaId) {
         var valBanner = document.getElementById('bwaValidationBanner');
         if(valBanner) {
             try {
-                var valResp = await sb.rpc('validate_bwa', {p_bwa_id: bwaId});
+                var valResp = await _sb().rpc('validate_bwa', {p_bwa_id: bwaId});
                 if(valResp.data) {
                     var vd = valResp.data;
                     var checks = vd.checks || [];
@@ -593,7 +593,7 @@ export async function parseBwaWithAI() {
             reader.onload = async function(e) {
                 try {
                     var base64 = e.target.result.split(',')[1];
-                    var session = await sb.auth.getSession();
+                    var session = await _sb().auth.getSession();
                     var token = session?.data?.session?.access_token;
                     var resp = await fetch(SUPABASE_URL + '/functions/v1/analyze-finance', {
                         method: 'POST',
@@ -668,7 +668,7 @@ export async function parseBwaWithAI() {
                 var arrayBuf = await file.arrayBuffer();
                 var wb = XLSX.read(arrayBuf, { type: 'array' });
                 var rawText = cleanCsvForKi(wb);
-                var session = await sb.auth.getSession();
+                var session = await _sb().auth.getSession();
                 var token = session?.data?.session?.access_token;
                 var resp = await fetch(SUPABASE_URL + '/functions/v1/analyze-finance', {
                     method: 'POST',
@@ -1163,7 +1163,7 @@ export async function autoSaveBwa(data, filename) {
     // Run validation after save
     if(resp.data && resp.data[0]) {
         try {
-            await sb.rpc('validate_bwa', {p_bwa_id: resp.data[0].id});
+            await _sb().rpc('validate_bwa', {p_bwa_id: resp.data[0].id});
         } catch(e) { console.warn('BWA Validation failed:', e); }
     }
     

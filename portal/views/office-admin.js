@@ -8,6 +8,7 @@
 
     var _rooms = [];
     var _desks = [];
+    function _sb() { return window.sb; }
     var _dragMode = false;
     var _dragTarget = null;
 
@@ -31,8 +32,8 @@
     async function loadData() {
         if (typeof sb === 'undefined' || !sb) { console.warn('[OfficeAdmin] sb not ready'); return; }
         try {
-            var roomsResp = await sb.from('office_rooms').select('*').order('sortierung');
-            var desksResp = await sb.from('office_desks').select('*').order('nr');
+            var roomsResp = await _sb().from('office_rooms').select('*').order('sortierung');
+            var desksResp = await _sb().from('office_desks').select('*').order('nr');
             if (roomsResp.error) { console.error('[OfficeAdmin] rooms error:', roomsResp.error); return; }
             if (desksResp.error) { console.error('[OfficeAdmin] desks error:', desksResp.error); return; }
             _rooms = (roomsResp.data || []).filter(function(r) { return r.active && r.name !== 'unbekannt'; });
@@ -67,10 +68,10 @@
             notify('Wird hochgeladen...','info');
             try {
                 var fn = 'grundriss_'+roomId+'_'+Date.now()+'.'+file.name.split('.').pop();
-                var up = await sb.storage.from('office-grundrisse').upload(fn, file, {cacheControl:'3600',upsert:false});
+                var up = await _sb().storage.from('office-grundrisse').upload(fn, file, {cacheControl:'3600',upsert:false});
                 if (up.error) throw up.error;
-                var url = sb.storage.from('office-grundrisse').getPublicUrl(fn).data.publicUrl;
-                var upd = await sb.from('office_rooms').update({grundriss_url: url}).eq('id', roomId);
+                var url = _sb().storage.from('office-grundrisse').getPublicUrl(fn).data.publicUrl;
+                var upd = await _sb().from('office_rooms').update({grundriss_url: url}).eq('id', roomId);
                 if (upd.error) throw upd.error;
                 room.grundriss_url = url;
                 notify('✅ Grundriss für "'+room.name+'" hochgeladen!');
@@ -83,7 +84,7 @@
     window.officeDeleteGrundriss = async function(roomId) {
         if (!confirm('Grundriss-Bild löschen?')) return;
         try {
-            var upd = await sb.from('office_rooms').update({grundriss_url: null}).eq('id', roomId);
+            var upd = await _sb().from('office_rooms').update({grundriss_url: null}).eq('id', roomId);
             if (upd.error) throw upd.error;
             var room = _rooms.find(function(r){return r.id===roomId;});
             if (room) room.grundriss_url = null;
@@ -148,7 +149,7 @@
         var t=parseFloat(_labelDragTarget.style.top);
         _labelDragTarget.style.cursor='grab';_labelDragTarget.style.zIndex='15';_labelDragTarget=null;
         try{
-            var r=await sb.from('office_rooms').update({label_pct_x:l.toFixed(2),label_pct_y:t.toFixed(2)}).eq('id',roomId);
+            var r=await _sb().from('office_rooms').update({label_pct_x:l.toFixed(2),label_pct_y:t.toFixed(2)}).eq('id',roomId);
             if(r.error)throw r.error;
             var rm=_rooms.find(function(rm){return rm.id===roomId;});
             if(rm){rm.label_pct_x=l.toFixed(2);rm.label_pct_y=t.toFixed(2);}
@@ -163,7 +164,7 @@
     function moveDot(cx,cy){var img=document.getElementById('officeGrundrissImg');if(!img||!_dragTarget)return;var r=img.getBoundingClientRect();_dragTarget.style.left=Math.max(0,Math.min(100,((cx-r.left)/r.width)*100))+'%';_dragTarget.style.top=Math.max(0,Math.min(100,((cy-r.top)/r.height)*100))+'%';}
     async function endDrag(){document.removeEventListener('mousemove',onDrag);document.removeEventListener('mouseup',endDrag);await saveDotPos();}
     async function endDragTouch(){document.removeEventListener('touchmove',onDragTouch);document.removeEventListener('touchend',endDragTouch);await saveDotPos();}
-    async function saveDotPos(){if(!_dragTarget)return;var nr=parseInt(_dragTarget.dataset.nr),l=parseFloat(_dragTarget.style.left),t=parseFloat(_dragTarget.style.top);_dragTarget.style.cursor='grab';_dragTarget.style.zIndex='10';_dragTarget=null;try{var r=await sb.from('office_desks').update({pct_x:l.toFixed(2),pct_y:t.toFixed(2)}).eq('nr',nr);if(r.error)throw r.error;var d=_desks.find(function(d){return d.nr===nr;});if(d){d.pct_x=l.toFixed(2);d.pct_y=t.toFixed(2);}}catch(e){notify('Position speichern fehlgeschlagen','error');}}
+    async function saveDotPos(){if(!_dragTarget)return;var nr=parseInt(_dragTarget.dataset.nr),l=parseFloat(_dragTarget.style.left),t=parseFloat(_dragTarget.style.top);_dragTarget.style.cursor='grab';_dragTarget.style.zIndex='10';_dragTarget=null;try{var r=await _sb().from('office_desks').update({pct_x:l.toFixed(2),pct_y:t.toFixed(2)}).eq('nr',nr);if(r.error)throw r.error;var d=_desks.find(function(d){return d.nr===nr;});if(d){d.pct_x=l.toFixed(2);d.pct_y=t.toFixed(2);}}catch(e){notify('Position speichern fehlgeschlagen','error');}}
 
     window.officeToggleDragMode = function(){var cb=document.getElementById('officeAdminDragMode');_dragMode=cb?cb.checked:false;var h=document.getElementById('officeAdminDragHint');if(h)h.innerHTML=_dragMode?'<span class="text-orange-600 font-semibold">⚡ Drag-Modus aktiv!</span> Ziehe Punkte <b>und Raumnamen</b> an die richtige Position.':'Aktiviere "Plätze verschieben" um Dots und Raumnamen per Drag & Drop auf dem Grundriss zu positionieren.';renderDots();};
 
@@ -266,7 +267,7 @@
                 var name = gv('oaRN').trim();
                 if (!name) { notify('Name ist Pflichtfeld','error'); return; }
                 try {
-                    var r = await sb.from('office_rooms').insert({name:name,floor_label:gv('oaRF')||null,sortierung:parseInt(gv('oaRS'))||0}).select().single();
+                    var r = await _sb().from('office_rooms').insert({name:name,floor_label:gv('oaRF')||null,sortierung:parseInt(gv('oaRS'))||0}).select().single();
                     if (r.error) throw r.error;
                     notify('✅ Raum "'+name+'" angelegt');
                     cModal(); await officeRenderAdminDots();
@@ -283,9 +284,9 @@
                 var name = gv('oaRN').trim();
                 if (!name) { notify('Name ist Pflichtfeld','error'); return; }
                 try {
-                    var upd = await sb.from('office_rooms').update({name:name,floor_label:gv('oaRF')||null,sortierung:parseInt(gv('oaRS'))||0}).eq('id',id);
+                    var upd = await _sb().from('office_rooms').update({name:name,floor_label:gv('oaRF')||null,sortierung:parseInt(gv('oaRS'))||0}).eq('id',id);
                     if (upd.error) throw upd.error;
-                    await sb.from('office_desks').update({room:name}).eq('room_id',id);
+                    await _sb().from('office_desks').update({room:name}).eq('room_id',id);
                     notify('✅ Raum aktualisiert');
                     cModal(); await officeRenderAdminDots();
                 } catch(err) { notify('Fehler: '+err.message,'error'); }
@@ -299,7 +300,7 @@
         if (cnt > 0) { notify('⚠️ Raum "'+room.name+'" hat noch '+cnt+' Plätze — erst löschen/verschieben','error'); return; }
         if (!confirm('Raum "'+room.name+'" wirklich löschen?')) return;
         try {
-            var r = await sb.from('office_rooms').update({active:false}).eq('id',id);
+            var r = await _sb().from('office_rooms').update({active:false}).eq('id',id);
             if (r.error) throw r.error;
             notify('🗑️ Raum "'+room.name+'" gelöscht');
             await officeRenderAdminDots();
@@ -319,15 +320,15 @@
             async function() {
                 var nr = parseInt(gv('oaDN'));
                 if (!nr||nr<1) { notify('Platz-Nr muss > 0 sein','error'); return; }
-                var existing = await sb.from('office_desks').select('nr,active').eq('nr',nr).maybeSingle();
+                var existing = await _sb().from('office_desks').select('nr,active').eq('nr',nr).maybeSingle();
                 if (existing.data && existing.data.active) { notify('P'+nr+' existiert bereits!','error'); return; }
                 try {
                     var r;
                     if (existing.data && !existing.data.active) {
                         // Reactivate inactive desk with new data
-                        r = await sb.from('office_desks').update({active:true,room:roomName,room_id:roomId,desk_type:gv('oaDT')||'standard',has_monitor:gc('oaDM'),has_docking:gc('oaDD'),is_bookable:gc('oaDB'),label:gv('oaDL')||null,pct_x:50,pct_y:50}).eq('nr',nr).select().single();
+                        r = await _sb().from('office_desks').update({active:true,room:roomName,room_id:roomId,desk_type:gv('oaDT')||'standard',has_monitor:gc('oaDM'),has_docking:gc('oaDD'),is_bookable:gc('oaDB'),label:gv('oaDL')||null,pct_x:50,pct_y:50}).eq('nr',nr).select().single();
                     } else {
-                        r = await sb.from('office_desks').insert({nr:nr,room:roomName,room_id:roomId,desk_type:gv('oaDT')||'standard',has_monitor:gc('oaDM'),has_docking:gc('oaDD'),is_bookable:gc('oaDB'),label:gv('oaDL')||null,pct_x:50,pct_y:50,x:0,y:0}).select().single();
+                        r = await _sb().from('office_desks').insert({nr:nr,room:roomName,room_id:roomId,desk_type:gv('oaDT')||'standard',has_monitor:gc('oaDM'),has_docking:gc('oaDD'),is_bookable:gc('oaDB'),label:gv('oaDL')||null,pct_x:50,pct_y:50,x:0,y:0}).select().single();
                     }
                     if (r.error) throw r.error;
                     notify('✅ P'+nr+' angelegt — Drag-Modus zum Positionieren!');
@@ -351,7 +352,7 @@
                 var selRoom = gv('oaDR');
                 var rmObj = _rooms.find(function(r){return r.id===selRoom;});
                 try {
-                    var upd = await sb.from('office_desks').update({room_id:selRoom,room:rmObj?rmObj.name:desk.room,desk_type:gv('oaDT')||'standard',has_monitor:gc('oaDM'),has_docking:gc('oaDD'),is_bookable:gc('oaDB'),label:gv('oaDL')||null}).eq('nr',nr);
+                    var upd = await _sb().from('office_desks').update({room_id:selRoom,room:rmObj?rmObj.name:desk.room,desk_type:gv('oaDT')||'standard',has_monitor:gc('oaDM'),has_docking:gc('oaDD'),is_bookable:gc('oaDB'),label:gv('oaDL')||null}).eq('nr',nr);
                     if (upd.error) throw upd.error;
                     notify('✅ P'+nr+' aktualisiert');
                     cModal(); await officeRenderAdminDots();
@@ -362,14 +363,14 @@
 
     window.officeDeleteDesk = async function(nr) {
         var today = new Date().toISOString().split('T')[0];
-        var bk = await sb.from('office_bookings').select('id').eq('desk_nr',nr).gte('booking_date',today).limit(1);
+        var bk = await _sb().from('office_bookings').select('id').eq('desk_nr',nr).gte('booking_date',today).limit(1);
         if (bk.data&&bk.data.length>0) {
             if (!confirm('⚠️ P'+nr+' hat aktive Buchungen!\nTrotzdem deaktivieren?')) return;
         } else {
             if (!confirm('Platz P'+nr+' wirklich deaktivieren?')) return;
         }
         try {
-            var r = await sb.from('office_desks').update({active:false}).eq('nr',nr);
+            var r = await _sb().from('office_desks').update({active:false}).eq('nr',nr);
             if (r.error) throw r.error;
             notify('🗑️ P'+nr+' deaktiviert');
             await officeRenderAdminDots();

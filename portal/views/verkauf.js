@@ -186,7 +186,7 @@ export async function renderJahresTabelle() {
 
     var trackingData = {};
     try {
-        var q = sb.from('verkauf_tracking').select('datum, geplant, spontan, ergo, verkauft, umsatz')
+        var q = _sb().from('verkauf_tracking').select('datum, geplant, spontan, ergo, verkauft, umsatz')
             .gte('datum', yr + '-01-01').lte('datum', yr + '-12-31');
         if(stdId && !profile.is_hq) q = q.eq('standort_id', stdId);
         var resp = await q;
@@ -204,7 +204,7 @@ export async function renderJahresTabelle() {
     var planData = {};
     try {
         if(stdId) {
-            var jpResp = await sb.from('jahresplaene').select('plan_daten').eq('standort_id', stdId).eq('jahr', yr).single();
+            var jpResp = await _sb().from('jahresplaene').select('plan_daten').eq('standort_id', stdId).eq('jahr', yr).single();
             if(jpResp.data && jpResp.data.plan_daten) {
                 for(var i = 1; i <= 12; i++) {
                     var mp = jpResp.data.plan_daten[String(i)] || jpResp.data.plan_daten[i] || {};

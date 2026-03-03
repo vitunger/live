@@ -920,7 +920,7 @@ export async function analysiereIdee(ideeId, btnEl) {
         if(!idee) throw new Error('Idee nicht gefunden');
         var resp = await fetch(SUPABASE_URL + '/functions/v1/feedback-analyst', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await sb.auth.getSession()).data.session.access_token },
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token },
             body: JSON.stringify({ text: idee.titel + '\n' + (idee.beschreibung||''), kategorie: idee.kategorie||'idee', standort: idee.standorte ? idee.standorte.name : 'HQ' })
         });
         var result = await resp.json();

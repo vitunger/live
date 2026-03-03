@@ -20,7 +20,7 @@ export async function renderHqVerkauf() {
     // Load standorte
     var standorte = [];
     try {
-        var r = await sb.from('standorte').select('id, name, slug').order('name');
+        var r = await _sb().from('standorte').select('id, name, slug').order('name');
         if(r.data) standorte = r.data;
     } catch(e) {}
     
@@ -33,7 +33,7 @@ export async function renderHqVerkauf() {
     
     var trackByStd = {};
     try {
-        var tr = await sb.from('verkauf_tracking').select('standort_id, geplant, spontan, ergo, verkauft, umsatz').gte('datum', mondayStr).lte('datum', sundayStr);
+        var tr = await _sb().from('verkauf_tracking').select('standort_id, geplant, spontan, ergo, verkauft, umsatz').gte('datum', mondayStr).lte('datum', sundayStr);
         if(tr.data) tr.data.forEach(function(d) {
             var sid = d.standort_id;
             if(!trackByStd[sid]) trackByStd[sid] = {beratungen:0,verkauft:0,umsatz:0};
@@ -46,7 +46,7 @@ export async function renderHqVerkauf() {
     // Load leads count per standort
     var leadsByStd = {};
     try {
-        var lr = await sb.from('leads').select('standort_id, id').in('status', ['lead','angebot','schwebend']);
+        var lr = await _sb().from('leads').select('standort_id, id').in('status', ['lead','angebot','schwebend']);
         if(lr.data) lr.data.forEach(function(d) {
             leadsByStd[d.standort_id] = (leadsByStd[d.standort_id]||0) + 1;
         });
@@ -121,7 +121,7 @@ async function loadHqAutomations() {
     var DB_TO_STAGE = {anfrage:'lead',angebot:'angebot',schwebend:'schwebend',verkauft:'verkauft',gold:'gold',verloren:'lost'};
     
     try {
-        var r = await sb.from('lead_automations').select('*').order('created_at');
+        var r = await _sb().from('lead_automations').select('*').order('created_at');
         if(!r.data || !r.data.length) { container.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">Noch keine Automationen angelegt.</p>'; return; }
         
         var html = '';
@@ -176,7 +176,7 @@ window.saveHqAutomation = async function() {
     var text = document.getElementById('hqAutoText').value;
     if(!text) { alert('Bitte Text eingeben'); return; }
     
-    var resp = await sb.from('lead_automations').insert({
+    var resp = await _sb().from('lead_automations').insert({
         from_stage: from === '*' ? '*' : (STAGE_TO_DB[from] || from),
         to_stage: STAGE_TO_DB[to] || to,
         action: action,
@@ -195,7 +195,7 @@ window.saveHqAutomation = async function() {
 window.toggleHqAuto = async function(id, enabled) {
     var sb = window.sb || window.supabase;
     if(!sb) return;
-    await sb.from('lead_automations').update({enabled: enabled}).eq('id', id);
+    await _sb().from('lead_automations').update({enabled: enabled}).eq('id', id);
     loadHqAutomations();
 };
 
@@ -203,7 +203,7 @@ window.deleteHqAuto = async function(id) {
     if(!confirm('Automation wirklich löschen?')) return;
     var sb = window.sb || window.supabase;
     if(!sb) return;
-    await sb.from('lead_automations').delete().eq('id', id);
+    await _sb().from('lead_automations').delete().eq('id', id);
     loadHqAutomations();
 };
 

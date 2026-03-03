@@ -710,7 +710,7 @@ export async function approvalAction(invId, action) {
             });
             // Trigger LexOffice sync for this single invoice
             try {
-                var session = await sb.auth.getSession();
+                var session = await _sb().auth.getSession();
                 await fetch(SUPABASE_URL + '/functions/v1/lexoffice-sync', {
                     method: 'POST',
                     headers: {'Content-Type':'application/json','Authorization':'Bearer '+(session.data.session?session.data.session.access_token:''),'apikey':SUPABASE_ANON_KEY},

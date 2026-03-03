@@ -68,7 +68,7 @@ try {
         if (prefs) userIds = prefs.filter(function(p) { return p[prefKey] !== false; }).map(function(p) { return p.user_id; });
         if (userIds.length === 0) return;
     }
-    var { data: session } = await sb.auth.getSession();
+    var { data: session } = await _sb().auth.getSession();
     var token = session?.session?.access_token;
     if (!token) return;
     await fetch('https://lwwagbkxeofahhwebkab.supabase.co/functions/v1/send-push', {
@@ -82,7 +82,7 @@ try {
 export async function triggerPushStandort(title, body, url, prefKey) {
 try {
     var sb = window._supabase;
-    var me = (await sb.auth.getUser()).data.user?.id;
+    var me = (await _sb().auth.getUser()).data.user?.id;
     var sid = _sbProfile() ? _sbProfile().standort_id : null;
     if (!sid || !me) return;
     var { data: users } = await _sb().from('users').select('id').eq('standort_id', sid);
@@ -95,7 +95,7 @@ try {
 export async function triggerPushHQ(title, body, url, prefKey) {
 try {
     var sb = window._supabase;
-    var me = (await sb.auth.getUser()).data.user?.id;
+    var me = (await _sb().auth.getUser()).data.user?.id;
     var { data: hqUsers } = await _sb().from('users').select('id').eq('is_hq', true);
     if (!hqUsers) return;
     var ids = hqUsers.map(function(u) { return u.id; }).filter(function(id) { return id !== me; });

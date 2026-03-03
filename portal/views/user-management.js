@@ -232,7 +232,7 @@ export async function confirmApprove(userId) {
         closeApproveModal();
         var rollenLabels = {'hq':'HQ','hq_gf':'GF','hq_sales':'Sales','hq_marketing':'Marketing','hq_einkauf':'Einkauf','hq_support':'Support','hq_akademie':'Akademie','hq_hr':'HR','hq_it':'IT','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
         alert('\u2705 User freigeschaltet!\nRollen: ' + selected.map(function(r){return rollenLabels[r]||r;}).join(', ') + '\n\nDer Mitarbeiter kann sich jetzt einloggen.');
-        renderKzMitarbeiter();
+        await renderKzMitarbeiter();
     } catch(err) {
         if(errEl) { errEl.textContent = 'Fehler: ' + err.message; errEl.style.display = 'block'; }
         if(btn) { btn.disabled = false; btn.textContent = '\u2705 Freigeben'; }
@@ -245,7 +245,7 @@ export async function rejectUser(userId) {
         await _sb().from('users').update({status: 'gesperrt'}).eq('id', userId);
         closeApproveModal();
         alert('User abgelehnt und gesperrt.');
-        renderKzMitarbeiter();
+        await renderKzMitarbeiter();
     } catch(err) { alert('Fehler: ' + err.message); }
 }
 
@@ -293,7 +293,7 @@ export function saveRollen(maIdx) {
     if(selected.length===0) { alert('Mindestens eine Rolle muss zugewiesen werden.'); return; }
     kzMitarbeiter[maIdx].rollen = selected;
     closeRollenModal();
-    renderKzMitarbeiter();
+    await renderKzMitarbeiter();
 
     var labels = {'hq':'HQ','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
     var names = selected.map(function(r){return labels[r];}).join(', ');
@@ -322,7 +322,7 @@ export function filterPartnerMa(f) {
     });
     var btn=document.querySelector('.p-ma-filter[data-pmf="'+f+'"]');
     if(btn) btn.className='p-ma-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white';
-    renderPartnerMitarbeiter();
+    await renderPartnerMitarbeiter();
 }
 
 // ============== EMPLOYEE + TOOLS SYSTEM ==============
@@ -484,7 +484,7 @@ export async function saveEmployeeTools(empId) {
             }
         }
         closeEmpToolsModal();
-        renderPartnerMitarbeiter();
+        await renderPartnerMitarbeiter();
     } catch(err){ if(errEl){errEl.textContent='Fehler: '+err.message;errEl.style.display='block';} if(btn){btn.disabled=false;btn.textContent='\u2714 Speichern';} }
 }
 
@@ -648,7 +648,7 @@ export async function renderMaKosten(){
     try{
         var stdId=(_sbStandort()&&_sbStandort().id)?_sbStandort().id:null;
         if(!stdId){el.innerHTML='<div class="text-center py-8 text-gray-400">Standort-Kontext ben\u00f6tigt.</div>';return;}
-        var resp=await sb.rpc('calculate_monthly_billing',{p_standort_id:stdId});
+        var resp=await _sb().rpc('calculate_monthly_billing',{p_standort_id:stdId});
         if(resp.error) throw resp.error;
         var rows=resp.data||[];
         var standortRows=rows.filter(function(r){return r.source==='standort';});
@@ -1172,7 +1172,7 @@ export async function saveEditMa(userId) {
 
         // 2. Passwort ändern (via set_user_password)
         if(pw && pw.length >= 6) {
-            var pwResp = await sb.rpc('set_user_password', { user_id: userId, new_password: pw });
+            var pwResp = await _sb().rpc('set_user_password', { user_id: userId, new_password: pw });
             if(pwResp && pwResp.error) console.warn('Passwort-Update:', pwResp.error.message);
         }
 
@@ -1195,7 +1195,7 @@ export async function saveEditMa(userId) {
 
         closeEditMaModal();
         alert('\u2705 Mitarbeiter aktualisiert!');
-        renderKzMitarbeiter();
+        await renderKzMitarbeiter();
         // If this user's status changed, re-check demo mode
         if(_sbProfile() && userId === _sbProfile().id) {
             _sbProfile().status = status;
@@ -1216,7 +1216,7 @@ export async function loginAs(userId, email, userName) {
     try {
         // 1. Temporäres Passwort setzen
         var tempPw = '_TempLogin_' + Date.now();
-        await sb.rpc('set_user_password', { user_id: userId, new_password: tempPw });
+        await _sb().rpc('set_user_password', { user_id: userId, new_password: tempPw });
         
         // 2. Ausloggen
         await _sb().auth.signOut();
@@ -1250,12 +1250,12 @@ export async function deleteMa(userId, userName) {
         // 3. Auth-User löschen (via DB-Funktion)
         await _sb().rpc('delete_auth_user', { target_user_id: userId });
         alert('\u2705 '+userName+' wurde gelöscht.');
-        renderKzMitarbeiter();
+        await renderKzMitarbeiter();
     } catch(err) {
         // Auch bei Fehler beim Auth-Löschen: Profil ist bereits weg
         if(err.message && err.message.includes('delete_auth_user')) {
             alert('\u2705 '+userName+' Profil gelöscht.\n\u26a0\ufe0f Auth-User muss manuell im Supabase Dashboard entfernt werden.');
-            renderKzMitarbeiter();
+            await renderKzMitarbeiter();
         } else {
             alert('Fehler: '+(err.message||err));
         }
@@ -1967,7 +1967,7 @@ export function showKommandoTab(tab) {
     var btn=document.querySelector('.kommando-tab-btn[data-ktab="'+tab+'"]');
     if(btn)btn.className='kommando-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
     if(tab==='standorte') renderKzStandorte();
-    if(tab==='mitarbeiter') renderKzMitarbeiter();
+    if(tab==='mitarbeiter') await renderKzMitarbeiter();
     if(tab==='kommunikation' && typeof window.renderHqKomm==='function') window.renderHqKomm();
     if(tab==='kampagnen' && typeof window.renderHqKampagnen==='function') window.renderHqKampagnen();
     if(tab==='dokumente' && typeof window.loadNetzwerkDokumente==='function') window.loadNetzwerkDokumente();
@@ -1987,7 +1987,7 @@ export function filterKzMa(f) {
     document.querySelectorAll('.kz-ma-filter').forEach(function(b){b.className='kz-ma-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600';});
     var btn=document.querySelector('.kz-ma-filter[data-kzmf="'+f+'"]');
     if(btn)btn.className='kz-ma-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white';
-    renderKzMitarbeiter();
+    await renderKzMitarbeiter();
 }
 
 function statusBadge(s) {

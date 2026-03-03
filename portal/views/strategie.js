@@ -1308,7 +1308,7 @@ export async function submitShopOrder() {
             var cartItem = shopCart[ci];
             if (cartItem.variant_id) {
                 try {
-                    var stockResp = await sb.rpc('decrement_stock', { p_variant_id: cartItem.variant_id, p_qty: cartItem.menge });
+                    var stockResp = await _sb().rpc('decrement_stock', { p_variant_id: cartItem.variant_id, p_qty: cartItem.menge });
                     if(stockResp.error) throw stockResp.error;
                 } catch(stockErr) {
                     // Fallback: direct update

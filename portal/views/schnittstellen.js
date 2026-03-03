@@ -101,7 +101,7 @@ export async function renderSchnittstellen() {
     try {
         var sb = _sb();
         if (sb && _sbProfile() && _sbProfile().is_hq) {
-            var { data: stds } = await sb.from('standorte').select('id, name').order('name');
+            var { data: stds } = await _sb().from('standorte').select('id, name').order('name');
             window._allStandorte = stds || [];
         }
     } catch (e) {}
@@ -122,7 +122,7 @@ export async function renderSchnittstellen() {
 async function loadAdsAccountData() {
     try {
         var sb = _sb(); if (!sb) return;
-        var res = await sb.from('ads_accounts').select('plattform, letzter_sync, sync_status, sync_fehler, account_id');
+        var res = await _sb().from('ads_accounts').select('plattform, letzter_sync, sync_status, sync_fehler, account_id');
         if (res.error) throw res.error;
         var accounts = res.data || [];
         accounts.forEach(function(a) {
@@ -152,7 +152,7 @@ async function loadAdsAccountData() {
 async function loadWawiStatus() {
     try {
         var sb = _sb(); if (!sb) return;
-        var res = await sb.from('wawi_connections').select('id, standort_id, system_typ, status, letzter_sync, standorte(name)');
+        var res = await _sb().from('wawi_connections').select('id, standort_id, system_typ, status, letzter_sync, standorte(name)');
         if (res.error) throw res.error;
         var conns = res.data || [];
 
@@ -559,7 +559,7 @@ window.loadEterminConfig = async function(standortId) {
     }
     try {
         var sb = _sb(); if (!sb) return;
-        var { data: cfg } = await sb.from('etermin_config')
+        var { data: cfg } = await _sb().from('etermin_config')
             .select('public_key, private_key').eq('standort_id', standortId).maybeSingle();
         var pubEl = document.getElementById('conn_etermin_public_key');
         var privEl = document.getElementById('conn_etermin_private_key');
@@ -575,7 +575,7 @@ async function loadEterminOverview() {
     if (!el) return;
     try {
         var sb = _sb(); if (!sb) { console.warn('[eTermin] no sb client'); return; }
-        var { data: configs, error: cfgErr } = await sb.from('etermin_config')
+        var { data: configs, error: cfgErr } = await _sb().from('etermin_config')
             .select('standort_id, is_active, updated_at, standorte(name)').order('updated_at', { ascending: false });
         console.log('[eTermin] configs:', configs, 'error:', cfgErr);
         configs = configs || [];
@@ -813,7 +813,7 @@ window.saveConnector = async function(id) {
 
             if (!stdId) throw new Error('Kein Standort ausgewählt');
 
-            var { data: existing } = await sb.from('etermin_config')
+            var { data: existing } = await _sb().from('etermin_config')
                 .select('id').eq('standort_id', stdId).maybeSingle();
             var payload = {
                 standort_id: stdId,
@@ -824,10 +824,10 @@ window.saveConnector = async function(id) {
                 updated_at: new Date().toISOString()
             };
             if (existing) {
-                var r = await sb.from('etermin_config').update(payload).eq('id', existing.id);
+                var r = await _sb().from('etermin_config').update(payload).eq('id', existing.id);
                 if (r.error) throw r.error;
             } else {
-                var r = await sb.from('etermin_config').insert(payload);
+                var r = await _sb().from('etermin_config').insert(payload);
                 if (r.error) throw r.error;
             }
             addLog(id, 'ok', 'API-Keys gespeichert für Standort');

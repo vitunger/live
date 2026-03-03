@@ -8,6 +8,7 @@
     'use strict';
 
     // ─── State ───
+    function _sb() { return window.sb; }
     var _weekOffset = 0;
     var _rooms = null;
     var _desks = null;
@@ -55,27 +56,27 @@
     // ─── Data Loading ───
     async function loadDesks() {
         if(_desks) return _desks;
-        var r=await sb.from('office_desks').select('*').eq('active',true).order('nr');
+        var r=await _sb().from('office_desks').select('*').eq('active',true).order('nr');
         _desks=r.data||[]; return _desks;
     }
     async function loadRooms() {
         if(_rooms) return _rooms;
-        var r=await sb.from('office_rooms').select('*').eq('active',true).order('sortierung');
+        var r=await _sb().from('office_rooms').select('*').eq('active',true).order('sortierung');
         _rooms=(r.data||[]).filter(function(rm){return rm.name!=='unbekannt';}); return _rooms;
     }
     async function loadHQUsers() {
         if(_hqUsers.length) return _hqUsers;
-        var r=await sb.from('users').select('id,name,vorname,nachname,avatar_url').eq('is_hq',true).eq('status','aktiv').order('nachname');
+        var r=await _sb().from('users').select('id,name,vorname,nachname,avatar_url').eq('is_hq',true).eq('status','aktiv').order('nachname');
         _hqUsers=r.data||[]; return _hqUsers;
     }
     async function loadTodayCheckins() {
-        var r=await sb.from('office_checkins').select('id,user_id,desk_nr,status,checked_in_at,source')
+        var r=await _sb().from('office_checkins').select('id,user_id,desk_nr,status,checked_in_at,source')
             .gte('checked_in_at',todayISO()+'T00:00:00').is('checked_out_at',null);
         _todayCheckins=r.data||[];
         _myCheckin=_todayCheckins.find(function(c){return c.user_id===sbUser.id;})||null;
     }
     async function loadTodayBookings() {
-        var r=await sb.from('office_bookings').select('id,user_id,desk_nr,status,note').eq('booking_date',todayISO());
+        var r=await _sb().from('office_bookings').select('id,user_id,desk_nr,status,note').eq('booking_date',todayISO());
         _todayBookings=r.data||[];
     }
 
@@ -402,14 +403,14 @@ var remoteList=[], absentList=[], unknownList=[];
         try {
             if(_myCheckin){notify('\u2705 Bereits eingecheckt','info');return;}
             var finalStatus = checkinStatus || 'office';
-            var r=await sb.from('office_checkins').insert({
+            var r=await _sb().from('office_checkins').insert({
                 user_id:sbUser.id, desk_nr:deskNr||null, status:finalStatus,
                 checked_in_at:new Date().toISOString(), source:'manual'
             }).select().single();
             if(r.error){
                 if(r.error.code==='23505'){
-                    await sb.from('office_checkins').update({checked_out_at:new Date().toISOString()}).eq('user_id',sbUser.id).is('checked_out_at',null);
-                    var r2=await sb.from('office_checkins').insert({user_id:sbUser.id,desk_nr:deskNr||null,status:'office',checked_in_at:new Date().toISOString(),source:'manual'}).select().single();
+                    await _sb().from('office_checkins').update({checked_out_at:new Date().toISOString()}).eq('user_id',sbUser.id).is('checked_out_at',null);
+                    var r2=await _sb().from('office_checkins').insert({user_id:sbUser.id,desk_nr:deskNr||null,status:'office',checked_in_at:new Date().toISOString(),source:'manual'}).select().single();
                     if(r2.error) throw r2.error;
                 } else throw r.error;
             }
@@ -424,7 +425,7 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
     window._offCheckOut = async function() {
         if(!_myCheckin) return;
         try {
-            var r=await sb.from('office_checkins').update({checked_out_at:new Date().toISOString()}).eq('id',_myCheckin.id);
+            var r=await _sb().from('office_checkins').update({checked_out_at:new Date().toISOString()}).eq('id',_myCheckin.id);
             if(r.error) throw r.error;
             notify('\ud83d\udc4b Ausgecheckt!','success');
             _myCheckin=null; await loadTodayCheckins(); renderDashboard();
@@ -447,7 +448,7 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
             var kw=getKW(monday), monISO=fmtISO(monday), friISO=fmtISO(days[4]);
             await loadHQUsers();
             await Promise.all([loadDesks(), loadRooms()]);
-            var bkRes=await sb.from('office_bookings').select('*').gte('booking_date',monISO).lte('booking_date',friISO);
+            var bkRes=await _sb().from('office_bookings').select('*').gte('booking_date',monISO).lte('booking_date',friISO);
             var bookings=bkRes.data||[];
             var bMap={}; bookings.forEach(function(b){bMap[b.user_id+'_'+b.booking_date]=b;});
             var dayLabels=['Mo','Di','Mi','Do','Fr'];
@@ -602,10 +603,10 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
         try {
             if(!status) {
                 // Delete booking
-                await sb.from('office_bookings').delete().eq('user_id',sbUser.id).eq('booking_date',dateStr);
+                await _sb().from('office_bookings').delete().eq('user_id',sbUser.id).eq('booking_date',dateStr);
             } else {
                 // Upsert: unique on (user_id, booking_date)
-                var r=await sb.from('office_bookings').upsert({
+                var r=await _sb().from('office_bookings').upsert({
                     user_id:sbUser.id, booking_date:dateStr, status:status,
                     desk_nr:null, updated_at:new Date().toISOString()
                 },{onConflict:'user_id,booking_date'});
@@ -623,7 +624,7 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
     window._offSetDesk = async function(dateStr, deskNr) {
         try {
             var nr=deskNr?parseInt(deskNr):null;
-            var r=await sb.from('office_bookings').update({desk_nr:nr,updated_at:new Date().toISOString()}).eq('user_id',sbUser.id).eq('booking_date',dateStr);
+            var r=await _sb().from('office_bookings').update({desk_nr:nr,updated_at:new Date().toISOString()}).eq('user_id',sbUser.id).eq('booking_date',dateStr);
             if(r.error) throw r.error;
             notify('\u2705 P'+nr+' gebucht f\u00fcr '+dateStr,'success');
         } catch(err) {
@@ -636,7 +637,7 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
     window._offSetParking = async function(dateStr, parkNr) {
         try {
             var nr=parkNr?parseInt(parkNr):null;
-            var r=await sb.from('office_bookings').update({parking_nr:nr,updated_at:new Date().toISOString()}).eq('user_id',sbUser.id).eq('booking_date',dateStr);
+            var r=await _sb().from('office_bookings').update({parking_nr:nr,updated_at:new Date().toISOString()}).eq('user_id',sbUser.id).eq('booking_date',dateStr);
             if(r.error) throw r.error;
             notify('\ud83c\udd7f\ufe0f P'+nr+' Parkplatz gebucht','success');
         } catch(err) {
@@ -785,7 +786,7 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
 
     window._offBookDesk = async function(nr) {
         try {
-            var r=await sb.from('office_bookings').upsert({
+            var r=await _sb().from('office_bookings').upsert({
                 user_id:sbUser.id, booking_date:todayISO(), status:'office',
                 desk_nr:nr, updated_at:new Date().toISOString()
             },{onConflict:'user_id,booking_date'});
@@ -799,7 +800,7 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
 
     window._offCancelBooking = async function(bookingId) {
         try {
-            var r=await sb.from('office_bookings').delete().eq('id',bookingId);
+            var r=await _sb().from('office_bookings').delete().eq('id',bookingId);
             if(r.error) throw r.error;
             notify('Buchung storniert','success');
             await loadTodayBookings(); window._offLoadRoom();
@@ -819,8 +820,8 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
         try {
             var td=todayISO();
             var [todayRes,futureRes]=await Promise.all([
-                sb.from('office_guests').select('*').eq('visit_date',td).order('visit_time'),
-                sb.from('office_guests').select('*').gt('visit_date',td).order('visit_date').limit(20)
+                _sb().from('office_guests').select('*').eq('visit_date',td).order('visit_time'),
+                _sb().from('office_guests').select('*').gt('visit_date',td).order('visit_date').limit(20)
             ]);
             var todayGuests=todayRes.data||[], futureGuests=futureRes.data||[];
 
@@ -937,7 +938,7 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
             // Get host user info for email
             var me=(_hqUsers||[]).find(function(u){return u.id===sbUser.id;})||{vorname:'',nachname:''};
 
-            var r=await sb.from('office_guests').insert({
+            var r=await _sb().from('office_guests').insert({
                 host_user_id:sbUser.id, name:name, company:company||null,
                 email:email||null, visit_date:date, visit_time:time||null,
                 room:room||null, needs_parking:parking, notes:notes||null,
@@ -950,11 +951,11 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
             if(parking) {
                 var slots=parkType==='electric'?[1,2]:(parkType==='guest'?[3,4]:[5,6,7,8,9,10,11,12]);
                 var parkLabel=parkType==='electric'?'⚡ Elektro':(parkType==='guest'?'🚗 Gast':'🅿️ Standard');
-                var parkRes=await sb.from('office_bookings').select('parking_nr').eq('booking_date',date).in('parking_nr',slots);
+                var parkRes=await _sb().from('office_bookings').select('parking_nr').eq('booking_date',date).in('parking_nr',slots);
                 var takenPark=(parkRes.data||[]).map(function(b){return b.parking_nr;});
                 var freePark=slots.find(function(n){return takenPark.indexOf(n)===-1;});
                 if(freePark) {
-                    await sb.from('office_bookings').insert({
+                    await _sb().from('office_bookings').insert({
                         user_id:sbUser.id, booking_date:date, status:'parking',
                         parking_nr:freePark,
                         time_from:time||'08:00', time_to:timeEnd||'18:00',
@@ -969,7 +970,7 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
             if(email) {
                 var dateStr=new Date(date+'T12:00:00').toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
                 try {
-                    var sess=await sb.auth.getSession();
+                    var sess=await _sb().auth.getSession();
                     var accessToken=(sess.data&&sess.data.session)?sess.data.session.access_token:null;
                     var invokeOpts={body:{
                         template:'guest-invitation',
@@ -989,7 +990,7 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
                         }
                     }};
                     if(accessToken) invokeOpts.headers={'Authorization':'Bearer '+accessToken};
-                    await sb.functions.invoke('send-email', invokeOpts);
+                    await _sb().functions.invoke('send-email', invokeOpts);
                     notify('\ud83d\udc64 Gast eingeladen & E-Mail gesendet!','success');
                 } catch(mailErr) {
                     console.warn('[Office] Email send failed:', mailErr);
@@ -1013,7 +1014,7 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
 
     window._offGuestCheckIn = async function(id) {
         try {
-            var r=await sb.from('office_guests').update({checked_in_at:new Date().toISOString(),status:'eingecheckt'}).eq('id',id);
+            var r=await _sb().from('office_guests').update({checked_in_at:new Date().toISOString(),status:'eingecheckt'}).eq('id',id);
             if(r.error) throw r.error;
             notify('Gast eingecheckt','success'); renderGaeste();
         } catch(err) { notify('Fehler: '+err.message,'error'); }
@@ -1021,7 +1022,7 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
 
     window._offGuestCheckOut = async function(id) {
         try {
-            var r=await sb.from('office_guests').update({status:'ausgecheckt'}).eq('id',id);
+            var r=await _sb().from('office_guests').update({status:'ausgecheckt'}).eq('id',id);
             if(r.error) throw r.error;
             notify('Gast ausgecheckt','success'); renderGaeste();
         } catch(err) { notify('Fehler: '+err.message,'error'); }
@@ -1039,10 +1040,10 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
             var thirtyAgo=new Date(now); thirtyAgo.setDate(now.getDate()-30);
 
             var [engRes,checkinsRes,desksRes,allEngRes]=await Promise.all([
-                sb.from('office_engagement').select('*').eq('user_id',sbUser.id).gte('month',fmtISO(monthStart)).limit(1),
-                sb.from('office_checkins').select('user_id,checked_in_at,status').gte('checked_in_at',fmtISO(thirtyAgo)+'T00:00:00'),
-                sb.from('office_desks').select('nr').eq('active',true).neq('desk_type','parkplatz'),
-                sb.from('office_engagement').select('user_id,office_days,current_streak,badges').gte('month',fmtISO(monthStart))
+                _sb().from('office_engagement').select('*').eq('user_id',sbUser.id).gte('month',fmtISO(monthStart)).limit(1),
+                _sb().from('office_checkins').select('user_id,checked_in_at,status').gte('checked_in_at',fmtISO(thirtyAgo)+'T00:00:00'),
+                _sb().from('office_desks').select('nr').eq('active',true).neq('desk_type','parkplatz'),
+                _sb().from('office_engagement').select('user_id,office_days,current_streak,badges').gte('month',fmtISO(monthStart))
             ]);
 
             var eng=(engRes.data||[])[0]||{};
@@ -1172,7 +1173,7 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
             await Promise.all([loadRooms(),loadDesks(),loadHQUsers()]);
             // Load favorite desk from user profile
             if (!_buchFavoriteDesk) {
-                var profRes = await sb.from('users').select('office_favorite_desk').eq('id', sbUser.id).single();
+                var profRes = await _sb().from('users').select('office_favorite_desk').eq('id', sbUser.id).single();
                 if (profRes.data && profRes.data.office_favorite_desk) {
                     _buchFavoriteDesk = profRes.data.office_favorite_desk;
                 }
@@ -1251,13 +1252,13 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
 
     async function _buchLoadData() {
         var td=todayISO();
-        var bRes=await sb.from('office_bookings').select('id,user_id,desk_nr,parking_nr,status,time_from,time_to,note').eq('booking_date',_buchDate);
+        var bRes=await _sb().from('office_bookings').select('id,user_id,desk_nr,parking_nr,status,time_from,time_to,note').eq('booking_date',_buchDate);
         var allBkgs=bRes.data||[];
         _buchAllBookingsForDay=allBkgs;
         _buchBookings=allBkgs.filter(function(b){return b.status==='office'&&b.desk_nr;});
         _buchParkBookings=allBkgs.filter(function(b){return b.parking_nr!=null;});
         if(_buchDate===td) {
-            var cRes=await sb.from('office_checkins').select('id,user_id,desk_nr,checked_in_at').gte('checked_in_at',td+'T00:00:00').is('checked_out_at',null);
+            var cRes=await _sb().from('office_checkins').select('id,user_id,desk_nr,checked_in_at').gte('checked_in_at',td+'T00:00:00').is('checked_out_at',null);
             _buchCheckins=cRes.data||[];
         } else {
             _buchCheckins=[];
@@ -1395,7 +1396,7 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
         try {
             var timeFrom = _buchAllDay ? null : _buchFrom;
             var timeTo   = _buchAllDay ? null : _buchTo;
-            var r = await sb.from('office_bookings').insert({
+            var r = await _sb().from('office_bookings').insert({
                 user_id: sbUser.id,
                 booking_date: _buchDate,
                 status: 'remote',
@@ -1416,7 +1417,7 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
     window._buchCancelRemote = async function(id) {
         if (!confirm('Remote-Buchung stornieren?')) return;
         try {
-            var r = await sb.from('office_bookings').delete().eq('id', id);
+            var r = await _sb().from('office_bookings').delete().eq('id', id);
             if (r.error) throw r.error;
             if (_buchAllBookingsForDay) _buchAllBookingsForDay = _buchAllBookingsForDay.filter(function(b){return b.id!==id;});
             notify('Remote-Buchung storniert','success');
@@ -1445,7 +1446,7 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
 
     window._buchSetFavorite = async function(nr) {
         try {
-            var r = await sb.from('users').update({office_favorite_desk: nr===_buchFavoriteDesk ? null : nr}).eq('id', sbUser.id);
+            var r = await _sb().from('users').update({office_favorite_desk: nr===_buchFavoriteDesk ? null : nr}).eq('id', sbUser.id);
             if (r.error) throw r.error;
             _buchFavoriteDesk = nr===_buchFavoriteDesk ? null : nr;
             notify(_buchFavoriteDesk ? '♥ Platz '+nr+' als Lieblingsplatz gesetzt' : '♡ Lieblingsplatz entfernt', 'success');
@@ -1558,7 +1559,7 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
                 return;
             }
             var payload={user_id:sbUser.id,booking_date:_buchDate,status:'office',desk_nr:deskNr,time_from:tf,time_to:tt,updated_at:new Date().toISOString()};
-            var r=await sb.from('office_bookings').upsert(payload,{onConflict:'user_id,booking_date'});
+            var r=await _sb().from('office_bookings').upsert(payload,{onConflict:'user_id,booking_date'});
             if(r.error) throw r.error;
             notify('✅ Platz '+deskNr+' gebucht für '+_buchDate+(tf?' ('+_buchFrom+' – '+_buchTo+')':'')+'!','success');
             await _buchLoadData();
@@ -1572,7 +1573,7 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
 
     window._buchCancel = async function(bookingId) {
         try {
-            var r=await sb.from('office_bookings').delete().eq('id',bookingId);
+            var r=await _sb().from('office_bookings').delete().eq('id',bookingId);
             if(r.error) throw r.error;
             notify('Buchung storniert','success');
             await _buchLoadData();
@@ -1693,9 +1694,9 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
                 var deskBk=_buchBookings.find(function(b){return b.user_id===sbUser.id;});
                 var res;
                 if(deskBk){
-                    res=await sb.from('office_bookings').update({parking_nr:assignNr,updated_at:new Date().toISOString()}).eq('id',deskBk.id);
+                    res=await _sb().from('office_bookings').update({parking_nr:assignNr,updated_at:new Date().toISOString()}).eq('id',deskBk.id);
                 } else {
-                    res=await sb.from('office_bookings').insert({user_id:sbUser.id,booking_date:_buchDate,status:'parking',parking_nr:assignNr,updated_at:new Date().toISOString()});
+                    res=await _sb().from('office_bookings').insert({user_id:sbUser.id,booking_date:_buchDate,status:'parking',parking_nr:assignNr,updated_at:new Date().toISOString()});
                 }
                 if(res.error) throw res.error;
                 var lbl=assignNr<=2?'⚡ P'+assignNr+' Elektro':assignNr<=4?'🚗 P'+assignNr+' Gast':'🅿️ Parkplatz P'+assignNr;
@@ -1713,9 +1714,9 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
                 if(!bk) return;
                 var res;
                 if(bk.desk_nr){
-                    res=await sb.from('office_bookings').update({parking_nr:null,updated_at:new Date().toISOString()}).eq('id',bookingId);
+                    res=await _sb().from('office_bookings').update({parking_nr:null,updated_at:new Date().toISOString()}).eq('id',bookingId);
                 } else {
-                    res=await sb.from('office_bookings').delete().eq('id',bookingId);
+                    res=await _sb().from('office_bookings').delete().eq('id',bookingId);
                 }
                 if(res.error) throw res.error;
                 notify('Parkplatz-Buchung storniert','success');
@@ -1752,7 +1753,7 @@ notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingeche
             // Load bookings: 6 months back, 3 months ahead
             var from = new Date(now); from.setMonth(from.getMonth()-6);
             var to   = new Date(now); to.setMonth(to.getMonth()+3);
-            var res = await sb.from('office_bookings')
+            var res = await _sb().from('office_bookings')
                 .select('id,booking_date,status,desk_nr,parking_nr,time_from,time_to,note')
                 .eq('user_id', sbUser.id)
                 .gte('booking_date', fmtISO(from))
@@ -2038,9 +2039,9 @@ var dotColor = b.status==='remote' ? '#3B82F6' : '#F97316';
             var bk = _mbBookings.find(function(b){return b.id===bookingId;});
             var res;
             if (bk&&bk.parking_nr) {
-                res = await sb.from('office_bookings').update({desk_nr:null,status:'parking'}).eq('id',bookingId);
+                res = await _sb().from('office_bookings').update({desk_nr:null,status:'parking'}).eq('id',bookingId);
             } else {
-                res = await sb.from('office_bookings').delete().eq('id',bookingId);
+                res = await _sb().from('office_bookings').delete().eq('id',bookingId);
             }
             if (res.error) throw res.error;
             notify('Buchung storniert','success');
@@ -2054,9 +2055,9 @@ var dotColor = b.status==='remote' ? '#3B82F6' : '#F97316';
             var bk = _mbBookings.find(function(b){return b.id===bookingId;});
             var res;
             if (bk&&bk.desk_nr) {
-                res = await sb.from('office_bookings').update({parking_nr:null}).eq('id',bookingId);
+                res = await _sb().from('office_bookings').update({parking_nr:null}).eq('id',bookingId);
             } else {
-                res = await sb.from('office_bookings').delete().eq('id',bookingId);
+                res = await _sb().from('office_bookings').delete().eq('id',bookingId);
             }
             if (res.error) throw res.error;
             notify('Parkplatz storniert','success');
@@ -2094,7 +2095,7 @@ var dotColor = b.status==='remote' ? '#3B82F6' : '#F97316';
     async function _wioLoad() {
         var td = todayISO();
         // All bookings for selected date (desk + parking)
-        var bRes = await sb.from('office_bookings')
+        var bRes = await _sb().from('office_bookings')
             .select('id,user_id,desk_nr,parking_nr,status,time_from,time_to,note')
             .eq('booking_date', _wioDate)
             .or('status.eq.office,status.eq.parking');
@@ -2104,7 +2105,7 @@ var dotColor = b.status==='remote' ? '#3B82F6' : '#F97316';
 
         // Checkins: only for today (can only be checked in today)
         if (_wioDate === td) {
-            var cRes = await sb.from('office_checkins')
+            var cRes = await _sb().from('office_checkins')
                 .select('id,user_id,desk_nr,checked_in_at')
                 .gte('checked_in_at', td+'T00:00:00')
                 .is('checked_out_at', null);
