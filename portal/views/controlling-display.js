@@ -107,6 +107,7 @@ export async function downloadBwa(bwaId) {
         var resp = await _sb().from('bwa_daten').select('*').eq('id', bwaId).single();
         if(resp.error) throw resp.error;
         var b = resp.data;
+        var _dp = document.getElementById("bwaDetailPanel"); if(_dp) _dp.style.display = "";
 
         // If original file exists in storage, download that
         if(b.datei_url) {
@@ -277,7 +278,7 @@ export async function showBwaFromDb(bwaId) {
                 tbody += '</tr>';
             });
             // Update table header for detail view
-            document.querySelector('#bwaDetailTable thead tr').innerHTML =
+            var _thr = document.querySelector('#bwaDetailTable thead tr'); if(_thr) _thr.innerHTML =
                 '<th class="text-left py-2 px-3 font-semibold text-gray-600">Position</th>'
                 +'<th class="text-right py-2 px-3 font-semibold text-gray-600">Monat</th>'
                 +'<th class="text-right py-2 px-3 font-semibold text-gray-600">Kumuliert</th>'
@@ -305,7 +306,7 @@ export async function showBwaFromDb(bwaId) {
                 {label:'Ergebnis vor Steuern', ist:b.ergebnis_vor_steuern, plan:b.plan_ergebnis, bold:true, bg:parseFloat(b.ergebnis_vor_steuern)>=0?'bg-green-50':'bg-red-50', highlight:parseFloat(b.ergebnis_vor_steuern)>=0?'text-green-800':'text-red-800', separator:true, big:true}
             ];
             // Restore default header
-            document.querySelector('#bwaDetailTable thead tr').innerHTML =
+            var _thr = document.querySelector('#bwaDetailTable thead tr'); if(_thr) _thr.innerHTML =
                 '<th class="text-left py-2 px-3 font-semibold text-gray-600">Position</th>'
                 +'<th class="text-right py-2 px-3 font-semibold text-gray-600">IST</th>'
                 +'<th class="text-right py-2 px-3 font-semibold text-gray-600">Plan</th>'
@@ -326,7 +327,7 @@ export async function showBwaFromDb(bwaId) {
                 tbody += '</tr>';
             });
         }
-        document.getElementById('bwaDetailBody').innerHTML = tbody;
+        var _bdb = document.getElementById('bwaDetailBody'); if(_bdb) _bdb.innerHTML = tbody;
 
         // Load trend
         loadBwaTrend(b.standort_id, b.jahr);
