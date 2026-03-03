@@ -10,7 +10,6 @@
  */
 // [prod] log removed
 
-console.log("[aktenschrank.js] MODULE LOADED");
 function _sb()        { return window.sb; }
 function _sbUser()    { return window.sbUser; }
 function _sbProfile() { return window.sbProfile; }
@@ -52,7 +51,7 @@ function aktenToast(msg){
 // RENDER MAIN VIEW
 // ═══════════════════════════════════════════════════════════
 
-function renderMainView(){console.log("[aktenschrank.js] renderMainView called");var _c=document.getElementById("aktenschrankView");console.log("[aktenschrank.js] view el:",_c,"display:",_c?_c.style.display:"N/A");
+function renderMainView(){
     var c=document.getElementById('aktenschrankView'); if(!c) return;
     c.innerHTML=
         '<div class="flex items-center justify-between mb-6"><div class="flex items-center space-x-3"><h1 class="h1-headline text-gray-800">AKTENSCHRANK</h1><span class="px-2 py-0.5 bg-purple-100 text-purple-700 text-[10px] font-bold rounded-full uppercase">Beta</span></div><div class="flex items-center space-x-3"><button onclick="showAktenInbox()" class="relative px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition flex items-center space-x-2"><span>\uD83D\uDCE5</span><span>Eingang</span><span id="aktenInboxBadge" class="hidden absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">0</span></button><button onclick="openAktenUpload()" class="px-4 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90 flex items-center space-x-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg><span>Hochladen</span></button></div></div>'+
@@ -495,7 +494,7 @@ export function filterAkten(){
 }
 
 // INIT
-export function loadAktenschrank(){console.log("[aktenschrank.js] loadAktenschrank called");if(_akten._loading)return;_akten._loading=true;renderMainView();loadAktenFiles().finally(function(){_akten._loading=false;});}
+export function loadAktenschrank(){if(_akten._loading)return;_akten._loading=true;renderMainView();loadAktenFiles().finally(function(){_akten._loading=false;});}
 
 // WINDOW REGISTRATION
 const _exports={loadAktenschrank,loadAktenFiles,getFileIcon,openAktenFolder,closeAktenFolder,filterAkten,showAktenInbox,closeAktenInbox,openAktenReview,closeAktenReview,selectAktenOrdner,saveAktenDraft,saveAndConfirmAktenDoc,rejectAktenDoc,deleteAktenDoc,openAktenUpload,closeAktenUpload,handleAktenDrop,handleAktenFileSelect,startAktenUpload,removeFromAktenQueue,downloadAktenDoc,viewAktenDoc,closeAktenPreview};
