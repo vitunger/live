@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 03.03.2026 – Session-Abschluss: Go-Live PRE-1 fast komplett, PRE-2 S1+S2 erledigt, Todo v2 mit 11 Features deployed, strategie.js Bugfix, V5 Schulungsunterlagen, Wissen-Demodaten entfernt
+> Letzte Aktualisierung: 03.03.2026 – Session: Todo v2 UX-Fixes (8 Verbesserungen), Buchhaltung refactored (Jahresstrategie entfernt, Kostenaufschlüsselung→Jahresplan-Daten, Liquiditäts-Tab MVP live mit finAPI-Placeholder), Feedback-Widget renamed, Sprachschalter→Profil
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -239,10 +239,10 @@ sbUrl()       → window.sbUrl()   // Supabase Project URL (zentralisiert)
 
 | Metrik | Wert |
 |--------|------|
-| Tabellen (public) | ~164 |
+| Tabellen (public) | ~168 |
 | Views | 2 (v_wawi_leasing_uebersicht, v_wawi_top_produkte) |
-| RLS Policies | 257 |
-| Indizes | 276 (269 + 7 neue FK-Indizes) |
+| RLS Policies | 261 |
+| Indizes | 281 (276 + 5 neue Banking-Indizes) |
 | Edge Functions | 39 deployed (18 mit JWT, 21 ohne) |
 | RPC Functions | 78 (12 Frontend, 23 Trigger, 21 RLS, 22 Server-Side) |
 | Auth-User | ~14 |
@@ -328,6 +328,18 @@ sbUrl()       → window.sbUrl()   // Supabase Project URL (zentralisiert)
 | Todo v2 (11 Features) | 163d0f4, a0328ad | Zuweisungs-Dropdown, Wiederkehrend, Templates, Attachments, Stats-Tab, @Mentions, List-DnD, Blockiert-Indikator, Erinnerungen, createTodoFromModule, Kalender-Integration |
 | DB-Migration todo_features_v2 | — | 3 neue Tabellen + 6 Spalten + Storage Bucket + RLS + Indices |
 | Edge Function todo-cron | — | Cron: Erinnerungen (Email via Resend) + wiederkehrende Tasks klonen |
+| Todo UX: Search entfernt | d52588e | Lokales Suchfeld raus, globale Suche reicht |
+| Todo UX: Board Section Delete | d52588e | ✕-Button für Sektionen in Board-View, Eingang geschützt |
+| Feedback-Widget renamed | c0e55c1 | "Feedback / Ideen / Wünsche" statt alter Text |
+| Todo UX: Detail Auto-Open | fce5c27 | Detail-Panel öffnet nach Quick-Add automatisch |
+| Todo UX: Attachments prominent | cf466bf, db56a7f | Upload-Button orange + unter Beschreibung verschoben |
+| Todo UX: Scroll-Fix | e108485 | h-full + min-h-0 für Flexbox-Scroll im Detail-Panel |
+| Todo UX: Textarea + Drag&Drop | 7805057 | Textarea rows=5 + resize:vertical, Drag&Drop-Upload-Zone |
+| Sprache → Profil | 149d427 | Sprachschalter aus Header in Profil/Einstellungen verschoben |
+| Jahresstrategie-Tab entfernt | 255eae1 | Tab aus Buchhaltung raus, Daten kommen aus Jahresplan |
+| Doppeltes Beta-Badge fix | ee0ca6b | Hardcoded Badge bei Buchhaltung entfernt |
+| Kostenaufschlüsselung refactored | c73b1a5 | Nutzt plan_umsatz + plan_werbekosten statt billing_annual_strategy, Tab ausgeblendet |
+| Liquiditäts-Tab MVP | 14a7376 | DB: 4 Banking-Tabellen + RLS. UI: Kacheln, Verlauf, Transaktionen, manueller Eintrag, finAPI-Placeholder |
 
 **Offene Aufgaben (aus heutiger Session):**
 
@@ -335,7 +347,10 @@ sbUrl()       → window.sbUrl()   // Supabase Project URL (zentralisiert)
 |---------|--------|---------|
 | Kostenaufschlüsselung-Tab (Buchhaltung) | ⬜ Offen | JS refactored (nutzt jetzt plan_umsatz + plan_werbekosten + HQ-Rechnungen statt billing_annual_strategy). Tab temporär ausgeblendet bis Jahresplan + Marketing-Strategie Daten verfügbar sind. |
 | Jahresstrategie-Tab (Buchhaltung) | ❌ Entfernt | Ersetzt durch Daten aus Finanzen/Jahresplan + Marketing-Strategie |
-| Liquiditäts-Tab (Buchhaltung) | 🟡 MVP live | DB: banking_connections, banking_balances, banking_transactions, banking_manual_entries. UI: Kontostand-Kacheln, Verlauf-Chart, Transaktionsliste, manueller Eintrag. finAPI-Integration als Placeholder – Kontakt zu finAPI nötig. |
+| Liquiditäts-Tab (Buchhaltung) | 🟡 MVP live | DB: banking_connections, banking_balances, banking_transactions, banking_manual_entries. Manueller Eintrag funktioniert. finAPI-Anbindung offen → Kontakt nötig. |
+| finAPI kontaktieren | ⬜ Offen | "Access für Eigenanwender" oder PSD2-Lizenz-als-Service, Pricing ~50 Standorte |
+| Edge Function banking-sync | ⬜ Offen | finAPI API → banking_balances + banking_transactions, nach Vertrag |
+| Banking Cron-Job | ⬜ Offen | Täglicher Kontostand-Sync + Consent-Ablauf-Reminder (90 Tage PSD2) |
 
 ### Rollen-IDs
 
