@@ -13,136 +13,92 @@ function _showToast(m,t){ if(window.showToast) window.showToast(m,t||'info'); }
 // ============================================================
 
 
-// ═══ PORTAL GUIDE DATA (auto-generated from module registry) ═══
+// ═══ PORTAL GUIDE DATA (V5 Schulungsunterlagen) ═══
 var PORTAL_GUIDES = [
 {id:'pg1',bereich:'portal',title:'Startseite & Tages-Cockpit',icon:'🏠',
- desc:'Deine Zentrale: Tages-KPIs, Health Score, Umsatz vs. Plan und Schnellzugriffe.',
- steps:['Nach Login siehst du das Tages-Cockpit mit 5 KPIs','Klicke auf eine Kachel um ins Modul zu springen','Der Health Score zeigt deine Gesamtperformance','Widgets kannst du über das Zahnrad-Icon anpassen'],
- version:'7.0',updated:'Feb 2026'},
+ desc:'Dein persoenliches Dashboard – hier siehst du auf einen Blick, was heute wichtig ist.',
+ steps:[
+     {t:'Dashboard oeffnen',d:'Nach dem Login landest du automatisch auf der Startseite. Hier siehst du alle wichtigen Kennzahlen als Widgets: offene Aufgaben, naechste Termine, Verkaufsleistung und mehr.'},
+     {t:'Widgets anpassen',d:'Klicke oben rechts auf das Zahnrad-Symbol, um Widgets ein- oder auszublenden. Du kannst selbst entscheiden, welche Informationen du auf deinem Dashboard sehen moechtest.'},
+     {t:'Quick Actions nutzen',d:'Unterhalb der Widgets findest du Schnellzugriffe: Neuen Lead erfassen, Termin anlegen, Aufgabe erstellen – alles mit einem Klick erreichbar.'},
+     {t:'💡 Tipp',d:'Schau morgens kurz auf dein Dashboard – so hast du in 30 Sekunden den Ueberblick ueber deinen Tag.'}
+ ],
+ version:'7.0',updated:'Maerz 2026'},
 {id:'pg2',bereich:'portal',title:'Verkauf & Pipeline',icon:'💰',
- desc:'Lead-Management, Pipeline-Stages, Angebote, Wochenauswertung und KI-Training.',
- steps:['Pipeline zeigt alle Leads in Kanban-Ansicht','Ziehe Leads zwischen den Stages','Streak-Anzeige motiviert zur täglichen Aktivität','Monatsziel-Fortschritt oben immer sichtbar','KI-Training simuliert Verkaufsgespräche'],
- version:'7.0',updated:'Feb 2026'},
+ desc:'Deine Verkaufs-Pipeline – vom ersten Kontakt bis zum Abschluss, alles an einem Ort.',
+ steps:[
+     {t:'Pipeline oeffnen',d:'Klicke in der Sidebar auf "Verkauf". Du siehst ein Kanban-Board mit Spalten fuer jede Verkaufsphase: Lead, Beratung, Angebot, Verhandlung, Gewonnen.'},
+     {t:'Neuen Lead erfassen',d:'Klicke auf "+ Neuer Lead" oben rechts. Gib den Namen des Kunden, sein Interesse (z.B. E-Bike Trekking) und den geschaetzten Wert ein. Der Lead erscheint in der Spalte "Lead".'},
+     {t:'Lead verschieben',d:'Ziehe eine Karte per Drag & Drop in die naechste Spalte, wenn sich der Status aendert. Beispiel: Kunde war zur Probefahrt → verschiebe von "Lead" nach "Beratung".'},
+     {t:'Details bearbeiten',d:'Klicke auf eine Lead-Karte, um Details zu sehen und zu bearbeiten: Notizen hinzufuegen, Wiedervorlage setzen, Wert anpassen.'},
+     {t:'Wochenansicht',d:'Wechsle zum Tab "Woche", um zu sehen welche Deals diese Woche Aktivitaet brauchen.'},
+     {t:'💡 Tipp',d:'Pflege deine Pipeline taeglich – nur aktuelle Daten ermoeglichen echte Verkaufsanalysen. Ziel: Jeder Kundenkontakt wird erfasst.'}
+ ],
+ version:'7.0',updated:'Maerz 2026'},
 {id:'pg3',bereich:'portal',title:'Controlling & BWA',icon:'📊',
- desc:'BWA hochladen, KPI-Report erhalten, Benchmarks freischalten, Plan/Ist vergleichen.',
- steps:['Cockpit zeigt BWA-Deadline Countdown','BWA hochladen unter "BWAs" Tab','Nach Upload: sofortiges KPI-Feedback','Benchmark wird freigeschaltet nach Einreichung','Gold-Status bei Abgabe vor dem 8.'],
- version:'7.0',updated:'Feb 2026'},
-{id:'pg4',bereich:'portal',title:'Marketing',icon:'📣',
- desc:'Kampagnen-Cockpit, Social Media Ranking, Content-Upload, Budget-Übersicht.',
- steps:['Cockpit zeigt aktive Kampagnen und KPIs','Content hochladen im "Mein Content" Tab','Ranking zeigt deine Position im Netzwerk','Badge-System belohnt regelmäßige Aktivität'],
- version:'7.0',updated:'Feb 2026'},
-{id:'pg5',bereich:'portal',title:'Einkauf',icon:'🛒',
- desc:'Sortiment, Lieferanten-Konditionen, Vororder-Planung, Bestandsmanagement.',
- steps:['Sortiment-Tab zeigt aktuelle Verfügbarkeit','Lieferanten-Tab mit Konditionen und Kontakten','Vororder-Planung mit Countdown-Timer'],
- version:'7.0',updated:'Feb 2026'},
-{id:'pg6',bereich:'portal',title:'Support & Tickets',icon:'🎫',
- desc:'Tickets erstellen, Auto-Support nutzen, HQ-Kontakte finden.',
- steps:['Neues Ticket: Kategorie wählen','Auto-Support schlägt sofortige Lösungen vor','Nur bei Bedarf geht Ticket an HQ','Kontakte-Tab zeigt alle Ansprechpartner'],
- version:'7.0',updated:'Feb 2026'},
-{id:'pg7',bereich:'portal',title:'Kalender & Aufgaben',icon:'📅',
- desc:'Termine verwalten, Aufgaben tracken, Gruppencall-Vorbereitung.',
- steps:['Monats/Wochen/Tagesansicht wählbar','Termine mit Typ und Teilnehmern anlegen','Aufgaben-Board mit Status-Spalten','Gruppencall-Vorbereitung vor jedem Call'],
- version:'7.0',updated:'Feb 2026'},
-{id:'pg8',bereich:'portal',title:'Nutzerprofil & Einstellungen',icon:'⚙️',
- desc:'Persönliche Daten, Theme, E-Mail-Benachrichtigungen anpassen.',
- steps:['Klick auf Avatar oben rechts öffnet Profil','Name, Telefon, Position editierbar','Dark/Light Mode umschalten','E-Mail-Benachrichtigungen ein/ausschalten'],
- version:'7.0',updated:'Feb 2026'}
+ desc:'Deine Finanzen im Blick – BWA hochladen, KI-Analyse erhalten, Plan vs. Ist vergleichen.',
+ steps:[
+     {t:'Controlling oeffnen',d:'Klicke in der Sidebar auf "Controlling". Du siehst eine Uebersicht deiner aktuellen Finanzkennzahlen.'},
+     {t:'BWA hochladen',d:'Klicke auf "BWA hochladen" und waehle deine BWA-Datei (Excel oder PDF vom Steuerberater). Das System erkennt automatisch das Format – es werden 6+ verschiedene Steuerberater-Formate unterstuetzt.'},
+     {t:'KI-Analyse erhalten',d:'Nach dem Upload analysiert die KI automatisch deine BWA. Du erhaeltst: Umsatzentwicklung, Rohertragsmarge, Kostenstruktur, Auffaelligkeiten und konkrete Handlungsempfehlungen.'},
+     {t:'Plan/Ist-Vergleich',d:'Wechsle zum Tab "Plan vs. Ist", um deine Planzahlen mit den tatsaechlichen Ergebnissen zu vergleichen. Abweichungen werden farblich hervorgehoben (gruen = besser als Plan, rot = unter Plan).'},
+     {t:'Jahresplan hochladen',d:'Unter "Plan hochladen" kannst du deinen Jahresplan als Excel-Datei hochladen. Dieser bildet die Basis fuer den Plan/Ist-Vergleich.'},
+     {t:'💡 Tipp',d:'Lade deine BWA monatlich hoch – idealerweise direkt wenn sie vom Steuerberater kommt (bis zum 15. des Folgemonats). So bleibst du immer am Puls deiner Zahlen.'}
+ ],
+ version:'7.0',updated:'Maerz 2026'},
+{id:'pg4',bereich:'portal',title:'Kalender & Termine',icon:'📅',
+ desc:'Alle Termine deines Standorts – eTermin-Buchungen und manuelle Termine an einem Ort.',
+ steps:[
+     {t:'Kalender oeffnen',d:'Klicke in der Sidebar auf "Kalender". Du siehst eine Wochen- oder Monatsansicht mit allen Terminen deines Standorts.'},
+     {t:'Termine aus eTermin',d:'Kunden-Buchungen ueber eure Website erscheinen automatisch im Kalender (blaue Markierung). Diese werden alle 15 Minuten synchronisiert.'},
+     {t:'Manuellen Termin anlegen',d:'Klicke auf einen freien Zeitslot oder auf "+ Neuer Termin". Waehle Typ (Beratung, Werkstatt, Abholung), trage Kunde und Uhrzeit ein.'},
+     {t:'Termin bearbeiten',d:'Klicke auf einen bestehenden Termin, um Details zu aendern, Notizen hinzuzufuegen oder den Termin zu verschieben.'},
+     {t:'💡 Tipp',d:'Nutze den Kalender auch fuer interne Termine wie Team-Meetings oder Lieferanten-Besuche – so hat das ganze Team den Ueberblick.'}
+ ],
+ version:'7.0',updated:'Maerz 2026'},
+{id:'pg5',bereich:'portal',title:'Aufgaben (Todos)',icon:'✅',
+ desc:'Aufgabenverwaltung im Todoist-Stil – fuer dich und dein Team.',
+ steps:[
+     {t:'Aufgaben oeffnen',d:'Klicke in der Sidebar auf "Aufgaben". Du siehst deine persoenliche Aufgabenliste mit den Filtern: Heute, Demnachst, Alle.'},
+     {t:'Neue Aufgabe erstellen',d:'Klicke auf "+ Neue Aufgabe". Gib einen Titel ein, setze optional ein Faelligkeitsdatum und waehle eine Prioritaet (P1=dringend bis P4=niedrig).'},
+     {t:'Aufgabe delegieren',d:'Waehle im Aufgaben-Detail unter "Zugewiesen an" einen Mitarbeiter aus. Der Mitarbeiter sieht die Aufgabe in seiner eigenen Liste.'},
+     {t:'Aufgabe erledigen',d:'Klicke auf den Kreis links neben der Aufgabe, um sie als erledigt zu markieren. Erledigte Aufgaben verschwinden aus der aktiven Liste.'},
+     {t:'Sektionen nutzen',d:'Erstelle Sektionen (z.B. "Werkstatt", "Bestellungen", "Marketing"), um deine Aufgaben thematisch zu gruppieren.'},
+     {t:'💡 Tipp',d:'Erstelle dir eine Morgenroutine: Aufgaben-Tab oeffnen, "Heute"-Filter waehlen, von oben nach unten abarbeiten.'}
+ ],
+ version:'7.0',updated:'Maerz 2026'},
+{id:'pg6',bereich:'portal',title:'Aktenschrank',icon:'🗄️',
+ desc:'Dein digitaler Aktenschrank – alle wichtigen Dokumente zentral gespeichert.',
+ steps:[
+     {t:'Aktenschrank oeffnen',d:'Klicke in der Sidebar auf "Aktenschrank". Du siehst eine Ordnerstruktur fuer deine Dokumente.'},
+     {t:'Dokument hochladen',d:'Oeffne einen Ordner und klicke auf "Datei hochladen". Waehle dein Dokument (PDF, Word, Excel, Bilder). Die Datei wird sicher in der Cloud gespeichert.'},
+     {t:'Dokument finden',d:'Nutze die Suchfunktion oben oder navigiere ueber die Ordnerstruktur. Ordner werden vom HQ vorgegeben, du kannst eigene Unterordner anlegen.'},
+     {t:'💡 Tipp',d:'Lege Vertraege, Versicherungspolicen und wichtige Korrespondenz hier ab – so hast du alles griffbereit, auch von unterwegs.'}
+ ],
+ version:'7.0',updated:'Maerz 2026'},
+{id:'pg7',bereich:'portal',title:'Allgemein (Ziele & Journal)',icon:'🎯',
+ desc:'Deine Jahresziele, Monatsplaene und das Partner-Journal – die strategische Steuerung.',
+ steps:[
+     {t:'Allgemein oeffnen',d:'Klicke in der Sidebar auf "Allgemein". Du siehst Tabs fuer Jahresziele, Monatsplan und Journal.'},
+     {t:'Jahresziele definieren',d:'Im Tab "Jahresziele" legst du deine strategischen Ziele fest: Umsatzziel, Margen-Ziel, Mitarbeiter-Entwicklung, Marketing-Fokus.'},
+     {t:'Monatsplan fuehren',d:'Im Tab "Monatsplan" planst du konkrete Massnahmen fuer den aktuellen Monat. Was steht an? Welche Aktionen? Wer ist verantwortlich?'},
+     {t:'Journal pflegen',d:'Nach jedem Gespraech mit deinem Trainer oder HQ kannst du im Journal ein Protokoll anlegen: Was wurde besprochen? Welche Aufgaben ergeben sich?'},
+     {t:'💡 Tipp',d:'Fuehre das Journal konsequent – es hilft dir und dem HQ, den Ueberblick zu behalten und Fortschritte sichtbar zu machen.'}
+ ],
+ version:'7.0',updated:'Maerz 2026'},
+{id:'pg8',bereich:'portal',title:'Support & Tickets',icon:'🎫',
+ desc:'Brauchst du Hilfe? Erstelle ein Support-Ticket und wir kuemmern uns darum.',
+ steps:[
+     {t:'Support oeffnen',d:'Klicke in der Sidebar auf "Support". Du siehst eine Uebersicht deiner bestehenden Tickets.'},
+     {t:'Neues Ticket erstellen',d:'Klicke auf "+ Neues Ticket". Waehle eine Kategorie (IT, Einkauf, Marketing, Allgemein), beschreibe dein Anliegen und setze eine Prioritaet.'},
+     {t:'Ticket verfolgen',d:'Jedes Ticket hat einen Status: Offen, In Bearbeitung, Erledigt. Du wirst benachrichtigt, wenn sich der Status aendert oder das HQ eine Rueckfrage hat.'},
+     {t:'💡 Tipp',d:'Je genauer du das Problem beschreibst (inkl. Screenshots), desto schneller koennen wir helfen. Nutze das Feedback-Widget (rechts unten) fuer schnelle Bug-Meldungen.'}
+ ],
+ version:'7.0',updated:'Maerz 2026'}
 ];
 
-// ═══ KURSE (Memberspot-Style) ═══
-var KURSE = [
-{id:'k1',bereich:'verkauf',title:'Verkaufsprofi in 5 Tagen',
- desc:'Der komplette Verkaufskurs: Vom Erstkontakt bis zum Abschluss. Mit Praxisübungen und KI-Rollenspielen.',
- instructor:'vit:bikes Akademie',duration:'5 Tage · 3h Gesamt',level:'Einsteiger',
- thumbnail:'🎯',progress:35,enrolled:true,
- chapters:[
-     {title:'Tag 1: Bedarfsanalyse',lessons:[
-         {title:'Warum Fragen wichtiger sind als Antworten',type:'video',duration:'8:30',done:true},
-         {title:'Die 5 Schlüsselfragen',type:'text',duration:'5 min',done:true},
-         {title:'Übung: Bedarfsanalyse simulieren',type:'exercise',duration:'10 min',done:false}
-     ]},
-     {title:'Tag 2: Probefahrt & Erlebnis',lessons:[
-         {title:'Die perfekte Probefahrt gestalten',type:'video',duration:'6:15',done:false},
-         {title:'Emotionen wecken: Storytelling',type:'text',duration:'4 min',done:false},
-         {title:'Checkliste: Probefahrt-Setup',type:'download',duration:'—',done:false}
-     ]},
-     {title:'Tag 3: Einwandbehandlung',lessons:[
-         {title:'Top 5 Einwände und wie du sie löst',type:'video',duration:'12:00',done:false},
-         {title:'Preis-Einwand: "Im Internet günstiger"',type:'text',duration:'6 min',done:false},
-         {title:'KI-Rollenspiel: Einwand-Training',type:'ai',duration:'15 min',done:false}
-     ]},
-     {title:'Tag 4: Abschluss & Finanzierung',lessons:[
-         {title:'Kaufsignale erkennen',type:'video',duration:'7:45',done:false},
-         {title:'Leasing richtig erklären',type:'text',duration:'8 min',done:false}
-     ]},
-     {title:'Tag 5: Nachbetreuung',lessons:[
-         {title:'Follow-Up das begeistert',type:'video',duration:'5:30',done:false},
-         {title:'Empfehlungsmarketing aktivieren',type:'text',duration:'4 min',done:false},
-         {title:'Abschlussquiz',type:'quiz',duration:'5 min',done:false}
-     ]}
- ]},
-{id:'k2',bereich:'controlling',title:'BWA verstehen & handeln',
- desc:'In 3 Lektionen lernst du, deine BWA zu lesen, KPIs zu interpretieren und Maßnahmen abzuleiten.',
- instructor:'vit:bikes Controlling',duration:'3 Lektionen · 90 Min',level:'Einsteiger',
- thumbnail:'📊',progress:0,enrolled:false,
- chapters:[
-     {title:'Lektion 1: BWA-Grundlagen',lessons:[
-         {title:'Was ist eine BWA?',type:'video',duration:'10:00',done:false},
-         {title:'Die wichtigsten Positionen',type:'text',duration:'8 min',done:false},
-         {title:'Deine erste BWA analysieren',type:'exercise',duration:'15 min',done:false}
-     ]},
-     {title:'Lektion 2: KPIs ableiten',lessons:[
-         {title:'Rohertrag, Marge, Kostenquoten',type:'video',duration:'12:00',done:false},
-         {title:'Benchmark: Du vs. Netzwerk',type:'text',duration:'6 min',done:false}
-     ]},
-     {title:'Lektion 3: Maßnahmen definieren',lessons:[
-         {title:'Von der Zahl zur Aktion',type:'video',duration:'8:00',done:false},
-         {title:'Maßnahmenplan erstellen',type:'exercise',duration:'20 min',done:false}
-     ]}
- ]},
-{id:'k3',bereich:'marketing',title:'Social Media Meisterklasse',
- desc:'Von Null auf Content-Pro: Reels, Stories, Ads – alles für lokale Fahrradhändler.',
- instructor:'vit:bikes Marketing',duration:'4 Module · 2h',level:'Mittel',
- thumbnail:'📱',progress:60,enrolled:true,
- chapters:[
-     {title:'Modul 1: Content-Strategie',lessons:[
-         {title:'Dein Content-Kalender',type:'video',duration:'10:00',done:true},
-         {title:'Was funktioniert lokal?',type:'text',duration:'5 min',done:true},
-         {title:'10 Posting-Ideen',type:'download',duration:'—',done:true}
-     ]},
-     {title:'Modul 2: Reels & Videos',lessons:[
-         {title:'Reel in 60 Sekunden',type:'video',duration:'8:00',done:true},
-         {title:'Schnitt mit CapCut',type:'video',duration:'12:00',done:true},
-         {title:'Übung: Dein erstes Reel',type:'exercise',duration:'20 min',done:false}
-     ]},
-     {title:'Modul 3: Meta Ads',lessons:[
-         {title:'Ads Manager Basics',type:'video',duration:'15:00',done:false},
-         {title:'Zielgruppen definieren',type:'text',duration:'8 min',done:false}
-     ]},
-     {title:'Modul 4: Analyse & Optimierung',lessons:[
-         {title:'KPIs die zählen',type:'video',duration:'7:00',done:false},
-         {title:'A/B Testing',type:'text',duration:'5 min',done:false}
-     ]}
- ]},
-{id:'k4',bereich:'einkauf',title:'Einkauf & Rohertrag optimieren',
- desc:'Konditionen verhandeln, Dreingaben statt Rabatte, Lagerumschlag steigern.',
- instructor:'vit:bikes Einkauf',duration:'3 Module · 2h',level:'Fortgeschritten',
- thumbnail:'🛒',progress:0,enrolled:false,
- chapters:[
-     {title:'Modul 1: Konditionsmodelle',lessons:[
-         {title:'Block- vs. Vororder',type:'video',duration:'10:00',done:false},
-         {title:'Rabatt-Staffeln verstehen',type:'text',duration:'6 min',done:false}
-     ]},
-     {title:'Modul 2: Rohertrag schützen',lessons:[
-         {title:'Dreingaben statt Rabatte',type:'video',duration:'8:00',done:false},
-         {title:'Sqlab & Co als Alternative',type:'text',duration:'5 min',done:false}
-     ]},
-     {title:'Modul 3: Bestandsmanagement',lessons:[
-         {title:'Umschlag & Ladenhüter',type:'video',duration:'12:00',done:false},
-         {title:'Saisonplanung Praxis',type:'exercise',duration:'15 min',done:false}
-     ]}
- ]}
-];
+// ═══ KURSE (Memberspot-Style) – wird von HQ befuellt ═══
+var KURSE = [];
 
 // ═══ ONBOARDING STEPS ═══
 var ONBOARDING = [
@@ -189,7 +145,13 @@ var el = document.getElementById('wissenGlobalContent');
 el.innerHTML = '<button onclick="switchWissenTyp(\'portal\')" class="text-xs text-vit-orange font-semibold mb-3 inline-block hover:underline">← Zurück zu allen Anleitungen</button>' +
 '<div class="vit-card p-6"><div class="flex items-center gap-4 mb-4"><span style="font-size:40px">'+g.icon+'</span><div><h2 class="text-lg font-bold text-gray-800">'+g.title+'</h2><p class="text-sm text-gray-500">'+g.desc+'</p><p class="text-xs text-gray-400 mt-1">Version '+g.version+' · Aktualisiert '+g.updated+'</p></div></div>' +
 '<div class="space-y-3">' + g.steps.map(function(s,i){
-    return '<div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"><span style="width:28px;height:28px;border-radius:50%;background:#EF7D00;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">'+(i+1)+'</span><p class="text-sm text-gray-700">'+s+'</p></div>';
+    var title = typeof s === 'string' ? s : (s.t||s);
+    var desc = typeof s === 'object' ? (s.d||'') : '';
+    var isTipp = title.indexOf('💡') > -1;
+    if(isTipp) {
+        return '<div class="p-3 bg-amber-50 border border-amber-200 rounded-lg"><p class="text-xs font-bold text-amber-700 mb-1">'+title+'</p>'+(desc?'<p class="text-xs text-amber-800 leading-relaxed">'+desc+'</p>':'')+'</div>';
+    }
+    return '<div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"><span style="width:28px;height:28px;border-radius:50%;background:#EF7D00;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">'+(i+1)+'</span><div><p class="text-sm font-semibold text-gray-800">'+title+'</p>'+(desc?'<p class="text-xs text-gray-600 mt-1 leading-relaxed">'+desc+'</p>':'')+'</div></div>';
 }).join('') + '</div></div>';
 };
 
