@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 03.03.2026 – Session: Todo v2 UX-Fixes (8 Verbesserungen), Buchhaltung refactored (Jahresstrategie entfernt, Kostenaufschlüsselung→Jahresplan-Daten, Liquiditäts-Tab MVP live mit finAPI-Placeholder), Feedback-Widget renamed, Sprachschalter→Profil
+> Letzte Aktualisierung: 03.03.2026 – Session: Edge Function Auth-Fixes (send-emails v22 + dev-ki-analyse v33 → verify_jwt=false, eigene Auth im Code), dev-release.js Token-Refresh vor KI-Calls
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -243,7 +243,7 @@ sbUrl()       → window.sbUrl()   // Supabase Project URL (zentralisiert)
 | Views | 2 (v_wawi_leasing_uebersicht, v_wawi_top_produkte) |
 | RLS Policies | 261 |
 | Indizes | 281 (276 + 5 neue Banking-Indizes) |
-| Edge Functions | 39 deployed (18 mit JWT, 21 ohne) |
+| Edge Functions | 41 deployed (15 mit JWT, 26 ohne) |
 | RPC Functions | 78 (12 Frontend, 23 Trigger, 21 RLS, 22 Server-Side) |
 | Auth-User | ~14 |
 | Standorte | 33 (angelegt) |
@@ -358,7 +358,7 @@ sbUrl()       → window.sbUrl()   // Supabase Project URL (zentralisiert)
 |-------|------|
 | verkauf | `a8439c42-a42a-4abd-b268-8557bb281897` |
 
-### Edge Functions (12)
+### Edge Functions (13)
 
 | Function | Zweck |
 |----------|-------|
@@ -372,7 +372,8 @@ sbUrl()       → window.sbUrl()   // Supabase Project URL (zentralisiert)
 | `send-push` | Push-Notifications (8 Trigger-Punkte) |
 | `db-backup` | Datenbank-Backup |
 | `dhl-shipping` | DHL Paket Label-Erstellung (OAuth2 Production, V2 API) – v12, liest Config aus connector_config DB (Fallback: Env-Vars). verify_jwt=false, eigene Auth |
-| `send-emails` | E-Mail-Versand (Resend API, Templates) |
+| `send-emails` | E-Mail-Versand (Resend API, Templates) – verify_jwt=false, eigene Auth (x-cron-secret + JWT) |
+| `dev-ki-analyse` | KI Dev-Pipeline: Analyse, Konzept, Mockup, Code, Release Notes – verify_jwt=false, eigene Auth |
 | `wawi-email-ingest` | WaWi E-Mail-Ingestion Pipeline |
 
 ### RLS-Prinzipien
