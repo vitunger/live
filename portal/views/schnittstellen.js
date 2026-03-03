@@ -67,20 +67,21 @@ var CONNECTORS = {
     dhl: {
         id: 'dhl', name: 'DHL Paket DE', icon: '📦', iconBg: '#fef08a',
         desc: 'Versandlabel direkt aus dem Shop erstellen. DHL Paket DE Versenden V2 REST API.',
-        category: 'active', status: 'connected', statusLabel: 'Sandbox',
+        category: 'active', status: 'connected', statusLabel: 'Production',
+        dhlFields: [
+            { key: 'api_key', label: 'API Key (Client ID)', type: 'text', placeholder: 'z.B. tmsv3oah...' },
+            { key: 'api_secret', label: 'API Secret', type: 'password', placeholder: 'Client Secret' },
+            { key: 'gkp_user', label: 'GKP-Benutzer', type: 'text', placeholder: 'Systembenutzer-Name' },
+            { key: 'gkp_pass', label: 'GKP-Passwort', type: 'password', placeholder: 'Passwort' },
+            { key: 'billing_number', label: 'Abrechnungsnr. (14-stellig)', type: 'text', placeholder: 'z.B. 52128352600101' },
+            { key: 'sandbox', label: 'Modus', type: 'select', options: [{ value: 'false', label: 'Production' }, { value: 'true', label: 'Sandbox (Test)' }] },
+        ],
         readonlyFields: [
-            { key: 'api_mode', label: 'Modus', value: 'Sandbox (Test)' },
-            { key: 'billing_number', label: 'Abrechnungsnr.', value: '5212835260****' },
-            { key: 'gkp_user', label: 'GKP-Benutzer', value: 'vitbikescockpit' },
             { key: 'sender', label: 'Absender', value: 'vit:bikes GmbH, Jahnstraße 2c, 85774 Unterföhring' },
             { key: 'products', label: 'Produkte', value: 'DHL Paket (V01PAK)' },
-            { key: 'edge_function', label: 'Edge Function', value: 'dhl-shipping (v3)' },
+            { key: 'edge_function', label: 'Edge Function', value: 'dhl-shipping (v12)' },
         ],
-        logs: [
-            { time: '03.03.2026 13:15', type: 'info', msg: 'DHL Paket DE API Sandbox konfiguriert' },
-            { time: '03.03.2026 13:14', type: 'info', msg: 'Edge Function dhl-shipping deployed' },
-            { time: '03.03.2026 13:10', type: 'info', msg: 'App im DHL Developer Portal angelegt' },
-        ]
+        logs: []
     },
     approom: {
         id: 'approom', name: 'app-room / CYCLE', icon: '🚲', iconBg: '#fef3c7',
@@ -127,6 +128,7 @@ export async function renderSchnittstellen() {
     loadWawiStatus();
     renderStatusGrid();
     renderActiveCards();
+    setTimeout(function() { if (window.loadDhlConfig) window.loadDhlConfig(); }, 500);
     renderPlannedGrid();
     renderPartnerCards();
     loadEterminOverview();
@@ -409,6 +411,42 @@ function renderConnectorCard(id) {
         } else {
             body += '<p class="text-xs text-gray-400 italic">Keine WaWi-Verbindungen konfiguriert.</p>';
         }
+        body += '</div>';
+    }
+
+    // -- DHL body --
+    if (id === 'dhl') {
+        body += '<div class="pt-4 space-y-3" id="dhlConfigPanel">';
+        body += renderGfToggle(id);
+        if (c.dhlFields) {
+            c.dhlFields.forEach(function(f) {
+                if (f.type === 'select') {
+                    body += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">' + f.label + '</label>'
+                        + '<select id="conn_dhl_' + f.key + '" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:border-blue-400 outline-none">';
+                    f.options.forEach(function(o) {
+                        body += '<option value="' + o.value + '">' + _escH(o.label) + '</option>';
+                    });
+                    body += '</select></div>';
+                } else {
+                    body += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">' + f.label + '</label>'
+                        + '<input type="' + f.type + '" id="conn_dhl_' + f.key + '" placeholder="' + f.placeholder + '" '
+                        + 'class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 outline-none transition font-mono"></div>';
+                }
+            });
+        }
+        if (c.readonlyFields) {
+            body += '<div class="pt-2 border-t border-gray-100 mt-2 space-y-1">';
+            c.readonlyFields.forEach(function(f) {
+                body += '<div class="flex items-center gap-2"><span class="text-[10px] text-gray-400 w-28 flex-shrink-0">' + f.label + '</span>'
+                    + '<span class="text-xs text-gray-600">' + _escH(f.value) + '</span></div>';
+            });
+            body += '</div>';
+        }
+        body += '<div class="flex gap-2 pt-2">'
+            + '<button onclick="window.testDhlConnection()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition">\ud83d\udd0d Verbindung testen</button>'
+            + '<button onclick="window.saveDhlConfig()" class="px-4 py-2 bg-blue-500 text-white rounded-lg text-xs font-semibold hover:bg-blue-600 transition">\ud83d\udcbe Speichern</button>'
+            + '</div>';
+        body += '<div id="dhlTestResult" class="mt-2"></div>';
         body += '</div>';
     }
 
@@ -857,8 +895,74 @@ window.saveConnector = async function(id) {
         }
         return;
     }
+    if (id === 'dhl') { window.saveDhlConfig(); return; }
     addLog(id, 'info', 'Konfiguration gespeichert');
     _showToast(CONNECTORS[id].name + ' Konfiguration gespeichert', 'success');
+};
+
+window.loadDhlConfig = async function() {
+    try {
+        var sb = _sb(); if (!sb) return;
+        var { data } = await sb.from('connector_config').select('config_key, config_value').eq('connector_id', 'dhl');
+        if (!data || !data.length) return;
+        data.forEach(function(r) {
+            var el = document.getElementById('conn_dhl_' + r.config_key);
+            if (el) el.value = r.config_value;
+        });
+        var sandboxEl = document.getElementById('conn_dhl_sandbox');
+        CONNECTORS.dhl.statusLabel = (sandboxEl && sandboxEl.value === 'true') ? 'Sandbox' : 'Production';
+        CONNECTORS.dhl.status = 'connected';
+    } catch(e) { console.warn('DHL config load:', e); }
+};
+
+window.saveDhlConfig = async function() {
+    try {
+        var sb = _sb(); if (!sb) throw new Error('Nicht eingeloggt');
+        var fields = CONNECTORS.dhl.dhlFields;
+        var values = {};
+        var missing = [];
+        fields.forEach(function(f) {
+            var el = document.getElementById('conn_dhl_' + f.key);
+            var val = el ? el.value.trim() : '';
+            if (f.key !== 'sandbox' && !val) missing.push(f.label);
+            values[f.key] = val || (f.key === 'sandbox' ? 'false' : '');
+        });
+        if (missing.length > 0) { _showToast('Fehlende Felder: ' + missing.join(', '), 'error'); return; }
+        for (var key in values) {
+            var { error } = await sb.from('connector_config').upsert({
+                connector_id: 'dhl', config_key: key, config_value: values[key],
+                updated_by: _sbUser().id, updated_at: new Date().toISOString()
+            }, { onConflict: 'connector_id,config_key' });
+            if (error) throw error;
+        }
+        var isSandbox = values.sandbox === 'true';
+        CONNECTORS.dhl.statusLabel = isSandbox ? 'Sandbox' : 'Production';
+        CONNECTORS.dhl.status = 'connected';
+        addLog('dhl', 'ok', 'DHL Konfiguration gespeichert (' + (isSandbox ? 'Sandbox' : 'Production') + ')');
+        _showToast('DHL Konfiguration gespeichert!', 'success');
+    } catch(err) {
+        addLog('dhl', 'err', 'Speichern fehlgeschlagen: ' + err.message);
+        _showToast('Fehler: ' + err.message, 'error');
+    }
+};
+
+window.testDhlConnection = async function() {
+    var el = document.getElementById('dhlTestResult');
+    if (el) el.innerHTML = '<span class="text-xs text-gray-400 animate-pulse">Teste DHL-Verbindung...</span>';
+    try {
+        await window.saveDhlConfig();
+        var sb = _sb(); if (!sb) throw new Error('Nicht eingeloggt');
+        var { data } = await sb.from('connector_config').select('config_key').eq('connector_id', 'dhl');
+        var keys = (data || []).map(function(r) { return r.config_key; });
+        var required = ['api_key', 'api_secret', 'gkp_user', 'gkp_pass', 'billing_number'];
+        var miss = required.filter(function(k) { return keys.indexOf(k) === -1; });
+        if (miss.length > 0) throw new Error('Fehlend: ' + miss.join(', '));
+        if (el) el.innerHTML = '<span class="text-xs text-green-600 font-semibold">Konfiguration vollstaendig (' + keys.length + ' Werte gespeichert)</span>';
+        addLog('dhl', 'ok', 'Konfigurationstest bestanden');
+    } catch(err) {
+        if (el) el.innerHTML = '<span class="text-xs text-red-500 font-semibold">' + _escH(err.message) + '</span>';
+        addLog('dhl', 'err', 'Test: ' + err.message);
+    }
 };
 
 window.manualSync = function(id) {
