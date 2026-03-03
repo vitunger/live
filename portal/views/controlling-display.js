@@ -390,7 +390,8 @@ export async function loadBwaTrend(stdId, jahr) {
     // HQ-User ohne Standort: Trend ausblenden statt alle Standorte zu mischen
     if(!stdId) { sec.style.display = 'none'; return; }
     try {
-        var query = _sb().from('bwa_daten').select('monat,umsatzerloese,rohertrag,gesamtkosten,ergebnis_vor_steuern').eq('jahr', jahr).eq('standort_id', stdId).order('monat');
+        var query = _sb().from('bwa_daten').select('monat,umsatzerloese,rohertrag,gesamtkosten,ergebnis_vor_steuern').eq('jahr', jahr).order('monat');
+        if(stdId) query = query.eq('standort_id', stdId);
         var resp = await query;
         if(resp.error || !resp.data || resp.data.length < 2) { sec.style.display = 'none'; return; }
         sec.style.display = '';
