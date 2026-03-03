@@ -80,7 +80,7 @@ export async function renderHqShop() {
 
         var { data: allOrders } = await _sb().from('shop_orders').select('id, status, total, created_at').order('created_at', {ascending:false});
         hqShopOrdersCache = allOrders || [];
-        var pending = hqShopOrdersCache.filter(function(o){return o.status==='pending'||o.status==='confirmed'}).length;
+        var pending = hqShopOrdersCache.filter(function(o){return o.status==='pending'||o.status==='confirmed'||o.status==='paid'}).length;
         var el2 = document.getElementById('hqShopKpiPending'); if(el2) { el2.textContent = pending; if(pending > 0) el2.parentNode.classList.add('ring-2','ring-yellow-400'); else el2.parentNode.classList.remove('ring-2','ring-yellow-400'); }
 
         var thisMonth = new Date().toISOString().substring(0,7);
@@ -120,8 +120,8 @@ export async function renderHqShopOrders() {
         if(!orders || !orders.length) { oEl.innerHTML = '<p class="text-center text-gray-400 py-8">Noch keine Bestellungen eingegangen.</p>'; return; }
 
         var filtered = hqShopOrderFilter === 'all' ? orders : orders.filter(function(o){return o.status===hqShopOrderFilter});
-        var statusC = {pending:'bg-red-100 text-red-700',confirmed:'bg-yellow-100 text-yellow-700',shipped:'bg-blue-100 text-blue-700',delivered:'bg-green-100 text-green-700',cancelled:'bg-gray-100 text-gray-400'};
-        var statusL = {pending:'⏳ Offen',confirmed:'📋 Bestätigt',shipped:'🚚 Versendet',delivered:'✅ Geliefert',cancelled:'❌ Storniert'};
+        var statusC = {pending:'bg-red-100 text-red-700',confirmed:'bg-yellow-100 text-yellow-700',paid:'bg-emerald-100 text-emerald-700',shipped:'bg-blue-100 text-blue-700',delivered:'bg-green-100 text-green-700',cancelled:'bg-gray-100 text-gray-400'};
+        var statusL = {pending:'⏳ Offen',confirmed:'📋 Bestätigt',paid:'💰 Bezahlt',shipped:'🚚 Versendet',delivered:'✅ Geliefert',cancelled:'❌ Storniert'};
         var fmtEur = window.fmtEur || function(n){ return n.toFixed(2)+' €'; };
         var fmtDate = window.fmtDate || function(d){ return new Date(d).toLocaleDateString('de-DE'); };
         var h = '';
@@ -159,10 +159,15 @@ export async function renderHqShopOrders() {
             if(o.status==='pending') {
                 h += '<button onclick="updateShopOrderStatus(\''+o.id+'\',\'confirmed\')" class="text-xs px-3 py-1.5 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600">✓ Bestätigen</button>';
             }
-            if(o.status==='pending'||o.status==='confirmed') {
+            if(o.status==='confirmed') {
+                h += '<button onclick="updateShopOrderStatus(\''+o.id+'\',\'paid\')" class="text-xs px-3 py-1.5 bg-emerald-500 text-white rounded-lg font-semibold hover:bg-emerald-600">💰 Bezahlt</button>';
+            }
+            if(o.status==='paid') {
                 h += '<button onclick="showPackingList(\''+o.id+'\')" class="text-xs px-3 py-1.5 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700">🖨️ Packliste</button>';
                 h += '<button id="dhlBtn_'+o.id+'" onclick="createDhlLabel(\''+o.id+'\')" class="text-xs px-3 py-1.5 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600">📦 DHL Label</button>';
                 h += '<button onclick="showTrackingModal(\''+o.id+'\')" class="text-xs px-3 py-1.5 bg-blue-400 text-white rounded-lg font-semibold hover:bg-blue-500 opacity-70" title="Manuell Tracking eingeben">✏️ Manuell</button>';
+            }
+            if(o.status==='pending'||o.status==='confirmed'||o.status==='paid') {
                 h += '<button onclick="cancelShopOrder(\''+o.id+'\')" class="text-xs px-3 py-1.5 bg-red-100 text-red-700 rounded-lg font-semibold hover:bg-red-200">✕ Stornieren</button>';
             }
             if(o.status==='shipped') {
@@ -255,6 +260,7 @@ export async function cancelShopOrder(orderId) {
 export async function updateShopOrderStatus(orderId, newStatus) {
     var updates = { status: newStatus, updated_at: new Date().toISOString() };
     if (newStatus === 'confirmed') updates.confirmed_at = new Date().toISOString();
+    if (newStatus === 'paid') updates.paid_at = new Date().toISOString();
     if (newStatus === 'shipped') updates.shipped_at = new Date().toISOString();
     if (newStatus === 'delivered') updates.delivered_at = new Date().toISOString();
     await _sb().from('shop_orders').update(updates).eq('id', orderId);

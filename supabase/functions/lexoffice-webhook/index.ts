@@ -93,6 +93,25 @@ Deno.serve(async (req: Request) => {
                     notes: `Status von LexOffice aktualisiert: ${voucherStatus}`,
                   })
                   .eq("id", ourInvoice.id);
+
+                // Also update linked shop_order if exists
+                const { data: linkedOrder } = await supabaseAdmin
+                  .from("shop_orders")
+                  .select("id, status")
+                  .eq("billing_invoice_id", ourInvoice.id)
+                  .single();
+
+                if (linkedOrder && newStatus === "paid" && linkedOrder.status === "confirmed") {
+                  await supabaseAdmin
+                    .from("shop_orders")
+                    .update({
+                      status: "paid",
+                      paid_at: new Date().toISOString(),
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", linkedOrder.id);
+                  console.log(`Shop order ${linkedOrder.id} auto-marked as paid via LexOffice webhook`);
+                }
               }
             }
           }

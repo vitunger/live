@@ -204,8 +204,13 @@ async function handleStatusChange(sb: any, orderId: string, newStatus: string) {
   const statusTexts: Record<string, { emoji: string; title: string; message: string }> = {
     confirmed: {
       emoji: "📋",
-      title: "Bestellung wird vorbereitet",
-      message: "Eure Bestellung wurde bestätigt und wird jetzt zusammengestellt. Wir melden uns sobald das Paket auf dem Weg ist.",
+      title: "Bestellung bestätigt",
+      message: "Eure Bestellung wurde bestätigt. Sobald die Zahlung eingegangen ist, wird das Paket vorbereitet und versendet.",
+    },
+    paid: {
+      emoji: "💰",
+      title: "Zahlung eingegangen",
+      message: "Die Zahlung für eure Bestellung ist eingegangen. Das Paket wird jetzt vorbereitet und versendet.",
     },
     shipped: {
       emoji: "🚚",
