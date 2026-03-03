@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 03.03.2026 (dev-pipeline Split, User-Registration unified, delete_auth_user fix, View-Restore fix)
+> Letzte Aktualisierung: 03.03.2026 (user-management/office/strategie Split, dev-pipeline Split, User-Registration unified, delete_auth_user fix, View-Restore fix)
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -51,7 +51,7 @@ portal/
 │   ├── globals.js          – showToast, escH, fmtN, Theme Toggle
 │   ├── supabase-init.js    – createClient, IDB Session, Auth Listener
 │   └── router.js           – showView(), i18n t(), View Switching
-├── views/                  – 53 Module, ~36.000 Zeilen (parallel geladen)
+├── views/                  – 68 Module, ~36.000 Zeilen (parallel geladen)
 │   ├── home.js             – Dashboard, Widgets, Quick Actions
 │   ├── verkauf.js          – Verkäufer-Performance, Pipeline
 │   ├── controlling.js      – BWA Upload/Parse/AI (13+ Formate)
@@ -69,8 +69,26 @@ portal/
 │   ├── dev-release.js      – Release-Docs, Feedback-Surveys
 │   ├── dev-ki.js           – KI-Priorisierung, Notizen, KPI-Filter
 │   ├── dev-mockup.js       – Mockup-Chat, Generation, Refinement
-│   ├── office.js           – Check-in, Desk Booking [143KB – AUFSPALTUNG PRIO]
-│   ├── user-management.js  – User CRUD, Rollen [141KB – AUFSPALTUNG PRIO]
+│   ├── user-management.js  – Orchestrator: Shared State, rolePermissions (✅ aufgespalten)
+│   ├── user-approval.js    – HQ User-Approval-Workflow
+│   ├── user-employees.js   – Partner-Mitarbeiterliste, Tools-Matrix, Kosten
+│   ├── user-create-edit.js – Neuer MA, Edit MA, Login-As, Delete
+│   ├── user-modules.js     – Modul-Status, Settings, HQ-Rechte-Matrix
+│   ├── user-kommando.js    – Kommandozentrale-Views, Beta-User
+│   ├── office.js           – Orchestrator: State, Helpers, Tab-Dispatch (✅ aufgespalten)
+│   ├── office-checkin.js   – Dashboard, Check-in/out, Desk-Modal
+│   ├── office-weekly.js    – Wochenplan, Tagesplanung
+│   ├── office-floorplan.js – Grundriss, Raum-Auswahl
+│   ├── office-guests.js    – Gäste-Verwaltung, Einladungen
+│   ├── office-booking.js   – Buchen-Tab (komplexeste Komponente)
+│   ├── office-mybookings.js – Meine Buchungen, Kalender
+│   ├── office-whoishere.js – Wer ist im Office, Personensuche
+│   ├── office-stats.js     – Gamification, Leaderboard
+│   ├── strategie.js        – Orchestrator: Kommandozentrale, showView, handleFileUpload (✅ aufgespalten)
+│   ├── strategie-shop.js   – Werbemittel-Shop: Katalog, Warenkorb, Bestellungen
+│   ├── strategie-i18n.js   – Internationalisierung: translateDOM, switchLang, t()
+│   ├── strategie-content.js – Social Media / Content-Strategie
+│   ├── strategie-onboarding.js – Asana-Onboarding, Demo-Tasks, Sales-Daten
 │   ├── view-router.js      – MUSS LETZTES View-Modul sein (vit:view-changed Events)
 │   └── ...                 – Weitere Module (siehe MODULE_MAP.md)
 ├── inline/                 – 19 Module, ~7.000 Zeilen (Script-Tags in index.html)
@@ -258,9 +276,9 @@ Die größten Module sollten bei der TypeScript-Migration aufgespalten werden:
 | # | Modul | Größe | Aufspaltung |
 |---|-------|-------|-------------|
 | 1 | `dev-pipeline.js` | 261 KB | ✅ Aufgespalten → 14 Sub-Module (dev-recording, dev-tabs, dev-kanban, dev-roadmap, dev-ideas, dev-detail, dev-vision, dev-notifications, dev-utils, dev-workflow, dev-release, dev-ki, dev-mockup) |
-| 2 | `office.js` | 143 KB | → office-checkin, office-booking, office-analytics |
-| 3 | `user-management.js` | 141 KB | → user-list, user-edit, user-roles |
-| 4 | `strategie.js` | 137 KB | → strategie-onboarding, strategie-kommando |
+| 2 | `office.js` | 143 KB | ✅ Aufgespalten → 9 Sub-Module (office-checkin, office-weekly, office-floorplan, office-guests, office-booking, office-mybookings, office-whoishere, office-stats) |
+| 3 | `user-management.js` | 141 KB | ✅ Aufgespalten → 6 Sub-Module (user-approval, user-employees, user-create-edit, user-modules, user-kommando) |
+| 4 | `strategie.js` | 137 KB | ✅ Aufgespalten → 5 Sub-Module (strategie-shop, strategie-i18n, strategie-content, strategie-onboarding) |
 | 5 | `video-pipeline.js` | 131 KB | → video-upload, video-consent, video-tagging |
 | 6 | `controlling.js` | 108 KB | → bwa-parser, bwa-display, bwa-ai-analysis |
 | 7 | `misc-views.js` | 89 KB | → moduluebersicht, social-media, verkaufstraining |

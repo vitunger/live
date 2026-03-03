@@ -12,7 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1772530030";
+const CACHE_BUST = "?v=1772531000";
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
@@ -50,7 +50,13 @@ const VIEW_MODULES = [
     
     // Systems
     'views/auth-system.js',
+    // User Management (split into 6 sub-modules)
     'views/user-management.js',
+    'views/user-approval.js',
+    'views/user-employees.js',
+    'views/user-create-edit.js',
+    'views/user-modules.js',
+    'views/user-kommando.js',
     'views/feature-flags-full.js',
     'views/cockpit-engine.js',
     'views/email-billing.js',
@@ -73,13 +79,26 @@ const VIEW_MODULES = [
     'views/dev-ki.js',
     'views/dev-mockup.js',
 
-    // Specialized
+    // Strategie (split into 5 sub-modules)
     'views/strategie.js',
+    'views/strategie-shop.js',
+    'views/strategie-i18n.js',
+    'views/strategie-content.js',
+    'views/strategie-onboarding.js',
     'views/profile-theme.js',
     'views/perf-cockpit.js',
     'views/onboarding-demo.js',
+    // Office (split into 9 sub-modules)
     'views/office.js',
     'views/office-admin.js',
+    'views/office-checkin.js',
+    'views/office-weekly.js',
+    'views/office-floorplan.js',
+    'views/office-guests.js',
+    'views/office-booking.js',
+    'views/office-mybookings.js',
+    'views/office-whoishere.js',
+    'views/office-stats.js',
     'views/wawi-integration.js',
     'views/schnittstellen.js',
     'views/video-pipeline.js',
