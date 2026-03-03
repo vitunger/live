@@ -3,6 +3,8 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
 // Extracted from index.html lines 11306-11587
 // ============================================================
 (function(){
+    function _sb() { return window.sb; }
+
     // ── Service Worker Registration ──
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
@@ -49,11 +51,11 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
             var sb = window._supabase;
             if (!sb) return;
             if (prefKey) {
-                var { data: prefs } = await sb.from('notification_preferences').select('user_id, ' + prefKey).in('user_id', userIds);
+                var { data: prefs } = await _sb().from('notification_preferences').select('user_id, ' + prefKey).in('user_id', userIds);
                 if (prefs) userIds = prefs.filter(function(p) { return p[prefKey] !== false; }).map(function(p) { return p.user_id; });
                 if (userIds.length === 0) return;
             }
-            var { data: session } = await sb.auth.getSession();
+            var { data: session } = await _sb().auth.getSession();
             var token = session?.session?.access_token;
             if (!token) return;
             await fetch('https://lwwagbkxeofahhwebkab.supabase.co/functions/v1/send-push', {
@@ -67,10 +69,10 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
     async function triggerPushStandort(title, body, url, prefKey) {
         try {
             var sb = window._supabase;
-            var me = (await sb.auth.getUser()).data.user?.id;
+            var me = (await _sb().auth.getUser()).data.user?.id;
             var sid = sbProfile ? sbProfile.standort_id : null;
             if (!sid || !me) return;
-            var { data: users } = await sb.from('users').select('id').eq('standort_id', sid);
+            var { data: users } = await _sb().from('users').select('id').eq('standort_id', sid);
             if (!users) return;
             var ids = users.map(function(u) { return u.id; }).filter(function(id) { return id !== me; });
             await triggerPush(ids, title, body, url, prefKey);
@@ -80,8 +82,8 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
     async function triggerPushHQ(title, body, url, prefKey) {
         try {
             var sb = window._supabase;
-            var me = (await sb.auth.getUser()).data.user?.id;
-            var { data: hqUsers } = await sb.from('users').select('id').eq('is_hq', true);
+            var me = (await _sb().auth.getUser()).data.user?.id;
+            var { data: hqUsers } = await _sb().from('users').select('id').eq('is_hq', true);
             if (!hqUsers) return;
             var ids = hqUsers.map(function(u) { return u.id; }).filter(function(id) { return id !== me; });
             await triggerPush(ids, title, body, url, prefKey);

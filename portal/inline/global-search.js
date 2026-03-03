@@ -5,6 +5,8 @@
 
 (function() {
   'use strict';
+    function _sb() { return window.sb; }
+
 
   let searchOpen = false;
   let searchMode = 'all'; // 'page' | 'all'
@@ -129,7 +131,7 @@
 
     const promises = SEARCH_SOURCES.map(async (src) => {
       try {
-        let q = sb.from(src.table).select('*');
+        let q = _sb().from(src.table).select('*');
         // Build OR filter
         const orParts = src.fields.map(f => `${f}.ilike.%${query}%`);
         q = q.or(orParts.join(','));

@@ -405,7 +405,9 @@ async function switchDemoAccount(level, stage) {
 
     // Safety: re-fill demo data after any async DB calls settle
     if(level !== 'extern') {
-        setTimeout(function() { fillDemoWidgets(level, stage); }, 500);
+        setTimeout(function() {
+    function _sb() { return window.sb; }
+ fillDemoWidgets(level, stage); }, 500);
     }
 }
 
@@ -723,7 +725,7 @@ async function renderHqFeedbackInbox() {
     list.innerHTML = '<div class="p-8 text-center text-gray-400">Wird geladen...</div>';
 
     try {
-        var resp = await sb.from('portal_feedback')
+        var resp = await _sb().from('portal_feedback')
             .select('*, users(name, email), standorte(name)')
             .order('created_at', { ascending: false })
             .limit(100);
@@ -846,8 +848,8 @@ window.openHqFbDetail = async function(id) {
         h += '<div class="mb-4"><p class="text-xs font-bold text-gray-500 uppercase mb-2">Anhänge ('+attachments.length+')</p>';
         for(var i=0; i<attachments.length; i++) {
             var a = attachments[i];
-            var url = sb.storage.from('feedback-attachments').getPublicUrl(a.path).data.publicUrl;
-            var signedResp = await sb.storage.from('feedback-attachments').createSignedUrl(a.path, 3600);
+            var url = _sb().storage.from('feedback-attachments').getPublicUrl(a.path).data.publicUrl;
+            var signedResp = await _sb().storage.from('feedback-attachments').createSignedUrl(a.path, 3600);
             var signedUrl = signedResp.data ? signedResp.data.signedUrl : url;
             if(a.type === 'screenshot') {
                 h += '<div class="mb-2"><img src="'+signedUrl+'" class="rounded-lg border max-h-[300px] w-auto" alt="Screenshot"></div>';
@@ -886,7 +888,7 @@ function formatFbSize(bytes) {
 
 window.updateFbStatus = async function(id, status) {
     try {
-        await sb.from('portal_feedback').update({ status: status, updated_at: new Date().toISOString() }).eq('id', id);
+        await _sb().from('portal_feedback').update({ status: status, updated_at: new Date().toISOString() }).eq('id', id);
         document.getElementById('hqFbDetailModal').style.display = 'none';
         renderHqFeedbackInbox();
     } catch(e) { _toast('Fehler: '+e.message, 'error'); }
@@ -911,7 +913,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     if((fb.attachments||[]).length) desc += '📎 Anhänge: ' + fb.attachments.length + ' Dateien\n';
 
     try {
-        var resp = await sb.from('ideen').insert({
+        var resp = await _sb().from('ideen').insert({
             standort_id: fb.standort_id,
             user_id: fb.user_id,
             titel: title.substring(0,200),
@@ -923,7 +925,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
         if(resp.error) throw resp.error;
 
         // Mark feedback as linked
-        await sb.from('portal_feedback').update({ status: 'gesehen' }).eq('id', fbId);
+        await _sb().from('portal_feedback').update({ status: 'gesehen' }).eq('id', fbId);
         _toast('✅ Idee wurde ins Ideenboard übernommen!', 'success');
         document.getElementById('hqFbDetailModal').style.display = 'none';
         renderHqFeedbackInbox();
@@ -931,7 +933,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
         // If ideas table doesn't exist yet, fall back gracefully
         if(e.message && e.message.indexOf('ideas') >= 0) {
             _toast('💡 Ideenboard-Tabelle noch nicht vorhanden. Feedback wurde als "gesehen" markiert.', 'info');
-            await sb.from('portal_feedback').update({ status: 'gesehen' }).eq('id', fbId);
+            await _sb().from('portal_feedback').update({ status: 'gesehen' }).eq('id', fbId);
             document.getElementById('hqFbDetailModal').style.display = 'none';
             renderHqFeedbackInbox();
         } else {
@@ -947,7 +949,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
         if(typeof sbUser === 'undefined' || !sbUser) return;
         clearInterval(badgeInterval);
         try {
-            var resp = await sb.from('portal_feedback').select('id', { count: 'exact', head: true }).eq('status','neu');
+            var resp = await _sb().from('portal_feedback').select('id', { count: 'exact', head: true }).eq('status','neu');
             var count = resp.count || 0;
             var badge = document.getElementById('hqFbBadge');
             if(badge) { badge.textContent = count; badge.style.display = count > 0 ? '' : 'none'; }

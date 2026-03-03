@@ -3,6 +3,8 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
 // Extracted from index.html lines 9900-10518
 // ============================================================
 (function(){
+    function _sb() { return window.sb; }
+
     const BILLING_FN = 'https://lwwagbkxeofahhwebkab.supabase.co/functions/v1/billing';
     
     // ── Helpers ──
@@ -159,7 +161,7 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
     window.finalizeAllReady = async function() {
         if (!confirm('Alle Drafts des aktuellen Monats finalisieren?')) return;
         var month = document.getElementById('billingMonthSelect')?.value;
-        var { data: invoices } = await sb.from('billing_invoices')
+        var { data: invoices } = await _sb().from('billing_invoices')
             .select('id').eq('status', 'draft').eq('period_start', month);
         if (!invoices?.length) { _toast('Keine Drafts zum Finalisieren', 'warning'); return; }
         var count = 0;
@@ -174,12 +176,12 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
     // ── HQ: Invoice Detail ──
     window.openBillingDetail = async function(invoiceId) {
         showView('hqBillingDetail');
-        var { data: inv } = await sb.from('billing_invoices')
+        var { data: inv } = await _sb().from('billing_invoices')
             .select('*, standort:standorte(name)').eq('id', invoiceId).single();
         if (!inv) return;
-        var { data: lines } = await sb.from('billing_invoice_line_items')
+        var { data: lines } = await _sb().from('billing_invoice_line_items')
             .select('*, product:billing_products(key, name)').eq('invoice_id', invoiceId).order('sort_index');
-        var { data: audits } = await sb.from('billing_audit_log')
+        var { data: audits } = await _sb().from('billing_audit_log')
             .select('*, user:users(name)').eq('invoice_id', invoiceId).order('created_at', { ascending: false });
 
         document.getElementById('billingDetailTitle').textContent = (inv.invoice_number || 'Rechnung') + ' – ' + (inv.standort?.name || '');
@@ -303,7 +305,7 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
     // ── HQ: Load All Invoices ──
     window.loadAllInvoices = async function() {
         var filter = document.getElementById('billingInvoiceFilter')?.value;
-        var query = sb.from('billing_invoices')
+        var query = _sb().from('billing_invoices')
             .select('*, standort:standorte(name)').order('created_at', { ascending: false }).limit(50);
         if (filter) query = query.eq('status', filter);
         var { data: invoices } = await query;
@@ -327,7 +329,7 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
 
     // ── HQ: Load Strategies ──
     window.loadStrategies = async function() {
-        var { data: strategies } = await sb.from('billing_annual_strategy')
+        var { data: strategies } = await _sb().from('billing_annual_strategy')
             .select('*, standort:standorte(name)').order('year', { ascending: false });
         var el = document.getElementById('billingStrategiesList');
         if (!el) return;
@@ -363,7 +365,7 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
 
     // ── HQ: Products ──
     window.loadProducts = async function() {
-        var { data: products } = await sb.from('billing_products').select('*').order('key');
+        var { data: products } = await _sb().from('billing_products').select('*').order('key');
         var el = document.getElementById('billingProductsList');
         if (!el) return;
         var h = '<div class="vit-card overflow-hidden"><table class="w-full text-sm">';
@@ -379,7 +381,7 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
 
     // ── HQ: Tool Packages ──
     window.loadToolPackages = async function() {
-        var { data: tools } = await sb.from('billing_tool_packages').select('*').order('monthly_cost');
+        var { data: tools } = await _sb().from('billing_tool_packages').select('*').order('monthly_cost');
         var el = document.getElementById('billingToolsList');
         if (!el) return;
         var h = '<div class="vit-card overflow-hidden"><table class="w-full text-sm">';
@@ -396,7 +398,7 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
     // ── PDF Download via Proxy ──
     window.downloadLexofficePdf = async function(invoiceId, invoiceNumber) {
         try {
-            var session = (await sb.auth.getSession()).data.session;
+            var session = (await _sb().auth.getSession()).data.session;
             if (!session) { _toast('Bitte erneut einloggen.', 'warning'); return; }
             var btn = event.target;
             btn.textContent = '⏳ Lade...';
@@ -436,7 +438,7 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
     window.loadStandortInvoices = async function() {
         var stId = sbProfile.standort_id;
         if (!stId) return;
-        var { data: invoices } = await sb.from('billing_invoices')
+        var { data: invoices } = await _sb().from('billing_invoices')
             .select('*').eq('standort_id', stId).order('period_start', { ascending: false });
         var el = document.getElementById('stBillingInvoicesList');
         if (!el) return;
@@ -472,7 +474,7 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
         var stId = sbProfile.standort_id;
         if (!stId) return;
         var year = new Date().getFullYear();
-        var { data: strategies } = await sb.from('billing_annual_strategy')
+        var { data: strategies } = await _sb().from('billing_annual_strategy')
             .select('*').eq('standort_id', stId).eq('year', year).order('version', { ascending: false });
         var el = document.getElementById('stBillingStrategyContent');
         if (!el) return;
@@ -506,11 +508,11 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
         var mkt = parseFloat(document.getElementById('stStratMarketing')?.value);
         if (!rev || isNaN(rev)) { _toast(t('misc_enter_revenue'), 'info'); return; }
         // Get current max version
-        var { data: existing } = await sb.from('billing_annual_strategy')
+        var { data: existing } = await _sb().from('billing_annual_strategy')
             .select('version').eq('standort_id', stId).eq('year', new Date().getFullYear())
             .order('version', { ascending: false }).limit(1);
         var newVersion = (existing?.[0]?.version || 0) + 1;
-        await sb.from('billing_annual_strategy').insert({
+        await _sb().from('billing_annual_strategy').insert({
             standort_id: stId, year: new Date().getFullYear(),
             planned_revenue_year: rev, planned_marketing_year: mkt || 0,
             submitted_at: new Date().toISOString(), submitted_by: sbUser.id,
@@ -528,9 +530,9 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
         if (!el) return;
         // Load strategy + tools
         var year = new Date().getFullYear();
-        var { data: strats } = await sb.from('billing_annual_strategy')
+        var { data: strats } = await _sb().from('billing_annual_strategy')
             .select('*').eq('standort_id', stId).eq('year', year).eq('locked', true).order('version', { ascending: false }).limit(1);
-        var { data: tools } = await sb.from('billing_user_tool_assignments')
+        var { data: tools } = await _sb().from('billing_user_tool_assignments')
             .select('*, tool:billing_tool_packages(name, monthly_cost), user:users(name)')
             .eq('standort_id', stId).eq('is_active', true);
         var s = strats?.[0];
@@ -576,7 +578,7 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
         if (!container) return;
         container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
 
-        var { data: invoices } = await sb.from('billing_invoices')
+        var { data: invoices } = await _sb().from('billing_invoices')
             .select('id, invoice_number, period_start, period_end, total, status, finalized_at, paid_at, created_at')
             .eq('standort_id', stId)
             .order('period_start', { ascending: false });

@@ -6,6 +6,8 @@
 // ═══════════════════════════════════════
 (function(){
     'use strict';
+    function _sb() { return window.sb; }
+
     function _toast(msg, type) { if(typeof window.showToast==='function') window.showToast(msg, type||'info'); }
 
 
@@ -283,13 +285,13 @@
                 // Chunked upload for large files
                 if(a.size > 5 * 1024 * 1024) {
                     // For very large files, upload directly (Supabase handles chunking)
-                    var upResp = await sb.storage.from('feedback-attachments').upload(path, a.blob, {
+                    var upResp = await _sb().storage.from('feedback-attachments').upload(path, a.blob, {
                         contentType: a.mime,
                         upsert: false
                     });
                     if(upResp.error) { console.error('Upload failed:', upResp.error); continue; }
                 } else {
-                    var upResp = await sb.storage.from('feedback-attachments').upload(path, a.blob, {
+                    var upResp = await _sb().storage.from('feedback-attachments').upload(path, a.blob, {
                         contentType: a.mime
                     });
                     if(upResp.error) { console.error('Upload failed:', upResp.error); continue; }
@@ -324,7 +326,7 @@
                 attachments: uploadedFiles
             };
 
-            var resp = await sb.from('portal_feedback').insert(fbRecord);
+            var resp = await _sb().from('portal_feedback').insert(fbRecord);
             if(resp.error) throw resp.error;
 
             // Show success

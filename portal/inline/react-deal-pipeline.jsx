@@ -1,3 +1,4 @@
+function _sb() { return window.sb; }
 /* ── vit:bikes Deal Flow Pipeline ─────────────────── */
 const { useState, useRef, useCallback, useEffect } = React;
 
@@ -113,17 +114,17 @@ function useSupabase(currentLoc, SELLERS) {
     setLoading(true);
     try {
       // Load leads
-      let q = sb.from("leads").select("*").order("created_at", { ascending: false });
+      let q = _sb().from("leads").select("*").order("created_at", { ascending: false });
       const { data: leads, error: e1 } = await q;
       if (e1) throw e1;
       if (!leads || !leads.length) { setLoading(false); return []; }
 
       // Load all todos for these leads
       const leadIds = leads.map(l => l.id);
-      const { data: allTodos } = await sb.from("lead_todos").select("*").in("lead_id", leadIds).order("created_at", { ascending: false });
+      const { data: allTodos } = await _sb().from("lead_todos").select("*").in("lead_id", leadIds).order("created_at", { ascending: false });
       
       // Load all activities for these leads
-      const { data: allActs } = await sb.from("lead_aktivitaeten").select("*").in("lead_id", leadIds).order("created_at", { ascending: false });
+      const { data: allActs } = await _sb().from("lead_aktivitaeten").select("*").in("lead_id", leadIds).order("created_at", { ascending: false });
 
       // Group by lead_id
       const todoMap = {};
@@ -168,7 +169,7 @@ function useSupabase(currentLoc, SELLERS) {
       default: return; // Unknown field, skip
     }
     try {
-      const { error: err } = await sb.from("leads").update(updates).eq("id", dealId);
+      const { error: err } = await _sb().from("leads").update(updates).eq("id", dealId);
       if (err) console.error("[Pipeline] Save error:", err);
     } catch (e) { console.error("[Pipeline] Save exception:", e); }
   }, [sb]);
@@ -177,7 +178,7 @@ function useSupabase(currentLoc, SELLERS) {
   const deleteDeal = useCallback(async (dealId) => {
     if (!sb || typeof dealId === "number") return false;
     try {
-      const { error: err } = await sb.from("leads").delete().eq("id", dealId);
+      const { error: err } = await _sb().from("leads").delete().eq("id", dealId);
       if (err) { console.error("[Pipeline] Delete error:", err); return false; }
       return true;
     } catch (e) { console.error("[Pipeline] Delete exception:", e); return false; }
@@ -192,7 +193,7 @@ function useSupabase(currentLoc, SELLERS) {
     const standortId = rawLoc || profile?.standort_id;
     if (!standortId) { console.error("[Pipeline] Cannot create deal: no standort_id"); return null; }
     try {
-      const { data, error: err } = await sb.from("leads").insert({
+      const { data, error: err } = await _sb().from("leads").insert({
         standort_id: standortId,
         erstellt_von: window.sbUser?.id || null,
         zugewiesen_an: deal.seller || null,
@@ -219,7 +220,7 @@ function useSupabase(currentLoc, SELLERS) {
   const saveTodo = useCallback(async (leadId, todo) => {
     if (!sb) return null;
     try {
-      const { data, error: err } = await sb.from("lead_todos").insert({
+      const { data, error: err } = await _sb().from("lead_todos").insert({
         lead_id: leadId,
         text: todo.text,
         done: todo.done || false,
@@ -235,7 +236,7 @@ function useSupabase(currentLoc, SELLERS) {
   const toggleTodo = useCallback(async (todoId, done) => {
     if (!sb) return;
     try {
-      await sb.from("lead_todos").update({ done }).eq("id", todoId);
+      await _sb().from("lead_todos").update({ done }).eq("id", todoId);
     } catch (e) { console.error("[Pipeline] Todo toggle error:", e); }
   }, [sb]);
 
@@ -243,7 +244,7 @@ function useSupabase(currentLoc, SELLERS) {
   const addActivity = useCallback(async (leadId, act) => {
     if (!sb) return null;
     try {
-      const { data, error: err } = await sb.from("lead_aktivitaeten").insert({
+      const { data, error: err } = await _sb().from("lead_aktivitaeten").insert({
         lead_id: leadId,
         user_id: window.sbUser?.id || null,
         typ: act.type || "note",
@@ -752,7 +753,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
     if(!sb)return;
     const eid=deal.eterminUid, tid=deal.terminId;
     if(!eid&&!tid)return;
-    let q=sb.from("termine").select("start_zeit,end_zeit,titel,etermin_uid");
+    let q=_sb().from("termine").select("start_zeit,end_zeit,titel,etermin_uid");
     if(tid) q=q.eq("id",tid);
     else q=q.eq("etermin_uid",eid);
     q.maybeSingle().then(({data})=>{if(data)setTermin(data)});
@@ -763,7 +764,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
     if(!deal.id||typeof deal.id==="number")return;
     const sb=window._sb&&window._sb();
     if(!sb)return;
-    sb.from("lead_events").select("*").eq("lead_id",deal.id).order("created_at",{ascending:false}).limit(20)
+    _sb().from("lead_events").select("*").eq("lead_id",deal.id).order("created_at",{ascending:false}).limit(20)
       .then(({data})=>{
         setEvents(data||[]);
         if(!data||!data.length)return;
@@ -1243,7 +1244,7 @@ function PipelineApp(){
       // Deal not in current state — force load from DB then open
       const sb = window._sb && window._sb();
       if(!sb) return;
-      sb.from('leads').select('*').eq('id',id).maybeSingle().then(({data:row})=>{
+      _sb().from('leads').select('*').eq('id',id).maybeSingle().then(({data:row})=>{
         if(!row) return;
         const d = {
           id:row.id, name:((row.vorname||"")+" "+(row.nachname||"")).trim()||"Unbekannt",
@@ -1288,7 +1289,7 @@ function PipelineApp(){
 
       try {
         // Load standorte
-        const { data: standorte, error: e1 } = await sb.from("standorte").select("id, name, slug").order("name");
+        const { data: standorte, error: e1 } = await _sb().from("standorte").select("id, name, slug").order("name");
         if (e1) console.warn("[Pipeline] Standorte error:", e1.message);
         if (standorte && standorte.length) {
           setLocations([
@@ -1298,13 +1299,13 @@ function PipelineApp(){
         }
 
         // Load users with role "verkauf" as sellers
-        const { data: verkaufRolle } = await sb.from("rollen").select("id").eq("name", "verkauf").single();
+        const { data: verkaufRolle } = await _sb().from("rollen").select("id").eq("name", "verkauf").single();
         let sellerUsers = [];
         if (verkaufRolle) {
-          const { data: roleLinks } = await sb.from("user_rollen").select("user_id").eq("rolle_id", verkaufRolle.id);
+          const { data: roleLinks } = await _sb().from("user_rollen").select("user_id").eq("rolle_id", verkaufRolle.id);
           if (roleLinks && roleLinks.length) {
             const sellerIds = roleLinks.map(r => r.user_id);
-            const { data: users, error: e2 } = await sb.from("users").select("id, vorname, nachname, name, standort_id, is_hq").eq("status", "aktiv").in("id", sellerIds);
+            const { data: users, error: e2 } = await _sb().from("users").select("id, vorname, nachname, name, standort_id, is_hq").eq("status", "aktiv").in("id", sellerIds);
             if (e2) console.warn("[Pipeline] Users error:", e2.message);
             sellerUsers = users || [];
           }
@@ -1335,7 +1336,7 @@ function PipelineApp(){
           if (stdId) {
             const yr = new Date().getFullYear();
             const mo = new Date().getMonth() + 1;
-            const { data: jp } = await sb.from("jahresplaene").select("plan_daten").eq("standort_id", stdId).eq("jahr", yr).single();
+            const { data: jp } = await _sb().from("jahresplaene").select("plan_daten").eq("standort_id", stdId).eq("jahr", yr).single();
             if (jp && jp.plan_daten) {
               const mPlan = jp.plan_daten[String(mo)] || jp.plan_daten[mo];
               if (mPlan && mPlan.umsatz) setGOAL(mPlan.umsatz);
@@ -1345,7 +1346,7 @@ function PipelineApp(){
 
         // Load automations from DB (non-critical, wrap separately)
         try {
-          const { data: autoRules } = await sb.from("lead_automations").select("*").eq("enabled", true);
+          const { data: autoRules } = await _sb().from("lead_automations").select("*").eq("enabled", true);
           if (autoRules && autoRules.length) {
             setRules(autoRules.map(r => ({
               id: r.id,

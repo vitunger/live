@@ -1,6 +1,8 @@
 // vit:bikes — BWA Netzwerk-Status + Tages-Cockpit
 // Extracted from index.html lines 8412-8760
 (function(){
+    function _sb() { return window.sb; }
+
     // ──── CONFIG ────
     var MO_NAMES = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
     var STANDORTE_DEMO = [
@@ -112,7 +114,7 @@
         var rating = 'missing';
         if(typeof sb !== 'undefined' && typeof sbProfile !== 'undefined' && sbProfile && sbProfile.standort_id) {
             try {
-                var bwaResp = await sb.from('bwa_daten').select('created_at').eq('standort_id', sbProfile.standort_id).eq('monat', bwaMo.m + 1).eq('jahr', bwaMo.y).limit(1);
+                var bwaResp = await _sb().from('bwa_daten').select('created_at').eq('standort_id', sbProfile.standort_id).eq('monat', bwaMo.m + 1).eq('jahr', bwaMo.y).limit(1);
                 if(bwaResp.data && bwaResp.data.length > 0) {
                     submitted = bwaResp.data[0].created_at.slice(0,10);
                     var subDay = new Date(bwaResp.data[0].created_at).getDate();
@@ -214,9 +216,9 @@
         if(typeof sb !== 'undefined') {
             try {
                 var bwaMo = getBwaMonth(new Date());
-                var stdResp = await sb.from('standorte').select('id,name');
+                var stdResp = await _sb().from('standorte').select('id,name');
                 total = (stdResp.data || []).length || 30;
-                var bwaResp = await sb.from('bwa_daten').select('standort_id,created_at').eq('monat', bwaMo.m + 1).eq('jahr', bwaMo.y);
+                var bwaResp = await _sb().from('bwa_daten').select('standort_id,created_at').eq('monat', bwaMo.m + 1).eq('jahr', bwaMo.y);
                 (bwaResp.data || []).forEach(function(b) {
                     var subDay = new Date(b.created_at).getDate();
                     if(subDay <= 8) gold++; else if(subDay <= 15) ok++; else late++;
@@ -255,7 +257,7 @@
             if(!standortId) throw new Error('Kein Standort');
 
             // Echte BWA-Daten für diesen Monat
-            var bwaResp = await sb.from('bwa_daten')
+            var bwaResp = await _sb().from('bwa_daten')
                 .select('umsatzerloese, rohertrag, wareneinsatz, personalkosten, gesamtkosten, ergebnis_vor_steuern')
                 .eq('standort_id', standortId)
                 .eq('monat', bwaMo.m + 1)
@@ -266,7 +268,7 @@
             // Vormonat für Vergleich
             var vmMonat = bwaMo.m === 0 ? 12 : bwaMo.m;
             var vmJahr  = bwaMo.m === 0 ? bwaMo.y - 1 : bwaMo.y;
-            var vmResp = await sb.from('bwa_daten')
+            var vmResp = await _sb().from('bwa_daten')
                 .select('umsatzerloese, rohertrag, gesamtkosten, ergebnis_vor_steuern')
                 .eq('standort_id', standortId)
                 .eq('monat', vmMonat)
@@ -276,7 +278,7 @@
 
             // Plan für diesen Monat aus plan_bwa_daten
             var monatKol = ['jan','feb','mrz','apr','mai','jun','jul','aug','sep','okt','nov','dez'][bwaMo.m];
-            var planResp = await sb.from('plan_bwa_daten')
+            var planResp = await _sb().from('plan_bwa_daten')
                 .select('kontengruppe, ' + monatKol)
                 .eq('standort_id', standortId);
             var planMap = {};
@@ -389,11 +391,11 @@
 
         try {
             // 1. Alle Standorte
-            var stdResp = await sb.from('standorte').select('id, name').order('name');
+            var stdResp = await _sb().from('standorte').select('id, name').order('name');
             var standorte = stdResp.data || [];
 
             // 2. BWA-Einreichungen für aktuellen BWA-Monat
-            var bwaResp = await sb.from('bwa_daten')
+            var bwaResp = await _sb().from('bwa_daten')
                 .select('standort_id, created_at')
                 .eq('monat', bwaMo.m + 1)
                 .eq('jahr', bwaMo.y);
@@ -401,7 +403,7 @@
             (bwaResp.data || []).forEach(function(b) { bwaMap[b.standort_id] = b.created_at; });
 
             // 3. WaWi-Belege per E-Mail – letzter Eingang + Anzahl pro Standort (aktueller Monat)
-            var wawiResp = await sb.from('wawi_email_log')
+            var wawiResp = await _sb().from('wawi_email_log')
                 .select('standort_id, created_at, anhang_anzahl, status')
                 .eq('status', 'verarbeitet')
                 .gte('created_at', bwaMo.y + '-' + String(bwaMo.m + 1).padStart(2,'0') + '-01');

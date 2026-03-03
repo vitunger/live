@@ -29,6 +29,8 @@ function openProfilePanel() {
     updateProfileThemeButtons();
     // Animate in
     requestAnimationFrame(function(){
+    function _sb() { return window.sb; }
+
         slider.style.transform = 'translateX(0)';
     });
     // Check push status & load prefs
@@ -222,7 +224,7 @@ async function saveProfile() {
     if(typeof sb !== 'undefined' && typeof sbProfile !== 'undefined' && sbProfile) {
         try {
             var upd = { name: fullName, vorname: vorname, nachname: nachname, telefon: telefon, position: position };
-            var resp = await sb.from('users').update(upd).eq('id', sbProfile.id);
+            var resp = await _sb().from('users').update(upd).eq('id', sbProfile.id);
             if(resp.error) throw resp.error;
             // Update local state
             sbProfile.name = fullName;
@@ -266,7 +268,7 @@ function changePassword() {
     var newPw = prompt('Neues Passwort eingeben (min. 8 Zeichen):');
     if(!newPw || newPw.length < 8) { if(newPw !== null) _toast('Passwort muss mindestens 8 Zeichen haben.', 'info'); return; }
     if(typeof sb !== 'undefined') {
-        sb.auth.updateUser({ password: newPw }).then(function(res){
+        _sb().auth.updateUser({ password: newPw }).then(function(res){
             if(res.error) _toast('Fehler: ' + res.error.message, 'error');
             else _toast(t('alert_pw_changed'), 'info');
         });

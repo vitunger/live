@@ -2,6 +2,8 @@
 // Extracted from index.html lines 10521-11302
 // ============================================================
 (function(){
+    function _sb() { return window.sb; }
+
 
     // ── pdf.js worker ──
     if(typeof pdfjsLib !== 'undefined') {
@@ -44,7 +46,7 @@
 
         // Load existing connection
         try {
-            var r = await sb.from('wawi_connections').select('*').eq('standort_id', stdId).maybeSingle();
+            var r = await _sb().from('wawi_connections').select('*').eq('standort_id', stdId).maybeSingle();
             if(r.data) {
                 _wawiConnection = r.data;
                 wawiPopulateForm(r.data);
@@ -116,7 +118,7 @@
         resEl.innerHTML = '<p class="text-sm text-gray-500">Verbindung wird getestet...</p>';
 
         try {
-            var r = await sb.functions.invoke('wawi-sync', { body: {
+            var r = await _sb().functions.invoke('wawi-sync', { body: {
                 action: 'test_connection',
                 api_url: apiUrl,
                 api_key: apiKey,
@@ -169,10 +171,10 @@
         try {
             var r;
             if(_wawiConnection) {
-                r = await sb.from('wawi_connections').update(payload).eq('id', _wawiConnection.id).select().single();
+                r = await _sb().from('wawi_connections').update(payload).eq('id', _wawiConnection.id).select().single();
             } else {
                 if(apiKey && apiKey !== '••••••••') payload.api_key_encrypted = apiKey;
-                r = await sb.from('wawi_connections').insert(payload).select().single();
+                r = await _sb().from('wawi_connections').insert(payload).select().single();
             }
             if(r.error) throw r.error;
             _wawiConnection = r.data;
@@ -189,7 +191,7 @@
         if(!_wawiConnection) { showToast('Keine Verbindung', 'error'); return; }
         showToast('Sync ' + module + ' gestartet...', 'info');
         try {
-            var r = await sb.functions.invoke('wawi-sync', { body: {
+            var r = await _sb().functions.invoke('wawi-sync', { body: {
                 action: 'sync',
                 connection_id: _wawiConnection.id,
                 standort_id: SESSION.standort_id,
@@ -210,7 +212,7 @@
         if(!_wawiConnection) { showToast('Keine Verbindung', 'error'); return; }
         showToast('Komplett-Sync gestartet...', 'info');
         try {
-            var r = await sb.functions.invoke('wawi-sync', { body: {
+            var r = await _sb().functions.invoke('wawi-sync', { body: {
                 action: 'sync_all',
                 connection_id: _wawiConnection.id,
                 standort_id: SESSION.standort_id
@@ -228,7 +230,7 @@
 
     async function loadWawiSyncLog() {
         if(!_wawiConnection) return;
-        var r = await sb.from('wawi_sync_log').select('*').eq('connection_id', _wawiConnection.id).order('created_at', {ascending:false}).limit(15);
+        var r = await _sb().from('wawi_sync_log').select('*').eq('connection_id', _wawiConnection.id).order('created_at', {ascending:false}).limit(15);
         var el = document.getElementById('wawiSyncLog');
         if(!el) return;
         if(!r.data || !r.data.length) { el.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">Noch keine Syncs durchgeführt</p>'; return; }
@@ -249,7 +251,7 @@
         var stdId = SESSION.standort_id;
 
         // Contacts count & preview
-        var cr = await sb.from('wawi_kontakte').select('id,name,vorname,email,ort', {count:'exact'}).eq('standort_id', stdId).limit(10);
+        var cr = await _sb().from('wawi_kontakte').select('id,name,vorname,email,ort', {count:'exact'}).eq('standort_id', stdId).limit(10);
         var cntEl = document.getElementById('wawiContactCount');
         if(cntEl) cntEl.textContent = '(' + (cr.count || 0) + ')';
         var cpEl = document.getElementById('wawiContactPreview');
@@ -261,7 +263,7 @@
         }
 
         // Products count & preview
-        var pr = await sb.from('wawi_produkte').select('id,name,hersteller,preis_vk,bestand', {count:'exact'}).eq('standort_id', stdId).limit(10);
+        var pr = await _sb().from('wawi_produkte').select('id,name,hersteller,preis_vk,bestand', {count:'exact'}).eq('standort_id', stdId).limit(10);
         var pCntEl = document.getElementById('wawiProductCount');
         if(pCntEl) pCntEl.textContent = '(' + (pr.count || 0) + ')';
         var ppEl = document.getElementById('wawiProductPreview');
@@ -574,7 +576,7 @@
             p.quell_datei_name = p.source_file;
 
             try {
-                var resp = await sb.rpc('upsert_wawi_beleg', { p_data: p });
+                var resp = await _sb().rpc('upsert_wawi_beleg', { p_data: p });
                 if(resp.error) { errors++; console.error('WaWi save error:', resp.error); }
                 else saved++;
             } catch(e) { errors++; console.error('WaWi save exception:', e); }
@@ -594,7 +596,7 @@
         if(!container) return;
         container.innerHTML = '<div class="p-6 text-center text-gray-400"><div class="animate-pulse">Lade Belege...</div></div>';
 
-        var q = sb.from('wawi_belege').select('id,beleg_typ,beleg_nr,datum,kunde_name,verkaeufer,endbetrag,ist_leasing,leasing_anbieter,status,kunden_nr').order('datum',{ascending:false}).limit(100);
+        var q = _sb().from('wawi_belege').select('id,beleg_typ,beleg_nr,datum,kunde_name,verkaeufer,endbetrag,ist_leasing,leasing_anbieter,status,kunden_nr').order('datum',{ascending:false}).limit(100);
 
         var fTyp = document.getElementById('wawiFilterTyp');
         if(fTyp && fTyp.value) q = q.eq('beleg_typ', fTyp.value);
@@ -637,9 +639,9 @@
         modal.style.display = 'flex';
         detail.innerHTML = '<div class="text-center p-6"><div class="animate-pulse text-gray-400">Lade Beleg...</div></div>';
 
-        var {data:b} = await sb.from('wawi_belege').select('*').eq('id',id).single();
+        var {data:b} = await _sb().from('wawi_belege').select('*').eq('id',id).single();
         if(!b){ detail.innerHTML='<p class="text-red-500">Beleg nicht gefunden</p>'; return; }
-        var {data:pos} = await sb.from('wawi_beleg_positionen').select('*').eq('beleg_id',id).order('sortierung');
+        var {data:pos} = await _sb().from('wawi_beleg_positionen').select('*').eq('beleg_id',id).order('sortierung');
         pos = pos || [];
 
         var typColors = {Angebot:'blue',Auftrag:'orange',Rechnung:'green'};
@@ -697,7 +699,7 @@
         if(!kpiEl) return;
 
         // Summary query
-        var {data:belege} = await sb.from('wawi_belege').select('beleg_typ,endbetrag,ist_leasing,datum').eq('status','neu');
+        var {data:belege} = await _sb().from('wawi_belege').select('beleg_typ,endbetrag,ist_leasing,datum').eq('status','neu');
         belege = belege || [];
 
         var total=0, countA=0, countR=0, countAng=0, leasingSum=0;
@@ -730,7 +732,7 @@
         }).join('');
 
         // Top Products
-        var {data:top} = await sb.from('v_wawi_top_produkte').select('*').order('gesamt_umsatz',{ascending:false}).limit(8);
+        var {data:top} = await _sb().from('v_wawi_top_produkte').select('*').order('gesamt_umsatz',{ascending:false}).limit(8);
         top = top || [];
         if(top.length===0){ topEl.innerHTML='<p class="text-gray-400 text-sm text-center py-6">Noch keine Daten</p>'; return; }
         topEl.innerHTML = '<div class="space-y-2">'+top.map(function(p,i){
@@ -744,7 +746,7 @@
         var tableEl = document.getElementById('wawiLeasingTable');
         if(!kpiEl) return;
 
-        var {data} = await sb.from('v_wawi_leasing_uebersicht').select('*');
+        var {data} = await _sb().from('v_wawi_leasing_uebersicht').select('*');
         data = data || [];
 
         var totalCount=0, totalSum=0, providers={};

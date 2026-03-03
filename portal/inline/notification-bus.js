@@ -1,8 +1,10 @@
 // vit:bikes — Notification Bus (Push/Email)
 // Extracted from index.html lines 9377-9572
 (function(){
+    function _sb() { return window.sb; }
+
     // ── Config ──
-    var RESEND_EDGE_URL = ''; // Set: sb.functions.invoke('send-email', ...)
+    var RESEND_EDGE_URL = ''; // Set: _sb().functions.invoke('send-email', ...)
     var EMAIL_LOG = []; // In-memory log (prod: notifications_log table)
 
     // ── Central send function ──
@@ -21,14 +23,14 @@
         EMAIL_LOG.push(logEntry);
 
         // In production: call Supabase Edge Function
-        if(typeof sb !== 'undefined' && sb.functions) {
+        if(typeof sb !== 'undefined' && _sb().functions) {
             try {
-                var res = await sb.functions.invoke('send-email', {body:{template:template, to:to, data:data}});
+                var res = await _sb().functions.invoke('send-email', {body:{template:template, to:to, data:data}});
                 if(res.error) { logEntry.status = 'failed'; console.error('[Email] Error:', res.error); }
                 else { console.log('[Email] Sent:', template, 'to', to); }
                 // Log to DB
-                if(sb.from) {
-                    await sb.from('notifications_log').insert({
+                if(_sb().from) {
+                    await _sb().from('notifications_log').insert({
                         location_id: data.location_id || null,
                         user_id: data.user_id || null,
                         template: template,

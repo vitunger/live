@@ -3,6 +3,8 @@
 // ============================================================
 (function(){
     'use strict';
+    function _sb() { return window.sb; }
+
     function _toast(msg, type) { if(typeof window.showToast==='function') window.showToast(msg, type||'info'); }
 
 
@@ -113,7 +115,7 @@
         var errors = [];
 
         // Get session for auth token
-        var sessionResp = await sb.auth.getSession();
+        var sessionResp = await _sb().auth.getSession();
         var accessToken = sessionResp?.data?.session?.access_token;
         if(!accessToken) { _toast('Nicht eingeloggt!', 'info'); btn.disabled = false; return; }
 
@@ -181,7 +183,7 @@
                 };
                 if(groupId) { insertData.group_id = groupId; insertData.group_label = groupLabel; }
 
-                var {error:dbErr} = await sb.from('videos').insert(insertData);
+                var {error:dbErr} = await _sb().from('videos').insert(insertData);
                 if(dbErr) throw dbErr;
 
                 if(fStatus) fStatus.innerHTML = '<span class="text-green-600">✅ Fertig</span>';
@@ -214,7 +216,7 @@
 
         try {
             var sid = sbStandort?.id;
-            var {data:videos,error} = await sb.from('videos').select('*').eq('standort_id',sid).order('created_at',{ascending:false});
+            var {data:videos,error} = await _sb().from('videos').select('*').eq('standort_id',sid).order('created_at',{ascending:false});
             if(error) throw error;
             videos = videos || [];
 
@@ -298,10 +300,10 @@
     window.vpShowVideoDetail = async function(videoId) {
         vpModal('<div class="flex justify-center py-8"><div class="animate-spin w-8 h-8 border-4 border-vit-orange border-t-transparent rounded-full"></div></div>');
         try {
-            var {data:v} = await sb.from('videos').select('*').eq('id',videoId).single();
-            var {data:persons} = await sb.from('video_persons').select('*, consents(person_name,consent_type,valid_until,revoked_at)').eq('video_id',videoId);
-            var {data:reels} = await sb.from('reels').select('*, reel_publications(*)').eq('video_id',videoId);
-            var {data:logs} = await sb.from('pipeline_log').select('*').eq('video_id',videoId).order('created_at',{ascending:true});
+            var {data:v} = await _sb().from('videos').select('*').eq('id',videoId).single();
+            var {data:persons} = await _sb().from('video_persons').select('*, consents(person_name,consent_type,valid_until,revoked_at)').eq('video_id',videoId);
+            var {data:reels} = await _sb().from('reels').select('*, reel_publications(*)').eq('video_id',videoId);
+            var {data:logs} = await _sb().from('pipeline_log').select('*').eq('video_id',videoId).order('created_at',{ascending:true});
 
             var html = '<div class="flex justify-between items-start mb-4"><div><h2 class="text-xl font-bold text-gray-800">'+v.filename+'</h2><p class="text-sm text-gray-500">'+(vpCategoryLabels[v.category]||v.category)+' · '+vpFileSize(v.file_size_bytes)+' · '+vpDateTime(v.created_at)+'</p></div><div class="flex items-center gap-2">'+vpBadge(v.pipeline_status)+'<button onclick="vpCloseModal()" class="text-gray-400 hover:text-gray-600 text-2xl ml-2">&times;</button></div></div>';
 
@@ -393,7 +395,7 @@
 
         try {
             var sid = sbStandort?.id;
-            var {data:consents,error} = await sb.from('consents').select('*').eq('standort_id',sid).order('created_at',{ascending:false});
+            var {data:consents,error} = await _sb().from('consents').select('*').eq('standort_id',sid).order('created_at',{ascending:false});
             if(error) throw error;
             consents = consents || [];
 
@@ -437,7 +439,7 @@
         var name = document.getElementById('vpConsentName').value.trim();
         if(!name) { _toast('Name ist erforderlich.', 'info'); return; }
         try {
-            var {error} = await sb.from('consents').insert({
+            var {error} = await _sb().from('consents').insert({
                 person_name: name,
                 person_email: document.getElementById('vpConsentEmail').value.trim()||null,
                 standort_id: sbStandort.id,
@@ -456,7 +458,7 @@
     window.vpRevokeConsent = async function(id) {
         if(!confirm('Consent wirklich widerrufen?')) return;
         try {
-            await sb.from('consents').update({revoked_at:new Date().toISOString()}).eq('id',id);
+            await _sb().from('consents').update({revoked_at:new Date().toISOString()}).eq('id',id);
             vpRenderConsents();
         } catch(e) { _toast('Fehler: '+e.message, 'error'); }
     };
@@ -465,9 +467,9 @@
     window.vpShowTagging = async function(videoId) {
         vpModal('<div class="flex justify-center py-8"><div class="animate-spin w-8 h-8 border-4 border-vit-orange border-t-transparent rounded-full"></div></div>');
         try {
-            var {data:v} = await sb.from('videos').select('*').eq('id',videoId).single();
-            var {data:existingPersons} = await sb.from('video_persons').select('*').eq('video_id',videoId);
-            var {data:consents} = await sb.from('consents').select('*').eq('standort_id',v.standort_id).is('revoked_at',null).order('person_name');
+            var {data:v} = await _sb().from('videos').select('*').eq('id',videoId).single();
+            var {data:existingPersons} = await _sb().from('video_persons').select('*').eq('video_id',videoId);
+            var {data:consents} = await _sb().from('consents').select('*').eq('standort_id',v.standort_id).is('revoked_at',null).order('person_name');
 
             var html = '<div class="flex justify-between items-start mb-4"><h2 class="text-lg font-bold text-gray-800">👥 Personen taggen: '+v.filename+'</h2><button onclick="vpCloseModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button></div>';
             html += '<div id="vpTaggingList" class="space-y-2 mb-4">';
@@ -510,17 +512,17 @@
         });
         if(tags.length===0) { _toast('Mindestens eine Person taggen.', 'info'); return; }
         try {
-            await sb.from('video_persons').delete().eq('video_id',videoId);
-            var {error} = await sb.from('video_persons').insert(tags);
+            await _sb().from('video_persons').delete().eq('video_id',videoId);
+            var {error} = await _sb().from('video_persons').insert(tags);
             if(error) throw error;
-            await sb.from('videos').update({persons_tagged:true}).eq('id',videoId);
-            var {data:result} = await sb.rpc('check_video_consent',{p_video_id:videoId});
+            await _sb().from('videos').update({persons_tagged:true}).eq('id',videoId);
+            var {data:result} = await _sb().rpc('check_video_consent',{p_video_id:videoId});
             var check = result&&result[0]?result[0]:{all_cleared:false};
             if(check.all_cleared) {
-                await sb.from('videos').update({pipeline_status:'cutting',consent_cleared:true,pipeline_status_detail:'Alle Consents gültig'}).eq('id',videoId);
+                await _sb().from('videos').update({pipeline_status:'cutting',consent_cleared:true,pipeline_status_detail:'Alle Consents gültig'}).eq('id',videoId);
                 vpCloseModal(); _toast('✅ Alle Consents gültig! Video geht in den Schnitt.', 'success');
             } else {
-                await sb.from('videos').update({pipeline_status:'consent_blocked',pipeline_status_detail:'Consent fehlt für '+(check.blocked_persons||[]).map(function(p){return p.person}).join(', ')}).eq('id',videoId);
+                await _sb().from('videos').update({pipeline_status:'consent_blocked',pipeline_status_detail:'Consent fehlt für '+(check.blocked_persons||[]).map(function(p){return p.person}).join(', ')}).eq('id',videoId);
                 vpCloseModal(); _toast('⚠️ Consent fehlt für: '+(check.blocked_persons||[]).map(function(p){return p.person+' ('+p.reason+')'}).join(', '), 'info');
             }
             vpRenderPipelineDashboard();
@@ -532,7 +534,7 @@
         if(!confirm('🔬 Video-Analyse starten?\n\nDas Video wird analysiert (Szenen, Personen, Highlights).\nDies kann 1-5 Minuten dauern.')) return;
         try {
             vpModal('<div class="text-center py-8"><div class="animate-spin w-10 h-10 border-4 border-vit-orange border-t-transparent rounded-full mx-auto mb-4"></div><p class="text-gray-600 font-medium">Analyse wird gestartet...</p><p class="text-xs text-gray-400 mt-1">Edge Function: analyze-video</p></div>');
-            var {data,error} = await sb.functions.invoke('analyze-video', {
+            var {data,error} = await _sb().functions.invoke('analyze-video', {
                 body: { video_id: videoId }
             });
             if(error) throw error;
@@ -559,7 +561,7 @@
     window.vpTriggerConsent = async function(videoId) {
         try {
             vpModal('<div class="text-center py-8"><div class="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div><p class="text-gray-600 font-medium">Consent wird geprüft...</p></div>');
-            var {data,error} = await sb.functions.invoke('check-consent', {
+            var {data,error} = await _sb().functions.invoke('check-consent', {
                 body: { video_id: videoId }
             });
             if(error) throw error;
@@ -585,7 +587,7 @@
         if(!confirm('🎬 Reels generieren?\n\nDas System wählt automatisch das passende Template\nund erstellt Reels basierend auf der Video-Analyse.')) return;
         try {
             vpModal('<div class="text-center py-8"><div class="animate-spin w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"></div><p class="text-gray-600 font-medium">Reels werden generiert...</p><p class="text-xs text-gray-400 mt-1">Edge Function: generate-reels</p></div>');
-            var {data,error} = await sb.functions.invoke('generate-reels', {
+            var {data,error} = await _sb().functions.invoke('generate-reels', {
                 body: { video_id: videoId }
             });
             if(error) throw error;
@@ -609,14 +611,14 @@
     window.vpApproveVideo = async function(videoId) {
         if(!confirm('✅ Video freigeben und zur Veröffentlichung markieren?')) return;
         try {
-            await sb.from('videos').update({
+            await _sb().from('videos').update({
                 pipeline_status:'approved',
                 pipeline_status_detail:'Freigegeben am '+new Date().toLocaleDateString('de-DE'),
                 approved_by:sbUser?.id||null,
                 approved_at:new Date().toISOString(),
                 updated_at:new Date().toISOString()
             }).eq('id',videoId);
-            await sb.from('pipeline_log').insert({
+            await _sb().from('pipeline_log').insert({
                 video_id:videoId, phase:'review', action:'approved',
                 actor:sbUser?.id||'unknown', details:{approved_by:sbUser?.name||'–'}
             });
@@ -631,12 +633,12 @@
         var reason = prompt('❌ Grund für Ablehnung:');
         if(!reason) return;
         try {
-            await sb.from('videos').update({
+            await _sb().from('videos').update({
                 pipeline_status:'rejected',
                 pipeline_status_detail:'Abgelehnt: '+reason,
                 updated_at:new Date().toISOString()
             }).eq('id',videoId);
-            await sb.from('pipeline_log').insert({
+            await _sb().from('pipeline_log').insert({
                 video_id:videoId, phase:'review', action:'rejected',
                 actor:sbUser?.id||'unknown', details:{reason:reason}
             });
@@ -651,12 +653,12 @@
         var labels = {analyzing:'Analyse',consent_check:'Consent-Check',cutting:'Schnitt',review:'Freigabe',approved:'Freigegeben',publishing:'Veröffentlichung',published:'Veröffentlicht'};
         if(!confirm('⏩ Manuell weiter zu: '+(labels[targetStatus]||targetStatus)+'?')) return;
         try {
-            await sb.from('videos').update({
+            await _sb().from('videos').update({
                 pipeline_status:targetStatus,
                 pipeline_status_detail:'Manuell gesetzt am '+new Date().toLocaleDateString('de-DE'),
                 updated_at:new Date().toISOString()
             }).eq('id',videoId);
-            await sb.from('pipeline_log').insert({
+            await _sb().from('pipeline_log').insert({
                 video_id:videoId, phase:targetStatus, action:'manual_advance',
                 actor:sbUser?.id||'unknown', details:{from:'manual',to:targetStatus}
             });
@@ -673,13 +675,13 @@
 
         try {
             // HQ sieht Videos ALLER Standorte im Status review
-            var {data:videos,error} = await sb.from('videos').select('*, standorte(name)').eq('pipeline_status','review').order('created_at',{ascending:true});
+            var {data:videos,error} = await _sb().from('videos').select('*, standorte(name)').eq('pipeline_status','review').order('created_at',{ascending:true});
             if(error) throw error;
             videos = videos || [];
 
             // Also load all that need review but are approved already
-            var {data:approved} = await sb.from('videos').select('*, standorte(name)').eq('pipeline_status','approved').order('updated_at',{ascending:false}).limit(10);
-            var {data:reels} = await sb.from('reels').select('*').eq('status','generated');
+            var {data:approved} = await _sb().from('videos').select('*, standorte(name)').eq('pipeline_status','approved').order('updated_at',{ascending:false}).limit(10);
+            var {data:reels} = await _sb().from('reels').select('*').eq('status','generated');
 
             var html = '';
 
@@ -748,9 +750,9 @@
         document.querySelectorAll('#vpChecklist_'+videoId+' .vp-check-item').forEach(function(cb){ checks[cb.dataset.key]=cb.checked; if(!cb.checked) allChecked=false; });
         if(!allChecked && !confirm('Nicht alle Prüfpunkte abgehakt. Trotzdem freigeben?')) return;
         try {
-            await sb.from('videos').update({pipeline_status:'approved',pipeline_status_detail:'Freigegeben von HQ'}).eq('id',videoId);
-            await sb.from('review_tasks').update({completed_at:new Date().toISOString(),decision:'approved',checklist:checks}).eq('video_id',videoId).is('completed_at',null);
-            await sb.from('reels').update({status:'approved',approved_by:sbUser.id,approved_at:new Date().toISOString()}).eq('video_id',videoId).eq('status','generated');
+            await _sb().from('videos').update({pipeline_status:'approved',pipeline_status_detail:'Freigegeben von HQ'}).eq('id',videoId);
+            await _sb().from('review_tasks').update({completed_at:new Date().toISOString(),decision:'approved',checklist:checks}).eq('video_id',videoId).is('completed_at',null);
+            await _sb().from('reels').update({status:'approved',approved_by:sbUser.id,approved_at:new Date().toISOString()}).eq('video_id',videoId).eq('status','generated');
             vpRenderHqReview();
             vpUpdateHqBadge();
         } catch(e) { _toast('Fehler: '+e.message, 'error'); }
@@ -760,9 +762,9 @@
         var reason = prompt('Ablehnungsgrund:');
         if(reason===null) return;
         try {
-            await sb.from('videos').update({pipeline_status:'rejected',pipeline_status_detail:'HQ: '+reason}).eq('id',videoId);
-            await sb.from('review_tasks').update({completed_at:new Date().toISOString(),decision:'rejected',checklist:{reason:reason}}).eq('video_id',videoId).is('completed_at',null);
-            await sb.from('reels').update({status:'rejected',review_notes:reason}).eq('video_id',videoId).eq('status','generated');
+            await _sb().from('videos').update({pipeline_status:'rejected',pipeline_status_detail:'HQ: '+reason}).eq('id',videoId);
+            await _sb().from('review_tasks').update({completed_at:new Date().toISOString(),decision:'rejected',checklist:{reason:reason}}).eq('video_id',videoId).is('completed_at',null);
+            await _sb().from('reels').update({status:'rejected',review_notes:reason}).eq('video_id',videoId).eq('status','generated');
             vpRenderHqReview();
             vpUpdateHqBadge();
         } catch(e) { _toast('Fehler: '+e.message, 'error'); }
@@ -771,7 +773,7 @@
     // ==================== BADGE UPDATES ====================
     window.vpUpdateHqBadge = async function() {
         try {
-            var {count} = await sb.from('videos').select('*',{count:'exact',head:true}).eq('pipeline_status','review');
+            var {count} = await _sb().from('videos').select('*',{count:'exact',head:true}).eq('pipeline_status','review');
             var b = document.getElementById('hqVpReviewBadge');
             if(b) { b.textContent = count||0; b.style.display = count>0?'inline':'none'; }
         } catch(e) {}
@@ -779,7 +781,7 @@
 
     // ==================== REALTIME ====================
     function vpSetupRealtime() {
-        sb.channel('video-pipeline-global')
+        _sb().channel('video-pipeline-global')
             .on('postgres_changes',{event:'*',schema:'public',table:'videos'}, function(){
                 vpUpdateHqBadge();
                 // Refresh standort pipeline if visible
