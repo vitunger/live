@@ -530,18 +530,18 @@ export function todoRenderDetail() {
     h += '</div>';
 
     // Description
-    h += '<textarea onblur="todoUpdateField(\'' + task.id + '\',\'beschreibung\',this.value)" placeholder="Beschreibung..." rows="2" class="w-full text-sm text-gray-600 placeholder-gray-400 outline-none bg-gray-50 rounded-lg p-2 border border-gray-100 focus:border-vit-orange/30" style="resize:none">' + (task.beschreibung || '') + '</textarea>';
+    h += '<textarea onblur="todoUpdateField(\'' + task.id + '\',\'beschreibung\',this.value)" placeholder="Beschreibung..." rows="5" class="w-full text-sm text-gray-600 placeholder-gray-400 outline-none bg-gray-50 rounded-lg p-2 border border-gray-100 focus:border-vit-orange/30" style="resize:vertical;min-height:80px">' + (task.beschreibung || '') + '</textarea>';
 
-    // Attachments - right after description for visibility
-    h += '<div class="bg-gray-50 rounded-xl p-3">';
+    // Attachments - with drag & drop
+    h += '<div id="todoDropZone" class="bg-gray-50 rounded-xl p-3 border-2 border-dashed border-gray-200 transition-colors" ondragover="event.preventDefault();event.stopPropagation();this.classList.add(\'border-vit-orange\',\'bg-orange-50\');this.classList.remove(\'border-gray-200\')" ondragleave="this.classList.remove(\'border-vit-orange\',\'bg-orange-50\');this.classList.add(\'border-gray-200\')" ondrop="event.preventDefault();event.stopPropagation();this.classList.remove(\'border-vit-orange\',\'bg-orange-50\');this.classList.add(\'border-gray-200\');todoDropFiles(\'' + task.id + '\',event.dataTransfer.files)">';
     h += '<div class="flex items-center justify-between mb-2">';
     h += '<label class="font-bold text-gray-400 uppercase text-[9px]" style="letter-spacing:0.05em">📎 Anhänge</label>';
     h += '<label class="flex items-center space-x-1 cursor-pointer px-3 py-1.5 bg-vit-orange text-white text-xs font-semibold rounded-lg hover:opacity-90">';
     h += '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>';
     h += '<span>Datei hochladen</span>';
-    h += '<input type="file" class="hidden" onchange="todoUploadAttachment(\'' + task.id + '\',this)">';
+    h += '<input type="file" class="hidden" multiple onchange="todoDropFiles(\'' + task.id + '\',this.files)">';
     h += '</label></div>';
-    h += '<div class="space-y-1" id="todoDetailAttachments"><p class="text-xs text-gray-400 italic">Keine Anhänge</p></div>';
+    h += '<div class="space-y-1" id="todoDetailAttachments"><p class="text-xs text-gray-400 italic">Dateien hierher ziehen oder Button klicken</p></div>';
     h += '</div>';
 
     // Properties grid
@@ -1101,6 +1101,30 @@ export async function todoLoadAttachments(taskId) {
     } catch(e) { todoState.attachments[taskId] = []; }
 }
 
+export async function todoDropFiles(taskId, files) {
+    if (!files || !files.length) return;
+    for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        if (file.size > 10 * 1024 * 1024) { _showToast('Max. 10 MB: ' + file.name, 'warning'); continue; }
+        var sid = _sbProfile() ? _sbProfile().standort_id : 'unknown';
+        var path = sid + '/' + taskId + '/' + Date.now() + '_' + file.name;
+        try {
+            var upload = await _sb().storage.from('todo-attachments').upload(path, file);
+            if (upload.error) throw upload.error;
+            var r = await _sb().from('todo_attachments').insert({
+                todo_id: taskId, user_id: _sbUser() ? _sbUser().id : null,
+                dateiname: file.name, dateipfad: path,
+                dateigroesse: file.size, mime_type: file.type
+            }).select();
+            if (r.error) throw r.error;
+            if (!todoState.attachments[taskId]) todoState.attachments[taskId] = [];
+            if (r.data && r.data[0]) todoState.attachments[taskId].unshift(r.data[0]);
+            _showToast('📎 ' + file.name + ' hochgeladen', 'success');
+        } catch(e) { _showToast('Fehler: ' + file.name + ' – ' + e.message, 'error'); }
+    }
+    todoRenderAttachments(taskId);
+}
+
 export async function todoUploadAttachment(taskId, fileInput) {
     if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
     var file = fileInput.files[0];
@@ -1416,6 +1440,7 @@ const exports = {
     todoDeleteTemplate,
     // Attachments
     todoLoadAttachments,
+    todoDropFiles,
     todoUploadAttachment,
     todoDeleteAttachment,
     todoRenderAttachments,
