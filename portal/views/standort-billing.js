@@ -187,58 +187,110 @@ var container = document.getElementById('stBillingCostsContent');
 if (!container) return;
 container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
 
+var sid = _sbProfile().standort_id;
 var year = new Date().getFullYear();
-var { data: strategies } = await _sb().from('billing_annual_strategy').select('*').eq('standort_id', _sbProfile().standort_id).eq('year', year).eq('locked', true).order('version', { ascending: false }).limit(1);
-var strat = strategies && strategies[0];
 
-var { data: tools } = await _sb().from('billing_user_tool_assignments').select('*, tool:billing_tool_packages(name, monthly_cost), user:users(name)').eq('standort_id', _sbProfile().standort_id).eq('is_active', true);
+// 1. Standort-Daten: plan_umsatz + plan_werbekosten aus Jahresplan/Controlling
+var { data: stdArr } = await _sb().from('standorte').select('plan_umsatz, plan_werbekosten, marketing_budget, planned_revenue_year, planned_marketing_year').eq('id', sid).limit(1);
+var std = stdArr && stdArr[0];
+
+// Planumsatz: erst plan_umsatz (Controlling), dann Fallback planned_revenue_year
+var planUmsatzJahr = (std && std.plan_umsatz) || (std && std.planned_revenue_year) || 0;
+// Marketing: erst plan_werbekosten (Marketing-Modul), dann marketing_budget, dann Fallback
+var planMarketingJahr = (std && std.plan_werbekosten) || (std && std.marketing_budget) || (std && std.planned_marketing_year) || 0;
+
+// 2. Tools
+var { data: tools } = await _sb().from('billing_user_tool_assignments').select('*, tool:billing_tool_packages(name, monthly_cost), user:users(name)').eq('standort_id', sid).eq('is_active', true);
+
+// 3. IST-Marketing aus HQ-Rechnungen (aktuelles Jahr)
+var yearStart = year + '-01-01';
+var yearEnd = year + '-12-31';
+var { data: mktLines } = await _sb().from('billing_invoice_line_items')
+    .select('amount, description, invoice:billing_invoices!inner(standort_id, period_start, status)')
+    .filter('invoice.standort_id', 'eq', sid)
+    .filter('invoice.period_start', 'gte', yearStart)
+    .or('description.ilike.%marketing%,description.ilike.%werbebudget%,description.ilike.%online-werbe%');
+var istMarketingYear = (mktLines || []).reduce(function(s, l) { return s + Number(l.amount || 0); }, 0);
+var istMarketingMonth = istMarketingYear / Math.max(new Date().getMonth(), 1);
+
+// Berechnungen
+var planMonthRevenue = planUmsatzJahr / 12;
+var revShare = 0.02 * planMonthRevenue;
+var revShareAdvance = 0.80 * revShare;
+var baseFee = 800;
+var marketingMonthPlan = planMarketingJahr / 12;
+var toolCosts = (tools || []).reduce(function(s, t) { return s + Number(t.cost_override || (t.tool && t.tool.monthly_cost) || 0); }, 0);
+var total = revShareAdvance + baseFee + marketingMonthPlan + toolCosts;
 
 var h = '<div class="vit-card p-6 mb-4">';
 h += '<h3 class="font-bold text-sm mb-4">📊 Monatliche Kostenaufschlüsselung</h3>';
 
-if (!strat) {
-    h += '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4"><p class="text-sm text-yellow-700">⚠️ Keine gesperrte Jahresstrategie vorhanden. Berechnung basiert auf Schätzwerten.</p></div>';
-    h += '</div>';
-    container.innerHTML = h;
-    return;
+// Hinweise wenn Daten fehlen
+if (!planUmsatzJahr) {
+    h += '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4"><p class="text-xs text-yellow-700">⚠️ Kein Planumsatz hinterlegt. Bitte im Modul <strong>Finanzen → Jahresplan</strong> den Planumsatz pflegen.</p></div>';
+}
+if (!planMarketingJahr) {
+    h += '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4"><p class="text-xs text-yellow-700">⚠️ Kein Marketing-Budget hinterlegt. Wird mit der Marketing-Strategie definiert.</p></div>';
 }
 
-var planMonthRevenue = strat.planned_revenue_year / 12;
-var revShare = 0.02 * planMonthRevenue;
-var revShareAdvance = 0.80 * revShare;
-var baseFee = 800;
-var marketingMonth = strat.planned_marketing_year / 12;
-var toolCosts = (tools || []).reduce(function(s, t) { return s + (t.cost_override || t.tool.monthly_cost); }, 0);
-var total = revShareAdvance + baseFee + marketingMonth + toolCosts;
-
 h += '<table class="w-full text-sm">';
+
+// Umsatzbeteiligung
 h += '<tr class="border-b"><td class="py-3">Umsatzbeteiligung (80% Abschlag)</td><td class="py-3 text-right font-semibold">' + fmtEur(revShareAdvance) + '</td></tr>';
-h += '<tr><td class="py-1 text-xs text-gray-400 pl-4" colspan="2">2% × ' + fmtEur(planMonthRevenue) + ' × 80% = ' + fmtEur(revShareAdvance) + '</td></tr>';
+if (planUmsatzJahr) {
+    h += '<tr><td class="py-1 text-xs text-gray-400 pl-4" colspan="2">2% × ' + fmtEur(planMonthRevenue) + '/Monat × 80% = ' + fmtEur(revShareAdvance) + '</td></tr>';
+    h += '<tr><td class="py-1 text-xs text-gray-400 pl-4" colspan="2">Quelle: Jahresplan ' + year + ' (' + fmtEur(planUmsatzJahr) + ' p.a.)</td></tr>';
+}
+
+// Grundgebühr
 h += '<tr class="border-b"><td class="py-3">Grundgebühr</td><td class="py-3 text-right font-semibold">' + fmtEur(baseFee) + '</td></tr>';
-h += '<tr class="border-b"><td class="py-3">Online-Werbebudget <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold ml-1">Durchlaufposten</span></td><td class="py-3 text-right font-semibold">' + fmtEur(marketingMonth) + '</td></tr>';
-h += '<tr><td class="py-1 text-xs text-gray-400 pl-4" colspan="2">' + fmtEur(strat.planned_marketing_year) + ' / 12 = ' + fmtEur(marketingMonth) + '</td></tr>';
+
+// Marketing - Plan vs IST
+h += '<tr class="border-b"><td class="py-3">Online-Werbebudget <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold ml-1">Durchlaufposten</span></td><td class="py-3 text-right font-semibold">' + fmtEur(marketingMonthPlan) + '</td></tr>';
+if (planMarketingJahr) {
+    h += '<tr><td class="py-1 text-xs text-gray-400 pl-4" colspan="2">Plan: ' + fmtEur(planMarketingJahr) + ' p.a. → ' + fmtEur(marketingMonthPlan) + '/Monat</td></tr>';
+}
+if (istMarketingYear > 0) {
+    h += '<tr><td class="py-1 text-xs pl-4" colspan="2"><span class="text-green-600 font-semibold">IST ' + year + ': ' + fmtEur(istMarketingYear) + '</span> <span class="text-gray-400">(Ø ' + fmtEur(istMarketingMonth) + '/Monat aus HQ-Rechnungen)</span></td></tr>';
+}
+
+// Marketing Info-Box
 h += '<tr><td colspan="2" class="pb-3 pl-4"><div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-1">';
 h += '<p class="text-[11px] text-blue-800 mb-2"><strong>💡 Dieses Budget ist kein Honorar an vit:bikes</strong> – es fließt zu <strong>100%</strong> in eure Werbekampagnen bei Google Ads, Meta (Facebook/Instagram) und weiteren Kanälen.</p>';
 h += '<p class="text-[11px] text-blue-700 mb-2">vit:bikes übernimmt die komplette Kampagnensteuerung, Optimierung und das Reporting – ohne zusätzliche Agenturgebühren.</p>';
 h += '<div class="border-t border-blue-200 pt-2 mt-2">';
 h += '<p class="text-[10px] font-bold text-gray-600 mb-1.5">Was dieselbe Leistung bei einer externen Agentur kosten würde:</p>';
 h += '<table class="w-full text-[10px]">';
-h += '<tr class="text-gray-500"><td>Kampagnen-Management (15–20% vom Budget)</td><td class="text-right">' + fmtEur(marketingMonth * 0.175) + '</td></tr>';
+h += '<tr class="text-gray-500"><td>Kampagnen-Management (15–20% vom Budget)</td><td class="text-right">' + fmtEur(marketingMonthPlan * 0.175) + '</td></tr>';
 h += '<tr class="text-gray-500"><td>Content-Erstellung & Anzeigendesign</td><td class="text-right">300–800 €</td></tr>';
 h += '<tr class="text-gray-500"><td>Reporting & Analyse</td><td class="text-right">200–400 €</td></tr>';
 h += '<tr class="text-gray-500"><td>Setup & laufende Optimierung</td><td class="text-right">250–500 €</td></tr>';
-h += '<tr class="border-t border-blue-200 font-bold text-gray-700"><td class="pt-1">Agenturkosten on top zum Werbebudget</td><td class="text-right pt-1 text-red-600">~' + fmtEur(marketingMonth * 0.175 + 900) + ' /Mon.</td></tr>';
+h += '<tr class="border-t border-blue-200 font-bold text-gray-700"><td class="pt-1">Agenturkosten on top zum Werbebudget</td><td class="text-right pt-1 text-red-600">~' + fmtEur(marketingMonthPlan * 0.175 + 900) + ' /Mon.</td></tr>';
 h += '</table>';
 h += '<p class="text-[10px] text-green-700 font-semibold mt-1.5">✅ Bei vit:bikes: 0 € Agenturkosten – alles inklusive in eurer Partnerschaft</p>';
 h += '</div></div></td></tr>';
+
+// Toolkosten
 h += '<tr class="border-b"><td class="py-3">Toolkosten (' + (tools || []).length + ' Nutzer)</td><td class="py-3 text-right font-semibold">' + fmtEur(toolCosts) + '</td></tr>';
 (tools || []).forEach(function(t) {
     h += '<tr><td class="py-1 text-xs text-gray-400 pl-4">' + (t.user ? t.user.name : '—') + ' – ' + (t.tool ? t.tool.name : '—') + '</td><td class="py-1 text-xs text-gray-400 text-right">' + fmtEur(t.cost_override || t.tool.monthly_cost) + '</td></tr>';
 });
+
+// Summen
 h += '<tr class="border-t-2"><td class="py-3 font-bold text-lg">Netto / Monat</td><td class="py-3 text-right font-bold text-lg text-vit-orange">' + fmtEur(total) + '</td></tr>';
 h += '<tr><td class="py-1 text-xs text-gray-400">zzgl. MwSt 19%</td><td class="py-1 text-xs text-gray-400 text-right">' + fmtEur(total * 0.19) + '</td></tr>';
 h += '<tr class="border-t"><td class="py-2 font-bold">Brutto / Monat</td><td class="py-2 text-right font-bold">' + fmtEur(total * 1.19) + '</td></tr>';
 h += '</table></div>';
+
+// Datenquellen-Info
+h += '<div class="vit-card p-6 mb-4">';
+h += '<h3 class="font-bold text-sm mb-3">📋 Datenquellen</h3>';
+h += '<div class="space-y-2 text-xs text-gray-600">';
+h += '<div class="flex items-start space-x-2"><span class="text-vit-orange font-bold">→</span><span><strong>Planumsatz:</strong> Finanzen → Jahresplan (' + (planUmsatzJahr ? fmtEur(planUmsatzJahr) + ' p.a.' : '<span class=\"text-red-500\">nicht hinterlegt</span>') + ')</span></div>';
+h += '<div class="flex items-start space-x-2"><span class="text-vit-orange font-bold">→</span><span><strong>Marketing-Budget:</strong> Marketing-Strategie (' + (planMarketingJahr ? fmtEur(planMarketingJahr) + ' p.a.' : '<span class=\"text-red-500\">nicht hinterlegt</span>') + ')</span></div>';
+h += '<div class="flex items-start space-x-2"><span class="text-vit-orange font-bold">→</span><span><strong>Marketing IST:</strong> HQ-Rechnungen ' + year + ' (' + (istMarketingYear > 0 ? fmtEur(istMarketingYear) : 'noch keine Rechnungen') + ')</span></div>';
+h += '<div class="flex items-start space-x-2"><span class="text-vit-orange font-bold">→</span><span><strong>Toolkosten:</strong> Aktive Tool-Zuweisungen (' + (tools || []).length + ' Nutzer)</span></div>';
+h += '</div></div>';
 
 // Quarterly settlement info
 h += '<div class="vit-card p-6">';
