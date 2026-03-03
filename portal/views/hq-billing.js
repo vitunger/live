@@ -38,8 +38,12 @@ export function billingStatusBadge(s) {
 
 export async function billingApi(action, params) {
     try {
+        var session = await _sb().auth.getSession();
+        var token = session && session.data && session.data.session ? session.data.session.access_token : null;
+        if (!token) { _showToast('Bitte erneut einloggen.', 'error'); return { error: 'Nicht angemeldet' }; }
         var resp = await fetch(BILLING_FN, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
             body: JSON.stringify(Object.assign({ action: action }, params || {}))
         });
         return await resp.json();

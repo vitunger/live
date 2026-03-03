@@ -186,8 +186,13 @@ credited: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-1
 return map[s] || '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">'+s+'</span>';
 }
 export async function billingCall(action, params) {
-const res = await fetch(BILLING_FN, {
-method: 'POST', headers: { 'Content-Type': 'application/json' },
+var session = await _sb().auth.getSession();
+var token = session && session.data && session.data.session ? session.data.session.access_token : null;
+if (!token) { _showToast('Bitte erneut einloggen.', 'error'); return { error: 'Nicht angemeldet' }; }
+var url = window.SUPABASE_URL + '/functions/v1/billing';
+var res = await fetch(url, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
 body: JSON.stringify({ action, ...params })
 });
 return res.json();

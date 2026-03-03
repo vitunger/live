@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 03.03.2026 (Go-Live Masterplan v2 integriert, Modul-Status 5-Werte-System: aktiv/beta/demo/bald/inaktiv, CHECK constraint, Router-Gate, Sidebar-Visibility via feature-flags-full.js, Beta-User-Gate via modul_beta_users)
+> Letzte Aktualisierung: 03.03.2026 (JWT-Audit billing Auth-Header, Go-Live Masterplan v2 integriert, Modul-Status 5-Werte-System, Beta-User-Gate, XSS-Audit 28 Fixes, Supabase-URL zentralisiert)
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
