@@ -41,7 +41,7 @@
 ## Dateistruktur
 
 ```
-index.html                  – Haupt-HTML: Views, Sidebar, Modals (~7.100 Zeilen)
+index.html                  – Haupt-HTML: Views, Sidebar, Modals (~6.700 Zeilen))
 manifest.json               – PWA Manifest
 sw.js                       – Service Worker
 portal/
@@ -185,7 +185,7 @@ _fmtN(n)      → window.fmtN(n)    // Zahlenformat (de-DE)
 | Metrik | Wert |
 |--------|------|
 | Tabellen (public) | ~165 |
-| Views | 54 |
+| Views | 11 (davon 2 aktiv genutzt, 9 als UNUSED markiert) |
 | RLS Policies | 257 |
 | Indizes | 276 (269 + 7 neue FK-Indizes) |
 | Edge Functions | 9 aktiv |
