@@ -25,26 +25,7 @@ export function showWissenTab(tabName) {
 }
 
 // --- AKADEMIE DATA ---
-var akademieKurse = [
-    {id:1, title:'Verkaufsgespraech E-Bike', desc:'Bedarfsermittlung, Einwandbehandlung, Abschluss-Techniken fuer E-Bike Beratung', cat:'verkauf', pflicht:true, dauer:'45 Min.', progress:100, zertifikat:true, format:'🎬 Video'},
-    {id:2, title:'Ergonomie-Beratung im Laden', desc:'Koerperanalyse, Sitzposition, Rahmengroesse bestimmen – mit SQlab Methodik', cat:'verkauf', pflicht:true, dauer:'60 Min.', progress:100, zertifikat:true, format:'🎬 Video'},
-    {id:3, title:'Leasing richtig erklaeren', desc:'JobRad, Dienstrad, Bikeleasing – Unterschiede, Rechenbeispiele, Einwaende', cat:'verkauf', pflicht:true, dauer:'30 Min.', progress:75, zertifikat:false, format:'🎬 Video'},
-    {id:4, title:'Bosch Diagnose-Tool', desc:'Smart System, Fehlercode-Auslesen, Software-Updates, Kundenkommunikation', cat:'allgemein', pflicht:true, dauer:'90 Min.', progress:100, zertifikat:true, format:'🛠 Workshop'},
-    {id:5, title:'Shimano Steps Technik', desc:'Di2, EP8 Motor, Fehlerdiagnose, Firmware-Updates', cat:'allgemein', pflicht:false, dauer:'60 Min.', progress:50, zertifikat:false, format:'🛠 Workshop'},
-    {id:6, title:'vit:bikes Kassensystem Schulung', desc:'Tagesabschluss, Retouren, Gutscheine, Lagerbuchungen im POS', cat:'allgemein', pflicht:true, dauer:'40 Min.', progress:100, zertifikat:false, format:'📄 Anleitung'},
-    {id:7, title:'Social Media fuer Partner', desc:'Reels erstellen, Story-Formate, Hashtag-Strategie, Content-Kalender', cat:'marketing', pflicht:false, dauer:'35 Min.', progress:30, zertifikat:false, format:'🎬 Video'},
-    {id:8, title:'Google My Business optimieren', desc:'Fotos, Beitraege, Rezensionen beantworten, Insights nutzen', cat:'marketing', pflicht:false, dauer:'25 Min.', progress:100, zertifikat:false, format:'📄 Anleitung'},
-    {id:9, title:'Event-Planung &amp; Durchfuehrung', desc:'Testivals, Grillvents, Schluesselaktionen – von der Idee bis zur Nachbereitung', cat:'marketing', pflicht:false, dauer:'50 Min.', progress:0, zertifikat:false, format:'🎬 Video'},
-    {id:10, title:'Vororder richtig planen', desc:'Bedarfsanalyse, Saisonplanung, Verhandlung mit Lieferanten, Blockorder-Strategie', cat:'einkauf', pflicht:true, dauer:'55 Min.', progress:100, zertifikat:true, format:'🎬 Video'},
-    {id:11, title:'Rohertrag optimieren', desc:'Rabatt-Strategie, Dreingaben statt Nachlass, Marken-Mix fuer maximalen DB', cat:'einkauf', pflicht:false, dauer:'30 Min.', progress:60, zertifikat:false, format:'📊 Case Study'},
-    {id:12, title:'Lagermanagement &amp; Umschlag', desc:'Bestandsoptimierung, Slow-Mover erkennen, Abverkaufsstrategien', cat:'einkauf', pflicht:false, dauer:'40 Min.', progress:0, zertifikat:false, format:'🎬 Video'},
-    {id:13, title:'BWA lesen &amp; verstehen', desc:'Umsatzerloese, Rohertrag, Kostenarten, Betriebsergebnis – Praxis fuer Nicht-Kaufleute', cat:'controlling', pflicht:true, dauer:'45 Min.', progress:100, zertifikat:false, format:'🎬 Video'},
-    {id:14, title:'Plan/Ist-Analyse durchfuehren', desc:'Monatliche Abweichungen erkennen, Massnahmen ableiten, Benchmarks nutzen', cat:'controlling', pflicht:false, dauer:'35 Min.', progress:0, zertifikat:false, format:'📄 Anleitung'},
-    {id:15, title:'Liquiditaetsplanung Basics', desc:'Cashflow verstehen, Zahlungsziele nutzen, saisonale Engpaesse vorbeugen', cat:'controlling', pflicht:false, dauer:'30 Min.', progress:0, zertifikat:false, format:'🎬 Video'},
-    {id:16, title:'Pipeline-Management im Portal', desc:'Leads erfassen, Kanban nutzen, Wiedervorlage, Conversion-Tracking', cat:'verkauf', pflicht:false, dauer:'20 Min.', progress:0, zertifikat:false, format:'📄 Anleitung'},
-    {id:17, title:'Reklamation &amp; Garantie', desc:'Ablauf Garantiefall, Hersteller-Kontakt, Dokumentation, Kulanz-Regeln', cat:'allgemein', pflicht:false, dauer:'35 Min.', progress:0, zertifikat:false, format:'📄 Anleitung'},
-    {id:18, title:'Personalfuehrung im Fachhandel', desc:'Teamgespraeche, Zielvereinbarungen, Motivation, Feedback-Kultur', cat:'allgemein', pflicht:false, dauer:'50 Min.', progress:0, zertifikat:false, format:'🎬 Video'}
-];
+var akademieKurse = [];
 var akdFilterCat = 'all';
 export function filterAkademie(cat) {
     akdFilterCat = cat;
@@ -86,26 +67,7 @@ export function renderAkademie() {
 renderAkademie();
 
 // --- HANDBUECHER DATA ---
-var handbuecher = [
-    {title:'Bosch Smart System – Einrichtung &amp; Diagnose', cat:'allgemein', marke:'Bosch', typ:'PDF', seiten:42, aktualisiert:'01/2026'},
-    {title:'Shimano Steps EP8 – Fehlercodes &amp; Loesungen', cat:'allgemein', marke:'Shimano', typ:'PDF', seiten:28, aktualisiert:'11/2025'},
-    {title:'Shimano Di2 – Einstellungen &amp; Updates', cat:'allgemein', marke:'Shimano', typ:'PDF', seiten:35, aktualisiert:'09/2025'},
-    {title:'Kalkhoff Garantieabwicklung – Prozesshandbuch', cat:'einkauf', marke:'Kalkhoff', typ:'PDF', seiten:18, aktualisiert:'03/2025'},
-    {title:'Haibike Modellkatalog 2026', cat:'einkauf', marke:'Haibike', typ:'Katalog', seiten:64, aktualisiert:'10/2025'},
-    {title:'Orbea MyO Konfigurator – Haendler-Guide', cat:'verkauf', marke:'Orbea', typ:'PDF', seiten:12, aktualisiert:'06/2025'},
-    {title:'Simplon Bestellprozess B2B-Portal', cat:'einkauf', marke:'Simplon', typ:'PDF', seiten:8, aktualisiert:'08/2025'},
-    {title:'vit:bikes Kassensystem – Benutzerhandbuch', cat:'allgemein', marke:'vit:bikes', typ:'PDF', seiten:55, aktualisiert:'01/2026'},
-    {title:'vit:bikes CI-Guide – Logo, Farben, Vorlagen', cat:'marketing', marke:'vit:bikes', typ:'PDF', seiten:24, aktualisiert:'04/2025'},
-    {title:'Meta Business Suite – Anleitung fuer Partner', cat:'marketing', marke:'Meta', typ:'PDF', seiten:32, aktualisiert:'02/2026'},
-    {title:'Google Ads – Kampagnen-Setup Leitfaden', cat:'marketing', marke:'Google', typ:'PDF', seiten:20, aktualisiert:'12/2025'},
-    {title:'JobRad Haendler-Handbuch', cat:'verkauf', marke:'JobRad', typ:'PDF', seiten:38, aktualisiert:'01/2026'},
-    {title:'Bikeleasing – Vertragsprozess A-Z', cat:'verkauf', marke:'Bikeleasing', typ:'PDF', seiten:15, aktualisiert:'11/2025'},
-    {title:'DATEV-Schnittstelle – BWA-Export Anleitung', cat:'controlling', marke:'DATEV', typ:'PDF', seiten:10, aktualisiert:'01/2026'},
-    {title:'Liquiditaetsplanung – Excel-Vorlage &amp; Erklaerung', cat:'controlling', marke:'vit:bikes', typ:'Excel', seiten:5, aktualisiert:'09/2025'},
-    {title:'SQlab Ergonomie-Messung – Leitfaden', cat:'verkauf', marke:'SQlab', typ:'PDF', seiten:22, aktualisiert:'07/2025'},
-    {title:'Velo de Ville – Konfigurator &amp; Bestellprozess', cat:'einkauf', marke:'Velo de Ville', typ:'PDF', seiten:14, aktualisiert:'10/2025'},
-    {title:'etermin – Terminbuchung Setup', cat:'allgemein', marke:'etermin', typ:'PDF', seiten:9, aktualisiert:'05/2025'}
-];
+var handbuecher = [];
 var hbFilterCat = 'all';
 export function filterHbCat(cat) {
     hbFilterCat = cat;
@@ -189,23 +151,7 @@ export function renderBP() {
 renderBP();
 
 // --- FAQ DATA ---
-var faqItems = [
-    {q:'Wie funktioniert die Garantieabwicklung bei Kalkhoff?', a:'Defektes Teil fotografieren, im Kalkhoff B2B-Portal Garantieantrag stellen (unter Service > Garantie). Bearbeitungszeit ca. 5-7 Werktage. Bei Rahmenbruch immer zuerst vit:bikes Einkauf kontaktieren.', cat:'einkauf'},
-    {q:'Welche Leasing-Anbieter sind zugelassen?', a:'JobRad, Deutsche Dienstrad, Bikeleasing, Businessbike und Lease-a-Bike. Alle Anbieter sind im Kassensystem hinterlegt. Fuer neue Anbieter bitte Support-Ticket erstellen.', cat:'verkauf'},
-    {q:'Wie erstelle ich eine Retoure im Kassensystem?', a:'Verkauf > Retoure > Originalbeleg scannen oder Belegnummer eingeben. Grund auswaehlen. Bei Retouren ueber 500€ ist eine Freigabe durch den Inhaber erforderlich.', cat:'allgemein'},
-    {q:'Wann bekomme ich meine monatliche BWA?', a:'Die BWA wird jeweils bis zum 15. des Folgemonats vom Steuerberater bereitgestellt und ist dann im Controlling-Modul unter BWAs abrufbar.', cat:'controlling'},
-    {q:'Wie aendere ich mein Marketing-Budget?', a:'Das Marketing-Budget kann jederzeit nach Absprache mit dem vit:bikes Marketing-Team angepasst werden. Aenderungen sind jeweils zum Monatsanfang des Folgemonats wirksam. Kontakt: Michael Stenzel.', cat:'marketing'},
-    {q:'Was tun bei Bosch-Fehlermeldung am Display?', a:'Fehlercode notieren, im Bosch Diagnose-Tool auslesen (siehe Handbuch). Bei Codes 5xx: Software-Update durchfuehren. Bei Hardware-Fehlern (Codes 6xx/7xx): Bosch Service-Ticket im B2B-Portal.', cat:'allgemein'},
-    {q:'Wie funktioniert die Vororder?', a:'Die Vororder fuer das Folgejahr wird zwischen Juli und Oktober platziert. Konditionen werden vorab mit vit:bikes Einkauf abgestimmt. Bestellungen laufen ueber die jeweiligen B2B-Portale der Hersteller.', cat:'einkauf'},
-    {q:'Wie kann ich Rabatte im Kassensystem dokumentieren?', a:'Bei jedem Verkauf mit Rabatt das Feld Nachlass-Grund ausfuellen. Woechentlich die Nachlass-Auswertung pruefen. Ziel: unter 5% durchschnittlicher Nachlass.', cat:'verkauf'},
-    {q:'Welche Kosten traegt vit:bikes beim Marketing?', a:'vit:bikes steuert die zentrale Kampagnenplanung, Content-Erstellung und Kanal-Optimierung bei. Das Mediabudget (z.B. 1.500€/Monat) wird vom Partner getragen.', cat:'marketing'},
-    {q:'Wie buche ich einen Werkstatt-Termin ueber etermin?', a:'Kunden koennen direkt ueber die Standortseite auf vitbikes.de buchen. Intern: etermin-Backend > Neuer Termin > Kategorie Werkstatt. Zeiten sind in 30-Min-Slots konfiguriert.', cat:'allgemein'},
-    {q:'Was ist der Unterschied zwischen Plan und Forecast?', a:'Der Plan wird einmal jaehrlich im Voraus erstellt (Planung_2026). Der Forecast wird monatlich angepasst basierend auf der aktuellen Entwicklung. Beide sind im Controlling-Modul sichtbar.', cat:'controlling'},
-    {q:'Wie melde ich einen IT-Fehler?', a:'Im Support-Bereich ein Ticket mit Kategorie "IT" erstellen. Screenshot beifuegen. Kritische Ausfaelle (Kasse, Internet): direkt IT-Hotline anrufen unter 089/123456-99.', cat:'allgemein'},
-    {q:'Wie funktioniert der Skonto bei Kalkhoff?', a:'3% Skonto bei Zahlung innerhalb von 14 Tagen. Bei Vororder-Bikes gilt das Skonto ab Rechnungsdatum, nicht ab Lieferdatum. Achtung: Skonto verfaellt bei verspaeteter Zahlung komplett.', cat:'einkauf'},
-    {q:'Kann ich eigene Social-Media-Posts machen?', a:'Ja, ausdruecklich erwuenscht! Bitte den vit:bikes CI-Guide beachten (Logo-Verwendung, Farben). Organische Posts werden vom Content-Team gerne auf den zentralen Kanaelen geteilt.', cat:'marketing'},
-    {q:'Wie interpretiere ich die Rohertragsmarge?', a:'Rohertrag = VK netto minus EK netto. Rohertragsmarge = Rohertrag / VK netto × 100. Zielwert bei E-Bikes: 35-42%. Unter 30% sollte Ursachenanalyse erfolgen (zu viel Rabatt? falsche Modelle?).', cat:'controlling'}
-];
+var faqItems = [];
 var faqFilterCat = 'all';
 export function filterFaqCat(cat) {
     faqFilterCat = cat;
