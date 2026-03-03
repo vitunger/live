@@ -62,7 +62,7 @@ export function showView(viewName) {
         var statusLoaded = Object.keys(_modulStatus).length > 0;
         if(statusLoaded && (!mStatus || mStatus === 'in_bearbeitung' || mStatus === 'deaktiviert')) {
             if(typeof window._showToast === 'function') window._showToast('Dieses Modul ist noch nicht verf\u00fcgbar (' + (mStatus === 'in_bearbeitung' ? 'Kommt bald' : mStatus === 'deaktiviert' ? 'Deaktiviert' : 'Nicht konfiguriert') + ')', 'info');
-            else alert('Dieses Modul ist noch nicht verf\u00fcgbar');
+            else _showToast('Dieses Modul ist noch nicht verfügbar','warning');
             return;
         }
         // Beta check: only HQ or assigned beta users may access

@@ -1,4 +1,5 @@
 /**
+function _sb() { return window.sb; }
  * views/office-checkin.js — Dashboard tab + Check-in/out + Desk Modal
  * @module views/office-checkin
  */
@@ -232,14 +233,14 @@ window._offDoCheckIn = async function(deskNr, checkinStatus) {
     try {
         if(S.myCheckin){S.notify('\u2705 Bereits eingecheckt','info');return;}
         var finalStatus = checkinStatus || 'office';
-        var r=await sb.from('office_checkins').insert({
+        var r=await _sb().from('office_checkins').insert({
             user_id:sbUser.id, desk_nr:deskNr||null, status:finalStatus,
             checked_in_at:new Date().toISOString(), source:'manual'
         }).select().single();
         if(r.error){
             if(r.error.code==='23505'){
-                await sb.from('office_checkins').update({checked_out_at:new Date().toISOString()}).eq('user_id',sbUser.id).is('checked_out_at',null);
-                var r2=await sb.from('office_checkins').insert({user_id:sbUser.id,desk_nr:deskNr||null,status:'office',checked_in_at:new Date().toISOString(),source:'manual'}).select().single();
+                await _sb().from('office_checkins').update({checked_out_at:new Date().toISOString()}).eq('user_id',sbUser.id).is('checked_out_at',null);
+                var r2=await _sb().from('office_checkins').insert({user_id:sbUser.id,desk_nr:deskNr||null,status:'office',checked_in_at:new Date().toISOString(),source:'manual'}).select().single();
                 if(r2.error) throw r2.error;
             } else throw r.error;
         }
@@ -255,7 +256,7 @@ window._offCheckOut = async function() {
     var S=_off();
     if(!S.myCheckin) return;
     try {
-        var r=await sb.from('office_checkins').update({checked_out_at:new Date().toISOString()}).eq('id',S.myCheckin.id);
+        var r=await _sb().from('office_checkins').update({checked_out_at:new Date().toISOString()}).eq('id',S.myCheckin.id);
         if(r.error) throw r.error;
         S.notify('\ud83d\udc4b Ausgecheckt!','success');
         S.myCheckin=null; await S.loadTodayCheckins(); renderDashboard();

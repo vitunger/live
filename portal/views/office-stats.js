@@ -1,4 +1,5 @@
 /**
+function _sb() { return window.sb; }
  * views/office-stats.js — Statistik tab with gamification
  * @module views/office-stats
  */
@@ -16,10 +17,10 @@ async function renderStatistik() {
         var thirtyAgo=new Date(now); thirtyAgo.setDate(now.getDate()-30);
 
         var [engRes,checkinsRes,desksRes,allEngRes]=await Promise.all([
-            sb.from('office_engagement').select('*').eq('user_id',sbUser.id).gte('month',S.fmtISO(monthStart)).limit(1),
-            sb.from('office_checkins').select('user_id,checked_in_at,status').gte('checked_in_at',S.fmtISO(thirtyAgo)+'T00:00:00'),
-            sb.from('office_desks').select('nr').eq('active',true).neq('desk_type','parkplatz'),
-            sb.from('office_engagement').select('user_id,office_days,current_streak,badges').gte('month',S.fmtISO(monthStart))
+            _sb().from('office_engagement').select('*').eq('user_id',sbUser.id).gte('month',S.fmtISO(monthStart)).limit(1),
+            _sb().from('office_checkins').select('user_id,checked_in_at,status').gte('checked_in_at',S.fmtISO(thirtyAgo)+'T00:00:00'),
+            _sb().from('office_desks').select('nr').eq('active',true).neq('desk_type','parkplatz'),
+            _sb().from('office_engagement').select('user_id,office_days,current_streak,badges').gte('month',S.fmtISO(monthStart))
         ]);
 
         var eng=(engRes.data||[])[0]||{};

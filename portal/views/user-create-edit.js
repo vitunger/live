@@ -503,7 +503,7 @@ export async function saveEditMa(userId) {
 
         // 2. Passwort ändern (via set_user_password)
         if(pw && pw.length >= 6) {
-            var pwResp = await sb.rpc('set_user_password', { user_id: userId, new_password: pw });
+            var pwResp = await _sb().rpc('set_user_password', { user_id: userId, new_password: pw });
             if(pwResp && pwResp.error) console.warn('Passwort-Update:', pwResp.error.message);
         }
 
@@ -547,7 +547,7 @@ export async function loginAs(userId, email, userName) {
     try {
         // 1. Temporäres Passwort setzen
         var tempPw = '_TempLogin_' + Date.now();
-        await sb.rpc('set_user_password', { user_id: userId, new_password: tempPw });
+        await _sb().rpc('set_user_password', { user_id: userId, new_password: tempPw });
 
         // 2. Ausloggen
         await _sb().auth.signOut();

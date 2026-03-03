@@ -1,4 +1,5 @@
 /**
+function _sb() { return window.sb; }
  * views/office-booking.js — Buchen tab (interactive desk booking with floorplan)
  * @module views/office-booking
  */
@@ -33,7 +34,7 @@ async function renderBuchen() {
     try {
         await Promise.all([S.loadRooms(),S.loadDesks(),S.loadHQUsers()]);
         if (!_buchFavoriteDesk) {
-            var profRes = await sb.from('users').select('office_favorite_desk').eq('id', sbUser.id).single();
+            var profRes = await _sb().from('users').select('office_favorite_desk').eq('id', sbUser.id).single();
             if (profRes.data && profRes.data.office_favorite_desk) {
                 _buchFavoriteDesk = profRes.data.office_favorite_desk;
             }
@@ -115,13 +116,13 @@ function _buildBuchenUI(el) {
 async function _buchLoadData() {
     var S=_off();
     var td=S.todayISO();
-    var bRes=await sb.from('office_bookings').select('id,user_id,desk_nr,parking_nr,status,time_from,time_to,note').eq('booking_date',_buchDate);
+    var bRes=await _sb().from('office_bookings').select('id,user_id,desk_nr,parking_nr,status,time_from,time_to,note').eq('booking_date',_buchDate);
     var allBkgs=bRes.data||[];
     _buchAllBookingsForDay=allBkgs;
     _buchBookings=allBkgs.filter(function(b){return b.status==='office'&&b.desk_nr;});
     _buchParkBookings=allBkgs.filter(function(b){return b.parking_nr!=null;});
     if(_buchDate===td) {
-        var cRes=await sb.from('office_checkins').select('id,user_id,desk_nr,checked_in_at').gte('checked_in_at',td+'T00:00:00').is('checked_out_at',null);
+        var cRes=await _sb().from('office_checkins').select('id,user_id,desk_nr,checked_in_at').gte('checked_in_at',td+'T00:00:00').is('checked_out_at',null);
         _buchCheckins=cRes.data||[];
     } else {
         _buchCheckins=[];
@@ -256,7 +257,7 @@ window._buchBookRemote = async function() {
     try {
         var timeFrom = _buchAllDay ? null : _buchFrom;
         var timeTo   = _buchAllDay ? null : _buchTo;
-        var r = await sb.from('office_bookings').insert({
+        var r = await _sb().from('office_bookings').insert({
             user_id: sbUser.id,
             booking_date: _buchDate,
             status: 'remote',
@@ -278,7 +279,7 @@ window._buchCancelRemote = async function(id) {
     var S=_off();
     if (!confirm('Remote-Buchung stornieren?')) return;
     try {
-        var r = await sb.from('office_bookings').delete().eq('id', id);
+        var r = await _sb().from('office_bookings').delete().eq('id', id);
         if (r.error) throw r.error;
         if (_buchAllBookingsForDay) _buchAllBookingsForDay = _buchAllBookingsForDay.filter(function(b){return b.id!==id;});
         S.notify('Remote-Buchung storniert','success');
@@ -306,7 +307,7 @@ window._offGuestModalForDate = function(date) {
 window._buchSetFavorite = async function(nr) {
     var S=_off();
     try {
-        var r = await sb.from('users').update({office_favorite_desk: nr===_buchFavoriteDesk ? null : nr}).eq('id', sbUser.id);
+        var r = await _sb().from('users').update({office_favorite_desk: nr===_buchFavoriteDesk ? null : nr}).eq('id', sbUser.id);
         if (r.error) throw r.error;
         _buchFavoriteDesk = nr===_buchFavoriteDesk ? null : nr;
         S.notify(_buchFavoriteDesk ? '\u2665 Platz '+nr+' als Lieblingsplatz gesetzt' : '\u2661 Lieblingsplatz entfernt', 'success');
@@ -419,7 +420,7 @@ window._buchBook = async function(deskNr) {
             return;
         }
         var payload={user_id:sbUser.id,booking_date:_buchDate,status:'office',desk_nr:deskNr,time_from:tf,time_to:tt,updated_at:new Date().toISOString()};
-        var r=await sb.from('office_bookings').upsert(payload,{onConflict:'user_id,booking_date'});
+        var r=await _sb().from('office_bookings').upsert(payload,{onConflict:'user_id,booking_date'});
         if(r.error) throw r.error;
         S.notify('\u2705 Platz '+deskNr+' gebucht f\u00fcr '+_buchDate+(tf?' ('+_buchFrom+' \u2013 '+_buchTo+')':'')+'!','success');
         await _buchLoadData();
@@ -434,7 +435,7 @@ window._buchBook = async function(deskNr) {
 window._buchCancel = async function(bookingId) {
     var S=_off();
     try {
-        var r=await sb.from('office_bookings').delete().eq('id',bookingId);
+        var r=await _sb().from('office_bookings').delete().eq('id',bookingId);
         if(r.error) throw r.error;
         S.notify('Buchung storniert','success');
         await _buchLoadData();
@@ -554,9 +555,9 @@ window._buchBookParking = function(nr) {
             var deskBk=_buchBookings.find(function(b){return b.user_id===sbUser.id;});
             var res;
             if(deskBk){
-                res=await sb.from('office_bookings').update({parking_nr:assignNr,updated_at:new Date().toISOString()}).eq('id',deskBk.id);
+                res=await _sb().from('office_bookings').update({parking_nr:assignNr,updated_at:new Date().toISOString()}).eq('id',deskBk.id);
             } else {
-                res=await sb.from('office_bookings').insert({user_id:sbUser.id,booking_date:_buchDate,status:'parking',parking_nr:assignNr,updated_at:new Date().toISOString()});
+                res=await _sb().from('office_bookings').insert({user_id:sbUser.id,booking_date:_buchDate,status:'parking',parking_nr:assignNr,updated_at:new Date().toISOString()});
             }
             if(res.error) throw res.error;
             var lbl=assignNr<=2?'\u26a1 P'+assignNr+' Elektro':assignNr<=4?'\ud83d\ude97 P'+assignNr+' Gast':'\ud83c\udd7f\ufe0f Parkplatz P'+assignNr;
@@ -575,9 +576,9 @@ window._buchCancelParking = function(bookingId) {
             if(!bk) return;
             var res;
             if(bk.desk_nr){
-                res=await sb.from('office_bookings').update({parking_nr:null,updated_at:new Date().toISOString()}).eq('id',bookingId);
+                res=await _sb().from('office_bookings').update({parking_nr:null,updated_at:new Date().toISOString()}).eq('id',bookingId);
             } else {
-                res=await sb.from('office_bookings').delete().eq('id',bookingId);
+                res=await _sb().from('office_bookings').delete().eq('id',bookingId);
             }
             if(res.error) throw res.error;
             S.notify('Parkplatz-Buchung storniert','success');

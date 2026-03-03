@@ -418,7 +418,7 @@ export async function renderMaKosten(){
     try{
         var stdId=(_sbStandort()&&_sbStandort().id)?_sbStandort().id:null;
         if(!stdId){el.innerHTML='<div class="text-center py-8 text-gray-400">Standort-Kontext ben\u00f6tigt.</div>';return;}
-        var resp=await sb.rpc('calculate_monthly_billing',{p_standort_id:stdId});
+        var resp=await _sb().rpc('calculate_monthly_billing',{p_standort_id:stdId});
         if(resp.error) throw resp.error;
         var rows=resp.data||[];
         var standortRows=rows.filter(function(r){return r.source==='standort';});

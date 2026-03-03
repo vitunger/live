@@ -1,4 +1,5 @@
 /**
+function _sb() { return window.sb; }
  * views/office-guests.js — Gäste tab with Invite Modal + Check-in/out
  * @module views/office-guests
  */
@@ -14,8 +15,8 @@ async function renderGaeste() {
     try {
         var td=S.todayISO();
         var [todayRes,futureRes]=await Promise.all([
-            sb.from('office_guests').select('*').eq('visit_date',td).order('visit_time'),
-            sb.from('office_guests').select('*').gt('visit_date',td).order('visit_date').limit(20)
+            _sb().from('office_guests').select('*').eq('visit_date',td).order('visit_time'),
+            _sb().from('office_guests').select('*').gt('visit_date',td).order('visit_date').limit(20)
         ]);
         var todayGuests=todayRes.data||[], futureGuests=futureRes.data||[];
 
@@ -129,13 +130,13 @@ window._offSaveGuest = async function() {
     var parkType=parkTypeEl?parkTypeEl.value:'none';
     var parking=parkType!=='none';
     var notes=(document.getElementById('offGuestNotes')||{}).value;
-    if(!name||!date){alert('Bitte Name und Datum ausfüllen!');return;}
+    if(!name||!date){_showToast('Bitte Name und Datum ausfüllen!','warning');return;}
     var btn=document.getElementById('offGuestSaveBtn');
     if(btn){btn.disabled=true;btn.textContent='Wird gespeichert...';}
     try {
         var me=(S.hqUsers||[]).find(function(u){return u.id===sbUser.id;})||{vorname:'',nachname:''};
 
-        var r=await sb.from('office_guests').insert({
+        var r=await _sb().from('office_guests').insert({
             host_user_id:sbUser.id, name:name, company:company||null,
             email:email||null, visit_date:date, visit_time:time||null,
             room:room||null, needs_parking:parking, notes:notes||null,
@@ -148,11 +149,11 @@ window._offSaveGuest = async function() {
         if(parking) {
             var slots=parkType==='electric'?[1,2]:(parkType==='guest'?[3,4]:[5,6,7,8,9,10,11,12]);
             var parkLabel=parkType==='electric'?'\u26a1 Elektro':(parkType==='guest'?'\ud83d\ude97 Gast':'\ud83c\udd7f\ufe0f Standard');
-            var parkRes=await sb.from('office_bookings').select('parking_nr').eq('booking_date',date).in('parking_nr',slots);
+            var parkRes=await _sb().from('office_bookings').select('parking_nr').eq('booking_date',date).in('parking_nr',slots);
             var takenPark=(parkRes.data||[]).map(function(b){return b.parking_nr;});
             var freePark=slots.find(function(n){return takenPark.indexOf(n)===-1;});
             if(freePark) {
-                await sb.from('office_bookings').insert({
+                await _sb().from('office_bookings').insert({
                     user_id:sbUser.id, booking_date:date, status:'parking',
                     parking_nr:freePark,
                     time_from:time||'08:00', time_to:timeEnd||'18:00',
@@ -167,7 +168,7 @@ window._offSaveGuest = async function() {
         if(email) {
             var dateStr=new Date(date+'T12:00:00').toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
             try {
-                var sess=await sb.auth.getSession();
+                var sess=await _sb().auth.getSession();
                 var accessToken=(sess.data&&sess.data.session)?sess.data.session.access_token:null;
                 var invokeOpts={body:{
                     template:'guest-invitation',
@@ -187,7 +188,7 @@ window._offSaveGuest = async function() {
                     }
                 }};
                 if(accessToken) invokeOpts.headers={'Authorization':'Bearer '+accessToken};
-                await sb.functions.invoke('send-email', invokeOpts);
+                await _sb().functions.invoke('send-email', invokeOpts);
                 S.notify('\ud83d\udc64 Gast eingeladen & E-Mail gesendet!','success');
             } catch(mailErr) {
                 console.warn('[Office] Email send failed:', mailErr);
@@ -211,7 +212,7 @@ window._offSaveGuest = async function() {
 window._offGuestCheckIn = async function(id) {
     var S=_off();
     try {
-        var r=await sb.from('office_guests').update({checked_in_at:new Date().toISOString(),status:'eingecheckt'}).eq('id',id);
+        var r=await _sb().from('office_guests').update({checked_in_at:new Date().toISOString(),status:'eingecheckt'}).eq('id',id);
         if(r.error) throw r.error;
         S.notify('Gast eingecheckt','success'); renderGaeste();
     } catch(err) { S.notify('Fehler: '+err.message,'error'); }
@@ -220,7 +221,7 @@ window._offGuestCheckIn = async function(id) {
 window._offGuestCheckOut = async function(id) {
     var S=_off();
     try {
-        var r=await sb.from('office_guests').update({status:'ausgecheckt'}).eq('id',id);
+        var r=await _sb().from('office_guests').update({status:'ausgecheckt'}).eq('id',id);
         if(r.error) throw r.error;
         S.notify('Gast ausgecheckt','success'); renderGaeste();
     } catch(err) { S.notify('Fehler: '+err.message,'error'); }

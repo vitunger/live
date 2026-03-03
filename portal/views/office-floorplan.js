@@ -1,4 +1,5 @@
 /**
+function _sb() { return window.sb; }
  * views/office-floorplan.js — Grundriss tab with Seat Picker
  * @module views/office-floorplan
  */
@@ -149,7 +150,7 @@ window._offSelectDesk = function(nr) {
 window._offBookDesk = async function(nr) {
     var S=_off();
     try {
-        var r=await sb.from('office_bookings').upsert({
+        var r=await _sb().from('office_bookings').upsert({
             user_id:sbUser.id, booking_date:S.todayISO(), status:'office',
             desk_nr:nr, updated_at:new Date().toISOString()
         },{onConflict:'user_id,booking_date'});
@@ -164,7 +165,7 @@ window._offBookDesk = async function(nr) {
 window._offCancelBooking = async function(bookingId) {
     var S=_off();
     try {
-        var r=await sb.from('office_bookings').delete().eq('id',bookingId);
+        var r=await _sb().from('office_bookings').delete().eq('id',bookingId);
         if(r.error) throw r.error;
         S.notify('Buchung storniert','success');
         await S.loadTodayBookings(); window._offLoadRoom();

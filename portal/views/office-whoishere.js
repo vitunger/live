@@ -1,4 +1,5 @@
 /**
+function _sb() { return window.sb; }
  * views/office-whoishere.js — "Wer ist im Office?" tab
  * @module views/office-whoishere
  */
@@ -35,7 +36,7 @@ window._offRenderWerImOffice = renderWerImOffice;
 async function _wioLoad() {
     var S=_off();
     var td = S.todayISO();
-    var bRes = await sb.from('office_bookings')
+    var bRes = await _sb().from('office_bookings')
         .select('id,user_id,desk_nr,parking_nr,status,time_from,time_to,note')
         .eq('booking_date', _wioDate)
         .or('status.eq.office,status.eq.parking');
@@ -44,7 +45,7 @@ async function _wioLoad() {
     _wioParkBookings = allBkgs.filter(function(b){ return b.parking_nr; });
 
     if (_wioDate === td) {
-        var cRes = await sb.from('office_checkins')
+        var cRes = await _sb().from('office_checkins')
             .select('id,user_id,desk_nr,checked_in_at')
             .gte('checked_in_at', td+'T00:00:00')
             .is('checked_out_at', null);

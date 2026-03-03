@@ -1,4 +1,5 @@
 /**
+function _sb() { return window.sb; }
  * views/office-weekly.js — Wochenplan tab
  * @module views/office-weekly
  */
@@ -17,7 +18,7 @@ async function renderWochenplan() {
         var kw=S.getKW(monday), monISO=S.fmtISO(monday), friISO=S.fmtISO(days[4]);
         await S.loadHQUsers();
         await Promise.all([S.loadDesks(), S.loadRooms()]);
-        var bkRes=await sb.from('office_bookings').select('*').gte('booking_date',monISO).lte('booking_date',friISO);
+        var bkRes=await _sb().from('office_bookings').select('*').gte('booking_date',monISO).lte('booking_date',friISO);
         var bookings=bkRes.data||[];
         var bMap={}; bookings.forEach(function(b){bMap[b.user_id+'_'+b.booking_date]=b;});
         var dayLabels=['Mo','Di','Mi','Do','Fr'];
@@ -172,9 +173,9 @@ window._offSetDay = async function(dateStr, status) {
     var S=_off();
     try {
         if(!status) {
-            await sb.from('office_bookings').delete().eq('user_id',sbUser.id).eq('booking_date',dateStr);
+            await _sb().from('office_bookings').delete().eq('user_id',sbUser.id).eq('booking_date',dateStr);
         } else {
-            var r=await sb.from('office_bookings').upsert({
+            var r=await _sb().from('office_bookings').upsert({
                 user_id:sbUser.id, booking_date:dateStr, status:status,
                 desk_nr:null, updated_at:new Date().toISOString()
             },{onConflict:'user_id,booking_date'});
@@ -191,7 +192,7 @@ window._offSetDesk = async function(dateStr, deskNr) {
     var S=_off();
     try {
         var nr=deskNr?parseInt(deskNr):null;
-        var r=await sb.from('office_bookings').update({desk_nr:nr,updated_at:new Date().toISOString()}).eq('user_id',sbUser.id).eq('booking_date',dateStr);
+        var r=await _sb().from('office_bookings').update({desk_nr:nr,updated_at:new Date().toISOString()}).eq('user_id',sbUser.id).eq('booking_date',dateStr);
         if(r.error) throw r.error;
         S.notify('\u2705 P'+nr+' gebucht f\u00fcr '+dateStr,'success');
     } catch(err) {
@@ -204,7 +205,7 @@ window._offSetParking = async function(dateStr, parkNr) {
     var S=_off();
     try {
         var nr=parkNr?parseInt(parkNr):null;
-        var r=await sb.from('office_bookings').update({parking_nr:nr,updated_at:new Date().toISOString()}).eq('user_id',sbUser.id).eq('booking_date',dateStr);
+        var r=await _sb().from('office_bookings').update({parking_nr:nr,updated_at:new Date().toISOString()}).eq('user_id',sbUser.id).eq('booking_date',dateStr);
         if(r.error) throw r.error;
         S.notify('\ud83c\udd7f\ufe0f P'+nr+' Parkplatz gebucht','success');
     } catch(err) {

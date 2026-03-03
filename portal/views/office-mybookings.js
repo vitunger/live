@@ -1,4 +1,5 @@
 /**
+function _sb() { return window.sb; }
  * views/office-mybookings.js — Meine Buchungen tab
  * @module views/office-mybookings
  */
@@ -28,7 +29,7 @@ async function renderMeineBuchungen() {
 
         var from = new Date(now); from.setMonth(from.getMonth()-6);
         var to   = new Date(now); to.setMonth(to.getMonth()+3);
-        var res = await sb.from('office_bookings')
+        var res = await _sb().from('office_bookings')
             .select('id,booking_date,status,desk_nr,parking_nr,time_from,time_to,note')
             .eq('user_id', sbUser.id)
             .gte('booking_date', S.fmtISO(from))
@@ -298,9 +299,9 @@ window._mbCancelDesk = async function(bookingId) {
         var bk = _mbBookings.find(function(b){return b.id===bookingId;});
         var res;
         if (bk&&bk.parking_nr) {
-            res = await sb.from('office_bookings').update({desk_nr:null,status:'parking'}).eq('id',bookingId);
+            res = await _sb().from('office_bookings').update({desk_nr:null,status:'parking'}).eq('id',bookingId);
         } else {
-            res = await sb.from('office_bookings').delete().eq('id',bookingId);
+            res = await _sb().from('office_bookings').delete().eq('id',bookingId);
         }
         if (res.error) throw res.error;
         S.notify('Buchung storniert','success');
@@ -315,9 +316,9 @@ window._mbCancelParking = async function(bookingId) {
         var bk = _mbBookings.find(function(b){return b.id===bookingId;});
         var res;
         if (bk&&bk.desk_nr) {
-            res = await sb.from('office_bookings').update({parking_nr:null}).eq('id',bookingId);
+            res = await _sb().from('office_bookings').update({parking_nr:null}).eq('id',bookingId);
         } else {
-            res = await sb.from('office_bookings').delete().eq('id',bookingId);
+            res = await _sb().from('office_bookings').delete().eq('id',bookingId);
         }
         if (res.error) throw res.error;
         S.notify('Parkplatz storniert','success');
