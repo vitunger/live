@@ -111,7 +111,42 @@ export function showDashboardTab(tabName) {
 //  DASHBOARD WIDGETS – Live-Daten laden
 // ═══════════════════════════════════════════════════════════════════
 
+// Widget → Modul mapping for status-based visibility
+var _widgetToModul = {
+    pipeline:'verkauf', success:'verkauf', termine:'kalender', aufgaben:'aufgaben',
+    marketing:'marketing', team:'mitarbeiter', controlling:'controlling',
+    support:'support', wissen:'wissen', nachrichten:'kommunikation'
+};
+
+function hideInactiveWidgets() {
+    var statusMap = window.sbModulStatus || {};
+    document.querySelectorAll('.dashboard-widget[data-widget]').forEach(function(w) {
+        var widgetName = w.getAttribute('data-widget');
+        var modulKey = _widgetToModul[widgetName];
+        if (!modulKey) return;
+        var st = statusMap[modulKey];
+        // Hide widget if module is inaktiv or demo (demo = fake data, not ready)
+        if (st === 'inaktiv' || st === 'demo') {
+            w.style.display = 'none';
+        }
+    });
+    // Also hide add-buttons for inactive modules in widgetAddPanel
+    var addPanel = document.getElementById('widgetAddPanel');
+    if (addPanel) {
+        addPanel.querySelectorAll('button[onclick*="addWidget"]').forEach(function(btn) {
+            var match = btn.getAttribute('onclick').match(/addWidget\('(\w+)'\)/);
+            if (!match) return;
+            var modulKey = _widgetToModul[match[1]];
+            if (!modulKey) return;
+            var st = statusMap[modulKey];
+            if (st === 'inaktiv' || st === 'demo') btn.style.display = 'none';
+        });
+    }
+}
+
 export async function loadDashboardWidgets() {
+    // Hide widgets for deactivated/demo modules
+    hideInactiveWidgets();
     // In demo mode, widgets are filled by fillDemoWidgets - skip DB queries
     if (window.DEMO_ACTIVE) return;
     try {
@@ -506,6 +541,9 @@ export function fillDemoWidgets(level, stage) {
         if (wt2) wt2.textContent = level === 'hq' ? 'Willkommen im HQ! 👋' : 'Willkommen! 👋';
 
         if (level === 'hq') return; // HQ has own demo fill
+
+        // Hide widgets for deactivated modules even in demo mode
+        hideInactiveWidgets();
 
         // ── Pipeline Widget ──
         var pip = document.getElementById('wPipelineContent');

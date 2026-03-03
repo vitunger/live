@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 03.03.2026 (JWT-Audit billing Auth-Header, Go-Live Masterplan v2 integriert, Modul-Status 5-Werte-System, Beta-User-Gate, XSS-Audit 28 Fixes, Supabase-URL zentralisiert)
+> Letzte Aktualisierung: 03.03.2026 (P3: Dashboard-Widget-Visibility anhand modul_status, hideInactiveWidgets() in home.js, Widget-Add-Panel gefiltert)
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -280,6 +280,7 @@ sbUrl()       → window.sbUrl()   // Supabase Project URL (zentralisiert)
 **Enforcement:** Router (`router.js` showView) + Sidebar (`feature-flags-full.js` applyModulStatus).
 **Beta-Zugang:** `modul_beta_users` Tabelle (user_id + modul_key). HQ-User (`is_hq=true`) haben immer Zugang.
 **DB-Constraint:** `modul_status_status_check` CHECK – nur die 5 Werte erlaubt.
+**Dashboard-Widgets:** `home.js` `hideInactiveWidgets()` blendet Widgets aus, deren Modul `inaktiv` oder `demo` ist. Mapping: pipeline/success→verkauf, termine→kalender, aufgaben→aufgaben, marketing→marketing, team→mitarbeiter, controlling→controlling, support→support, wissen→wissen, nachrichten→kommunikation. Auch Widget-Add-Buttons im Edit-Panel werden gefiltert.
 
 ### Rollen-IDs
 
@@ -539,200 +540,6 @@ security: RLS/JWT/Auth-Verbesserung
 
 ### bwa-cockpit.js Fix (2026-03-03)
 - updateBwaDeadlineWidget: subEl in null-guard aufgenommen
-
-## Go-Live Masterplan (v2, Stand 03.03.2026)
-
-> Quelle: `vit-bikes-go-live-masterplan-v2.docx`
-
-### Grundprinzip
-
-Es gibt genau einen Moment, ab dem echte Nutzer mit echten Daten arbeiten: **Tag X (Go-Live)**. Alles davor darf kaputt gehen (Breaking Changes, DB-Migrationen, Refactorings). Ab Tag X gilt: **Stabilitaet = Gesetz.**
-
-### IST-Analyse
-
-**Codebase:**
-- ~80 JS-Dateien, ~44.000 Zeilen, kein Build-System, kein Linting, keine Tests
-- ~5.400 var-Deklarationen, ~669 innerHTML-Aufrufe (XSS-Risiko), ~497 onclick-in-Strings
-- 41 Edge Functions deployed, 12 ohne JWT (5 davon kritisch)
-- 257 RLS Policies ✅
-
-**Daten-Realitaet (echte Nutzung):**
-
-| Standort | Leads | BWA | Termine | WaWi | Bewertung |
-|----------|-------|-----|---------|------|-----------|
-| Muenster | 53 | 0 | 139 | 16 | Einziger Power-User |
-| Grafrath | 2 | 1 | 0 | 5 | BWA + erste Leads |
-| Rottweil | 4 | 8 | 0 | 9 | Gute BWA-Historie |
-| Witten | 1 | 8 | 1 | 2 | Gute BWA-Historie |
-| 28 weitere | 0-1 | 0 | 0-1 | 0-5 | Keine echte Nutzung |
-
-**Fehlende Stammdaten (Blocker):**
-- `umsatz_plan_ytd`: 0.00 bei allen 32 Standorten
-- `inhaber_name`: NULL bei allen
-- `region`: 'mitte' bei allen (unbrauchbar)
-- `plan_bwa_daten`: nur 12 Rows (1 Standort)
-
-### Modul Go-Live Entscheidungen
-
-**Partner-Module:**
-
-| Modul | Entscheidung |
-|-------|-------------|
-| Home, Verkauf/Pipeline, Kalender, Aufgaben, Controlling/BWA, Aktenschrank, Allgemein | ✅ Go-Live |
-| Support | ✅ Go-Live (minimal) |
-| Kommunikation | ❌ Ausblenden (kein Backend) |
-| Marketing, Einkauf, Wissen, Onboarding, Dashboards | ❌ Deaktivieren |
-
-**HQ-Module:**
-
-| Modul | Entscheidung |
-|-------|-------------|
-| HQ Cockpit, HQ Finanzen, HQ Standorte, HQ Kommandozentrale, HQ Handlungsbedarf | ✅ Aktivieren |
-| HQ Verkauf | ⚠️ Nur wenn Daten da |
-| HQ Marketing | ⚠️ Nur wenn Ads aktiv |
-| HQ Einkauf, HQ Akademie | ❌ Deaktiviert lassen |
-| Entwicklung | ✅ Nur fuer HQ sichtbar |
-
-### Phasen-Ueberblick
-
-| Woche | Phase | Schwerpunkt | Stunden |
-|-------|-------|-------------|---------|
-| 1-2 | **PRE-1** | Aufraeumen: Demo weg, HQ an, Stammdaten, Badge-System | ~18h |
-| 2-4 | **PRE-2** | Sicherheit: JWT, Sessions, Error Handling, RLS, Mobile, HQ-Test | ~24h |
-| 4-5 | **PRE-3** | Pilot-Vorbereitung: Accounts, eTermin, Schulung, Monitoring | ~12h |
-| 5 | **GO-LIVE** | Pilot-Start mit 3-5 Standorten | – |
-| 6-7 | **LIVE-1** | Monitoring, Feedback, Quick-Fix Bugs (nur non-breaking) | ~12h |
-| 8-20 | **LIVE-2** | TypeScript-Migration Modul fuer Modul (Feature-Flag pro Modul) | ~72h |
-| 12+ | **LIVE-3** | Neue Module in TS: Marketing, Einkauf, Wissen + API-Integrationen | ~30h+ |
-
-**Gesamt: ~168 Stunden (~56 Sessions a 3h) ueber 20+ Wochen**
-
-### PRE-1: Aufraeumen (Woche 1-2, ~18h)
-
-| # | Aufgabe | Std. |
-|---|---------|------|
-| P1 | Demo-Module deaktivieren (Marketing, Einkauf, Wissen, Onboarding, Dashboards, Kommunikation) | 2 |
-| P2 | HQ-Module aktivieren (Cockpit, Finanzen, Standorte, Kommandozentrale, Handlungsbedarf) | 2 |
-| P3 | Demo-Widgets entfernen (Home-Dashboard aufräumen, Leer-Zustaende) | 3 |
-| P4 | Stammdaten-Migration (inhaber_name, umsatz_plan_ytd, region fuer 5 Pilot-Standorte) | 3 |
-| P5 | modul_status bereinigen (aktiv/beta/deaktiviert vereinheitlichen) | 1 |
-| P6 | Badge-System konsistent (kein DEMO-Badge mehr im Live-System) | 1 |
-
-### PRE-2: Sicherheit + Stabilitaet (Woche 2-4, ~24h)
-
-| # | Aufgabe | Std. |
-|---|---------|------|
-| S1 | JWT-Audit: 5 kritische Edge Functions (create-user, db-backup, billing-automation, send-emails, send-email) | 3 |
-| S2 | Session-Handling: Auto-Refresh, Logout-Cleanup (BWA-Banner, Cache, globale Vars) | 4 |
-| S3 | Error Handling: 8 Go-Live Partner-Module durchgehen (Null-Guards, Leer-Zustaende, Offline) | 6 |
-| S4 | RLS Smoke-Tests: Kann User A Daten von User B sehen? (leads, verkauf, bwa, todos, termine) | 3 |
-| S5 | Mobile Responsive: Alle 8 Partner-Module auf iPhone/Android testen | 4 |
-| S6 | HQ-Module Smoke-Test | 2 |
-| S7 | Performance Check (Ladezeiten, N+1 Queries, unnoetige Echtzeit-Subscriptions) | 2 |
-
-### PRE-3: Pilot-Vorbereitung (Woche 4-5, ~12h)
-
-| # | Aufgabe | Std. |
-|---|---------|------|
-| V1 | Pilot-Standorte auswaehlen (Vorschlag: Muenster, Grafrath, Rottweil, Holzkirchen + 1 neuer) | 1 |
-| V2 | User-Accounts einrichten (1 Inhaber + opt. 1 MA pro Pilot, Passwort-Reset testen) | 2 |
-| V3 | eTermin-Rollout fuer Pilot-Standorte (API-Key in connector_config, Webhook-URL) | 2 |
-| V4 | Feedback-Kanal einrichten (Widget + WhatsApp/Support-Channel) | 1 |
-| V5 | Schulungsunterlagen (1-2 Seiten pro Modul) | 4 |
-| V6 | Monitoring aufsetzen (Edge Function Logs, portal_events, Error-Tracking) | 2 |
-
-### Go-Live Checkliste (alles muss TRUE sein)
-
-- [ ] Alle 8 Partner-Module fehlerfrei auf Desktop + Mobile
-- [ ] 5 kritische Edge Functions JWT-gesichert
-- [ ] Session-Handling: Auto-Refresh + Logout-Cleanup getestet
-- [ ] Stammdaten fuer Pilot-Standorte eingepflegt
-- [ ] Leer-Zustaende in allen Modulen sauber (keine Console-Errors)
-- [ ] RLS: User A sieht nicht User B Daten (getestet)
-- [ ] Pilot-Partner haben Accounts + wurden geschult
-- [ ] Feedback-Kanal steht (Widget + direkte Kommunikation)
-- [ ] Monitoring aktiv (Error-Logging, Edge Function Logs)
-- [ ] HQ-Module fuer HQ-User freigeschaltet + getestet
-
-### LIVE-1: Erste 2 Wochen (Woche 6-7, ~12h)
-
-| # | Aufgabe | Details |
-|---|---------|---------|
-| L1 | Daily Monitoring | Edge Function Logs, portal_events, Antwortzeiten |
-| L2 | Pilot-Feedback Round 1 | Nach 3 Tagen: Call mit jedem Partner |
-| L3 | Quick-Fix Bugs | Nur non-breaking: CSS, Texte, Null-Guards |
-| L4 | Pilot-Feedback Round 2 | Nach 10 Tagen: Nutzung und Probleme evaluieren |
-
-### LIVE-2: TypeScript-Migration (Woche 8-20, ~72h)
-
-**Build-System:** Vite 6 + TS 5 strict, Supabase Types generieren, Tailwind 4, Dual-Loading in app.js (Feature-Flag ts_module_X), GitHub Action CI (tsc --noEmit).
-
-**Migrations-Reihenfolge (Risiko aufsteigend):**
-
-| Reihe | Modul(e) | Zeilen | Risiko |
-|-------|----------|--------|--------|
-| 1 | Core (globals, supabase-init, router) | ~677 | MITTEL |
-| 2 | Supabase Types generieren | – | KEINS |
-| 3 | Todo | ~847 | NIEDRIG |
-| 4 | Support | ~494 | NIEDRIG |
-| 5 | Aktenschrank | ~272 | NIEDRIG |
-| 6 | Kalender | ~742 | NIEDRIG |
-| 7 | Allgemein | ~634 | NIEDRIG |
-| 8 | Home / Dashboard | ~1.483 | MITTEL |
-| 9 | Verkauf + Pipeline | ~1.885 (JSX) | MITTEL |
-| 10 | Controlling (5 Module) | ~2.200 | HOCH |
-| 11 | Auth-System | ~1.965 | HOCH |
-| 12 | Inline-Module (19 St.) | ~7.000 | HOCH |
-| 13 | HQ-Module (6 St.) | ~6.500 | MITTEL |
-
-**Pro Modul:** .js → .ts/.tsx, var → let/const, Supabase-Calls typisieren, innerHTML → DOM-API wo moeglich, window.*-Export beibehalten, Feature-Flag, Pilot-Test, Freischaltung.
-
-### LIVE-3: Neue Module + APIs (ab Woche 12, ~30h+)
-
-Neue Module werden direkt in TypeScript gebaut, hinter modul_status = deaktiviert bis getestet.
-
-**Marketing-Modul (TS-native):** Kampagnen-Uebersicht, Post-Performance (Instagram/Facebook API NEU), Budget-Tracking, Google Bewertungen, Auto-Sync Cron. **KRITISCH:** Meta Token-Refresh (Tokens laufen nach 60 Tagen ab → automatischer Refresh).
-
-**Einkauf-Modul:** 65 Lieferanten von JS-Array → DB-Tabellen (lieferanten + standort_lieferanten).
-
-**Wissen-Modul:** CMS-Editor im HQ-Modus (Tabellen existieren, sind leer).
-
-**API-Integrations-Prioritaet:**
-
-| Prio | API | Komplexitaet |
-|------|-----|-------------|
-| 1 | eTermin Multi-Standort | Niedrig (Quick Win) |
-| 2 | Meta Token Auto-Refresh | Mittel (Pflicht!) |
-| 3 | Google Ads Cron-Job | Niedrig (Quick Win) |
-| 4 | Google Business Profile | Mittel |
-| 5 | Instagram Graph | Mittel |
-| 6 | WaWi Mailbox | Mittel |
-| 7 | MS365 SSO | Hoch (Spaeter) |
-| 8 | Creditreform | Hoch (Spaeter) |
-
-### Edge Functions: Sicherheits-Bewertung (41 deployed)
-
-**KRITISCH – JWT VOR Go-Live aktivieren:**
-- create-user, db-backup, billing-automation, send-emails, send-email
-
-**OK ohne JWT (Webhooks/Public):**
-- password-reset, lexoffice-webhook, creatomate-webhook, email-ingest, process-wawi-email, potential-check-lead
-
-**Pruefen:**
-- lexoffice-sync, check-consent, dhl-shipping, dhl-secrets-check
-
-### Entwicklungsregeln nach Go-Live
-
-**Deployment:** Code vorbereiten → Pruefen ob Live-Modul betroffen → Commit + Push → Vercel Auto-Deploy → Cache-Bust bumpen → Testen → Bei Problemen: Revert sofort.
-
-**Feature-Flags:** Jedes neue Feature hinter Feature-Flag. Rollout: HQ → 1 Pilot → alle. Sofort deaktivierbar.
-
-**DB-Aenderungen erlaubt:** Neue Tabellen, neue Spalten (mit DEFAULT), neue RLS Policies, neue Indizes.
-**DB-Aenderungen VERBOTEN:** DROP TABLE, DROP COLUMN, RENAME COLUMN, Datentyp-Aenderungen auf befuellten Spalten, RLS Policies loeschen.
-
-**Edge Function Updates:** Neue Version → Test mit curl → Deploy. verify_jwt nie aendern ohne Frontend-Update. Bei Problemen: alte Version aus Git wiederherstellen.
-
----
 
 ## Pflege dieser Datei
 
