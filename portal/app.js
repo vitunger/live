@@ -178,6 +178,7 @@ async function loadModules() {
     // [prod] log removed
     
     // Signal that all modules are ready
+    window._vitModulesReady = true;
     window.dispatchEvent(new CustomEvent('vit:modules-ready', { 
         detail: { loaded, failed, time: dt } 
     }));

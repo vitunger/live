@@ -526,14 +526,18 @@ async function renderHqBwaStatus() {
 }
 
 // ──── INIT ────
-// Hook into controlling view activation
-var _origShowCtrl = window.showControllingTab;
-if(_origShowCtrl) {
-    window.showControllingTab = function(t) {
-        _origShowCtrl(t);
-        if(t === 'cockpit') setTimeout(updateBwaDeadlineWidget, 100);
-    };
+// Hook into controlling view activation (deferred for parallel loading)
+function _hookShowCtrl() {
+    var _origShowCtrl = window.showControllingTab;
+    if(_origShowCtrl) {
+        window.showControllingTab = function(t) {
+            _origShowCtrl(t);
+            if(t === 'cockpit') setTimeout(updateBwaDeadlineWidget, 100);
+        };
+    }
 }
+document.addEventListener('vit:modules-ready', _hookShowCtrl);
+if(window._vitModulesReady) _hookShowCtrl();
 
 // [Hook 1 moved to unified dispatcher]
 

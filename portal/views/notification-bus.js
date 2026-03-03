@@ -85,6 +85,8 @@ function showEmailNotification(template, to) {
 // TRIGGER 1: Welcome bei Anmeldung
 // ════════════════════════════════════════════════
 // Hook into enterApp for first-login detection
+// ═══ DEFERRED HOOKS (must run after all modules loaded) ═══
+function _initNotifHooks() {
 var _origEnterApp2 = window.enterApp;
 if(_origEnterApp2) {
     window.enterApp = function() {
@@ -205,5 +207,6 @@ window.triggerGroupcallReminder = function(callTitle, callDate, callTime, zoomLi
 // EMAIL LOG VIEWER (HQ feature)
 // ════════════════════════════════════════════════
 window.getEmailLog = function(){ return EMAIL_LOG; };
-
-
+}
+document.addEventListener('vit:modules-ready', _initNotifHooks);
+if(window._vitModulesReady) _initNotifHooks();
