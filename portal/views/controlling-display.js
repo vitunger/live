@@ -107,7 +107,6 @@ export async function downloadBwa(bwaId) {
         var resp = await _sb().from('bwa_daten').select('*').eq('id', bwaId).single();
         if(resp.error) throw resp.error;
         var b = resp.data;
-        var _dp = document.getElementById("bwaDetailPanel"); if(_dp) _dp.style.display = "";
 
         // If original file exists in storage, download that
         if(b.datei_url) {
@@ -171,6 +170,8 @@ export async function showBwaFromDb(bwaId) {
         var resp = await _sb().from('bwa_daten').select('*').eq('id', bwaId).single();
         if(resp.error) throw resp.error;
         var b = resp.data;
+        // Show detail panel
+        var _dp = document.getElementById('bwaDetailPanel'); if(_dp) _dp.style.display = '';
         // Update title
         _setTxt('bwaTitle', 'BWA ' + monatNamen[b.monat] + ' ' + b.jahr);
         _setDisp('bwaEditBtn', '');
