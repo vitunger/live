@@ -339,6 +339,8 @@ claude/db-schema-xyz            – Datenbank-Änderungen
 | Fehlende FK-Indizes (leads, lead_events) | Niedrig | ✅ Behoben – 7 Indizes erstellt |
 | Fehlende Unique Constraints | Mittel | ✅ Behoben – user_rollen + employees |
 | Environment-Variablen nicht externalisiert | Mittel | Noch im Code |
+| create-user CORS: * | Mittel | ✅ Behoben – Origin-Whitelist |
+| create-user Invite ohne Rollen-Check | Mittel | ✅ Behoben – HQ/Inhaber-Prüfung |
 | Sicherheitsaudit (28 Maßnahmen) | Hoch | Teilweise umgesetzt |
 
 ---
