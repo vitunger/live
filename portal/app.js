@@ -44,6 +44,7 @@ const VIEW_MODULES = [
     'views/plan-ist.js',
     'views/wissen.js',
     'views/aktenschrank.js',
+    'views/akten-debug.js',
     
     // HQ
     'views/hq-cockpit.js',
