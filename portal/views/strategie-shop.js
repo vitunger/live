@@ -485,12 +485,25 @@ export async function submitShopOrder() {
 
         // E-Mail an HQ: Neue Bestellung eingegangen
         try {
+            var _session = await _sb().auth.getSession();
+            var _token = _session.data.session ? _session.data.session.access_token : '';
             await fetch(SUPABASE_URL + '/functions/v1/shop-notify', {
                 method: 'POST',
-                headers: { 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token, 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+                headers: { 'Authorization': 'Bearer ' + _token, 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ mode: 'new_order', order_id: order.id })
             });
         } catch(notifyErr) { console.warn('Shop notify (new_order):', notifyErr); }
+
+        // E-Mail an Standort: Bestellbestätigung
+        try {
+            var _session2 = await _sb().auth.getSession();
+            var _token2 = _session2.data.session ? _session2.data.session.access_token : '';
+            await fetch(SUPABASE_URL + '/functions/v1/shop-notify', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + _token2, 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mode: 'order_confirmation', order_id: order.id })
+            });
+        } catch(notifyErr2) { console.warn('Shop notify (confirmation):', notifyErr2); }
 
         shopCart = [];
         shopAllProducts = [];
@@ -533,10 +546,12 @@ export function updateShopCart(cartKey, delta) {
 export async function cancelMyShopOrder(orderId) {
     if(!confirm('Bestellung wirklich stornieren?')) return;
     try {
-        // Check if order is still pending
-        var { data: order, error } = await _sb().from('shop_orders').select('status').eq('id', orderId).single();
+        // Check if order can be cancelled
+        var { data: order, error } = await _sb().from('shop_orders').select('status, billing_invoice_id').eq('id', orderId).single();
         if(error || !order) { _showToast('Bestellung nicht gefunden.', 'error'); return; }
-        if(order.status !== 'pending') { _showToast('Bestellung kann nicht mehr storniert werden (Status: '+order.status+').', 'info'); return; }
+        if(order.status === 'shipped' || order.status === 'delivered' || order.status === 'cancelled') {
+            _showToast('Bestellung kann nicht mehr storniert werden (Status: '+order.status+').', 'info'); return;
+        }
 
         // Load items for stock reversal
         var { data: items } = await _sb().from('shop_order_items').select('variant_id, quantity').eq('order_id', orderId);
@@ -553,6 +568,32 @@ export async function cancelMyShopOrder(orderId) {
         }
 
         await _sb().from('shop_orders').update({ status: 'cancelled', updated_at: new Date().toISOString() }).eq('id', orderId);
+
+        // Cancel billing invoice if exists
+        if (order.billing_invoice_id) {
+            // Get LexOffice ID before updating
+            var { data: inv } = await _sb().from('billing_invoices').select('lexoffice_invoice_id').eq('id', order.billing_invoice_id).single();
+
+            // Cancel in our DB
+            await _sb().from('billing_invoices').update({
+                status: 'cancelled',
+                notes: 'Storniert durch Partner',
+                updated_at: new Date().toISOString()
+            }).eq('id', order.billing_invoice_id);
+
+            // Cancel in LexOffice
+            if (inv && inv.lexoffice_invoice_id) {
+                try {
+                    var session = await _sb().auth.getSession();
+                    await fetch(SUPABASE_URL + '/functions/v1/lexoffice-sync', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + session.data.session.access_token, 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'cancel-invoice', lexoffice_invoice_id: inv.lexoffice_invoice_id })
+                    });
+                } catch(lexErr) { console.warn('LexOffice Storno:', lexErr); }
+            }
+        }
+
         _showToast('Bestellung storniert.', 'success');
         shopAllProducts = []; shopVariants = {};
         _saveCart();

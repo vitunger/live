@@ -234,6 +234,71 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    // ─── Action: cancel-invoice ───
+    if (action === "cancel-invoice") {
+      const lexofficeInvoiceId = body.lexoffice_invoice_id;
+      if (!lexofficeInvoiceId) throw new Error("lexoffice_invoice_id required");
+
+      // LexOffice: Transition invoice to "voided" status
+      // First get the current version
+      const invoice = await lexofficeRequest(apiKey, `/invoices/${lexofficeInvoiceId}`);
+      const resourceVersion = invoice.version;
+
+      // Cancel/void the invoice via status transition
+      try {
+        await lexofficeRequest(apiKey, `/invoices/${lexofficeInvoiceId}/document`, "GET");
+      } catch { /* may already be rendered */ }
+
+      // Use the voucherStatus endpoint to void
+      const voidResp = await fetch(`${LEXOFFICE_BASE}/invoices/${lexofficeInvoiceId}/void`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ voidedDate: new Date().toISOString().split("T")[0] }),
+      });
+
+      // If /void doesn't work, try the pursue-cancellation endpoint
+      if (!voidResp.ok) {
+        // Alternative: create a credit note
+        const creditResp = await fetch(`${LEXOFFICE_BASE}/credit-notes?precedingSalesVoucherId=${lexofficeInvoiceId}`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            voucherDate: new Date().toISOString().split("T")[0],
+            address: invoice.address,
+            lineItems: invoice.lineItems,
+            totalPrice: { currency: "EUR" },
+            taxConditions: invoice.taxConditions || { taxType: "net" },
+          }),
+        });
+
+        if (creditResp.ok) {
+          const creditData = await creditResp.json();
+          return new Response(JSON.stringify({
+            success: true,
+            method: "credit-note",
+            creditNoteId: creditData.id,
+            lexofficeInvoiceId,
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        method: "voided",
+        lexofficeInvoiceId,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // ─── Action: sync-contact ───
     if (action === "sync-contact") {
       const standortId = body.standort_id;

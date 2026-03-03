@@ -289,6 +289,9 @@ serve(async (req) => {
       case "new_order":
         result = await handleNewOrder(sb, order_id);
         break;
+      case "order_confirmation":
+        result = await handleStatusChange(sb, order_id, "confirmed");
+        break;
       case "status_change":
         if (!new_status) {
           return new Response(JSON.stringify({ error: "new_status required" }), {

@@ -208,10 +208,33 @@ export async function cancelShopOrder(orderId) {
         }
 
         // 3. Update order status
+        var { data: orderData } = await _sb().from('shop_orders').select('billing_invoice_id').eq('id', orderId).single();
         await _sb().from('shop_orders').update({
             status: 'cancelled',
             updated_at: new Date().toISOString()
         }).eq('id', orderId);
+
+        // 3b. Cancel billing invoice + LexOffice
+        if (orderData && orderData.billing_invoice_id) {
+            var { data: inv } = await _sb().from('billing_invoices').select('lexoffice_invoice_id').eq('id', orderData.billing_invoice_id).single();
+
+            await _sb().from('billing_invoices').update({
+                status: 'cancelled',
+                notes: 'Storniert durch HQ',
+                updated_at: new Date().toISOString()
+            }).eq('id', orderData.billing_invoice_id);
+
+            if (inv && inv.lexoffice_invoice_id) {
+                try {
+                    _ensureConfig();
+                    await fetch(SUPABASE_URL + '/functions/v1/lexoffice-sync', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token, 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'cancel-invoice', lexoffice_invoice_id: inv.lexoffice_invoice_id })
+                    });
+                } catch(lexErr) { console.warn('LexOffice Storno:', lexErr); }
+            }
+        }
 
         // 4. Notify standort
         _ensureConfig();
