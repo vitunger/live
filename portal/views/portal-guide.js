@@ -256,7 +256,43 @@ if(p && p.steps[idx]) { p.steps[idx].done = !p.steps[idx].done; renderOnboarding
 
 
 
-// ═══ HOOK: extend switchWissenTyp ═══
+// ═══ CLEANUP: Hide empty tabs, KPIs & filters (V5) ═══
+// Done via JS to survive Windsurf index.html overwrites
+(function cleanupWissenUI() {
+    function doCleanup() {
+        // Hide KPI cards (all 0)
+        var kpi = document.getElementById('wissenKpis');
+        if (kpi) kpi.style.display = 'none';
+
+        // Hide bereich filter buttons
+        var filters = kpi && kpi.parentElement ? kpi.parentElement.querySelectorAll('.wissen-bereich-filter') : document.querySelectorAll('.wissen-bereich-filter');
+        if (filters.length > 0) {
+            var filterWrap = filters[0].parentElement;
+            if (filterWrap) filterWrap.style.display = 'none';
+        }
+
+        // Remove empty tabs, keep only Portal-Guide + Onboarding
+        var emptyTabs = ['akademie', 'kurse', 'handbuecher', 'bestpractices', 'faq'];
+        emptyTabs.forEach(function(t) {
+            var btn = document.querySelector('.wissen-typ-btn[data-wtt="' + t + '"]');
+            if (btn) btn.style.display = 'none';
+        });
+
+        // Make Portal-Guide the default active tab
+        var portalBtn = document.querySelector('.wissen-typ-btn[data-wtt="portal"]');
+        if (portalBtn && portalBtn.className.indexOf('border-vit-orange') === -1) {
+            document.querySelectorAll('.wissen-typ-btn').forEach(function(b) {
+                b.className = 'wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
+            });
+            portalBtn.className = 'wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
+        }
+    }
+    // Run on modules-ready and also on view-changed to wissen
+    window.addEventListener('vit:modules-ready', doCleanup);
+    window.addEventListener('vit:view-changed', function(e) {
+        if (e.detail && e.detail.view === 'wissen') setTimeout(doCleanup, 10);
+    });
+})();
 var _origSwitch = window.switchWissenTyp;
 window.switchWissenTyp = function(typ) {
 if(typeof currentWissenTyp !== 'undefined') currentWissenTyp = typ;
