@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 03.03.2026 (video-pipeline Split, controlling Split, misc-views Split, Shop Go-Live, Duplikat-Module zusammengeführt, dev-pipeline Split, user-management/office/strategie Split)
+> Letzte Aktualisierung: 03.03.2026 (misc-views Split, controlling Split, video-pipeline Split, Shop Go-Live, Duplikat-Module zusammengeführt, dev-pipeline Split, user-management/office/strategie Split)
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -54,7 +54,11 @@ portal/
 ├── views/                  – 83 Module, ~38.000 Zeilen (parallel geladen)
 │   ├── home.js             – Dashboard, Widgets, Quick Actions
 │   ├── verkauf.js          – Verkäufer-Performance, Pipeline
-│   ├── controlling.js      – BWA Upload/Parse/AI (13+ Formate)
+│   ├── controlling.js      – Orchestrator: State, BwaParser, Tabs, Formatting (✅ aufgespalten)
+│   ├── controlling-display.js – BWA-Liste, Detail, Trend, Download, Delete
+│   ├── controlling-upload.js  – Upload-Modal, Parse, Batch, KI-Fallback
+│   ├── controlling-save.js    – Auto-Save, Apply KI Result, Save Data
+│   ├── controlling-benchmarks.js – Netzwerk-Benchmark Vergleich
 │   ├── dev-pipeline.js     – Orchestrator: State, Tabs, loadDevSubmissions (✅ aufgespalten)
 │   ├── dev-recording.js    – Audio/Video-Recording, Datei-Upload
 │   ├── dev-tabs.js         – Tab-Renderer: Ideen, Releases, Steuerung, Flags, System, Nutzung
@@ -89,6 +93,9 @@ portal/
 │   ├── strategie-i18n.js   – Internationalisierung: translateDOM, switchLang, t()
 │   ├── strategie-content.js – Social Media / Content-Strategie
 │   ├── strategie-onboarding.js – Asana-Onboarding, Demo-Tasks, Sales-Daten
+│   ├── misc-views.js       – Orchestrator: Sidebar, ViewSwitcher, Social Media, React Mount (✅ aufgespalten)
+│   ├── misc-modulstatus.js – MODUL_DATEN, DevStatus, Modulübersicht, Release-Updates
+│   ├── misc-training.js    – KI-Verkaufstrainer: Szenarien, Speech, TTS, Evaluation
 │   ├── view-router.js      – MUSS LETZTES View-Modul sein (vit:view-changed Events)
 │   └── ...                 – Weitere Module (siehe MODULE_MAP.md)
 ├── inline/                 – 14 Module, ~4.200 Zeilen (Script-Tags in index.html)
@@ -110,7 +117,7 @@ docs/
 
 ### Strangler Fig Pattern
 
-Das Portal wurde von einer 37.000-Zeilen monolithischen HTML-Datei in 83 ES-Module migriert. Die Module exportieren auf `window.*` für Abwärtskompatibilität mit bestehenden `onclick=""`-Handlern.
+Das Portal wurde von einer 37.000-Zeilen monolithischen HTML-Datei in 87 ES-Module migriert. Die Module exportieren auf `window.*` für Abwärtskompatibilität mit bestehenden `onclick=""`-Handlern.
 
 ```
 ┌─────────────┐    sequentiell    ┌──────────────┐    parallel    ┌──────────────┐
@@ -285,8 +292,8 @@ Die größten Module sollten bei der TypeScript-Migration aufgespalten werden:
 | 4 | `strategie.js` | 137 KB | ✅ Aufgespalten → 5 Sub-Module (strategie-shop, strategie-i18n, strategie-content, strategie-onboarding) |
 | — | `hq-kommando.js` | ~64 KB | ✅ Shop-Code extrahiert → hq-shop.js (Produkte, Varianten, Bestand, Stornierung) |
 | 5 | `video-pipeline.js` | 131 KB | ✅ Aufgespalten → 9 Sub-Module (video-upload, video-dashboard, video-consent, video-hq-review, video-templates, video-feedback, video-subtitles, video-themes) |
-| 6 | `controlling.js` | 108 KB | → bwa-parser, bwa-display, bwa-ai-analysis |
-| 7 | `misc-views.js` | 89 KB | → moduluebersicht, social-media, verkaufstraining |
+| 6 | `controlling.js` | 108 KB | ✅ Aufgespalten → 5 Sub-Module (controlling-display, controlling-upload, controlling-save, controlling-benchmarks) |
+| 7 | `misc-views.js` | 89 KB | ✅ Aufgespalten → 3 Sub-Module (misc-modulstatus, misc-training) + hq-verkauf.js bereinigt |
 
 **Kleine Dateien zuerst migrieren** (core/globals.js, core/router.js, inline-Module).
 

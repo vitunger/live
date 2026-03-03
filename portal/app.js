@@ -12,7 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1772542591";
+const CACHE_BUST = "?v=1772542592";
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
@@ -33,7 +33,12 @@ const VIEW_MODULES = [
     // Business
     'views/verkauf.js',
     'views/einkauf.js',
+    // Controlling (split into 5 sub-modules)
     'views/controlling.js',
+    'views/controlling-display.js',
+    'views/controlling-upload.js',
+    'views/controlling-save.js',
+    'views/controlling-benchmarks.js',
     'views/support.js',
     'views/allgemein.js',
     'views/plan-ist.js',
@@ -112,7 +117,10 @@ const VIEW_MODULES = [
     'views/video-subtitles.js',
     'views/video-themes.js',
     'views/feedback-widget.js',
+    // Misc views (split into 3 sub-modules)
     'views/misc-views.js',
+    'views/misc-modulstatus.js',
+    'views/misc-training.js',
     
     // Central render router - MUST be last (listens for vit:view-changed events)
     'views/view-router.js',
