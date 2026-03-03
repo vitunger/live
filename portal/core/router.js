@@ -178,15 +178,37 @@ export function showView(viewName) {
     // Persist current view for reload restoration (skip during switchViewMode)
     if(!window._vitRestoringView) { try { localStorage.setItem('vit_lastView', viewName); } catch(e) {} }
     
-    // Check module status - block 'bald' and 'deaktiviert' modules
-    var moduleStatusMap = {controlling:'controlling',marketing:'marketing',werkstatt:'werkstatt',personal:'personal',office:'office',kalender:'kalender',nachrichten:'nachrichten',wissen:'wissen',support:'support'};
-    var moduleKey = moduleStatusMap[viewName];
-    if(moduleKey && typeof sbModulConfig !== 'undefined' && sbModulConfig[moduleKey]) {
-        var mStatus = sbModulConfig[moduleKey].status;
-        if(mStatus === 'bald' || mStatus === 'deaktiviert') {
-            showToast('Dieses Modul ist noch nicht verfügbar (' + (mStatus === 'bald' ? 'Kommt bald' : 'Deaktiviert') + ')', 'info');
+    // Check module status: aktiv/beta/demo/bald/inaktiv
+    // Map viewName → modul_key (from data-module attributes in sidebar)
+    var _viewToModul = {
+        home:'startseite', kalender:'kalender', todo:'aufgaben', kommunikation:'kommunikation',
+        dashboards:'dashboards', allgemein:'allgemein', verkauf:'verkauf', einkauf:'einkauf',
+        marketing:'marketing', controlling:'controlling', standortBilling:'standortBilling',
+        wissen:'wissen', support:'support', entwicklung:'entwicklung', shop:'shop',
+        aktenschrank:'aktenschrank', onboarding:'onboarding', mitarbeiter:'mitarbeiter'
+    };
+    var moduleKey = _viewToModul[viewName];
+    if(moduleKey && window.sbModulStatus) {
+        var mStatus = window.sbModulStatus[moduleKey];
+        var isHQ = window.sbProfile && window.sbProfile.is_hq;
+        var isBetaUser = (window._betaModules||[]).indexOf(moduleKey) !== -1;
+
+        // inaktiv: nobody gets in
+        if(mStatus === 'inaktiv') {
             return;
         }
+        // bald: visible in sidebar but cannot open
+        if(mStatus === 'bald') {
+            showToast('Dieses Modul kommt bald!', 'info');
+            return;
+        }
+        // beta: only beta users and HQ can open, rest gets bald-like message
+        if(mStatus === 'beta' && !isBetaUser && !isHQ) {
+            showToast('Dieses Modul ist in der Beta-Phase. Zugang wird bald freigeschaltet.', 'info');
+            return;
+        }
+        // demo: everyone can open (sees demo data) → pass through
+        // aktiv: everyone can open → pass through
     }
     
     // Verstecke ALLE Views automatisch (per Klasse statt hardcoded Liste)

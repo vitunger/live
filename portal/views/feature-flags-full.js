@@ -583,23 +583,31 @@ export function applyModulStatus() {
     var hqKeyMap = {hqOffice:'office',hqBilling:'abrechnung'};
 
     // Helper: apply status to a sidebar button
+    // Status values: aktiv, beta, demo, bald, inaktiv
     function applyToBtn(btn, status, key) {
         // Remove old badges first
-        var oldBadge = btn.querySelector('.modul-wip-badge,.modul-demo-badge,.modul-beta-badge');
+        var oldBadge = btn.querySelector('.modul-wip-badge,.modul-demo-badge,.modul-beta-badge,.modul-bald-badge');
         if(oldBadge) oldBadge.remove();
 
-        if(status === 'deaktiviert') {
-            if(btn.closest('#quickActionsGrid')) {
-                btn.classList.remove('hidden');
-                btn.style.display = '';
-                btn.style.opacity = '0.35';
-                btn.style.pointerEvents = 'none';
-            } else {
-                btn.style.display = 'none';
+        if(status === 'inaktiv') {
+            // Completely hidden - not in sidebar, not accessible
+            btn.style.display = 'none';
+        } else if(status === 'bald') {
+            // Visible in sidebar but greyed out and not clickable
+            btn.style.display = '';
+            btn.style.opacity = '0.45';
+            btn.style.pointerEvents = 'none';
+            btn.style.cursor = 'default';
+            if(!btn.querySelector('.modul-bald-badge')) {
+                var badge = document.createElement('span');
+                badge.className = 'modul-bald-badge ml-auto text-[9px] bg-gray-400 text-white rounded px-1 py-0.5 font-bold';
+                badge.textContent = 'BALD';
+                btn.appendChild(badge);
             }
         } else if(status === 'beta') {
             var isBetaUser = (window._betaModules||[]).indexOf(key) !== -1;
             if(isHqUser || isBetaUser) {
+                // Beta user or HQ: full access with BETA badge
                 btn.style.display = '';
                 btn.style.opacity = '';
                 btn.style.pointerEvents = '';
@@ -611,20 +619,20 @@ export function applyModulStatus() {
                     btn.appendChild(badge);
                 }
             } else {
-                btn.style.display = 'none';
-            }
-        } else if(status === 'in_bearbeitung') {
-            btn.style.display = '';
-            btn.style.opacity = '0.4';
-            btn.style.pointerEvents = 'none';
-            btn.style.cursor = 'not-allowed';
-            if(!btn.querySelector('.modul-wip-badge')) {
-                var badge = document.createElement('span');
-                badge.className = 'modul-wip-badge ml-auto text-[9px] bg-yellow-500 text-white rounded px-1 py-0.5 font-bold';
-                badge.textContent = 'BALD';
-                btn.appendChild(badge);
+                // Non-beta user: visible but greyed out like bald
+                btn.style.display = '';
+                btn.style.opacity = '0.45';
+                btn.style.pointerEvents = 'none';
+                btn.style.cursor = 'default';
+                if(!btn.querySelector('.modul-beta-badge')) {
+                    var badge = document.createElement('span');
+                    badge.className = 'modul-beta-badge ml-auto text-[9px] bg-purple-300 text-white rounded px-1 py-0.5 font-bold';
+                    badge.textContent = 'BETA';
+                    btn.appendChild(badge);
+                }
             }
         } else if(status === 'demo') {
+            // Everyone can access, shown with DEMO badge
             btn.style.display = '';
             btn.style.opacity = '';
             btn.style.pointerEvents = '';
@@ -636,7 +644,7 @@ export function applyModulStatus() {
                 btn.appendChild(badge);
             }
         } else {
-            // aktiv - reset everything
+            // aktiv - reset everything, no badge
             btn.style.display = '';
             btn.style.opacity = '';
             btn.style.pointerEvents = '';
@@ -668,9 +676,9 @@ export function applyModulStatus() {
         applyToBtn(btn, status, dbKey);
     });
 
-    // Wissen-Tabs in Fachbereichen ausblenden wenn Modul deaktiviert
+    // Wissen-Tabs in Fachbereichen ausblenden wenn Modul inaktiv
     var wissenStatus = sbModulStatus['wissen'] || 'aktiv';
-    var wissenDisabled = wissenStatus === 'deaktiviert';
+    var wissenDisabled = wissenStatus === 'inaktiv';
     var wissenTabSelectors = [
         'button[data-tab="vkWissen"]', '#vkTabVkWissen',
         'button[data-tab="mktWissen"]', '#marketingTabMktWissen',
@@ -718,7 +726,7 @@ export function applyModulStatus() {
             if (modulKey === 'marketing') contentId = 'marketingTab' + htmlTab.charAt(0).toUpperCase() + htmlTab.slice(1);
             var content = document.getElementById(contentId);
 
-            if (status === 'deaktiviert') {
+            if (status === 'inaktiv') {
                 btn.style.display = 'none';
                 if (content) content.style.display = 'none';
             } else {

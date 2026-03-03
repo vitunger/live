@@ -14,8 +14,9 @@ function _triggerPush()  { if (typeof window.triggerPush === 'function') window.
 
 // Persistent expanded state
 var expandedModules = {};
-// Local config cache: {modul_key: {tabs: {tab_key: status}, widgets: {w_key: status}}}
+// Module config cache: {modul_key: {status: 'aktiv'|'beta'|'demo'|'bald'|'inaktiv', tabs: {...}, widgets: {...}}}
 var sbModulConfig = {};
+window.sbModulConfig = sbModulConfig;
 var _hqToggling = false;
 
 export function showSettingsTab(tab) {
@@ -46,11 +47,12 @@ export async function renderModulStatusList() {
         var html = '';
         var katLabels = {basis:'Basis',dashboards:'Dashboards',fachbereiche:'Fachbereiche',tools:'Tools'};
         var lastKat = '';
-        var counts = {aktiv:0, demo:0, in_bearbeitung:0, deaktiviert:0};
+        var counts = {aktiv:0, beta:0, demo:0, bald:0, inaktiv:0};
 
         modules.forEach(function(m) {
             counts[m.status] = (counts[m.status]||0) + 1;
             var cfg = m.config || {};
+            cfg.status = m.status;
             sbModulConfig[m.modul_key] = cfg;
 
             if(m.kategorie !== lastKat) {
@@ -63,8 +65,8 @@ export async function renderModulStatusList() {
 
         var el1 = document.getElementById('countAktiv'); if(el1) el1.textContent = counts.aktiv||0;
         var el1b = document.getElementById('countDemo'); if(el1b) el1b.textContent = counts.demo||0;
-        var el2 = document.getElementById('countWip'); if(el2) el2.textContent = counts.in_bearbeitung||0;
-        var el3 = document.getElementById('countDeaktiviert'); if(el3) el3.textContent = counts.deaktiviert||0;
+        var el2 = document.getElementById('countWip'); if(el2) el2.textContent = counts.bald||0;
+        var el3 = document.getElementById('countDeaktiviert'); if(el3) el3.textContent = counts.inaktiv||0;
     } catch(err) { console.error('ModulStatusList:', err); container.innerHTML = '<div class="p-4 text-center text-red-400">Fehler beim Laden</div>'; }
 }
 
@@ -80,13 +82,20 @@ export async function renderHqModulStatusList() {
         var html = '';
         var katLabels = {basis:'Basis (Shared)',hq:'HQ-Intern',hq_steuerung:'HQ-Steuerung',hq_netzwerk:'HQ-Netzwerk',hq_admin:'HQ-Admin',dashboards:'Dashboards',fachbereiche:'Fachbereiche',tools:'Tools'};
         var lastKat = '';
-        var counts = {aktiv:0, demo:0, in_bearbeitung:0, deaktiviert:0};
+        var counts = {aktiv:0, beta:0, demo:0, bald:0, inaktiv:0};
 
         modules.forEach(function(m) {
             var hqSt = m.hq_status || 'aktiv';
             counts[hqSt] = (counts[hqSt]||0) + 1;
             var cfg = m.hq_config || {};
+            cfg.status = hqSt;
             sbHqModulConfig[m.modul_key] = cfg;
+            // Also store partner-side status for shared modules (ebene=beide)
+            if(m.ebene === 'beide' && !sbModulConfig[m.modul_key]) {
+                var pcfg = m.config || {};
+                pcfg.status = m.status;
+                sbModulConfig[m.modul_key] = pcfg;
+            }
 
             if(m.kategorie !== lastKat) {
                 lastKat = m.kategorie;
@@ -98,8 +107,8 @@ export async function renderHqModulStatusList() {
 
         var el1 = document.getElementById('countHqAktiv'); if(el1) el1.textContent = counts.aktiv||0;
         var el1b = document.getElementById('countHqDemo'); if(el1b) el1b.textContent = counts.demo||0;
-        var el2 = document.getElementById('countHqWip'); if(el2) el2.textContent = counts.in_bearbeitung||0;
-        var el3 = document.getElementById('countHqDeaktiviert'); if(el3) el3.textContent = counts.deaktiviert||0;
+        var el2 = document.getElementById('countHqWip'); if(el2) el2.textContent = counts.bald||0;
+        var el3 = document.getElementById('countHqDeaktiviert'); if(el3) el3.textContent = counts.inaktiv||0;
     } catch(err) { console.error('HqModulStatusList:', err); container.innerHTML = '<div class="p-4 text-center text-red-400">Fehler beim Laden</div>'; }
 }
 
@@ -141,8 +150,8 @@ export function _renderModulRow(m, currentStatus, ebene) {
     html += '<button onclick="' + setFn + '(\'' + m.id + '\',\'aktiv\')" class="' + btnBase + ' ' + (currentStatus==='aktiv' ? 'bg-green-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">✓ Aktiv</button>';
     html += '<button onclick="' + setFn + '(\'' + m.id + '\',\'beta\')" class="' + btnBase + ' ' + (currentStatus==='beta' ? 'bg-purple-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">🧪 Beta</button>';
     html += '<button onclick="' + setFn + '(\'' + m.id + '\',\'demo\')" class="' + btnBase + ' ' + (currentStatus==='demo' ? 'bg-orange-400 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">👁 Demo</button>';
-    html += '<button onclick="' + setFn + '(\'' + m.id + '\',\'in_bearbeitung\')" class="' + btnBase + ' ' + (currentStatus==='in_bearbeitung' ? 'bg-yellow-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">🔧 Bald</button>';
-    html += '<button onclick="' + setFn + '(\'' + m.id + '\',\'deaktiviert\')" class="' + btnBase + ' ' + (currentStatus==='deaktiviert' ? 'bg-gray-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">✕ Aus</button>';
+    html += '<button onclick="' + setFn + '(\'' + m.id + '\',\'bald\')" class="' + btnBase + ' ' + (currentStatus==='bald' ? 'bg-gray-400 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">⏳ Bald</button>';
+    html += '<button onclick="' + setFn + '(\'' + m.id + '\',\'inaktiv\')" class="' + btnBase + ' ' + (currentStatus==='inaktiv' ? 'bg-gray-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200') + '">✕ Aus</button>';
     html += '</div>';
     html += '</div>';
 
@@ -160,7 +169,7 @@ export function _renderModulRow(m, currentStatus, ebene) {
                 html += '<button onclick="' + setTabFn + '(\'' + m.modul_key + '\',\'' + tab.key + '\',\'aktiv\')" class="' + tbtn + ' ' + (tabStatus==='aktiv'?'bg-green-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✓</button>';
                 html += '<button onclick="' + setTabFn + '(\'' + m.modul_key + '\',\'' + tab.key + '\',\'beta\')" class="' + tbtn + ' ' + (tabStatus==='beta'?'bg-purple-500 text-white':'text-gray-400 hover:bg-gray-200') + '">🧪</button>';
                 html += '<button onclick="' + setTabFn + '(\'' + m.modul_key + '\',\'' + tab.key + '\',\'demo\')" class="' + tbtn + ' ' + (tabStatus==='demo'?'bg-orange-400 text-white':'text-gray-400 hover:bg-gray-200') + '">👁</button>';
-                html += '<button onclick="' + setTabFn + '(\'' + m.modul_key + '\',\'' + tab.key + '\',\'deaktiviert\')" class="' + tbtn + ' ' + (tabStatus==='deaktiviert'?'bg-gray-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✕</button>';
+                html += '<button onclick="' + setTabFn + '(\'' + m.modul_key + '\',\'' + tab.key + '\',\'deaktiviert\')" class="' + tbtn + ' ' + (tabStatus==='inaktiv'?'bg-gray-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✕</button>';
                 html += '</div></div>';
             });
         }
@@ -175,7 +184,7 @@ export function _renderModulRow(m, currentStatus, ebene) {
                 html += '<button onclick="' + setWidgetFn + '(\'' + m.modul_key + '\',\'' + w.key + '\',\'aktiv\')" class="' + wbtn + ' ' + (wStatus==='aktiv'?'bg-green-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✓</button>';
                 html += '<button onclick="' + setWidgetFn + '(\'' + m.modul_key + '\',\'' + w.key + '\',\'beta\')" class="' + wbtn + ' ' + (wStatus==='beta'?'bg-purple-500 text-white':'text-gray-400 hover:bg-gray-200') + '">🧪</button>';
                 html += '<button onclick="' + setWidgetFn + '(\'' + m.modul_key + '\',\'' + w.key + '\',\'demo\')" class="' + wbtn + ' ' + (wStatus==='demo'?'bg-orange-400 text-white':'text-gray-400 hover:bg-gray-200') + '">👁</button>';
-                html += '<button onclick="' + setWidgetFn + '(\'' + m.modul_key + '\',\'' + w.key + '\',\'deaktiviert\')" class="' + wbtn + ' ' + (wStatus==='deaktiviert'?'bg-gray-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✕</button>';
+                html += '<button onclick="' + setWidgetFn + '(\'' + m.modul_key + '\',\'' + w.key + '\',\'deaktiviert\')" class="' + wbtn + ' ' + (wStatus==='inaktiv'?'bg-gray-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✕</button>';
                 html += '</div></div>';
             });
         }
@@ -240,8 +249,8 @@ export async function renderDemoModulList() {
             html += '</div>';
             // Only Demo / Aus toggle
             html += '<div class="flex items-center space-x-1 bg-gray-100 rounded-lg p-0.5">';
-            html += '<button data-action="set-demo" data-id="' + m.id + '" data-mk="' + m.modul_key + '" data-st="demo" class="px-2.5 py-1.5 rounded-md text-[11px] font-semibold transition cursor-pointer ' + (ds!=='deaktiviert'?'bg-orange-400 text-white shadow-sm':'text-gray-500 hover:bg-gray-200') + '">👁 Demo</button>';
-            html += '<button data-action="set-demo" data-id="' + m.id + '" data-mk="' + m.modul_key + '" data-st="deaktiviert" class="px-2.5 py-1.5 rounded-md text-[11px] font-semibold transition cursor-pointer ' + (ds==='deaktiviert'?'bg-gray-500 text-white shadow-sm':'text-gray-500 hover:bg-gray-200') + '">✕ Aus</button>';
+            html += '<button data-action="set-demo" data-id="' + m.id + '" data-mk="' + m.modul_key + '" data-st="demo" class="px-2.5 py-1.5 rounded-md text-[11px] font-semibold transition cursor-pointer ' + (ds!=='inaktiv'?'bg-orange-400 text-white shadow-sm':'text-gray-500 hover:bg-gray-200') + '">👁 Demo</button>';
+            html += '<button data-action="set-demo" data-id="' + m.id + '" data-mk="' + m.modul_key + '" data-st="deaktiviert" class="px-2.5 py-1.5 rounded-md text-[11px] font-semibold transition cursor-pointer ' + (ds==='inaktiv'?'bg-gray-500 text-white shadow-sm':'text-gray-500 hover:bg-gray-200') + '">✕ Aus</button>';
             html += '</div></div>';
 
             // Expandable tabs/widgets
@@ -255,8 +264,8 @@ export async function renderDemoModulList() {
                         html += '<div class="flex items-center justify-between py-1">';
                         html += '<span class="text-xs text-gray-700">↳ ' + tab.label + '</span>';
                         html += '<div class="flex items-center space-x-0.5 bg-gray-100 rounded p-0.5">';
-                        html += '<button data-action="set-demo-tab" data-mk="' + m.modul_key + '" data-tk="' + tab.key + '" data-st="demo" class="px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ' + (ts!=='deaktiviert'?'bg-orange-400 text-white':'text-gray-400 hover:bg-gray-200') + '">👁</button>';
-                        html += '<button data-action="set-demo-tab" data-mk="' + m.modul_key + '" data-tk="' + tab.key + '" data-st="deaktiviert" class="px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ' + (ts==='deaktiviert'?'bg-gray-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✕</button>';
+                        html += '<button data-action="set-demo-tab" data-mk="' + m.modul_key + '" data-tk="' + tab.key + '" data-st="demo" class="px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ' + (ts!=='inaktiv'?'bg-orange-400 text-white':'text-gray-400 hover:bg-gray-200') + '">👁</button>';
+                        html += '<button data-action="set-demo-tab" data-mk="' + m.modul_key + '" data-tk="' + tab.key + '" data-st="deaktiviert" class="px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ' + (ts==='inaktiv'?'bg-gray-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✕</button>';
                         html += '</div></div>';
                     });
                 }
@@ -267,8 +276,8 @@ export async function renderDemoModulList() {
                         html += '<div class="flex items-center justify-between py-1">';
                         html += '<span class="text-xs text-gray-700">↳ ' + w.label + '</span>';
                         html += '<div class="flex items-center space-x-0.5 bg-gray-100 rounded p-0.5">';
-                        html += '<button data-action="set-demo-widget" data-mk="' + m.modul_key + '" data-wk="' + w.key + '" data-st="demo" class="px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ' + (ws!=='deaktiviert'?'bg-orange-400 text-white':'text-gray-400 hover:bg-gray-200') + '">👁</button>';
-                        html += '<button data-action="set-demo-widget" data-mk="' + m.modul_key + '" data-wk="' + w.key + '" data-st="deaktiviert" class="px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ' + (ws==='deaktiviert'?'bg-gray-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✕</button>';
+                        html += '<button data-action="set-demo-widget" data-mk="' + m.modul_key + '" data-wk="' + w.key + '" data-st="demo" class="px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ' + (ws!=='inaktiv'?'bg-orange-400 text-white':'text-gray-400 hover:bg-gray-200') + '">👁</button>';
+                        html += '<button data-action="set-demo-widget" data-mk="' + m.modul_key + '" data-wk="' + w.key + '" data-st="deaktiviert" class="px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ' + (ws==='inaktiv'?'bg-gray-500 text-white':'text-gray-400 hover:bg-gray-200') + '">✕</button>';
                         html += '</div></div>';
                     });
                 }
@@ -302,7 +311,7 @@ export async function setDemoModulStatus(id, modulKey, newStatus) {
     try {
         var resp = await _sb().from('modul_status').update({demo_status: newStatus}).eq('id', id);
         if(resp.error) throw resp.error;
-        _showToast(modulKey + ' → ' + (newStatus==='deaktiviert'?'Aus':'Demo'), 'success');
+        _showToast(modulKey + ' → ' + (newStatus==='inaktiv'?'Aus':'Demo'), 'success');
         renderDemoModulList();
     } catch(err) { _showToast('Fehler: ' + err.message, 'error'); }
 }
@@ -335,7 +344,7 @@ export async function setAllDemoStatus(newStatus) {
     try {
         var resp = await _sb().from('modul_status').update({demo_status: newStatus}).neq('modul_key', 'dummy');
         if(resp.error) throw resp.error;
-        _showToast('Alle Module → ' + (newStatus==='deaktiviert'?'Aus':'Demo'), 'success');
+        _showToast('Alle Module → ' + (newStatus==='inaktiv'?'Aus':'Demo'), 'success');
         renderDemoModulList();
     } catch(err) { _showToast('Fehler: ' + err.message, 'error'); }
 }

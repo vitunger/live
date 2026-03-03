@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 03.03.2026 (Inline-Migration komplett, Dead-Code-Audit, Hook-Race-Condition-Fix, controllingView-Div-Balance-Fix, setTheme ES-Module-Scope-Fix, XSS-Audit 58 Fixes, Duplikat-Module konsolidiert, Inline-Styles Cleanup)
+> Letzte Aktualisierung: 03.03.2026 (Modul-Status 5-Werte-System: aktiv/beta/demo/bald/inaktiv, CHECK constraint, Router-Gate, Sidebar-Visibility via feature-flags-full.js, Beta-User-Gate via modul_beta_users)
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -262,9 +262,24 @@ sbUrl()       → window.sbUrl()   // Supabase Project URL (zentralisiert)
 | `todos` | Aufgaben |
 | `bwa_daten` | BWA-Finanzdaten (monatlich pro Standort) |
 | `verkauf_tracking` | Verkäufer-Tagesperformance |
-| `modul_status` | 18 Module – Aktivierung pro Standort |
+| `modul_status` | 33 Module – 5 Status-Werte: aktiv/beta/demo/bald/inaktiv. CHECK constraint enforced. |
+| `modul_beta_users` | Beta-Zugang pro User+Modul (user_id, modul_key) |
 | `feature_flags` | 7 Feature-Flags mit granularem Targeting |
 | `netzwerk_dokumente` | Kampagnen, Anleitungen, Vorlagen |
+
+### Modul-Status-System (5 Werte)
+
+| Status | Sidebar | Klickbar | Inhalt | Wer sieht es |
+|--------|---------|----------|--------|--------------|
+| `aktiv` | ✅ sichtbar | ✅ ja | Echte Daten | Alle (rollenbasiert) |
+| `beta` | ✅ sichtbar | Nur Beta-User + HQ | Echte Daten | Beta-User: voll. Rest: ausgegraut + Badge |
+| `demo` | ✅ sichtbar | ✅ ja | Demo-Daten | Alle – mit DEMO-Badge |
+| `bald` | ✅ sichtbar | ❌ nein | – | Alle – ausgegraut + BALD-Badge |
+| `inaktiv` | ❌ versteckt | ❌ nein | – | Niemand |
+
+**Enforcement:** Router (`router.js` showView) + Sidebar (`feature-flags-full.js` applyModulStatus).
+**Beta-Zugang:** `modul_beta_users` Tabelle (user_id + modul_key). HQ-User (`is_hq=true`) haben immer Zugang.
+**DB-Constraint:** `modul_status_status_check` CHECK – nur die 5 Werte erlaubt.
 
 ### Rollen-IDs
 
