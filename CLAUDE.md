@@ -1,7 +1,6 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
-> Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 03.03.2026 (Shop Go-Live komplett: HQ-Shop Modul, Edit, Varianten, Stock, Stornierung, Warenkorb-Persistenz, Netto/Brutto, Notizen, Bild-Upload via Supabase Storage)
+> Letzte Aktualisierung: 03.03.2026 (Shop Go-Live, Duplikat-Module zusammengeführt: pdf-wawi→wawi-integration, feedback→hq-feedback, billing-inline→email-billing)
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -51,7 +50,7 @@ portal/
 │   ├── globals.js          – showToast, escH, fmtN, fmtEur, fmtDate, timeAgo, sbUrl
 │   ├── supabase-init.js    – createClient, IDB Session, Auth Listener
 │   └── router.js           – showView(), i18n t(), View Switching
-├── views/                  – 69 Module, ~38.500 Zeilen (parallel geladen)
+├── views/                  – 69 Module, ~38.000 Zeilen (parallel geladen)
 │   ├── home.js             – Dashboard, Widgets, Quick Actions
 │   ├── verkauf.js          – Verkäufer-Performance, Pipeline
 │   ├── controlling.js      – BWA Upload/Parse/AI (13+ Formate)
@@ -91,7 +90,7 @@ portal/
 │   ├── strategie-onboarding.js – Asana-Onboarding, Demo-Tasks, Sales-Daten
 │   ├── view-router.js      – MUSS LETZTES View-Modul sein (vit:view-changed Events)
 │   └── ...                 – Weitere Module (siehe MODULE_MAP.md)
-├── inline/                 – 18 Module, ~7.600 Zeilen (Script-Tags in index.html)
+├── inline/                 – 14 Module, ~4.200 Zeilen (Script-Tags in index.html)
 │   ├── react-deal-pipeline.jsx  – React Kanban Pipeline
 │   ├── react-marketing.jsx      – React Marketing Dashboard
 │   ├── global-search.js         – Globale Suche + Deeplinks
@@ -374,6 +373,7 @@ claude/db-schema-xyz            – Datenbank-Änderungen
 | Sicherheitsaudit (28 Maßnahmen) | Hoch | Teilweise umgesetzt |
 | HTML-Nesting: Views außerhalb `<main>` (Cleanup-Folgeschaden) | Kritisch | ✅ Behoben – orphaned `</div>` Tags entfernt, controllingView closing tag ergänzt |
 | Login-Fehlermeldung englisch ("Invalid login credentials") | Mittel | ✅ Behoben – Deutsche UX-Texte für alle Fehlertypen |
+| Duplikat-Module (pdf-wawi, billing-inline, feedback in render-system) | Mittel | ✅ Behoben – 3 Module konsolidiert, ~1.660 Zeilen entfernt |
 
 ---
 
