@@ -272,7 +272,7 @@ if(p && p.steps[idx]) { p.steps[idx].done = !p.steps[idx].done; renderOnboarding
         }
 
         // Remove empty tabs, keep only Portal-Guide + Onboarding
-        var emptyTabs = ['akademie', 'kurse', 'handbuecher', 'bestpractices', 'faq'];
+        var emptyTabs = ['akademie', 'kurse', 'handbuecher', 'bestpractices', 'faq', 'onboarding'];
         emptyTabs.forEach(function(t) {
             var btn = document.querySelector('.wissen-typ-btn[data-wtt="' + t + '"]');
             if (btn) btn.style.display = 'none';
