@@ -131,7 +131,7 @@ IIFEs und nicht-modulare Skripte die parallel geladen werden.
 | `inline/render-system.js` | 956 | Render-System, View-Lifecycle |
 | `inline/video-helpers.js` | 805 | Video-Processing, Consent, Thumbnails |
 | ~~`inline/pdf-wawi.js`~~ | – | GELÖSCHT: Duplikat von `views/wawi-integration.js` |
-| `inline/billing-inline.js` | 621 | Billing-UI, Draft/Finalisierung, LexOffice PDF |
+| ~~`inline/billing-inline.js`~~ | – | GELÖSCHT: Duplikat von `views/email-billing.js` |
 | `inline/bwa-cockpit.js` | 530 | BWA-Cockpit Widgets, Deadline-Anzeige |
 | `inline/global-search.js` | 407 | Globale Suche (Cmd+K) |
 | `inline/feedback-prod.js` | 342 | Feedback Widget Produktion |
