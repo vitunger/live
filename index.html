@@ -739,7 +739,6 @@
                     </div>
 
                     <!-- Global Search -->
-                    <div id="globalSearchAnchor"></div>
 
                     <button onclick="showView('notifications'); return false;" class="relative flex-shrink-0">
                         <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1070,7 +1069,6 @@
                             <button onclick="showView('hqOnboarding')" data-hq-module="hqStandorte" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
                                 <span>Onboarding-Pipeline</span>
-                                <span class="ml-auto bg-vit-orange text-white text-[9px] rounded-full px-1.5 py-0.5 font-bold" id="hqOnbBadge">3</span>
                             </button>
                             
                             <button onclick="showView('hqEinstellungen')" data-hq-module="hqEinstellungen" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
@@ -1162,58 +1160,6 @@
 
 
                         <!-- 🎯 TAGES-COCKPIT – Heute steuern -->
-                        <div id="dailyFocusBlock" class="mb-6" data-widget="daily_focus">
-                            <div class="vit-card p-5" style="border-left:4px solid #EF7D00;">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h3 class="text-sm font-bold text-gray-800">🎯 Heute steuern<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-daily')">i</button></h3><div class="widget-info-popup" id="info-daily">Dein tägliches Steuerungs-Cockpit. Zeigt die 5 wichtigsten Kennzahlen für heute: Umsatz, offene Leads, Aufgaben, BWA-Deadline und Termine. Klicke auf eine Kachel, um direkt ins Modul zu springen.</div>
-                                    <span class="text-xs text-gray-400" id="dailyFocusDate"></span>
-                                </div>
-                                <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
-                                    <div class="p-3 bg-green-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('verkauf')">
-                                        <p class="text-xs text-gray-500">Umsatz heute</p>
-                                        <p id="dfUmsatz" class="text-xl font-bold text-green-600">—</p>
-                                        <p class="text-[10px] text-gray-400">Keine Daten</p>
-                                    </div>
-                                    <div class="p-3 bg-orange-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('verkauf')">
-                                        <p class="text-xs text-gray-500">Offene Leads</p>
-                                        <p id="dfLeads" class="text-xl font-bold text-vit-orange">—</p>
-                                        <p class="text-[10px] text-gray-400">Keine Daten</p>
-                                    </div>
-                                    <div class="p-3 bg-blue-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('todo')">
-                                        <p class="text-xs text-gray-500">Aufgaben heute</p>
-                                        <p id="dfTasks" class="text-xl font-bold text-blue-600">—</p>
-                                        <p class="text-[10px] text-gray-400">Keine Daten</p>
-                                    </div>
-                                    <div class="p-3 bg-purple-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('controlling')">
-                                        <p class="text-xs text-gray-500">BWA-Status</p>
-                                        <p id="dfBwa" class="text-lg font-bold text-gray-800">⏳</p>
-                                        <p id="dfBwaSub" class="text-[10px] text-gray-500">— Tage</p>
-                                    </div>
-                                    <div class="p-3 bg-yellow-50 rounded-lg text-center cursor-pointer hover:shadow-md transition" onclick="showView('kalender')">
-                                        <p class="text-xs text-gray-500">Termine heute</p>
-                                        <p id="dfTermine" class="text-xl font-bold text-yellow-600">—</p>
-                                        <p class="text-[10px] text-gray-400">Keine Daten</p>
-                                    </div>
-                                </div>
-                                <!-- Tagesimpuls -->
-                                <div id="dailyImpulse" class="p-3 rounded-lg" style="background:linear-gradient(135deg,rgba(239,125,0,0.06),rgba(245,158,11,0.06))">
-                                    <div class="flex items-center gap-2">
-                                        <span style="font-size:16px">💡</span>
-                                        <p class="text-xs text-gray-700"><strong>Tagesimpuls:</strong> <span id="dfImpulseText">Willkommen im Portal! Dein Tagesimpuls wird geladen, sobald Daten verfügbar sind.</span></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-
-
-                        <!-- Kern-Metrik: Umsatz -->
-                        <div class="vit-card p-6">
-                            <h2 class="h2-headline text-gray-800 mb-4">UMSATZ VS. PLAN<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-umsatz')">i</button></h2><div class="widget-info-popup" id="info-umsatz">Vergleich deines tatsächlichen Umsatzes mit dem Plan – aufgeteilt in Heute, diese Woche und diesen Monat. Der Fortschrittsbalken zeigt, wie nah du am Ziel bist.</div>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div>
-                                    <p class="text-sm text-gray-500 mb-1">Heute</p>
-                                    <p class="text-3xl font-bold text-gray-400">—</p>
                                     <div class="flex items-center space-x-2 mt-2">
                                         <div class="flex-1 bg-gray-200 rounded-full h-2">
                                             <div class="bg-gray-300 h-2 rounded-full" style="width: 0%"></div>
@@ -1879,7 +1825,6 @@
                             <!-- Progress -->
                             <div class="mt-3 flex items-center space-x-3">
                                 <div class="flex-1 bg-gray-200 rounded-full h-3">
-                                    <div class="bg-gradient-to-r from-vit-orange to-yellow-400 h-3 rounded-full transition-all" id="smProgressBar" style="width:8%"></div>
                                 </div>
                                 <span class="text-xs font-bold text-gray-600" id="smProgressText">4 / 50 Themen</span>
                             </div>
@@ -2216,25 +2161,11 @@
                         <div id="bwaDeadlineWidget" class="vit-card p-5 mb-6" data-widget="bwa_deadline">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-4">
-                                    <div id="bwaCountdownRing" style="position:relative;width:64px;height:64px;flex-shrink:0">
-                                        <svg width="64" height="64" style="transform:rotate(-90deg)">
-                                            <circle cx="32" cy="32" r="28" fill="none" stroke="var(--c-bg3)" stroke-width="5"/>
-                                            <circle id="bwaRingCircle" cx="32" cy="32" r="28" fill="none" stroke="#EF7D00" stroke-width="5" stroke-dasharray="175.9" stroke-dashoffset="0" stroke-linecap="round" style="transition:stroke-dashoffset 1s ease"/>
-                                        </svg>
-                                        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-                                            <span id="bwaCountdownDays" style="font-size:18px;font-weight:900;color:#EF7D00">—</span>
-                                        </div>
-                                    </div>
                                     <div>
                                         <h2 id="bwaDeadlineTitle" class="text-base font-bold text-gray-800">BWA-Status wird geladen...<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-bwa')">i</button></h2><div class="widget-info-popup" id="info-bwa">Zeigt den Status deiner monatlichen BWA-Einreichung. Deadline ist der 15. des Folgemonats. Einreichung vor dem 8. = 🥇 Gold-Status. Nach dem 15. = überfällig mit Eskalation. Aktuelle BWA freischaltet Benchmarks und KPI-Feedback.</div>
                                         <p id="bwaDeadlineSubtext" class="text-sm text-gray-500 mt-1"></p>
                                         <div id="bwaRatingBadge" style="display:none;margin-top:6px"></div>
                                     </div>
-                                </div>
-                                <div id="bwaCTAArea">
-                                    <button onclick="showControllingTab('bwa')" id="bwaUploadCTA" class="px-5 py-2.5 bg-vit-orange text-white font-bold text-sm rounded-lg hover:opacity-90 transition" style="display:none">
-                                        📤 BWA jetzt einreichen
-                                    </button>
                                 </div>
                             </div>
                             <!-- Eskalation-Banner (Stufe 2+3) -->
@@ -2250,34 +2181,11 @@
                         </div>
 
                         <!-- Netzwerk-Vergleich: Wer hat schon eingereicht? -->
-                        <div id="bwaNetzwerkWidget" class="vit-card p-5 mb-6" data-widget="bwa_netzwerk">
-                            <div class="flex items-center justify-between mb-3">
-                                <h2 class="text-sm font-bold text-gray-800">📊 BWA-Status im Netzwerk<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-bwa-nw')">i</button></h2><div class="widget-info-popup" id="info-bwa-nw">Wie viele der 21 Standorte haben ihre BWA bereits eingereicht? Gold = vor dem 8., OK = bis zum 15., Überfällig = nach dem 15. Je mehr Standorte einreichen, desto besser die Netzwerk-Analyse.</div>
-                                <span id="bwaNetzwerkProgress" class="text-xs font-semibold text-gray-500"></span>
-                            </div>
-                            <div class="bg-gray-200 rounded-full h-2.5 mb-3"><div id="bwaNetzwerkBar" class="h-2.5 rounded-full transition-all" style="width:0%;background:#EF7D00"></div></div>
-                            <div id="bwaNetzwerkDetail" class="flex gap-4 text-xs text-gray-500">
-                                <span id="bwaNwGold">🥇 Gold: —</span>
-                                <span id="bwaNwOk">✅ OK: —</span>
-                                <span id="bwaNwMissing">⏳ Ausstehend: —</span>
-                                <span id="bwaNwOverdue">🚨 Überfällig: —</span>
-                            </div>
-                        </div>
-
-                        <!-- KPI Sofort-Report (nach Upload sichtbar) -->
-                        <div id="bwaKpiReport" class="vit-card p-5 mb-6" data-widget="kpi_feedback" style="display:none;border-left:4px solid #16a34a">
-                            <div class="flex items-center justify-between mb-4">
-                                <div>
-                                    <h2 class="text-sm font-bold text-gray-800">✅ Dein Monats-Feedback<button class="widget-info-btn" onclick="toggleWidgetInfo(event,'info-kpi')">i</button></h2><div class="widget-info-popup" id="info-kpi">Nach Einreichung deiner BWA erhältst du sofort ein Feedback mit KPIs und 1–3 konkreten Empfehlungen. Der Vergleich zum Netzwerk-Durchschnitt zeigt, wo du gut bist und wo Potenzial liegt.</div>
                                     <p class="text-xs text-gray-500" id="bwaKpiReportMonth"></p>
                                 </div>
                                 <div id="bwaKpiRating"></div>
                             </div>
                             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4" id="bwaKpiReportGrid"></div>
-                            <div id="bwaKpiInsights" class="p-3 bg-green-50 rounded-lg">
-                                <p class="text-xs font-semibold text-green-700 mb-1">💡 Empfehlungen</p>
-                                <ul id="bwaKpiRecList" class="text-xs text-green-600 space-y-1"></ul>
-                            </div>
                         </div>
 
                         <!-- Original Cockpit Content -->
@@ -2301,42 +2209,6 @@
                             </div>
                             <!-- Right: BWA Anzeige -->
                             <div class="lg:col-span-2">
-                                <div class="vit-card p-6" id="bwaDisplay">
-                                    <div class="flex items-center justify-between mb-4">
-                                        <h2 class="text-lg font-semibold text-gray-800" id="bwaTitle">BWA auswaehlen</h2>
-                                        <div class="flex space-x-2">
-                                            <button onclick="editSelectedBwa()" class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50" id="bwaEditBtn" style="display:none">✏️ Bearbeiten</button>
-                                            <button onclick="deleteBwa()" class="px-3 py-1.5 text-sm border border-red-300 text-red-500 rounded-lg hover:bg-red-50" id="bwaDeleteBtn" style="display:none">🗑️</button>
-                                        </div>
-                                    </div>
-                                    <!-- KPI Summary -->
-                                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="bwaKpiGrid">
-                                        <div class="p-4 bg-green-50 rounded-lg text-center"><p class="text-xs text-gray-500">Umsatz</p><p class="text-xl font-bold text-gray-800" id="bwaKpiUmsatz">—</p><p class="text-xs text-gray-400" id="bwaKpiUmsatzVj">&nbsp;</p></div>
-                                        <div class="p-4 bg-blue-50 rounded-lg text-center"><p class="text-xs text-gray-500">Rohertrag</p><p class="text-xl font-bold text-gray-800" id="bwaKpiRohertrag">—</p><p class="text-xs text-gray-400" id="bwaKpiMarge">&nbsp;</p></div>
-                                        <div class="p-4 bg-orange-50 rounded-lg text-center"><p class="text-xs text-gray-500">Gesamtkosten</p><p class="text-xl font-bold text-gray-800" id="bwaKpiKosten">—</p><p class="text-xs text-gray-400" id="bwaKpiKostenVj">&nbsp;</p></div>
-                                        <div class="p-4 bg-purple-50 rounded-lg text-center"><p class="text-xs text-gray-500">Ergebnis</p><p class="text-xl font-bold text-gray-800" id="bwaKpiErgebnis">—</p><p class="text-xs text-gray-400" id="bwaKpiErgebnisMarge">&nbsp;</p></div>
-                                    </div>
-                                    <!-- Validation Banner -->
-                                    <div id="bwaValidationBanner" class="hidden"></div>
-                                    <!-- BWA Table -->
-                                    <div class="overflow-x-auto">
-                                        <table class="w-full text-sm" id="bwaDetailTable">
-                                            <thead><tr class="bg-gray-50"><th class="text-left py-2 px-3 font-semibold text-gray-600">Position</th><th class="text-right py-2 px-3 font-semibold text-gray-600">IST</th><th class="text-right py-2 px-3 font-semibold text-gray-600">Plan</th><th class="text-right py-2 px-3 font-semibold text-gray-600">Abweichung</th><th class="text-right py-2 px-3 font-semibold text-gray-600">VJ</th></tr></thead>
-                                            <tbody id="bwaDetailBody"><tr><td colspan="5" class="text-center py-8 text-gray-400">Waehle links eine BWA aus oder erfasse neue Daten.</td></tr></tbody>
-                                        </table>
-                                    </div>
-                                    <!-- 12-Monats-Verlauf -->
-                                    <div class="mt-6 pt-4 border-t border-gray-200" id="bwaTrendSection" style="display:none">
-                                        <h3 class="font-semibold text-gray-800 mb-3">📈 12-Monats-Verlauf</h3>
-                                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" id="bwaTrendCards"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ===== TAB 2: Benchmarks ===== -->
-                    <div id="ctrlTabBenchmark" class="ctrl-tab-content" style="display:none;">
                         <!-- Feature Lock Overlay -->
                         <div id="benchmarkLockOverlay" style="display:none;">
                             <div class="vit-card p-8 text-center mb-6" style="border:2px dashed var(--c-border);">
@@ -2416,7 +2288,6 @@
                                     <span style="font-size:24px">🤖</span>
                                     <div><p class="text-sm font-bold text-gray-800">Bevor du ein Ticket erstellst...</p><p class="text-xs text-gray-500">Wir haben möglicherweise eine sofortige Lösung!</p></div>
                                 </div>
-                                <div id="interceptorContent" class="space-y-2 mb-3"></div>
                                 <div class="flex gap-2">
                                     <button onclick="acceptInterceptor()" class="flex-1 px-3 py-2 bg-green-500 text-white text-xs font-bold rounded-lg hover:bg-green-600">✅ Lösung ausprobieren</button>
                                     <button onclick="skipInterceptor()" class="flex-1 px-3 py-2 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg hover:bg-gray-200">Trotzdem Ticket erstellen →</button>
@@ -3849,28 +3720,6 @@
                     </div>
 
                     <!-- Stage Banner -->
-                    <div id="externStageBanner" class="vit-card p-5 mb-6" style="background: linear-gradient(135deg, #1a1a1a, #2a2a2a); color: white;">
-                        <div class="flex items-center justify-between flex-wrap gap-4">
-                            <div class="flex items-center space-x-4">
-                                <div class="w-14 h-14 rounded-xl flex items-center justify-center text-2xl" style="background: rgba(239,125,0,0.2);">🚀</div>
-                                <div>
-                                    <p class="text-xs text-gray-400 uppercase tracking-wider">Aktueller Status</p>
-                                    <p class="text-lg font-bold text-vit-orange" id="externStageLabel">Phase 0 – Kostenloser Akademiezugang</p>
-                                    <p class="text-xs text-gray-400 mt-1" id="externStageDesc">Einstieg ohne Verpflichtung – lerne vit:bikes kennen</p>
-                                </div>
-                            </div>
-                            <div id="externStageAction">
-                                <button onclick="showView('onboarding')" class="px-5 py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition">
-                                    Nächster Schritt →
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Quick Cards -->
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <button onclick="showView('onboarding')" class="vit-card p-4 hover:shadow-lg transition-shadow text-center">
-                            <p class="text-2xl mb-1">🗺️</p>
                             <p class="text-xs font-semibold text-gray-700">Dein Weg</p>
                             <p class="text-[10px] text-gray-400">Roadmap & Status</p>
                         </button>
@@ -4459,11 +4308,6 @@
                         </div>
                         <div class="flex items-center space-x-3">
                             <span class="text-xs text-gray-400">Stand: 14.02.2026</span>
-                            <select id="hqPeriod" class="px-3 py-2 border border-gray-300 rounded-lg text-sm" onchange="renderHqCockpit()">
-                                <option value="ytd">YTD 2026</option>
-                                <option value="jan">Januar 2026</option>
-                                <option value="feb">Februar 2026</option>
-                            </select>
                         </div>
                     </div>
 
@@ -4684,13 +4528,6 @@
                     <h1 class="h1-headline text-gray-800 mb-6">VERKAUF – NETZWERK</h1>
                     
                     <!-- KPI Cards -->
-                    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6" id="hqVkKpis">
-                        <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Beratungen (KW)</p><p class="text-2xl font-bold text-gray-800" id="hqVkBeratKW">—</p></div>
-                        <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Verkäufe (KW)</p><p class="text-2xl font-bold text-green-600" id="hqVkSalesKW">—</p></div>
-                        <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Umsatz (KW)</p><p class="text-2xl font-bold text-vit-orange" id="hqVkUmsatzKW">—</p></div>
-                        <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Ø VK-Quote Netzwerk</p><p class="text-2xl font-bold text-blue-600" id="hqVkQuote">—</p></div>
-                        <div class="vit-card p-5 text-center"><p class="text-xs text-gray-500">Aktive Leads</p><p class="text-2xl font-bold text-purple-600" id="hqVkLeads">—</p></div>
-                    </div>
 
                     <!-- Tabs -->
                     <div class="mb-6 border-b border-gray-200">
@@ -4707,11 +4544,6 @@
                         <div class="vit-card p-6">
                             <div class="flex items-center justify-between mb-4">
                                 <h2 class="text-lg font-semibold text-gray-800">Verkaufsleistung pro Standort</h2>
-                                <select id="hqVkPeriod" onchange="loadHqVerkaufData()" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm">
-                                    <option value="week">Diese Woche</option>
-                                    <option value="month">Dieser Monat</option>
-                                    <option value="year">Dieses Jahr</option>
-                                </select>
                             </div>
                             <div class="overflow-x-auto"><table class="w-full text-sm" id="hqVkTable">
                                 <thead><tr class="bg-gray-50">
@@ -4732,7 +4564,6 @@
                     <div id="hqVkTabPipeline" class="hqvk-content" style="display:none;">
                         <div class="vit-card p-6">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">Pipeline alle Standorte</h2>
-                            <div id="hqVkPipelineContent" class="text-sm text-gray-400 text-center py-6">Lade Pipeline-Daten...</div>
                         </div>
                     </div>
 
@@ -5022,7 +4853,6 @@
                                     <input type="date" id="hqTaskDeadline" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
                                     <select id="hqTaskPrio" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="hoch">🔴 Hoch</option><option value="mittel" selected>🟡 Mittel</option><option value="niedrig">🟢 Niedrig</option></select>
                                     <select id="hqTaskTarget" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="alle">Alle Standorte (21)</option><option value="region_sued">Region Sued (8)</option><option value="region_nord">Region Nord (5)</option><option value="region_west">Region West (5)</option><option value="region_ost">Region Ost (3)</option></select>
-                                    <textarea id="hqTaskDesc" rows="2" placeholder="Beschreibung" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"></textarea>
                                 </div>
                                 <div class="flex space-x-3 mt-4">
                                     <button onclick="addHqTask()" class="flex-1 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Verteilen</button>
@@ -5070,75 +4900,6 @@
                         </div>
 
                         <!-- Abrechnungsmodus Erklärung -->
-                        <div id="approvalModeCard" class="vit-card mb-5 overflow-hidden">
-                            <div id="approvalModeHeader" class="p-4 bg-amber-50 border-b-2 border-amber-300">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center space-x-3">
-                                        <div id="approvalModeIcon" class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-xl">🛡️</div>
-                                        <div>
-                                            <div class="font-bold text-gray-800" id="approvalModeTitle">Manueller Freigabemodus aktiv</div>
-                                            <div class="text-xs text-gray-500" id="approvalModeSubtitle">Jede Rechnung muss einzeln geprüft und freigegeben werden</div>
-                                        </div>
-                                    </div>
-                                    <button onclick="toggleApprovalMode()" id="approvalModeBtn" class="px-4 py-2 rounded-lg text-sm font-semibold border-2 border-amber-400 text-amber-700 bg-white hover:bg-amber-50 transition">
-                                        Zu Automatik wechseln →
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="p-4">
-                                <div id="approvalModeManualInfo">
-                                    <div class="text-sm font-semibold text-gray-700 mb-2">So funktioniert der aktuelle Ablauf:</div>
-                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-center">
-                                        <div class="p-3 rounded-lg bg-yellow-50 border border-yellow-200">
-                                            <div class="text-lg mb-1">📝</div>
-                                            <div class="text-xs font-bold text-yellow-700">1. Entwurf</div>
-                                            <div class="text-[10px] text-gray-500">Rechnungen werden als Entwurf erstellt</div>
-                                        </div>
-                                        <div class="p-3 rounded-lg bg-blue-50 border border-blue-200">
-                                            <div class="text-lg mb-1">🔍</div>
-                                            <div class="text-xs font-bold text-blue-700">2. Prüfen</div>
-                                            <div class="text-[10px] text-gray-500">Positionen & Beträge kontrollieren</div>
-                                        </div>
-                                        <div class="p-3 rounded-lg bg-green-50 border border-green-200">
-                                            <div class="text-lg mb-1">✅</div>
-                                            <div class="text-xs font-bold text-green-700">3. Freigeben</div>
-                                            <div class="text-[10px] text-gray-500">Rechnung bestätigen</div>
-                                        </div>
-                                        <div class="p-3 rounded-lg bg-orange-50 border border-orange-200">
-                                            <div class="text-lg mb-1">📨</div>
-                                            <div class="text-xs font-bold text-orange-700">4. Versenden</div>
-                                            <div class="text-[10px] text-gray-500">Manuell an LexOffice senden</div>
-                                        </div>
-                                    </div>
-                                    <div class="mt-3 p-2 bg-amber-50 rounded text-[11px] text-amber-700 border border-amber-200">
-                                        💡 <strong>Empfehlung:</strong> Bleibt im manuellen Modus, bis ihr sicher seid, dass alle Positionen und Beträge stimmen. Ihr könnt jederzeit auf Automatik wechseln.
-                                    </div>
-                                </div>
-                                <div id="approvalModeAutoInfo" style="display:none;">
-                                    <div class="text-sm font-semibold text-gray-700 mb-2">Automatischer Ablauf:</div>
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-center">
-                                        <div class="p-3 rounded-lg bg-green-50 border border-green-200">
-                                            <div class="text-lg mb-1">⚡</div>
-                                            <div class="text-xs font-bold text-green-700">1. Generieren</div>
-                                            <div class="text-[10px] text-gray-500">Rechnungen werden automatisch berechnet</div>
-                                        </div>
-                                        <div class="p-3 rounded-lg bg-green-50 border border-green-200">
-                                            <div class="text-lg mb-1">✅</div>
-                                            <div class="text-xs font-bold text-green-700">2. Auto-Freigabe</div>
-                                            <div class="text-[10px] text-gray-500">Sofort freigegeben wenn Validierung OK</div>
-                                        </div>
-                                        <div class="p-3 rounded-lg bg-green-50 border border-green-200">
-                                            <div class="text-lg mb-1">📨</div>
-                                            <div class="text-xs font-bold text-green-700">3. Auto-Versand</div>
-                                            <div class="text-[10px] text-gray-500">Direkt an LexOffice gesendet</div>
-                                        </div>
-                                    </div>
-                                    <div class="mt-3 p-2 bg-red-50 rounded text-[11px] text-red-700 border border-red-200">
-                                        ⚠️ <strong>Achtung:</strong> Rechnungen werden ohne manuelle Prüfung versendet. Nur aktivieren wenn das Abrechnungssystem zuverlässig läuft!
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- Aktionen -->
                         <div class="flex items-center justify-between mb-4">
@@ -5679,13 +5440,6 @@
                         <textarea id="devBeschreibung" placeholder="Beschreibe deine Idee oder dein Problem möglichst konkret..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3" rows="4"></textarea>
 
                         <!-- Datei-Upload -->
-                        <div id="devFileArea" class="mb-3">
-                            <input type="file" id="devFileInput" multiple class="hidden" onchange="handleDevFileSelect(event)">
-                            <button onclick="document.getElementById('devFileInput').click()" class="px-3 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-vit-orange hover:text-vit-orange w-full">
-                                📎 Dateien / Screenshots hinzufügen (optional)
-                            </button>
-                            <div id="devFileList" class="mt-2 space-y-1"></div>
-                        </div>
 
                         <div class="flex items-center justify-between">
                             <span class="text-xs text-gray-400">Dein Feedback wird automatisch analysiert und priorisiert</span>
@@ -5709,12 +5463,6 @@
 <div id="hqShopView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-2">🛍️ SHOP – VERWALTUNG</h1>
                     <p class="text-sm text-gray-500 mb-6">Bestellungen bearbeiten, Packlisten drucken, Versand tracken.</p>
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="hqShopKpis">
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-vit-orange" id="hqShopKpiProducts">-</div><div class="text-xs text-gray-500">Produkte aktiv</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-yellow-600" id="hqShopKpiPending">-</div><div class="text-xs text-gray-500">Offen / zu packen</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-blue-600" id="hqShopKpiShipped">-</div><div class="text-xs text-gray-500">Versendet (Monat)</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600" id="hqShopKpiRevenue">-</div><div class="text-xs text-gray-500">Umsatz (Monat)</div></div>
-                    </div>
 
                     <!-- Tabs -->
                     <div class="flex space-x-1 mb-6 border-b border-gray-200">
@@ -5967,22 +5715,6 @@
                             <span class="text-xs text-gray-400">Klicken zum Aktivieren/Deaktivieren</span>
                         </div>
                         <div class="overflow-x-auto">
-                            <table class="w-full text-sm" id="hqRechteMatrixTable">
-                                <thead class="bg-red-50/50">
-                                    <tr>
-                                        <th class="px-4 py-3 text-left font-semibold text-gray-600 min-w-[160px]">HQ-Modul</th>
-                                        <th class="px-4 py-3 text-center font-semibold text-red-600 min-w-[70px]">👑 GF</th>
-                                        <th class="px-4 py-3 text-center font-semibold text-blue-600 min-w-[70px]">📊 Sales</th>
-                                        <th class="px-4 py-3 text-center font-semibold text-pink-600 min-w-[70px]">📣 Mktg</th>
-                                        <th class="px-4 py-3 text-center font-semibold text-green-600 min-w-[70px]">🛒 Eink.</th>
-                                        <th class="px-4 py-3 text-center font-semibold text-yellow-600 min-w-[70px]">🎧 Supp.</th>
-                                        <th class="px-4 py-3 text-center font-semibold text-indigo-600 min-w-[70px]">🎓 Akad.</th>
-                                        <th class="px-4 py-3 text-center font-semibold text-purple-600 min-w-[70px]">👥 HR</th>
-                                        <th class="px-4 py-3 text-center font-semibold text-gray-600 min-w-[70px]">🖥️ IT</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="hqRechteMatrixBody"></tbody>
-                            </table>
                         </div>
                     </div>
 
@@ -6073,10 +5805,6 @@
                                     <h3 class="font-bold text-gray-800">Schnittstellen & Integrationen</h3>
                                     <p class="text-xs text-gray-500 mt-0.5">API-Verbindungen verwalten, testen und Partner-Berechtigungen steuern.</p>
                                 </div>
-                            </div>
-                            <div class="flex bg-gray-100 rounded-lg p-0.5" id="connViewToggle">
-                                <button onclick="window.showConnView&&showConnView('hq')" class="conn-view-btn px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-gray-800 shadow-sm" data-cv="hq">🏢 HQ</button>
-                                <button onclick="window.showConnView&&showConnView('partner')" class="conn-view-btn px-3 py-1.5 text-xs font-semibold rounded-md text-gray-500" data-cv="partner">🏪 GF-Ansicht</button>
                             </div>
                         </div>
 
@@ -6300,28 +6028,6 @@
                         </div>
 
                         <!-- KPIs -->
-                        <div id="bkStats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                            <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-                                <p class="text-xs text-gray-500 uppercase tracking-wide">Letztes Backup</p>
-                                <p id="bkLastTime" class="text-lg font-bold text-gray-900 mt-1">-</p>
-                                <p id="bkLastStatus" class="text-xs mt-0.5">-</p>
-                            </div>
-                            <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-                                <p class="text-xs text-gray-500 uppercase tracking-wide">Backups (24h)</p>
-                                <p id="bkCount24h" class="text-lg font-bold text-gray-900 mt-1">-</p>
-                                <p class="text-xs text-gray-400 mt-0.5">Erwartet: 24</p>
-                            </div>
-                            <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-                                <p class="text-xs text-gray-500 uppercase tracking-wide">Tabellen gesichert</p>
-                                <p id="bkTableCount" class="text-lg font-bold text-gray-900 mt-1">-</p>
-                                <p class="text-xs text-gray-400 mt-0.5">von 15</p>
-                            </div>
-                            <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-                                <p class="text-xs text-gray-500 uppercase tracking-wide">Datenvolumen (24h)</p>
-                                <p id="bkSizeTotal" class="text-lg font-bold text-gray-900 mt-1">-</p>
-                                <p class="text-xs text-gray-400 mt-0.5">Supabase + R2</p>
-                            </div>
-                        </div>
 
                         <!-- Health indicator -->
                         <div id="bkHealth" class="mb-6 p-4 rounded-xl border flex items-center gap-3">
@@ -6887,13 +6593,6 @@
         <div class="fb-body" id="fbForm">
             <div class="fb-field">
                 <label>Kategorie</label>
-                <div class="fb-cats" id="fbCats">
-                    <button class="fb-cat active" data-cat="wunsch" onclick="fbSetCat(this)">✨ Wunsch</button>
-                    <button class="fb-cat" data-cat="idee" onclick="fbSetCat(this)">💡 Idee</button>
-                    <button class="fb-cat" data-cat="bug" onclick="fbSetCat(this)">🐛 Bug</button>
-                    <button class="fb-cat" data-cat="ux" onclick="fbSetCat(this)">🎨 UX</button>
-                    <button class="fb-cat" data-cat="performance" onclick="fbSetCat(this)">⚡ Performance</button>
-                </div>
             </div>
             <div class="fb-field">
                 <label>Titel <span style="font-weight:400;text-transform:none;color:var(--c-muted)">(optional)</span></label>
@@ -6968,7 +6667,7 @@
 <!-- ==================== OFFICE MODUL v4 (VitSpace React) ==================== -->
 <!-- Legacy Office v3 replaced by React-based VitSpace Office -->
 <!-- Office React component removed - now loaded via /portal/views/office.js -->
-<!-- office-admin.js now loaded via app.js -->
+
 
 <script type="module" src="/portal/app.js?v=1772385703"></script>
 </body>
