@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 03.03.2026 (misc-views Split, controlling Split, video-pipeline Split, Shop Go-Live, Duplikat-Module zusammengeführt, dev-pipeline Split, user-management/office/strategie Split)
+> Letzte Aktualisierung: 03.03.2026 (DHL Shipping Integration, Shop Duplikat-Fix, misc-views Split, controlling Split, video-pipeline Split, Shop Go-Live, Duplikat-Module zusammengeführt, dev-pipeline Split, user-management/office/strategie Split)
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -93,6 +93,7 @@ portal/
 │   ├── strategie-i18n.js   – Internationalisierung: translateDOM, switchLang, t()
 │   ├── strategie-content.js – Social Media / Content-Strategie
 │   ├── strategie-onboarding.js – Asana-Onboarding, Demo-Tasks, Sales-Daten
+│   ├── hq-shop.js          – HQ Shop: Bestellverwaltung, DHL Label, Packliste, Tracking
 │   ├── misc-views.js       – Orchestrator: Sidebar, ViewSwitcher, Social Media, React Mount (✅ aufgespalten)
 │   ├── misc-modulstatus.js – MODUL_DATEN, DevStatus, Modulübersicht, Release-Updates
 │   ├── misc-training.js    – KI-Verkaufstrainer: Szenarien, Speech, TTS, Evaluation
@@ -246,7 +247,7 @@ sbUrl()       → window.sbUrl()   // Supabase Project URL (zentralisiert)
 |-------|------|
 | verkauf | `a8439c42-a42a-4abd-b268-8557bb281897` |
 
-### Edge Functions (9)
+### Edge Functions (12)
 
 | Function | Zweck |
 |----------|-------|
@@ -259,6 +260,9 @@ sbUrl()       → window.sbUrl()   // Supabase Project URL (zentralisiert)
 | `lexoffice-pdf` | PDF via LexOffice |
 | `send-push` | Push-Notifications (8 Trigger-Punkte) |
 | `db-backup` | Datenbank-Backup |
+| `dhl-shipping` | DHL Paket Label-Erstellung (OAuth2 Production, V2 API) – verify_jwt=false, eigene Auth |
+| `send-emails` | E-Mail-Versand (Resend API, Templates) |
+| `wawi-email-ingest` | WaWi E-Mail-Ingestion Pipeline |
 
 ### RLS-Prinzipien
 
@@ -290,7 +294,7 @@ Die größten Module sollten bei der TypeScript-Migration aufgespalten werden:
 | 2 | `office.js` | 143 KB | ✅ Aufgespalten → 9 Sub-Module (office-checkin, office-weekly, office-floorplan, office-guests, office-booking, office-mybookings, office-whoishere, office-stats) |
 | 3 | `user-management.js` | 141 KB | ✅ Aufgespalten → 6 Sub-Module (user-approval, user-employees, user-create-edit, user-modules, user-kommando) |
 | 4 | `strategie.js` | 137 KB | ✅ Aufgespalten → 5 Sub-Module (strategie-shop, strategie-i18n, strategie-content, strategie-onboarding) |
-| — | `hq-kommando.js` | ~64 KB | ✅ Shop-Code extrahiert → hq-shop.js (Produkte, Varianten, Bestand, Stornierung) |
+| — | `hq-kommando.js` | ~64 KB | ✅ Shop-Code extrahiert → hq-shop.js (Produkte, Varianten, Bestand, Stornierung, DHL Shipping) |
 | 5 | `video-pipeline.js` | 131 KB | ✅ Aufgespalten → 9 Sub-Module (video-upload, video-dashboard, video-consent, video-hq-review, video-templates, video-feedback, video-subtitles, video-themes) |
 | 6 | `controlling.js` | 108 KB | ✅ Aufgespalten → 5 Sub-Module (controlling-display, controlling-upload, controlling-save, controlling-benchmarks) |
 | 7 | `misc-views.js` | 89 KB | ✅ Aufgespalten → 3 Sub-Module (misc-modulstatus, misc-training) + hq-verkauf.js bereinigt |
@@ -496,4 +500,5 @@ security: RLS/JWT/Auth-Verbesserung
 > - Neue Edge Functions oder DB-Tabellen hinzugekommen sind
 >
 > **Datum oben aktualisieren** bei jeder inhaltlichen Änderung.
+
 
