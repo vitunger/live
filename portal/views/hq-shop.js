@@ -274,6 +274,22 @@ export async function updateShopOrderStatus(orderId, newStatus) {
         });
     } catch(notifyErr) { console.warn('Shop notify (status_change):', notifyErr); }
 
+    // In-app notification for the standort
+    try {
+        var { data: _ord } = await _sb().from('shop_orders').select('order_number, standort_id').eq('id', orderId).single();
+        if (_ord) {
+            var statusEmoji = { confirmed:'\ud83d\udccb', paid:'\ud83d\udcb0', shipped:'\ud83d\ude9a', delivered:'\u2705', cancelled:'\u274c' };
+            var statusText = { confirmed:'best\u00e4tigt', paid:'bezahlt', shipped:'versendet', delivered:'zugestellt', cancelled:'storniert' };
+            await _sb().rpc('create_notification', {
+                p_standort_id: _ord.standort_id,
+                p_type: 'shop', p_icon: statusEmoji[newStatus] || '\ud83d\udce6',
+                p_title: 'Bestellung ' + _ord.order_number + ' ' + (statusText[newStatus] || newStatus),
+                p_description: newStatus === 'shipped' ? 'Euer Paket ist unterwegs!' : newStatus === 'paid' ? 'Zahlung eingegangen, Versand wird vorbereitet.' : '',
+                p_action_view: 'shop'
+            });
+        }
+    } catch(nErr) { console.warn('Notif create:', nErr); }
+
     renderHqShop();
 }
 

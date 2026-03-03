@@ -507,6 +507,16 @@ export async function submitShopOrder() {
             });
         } catch(notifyErr2) { console.warn('Shop notify (invoice_email):', notifyErr2); }
 
+        // In-app notification for HQ
+        try {
+            await _sb().rpc('create_notification', {
+                p_type: 'shop', p_icon: '\ud83d\uded2',
+                p_title: 'Neue Bestellung ' + orderNum,
+                p_description: (sbStandort ? sbStandort.name + ': ' : '') + shopCart.map(function(c){return c.menge+'x '+c.name}).join(', ') + ' \u2013 ' + total.toFixed(2) + ' \u20ac',
+                p_action_view: 'hqShop'
+            });
+        } catch(nErr) { console.warn('Notif create:', nErr); }
+
         shopCart = [];
         shopAllProducts = [];
         shopVariants = {};

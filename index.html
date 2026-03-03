@@ -3778,7 +3778,7 @@
                         <button onclick="filterNotif('unread')" class="notif-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-nf="unread">Ungelesen</button>
                         <button onclick="filterNotif('system')" class="notif-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-nf="system">System</button>
                         <button onclick="filterNotif('hq')" class="notif-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-nf="hq">HQ</button>
-                        <button class="ml-auto text-xs text-vit-orange font-semibold hover:underline" onclick="document.querySelectorAll('.notif-dot').forEach(function(d){d.remove();}); document.querySelector('.absolute.-top-1.-right-1').textContent='0';">Alle als gelesen markieren</button>
+                        <button class="ml-auto text-xs text-vit-orange font-semibold hover:underline" onclick="markAllNotifsRead()">Alle als gelesen markieren</button>
                     </div>
 
                     <div id="notifList" class="space-y-2"></div>

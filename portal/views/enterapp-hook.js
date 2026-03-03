@@ -26,6 +26,8 @@ function _hookEnterApp() {
                 if(typeof updateBwaDeadlineWidget === 'function') updateBwaDeadlineWidget();
                 if(typeof renderHqBwaStatus === 'function') renderHqBwaStatus();
                 if(typeof renderHqHealth === 'function') renderHqHealth();
+                // Init notification system (load from DB + realtime)
+                if(typeof initNotifications === 'function') initNotifications();
                 // Trainer card after 4s (only for Standort users, not HQ)
                 if(typeof showTrainerCard === 'function' && typeof activeTrainers !== 'undefined' && activeTrainers.length > 0 && currentRole !== 'hq') {
                     setTimeout(function(){ showTrainerCard(activeTrainers[0]); }, 4000);
