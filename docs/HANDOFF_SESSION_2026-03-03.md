@@ -255,3 +255,43 @@ Keine Tabelle gelöscht – nur die 2 verwaisten markiert.
 4. **billing-inline.js** als IIFE beibehalten, shared Logik aus email-billing.js importieren
 
 ~967 Zeilen Einsparung möglich. Erfordert Feature-Branch.
+
+---
+
+## Nachtrag: Weitere Cleanups
+
+### CSS Audit
+- 9 tote CSS-Klassen entfernt (77 Zeilen): vit-gradient, status-badge/new/inprogress/done, vit-list, dev-badge, bg-vit-gray, feedback-bar, ek-modal
+- Braces balanced: 217/217 ✅
+
+### innerHTML Security Scan
+- 836 innerHTML-Stellen insgesamt
+- 1 kritische + 10 mittlere XSS-Lücken gefixt
+- 66 niedrigere verbleibend (Langzeit-Projekt)
+
+### Deprecated DB Objects gelöscht
+- 2 Functions: handle_new_auth_user, create_full_user_deprecated_v1
+- 9 Views (alle UNUSED)
+- 2 Tabellen: office_location_aliases, office_sync_log
+
+### Sidebar Cleanup
+- 3 tote HTML-Elemente entfernt
+- Impersonation-Section: Inline-Styles → Tailwind
+- JS style.display → classList.toggle('hidden')
+
+### Console.log Cleanup
+- 25x console.log → console.debug (Production-Hygiene)
+- 155 console.error + 130 console.warn bleiben (legitim)
+
+### Verbleibende TODOs
+- 5 echte TODO-Kommentare (alle dokumentieren offene Aufgaben)
+- 314 Inline-Styles in HTML body (größeres Refactoring)
+
+### Finale Tagesstatistik
+- **20+ Commits** heute
+- **index.html**: 6.976 → 6.589 Zeilen (-387, -5,5%)
+- **JS-Fixes**: 220x sb→_sb, 60x alert→toast, 25x console.log→debug
+- **Security**: JWT-Audit, CORS, XSS-Fixes, Role-Checks
+- **DB**: 7 Indizes, 2 Constraints, 13 Objekte gelöscht, 80 RPCs auditiert
+- **Docs**: 3 Dateien synchronisiert, Handoff erstellt
+- **Neues Feature**: Potential-Check E-Mail-Backend (Edge Function + DB)
