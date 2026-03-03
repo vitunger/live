@@ -532,6 +532,18 @@ export function todoRenderDetail() {
     // Description
     h += '<textarea onblur="todoUpdateField(\'' + task.id + '\',\'beschreibung\',this.value)" placeholder="Beschreibung..." rows="2" class="w-full text-sm text-gray-600 placeholder-gray-400 outline-none bg-gray-50 rounded-lg p-2 border border-gray-100 focus:border-vit-orange/30" style="resize:none">' + (task.beschreibung || '') + '</textarea>';
 
+    // Attachments - right after description for visibility
+    h += '<div class="bg-gray-50 rounded-xl p-3">';
+    h += '<div class="flex items-center justify-between mb-2">';
+    h += '<label class="font-bold text-gray-400 uppercase text-[9px]" style="letter-spacing:0.05em">📎 Anhänge</label>';
+    h += '<label class="flex items-center space-x-1 cursor-pointer px-3 py-1.5 bg-vit-orange text-white text-xs font-semibold rounded-lg hover:opacity-90">';
+    h += '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>';
+    h += '<span>Datei hochladen</span>';
+    h += '<input type="file" class="hidden" onchange="todoUploadAttachment(\'' + task.id + '\',this)">';
+    h += '</label></div>';
+    h += '<div class="space-y-1" id="todoDetailAttachments"><p class="text-xs text-gray-400 italic">Keine Anhänge</p></div>';
+    h += '</div>';
+
     // Properties grid
     h += '<div class="grid grid-cols-2 gap-2">';
     h += '<div><label class="font-bold text-gray-400 uppercase text-[9px]" style="letter-spacing:0.05em">Fällig</label>';
@@ -640,18 +652,6 @@ export function todoRenderDetail() {
     h += '</div>';
     h += '<div class="flex space-x-2 mt-2"><input id="todoCommentInput" placeholder="Kommentar... (@Name für Erwähnung)" class="flex-1 px-2 py-1 border border-gray-200 rounded-lg outline-none focus:border-vit-orange/30 text-xs" onkeydown="if(event.key===\'Enter\')todoAddCommentWithMentions(\'' + task.id + '\')">';
     h += '</div></div>';
-
-    // Attachments - prominent section
-    h += '<div class="bg-gray-50 rounded-xl p-3">';
-    h += '<div class="flex items-center justify-between mb-2">';
-    h += '<label class="font-bold text-gray-400 uppercase text-[9px]" style="letter-spacing:0.05em">📎 Anhänge</label>';
-    h += '<label class="flex items-center space-x-1 cursor-pointer px-3 py-1.5 bg-vit-orange text-white text-xs font-semibold rounded-lg hover:opacity-90">';
-    h += '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>';
-    h += '<span>Datei hochladen</span>';
-    h += '<input type="file" class="hidden" onchange="todoUploadAttachment(\'' + task.id + '\',this)">';
-    h += '</label></div>';
-    h += '<div class="space-y-1" id="todoDetailAttachments"><p class="text-xs text-gray-400 italic">Wird geladen...</p></div>';
-    h += '</div>';
 
     h += '</div></div>';
 
