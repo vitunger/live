@@ -456,7 +456,7 @@ export async function submitShopOrder() {
                     body: JSON.stringify({ action: 'sync-invoice', invoice_id: inv.id })
                 });
                 var syncData = await syncResp.json();
-                if(syncData.lexofficeId) console.log('Shop order synced to LexOffice:', syncData.lexofficeId);
+                if(syncData.lexofficeId) console.debug('Shop order synced to LexOffice:', syncData.lexofficeId);
             } catch(syncErr) { console.warn('LexOffice sync delayed:', syncErr); }
         }
 

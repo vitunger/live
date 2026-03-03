@@ -571,13 +571,13 @@ window.loadEterminConfig = async function(standortId) {
 // ── Load overview of all configured standorte ──
 async function loadEterminOverview() {
     var el = document.getElementById('connEterminOverview');
-    console.log('[eTermin] loadOverview called, el:', !!el, 'profile:', !!_sbProfile(), 'is_hq:', _sbProfile() && _sbProfile().is_hq);
+    console.debug('[eTermin] loadOverview called, el:', !!el, 'profile:', !!_sbProfile(), 'is_hq:', _sbProfile() && _sbProfile().is_hq);
     if (!el) return;
     try {
         var sb = _sb(); if (!sb) { console.warn('[eTermin] no sb client'); return; }
         var { data: configs, error: cfgErr } = await _sb().from('etermin_config')
             .select('standort_id, is_active, updated_at, standorte(name)').order('updated_at', { ascending: false });
-        console.log('[eTermin] configs:', configs, 'error:', cfgErr);
+        console.debug('[eTermin] configs:', configs, 'error:', cfgErr);
         configs = configs || [];
 
         // Load all standorte to show which are NOT yet connected
@@ -650,16 +650,16 @@ var PORTAL_TYPEN = [
 
 async function loadEterminMapping() {
     var el = document.getElementById('connEterminMapping');
-    console.log('[eTermin] loadMapping called, el:', !!el, 'profile:', !!_sbProfile(), 'is_hq:', _sbProfile() && _sbProfile().is_hq);
+    console.debug('[eTermin] loadMapping called, el:', !!el, 'profile:', !!_sbProfile(), 'is_hq:', _sbProfile() && _sbProfile().is_hq);
     if (!el) return;
     try {
         // Load all mappings
         var resp = await _sb().from('etermin_typ_mapping').select('*, standorte(name)').order('standort_id');
-        console.log('[eTermin] mappings:', resp.data, 'error:', resp.error);
+        console.debug('[eTermin] mappings:', resp.data, 'error:', resp.error);
         var mappings = (resp.data || []);
         // Load standorte with active etermin configs
         var cfgResp = await _sb().from('etermin_config').select('standort_id, standorte(name)').eq('is_active', true);
-        console.log('[eTermin] mapping configs:', cfgResp.data, 'error:', cfgResp.error);
+        console.debug('[eTermin] mapping configs:', cfgResp.data, 'error:', cfgResp.error);
         var configs = (cfgResp.data || []);
 
         var h = '<details class="border border-gray-200 rounded-lg" id="eterminMappingDetails">'

@@ -400,7 +400,7 @@ async function parsePlanFileLocal(file, statusEl, resultEl) {
                 var sonstRow = findSummaryRow(['1260'], ['sonstige kosten','sonstige']);
                 var gesamtkRow = findSummaryRow(['1270'], ['gesamtkosten']);
                 
-                console.log('[Plan-Local] Found rows:', {
+                console.debug('[Plan-Local] Found rows:', {
                     umsatz: umsatzRow ? (umsatzRow.bezeichnung + ' konto=' + umsatzRow.konto + ' jan=' + umsatzRow.jan) : 'NOT FOUND',
                     wareneinsatz: weRow ? (weRow.bezeichnung + ' konto=' + weRow.konto + ' jan=' + weRow.jan) : 'NOT FOUND',
                     personal: pkRow ? (pkRow.bezeichnung + ' konto=' + pkRow.konto + ' jan=' + pkRow.jan) : 'NOT FOUND',

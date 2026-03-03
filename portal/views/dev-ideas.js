@@ -80,7 +80,7 @@ export async function submitDevIdea() {
             body: { submission_id: submissionId }
         }).then(function(kiResp) {
             if(kiResp.error) console.warn('KI-Analyse Fehler:', kiResp.error);
-            else console.log('KI-Analyse fertig für:', submissionId);
+            else console.debug('KI-Analyse fertig für:', submissionId);
             // Nach Analyse nochmal neu laden um Ergebnis zu zeigen
             loadDevSubmissions(true).then(function(){ refreshEntwicklungViews(); });
         });

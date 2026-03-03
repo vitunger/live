@@ -63,7 +63,7 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
                 headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_ids: userIds, title: title, body: body, url: url || '/', icon: '/icon-192.png' })
             });
-        } catch(e) { console.log('[Push] trigger error:', e.message); }
+        } catch(e) { console.debug('[Push] trigger error:', e.message); }
     }
 
     async function triggerPushStandort(title, body, url, prefKey) {
@@ -76,7 +76,7 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
             if (!users) return;
             var ids = users.map(function(u) { return u.id; }).filter(function(id) { return id !== me; });
             await triggerPush(ids, title, body, url, prefKey);
-        } catch(e) { console.log('[Push] standort trigger:', e.message); }
+        } catch(e) { console.debug('[Push] standort trigger:', e.message); }
     }
 
     async function triggerPushHQ(title, body, url, prefKey) {
@@ -87,7 +87,7 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
             if (!hqUsers) return;
             var ids = hqUsers.map(function(u) { return u.id; }).filter(function(id) { return id !== me; });
             await triggerPush(ids, title, body, url, prefKey);
-        } catch(e) { console.log('[Push] HQ trigger:', e.message); }
+        } catch(e) { console.debug('[Push] HQ trigger:', e.message); }
     }
 
     function showInstallBanner() {
@@ -210,7 +210,7 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
             var sub = await reg.pushManager.getSubscription();
             updatePushUI(!!sub, sub ? 'Aktives Gerät' : null);
             if (sub) loadNotificationPrefs();
-        } catch(e) { console.log('[Push] Status check:', e.message); }
+        } catch(e) { console.debug('[Push] Status check:', e.message); }
     }
 
     window.loadNotificationPrefs = async function() {
@@ -224,7 +224,7 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
                 var key = cb.dataset.pref;
                 if (key && data[key] !== undefined) cb.checked = data[key];
             });
-        } catch(e) { console.log('[Prefs] load:', e.message); }
+        } catch(e) { console.debug('[Prefs] load:', e.message); }
     }
 
     window.saveNotificationPrefs = async function() {

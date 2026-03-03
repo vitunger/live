@@ -15,7 +15,7 @@
         var cd = cooldowns[template] || 86400000;
         if(cd > 0) {
             var existing = EMAIL_LOG.find(function(l){return l.key===key && (Date.now()-l.ts)<cd;});
-            if(existing) { console.log('[Email] Cooldown active for', key); return null; }
+            if(existing) { console.debug('[Email] Cooldown active for', key); return null; }
         }
 
         // Log
@@ -27,7 +27,7 @@
             try {
                 var res = await _sb().functions.invoke('send-email', {body:{template:template, to:to, data:data}});
                 if(res.error) { logEntry.status = 'failed'; console.error('[Email] Error:', res.error); }
-                else { console.log('[Email] Sent:', template, 'to', to); }
+                else { console.debug('[Email] Sent:', template, 'to', to); }
                 // Log to DB
                 if(_sb().from) {
                     await _sb().from('notifications_log').insert({

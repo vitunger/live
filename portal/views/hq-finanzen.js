@@ -74,7 +74,7 @@ async function loadHqFinData() {
             .in('jahr', [currentYear, currentYear - 1])
             .order('jahr', { ascending: false });
         if(planResp.error) { console.warn('[hq-finanzen] Plan query error:', JSON.stringify(planResp.error)); }
-        if(planResp.status) { console.log('[hq-finanzen] Plan query status:', planResp.status, planResp.statusText); }
+        if(planResp.status) { console.debug('[hq-finanzen] Plan query status:', planResp.status, planResp.statusText); }
         var planData = planResp.data || [];
         hqFinPlanMap = {};
         // Current year takes priority, fallback to previous year
