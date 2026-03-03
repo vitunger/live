@@ -46,7 +46,7 @@ export async function renderHqVerkauf() {
     // Load leads count per standort
     var leadsByStd = {};
     try {
-        var lr = await _sb().from('leads').select('standort_id, id').in('status', ['lead','angebot','schwebend']);
+        var lr = await _sb().from('leads').select('standort_id, id').in('status', ['neu','kontaktiert','angebot','schwebend']);
         if(lr.data) lr.data.forEach(function(d) {
             leadsByStd[d.standort_id] = (leadsByStd[d.standort_id]||0) + 1;
         });
