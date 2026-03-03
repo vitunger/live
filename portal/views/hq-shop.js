@@ -18,6 +18,36 @@ function _ensureConfig() {
     if (!SUPABASE_ANON_KEY) SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || '';
 }
 
+// ===== IMAGE UPLOAD =====
+async function uploadShopImage(file, productId) {
+    if(!file) return null;
+    var ext = file.name.split('.').pop().toLowerCase();
+    if(['jpg','jpeg','png','webp','gif'].indexOf(ext) === -1) {
+        _showToast('Nur JPG, PNG, WebP oder GIF erlaubt.', 'error');
+        return null;
+    }
+    if(file.size > 5 * 1024 * 1024) {
+        _showToast('Datei zu groß (max 5 MB).', 'error');
+        return null;
+    }
+    var path = 'products/' + productId + '.' + ext;
+    var { data, error } = await _sb().storage.from('shop-images').upload(path, file, { upsert: true, contentType: file.type });
+    if(error) { _showToast('Upload-Fehler: ' + error.message, 'error'); return null; }
+    // Get public URL
+    var { data: urlData } = _sb().storage.from('shop-images').getPublicUrl(path);
+    return urlData?.publicUrl || null;
+}
+
+function _renderImagePreview(containerId, currentUrl) {
+    var el = document.getElementById(containerId);
+    if(!el) return;
+    if(currentUrl) {
+        el.innerHTML = '<div class="flex items-center space-x-3"><img src="'+currentUrl+'" class="w-16 h-16 rounded-lg object-contain bg-gray-50 border" onerror="this.src=\'\'"><span class="text-xs text-gray-400 truncate max-w-[200px]">'+currentUrl.split('/').pop()+'</span></div>';
+    } else {
+        el.innerHTML = '<span class="text-xs text-gray-400">Kein Bild</span>';
+    }
+}
+
 // ===== STATE =====
 var hqShopOrderFilter = 'all';
 var hqShopOrdersCache = [];
@@ -297,6 +327,10 @@ export async function openProductEditModal(productId) {
         document.getElementById('editProductKat').value = p.category || 'textil';
         document.getElementById('editProductImageUrl').value = p.image_url || '';
         document.getElementById('editProductMinQty').value = p.min_order_qty || 1;
+        _renderImagePreview('editImagePreview', p.image_url);
+        // Reset file input
+        var fileInput = document.getElementById('editProductImageFile');
+        if(fileInput) fileInput.value = '';
         modal.classList.remove('hidden');
     } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
 }
@@ -320,7 +354,10 @@ function _createEditModal() {
         '<div><label class="block text-sm font-medium text-gray-700 mb-1">Kategorie</label><select id="editProductKat" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"><option value="textil">👕 Textilien</option><option value="print">🖨️ Print</option><option value="display">🏪 Displays</option><option value="digital">💻 Digital</option><option value="give">🎁 Giveaways</option></select></div>' +
         '<div><label class="block text-sm font-medium text-gray-700 mb-1">Mindestbestellmenge</label><input type="number" id="editProductMinQty" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"></div>' +
         '</div>' +
-        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Bild-URL</label><input type="url" id="editProductImageUrl" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="https://..."></div>' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Produktbild</label>' +
+        '<div id="editImagePreview" class="mb-2"></div>' +
+        '<input type="file" id="editProductImageFile" accept="image/jpeg,image/png,image/webp,image/gif" class="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-vit-orange hover:file:bg-orange-100 mb-1">' +
+        '<input type="url" id="editProductImageUrl" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs text-gray-400" placeholder="oder URL manuell eingeben"></div>' +
         '</div>' +
         '<div class="flex space-x-3 mt-5">' +
         '<button onclick="saveProductEdit()" class="flex-1 px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600">💾 Speichern</button>' +
@@ -333,13 +370,21 @@ export async function saveProductEdit() {
     var id = document.getElementById('editProductId').value;
     if(!id) return;
     try {
+        // Check for file upload first
+        var fileInput = document.getElementById('editProductImageFile');
+        var imageUrl = document.getElementById('editProductImageUrl').value.trim() || null;
+        if(fileInput && fileInput.files && fileInput.files[0]) {
+            _showToast('Bild wird hochgeladen...', 'info');
+            var uploadedUrl = await uploadShopImage(fileInput.files[0], id);
+            if(uploadedUrl) imageUrl = uploadedUrl;
+        }
         var updates = {
             name: document.getElementById('editProductName').value.trim(),
             description: document.getElementById('editProductDesc').value.trim(),
             price: parseFloat(document.getElementById('editProductPrice').value) || 0,
             sku: document.getElementById('editProductSku').value.trim(),
             category: document.getElementById('editProductKat').value,
-            image_url: document.getElementById('editProductImageUrl').value.trim() || null,
+            image_url: imageUrl,
             min_order_qty: parseInt(document.getElementById('editProductMinQty').value) || 1,
             updated_at: new Date().toISOString()
         };
@@ -536,17 +581,30 @@ export async function addHqShopProduct() {
     var p = document.getElementById('hqShopPreis');
     if(!n||!n.value.trim()){_showToast('Produktname eingeben.', 'error');return;}
     try {
+        var imageUrl = document.getElementById('hqShopImageUrl')?.value || null;
         var { data: product, error } = await _sb().from('shop_products').insert({
             name: n.value.trim(),
             category: document.getElementById('hqShopKat')?.value || 'textil',
             price: parseFloat(p.value)||0,
             description: document.getElementById('hqShopDesc')?.value || '',
-            image_url: document.getElementById('hqShopImageUrl')?.value || null
+            image_url: imageUrl
         }).select().single();
         if(error) throw error;
+
+        // Upload image if file selected
+        var fileInput = document.getElementById('hqShopImageFile');
+        if(fileInput && fileInput.files && fileInput.files[0]) {
+            _showToast('Bild wird hochgeladen...', 'info');
+            var uploadedUrl = await uploadShopImage(fileInput.files[0], product.id);
+            if(uploadedUrl) {
+                await _sb().from('shop_products').update({ image_url: uploadedUrl }).eq('id', product.id);
+                product.image_url = uploadedUrl;
+            }
+        }
         n.value=''; p.value='';
         if(document.getElementById('hqShopDesc')) document.getElementById('hqShopDesc').value='';
         if(document.getElementById('hqShopImageUrl')) document.getElementById('hqShopImageUrl').value='';
+        if(document.getElementById('hqShopImageFile')) document.getElementById('hqShopImageFile').value='';
         _showToast('Produkt "'+product.name+'" angelegt.', 'success');
         showHqShopTab('products');
     } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
@@ -657,7 +715,9 @@ const _exports = {
     openProductEditModal, saveProductEdit, toggleProductActive,
     openStockModal, saveStockAdjustment,
     openVariantManager, addVariant, addBulkVariants, deleteVariant, updateVariantSort,
-    toggleOrderNotes, saveOrderNote
+    toggleOrderNotes, saveOrderNote,
+    uploadShopImage
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
+
 
