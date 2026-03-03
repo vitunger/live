@@ -20,6 +20,8 @@ export async function loadHqStandorte() {
         var sResp = await _sb().from('standorte').select('*').order('name');
         if(sResp.error) throw sResp.error;
         var standorte = sResp.data || [];
+        // Filter out demo standorte
+        standorte = standorte.filter(function(s) { return !s.is_demo; });
 
         // Load BWA data for current year
         var currentYear = new Date().getFullYear();
