@@ -112,6 +112,7 @@
             meinebuchungen: window._offRenderMeineBuchungen,
             werImOffice: window._offRenderWerImOffice,
             gaeste: window._offRenderGaeste,
+            wifi: window._offRenderWifi,
             statistik: window._offRenderStatistik
         };
         if(fns[tab]) fns[tab]();
@@ -137,13 +138,15 @@
                 '<button onclick="showOfficeTab(\'werImOffice\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="werImOffice">\ud83d\udc65 Wer ist im Office?</button>'+
                 '<button onclick="showOfficeTab(\'gaeste\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="gaeste">G\u00e4ste</button>'+
                 '<button onclick="showOfficeTab(\'statistik\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="statistik">Statistik</button>'+
+                '<button onclick="showOfficeTab(\'wifi\')" class="office-tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition" data-tab="wifi">\ud83d\udcf6 WLAN</button>'+
             '</div>'+
             '<div id="officeTab_dashboard" class="office-tab-content"></div>'+
             '<div id="officeTab_buchen" class="office-tab-content" style="display:none"></div>'+
             '<div id="officeTab_meinebuchungen" class="office-tab-content" style="display:none"></div>'+
             '<div id="officeTab_werImOffice" class="office-tab-content" style="display:none"></div>'+
             '<div id="officeTab_gaeste" class="office-tab-content" style="display:none"></div>'+
-            '<div id="officeTab_statistik" class="office-tab-content" style="display:none"></div>';
+            '<div id="officeTab_statistik" class="office-tab-content" style="display:none"></div>'+
+            '<div id="officeTab_wifi" class="office-tab-content" style="display:none"></div>';
         window._offRenderDashboard();
     };
 
