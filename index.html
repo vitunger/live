@@ -666,12 +666,6 @@
                 </div>
                 
                 <div class="flex items-center space-x-2 md:space-x-6 flex-shrink-0">
-                    <!-- Language Switcher -->
-                    <div class="flex items-center space-x-0.5 md:space-x-1">
-                        <button onclick="switchLang('de')" class="lang-flag text-sm md:text-lg hover:scale-125 transition-transform" title="Deutsch" data-lang="de">🇩🇪</button>
-                        <button onclick="switchLang('en')" class="lang-flag text-sm md:text-lg hover:scale-125 transition-transform opacity-40" title="English" data-lang="en">🇬🇧</button>
-                        <button onclick="switchLang('nl')" class="lang-flag text-sm md:text-lg hover:scale-125 transition-transform opacity-40" title="Nederlands" data-lang="nl">🇳🇱</button>
-                    </div>
 
                     <!-- Global Search -->
 
@@ -6177,6 +6171,25 @@
                     <button onclick="setTheme('dark')" id="profileThemeDark" class="vit-profile-btn border-2 border-transparent bg-[var(--c-border)]">
                         <span class="text-xl">🌙</span>
                         <p class="text-[11px] font-semibold text-[var(--c-muted)] mt-1">Dark</p>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sprache -->
+            <div class="vit-section-card">
+                <p class="vit-section-header">Sprache</p>
+                <div style="display:flex;gap:8px;">
+                    <button onclick="switchLang('de')" class="lang-flag vit-profile-btn border-2 border-vit-orange bg-[var(--c-bg2)]" data-lang="de">
+                        <span class="text-2xl">🇩🇪</span>
+                        <p class="text-[11px] font-semibold text-[var(--c-text)] mt-1">Deutsch</p>
+                    </button>
+                    <button onclick="switchLang('en')" class="lang-flag vit-profile-btn border-2 border-transparent bg-[var(--c-bg2)] opacity-40" data-lang="en">
+                        <span class="text-2xl">🇬🇧</span>
+                        <p class="text-[11px] font-semibold text-[var(--c-text)] mt-1">English</p>
+                    </button>
+                    <button onclick="switchLang('nl')" class="lang-flag vit-profile-btn border-2 border-transparent bg-[var(--c-bg2)] opacity-40" data-lang="nl">
+                        <span class="text-2xl">🇳🇱</span>
+                        <p class="text-[11px] font-semibold text-[var(--c-text)] mt-1">Nederlands</p>
                     </button>
                 </div>
             </div>
