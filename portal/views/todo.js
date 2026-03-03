@@ -420,8 +420,10 @@ export function todoBoardHTML() {
     secs.forEach(function(sec) {
         var tasks = parents.filter(function(t) { return t.section_id === sec.id; });
         h += '<div class="flex-shrink-0" style="width:260px" ondragover="event.preventDefault();event.dataTransfer.dropEffect=\'move\'" ondrop="todoBoardDrop(event,\'' + sec.id + '\')">';
-        h += '<div class="flex items-center space-x-2 px-2 py-1 mb-2"><h3 class="font-bold text-gray-500 uppercase" style="font-size:11px;letter-spacing:0.05em">' + _escH(sec.name) + '</h3>';
-        h += '<span class="font-bold rounded-full bg-gray-200 text-gray-500 flex items-center justify-center" style="width:18px;height:18px;font-size:9px">' + tasks.length + '</span></div>';
+        h += '<div class="flex items-center space-x-2 px-2 py-1 mb-2 group"><h3 class="font-bold text-gray-500 uppercase" style="font-size:11px;letter-spacing:0.05em">' + _escH(sec.name) + '</h3>';
+        h += '<span class="font-bold rounded-full bg-gray-200 text-gray-500 flex items-center justify-center" style="width:18px;height:18px;font-size:9px">' + tasks.length + '</span>';
+        if (sec.name !== 'Eingang') h += '<button onclick="todoDeleteSec(\'' + sec.id + '\')" class="text-gray-400 hover:text-red-500 text-xs opacity-0 group-hover:opacity-100 ml-auto" title="Sektion löschen">✕</button>';
+        h += '</div>';
         h += '<div class="space-y-2">';
 
         tasks.forEach(function(task) {
