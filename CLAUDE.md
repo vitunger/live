@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 03.03.2026 (XSS-Audit 28 Fixes, Supabase-URL zentralisiert, DHL Config-UI, BWA GF-Fix, shop-notify, DHL OAuth2, misc-views Split, controlling Split, video-pipeline Split)
+> Letzte Aktualisierung: 03.03.2026 (Inline-Migration komplett, Dead-Code-Audit, Hook-Race-Condition-Fix, controllingView-Div-Balance-Fix, setTheme ES-Module-Scope-Fix, XSS-Audit 58 Fixes, Duplikat-Module konsolidiert, Inline-Styles Cleanup)
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -41,7 +41,7 @@
 ## Dateistruktur
 
 ```
-index.html                  – Haupt-HTML: Views, Sidebar, Modals (~6.560 Zeilen)
+index.html                  – Haupt-HTML: Views, Sidebar, Modals (~6.585 Zeilen)
 manifest.json               – PWA Manifest
 sw.js                       – Service Worker
 portal/
@@ -51,7 +51,7 @@ portal/
 │   ├── globals.js          – showToast, escH, fmtN, fmtEur, fmtDate, timeAgo, sbUrl
 │   ├── supabase-init.js    – createClient, IDB Session, Auth Listener
 │   └── router.js           – showView(), i18n t(), View Switching
-├── views/                  – 83 Module, ~38.000 Zeilen (parallel geladen)
+├── views/                  – 98 Module, ~41.200 Zeilen (parallel geladen)
 │   ├── home.js             – Dashboard, Widgets, Quick Actions
 │   ├── verkauf.js          – Verkäufer-Performance, Pipeline
 │   ├── controlling.js      – Orchestrator: State, BwaParser, Tabs, Formatting (✅ aufgespalten)
@@ -99,11 +99,9 @@ portal/
 │   ├── misc-training.js    – KI-Verkaufstrainer: Szenarien, Speech, TTS, Evaluation
 │   ├── view-router.js      – MUSS LETZTES View-Modul sein (vit:view-changed Events)
 │   └── ...                 – Weitere Module (siehe MODULE_MAP.md)
-├── inline/                 – 112 JSX-Bundles (React), 0 JS-Module (Script-Tags in index.html)
-│   ├── react-deal-pipeline.jsx  – React Kanban Pipeline
-│   ├── react-marketing.jsx      – React Marketing Dashboard
-│   ├── global-search.js         – Globale Suche + Deeplinks
-│   └── ...
+├── inline/                 – 2 JSX-Bundles (React), 0 JS-Module (alle nach views/ migriert)
+│   ├── react-deal-pipeline.jsx  – React Kanban Pipeline (1604 Zeilen)
+│   └── react-marketing.jsx      – React Marketing Dashboard (162 Zeilen)
 api/
 ├── etermin-proxy.js        – Vercel Serverless Function
 └── webhooks/               – Webhook-Handler
@@ -114,6 +112,22 @@ docs/
 
 ---
 
+
+### Code-Hygiene Session (03.03.2026)
+
+**Inline-Migration komplett:** Alle 14 Inline-JS aus portal/inline/ nach portal/views/ migriert. 98 JS-Module (41.200 Zeilen), 0 JS in inline/. Nur 2 JSX-Bundles verbleiben (React).
+
+**Hook Race Condition Fix:** Parallel geladene Hook-Module (enterapp-hook, bwa-cockpit, notification-bus) deferred via vit:modules-ready Event + window._vitModulesReady Flag.
+
+**ES Module Scope:** Funktionen muessen explizit window.* exportiert werden. Bare References (setTheme statt window.setTheme) verursachen ReferenceError in ES Modules.
+
+**controllingView Div-Balance:** 39 opens vs 38 closes - aktenschrankView war unsichtbar eingebettet. Fix: fehlende </div>. Alle 53 Views geprueft, keine weiteren Fehler.
+
+**Dead Code Audit:** 502 window.* Exports, 12 tote Funktionen mit DEAD_CODE markiert. 15 Duplikat-Definitionen intentional (Demo-Mode-Wrappers, Hook-Chains).
+
+**XSS Audit:** 58 innerHTML-Stellen mit _escH() escaped.
+
+**Duplikat-Module:** 3 Paare konsolidiert (-1.660 Zeilen). Inline-Styles: 116 konvertiert (315->199).
 
 ### Neue Tabellen (03.03.2026)
 | Tabelle | Zweck |
