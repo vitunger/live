@@ -202,12 +202,12 @@ _fmtN(n)      → window.fmtN(n)    // Zahlenformat (de-DE)
 
 | Metrik | Wert |
 |--------|------|
-| Tabellen (public) | ~165 |
-| Views | 11 (davon 2 aktiv genutzt, 9 als UNUSED markiert) |
+| Tabellen (public) | ~164 |
+| Views | 2 (v_wawi_leasing_uebersicht, v_wawi_top_produkte) |
 | RLS Policies | 257 |
 | Indizes | 276 (269 + 7 neue FK-Indizes) |
 | Edge Functions | 39 deployed (18 mit JWT, 21 ohne) |
-| RPC Functions | 80 (12 Frontend, 23 Trigger, 21 RLS, 22 Server-Side, 2 Deprecated) |
+| RPC Functions | 78 (12 Frontend, 23 Trigger, 21 RLS, 22 Server-Side) |
 | Auth-User | ~14 |
 | Standorte | 33 (angelegt) |
 | DB-Größe | ~65 MB |
