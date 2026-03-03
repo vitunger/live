@@ -237,7 +237,7 @@ window.showConnView = function(view) {
 function renderStatusGrid() {
     var el = document.getElementById('connStatusGrid');
     if (!el) return;
-    var ids = ['etermin', 'approom', 'google', 'meta', 'wawi'];
+    var ids = ['etermin', 'approom', 'dhl', 'google', 'meta', 'wawi'];
     el.innerHTML = ids.map(function(id) {
         var c = CONNECTORS[id];
         var sc = c.status === 'connected' ? '#16a34a' : c.status === 'error' ? '#dc2626' : c.status === 'disconnected' ? '#dc2626' : '#9ca3af';
@@ -258,7 +258,7 @@ function renderStatusGrid() {
 function renderActiveCards() {
     var el = document.getElementById('connActiveCards');
     if (!el) return;
-    el.innerHTML = ['etermin', 'approom', 'google', 'meta', 'wawi'].map(function(id) {
+    el.innerHTML = ['etermin', 'approom', 'dhl', 'google', 'meta', 'wawi'].map(function(id) {
         return renderConnectorCard(id);
     }).join('');
 }
@@ -462,7 +462,7 @@ function renderPlannedGrid() {
 function renderPartnerCards() {
     var el = document.getElementById('connPartnerCards');
     if (!el) return;
-    var ids = ['etermin', 'approom', 'google', 'meta', 'wawi'];
+    var ids = ['etermin', 'approom', 'dhl', 'google', 'meta', 'wawi'];
     el.innerHTML = ids.map(function(id) {
         var c = CONNECTORS[id];
         if (c.status === 'planned' || c.status === 'unknown') return '';
