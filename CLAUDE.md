@@ -329,11 +329,11 @@ claude/db-schema-xyz            – Datenbank-Änderungen
 | User-Löschung ließ auth.users-Einträge zurück | Kritisch | ✅ Behoben – delete_auth_user RPC gefixt (Paramname) |
 | Standort-Dropdown leer bei Registrierung | Mittel | ✅ Behoben – get_standorte_public() RPC |
 | View-Restore nach Reload (HQ → Netzwerk-Cockpit) | Mittel | ✅ Behoben – vit:modules-ready überschrieb View |
-| Edge Functions `verify_jwt = false` (einige) | Mittel | JWT-Audit offen |
+| Edge Functions `verify_jwt = false` (einige) | Mittel | ✅ Behoben – 7 kritische auf true, 7 korrekt ohne JWT |
 | HQ Einkauf nur UI (keine DB) | Niedrig | DB-Anbindung ausstehend |
 | MS365 SSO | Geplant | Stubs vorhanden |
-| BWA-Banner bleibt nach Logout sichtbar | Mittel | State-Cleanup fehlt |
-| `URIError: URI malformed` in content.js | Niedrig | encodeURIComponent-Bug |
+| BWA-Banner bleibt nach Logout sichtbar | Mittel | ✅ Behoben – State-Cleanup im Logout |
+| `URIError: URI malformed` in content.js | Niedrig | Browser-Extension, kein Portal-Bug |
 | Environment-Variablen nicht externalisiert | Mittel | Noch im Code |
 | Sicherheitsaudit (28 Maßnahmen) | Hoch | Teilweise umgesetzt |
 
