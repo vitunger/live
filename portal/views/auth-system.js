@@ -998,6 +998,14 @@ document.getElementById('pendingScreen').style.display = 'none';
 document.getElementById('blockedScreen').style.display = 'none';
 var fbw = document.getElementById('fbWidget'); if(fbw) fbw.style.display = 'none';
 var fbctx = document.getElementById('fbContextPrompt'); if(fbctx) fbctx.style.display = 'none';
+// State-Cleanup: BWA-Banner, Widgets, Overlays
+var bwaW = document.getElementById('bwaDeadlineWidget'); if(bwaW) bwaW.style.display = 'none';
+var bwaE = document.getElementById('bwaEskalationBanner'); if(bwaE) bwaE.style.display = 'none';
+var bwaV = document.getElementById('bwaValidationBanner'); if(bwaV) { bwaV.style.display = 'none'; bwaV.className = 'hidden'; }
+// Remove any open modals/overlays
+['neuerMaContainer','editEmpContainer','editMaContainer','regContainer','neuerStdContainer'].forEach(function(id){ var el=document.getElementById(id); if(el) el.remove(); });
+// Clear localStorage view state
+try { localStorage.removeItem('vit_lastView'); } catch(e) {}
 }
 
 export async function checkSession() {
