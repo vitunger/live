@@ -523,3 +523,4 @@ security: RLS/JWT/Auth-Verbesserung
 > **Datum oben aktualisieren** bei jeder inhaltlichen Änderung.
 
 
+- 2026-03-03: BWA Detail-Panel HTML restored. Null-guards in controlling-display.js. renderBenchmarks added to view-router chain.
