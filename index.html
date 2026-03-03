@@ -2127,23 +2127,27 @@
                                     </div>
                                     <div id="bwaTrendSection" class="mb-4" style="display:none;"><div class="vit-card p-6"><h4 class="font-semibold text-gray-800 mb-3">Jahrestrend</h4><div id="bwaTrendCards" class="grid grid-cols-2 lg:grid-cols-4 gap-2"></div></div></div>
                                 </div>
-                        <!-- Feature Lock Overlay -->
+                                                    </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== TAB 2.5: Benchmarks ===== -->
+                    <div id="ctrlTabBenchmark" class="ctrl-tab-content" style="display:none;">
                         <div id="benchmarkLockOverlay" style="display:none;">
                             <div class="vit-card p-8 text-center mb-6 vit-dashed">
                                 <div class="text-5xl mb-3">🔒</div>
                                 <h2 class="text-lg font-bold text-gray-800 mb-2">Benchmark-Vergleich gesperrt</h2>
                                 <p class="text-sm text-gray-500 mb-4">Ohne aktuelle BWA-Daten ist kein Netzwerk-Vergleich möglich.<br>Reiche deine BWA ein, um die Benchmarks freizuschalten.</p>
-                                <button onclick="showControllingTab('bwa')" class="px-6 py-3 bg-vit-orange text-white font-bold text-sm rounded-lg hover:opacity-90 transition">
-                                    📤 BWA einreichen & freischalten
-                                </button>
+                                <button onclick="showControllingTab('bwa')" class="px-6 py-3 bg-vit-orange text-white font-bold text-sm rounded-lg hover:opacity-90 transition">📤 BWA einreichen &amp; freischalten</button>
                                 <p class="text-xs text-gray-400 mt-3">Tipp: Frühabgabe vor dem 8. = Gold-Status 🥇</p>
                             </div>
                         </div>
                         <div id="benchmarkContent">
-                        <div class="vit-card p-6">
-                            <div id="benchmarkDynamic"><p class="text-center text-gray-400 py-8">Lade Benchmark-Daten...</p></div>
+                            <div class="vit-card p-6">
+                                <div id="benchmarkDynamic"><p class="text-center text-gray-400 py-8">Lade Benchmark-Daten...</p></div>
+                            </div>
                         </div>
-                    </div></div>
+                    </div>
 
                     <!-- ===== TAB 3: Plan / Ist (dynamisch) ===== -->
                     <div id="ctrlTabPlanist" class="ctrl-tab-content" style="display:none;">
