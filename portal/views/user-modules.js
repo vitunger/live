@@ -64,6 +64,7 @@ export async function renderModulStatusList() {
         container.innerHTML = html;
 
         var el1 = document.getElementById('countAktiv'); if(el1) el1.textContent = counts.aktiv||0;
+        var el1a = document.getElementById('countBeta'); if(el1a) el1a.textContent = counts.beta||0;
         var el1b = document.getElementById('countDemo'); if(el1b) el1b.textContent = counts.demo||0;
         var el2 = document.getElementById('countWip'); if(el2) el2.textContent = counts.bald||0;
         var el3 = document.getElementById('countDeaktiviert'); if(el3) el3.textContent = counts.inaktiv||0;
@@ -106,6 +107,7 @@ export async function renderHqModulStatusList() {
         container.innerHTML = html;
 
         var el1 = document.getElementById('countHqAktiv'); if(el1) el1.textContent = counts.aktiv||0;
+        var el1a = document.getElementById('countHqBeta'); if(el1a) el1a.textContent = counts.beta||0;
         var el1b = document.getElementById('countHqDemo'); if(el1b) el1b.textContent = counts.demo||0;
         var el2 = document.getElementById('countHqWip'); if(el2) el2.textContent = counts.bald||0;
         var el3 = document.getElementById('countHqDeaktiviert'); if(el3) el3.textContent = counts.inaktiv||0;
