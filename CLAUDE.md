@@ -188,7 +188,8 @@ _fmtN(n)      → window.fmtN(n)    // Zahlenformat (de-DE)
 | Views | 11 (davon 2 aktiv genutzt, 9 als UNUSED markiert) |
 | RLS Policies | 257 |
 | Indizes | 276 (269 + 7 neue FK-Indizes) |
-| Edge Functions | 9 aktiv |
+| Edge Functions | 39 deployed (18 mit JWT, 21 ohne) |
+| RPC Functions | 80 (12 Frontend, 23 Trigger, 21 RLS, 22 Server-Side, 2 Deprecated) |
 | Auth-User | ~14 |
 | Standorte | 33 (angelegt) |
 | DB-Größe | ~65 MB |
