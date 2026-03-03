@@ -93,7 +93,7 @@ var CONNECTORS = {
         readonlyFields: [
             { key: 'edge_functions', label: 'Edge Functions', value: 'lexoffice-sync, lexoffice-pdf, lexoffice-webhook' },
             { key: 'features', label: 'Funktionen', value: 'Kontakte sync, Rechnungen erstellen, PDF abrufen, Webhook-Events' },
-            { key: 'env_key', label: 'Supabase Secret', value: 'LEXOFFICE_API_KEY' },
+            { key: 'key_storage', label: 'Key-Speicherort', value: 'connector_config (automatisch fuer alle Functions)' },
         ],
         logs: []
     },
@@ -424,9 +424,10 @@ function renderConnectorCard(id) {
             });
         }
         // Info box
-        body += '<div class="bg-blue-50 border border-blue-200 rounded-lg p-3">'
-            + '<p class="text-xs text-blue-700">\u2139\ufe0f <strong>Hinweis:</strong> Der API Key wird in den Supabase Secrets gespeichert (LEXOFFICE_API_KEY) und von den Edge Functions lexoffice-sync, lexoffice-pdf und lexoffice-webhook verwendet. '
-            + 'Wenn du den Key hier aenderst, wird er automatisch in der connector_config gespeichert. Den Supabase Secret musst du <strong>zusaetzlich manuell</strong> im Supabase Dashboard aktualisieren (Settings \u2192 Edge Functions \u2192 Secrets).</p></div>';
+        body += '<div class="bg-green-50 border border-green-200 rounded-lg p-3">'
+            + '<p class="text-xs text-green-700">\u2705 <strong>Zentrale Verwaltung:</strong> Der API Key wird direkt in der Portal-Datenbank gespeichert. '
+            + 'Alle Edge Functions (lexoffice-sync, lexoffice-pdf, lexoffice-webhook) lesen den Key automatisch von hier. '
+            + 'Du musst nichts manuell im Supabase Dashboard aendern.</p></div>';
         // Buttons
         body += '<div class="flex gap-2 pt-1">'
             + '<button onclick="window.testLexofficeConnection()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition">\ud83d\udd0d Verbindung testen</button>'
@@ -440,9 +441,8 @@ function renderConnectorCard(id) {
             + '<p><strong>2.</strong> Gehe zu <em>Einstellungen \u2192 Erweiterungen \u2192 \u00d6ffentliche API</em>.</p>'
             + '<p><strong>3.</strong> Klicke auf <strong>\u201eNeuen Key erstellen\u201c</strong>.</p>'
             + '<p><strong>4.</strong> Vergib einen Namen (z.B. \u201evit:bikes Portal\u201c) und kopiere den angezeigten Key.</p>'
-            + '<p><strong>5.</strong> Trage den Key hier ein und klicke \u201eSpeichern\u201c.</p>'
-            + '<p><strong>6.</strong> Aktualisiere den Key auch im <a href="https://supabase.com/dashboard/project/lwwagbkxeofahhwebkab/settings/functions" target="_blank" class="text-blue-600 underline">Supabase Dashboard</a> unter Edge Function Secrets (LEXOFFICE_API_KEY).</p>'
-            + '<p class="text-gray-400 pt-1">\ud83d\udca1 Wichtig: Der alte Test-Key muss durch den produktiven Key ersetzt werden. Der alte Key funktioniert nach Ablauf der Testversion nicht mehr.</p>'
+            + '<p><strong>5.</strong> Trage den Key hier ein und klicke \u201eSpeichern\u201c. Fertig!</p>'
+            + '<p class="text-green-600 pt-1">\u2705 Der Key wird automatisch von allen LexOffice Edge Functions verwendet. Kein manueller Schritt im Supabase Dashboard noetig.</p>'
             + '</div></details>';
         body += '</div>';
     }
