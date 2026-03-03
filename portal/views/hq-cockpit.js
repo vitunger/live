@@ -131,7 +131,7 @@ export async function renderHqCockpit() {
     var totalPlan = hqStandorte.reduce(function(a,s){return a+s.umsatzPlan;},0);
     var avgRohertrag = active.length ? (active.reduce(function(a,s){return a+s.rohertrag;},0)/active.length).toFixed(1) : 0;
     var totalLeads = hqStandorte.reduce(function(a,s){return a+s.leads;},0);
-    var kritisch = hqStandorte.filter(function(s){return s.leadPerf<50;}).length;
+    var kritisch = hqStandorte.filter(function(s){return s.leadPerf>0 && s.leadPerf<50;}).length;
     var tickets = hqStandorte.reduce(function(a,s){return a+s.offeneTickets;},0);
 
     // KPIs
@@ -596,7 +596,7 @@ export function renderHqMarketing() {
     var ma = document.getElementById('hqMktAlerts');
     if(ma) {
         var mah = '';
-        hqStandorte.filter(function(s){return s.leadPerf<50;}).sort(function(a,b){return a.leadPerf-b.leadPerf;}).forEach(function(s){
+        hqStandorte.filter(function(s){return s.leadPerf>0 && s.leadPerf<50;}).sort(function(a,b){return a.leadPerf-b.leadPerf;}).forEach(function(s){
             mah += '<div class="p-3 bg-red-50 rounded-lg"><div class="flex justify-between"><span class="text-sm font-semibold text-red-700">'+s.name+' – '+s.leadPerf+'% Lead-Performance</span><span class="text-xs text-gray-400">CPT: '+s.cpt+' €</span></div><p class="text-xs text-red-500 mt-1">Budget: '+s.budget+' €/Monat · '+s.leads+' Leads · '+(s.strategieStatus==='missing'?'❌ Keine Strategie vereinbart':'Strategie: '+s.strategieStatus)+'</p></div>';
         });
         hqStandorte.filter(function(s){return s.strategieStatus==='missing';}).forEach(function(s){
@@ -669,8 +669,8 @@ export function renderHqMktHandlungsbedarf() {
     if(!el||el.children.length>0) return;
     var alerts=[];
     hqStandorte.forEach(function(s){
-        if(s.leadPerf<30) alerts.push({prio:'kritisch',icon:'🔴',title:s.name+' – Nur '+s.leadPerf+'% Lead-Performance',desc:'Budget: '+s.budget+' €/Mo · '+s.leads+' Leads · CPT: '+s.cpt+' € · Dringend Gespraech fuehren',color:'bg-red-50 border-red-200'});
-        else if(s.leadPerf<50) alerts.push({prio:'warnung',icon:'🟡',title:s.name+' – '+s.leadPerf+'% Lead-Performance',desc:'Unter Ziel. Budget-Optimierung pruefen. CPT: '+s.cpt+' €',color:'bg-yellow-50 border-yellow-200'});
+        if(s.leadPerf>0 && s.leadPerf<30) alerts.push({prio:'kritisch',icon:'🔴',title:s.name+' – Nur '+s.leadPerf+'% Lead-Performance',desc:'Budget: '+s.budget+' €/Mo · '+s.leads+' Leads · CPT: '+s.cpt+' € · Dringend Gespraech fuehren',color:'bg-red-50 border-red-200'});
+        else if(s.leadPerf>0 && s.leadPerf<50) alerts.push({prio:'warnung',icon:'🟡',title:s.name+' – '+s.leadPerf+'% Lead-Performance',desc:'Unter Ziel. Budget-Optimierung pruefen. CPT: '+s.cpt+' €',color:'bg-yellow-50 border-yellow-200'});
         if(s.strategieStatus==='missing') alerts.push({prio:'kritisch',icon:'📋',title:s.name+' – Keine Marketing-Strategie vereinbart',desc:'Jahresgespraech muss noch terminiert werden',color:'bg-red-50 border-red-200'});
     });
     alerts.sort(function(a,b){var p={kritisch:0,warnung:1,info:2};return (p[a.prio]||9)-(p[b.prio]||9);});
