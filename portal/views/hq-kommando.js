@@ -960,261 +960,31 @@ export async function updateIdeeStatus(ideeId, newStatus) {
 }
 
 
-// === HQ SHOP-VERWALTUNG ===
-var hqShopOrderFilter = 'all';
-var hqShopOrdersCache = [];
-
-export function showHqShopTab(tab) {
-    document.querySelectorAll('.hq-shop-tabcontent').forEach(function(el){el.style.display='none';});
-    document.querySelectorAll('.hq-shop-tab').forEach(function(b){b.className='hq-shop-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700';});
-    var tabEl = document.getElementById('hqShopTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
-    if(tabEl) tabEl.style.display = 'block';
-    var btn = document.querySelector('.hq-shop-tab[data-tab="'+tab+'"]');
-    if(btn) btn.className = 'hq-shop-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-vit-orange text-vit-orange';
-    if(tab==='orders') renderHqShopOrders();
-    if(tab==='products') renderHqShopProducts();
-}
-
-export function filterHqShopOrders(f) {
-    hqShopOrderFilter = f;
-    document.querySelectorAll('.hq-order-filter').forEach(function(b){b.className='hq-order-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600';});
-    var btn = document.querySelector('.hq-order-filter[data-f="'+f+'"]');
-    if(btn) btn.className = 'hq-order-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white';
-    renderHqShopOrders();
-}
-
-export async function renderHqShop() {
-    // Load KPIs
-    var { data: products } = await _sb().from('shop_products').select('id').eq('is_active', true);
-    var el1 = document.getElementById('hqShopKpiProducts'); if(el1) el1.textContent = (products||[]).length;
-
-    var { data: allOrders } = await _sb().from('shop_orders').select('id, status, total, created_at').order('created_at', {ascending:false});
-    hqShopOrdersCache = allOrders || [];
-    var pending = hqShopOrdersCache.filter(function(o){return o.status==='pending'||o.status==='confirmed'}).length;
-    var el2 = document.getElementById('hqShopKpiPending'); if(el2) el2.textContent = pending;
-    if(el2 && pending > 0) el2.parentNode.classList.add('ring-2','ring-yellow-400');
-
-    var thisMonth = new Date().toISOString().substring(0,7);
-    var monthOrders = hqShopOrdersCache.filter(function(o){return o.created_at.substring(0,7)===thisMonth});
-    var shipped = monthOrders.filter(function(o){return o.status==='shipped'||o.status==='delivered'}).length;
-    var el3 = document.getElementById('hqShopKpiShipped'); if(el3) el3.textContent = shipped;
-    var revenue = monthOrders.reduce(function(a,o){return a+(parseFloat(o.total)||0)},0);
-    var el4 = document.getElementById('hqShopKpiRevenue'); if(el4) el4.textContent = fmtEur(revenue);
-
-    renderHqShopOrders();
-}
-
-export async function renderHqShopOrders() {
-    var oEl = document.getElementById('hqShopOrders');
-    if(!oEl) return;
-    var { data: orders } = await _sb().from('shop_orders').select('*, standort:standorte(name, ort), items:shop_order_items(*, product:shop_products(name))').order('created_at', {ascending:false}).limit(50);
-    if(!orders?.length) { oEl.innerHTML = '<p class="text-center text-gray-400 py-4">Keine Bestellungen</p>'; return; }
-
-    var filtered = hqShopOrderFilter === 'all' ? orders : orders.filter(function(o){return o.status===hqShopOrderFilter});
-    var statusC = {pending:'bg-red-100 text-red-700',confirmed:'bg-yellow-100 text-yellow-700',shipped:'bg-blue-100 text-blue-700',delivered:'bg-green-100 text-green-700',cancelled:'bg-gray-100 text-gray-400'};
-    var statusL = {pending:'⏳ Offen',confirmed:'📋 Bestätigt',shipped:'🚚 Versendet',delivered:'✅ Geliefert',cancelled:'❌ Storniert'};
-    var h = '';
-    filtered.forEach(function(o) {
-        var itemList = (o.items||[]).map(function(it){return it.quantity+'x '+(it.variant_name?it.variant_name+' ':'')+(it.product?.name||it.product_name)}).join(', ');
-        h += '<div class="vit-card p-4 '+(o.status==='pending'?'border-l-4 border-red-500':'')+'">';
-        h += '<div class="flex items-center justify-between mb-2">';
-        h += '<div class="flex items-center space-x-3"><span class="font-mono text-sm font-bold text-gray-700">'+o.order_number+'</span>';
-        h += '<span class="text-xs px-2 py-0.5 rounded-full font-semibold '+(statusC[o.status]||'')+'">'+(statusL[o.status]||o.status)+'</span></div>';
-        h += '<span class="text-lg font-bold text-gray-800">'+fmtEur(o.total)+'</span></div>';
-        h += '<p class="text-sm text-gray-600 mb-1">📍 <strong>'+(o.standort?.name||'?')+'</strong>'+(o.standort?.ort?' · '+o.standort.ort:'')+'</p>';
-        h += '<p class="text-xs text-gray-500 mb-2">'+itemList+'</p>';
-        h += '<p class="text-xs text-gray-400 mb-3">Bestellt: '+fmtDate(o.created_at)+'</p>';
-
-        // Tracking info
-        if(o.tracking_number) {
-            var trackUrl = o.tracking_url || getTrackingUrl(o.tracking_carrier, o.tracking_number);
-            h += '<div class="p-2 bg-blue-50 rounded-lg mb-3 text-xs"><span class="font-semibold text-blue-700">🚚 '+(o.tracking_carrier||'')+': </span>';
-            h += '<a href="'+trackUrl+'" target="_blank" class="text-blue-600 underline hover:text-blue-800">'+o.tracking_number+'</a></div>';
-        }
-
-        // Action buttons
-        h += '<div class="flex flex-wrap gap-2">';
-        if(o.status==='pending') {
-            h += '<button onclick="updateShopOrderStatus(\x27'+o.id+'\x27,\x27confirmed\x27)" class="text-xs px-3 py-1.5 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600">✓ Bestätigen</button>';
-        }
-        if(o.status==='pending'||o.status==='confirmed') {
-            h += '<button onclick="showPackingList(\x27'+o.id+'\x27)" class="text-xs px-3 py-1.5 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700">🖨️ Packliste</button>';
-            h += '<button onclick="showTrackingModal(\x27'+o.id+'\x27)" class="text-xs px-3 py-1.5 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600">📦 Versenden</button>';
-        }
-        if(o.status==='shipped') {
-            h += '<button onclick="updateShopOrderStatus(\x27'+o.id+'\x27,\x27delivered\x27)" class="text-xs px-3 py-1.5 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600">✅ Zugestellt</button>';
-        }
-        h += '</div></div>';
-    });
-    oEl.innerHTML = h;
-}
-
-export async function renderHqShopProducts() {
-    var pEl = document.getElementById('hqShopProducts');
-    if(!pEl) return;
-    var { data: products } = await _sb().from('shop_products').select('*, variants:shop_product_variants(*)').order('category');
-    var catIcons = {print:'🖨️',textil:'👕',display:'🏪',digital:'💻',give:'🎁'};
-    var h = '';
-    (products||[]).forEach(function(p) {
-        var totalStock = (p.variants||[]).reduce(function(a,v){return a+v.stock},0);
-        var hasVariants = p.variants && p.variants.length > 0;
-        h += '<div class="vit-card p-4">';
-        h += '<div class="flex items-center justify-between mb-1">';
-        h += '<div class="flex items-center space-x-2"><span>'+(catIcons[p.category]||'🛍️')+'</span><span class="text-sm font-semibold">'+p.name+'</span>';
-        h += '<span class="text-xs text-gray-400">('+p.category+')</span>';
-        if(!p.is_active) h += '<span class="text-xs text-red-400 font-semibold">inaktiv</span>';
-        h += '</div><span class="text-sm font-bold text-gray-800">'+fmtEur(p.price)+'</span></div>';
-        if(hasVariants) {
-            h += '<div class="flex flex-wrap gap-1 mt-2">';
-            p.variants.sort(function(a,b){return a.sort_index-b.sort_index}).forEach(function(v) {
-                var color = v.stock <= 0 ? 'bg-red-50 text-red-500' : v.stock <= 3 ? 'bg-yellow-50 text-yellow-700' : 'bg-green-50 text-green-700';
-                h += '<span class="text-[10px] px-2 py-0.5 rounded font-mono '+color+'">'+v.variant_name+':'+v.stock+'</span>';
-            });
-            h += '<span class="text-[10px] px-2 py-0.5 rounded bg-gray-100 text-gray-600 font-semibold">Σ '+totalStock+'</span>';
-            h += '</div>';
-        }
-        h += '</div>';
-    });
-    pEl.innerHTML = h;
-}
-
-export function getTrackingUrl(carrier, number) {
-    var urls = {
-        'DHL': 'https://www.dhl.de/de/privatkunden/pakete-empfangen/verfolgen.html?piececode='+number,
-        'DPD': 'https://tracking.dpd.de/status/de_DE/parcel/'+number,
-        'Hermes': 'https://www.myhermes.de/empfangen/sendungsverfolgung/sendungsinformation/#'+number,
-        'UPS': 'https://www.ups.com/track?tracknum='+number,
-        'GLS': 'https://gls-group.eu/DE/de/paketverfolgung?match='+number
-    };
-    return urls[carrier] || '#';
-}
-
-export async function showPackingList(orderId) {
-    var { data: order } = await _sb().from('shop_orders').select('*, standort:standorte(name, strasse, plz, ort), items:shop_order_items(*, product:shop_products(name, sku))').eq('id', orderId).single();
-    if(!order) return;
-    var h = '<div style="font-family:monospace;font-size:12px;">';
-    h += '<div style="text-align:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:12px;">';
-    h += '<h2 style="margin:0;font-size:16px;">📋 PACKLISTE</h2>';
-    h += '<p style="margin:4px 0 0;">'+order.order_number+' · '+fmtDate(order.created_at)+'</p></div>';
-    h += '<div style="margin-bottom:12px;"><strong>Lieferadresse:</strong><br>';
-    h += (order.standort?.name||'')+'<br>';
-    h += (order.standort?.strasse||'')+'<br>';
-    h += (order.standort?.plz||'')+' '+(order.standort?.ort||'')+'</div>';
-    h += '<table style="width:100%;border-collapse:collapse;">';
-    h += '<tr style="border-bottom:1px solid #000;"><th style="text-align:left;padding:4px;">✓</th><th style="text-align:left;padding:4px;">Menge</th><th style="text-align:left;padding:4px;">Artikel</th><th style="text-align:left;padding:4px;">SKU</th><th style="text-align:left;padding:4px;">Größe</th></tr>';
-    (order.items||[]).forEach(function(it) {
-        h += '<tr style="border-bottom:1px dashed #ccc;">';
-        h += '<td style="padding:6px 4px;">☐</td>';
-        h += '<td style="padding:6px 4px;font-weight:bold;font-size:14px;">'+it.quantity+'x</td>';
-        h += '<td style="padding:6px 4px;">'+(it.product?.name||it.product_name)+'</td>';
-        h += '<td style="padding:6px 4px;color:#888;">'+(it.product?.sku||'')+'</td>';
-        h += '<td style="padding:6px 4px;font-weight:bold;">'+(it.variant_name||'-')+'</td>';
-        h += '</tr>';
-    });
-    h += '</table>';
-    h += '<div style="margin-top:16px;border-top:1px solid #000;padding-top:8px;">';
-    h += '<strong>Gesamt: '+fmtEur(order.total)+'</strong></div>';
-    h += '<div style="margin-top:20px;border-top:1px dashed #ccc;padding-top:8px;">';
-    h += '<p>Gepackt von: _________________ Datum: _________</p></div></div>';
-    document.getElementById('packingListContent').innerHTML = h;
-    document.getElementById('packingListModal').classList.remove('hidden');
-}
-
-export function showTrackingModal(orderId) {
-    document.getElementById('trackingOrderId').value = orderId;
-    document.getElementById('trackingNumber').value = '';
-    document.getElementById('trackingModal').classList.remove('hidden');
-}
-
-export async function saveTracking() {
-    var orderId = document.getElementById('trackingOrderId').value;
-    var carrier = document.getElementById('trackingCarrier').value;
-    var number = document.getElementById('trackingNumber').value.trim();
-    if(!number) { _showToast('Bitte Tracking-Nummer eingeben.', 'error'); return; }
-    var trackUrl = getTrackingUrl(carrier, number);
-    await _sb().from('shop_orders').update({
-        status: 'shipped',
-        shipped_at: new Date().toISOString(),
-        tracking_number: number,
-        tracking_carrier: carrier,
-        tracking_url: trackUrl,
-        updated_at: new Date().toISOString()
-    }).eq('id', orderId);
-
-    // E-Mail an Standort: Paket versendet mit Tracking
-    try {
-        await fetch(SUPABASE_URL + '/functions/v1/shop-notify', {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token, 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mode: 'status_change', order_id: orderId, new_status: 'shipped' })
-        });
-    } catch(notifyErr) { console.warn('Shop notify (shipped):', notifyErr); }
-
-    document.getElementById('trackingModal').classList.add('hidden');
-    renderHqShop();
-}
-
-window.updateShopOrderStatus = async function(orderId, newStatus) {
-    var updates = { status: newStatus, updated_at: new Date().toISOString() };
-    if (newStatus === 'confirmed') updates.confirmed_at = new Date().toISOString();
-    if (newStatus === 'shipped') updates.shipped_at = new Date().toISOString();
-    if (newStatus === 'delivered') updates.delivered_at = new Date().toISOString();
-    await _sb().from('shop_orders').update(updates).eq('id', orderId);
-
-    // E-Mail an Standort: Statusänderung
-    try {
-        await fetch(SUPABASE_URL + '/functions/v1/shop-notify', {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token, 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mode: 'status_change', order_id: orderId, new_status: newStatus })
-        });
-    } catch(notifyErr) { console.warn('Shop notify (status_change):', notifyErr); }
-
-    renderHqShop();
-};
-export function addHqShopProduct(){
-    var n=document.getElementById('hqShopName');
-    var p=document.getElementById('hqShopPreis');
-    if(!n||!n.value.trim()){_showToast('Produktname eingeben', 'error');return;}
-    _sb().from('shop_products').insert({
-        name: n.value.trim(),
-        category: document.getElementById('hqShopKat')?.value || 'print',
-        price: parseFloat(p.value)||0,
-        description: document.getElementById('hqShopDesc')?.value || ''
-    }).then(function(){ n.value='';p.value='';if(document.getElementById('hqShopDesc'))document.getElementById('hqShopDesc').value=''; showHqShopTab('products'); });
-}
 var kzStandorte = []; // loaded from Supabase
 
 // ============================================================
 // === HQ BILLING / ABRECHNUNG MODULE ===
 
 
-// Strangler Fig
-const _exports = {showHqKommTab,openAnkuendigungModal,closeAnkModal,saveAnkuendigung,renderHqKomm,renderHqKampagnen,addHqKampagne,filterHqDok,loadNetzwerkDokumente,renderHqDokumente,formatFileSize,downloadDokument,deleteNetzwerkDok,loadHqKalTermine,filterHqKal,renderHqKalender,addHqKalTermin,filterHqTasks,renderHqAufgaben,addHqTask,calculateBwaAge,countFeaturesUsed,calculateActivityScore,loadPortalNutzungData,renderHqAuswertung,renderHqWissen,addHqWissen,renderHqSupport,renderHqIdeen,filterHqIdeen,renderKiAnalyseHtml,toggleKiPanel,analysiereIdee,analysierAlleNeuen,updateIdeeStatus,showHqShopTab,filterHqShopOrders,renderHqShop,renderHqShopOrders,renderHqShopProducts,getTrackingUrl,showPackingList,showTrackingModal,saveTracking,addHqShopProduct};
+// Strangler Fig (Shop-Code ausgelagert in hq-shop.js)
+const _exports = {showHqKommTab,openAnkuendigungModal,closeAnkModal,saveAnkuendigung,renderHqKomm,renderHqKampagnen,addHqKampagne,filterHqDok,loadNetzwerkDokumente,renderHqDokumente,formatFileSize,downloadDokument,deleteNetzwerkDok,loadHqKalTermine,filterHqKal,renderHqKalender,addHqKalTermin,filterHqTasks,renderHqAufgaben,addHqTask,calculateBwaAge,countFeaturesUsed,calculateActivityScore,loadPortalNutzungData,renderHqAuswertung,renderHqWissen,addHqWissen,renderHqSupport,renderHqIdeen,filterHqIdeen,renderKiAnalyseHtml,toggleKiPanel,analysiereIdee,analysierAlleNeuen,updateIdeeStatus};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-// [prod] log removed
 
 // === Window Exports (onclick handlers) ===
 window.addHqKalTermin = addHqKalTermin;
 window.addHqKampagne = addHqKampagne;
-window.addHqShopProduct = addHqShopProduct;
 window.addHqTask = addHqTask;
 window.addHqWissen = addHqWissen;
 window.filterHqDok = filterHqDok;
 window.filterHqKal = filterHqKal;
-window.filterHqShopOrders = filterHqShopOrders;
 window.filterHqTasks = filterHqTasks;
-window.saveTracking = saveTracking;
 window.showHqKommTab = showHqKommTab;
-window.showHqShopTab = showHqShopTab;
 
 // === Stub: openDokUploadModal (TODO: vollständig implementieren) ===
 window.openDokUploadModal = function() {
     if(window.showToast) window.showToast('Dokument-Upload wird vorbereitet...', 'info');
-    // TODO: Modal für Netzwerk-Dokument-Upload implementieren
     console.warn('openDokUploadModal: noch nicht implementiert');
 };
 window.renderHqAuswertung = renderHqAuswertung;
-window.renderHqShop = renderHqShop;
 window.renderHqSupport = renderHqSupport;
 window.renderHqWissen = renderHqWissen;

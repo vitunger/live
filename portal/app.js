@@ -12,7 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1772531132";
+const CACHE_BUST = "?v=1772537442";
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
@@ -45,6 +45,7 @@ const VIEW_MODULES = [
     'views/hq-verkauf.js',
     'views/hq-finanzen.js',
     'views/hq-kommando.js',
+    'views/hq-shop.js',
     'views/hq-billing.js',
     'views/hq-feedback.js',
     
@@ -152,4 +153,5 @@ async function loadModules() {
 
 // ── Boot ──
 loadModules();
-/* pro deploy 1772294969 */
+/* pro deploy 1772537442 */
+

@@ -367,6 +367,10 @@ export async function loadMyShopOrders() {
         }
 
         h += '<p class="text-xs text-gray-400 mt-2">Bestellt am '+fmtDate(o.created_at)+'</p>';
+        // Cancel button for pending orders
+        if(o.status === 'pending') {
+            h += '<button onclick="cancelMyShopOrder(\''+o.id+'\')\" class="mt-2 text-xs px-3 py-1.5 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100">✕ Bestellung stornieren</button>';
+        }
         h += '</div>';
     });
     el.innerHTML = h;
@@ -503,6 +507,37 @@ export function updateShopCart(cartKey, delta) {
     renderShop();
 }
 
+// Cancel order from standort side
+export async function cancelMyShopOrder(orderId) {
+    if(!confirm('Bestellung wirklich stornieren?')) return;
+    try {
+        // Check if order is still pending
+        var { data: order, error } = await _sb().from('shop_orders').select('status').eq('id', orderId).single();
+        if(error || !order) { _showToast('Bestellung nicht gefunden.', 'error'); return; }
+        if(order.status !== 'pending') { _showToast('Bestellung kann nicht mehr storniert werden (Status: '+order.status+').', 'info'); return; }
+
+        // Load items for stock reversal
+        var { data: items } = await _sb().from('shop_order_items').select('variant_id, quantity').eq('order_id', orderId);
+        if(items && items.length > 0) {
+            for(var i = 0; i < items.length; i++) {
+                var it = items[i];
+                if(it.variant_id) {
+                    var { data: variant } = await _sb().from('shop_product_variants').select('stock').eq('id', it.variant_id).single();
+                    if(variant) {
+                        await _sb().from('shop_product_variants').update({ stock: variant.stock + it.quantity }).eq('id', it.variant_id);
+                    }
+                }
+            }
+        }
+
+        await _sb().from('shop_orders').update({ status: 'cancelled', updated_at: new Date().toISOString() }).eq('id', orderId);
+        _showToast('Bestellung storniert.', 'success');
+        shopAllProducts = []; shopVariants = {};
+        loadMyShopOrders();
+    } catch(err) { _showToast('Fehler: '+err.message, 'error'); console.error(err); }
+}
+
 // Strangler Fig
-const _exports = { renderShop, shopSizeQty, shopSizeQtyInput, shopAddSelectedSizes, shopUpdateSizeCart, selectShopSize, updateCartQty, addToCartWithSize, addToCart, renderShopCart, filterShop, showShopTab, loadMyShopOrders, submitShopOrder, removeFromCart, updateShopCart };
+const _exports = { renderShop, shopSizeQty, shopSizeQtyInput, shopAddSelectedSizes, shopUpdateSizeCart, selectShopSize, updateCartQty, addToCartWithSize, addToCart, renderShopCart, filterShop, showShopTab, loadMyShopOrders, submitShopOrder, removeFromCart, updateShopCart, cancelMyShopOrder };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
+
