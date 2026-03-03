@@ -359,6 +359,14 @@
 .fi{animation:fi .25s ease}@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 .td{transition:background .15s;border-radius:7px;padding:7px 9px}.td:hover{background:#fef7ed}
 .td input[type=checkbox]{accent-color:#EF7D00;width:15px;height:15px}
+.vit-checkbox{accent-color:#EF7D00;width:16px;height:16px}
+.vit-label{font-size:11px;color:var(--c-sub);font-weight:600;display:block;margin-bottom:3px}
+.vit-input{width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none}
+.vit-section-header{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--c-muted);font-weight:600;margin-bottom:12px}
+.vit-section-card{background:var(--c-bg2);border-radius:12px;padding:16px;margin-bottom:16px}
+.vit-settings-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;cursor:pointer;font-size:12px;color:var(--c-sub)}
+.vit-settings-row-lg{display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:var(--c-sub)}
+.vit-gradient{background:linear-gradient(135deg,#EF7D00,#dc6b00)}
 .dt{width:100%;border-collapse:collapse;font-size:12.5px}.dt th{background:var(--c-bg2);font-weight:600;color:#666;padding:9px 12px;text-align:left;border-bottom:1.5px solid #eee}.dt td{padding:8px 12px;border-bottom:1px solid #f3f3f3}.dt tr:hover td{background:var(--c-bg2)}
 .wn{padding:7px 14px;border-radius:9px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s;border:1.5px solid transparent}.wn.on{background:#EF7D00;color:#fff;border-color:#EF7D00}.wn:not(.on){background:var(--c-bg);color:var(--c-sub);border-color:var(--c-border)}.wn:not(.on):hover{border-color:#EF7D00;color:#EF7D00}
 .mc{transition:all .2s}.mc:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.1)}
@@ -692,7 +700,7 @@
             <!-- Sidebar Overlay (mobile) -->
             <div id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
             <!-- Sidebar -->
-            <aside id="sidebarNav" class="sidebar w-64 text-white overflow-y-auto flex-shrink-0" style="position:relative;">
+            <aside id="sidebarNav" class="sidebar w-64 text-white overflow-y-auto flex-shrink-0 relative">
                 <!-- Collapse toggle -->
                 <button id="sidebarCollapseBtn" class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Sidebar einklappen">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -1372,7 +1380,7 @@
                 <div id="verkaufView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-6" data-i18n="h_sales">VERKAUF</h1>
 
-                    <!-- 🔥 Verkaufs-Momentum (jetzt in React Pipeline KPIs) --><div style="position:relative">
+                    <!-- 🔥 Verkaufs-Momentum (jetzt in React Pipeline KPIs) --><div class="relative">
 
                     <!-- Tab Navigation -->
                     <div class="mb-6 border-b border-gray-200">
@@ -1432,8 +1440,8 @@
                     <div id="vkTabAuswertung" class="vk-tab-content" style="display:none;">
                         <!-- Soft Lock: Pipeline Insights -->
                         <div id="pipelineInsightLock" style="display:none;">
-                            <div class="vit-card p-6 text-center mb-4" style="border:2px dashed var(--c-border);">
-                                <div style="font-size:40px;margin-bottom:8px">📊</div>
+                            <div class="vit-card p-6 text-center mb-4" style="border:2px dashed var(--c-border)">
+                                <div class="text-4xl mb-2">📊</div>
                                 <h3 class="text-base font-bold text-gray-800 mb-1">Erweiterte Pipeline-Auswertung</h3>
                             </div>
                         </div>
@@ -1509,15 +1517,15 @@
                                 </div>
                                 <button id="tEndBtn" onclick="endTrainingSession()" disabled class="text-xs px-4 py-2 border-2 border-vit-orange text-vit-orange rounded-lg font-bold hover:bg-orange-50 transition disabled:opacity-40">Beenden &amp; Bewerten</button>
                             </div>
-                            <div class="p-3 rounded-lg text-xs text-center text-white font-semibold" style="background:linear-gradient(135deg,#EF7D00,#dc6b00)">💡 <span id="tSessionHint"></span></div>
+                            <div class="p-3 rounded-lg text-xs text-center text-white font-semibold vit-gradient">💡 <span id="tSessionHint"></span></div>
                             <div id="tChatMessages" class="space-y-3 mt-4" style="min-height:200px;max-height:400px;overflow-y:auto"></div>
                             <div id="tThinking" class="hidden p-3 text-center text-xs text-gray-400"><div class="inline-flex items-center gap-2"><div class="flex gap-1"><span class="w-2 h-2 bg-gray-300 rounded-full" style="animation:tpulse 1s infinite"></span><span class="w-2 h-2 bg-gray-300 rounded-full" style="animation:tpulse 1s infinite 0.2s"></span><span class="w-2 h-2 bg-gray-300 rounded-full" style="animation:tpulse 1s infinite 0.4s"></span></div> Kunde überlegt...</div></div>
-                            <div id="tWaveform" class="hidden p-3 rounded-lg mt-2"><div id="tWaveBars" class="flex items-center justify-center gap-0.5" style="height:32px"></div><p id="tWaveLabel" class="text-[10px] font-semibold text-center mt-1" style="color:#EF7D00">🎤 Hört zu...</p></div>
+                            <div id="tWaveform" class="hidden p-3 rounded-lg mt-2"><div id="tWaveBars" class="flex items-center justify-center gap-0.5" style="height:32px"></div><p id="tWaveLabel" class="text-[10px] font-semibold text-center mt-1 text-vit-orange">🎤 Hört zu...</p></div>
                             <p id="tTranscript" class="hidden text-xs text-vit-orange italic text-center mt-2"></p>
                             <div class="mt-3">
                                 <div class="flex gap-2">
                                     <input id="tTextInput" type="text" placeholder="Oder hier tippen..." class="flex-1 p-2.5 border border-gray-200 rounded-lg text-sm" onkeydown="if(event.key==='Enter')sendTrainingText()">
-                                    <button id="tMicBtn" onclick="toggleTrainingMic()" class="w-12 h-12 rounded-full text-white text-xl flex items-center justify-center" style="background:linear-gradient(135deg,#EF7D00,#dc6b00);box-shadow:0 4px 15px rgba(239,125,0,0.3)">🎤</button>
+                                    <button id="tMicBtn" onclick="toggleTrainingMic()" class="w-12 h-12 rounded-full text-white text-xl flex items-center justify-center vit-gradient shadow-[0_4px_15px_rgba(239,125,0,0.3)]">🎤</button>
                                     <button id="tSendMicBtn" onclick="sendTrainingVoice()" class="hidden w-12 h-12 rounded-full bg-green-500 text-white text-xl flex items-center justify-center font-bold">✓</button>
                                     <button id="tSendTextBtn" onclick="sendTrainingText()" class="hidden w-10 h-10 rounded-full text-white text-sm flex items-center justify-center" style="background:#EF7D00">↑</button>
                                 </div>
@@ -1536,10 +1544,10 @@
                             </div>
                             <div class="grid grid-cols-2 gap-4 mb-6">
                                 <div class="p-3 rounded-lg" style="background:#f0fdf4"><p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color:#059669">💪 Stärken</p><div id="tStrengths"></div></div>
-                                <div class="p-3 rounded-lg" style="background:var(--c-yellow-tint,#fffbeb)"><p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color:#EF7D00">💡 Tipps</p><div id="tImprovements"></div></div>
+                                <div class="p-3 rounded-lg" style="background:var(--c-yellow-tint,#fffbeb)"><p class="text-[10px] font-bold uppercase tracking-wider mb-2 text-vit-orange">💡 Tipps</p><div id="tImprovements"></div></div>
                             </div>
                             <div class="flex justify-center gap-3">
-                                <button onclick="restartTrainingScenario()" class="px-6 py-2.5 rounded-lg text-white text-sm font-bold" style="background:linear-gradient(135deg,#EF7D00,#dc6b00)">🔄 Nochmal üben</button>
+                                <button onclick="restartTrainingScenario()" class="px-6 py-2.5 rounded-lg text-white text-sm font-bold vit-gradient">🔄 Nochmal üben</button>
                                 <button onclick="backToTrainingMenu()" class="px-6 py-2.5 rounded-lg border-2 border-gray-200 text-gray-600 text-sm font-bold hover:bg-gray-50">← Szenarien</button>
                             </div>
                         </div>
@@ -2095,8 +2103,8 @@
                             <div class="lg:col-span-2">
                         <!-- Feature Lock Overlay -->
                         <div id="benchmarkLockOverlay" style="display:none;">
-                            <div class="vit-card p-8 text-center mb-6" style="border:2px dashed var(--c-border);">
-                                <div style="font-size:48px;margin-bottom:12px">🔒</div>
+                            <div class="vit-card p-8 text-center mb-6" style="border:2px dashed var(--c-border)">
+                                <div class="text-5xl mb-3">🔒</div>
                                 <h2 class="text-lg font-bold text-gray-800 mb-2">Benchmark-Vergleich gesperrt</h2>
                                 <p class="text-sm text-gray-500 mb-4">Ohne aktuelle BWA-Daten ist kein Netzwerk-Vergleich möglich.<br>Reiche deine BWA ein, um die Benchmarks freizuschalten.</p>
                                 <button onclick="showControllingTab('bwa')" class="px-6 py-3 bg-vit-orange text-white font-bold text-sm rounded-lg hover:opacity-90 transition">
@@ -2284,7 +2292,7 @@
                                 </div>
 
                                 <!-- Messages Area -->
-                                <div id="kommChatMessages" class="flex-1 overflow-y-auto p-5 space-y-1" style="scroll-behavior:smooth;">
+                                <div id="kommChatMessages" class="flex-1 overflow-y-auto p-5 space-y-1 scroll-smooth">
                                     <div class="flex items-center justify-center h-full text-gray-400 text-sm">
                                         <div class="text-center">
                                             <div class="text-4xl mb-3">💬</div>
@@ -2583,7 +2591,7 @@
                                 </div>
                             </div>
 
-                            <div class="lg:col-span-2 vit-card flex flex-col" style="height: 600px;">
+                            <div class="lg:col-span-2 vit-card flex flex-col h-[600px]">
                                 <div class="border-b p-4 flex items-center space-x-3">
                                     <img src="https://ui-avatars.com/api/?name=HQ+Team&background=EF7D00&color=fff" class="w-10 h-10 rounded-full">
                                     <div>
@@ -2750,7 +2758,7 @@
                             </div>
                         </div>
 
-                        <div class="lg:col-span-2 vit-card flex flex-col" style="height: 600px;">
+                        <div class="lg:col-span-2 vit-card flex flex-col h-[600px]">
                             <div class="border-b p-4 flex items-center space-x-3">
                                 <img src="https://ui-avatars.com/api/?name=Markus+Unger&background=EF7D00&color=fff" class="w-10 h-10 rounded-full">
                                 <div>
@@ -2884,10 +2892,10 @@
                                     <div class="flex-1">
                                         <div class="text-xs text-gray-500 mb-1">Januar</div>
                                         <div class="flex space-x-2">
-                                            <div class="bg-vit-orange h-32 rounded-t flex items-end justify-center pb-2 text-white text-xs font-semibold" style="width: 60%">
+                                            <div class="bg-vit-orange h-32 rounded-t flex items-end justify-center pb-2 text-white text-xs font-semibold w-[60%]">
                                                 55k
                                             </div>
-                                            <div class="bg-gray-300 h-24 rounded-t flex items-end justify-center pb-2 text-gray-700 text-xs font-semibold" style="width: 40%">
+                                            <div class="bg-gray-300 h-24 rounded-t flex items-end justify-center pb-2 text-gray-700 text-xs font-semibold w-[40%]">
                                                 40k
                                             </div>
                                         </div>
@@ -2914,10 +2922,10 @@
                                     <div class="flex-1">
                                         <div class="text-xs text-gray-500 mb-1">Januar</div>
                                         <div class="flex space-x-2">
-                                            <div class="bg-vit-orange h-28 rounded-t flex items-end justify-center pb-2 text-white text-xs font-semibold" style="width: 60%">
+                                            <div class="bg-vit-orange h-28 rounded-t flex items-end justify-center pb-2 text-white text-xs font-semibold w-[60%]">
                                                 21k
                                             </div>
-                                            <div class="bg-gray-300 h-20 rounded-t flex items-end justify-center pb-2 text-gray-700 text-xs font-semibold" style="width: 40%">
+                                            <div class="bg-gray-300 h-20 rounded-t flex items-end justify-center pb-2 text-gray-700 text-xs font-semibold w-[40%]">
                                                 18k
                                             </div>
                                         </div>
@@ -3598,7 +3606,7 @@
                         <div class="flex items-center space-x-3 mb-2">
                             <span class="text-3xl">⚡</span>
                             <div>
-                                <h1 class="h1-headline text-gray-800" style="font-size:22px">BIKEENGINE DASHBOARD</h1>
+                                <h1 class="h1-headline text-gray-800 text-[22px]">BIKEENGINE DASHBOARD</h1>
                                 <p class="text-sm text-gray-500">Dein Einstieg in die vit:bikes Welt</p>
                             </div>
                         </div>
@@ -3926,7 +3934,7 @@
                                     <div class="flex items-center space-x-2">
                                         <div class="relative">
                                             <svg class="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                                            <input type="text" id="todoSearchInput" placeholder="Suchen..." class="pl-7 pr-3 py-1 border border-gray-200 rounded-lg bg-gray-50 text-xs focus:outline-none focus:border-vit-orange" style="width:160px" oninput="todoSearchChanged()">
+                                            <input type="text" id="todoSearchInput" placeholder="Suchen..." class="pl-7 pr-3 py-1 border border-gray-200 rounded-lg bg-gray-50 text-xs focus:outline-none focus:border-vit-orange w-40" oninput="todoSearchChanged()">
                                         </div>
                                         <div class="flex bg-gray-100 rounded-lg p-0.5">
                                             <button onclick="todoSetView('list')" id="todoViewListBtn" class="px-2 py-1 rounded-md text-[11px] bg-white text-gray-900 shadow-sm">☰ Liste</button>
@@ -3963,7 +3971,7 @@
                                     <div id="todoListArea"></div>
                                 </div>
                                 <!-- Detail Panel (hidden by default) -->
-                                <div id="todoDetailPanel" class="hidden flex-shrink-0 border-l border-gray-200 bg-white flex flex-col overflow-hidden" style="width:360px;"></div>
+                                <div id="todoDetailPanel" class="hidden flex-shrink-0 border-l border-gray-200 bg-white flex flex-col overflow-hidden w-[360px]"></div>
                             </div>
                         </div>
                     </div>
@@ -4181,7 +4189,7 @@
                 <!-- ═══ OFFICE VIEW (HQ only) ═══ -->
                 <!-- Office View (HQ only) -->
                 <div id="hqOfficeView" class="view" style="display: none;">
-                    <div id="officeReactRoot" style="min-height:400px"></div>
+                    <div id="officeReactRoot" class="min-h-[400px]"></div>
                 </div>
 
                 <div id="hqCockpitView" class="view" style="display: none;">
@@ -5668,7 +5676,7 @@
                                     <label class="flex items-center gap-2 text-[11px] cursor-pointer"><input type="checkbox" id="officeAdminDragMode" onchange="if(typeof officeToggleDragMode==='function')officeToggleDragMode()" class="accent-orange-500"> <span style="color:#EF7D00;font-weight:700">Plätze verschieben</span></label>
                                 </div>
                             </div>
-                            <div id="officeFloorplanContainer" style="position:relative;overflow:auto">
+                            <div id="officeFloorplanContainer" class="relative overflow-auto">
                                 <img id="officeGrundrissImg" src="grundriss_og.png" style="width:100%;min-width:700px;display:block;border-radius:8px;opacity:0.92"
                                      onload="this.dataset.loaded='1';if(typeof officeRenderAdminDots==='function')officeRenderAdminDots()"
                                      onerror="this.style.display='none';document.getElementById('officeGrundrissPlaceholder').style.display='flex'">
@@ -5677,7 +5685,7 @@
                                     <p class="text-sm text-gray-400 font-semibold">Kein Grundriss vorhanden</p>
                                     <button onclick="if(typeof officeUploadGrundriss==='function')officeUploadGrundriss()" class="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600">📤 Grundriss hochladen</button>
                                 </div>
-                                <div id="officeAdminDots" style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none"></div>
+                                <div id="officeAdminDots" class="absolute inset-0 pointer-events-none"></div>
                             </div>
                             <div class="flex flex-wrap gap-2 mt-3" id="officeRoomLegend"></div>
                             <div class="text-[10px] text-gray-400 mt-1" id="officeAdminDragHint">Aktiviere "Plätze verschieben" um Dots per Drag & Drop auf dem Grundriss zu positionieren.</div>
@@ -6063,9 +6071,9 @@
             <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--c-muted);font-weight:600;margin-bottom:16px;">Mein Profil</p>
 
             <!-- Avatar + Name -->
-            <div style="text-align:center;margin-bottom:24px;">
+            <div class="text-center mb-6">
                 <div style="position:relative;display:inline-block;">
-                    <img id="profileAvatarImg" src="https://ui-avatars.com/api/?name=Demo+User&background=EF7D00&color=fff" style="width:80px;height:80px;border-radius:50%;border:3px solid #EF7D00;">
+                    <img id="profileAvatarImg" src="https://ui-avatars.com/api/?name=Demo+User&background=EF7D00&color=fff" class="w-20 h-20 rounded-full border-[3px] border-vit-orange">
                     <label for="profilePhotoUpload" style="position:absolute;bottom:0;right:0;width:26px;height:26px;border-radius:50%;background:#EF7D00;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid white;font-size:12px;" title="Foto ändern">📷</label>
                     <input type="file" id="profilePhotoUpload" accept="image/*" style="display:none;" onchange="handleProfilePhoto(this)">
                 </div>
@@ -6077,46 +6085,46 @@
 
         <!-- Persönliche Daten -->
         <div style="padding:0 24px 24px;">
-            <div style="background:var(--c-bg2);border-radius:12px;padding:16px;margin-bottom:16px;">
-                <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--c-muted);font-weight:600;margin-bottom:12px;">Persönliche Daten</p>
+            <div class="vit-section-card">
+                <p class="vit-section-header">Persönliche Daten</p>
 
-                <div style="margin-bottom:12px;">
-                    <label style="font-size:11px;color:var(--c-sub);font-weight:600;display:block;margin-bottom:3px;">Vorname</label>
-                    <input id="profileVorname" type="text" value="Max" style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='var(--c-border)'">
+                <div class="mb-3">
+                    <label class="vit-label">Vorname</label>
+                    <input id="profileVorname" type="text" value="Max" class="vit-input" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='var(--c-border)'">
                 </div>
 
-                <div style="margin-bottom:12px;">
-                    <label style="font-size:11px;color:var(--c-sub);font-weight:600;display:block;margin-bottom:3px;">Nachname</label>
-                    <input id="profileNachname" type="text" value="Bauer" style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='var(--c-border)'">
+                <div class="mb-3">
+                    <label class="vit-label">Nachname</label>
+                    <input id="profileNachname" type="text" value="Bauer" class="vit-input" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='var(--c-border)'">
                 </div>
 
-                <div style="margin-bottom:12px;">
-                    <label style="font-size:11px;color:var(--c-sub);font-weight:600;display:block;margin-bottom:3px;">E-Mail</label>
+                <div class="mb-3">
+                    <label class="vit-label">E-Mail</label>
                     <input id="profileEmail" type="email"  disabled style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:8px;font-size:13px;background:var(--c-bg3);color:var(--c-sub);font-family:Outfit,sans-serif;">
                     <p style="font-size:9px;color:var(--c-muted);margin-top:2px;">Wird vom HQ verwaltet</p>
                 </div>
 
-                <div style="margin-bottom:12px;">
-                    <label style="font-size:11px;color:var(--c-sub);font-weight:600;display:block;margin-bottom:3px;">Telefon</label>
-                    <input id="profileTelefon" type="tel" value="" placeholder="+49 ..." style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='var(--c-border)'">
+                <div class="mb-3">
+                    <label class="vit-label">Telefon</label>
+                    <input id="profileTelefon" type="tel" value="" placeholder="+49 ..." class="vit-input" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='var(--c-border)'">
                 </div>
 
                 <div style="margin-bottom:0;">
-                    <label style="font-size:11px;color:var(--c-sub);font-weight:600;display:block;margin-bottom:3px;">Position / Rolle</label>
-                    <input id="profilePosition" type="text" value="" placeholder="z.B. Geschäftsführer, Werkstattleiter..." style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:8px;font-size:13px;font-family:Outfit,sans-serif;outline:none;" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='var(--c-border)'">
+                    <label class="vit-label">Position / Rolle</label>
+                    <input id="profilePosition" type="text" value="" placeholder="z.B. Geschäftsführer, Werkstattleiter..." class="vit-input" onfocus="this.style.borderColor='#EF7D00'" onblur="this.style.borderColor='var(--c-border)'">
                 </div>
             </div>
 
             <!-- Erscheinungsbild -->
-            <div style="background:var(--c-bg2);border-radius:12px;padding:16px;margin-bottom:16px;" class="bg-gray-50">
-                <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--c-muted);font-weight:600;margin-bottom:12px;">Erscheinungsbild</p>
+            <div class="vit-section-card">
+                <p class="vit-section-header">Erscheinungsbild</p>
                 <div style="display:flex;gap:8px;">
                     <button onclick="setTheme('light')" id="profileThemeLight" style="flex:1;padding:12px;border-radius:10px;border:2px solid #EF7D00;background:var(--c-bg2);cursor:pointer;text-align:center;">
-                        <span style="font-size:20px;">☀️</span>
+                        <span class="text-xl">☀️</span>
                         <p style="font-size:11px;font-weight:600;color:var(--c-text);margin-top:4px;">Light</p>
                     </button>
                     <button onclick="setTheme('dark')" id="profileThemeDark" style="flex:1;padding:12px;border-radius:10px;border:2px solid transparent;background:var(--c-border);cursor:pointer;text-align:center;">
-                        <span style="font-size:20px;">🌙</span>
+                        <span class="text-xl">🌙</span>
                         <p style="font-size:11px;font-weight:600;color:var(--c-muted);margin-top:4px;">Dark</p>
                     </button>
                 </div>
@@ -6135,21 +6143,21 @@
 
             <!-- Meta -->
             <!-- E-Mail-Einstellungen -->
-            <div style="background:var(--c-bg2);border-radius:12px;padding:16px;margin-bottom:16px;">
-                <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--c-muted);font-weight:600;margin-bottom:12px;">E-Mail-Benachrichtigungen</p>
-                <label style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:var(--c-sub);">
+            <div class="vit-section-card">
+                <p class="vit-section-header">E-Mail-Benachrichtigungen</p>
+                <label class="vit-settings-row-lg">
                     <span>📊 BWA-Erinnerungen</span>
-                    <input type="checkbox" checked id="prefBwa" style="accent-color:#EF7D00;width:16px;height:16px;">
+                    <input type="checkbox" checked id="prefBwa" class="vit-checkbox">
                 </label>
-                <label style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:var(--c-sub);">
+                <label class="vit-settings-row-lg">
                     <span>📈 Lead-Benachrichtigungen</span>
-                    <input type="checkbox" checked id="prefLeads" style="accent-color:#EF7D00;width:16px;height:16px;">
+                    <input type="checkbox" checked id="prefLeads" class="vit-checkbox">
                 </label>
-                <label style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:var(--c-sub);">
+                <label class="vit-settings-row-lg">
                 </label>
-                <label style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;font-size:12px;color:var(--c-sub);">
+                <label class="vit-settings-row-lg">
                     <span>📞 Gruppencall-Erinnerungen</span>
-                    <input type="checkbox" checked id="prefCalls" style="accent-color:#EF7D00;width:16px;height:16px;">
+                    <input type="checkbox" checked id="prefCalls" class="vit-checkbox">
                 </label>
                 <div style="border-top:1px solid var(--c-border);margin-top:8px;padding-top:8px;">
                     <div id="pushSettingsSection">
@@ -6165,29 +6173,29 @@
                                 <button onclick="unsubscribePush()" style="font-size:10px;color:#ef4444;background:none;border:none;cursor:pointer;text-decoration:underline;">Deaktivieren</button>
                             </div>
                             <p style="font-size:10px;font-weight:600;color:var(--c-sub);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Push-Benachrichtigungen</p>
-                            <label class="notif-toggle-wrap" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;cursor:pointer;font-size:12px;color:var(--c-sub);">
+                            <label class="notif-toggle-wrap vit-settings-row">
                                 <span>💬 Neue Nachrichten</span>
-                                <input type="checkbox" checked class="notif-toggle" data-pref="push_neue_nachricht" style="accent-color:#EF7D00;width:16px;height:16px;">
+                                <input type="checkbox" checked class="notif-toggle vit-checkbox" data-pref="push_neue_nachricht">
                             </label>
-                            <label class="notif-toggle-wrap" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;cursor:pointer;font-size:12px;color:var(--c-sub);">
+                            <label class="notif-toggle-wrap vit-settings-row">
                                 <span>📋 Aufgabe zugewiesen</span>
-                                <input type="checkbox" checked class="notif-toggle" data-pref="push_aufgabe_zugewiesen" style="accent-color:#EF7D00;width:16px;height:16px;">
+                                <input type="checkbox" checked class="notif-toggle vit-checkbox" data-pref="push_aufgabe_zugewiesen">
                             </label>
-                            <label class="notif-toggle-wrap" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;cursor:pointer;font-size:12px;color:var(--c-sub);">
+                            <label class="notif-toggle-wrap vit-settings-row">
                                 <span>📅 Termin-Erinnerungen</span>
-                                <input type="checkbox" checked class="notif-toggle" data-pref="push_termin_erinnerung" style="accent-color:#EF7D00;width:16px;height:16px;">
+                                <input type="checkbox" checked class="notif-toggle vit-checkbox" data-pref="push_termin_erinnerung">
                             </label>
-                            <label class="notif-toggle-wrap" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;cursor:pointer;font-size:12px;color:var(--c-sub);">
+                            <label class="notif-toggle-wrap vit-settings-row">
                                 <span>🎯 Lead-Aktivitäten</span>
-                                <input type="checkbox" checked class="notif-toggle" data-pref="push_lead_aktivitaet" style="accent-color:#EF7D00;width:16px;height:16px;">
+                                <input type="checkbox" checked class="notif-toggle vit-checkbox" data-pref="push_lead_aktivitaet">
                             </label>
-                            <label class="notif-toggle-wrap" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;cursor:pointer;font-size:12px;color:var(--c-sub);">
+                            <label class="notif-toggle-wrap vit-settings-row">
                                 <span>📢 Ankündigungen</span>
-                                <input type="checkbox" checked class="notif-toggle" data-pref="push_ankuendigung" style="accent-color:#EF7D00;width:16px;height:16px;">
+                                <input type="checkbox" checked class="notif-toggle vit-checkbox" data-pref="push_ankuendigung">
                             </label>
-                            <label class="notif-toggle-wrap" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;cursor:pointer;font-size:12px;color:var(--c-sub);">
+                            <label class="notif-toggle-wrap vit-settings-row">
                                 <span>🆘 Support-Updates</span>
-                                <input type="checkbox" checked class="notif-toggle" data-pref="push_support_update" style="accent-color:#EF7D00;width:16px;height:16px;">
+                                <input type="checkbox" checked class="notif-toggle vit-checkbox" data-pref="push_support_update">
                             </label>
                             <button onclick="saveNotificationPrefs()" style="width:100%;margin-top:8px;padding:7px;background:var(--c-bg3);border:1px solid #d1d5db;border-radius:6px;font-size:11px;font-weight:600;color:var(--c-text2);cursor:pointer;">💾 Push-Einstellungen speichern</button>
                         </div>
