@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 03.03.2026 (P3: Dashboard-Widget-Visibility anhand modul_status, hideInactiveWidgets() in home.js, Widget-Add-Panel gefiltert)
+> Letzte Aktualisierung: 03.03.2026 (S2: Globaler Session-Error-Handler handleSupabaseError(), SIGNED_OUT Auto-Redirect, S1 JWT-Audit bestätigt)
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -299,8 +299,8 @@ sbUrl()       → window.sbUrl()   // Supabase Project URL (zentralisiert)
 
 | # | Aufgabe | Status |
 |---|---------|--------|
-| S1 | JWT-Audit Edge Functions | ⬜ Offen |
-| S2 | Session-Handling | ⬜ Offen |
+| S1 | JWT-Audit Edge Functions | ✅ Erledigt | 4/5 kritische auf verify_jwt=true (db-backup, billing-automation, send-emails, send-email). create-user bleibt false (Register-Modus). |
+| S2 | Session-Handling | ✅ Erledigt | Auto-Refresh (supabase-init), Logout-Cleanup (auth-system), globaler Session-Error-Handler (handleSupabaseError in supabase-init) |
 | S3 | Error Handling Partner-Module | ⬜ Offen |
 | S4 | RLS Smoke-Tests | ⬜ Offen |
 | S5 | Mobile Responsive | ⬜ Offen |
@@ -315,7 +315,7 @@ sbUrl()       → window.sbUrl()   // Supabase Project URL (zentralisiert)
 | V2 | User-Accounts einrichten | ⬜ Offen |
 | V3 | eTermin-Rollout | ⬜ Offen |
 | V4 | Feedback-Kanal einrichten | ⬜ Offen |
-| V5 | Schulungsunterlagen (8 Portal-Anleitungen im Wissensmodul, Tab Portal-Guide) | ✅ Done |
+| V5 | Schulungsunterlagen | ⬜ Offen |
 | V6 | Monitoring aufsetzen | ⬜ Offen |
 
 ### Rollen-IDs

@@ -108,13 +108,12 @@ var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 window.sb = sb;
 
-// Listen for auth state changes (logging only)
+// Listen for auth state changes
 // NOTE: Session persistence is handled automatically by Supabase via storage option.
 // Previously, manual re-write here caused SIGNED_IN infinite loop.
+var _sessionExpiredShown = false;
 sb.auth.onAuthStateChange(function(event, session) {
-    // [prod] log removed
     if(event === 'PASSWORD_RECOVERY') {
-        // [prod] log removed
         // Wait for modules to be ready, then show modal
         function _showPwModal() {
             if(typeof window.showChangePasswordModal === 'function') {
@@ -126,7 +125,59 @@ sb.auth.onAuthStateChange(function(event, session) {
         }
         _showPwModal();
     }
+    // Token refresh failed or user signed out unexpectedly → redirect to login
+    if(event === 'SIGNED_OUT' && window.sbUser && !window.DEMO_ACTIVE && !window._impActive) {
+        if(!_sessionExpiredShown) {
+            _sessionExpiredShown = true;
+            window.sbUser = null; window.sbProfile = null;
+            if(typeof window.showToast === 'function') window.showToast('Sitzung abgelaufen – bitte erneut anmelden.', 'warning');
+            setTimeout(function() {
+                var login = document.getElementById('loginScreen');
+                var main = document.getElementById('mainApp');
+                if(login) login.style.display = 'flex';
+                if(main) main.style.display = 'none';
+                _sessionExpiredShown = false;
+            }, 500);
+        }
+    }
 });
+
+// ═══ GLOBAL SESSION ERROR HANDLER ═══
+// Views call this in catch blocks to detect auth errors and trigger re-login.
+// Returns true if the error was a session error (caller should abort).
+window.handleSupabaseError = function(error, context) {
+    if(!error) return false;
+    var msg = (error.message || error.msg || String(error)).toLowerCase();
+    var code = error.code || '';
+    var status = error.status || 0;
+    var isAuthError = (
+        msg.indexOf('jwt expired') !== -1 ||
+        msg.indexOf('jwt') !== -1 && msg.indexOf('invalid') !== -1 ||
+        msg.indexOf('session_not_found') !== -1 ||
+        msg.indexOf('auth session missing') !== -1 ||
+        msg.indexOf('not authenticated') !== -1 ||
+        msg.indexOf('refresh_token') !== -1 && msg.indexOf('not found') !== -1 ||
+        code === 'PGRST301' ||
+        status === 401 || status === 403
+    );
+    if(isAuthError && !window.DEMO_ACTIVE && !window._impActive) {
+        console.warn('[Session]', context || 'Supabase', '– Auth-Fehler:', msg);
+        // Try to refresh the session first
+        sb.auth.getSession().then(function(resp) {
+            if(!resp.data.session) {
+                // Session is truly gone – force logout
+                if(typeof window.handleLogout === 'function') {
+                    window.handleLogout();
+                    if(typeof window.showToast === 'function') window.showToast('Sitzung abgelaufen – bitte erneut anmelden.', 'warning');
+                }
+            }
+        }).catch(function() {
+            if(typeof window.handleLogout === 'function') window.handleLogout();
+        });
+        return true;
+    }
+    return false;
+};
 
 // Auto-login: wait for all modules to be ready, then check session
 window.addEventListener('vit:modules-ready', function() {
