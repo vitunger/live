@@ -519,7 +519,7 @@ export function todoRenderDetail() {
     h += '</div>';
 
     // Scrollable content
-    h += '<div class="flex-1 overflow-y-auto"><div class="p-4 space-y-4">';
+    h += '<div class="flex-1 overflow-y-auto min-h-0"><div class="p-4 space-y-4">';
 
     // Title with checkbox
     h += '<div class="flex items-start space-x-2">';
