@@ -335,6 +335,7 @@ sbUrl()       → window.sbUrl()   // Supabase Project URL (zentralisiert)
 |---------|--------|---------|
 | Kostenaufschlüsselung-Tab (Buchhaltung) | ⬜ Offen | JS refactored (nutzt jetzt plan_umsatz + plan_werbekosten + HQ-Rechnungen statt billing_annual_strategy). Tab temporär ausgeblendet bis Jahresplan + Marketing-Strategie Daten verfügbar sind. |
 | Jahresstrategie-Tab (Buchhaltung) | ❌ Entfernt | Ersetzt durch Daten aus Finanzen/Jahresplan + Marketing-Strategie |
+| Liquiditäts-Tab (Buchhaltung) | 🟡 MVP live | DB: banking_connections, banking_balances, banking_transactions, banking_manual_entries. UI: Kontostand-Kacheln, Verlauf-Chart, Transaktionsliste, manueller Eintrag. finAPI-Integration als Placeholder – Kontakt zu finAPI nötig. |
 
 ### Rollen-IDs
 

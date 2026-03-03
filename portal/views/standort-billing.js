@@ -35,6 +35,7 @@ if (tab === 'invoices') loadStandortInvoices();
 if (tab === 'payments') loadStandortPayments();
 if (tab === 'strategy') loadStandortStrategy();
 if (tab === 'costs') loadStandortCosts();
+if (tab === 'liquidity') loadStandortLiquidity();
 if (tab === 'wawi') initWawiTab();
 }
 
@@ -305,6 +306,178 @@ h += '</div></div>';
 
 container.innerHTML = h;
 }
+
+// Liquiditäts-Tab
+export async function loadStandortLiquidity() {
+var container = document.getElementById('stBillingLiquidityContent');
+if (!container) return;
+container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
+
+var sid = _sbProfile().standort_id;
+
+// Bankverbindungen laden
+var { data: connections } = await _sb().from('banking_connections').select('*').eq('standort_id', sid).order('created_at', { ascending: false });
+var activeConn = (connections || []).find(function(c) { return c.status === 'active'; });
+
+// Kontostände laden (letzte 90 Tage)
+var since = new Date();
+since.setDate(since.getDate() - 90);
+var sinceStr = since.toISOString().split('T')[0];
+
+var balances = [];
+var transactions = [];
+if (activeConn) {
+    var { data: bal } = await _sb().from('banking_balances').select('*').eq('connection_id', activeConn.id).gte('balance_date', sinceStr).order('balance_date', { ascending: true });
+    balances = bal || [];
+    var { data: txn } = await _sb().from('banking_transactions').select('*').eq('connection_id', activeConn.id).gte('booking_date', sinceStr).order('booking_date', { ascending: false }).limit(50);
+    transactions = txn || [];
+}
+
+// Manuelle Einträge als Fallback
+var { data: manualEntries } = await _sb().from('banking_manual_entries').select('*').eq('standort_id', sid).gte('entry_date', sinceStr).order('entry_date', { ascending: true });
+manualEntries = manualEntries || [];
+
+var h = '';
+
+// Status-Banner
+if (activeConn) {
+    var daysLeft = activeConn.consent_expires_at ? Math.ceil((new Date(activeConn.consent_expires_at) - new Date()) / 86400000) : null;
+    h += '<div class="vit-card p-4 mb-4 flex items-center justify-between">';
+    h += '<div class="flex items-center space-x-3"><span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span>';
+    h += '<div><span class="font-semibold text-sm">' + _escH(activeConn.bank_name || 'Bank') + '</span>';
+    h += '<span class="text-xs text-gray-400 ml-2">' + _escH(activeConn.iban_masked || '') + '</span></div></div>';
+    h += '<div class="text-xs text-gray-500">';
+    if (activeConn.last_sync_at) h += 'Letzter Sync: ' + new Date(activeConn.last_sync_at).toLocaleString('de-DE');
+    if (daysLeft !== null && daysLeft <= 14) h += '<span class="ml-2 text-yellow-600 font-semibold">⚠️ Consent läuft in ' + daysLeft + ' Tagen ab</span>';
+    h += '</div></div>';
+} else {
+    h += '<div class="vit-card p-6 mb-4 text-center">';
+    h += '<div class="text-4xl mb-3">🏦</div>';
+    h += '<h3 class="font-bold text-lg mb-2">Bankkonto verbinden</h3>';
+    h += '<p class="text-sm text-gray-500 mb-4">Verbinde dein Geschäftskonto, um Kontostände und Transaktionen automatisch zu sehen.</p>';
+    h += '<button onclick="startBankConnection()" class="px-6 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition">🔗 Bank verbinden (finAPI)</button>';
+    h += '<p class="text-xs text-gray-400 mt-3">Sicher über PSD2 / Open Banking – deine Daten bleiben geschützt</p>';
+    h += '</div>';
+}
+
+// Aktueller Kontostand
+var latestBalance = balances.length > 0 ? balances[balances.length - 1] : null;
+var latestManual = manualEntries.length > 0 ? manualEntries[manualEntries.length - 1] : null;
+var currentBalance = latestBalance ? latestBalance.balance_amount : (latestManual ? latestManual.balance_amount : null);
+var currentDate = latestBalance ? latestBalance.balance_date : (latestManual ? latestManual.entry_date : null);
+
+h += '<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">';
+
+// Kontostand Karte
+h += '<div class="vit-card p-5">';
+h += '<p class="text-xs text-gray-500 mb-1">Aktueller Kontostand</p>';
+if (currentBalance !== null) {
+    var balColor = currentBalance >= 0 ? 'text-green-600' : 'text-red-600';
+    h += '<p class="text-2xl font-bold ' + balColor + '">' + fmtEur(currentBalance) + '</p>';
+    h += '<p class="text-xs text-gray-400 mt-1">Stand: ' + new Date(currentDate).toLocaleDateString('de-DE') + '</p>';
+} else {
+    h += '<p class="text-lg text-gray-400">— nicht verfügbar</p>';
+}
+h += '</div>';
+
+// Einnahmen letzte 30 Tage
+var thirtyAgo = new Date();
+thirtyAgo.setDate(thirtyAgo.getDate() - 30);
+var income30 = transactions.filter(function(t) { return t.amount > 0 && new Date(t.booking_date) >= thirtyAgo; }).reduce(function(s, t) { return s + Number(t.amount); }, 0);
+var expense30 = transactions.filter(function(t) { return t.amount < 0 && new Date(t.booking_date) >= thirtyAgo; }).reduce(function(s, t) { return s + Math.abs(Number(t.amount)); }, 0);
+
+h += '<div class="vit-card p-5">';
+h += '<p class="text-xs text-gray-500 mb-1">Einnahmen (30 Tage)</p>';
+h += '<p class="text-2xl font-bold text-green-600">+ ' + fmtEur(income30) + '</p>';
+h += '</div>';
+
+h += '<div class="vit-card p-5">';
+h += '<p class="text-xs text-gray-500 mb-1">Ausgaben (30 Tage)</p>';
+h += '<p class="text-2xl font-bold text-red-600">- ' + fmtEur(expense30) + '</p>';
+h += '</div>';
+
+h += '</div>';
+
+// Kontostand-Verlauf (Mini-Chart als CSS-Bars)
+if (balances.length > 1) {
+    var maxBal = Math.max.apply(null, balances.map(function(b) { return Math.abs(b.balance_amount); }));
+    h += '<div class="vit-card p-5 mb-4">';
+    h += '<h3 class="font-bold text-sm mb-3">📈 Kontostand-Verlauf (90 Tage)</h3>';
+    h += '<div class="flex items-end space-x-1" style="height:120px;">';
+    balances.forEach(function(b) {
+        var pct = maxBal > 0 ? Math.abs(b.balance_amount) / maxBal * 100 : 0;
+        var color = b.balance_amount >= 0 ? 'bg-green-400' : 'bg-red-400';
+        h += '<div class="flex-1 ' + color + ' rounded-t transition-all" style="height:' + Math.max(pct, 2) + '%" title="' + new Date(b.balance_date).toLocaleDateString('de-DE') + ': ' + fmtEur(b.balance_amount) + '"></div>';
+    });
+    h += '</div>';
+    h += '<div class="flex justify-between text-xs text-gray-400 mt-1"><span>' + new Date(balances[0].balance_date).toLocaleDateString('de-DE') + '</span><span>' + new Date(balances[balances.length - 1].balance_date).toLocaleDateString('de-DE') + '</span></div>';
+    h += '</div>';
+}
+
+// Letzte Transaktionen
+if (transactions.length > 0) {
+    h += '<div class="vit-card p-5 mb-4">';
+    h += '<h3 class="font-bold text-sm mb-3">📋 Letzte Transaktionen</h3>';
+    h += '<div class="space-y-2 max-h-80 overflow-y-auto">';
+    transactions.slice(0, 20).forEach(function(t) {
+        var isIncome = t.amount >= 0;
+        h += '<div class="flex items-center justify-between py-2 border-b border-gray-100">';
+        h += '<div class="flex-1 min-w-0"><p class="text-sm font-medium truncate">' + _escH(t.counterpart_name || 'Unbekannt') + '</p>';
+        h += '<p class="text-xs text-gray-400 truncate">' + _escH(t.purpose || '—') + '</p></div>';
+        h += '<div class="text-right ml-3"><p class="text-sm font-semibold ' + (isIncome ? 'text-green-600' : 'text-red-600') + '">' + (isIncome ? '+' : '') + fmtEur(t.amount) + '</p>';
+        h += '<p class="text-xs text-gray-400">' + new Date(t.booking_date).toLocaleDateString('de-DE') + '</p></div>';
+        h += '</div>';
+    });
+    h += '</div></div>';
+}
+
+// Manueller Eintrag (immer sichtbar als Fallback)
+h += '<div class="vit-card p-5">';
+h += '<h3 class="font-bold text-sm mb-3">✏️ Kontostand manuell eintragen</h3>';
+h += '<p class="text-xs text-gray-500 mb-3">Falls keine Bank verbunden ist, kannst du deinen Kontostand hier manuell pflegen.</p>';
+h += '<div class="flex items-end space-x-3">';
+h += '<div><label class="text-xs text-gray-500">Datum</label><input type="date" id="manualBalDate" value="' + new Date().toISOString().split('T')[0] + '" class="block w-full border rounded-lg px-3 py-2 text-sm"></div>';
+h += '<div><label class="text-xs text-gray-500">Kontostand (€)</label><input type="number" id="manualBalAmount" step="0.01" placeholder="z.B. 45000.00" class="block w-full border rounded-lg px-3 py-2 text-sm"></div>';
+h += '<div><label class="text-xs text-gray-500">Bank</label><input type="text" id="manualBalBank" placeholder="z.B. Sparkasse" class="block w-full border rounded-lg px-3 py-2 text-sm"></div>';
+h += '<button onclick="saveManualBalance()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 whitespace-nowrap">Speichern</button>';
+h += '</div>';
+
+// Bisherige manuelle Einträge
+if (manualEntries.length > 0) {
+    h += '<div class="mt-4 border-t pt-3"><p class="text-xs text-gray-500 mb-2">Bisherige Einträge:</p>';
+    manualEntries.slice(-5).reverse().forEach(function(e) {
+        h += '<div class="flex justify-between text-xs py-1"><span>' + new Date(e.entry_date).toLocaleDateString('de-DE') + (e.bank_name ? ' – ' + _escH(e.bank_name) : '') + '</span><span class="font-semibold">' + fmtEur(e.balance_amount) + '</span></div>';
+    });
+    h += '</div>';
+}
+h += '</div>';
+
+container.innerHTML = h;
+}
+
+// Manuellen Kontostand speichern
+window.saveManualBalance = async function() {
+var date = document.getElementById('manualBalDate').value;
+var amount = parseFloat(document.getElementById('manualBalAmount').value);
+var bank = document.getElementById('manualBalBank').value;
+if (!date || isNaN(amount)) { _toast('Bitte Datum und Betrag eingeben', 'error'); return; }
+
+var { error } = await _sb().from('banking_manual_entries').insert({
+    standort_id: _sbProfile().standort_id,
+    entry_date: date,
+    balance_amount: amount,
+    bank_name: bank || null,
+    created_by: _sbProfile().id
+});
+if (error) { _toast('Fehler: ' + error.message, 'error'); return; }
+_toast('Kontostand gespeichert');
+loadStandortLiquidity();
+};
+
+// Bank verbinden Placeholder
+window.startBankConnection = function() {
+_toast('finAPI-Integration wird eingerichtet – kommt bald!', 'info');
+};
 
 // PDF Download for invoices
 export async function downloadInvoicePdf(invId) {
@@ -798,7 +971,7 @@ try {
 
 
 // Strangler Fig
-const _exports = {initStandortBilling,loadStandortInvoices,loadStandortStrategy,loadStandortCosts,downloadInvoicePdf,loadStandortPayments,applyKommandoPermissions,filterKzStandorte,filterKzMa,statusBadge,rolleBadge,rollenBadges,renderKzStandorte,openStandortDetailModal,closeStdDetailModal,selectWawi,renderKzMitarbeiter};
+const _exports = {initStandortBilling,loadStandortInvoices,loadStandortStrategy,loadStandortCosts,loadStandortLiquidity,downloadInvoicePdf,loadStandortPayments,applyKommandoPermissions,filterKzStandorte,filterKzMa,statusBadge,rolleBadge,rollenBadges,renderKzStandorte,openStandortDetailModal,closeStdDetailModal,selectWawi,renderKzMitarbeiter};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // [prod] log removed
 window.initStandortBilling = initStandortBilling;
