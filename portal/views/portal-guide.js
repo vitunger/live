@@ -128,32 +128,36 @@ var el = document.getElementById('wissenGlobalContent');
 if(!el) return;
 var search = (document.getElementById('wissenSearch')||{}).value||'';
 var items = PORTAL_GUIDES;
-if(currentWissenBereich && currentWissenBereich !== 'all') items = items.filter(function(g){return g.bereich===currentWissenBereich;});
-if(search) { var s=search.toLowerCase(); items=items.filter(function(g){return g.title.toLowerCase().indexOf(s)>-1||g.desc.toLowerCase().indexOf(s)>-1;}); }
+if(search) { var s=search.toLowerCase(); items=items.filter(function(g){return g.title.toLowerCase().indexOf(s)>-1||g.desc.toLowerCase().indexOf(s)>-1||g.steps.some(function(st){var t=typeof st==='string'?st:(st.t||'');var d=typeof st==='object'?(st.d||''):'';return t.toLowerCase().indexOf(s)>-1||d.toLowerCase().indexOf(s)>-1;});}); }
 
-el.innerHTML = '<div class="mb-4 p-4 rounded-xl" style="background:linear-gradient(135deg,rgba(239,125,0,0.06),rgba(245,158,11,0.04))"><div class="flex items-center gap-2 mb-1"><span style="font-size:16px">📱</span><span class="text-sm font-bold text-gray-800">Portal-Anleitungen</span></div><p class="text-xs text-gray-500">Automatisch generiert aus der aktuellen Portal-Version. Wird bei Modul-Änderungen aktualisiert.</p></div>' +
-'<div class="grid grid-cols-1 md:grid-cols-2 gap-3">' +
-items.map(function(g){
-    return '<div class="vit-card p-4 hover:shadow-md transition cursor-pointer" onclick="showGuideDetail(\''+g.id+'\')"><div class="flex items-center gap-3 mb-2"><span style="font-size:28px">'+g.icon+'</span><div><p class="text-sm font-bold text-gray-800">'+g.title+'</p><p class="text-[10px] text-gray-400">v'+g.version+' · '+g.updated+'</p></div></div><p class="text-xs text-gray-500">'+g.desc+'</p><p class="text-[10px] text-vit-orange font-semibold mt-2">'+g.steps.length+' Schritte →</p></div>';
-}).join('') + '</div>';
+var h = '';
+items.forEach(function(g) {
+    // Steps HTML
+    var stepsHtml = g.steps.map(function(s,i) {
+        var title = typeof s === 'string' ? s : (s.t||s);
+        var desc = typeof s === 'object' ? (s.d||'') : '';
+        var isTipp = title.indexOf('💡') > -1;
+        if(isTipp) {
+            return '<div class="p-3 bg-amber-50 border border-amber-200 rounded-lg mt-2"><p class="text-xs font-bold text-amber-700 mb-1">'+title+'</p>'+(desc?'<p class="text-xs text-amber-800 leading-relaxed">'+desc+'</p>':'')+'</div>';
+        }
+        return '<div class="flex items-start gap-3 p-3 '+(i>0?'border-t border-gray-100':'')+'"><span style="width:26px;height:26px;border-radius:50%;background:#EF7D00;color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">'+(i+1)+'</span><div><p class="text-sm font-semibold text-gray-800">'+title+'</p>'+(desc?'<p class="text-xs text-gray-600 mt-1 leading-relaxed">'+desc+'</p>':'')+'</div></div>';
+    }).join('');
+
+    h += '<div class="vit-card mb-3 overflow-hidden">' +
+        '<div class="p-4 cursor-pointer flex items-center justify-between hover:bg-gray-50 transition" onclick="var d=document.getElementById(\'pgd_'+g.id+'\');var open=d.style.display!==\'none\';d.style.display=open?\'none\':\'block\';this.querySelector(\'.pg-chev\').style.transform=open?\'rotate(0deg)\':\'rotate(180deg)\'">' +
+            '<div class="flex items-center gap-3"><span style="font-size:28px">'+g.icon+'</span><div><p class="text-sm font-bold text-gray-800">'+g.title+'</p><p class="text-xs text-gray-500">'+g.desc+'</p></div></div>' +
+            '<svg class="pg-chev w-5 h-5 text-gray-400 transition-transform" style="transform:rotate(0deg)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>' +
+        '</div>' +
+        '<div id="pgd_'+g.id+'" style="display:none" class="px-4 pb-4 border-t border-gray-100"><div class="pt-3">'+stepsHtml+'</div></div>' +
+    '</div>';
+});
+
+if(!h) h = '<div class="text-center text-gray-400 py-8"><p class="text-lg mb-2">🔍</p><p class="text-sm">Keine Anleitungen gefunden.</p></div>';
+el.innerHTML = h;
 };
 
-window.showGuideDetail = function(id) {
-var g = PORTAL_GUIDES.find(function(p){return p.id===id;});
-if(!g) return;
-var el = document.getElementById('wissenGlobalContent');
-el.innerHTML = '<button onclick="switchWissenTyp(\'portal\')" class="text-xs text-vit-orange font-semibold mb-3 inline-block hover:underline">← Zurück zu allen Anleitungen</button>' +
-'<div class="vit-card p-6"><div class="flex items-center gap-4 mb-4"><span style="font-size:40px">'+g.icon+'</span><div><h2 class="text-lg font-bold text-gray-800">'+g.title+'</h2><p class="text-sm text-gray-500">'+g.desc+'</p><p class="text-xs text-gray-400 mt-1">Version '+g.version+' · Aktualisiert '+g.updated+'</p></div></div>' +
-'<div class="space-y-3">' + g.steps.map(function(s,i){
-    var title = typeof s === 'string' ? s : (s.t||s);
-    var desc = typeof s === 'object' ? (s.d||'') : '';
-    var isTipp = title.indexOf('💡') > -1;
-    if(isTipp) {
-        return '<div class="p-3 bg-amber-50 border border-amber-200 rounded-lg"><p class="text-xs font-bold text-amber-700 mb-1">'+title+'</p>'+(desc?'<p class="text-xs text-amber-800 leading-relaxed">'+desc+'</p>':'')+'</div>';
-    }
-    return '<div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"><span style="width:28px;height:28px;border-radius:50%;background:#EF7D00;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">'+(i+1)+'</span><div><p class="text-sm font-semibold text-gray-800">'+title+'</p>'+(desc?'<p class="text-xs text-gray-600 mt-1 leading-relaxed">'+desc+'</p>':'')+'</div></div>';
-}).join('') + '</div></div>';
-};
+// showGuideDetail kept for backwards compat
+window.showGuideDetail = function(id) { renderPortalGuide(); };
 
 // ═══ RENDER: Kurse (Memberspot-Style) ═══
 window.renderKurse = function() {
