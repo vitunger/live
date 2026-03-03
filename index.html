@@ -4948,6 +4948,7 @@
                         <nav class="flex space-x-4 -mb-px">
                             <button onclick="showStBillingTab('invoices')" class="st-billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="invoices">📄 Rechnungen</button>
                             <button onclick="showStBillingTab('payments')" class="st-billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500" data-tab="payments">💳 Zahlungsstatus</button>
+                            <button onclick="showStBillingTab('costs')" class="st-billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500" data-tab="costs">🔍 Kostenaufschlüsselung</button>
                             <button onclick="showStBillingTab('wawi')" class="st-billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500" data-tab="wawi">📄 WaWi Belege</button>
                         </nav>
                     </div>
@@ -4957,6 +4958,9 @@
                     </div>
                     <div id="stBillingTabPayments" class="st-billing-tab-content" style="display:none;">
                         <div id="stBillingPaymentsContent"></div>
+                    </div>
+                    <div id="stBillingTabCosts" class="st-billing-tab-content" style="display:none;">
+                        <div id="stBillingCostsContent"></div>
                     </div>
                     <div id="stBillingTabWawi" class="st-billing-tab-content" style="display:none;">
                         <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
