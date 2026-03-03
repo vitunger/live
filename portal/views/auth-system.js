@@ -663,8 +663,19 @@ try {
     try { await loadPipelineFromSupabase(); } catch(e) { console.warn('[Login] Pipeline load optional:', e); }
 } catch(err) {
     console.error('[Login] ERROR:', err);
-    if(errEl) { errEl.textContent = err.message || 'Login fehlgeschlagen'; errEl.style.display = 'block'; }
-    else _showToast('Login fehlgeschlagen: ' + (err.message||err, 'error'));
+    var rawMsg = (err.message || '').toLowerCase();
+    var userMsg = 'Login fehlgeschlagen. Bitte versuche es erneut.';
+    if(rawMsg.indexOf('invalid login credentials') !== -1 || rawMsg.indexOf('invalid_credentials') !== -1) {
+        userMsg = 'E-Mail oder Passwort ist falsch. Bitte überprüfe deine Eingaben.';
+    } else if(rawMsg.indexOf('email not confirmed') !== -1) {
+        userMsg = 'Deine E-Mail-Adresse wurde noch nicht bestätigt. Bitte prüfe dein Postfach.';
+    } else if(rawMsg.indexOf('too many requests') !== -1 || rawMsg.indexOf('rate limit') !== -1) {
+        userMsg = 'Zu viele Anmeldeversuche. Bitte warte kurz und versuche es dann erneut.';
+    } else if(rawMsg.indexOf('network') !== -1 || rawMsg.indexOf('fetch') !== -1) {
+        userMsg = 'Keine Verbindung zum Server. Bitte prüfe deine Internetverbindung.';
+    }
+    if(errEl) { errEl.textContent = userMsg; errEl.style.display = 'block'; }
+    else _showToast(userMsg, 'error');
 } finally {
     if(loginBtn) { loginBtn.disabled = false; loginBtn.textContent = _t('ui_sign_in'); }
 }
