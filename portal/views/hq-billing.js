@@ -98,7 +98,7 @@ export async function loadBillingOverview() {
             var strat = st.strategy;
             var acct = st.billing_account;
             h += '<tr class="border-t hover:bg-gray-50 cursor-pointer" onclick="' + (inv ? "showBillingInvoice('" + inv.id + "')" : '') + '">';
-            h += '<td class="p-3"><p class="font-semibold text-sm">' + st.name + '</p><p class="text-xs text-gray-400">' + (st.inhaber_name || '') + '</p></td>';
+            h += '<td class="p-3"><p class="font-semibold text-sm">' + _escH(st.name) + '</p><p class="text-xs text-gray-400">' + _escH(st.inhaber_name || '') + '</p></td>';
             h += '<td class="p-3 text-center">' + (strat && strat.locked ? '<span class="text-green-600 text-xs font-semibold">✅ Gesperrt</span>' : strat && strat.approved_at ? '<span class="text-blue-600 text-xs">✓ Genehmigt</span>' : '<span class="text-red-500 text-xs">❌ Fehlt</span>') + '</td>';
             h += '<td class="p-3 text-center">' + (acct && acct.sepa_active ? '<span class="text-green-600 text-xs">✅</span>' : '<span class="text-gray-300 text-xs">—</span>') + '</td>';
             h += '<td class="p-3 text-right">' + (inv ? '<span class="font-semibold">' + _fmtEur(inv.total) + '</span>' : '<span class="text-gray-300">—</span>') + '</td>';
@@ -372,7 +372,7 @@ export async function loadAllStrategies() {
     if (missing.length) {
         h += '<div class="vit-card p-4 mt-4 border-l-4 border-red-400"><h3 class="font-semibold text-sm text-red-700 mb-2">⚠️ Standorte ohne Jahresstrategie ' + year + '</h3>';
         h += '<div class="flex flex-wrap gap-2">';
-        missing.forEach(function(m) { h += '<span class="text-xs bg-red-50 text-red-600 px-2 py-1 rounded">' + m.name + '</span>'; });
+        missing.forEach(function(m) { h += '<span class="text-xs bg-red-50 text-red-600 px-2 py-1 rounded">' + _escH(m.name) + '</span>'; });
         h += '</div></div>';
     }
 

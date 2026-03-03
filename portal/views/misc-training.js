@@ -492,14 +492,14 @@ export function showTrainingEvaluation(ev) {
     (ev.kriterien||[]).forEach(function(k) {
         var kc = k.score>=80?'#059669':k.score>=60?'#D97706':'#DC2626';
         var kr=20, kcirc=2*Math.PI*kr, koff=kcirc-(k.score/100)*kcirc;
-        rh += '<div class="text-center"><svg width="48" height="48"><circle cx="24" cy="24" r="'+kr+'" fill="none" stroke="#e5e7eb" stroke-width="3"/><circle cx="24" cy="24" r="'+kr+'" fill="none" stroke="'+kc+'" stroke-width="3" stroke-dasharray="'+kcirc+'" stroke-dashoffset="'+koff+'" stroke-linecap="round" style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset 1s"/><text x="24" y="24" text-anchor="middle" dominant-baseline="central" style="font-size:11px;font-weight:700;fill:'+kc+'">'+k.score+'</text></svg><p class="text-[9px] text-gray-500 font-semibold mt-1" style="max-width:70px">'+k.name+'</p></div>';
-        dh += '<div class="p-3 rounded-lg" style="background:var(--c-bg2)"><div class="flex justify-between mb-1"><span class="text-xs font-semibold text-gray-800">'+k.name+'</span><span class="text-xs font-bold" style="color:'+kc+'">'+k.score+'/100</span></div><p class="text-[11px] text-gray-500">'+k.kommentar+'</p></div>';
+        rh += '<div class="text-center"><svg width="48" height="48"><circle cx="24" cy="24" r="'+kr+'" fill="none" stroke="#e5e7eb" stroke-width="3"/><circle cx="24" cy="24" r="'+kr+'" fill="none" stroke="'+kc+'" stroke-width="3" stroke-dasharray="'+kcirc+'" stroke-dashoffset="'+koff+'" stroke-linecap="round" style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset 1s"/><text x="24" y="24" text-anchor="middle" dominant-baseline="central" style="font-size:11px;font-weight:700;fill:'+kc+'">'+k.score+'</text></svg><p class="text-[9px] text-gray-500 font-semibold mt-1" style="max-width:70px">'+_escH(k.name)+'</p></div>';
+        dh += '<div class="p-3 rounded-lg" style="background:var(--c-bg2)"><div class="flex justify-between mb-1"><span class="text-xs font-semibold text-gray-800">'+_escH(k.name)+'</span><span class="text-xs font-bold" style="color:'+kc+'">'+k.score+'/100</span></div><p class="text-[11px] text-gray-500">'+_escH(k.kommentar)+'</p></div>';
     });
     if(rings) rings.innerHTML = rh;
     if(details) details.innerHTML = dh;
     var sh='', ih='';
-    (ev.staerken||[]).forEach(function(s){ sh += '<p class="text-xs text-gray-600">• '+s+'</p>'; });
-    (ev.verbesserungen||[]).forEach(function(v){ ih += '<p class="text-xs text-gray-600">• '+v+'</p>'; });
+    (ev.staerken||[]).forEach(function(s){ sh += '<p class="text-xs text-gray-600">• '+_escH(s)+'</p>'; });
+    (ev.verbesserungen||[]).forEach(function(v){ ih += '<p class="text-xs text-gray-600">• '+_escH(v)+'</p>'; });
     document.getElementById('tStrengths').innerHTML = sh || '<p class="text-xs text-gray-400">—</p>';
     document.getElementById('tImprovements').innerHTML = ih || '<p class="text-xs text-gray-400">—</p>';
 }

@@ -62,8 +62,8 @@ export async function renderShop() {
                 html += '<div class="w-full h-40 bg-gradient-to-br from-gray-50 to-orange-50 rounded-lg mb-3 flex items-center justify-center text-5xl">' + (catIcons[p.category]||'\ud83d\udecd\ufe0f') + '</div>';
             }
             html += '<span class="text-xs font-semibold text-vit-orange uppercase">' + (p.category||'') + '</span>';
-            html += '<h3 class="font-bold text-gray-800 text-sm mt-1">' + p.name + '</h3>';
-            if(p.description) html += '<p class="text-xs text-gray-500 mt-1 line-clamp-2">' + p.description + '</p>';
+            html += '<h3 class="font-bold text-gray-800 text-sm mt-1">' + _escH(p.name) + '</h3>';
+            if(p.description) html += '<p class="text-xs text-gray-500 mt-1 line-clamp-2">' + _escH(p.description) + '</p>';
 
             // Stock indicator
             if (hasVariants) {
@@ -302,7 +302,7 @@ export function renderShopCart() {
         total += c.preis * c.menge;
         count += c.menge;
         html += '<div class="flex items-center justify-between py-2 border-b border-gray-100">';
-        html += '<div class="flex-1 min-w-0"><span class="text-sm font-medium text-gray-800 truncate block">' + c.name + '</span>';
+        html += '<div class="flex-1 min-w-0"><span class="text-sm font-medium text-gray-800 truncate block">' + _escH(c.name) + '</span>';
         html += '<span class="text-xs text-gray-400">' + fmtEur(c.preis) + ' / St\u00fcck</span></div>';
         html += '<div class="flex items-center space-x-2 ml-3">';
         html += '<button onclick="updateShopCart(\x27'+c.cartKey+'\x27,-1)" class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 text-sm font-bold">\u2212</button>';

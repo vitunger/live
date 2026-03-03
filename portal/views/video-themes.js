@@ -239,7 +239,7 @@ window.vpThemenStatus = async function(themaDbId) {
 
         html += '<div class="flex items-center gap-3 p-2 rounded hover:bg-gray-50">';
         html += '<span class="text-sm">'+(statusIcons[statusText]||'\u2b1c')+'</span>';
-        html += '<span class="flex-1 text-sm '+(statusColors[statusText]||'text-gray-600')+'">'+st.name+(st.ort?' \u00b7 '+st.ort:'')+'</span>';
+        html += '<span class="flex-1 text-sm '+(statusColors[statusText]||'text-gray-600')+'">'+_escH(st.name)+(st.ort?' \u00b7 '+_escH(st.ort):'')+'</span>';
 
         // Status-Dropdown
         html += '<select onchange="vpThemenSetStatus(\''+themaDbId+'\',\''+st.id+'\',this.value)" class="text-xs border rounded px-2 py-1">';

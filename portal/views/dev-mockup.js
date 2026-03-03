@@ -209,7 +209,8 @@ export async function devMockupChatAttachImage(fileInput) {
         container.classList.remove('hidden');
         var preview = document.createElement('div');
         preview.className = 'relative';
-        preview.innerHTML = '<img src="'+_escH(url)+'" class="w-16 h-16 object-cover rounded border" /><button onclick="this.parentElement.remove();window._mockupChatAttachments=window._mockupChatAttachments||[];window._mockupChatAttachments=window._mockupChatAttachments.filter(function(a){return a.url!==\''+url+'\';})" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center">×</button>';
+        var safeUrl2 = url.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        preview.innerHTML = '<img src="'+_escH(url)+'" class="w-16 h-16 object-cover rounded border" /><button onclick="this.parentElement.remove();window._mockupChatAttachments=window._mockupChatAttachments||[];window._mockupChatAttachments=window._mockupChatAttachments.filter(function(a){return a.url!==\''+safeUrl2+'\';})" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center">×</button>';
         container.appendChild(preview);
     }
     fileInput.value = '';

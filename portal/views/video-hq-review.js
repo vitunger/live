@@ -120,7 +120,7 @@ try {
     if(approved && approved.length>0) {
         html += '<div class="mt-6"><h3 class="font-semibold text-gray-700 mb-3">K\u00fcrzlich erledigt</h3><div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="text-left p-3">Video</th><th class="text-left p-3">Standort</th><th class="text-left p-3">Status</th><th class="text-left p-3">Datum</th></tr></thead><tbody>';
         approved.forEach(function(v){
-            html += '<tr class="border-t border-gray-100 hover:bg-gray-50 cursor-pointer" onclick="vpShowVideoDetail(\''+v.id+'\')"><td class="p-3 font-medium">'+v.filename+'</td><td class="p-3 text-gray-500">'+(v.standorte?v.standorte.name:'\u2013')+'</td><td class="p-3">'+window.vpBadge(v.pipeline_status)+'</td><td class="p-3 text-gray-500">'+window.vpDateTime(v.updated_at)+'</td></tr>';
+            html += '<tr class="border-t border-gray-100 hover:bg-gray-50 cursor-pointer" onclick="vpShowVideoDetail(\''+v.id+'\')"><td class="p-3 font-medium">'+_escH(v.filename)+'</td><td class="p-3 text-gray-500">'+(v.standorte?_escH(v.standorte.name):'\u2013')+'</td><td class="p-3">'+window.vpBadge(v.pipeline_status)+'</td><td class="p-3 text-gray-500">'+window.vpDateTime(v.updated_at)+'</td></tr>';
         });
         html += '</tbody></table></div></div>';
     }
@@ -361,8 +361,8 @@ try {
             var typeIcon = ex.example_type==='good'?'\u2705':'\u274c';
             html += '<div class="flex items-start gap-2 p-2 bg-gray-50 rounded-lg text-sm">';
             html += '<span>'+typeIcon+'</span>';
-            html += '<div class="flex-1"><div class="text-gray-800">'+(ex.videos?ex.videos.filename:'Video gel\u00f6scht')+'</div>';
-            html += '<div class="text-xs text-gray-500">'+ex.description+'</div>';
+            html += '<div class="flex-1"><div class="text-gray-800">'+(ex.videos?_escH(ex.videos.filename):'Video gel\u00f6scht')+'</div>';
+            html += '<div class="text-xs text-gray-500">'+_escH(ex.description)+'</div>';
             html += '<span class="text-xs px-1.5 py-0.5 rounded '+typeColor+'">'+ex.example_type+'</span></div>';
             html += '<button onclick="vpDeleteExample(\''+ex.id+'\')" class="text-gray-300 hover:text-red-500 text-xs">\u2715</button>';
             html += '</div>';

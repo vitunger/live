@@ -136,8 +136,8 @@ export function renderWeekViewFromDb() {
         var sQuote = sGesamt > 0 ? Math.round((sVerkauft/sGesamt)*100) : 0;
         html += '<div class="vit-card overflow-hidden">';
         html += '<div class="flex items-center justify-between p-4 bg-gray-50 border-b">';
-        html += '<div class="flex items-center space-x-3"><div class="w-8 h-8 bg-vit-orange rounded-full flex items-center justify-center text-white font-bold text-sm">'+s.name.charAt(0)+'</div>';
-        html += '<div><p class="font-semibold text-gray-800">'+s.name+'</p><p class="text-xs text-gray-500">Plan: '+s.plan_soll+' Termine</p></div></div>';
+        html += '<div class="flex items-center space-x-3"><div class="w-8 h-8 bg-vit-orange rounded-full flex items-center justify-center text-white font-bold text-sm">'+_escH(s.name.charAt(0))+'</div>';
+        html += '<div><p class="font-semibold text-gray-800">'+_escH(s.name)+'</p><p class="text-xs text-gray-500">Plan: '+s.plan_soll+' Termine</p></div></div>';
         html += '<div class="flex space-x-4 text-center">';
         html += '<div><p class="text-xs text-gray-500">Beratungen</p><p class="font-bold text-blue-600">'+sGesamt+'</p></div>';
         html += '<div><p class="text-xs text-gray-500">Verkauft</p><p class="font-bold text-green-600">'+sVerkauft+'</p></div>';

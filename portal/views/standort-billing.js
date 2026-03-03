@@ -509,11 +509,11 @@ try {
 
     var html = '<div id="stdDetailOverlay" onclick="closeStdDetailModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
     html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
-    html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">'+s.name+'</h3><button onclick="closeStdDetailModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
+    html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">'+_escH(s.name)+'</h3><button onclick="closeStdDetailModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
     html += '<div class="grid grid-cols-2 gap-3 mb-5 text-sm">';
-    html += '<div><span class="text-gray-500">Adresse:</span><br><span class="font-semibold">'+(s.adresse||'\u2014')+'</span></div>';
-    html += '<div><span class="text-gray-500">Inhaber:</span><br><span class="font-semibold">'+(s.inhaber_name||'\u2014')+'</span></div>';
-    html += '<div><span class="text-gray-500">Telefon:</span><br><span class="font-semibold">'+(s.telefon||'\u2014')+'</span></div>';
+    html += '<div><span class="text-gray-500">Adresse:</span><br><span class="font-semibold">'+_escH(s.adresse||'\u2014')+'</span></div>';
+    html += '<div><span class="text-gray-500">Inhaber:</span><br><span class="font-semibold">'+_escH(s.inhaber_name||'\u2014')+'</span></div>';
+    html += '<div><span class="text-gray-500">Telefon:</span><br><span class="font-semibold">'+_escH(s.telefon||'\u2014')+'</span></div>';
     html += '<div><span class="text-gray-500">Mitarbeiter (aktiv):</span><br><span class="font-semibold">'+(empCount.count||0)+'</span></div>';
     html += '</div>';
     html += '<div class="mb-5"><label class="block text-xs font-semibold text-gray-600 mb-2">\ud83d\udcbb Warenwirtschaft</label>';
@@ -545,13 +545,13 @@ try {
     });
     html += '</select></div>';
     html += '<div><label class="block text-[10px] text-gray-500 mb-1">API-URL</label>';
-    html += '<input type="text" id="stdWawiUrl" value="'+(wawiConn ? wawiConn.api_url : '')+'" placeholder="https://erp.app-room.ch/api" class="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5"></div>';
+    html += '<input type="text" id="stdWawiUrl" value="'+_escH(wawiConn ? wawiConn.api_url : '')+'" placeholder="https://erp.app-room.ch/api" class="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5"></div>';
     html += '</div>';
     html += '<div class="grid grid-cols-2 gap-3 mb-3">';
     html += '<div><label class="block text-[10px] text-gray-500 mb-1">API-Key</label>';
     html += '<input type="password" id="stdWawiKey" value="'+(wawiConn && wawiConn.api_key_encrypted ? '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' : '')+'" placeholder="cycle-api-key" class="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5"></div>';
     html += '<div><label class="block text-[10px] text-gray-500 mb-1">Label (optional)</label>';
-    html += '<input type="text" id="stdWawiLabel" value="'+(wawiConn && wawiConn.system_label ? wawiConn.system_label : '')+'" placeholder="z.B. CYCLE '+s.name+'" class="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5"></div>';
+    html += '<input type="text" id="stdWawiLabel" value="'+_escH(wawiConn && wawiConn.system_label ? wawiConn.system_label : '')+'" placeholder="z.B. CYCLE '+_escH(s.name)+'" class="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5"></div>';
     html += '</div>';
     html += '<div class="flex gap-2">';
     html += '<button onclick="hqTestWawiConnection(\''+stdId+'\')" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200" id="hqWawiTestBtn">\ud83d\udd0d Testen</button>';

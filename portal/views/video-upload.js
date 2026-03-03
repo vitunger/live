@@ -46,7 +46,7 @@ vpSelectedFiles.forEach(function(f, idx) {
     var sizeMB = (f.size/(1024*1024)).toFixed(1);
     html += '<div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg" id="vpFileItem_'+idx+'">';
     html += '<div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-sm font-bold">'+(idx+1)+'</div>';
-    html += '<div class="flex-1 min-w-0"><p class="text-sm font-medium text-gray-800 truncate">'+f.name+'</p><p class="text-xs text-gray-400">'+sizeMB+' MB</p></div>';
+    html += '<div class="flex-1 min-w-0"><p class="text-sm font-medium text-gray-800 truncate">'+_escH(f.name)+'</p><p class="text-xs text-gray-400">'+sizeMB+' MB</p></div>';
     html += '<div id="vpFileStatus_'+idx+'" class="text-xs text-gray-400">Bereit</div>';
     html += '<button onclick="vpRemoveFile('+idx+')" class="text-gray-300 hover:text-red-500 text-lg">&times;</button>';
     html += '</div>';
