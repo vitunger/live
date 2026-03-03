@@ -130,7 +130,7 @@ IIFEs und nicht-modulare Skripte die parallel geladen werden.
 | `inline/react-deal-pipeline.jsx` | 1.603 | React Deal Pipeline (Kanban, Drag&Drop) |
 | `inline/render-system.js` | 956 | Render-System, View-Lifecycle |
 | `inline/video-helpers.js` | 805 | Video-Processing, Consent, Thumbnails |
-| `inline/pdf-wawi.js` | 783 | WaWi PDF-Parsing, Beleg-Erkennung |
+| ~~`inline/pdf-wawi.js`~~ | – | GELÖSCHT: Duplikat von `views/wawi-integration.js` |
 | `inline/billing-inline.js` | 621 | Billing-UI, Draft/Finalisierung, LexOffice PDF |
 | `inline/bwa-cockpit.js` | 530 | BWA-Cockpit Widgets, Deadline-Anzeige |
 | `inline/global-search.js` | 407 | Globale Suche (Cmd+K) |
