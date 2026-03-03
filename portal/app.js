@@ -61,7 +61,6 @@ const VIEW_MODULES = [
     'views/cockpit-engine.js',
     'views/email-billing.js',
     'views/standort-billing.js',
-    'views/trainer-system.js',
     
     // Entwicklung (dev-pipeline split into 14 sub-modules)
     'views/dev-pipeline.js',
