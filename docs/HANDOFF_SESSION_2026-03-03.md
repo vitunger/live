@@ -211,3 +211,16 @@ async function submitLead() {
   if (data.success) { /* Erfolg anzeigen */ }
 }
 ```
+
+---
+
+## Nachtrag: Leere Tabellen Audit
+
+73 leere Tabellen analysiert:
+- **42** im Frontend referenziert (warten auf Daten durch Nutzung)
+- **29** geplante Features mit FK-Beziehungen (Schema vorbereitet)
+- **2** komplett verwaist → als UNUSED kommentiert:
+  - `office_location_aliases`
+  - `office_sync_log`
+
+Keine Tabelle gelöscht – nur die 2 verwaisten markiert.
