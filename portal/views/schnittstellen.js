@@ -83,6 +83,20 @@ var CONNECTORS = {
         ],
         logs: []
     },
+    lexoffice: {
+        id: 'lexoffice', name: 'lexoffice', icon: '📒', iconBg: '#d1fae5',
+        desc: 'Buchhaltung & Rechnungswesen. Automatischer Kontakt- und Rechnungs-Sync, PDF-Abruf.',
+        category: 'active', status: 'unknown', statusLabel: 'Prüfe...',
+        fields: [
+            { key: 'api_key', label: 'API Key', type: 'password', placeholder: 'Dein lexoffice API Key (aus Einstellungen → API)' },
+        ],
+        readonlyFields: [
+            { key: 'edge_functions', label: 'Edge Functions', value: 'lexoffice-sync, lexoffice-pdf, lexoffice-webhook' },
+            { key: 'features', label: 'Funktionen', value: 'Kontakte sync, Rechnungen erstellen, PDF abrufen, Webhook-Events' },
+            { key: 'env_key', label: 'Supabase Secret', value: 'LEXOFFICE_API_KEY' },
+        ],
+        logs: []
+    },
     approom: {
         id: 'approom', name: 'app-room / CYCLE', icon: '🚲', iconBg: '#fef3c7',
         desc: 'Cloud-WaWi für Fahrradhändler. Veloconnect, JobRad-API, SPODAS. Umsatz, Lager & Belege.',
@@ -106,7 +120,7 @@ var PLANNED = [
     { name: 'Microsoft 365', icon: '📧', desc: 'Kalender & Mail', color: '#3b82f6' },
 ];
 
-var openCards = { etermin: true, google: false, meta: false, wawi: false, approom: false, dhl: false };
+var openCards = { etermin: true, lexoffice: false, google: false, meta: false, wawi: false, approom: false, dhl: false };
 
 // ═══════════════════════════════════════════════════════
 // MAIN RENDER
@@ -129,6 +143,7 @@ export async function renderSchnittstellen() {
     renderStatusGrid();
     renderActiveCards();
     setTimeout(function() { if (window.loadDhlConfig) window.loadDhlConfig(); }, 500);
+    setTimeout(function() { if (window.loadLexofficeConfig) window.loadLexofficeConfig(); }, 600);
     renderPlannedGrid();
     renderPartnerCards();
     loadEterminOverview();
@@ -239,7 +254,7 @@ window.showConnView = function(view) {
 function renderStatusGrid() {
     var el = document.getElementById('connStatusGrid');
     if (!el) return;
-    var ids = ['etermin', 'approom', 'dhl', 'google', 'meta', 'wawi'];
+    var ids = ['etermin', 'lexoffice', 'approom', 'dhl', 'google', 'meta', 'wawi'];
     el.innerHTML = ids.map(function(id) {
         var c = CONNECTORS[id];
         var sc = c.status === 'connected' ? '#16a34a' : c.status === 'error' ? '#dc2626' : c.status === 'disconnected' ? '#dc2626' : '#9ca3af';
@@ -260,7 +275,7 @@ function renderStatusGrid() {
 function renderActiveCards() {
     var el = document.getElementById('connActiveCards');
     if (!el) return;
-    el.innerHTML = ['etermin', 'approom', 'dhl', 'google', 'meta', 'wawi'].map(function(id) {
+    el.innerHTML = ['etermin', 'lexoffice', 'approom', 'dhl', 'google', 'meta', 'wawi'].map(function(id) {
         return renderConnectorCard(id);
     }).join('');
 }
@@ -390,6 +405,48 @@ function renderConnectorCard(id) {
         body += '</div>';
     }
 
+    // ── lexoffice body ──
+    if (id === 'lexoffice') {
+        body += '<div class="pt-4 space-y-3" id="lexofficeConfigPanel">';
+        body += renderGfToggle(id);
+        // Editable API Key field
+        if (c.fields) {
+            c.fields.forEach(function(f) {
+                body += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">' + f.label + '</label>'
+                    + '<input type="' + f.type + '" id="conn_lexoffice_' + f.key + '" placeholder="' + f.placeholder + '" '
+                    + 'class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 outline-none transition font-mono"></div>';
+            });
+        }
+        // Readonly info
+        if (c.readonlyFields) {
+            c.readonlyFields.forEach(function(f) {
+                body += '<div class="flex items-center gap-3"><span class="text-xs text-gray-500 w-36">' + f.label + '</span><span class="text-xs font-semibold text-gray-800">' + _escH(f.value) + '</span></div>';
+            });
+        }
+        // Info box
+        body += '<div class="bg-blue-50 border border-blue-200 rounded-lg p-3">'
+            + '<p class="text-xs text-blue-700">\u2139\ufe0f <strong>Hinweis:</strong> Der API Key wird in den Supabase Secrets gespeichert (LEXOFFICE_API_KEY) und von den Edge Functions lexoffice-sync, lexoffice-pdf und lexoffice-webhook verwendet. '
+            + 'Wenn du den Key hier aenderst, wird er automatisch in der connector_config gespeichert. Den Supabase Secret musst du <strong>zusaetzlich manuell</strong> im Supabase Dashboard aktualisieren (Settings \u2192 Edge Functions \u2192 Secrets).</p></div>';
+        // Buttons
+        body += '<div class="flex gap-2 pt-1">'
+            + '<button onclick="window.testLexofficeConnection()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition">\ud83d\udd0d Verbindung testen</button>'
+            + '<button onclick="window.saveLexofficeConfig()" class="px-4 py-2 bg-blue-500 text-white rounded-lg text-xs font-semibold hover:bg-blue-600 transition">\ud83d\udcbe Speichern</button>'
+            + '</div>';
+        body += '<div id="connTestResult_lexoffice" class="mt-2"></div>';
+        // Anleitung
+        body += '<details class="mt-3 border border-gray-200 rounded-lg"><summary class="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50 transition">\ud83d\udcd6 Anleitung: lexoffice API Key erstellen</summary>'
+            + '<div class="px-3 pb-3 text-xs text-gray-600 space-y-2 border-t border-gray-100 pt-2">'
+            + '<p><strong>1.</strong> Logge dich bei <a href="https://app.lexoffice.de" target="_blank" class="text-blue-600 underline">app.lexoffice.de</a> ein.</p>'
+            + '<p><strong>2.</strong> Gehe zu <em>Einstellungen \u2192 Erweiterungen \u2192 \u00d6ffentliche API</em>.</p>'
+            + '<p><strong>3.</strong> Klicke auf <strong>\u201eNeuen Key erstellen\u201c</strong>.</p>'
+            + '<p><strong>4.</strong> Vergib einen Namen (z.B. \u201evit:bikes Portal\u201c) und kopiere den angezeigten Key.</p>'
+            + '<p><strong>5.</strong> Trage den Key hier ein und klicke \u201eSpeichern\u201c.</p>'
+            + '<p><strong>6.</strong> Aktualisiere den Key auch im <a href="https://supabase.com/dashboard/project/lwwagbkxeofahhwebkab/settings/functions" target="_blank" class="text-blue-600 underline">Supabase Dashboard</a> unter Edge Function Secrets (LEXOFFICE_API_KEY).</p>'
+            + '<p class="text-gray-400 pt-1">\ud83d\udca1 Wichtig: Der alte Test-Key muss durch den produktiven Key ersetzt werden. Der alte Key funktioniert nach Ablauf der Testversion nicht mehr.</p>'
+            + '</div></details>';
+        body += '</div>';
+    }
+
     // ── WaWi body ──
     if (id === 'wawi') {
         body += '<div class="pt-4 space-y-3">';
@@ -500,7 +557,7 @@ function renderPlannedGrid() {
 function renderPartnerCards() {
     var el = document.getElementById('connPartnerCards');
     if (!el) return;
-    var ids = ['etermin', 'approom', 'dhl', 'google', 'meta', 'wawi'];
+    var ids = ['etermin', 'lexoffice', 'approom', 'dhl', 'google', 'meta', 'wawi'];
     el.innerHTML = ids.map(function(id) {
         var c = CONNECTORS[id];
         if (c.status === 'planned' || c.status === 'unknown') return '';
@@ -896,6 +953,7 @@ window.saveConnector = async function(id) {
         return;
     }
     if (id === 'dhl') { window.saveDhlConfig(); return; }
+    if (id === 'lexoffice') { window.saveLexofficeConfig(); return; }
     addLog(id, 'info', 'Konfiguration gespeichert');
     _showToast(CONNECTORS[id].name + ' Konfiguration gespeichert', 'success');
 };
@@ -962,6 +1020,75 @@ window.testDhlConnection = async function() {
     } catch(err) {
         if (el) el.innerHTML = '<span class="text-xs text-red-500 font-semibold">' + _escH(err.message) + '</span>';
         addLog('dhl', 'err', 'Test: ' + err.message);
+    }
+};
+
+// ═══ LEXOFFICE CONFIG ═══
+window.loadLexofficeConfig = async function() {
+    try {
+        var sb = _sb(); if (!sb) return;
+        var { data } = await sb.from('connector_config').select('config_key, config_value').eq('connector_id', 'lexoffice');
+        if (!data || !data.length) {
+            CONNECTORS.lexoffice.status = 'disconnected';
+            CONNECTORS.lexoffice.statusLabel = 'Nicht konfiguriert';
+            return;
+        }
+        data.forEach(function(r) {
+            var el = document.getElementById('conn_lexoffice_' + r.config_key);
+            if (el) el.value = r.config_value;
+        });
+        CONNECTORS.lexoffice.status = 'connected';
+        CONNECTORS.lexoffice.statusLabel = 'Verbunden';
+    } catch(e) { console.warn('LexOffice config load:', e); }
+};
+
+window.saveLexofficeConfig = async function() {
+    try {
+        var sb = _sb(); if (!sb) throw new Error('Nicht eingeloggt');
+        var apiKeyEl = document.getElementById('conn_lexoffice_api_key');
+        var apiKey = apiKeyEl ? apiKeyEl.value.trim() : '';
+        if (!apiKey) { _showToast('Bitte API Key eingeben.', 'error'); return; }
+        var { error } = await sb.from('connector_config').upsert({
+            connector_id: 'lexoffice', config_key: 'api_key', config_value: apiKey,
+            updated_by: _sbUser().id, updated_at: new Date().toISOString()
+        }, { onConflict: 'connector_id,config_key' });
+        if (error) throw error;
+        CONNECTORS.lexoffice.status = 'connected';
+        CONNECTORS.lexoffice.statusLabel = 'Verbunden';
+        addLog('lexoffice', 'ok', 'API Key gespeichert');
+        _showToast('lexoffice API Key gespeichert! Vergiss nicht, den Key auch im Supabase Dashboard zu aktualisieren.', 'success');
+    } catch(err) {
+        addLog('lexoffice', 'err', 'Speichern fehlgeschlagen: ' + err.message);
+        _showToast('Fehler: ' + err.message, 'error');
+    }
+};
+
+window.testLexofficeConnection = async function() {
+    var el = document.getElementById('connTestResult_lexoffice');
+    if (el) el.innerHTML = '<span class="text-xs text-gray-400 animate-pulse">Teste lexoffice-Verbindung...</span>';
+    try {
+        // First save
+        await window.saveLexofficeConfig();
+        // Then test by calling lexoffice-sync with test action
+        var session = await _sb().auth.getSession();
+        var token = session.data.session && session.data.session.access_token ? session.data.session.access_token : '';
+        var resp = await fetch(window.SUPABASE_URL + '/functions/v1/lexoffice-sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': window.SUPABASE_ANON_KEY },
+            body: JSON.stringify({ action: 'test-connection' })
+        });
+        var data = await resp.json();
+        if (resp.ok && !data.error) {
+            if (el) el.innerHTML = '<span class="text-xs text-green-600 font-semibold">\u2705 Verbindung erfolgreich! lexoffice antwortet.</span>';
+            addLog('lexoffice', 'ok', 'Verbindungstest bestanden');
+            CONNECTORS.lexoffice.status = 'connected';
+            CONNECTORS.lexoffice.statusLabel = 'Verbunden';
+        } else {
+            throw new Error(data.error || data.message || 'Unbekannter Fehler');
+        }
+    } catch(err) {
+        if (el) el.innerHTML = '<span class="text-xs text-red-500 font-semibold">\u274c ' + _escH(err.message) + '</span>';
+        addLog('lexoffice', 'err', 'Verbindungstest: ' + err.message);
     }
 };
 
