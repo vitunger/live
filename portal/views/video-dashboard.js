@@ -338,7 +338,7 @@ window.vpChatSend = async function(videoId) {
     // Add message to chat UI immediately
     var chatEl = document.getElementById('vpChatMessages');
     if(chatEl) {
-        chatEl.innerHTML += '<div class="flex gap-2"><div class="w-6 h-6 rounded-full bg-vit-orange text-white flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">HQ</div><div class="bg-white rounded-lg rounded-tl-sm px-3 py-2 text-xs shadow-sm max-w-[90%]">'+msg+'<div class="text-[10px] text-gray-300 mt-1">gerade eben</div></div></div>';
+        chatEl.innerHTML += '<div class="flex gap-2"><div class="w-6 h-6 rounded-full bg-vit-orange text-white flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">HQ</div><div class="bg-white rounded-lg rounded-tl-sm px-3 py-2 text-xs shadow-sm max-w-[90%]">'+_escH(msg)+'<div class="text-[10px] text-gray-300 mt-1">gerade eben</div></div></div>';
         chatEl.innerHTML += '<div id="vpChatTyping" class="flex gap-2 justify-end"><div class="bg-blue-50 rounded-lg px-3 py-2 text-xs text-blue-400"><span class="animate-pulse">KI denkt nach...</span></div><div class="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">KI</div></div>';
         chatEl.scrollTop = chatEl.scrollHeight;
     }
@@ -357,7 +357,7 @@ window.vpChatSend = async function(videoId) {
 
         if(res.data && res.data.success) {
             var reply = res.data.message || 'Feedback verarbeitet. Revision wird vorbereitet.';
-            if(typing) typing.outerHTML = '<div class="flex gap-2 justify-end"><div class="bg-blue-50 rounded-lg rounded-tr-sm px-3 py-2 text-xs shadow-sm max-w-[90%]"><div class="text-[10px] font-medium text-blue-600 mb-1">\ud83e\udd16 KI</div>'+reply+'</div><div class="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">KI</div></div>';
+            if(typing) typing.outerHTML = '<div class="flex gap-2 justify-end"><div class="bg-blue-50 rounded-lg rounded-tr-sm px-3 py-2 text-xs shadow-sm max-w-[90%]"><div class="text-[10px] font-medium text-blue-600 mb-1">\ud83e\udd16 KI</div>'+_escH(reply)+'</div><div class="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">KI</div></div>';
         } else {
             if(typing) typing.outerHTML = '<div class="flex gap-2 justify-end"><div class="bg-gray-100 rounded-lg px-3 py-2 text-xs text-gray-500">\ud83d\udcdd Feedback gespeichert (KI-Revision sp\u00e4ter)</div><div class="w-6 h-6 rounded-full bg-gray-400 text-white flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">KI</div></div>';
         }
