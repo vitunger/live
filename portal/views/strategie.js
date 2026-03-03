@@ -68,7 +68,8 @@ export function showView(viewName) {
         // Beta check: only HQ or assigned beta users may access
         if(statusLoaded && mStatus === 'beta') {
             var isHqUser = (window.sbProfile && window.sbProfile.is_hq) || (window.currentRoles && window.currentRoles.indexOf('hq') !== -1);
-            if(!isHqUser && !window._isBetaUser) {
+            var isBetaForModule = window._isBetaUser || (window._betaModules && window._betaModules.indexOf(moduleKey) !== -1);
+            if(!isHqUser && !isBetaForModule) {
                 if(typeof window._showToast === 'function') window._showToast('Dieses Modul ist in der Beta-Phase. Zugang nur f\u00fcr freigeschaltete Tester.', 'info');
                 return;
             }
