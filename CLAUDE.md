@@ -501,6 +501,16 @@ security: RLS/JWT/Auth-Verbesserung
 
 ---
 
+
+### connector_config (2026-03-03)
+- Neue DB-Tabelle connector_config fuer Schnittstellen-Konfiguration
+- Edge Function dhl-shipping v12: Liest aus connector_config, Fallback Env-Vars
+- Edge Function shop-notify v8: Bestellungen an shop@vitbikes.de
+- DHL Connector UI: Editierbare Felder in schnittstellen.js
+
+### bwa-cockpit.js Fix (2026-03-03)
+- updateBwaDeadlineWidget: subEl in null-guard aufgenommen
+
 ## Pflege dieser Datei
 
 > **An alle KI-Agenten:** Wenn du Code-Änderungen am Repo machst, prüfe ob diese Datei aktualisiert werden muss. Aktualisiere sie im selben Commit wenn:
