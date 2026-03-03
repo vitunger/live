@@ -17,6 +17,18 @@ var shopAllProducts = [];
 var shopVariants = {}; // product_id -> [variants]
 var shopSelectedSizes = {}; // kept for backwards compat
 
+// Warenkorb-Persistenz (sessionStorage)
+function _saveCart() {
+    try { sessionStorage.setItem('vb_shop_cart', JSON.stringify(shopCart)); } catch(e) {}
+}
+function _loadCart() {
+    try {
+        var saved = sessionStorage.getItem('vb_shop_cart');
+        if(saved) { shopCart = JSON.parse(saved); }
+    } catch(e) { shopCart = []; }
+}
+_loadCart(); // Warenkorb beim Laden wiederherstellen
+
 export async function renderShop() {
     var container = document.getElementById('shopGrid');
     if(!container) return;
@@ -100,6 +112,7 @@ export async function renderShop() {
             html += '<div class="mt-auto pt-2 border-t border-gray-100" id="shopCardFooter_'+p.id+'">';
             html += '<div class="flex items-center justify-between mb-2">';
             html += '<span class="font-bold text-gray-800 text-lg">' + fmtEur(p.price) + '</span>';
+            html += '<span class="text-[10px] text-gray-400 ml-1">netto</span>';
             if(productCartQty > 0) {
                 html += '<span class="text-xs font-bold text-vit-orange">\ud83d\uded2 '+productCartQty+' = '+fmtEur(productCartTotal)+'</span>';
             }
@@ -185,6 +198,7 @@ export function shopAddSelectedSizes(productId, productName) {
         added += qty;
     });
     if(added === 0) { _showToast('Bitte wähle mindestens eine Größe aus.', 'error'); return; }
+    _saveCart();
     renderShop();
 }
 
@@ -200,6 +214,7 @@ export function shopUpdateSizeCart(productId, variantId, variantName, qty, price
         });
     }
     renderShopCart();
+    _saveCart();
 }
 
 export function selectShopSize(productId, variantId, variantName) {
@@ -242,6 +257,7 @@ export function updateCartQty(input) {
     // Just update the cart badge
     var countEl = document.getElementById('shopCartCount');
     if(countEl) countEl.textContent = shopCart.reduce(function(s,c){return s+c.menge;},0);
+    _saveCart();
 }
 
 export function addToCartWithSize(productId, name, preis) {
@@ -261,12 +277,14 @@ export function addToCartWithSize(productId, name, preis) {
     } else {
         shopCart.push({ cartKey: cartKey, id: productId, variant_id: sel.variant_id, variant_name: sel.variant_name, name: name + ' (' + sel.variant_name + ')', preis: preis, menge: 1 });
     }
+    _saveCart();
     renderShop();
 }
 
 export function addToCart(id, name, preis) {
     var existing = shopCart.find(function(c){return c.id===id && !c.variant_id});
     if(existing) { existing.menge++; } else { shopCart.push({cartKey:id, id:id, name:name, preis:preis, menge:1}); }
+    _saveCart();
     renderShop();
 }
 
@@ -299,6 +317,7 @@ export function renderShopCart() {
     html += '<div class="flex justify-between pt-1 font-bold text-lg text-vit-orange"><span>Brutto</span><span>' + fmtEur(total*1.19) + '</span></div>';
     container.innerHTML = html;
     var totalEl = document.getElementById('shopCartTotal'); if(totalEl) totalEl.textContent = total.toFixed(2).replace('.',',');
+    var bruttoEl = document.getElementById('shopCartTotalBrutto'); if(bruttoEl) bruttoEl.textContent = (total*1.19).toFixed(2).replace('.',',');
     var countEl = document.getElementById('shopCartCount'); if(countEl) countEl.textContent = count;
 }
 
@@ -477,6 +496,7 @@ export async function submitShopOrder() {
         shopAllProducts = [];
         shopVariants = {};
         shopSelectedSizes = {};
+        try { sessionStorage.removeItem('vb_shop_cart'); } catch(e) {}
         document.getElementById('shopOrderModal').classList.remove('hidden');
         document.getElementById('shopOrderModalContent').innerHTML =
             '<div class="text-center"><div class="text-5xl mb-3">✅</div>' +
@@ -490,6 +510,7 @@ export async function submitShopOrder() {
 
 export function removeFromCart(cartKey) {
     shopCart = shopCart.filter(function(c){return c.cartKey!==cartKey;});
+    _saveCart();
     renderShop();
 }
 
@@ -504,6 +525,7 @@ export function updateShopCart(cartKey, delta) {
     }
     item.menge += delta;
     if(item.menge <= 0) shopCart = shopCart.filter(function(c){return c.cartKey!==cartKey;});
+    _saveCart();
     renderShop();
 }
 
@@ -533,6 +555,7 @@ export async function cancelMyShopOrder(orderId) {
         await _sb().from('shop_orders').update({ status: 'cancelled', updated_at: new Date().toISOString() }).eq('id', orderId);
         _showToast('Bestellung storniert.', 'success');
         shopAllProducts = []; shopVariants = {};
+        _saveCart();
         loadMyShopOrders();
     } catch(err) { _showToast('Fehler: '+err.message, 'error'); console.error(err); }
 }
@@ -540,4 +563,5 @@ export async function cancelMyShopOrder(orderId) {
 // Strangler Fig
 const _exports = { renderShop, shopSizeQty, shopSizeQtyInput, shopAddSelectedSizes, shopUpdateSizeCart, selectShopSize, updateCartQty, addToCartWithSize, addToCart, renderShopCart, filterShop, showShopTab, loadMyShopOrders, submitShopOrder, removeFromCart, updateShopCart, cancelMyShopOrder };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
+
 

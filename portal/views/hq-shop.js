@@ -120,6 +120,11 @@ export async function renderHqShopOrders() {
                 h += '<a href="'+trackUrl+'" target="_blank" class="text-blue-600 underline hover:text-blue-800">'+o.tracking_number+'</a></div>';
             }
 
+            // Notes
+            h += '<div class="mb-2"><button onclick="toggleOrderNotes(\''+o.id+'\')" class="text-xs text-gray-400 hover:text-gray-600">💬 Notiz '+(o.notes?'bearbeiten':'hinzufügen')+'</button>';
+            h += '<div id="orderNotes_'+o.id+'" class="hidden mt-2"><div class="flex space-x-2"><input type="text" id="noteInput_'+o.id+'" class="flex-1 px-2 py-1 text-xs border rounded" placeholder="Interne Notiz..." value="'+_escH(o.notes||'')+'">';
+            h += '<button onclick="saveOrderNote(\''+o.id+'\')" class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded hover:bg-gray-200">💾</button></div></div></div>';
+
             // Action buttons
             h += '<div class="flex flex-wrap gap-2">';
             if(o.status==='pending') {
@@ -627,6 +632,23 @@ export async function saveTracking() {
     renderHqShop();
 }
 
+// ===== ORDER NOTES =====
+export function toggleOrderNotes(orderId) {
+    var el = document.getElementById('orderNotes_' + orderId);
+    if(el) el.classList.toggle('hidden');
+}
+
+export async function saveOrderNote(orderId) {
+    var input = document.getElementById('noteInput_' + orderId);
+    if(!input) return;
+    try {
+        await _sb().from('shop_orders').update({ notes: input.value.trim(), updated_at: new Date().toISOString() }).eq('id', orderId);
+        _showToast('Notiz gespeichert.', 'success');
+        document.getElementById('orderNotes_' + orderId).classList.add('hidden');
+        renderHqShopOrders();
+    } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
+}
+
 // ===== STRANGLER FIG EXPORTS =====
 const _exports = {
     showHqShopTab, filterHqShopOrders, renderHqShop, renderHqShopOrders,
@@ -634,6 +656,8 @@ const _exports = {
     saveTracking, addHqShopProduct, updateShopOrderStatus, cancelShopOrder,
     openProductEditModal, saveProductEdit, toggleProductActive,
     openStockModal, saveStockAdjustment,
-    openVariantManager, addVariant, addBulkVariants, deleteVariant, updateVariantSort
+    openVariantManager, addVariant, addBulkVariants, deleteVariant, updateVariantSort,
+    toggleOrderNotes, saveOrderNote
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
+
