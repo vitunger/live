@@ -12,7 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1772579116";
+const CACHE_BUST = "?v=1772579800";
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
@@ -119,6 +119,7 @@ const VIEW_MODULES = [
     'views/office-mybookings.js',
     'views/office-whoishere.js',
     'views/office-stats.js',
+    'views/office-wifi.js',
     'views/wawi-integration.js',
     'views/schnittstellen.js',
     // Video Pipeline (split into 9 sub-modules)
