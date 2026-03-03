@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 03.03.2026 (HQ-Shop Modul-Extraktion, Produkt-Edit, Varianten-Mgmt, Stock, Stornierung)
+> Letzte Aktualisierung: 03.03.2026 (Shop Go-Live: HQ-Shop Modul, Produkt-Edit, Varianten, Stock, Stornierung, Warenkorb-Persistenz, Netto/Brutto, HQ-Notizen)
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
