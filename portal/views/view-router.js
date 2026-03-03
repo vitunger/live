@@ -23,6 +23,7 @@
 // Maps view names to their render functions and init calls.
 // Each entry: viewName → { fn: 'functionName', args?: [...], chain?: [{fn, args}] }
 // 'fn' is looked up on window.* at call time (lazy binding).
+console.log("[view-router.js] MODULE LOADED");
 const VIEW_RENDER_MAP = {
     // === HQ Views ===
     'hqCockpit':     { fn: 'renderHqCockpit' },
@@ -48,7 +49,7 @@ const VIEW_RENDER_MAP = {
     'controlling':   { fn: 'showControllingTab', args: ['cockpit'], chain: [{ fn: 'renderPerformanceCockpit' }, { fn: 'loadBwaList' }] },
     'verkauf':       { fn: 'showVerkaufTab', args: ['pipeline'] },
     'kommunikation': { fn: 'showKommTab', args: ['chat'] },
-    'aktenschrank':  { fn: 'loadAktenschrank' },
+    'aktenschrank':  { fn: 'loadAktenschrank' }, // DEBUG
     'kalender':      { fn: 'loadKalTermine' },
     'todo':          { fn: 'loadTodos' },
     'notifications': { fn: 'renderNotifications', args: ['all'] },
