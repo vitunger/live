@@ -304,6 +304,7 @@ window._offGuestModalForDate = function(date) {
 };
 
 
+// DEAD_CODE: _buchSetFavorite - never called
 window._buchSetFavorite = async function(nr) {
     var S=_off();
     try {
@@ -336,6 +337,7 @@ window._buchTimeChanged = function() {
     _buchTo=(document.getElementById('buchTo')||{}).value||'17:00';
 };
 
+// DEAD_CODE: _buchRoomChanged - never called
 window._buchRoomChanged = function() {
     var sel=document.getElementById('buchRoomSelect');
     if(sel) _buchRoomId=sel.value;

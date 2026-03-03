@@ -269,6 +269,7 @@ try {
 };
 
 // ==================== APPROVE MIT LEARNING ====================
+// DEAD_CODE: vpHqApproveWithLearning
 window.vpHqApproveWithLearning = async function(videoId) {
 var {data:v} = await _sb().from('videos').select('filename,category').eq('id',videoId).single();
 var html = '<div class="flex justify-between items-center mb-4"><h2 class="text-lg font-bold text-gray-800">\u2705 Video freigeben</h2><button onclick="vpCloseModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button></div>';

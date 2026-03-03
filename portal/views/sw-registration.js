@@ -268,7 +268,8 @@ function _showToast(m,t){ if(window.showToast) window.showToast(m,t||'info'); }
     }
 
     // ── Camera Access for Content Upload ──
-    window.openCamera = function(callback) {
+    // DEAD_CODE: openCamera - never called
+window.openCamera = function(callback) {
         var input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*,video/*';

@@ -166,6 +166,7 @@ window.triggerDealStatusEmail = function(dealName, dealValue, status, sellerEmai
 // ════════════════════════════════════════════════
 var _origSnooze = window.snoozeTrainer;
 var snoozeCount = {};
+// DEAD_CODE: snoozeTrainer - never called
 window.snoozeTrainer = function() {
     if(typeof currentTrainer !== 'undefined' && currentTrainer) {
         var tid = currentTrainer.id;
@@ -187,6 +188,7 @@ window.snoozeTrainer = function() {
 // ════════════════════════════════════════════════
 // TRIGGER 6: Gruppencall-Erinnerung (24h vorher)
 // ════════════════════════════════════════════════
+// DEAD_CODE: triggerGroupcallReminder - never called
 window.triggerGroupcallReminder = function(callTitle, callDate, callTime, zoomLink, participants) {
     participants.forEach(function(p){
         sendEmail('groupcall_reminder', p.email, {

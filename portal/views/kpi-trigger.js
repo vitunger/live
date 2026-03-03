@@ -58,6 +58,7 @@ window.canBookHqCall = function() {
 };
 
 // ──── IMPACT CHECK (7-day follow-up) ────
+// DEAD_CODE: scheduleImpactCheck
 window.scheduleImpactCheck = function(trainerId, startDate) {
     // In production: store in Supabase, cron checks after 7 days
     var checkDate = new Date(startDate);
@@ -84,6 +85,7 @@ window.checkPendingImpacts = function() {
 };
 
 // ──── ONBOARDING PHASE TRACKING ────
+// DEAD_CODE: getOnboardingPhase
 window.getOnboardingPhase = function() {
     try {
         var phase = localStorage.getItem('vit_onb_phase');
@@ -94,6 +96,7 @@ window.getOnboardingPhase = function() {
     return {phase: 2, label: 'Woche 1', progress: 65};
 };
 
+// DEAD_CODE: completeOnboardingPhase
 window.completeOnboardingPhase = function(phaseNum) {
     if(phaseNum >= 3) {
         try { localStorage.setItem('vit_onb_phase', 'done'); } catch(e){}

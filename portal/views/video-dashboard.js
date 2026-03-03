@@ -448,6 +448,7 @@ function vpExtractPersonFrames(persons) {
 }
 
 // Seek to a specific timestamp and update the frame
+// DEAD_CODE: vpSeekFrame
 window.vpSeekFrame = function(timestamp, personIdx) {
     var video = document.getElementById('vpDetailPlayer');
     var canvas = document.getElementById('vpFrameCanvas');
@@ -554,6 +555,7 @@ try {
 }
 };
 
+// DEAD_CODE: vpApproveVideo
 window.vpApproveVideo = async function(videoId) {
 if(!confirm('\u2705 Video freigeben und zur Ver\u00f6ffentlichung markieren?')) return;
 try {
@@ -575,6 +577,7 @@ try {
 } catch(e) { _showToast('Fehler: '+e.message, 'error'); }
 };
 
+// DEAD_CODE: vpRejectVideo
 window.vpRejectVideo = async function(videoId) {
 var reason = prompt('\u274c Grund f\u00fcr Ablehnung:');
 if(!reason) return;
