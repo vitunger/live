@@ -18,7 +18,7 @@ function _showToast(m,t) { if (typeof window.showToast === 'function') window.sh
 var currentConnView = 'hq';
 
 // GF permissions per connector (persisted to Supabase later)
-var gfPermissions = { etermin: false, google: false, meta: false, wawi: false, approom: false };
+var gfPermissions = { etermin: false, google: false, meta: false, wawi: false, approom: false, dhl: false };
 
 // Connector definitions
 var CONNECTORS = {
@@ -64,6 +64,24 @@ var CONNECTORS = {
         isStandortLevel: true,
         logs: []
     },
+    dhl: {
+        id: 'dhl', name: 'DHL Paket DE', icon: '📦', iconBg: '#fef08a',
+        desc: 'Versandlabel direkt aus dem Shop erstellen. DHL Paket DE Versenden V2 REST API.',
+        category: 'active', status: 'connected', statusLabel: 'Sandbox',
+        readonlyFields: [
+            { key: 'api_mode', label: 'Modus', value: 'Sandbox (Test)' },
+            { key: 'billing_number', label: 'Abrechnungsnr.', value: '5212835260****' },
+            { key: 'gkp_user', label: 'GKP-Benutzer', value: 'vitbikescockpit' },
+            { key: 'sender', label: 'Absender', value: 'vit:bikes GmbH, Jahnstraße 2c, 85774 Unterföhring' },
+            { key: 'products', label: 'Produkte', value: 'DHL Paket (V01PAK)' },
+            { key: 'edge_function', label: 'Edge Function', value: 'dhl-shipping (v3)' },
+        ],
+        logs: [
+            { time: '03.03.2026 13:15', type: 'info', msg: 'DHL Paket DE API Sandbox konfiguriert' },
+            { time: '03.03.2026 13:14', type: 'info', msg: 'Edge Function dhl-shipping deployed' },
+            { time: '03.03.2026 13:10', type: 'info', msg: 'App im DHL Developer Portal angelegt' },
+        ]
+    },
     approom: {
         id: 'approom', name: 'app-room / CYCLE', icon: '🚲', iconBg: '#fef3c7',
         desc: 'Cloud-WaWi für Fahrradhändler. Veloconnect, JobRad-API, SPODAS. Umsatz, Lager & Belege.',
@@ -87,7 +105,7 @@ var PLANNED = [
     { name: 'Microsoft 365', icon: '📧', desc: 'Kalender & Mail', color: '#3b82f6' },
 ];
 
-var openCards = { etermin: true, google: false, meta: false, wawi: false, approom: false };
+var openCards = { etermin: true, google: false, meta: false, wawi: false, approom: false, dhl: false };
 
 // ═══════════════════════════════════════════════════════
 // MAIN RENDER
@@ -892,3 +910,4 @@ function fmtDT(iso) {
 const _exports = { renderSchnittstellen };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // [prod] log removed
+
