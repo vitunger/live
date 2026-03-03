@@ -3,6 +3,8 @@
  * @module views/email-billing
  */
 function _sb()           { return window.sb; }
+function _fmtEur(n) { return typeof window.fmtEur === 'function' ? window.fmtEur(n) : (n||0)+' €'; }
+function _fmtDate(d) { return typeof window.fmtDate === 'function' ? window.fmtDate(d) : String(d||'–'); }
 function _sbUser()       { return window.sbUser; }
 function _sbProfile()    { return window.sbProfile; }
 function _escH(s)        { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
@@ -170,8 +172,6 @@ sendEmail('deal_status', kundeEmail, {
 window.getEmailLog = function(){ return EMAIL_LOG; };
 
 // ── Helpers ──
-export function fmtEur(n) { return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n || 0); }
-export function fmtDate(d) { if (!d) return '–'; return new Date(d).toLocaleDateString('de-DE'); }
 export function statusBadge(s) {
 const map = {
 draft: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">Draft</span>',
@@ -262,7 +262,7 @@ if (kpiEl) kpiEl.innerHTML =
 '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Standorte</p><p class="text-2xl font-bold">'+standorte.length+'</p></div>'
 +'<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Drafts</p><p class="text-2xl font-bold text-yellow-600">'+drafts+'</p></div>'
 +'<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Bezahlt</p><p class="text-2xl font-bold text-green-600">'+paid+'</p></div>'
-+'<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Volumen</p><p class="text-2xl font-bold text-vit-orange">'+fmtEur(totalRevenue)+'</p></div>';
++'<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Volumen</p><p class="text-2xl font-bold text-vit-orange">'+_fmtEur(totalRevenue)+'</p></div>';
 
 var tbody = document.getElementById('billingOverviewTable');
 if (!tbody) return;
@@ -270,7 +270,7 @@ var h = '';
 standorte.forEach(function(s) {
 var stratBadge = !s.strategy ? '<span class="text-xs text-red-500">❌ Fehlt</span>' : s.strategy.locked ? '<span class="text-xs text-green-600">🔒 Locked</span>' : s.strategy.approved_at ? '<span class="text-xs text-blue-500">✓ Approved</span>' : '<span class="text-xs text-yellow-500">⏳ Offen</span>';
 var sepaBadge = s.billing_account?.sepa_active ? '<span class="text-xs text-green-600">✅</span>' : '<span class="text-xs text-gray-400">–</span>';
-var invTotal = s.invoice ? fmtEur(s.invoice.total) : '<span class="text-xs text-gray-400">–</span>';
+var invTotal = s.invoice ? _fmtEur(s.invoice.total) : '<span class="text-xs text-gray-400">–</span>';
 var invStatus = s.invoice ? statusBadge(s.invoice.status) : '<span class="text-xs text-gray-400">Kein Draft</span>';
 var action = '';
 if (s.invoice && s.invoice.status === 'draft') {
@@ -347,8 +347,8 @@ var { data: audits } = await _sb().from('billing_audit_log')
 .select('*, user:users(name)').eq('invoice_id', invoiceId).order('created_at', { ascending: false });
 
 document.getElementById('billingDetailTitle').textContent = (inv.invoice_number || 'Rechnung') + ' – ' + (inv.standort?.name || '');
-document.getElementById('billingDetailSubtitle').textContent = fmtDate(inv.period_start) + ' – ' + fmtDate(inv.period_end) + ' · ' + statusBadge(inv.status);
-document.getElementById('billingDetailSubtitle').innerHTML = fmtDate(inv.period_start) + ' – ' + fmtDate(inv.period_end) + ' · ' + statusBadge(inv.status);
+document.getElementById('billingDetailSubtitle').textContent = _fmtDate(inv.period_start) + ' – ' + _fmtDate(inv.period_end) + ' · ' + statusBadge(inv.status);
+document.getElementById('billingDetailSubtitle').innerHTML = _fmtDate(inv.period_start) + ' – ' + _fmtDate(inv.period_end) + ' · ' + statusBadge(inv.status);
 
 // Action buttons
 var actionsHtml = '';
@@ -392,7 +392,7 @@ h += '<td class="p-3 text-gray-400">' + (idx+1) + '</td>';
 h += '<td class="p-3">' + li.description;
 if (li.meta?.formula) h += '<br><span class="text-xs text-gray-400">' + li.meta.formula + '</span>';
 h += '</td>';
-h += '<td class="p-3 text-right font-mono">' + fmtEur(li.amount) + '</td>';
+h += '<td class="p-3 text-right font-mono">' + _fmtEur(li.amount) + '</td>';
 if (inv.status === 'draft') {
     h += '<td class="p-3 text-center">';
     if (li.editable) {
@@ -405,9 +405,9 @@ h += '</tr>';
 });
 h += '</tbody>';
 h += '<tfoot class="bg-gray-50 font-semibold">';
-h += '<tr><td class="p-3" colspan="' + (inv.status === 'draft' ? 2 : 2) + '">Netto</td><td class="p-3 text-right font-mono">' + fmtEur(inv.subtotal) + '</td>'+(inv.status==='draft'?'<td></td>':'')+'</tr>';
-h += '<tr><td class="p-3" colspan="' + (inv.status === 'draft' ? 2 : 2) + '">MwSt. ('+inv.tax_rate+'%)</td><td class="p-3 text-right font-mono">' + fmtEur(inv.tax_amount) + '</td>'+(inv.status==='draft'?'<td></td>':'')+'</tr>';
-h += '<tr class="text-lg"><td class="p-3" colspan="' + (inv.status === 'draft' ? 2 : 2) + '">Gesamt</td><td class="p-3 text-right font-mono text-vit-orange">' + fmtEur(inv.total) + '</td>'+(inv.status==='draft'?'<td></td>':'')+'</tr>';
+h += '<tr><td class="p-3" colspan="' + (inv.status === 'draft' ? 2 : 2) + '">Netto</td><td class="p-3 text-right font-mono">' + _fmtEur(inv.subtotal) + '</td>'+(inv.status==='draft'?'<td></td>':'')+'</tr>';
+h += '<tr><td class="p-3" colspan="' + (inv.status === 'draft' ? 2 : 2) + '">MwSt. ('+inv.tax_rate+'%)</td><td class="p-3 text-right font-mono">' + _fmtEur(inv.tax_amount) + '</td>'+(inv.status==='draft'?'<td></td>':'')+'</tr>';
+h += '<tr class="text-lg"><td class="p-3" colspan="' + (inv.status === 'draft' ? 2 : 2) + '">Gesamt</td><td class="p-3 text-right font-mono text-vit-orange">' + _fmtEur(inv.total) + '</td>'+(inv.status==='draft'?'<td></td>':'')+'</tr>';
 h += '</tfoot></table></div>';
 
 // Audit Log
@@ -415,7 +415,7 @@ if (audits?.length) {
 h += '<div class="vit-card p-4"><h4 class="font-semibold text-gray-800 mb-3">📋 Änderungsprotokoll</h4>';
 h += '<div class="space-y-2">';
 audits.forEach(function(a) {
-    h += '<div class="flex items-start text-xs text-gray-500"><span class="mr-2">' + fmtDate(a.created_at) + '</span>';
+    h += '<div class="flex items-start text-xs text-gray-500"><span class="mr-2">' + _fmtDate(a.created_at) + '</span>';
     h += '<span class="font-semibold mr-1">' + (a.user?.name || 'System') + '</span>';
     h += '<span>' + a.action + (a.note ? ': ' + a.note : '') + '</span></div>';
 });
@@ -480,9 +480,9 @@ var h = '';
 invoices.forEach(function(inv) {
 h += '<div class="vit-card p-4 flex items-center justify-between cursor-pointer hover:shadow-md" onclick="openBillingDetail(\''+inv.id+'\')">';
 h += '<div><p class="font-semibold text-sm">' + (inv.invoice_number || '–') + '</p>';
-h += '<p class="text-xs text-gray-500">' + (inv.standort?.name || '') + ' · ' + fmtDate(inv.period_start) + '</p></div>';
+h += '<p class="text-xs text-gray-500">' + (inv.standort?.name || '') + ' · ' + _fmtDate(inv.period_start) + '</p></div>';
 h += '<div class="text-right">';
-h += '<p class="font-mono font-semibold">' + fmtEur(inv.total) + '</p>';
+h += '<p class="font-mono font-semibold">' + _fmtEur(inv.total) + '</p>';
 h += statusBadge(inv.status);
 h += '</div></div>';
 });
@@ -505,7 +505,7 @@ var lockBadge = s.locked ? '🔒 Locked' : s.approved_at ? '✓ Approved' : '⏳
 var lockClass = s.locked ? 'text-green-600' : s.approved_at ? 'text-blue-500' : 'text-yellow-500';
 h += '<div class="vit-card p-4 flex items-center justify-between">';
 h += '<div><p class="font-semibold text-sm">' + (s.standort?.name || '') + ' – ' + s.year + ' (v' + s.version + ')</p>';
-h += '<p class="text-xs text-gray-500">Plan-Umsatz: ' + fmtEur(s.planned_revenue_year) + ' · Marketing: ' + fmtEur(s.planned_marketing_year) + '</p></div>';
+h += '<p class="text-xs text-gray-500">Plan-Umsatz: ' + _fmtEur(s.planned_revenue_year) + ' · Marketing: ' + _fmtEur(s.planned_marketing_year) + '</p></div>';
 h += '<div class="flex items-center space-x-3">';
 h += '<span class="text-xs font-semibold ' + lockClass + '">' + lockBadge + '</span>';
 if (!s.approved_at) h += '<button onclick="approveStrategy(\''+s.id+'\')" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Approve</button>';
@@ -534,7 +534,7 @@ var h = '<div class="vit-card overflow-hidden"><table class="w-full text-sm">';
 h += '<thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr><th class="p-3 text-left">Key</th><th class="p-3 text-left">Name</th><th class="p-3 text-left">Typ</th><th class="p-3 text-right">Betrag</th><th class="p-3 text-right">%</th></tr></thead><tbody>';
 (products || []).forEach(function(p) {
 h += '<tr class="border-b"><td class="p-3 font-mono text-xs">'+p.key+'</td><td class="p-3">'+p.name+'</td><td class="p-3 text-xs text-gray-500">'+p.product_type+'</td>';
-h += '<td class="p-3 text-right">'+(p.default_amount ? fmtEur(p.default_amount) : '–')+'</td>';
+h += '<td class="p-3 text-right">'+(p.default_amount ? _fmtEur(p.default_amount) : '–')+'</td>';
 h += '<td class="p-3 text-right">'+(p.default_percent ? (p.default_percent*100).toFixed(1)+'%' : '–')+'</td></tr>';
 });
 h += '</tbody></table></div>';
@@ -550,7 +550,7 @@ var h = '<div class="vit-card overflow-hidden"><table class="w-full text-sm">';
 h += '<thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr><th class="p-3 text-left">Paket</th><th class="p-3 text-left">Beschreibung</th><th class="p-3 text-right">Preis/Monat</th><th class="p-3 text-center">Status</th></tr></thead><tbody>';
 (tools || []).forEach(function(t) {
 h += '<tr class="border-b"><td class="p-3 font-semibold">'+t.name+'</td><td class="p-3 text-sm text-gray-500">'+(t.description||'')+'</td>';
-h += '<td class="p-3 text-right font-mono">'+fmtEur(t.monthly_cost)+'</td>';
+h += '<td class="p-3 text-right font-mono">'+_fmtEur(t.monthly_cost)+'</td>';
 h += '<td class="p-3 text-center">'+(t.active?'<span class="text-green-600">✅</span>':'<span class="text-gray-400">–</span>')+'</td></tr>';
 });
 h += '</tbody></table></div>';
@@ -610,8 +610,8 @@ invoices.forEach(function(inv) {
 h += '<div class="vit-card p-4">';
 h += '<div class="flex items-center justify-between mb-2">';
 h += '<div><p class="font-semibold">' + (inv.invoice_number || 'Rechnung') + '</p>';
-h += '<p class="text-xs text-gray-500">' + fmtDate(inv.period_start) + ' – ' + fmtDate(inv.period_end) + '</p></div>';
-h += '<div class="text-right"><p class="font-mono text-lg font-bold">' + fmtEur(inv.total) + '</p>' + statusBadge(inv.status) + '</div></div>';
+h += '<p class="text-xs text-gray-500">' + _fmtDate(inv.period_start) + ' – ' + _fmtDate(inv.period_end) + '</p></div>';
+h += '<div class="text-right"><p class="font-mono text-lg font-bold">' + _fmtEur(inv.total) + '</p>' + statusBadge(inv.status) + '</div></div>';
 // Transparency
 if (inv.calculated_snapshot?.formulas) {
     h += '<details class="mt-2"><summary class="text-xs text-blue-600 cursor-pointer hover:underline">📐 Berechnung anzeigen</summary>';
@@ -647,8 +647,8 @@ var lockBadge = s.locked ? '🔒 Gesperrt (verbindlich)' : s.approved_at ? '✅ 
 h += '<div class="vit-card p-6">';
 h += '<div class="flex items-center justify-between mb-4"><h3 class="font-bold text-lg">Jahresstrategie ' + year + '</h3><span class="text-sm font-semibold">' + lockBadge + '</span></div>';
 h += '<div class="grid grid-cols-2 gap-4">';
-h += '<div class="p-4 bg-orange-50 rounded-lg"><p class="text-xs text-gray-400">Plan-Umsatz</p><p class="text-xl font-bold text-vit-orange">' + fmtEur(s.planned_revenue_year) + '</p><p class="text-xs text-gray-500">' + fmtEur(s.planned_revenue_year/12) + ' / Monat</p></div>';
-h += '<div class="p-4 bg-blue-50 rounded-lg"><p class="text-xs text-gray-400">Marketing-Budget</p><p class="text-xl font-bold text-blue-600">' + fmtEur(s.planned_marketing_year) + '</p><p class="text-xs text-gray-500">' + fmtEur(s.planned_marketing_year/12) + ' / Monat</p></div>';
+h += '<div class="p-4 bg-orange-50 rounded-lg"><p class="text-xs text-gray-400">Plan-Umsatz</p><p class="text-xl font-bold text-vit-orange">' + _fmtEur(s.planned_revenue_year) + '</p><p class="text-xs text-gray-500">' + _fmtEur(s.planned_revenue_year/12) + ' / Monat</p></div>';
+h += '<div class="p-4 bg-blue-50 rounded-lg"><p class="text-xs text-gray-400">Marketing-Budget</p><p class="text-xl font-bold text-blue-600">' + _fmtEur(s.planned_marketing_year) + '</p><p class="text-xs text-gray-500">' + _fmtEur(s.planned_marketing_year/12) + ' / Monat</p></div>';
 h += '</div></div>';
 }
 if (!s || !s.locked) {
@@ -708,20 +708,20 @@ var toolTotal = (tools||[]).reduce(function(sum, t) { return sum + (t.cost_overr
 h += '<div class="vit-card p-6">';
 h += '<h3 class="font-bold text-lg mb-4">Monatliche Kostenaufschlüsselung</h3>';
 h += '<table class="w-full text-sm"><tbody>';
-h += '<tr class="border-b"><td class="py-2">Grundgebühr</td><td class="py-2 text-right font-mono">'+fmtEur(800)+'</td></tr>';
-h += '<tr class="border-b"><td class="py-2">Umsatzbeteiligung (80% × 2% × '+fmtEur(planMonth)+')</td><td class="py-2 text-right font-mono">'+fmtEur(advance)+'</td></tr>';
-h += '<tr class="border-b"><td class="py-2">Online-Werbebudget <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold">Durchlaufposten</span><br><span class="text-[10px] text-gray-400">'+fmtEur(s.planned_marketing_year)+' / 12 – fließt 100% in Google/Meta Ads</span></td><td class="py-2 text-right font-mono">'+fmtEur(mktMonth)+'</td></tr>';
-h += '<tr class="border-b"><td class="py-2">Toolkosten ('+(tools?.length||0)+' Nutzer)</td><td class="py-2 text-right font-mono">'+fmtEur(toolTotal)+'</td></tr>';
+h += '<tr class="border-b"><td class="py-2">Grundgebühr</td><td class="py-2 text-right font-mono">'+_fmtEur(800)+'</td></tr>';
+h += '<tr class="border-b"><td class="py-2">Umsatzbeteiligung (80% × 2% × '+_fmtEur(planMonth)+')</td><td class="py-2 text-right font-mono">'+_fmtEur(advance)+'</td></tr>';
+h += '<tr class="border-b"><td class="py-2">Online-Werbebudget <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold">Durchlaufposten</span><br><span class="text-[10px] text-gray-400">'+_fmtEur(s.planned_marketing_year)+' / 12 – fließt 100% in Google/Meta Ads</span></td><td class="py-2 text-right font-mono">'+_fmtEur(mktMonth)+'</td></tr>';
+h += '<tr class="border-b"><td class="py-2">Toolkosten ('+(tools?.length||0)+' Nutzer)</td><td class="py-2 text-right font-mono">'+_fmtEur(toolTotal)+'</td></tr>';
 var nettoSum = 800 + advance + mktMonth + toolTotal;
-h += '<tr class="font-bold text-lg"><td class="pt-3">Netto gesamt</td><td class="pt-3 text-right font-mono text-vit-orange">'+fmtEur(nettoSum)+'</td></tr>';
-h += '<tr><td class="py-1 text-gray-400">zzgl. 19% MwSt.</td><td class="py-1 text-right font-mono text-gray-400">'+fmtEur(nettoSum*0.19)+'</td></tr>';
-h += '<tr class="font-bold text-xl border-t"><td class="pt-2">Brutto</td><td class="pt-2 text-right font-mono text-vit-orange">'+fmtEur(nettoSum*1.19)+'</td></tr>';
+h += '<tr class="font-bold text-lg"><td class="pt-3">Netto gesamt</td><td class="pt-3 text-right font-mono text-vit-orange">'+_fmtEur(nettoSum)+'</td></tr>';
+h += '<tr><td class="py-1 text-gray-400">zzgl. 19% MwSt.</td><td class="py-1 text-right font-mono text-gray-400">'+_fmtEur(nettoSum*0.19)+'</td></tr>';
+h += '<tr class="font-bold text-xl border-t"><td class="pt-2">Brutto</td><td class="pt-2 text-right font-mono text-vit-orange">'+_fmtEur(nettoSum*1.19)+'</td></tr>';
 h += '</tbody></table>';
 // Tool breakdown
 if (tools?.length) {
     h += '<h4 class="font-semibold mt-6 mb-2">🔧 Tool-Zuweisungen</h4><div class="space-y-1">';
     tools.forEach(function(t) {
-        h += '<div class="flex justify-between text-sm"><span>'+((t.user?.name)||'–')+' – '+(t.tool?.name||'–')+'</span><span class="font-mono">'+fmtEur(t.cost_override||t.tool?.monthly_cost)+'</span></div>';
+        h += '<div class="flex justify-between text-sm"><span>'+((t.user?.name)||'–')+' – '+(t.tool?.name||'–')+'</span><span class="font-mono">'+_fmtEur(t.cost_override||t.tool?.monthly_cost)+'</span></div>';
     });
     h += '</div>';
 }

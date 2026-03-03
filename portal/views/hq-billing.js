@@ -3,6 +3,8 @@
  * @module views/hq-billing
  */
 function _sb()           { return window.sb; }
+function _fmtEur(n) { return typeof window.fmtEur === 'function' ? window.fmtEur(n) : (n||0)+' €'; }
+function _fmtDate(d) { return typeof window.fmtDate === 'function' ? window.fmtDate(d) : String(d||'–'); }
 function _sbUser()       { return window.sbUser; }
 function _sbProfile()    { return window.sbProfile; }
 function _escH(s)        { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
@@ -18,8 +20,6 @@ var BILLING_FN = 'https://lwwagbkxeofahhwebkab.supabase.co/functions/v1/billing'
 var billingData = { invoices: [], products: [], strategies: [], tools: [], overview: [] };
 var currentBillingMonth = '';
 
-export function fmtEur(n) { return new Intl.NumberFormat('de-DE', { style:'currency', currency:'EUR' }).format(n || 0); }
-export function fmtDate(d) { if (!d) return '–'; return new Date(d).toLocaleDateString('de-DE'); }
 
 export function billingStatusBadge(s) {
     var m = {
@@ -85,7 +85,7 @@ export async function loadBillingOverview() {
     var noStrategy = ov.filter(function(x) { return !x.strategy || !x.strategy.locked; }).length;
 
     if (kpis) kpis.innerHTML =
-        '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Rechnungsvolumen</p><p class="text-xl font-bold text-gray-800">' + fmtEur(totalInvoiced) + '</p></div>' +
+        '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Rechnungsvolumen</p><p class="text-xl font-bold text-gray-800">' + _fmtEur(totalInvoiced) + '</p></div>' +
         '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Drafts</p><p class="text-xl font-bold text-yellow-600">' + drafts + '</p></div>' +
         '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Bezahlt</p><p class="text-xl font-bold text-green-600">' + paid + '</p></div>' +
         '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Strategie fehlt</p><p class="text-xl font-bold ' + (noStrategy > 0 ? 'text-red-500' : 'text-green-600') + '">' + noStrategy + '</p></div>';
@@ -101,7 +101,7 @@ export async function loadBillingOverview() {
             h += '<td class="p-3"><p class="font-semibold text-sm">' + st.name + '</p><p class="text-xs text-gray-400">' + (st.inhaber_name || '') + '</p></td>';
             h += '<td class="p-3 text-center">' + (strat && strat.locked ? '<span class="text-green-600 text-xs font-semibold">✅ Gesperrt</span>' : strat && strat.approved_at ? '<span class="text-blue-600 text-xs">✓ Genehmigt</span>' : '<span class="text-red-500 text-xs">❌ Fehlt</span>') + '</td>';
             h += '<td class="p-3 text-center">' + (acct && acct.sepa_active ? '<span class="text-green-600 text-xs">✅</span>' : '<span class="text-gray-300 text-xs">—</span>') + '</td>';
-            h += '<td class="p-3 text-right">' + (inv ? '<span class="font-semibold">' + fmtEur(inv.total) + '</span>' : '<span class="text-gray-300">—</span>') + '</td>';
+            h += '<td class="p-3 text-right">' + (inv ? '<span class="font-semibold">' + _fmtEur(inv.total) + '</span>' : '<span class="text-gray-300">—</span>') + '</td>';
             h += '<td class="p-3 text-center">' + (inv ? billingStatusBadge(inv.status) : '<span class="text-gray-300 text-xs">Keine</span>') + '</td>';
             h += '<td class="p-3 text-center">';
             if (inv) h += '<button onclick="event.stopPropagation();showBillingInvoice(\'' + inv.id + '\')" class="text-xs text-vit-orange hover:underline">Details →</button>';
@@ -188,9 +188,9 @@ export async function showBillingInvoice(invId) {
     // Status + Summary Card
     ch += '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">';
     ch += '<div class="vit-card p-4"><p class="text-xs text-gray-400">Status</p><div class="mt-1">' + billingStatusBadge(inv.status) + '</div></div>';
-    ch += '<div class="vit-card p-4"><p class="text-xs text-gray-400">Netto</p><p class="text-lg font-bold">' + fmtEur(inv.subtotal) + '</p></div>';
-    ch += '<div class="vit-card p-4"><p class="text-xs text-gray-400">MwSt (' + (inv.tax_rate || 19) + '%)</p><p class="text-lg font-bold text-gray-500">' + fmtEur(inv.tax_amount) + '</p></div>';
-    ch += '<div class="vit-card p-4"><p class="text-xs text-gray-400">Gesamt</p><p class="text-lg font-bold text-vit-orange">' + fmtEur(inv.total) + '</p></div>';
+    ch += '<div class="vit-card p-4"><p class="text-xs text-gray-400">Netto</p><p class="text-lg font-bold">' + _fmtEur(inv.subtotal) + '</p></div>';
+    ch += '<div class="vit-card p-4"><p class="text-xs text-gray-400">MwSt (' + (inv.tax_rate || 19) + '%)</p><p class="text-lg font-bold text-gray-500">' + _fmtEur(inv.tax_amount) + '</p></div>';
+    ch += '<div class="vit-card p-4"><p class="text-xs text-gray-400">Gesamt</p><p class="text-lg font-bold text-vit-orange">' + _fmtEur(inv.total) + '</p></div>';
     ch += '</div>';
 
     // Line Items
@@ -206,8 +206,8 @@ export async function showBillingInvoice(invId) {
         if (li.meta && li.meta.formula) ch += '<p class="text-xs text-gray-400 mt-1">📐 ' + li.meta.formula + '</p>';
         ch += '</td>';
         ch += '<td class="p-3 text-right">' + (li.quantity || 1) + '</td>';
-        ch += '<td class="p-3 text-right">' + fmtEur(li.unit_price) + '</td>';
-        ch += '<td class="p-3 text-right font-semibold">' + fmtEur(li.amount) + '</td>';
+        ch += '<td class="p-3 text-right">' + _fmtEur(li.unit_price) + '</td>';
+        ch += '<td class="p-3 text-right font-semibold">' + _fmtEur(li.amount) + '</td>';
         if (inv.status === 'draft') {
             ch += '<td class="p-3 text-center">';
             if (li.editable) ch += '<button onclick="editLineItem(\'' + li.id + '\', ' + li.amount + ', \'' + li.description.replace(/'/g, "\\'") + '\')" class="text-xs text-blue-600 hover:underline mr-2">✏️</button>';
@@ -262,7 +262,7 @@ export async function markInvoicePaid(invId) {
 }
 
 export async function editLineItem(lineId, currentAmount, currentDesc) {
-    var newAmount = prompt('Neuer Betrag (aktuell: ' + fmtEur(currentAmount) + '):', currentAmount);
+    var newAmount = prompt('Neuer Betrag (aktuell: ' + _fmtEur(currentAmount) + '):', currentAmount);
     if (newAmount === null) return;
     var r = await billingApi('update-line-item', { line_item_id: lineId, amount: parseFloat(newAmount), user_id: SESSION.user_id });
     if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
@@ -335,7 +335,7 @@ export async function loadAllInvoices() {
         h += '<p class="text-xs text-gray-400">' + (inv.period_start || '') + ' bis ' + (inv.period_end || '') + '</p>';
         h += '</div>';
         h += '<div class="text-right ml-4">';
-        h += '<p class="font-bold text-lg">' + fmtEur(inv.total) + '</p>';
+        h += '<p class="font-bold text-lg">' + _fmtEur(inv.total) + '</p>';
         h += '<p class="text-xs text-gray-400">' + new Date(inv.created_at).toLocaleDateString('de-DE') + '</p>';
         h += '</div></div>';
     });
@@ -356,11 +356,11 @@ export async function loadAllStrategies() {
     (strategies || []).forEach(function(s) {
         h += '<tr class="border-t">';
         h += '<td class="p-3 font-semibold">' + (s.standort ? s.standort.name : '—') + ' <span class="text-xs text-gray-400">v' + s.version + '</span></td>';
-        h += '<td class="p-3 text-right">' + fmtEur(s.planned_revenue_year) + '</td>';
-        h += '<td class="p-3 text-right">' + fmtEur(s.planned_marketing_year) + '</td>';
+        h += '<td class="p-3 text-right">' + _fmtEur(s.planned_revenue_year) + '</td>';
+        h += '<td class="p-3 text-right">' + _fmtEur(s.planned_marketing_year) + '</td>';
         h += '<td class="p-3 text-center">' + (s.approved_at ? '<span class="text-green-600">✅ ' + new Date(s.approved_at).toLocaleDateString('de-DE') + '</span>' : '<button onclick="approveStrategy(\'' + s.id + '\')" class="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">Genehmigen</button>') + '</td>';
         h += '<td class="p-3 text-center">' + (s.locked ? '<span class="text-green-600 font-semibold">🔒</span>' : s.approved_at ? '<button onclick="lockStrategy(\'' + s.id + '\')" class="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">Sperren</button>' : '<span class="text-gray-300">—</span>') + '</td>';
-        h += '<td class="p-3 text-center"><span class="text-xs text-gray-400">' + fmtEur(s.planned_revenue_year / 12) + '/Mo</span></td>';
+        h += '<td class="p-3 text-center"><span class="text-xs text-gray-400">' + _fmtEur(s.planned_revenue_year / 12) + '/Mo</span></td>';
         h += '</tr>';
     });
     h += '</tbody></table></div>';
@@ -405,7 +405,7 @@ export async function loadBillingProducts() {
         h += '<td class="p-3 font-semibold">' + p.name + '</td>';
         h += '<td class="p-3 text-xs">' + p.product_type + '</td>';
         h += '<td class="p-3 text-xs">' + p.billing_frequency + '</td>';
-        h += '<td class="p-3 text-right">' + (p.default_amount ? fmtEur(p.default_amount) : p.default_percent ? (p.default_percent * 100).toFixed(2) + '%' : '—') + '</td>';
+        h += '<td class="p-3 text-right">' + (p.default_amount ? _fmtEur(p.default_amount) : p.default_percent ? (p.default_percent * 100).toFixed(2) + '%' : '—') + '</td>';
         h += '<td class="p-3 text-center">' + (p.active ? '✅' : '❌') + '</td>';
         h += '</tr>';
     });
@@ -425,7 +425,7 @@ export async function loadBillingTools() {
     (packages || []).forEach(function(p) {
         h += '<div class="p-4 border rounded-lg ' + (p.active ? 'border-gray-200' : 'border-red-200 opacity-60') + '">';
         h += '<p class="font-semibold">' + p.name + '</p>';
-        h += '<p class="text-xl font-bold text-vit-orange mt-1">' + fmtEur(p.monthly_cost) + '<span class="text-xs text-gray-400 font-normal">/Monat</span></p>';
+        h += '<p class="text-xl font-bold text-vit-orange mt-1">' + _fmtEur(p.monthly_cost) + '<span class="text-xs text-gray-400 font-normal">/Monat</span></p>';
         h += '<p class="text-xs text-gray-500 mt-1">' + (p.description || '') + '</p>';
         h += '</div>';
     });
@@ -440,7 +440,7 @@ export async function loadBillingTools() {
         h += '<td class="p-3">' + (a.user ? a.user.name : '—') + '</td>';
         h += '<td class="p-3">' + (a.standort ? a.standort.name : '—') + '</td>';
         h += '<td class="p-3">' + (a.tool ? a.tool.name : '—') + '</td>';
-        h += '<td class="p-3 text-right font-semibold">' + fmtEur(a.cost_override || (a.tool ? a.tool.monthly_cost : 0)) + '</td>';
+        h += '<td class="p-3 text-right font-semibold">' + _fmtEur(a.cost_override || (a.tool ? a.tool.monthly_cost : 0)) + '</td>';
         h += '<td class="p-3 text-xs text-gray-400">' + (a.active_from || '—') + '</td>';
         h += '</tr>';
     });
@@ -854,7 +854,7 @@ export async function loadStandortInvoices() {
         h += '<span class="font-mono text-xs text-gray-400">' + (inv.invoice_number || '—') + '</span>';
         h += billingStatusBadge(inv.status);
         h += '</div>';
-        h += '<span class="font-bold text-lg">' + fmtEur(inv.total) + '</span>';
+        h += '<span class="font-bold text-lg">' + _fmtEur(inv.total) + '</span>';
         h += '</div>';
         h += '<p class="text-sm text-gray-600">Zeitraum: ' + (inv.period_start || '') + ' bis ' + (inv.period_end || '') + '</p>';
         h += '</div>';
@@ -878,7 +878,7 @@ export async function showStandortInvoiceDetail(invId) {
     h += '<div><h3 class="font-bold text-lg">' + (inv.invoice_number || 'Rechnung') + '</h3><p class="text-xs text-gray-400">' + (inv.period_start || '') + ' bis ' + (inv.period_end || '') + '</p></div>';
     h += '<div class="text-right">' + billingStatusBadge(inv.status);
     if (inv.status !== 'draft') h += '<button onclick="downloadInvoicePdf(\'' + inv.id + '\')" class="ml-2 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> PDF</button>';
-    h += '<p class="text-2xl font-bold text-vit-orange mt-2">' + fmtEur(inv.total) + '</p></div>';
+    h += '<p class="text-2xl font-bold text-vit-orange mt-2">' + _fmtEur(inv.total) + '</p></div>';
     h += '</div>';
 
     h += '<table class="w-full text-sm mb-4"><thead class="text-xs text-gray-500 uppercase border-b"><tr>';
@@ -889,12 +889,12 @@ export async function showStandortInvoiceDetail(invId) {
         h += '<td class="py-2"><p class="font-medium">' + li.description + '</p>';
         if (li.meta && li.meta.formula) h += '<p class="text-xs text-blue-600 mt-0.5">📐 ' + li.meta.formula + '</p>';
         h += '</td>';
-        h += '<td class="py-2 text-right font-semibold">' + fmtEur(li.amount) + '</td>';
+        h += '<td class="py-2 text-right font-semibold">' + _fmtEur(li.amount) + '</td>';
         h += '</tr>';
     });
-    h += '<tr class="border-t-2"><td class="py-2 font-semibold">Netto</td><td class="py-2 text-right font-semibold">' + fmtEur(inv.subtotal) + '</td></tr>';
-    h += '<tr><td class="py-1 text-gray-500 text-xs">MwSt (' + (inv.tax_rate || 19) + '%)</td><td class="py-1 text-right text-xs text-gray-500">' + fmtEur(inv.tax_amount) + '</td></tr>';
-    h += '<tr class="border-t-2"><td class="py-2 font-bold text-lg">Gesamt</td><td class="py-2 text-right font-bold text-lg text-vit-orange">' + fmtEur(inv.total) + '</td></tr>';
+    h += '<tr class="border-t-2"><td class="py-2 font-semibold">Netto</td><td class="py-2 text-right font-semibold">' + _fmtEur(inv.subtotal) + '</td></tr>';
+    h += '<tr><td class="py-1 text-gray-500 text-xs">MwSt (' + (inv.tax_rate || 19) + '%)</td><td class="py-1 text-right text-xs text-gray-500">' + _fmtEur(inv.tax_amount) + '</td></tr>';
+    h += '<tr class="border-t-2"><td class="py-2 font-bold text-lg">Gesamt</td><td class="py-2 text-right font-bold text-lg text-vit-orange">' + _fmtEur(inv.total) + '</td></tr>';
     h += '</tbody></table>';
 
     // Formulas
@@ -927,8 +927,8 @@ export async function loadStandortStrategy() {
         h += '<div>' + (strat.locked ? '<span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-semibold">🔒 Gesperrt</span>' : strat.approved_at ? '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">✓ Genehmigt</span>' : '<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">⏳ Warte auf Genehmigung</span>') + '</div>';
         h += '</div>';
         h += '<div class="grid grid-cols-2 gap-4">';
-        h += '<div class="p-4 bg-gray-50 rounded-lg"><p class="text-xs text-gray-400">Geplanter Jahresumsatz</p><p class="text-xl font-bold">' + fmtEur(strat.planned_revenue_year) + '</p><p class="text-xs text-gray-400 mt-1">= ' + fmtEur(strat.planned_revenue_year / 12) + ' / Monat</p></div>';
-        h += '<div class="p-4 bg-gray-50 rounded-lg"><p class="text-xs text-gray-400">Geplantes Marketingbudget</p><p class="text-xl font-bold">' + fmtEur(strat.planned_marketing_year) + '</p><p class="text-xs text-gray-400 mt-1">= ' + fmtEur(strat.planned_marketing_year / 12) + ' / Monat</p></div>';
+        h += '<div class="p-4 bg-gray-50 rounded-lg"><p class="text-xs text-gray-400">Geplanter Jahresumsatz</p><p class="text-xl font-bold">' + _fmtEur(strat.planned_revenue_year) + '</p><p class="text-xs text-gray-400 mt-1">= ' + _fmtEur(strat.planned_revenue_year / 12) + ' / Monat</p></div>';
+        h += '<div class="p-4 bg-gray-50 rounded-lg"><p class="text-xs text-gray-400">Geplantes Marketingbudget</p><p class="text-xl font-bold">' + _fmtEur(strat.planned_marketing_year) + '</p><p class="text-xs text-gray-400 mt-1">= ' + _fmtEur(strat.planned_marketing_year / 12) + ' / Monat</p></div>';
         h += '</div>';
         if (strat.notes) h += '<p class="text-sm text-gray-600 mt-4">' + strat.notes + '</p>';
         h += '</div>';
@@ -1009,32 +1009,32 @@ export async function loadStandortCosts() {
     var total = revShareAdvance + baseFee + marketingMonth + toolCosts;
 
     h += '<table class="w-full text-sm">';
-    h += '<tr class="border-b"><td class="py-3">Umsatzbeteiligung (80% Abschlag)</td><td class="py-3 text-right font-semibold">' + fmtEur(revShareAdvance) + '</td></tr>';
-    h += '<tr><td class="py-1 text-xs text-gray-400 pl-4" colspan="2">2% × ' + fmtEur(planMonthRevenue) + ' × 80% = ' + fmtEur(revShareAdvance) + '</td></tr>';
-    h += '<tr class="border-b"><td class="py-3">Grundgebühr</td><td class="py-3 text-right font-semibold">' + fmtEur(baseFee) + '</td></tr>';
-    h += '<tr class="border-b"><td class="py-3">Online-Werbebudget <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold ml-1">Durchlaufposten</span></td><td class="py-3 text-right font-semibold">' + fmtEur(marketingMonth) + '</td></tr>';
-    h += '<tr><td class="py-1 text-xs text-gray-400 pl-4" colspan="2">' + fmtEur(strat.planned_marketing_year) + ' / 12 = ' + fmtEur(marketingMonth) + '</td></tr>';
+    h += '<tr class="border-b"><td class="py-3">Umsatzbeteiligung (80% Abschlag)</td><td class="py-3 text-right font-semibold">' + _fmtEur(revShareAdvance) + '</td></tr>';
+    h += '<tr><td class="py-1 text-xs text-gray-400 pl-4" colspan="2">2% × ' + _fmtEur(planMonthRevenue) + ' × 80% = ' + _fmtEur(revShareAdvance) + '</td></tr>';
+    h += '<tr class="border-b"><td class="py-3">Grundgebühr</td><td class="py-3 text-right font-semibold">' + _fmtEur(baseFee) + '</td></tr>';
+    h += '<tr class="border-b"><td class="py-3">Online-Werbebudget <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold ml-1">Durchlaufposten</span></td><td class="py-3 text-right font-semibold">' + _fmtEur(marketingMonth) + '</td></tr>';
+    h += '<tr><td class="py-1 text-xs text-gray-400 pl-4" colspan="2">' + _fmtEur(strat.planned_marketing_year) + ' / 12 = ' + _fmtEur(marketingMonth) + '</td></tr>';
     h += '<tr><td colspan="2" class="pb-3 pl-4"><div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-1">';
     h += '<p class="text-[11px] text-blue-800 mb-2"><strong>💡 Dieses Budget ist kein Honorar an vit:bikes</strong> – es fließt zu <strong>100%</strong> in eure Werbekampagnen bei Google Ads, Meta (Facebook/Instagram) und weiteren Kanälen.</p>';
     h += '<p class="text-[11px] text-blue-700 mb-2">vit:bikes übernimmt die komplette Kampagnensteuerung, Optimierung und das Reporting – ohne zusätzliche Agenturgebühren.</p>';
     h += '<div class="border-t border-blue-200 pt-2 mt-2">';
     h += '<p class="text-[10px] font-bold text-gray-600 mb-1.5">Was dieselbe Leistung bei einer externen Agentur kosten würde:</p>';
     h += '<table class="w-full text-[10px]">';
-    h += '<tr class="text-gray-500"><td>Kampagnen-Management (15–20% vom Budget)</td><td class="text-right">' + fmtEur(marketingMonth * 0.175) + '</td></tr>';
+    h += '<tr class="text-gray-500"><td>Kampagnen-Management (15–20% vom Budget)</td><td class="text-right">' + _fmtEur(marketingMonth * 0.175) + '</td></tr>';
     h += '<tr class="text-gray-500"><td>Content-Erstellung & Anzeigendesign</td><td class="text-right">300–800 €</td></tr>';
     h += '<tr class="text-gray-500"><td>Reporting & Analyse</td><td class="text-right">200–400 €</td></tr>';
     h += '<tr class="text-gray-500"><td>Setup & laufende Optimierung</td><td class="text-right">250–500 €</td></tr>';
-    h += '<tr class="border-t border-blue-200 font-bold text-gray-700"><td class="pt-1">Agenturkosten on top zum Werbebudget</td><td class="text-right pt-1 text-red-600">~' + fmtEur(marketingMonth * 0.175 + 900) + ' /Mon.</td></tr>';
+    h += '<tr class="border-t border-blue-200 font-bold text-gray-700"><td class="pt-1">Agenturkosten on top zum Werbebudget</td><td class="text-right pt-1 text-red-600">~' + _fmtEur(marketingMonth * 0.175 + 900) + ' /Mon.</td></tr>';
     h += '</table>';
     h += '<p class="text-[10px] text-green-700 font-semibold mt-1.5">✅ Bei vit:bikes: 0 € Agenturkosten – alles inklusive in eurer Partnerschaft</p>';
     h += '</div></div></td></tr>';
-    h += '<tr class="border-b"><td class="py-3">Toolkosten (' + (tools || []).length + ' Nutzer)</td><td class="py-3 text-right font-semibold">' + fmtEur(toolCosts) + '</td></tr>';
+    h += '<tr class="border-b"><td class="py-3">Toolkosten (' + (tools || []).length + ' Nutzer)</td><td class="py-3 text-right font-semibold">' + _fmtEur(toolCosts) + '</td></tr>';
     (tools || []).forEach(function(t) {
-        h += '<tr><td class="py-1 text-xs text-gray-400 pl-4">' + (t.user ? t.user.name : '—') + ' – ' + (t.tool ? t.tool.name : '—') + '</td><td class="py-1 text-xs text-gray-400 text-right">' + fmtEur(t.cost_override || t.tool.monthly_cost) + '</td></tr>';
+        h += '<tr><td class="py-1 text-xs text-gray-400 pl-4">' + (t.user ? t.user.name : '—') + ' – ' + (t.tool ? t.tool.name : '—') + '</td><td class="py-1 text-xs text-gray-400 text-right">' + _fmtEur(t.cost_override || t.tool.monthly_cost) + '</td></tr>';
     });
-    h += '<tr class="border-t-2"><td class="py-3 font-bold text-lg">Netto / Monat</td><td class="py-3 text-right font-bold text-lg text-vit-orange">' + fmtEur(total) + '</td></tr>';
-    h += '<tr><td class="py-1 text-xs text-gray-400">zzgl. MwSt 19%</td><td class="py-1 text-xs text-gray-400 text-right">' + fmtEur(total * 0.19) + '</td></tr>';
-    h += '<tr class="border-t"><td class="py-2 font-bold">Brutto / Monat</td><td class="py-2 text-right font-bold">' + fmtEur(total * 1.19) + '</td></tr>';
+    h += '<tr class="border-t-2"><td class="py-3 font-bold text-lg">Netto / Monat</td><td class="py-3 text-right font-bold text-lg text-vit-orange">' + _fmtEur(total) + '</td></tr>';
+    h += '<tr><td class="py-1 text-xs text-gray-400">zzgl. MwSt 19%</td><td class="py-1 text-xs text-gray-400 text-right">' + _fmtEur(total * 0.19) + '</td></tr>';
+    h += '<tr class="border-t"><td class="py-2 font-bold">Brutto / Monat</td><td class="py-2 text-right font-bold">' + _fmtEur(total * 1.19) + '</td></tr>';
     h += '</table></div>';
 
     // Quarterly settlement info
@@ -1078,14 +1078,14 @@ export async function downloadInvoicePdf(invId) {
         (lines || []).forEach(function(li) {
             w.document.write('<tr><td>' + li.description);
             if (li.meta && li.meta.formula) w.document.write('<br><span class="formula">📐 ' + li.meta.formula + '</span>');
-            w.document.write('</td><td>' + (li.quantity || 1) + '</td><td class="right">' + fmtEur(li.unit_price) + '</td><td class="right">' + fmtEur(li.amount) + '</td></tr>');
+            w.document.write('</td><td>' + (li.quantity || 1) + '</td><td class="right">' + _fmtEur(li.unit_price) + '</td><td class="right">' + _fmtEur(li.amount) + '</td></tr>');
         });
         w.document.write('</tbody></table>');
         
         w.document.write('<table style="width:300px;margin-left:auto"><tbody>');
-        w.document.write('<tr><td>Nettobetrag</td><td class="right">' + fmtEur(inv.subtotal) + '</td></tr>');
-        w.document.write('<tr><td>MwSt ' + (inv.tax_rate || 19) + '%</td><td class="right">' + fmtEur(inv.tax_amount) + '</td></tr>');
-        w.document.write('<tr class="total-row"><td>Gesamtbetrag</td><td class="right" style="color:#EF7D00">' + fmtEur(inv.total) + '</td></tr>');
+        w.document.write('<tr><td>Nettobetrag</td><td class="right">' + _fmtEur(inv.subtotal) + '</td></tr>');
+        w.document.write('<tr><td>MwSt ' + (inv.tax_rate || 19) + '%</td><td class="right">' + _fmtEur(inv.tax_amount) + '</td></tr>');
+        w.document.write('<tr class="total-row"><td>Gesamtbetrag</td><td class="right" style="color:#EF7D00">' + _fmtEur(inv.total) + '</td></tr>');
         w.document.write('</tbody></table>');
         
         w.document.write('<p style="margin-top:30px;font-size:12px">Zahlungsziel: 14 Tage netto<br>Bitte überweisen Sie den Betrag unter Angabe der Rechnungsnummer.</p>');
@@ -1119,9 +1119,9 @@ export async function loadStandortPayments() {
     });
 
     h += '<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">';
-    h += '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Bezahlt</p><p class="text-2xl font-bold text-green-600">' + fmtEur(totalPaid) + '</p><p class="text-xs text-gray-400">' + countPaid + ' Rechnungen</p></div>';
-    h += '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Offen</p><p class="text-2xl font-bold text-amber-500">' + fmtEur(totalOpen) + '</p><p class="text-xs text-gray-400">' + countOpen + ' Rechnungen</p></div>';
-    h += '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Gesamt ' + new Date().getFullYear() + '</p><p class="text-2xl font-bold text-gray-800">' + fmtEur(totalPaid + totalOpen) + '</p><p class="text-xs text-gray-400">' + (invoices || []).length + ' Rechnungen</p></div>';
+    h += '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Bezahlt</p><p class="text-2xl font-bold text-green-600">' + _fmtEur(totalPaid) + '</p><p class="text-xs text-gray-400">' + countPaid + ' Rechnungen</p></div>';
+    h += '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Offen</p><p class="text-2xl font-bold text-amber-500">' + _fmtEur(totalOpen) + '</p><p class="text-xs text-gray-400">' + countOpen + ' Rechnungen</p></div>';
+    h += '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Gesamt ' + new Date().getFullYear() + '</p><p class="text-2xl font-bold text-gray-800">' + _fmtEur(totalPaid + totalOpen) + '</p><p class="text-xs text-gray-400">' + (invoices || []).length + ' Rechnungen</p></div>';
     h += '</div>';
 
     // Payment timeline
@@ -1141,7 +1141,7 @@ export async function loadStandortPayments() {
             h += '<div class="flex-1 min-w-0">';
             h += '<div class="flex items-center justify-between">';
             h += '<span class="font-mono text-xs font-semibold text-gray-700">' + (inv.invoice_number || '—') + '</span>';
-            h += '<span class="font-bold text-' + statusColor + '-700">' + fmtEur(inv.total) + '</span>';
+            h += '<span class="font-bold text-' + statusColor + '-700">' + _fmtEur(inv.total) + '</span>';
             h += '</div>';
             h += '<div class="flex items-center justify-between mt-1">';
             h += '<span class="text-xs text-gray-500">' + (inv.period_start || '') + ' – ' + (inv.period_end || '') + '</span>';

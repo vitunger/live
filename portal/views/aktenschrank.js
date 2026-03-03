@@ -22,7 +22,7 @@ export var aktenFolderLabels = {};
 
 // HELPERS
 function esc(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function fmtDate(d){ if(!d)return'\u2014'; try{return new Date(d).toLocaleDateString('de-DE');}catch(e){return'\u2014';} }
+function fmtDate(d) { return window.fmtDate ? window.fmtDate(d) : '—'; }
 function fmtDateTime(d){ if(!d)return'\u2014'; try{return new Date(d).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});}catch(e){return'\u2014';} }
 function fmtBytes(b){ if(!b)return'\u2014'; if(b<1024)return b+' B'; if(b<1048576)return(b/1024).toFixed(0)+' KB'; return(b/1048576).toFixed(1)+' MB'; }
 

@@ -8,8 +8,8 @@ function _toast(msg, type) { if(typeof window.showToast==='function') window.sho
     const BILLING_FN = 'https://lwwagbkxeofahhwebkab.supabase.co/functions/v1/billing';
     
     // ── Helpers ──
-    function fmtEur(n) { return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n || 0); }
-    function fmtDate(d) { if (!d) return '–'; return new Date(d).toLocaleDateString('de-DE'); }
+    function fmtEur(n) { return window.fmtEur ? window.fmtEur(n) : (n||0)+' €'; }
+    function fmtDate(d) { return window.fmtDate ? window.fmtDate(d) : String(d||'–'); }
     function statusBadge(s) {
         const map = {
             draft: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">Draft</span>',

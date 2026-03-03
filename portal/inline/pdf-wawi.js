@@ -88,13 +88,7 @@
         }
     }
 
-    function timeAgo(d) {
-        var s = Math.floor((Date.now() - d.getTime()) / 1000);
-        if(s < 60) return 'gerade eben';
-        if(s < 3600) return Math.floor(s/60) + ' Min.';
-        if(s < 86400) return Math.floor(s/3600) + ' Std.';
-        return Math.floor(s/86400) + ' Tage';
-    }
+    function timeAgo(d) { return window.timeAgo ? window.timeAgo(d) : '—'; }
 
     window.wawiSystemChanged = function() {
         var typ = document.getElementById('wawiSystemTyp').value;

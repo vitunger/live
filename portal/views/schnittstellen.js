@@ -874,16 +874,7 @@ function addLog(id, type, msg) {
     }
 }
 
-function timeAgo(iso) {
-    if (!iso) return '—';
-    var d = new Date(iso);
-    var now = Date.now();
-    var diff = Math.floor((now - d.getTime()) / 1000);
-    if (diff < 60) return 'Gerade eben';
-    if (diff < 3600) return 'vor ' + Math.floor(diff / 60) + ' Min.';
-    if (diff < 86400) return 'vor ' + Math.floor(diff / 3600) + ' Std.';
-    return 'vor ' + Math.floor(diff / 86400) + ' Tagen';
-}
+function timeAgo(d) { return window.timeAgo ? window.timeAgo(d) : '—'; }
 
 function fmtDT(iso) {
     if (!iso) return '—';

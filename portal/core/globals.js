@@ -1,5 +1,5 @@
 /**
- * core/globals.js - Global Helpers (showToast, escH, fmtN, theme)
+ * core/globals.js - Global Helpers (showToast, escH, fmtN, fmtEur, fmtDate, timeAgo, theme)
  * @module core/globals
  */
 
@@ -24,4 +24,21 @@ export function fmtN(n) { return (!n && n !== 0) ? '0' : Number(n).toLocaleStrin
 
 window.escH = escH;
 window.fmtN = fmtN;
+
+// ═══ SHARED FORMATTING UTILS ═══
+export function fmtEur(n) { return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n || 0); }
+export function fmtDate(d) { if (!d) return '–'; try { return new Date(d).toLocaleDateString('de-DE'); } catch(e) { return '–'; } }
+export function timeAgo(d) {
+    if (!d) return '—';
+    var dt = (d instanceof Date) ? d : new Date(d);
+    var s = Math.floor((Date.now() - dt.getTime()) / 1000);
+    if (s < 60) return 'gerade eben';
+    if (s < 3600) return 'vor ' + Math.floor(s/60) + ' Min.';
+    if (s < 86400) return 'vor ' + Math.floor(s/3600) + ' Std.';
+    return 'vor ' + Math.floor(s/86400) + ' Tagen';
+}
+
+window.fmtEur = fmtEur;
+window.fmtDate = fmtDate;
+window.timeAgo = timeAgo;
 // [prod] log removed
