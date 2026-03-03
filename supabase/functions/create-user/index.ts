@@ -18,16 +18,26 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const RESEND_FROM = Deno.env.get("RESEND_FROM") || "vit:bikes Cockpit <portal@vitbikes.de>";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+const ALLOWED_ORIGINS = [
+  "https://cockpit.vitbikes.de",
+  "https://vitbikes-live.vercel.app",
+  "http://localhost:3000",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("Origin") || "";
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+}
 
 serve(async (req) => {
   // CORS preflight
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: getCorsHeaders(req) });
   }
 
   try {
@@ -49,7 +59,7 @@ serve(async (req) => {
     if (!email || !vorname) {
       return new Response(
         JSON.stringify({ error: "E-Mail und Vorname sind Pflichtfelder." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -62,7 +72,7 @@ serve(async (req) => {
       if (!authHeader) {
         return new Response(
           JSON.stringify({ error: "Nicht autorisiert. Bitte einloggen." }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 401, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
         );
       }
       // Verify the caller's JWT using the service client
@@ -75,7 +85,26 @@ serve(async (req) => {
       if (callerError || !caller) {
         return new Response(
           JSON.stringify({ error: "Ungültige Sitzung. Bitte erneut einloggen." }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 401, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
+        );
+      }
+
+      // Permission check: only HQ users or Inhaber (GF) can invite
+      const { data: callerProfile } = await adminForVerify
+        .from("users")
+        .select("is_hq")
+        .eq("id", caller.id)
+        .single();
+      const { data: callerRoles } = await adminForVerify
+        .from("user_rollen")
+        .select("rollen(name)")
+        .eq("user_id", caller.id);
+      const roleNames = (callerRoles || []).map((r: any) => r.rollen?.name).filter(Boolean);
+      const canInvite = callerProfile?.is_hq || roleNames.includes("hq") || roleNames.includes("inhaber");
+      if (!canInvite) {
+        return new Response(
+          JSON.stringify({ error: "Keine Berechtigung. Nur HQ oder Geschäftsführer können Mitarbeiter einladen." }),
+          { status: 403, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
         );
       }
     }
@@ -84,7 +113,7 @@ serve(async (req) => {
     if (isRegister && (!password || password.length < 8)) {
       return new Response(
         JSON.stringify({ error: "Passwort muss mindestens 8 Zeichen haben." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -104,7 +133,7 @@ serve(async (req) => {
     if (existingUsers && existingUsers.length > 0) {
       return new Response(
         JSON.stringify({ error: "Ein Account mit dieser E-Mail existiert bereits." }),
-        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 409, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -134,12 +163,12 @@ serve(async (req) => {
       if (authError.message?.includes("already been registered")) {
         return new Response(
           JSON.stringify({ error: "Diese E-Mail-Adresse ist bereits registriert." }),
-          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 409, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
         );
       }
       return new Response(
         JSON.stringify({ error: "Auth-Fehler: " + authError.message }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -169,7 +198,7 @@ serve(async (req) => {
       await adminClient.auth.admin.deleteUser(userId);
       return new Response(
         JSON.stringify({ error: "Profil konnte nicht erstellt werden: " + profileError.message }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
     console.log(`[create-user] Profile created: status=${userStatus}`);
@@ -306,18 +335,22 @@ serve(async (req) => {
         email_sent: emailSent,
         mode: mode,
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
   } catch (err) {
     console.error("[create-user] Unexpected error:", err);
     return new Response(
       JSON.stringify({ error: "Interner Fehler: " + (err as Error).message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
   }
 });
 
 // ─── Email Templates ───
+
+function escHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
 
 function buildInviteEmail(name: string, resetUrl: string, portalUrl: string): string {
   return `
@@ -385,6 +418,8 @@ function buildRegistrationConfirmEmail(name: string, portalUrl: string): string 
 }
 
 function buildHqNotifyEmail(name: string, email: string, portalUrl: string): string {
+  const eName = escHtml(name);
+  const eEmail = escHtml(email);
   return `
 <!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
@@ -395,7 +430,7 @@ function buildHqNotifyEmail(name: string, email: string, portalUrl: string): str
   </div>
   <div style="padding:32px;">
     <p style="font-size:14px;color:#4b5563;line-height:1.6;">
-      <strong>${name}</strong> (<a href="mailto:${email}" style="color:#EF7D00;">${email}</a>)
+      <strong>${eName}</strong> (<a href="mailto:${eEmail}" style="color:#EF7D00;">${eEmail}</a>)
       hat sich im Cockpit registriert und wartet auf Freigabe.
     </p>
     <div style="text-align:center;margin:24px 0;">
