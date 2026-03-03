@@ -128,7 +128,7 @@ export async function openNeuerMaModal() {
                 var sel = document.getElementById('newMaStandort');
                 if(sel && stdResp.data) {
                     sel.innerHTML = '<option value="">— Standort wählen —</option>';
-                    stdResp.data.forEach(function(s){ sel.innerHTML += '<option value="'+s.id+'">'+s.name+'</option>'; });
+                    stdResp.data.forEach(function(s){ sel.innerHTML += '<option value="'+s.id+'">'+_escH(s.name)+'</option>'; });
                 }
             } catch(e){ console.error(e); }
         }, 100);
@@ -414,7 +414,7 @@ export async function openEditMaModal(userId) {
                     sel.innerHTML = '<option value="hq">HQ (kein Standort)</option>';
                     stdResp.data.forEach(function(s){
                         var selected = (u.standort_id === s.id) ? ' selected' : '';
-                        sel.innerHTML += '<option value="'+s.id+'"'+selected+'>'+s.name+'</option>';
+                        sel.innerHTML += '<option value="'+s.id+'"'+selected+'>'+_escH(s.name)+'</option>';
                     });
                 }
             } catch(e){}

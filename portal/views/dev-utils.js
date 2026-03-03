@@ -82,7 +82,7 @@ export async function sendDevKonzeptChat(subId) {
 
         // Show KI response
         if(history) {
-            history.innerHTML += '<div class="bg-purple-50 rounded p-2 text-xs border border-purple-100"><span class="font-semibold text-purple-700">KI:</span> '+(data.antwort || 'Konzept wurde aktualisiert.')+'</div>';
+            history.innerHTML += '<div class="bg-purple-50 rounded p-2 text-xs border border-purple-100"><span class="font-semibold text-purple-700">KI:</span> '+_escH(data.antwort || 'Konzept wurde aktualisiert.')+'</div>';
             history.scrollTop = history.scrollHeight;
         }
         _showToast('✅ Konzept aktualisiert (v' + (data.version || '?') + ')', 'success');

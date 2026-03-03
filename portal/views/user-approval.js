@@ -97,7 +97,7 @@ export async function approveUser(userId, userName) {
                 sel.innerHTML = '<option value="">— Standort wählen —</option>';
                 stdResp.data.forEach(function(s){
                     var selected = (currentStandortId === s.id) ? ' selected' : '';
-                    sel.innerHTML += '<option value="'+s.id+'"'+selected+'>'+s.name+'</option>';
+                    sel.innerHTML += '<option value="'+s.id+'"'+selected+'>'+_escH(s.name)+'</option>';
                 });
             }
         } catch(e){ console.error(e); }

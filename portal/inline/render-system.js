@@ -791,10 +791,10 @@ function renderHqFbList(items) {
             +'<span class="text-xs px-2 py-0.5 rounded-full font-semibold '+(statusColors[fb.status]||'bg-gray-100')+'">'+( statusLabels[fb.status]||fb.status)+'</span>'
             +(attachCount ? '<span class="text-xs text-gray-400">📎 '+attachCount+'</span>' : '')
             +'</div>'
-            +'<p class="text-sm font-semibold text-gray-800 truncate">'+(fb.titel || fb.beschreibung || 'Kein Text').substring(0,80)+'</p>'
+            +'<p class="text-sm font-semibold text-gray-800 truncate">'+_escH((fb.titel || fb.beschreibung || 'Kein Text').substring(0,80))+'</p>'
             +'<div class="flex items-center gap-3 mt-1 text-[11px] text-gray-400">'
-            +'<span>👤 '+(user.name||user.email||'Unbekannt')+'</span>'
-            +(standort.name ? '<span>📍 '+standort.name+'</span>' : '')
+            +'<span>👤 '+_escH(user.name||user.email||'Unbekannt')+'</span>'
+            +(standort.name ? '<span>📍 '+_escH(standort.name)+'</span>' : '')
             +(fb.route ? '<span>📄 '+fb.route+'</span>' : '')
             +'<span>'+dateStr+'</span>'
             +'</div>'
@@ -905,7 +905,7 @@ window.fbCreateIdeenboardTicket = async function(fbId) {
     var user = fb.users || {};
     var standort = fb.standorte || {};
     var desc = (fb.beschreibung||'Kein Text') + '\n\n---\n';
-    desc += '📧 Von: ' + (user.name||user.email||'Unbekannt') + '\n';
+    desc += '📧 Von: ' + _escH(user.name||user.email||'Unbekannt') + '\n';
     desc += '📍 Standort: ' + (standort.name||'HQ') + '\n';
     desc += '📄 Route: ' + (fb.route||'-') + '\n';
     desc += '🏷️ Kategorie: ' + (catLabels[fb.kategorie]||fb.kategorie) + '\n';
