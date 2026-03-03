@@ -117,7 +117,7 @@ export async function showPlanAssistent() {
     var vorjahr = planIstYear - 1;
     var vorjahrData = null, netzwerkSaison = null;
     try {
-        var bwaResp = await _sb().from('bwa_daten').select('monat,umsatzerloese,wareneinsatz,rohertrag,personalkosten,raumkosten,ergebnis').eq('standort_id', stdId).eq('jahr', vorjahr).order('monat');
+        var bwaResp = await _sb().from('bwa_daten').select('monat,umsatzerloese,wareneinsatz,rohertrag,personalkosten,raumkosten,ergebnis_vor_steuern').eq('standort_id', stdId).eq('jahr', vorjahr).order('monat');
         if(bwaResp.data && bwaResp.data.length >= 3) {
             vorjahrData = { monate: {} };
             var tU = 0, tWe = 0, tPk = 0, tRk = 0;

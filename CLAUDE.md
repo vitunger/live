@@ -335,6 +335,9 @@ claude/db-schema-xyz            – Datenbank-Änderungen
 | MS365 SSO | Geplant | Stubs vorhanden |
 | BWA-Banner bleibt nach Logout sichtbar | Mittel | ✅ Behoben – State-Cleanup im Logout |
 | `URIError: URI malformed` in content.js | Niedrig | Browser-Extension, kein Portal-Bug |
+| 400-Fehler `bwa_daten.ergebnis` (plan-ist.js) | Mittel | ✅ Behoben – Spalte heißt `ergebnis_vor_steuern` |
+| 400-Fehler `users.rolle` (kalender.js) | Mittel | ✅ Behoben – Spalte existiert nicht, Join über `user_rollen` |
+| Status `'active'` statt `'aktiv'` (user-management.js) | Niedrig | ✅ Behoben – englischer Wert gab leere Ergebnisse |
 | Deprecated Trigger `on_auth_user_created` | Mittel | ✅ Behoben – Trigger entfernt, create-user EF übernimmt |
 | Fehlende FK-Indizes (leads, lead_events) | Niedrig | ✅ Behoben – 7 Indizes erstellt |
 | Fehlende Unique Constraints | Mittel | ✅ Behoben – user_rollen + employees |

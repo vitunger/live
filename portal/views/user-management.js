@@ -2125,7 +2125,7 @@ export async function openBetaUsersModal(modulKey, modulName) {
         var {data:betaUsers, error:e1} = await s.from('modul_beta_users').select('*, user:user_id(id, email, raw_user_meta_data)').eq('modul_key', modulKey);
         if(e1) throw e1;
         // Load all users for selection
-        var {data:allUsers, error:e2} = await s.from('users').select('id, vorname, nachname, email, standort_id, standorte(name)').eq('status','active').order('nachname');
+        var {data:allUsers, error:e2} = await s.from('users').select('id, vorname, nachname, email, standort_id, standorte(name)').eq('status','aktiv').order('nachname');
         if(e2) throw e2;
 
         var betaUserIds = (betaUsers||[]).map(function(b){ return b.user_id; });

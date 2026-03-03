@@ -575,11 +575,12 @@ export async function kalLoadTeilnehmerDropdown() {
     // Load users if not cached
     if(kalStandortUsers.length === 0) {
         try {
-            var q = _sb().from('users').select('id, vorname, nachname, rolle').eq('status', 'aktiv');
+            var q = _sb().from('users').select('id, vorname, nachname, user_rollen(rollen(name))').eq('status', 'aktiv');
             if(_sbProfile() && _sbProfile().standort_id && !_sbProfile().is_hq) q = q.eq('standort_id', _sbProfile().standort_id);
             var res = await q;
             kalStandortUsers = (res.data || []).map(function(u) {
-                return { id: u.id, name: ((u.vorname || '') + ' ' + (u.nachname || '')).trim() || 'Unbekannt', rolle: u.rolle };
+                var rolleArr = (u.user_rollen || []).map(function(ur) { return ur.rollen ? ur.rollen.name : ''; }).filter(Boolean);
+                return { id: u.id, name: ((u.vorname || '') + ' ' + (u.nachname || '')).trim() || 'Unbekannt', rolle: rolleArr[0] || '' };
             });
         } catch(e) { console.warn('Teilnehmer laden:', e); }
     }
