@@ -139,7 +139,7 @@ var ctaEl = document.getElementById('bwaUploadCTA');
 var badgeEl = document.getElementById('bwaRatingBadge');
 var eskBanner = document.getElementById('bwaEskalationBanner');
 
-if(!titleEl || !ctaEl || !badgeEl || !daysEl || !ringEl || !eskBanner) return;
+if(!titleEl || !subEl || !ctaEl || !badgeEl || !daysEl || !ringEl || !eskBanner) return;
 
 if(submitted && rating !== 'missing') {
 // Already submitted
