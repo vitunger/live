@@ -2107,6 +2107,26 @@
                             </div>
                             <!-- Right: BWA Anzeige -->
                             <div class="lg:col-span-2">
+                                <div id="bwaDetailPanel" style="display:none;">
+                                    <div class="vit-card p-6 mb-4">
+                                        <div class="flex items-center justify-between mb-4">
+                                            <h3 id="bwaTitle" class="text-lg font-bold text-gray-800">BWA Details</h3>
+                                            <div class="flex items-center space-x-2">
+                                                <button id="bwaEditBtn" style="display:none;" class="text-xs text-gray-400 hover:text-vit-orange">Bearbeiten</button>
+                                                <button id="bwaDeleteBtn" style="display:none;" class="text-xs text-gray-400 hover:text-red-500">Loeschen</button>
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                                            <div class="bg-gray-50 rounded-lg p-3 text-center"><p class="text-xs text-gray-500">Umsatz</p><p id="bwaKpiUmsatz" class="text-base font-bold text-gray-800">-</p><p id="bwaKpiUmsatzVj" class="text-[10px] text-gray-400"></p></div>
+                                            <div class="bg-gray-50 rounded-lg p-3 text-center"><p class="text-xs text-gray-500">Rohertrag</p><p id="bwaKpiRohertrag" class="text-base font-bold text-gray-800">-</p><p id="bwaKpiMarge" class="text-[10px] text-gray-400"></p></div>
+                                            <div class="bg-gray-50 rounded-lg p-3 text-center"><p class="text-xs text-gray-500">Kosten</p><p id="bwaKpiKosten" class="text-base font-bold text-gray-800">-</p><p id="bwaKpiKostenVj" class="text-[10px] text-gray-400"></p></div>
+                                            <div class="bg-gray-50 rounded-lg p-3 text-center"><p class="text-xs text-gray-500">Ergebnis</p><p id="bwaKpiErgebnis" class="text-base font-bold text-gray-800">-</p><p id="bwaKpiErgebnisMarge" class="text-[10px] text-gray-400"></p></div>
+                                        </div>
+                                        <div id="bwaValidationBanner" class="hidden"></div>
+                                        <div class="overflow-x-auto"><table id="bwaDetailTable" class="w-full text-xs"><thead><tr><th class="text-left py-2 px-3 font-semibold text-gray-600">Position</th><th class="text-right py-2 px-3 font-semibold text-gray-600">IST</th><th class="text-right py-2 px-3 font-semibold text-gray-600">Plan</th><th class="text-right py-2 px-3 font-semibold text-gray-600">Abweichung</th><th class="text-right py-2 px-3 font-semibold text-gray-600">VJ</th></tr></thead><tbody id="bwaDetailBody"></tbody></table></div>
+                                    </div>
+                                    <div id="bwaTrendSection" class="mb-4" style="display:none;"><div class="vit-card p-6"><h4 class="font-semibold text-gray-800 mb-3">Jahrestrend</h4><div id="bwaTrendCards" class="grid grid-cols-2 lg:grid-cols-4 gap-2"></div></div></div>
+                                </div>
                         <!-- Feature Lock Overlay -->
                         <div id="benchmarkLockOverlay" style="display:none;">
                             <div class="vit-card p-8 text-center mb-6 vit-dashed">
