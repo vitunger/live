@@ -224,3 +224,34 @@ async function submitLead() {
   - `office_sync_log`
 
 Keine Tabelle gelöscht – nur die 2 verwaisten markiert.
+
+---
+
+## Nachtrag: Duplikat-Code Analyse
+
+### Kritische Duplikate (Refactoring-Kandidaten)
+
+| Paar | Overlap | Gemeinsame Funktionen |
+|------|---------|----------------------|
+| **pdf-wawi.js ↔ wawi-integration.js** | 91% (~472 Zeilen) | parseWawiText, extractPdfText, kpiCard, timeAgo, renderParseCard, wawiPopulateForm, wawiRenderStatus + 4 weitere |
+| **render-system.js ↔ hq-feedback.js** | 87% (~153 Zeilen) | Komplette Feedback-Rendering-Logik dupliziert |
+| **billing-inline.js ↔ email-billing.js** | 83% (~342 Zeilen) | fmtEur, fmtDate, statusBadge + Billing-Rendering |
+
+### Utility-Duplikate (6+ Kopien)
+
+| Funktion | Kopien | Lösung |
+|----------|--------|--------|
+| kpiCard | 6 | → globals.js |
+| statusBadge | 5 | → globals.js |
+| fmtEur | 4 | → globals.js |
+| fmtDate | 4 | → globals.js |
+| timeAgo | 3 | → globals.js |
+
+### Empfohlene Lösung
+
+1. **Shared Utilities** in globals.js oder neues `portal/core/utils.js` auslagern (kpiCard, statusBadge, fmtEur, fmtDate, timeAgo)
+2. **pdf-wawi.js löschen**, wawi-integration.js als Single Source of Truth
+3. **hq-feedback.js** als eigenständiges Modul behalten, shared Rendering-Code in render-system.js importieren
+4. **billing-inline.js** als IIFE beibehalten, shared Logik aus email-billing.js importieren
+
+~967 Zeilen Einsparung möglich. Erfordert Feature-Branch.
