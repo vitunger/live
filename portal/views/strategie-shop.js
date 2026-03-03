@@ -494,16 +494,18 @@ export async function submitShopOrder() {
             });
         } catch(notifyErr) { console.warn('Shop notify (new_order):', notifyErr); }
 
-        // E-Mail an Standort: Bestellbestätigung
+        // E-Mail an Standort: Rechnung mit PDF-Anhang
+        // Kurz warten damit LexOffice die Rechnung verarbeiten kann
         try {
+            await new Promise(function(r){ setTimeout(r, 2000); });
             var _session2 = await _sb().auth.getSession();
             var _token2 = _session2.data.session ? _session2.data.session.access_token : '';
             await fetch(SUPABASE_URL + '/functions/v1/shop-notify', {
                 method: 'POST',
                 headers: { 'Authorization': 'Bearer ' + _token2, 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mode: 'order_confirmation', order_id: order.id })
+                body: JSON.stringify({ mode: 'invoice_email', order_id: order.id })
             });
-        } catch(notifyErr2) { console.warn('Shop notify (confirmation):', notifyErr2); }
+        } catch(notifyErr2) { console.warn('Shop notify (invoice_email):', notifyErr2); }
 
         shopCart = [];
         shopAllProducts = [];

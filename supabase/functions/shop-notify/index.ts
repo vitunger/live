@@ -31,10 +31,19 @@ function getAdminClient() {
 }
 
 // ── Resend E-Mail senden ──
-async function sendEmail(to: string[], subject: string, html: string) {
+async function sendEmail(to: string[], subject: string, html: string, attachments?: { filename: string; content: string }[]) {
   if (!RESEND_API_KEY) {
     console.warn("RESEND_API_KEY nicht gesetzt – E-Mail übersprungen");
     return { skipped: true };
+  }
+  const payload: any = {
+    from: RESEND_FROM,
+    to,
+    subject,
+    html,
+  };
+  if (attachments && attachments.length > 0) {
+    payload.attachments = attachments;
   }
   const resp = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -42,12 +51,7 @@ async function sendEmail(to: string[], subject: string, html: string) {
       Authorization: `Bearer ${RESEND_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      from: RESEND_FROM,
-      to,
-      subject,
-      html,
-    }),
+    body: JSON.stringify(payload),
   });
   const data = await resp.json();
   if (!resp.ok) {
@@ -257,6 +261,128 @@ async function handleStatusChange(sb: any, orderId: string, newStatus: string) {
   return { sent: recipients.length, order_number: order.order_number, status: newStatus, ...result };
 }
 
+// ── Helper: Get LexOffice API Key from connector_config ──
+async function getLexofficeApiKey(sb: any): Promise<string | null> {
+  try {
+    const { data } = await sb
+      .from("connector_config")
+      .select("config_value")
+      .eq("connector_id", "lexoffice")
+      .eq("config_key", "api_key")
+      .single();
+    if (data?.config_value) return data.config_value;
+  } catch {}
+  return Deno.env.get("LEXOFFICE_API_KEY") || null;
+}
+
+// ── Helper: Fetch PDF from LexOffice as base64 ──
+async function fetchLexofficePdf(sb: any, lexofficeInvoiceId: string): Promise<{ base64: string; filename: string } | null> {
+  try {
+    const apiKey = await getLexofficeApiKey(sb);
+    if (!apiKey) return null;
+
+    // Get document file ID
+    const docResp = await fetch(`https://api.lexoffice.io/v1/invoices/${lexofficeInvoiceId}/document`, {
+      headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
+    });
+    
+    let pdfUrl: string;
+    if (docResp.ok) {
+      const docData = await docResp.json();
+      pdfUrl = docData.documentFileId
+        ? `https://api.lexoffice.io/v1/files/${docData.documentFileId}`
+        : `https://api.lexoffice.io/v1/invoices/${lexofficeInvoiceId}/document`;
+    } else {
+      pdfUrl = `https://api.lexoffice.io/v1/invoices/${lexofficeInvoiceId}/document`;
+    }
+
+    const pdfResp = await fetch(pdfUrl, {
+      headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/pdf" },
+    });
+
+    if (!pdfResp.ok) {
+      console.warn("LexOffice PDF fetch failed:", pdfResp.status);
+      return null;
+    }
+
+    const arrayBuffer = await pdfResp.arrayBuffer();
+    const uint8 = new Uint8Array(arrayBuffer);
+    // Convert to base64
+    let binary = "";
+    for (let i = 0; i < uint8.length; i++) {
+      binary += String.fromCharCode(uint8[i]);
+    }
+    const base64 = btoa(binary);
+    
+    return { base64, filename: `Rechnung-${lexofficeInvoiceId.substring(0, 8)}.pdf` };
+  } catch (err) {
+    console.error("fetchLexofficePdf error:", err);
+    return null;
+  }
+}
+
+// ── Mode: invoice_email → Rechnung mit PDF an Standort ──
+async function handleInvoiceEmail(sb: any, orderId: string) {
+  const order = await loadOrder(sb, orderId);
+  const recipients = await getOrderRecipients(sb, order);
+  if (recipients.length === 0) return { sent: 0, reason: "no_recipients" };
+
+  // Get billing invoice with LexOffice ID
+  const { data: shopOrder } = await sb
+    .from("shop_orders")
+    .select("billing_invoice_id")
+    .eq("id", orderId)
+    .single();
+
+  let pdfAttachment: { filename: string; content: string }[] = [];
+  let invoiceNumber = order.order_number;
+
+  if (shopOrder?.billing_invoice_id) {
+    const { data: invoice } = await sb
+      .from("billing_invoices")
+      .select("lexoffice_invoice_id, invoice_number")
+      .eq("id", shopOrder.billing_invoice_id)
+      .single();
+
+    if (invoice?.invoice_number) invoiceNumber = invoice.invoice_number;
+
+    if (invoice?.lexoffice_invoice_id) {
+      const pdf = await fetchLexofficePdf(sb, invoice.lexoffice_invoice_id);
+      if (pdf) {
+        pdfAttachment = [{ filename: `Rechnung-${invoiceNumber}.pdf`, content: pdf.base64 }];
+      }
+    }
+  }
+
+  const subject = `📄 Rechnung ${invoiceNumber} – Bestellung ${order.order_number}`;
+  const content = `
+    <p>Hallo,</p>
+    <p>anbei eure Rechnung zur Bestellung <strong>${order.order_number}</strong>.</p>
+    <table width="100%" style="margin:12px 0;">
+      <tr><td style="padding:4px 0;color:#888;font-size:13px;">Bestellnr:</td><td style="padding:4px 0;font-weight:700;font-size:13px;">${order.order_number}</td></tr>
+      <tr><td style="padding:4px 0;color:#888;font-size:13px;">Standort:</td><td style="padding:4px 0;font-size:13px;">📍 ${order.standort?.name || "?"}</td></tr>
+      <tr><td style="padding:4px 0;color:#888;font-size:13px;">Betrag:</td><td style="padding:4px 0;font-weight:700;font-size:16px;color:#EF7D00;">${fmtEur(order.total)}</td></tr>
+      <tr><td style="padding:4px 0;color:#888;font-size:13px;">Fällig:</td><td style="padding:4px 0;font-size:13px;">14 Tage nach Rechnungsdatum</td></tr>
+    </table>
+    ${renderItemsTable(order.items || [])}
+    ${pdfAttachment.length > 0
+      ? '<p style="margin:16px 0;padding:12px;background:#f0fdf4;border-radius:8px;font-size:13px;">📎 <strong>Die Rechnung als PDF ist dieser E-Mail angehängt.</strong></p>'
+      : '<p style="margin:16px 0;padding:12px;background:#fef3c7;border-radius:8px;font-size:13px;">⚠️ Die PDF-Rechnung konnte nicht angehängt werden. Du findest sie im Cockpit.</p>'
+    }
+    <div style="margin:20px 0;">
+      <a href="${COCKPIT_URL}/#shop" style="display:inline-block;background:#EF7D00;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">📦 Bestellung im Cockpit ansehen</a>
+    </div>
+  `;
+
+  const result = await sendEmail(
+    recipients,
+    subject,
+    wrapTemplate("Rechnung zu deiner Bestellung", content),
+    pdfAttachment.length > 0 ? pdfAttachment : undefined,
+  );
+  return { sent: recipients.length, order_number: order.order_number, pdf_attached: pdfAttachment.length > 0, ...result };
+}
+
 // ── Main Handler ──
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -291,6 +417,9 @@ serve(async (req) => {
         break;
       case "order_confirmation":
         result = await handleStatusChange(sb, order_id, "confirmed");
+        break;
+      case "invoice_email":
+        result = await handleInvoiceEmail(sb, order_id);
         break;
       case "status_change":
         if (!new_status) {
