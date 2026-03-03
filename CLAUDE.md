@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 03.03.2026 (user-management/office/strategie Split, dev-pipeline Split, User-Registration unified, delete_auth_user fix, View-Restore fix)
+> Letzte Aktualisierung: 03.03.2026 (HTML-Nesting-Fix, Login-UX deutsch, SyntaxError-Fixes 8 Module, controllingView closing tag)
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -51,7 +51,7 @@ portal/
 │   ├── globals.js          – showToast, escH, fmtN, fmtEur, fmtDate, timeAgo, sbUrl
 │   ├── supabase-init.js    – createClient, IDB Session, Auth Listener
 │   └── router.js           – showView(), i18n t(), View Switching
-├── views/                  – 68 Module, ~37.400 Zeilen (parallel geladen)
+├── views/                  – 68 Module, ~38.000 Zeilen (parallel geladen)
 │   ├── home.js             – Dashboard, Widgets, Quick Actions
 │   ├── verkauf.js          – Verkäufer-Performance, Pipeline
 │   ├── controlling.js      – BWA Upload/Parse/AI (13+ Formate)
@@ -371,6 +371,8 @@ claude/db-schema-xyz            – Datenbank-Änderungen
 | create-user CORS: * | Mittel | ✅ Behoben – Origin-Whitelist |
 | create-user Invite ohne Rollen-Check | Mittel | ✅ Behoben – HQ/Inhaber-Prüfung |
 | Sicherheitsaudit (28 Maßnahmen) | Hoch | Teilweise umgesetzt |
+| HTML-Nesting: Views außerhalb `<main>` (Cleanup-Folgeschaden) | Kritisch | ✅ Behoben – orphaned `</div>` Tags entfernt, controllingView closing tag ergänzt |
+| Login-Fehlermeldung englisch ("Invalid login credentials") | Mittel | ✅ Behoben – Deutsche UX-Texte für alle Fehlertypen |
 
 ---
 
