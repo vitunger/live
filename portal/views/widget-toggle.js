@@ -1,3 +1,13 @@
+// vit:bikes - Widget Info Toggle
+// Migrated from inline/widget-toggle.js
+
+// Safe Helpers
+function _sb()       { return window.sb; }
+function _sbUser()   { return window.sbUser; }
+function _sbProfile(){ return window.sbProfile; }
+function _escH(s)    { return window.escH ? window.escH(s) : String(s); }
+function _showToast(m,t){ if(window.showToast) window.showToast(m,t||'info'); }
+
 function toggleWidgetInfo(e, id) {
     e.stopPropagation();
     e.preventDefault();

@@ -73,6 +73,13 @@ const VIEW_MODULES = [
     'views/feedback-prod.js',
     'views/portal-guide.js',
     'views/profile-panel.js',
+    'views/enterapp-hook.js',
+    'views/kpi-trigger.js',
+    'views/notification-bus.js',
+    'views/sw-registration.js',
+    'views/toast-notification.js',
+    'views/verkaufs-streak.js',
+    'views/widget-toggle.js',
     'views/email-billing.js',
     'views/standort-billing.js',
     

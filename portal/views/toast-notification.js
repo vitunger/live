@@ -1,3 +1,13 @@
+// vit:bikes - Toast Notification System
+// Migrated from inline/toast-notification.js
+
+// Safe Helpers
+function _sb()       { return window.sb; }
+function _sbUser()   { return window.sbUser; }
+function _sbProfile(){ return window.sbProfile; }
+function _escH(s)    { return window.escH ? window.escH(s) : String(s); }
+function _showToast(m,t){ if(window.showToast) window.showToast(m,t||'info'); }
+
 // ═══ GLOBAL TOAST NOTIFICATION ═══
 window.showToast = function(message, type) {
     type = type || 'info';

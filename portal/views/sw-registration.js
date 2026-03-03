@@ -1,4 +1,13 @@
-function _toast(msg, type) { if(typeof window.showToast==='function') window.showToast(msg, type||'info'); }
+// vit:bikes - Service Worker Registration
+// Migrated from inline/sw-registration.js
+
+// Safe Helpers
+function _sb()       { return window.sb; }
+function _sbUser()   { return window.sbUser; }
+function _sbProfile(){ return window.sbProfile; }
+function _escH(s)    { return window.escH ? window.escH(s) : String(s); }
+function _showToast(m,t){ if(window.showToast) window.showToast(m,t||'info'); }
+
 // vit:bikes Partner Portal — Service Worker Registration + Cache
 // Extracted from index.html lines 11306-11587
 // ============================================================
