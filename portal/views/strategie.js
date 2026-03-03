@@ -1361,6 +1361,15 @@ export async function submitShopOrder() {
             } catch(syncErr) { console.warn('LexOffice sync delayed:', syncErr); }
         }
 
+        // E-Mail an HQ: Neue Bestellung eingegangen
+        try {
+            await fetch(SUPABASE_URL + '/functions/v1/shop-notify', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token, 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mode: 'new_order', order_id: order.id })
+            });
+        } catch(notifyErr) { console.warn('Shop notify (new_order):', notifyErr); }
+
         shopCart = [];
         shopAllProducts = [];
         shopVariants = {};

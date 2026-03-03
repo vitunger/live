@@ -1140,6 +1140,16 @@ export async function saveTracking() {
         tracking_url: trackUrl,
         updated_at: new Date().toISOString()
     }).eq('id', orderId);
+
+    // E-Mail an Standort: Paket versendet mit Tracking
+    try {
+        await fetch(SUPABASE_URL + '/functions/v1/shop-notify', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token, 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: 'status_change', order_id: orderId, new_status: 'shipped' })
+        });
+    } catch(notifyErr) { console.warn('Shop notify (shipped):', notifyErr); }
+
     document.getElementById('trackingModal').classList.add('hidden');
     renderHqShop();
 }
@@ -1150,6 +1160,16 @@ window.updateShopOrderStatus = async function(orderId, newStatus) {
     if (newStatus === 'shipped') updates.shipped_at = new Date().toISOString();
     if (newStatus === 'delivered') updates.delivered_at = new Date().toISOString();
     await _sb().from('shop_orders').update(updates).eq('id', orderId);
+
+    // E-Mail an Standort: Statusänderung
+    try {
+        await fetch(SUPABASE_URL + '/functions/v1/shop-notify', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + (await _sb().auth.getSession()).data.session.access_token, 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: 'status_change', order_id: orderId, new_status: newStatus })
+        });
+    } catch(notifyErr) { console.warn('Shop notify (status_change):', notifyErr); }
+
     renderHqShop();
 };
 export function addHqShopProduct(){
