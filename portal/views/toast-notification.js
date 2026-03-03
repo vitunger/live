@@ -45,6 +45,8 @@ function setTheme(theme) {
     if(ps) ps.style.background = theme === 'dark' ? 'var(--dm-surface)' : '#fff';
 }
 // Init on load - respect saved preference
+window.setTheme = setTheme;
+window.toggleTheme = toggleTheme;
 (function(){
     var saved = 'light';
     try { saved = localStorage.getItem('vit-theme') || 'light'; } catch(e){}

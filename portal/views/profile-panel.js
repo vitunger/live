@@ -63,8 +63,8 @@ function updateProfileThemeButtons() {
 }
 
 // Override setTheme to also update profile buttons
-var _origSetTheme = typeof setTheme === 'function' ? setTheme : null;
-setTheme = function(theme) {
+var _origSetTheme = typeof window.setTheme === 'function' ? window.setTheme : null;
+window.setTheme = function(theme) {
     if(_origSetTheme) _origSetTheme(theme);
     else {
         document.documentElement.setAttribute('data-theme', theme);
