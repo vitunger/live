@@ -134,6 +134,8 @@ function installRedirectInterceptor() {
     if (!_baseShowView || _baseShowView._hasRedirects) return;
     
     window.showView = function(v) {
+        // Scroll main content to top on every view change
+        try { var _m = document.querySelector('main.main-content-area'); if(_m) _m.scrollTop = 0; } catch(e) {}
         // Access check (skip if auth not yet loaded or during view restoration)
         if (typeof window.hasAccess === 'function' && window.currentRole && !window._vitRestoringView && !window.hasAccess(v)) {
             console.warn('[view-router] Kein Zugriff auf', v, 'mit Rolle', window.currentRole);
