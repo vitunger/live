@@ -3532,29 +3532,17 @@
                     </div>
 
                     <!-- KPIs -->
-                    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6" id="wissenKpis"></div>
+                    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6 hidden" id="wissenKpis"></div>
 
-                    <!-- Bereich-Filter -->
-                    <div class="flex flex-wrap gap-2 mb-6">
+                    <!-- Bereich-Filter (hidden) -->
+                    <div class="flex flex-wrap gap-2 mb-6 hidden">
                         <button onclick="filterWissenBereich('all')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white" data-wbf="all">📚 Alle Bereiche</button>
-                        <button onclick="filterWissenBereich('allgemein')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-wbf="allgemein">🏢 Allgemein</button>
-                        <button onclick="filterWissenBereich('verkauf')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-wbf="verkauf">💰 Verkauf</button>
-                        <button onclick="filterWissenBereich('einkauf')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-wbf="einkauf">🛒 Einkauf</button>
-                        <button onclick="filterWissenBereich('marketing')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-wbf="marketing">📣 Marketing</button>
-                        <button onclick="filterWissenBereich('controlling')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-wbf="controlling">📊 Controlling</button>
-                        <button onclick="filterWissenBereich('werkstatt')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-wbf="werkstatt">🔧 Werkstatt</button>
-                        <button onclick="filterWissenBereich('portal')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-wbf="portal">📱 Portal</button>
                     </div>
 
                     <!-- Typ-Tabs -->
                     <div class="mb-6 border-b border-gray-200">
                         <nav class="-mb-px flex space-x-6">
-                            <button onclick="switchWissenTyp('akademie')" class="wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-wtt="akademie">🎓 Akademie</button>
-                            <button onclick="switchWissenTyp('portal')" class="wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-wtt="portal">📱 Portal-Guide</button>
-                            <button onclick="switchWissenTyp('kurse')" class="wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-wtt="kurse">🎬 Kurse & Videos</button>
-                            <button onclick="switchWissenTyp('handbuecher')" class="wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-wtt="handbuecher">📖 Handbücher</button>
-                            <button onclick="switchWissenTyp('bestpractices')" class="wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-wtt="bestpractices">💡 Best Practices</button>
-                            <button onclick="switchWissenTyp('faq')" class="wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-wtt="faq">❓ FAQ</button>
+                            <button onclick="switchWissenTyp('portal')" class="wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-wtt="portal">📱 Portal-Guide</button>
                             <button onclick="switchWissenTyp('onboarding')" class="wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-wtt="onboarding">🚀 Onboarding</button>
 
                         </nav>
