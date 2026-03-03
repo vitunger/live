@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 03.03.2026 – Session: Edge Function Auth-Fixes (send-emails v22 + dev-ki-analyse v33 → verify_jwt=false, eigene Auth im Code), dev-release.js Token-Refresh vor KI-Calls
+> Letzte Aktualisierung: 04.03.2026 – Session: WiFi Presence System (office-wifi.js, Edge Function wifi-presence v1, DB: wifi_devices + wifi_events + wifi_config)
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -624,6 +624,7 @@ security: RLS/JWT/Auth-Verbesserung
 > **Datum oben aktualisieren** bei jeder inhaltlichen Änderung.
 
 
+- 2026-03-04: WiFi Presence System für vit:space Office. Neue DB-Tabellen: wifi_devices (MAC→User Mapping), wifi_events (UniFi Event-Log), wifi_config (Controller-Settings pro Standort). Edge Function wifi-presence v1 (verify_jwt=false, webhook_secret Auth): UniFi Webhook→Auto-Checkin/Checkout. office-wifi.js: Neuer WLAN-Tab im Office-Modul (Geräte-Registrierung, MAC-Eingabe, Toggle auto_checkin, Event-Log). office.js: WiFi-Tab hinzugefügt. app.js: office-wifi.js registriert. Architektur: Connect→sofort Checkin, Disconnect→delayed Checkout (configurable timeout via wifi_config.auto_checkout_minutes). Nur WiFi-Checkins werden auto-ausgecheckt, manuelle bleiben bestehen. RLS: User sieht eigene Geräte, HQ sieht alle.
 - 2026-03-03: BWA Detail-Panel HTML restored. Null-guards in controlling-display.js. renderBenchmarks added to view-router chain.
 - 2026-03-03: Demo-Standort aus allen BWA-Auswertungen/Benchmarks/KPIs entfernt. is_demo Flag auf standorte-Tabelle. 4 RPC-Funktionen aktualisiert: get_benchmark_data, get_benchmark_averages, get_bwa_network_status, get_bwa_status_overview. BWA Detail-Panel display fix in showBwaFromDb (war faelschlicherweise in downloadBwa). Benchmark-Content in eigenen ctrlTabBenchmark Tab verschoben.
 - 2026-03-03: KRITISCH - 2 extra close-div nach controllingView entfernt (46/53 Views aus main-Layout gebrochen). Benchmark-Minimum 5 Standorte (insufficient_data Card). Scroll-to-top bei View-Wechsel.
