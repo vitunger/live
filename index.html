@@ -46,8 +46,7 @@
         }
         
         .bg-vit-orange { background-color: var(--vit-orange); }
-        .bg-vit-gray { background-color: var(--vit-gray); }
-        .text-vit-orange { color: var(--vit-orange); }
+.text-vit-orange { color: var(--vit-orange); }
         .text-vit-gray { color: var(--vit-gray); }
         .border-vit-orange { border-color: var(--vit-orange); }
         .hover\:bg-vit-orange:hover { background-color: var(--vit-orange); }
@@ -81,13 +80,7 @@
             height: 0.5pt;
             background-color: var(--vit-orange);
         }
-        
-        /* Gradient Backgrounds */
-        .vit-gradient {
-            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-        }
-        
-        /* Subtiler vit-Hintergrund für Main Content */
+/* Subtiler vit-Hintergrund für Main Content */
         .vit-background {
             position: relative;
         }
@@ -143,7 +136,6 @@
         .sidebar.collapsed { width: 64px !important; min-width: 64px; }
         .sidebar.collapsed .sidebar-label,
         .sidebar.collapsed .sidebar-badge,
-        .sidebar.collapsed .dev-badge,
         .sidebar.collapsed hr { display: none !important; }
         .sidebar.collapsed .sidebar-item {
             justify-content: center !important;
@@ -189,50 +181,9 @@
             background-color: rgba(239, 125, 0, 0.15);
             border-left: 3px solid var(--vit-orange);
         }
-        
-        /* Status Badges */
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
-        .status-new { 
-            background-color: rgba(239, 125, 0, 0.15); 
-            color: var(--vit-orange);
-            border: 1px solid var(--vit-orange);
-        }
-        .status-inprogress { 
-            background-color: var(--vit-orange); 
-            color: white; 
-        }
-
-        /* Badge-System wird jetzt über modul_status DB gesteuert */
+/* Badge-System wird jetzt über modul_status DB gesteuert */
         /* Dev-Status Badge styles */
-        .dev-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 2px 8px;
-            border-radius: 9999px;
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-        .dev-badge.live { background-color: #dcfce7; color: #15803d; }
-        .dev-badge.beta { background-color: #ede9fe; color: #6d28d9; }
-        .dev-badge.demo { background-color: #fef3c7; color: #b45309; }
-        .dev-badge.wip { background-color: #dbeafe; color: #1d4ed8; }
-        .dev-badge.planned { background-color: var(--c-bg3); color: var(--c-sub); }
-
-        .status-done { 
-            background-color: var(--vit-gray); 
-            color: white; 
-        }
-        
-        /* Chat Styles */
+/* Chat Styles */
         .chat-message {
             padding: 10px;
             margin-bottom: 8px;
@@ -255,31 +206,7 @@
             border-left: 3px solid var(--vit-orange);
             padding-left: 15px;
         }
-        
-        /* Corporate Bullets - Orangene Kreise */
-        .vit-list {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .vit-list li {
-            position: relative;
-            padding-left: 20px;
-            margin-bottom: 8px;
-        }
-        
-        .vit-list li::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 7px;
-            width: 8px;
-            height: 8px;
-            background-color: var(--vit-orange);
-            border-radius: 50%;
-        }
-        
-        /* Hide class for view switching - MUST override Tailwind */
+/* Hide class for view switching - MUST override Tailwind */
         /* Premium Feature Locks */
         .premium-feature {
             position: relative;
@@ -382,8 +309,7 @@
             /* Profile slider */
             #profileSlider { width: 100% !important; }
             /* Feedback button mobile */
-            .feedback-bar { font-size: 11px !important; padding: 6px 12px !important; }
-            /* vit-card text overflow */
+/* vit-card text overflow */
             .vit-card { overflow: hidden; }
             /* Kanban columns stack */
             .grid.md\\:grid-cols-5 { grid-template-columns: 1fr !important; }
@@ -438,8 +364,6 @@
 .mc{transition:all .2s}.mc:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.1)}
 .rbtn{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:9px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;border:1.5px solid var(--c-border);background:var(--c-bg);color:var(--c-sub)}.rbtn:hover{border-color:#EF7D00;color:#EF7D00}
 .vbtn{background:#EF7D00;color:#fff;border:none;padding:7px 18px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer}.vbtn:hover{opacity:.9}
-.ek-modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:100;display:flex;align-items:center;justify-content:center}
-.ek-modal{background:var(--c-bg);border-radius:16px;max-width:720px;width:95%;max-height:85vh;overflow-y:auto;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
 .widget-info-btn{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--c-bg3);color:var(--c-muted);font-size:10px;font-weight:700;cursor:pointer;border:none;margin-left:6px;transition:all .2s;font-style:italic;font-family:Georgia,serif;line-height:1;vertical-align:middle}
 .widget-info-btn:hover{background:#EF7D00;color:#fff}
 .widget-info-popup{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;max-width:420px;background:var(--c-bg);border:1px solid var(--c-border);border-radius:12px;padding:16px 18px;box-shadow:0 12px 40px rgba(0,0,0,.18);z-index:9999;font-size:13px;color:var(--c-sub);line-height:1.6}
@@ -530,10 +454,9 @@
         body.dark .hover\:bg-gray-200:hover { background-color: var(--dm-border) !important; }
 
         /* Status badges */
-        body.dark .status-new { background-color: rgba(59,130,246,0.15) !important; color: #60A5FA !important; }
-        body.dark .status-inprogress { background-color: rgba(239,125,0,0.15) !important; color: #EF7D00 !important; }
-
-        /* Colored backgrounds -> transparent tinted */
+        body.dark
+body.dark
+/* Colored backgrounds -> transparent tinted */
         body.dark .bg-green-50, body.dark .bg-green-100 { background-color: rgba(34,197,94,0.12) !important; }
         body.dark .bg-red-50, body.dark .bg-red-100 { background-color: rgba(248,113,113,0.12) !important; }
         body.dark .bg-blue-50, body.dark .bg-blue-100 { background-color: rgba(59,130,246,0.12) !important; }
