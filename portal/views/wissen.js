@@ -314,7 +314,7 @@ export function switchWissenSub(containerId, sub) {
 
 var currentWissenBereich = 'all';
 window.currentWissenBereich = currentWissenBereich;
-var currentWissenTyp = 'akademie';
+var currentWissenTyp = 'portal';
 window.currentWissenTyp = currentWissenTyp;
 
 window.renderWissenGlobal = renderWissenGlobal;
