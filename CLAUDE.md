@@ -184,13 +184,14 @@ _fmtN(n)      → window.fmtN(n)    // Zahlenformat (de-DE)
 
 | Metrik | Wert |
 |--------|------|
-| Tabellen (public) | ~111 |
+| Tabellen (public) | ~165 |
 | Views | 54 |
 | RLS Policies | 257 |
-| Indizes | 269 |
+| Indizes | 276 (269 + 7 neue FK-Indizes) |
 | Edge Functions | 9 aktiv |
 | Auth-User | ~14 |
-| Standorte | 32 (angelegt) |
+| Standorte | 33 (angelegt) |
+| DB-Größe | ~65 MB |
 
 ### Wichtige Tabellen
 
@@ -334,6 +335,9 @@ claude/db-schema-xyz            – Datenbank-Änderungen
 | MS365 SSO | Geplant | Stubs vorhanden |
 | BWA-Banner bleibt nach Logout sichtbar | Mittel | ✅ Behoben – State-Cleanup im Logout |
 | `URIError: URI malformed` in content.js | Niedrig | Browser-Extension, kein Portal-Bug |
+| Deprecated Trigger `on_auth_user_created` | Mittel | ✅ Behoben – Trigger entfernt, create-user EF übernimmt |
+| Fehlende FK-Indizes (leads, lead_events) | Niedrig | ✅ Behoben – 7 Indizes erstellt |
+| Fehlende Unique Constraints | Mittel | ✅ Behoben – user_rollen + employees |
 | Environment-Variablen nicht externalisiert | Mittel | Noch im Code |
 | Sicherheitsaudit (28 Maßnahmen) | Hoch | Teilweise umgesetzt |
 
