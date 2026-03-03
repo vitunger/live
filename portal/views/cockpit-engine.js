@@ -139,7 +139,7 @@ var ctaEl = document.getElementById('bwaUploadCTA');
 var badgeEl = document.getElementById('bwaRatingBadge');
 var eskBanner = document.getElementById('bwaEskalationBanner');
 
-if(!titleEl || !ctaEl || !badgeEl) return;
+if(!titleEl || !ctaEl || !badgeEl || !daysEl || !ringEl || !eskBanner) return;
 
 if(submitted && rating !== 'missing') {
 // Already submitted
@@ -163,7 +163,7 @@ setBenchmarkLock(false);
 ctaEl.style.display = '';
 badgeEl.style.display = 'none';
 setBenchmarkLock(true);
-document.getElementById('bwaKpiReport').style.display = 'none';
+var kpiEl = document.getElementById('bwaKpiReport'); if(kpiEl) kpiEl.style.display = 'none';
 
 if(days > 0) {
     titleEl.textContent = 'Noch ' + days + ' Tage bis zur BWA-Deadline';
@@ -256,7 +256,7 @@ window._bwaCockpitShowKpiReport(bwaMo, rating);
 return;
 }
 // Minimal fallback: show loading state (the real function will overwrite this)
-var report = document.getElementById('bwaKpiReport');
+var report = document.getElementById('bwaKpiReport'); if(!report) return;
 if(!report) return;
 report.style.display = '';
 var moName = MO_NAMES[bwaMo.m] + ' ' + bwaMo.y;
