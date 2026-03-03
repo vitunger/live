@@ -17,6 +17,19 @@ function _devStatusLabels() { return window._devState ? window._devState.statusL
 function _devStatusColors() { return window._devState ? window._devState.statusColors : {}; }
 function _devKatIcons() { return window._devState ? window._devState.katIcons : {}; }
 
+// Helper: get fresh access token (refresh if needed)
+async function _getFreshToken() {
+    var session = await _sb().auth.getSession();
+    var token = session?.data?.session?.access_token;
+    if (!token) {
+        // Try refresh
+        var refresh = await _sb().auth.refreshSession();
+        token = refresh?.data?.session?.access_token;
+    }
+    if (!token) throw new Error('Nicht angemeldet – bitte neu einloggen.');
+    return token;
+}
+
 export async function devKIReleaseVorschlag() {
     var btn = document.getElementById('btnKIRelease');
     if(btn) { btn.disabled = true; btn.innerHTML = '<span class="animate-spin">🧠</span><span>KI denkt nach...</span>'; }
@@ -50,17 +63,24 @@ export async function devKIReleaseVorschlag() {
             return typ + ': ' + titel + (analyse ? ' – ' + analyse : '');
         }).join('\n');
 
-        var resp = await _sb().functions.invoke('dev-ki-analyse', {
-            body: {
+        // Fresh token holen (mit auto-refresh)
+        var token = await _getFreshToken();
+
+        var resp = await fetch(window.SUPABASE_URL + '/functions/v1/dev-ki-analyse', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({
                 mode: 'release_notes',
                 context: zusammenfassung,
                 count: relevant.length
-            }
+            })
         });
 
-        if(resp.error) throw resp.error;
-        var d = resp.data;
-        if(d.error) throw new Error(d.error);
+        var d = await resp.json();
+        if(!resp.ok || d.error) throw new Error(d.error || 'Edge Function returned a non-2xx status code');
 
         var vorschlag = d.release_notes || d.antwort || d.text || '';
         if(vorschlag) {
