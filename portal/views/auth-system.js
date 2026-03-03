@@ -378,8 +378,8 @@ _impActive = true;
 var btns = document.getElementById('impersonationBtns');
 var active = document.getElementById('impersonationActive');
 var lbl = document.getElementById('impersonationLabel');
-if(btns) btns.style.display = 'none';
-if(active) active.style.display = '';
+if(btns) btns.classList.add('hidden');
+if(active) active.classList.remove('hidden');
 if(lbl) lbl.textContent = label;
 // Update name, avatar, welcome for impersonated user
 var impName = _sbProfile() ? _sbProfile().name : 'Benutzer';
@@ -409,8 +409,8 @@ _impActive = false;
 // Update UI
 var btns = document.getElementById('impersonationBtns');
 var active = document.getElementById('impersonationActive');
-if(btns) btns.style.display = '';
-if(active) active.style.display = 'none';
+if(btns) btns.classList.remove('hidden');
+if(active) active.classList.add('hidden');
 // Restore original name, avatar, welcome
 var origName = _sbProfile() ? _sbProfile().name : 'Benutzer';
 var origFirst = origName.split(' ')[0];
@@ -1274,7 +1274,7 @@ if(isHQ && hqMenu) {
 // HQ Impersonation buttons (show if real user is HQ or currently impersonating, but NOT in demo mode)
 var sidebarBtmHQ = document.getElementById('sidebarBottomHQ');
 var isDemoActive = window.DEMO_ACTIVE || false;
-if(sidebarBtmHQ) sidebarBtmHQ.style.display = ((isHQ || _impActive) && !isDemoActive) ? '' : 'none';
+if(sidebarBtmHQ) sidebarBtmHQ.classList.toggle('hidden', !((isHQ || _impActive) && !isDemoActive));
 
 // ═══ EXTERN MENU ═══
 var isExtern = SESSION.account_level === 'extern';

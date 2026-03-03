@@ -698,8 +698,6 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
                 </button>
                 <div class="p-4 pt-5">
-                        <!-- HQ/Standort Toggle entfernt - Umschaltung erfolgt automatisch per Rolle -->
-                        <div id="hqToggleSection" class="hidden"></div>
 
                         <!-- Partner-level quick access (hidden in HQ mode) -->
                         <div id="partnerQuickNav">
@@ -822,10 +820,6 @@
                         </div>
 
 
-                        <!-- Dev-Status (nur HQ/Admin) -->
-                        <div id="devStatusNavSection" style="display:none">
-                        </div>
-
                         <!-- ═══ EXTERN (BikeEngine) SIDEBAR ═══ -->
                         <div id="externMenu" class="space-y-1 hidden">
                             <div class="mb-3 px-3 py-2 rounded-lg" style="background: linear-gradient(135deg, rgba(239,125,0,0.15), rgba(239,125,0,0.05));">
@@ -946,7 +940,6 @@
                                 <span>🏢</span><span class="sidebar-label">Allgemein</span>
                             </button>
 
-                            <!-- Feature Flags & Backups moved to Entwicklung -->
 
                             <button onclick="showView('hqVerkauf')" data-hq-module="hqStandorte" data-tooltip="Verkauf" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1001,19 +994,19 @@
                 </div>
 
                 <!-- HQ Quick-Switch (nur für HQ-User sichtbar) -->
-                <div id="sidebarBottomHQ" style="padding:8px 12px;border-top:1px solid #333;display:none;">
-                    <div id="impersonationBtns" style="display:flex;flex-direction:column;gap:4px;">
-                        <button onclick="switchDemoAccount('standort','partner')" style="width:100%;padding:6px 10px;background:#374151;border:1px solid #4B5563;border-radius:8px;color:#9CA3AF;font-size:11px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px;" onmouseover="this.style.background='#4B5563'" onmouseout="this.style.background='#374151'">
-                            <span style="font-size:14px">👁️</span> Demo-Standort
+                <div id="sidebarBottomHQ" class="px-3 py-2 border-t border-gray-700 hidden">
+                    <div id="impersonationBtns" class="flex flex-col gap-1">
+                        <button onclick="switchDemoAccount('standort','partner')" class="w-full px-2.5 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-gray-400 text-[11px] cursor-pointer text-left flex items-center gap-1.5 hover:bg-gray-600 transition">
+                            <span class="text-sm">👁️</span> Demo-Standort
                         </button>
-                        <button onclick="impersonateUser('a2135f35-fff3-48ca-a766-4b5370ed7a1a')" style="width:100%;padding:6px 10px;background:#374151;border:1px solid #4B5563;border-radius:8px;color:#9CA3AF;font-size:11px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px;" onmouseover="this.style.background='#4B5563'" onmouseout="this.style.background='#374151'">
-                            <span style="font-size:14px">🔄</span> Thorsten Guhr
+                        <button onclick="impersonateUser('a2135f35-fff3-48ca-a766-4b5370ed7a1a')" class="w-full px-2.5 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-gray-400 text-[11px] cursor-pointer text-left flex items-center gap-1.5 hover:bg-gray-600 transition">
+                            <span class="text-sm">🔄</span> Thorsten Guhr
                         </button>
                     </div>
-                    <div id="impersonationActive" style="display:none;">
-                        <div style="background:#7C3AED;border-radius:8px;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">
-                            <span style="font-size:10px;color:white;" id="impersonationLabel">👁️ Demo</span>
-                            <button onclick="exitImpersonation()" style="background:#EF4444;color:white;border:none;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;font-weight:600;">✕ Zurück</button>
+                    <div id="impersonationActive" class="hidden">
+                        <div class="bg-purple-600 rounded-lg px-2.5 py-1.5 flex items-center justify-between">
+                            <span class="text-[10px] text-white" id="impersonationLabel">👁️ Demo</span>
+                            <button onclick="exitImpersonation()" class="bg-red-500 text-white border-none rounded px-2 py-0.5 text-[10px] cursor-pointer font-semibold hover:bg-red-600 transition">✕ Zurück</button>
                         </div>
                     </div>
                 </div>
