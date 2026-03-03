@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 03.03.2026 (Todo v2: 11 neue Features – Zuweisungs-Dropdown, Wiederkehrend, Templates, Attachments, Stats, @Mentions, List-DnD, Blockiert, Erinnerungen, createTodoFromModule, Kalender-Integration. Edge Function todo-cron deployed. DB: todo_templates, todo_template_items, todo_attachments + 6 neue Spalten auf todos)
+> Letzte Aktualisierung: 03.03.2026 – Session-Abschluss: Go-Live PRE-1 fast komplett, PRE-2 S1+S2 erledigt, Todo v2 mit 11 Features deployed, strategie.js Bugfix, V5 Schulungsunterlagen, Wissen-Demodaten entfernt
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -284,6 +284,8 @@ sbUrl()       → window.sbUrl()   // Supabase Project URL (zentralisiert)
 
 ### Go-Live Arbeitsplan
 
+**Fortschritt: PRE-1 5/6 ✅ | PRE-2 2/7 ✅ | PRE-3 1/6 ✅**
+
 **Phase PRE-1: Aufräumen (Woche 1–2, ~18h)**
 
 | # | Aufgabe | Status | Details |
@@ -297,26 +299,35 @@ sbUrl()       → window.sbUrl()   // Supabase Project URL (zentralisiert)
 
 **Phase PRE-2: Sicherheit + Stabilität (Woche 2–4, ~24h)**
 
-| # | Aufgabe | Status |
-|---|---------|--------|
-| S1 | JWT-Audit Edge Functions | ✅ Erledigt | 4/5 kritische auf verify_jwt=true (db-backup, billing-automation, send-emails, send-email). create-user bleibt false (Register-Modus). |
-| S2 | Session-Handling | ✅ Erledigt | Auto-Refresh (supabase-init), Logout-Cleanup (auth-system), globaler Session-Error-Handler (handleSupabaseError in supabase-init) |
-| S3 | Error Handling Partner-Module | ⬜ Offen |
-| S4 | RLS Smoke-Tests | ⬜ Offen |
-| S5 | Mobile Responsive | ⬜ Offen |
-| S6 | HQ-Module Smoke-Test | ⬜ Offen |
-| S7 | Performance Check | ⬜ Offen |
+| # | Aufgabe | Status | Details |
+|---|---------|--------|---------|
+| S1 | JWT-Audit Edge Functions | ✅ Erledigt | 4/5 kritische auf verify_jwt=true. create-user bleibt false. Commits: f7ca2de, 64ce5b1 |
+| S2 | Session-Handling | ✅ Erledigt | Auto-Refresh, Logout-Cleanup, handleSupabaseError(), SIGNED_OUT Auto-Redirect. Commit: 6cd8e82 |
+| S3 | Error Handling Partner-Module | ⬜ Offen | Claude Code übernimmt |
+| S4 | RLS Smoke-Tests | ⬜ Offen | |
+| S5 | Mobile Responsive | ⬜ Offen | |
+| S6 | HQ-Module Smoke-Test | ⬜ Offen | |
+| S7 | Performance Check | ⬜ Offen | |
 
 **Phase PRE-3: Pilot-Vorbereitung (Woche 4–5, ~12h)**
 
-| # | Aufgabe | Status |
-|---|---------|--------|
-| V1 | Pilot-Standorte auswählen | ⬜ Offen |
-| V2 | User-Accounts einrichten | ⬜ Offen |
-| V3 | eTermin-Rollout | ⬜ Offen |
-| V4 | Feedback-Kanal einrichten | ⬜ Offen |
-| V5 | Schulungsunterlagen | ⬜ Offen |
-| V6 | Monitoring aufsetzen | ⬜ Offen |
+| # | Aufgabe | Status | Details |
+|---|---------|--------|---------|
+| V1 | Pilot-Standorte auswählen | ⬜ Offen | |
+| V2 | User-Accounts einrichten | ⬜ Offen | |
+| V3 | eTermin-Rollout | ⬜ Offen | |
+| V4 | Feedback-Kanal einrichten | ⬜ Offen | |
+| V5 | Schulungsunterlagen | ✅ Erledigt | Portal-Guide Anleitungen im Wissensmodul, Demodaten entfernt. Commits: ae628a5, 354dfb0, 6fea920 |
+| V6 | Monitoring aufsetzen | ⬜ Offen | |
+
+**Bugfixes & Features (heute, außerhalb Plan):**
+
+| Aufgabe | Commit | Beschreibung |
+|---------|--------|-------------|
+| strategie.js showView Bugfix | 2a9c797 | Gate auf 5-Werte-System migriert, todo→aufgaben Key-Mapping |
+| Todo v2 (11 Features) | 163d0f4, a0328ad | Zuweisungs-Dropdown, Wiederkehrend, Templates, Attachments, Stats-Tab, @Mentions, List-DnD, Blockiert-Indikator, Erinnerungen, createTodoFromModule, Kalender-Integration |
+| DB-Migration todo_features_v2 | — | 3 neue Tabellen + 6 Spalten + Storage Bucket + RLS + Indices |
+| Edge Function todo-cron | — | Cron: Erinnerungen (Email via Resend) + wiederkehrende Tasks klonen |
 
 ### Rollen-IDs
 
