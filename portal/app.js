@@ -12,7 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1772542590";
+const CACHE_BUST = "?v=1772542591";
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
@@ -101,7 +101,16 @@ const VIEW_MODULES = [
     'views/office-stats.js',
     'views/wawi-integration.js',
     'views/schnittstellen.js',
+    // Video Pipeline (split into 9 sub-modules)
     'views/video-pipeline.js',
+    'views/video-upload.js',
+    'views/video-dashboard.js',
+    'views/video-consent.js',
+    'views/video-hq-review.js',
+    'views/video-templates.js',
+    'views/video-feedback.js',
+    'views/video-subtitles.js',
+    'views/video-themes.js',
     'views/feedback-widget.js',
     'views/misc-views.js',
     
