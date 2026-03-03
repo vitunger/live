@@ -1073,41 +1073,7 @@
                         </div>
 
 
-                        <!-- 🎯 TAGES-COCKPIT – Heute steuern -->
-                                    <div class="flex items-center space-x-2 mt-2">
-                                        <div class="flex-1 bg-gray-200 rounded-full h-2">
-                                            <div class="bg-gray-300 h-2 rounded-full" style="width: 0%"></div>
-                                        </div>
-                                        <span class="text-xs text-gray-400 font-semibold">—</span>
-                                    </div>
-                                    <p class="text-xs text-gray-400 mt-1">Plan: —</p>
-                                </div>
-
-                                <div>
-                                    <p class="text-sm text-gray-500 mb-1">Diese Woche</p>
-                                    <p class="text-3xl font-bold text-gray-400">—</p>
-                                    <div class="flex items-center space-x-2 mt-2">
-                                        <div class="flex-1 bg-gray-200 rounded-full h-2">
-                                            <div class="bg-gray-300 h-2 rounded-full" style="width: 0%"></div>
-                                        </div>
-                                        <span class="text-xs text-gray-400 font-semibold">—</span>
-                                    </div>
-                                    <p class="text-xs text-gray-400 mt-1">Plan: —</p>
-                                </div>
-
-                                <div>
-                                    <p class="text-sm text-gray-500 mb-1">Dieser Monat</p>
-                                    <p class="text-3xl font-bold text-gray-400">—</p>
-                                    <div class="flex items-center space-x-2 mt-2">
-                                        <div class="flex-1 bg-gray-200 rounded-full h-2">
-                                            <div class="bg-gray-300 h-2 rounded-full" style="width: 0%"></div>
-                                        </div>
-                                        <span class="text-xs text-gray-400 font-semibold">—</span>
-                                    </div>
-                                    <p class="text-xs text-gray-400 mt-1">Plan: —</p>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- Tages-Cockpit wird dynamisch von cockpit-engine.js gerendert -->
                     </div>
 
                     <!-- WIDGET-BEREICH (anpassbar) -->
@@ -2094,7 +2060,11 @@
                             </div>
                         </div>
 
-                        <!-- Netzwerk-Vergleich: Wer hat schon eingereicht? -->
+                        <!-- KPI Report wird dynamisch von cockpit-engine.js gerendert -->
+                        <div id="bwaKpiReport" class="vit-card p-5 mb-6" style="display:none">
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <h3 class="text-base font-bold text-gray-800">BWA-Auswertung</h3>
                                     <p class="text-xs text-gray-500" id="bwaKpiReportMonth"></p>
                                 </div>
                                 <div id="bwaKpiRating"></div>
