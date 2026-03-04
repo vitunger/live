@@ -1,5 +1,6 @@
-// vit:bikes - Demo Mode System
-// Migrated from inline/render-system.js
+// vit:bikes Cockpit - Demo Mode System
+// GF/Standort-Perspektive mit realistischen Fake-Daten
+// Standort: vit:bikes Grafrath | Inhaber: Sandra Engelmann
 
 // Safe Helpers
 function _sb()       { return window.sb; }
@@ -7,6 +8,70 @@ function _sbUser()   { return window.sbUser; }
 function _sbProfile(){ return window.sbProfile; }
 function _escH(s)    { return window.escH ? window.escH(s) : String(s); }
 function _showToast(m,t){ if(window.showToast) window.showToast(m,t||'info'); }
+
+// ─── Demo Fake Data (Standort: Grafrath, Februar 2026) ─────────────────────
+
+var DEMO_STANDORT = {
+    id: 'dd000000-0000-0000-0000-000000000099',
+    name: 'vit:bikes Grafrath',
+    slug: 'grafrath',
+    city: 'Grafrath',
+    region: 'Süd-Bayern'
+};
+
+var DEMO_LEADS = [
+    { id:'dl-1', name:'Thomas Bauer', modell:'Trek Domane SL 6', wert:3499, status:'beratung', created_at:'2026-02-24', telefon:'0151-234567', notiz:'Interessiert an Finanzierung' },
+    { id:'dl-2', name:'Katrin Sommer', modell:'Cube Stereo Hybrid 140', wert:5299, status:'angebot', created_at:'2026-02-22', telefon:'0162-987654', notiz:'Angebot per Mail verschickt' },
+    { id:'dl-3', name:'Michael Hofer', modell:'Riese & Müller Multicharger', wert:7890, status:'angebot', created_at:'2026-02-20', telefon:'0170-112233', notiz:'Test-Ride am Sa. vereinbart' },
+    { id:'dl-4', name:'Anni Kramer', modell:'Specialized Turbo Como 4.0', wert:4199, status:'kaufbereit', created_at:'2026-02-18', telefon:'0176-445566', notiz:'Kauf wahrscheinlich diese Woche' },
+    { id:'dl-5', name:'Peter Stein', modell:'Cannondale Topstone Carbon', wert:3999, status:'gewonnen', created_at:'2026-02-15', telefon:'0179-778899', notiz:'Abgeholt am 20.02.' },
+    { id:'dl-6', name:'Lisa Gruber', modell:'Giant Trance X E+ Pro 29', wert:6299, status:'gewonnen', created_at:'2026-02-10', telefon:'0155-334455', notiz:'Zubehör-Paket dazu' },
+    { id:'dl-7', name:'Marco Felber', modell:'Trek Marlin 7', wert:1299, status:'verloren', created_at:'2026-02-08', telefon:'0160-223344', notiz:'Online günstiger gefunden' },
+    { id:'dl-8', name:'Sabine König', modell:'Gazelle Ultimate C380 HMB', wert:3599, status:'beratung', created_at:'2026-02-26', telefon:'0152-667788', notiz:'Erstgespräch heute' }
+];
+
+var DEMO_TODOS = [
+    { id:'dt-1', title:'BWA Februar 2026 hochladen', status:'offen', prio:'hoch', due_date:'2026-03-08', kategorie:'finanzen' },
+    { id:'dt-2', title:'Vororder-Bestätigung an HQ schicken', status:'offen', prio:'hoch', due_date:'2026-03-05', kategorie:'einkauf' },
+    { id:'dt-3', title:'Quartals-Review Termin buchen', status:'offen', prio:'mittel', due_date:'2026-03-15', kategorie:'planung' },
+    { id:'dt-4', title:'Social Media Post: Frühjahrs-Aktion', status:'in_bearbeitung', prio:'mittel', due_date:'2026-03-03', kategorie:'marketing' },
+    { id:'dt-5', title:'Werkstatt-Kapazität April planen', status:'offen', prio:'mittel', due_date:'2026-03-20', kategorie:'werkstatt' },
+    { id:'dt-6', title:'Mitarbeiter-Gespräch Dirk G.', status:'erledigt', prio:'hoch', due_date:'2026-02-28', kategorie:'personal' },
+    { id:'dt-7', title:'Schaufenster-Deko Frühjahr', status:'erledigt', prio:'niedrig', due_date:'2026-02-25', kategorie:'marketing' },
+    { id:'dt-8', title:'Reifenservice-Kampagne vorbereiten', status:'in_bearbeitung', prio:'mittel', due_date:'2026-03-10', kategorie:'marketing' }
+];
+
+var DEMO_TERMINE = [
+    { id:'kt-1', titel:'Probe-Ride: Michael Hofer', datum:'2026-03-01', uhrzeit:'10:00', typ:'etermin', dauer:60 },
+    { id:'kt-2', titel:'Beratung E-Bike Pendler', datum:'2026-03-01', uhrzeit:'14:30', typ:'etermin', dauer:45 },
+    { id:'kt-3', titel:'Werkstatt: Inspektion Kramer', datum:'2026-03-03', uhrzeit:'09:00', typ:'werkstatt', dauer:90 },
+    { id:'kt-4', titel:'Jahres-Gespräch mit Lieferant', datum:'2026-03-04', uhrzeit:'11:00', typ:'intern', dauer:60 },
+    { id:'kt-5', titel:'Team-Meeting März', datum:'2026-03-05', uhrzeit:'08:30', typ:'intern', dauer:45 },
+    { id:'kt-6', titel:'Beratung Familienräder', datum:'2026-03-06', uhrzeit:'16:00', typ:'etermin', dauer:60 },
+    { id:'kt-7', titel:'Frühjahrs-Aktion Aufbau', datum:'2026-03-07', uhrzeit:'08:00', typ:'intern', dauer:120 },
+    { id:'kt-8', titel:'Probe-Ride: Familie Sommer', datum:'2026-03-08', uhrzeit:'10:30', typ:'etermin', dauer:90 }
+];
+
+var DEMO_TICKETS = [
+    { id:'st-1', betreff:'Cockpit Login-Problem bei Mitarbeiterin', status:'offen', prio:'hoch', erstellt:'2026-02-27', letzte_antwort:'Wird geprüft – HQ meldet sich morgen' },
+    { id:'st-2', betreff:'Frage zu BWA-Benchmark: Rohertrag', status:'in_bearbeitung', prio:'mittel', erstellt:'2026-02-20', letzte_antwort:'Benchmark gilt für Q1-Durchschnitt Süd' },
+    { id:'st-3', betreff:'Vororder-Bestätigung kommt nicht an', status:'geloest', prio:'hoch', erstellt:'2026-02-10', letzte_antwort:'E-Mail-Adresse im System korrigiert' }
+];
+
+var DEMO_BWA = {
+    jan: { monat:1, jahr:2026, umsatzerloese:168420, wareneinsatz:-101052, rohertrag:67368, personalkosten:-21200, raumkosten:-4800, werbekosten:-2800, abschreibungen:-1900, sonstige_kosten:-3400, gesamtkosten:-34100, betriebsergebnis:33268, zinsaufwand:-680, ergebnis_vor_steuern:32588 },
+    feb: { monat:2, jahr:2026, umsatzerloese:142500, wareneinsatz:-85500, rohertrag:57000, personalkosten:-21200, raumkosten:-4800, werbekosten:-3200, abschreibungen:-1900, sonstige_kosten:-2850, gesamtkosten:-33950, betriebsergebnis:23050, zinsaufwand:-680, ergebnis_vor_steuern:22370 },
+    plan: { umsatzerloese:200000, rohertrag:76000, betriebsergebnis:32000, ergebnis_vor_steuern:30000 }
+};
+
+var DEMO_MITARBEITER = [
+    { name:'Sandra Engelmann', rolle:'Geschäftsführerin', status:'aktiv', seit:'2018' },
+    { name:'Dirk Gromann', rolle:'Verkauf & Beratung', status:'aktiv', seit:'2020' },
+    { name:'Lisa Maier', rolle:'Werkstatt', status:'aktiv', seit:'2021' },
+    { name:'Jonas Weber', rolle:'Werkstatt', status:'aktiv', seit:'2023' }
+];
+
+// ─── Main Entry: Demo-Login ────────────────────────────────────────────────
 
 async function switchDemoAccount(level, stage) {
     var ls = document.getElementById('loginScreen');
@@ -18,163 +83,515 @@ async function switchDemoAccount(level, stage) {
     SESSION.account_level = level;
     SESSION.stage = stage || 'partner';
     SESSION.stage_status = 'active';
-    SESSION.account_id = 'demo-'+level;
-    SESSION.account_name = 'Demo '+level;
+    SESSION.account_id = 'demo-standort';
+    SESSION.account_name = 'vit:bikes Grafrath (Demo)';
 
-    // Set sbUser so DB operations (feedback, etc.) work
-    var demoUserId = level === 'hq' ? 'dd000000-0000-0000-0000-000000000001' : 'dd000000-0000-0000-0000-000000000002';
-    var demoEmail = level === 'hq' ? 'demo-hq@vitbikes.de' : 'demo-standort@vitbikes.de';
-    window.sbUser = { id: demoUserId, email: demoEmail };
-    window.sbProfile = { id: demoUserId, email: demoEmail, name: 'Demo User', is_hq: level === 'hq', status: 'demo' };
+    window.sbUser = { id: 'dd000000-0000-0000-0000-000000000002', email: 'demo@vitbikes-grafrath.de' };
+    window.sbProfile = {
+        id: 'dd000000-0000-0000-0000-000000000002',
+        name: 'Sandra Engelmann',
+        vorname: 'Sandra',
+        nachname: 'Engelmann',
+        email: 'demo@vitbikes-grafrath.de',
+        is_hq: false,
+        status: 'demo',
+        standort_id: DEMO_STANDORT.id,
+        standort_name: DEMO_STANDORT.name
+    };
+    window.sbStandort = { id: DEMO_STANDORT.id, name: DEMO_STANDORT.name, slug: DEMO_STANDORT.slug, is_premium: true };
 
-    if(level === 'extern') {
-        currentRole = 'external_owner';
-        currentRoles = ['external_owner'];
-        SESSION.stage = stage || 'phase0';
-    } else if(level === 'hq') {
-        currentRole = 'hq';
-        currentRoles = ['hq'];
-    } else {
-        currentRole = 'inhaber';
-        currentRoles = ['inhaber'];
-    }
+    currentRole = 'inhaber';
+    currentRoles = ['inhaber'];
+    currentLocation = 'grafrath';
+    isPremium = true;
 
-    if(stage === 'part1') {
-        SESSION.stage_started_at = new Date(Date.now() - 30*24*60*60*1000).toISOString();
-        SESSION.stage_due_at = new Date(Date.now() + 60*24*60*60*1000).toISOString();
-        initMilestonesForStage('part1');
-    } else if(stage === 'part2') {
-        SESSION.stage_started_at = new Date(Date.now() - 60*24*60*60*1000).toISOString();
-        SESSION.stage_due_at = new Date(Date.now() + 210*24*60*60*1000).toISOString();
-        initMilestonesForStage('part2');
-    }
-
-    // Inject demo banner
     injectDemoBanner(level, stage);
-    // Fill demo data into widgets
-    fillDemoWidgets(level, stage);
+    installDemoOverrides();
 
     updateUIForRole();
     try { await loadModulStatus(); } catch(e) { try { applyModulStatus(); } catch(e2) {} }
-    if(level === 'extern') showView('externHome');
-    else if(level === 'hq') { switchViewMode('hq'); fillDemoHQ(); }
-    else showView('home');
 
-    // Safety: re-fill demo data after any async DB calls settle
-    if(level !== 'extern') {
-        setTimeout(function() {
-    function _sb() { return window.sb; }
- fillDemoWidgets(level, stage); }, 500);
-    }
+    // Update nav user info
+    var nameEl = document.querySelector('[data-user-name]');
+    if(nameEl) nameEl.textContent = 'Sandra Engelmann';
+    var avatarEl = document.querySelector('.topnav-desktop img.rounded-full');
+    if(avatarEl) avatarEl.src = 'https://ui-avatars.com/api/?name=Sandra+Engelmann&background=EF7D00&color=fff';
+
+    showView('home');
+
+    // Fill home widgets after a tick
+    setTimeout(function() {
+        fillDemoWidgets(level, stage);
+    }, 300);
 }
+
+// ─── Demo Banner ──────────────────────────────────────────────────────────
 
 function injectDemoBanner(level, stage) {
     var existing = document.getElementById('demoBannerTop');
-    if (existing) existing.remove();
-    var labels = {'extern':'Extern · Phase 0','hq':'HQ-Modus'};
-    if(level==='standort') labels.standort = 'Standort · ' + (stage==='part1'?'Part 1':stage==='part2'?'Part 2':'Partner');
-    var label = labels[level] || level;
+    if(existing) existing.remove();
     var banner = document.createElement('div');
     banner.id = 'demoBannerTop';
     banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(90deg,#EF7D00,#F59E0B);color:white;text-align:center;padding:6px 16px;font-size:12px;font-weight:700;letter-spacing:0.5px;display:flex;align-items:center;justify-content:center;gap:12px;';
-    banner.innerHTML = '🎭 DEMO-MODUS: ' + label + ' <span style="font-weight:400;opacity:0.85">– Alle Daten sind fiktiv</span> <button onclick="exitDemoMode()" style="margin-left:12px;background:rgba(255,255,255,0.25);border:none;color:white;padding:2px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600">✕ Demo beenden</button>';
+    banner.innerHTML = '🎭 DEMO-MODUS: Standort · Partner'
+        + ' <span style="font-weight:400;opacity:0.85">– vit:bikes Grafrath · Alle Daten sind fiktiv</span>'
+        + ' <button onclick="exitDemoMode()" style="margin-left:12px;background:rgba(255,255,255,0.25);border:none;color:white;padding:2px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600">✕ Demo beenden</button>';
     document.body.prepend(banner);
-    // Shift main content down
     var app = document.getElementById('mainApp');
     if(app) app.style.marginTop = '34px';
 }
 
 function exitDemoMode() {
     DEMO_ACTIVE = false;
+    uninstallDemoOverrides();
     var banner = document.getElementById('demoBannerTop');
     if(banner) banner.remove();
     var app = document.getElementById('mainApp');
-    if(app) app.style.marginTop = '0';
-    document.getElementById('mainApp').style.display = 'none';
-    document.getElementById('loginScreen').style.display = 'flex';
+    if(app) { app.style.marginTop = '0'; app.style.display = 'none'; }
+    var ls = document.getElementById('loginScreen');
+    if(ls) ls.style.display = 'flex';
 }
 
-// ═══ DEMO DATA: Fill all dashboard widgets with realistic fake data ═══
+// ─── Module Overrides ─────────────────────────────────────────────────────
+// Intercept DB-loading functions and replace with fake data when DEMO_ACTIVE
+
+var _origOverrides = {};
+
+function installDemoOverrides() {
+    // ── Todos ──
+    _origOverrides.loadTodos = window.loadTodos;
+    window.loadTodos = function() {
+        if(!DEMO_ACTIVE) { return _origOverrides.loadTodos && _origOverrides.loadTodos(); }
+        return demoFillTodos();
+    };
+
+    // ── Kalender ──
+    _origOverrides.renderKalender = window.renderKalender;
+    window.renderKalender = function() {
+        if(!DEMO_ACTIVE) { return _origOverrides.renderKalender && _origOverrides.renderKalender(); }
+        return demoFillKalender();
+    };
+
+    // ── Support ──
+    _origOverrides.renderTickets = window.renderTickets;
+    window.renderTickets = function(filter) {
+        if(!DEMO_ACTIVE) { return _origOverrides.renderTickets && _origOverrides.renderTickets(filter); }
+        return demoFillSupport();
+    };
+
+    // ── Controlling / BWA ──
+    _origOverrides.renderBwaList = window.renderBwaList;
+    window.renderBwaList = function() {
+        if(!DEMO_ACTIVE) { return _origOverrides.renderBwaList && _origOverrides.renderBwaList(); }
+        return demoFillControlling();
+    };
+
+    // ── Verkauf / Pipeline ──
+    _origOverrides.loadWeekFromDb = window.loadWeekFromDb;
+    window.loadWeekFromDb = function() {
+        if(!DEMO_ACTIVE) { return _origOverrides.loadWeekFromDb && _origOverrides.loadWeekFromDb(); }
+        return demoFillVerkaufWeek();
+    };
+
+    // ── Allgemein ──
+    _origOverrides.loadAllgemeinData = window.loadAllgemeinData;
+    window.loadAllgemeinData = function() {
+        if(!DEMO_ACTIVE) { return _origOverrides.loadAllgemeinData && _origOverrides.loadAllgemeinData(); }
+        return demoFillAllgemein();
+    };
+
+    // ── Billing ──
+    _origOverrides.loadStandortInvoices = window.loadStandortInvoices;
+    _origOverrides.loadStandortPayments = window.loadStandortPayments;
+    _origOverrides.loadStandortStrategy = window.loadStandortStrategy;
+    _origOverrides.loadStandortCosts = window.loadStandortCosts;
+    window.loadStandortInvoices = function() { if(DEMO_ACTIVE) { fillDemoBilling(); return; } if(_origOverrides.loadStandortInvoices) return _origOverrides.loadStandortInvoices(); };
+    window.loadStandortPayments = function() { if(DEMO_ACTIVE) { fillDemoBilling(); return; } if(_origOverrides.loadStandortPayments) return _origOverrides.loadStandortPayments(); };
+    window.loadStandortStrategy = function() { if(DEMO_ACTIVE) { fillDemoBilling(); return; } if(_origOverrides.loadStandortStrategy) return _origOverrides.loadStandortStrategy(); };
+    window.loadStandortCosts = function() { if(DEMO_ACTIVE) { fillDemoBilling(); return; } if(_origOverrides.loadStandortCosts) return _origOverrides.loadStandortCosts(); };
+}
+
+function uninstallDemoOverrides() {
+    for(var k in _origOverrides) {
+        if(_origOverrides[k]) window[k] = _origOverrides[k];
+    }
+    _origOverrides = {};
+}
+
+// ─── HOME DASHBOARD WIDGETS ───────────────────────────────────────────────
+
 function fillDemoWidgets(level, stage) {
-    // Demo widget data removed for production - widgets load real data from DB via loadWidget* functions
-    setTimeout(function() {
-        var wt2 = document.getElementById('welcomeText');
-        if(wt2) wt2.textContent = level === 'hq' ? 'Willkommen im HQ! 👋' : 'Willkommen! 👋';
-    }, 200);
+    // Welcome
+    var wt = document.getElementById('welcomeText');
+    if(wt) wt.textContent = 'Willkommen zurück, Sandra! 👋';
+
+    // KW
+    var now = new Date();
+    var kw = getKWStr(now);
+
+    // Pipeline Widget
+    var wp = document.getElementById('wPipelineContent');
+    if(wp) {
+        var offene = DEMO_LEADS.filter(function(l){ return ['beratung','angebot','kaufbereit'].indexOf(l.status) >= 0; });
+        var volumen = offene.reduce(function(a,l){ return a+l.wert; }, 0);
+        wp.innerHTML = '<div class="flex items-center justify-between mb-3">'
+            + '<span class="text-2xl font-bold text-gray-800">' + offene.length + '</span>'
+            + '<span class="text-xs text-gray-400">offene Leads</span></div>'
+            + '<div class="text-sm text-gray-600 mb-3">Gesamtvolumen: <strong class="text-vit-orange">' + eur(volumen) + '</strong></div>'
+            + '<div class="space-y-1">'
+            + demoLeadRow('🟡 Beratung', offene.filter(function(l){ return l.status==='beratung'; }).length)
+            + demoLeadRow('🟠 Angebot', offene.filter(function(l){ return l.status==='angebot'; }).length)
+            + demoLeadRow('🟢 Kaufbereit', offene.filter(function(l){ return l.status==='kaufbereit'; }).length)
+            + '</div>';
+        var badge = document.getElementById('wPipelineBadge');
+        if(badge) badge.textContent = offene.length;
+    }
+
+    // Erfolge Widget (Verkauft diese KW)
+    var ws = document.getElementById('wSuccessContent');
+    var wkw = document.getElementById('wSuccessKW');
+    if(wkw) wkw.textContent = kw;
+    if(ws) {
+        ws.innerHTML = '<div class="grid grid-cols-2 gap-3 mb-3">'
+            + demoStatCard('Verkauft', '4', 'Fahrräder', 'text-green-600')
+            + demoStatCard('Beratungen', '11', 'Gespräche', 'text-blue-600')
+            + '</div>'
+            + '<div class="text-xs text-gray-500">Top-Verkauf: <strong>Katrin S.</strong> – Cube Hybrid 5.299 €</div>';
+    }
+
+    // Termine Widget
+    var wt2 = document.getElementById('wTermineContent');
+    var wtc = document.getElementById('wTermineCount');
+    var heute = DEMO_TERMINE.filter(function(t){ return t.datum === '2026-03-04'; });
+    if(wtc) wtc.textContent = heute.length;
+    if(wt2) {
+        var h = heute.length > 0
+            ? heute.map(function(t){ return '<div class="flex items-center gap-2 text-sm py-1"><span class="text-gray-400 w-12 shrink-0">' + t.uhrzeit + '</span><span class="truncate">' + t.titel + '</span></div>'; }).join('')
+            : '<p class="text-sm text-gray-400">Keine Termine heute</p>';
+        wt2.innerHTML = h
+            + '<div class="mt-2 pt-2 border-t border-gray-100 text-xs text-gray-400">+'
+            + (DEMO_TERMINE.length - heute.length) + ' weitere diese Woche</div>';
+    }
+
+    // Aufgaben Widget
+    var wa = document.getElementById('wAufgabenContent');
+    var wac = document.getElementById('wAufgabenCount');
+    var offeneTodos = DEMO_TODOS.filter(function(t){ return t.status !== 'erledigt'; });
+    var faellig = DEMO_TODOS.filter(function(t){ return t.status !== 'erledigt' && t.prio === 'hoch'; });
+    if(wac) wac.textContent = offeneTodos.length;
+    if(wa) {
+        wa.innerHTML = '<div class="space-y-1.5">'
+            + faellig.slice(0,3).map(function(t){
+                return '<div class="flex items-start gap-2 text-sm">'
+                    + '<span class="text-red-400 mt-0.5">●</span>'
+                    + '<span class="truncate">' + t.title + '</span></div>';
+            }).join('')
+            + (offeneTodos.length > 3 ? '<div class="text-xs text-gray-400 mt-1">+' + (offeneTodos.length - 3) + ' weitere offen</div>' : '')
+            + '</div>';
+    }
+
+    // Controlling Widget
+    var wc = document.getElementById('wControllingContent');
+    if(wc) {
+        var bwa = DEMO_BWA.feb;
+        var plan = DEMO_BWA.plan;
+        var umsatzPct = Math.round(bwa.umsatzerloese / plan.umsatzerloese * 100);
+        wc.innerHTML = '<div class="mb-2"><div class="flex justify-between text-xs text-gray-500 mb-1">'
+            + '<span>Umsatz Feb</span><span>' + eur(bwa.umsatzerloese) + ' / ' + eur(plan.umsatzerloese) + '</span></div>'
+            + '<div class="w-full bg-gray-100 rounded-full h-2"><div class="bg-vit-orange h-2 rounded-full" style="width:' + umsatzPct + '%"></div></div>'
+            + '<div class="text-xs text-gray-400 mt-0.5">' + umsatzPct + '% des Monatsplans</div></div>'
+            + '<div class="grid grid-cols-2 gap-2 mt-3">'
+            + demoStatCard('Rohertrag', Math.round(bwa.rohertrag / bwa.umsatzerloese * 100) + '%', 'Marge', 'text-blue-600')
+            + demoStatCard('Ergebnis', eur(bwa.ergebnis_vor_steuern), 'Gewinn', 'text-green-600')
+            + '</div>';
+    }
+
+    // Support Widget
+    var wsu = document.getElementById('wSupportContent');
+    var wsuc = document.getElementById('wSupportCount');
+    var offeneTickets = DEMO_TICKETS.filter(function(t){ return t.status !== 'geloest'; });
+    if(wsuc) wsuc.textContent = offeneTickets.length;
+    if(wsu) {
+        wsu.innerHTML = offeneTickets.length > 0
+            ? '<div class="space-y-1.5">' + offeneTickets.map(function(t){
+                return '<div class="text-sm"><span class="text-' + (t.prio==='hoch'?'red':'amber') + '-400">●</span> '
+                    + '<span class="truncate">' + t.betreff + '</span></div>';
+            }).join('') + '</div>'
+            : '<div class="text-sm text-green-600">✓ Keine offenen Tickets</div>';
+    }
+
+    // Marketing Widget
+    var wm = document.getElementById('wMarketingContent');
+    if(wm) {
+        wm.innerHTML = '<div class="space-y-2">'
+            + '<div class="flex justify-between text-sm"><span class="text-gray-600">Google Ads Feb</span><span class="font-semibold">1.284 Klicks</span></div>'
+            + '<div class="flex justify-between text-sm"><span class="text-gray-600">Meta Ads Feb</span><span class="font-semibold">2.108 Reichweite</span></div>'
+            + '<div class="flex justify-between text-sm"><span class="text-gray-600">Leads aus Werbung</span><span class="font-semibold text-green-600">12 Leads</span></div>'
+            + '<div class="flex justify-between text-sm"><span class="text-gray-600">Kosten pro Lead</span><span class="font-semibold">127 €</span></div>'
+            + '</div>';
+    }
+
+    // Team Widget
+    var wte = document.getElementById('wTeamContent');
+    if(wte) {
+        wte.innerHTML = '<div class="space-y-1.5">'
+            + DEMO_MITARBEITER.map(function(m){
+                return '<div class="flex items-center gap-2 text-sm">'
+                    + '<span class="w-7 h-7 rounded-full bg-orange-100 text-vit-orange text-xs font-bold flex items-center justify-center shrink-0">'
+                    + m.name.split(' ').map(function(n){ return n[0]; }).join('') + '</span>'
+                    + '<div><div class="font-medium leading-tight">' + m.name + '</div>'
+                    + '<div class="text-xs text-gray-400">' + m.rolle + '</div></div></div>';
+            }).join('')
+            + '</div>';
+    }
+
+    // Wissen Widget
+    var ww = document.getElementById('wWissenContent');
+    if(ww) {
+        ww.innerHTML = '<div class="space-y-2">'
+            + '<div class="p-2 rounded-lg bg-orange-50 text-sm"><div class="font-semibold text-gray-700">Frühjahrs-Schulung 2026</div><div class="text-xs text-gray-400">E-Bike Beratung · 45 Min.</div></div>'
+            + '<div class="p-2 rounded-lg bg-blue-50 text-sm"><div class="font-semibold text-gray-700">Verkaufstraining Modul 3</div><div class="text-xs text-gray-400">Einwandbehandlung · 30 Min.</div></div>'
+            + '<div class="p-2 rounded-lg bg-gray-50 text-sm"><div class="font-semibold text-gray-700">Handbuch: Reklamationen</div><div class="text-xs text-gray-400">Referenz · 8 Seiten</div></div>'
+            + '</div>';
+    }
+
+    // Nachrichten Widget
+    var wn = document.getElementById('wNachrichtenContent');
+    if(wn) {
+        wn.innerHTML = '<div class="space-y-2">'
+            + '<div class="text-sm p-2 rounded-lg bg-blue-50"><div class="font-semibold">HQ → Grafrath</div><div class="text-xs text-gray-500">Frühjahrs-Kampagne startet 10. März</div></div>'
+            + '<div class="text-sm p-2 rounded-lg bg-gray-50"><div class="font-semibold">System</div><div class="text-xs text-gray-500">BWA Januar wurde vom HQ geprüft ✓</div></div>'
+            + '</div>';
+    }
+
+    // Jahresziele (Allgemein view – homeJahresziele*)
+    var hjc = document.getElementById('homeJahreszieleContent');
+    if(hjc) demoFillJahresziele(hjc);
+
+    // Monatsfokus
+    var hmm = document.getElementById('homeMonatsfokusMonat');
+    var hmc = document.getElementById('homeMonatsfokusContent');
+    if(hmm) hmm.textContent = 'März 2026';
+    if(hmc) hmc.innerHTML = '<div class="text-sm text-gray-700">Frühjahrs-Aktion starten – Fokus auf E-Bike Beratung und Reifenservice. '
+        + 'Ziel: 20 Beratungsgespräche, 8 Verkäufe.</div>';
 }
 
-// ═══ DEMO: HQ-specific data ═══
-function fillDemoHQ() {
-    // HQ demo data removed for production
+// ─── Module Fill Functions ─────────────────────────────────────────────────
+
+function demoFillTodos() {
+    var el = document.getElementById('todosView');
+    if(!el) return;
+    var offen = DEMO_TODOS.filter(function(t){ return t.status !== 'erledigt'; });
+    var erledigt = DEMO_TODOS.filter(function(t){ return t.status === 'erledigt'; });
+
+    var h = '<div class="p-4 max-w-2xl mx-auto">'
+        + '<div class="flex items-center justify-between mb-4">'
+        + '<h2 class="text-lg font-bold text-gray-800">Aufgaben</h2>'
+        + '<span class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">' + offen.length + ' offen</span></div>'
+        + '<div class="space-y-2 mb-6">';
+
+    offen.forEach(function(t) {
+        var prioColor = t.prio === 'hoch' ? 'red' : t.prio === 'mittel' ? 'amber' : 'gray';
+        h += '<div class="vit-card p-3 flex items-center gap-3">'
+            + '<div class="w-5 h-5 rounded border-2 border-gray-300 shrink-0"></div>'
+            + '<div class="flex-1 min-w-0">'
+            + '<div class="text-sm font-medium text-gray-800">' + t.title + '</div>'
+            + '<div class="text-xs text-gray-400">Fällig: ' + fmtDate(t.due_date) + '</div></div>'
+            + '<span class="text-xs px-2 py-0.5 rounded-full bg-' + prioColor + '-100 text-' + prioColor + '-700 font-semibold shrink-0">' + t.prio + '</span>'
+            + '</div>';
+    });
+
+    h += '</div><div class="text-xs text-gray-400 uppercase font-semibold mb-2">Erledigt</div><div class="space-y-2">';
+    erledigt.forEach(function(t) {
+        h += '<div class="vit-card p-3 flex items-center gap-3 opacity-60">'
+            + '<div class="w-5 h-5 rounded border-2 border-green-400 bg-green-400 shrink-0 flex items-center justify-center">'
+            + '<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>'
+            + '<div class="text-sm text-gray-500 line-through">' + t.title + '</div>'
+            + '</div>';
+    });
+
+    h += '</div></div>';
+
+    // Try to find the list container inside the view
+    var list = el.querySelector('#todosList') || el.querySelector('.todos-list') || el.querySelector('[id*="todo"]');
+    if(list) { list.innerHTML = h; } else { el.innerHTML = h; }
 }
 
-// ═══ DEMO: Override billing module for demo mode ═══
+function demoFillKalender() {
+    // Inject upcoming termine into calendar display
+    var el = document.getElementById('kalenderView');
+    if(!el) return;
+    var listEl = el.querySelector('#kalTerminListe') || el.querySelector('.kal-list');
+    if(!listEl) return;
+    var h = '<div class="p-4"><h3 class="font-semibold text-gray-700 mb-3">Kommende Termine</h3><div class="space-y-2">';
+    DEMO_TERMINE.forEach(function(t) {
+        var typColor = t.typ === 'etermin' ? 'green' : t.typ === 'werkstatt' ? 'blue' : 'gray';
+        h += '<div class="vit-card p-3 flex items-center gap-3">'
+            + '<div class="text-center w-12 shrink-0"><div class="text-xs text-gray-400">' + fmtDayMonth(t.datum) + '</div>'
+            + '<div class="text-sm font-bold text-gray-800">' + t.uhrzeit + '</div></div>'
+            + '<div class="flex-1 min-w-0"><div class="font-medium text-sm">' + t.titel + '</div>'
+            + '<span class="text-xs px-2 py-0.5 rounded-full bg-' + typColor + '-100 text-' + typColor + '-700">' + t.typ + '</span></div>'
+            + '<div class="text-xs text-gray-400 shrink-0">' + t.dauer + ' Min</div></div>';
+    });
+    h += '</div></div>';
+    listEl.innerHTML = h;
+}
+
+function demoFillSupport() {
+    var el = document.getElementById('ticketList') || document.getElementById('supportView');
+    if(!el) return;
+    var h = '<div class="space-y-3">';
+    DEMO_TICKETS.forEach(function(t) {
+        var statusColor = t.status === 'offen' ? 'red' : t.status === 'in_bearbeitung' ? 'amber' : 'green';
+        var statusLabel = t.status === 'offen' ? 'Offen' : t.status === 'in_bearbeitung' ? 'In Bearbeitung' : 'Gelöst';
+        h += '<div class="vit-card p-4">'
+            + '<div class="flex items-start justify-between mb-2">'
+            + '<span class="font-semibold text-gray-800 text-sm">' + t.betreff + '</span>'
+            + '<span class="text-xs px-2 py-0.5 rounded-full bg-' + statusColor + '-100 text-' + statusColor + '-700 font-semibold ml-2 shrink-0">' + statusLabel + '</span></div>'
+            + '<div class="text-xs text-gray-400 mb-2">' + fmtDate(t.erstellt) + ' · Priorität: ' + t.prio + '</div>'
+            + '<div class="text-sm text-gray-600 bg-gray-50 rounded p-2">' + t.letzte_antwort + '</div></div>';
+    });
+    h += '</div>';
+    el.innerHTML = h;
+}
+
+function demoFillControlling() {
+    var bwaList = document.getElementById('bwaFileList');
+    if(bwaList) {
+        bwaList.innerHTML = ''
+            + demoBwaListItem('Februar 2026', DEMO_BWA.feb.umsatzerloese, true)
+            + demoBwaListItem('Januar 2026', DEMO_BWA.jan.umsatzerloese, false);
+    }
+    // Auto-show Feb detail
+    setTimeout(function() { demoShowBwaDetail('feb'); }, 200);
+}
+
+function demoShowBwaDetail(monat) {
+    var body = document.getElementById('bwaDetailBody');
+    if(!body) return;
+    var bwa = DEMO_BWA[monat];
+    var plan = DEMO_BWA.plan;
+    var rows = [
+        { label:'Umsatzerlöse', ist:bwa.umsatzerloese, plan:plan.umsatzerloese, bold:true, big:true, highlight:'bg-orange-50' },
+        { label:'Wareneinsatz', ist:bwa.wareneinsatz },
+        { label:'Rohertrag', ist:bwa.rohertrag, plan:plan.rohertrag, bold:true },
+        { sep:true },
+        { label:'Personalkosten', ist:bwa.personalkosten },
+        { label:'Raumkosten', ist:bwa.raumkosten },
+        { label:'Werbekosten', ist:bwa.werbekosten },
+        { label:'Abschreibungen', ist:bwa.abschreibungen },
+        { label:'Sonstige Kosten', ist:bwa.sonstige_kosten },
+        { label:'Gesamtkosten', ist:bwa.gesamtkosten, bold:true },
+        { sep:true },
+        { label:'Betriebsergebnis', ist:bwa.betriebsergebnis, plan:plan.betriebsergebnis, bold:true, highlight:'bg-blue-50' },
+        { label:'Zinsaufwand', ist:bwa.zinsaufwand },
+        { label:'Ergebnis vor Steuern', ist:bwa.ergebnis_vor_steuern, plan:plan.ergebnis_vor_steuern, bold:true, big:true, highlight:'bg-green-50' }
+    ];
+    var h = '';
+    rows.forEach(function(r) {
+        if(r.sep) { h += '<tr><td colspan="5" class="py-1 border-t border-gray-200"></td></tr>'; return; }
+        var abw = (r.plan && r.ist) ? r.ist - r.plan : null;
+        var abwCls = abw === null ? '' : abw > 0 ? 'text-green-600' : 'text-red-600';
+        var cls = (r.highlight || '') + (r.bold ? '' : '');
+        h += '<tr class="' + cls + '">';
+        h += '<td class="py-2 px-3 ' + (r.bold ? 'font-bold' : '') + ' ' + (r.big ? 'text-base' : 'text-sm') + '">' + r.label + '</td>';
+        h += '<td class="text-right py-2 px-3 font-mono ' + (r.bold ? 'font-bold' : '') + ' ' + eurCls(r.ist) + '">' + eur(r.ist) + '</td>';
+        h += '<td class="text-right py-2 px-3 font-mono text-gray-400">' + (r.plan ? eur(r.plan) : '—') + '</td>';
+        h += '<td class="text-right py-2 px-3 font-mono ' + abwCls + '">' + (abw !== null ? (abw > 0 ? '+' : '') + eur(abw) : '—') + '</td>';
+        h += '<td class="text-right py-2 px-3 text-gray-300">—</td>';
+        h += '</tr>';
+    });
+    body.innerHTML = h;
+}
+
+function demoFillVerkaufWeek() {
+    var el = document.getElementById('verkaufWeekView') || document.getElementById('wochenzielContent');
+    if(!el) return;
+    el.innerHTML = '<div class="p-4">'
+        + '<div class="grid grid-cols-2 gap-4 mb-6">'
+        + demoStatCard('Beratungen KW9', '11', 'Gespräche', 'text-blue-600')
+        + demoStatCard('Verkauft KW9', '4', 'Fahrräder', 'text-green-600')
+        + '</div>'
+        + '<div class="vit-card p-4">'
+        + '<h3 class="font-semibold text-gray-700 mb-3">Aktuelle Woche – Übersicht</h3>'
+        + '<div class="space-y-2">'
+        + demoVerkaufRow('Mo 02.03', 3, 2)
+        + demoVerkaufRow('Di 03.03', 2, 1)
+        + demoVerkaufRow('Mi 04.03', 4, 0)
+        + demoVerkaufRow('Do 05.03', 1, 1)
+        + demoVerkaufRow('Fr 06.03', 1, 0)
+        + '</div></div></div>';
+}
+
+function demoFillAllgemein() {
+    var el = document.getElementById('allgemeinView');
+    if(!el) return;
+    var jzContent = el.querySelector('#homeJahreszieleContent') || el.querySelector('[id*="jahresziel"]');
+    if(jzContent) demoFillJahresziele(jzContent);
+}
+
+function demoFillJahresziele(el) {
+    if(!el) return;
+    var ziele = [
+        { titel:'Jahresumsatz', ziel:'2.400.000 €', ist:'309.000 €', pct:13, farbe:'orange' },
+        { titel:'Neue Stammkunden', ziel:'80 Kunden', ist:'12 Kunden', pct:15, farbe:'blue' },
+        { titel:'Workshop-Umsatz', ziel:'48.000 €', ist:'5.800 €', pct:12, farbe:'green' },
+        { titel:'Mitarbeiterzufriedenheit', ziel:'≥ 4,5 / 5', ist:'4,3 / 5', pct:86, farbe:'purple' }
+    ];
+    el.innerHTML = '<div class="space-y-3">'
+        + ziele.map(function(z) {
+            return '<div class="vit-card p-4"><div class="flex justify-between items-center mb-1">'
+                + '<span class="font-semibold text-gray-800 text-sm">' + z.titel + '</span>'
+                + '<span class="text-xs text-gray-500">' + z.ist + ' / ' + z.ziel + '</span></div>'
+                + '<div class="w-full bg-gray-100 rounded-full h-2"><div class="h-2 rounded-full bg-' + z.farbe + '-400" style="width:' + z.pct + '%"></div></div>'
+                + '<div class="text-xs text-gray-400 mt-0.5">' + z.pct + '%</div></div>';
+        }).join('')
+        + '</div>';
+}
+
+// ─── Billing Demo (unverändert + erweitert) ───────────────────────────────
+
 function fillDemoBilling() {
-    // Invoices tab
     var inv = document.getElementById('stBillingInvoicesList');
     if(inv) inv.innerHTML = ''
-        +'<div class="vit-card p-4 cursor-pointer hover:shadow-md transition-shadow" onclick="showDemoInvoiceDetail(1)">'
-        +'<div class="flex items-center justify-between mb-2"><div class="flex items-center space-x-2">'
-        +'<span class="font-mono text-xs text-gray-400">VB-2026-001</span>'
-        +'<span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-semibold">Bezahlt</span>'
-        +'</div><span class="font-bold text-lg">2.618,00 €</span></div>'
-        +'<p class="text-sm text-gray-600">Zeitraum: 2026-01-01 bis 2026-01-31</p>'
-        +'</div>'
-        +'<div class="vit-card p-4 cursor-pointer hover:shadow-md transition-shadow" onclick="showDemoInvoiceDetail(2)">'
-        +'<div class="flex items-center justify-between mb-2"><div class="flex items-center space-x-2">'
-        +'<span class="font-mono text-xs text-gray-400">VB-2026-002</span>'
-        +'<span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold">Finalisiert</span>'
-        +'</div><span class="font-bold text-lg">2.754,20 €</span></div>'
-        +'<p class="text-sm text-gray-600">Zeitraum: 2026-02-01 bis 2026-02-28</p>'
-        +'</div>'
-        +'<div class="vit-card p-4 cursor-pointer hover:shadow-md transition-shadow">'
-        +'<div class="flex items-center justify-between mb-2"><div class="flex items-center space-x-2">'
-        +'<span class="font-mono text-xs text-gray-400">VB-2025-012</span>'
-        +'<span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-semibold">Bezahlt</span>'
-        +'</div><span class="font-bold text-lg">2.489,50 €</span></div>'
-        +'<p class="text-sm text-gray-600">Zeitraum: 2025-12-01 bis 2025-12-31</p>'
-        +'</div>';
+        + '<div class="vit-card p-4 cursor-pointer hover:shadow-md transition-shadow" onclick="showDemoInvoiceDetail(1)">'
+        + '<div class="flex items-center justify-between mb-2"><div class="flex items-center space-x-2">'
+        + '<span class="font-mono text-xs text-gray-400">VB-2026-001</span>'
+        + '<span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-semibold">Bezahlt</span>'
+        + '</div><span class="font-bold text-lg">2.618,00 €</span></div>'
+        + '<p class="text-sm text-gray-600">Zeitraum: 2026-01-01 bis 2026-01-31</p></div>'
+        + '<div class="vit-card p-4 cursor-pointer hover:shadow-md transition-shadow" onclick="showDemoInvoiceDetail(2)">'
+        + '<div class="flex items-center justify-between mb-2"><div class="flex items-center space-x-2">'
+        + '<span class="font-mono text-xs text-gray-400">VB-2026-002</span>'
+        + '<span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold">Finalisiert</span>'
+        + '</div><span class="font-bold text-lg">2.754,20 €</span></div>'
+        + '<p class="text-sm text-gray-600">Zeitraum: 2026-02-01 bis 2026-02-28</p></div>';
 
-    // Payments tab
     var pay = document.getElementById('stBillingPaymentsContent');
     if(pay) pay.innerHTML = '<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">'
-        +'<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Bezahlt</p><p class="text-2xl font-bold text-green-600">28.734,00 €</p><p class="text-xs text-gray-400">11 Rechnungen</p></div>'
-        +'<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Offen</p><p class="text-2xl font-bold text-amber-500">2.754,20 €</p><p class="text-xs text-gray-400">1 Rechnung</p></div>'
-        +'<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Gesamt 2026</p><p class="text-2xl font-bold text-gray-800">5.372,20 €</p><p class="text-xs text-gray-400">2 Rechnungen</p></div>'
-        +'</div>'
-        +'<div class="vit-card p-6"><h3 class="font-bold text-sm mb-4">📋 Zahlungsverlauf</h3><div class="space-y-3">'
-        +'<div class="flex items-center gap-4 p-3 rounded-lg bg-amber-50 border border-amber-100"><div class="text-xl">📬</div><div class="flex-1"><div class="flex items-center justify-between"><span class="font-mono text-xs font-semibold text-gray-700">VB-2026-002</span><span class="font-bold text-amber-700">2.754,20 €</span></div><div class="flex items-center justify-between mt-1"><span class="text-xs text-gray-500">2026-02-01 – 2026-02-28</span><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Finalisiert</span></div></div></div>'
-        +'<div class="flex items-center gap-4 p-3 rounded-lg bg-green-50 border border-green-100"><div class="text-xl">✅</div><div class="flex-1"><div class="flex items-center justify-between"><span class="font-mono text-xs font-semibold text-gray-700">VB-2026-001</span><span class="font-bold text-green-700">2.618,00 €</span></div><div class="flex items-center justify-between mt-1"><span class="text-xs text-gray-500">2026-01-01 – 2026-01-31</span><span class="text-xs text-green-600">Bezahlt am 05.02.2026</span></div></div></div>'
-        +'<div class="flex items-center gap-4 p-3 rounded-lg bg-green-50 border border-green-100"><div class="text-xl">✅</div><div class="flex-1"><div class="flex items-center justify-between"><span class="font-mono text-xs font-semibold text-gray-700">VB-2025-012</span><span class="font-bold text-green-700">2.489,50 €</span></div><div class="flex items-center justify-between mt-1"><span class="text-xs text-gray-500">2025-12-01 – 2025-12-31</span><span class="text-xs text-green-600">Bezahlt am 08.01.2026</span></div></div></div>'
-        +'</div></div>';
+        + '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Bezahlt</p><p class="text-2xl font-bold text-green-600">28.734,00 €</p><p class="text-xs text-gray-400">11 Rechnungen</p></div>'
+        + '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Offen</p><p class="text-2xl font-bold text-amber-500">2.754,20 €</p><p class="text-xs text-gray-400">1 Rechnung</p></div>'
+        + '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400 uppercase font-semibold">Gesamt 2026</p><p class="text-2xl font-bold text-gray-800">5.372,20 €</p><p class="text-xs text-gray-400">2 Rechnungen</p></div>'
+        + '</div>';
 
-    // Strategy tab
     var str = document.getElementById('stBillingStrategyContent');
     if(str) str.innerHTML = '<div class="vit-card p-6">'
-        +'<div class="flex items-center justify-between mb-4"><h3 class="font-bold text-lg">Jahresstrategie 2026</h3><span class="text-sm font-semibold">🔒 Gesperrt (verbindlich)</span></div>'
-        +'<div class="grid grid-cols-2 gap-4">'
-        +'<div class="p-4 bg-orange-50 rounded-lg"><p class="text-xs text-gray-400">Plan-Umsatz</p><p class="text-xl font-bold text-vit-orange">2.400.000 €</p><p class="text-xs text-gray-500">200.000 € / Monat</p></div>'
-        +'<div class="p-4 bg-blue-50 rounded-lg"><p class="text-xs text-gray-400">Marketing-Budget</p><p class="text-xl font-bold text-blue-600">24.000 €</p><p class="text-xs text-gray-500">2.000 € / Monat</p></div>'
-        +'</div></div>';
+        + '<div class="flex items-center justify-between mb-4"><h3 class="font-bold text-lg">Jahresstrategie 2026</h3><span class="text-sm font-semibold">🔒 Gesperrt (verbindlich)</span></div>'
+        + '<div class="grid grid-cols-2 gap-4">'
+        + '<div class="p-4 bg-orange-50 rounded-lg"><p class="text-xs text-gray-400">Plan-Umsatz</p><p class="text-xl font-bold text-vit-orange">2.400.000 €</p><p class="text-xs text-gray-500">200.000 € / Monat</p></div>'
+        + '<div class="p-4 bg-blue-50 rounded-lg"><p class="text-xs text-gray-400">Marketing-Budget</p><p class="text-xl font-bold text-blue-600">24.000 €</p><p class="text-xs text-gray-500">2.000 € / Monat</p></div>'
+        + '</div></div>';
 
-    // Costs tab
     var costs = document.getElementById('stBillingCostsContent');
     if(costs) costs.innerHTML = '<div class="vit-card p-6">'
-        +'<h3 class="font-bold text-lg mb-4">Monatliche Kostenaufschlüsselung</h3>'
-        +'<table class="w-full text-sm"><tbody>'
-        +'<tr class="border-b"><td class="py-2">Grundgebühr</td><td class="py-2 text-right font-mono">800,00 €</td></tr>'
-        +'<tr class="border-b"><td class="py-2">Umsatzbeteiligung (80% × 2% × 200.000 €)</td><td class="py-2 text-right font-mono">3.200,00 €</td></tr>'
-        +'<tr class="border-b"><td class="py-2">Online-Werbebudget <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold">Durchlaufposten</span><br><span class="text-[10px] text-gray-400">24.000 € / 12 – fließt 100% in Google/Meta Ads</span></td><td class="py-2 text-right font-mono">2.000,00 €</td></tr>'
-        +'<tr class="border-b"><td class="py-2">Toolkosten (3 Nutzer)</td><td class="py-2 text-right font-mono">147,00 €</td></tr>'
-        +'<tr class="font-bold text-lg"><td class="pt-3">Netto gesamt</td><td class="pt-3 text-right font-mono text-vit-orange">6.147,00 €</td></tr>'
-        +'<tr><td class="py-1 text-gray-400">zzgl. 19% MwSt.</td><td class="py-1 text-right font-mono text-gray-400">1.167,93 €</td></tr>'
-        +'<tr class="font-bold text-xl border-t"><td class="pt-2">Brutto</td><td class="pt-2 text-right font-mono text-vit-orange">7.314,93 €</td></tr>'
-        +'</tbody></table>'
-        +'<h4 class="font-semibold mt-6 mb-2">🔧 Tool-Zuweisungen</h4><div class="space-y-1">'
-        +'<div class="flex justify-between text-sm"><span>Sandra E. – Portal Premium</span><span class="font-mono">49,00 €</span></div>'
-        +'<div class="flex justify-between text-sm"><span>Dirk G. – Portal Standard</span><span class="font-mono">49,00 €</span></div>'
-        +'<div class="flex justify-between text-sm"><span>Lisa M. – Portal Standard</span><span class="font-mono">49,00 €</span></div>'
-        +'</div></div>';
+        + '<h3 class="font-bold text-lg mb-4">Monatliche Kostenaufschlüsselung</h3>'
+        + '<table class="w-full text-sm"><tbody>'
+        + '<tr class="border-b"><td class="py-2">Grundgebühr</td><td class="py-2 text-right font-mono">800,00 €</td></tr>'
+        + '<tr class="border-b"><td class="py-2">Umsatzbeteiligung (80% × 2% × 200.000 €)</td><td class="py-2 text-right font-mono">3.200,00 €</td></tr>'
+        + '<tr class="border-b"><td class="py-2">Online-Werbebudget <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold">Durchlaufposten</span></td><td class="py-2 text-right font-mono">2.000,00 €</td></tr>'
+        + '<tr class="border-b"><td class="py-2">Toolkosten (3 Nutzer)</td><td class="py-2 text-right font-mono">147,00 €</td></tr>'
+        + '<tr class="font-bold text-lg"><td class="pt-3">Netto gesamt</td><td class="pt-3 text-right font-mono text-vit-orange">6.147,00 €</td></tr>'
+        + '</tbody></table></div>';
 }
 
 function showDemoInvoiceDetail(nr) {
@@ -182,9 +599,9 @@ function showDemoInvoiceDetail(nr) {
     if(!el) return;
     var invoices = {
         1: {num:'VB-2026-001',status:'Bezahlt',period:'01.01.2026 – 31.01.2026',netto:'2.200,00',mwst:'418,00',total:'2.618,00',
-            lines:[{desc:'Grundgebühr Januar 2026',amount:'800,00'},{desc:'Umsatzbeteiligung (80% × 2% × 187.420 €)',amount:'2.998,72',formula:'0.80 × 0.02 × 187.420 = 2.998,72'},{desc:'Marketing-Umlage',amount:'2.000,00'},{desc:'Abzgl. Quartalsverrechnung Q4/2025',amount:'-1.598,72'}]},
+            lines:[{desc:'Grundgebühr Januar 2026',amount:'800,00'},{desc:'Umsatzbeteiligung (80% × 2% × 168.420 €)',amount:'2.694,72'},{desc:'Marketing-Umlage',amount:'2.000,00'},{desc:'Abzgl. Quartalsverrechnung Q4/2025',amount:'-3.294,72'}]},
         2: {num:'VB-2026-002',status:'Finalisiert',period:'01.02.2026 – 28.02.2026',netto:'2.314,45',mwst:'439,75',total:'2.754,20',
-            lines:[{desc:'Grundgebühr Februar 2026',amount:'800,00'},{desc:'Umsatzbeteiligung Vorauszahlung',amount:'3.200,00',formula:'0.80 × 0.02 × 200.000 (Plan) = 3.200'},{desc:'Marketing-Umlage',amount:'2.000,00'},{desc:'Portal-Tools (3 Nutzer)',amount:'147,00'},{desc:'Abzgl. Frühbucher-Rabatt',amount:'-832,55'}]}
+            lines:[{desc:'Grundgebühr Februar 2026',amount:'800,00'},{desc:'Umsatzbeteiligung Vorauszahlung',amount:'3.200,00'},{desc:'Marketing-Umlage',amount:'2.000,00'},{desc:'Portal-Tools (3 Nutzer)',amount:'147,00'},{desc:'Abzgl. Frühbucher-Rabatt',amount:'-832,55'}]}
     };
     var inv = invoices[nr]; if(!inv) return;
     var h = '<button onclick="fillDemoBilling()" class="text-xs text-vit-orange hover:underline mb-4 inline-block">← Zurück zur Übersicht</button>';
@@ -194,9 +611,7 @@ function showDemoInvoiceDetail(nr) {
     h += '<p class="text-2xl font-bold text-vit-orange mt-2">'+inv.total+' €</p></div></div>';
     h += '<table class="w-full text-sm mb-4"><thead class="text-xs text-gray-500 uppercase border-b"><tr><th class="text-left py-2">Position</th><th class="text-right py-2">Betrag</th></tr></thead><tbody>';
     inv.lines.forEach(function(li){
-        h += '<tr class="border-b border-gray-100"><td class="py-2"><p class="font-medium">'+li.desc+'</p>';
-        if(li.formula) h += '<p class="text-xs text-blue-600 mt-0.5">📐 '+li.formula+'</p>';
-        h += '</td><td class="py-2 text-right font-semibold">'+li.amount+' €</td></tr>';
+        h += '<tr class="border-b border-gray-100"><td class="py-2">'+li.desc+'</td><td class="py-2 text-right font-semibold">'+li.amount+' €</td></tr>';
     });
     h += '<tr class="border-t-2"><td class="py-2 font-semibold">Netto</td><td class="py-2 text-right font-semibold">'+inv.netto+' €</td></tr>';
     h += '<tr><td class="py-1 text-gray-500 text-xs">MwSt (19%)</td><td class="py-1 text-right text-xs text-gray-500">'+inv.mwst+' €</td></tr>';
@@ -205,17 +620,8 @@ function showDemoInvoiceDetail(nr) {
     el.innerHTML = h;
 }
 
-// Override billing load functions to use demo data when in demo mode
-var _origLoadStInvoices = window.loadStandortInvoices;
-var _origLoadStPayments = window.loadStandortPayments;
-var _origLoadStStrategy = window.loadStandortStrategy;
-var _origLoadStCosts = window.loadStandortCosts;
-window.loadStandortInvoices = function() { if(DEMO_ACTIVE) { fillDemoBilling(); return; } if(_origLoadStInvoices) return _origLoadStInvoices(); };
-window.loadStandortPayments = function() { if(DEMO_ACTIVE) { fillDemoBilling(); return; } if(_origLoadStPayments) return _origLoadStPayments(); };
-window.loadStandortStrategy = function() { if(DEMO_ACTIVE) { fillDemoBilling(); return; } if(_origLoadStStrategy) return _origLoadStStrategy(); };
-window.loadStandortCosts = function() { if(DEMO_ACTIVE) { fillDemoBilling(); return; } if(_origLoadStCosts) return _origLoadStCosts(); };
+// ─── HQ Billing Overrides (bleiben erhalten) ──────────────────────────────
 
-// ═══ DEMO: HQ Billing Overrides ═══
 var _origLoadBillingOverview = window.loadBillingOverview;
 var _origLoadAllInvoices = window.loadAllInvoices;
 var _origLoadStrategies = window.loadStrategies;
@@ -224,8 +630,7 @@ var _origLoadToolPackages = window.loadToolPackages;
 
 window.loadBillingOverview = function() {
     if(!DEMO_ACTIVE) { if(_origLoadBillingOverview) return _origLoadBillingOverview(); return; }
-    initBillingMonthSelect();
-    // Use timeout to win race against async DB calls from local initBillingModule
+    if(typeof initBillingMonthSelect === 'function') initBillingMonthSelect();
     setTimeout(fillDemoHQBillingOverview, 150);
 };
 window.loadAllInvoices = function() { if(!DEMO_ACTIVE) { if(_origLoadAllInvoices) return _origLoadAllInvoices(); return; } fillDemoHQInvoices(); };
@@ -234,137 +639,168 @@ window.loadProducts = function() { if(!DEMO_ACTIVE) { if(_origLoadProducts) retu
 window.loadToolPackages = function() { if(!DEMO_ACTIVE) { if(_origLoadToolPackages) return _origLoadToolPackages(); return; } fillDemoHQTools(); };
 
 function fillDemoHQBillingOverview() {
-    // KPIs
     var kpis = document.getElementById('billingKpis');
     if(kpis) kpis.innerHTML = ''
-        +'<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">Drafts</p><p class="text-2xl font-bold text-blue-600">8</p></div>'
-        +'<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">Finalisiert</p><p class="text-2xl font-bold text-amber-500">5</p></div>'
-        +'<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">Bezahlt</p><p class="text-2xl font-bold text-green-600">10</p></div>'
-        +'<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">Gesamtvolumen</p><p class="text-2xl font-bold text-vit-orange">56.830 €</p></div>';
-    // Standort table
+        + '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">Drafts</p><p class="text-2xl font-bold text-blue-600">8</p></div>'
+        + '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">Finalisiert</p><p class="text-2xl font-bold text-amber-500">5</p></div>'
+        + '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">Bezahlt</p><p class="text-2xl font-bold text-green-600">10</p></div>'
+        + '<div class="vit-card p-4 text-center"><p class="text-xs text-gray-400">Gesamtvolumen</p><p class="text-2xl font-bold text-vit-orange">56.830 €</p></div>';
     var tbl = document.getElementById('billingOverviewTable');
     if(!tbl) return;
     var rows = [
-        {name:'Grafrath',strat:'✅ 2.4M',sepa:'✅',total:'2.754,20',status:'finalized',color:'amber'},
-        {name:'Berlin-Brandenburg',strat:'✅ 3.8M',sepa:'✅',total:'4.289,00',status:'paid',color:'green'},
-        {name:'Witten',strat:'✅ 1.8M',sepa:'❌',total:'1.987,60',status:'draft',color:'blue'},
-        {name:'Rottweil',strat:'✅ 2.0M',sepa:'✅',total:'2.156,40',status:'paid',color:'green'},
-        {name:'Hamburg',strat:'✅ 3.2M',sepa:'✅',total:'3.845,20',status:'paid',color:'green'},
-        {name:'München BAL',strat:'✅ 2.8M',sepa:'✅',total:'3.124,80',status:'finalized',color:'amber'},
-        {name:'Holzkirchen',strat:'⏳ Ausstehend',sepa:'✅',total:'—',status:'draft',color:'blue'},
-        {name:'Lohmar',strat:'✅ 2.1M',sepa:'✅',total:'2.398,00',status:'paid',color:'green'},
-        {name:'Münster',strat:'✅ 2.5M',sepa:'✅',total:'2.812,50',status:'finalized',color:'amber'},
-        {name:'Reutlingen',strat:'✅ 1.9M',sepa:'✅',total:'2.067,30',status:'draft',color:'blue'}
+        {name:'Grafrath',strat:'✅ 2.4M',sepa:'✅',total:'2.754,20',status:'finalized'},
+        {name:'Berlin-Brandenburg',strat:'✅ 3.8M',sepa:'✅',total:'4.289,00',status:'paid'},
+        {name:'Witten',strat:'✅ 1.8M',sepa:'❌',total:'1.987,60',status:'draft'},
+        {name:'Rottweil',strat:'✅ 2.0M',sepa:'✅',total:'2.156,40',status:'paid'},
+        {name:'Hamburg',strat:'✅ 3.2M',sepa:'✅',total:'3.845,20',status:'paid'},
+        {name:'München BAL',strat:'✅ 2.8M',sepa:'✅',total:'3.124,80',status:'finalized'},
+        {name:'Holzkirchen',strat:'⏳ Ausstehend',sepa:'✅',total:'—',status:'draft'},
+        {name:'Lohmar',strat:'✅ 2.1M',sepa:'✅',total:'2.398,00',status:'paid'}
     ];
-    var statusLabels = {draft:'📝 Draft',finalized:'📬 Finalisiert',paid:'✅ Bezahlt'};
-    var statusColors = {draft:'bg-blue-100 text-blue-700',finalized:'bg-amber-100 text-amber-700',paid:'bg-green-100 text-green-700'};
-    var h = '';
-    rows.forEach(function(r){
-        h += '<tr class="border-t hover:bg-gray-50">';
-        h += '<td class="p-3 font-semibold">vit:bikes '+r.name+'</td>';
-        h += '<td class="p-3 text-center text-xs">'+r.strat+'</td>';
-        h += '<td class="p-3 text-center">'+r.sepa+'</td>';
-        h += '<td class="p-3 text-right font-mono font-semibold">'+r.total+' €</td>';
-        h += '<td class="p-3 text-center"><span class="text-xs px-2 py-0.5 rounded-full '+statusColors[r.status]+' font-semibold">'+statusLabels[r.status]+'</span></td>';
-        h += '<td class="p-3 text-center"><button class="text-xs text-vit-orange hover:underline">Details →</button></td>';
-        h += '</tr>';
-    });
-    tbl.innerHTML = h;
+    var sL = {draft:'📝 Draft',finalized:'📬 Finalisiert',paid:'✅ Bezahlt'};
+    var sC = {draft:'bg-blue-100 text-blue-700',finalized:'bg-amber-100 text-amber-700',paid:'bg-green-100 text-green-700'};
+    tbl.innerHTML = rows.map(function(r){
+        return '<tr class="border-t hover:bg-gray-50">'
+            + '<td class="p-3 font-semibold">vit:bikes '+r.name+'</td>'
+            + '<td class="p-3 text-center text-xs">'+r.strat+'</td>'
+            + '<td class="p-3 text-center">'+r.sepa+'</td>'
+            + '<td class="p-3 text-right font-mono font-semibold">'+r.total+' €</td>'
+            + '<td class="p-3 text-center"><span class="text-xs px-2 py-0.5 rounded-full '+sC[r.status]+' font-semibold">'+sL[r.status]+'</span></td>'
+            + '<td class="p-3 text-center"><button class="text-xs text-vit-orange hover:underline">Details →</button></td>'
+            + '</tr>';
+    }).join('');
 }
 
 function fillDemoHQInvoices() {
-    var el = document.getElementById('billingInvoicesList');
-    if(!el) return;
+    var el = document.getElementById('billingInvoicesList'); if(!el) return;
     var invoices = [
-        {num:'VB-2026-023',standort:'Berlin-Brandenburg',period:'Feb 2026',total:'4.289,00',status:'paid',statusLabel:'Bezahlt',sc:'green'},
-        {num:'VB-2026-022',standort:'Hamburg',period:'Feb 2026',total:'3.845,20',status:'paid',statusLabel:'Bezahlt',sc:'green'},
-        {num:'VB-2026-021',standort:'Grafrath',period:'Feb 2026',total:'2.754,20',status:'finalized',statusLabel:'Finalisiert',sc:'amber'},
-        {num:'VB-2026-020',standort:'München BAL',period:'Feb 2026',total:'3.124,80',status:'finalized',statusLabel:'Finalisiert',sc:'amber'},
-        {num:'VB-2026-019',standort:'Münster',period:'Feb 2026',total:'2.812,50',status:'finalized',statusLabel:'Finalisiert',sc:'amber'},
-        {num:'VB-2026-018',standort:'Rottweil',period:'Feb 2026',total:'2.156,40',status:'paid',statusLabel:'Bezahlt',sc:'green'},
-        {num:'VB-2026-017',standort:'Lohmar',period:'Feb 2026',total:'2.398,00',status:'paid',statusLabel:'Bezahlt',sc:'green'},
-        {num:'VB-2026-016',standort:'Witten',period:'Feb 2026',total:'1.987,60',status:'draft',statusLabel:'Draft',sc:'blue'},
-        {num:'VB-2026-015',standort:'Reutlingen',period:'Feb 2026',total:'2.067,30',status:'draft',statusLabel:'Draft',sc:'blue'},
-        {num:'VB-2026-014',standort:'Holzkirchen',period:'Feb 2026',total:'1.845,00',status:'draft',statusLabel:'Draft',sc:'blue'}
+        {num:'VB-2026-023',standort:'Berlin-Brandenburg',period:'Feb 2026',total:'4.289,00',sc:'green',sl:'Bezahlt'},
+        {num:'VB-2026-022',standort:'Hamburg',period:'Feb 2026',total:'3.845,20',sc:'green',sl:'Bezahlt'},
+        {num:'VB-2026-021',standort:'Grafrath',period:'Feb 2026',total:'2.754,20',sc:'amber',sl:'Finalisiert'},
+        {num:'VB-2026-020',standort:'München BAL',period:'Feb 2026',total:'3.124,80',sc:'amber',sl:'Finalisiert'},
+        {num:'VB-2026-019',standort:'Münster',period:'Feb 2026',total:'2.812,50',sc:'amber',sl:'Finalisiert'}
     ];
     el.innerHTML = '<div class="space-y-2">'+invoices.map(function(inv){
-        return '<div class="vit-card p-4 hover:shadow-md transition cursor-pointer">'
-            +'<div class="flex items-center justify-between mb-1">'
-            +'<div class="flex items-center space-x-3"><span class="font-mono text-xs text-gray-400">'+inv.num+'</span>'
-            +'<span class="text-xs px-2 py-0.5 rounded-full bg-'+inv.sc+'-100 text-'+inv.sc+'-700 font-semibold">'+inv.statusLabel+'</span></div>'
-            +'<span class="font-bold text-lg">'+inv.total+' €</span></div>'
-            +'<p class="text-sm text-gray-500">'+inv.standort+' · '+inv.period+'</p></div>';
+        return '<div class="vit-card p-4 hover:shadow-md cursor-pointer">'
+            + '<div class="flex items-center justify-between mb-1"><div class="flex items-center space-x-3"><span class="font-mono text-xs text-gray-400">'+inv.num+'</span>'
+            + '<span class="text-xs px-2 py-0.5 rounded-full bg-'+inv.sc+'-100 text-'+inv.sc+'-700 font-semibold">'+inv.sl+'</span></div>'
+            + '<span class="font-bold text-lg">'+inv.total+' €</span></div>'
+            + '<p class="text-sm text-gray-500">'+inv.standort+' · '+inv.period+'</p></div>';
     }).join('')+'</div>';
 }
 
 function fillDemoHQStrategies() {
-    var el = document.getElementById('billingStrategiesList');
-    if(!el) return;
+    var el = document.getElementById('billingStrategiesList'); if(!el) return;
     var strats = [
-        {name:'Grafrath',revenue:'2.400.000',marketing:'24.000',status:'locked',v:2},
-        {name:'Berlin-Brandenburg',revenue:'3.800.000',marketing:'36.000',status:'locked',v:1},
-        {name:'Hamburg',revenue:'3.200.000',marketing:'30.000',status:'locked',v:1},
-        {name:'München BAL',revenue:'2.800.000',marketing:'28.000',status:'approved',v:1},
-        {name:'Rottweil',revenue:'2.000.000',marketing:'18.000',status:'locked',v:3},
-        {name:'Lohmar',revenue:'2.100.000',marketing:'20.000',status:'locked',v:1},
-        {name:'Witten',revenue:'1.800.000',marketing:'16.000',status:'locked',v:2},
-        {name:'Holzkirchen',revenue:'—',marketing:'—',status:'missing',v:0}
+        {name:'Grafrath',revenue:'2.400.000',marketing:'24.000',status:'locked'},
+        {name:'Berlin-Brandenburg',revenue:'3.800.000',marketing:'36.000',status:'locked'},
+        {name:'Hamburg',revenue:'3.200.000',marketing:'30.000',status:'locked'},
+        {name:'Holzkirchen',revenue:'—',marketing:'—',status:'missing'}
     ];
     el.innerHTML = strats.map(function(s){
-        var badge = s.status==='locked'?'🔒 Gesperrt':'<span class="text-amber-600">'+(s.status==='approved'?'✅ Genehmigt':'⏳ Ausstehend')+'</span>';
+        var badge = s.status==='locked'?'🔒 Gesperrt':'<span class="text-amber-600">⏳ Ausstehend</span>';
         return '<div class="vit-card p-4"><div class="flex items-center justify-between">'
-            +'<div><p class="font-semibold">vit:bikes '+s.name+'</p><p class="text-xs text-gray-400">v'+s.v+' · 2026</p></div>'
-            +'<div class="text-right"><p class="text-sm">'+badge+'</p></div></div>'
-            +(s.revenue!=='—'?'<div class="grid grid-cols-2 gap-4 mt-3"><div class="p-2 bg-orange-50 rounded"><p class="text-[10px] text-gray-400">Plan-Umsatz</p><p class="text-sm font-bold text-vit-orange">'+s.revenue+' €</p></div>'
-            +'<div class="p-2 bg-blue-50 rounded"><p class="text-[10px] text-gray-400">Marketing</p><p class="text-sm font-bold text-blue-600">'+s.marketing+' €</p></div></div>':'')
-            +'</div>';
+            + '<div><p class="font-semibold">vit:bikes '+s.name+'</p></div>'
+            + '<p class="text-sm">'+badge+'</p></div>'
+            + (s.revenue!=='—'?'<div class="grid grid-cols-2 gap-4 mt-3">'
+            + '<div class="p-2 bg-orange-50 rounded"><p class="text-[10px] text-gray-400">Plan-Umsatz</p><p class="text-sm font-bold text-vit-orange">'+s.revenue+' €</p></div>'
+            + '<div class="p-2 bg-blue-50 rounded"><p class="text-[10px] text-gray-400">Marketing</p><p class="text-sm font-bold text-blue-600">'+s.marketing+' €</p></div></div>':'')
+            + '</div>';
     }).join('');
 }
 
 function fillDemoHQProducts() {
-    var el = document.getElementById('billingProductsList');
-    if(!el) return;
+    var el = document.getElementById('billingProductsList'); if(!el) return;
     var products = [
-        {name:'Grundgebühr',key:'grundgebuehr',price:'800,00',type:'fix',desc:'Monatliche Franchise-Grundgebühr'},
-        {name:'Umsatzbeteiligung',key:'umsatzbeteiligung',price:'2%',type:'variabel',desc:'Revenue Share auf Basis Plan-Umsatz (80% Vorauszahlung)'},
-        {name:'Online-Werbebudget (Durchlaufposten)',key:'marketing_umlage',price:'variabel',type:'variabel',desc:'100% Werbebudget für Google/Meta Ads – kein Honorar an vit:bikes'},
-        {name:'Portal Premium',key:'portal_premium',price:'49,00',type:'pro Nutzer',desc:'Vollzugang cockpit inkl. KI-Features'},
-        {name:'Portal Standard',key:'portal_standard',price:'49,00',type:'pro Nutzer',desc:'Standard-Zugang cockpit'},
-        {name:'Werkstatt-Software',key:'werkstatt_sw',price:'29,00',type:'pro Nutzer',desc:'Werkstatt-Management & Auftragsverwaltung'}
+        {name:'Grundgebühr',key:'grundgebuehr',price:'800,00',type:'fix'},
+        {name:'Umsatzbeteiligung',key:'umsatzbeteiligung',price:'2%',type:'variabel'},
+        {name:'Online-Werbebudget',key:'marketing_umlage',price:'variabel',type:'Durchlaufposten'},
+        {name:'Portal Premium',key:'portal_premium',price:'49,00',type:'pro Nutzer'}
     ];
-    el.innerHTML = '<div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr><th class="text-left p-3">Produkt</th><th class="p-3">Key</th><th class="text-right p-3">Preis</th><th class="p-3">Typ</th><th class="p-3">Beschreibung</th></tr></thead><tbody>'
-        +products.map(function(p){
+    el.innerHTML = '<div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr><th class="text-left p-3">Produkt</th><th class="p-3">Key</th><th class="text-right p-3">Preis</th><th class="p-3">Typ</th></tr></thead><tbody>'
+        + products.map(function(p){
             return '<tr class="border-t"><td class="p-3 font-semibold">'+p.name+'</td><td class="p-3 font-mono text-xs text-gray-400">'+p.key+'</td>'
-                +'<td class="p-3 text-right font-mono font-semibold">'+p.price+' €</td><td class="p-3 text-center"><span class="text-xs px-2 py-0.5 rounded-full bg-gray-100">'+p.type+'</span></td>'
-                +'<td class="p-3 text-xs text-gray-500">'+p.desc+'</td></tr>';
+                + '<td class="p-3 text-right font-mono font-semibold">'+p.price+' €</td><td class="p-3 text-center"><span class="text-xs px-2 py-0.5 rounded-full bg-gray-100">'+p.type+'</span></td></tr>';
         }).join('')+'</tbody></table></div>';
 }
 
 function fillDemoHQTools() {
-    var el = document.getElementById('billingToolsList');
-    if(!el) return;
-    el.innerHTML = '<div class="vit-card p-4 mb-4"><h3 class="font-semibold mb-3">📦 Tool-Pakete</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4">'
-        +'<div class="p-4 border rounded-lg"><p class="font-bold">Portal Premium</p><p class="text-2xl font-bold text-vit-orange mt-1">49 €<span class="text-xs text-gray-400 font-normal">/Monat</span></p><p class="text-xs text-gray-500 mt-2">Vollzugang, KI-BWA, Sales-Training</p></div>'
-        +'<div class="p-4 border rounded-lg"><p class="font-bold">Portal Standard</p><p class="text-2xl font-bold text-blue-600 mt-1">49 €<span class="text-xs text-gray-400 font-normal">/Monat</span></p><p class="text-xs text-gray-500 mt-2">Basis-Features, Dashboard, CRM</p></div>'
-        +'<div class="p-4 border rounded-lg"><p class="font-bold">Werkstatt-Software</p><p class="text-2xl font-bold text-green-600 mt-1">29 €<span class="text-xs text-gray-400 font-normal">/Monat</span></p><p class="text-xs text-gray-500 mt-2">Aufträge, Lager, Zeiterfassung</p></div>'
-        +'</div></div>'
-        +'<div class="vit-card p-4"><h3 class="font-semibold mb-3">👥 Aktive Zuweisungen</h3>'
-        +'<table class="w-full text-sm"><thead class="text-xs text-gray-500 uppercase bg-gray-50"><tr><th class="text-left p-3">Nutzer</th><th class="p-3">Standort</th><th class="p-3">Paket</th><th class="text-right p-3">Kosten</th><th class="p-3">Seit</th></tr></thead><tbody>'
-        +'<tr class="border-t"><td class="p-3">Sandra Engelmann</td><td class="p-3">Grafrath</td><td class="p-3">Portal Premium</td><td class="p-3 text-right font-semibold">49,00 €</td><td class="p-3 text-xs text-gray-400">01.01.2026</td></tr>'
-        +'<tr class="border-t"><td class="p-3">Dirk Gromann</td><td class="p-3">Grafrath</td><td class="p-3">Portal Standard</td><td class="p-3 text-right font-semibold">49,00 €</td><td class="p-3 text-xs text-gray-400">01.01.2026</td></tr>'
-        +'<tr class="border-t"><td class="p-3">Patrick Henkel</td><td class="p-3">Berlin-Brandenburg</td><td class="p-3">Portal Premium</td><td class="p-3 text-right font-semibold">49,00 €</td><td class="p-3 text-xs text-gray-400">15.01.2026</td></tr>'
-        +'<tr class="border-t"><td class="p-3">Thorsten Guhr</td><td class="p-3">Witten</td><td class="p-3">Portal Premium</td><td class="p-3 text-right font-semibold">49,00 €</td><td class="p-3 text-xs text-gray-400">01.02.2026</td></tr>'
-        +'<tr class="border-t"><td class="p-3">Volker Schipke</td><td class="p-3">Rottweil</td><td class="p-3">Portal Standard</td><td class="p-3 text-right font-semibold">49,00 €</td><td class="p-3 text-xs text-gray-400">15.12.2025</td></tr>'
-        +'</tbody></table></div>';
+    var el = document.getElementById('billingToolsList'); if(!el) return;
+    el.innerHTML = '<div class="vit-card p-4"><h3 class="font-semibold mb-3">📦 Tool-Pakete</h3>'
+        + '<div class="grid grid-cols-1 md:grid-cols-3 gap-4">'
+        + '<div class="p-4 border rounded-lg"><p class="font-bold">Portal Premium</p><p class="text-2xl font-bold text-vit-orange mt-1">49 €<span class="text-xs text-gray-400">/Monat</span></p></div>'
+        + '<div class="p-4 border rounded-lg"><p class="font-bold">Portal Standard</p><p class="text-2xl font-bold text-blue-600 mt-1">49 €<span class="text-xs text-gray-400">/Monat</span></p></div>'
+        + '<div class="p-4 border rounded-lg"><p class="font-bold">Werkstatt-Software</p><p class="text-2xl font-bold text-green-600 mt-1">29 €<span class="text-xs text-gray-400">/Monat</span></p></div>'
+        + '</div></div>';
 }
 
-// [prod] log removed
+// ─── Utility Helpers ──────────────────────────────────────────────────────
 
-// ═══ HQ Feedback moved to views/hq-feedback.js ═══
+function eur(v) {
+    if(v === null || v === undefined) return '—';
+    var n = Math.abs(Math.round(v));
+    var s = n.toLocaleString('de-DE') + ' €';
+    return v < 0 ? '−' + s : s;
+}
 
-// Exports
-export { switchDemoAccount, injectDemoBanner, exitDemoMode, fillDemoWidgets };
+function eurCls(v) {
+    if(!v) return '';
+    return v >= 0 ? 'text-green-700' : 'text-red-600';
+}
+
+function fmtDate(d) {
+    if(!d) return '';
+    var parts = d.split('-');
+    return parts[2] + '.' + parts[1] + '.' + parts[0];
+}
+
+function fmtDayMonth(d) {
+    if(!d) return '';
+    var parts = d.split('-');
+    return parts[2] + '.' + parts[1] + '.';
+}
+
+function getKWStr(d) {
+    var onejan = new Date(d.getFullYear(), 0, 1);
+    var kw = Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+    return 'KW ' + kw;
+}
+
+function demoLeadRow(label, count) {
+    return '<div class="flex justify-between text-xs py-0.5">'
+        + '<span class="text-gray-600">' + label + '</span>'
+        + '<span class="font-semibold">' + count + '</span></div>';
+}
+
+function demoStatCard(label, value, sub, cls) {
+    return '<div class="vit-card p-3 text-center">'
+        + '<div class="text-xs text-gray-400 mb-1">' + label + '</div>'
+        + '<div class="text-xl font-bold ' + cls + '">' + value + '</div>'
+        + '<div class="text-xs text-gray-400">' + sub + '</div></div>';
+}
+
+function demoVerkaufRow(tag, beratungen, verkauft) {
+    return '<div class="flex items-center gap-3 text-sm py-1.5 border-b border-gray-50">'
+        + '<span class="w-20 text-gray-500 shrink-0">' + tag + '</span>'
+        + '<span class="text-blue-600 font-medium">' + beratungen + ' Berat.</span>'
+        + '<span class="text-green-600 font-medium ml-auto">' + verkauft + ' Verk.</span></div>';
+}
+
+function demoBwaListItem(label, umsatz, active) {
+    return '<div class="p-3 rounded-lg cursor-pointer ' + (active ? 'bg-orange-50 border border-vit-orange' : 'hover:bg-gray-50') + '" onclick="demoShowBwaDetail(\'' + (label.includes('Feb') ? 'feb' : 'jan') + '\')">'
+        + '<div class="font-semibold text-sm">' + label + '</div>'
+        + '<div class="text-xs text-gray-500">' + eur(umsatz) + ' Umsatz</div></div>';
+}
+
+// ─── fillDemoHQ (legacy – not used for standort demo) ────────────────────
+function fillDemoHQ() {}
+
+// ─── Exports ─────────────────────────────────────────────────────────────
+export { switchDemoAccount, injectDemoBanner, exitDemoMode, fillDemoWidgets, fillDemoBilling, showDemoInvoiceDetail };
 window.switchDemoAccount = switchDemoAccount;
 window.injectDemoBanner = injectDemoBanner;
 window.exitDemoMode = exitDemoMode;
 window.fillDemoWidgets = fillDemoWidgets;
+window.fillDemoBilling = fillDemoBilling;
+window.showDemoInvoiceDetail = showDemoInvoiceDetail;
+window.demoShowBwaDetail = demoShowBwaDetail;
