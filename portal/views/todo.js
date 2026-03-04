@@ -73,6 +73,20 @@ function _showToast(m, type) { return (window.showToast || function(msg){console
 // ═══════════════════════════════════════════════════════════════
 
 export async function loadTodos() {
+    // ── Demo Mode: inject fake todos ──
+    if (window.DEMO_ACTIVE && window.DEMO_DATA && window.DEMO_DATA.todos) {
+        todoState.todos = window.DEMO_DATA.todos;
+        todoState.sections = [{ id: 'demo-s1', name: 'Eingang', sort_order: 0 }, { id: 'demo-s2', name: 'Diese Woche', sort_order: 1 }];
+        todoState.labels = [];
+        todoState.teamMembers = window.DEMO_DATA.mitarbeiter || [];
+        todoState.templates = [];
+        var sbI = document.getElementById('todoSbInitials');
+        var sbS = document.getElementById('todoSbStore');
+        if (sbI) sbI.textContent = 'SE';
+        if (sbS) sbS.textContent = 'vit:bikes Grafrath';
+        todoRender();
+        return;
+    }
     try {
         var sid = _sbProfile() ? _sbProfile().standort_id : null;
         var isHQ = _sbProfile() && _sbProfile().is_hq;
