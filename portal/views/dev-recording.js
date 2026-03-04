@@ -65,6 +65,19 @@ export function setDevInputType(typ) {
     var screenArea = document.getElementById('devScreenRecordArea');
     if(audioArea) { if(typ === 'audio') audioArea.classList.remove('hidden'); else audioArea.classList.add('hidden'); }
     if(screenArea) { if(typ === 'video') screenArea.classList.remove('hidden'); else screenArea.classList.add('hidden'); }
+
+    // Datei-Upload-Bereich
+    var dateiArea = document.getElementById('devDateiArea');
+    if(dateiArea) {
+        if(typ === 'datei') {
+            dateiArea.classList.remove('hidden');
+            // Auto-open file picker
+            var fi = document.getElementById('devFileInput');
+            if(fi) setTimeout(function(){ fi.click(); }, 50);
+        } else {
+            dateiArea.classList.add('hidden');
+        }
+    }
 }
 
 // ---- AUDIO RECORDING ----
