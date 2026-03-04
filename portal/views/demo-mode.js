@@ -80,6 +80,55 @@ async function switchDemoAccount(level, stage) {
     if(ma) ma.style.display = 'block';
 
     DEMO_ACTIVE = true;
+
+    // ── Expose DEMO_DATA globally for module-level checks ──
+    window.DEMO_DATA = {
+        todos: [
+            { id:'dt-1', title:'BWA Februar 2026 hochladen', erledigt:false, prio_sort:1, prio:'hoch', faellig_am:'2026-03-08', kategorie:'finanzen', parent_id:null, section_id:'demo-s1', notiz:'', standort_id:'dd000000-0000-0000-0000-000000000099' },
+            { id:'dt-2', title:'Vororder-Bestätigung an HQ schicken', erledigt:false, prio_sort:1, prio:'hoch', faellig_am:'2026-03-05', kategorie:'einkauf', parent_id:null, section_id:'demo-s1', notiz:'', standort_id:'dd000000-0000-0000-0000-000000000099' },
+            { id:'dt-3', title:'Quartals-Review Termin buchen', erledigt:false, prio_sort:2, prio:'mittel', faellig_am:'2026-03-15', kategorie:'planung', parent_id:null, section_id:'demo-s1', notiz:'', standort_id:'dd000000-0000-0000-0000-000000000099' },
+            { id:'dt-4', title:'Social Media Post: Frühjahrs-Aktion', erledigt:false, prio_sort:2, prio:'mittel', faellig_am:'2026-03-03', kategorie:'marketing', parent_id:null, section_id:'demo-s2', notiz:'', standort_id:'dd000000-0000-0000-0000-000000000099' },
+            { id:'dt-5', title:'Werkstatt-Kapazität April planen', erledigt:false, prio_sort:2, prio:'mittel', faellig_am:'2026-03-20', kategorie:'werkstatt', parent_id:null, section_id:'demo-s2', notiz:'', standort_id:'dd000000-0000-0000-0000-000000000099' },
+            { id:'dt-6', title:'Reifenservice-Kampagne vorbereiten', erledigt:false, prio_sort:3, prio:'mittel', faellig_am:'2026-03-10', kategorie:'marketing', parent_id:null, section_id:'demo-s2', notiz:'', standort_id:'dd000000-0000-0000-0000-000000000099' },
+            { id:'dt-7', title:'Mitarbeiter-Gespräch Dirk G.', erledigt:true, prio_sort:1, prio:'hoch', faellig_am:'2026-02-28', kategorie:'personal', parent_id:null, section_id:'demo-s1', notiz:'', standort_id:'dd000000-0000-0000-0000-000000000099' },
+            { id:'dt-8', title:'Schaufenster-Deko Frühjahr', erledigt:true, prio_sort:3, prio:'niedrig', faellig_am:'2026-02-25', kategorie:'marketing', parent_id:null, section_id:'demo-s1', notiz:'', standort_id:'dd000000-0000-0000-0000-000000000099' }
+        ],
+        termine: [
+            { id:'kt-1', titel:'Probe-Ride: Michael Hofer', datum:'2026-03-01', uhrzeit:'10:00', typ:'etermin', dauer:60 },
+            { id:'kt-2', titel:'Beratung E-Bike Pendler', datum:'2026-03-01', uhrzeit:'14:30', typ:'etermin', dauer:45 },
+            { id:'kt-3', titel:'Werkstatt: Inspektion Kramer', datum:'2026-03-03', uhrzeit:'09:00', typ:'werkstatt', dauer:90 },
+            { id:'kt-4', titel:'Jahres-Gespräch mit Lieferant', datum:'2026-03-04', uhrzeit:'11:00', typ:'intern', dauer:60 },
+            { id:'kt-5', titel:'Team-Meeting März', datum:'2026-03-05', uhrzeit:'08:30', typ:'intern', dauer:45 },
+            { id:'kt-6', titel:'Beratung Familienräder', datum:'2026-03-06', uhrzeit:'16:00', typ:'etermin', dauer:60 },
+            { id:'kt-7', titel:'Frühjahrs-Aktion Aufbau', datum:'2026-03-07', uhrzeit:'08:00', typ:'intern', dauer:120 },
+            { id:'kt-8', titel:'Probe-Ride: Familie Sommer', datum:'2026-03-08', uhrzeit:'10:30', typ:'etermin', dauer:90 }
+        ],
+        tickets: [
+            { id:'st-1', betreff:'Cockpit Login-Problem bei Mitarbeiterin', status:'offen', prio:'hoch', erstellt:'27.02.2026', letzte_antwort:'Wird geprüft – HQ meldet sich morgen' },
+            { id:'st-2', betreff:'Frage zu BWA-Benchmark: Rohertrag', status:'in_bearbeitung', prio:'mittel', erstellt:'20.02.2026', letzte_antwort:'Benchmark gilt für Q1-Durchschnitt Süd' },
+            { id:'st-3', betreff:'Vororder-Bestätigung kommt nicht an', status:'geloest', prio:'hoch', erstellt:'10.02.2026', letzte_antwort:'E-Mail-Adresse im System korrigiert ✓' }
+        ],
+        bwa: [
+            { monat:2, jahr:2026, umsatz_fmt:'142.500 €', ergebnis_fmt:'+22.370 €',
+              umsatzerloese:142500, wareneinsatz:-85500, rohertrag:57000,
+              personalkosten:-21200, raumkosten:-4800, werbekosten:-3200,
+              abschreibungen:-1900, sonstige_kosten:-2850, gesamtkosten:-33950,
+              betriebsergebnis:23050, zinsaufwand:-680, ergebnis_vor_steuern:22370,
+              plan_umsatz:200000, plan_rohertrag:76000, plan_ergebnis:30000 },
+            { monat:1, jahr:2026, umsatz_fmt:'168.420 €', ergebnis_fmt:'+32.588 €',
+              umsatzerloese:168420, wareneinsatz:-101052, rohertrag:67368,
+              personalkosten:-21200, raumkosten:-4800, werbekosten:-2800,
+              abschreibungen:-1900, sonstige_kosten:-3400, gesamtkosten:-34100,
+              betriebsergebnis:33268, zinsaufwand:-680, ergebnis_vor_steuern:32588,
+              plan_umsatz:200000, plan_rohertrag:76000, plan_ergebnis:30000 }
+        ],
+        mitarbeiter: [
+            { id:'dm-1', name:'Sandra Engelmann' },
+            { id:'dm-2', name:'Dirk Gromann' },
+            { id:'dm-3', name:'Lisa Maier' },
+            { id:'dm-4', name:'Jonas Weber' }
+        ]
+    };
     SESSION.account_level = level;
     SESSION.stage = stage || 'partner';
     SESSION.stage_status = 'active';
@@ -466,11 +515,13 @@ function demoFillControlling() {
     setTimeout(function() { demoShowBwaDetail('feb'); }, 200);
 }
 
-function demoShowBwaDetail(monat) {
+function demoShowBwaDetail(idx) {
     var body = document.getElementById('bwaDetailBody');
     if(!body) return;
-    var bwa = DEMO_BWA[monat];
-    var plan = DEMO_BWA.plan;
+    var bwaArr = window.DEMO_DATA ? window.DEMO_DATA.bwa : null;
+    if(!bwaArr || !bwaArr[idx]) return;
+    var bwa = bwaArr[idx];
+    var plan = { umsatzerloese: bwa.plan_umsatz, rohertrag: bwa.plan_rohertrag, betriebsergebnis: 0, ergebnis_vor_steuern: bwa.plan_ergebnis };
     var rows = [
         { label:'Umsatzerlöse', ist:bwa.umsatzerloese, plan:plan.umsatzerloese, bold:true, big:true, highlight:'bg-orange-50' },
         { label:'Wareneinsatz', ist:bwa.wareneinsatz },
