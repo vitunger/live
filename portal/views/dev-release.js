@@ -131,6 +131,10 @@ export async function devSaveRelease() {
         });
         if(resp.error) throw resp.error;
         _showToast('📣 Release-Note veröffentlicht!', 'success');
+        // Benachrichtigung für alle User erstellen
+        if(typeof window.createReleaseNotification === 'function') {
+            window.createReleaseNotification(titel, version);
+        }
         // Formular leeren und schließen
         document.getElementById('relTitel').value = '';
         document.getElementById('relInhalt').value = '';
