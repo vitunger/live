@@ -13,6 +13,38 @@ function isLeadTrigger(a, n) {
   return LEAD_TRIGGERS.some(t => c.includes(t));
 }
 
+// Map eTermin calendar ID/name to portal user via etermin_kalender_mapping
+async function mapKalenderToVerkaufer(standortId, calendarId, calendarName) {
+  if (!standortId || (!calendarId && !calendarName)) return null;
+  try {
+    let rows = null;
+    if (calendarId) {
+      rows = await sbGet("etermin_kalender_mapping",
+        "standort_id=eq." + standortId + "&etermin_kalender_id=eq." + encodeURIComponent(calendarId));
+    }
+    if ((!rows || rows.length === 0) && calendarName) {
+      rows = await sbGet("etermin_kalender_mapping",
+        "standort_id=eq." + standortId + "&etermin_kalender_name=eq." + encodeURIComponent(calendarName));
+    }
+    if (rows && rows.length > 0) {
+      return rows[0].user_id || null;
+    }
+    // Auto-insert unknown calendar so HQ can map it later
+    if (calendarName) {
+      try {
+        await sbInsert("etermin_kalender_mapping", {
+          standort_id: standortId,
+          etermin_kalender_id: calendarId,
+          etermin_kalender_name: calendarName,
+          user_id: null
+        });
+        console.log("[etermin-wh] new unmapped calendar:", calendarName, "id:", calendarId);
+      } catch(e) { /* ignore duplicate */ }
+    }
+  } catch(e) { console.warn("[etermin-wh] kalender mapping lookup failed:", e); }
+  return null;
+}
+
 // Map eTermin service names to portal termin types via DB mapping
 async function mapTerminTyp(standortId, answers, notes) {
   if (!standortId || !answers) return "sonstig";
@@ -89,6 +121,7 @@ module.exports = async function(req, res) {
     const answers = (b.SELECTEDANSWERS || "").trim();
     const town = (b.TOWN || "").trim();
     const cal = b.CALENDARNAME || "";
+    const calId = b.CALENDARID ? String(b.CALENDARID) : null;
     const startL = parseDT(b.STARTDATETIME);
     const endL = parseDT(b.ENDDATETIME);
     const startU = parseDT(b.STARTDATETIMEUTC);
@@ -109,6 +142,7 @@ module.exports = async function(req, res) {
     // CREATE / MODIFY
     const name = (fn + " " + ln).trim();
     const mappedTyp = await mapTerminTyp(stdId, answers, notes);
+    const zugewiesenAn = await mapKalenderToVerkaufer(stdId, calId, cal||null);
     const payload = {
       etermin_uid: uid,
       titel: (name || "eTermin Buchung") + (answers ? " – " + answers : ""),
@@ -116,7 +150,10 @@ module.exports = async function(req, res) {
       typ: mappedTyp, ganztaegig: false, quelle: "etermin",
       beschreibung: [answers&&"Terminart: "+answers, notes&&"Notizen: "+notes, email&&"E-Mail: "+email, phone&&"Tel: "+phone, town&&"Ort: "+town].filter(Boolean).join("\n"),
       ort: cal || null, standort_id: stdId,
-      kontakt_name: name || null, kontakt_email: email || null, kontakt_telefon: phone || null
+      kontakt_name: name || null, kontakt_email: email || null, kontakt_telefon: phone || null,
+      etermin_kalender_id: calId,
+      etermin_kalender_name: cal || null,
+      zugewiesen_an: zugewiesenAn
     };
 
     // Check if exists
@@ -162,3 +199,4 @@ module.exports = async function(req, res) {
     return res.status(500).json({ error: e.message });
   }
 };
+
