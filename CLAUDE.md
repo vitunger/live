@@ -662,3 +662,9 @@ security: RLS/JWT/Auth-Verbesserung
 - **Fix:** `kalender.js` – OR-Filter für HQ: `ist_netzwerk_termin=true OR erstellt_von=myId`
 - **Fix:** `saveKalTermin` setzt `ist_netzwerk_termin: true` automatisch wenn HQ-User Termin anlegt
 - **Logik:** Standort-User sehen nur eigenen Standort; HQ sieht Netzwerk-Termine + eigene
+
+## Bugfix (04.03.2026) – Todos HQ-Filter
+- **Bug:** HQ-User sah alle Todos aller Standorte (kein Filter in `loadTodos`)
+- **Fix:** `todo.js` – todos: OR-Filter `erstellt_von=myId OR zugewiesen_an=myId`
+- **Fix:** todo_sections: nur globale Sections (`standort_id IS NULL`)
+- **Fix:** todo_labels + users: kein Standort-Filter für HQ
