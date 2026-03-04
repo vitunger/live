@@ -147,7 +147,7 @@ export async function renderSchnittstellen() {
     renderPlannedGrid();
     renderPartnerCards();
     loadEterminOverview();
-    if (_sbProfile() && _sbProfile().is_hq) loadEterminMapping();
+    if (_sbProfile() && _sbProfile().is_hq) { loadEterminMapping(); loadKalenderVerkauferMapping(); }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -341,6 +341,7 @@ function renderConnectorCard(id) {
         // Terminart-Mapping (HQ only)
         if (_sbProfile() && _sbProfile().is_hq) {
             body += '<div id="connEterminMapping" class="mt-4"></div>';
+            body += '<div id="connEterminKalenderMapping" class="mt-4"></div>';
         }
         // Setup-Anleitung (klappbar)
         body += '<details class="mt-3 border border-gray-200 rounded-lg"><summary class="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50 transition">📖 Anleitung: eTermin API-Keys &amp; Webhook einrichten</summary>'
@@ -860,6 +861,176 @@ window.addEterminMapping = async function() {
     loadEterminMapping();
 };
 
+// ─── Kalender → Verkäufer Mapping ───────────────────────────────────────────
+
+async function loadKalenderVerkauferMapping() {
+    var el = document.getElementById('connEterminKalenderMapping');
+    if (!el) return;
+    try {
+        // Load existing mappings
+        var resp = await _sb().from('etermin_kalender_mapping').select('*, standorte(name), users(vorname, nachname)').order('standort_id');
+        var mappings = (resp.data || []);
+
+        // Load standorte with active etermin configs
+        var cfgResp = await _sb().from('etermin_config').select('standort_id, standorte(name)').eq('is_active', true);
+        var configs = (cfgResp.data || []);
+
+        // Load users for dropdown
+        var usersResp = await _sb().from('users').select('id, vorname, nachname, standort_id').eq('status', 'aktiv').order('vorname');
+        var allUsers = (usersResp.data || []);
+
+        var h = '<details class="border border-orange-200 rounded-lg" id="eterminKalenderMappingDetails" open>';
+        h += '<summary class="px-3 py-2 text-xs font-semibold text-gray-700 cursor-pointer hover:bg-orange-50 transition flex items-center gap-2">';
+        h += '👤 Kalender → Verkäufer-Zuordnung <span class="text-[10px] font-normal text-gray-400">(eTermin-Kalender einem Mitarbeiter zuordnen)</span>';
+        h += '<span class="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 font-bold">' + mappings.length + ' Zuordnungen</span>';
+        h += '</summary>';
+        h += '<div class="px-3 pb-3 pt-2 border-t border-orange-100 space-y-3">';
+        h += '<p class="text-[10px] text-gray-500">Jeder Kalender in eTermin gehört meist einem Verkäufer. Ordne hier zu, wer welchen Kalender betreut. Termine aus diesem Kalender werden dann automatisch dem Mitarbeiter zugewiesen.</p>';
+
+        // Group by standort
+        var byStd = {};
+        mappings.forEach(function(m) {
+            var sid = m.standort_id;
+            if (!byStd[sid]) byStd[sid] = { name: (m.standorte && m.standorte.name) || 'Unbekannt', items: [] };
+            byStd[sid].items.push(m);
+        });
+
+        Object.keys(byStd).forEach(function(sid) {
+            var std = byStd[sid];
+            var stdUsers = allUsers.filter(function(u) { return String(u.standort_id) === String(sid); });
+            var userOptHtml = '<option value="">— Kein Mitarbeiter —</option>' + stdUsers.map(function(u) { return '<option value="' + u.id + '">' + _escH(u.vorname + ' ' + u.nachname) + '</option>'; }).join('');
+            h += '<div class="border border-gray-100 rounded-lg p-2">';
+            h += '<p class="text-xs font-bold text-gray-700 mb-2">📍 ' + _escH(std.name) + '</p>';
+            h += '<table class="w-full text-xs"><thead><tr class="text-[10px] text-gray-500 border-b border-gray-100">'
+                + '<th class="text-left px-2 py-1">Kalender-Name (in eTermin)</th>'
+                + '<th class="text-left px-2 py-1">Kalender-ID</th>'
+                + '<th class="text-left px-2 py-1">→ Mitarbeiter</th>'
+                + '<th class="px-2 py-1 w-8"></th></tr></thead><tbody>';
+            std.items.forEach(function(m) {
+                var mName = m.users ? (m.users.vorname + ' ' + m.users.nachname).trim() : '';
+                h += '<tr class="border-t border-gray-50 hover:bg-gray-50">';
+                h += '<td class="px-2 py-1.5 text-gray-700 font-semibold">' + _escH(m.etermin_kalender_name || '—') + '</td>';
+                h += '<td class="px-2 py-1.5 text-gray-400 font-mono text-[10px]">' + _escH(m.etermin_kalender_id || '—') + '</td>';
+                h += '<td class="px-2 py-1.5"><select onchange="window.updateKalenderMapping(\''+m.id+'\',this.value)" class="text-xs border border-gray-200 rounded px-2 py-1 w-full">'
+                    + stdUsers.map(function(u) { return '<option value="'+u.id+'"'+(u.id===m.user_id?' selected':'')+'>'+_escH(u.vorname+' '+u.nachname)+'</option>'; }).join('')
+                    + '</select></td>';
+                h += '<td class="px-2 py-1.5 text-center"><button onclick="window.deleteKalenderMapping(\''+m.id+'\')" class="text-gray-400 hover:text-red-500 text-[10px]" title="Löschen">🗑️</button></td>';
+                h += '</tr>';
+            });
+            h += '</tbody></table></div>';
+        });
+
+        // Add form
+        if (configs.length > 0) {
+            h += '<div class="border border-dashed border-orange-300 rounded-lg p-3 bg-orange-50/50">';
+            h += '<p class="text-[11px] font-semibold text-orange-700 mb-2">➕ Kalender hinzufügen</p>';
+            h += '<p class="text-[10px] text-gray-500 mb-2">Trage den <strong>Kalender-Namen</strong> (exakt wie in eTermin) und optional die <strong>Kalender-ID</strong> ein. Oder klicke auf <strong>Kalender laden</strong> um sie direkt aus eTermin abzurufen.</p>';
+    h += '<button onclick="window.fetchEterminCalendarsForMapping()" class="mb-2 px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded font-semibold hover:bg-blue-200 transition">🔄 Kalender aus eTermin laden</button>';
+    h += '<div id="kalenderImportList" class="mb-2"></div>';
+            h += '<div class="flex gap-2 items-end flex-wrap">';
+            h += '<div class="flex-1 min-w-[100px]"><label class="text-[10px] text-gray-500">Standort</label>'
+                + '<select id="kalMappingNewStandort" onchange="window.kalMappingUpdateUsers()" class="w-full text-xs border border-gray-200 rounded px-2 py-1">'
+                + configs.map(function(c) { return '<option value="'+c.standort_id+'">'+_escH((c.standorte&&c.standorte.name)||c.standort_id)+'</option>'; }).join('')
+                + '</select></div>';
+            h += '<div class="flex-1 min-w-[140px]"><label class="text-[10px] text-gray-500">Kalender-Name in eTermin</label>'
+                + '<input type="text" id="kalMappingNewName" placeholder="z.B. Max Mustermann" class="w-full text-xs border border-gray-200 rounded px-2 py-1"></div>';
+            h += '<div class="flex-1 min-w-[100px]"><label class="text-[10px] text-gray-500">Kalender-ID (optional)</label>'
+                + '<input type="text" id="kalMappingNewId" placeholder="z.B. 12345" class="w-full text-xs border border-gray-200 rounded px-2 py-1"></div>';
+            h += '<div class="flex-1 min-w-[140px]"><label class="text-[10px] text-gray-500">→ Mitarbeiter</label>'
+                + '<select id="kalMappingNewUser" class="w-full text-xs border border-gray-200 rounded px-2 py-1">'
+                + '<option value="">— wählen —</option>'
+                + allUsers.map(function(u) { return '<option value="'+u.id+'" data-sid="'+u.standort_id+'">'+_escH(u.vorname+' '+u.nachname)+'</option>'; }).join('')
+                + '</select></div>';
+            h += '<button onclick="window.addKalenderMapping()" class="px-3 py-1 bg-orange-500 text-white text-xs rounded font-semibold hover:bg-orange-600">Hinzufügen</button>';
+            h += '</div></div>';
+        } else {
+            h += '<div class="bg-amber-50 border border-amber-200 rounded-lg p-3"><p class="text-xs text-amber-700">⚠️ Kein aktiver eTermin-Account konfiguriert. Bitte zuerst API-Keys einrichten.</p></div>';
+        }
+
+        h += '</div></details>';
+        el.innerHTML = h;
+    } catch (e) { console.warn('[schnittstellen] loadKalenderVerkauferMapping:', e); if(el) el.innerHTML = '<p class="text-xs text-red-500 p-2">Fehler: ' + _escH(e.message) + '</p>'; }
+}
+
+window.kalMappingUpdateUsers = function() {
+    var sid = (document.getElementById('kalMappingNewStandort')||{}).value;
+    var sel = document.getElementById('kalMappingNewUser');
+    if (!sel) return;
+    Array.from(sel.options).forEach(function(opt) {
+        if (!opt.value) { opt.style.display = ''; return; }
+        opt.style.display = (!sid || opt.dataset.sid === sid) ? '' : 'none';
+    });
+};
+
+window.updateKalenderMapping = async function(id, userId) {
+    var resp = await _sb().from('etermin_kalender_mapping').update({ user_id: userId || null, updated_at: new Date().toISOString() }).eq('id', id);
+    if (resp.error) { _showToast('Fehler beim Speichern', 'error'); return; }
+    _showToast('Zuordnung gespeichert', 'success');
+    loadKalenderVerkauferMapping();
+};
+
+window.deleteKalenderMapping = async function(id) {
+    if (!confirm('Kalender-Zuordnung wirklich löschen?')) return;
+    await _sb().from('etermin_kalender_mapping').delete().eq('id', id);
+    loadKalenderVerkauferMapping();
+};
+
+window.fetchEterminCalendarsForMapping = async function() {
+    var el = document.getElementById('kalenderImportList');
+    if (el) el.innerHTML = '<span class="text-xs text-gray-400 animate-pulse">⏳ Lade Kalender aus eTermin...</span>';
+    var stdSelect = document.getElementById('kalMappingNewStandort');
+    var stdId = stdSelect ? stdSelect.value : (_sbProfile() ? _sbProfile().standort_id : '');
+    if (!stdId) { if(el) el.innerHTML = '<span class="text-xs text-red-500">Bitte erst Standort wählen</span>'; return; }
+    var token = '';
+    try { var s = await _sb().auth.getSession(); token = s.data.session.access_token; } catch(e) {}
+    try {
+        var r = await fetch('/api/etermin-proxy?action=calendars_list&standort_id=' + stdId, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        var data = await r.json();
+        var calendars = (data.data || []);
+        if (!calendars.length) {
+            if(el) el.innerHTML = '<span class="text-xs text-amber-600">Keine Kalender gefunden. Namen bitte manuell eintragen.</span>';
+            return;
+        }
+        var h = '<div class="flex flex-wrap gap-1 mt-1">';
+        calendars.forEach(function(cal) {
+            var calName = cal.name || cal.title || cal.calendarname || JSON.stringify(cal).slice(0,40);
+            var calId = cal.id || cal.calendarid || '';
+            h += '<button onclick="window.kalImportCalendar(\'' + _escH(String(calName)).replace(/'/g,"\'\'") + '\',\'' + _escH(String(calId)) + '\')" class="px-2 py-1 bg-white border border-gray-200 rounded text-[10px] hover:bg-orange-50 hover:border-orange-300 transition">📅 ' + _escH(calName) + (calId?' <span class="text-gray-400">#'+_escH(String(calId))+'</span>':'') + '</button>';
+        });
+        h += '</div><p class="text-[10px] text-gray-400 mt-1">Klicke auf einen Kalender um ihn ins Formular zu übernehmen.</p>';
+        if(el) el.innerHTML = h;
+    } catch(e) {
+        if(el) el.innerHTML = '<span class="text-xs text-red-500">Fehler: ' + _escH(e.message) + '</span>';
+    }
+};
+
+window.kalImportCalendar = function(name, id) {
+    var nameEl = document.getElementById('kalMappingNewName');
+    var idEl = document.getElementById('kalMappingNewId');
+    if (nameEl) nameEl.value = name;
+    if (idEl) idEl.value = id;
+};
+
+window.addKalenderMapping = async function() {
+    var sid = (document.getElementById('kalMappingNewStandort')||{}).value;
+    var name = ((document.getElementById('kalMappingNewName')||{}).value||'').trim();
+    var kalId = ((document.getElementById('kalMappingNewId')||{}).value||'').trim() || null;
+    var userId = (document.getElementById('kalMappingNewUser')||{}).value || null;
+    if (!name) { _showToast('Bitte Kalender-Namen eingeben', 'error'); return; }
+    if (!userId) { _showToast('Bitte Mitarbeiter auswählen', 'error'); return; }
+    var resp = await _sb().from('etermin_kalender_mapping').upsert({
+        standort_id: sid, etermin_kalender_name: name, etermin_kalender_id: kalId,
+        user_id: userId, updated_at: new Date().toISOString()
+    }, { onConflict: 'standort_id,etermin_kalender_name' });
+    if (resp.error) { _showToast('Fehler: ' + resp.error.message, 'error'); return; }
+    _showToast('Kalender-Zuordnung gespeichert', 'success');
+    if (document.getElementById('kalMappingNewName')) document.getElementById('kalMappingNewName').value = '';
+    if (document.getElementById('kalMappingNewId')) document.getElementById('kalMappingNewId').value = '';
+    loadKalenderVerkauferMapping();
+};
+
 window.testConnector = async function(id) {
     var el = document.getElementById('connTestResult_' + id);
     if (el) el.innerHTML = '<span class="text-xs text-gray-400 animate-pulse">⏳ Teste Verbindung...</span>';
@@ -1141,4 +1312,5 @@ function fmtDT(iso) {
 const _exports = { renderSchnittstellen };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // [prod] log removed
+
 
