@@ -138,7 +138,15 @@ docs/
 ### Bug-Fixes (03.03.2026)
 - **bwa-cockpit.js + cockpit-engine.js**: Null-Guards fuer alle DOM-Elemente in `updateBwaDeadlineWidget`. GF/Partner-Rollen (z.B. Thorsten Guhr) hatten keine BWA-Widget-Elemente im DOM → TypeError crash.
 - **shop-notify Edge Function (v8)**: Neue Bestellungen gehen jetzt an feste Adresse `shop@vitbikes.de` statt an alle HQ-User.
-- **schnittstellen.js**: TikTok Connector hinzugefügt (03.03.2026). OAuth 2.0 Flow (PKCE), Account-Stats (Follower, Likes, Video-Anzahl), Video-Liste mit Performance-KPIs (Views, Likes, Kommentare, Shares). Sandbox/Production-Toggle. Keys gespeichert in `connector_config`. Demo-Daten für Sandbox-Modus. Benötigte Scopes: user.info.basic, user.info.stats, video.list. App-Callback: https://cockpit.vitbikes.de/api/tiktok-callback
+- **schnittstellen.js**: 5 weitere Social/Analytics Connectoren hinzugefügt (03.03.2026):
+- **Instagram** (Meta Graph API) – Posts, Follower, Reichweite, Story-Insights
+- **Facebook Page** (Meta Graph API) – Fans, Reichweite, Post-Engagement
+- **YouTube** (YouTube Data API v3) – Abonnenten, Views, Video-Liste; API Key vorkonfiguriert (AIzaSyBLlbkT79iz...). Live-Datenabruf via Channel ID
+- **Google My Business** (Business Profile API v4) – Bewertungen, Profilaufrufe, Anrufe
+- **Google Analytics** (GA4 Data API) – Seitenaufrufe, Nutzer, Sessions, Traffic-Quellen
+Alle Connectoren: Config-Felder → in connector_config gespeichert. Demo-Daten für alle 5. Shared Helpers: _renderOAuthFields, _renderReadonlyInfo, _renderSocialVideoTable, _populateSocialCard, _populateSocialRows. Auto-Load beim Modulaufruf via loadSocialConfigs().
+
+**schnittstellen.js**: TikTok Connector hinzugefügt (03.03.2026). OAuth 2.0 Flow (PKCE), Account-Stats (Follower, Likes, Video-Anzahl), Video-Liste mit Performance-KPIs (Views, Likes, Kommentare, Shares). Sandbox/Production-Toggle. Keys gespeichert in `connector_config`. Demo-Daten für Sandbox-Modus. Benötigte Scopes: user.info.basic, user.info.stats, video.list. App-Callback: https://cockpit.vitbikes.de/api/tiktok-callback
 
 **schnittstellen.js**: DHL Connector hat jetzt editierbare Felder (API Key, Secret, GKP-User/Pass, Abrechnungsnr, Modus). Gespeichert in `connector_config` DB. Auto-Load beim Seitenaufruf.
 
