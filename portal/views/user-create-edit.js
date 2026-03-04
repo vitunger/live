@@ -92,7 +92,8 @@ export async function openNeuerMaModal() {
         {key:'hq_support',label:'Support',          color:'border-yellow-300 bg-yellow-50', icon:'🎧', desc:'Tickets, Partner-Support'},
         {key:'hq_akademie',label:'Akademie',        color:'border-indigo-300 bg-indigo-50', icon:'🎓', desc:'Wissen, Schulungen, Onboarding'},
         {key:'hq_hr',     label:'HR',               color:'border-purple-300 bg-purple-50', icon:'👥', desc:'Personal, Tools, Abrechnung'},
-        {key:'hq_it',     label:'IT / Systemadmin', color:'border-gray-400 bg-gray-100', icon:'🖥️', desc:'Einstellungen, Features, System'}
+        {key:'hq_it',     label:'IT / Systemadmin', color:'border-gray-400 bg-gray-100', icon:'🖥️', desc:'Einstellungen, Features, System'},
+        {key:'hq_zahlen', label:'Zahlen',           color:'border-teal-300 bg-teal-50',   icon:'💹', desc:'BWA, Controlling, Finanzen'}
     ];
     hqRollen.forEach(function(r){
         html += '<label class="flex items-center space-x-3 p-2 rounded-lg border '+r.color+' mb-1.5 cursor-pointer hover:shadow-sm transition">';
@@ -278,7 +279,7 @@ export async function saveNeuerMa() {
         if(!response.ok) throw { message: result.error || 'User-Erstellung fehlgeschlagen' };
 
         closeNeuerMaModal();
-        var rollenLabels = {'hq':'HQ','hq_gf':'GF','hq_sales':'Sales','hq_marketing':'Marketing','hq_einkauf':'Einkauf','hq_support':'Support','hq_akademie':'Akademie','hq_hr':'HR','hq_it':'IT','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
+        var rollenLabels = {'hq':'HQ','hq_gf':'GF','hq_sales':'Sales','hq_marketing':'Marketing','hq_einkauf':'Einkauf','hq_support':'Support','hq_akademie':'Akademie','hq_hr':'HR','hq_it':'IT','hq_zahlen':'Zahlen','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
 
         // Also create employee record for tool tracking
         if(!isHqUser && standortId) {
@@ -374,7 +375,8 @@ export async function openEditMaModal(userId) {
             {key:'hq_support',label:'🎧 Support',color:'border-yellow-300 bg-yellow-50'},
             {key:'hq_akademie',label:'🎓 Akademie',color:'border-indigo-300 bg-indigo-50'},
             {key:'hq_hr',label:'👥 HR',color:'border-purple-300 bg-purple-50'},
-            {key:'hq_it',label:'🖥️ IT / Systemadmin',color:'border-gray-400 bg-gray-100'}
+            {key:'hq_it',label:'🖥️ IT / Systemadmin',color:'border-gray-400 bg-gray-100'},
+            {key:'hq_zahlen',label:'💹 Zahlen',color:'border-teal-300 bg-teal-50'}
         ];
         editHqRollen.forEach(function(r){
             var checked = userRollen.indexOf(r.key) >= 0 ? ' checked' : '';
