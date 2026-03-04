@@ -17,6 +17,24 @@ function _triggerPush()  { if (typeof window.triggerPush === 'function') window.
 export async function renderTickets(filter) {
     var container = document.getElementById('ticketList');
     if(!container) return;
+    // ── Demo Mode ──
+    if (window.DEMO_ACTIVE && window.DEMO_DATA && window.DEMO_DATA.tickets) {
+        var tickets = window.DEMO_DATA.tickets;
+        var h = '<div class="space-y-3">';
+        tickets.forEach(function(t) {
+            var sc = t.status === 'offen' ? 'red' : t.status === 'in_bearbeitung' ? 'amber' : 'green';
+            var sl = t.status === 'offen' ? 'Offen' : t.status === 'in_bearbeitung' ? 'In Bearbeitung' : 'Gelöst';
+            h += '<div class="vit-card p-4 cursor-pointer" onclick="openTicketDetail(''+t.id+'')">'
+                + '<div class="flex items-start justify-between mb-2">'
+                + '<span class="font-semibold text-gray-800 text-sm">' + t.betreff + '</span>'
+                + '<span class="text-xs px-2 py-0.5 rounded-full bg-'+sc+'-100 text-'+sc+'-700 font-semibold ml-2 shrink-0">'+sl+'</span></div>'
+                + '<div class="text-xs text-gray-400 mb-2">' + t.erstellt + ' · Priorität: ' + t.prio + '</div>'
+                + '<div class="text-sm text-gray-600 bg-gray-50 rounded p-2">' + t.letzte_antwort + '</div></div>';
+        });
+        h += '</div>';
+        container.innerHTML = h;
+        return;
+    }
     try {
         var query = _sb().from('support_tickets').select('*, users(name)').order('created_at', {ascending:false});
         if(_sbProfile() && _sbProfile().standort_id && !_sbProfile().is_hq) query = query.eq('standort_id', _sbProfile().standort_id);
