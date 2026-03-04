@@ -12,7 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1772602087";
+const CACHE_BUST = "?v=1772610077";
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
@@ -39,6 +39,7 @@ const VIEW_MODULES = [
     'views/controlling-upload.js',
     'views/controlling-save.js',
     'views/controlling-benchmarks.js',
+    'views/controlling-liquiditaet.js',
     'views/support.js',
     'views/allgemein.js',
     'views/plan-ist.js',
