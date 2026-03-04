@@ -153,6 +153,9 @@ export async function renderEntwReleases() {
             h += '</div>';
             h += '<input id="relTitel" type="text" placeholder="Titel der Release-Note" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 mb-3">';
             h += '<textarea id="relInhalt" placeholder="Was wurde geändert / verbessert / gefixt?\n\nTipp: Nutze Aufzählungen für mehrere Punkte." class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 mb-3" rows="5"></textarea>';
+            h += '<details class="mb-3"><summary class="text-xs text-gray-500 cursor-pointer hover:text-gray-700">Zusätzliche Änderungen (nicht in Submissions erfasst)</summary>';
+            h += '<textarea id="relManualContext" placeholder="Hier kannst du Änderungen eintragen, die nicht als Submission existieren.\nz.B. Bug-Fixes aus Claude-Sessions, Config-Änderungen, Refactorings..." class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 mt-2" rows="3"></textarea>';
+            h += '<p class="text-[10px] text-gray-400 mt-1">Die KI bezieht auch automatisch CLAUDE.md Session-Notizen und bereits veröffentlichte Releases ein.</p></details>';
             h += '<div class="flex justify-between items-center">';
             h += '<button onclick="devKIReleaseVorschlag()" id="btnKIRelease" class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg text-xs font-semibold hover:from-purple-600 hover:to-indigo-700 flex items-center gap-1.5"><span>🧠</span><span>KI-Vorschlag generieren</span></button>';
             h += '<div class="flex gap-2">';
