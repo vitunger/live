@@ -5363,6 +5363,21 @@
                             <p class="text-[10px] text-gray-400 mt-1">Wähle Bildschirm/Fenster/Tab – die Aufnahme wird automatisch als Datei angehängt.</p>
                         </div>
 
+                        <!-- Datei-Upload-Bereich -->
+                        <div id="devDateiArea" class="hidden mb-4">
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-vit-orange transition cursor-pointer"
+                                 onclick="document.getElementById('devFileInput').click()">
+                                <div class="text-3xl mb-1">📎</div>
+                                <p class="text-sm text-gray-600 font-semibold">Datei auswählen</p>
+                                <p class="text-xs text-gray-400 mt-1">Bilder, PDF, Word, Excel, CSV – max. 25 MB</p>
+                            </div>
+                            <input type="file" id="devFileInput" multiple
+                                   accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip"
+                                   style="display:none" onchange="handleDevFileSelect(event)">
+                        </div>
+                        <!-- Dateiliste (shared für alle Upload-Typen) -->
+                        <div id="devFileList" class="space-y-1 mb-3"></div>
+
                         <!-- Art, Modul und Titel werden automatisch von der KI bestimmt -->
                         <input id="devKategorie" type="hidden" value="sonstiges">
                         <input id="devModul" type="hidden" value="">
