@@ -45,14 +45,11 @@ export async function loadNotifications() {
 // === BADGE UPDATE ===
 function updateNotifBadge() {
     var unread = notifData.filter(function(n) { return !n.read; }).length;
-    var bellBtn = document.querySelector('button[onclick*="notifications"]');
-    if (bellBtn) {
-        var span = bellBtn.querySelector('span');
-        if (span) {
-            span.textContent = unread > 9 ? '9+' : unread;
-            span.style.display = unread > 0 ? '' : 'none';
-            span.classList.toggle('animate-pulse', unread > 0);
-        }
+    var span = document.getElementById('notifBellBadge');
+    if (span) {
+        span.textContent = unread > 9 ? '9+' : unread;
+        span.style.display = unread > 0 ? '' : 'none';
+        span.classList.toggle('animate-pulse', unread > 0);
     }
 }
 
@@ -309,12 +306,35 @@ export async function unsubscribePush() {
 }
 
 // === STRANGLER FIG EXPORTS ===
+// === CREATE RELEASE NOTIFICATION FOR ALL ACTIVE USERS ===
+export async function createReleaseNotification(titel, version) {
+    try {
+        var sb = _sb(); if (!sb || !_sbUser()) return;
+        var { data: users, error } = await sb.from('users').select('id').eq('status', 'aktiv');
+        if (error || !users || users.length === 0) return;
+        var notifTitle = version ? version + ': ' + titel : titel;
+        var rows = users.map(function(u) {
+            return {
+                user_id: u.id,
+                type: 'hq',
+                icon: '📣',
+                title: notifTitle,
+                description: 'Ein neues Release wurde veröffentlicht.',
+                read: false,
+                action_view: 'entwicklung'
+            };
+        });
+        await sb.from('notifications').insert(rows);
+    } catch(err) { console.warn('createReleaseNotification:', err); }
+}
+
 const _exports = {
     renderNotifications, filterNotif, loadNotifications, initNotifications,
     handleNotifClick, markAllNotifsRead, subscribeNotifRealtime,
     triggerPush, triggerPushStandort, triggerPushHQ,
     installPWA, dismissInstall, showLocalNotification,
     updatePushUI, checkPushStatus, loadNotificationPrefs,
-    saveNotificationPrefs, unsubscribePush, setupPushNotifications
+    saveNotificationPrefs, unsubscribePush, setupPushNotifications,
+    createReleaseNotification
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
