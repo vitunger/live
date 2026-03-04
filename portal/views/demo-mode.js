@@ -168,10 +168,10 @@ async function switchDemoAccount(level, stage) {
 
     showView('home');
 
-    // Fill home widgets after a tick
+    // Fill home widgets after modules loaded – home.js registers window.fillDemoWidgets
     setTimeout(function() {
-        fillDemoWidgets(level, stage);
-    }, 300);
+        if (window.fillDemoWidgets) window.fillDemoWidgets(level, stage);
+    }, 400);
 }
 
 // ─── Demo Banner ──────────────────────────────────────────────────────────
@@ -267,163 +267,8 @@ function uninstallDemoOverrides() {
     _origOverrides = {};
 }
 
-// ─── HOME DASHBOARD WIDGETS ───────────────────────────────────────────────
 
-function fillDemoWidgets(level, stage) {
-    // Welcome
-    var wt = document.getElementById('welcomeText');
-    if(wt) wt.textContent = 'Willkommen zurück, Sandra! 👋';
-
-    // KW
-    var now = new Date();
-    var kw = getKWStr(now);
-
-    // Pipeline Widget
-    var wp = document.getElementById('wPipelineContent');
-    if(wp) {
-        var offene = DEMO_LEADS.filter(function(l){ return ['beratung','angebot','kaufbereit'].indexOf(l.status) >= 0; });
-        var volumen = offene.reduce(function(a,l){ return a+l.wert; }, 0);
-        wp.innerHTML = '<div class="flex items-center justify-between mb-3">'
-            + '<span class="text-2xl font-bold text-gray-800">' + offene.length + '</span>'
-            + '<span class="text-xs text-gray-400">offene Leads</span></div>'
-            + '<div class="text-sm text-gray-600 mb-3">Gesamtvolumen: <strong class="text-vit-orange">' + eur(volumen) + '</strong></div>'
-            + '<div class="space-y-1">'
-            + demoLeadRow('🟡 Beratung', offene.filter(function(l){ return l.status==='beratung'; }).length)
-            + demoLeadRow('🟠 Angebot', offene.filter(function(l){ return l.status==='angebot'; }).length)
-            + demoLeadRow('🟢 Kaufbereit', offene.filter(function(l){ return l.status==='kaufbereit'; }).length)
-            + '</div>';
-        var badge = document.getElementById('wPipelineBadge');
-        if(badge) badge.textContent = offene.length;
-    }
-
-    // Erfolge Widget (Verkauft diese KW)
-    var ws = document.getElementById('wSuccessContent');
-    var wkw = document.getElementById('wSuccessKW');
-    if(wkw) wkw.textContent = kw;
-    if(ws) {
-        ws.innerHTML = '<div class="grid grid-cols-2 gap-3 mb-3">'
-            + demoStatCard('Verkauft', '4', 'Fahrräder', 'text-green-600')
-            + demoStatCard('Beratungen', '11', 'Gespräche', 'text-blue-600')
-            + '</div>'
-            + '<div class="text-xs text-gray-500">Top-Verkauf: <strong>Katrin S.</strong> – Cube Hybrid 5.299 €</div>';
-    }
-
-    // Termine Widget
-    var wt2 = document.getElementById('wTermineContent');
-    var wtc = document.getElementById('wTermineCount');
-    var heute = DEMO_TERMINE.filter(function(t){ return t.datum === '2026-03-04'; });
-    if(wtc) wtc.textContent = heute.length;
-    if(wt2) {
-        var h = heute.length > 0
-            ? heute.map(function(t){ return '<div class="flex items-center gap-2 text-sm py-1"><span class="text-gray-400 w-12 shrink-0">' + t.uhrzeit + '</span><span class="truncate">' + t.titel + '</span></div>'; }).join('')
-            : '<p class="text-sm text-gray-400">Keine Termine heute</p>';
-        wt2.innerHTML = h
-            + '<div class="mt-2 pt-2 border-t border-gray-100 text-xs text-gray-400">+'
-            + (DEMO_TERMINE.length - heute.length) + ' weitere diese Woche</div>';
-    }
-
-    // Aufgaben Widget
-    var wa = document.getElementById('wAufgabenContent');
-    var wac = document.getElementById('wAufgabenCount');
-    var offeneTodos = DEMO_TODOS.filter(function(t){ return t.status !== 'erledigt'; });
-    var faellig = DEMO_TODOS.filter(function(t){ return t.status !== 'erledigt' && t.prio === 'hoch'; });
-    if(wac) wac.textContent = offeneTodos.length;
-    if(wa) {
-        wa.innerHTML = '<div class="space-y-1.5">'
-            + faellig.slice(0,3).map(function(t){
-                return '<div class="flex items-start gap-2 text-sm">'
-                    + '<span class="text-red-400 mt-0.5">●</span>'
-                    + '<span class="truncate">' + t.title + '</span></div>';
-            }).join('')
-            + (offeneTodos.length > 3 ? '<div class="text-xs text-gray-400 mt-1">+' + (offeneTodos.length - 3) + ' weitere offen</div>' : '')
-            + '</div>';
-    }
-
-    // Controlling Widget
-    var wc = document.getElementById('wControllingContent');
-    if(wc) {
-        var bwa = DEMO_BWA.feb;
-        var plan = DEMO_BWA.plan;
-        var umsatzPct = Math.round(bwa.umsatzerloese / plan.umsatzerloese * 100);
-        wc.innerHTML = '<div class="mb-2"><div class="flex justify-between text-xs text-gray-500 mb-1">'
-            + '<span>Umsatz Feb</span><span>' + eur(bwa.umsatzerloese) + ' / ' + eur(plan.umsatzerloese) + '</span></div>'
-            + '<div class="w-full bg-gray-100 rounded-full h-2"><div class="bg-vit-orange h-2 rounded-full" style="width:' + umsatzPct + '%"></div></div>'
-            + '<div class="text-xs text-gray-400 mt-0.5">' + umsatzPct + '% des Monatsplans</div></div>'
-            + '<div class="grid grid-cols-2 gap-2 mt-3">'
-            + demoStatCard('Rohertrag', Math.round(bwa.rohertrag / bwa.umsatzerloese * 100) + '%', 'Marge', 'text-blue-600')
-            + demoStatCard('Ergebnis', eur(bwa.ergebnis_vor_steuern), 'Gewinn', 'text-green-600')
-            + '</div>';
-    }
-
-    // Support Widget
-    var wsu = document.getElementById('wSupportContent');
-    var wsuc = document.getElementById('wSupportCount');
-    var offeneTickets = DEMO_TICKETS.filter(function(t){ return t.status !== 'geloest'; });
-    if(wsuc) wsuc.textContent = offeneTickets.length;
-    if(wsu) {
-        wsu.innerHTML = offeneTickets.length > 0
-            ? '<div class="space-y-1.5">' + offeneTickets.map(function(t){
-                return '<div class="text-sm"><span class="text-' + (t.prio==='hoch'?'red':'amber') + '-400">●</span> '
-                    + '<span class="truncate">' + t.betreff + '</span></div>';
-            }).join('') + '</div>'
-            : '<div class="text-sm text-green-600">✓ Keine offenen Tickets</div>';
-    }
-
-    // Marketing Widget
-    var wm = document.getElementById('wMarketingContent');
-    if(wm) {
-        wm.innerHTML = '<div class="space-y-2">'
-            + '<div class="flex justify-between text-sm"><span class="text-gray-600">Google Ads Feb</span><span class="font-semibold">1.284 Klicks</span></div>'
-            + '<div class="flex justify-between text-sm"><span class="text-gray-600">Meta Ads Feb</span><span class="font-semibold">2.108 Reichweite</span></div>'
-            + '<div class="flex justify-between text-sm"><span class="text-gray-600">Leads aus Werbung</span><span class="font-semibold text-green-600">12 Leads</span></div>'
-            + '<div class="flex justify-between text-sm"><span class="text-gray-600">Kosten pro Lead</span><span class="font-semibold">127 €</span></div>'
-            + '</div>';
-    }
-
-    // Team Widget
-    var wte = document.getElementById('wTeamContent');
-    if(wte) {
-        wte.innerHTML = '<div class="space-y-1.5">'
-            + DEMO_MITARBEITER.map(function(m){
-                return '<div class="flex items-center gap-2 text-sm">'
-                    + '<span class="w-7 h-7 rounded-full bg-orange-100 text-vit-orange text-xs font-bold flex items-center justify-center shrink-0">'
-                    + m.name.split(' ').map(function(n){ return n[0]; }).join('') + '</span>'
-                    + '<div><div class="font-medium leading-tight">' + m.name + '</div>'
-                    + '<div class="text-xs text-gray-400">' + m.rolle + '</div></div></div>';
-            }).join('')
-            + '</div>';
-    }
-
-    // Wissen Widget
-    var ww = document.getElementById('wWissenContent');
-    if(ww) {
-        ww.innerHTML = '<div class="space-y-2">'
-            + '<div class="p-2 rounded-lg bg-orange-50 text-sm"><div class="font-semibold text-gray-700">Frühjahrs-Schulung 2026</div><div class="text-xs text-gray-400">E-Bike Beratung · 45 Min.</div></div>'
-            + '<div class="p-2 rounded-lg bg-blue-50 text-sm"><div class="font-semibold text-gray-700">Verkaufstraining Modul 3</div><div class="text-xs text-gray-400">Einwandbehandlung · 30 Min.</div></div>'
-            + '<div class="p-2 rounded-lg bg-gray-50 text-sm"><div class="font-semibold text-gray-700">Handbuch: Reklamationen</div><div class="text-xs text-gray-400">Referenz · 8 Seiten</div></div>'
-            + '</div>';
-    }
-
-    // Nachrichten Widget
-    var wn = document.getElementById('wNachrichtenContent');
-    if(wn) {
-        wn.innerHTML = '<div class="space-y-2">'
-            + '<div class="text-sm p-2 rounded-lg bg-blue-50"><div class="font-semibold">HQ → Grafrath</div><div class="text-xs text-gray-500">Frühjahrs-Kampagne startet 10. März</div></div>'
-            + '<div class="text-sm p-2 rounded-lg bg-gray-50"><div class="font-semibold">System</div><div class="text-xs text-gray-500">BWA Januar wurde vom HQ geprüft ✓</div></div>'
-            + '</div>';
-    }
-
-    // Jahresziele (Allgemein view – homeJahresziele*)
-    var hjc = document.getElementById('homeJahreszieleContent');
-    if(hjc) demoFillJahresziele(hjc);
-
-    // Monatsfokus
-    var hmm = document.getElementById('homeMonatsfokusMonat');
-    var hmc = document.getElementById('homeMonatsfokusContent');
-    if(hmm) hmm.textContent = 'März 2026';
-    if(hmc) hmc.innerHTML = '<div class="text-sm text-gray-700">Frühjahrs-Aktion starten – Fokus auf E-Bike Beratung und Reifenservice. '
-        + 'Ziel: 20 Beratungsgespräche, 8 Verkäufe.</div>';
-}
+// ─── HOME DASHBOARD WIDGETS: filled by home.js fillDemoWidgets ───────────
 
 // ─── Module Fill Functions ─────────────────────────────────────────────────
 
@@ -847,11 +692,10 @@ function demoBwaListItem(label, umsatz, active) {
 function fillDemoHQ() {}
 
 // ─── Exports ─────────────────────────────────────────────────────────────
-export { switchDemoAccount, injectDemoBanner, exitDemoMode, fillDemoWidgets, fillDemoBilling, showDemoInvoiceDetail };
+export { switchDemoAccount, injectDemoBanner, exitDemoMode, fillDemoBilling, showDemoInvoiceDetail };
 window.switchDemoAccount = switchDemoAccount;
 window.injectDemoBanner = injectDemoBanner;
 window.exitDemoMode = exitDemoMode;
-window.fillDemoWidgets = fillDemoWidgets;
 window.fillDemoBilling = fillDemoBilling;
 window.showDemoInvoiceDetail = showDemoInvoiceDetail;
 window.demoShowBwaDetail = demoShowBwaDetail;
