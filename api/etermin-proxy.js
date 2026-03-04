@@ -78,6 +78,17 @@ module.exports = async function(req, res) {
       return res.json({ ok: true, data });
     }
 
+    if (action === "calendars_list") {
+      // Returns list of calendars with id and name for Kalender→Verkäufer mapping
+      let data = [];
+      try { data = await eterminFetch("/calendar", pub, priv); } catch(e) {}
+      if (!Array.isArray(data) || data.length === 0) {
+        // Fallback: try /workingtimes which has employee info
+        try { data = await eterminFetch("/workingtimes", pub, priv); } catch(e) {}
+      }
+      return res.json({ ok: true, data: Array.isArray(data) ? data : [] });
+    }
+
     if (action === "appointments") {
       let p = "/appointment?";
       if (req.query.from) p += "datefrom=" + req.query.from + "&";
@@ -99,3 +110,4 @@ module.exports = async function(req, res) {
     return res.status(500).json({ error: e.message });
   }
 };
+
