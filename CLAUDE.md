@@ -656,3 +656,9 @@ security: RLS/JWT/Auth-Verbesserung
 - **View init:** initSpiritus() via view-router.js
 - **window exports:** initSpiritus, spTab, spSetMode, spSubmit, spFileSelected, spDragOver, spDragLeave, spDrop, spApplyFilter, spOpenDetail, spCloseDetail, spOpenReview, spApproveAll, spApproveExtraction, spRejectTranscript
 
+
+## Bugfix (04.03.2026) – Kalender HQ-Filter
+- **Bug:** HQ-User sah alle Termine aller Standorte (kein Filter in `loadKalTermine`)
+- **Fix:** `kalender.js` – OR-Filter für HQ: `ist_netzwerk_termin=true OR erstellt_von=myId`
+- **Fix:** `saveKalTermin` setzt `ist_netzwerk_termin: true` automatisch wenn HQ-User Termin anlegt
+- **Logik:** Standort-User sehen nur eigenen Standort; HQ sieht Netzwerk-Termine + eigene
