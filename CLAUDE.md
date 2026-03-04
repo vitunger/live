@@ -632,7 +632,14 @@ security: RLS/JWT/Auth-Verbesserung
 - 2026-03-03: Standorte kritisch 33/33 Fix: leadPerf=0 (kein Plan-Umsatz) wird nicht mehr als kritisch gewertet. Betrifft HQ-Cockpit KPI, Marketing-Alerts, Handlungsbedarf-Alerts.
 
 ## Letzte Session (04.03.2026)
-- Notification-Badge-Fix: Hardcodierte "3" in Glocke entfernt, Badge hidden bis DB geladen
-- `notifications.js`: `updateNotifBadge()` nutzt `#notifBellBadge` ID, neue `createReleaseNotification()`
+- Notification-Badge-Fix: Hardcodierte "3" in Glocke entfernt, Badge hidden bis DB geladen (`#notifBellBadge`)
+- `notifications.js`: `updateNotifBadge()` nutzt ID statt querySelector, neue `createReleaseNotification()`
 - `dev-release.js`: Release-Veröffentlichung erstellt Benachrichtigung für alle User
-- Edge Function `dev-ki-analyse` v34: Release-Notes Prompt sachlich, ohne Floskeln
+- `dev-release.js`: `devKIReleaseVorschlag()` erweitert – bezieht jetzt 4 Quellen ein:
+  1. `dev_submissions` (Status ausgerollt/release_geplant/im_review/in_entwicklung/geschlossen)
+  2. `CLAUDE.md` Session-Notizen (fetch von raw.githubusercontent.com, "Letzte Session" Sektion)
+  3. Bereits veröffentlichte `dev_release_docs` (um Duplikate zu vermeiden)
+  4. Manuelles Kontext-Feld `#relManualContext` (Details-Aufklapp im Formular)
+- `dev-tabs.js`: Release-Formular hat neues `<details>`-Aufklappfeld für manuelle Ergänzungen
+- Edge Function `dev-ki-analyse` v34: Release-Notes Prompt sachlich, ohne Floskeln/Emojis
+- Roadmap 2026 erstellt: 6 Phasen (A-F), ~204h, Phase D: WhatsApp Bot + KI-Telefonie + Video-Calls
