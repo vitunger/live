@@ -276,7 +276,8 @@ export async function todoSubmitQuickAdd() {
     if (!title || !title.trim()) return;
     var due = (document.getElementById('todoQADate') || {}).value || null;
     var prio = (document.getElementById('todoQAPrio') || {}).value || 'normal';
-    var secId = (document.getElementById('todoQASec') || {}).value || null;
+    var secIdRaw = (document.getElementById('todoQASec') || {}).value;
+    var secId = (secIdRaw && secIdRaw.trim()) ? secIdRaw.trim() : null;
     var prioSort = (TODO_PRIO[prio] || {}).sort || 1;
     var newId = null;
     try {
@@ -293,8 +294,13 @@ export async function todoSubmitQuickAdd() {
         }
     } catch (e) { console.error('QA add:', e); }
     todoCloseQuickAdd();
-    if (newId) todoState.selectedId = newId;
-    todoRender();
+    if (newId) {
+        todoState.selectedId = newId;
+        todoRender();
+        todoLoadComments(newId);
+    } else {
+        todoRender();
+    }
 }
 
 // ── List View HTML ──
