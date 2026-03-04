@@ -33,6 +33,7 @@ export function showControllingTab(tabName) {
     var btn = document.querySelector('.ctrl-tab-btn[data-tab="' + tabName + '"]');
     if (btn) btn.className = 'ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
     if (tabName === 'benchmark' && typeof renderBenchmarks === 'function') renderBenchmarks();
+    if (tabName === 'liquiditaet' && typeof window.initLiquiditaet === 'function') window.initLiquiditaet();
 }
 
 export function showBwaDetail(id) {
