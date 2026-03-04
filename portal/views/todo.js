@@ -78,16 +78,27 @@ export async function loadTodos() {
         var isHQ = _sbProfile() && _sbProfile().is_hq;
 
         // Todos (with new fields)
+        var myId = window.sbUser ? window.sbUser.id : null;
         var q = _sb().from('todos').select('*, zugewiesen:zugewiesen_an(name)')
             .order('prio_sort', { ascending: true })
             .order('faellig_am', { ascending: true, nullsFirst: false });
-        if (sid && !isHQ) q = q.eq('standort_id', sid);
+        if (isHQ) {
+            // HQ: nur eigene Todos (erstellt oder zugewiesen)
+            if (myId) q = q.or('erstellt_von.eq.' + myId + ',zugewiesen_an.eq.' + myId);
+        } else if (sid) {
+            q = q.eq('standort_id', sid);
+        }
         var r = await q;
         todoState.todos = (!r.error && r.data) ? r.data : [];
 
         // Sections
         var sq = _sb().from('todo_sections').select('*').order('sort_order', { ascending: true });
-        if (sid && !isHQ) sq = sq.eq('standort_id', sid);
+        if (isHQ) {
+            // HQ: globale Sections (standort_id null) oder eigene
+            sq = sq.is('standort_id', null);
+        } else if (sid) {
+            sq = sq.eq('standort_id', sid);
+        }
         var sr = await sq;
         todoState.sections = (!sr.error && sr.data) ? sr.data : [];
 
@@ -99,14 +110,14 @@ export async function loadTodos() {
 
         // Labels
         var lq = _sb().from('todo_labels').select('*').order('name');
-        if (sid && !isHQ) lq = lq.or('standort_id.eq.' + sid + ',standort_id.is.null');
+        if (!isHQ && sid) lq = lq.or('standort_id.eq.' + sid + ',standort_id.is.null');
         var lr = await lq;
         todoState.labels = (!lr.error && lr.data) ? lr.data : [];
 
         // Team Members (for assignee dropdown)
         try {
             var tq = _sb().from('users').select('id, name, vorname, nachname').eq('status', 'aktiv');
-            if (sid && !isHQ) tq = tq.eq('standort_id', sid);
+            if (!isHQ && sid) tq = tq.eq('standort_id', sid);
             var tr = await tq;
             todoState.teamMembers = (!tr.error && tr.data) ? tr.data : [];
         } catch(e) { todoState.teamMembers = []; }
@@ -1473,3 +1484,4 @@ window.todoSearchChanged = todoSearchChanged;
 window.todoSetFilter = todoSetFilter;
 window.todoSetView = todoSetView;
 window.loadTodos = loadTodos;
+
