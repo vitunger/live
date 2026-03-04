@@ -12,7 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1772629786";
+const CACHE_BUST = "?v=1772645696";
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
