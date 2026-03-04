@@ -12,7 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1772602087";
+const CACHE_BUST = "?v=1772602088";
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
@@ -43,6 +43,7 @@ const VIEW_MODULES = [
     'views/allgemein.js',
     'views/plan-ist.js',
     'views/wissen.js',
+    'views/spiritus.js',
     'views/aktenschrank.js',
     
     // HQ
