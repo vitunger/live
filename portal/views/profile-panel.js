@@ -285,3 +285,11 @@ function changePassword() {
         _toast(t('alert_pw_changed'), 'info');
     }
 }
+
+// ── window.* Exports (Strangler Fig Bridge) ──────────────────────────────────
+window.openProfilePanel   = openProfilePanel;
+window.closeProfilePanel  = closeProfilePanel;
+window.saveProfile        = saveProfile;
+window.handleProfilePhoto = handleProfilePhoto;
+window.changePassword     = changePassword;
+window.updateProfileThemeButtons = updateProfileThemeButtons;
