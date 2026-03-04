@@ -1086,6 +1086,12 @@ var rtDict = {
     'Budget-Steuerung':'Budgetbeheer','Lead Reporting':'Lead Rapportage',
     'Video-Freigabe':'Video Goedkeuring','Action Required':'Actie vereist',
     'Übersicht':'Overzicht',
+    // Missing NL entries (sync with EN rtDict)
+    'Cockpit':'Cockpit','Social Media':'Social Media',
+    'Performance':'Prestaties','Content Library':'Contentbibliotheek',
+    'Marketing Performance':'Marketingprestaties',
+    'BWA hochladen':'BWA uploaden','BWA auswaehlen':'BWA selecteren',
+    'Bitte Datei auswaehlen.':'Selecteer een bestand.',
   }
 };
 
