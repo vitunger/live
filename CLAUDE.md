@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 04.03.2026 – Session: WiFi Presence System (office-wifi.js, Edge Function wifi-presence v1, DB: wifi_devices + wifi_events + wifi_config) | Spiritus Call Intelligence Modul (spiritus.js, DB: spiritus_calls + spiritus_extractions + spiritus_kb)
+> Letzte Aktualisierung: 04.03.2026 – Session: Quick Actions entfernt (index.html) | WiFi Presence System (office-wifi.js, Edge Function wifi-presence v1, DB: wifi_devices + wifi_events + wifi_config) | Spiritus Call Intelligence Modul (spiritus.js, DB: spiritus_calls + spiritus_extractions + spiritus_kb)
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
