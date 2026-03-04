@@ -645,3 +645,12 @@ security: RLS/JWT/Auth-Verbesserung
 - `dev-tabs.js`: Release-Formular hat neues `<details>`-Aufklappfeld für manuelle Ergänzungen
 - Edge Function `dev-ki-analyse` v34: Release-Notes Prompt sachlich, ohne Floskeln/Emojis
 - Roadmap 2026 erstellt: 6 Phasen (A-F), ~204h, Phase D: WhatsApp Bot + KI-Telefonie + Video-Calls
+
+## Spiritus (Call Intelligence) – views/spiritus.js
+- **Zweck:** HQ-only Modul zum Transkribieren und Analysieren von Standort-Calls
+- **Tabellen:** spiritus_transcripts, spiritus_extractions
+- **Edge Function:** spiritus-analyze (Claude-powered KI-Extraktion)
+- **Tabs:** Übersicht | Timeline | Intelligenz | Upload
+- **Flow:** Upload (Audio/Text) → spiritus-analyze Edge Function → Claude extrahiert Probleme/Maßnahmen/Sentiment → Review-Queue (confidence < 0.85) oder Auto-Approve (≥ 0.85) → Wissensbasis
+- **View init:** initSpiritus() via view-router.js
+- **window exports:** initSpiritus, spTab, spSetMode, spSubmit, spFileSelected, spDragOver, spDragLeave, spDrop, spApplyFilter, spOpenDetail, spCloseDetail, spOpenReview, spApproveAll, spApproveExtraction, spRejectTranscript
