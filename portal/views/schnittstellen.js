@@ -83,6 +83,81 @@ var CONNECTORS = {
         ],
         logs: []
     },
+    instagram: {
+        id: 'instagram', name: 'Instagram', icon: '📸', iconBg: '#fce7f3',
+        desc: 'Organische Performance: Posts, Follower, Reichweite & Story-Insights pro Standort.',
+        category: 'active', status: 'disconnected', statusLabel: 'Nicht verbunden',
+        oauthFields: [
+            { key: 'page_id', label: 'Instagram Business Account ID', type: 'text', placeholder: 'z.B. 17841400455970638' },
+            { key: 'access_token', label: 'Long-Lived Access Token', type: 'password', placeholder: 'Via Meta Graph API generieren' },
+        ],
+        readonlyFields: [
+            { key: 'api', label: 'API', value: 'Meta Graph API v19+ – Instagram Basic Display + Business' },
+            { key: 'scopes', label: 'Benötigte Rechte', value: 'instagram_basic, instagram_manage_insights, pages_show_list' },
+            { key: 'docs', label: 'Token generieren', value: 'developers.facebook.com → Tools → Graph API Explorer' },
+        ],
+        logs: []
+    },
+    facebook: {
+        id: 'facebook', name: 'Facebook Page', icon: '👥', iconBg: '#dbeafe',
+        desc: 'Facebook Seiten-Insights: Fans, Reichweite, Post-Performance & Engagement.',
+        category: 'active', status: 'disconnected', statusLabel: 'Nicht verbunden',
+        oauthFields: [
+            { key: 'page_id', label: 'Facebook Page ID', type: 'text', placeholder: 'z.B. 123456789012345' },
+            { key: 'access_token', label: 'Page Access Token', type: 'password', placeholder: 'Langlebiger Page Access Token' },
+        ],
+        readonlyFields: [
+            { key: 'api', label: 'API', value: 'Meta Graph API v19+ – Facebook Pages API' },
+            { key: 'scopes', label: 'Benötigte Rechte', value: 'pages_show_list, pages_read_engagement, pages_read_user_content' },
+            { key: 'note', label: 'Hinweis', value: 'Gleicher App wie Meta Ads – Token aus Facebook Business Manager' },
+        ],
+        logs: []
+    },
+    youtube: {
+        id: 'youtube', name: 'YouTube', icon: '▶️', iconBg: '#fee2e2',
+        desc: 'YouTube Analytics: Abonnenten, Views, Watch-Time & Video-Performance.',
+        category: 'active', status: 'disconnected', statusLabel: 'Nicht verbunden',
+        oauthFields: [
+            { key: 'api_key', label: 'YouTube Data API Key', type: 'password', placeholder: 'AIzaSy...' },
+            { key: 'channel_id', label: 'Channel ID', type: 'text', placeholder: 'z.B. UCxxxxxxxxxxxxxxxxxxxxxxxx' },
+        ],
+        readonlyFields: [
+            { key: 'api', label: 'API', value: 'YouTube Data API v3 + YouTube Analytics API' },
+            { key: 'scopes', label: 'Scopes (OAuth)', value: 'youtube.readonly, yt-analytics.readonly' },
+            { key: 'console', label: 'Key erstellen', value: 'console.cloud.google.com → APIs & Services → Credentials' },
+        ],
+        logs: []
+    },
+    gmb: {
+        id: 'gmb', name: 'Google My Business', icon: '📍', iconBg: '#dcfce7',
+        desc: 'Google Business Profile: Bewertungen, Sichtbarkeit, Anrufe & Wegbeschreibungen.',
+        category: 'active', status: 'disconnected', statusLabel: 'Nicht verbunden',
+        oauthFields: [
+            { key: 'account_id', label: 'Business Account ID', type: 'text', placeholder: 'accounts/123456789' },
+            { key: 'api_key', label: 'API Key', type: 'password', placeholder: 'Google Cloud API Key' },
+        ],
+        readonlyFields: [
+            { key: 'api', label: 'API', value: 'Google Business Profile API v4' },
+            { key: 'scopes', label: 'OAuth Scope', value: 'https://www.googleapis.com/auth/business.manage' },
+            { key: 'note', label: 'Hinweis', value: 'API muss in Google Cloud Console aktiviert werden (Business Profile API)' },
+        ],
+        logs: []
+    },
+    analytics: {
+        id: 'analytics', name: 'Google Analytics', icon: '📊', iconBg: '#fef3c7',
+        desc: 'GA4 Website-Daten: Seitenaufrufe, Sessions, Traffic-Quellen & Nutzerverhalten.',
+        category: 'active', status: 'disconnected', statusLabel: 'Nicht verbunden',
+        oauthFields: [
+            { key: 'property_id', label: 'GA4 Property ID', type: 'text', placeholder: 'z.B. 123456789' },
+            { key: 'api_key', label: 'API Key', type: 'password', placeholder: 'Google Cloud API Key' },
+        ],
+        readonlyFields: [
+            { key: 'api', label: 'API', value: 'Google Analytics Data API v1 (GA4)' },
+            { key: 'property', label: 'Property Format', value: 'properties/PROPERTY_ID' },
+            { key: 'console', label: 'Setup', value: 'analytics.google.com → Admin → Property → Property Settings → Property ID' },
+        ],
+        logs: []
+    },
     tiktok: {
         id: 'tiktok', name: 'TikTok', icon: '🎵', iconBg: '#fce7f3',
         desc: 'TikTok Business: Account-Stats, Follower & Video-Performance für interne Auswertungen.',
@@ -136,7 +211,7 @@ var PLANNED = [
     { name: 'Microsoft 365', icon: '📧', desc: 'Kalender & Mail', color: '#3b82f6' },
 ];
 
-var openCards = { etermin: true, lexoffice: false, google: false, meta: false, wawi: false, approom: false, dhl: false, tiktok: false };
+var openCards = { etermin: true, lexoffice: false, google: false, meta: false, wawi: false, approom: false, dhl: false, tiktok: false, instagram: false, facebook: false, youtube: false, gmb: false, analytics: false };
 
 // ═══════════════════════════════════════════════════════
 // MAIN RENDER
@@ -161,6 +236,7 @@ export async function renderSchnittstellen() {
     setTimeout(function() { if (window.loadDhlConfig) window.loadDhlConfig(); }, 500);
     setTimeout(function() { if (window.loadLexofficeConfig) window.loadLexofficeConfig(); }, 600);
     setTimeout(function() { if (window.loadTikTokConfig) window.loadTikTokConfig(); }, 700);
+    setTimeout(function() { if (window.loadSocialConfigs) window.loadSocialConfigs(); }, 800);
     renderPlannedGrid();
     renderPartnerCards();
     loadEterminOverview();
@@ -271,7 +347,7 @@ window.showConnView = function(view) {
 function renderStatusGrid() {
     var el = document.getElementById('connStatusGrid');
     if (!el) return;
-    var ids = ['etermin', 'lexoffice', 'approom', 'dhl', 'google', 'meta', 'wawi'];
+    var ids = ['etermin', 'tiktok', 'instagram', 'facebook', 'youtube', 'gmb', 'analytics', 'lexoffice', 'approom', 'dhl', 'google', 'meta', 'wawi'];
     el.innerHTML = ids.map(function(id) {
         var c = CONNECTORS[id];
         var sc = c.status === 'connected' ? '#16a34a' : c.status === 'error' ? '#dc2626' : c.status === 'disconnected' ? '#dc2626' : '#9ca3af';
@@ -534,6 +610,127 @@ function renderConnectorCard(id) {
                 + '<span class="' + (l.type === 'ok' ? 'text-green-600' : l.type === 'err' ? 'text-red-500' : 'text-gray-500') + '">' + _escH(l.msg) + '</span></div>';
         });
         body += '</div></div>';
+    }
+
+
+    // ── Instagram body ──
+    if (id === 'instagram') {
+        body += '<div class="pt-4 space-y-4">';
+        body += renderGfToggle(id);
+        body += '<p class="text-xs text-gray-500">Verbinde das Instagram Business-Konto des Standorts über die Meta Graph API. Organische Posts, Follower-Entwicklung und Story-Reichweite.</p>';
+        body += _renderOAuthFields(c, 'instagram');
+        body += _renderReadonlyInfo(c);
+        body += '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+            + '<button onclick="window.saveSocialConfig('instagram')" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Speichern</button>'
+            + '<button onclick="window.loadSocialData('instagram')" style="padding:7px 14px;background:linear-gradient(135deg,#e1306c,#f77737,#fcaf45);color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten laden</button>'
+            + '</div>';
+        body += '<div id="socialStats_instagram" style="display:none">';
+        body += '<div id="socialAccountCard_instagram" style="background:#f9fafb;border-radius:10px;padding:12px;margin-top:8px">'
+            + '<p id="socialName_instagram" class="text-sm font-bold text-gray-800">—</p>'
+            + '<div style="display:flex;gap:16px;margin-top:6px;flex-wrap:wrap">'
+            + '<span class="text-[11px] text-gray-500">👥 <span id="socialFollowers_instagram">—</span> Follower</span>'
+            + '<span class="text-[11px] text-gray-500">❤️ <span id="socialReach_instagram">—</span> Reichweite (30T)</span>'
+            + '<span class="text-[11px] text-gray-500">🖼 <span id="socialPosts_instagram">—</span> Posts</span>'
+            + '</div></div>';
+        body += _renderSocialVideoTable('instagram', ['Post', '❤️ Likes', '💬 Komm.', '👁 Impressionen', 'Datum']);
+        body += '</div>';
+        body += '</div>';
+    }
+
+    // ── Facebook body ──
+    if (id === 'facebook') {
+        body += '<div class="pt-4 space-y-4">';
+        body += renderGfToggle(id);
+        body += '<p class="text-xs text-gray-500">Facebook Seiten-Performance: Fans, organische Reichweite und Engagement-Auswertung über die Meta Graph API.</p>';
+        body += _renderOAuthFields(c, 'facebook');
+        body += _renderReadonlyInfo(c);
+        body += '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+            + '<button onclick="window.saveSocialConfig('facebook')" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Speichern</button>'
+            + '<button onclick="window.loadSocialData('facebook')" style="padding:7px 14px;background:#1877f2;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten laden</button>'
+            + '</div>';
+        body += '<div id="socialStats_facebook" style="display:none">';
+        body += '<div id="socialAccountCard_facebook" style="background:#f9fafb;border-radius:10px;padding:12px;margin-top:8px">'
+            + '<p id="socialName_facebook" class="text-sm font-bold text-gray-800">—</p>'
+            + '<div style="display:flex;gap:16px;margin-top:6px;flex-wrap:wrap">'
+            + '<span class="text-[11px] text-gray-500">👍 <span id="socialFollowers_facebook">—</span> Fans</span>'
+            + '<span class="text-[11px] text-gray-500">📢 <span id="socialReach_facebook">—</span> Reichweite (30T)</span>'
+            + '<span class="text-[11px] text-gray-500">📝 <span id="socialPosts_facebook">—</span> Posts</span>'
+            + '</div></div>';
+        body += _renderSocialVideoTable('facebook', ['Post', '❤️ Reaktionen', '💬 Komm.', '↗ Shares', 'Datum']);
+        body += '</div>';
+        body += '</div>';
+    }
+
+    // ── YouTube body ──
+    if (id === 'youtube') {
+        body += '<div class="pt-4 space-y-4">';
+        body += renderGfToggle(id);
+        body += '<p class="text-xs text-gray-500">YouTube Analytics: Abonnenten, Gesamtaufrufe, Watch-Time und Video-Performance des vit:bikes Kanals.</p>';
+        body += _renderOAuthFields(c, 'youtube');
+        body += _renderReadonlyInfo(c);
+        body += '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+            + '<button onclick="window.saveSocialConfig('youtube')" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Speichern</button>'
+            + '<button onclick="window.loadSocialData('youtube')" style="padding:7px 14px;background:#ff0000;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten laden</button>'
+            + '</div>';
+        body += '<div id="socialStats_youtube" style="display:none">';
+        body += '<div id="socialAccountCard_youtube" style="background:#f9fafb;border-radius:10px;padding:12px;margin-top:8px">'
+            + '<p id="socialName_youtube" class="text-sm font-bold text-gray-800">—</p>'
+            + '<div style="display:flex;gap:16px;margin-top:6px;flex-wrap:wrap">'
+            + '<span class="text-[11px] text-gray-500">🔔 <span id="socialFollowers_youtube">—</span> Abonnenten</span>'
+            + '<span class="text-[11px] text-gray-500">👁 <span id="socialReach_youtube">—</span> Aufrufe gesamt</span>'
+            + '<span class="text-[11px] text-gray-500">🎬 <span id="socialPosts_youtube">—</span> Videos</span>'
+            + '</div></div>';
+        body += _renderSocialVideoTable('youtube', ['Titel', '👁 Views', '👍 Likes', '⏱ Watch-Time (Min)', 'Datum']);
+        body += '</div>';
+        body += '</div>';
+    }
+
+    // ── Google My Business body ──
+    if (id === 'gmb') {
+        body += '<div class="pt-4 space-y-4">';
+        body += renderGfToggle(id);
+        body += '<p class="text-xs text-gray-500">Google Business Profile: Bewertungen, Anrufe, Wegbeschreibungen und Profilaufrufe – pro Standort oder netzwerkweit.</p>';
+        body += _renderOAuthFields(c, 'gmb');
+        body += _renderReadonlyInfo(c);
+        body += '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+            + '<button onclick="window.saveSocialConfig('gmb')" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Speichern</button>'
+            + '<button onclick="window.loadSocialData('gmb')" style="padding:7px 14px;background:#4285f4;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten laden</button>'
+            + '</div>';
+        body += '<div id="socialStats_gmb" style="display:none">';
+        body += '<div id="socialAccountCard_gmb" style="background:#f9fafb;border-radius:10px;padding:12px;margin-top:8px">'
+            + '<p id="socialName_gmb" class="text-sm font-bold text-gray-800">—</p>'
+            + '<div style="display:flex;gap:16px;margin-top:6px;flex-wrap:wrap">'
+            + '<span class="text-[11px] text-gray-500">⭐ <span id="socialFollowers_gmb">—</span> Ø Bewertung</span>'
+            + '<span class="text-[11px] text-gray-500">📋 <span id="socialReach_gmb">—</span> Bewertungen</span>'
+            + '<span class="text-[11px] text-gray-500">👁 <span id="socialPosts_gmb">—</span> Profilaufrufe (30T)</span>'
+            + '</div></div>';
+        body += _renderSocialVideoTable('gmb', ['Rezensent', '⭐ Stars', 'Kommentar', 'Antwort', 'Datum']);
+        body += '</div>';
+        body += '</div>';
+    }
+
+    // ── Google Analytics body ──
+    if (id === 'analytics') {
+        body += '<div class="pt-4 space-y-4">';
+        body += renderGfToggle(id);
+        body += '<p class="text-xs text-gray-500">GA4 Website-Statistiken: Seitenaufrufe, Nutzer, Sessions und Traffic-Quellen für vitbikes.de und Standort-Webseiten.</p>';
+        body += _renderOAuthFields(c, 'analytics');
+        body += _renderReadonlyInfo(c);
+        body += '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+            + '<button onclick="window.saveSocialConfig('analytics')" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Speichern</button>'
+            + '<button onclick="window.loadSocialData('analytics')" style="padding:7px 14px;background:#e37400;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten laden</button>'
+            + '</div>';
+        body += '<div id="socialStats_analytics" style="display:none">';
+        body += '<div id="socialAccountCard_analytics" style="background:#f9fafb;border-radius:10px;padding:12px;margin-top:8px">'
+            + '<p id="socialName_analytics" class="text-sm font-bold text-gray-800">—</p>'
+            + '<div style="display:flex;gap:16px;margin-top:6px;flex-wrap:wrap">'
+            + '<span class="text-[11px] text-gray-500">👁 <span id="socialFollowers_analytics">—</span> Seitenaufrufe (30T)</span>'
+            + '<span class="text-[11px] text-gray-500">👤 <span id="socialReach_analytics">—</span> Nutzer (30T)</span>'
+            + '<span class="text-[11px] text-gray-500">⏱ <span id="socialPosts_analytics">—</span> Ø Sitzungsdauer</span>'
+            + '</div></div>';
+        body += _renderSocialVideoTable('analytics', ['Seite', '👁 Aufrufe', '👤 Nutzer', '⏱ Ø Zeit', 'Quelle']);
+        body += '</div>';
+        body += '</div>';
     }
 
 
@@ -1402,6 +1599,254 @@ Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 
 
 
+
+
+// ═══════════════════════════════════════════════════════
+// SOCIAL MEDIA – SHARED HELPERS
+// ═══════════════════════════════════════════════════════
+
+function _renderOAuthFields(c, prefix) {
+    var html = '<div class="space-y-2">';
+    html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Verbindung konfigurieren</p>';
+    (c.oauthFields || []).forEach(function(f) {
+        html += '<div><label class="text-[10px] text-gray-500 font-medium">' + _escH(f.label) + '</label>'
+            + '<input id="' + prefix + '_field_' + f.key + '" type="' + (f.type || 'text') + '" placeholder="' + _escH(f.placeholder || '') + '"'
+            + ' style="width:100%;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;margin-top:2px"/></div>';
+    });
+    html += '</div>';
+    return html;
+}
+
+function _renderReadonlyInfo(c) {
+    if (!c.readonlyFields || !c.readonlyFields.length) return '';
+    var html = '<div class="space-y-1">';
+    html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Info</p>';
+    c.readonlyFields.forEach(function(f) {
+        html += '<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #f3f4f6">'
+            + '<span class="text-[10px] text-gray-400 font-medium" style="min-width:110px">' + _escH(f.label) + '</span>'
+            + '<span class="text-[10px] text-gray-600">' + _escH(f.value) + '</span></div>';
+    });
+    html += '</div>';
+    return html;
+}
+
+function _renderSocialVideoTable(platform, headers) {
+    var html = '<div style="margin-top:12px">'
+        + '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider" style="margin-bottom:6px">Details</p>'
+        + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">'
+        + '<thead><tr style="border-bottom:2px solid #e5e7eb">';
+    headers.forEach(function(h, i) {
+        html += '<th style="text-align:' + (i === 0 ? 'left' : 'center') + ';padding:4px 8px;color:#6b7280;font-weight:600">' + h + '</th>';
+    });
+    html += '</tr></thead><tbody id="socialRows_' + platform + '"></tbody></table></div></div>';
+    return html;
+}
+
+// ── DEMO DATA per platform ──
+var SOCIAL_DEMO = {
+    instagram: {
+        name: 'vitbikes (Demo)', followers: '2.847', reach: '18.400', posts: '127',
+        rows: [
+            ['Frühjahrsaktion: E-Bike Test-Days 🚲', '342', '28', '4.200', '01.03.2026'],
+            ['Gravel-Tipps für Anfänger', '218', '19', '2.900', '22.02.2026'],
+            ['Hinter den Kulissen: Werkstatt-Alltag', '189', '14', '2.100', '15.02.2026'],
+            ['JobRad – So einfach geht's', '567', '44', '7.800', '08.02.2026'],
+            ['MTB-Trail Münster 🏔️', '143', '11', '1.600', '01.02.2026'],
+        ]
+    },
+    facebook: {
+        name: 'vit:bikes (Demo)', followers: '1.234', reach: '9.700', posts: '89',
+        rows: [
+            ['Frühjahrscheck – Fahrrad fit machen', '87', '12', '34', '28.02.2026'],
+            ['Neue Partner: Herzlich willkommen!', '124', '22', '67', '20.02.2026'],
+            ['E-Bike Beratung – Termin buchen', '56', '8', '19', '12.02.2026'],
+            ['Saison-Opening 2026 🎉', '203', '38', '91', '05.02.2026'],
+            ['Tipp: Reifendruck im Winter', '41', '5', '13', '29.01.2026'],
+        ]
+    },
+    youtube: {
+        name: 'vit:bikes Channel (Demo)', followers: '892', reach: '48.200', posts: '34',
+        rows: [
+            ['E-Bike Kaufberatung 2026 – Komplett-Guide', '12.400', '340', '1.820', '15.02.2026'],
+            ['JobRad vs. Privatkauf – Was lohnt sich?', '8.700', '218', '1.240', '01.02.2026'],
+            ['Werkstatt-Tour: So warten wir Dein Rad', '5.200', '134', '780', '20.01.2026'],
+            ['Gravel Bike Test: Trek vs. Cube', '9.100', '287', '1.350', '10.01.2026'],
+            ['Starnberger See mit dem Gravel Bike', '3.800', '98', '560', '02.01.2026'],
+        ]
+    },
+    gmb: {
+        name: 'vit:bikes Netzwerk (Demo)', followers: '4.7', reach: '89', posts: '3.240',
+        rows: [
+            ['Max M.', '⭐⭐⭐⭐⭐', 'Super Beratung, sehr kompetent!', '✓ Beantwortet', '01.03.2026'],
+            ['Lisa K.', '⭐⭐⭐⭐⭐', 'Tolles Sortiment, faire Preise.', '✓ Beantwortet', '22.02.2026'],
+            ['Thomas B.', '⭐⭐⭐⭐', 'Schnelle Reparatur, gerne wieder.', '✓ Beantwortet', '14.02.2026'],
+            ['Sarah W.', '⭐⭐⭐⭐⭐', 'Hat mir das perfekte E-Bike empfohlen!', '✓ Beantwortet', '05.02.2026'],
+            ['Klaus R.', '⭐⭐⭐', 'Wartezeit bei Werkstatt etwas lang.', '✓ Beantwortet', '28.01.2026'],
+        ]
+    },
+    analytics: {
+        name: 'vitbikes.de (Demo)', followers: '24.800', reach: '8.420', posts: '2m 14s',
+        rows: [
+            ['/e-bike-beratung', '4.200', '3.100', '3m 12s', 'Google Organic'],
+            ['/', '3.800', '3.200', '1m 45s', 'Direkt'],
+            ['/jobbike', '2.900', '2.400', '4m 08s', 'Google Ads'],
+            ['/standorte', '2.100', '1.900', '1m 22s', 'Google Organic'],
+            ['/kontakt', '1.800', '1.600', '0m 54s', 'Social Media'],
+        ]
+    }
+};
+
+window.saveSocialConfig = async function(platform) {
+    var c = CONNECTORS[platform];
+    if (!c || !c.oauthFields) return;
+    try {
+        var sb = _sb(); if (!sb) return;
+        var profile = _sbProfile(); if (!profile) return;
+        for (var i = 0; i < c.oauthFields.length; i++) {
+            var f = c.oauthFields[i];
+            var el = document.getElementById(platform + '_field_' + f.key);
+            if (!el || !el.value.trim()) continue;
+            await sb.from('connector_config').upsert({
+                standort_id: profile.standort_id || null,
+                connector_key: platform + '_' + f.key,
+                config_value: el.value.trim()
+            }, { onConflict: 'standort_id,connector_key' });
+        }
+        CONNECTORS[platform].status = 'planned';
+        CONNECTORS[platform].statusLabel = 'Konfiguriert';
+        _showToast(c.name + ' gespeichert ✓', 'success');
+    } catch(e) {
+        _showToast('Fehler beim Speichern: ' + e.message, 'error');
+    }
+};
+
+window.loadSocialData = async function(platform) {
+    _showToast('Daten werden geladen...', 'info');
+
+    // YouTube: try live API
+    if (platform === 'youtube') {
+        var keyEl = document.getElementById('youtube_field_api_key');
+        var chEl = document.getElementById('youtube_field_channel_id');
+        var apiKey = keyEl && keyEl.value.trim() ? keyEl.value.trim() : 'AIzaSyBLlbkT79izWdYCFnuqHmwlC5-hfA5CUFc';
+        var channelId = chEl && chEl.value.trim();
+
+        if (channelId) {
+            try {
+                var chUrl = 'https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=' + encodeURIComponent(channelId) + '&key=' + encodeURIComponent(apiKey);
+                var resp = await fetch(chUrl);
+                var data = await resp.json();
+                if (data.items && data.items.length > 0) {
+                    var ch = data.items[0];
+                    var stats = ch.statistics || {};
+                    _populateSocialCard('youtube',
+                        ch.snippet.title,
+                        parseInt(stats.subscriberCount || 0).toLocaleString('de-DE'),
+                        parseInt(stats.viewCount || 0).toLocaleString('de-DE'),
+                        parseInt(stats.videoCount || 0).toLocaleString('de-DE')
+                    );
+                    // Fetch recent videos
+                    var searchUrl = 'https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=' + encodeURIComponent(channelId) + '&order=date&maxResults=10&type=video&key=' + encodeURIComponent(apiKey);
+                    var sResp = await fetch(searchUrl);
+                    var sData = await sResp.json();
+                    if (sData.items && sData.items.length) {
+                        var videoIds = sData.items.map(function(v) { return v.id.videoId; }).join(',');
+                        var vUrl = 'https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=' + videoIds + '&key=' + encodeURIComponent(apiKey);
+                        var vResp2 = await fetch(vUrl);
+                        var vData = await vResp2.json();
+                        if (vData.items) {
+                            var rows = vData.items.map(function(v) {
+                                var s = v.statistics || {};
+                                var date = v.snippet.publishedAt ? new Date(v.snippet.publishedAt).toLocaleDateString('de-DE') : '—';
+                                return [
+                                    v.snippet.title,
+                                    parseInt(s.viewCount || 0).toLocaleString('de-DE'),
+                                    parseInt(s.likeCount || 0).toLocaleString('de-DE'),
+                                    '—',
+                                    date
+                                ];
+                            });
+                            _populateSocialRows('youtube', rows);
+                        }
+                    }
+                    document.getElementById('socialStats_youtube').style.display = '';
+                    CONNECTORS.youtube.status = 'connected';
+                    CONNECTORS.youtube.statusLabel = 'Verbunden';
+                    _showToast('YouTube-Daten geladen ✓', 'success');
+                    return;
+                }
+            } catch(e) {}
+        }
+    }
+
+    // All others: show demo data
+    _showSocialDemo(platform);
+};
+
+function _showSocialDemo(platform) {
+    var demo = SOCIAL_DEMO[platform];
+    if (!demo) return;
+    _populateSocialCard(platform, demo.name, demo.followers, demo.reach, demo.posts);
+    _populateSocialRows(platform, demo.rows);
+    document.getElementById('socialStats_' + platform).style.display = '';
+    CONNECTORS[platform].status = 'planned';
+    CONNECTORS[platform].statusLabel = 'Demo-Daten';
+    _showToast(CONNECTORS[platform].name + ': Demo-Daten angezeigt', 'info');
+}
+
+function _populateSocialCard(platform, name, stat1, stat2, stat3) {
+    var el = function(id) { return document.getElementById(id); };
+    if (el('socialName_' + platform)) el('socialName_' + platform).textContent = name;
+    if (el('socialFollowers_' + platform)) el('socialFollowers_' + platform).textContent = stat1;
+    if (el('socialReach_' + platform)) el('socialReach_' + platform).textContent = stat2;
+    if (el('socialPosts_' + platform)) el('socialPosts_' + platform).textContent = stat3;
+}
+
+function _populateSocialRows(platform, rows) {
+    var tbody = document.getElementById('socialRows_' + platform);
+    if (!tbody) return;
+    tbody.innerHTML = rows.map(function(row) {
+        return '<tr style="border-bottom:1px solid #f3f4f6">'
+            + row.map(function(cell, i) {
+                return '<td style="padding:5px 8px;' + (i === 0 ? 'max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' : 'text-align:center') + '">' + _escH(String(cell)) + '</td>';
+            }).join('')
+            + '</tr>';
+    }).join('');
+}
+
+window.loadSocialConfigs = async function() {
+    var platforms = ['instagram', 'facebook', 'youtube', 'gmb', 'analytics'];
+    try {
+        var sb = _sb(); if (!sb) return;
+        var keys = [];
+        platforms.forEach(function(p) {
+            var c = CONNECTORS[p];
+            if (c && c.oauthFields) {
+                c.oauthFields.forEach(function(f) { keys.push(p + '_' + f.key); });
+            }
+        });
+        var { data: rows } = await sb.from('connector_config').select('connector_key, config_value').in('connector_key', keys);
+        if (!rows || !rows.length) return;
+        var map = {};
+        rows.forEach(function(r) { map[r.connector_key] = r.config_value; });
+        platforms.forEach(function(p) {
+            var c = CONNECTORS[p];
+            if (!c || !c.oauthFields) return;
+            var hasValue = false;
+            c.oauthFields.forEach(function(f) {
+                var val = map[p + '_' + f.key];
+                var el = document.getElementById(p + '_field_' + f.key);
+                if (el && val) { el.value = val; hasValue = true; }
+            });
+            if (hasValue) {
+                CONNECTORS[p].status = 'planned';
+                CONNECTORS[p].statusLabel = 'Konfiguriert';
+            }
+        });
+        // Pre-fill YouTube API key
+        var ytKeyEl = document.getElementById('youtube_field_api_key');
+        if (ytKeyEl && !ytKeyEl.value) ytKeyEl.value = 'AIzaSyBLlbkT79izWdYCFnuqHmwlC5-hfA5CUFc';
+    } catch(e) {}
+};
 
 // ═══════════════════════════════════════════════════════
 // TIKTOK INTEGRATION
