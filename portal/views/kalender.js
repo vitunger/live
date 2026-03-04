@@ -417,7 +417,21 @@ function kalResolveVerkaufer(t) {
 
 export async function loadKalTermine() {
     // In demo mode, termine are injected by fillDemoWidgets
-    if (window.DEMO_ACTIVE) { kalRenderActive(); return; }
+    if (window.DEMO_ACTIVE) {
+        // Inject demo termine into kalTermine
+        if (window.DEMO_DATA && window.DEMO_DATA.termine) {
+            kalTermine = window.DEMO_DATA.termine.map(function(t) {
+                return {
+                    id: t.id, titel: t.titel,
+                    start_zeit: t.datum + 'T' + t.uhrzeit + ':00',
+                    end_zeit: t.datum + 'T' + t.uhrzeit + ':00',
+                    typ: t.typ, dauer_min: t.dauer
+                };
+            });
+        }
+        kalRenderActive();
+        return;
+    }
     // Load kalender mapping cache in parallel
     await loadKalenderMappingCache();
     try {
