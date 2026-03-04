@@ -23,9 +23,23 @@ function openProfilePanel() {
         var nameParts = (sbProfile.name || 'Demo User').split(' ');
         document.getElementById('profileVorname').value = nameParts[0] || '';
         document.getElementById('profileNachname').value = nameParts.slice(1).join(' ') || '';
-        document.getElementById('profileEmail').value = sbProfile.email || '';
-        document.getElementById('profileTelefon').value = sbProfile.telefon || '';
-        document.getElementById('profilePosition').value = sbProfile.position || '';
+        // Rollen als Badges anzeigen
+        var rollenBadgesEl = document.getElementById('profileRollenBadges');
+        if(rollenBadgesEl) {
+            var rollen = (typeof sbProfile.rollen !== 'undefined' && sbProfile.rollen) ? sbProfile.rollen : [];
+            if(!rollen.length && typeof currentRole !== 'undefined' && currentRole) rollen = [currentRole];
+            var labelMap = {'inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung','hq':'HQ','hq_gf':'Geschäftsführung','hq_sales':'Sales','hq_marketing':'Marketing','hq_einkauf':'Einkauf','hq_support':'Support','hq_akademie':'Akademie','hq_hr':'HR','hq_it':'IT / Systemadmin','hq_zahlen':'Zahlen','owner':'Owner'};
+            var colorMap = {'inhaber':'bg-orange-100 text-orange-700','hq_gf':'bg-yellow-100 text-yellow-800','hq_sales':'bg-blue-100 text-blue-700','hq_marketing':'bg-pink-100 text-pink-700','hq_einkauf':'bg-cyan-100 text-cyan-700','hq_support':'bg-yellow-100 text-yellow-700','hq_akademie':'bg-emerald-100 text-emerald-700','hq_hr':'bg-rose-100 text-rose-700','hq_it':'bg-slate-200 text-slate-700','hq_zahlen':'bg-teal-100 text-teal-700','verkauf':'bg-blue-100 text-blue-700','werkstatt':'bg-gray-200 text-gray-700','buchhaltung':'bg-purple-100 text-purple-700','hq':'bg-red-100 text-red-700','owner':'bg-amber-100 text-amber-800'};
+            if(rollen.length) {
+                rollenBadgesEl.innerHTML = rollen.map(function(r){
+                    var label = labelMap[r] || r;
+                    var cls = colorMap[r] || 'bg-gray-100 text-gray-600';
+                    return '<span class="px-2.5 py-1 rounded-full text-xs font-semibold '+cls+'">'+label+'</span>';
+                }).join('');
+            } else {
+                rollenBadgesEl.innerHTML = '<span class="text-xs text-gray-400">Keine Rolle zugewiesen</span>';
+            }
+        }
         document.getElementById('profileNameDisplay').textContent = sbProfile.name || 'Demo User';
         document.getElementById('profileRoleDisplay').textContent = (typeof currentRole !== 'undefined' ? currentRole : 'Inhaber');
         var stdName = (typeof sbStandort !== 'undefined' && sbStandort) ? sbStandort.name : '';
@@ -227,18 +241,14 @@ async function saveProfile() {
     var vorname = document.getElementById('profileVorname').value.trim();
     var nachname = document.getElementById('profileNachname').value.trim();
     var fullName = (vorname + ' ' + nachname).trim();
-    var telefon = document.getElementById('profileTelefon').value.trim();
-    var position = document.getElementById('profilePosition').value.trim();
 
     if(typeof sb !== 'undefined' && typeof sbProfile !== 'undefined' && sbProfile) {
         try {
-            var upd = { name: fullName, vorname: vorname, nachname: nachname, telefon: telefon, position: position };
+            var upd = { name: fullName, vorname: vorname, nachname: nachname };
             var resp = await _sb().from('users').update(upd).eq('id', sbProfile.id);
             if(resp.error) throw resp.error;
             // Update local state
             sbProfile.name = fullName;
-            sbProfile.telefon = telefon;
-            sbProfile.position = position;
             // Update UI
             document.querySelectorAll('[data-user-name]').forEach(function(el){ el.textContent = fullName; });
             document.getElementById('profileNameDisplay').textContent = fullName;
