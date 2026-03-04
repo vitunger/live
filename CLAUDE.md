@@ -59,6 +59,7 @@ portal/
 │   ├── controlling-upload.js  – Upload-Modal, Parse, Batch, KI-Fallback
 │   ├── controlling-save.js    – Auto-Save, Apply KI Result, Save Data
 │   ├── controlling-benchmarks.js – Netzwerk-Benchmark Vergleich
+│   ├── controlling-liquiditaet.js – Liquiditätsplanung (12-Monats Cashflow, Ist/Plan, Ampel, KI-Analyse, CSV-Export)
 │   ├── dev-pipeline.js     – Orchestrator: State, Tabs, loadDevSubmissions (✅ aufgespalten)
 │   ├── dev-recording.js    – Audio/Video-Recording, Datei-Upload
 │   ├── dev-tabs.js         – Tab-Renderer: Ideen, Releases, Steuerung, Flags, System, Nutzung
@@ -628,6 +629,7 @@ security: RLS/JWT/Auth-Verbesserung
 - 2026-03-03: BWA Detail-Panel HTML restored. Null-guards in controlling-display.js. renderBenchmarks added to view-router chain.
 - 2026-03-03: Demo-Standort aus allen BWA-Auswertungen/Benchmarks/KPIs entfernt. is_demo Flag auf standorte-Tabelle. 4 RPC-Funktionen aktualisiert: get_benchmark_data, get_benchmark_averages, get_bwa_network_status, get_bwa_status_overview. BWA Detail-Panel display fix in showBwaFromDb (war faelschlicherweise in downloadBwa). Benchmark-Content in eigenen ctrlTabBenchmark Tab verschoben.
 - 2026-03-03: KRITISCH - 2 extra close-div nach controllingView entfernt (46/53 Views aus main-Layout gebrochen). Benchmark-Minimum 5 Standorte (insufficient_data Card). Scroll-to-top bei View-Wechsel.
+- 2026-03-04: Liquiditäts-Modul hinzugefügt (controlling-liquiditaet.js). Tab in Controlling aktiv. DB-Tabelle liquidity_plan mit RLS. BWA-Fallback. KI-Analyse. CSV-Export. CACHE_BUST aktualisiert.
 - 2026-03-03: Demo-Standort aus HQ-Cockpit gefiltert. loadHqStandorte() in hq-cockpit.js filtert jetzt standorte mit is_demo=true raus. Betrifft alle HQ-Views: Top 5, Bottom 5, KPIs, Finanzen, Marketing, Einkauf, Verkauf, Standorte-Liste.
 - 2026-03-03: Standorte kritisch 33/33 Fix: leadPerf=0 (kein Plan-Umsatz) wird nicht mehr als kritisch gewertet. Betrifft HQ-Cockpit KPI, Marketing-Alerts, Handlungsbedarf-Alerts.
 
