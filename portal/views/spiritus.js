@@ -1,696 +1,759 @@
-// ============================================================
-// SPIRITUS – Call Intelligence & Protokoll
-// vit:bikes Partner Portal
-// Zeilen: ~600
-// ============================================================
+/**
+ * views/spiritus.js – Spiritus: Call Intelligence & Protokoll
+ * Transkribiert Standort-Calls, extrahiert Erkenntnisse via KI,
+ * speist den KI-Trainer mit netzwerkinternem Wissen.
+ * @module views/spiritus
+ * Nur für HQ sichtbar (is_hq = true)
+ */
 
-const SPIRITUS_VERSION = '1.0.0';
+function _sb()           { return window.sb; }
+function _sbUser()       { return window.sbUser; }
+function _sbProfile()    { return window.sbProfile; }
+function _escH(s)        { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
+function _t(k)           { return typeof window.t === 'function' ? window.t(k) : k; }
+function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
+function _fmtN(n)        { return typeof window.fmtN === 'function' ? window.fmtN(n) : String(n); }
 
-// ─── State ──────────────────────────────────────────────────
+// ─── State ─────────────────────────────────────────────────────────────────
 var SP = {
     transcripts: [],
-    filter: { location: '', type: '' },
-    analyzing: false
+    currentTab: 'uebersicht',
+    filterStandort: '',
+    filterStatus: '',
+    uploadMode: 'audio',   // 'audio' | 'text'
+    processing: false
 };
 
-// ─── Render ─────────────────────────────────────────────────
-window.renderSpiritus = function() {
-    var el = document.getElementById('spiritusView');
-    if (!el) return;
-    el.innerHTML = `
-    <div class="p-4 max-w-5xl mx-auto">
-
-      <!-- Header -->
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-5 gap-3">
-        <div>
-          <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
-            🎙️ <span>Spiritus</span>
-            <span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">BETA</span>
-          </h1>
-          <p class="text-sm text-gray-500 mt-0.5">Call-Protokolle hochladen · KI extrahiert Erkenntnisse · Netzwerk lernt</p>
-        </div>
-        <button onclick="spOpenUploadModal()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 flex items-center gap-2 shrink-0">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-          Call hochladen
-        </button>
-      </div>
-
-      <!-- Stats -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5" id="spStats">
-        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-vit-orange" id="spStatTotal">–</div><div class="text-xs text-gray-500">Calls gesamt</div></div>
-        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-blue-600" id="spStatMonth">–</div><div class="text-xs text-gray-500">Dieser Monat</div></div>
-        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-amber-500" id="spStatPending">–</div><div class="text-xs text-gray-500">In Analyse</div></div>
-        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600" id="spStatKB">–</div><div class="text-xs text-gray-500">KB-Einträge erzeugt</div></div>
-      </div>
-
-      <!-- Filter -->
-      <div class="vit-card p-3 mb-4 flex flex-wrap gap-3 items-center">
-        <select id="spFilterLocation" onchange="spApplyFilter()" class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white">
-          <option value="">Alle Standorte</option>
-        </select>
-        <select id="spFilterType" onchange="spApplyFilter()" class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white">
-          <option value="">Alle Typen</option>
-          <option value="beratung">Beratungscall</option>
-          <option value="review">Performance Review</option>
-          <option value="onboarding">Onboarding</option>
-          <option value="support">Support</option>
-          <option value="strategie">Strategie</option>
-        </select>
-        <div class="ml-auto text-xs text-gray-400" id="spFilterInfo"></div>
-      </div>
-
-      <!-- Liste -->
-      <div id="spList" class="space-y-3"></div>
-
-    </div>
-
-    <!-- Upload Modal -->
-    <div id="spUploadModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" style="display:none!important;">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div class="p-5 border-b border-gray-100 flex items-center justify-between">
-          <h2 class="text-base font-bold text-gray-800">🎙️ Neuen Call hochladen</h2>
-          <button onclick="spCloseUploadModal()" class="text-gray-400 hover:text-gray-600">✕</button>
-        </div>
-        <div class="p-5 space-y-4">
-
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">Standort *</label>
-              <select id="spLocation" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                <option value="">Standort wählen...</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">Call-Datum *</label>
-              <input type="date" id="spCallDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Call-Typ</label>
-            <select id="spCallType" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-              <option value="beratung">Beratungscall</option>
-              <option value="review">Performance Review</option>
-              <option value="onboarding">Onboarding</option>
-              <option value="support">Support</option>
-              <option value="strategie">Strategie</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Gesprächspartner (optional)</label>
-            <input type="text" id="spContact" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="z.B. Max Müller (Inhaber)">
-          </div>
-
-          <!-- Input Mode Toggle -->
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-2">Protokoll-Quelle *</label>
-            <div class="flex gap-2 mb-3">
-              <button onclick="spSetInputMode('text')" id="spModeText" class="flex-1 py-2 text-xs rounded-lg border border-gray-200 text-gray-600 hover:border-vit-orange transition">✏️ Text / Transkript</button>
-              <button onclick="spSetInputMode('file')" id="spModeFile" class="flex-1 py-2 text-xs rounded-lg border border-gray-200 text-gray-600 hover:border-vit-orange transition">📄 Datei Upload</button>
-            </div>
-
-            <div id="spInputText">
-              <textarea id="spTranscriptText" rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none" placeholder="Protokoll oder Transkript hier einfügen (mind. 100 Zeichen für KI-Analyse)..."></textarea>
-            </div>
-
-            <div id="spInputFile" style="display:none;">
-              <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-vit-orange transition cursor-pointer" onclick="document.getElementById('spFileInput').click()">
-                <div class="text-2xl mb-1">📄</div>
-                <div class="text-sm text-gray-500">TXT oder DOCX hochladen</div>
-                <div class="text-xs text-gray-400 mt-1">Klicken zum Auswählen</div>
-              </div>
-              <input type="file" id="spFileInput" accept=".txt,.docx,.doc" class="hidden" onchange="spHandleFile(this)">
-              <div id="spFileName" class="text-xs text-gray-500 mt-1 text-center"></div>
-            </div>
-          </div>
-
-          <!-- KI-Analyse Hinweis -->
-          <div class="bg-orange-50 border border-orange-200 rounded-lg p-3 text-xs text-orange-700">
-            <strong>🤖 KI-Analyse:</strong> Nach dem Speichern extrahiert Claude automatisch Probleme, Maßnahmen und Stimmung. Erkenntnisse mit hoher Konfidenz (≥85%) fließen direkt in die Wissensbasis.
-          </div>
-
-          <button onclick="spSaveCall()" class="w-full py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600">
-            💾 Speichern & Analysieren
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Detail Modal -->
-    <div id="spDetailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" style="display:none!important;">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div class="p-5 border-b border-gray-100 flex items-center justify-between">
-          <h2 class="text-base font-bold text-gray-800" id="spDetailTitle">Call Details</h2>
-          <button onclick="spCloseDetailModal()" class="text-gray-400 hover:text-gray-600">✕</button>
-        </div>
-        <div id="spDetailContent" class="p-5"></div>
-      </div>
-    </div>
-    `;
-
-    spLoadData();
-};
-
-// ─── Input Mode ─────────────────────────────────────────────
-window.spSetInputMode = function(mode) {
-    var textBtn = document.getElementById('spModeText');
-    var fileBtn = document.getElementById('spModeFile');
-    var textArea = document.getElementById('spInputText');
-    var fileArea = document.getElementById('spInputFile');
-    if (!textBtn) return;
-
-    if (mode === 'text') {
-        textBtn.className = 'flex-1 py-2 text-xs rounded-lg border border-vit-orange bg-orange-50 text-vit-orange font-medium';
-        fileBtn.className = 'flex-1 py-2 text-xs rounded-lg border border-gray-200 text-gray-600 hover:border-vit-orange transition';
-        if (textArea) textArea.style.display = '';
-        if (fileArea) fileArea.style.display = 'none';
-    } else {
-        fileBtn.className = 'flex-1 py-2 text-xs rounded-lg border border-vit-orange bg-orange-50 text-vit-orange font-medium';
-        textBtn.className = 'flex-1 py-2 text-xs rounded-lg border border-gray-200 text-gray-600 hover:border-vit-orange transition';
-        if (fileArea) fileArea.style.display = '';
-        if (textArea) textArea.style.display = 'none';
-    }
-};
-
-window.spHandleFile = function(input) {
-    if (!input.files || !input.files[0]) return;
-    var file = input.files[0];
-    var nameEl = document.getElementById('spFileName');
-    if (nameEl) nameEl.textContent = '📄 ' + file.name + ' (' + Math.round(file.size / 1024) + ' KB)';
-
-    if (file.name.endsWith('.txt')) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            SP._fileContent = e.target.result;
-        };
-        reader.readAsText(file);
-    } else {
-        // DOCX: hint only, would need mammoth in full impl
-        SP._fileContent = null;
-        SP._fileName = file.name;
-        if (nameEl) nameEl.textContent += ' – DOCX wird als Referenz gespeichert';
-    }
-};
-
-// ─── Load Data ───────────────────────────────────────────────
-function spLoadData() {
-    // Try Supabase first
-    if (window.sb) {
-        window.sb.from('spiritus_calls')
-            .select('*, spiritus_extractions(*)')
-            .order('call_date', { ascending: false })
-            .limit(50)
-            .then(function(res) {
-                if (res.data) {
-                    SP.transcripts = res.data;
-                } else {
-                    SP.transcripts = spDemoData();
-                }
-                spRefreshUI();
-                spPopulateLocations();
-            })
-            .catch(function() {
-                SP.transcripts = spDemoData();
-                spRefreshUI();
-                spPopulateLocations();
-            });
-    } else {
-        SP.transcripts = spDemoData();
-        spRefreshUI();
-        spPopulateLocations();
-    }
+// ─── Helpers ────────────────────────────────────────────────────────────────
+function spFmt(date) {
+    if (!date) return '–';
+    var d = new Date(date);
+    return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function spPopulateLocations() {
-    var selects = ['spLocation', 'spFilterLocation'];
-    if (!window.sb) return;
-    window.sb.from('standorte').select('id, name').order('name').then(function(res) {
-        if (!res.data) return;
-        selects.forEach(function(id) {
-            var el = document.getElementById(id);
-            if (!el) return;
-            var isFilter = id === 'spFilterLocation';
-            var html = isFilter ? '<option value="">Alle Standorte</option>' : '<option value="">Standort wählen...</option>';
-            res.data.forEach(function(s) {
-                html += '<option value="' + s.id + '">' + s.name + '</option>';
-            });
-            el.innerHTML = html;
-        });
+function spSentimentColor(level) {
+    if (level === 'positiv')    return 'text-green-600 bg-green-50';
+    if (level === 'angespannt') return 'text-red-600 bg-red-50';
+    return 'text-gray-600 bg-gray-100';
+}
+
+function spSentimentIcon(level) {
+    if (level === 'positiv')    return '😊';
+    if (level === 'angespannt') return '😤';
+    return '😐';
+}
+
+function spStatusBadge(status) {
+    var map = {
+        'verarbeitet':  'bg-green-100 text-green-700',
+        'review':       'bg-yellow-100 text-yellow-700',
+        'in_progress':  'bg-blue-100 text-blue-700',
+        'fehler':       'bg-red-100 text-red-700'
+    };
+    var label = {
+        'verarbeitet': 'Fertig',
+        'review': 'Review',
+        'in_progress': 'Wird verarbeitet',
+        'fehler': 'Fehler'
+    };
+    var cls = map[status] || 'bg-gray-100 text-gray-600';
+    return '<span class="text-xs px-2 py-0.5 rounded-full font-medium ' + cls + '">' + (label[status] || status) + '</span>';
+}
+
+// ─── Init ───────────────────────────────────────────────────────────────────
+export function initSpiritus() {
+    SP.transcripts = [];
+    SP.currentTab  = 'uebersicht';
+    SP.filterStandort = '';
+    SP.filterStatus   = '';
+    loadSpTranscripts();
+    spRenderAll();
+}
+
+function loadSpTranscripts() {
+    var sb = _sb();
+    if (!sb) return;
+    sb.from('spiritus_transcripts')
+      .select('id, standort_id, standort_name, call_date, call_type, duration_min, status, summary, sentiment_level, created_at, spiritus_extractions(id, kategorie, content, confidence, approved)')
+      .order('call_date', { ascending: false })
+      .limit(200)
+      .then(function(res) {
+          if (res.error) { console.warn('Spiritus load:', res.error.message); return; }
+          SP.transcripts = res.data || [];
+          spRenderAll();
+      });
+}
+
+// ─── Tab Navigation ─────────────────────────────────────────────────────────
+export function spTab(tab) {
+    SP.currentTab = tab;
+    document.querySelectorAll('.sp-tab-btn').forEach(function(b) {
+        var active = b.dataset.sptab === tab;
+        b.className = 'sp-tab-btn whitespace-nowrap py-3 px-4 border-b-2 font-semibold text-sm transition-colors ' +
+            (active ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700');
+    });
+    spRenderAll();
+}
+
+function spRenderAll() {
+    spRenderUebersicht();
+    spRenderTimeline();
+    spRenderIntelligenz();
+    spRenderUpload();
+
+    // Tab visibility
+    ['uebersicht','timeline','intelligenz','upload'].forEach(function(t) {
+        var el = document.getElementById('spTab_' + t);
+        if (el) el.style.display = SP.currentTab === t ? '' : 'none';
     });
 }
 
-// ─── Refresh UI ──────────────────────────────────────────────
-function spRefreshUI() {
-    spUpdateStats();
-    spRenderList();
-    spUpdateFilterInfo();
+// ─── Tab: Übersicht ──────────────────────────────────────────────────────────
+function spRenderUebersicht() {
+    var el = document.getElementById('spTab_uebersicht');
+    if (!el) return;
+
+    var total   = SP.transcripts.length;
+    var pending = SP.transcripts.filter(function(t) { return t.status === 'review'; }).length;
+    var done    = SP.transcripts.filter(function(t) { return t.status === 'verarbeitet'; }).length;
+
+    // Sentiment verteilung
+    var pos = 0, neu = 0, ang = 0;
+    SP.transcripts.forEach(function(t) {
+        if (t.sentiment_level === 'positiv')    pos++;
+        else if (t.sentiment_level === 'angespannt') ang++;
+        else neu++;
+    });
+
+    // Letzte 5 Calls
+    var recent = SP.transcripts.slice(0, 5);
+
+    var html = '';
+    html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">';
+    html += spStatCard('🎙️', total, 'Calls gesamt', 'text-orange-600');
+    html += spStatCard('⏳', pending, 'Warten auf Review', 'text-yellow-600');
+    html += spStatCard('✅', done, 'Abgeschlossen', 'text-green-600');
+    html += spStatCard('😤', ang, 'Angespannte Calls', 'text-red-600');
+    html += '</div>';
+
+    // Sentiment Chart (simple bar)
+    if (total > 0) {
+        html += '<div class="vit-card p-4 mb-5">';
+        html += '<h3 class="text-sm font-bold text-gray-700 mb-3">📊 Stimmungsbild im Netzwerk</h3>';
+        html += '<div class="space-y-2">';
+        html += spSentimentBar('Positiv 😊', pos, total, 'bg-green-400');
+        html += spSentimentBar('Neutral 😐', neu, total, 'bg-gray-300');
+        html += spSentimentBar('Angespannt 😤', ang, total, 'bg-red-400');
+        html += '</div></div>';
+    }
+
+    // Pending Reviews
+    var reviews = SP.transcripts.filter(function(t) { return t.status === 'review'; });
+    if (reviews.length) {
+        html += '<div class="vit-card p-4 mb-5">';
+        html += '<h3 class="text-sm font-bold text-gray-700 mb-3">⏳ Warten auf deine Freigabe (' + reviews.length + ')</h3>';
+        html += '<div class="space-y-2">';
+        reviews.slice(0, 5).forEach(function(t) {
+            html += '<div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">';
+            html += '<div>';
+            html += '<span class="font-semibold text-sm text-gray-800">' + _escH(t.standort_name || '–') + '</span>';
+            html += '<span class="text-xs text-gray-500 ml-2">' + spFmt(t.call_date) + '</span>';
+            html += '</div>';
+            html += '<button onclick="spOpenReview(\'' + t.id + '\')" class="text-xs bg-orange-500 text-white px-3 py-1 rounded-full hover:bg-orange-600 transition">Review →</button>';
+            html += '</div>';
+        });
+        html += '</div></div>';
+    }
+
+    // Recent Calls
+    html += '<div class="vit-card p-4">';
+    html += '<h3 class="text-sm font-bold text-gray-700 mb-3">🕐 Letzte Calls</h3>';
+    if (!recent.length) {
+        html += '<p class="text-sm text-gray-400 text-center py-6">Noch keine Calls verarbeitet.</p>';
+    } else {
+        html += '<div class="space-y-2">';
+        recent.forEach(function(t) {
+            html += '<div class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 border border-gray-100 cursor-pointer" onclick="spOpenDetail(\'' + t.id + '\')">';
+            html += '<div class="flex items-center gap-3">';
+            html += '<span class="text-lg">' + spSentimentIcon(t.sentiment_level) + '</span>';
+            html += '<div>';
+            html += '<div class="font-semibold text-sm text-gray-800">' + _escH(t.standort_name || '–') + '</div>';
+            html += '<div class="text-xs text-gray-400">' + spFmt(t.call_date) + (t.duration_min ? ' · ' + t.duration_min + ' Min' : '') + '</div>';
+            html += '</div></div>';
+            html += '<div class="flex items-center gap-2">';
+            html += spStatusBadge(t.status);
+            html += '</div></div>';
+        });
+        html += '</div>';
+    }
+    html += '</div>';
+
+    el.innerHTML = html;
 }
 
-function spUpdateStats() {
-    var total = SP.transcripts.length;
-    var now = new Date();
-    var thisMonth = SP.transcripts.filter(function(t) {
-        var d = new Date(t.call_date);
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    }).length;
-    var pending = SP.transcripts.filter(function(t) { return t.status === 'analyzing'; }).length;
-    var kbCount = SP.transcripts.reduce(function(acc, t) {
-        return acc + ((t.spiritus_extractions || []).filter(function(e) { return e.approved; }).length);
-    }, 0);
-
-    var el;
-    if ((el = document.getElementById('spStatTotal'))) el.textContent = total;
-    if ((el = document.getElementById('spStatMonth'))) el.textContent = thisMonth;
-    if ((el = document.getElementById('spStatPending'))) el.textContent = pending;
-    if ((el = document.getElementById('spStatKB'))) el.textContent = kbCount;
+function spStatCard(icon, val, label, colorCls) {
+    return '<div class="vit-card p-4 text-center">' +
+        '<div class="text-2xl mb-1">' + icon + '</div>' +
+        '<div class="text-2xl font-bold ' + colorCls + '">' + val + '</div>' +
+        '<div class="text-xs text-gray-500 mt-0.5">' + label + '</div>' +
+        '</div>';
 }
 
-function spApplyFilter() {
-    var loc = document.getElementById('spFilterLocation');
-    var typ = document.getElementById('spFilterType');
-    SP.filter.location = loc ? loc.value : '';
-    SP.filter.type = typ ? typ.value : '';
-    spRenderList();
-    spUpdateFilterInfo();
+function spSentimentBar(label, count, total, color) {
+    var pct = total > 0 ? Math.round((count / total) * 100) : 0;
+    return '<div class="flex items-center gap-3">' +
+        '<span class="text-xs text-gray-600 w-28">' + label + '</span>' +
+        '<div class="flex-1 bg-gray-100 rounded-full h-3">' +
+        '<div class="h-3 rounded-full ' + color + ' transition-all" style="width:' + pct + '%"></div>' +
+        '</div>' +
+        '<span class="text-xs font-semibold text-gray-700 w-10 text-right">' + count + ' (' + pct + '%)</span>' +
+        '</div>';
 }
 
-function spUpdateFilterInfo() {
-    var filtered = spFilteredTranscripts();
-    var el = document.getElementById('spFilterInfo');
-    if (el) el.textContent = filtered.length + ' von ' + SP.transcripts.length + ' Calls';
-}
+// ─── Tab: Timeline ───────────────────────────────────────────────────────────
+function spRenderTimeline() {
+    var el = document.getElementById('spTab_timeline');
+    if (!el) return;
 
-function spFilteredTranscripts() {
-    return SP.transcripts.filter(function(t) {
-        if (SP.filter.location && t.standort_id !== SP.filter.location && t.standort_name !== SP.filter.location) return false;
-        if (SP.filter.type && t.call_type !== SP.filter.type) return false;
+    // Filter controls
+    var html = '<div class="flex flex-wrap gap-3 mb-5">';
+    html += '<select id="spFilterStandort" onchange="spApplyFilter()" class="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white"><option value="">Alle Standorte</option></select>';
+    html += '<select id="spFilterStatus" onchange="spApplyFilter()" class="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white">';
+    html += '<option value="">Alle Status</option>';
+    html += '<option value="verarbeitet">Fertig</option>';
+    html += '<option value="review">Review</option>';
+    html += '<option value="fehler">Fehler</option>';
+    html += '</select>';
+    html += '</div>';
+
+    // Transcripts list
+    var filtered = SP.transcripts.filter(function(t) {
+        if (SP.filterStandort && t.standort_id !== SP.filterStandort) return false;
+        if (SP.filterStatus  && t.status !== SP.filterStatus)          return false;
         return true;
     });
-}
 
-function spRenderList() {
-    var el = document.getElementById('spList');
-    if (!el) return;
-    var items = spFilteredTranscripts();
+    if (!filtered.length) {
+        html += '<div class="vit-card p-8 text-center text-gray-400"><div class="text-4xl mb-2">🎙️</div><p class="text-sm">Noch keine Calls vorhanden.<br>Neuen Call über <strong>Upload</strong> erfassen.</p></div>';
+    } else {
+        html += '<div class="space-y-3">';
+        filtered.forEach(function(t) {
+            var extr = t.spiritus_extractions || [];
+            var problems  = extr.filter(function(e) { return e.kategorie === 'problem'; }).length;
+            var massnahmen= extr.filter(function(e) { return e.kategorie === 'massnahme'; }).length;
 
-    if (!items.length) {
-        el.innerHTML = '<div class="vit-card p-8 text-center text-gray-400"><div class="text-3xl mb-2">🎙️</div><p class="text-sm">Noch keine Calls. Ersten Call hochladen!</p></div>';
-        return;
+            html += '<div class="vit-card p-4 hover:shadow-md transition cursor-pointer" onclick="spOpenDetail(\'' + t.id + '\')">';
+            html += '<div class="flex items-start justify-between mb-2">';
+            html += '<div class="flex items-center gap-3">';
+            html += '<span class="text-2xl">' + spSentimentIcon(t.sentiment_level) + '</span>';
+            html += '<div>';
+            html += '<div class="font-bold text-gray-900">' + _escH(t.standort_name || '–') + '</div>';
+            html += '<div class="text-xs text-gray-500">' + spFmt(t.call_date) + (t.call_type ? ' · ' + _escH(t.call_type) : '') + (t.duration_min ? ' · ' + t.duration_min + ' Min' : '') + '</div>';
+            html += '</div></div>';
+            html += '<div class="flex items-center gap-2">';
+            html += spStatusBadge(t.status);
+            html += '</div></div>';
+
+            if (t.summary) {
+                html += '<p class="text-sm text-gray-600 mb-3 line-clamp-2">' + _escH(t.summary) + '</p>';
+            }
+
+            html += '<div class="flex items-center gap-4 text-xs text-gray-500">';
+            html += '<span>🔴 ' + problems + ' Probleme</span>';
+            html += '<span>✅ ' + massnahmen + ' Maßnahmen</span>';
+            if (t.sentiment_level) {
+                var sentCls = spSentimentColor(t.sentiment_level);
+                html += '<span class="px-2 py-0.5 rounded-full text-xs font-medium ' + sentCls + '">' + t.sentiment_level + '</span>';
+            }
+            html += '</div>';
+            html += '</div>';
+        });
+        html += '</div>';
     }
 
-    el.innerHTML = items.map(function(t) {
-        var extractions = t.spiritus_extractions || t.extractions || [];
-        var problems = extractions.filter(function(e) { return e.type === 'problem'; });
-        var actions = extractions.filter(function(e) { return e.type === 'massnahme'; });
-        var sentiment = extractions.find(function(e) { return e.type === 'sentiment'; });
+    el.innerHTML = html;
 
-        var sentimentIcon = '😐';
-        var sentimentClass = 'text-gray-500';
-        if (sentiment) {
-            if (sentiment.content === 'positiv' || (sentiment.data && sentiment.data.level === 'positiv')) {
-                sentimentIcon = '😊'; sentimentClass = 'text-green-600';
-            } else if (sentiment.content === 'angespannt' || (sentiment.data && sentiment.data.level === 'angespannt')) {
-                sentimentIcon = '😟'; sentimentClass = 'text-red-500';
-            }
-        }
-
-        var statusBadge = '';
-        if (t.status === 'analyzing') {
-            statusBadge = '<span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full animate-pulse">⏳ Analyse...</span>';
-        } else if (t.status === 'done' || t.status === 'analyzed') {
-            statusBadge = '<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">✓ Analysiert</span>';
-        } else if (t.status === 'error') {
-            statusBadge = '<span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">✗ Fehler</span>';
-        } else {
-            statusBadge = '<span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Entwurf</span>';
-        }
-
-        var typeLabel = { beratung: 'Beratung', review: 'Review', onboarding: 'Onboarding', support: 'Support', strategie: 'Strategie' };
-
-        return '<div class="vit-card p-4 hover:shadow-md transition cursor-pointer" onclick="spOpenDetail(\'' + t.id + '\')">' +
-            '<div class="flex items-start justify-between gap-3 mb-2">' +
-              '<div>' +
-                '<div class="font-semibold text-gray-800 text-sm">' + (t.standort_name || t.location_name || 'Standort') + '</div>' +
-                '<div class="text-xs text-gray-400 mt-0.5">' + spFormatDate(t.call_date) + ' · ' + (typeLabel[t.call_type] || t.call_type || 'Call') + (t.contact ? ' · ' + t.contact : '') + '</div>' +
-              '</div>' +
-              '<div class="flex items-center gap-2 shrink-0">' +
-                statusBadge +
-                '<span class="text-lg ' + sentimentClass + '">' + sentimentIcon + '</span>' +
-              '</div>' +
-            '</div>' +
-            (t.summary ? '<p class="text-xs text-gray-500 mb-2 line-clamp-2">' + (t.summary || '') + '</p>' : '') +
-            '<div class="flex gap-3 text-xs text-gray-400">' +
-              (problems.length ? '<span class="text-red-500">⚠️ ' + problems.length + ' Problem' + (problems.length !== 1 ? 'e' : '') + '</span>' : '') +
-              (actions.length ? '<span class="text-blue-500">✓ ' + actions.length + ' Maßnahme' + (actions.length !== 1 ? 'n' : '') + '</span>' : '') +
-              (!extractions.length && t.status !== 'analyzing' ? '<span>Noch keine Extraktion</span>' : '') +
-            '</div>' +
-        '</div>';
-    }).join('');
+    // Populate standort filter
+    spPopulateStandortFilter();
 }
 
-// ─── Detail Modal ────────────────────────────────────────────
-window.spOpenDetail = function(id) {
-    var t = SP.transcripts.find(function(x) { return x.id == id; });
-    if (!t) return;
-    var modal = document.getElementById('spDetailModal');
-    var title = document.getElementById('spDetailTitle');
-    var content = document.getElementById('spDetailContent');
-    if (!modal || !content) return;
+export function spApplyFilter() {
+    var s = document.getElementById('spFilterStandort');
+    var f = document.getElementById('spFilterStatus');
+    SP.filterStandort = s ? s.value : '';
+    SP.filterStatus   = f ? f.value : '';
+    spRenderTimeline();
+}
 
-    var extractions = t.spiritus_extractions || t.extractions || [];
-    var problems = extractions.filter(function(e) { return e.type === 'problem'; });
-    var actions = extractions.filter(function(e) { return e.type === 'massnahme'; });
-    var sentiment = extractions.find(function(e) { return e.type === 'sentiment'; });
+function spPopulateStandortFilter() {
+    var sel = document.getElementById('spFilterStandort');
+    if (!sel) return;
+    var seen = {};
+    var opts = '<option value="">Alle Standorte</option>';
+    SP.transcripts.forEach(function(t) {
+        if (t.standort_id && !seen[t.standort_id]) {
+            seen[t.standort_id] = true;
+            opts += '<option value="' + _escH(t.standort_id) + '">' + _escH(t.standort_name || t.standort_id) + '</option>';
+        }
+    });
+    sel.innerHTML = opts;
+    if (SP.filterStandort) sel.value = SP.filterStandort;
+}
 
-    if (title) title.textContent = '🎙️ ' + (t.standort_name || t.location_name || 'Standort') + ' · ' + spFormatDate(t.call_date);
+// ─── Tab: Intelligenz ────────────────────────────────────────────────────────
+function spRenderIntelligenz() {
+    var el = document.getElementById('spTab_intelligenz');
+    if (!el) return;
+
+    // Aggregate all approved extractions
+    var allExtr = [];
+    SP.transcripts.forEach(function(t) {
+        (t.spiritus_extractions || []).forEach(function(e) {
+            if (e.approved) allExtr.push(Object.assign({}, e, { standort_name: t.standort_name, call_date: t.call_date }));
+        });
+    });
+
+    var problems   = allExtr.filter(function(e) { return e.kategorie === 'problem'; });
+    var massnahmen = allExtr.filter(function(e) { return e.kategorie === 'massnahme'; });
 
     var html = '';
 
-    // Meta
-    html += '<div class="flex flex-wrap gap-2 mb-4 text-xs">' +
-        '<span class="bg-gray-100 text-gray-600 px-2 py-1 rounded">📅 ' + spFormatDate(t.call_date) + '</span>' +
-        '<span class="bg-gray-100 text-gray-600 px-2 py-1 rounded">📋 ' + (t.call_type || 'Call') + '</span>' +
-        (t.contact ? '<span class="bg-gray-100 text-gray-600 px-2 py-1 rounded">👤 ' + t.contact + '</span>' : '') +
-    '</div>';
+    // Summary cards
+    html += '<div class="grid grid-cols-2 gap-4 mb-6">';
+    html += '<div class="vit-card p-4"><div class="text-2xl font-bold text-red-600">' + problems.length + '</div><div class="text-xs text-gray-500">Erkannte Probleme</div></div>';
+    html += '<div class="vit-card p-4"><div class="text-2xl font-bold text-green-600">' + massnahmen.length + '</div><div class="text-xs text-gray-500">Bewährte Maßnahmen</div></div>';
+    html += '</div>';
+
+    // Top Problems
+    html += '<div class="vit-card p-4 mb-5">';
+    html += '<h3 class="text-sm font-bold text-gray-700 mb-3">🔴 Häufigste Probleme im Netzwerk</h3>';
+    if (!problems.length) {
+        html += '<p class="text-xs text-gray-400">Noch keine Daten.</p>';
+    } else {
+        html += '<div class="space-y-2">';
+        problems.slice(0, 8).forEach(function(e) {
+            html += '<div class="flex items-start gap-3 p-3 bg-red-50 rounded-lg">';
+            html += '<span class="text-red-500 mt-0.5">•</span>';
+            html += '<div class="flex-1">';
+            html += '<p class="text-sm text-gray-800">' + _escH(e.content) + '</p>';
+            html += '<p class="text-xs text-gray-400 mt-0.5">' + _escH(e.standort_name || '–') + ' · ' + spFmt(e.call_date) + '</p>';
+            html += '</div>';
+            html += '<span class="text-xs text-gray-400">' + Math.round((e.confidence || 0) * 100) + '%</span>';
+            html += '</div>';
+        });
+        html += '</div>';
+    }
+    html += '</div>';
+
+    // Top Maßnahmen
+    html += '<div class="vit-card p-4">';
+    html += '<h3 class="text-sm font-bold text-gray-700 mb-3">✅ Bewährte Maßnahmen aus dem Netzwerk</h3>';
+    if (!massnahmen.length) {
+        html += '<p class="text-xs text-gray-400">Noch keine Daten.</p>';
+    } else {
+        html += '<div class="space-y-2">';
+        massnahmen.slice(0, 8).forEach(function(e) {
+            html += '<div class="flex items-start gap-3 p-3 bg-green-50 rounded-lg">';
+            html += '<span class="text-green-500 mt-0.5">✓</span>';
+            html += '<div class="flex-1">';
+            html += '<p class="text-sm text-gray-800">' + _escH(e.content) + '</p>';
+            html += '<p class="text-xs text-gray-400 mt-0.5">' + _escH(e.standort_name || '–') + ' · ' + spFmt(e.call_date) + '</p>';
+            html += '</div>';
+            html += '</div>';
+        });
+        html += '</div>';
+    }
+    html += '</div>';
+
+    el.innerHTML = html;
+}
+
+// ─── Tab: Upload ─────────────────────────────────────────────────────────────
+function spRenderUpload() {
+    var el = document.getElementById('spTab_upload');
+    if (!el) return;
+
+    var html = '<div class="max-w-2xl mx-auto">';
+    html += '<div class="vit-card p-6">';
+    html += '<h3 class="text-base font-bold text-gray-800 mb-4">🎙️ Neuen Call erfassen</h3>';
+
+    // Mode toggle
+    html += '<div class="flex gap-2 mb-5">';
+    html += '<button onclick="spSetMode(\'audio\')" id="spModeAudio" class="flex-1 py-2 rounded-lg text-sm font-semibold transition ' + (SP.uploadMode === 'audio' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + '">🎵 Audio-Datei</button>';
+    html += '<button onclick="spSetMode(\'text\')"  id="spModeText"  class="flex-1 py-2 rounded-lg text-sm font-semibold transition ' + (SP.uploadMode === 'text'  ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + '">📝 Transkript-Text</button>';
+    html += '</div>';
+
+    // Meta fields
+    html += '<div class="grid grid-cols-2 gap-4 mb-4">';
+    html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Standort *</label>';
+    html += '<select id="spUpStandort" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"><option value="">Standort wählen…</option></select></div>';
+    html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Call-Datum *</label>';
+    html += '<input id="spUpDate" type="date" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value="' + new Date().toISOString().split('T')[0] + '"></div>';
+    html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Call-Typ</label>';
+    html += '<select id="spUpType" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white">';
+    html += '<option>Check-in</option><option>Onboarding</option><option>Problem-Call</option><option>Strategiegespräch</option><option>Sonstiges</option>';
+    html += '</select></div>';
+    html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Dauer (Minuten)</label>';
+    html += '<input id="spUpDuration" type="number" min="1" max="180" placeholder="z.B. 30" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"></div>';
+    html += '</div>';
+
+    // Upload area
+    if (SP.uploadMode === 'audio') {
+        html += '<div id="spDropZone" ondragover="spDragOver(event)" ondragleave="spDragLeave(event)" ondrop="spDrop(event)" class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center mb-4 transition-colors hover:border-orange-400 cursor-pointer" onclick="document.getElementById(\'spAudioInput\').click()">';
+        html += '<div class="text-4xl mb-2">🎵</div>';
+        html += '<p class="text-sm font-semibold text-gray-700">Audio-Datei hierher ziehen</p>';
+        html += '<p class="text-xs text-gray-400 mt-1">oder klicken zum Auswählen · MP3, M4A, WAV, MP4 · max. 100 MB</p>';
+        html += '<p id="spFileLabel" class="text-xs text-orange-600 mt-2 font-medium"></p>';
+        html += '</div>';
+        html += '<input id="spAudioInput" type="file" accept="audio/*,video/mp4" class="hidden" onchange="spFileSelected(this)">';
+    } else {
+        html += '<div class="mb-4">';
+        html += '<label class="text-xs font-semibold text-gray-600 block mb-1">Transkript einfügen *</label>';
+        html += '<textarea id="spTranscriptText" rows="8" placeholder="Transkript hier einfügen…" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none"></textarea>';
+        html += '</div>';
+    }
+
+    // Submit
+    html += '<button onclick="spSubmit()" id="spSubmitBtn" class="w-full py-3 bg-orange-500 text-white rounded-xl font-bold text-sm hover:bg-orange-600 active:scale-95 transition-all">';
+    html += SP.processing ? '⏳ Wird verarbeitet…' : '🚀 Call analysieren';
+    html += '</button>';
+
+    if (SP.processing) {
+        html += '<div class="mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-700 text-center">';
+        html += '⏳ KI analysiert den Call… Das kann 30–60 Sekunden dauern.';
+        html += '</div>';
+    }
+
+    html += '</div></div>';
+    el.innerHTML = html;
+
+    // Populate standort dropdown
+    spPopulateUploadStandort();
+}
+
+export function spSetMode(mode) {
+    SP.uploadMode = mode;
+    spRenderUpload();
+}
+
+function spPopulateUploadStandort() {
+    var sel = document.getElementById('spUpStandort');
+    if (!sel) return;
+    var sb = _sb();
+    if (!sb) return;
+    sb.from('standorte').select('id, name').eq('status', 'aktiv').order('name').then(function(res) {
+        if (!res.data) return;
+        var html = '<option value="">Standort wählen…</option>';
+        res.data.forEach(function(s) {
+            html += '<option value="' + _escH(s.id) + '">' + _escH(s.name) + '</option>';
+        });
+        sel.innerHTML = html;
+    });
+}
+
+export function spFileSelected(input) {
+    var label = document.getElementById('spFileLabel');
+    if (label && input.files[0]) {
+        label.textContent = '✓ ' + input.files[0].name + ' (' + Math.round(input.files[0].size / 1024 / 1024 * 10) / 10 + ' MB)';
+    }
+}
+
+export function spDragOver(e) {
+    e.preventDefault();
+    var zone = document.getElementById('spDropZone');
+    if (zone) zone.classList.add('border-orange-500', 'bg-orange-50');
+}
+
+export function spDragLeave(e) {
+    var zone = document.getElementById('spDropZone');
+    if (zone) zone.classList.remove('border-orange-500', 'bg-orange-50');
+}
+
+export function spDrop(e) {
+    e.preventDefault();
+    spDragLeave(e);
+    var file = e.dataTransfer.files[0];
+    if (!file) return;
+    var input = document.getElementById('spAudioInput');
+    if (input) {
+        // Assign to file input via DataTransfer
+        var dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        spFileSelected(input);
+    }
+}
+
+// ─── Submit & Analyse ────────────────────────────────────────────────────────
+export async function spSubmit() {
+    if (SP.processing) return;
+
+    var standortId   = (document.getElementById('spUpStandort')   || {}).value;
+    var callDate     = (document.getElementById('spUpDate')        || {}).value;
+    var callType     = (document.getElementById('spUpType')        || {}).value;
+    var durationMin  = parseInt((document.getElementById('spUpDuration') || {}).value || '0') || null;
+
+    if (!standortId) { _showToast('Bitte Standort wählen.', 'warning'); return; }
+    if (!callDate)   { _showToast('Bitte Datum auswählen.', 'warning'); return; }
+
+    var transcriptText = '';
+
+    if (SP.uploadMode === 'audio') {
+        var audioInput = document.getElementById('spAudioInput');
+        if (!audioInput || !audioInput.files[0]) { _showToast('Bitte Audio-Datei wählen.', 'warning'); return; }
+        var file = audioInput.files[0];
+        if (file.size > 100 * 1024 * 1024) { _showToast('Datei zu groß (max. 100 MB).', 'error'); return; }
+
+        SP.processing = true;
+        spRenderUpload();
+        _showToast('⏳ Audio wird transkribiert…', 'info');
+
+        // Upload to Supabase Storage first
+        var sb = _sb();
+        var user = _sbUser();
+        if (!sb || !user) { SP.processing = false; spRenderUpload(); _showToast('Nicht eingeloggt.', 'error'); return; }
+
+        var fileName = 'spiritus/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        var uploadRes = await sb.storage.from('documents').upload(fileName, file, { contentType: file.type });
+        if (uploadRes.error) {
+            SP.processing = false; spRenderUpload();
+            _showToast('Upload fehlgeschlagen: ' + uploadRes.error.message, 'error');
+            return;
+        }
+
+        // Transcribe via Edge Function
+        try {
+            var resp = await fetch('/api/spiritus-transcribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ((await sb.auth.getSession()).data.session || {}).access_token },
+                body: JSON.stringify({ filePath: fileName, standortId: standortId, callDate: callDate, callType: callType, durationMin: durationMin })
+            });
+            var result = await resp.json();
+            if (!resp.ok) throw new Error(result.error || 'Transkription fehlgeschlagen');
+            transcriptText = result.transcript || '';
+        } catch(e) {
+            SP.processing = false; spRenderUpload();
+            _showToast('Transkription fehlgeschlagen: ' + e.message, 'error');
+            return;
+        }
+    } else {
+        transcriptText = (document.getElementById('spTranscriptText') || {}).value || '';
+        if (!transcriptText.trim() || transcriptText.length < 50) {
+            _showToast('Bitte Transkript einfügen (min. 50 Zeichen).', 'warning'); return;
+        }
+        SP.processing = true;
+        spRenderUpload();
+    }
+
+    // Get standort name for display
+    var standortSel = document.getElementById('spUpStandort');
+    var standortName = standortSel ? (standortSel.options[standortSel.selectedIndex] || {}).text || standortId : standortId;
+
+    _showToast('🤖 KI analysiert den Call…', 'info');
+
+    // Analyse via Claude Edge Function
+    try {
+        var sb2 = _sb();
+        var sess = await sb2.auth.getSession();
+        var token = (sess.data.session || {}).access_token;
+
+        var analyzeResp = await fetch('https://rlzkiuxmnouyqxinxchw.supabase.co/functions/v1/spiritus-analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({
+                transcript: transcriptText,
+                standortId: standortId,
+                standortName: standortName,
+                callDate: callDate,
+                callType: callType,
+                durationMin: durationMin
+            })
+        });
+
+        var analyzeResult = await analyzeResp.json();
+        if (!analyzeResp.ok) throw new Error(analyzeResult.error || 'Analyse fehlgeschlagen');
+
+        SP.processing = false;
+        _showToast('✅ Call erfolgreich analysiert!', 'success');
+
+        // Reload transcripts and go to timeline
+        loadSpTranscripts();
+        spTab('timeline');
+
+    } catch(e) {
+        SP.processing = false;
+        spRenderUpload();
+        _showToast('Analyse fehlgeschlagen: ' + e.message, 'error');
+    }
+}
+
+// ─── Detail Modal ────────────────────────────────────────────────────────────
+export function spOpenDetail(id) {
+    var t = SP.transcripts.find(function(t) { return t.id === id; });
+    if (!t) return;
+
+    var extr = t.spiritus_extractions || [];
+    var problems   = extr.filter(function(e) { return e.kategorie === 'problem'; });
+    var massnahmen = extr.filter(function(e) { return e.kategorie === 'massnahme'; });
+    var sentiment  = extr.find(function(e)   { return e.kategorie === 'sentiment'; });
+
+    var html = '<div id="spDetailOverlay" onclick="spCloseDetail()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;">';
+    html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg,#fff);border-radius:16px;padding:24px;width:620px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+
+    // Header
+    html += '<div class="flex items-start justify-between mb-4">';
+    html += '<div>';
+    html += '<h2 class="text-lg font-bold text-gray-900">' + _escH(t.standort_name || '–') + '</h2>';
+    html += '<p class="text-sm text-gray-500">' + spFmt(t.call_date) + (t.call_type ? ' · ' + _escH(t.call_type) : '') + (t.duration_min ? ' · ' + t.duration_min + ' Min' : '') + '</p>';
+    html += '</div>';
+    html += '<button onclick="spCloseDetail()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>';
+    html += '</div>';
+
+    // Status + Sentiment
+    html += '<div class="flex items-center gap-3 mb-4">';
+    html += spStatusBadge(t.status);
+    if (t.sentiment_level) {
+        html += '<span class="text-sm px-3 py-1 rounded-full font-medium ' + spSentimentColor(t.sentiment_level) + '">' + spSentimentIcon(t.sentiment_level) + ' ' + t.sentiment_level + '</span>';
+    }
+    html += '</div>';
 
     // Summary
     if (t.summary) {
-        html += '<div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm text-blue-800">' +
-            '<strong>Zusammenfassung:</strong> ' + t.summary + '</div>';
+        html += '<div class="bg-gray-50 rounded-xl p-4 mb-4">';
+        html += '<h4 class="text-xs font-bold text-gray-600 mb-1">📋 ZUSAMMENFASSUNG</h4>';
+        html += '<p class="text-sm text-gray-700">' + _escH(t.summary) + '</p>';
+        html += '</div>';
     }
 
-    // Sentiment
-    if (sentiment) {
-        var data = sentiment.data || {};
-        var level = data.level || sentiment.content || 'neutral';
-        var icons = { positiv: '😊', neutral: '😐', angespannt: '😟' };
-        var colors = { positiv: 'green', neutral: 'gray', angespannt: 'red' };
-        var c = colors[level] || 'gray';
-        html += '<div class="bg-' + c + '-50 border border-' + c + '-200 rounded-lg p-3 mb-4">' +
-            '<div class="text-sm font-semibold text-' + c + '-700 mb-1">' + (icons[level] || '😐') + ' Stimmung: ' + level.charAt(0).toUpperCase() + level.slice(1) + '</div>' +
-            (data.begruendung ? '<div class="text-xs text-' + c + '-600">' + data.begruendung + '</div>' : '') +
-        '</div>';
+    // Sentiment reason
+    if (sentiment && sentiment.content) {
+        html += '<div class="bg-blue-50 rounded-xl p-4 mb-4">';
+        html += '<h4 class="text-xs font-bold text-blue-700 mb-1">💬 STIMMUNGS-BEGRÜNDUNG</h4>';
+        html += '<p class="text-sm text-blue-800">' + _escH(sentiment.content) + '</p>';
+        html += '</div>';
     }
 
-    // Probleme
+    // Problems
     if (problems.length) {
-        html += '<div class="mb-4"><h3 class="text-sm font-semibold text-red-600 mb-2">⚠️ Probleme & Herausforderungen</h3><div class="space-y-2">';
-        problems.forEach(function(p) {
-            var conf = Math.round((p.confidence || 0) * 100);
-            html += '<div class="flex items-start gap-3 p-3 bg-red-50 rounded-lg">' +
-                '<div class="flex-1 text-sm text-gray-700">' + p.content + '</div>' +
-                '<div class="text-xs text-gray-400 shrink-0">' + conf + '%</div>' +
-            '</div>';
-        });
-        html += '</div></div>';
-    }
-
-    // Maßnahmen
-    if (actions.length) {
-        html += '<div class="mb-4"><h3 class="text-sm font-semibold text-blue-600 mb-2">✅ Maßnahmen & Empfehlungen</h3><div class="space-y-2">';
-        actions.forEach(function(a) {
-            var conf = Math.round((a.confidence || 0) * 100);
-            var kbBadge = a.approved ? '<span class="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">In KB</span>' : '';
-            html += '<div class="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">' +
-                '<div class="flex-1 text-sm text-gray-700">' + a.content + ' ' + kbBadge + '</div>' +
-                '<div class="text-xs text-gray-400 shrink-0">' + conf + '%</div>' +
-            '</div>';
-        });
-        html += '</div></div>';
-    }
-
-    // Kein Ergebnis
-    if (!extractions.length) {
-        if (t.status === 'analyzing') {
-            html += '<div class="text-center py-6 text-amber-600"><div class="text-3xl mb-2 animate-pulse">⏳</div><div class="text-sm">KI-Analyse läuft...</div></div>';
-        } else {
-            html += '<div class="text-center py-6 text-gray-400"><div class="text-3xl mb-2">🤖</div><div class="text-sm">Noch keine Extraktion. Analyse starten?</div>' +
-                '<button onclick="spRunAnalysis(\'' + t.id + '\')" class="mt-3 px-4 py-2 bg-vit-orange text-white rounded-lg text-sm">Jetzt analysieren</button></div>';
-        }
-    }
-
-    // Transkript (collapsed)
-    if (t.transcript_text) {
-        html += '<details class="mt-4"><summary class="text-xs text-gray-400 cursor-pointer hover:text-gray-600">📄 Originaltranskript anzeigen</summary>' +
-            '<div class="mt-2 p-3 bg-gray-50 rounded-lg text-xs text-gray-500 whitespace-pre-wrap max-h-40 overflow-y-auto">' + t.transcript_text.substring(0, 1000) + (t.transcript_text.length > 1000 ? '...' : '') + '</div>' +
-        '</details>';
-    }
-
-    modal.style.cssText = '';
-    modal.style.display = 'flex';
-    content.innerHTML = html;
-};
-
-window.spCloseDetailModal = function() {
-    var modal = document.getElementById('spDetailModal');
-    if (modal) modal.style.cssText = 'display:none!important;';
-};
-
-// ─── Upload Modal ────────────────────────────────────────────
-window.spOpenUploadModal = function() {
-    var modal = document.getElementById('spUploadModal');
-    if (modal) { modal.style.cssText = ''; modal.style.display = 'flex'; }
-    spSetInputMode('text');
-    // Datum vorbelegen
-    var d = document.getElementById('spCallDate');
-    if (d) d.value = new Date().toISOString().split('T')[0];
-};
-
-window.spCloseUploadModal = function() {
-    var modal = document.getElementById('spUploadModal');
-    if (modal) modal.style.cssText = 'display:none!important;';
-    SP._fileContent = null;
-};
-
-// ─── Save & Analyze ──────────────────────────────────────────
-window.spSaveCall = function() {
-    var loc = document.getElementById('spLocation');
-    var date = document.getElementById('spCallDate');
-    var type = document.getElementById('spCallType');
-    var contact = document.getElementById('spContact');
-    var textArea = document.getElementById('spTranscriptText');
-    var fileInput = document.getElementById('spFileInput');
-
-    var locationId = loc ? loc.value : '';
-    var locationName = loc ? (loc.options[loc.selectedIndex] || {}).text : '';
-    var callDate = date ? date.value : new Date().toISOString().split('T')[0];
-    var callType = type ? type.value : 'beratung';
-    var contactVal = contact ? contact.value.trim() : '';
-
-    // Get transcript text
-    var transcriptText = '';
-    var textVisible = document.getElementById('spInputText');
-    var fileVisible = document.getElementById('spInputFile');
-    if (textVisible && textVisible.style.display !== 'none') {
-        transcriptText = textArea ? textArea.value.trim() : '';
-    } else {
-        transcriptText = SP._fileContent || '';
-    }
-
-    if (!locationId) { window.showToast('Bitte Standort wählen', 'error'); return; }
-    if (!transcriptText || transcriptText.length < 50) { window.showToast('Bitte Protokoll eingeben (mind. 50 Zeichen)', 'error'); return; }
-
-    var callId = 'sp_' + Date.now();
-    var newCall = {
-        id: callId,
-        standort_id: locationId,
-        standort_name: locationName,
-        call_date: callDate,
-        call_type: callType,
-        contact: contactVal,
-        transcript_text: transcriptText,
-        status: 'analyzing',
-        created_at: new Date().toISOString(),
-        spiritus_extractions: []
-    };
-
-    SP.transcripts.unshift(newCall);
-    spCloseUploadModal();
-    spRefreshUI();
-    window.showToast('Call gespeichert – KI-Analyse gestartet...', 'success');
-
-    // Supabase speichern
-    if (window.sb) {
-        window.sb.from('spiritus_calls').insert({
-            standort_id: locationId,
-            call_date: callDate,
-            call_type: callType,
-            contact: contactVal,
-            transcript_text: transcriptText,
-            status: 'analyzing',
-            created_by: window.sbUser ? window.sbUser.id : null
-        }).then(function(res) {
-            if (res.data && res.data[0]) {
-                newCall.id = res.data[0].id;
+        html += '<div class="mb-4">';
+        html += '<h4 class="text-xs font-bold text-gray-600 mb-2">🔴 ERKANNTE PROBLEME (' + problems.length + ')</h4>';
+        html += '<div class="space-y-2">';
+        problems.forEach(function(e) {
+            html += '<div class="flex items-start gap-2 p-3 bg-red-50 rounded-lg">';
+            html += '<span class="text-red-400 mt-0.5 flex-shrink-0">•</span>';
+            html += '<div class="flex-1"><p class="text-sm text-gray-800">' + _escH(e.content) + '</p></div>';
+            if (!e.approved && t.status === 'review') {
+                html += '<button onclick="spApproveExtraction(\'' + e.id + '\')" class="text-xs bg-green-500 text-white px-2 py-0.5 rounded hover:bg-green-600 flex-shrink-0">✓</button>';
             }
-            spRunAnalysisInternal(newCall);
+            html += '</div>';
         });
-    } else {
-        setTimeout(function() { spRunAnalysisInternal(newCall); }, 500);
+        html += '</div></div>';
     }
-};
-
-// ─── KI Analyse ─────────────────────────────────────────────
-window.spRunAnalysis = function(id) {
-    var t = SP.transcripts.find(function(x) { return x.id == id; });
-    if (!t) return;
-    t.status = 'analyzing';
-    spRefreshUI();
-    spRunAnalysisInternal(t);
-};
-
-function spRunAnalysisInternal(callObj) {
-    if (!callObj.transcript_text) {
-        callObj.status = 'error';
-        spRefreshUI();
-        return;
-    }
-
-    var prompt = 'Du analysierst ein Call-Protokoll eines Gesprächs zwischen dem HQ von vit:bikes (einem Fahrrad-Franchise-Netzwerk) und einem Franchise-Standort.\n\n' +
-        'Extrahiere GENAU diese Kategorien:\n\n' +
-        '1. PROBLEME: Konkrete Herausforderungen, Hürden oder Beschwerden des Standorts\n' +
-        '2. MASSNAHMEN: Konkrete Empfehlungen oder Lösungsansätze aus dem Gespräch\n' +
-        '3. SENTIMENT: Gesamtstimmung des Standorts (positiv/neutral/angespannt)\n\n' +
-        'Für jede Erkenntnis: Bewerte confidence 0.0–1.0 (≥0.85 = explizit genannt, 0.6–0.84 = sinngemäß, <0.6 = Interpretation)\n\n' +
-        'ANTWORT NUR ALS JSON (kein Markdown, kein Preamble):\n' +
-        '{"probleme":[{"content":"...","confidence":0.0}],"massnahmen":[{"content":"...","confidence":0.0}],"sentiment":{"level":"positiv|neutral|angespannt","confidence":0.0,"begruendung":"..."},"summary":"..."}\n\n' +
-        'TRANSKRIPT:\n' + callObj.transcript_text.substring(0, 4000);
-
-    fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 1000,
-            messages: [{ role: 'user', content: prompt }]
-        })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        var text = '';
-        if (data.content && data.content[0]) text = data.content[0].text || '';
-        try {
-            var clean = text.replace(/```json|```/g, '').trim();
-            var parsed = JSON.parse(clean);
-            spProcessExtractions(callObj, parsed);
-        } catch (e) {
-            callObj.status = 'error';
-            spRefreshUI();
-        }
-    })
-    .catch(function() {
-        callObj.status = 'error';
-        spRefreshUI();
-    });
-}
-
-function spProcessExtractions(callObj, parsed) {
-    var extractions = [];
-    var kbEntries = [];
-
-    // Probleme
-    (parsed.probleme || []).forEach(function(p) {
-        extractions.push({ type: 'problem', content: p.content, confidence: p.confidence || 0.7, approved: false });
-    });
 
     // Maßnahmen
-    (parsed.massnahmen || []).forEach(function(m) {
-        var approved = (m.confidence || 0) >= 0.85;
-        extractions.push({ type: 'massnahme', content: m.content, confidence: m.confidence || 0.7, approved: approved });
-        if (approved) kbEntries.push(m.content);
+    if (massnahmen.length) {
+        html += '<div class="mb-4">';
+        html += '<h4 class="text-xs font-bold text-gray-600 mb-2">✅ EMPFOHLENE MAẞNAHMEN (' + massnahmen.length + ')</h4>';
+        html += '<div class="space-y-2">';
+        massnahmen.forEach(function(e) {
+            html += '<div class="flex items-start gap-2 p-3 bg-green-50 rounded-lg">';
+            html += '<span class="text-green-500 mt-0.5 flex-shrink-0">✓</span>';
+            html += '<div class="flex-1"><p class="text-sm text-gray-800">' + _escH(e.content) + '</p></div>';
+            if (!e.approved && t.status === 'review') {
+                html += '<button onclick="spApproveExtraction(\'' + e.id + '\')" class="text-xs bg-green-500 text-white px-2 py-0.5 rounded hover:bg-green-600 flex-shrink-0">✓</button>';
+            }
+            html += '</div>';
+        });
+        html += '</div></div>';
+    }
+
+    // Review actions
+    if (t.status === 'review') {
+        html += '<div class="flex gap-3 mt-5 pt-4 border-t border-gray-100">';
+        html += '<button onclick="spApproveAll(\'' + t.id + '\')" class="flex-1 py-2 bg-green-500 text-white rounded-xl text-sm font-bold hover:bg-green-600 transition">✅ Alle genehmigen & in KB übernehmen</button>';
+        html += '<button onclick="spRejectTranscript(\'' + t.id + '\')" class="px-4 py-2 bg-red-100 text-red-700 rounded-xl text-sm font-semibold hover:bg-red-200 transition">Ablehnen</button>';
+        html += '</div>';
+    }
+
+    html += '</div></div>';
+
+    var existing = document.getElementById('spDetailOverlay');
+    if (existing) existing.remove();
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+
+export function spCloseDetail() {
+    var el = document.getElementById('spDetailOverlay');
+    if (el) el.remove();
+}
+
+export function spOpenReview(id) {
+    spOpenDetail(id);
+}
+
+// ─── Approve / Reject ────────────────────────────────────────────────────────
+export async function spApproveAll(transcriptId) {
+    var t = SP.transcripts.find(function(x) { return x.id === transcriptId; });
+    if (!t) return;
+
+    var sb = _sb();
+    if (!sb) return;
+
+    // Mark all extractions as approved
+    var extr = (t.spiritus_extractions || []).filter(function(e) { return !e.approved; });
+    for (var i = 0; i < extr.length; i++) {
+        await sb.from('spiritus_extractions').update({ approved: true }).eq('id', extr[i].id);
+        extr[i].approved = true;
+    }
+
+    // Update transcript status
+    await sb.from('spiritus_transcripts').update({ status: 'verarbeitet' }).eq('id', transcriptId);
+    if (t) t.status = 'verarbeitet';
+
+    _showToast('✅ Erkenntnisse in Wissensbasis übernommen!', 'success');
+    spCloseDetail();
+    spRenderAll();
+}
+
+export async function spApproveExtraction(extractionId) {
+    var sb = _sb();
+    if (!sb) return;
+    await sb.from('spiritus_extractions').update({ approved: true }).eq('id', extractionId);
+
+    // Update local state
+    SP.transcripts.forEach(function(t) {
+        (t.spiritus_extractions || []).forEach(function(e) {
+            if (e.id === extractionId) e.approved = true;
+        });
     });
-
-    // Sentiment
-    if (parsed.sentiment) {
-        extractions.push({ type: 'sentiment', content: parsed.sentiment.level, confidence: parsed.sentiment.confidence || 0.8, data: parsed.sentiment, approved: false });
-    }
-
-    callObj.spiritus_extractions = extractions;
-    callObj.summary = parsed.summary || '';
-    callObj.status = 'done';
-
-    spRefreshUI();
-    window.showToast('Analyse abgeschlossen – ' + extractions.length + ' Erkenntnisse extrahiert', 'success');
-
-    // In Supabase persistieren
-    if (window.sb && callObj.id && !String(callObj.id).startsWith('sp_')) {
-        window.sb.from('spiritus_calls').update({ status: 'done', summary: callObj.summary })
-            .eq('id', callObj.id).then(function() {});
-
-        extractions.forEach(function(ext) {
-            window.sb.from('spiritus_extractions').insert({
-                call_id: callObj.id,
-                type: ext.type,
-                content: ext.content,
-                confidence: ext.confidence,
-                approved: ext.approved
-            }).then(function() {});
-        });
-
-        // KB-Einträge mit hoher Konfidenz
-        kbEntries.forEach(function(entry) {
-            window.sb.from('spiritus_kb').insert({
-                source_call_id: callObj.id,
-                standort_id: callObj.standort_id,
-                content: entry,
-                category: 'massnahme',
-                auto_approved: true
-            }).then(function() {});
-        });
-    }
+    _showToast('Erkenntnis genehmigt.', 'success');
+    spRenderAll();
 }
 
-// ─── Demo Daten ──────────────────────────────────────────────
-function spDemoData() {
-    return [
-        {
-            id: 'demo1', standort_name: 'Münster', call_date: '2026-03-01', call_type: 'review',
-            contact: 'Thomas Weiser', status: 'done', summary: 'Guter Monat, Verkaufspipeline wächst. Werkstatt-Kapazität bleibt Engpass.',
-            spiritus_extractions: [
-                { type: 'problem', content: 'Werkstatt ist dauerhaft ausgelastet, Wartezeiten über 2 Wochen', confidence: 0.92, approved: false },
-                { type: 'problem', content: 'E-Bike-Beratungskompetenz beim neuen MA noch ausbaufähig', confidence: 0.78, approved: false },
-                { type: 'massnahme', content: 'Zweiten Werkstatt-MA einstellen oder Aushilfe für Hochsaison', confidence: 0.88, approved: true },
-                { type: 'massnahme', content: 'E-Bike-Schulung über vit:bikes Akademie für neuen MA buchen', confidence: 0.91, approved: true },
-                { type: 'sentiment', content: 'positiv', confidence: 0.85, data: { level: 'positiv', begruendung: 'Inhaber ist motiviert, Umsatz wächst, spricht positiv über Netzwerkvorteile' } }
-            ]
-        },
-        {
-            id: 'demo2', standort_name: 'Grafrath', call_date: '2026-02-26', call_type: 'beratung',
-            contact: 'Klaus Bauer', status: 'done', summary: 'Onboarding läuft, erste BWA hochgeladen. Fragen zur Margenverbesserung.',
-            spiritus_extractions: [
-                { type: 'problem', content: 'Unsicherheit bei der BWA-Interpretation, weiß nicht was die Zahlen bedeuten', confidence: 0.89, approved: false },
-                { type: 'massnahme', content: 'BWA-Erklärung im nächsten Call gemeinsam durchgehen + Screenshare', confidence: 0.86, approved: true },
-                { type: 'massnahme', content: 'Einkaufskonditionen für Hauptlieferant optimieren über HQ-Rahmenvertrag', confidence: 0.82, approved: false },
-                { type: 'sentiment', content: 'neutral', confidence: 0.80, data: { level: 'neutral', begruendung: 'Noch in der Eingewöhnungsphase, vorsichtig optimistisch' } }
-            ]
-        },
-        {
-            id: 'demo3', standort_name: 'Rottweil', call_date: '2026-02-20', call_type: 'support',
-            contact: 'Maria Schlager', status: 'done', summary: 'Technisches Problem mit Terminbuchungssystem. Frustration über Ausfallzeit.',
-            spiritus_extractions: [
-                { type: 'problem', content: 'eTermin-Integration synchronisiert Buchungen nicht zuverlässig', confidence: 0.95, approved: false },
-                { type: 'problem', content: 'Kunden beschweren sich über Doppelbuchungen', confidence: 0.88, approved: false },
-                { type: 'massnahme', content: 'Webhook-Konfiguration prüfen und neu deployen', confidence: 0.90, approved: true },
-                { type: 'sentiment', content: 'angespannt', confidence: 0.87, data: { level: 'angespannt', begruendung: 'Technischer Fehler sorgt für Frust, erwartet schnelle Lösung vom HQ' } }
-            ]
-        }
-    ];
+export async function spRejectTranscript(transcriptId) {
+    var sb = _sb();
+    if (!sb) return;
+    await sb.from('spiritus_transcripts').update({ status: 'abgelehnt' }).eq('id', transcriptId);
+    var t = SP.transcripts.find(function(x) { return x.id === transcriptId; });
+    if (t) t.status = 'abgelehnt';
+    _showToast('Call abgelehnt.', 'info');
+    spCloseDetail();
+    spRenderAll();
 }
 
-// ─── Helpers ─────────────────────────────────────────────────
-function spFormatDate(dateStr) {
-    if (!dateStr) return '';
-    try {
-        var d = new Date(dateStr);
-        return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    } catch(e) { return dateStr; }
-}
-
-// ─── View Hook ───────────────────────────────────────────────
-window.showSpiritus = function() {
-    window.renderSpiritus();
-};
-
-// Export for router
-export { renderSpiritus };
+// ─── window exports ──────────────────────────────────────────────────────────
+window.initSpiritus      = initSpiritus;
+window.spTab             = spTab;
+window.spSetMode         = spSetMode;
+window.spSubmit          = spSubmit;
+window.spFileSelected    = spFileSelected;
+window.spDragOver        = spDragOver;
+window.spDragLeave       = spDragLeave;
+window.spDrop            = spDrop;
+window.spApplyFilter     = spApplyFilter;
+window.spOpenDetail      = spOpenDetail;
+window.spCloseDetail     = spCloseDetail;
+window.spOpenReview      = spOpenReview;
+window.spApproveAll      = spApproveAll;
+window.spApproveExtraction = spApproveExtraction;
+window.spRejectTranscript= spRejectTranscript;
