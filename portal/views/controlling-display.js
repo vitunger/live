@@ -39,10 +39,24 @@ function diffHtml(ist, plan) {
 export async function loadBwaList() {
     var container = document.getElementById('bwaFileList');
     if(!container) return;
-    // Set standort label dynamically
     var bwaLabel = document.getElementById('bwaStandortLabel');
-    var useDemo = (typeof isDemoMode !== 'undefined' && isDemoMode) || (_sbProfile() && (_sbProfile().status === 'demo' || _sbProfile().status === 'demo_active'));
-    if(bwaLabel) bwaLabel.textContent = useDemo ? 'vit:bikes Muster-Filiale' : ('vit:bikes ' + (_sbProfile() && _sbProfile().standort_name ? _sbProfile().standort_name : 'Standort'));
+    if(bwaLabel) bwaLabel.textContent = 'vit:bikes ' + ((_sbProfile() && _sbProfile().standort_name) ? _sbProfile().standort_name : 'Standort');
+    // ── Demo Mode ──
+    if (window.DEMO_ACTIVE && window.DEMO_DATA && window.DEMO_DATA.bwa) {
+        var bwaMonths = window.DEMO_DATA.bwa;
+        var months = ['','Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+        var h = '<div class="space-y-1">';
+        bwaMonths.forEach(function(b, i) {
+            var active = i === 0;
+            h += '<div class="p-3 rounded-lg cursor-pointer ' + (active ? 'bg-orange-50 border border-vit-orange' : 'hover:bg-gray-50 border border-transparent') + '" onclick="window.demoShowBwaDetail(' + i + ')">'
+                + '<div class="font-semibold text-sm">' + months[b.monat] + ' ' + b.jahr + '</div>'
+                + '<div class="text-xs text-gray-500">' + b.umsatz_fmt + ' &middot; ' + b.ergebnis_fmt + '</div></div>';
+        });
+        h += '</div>';
+        container.innerHTML = h;
+        setTimeout(function() { if(window.demoShowBwaDetail) window.demoShowBwaDetail(0); }, 150);
+        return;
+    }
     try {
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
         var query = _sb().from('bwa_daten').select('id,monat,jahr,umsatzerloese,rohertrag,ergebnis_vor_steuern,datei_name,datei_url,created_at').order('jahr', {ascending:false}).order('monat', {ascending:false});
