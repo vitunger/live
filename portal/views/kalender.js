@@ -422,7 +422,17 @@ export async function loadKalTermine() {
     await loadKalenderMappingCache();
     try {
         var query = _sb().from('termine').select('*').order('start_zeit', {ascending:true});
-        if(_sbProfile() && _sbProfile().standort_id && !_sbProfile().is_hq) query = query.eq('standort_id', _sbProfile().standort_id);
+        if(_sbProfile() && _sbProfile().is_hq) {
+            // HQ: nur Netzwerk-Termine + eigene Termine
+            var myId = _sbUser() ? _sbUser().id : null;
+            if(myId) {
+                query = query.or('ist_netzwerk_termin.eq.true,erstellt_von.eq.' + myId);
+            } else {
+                query = query.eq('ist_netzwerk_termin', true);
+            }
+        } else if(_sbProfile() && _sbProfile().standort_id) {
+            query = query.eq('standort_id', _sbProfile().standort_id);
+        }
         var resp = await query;
         if(!resp.error) {
             kalTermine = (resp.data||[]).map(function(t) {
@@ -534,6 +544,7 @@ export async function saveKalTermin(){
         erstellt_von: _sbUser() ? _sbUser().id : null,
         erstellt_von_name: _sbProfile() ? _sbProfile().name : 'Unbekannt',
         standort_id: _sbProfile() ? _sbProfile().standort_id : null,
+        ist_netzwerk_termin: !!((_sbProfile() && _sbProfile().is_hq)),
         teilnehmer: teilnehmerData,
         wiederholung: repeat || null,
         wiederholung_bis: repeatEnd || null
@@ -759,4 +770,5 @@ window.openKalDayModal = openKalDayModal;
 window.saveKalTermin = saveKalTermin;
 window.switchKalView = switchKalView;
 window.loadKalTermine = loadKalTermine;
+
 
