@@ -1722,14 +1722,14 @@ window.saveSocialConfig = async function(platform) {
 
 window.loadSocialData = async function(platform) {
     _showToast('Daten werden geladen...', 'info');
+    var sb = _sb();
 
-    // YouTube: try live API
+    // ── YouTube: direkte Google API (kein CORS-Problem) ──────────────
     if (platform === 'youtube') {
         var keyEl = document.getElementById('youtube_field_api_key');
         var chEl = document.getElementById('youtube_field_channel_id');
-        var apiKey = keyEl && keyEl.value.trim() ? keyEl.value.trim() : 'AIzaSyBLlbkT79izWdYCFnuqHmwlC5-hfA5CUFc';
+        var apiKey = (keyEl && keyEl.value.trim()) ? keyEl.value.trim() : 'AIzaSyBLlbkT79izWdYCFnuqHmwlC5-hfA5CUFc';
         var channelId = chEl && chEl.value.trim();
-
         if (channelId) {
             try {
                 var chUrl = 'https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=' + encodeURIComponent(channelId) + '&key=' + encodeURIComponent(apiKey);
@@ -1744,7 +1744,6 @@ window.loadSocialData = async function(platform) {
                         parseInt(stats.viewCount || 0).toLocaleString('de-DE'),
                         parseInt(stats.videoCount || 0).toLocaleString('de-DE')
                     );
-                    // Fetch recent videos
                     var searchUrl = 'https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=' + encodeURIComponent(channelId) + '&order=date&maxResults=10&type=video&key=' + encodeURIComponent(apiKey);
                     var sResp = await fetch(searchUrl);
                     var sData = await sResp.json();
@@ -1757,13 +1756,7 @@ window.loadSocialData = async function(platform) {
                             var rows = vData.items.map(function(v) {
                                 var s = v.statistics || {};
                                 var date = v.snippet.publishedAt ? new Date(v.snippet.publishedAt).toLocaleDateString('de-DE') : '—';
-                                return [
-                                    v.snippet.title,
-                                    parseInt(s.viewCount || 0).toLocaleString('de-DE'),
-                                    parseInt(s.likeCount || 0).toLocaleString('de-DE'),
-                                    '—',
-                                    date
-                                ];
+                                return [v.snippet.title, parseInt(s.viewCount||0).toLocaleString('de-DE'), parseInt(s.likeCount||0).toLocaleString('de-DE'), '—', date];
                             });
                             _populateSocialRows('youtube', rows);
                         }
@@ -1774,13 +1767,131 @@ window.loadSocialData = async function(platform) {
                     _showToast('YouTube-Daten geladen ✓', 'success');
                     return;
                 }
-            } catch(e) {}
+            } catch(e) { console.warn('YouTube live fehlgeschlagen, zeige Demo:', e); }
         }
+        _showSocialDemo('youtube');
+        return;
     }
 
-    // All others: show demo data
+    // ── Google Analytics: via analytics-proxy Edge Function ──────────
+    if (platform === 'analytics') {
+        var propEl = document.getElementById('analytics_field_property_id');
+        var keyEl2 = document.getElementById('analytics_field_api_key');
+        var propertyId = propEl && propEl.value.trim();
+        var apiKey2 = keyEl2 && keyEl2.value.trim();
+        if (propertyId && apiKey2 && sb) {
+            try {
+                var ovResp = await sb.functions.invoke('analytics-proxy', {
+                    body: { action: 'overview', property_id: propertyId, api_key: apiKey2 }
+                });
+                var pagesResp = await sb.functions.invoke('analytics-proxy', {
+                    body: { action: 'top_pages', property_id: propertyId, api_key: apiKey2 }
+                });
+                if (ovResp.data && !ovResp.error) {
+                    var ov = ovResp.data;
+                    _populateSocialCard('analytics',
+                        'GA4 Property ' + propertyId,
+                        parseInt(ov.pageviews||0).toLocaleString('de-DE'),
+                        parseInt(ov.users||0).toLocaleString('de-DE'),
+                        ov.avg_session_duration || '—'
+                    );
+                    if (pagesResp.data && pagesResp.data.pages) {
+                        var pageRows = pagesResp.data.pages.map(function(p) {
+                            return [p.page, parseInt(p.views).toLocaleString('de-DE'), parseInt(p.users).toLocaleString('de-DE'), p.avg_time, p.source];
+                        });
+                        _populateSocialRows('analytics', pageRows);
+                    }
+                    document.getElementById('socialStats_analytics').style.display = '';
+                    CONNECTORS.analytics.status = 'connected';
+                    CONNECTORS.analytics.statusLabel = 'Verbunden';
+                    _showToast('Google Analytics Daten geladen ✓', 'success');
+                    return;
+                } else if (ovResp.error || (ovResp.data && ovResp.data.error)) {
+                    _showToast('GA4 Fehler: ' + (ovResp.data && ovResp.data.error || ovResp.error), 'error');
+                }
+            } catch(e) { _showToast('GA4 Verbindungsfehler: ' + e.message, 'error'); }
+        }
+        _showSocialDemo('analytics');
+        return;
+    }
+
+    // ── Google My Business: via gmb-proxy Edge Function ──────────────
+    if (platform === 'gmb') {
+        var accEl = document.getElementById('gmb_field_account_id');
+        var gmbKeyEl = document.getElementById('gmb_field_api_key');
+        var accountId = accEl && accEl.value.trim();
+        var gmbApiKey = gmbKeyEl && gmbKeyEl.value.trim();
+        if (accountId && gmbApiKey && sb) {
+            try {
+                var ovResp2 = await sb.functions.invoke('gmb-proxy', {
+                    body: { action: 'overview', account_id: accountId, api_key: gmbApiKey }
+                });
+                if (ovResp2.data && !ovResp2.error && !ovResp2.data.error) {
+                    var ov2 = ovResp2.data;
+                    _populateSocialCard('gmb',
+                        ov2.account_name || accountId,
+                        ov2.avg_rating || '—',
+                        ov2.total_reviews || '—',
+                        ov2.locations_count || '—'
+                    );
+                    // Load reviews for first location
+                    if (ov2.locations && ov2.locations.length > 0) {
+                        var revResp = await sb.functions.invoke('gmb-proxy', {
+                            body: { action: 'reviews', account_id: accountId, location_id: ov2.locations[0].id, api_key: gmbApiKey }
+                        });
+                        if (revResp.data && revResp.data.reviews) {
+                            var revRows = revResp.data.reviews.map(function(r) {
+                                return [r.reviewer, '★'.repeat(r.stars), r.comment.substring(0,60)+(r.comment.length>60?'…':''), r.reply, r.date];
+                            });
+                            _populateSocialRows('gmb', revRows);
+                        }
+                    }
+                    document.getElementById('socialStats_gmb').style.display = '';
+                    CONNECTORS.gmb.status = 'connected';
+                    CONNECTORS.gmb.statusLabel = 'Verbunden';
+                    _showToast('Google My Business Daten geladen ✓', 'success');
+                    return;
+                } else {
+                    _showToast('GMB Fehler: ' + (ovResp2.data && ovResp2.data.error || 'Unbekannt'), 'error');
+                }
+            } catch(e) { _showToast('GMB Verbindungsfehler: ' + e.message, 'error'); }
+        }
+        _showSocialDemo('gmb');
+        return;
+    }
+
+    // ── TikTok: via tiktok-proxy Edge Function ───────────────────────
+    if (platform === 'tiktok') {
+        if (sb) {
+            try {
+                var ttResp = await sb.functions.invoke('tiktok-proxy', { body: { action: 'user_info' } });
+                if (ttResp.data && ttResp.data.user) {
+                    var u = ttResp.data.user;
+                    var fmt = function(n) { return parseInt(n||0).toLocaleString('de-DE'); };
+                    var el = function(id) { return document.getElementById(id); };
+                    if (el('tiktokDisplayName')) el('tiktokDisplayName').textContent = u.display_name || '—';
+                    if (el('tiktokFollowers')) el('tiktokFollowers').textContent = fmt(u.follower_count);
+                    if (el('tiktokLikes')) el('tiktokLikes').textContent = fmt(u.likes_count);
+                    if (el('tiktokVideoCount')) el('tiktokVideoCount').textContent = u.video_count || 0;
+                    if (el('tiktokAvatar') && u.avatar_url) el('tiktokAvatar').src = u.avatar_url;
+                    var vResp3 = await sb.functions.invoke('tiktok-proxy', { body: { action: 'video_list' } });
+                    if (vResp3.data && vResp3.data.videos) window._renderTikTokVideos(vResp3.data.videos);
+                    document.getElementById('tiktokStatsArea').style.display = '';
+                    CONNECTORS.tiktok.status = 'connected';
+                    CONNECTORS.tiktok.statusLabel = 'Verbunden';
+                    _showToast('TikTok Daten geladen ✓', 'success');
+                    return;
+                }
+            } catch(e) { console.warn('TikTok live fehlgeschlagen:', e); }
+        }
+        window._showTikTokDemoData();
+        return;
+    }
+
+    // ── Instagram & Facebook: Demo (Token wird direkt gespeichert, kein Proxy nötig) ─
     _showSocialDemo(platform);
 };
+
 
 function _showSocialDemo(platform) {
     var demo = SOCIAL_DEMO[platform];
