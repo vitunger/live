@@ -138,7 +138,16 @@ docs/
 ### Bug-Fixes (03.03.2026)
 - **bwa-cockpit.js + cockpit-engine.js**: Null-Guards fuer alle DOM-Elemente in `updateBwaDeadlineWidget`. GF/Partner-Rollen (z.B. Thorsten Guhr) hatten keine BWA-Widget-Elemente im DOM → TypeError crash.
 - **shop-notify Edge Function (v8)**: Neue Bestellungen gehen jetzt an feste Adresse `shop@vitbikes.de` statt an alle HQ-User.
-- **schnittstellen.js**: 5 weitere Social/Analytics Connectoren hinzugefügt (03.03.2026):
+- **Edge Functions (3 neue, 03.03.2026):**
+- **tiktok-proxy**: OAuth Token Exchange (code→token), Token Refresh, user_info, video_list. Keys aus connector_config. Speichert access_token + refresh_token automatisch.
+- **analytics-proxy**: Google Analytics Data API v1 (GA4). Actions: overview (30T KPIs: Pageviews, Users, Sessions, Avg Duration, Bounce Rate), top_pages (Top 10 Seiten), traffic_sources. Property ID + API Key aus connector_config.
+- **gmb-proxy**: Google Business Profile API v4. Actions: overview (Account-Überblick, Locations, Avg Rating), reviews (letzte 10 Bewertungen mit Antwort-Status), locations (alle Standorte des Accounts). Account ID + API Key aus connector_config.
+
+**api/tiktok-callback.js** (Vercel Serverless Function): OAuth 2.0 Callback für TikTok. Empfängt Code nach User-Authorization, ruft tiktok-proxy für Token-Exchange auf, schließt Popup und benachrichtigt Parent-Window via postMessage.
+
+**schnittstellen.js**: loadSocialData nutzt jetzt Edge Functions: analytics → analytics-proxy, gmb → gmb-proxy, tiktok → tiktok-proxy. YouTube weiterhin direkte Google API (kein CORS-Problem). Instagram/Facebook zeigen Demo bis Token eingetragen.
+
+**schnittstellen.js**: 5 weitere Social/Analytics Connectoren hinzugefügt (03.03.2026):
 - **Instagram** (Meta Graph API) – Posts, Follower, Reichweite, Story-Insights
 - **Facebook Page** (Meta Graph API) – Fans, Reichweite, Post-Engagement
 - **YouTube** (YouTube Data API v3) – Abonnenten, Views, Video-Liste; API Key vorkonfiguriert (AIzaSyBLlbkT79iz...). Live-Datenabruf via Channel ID
