@@ -259,7 +259,8 @@ sbUrl()       → window.sbUrl()   // Supabase Project URL (zentralisiert)
 | `rollen` | Rollen-Definitionen (hq, inhaber, verkauf, werkstatt, buchhaltung) |
 | `standorte` | Franchise-Standorte |
 | `sales` | Leads/Deals (Pipeline) – Status-ENUM: neu/kontaktiert/angebot/verhandlung/schwebend/gewonnen/verloren/gold |
-| `termine` | Kalender-Termine (start_zeit, etermin_uid) |
+| `termine` | Kalender-Termine (start_zeit, etermin_uid, etermin_kalender_id, etermin_kalender_name, zugewiesen_an) |
+| `etermin_kalender_mapping` | Kalender-ID/Name → Portal-User Zuordnung pro Standort |
 | `todos` | Aufgaben |
 | `bwa_daten` | BWA-Finanzdaten (monatlich pro Standort) |
 | `verkauf_tracking` | Verkäufer-Tagesperformance |
@@ -654,3 +655,4 @@ security: RLS/JWT/Auth-Verbesserung
 - **Flow:** Upload (Audio/Text) → spiritus-analyze Edge Function → Claude extrahiert Probleme/Maßnahmen/Sentiment → Review-Queue (confidence < 0.85) oder Auto-Approve (≥ 0.85) → Wissensbasis
 - **View init:** initSpiritus() via view-router.js
 - **window exports:** initSpiritus, spTab, spSetMode, spSubmit, spFileSelected, spDragOver, spDragLeave, spDrop, spApplyFilter, spOpenDetail, spCloseDetail, spOpenReview, spApproveAll, spApproveExtraction, spRejectTranscript
+
