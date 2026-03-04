@@ -39,21 +39,16 @@ export async function devKIReleaseVorschlag() {
         if(!_devSubs() || _devSubs().length === 0) {
             await loadDevSubmissions();
         }
-        // Sammle alle umgesetzten + in Arbeit befindlichen Submissions
+
+        // 1) Umgesetzte Submissions sammeln
         var relevant = _devSubs().filter(function(s) {
             return ['ausgerollt','release_geplant','im_review','in_entwicklung','geschlossen'].indexOf(s.status) !== -1;
         });
-        // Fallback: wenn nichts gefunden, nehme alle nicht-abgelehnten der letzten 30 Tage
         if(relevant.length === 0) {
             var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
             relevant = _devSubs().filter(function(s) {
                 return s.status !== 'abgelehnt' && s.status !== 'geparkt' && new Date(s.created_at) > cutoff;
             }).slice(0, 20);
-        }
-        if(relevant.length === 0) {
-            _showToast('Keine Features/Bugs für Release-Note gefunden.', 'error');
-            if(btn) { btn.disabled = false; btn.innerHTML = '<span>🧠</span><span>KI-Vorschlag generieren</span>'; }
-            return;
         }
 
         var zusammenfassung = relevant.map(function(s) {
@@ -62,6 +57,61 @@ export async function devKIReleaseVorschlag() {
             var analyse = s.dev_ki_analysen && s.dev_ki_analysen[0] ? s.dev_ki_analysen[0].zusammenfassung : '';
             return typ + ': ' + titel + (analyse ? ' – ' + analyse : '');
         }).join('\n');
+
+        // 2) CLAUDE.md Session-Notizen laden (letzte Aenderungen die nicht als Submission existieren)
+        var claudeContext = '';
+        try {
+            var claudeResp = await fetch('https://raw.githubusercontent.com/vitunger/live/main/CLAUDE.md');
+            if(claudeResp.ok) {
+                var claudeText = await claudeResp.text();
+                // Letzte Session extrahieren
+                var sessionIdx = claudeText.lastIndexOf('## Letzte Session');
+                if(sessionIdx === -1) sessionIdx = claudeText.lastIndexOf('## Session');
+                if(sessionIdx > -1) {
+                    var sessionEnd = claudeText.indexOf('\n## ', sessionIdx + 10);
+                    var sessionText = sessionEnd > -1 ? claudeText.substring(sessionIdx, sessionEnd) : claudeText.substring(sessionIdx);
+                    claudeContext = sessionText.trim();
+                }
+            }
+        } catch(e) { console.warn('CLAUDE.md fetch:', e); }
+
+        // 3) Bereits veroeffentlichte Releases laden (um Duplikate zu vermeiden)
+        var existingReleases = '';
+        try {
+            var relResp = await _sb().from('dev_release_docs')
+                .select('titel, version, created_at')
+                .eq('typ', 'release_note')
+                .eq('freigegeben', true)
+                .order('created_at', { ascending: false })
+                .limit(5);
+            if(relResp.data && relResp.data.length > 0) {
+                existingReleases = relResp.data.map(function(r) {
+                    return (r.version || '') + ' ' + r.titel + ' (' + (r.created_at || '').split('T')[0] + ')';
+                }).join(', ');
+            }
+        } catch(e) {}
+
+        // 4) Manuellen Kontext aus Textfeld holen (falls vorhanden)
+        var manualCtx = '';
+        var manualField = document.getElementById('relManualContext');
+        if(manualField && manualField.value.trim()) {
+            manualCtx = manualField.value.trim();
+        }
+
+        // Alles zusammenbauen
+        var fullContext = '';
+        if(zusammenfassung) fullContext += 'SUBMISSIONS:\n' + zusammenfassung;
+        if(claudeContext) fullContext += '\n\nCLAUDE.MD SESSION-NOTIZEN:\n' + claudeContext;
+        if(manualCtx) fullContext += '\n\nMANUELLE ERGAENZUNGEN:\n' + manualCtx;
+        if(existingReleases) fullContext += '\n\nBEREITS VEROEFFENTLICHT (nicht nochmal aufnehmen):\n' + existingReleases;
+
+        if(!fullContext.trim()) {
+            _showToast('Keine Aenderungen gefunden.', 'error');
+            if(btn) { btn.disabled = false; btn.innerHTML = '<span>🧠</span><span>KI-Vorschlag generieren</span>'; }
+            return;
+        }
+
+        var totalCount = relevant.length + (claudeContext ? 1 : 0) + (manualCtx ? 1 : 0);
 
         // Fresh token holen (mit auto-refresh)
         var token = await _getFreshToken();
@@ -74,8 +124,8 @@ export async function devKIReleaseVorschlag() {
             },
             body: JSON.stringify({
                 mode: 'release_notes',
-                context: zusammenfassung,
-                count: relevant.length
+                context: fullContext,
+                count: totalCount
             })
         });
 
@@ -84,15 +134,14 @@ export async function devKIReleaseVorschlag() {
 
         var vorschlag = d.release_notes || d.antwort || d.text || '';
         if(vorschlag) {
-            // Strip intro/greeting lines (Partneransprache entfernen)
+            // Strip intro/greeting lines
             vorschlag = vorschlag.replace(/^(Liebe\s+Partner[^\n]*\n+|Hallo[^\n]*\n+|Sehr\s+geehrte[^\n]*\n+|Dieses\s+Release\s+bringt[^\n]*\n+|Diese[sr]?\s+(Release|Update|Version)\s+[^\n]*\n+)/gi, '').trim();
-            // Strip trailing greetings
             vorschlag = vorschlag.replace(/\n+(Viele\s+Gr[uü][sß]e[^\n]*|Euer\s+[^\n]*|Beste\s+Gr[uü][sß]e[^\n]*|Mit\s+freundlichen[^\n]*)$/gi, '').trim();
             var titelField = document.getElementById('relTitel');
             var inhaltField = document.getElementById('relInhalt');
             if(d.titel && titelField && !titelField.value) titelField.value = d.titel;
             if(inhaltField) inhaltField.value = vorschlag;
-            _showToast('🧠 KI-Vorschlag eingefügt! Bitte prüfen und anpassen.', 'success');
+            _showToast('KI-Vorschlag eingefügt – bitte prüfen.', 'success');
         } else {
             _showToast('KI hat keinen Vorschlag generiert.', 'error');
         }
