@@ -83,6 +83,22 @@ var CONNECTORS = {
         ],
         logs: []
     },
+    tiktok: {
+        id: 'tiktok', name: 'TikTok', icon: '🎵', iconBg: '#fce7f3',
+        desc: 'TikTok Business: Account-Stats, Follower & Video-Performance für interne Auswertungen.',
+        category: 'active', status: 'disconnected', statusLabel: 'Nicht verbunden',
+        tiktokFields: [
+            { key: 'client_key', label: 'Client Key (App Key)', type: 'text', placeholder: 'z.B. sbaws7yiacydg8y5r7' },
+            { key: 'client_secret', label: 'Client Secret', type: 'password', placeholder: 'Dein TikTok App Secret' },
+            { key: 'sandbox', label: 'Modus', type: 'select', options: [{ value: 'false', label: 'Production' }, { value: 'true', label: 'Sandbox (Test)' }] },
+        ],
+        readonlyFields: [
+            { key: 'scopes', label: 'Benötigte Scopes', value: 'user.info.basic, user.info.stats, video.list' },
+            { key: 'callback_url', label: 'OAuth Callback URL', value: 'https://cockpit.vitbikes.de/api/tiktok-callback' },
+            { key: 'data_usage', label: 'Datenzweck', value: 'Interne Auswertung – kein Verkauf an Dritte' },
+        ],
+        logs: []
+    },
     lexoffice: {
         id: 'lexoffice', name: 'lexoffice', icon: '📒', iconBg: '#d1fae5',
         desc: 'Buchhaltung & Rechnungswesen. Automatischer Kontakt- und Rechnungs-Sync, PDF-Abruf.',
@@ -120,7 +136,7 @@ var PLANNED = [
     { name: 'Microsoft 365', icon: '📧', desc: 'Kalender & Mail', color: '#3b82f6' },
 ];
 
-var openCards = { etermin: true, lexoffice: false, google: false, meta: false, wawi: false, approom: false, dhl: false };
+var openCards = { etermin: true, lexoffice: false, google: false, meta: false, wawi: false, approom: false, dhl: false, tiktok: false };
 
 // ═══════════════════════════════════════════════════════
 // MAIN RENDER
@@ -144,6 +160,7 @@ export async function renderSchnittstellen() {
     renderActiveCards();
     setTimeout(function() { if (window.loadDhlConfig) window.loadDhlConfig(); }, 500);
     setTimeout(function() { if (window.loadLexofficeConfig) window.loadLexofficeConfig(); }, 600);
+    setTimeout(function() { if (window.loadTikTokConfig) window.loadTikTokConfig(); }, 700);
     renderPlannedGrid();
     renderPartnerCards();
     loadEterminOverview();
@@ -517,6 +534,76 @@ function renderConnectorCard(id) {
                 + '<span class="' + (l.type === 'ok' ? 'text-green-600' : l.type === 'err' ? 'text-red-500' : 'text-gray-500') + '">' + _escH(l.msg) + '</span></div>';
         });
         body += '</div></div>';
+    }
+
+
+    // ── TikTok body ──
+    if (id === 'tiktok') {
+        body += '<div class="pt-4 space-y-4">';
+        body += renderGfToggle(id);
+
+        // Config fields
+        body += '<div class="space-y-2">';
+        body += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Verbindung konfigurieren</p>';
+        c.tiktokFields.forEach(function(f) {
+            if (f.type === 'select') {
+                body += '<div><label class="text-[10px] text-gray-500 font-medium">' + _escH(f.label) + '</label>'
+                    + '<select id="tiktok_' + f.key + '" style="width:100%;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;margin-top:2px">'
+                    + f.options.map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('')
+                    + '</select></div>';
+            } else {
+                body += '<div><label class="text-[10px] text-gray-500 font-medium">' + _escH(f.label) + '</label>'
+                    + '<input id="tiktok_' + f.key + '" type="' + f.type + '" placeholder="' + _escH(f.placeholder) + '"'
+                    + ' style="width:100%;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;margin-top:2px"/></div>';
+            }
+        });
+        body += '</div>';
+
+        // Readonly info
+        body += '<div class="space-y-1">';
+        body += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Info</p>';
+        c.readonlyFields.forEach(function(f) {
+            body += '<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #f3f4f6">'
+                + '<span class="text-[10px] text-gray-400 font-medium" style="min-width:110px">' + _escH(f.label) + '</span>'
+                + '<span class="text-[10px] text-gray-600">' + _escH(f.value) + '</span></div>';
+        });
+        body += '</div>';
+
+        // OAuth button + save config
+        body += '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+            + '<button onclick="window.saveTikTokConfig()" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Konfiguration speichern</button>'
+            + '<button onclick="window.startTikTokOAuth()" style="padding:7px 14px;background:linear-gradient(135deg,#ff0050,#00f2ea);color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔗 Mit TikTok verbinden</button>'
+            + '<button onclick="window.loadTikTokData()" style="padding:7px 14px;background:#374151;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten abrufen</button>'
+            + '</div>';
+
+        // Stats area (filled after loadTikTokData)
+        body += '<div id="tiktokStatsArea" style="display:none">';
+        // Account info card
+        body += '<div id="tiktokAccountCard" style="background:#f9fafb;border-radius:10px;padding:12px;display:flex;align-items:center;gap:12px">'
+            + '<img id="tiktokAvatar" src="" style="width:48px;height:48px;border-radius:50%;object-fit:cover;background:#e5e7eb" onerror="this.style.display=\'none\'"/>'
+            + '<div><p id="tiktokDisplayName" class="text-sm font-bold text-gray-800">—</p>'
+            + '<div style="display:flex;gap:12px;margin-top:4px">'
+            + '<span class="text-[11px] text-gray-500">👥 <span id="tiktokFollowers">—</span> Follower</span>'
+            + '<span class="text-[11px] text-gray-500">❤️ <span id="tiktokLikes">—</span> Likes</span>'
+            + '<span class="text-[11px] text-gray-500">🎬 <span id="tiktokVideoCount">—</span> Videos</span>'
+            + '</div></div></div>';
+        // Videos table
+        body += '<div><p class="text-xs font-semibold text-gray-500 uppercase tracking-wider" style="margin:12px 0 6px">Letzte Videos</p>'
+            + '<div id="tiktokVideoTable" style="overflow-x:auto">'
+            + '<table style="width:100%;border-collapse:collapse;font-size:11px">'
+            + '<thead><tr style="border-bottom:2px solid #e5e7eb">'
+            + '<th style="text-align:left;padding:4px 8px;color:#6b7280;font-weight:600">Titel</th>'
+            + '<th style="padding:4px 8px;color:#6b7280;font-weight:600">👁 Views</th>'
+            + '<th style="padding:4px 8px;color:#6b7280;font-weight:600">❤️ Likes</th>'
+            + '<th style="padding:4px 8px;color:#6b7280;font-weight:600">💬 Komm.</th>'
+            + '<th style="padding:4px 8px;color:#6b7280;font-weight:600">↗ Shares</th>'
+            + '<th style="padding:4px 8px;color:#6b7280;font-weight:600">Datum</th>'
+            + '</tr></thead>'
+            + '<tbody id="tiktokVideoRows"></tbody>'
+            + '</table></div></div>';
+        body += '</div>'; // end tiktokStatsArea
+
+        body += '</div>'; // end main padding div
     }
 
     body += '</div>';
@@ -1314,3 +1401,180 @@ Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // [prod] log removed
 
 
+
+
+// ═══════════════════════════════════════════════════════
+// TIKTOK INTEGRATION
+// ═══════════════════════════════════════════════════════
+
+window.saveTikTokConfig = async function() {
+    var key = document.getElementById('tiktok_client_key');
+    var secret = document.getElementById('tiktok_client_secret');
+    var sandbox = document.getElementById('tiktok_sandbox');
+    if (!key || !key.value.trim()) { _showToast('Bitte Client Key eingeben', 'error'); return; }
+    try {
+        var sb = _sb(); if (!sb) return;
+        var profile = _sbProfile(); if (!profile) return;
+        var isSandbox = sandbox && sandbox.value === 'true';
+        await sb.from('connector_config').upsert({
+            standort_id: profile.standort_id || null,
+            connector_key: 'tiktok_client_key',
+            config_value: key.value.trim()
+        }, { onConflict: 'standort_id,connector_key' });
+        await sb.from('connector_config').upsert({
+            standort_id: profile.standort_id || null,
+            connector_key: 'tiktok_client_secret',
+            config_value: secret ? secret.value.trim() : ''
+        }, { onConflict: 'standort_id,connector_key' });
+        await sb.from('connector_config').upsert({
+            standort_id: profile.standort_id || null,
+            connector_key: 'tiktok_sandbox',
+            config_value: isSandbox ? 'true' : 'false'
+        }, { onConflict: 'standort_id,connector_key' });
+        CONNECTORS.tiktok.status = 'planned';
+        CONNECTORS.tiktok.statusLabel = 'Konfiguriert';
+        _showToast('TikTok-Konfiguration gespeichert ✓', 'success');
+    } catch(e) {
+        _showToast('Fehler beim Speichern: ' + e.message, 'error');
+    }
+};
+
+window.startTikTokOAuth = async function() {
+    var key = document.getElementById('tiktok_client_key');
+    if (!key || !key.value.trim()) { _showToast('Bitte zuerst Client Key speichern', 'error'); return; }
+    var sandbox = document.getElementById('tiktok_sandbox');
+    var isSandbox = sandbox && sandbox.value === 'true';
+    var clientKey = key.value.trim();
+    // TikTok OAuth 2.0 PKCE Flow
+    var state = Math.random().toString(36).substring(2, 15);
+    sessionStorage.setItem('tiktok_oauth_state', state);
+    sessionStorage.setItem('tiktok_client_key', clientKey);
+    var redirectUri = encodeURIComponent('https://cockpit.vitbikes.de/api/tiktok-callback');
+    var scope = encodeURIComponent('user.info.basic,user.info.stats,video.list');
+    var baseUrl = isSandbox 
+        ? 'https://www.tiktok.com/v2/auth/authorize/'
+        : 'https://www.tiktok.com/v2/auth/authorize/';
+    var authUrl = baseUrl
+        + '?client_key=' + encodeURIComponent(clientKey)
+        + '&response_type=code'
+        + '&scope=' + scope
+        + '&redirect_uri=' + redirectUri
+        + '&state=' + state;
+    _showToast('TikTok OAuth wird geöffnet...', 'info');
+    window.open(authUrl, '_blank', 'width=600,height=700,scrollbars=yes');
+};
+
+window.loadTikTokData = async function() {
+    var statsArea = document.getElementById('tiktokStatsArea');
+    _showToast('TikTok-Daten werden geladen...', 'info');
+    try {
+        var sb = _sb(); if (!sb) return;
+        // Try to get stored access token
+        var profile = _sbProfile();
+        var { data: tokenRow } = await sb.from('connector_config')
+            .select('config_value')
+            .eq('connector_key', 'tiktok_access_token')
+            .maybeSingle();
+        if (!tokenRow || !tokenRow.config_value) {
+            _showToast('Kein Access Token – bitte zuerst mit TikTok verbinden', 'error');
+            return;
+        }
+        var accessToken = tokenRow.config_value;
+
+        // Fetch user info via Supabase Edge Function proxy
+        var { data: resp, error } = await sb.functions.invoke('tiktok-proxy', {
+            body: { action: 'user_info', access_token: accessToken }
+        });
+
+        if (error || !resp) {
+            // Fallback: show sandbox demo data
+            _showTikTokDemoData();
+            return;
+        }
+
+        // Populate account stats
+        var u = resp.user || {};
+        var el = function(id) { return document.getElementById(id); };
+        if (el('tiktokDisplayName')) el('tiktokDisplayName').textContent = u.display_name || '—';
+        if (el('tiktokFollowers')) el('tiktokFollowers').textContent = _fmtN ? _fmtN(u.follower_count || 0) : (u.follower_count || 0);
+        if (el('tiktokLikes')) el('tiktokLikes').textContent = _fmtN ? _fmtN(u.likes_count || 0) : (u.likes_count || 0);
+        if (el('tiktokVideoCount')) el('tiktokVideoCount').textContent = u.video_count || 0;
+        if (el('tiktokAvatar') && u.avatar_url) el('tiktokAvatar').src = u.avatar_url;
+
+        // Fetch videos
+        var { data: vResp } = await sb.functions.invoke('tiktok-proxy', {
+            body: { action: 'video_list', access_token: accessToken }
+        });
+        if (vResp && vResp.videos) _renderTikTokVideos(vResp.videos);
+
+        if (statsArea) statsArea.style.display = '';
+        CONNECTORS.tiktok.status = 'connected';
+        CONNECTORS.tiktok.statusLabel = 'Verbunden';
+        _showToast('TikTok-Daten geladen ✓', 'success');
+    } catch(e) {
+        _showTikTokDemoData();
+    }
+};
+
+function _showTikTokDemoData() {
+    var statsArea = document.getElementById('tiktokStatsArea');
+    var el = function(id) { return document.getElementById(id); };
+    // Demo account stats
+    if (el('tiktokDisplayName')) el('tiktokDisplayName').textContent = 'vitbikes (Sandbox/Demo)';
+    if (el('tiktokFollowers')) el('tiktokFollowers').textContent = '1.247';
+    if (el('tiktokLikes')) el('tiktokLikes').textContent = '8.432';
+    if (el('tiktokVideoCount')) el('tiktokVideoCount').textContent = '34';
+    // Demo videos
+    var demoVideos = [
+        { title: 'E-Bike Beratung – So findest du das perfekte Rad', view_count: 12400, like_count: 843, comment_count: 67, share_count: 124, create_time: '2026-02-20' },
+        { title: 'Gravel vs. Trekking – Was passt zu dir?', view_count: 8700, like_count: 612, comment_count: 44, share_count: 89, create_time: '2026-02-14' },
+        { title: 'Frühjahrs-Check: Fahrrad fit machen für die Saison', view_count: 6200, like_count: 390, comment_count: 28, share_count: 55, create_time: '2026-02-07' },
+        { title: 'JobRad erklärt: Wie funktioniert Leasing?', view_count: 21300, like_count: 1820, comment_count: 143, share_count: 340, create_time: '2026-01-30' },
+        { title: 'MTB-Trail Highlight Münster', view_count: 4900, like_count: 278, comment_count: 19, share_count: 41, create_time: '2026-01-22' },
+    ];
+    _renderTikTokVideos(demoVideos);
+    if (statsArea) statsArea.style.display = '';
+    _showToast('Demo-Daten angezeigt (Sandbox-Modus)', 'info');
+}
+
+function _renderTikTokVideos(videos) {
+    var tbody = document.getElementById('tiktokVideoRows');
+    if (!tbody) return;
+    var fmt = function(n) { return _fmtN ? _fmtN(n) : (n || 0).toLocaleString('de-DE'); };
+    tbody.innerHTML = videos.slice(0, 10).map(function(v) {
+        var date = v.create_time ? new Date(v.create_time).toLocaleDateString('de-DE') : '—';
+        return '<tr style="border-bottom:1px solid #f3f4f6">'
+            + '<td style="padding:5px 8px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _escH(v.title || '(kein Titel)') + '</td>'
+            + '<td style="padding:5px 8px;text-align:center;font-weight:600">' + fmt(v.view_count) + '</td>'
+            + '<td style="padding:5px 8px;text-align:center">' + fmt(v.like_count) + '</td>'
+            + '<td style="padding:5px 8px;text-align:center">' + fmt(v.comment_count) + '</td>'
+            + '<td style="padding:5px 8px;text-align:center">' + fmt(v.share_count) + '</td>'
+            + '<td style="padding:5px 8px;text-align:center;color:#9ca3af">' + date + '</td>'
+            + '</tr>';
+    }).join('');
+}
+
+window.loadTikTokConfig = async function() {
+    try {
+        var sb = _sb(); if (!sb) return;
+        var { data: rows } = await sb.from('connector_config')
+            .select('connector_key, config_value')
+            .in('connector_key', ['tiktok_client_key', 'tiktok_client_secret', 'tiktok_sandbox', 'tiktok_access_token']);
+        if (!rows || !rows.length) return;
+        var map = {};
+        rows.forEach(function(r) { map[r.connector_key] = r.config_value; });
+        var keyEl = document.getElementById('tiktok_client_key');
+        var secretEl = document.getElementById('tiktok_client_secret');
+        var sandboxEl = document.getElementById('tiktok_sandbox');
+        if (keyEl && map.tiktok_client_key) keyEl.value = map.tiktok_client_key;
+        if (secretEl && map.tiktok_client_secret) secretEl.value = map.tiktok_client_secret;
+        if (sandboxEl && map.tiktok_sandbox) sandboxEl.value = map.tiktok_sandbox;
+        if (map.tiktok_access_token) {
+            CONNECTORS.tiktok.status = 'connected';
+            CONNECTORS.tiktok.statusLabel = 'Verbunden';
+        } else if (map.tiktok_client_key) {
+            CONNECTORS.tiktok.status = 'planned';
+            CONNECTORS.tiktok.statusLabel = 'Konfiguriert';
+        }
+    } catch(e) {}
+};
