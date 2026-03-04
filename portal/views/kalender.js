@@ -100,7 +100,8 @@ export function kalUpdateNavTitle(){
 export function kalGetFiltered(){
     var userFilter=(document.getElementById('kalFilterUser')||{}).value||'all';
     return kalTermine.filter(function(t){
-        if(userFilter==='me' && sbProfile) return t.erstellt_von===(_sbUser() ?_sbUser().id:null) || t.user==='all';
+        if(userFilter==='me' && sbProfile) return t.erstellt_von===(_sbUser() ?_sbUser().id:null) || t.zugewiesen_an===(_sbUser()?_sbUser().id:null) || t.user==='all';
+        if(userFilter && userFilter!=='all' && userFilter!=='me') return t.zugewiesen_an===userFilter || t.erstellt_von===userFilter;
         return true;
     });
 }
@@ -235,6 +236,7 @@ export function renderKalWeek(){
                 h+='<div onclick="event.stopPropagation();openTerminDetail(\''+t.id+'\')" class="'+solid+' text-white rounded px-1.5 py-1 mb-0.5 text-[10px] cursor-pointer hover:opacity-90 shadow-sm overflow-hidden" style="min-height:'+Math.max(24,heightPx-4)+'px;" title="'+_escH(t.title)+'">';
                 h+='<p class="font-bold truncate">'+_escH(t.title)+'</p>';
                 h+='<p class="opacity-80 truncate">'+t.time+(t.endTime?' – '+t.endTime:'')+(t.ort?' · '+_escH(t.ort):'')+'</p>';
+                if(t.zugewiesen_an_name)h+='<p class="opacity-90 truncate text-white/80">👤 '+_escH(t.zugewiesen_an_name)+'</p>';
                 h+='</div>';
             });
             h+='</div>';
@@ -356,6 +358,7 @@ export function renderKalDay(){
             sh+='<div class="flex-1 min-w-0"><p class="font-semibold text-sm text-gray-800 truncate">'+_escH(t.title)+'</p>';
             sh+='<p class="text-xs text-gray-500">'+(t.ganztaegig?'Ganztägig':t.time+(t.endTime?' – '+t.endTime:''))+'</p>';
             if(t.ort)sh+='<p class="text-xs text-gray-400">📍 '+_escH(t.ort)+'</p>';
+            if(t.zugewiesen_an_name)sh+='<p class="text-[10px] text-orange-600 font-semibold">👤 '+_escH(t.zugewiesen_an_name)+'</p>';
             if(t.teilnehmer && t.teilnehmer.length > 0) sh+='<p class="text-[10px] text-gray-400">👥 '+t.teilnehmer.map(function(tn){return _escH(typeof tn==="object"?tn.name:tn);}).join(", ")+'</p>';
             sh+='</div><span class="text-[10px] px-1.5 py-0.5 rounded-full font-semibold flex-shrink-0 '+cls+'">'+typeLabels[t.type]+'</span></div>';
         });
@@ -376,9 +379,47 @@ export function renderKalDay(){
     statsEl.innerHTML=statH;
 }
 
+// Cache for kalender→verkäufer mapping
+var kalKalenderMapping = []; // [{etermin_kalender_id, etermin_kalender_name, user_id, user_name}]
+
+async function loadKalenderMappingCache() {
+    try {
+        var stdId = _sbProfile() && _sbProfile().standort_id;
+        var query = _sb().from('etermin_kalender_mapping').select('etermin_kalender_id, etermin_kalender_name, user_id, users(vorname, nachname)');
+        if (stdId && !(_sbProfile() && _sbProfile().is_hq)) query = query.eq('standort_id', stdId);
+        var resp = await query;
+        if (!resp.error) {
+            kalKalenderMapping = (resp.data || []).map(function(m) {
+                var name = m.users ? (m.users.vorname + ' ' + m.users.nachname).trim() : null;
+                return { etermin_kalender_id: m.etermin_kalender_id, etermin_kalender_name: m.etermin_kalender_name, user_id: m.user_id, user_name: name };
+            });
+        }
+    } catch(e) { kalKalenderMapping = []; }
+}
+
+function kalResolveVerkaufer(t) {
+    // If already has zugewiesen_an from DB, use that
+    if (t.zugewiesen_an) return t;
+    // Otherwise try to resolve from kalender mapping via etermin_kalender_id or etermin_kalender_name
+    var match = null;
+    if (t.etermin_kalender_id) {
+        match = kalKalenderMapping.find(function(m) { return m.etermin_kalender_id === String(t.etermin_kalender_id); });
+    }
+    if (!match && t.etermin_kalender_name) {
+        match = kalKalenderMapping.find(function(m) { return m.etermin_kalender_name && m.etermin_kalender_name.toLowerCase() === t.etermin_kalender_name.toLowerCase(); });
+    }
+    if (match) {
+        t.zugewiesen_an = match.user_id;
+        t.zugewiesen_an_name = match.user_name;
+    }
+    return t;
+}
+
 export async function loadKalTermine() {
     // In demo mode, termine are injected by fillDemoWidgets
     if (window.DEMO_ACTIVE) { kalRenderActive(); return; }
+    // Load kalender mapping cache in parallel
+    await loadKalenderMappingCache();
     try {
         var query = _sb().from('termine').select('*').order('start_zeit', {ascending:true});
         if(_sbProfile() && _sbProfile().standort_id && !_sbProfile().is_hq) query = query.eq('standort_id', _sbProfile().standort_id);
@@ -403,9 +444,13 @@ export async function loadKalTermine() {
                     wiederholung_bis: t.wiederholung_bis || null,
                     serie_id: t.serie_id || null,
                     ms365_event_id: t.ms365_event_id || null,
-                    ms365_sync_status: t.ms365_sync_status || null
+                    ms365_sync_status: t.ms365_sync_status || null,
+                    etermin_kalender_id: t.etermin_kalender_id || null,
+                    etermin_kalender_name: t.etermin_kalender_name || null,
+                    zugewiesen_an: t.zugewiesen_an || null,
+                    zugewiesen_an_name: t.zugewiesen_an_name || null
                 };
-            });
+            }).map(kalResolveVerkaufer);
         } else { kalTermine = []; }
     } catch(e) { console.warn('Kalender load:', e); kalTermine = []; }
     kalRenderActive();
@@ -714,3 +759,4 @@ window.openKalDayModal = openKalDayModal;
 window.saveKalTermin = saveKalTermin;
 window.switchKalView = switchKalView;
 window.loadKalTermine = loadKalTermine;
+
