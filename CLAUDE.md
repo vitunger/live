@@ -630,3 +630,9 @@ security: RLS/JWT/Auth-Verbesserung
 - 2026-03-03: KRITISCH - 2 extra close-div nach controllingView entfernt (46/53 Views aus main-Layout gebrochen). Benchmark-Minimum 5 Standorte (insufficient_data Card). Scroll-to-top bei View-Wechsel.
 - 2026-03-03: Demo-Standort aus HQ-Cockpit gefiltert. loadHqStandorte() in hq-cockpit.js filtert jetzt standorte mit is_demo=true raus. Betrifft alle HQ-Views: Top 5, Bottom 5, KPIs, Finanzen, Marketing, Einkauf, Verkauf, Standorte-Liste.
 - 2026-03-03: Standorte kritisch 33/33 Fix: leadPerf=0 (kein Plan-Umsatz) wird nicht mehr als kritisch gewertet. Betrifft HQ-Cockpit KPI, Marketing-Alerts, Handlungsbedarf-Alerts.
+
+## Letzte Session (04.03.2026)
+- Notification-Badge-Fix: Hardcodierte "3" in Glocke entfernt, Badge hidden bis DB geladen
+- `notifications.js`: `updateNotifBadge()` nutzt `#notifBellBadge` ID, neue `createReleaseNotification()`
+- `dev-release.js`: Release-Veröffentlichung erstellt Benachrichtigung für alle User
+- Edge Function `dev-ki-analyse` v34: Release-Notes Prompt sachlich, ohne Floskeln
