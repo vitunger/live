@@ -727,6 +727,27 @@ window.sbUser = sbUser; window.sbProfile = sbProfile; window.sbRollen = sbRollen
 window.sbStandort = sbStandort; window.currentRole = currentRole; window.currentRoles = currentRoles;
 window.currentStandortId = currentStandortId; window.currentLocation = currentLocation;
 window.isPremium = isPremium;
+
+// Multi-Standort: user_standorte laden (für Standort-Switcher)
+try {
+    var usResp = await _sb().from('user_standorte')
+        .select('standort_id, is_primary, standorte(id, name, slug, is_premium)')
+        .eq('user_id', userId);
+    var usData = (!usResp.error && usResp.data) ? usResp.data : [];
+    if (usData.length > 1) {
+        // Mehrere Standorte — Switcher aktivieren
+        window.sbStandortIds = usData.map(function(u) { return u.standorte; }).filter(Boolean);
+        // Primären Standort setzen (falls abweichend)
+        var primaryEntry = usData.find(function(u) { return u.is_primary; });
+        if (primaryEntry && primaryEntry.standorte) {
+            window.sbStandort = primaryEntry.standorte;
+            sbStandort = primaryEntry.standorte;
+            window.sbStandort = sbStandort;
+        }
+    } else {
+        window.sbStandortIds = [];
+    }
+} catch(e) { console.warn('[MultiStandort] Konnte user_standorte nicht laden:', e.message); window.sbStandortIds = []; }
 }
 
 
