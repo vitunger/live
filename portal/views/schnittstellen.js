@@ -1984,7 +1984,6 @@ window.loadSocialData = async function(platform) {
                 }
             } catch(e) { console.warn('YouTube live fehlgeschlagen, zeige Demo:', e); }
         }
-        _showSocialDemo('youtube');
         return;
     }
 
@@ -2026,7 +2025,6 @@ window.loadSocialData = async function(platform) {
                 }
             } catch(e) { _showToast('GA4 Verbindungsfehler: ' + e.message, 'error'); }
         }
-        _showSocialDemo('analytics');
         return;
     }
 
@@ -2067,11 +2065,11 @@ window.loadSocialData = async function(platform) {
                     _showToast('Google My Business Daten geladen ✓', 'success');
                     return;
                 } else {
-                    _showToast('GMB Fehler: ' + (ovResp2.data && ovResp2.data.error || 'Unbekannt'), 'error');
+                    var gmbErr = (ovResp2.data && ovResp2.data.error) ? ovResp2.data.error : (ovResp2.data && ovResp2.data.details_v1) ? ovResp2.data.details_v1 : 'API-Antwort ungueltig';
+                    _showToast('GMB: ' + gmbErr, 'error');
                 }
             } catch(e) { _showToast('GMB Verbindungsfehler: ' + e.message, 'error'); }
         }
-        _showSocialDemo('gmb');
         return;
     }
 
@@ -2266,7 +2264,7 @@ window.loadTikTokData = async function() {
         });
 
         if (error || !resp) {
-            _showTikTokDemoData();
+            _showToast('TikTok: Daten konnten nicht geladen werden', 'error');
             return;
         }
 
@@ -2289,7 +2287,7 @@ window.loadTikTokData = async function() {
         CONNECTORS.tiktok.statusLabel = 'Verbunden';
         _showToast('TikTok-Daten geladen \u2713', 'success');
     } catch(e) {
-        _showTikTokDemoData();
+        _showToast('TikTok: Verbindungsfehler', 'error');
     }
 };
 
