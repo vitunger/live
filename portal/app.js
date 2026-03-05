@@ -12,7 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1772701927";
+const CACHE_BUST = "?v=1772870402";
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
@@ -144,6 +144,7 @@ const VIEW_MODULES = [
     'views/misc-modulstatus.js',
     'views/misc-training.js',
     'views/hq-plz.js',
+    'views/scompler.js',
 
     // Central render router - MUST be last (listens for vit:view-changed events)
     'views/view-router.js',
