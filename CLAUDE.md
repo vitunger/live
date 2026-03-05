@@ -251,3 +251,13 @@ security: RLS/JWT/Auth-Verbesserung
   `verkauf_tracking`, `bwa_daten`, `bwa_detail_positionen`, `notifications`, `ideen`,
   `kommunikation_channels`, `kommunikation_nachrichten`, `ads_performance`, `wawi_belege`, `office_bookings`
 
+### BWA KI-Validierung immer aktiv (2026-03-05)
+- **Problem:** Parser erkannte Werte (z.B. 8 von 17), aber KI-Fallback wurde nur bei 0 Treffern ausgeloest.
+  Bei "unbekannt" Formaten interpretierte der Parser Tausender als Dezimalstellen (56.206 EUR → 56,21).
+- **Fix:** Nach JEDEM Parser-Durchlauf wird `callFinanceKi()` automatisch als Validierung aufgerufen.
+  KI bekommt Raw-Text + Parser-Ergebnisse (`parser_werte` in meta) und korrigiert fehlerhafte Werte.
+  Flow: Parser (schnell, client) → KI-Validierung (Edge Function analyze-finance v20) → Korrekturen anzeigen.
+- **Edge Function:** `analyze-finance` v20 – neuer Prompt-Abschnitt fuer Parser-Vergleich mit typischen Fehlermustern.
+- **UX:** Korrigierte Felder werden lila hervorgehoben, Aenderungen als Liste angezeigt.
+  Bei KI-Ausfall bleiben Parser-Werte stehen (graceful degradation).
+
