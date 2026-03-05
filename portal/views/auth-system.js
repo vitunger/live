@@ -723,6 +723,40 @@ if(_sbProfile() && _sbProfile().is_hq) {
     } catch(e) { console.warn('[HQ Perms] Could not load:', e.message); window._hqModulPerms = null; }
 }
 // Sync all auth state to window for cross-module access
+
+// =====================================================
+// STANDORT-SWITCHER
+// =====================================================
+export function switchStandort(selectEl) {
+    var selectedOpt = selectEl.options[selectEl.selectedIndex];
+    if (!selectedOpt || !selectedOpt.value) return;
+    var newId = selectedOpt.value;
+    var newName = selectedOpt.dataset.name || selectedOpt.text;
+    var newSlug = selectedOpt.dataset.slug || '';
+    var newPremium = selectedOpt.dataset.premium === 'true';
+
+    // sbStandort updaten
+    window.sbStandort = { id: newId, name: newName, slug: newSlug, is_premium: newPremium };
+    if (window.sbProfile) window.sbProfile.standort_id = newId;
+    window.currentLocation = newSlug || newName.toLowerCase();
+    window.isPremium = newPremium;
+
+    // locationDisplay updaten
+    var ld = document.getElementById('locationDisplay');
+    if (ld) ld.textContent = newName;
+    var ldm = document.getElementById('locationDisplayMobile');
+    if (ldm) ldm.textContent = newName;
+
+    // Alle Module neu laden: aktuellen View neu rendern
+    if (typeof window.showView === 'function' && window._currentView) {
+        window.showView(window._currentView);
+    }
+    if (typeof window.showToast === 'function') {
+        window.showToast('📍 Standort gewechselt: ' + newName, 'success');
+    }
+}
+window.switchStandort = switchStandort;
+
 window.sbUser = sbUser; window.sbProfile = sbProfile; window.sbRollen = sbRollen;
 window.sbStandort = sbStandort; window.currentRole = currentRole; window.currentRoles = currentRoles;
 window.currentStandortId = currentStandortId; window.currentLocation = currentLocation;
@@ -1222,6 +1256,29 @@ if (userRoleText) userRoleText.textContent = roleDisplay;
 if (locationDisplay) locationDisplay.textContent = displayLocation;
 if (locationDisplayMobile) locationDisplayMobile.textContent = displayLocation;
 if (userRoleDisplay) userRoleDisplay.textContent = isHQ ? '' : '';
+
+// Standort-Switcher (nur für Multi-Standort-User)
+var switcherEl = document.getElementById('standortSwitcher');
+var sbIds = window.sbStandortIds || [];
+if (!isHQ && sbIds.length > 1) {
+    if (!switcherEl) {
+        switcherEl = document.createElement('div');
+        switcherEl.id = 'standortSwitcher';
+        switcherEl.className = 'px-3 py-2 border-t border-gray-700';
+        var parent = locationDisplay ? locationDisplay.closest('.px-3') || locationDisplay.parentNode : null;
+        if (parent) parent.after(switcherEl);
+    }
+    var opts = sbIds.map(function(s) {
+        var sel = (window.sbStandort && window.sbStandort.id === s.id) ? ' selected' : '';
+        return '<option value="' + s.id + '" data-slug="' + (s.slug||'') + '" data-name="' + (s.name||'') + '" data-premium="' + (s.is_premium||false) + '"' + sel + '>' + s.name + '</option>';
+    }).join('');
+    switcherEl.innerHTML = '<select id="standortSwitcherSelect" onchange="window.switchStandort(this)" ' +
+        'class="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-xs font-semibold cursor-pointer hover:bg-gray-600 transition">' +
+        opts + '</select>';
+    switcherEl.style.display = '';
+} else if (switcherEl) {
+    switcherEl.style.display = 'none';
+}
 
 // Premium Badge
 var premiumBadge = document.getElementById('premiumBadge');
