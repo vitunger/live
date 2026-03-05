@@ -43,4 +43,29 @@ window.fmtDate = fmtDate;
 window.timeAgo = timeAgo;
 // [prod] log removed
 
+// ═══ SCOPED QUERY HELPER ═══
+// Defense-in-depth: auto-applies .eq('standort_id', ...) for non-HQ users.
+// Use instead of _sb().from(table).select(...) for any standort-scoped table.
+// During impersonation auth.uid() is still HQ → RLS alone is NOT enough.
+//
+// Usage:  const q = _scopedQuery('leads').select('*').order('created_at', {ascending:false});
+//         const q = _scopedQuery('todos', { forceStandort: someId }).select('*');
+//         const q = _scopedQuery('leads', { skipScope: true }).select('*'); // explicit opt-out (HQ dashboards)
+//
+export function scopedQuery(table, opts) {
+    var sb = window.sb;
+    if (!sb) { console.error('[scopedQuery] Supabase client not ready'); return null; }
+    var q = sb.from(table);
+    var skip = opts && opts.skipScope;
+    var forceId = opts && opts.forceStandort;
+    if (skip) return q;
+    if (forceId) return q.eq('standort_id', forceId);
+    var prof = window.sbProfile;
+    if (prof && !prof.is_hq && prof.standort_id) {
+        q = q.eq('standort_id', prof.standort_id);
+    }
+    return q;
+}
+window._scopedQuery = scopedQuery;
+
 
