@@ -1,0 +1,21 @@
+name: DB Migration – einkauf_performance Tabellen
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Tippe "ja" um die Migration auszuführen'
+        required: true
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Migration
+        if: github.event.inputs.confirm == 'ja'
+        run: |
+          PGPASSWORD='*SqhN%VmJ52pms_S' psql \
+            "postgresql://postgres.lwwagbkxeofahhwebkab@aws-0-eu-central-1.pooler.supabase.com:5432/postgres" \
+            -f docs/migration_einkauf_performance.sql \
+            -v ON_ERROR_STOP=1
+          echo "✅ Migration erfolgreich"
