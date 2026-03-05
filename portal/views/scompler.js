@@ -844,16 +844,22 @@
         var sb = _sb(); if (!sb) { el.innerHTML = emptyState('\uD83D\uDD0C', 'Instagram/Facebook nicht verbunden', 'Token unter Einstellungen \u2192 Schnittstellen eintragen.', true); return; }
 
         try {
-            var { data: rows } = await sb.from('connector_config')
+            var { data: igRows } = await sb.from('connector_config')
                 .select('config_key, config_value')
-                .in('config_key', ['instagram_access_token', 'instagram_page_id', 'facebook_access_token', 'facebook_page_id']);
+                .eq('connector_id', 'instagram');
+            var { data: fbRows } = await sb.from('connector_config')
+                .select('config_key, config_value')
+                .eq('connector_id', 'facebook');
 
-            // Fallback: try connector_key column
-            if (!rows || !rows.length) {
-                var { data: rows2 } = await sb.from('connector_config')
-                    .select('connector_key, config_value')
-                    .in('connector_key', ['instagram_access_token', 'instagram_page_id', 'facebook_access_token', 'facebook_page_id']);
-                rows = (rows2 || []).map(function(r) { return { config_key: r.connector_key, config_value: r.config_value }; });
+            var igCfg = {}; (igRows || []).forEach(function(r) { igCfg[r.config_key] = r.config_value; });
+            var fbCfg = {}; (fbRows || []).forEach(function(r) { fbCfg[r.config_key] = r.config_value; });
+            var rows = [
+                { config_key: 'instagram_access_token', config_value: igCfg.access_token },
+                { config_key: 'instagram_page_id',      config_value: igCfg.page_id },
+                { config_key: 'facebook_access_token',  config_value: fbCfg.access_token },
+                { config_key: 'facebook_page_id',       config_value: fbCfg.page_id },
+            ].filter(function(r) { return r.config_value; });
+            if (false) {  // legacy fallback removed
             }
 
             var cfg = {};
