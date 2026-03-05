@@ -91,9 +91,9 @@ function renderUebersicht(el) {
     // Ads aggregieren
     var totalSpend = 0, totalImpr = 0, totalClicks = 0, totalLeads = 0;
     ads.forEach(function(a) {
-        totalSpend += Number(a.cost || 0);
-        totalImpr += Number(a.impressions || 0);
-        totalClicks += Number(a.clicks || 0);
+        totalSpend += Number(a.ausgaben || 0);
+        totalImpr += Number(a.impressionen || 0);
+        totalClicks += Number(a.klicks || 0);
         totalLeads += Number(a.conversions || 0);
     });
 
@@ -148,8 +148,8 @@ function renderUebersicht(el) {
         var rows = ads.map(function(a) {
             return '<tr class="hover:bg-gray-50"><td class="px-4 py-3 text-sm font-semibold text-gray-800">' + _escH(a.campaign_name || '\u2013') + '</td>' +
                 '<td class="px-4 py-3 text-sm text-gray-600">' + _escH(a.platform || '\u2013') + '</td>' +
-                '<td class="px-4 py-3 text-sm">' + _fmtEur(a.cost || 0) + '</td>' +
-                '<td class="px-4 py-3 text-sm">' + _fmtN(a.clicks || 0) + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + _fmtEur(a.ausgaben || 0) + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + _fmtN(a.klicks || 0) + '</td>' +
                 '<td class="px-4 py-3 text-sm">' + (a.conversions || 0) + '</td></tr>';
         }).join('');
         campHtml = '<div class="vit-card overflow-hidden"><div class="px-5 py-4 border-b border-gray-200"><h3 class="text-sm font-semibold text-gray-800">Aktive Kampagnen</h3></div>' +
@@ -182,8 +182,8 @@ function renderUebersichtCharts(ads) {
     var metaSpend = 0, googleSpend = 0;
     (ads || []).forEach(function(a) {
         var p = (a.platform || '').toLowerCase();
-        if (p.indexOf('meta') >= 0 || p.indexOf('facebook') >= 0 || p.indexOf('instagram') >= 0) metaSpend += Number(a.cost || 0);
-        else googleSpend += Number(a.cost || 0);
+        if (p.indexOf('meta') >= 0 || p.indexOf('facebook') >= 0 || p.indexOf('instagram') >= 0) metaSpend += Number(a.ausgaben || 0);
+        else googleSpend += Number(a.ausgaben || 0);
     });
 
     window.mktChartBarLine('mktChartPovSpend', labels, [0,0,0,0,0, Math.round(metaSpend + googleSpend)], [0,0,0,0,0, ads.length], 'Ausgaben (\u20ac)', 'Leads');
@@ -340,9 +340,9 @@ function renderMetaAds(el) {
 
     var totalSpend = 0, totalImpr = 0, totalClicks = 0, totalLeads = 0;
     ads.forEach(function(a) {
-        totalSpend += Number(a.cost || 0);
-        totalImpr += Number(a.impressions || 0);
-        totalClicks += Number(a.clicks || 0);
+        totalSpend += Number(a.ausgaben || 0);
+        totalImpr += Number(a.impressionen || 0);
+        totalClicks += Number(a.klicks || 0);
         totalLeads += Number(a.conversions || 0);
     });
 
@@ -378,9 +378,9 @@ function renderGoogleAds(el) {
 
     var totalSpend = 0, totalImpr = 0, totalClicks = 0, totalLeads = 0;
     ads.forEach(function(a) {
-        totalSpend += Number(a.cost || 0);
-        totalImpr += Number(a.impressions || 0);
-        totalClicks += Number(a.clicks || 0);
+        totalSpend += Number(a.ausgaben || 0);
+        totalImpr += Number(a.impressionen || 0);
+        totalClicks += Number(a.klicks || 0);
         totalLeads += Number(a.conversions || 0);
     });
 
@@ -469,12 +469,12 @@ function renderNoData(title, msg) {
 function renderAdsTable(ads, title) {
     if (!ads || ads.length === 0) return '';
     var rows = ads.map(function(a) {
-        var ctr = a.impressions > 0 ? ((a.clicks / a.impressions) * 100).toFixed(2) + '%' : '\u2013';
+        var ctr = a.impressionen > 0 ? ((a.klicks / a.impressionen) * 100).toFixed(2) + '%' : '\u2013';
         return '<tr class="hover:bg-gray-50">' +
             '<td class="px-4 py-3 text-sm font-semibold text-gray-800">' + _escH(a.campaign_name || '\u2013') + '</td>' +
-            '<td class="px-4 py-3 text-sm">' + _fmtEur(a.cost || 0) + '</td>' +
-            '<td class="px-4 py-3 text-sm">' + _fmtN(a.impressions || 0) + '</td>' +
-            '<td class="px-4 py-3 text-sm">' + _fmtN(a.clicks || 0) + '</td>' +
+            '<td class="px-4 py-3 text-sm">' + _fmtEur(a.ausgaben || 0) + '</td>' +
+            '<td class="px-4 py-3 text-sm">' + _fmtN(a.impressionen || 0) + '</td>' +
+            '<td class="px-4 py-3 text-sm">' + _fmtN(a.klicks || 0) + '</td>' +
             '<td class="px-4 py-3 text-sm">' + ctr + '</td>' +
             '<td class="px-4 py-3 text-sm">' + (a.conversions || 0) + '</td></tr>';
     }).join('');
