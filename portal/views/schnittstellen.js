@@ -2005,11 +2005,11 @@ window.loadSocialData = async function(platform) {
                         'GA4 Property ' + propertyId,
                         parseInt(ov.pageviews||0).toLocaleString('de-DE'),
                         parseInt(ov.users||0).toLocaleString('de-DE'),
-                        ov.avg_session_duration || '—'
+                        ov.avgSessionDuration ? Math.round(ov.avgSessionDuration) + 's' : '—'
                     );
                     if (pagesResp.data && pagesResp.data.pages) {
                         var pageRows = pagesResp.data.pages.map(function(p) {
-                            return [p.page, parseInt(p.views).toLocaleString('de-DE'), parseInt(p.users).toLocaleString('de-DE'), p.avg_time, p.source];
+                            return [p.path || '—', parseInt(p.views || 0).toLocaleString('de-DE'), parseInt(p.users || 0).toLocaleString('de-DE'), '—', 'organisch'];
                         });
                         _populateSocialRows('analytics', pageRows);
                     }
