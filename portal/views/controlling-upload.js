@@ -41,6 +41,12 @@ export function openBwaUploadModal() {
     html += '<div id="bwaAiResult" class="mt-2 hidden"></div>';
     html += '</div>';
 
+    // Excel Preview: Show original file data next to recognized values
+    html += '<div id="bwaExcelPreview" class="hidden mb-4">';
+    html += '<details open><summary class="text-xs font-semibold text-gray-600 cursor-pointer mb-1">\u{1F4C4} Originaldaten aus Datei</summary>';
+    html += '<div id="bwaExcelPreviewContent" class="max-h-48 overflow-auto border border-gray-200 rounded-lg text-[10px] bg-gray-50"></div>';
+    html += '</details></div>';
+
     // Month/Year AFTER upload (auto-filled by KI)
     html += '<div class="grid grid-cols-2 gap-3 mb-4">';
     html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Monat</label><select id="bwaMonth" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">';
@@ -185,6 +191,24 @@ export async function parseBwaWithAI() {
         if(!err && result && result.bwa_daten) {
             result.bwa_daten = fixDatevSigns(result.bwa_daten);
         }
+
+        // Show Excel preview (raw data from file)
+        try {
+            var previewContainer = document.getElementById('bwaExcelPreview');
+            var previewContent = document.getElementById('bwaExcelPreviewContent');
+            if(previewContainer && previewContent) {
+                var pBuf = await file.arrayBuffer();
+                var pWb = XLSX.read(pBuf, { type: 'array', cellDates: true });
+                var pSheet = pWb.Sheets[pWb.SheetNames[0]];
+                var pHtml = XLSX.utils.sheet_to_html(pSheet, { editable: false });
+                // Style the generated table
+                pHtml = pHtml.replace('<table', '<table style="border-collapse:collapse;width:100%;font-size:10px;font-family:monospace"');
+                pHtml = pHtml.replace(/<td/g, '<td style="border:1px solid #e5e7eb;padding:2px 4px;white-space:nowrap"');
+                pHtml = pHtml.replace(/<th/g, '<th style="border:1px solid #e5e7eb;padding:2px 4px;background:#f3f4f6;font-weight:bold;white-space:nowrap"');
+                previewContent.innerHTML = pHtml;
+                previewContainer.classList.remove('hidden');
+            }
+        } catch(prevErr) { console.warn('[BWA] Preview render error:', prevErr); }
         if(err) {
             // KI-Fallback: Excel-Text extrahieren und an KI senden
             statusText.textContent = '\u{1F916} Parser fehlgeschlagen \u2013 KI-Analyse wird gestartet...';
