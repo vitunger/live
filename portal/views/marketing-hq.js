@@ -56,13 +56,15 @@ async function renderHqMarketing() {
 
     // Daten laden (nur wenn noch nicht gecacht)
     var state = window.mktState || {};
-    if (!state.adsData || state.adsData.length === 0 || !state._lastMonth || state._lastMonth !== (window.mktGetCurrentMonth ? window.mktGetCurrentMonth() : {}).month) {
+    var currentMonth = window.mktGetCurrentMonth ? window.mktGetCurrentMonth() : {};
+    if (!state._hqDataLoaded || state._lastMonth !== currentMonth.month) {
         await Promise.all([
             window.mktLoadAlleVereinbarungen(),
             window.mktLoadAdsData(null),
             window.mktLoadLeadTracking(null)
         ]);
-        if (window.mktState) window.mktState._lastMonth = (window.mktGetCurrentMonth ? window.mktGetCurrentMonth() : {}).month;
+        state._hqDataLoaded = true;
+        state._lastMonth = currentMonth.month;
     }
 
     // Ersten Tab rendern
@@ -177,9 +179,9 @@ function renderHqUebersicht(el) {
         ads.forEach(function(a) {
             var sid = a.standort_id || 'unknown';
             if (!byStandort[sid]) byStandort[sid] = { id: sid, spend: 0, clicks: 0, impr: 0, leads: 0, name: a.standort_name || sid };
-            byStandort[sid].spend += Number(a.cost || 0);
-            byStandort[sid].clicks += Number(a.clicks || 0);
-            byStandort[sid].impr += Number(a.impressions || 0);
+            byStandort[sid].spend += Number(a.ausgaben || 0);
+            byStandort[sid].clicks += Number(a.klicks || 0);
+            byStandort[sid].impr += Number(a.impressionen || 0);
             byStandort[sid].leads += Number(a.conversions || 0);
         });
 
@@ -538,20 +540,20 @@ function renderHqAdsTab(el, platform, title, subtitle) {
         if (platform === 'meta') {
             var fbS = 0, igS = 0;
             ads.forEach(function(a) {
-                var pp = (a.publisher_platform || a.platform || '').toLowerCase();
-                if (pp.indexOf('instagram') >= 0) igS += Number(a.cost || 0);
-                else fbS += Number(a.cost || 0);
+                var pp = (a.publisher_platform || a.plattform || '').toLowerCase();
+                if (pp.indexOf('instagram') >= 0) igS += Number(a.ausgaben || 0);
+                else fbS += Number(a.ausgaben || 0);
             });
             window.mktChartDoughnut(chartId2, ['Facebook', 'Instagram'], [Math.round(fbS), Math.round(igS)], [C.blue, '#E1306C']);
         } else {
             var typeMap = { search: 0, display: 0, shopping: 0, video: 0, other: 0 };
             ads.forEach(function(a) {
                 var ct = (a.campaign_type || '').toLowerCase();
-                if (ct.indexOf('search') >= 0) typeMap.search += Number(a.cost || 0);
-                else if (ct.indexOf('display') >= 0) typeMap.display += Number(a.cost || 0);
-                else if (ct.indexOf('shopping') >= 0 || ct.indexOf('pmax') >= 0) typeMap.shopping += Number(a.cost || 0);
-                else if (ct.indexOf('video') >= 0) typeMap.video += Number(a.cost || 0);
-                else typeMap.other += Number(a.cost || 0);
+                if (ct.indexOf('search') >= 0) typeMap.search += Number(a.ausgaben || 0);
+                else if (ct.indexOf('display') >= 0) typeMap.display += Number(a.ausgaben || 0);
+                else if (ct.indexOf('shopping') >= 0 || ct.indexOf('pmax') >= 0) typeMap.shopping += Number(a.ausgaben || 0);
+                else if (ct.indexOf('video') >= 0) typeMap.video += Number(a.ausgaben || 0);
+                else typeMap.other += Number(a.ausgaben || 0);
             });
             if (typeMap.search === 0 && typeMap.display === 0 && typeMap.shopping === 0 && typeMap.video === 0 && typeMap.other === 0) {
                 typeMap.search = totalSpend;
@@ -569,16 +571,25 @@ function renderHqAdsTab(el, platform, title, subtitle) {
 function renderHqLeadReporting(el) {
     var tracking = window.mktState.leadTracking || [];
     var vbs = window.mktState.vereinbarungen || [];
+    var leadType = window.mktState._leadType || 'kombi';
 
     var totalZiel = vbs.reduce(function(s,v) { return s + Number(v.max_leads || 0); }, 0);
     var zielMonat = Math.round(totalZiel / 12);
 
-    // YTD aggregieren
+    // YTD aggregieren basierend auf Lead-Typ
     var ytdLeads = 0, ytdTermine = 0, ytdSV = 0;
     tracking.forEach(function(t) {
-        ytdLeads += Number(t.leads_ist || 0);
         ytdTermine += Number(t.termine_ist || 0);
         ytdSV += Number(t.store_visits_ist || 0);
+        if (leadType === 'kombi') {
+            ytdLeads += Number(t.leads_ist || 0);
+        } else if (leadType === 'regulaer') {
+            ytdLeads += Number(t.leads_ist || 0) - Number(t.store_visits_ist || 0);
+        } else if (leadType === 'store_visits') {
+            ytdLeads += Math.round(Number(t.store_visits_ist || 0) * 0.25);
+        } else if (leadType === 'anzeige_sv') {
+            ytdLeads += Number(t.store_visits_ist || 0);
+        }
     });
 
     var m = window.mktGetCurrentMonth();
@@ -590,10 +601,10 @@ function renderHqLeadReporting(el) {
         '<div><h2 class="text-xl font-bold text-gray-800 mb-1">Lead Reporting \u2013 Netzwerk</h2>' +
         '<p class="text-sm text-gray-500">Jahresziel-Tracking und Lead-Qualit\u00e4t</p></div>' +
         '<div class="flex flex-wrap gap-2">' +
-        '<button class="mkt-lead-pill active" onclick="mktSetLeadType(this,\'kombi\')">Kombi</button>' +
-        '<button class="mkt-lead-pill" onclick="mktSetLeadType(this,\'regulaer\')">Leads Regul\u00e4r</button>' +
-        '<button class="mkt-lead-pill" onclick="mktSetLeadType(this,\'store_visits\')">Store-Visits 25%</button>' +
-        '<button class="mkt-lead-pill" onclick="mktSetLeadType(this,\'anzeige_sv\')">Anzeige-Store-Visits</button>' +
+        '<button class="mkt-lead-pill' + (leadType === 'kombi' ? ' active' : '') + '" onclick="mktSetLeadType(this,\'kombi\')">Kombi</button>' +
+        '<button class="mkt-lead-pill' + (leadType === 'regulaer' ? ' active' : '') + '" onclick="mktSetLeadType(this,\'regulaer\')">Leads Regul\u00e4r</button>' +
+        '<button class="mkt-lead-pill' + (leadType === 'store_visits' ? ' active' : '') + '" onclick="mktSetLeadType(this,\'store_visits\')">Store-Visits 25%</button>' +
+        '<button class="mkt-lead-pill' + (leadType === 'anzeige_sv' ? ' active' : '') + '" onclick="mktSetLeadType(this,\'anzeige_sv\')">Anzeige-Store-Visits</button>' +
         '</div></div>';
 
     html += '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">' +
@@ -623,9 +634,15 @@ function renderHqLeadReporting(el) {
             var sName = v.standorte ? v.standorte.name : '\u2013';
             var jz = v.max_leads || 0;
             var ytdSollV = Math.round(jz * m.month / 12);
-            // Ist aus tracking summieren
+            // Ist aus tracking summieren (nach Lead-Typ gefiltert)
             var ytdIstV = tracking.filter(function(t) { return t.standort_id === v.standort_id; })
-                .reduce(function(s, t) { return s + Number(t.leads_ist || 0); }, 0);
+                .reduce(function(s, t) {
+                    if (leadType === 'kombi') return s + Number(t.leads_ist || 0);
+                    if (leadType === 'regulaer') return s + Number(t.leads_ist || 0) - Number(t.store_visits_ist || 0);
+                    if (leadType === 'store_visits') return s + Math.round(Number(t.store_visits_ist || 0) * 0.25);
+                    if (leadType === 'anzeige_sv') return s + Number(t.store_visits_ist || 0);
+                    return s + Number(t.leads_ist || 0);
+                }, 0);
             var pct = ytdSollV > 0 ? Math.round(ytdIstV / ytdSollV * 100) : 0;
 
             html += '<tr class="hover:bg-gray-50"><td class="px-4 py-3 font-semibold">' + _escH(sName) + '</td>' +
@@ -654,7 +671,13 @@ function renderHqLeadReporting(el) {
         var zielData = MN.map(function() { return zielMonat; });
         var istData = MN.map(function(_, i) {
             return tracking.filter(function(t) { return t.monat === (i + 1); })
-                .reduce(function(s, t) { return s + Number(t.leads_ist || 0); }, 0);
+                .reduce(function(s, t) {
+                    if (leadType === 'kombi') return s + Number(t.leads_ist || 0);
+                    if (leadType === 'regulaer') return s + Number(t.leads_ist || 0) - Number(t.store_visits_ist || 0);
+                    if (leadType === 'store_visits') return s + Math.round(Number(t.store_visits_ist || 0) * 0.25);
+                    if (leadType === 'anzeige_sv') return s + Number(t.store_visits_ist || 0);
+                    return s + Number(t.leads_ist || 0);
+                }, 0);
         });
         window.mktMakeChart('hqMktLeadChart', {
             type: 'bar',
@@ -670,7 +693,7 @@ function renderHqLeadReporting(el) {
     }, 50);
 }
 
-// Live-Leads laden (Feature 14)
+// Live-Leads laden (Feature 14) – aus leads-Tabelle (nicht marketing_lead_tracking)
 async function loadLiveLeads() {
     var container = document.getElementById('hqMktLiveLeads');
     if (!container) return;
@@ -678,45 +701,39 @@ async function loadLiveLeads() {
     if (!sb) { container.innerHTML = '<div class="p-5 text-sm text-gray-400 text-center">Supabase nicht verf\u00fcgbar</div>'; return; }
     try {
         var { data, error } = await sb
-            .from('marketing_lead_tracking')
-            .select('*')
+            .from('leads')
+            .select('*, standorte(name)')
             .order('created_at', { ascending: false })
-            .limit(50);
+            .limit(20);
         if (error || !data || data.length === 0) {
             container.innerHTML = '<div class="p-5 text-sm text-gray-400 text-center">Keine aktuellen Lead-Daten vorhanden.</div>';
             return;
         }
         var rows = data.map(function(l) {
             var datum = l.created_at ? new Date(l.created_at).toLocaleDateString('de-DE') : '\u2013';
-            var plz = _escH(l.plz || '\u2013');
-            var standort = _escH(l.standort_name || '\u2013');
-            var nameKontakt = _escH(l.name || '\u2013');
-            if (l.email) nameKontakt += '<br><span class="text-xs text-gray-400">' + _escH(l.email) + '</span>';
-            if (l.telefon) nameKontakt += '<br><span class="text-xs text-gray-400">' + _escH(l.telefon) + '</span>';
-            var typ = _escH(l.typ || l.lead_type || '\u2013');
-            var quelle = _escH(l.quelle || l.source || '\u2013');
-            var termin = l.termin_datum ? new Date(l.termin_datum).toLocaleDateString('de-DE') : '\u2013';
-            var statusCls = l.status === 'abgeschlossen' || l.status === 'Kontaktiert' ? 'bg-green-100 text-green-700' :
-                l.status === 'offen' || l.status === 'Offen' || l.status === 'Neu' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600';
+            var standort = _escH(l.standorte ? l.standorte.name : '\u2013');
+            var nameKontakt = _escH(l.name || l.kunde_name || '\u2013');
+            if (l.email || l.kunde_email) nameKontakt += '<br><span class="text-xs text-gray-400">' + _escH(l.email || l.kunde_email || '') + '</span>';
+            if (l.telefon || l.kunde_telefon) nameKontakt += '<br><span class="text-xs text-gray-400">' + _escH(l.telefon || l.kunde_telefon || '') + '</span>';
+            var quelle = _escH(l.quelle || l.kanal || '\u2013');
+            var statusCls = l.status === 'gewonnen' || l.status === 'kontaktiert' ? 'bg-green-100 text-green-700' :
+                l.status === 'neu' || l.status === 'offen' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600';
             var statusTxt = _escH(l.status || 'unbekannt');
+            var wert = l.wert ? _fmtEur(l.wert) : '\u2013';
             return '<tr class="hover:bg-gray-50"><td class="px-4 py-3 text-sm">' + datum + '</td>' +
-                '<td class="px-4 py-3 text-sm">' + plz + '</td>' +
                 '<td class="px-4 py-3 text-sm">' + standort + '</td>' +
                 '<td class="px-4 py-3 text-sm font-semibold">' + nameKontakt + '</td>' +
-                '<td class="px-4 py-3 text-sm">' + typ + '</td>' +
                 '<td class="px-4 py-3 text-sm">' + quelle + '</td>' +
-                '<td class="px-4 py-3 text-sm">' + termin + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + wert + '</td>' +
                 '<td class="px-4 py-3 text-sm"><span class="text-xs px-2 py-1 rounded-full font-semibold ' + statusCls + '">' + statusTxt + '</span></td></tr>';
         }).join('');
 
         container.innerHTML = '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-50">' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Datum</th>' +
-            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">PLZ</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Standort</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Name / Kontakt</th>' +
-            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Typ</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Quelle</th>' +
-            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Termin</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Wert</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Status</th>' +
             '</tr></thead><tbody class="divide-y divide-gray-100">' + rows + '</tbody></table></div>';
     } catch(e) {
@@ -731,11 +748,10 @@ function mktSetLeadType(btnEl, type) {
     pills.forEach(function(p) { p.classList.remove('active'); });
     btnEl.classList.add('active');
 
-    // Speichern fuer spaeter
     window.mktState._leadType = type;
 
-    // Chart+Tabelle neu rendern (vereinfacht: zeigt gleiche Daten, da Differenzierung spaeter kommt)
-    _showToast('Lead-Typ: ' + (type === 'kombi' ? 'Kombi' : type === 'regulaer' ? 'Regulaer' : type === 'store_visits' ? 'Store-Visits' : 'Anzeige-SV'), 'info');
+    // Tab komplett neu rendern mit dem gewählten Filter
+    renderHqMktTabContent('leadReporting');
 }
 
 // ══════════════════════════════════
@@ -793,11 +809,11 @@ function renderHqBudgetPlan(el) {
             var monatsBudget = Math.round(v.budget_jahr / 12);
             // Standort-spezifische Ausgaben aus ads
             var sAds = ads.filter(function(a) { return a.standort_id === v.standort_id; });
-            var sSpend = sAds.reduce(function(s,a) { return s + Number(a.cost || 0); }, 0);
+            var sSpend = sAds.reduce(function(s,a) { return s + Number(a.ausgaben || 0); }, 0);
             var spentPct = monatsBudget > 0 ? Math.round(sSpend / monatsBudget * 100) : 0;
             var hochrechnung = monatsBudget > 0 ? Math.round(sSpend * 30 / Math.max(1, new Date().getDate())) : 0;
-            var sGoogle = sAds.filter(function(a) { return (a.platform||'').toLowerCase().indexOf('google') >= 0; }).reduce(function(s,a) { return s + Number(a.cost || 0); }, 0);
-            var sMeta = sAds.filter(function(a) { var p=(a.platform||'').toLowerCase(); return p.indexOf('meta')>=0||p.indexOf('facebook')>=0||p.indexOf('instagram')>=0; }).reduce(function(s,a) { return s + Number(a.cost || 0); }, 0);
+            var sGoogle = sAds.filter(function(a) { return (a.plattform||'').toLowerCase().indexOf('google') >= 0; }).reduce(function(s,a) { return s + Number(a.ausgaben || 0); }, 0);
+            var sMeta = sAds.filter(function(a) { var p=(a.plattform||'').toLowerCase(); return p.indexOf('meta')>=0||p.indexOf('facebook')>=0||p.indexOf('instagram')>=0; }).reduce(function(s,a) { return s + Number(a.ausgaben || 0); }, 0);
             var statusCls = spentPct < 50 ? 'bg-red-100 text-red-700' : spentPct > 110 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700';
             var statusTxt = spentPct < 50 ? 'Unter' : spentPct > 110 ? '\u00dcber' : 'OK';
             html += '<tr class="hover:bg-gray-50"><td class="px-4 py-3 font-semibold">' + _escH(sName) + '</td>' +
@@ -863,7 +879,7 @@ function renderBudgetDailyCharts(ads) {
     ads.forEach(function(a) {
         if (!a.datum) return;
         var key = a.datum.slice(0, 10);
-        if (dailyTotal[key] !== undefined) dailyTotal[key] += Number(a.cost || 0);
+        if (dailyTotal[key] !== undefined) dailyTotal[key] += Number(a.ausgaben || 0);
     });
     var totalData = Object.keys(dailyTotal).sort().map(function(k) { return Math.round(dailyTotal[k] * 100) / 100; });
     window.mktChartLine('mktSpendTrendDaily', labels, [
@@ -873,9 +889,9 @@ function renderBudgetDailyCharts(ads) {
     // Channel-Split Doughnut
     var gSpend = 0, mSpend = 0;
     ads.forEach(function(a) {
-        var p = (a.platform || '').toLowerCase();
-        if (p.indexOf('meta') >= 0 || p.indexOf('facebook') >= 0 || p.indexOf('instagram') >= 0) mSpend += Number(a.cost || 0);
-        else gSpend += Number(a.cost || 0);
+        var p = (a.plattform || '').toLowerCase();
+        if (p.indexOf('meta') >= 0 || p.indexOf('facebook') >= 0 || p.indexOf('instagram') >= 0) mSpend += Number(a.ausgaben || 0);
+        else gSpend += Number(a.ausgaben || 0);
     });
     window.mktChartDoughnut('mktChannelSplit', ['Google Ads', 'Meta Ads'], [Math.round(gSpend), Math.round(mSpend)], ['#EAB308', '#3B82F6']);
 }
@@ -899,11 +915,11 @@ function renderSpendingTrendDual(ads) {
     ads.forEach(function(a) {
         if (!a.datum) return;
         var key = a.datum.slice(0, 10);
-        var p = (a.platform || '').toLowerCase();
+        var p = (a.plattform || '').toLowerCase();
         if (p.indexOf('meta') >= 0 || p.indexOf('facebook') >= 0 || p.indexOf('instagram') >= 0) {
-            if (metaByDay[key] !== undefined) metaByDay[key] += Number(a.cost || 0);
+            if (metaByDay[key] !== undefined) metaByDay[key] += Number(a.ausgaben || 0);
         } else {
-            if (googleByDay[key] !== undefined) googleByDay[key] += Number(a.cost || 0);
+            if (googleByDay[key] !== undefined) googleByDay[key] += Number(a.ausgaben || 0);
         }
     });
 

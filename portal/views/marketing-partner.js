@@ -56,12 +56,13 @@ async function renderPartnerMarketing() {
 
     // Daten laden (nur wenn noch nicht gecacht)
     var state = window.mktState || {};
-    if (!state.adsData || state.adsData.length === 0) {
+    if (!state._partnerDataLoaded) {
         await Promise.all([
             window.mktLoadVereinbarung(),
             window.mktLoadAdsData(_sbProfile().standort_id),
             window.mktLoadLeadTracking(_sbProfile().standort_id)
         ]);
+        state._partnerDataLoaded = true;
     }
 
     // Ersten Tab rendern
@@ -182,15 +183,15 @@ function renderUebersicht(el) {
     var campHtml = '';
     if (ads.length > 0) {
         var rows = ads.map(function(a) {
-            var budget = Number(a.budget || a.cost || 0);
-            var spent = Number(a.cost || 0);
+            var budget = Number(a.budget || a.ausgaben || 0);
+            var spent = Number(a.ausgaben || 0);
             var statusCls = spent > budget * 1.1 ? 'bg-yellow-100 text-yellow-700' : spent > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600';
             var statusTxt = spent > budget * 1.1 ? '\u00dcber Budget' : spent > 0 ? 'Aktiv' : 'Pausiert';
-            return '<tr class="hover:bg-gray-50"><td class="px-4 py-3 text-sm font-semibold text-gray-800">' + _escH(a.campaign_name || '\u2013') + '</td>' +
-                '<td class="px-4 py-3 text-sm text-gray-600">' + _escH(a.platform || '\u2013') + '</td>' +
+            return '<tr class="hover:bg-gray-50"><td class="px-4 py-3 text-sm font-semibold text-gray-800">' + _escH(a.kampagne_name || '\u2013') + '</td>' +
+                '<td class="px-4 py-3 text-sm text-gray-600">' + _escH(a.plattform || '\u2013') + '</td>' +
                 '<td class="px-4 py-3 text-sm">' + _fmtEur(budget) + '</td>' +
                 '<td class="px-4 py-3 text-sm">' + _fmtEur(spent) + '</td>' +
-                '<td class="px-4 py-3 text-sm">' + _fmtN(a.clicks || 0) + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + _fmtN(a.klicks || 0) + '</td>' +
                 '<td class="px-4 py-3 text-sm">' + (a.conversions || 0) + '</td>' +
                 '<td class="px-4 py-3 text-sm"><span class="text-xs px-2 py-1 rounded-full font-semibold ' + statusCls + '">' + statusTxt + '</span></td></tr>';
         }).join('');
@@ -410,7 +411,7 @@ function renderMetaAds(el) {
     var metaCtr = totalImpr > 0 ? (totalClicks / totalImpr * 100).toFixed(2) : '0,00';
     var metaCpc = totalClicks > 0 ? (totalSpend / totalClicks).toFixed(2) : '\u2013';
     var metaCpm = totalImpr > 0 ? (totalSpend / totalImpr * 1000).toFixed(2) : '\u2013';
-    var metaFreq = totalImpr > 0 && ads.length > 0 ? (totalImpr / Math.max(1, new Set(ads.map(function(a){ return a.campaign_name; })).size) / 1000).toFixed(1) : '\u2013';
+    var metaFreq = totalImpr > 0 && ads.length > 0 ? (totalImpr / Math.max(1, new Set(ads.map(function(a){ return a.kampagne_name; })).size) / 1000).toFixed(1) : '\u2013';
     var metaLinkCtr = totalImpr > 0 ? (totalClicks / totalImpr * 100 * 1.14).toFixed(2) : '0,00';
     var metaCpl = totalLeads > 0 ? (totalSpend / totalLeads).toFixed(2) : '\u2013';
 
@@ -470,15 +471,15 @@ function renderMetaCharts(ads) {
     }
     // Trend: Meta-Ausgaben letzte 6 Monate (Platzhalter nur aktueller Monat)
     var totalMetaSpend = 0;
-    ads.forEach(function(a) { totalMetaSpend += Number(a.cost || 0); });
+    ads.forEach(function(a) { totalMetaSpend += Number(a.ausgaben || 0); });
     window.mktChartBarLine('mktMetaTrend', labels, [0,0,0,0,0, Math.round(totalMetaSpend)], [0,0,0,0,0, ads.reduce(function(s,a){ return s + Number(a.conversions||0); }, 0)], 'Ausgaben (\u20ac)', 'Leads');
 
     // Plattform-Split: Facebook vs. Instagram
     var fbSpend = 0, igSpend = 0;
     ads.forEach(function(a) {
-        var pp = (a.publisher_platform || a.platform || '').toLowerCase();
-        if (pp.indexOf('instagram') >= 0) igSpend += Number(a.cost || 0);
-        else fbSpend += Number(a.cost || 0);
+        var pp = (a.publisher_platform || a.plattform || '').toLowerCase();
+        if (pp.indexOf('instagram') >= 0) igSpend += Number(a.ausgaben || 0);
+        else fbSpend += Number(a.ausgaben || 0);
     });
     window.mktChartDoughnut('mktMetaSplit', ['Facebook', 'Instagram'], [Math.round(fbSpend), Math.round(igSpend)], [C.blue, '#E1306C']);
 }
@@ -491,7 +492,7 @@ function renderMetaDemoCharts(ads) {
     var ageBuckets = { '18-24': 0, '25-34': 0, '35-44': 0, '45-54': 0, '55-64': 0, '65+': 0 };
     ads.forEach(function(a) {
         var ar = a.age_range || '';
-        if (ageBuckets[ar] !== undefined) ageBuckets[ar] += Number(a.impressions || 0);
+        if (ageBuckets[ar] !== undefined) ageBuckets[ar] += Number(a.impressionen || 0);
     });
     var ageLabels = Object.keys(ageBuckets);
     var ageData = ageLabels.map(function(k) { return ageBuckets[k]; });
@@ -503,9 +504,9 @@ function renderMetaDemoCharts(ads) {
     var genderMap = { 'male': 0, 'female': 0, 'unknown': 0 };
     ads.forEach(function(a) {
         var g = (a.gender || '').toLowerCase();
-        if (g === 'male' || g === 'maennlich' || g === 'm\u00e4nnlich') genderMap.male += Number(a.impressions || 0);
-        else if (g === 'female' || g === 'weiblich') genderMap.female += Number(a.impressions || 0);
-        else if (g) genderMap.unknown += Number(a.impressions || 0);
+        if (g === 'male' || g === 'maennlich' || g === 'm\u00e4nnlich') genderMap.male += Number(a.impressionen || 0);
+        else if (g === 'female' || g === 'weiblich') genderMap.female += Number(a.impressionen || 0);
+        else if (g) genderMap.unknown += Number(a.impressionen || 0);
     });
     var genderLabels = ['M\u00e4nnlich', 'Weiblich', 'Divers'];
     var genderData = [genderMap.male, genderMap.female, genderMap.unknown];
@@ -517,9 +518,9 @@ function renderMetaDemoCharts(ads) {
     var platMap = { 'facebook': 0, 'instagram': 0, 'audience_network': 0 };
     ads.forEach(function(a) {
         var pp = (a.publisher_platform || '').toLowerCase();
-        if (pp.indexOf('facebook') >= 0) platMap.facebook += Number(a.impressions || 0);
-        else if (pp.indexOf('instagram') >= 0) platMap.instagram += Number(a.impressions || 0);
-        else if (pp) platMap.audience_network += Number(a.impressions || 0);
+        if (pp.indexOf('facebook') >= 0) platMap.facebook += Number(a.impressionen || 0);
+        else if (pp.indexOf('instagram') >= 0) platMap.instagram += Number(a.impressionen || 0);
+        else if (pp) platMap.audience_network += Number(a.impressionen || 0);
     });
     var platLabels = ['Facebook', 'Instagram', 'Audience Network'];
     var platData = [platMap.facebook, platMap.instagram, platMap.audience_network];
@@ -609,9 +610,9 @@ function renderGoogleAds(el) {
         keywordAds.forEach(function(a) {
             var kw = a.keyword;
             if (!kwMap[kw]) kwMap[kw] = { impr: 0, clicks: 0, cost: 0, conv: 0 };
-            kwMap[kw].impr += Number(a.impressions || 0);
-            kwMap[kw].clicks += Number(a.clicks || 0);
-            kwMap[kw].cost += Number(a.cost || 0);
+            kwMap[kw].impr += Number(a.impressionen || 0);
+            kwMap[kw].clicks += Number(a.klicks || 0);
+            kwMap[kw].cost += Number(a.ausgaben || 0);
             kwMap[kw].conv += Number(a.conversions || 0);
         });
         var kwEntries = Object.keys(kwMap).map(function(k) { return { keyword: k, d: kwMap[k] }; });
@@ -665,22 +666,22 @@ function renderGoogleCharts(ads) {
     }
     // Trend: Google-Ausgaben letzte 6 Monate
     var totalGooSpend = 0;
-    ads.forEach(function(a) { totalGooSpend += Number(a.cost || 0); });
+    ads.forEach(function(a) { totalGooSpend += Number(a.ausgaben || 0); });
     window.mktChartBarLine('mktGoogleTrend', labels, [0,0,0,0,0, Math.round(totalGooSpend)], [0,0,0,0,0, ads.reduce(function(s,a){ return s + Number(a.conversions||0); }, 0)], 'Ausgaben (\u20ac)', 'Leads');
 
     // Kampagnen-Typ Verteilung
     var typeMap = { 'search': 0, 'display': 0, 'shopping': 0, 'video': 0, 'other': 0 };
     ads.forEach(function(a) {
         var ct = (a.campaign_type || '').toLowerCase();
-        if (ct.indexOf('search') >= 0 || ct.indexOf('such') >= 0) typeMap.search += Number(a.cost || 0);
-        else if (ct.indexOf('display') >= 0) typeMap.display += Number(a.cost || 0);
-        else if (ct.indexOf('shopping') >= 0 || ct.indexOf('pmax') >= 0) typeMap.shopping += Number(a.cost || 0);
-        else if (ct.indexOf('video') >= 0 || ct.indexOf('youtube') >= 0) typeMap.video += Number(a.cost || 0);
-        else typeMap.other += Number(a.cost || 0);
+        if (ct.indexOf('search') >= 0 || ct.indexOf('such') >= 0) typeMap.search += Number(a.ausgaben || 0);
+        else if (ct.indexOf('display') >= 0) typeMap.display += Number(a.ausgaben || 0);
+        else if (ct.indexOf('shopping') >= 0 || ct.indexOf('pmax') >= 0) typeMap.shopping += Number(a.ausgaben || 0);
+        else if (ct.indexOf('video') >= 0 || ct.indexOf('youtube') >= 0) typeMap.video += Number(a.ausgaben || 0);
+        else typeMap.other += Number(a.ausgaben || 0);
     });
     // Falls keine Typ-Daten: alles als Search z\u00e4hlen
     if (typeMap.search === 0 && typeMap.display === 0 && typeMap.shopping === 0 && typeMap.video === 0 && typeMap.other === 0) {
-        typeMap.search = ads.reduce(function(s,a) { return s + Number(a.cost || 0); }, 0);
+        typeMap.search = ads.reduce(function(s,a) { return s + Number(a.ausgaben || 0); }, 0);
     }
     var typeLabels = ['Suche', 'Display', 'Shopping', 'Video', 'Sonstige'];
     var typeData = [Math.round(typeMap.search), Math.round(typeMap.display), Math.round(typeMap.shopping), Math.round(typeMap.video), Math.round(typeMap.other)];
@@ -695,7 +696,7 @@ function renderGoogleDemoCharts(ads) {
     var ageBuckets = { '18-24': 0, '25-34': 0, '35-44': 0, '45-54': 0, '55-64': 0, '65+': 0 };
     ads.forEach(function(a) {
         var ar = a.age_range || '';
-        if (ageBuckets[ar] !== undefined) ageBuckets[ar] += Number(a.impressions || 0);
+        if (ageBuckets[ar] !== undefined) ageBuckets[ar] += Number(a.impressionen || 0);
     });
     var ageLabels = Object.keys(ageBuckets);
     var ageData = ageLabels.map(function(k) { return ageBuckets[k]; });
@@ -707,9 +708,9 @@ function renderGoogleDemoCharts(ads) {
     var genderMap = { 'male': 0, 'female': 0, 'unknown': 0 };
     ads.forEach(function(a) {
         var g = (a.gender || '').toLowerCase();
-        if (g === 'male' || g === 'maennlich' || g === 'm\u00e4nnlich') genderMap.male += Number(a.impressions || 0);
-        else if (g === 'female' || g === 'weiblich') genderMap.female += Number(a.impressions || 0);
-        else if (g) genderMap.unknown += Number(a.impressions || 0);
+        if (g === 'male' || g === 'maennlich' || g === 'm\u00e4nnlich') genderMap.male += Number(a.impressionen || 0);
+        else if (g === 'female' || g === 'weiblich') genderMap.female += Number(a.impressionen || 0);
+        else if (g) genderMap.unknown += Number(a.impressionen || 0);
     });
     var genderLabels = ['M\u00e4nnlich', 'Weiblich', 'Divers'];
     var genderData = [genderMap.male, genderMap.female, genderMap.unknown];
@@ -723,7 +724,7 @@ function renderGoogleDemoCharts(ads) {
         var gt = a.geo_target || '';
         if (gt) {
             if (!geoMap[gt]) geoMap[gt] = 0;
-            geoMap[gt] += Number(a.impressions || 0);
+            geoMap[gt] += Number(a.impressionen || 0);
         }
     });
     var geoEntries = Object.keys(geoMap).map(function(k) { return { name: k, val: geoMap[k] }; });
@@ -851,15 +852,15 @@ function renderNoData(title, msg) {
 function renderMetaCampaignTable(ads) {
     if (!ads || ads.length === 0) return '';
     var rows = ads.map(function(a) {
-        var plattform = (a.publisher_platform || a.platform || '\u2013');
-        var budget = Number(a.budget || a.cost || 0);
-        var ctr = a.impressions > 0 ? ((a.clicks / a.impressions) * 100).toFixed(2) + '%' : '\u2013';
+        var plattform = (a.publisher_platform || a.plattform || '\u2013');
+        var budget = Number(a.budget || a.ausgaben || 0);
+        var ctr = a.impressionen > 0 ? ((a.klicks / a.impressionen) * 100).toFixed(2) + '%' : '\u2013';
         return '<tr class="hover:bg-gray-50">' +
-            '<td class="px-4 py-3 text-sm font-semibold text-gray-800">' + _escH(a.campaign_name || '\u2013') + '</td>' +
+            '<td class="px-4 py-3 text-sm font-semibold text-gray-800">' + _escH(a.kampagne_name || '\u2013') + '</td>' +
             '<td class="px-4 py-3 text-sm">' + _escH(plattform) + '</td>' +
             '<td class="px-4 py-3 text-sm">' + _fmtEur(budget) + '</td>' +
-            '<td class="px-4 py-3 text-sm">' + _fmtN(a.impressions || 0) + '</td>' +
-            '<td class="px-4 py-3 text-sm">' + _fmtN(a.clicks || 0) + '</td>' +
+            '<td class="px-4 py-3 text-sm">' + _fmtN(a.impressionen || 0) + '</td>' +
+            '<td class="px-4 py-3 text-sm">' + _fmtN(a.klicks || 0) + '</td>' +
             '<td class="px-4 py-3 text-sm">' + ctr + '</td>' +
             '<td class="px-4 py-3 text-sm">' + (a.conversions || 0) + '</td></tr>';
     }).join('');
@@ -881,7 +882,7 @@ function renderAdsTable(ads, title) {
     var rows = ads.map(function(a) {
         var ctr = a.impressionen > 0 ? ((a.klicks / a.impressionen) * 100).toFixed(2) + '%' : '\u2013';
         return '<tr class="hover:bg-gray-50">' +
-            '<td class="px-4 py-3 text-sm font-semibold text-gray-800">' + _escH(a.campaign_name || '\u2013') + '</td>' +
+            '<td class="px-4 py-3 text-sm font-semibold text-gray-800">' + _escH(a.kampagne_name || '\u2013') + '</td>' +
             '<td class="px-4 py-3 text-sm">' + _fmtEur(a.ausgaben || 0) + '</td>' +
             '<td class="px-4 py-3 text-sm">' + _fmtN(a.impressionen || 0) + '</td>' +
             '<td class="px-4 py-3 text-sm">' + _fmtN(a.klicks || 0) + '</td>' +
