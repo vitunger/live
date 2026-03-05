@@ -994,6 +994,28 @@ window._stdZugRemove = async function(entryId, standortId) {
     openStandortDetailModal(standortId);
 };
 
+// updateGruppeSetting lokal definieren (falls user-kommando.js noch nicht geladen)
+if (!window.updateGruppeSetting) {
+    window.updateGruppeSetting = async function(gruppeId, standortId, field, value) {
+        var sb = _sb();
+        var upd = {};
+        upd[field] = (value === true || value === 'true');
+        var resp = await sb.from('standort_gruppe_mitglieder').update(upd)
+            .eq('gruppe_id', gruppeId).eq('standort_id', standortId);
+        if (resp && resp.error) { _showToast('Fehler: ' + resp.error.message, 'error'); return; }
+        _showToast('Gespeichert ✅', 'success');
+    };
+}
+if (!window.removeStandortFromGruppe) {
+    window.removeStandortFromGruppe = async function(gruppeId, standortId) {
+        var sb = _sb();
+        await sb.from('standort_gruppe_mitglieder').delete()
+            .eq('gruppe_id', gruppeId).eq('standort_id', standortId);
+        _showToast('Gruppe verlassen ✅', 'success');
+        openStandortDetailModal(standortId);
+    };
+}
+
 
 // ═══ HQ WaWi Connection Management (in Standort Detail Modal) ═══
 window.hqTestWawiConnection = async function(stdId) {
