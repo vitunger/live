@@ -48,7 +48,7 @@ const VIEW_RENDER_MAP = {
     // === Standort Views ===
     'allgemein':     { fn: 'loadAllgemeinData', async: true, chain: [{ fn: 'showAllgemeinTab', args: ['uebersicht'] }] },
     'home':          { fn: 'loadDashboardWidgets', chain: [{ fn: 'loadAllgemeinData' }] },
-    'einkauf':       { fn: 'showEinkaufTab', args: ['sortiment'] },
+    'einkauf':       { fn: 'renderEinkaufV2', args: [] },
     'controlling':   { fn: 'showControllingTab', args: ['cockpit'], chain: [{ fn: 'renderPerformanceCockpit' }, { fn: 'loadBwaList' }] },
     'verkauf':       { fn: 'showVerkaufTab', args: ['pipeline'] },
     'kommunikation': { fn: 'showKommTab', args: ['chat'] },

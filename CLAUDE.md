@@ -790,7 +790,7 @@ Neue Module werden direkt in TypeScript gebaut, hinter modul_status = deaktivier
 
 **Marketing-Modul (TS-native):** Kampagnen-Uebersicht, Post-Performance (Instagram/Facebook API NEU), Budget-Tracking, Google Bewertungen, Auto-Sync Cron. **KRITISCH:** Meta Token-Refresh (Tokens laufen nach 60 Tagen ab → automatischer Refresh).
 
-**Einkauf-Modul:** 65 Lieferanten von JS-Array → DB-Tabellen (lieferanten + standort_lieferanten).
+**Einkauf-Modul:** ✅ DONE (2026-03-05) – einkauf-v2.js ersetzt altes einkauf.js. Neue DB-Tabelle `lieferanten` mit 65 Lieferanten aus Excel. HQ: vollstaendiges Cockpit + Filter + Edit-Modal. Partner: nur Kernsortiment/Zusatz mit fixierten Konditionen als Karten. SQL-Migration: docs/migration_lieferanten_2026_03_05.sql (in Supabase SQL Editor ausfuehren). Naechster Schritt: Einkaufsstrategie-Modul (Status Quo + Ziele + Modus Operandi pro Standort).
 
 **Wissen-Modul:** CMS-Editor im HQ-Modus (Tabellen existieren, sind leer).
 

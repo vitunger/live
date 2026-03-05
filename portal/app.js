@@ -32,7 +32,8 @@ const VIEW_MODULES = [
     
     // Business
     'views/verkauf.js',
-    'views/einkauf.js',
+    // 'views/einkauf.js', // ersetzt durch einkauf-v2 (DB-gestützt)
+    'views/einkauf-v2.js',
     // Controlling (split into 5 sub-modules)
     'views/controlling.js',
     'views/controlling-display.js',
