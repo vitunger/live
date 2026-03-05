@@ -149,10 +149,7 @@ export async function parseBwaWithAI() {
                         statusEl.querySelector('.animate-spin').style.display = 'none';
                         statusText.textContent = '\u2705 KI-Analyse abgeschlossen' + (result.confidence ? ' (Konfidenz: ' + Math.round(result.confidence * 100) + '%)' : '');
                         var _sB=document.getElementById("bwaSaveBtn");if(_sB){_sB.disabled=false;_sB.style.display="";_sB.className="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-all";_sB.textContent="\u2705 Werte pr\u00fcfen & BWA speichern";}
-                        if(result.hinweise && result.hinweise.length > 0) {
-                            resultEl.innerHTML = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-700"><p class="font-semibold mb-1">KI-Hinweise:</p><ul class="list-disc pl-4">' + result.hinweise.map(function(h){return '<li>'+_escH(h)+'</li>';}).join('') + '</ul></div>';
-                            resultEl.classList.remove('hidden');
-                        }
+
                     } else {
                         throw new Error('Keine Werte erkannt');
                     }
@@ -249,10 +246,7 @@ export async function parseBwaWithAI() {
                     statusEl.querySelector('.animate-spin').style.display = 'none';
                     statusText.textContent = '\u2705 KI-Analyse abgeschlossen' + (data.result.confidence ? ' (Konfidenz: ' + Math.round(data.result.confidence * 100) + '%)' : '');
                     var _sB=document.getElementById("bwaSaveBtn");if(_sB){_sB.disabled=false;_sB.style.display="";_sB.className="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-all";_sB.textContent="\u2705 Werte pr\u00fcfen & BWA speichern";}
-                    if(data.result.hinweise && data.result.hinweise.length > 0) {
-                        resultEl.innerHTML = '<div class="bg-purple-50 border border-purple-200 rounded-lg p-3 text-xs text-purple-700"><p class="font-semibold mb-1">\u{1F916} KI-Hinweise:</p><ul class="list-disc pl-4">' + data.result.hinweise.map(function(h){return '<li>'+_escH(h)+'</li>';}).join('') + '</ul><p class="mt-2 text-[10px] text-purple-400">Bitte Werte vor dem Speichern kontrollieren.</p></div>';
-                        resultEl.classList.remove('hidden');
-                    }
+
                 } else { throw new Error('Keine Werte erkannt'); }
             } catch(kiFallbackErr) {
                 statusEl.querySelector('.animate-spin').style.display = 'none';
@@ -417,10 +411,7 @@ export async function parseBwaWithAI() {
                     statusEl.querySelector('.animate-spin').style.display = 'none';
                     statusText.textContent = '\u2705 KI-Analyse abgeschlossen' + (kiResult.confidence ? ' (Konfidenz: ' + Math.round(kiResult.confidence * 100) + '%)' : '') + ' [' + meta.format + ' \u2192 KI]';
                     var _sB=document.getElementById("bwaSaveBtn");if(_sB){_sB.disabled=false;_sB.style.display="";_sB.className="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-all";_sB.textContent="\u2705 Werte pr\u00fcfen & BWA speichern";}
-                    if(kiResult.hinweise && kiResult.hinweise.length > 0) {
-                        resultEl.innerHTML = '<div class="bg-purple-50 border border-purple-200 rounded-lg p-3 text-xs text-purple-700"><p class="font-semibold mb-1">\u{1F916} KI-Hinweise:</p><ul class="list-disc pl-4">' + kiResult.hinweise.map(function(h){return '<li>'+_escH(h)+'</li>';}).join('') + '</ul><p class="mt-2 text-[10px] text-purple-400">Bitte Werte vor dem Speichern kontrollieren.</p></div>';
-                        resultEl.classList.remove('hidden');
-                    }
+
                 } else { throw new Error('Keine Werte erkannt'); }
             } catch(kiErr2) {
                 statusEl.querySelector('.animate-spin').style.display = 'none';
@@ -556,12 +547,7 @@ export async function parseBwaWithAI() {
                 statusEl.querySelector('.animate-spin').style.display = 'none';
                 if(corrections.length > 0) {
                     statusText.textContent = '\u{1F916} KI hat ' + corrections.length + ' Wert' + (corrections.length > 1 ? 'e' : '') + ' korrigiert';
-                    var corrHtml = '<div class="bg-purple-50 border border-purple-200 rounded-lg p-3 mt-2 text-xs text-purple-700">'
-                        + '<p class="font-semibold mb-1">\u{1F916} KI-Korrekturen:</p>'
-                        + '<ul class="list-disc pl-4">' + corrections.map(function(c){return '<li>'+_escH(c)+'</li>';}).join('') + '</ul>';
-                    if(kiValResult.confidence) corrHtml += '<p class="mt-1 text-[10px] text-purple-400">Konfidenz: ' + Math.round(kiValResult.confidence * 100) + '%</p>';
-                    corrHtml += '</div>';
-                    resultEl.innerHTML = resultEl.innerHTML + corrHtml;
+
 
                     // Recalculate summary
                     var umsatzKi = parsed.umsatzerloese || 0;
@@ -577,11 +563,7 @@ export async function parseBwaWithAI() {
                 } else {
                     statusText.textContent = '\u2705 ' + matchedRows.length + ' Werte erkannt!' + periodInfo + ' [' + meta.format + '] \u2013 KI best\u00e4tigt \u2705';
                 }
-                if(kiValResult.hinweise && kiValResult.hinweise.length > 0) {
-                    resultEl.innerHTML += '<div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2 text-xs text-blue-700">'
-                        + '<p class="font-semibold mb-1">\u{1F4A1} KI-Hinweise:</p>'
-                        + '<ul class="list-disc pl-4">' + kiValResult.hinweise.map(function(h){return '<li>'+_escH(h)+'</li>';}).join('') + '</ul></div>';
-                }
+
                 // Enable save button after KI validation
                 var _sB=document.getElementById("bwaSaveBtn");if(_sB){_sB.disabled=false;_sB.style.display="";_sB.className="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-all";_sB.textContent="\u2705 Werte pr\u00fcfen & BWA speichern";}
             }
