@@ -102,7 +102,7 @@ export async function loadBillingOverview() {
             var strat = st.strategy;
             var acct = st.billing_account;
             h += '<tr class="border-t hover:bg-gray-50 cursor-pointer" onclick="' + (inv ? "showBillingInvoice('" + inv.id + "')" : '') + '">';
-            h += '<td class="p-3"><p class="font-semibold text-sm">' + _escH(st.name) + '</p><p class="text-xs text-gray-400">' + _escH(st.inhaber_name || '') + '</p></td>';
+            h += '<td class="p-3"><p class="font-semibold text-sm">' + _escH(st.name) + (st.billing_status === 'danger' ? ' <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500 text-white font-bold animate-pulse">VORKASSE</span>' : '') + '</p><p class="text-xs text-gray-400">' + _escH(st.inhaber_name || '') + '</p></td>';
             h += '<td class="p-3 text-center">' + (strat && strat.locked ? '<span class="text-green-600 text-xs font-semibold">✅ Gesperrt</span>' : strat && strat.approved_at ? '<span class="text-blue-600 text-xs">✓ Genehmigt</span>' : '<span class="text-red-500 text-xs">❌ Fehlt</span>') + '</td>';
             h += '<td class="p-3 text-center">' + (acct && acct.sepa_active ? '<span class="text-green-600 text-xs">✅</span>' : '<span class="text-gray-300 text-xs">—</span>') + '</td>';
             var allInvs = st.invoices || (inv ? [inv] : []);
@@ -318,6 +318,7 @@ export function showBillingTab(tab) {
     if (tab === 'strategies') loadAllStrategies();
     if (tab === 'products') loadBillingProducts();
     if (tab === 'tools') loadBillingTools();
+    if (tab === 'schedules') loadBillingSchedules();
     if (tab === 'approval') loadApprovalQueue();
 }
 
@@ -406,9 +407,9 @@ export async function lockStrategy(stratId) {
 export async function loadBillingProducts() {
     var container = document.getElementById('billingProductsList');
     if (!container) return;
-    var { data: products } = await _sb().from('billing_products').select('*').order('key');
+    var { data: products } = await _sb().from('billing_products').select('*, schedule:billing_schedules(id, name, is_prepayment, is_immediate, billing_day, payment_term_days)').order('key');
     var h = '<div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr>';
-    h += '<th class="text-left p-3">Key</th><th class="text-left p-3">Name</th><th class="text-left p-3">Typ</th><th class="text-left p-3">Frequenz</th><th class="text-center p-3">Abrechnungstag</th><th class="text-right p-3">Betrag/Prozent</th><th class="text-center p-3">Aktiv</th>';
+    h += '<th class="text-left p-3">Key</th><th class="text-left p-3">Name</th><th class="text-left p-3">Typ</th><th class="text-left p-3">Frequenz</th><th class="text-center p-3">Abrechnungsart</th><th class="text-right p-3">Betrag/Prozent</th><th class="text-center p-3">Aktiv</th>';
     h += '</tr></thead><tbody>';
     (products || []).forEach(function(p) {
         h += '<tr class="border-t">';
@@ -416,7 +417,7 @@ export async function loadBillingProducts() {
         h += '<td class="p-3 font-semibold">' + p.name + '</td>';
         h += '<td class="p-3 text-xs">' + p.product_type + '</td>';
         h += '<td class="p-3 text-xs">' + p.billing_frequency + '</td>';
-        h += '<td class="p-3 text-center">' + (p.billing_frequency === 'monthly' ? '<span class="text-xs font-mono px-2 py-0.5 rounded bg-blue-50 text-blue-700">' + (p.billing_day || 1) + '.</span>' : '<span class="text-xs text-gray-300">—</span>') + '</td>';
+        h += '<td class="p-3 text-center">' + (p.schedule ? '<span class="text-xs px-2 py-0.5 rounded font-semibold ' + (p.schedule.is_prepayment ? 'bg-red-100 text-red-700' : p.schedule.is_immediate ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-50 text-blue-700') + '">' + p.schedule.name + '</span>' : '<span class="text-xs text-gray-300">—</span>') + '</td>';
         h += '<td class="p-3 text-right">' + (p.default_amount ? _fmtEur(p.default_amount) : p.default_percent ? (p.default_percent * 100).toFixed(2) + '%' : '—') + '</td>';
         h += '<td class="p-3 text-center">' + (p.active ? '✅' : '❌') + '</td>';
         h += '</tr>';
@@ -1189,8 +1190,118 @@ var currentKzMaFilter = 'all';
 
 // showKommandoTab: definiert in user-management.js (hier entfernt um Placeholder-Überschreibung zu verhindern)
 
+
+
+// ============================================================
+// === SCHEDULE MANAGEMENT ===
+// ============================================================
+var _schedulesCache = [];
+
+export async function loadBillingSchedules() {
+    var container = document.getElementById('billingSchedulesList');
+    if (!container) return;
+    container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
+
+    var { data: schedules } = await _sb().from('billing_schedules').select('*').order('sort_order');
+    _schedulesCache = schedules || [];
+
+    var h = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+    (schedules || []).forEach(function(s) {
+        var typeIcon = s.is_immediate ? '\u26a1' : s.is_prepayment ? '\u26a0\ufe0f' : '\ud83d\udcc5';
+        var typeColor = s.is_prepayment ? 'border-red-300 bg-red-50' : s.is_immediate ? 'border-yellow-300 bg-yellow-50' : 'border-blue-200 bg-blue-50';
+        h += '<div class="vit-card p-5 border-l-4 ' + typeColor + '">';
+        h += '<div class="flex items-center justify-between mb-2"><h4 class="font-bold text-sm">' + typeIcon + ' ' + s.name + '</h4>';
+        h += '<span class="text-[10px] px-2 py-0.5 rounded-full ' + (s.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500') + '">' + (s.active ? 'Aktiv' : 'Inaktiv') + '</span></div>';
+        h += '<p class="text-xs text-gray-500 mb-3">' + (s.description || '') + '</p>';
+        h += '<div class="grid grid-cols-2 gap-2 text-xs">';
+        h += '<div><span class="text-gray-400">Typ:</span> <span class="font-semibold">' + (s.is_immediate ? 'Sofort' : s.is_prepayment ? 'Vorkasse' : 'Fester Tag') + '</span></div>';
+        if (s.billing_day) h += '<div><span class="text-gray-400">Tag:</span> <span class="font-semibold">' + s.billing_day + '. des Monats</span></div>';
+        if (s.days_before_month_end) h += '<div><span class="text-gray-400">Vor Monatsende:</span> <span class="font-semibold">' + s.days_before_month_end + ' Tage</span></div>';
+        h += '<div><span class="text-gray-400">Zahlungsfrist:</span> <span class="font-semibold">' + s.payment_term_days + ' Tage</span></div>';
+        h += '</div>';
+        h += '<div class="mt-3 flex gap-2">';
+        h += '<button onclick="editSchedule(\'' + s.id + '\')" class="text-xs text-vit-orange hover:underline font-semibold">\u270f\ufe0f Bearbeiten</button>';
+        h += '</div></div>';
+    });
+    h += '</div>';
+    h += '<div class="mt-4"><button onclick="showNewScheduleForm()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600">+ Neue Abrechnungsart</button></div>';
+    container.innerHTML = h;
+}
+
+window.showNewScheduleForm = function() {
+    var container = document.getElementById('billingSchedulesList');
+    if (!container) return;
+    var h = '<div class="vit-card p-6 mb-4"><h3 class="font-bold text-sm mb-4">Neue Abrechnungsart anlegen</h3>';
+    h += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">';
+    h += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Name</label><input type="text" id="newSchedName" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="z.B. Quartalsmitte"></div>';
+    h += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Beschreibung</label><input type="text" id="newSchedDesc" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Kurzbeschreibung"></div>';
+    h += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Typ</label><select id="newSchedType" class="w-full border rounded-lg px-3 py-2 text-sm" onchange="toggleSchedFields()"><option value="fixed_day">Fester Tag</option><option value="before_month_end">Vor Monatsende</option><option value="immediate">Sofort</option></select></div>';
+    h += '<div id="newSchedDayWrap"><label class="block text-xs font-semibold text-gray-600 mb-1">Tag im Monat</label><input type="number" id="newSchedDay" min="1" max="28" class="w-full border rounded-lg px-3 py-2 text-sm" value="1"></div>';
+    h += '<div id="newSchedBeforeWrap" style="display:none"><label class="block text-xs font-semibold text-gray-600 mb-1">Tage vor Monatsende</label><input type="number" id="newSchedBefore" min="1" max="15" class="w-full border rounded-lg px-3 py-2 text-sm" value="5"></div>';
+    h += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Zahlungsfrist (Tage)</label><input type="number" id="newSchedTermDays" min="0" max="90" class="w-full border rounded-lg px-3 py-2 text-sm" value="30"></div>';
+    h += '<div><label class="flex items-center gap-2 text-sm mt-4"><input type="checkbox" id="newSchedPrepay"> Vorkasse-Modus</label></div>';
+    h += '</div>';
+    h += '<div class="flex gap-2"><button onclick="saveNewSchedule()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold">Speichern</button>';
+    h += '<button onclick="loadBillingSchedules()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm">Abbrechen</button></div>';
+    h += '</div>';
+    container.insertAdjacentHTML('afterbegin', h);
+};
+
+window.toggleSchedFields = function() {
+    var typ = document.getElementById('newSchedType').value;
+    document.getElementById('newSchedDayWrap').style.display = typ === 'fixed_day' ? '' : 'none';
+    document.getElementById('newSchedBeforeWrap').style.display = typ === 'before_month_end' ? '' : 'none';
+};
+
+window.saveNewSchedule = async function() {
+    var name = document.getElementById('newSchedName').value.trim();
+    if (!name) { _showToast('Name fehlt', 'error'); return; }
+    var typ = document.getElementById('newSchedType').value;
+    var payload = {
+        action: 'create-schedule', name: name,
+        description: document.getElementById('newSchedDesc').value.trim(),
+        schedule_type: typ,
+        billing_day: typ === 'fixed_day' ? parseInt(document.getElementById('newSchedDay').value) : null,
+        days_before_month_end: typ === 'before_month_end' ? parseInt(document.getElementById('newSchedBefore').value) : null,
+        payment_term_days: parseInt(document.getElementById('newSchedTermDays').value) || 30,
+        is_prepayment: document.getElementById('newSchedPrepay').checked,
+        is_immediate: typ === 'immediate'
+    };
+    var r = await billingApi('create-schedule', payload);
+    if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
+    _showToast('Abrechnungsart erstellt', 'success');
+    loadBillingSchedules();
+};
+
+window.editSchedule = async function(schedId) {
+    var s = _schedulesCache.find(function(x) { return x.id === schedId; });
+    if (!s) return;
+    var newName = prompt('Name:', s.name);
+    if (newName === null) return;
+    var newTermDays = prompt('Zahlungsfrist (Tage):', s.payment_term_days);
+    if (newTermDays === null) return;
+    var r = await billingApi('update-schedule', { schedule_id: schedId, name: newName, payment_term_days: parseInt(newTermDays) });
+    if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
+    _showToast('Aktualisiert', 'success');
+    loadBillingSchedules();
+};
+
+// === DANGER STATUS TOGGLE ===
+window.toggleBillingDanger = async function(stdId, currentStatus) {
+    var newStatus = currentStatus === 'danger' ? 'normal' : 'danger';
+    var confirmMsg = newStatus === 'danger'
+        ? 'Standort auf VORKASSE setzen?\n\nAlle zuk\u00fcnftigen Rechnungen werden mit Vorkasse-Konditionen erstellt (5 Tage vor Monatsende, 3 Tage Zahlungsfrist).'
+        : 'Vorkasse-Status aufheben?\n\nDer Standort wird wieder mit normalen Abrechnungsarten berechnet.';
+    if (!confirm(confirmMsg)) return;
+    var r = await billingApi('set-billing-status', { standort_id: stdId, billing_status: newStatus });
+    if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
+    _showToast(newStatus === 'danger' ? '\u26a0\ufe0f Standort auf Vorkasse gesetzt' : '\u2705 Vorkasse aufgehoben', newStatus === 'danger' ? 'error' : 'success');
+    loadBillingOverview();
+};
+
+
 // Strangler Fig
-const _exports = {fmtEur,fmtDate,billingStatusBadge,billingApi,initBillingModule,loadBillingOverview,generateMonthlyDrafts,showQuarterlySettlementDialog,generateQuarterlySettlement,finalizeAllReady,showBillingInvoice,finalizeInvoice,markInvoicePaid,editLineItem,removeLineItem,addManualLineItem,showBillingTab,loadAllInvoices,loadAllStrategies,approveStrategy,lockStrategy,loadBillingProducts,loadBillingTools,toggleApprovalMode,updateApprovalModeUI,approvalBulkAction,loadApprovalQueue,approvalAction,generateAllDrafts,showStBillingTab,initStandortBilling,loadStandortInvoices,showStandortInvoiceDetail,loadStandortStrategy,submitStandortStrategy,loadStandortCosts,downloadInvoicePdf,loadStandortPayments};
+const _exports = {fmtEur,fmtDate,billingStatusBadge,billingApi,initBillingModule,loadBillingOverview,generateMonthlyDrafts,showQuarterlySettlementDialog,generateQuarterlySettlement,finalizeAllReady,showBillingInvoice,finalizeInvoice,markInvoicePaid,editLineItem,removeLineItem,addManualLineItem,showBillingTab,loadAllInvoices,loadAllStrategies,approveStrategy,lockStrategy,loadBillingProducts,loadBillingTools,toggleApprovalMode,updateApprovalModeUI,approvalBulkAction,loadApprovalQueue,approvalAction,generateAllDrafts,showStBillingTab,initStandortBilling,loadStandortInvoices,showStandortInvoiceDetail,loadStandortStrategy,submitStandortStrategy,loadStandortCosts,downloadInvoicePdf,loadStandortPayments,loadBillingSchedules};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // [prod] log removed
 
