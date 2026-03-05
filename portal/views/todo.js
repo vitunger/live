@@ -743,11 +743,12 @@ export async function todoToggle(id) {
 
 export async function todoDelete(id) {
     // Delete subtasks too
+    var t = todoState.todos.find(function(x) { return x.id === id; });
     todoState.todos = todoState.todos.filter(function(t) { return t.id !== id && t.parent_id !== id; });
     todoRender();
     try {
         await _sb().from('todos').delete().eq('id', id);
-        window.logAudit && window.logAudit('todo_geloescht', 'todo', { id: id });
+        window.logAudit && window.logAudit('todo_geloescht', 'todo', { titel: t ? (t.titel || '') : '', id: id });
     } catch (e) { console.warn(e); }
 }
 

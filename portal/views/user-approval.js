@@ -222,7 +222,9 @@ export async function rejectUser(userId) {
     if(!confirm(_t('confirm_reject_user'))) return;
     try {
         await _sb().from('users').update({status: 'gesperrt'}).eq('id', userId);
-        window.logAudit && window.logAudit('user_gesperrt', 'user-management', { user_id: userId });
+        _sb().from('users').select('name,email').eq('id',userId).single().then(function(r){
+            window.logAudit && window.logAudit('user_gesperrt', 'user-management', { user_id: userId, name: r.data ? r.data.name : '', email: r.data ? r.data.email : '' });
+        });
         closeApproveModal();
         _showToast('User abgelehnt und gesperrt.', 'info');
         window.renderKzMitarbeiter();

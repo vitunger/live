@@ -78,12 +78,18 @@ window.logAudit = async function(aktion, modul, details) {
         var user = window.sbUser;
         var prof = window.sbProfile;
         if (!sb || !user) return; // Nicht eingeloggt → skip
+        // Anreichern mit Browser-Kontext
+        var enriched = Object.assign({
+            _ua: (navigator.userAgent || '').substring(0, 80),
+            _url: (window.location.pathname + window.location.search).substring(0, 120)
+        }, details || {});
         await sb.from('audit_log').insert({
             user_id:     user.id,
             standort_id: prof ? prof.standort_id : null,
             aktion:      aktion,
             modul:       modul || null,
-            details:     details || {}
+            details:     enriched,
+            ip_hint:     (document.cookie.match(/cf_ip=([^;]+)/) || [])[1] || null
         });
     } catch(e) {
         // Nie werfen – Audit darf nie eine Nutzer-Aktion blockieren

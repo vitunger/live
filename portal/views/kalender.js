@@ -714,12 +714,12 @@ export async function deleteKalTermin() {
                 var resp = await _sb().from('termine').delete().eq('serie_id', t.serie_id).select();
                 if(resp.error) throw resp.error;
                 if(!resp.data || resp.data.length === 0) throw new Error('Löschen fehlgeschlagen – evtl. fehlende Berechtigung. Bitte Admin kontaktieren.');
-                window.logAudit && window.logAudit('termin_geloescht', 'kalender', { serie: true, anzahl: resp.data.length });
+                window.logAudit && window.logAudit('termin_geloescht', 'kalender', { serie: true, anzahl: resp.data.length, titel: t ? (t.titel || '') : '' });
             } else {
                 var resp = await _sb().from('termine').delete().eq('id', kalEditId).select();
                 if(resp.error) throw resp.error;
                 if(!resp.data || resp.data.length === 0) throw new Error('Löschen fehlgeschlagen – evtl. fehlende Berechtigung. Bitte Admin kontaktieren.');
-                window.logAudit && window.logAudit('termin_geloescht', 'kalender', { serie: false });
+                window.logAudit && window.logAudit('termin_geloescht', 'kalender', { serie: false, titel: t ? (t.titel || '') : '' });
             }
             document.getElementById('kalNewModal').classList.add('hidden');
             kalEditId = null;
@@ -731,13 +731,7 @@ export async function deleteKalTermin() {
             var resp = await _sb().from('termine').delete().eq('id', kalEditId).select();
             if(resp.error) throw resp.error;
             if(!resp.data || resp.data.length === 0) throw new Error('Löschen fehlgeschlagen – evtl. fehlende Berechtigung. Bitte Admin kontaktieren.');
-            window.logAudit && window.logAudit('termin_geloescht', 'kalender', { serie: false });
-            document.getElementById('kalNewModal').classList.add('hidden');
-            kalEditId = null;
-            await loadKalTermine();
-        } catch(err) { _showToast('Fehler: '+(err.message||err), 'error'); }
-    }
-}
+            window.logAudit && window.logAudit('termin_geloescht', 'kalender', { serie: false, titel: t ? (t.titel || '') : '' });
 
 // === MS365 CALENDAR SYNC PREPARATION ===
 // Data model: termine table has ms365_event_id and ms365_sync_status columns

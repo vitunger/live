@@ -371,7 +371,7 @@ export async function deleteAktenDoc(dokId, titel){
         // Delete document
         var delR=await s.from('dokumente').delete().eq('id',dokId);
         if(delR.error){aktenToast('\u274C Fehler: '+delR.error.message);return;}
-        window.logAudit && window.logAudit('dokument_geloescht', 'aktenschrank', { dokument_id: dokId });
+        window.logAudit && window.logAudit('dokument_geloescht', 'aktenschrank', { dokument_id: dokId, titel: dok ? (dok.titel || '') : '', typ: dok ? (dok.datei_typ || '') : '' });
         // Remove from local state
         _akten.dokumente=_akten.dokumente.filter(function(d){return d.id!==dokId;});
         closeAktenReview();renderFolders();updateStats();updateInboxBadge();refreshInboxIfOpen();
@@ -413,7 +413,7 @@ export async function startAktenUpload(){
         try{var path=(sid||'unknown')+'/inbox/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');var upR=await s.storage.from('dokumente').upload(path,file,{upsert:true});var fileUrl=path;if(!upR.error){var urlR=s.storage.from('dokumente').getPublicUrl(path);fileUrl=urlR.data?urlR.data.publicUrl:path;}var titel=file.name.replace(/\.[^.]+$/,'').replace(/[_-]/g,' ');
         var insR=await s.from('dokumente').insert({standort_id:sid,firma_name:_firmaN,titel:titel,datei_url:fileUrl,datei_name:file.name,datei_groesse:file.size,datei_typ:file.type,status:'eingegangen',quelle:'upload',hochgeladen_von:u?u.id:null}).select().single();
         if(!insR.error&&insR.data){await s.from('dokument_audit').insert({dokument_id:insR.data.id,aktion:'hochgeladen',details:{datei_name:file.name,datei_groesse:file.size},user_id:u?u.id:null});_akten.dokumente.unshift(insR.data);
-        window.logAudit && window.logAudit('dokument_hochgeladen', 'aktenschrank', { datei: file.name, groesse: file.size });
+        window.logAudit && window.logAudit('dokument_hochgeladen', 'aktenschrank', { datei: file.name, groesse: file.size, typ: file.type, titel: titel });
         // KI-Klassifikation asynchron starten
         triggerKiClassification(insR.data.id);
         }}catch(err){console.error('Upload err:',file.name,err);aktenToast('\u274C Fehler: '+file.name);}}

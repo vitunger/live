@@ -150,7 +150,10 @@ export async function changeTicketStatus(ticketId, newStatus) {
     try {
         var resp = await _sb().from('support_tickets').update({status:newStatus, updated_at:new Date().toISOString()}).eq('id',ticketId);
         if(resp.error) throw resp.error;
-        window.logAudit && window.logAudit('ticket_status', 'support', { ticket_id: ticketId, status: newStatus });
+        // Betreff für Audit nachladen (fire-and-forget)
+        _sb().from('support_tickets').select('betreff,prioritaet').eq('id',ticketId).single().then(function(r){
+            window.logAudit && window.logAudit('ticket_status', 'support', { ticket_id: ticketId, status: newStatus, betreff: r.data ? r.data.betreff : '', prioritaet: r.data ? r.data.prioritaet : '' });
+        });
         closeTicketDetail();
         await openTicketDetail(ticketId);
         renderTickets('all');

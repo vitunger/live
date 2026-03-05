@@ -656,7 +656,7 @@ try {
     
     // [prod] log removed
     await loadUserProfile(_sbUser().id);
-    if (typeof window.logAudit === 'function') window.logAudit('login', 'auth', { email: email });
+    if (typeof window.logAudit === 'function') window.logAudit('login', 'auth', { email: email, is_hq: window.sbProfile ? !!window.sbProfile.is_hq : false, standort: window.sbStandort ? window.sbStandort.name : null });
     await loadModulStatus();
     await loadFeatureFlags();
     // [prod] log removed

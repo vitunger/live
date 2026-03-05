@@ -218,7 +218,7 @@ function useSupabase(currentLoc, SELLERS) {
         sales: deal.sales || {}
       }).select().single();
       if (err) throw err;
-      window.logAudit && window.logAudit("lead_erstellt", "verkauf", { name: (nameParts[0] || "") + " " + (nameParts.slice(1).join(" ") || ""), wert: deal.value || 0 });
+      window.logAudit && window.logAudit("lead_erstellt", "verkauf", { name: (nameParts[0] || "") + " " + (nameParts.slice(1).join(" ") || ""), wert: deal.value || 0, quelle: SOURCE_TO_DB[deal.source] || "walk_in", stage: deal.stage || "neu" });
       return data;
     } catch (e) { console.error("[Pipeline] Create error:", e); return null; }
   }, [sb, profile]);

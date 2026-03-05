@@ -263,7 +263,7 @@ export async function saveBwaData() {
         closeBwaUploadModal();
         await loadBwaList();
         if(bwaId) showBwaFromDb(bwaId);
-        if (typeof window.logAudit === 'function') window.logAudit('bwa_upload', 'controlling', { monat: month, jahr: year });
+        if (typeof window.logAudit === 'function') window.logAudit('bwa_upload', 'controlling', { monat: month, jahr: year, umsatz: v('bwaF_umsatz') || 0, format: window._lastParsedFormat || 'manuell', standort: window._hqBwaUploadStandortName || null });
         _showToast('\u2705 BWA '+monatNamen[month]+' '+year+' gespeichert!', 'success');
     } catch(err) {
         if(errEl){errEl.textContent='Fehler: '+err.message;errEl.style.display='block';}
