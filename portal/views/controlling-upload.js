@@ -74,7 +74,7 @@ export function openBwaUploadModal() {
     });
     html += '</div>';
     html += '<div id="bwaUploadError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mb-3"></div>';
-    html += '<button onclick="saveBwaData()" id="bwaSaveBtn" class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">BWA speichern</button>';
+    html += '<button onclick="saveBwaData()" id="bwaSaveBtn" disabled class="w-full py-2.5 bg-gray-300 text-white rounded-lg font-semibold text-sm cursor-not-allowed transition-all" style="display:none;">BWA speichern</button>';
     html += '</div></div>';
     var c = document.createElement('div'); c.id = 'bwaUploadContainer'; c.innerHTML = html; document.body.appendChild(c);
 }
@@ -132,6 +132,7 @@ export async function parseBwaWithAI() {
                         bwaApplyKiResult(result);
                         statusEl.querySelector('.animate-spin').style.display = 'none';
                         statusText.textContent = '\u2705 KI-Analyse abgeschlossen' + (result.confidence ? ' (Konfidenz: ' + Math.round(result.confidence * 100) + '%)' : '');
+                        var _sB=document.getElementById("bwaSaveBtn");if(_sB){_sB.disabled=false;_sB.style.display="";_sB.className="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-all";_sB.textContent="\u2705 Werte pr\u00fcfen & BWA speichern";}
                         if(result.hinweise && result.hinweise.length > 0) {
                             resultEl.innerHTML = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-700"><p class="font-semibold mb-1">KI-Hinweise:</p><ul class="list-disc pl-4">' + result.hinweise.map(function(h){return '<li>'+_escH(h)+'</li>';}).join('') + '</ul></div>';
                             resultEl.classList.remove('hidden');
@@ -205,6 +206,7 @@ export async function parseBwaWithAI() {
                     bwaApplyKiResult(data.result);
                     statusEl.querySelector('.animate-spin').style.display = 'none';
                     statusText.textContent = '\u2705 KI-Analyse abgeschlossen' + (data.result.confidence ? ' (Konfidenz: ' + Math.round(data.result.confidence * 100) + '%)' : '');
+                    var _sB=document.getElementById("bwaSaveBtn");if(_sB){_sB.disabled=false;_sB.style.display="";_sB.className="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-all";_sB.textContent="\u2705 Werte pr\u00fcfen & BWA speichern";}
                     if(data.result.hinweise && data.result.hinweise.length > 0) {
                         resultEl.innerHTML = '<div class="bg-purple-50 border border-purple-200 rounded-lg p-3 text-xs text-purple-700"><p class="font-semibold mb-1">\u{1F916} KI-Hinweise:</p><ul class="list-disc pl-4">' + data.result.hinweise.map(function(h){return '<li>'+_escH(h)+'</li>';}).join('') + '</ul><p class="mt-2 text-[10px] text-purple-400">Bitte Werte vor dem Speichern kontrollieren.</p></div>';
                         resultEl.classList.remove('hidden');
@@ -216,6 +218,7 @@ export async function parseBwaWithAI() {
                 resultEl.innerHTML = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-700">'
                     + '<p class="font-semibold mb-1">Automatische Erkennung fehlgeschlagen</p>'
                     + '<p>Bitte die Werte manuell eingeben.</p></div>';
+                var _sB=document.getElementById("bwaSaveBtn");if(_sB){_sB.disabled=false;_sB.style.display="";_sB.className="w-full py-2.5 bg-yellow-500 text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-all";_sB.textContent="\u26a0\ufe0f Manuell pr\u00fcfen & speichern";}
                 resultEl.classList.remove('hidden');
             }
             if(parseBtn) parseBtn.disabled = false;
@@ -371,6 +374,7 @@ export async function parseBwaWithAI() {
                     bwaApplyKiResult(kiResult);
                     statusEl.querySelector('.animate-spin').style.display = 'none';
                     statusText.textContent = '\u2705 KI-Analyse abgeschlossen' + (kiResult.confidence ? ' (Konfidenz: ' + Math.round(kiResult.confidence * 100) + '%)' : '') + ' [' + meta.format + ' \u2192 KI]';
+                    var _sB=document.getElementById("bwaSaveBtn");if(_sB){_sB.disabled=false;_sB.style.display="";_sB.className="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-all";_sB.textContent="\u2705 Werte pr\u00fcfen & BWA speichern";}
                     if(kiResult.hinweise && kiResult.hinweise.length > 0) {
                         resultEl.innerHTML = '<div class="bg-purple-50 border border-purple-200 rounded-lg p-3 text-xs text-purple-700"><p class="font-semibold mb-1">\u{1F916} KI-Hinweise:</p><ul class="list-disc pl-4">' + kiResult.hinweise.map(function(h){return '<li>'+_escH(h)+'</li>';}).join('') + '</ul><p class="mt-2 text-[10px] text-purple-400">Bitte Werte vor dem Speichern kontrollieren.</p></div>';
                         resultEl.classList.remove('hidden');
@@ -382,6 +386,7 @@ export async function parseBwaWithAI() {
                 resultEl.innerHTML = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-700">'
                     + '<p class="font-semibold mb-1">Automatische Erkennung fehlgeschlagen</p>'
                     + '<p>Bitte die Werte manuell eingeben.</p></div>';
+                var _sB=document.getElementById("bwaSaveBtn");if(_sB){_sB.disabled=false;_sB.style.display="";_sB.className="w-full py-2.5 bg-yellow-500 text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-all";_sB.textContent="\u26a0\ufe0f Manuell pr\u00fcfen & speichern";}
                 resultEl.classList.remove('hidden');
             }
             if(parseBtn) parseBtn.disabled = false;
@@ -535,12 +540,15 @@ export async function parseBwaWithAI() {
                         + '<p class="font-semibold mb-1">\u{1F4A1} KI-Hinweise:</p>'
                         + '<ul class="list-disc pl-4">' + kiValResult.hinweise.map(function(h){return '<li>'+_escH(h)+'</li>';}).join('') + '</ul></div>';
                 }
+                // Enable save button after KI validation
+                var _sB=document.getElementById("bwaSaveBtn");if(_sB){_sB.disabled=false;_sB.style.display="";_sB.className="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-all";_sB.textContent="\u2705 Werte pr\u00fcfen & BWA speichern";}
             }
         } catch(kiValErr) {
             console.warn('[BWA] KI-Validierung fehlgeschlagen:', kiValErr.message || kiValErr);
             statusEl.querySelector('.animate-spin').style.display = 'none';
             // Kein harter Fehler - Parser-Werte bleiben stehen, User sieht Warnung
             statusText.textContent = '\u2705 ' + matchedRows.length + ' Werte erkannt!' + periodInfo + ' [' + meta.format + '] \u2013 KI nicht erreichbar';
+            var _sB=document.getElementById("bwaSaveBtn");if(_sB){_sB.disabled=false;_sB.style.display="";_sB.className="w-full py-2.5 bg-yellow-500 text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-all";_sB.textContent="\u26a0\ufe0f Ohne KI-Pr\u00fcfung speichern";}
         }
 
         if(parseBtn) parseBtn.disabled = false;
