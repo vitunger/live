@@ -39,7 +39,7 @@ const VIEW_RENDER_MAP = {
     'spiritus':      { fn: 'initSpiritus' },
     'hqShop':        { fn: 'renderHqShop' },
     'hqAktionen':    { fn: 'renderHqAktionen' },
-    'hqEinkauf':     { fn: 'showHqEkTab', args: ['dash'] },
+    'hqEinkauf':     { fn: 'renderEinkaufV2', args: [] },
     'hqAllgemein':   { fn: 'renderHqAllgemein', args: [] },  // args filled dynamically
     'hqKommando':    { fn: 'renderKommandozentrale' },
     'hqEinstellungen': { fn: 'renderHqEinstellungen' },
