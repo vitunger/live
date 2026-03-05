@@ -231,3 +231,21 @@ security: RLS/JWT/Auth-Verbesserung
 - **Lesson:** Never rely solely on RLS during impersonation — the auth.uid() stays the original HQ user.
   Always add explicit query filters as defense-in-depth.
 
+### Systematic Standort-Scope Audit + _scopedQuery Helper (2026-03-05)
+- **Audit:** Scanned all 112 JS/JSX files for `.from("table").select(...)` on standort-scoped tables without `.eq('standort_id', ...)`.
+  Found 35 queries, of which 3 were real risks (not filtered and not in HQ-only modules):
+  1. `auth-system.js:1040` — `loadPipelineFromSupabase()` (legacy pipeline loader)
+  2. `wawi-integration.js:596` — `loadWawiBelege()`
+  3. `wawi-integration.js:705` — `loadWawiDashboard()`
+  All 3 fixed with explicit `standort_id` filter for non-HQ users.
+- **New Helper `_scopedQuery(table, opts)`** in `globals.js`:
+  - Replaces `_sb().from(table)` for standort-scoped tables
+  - Auto-applies `.eq('standort_id', profile.standort_id)` for non-HQ users
+  - Options: `{ skipScope: true }` for HQ dashboards, `{ forceStandort: id }` for explicit override
+  - Available as `window._scopedQuery` and `export { scopedQuery }`
+  - **Convention: ALL new queries on standort-scoped tables MUST use `_scopedQuery()` instead of `_sb().from()`**
+- **Standort-scoped tables** (require `_scopedQuery` or explicit filter):
+  `leads`, `lead_todos`, `lead_aktivitaeten`, `lead_events`, `todos`, `termine`, `support_tickets`,
+  `verkauf_tracking`, `bwa_daten`, `bwa_detail_positionen`, `notifications`, `ideen`,
+  `kommunikation_channels`, `kommunikation_nachrichten`, `ads_performance`, `wawi_belege`, `office_bookings`
+
