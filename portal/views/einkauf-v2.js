@@ -42,10 +42,14 @@ function statusBadge(status, map) {
 
 async function renderEinkaufV2() {
   const isHQ = window.sbProfile?.is_hq === true;
-  // Container je nach Rolle: HQ bekommt hq-Container, Partner den partner-Container
-  const containerId = isHQ ? 'view-einkauf-hq' : 'view-einkauf-partner';
-  const container = document.getElementById(containerId);
-  if (!container) return;
+  // Den Container im aktuell sichtbaren View finden
+  const hqContainer = document.getElementById('view-einkauf-hq');
+  const partnerContainer = document.getElementById('view-einkauf-partner');
+  // Aktiver View: HQ-View sichtbar wenn hqEinkaufView display!=none, sonst Partner
+  const hqView = document.getElementById('hqEinkaufView');
+  const isHQView = hqView && hqView.style.display !== 'none';
+  const container = isHQView ? hqContainer : partnerContainer;
+  if (!container) { console.warn('[einkauf-v2] Kein Container gefunden, isHQView=', isHQView); return; }
 
   container.innerHTML = `
     <div class="p-6 max-w-7xl mx-auto">
