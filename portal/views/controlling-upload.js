@@ -104,12 +104,38 @@ export function openBwaUploadModal() {
     });
     html += '</div>';
     // Recalc function for computed fields
-    html += '<script>window._bwaRecalc=function(){var v=function(id){return parseFloat((document.getElementById(id)||{}).value)||0;};var u=v("bwaF_umsatz"),we=v("bwaF_wareneinsatz"),pk=v("bwaF_personal"),rk=v("bwaF_raum"),wk=v("bwaF_werbe"),wa=v("bwaF_warenabgabe"),ab=v("bwaF_abschreibung"),so=v("bwaF_sonstige"),zi=v("bwaF_zins");var roh=u+we;var gk=pk+rk+wk+wa+ab+so;var be=roh+gk;var ev=be+zi;var fmt=function(n){return n.toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2});};var clr=function(n){return n>=0?"color:#16a34a":"color:#ef4444";};var s=function(id,n){var e=document.getElementById(id);if(e){e.textContent=fmt(n);e.style.cssText+=";"+clr(n);}};s("bwaF_rohertrag",roh);s("bwaF_gesamtkosten",gk);s("bwaF_betriebsergebnis",be);s("bwaF_ergebnis",ev);};document.addEventListener("input",function(e){if(e.target&&e.target.classList.contains("bwa-field"))window._bwaRecalc();});<\/script>';
+
     html += '<div id="bwaUploadError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mb-3"></div>';
     html += '<button onclick="saveBwaData()" id="bwaSaveBtn" disabled class="w-full py-2.5 bg-gray-300 text-white rounded-lg font-semibold text-sm cursor-not-allowed transition-all" style="display:none;">BWA speichern</button>';
     html += '</div>';  // close bwaFormFields
     html += '</div></div>';
     var c = document.createElement('div'); c.id = 'bwaUploadContainer'; c.innerHTML = html; document.body.appendChild(c);
+
+    // Define _bwaRecalc after DOM is created (script tags in innerHTML don't execute)
+    window._bwaRecalc = function() {
+        var v = function(id) { return parseFloat((document.getElementById(id)||{}).value) || 0; };
+        var u = v('bwaF_umsatz'), we = v('bwaF_wareneinsatz');
+        var pk = v('bwaF_personal'), rk = v('bwaF_raum'), wk = v('bwaF_werbe');
+        var wa = v('bwaF_warenabgabe'), ab = v('bwaF_abschreibung'), so = v('bwaF_sonstige');
+        var zi = v('bwaF_zins');
+        var roh = u + we;
+        var gk = pk + rk + wk + wa + ab + so;
+        var be = roh + gk;
+        var ev = be + zi;
+        var fmt = function(n) { return n.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}); };
+        var set = function(id, n) {
+            var e = document.getElementById(id);
+            if(e) { e.textContent = fmt(n); e.style.color = n >= 0 ? '#16a34a' : '#ef4444'; }
+        };
+        set('bwaF_rohertrag', roh);
+        set('bwaF_gesamtkosten', gk);
+        set('bwaF_betriebsergebnis', be);
+        set('bwaF_ergebnis', ev);
+    };
+    // Live recalc on any input change
+    c.addEventListener('input', function(e) {
+        if(e.target && e.target.classList.contains('bwa-field')) window._bwaRecalc();
+    });
 }
 
 export function handleBwaFileSelect(input) {
