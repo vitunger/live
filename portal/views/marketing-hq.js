@@ -32,7 +32,8 @@ async function renderHqMarketing() {
     var container = document.getElementById('hqMarketingContent');
     if (!container) return;
 
-    // Monatsdaten ermitteln (auto-select letzter Monat mit Daten)
+    // Standorte + Monatsdaten laden
+    if (typeof window.mktLoadStandorte === 'function') await window.mktLoadStandorte();
     await window.mktInitMonthSelect();
 
     // Tabs rendern
@@ -46,10 +47,17 @@ async function renderHqMarketing() {
 
     var expertToggle = typeof window.mktRenderExpertToggle === 'function' ? window.mktRenderExpertToggle() : '';
 
+    var standortFilter = typeof window.mktRenderStandortFilter === 'function' ? window.mktRenderStandortFilter() : '';
+    var yearSelector = typeof window.mktRenderYearSelector === 'function' ? window.mktRenderYearSelector() : '';
+
     container.innerHTML =
         '<div class="flex items-center justify-between mb-2 flex-wrap gap-2">' +
-            '<div>' + expertToggle + '</div>' +
-            '<div class="flex items-center gap-2"><span class="text-xs text-gray-400">Zeitraum:</span>' + monthSelector + '</div>' +
+            '<div class="flex items-center gap-3">' + expertToggle + '</div>' +
+            '<div class="flex items-center gap-2 flex-wrap">' +
+                '<span class="text-xs text-gray-400">Standort:</span>' + standortFilter +
+                '<span class="text-xs text-gray-400 ml-2">Zeitraum:</span>' + monthSelector +
+                '<span class="text-xs text-gray-400 ml-2">Jahr:</span>' + yearSelector +
+            '</div>' +
         '</div>' +
         '<div class="mb-6 border-b border-gray-200"><nav class="-mb-px flex space-x-6 overflow-x-auto">' + tabHtml + '</nav></div>' +
         '<div id="hqMktTabContent"></div>';
@@ -571,6 +579,13 @@ function renderHqAdsTab(el, platform, title, subtitle) {
 function renderHqLeadReporting(el) {
     var tracking = window.mktState.leadTracking || [];
     var vbs = window.mktState.vereinbarungen || [];
+    var selectedStandort = window.mktState.selectedStandort;
+
+    // Filter by selected standort if set
+    if (selectedStandort) {
+        tracking = tracking.filter(function(t) { return t.standort_id === selectedStandort; });
+        vbs = vbs.filter(function(v) { return v.standort_id === selectedStandort; });
+    }
 
     var totalZiel = vbs.reduce(function(s,v) { return s + Number(v.max_leads || 0); }, 0);
     var zielMonat = Math.round(totalZiel / 12);
@@ -596,27 +611,116 @@ function renderHqLeadReporting(el) {
     var ytdSoll = Math.round(totalZiel * m.month / 12);
     var ytdPct = ytdSoll > 0 ? Math.round(ytdLeads / ytdSoll * 100) : 0;
 
-    // Titel + Lead-Typen-Toggle im selben Flex-Container (Mockup-Struktur)
-    var html = '<div class="flex justify-between items-start flex-wrap gap-3 mb-6">' +
+    // Live-Daten Banner
+    var html = typeof window.mktRenderLiveBanner === 'function' ? window.mktRenderLiveBanner(leadType) : '';
+
+    // Titel + Lead-Typen-Toggle
+    html += '<div class="flex justify-between items-start flex-wrap gap-3 mb-6">' +
         '<div><h2 class="text-xl font-bold text-gray-800 mb-1">Lead Reporting \u2013 Netzwerk</h2>' +
         '<p class="text-sm text-gray-500">Jahresziel-Tracking und Lead-Qualit\u00e4t</p></div>' +
         '<div class="flex flex-wrap gap-2">' +
-        '<button class="mkt-lead-pill active" onclick="mktSetLeadType(this,\'kombi\')">Kombi</button>' +
-        '<button class="mkt-lead-pill" onclick="mktSetLeadType(this,\'regulaer\')">Leads Regul\u00e4r</button>' +
-        '<button class="mkt-lead-pill" onclick="mktSetLeadType(this,\'store_visits\')">Store-Visits 25%</button>' +
-        '<button class="mkt-lead-pill" onclick="mktSetLeadType(this,\'anzeige_sv\')">Anzeige-Store-Visits</button>' +
+        '<button class="mkt-lead-pill' + (leadType === 'kombi' ? ' active' : '') + '" onclick="mktSetLeadType(this,'kombi')">Kombi</button>' +
+        '<button class="mkt-lead-pill' + (leadType === 'regulaer' ? ' active' : '') + '" onclick="mktSetLeadType(this,'regulaer')">Leads Regul\u00e4r</button>' +
+        '<button class="mkt-lead-pill' + (leadType === 'store_visits' ? ' active' : '') + '" onclick="mktSetLeadType(this,'store_visits')">Store-Visits 25%</button>' +
+        '<button class="mkt-lead-pill' + (leadType === 'anzeige_sv' ? ' active' : '') + '" onclick="mktSetLeadType(this,'anzeige_sv')">Anzeige-Store-Visits</button>' +
         '</div></div>';
 
+    // KPI Cards
     html += '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">' +
         window.mktKpiCard('Jahresziel Leads', _fmtN(totalZiel), zielMonat + ' pro Monat Ziel') +
-        window.mktKpiCard('YTD Leads', _fmtN(ytdLeads), 'Soll YTD: ' + _fmtN(ytdSoll)) +
-        window.mktKpiCard('Terminbuchungen', _fmtN(ytdTermine), ytdLeads > 0 ? (Math.round(ytdTermine / ytdLeads * 100) + '% Terminquote') : '\u2013') +
-        window.mktKpiCard('Store Visits (25%)', _fmtN(ytdSV), 'Gewichtet mit Faktor 0,25') +
+        window.mktKpiCard('Ziel YTD (' + m.month + ' Mon.)', _fmtN(ytdSoll), 'Soll bis heute') +
+        window.mktKpiCard('Ist YTD', _fmtN(ytdLeads), 'Erreicht bis heute') +
+        window.mktKpiCard('Performance', ytdPct + '%', 'Zielerreichung') +
         '</div>';
 
-    // Charts
-    html += '<div class="vit-card p-5 mb-6"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Monatliche Lead-Entwicklung vs. Ziel</div>' +
+    // Standort-Performance Pills (kompakt)
+    if (vbs.length > 0 && !selectedStandort) {
+        html += '<div class="vit-card p-5 mb-6"><div class="flex justify-between items-center mb-3">' +
+            '<div class="text-xs font-semibold text-gray-400 uppercase tracking-wider">\ud83d\udccd Standort-Performance YTD</div>' +
+            '<div class="flex items-center gap-2 text-[10px] text-gray-400">' +
+            '<span>\ud83d\udd34 &lt;50%</span><span>\ud83d\udfe0 50-75%</span><span>\ud83d\udfe2 75-100%</span><span>\ud83d\udfe2 \u2265100%</span></div></div>' +
+            '<div class="flex flex-wrap gap-2" id="hqMktStandortPills">';
+        var pillData = vbs.map(function(v) {
+            var ytd = window.mktCalcYTD(v);
+            var pct = leadType === 'kombi' ? ytd.leadsPct : ytd.budgetPct;
+            var sName = v.standorte ? v.standorte.name : '\u2013';
+            return { name: sName, pct: pct };
+        });
+        pillData.sort(function(a, b) { return a.pct - b.pct; });
+        pillData.forEach(function(p) {
+            var dotCls = p.pct >= 100 ? 'bg-green-400' : p.pct >= 75 ? 'bg-green-500' : p.pct >= 50 ? 'bg-yellow-500' : 'bg-red-500';
+            html += '<div class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200 text-xs">' +
+                '<span class="w-2 h-2 rounded-full ' + dotCls + '"></span>' +
+                '<span class="text-gray-700">' + _escH(p.name) + '</span>' +
+                '<span class="font-bold ' + (p.pct >= 75 ? 'text-green-600' : p.pct >= 50 ? 'text-yellow-600' : 'text-red-600') + '">' + p.pct + '%</span></div>';
+        });
+        html += '</div></div>';
+    }
+
+    // Monatliche Uebersicht (Bar Chart Soll vs Ist)
+    html += '<div class="vit-card p-5 mb-6"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">\ud83d\udcca Monatliche \u00dcbersicht</div>' +
         '<div style="height:250px"><canvas id="hqMktLeadChart"></canvas></div></div>';
+
+    // Zielerreichung pro Standort & Monat (Multi-Line Chart) - NEUES FEATURE
+    if (vbs.length > 1 && !selectedStandort) {
+        html += '<div class="vit-card p-5 mb-6"><div class="flex justify-between items-center mb-4">' +
+            '<div><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider">\ud83d\udcc8 Zielerreichung pro Standort & Monat</div>' +
+            '<div class="text-xs text-gray-400 mt-1">Prozentuale Zielerreichung (Ist / Soll \u00d7 100) je Standort</div></div></div>' +
+            '<div style="height:300px"><canvas id="hqMktZielerreichungChart"></canvas></div></div>';
+    }
+
+    // Detailansicht Monatstabelle - NEUES FEATURE
+    html += '<div class="vit-card overflow-hidden mb-6"><div class="px-5 py-4 border-b border-gray-200"><h3 class="text-sm font-semibold text-gray-800">\ud83d\udccb Detailansicht</h3></div>' +
+        '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-50">' +
+        '<th class="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Monat</th>' +
+        '<th class="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Soll</th>' +
+        '<th class="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase text-orange-500">Termine</th>' +
+        '<th class="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase text-green-500">\u20ac/Termin</th>' +
+        '<th class="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase text-purple-500">SV (\u00d70.25)</th>' +
+        '<th class="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase text-yellow-500">SV (Roh)</th>' +
+        '<th class="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase font-bold">Gesamt</th>' +
+        '<th class="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Differenz</th>' +
+        '<th class="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Performance</th>' +
+        '<th class="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Status</th>' +
+        '</tr></thead><tbody class="divide-y divide-gray-100">';
+
+    var MN = window.MKT_MONTH_NAMES;
+    var W = window.MKT_SEASON_WEIGHTS;
+    var ads = window.mktState.adsData || [];
+    MN.forEach(function(mName, i) {
+        var monat = i + 1;
+        var soll = Math.round(totalZiel * W[i] / 100);
+        var mTracking = tracking.filter(function(t) { return t.monat === monat; });
+        var termine = mTracking.reduce(function(s,t) { return s + Number(t.termine_ist || 0); }, 0);
+        var svRoh = mTracking.reduce(function(s,t) { return s + Number(t.store_visits_ist || 0); }, 0);
+        var sv25 = Math.round(svRoh * 0.25 * 10) / 10;
+        var leadsReg = mTracking.reduce(function(s,t) { return s + Number(t.leads_ist || 0); }, 0);
+        var gesamt = leadsReg + sv25;
+        // Ads ausgaben fuer diesen Monat
+        var mAds = ads.filter(function(a) { if (!a.datum) return false; var d = new Date(a.datum); return d.getMonth() === i; });
+        var mSpend = mAds.reduce(function(s,a) { return s + Number(a.ausgaben || 0); }, 0);
+        var euroTermin = termine > 0 ? Math.round(mSpend / termine) : 0;
+        var diff = Math.round((gesamt - soll) * 10) / 10;
+        var perf = soll > 0 ? Math.round(gesamt / soll * 100) : 0;
+        var isActive = monat === m.month;
+        var isFuture = monat > m.month;
+        var statusIcon = isFuture ? '\u23f0' : perf >= 100 ? '\u2705' : perf < 50 ? '\u274c' : '\u26a0\ufe0f';
+        var diffCls = diff >= 0 ? 'text-green-600' : 'text-red-600';
+        var perfCls = perf >= 100 ? 'text-green-600' : perf >= 50 ? 'text-yellow-600' : 'text-red-600';
+        var rowBg = isActive ? ' bg-orange-50' : '';
+        html += '<tr class="hover:bg-gray-50' + rowBg + '">' +
+            '<td class="px-3 py-2.5 font-semibold">' + mName + '</td>' +
+            '<td class="px-3 py-2.5">' + _fmtN(soll) + '</td>' +
+            '<td class="px-3 py-2.5 text-orange-500 font-semibold">' + (isFuture ? '\u2013' : termine) + '</td>' +
+            '<td class="px-3 py-2.5 text-green-600">' + (isFuture || !euroTermin ? '\u2013' : _fmtEur(euroTermin)) + '</td>' +
+            '<td class="px-3 py-2.5 text-purple-600">' + (isFuture ? '\u2013' : sv25) + '</td>' +
+            '<td class="px-3 py-2.5 text-yellow-600">' + (isFuture ? '\u2013' : svRoh) + '</td>' +
+            '<td class="px-3 py-2.5 font-bold">' + (isFuture ? '\u2013' : _fmtN(gesamt)) + '</td>' +
+            '<td class="px-3 py-2.5 ' + (isFuture ? '' : diffCls) + ' font-semibold">' + (isFuture ? '\u2013' : (diff > 0 ? '+' : '') + diff) + '</td>' +
+            '<td class="px-3 py-2.5 ' + (isFuture ? '' : perfCls) + ' font-semibold">' + (isFuture ? '\u2013' : perf + '%') + '</td>' +
+            '<td class="px-3 py-2.5 text-center">' + statusIcon + '</td></tr>';
+    });
+    html += '</tbody></table></div></div>';
 
     // Ampel-Tabelle
     if (vbs.length > 0) {
@@ -634,7 +738,6 @@ function renderHqLeadReporting(el) {
             var sName = v.standorte ? v.standorte.name : '\u2013';
             var jz = v.max_leads || 0;
             var ytdSollV = Math.round(jz * m.month / 12);
-            // Ist aus tracking summieren
             var ytdIstV = tracking.filter(function(t) { return t.standort_id === v.standort_id; })
                 .reduce(function(s, t) { return s + Number(t.leads_ist || 0); }, 0);
             var pct = ytdSollV > 0 ? Math.round(ytdIstV / ytdSollV * 100) : 0;
@@ -649,90 +752,100 @@ function renderHqLeadReporting(el) {
         html += '</tbody></table></div></div>';
     }
 
-    // Live-Leads Tabelle (expert-panel)
-    html += '<div class="expert-panel"><div class="vit-card overflow-hidden mb-6"><div class="px-5 py-4 border-b border-gray-200"><h3 class="text-sm font-semibold text-gray-800">Live-Leads (letzte 20)</h3></div>' +
-        '<div id="hqMktLiveLeads"><div class="p-5 text-sm text-gray-400 text-center">Lade aktuelle Leads...</div></div></div></div>';
+    // Live-Leads mit Filter (PAKET 1: UPGRADE)
+    html += '<div class="vit-card overflow-hidden mb-6"><div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center flex-wrap gap-2">' +
+        '<div class="flex items-center gap-2"><h3 class="text-sm font-semibold text-gray-800">\ud83d\udccb Live-Leads</h3>' +
+        '<span id="hqMktLeadCount" class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500"></span></div>' +
+        '<div class="flex items-center gap-2"><button onclick="mktSortLeads()" class="text-xs px-2 py-1 bg-gray-100 rounded hover:bg-gray-200">\u2195 Neueste zuerst</button>' +
+        '<button onclick="loadLiveLeads()" class="text-xs px-2 py-1 bg-gray-100 rounded hover:bg-gray-200">\u21bb Aktualisieren</button></div></div>' +
+        '<div class="px-5 py-3 border-b border-gray-100 flex flex-wrap gap-2">' +
+        '<select id="hqLeadStandortFilter" onchange="loadLiveLeads()" class="text-xs px-2 py-1 border border-gray-200 rounded bg-white">' +
+        '<option value="">\ud83d\udccd Alle Standorte</option></select>' +
+        '<select id="hqLeadMonatFilter" onchange="loadLiveLeads()" class="text-xs px-2 py-1 border border-gray-200 rounded bg-white">' +
+        '<option value="">\ud83d\udcc5 Alle Monate</option>';
+    var MNF = window.MKT_MONTH_NAMES_FULL;
+    for (var mi = 0; mi < 12; mi++) {
+        html += '<option value="' + (mi + 1) + '">' + MNF[mi] + '</option>';
+    }
+    html += '</select>' +
+        '<input type="text" id="hqLeadSearch" oninput="loadLiveLeads()" placeholder="\ud83d\udd0d Suche nach Name, E-Mail, PLZ..." class="text-xs px-3 py-1 border border-gray-200 rounded bg-white flex-1 min-w-[200px]">' +
+        '</div>' +
+        '<div id="hqMktLiveLeads"><div class="p-5 text-sm text-gray-400 text-center">Lade aktuelle Leads...</div></div></div>';
 
     el.innerHTML = html;
 
-    // Live-Leads async laden
+    // Standort-Filter Optionen befuellen
+    var standortSelect = document.getElementById('hqLeadStandortFilter');
+    if (standortSelect && window.mktState.standorte) {
+        window.mktState.standorte.forEach(function(s) {
+            var opt = document.createElement('option');
+            opt.value = s.id; opt.textContent = s.name;
+            standortSelect.appendChild(opt);
+        });
+    }
+
+    // Live-Leads laden
     loadLiveLeads();
 
-    // Lead Chart
+    // Charts rendern
     setTimeout(function() {
-        var MN = window.MKT_MONTH_NAMES;
-        var C = window.MKT_CHART_COLORS;
-        var zielData = MN.map(function() { return zielMonat; });
-        var istData = MN.map(function(_, i) {
-            return tracking.filter(function(t) { return t.monat === (i + 1); })
-                .reduce(function(s, t) { return s + Number(t.leads_ist || 0); }, 0);
-        });
-        window.mktMakeChart('hqMktLeadChart', {
-            type: 'bar',
-            data: {
-                labels: MN,
-                datasets: [
-                    { label: 'Ziel', data: zielData, backgroundColor: 'rgba(209,213,219,.4)', borderRadius: 6, order: 2 },
-                    { label: 'Ist', data: istData, backgroundColor: C.orange, borderRadius: 6, order: 1 }
-                ]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 12 }, usePointStyle: true, padding: 16 } } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#f3f4f6' } } } }
-        });
+        renderLeadCharts(tracking, vbs, totalZiel, zielMonat, m, leadType);
     }, 50);
 }
 
-// Live-Leads laden (Feature 14)
-async function loadLiveLeads() {
-    var container = document.getElementById('hqMktLiveLeads');
-    if (!container) return;
-    var sb = _sb();
-    if (!sb) { container.innerHTML = '<div class="p-5 text-sm text-gray-400 text-center">Supabase nicht verf\u00fcgbar</div>'; return; }
-    try {
-        var { data, error } = await sb
-            .from('leads')
-            .select('*, standorte(name)')
-            .order('created_at', { ascending: false })
-            .limit(20);
-        if (error || !data || data.length === 0) {
-            container.innerHTML = '<div class="p-5 text-sm text-gray-400 text-center">Keine aktuellen Lead-Daten vorhanden.</div>';
-            return;
-        }
-        var rows = data.map(function(l) {
-            var datum = l.created_at ? new Date(l.created_at).toLocaleDateString('de-DE') : '\u2013';
-            var plz = '\u2013';
-            var standort = _escH(l.standorte ? l.standorte.name : '\u2013');
-            var nameKontakt = _escH((l.vorname || '') + ' ' + (l.nachname || '')).trim() || '\u2013';
-            if (l.email) nameKontakt += '<br><span class="text-xs text-gray-400">' + _escH(l.email) + '</span>';
-            if (l.telefon) nameKontakt += '<br><span class="text-xs text-gray-400">' + _escH(l.telefon) + '</span>';
-            var typ = _escH(l.interesse || '\u2013');
-            var quelle = _escH(l.quelle || '\u2013');
-            var termin = l.letzter_kontakt ? new Date(l.letzter_kontakt).toLocaleDateString('de-DE') : '\u2013';
-            var statusCls = l.status === 'gewonnen' || l.status === 'kontaktiert' ? 'bg-green-100 text-green-700' :
-                l.status === 'neu' || l.status === 'offen' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600';
-            var statusTxt = _escH(l.status || 'unbekannt');
-            return '<tr class="hover:bg-gray-50"><td class="px-4 py-3 text-sm">' + datum + '</td>' +
-                '<td class="px-4 py-3 text-sm">' + plz + '</td>' +
-                '<td class="px-4 py-3 text-sm">' + standort + '</td>' +
-                '<td class="px-4 py-3 text-sm font-semibold">' + nameKontakt + '</td>' +
-                '<td class="px-4 py-3 text-sm">' + typ + '</td>' +
-                '<td class="px-4 py-3 text-sm">' + quelle + '</td>' +
-                '<td class="px-4 py-3 text-sm">' + termin + '</td>' +
-                '<td class="px-4 py-3 text-sm"><span class="text-xs px-2 py-1 rounded-full font-semibold ' + statusCls + '">' + statusTxt + '</span></td></tr>';
-        }).join('');
+function renderLeadCharts(tracking, vbs, totalZiel, zielMonat, m, leadType) {
+    var MN = window.MKT_MONTH_NAMES;
+    var C = window.MKT_CHART_COLORS;
+    var W = window.MKT_SEASON_WEIGHTS;
 
-        container.innerHTML = '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-50">' +
-            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Datum</th>' +
-            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">PLZ</th>' +
-            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Standort</th>' +
-            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Name / Kontakt</th>' +
-            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Typ</th>' +
-            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Quelle</th>' +
-            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Termin</th>' +
-            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Status</th>' +
-            '</tr></thead><tbody class="divide-y divide-gray-100">' + rows + '</tbody></table></div>';
-    } catch(e) {
-        container.innerHTML = '<div class="p-5 text-sm text-gray-400 text-center">Fehler beim Laden: ' + _escH(e.message) + '</div>';
+    // Monatliche Uebersicht (Soll vs Ist)
+    var sollData = MN.map(function(_, i) { return Math.round(totalZiel * W[i] / 100); });
+    var istData = MN.map(function(_, i) {
+        var mT = tracking.filter(function(t) { return t.monat === (i + 1); });
+        if (leadType === 'kombi') return mT.reduce(function(s,t) { return s + Number(t.leads_ist || 0); }, 0);
+        if (leadType === 'regulaer') return mT.reduce(function(s,t) { return s + Number(t.leads_ist || 0) - Number(t.store_visits_ist || 0); }, 0);
+        if (leadType === 'store_visits') return mT.reduce(function(s,t) { return s + Math.round(Number(t.store_visits_ist || 0) * 0.25); }, 0);
+        return mT.reduce(function(s,t) { return s + Number(t.store_visits_ist || 0); }, 0);
+    });
+    window.mktMakeChart('hqMktLeadChart', {
+        type: 'bar',
+        data: { labels: MN, datasets: [
+            { label: 'Soll', data: sollData, backgroundColor: 'rgba(209,213,219,.4)', borderRadius: 6, order: 2 },
+            { label: 'Ist', data: istData, backgroundColor: C.orange, borderRadius: 6, order: 1 }
+        ] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 12 }, usePointStyle: true, padding: 16 } }, annotation: { annotations: { currentMonth: { type: 'line', xMin: m.month - 1, xMax: m.month - 1, borderColor: '#EF4444', borderWidth: 1, borderDash: [4, 4] } } } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#f3f4f6' } } } }
+    });
+
+    // Zielerreichung Multi-Line Chart (NEUES FEATURE)
+    var canvas = document.getElementById('hqMktZielerreichungChart');
+    if (canvas && vbs.length > 1) {
+        var colors = [C.orange, C.blue, C.green, '#8B5CF6', '#EC4899', '#EAB308', '#14B8A6', '#F97316', '#6366F1', '#84CC16', '#F43F5E', '#0EA5E9', '#A855F7', '#D946EF', '#10B981', '#F59E0B', '#3B82F6', '#EF4444', '#8B5CF6', '#06B6D4', '#F97316', '#22C55E'];
+        var datasets = vbs.slice(0, 22).map(function(v, vi) {
+            var sName = v.standorte ? v.standorte.name : 'Standort ' + vi;
+            var data = MN.map(function(_, i) {
+                var monat = i + 1;
+                if (monat > m.month) return null;
+                var soll = Math.round((v.max_leads || 0) * W[i] / 100);
+                var ist = tracking.filter(function(t) { return t.standort_id === v.standort_id && t.monat === monat; })
+                    .reduce(function(s,t) { return s + Number(t.leads_ist || 0); }, 0);
+                return soll > 0 ? Math.round(ist / soll * 100) : 0;
+            });
+            return { label: sName, data: data, borderColor: colors[vi % colors.length], backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 2, tension: 0.3 };
+        });
+        // 100% reference line
+        datasets.push({ label: '100% Ziel', data: MN.map(function() { return 100; }), borderColor: '#EF4444', borderWidth: 1.5, borderDash: [6, 4], pointRadius: 0, fill: false });
+
+        window.mktMakeChart('hqMktZielerreichungChart', {
+            type: 'line',
+            data: { labels: MN, datasets: datasets },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, usePointStyle: true, padding: 8, boxWidth: 8 } } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#f3f4f6' }, ticks: { callback: function(v) { return v + '%'; } } } } }
+        });
     }
+}
+
+function mktSortLeads() {
+    window.mktState._leadSortAsc = !window.mktState._leadSortAsc;
+    loadLiveLeads();
 }
 
 // Lead-Typen-Toggle (Feature 13)
@@ -783,6 +896,38 @@ function renderHqBudgetPlan(el) {
             '<div class="text-xs text-gray-500 mt-1">' + k.s + '</div></div>';
     });
     html += '</div></div>';
+
+    // Channel Budget Overview Cards (NEUES FEATURE)
+    var mMonth = window.mktGetCurrentMonth();
+    var daysInMonth = new Date(mMonth.year, mMonth.month, 0).getDate();
+    var daysPassed = Math.min(new Date().getDate(), daysInMonth);
+    var googleMonthBudget = Math.round(totalBudget / 12 * (splitPct / 100));
+    var metaMonthBudget = Math.round(totalBudget / 12 * ((100 - splitPct) / 100));
+    var googleHochr = daysPassed > 0 ? Math.round(googleSpend / daysPassed * daysInMonth) : 0;
+    var metaHochr = daysPassed > 0 ? Math.round(metaSpend / daysPassed * daysInMonth) : 0;
+    var googlePct = googleMonthBudget > 0 ? Math.round(googleSpend / googleMonthBudget * 100) : 0;
+    var metaPct = metaMonthBudget > 0 ? Math.round(metaSpend / metaMonthBudget * 100) : 0;
+
+    html += '<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">';
+    // Google Card
+    html += '<div class="vit-card p-5 border-l-4 border-yellow-500"><div class="flex justify-between items-start mb-3">' +
+        '<div class="text-sm font-bold text-gray-800">\ud83d\udfe0 Google Ads (' + splitPct + '% Split)</div></div>' +
+        '<div class="text-xs text-gray-500 mb-1">Budget ' + window.MKT_MONTH_NAMES_FULL[mMonth.month - 1] + ':</div>' +
+        '<div class="text-xl font-bold text-yellow-600 mb-2">' + _fmtEur(googleMonthBudget) + '</div>' +
+        '<div class="text-xs text-gray-500">Ausgegeben: <strong>' + _fmtEur(Math.round(googleSpend)) + '</strong></div>' +
+        '<div class="text-xs text-gray-500">\u2192 Hochrechnung: <strong>~' + _fmtEur(googleHochr) + '</strong></div>' +
+        '<div class="mt-3">' + window.mktProgressBar(googlePct, 6) + '</div>' +
+        '<div class="text-[10px] text-gray-400 mt-1">' + googlePct + '% verbraucht (' + daysPassed + '/' + daysInMonth + ' Tage)</div></div>';
+    // Meta Card
+    html += '<div class="vit-card p-5 border-l-4 border-blue-500"><div class="flex justify-between items-start mb-3">' +
+        '<div class="text-sm font-bold text-gray-800">\ud83d\udfe6 Meta Ads (' + (100 - splitPct) + '% Split)</div></div>' +
+        '<div class="text-xs text-gray-500 mb-1">Budget ' + window.MKT_MONTH_NAMES_FULL[mMonth.month - 1] + ':</div>' +
+        '<div class="text-xl font-bold text-blue-600 mb-2">' + _fmtEur(metaMonthBudget) + '</div>' +
+        '<div class="text-xs text-gray-500">Ausgegeben: <strong>' + _fmtEur(Math.round(metaSpend)) + '</strong></div>' +
+        '<div class="text-xs text-gray-500">\u2192 Hochrechnung: <strong>~' + _fmtEur(metaHochr) + '</strong></div>' +
+        '<div class="mt-3">' + window.mktProgressBar(metaPct, 6) + '</div>' +
+        '<div class="text-[10px] text-gray-400 mt-1">' + metaPct + '% verbraucht (' + daysPassed + '/' + daysInMonth + ' Tage)</div></div>';
+    html += '</div>';
 
     // Budget pro Standort Tabelle (Mockup-Spalten: Standort, Status, Monatsbudget, Ausgegeben%, Hochrechnung, Google, Meta)
     if (vbs.length > 0) {
@@ -837,6 +982,20 @@ function renderHqBudgetPlan(el) {
         '<div class="text-xl font-bold mt-1" style="color:#3B82F6">' + _fmtEur(Math.round(metaSpend)) + '</div>' +
         '<div class="text-xs text-gray-500 mt-1">' + (100 - splitPct) + '% Split \u00b7 YTD</div></div></div>' +
         '<div style="height:200px"><canvas id="mktSpendTrendDual"></canvas></div></div>';
+
+    // Budget Edit Button
+    html += '<div class="flex justify-end mb-4"><button onclick="mktOpenBudgetEditModal()" class="text-sm px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 transition font-semibold">\u270f\ufe0f Budgets bearbeiten</button></div>';
+
+    // Budget Edit Modal (hidden)
+    html += '<div id="mktBudgetEditModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="if(event.target===this)this.classList.add('hidden')">' +
+        '<div class="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">' +
+        '<div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold text-gray-800">Jahresbudgets bearbeiten</h3>' +
+        '<button onclick="document.getElementById('mktBudgetEditModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>' +
+        '<select id="mktBudgetEditStandort" onchange="mktLoadBudgetForStandort(this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-4">' +
+        '<option value="">Standort ausw\u00e4hlen...</option></select>' +
+        '<div id="mktBudgetEditFields"></div>' +
+        '<button onclick="mktSaveBudgetEdit()" class="w-full mt-4 px-4 py-3 bg-vit-orange text-white rounded-lg font-semibold hover:bg-orange-600 transition">\ud83d\udcbe \u00c4nderungen speichern</button>' +
+        '</div></div>';
 
     // E-Mail-Benachrichtigungen (Mockup: Email-Adressen anzeigen)
     html += '<div class="vit-card p-5 mb-6 border-l-4 border-vit-orange">' +
@@ -982,6 +1141,75 @@ function mktHqDownloadPDF(type, vereinbarungId) {
     }
 }
 
+
+// ── Budget Edit Modal Functions ──
+
+function mktOpenBudgetEditModal() {
+    var modal = document.getElementById('mktBudgetEditModal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    var sel = document.getElementById('mktBudgetEditStandort');
+    if (sel) {
+        sel.innerHTML = '<option value="">Standort ausw\u00e4hlen...</option>';
+        (window.mktState.vereinbarungen || []).forEach(function(v) {
+            var name = v.standorte ? v.standorte.name : '\u2013';
+            sel.innerHTML += '<option value="' + v.standort_id + '">' + _escH(name) + '</option>';
+        });
+    }
+    document.getElementById('mktBudgetEditFields').innerHTML = '<p class="text-sm text-gray-400 text-center py-8">Bitte Standort ausw\u00e4hlen</p>';
+}
+
+function mktLoadBudgetForStandort(standortId) {
+    var fields = document.getElementById('mktBudgetEditFields');
+    if (!fields || !standortId) { if (fields) fields.innerHTML = '<p class="text-sm text-gray-400 text-center py-8">Bitte Standort ausw\u00e4hlen</p>'; return; }
+    var vb = (window.mktState.vereinbarungen || []).find(function(v) { return v.standort_id === standortId; });
+    if (!vb) { fields.innerHTML = '<p class="text-sm text-gray-400 text-center">Keine Vereinbarung gefunden</p>'; return; }
+    var W = vb.saison_gewichtung || window.MKT_SEASON_WEIGHTS;
+    var MNF = window.MKT_MONTH_NAMES_FULL;
+    var html = '<div class="flex justify-between items-center mb-3"><span class="text-sm text-gray-500">Jahresbudget:</span><span class="text-lg font-bold text-vit-orange">' + window.mktFmtEur(vb.budget_jahr) + '</span></div>';
+    html += '<div class="grid grid-cols-2 gap-3">';
+    MNF.forEach(function(name, i) {
+        var mBudget = Math.round(vb.budget_jahr * W[i] / 100);
+        html += '<div><label class="text-xs text-gray-500">' + name + '</label>' +
+            '<input type="number" id="mktBudgetM' + (i+1) + '" value="' + mBudget + '" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm mt-1" /></div>';
+    });
+    html += '</div>';
+    fields.innerHTML = html;
+}
+
+async function mktSaveBudgetEdit() {
+    var standortId = document.getElementById('mktBudgetEditStandort').value;
+    if (!standortId) { if (typeof window.showToast === 'function') window.showToast('Bitte Standort ausw\u00e4hlen', 'error'); return; }
+    var vb = (window.mktState.vereinbarungen || []).find(function(v) { return v.standort_id === standortId; });
+    if (!vb) return;
+    // Neue Gewichtung berechnen
+    var newWeights = [];
+    var totalBudget = 0;
+    for (var i = 1; i <= 12; i++) {
+        var el = document.getElementById('mktBudgetM' + i);
+        totalBudget += Number(el ? el.value : 0);
+    }
+    for (var i = 1; i <= 12; i++) {
+        var el = document.getElementById('mktBudgetM' + i);
+        var val = Number(el ? el.value : 0);
+        newWeights.push(totalBudget > 0 ? Math.round(val / totalBudget * 100) : Math.round(100/12));
+    }
+    try {
+        var sb = _sb();
+        var { error } = await sb.from('marketing_vereinbarungen').update({
+            saison_gewichtung: newWeights,
+            budget_jahr: totalBudget
+        }).eq('standort_id', standortId).eq('jahr', window.mktState.selectedYear || new Date().getFullYear());
+        if (error) throw error;
+        if (typeof window.showToast === 'function') window.showToast('Budget gespeichert!', 'success');
+        document.getElementById('mktBudgetEditModal').classList.add('hidden');
+        window.mktState._hqDataLoaded = false;
+        renderHqMktTabContent('budgetPlan');
+    } catch(e) {
+        if (typeof window.showToast === 'function') window.showToast('Fehler: ' + e.message, 'error');
+    }
+}
+
 // ── Window Exports ──
 window.renderHqMarketing = renderHqMarketing;
 window.renderHqMktTabContent = renderHqMktTabContent;
@@ -989,6 +1217,10 @@ window.showHqMktTab = showHqMktTab;
 window.mktHqFilterTable = mktHqFilterTable;
 window.mktHqDownloadPDF = mktHqDownloadPDF;
 window.mktSetLeadType = mktSetLeadType;
+window.mktSortLeads = mktSortLeads;
+window.mktOpenBudgetEditModal = mktOpenBudgetEditModal;
+window.mktLoadBudgetForStandort = mktLoadBudgetForStandort;
+window.mktSaveBudgetEdit = mktSaveBudgetEdit;
 
 
 })();
