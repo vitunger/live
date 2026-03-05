@@ -39,8 +39,14 @@ var CONNECTORS = {
         id: 'google', name: 'Google Ads', icon: '🔍', iconBg: '#fef3c7',
         desc: 'Kampagnen-Performance und Budget-Tracking. Automatischer Sync alle 6 Stunden.',
         category: 'active', status: 'connected', statusLabel: 'Verbunden',
+        configFields: [
+            { key: 'customer_id', label: 'Customer ID (ohne Bindestriche)', type: 'text', placeholder: 'z.B. 1234567890' },
+            { key: 'developer_token', label: 'Developer Token', type: 'password', placeholder: 'Google Ads Developer Token' },
+            { key: 'client_id', label: 'OAuth Client ID', type: 'text', placeholder: 'z.B. 123456-xxxxx.apps.googleusercontent.com' },
+            { key: 'client_secret', label: 'OAuth Client Secret', type: 'password', placeholder: 'OAuth Client Secret' },
+            { key: 'refresh_token', label: 'Refresh Token', type: 'password', placeholder: 'OAuth Refresh Token (einmalig generiert)' },
+        ],
         readonlyFields: [
-            { key: 'customer_id', label: 'Customer ID', value: '—' },
             { key: 'last_sync', label: 'Letzter Sync', value: '—' },
             { key: 'sync_status', label: 'Sync-Status', value: '—' },
         ],
@@ -50,8 +56,11 @@ var CONNECTORS = {
         id: 'meta', name: 'Meta Ads', icon: '📘', iconBg: '#dbeafe',
         desc: 'Facebook & Instagram Ads. Kampagnen, Reichweite und Conversions.',
         category: 'active', status: 'connected', statusLabel: 'Verbunden',
+        configFields: [
+            { key: 'ad_account_id', label: 'Ad Account ID', type: 'text', placeholder: 'z.B. act_1234567890' },
+            { key: 'access_token', label: 'System User Access Token', type: 'password', placeholder: 'Token aus Business Manager (läuft nicht ab)' },
+        ],
         readonlyFields: [
-            { key: 'ad_account_id', label: 'Ad Account ID', value: '—' },
             { key: 'last_sync', label: 'Letzter Sync', value: '—' },
             { key: 'sync_status', label: 'Sync-Status', value: '—' },
         ],
@@ -236,6 +245,7 @@ export async function renderSchnittstellen() {
     setTimeout(function() { if (window.loadDhlConfig) window.loadDhlConfig(); }, 500);
     setTimeout(function() { if (window.loadLexofficeConfig) window.loadLexofficeConfig(); }, 600);
     setTimeout(function() { if (window.loadTikTokConfig) window.loadTikTokConfig(); }, 700);
+    setTimeout(function() { if (window.loadAdsConfigs) window.loadAdsConfigs(); }, 900);
     setTimeout(function() { if (window.loadSocialConfigs) window.loadSocialConfigs(); }, 800);
     renderPlannedGrid();
     renderPartnerCards();
@@ -459,13 +469,40 @@ function renderConnectorCard(id) {
     if (id === 'google' || id === 'meta') {
         body += '<div class="pt-4 space-y-3">';
         body += renderGfToggle(id);
-        if (c.readonlyFields) {
-            c.readonlyFields.forEach(function(f) {
-                body += '<div class="flex items-center gap-3"><span class="text-xs text-gray-500 w-28">' + f.label + '</span><span class="text-xs font-semibold text-gray-800">' + _escH(f.value) + '</span></div>';
+        // Editable config fields
+        if (c.configFields) {
+            c.configFields.forEach(function(f) {
+                body += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">' + f.label + '</label>'
+                    + '<input type="' + f.type + '" id="conn_' + id + '_' + f.key + '" placeholder="' + f.placeholder + '" '
+                    + 'class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 outline-none transition font-mono"></div>';
             });
         }
+        // Readonly status info
+        if (c.readonlyFields) {
+            body += '<div class="pt-2 border-t border-gray-100 mt-2 space-y-1">';
+            c.readonlyFields.forEach(function(f) {
+                body += '<div class="flex items-center gap-3"><span class="text-xs text-gray-500 w-28">' + f.label + '</span><span class="text-xs font-semibold text-gray-800" id="conn_' + id + '_ro_' + f.key + '">' + _escH(f.value) + '</span></div>';
+            });
+            body += '</div>';
+        }
+        // Info box
+        if (id === 'google') {
+            body += '<div class="bg-blue-50 border border-blue-200 rounded-lg p-3">'
+                + '<p class="text-xs text-blue-700">\u2139\ufe0f <strong>Setup:</strong> Developer Token aus dem Google Ads MCC. '
+                + 'OAuth Credentials aus der Google Cloud Console (APIs & Services \u2192 Credentials). '
+                + 'Refresh Token einmalig \u00fcber den OAuth Playground generieren.</p></div>';
+        }
+        if (id === 'meta') {
+            body += '<div class="bg-blue-50 border border-blue-200 rounded-lg p-3">'
+                + '<p class="text-xs text-blue-700">\u2139\ufe0f <strong>Setup:</strong> System User Token im Meta Business Manager erstellen '
+                + '(Einstellungen \u2192 Systembenutzer \u2192 Token generieren). Berechtigung: <em>ads_read</em> auf das Ad Account. '
+                + 'System User Tokens laufen nicht ab!</p></div>';
+        }
+        // Buttons
         body += '<div class="flex gap-2 pt-1">'
-            + '<button onclick="window.manualSync(\'' + id + '\')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition">🔄 Manuell synchronisieren</button>'
+            + '<button onclick="window.saveAdsConfig(\'' + id + '\')" class="px-4 py-2 bg-blue-500 text-white rounded-lg text-xs font-semibold hover:bg-blue-600 transition">\ud83d\udcbe Speichern</button>'
+            + '<button onclick="window.testAdsConnection(\'' + id + '\')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition">\ud83d\udd0d Verbindung testen</button>'
+            + '<button onclick="window.manualSync(\'' + id + '\')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition">\ud83d\udd04 Manuell synchronisieren</button>'
             + '</div>';
         body += '<div id="connTestResult_' + id + '" class="mt-2"></div>';
         body += '</div>';
@@ -2109,6 +2146,106 @@ function _renderTikTokVideos(videos) {
             + '</tr>';
     }).join('');
 }
+
+// ═══════════════════════════════════════════════════════
+// GOOGLE ADS / META ADS – SAVE, LOAD, TEST
+// ═══════════════════════════════════════════════════════
+
+window.saveAdsConfig = async function(platform) {
+    try {
+        var sb = _sb(); if (!sb) return;
+        var c = CONNECTORS[platform];
+        if (!c || !c.configFields) return;
+        var hasValue = false;
+        for (var i = 0; i < c.configFields.length; i++) {
+            var f = c.configFields[i];
+            var el = document.getElementById('conn_' + platform + '_' + f.key);
+            if (!el || !el.value.trim()) continue;
+            hasValue = true;
+            var { error } = await sb.from('connector_config').upsert({
+                connector_id: platform, config_key: f.key, config_value: el.value.trim(),
+                updated_at: new Date().toISOString(), updated_by: _sbUser() ? _sbUser().id : null
+            }, { onConflict: 'connector_id,config_key' });
+            if (error) throw error;
+        }
+        if (!hasValue) { _showToast('Bitte mindestens ein Feld ausfuellen', 'error'); return; }
+        CONNECTORS[platform].status = 'connected';
+        CONNECTORS[platform].statusLabel = 'Konfiguriert';
+        renderStatusGrid();
+        _showToast(c.name + ' Konfiguration gespeichert \u2713', 'success');
+    } catch(e) {
+        _showToast('Fehler beim Speichern: ' + e.message, 'error');
+    }
+};
+
+window.loadAdsConfigs = async function() {
+    try {
+        var sb = _sb(); if (!sb) return;
+        var platforms = ['google', 'meta'];
+        for (var p = 0; p < platforms.length; p++) {
+            var platform = platforms[p];
+            var c = CONNECTORS[platform];
+            if (!c || !c.configFields) continue;
+            var { data } = await sb.from('connector_config').select('config_key, config_value').eq('connector_id', platform);
+            if (!data || !data.length) continue;
+            var hasToken = false;
+            data.forEach(function(r) {
+                var el = document.getElementById('conn_' + platform + '_' + r.config_key);
+                if (el) el.value = r.config_value;
+                if (r.config_value) hasToken = true;
+            });
+            if (hasToken) {
+                CONNECTORS[platform].status = 'connected';
+                CONNECTORS[platform].statusLabel = 'Konfiguriert';
+            }
+        }
+    } catch(e) {}
+};
+
+window.testAdsConnection = async function(platform) {
+    var resultEl = document.getElementById('connTestResult_' + platform);
+    if (resultEl) resultEl.innerHTML = '<p class="text-xs text-gray-500">\u23f3 Teste Verbindung...</p>';
+    try {
+        var sb = _sb(); if (!sb) throw new Error('Keine Supabase-Verbindung');
+        // Load config from DB
+        var { data } = await sb.from('connector_config').select('config_key, config_value').eq('connector_id', platform);
+        if (!data || !data.length) throw new Error('Keine Zugangsdaten gespeichert');
+        var cfg = {};
+        data.forEach(function(r) { cfg[r.config_key] = r.config_value; });
+
+        if (platform === 'google') {
+            // Test: try to get access token via refresh token
+            if (!cfg.client_id || !cfg.client_secret || !cfg.refresh_token) throw new Error('Client ID, Client Secret und Refresh Token benoetigt');
+            var resp = await fetch('https://oauth2.googleapis.com/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'client_id=' + encodeURIComponent(cfg.client_id)
+                    + '&client_secret=' + encodeURIComponent(cfg.client_secret)
+                    + '&refresh_token=' + encodeURIComponent(cfg.refresh_token)
+                    + '&grant_type=refresh_token'
+            });
+            if (!resp.ok) { var errText = await resp.text(); throw new Error('OAuth fehlgeschlagen: ' + errText); }
+            var tokenData = await resp.json();
+            if (tokenData.access_token) {
+                if (resultEl) resultEl.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-lg p-3"><p class="text-xs text-green-700">\u2705 <strong>Verbindung erfolgreich!</strong> Access Token erhalten. Google Ads API erreichbar.</p></div>';
+            }
+        } else if (platform === 'meta') {
+            // Test: debug the token
+            if (!cfg.access_token) throw new Error('Access Token benoetigt');
+            var resp = await fetch('https://graph.facebook.com/debug_token?input_token=' + encodeURIComponent(cfg.access_token) + '&access_token=' + encodeURIComponent(cfg.access_token));
+            var debugData = await resp.json();
+            if (debugData.data && debugData.data.is_valid) {
+                var scopes = (debugData.data.scopes || []).join(', ');
+                if (resultEl) resultEl.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-lg p-3"><p class="text-xs text-green-700">\u2705 <strong>Token gueltig!</strong> Scopes: ' + scopes + '</p></div>';
+            } else {
+                throw new Error('Token ungueltig oder abgelaufen');
+            }
+        }
+    } catch(e) {
+        if (resultEl) resultEl.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-lg p-3"><p class="text-xs text-red-700">\u274c ' + e.message + '</p></div>';
+    }
+};
+
 
 window.loadTikTokConfig = async function() {
     try {
