@@ -285,3 +285,14 @@ security: RLS/JWT/Auth-Verbesserung
   Shown in collapsible `<details open>` block above the form fields so user can compare KI-values vs original.
   Max-height 12rem with scroll for large files.
 
+### BWA Learning System (2026-03-05)
+- **New table `bwa_training_examples`:** standort_id, format, monat, jahr, raw_text, final_values (JSONB).
+  Created on every BWA save with user-confirmed values + the raw Excel text.
+- **Few-shot learning:** On upload, the last 2 training examples for the same standort are loaded
+  and sent to the KI as context ("Lernbeispiele"). The KI uses these to understand the standort's
+  specific BWA structure (e.g., Steuerberater uses non-standard DATEV layout).
+- **Edge Function v22:** New `training_examples` field in meta, injected as few-shot context in prompt.
+- **UX hint:** Blue box above Kennzahlen: "Kontrolliere die Werte und korrigiere sie bei Bedarf.
+  Das System lernt aus deinen Korrekturen und wird beim nächsten Upload genauer."
+- **Flow:** Upload → Parser → KI (with training examples) → User corrects → Save → Training example stored → Next upload is smarter
+
