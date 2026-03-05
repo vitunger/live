@@ -908,3 +908,16 @@ Neue Module werden direkt in TypeScript gebaut, hinter modul_status = deaktivier
 - **Bestehende Basis:** banking_connections, banking_balances, banking_transactions, banking_manual_entries bereits vorhanden. UI-Tab mit manuellem Eintrag + finAPI-Placeholder live.
 - **Masterplan:** v3.0 erstellt (05.03.2026), Go-Live Gesamtaufwand ~183h / ~61 Sessions
 - 2026-03-05: Marketing-Modul v2: react-marketing.jsx durch 3 ES-Module ersetzt (marketing.js, marketing-partner.js, marketing-hq.js). Partner: 7 Tabs (Uebersicht, Vereinbarung 2026, Meta Ads, Google Ads, Brand-Reichweite, Socialmedia, Glossar). HQ: 7 Tabs (Netzwerk-Uebersicht, Vereinbarungen, Meta Ads Gesamt, Google Ads Gesamt, Lead Reporting, Budget Plan, Video-Freigabe). DB: marketing_vereinbarungen + marketing_lead_tracking + marketing-docs Bucket. Seed-Daten: Berlin-Brandenburg + Witten. SQL-Migration: supabase/migrations/20260305_marketing_module.sql (muss noch ausgefuehrt werden).
+
+
+### Billing-Day Feature (März 2026)
+- `billing_products.billing_day` (integer 1-28, default 1): Definiert den Abrechnungstag pro Produkt
+- Grundgebühr + Umsatzbeteiligung + Tools → billing_day = 1 (1. des Monats)
+- Marketing-Budget → billing_day = 15 (15. des Monats)
+- Pro Standort können mehrere Rechnungen pro Monat entstehen (eine pro billing_day)
+- `billing_invoices.billing_day` speichert den Tag der jeweiligen Rechnung
+- Rechnungsnummer-Suffix: Tag 1 = normal, Tag 15 = `-15` (z.B. `VB-202603-1001-15`)
+- Edge Function `billing` v16: `generate-monthly-drafts` iteriert über alle billing_days
+- Neue Actions: `get-billing-days`, `update-product-billing-day`
+- HQ Produkte-Tab zeigt `billing_day` als Spalte an
+- Standort-Kostenrechner zeigt die Aufteilung nach Abrechnungstag (1. + 15.)
