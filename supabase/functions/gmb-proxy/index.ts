@@ -1,9 +1,6 @@
 // gmb-proxy Edge Function
-// Proxied Google Business Profile API calls (CORS-blocked in browser)
-// Endpoints:
-//   POST /gmb-proxy  { action: 'overview', account_id?, api_key? }
-//   POST /gmb-proxy  { action: 'reviews', account_id?, location_id?, api_key? }
-//   POST /gmb-proxy  { action: 'locations', account_id?, api_key? }
+// Uses Google Service Account JWT for Business Profile API authentication
+// POST /gmb-proxy { action: 'locations' | 'insights', account_id?, location_name? }
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -13,139 +10,118 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const GMB_BASE = "https://mybusinessbusinessinformation.googleapis.com/v1";
-const GMB_REVIEWS_BASE = "https://mybusiness.googleapis.com/v4";
-
-// ─── Helper: Get GMB config ───
-async function getGmbConfig() {
+async function getConfig() {
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
-  const { data } = await admin
-    .from("connector_config")
-    .select("connector_key, config_value")
-    .in("connector_key", ["gmb_account_id", "gmb_api_key"]);
+  // Get GMB config
+  const { data: gmbData } = await admin.from("connector_config")
+    .select("config_key, config_value")
+    .eq("connector_id", "gmb");
+  // Get service account from analytics config
+  const { data: saData } = await admin.from("connector_config")
+    .select("config_key, config_value")
+    .eq("connector_id", "analytics")
+    .in("config_key", ["service_account_email", "service_account_key"]);
 
-  const map: Record<string, string> = {};
-  (data || []).forEach((r: any) => { map[r.connector_key] = r.config_value; });
-  return map;
+  const gmb: Record<string, string> = {};
+  (gmbData || []).forEach((r: any) => { gmb[r.config_key] = r.config_value; });
+  const sa: Record<string, string> = {};
+  (saData || []).forEach((r: any) => { sa[r.config_key] = r.config_value; });
+  return { gmb, sa };
 }
 
-// ─── Helper: GMB API request ───
-async function gmbRequest(path: string, apiKey: string, baseUrl = GMB_BASE) {
-  const sep = path.includes("?") ? "&" : "?";
-  const resp = await fetch(`${baseUrl}/${path}${sep}key=${apiKey}`, {
-    headers: { "Content-Type": "application/json" },
+async function getServiceAccountToken(clientEmail: string, privateKeyPem: string): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    iss: clientEmail, sub: clientEmail,
+    aud: "https://oauth2.googleapis.com/token",
+    iat: now, exp: now + 3600,
+    scope: "https://www.googleapis.com/auth/business.manage",
+  };
+  const pemClean = privateKeyPem
+    .replace("-----BEGIN PRIVATE KEY-----", "")
+    .replace("-----END PRIVATE KEY-----", "")
+    .replace(/\s/g, "");
+  const keyBytes = Uint8Array.from(atob(pemClean), c => c.charCodeAt(0));
+  const cryptoKey = await crypto.subtle.importKey(
+    "pkcs8", keyBytes,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false, ["sign"]
+  );
+  const header = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" })).replace(/=/g,"").replace(/\+/g,"-").replace(/\//g,"_");
+  const body = btoa(JSON.stringify(payload)).replace(/=/g,"").replace(/\+/g,"-").replace(/\//g,"_");
+  const sigInput = new TextEncoder().encode(`${header}.${body}`);
+  const sigBytes = await crypto.subtle.sign({ name: "RSASSA-PKCS1-v1_5" }, cryptoKey, sigInput);
+  const sig = btoa(String.fromCharCode(...new Uint8Array(sigBytes))).replace(/=/g,"").replace(/\+/g,"-").replace(/\//g,"_");
+  const jwt = `${header}.${body}.${sig}`;
+
+  const tokenResp = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`,
   });
-  if (!resp.ok) {
-    const err = await resp.text();
-    throw new Error(`GMB API ${resp.status}: ${err}`);
-  }
-  return resp.json();
+  const tokenData = await tokenResp.json();
+  if (!tokenData.access_token) throw new Error("Token error: " + JSON.stringify(tokenData));
+  return tokenData.access_token;
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const body = await req.json();
-    const { action } = body;
-    const config = await getGmbConfig();
+    const { action = "locations", location_name } = await req.json().catch(() => ({}));
+    const { gmb, sa } = await getConfig();
 
-    const accountId = body.account_id || config.gmb_account_id || Deno.env.get("GMB_ACCOUNT_ID") || "";
-    const apiKey = body.api_key || config.gmb_api_key || Deno.env.get("GMB_API_KEY") || "";
-
-    if (!accountId || !apiKey) {
-      return Response.json({
-        error: "Business Account ID und API Key erforderlich. Bitte unter Schnittstellen → Google My Business eintragen."
-      }, { status: 400, headers: corsHeaders });
+    if (!sa.service_account_email || !sa.service_account_key) {
+      return new Response(JSON.stringify({ error: "Service Account nicht konfiguriert" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
 
-    // Normalize account ID format
-    const normalizedAccountId = accountId.startsWith("accounts/") ? accountId : `accounts/${accountId}`;
+    const accountId = gmb.account_id || "accounts/5412113097";
+    const accessToken = await getServiceAccountToken(sa.service_account_email, sa.service_account_key);
 
-    // ── Action: locations (alle Standorte des Accounts) ─────────────
     if (action === "locations") {
-      const data = await gmbRequest(`${normalizedAccountId}/locations?readMask=name,title,websiteUri,regularHours,metadata`, apiKey);
-      const locations = (data.locations || []).map((loc: any) => ({
-        name: loc.name,
-        title: loc.title || "Unbekannt",
-        website: loc.websiteUri || "",
-        location_id: loc.name?.split("/").pop() || "",
-      }));
-      return Response.json({ locations }, { headers: corsHeaders });
-    }
-
-    // ── Action: reviews (Bewertungen für einen Standort) ────────────
-    if (action === "reviews") {
-      const locationId = body.location_id;
-      if (!locationId) return Response.json({ error: "location_id fehlt" }, { status: 400, headers: corsHeaders });
-
-      const locationPath = locationId.startsWith("accounts/") ? locationId : `${normalizedAccountId}/locations/${locationId}`;
-
-      // Google My Business API v4 for reviews
-      const data = await gmbRequest(`${locationPath}/reviews?pageSize=10`, apiKey, GMB_REVIEWS_BASE);
-
-      const reviews = (data.reviews || []).map((r: any) => ({
-        reviewer: r.reviewer?.displayName || "Anonym",
-        rating: r.starRating || "FIVE",
-        stars: { ONE: 1, TWO: 2, THREE: 3, FOUR: 4, FIVE: 5 }[r.starRating as string] || 5,
-        comment: r.comment || "",
-        reply: r.reviewReply?.comment ? "✓ Beantwortet" : "—",
-        date: r.createTime ? new Date(r.createTime).toLocaleDateString("de-DE") : "—",
-      }));
-
-      // Calculate average rating
-      const avgRating = reviews.length
-        ? (reviews.reduce((sum: number, r: any) => sum + r.stars, 0) / reviews.length).toFixed(1)
-        : "—";
-
-      return Response.json({
-        reviews,
-        total_reviews: data.totalReviewCount || reviews.length,
-        avg_rating: avgRating,
-      }, { headers: corsHeaders });
-    }
-
-    // ── Action: overview (Insights für einen Standort) ───────────────
-    if (action === "overview") {
-      // First get locations
-      const locData = await gmbRequest(`${normalizedAccountId}/locations?readMask=name,title,metadata`, apiKey);
-      const locations = locData.locations || [];
-
-      if (!locations.length) {
-        return Response.json({ error: "Keine Standorte gefunden für diesen Account" }, { status: 404, headers: corsHeaders });
+      const resp = await fetch(
+        `https://mybusinessbusinessinformation.googleapis.com/v1/${accountId}/locations?readMask=name,title,storefrontAddress,websiteUri,regularHours,metadata,profile`,
+        { headers: { "Authorization": `Bearer ${accessToken}` } }
+      );
+      if (!resp.ok) {
+        const err = await resp.text();
+        throw new Error(`GMB API ${resp.status}: ${err}`);
       }
-
-      // Get reviews for first location as overview
-      const firstLocation = locations[0];
-      const locationId = firstLocation.name?.split("/").pop() || "";
-      const locationPath = `${normalizedAccountId}/locations/${locationId}`;
-
-      let reviewSummary = { avg_rating: "—", total_reviews: 0 };
-      try {
-        const reviewData = await gmbRequest(`${locationPath}/reviews?pageSize=1`, apiKey, GMB_REVIEWS_BASE);
-        const total = reviewData.totalReviewCount || 0;
-        const avg = reviewData.averageRating || 0;
-        reviewSummary = { avg_rating: avg ? avg.toFixed(1) : "—", total_reviews: total };
-      } catch (_) { /* reviews API might need extra permissions */ }
-
-      return Response.json({
-        account_name: firstLocation.title || normalizedAccountId,
-        locations_count: locations.length,
-        avg_rating: reviewSummary.avg_rating,
-        total_reviews: reviewSummary.total_reviews,
-        locations: locations.map((l: any) => ({
-          id: l.name?.split("/").pop(),
-          title: l.title,
-        })),
-      }, { headers: corsHeaders });
+      const data = await resp.json();
+      return new Response(JSON.stringify(data), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
 
-    return Response.json({ error: `Unbekannte Action: ${action}` }, { status: 400, headers: corsHeaders });
+    if (action === "insights" && location_name) {
+      const endTime = new Date().toISOString();
+      const startTime = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+      const resp = await fetch(
+        `https://businessprofileperformance.googleapis.com/v1/${location_name}:fetchMultiDailyMetricsTimeSeries?dailyMetrics=BUSINESS_IMPRESSIONS_DESKTOP_MAPS&dailyMetrics=BUSINESS_IMPRESSIONS_MOBILE_MAPS&dailyMetrics=CALL_CLICKS&dailyMetrics=WEBSITE_CLICKS&dailyRange.start_date.year=${new Date(startTime).getFullYear()}&dailyRange.start_date.month=${new Date(startTime).getMonth()+1}&dailyRange.start_date.day=${new Date(startTime).getDate()}&dailyRange.end_date.year=${new Date(endTime).getFullYear()}&dailyRange.end_date.month=${new Date(endTime).getMonth()+1}&dailyRange.end_date.day=${new Date(endTime).getDate()}`,
+        { headers: { "Authorization": `Bearer ${accessToken}` } }
+      );
+      if (!resp.ok) {
+        const err = await resp.text();
+        throw new Error(`GMB Insights ${resp.status}: ${err}`);
+      }
+      const data = await resp.json();
+      return new Response(JSON.stringify(data), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
 
-  } catch (e: any) {
-    return Response.json({ error: e.message }, { status: 500, headers: corsHeaders });
+    return new Response(JSON.stringify({ error: "Unbekannte Action" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+
+  } catch (e) {
+    return new Response(JSON.stringify({ error: e.message }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
   }
 });
