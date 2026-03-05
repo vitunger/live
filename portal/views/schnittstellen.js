@@ -1760,20 +1760,47 @@ window.saveSocialConfig = async function(platform) {
     if (!c || !c.oauthFields) return;
     try {
         var sb = _sb(); if (!sb) return;
-        var profile = _sbProfile(); if (!profile) return;
+        // Get selected standort from dropdown
+        var selectEl = document.getElementById(platform + '_standort_select');
+        var standortId = selectEl ? selectEl.value : null;
+        if (!standortId) standortId = null; // HQ-level
+        var hasValue = false;
         for (var i = 0; i < c.oauthFields.length; i++) {
             var f = c.oauthFields[i];
             var el = document.getElementById(platform + '_field_' + f.key);
             if (!el || !el.value.trim()) continue;
-            await sb.from('connector_config').upsert({
-                standort_id: profile.standort_id || null,
-                connector_key: platform + '_' + f.key,
-                config_value: el.value.trim()
-            }, { onConflict: 'standort_id,connector_key' });
+            hasValue = true;
+            // Check if entry exists (COALESCE unique index)
+            var query = sb.from('connector_config')
+                .select('id')
+                .eq('connector_id', platform)
+                .eq('config_key', f.key);
+            if (standortId) { query = query.eq('standort_id', standortId); }
+            else { query = query.is('standort_id', null); }
+            var { data: existing } = await query.maybeSingle();
+            if (existing) {
+                await sb.from('connector_config').update({
+                    config_value: el.value.trim(),
+                    updated_at: new Date().toISOString(),
+                    updated_by: _sbUser() ? _sbUser().id : null
+                }).eq('id', existing.id);
+            } else {
+                await sb.from('connector_config').insert({
+                    connector_id: platform,
+                    config_key: f.key,
+                    config_value: el.value.trim(),
+                    standort_id: standortId,
+                    updated_at: new Date().toISOString(),
+                    updated_by: _sbUser() ? _sbUser().id : null
+                });
+            }
         }
-        CONNECTORS[platform].status = 'planned';
-        CONNECTORS[platform].statusLabel = 'Konfiguriert';
-        _showToast(c.name + ' gespeichert ✓', 'success');
+        if (!hasValue) { _showToast('Bitte mindestens ein Feld ausfuellen', 'error'); return; }
+        // Reload standort overview
+        if (window.loadSocialStandortOverview) window.loadSocialStandortOverview(platform);
+        var sName = '';
+        if (selectEl && selectEl.selectedIndex >= 0) sName = selectEl.options[selectEl.selectedIndex].text;
+        _showToast(c.name + (sName ? ' (' + sName + ')' : '') + ' gespeichert \u2713', 'success');
     } catch(e) {
         _showToast('Fehler beim Speichern: ' + e.message, 'error');
     }
