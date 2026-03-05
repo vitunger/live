@@ -52,12 +52,16 @@ async function renderHqMarketing() {
         '<div class="mb-6 border-b border-gray-200"><nav class="-mb-px flex space-x-6 overflow-x-auto">' + tabHtml + '</nav></div>' +
         '<div id="hqMktTabContent"></div>';
 
-    // Daten laden
-    await Promise.all([
-        window.mktLoadAlleVereinbarungen(),
-        window.mktLoadAdsData(null),
-        window.mktLoadLeadTracking(null)
-    ]);
+    // Daten laden (nur wenn noch nicht gecacht)
+    var state = window.mktState || {};
+    if (!state.adsData || state.adsData.length === 0 || !state._lastMonth || state._lastMonth !== (window.mktGetCurrentMonth ? window.mktGetCurrentMonth() : {}).month) {
+        await Promise.all([
+            window.mktLoadAlleVereinbarungen(),
+            window.mktLoadAdsData(null),
+            window.mktLoadLeadTracking(null)
+        ]);
+        if (window.mktState) window.mktState._lastMonth = (window.mktGetCurrentMonth ? window.mktGetCurrentMonth() : {}).month;
+    }
 
     // Ersten Tab rendern
     renderHqMktTabContent('uebersicht');
