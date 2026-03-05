@@ -42,7 +42,9 @@ function statusBadge(status, map) {
 
 async function renderEinkaufV2() {
   const isHQ = window.sbProfile?.is_hq === true;
-  const container = document.getElementById('view-einkauf');
+  // Container je nach Rolle: HQ bekommt hq-Container, Partner den partner-Container
+  const containerId = isHQ ? 'view-einkauf-hq' : 'view-einkauf-partner';
+  const container = document.getElementById(containerId);
   if (!container) return;
 
   container.innerHTML = `
