@@ -61,26 +61,22 @@ export async function loadBwaList() {
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
         var query = _sb().from('bwa_daten').select('id,monat,jahr,umsatzerloese,rohertrag,ergebnis_vor_steuern,datei_name,datei_url,created_at').order('jahr', {ascending:false}).order('monat', {ascending:false});
         if(stdId && !_sbProfile().is_hq) {
-            // Gruppen-BWA: prüfen ob Standort in einer Gruppe mit gemeinsamer BWA
+            // Firma-BWA: prüfen ob Standort gemeinsame_bwa hat
             try {
-                var grpResp = await _sb().from('standort_gruppe_mitglieder')
-                    .select('gruppe_id, gemeinsame_bwa')
-                    .eq('standort_id', stdId);
-                var grpData = (!grpResp.error && grpResp.data && grpResp.data.length > 0) ? grpResp.data[0] : null;
-                if (grpData && grpData.gemeinsame_bwa) {
-                    // Alle Standort-IDs der Gruppe holen
-                    var mitglResp = await _sb().from('standort_gruppe_mitglieder')
-                        .select('standort_id')
-                        .eq('gruppe_id', grpData.gruppe_id);
-                    var gruppenIds = (!mitglResp.error && mitglResp.data)
-                        ? mitglResp.data.map(function(m){ return m.standort_id; })
+                var stdResp = await _sb().from('standorte')
+                    .select('firma_name, gemeinsame_bwa').eq('id', stdId).single();
+                var stdData = stdResp.data;
+                if (stdData && stdData.gemeinsame_bwa && stdData.firma_name) {
+                    var firmaResp = await _sb().from('standorte')
+                        .select('id').eq('firma_name', stdData.firma_name);
+                    var gruppenIds = (!firmaResp.error && firmaResp.data)
+                        ? firmaResp.data.map(function(s){ return s.id; })
                         : [stdId];
                     query = query.in('standort_id', gruppenIds);
                 } else {
                     query = query.eq('standort_id', stdId);
                 }
             } catch(e) {
-                // Fallback: nur eigener Standort
                 query = query.eq('standort_id', stdId);
             }
         }
@@ -431,16 +427,16 @@ export async function loadBwaTrend(stdId, jahr) {
     try {
         var query = _sb().from('bwa_daten').select('monat,umsatzerloese,rohertrag,gesamtkosten,ergebnis_vor_steuern').eq('jahr', jahr).order('monat');
         if(stdId) {
-            // Gruppen-BWA für Trend-Chart
+            // Firma-BWA für Trend-Chart
             try {
-                var tGrpResp = await _sb().from('standort_gruppe_mitglieder')
-                    .select('gruppe_id, gemeinsame_bwa').eq('standort_id', stdId);
-                var tGrp = (!tGrpResp.error && tGrpResp.data && tGrpResp.data.length > 0) ? tGrpResp.data[0] : null;
-                if (tGrp && tGrp.gemeinsame_bwa) {
-                    var tMitglResp = await _sb().from('standort_gruppe_mitglieder')
-                        .select('standort_id').eq('gruppe_id', tGrp.gruppe_id);
-                    var tIds = (!tMitglResp.error && tMitglResp.data)
-                        ? tMitglResp.data.map(function(m){ return m.standort_id; }) : [stdId];
+                var tStdResp = await _sb().from('standorte')
+                    .select('firma_name, gemeinsame_bwa').eq('id', stdId).single();
+                var tStd = tStdResp.data;
+                if (tStd && tStd.gemeinsame_bwa && tStd.firma_name) {
+                    var tFirmaResp = await _sb().from('standorte')
+                        .select('id').eq('firma_name', tStd.firma_name);
+                    var tIds = (!tFirmaResp.error && tFirmaResp.data)
+                        ? tFirmaResp.data.map(function(s){ return s.id; }) : [stdId];
                     query = query.in('standort_id', tIds);
                 } else {
                     query = query.eq('standort_id', stdId);
