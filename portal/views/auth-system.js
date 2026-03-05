@@ -1037,7 +1037,10 @@ export async function loadPipelineFromSupabase() {
 try {
     if(typeof verkaufData === 'undefined' && !window.verkaufData) { console.warn('Pipeline: verkaufData not yet available'); return; }
     var _vd = (typeof verkaufData !== 'undefined') ? verkaufData : window.verkaufData;
-    var resp = await _sb().from('leads').select('*').order('created_at', { ascending: false });
+    var q = _sb().from('leads').select('*').order('created_at', { ascending: false });
+    var _prof = _sbProfile();
+    if (_prof && !_prof.is_hq && _prof.standort_id) { q = q.eq('standort_id', _prof.standort_id); }
+    var resp = await q;
     if(resp.error) throw resp.error;
     var stageMap = { 'neu':'lead','kontaktiert':'termin','angebot':'angebot','verhandlung':'schwebend','schwebend':'schwebend','gewonnen':'verkauft','verloren':'verloren','gold':'gold' };
     _vd.pipeline = (resp.data||[]).map(function(l,i) {
