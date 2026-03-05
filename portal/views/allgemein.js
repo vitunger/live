@@ -95,7 +95,12 @@ export async function loadJahresziele() {
         var query = _sb().from('partner_jahresziele').select('*')
             .eq('jahr', allgemeinJahr)
             .order('sortierung', {ascending: true});
-        if (_sbProfile() && !_sbProfile().is_hq) query = query.eq('standort_id', _sbProfile().standort_id);
+        if (_sbProfile() && !_sbProfile().is_hq) {
+            var jzStdId = _sbProfile().standort_id;
+            var jzGrpIds = await _getGruppenStandortIds(jzStdId);
+            if (jzGrpIds) { query = query.in('standort_id', jzGrpIds); }
+            else { query = query.eq('standort_id', jzStdId); }
+        }
         var res = await query;
         if (res.error) throw res.error;
         allgemeinJahresziele = res.data || [];
@@ -250,7 +255,12 @@ export async function toggleSoftTarget(id, checked) {
 export async function loadMonatsplan() {
     try {
         var query = _sb().from('partner_monatsplan').select('*').eq('jahr', allgemeinJahr).order('monat',{ascending:true});
-        if (_sbProfile() && !_sbProfile().is_hq) query = query.eq('standort_id', _sbProfile().standort_id);
+        if (_sbProfile() && !_sbProfile().is_hq) {
+            var mpStdId = _sbProfile().standort_id;
+            var mpGrpIds = await _getGruppenStandortIds(mpStdId);
+            if (mpGrpIds) { query = query.in('standort_id', mpGrpIds); }
+            else { query = query.eq('standort_id', mpStdId); }
+        }
         var res = await query;
         if (res.error) throw res.error;
         allgemeinMonatsplan = res.data || [];
