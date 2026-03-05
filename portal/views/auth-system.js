@@ -724,39 +724,6 @@ if(_sbProfile() && _sbProfile().is_hq) {
 }
 // Sync all auth state to window for cross-module access
 
-// =====================================================
-// STANDORT-SWITCHER
-// =====================================================
-export function switchStandort(selectEl) {
-    var selectedOpt = selectEl.options[selectEl.selectedIndex];
-    if (!selectedOpt || !selectedOpt.value) return;
-    var newId = selectedOpt.value;
-    var newName = selectedOpt.dataset.name || selectedOpt.text;
-    var newSlug = selectedOpt.dataset.slug || '';
-    var newPremium = selectedOpt.dataset.premium === 'true';
-
-    // sbStandort updaten
-    window.sbStandort = { id: newId, name: newName, slug: newSlug, is_premium: newPremium };
-    if (window.sbProfile) window.sbProfile.standort_id = newId;
-    window.currentLocation = newSlug || newName.toLowerCase();
-    window.isPremium = newPremium;
-
-    // locationDisplay updaten
-    var ld = document.getElementById('locationDisplay');
-    if (ld) ld.textContent = newName;
-    var ldm = document.getElementById('locationDisplayMobile');
-    if (ldm) ldm.textContent = newName;
-
-    // Alle Module neu laden: aktuellen View neu rendern
-    if (typeof window.showView === 'function' && window._currentView) {
-        window.showView(window._currentView);
-    }
-    if (typeof window.showToast === 'function') {
-        window.showToast('📍 Standort gewechselt: ' + newName, 'success');
-    }
-}
-window.switchStandort = switchStandort;
-
 window.sbUser = sbUser; window.sbProfile = sbProfile; window.sbRollen = sbRollen;
 window.sbStandort = sbStandort; window.currentRole = currentRole; window.currentRoles = currentRoles;
 window.currentStandortId = currentStandortId; window.currentLocation = currentLocation;
@@ -784,7 +751,6 @@ try {
 } catch(e) { console.warn('[MultiStandort] Konnte user_standorte nicht laden:', e.message); window.sbStandortIds = []; }
 }
 
-
 // =====================================================
 // STANDORT-SWITCHER
 // =====================================================
@@ -811,6 +777,8 @@ export function switchStandort(selectEl) {
     }
 }
 window.switchStandort = switchStandort;
+
+
 
 
 // ======================================================
