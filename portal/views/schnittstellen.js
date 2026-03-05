@@ -952,10 +952,35 @@ window.toggleConnCard = async function(id) {
     
     renderActiveCards();
     
-    // Load eTermin dynamic content after DOM is ready
-    if (id === 'etermin' && openCards[id]) {
-        loadEterminOverview();
-        if (_sbProfile() && _sbProfile().is_hq) loadEterminMapping();
+    // Load data into fields after DOM is ready (card just opened)
+    if (openCards[id]) {
+        // Google Ads / Meta Ads
+        if (id === 'google' || id === 'meta') {
+            setTimeout(function() { if (window.loadAdsConfigs) window.loadAdsConfigs(); }, 100);
+        }
+        // Social connectors
+        var socialPlatforms = ['instagram', 'facebook', 'youtube', 'gmb', 'analytics'];
+        if (socialPlatforms.indexOf(id) >= 0) {
+            setTimeout(function() {
+                if (window.loadSocialForStandort) {
+                    var selectEl = document.getElementById(id + '_standort_select');
+                    var sid = selectEl ? selectEl.value : '';
+                    window.loadSocialForStandort(id, sid || null);
+                }
+                if (window.loadSocialStandortOverview) window.loadSocialStandortOverview(id);
+            }, 100);
+        }
+        // DHL
+        if (id === 'dhl') setTimeout(function() { if (window.loadDhlConfig) window.loadDhlConfig(); }, 100);
+        // lexoffice
+        if (id === 'lexoffice') setTimeout(function() { if (window.loadLexofficeConfig) window.loadLexofficeConfig(); }, 100);
+        // TikTok
+        if (id === 'tiktok') setTimeout(function() { if (window.loadTikTokConfig) window.loadTikTokConfig(); }, 100);
+        // eTermin
+        if (id === 'etermin') {
+            loadEterminOverview();
+            if (_sbProfile() && _sbProfile().is_hq) loadEterminMapping();
+        }
     }
 };
 
@@ -2112,25 +2137,32 @@ window.loadSocialConfigs = async function() {
             var platform = platforms[p];
             var c = CONNECTORS[platform];
             if (!c || !c.oauthFields) continue;
-            // Try new pattern: connector_id based
+            // Check if ANY config exists for this platform (any standort)
             var { data } = await sb.from('connector_config')
                 .select('config_key, config_value, standort_id')
                 .eq('connector_id', platform);
             if (data && data.length) {
-                // Load first available config into fields (HQ-level first, then any standort)
+                var hasValue = data.some(function(r) { return !!r.config_value; });
+                if (hasValue) {
+                    var standortCount = {};
+                    data.forEach(function(r) { standortCount[r.standort_id || 'hq'] = true; });
+                    var cnt = Object.keys(standortCount).length;
+                    CONNECTORS[platform].status = 'connected';
+                    CONNECTORS[platform].statusLabel = cnt + (cnt === 1 ? ' Konfiguration' : ' Konfigurationen');
+                }
+                // Populate fields if DOM exists (card is open)
                 var hqData = data.filter(function(r) { return !r.standort_id; });
                 var firstData = hqData.length ? hqData : data;
                 firstData.forEach(function(r) {
                     var el = document.getElementById(platform + '_field_' + r.config_key);
                     if (el) el.value = r.config_value;
                 });
-                // Set dropdown to matching standort if applicable
-                if (!hqData.length && data[0].standort_id) {
-                    var selectEl = document.getElementById(platform + '_standort_select');
-                    if (selectEl) selectEl.value = data[0].standort_id;
-                }
+            } else {
+                CONNECTORS[platform].status = 'disconnected';
+                CONNECTORS[platform].statusLabel = 'Nicht verbunden';
             }
         }
+        renderStatusGrid();
     } catch(e) {}
 }
 
@@ -2339,23 +2371,23 @@ window.loadAdsConfigs = async function() {
             var platform = platforms[p];
             var c = CONNECTORS[platform];
             if (!c || !c.configFields) continue;
-            var { data } = await sb.from('connector_config').select('config_key, config_value').eq('connector_id', platform);
+            var { data } = await sb.from('connector_config')
+                .select('config_key, config_value')
+                .eq('connector_id', platform)
+                .is('standort_id', null);
             var hasCredentials = false;
             if (data && data.length) {
                 data.forEach(function(r) {
+                    if (r.config_value) hasCredentials = true;
+                    // Try to populate field if it exists in DOM
                     var el = document.getElementById('conn_' + platform + '_' + r.config_key);
                     if (el) el.value = r.config_value;
-                    if (r.config_value) hasCredentials = true;
                 });
             }
             if (hasCredentials) {
-                // Credentials vorhanden – Status aus ads_accounts beibehalten oder 'Konfiguriert'
-                if (CONNECTORS[platform].status !== 'connected' || CONNECTORS[platform].statusLabel === 'Verbunden') {
-                    CONNECTORS[platform].status = 'connected';
-                    CONNECTORS[platform].statusLabel = 'Verbunden';
-                }
+                CONNECTORS[platform].status = 'connected';
+                CONNECTORS[platform].statusLabel = 'Verbunden';
             } else {
-                // Keine Credentials → immer 'Nicht konfiguriert'
                 CONNECTORS[platform].status = 'disconnected';
                 CONNECTORS[platform].statusLabel = 'Nicht konfiguriert';
             }
