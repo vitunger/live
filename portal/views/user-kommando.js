@@ -395,7 +395,7 @@ export async function removeZugriff(entryId) {
     document.getElementById('standortDetailModal') && openStandortDetail(_stdDetailId);
 }
 
-const _exports = { showKommandoTab, filterKzStandorte, filterKzMa, renderKzStandorte, renderKzMitarbeiter, openBetaUsers, openStandortDetail, createUndJoinGruppe, joinExistingGruppe, removeStandortFromGruppe, updateGruppeSetting, addZugriff, removeZugriffModal, filterBetaUserList, addBetaUser, removeBetaUser };
+const _exports = { showKommandoTab, filterKzStandorte, filterKzMa, renderKzStandorte, renderKzMitarbeiter, openBetaUsersModal, openStandortDetail, createUndJoinGruppe, joinExistingGruppe, removeStandortFromGruppe, updateGruppeSetting, addZugriff, removeZugriffModal, filterBetaUserList, addBetaUser, removeBetaUser };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 window.openStandortDetail = openStandortDetail;
 window.createUndJoinGruppe = createUndJoinGruppe;
