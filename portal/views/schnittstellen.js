@@ -1619,14 +1619,48 @@ window.testLexofficeConnection = async function() {
     }
 };
 
-window.manualSync = function(id) {
+window.manualSync = async function(id) {
     var el = document.getElementById('connTestResult_' + id);
     if (el) el.innerHTML = '<span class="text-xs text-gray-400 animate-pulse">🔄 Synchronisiere...</span>';
     addLog(id, 'info', 'Manueller Sync gestartet');
 
-    // Simulate sync (TODO: Replace with Edge Function call)
+    // Google Ads + Meta Ads: echte Edge Function aufrufen mit JWT
+    if (id === 'google' || id === 'meta') {
+        try {
+            var sb = _sb();
+            if (!sb) throw new Error('Keine Supabase-Verbindung');
+            var sessionRes = await sb.auth.getSession();
+            var token = sessionRes && sessionRes.data && sessionRes.data.session ? sessionRes.data.session.access_token : null;
+            if (!token) throw new Error('Nicht eingeloggt \u2013 bitte neu anmelden');
+
+            var fnName = 'sync-' + id + '-ads';
+            var baseUrl = window.SUPABASE_URL || (sb.supabaseUrl || '');
+            var resp = await fetch(baseUrl + '/functions/v1/' + fnName, {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json',
+                    'apikey': window.SUPABASE_ANON_KEY || ''
+                }
+            });
+            var result = await resp.json();
+            if (!resp.ok || !result.success) {
+                throw new Error(result.error || 'Sync fehlgeschlagen (HTTP ' + resp.status + ')');
+            }
+            if (el) el.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-lg p-3"><p class="text-xs text-green-700">\u2705 <strong>Sync erfolgreich!</strong> ' + (result.rows_synced || 0) + ' Datens\u00e4tze synchronisiert' + (result.neue_kampagnen ? ', ' + result.neue_kampagnen + ' neue Kampagnen' : '') + '.</p></div>';
+            addLog(id, 'ok', 'Sync erfolgreich: ' + (result.rows_synced || 0) + ' Zeilen');
+            // Account-Daten neu laden
+            setTimeout(function() { if (typeof loadAdsAccountData === 'function') loadAdsAccountData(); }, 1000);
+        } catch(e) {
+            if (el) el.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-lg p-3"><p class="text-xs text-red-700">\u274c ' + (e.message || String(e)) + '</p></div>';
+            addLog(id, 'err', 'Sync fehlgeschlagen: ' + (e.message || String(e)));
+        }
+        return;
+    }
+
+    // Andere Connectors: Platzhalter
     setTimeout(function() {
-        if (el) el.innerHTML = '<span class="text-xs text-green-600 font-semibold">✅ Sync abgeschlossen</span>';
+        if (el) el.innerHTML = '<span class="text-xs text-green-600 font-semibold">\u2705 Sync abgeschlossen</span>';
         addLog(id, 'ok', 'Sync erfolgreich abgeschlossen');
         setTimeout(function() { if (el) el.innerHTML = ''; }, 4000);
     }, 2000);
