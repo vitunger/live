@@ -785,6 +785,34 @@ try {
 }
 
 
+// =====================================================
+// STANDORT-SWITCHER
+// =====================================================
+export function switchStandort(selectEl) {
+    var selectedOpt = selectEl.options[selectEl.selectedIndex];
+    if (!selectedOpt || !selectedOpt.value) return;
+    var newId = selectedOpt.value;
+    var newName = selectedOpt.dataset.name || selectedOpt.text;
+    var newSlug = selectedOpt.dataset.slug || '';
+    var newPremium = selectedOpt.dataset.premium === 'true';
+    window.sbStandort = { id: newId, name: newName, slug: newSlug, is_premium: newPremium };
+    if (window.sbProfile) window.sbProfile.standort_id = newId;
+    window.currentLocation = newSlug || newName.toLowerCase();
+    window.isPremium = newPremium;
+    var ld = document.getElementById('locationDisplay');
+    if (ld) ld.textContent = newName;
+    var ldm = document.getElementById('locationDisplayMobile');
+    if (ldm) ldm.textContent = newName;
+    if (typeof window.showView === 'function' && window._currentView) {
+        window.showView(window._currentView);
+    }
+    if (typeof window.showToast === 'function') {
+        window.showToast('Standort gewechselt: ' + newName, 'success');
+    }
+}
+window.switchStandort = switchStandort;
+
+
 // ======================================================
 // === DEMO / BETA BADGE SYSTEM ===
 // ======================================================
