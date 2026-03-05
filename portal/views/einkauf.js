@@ -459,13 +459,17 @@ export function initEinkaufModule() {
 
 
 // Strangler Fig
-const _exports = {renderHQDash,renderHQLief,openLiefEditor,saveLief,closeModal,renderHQStrat,renderStSortiment,renderStLief,renderZR,renderStStrat,renderWissen,renderWIht,renderWParts,renderWDb1,renderWKern,renderWVo,reRenderEkTab,showEinkaufTab,showHqEkTab,initEinkaufModule,renderPerfPartner,renderPerfPartnerInPage,addPerfRow,removePerfRow,savePerfDaten,renderHQPerf,loadHQPerfRuecklauf,showHQPerfAuswertung,openHQPerfAbfrageModal,createHQPerfAbfrage,schliesseAbfrage};
+const _exports = {renderHQDash,renderHQLief,openLiefEditor,saveLief,closeModal,renderHQStrat,renderStSortiment,renderStLief,renderZR,renderStStrat,renderWissen,renderWIht,renderWParts,renderWDb1,renderWKern,renderWVo,reRenderEkTab,showEinkaufTab,showHqEkTab,initEinkaufModule,renderPerfPartner,renderPerfPartnerInPage,addPerfRow,removePerfRow,savePerfDaten,renderHQPerf,loadHQPerfRuecklauf,showHQPerfAuswertung,openHQPerfAbfrageModal,createHQPerfAbfrage,schliesseAbfrage,closeHQPerfModal};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // [prod] log removed
 
 // === Window Exports (onclick handlers) ===
 window.showHqEkTab = showHqEkTab;
 
+export function closeHQPerfModal() {
+  var w = document.getElementById('hqPerfModalWrap');
+  if (w) { w.innerHTML = ''; w.style.display = 'none'; }
+}
 
 // ==================== PERFORMANCE ABFRAGE ====================
 // DB-Tabellen: einkauf_performance_abfragen, einkauf_performance_daten
@@ -948,8 +952,8 @@ export async function showHQPerfAuswertung(abfrageId) {
 
 export function openHQPerfAbfrageModal() {
   var thisYear = new Date().getFullYear();
-  var h = '<div class="modal-bg" onclick="if(event.target==this)closeModal()"><div class="modal">';
-  h += '<div class="flex items-center justify-between mb-4"><h2 class="font-bold text-base">➕ Neue Performance-Abfrage</h2><button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-lg">✕</button></div>';
+  var h = '<div class="modal-bg" onclick="if(event.target==this)closeHQPerfModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center"><div class="modal" style="background:#fff;border-radius:12px;padding:24px;width:min(520px,90vw);max-height:90vh;overflow-y:auto">';
+  h += '<div class="flex items-center justify-between mb-4"><h2 class="font-bold text-base">➕ Neue Performance-Abfrage</h2><button onclick="closeHQPerfModal()" class="text-gray-400 hover:text-gray-600 text-lg">✕</button></div>';
   h += '<div class="space-y-3">';
   h += '<div><label class="form-label">Titel der Abfrage</label><input class="form-input" id="hqPerfTitel" value="Performance-Abfrage Geschäftsjahr 2024/25" placeholder="z.B. Performance-Abfrage GJ 2024/25"></div>';
   h += '<div class="form-row"><div><label class="form-label">Zeitraum aktuell (Label)</label><input class="form-input" id="hqPerfAkt" value="09/2024 – 08/2025" placeholder="z.B. 09/2024 – 08/2025"></div>';
@@ -958,10 +962,11 @@ export function openHQPerfAbfrageModal() {
   h += '</div>';
   h += '<div class="flex gap-3 mt-5 pt-4 border-t border-gray-100">';
   h += '<button onclick="createHQPerfAbfrage()" class="vbtn">✅ Abfrage anlegen & öffnen</button>';
-  h += '<button onclick="closeModal()" class="rbtn">Abbrechen</button></div>';
+  h += '<button onclick="closeHQPerfModal()" class="rbtn">Abbrechen</button></div>';
   h += '</div></div>';
-  var modalWrap = document.getElementById('modalWrap');
-  if (modalWrap) { modalWrap.innerHTML = h; modalWrap.style.display = 'block'; }
+  var modalWrap = document.getElementById('hqPerfModalWrap');
+  if (!modalWrap) { modalWrap = document.createElement('div'); modalWrap.id = 'hqPerfModalWrap'; document.body.appendChild(modalWrap); }
+  modalWrap.innerHTML = h; modalWrap.style.display = 'block';
 }
 
 export async function createHQPerfAbfrage() {
@@ -984,7 +989,7 @@ export async function createHQPerfAbfrage() {
 
   if (error) { _showToast('Fehler: ' + error.message, 'error'); return; }
 
-  if (typeof closeModal === 'function') closeModal();
+  closeHQPerfModal();
   _showToast('✅ Abfrage angelegt!', 'success');
 
   // Re-render HQ Perf Tab
