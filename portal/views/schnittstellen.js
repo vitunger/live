@@ -2273,25 +2273,9 @@ window.loadTikTokData = async function() {
     }
 };
 
-function _showTikTokDemoData() { return; /* Demo entfernt */ }
-    var statsArea = document.getElementById('tiktokStatsArea');
-    var el = function(id) { return document.getElementById(id); };
-    // Demo account stats
-    if (el('tiktokDisplayName')) el('tiktokDisplayName').textContent = 'vitbikes (Sandbox/Demo)';
-    if (el('tiktokFollowers')) el('tiktokFollowers').textContent = '1.247';
-    if (el('tiktokLikes')) el('tiktokLikes').textContent = '8.432';
-    if (el('tiktokVideoCount')) el('tiktokVideoCount').textContent = '34';
-    // Demo videos
-    var demoVideos = [
-        { title: 'E-Bike Beratung – So findest du das perfekte Rad', view_count: 12400, like_count: 843, comment_count: 67, share_count: 124, create_time: '2026-02-20' },
-        { title: 'Gravel vs. Trekking – Was passt zu dir?', view_count: 8700, like_count: 612, comment_count: 44, share_count: 89, create_time: '2026-02-14' },
-        { title: 'Frühjahrs-Check: Fahrrad fit machen für die Saison', view_count: 6200, like_count: 390, comment_count: 28, share_count: 55, create_time: '2026-02-07' },
-        { title: 'JobRad erklärt: Wie funktioniert Leasing?', view_count: 21300, like_count: 1820, comment_count: 143, share_count: 340, create_time: '2026-01-30' },
-        { title: 'MTB-Trail Highlight Münster', view_count: 4900, like_count: 278, comment_count: 19, share_count: 41, create_time: '2026-01-22' },
-    ];
-    _renderTikTokVideos(demoVideos);
-    if (statsArea) statsArea.style.display = '';
-    // Demo entfernt
+function _showTikTokDemoData() {
+    // Demo-Daten entfernt
+    return;
 }
 
 function _renderTikTokVideos(videos) {
