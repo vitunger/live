@@ -220,7 +220,7 @@ var PLANNED = [
     { name: 'Microsoft 365', icon: '📧', desc: 'Kalender & Mail', color: '#3b82f6' },
 ];
 
-var openCards = { etermin: true, lexoffice: false, google: false, meta: false, wawi: false, approom: false, dhl: false, tiktok: false, instagram: false, facebook: false, youtube: false, gmb: false, analytics: false };
+var openCards = { etermin: false, lexoffice: false, google: false, meta: false, wawi: false, approom: false, dhl: false, tiktok: false, instagram: false, facebook: false, youtube: false, gmb: false, analytics: false };
 
 // ═══════════════════════════════════════════════════════
 // MAIN RENDER
