@@ -1247,34 +1247,80 @@ var locationDisplay = document.getElementById('locationDisplay');
 var locationDisplayMobile = document.getElementById('locationDisplayMobile');
 var userRoleDisplay = document.getElementById('userRoleDisplay');
 
-var displayLocation = isHQ ? '🏢 HQ – Netzwerk' : locationName;
+var displayLocation = isHQ ? '\uD83C\uDFE2 HQ \u2013 Netzwerk' : locationName;
 if (userRoleText) userRoleText.textContent = roleDisplay;
-if (locationDisplay) locationDisplay.textContent = displayLocation;
-if (locationDisplayMobile) locationDisplayMobile.textContent = displayLocation;
 if (userRoleDisplay) userRoleDisplay.textContent = isHQ ? '' : '';
 
-// Standort-Switcher (nur für Multi-Standort-User)
-var switcherEl = document.getElementById('standortSwitcher');
 var sbIds = window.sbStandortIds || [];
-if (!isHQ && sbIds.length > 1) {
-    if (!switcherEl) {
-        switcherEl = document.createElement('div');
-        switcherEl.id = 'standortSwitcher';
-        switcherEl.className = 'px-3 py-2 border-t border-gray-700';
-        var parent = locationDisplay ? locationDisplay.closest('.px-3') || locationDisplay.parentNode : null;
-        if (parent) parent.after(switcherEl);
+var hasMultiple = !isHQ && sbIds.length > 1;
+
+if (locationDisplay) {
+    if (hasMultiple) {
+        locationDisplay.innerHTML =
+            '<button id="locSwitchBtn" onclick="window._toggleLocDropdown(event)" ' +
+            'class="flex items-center gap-1 text-sm font-semibold text-gray-700 hover:text-vit-orange transition cursor-pointer select-none">' +
+            '<span id="locSwitchLabel">' + _escH(displayLocation) + '</span>' +
+            '<svg class="w-3.5 h-3.5 mt-0.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>' +
+            '</button>';
+    } else {
+        locationDisplay.textContent = displayLocation;
     }
-    var opts = sbIds.map(function(s) {
-        var sel = (window.sbStandort && window.sbStandort.id === s.id) ? ' selected' : '';
-        return '<option value="' + s.id + '" data-slug="' + (s.slug||'') + '" data-name="' + (s.name||'') + '" data-premium="' + (s.is_premium||false) + '"' + sel + '>' + s.name + '</option>';
-    }).join('');
-    switcherEl.innerHTML = '<select id="standortSwitcherSelect" onchange="window.switchStandort(this)" ' +
-        'class="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-xs font-semibold cursor-pointer hover:bg-gray-600 transition">' +
-        opts + '</select>';
-    switcherEl.style.display = '';
-} else if (switcherEl) {
-    switcherEl.style.display = 'none';
 }
+if (locationDisplayMobile) locationDisplayMobile.textContent = displayLocation;
+
+var locDropEl = document.getElementById('locSwitchDropdown');
+if (!locDropEl) {
+    locDropEl = document.createElement('div');
+    locDropEl.id = 'locSwitchDropdown';
+    locDropEl.style.cssText = 'display:none;position:fixed;z-index:9999;background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:200px;padding:6px;';
+    document.body.appendChild(locDropEl);
+}
+
+window._locSwitchTo = function(standortId) {
+    var dd = document.getElementById('locSwitchDropdown');
+    if (dd) dd.style.display = 'none';
+    var fakeSelect = { value: standortId, dataset: {} };
+    var s = (window.sbStandortIds || []).find(function(x){ return x.id === standortId; });
+    if (s) { fakeSelect.dataset.slug = s.slug || ''; fakeSelect.dataset.name = s.name || ''; fakeSelect.dataset.premium = s.is_premium ? '1' : '0'; }
+    window.switchStandort(fakeSelect);
+};
+
+if (hasMultiple) {
+    var dropHtml = sbIds.map(function(s) {
+        var isActive = window.sbStandort && window.sbStandort.id === s.id;
+        var activeStyle = isActive
+            ? 'font-weight:700;color:#EF7D00;background:#FFF7ED;'
+            : 'font-weight:500;color:#374151;background:transparent;';
+        return '<button onclick="window._locSwitchTo(\'' + s.id + '\')" ' +
+            'style="display:block;width:100%;text-align:left;padding:8px 12px;border-radius:8px;font-size:13px;border:none;cursor:pointer;' + activeStyle + '">' +
+            _escH(s.name) + (isActive ? ' \u2713' : '') + '</button>';
+    }).join('');
+    locDropEl.innerHTML = dropHtml;
+}
+
+window._toggleLocDropdown = function(e) {
+    e.stopPropagation();
+    var dd = document.getElementById('locSwitchDropdown');
+    if (!dd) return;
+    if (dd.style.display !== 'none') { dd.style.display = 'none'; return; }
+    var btn = document.getElementById('locSwitchBtn');
+    if (btn) {
+        var rect = btn.getBoundingClientRect();
+        dd.style.top = (rect.bottom + 6) + 'px';
+        dd.style.left = rect.left + 'px';
+    }
+    dd.style.display = 'block';
+    setTimeout(function() {
+        document.addEventListener('click', function _close() {
+            dd.style.display = 'none';
+            document.removeEventListener('click', _close);
+        });
+    }, 0);
+};
+
+var switcherEl = document.getElementById('standortSwitcher');
+if (switcherEl) switcherEl.style.display = 'none';
 
 // Premium Badge
 var premiumBadge = document.getElementById('premiumBadge');
