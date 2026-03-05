@@ -225,6 +225,7 @@ var total = revShareAdvance + baseFee + marketingMonthPlan + toolCosts;
 
 var h = '<div class="vit-card p-6 mb-4">';
 h += '<h3 class="font-bold text-sm mb-4">📊 Monatliche Kostenaufschlüsselung</h3>';
+h += '<div class="flex items-center gap-2 mb-4"><span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">1. des Monats</span><span class="text-xs text-gray-400">Grundgebühr + Umsatzbeteiligung + Tools</span><span class="mx-2 text-gray-300">|</span><span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-semibold">15. des Monats</span><span class="text-xs text-gray-400">Werbebudget</span></div>';
 
 // Hinweise wenn Daten fehlen
 if (!planUmsatzJahr) {
@@ -236,7 +237,8 @@ if (!planMarketingJahr) {
 
 h += '<table class="w-full text-sm">';
 
-// Umsatzbeteiligung
+// Umsatzbeteiligung (billing_day 1)
+h += '<tr><td colspan="2" class="py-2"><span class="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-1 rounded">Abrechnungstag: 1. des Monats</span></td></tr>';
 h += '<tr class="border-b"><td class="py-3">Umsatzbeteiligung (80% Abschlag)</td><td class="py-3 text-right font-semibold">' + fmtEur(revShareAdvance) + '</td></tr>';
 if (planUmsatzJahr) {
     h += '<tr><td class="py-1 text-xs text-gray-400 pl-4" colspan="2">2% × ' + fmtEur(planMonthRevenue) + '/Monat × 80% = ' + fmtEur(revShareAdvance) + '</td></tr>';
@@ -246,7 +248,8 @@ if (planUmsatzJahr) {
 // Grundgebühr
 h += '<tr class="border-b"><td class="py-3">Grundgebühr</td><td class="py-3 text-right font-semibold">' + fmtEur(baseFee) + '</td></tr>';
 
-// Marketing - Plan vs IST
+// Marketing - Plan vs IST (billing_day 15)
+h += '<tr class="border-t-2 border-green-200"><td colspan="2" class="py-2"><span class="text-xs font-semibold text-green-700 bg-green-50 px-2 py-1 rounded">Abrechnungstag: 15. des Monats</span></td></tr>';
 h += '<tr class="border-b"><td class="py-3">Online-Werbebudget <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold ml-1">Durchlaufposten</span></td><td class="py-3 text-right font-semibold">' + fmtEur(marketingMonthPlan) + '</td></tr>';
 if (planMarketingJahr) {
     h += '<tr><td class="py-1 text-xs text-gray-400 pl-4" colspan="2">Plan: ' + fmtEur(planMarketingJahr) + ' p.a. → ' + fmtEur(marketingMonthPlan) + '/Monat</td></tr>';
