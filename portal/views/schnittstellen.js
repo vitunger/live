@@ -1990,16 +1990,14 @@ window.loadSocialData = async function(platform) {
     // ── Google Analytics: via analytics-proxy Edge Function ──────────
     if (platform === 'analytics') {
         var propEl = document.getElementById('analytics_field_property_id');
-        var keyEl2 = document.getElementById('analytics_field_api_key');
         var propertyId = propEl && propEl.value.trim();
-        var apiKey2 = keyEl2 && keyEl2.value.trim();
-        if (propertyId && apiKey2 && sb) {
+        if (propertyId && sb) {
             try {
                 var ovResp = await sb.functions.invoke('analytics-proxy', {
-                    body: { action: 'overview', property_id: propertyId, api_key: apiKey2 }
+                    body: { action: 'overview', days: 30 }
                 });
                 var pagesResp = await sb.functions.invoke('analytics-proxy', {
-                    body: { action: 'top_pages', property_id: propertyId, api_key: apiKey2 }
+                    body: { action: 'top_pages', days: 30 }
                 });
                 if (ovResp.data && !ovResp.error) {
                     var ov = ovResp.data;
