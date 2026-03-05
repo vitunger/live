@@ -165,7 +165,9 @@ export async function saveBwaData() {
 
     if(btn) { btn.disabled=true; btn.textContent='Wird gespeichert...'; }
     try {
-        var stdId = _sbProfile() ? _sbProfile().standort_id : null;
+        // HQ-Upload: Use target standort from hq-finanzen, otherwise user's own standort
+        var stdId = window._hqBwaUploadStandortId || (_sbProfile() ? _sbProfile().standort_id : null);
+        if(!stdId) { if(errEl){errEl.textContent='Kein Standort zugeordnet. Bitte Standort auswählen.';errEl.style.display='block';} if(btn){btn.disabled=false;btn.textContent='BWA speichern';} return; }
 
         // Upload file if selected
         var fileUrl = null;
@@ -255,6 +257,8 @@ export async function saveBwaData() {
         // Cleanup temp vars
         window._lastParsedDetails = null;
         window._lastParsedFormat = null;
+        window._hqBwaUploadStandortId = null;
+        window._hqBwaUploadStandortName = null;
 
         closeBwaUploadModal();
         await loadBwaList();
