@@ -30,6 +30,8 @@
         adsData: [],
         zeitraum: 30,
         kalView: 'liste',
+        kalYear: new Date().getFullYear(),
+        kalMonth: new Date().getMonth(),
         editMode: false,
         benchmarkMetrik: 'views'
     };
@@ -267,39 +269,44 @@
     }
 
     function renderKalMonat(el, posts) {
-        var now = new Date();
-        var year = now.getFullYear(), month = now.getMonth();
-        var firstDay = new Date(year, month, 1).getDay();
-        var daysInMonth = new Date(year, month + 1, 0).getDate();
-        var startOffset = (firstDay + 6) % 7; // Monday start
+        const now = new Date();
+        const year = SC.kalYear, month = SC.kalMonth;
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const startOffset = (firstDay + 6) % 7; // Monday start
+        const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
 
-        var postsByDay = {};
+        const postsByDay = {};
         posts.forEach(function(p) {
             if (!p.geplant_am) return;
-            var d = new Date(p.geplant_am);
+            const d = new Date(p.geplant_am);
             if (d.getMonth() === month && d.getFullYear() === year) {
-                var day = d.getDate();
+                const day = d.getDate();
                 if (!postsByDay[day]) postsByDay[day] = [];
                 postsByDay[day].push(p);
             }
         });
 
-        var monthNames = ['Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-        var html = '<div class="text-center font-semibold text-gray-700 mb-3">' + monthNames[month] + ' ' + year + '</div>';
+        const monthNames = ['Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+        let html = '<div class="flex items-center justify-center gap-4 mb-3">' +
+            '<button onclick="scKalNav(-1)" class="px-2 py-1 rounded hover:bg-gray-100 text-gray-500 font-bold text-lg">\u2039</button>' +
+            '<span class="font-semibold text-gray-700 min-w-[160px] text-center">' + monthNames[month] + ' ' + year + '</span>' +
+            '<button onclick="scKalNav(1)" class="px-2 py-1 rounded hover:bg-gray-100 text-gray-500 font-bold text-lg">\u203A</button>' +
+            '</div>';
         html += '<div class="grid grid-cols-7 gap-1 text-xs">';
         ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(function(d) {
             html += '<div class="text-center font-semibold text-gray-400 py-1">' + d + '</div>';
         });
 
-        for (var i = 0; i < startOffset; i++) html += '<div></div>';
+        for (let i = 0; i < startOffset; i++) html += '<div></div>';
 
-        for (var d = 1; d <= daysInMonth; d++) {
-            var dayPosts = postsByDay[d] || [];
-            var isToday = d === now.getDate();
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dayPosts = postsByDay[d] || [];
+            const isToday = isCurrentMonth && d === now.getDate();
             html += '<div class="border border-gray-100 rounded-lg p-1 min-h-[60px] ' + (isToday ? 'bg-orange-50 border-vit-orange' : 'bg-white') + '">' +
                 '<div class="text-xs font-semibold text-gray-500 mb-1">' + d + '</div>';
             dayPosts.slice(0, 2).forEach(function(p) {
-                var s = STATUS_LABELS[p.status] || {};
+                const s = STATUS_LABELS[p.status] || {};
                 html += '<div class="text-[10px] truncate px-1 rounded ' + (s.cls || '') + '">' + _escH(p.title) + '</div>';
             });
             if (dayPosts.length > 2) html += '<div class="text-[10px] text-gray-400">+' + (dayPosts.length - 2) + '</div>';
@@ -352,6 +359,13 @@
         SC.kalView = v;
         var c = document.getElementById('scTabContent');
         if (c) renderKalender(c);
+    }
+
+    function scKalNav(dir) {
+        SC.kalMonth += dir;
+        if (SC.kalMonth > 11) { SC.kalMonth = 0; SC.kalYear++; }
+        if (SC.kalMonth < 0)  { SC.kalMonth = 11; SC.kalYear--; }
+        scFilterKal('alle');
     }
 
     function scOpenPostAdd() {
@@ -463,12 +477,18 @@
                 '<div class="space-y-3">' +
                     '<input id="scImpTitle" placeholder="Titel / Hook" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
                     '<textarea id="scImpCaption" placeholder="Caption (optional)" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"></textarea>' +
-                    '<div class="grid grid-cols-2 gap-3">' +
+                    '<div class="grid grid-cols-3 gap-3">' +
+                        '<select id="scImpPlattform" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
+                            '<option value="Instagram">Instagram</option><option value="TikTok">TikTok</option>' +
+                            '<option value="Facebook">Facebook</option><option value="YouTube">YouTube</option>' +
+                            '<option value="LinkedIn">LinkedIn</option>' +
+                        '</select>' +
                         '<select id="scImpFormat" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
                             Object.keys(FORMAT_LABELS).map(function(k) { return '<option value="' + k + '">' + _escH(FORMAT_LABELS[k]) + '</option>'; }).join('') +
                         '</select>' +
                         '<select id="scImpStandort" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">' + stOptions + '</select>' +
                     '</div>' +
+                    '<input id="scImpUrl" placeholder="Post-URL (optional)" type="url" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
                     '<input id="scImpDatum" type="datetime-local" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
                     '<div class="grid grid-cols-2 md:grid-cols-4 gap-3">' +
                         '<input id="scImpViews" type="number" placeholder="Views" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
@@ -492,10 +512,13 @@
         var title = (document.getElementById('scImpTitle')?.value || '').trim();
         if (!title) { _showToast('Titel ist erforderlich', 'error'); return; }
 
+        const plattform = document.getElementById('scImpPlattform')?.value || 'Instagram';
+        const postUrl = (document.getElementById('scImpUrl')?.value || '').trim();
         var row = {
             title: title,
             caption: document.getElementById('scImpCaption')?.value || null,
             format: document.getElementById('scImpFormat')?.value || 'feed',
+            kanaele: [plattform],
             standort_id: document.getElementById('scImpStandort')?.value || null,
             geplant_am: document.getElementById('scImpDatum')?.value || null,
             status: 'ausgespielt',
@@ -504,7 +527,7 @@
             likes: parseInt(document.getElementById('scImpLikes')?.value) || 0,
             comments: parseInt(document.getElementById('scImpComments')?.value) || 0,
             shares: parseInt(document.getElementById('scImpShares')?.value) || 0,
-            platform_post_id: document.getElementById('scImpPostId')?.value || null,
+            platform_post_id: postUrl || document.getElementById('scImpPostId')?.value || null,
             erstellt_von: window.sbUser?.id || null
         };
 
@@ -1003,8 +1026,14 @@
                 return vals.length ? vals.reduce(function(a,b) { return a + Number(b); }, 0) / vals.length : 0;
             }
 
+            // Info banner
+            var html = '<div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4 text-xs text-blue-700">' +
+                '\u2139\uFE0F Historische Zeitreihen werden zukuenftig aus API-Snapshots generiert. ' +
+                'Aktuell zeigt dieser Tab einen Follower-Snapshot und den Vergleich mit dem naechstgroesseren Wettbewerber.' +
+                '</div>';
+
             // Snapshot KPIs
-            var html = '<h2 class="text-lg font-bold text-gray-800 mb-4">Follower-Wachstum & Potenzial</h2>' +
+            html += '<h2 class="text-lg font-bold text-gray-800 mb-4">Follower-Wachstum & Potenzial</h2>' +
                 '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">' +
                     kpiCard('IG Follower', fmtK(vitBikes?.ig_follower || 0), 'Aktuell') +
                     kpiCard('TT Follower', fmtK(vitBikes?.tt_follower || 0), 'Aktuell') +
@@ -1025,27 +1054,32 @@
                 '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400">Plattform</th>' +
                 '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">vit:bikes</th>' +
                 '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">Branche \u00D8</th>' +
-                '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">Top Wettbewerber</th>' +
-                '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">Gap zu Top</th>' +
+                '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">Naechstgroesserer</th>' +
+                '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">Gap</th>' +
                 '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">Potenzial</th>' +
                 '</tr></thead><tbody class="divide-y divide-gray-100">';
 
             platforms.forEach(function(plat) {
                 var vitVal = vitBikes ? (vitBikes[plat.key] || 0) : 0;
                 var avgVal = Math.round(avg(others, plat.key));
-                var topVal = 0;
-                var topName = '–';
+                // Find next larger competitor (smallest value > vitVal)
+                var nextVal = null;
+                var nextName = '–';
                 others.forEach(function(w) {
-                    if ((w[plat.key] || 0) > topVal) { topVal = w[plat.key]; topName = w.name; }
+                    var wVal = w[plat.key] || 0;
+                    if (wVal > vitVal && (nextVal === null || wVal < nextVal)) {
+                        nextVal = wVal; nextName = w.name;
+                    }
                 });
-                var gap = topVal - vitVal;
-                var potenzial = vitVal > 0 ? ((topVal / vitVal - 1) * 100).toFixed(0) : '–';
+                if (nextVal === null) { nextVal = vitVal; nextName = 'Spitze!'; }
+                var gap = nextVal - vitVal;
+                var potenzial = vitVal > 0 ? ((nextVal / vitVal - 1) * 100).toFixed(0) : '–';
 
                 html += '<tr class="hover:bg-gray-50">' +
                     '<td class="px-4 py-3 font-semibold">' + plat.label + '</td>' +
                     '<td class="px-4 py-3 text-right font-mono text-vit-orange font-bold">' + fmtK(vitVal) + '</td>' +
                     '<td class="px-4 py-3 text-right font-mono">' + fmtK(avgVal) + '</td>' +
-                    '<td class="px-4 py-3 text-right font-mono">' + fmtK(topVal) + ' <span class="text-[10px] text-gray-400">(' + _escH(topName) + ')</span></td>' +
+                    '<td class="px-4 py-3 text-right font-mono">' + fmtK(nextVal) + ' <span class="text-[10px] text-gray-400">(' + _escH(nextName) + ')</span></td>' +
                     '<td class="px-4 py-3 text-right font-mono ' + (gap > 0 ? 'text-red-500' : 'text-green-600') + '">' + (gap > 0 ? '+' : '') + fmtK(gap) + '</td>' +
                     '<td class="px-4 py-3 text-right font-semibold ' + (Number(potenzial) > 100 ? 'text-red-500' : 'text-yellow-600') + '">' + (potenzial !== '–' ? potenzial + '%' : '–') + '</td>' +
                     '</tr>';
@@ -1212,6 +1246,44 @@
                     '</tr>';
             });
             html += '</tbody></table></div></div>';
+
+            // Standort × Kanal Matrix (from posts.kanaele[])
+            const kanalSet = new Set();
+            const stKanalMap = {};
+            posts.forEach(function(p) {
+                const sName = p.standorte?.name || '–';
+                if (!stKanalMap[sName]) stKanalMap[sName] = {};
+                (p.kanaele || []).forEach(function(k) {
+                    kanalSet.add(k);
+                    stKanalMap[sName][k] = (stKanalMap[sName][k] || 0) + 1;
+                });
+            });
+            const kanaele = Array.from(kanalSet).sort();
+            const stNames = Object.keys(stKanalMap).sort();
+
+            if (kanaele.length && stNames.length) {
+                html += '<h3 class="text-sm font-semibold text-gray-800 mb-3">Standort \u00D7 Kanal Matrix (Posts)</h3>' +
+                    '<div class="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">' +
+                    '<div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr>' +
+                    '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400">Standort</th>';
+                kanaele.forEach(function(k) {
+                    html += '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">' + _escH(k) + '</th>';
+                });
+                html += '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">Gesamt</th></tr></thead>' +
+                    '<tbody class="divide-y divide-gray-100">';
+
+                stNames.forEach(function(sName) {
+                    let total = 0;
+                    html += '<tr class="hover:bg-gray-50"><td class="px-4 py-2 font-semibold">' + _escH(sName) + '</td>';
+                    kanaele.forEach(function(k) {
+                        const cnt = stKanalMap[sName][k] || 0;
+                        total += cnt;
+                        html += '<td class="px-4 py-2 text-right font-mono ' + (cnt > 0 ? '' : 'text-gray-300') + '">' + (cnt || '–') + '</td>';
+                    });
+                    html += '<td class="px-4 py-2 text-right font-mono font-bold">' + total + '</td></tr>';
+                });
+                html += '</tbody></table></div></div>';
+            }
 
             c.innerHTML = html || emptyState('\uD83C\uDFC6', 'Noch keine Benchmark-Daten', 'Erstelle Posts und trage Wettbewerber-Daten ein.', false);
         } catch(e) {
@@ -1773,4 +1845,5 @@
     window.scCloseImport   = scCloseImport;
     window.scSaveImport    = scSaveImport;
     window.scSetBenchmarkMetrik = scSetBenchmarkMetrik;
+    window.scKalNav        = scKalNav;
 })();
