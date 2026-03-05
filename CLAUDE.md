@@ -922,4 +922,12 @@ Neue Module werden direkt in TypeScript gebaut, hinter modul_status = deaktivier
 - Neue Actions: `list-schedules`, `create-schedule`, `update-schedule`, `update-product-schedule`, `set-billing-status`
 - HQ: Schedules-Tab zur Verwaltung, Produkte-Tab zeigt Abrechnungsart, Danger-Badge in Übersicht
 - Standort: Kostenrechner zeigt Vorkasse-Warnung, Detail-Modal hat Danger-Toggle
+
+- **`calculate_quarterly_settlement` RPC (PL/pgSQL):** Single Source of Truth für Spitzenausgleich
+  - Nutzt `bwa_daten.umsatzerloese` für IST-Monate, `planned_revenue_year/12` für fehlende
+  - 20% Aufschlag auf Plan-Abschlag für fehlende BWA-Monate
+  - Liefert Monat-für-Monat-Aufschlüsselung mit BWA-Status
+  - Wird sowohl für Live-Vorschau (Standort) als auch echte Rechnungserstellung (HQ) genutzt
+- Edge Function `billing` v18: `settlement-preview` Action ruft RPC auf, `generate-quarterly-settlement` nutzt RPC statt duplizierter Logik
+- Standort-Kostenrechner: Live-Widget zeigt voraussichtlichen Spitzenausgleich mit Monats-Tabelle, Summary-Karten und Berechnungsdetails
 - `calcDueDate()` berechnet Fälligkeitsdatum basierend auf Schedule-Typ
