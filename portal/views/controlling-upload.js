@@ -26,7 +26,7 @@ export function openBwaUploadModal() {
     var now = new Date();
     var _mn = (typeof monatNamen !== 'undefined') ? monatNamen : ['','Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
     var html = '<div id="bwaUploadOverlay" onclick="closeBwaUploadModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
-    html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:600px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
+    html += '<div onclick="event.stopPropagation()" id="bwaModalInner" style="background:var(--c-bg);border-radius:16px;padding:24px;width:600px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);transition:width 0.3s ease;">';
     html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">\u{1F4CA} BWA erfassen</h3><button onclick="closeBwaUploadModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
 
     // AI Upload Section FIRST
@@ -41,13 +41,21 @@ export function openBwaUploadModal() {
     html += '<div id="bwaAiResult" class="mt-2 hidden"></div>';
     html += '</div>';
 
-    // Excel Preview: Show original file data next to recognized values
-    html += '<div id="bwaExcelPreview" class="hidden mb-4">';
-    html += '<details open><summary class="text-xs font-semibold text-gray-600 cursor-pointer mb-1">\u{1F4C4} Originaldaten aus Datei</summary>';
-    html += '<div id="bwaExcelPreviewContent" class="max-h-48 overflow-auto border border-gray-200 rounded-lg text-[10px] bg-gray-50"></div>';
-    html += '</details></div>';
+    // Split container: left = Excel preview, right = form fields (activated after parse)
+    html += '<div id="bwaSplitContainer" class="hidden" style="display:none;">';
+    html += '<div style="display:flex;gap:16px;align-items:flex-start;">';
+    // LEFT: Excel preview
+    html += '<div id="bwaExcelPreview" style="flex:1;min-width:0;">';
+    html += '<p class="text-xs font-semibold text-gray-600 mb-1">\u{1F4C4} Originaldaten aus Datei</p>';
+    html += '<div id="bwaExcelPreviewContent" style="max-height:520px;overflow:auto;border:1px solid #e5e7eb;border-radius:8px;font-size:10px;background:#fafafa;"></div>';
+    html += '</div>';
+    // RIGHT: Recognized values + form
+    html += '<div id="bwaFormSide" style="flex:1;min-width:0;">';
+    html += '</div>';
+    html += '</div></div>';
 
     // Month/Year AFTER upload (auto-filled by KI)
+    html += '<div id="bwaFormFields">';
     html += '<div class="grid grid-cols-2 gap-3 mb-4">';
     html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Monat</label><select id="bwaMonth" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">';
     for(var m=1;m<=12;m++) html += '<option value="'+m+'"'+(m===(now.getMonth())?' selected':'')+'>'+_mn[m]+'</option>';
@@ -81,6 +89,7 @@ export function openBwaUploadModal() {
     html += '</div>';
     html += '<div id="bwaUploadError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mb-3"></div>';
     html += '<button onclick="saveBwaData()" id="bwaSaveBtn" disabled class="w-full py-2.5 bg-gray-300 text-white rounded-lg font-semibold text-sm cursor-not-allowed transition-all" style="display:none;">BWA speichern</button>';
+    html += '</div>';  // close bwaFormFields
     html += '</div></div>';
     var c = document.createElement('div'); c.id = 'bwaUploadContainer'; c.innerHTML = html; document.body.appendChild(c);
 }
@@ -193,21 +202,29 @@ export async function parseBwaWithAI() {
             result.bwa_daten = fixDatevSigns(result.bwa_daten);
         }
 
-        // Show Excel preview (raw data from file)
+        // Show Excel preview + activate split layout
         try {
-            var previewContainer = document.getElementById('bwaExcelPreview');
+            var splitContainer = document.getElementById('bwaSplitContainer');
             var previewContent = document.getElementById('bwaExcelPreviewContent');
-            if(previewContainer && previewContent) {
+            var formFields = document.getElementById('bwaFormFields');
+            var formSide = document.getElementById('bwaFormSide');
+            var modalInner = document.getElementById('bwaModalInner');
+            if(splitContainer && previewContent && formFields && formSide && modalInner) {
                 var pBuf = await file.arrayBuffer();
                 var pWb = XLSX.read(pBuf, { type: 'array', cellDates: true });
                 var pSheet = pWb.Sheets[pWb.SheetNames[0]];
                 var pHtml = XLSX.utils.sheet_to_html(pSheet, { editable: false });
-                // Style the generated table
                 pHtml = pHtml.replace('<table', '<table style="border-collapse:collapse;width:100%;font-size:10px;font-family:monospace"');
                 pHtml = pHtml.replace(/<td/g, '<td style="border:1px solid #e5e7eb;padding:2px 4px;white-space:nowrap"');
                 pHtml = pHtml.replace(/<th/g, '<th style="border:1px solid #e5e7eb;padding:2px 4px;background:#f3f4f6;font-weight:bold;white-space:nowrap"');
                 previewContent.innerHTML = pHtml;
-                previewContainer.classList.remove('hidden');
+                // Move form fields into right side of split
+                formSide.appendChild(formFields);
+                // Widen modal and show split
+                modalInner.style.width = '95vw';
+                modalInner.style.maxWidth = '1200px';
+                splitContainer.style.display = '';
+                splitContainer.classList.remove('hidden');
             }
         } catch(prevErr) { console.warn('[BWA] Preview render error:', prevErr); }
         if(err) {
