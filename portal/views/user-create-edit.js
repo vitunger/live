@@ -545,33 +545,14 @@ export async function saveEditMa(userId) {
 // === ALS USER ANMELDEN (ohne Passwort) ===
 export async function loginAs(userId, email, userName) {
     if(!hqCan('impersonate')) { _showToast('Keine Berechtigung für "Anmelden als"', 'error'); return; }
-    if(!confirm('Als "'+userName+'" anmelden?\n\nDu wirst als dieser User eingeloggt um die Rechte zu testen.')) return;
-    try {
-        // 1. Temporäres Passwort setzen
-        var tempPw = '_TempLogin_' + Date.now();
-        await _sb().rpc('set_user_password', { user_id: userId, new_password: tempPw });
-
-        // 2. Ausloggen
-        await _sb().auth.signOut();
-
-        // 3. Mit temporärem Passwort einloggen
-        var resp = await _sb().auth.signInWithPassword({ email: email, password: tempPw });
-        if(resp.error) throw resp.error;
-        sbUser = resp.data.user;
-        await loadUserProfile(_sbUser().id);
-        await loadModulStatus();
-        await loadFeatureFlags();
-        // Reset cached module states (Office, etc.)
-        if(typeof window._offResetState === 'function') window._offResetState();
-        enterApp();
-        try { await loadPipelineFromSupabase(); } catch(e) {}
-    } catch(err) {
-        _showToast('Login fehlgeschlagen: '+(err.message||err), 'error');
-        location.reload();
+    if(!confirm('Als "'+userName+'" anmelden?\n\nDu siehst das Cockpit aus Sicht dieses Users.')) return;
+    if(typeof window.impersonateUser === 'function') {
+        await window.impersonateUser(userId);
+    } else {
+        _showToast('Impersonation nicht verfügbar', 'error');
     }
 }
 
-// === MITARBEITER LÖSCHEN ===
 export async function deleteMa(userId, userName) {
     if(!hqCan('delete_user')) { _showToast('Keine Berechtigung zum Löschen', 'error'); return; }
     if(!confirm('Mitarbeiter "'+userName+'" wirklich löschen?\n\nDies löscht den Account komplett (Auth + Profil + Rollen).')) return;
