@@ -463,6 +463,15 @@ container.innerHTML = h;
 }
 
 // Manuellen Kontostand speichern
+window.setSettlementInterval = async function(stdId, interval) {
+    var r = await billingApi('set-settlement-interval', { standort_id: stdId, settlement_interval: interval });
+    if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
+    var labels = {monthly:'Monatlich', quarterly:'Vierteljährlich', semi_annual:'Halbjährlich'};
+    _showToast('Spitzenausgleich auf ' + labels[interval] + ' gesetzt', 'success');
+    closeStdDetailModal();
+    openStandortDetailModal(stdId);
+};
+
 window.saveManualBalance = async function() {
 var date = document.getElementById('manualBalDate').value;
 var amount = parseFloat(document.getElementById('manualBalAmount').value);
@@ -807,6 +816,19 @@ try {
         });
         html += '</div></div>';
     }
+    // Settlement interval selector
+    var intervalLabels = {monthly:'Monatlich', quarterly:'Vierteljährlich', semi_annual:'Halbjährlich'};
+    var currentInterval = s.settlement_interval || 'semi_annual';
+    html += '<div class="mb-4 border-t border-gray-200 pt-4"><label class="block text-xs font-semibold text-gray-600 mb-2">\ud83d\udcc6 Spitzenausgleich-Intervall</label>';
+    html += '<div class="flex gap-2">';
+    ['monthly', 'quarterly', 'semi_annual'].forEach(function(intv) {
+        var isActive = currentInterval === intv;
+        var cls = isActive ? 'border-vit-orange bg-orange-50 text-orange-700 ring-2 ring-orange-300' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300';
+        html += '<button onclick="setSettlementInterval(\''+s.id+'\',\''+intv+'\')" class="flex-1 px-3 py-2 rounded-lg border-2 text-xs font-semibold transition '+cls+'">'+intervalLabels[intv]+'</button>';
+    });
+    html += '</div>';
+    html += '<p class="text-[10px] text-gray-400 mt-1">Bestimmt, wie oft der Spitzenausgleich (IST vs. Abschlag) abgerechnet wird.</p>';
+    html += '</div>';
     // Danger/Vorkasse toggle
     var isDanger = s.billing_status === 'danger';
     html += '<div class="mb-4 border-t border-gray-200 pt-4"><label class="block text-xs font-semibold text-gray-600 mb-2">\ud83d\udea8 Abrechnungsstatus</label>';
@@ -1000,7 +1022,13 @@ async function loadSettlementPreview(standortId) {
         }
         var mLabels = {1:'Jan',2:'Feb',3:'Mär',4:'Apr',5:'Mai',6:'Jun',7:'Jul',8:'Aug',9:'Sep',10:'Okt',11:'Nov',12:'Dez'};
         var h = '';
-        h += '<p class="text-xs text-gray-500 mb-3">Voraussichtlicher Spitzenausgleich Q' + currentQ + '/' + currentY + ' – aktualisiert sich automatisch bei jeder BWA-Einreichung.</p>';
+        var intervalLabels2 = {monthly:'Monatlich', quarterly:'Vierteljährlich', semi_annual:'Halbjährlich'};
+        var intervalLabel = intervalLabels2[result.settlement_interval] || 'Halbjährlich';
+        var periodLabel = result.period_label || ('Q' + currentQ + '/' + currentY);
+        h += '<div class="flex items-center justify-between mb-3">';
+        h += '<p class="text-xs text-gray-500">Voraussichtlicher Spitzenausgleich ' + periodLabel + '</p>';
+        h += '<span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-semibold">' + intervalLabel + '</span>';
+        h += '</div>';
         // Month-by-month table
         h += '<table class="w-full text-sm mb-4"><thead class="text-xs text-gray-500 uppercase border-b"><tr>';
         h += '<th class="text-left py-2">Monat</th><th class="text-center py-2">BWA</th><th class="text-right py-2">Umsatz</th><th class="text-right py-2">2% Beteiligung</th><th class="text-left py-2">Basis</th>';
