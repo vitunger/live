@@ -240,7 +240,6 @@ export async function renderSchnittstellen() {
     } catch (e) {}
     loadAdsAccountData();
     loadWawiStatus();
-    renderStatusGrid();
     renderActiveCards();
     setTimeout(function() { if (window.loadDhlConfig) window.loadDhlConfig(); }, 500);
     setTimeout(function() { if (window.loadLexofficeConfig) window.loadLexofficeConfig(); }, 600);
@@ -356,22 +355,7 @@ window.showConnView = function(view) {
 // STATUS GRID
 // ═══════════════════════════════════════════════════════
 
-function renderStatusGrid() {
-    var el = document.getElementById('connStatusGrid');
-    if (!el) return;
-    var ids = ['etermin', 'tiktok', 'instagram', 'facebook', 'youtube', 'gmb', 'analytics', 'lexoffice', 'approom', 'dhl', 'google', 'meta', 'wawi'];
-    el.innerHTML = ids.map(function(id) {
-        var c = CONNECTORS[id];
-        var sc = c.status === 'connected' ? '#16a34a' : c.status === 'error' ? '#dc2626' : c.status === 'disconnected' ? '#dc2626' : '#9ca3af';
-        var dot = c.status === 'connected' ? '🟢' : c.status === 'error' ? '🔴' : c.status === 'disconnected' ? '🔴' : '⚫';
-        return '<div class="vit-card p-3 flex items-center gap-3">'
-            + '<div style="width:36px;height:36px;border-radius:10px;background:' + c.iconBg + ';display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">' + c.icon + '</div>'
-            + '<div style="min-width:0;flex:1">'
-            + '<p class="text-xs font-bold text-gray-800 truncate">' + c.name + '</p>'
-            + '<p class="text-[10px] text-gray-500 truncate">' + dot + ' ' + _escH(c.statusLabel) + '</p>'
-            + '</div></div>';
-    }).join('');
-}
+function renderStatusGrid() { return; }
 
 // ═══════════════════════════════════════════════════════
 // ACTIVE CONNECTOR CARDS (HQ)
