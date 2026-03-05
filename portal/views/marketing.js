@@ -187,12 +187,16 @@ async function loadAdsData(standortId) {
         var endStr = m.year + '-' + String(m.month).padStart(2, '0') + '-' + String(endDate.getDate()).padStart(2, '0');
         var query = sb
             .from('ads_performance')
-            .select('*')
+            .select('*, standorte(name, slug, is_demo)')
             .gte('datum', startStr)
             .lte('datum', endStr);
         if (standortId) query = query.eq('standort_id', standortId);
         var { data, error } = await query;
         if (error) { console.warn('[marketing] loadAdsData:', error.message); return []; }
+        // Flatten standort name
+        (data || []).forEach(function(d) {
+            if (d.standorte) d.standort_name = d.standorte.name;
+        });
         mktState.adsData = data || [];
         return data || [];
     } catch(e) { console.warn('[marketing] loadAdsData:', e.message); return []; }
