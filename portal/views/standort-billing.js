@@ -744,9 +744,6 @@ try {
     var svcResp = await _sb().from('standort_services').select('*, product:billing_products(name, default_amount)').eq('standort_id', stdId).eq('is_active', true);
     var services = svcResp.data || [];
     var empCount = await _sb().from('employees').select('id', {count:'exact', head:true}).eq('standort_id', stdId).eq('status','aktiv');
-    // Load WaWi API connection for this standort
-    var connResp = await _sb().from('wawi_connections').select('*').eq('standort_id', stdId).maybeSingle();
-    var wawiConn = connResp.data;
 
     var html = '<div id="stdDetailOverlay" onclick="closeStdDetailModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
     html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
@@ -757,37 +754,30 @@ try {
     html += '<div><span class="text-gray-500">Telefon:</span><br><span class="font-semibold">'+_escH(s.telefon||'\u2014')+'</span></div>';
     html += '<div><span class="text-gray-500">Mitarbeiter (aktiv):</span><br><span class="font-semibold">'+(empCount.count||0)+'</span></div>';
     html += '</div>';
-    html += '<div class="mb-5"><label class="block text-xs font-semibold text-gray-600 mb-2">\ud83d\udcbb Warenwirtschaft</label>';
-    html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-2" id="wawiSelector">';
-    WAWI_OPTIONS.forEach(function(w){
+    html += '<div class="mb-4">';
+    html += '<label class="block text-xs font-semibold text-gray-600 mb-2">\ud83d\udcbb Warenwirtschaft</label>';
+    if (s.warenwirtschaft) {
+        // Aktive WaWi anzeigen + Wechsel-Button
+        var activeWawi = s.warenwirtschaft;
+        html += '<div id="wawiDisplay_' + stdId + '" class="flex items-center gap-2">';
+        html += '<span class="px-3 py-1.5 rounded-lg border-2 border-vit-orange bg-orange-50 text-orange-700 text-xs font-semibold">' + _escH(activeWawi) + '</span>';
+        html += '<button onclick="window._showAllWawi(\'' + stdId + '\')" class="text-xs text-gray-400 hover:text-gray-600 underline">Wechseln</button>';
+        html += '</div>';
+        html += '<div id="wawiAll_' + stdId + '" style="display:none" class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">';
+    } else {
+        html += '<div id="wawiAll_' + stdId + '" class="grid grid-cols-2 md:grid-cols-4 gap-2">';
+    }
+    WAWI_OPTIONS.forEach(function(w) {
         var isActive = s.warenwirtschaft === w;
         var cls = isActive ? 'border-vit-orange bg-orange-50 text-orange-700 ring-2 ring-orange-300' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300';
-        html += '<button onclick="selectWawi(\''+stdId+'\',\''+w+'\',this)" class="wawi-opt px-2 py-2 rounded-lg border-2 text-xs font-semibold transition '+cls+'">'+w+'</button>';
+        html += '<button onclick="selectWawi(\'' + stdId + '\',\'' + w + '\',this)" class="wawi-opt px-2 py-2 rounded-lg border-2 text-xs font-semibold transition ' + cls + '">' + w + '</button>';
     });
     var noneActive = !s.warenwirtschaft;
-    html += '<button onclick="selectWawi(\''+stdId+'\',null,this)" class="wawi-opt px-2 py-2 rounded-lg border-2 text-xs font-semibold transition '+(noneActive?'border-gray-400 bg-gray-50 text-gray-700 ring-2 ring-gray-300':'border-gray-200 bg-white text-gray-400 hover:border-gray-300')+'">keine</button>';
+    html += '<button onclick="selectWawi(\'' + stdId + '\',null,this)" class="wawi-opt px-2 py-2 rounded-lg border-2 text-xs font-semibold transition ' + (noneActive ? 'border-gray-400 bg-gray-50 text-gray-700 ring-2 ring-gray-300' : 'border-gray-200 bg-white text-gray-400 hover:border-gray-300') + '">keine</button>';
+    html += '</div>';
     html += '</div>';
 
-    // ═══ WaWi API Connection Section ═══
-    html += '<div class="mb-5 border-t border-gray-200 pt-4">';
-    html += '<label class="block text-xs font-semibold text-gray-600 mb-2">\ud83d\udd0c WaWi API-Anbindung';
-    if(wawiConn && wawiConn.ist_aktiv) {
-        html += ' <span class="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">\u2705 Verbunden</span>';
-    } else if(wawiConn && wawiConn.fehler_count > 0) {
-        html += ' <span class="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">\u274c Fehler</span>';
-    }
-    html += '</label>';
-    html += '<div class="grid grid-cols-2 gap-3 mb-3">';
-    html += '<div><label class="block text-[10px] text-gray-500 mb-1">System</label>';
-    html += '<select id="stdWawiSystem" class="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5">';
-    ['approom','velodata','velo_plus','bc','custom'].forEach(function(t) {
-        var labels = {approom:'app-room / CYCLE',velodata:'velodata',velo_plus:'Velo Plus',bc:'Business Central',custom:'Andere'};
-        html += '<option value="'+t+'"'+(wawiConn && wawiConn.system_typ===t?' selected':'')+'>'+labels[t]+'</option>';
-    });
-    html += '</select></div>';
-    html += '<div><label class="block text-[10px] text-gray-500 mb-1">API-URL</label>';
-    html += '<input type="text" id="stdWawiUrl" value="'+_escH(wawiConn ? wawiConn.api_url : '')+'" placeholder="https://erp.app-room.ch/api" class="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5"></div>';
-    html += '</div>';
+
     html += '<div class="grid grid-cols-2 gap-3 mb-3">';
     html += '<div><label class="block text-[10px] text-gray-500 mb-1">API-Key</label>';
     html += '<input type="password" id="stdWawiKey" value="'+(wawiConn && wawiConn.api_key_encrypted ? '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' : '')+'" placeholder="cycle-api-key" class="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5"></div>';
@@ -982,6 +972,14 @@ window._stdZugRemove = async function(entryId, standortId) {
     await sb.from('user_standorte').delete().eq('id', entryId);
     _showToast('Zugriff entfernt', 'success');
     openStandortDetailModal(standortId);
+};
+
+
+window._showAllWawi = function(stdId) {
+    var disp = document.getElementById('wawiDisplay_' + stdId);
+    var all = document.getElementById('wawiAll_' + stdId);
+    if (disp) disp.style.display = 'none';
+    if (all) all.style.display = 'grid';
 };
 
 
