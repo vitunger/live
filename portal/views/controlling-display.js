@@ -512,8 +512,44 @@ export async function deleteBwa() {
     } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
 }
 
+// === Edit BWA (opens upload modal pre-filled) ===
+export function editSelectedBwa() {
+    if(!window.selectedBwaId) return;
+    if(typeof window.openBwaUploadModal !== 'function') { _showToast('Upload-Modul nicht geladen', 'error'); return; }
+    window.openBwaUploadModal();
+    setTimeout(async function() {
+        try {
+            var resp = await _sb().from('bwa_daten').select('*').eq('id', window.selectedBwaId).single();
+            if(resp.error) return;
+            var d = resp.data;
+            var mEl = document.getElementById('bwaMonth'); if(mEl) mEl.value = d.monat;
+            var yEl = document.getElementById('bwaYear'); if(yEl) yEl.value = d.jahr;
+            var map = {
+                'bwaF_umsatz': d.umsatzerloese, 'bwaF_fahrraeder': d.davon_fahrraeder,
+                'bwaF_teile': d.davon_teile, 'bwaF_service': d.davon_service,
+                'bwaF_skonti': d.davon_skonti, 'bwaF_wareneinsatz': d.wareneinsatz,
+                'bwaF_soErloese': d.so_betr_erloese,
+                'bwaF_personal': d.personalkosten, 'bwaF_raum': d.raumkosten,
+                'bwaF_versicherungen': d.versicherungen, 'bwaF_kfz': d.fahrzeugkosten,
+                'bwaF_werbe': d.werbekosten, 'bwaF_warenabgabe': d.kosten_warenabgabe,
+                'bwaF_abschreibung': d.abschreibungen, 'bwaF_reparatur': d.reparaturen_instandhaltung,
+                'bwaF_sonstige': d.sonstige_kosten, 'bwaF_zins': d.zinsaufwand,
+                'bwaF_neutralAufwand': d.neutraler_aufwand, 'bwaF_neutralErtrag': d.neutraler_ertrag
+            };
+            Object.keys(map).forEach(function(id) {
+                var el = document.getElementById(id);
+                if(el && map[id] !== null && map[id] !== undefined) { el.value = map[id]; el.style.borderColor = '#f97316'; el.style.backgroundColor = '#fff7ed'; }
+            });
+            if(typeof window._bwaRecalc === 'function') window._bwaRecalc();
+            // Enable save button for edit
+            var sBtn = document.getElementById('bwaSaveBtn');
+            if(sBtn) { sBtn.disabled = false; sBtn.style.display = ''; sBtn.className = 'w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-all'; sBtn.textContent = '\u2705 BWA speichern'; }
+        } catch(e) { console.warn('[editBwa]', e); }
+    }, 300);
+}
+
 // === Window Exports ===
-const _exports = {loadBwaList, downloadBwa, showBwaFromDb, loadBwaTrend, deleteBwa};
+const _exports = {loadBwaList, downloadBwa, showBwaFromDb, loadBwaTrend, deleteBwa, editSelectedBwa};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // Extra explicit export for view-router
 window.loadBwaList = loadBwaList;
