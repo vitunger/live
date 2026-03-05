@@ -275,7 +275,7 @@ async function loadAdsAccountData() {
             if (c.readonlyFields) {
                 c.readonlyFields.forEach(function(f) {
                     if (f.key === 'customer_id' || f.key === 'ad_account_id') f.value = a.account_id || '—';
-                    if (f.key === 'last_sync') f.value = a.letzter_sync ? timeAgo(a.letzter_sync) : '—';
+                    if (f.key === 'last_sync') f.value = a.letzter_sync ? _timeAgo(a.letzter_sync) : '—';
                     if (f.key === 'sync_status') f.value = a.sync_status === 'ok' ? '✅ OK' : a.sync_fehler || a.sync_status || '—';
                 });
             }
@@ -293,7 +293,7 @@ async function loadAdsAccountData() {
 async function loadWawiStatus() {
     try {
         var sb = _sb(); if (!sb) return;
-        var res = await _sb().from('wawi_connections').select('id, standort_id, system_typ, status, letzter_sync, standorte(name)');
+        var res = await _sb().from('wawi_connections').select('id, standort_id, system_typ, ist_aktiv, letzter_sync, standorte(name)');
         if (res.error) throw res.error;
         var conns = res.data || [];
 
@@ -302,7 +302,7 @@ async function loadWawiStatus() {
         if (conns.length === 0) {
             c.status = 'disconnected'; c.statusLabel = 'Keine Standorte verbunden';
         } else {
-            var connected = conns.filter(function(x) { return x.status === 'connected' || x.status === 'aktiv'; });
+            var connected = conns.filter(function(x) { return x.ist_aktiv === true; });
             c.status = connected.length > 0 ? 'connected' : 'disconnected';
             c.statusLabel = connected.length + '/' + conns.length + ' Standorte verbunden';
             c.wawiConnections = conns;
@@ -314,7 +314,7 @@ async function loadWawiStatus() {
         if (arConns.length === 0) {
             ar.status = 'disconnected'; ar.statusLabel = 'Nicht verbunden';
         } else {
-            var arConnected = arConns.filter(function(x) { return x.status === 'connected' || x.status === 'aktiv'; });
+            var arConnected = arConns.filter(function(x) { return x.ist_aktiv === true; });
             ar.status = arConnected.length > 0 ? 'connected' : 'disconnected';
             ar.statusLabel = arConnected.length + '/' + arConns.length + ' Standorte';
             ar.approomStandorte = arConns.map(function(x) {
@@ -325,7 +325,7 @@ async function loadWawiStatus() {
                     if (f.key === 'connected_count') f.value = arConnected.length + ' von ' + arConns.length;
                     if (f.key === 'last_sync') {
                         var latest = arConns.filter(function(x){return x.letzter_sync;}).sort(function(a,b){return new Date(b.letzter_sync)-new Date(a.letzter_sync);})[0];
-                        f.value = latest ? timeAgo(latest.letzter_sync) : '—';
+                        f.value = latest ? _timeAgo(latest.letzter_sync) : '—';
                     }
                 });
             }
@@ -512,7 +512,7 @@ function renderConnectorCard(id) {
                 body += '<div class="flex items-center gap-2 py-1.5 border-b border-gray-100">'
                     + '<span style="width:8px;height:8px;border-radius:50%;background:' + (isOk ? '#16a34a' : '#dc2626') + ';flex-shrink:0"></span>'
                     + '<span class="text-xs font-semibold text-gray-700 flex-1">' + _escH(s.name) + '</span>'
-                    + '<span class="text-[10px] text-gray-400">' + (s.letzter_sync ? timeAgo(s.letzter_sync) : 'Kein Sync') + '</span>'
+                    + '<span class="text-[10px] text-gray-400">' + (s.letzter_sync ? _timeAgo(s.letzter_sync) : 'Kein Sync') + '</span>'
                     + '</div>';
             });
             body += '</div>';
@@ -575,12 +575,12 @@ function renderConnectorCard(id) {
             body += '<div class="space-y-1">';
             c.wawiConnections.forEach(function(w) {
                 var sName = (w.standorte && w.standorte.name) || 'Standort';
-                var isOk = w.status === 'connected' || w.status === 'aktiv';
+                var isOk = w.ist_aktiv === true;
                 body += '<div class="flex items-center gap-2 py-1.5 border-b border-gray-100">'
                     + '<span style="width:8px;height:8px;border-radius:50%;background:' + (isOk ? '#16a34a' : '#dc2626') + ';flex-shrink:0"></span>'
                     + '<span class="text-xs font-semibold text-gray-700 flex-1">' + _escH(sName) + '</span>'
                     + '<span class="text-[10px] text-gray-400">' + _escH(w.system_typ || '—') + '</span>'
-                    + '<span class="text-[10px] text-gray-400">' + (w.letzter_sync ? timeAgo(w.letzter_sync) : 'Kein Sync') + '</span>'
+                    + '<span class="text-[10px] text-gray-400">' + (w.letzter_sync ? _timeAgo(w.letzter_sync) : 'Kein Sync') + '</span>'
                     + '</div>';
             });
             body += '</div>';
@@ -1083,12 +1083,12 @@ async function loadEterminOverview() {
                 h += '<tr class="border-t border-gray-100 bg-green-50/50"><td class="px-3 py-2 font-semibold">' + _escH(name) + '</td>'
                     + '<td class="px-3 py-2 text-center"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700">✅ Verbunden</span></td>'
                     + '<td class="px-3 py-2"><code class="text-[9px] text-gray-400 select-all">' + whUrl.slice(-50) + '</code></td>'
-                    + '<td class="px-3 py-2 text-right text-gray-400">' + (c.updated_at ? timeAgo(c.updated_at) : '—') + '</td></tr>';
+                    + '<td class="px-3 py-2 text-right text-gray-400">' + (c.updated_at ? _timeAgo(c.updated_at) : '—') + '</td></tr>';
             } else {
                 h += '<tr class="border-t border-gray-100"><td class="px-3 py-2 font-semibold">' + _escH(name) + '</td>'
                     + '<td class="px-3 py-2 text-center"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-100 text-yellow-700">⏸️ Inaktiv</span></td>'
                     + '<td class="px-3 py-2"><code class="text-[9px] text-gray-400">' + whUrl.slice(-50) + '</code></td>'
-                    + '<td class="px-3 py-2 text-right text-gray-400">' + (c.updated_at ? timeAgo(c.updated_at) : '—') + '</td></tr>';
+                    + '<td class="px-3 py-2 text-right text-gray-400">' + (c.updated_at ? _timeAgo(c.updated_at) : '—') + '</td></tr>';
             }
         });
 
@@ -1696,7 +1696,7 @@ function addLog(id, type, msg) {
     }
 }
 
-function timeAgo(d) { return window.timeAgo ? window.timeAgo(d) : '—'; }
+function _timeAgo(d) { return typeof window.timeAgo === "function" ? window.timeAgo(d) : "—"; }
 
 function fmtDT(iso) {
     if (!iso) return '—';
