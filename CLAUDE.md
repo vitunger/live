@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung für KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 05.03.2026 – PRE-2 S2-S7 komplett, WiFi Presence v2, Spiritus Call Intelligence, Kalender/Todo HQ-Filter
+> Letzte Aktualisierung: 05.03.2026 – Marketing-Modul v2 (3 ES-Module), PRE-2 S2-S7 komplett, WiFi Presence v2, Spiritus Call Intelligence, Kalender/Todo HQ-Filter
 >
 > 📄 **Ausführlicher Geschäfts- und Projektkontext:** [`docs/CLAUDE_KONTEXT.md`](docs/CLAUDE_KONTEXT.md)
 > (Gebührenmodell, Partner-Benchmarks, Roadmap, DSGVO, Integrationen, Entwicklungshistorie)
@@ -98,11 +98,13 @@ portal/
 │   ├── misc-views.js       – Orchestrator: Sidebar, ViewSwitcher, Social Media, React Mount (✅ aufgespalten)
 │   ├── misc-modulstatus.js – MODUL_DATEN, DevStatus, Modulübersicht, Release-Updates
 │   ├── misc-training.js    – KI-Verkaufstrainer: Szenarien, Speech, TTS, Evaluation
+│   ├── marketing.js        – Marketing-Modul Router + Shared Logic (Queries, Charts, Formatierung)
+│   ├── marketing-partner.js – Partner-Views (7 Tabs: Übersicht, Vereinbarung, Meta, Google, Reichweite, Social, Glossar)
+│   ├── marketing-hq.js     – HQ-Views (7 Tabs: Netzwerk-Übersicht, Vereinbarungen, Meta Gesamt, Google Gesamt, Lead Reporting, Budget Plan, Video-Freigabe)
 │   ├── view-router.js      – MUSS LETZTES View-Modul sein (vit:view-changed Events)
 │   └── ...                 – Weitere Module (siehe MODULE_MAP.md)
-├── inline/                 – 2 JSX-Bundles (React), 0 JS-Module (alle nach views/ migriert)
-│   ├── react-deal-pipeline.jsx  – React Kanban Pipeline (1604 Zeilen)
-│   └── react-marketing.jsx      – React Marketing Dashboard (162 Zeilen)
+├── inline/                 – 1 JSX-Bundle (React), 0 JS-Module (alle nach views/ migriert)
+│   └── react-deal-pipeline.jsx  – React Kanban Pipeline (1604 Zeilen)
 api/
 ├── etermin-proxy.js        – Vercel Serverless Function
 └── webhooks/               – Webhook-Handler
@@ -134,6 +136,8 @@ docs/
 | Tabelle | Zweck |
 |---------|-------|
 | `connector_config` | Konfiguration externer Schnittstellen (DHL API Keys etc). RLS: nur HQ. Felder: connector_id, config_key, config_value |
+| `marketing_vereinbarungen` | Marketing-Jahresgespraeche pro Standort. Budget, Umsatzziel, CPT, Mediamix, Saisongewichtung, Vorjahres-Performance. RLS: Partner sieht eigenen Standort, HQ sieht alle. |
+| `marketing_lead_tracking` | Monatliches Lead-Tracking (Soll/Ist Budget, Leads, Termine, Store Visits). RLS: wie Vereinbarungen. |
 
 ### Bug-Fixes (03.03.2026)
 - **bwa-cockpit.js + cockpit-engine.js**: Null-Guards fuer alle DOM-Elemente in `updateBwaDeadlineWidget`. GF/Partner-Rollen (z.B. Thorsten Guhr) hatten keine BWA-Widget-Elemente im DOM → TypeError crash.
@@ -903,3 +907,4 @@ Neue Module werden direkt in TypeScript gebaut, hinter modul_status = deaktivier
 - **Blocker:** finAPI-Vertrag ausstehend (Access für Eigenanwender oder PSD2-Lizenz-als-Service, ~50 Standorte anfragen). DB-Schema + Edge Function können bereits ohne finAPI mit Mock-Daten vorbereitet werden.
 - **Bestehende Basis:** banking_connections, banking_balances, banking_transactions, banking_manual_entries bereits vorhanden. UI-Tab mit manuellem Eintrag + finAPI-Placeholder live.
 - **Masterplan:** v3.0 erstellt (05.03.2026), Go-Live Gesamtaufwand ~183h / ~61 Sessions
+- 2026-03-05: Marketing-Modul v2: react-marketing.jsx durch 3 ES-Module ersetzt (marketing.js, marketing-partner.js, marketing-hq.js). Partner: 7 Tabs (Uebersicht, Vereinbarung 2026, Meta Ads, Google Ads, Brand-Reichweite, Socialmedia, Glossar). HQ: 7 Tabs (Netzwerk-Uebersicht, Vereinbarungen, Meta Ads Gesamt, Google Ads Gesamt, Lead Reporting, Budget Plan, Video-Freigabe). DB: marketing_vereinbarungen + marketing_lead_tracking + marketing-docs Bucket. Seed-Daten: Berlin-Brandenburg + Witten. SQL-Migration: supabase/migrations/20260305_marketing_module.sql (muss noch ausgefuehrt werden).

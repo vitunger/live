@@ -12,7 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1772650400";
+const CACHE_BUST = "?v=1772870400";
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
@@ -124,6 +124,10 @@ const VIEW_MODULES = [
     'views/office-wifi.js',
     'views/wawi-integration.js',
     'views/schnittstellen.js',
+    // Marketing (split into 3 sub-modules)
+    'views/marketing.js',
+    'views/marketing-partner.js',
+    'views/marketing-hq.js',
     // Video Pipeline (split into 9 sub-modules)
     'views/video-pipeline.js',
     'views/video-upload.js',
