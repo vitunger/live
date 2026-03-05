@@ -854,7 +854,7 @@ async function _loadGruppenAbschnitt(standortId) {
         var q = function(v){ return String(v).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); };
 
         // Standort-Daten laden (firma_name + gemeinsame_bwa)
-        var stdR = await sb.from('standorte').select('id, name, firma_name, gemeinsame_bwa').eq('id', standortId).single();
+        var stdR = await sb.from('standorte').select('id, name, firma_name, gemeinsame_bwa, gemeinsames_marketing').eq('id', standortId).single();
         var std = stdR.data || {};
 
         // Alle Standorte der gleichen Firma
@@ -900,9 +900,13 @@ async function _loadGruppenAbschnitt(standortId) {
             } else {
                 h += '<p class="text-xs text-gray-400 mb-2">Noch keine weiteren Standorte mit dieser Firma.</p>';
             }
-            h += '<label class="flex items-center gap-2 text-sm cursor-pointer">';
+            h += '<label class="flex items-center gap-2 text-sm cursor-pointer mb-1">';
             h += '<input type="checkbox" id="stdGemBwaCheck" ' + (std.gemeinsame_bwa ? 'checked' : '') + ' onchange="window._stdGemBwaSave(\'' + q(standortId) + '\',\'' + q(std.firma_name) + '\',this.checked)" class="rounded" style="accent-color:#EF7D00">';
             h += '<span class="text-gray-700">Gemeinsame BWA <span class="text-xs text-gray-400">(alle Standorte dieser Firma reichen gemeinsam ein)</span></span>';
+            h += '</label>';
+            h += '<label class="flex items-center gap-2 text-sm cursor-pointer">';
+            h += '<input type="checkbox" id="stdGemMktCheck" ' + (std.gemeinsames_marketing ? 'checked' : '') + ' onchange="window._stdGemMktSave(\'' + q(standortId) + '\',\'' + q(std.firma_name) + '\',this.checked)" class="rounded" style="accent-color:#EF7D00">';
+            h += '<span class="text-gray-700">Gemeinsames Marketing <span class="text-xs text-gray-400">(Kampagnen &amp; Budget firmenweit)</span></span>';
             h += '</label>';
         }
         h += '</div>';
