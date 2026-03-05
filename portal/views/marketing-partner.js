@@ -147,7 +147,7 @@ function renderUebersicht(el) {
     if (ads.length > 0) {
         var rows = ads.map(function(a) {
             return '<tr class="hover:bg-gray-50"><td class="px-4 py-3 text-sm font-semibold text-gray-800">' + _escH(a.campaign_name || '\u2013') + '</td>' +
-                '<td class="px-4 py-3 text-sm text-gray-600">' + _escH(a.platform || '\u2013') + '</td>' +
+                '<td class="px-4 py-3 text-sm text-gray-600">' + _escH(a.plattform || '\u2013') + '</td>' +
                 '<td class="px-4 py-3 text-sm">' + _fmtEur(a.ausgaben || 0) + '</td>' +
                 '<td class="px-4 py-3 text-sm">' + _fmtN(a.klicks || 0) + '</td>' +
                 '<td class="px-4 py-3 text-sm">' + (a.conversions || 0) + '</td></tr>';
@@ -181,7 +181,7 @@ function renderUebersichtCharts(ads) {
     // Aggregiere nach Platform
     var metaSpend = 0, googleSpend = 0;
     (ads || []).forEach(function(a) {
-        var p = (a.platform || '').toLowerCase();
+        var p = (a.plattform || '').toLowerCase();
         if (p.indexOf('meta') >= 0 || p.indexOf('facebook') >= 0 || p.indexOf('instagram') >= 0) metaSpend += Number(a.ausgaben || 0);
         else googleSpend += Number(a.ausgaben || 0);
     });
@@ -334,7 +334,7 @@ function renderVereinbarung(el) {
 // ══════════════════════════════════
 function renderMetaAds(el) {
     var ads = (window.mktState.adsData || []).filter(function(a) {
-        var p = (a.platform || '').toLowerCase();
+        var p = (a.plattform || '').toLowerCase();
         return p.indexOf('meta') >= 0 || p.indexOf('facebook') >= 0 || p.indexOf('instagram') >= 0;
     });
 
@@ -372,7 +372,7 @@ function renderMetaAds(el) {
 // ══════════════════════════════════
 function renderGoogleAds(el) {
     var ads = (window.mktState.adsData || []).filter(function(a) {
-        var p = (a.platform || '').toLowerCase();
+        var p = (a.plattform || '').toLowerCase();
         return p.indexOf('google') >= 0;
     });
 
