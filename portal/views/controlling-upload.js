@@ -447,6 +447,102 @@ export async function parseBwaWithAI() {
         window._lastParsedDetails = daten && daten.length > 0 ? daten : [];
         window._lastParsedFormat = meta.format;
 
+        // ═══ KI-VALIDIERUNG: IMMER nach Parser-Durchlauf ═══
+        // Parser-Werte koennen falsch sein (z.B. Tausender als Dezimal: 56.206 -> 56,21).
+        // KI prueft und korrigiert die Werte anhand des Rohtexts.
+        try {
+            statusEl.classList.remove('hidden');
+            statusEl.querySelector('.animate-spin').style.display = '';
+            statusText.textContent = '\u{1F916} KI pr\u00fcft erkannte Werte...';
+
+            var arrayBufKi = await file.arrayBuffer();
+            var wbKi = XLSX.read(arrayBufKi, { type: 'array' });
+            var rawTextKi = cleanCsvForKi(wbKi);
+
+            var kiValResult = await callFinanceKi('bwa', null, null, rawTextKi.substring(0, 15000), {
+                jahr: meta.jahr, monat: meta.monat, format: meta.format,
+                parser_werte: parsed  // Send parser results so KI can compare
+            });
+
+            if(kiValResult && kiValResult.werte) {
+                // Compare KI vs Parser and apply corrections
+                var corrections = [];
+                var kiFieldMap = {
+                    umsatzerloese: 'bwaF_umsatz', wareneinsatz: 'bwaF_wareneinsatz',
+                    personalkosten: 'bwaF_personal', raumkosten: 'bwaF_raum',
+                    werbekosten: 'bwaF_werbe', kosten_warenabgabe: 'bwaF_warenabgabe',
+                    abschreibungen: 'bwaF_abschreibung', sonstige_kosten: 'bwaF_sonstige',
+                    zinsaufwand: 'bwaF_zins', davon_fahrraeder: 'bwaF_fahrraeder',
+                    davon_teile: 'bwaF_teile', davon_service: 'bwaF_service',
+                    davon_skonti: 'bwaF_skonti'
+                };
+                Object.keys(kiValResult.werte).forEach(function(key) {
+                    var kiVal = kiValResult.werte[key];
+                    if(kiVal === null || kiVal === undefined) return;
+                    var parserVal = parsed[key];
+                    var diff = parserVal ? Math.abs(kiVal - parserVal) : Math.abs(kiVal);
+                    var significant = !parserVal || (parserVal && diff > Math.abs(parserVal) * 0.05);
+                    if(significant || !parserVal) {
+                        var fId = kiFieldMap[key];
+                        if(fId) {
+                            var el = document.getElementById(fId);
+                            if(el) {
+                                var oldVal = el.value;
+                                el.value = Math.round(kiVal * 100) / 100;
+                                el.style.borderColor = '#8B5CF6';
+                                el.style.backgroundColor = '#F5F3FF';
+                                if(parserVal && significant) {
+                                    corrections.push(key + ': ' + Math.round(parserVal*100)/100 + ' \u2192 ' + Math.round(kiVal*100)/100);
+                                } else if(!parserVal) {
+                                    corrections.push(key + ': (leer) \u2192 ' + Math.round(kiVal*100)/100);
+                                }
+                            }
+                        }
+                        parsed[key] = kiVal;
+                    }
+                });
+
+                // Update month/year if KI detected them
+                if(kiValResult.monat) { var mS = document.getElementById('bwaMonth'); if(mS) mS.value = kiValResult.monat; }
+                if(kiValResult.jahr) { var yS = document.getElementById('bwaYear'); if(yS) yS.value = kiValResult.jahr; }
+
+                statusEl.querySelector('.animate-spin').style.display = 'none';
+                if(corrections.length > 0) {
+                    statusText.textContent = '\u{1F916} KI hat ' + corrections.length + ' Wert' + (corrections.length > 1 ? 'e' : '') + ' korrigiert';
+                    var corrHtml = '<div class="bg-purple-50 border border-purple-200 rounded-lg p-3 mt-2 text-xs text-purple-700">'
+                        + '<p class="font-semibold mb-1">\u{1F916} KI-Korrekturen:</p>'
+                        + '<ul class="list-disc pl-4">' + corrections.map(function(c){return '<li>'+_escH(c)+'</li>';}).join('') + '</ul>';
+                    if(kiValResult.confidence) corrHtml += '<p class="mt-1 text-[10px] text-purple-400">Konfidenz: ' + Math.round(kiValResult.confidence * 100) + '%</p>';
+                    corrHtml += '</div>';
+                    resultEl.innerHTML = resultEl.innerHTML + corrHtml;
+
+                    // Recalculate summary
+                    var umsatzKi = parsed.umsatzerloese || 0;
+                    var rohertragKi = parsed.rohertrag || (umsatzKi + (parsed.wareneinsatz||0));
+                    var rohertragPctKi = umsatzKi ? ((rohertragKi / umsatzKi) * 100).toFixed(1) : 0;
+                    var ergebnisKi = parsed.ergebnis_vor_steuern || parsed.betriebsergebnis || 0;
+                    var summaryDiv = resultEl.querySelector('.grid');
+                    if(summaryDiv) {
+                        summaryDiv.innerHTML = '<div><span class="text-gray-500">Umsatz:</span><br><strong>' + umsatzKi.toLocaleString('de-DE') + ' \u20AC</strong></div>'
+                            + '<div><span class="text-gray-500">Rohertrag:</span><br><strong>' + rohertragPctKi + '%</strong></div>'
+                            + '<div><span class="text-gray-500">Ergebnis:</span><br><strong class="' + (ergebnisKi >= 0 ? 'text-green-600' : 'text-red-600') + '">' + ergebnisKi.toLocaleString('de-DE') + ' \u20AC</strong></div>';
+                    }
+                } else {
+                    statusText.textContent = '\u2705 ' + matchedRows.length + ' Werte erkannt!' + periodInfo + ' [' + meta.format + '] \u2013 KI best\u00e4tigt \u2705';
+                }
+                if(kiValResult.hinweise && kiValResult.hinweise.length > 0) {
+                    resultEl.innerHTML += '<div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2 text-xs text-blue-700">'
+                        + '<p class="font-semibold mb-1">\u{1F4A1} KI-Hinweise:</p>'
+                        + '<ul class="list-disc pl-4">' + kiValResult.hinweise.map(function(h){return '<li>'+_escH(h)+'</li>';}).join('') + '</ul></div>';
+                }
+            }
+        } catch(kiValErr) {
+            console.warn('[BWA] KI-Validierung fehlgeschlagen:', kiValErr.message || kiValErr);
+            statusEl.querySelector('.animate-spin').style.display = 'none';
+            // Kein harter Fehler - Parser-Werte bleiben stehen, User sieht Warnung
+            statusText.textContent = '\u2705 ' + matchedRows.length + ' Werte erkannt!' + periodInfo + ' [' + meta.format + '] \u2013 KI nicht erreichbar';
+        }
+
         if(parseBtn) parseBtn.disabled = false;
     });
 }
