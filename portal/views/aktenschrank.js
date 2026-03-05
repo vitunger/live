@@ -97,7 +97,7 @@ export async function loadAktenFiles(){
         var [oR,tR,dR]=await Promise.all([
             s.from('dokument_ordner').select('*').eq('ist_aktiv',true).order('sort_order'),
             s.from('dokument_typen').select('*').eq('ist_aktiv',true).order('sort_order'),
-            (function(){var q=s.from('dokumente').select('*, dokument_typen(name,icon,key), dokument_ordner(name,key,icon,farbe)').order('created_at',{ascending:false});if(p&&p.standort_id&&!p.is_hq)q=q.eq('standort_id',p.standort_id);return q;})()
+            (function(){var q=s.from('dokumente').select('*, dokument_typen(name,icon,key), dokument_ordner(name,key,icon,farbe)').order('created_at',{ascending:false});if(p&&!p.is_hq){var fn=window.sbStandort&&window.sbStandort.firma_name;if(fn)q=q.eq('firma_name',fn);else if(p.standort_id)q=q.eq('standort_id',p.standort_id);}return q;})()
         ]);
         if(!oR.error)_akten.ordner=oR.data||[];
         if(!tR.error)_akten.typen=tR.data||[];
@@ -407,9 +407,10 @@ export async function startAktenUpload(){
     var btn=document.getElementById('aktenUploadBtn'),prog=document.getElementById('aktenUploadProgress'),stat=document.getElementById('aktenUploadStatus'),bar=document.getElementById('aktenUploadBar');
     btn.disabled=true;btn.classList.add('opacity-50');prog.classList.remove('hidden');
     var total=_akten.uploadQueue.length,p=_sbProfile(),sid=p?p.standort_id:null,u=_sbUser(),s=_sb();
+    var _firmaN=window.sbStandort&&window.sbStandort.firma_name||null;
     for(var i=0;i<total;i++){var file=_akten.uploadQueue[i];bar.style.width=Math.round((i/total)*100)+'%';stat.textContent=file.name+' ('+(i+1)+'/'+total+')';
         try{var path=(sid||'unknown')+'/inbox/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');var upR=await s.storage.from('dokumente').upload(path,file,{upsert:true});var fileUrl=path;if(!upR.error){var urlR=s.storage.from('dokumente').getPublicUrl(path);fileUrl=urlR.data?urlR.data.publicUrl:path;}var titel=file.name.replace(/\.[^.]+$/,'').replace(/[_-]/g,' ');
-        var insR=await s.from('dokumente').insert({standort_id:sid,titel:titel,datei_url:fileUrl,datei_name:file.name,datei_groesse:file.size,datei_typ:file.type,status:'eingegangen',quelle:'upload',hochgeladen_von:u?u.id:null}).select().single();
+        var insR=await s.from('dokumente').insert({standort_id:sid,firma_name:_firmaN,titel:titel,datei_url:fileUrl,datei_name:file.name,datei_groesse:file.size,datei_typ:file.type,status:'eingegangen',quelle:'upload',hochgeladen_von:u?u.id:null}).select().single();
         if(!insR.error&&insR.data){await s.from('dokument_audit').insert({dokument_id:insR.data.id,aktion:'hochgeladen',details:{datei_name:file.name,datei_groesse:file.size},user_id:u?u.id:null});_akten.dokumente.unshift(insR.data);
         // KI-Klassifikation asynchron starten
         triggerKiClassification(insR.data.id);
