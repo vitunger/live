@@ -65,6 +65,10 @@ export function openBwaUploadModal() {
     html += '</select></div></div>';
 
     // Data entry
+    html += '<div class="mb-3 p-2.5 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">';
+    html += '<span class="text-sm mt-0.5">\u{1F9E0}</span>';
+    html += '<p class="text-xs text-blue-700">Kontrolliere die Werte und korrigiere sie bei Bedarf. <strong>Das System lernt aus deinen Korrekturen</strong> und wird beim n\u00e4chsten Upload f\u00fcr diesen Standort genauer.</p>';
+    html += '</div>';
     html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Kennzahlen <span class="text-gray-400 font-normal">(werden automatisch bef\u00fcllt oder manuell eingeben)</span></p>';
     var fields = [
         {id:'bwaF_umsatz',label:'Umsatzerl\u00f6se',ph:'z.B. 54938'},
@@ -536,10 +540,26 @@ export async function parseBwaWithAI() {
             var arrayBufKi = await file.arrayBuffer();
             var wbKi = XLSX.read(arrayBufKi, { type: 'array' });
             var rawTextKi = cleanCsvForKi(wbKi);
+            window._bwaRawText = rawTextKi.substring(0, 15000);
+
+            // Load training examples for this standort (few-shot learning)
+            var _trainExamples = [];
+            try {
+                var _stdIdTrain = window._hqBwaUploadStandortId || (window.sbProfile ? window.sbProfile.standort_id : null);
+                if(_stdIdTrain) {
+                    var _teResp = await _sb().from('bwa_training_examples')
+                        .select('format, final_values, monat, jahr')
+                        .eq('standort_id', _stdIdTrain)
+                        .order('created_at', {ascending: false})
+                        .limit(2);
+                    if(_teResp.data && _teResp.data.length > 0) _trainExamples = _teResp.data;
+                }
+            } catch(teErr) { console.warn('[BWA] Training examples load:', teErr); }
 
             var kiValResult = await callFinanceKi('bwa', null, null, rawTextKi.substring(0, 15000), {
                 jahr: meta.jahr, monat: meta.monat, format: meta.format,
-                parser_werte: parsed  // Send parser results so KI can compare
+                parser_werte: parsed,
+                training_examples: _trainExamples.length > 0 ? _trainExamples : undefined
             });
 
             if(kiValResult && kiValResult.werte) {
