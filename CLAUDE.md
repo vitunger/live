@@ -1,8 +1,9 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung fuer KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 05.03.2026
+> Letzte Aktualisierung: 05.03.2026 (Marketing-Fix Session)
 > Performance-Abfrage Feature hinzugefuegt: `einkauf_performance_abfragen` + `einkauf_performance_daten` Tabellen (Migration: docs/migration_einkauf_performance.sql)
+> Marketing-Modul 4 Bugs gefixt: (1) Cache-Bug (Tab-Wechsel verlor Daten) via _dataLoaded Flags, (2) Inkonsistente Feld-Referenzen (.cost/.clicks/.platform -> .ausgaben/.klicks/.plattform) in marketing-hq.js + marketing-partner.js, (3) Live-Leads liest jetzt aus `leads`-Tabelle statt `marketing_lead_tracking`, (4) Lead-Typen-Toggle filtert jetzt tatsaechlich (kombi/regulaer/store_visits/anzeige_sv)
 >
 > **Ausfuehrliche Sub-Dokumentation:**
 > - [`portal/CLAUDE.md`](portal/CLAUDE.md) – Frontend-Architektur, Dateistruktur, Module, TypeScript-Migration
