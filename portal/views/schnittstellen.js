@@ -1629,23 +1629,15 @@ window.manualSync = async function(id) {
         try {
             var sb = _sb();
             if (!sb) throw new Error('Keine Supabase-Verbindung');
-            var sessionRes = await sb.auth.getSession();
-            var token = sessionRes && sessionRes.data && sessionRes.data.session ? sessionRes.data.session.access_token : null;
-            if (!token) throw new Error('Nicht eingeloggt \u2013 bitte neu anmelden');
 
             var fnName = 'sync-' + id + '-ads';
-            var baseUrl = window.SUPABASE_URL || (sb.supabaseUrl || '');
-            var resp = await fetch(baseUrl + '/functions/v1/' + fnName, {
-                method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'Content-Type': 'application/json',
-                    'apikey': window.SUPABASE_ANON_KEY || ''
-                }
+            var { data: result, error: invokeErr } = await sb.functions.invoke(fnName, {
+                body: {},
+                method: 'POST'
             });
-            var result = await resp.json();
-            if (!resp.ok || !result.success) {
-                throw new Error(result.error || 'Sync fehlgeschlagen (HTTP ' + resp.status + ')');
+            if (invokeErr) throw new Error(invokeErr.message || String(invokeErr));
+            if (!result || !result.success) {
+                throw new Error((result && result.error) || 'Sync fehlgeschlagen');
             }
             if (el) el.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-lg p-3"><p class="text-xs text-green-700">\u2705 <strong>Sync erfolgreich!</strong> ' + (result.rows_synced || 0) + ' Datens\u00e4tze synchronisiert' + (result.neue_kampagnen ? ', ' + result.neue_kampagnen + ' neue Kampagnen' : '') + '.</p></div>';
             addLog(id, 'ok', 'Sync erfolgreich: ' + (result.rows_synced || 0) + ' Zeilen');
