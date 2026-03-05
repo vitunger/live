@@ -172,10 +172,16 @@ window.einkaufV2ShowTab = function(tab, isHQOverride) {
         activeEl.querySelectorAll('[id^="hqPerfRuecklauf_"]').forEach(function(el) {
           window.loadHQPerfRuecklauf && window.loadHQPerfRuecklauf(el.id.replace('hqPerfRuecklauf_', ''));
         });
+      }).catch(function(err) {
+        activeEl.innerHTML = '<div class="vc p-8 text-center"><p class="text-red-400 text-sm">Fehler beim Laden: ' + (err.message || err) + '</p></div>';
+        console.error('renderHQPerf error:', err);
       });
     } else {
       window.renderPerfPartner && window.renderPerfPartner().then(function(html) {
         activeEl.innerHTML = html;
+      }).catch(function(err) {
+        activeEl.innerHTML = '<div class="vc p-8 text-center"><p class="text-red-400 text-sm">Fehler beim Laden: ' + (err.message || err) + '</p></div>';
+        console.error('renderPerfPartner error:', err);
       });
     }
   }
