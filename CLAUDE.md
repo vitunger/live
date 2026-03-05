@@ -929,5 +929,12 @@ Neue Module werden direkt in TypeScript gebaut, hinter modul_status = deaktivier
   - Liefert Monat-für-Monat-Aufschlüsselung mit BWA-Status
   - Wird sowohl für Live-Vorschau (Standort) als auch echte Rechnungserstellung (HQ) genutzt
 - Edge Function `billing` v18: `settlement-preview` Action ruft RPC auf, `generate-quarterly-settlement` nutzt RPC statt duplizierter Logik
+
+- **`standorte.settlement_interval`**: `monthly` | `quarterly` | `semi_annual` (Default) – Pro Standort konfigurierbares Spitzenausgleich-Intervall
+- **`calculate_settlement` RPC** ersetzt `calculate_quarterly_settlement`: Nimmt beliebigen Zeitraum (p_month_start, p_month_end)
+- Edge Function `billing` v19: Neue Action `generate-settlements` respektiert Intervall pro Standort, `settlement-preview` zeigt dynamischen Zeitraum
+- `set-settlement-interval` Action zum Setzen des Intervalls
+- Standort-Detail-Modal: 3-Button-Selector (Monatlich / Vierteljährlich / Halbjährlich)
+- HQ-Übersicht: Badge "mtl." / "qtl." bei Nicht-Standard-Intervallen
 - Standort-Kostenrechner: Live-Widget zeigt voraussichtlichen Spitzenausgleich mit Monats-Tabelle, Summary-Karten und Berechnungsdetails
 - `calcDueDate()` berechnet Fälligkeitsdatum basierend auf Schedule-Typ
