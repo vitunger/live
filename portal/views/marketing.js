@@ -55,9 +55,21 @@ function getCurrentMonth() {
 
 function setSelectedMonth(year, month) {
     mktState.selectedMonth = { year: year, month: month };
-    // Re-render aktiven Tab
+    // Dropdown synchronisieren
+    var sel = document.getElementById('mktMonthSelect');
+    if (sel) sel.value = year + '-' + String(month).padStart(2, '0');
+    // Re-render aktiven Tab + Daten neu laden
+    reloadAndRender();
+}
+
+async function reloadAndRender() {
+    var isHq = _sbProfile() && _sbProfile().is_hq;
+    var standortId = isHq ? null : (_sbProfile() && _sbProfile().standort_id);
+    await Promise.all([
+        loadAdsData(standortId),
+        loadLeadTracking(standortId)
+    ]);
     if (mktState.activeTab) {
-        var isHq = _sbProfile() && _sbProfile().is_hq;
         if (isHq && typeof window.renderHqMktTabContent === 'function') {
             window.renderHqMktTabContent(mktState.activeTab);
         } else if (!isHq && typeof window.renderPartnerMktTabContent === 'function') {
@@ -69,6 +81,63 @@ function setSelectedMonth(year, month) {
 function getMonthLabel(m) {
     if (!m) m = getCurrentMonth();
     return MONTH_NAMES_FULL[m.month - 1] + ' ' + m.year;
+}
+
+// Monats-Dropdown: verfügbare Monate aus ads_performance ermitteln
+async function initMonthSelect() {
+    var sb = _sb();
+    if (!sb) return;
+    try {
+        var { data } = await sb.from('ads_performance').select('datum').order('datum', { ascending: false });
+        if (!data || !data.length) return;
+
+        // Distinct year-month Paare extrahieren
+        var seen = {};
+        var months = [];
+        data.forEach(function(r) {
+            if (!r.datum) return;
+            var d = new Date(r.datum);
+            var key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            if (!seen[key]) {
+                seen[key] = true;
+                months.push({ year: d.getFullYear(), month: d.getMonth() + 1, key: key });
+            }
+        });
+
+        mktState.availableMonths = months;
+
+        // Auto-Select: letzter Monat mit Daten (falls kein Monat gewählt)
+        if (!mktState.selectedMonth && months.length) {
+            mktState.selectedMonth = { year: months[0].year, month: months[0].month };
+        }
+    } catch(e) { console.warn('[marketing] initMonthSelect:', e.message); }
+}
+
+function renderMonthSelector() {
+    var months = mktState.availableMonths || [];
+    var current = getCurrentMonth();
+    var currentKey = current.year + '-' + String(current.month).padStart(2, '0');
+
+    // Aktuellen Monat als Option einfügen falls nicht in Daten
+    var hasCurrentKey = months.some(function(m) { return m.key === currentKey; });
+    var allMonths = hasCurrentKey ? months : [{ year: current.year, month: current.month, key: currentKey }].concat(months);
+
+    var options = allMonths.map(function(m) {
+        var selected = m.key === currentKey ? ' selected' : '';
+        return '<option value="' + m.key + '"' + selected + '>' + MONTH_NAMES_FULL[m.month - 1] + ' ' + m.year + '</option>';
+    }).join('');
+
+    return '<select id="mktMonthSelect" onchange="mktOnMonthChange(this.value)" ' +
+        'class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-semibold bg-white">' +
+        options + '</select>';
+}
+
+function onMonthChange(val) {
+    var parts = val.split('-');
+    var year = parseInt(parts[0]);
+    var month = parseInt(parts[1]);
+    mktState.selectedMonth = { year: year, month: month };
+    reloadAndRender();
 }
 
 // ── Supabase Queries ──
@@ -314,6 +383,9 @@ window.MKT_GLOSSAR = GLOSSAR;
 window.mktGetCurrentMonth = getCurrentMonth;
 window.mktSetSelectedMonth = setSelectedMonth;
 window.mktGetMonthLabel = getMonthLabel;
+window.mktInitMonthSelect = initMonthSelect;
+window.mktRenderMonthSelector = renderMonthSelector;
+window.mktOnMonthChange = onMonthChange;
 window.mktLoadVereinbarung = loadVereinbarung;
 window.mktLoadAlleVereinbarungen = loadAlleVereinbarungen;
 window.mktLoadAdsData = loadAdsData;

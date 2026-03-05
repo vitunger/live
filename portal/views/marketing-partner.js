@@ -32,6 +32,9 @@ async function renderPartnerMarketing() {
     var container = document.getElementById('marketingContent');
     if (!container) return;
 
+    // Monatsdaten ermitteln (auto-select letzter Monat mit Daten)
+    await window.mktInitMonthSelect();
+
     // Tabs rendern
     var tabHtml = PARTNER_TABS.map(function(t) {
         return '<button onclick="showMarketingTab(\'' + t.id + '\')" class="mkt-tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-sm ' +
@@ -39,7 +42,14 @@ async function renderPartnerMarketing() {
             '" data-mkt="' + t.id + '">' + t.icon + ' ' + t.label + '</button>';
     }).join('');
 
-    container.innerHTML = '<div class="mb-6 border-b border-gray-200"><nav class="-mb-px flex space-x-6 overflow-x-auto">' + tabHtml + '</nav></div>' +
+    var monthSelector = typeof window.mktRenderMonthSelector === 'function' ? window.mktRenderMonthSelector() : '';
+
+    container.innerHTML =
+        '<div class="flex items-center justify-between mb-2 flex-wrap gap-2">' +
+            '<div></div>' +
+            '<div class="flex items-center gap-2"><span class="text-xs text-gray-400">Zeitraum:</span>' + monthSelector + '</div>' +
+        '</div>' +
+        '<div class="mb-6 border-b border-gray-200"><nav class="-mb-px flex space-x-6 overflow-x-auto">' + tabHtml + '</nav></div>' +
         '<div id="mktTabContent"></div>';
 
     // Daten laden
