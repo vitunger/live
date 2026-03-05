@@ -156,10 +156,7 @@ export async function saveBwaData() {
     var warenabgabe = v('bwaF_warenabgabe');
     var abschreibung = v('bwaF_abschreibung');
     var sonstige = v('bwaF_sonstige');
-    var gesamtkosten = personal + raum + werbe + warenabgabe + abschreibung + sonstige;
-    var betriebsergebnis = rohertrag + gesamtkosten;
     var zins = v('bwaF_zins');
-    var ergebnis = betriebsergebnis + zins;
 
     if(!umsatz && !wareneinsatz) { if(errEl){errEl.textContent='Bitte mindestens Umsatz oder Wareneinsatz eingeben.';errEl.style.display='block';} return; }
 
@@ -182,6 +179,17 @@ export async function saveBwaData() {
             else fileUrl = path;
         }
 
+        var soErloese = v('bwaF_soErloese');
+        var versicherungen = v('bwaF_versicherungen');
+        var kfzkosten = v('bwaF_kfz');
+        var reparatur = v('bwaF_reparatur');
+        var neutralAufwand = v('bwaF_neutralAufwand');
+        var neutralErtrag = v('bwaF_neutralErtrag');
+        var betrRohertrag = rohertrag + soErloese;
+        var gesamtkosten = personal + raum + versicherungen + kfzkosten + werbe + warenabgabe + abschreibung + reparatur + sonstige;
+        var betriebsergebnis = betrRohertrag + gesamtkosten;
+        var ergebnis = betriebsergebnis + zins + neutralAufwand + neutralErtrag;
+
         var data = {
             standort_id: stdId,
             monat: month,
@@ -193,15 +201,22 @@ export async function saveBwaData() {
             davon_skonti: v('bwaF_skonti'),
             wareneinsatz: wareneinsatz,
             rohertrag: rohertrag,
+            so_betr_erloese: soErloese,
+            betrieblicher_rohertrag: betrRohertrag,
             personalkosten: personal,
             raumkosten: raum,
+            versicherungen: versicherungen,
+            fahrzeugkosten: kfzkosten,
             werbekosten: werbe,
             kosten_warenabgabe: warenabgabe,
             abschreibungen: abschreibung,
+            reparaturen_instandhaltung: reparatur,
             sonstige_kosten: sonstige,
             gesamtkosten: gesamtkosten,
             betriebsergebnis: betriebsergebnis,
             zinsaufwand: zins,
+            neutraler_aufwand: neutralAufwand,
+            neutraler_ertrag: neutralErtrag,
             ergebnis_vor_steuern: ergebnis,
             plan_umsatz: v('bwaF_planUmsatz'),
             plan_wareneinsatz: v('bwaF_planWareneinsatz'),
@@ -221,8 +236,9 @@ export async function saveBwaData() {
         if(resp.error) throw resp.error;
         var bwaId = resp.data && resp.data[0] ? resp.data[0].id : null;
 
-        // Detail-Positionen speichern (wenn vom Parser vorhanden)
-        if(bwaId && window._lastParsedDetails && window._lastParsedDetails.length > 0) {
+        // Detail-Positionen speichern (nur wenn Parser-Daten vorhanden UND KI nicht korrigiert hat)
+        // Bei KI-Korrektur sind die Parser-Details unzuverlässig → nicht speichern
+        if(bwaId && window._lastParsedDetails && window._lastParsedDetails.length > 0 && !window._bwaKiCorrected) {
             // Alte Details löschen
             await _sb().from('bwa_detail_positionen').delete().eq('bwa_id', bwaId);
             // Neue Details in Batches speichern
@@ -257,13 +273,14 @@ export async function saveBwaData() {
         // Cleanup temp vars
         window._lastParsedDetails = null;
         window._lastParsedFormat = null;
+        window._bwaKiCorrected = null;
         window._hqBwaUploadStandortId = null;
         window._hqBwaUploadStandortName = null;
 
         closeBwaUploadModal();
         await loadBwaList();
         if(bwaId) showBwaFromDb(bwaId);
-        if (typeof window.logAudit === 'function') window.logAudit('bwa_upload', 'controlling', { monat: month, jahr: year, umsatz: v('bwaF_umsatz') || 0, format: window._lastParsedFormat || 'manuell', standort: window._hqBwaUploadStandortName || null });
+        if (typeof window.logAudit === 'function') window.logAudit('bwa_upload', 'controlling', { monat: month, jahr: year });
         _showToast('\u2705 BWA '+monatNamen[month]+' '+year+' gespeichert!', 'success');
     } catch(err) {
         if(errEl){errEl.textContent='Fehler: '+err.message;errEl.style.display='block';}
