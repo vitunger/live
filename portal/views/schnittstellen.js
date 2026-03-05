@@ -2155,32 +2155,43 @@ window.loadSocialConfigs = async function() {
 // ═══════════════════════════════════════════════════════
 
 window.saveTikTokConfig = async function() {
-    var key = document.getElementById('tiktok_client_key');
-    var secret = document.getElementById('tiktok_client_secret');
-    var sandbox = document.getElementById('tiktok_sandbox');
-    if (!key || !key.value.trim()) { _showToast('Bitte Client Key eingeben', 'error'); return; }
     try {
         var sb = _sb(); if (!sb) return;
-        var profile = _sbProfile(); if (!profile) return;
-        var isSandbox = sandbox && sandbox.value === 'true';
-        await sb.from('connector_config').upsert({
-            standort_id: profile.standort_id || null,
-            connector_key: 'tiktok_client_key',
-            config_value: key.value.trim()
-        }, { onConflict: 'standort_id,connector_key' });
-        await sb.from('connector_config').upsert({
-            standort_id: profile.standort_id || null,
-            connector_key: 'tiktok_client_secret',
-            config_value: secret ? secret.value.trim() : ''
-        }, { onConflict: 'standort_id,connector_key' });
-        await sb.from('connector_config').upsert({
-            standort_id: profile.standort_id || null,
-            connector_key: 'tiktok_sandbox',
-            config_value: isSandbox ? 'true' : 'false'
-        }, { onConflict: 'standort_id,connector_key' });
+        var fields = [
+            { key: 'client_key', elId: 'tiktok_client_key' },
+            { key: 'client_secret', elId: 'tiktok_client_secret' },
+            { key: 'sandbox', elId: 'tiktok_sandbox' },
+        ];
+        for (var i = 0; i < fields.length; i++) {
+            var f = fields[i];
+            var el = document.getElementById(f.elId);
+            if (!el || !el.value.trim()) continue;
+            var { data: existing } = await sb.from('connector_config')
+                .select('id')
+                .eq('connector_id', 'tiktok')
+                .eq('config_key', f.key)
+                .is('standort_id', null)
+                .maybeSingle();
+            if (existing) {
+                await sb.from('connector_config').update({
+                    config_value: el.value.trim(),
+                    updated_at: new Date().toISOString(),
+                    updated_by: _sbUser() ? _sbUser().id : null
+                }).eq('id', existing.id);
+            } else {
+                await sb.from('connector_config').insert({
+                    connector_id: 'tiktok',
+                    config_key: f.key,
+                    config_value: el.value.trim(),
+                    standort_id: null,
+                    updated_at: new Date().toISOString(),
+                    updated_by: _sbUser() ? _sbUser().id : null
+                });
+            }
+        }
         CONNECTORS.tiktok.status = 'planned';
         CONNECTORS.tiktok.statusLabel = 'Konfiguriert';
-        _showToast('TikTok-Konfiguration gespeichert ✓', 'success');
+        _showToast('TikTok-Konfiguration gespeichert \u2713', 'success');
     } catch(e) {
         _showToast('Fehler beim Speichern: ' + e.message, 'error');
     }
@@ -2216,33 +2227,32 @@ window.loadTikTokData = async function() {
     _showToast('TikTok-Daten werden geladen...', 'info');
     try {
         var sb = _sb(); if (!sb) return;
-        // Try to get stored access token
-        var profile = _sbProfile();
+        // Read access token from connector_config (new pattern)
         var { data: tokenRow } = await sb.from('connector_config')
             .select('config_value')
-            .eq('connector_key', 'tiktok_access_token')
+            .eq('connector_id', 'tiktok')
+            .eq('config_key', 'access_token')
+            .is('standort_id', null)
             .maybeSingle();
         if (!tokenRow || !tokenRow.config_value) {
-            _showToast('Kein Access Token – bitte zuerst mit TikTok verbinden', 'error');
+            _showToast('Kein Access Token \u2013 bitte zuerst mit TikTok verbinden', 'error');
             return;
         }
         var accessToken = tokenRow.config_value;
 
-        // Fetch user info via Supabase Edge Function proxy
+        // Fetch user info via tiktok-proxy Edge Function
         var { data: resp, error } = await sb.functions.invoke('tiktok-proxy', {
             body: { action: 'user_info', access_token: accessToken }
         });
 
         if (error || !resp) {
-            // Fallback: show sandbox demo data
             _showTikTokDemoData();
             return;
         }
 
-        // Populate account stats
         var u = resp.user || {};
         var el = function(id) { return document.getElementById(id); };
-        if (el('tiktokDisplayName')) el('tiktokDisplayName').textContent = u.display_name || '—';
+        if (el('tiktokDisplayName')) el('tiktokDisplayName').textContent = u.display_name || '\u2014';
         if (el('tiktokFollowers')) el('tiktokFollowers').textContent = _fmtN ? _fmtN(u.follower_count || 0) : (u.follower_count || 0);
         if (el('tiktokLikes')) el('tiktokLikes').textContent = _fmtN ? _fmtN(u.likes_count || 0) : (u.likes_count || 0);
         if (el('tiktokVideoCount')) el('tiktokVideoCount').textContent = u.video_count || 0;
@@ -2257,7 +2267,7 @@ window.loadTikTokData = async function() {
         if (statsArea) statsArea.style.display = '';
         CONNECTORS.tiktok.status = 'connected';
         CONNECTORS.tiktok.statusLabel = 'Verbunden';
-        _showToast('TikTok-Daten geladen ✓', 'success');
+        _showToast('TikTok-Daten geladen \u2713', 'success');
     } catch(e) {
         _showTikTokDemoData();
     }
@@ -2429,21 +2439,22 @@ window.loadTikTokConfig = async function() {
     try {
         var sb = _sb(); if (!sb) return;
         var { data: rows } = await sb.from('connector_config')
-            .select('connector_key, config_value')
-            .in('connector_key', ['tiktok_client_key', 'tiktok_client_secret', 'tiktok_sandbox', 'tiktok_access_token']);
+            .select('config_key, config_value')
+            .eq('connector_id', 'tiktok')
+            .is('standort_id', null);
         if (!rows || !rows.length) return;
         var map = {};
-        rows.forEach(function(r) { map[r.connector_key] = r.config_value; });
+        rows.forEach(function(r) { map[r.config_key] = r.config_value; });
         var keyEl = document.getElementById('tiktok_client_key');
         var secretEl = document.getElementById('tiktok_client_secret');
         var sandboxEl = document.getElementById('tiktok_sandbox');
-        if (keyEl && map.tiktok_client_key) keyEl.value = map.tiktok_client_key;
-        if (secretEl && map.tiktok_client_secret) secretEl.value = map.tiktok_client_secret;
-        if (sandboxEl && map.tiktok_sandbox) sandboxEl.value = map.tiktok_sandbox;
-        if (map.tiktok_access_token) {
+        if (keyEl && map.client_key) keyEl.value = map.client_key;
+        if (secretEl && map.client_secret) secretEl.value = map.client_secret;
+        if (sandboxEl && map.sandbox) sandboxEl.value = map.sandbox;
+        if (map.access_token) {
             CONNECTORS.tiktok.status = 'connected';
             CONNECTORS.tiktok.statusLabel = 'Verbunden';
-        } else if (map.tiktok_client_key) {
+        } else if (map.client_key) {
             CONNECTORS.tiktok.status = 'planned';
             CONNECTORS.tiktok.statusLabel = 'Konfiguriert';
         }
