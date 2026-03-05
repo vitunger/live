@@ -302,16 +302,14 @@ h += '<div class="flex items-start space-x-2"><span class="text-vit-orange font-
 h += '<div class="flex items-start space-x-2"><span class="text-vit-orange font-bold">→</span><span><strong>Toolkosten:</strong> Aktive Tool-Zuweisungen (' + (tools || []).length + ' Nutzer)</span></div>';
 h += '</div></div>';
 
-// Quarterly settlement info
-h += '<div class="vit-card p-6">';
-h += '<h3 class="font-bold text-sm mb-3">📊 Quartals-Spitzenausgleich</h3>';
-h += '<p class="text-sm text-gray-600 mb-2">Vierteljährlich wird auf Basis der tatsächlichen BWA-Umsätze abgerechnet:</p>';
-h += '<div class="bg-blue-50 rounded-lg p-4 text-xs text-blue-800 space-y-1 font-mono">';
-h += '<p>IST-Beteiligung = 2% × tatsächlicher Umsatz (aus BWA)</p>';
-h += '<p>Bereits bezahlt = Summe der monatl. Abschläge (80%)</p>';
-h += '<p>Spitzenausgleich = IST-Beteiligung − bereits bezahlt</p>';
-h += '<p class="text-red-600 font-semibold mt-2">⚠️ Fehlende BWA-Monate: 100% Planbasis statt IST</p>';
-h += '</div></div>';
+// Quarterly settlement LIVE PREVIEW
+h += '<div class="vit-card p-6" id="settlementPreviewCard">';
+h += '<h3 class="font-bold text-sm mb-3">📊 Quartals-Spitzenausgleich – Live-Vorschau</h3>';
+h += '<div id="settlementPreviewContent"><div class="text-center py-4"><div class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-vit-orange"></div><p class="text-xs text-gray-400 mt-2">Berechne Vorschau...</p></div></div>';
+h += '</div>';
+
+// Load settlement preview async
+loadSettlementPreview(sid);
 
 container.innerHTML = h;
 }
@@ -985,6 +983,81 @@ try {
 }
 
 
+
+
+// === SETTLEMENT LIVE PREVIEW ===
+async function loadSettlementPreview(standortId) {
+    var container = document.getElementById('settlementPreviewContent');
+    if (!container) return;
+    try {
+        var now = new Date();
+        var currentQ = Math.ceil((now.getMonth() + 1) / 3);
+        var currentY = now.getFullYear();
+        var result = await billingApi('settlement-preview', { standort_id: standortId, year: currentY, quarter: currentQ });
+        if (result.error || !result.has_strategy) {
+            container.innerHTML = '<p class="text-sm text-gray-400">Keine Vorschau verfügbar – Jahresstrategie fehlt oder nicht gesperrt.</p>';
+            return;
+        }
+        var mLabels = {1:'Jan',2:'Feb',3:'Mär',4:'Apr',5:'Mai',6:'Jun',7:'Jul',8:'Aug',9:'Sep',10:'Okt',11:'Nov',12:'Dez'};
+        var h = '';
+        h += '<p class="text-xs text-gray-500 mb-3">Voraussichtlicher Spitzenausgleich Q' + currentQ + '/' + currentY + ' – aktualisiert sich automatisch bei jeder BWA-Einreichung.</p>';
+        // Month-by-month table
+        h += '<table class="w-full text-sm mb-4"><thead class="text-xs text-gray-500 uppercase border-b"><tr>';
+        h += '<th class="text-left py-2">Monat</th><th class="text-center py-2">BWA</th><th class="text-right py-2">Umsatz</th><th class="text-right py-2">2% Beteiligung</th><th class="text-left py-2">Basis</th>';
+        h += '</tr></thead><tbody>';
+        var months = result.months || [];
+        months.forEach(function(m) {
+            var hasBwa = m.status === 'bwa_vorhanden';
+            var rowClass = hasBwa ? '' : 'bg-yellow-50';
+            h += '<tr class="border-b border-gray-100 ' + rowClass + '">';
+            h += '<td class="py-2 font-medium">' + (mLabels[m.monat] || m.monat) + '</td>';
+            h += '<td class="py-2 text-center">' + (hasBwa ? '<span class="text-green-600 font-bold">\u2705</span>' : '<span class="text-yellow-600 font-bold">\u26a0\ufe0f</span>') + '</td>';
+            h += '<td class="py-2 text-right font-semibold">' + fmtEur(m.umsatz) + '</td>';
+            h += '<td class="py-2 text-right">' + fmtEur(m.rev_share) + '</td>';
+            h += '<td class="py-2 text-xs ' + (hasBwa ? 'text-green-600' : 'text-yellow-600 font-semibold') + '">' + m.basis + '</td>';
+            h += '</tr>';
+        });
+        h += '</tbody></table>';
+        // Summary
+        h += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">';
+        h += '<div class="p-3 bg-gray-50 rounded-lg"><p class="text-[10px] text-gray-400 uppercase">Soll (IST+Plan)</p><p class="text-sm font-bold">' + fmtEur(result.total_target) + '</p></div>';
+        h += '<div class="p-3 bg-gray-50 rounded-lg"><p class="text-[10px] text-gray-400 uppercase">Bereits bezahlt</p><p class="text-sm font-bold text-green-600">- ' + fmtEur(result.already_billed) + '</p></div>';
+        if (result.missing_extra > 0) {
+            h += '<div class="p-3 bg-yellow-50 rounded-lg"><p class="text-[10px] text-yellow-600 uppercase">BWA-Aufschlag</p><p class="text-sm font-bold text-yellow-700">+ ' + fmtEur(result.missing_extra) + '</p></div>';
+        }
+        var settColor = result.settlement_total >= 0 ? 'text-red-600' : 'text-green-600';
+        var settLabel = result.settlement_total >= 0 ? 'Nachzahlung' : 'Gutschrift';
+        h += '<div class="p-3 rounded-lg ' + (result.settlement_total >= 0 ? 'bg-red-50' : 'bg-green-50') + '"><p class="text-[10px] uppercase ' + settColor + '">' + settLabel + '</p><p class="text-lg font-bold ' + settColor + '">' + fmtEur(Math.abs(result.settlement_total)) + '</p></div>';
+        h += '</div>';
+        // Missing BWA warning
+        if (result.missing_count > 0) {
+            h += '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">';
+            h += '<p class="text-xs text-yellow-700"><strong>\u26a0\ufe0f ' + result.missing_count + ' BWA-Monat' + (result.missing_count > 1 ? 'e fehlen' : ' fehlt') + '!</strong> Fehlende Monate werden mit 100% Planbasis + 20% Aufschlag berechnet. Reiche die BWA rechtzeitig ein, um den Aufschlag zu vermeiden.</p>';
+            h += '</div>';
+        }
+        if (result.missing_count === 0 && result.bwa_count === 3) {
+            h += '<div class="bg-green-50 border border-green-200 rounded-lg p-3">';
+            h += '<p class="text-xs text-green-700"><strong>\u2705 Alle BWAs eingereicht!</strong> Der Spitzenausgleich basiert vollständig auf deinen IST-Umsätzen – kein Planzuschlag.</p>';
+            h += '</div>';
+        }
+        // Formulas
+        h += '<details class="mt-3"><summary class="text-xs text-gray-400 cursor-pointer hover:text-gray-600">\ud83d\udcda Berechnungsdetails anzeigen</summary>';
+        h += '<div class="bg-blue-50 rounded-lg p-3 mt-2 text-xs text-blue-800 space-y-1 font-mono">';
+        h += '<p>IST-Umsatz (BWA): ' + fmtEur(result.total_ist_revenue) + ' (' + result.bwa_count + ' Monate)</p>';
+        h += '<p>Plan-Umsatz (fehlend): ' + fmtEur(result.total_plan_revenue) + ' (' + result.missing_count + ' Monate)</p>';
+        h += '<p>Soll IST: 2% \u00d7 ' + fmtEur(result.total_ist_revenue) + ' = ' + fmtEur(result.target_ist) + '</p>';
+        if (result.missing_count > 0) h += '<p>Soll fehlend: 2% \u00d7 ' + fmtEur(result.plan_month_revenue) + ' \u00d7 ' + result.missing_count + ' = ' + fmtEur(result.target_missing) + '</p>';
+        h += '<p>Bereits abgerechnet: ' + fmtEur(result.already_billed) + '</p>';
+        h += '<p class="font-semibold">Spitzenausgleich: ' + fmtEur(result.total_target) + ' - ' + fmtEur(result.already_billed) + ' = ' + fmtEur(result.settlement_base) + '</p>';
+        if (result.missing_extra > 0) h += '<p class="text-yellow-700">+ BWA-Aufschlag: ' + fmtEur(result.missing_extra) + '</p>';
+        h += '<p class="font-bold text-lg mt-1">= ' + fmtEur(result.settlement_total) + ' netto</p>';
+        h += '</div></details>';
+        container.innerHTML = h;
+    } catch(err) {
+        container.innerHTML = '<p class="text-xs text-red-400">Fehler: ' + (err.message || err) + '</p>';
+    }
+}
+window.loadSettlementPreview = loadSettlementPreview;
 
 // Strangler Fig
 const _exports = {initStandortBilling,loadStandortInvoices,loadStandortStrategy,loadStandortCosts,loadStandortLiquidity,downloadInvoicePdf,loadStandortPayments,applyKommandoPermissions,filterKzStandorte,filterKzMa,statusBadge,rolleBadge,rollenBadges,renderKzStandorte,openStandortDetailModal,closeStdDetailModal,selectWawi,renderKzMitarbeiter};
