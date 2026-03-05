@@ -2089,8 +2089,8 @@ function _showSocialDemo(platform) {
     _populateSocialRows(platform, demo.rows);
     document.getElementById('socialStats_' + platform).style.display = '';
     CONNECTORS[platform].status = 'planned';
-    CONNECTORS[platform].statusLabel = 'Demo-Daten';
-    _showToast(CONNECTORS[platform].name + ': Demo-Daten angezeigt', 'info');
+    // Demo-Daten entfernt
+    // Demo-Daten entfernt
 }
 
 function _populateSocialCard(platform, name, stat1, stat2, stat3) {
@@ -2273,7 +2273,7 @@ window.loadTikTokData = async function() {
     }
 };
 
-function _showTikTokDemoData() {
+function _showTikTokDemoData() { return; /* Demo entfernt */ }
     var statsArea = document.getElementById('tiktokStatsArea');
     var el = function(id) { return document.getElementById(id); };
     // Demo account stats
@@ -2291,7 +2291,7 @@ function _showTikTokDemoData() {
     ];
     _renderTikTokVideos(demoVideos);
     if (statsArea) statsArea.style.display = '';
-    _showToast('Demo-Daten angezeigt (Sandbox-Modus)', 'info');
+    // Demo entfernt
 }
 
 function _renderTikTokVideos(videos) {
