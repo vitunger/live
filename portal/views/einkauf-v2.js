@@ -730,3 +730,6 @@ window.einkaufV2Delete = async function(id) {
 };
 
 window.renderEinkaufV2 = renderEinkaufV2;
+// Alias für Abwärtskompatibilität (hq-verkauf.js ruft showHqEkTab)
+window.showHqEkTab = function(tab) { window.einkaufV2ShowTab && window.einkaufV2ShowTab(tab); };
+window.showEinkaufTab = window.showHqEkTab;

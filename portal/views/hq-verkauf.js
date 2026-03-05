@@ -528,7 +528,7 @@ function _hookShowView() {
     if(v==='home') { loadDashboardWidgets(); loadAllgemeinData(); }
     if(v==='einkauf') { showEinkaufTab('sortiment'); }
     if(v==='hqAllgemein') { renderHqAllgemein(hqStandorte, [], [], []); }
-    if(v==='hqEinkauf') { showHqEkTab('dash'); }
+    if(v==='hqEinkauf') { if(window.showHqEkTab) { showHqEkTab('dash'); } else { setTimeout(function(){ window.showHqEkTab && window.showHqEkTab('dash'); }, 300); } }
     if(v==='hqVerkauf') renderHqVerkauf();
     if(v==='hqAktionen') renderHqAktionen();
     if(v==='hqKomm'){_showView('hqKommando');showKommandoTab('kommunikation');return;}
