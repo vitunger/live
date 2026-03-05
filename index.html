@@ -1733,8 +1733,8 @@
                                         <div class="flex items-center justify-between mb-4">
                                             <h3 id="bwaTitle" class="text-lg font-bold text-gray-800">BWA Details</h3>
                                             <div class="flex items-center space-x-2">
-                                                <button id="bwaEditBtn" style="display:none;" class="text-xs text-gray-400 hover:text-vit-orange">Bearbeiten</button>
-                                                <button id="bwaDeleteBtn" style="display:none;" class="text-xs text-gray-400 hover:text-red-500">Loeschen</button>
+                                                <button id="bwaEditBtn" onclick="if(typeof window.editSelectedBwa==='function')window.editSelectedBwa()" style="display:none;" class="text-xs text-gray-400 hover:text-vit-orange cursor-pointer">Bearbeiten</button>
+                                                <button id="bwaDeleteBtn" onclick="if(typeof window.deleteBwa==='function')window.deleteBwa()" style="display:none;" class="text-xs text-gray-400 hover:text-red-500 cursor-pointer">Loeschen</button>
                                             </div>
                                         </div>
                                         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
