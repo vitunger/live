@@ -38,10 +38,13 @@ var CHART_COLORS = {
 // ── State ──
 var mktState = {
     selectedMonth: null, // {year, month} - null = aktueller Monat
+    selectedStandort: null, // UUID oder null = alle
+    selectedYear: new Date().getFullYear(), // Jahresfilter
     vereinbarung: null,  // Partner: eigene Vereinbarung
     vereinbarungen: [],  // HQ: alle Vereinbarungen
     adsData: [],         // ads_performance Daten
     leadTracking: [],    // marketing_lead_tracking Daten
+    standorte: [],       // Standort-Liste fuer Filter
     charts: {},          // Chart.js instances
     activeTab: null      // aktueller Tab-Name
 };
@@ -453,6 +456,72 @@ function renderExpertToggle() {
         '</div>';
 }
 
+// ── Standort-Filter ──
+
+async function loadStandorte() {
+    var sb = _sb();
+    if (!sb || mktState.standorte.length > 0) return;
+    try {
+        var { data } = await sb.from('standorte').select('id, name, slug').eq('is_demo', false).order('name');
+        mktState.standorte = data || [];
+    } catch(e) { console.warn('[marketing] loadStandorte:', e.message); }
+}
+
+function renderStandortFilter() {
+    var options = '<option value="">Alle Standorte</option>';
+    (mktState.standorte || []).forEach(function(s) {
+        var sel = mktState.selectedStandort === s.id ? ' selected' : '';
+        options += '<option value="' + s.id + '"' + sel + '>' + _escH(s.name) + '</option>';
+    });
+    return '<select id="mktStandortFilter" onchange="mktOnStandortChange(this.value)" ' +
+        'class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white">' +
+        options + '</select>';
+}
+
+function onStandortChange(val) {
+    mktState.selectedStandort = val || null;
+    mktState._hqDataLoaded = false;
+    reloadAndRender();
+}
+
+function renderYearSelector() {
+    var currentYear = new Date().getFullYear();
+    var options = '';
+    for (var y = currentYear; y >= currentYear - 2; y--) {
+        var sel = mktState.selectedYear === y ? ' selected' : '';
+        options += '<option value="' + y + '"' + sel + '>' + y + '</option>';
+    }
+    return '<select id="mktYearSelect" onchange="mktOnYearChange(this.value)" ' +
+        'class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-semibold bg-white">' +
+        options + '</select>';
+}
+
+function onYearChange(val) {
+    mktState.selectedYear = parseInt(val);
+    mktState._hqDataLoaded = false;
+    reloadAndRender();
+}
+
+// ── Live-Daten Banner ──
+
+function renderLiveBanner(leadType) {
+    var tracking = mktState.leadTracking || [];
+    var total = 0;
+    var lt = leadType || mktState._leadType || 'kombi';
+    tracking.forEach(function(t) {
+        if (lt === 'kombi') total += Number(t.leads_ist || 0);
+        else if (lt === 'regulaer') total += Number(t.leads_ist || 0) - Number(t.store_visits_ist || 0);
+        else if (lt === 'store_visits') total += Math.round(Number(t.store_visits_ist || 0) * 0.25);
+        else if (lt === 'anzeige_sv') total += Number(t.store_visits_ist || 0);
+    });
+    var labels = { kombi: _fmtN(total) + ' Leads + SV Conv.', regulaer: _fmtN(total) + ' Leads', store_visits: _fmtN(total) + ' Store Visit Conv. (\u00d70.25)', anzeige_sv: _fmtN(total) + ' Store Visits (Roh)' };
+    var txt = labels[lt] || _fmtN(total) + ' Leads';
+    return '<div class="flex items-center gap-2 mb-4 text-sm"><span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>' +
+        '<span class="text-green-600 font-semibold">Live-Daten</span>' +
+        '<span class="text-gray-400">\u2022</span>' +
+        '<span class="text-gray-600">' + txt + ' in ' + mktState.selectedYear + '</span></div>';
+}
+
 // Inject CSS on module load
 injectMarketingCSS();
 
@@ -489,5 +558,11 @@ window.mktFmtN = _fmtN;
 window.mktFmtEur = _fmtEur;
 window.mktToggleExpert = mktToggleExpert;
 window.mktRenderExpertToggle = renderExpertToggle;
+window.mktLoadStandorte = loadStandorte;
+window.mktRenderStandortFilter = renderStandortFilter;
+window.mktOnStandortChange = onStandortChange;
+window.mktRenderYearSelector = renderYearSelector;
+window.mktOnYearChange = onYearChange;
+window.mktRenderLiveBanner = renderLiveBanner;
 
 })();
