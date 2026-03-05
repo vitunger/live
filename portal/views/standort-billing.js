@@ -836,12 +836,161 @@ try {
     html += '<button onclick="toggleBillingDanger(\''+s.id+'\',\''+s.billing_status+'\')" class="px-4 py-2 rounded-lg text-sm font-semibold transition ' + (isDanger ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + '">' + (isDanger ? '\u26a0\ufe0f Vorkasse aktiv \u2013 Aufheben?' : 'Auf Vorkasse setzen') + '</button>';
     if (isDanger) html += '<span class="text-xs text-red-600">Alle Rechnungen werden mit Vorkasse-Konditionen erstellt</span>';
     html += '</div></div>';
+    html += '<div id="stdGruppenPlaceholder" class="mt-4 pt-4 border-t border-gray-200"><p class="text-xs text-gray-400 py-2">Lade Gruppen-Daten...</p></div>';
     html += '<div class="flex space-x-3 mt-4"><button onclick="closeStdDetailModal()" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-semibold text-sm hover:bg-gray-200">Schlie\u00dfen</button></div>';
     html += '</div></div>';
     var c = document.createElement('div'); c.id='stdDetailContainer'; c.innerHTML=html; document.body.appendChild(c);
+    _loadGruppenAbschnitt(stdId);
 } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
 }
 export function closeStdDetailModal() { var c=document.getElementById('stdDetailContainer'); if(c) c.remove(); }
+
+async function _loadGruppenAbschnitt(standortId) {
+    var el = document.getElementById('stdGruppenPlaceholder');
+    if (!el) return;
+    try {
+        var sb = _sb();
+        var escH = window._escH || function(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+        var q = function(v){ return String(v).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); };
+
+        var grpR = await sb.from('standort_gruppe_mitglieder')
+            .select('*, standort_gruppen(id, name)')
+            .eq('standort_id', standortId);
+        var grp = (!grpR.error && grpR.data && grpR.data.length > 0) ? grpR.data[0] : null;
+
+        var allGR = await sb.from('standort_gruppen').select('id, name').order('name');
+        var allG = (!allGR.error && allGR.data) ? allGR.data : [];
+
+        var zugR = await sb.from('user_standorte')
+            .select('id, user_id, users(id, name, email)')
+            .eq('standort_id', standortId);
+        var zugUser = (!zugR.error && zugR.data) ? zugR.data : [];
+
+        var gfR = await sb.from('users').select('id, name, email')
+            .eq('status', 'aktiv').eq('is_hq', false).neq('standort_id', standortId);
+        var andereGfs = (!gfR.error && gfR.data) ? gfR.data : [];
+
+        var mitgl = [];
+        if (grp) {
+            var mR = await sb.from('standort_gruppe_mitglieder')
+                .select('standort_id, standorte(name)')
+                .eq('gruppe_id', grp.standort_gruppen.id);
+            mitgl = (!mR.error && mR.data) ? mR.data : [];
+        }
+
+        var h = '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">\uD83D\uDD17 Standort-Gruppe</p>';
+
+        if (grp) {
+            var gId = grp.standort_gruppen.id;
+            var names = mitgl
+                .filter(function(m){ return m.standort_id !== standortId; })
+                .map(function(m){ return m.standorte ? m.standorte.name : ''; })
+                .filter(Boolean).join(', ') || '\u2014';
+            h += '<div class="bg-green-50 border border-green-200 rounded-xl p-3 mb-2">';
+            h += '<div class="flex items-center justify-between mb-2">';
+            h += '<div><p class="text-sm font-semibold text-green-800">\uD83D\uDD17 ' + escH(grp.standort_gruppen.name) + '</p>';
+            h += '<p class="text-xs text-green-600">Mitglieder: ' + escH(names) + '</p></div>';
+            h += '<button onclick="window.removeStandortFromGruppe(\'' + q(gId) + '\',\'' + q(standortId) + '\');closeStdDetailModal()" class="text-xs text-red-500 hover:underline">Verlassen</button>';
+            h += '</div><div class="grid grid-cols-2 gap-2">';
+            h += '<label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" '
+                + (grp.gemeinsame_bwa ? 'checked' : '')
+                + ' onchange="window.updateGruppeSetting(\'' + q(gId) + '\',\'' + q(standortId) + '\',\'gemeinsame_bwa\',this.checked)" class="rounded" style="accent-color:#EF7D00"><span>Gemeinsame BWA</span></label>';
+            h += '<label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" '
+                + (grp.gemeinsame_planung ? 'checked' : '')
+                + ' onchange="window.updateGruppeSetting(\'' + q(gId) + '\',\'' + q(standortId) + '\',\'gemeinsame_planung\',this.checked)" class="rounded" style="accent-color:#EF7D00"><span>Gemeinsame Planung</span></label>';
+            h += '</div></div>';
+        } else {
+            var opts = allG.map(function(g){ return '<option value="' + g.id + '">' + escH(g.name) + '</option>'; }).join('');
+            h += '<div class="bg-gray-50 rounded-xl p-3 mb-2">';
+            h += '<p class="text-xs text-gray-400 mb-2">Kein Mitglied einer Gruppe.</p>';
+            h += '<div class="flex gap-2 mb-2">';
+            h += '<input id="stdGrpNeu" type="text" placeholder="Neue Gruppe..." class="flex-1 px-3 py-1.5 border border-gray-200 rounded-lg text-sm">';
+            h += '<button onclick="window._stdGrpCreate(\'' + q(standortId) + '\')" class="px-3 py-1.5 bg-vit-orange text-white rounded-lg text-sm font-semibold">Erstellen</button>';
+            h += '</div>';
+            if (allG.length > 0) {
+                h += '<div class="flex gap-2">';
+                h += '<select id="stdGrpJoinSel" class="flex-1 px-3 py-1.5 border border-gray-200 rounded-lg text-sm">';
+                h += '<option value="">— Bestehende Gruppe —</option>' + opts;
+                h += '</select>';
+                h += '<button onclick="window._stdGrpJoin(\'' + q(standortId) + '\')" class="px-3 py-1.5 bg-gray-700 text-white rounded-lg text-sm font-semibold">Beitreten</button>';
+                h += '</div>';
+            }
+            h += '</div>';
+        }
+
+        h += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-4 mb-2">\uD83D\uDC65 Erweiterter Zugriff</p>';
+        if (zugUser.length > 0) {
+            zugUser.forEach(function(z) {
+                var u = z.users; if (!u) return;
+                h += '<div class="flex items-center justify-between py-1.5 border-b border-gray-100">';
+                h += '<div><p class="text-sm font-semibold text-gray-800">' + escH(u.name || '') + '</p>';
+                h += '<p class="text-xs text-gray-400">' + escH(u.email || '') + '</p></div>';
+                h += '<button onclick="window._stdZugRemove(\'' + q(z.id) + '\',\'' + q(standortId) + '\')" class="text-xs text-red-400 hover:underline">Entfernen</button>';
+                h += '</div>';
+            });
+        } else {
+            h += '<p class="text-xs text-gray-400 mb-2">Kein erweiterter Zugriff vergeben.</p>';
+        }
+        if (andereGfs.length > 0) {
+            var gfOpts = andereGfs.map(function(u){ return '<option value="' + u.id + '">' + escH(u.name || u.email) + '</option>'; }).join('');
+            h += '<div class="flex gap-2 mt-2">';
+            h += '<select id="stdZugSel" class="flex-1 px-3 py-1.5 border border-gray-200 rounded-lg text-sm">';
+            h += '<option value="">— GF ausw\u00e4hlen —</option>' + gfOpts;
+            h += '</select>';
+            h += '<button onclick="window._stdZugAdd(\'' + q(standortId) + '\')" class="px-3 py-1.5 bg-vit-orange text-white rounded-lg text-sm font-semibold">Hinzuf\u00fcgen</button>';
+            h += '</div>';
+        }
+
+        el.innerHTML = h;
+    } catch(e) {
+        if (el) el.innerHTML = '<p class="text-xs text-red-400">Fehler beim Laden der Gruppen-Daten.</p>';
+    }
+}
+
+window._stdGrpCreate = async function(standortId) {
+    var name = (document.getElementById('stdGrpNeu') || {}).value || '';
+    if (!name.trim()) { _showToast('Bitte Gruppenname eingeben', 'error'); return; }
+    var sb = _sb();
+    var r = await sb.from('standort_gruppen').insert({ name: name.trim() }).select().single();
+    if (r.error) { _showToast('Fehler: ' + r.error.message, 'error'); return; }
+    await sb.from('standort_gruppe_mitglieder').insert({
+        gruppe_id: r.data.id, standort_id: standortId,
+        is_primary: true, gemeinsame_bwa: false, gemeinsame_planung: false
+    });
+    _showToast('Gruppe erstellt \u2705', 'success');
+    openStandortDetailModal(standortId);
+};
+
+window._stdGrpJoin = async function(standortId) {
+    var gruppeId = (document.getElementById('stdGrpJoinSel') || {}).value || '';
+    if (!gruppeId) { _showToast('Bitte Gruppe w\u00e4hlen', 'error'); return; }
+    var sb = _sb();
+    var r = await sb.from('standort_gruppe_mitglieder').insert({
+        gruppe_id: gruppeId, standort_id: standortId,
+        is_primary: false, gemeinsame_bwa: false, gemeinsame_planung: false
+    });
+    if (r.error) { _showToast('Fehler: ' + r.error.message, 'error'); return; }
+    _showToast('Gruppe beigetreten \u2705', 'success');
+    openStandortDetailModal(standortId);
+};
+
+window._stdZugAdd = async function(standortId) {
+    var userId = (document.getElementById('stdZugSel') || {}).value || '';
+    if (!userId) { _showToast('Bitte GF w\u00e4hlen', 'error'); return; }
+    var sb = _sb();
+    var r = await sb.from('user_standorte').insert({ user_id: userId, standort_id: standortId, is_primary: false });
+    if (r.error) { _showToast('Fehler: ' + r.error.message, 'error'); return; }
+    _showToast('Zugriff vergeben \u2705', 'success');
+    openStandortDetailModal(standortId);
+};
+
+window._stdZugRemove = async function(entryId, standortId) {
+    var sb = _sb();
+    await sb.from('user_standorte').delete().eq('id', entryId);
+    _showToast('Zugriff entfernt', 'success');
+    openStandortDetailModal(standortId);
+};
+
 
 // ═══ HQ WaWi Connection Management (in Standort Detail Modal) ═══
 window.hqTestWawiConnection = async function(stdId) {
