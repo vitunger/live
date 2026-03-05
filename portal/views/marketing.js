@@ -63,7 +63,7 @@ function setSelectedMonth(year, month) {
 }
 
 async function reloadAndRender() {
-    // Flags resetten damit Daten beim nächsten Render neu geladen werden
+    // Flags resetten damit Daten fuer neuen Monat neu geladen werden
     mktState._partnerDataLoaded = false;
     mktState._hqDataLoaded = false;
     var isHq = _sbProfile() && _sbProfile().is_hq;
