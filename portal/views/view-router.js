@@ -26,7 +26,7 @@
 const VIEW_RENDER_MAP = {
     // === HQ Views ===
     'hqCockpit':     { fn: 'renderHqCockpit' },
-    'hqStandorte':   { fn: 'renderHqStandorte' },
+    'hqStandorte':   { fn: 'showHqStandorteTab', args: ['uebersicht'] },
     'hqFinanzen':    { fn: 'renderHqFinanzen' },
     'marketing':     { fn: 'renderMarketing' },
     'hqMarketing':   { fn: 'renderHqMarketing' },
