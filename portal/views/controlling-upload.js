@@ -47,7 +47,7 @@ export function openBwaUploadModal() {
     // LEFT: Excel preview
     html += '<div id="bwaExcelPreview" style="flex:1;min-width:0;">';
     html += '<p class="text-xs font-semibold text-gray-600 mb-1">\u{1F4C4} Originaldaten aus Datei</p>';
-    html += '<div id="bwaExcelPreviewContent" style="max-height:520px;overflow:auto;border:1px solid #e5e7eb;border-radius:8px;font-size:10px;background:#fafafa;"></div>';
+    html += '<div id="bwaExcelPreviewContent" style="max-height:70vh;overflow:auto;border:1px solid #e5e7eb;border-radius:8px;font-size:10px;background:#fafafa;"></div>';
     html += '</div>';
     // RIGHT: Recognized values + form
     html += '<div id="bwaFormSide" style="flex:1;min-width:0;">';
@@ -81,7 +81,7 @@ export function openBwaUploadModal() {
         {id:'bwaF_sonstige',label:'Sonstige Kosten',ph:''},
         {id:'bwaF_zins',label:'Zinsaufwand',ph:''}
     ];
-    html += '<div class="space-y-2 mb-4 max-h-60 overflow-y-auto">';
+    html += '<div class="space-y-2 mb-4">';
     fields.forEach(function(f) {
         html += '<div class="flex items-center space-x-2"><label class="'+(f.sub?'pl-4 ':'')+' text-xs text-gray-600 w-48 flex-shrink-0">'+f.label+'</label>';
         html += '<input id="'+f.id+'" type="number" step="0.01" class="flex-1 px-2 py-1.5 border border-gray-200 rounded text-sm text-right bwa-field" placeholder="'+f.ph+'"></div>';
