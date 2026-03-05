@@ -627,9 +627,6 @@
                         '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">Likes</th>' +
                         '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">Kommentare</th>' +
                         '</tr></thead><tbody class="divide-y divide-gray-100">';
-                    ausgespielt.slice(0, 20).forEach(function(p) {
-                        el.innerHTML = el.innerHTML; // force reflow avoided
-                    });
                     var rows = '';
                     ausgespielt.slice(0, 20).forEach(function(p) {
                         rows += '<tr class="hover:bg-gray-50">' +
@@ -1199,9 +1196,8 @@
                 '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">Gesamt</th>' +
                 '</tr></thead><tbody class="divide-y divide-gray-100">';
 
-            var matrixData = SC.wettbewerber.slice().map(function(w) {
-                w._totalFollower = (w.ig_follower || 0) + (w.tt_follower || 0) + (w.fb_follower || 0) + (w.yt_follower || 0);
-                return w;
+            var matrixData = SC.wettbewerber.map(function(w) {
+                return { name: w.name, ig_follower: w.ig_follower, tt_follower: w.tt_follower, fb_follower: w.fb_follower, yt_follower: w.yt_follower, _totalFollower: (w.ig_follower || 0) + (w.tt_follower || 0) + (w.fb_follower || 0) + (w.yt_follower || 0) };
             }).sort(function(a,b) { return b._totalFollower - a._totalFollower; });
 
             matrixData.forEach(function(w) {
