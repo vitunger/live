@@ -748,6 +748,8 @@ try {
     } else {
         window.sbStandortIds = [];
     }
+    // Topbar-Name aktualisieren nachdem sbStandort gesetzt wurde
+    if (typeof updateUI === 'function') updateUI();
 } catch(e) { console.warn('[MultiStandort] Konnte user_standorte nicht laden:', e.message); window.sbStandortIds = []; }
 }
 
