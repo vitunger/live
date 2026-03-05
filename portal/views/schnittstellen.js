@@ -2083,14 +2083,8 @@ window.loadSocialData = async function(platform) {
 
 
 function _showSocialDemo(platform) {
-    var demo = SOCIAL_DEMO[platform];
-    if (!demo) return;
-    _populateSocialCard(platform, demo.name, demo.followers, demo.reach, demo.posts);
-    _populateSocialRows(platform, demo.rows);
-    document.getElementById('socialStats_' + platform).style.display = '';
-    CONNECTORS[platform].status = 'planned';
-    // Demo-Daten entfernt
-    // Demo-Daten entfernt
+    // Demo-Daten komplett entfernt
+    return;
 }
 
 function _populateSocialCard(platform, name, stat1, stat2, stat3) {
