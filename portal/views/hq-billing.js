@@ -105,7 +105,9 @@ export async function loadBillingOverview() {
             h += '<td class="p-3"><p class="font-semibold text-sm">' + _escH(st.name) + '</p><p class="text-xs text-gray-400">' + _escH(st.inhaber_name || '') + '</p></td>';
             h += '<td class="p-3 text-center">' + (strat && strat.locked ? '<span class="text-green-600 text-xs font-semibold">✅ Gesperrt</span>' : strat && strat.approved_at ? '<span class="text-blue-600 text-xs">✓ Genehmigt</span>' : '<span class="text-red-500 text-xs">❌ Fehlt</span>') + '</td>';
             h += '<td class="p-3 text-center">' + (acct && acct.sepa_active ? '<span class="text-green-600 text-xs">✅</span>' : '<span class="text-gray-300 text-xs">—</span>') + '</td>';
-            h += '<td class="p-3 text-right">' + (inv ? '<span class="font-semibold">' + _fmtEur(inv.total) + '</span>' : '<span class="text-gray-300">—</span>') + '</td>';
+            var allInvs = st.invoices || (inv ? [inv] : []);
+            var totalAllInvs = allInvs.reduce(function(s,i){ return s + (i.total || 0); }, 0);
+            h += '<td class="p-3 text-right">' + (allInvs.length > 0 ? '<span class="font-semibold">' + _fmtEur(totalAllInvs) + '</span>' + (allInvs.length > 1 ? '<br><span class="text-[10px] text-gray-400">' + allInvs.length + ' Rechnungen</span>' : '') : '<span class="text-gray-300">—</span>') + '</td>';
             h += '<td class="p-3 text-center">' + (inv ? billingStatusBadge(inv.status) : '<span class="text-gray-300 text-xs">Keine</span>') + '</td>';
             h += '<td class="p-3 text-center">';
             if (inv) h += '<button onclick="event.stopPropagation();showBillingInvoice(\'' + inv.id + '\')" class="text-xs text-vit-orange hover:underline">Details →</button>';
@@ -406,7 +408,7 @@ export async function loadBillingProducts() {
     if (!container) return;
     var { data: products } = await _sb().from('billing_products').select('*').order('key');
     var h = '<div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr>';
-    h += '<th class="text-left p-3">Key</th><th class="text-left p-3">Name</th><th class="text-left p-3">Typ</th><th class="text-left p-3">Frequenz</th><th class="text-right p-3">Betrag/Prozent</th><th class="text-center p-3">Aktiv</th>';
+    h += '<th class="text-left p-3">Key</th><th class="text-left p-3">Name</th><th class="text-left p-3">Typ</th><th class="text-left p-3">Frequenz</th><th class="text-center p-3">Abrechnungstag</th><th class="text-right p-3">Betrag/Prozent</th><th class="text-center p-3">Aktiv</th>';
     h += '</tr></thead><tbody>';
     (products || []).forEach(function(p) {
         h += '<tr class="border-t">';
@@ -414,6 +416,7 @@ export async function loadBillingProducts() {
         h += '<td class="p-3 font-semibold">' + p.name + '</td>';
         h += '<td class="p-3 text-xs">' + p.product_type + '</td>';
         h += '<td class="p-3 text-xs">' + p.billing_frequency + '</td>';
+        h += '<td class="p-3 text-center">' + (p.billing_frequency === 'monthly' ? '<span class="text-xs font-mono px-2 py-0.5 rounded bg-blue-50 text-blue-700">' + (p.billing_day || 1) + '.</span>' : '<span class="text-xs text-gray-300">—</span>') + '</td>';
         h += '<td class="p-3 text-right">' + (p.default_amount ? _fmtEur(p.default_amount) : p.default_percent ? (p.default_percent * 100).toFixed(2) + '%' : '—') + '</td>';
         h += '<td class="p-3 text-center">' + (p.active ? '✅' : '❌') + '</td>';
         h += '</tr>';
