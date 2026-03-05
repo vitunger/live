@@ -247,6 +247,7 @@ export async function renderSchnittstellen() {
     setTimeout(function() { if (window.loadTikTokConfig) window.loadTikTokConfig(); }, 700);
     setTimeout(function() { if (window.loadAdsConfigs) window.loadAdsConfigs(); }, 900);
     setTimeout(function() { if (window.loadSocialConfigs) window.loadSocialConfigs(); }, 800);
+    setTimeout(function() { if (window.loadAllSocialOverviews) window.loadAllSocialOverviews(); }, 1000);
     renderPlannedGrid();
     renderPartnerCards();
     loadEterminOverview();
@@ -1644,7 +1645,27 @@ Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // ═══════════════════════════════════════════════════════
 
 function _renderOAuthFields(c, prefix) {
+    var isHQ = _sbProfile() && _sbProfile().is_hq;
     var html = '<div class="space-y-2">';
+    // Standort-Dropdown (HQ sees all, Partner sees own)
+    html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">\ud83d\udccd Standort</label>'
+        + '<select id="' + prefix + '_standort_select" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:border-blue-400 outline-none" '
+        + 'onchange="window.loadSocialForStandort(\'' + prefix + '\', this.value)">';
+    if (isHQ) {
+        html += '<option value="">\u2014 HQ (netzwerkweit) \u2014</option>';
+        if (window._allStandorte) {
+            window._allStandorte.forEach(function(s) {
+                html += '<option value="' + s.id + '">' + _escH(s.name) + '</option>';
+            });
+        }
+    } else {
+        var profile = _sbProfile();
+        html += '<option value="' + (profile.standort_id || '') + '">' + _escH(profile.standort_name || 'Mein Standort') + '</option>';
+    }
+    html += '</select></div>';
+    // Standort-Uebersicht (welche konfiguriert)
+    html += '<div id="' + prefix + '_standort_overview" style="margin-bottom:4px"></div>';
+    // Config fields
     html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Verbindung konfigurieren</p>';
     (c.oauthFields || []).forEach(function(f) {
         html += '<div><label class="text-[10px] text-gray-500 font-medium">' + _escH(f.label) + '</label>'
@@ -1757,6 +1778,75 @@ window.saveSocialConfig = async function(platform) {
         _showToast('Fehler beim Speichern: ' + e.message, 'error');
     }
 };
+
+// Load social config for a specific standort
+window.loadSocialForStandort = async function(platform, standortId) {
+    try {
+        var sb = _sb(); if (!sb) return;
+        var c = CONNECTORS[platform];
+        if (!c || !c.oauthFields) return;
+        // Clear fields first
+        c.oauthFields.forEach(function(f) {
+            var el = document.getElementById(platform + '_field_' + f.key);
+            if (el) el.value = '';
+        });
+        // Load config for this standort
+        var query = sb.from('connector_config')
+            .select('config_key, config_value')
+            .eq('connector_id', platform);
+        if (standortId) { query = query.eq('standort_id', standortId); }
+        else { query = query.is('standort_id', null); }
+        var { data } = await query;
+        if (data && data.length) {
+            data.forEach(function(r) {
+                var el = document.getElementById(platform + '_field_' + r.config_key);
+                if (el) el.value = r.config_value;
+            });
+        }
+    } catch(e) {}
+};
+
+// Load overview: which standorte have config for this platform
+window.loadSocialStandortOverview = async function(platform) {
+    var el = document.getElementById(platform + '_standort_overview');
+    if (!el) return;
+    try {
+        var sb = _sb(); if (!sb) return;
+        var { data } = await sb.from('connector_config')
+            .select('standort_id, config_key')
+            .eq('connector_id', platform);
+        if (!data || !data.length) {
+            el.innerHTML = '<p class="text-[10px] text-gray-400 italic">Noch keine Standorte konfiguriert.</p>';
+            return;
+        }
+        // Group by standort_id
+        var standortIds = {};
+        data.forEach(function(r) {
+            var sid = r.standort_id || 'hq';
+            standortIds[sid] = (standortIds[sid] || 0) + 1;
+        });
+        var count = Object.keys(standortIds).length;
+        var hasHQ = !!standortIds['hq'];
+        var standortCount = hasHQ ? count - 1 : count;
+        var parts = [];
+        if (hasHQ) parts.push('HQ');
+        if (standortCount > 0) parts.push(standortCount + ' Standort' + (standortCount > 1 ? 'e' : ''));
+        el.innerHTML = '<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px">'
+            + '<span style="color:#16a34a;font-size:11px;font-weight:600">\u2705 Konfiguriert: ' + parts.join(' + ') + '</span>'
+            + '</div>';
+    } catch(e) {
+        el.innerHTML = '';
+    }
+};
+
+// Load all social standort overviews on page load
+window.loadAllSocialOverviews = function() {
+    var platforms = ['instagram', 'facebook', 'youtube', 'gmb', 'analytics'];
+    platforms.forEach(function(p) {
+        if (window.loadSocialStandortOverview) window.loadSocialStandortOverview(p);
+    });
+};
+
 
 window.loadSocialData = async function(platform) {
     _showToast('Daten werden geladen...', 'info');
@@ -1963,39 +2053,34 @@ function _populateSocialRows(platform, rows) {
 }
 
 window.loadSocialConfigs = async function() {
-    var platforms = ['instagram', 'facebook', 'youtube', 'gmb', 'analytics'];
     try {
         var sb = _sb(); if (!sb) return;
-        var keys = [];
-        platforms.forEach(function(p) {
-            var c = CONNECTORS[p];
-            if (c && c.oauthFields) {
-                c.oauthFields.forEach(function(f) { keys.push(p + '_' + f.key); });
+        var platforms = ['instagram', 'facebook', 'youtube', 'gmb', 'analytics'];
+        for (var p = 0; p < platforms.length; p++) {
+            var platform = platforms[p];
+            var c = CONNECTORS[platform];
+            if (!c || !c.oauthFields) continue;
+            // Try new pattern: connector_id based
+            var { data } = await sb.from('connector_config')
+                .select('config_key, config_value, standort_id')
+                .eq('connector_id', platform);
+            if (data && data.length) {
+                // Load first available config into fields (HQ-level first, then any standort)
+                var hqData = data.filter(function(r) { return !r.standort_id; });
+                var firstData = hqData.length ? hqData : data;
+                firstData.forEach(function(r) {
+                    var el = document.getElementById(platform + '_field_' + r.config_key);
+                    if (el) el.value = r.config_value;
+                });
+                // Set dropdown to matching standort if applicable
+                if (!hqData.length && data[0].standort_id) {
+                    var selectEl = document.getElementById(platform + '_standort_select');
+                    if (selectEl) selectEl.value = data[0].standort_id;
+                }
             }
-        });
-        var { data: rows } = await sb.from('connector_config').select('connector_key, config_value').in('connector_key', keys);
-        if (!rows || !rows.length) return;
-        var map = {};
-        rows.forEach(function(r) { map[r.connector_key] = r.config_value; });
-        platforms.forEach(function(p) {
-            var c = CONNECTORS[p];
-            if (!c || !c.oauthFields) return;
-            var hasValue = false;
-            c.oauthFields.forEach(function(f) {
-                var val = map[p + '_' + f.key];
-                var el = document.getElementById(p + '_field_' + f.key);
-                if (el && val) { el.value = val; hasValue = true; }
-            });
-            if (hasValue) {
-                CONNECTORS[p].status = 'planned';
-                CONNECTORS[p].statusLabel = 'Konfiguriert';
-            }
-        });
-        // Pre-fill YouTube API key
-        var ytKeyEl = document.getElementById('youtube_field_api_key');
-        if (ytKeyEl && !ytKeyEl.value) ytKeyEl.value = 'AIzaSyBLlbkT79izWdYCFnuqHmwlC5-hfA5CUFc';
+        }
     } catch(e) {}
-};
+}
 
 // ═══════════════════════════════════════════════════════
 // TIKTOK INTEGRATION
