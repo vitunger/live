@@ -867,8 +867,11 @@ async function _loadGruppenAbschnitt(standortId) {
         var zugUser = (!zugR.error && zugR.data) ? zugR.data : [];
 
         var gfR = await sb.from('users').select('id, name, email')
-            .eq('status', 'aktiv').eq('is_hq', false).neq('standort_id', standortId);
-        var andereGfs = (!gfR.error && gfR.data) ? gfR.data : [];
+            .eq('status', 'aktiv').eq('is_hq', false);
+        var bereitsIds = zugUser.map(function(z){ return z.user_id; });
+        var andereGfs = (!gfR.error && gfR.data)
+            ? gfR.data.filter(function(u){ return !bereitsIds.includes(u.id); })
+            : [];
 
         var mitgl = [];
         if (grp) {
