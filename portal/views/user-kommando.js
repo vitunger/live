@@ -368,9 +368,10 @@ export async function removeStandortFromGruppe(gruppeId, standortId) {
 export async function updateGruppeSetting(gruppeId, standortId, field, value) {
     var sb = _sb();
     var upd = {};
-    upd[field] = value;
-    await sb.from('standort_gruppe_mitglieder').update(upd)
+    upd[field] = (value === true || value === 'true');
+    var resp = await sb.from('standort_gruppe_mitglieder').update(upd)
         .eq('gruppe_id', gruppeId).eq('standort_id', standortId);
+    if (resp.error) { _showToast('Fehler: ' + resp.error.message, 'error'); return; }
     _showToast('Gespeichert ✅', 'success');
 }
 
