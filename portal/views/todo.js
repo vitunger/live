@@ -66,7 +66,7 @@ function _sbUser()    { return window.sbUser; }
 function _sbProfile() { return window.sbProfile; }
 function _escH(s)     { return (window.escH || window.escapeHtml || (x => x))(s); }
 function _t(key)      { return (window.t || (k => k))(key); }
-function _showToast(m, type) { return (window.showToast || function(msg){console.warn(msg);})(m, type); }
+function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
 
 // ═══════════════════════════════════════════════════════════════
 // DATA LOADING
@@ -149,7 +149,7 @@ export async function loadTodos() {
         if (sbI && _sbProfile()) sbI.textContent = (_sbProfile().name || '??').split(' ').map(function(w) { return w[0]; }).join('').substring(0, 2);
         if (sbS && _sbProfile()) sbS.textContent = _sbProfile().standort_name || 'Mein Standort';
 
-    } catch (e) { console.warn('loadTodos:', e); }
+    } catch (e) { console.warn('loadTodos:', e); _showToast('Fehler beim Laden der Aufgaben', 'error'); }
     todoRender();
 }
 
@@ -721,18 +721,22 @@ export async function todoToggle(id) {
     var nowDone = !t.erledigt;
     t.erledigt = nowDone;
     t.erledigt_am = nowDone ? new Date().toISOString() : null;
-    // If completing parent → complete all subtasks
+    // If completing parent → complete all subtasks (batch update)
+    var subtaskIds = [];
     if (nowDone && !t.parent_id) {
         todoState.todos.forEach(function(s) {
             if (s.parent_id === id && !s.erledigt) {
                 s.erledigt = true;
                 s.erledigt_am = new Date().toISOString();
-                _sb().from('todos').update({ erledigt: true, erledigt_am: s.erledigt_am }).eq('id', s.id);
+                subtaskIds.push(s.id);
             }
         });
     }
     todoRender();
-    try { await _sb().from('todos').update({ erledigt: nowDone, erledigt_am: t.erledigt_am }).eq('id', id); } catch (e) { console.warn(e); }
+    try {
+        await _sb().from('todos').update({ erledigt: nowDone, erledigt_am: t.erledigt_am }).eq('id', id);
+        if (subtaskIds.length > 0) await _sb().from('todos').update({ erledigt: true, erledigt_am: new Date().toISOString() }).in('id', subtaskIds);
+    } catch (e) { console.warn(e); }
 }
 
 export async function todoDelete(id) {
@@ -833,7 +837,7 @@ export async function todoAddSecPrompt() {
         }).select();
         if (resp.error) throw resp.error;
         if (resp.data && resp.data[0]) todoState.sections.push(resp.data[0]);
-    } catch (e) { (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})('Fehler: ' + e.message, 'error'); }
+    } catch (e) { _showToast('Fehler: ' + e.message, 'error'); }
     todoRender();
 }
 
@@ -894,7 +898,7 @@ export async function todoAddComment(taskId) {
         if (r.data && r.data[0]) todoState.comments[taskId].push(r.data[0]);
         inp.value = '';
         todoLoadComments(taskId);
-    } catch (e) { (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})('Fehler: ' + e.message, 'error'); }
+    } catch (e) { _showToast('Fehler: ' + e.message, 'error'); }
 }
 
 // ═══════════════════════════════════════════════════════════════

@@ -265,6 +265,7 @@ export async function loadWidgetAufgaben() {
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
         var userId = _sbProfile() ? _sbProfile().user_id : null;
         var q = _sb().from('todos').select('id, titel, erledigt, faellig_am, prio_sort').eq('erledigt', false).order('prio_sort').order('faellig_am').limit(5);
+        if (stdId && !(_sbProfile() && _sbProfile().is_hq)) q = q.eq('standort_id', stdId);
         if (userId) q = q.eq('user_id', userId);
         var res = await q;
         var aufgaben = res.data || [];
@@ -307,7 +308,10 @@ export async function loadWidgetTeam() {
         // Load roles from user_rollen + rollen
         var rollenMap = {};
         try {
-            var rr = await _sb().from('user_rollen').select('user_id, rollen(name)');
+            var rrQuery = _sb().from('user_rollen').select('user_id, rollen(name)');
+            var teamIds = team.map(function(u) { return u.id; });
+            if (teamIds.length > 0) rrQuery = rrQuery.in('user_id', teamIds);
+            var rr = await rrQuery;
             if (rr.data) rr.data.forEach(function(ur) { if (ur.rollen) rollenMap[ur.user_id] = ur.rollen.name; });
         } catch(e) {}
         var rolleIcons = { admin: '👑', geschaeftsfuehrer: '🏢', standortleiter: '⭐', verkauf: '💰', werkstatt: '🔧', mitarbeiter: '👤' };

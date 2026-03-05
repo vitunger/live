@@ -95,16 +95,16 @@ export function renderHqKomm(){
         h+='<h3 class="font-bold text-gray-800 mt-6 mb-3">Letzte Rundmails</h3>';
         var mails=[];
         mails.forEach(function(m){
-            h+='<div class="vit-card p-3 flex items-center justify-between mb-2"><div><p class="text-sm font-semibold text-gray-800">'+m.subj+'</p><p class="text-xs text-gray-500">'+m.date+' · An: '+m.to+'</p></div><span class="text-xs font-semibold text-gray-500">Geoeffnet: '+m.opened+'</span></div>';
+            h+='<div class="vit-card p-3 flex items-center justify-between mb-2"><div><p class="text-sm font-semibold text-gray-800">'+_escH(m.subj)+'</p><p class="text-xs text-gray-500">'+_escH(m.date)+' · An: '+_escH(m.to)+'</p></div><span class="text-xs font-semibold text-gray-500">Geoeffnet: '+m.opened+'</span></div>';
         });
     } else if(currentHqKommTab==='forum'){
         h+='<p class="text-sm text-gray-500 mb-4">Netzwerk-Forum: Moderieren und Pinnen von Beitraegen aller Standorte.</p>';
         hqForumTopics.forEach(function(f){
             h+='<div class="vit-card p-4 flex items-center space-x-3 mb-2">';
             if(f.pinned) h+='<span class="text-vit-orange text-sm">📌</span>'; else h+='<span class="text-gray-300 text-sm">💬</span>';
-            h+='<div class="flex-1 min-w-0"><p class="font-semibold text-sm text-gray-800 truncate">'+f.title+'</p><p class="text-xs text-gray-500">'+f.author+' · '+f.date+'</p></div>';
+            h+='<div class="flex-1 min-w-0"><p class="font-semibold text-sm text-gray-800 truncate">'+_escH(f.title)+'</p><p class="text-xs text-gray-500">'+_escH(f.author)+' · '+_escH(f.date)+'</p></div>';
             h+='<div class="text-right flex-shrink-0"><span class="text-xs font-bold text-gray-600">'+f.replies+' Antworten</span></div>';
-            h+='<button onclick="_showToast(\'Beitrag '+(f.pinned?'loesen':'pinnen', 'info')+' (Demo)\')" class="text-xs px-2 py-1 rounded border border-gray-200 text-gray-500 hover:bg-gray-50">'+(f.pinned?'Loesen':'Pinnen')+'</button>';
+            h+='<button onclick="_showToast(\'Beitrag '+(f.pinned?'loesen':'pinnen')+' (Demo)\', \'info\')" class="text-xs px-2 py-1 rounded border border-gray-200 text-gray-500 hover:bg-gray-50">'+(f.pinned?'Loesen':'Pinnen')+'</button>';
             h+='</div>';
         });
     }
@@ -352,7 +352,7 @@ export async function addHqKalTermin(){
         document.getElementById('hqKalModal').classList.add('hidden');
         document.getElementById('hqKalTitle').value='';
         await loadHqKalTermine();
-    }catch(err){_showToast('Fehler: '+(err.message||err, 'error'));}
+    }catch(err){_showToast('Fehler: '+(err.message||err), 'error');}
 }
 
 // === HQ AUFGABEN ===

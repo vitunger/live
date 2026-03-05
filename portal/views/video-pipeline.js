@@ -52,8 +52,11 @@ document.addEventListener('click', function(e){ if(e.target && e.target.id === '
 window._vpHelpers = { vpStatusLabels, vpStatusColors, vpCategoryLabels, vpConsentTypeLabels, vpFormatTime };
 
 // ==================== REALTIME ====================
+var _vpChannel = null;
+var _vpBadgeInterval = null;
+
 export function vpSetupRealtime() {
-_sb().channel('video-pipeline-global')
+_vpChannel = _sb().channel('video-pipeline-global')
     .on('postgres_changes',{event:'*',schema:'public',table:'videos'}, function(){
         vpUpdateHqBadge();
         // Refresh standort pipeline if visible
@@ -75,13 +78,19 @@ try {
 } catch(e) {}
 };
 
+// ==================== LOGOUT CLEANUP ====================
+window.addEventListener('vit:logout', function() {
+    if(_vpChannel) { try { _sb().removeChannel(_vpChannel); } catch(e) {} _vpChannel = null; }
+    if(_vpBadgeInterval) { clearInterval(_vpBadgeInterval); _vpBadgeInterval = null; }
+});
+
 // ==================== INIT ====================
 var vpInitInterval = setInterval(function(){
 if(window.sb) {
     clearInterval(vpInitInterval);
     vpUpdateHqBadge();
     vpSetupRealtime();
-    setInterval(vpUpdateHqBadge, 60000);
+    _vpBadgeInterval = setInterval(vpUpdateHqBadge, 60000);
 }
 }, 500);
 

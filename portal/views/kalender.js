@@ -15,6 +15,7 @@ function _sbUser()    { return window.sbUser; }
 function _sbProfile() { return window.sbProfile; }
 function _escH(s)     { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
 function _t(k)        { return typeof window.t === 'function' ? window.t(k) : k; }
+function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
 
 // === KALENDER DATA & LOGIC (DB-backed) ===
 var kalMonth = new Date().getMonth(); var kalYear = new Date().getFullYear();
@@ -451,6 +452,7 @@ export async function loadKalTermine() {
         if(!resp.error) {
             kalTermine = (resp.data||[]).map(function(t) {
                 var d = new Date(t.start_zeit);
+                if(isNaN(d.getTime())) return null;
                 var endTime = t.end_zeit ? new Date(t.end_zeit) : null;
                 return {
                     id: t.id, title: t.titel, 
@@ -474,7 +476,7 @@ export async function loadKalTermine() {
                     zugewiesen_an: t.zugewiesen_an || null,
                     zugewiesen_an_name: t.zugewiesen_an_name || null
                 };
-            }).map(kalResolveVerkaufer);
+            }).filter(Boolean).map(kalResolveVerkaufer);
         } else { kalTermine = []; }
     } catch(e) { console.warn('Kalender load:', e); kalTermine = []; }
     kalRenderActive();
@@ -546,7 +548,7 @@ export async function saveKalTermin(){
     var ganztaegig=document.getElementById('kalNewGanztaegig').checked;
     var repeat=document.getElementById('kalNewRepeat').value||'';
     var repeatEnd=document.getElementById('kalNewRepeatEnd').value||null;
-    if(!title||!date){(typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})(_t('misc_enter_title_date', 'error'));return;}
+    if(!title||!date){_showToast(_t('misc_enter_title_date'), 'error');return;}
 
     var startZeit = date+'T'+time+':00';
     var endZeit = endTime ? date+'T'+endTime+':00' : null;
@@ -580,7 +582,7 @@ export async function saveKalTermin(){
                     p.end_zeit = endTime ? d + 'T' + endTime + ':00' : null;
                     return p;
                 });
-                if(inserts.length > 100) { (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})(_t('misc_max_repeat', 'info')); return; }
+                if(inserts.length > 100) { _showToast(_t('misc_max_repeat'), 'info'); return; }
                 var resp = await _sb().from('termine').insert(inserts);
                 if(resp.error) throw resp.error;
             } else {
@@ -592,7 +594,7 @@ export async function saveKalTermin(){
         kalEditId = null;
         kalSelectedTeilnehmer = [];
         await loadKalTermine();
-    } catch(err) { (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})('Fehler: '+(err.message||err, 'error')); }
+    } catch(err) { _showToast('Fehler: '+(err.message||err), 'error'); }
 }
 
 // Generate repeat dates array
@@ -717,7 +719,7 @@ export async function deleteKalTermin() {
             document.getElementById('kalNewModal').classList.add('hidden');
             kalEditId = null;
             await loadKalTermine();
-        } catch(err) { (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})('Fehler: '+(err.message||err, 'error')); }
+        } catch(err) { _showToast('Fehler: '+(err.message||err), 'error'); }
     } else {
         if(!confirm(_t('confirm_delete_event'))) return;
         try {
@@ -727,7 +729,7 @@ export async function deleteKalTermin() {
             document.getElementById('kalNewModal').classList.add('hidden');
             kalEditId = null;
             await loadKalTermine();
-        } catch(err) { (typeof _showToast==="function"?_showToast:typeof showToast==="function"?showToast:function(m){console.warn(m)})('Fehler: '+(err.message||err, 'error')); }
+        } catch(err) { _showToast('Fehler: '+(err.message||err), 'error'); }
     }
 }
 

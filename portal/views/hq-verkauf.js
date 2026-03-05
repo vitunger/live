@@ -79,7 +79,7 @@ export async function renderHqVerkauf() {
 
         rows.forEach(function(r) {
             html += '<tr class="border-b border-gray-100 hover:bg-gray-50">';
-            html += '<td class="py-2.5 px-3 text-sm font-semibold">' + r.name + '</td>';
+            html += '<td class="py-2.5 px-3 text-sm font-semibold">' + _escH(r.name) + '</td>';
             html += '<td class="text-right py-2.5 px-3 text-sm">' + (r.b || '—') + '</td>';
             html += '<td class="text-right py-2.5 px-3 text-sm font-bold text-green-600">' + (r.v || '—') + '</td>';
             html += '<td class="text-right py-2.5 px-3 text-sm ' + (r.q >= 40 ? 'text-green-600' : r.q > 0 ? 'text-orange-500' : '') + '">' + (r.q > 0 ? r.q + '%' : '—') + '</td>';
@@ -99,9 +99,9 @@ export async function renderHqVerkauf() {
             var t = trackByStd[s.id] || {beratungen:0,verkauft:0,umsatz:0};
             var nm = s.name.replace('vit:bikes ','');
             if(t.beratungen === 0 && t.verkauft === 0) {
-                ah += '<div class="p-3 bg-red-50 rounded-lg"><span class="text-sm font-semibold text-red-700">🔴 '+nm+' – Keine Einträge diese Woche</span></div>';
+                ah += '<div class="p-3 bg-red-50 rounded-lg"><span class="text-sm font-semibold text-red-700">🔴 '+_escH(nm)+' – Keine Einträge diese Woche</span></div>';
             } else if(t.beratungen > 0 && t.verkauft === 0) {
-                ah += '<div class="p-3 bg-yellow-50 rounded-lg"><span class="text-sm font-semibold text-yellow-700">⚠️ '+nm+' – '+t.beratungen+' Beratungen, 0 Verkäufe</span></div>';
+                ah += '<div class="p-3 bg-yellow-50 rounded-lg"><span class="text-sm font-semibold text-yellow-700">⚠️ '+_escH(nm)+' – '+t.beratungen+' Beratungen, 0 Verkäufe</span></div>';
             }
         });
         alerts.innerHTML = ah || '<p class="text-sm text-green-600">✅ Alle Standorte verkaufen aktiv</p>';

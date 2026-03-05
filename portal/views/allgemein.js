@@ -155,42 +155,52 @@ function fmtN(n) { return (!n && n !== 0) ? '0' : Number(n).toLocaleString('de-D
 function escH(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 export function openJahreszielModal() {
+    var modal = document.getElementById('jahreszielModal');
+    if(!modal) return;
     document.getElementById('jahreszielEditId').value = '';
-    document.getElementById('jahreszielTyp').value = 'umsatz';
-    document.getElementById('jahreszielTitel').value = '';
-    document.getElementById('jahreszielBeschreibung').value = '';
-    document.getElementById('jahreszielZielwert').value = '';
-    document.getElementById('jahreszielAktuellerWert').value = '';
-    document.getElementById('jahreszielEinheit').value = '€';
+    var el;
+    el = document.getElementById('jahreszielTyp'); if(el) el.value = 'umsatz';
+    el = document.getElementById('jahreszielTitel'); if(el) el.value = '';
+    el = document.getElementById('jahreszielBeschreibung'); if(el) el.value = '';
+    el = document.getElementById('jahreszielZielwert'); if(el) el.value = '';
+    el = document.getElementById('jahreszielAktuellerWert'); if(el) el.value = '';
+    el = document.getElementById('jahreszielEinheit'); if(el) el.value = '€';
     toggleJahreszielFelder();
-    document.getElementById('jahreszielModal').style.display = 'flex';
+    modal.style.display = 'flex';
 }
 
 export function openJahreszielEdit(id) {
     var z = allgemeinJahresziele.find(function(x){return x.id===id;});
     if (!z) return;
+    var modal = document.getElementById('jahreszielModal');
+    if(!modal) return;
     document.getElementById('jahreszielEditId').value = z.id;
-    document.getElementById('jahreszielTyp').value = z.typ;
-    document.getElementById('jahreszielTitel').value = z.titel||'';
-    document.getElementById('jahreszielBeschreibung').value = z.beschreibung||'';
-    document.getElementById('jahreszielZielwert').value = z.zielwert||'';
-    document.getElementById('jahreszielAktuellerWert').value = z.aktueller_wert||'';
-    document.getElementById('jahreszielEinheit').value = z.einheit||'€';
+    var el;
+    el = document.getElementById('jahreszielTyp'); if(el) el.value = z.typ;
+    el = document.getElementById('jahreszielTitel'); if(el) el.value = z.titel||'';
+    el = document.getElementById('jahreszielBeschreibung'); if(el) el.value = z.beschreibung||'';
+    el = document.getElementById('jahreszielZielwert'); if(el) el.value = z.zielwert||'';
+    el = document.getElementById('jahreszielAktuellerWert'); if(el) el.value = z.aktueller_wert||'';
+    el = document.getElementById('jahreszielEinheit'); if(el) el.value = z.einheit||'€';
     toggleJahreszielFelder();
-    document.getElementById('jahreszielModal').style.display = 'flex';
+    modal.style.display = 'flex';
 }
-export function closeJahreszielModal() { document.getElementById('jahreszielModal').style.display='none'; }
+export function closeJahreszielModal() { var el=document.getElementById('jahreszielModal'); if(el) el.style.display='none'; }
 
 export function toggleJahreszielFelder() {
-    var typ = document.getElementById('jahreszielTyp').value;
-    document.getElementById('jahreszielWerteWrap').style.display = typ==='soft_target' ? 'none' : 'grid';
-    document.getElementById('jahreszielBeschreibungWrap').style.display = typ==='soft_target' ? 'none' : 'block';
+    var typEl = document.getElementById('jahreszielTyp');
+    if(!typEl) return;
+    var typ = typEl.value;
+    var wEl = document.getElementById('jahreszielWerteWrap'); if(wEl) wEl.style.display = typ==='soft_target' ? 'none' : 'grid';
+    var bEl = document.getElementById('jahreszielBeschreibungWrap'); if(bEl) bEl.style.display = typ==='soft_target' ? 'none' : 'block';
 }
 
 export async function saveJahresziel() {
+    var p = _sbProfile();
+    if(!p || !p.standort_id) { _showToast('Kein Standort zugewiesen', 'error'); return; }
     var editId = document.getElementById('jahreszielEditId').value;
     var payload = {
-        standort_id: _sbProfile().standort_id, jahr: allgemeinJahr,
+        standort_id: p.standort_id, jahr: allgemeinJahr,
         typ: document.getElementById('jahreszielTyp').value,
         titel: document.getElementById('jahreszielTitel').value.trim(),
         beschreibung: document.getElementById('jahreszielBeschreibung').value.trim(),
@@ -227,9 +237,10 @@ export async function loadMonatsplan() {
         var res = await query;
         if (res.error) throw res.error;
         allgemeinMonatsplan = res.data || [];
+        var pStdId = _sbProfile() ? _sbProfile().standort_id : null;
         for (var m = 1; m <= 12; m++) {
             if (!allgemeinMonatsplan.find(function(p){return p.monat===m;})) {
-                allgemeinMonatsplan.push({id:null, standort_id:_sbProfile().standort_id, jahr:allgemeinJahr, monat:m, fokus_thema:'', beschreibung:'', massnahmen:[], verknuepfte_ziele:[], reflexion:'', status:'offen'});
+                allgemeinMonatsplan.push({id:null, standort_id:pStdId, jahr:allgemeinJahr, monat:m, fokus_thema:'', beschreibung:'', massnahmen:[], verknuepfte_ziele:[], reflexion:'', status:'offen'});
             }
         }
         allgemeinMonatsplan.sort(function(a,b){return a.monat-b.monat;});
@@ -265,13 +276,16 @@ export function openMonatsDetail(monat) {
     monatsDetailEditMonat = monat;
     var mp = allgemeinMonatsplan.find(function(p){return p.monat===monat;});
     if (!mp) return;
-    document.getElementById('monatsDetailTitel').textContent = '📅 ' + monatsNamen[monat] + ' ' + allgemeinJahr;
-    document.getElementById('monatsDetailFokus').value = mp.fokus_thema || '';
-    document.getElementById('monatsDetailBeschreibung').value = mp.beschreibung || '';
-    document.getElementById('monatsDetailReflexion').value = mp.reflexion || '';
-    document.getElementById('monatsDetailReflexionWrap').style.display = monat <= allgemeinAktuellerMonat ? 'block' : 'none';
+    var titelEl = document.getElementById('monatsDetailTitel');
+    if(!titelEl) return;
+    titelEl.textContent = '📅 ' + monatsNamen[monat] + ' ' + allgemeinJahr;
+    var fokusEl = document.getElementById('monatsDetailFokus'); if(fokusEl) fokusEl.value = mp.fokus_thema || '';
+    var beschrEl = document.getElementById('monatsDetailBeschreibung'); if(beschrEl) beschrEl.value = mp.beschreibung || '';
+    var reflEl = document.getElementById('monatsDetailReflexion'); if(reflEl) reflEl.value = mp.reflexion || '';
+    var reflWrap = document.getElementById('monatsDetailReflexionWrap'); if(reflWrap) reflWrap.style.display = monat <= allgemeinAktuellerMonat ? 'block' : 'none';
 
     var mc = document.getElementById('monatsDetailMassnahmen');
+    if(!mc) return;
     mc.innerHTML = (mp.massnahmen||[]).map(function(m,i){
         return '<div class="flex items-center space-x-2">'
           +'<input type="checkbox" '+(m.erledigt?'checked':'')+' class="monats-massnahme-cb w-4 h-4 rounded border-gray-300 text-vit-orange focus:ring-orange-400" data-index="'+i+'">'
@@ -280,6 +294,7 @@ export function openMonatsDetail(monat) {
     }).join('');
 
     var zc = document.getElementById('monatsDetailZiele');
+    if(!zc) return;
     var vIds = mp.verknuepfte_ziele || [];
     if (!allgemeinJahresziele.length) {
         zc.innerHTML = '<p class="text-xs text-gray-400">Erst Jahresziele anlegen</p>';
@@ -289,15 +304,15 @@ export function openMonatsDetail(monat) {
             return '<label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" value="'+z.id+'" class="monats-ziel-cb w-3.5 h-3.5 rounded border-gray-300 text-vit-orange focus:ring-orange-400" '+(linked?'checked':'')+'><span class="text-xs text-gray-600">'+escH(z.titel)+'</span></label>';
         }).join('');
     }
-    document.getElementById('monatsDetailPanel').style.display = 'block';
-    document.getElementById('monatsDetailPanel').scrollIntoView({behavior:'smooth'});
+    var panel = document.getElementById('monatsDetailPanel');
+    if(panel) { panel.style.display = 'block'; panel.scrollIntoView({behavior:'smooth'}); }
 }
 
 export function addMonatsMassnahme() {
     document.getElementById('monatsDetailMassnahmen').insertAdjacentHTML('beforeend',
         '<div class="flex items-center space-x-2"><input type="checkbox" class="monats-massnahme-cb w-4 h-4 rounded border-gray-300 text-vit-orange focus:ring-orange-400"><input type="text" class="monats-massnahme-text flex-1 border rounded px-2 py-1 text-sm" placeholder="Neue Maßnahme..."><button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 text-xs">✕</button></div>');
 }
-export function closeMonatsDetail() { document.getElementById('monatsDetailPanel').style.display = 'none'; monatsDetailEditMonat = null; }
+export function closeMonatsDetail() { var el=document.getElementById('monatsDetailPanel'); if(el) el.style.display = 'none'; monatsDetailEditMonat = null; }
 
 export async function saveMonatsDetail() {
     if (!monatsDetailEditMonat) return;
@@ -309,7 +324,9 @@ export async function saveMonatsDetail() {
     var zielIds = [];
     document.querySelectorAll('.monats-ziel-cb:checked').forEach(function(cb){ zielIds.push(cb.value); });
     var m = monatsDetailEditMonat;
-    var payload = { standort_id: _sbProfile().standort_id, jahr: allgemeinJahr, monat: m,
+    var p = _sbProfile();
+    if(!p || !p.standort_id) { _showToast('Kein Standort zugewiesen', 'error'); return; }
+    var payload = { standort_id: p.standort_id, jahr: allgemeinJahr, monat: m,
         fokus_thema: document.getElementById('monatsDetailFokus').value.trim(),
         beschreibung: document.getElementById('monatsDetailBeschreibung').value.trim(),
         massnahmen: massnahmen, verknuepfte_ziele: zielIds,
@@ -375,37 +392,41 @@ export function renderJournal() {
 }
 
 export function openJournalModal() {
-    document.getElementById('journalEditId').value = '';
-    document.getElementById('journalDatum').value = new Date().toISOString().split('T')[0];
-    document.getElementById('journalStimmung').value = '';
+    var modal = document.getElementById('journalModal');
+    if(!modal) return;
+    var el;
+    el=document.getElementById('journalEditId'); if(el) el.value = '';
+    el=document.getElementById('journalDatum'); if(el) el.value = new Date().toISOString().split('T')[0];
+    el=document.getElementById('journalStimmung'); if(el) el.value = '';
     journalStimmungValue = '';
-    document.getElementById('journalTeilnehmer').value = '';
-    document.getElementById('journalLage').value = '';
-    document.getElementById('journalNaechsterTermin').value = '';
+    el=document.getElementById('journalTeilnehmer'); if(el) el.value = '';
+    el=document.getElementById('journalLage'); if(el) el.value = '';
+    el=document.getElementById('journalNaechsterTermin'); if(el) el.value = '';
     document.querySelectorAll('.journal-thema-cb').forEach(function(cb){cb.checked=false; updateThemaStyle(cb);});
     document.querySelectorAll('.journal-stimmung-btn').forEach(function(b){b.style.opacity='0.4'; b.style.transform='scale(1)';});
-    document.getElementById('journalWuensche').innerHTML = '';
-    document.getElementById('journalMassnahmen').innerHTML = '';
-    document.getElementById('journalModal').style.display = 'flex';
+    el=document.getElementById('journalWuensche'); if(el) el.innerHTML = '';
+    el=document.getElementById('journalMassnahmen'); if(el) el.innerHTML = '';
+    modal.style.display = 'flex';
 }
 
 export function openJournalEdit(id) {
     var j = allgemeinJournal.find(function(x){return x.id===id;});
     if (!j) return;
-    document.getElementById('journalEditId').value = j.id;
-    document.getElementById('journalDatum').value = j.datum||'';
+    var modal = document.getElementById('journalModal');
+    if(!modal) return;
+    var el;
+    el=document.getElementById('journalEditId'); if(el) el.value = j.id;
+    el=document.getElementById('journalDatum'); if(el) el.value = j.datum||'';
     setJournalStimmung(j.stimmung||'neutral');
-    document.getElementById('journalTeilnehmer').value = Array.isArray(j.teilnehmer)?j.teilnehmer.join(', '):(j.teilnehmer||'');
-    document.getElementById('journalLage').value = j.aktuelle_lage||'';
-    document.getElementById('journalNaechsterTermin').value = j.naechster_termin||'';
+    el=document.getElementById('journalTeilnehmer'); if(el) el.value = Array.isArray(j.teilnehmer)?j.teilnehmer.join(', '):(j.teilnehmer||'');
+    el=document.getElementById('journalLage'); if(el) el.value = j.aktuelle_lage||'';
+    el=document.getElementById('journalNaechsterTermin'); if(el) el.value = j.naechster_termin||'';
     document.querySelectorAll('.journal-thema-cb').forEach(function(cb){ cb.checked = (j.themen||[]).indexOf(cb.value)!==-1; updateThemaStyle(cb); });
-    var wEl = document.getElementById('journalWuensche'); wEl.innerHTML='';
-    (j.wuensche_hq||[]).forEach(function(w){addJournalWunsch(typeof w==='string'?w:w.text);});
-    var mEl = document.getElementById('journalMassnahmen'); mEl.innerHTML='';
-    (j.massnahmen||[]).forEach(function(m){addJournalMassnahme(m.text,m.verantwortlich,m.frist);});
-    document.getElementById('journalModal').style.display = 'flex';
+    var wEl = document.getElementById('journalWuensche'); if(wEl) { wEl.innerHTML=''; (j.wuensche_hq||[]).forEach(function(w){addJournalWunsch(typeof w==='string'?w:w.text);}); }
+    var mEl = document.getElementById('journalMassnahmen'); if(mEl) { mEl.innerHTML=''; (j.massnahmen||[]).forEach(function(m){addJournalMassnahme(m.text,m.verantwortlich,m.frist);}); }
+    modal.style.display = 'flex';
 }
-export function closeJournalModal() { document.getElementById('journalModal').style.display='none'; }
+export function closeJournalModal() { var el=document.getElementById('journalModal'); if(el) el.style.display='none'; }
 
 export function setJournalStimmung(val) {
     journalStimmungValue = val;
@@ -451,10 +472,12 @@ export async function saveJournalEntry() {
     });
     var teilnStr = document.getElementById('journalTeilnehmer').value;
     var teilnehmer = teilnStr.split(',').map(function(s){return s.trim();}).filter(Boolean);
-    var payload = { standort_id: _sbProfile().standort_id, datum: document.getElementById('journalDatum').value,
+    var p = _sbProfile();
+    if(!p || !p.standort_id) { _showToast('Kein Standort zugewiesen', 'error'); return; }
+    var payload = { standort_id: p.standort_id, datum: (document.getElementById('journalDatum')||{}).value||'',
         teilnehmer: teilnehmer, stimmung: journalStimmungValue || 'neutral', themen: themen,
-        aktuelle_lage: document.getElementById('journalLage').value.trim(), wuensche_hq: wuensche, massnahmen: massnahmen,
-        naechster_termin: document.getElementById('journalNaechsterTermin').value || null, erstellt_von: _sbUser().id
+        aktuelle_lage: (document.getElementById('journalLage')||{}).value||'', wuensche_hq: wuensche, massnahmen: massnahmen,
+        naechster_termin: (document.getElementById('journalNaechsterTermin')||{}).value || null, erstellt_von: _sbUser() ? _sbUser().id : null
     };
     if (!payload.datum) { _showToast(_t('alert_enter_date'), 'error'); return; }
     try {
@@ -487,8 +510,10 @@ export async function setStimmung(val) {
     });
     try {
         var existing = allgemeinMonatsplan.find(function(p){return p.monat===allgemeinAktuellerMonat && p.id;});
+        var pStd = _sbProfile() ? _sbProfile().standort_id : null;
+        if(!pStd) return;
         if (existing && existing.id) { await _sb().from('partner_monatsplan').update({stimmung:val}).eq('id',existing.id); }
-        else { await _sb().from('partner_monatsplan').insert([{standort_id:_sbProfile().standort_id, jahr:allgemeinJahr, monat:allgemeinAktuellerMonat, stimmung:val, fokus_thema:'', status:'aktiv', massnahmen:[], verknuepfte_ziele:[]}]); }
+        else { await _sb().from('partner_monatsplan').insert([{standort_id:pStd, jahr:allgemeinJahr, monat:allgemeinAktuellerMonat, stimmung:val, fokus_thema:'', status:'aktiv', massnahmen:[], verknuepfte_ziele:[]}]); }
     } catch(e) { console.error('setStimmung:',e); }
 }
 
@@ -563,19 +588,22 @@ export function renderHqAllgemein(standorte, monatsplaene, journals, jahresziele
     var stimmungEmojis = {positiv:'😊', neutral:'😐', besorgt:'😟', kritisch:'😤'};
     var stimmungen = {positiv:0, neutral:0, besorgt:0, kritisch:0};
     monatsplaene.forEach(function(mp){ if (mp.stimmung && stimmungen.hasOwnProperty(mp.stimmung)) stimmungen[mp.stimmung]++; });
-    document.getElementById('hqStimmungPositiv').textContent = stimmungen.positiv;
-    document.getElementById('hqStimmungNeutral').textContent = stimmungen.neutral;
-    document.getElementById('hqStimmungBesorgt').textContent = stimmungen.besorgt;
-    document.getElementById('hqStimmungKritisch').textContent = stimmungen.kritisch;
+    var el;
+    el=document.getElementById('hqStimmungPositiv'); if(el) el.textContent = stimmungen.positiv;
+    el=document.getElementById('hqStimmungNeutral'); if(el) el.textContent = stimmungen.neutral;
+    el=document.getElementById('hqStimmungBesorgt'); if(el) el.textContent = stimmungen.besorgt;
+    el=document.getElementById('hqStimmungKritisch'); if(el) el.textContent = stimmungen.kritisch;
 
     var hqAufgaben = [];
     journals.forEach(function(j){ (j.wuensche_hq||[]).forEach(function(w){ var text = typeof w==='string'?w:w.text; var status = typeof w==='object'?w.status:'offen'; if (status === 'offen') hqAufgaben.push({text:text, standort:j.standorte?j.standorte.name:'', datum:j.datum}); }); });
-    document.getElementById('hqAufgabenBadge').textContent = hqAufgaben.length;
+    el=document.getElementById('hqAufgabenBadge'); if(el) el.textContent = hqAufgaben.length;
     var aufgEl = document.getElementById('hqJournalAufgaben');
+    if(!aufgEl) return;
     aufgEl.innerHTML = !hqAufgaben.length ? '<p class="text-sm text-green-600 font-semibold">Keine offenen HQ-Aufgaben 🎉</p>'
         : hqAufgaben.map(function(a){ return '<div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"><div class="flex items-center space-x-2"><span class="text-red-500">•</span><span class="text-sm text-gray-800">'+escH(a.text)+'</span></div><div class="text-xs text-gray-500">'+escH(a.standort)+' · '+(a.datum?new Date(a.datum+'T00:00:00').toLocaleDateString('de-DE'):'')+'</div></div>'; }).join('');
 
     var tbody = document.getElementById('hqPartnerTabelle');
+    if(!tbody) return;
     if (!standorte.length) { tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-400">Keine aktiven Standorte</td></tr>'; return; }
     tbody.innerHTML = standorte.map(function(st){
         var mp = monatsplaene.find(function(p){return p.standort_id===st.id;});

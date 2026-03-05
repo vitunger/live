@@ -13,6 +13,7 @@
 function _sb()        { return window.sb; }
 function _sbUser()    { return window.sbUser; }
 function _sbProfile() { return window.sbProfile; }
+function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
 
 // STATE
 var _akten = { ordner:[], typen:[], dokumente:[], loaded:false, currentFolder:null, uploadQueue:[] };
@@ -104,7 +105,7 @@ export async function loadAktenFiles(){
         if(_akten.ordner.length>0){_akten.loaded=true;aktenLoaded=true;}
         aktenFolderLabels={};_akten.ordner.forEach(function(o){aktenFolderLabels[o.key]=o.name;});
         renderFolders();updateStats();updateInboxBadge();
-    }catch(err){console.warn('[aktenschrank] Load error:',err);renderFoldersEmpty();}
+    }catch(err){console.warn('[aktenschrank] Load error:',err);_showToast('Fehler beim Laden der Dokumente','error');renderFoldersEmpty();}
 }
 
 // RENDER FOLDERS
@@ -140,9 +141,12 @@ export async function openAktenFolder(ordnerId){
     // Fallback: if folder not found in loaded data, try to get name from DOM
     var folderName=o?((o.icon||'')+' '+o.name):'Ordner';
     if(!o){var el=document.querySelector('[data-ordner][onclick*="'+ordnerId+'"]');if(el){var h3=el.querySelector('h3');if(h3)folderName=h3.textContent;}}
-    document.getElementById('aktenFolderTitle').textContent=folderName;
-    document.getElementById('aktenFolderCount').textContent=docs.length+' Dokument'+(docs.length!==1?'e':'');
+    var titleEl=document.getElementById('aktenFolderTitle');
+    if(!titleEl) return;
+    titleEl.textContent=folderName;
+    var countEl=document.getElementById('aktenFolderCount'); if(countEl) countEl.textContent=docs.length+' Dokument'+(docs.length!==1?'e':'');
     var tb=document.getElementById('aktenFileList'),em=document.getElementById('aktenFileEmpty');
+    if(!tb||!em) return;
     if(docs.length===0){tb.innerHTML='';em.classList.remove('hidden');}
     else{em.classList.add('hidden');var html='';docs.forEach(function(d){html+=renderRow(d);});tb.innerHTML=html;}
     document.getElementById('aktenFolders').style.display='none';

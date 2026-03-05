@@ -353,7 +353,7 @@ export async function updateDevPlanStatus(subId, newStatus) {
     try {
         await _sb().from('dev_submissions').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', subId);
         renderDevPipeline();
-    } catch(err) { _showToast('Fehler: ' + (err.message||err, 'error')); }
+    } catch(err) { _showToast('Fehler: ' + (err.message||err), 'error'); }
 }
 
 export async function updateDevPlanField(subId, field, value) {

@@ -171,7 +171,7 @@ export async function addRoadmapItem() {
         document.getElementById('rmBeschreibung').value = '';
         toggleRoadmapForm();
         renderDevRoadmap();
-    } catch(err) { _showToast('Fehler: '+(err.message||err, 'error')); }
+    } catch(err) { _showToast('Fehler: '+(err.message||err), 'error'); }
 }
 
 export async function updateRoadmapStatus(id, newStatus) {

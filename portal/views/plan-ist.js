@@ -585,7 +585,7 @@ export async function saveParsedPlan() {
         currentPlan = resp.data[0] || payload;
         _showToast('✅ Jahresplan '+planIstYear+' gespeichert!', 'success');
         renderPlanIst();
-    } catch(err) { _showToast('Fehler: '+(err.message||err, 'error')); }
+    } catch(err) { _showToast('Fehler: '+(err.message||err), 'error'); }
 }
 
 export async function saveManualPlan() {

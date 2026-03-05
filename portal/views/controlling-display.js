@@ -82,7 +82,7 @@ export async function loadBwaList() {
         });
         // Group by year
         var years = {};
-        window.bwaCache.forEach(function(b) {
+        (window.bwaCache || []).forEach(function(b) {
             if(!years[b.jahr]) years[b.jahr] = [];
             years[b.jahr].push(b);
         });

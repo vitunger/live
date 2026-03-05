@@ -159,7 +159,7 @@ export async function renderHqCockpit() {
     if(t5) {
         var th = '';
         sorted.slice(0,5).forEach(function(s,i){
-            th += '<div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"><span class="text-lg font-bold text-gray-300 w-6">'+(i+1)+'</span><div class="flex-1"><p class="text-sm font-semibold">'+s.name+'</p><p class="text-xs text-gray-400">'+s.inhaber+'</p></div><div class="text-right"><p class="font-bold '+perfColor(s.leadPerf)+'">'+s.leadPerf+'%</p><p class="text-xs text-gray-400">'+fmt(s.umsatzIst)+' € Umsatz</p></div></div>';
+            th += '<div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"><span class="text-lg font-bold text-gray-300 w-6">'+(i+1)+'</span><div class="flex-1"><p class="text-sm font-semibold">'+_escH(s.name)+'</p><p class="text-xs text-gray-400">'+_escH(s.inhaber)+'</p></div><div class="text-right"><p class="font-bold '+perfColor(s.leadPerf)+'">'+s.leadPerf+'%</p><p class="text-xs text-gray-400">'+fmt(s.umsatzIst)+' € Umsatz</p></div></div>';
         });
         t5.innerHTML = th;
     }
@@ -169,7 +169,7 @@ export async function renderHqCockpit() {
     if(b5) {
         var bh = '';
         sorted.slice(-5).reverse().forEach(function(s){
-            bh += '<div class="flex items-center space-x-3 p-3 bg-red-50 rounded-lg"><span class="text-lg">⚠️</span><div class="flex-1"><p class="text-sm font-semibold text-red-700">'+s.name+'</p><p class="text-xs text-red-500">'+(s.bwaAuffaellig||'Lead-Performance kritisch')+'</p></div><div class="text-right"><p class="font-bold text-red-600">'+s.leadPerf+'%</p><button class="text-[10px] px-2 py-1 bg-red-600 text-white rounded mt-1" onclick="_showToast(this.textContent, &quot;info&quot;)">Details →</button></div></div>';
+            bh += '<div class="flex items-center space-x-3 p-3 bg-red-50 rounded-lg"><span class="text-lg">⚠️</span><div class="flex-1"><p class="text-sm font-semibold text-red-700">'+_escH(s.name)+'</p><p class="text-xs text-red-500">'+_escH(s.bwaAuffaellig||'Lead-Performance kritisch')+'</p></div><div class="text-right"><p class="font-bold text-red-600">'+s.leadPerf+'%</p><button class="text-[10px] px-2 py-1 bg-red-600 text-white rounded mt-1" onclick="_showToast(this.textContent, &quot;info&quot;)">Details →</button></div></div>';
         });
         b5.innerHTML = bh;
     }
@@ -180,7 +180,7 @@ export async function renderHqCockpit() {
         var gh = '';
         sorted.forEach(function(s){
             gh += '<div class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:shadow-md transition" onclick="_showToast(this.textContent, &quot;info&quot;)">'
-                +'<div class="flex items-center justify-center space-x-1 mb-1"><span style="width:10px;height:10px;border-radius:50%;background:'+perfDot(s.leadPerf)+';display:inline-block;"></span><span class="text-xs font-semibold text-gray-700 truncate">'+s.name+'</span></div>'
+                +'<div class="flex items-center justify-center space-x-1 mb-1"><span style="width:10px;height:10px;border-radius:50%;background:'+perfDot(s.leadPerf)+';display:inline-block;"></span><span class="text-xs font-semibold text-gray-700 truncate">'+_escH(s.name)+'</span></div>'
                 +'<span class="text-sm font-bold text-gray-800">'+s.leadPerf+'%</span>'
                 +'</div>';
         });
@@ -195,7 +195,7 @@ export async function renderHqCockpit() {
         hqKampagnen.filter(function(k){return k.status==='aktiv';}).forEach(function(k){
             var pct = k.standorte ? Math.round(k.umgesetzt/k.standorte*100) : 0;
             hkh += '<div class="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">';
-            hkh += '<div class="flex-1 min-w-0"><p class="text-xs font-semibold text-gray-800 truncate">'+k.name+'</p>';
+            hkh += '<div class="flex-1 min-w-0"><p class="text-xs font-semibold text-gray-800 truncate">'+_escH(k.name)+'</p>';
             hkh += '<div class="w-full bg-gray-200 rounded-full h-1.5 mt-1"><div class="h-1.5 rounded-full '+(pct>=80?'bg-green-500':pct>=50?'bg-yellow-500':'bg-red-400')+'" style="width:'+pct+'%"></div></div></div>';
             hkh += '<span class="text-xs font-bold '+(pct>=80?'text-green-600':'text-orange-500')+'">'+pct+'%</span>';
             hkh += '</div>';
@@ -213,8 +213,8 @@ export async function renderHqCockpit() {
             var pct = Math.round(t.done/t.total*100);
             hah += '<div class="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg">';
             hah += '<span class="text-xs">'+(prioIcons[t.prio]||'')+'</span>';
-            hah += '<div class="flex-1 min-w-0"><p class="text-[11px] font-semibold text-gray-800 truncate">'+t.title+'</p>';
-            hah += '<p class="text-[9px] text-gray-400">Frist: '+t.deadline+' · '+pct+'% erledigt</p></div>';
+            hah += '<div class="flex-1 min-w-0"><p class="text-[11px] font-semibold text-gray-800 truncate">'+_escH(t.title)+'</p>';
+            hah += '<p class="text-[9px] text-gray-400">Frist: '+_escH(t.deadline)+' · '+pct+'% erledigt</p></div>';
             hah += '</div>';
         });
         if(!hah) hah = '<p class="text-xs text-gray-400 text-center">Alles erledigt! ✅</p>';
@@ -229,8 +229,8 @@ export async function renderHqCockpit() {
         hqKalTermine.filter(function(t){return t.date>='2026-02-14';}).sort(function(a,b){return a.date>b.date?1:-1;}).slice(0,5).forEach(function(t){
             hth += '<div class="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg">';
             hth += '<span class="text-sm">'+(typeIcons[t.type]||'📅')+'</span>';
-            hth += '<div class="flex-1 min-w-0"><p class="text-[11px] font-semibold text-gray-800 truncate">'+t.title+'</p>';
-            hth += '<p class="text-[9px] text-gray-400">'+t.date+' · '+t.time+' Uhr'+(t.pflicht?' · <span class="text-red-500">PFLICHT</span>':'')+'</p></div>';
+            hth += '<div class="flex-1 min-w-0"><p class="text-[11px] font-semibold text-gray-800 truncate">'+_escH(t.title)+'</p>';
+            hth += '<p class="text-[9px] text-gray-400">'+_escH(t.date)+' · '+_escH(t.time)+' Uhr'+(t.pflicht?' · <span class="text-red-500">PFLICHT</span>':'')+'</p></div>';
             hth += '</div>';
         });
         if(!hth) hth = '<p class="text-xs text-gray-400 text-center">Keine Termine</p>';
@@ -244,8 +244,8 @@ export async function renderHqCockpit() {
         hqAnnouncements.slice(0,3).forEach(function(a){
             var readPct = Math.round(a.read/a.total*100);
             aah += '<div class="p-2 bg-gray-50 rounded-lg">';
-            aah += '<p class="text-[11px] font-semibold text-gray-800 truncate">'+a.title+'</p>';
-            aah += '<div class="flex items-center justify-between mt-1"><p class="text-[9px] text-gray-400">'+a.date+' · '+a.author+'</p>';
+            aah += '<p class="text-[11px] font-semibold text-gray-800 truncate">'+_escH(a.title)+'</p>';
+            aah += '<div class="flex items-center justify-between mt-1"><p class="text-[9px] text-gray-400">'+_escH(a.date)+' · '+_escH(a.author)+'</p>';
             aah += '<span class="text-[9px] font-bold '+(readPct>=90?'text-green-600':'text-orange-500')+'">'+a.read+'/'+a.total+' gelesen</span></div>';
             aah += '</div>';
         });

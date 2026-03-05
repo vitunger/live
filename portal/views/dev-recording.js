@@ -102,7 +102,7 @@ export async function toggleDevAudioRecord() {
         if(statusEl) statusEl.textContent = '⏺ Aufnahme läuft...';
         startDevTimer('devAudioTimer');
     } catch(err) {
-        _showToast('Mikrofon-Zugriff nicht möglich: ' + (err.message||err, 'error'));
+        _showToast('Mikrofon-Zugriff nicht möglich: ' + (err.message||err), 'error');
     }
 }
 
@@ -177,7 +177,7 @@ export async function toggleDevScreenRecord() {
         if(err.name === 'NotAllowedError') {
             // Nutzer hat abgebrochen – kein Fehler
         } else {
-            _showToast('Bildschirmaufnahme nicht möglich: ' + (err.message||err, 'error'));
+            _showToast('Bildschirmaufnahme nicht möglich: ' + (err.message||err), 'error');
         }
     }
 }

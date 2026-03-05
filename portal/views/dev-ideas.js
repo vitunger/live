@@ -84,7 +84,7 @@ export async function submitDevIdea() {
             loadDevSubmissions(true).then(function(){ refreshEntwicklungViews(); });
         });
     } catch(err) {
-        _showToast('Fehler beim Einreichen: ' + (err.message||err, 'error'));
+        _showToast('Fehler beim Einreichen: ' + (err.message||err), 'error');
     } finally {
         if(btn) { btn.disabled = false; btn.textContent = '💡 Feedback einreichen'; }
     }
@@ -210,7 +210,7 @@ export async function devHQDecision(subId, ergebnis) {
         await loadDevSubmissions(true);
         if(typeof window.renderDevPipeline === 'function') window.renderDevPipeline();
         if(typeof window.renderEntwSteuerung === 'function') window.renderEntwSteuerung();
-    } catch(err) { _showToast('Fehler: ' + (err.message||err, 'error')); }
+    } catch(err) { _showToast('Fehler: ' + (err.message||err), 'error'); }
 }
 
 export async function moveDevQueue(subId, direction) {

@@ -998,9 +998,33 @@ try {
 }
 
 export async function handleLogout() {
+// 1) Dispatch vit:logout BEFORE signOut so modules can unsubscribe while sb client is still valid
+window.dispatchEvent(new CustomEvent('vit:logout'));
+// 2) Unsubscribe Push notifications
+if(typeof window.unsubscribePush === 'function') { try { await window.unsubscribePush(); } catch(e) { console.warn('[Logout] Push unsub:', e); } }
+// 3) Supabase sign out
 await _sb().auth.signOut();
+// 4) Core auth state
 sbUser = null; sbProfile = null; sbRollen = []; sbStandort = null;
 window.sbUser = null; window.sbProfile = null; window.sbRollen = []; window.sbStandort = null;
+// 5) Module-internal auth/role state
+currentRole = 'inhaber'; currentRoles = []; currentStandortId = null; currentLocation = null; isPremium = false;
+window.currentRole = null; window.currentRoles = []; window.currentStandortId = null; window.currentLocation = null; window.isPremium = false;
+SESSION = { standort_id: null, user_id: null, rolle: null, is_hq: false };
+window.SESSION = SESSION;
+accountMilestoneStates = {}; onboardingActionsLog = [];
+isDemoMode = false; demoDataSeeded = false;
+// 6) Impersonation state
+_impActive = false; _impOrigProfile = null; _impOrigRoles = null; _impOrigStandort = null; _impOrigSession = null; _impOrigSbStandort = null;
+// 7) Feature-flags & modul status
+window.sbModulStatus = null; window.sbHqModulStatus = null; window.sbHqModulConfig = null;
+window.sbModulEbene = null; window.sbFeatureFlags = null;
+window._hqModulPerms = null; window._betaModules = []; window._isBetaUser = false;
+// 8) Module-specific caches
+window.bwaCache = null; window.selectedBwaId = null; window.smRankingData = null;
+if(window._devState) { try { window._devState.submissions = []; window._devState.selectedFiles = []; } catch(e) {} }
+if(typeof window._offResetState === 'function') { try { window._offResetState(); } catch(e) {} }
+// 9) UI cleanup
 var splash = document.getElementById('appSplash'); if(splash) splash.remove();
 document.getElementById('loginScreen').style.display = 'flex';
 document.getElementById('mainApp').style.display = 'none';
@@ -1015,8 +1039,8 @@ var bwaE = document.getElementById('bwaEskalationBanner'); if(bwaE) bwaE.style.d
 var bwaV = document.getElementById('bwaValidationBanner'); if(bwaV) { bwaV.style.display = 'none'; bwaV.className = 'hidden'; }
 // Remove any open modals/overlays
 ['neuerMaContainer','editEmpContainer','editMaContainer','regContainer','neuerStdContainer'].forEach(function(id){ var el=document.getElementById(id); if(el) el.remove(); });
-// Clear localStorage view state
-try { localStorage.removeItem('vit_lastView'); } catch(e) {}
+// 10) Clear session-specific localStorage keys
+['vit_lastView','vit:lastView','vit_lastEntwicklungTab','vit:lastEntwTab','vit:lastIdeenTab','vit_impact_checks','vit_onb_phase'].forEach(function(k) { try { localStorage.removeItem(k); } catch(e) {} });
 }
 
 export async function checkSession() {

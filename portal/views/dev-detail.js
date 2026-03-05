@@ -686,7 +686,7 @@ export async function submitDevRueckfragenAntwort(subId, currentStatus) {
         openDevDetail(subId);
         renderDevPipeline();
     } catch(err) {
-        _showToast('Fehler: ' + (err.message||err, 'error'));
+        _showToast('Fehler: ' + (err.message||err), 'error');
     }
 }
 
@@ -851,7 +851,7 @@ export async function devHQDecisionFromDetail(subId, ergebnis) {
         // Reload fresh data from DB after short delay (KI-Analyse etc.)
         setTimeout(function(){ loadDevSubmissions(); }, 1500);
     } catch(err) {
-        _showToast('Fehler: ' + (err.message||err, 'error'));
+        _showToast('Fehler: ' + (err.message||err), 'error');
         var loadEl = document.getElementById('devReanalyseLoading');
         if(loadEl) loadEl.remove();
     }
@@ -890,7 +890,7 @@ export async function submitDevKommentar(subId) {
         await openDevDetail(subId);
     } catch(err) {
         console.error('Comment error:', err);
-        _showToast('Fehler beim Kommentar: ' + (err.message||err, 'error'));
+        _showToast('Fehler beim Kommentar: ' + (err.message||err), 'error');
         var input2 = document.getElementById('devKommentarInput');
         if(input2) input2.value = text;
     }

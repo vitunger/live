@@ -3777,8 +3777,8 @@
 
                     <!-- ===== MONTH VIEW ===== -->
                     <div id="kalMonthContainer">
-                        <div class="vit-card overflow-hidden">
-                            <div class="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+                        <div class="vit-card overflow-x-auto">
+                            <div class="grid grid-cols-7 bg-gray-50 border-b border-gray-200 min-w-[500px]">
                                 <div class="py-2 text-center text-xs font-semibold text-gray-500">Mo</div>
                                 <div class="py-2 text-center text-xs font-semibold text-gray-500">Di</div>
                                 <div class="py-2 text-center text-xs font-semibold text-gray-500">Mi</div>
@@ -3787,7 +3787,7 @@
                                 <div class="py-2 text-center text-xs font-semibold text-gray-500 text-orange-400">Sa</div>
                                 <div class="py-2 text-center text-xs font-semibold text-gray-500 text-orange-400">So</div>
                             </div>
-                            <div id="kalGrid" class="grid grid-cols-7"></div>
+                            <div id="kalGrid" class="grid grid-cols-7 min-w-[500px]"></div>
                         </div>
                         <h3 class="font-bold text-gray-800 mt-6 mb-3">Anstehende Termine</h3>
                         <div id="kalUpcoming" class="space-y-2"></div>
@@ -3796,7 +3796,7 @@
                     <!-- ===== WEEK VIEW ===== -->
                     <div id="kalWeekContainer" style="display:none;">
                         <!-- Ganztägig row -->
-                        <div id="kalWeekAllDay" class="vit-card mb-2 p-0 overflow-hidden" style="display:none;">
+                        <div id="kalWeekAllDay" class="vit-card mb-2 p-0 overflow-x-auto" style="display:none;">
                             <div class="grid grid-cols-8 text-xs">
                                 <div class="p-2 bg-gray-50 border-r border-b border-gray-200 text-gray-400 font-semibold text-center">Ganztägig</div>
                                 <div id="kalWeekAllDay0" class="p-1.5 border-r border-b border-gray-100 min-h-[32px]"></div>
@@ -3809,9 +3809,9 @@
                             </div>
                         </div>
                         <!-- Week time grid -->
-                        <div class="vit-card overflow-hidden">
+                        <div class="vit-card overflow-x-auto">
                             <!-- Day headers -->
-                            <div class="grid grid-cols-8 bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                            <div class="grid grid-cols-8 bg-gray-50 border-b border-gray-200 sticky top-0 z-10 min-w-[600px]">
                                 <div class="py-2 text-center text-[10px] font-semibold text-gray-400">Uhrzeit</div>
                                 <div id="kalWeekHead0" class="py-2 text-center text-xs font-semibold text-gray-600"></div>
                                 <div id="kalWeekHead1" class="py-2 text-center text-xs font-semibold text-gray-600"></div>

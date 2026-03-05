@@ -138,8 +138,11 @@ export function bwaApplyKiResult(result) {
 export function closeBwaUploadModal() { var c = document.getElementById('bwaUploadContainer'); if(c) c.remove(); }
 
 export async function saveBwaData() {
-    var month = parseInt(document.getElementById('bwaMonth').value);
-    var year = parseInt(document.getElementById('bwaYear').value);
+    var monthEl = document.getElementById('bwaMonth');
+    var yearEl = document.getElementById('bwaYear');
+    if(!monthEl || !yearEl) { _showToast('Upload-Formular nicht verfügbar', 'error'); return; }
+    var month = parseInt(monthEl.value);
+    var year = parseInt(yearEl.value);
     var errEl = document.getElementById('bwaUploadError');
     var btn = document.getElementById('bwaSaveBtn');
     var v = function(id) { return parseFloat((document.getElementById(id)||{}).value) || 0; };

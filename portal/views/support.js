@@ -56,8 +56,8 @@ export async function renderTickets(filter) {
             html += '<span class="text-xs font-semibold rounded px-2 py-0.5 ' + (statusColors[t.status]||'') + '">' + (statusLabels[t.status]||t.status) + '</span>';
             html += '<span>' + (prioIcons[t.prioritaet]||'') + '</span>';
             html += '<span class="text-xs text-gray-400">#' + t.id.substring(0,8) + '</span></div>';
-            html += '<h4 class="font-bold text-gray-800 text-sm">' + t.titel + '</h4>';
-            html += '<p class="text-xs text-gray-500 mt-1">' + desc + '</p>';
+            html += '<h4 class="font-bold text-gray-800 text-sm">' + _escH(t.titel) + '</h4>';
+            html += '<p class="text-xs text-gray-500 mt-1">' + _escH(desc) + '</p>';
             html += '<div class="flex items-center space-x-3 mt-2 text-xs text-gray-400">';
             html += '<span>' + d.toLocaleDateString('de-DE') + '</span>';
             html += '<span>' + (t.kategorie||'') + '</span>';
@@ -130,7 +130,7 @@ export async function openTicketDetail(ticketId) {
             html += '<div class="mb-3 p-3 rounded-lg '+(isOwn?'bg-orange-50 border border-orange-100':'bg-gray-50 border border-gray-100')+'">';
             html += '<div class="flex items-center justify-between mb-1"><span class="text-xs font-bold text-gray-700">'+(k.users&&k.users.name?k.users.name:'Unbekannt')+'</span>';
             html += '<span class="text-[10px] text-gray-400">'+kd.toLocaleDateString('de-DE')+' '+kd.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})+'</span></div>';
-            html += '<p class="text-sm text-gray-600 whitespace-pre-wrap">'+k.text+'</p></div>';
+            html += '<p class="text-sm text-gray-600 whitespace-pre-wrap">'+_escH(k.text)+'</p></div>';
         });
 
         // Neuer Kommentar
@@ -205,9 +205,10 @@ export async function submitTicketForm() {
         });
         if(resp.error) throw resp.error;
         triggerPushHQ('🆘 Neues Ticket', titel.trim() + (sbStandort ? ' – ' + sbStandort.name : ''), '/?view=hqSupport', 'push_support_update');
-        document.getElementById('ticketCreate').classList.add('hidden');
-        document.getElementById('ticketTitelInput').value = '';
-        document.getElementById('ticketBeschreibungInput').value = '';
+        var el;
+        el = document.getElementById('ticketCreate'); if(el) el.classList.add('hidden');
+        el = document.getElementById('ticketTitelInput'); if(el) el.value = '';
+        el = document.getElementById('ticketBeschreibungInput'); if(el) el.value = '';
         _showToast('\u2705 Ticket erstellt!', 'success');
         renderTickets('all');
     } catch(err) { _showToast('Fehler: ' + err.message, 'error'); }
