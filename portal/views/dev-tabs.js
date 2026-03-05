@@ -645,26 +645,67 @@ export async function renderEntwAuditLog() {
         }
 
         try {
+            // Schritt 1: Basis-Felder ohne FK-Join (funktioniert immer, auch vor Migration)
+            // Spalten 'aktion/modul/details' existieren evtl. noch nicht – erst prüfen
+            var testR = await _sb().from('audit_log').select('aktion').limit(0);
+            var hasAktion = !(testR.error && testR.error.message && testR.error.message.includes('aktion'));
+
+            var selectFields = hasAktion
+                ? 'id, created_at, user_id, standort_id, aktion, modul, details'
+                : 'id, created_at, user_id, action'; // legacy: nur alte Spalte
+
             var q = _sb().from('audit_log')
-                .select('id, created_at, aktion, modul, details, user_id, standort_id, users!audit_log_user_id_fkey(vorname, nachname), standorte!audit_log_standort_id_fkey(name)')
+                .select(selectFields)
                 .order('created_at', { ascending: false })
                 .range(_auditState.page * _auditState.PAGE_SIZE, (_auditState.page + 1) * _auditState.PAGE_SIZE - 1);
 
             var f = _auditState.filter;
-            if (f.aktion)  q = q.eq('aktion', f.aktion);
-            if (f.von)     q = q.gte('created_at', f.von + 'T00:00:00Z');
-            if (f.bis)     q = q.lte('created_at', f.bis + 'T23:59:59Z');
+            if (f.aktion && hasAktion) q = q.eq('aktion', f.aktion);
+            if (f.von)                 q = q.gte('created_at', f.von + 'T00:00:00Z');
+            if (f.bis)                 q = q.lte('created_at', f.bis + 'T23:59:59Z');
 
-            var { data, error } = await q;
+            var { data: rows, error } = await q;
             if (error) throw error;
 
-            _auditState.entries = reset ? (data || []) : _auditState.entries.concat(data || []);
+            var entries = (rows || []).map(function(e) {
+                return Object.assign({}, e, {
+                    aktion: e.aktion || e.action || 'unbekannt',
+                    modul: e.modul || null,
+                    details: e.details || {}
+                });
+            });
+
+            // Schritt 2: User-Namen separat nachladen (kein FK-Join nötig)
+            var userIds = [...new Set(entries.map(function(e) { return e.user_id; }).filter(Boolean))];
+            var userMap = {};
+            if (userIds.length > 0) {
+                var { data: uData } = await _sb().from('users').select('id, vorname, nachname').in('id', userIds);
+                (uData || []).forEach(function(u) { userMap[u.id] = u; });
+            }
+
+            // Schritt 3: Standort-Namen separat nachladen
+            var standortIds = [...new Set(entries.map(function(e) { return e.standort_id; }).filter(Boolean))];
+            var standortMap = {};
+            if (standortIds.length > 0) {
+                var { data: sData } = await _sb().from('standorte').select('id, name').in('id', standortIds);
+                (sData || []).forEach(function(s) { standortMap[s.id] = s; });
+            }
+
+            // Schritt 4: Zusammenführen
+            entries = entries.map(function(e) {
+                return Object.assign({}, e, {
+                    users: userMap[e.user_id] || null,
+                    standorte: standortMap[e.standort_id] || null
+                });
+            });
+
+            _auditState.entries = reset ? entries : _auditState.entries.concat(entries);
             _auditState.page++;
 
-            _auditRenderListe(data && data.length === _auditState.PAGE_SIZE);
+            _auditRenderListe(rows && rows.length === _auditState.PAGE_SIZE);
         } catch(err) {
             var content2 = document.getElementById('auditLogContent');
-            if (content2) content2.innerHTML = '<div class="text-center py-8"><p class="text-red-400 text-sm">Fehler: ' + _escH(err.message) + '</p><p class="text-xs text-gray-400 mt-1">Wurde die audit_log Migration bereits ausgeführt?</p></div>';
+            if (content2) content2.innerHTML = '<div class="text-center py-8"><p class="text-red-400 text-sm">Fehler: ' + _escH(err.message) + '</p><p class="text-xs text-gray-400 mt-1">' + _escH(err.code || '') + '</p></div>';
         } finally {
             _auditState.loading = false;
         }
