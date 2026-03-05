@@ -170,7 +170,7 @@ function renderHqUebersicht(el) {
         var C = window.MKT_CHART_COLORS;
         var metaSpend = 0, googleSpend = 0;
         ads.forEach(function(a) {
-            var p = (a.platform || '').toLowerCase();
+            var p = (a.plattform || '').toLowerCase();
             if (p.indexOf('meta') >= 0 || p.indexOf('facebook') >= 0) metaSpend += Number(a.ausgaben || 0);
             else googleSpend += Number(a.ausgaben || 0);
         });
@@ -275,7 +275,7 @@ function renderHqGoogleAds(el) {
 
 function renderHqAdsTab(el, platform, title, subtitle) {
     var ads = (window.mktState.adsData || []).filter(function(a) {
-        var p = (a.platform || '').toLowerCase();
+        var p = (a.plattform || '').toLowerCase();
         if (platform === 'meta') return p.indexOf('meta') >= 0 || p.indexOf('facebook') >= 0 || p.indexOf('instagram') >= 0;
         return p.indexOf('google') >= 0;
     });
@@ -453,7 +453,7 @@ function renderHqBudgetPlan(el) {
     // Google vs Meta Split aus ads berechnen
     var googleSpend = 0, metaSpend = 0;
     ads.forEach(function(a) {
-        var p = (a.platform || '').toLowerCase();
+        var p = (a.plattform || '').toLowerCase();
         if (p.indexOf('meta') >= 0 || p.indexOf('facebook') >= 0) metaSpend += Number(a.ausgaben || 0);
         else googleSpend += Number(a.ausgaben || 0);
     });
