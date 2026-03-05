@@ -621,8 +621,8 @@ function renderConnectorCard(id) {
         body += _renderOAuthFields(c, 'instagram');
         body += _renderReadonlyInfo(c);
         body += '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-            + '<button onclick="window.saveSocialConfig('instagram')" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Speichern</button>'
-            + '<button onclick="window.loadSocialData('instagram')" style="padding:7px 14px;background:linear-gradient(135deg,#e1306c,#f77737,#fcaf45);color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten laden</button>'
+            + '<button onclick="window.saveSocialConfig(\'instagram\')" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Speichern</button>'
+            + '<button onclick="window.loadSocialData(\'instagram\')" style="padding:7px 14px;background:linear-gradient(135deg,#e1306c,#f77737,#fcaf45);color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten laden</button>'
             + '</div>';
         body += '<div id="socialStats_instagram" style="display:none">';
         body += '<div id="socialAccountCard_instagram" style="background:#f9fafb;border-radius:10px;padding:12px;margin-top:8px">'
@@ -645,8 +645,8 @@ function renderConnectorCard(id) {
         body += _renderOAuthFields(c, 'facebook');
         body += _renderReadonlyInfo(c);
         body += '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-            + '<button onclick="window.saveSocialConfig('facebook')" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Speichern</button>'
-            + '<button onclick="window.loadSocialData('facebook')" style="padding:7px 14px;background:#1877f2;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten laden</button>'
+            + '<button onclick="window.saveSocialConfig(\'facebook\')" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Speichern</button>'
+            + '<button onclick="window.loadSocialData(\'facebook\')" style="padding:7px 14px;background:#1877f2;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten laden</button>'
             + '</div>';
         body += '<div id="socialStats_facebook" style="display:none">';
         body += '<div id="socialAccountCard_facebook" style="background:#f9fafb;border-radius:10px;padding:12px;margin-top:8px">'
@@ -669,8 +669,8 @@ function renderConnectorCard(id) {
         body += _renderOAuthFields(c, 'youtube');
         body += _renderReadonlyInfo(c);
         body += '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-            + '<button onclick="window.saveSocialConfig('youtube')" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Speichern</button>'
-            + '<button onclick="window.loadSocialData('youtube')" style="padding:7px 14px;background:#ff0000;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten laden</button>'
+            + '<button onclick="window.saveSocialConfig(\'youtube\')" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Speichern</button>'
+            + '<button onclick="window.loadSocialData(\'youtube\')" style="padding:7px 14px;background:#ff0000;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten laden</button>'
             + '</div>';
         body += '<div id="socialStats_youtube" style="display:none">';
         body += '<div id="socialAccountCard_youtube" style="background:#f9fafb;border-radius:10px;padding:12px;margin-top:8px">'
@@ -693,8 +693,8 @@ function renderConnectorCard(id) {
         body += _renderOAuthFields(c, 'gmb');
         body += _renderReadonlyInfo(c);
         body += '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-            + '<button onclick="window.saveSocialConfig('gmb')" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Speichern</button>'
-            + '<button onclick="window.loadSocialData('gmb')" style="padding:7px 14px;background:#4285f4;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten laden</button>'
+            + '<button onclick="window.saveSocialConfig(\'gmb\')" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Speichern</button>'
+            + '<button onclick="window.loadSocialData(\'gmb\')" style="padding:7px 14px;background:#4285f4;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten laden</button>'
             + '</div>';
         body += '<div id="socialStats_gmb" style="display:none">';
         body += '<div id="socialAccountCard_gmb" style="background:#f9fafb;border-radius:10px;padding:12px;margin-top:8px">'
@@ -717,8 +717,8 @@ function renderConnectorCard(id) {
         body += _renderOAuthFields(c, 'analytics');
         body += _renderReadonlyInfo(c);
         body += '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-            + '<button onclick="window.saveSocialConfig('analytics')" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Speichern</button>'
-            + '<button onclick="window.loadSocialData('analytics')" style="padding:7px 14px;background:#e37400;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten laden</button>'
+            + '<button onclick="window.saveSocialConfig(\'analytics\')" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Speichern</button>'
+            + '<button onclick="window.loadSocialData(\'analytics\')" style="padding:7px 14px;background:#e37400;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten laden</button>'
             + '</div>';
         body += '<div id="socialStats_analytics" style="display:none">';
         body += '<div id="socialAccountCard_analytics" style="background:#f9fafb;border-radius:10px;padding:12px;margin-top:8px">'
@@ -1650,7 +1650,7 @@ var SOCIAL_DEMO = {
             ['Frühjahrsaktion: E-Bike Test-Days 🚲', '342', '28', '4.200', '01.03.2026'],
             ['Gravel-Tipps für Anfänger', '218', '19', '2.900', '22.02.2026'],
             ['Hinter den Kulissen: Werkstatt-Alltag', '189', '14', '2.100', '15.02.2026'],
-            ['JobRad – So einfach geht's', '567', '44', '7.800', '08.02.2026'],
+            ['JobRad \u2013 So einfach geht\'s', '567', '44', '7.800', '08.02.2026'],
             ['MTB-Trail Münster 🏔️', '143', '11', '1.600', '01.02.2026'],
         ]
     },
