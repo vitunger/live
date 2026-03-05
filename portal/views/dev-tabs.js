@@ -620,6 +620,10 @@ const AUDIT_AKTIONEN = {
     'lieferant_geloescht':      { label: 'Lieferant gelöscht',       icon: '🗑️', color: 'gray' },
     // Sonstige
     'modul_wechsel':            { label: 'Modul geöffnet',           icon: '📂', color: 'gray' },
+    // UI / Technisch
+    'theme_gewechselt':         { label: 'Dark Mode',                 icon: '🌙', color: 'gray' },
+    'suche':                    { label: 'Suche',                     icon: '🔍', color: 'gray' },
+    'js_fehler':                { label: 'JS-Fehler',                 icon: '🔴', color: 'orange' },
 };
 
 const AUDIT_COLOR_CLASSES = {

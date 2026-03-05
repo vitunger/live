@@ -245,6 +245,10 @@ export function showView(viewName) {
     } else {
         console.error('FAILED: View not found:', viewId);
     }
+    // Modul-Wechsel loggen (fire-and-forget, nur wenn eingeloggt)
+    if(window.logAudit && viewEl) {
+        window.logAudit('modul_wechsel', viewName, { view: viewName, modul_status: (window.sbModulStatus && moduleKey) ? (window.sbModulStatus[moduleKey] || 'aktiv') : 'aktiv' });
+    }
 }
 
 export function showModuleVersionBadge(viewId) {

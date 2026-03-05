@@ -97,3 +97,23 @@ window.logAudit = async function(aktion, modul, details) {
     }
 };
 
+// Globaler Fehler-Handler – loggt JS-Fehler ins Audit-Log (gedrosselt, max 1/5s)
+(function() {
+    var _lastErrTs = 0;
+    function _logErr(msg, src, detail) {
+        var now = Date.now();
+        if (now - _lastErrTs < 5000) return; // max 1 Fehler alle 5s
+        _lastErrTs = now;
+        window.logAudit && window.logAudit('js_fehler', 'system', {
+            meldung: (msg || '').substring(0, 200),
+            datei: (src || '').replace(window.location.origin, '').substring(0, 100),
+            detail: detail ? String(detail).substring(0, 200) : null
+        });
+    }
+    window.addEventListener('error', function(e) {
+        _logErr(e.message, e.filename + ':' + e.lineno, null);
+    });
+    window.addEventListener('unhandledrejection', function(e) {
+        _logErr('Unhandled Promise rejection', window.location.pathname, e.reason && e.reason.message ? e.reason.message : String(e.reason).substring(0, 100));
+    });
+})();

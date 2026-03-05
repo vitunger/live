@@ -15,6 +15,7 @@ export function toggleTheme() {
 var current = document.documentElement.getAttribute('data-theme') || 'light';
 var next = current === 'dark' ? 'light' : 'dark';
 setTheme(next);
+window.logAudit && window.logAudit('theme_gewechselt', 'ui', { von: current, nach: next });
 }
 export function setTheme(theme) {
 document.documentElement.setAttribute('data-theme', theme);

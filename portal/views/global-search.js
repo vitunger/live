@@ -180,6 +180,7 @@ if (searchMode === 'page') {
   searchResults = [...globalResults, ...pageResults];
   renderResults(searchResults);
 }
+window.logAudit && window.logAudit('suche', 'global-search', { query: query, modus: searchMode, treffer: searchResults.length });
   }
 
   // ── Render dropdown results ──
