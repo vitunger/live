@@ -24,7 +24,7 @@ export async function renderTickets(filter) {
         tickets.forEach(function(t) {
             var sc = t.status === 'offen' ? 'red' : t.status === 'in_bearbeitung' ? 'amber' : 'green';
             var sl = t.status === 'offen' ? 'Offen' : t.status === 'in_bearbeitung' ? 'In Bearbeitung' : 'Gelöst';
-            h += '<div class="vit-card p-4 cursor-pointer" onclick="openTicketDetail(''+t.id+'')">'
+            h += '<div class="vit-card p-4 cursor-pointer" onclick="openTicketDetail(\''+t.id+'\')">'
                 + '<div class="flex items-start justify-between mb-2">'
                 + '<span class="font-semibold text-gray-800 text-sm">' + t.betreff + '</span>'
                 + '<span class="text-xs px-2 py-0.5 rounded-full bg-'+sc+'-100 text-'+sc+'-700 font-semibold ml-2 shrink-0">'+sl+'</span></div>'
