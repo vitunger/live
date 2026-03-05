@@ -113,11 +113,14 @@ async function loadAdsData(standortId) {
     if (!sb) return [];
     try {
         var m = getCurrentMonth();
+        var startStr = m.year + '-' + String(m.month).padStart(2, '0') + '-01';
+        var endDate = new Date(m.year, m.month, 0); // last day of month
+        var endStr = m.year + '-' + String(m.month).padStart(2, '0') + '-' + String(endDate.getDate()).padStart(2, '0');
         var query = sb
             .from('ads_performance')
             .select('*')
-            .eq('year', m.year)
-            .eq('month', m.month);
+            .gte('datum', startStr)
+            .lte('datum', endStr);
         if (standortId) query = query.eq('standort_id', standortId);
         var { data, error } = await query;
         if (error) { console.warn('[marketing] loadAdsData:', error.message); return []; }
