@@ -1,8 +1,8 @@
 // analytics-proxy Edge Function
-// Proxied Google Analytics Data API v1 (GA4) calls
+// Uses Google Service Account JWT for GA4 Data API v1 authentication
 // Endpoints:
-//   POST /analytics-proxy  { action: 'overview', property_id?, api_key? }
-//   POST /analytics-proxy  { action: 'top_pages', property_id?, api_key? }
+//   POST /analytics-proxy  { action: 'overview', days? }
+//   POST /analytics-proxy  { action: 'top_pages', days? }
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -12,7 +12,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// ─── Helper: Get Analytics config ───
+// ─── Helper: Get Analytics config from DB ───
 async function getAnalyticsConfig() {
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -28,13 +28,59 @@ async function getAnalyticsConfig() {
   return map;
 }
 
+// ─── Helper: Create JWT for Service Account ───
+async function getServiceAccountToken(clientEmail: string, privateKeyPem: string): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    iss: clientEmail,
+    sub: clientEmail,
+    aud: "https://oauth2.googleapis.com/token",
+    iat: now,
+    exp: now + 3600,
+    scope: "https://www.googleapis.com/auth/analytics.readonly",
+  };
+
+  // Clean PEM key
+  const pemClean = privateKeyPem
+    .replace("-----BEGIN PRIVATE KEY-----", "")
+    .replace("-----END PRIVATE KEY-----", "")
+    .replace(/\s/g, "");
+
+  const keyBytes = Uint8Array.from(atob(pemClean), c => c.charCodeAt(0));
+  const cryptoKey = await crypto.subtle.importKey(
+    "pkcs8", keyBytes,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false, ["sign"]
+  );
+
+  // Build JWT
+  const header = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" })).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+  const body = btoa(JSON.stringify(payload)).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+  const sigInput = new TextEncoder().encode(`${header}.${body}`);
+  const sigBytes = await crypto.subtle.sign({ name: "RSASSA-PKCS1-v1_5" }, cryptoKey, sigInput);
+  const sig = btoa(String.fromCharCode(...new Uint8Array(sigBytes))).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+  const jwt = `${header}.${body}.${sig}`;
+
+  // Exchange JWT for access token
+  const tokenResp = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`,
+  });
+  const tokenData = await tokenResp.json();
+  if (!tokenData.access_token) throw new Error("Token error: " + JSON.stringify(tokenData));
+  return tokenData.access_token;
+}
+
 // ─── Helper: GA4 Data API request ───
-// GA4 Data API supports API Key for basic reporting (no user-level data)
-async function ga4Request(propertyId: string, apiKey: string, body: object) {
-  const url = `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport?key=${apiKey}`;
+async function ga4Request(propertyId: string, accessToken: string, body: object) {
+  const url = `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`;
   const resp = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${accessToken}`,
+    },
     body: JSON.stringify(body),
   });
   if (!resp.ok) {
@@ -44,105 +90,91 @@ async function ga4Request(propertyId: string, apiKey: string, body: object) {
   return resp.json();
 }
 
-// ─── Helper: Format GA4 response rows ───
-function parseGA4Rows(data: any, dimNames: string[], metNames: string[]) {
-  if (!data.rows) return [];
-  return data.rows.map((row: any) => {
-    const result: Record<string, string> = {};
-    (row.dimensionValues || []).forEach((v: any, i: number) => { result[dimNames[i]] = v.value; });
-    (row.metricValues || []).forEach((v: any, i: number) => { result[metNames[i]] = v.value; });
-    return result;
-  });
-}
-
+// ─── Main Handler ───
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const body = await req.json();
-    const { action } = body;
-    const config = await getAnalyticsConfig();
+    const { action, days = 30 } = await req.json();
+    const cfg = await getAnalyticsConfig();
 
-    const propertyId = body.property_id || config.analytics_property_id || Deno.env.get("GA4_PROPERTY_ID") || "";
-    const apiKey = body.api_key || config.analytics_api_key || Deno.env.get("GA4_API_KEY") || "";
+    const propertyId = cfg["property_id"];
+    const clientEmail = cfg["service_account_email"];
+    const privateKey = cfg["service_account_key"];
 
-    if (!propertyId || !apiKey) {
-      return Response.json({ error: "Property ID und API Key erforderlich. Bitte unter Schnittstellen → Google Analytics eintragen." }, { status: 400, headers: corsHeaders });
+    if (!propertyId || !clientEmail || !privateKey) {
+      return new Response(JSON.stringify({ error: "GA4 nicht konfiguriert" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
 
-    // ── Action: overview (letzte 30 Tage Gesamt-KPIs) ──────────────
+    const accessToken = await getServiceAccountToken(clientEmail, privateKey);
+    const endDate = "today";
+    const startDate = `${days}daysAgo`;
+
+    let result: any = {};
+
     if (action === "overview") {
-      const data = await ga4Request(propertyId, apiKey, {
-        dateRanges: [{ startDate: "30daysAgo", endDate: "today" }],
+      const data = await ga4Request(propertyId, accessToken, {
+        dateRanges: [{ startDate, endDate }],
         metrics: [
-          { name: "screenPageViews" },
-          { name: "activeUsers" },
           { name: "sessions" },
-          { name: "averageSessionDuration" },
+          { name: "activeUsers" },
+          { name: "screenPageViews" },
           { name: "bounceRate" },
+          { name: "averageSessionDuration" },
         ],
       });
-
-      const metrics = (data.rows?.[0]?.metricValues || []).map((v: any) => v.value);
-      const avgDuration = Math.round(parseFloat(metrics[3] || "0"));
-      const minutes = Math.floor(avgDuration / 60);
-      const seconds = avgDuration % 60;
-
-      return Response.json({
-        pageviews: parseInt(metrics[0] || "0"),
-        users: parseInt(metrics[1] || "0"),
-        sessions: parseInt(metrics[2] || "0"),
-        avg_session_duration: `${minutes}m ${seconds}s`,
-        bounce_rate: parseFloat((parseFloat(metrics[4] || "0") * 100).toFixed(1)),
-      }, { headers: corsHeaders });
-    }
-
-    // ── Action: top_pages ────────────────────────────────────────────
-    if (action === "top_pages") {
-      const data = await ga4Request(propertyId, apiKey, {
-        dateRanges: [{ startDate: "30daysAgo", endDate: "today" }],
-        dimensions: [{ name: "pagePath" }, { name: "sessionDefaultChannelGroup" }],
-        metrics: [
-          { name: "screenPageViews" },
-          { name: "activeUsers" },
-          { name: "averageSessionDuration" },
-        ],
+      const row = data.rows?.[0]?.metricValues || [];
+      result = {
+        sessions: parseInt(row[0]?.value || "0"),
+        users: parseInt(row[1]?.value || "0"),
+        pageviews: parseInt(row[2]?.value || "0"),
+        bounceRate: parseFloat(row[3]?.value || "0"),
+        avgSessionDuration: parseFloat(row[4]?.value || "0"),
+      };
+    } else if (action === "top_pages") {
+      const data = await ga4Request(propertyId, accessToken, {
+        dateRanges: [{ startDate, endDate }],
+        dimensions: [{ name: "pagePath" }],
+        metrics: [{ name: "screenPageViews" }, { name: "activeUsers" }],
         orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
         limit: 10,
       });
-
-      const rows = parseGA4Rows(data, ["page", "source"], ["views", "users", "avg_time"]);
-      const formatted = rows.map((r: any) => ({
-        page: r.page,
-        source: r.source,
-        views: parseInt(r.views),
-        users: parseInt(r.users),
-        avg_time: (() => {
-          const s = Math.round(parseFloat(r.avg_time || "0"));
-          return `${Math.floor(s/60)}m ${s%60}s`;
-        })(),
-      }));
-
-      return Response.json({ pages: formatted }, { headers: corsHeaders });
-    }
-
-    // ── Action: traffic_sources ──────────────────────────────────────
-    if (action === "traffic_sources") {
-      const data = await ga4Request(propertyId, apiKey, {
-        dateRanges: [{ startDate: "30daysAgo", endDate: "today" }],
+      result = {
+        pages: (data.rows || []).map((r: any) => ({
+          path: r.dimensionValues[0]?.value,
+          views: parseInt(r.metricValues[0]?.value || "0"),
+          users: parseInt(r.metricValues[1]?.value || "0"),
+        }))
+      };
+    } else if (action === "traffic_sources") {
+      const data = await ga4Request(propertyId, accessToken, {
+        dateRanges: [{ startDate, endDate }],
         dimensions: [{ name: "sessionDefaultChannelGroup" }],
-        metrics: [{ name: "sessions" }, { name: "activeUsers" }],
+        metrics: [{ name: "sessions" }],
         orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
         limit: 8,
       });
-
-      const rows = parseGA4Rows(data, ["channel"], ["sessions", "users"]);
-      return Response.json({ sources: rows }, { headers: corsHeaders });
+      result = {
+        sources: (data.rows || []).map((r: any) => ({
+          channel: r.dimensionValues[0]?.value,
+          sessions: parseInt(r.metricValues[0]?.value || "0"),
+        }))
+      };
+    } else {
+      return new Response(JSON.stringify({ error: "Unbekannte Action: " + action }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
 
-    return Response.json({ error: `Unbekannte Action: ${action}` }, { status: 400, headers: corsHeaders });
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
 
-  } catch (e: any) {
-    return Response.json({ error: e.message }, { status: 500, headers: corsHeaders });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: e.message }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
   }
 });
