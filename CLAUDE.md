@@ -938,3 +938,75 @@ Neue Module werden direkt in TypeScript gebaut, hinter modul_status = deaktivier
 - HQ-Übersicht: Badge "mtl." / "qtl." bei Nicht-Standard-Intervallen
 - Standort-Kostenrechner: Live-Widget zeigt voraussichtlichen Spitzenausgleich mit Monats-Tabelle, Summary-Karten und Berechnungsdetails
 - `calcDueDate()` berechnet Fälligkeitsdatum basierend auf Schedule-Typ
+## Multi-Standort / Standort-Gruppen (Konzept, 05.03.2026)
+
+### Hintergrund
+Manche GFs betreiben mehrere Standorte. Die aktuelle Architektur basiert auf 1 User = 1 Standort
+(`users.standort_id`). Das Multi-Standort-Feature erweitert dies ohne Breaking Changes.
+
+### 4 Situationen
+
+**Situation 1: Vollständig getrennte Standorte**
+- Rechtlich getrennt, je eigene BWA, Mitarbeiter komplett getrennt
+- Lösung: Nur Standort-Switcher + GF-Zuweisung
+- Status: Geplant (automatisch durch Situation 3 abgedeckt mit gemeinsame_bwa=false)
+
+**Situation 2: Getrennte Standorte, übergreifende Mitarbeiter**
+- Rechtlich getrennt, je eigene BWA, Mitarbeiter sollen beide Standorte sehen
+- Lösung: Switcher auch für normale Mitarbeiter (user_standorte für Nicht-GFs)
+- Status: Geplant (Erweiterung von Situation 3)
+
+**Situation 3: Eine Firma, eine BWA, getrennte Mitarbeiter — IN UMSETZUNG**
+- Eine GmbH, zwei Filialen, eine BWA (keine Kostenstellen), eine Planung
+- Abrechnung + Marketing-Budget getrennt pro Standort
+- BWA-Upload: nur durch GF
+- Lösung: standort_gruppen + standort_gruppe_mitglieder + user_standorte + Sidebar-Switcher
+- Status: In Umsetzung
+
+**Situation 4: Eine Firma, eine BWA mit Kostenstellen**
+- Wie Situation 3, aber BWA hat Kostenstellen pro Standort
+- Lösung: Zusätzlich Kostenstellen-Logik im BWA-Parser
+- Status: Nicht geplant, größerer Umbauaufwand
+
+### Datenbankschema (neu)
+
+```sql
+-- Gruppen-Tabelle
+standort_gruppen (id, name, created_at)
+
+-- Standort-zu-Gruppe Zuordnung
+standort_gruppe_mitglieder (
+  standort_id FK standorte,
+  gruppe_id FK standort_gruppen,
+  is_primary bool,
+  gemeinsame_bwa bool,
+  gemeinsame_planung bool
+)
+
+-- User-zu-Standort n:m (für Multi-Standort-User)
+user_standorte (
+  user_id FK users,
+  standort_id FK standorte,
+  is_primary bool,
+  created_at
+)
+```
+
+`users.standort_id` bleibt als Primary-Standort erhalten (Abwärtskompatibilität).
+
+### Umsetzungsreihenfolge (Situation 3)
+1. DB-Migration: 3 neue Tabellen + RLS
+2. HQ Kontrollcenter: Standort-Detail → Abschnitt "Standort-Gruppe" + "Erweiterter Zugriff"
+3. Auth: user_standorte nach Login laden → window.sbStandortIds[]
+4. Sidebar: Standort-Switcher Dropdown (nur wenn sbStandortIds.length > 1)
+5. Controlling: Gruppen-BWA laden (gemeinsame_bwa=true → nach gruppe_id filtern)
+6. Planung (allgemein.js): Gruppen-Plan laden (gemeinsame_planung=true)
+
+### Was NICHT geändert wird
+- Keine der bestehenden eq('standort_id', sid) Filter
+- Keine RLS-Änderungen an bestehenden Tabellen
+- Keine Modul-Logik außer Controlling + Planung
+
+### Wissen-Artikel
+Bereits in wissen_artikel Tabelle eingefügt (gepinnt=true, kategorie=allgemein).
+Titel: "Multi-Standort: Wenn ein GF mehrere Standorte betreibt"
