@@ -571,12 +571,12 @@ function renderHqAdsTab(el, platform, title, subtitle) {
 function renderHqLeadReporting(el) {
     var tracking = window.mktState.leadTracking || [];
     var vbs = window.mktState.vereinbarungen || [];
-    var leadType = window.mktState._leadType || 'kombi';
 
     var totalZiel = vbs.reduce(function(s,v) { return s + Number(v.max_leads || 0); }, 0);
     var zielMonat = Math.round(totalZiel / 12);
 
-    // YTD aggregieren basierend auf Lead-Typ
+    // YTD aggregieren basierend auf Lead-Typ-Filter
+    var leadType = window.mktState._leadType || 'kombi';
     var ytdLeads = 0, ytdTermine = 0, ytdSV = 0;
     tracking.forEach(function(t) {
         ytdTermine += Number(t.termine_ist || 0);
@@ -601,10 +601,10 @@ function renderHqLeadReporting(el) {
         '<div><h2 class="text-xl font-bold text-gray-800 mb-1">Lead Reporting \u2013 Netzwerk</h2>' +
         '<p class="text-sm text-gray-500">Jahresziel-Tracking und Lead-Qualit\u00e4t</p></div>' +
         '<div class="flex flex-wrap gap-2">' +
-        '<button class="mkt-lead-pill' + (leadType === 'kombi' ? ' active' : '') + '" onclick="mktSetLeadType(this,\'kombi\')">Kombi</button>' +
-        '<button class="mkt-lead-pill' + (leadType === 'regulaer' ? ' active' : '') + '" onclick="mktSetLeadType(this,\'regulaer\')">Leads Regul\u00e4r</button>' +
-        '<button class="mkt-lead-pill' + (leadType === 'store_visits' ? ' active' : '') + '" onclick="mktSetLeadType(this,\'store_visits\')">Store-Visits 25%</button>' +
-        '<button class="mkt-lead-pill' + (leadType === 'anzeige_sv' ? ' active' : '') + '" onclick="mktSetLeadType(this,\'anzeige_sv\')">Anzeige-Store-Visits</button>' +
+        '<button class="mkt-lead-pill active" onclick="mktSetLeadType(this,\'kombi\')">Kombi</button>' +
+        '<button class="mkt-lead-pill" onclick="mktSetLeadType(this,\'regulaer\')">Leads Regul\u00e4r</button>' +
+        '<button class="mkt-lead-pill" onclick="mktSetLeadType(this,\'store_visits\')">Store-Visits 25%</button>' +
+        '<button class="mkt-lead-pill" onclick="mktSetLeadType(this,\'anzeige_sv\')">Anzeige-Store-Visits</button>' +
         '</div></div>';
 
     html += '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">' +
@@ -634,15 +634,9 @@ function renderHqLeadReporting(el) {
             var sName = v.standorte ? v.standorte.name : '\u2013';
             var jz = v.max_leads || 0;
             var ytdSollV = Math.round(jz * m.month / 12);
-            // Ist aus tracking summieren (nach Lead-Typ gefiltert)
+            // Ist aus tracking summieren
             var ytdIstV = tracking.filter(function(t) { return t.standort_id === v.standort_id; })
-                .reduce(function(s, t) {
-                    if (leadType === 'kombi') return s + Number(t.leads_ist || 0);
-                    if (leadType === 'regulaer') return s + Number(t.leads_ist || 0) - Number(t.store_visits_ist || 0);
-                    if (leadType === 'store_visits') return s + Math.round(Number(t.store_visits_ist || 0) * 0.25);
-                    if (leadType === 'anzeige_sv') return s + Number(t.store_visits_ist || 0);
-                    return s + Number(t.leads_ist || 0);
-                }, 0);
+                .reduce(function(s, t) { return s + Number(t.leads_ist || 0); }, 0);
             var pct = ytdSollV > 0 ? Math.round(ytdIstV / ytdSollV * 100) : 0;
 
             html += '<tr class="hover:bg-gray-50"><td class="px-4 py-3 font-semibold">' + _escH(sName) + '</td>' +
@@ -671,13 +665,7 @@ function renderHqLeadReporting(el) {
         var zielData = MN.map(function() { return zielMonat; });
         var istData = MN.map(function(_, i) {
             return tracking.filter(function(t) { return t.monat === (i + 1); })
-                .reduce(function(s, t) {
-                    if (leadType === 'kombi') return s + Number(t.leads_ist || 0);
-                    if (leadType === 'regulaer') return s + Number(t.leads_ist || 0) - Number(t.store_visits_ist || 0);
-                    if (leadType === 'store_visits') return s + Math.round(Number(t.store_visits_ist || 0) * 0.25);
-                    if (leadType === 'anzeige_sv') return s + Number(t.store_visits_ist || 0);
-                    return s + Number(t.leads_ist || 0);
-                }, 0);
+                .reduce(function(s, t) { return s + Number(t.leads_ist || 0); }, 0);
         });
         window.mktMakeChart('hqMktLeadChart', {
             type: 'bar',
@@ -693,7 +681,7 @@ function renderHqLeadReporting(el) {
     }, 50);
 }
 
-// Live-Leads laden (Feature 14) – aus leads-Tabelle (nicht marketing_lead_tracking)
+// Live-Leads laden (Feature 14)
 async function loadLiveLeads() {
     var container = document.getElementById('hqMktLiveLeads');
     if (!container) return;
@@ -711,29 +699,35 @@ async function loadLiveLeads() {
         }
         var rows = data.map(function(l) {
             var datum = l.created_at ? new Date(l.created_at).toLocaleDateString('de-DE') : '\u2013';
+            var plz = '\u2013';
             var standort = _escH(l.standorte ? l.standorte.name : '\u2013');
-            var nameKontakt = _escH(l.name || l.kunde_name || '\u2013');
-            if (l.email || l.kunde_email) nameKontakt += '<br><span class="text-xs text-gray-400">' + _escH(l.email || l.kunde_email || '') + '</span>';
-            if (l.telefon || l.kunde_telefon) nameKontakt += '<br><span class="text-xs text-gray-400">' + _escH(l.telefon || l.kunde_telefon || '') + '</span>';
-            var quelle = _escH(l.quelle || l.kanal || '\u2013');
+            var nameKontakt = _escH((l.vorname || '') + ' ' + (l.nachname || '')).trim() || '\u2013';
+            if (l.email) nameKontakt += '<br><span class="text-xs text-gray-400">' + _escH(l.email) + '</span>';
+            if (l.telefon) nameKontakt += '<br><span class="text-xs text-gray-400">' + _escH(l.telefon) + '</span>';
+            var typ = _escH(l.interesse || '\u2013');
+            var quelle = _escH(l.quelle || '\u2013');
+            var termin = l.letzter_kontakt ? new Date(l.letzter_kontakt).toLocaleDateString('de-DE') : '\u2013';
             var statusCls = l.status === 'gewonnen' || l.status === 'kontaktiert' ? 'bg-green-100 text-green-700' :
                 l.status === 'neu' || l.status === 'offen' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600';
             var statusTxt = _escH(l.status || 'unbekannt');
-            var wert = l.wert ? _fmtEur(l.wert) : '\u2013';
             return '<tr class="hover:bg-gray-50"><td class="px-4 py-3 text-sm">' + datum + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + plz + '</td>' +
                 '<td class="px-4 py-3 text-sm">' + standort + '</td>' +
                 '<td class="px-4 py-3 text-sm font-semibold">' + nameKontakt + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + typ + '</td>' +
                 '<td class="px-4 py-3 text-sm">' + quelle + '</td>' +
-                '<td class="px-4 py-3 text-sm">' + wert + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + termin + '</td>' +
                 '<td class="px-4 py-3 text-sm"><span class="text-xs px-2 py-1 rounded-full font-semibold ' + statusCls + '">' + statusTxt + '</span></td></tr>';
         }).join('');
 
         container.innerHTML = '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-50">' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Datum</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">PLZ</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Standort</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Name / Kontakt</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Typ</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Quelle</th>' +
-            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Wert</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Termin</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Status</th>' +
             '</tr></thead><tbody class="divide-y divide-gray-100">' + rows + '</tbody></table></div>';
     } catch(e) {
@@ -748,9 +742,8 @@ function mktSetLeadType(btnEl, type) {
     pills.forEach(function(p) { p.classList.remove('active'); });
     btnEl.classList.add('active');
 
+    // Speichern und Tab neu rendern mit Filter
     window.mktState._leadType = type;
-
-    // Tab komplett neu rendern mit dem gewählten Filter
     renderHqMktTabContent('leadReporting');
 }
 
