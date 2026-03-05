@@ -82,7 +82,7 @@ export function wawiRenderStatus(conn) {
     var el = document.getElementById('wawiConnectionStatus');
     if(!el) return;
     if(conn && conn.ist_aktiv) {
-        var ago = conn.letzter_sync ? timeAgo(new Date(conn.letzter_sync)) : 'Nie';
+        var ago = conn.letzter_sync ? _wawiTimeAgo(new Date(conn.letzter_sync)) : 'Nie';
         el.innerHTML = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">✅ Verbunden' +
             (conn.letzter_sync ? ' • Letzter Sync: ' + ago : '') + '</span>';
     } else if(conn && conn.fehler_count > 0) {
@@ -92,7 +92,7 @@ export function wawiRenderStatus(conn) {
     }
 }
 
-function timeAgo(d) { return window.timeAgo ? window.timeAgo(d) : '—'; }
+function _wawiTimeAgo(d) { return typeof window.timeAgo === "function" ? window.timeAgo(d) : "—"; }
 
 window.wawiSystemChanged = function() {
     var typ = document.getElementById('wawiSystemTyp').value;
@@ -279,7 +279,7 @@ export async function loadWawiDataPreview() {
         kpiEl.innerHTML = [
             {label:'Kontakte', val: cr.count || 0, icon:'👥', color:'blue'},
             {label:'Produkte', val: pr.count || 0, icon:'📦', color:'green'},
-            {label:'Letzter Sync', val: _wawiConnection.letzter_sync ? timeAgo(new Date(_wawiConnection.letzter_sync)) : 'Nie', icon:'🔄', color:'orange'},
+            {label:'Letzter Sync', val: _wawiConnection.letzter_sync ? _wawiTimeAgo(new Date(_wawiConnection.letzter_sync)) : 'Nie', icon:'🔄', color:'orange'},
             {label:'Fehler', val: _wawiConnection.fehler_count || 0, icon: (_wawiConnection.fehler_count || 0) > 0 ? '⚠️' : '✅', color: (_wawiConnection.fehler_count || 0) > 0 ? 'red' : 'green'}
         ].map(function(k) {
             return '<div class="vit-card p-4 text-center"><div class="text-2xl mb-1">' + k.icon + '</div><div class="text-xl font-bold text-gray-800">' + k.val + '</div><div class="text-xs text-gray-500">' + k.label + '</div></div>';
@@ -793,6 +793,6 @@ window.loadWawiLeasing = async function() {
 
 
 // Strangler Fig
-const _exports = {wawiPopulateForm,wawiRenderStatus,timeAgo,loadWawiSyncLog,loadWawiDataPreview,extractPdfText,parseEur,parseWawiText,renderParseCard};
+const _exports = {wawiPopulateForm,wawiRenderStatus,loadWawiSyncLog,loadWawiDataPreview,extractPdfText,parseEur,parseWawiText,renderParseCard};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // [prod] log removed
