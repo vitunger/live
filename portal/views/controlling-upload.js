@@ -427,7 +427,6 @@ export async function parseBwaWithAI() {
         }
 
         var periodInfo = meta.monat && meta.jahr ? ' (' + monatNamen[meta.monat] + ' ' + meta.jahr + ')' : '';
-        statusText.textContent = '\u2705 ' + matchedRows.length + ' Werte erkannt!' + periodInfo + ' [' + meta.format + ']';
 
         // Fill form fields
         var fieldMap = {
@@ -446,7 +445,6 @@ export async function parseBwaWithAI() {
             zinsaufwand: 'bwaF_zins'
         };
 
-        var filledCount = 0;
         Object.keys(fieldMap).forEach(function(key) {
             var val = parsed[key];
             if(val !== undefined && val !== 0) {
@@ -455,31 +453,11 @@ export async function parseBwaWithAI() {
                     el.value = Math.round(val * 100) / 100;
                     el.style.borderColor = '#f97316';
                     el.style.backgroundColor = '#fff7ed';
-                    filledCount++;
                 }
             }
         });
 
-        // Show results
-        var umsatz = parsed.umsatzerloese || 0;
-        var rohertrag = parsed.rohertrag || 0;
-        var rohertragPct = umsatz ? ((rohertrag / umsatz) * 100).toFixed(1) : 0;
-        var ergebnis = parsed.ergebnis_vor_steuern || parsed.betriebsergebnis || 0;
 
-        resultEl.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-lg p-3">'
-            + '<p class="text-xs font-semibold text-green-700 mb-2">\u2705 ' + filledCount + ' Werte erkannt \u00b7 Format: <code>' + meta.format + '</code></p>'
-            + '<div class="grid grid-cols-3 gap-2 text-xs">'
-            + '<div><span class="text-gray-500">Umsatz:</span><br><strong>' + umsatz.toLocaleString('de-DE') + ' \u20AC</strong></div>'
-            + '<div><span class="text-gray-500">Rohertrag:</span><br><strong>' + rohertragPct + '%</strong></div>'
-            + '<div><span class="text-gray-500">Ergebnis:</span><br><strong class="' + (ergebnis >= 0 ? 'text-green-600' : 'text-red-600') + '">' + ergebnis.toLocaleString('de-DE') + ' \u20AC</strong></div>'
-            + '</div>'
-            + '<details class="mt-2"><summary class="text-[10px] text-gray-400 cursor-pointer">Erkannte Zuordnungen (' + matchedRows.length + ')</summary>'
-            + '<div class="mt-1 space-y-0.5 max-h-40 overflow-y-auto">' + matchedRows.map(function(m) {
-                return '<div class="text-[10px] text-gray-500"><span class="text-gray-700">"' + m.label + '"</span> \u2192 <strong>' + m.key + '</strong> = ' + (typeof m.value === 'number' ? m.value.toLocaleString('de-DE') : m.value) + '</div>';
-            }).join('') + '</div></details>'
-
-            + '</div>';
-        resultEl.classList.remove('hidden');
 
         // Store detail data for saveBwaData()
         window._lastParsedDetails = daten && daten.length > 0 ? daten : [];
@@ -544,25 +522,8 @@ export async function parseBwaWithAI() {
                 if(kiValResult.monat) { var mS = document.getElementById('bwaMonth'); if(mS) mS.value = kiValResult.monat; }
                 if(kiValResult.jahr) { var yS = document.getElementById('bwaYear'); if(yS) yS.value = kiValResult.jahr; }
 
-                statusEl.querySelector('.animate-spin').style.display = 'none';
-                if(corrections.length > 0) {
-                    statusText.textContent = '\u{1F916} KI hat ' + corrections.length + ' Wert' + (corrections.length > 1 ? 'e' : '') + ' korrigiert';
-
-
-                    // Recalculate summary
-                    var umsatzKi = parsed.umsatzerloese || 0;
-                    var rohertragKi = parsed.rohertrag || (umsatzKi + (parsed.wareneinsatz||0));
-                    var rohertragPctKi = umsatzKi ? ((rohertragKi / umsatzKi) * 100).toFixed(1) : 0;
-                    var ergebnisKi = parsed.ergebnis_vor_steuern || parsed.betriebsergebnis || 0;
-                    var summaryDiv = resultEl.querySelector('.grid');
-                    if(summaryDiv) {
-                        summaryDiv.innerHTML = '<div><span class="text-gray-500">Umsatz:</span><br><strong>' + umsatzKi.toLocaleString('de-DE') + ' \u20AC</strong></div>'
-                            + '<div><span class="text-gray-500">Rohertrag:</span><br><strong>' + rohertragPctKi + '%</strong></div>'
-                            + '<div><span class="text-gray-500">Ergebnis:</span><br><strong class="' + (ergebnisKi >= 0 ? 'text-green-600' : 'text-red-600') + '">' + ergebnisKi.toLocaleString('de-DE') + ' \u20AC</strong></div>';
-                    }
-                } else {
-                    statusText.textContent = '\u2705 ' + matchedRows.length + ' Werte erkannt!' + periodInfo + ' [' + meta.format + '] \u2013 KI best\u00e4tigt \u2705';
-                }
+                // KI done — hide spinner
+                statusEl.classList.add('hidden');
 
                 // Enable save button after KI validation
                 var _sB=document.getElementById("bwaSaveBtn");if(_sB){_sB.disabled=false;_sB.style.display="";_sB.className="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-all";_sB.textContent="\u2705 Werte pr\u00fcfen & BWA speichern";}
@@ -571,7 +532,7 @@ export async function parseBwaWithAI() {
             console.warn('[BWA] KI-Validierung fehlgeschlagen:', kiValErr.message || kiValErr);
             statusEl.querySelector('.animate-spin').style.display = 'none';
             // Kein harter Fehler - Parser-Werte bleiben stehen, User sieht Warnung
-            statusText.textContent = '\u2705 ' + matchedRows.length + ' Werte erkannt!' + periodInfo + ' [' + meta.format + '] \u2013 KI nicht erreichbar';
+            statusEl.classList.add('hidden');
             var _sB=document.getElementById("bwaSaveBtn");if(_sB){_sB.disabled=false;_sB.style.display="";_sB.className="w-full py-2.5 bg-yellow-500 text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-all";_sB.textContent="\u26a0\ufe0f Ohne KI-Pr\u00fcfung speichern";}
         }
 
