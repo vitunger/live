@@ -54,8 +54,8 @@ export default async function handler(req, res) {
 
   try {
     // Exchange code for token via tiktok-proxy Edge Function
-    const supabaseUrl = process.env.SUPABASE_URL || 'https://qpkapkmeqUpper.supabase.co';
-    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
+    const supabaseUrl = process.env.SUPABASE_URL || 'https://lwwagbkxeofahhwebkab.supabase.co';
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3d2FnYmt4ZW9mYWhod2Via2FiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwMTM3NDAsImV4cCI6MjA4NjU4OTc0MH0.YBKO7grysp8RHzGWA6xSGpTVi0wG2PmeEWJHI25f7ks';
 
     const proxyResp = await fetch(`${supabaseUrl}/functions/v1/tiktok-proxy`, {
       method: 'POST',
