@@ -678,20 +678,13 @@
         try {
             var { data: cfgRows } = await sb.from('connector_config')
                 .select('config_key, config_value')
-                .in('config_key', ['youtube_api_key', 'youtube_channel_id']);
+                .eq('connector_id', 'youtube');
 
             var cfg = {};
             (cfgRows || []).forEach(function(r) { cfg[r.config_key] = r.config_value; });
-            // Fallback: check old connector_key format
-            if (!cfg.youtube_api_key) {
-                var { data: rows2 } = await sb.from('connector_config')
-                    .select('connector_key, config_value')
-                    .in('connector_key', ['youtube_api_key', 'youtube_channel_id']);
-                (rows2 || []).forEach(function(r) { cfg[r.connector_key] = r.config_value; });
-            }
 
-            var apiKey = cfg.youtube_api_key || 'AIzaSyBLlbkT79izWdYCFnuqHmwlC5-hfA5CUFc';
-            var channelId = cfg.youtube_channel_id;
+            var apiKey = cfg.api_key;
+            var channelId = cfg.channel_id;
 
             if (!channelId) {
                 el.innerHTML = emptyState('\uD83D\uDD0C', 'YouTube nicht verbunden', 'Konfiguriere den Kanal unter Einstellungen \u2192 Schnittstellen.', true);
