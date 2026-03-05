@@ -59,6 +59,7 @@ export async function submitDevIdea() {
 
         var resp = await _sb().from('dev_submissions').insert(insertData).select().single();
         if(resp.error) throw resp.error;
+        window.logAudit && window.logAudit('idee_eingereicht', 'entwicklung', { titel: insertData.titel, kategorie: insertData.kategorie });
 
         // Reset form
         document.getElementById('devTitel').value = '';

@@ -356,6 +356,7 @@ try {
     SESSION.account_level = 'standort';
     var label = '🔄 ' + user.name + (user.standorte ? ' (' + user.standorte.name + ')' : '');
     _activateImpersonation(label);
+    window.logAudit && window.logAudit('impersonation_start', 'auth', { target_user: user.name, target_id: userId, standort: user.standorte ? user.standorte.name : null });
 } catch(err) {
     _showToast('Impersonation fehlgeschlagen: ' + err.message, 'error');
     _restoreOrigState();
@@ -1205,6 +1206,7 @@ btn.disabled = true; btn.textContent = 'Wird gespeichert...';
 try {
     var resp = await _sb().auth.updateUser({ password: pw1 });
     if (resp.error) throw resp.error;
+    window.logAudit && window.logAudit('passwort_geaendert', 'auth', {});
     msg.className='text-sm rounded-lg p-3 mb-3 bg-green-50 border border-green-200 text-green-700';
     msg.textContent=_t('ui_pw_changed_redirect');
     msg.style.display='block';

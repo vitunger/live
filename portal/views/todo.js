@@ -737,6 +737,7 @@ export async function todoToggle(id) {
     try {
         await _sb().from('todos').update({ erledigt: nowDone, erledigt_am: t.erledigt_am }).eq('id', id);
         if (subtaskIds.length > 0) await _sb().from('todos').update({ erledigt: true, erledigt_am: new Date().toISOString() }).in('id', subtaskIds);
+        window.logAudit && window.logAudit(nowDone ? 'todo_erledigt' : 'todo_wiederoeffnet', 'todo', { titel: t.titel || '', id: id });
     } catch (e) { console.warn(e); }
 }
 
@@ -744,7 +745,10 @@ export async function todoDelete(id) {
     // Delete subtasks too
     todoState.todos = todoState.todos.filter(function(t) { return t.id !== id && t.parent_id !== id; });
     todoRender();
-    try { await _sb().from('todos').delete().eq('id', id); } catch (e) { console.warn(e); }
+    try {
+        await _sb().from('todos').delete().eq('id', id);
+        window.logAudit && window.logAudit('todo_geloescht', 'todo', { id: id });
+    } catch (e) { console.warn(e); }
 }
 
 export async function todoUpdateField(id, field, value) {

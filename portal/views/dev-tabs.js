@@ -550,13 +550,51 @@ export async function renderEntwNutzung() {
 // AUDIT LOG TAB
 // ═══════════════════════════════════════════════════════════
 const AUDIT_AKTIONEN = {
-    'login':          { label: 'Login',          icon: '🔑', color: 'blue' },
-    'logout':         { label: 'Logout',         icon: '🚪', color: 'gray' },
-    'bwa_upload':     { label: 'BWA Upload',     icon: '📊', color: 'green' },
-    'todo_erstellt':  { label: 'Todo erstellt',  icon: '✅', color: 'purple' },
-    'lead_erstellt':  { label: 'Lead erstellt',  icon: '🎯', color: 'orange' },
-    'user_erstellt':  { label: 'User erstellt',  icon: '👤', color: 'indigo' },
-    'modul_wechsel':  { label: 'Modul geöffnet', icon: '📂', color: 'gray' },
+    // Auth
+    'login':                { label: 'Login',                icon: '🔑', color: 'blue' },
+    'logout':               { label: 'Logout',               icon: '🚪', color: 'gray' },
+    'passwort_geaendert':   { label: 'Passwort geändert',    icon: '🔐', color: 'blue' },
+    'impersonation_start':  { label: 'Als User angemeldet',  icon: '🔄', color: 'indigo' },
+    // Controlling / BWA
+    'bwa_upload':           { label: 'BWA Upload',           icon: '📊', color: 'green' },
+    'bwa_ki_analyse':       { label: 'BWA KI-Analyse',       icon: '🤖', color: 'green' },
+    'bwa_geloescht':        { label: 'BWA gelöscht',         icon: '🗑️', color: 'gray' },
+    // Todos
+    'todo_erstellt':        { label: 'Todo erstellt',        icon: '✅', color: 'purple' },
+    'todo_erledigt':        { label: 'Todo erledigt',        icon: '☑️', color: 'purple' },
+    'todo_wiederoeffnet':   { label: 'Todo wiedereröffnet',  icon: '↩️', color: 'purple' },
+    'todo_geloescht':       { label: 'Todo gelöscht',        icon: '🗑️', color: 'gray' },
+    // Leads / Verkauf
+    'lead_erstellt':        { label: 'Lead erstellt',        icon: '🎯', color: 'orange' },
+    'lead_bearbeitet':      { label: 'Lead bearbeitet',      icon: '✏️', color: 'orange' },
+    'lead_geloescht':       { label: 'Lead gelöscht',        icon: '🗑️', color: 'gray' },
+    // Kalender
+    'termin_erstellt':      { label: 'Termin erstellt',      icon: '📅', color: 'blue' },
+    'termin_bearbeitet':    { label: 'Termin bearbeitet',    icon: '✏️', color: 'blue' },
+    'termin_geloescht':     { label: 'Termin gelöscht',      icon: '🗑️', color: 'gray' },
+    // Aktenschrank
+    'dokument_hochgeladen': { label: 'Dokument hochgeladen', icon: '📎', color: 'green' },
+    'dokument_geloescht':   { label: 'Dokument gelöscht',    icon: '🗑️', color: 'gray' },
+    // Support
+    'ticket_erstellt':      { label: 'Ticket erstellt',      icon: '🆘', color: 'orange' },
+    'ticket_status':        { label: 'Ticket Status',        icon: '🔔', color: 'blue' },
+    // User-Management
+    'user_erstellt':        { label: 'User erstellt',        icon: '👤', color: 'indigo' },
+    'user_bearbeitet':      { label: 'User bearbeitet',      icon: '✏️', color: 'indigo' },
+    'user_geloescht':       { label: 'User gelöscht',        icon: '🗑️', color: 'gray' },
+    'standort_angelegt':    { label: 'Standort angelegt',    icon: '📍', color: 'indigo' },
+    // Feedback & Ideen
+    'feedback_eingereicht': { label: 'Feedback eingereicht', icon: '💬', color: 'purple' },
+    'idee_eingereicht':     { label: 'Idee eingereicht',     icon: '💡', color: 'purple' },
+    // Allgemein
+    'jahresziel_erstellt':  { label: 'Jahresziel erstellt',  icon: '🏆', color: 'green' },
+    'jahresziel_bearbeitet':{ label: 'Jahresziel bearbeitet',icon: '✏️', color: 'green' },
+    'jahresziel_geloescht': { label: 'Jahresziel gelöscht',  icon: '🗑️', color: 'gray' },
+    'journal_erstellt':     { label: 'Journal erstellt',     icon: '📝', color: 'blue' },
+    'journal_bearbeitet':   { label: 'Journal bearbeitet',   icon: '✏️', color: 'blue' },
+    'journal_geloescht':    { label: 'Journal gelöscht',     icon: '🗑️', color: 'gray' },
+    // Sonstige
+    'modul_wechsel':        { label: 'Modul geöffnet',       icon: '📂', color: 'gray' },
 };
 
 const AUDIT_COLOR_CLASSES = {

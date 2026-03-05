@@ -642,7 +642,7 @@ export async function saveNeuerStandort() {
             telefon: telefon.trim() || null
         }).select().single();
         if(resp.error) throw resp.error;
-
+        window.logAudit && window.logAudit('standort_angelegt', 'user-management', { name: name.trim(), slug: slug, region: region });
         closeNeuerStdModal();
         _showToast('Standort angelegt: '+name.trim()+' ('+slug+')', 'success');
         window.renderKzStandorte();

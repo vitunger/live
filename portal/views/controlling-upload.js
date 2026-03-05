@@ -136,6 +136,7 @@ export async function parseBwaWithAI() {
                     if(result && result.werte) {
                         // Fill form fields from KI result
                         bwaApplyKiResult(result);
+                        window.logAudit && window.logAudit('bwa_ki_analyse', 'controlling', { datei: file.name, konfidenz: result.confidence ? Math.round(result.confidence * 100) : null });
                         statusEl.querySelector('.animate-spin').style.display = 'none';
                         statusText.textContent = '\u2705 KI-Analyse abgeschlossen' + (result.confidence ? ' (Konfidenz: ' + Math.round(result.confidence * 100) + '%)' : '');
                         var _sB=document.getElementById("bwaSaveBtn");if(_sB){_sB.disabled=false;_sB.style.display="";_sB.className="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-all";_sB.textContent="\u2705 Werte pr\u00fcfen & BWA speichern";}

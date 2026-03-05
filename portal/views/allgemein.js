@@ -235,13 +235,14 @@ export async function saveJahresziel() {
     try {
         var res = editId ? await _sb().from('partner_jahresziele').update(payload).eq('id', editId) : await _sb().from('partner_jahresziele').insert([payload]);
         if (res.error) throw res.error;
+        window.logAudit && window.logAudit(editId ? 'jahresziel_bearbeitet' : 'jahresziel_erstellt', 'allgemein', { titel: payload.titel });
         closeJahreszielModal(); loadJahresziele();
     } catch(e) { _showToast('Fehler: '+e.message, 'error'); }
 }
 
 export async function deleteJahresziel(id) {
     if (!confirm(_t('confirm_delete_goal'))) return;
-    try { var r = await _sb().from('partner_jahresziele').delete().eq('id', id); if (r.error) throw r.error; loadJahresziele(); } catch(e) { _showToast('Fehler: '+e.message, 'error'); }
+    try { var r = await _sb().from('partner_jahresziele').delete().eq('id', id); if (r.error) throw r.error; window.logAudit && window.logAudit('jahresziel_geloescht', 'allgemein', { id: id }); loadJahresziele(); } catch(e) { _showToast('Fehler: '+e.message, 'error'); }
 }
 
 export async function toggleSoftTarget(id, checked) {
@@ -510,13 +511,14 @@ export async function saveJournalEntry() {
     try {
         var res = editId ? await _sb().from('partner_journal').update(payload).eq('id', editId) : await _sb().from('partner_journal').insert([payload]);
         if (res.error) throw res.error;
+        window.logAudit && window.logAudit(editId ? 'journal_bearbeitet' : 'journal_erstellt', 'allgemein', { datum: payload.datum });
         closeJournalModal(); loadJournal();
     } catch(e) { _showToast('Fehler: '+e.message, 'error'); }
 }
 
 export async function deleteJournalEntry(id) {
     if (!confirm(_t('confirm_delete_protocol'))) return;
-    try { var r = await _sb().from('partner_journal').delete().eq('id',id); if (r.error) throw r.error; loadJournal(); } catch(e) { _showToast('Fehler: '+e.message, 'error'); }
+    try { var r = await _sb().from('partner_journal').delete().eq('id',id); if (r.error) throw r.error; window.logAudit && window.logAudit('journal_geloescht', 'allgemein', { id: id }); loadJournal(); } catch(e) { _showToast('Fehler: '+e.message, 'error'); }
 }
 
 export async function toggleJournalMassnahme(journalId, massnahmeText, checked) {

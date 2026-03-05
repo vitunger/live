@@ -496,6 +496,7 @@ export async function deleteBwa() {
         await _sb().from('bwa_detail_positionen').delete().eq('bwa_id', window.selectedBwaId);
         var resp = await _sb().from('bwa_daten').delete().eq('id', window.selectedBwaId);
         if(resp.error) throw resp.error;
+        window.logAudit && window.logAudit('bwa_geloescht', 'controlling', { bwa_id: window.selectedBwaId });
         window.selectedBwaId = null;
         _setTxt('bwaTitle', 'BWA ausw\u00e4hlen');
         var body = _el('bwaDetailBody');

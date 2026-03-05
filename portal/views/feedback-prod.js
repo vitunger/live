@@ -336,6 +336,7 @@ window.fbSubmit = async function(){
 
         var resp = await _sb().from('portal_feedback').insert(fbRecord);
         if(resp.error) throw resp.error;
+        window.logAudit && window.logAudit('feedback_eingereicht', 'feedback', { kategorie: fbRecord.kategorie, modul: fbRecord.modul });
 
         // Show success
         document.getElementById('fbForm').style.display = 'none';
