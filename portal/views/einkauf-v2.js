@@ -80,12 +80,14 @@ async function renderEinkaufV2(startTab) {
         <nav class="-mb-px flex space-x-1">
           ${tabBtn('lieferanten', 'Lieferanten', '📋')}
           ${tabBtn('strategien', 'Strategien', '🎯')}
+          ${tabBtn('performance', 'Performance-Abfrage', '📊')}
         </nav>
       </div>
 
       <!-- Tab-Inhalte -->
       <div id="ek2-tab-lieferanten" class="ek2-tab-content" ${activeTab !== 'lieferanten' ? 'style="display:none"' : ''}></div>
       <div id="ek2-tab-strategien" class="ek2-tab-content" ${activeTab !== 'strategien' ? 'style="display:none"' : ''}></div>
+      <div id="ek2-tab-performance" class="ek2-tab-content" ${activeTab !== 'performance' ? 'style="display:none"' : ''}></div>
     </div>
 
     <!-- Lieferant Edit Modal -->
@@ -159,6 +161,23 @@ window.einkaufV2ShowTab = function(tab, isHQOverride) {
   if (tab === 'strategien' && activeEl && !activeEl.dataset.loaded) {
     renderStrategienTab(activeEl, isHQ);
     activeEl.dataset.loaded = '1';
+  }
+  if (tab === 'performance' && activeEl) {
+    // Always re-render (live data)
+    activeEl.innerHTML = '<div class="flex items-center justify-center py-16"><div class="text-center"><div class="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div><p class="text-gray-400 text-sm">Performance-Daten werden geladen\u2026</p></div></div>';
+    if (isHQ) {
+      window.renderHQPerf && window.renderHQPerf().then(function(html) {
+        activeEl.innerHTML = html;
+        // Rücklauf für alle Abfragen nachladen
+        activeEl.querySelectorAll('[id^="hqPerfRuecklauf_"]').forEach(function(el) {
+          window.loadHQPerfRuecklauf && window.loadHQPerfRuecklauf(el.id.replace('hqPerfRuecklauf_', ''));
+        });
+      });
+    } else {
+      window.renderPerfPartner && window.renderPerfPartner().then(function(html) {
+        activeEl.innerHTML = html;
+      });
+    }
   }
 };
 

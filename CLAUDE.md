@@ -2,6 +2,7 @@
 
 > Technische Arbeitsanweisung fuer KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
 > Letzte Aktualisierung: 05.03.2026
+> Performance-Abfrage Feature hinzugefuegt: `einkauf_performance_abfragen` + `einkauf_performance_daten` Tabellen (Migration: docs/migration_einkauf_performance.sql)
 >
 > **Ausfuehrliche Sub-Dokumentation:**
 > - [`portal/CLAUDE.md`](portal/CLAUDE.md) – Frontend-Architektur, Dateistruktur, Module, TypeScript-Migration

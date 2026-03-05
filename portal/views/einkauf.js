@@ -459,9 +459,559 @@ export function initEinkaufModule() {
 
 
 // Strangler Fig
-const _exports = {renderHQDash,renderHQLief,openLiefEditor,saveLief,closeModal,renderHQStrat,renderStSortiment,renderStLief,renderZR,renderStStrat,renderWissen,renderWIht,renderWParts,renderWDb1,renderWKern,renderWVo,reRenderEkTab,showEinkaufTab,showHqEkTab,initEinkaufModule};
+const _exports = {renderHQDash,renderHQLief,openLiefEditor,saveLief,closeModal,renderHQStrat,renderStSortiment,renderStLief,renderZR,renderStStrat,renderWissen,renderWIht,renderWParts,renderWDb1,renderWKern,renderWVo,reRenderEkTab,showEinkaufTab,showHqEkTab,initEinkaufModule,renderPerfPartner,renderPerfPartnerInPage,addPerfRow,removePerfRow,savePerfDaten,renderHQPerf,loadHQPerfRuecklauf,showHQPerfAuswertung,openHQPerfAbfrageModal,createHQPerfAbfrage,schliesseAbfrage};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // [prod] log removed
 
 // === Window Exports (onclick handlers) ===
 window.showHqEkTab = showHqEkTab;
+
+
+// ==================== PERFORMANCE ABFRAGE ====================
+// DB-Tabellen: einkauf_performance_abfragen, einkauf_performance_daten
+
+var ekPerfAbfrage = null; // aktive Abfrage (gesetzt beim Laden)
+var ekPerfDaten = [];     // bereits gespeicherte Zeilen dieser Abfrage
+
+// Alle vit:bikes Marken (aus allLief bike-Einträge)
+var PERF_MARKEN = allLief.filter(function(l){return l.art==='bike';}).map(function(l){return l.n;});
+PERF_MARKEN.push('Sonstige');
+
+// ==================== PARTNER: Performance Tab ====================
+export async function renderPerfPartner() {
+  var sb = _sb();
+  var profile = window.sbProfile || {};
+  var standortId = profile.standort_id;
+  var h = '';
+
+  // Aktive Abfrage laden (offen + aktuelles GJ)
+  var { data: abfragen, error: abfErr } = await sb
+    .from('einkauf_performance_abfragen')
+    .select('*')
+    .eq('status', 'offen')
+    .order('erstellt_am', { ascending: false })
+    .limit(1);
+
+  if (abfErr || !abfragen || abfragen.length === 0) {
+    return '<div class="vc p-8 text-center"><div class="text-3xl mb-3">📋</div><p class="font-semibold text-gray-700">Keine aktive Performance-Abfrage</p><p class="text-xs text-gray-400 mt-1">Das HQ hat aktuell keine Abfrage geöffnet.</p></div>';
+  }
+
+  ekPerfAbfrage = abfragen[0];
+
+  // Bereits eingegebene Daten laden
+  var { data: existing } = await sb
+    .from('einkauf_performance_daten')
+    .select('*')
+    .eq('abfrage_id', ekPerfAbfrage.id)
+    .eq('standort_id', standortId);
+
+  ekPerfDaten = existing || [];
+  var istAbgeschlossen = ekPerfDaten.length > 0 && ekPerfDaten[0].abgeschlossen;
+
+  // Header
+  h += '<div class="vc p-5 mb-5" style="border-left:4px solid #EF7D00">';
+  h += '<div class="flex items-start justify-between flex-wrap gap-3">';
+  h += '<div><h2 class="font-bold text-base">📊 Performance-Abfrage</h2>';
+  h += '<p class="text-xs text-gray-500 mt-0.5">' + ekPerfAbfrage.titel + '</p>';
+  h += '<p class="text-[11px] text-gray-400 mt-0.5">Zeitraum: <b>' + ekPerfAbfrage.zeitraum_aktuell + '</b> vs. <b>' + ekPerfAbfrage.zeitraum_vorjahr + '</b></p></div>';
+  if (istAbgeschlossen) {
+    h += '<span class="pill pg">✅ Abgeschlossen</span>';
+  } else {
+    h += '<span class="pill po">⏳ Offen — bitte ausfüllen</span>';
+  }
+  h += '</div></div>';
+
+  // Info-Banner: was ist optional
+  h += '<div class="vc p-4 mb-4" style="background:#fff7ed;border:1px solid #fed7aa">';
+  h += '<p class="text-xs font-semibold" style="color:#EF7D00">ℹ️ Hinweis zu optionalen Feldern</p>';
+  h += '<p class="text-[11px] text-gray-600 mt-1">Absatz, Umsatz und Lagerbestand sind Pflichtfelder — diese liefert jede Warenwirtschaft. Rabatt und Rohertrag sind optional: Falls deine Warenwirtschaft diese Auswertung nicht pro Marke hergibt, lass die Felder einfach leer.</p>';
+  h += '</div>';
+
+  // Tabelle / Formular
+  h += '<div class="vc overflow-x-auto mb-4">';
+  h += '<table class="dt" style="min-width:900px"><thead>';
+  h += '<tr style="background:#EF7D00">';
+  h += '<th class="text-white text-left" style="min-width:130px">Marke</th>';
+  h += '<th class="text-white text-center" colspan="2">📦 Absatz (Stück)</th>';
+  h += '<th class="text-white text-center" style="width:20px"></th>';
+  h += '<th class="text-white text-center" colspan="2">💶 Umsatz netto (€)</th>';
+  h += '<th class="text-white text-center" style="width:20px"></th>';
+  h += '<th class="text-white text-center" colspan="2">🏪 Lagerbestand</th>';
+  h += '<th class="text-white text-center" style="width:20px"></th>';
+  h += '<th class="text-white text-center" colspan="2">🏷️ Rabatt brutto (€) <span style="font-weight:400;font-size:10px">optional</span></th>';
+  h += '<th class="text-white text-center" style="width:20px"></th>';
+  h += '<th class="text-white text-center" colspan="2">📈 Rohertrag netto (€) <span style="font-weight:400;font-size:10px">optional</span></th>';
+  h += '<th class="text-white" style="width:30px"></th>';
+  h += '</tr>';
+  h += '<tr style="background:#f97316;color:white;font-size:10px">';
+  h += '<td></td>';
+  h += '<td class="text-center">Aktuell</td><td class="text-center">Vorjahr</td>';
+  h += '<td></td>';
+  h += '<td class="text-center">Aktuell</td><td class="text-center">Vorjahr</td>';
+  h += '<td></td>';
+  h += '<td class="text-center">Stück</td><td class="text-center">Wert (€)</td>';
+  h += '<td></td>';
+  h += '<td class="text-center">Aktuell</td><td class="text-center">Vorjahr</td>';
+  h += '<td></td>';
+  h += '<td class="text-center">Aktuell</td><td class="text-center">Vorjahr</td>';
+  h += '<td></td>';
+  h += '</tr></thead><tbody id="perfRows">';
+
+  // Bestehende Zeilen rendern
+  if (ekPerfDaten.length > 0) {
+    ekPerfDaten.filter(function(d){return d.marke !== '__gesamt__';}).forEach(function(d, i) {
+      h += renderPerfRow(i, d, istAbgeschlossen);
+    });
+  } else {
+    // Leere Startzeile
+    h += renderPerfRow(0, null, false);
+  }
+
+  h += '</tbody></table></div>';
+
+  if (!istAbgeschlossen) {
+    h += '<div class="flex gap-3 flex-wrap">';
+    h += '<button onclick="addPerfRow()" class="rbtn text-xs">＋ Marke hinzufügen</button>';
+    h += '<button onclick="savePerfDaten(false)" class="vbtn text-xs" style="background:#6b7280">💾 Zwischenspeichern</button>';
+    h += '<button onclick="savePerfDaten(true)" class="vbtn text-xs">✅ Abschließen & an HQ senden</button>';
+    h += '</div>';
+    h += '<p class="text-[10px] text-gray-400 mt-2">Beim Abschließen werden die Daten an das HQ übermittelt. Danach sind sie schreibgeschützt.</p>';
+  } else {
+    h += '<button onclick="ekPerfDaten=[];ekPerfAbfrage.status_readonly=false;renderPerfPartnerInPage()" class="rbtn text-xs">✏️ Bearbeiten (Abschluss aufheben)</button>';
+  }
+
+  return h;
+}
+
+function renderPerfRow(i, d, readonly) {
+  var marke = d ? d.marke : '';
+  var v = d || {};
+  var dis = readonly ? 'disabled style="background:#f9fafb;color:#6b7280"' : '';
+  var numInput = function(id, val, req) {
+    return '<input type="number" min="0" step="any" id="pf_'+id+'_'+i+'" value="'+(val||'')+'" placeholder="'+(req?'Pflicht':'—')+'" class="form-input text-right text-xs" style="min-width:70px;padding:4px 6px" '+dis+'>';
+  };
+
+  // Marken-Dropdown
+  var markeSel = '<select id="pf_marke_'+i+'" class="form-input text-xs" style="min-width:120px" '+dis+'>';
+  markeSel += '<option value="">— Marke wählen —</option>';
+  PERF_MARKEN.forEach(function(m) {
+    markeSel += '<option value="'+m+'"'+(marke===m?' selected':'')+'>'+m+'</option>';
+  });
+  markeSel += '</select>';
+
+  var delBtn = readonly ? '' : '<button onclick="removePerfRow('+i+')" style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:14px" title="Zeile löschen">✕</button>';
+
+  return '<tr id="perfRow_'+i+'">' +
+    '<td>'+markeSel+'</td>' +
+    '<td>'+numInput('abs_akt', v.absatz_aktuell, true)+'</td>' +
+    '<td>'+numInput('abs_vj', v.absatz_vorjahr, true)+'</td>' +
+    '<td style="background:#f3f4f6;width:4px"></td>' +
+    '<td>'+numInput('um_akt', v.umsatz_aktuell, true)+'</td>' +
+    '<td>'+numInput('um_vj', v.umsatz_vorjahr, true)+'</td>' +
+    '<td style="background:#f3f4f6;width:4px"></td>' +
+    '<td>'+numInput('lag_st', v.lager_stueck, true)+'</td>' +
+    '<td>'+numInput('lag_wert', v.lager_wert, true)+'</td>' +
+    '<td style="background:#f3f4f6;width:4px"></td>' +
+    '<td>'+numInput('rab_akt', v.rabatt_aktuell, false)+'</td>' +
+    '<td>'+numInput('rab_vj', v.rabatt_vorjahr, false)+'</td>' +
+    '<td style="background:#f3f4f6;width:4px"></td>' +
+    '<td>'+numInput('roh_akt', v.rohertrag_aktuell, false)+'</td>' +
+    '<td>'+numInput('roh_vj', v.rohertrag_vorjahr, false)+'</td>' +
+    '<td>'+delBtn+'</td>' +
+    '</tr>';
+}
+
+var perfRowCount = 1;
+export function addPerfRow() {
+  var tbody = document.getElementById('perfRows');
+  if (!tbody) return;
+  var div = document.createElement('tr');
+  div.outerHTML; // just use innerHTML approach
+  tbody.insertAdjacentHTML('beforeend', renderPerfRow(perfRowCount++, null, false));
+}
+
+export function removePerfRow(i) {
+  var row = document.getElementById('perfRow_'+i);
+  if (row) row.remove();
+}
+
+export async function savePerfDaten(abschliessen) {
+  var sb = _sb();
+  var profile = window.sbProfile || {};
+  var standortId = profile.standort_id;
+
+  if (!ekPerfAbfrage) { _showToast('Keine aktive Abfrage', 'error'); return; }
+
+  // Alle Zeilen einlesen
+  var rows = document.querySelectorAll('#perfRows tr');
+  var daten = [];
+  var fehler = [];
+
+  rows.forEach(function(row, i) {
+    var markeEl = row.querySelector('[id^="pf_marke_"]');
+    if (!markeEl || !markeEl.value) return;
+    var g = function(suffix) {
+      var el = row.querySelector('[id^="pf_'+suffix+'_"]');
+      return el && el.value !== '' ? parseFloat(el.value) : null;
+    };
+
+    var absAkt = g('abs_akt'), absVj = g('abs_vj');
+    var umAkt = g('um_akt'), umVj = g('um_vj');
+    var lagSt = g('lag_st'), lagWert = g('lag_wert');
+
+    if (abschliessen && (absAkt === null || umAkt === null || lagSt === null || lagWert === null)) {
+      fehler.push(markeEl.value + ': Pflichtfelder fehlen');
+    }
+
+    daten.push({
+      abfrage_id: ekPerfAbfrage.id,
+      standort_id: standortId,
+      marke: markeEl.value,
+      absatz_aktuell: absAkt,
+      absatz_vorjahr: absVj,
+      umsatz_aktuell: umAkt,
+      umsatz_vorjahr: umVj,
+      lager_stueck: lagSt,
+      lager_wert: lagWert,
+      rabatt_aktuell: g('rab_akt'),
+      rabatt_vorjahr: g('rab_vj'),
+      rohertrag_aktuell: g('roh_akt'),
+      rohertrag_vorjahr: g('roh_vj'),
+      abgeschlossen: abschliessen
+    });
+  });
+
+  if (fehler.length > 0) {
+    _showToast('Pflichtfelder fehlen: ' + fehler.join(', '), 'error');
+    return;
+  }
+
+  if (daten.length === 0) {
+    _showToast('Bitte mindestens eine Marke eingeben.', 'error');
+    return;
+  }
+
+  // Alte Einträge dieser Abfrage für diesen Standort löschen
+  await sb.from('einkauf_performance_daten')
+    .delete()
+    .eq('abfrage_id', ekPerfAbfrage.id)
+    .eq('standort_id', standortId);
+
+  var { error } = await sb.from('einkauf_performance_daten').insert(daten);
+
+  if (error) {
+    _showToast('Fehler beim Speichern: ' + error.message, 'error');
+    return;
+  }
+
+  if (abschliessen) {
+    _showToast('✅ Abgeschlossen & an HQ gesendet!', 'success');
+  } else {
+    _showToast('💾 Zwischengespeichert', 'success');
+  }
+
+  // Re-render
+  var container = document.getElementById('ekTabPerf');
+  if (container) {
+    container.innerHTML = '<div class="fi"><p class="text-xs text-gray-400 p-4">Lädt…</p></div>';
+    renderPerfPartner().then(function(html) {
+      container.innerHTML = '<div class="fi">' + html + '</div>';
+    });
+  }
+}
+
+export function renderPerfPartnerInPage() {
+  var container = document.getElementById('ekTabPerf');
+  if (!container) return;
+  container.innerHTML = '<div class="fi"><p class="text-xs text-gray-400 p-4">Lädt…</p></div>';
+  renderPerfPartner().then(function(html) {
+    container.innerHTML = '<div class="fi">' + html + '</div>';
+  });
+}
+
+// ==================== HQ: Performance Tab ====================
+export async function renderHQPerf() {
+  var sb = _sb();
+  var h = '';
+
+  // Alle Abfragen laden
+  var { data: abfragen } = await sb
+    .from('einkauf_performance_abfragen')
+    .select('*')
+    .order('erstellt_am', { ascending: false });
+
+  abfragen = abfragen || [];
+
+  // Header + Neue Abfrage anlegen
+  h += '<div class="flex items-center justify-between mb-5">';
+  h += '<div><h2 class="font-bold text-base">📊 Performance-Abfragen</h2>';
+  h += '<p class="text-xs text-gray-500">Abfragen anlegen, Rücklauf überwachen, Auswertung je Abfrage</p></div>';
+  h += '<button onclick="openHQPerfAbfrageModal()" class="vbtn text-xs">＋ Neue Abfrage</button>';
+  h += '</div>';
+
+  if (abfragen.length === 0) {
+    h += '<div class="vc p-8 text-center"><p class="text-gray-400 text-sm">Noch keine Abfragen erstellt.</p></div>';
+    return h;
+  }
+
+  // Abfrage-Karten
+  abfragen.forEach(function(a) {
+    var isOffen = a.status === 'offen';
+    h += '<div class="vc p-5 mb-4">';
+    h += '<div class="flex items-start justify-between flex-wrap gap-3 mb-3">';
+    h += '<div>';
+    h += '<div class="flex items-center gap-2"><h3 class="font-bold text-sm">' + _escH(a.titel) + '</h3>';
+    h += '<span class="pill ' + (isOffen ? 'po' : 'pg') + '">' + (isOffen ? '⏳ Offen' : '✅ Geschlossen') + '</span></div>';
+    h += '<p class="text-[11px] text-gray-500 mt-0.5">Zeitraum: <b>' + a.zeitraum_aktuell + '</b> vs. <b>' + a.zeitraum_vorjahr + '</b></p>';
+    h += '<p class="text-[10px] text-gray-400">Erstellt: ' + new Date(a.erstellt_am).toLocaleDateString('de-DE') + '</p>';
+    h += '</div>';
+    h += '<div class="flex gap-2">';
+    if (isOffen) {
+      h += '<button onclick="schliesseAbfrage(\'' + a.id + '\')" class="rbtn text-xs">🔒 Schließen</button>';
+    }
+    h += '<button onclick="showHQPerfAuswertung(\'' + a.id + '\')" class="vbtn text-xs">📊 Auswertung</button>';
+    h += '</div></div>';
+
+    // Rücklauf-Anzeige (wird async nachgeladen)
+    h += '<div id="hqPerfRuecklauf_' + a.id + '" class="text-xs text-gray-400">Lade Rücklauf…</div>';
+    h += '</div>';
+  });
+
+  // Auswertungsbereich (wird bei Klick befüllt)
+  h += '<div id="hqPerfAuswertungContainer"></div>';
+
+  return h;
+}
+
+export async function loadHQPerfRuecklauf(abfrageId) {
+  var sb = _sb();
+  var { data: standorte } = await sb.from('standorte').select('id, name').eq('status', 'aktiv');
+  var { data: daten } = await sb.from('einkauf_performance_daten').select('standort_id, abgeschlossen').eq('abfrage_id', abfrageId);
+
+  standorte = standorte || [];
+  daten = daten || [];
+
+  var abgeschlossen = daten.filter(function(d){return d.abgeschlossen;}).map(function(d){return d.standort_id;});
+  var begonnen = daten.map(function(d){return d.standort_id;});
+  var uniqueBegonnen = [...new Set(begonnen)];
+
+  var el = document.getElementById('hqPerfRuecklauf_' + abfrageId);
+  if (!el) return;
+
+  var total = standorte.length;
+  var done = abgeschlossen.length;
+  var pct = total > 0 ? Math.round(done / total * 100) : 0;
+
+  el.innerHTML = '<div class="flex items-center gap-3">' +
+    '<div class="prog flex-1" style="max-width:200px"><div class="pf" style="width:' + pct + '%;background:#EF7D00"></div></div>' +
+    '<span class="font-semibold text-xs" style="color:#EF7D00">' + done + '/' + total + ' abgeschlossen</span>' +
+    '<span class="text-[10px] text-gray-400">(' + uniqueBegonnen.length + ' begonnen)</span>' +
+    '</div>' +
+    '<div class="flex flex-wrap gap-1 mt-2">' +
+    standorte.map(function(s) {
+      var isDone = abgeschlossen.indexOf(s.id) >= 0;
+      var isBegonnen = uniqueBegonnen.indexOf(s.id) >= 0;
+      return '<span class="pill ' + (isDone ? 'pg' : isBegonnen ? 'po' : 'pgr') + '" style="font-size:9px">' +
+        (isDone ? '✓ ' : isBegonnen ? '⏳ ' : '○ ') + _escH(s.name) + '</span>';
+    }).join('') +
+    '</div>';
+}
+
+export async function showHQPerfAuswertung(abfrageId) {
+  var sb = _sb();
+  var container = document.getElementById('hqPerfAuswertungContainer');
+  if (!container) return;
+  container.innerHTML = '<div class="vc p-4 text-center text-xs text-gray-400">Lade Auswertung…</div>';
+
+  var { data: abfrage } = await sb.from('einkauf_performance_abfragen').select('*').eq('id', abfrageId).single();
+  var { data: daten } = await sb.from('einkauf_performance_daten').select('*, standorte(name)').eq('abfrage_id', abfrageId).eq('abgeschlossen', true);
+
+  daten = daten || [];
+
+  // Aggregation je Marke
+  var markenMap = {};
+  daten.forEach(function(d) {
+    if (!d.marke || d.marke === '__gesamt__') return;
+    if (!markenMap[d.marke]) {
+      markenMap[d.marke] = { absatz_akt: 0, absatz_vj: 0, umsatz_akt: 0, umsatz_vj: 0, lager_st: 0, lager_wert: 0, rabatt_akt: 0, rabatt_vj: 0, roh_akt: 0, roh_vj: 0, standorte: 0, hat_rabatt: 0, hat_roh: 0 };
+    }
+    var m = markenMap[d.marke];
+    m.absatz_akt += d.absatz_aktuell || 0;
+    m.absatz_vj += d.absatz_vorjahr || 0;
+    m.umsatz_akt += d.umsatz_aktuell || 0;
+    m.umsatz_vj += d.umsatz_vorjahr || 0;
+    m.lager_st += d.lager_stueck || 0;
+    m.lager_wert += d.lager_wert || 0;
+    if (d.rabatt_aktuell !== null) { m.rabatt_akt += d.rabatt_aktuell; m.hat_rabatt++; }
+    if (d.rabatt_vorjahr !== null) m.rabatt_vj += d.rabatt_vorjahr;
+    if (d.rohertrag_aktuell !== null) { m.roh_akt += d.rohertrag_aktuell; m.hat_roh++; }
+    if (d.rohertrag_vorjahr !== null) m.roh_vj += d.rohertrag_vorjahr;
+    m.standorte++;
+  });
+
+  var marken = Object.keys(markenMap).sort(function(a, b) {
+    return markenMap[b].umsatz_akt - markenMap[a].umsatz_akt;
+  });
+
+  var fmtEur = function(v) { return v ? Math.round(v).toLocaleString('de-DE') + '€' : '—'; };
+  var fmtPct = function(n, d) { return d > 0 ? (n / d * 100).toFixed(1).replace('.', ',') + '%' : '—'; };
+  var fmtChg = function(akt, vj) {
+    if (!vj || vj === 0) return '<span class="text-gray-300">neu</span>';
+    var pct = (akt - vj) / vj * 100;
+    var cls = pct >= 0 ? 'text-green-600' : 'text-red-500';
+    return '<span class="' + cls + '">' + (pct >= 0 ? '▲' : '▼') + ' ' + Math.abs(pct).toFixed(0) + '%</span>';
+  };
+
+  var h = '<div class="vc p-5 mt-5" style="border-left:4px solid #EF7D00">';
+  h += '<div class="flex items-center justify-between mb-4">';
+  h += '<div><h3 class="font-bold text-sm">📊 Netzwerk-Auswertung: ' + _escH(abfrage ? abfrage.titel : '') + '</h3>';
+  h += '<p class="text-[11px] text-gray-500">' + daten.filter(function(d,i,a){return a.findIndex(function(x){return x.standort_id===d.standort_id;})===i;}).length + ' Standorte · ' + marken.length + ' Marken</p></div>';
+  h += '<button onclick="document.getElementById(\'hqPerfAuswertungContainer\').innerHTML=\'\'" class="text-gray-400 hover:text-gray-600 text-xs">✕ Schließen</button>';
+  h += '</div>';
+
+  // Gesamtzahlen
+  var totAbs = marken.reduce(function(s,m){return s+markenMap[m].absatz_akt;},0);
+  var totUm = marken.reduce(function(s,m){return s+markenMap[m].umsatz_akt;},0);
+  var totLag = marken.reduce(function(s,m){return s+markenMap[m].lager_wert;},0);
+  h += '<div class="grid grid-cols-3 gap-3 mb-4">';
+  h += '<div class="p-3 rounded-xl text-center" style="background:#fff7ed"><p class="text-[10px] text-gray-500">Gesamtabsatz</p><p class="text-xl font-bold mt-1" style="color:#EF7D00">'+totAbs.toLocaleString('de-DE')+' Stk</p></div>';
+  h += '<div class="p-3 rounded-xl text-center" style="background:#fff7ed"><p class="text-[10px] text-gray-500">Gesamtumsatz netto</p><p class="text-xl font-bold mt-1" style="color:#EF7D00">'+fmtEur(totUm)+'</p></div>';
+  h += '<div class="p-3 rounded-xl text-center" style="background:#fff7ed"><p class="text-[10px] text-gray-500">Gesamtlagerwert</p><p class="text-xl font-bold mt-1" style="color:#EF7D00">'+fmtEur(totLag)+'</p></div>';
+  h += '</div>';
+
+  // Marken-Tabelle
+  h += '<div class="overflow-x-auto">';
+  h += '<table class="dt" style="min-width:800px"><thead><tr style="background:#EF7D00">';
+  h += '<th class="text-white text-left">Marke</th>';
+  h += '<th class="text-white text-right">Absatz aktuell</th>';
+  h += '<th class="text-white text-right">Ggü. VJ</th>';
+  h += '<th class="text-white text-right">Umsatz netto</th>';
+  h += '<th class="text-white text-right">Ggü. VJ</th>';
+  h += '<th class="text-white text-right">Anteil</th>';
+  h += '<th class="text-white text-right">Ø VK brutto</th>';
+  h += '<th class="text-white text-right">Lager (Stk)</th>';
+  h += '<th class="text-white text-right">Lagerwert</th>';
+  h += '<th class="text-white text-right">Nachlass %</th>';
+  h += '<th class="text-white text-right">Rohertrag %</th>';
+  h += '<th class="text-white text-center">Standorte</th>';
+  h += '</tr></thead><tbody>';
+
+  marken.forEach(function(mk) {
+    var m = markenMap[mk];
+    var avkBrutto = m.absatz_akt > 0 ? (m.umsatz_akt / m.absatz_akt * 1.19) : null;
+    var nachlassPct = m.hat_rabatt > 0 && m.umsatz_akt > 0 ? (m.rabatt_akt / 1.19) / m.umsatz_akt * 100 : null;
+    var rohPct = m.hat_roh > 0 && m.umsatz_akt > 0 ? m.roh_akt / m.umsatz_akt * 100 : null;
+    var nachlassCls = nachlassPct !== null ? (nachlassPct > 10 ? 'text-red-500' : nachlassPct > 7 ? 'text-yellow-600' : 'text-green-600') : '';
+    var rohCls = rohPct !== null ? (rohPct > 34 ? 'text-green-600' : rohPct > 30 ? 'text-yellow-600' : 'text-red-500') : '';
+
+    h += '<tr>';
+    h += '<td class="font-semibold">' + _escH(mk) + '</td>';
+    h += '<td class="text-right">' + m.absatz_akt.toLocaleString('de-DE') + '</td>';
+    h += '<td class="text-right">' + fmtChg(m.absatz_akt, m.absatz_vj) + '</td>';
+    h += '<td class="text-right font-semibold">' + fmtEur(m.umsatz_akt) + '</td>';
+    h += '<td class="text-right">' + fmtChg(m.umsatz_akt, m.umsatz_vj) + '</td>';
+    h += '<td class="text-right">' + fmtPct(m.umsatz_akt, totUm) + '</td>';
+    h += '<td class="text-right">' + (avkBrutto ? fmtEur(avkBrutto) : '—') + '</td>';
+    h += '<td class="text-right">' + m.lager_st.toLocaleString('de-DE') + '</td>';
+    h += '<td class="text-right">' + fmtEur(m.lager_wert) + '</td>';
+    h += '<td class="text-right ' + nachlassCls + '">' + (nachlassPct !== null ? nachlassPct.toFixed(1).replace('.', ',') + '%' : '<span class="text-gray-300 text-[10px]">k.A.</span>') + '</td>';
+    h += '<td class="text-right ' + rohCls + '">' + (rohPct !== null ? rohPct.toFixed(1).replace('.', ',') + '%' : '<span class="text-gray-300 text-[10px]">k.A.</span>') + '</td>';
+    h += '<td class="text-center text-xs">' + m.standorte + '</td>';
+    h += '</tr>';
+  });
+
+  h += '</tbody></table></div>';
+
+  // Detailansicht je Standort
+  h += '<details class="mt-4"><summary class="cursor-pointer text-xs font-semibold text-gray-600 hover:text-gray-900 py-2">▶ Detaildaten je Standort</summary>';
+  h += '<div class="overflow-x-auto mt-2"><table class="dt" style="min-width:700px"><thead><tr style="background:#6b7280">';
+  h += '<th class="text-white">Standort</th><th class="text-white">Marke</th><th class="text-white text-right">Absatz</th><th class="text-white text-right">Umsatz</th><th class="text-white text-right">Lager (Stk)</th><th class="text-white text-right">Lagerwert</th><th class="text-white text-right">Nachlass</th><th class="text-white text-right">Rohertrag</th>';
+  h += '</tr></thead><tbody>';
+  daten.forEach(function(d) {
+    var stName = d.standorte ? d.standorte.name : d.standort_id;
+    var nl = d.rabatt_aktuell !== null && d.umsatz_aktuell ? ((d.rabatt_aktuell/1.19)/d.umsatz_aktuell*100).toFixed(1)+'%' : '<span class="text-gray-300">k.A.</span>';
+    var roh = d.rohertrag_aktuell !== null && d.umsatz_aktuell ? (d.rohertrag_aktuell/d.umsatz_aktuell*100).toFixed(1)+'%' : '<span class="text-gray-300">k.A.</span>';
+    h += '<tr><td class="text-xs">' + _escH(stName) + '</td><td class="font-semibold text-xs">' + _escH(d.marke) + '</td>';
+    h += '<td class="text-right text-xs">' + (d.absatz_aktuell||'—') + '</td>';
+    h += '<td class="text-right text-xs">' + fmtEur(d.umsatz_aktuell) + '</td>';
+    h += '<td class="text-right text-xs">' + (d.lager_stueck||'—') + '</td>';
+    h += '<td class="text-right text-xs">' + fmtEur(d.lager_wert) + '</td>';
+    h += '<td class="text-right text-xs">' + nl + '</td>';
+    h += '<td class="text-right text-xs">' + roh + '</td>';
+    h += '</tr>';
+  });
+  h += '</tbody></table></div></details>';
+  h += '</div>';
+
+  container.innerHTML = h;
+}
+
+export function openHQPerfAbfrageModal() {
+  var thisYear = new Date().getFullYear();
+  var h = '<div class="modal-bg" onclick="if(event.target==this)closeModal()"><div class="modal">';
+  h += '<div class="flex items-center justify-between mb-4"><h2 class="font-bold text-base">➕ Neue Performance-Abfrage</h2><button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-lg">✕</button></div>';
+  h += '<div class="space-y-3">';
+  h += '<div><label class="form-label">Titel der Abfrage</label><input class="form-input" id="hqPerfTitel" value="Performance-Abfrage Geschäftsjahr 2024/25" placeholder="z.B. Performance-Abfrage GJ 2024/25"></div>';
+  h += '<div class="form-row"><div><label class="form-label">Zeitraum aktuell (Label)</label><input class="form-input" id="hqPerfAkt" value="09/2024 – 08/2025" placeholder="z.B. 09/2024 – 08/2025"></div>';
+  h += '<div><label class="form-label">Zeitraum Vorjahr (Label)</label><input class="form-input" id="hqPerfVj" value="09/2023 – 08/2024" placeholder="z.B. 09/2023 – 08/2024"></div></div>';
+  h += '<div><label class="form-label">Notiz / Anleitung für Partner (optional)</label><textarea class="form-input" id="hqPerfNotiz" rows="2" placeholder="Wird den Partnern im Formular angezeigt…"></textarea></div>';
+  h += '</div>';
+  h += '<div class="flex gap-3 mt-5 pt-4 border-t border-gray-100">';
+  h += '<button onclick="createHQPerfAbfrage()" class="vbtn">✅ Abfrage anlegen & öffnen</button>';
+  h += '<button onclick="closeModal()" class="rbtn">Abbrechen</button></div>';
+  h += '</div></div>';
+  var modalWrap = document.getElementById('modalWrap');
+  if (modalWrap) { modalWrap.innerHTML = h; modalWrap.style.display = 'block'; }
+}
+
+export async function createHQPerfAbfrage() {
+  var sb = _sb();
+  var titel = document.getElementById('hqPerfTitel')?.value?.trim();
+  var akt = document.getElementById('hqPerfAkt')?.value?.trim();
+  var vj = document.getElementById('hqPerfVj')?.value?.trim();
+  var notiz = document.getElementById('hqPerfNotiz')?.value?.trim();
+
+  if (!titel || !akt || !vj) { _showToast('Bitte alle Pflichtfelder ausfüllen.', 'error'); return; }
+
+  var { error } = await sb.from('einkauf_performance_abfragen').insert({
+    titel: titel,
+    zeitraum_aktuell: akt,
+    zeitraum_vorjahr: vj,
+    notiz: notiz || null,
+    status: 'offen',
+    erstellt_von: window.sbUser?.id
+  });
+
+  if (error) { _showToast('Fehler: ' + error.message, 'error'); return; }
+
+  if (typeof closeModal === 'function') closeModal();
+  _showToast('✅ Abfrage angelegt!', 'success');
+
+  // Re-render HQ Perf Tab
+  var c = document.getElementById('hqEkTabPerf');
+  if (c) {
+    c.innerHTML = '<div class="fi"><p class="text-xs text-gray-400">Lädt…</p></div>';
+    renderHQPerf().then(function(html) {
+      c.innerHTML = '<div class="fi">' + html + '</div>';
+      // Rücklauf für alle Abfragen laden
+      document.querySelectorAll('[id^="hqPerfRuecklauf_"]').forEach(function(el) {
+        loadHQPerfRuecklauf(el.id.replace('hqPerfRuecklauf_', ''));
+      });
+    });
+  }
+}
+
+export async function schliesseAbfrage(abfrageId) {
+  if (!confirm('Abfrage schließen? Partner können dann keine Daten mehr eingeben.')) return;
+  var sb = _sb();
+  var { error } = await sb.from('einkauf_performance_abfragen').update({ status: 'geschlossen' }).eq('id', abfrageId);
+  if (error) { _showToast('Fehler: ' + error.message, 'error'); return; }
+  _showToast('🔒 Abfrage geschlossen', 'success');
+  var c = document.getElementById('hqEkTabPerf');
+  if (c) {
+    renderHQPerf().then(function(html) {
+      c.innerHTML = '<div class="fi">' + html + '</div>';
+    });
+  }
+}
+
