@@ -1001,7 +1001,7 @@ if (!window.updateGruppeSetting) {
         var upd = {};
         upd[field] = (value === true || value === 'true');
         var resp = await sb.from('standort_gruppe_mitglieder').update(upd)
-            .eq('gruppe_id', gruppeId).eq('standort_id', standortId);
+            .eq('gruppe_id', gruppeId); // alle Mitglieder der Gruppe
         if (resp && resp.error) { _showToast('Fehler: ' + resp.error.message, 'error'); return; }
         _showToast('Gespeichert ✅', 'success');
     };
