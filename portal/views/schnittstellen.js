@@ -1469,32 +1469,43 @@ window.loadDhlConfig = async function() {
 
 window.saveDhlConfig = async function() {
     try {
-        var sb = _sb(); if (!sb) throw new Error('Nicht eingeloggt');
-        var fields = CONNECTORS.dhl.dhlFields;
+        var sb = _sb(); if (!sb) return;
+        var c = CONNECTORS.dhl;
         var values = {};
-        var missing = [];
-        fields.forEach(function(f) {
+        c.dhlFields.forEach(function(f) {
             var el = document.getElementById('conn_dhl_' + f.key);
-            var val = el ? el.value.trim() : '';
-            if (f.key !== 'sandbox' && !val) missing.push(f.label);
-            values[f.key] = val || (f.key === 'sandbox' ? 'false' : '');
+            if (el && el.value.trim()) values[f.key] = el.value.trim();
         });
-        if (missing.length > 0) { _showToast('Fehlende Felder: ' + missing.join(', '), 'error'); return; }
-        for (var key in values) {
-            var { error } = await sb.from('connector_config').upsert({
-                connector_id: 'dhl', config_key: key, config_value: values[key],
-                updated_by: _sbUser().id, updated_at: new Date().toISOString()
-            }, { onConflict: 'connector_id,config_key' });
-            if (error) throw error;
+        if (Object.keys(values).length === 0) { _showToast('Bitte mindestens ein Feld ausfuellen', 'error'); return; }
+        var keys = Object.keys(values);
+        for (var i = 0; i < keys.length; i++) {
+            var key = keys[i];
+            var { data: existing } = await sb.from('connector_config')
+                .select('id')
+                .eq('connector_id', 'dhl')
+                .eq('config_key', key)
+                .is('standort_id', null)
+                .maybeSingle();
+            if (existing) {
+                await sb.from('connector_config').update({
+                    config_value: values[key],
+                    updated_at: new Date().toISOString(),
+                    updated_by: _sbUser() ? _sbUser().id : null
+                }).eq('id', existing.id);
+            } else {
+                await sb.from('connector_config').insert({
+                    connector_id: 'dhl', config_key: key, config_value: values[key],
+                    standort_id: null,
+                    updated_at: new Date().toISOString(), updated_by: _sbUser() ? _sbUser().id : null
+                });
+            }
         }
-        var isSandbox = values.sandbox === 'true';
-        CONNECTORS.dhl.statusLabel = isSandbox ? 'Sandbox' : 'Production';
         CONNECTORS.dhl.status = 'connected';
-        addLog('dhl', 'ok', 'DHL Konfiguration gespeichert (' + (isSandbox ? 'Sandbox' : 'Production') + ')');
-        _showToast('DHL Konfiguration gespeichert!', 'success');
-    } catch(err) {
-        addLog('dhl', 'err', 'Speichern fehlgeschlagen: ' + err.message);
-        _showToast('Fehler: ' + err.message, 'error');
+        CONNECTORS.dhl.statusLabel = 'Konfiguriert';
+        renderStatusGrid();
+        _showToast('DHL Konfiguration gespeichert \u2713', 'success');
+    } catch(e) {
+        _showToast('Fehler: ' + e.message, 'error');
     }
 };
 
@@ -1538,22 +1549,35 @@ window.loadLexofficeConfig = async function() {
 
 window.saveLexofficeConfig = async function() {
     try {
-        var sb = _sb(); if (!sb) throw new Error('Nicht eingeloggt');
+        var sb = _sb(); if (!sb) return;
         var apiKeyEl = document.getElementById('conn_lexoffice_api_key');
         var apiKey = apiKeyEl ? apiKeyEl.value.trim() : '';
-        if (!apiKey) { _showToast('Bitte API Key eingeben.', 'error'); return; }
-        var { error } = await sb.from('connector_config').upsert({
-            connector_id: 'lexoffice', config_key: 'api_key', config_value: apiKey,
-            updated_by: _sbUser().id, updated_at: new Date().toISOString()
-        }, { onConflict: 'connector_id,config_key' });
-        if (error) throw error;
+        if (!apiKey) { _showToast('Bitte API Key eintragen', 'error'); return; }
+        var { data: existing } = await sb.from('connector_config')
+            .select('id')
+            .eq('connector_id', 'lexoffice')
+            .eq('config_key', 'api_key')
+            .is('standort_id', null)
+            .maybeSingle();
+        if (existing) {
+            await sb.from('connector_config').update({
+                config_value: apiKey,
+                updated_at: new Date().toISOString(),
+                updated_by: _sbUser() ? _sbUser().id : null
+            }).eq('id', existing.id);
+        } else {
+            await sb.from('connector_config').insert({
+                connector_id: 'lexoffice', config_key: 'api_key', config_value: apiKey,
+                standort_id: null,
+                updated_at: new Date().toISOString(), updated_by: _sbUser() ? _sbUser().id : null
+            });
+        }
         CONNECTORS.lexoffice.status = 'connected';
         CONNECTORS.lexoffice.statusLabel = 'Verbunden';
-        addLog('lexoffice', 'ok', 'API Key gespeichert');
-        _showToast('lexoffice API Key gespeichert!', 'success');
-    } catch(err) {
-        addLog('lexoffice', 'err', 'Speichern fehlgeschlagen: ' + err.message);
-        _showToast('Fehler: ' + err.message, 'error');
+        renderStatusGrid();
+        _showToast('lexoffice API Key gespeichert \u2713', 'success');
+    } catch(e) {
+        _showToast('Fehler: ' + e.message, 'error');
     }
 };
 
@@ -2276,11 +2300,26 @@ window.saveAdsConfig = async function(platform) {
             var el = document.getElementById('conn_' + platform + '_' + f.key);
             if (!el || !el.value.trim()) continue;
             hasValue = true;
-            var { error } = await sb.from('connector_config').upsert({
-                connector_id: platform, config_key: f.key, config_value: el.value.trim(),
-                updated_at: new Date().toISOString(), updated_by: _sbUser() ? _sbUser().id : null
-            }, { onConflict: 'connector_id,config_key' });
-            if (error) throw error;
+            // Check if exists (standort_id is NULL for HQ-level ads)
+            var { data: existing } = await sb.from('connector_config')
+                .select('id')
+                .eq('connector_id', platform)
+                .eq('config_key', f.key)
+                .is('standort_id', null)
+                .maybeSingle();
+            if (existing) {
+                await sb.from('connector_config').update({
+                    config_value: el.value.trim(),
+                    updated_at: new Date().toISOString(),
+                    updated_by: _sbUser() ? _sbUser().id : null
+                }).eq('id', existing.id);
+            } else {
+                await sb.from('connector_config').insert({
+                    connector_id: platform, config_key: f.key, config_value: el.value.trim(),
+                    standort_id: null,
+                    updated_at: new Date().toISOString(), updated_by: _sbUser() ? _sbUser().id : null
+                });
+            }
         }
         if (!hasValue) { _showToast('Bitte mindestens ein Feld ausfuellen', 'error'); return; }
         CONNECTORS[platform].status = 'connected';
