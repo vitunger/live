@@ -760,8 +760,7 @@ try {
         // Aktive WaWi anzeigen + Wechsel-Button
         var activeWawi = s.warenwirtschaft;
         html += '<div id="wawiDisplay_' + stdId + '" class="flex items-center gap-2">';
-        html += '<span class="px-3 py-1.5 rounded-lg border-2 border-vit-orange bg-orange-50 text-orange-700 text-xs font-semibold">' + _escH(activeWawi) + '</span>';
-        html += '<button onclick="window._showAllWawi(\'' + stdId + '\')" class="text-xs text-gray-400 hover:text-gray-600 underline">Wechseln</button>';
+        html += '<button onclick="window._showAllWawi(\'' + stdId + '\')" class="px-3 py-1.5 rounded-lg border-2 border-vit-orange bg-orange-50 text-orange-700 text-xs font-semibold hover:opacity-80 transition">' + _escH(activeWawi) + '</button>';
         html += '</div>';
         html += '<div id="wawiAll_' + stdId + '" style="display:none" class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">';
     } else {
@@ -1021,7 +1020,18 @@ try {
     }
     if(r.error) throw r.error;
     _showToast('WaWi-Verbindung f\u00fcr Standort gespeichert \u2705', 'success');
-    closeStdDetailModal();
+    // Modal offen lassen, WaWi-Display aktualisieren
+    var disp = document.getElementById('wawiDisplay_' + stdId);
+    var allDiv = document.getElementById('wawiAll_' + stdId);
+    if (disp && wawiValue) {
+        disp.style.display = 'flex';
+        var lbl = disp.querySelector('span');
+        if (lbl) lbl.textContent = wawiValue;
+        if (allDiv) allDiv.style.display = 'none';
+    } else if (disp && !wawiValue) {
+        disp.style.display = 'none';
+        if (allDiv) allDiv.style.display = 'grid';
+    }
     renderKzStandorte();
 } catch(e) {
     _showToast('Fehler: ' + e.message, 'error');
@@ -1057,7 +1067,18 @@ btn.className += ' border-vit-orange bg-orange-50 text-orange-700 ring-2 ring-or
 try {
     var resp = await _sb().from('standorte').update({ warenwirtschaft: wawiValue, updated_at: new Date().toISOString() }).eq('id', stdId);
     if(resp.error) throw resp.error;
-    closeStdDetailModal();
+    // Modal offen lassen, WaWi-Display aktualisieren
+    var disp = document.getElementById('wawiDisplay_' + stdId);
+    var allDiv = document.getElementById('wawiAll_' + stdId);
+    if (disp && wawiValue) {
+        disp.style.display = 'flex';
+        var lbl = disp.querySelector('span');
+        if (lbl) lbl.textContent = wawiValue;
+        if (allDiv) allDiv.style.display = 'none';
+    } else if (disp && !wawiValue) {
+        disp.style.display = 'none';
+        if (allDiv) allDiv.style.display = 'grid';
+    }
     renderKzStandorte();
 } catch(err) { _showToast('Fehler beim Speichern: '+err.message, 'error'); }
 }
