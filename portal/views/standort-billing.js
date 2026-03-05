@@ -954,8 +954,15 @@ window._stdFirmaSave = async function(standortId) {
 window._stdGemBwaSave = async function(standortId, firmaName, value) {
     var boolVal = (value === true || value === 'true');
     var sb = _sb();
-    // Alle Standorte dieser Firma updaten
     var r = await sb.from('standorte').update({ gemeinsame_bwa: boolVal }).eq('firma_name', firmaName);
+    if (r.error) { _showToast('Fehler: ' + r.error.message, 'error'); return; }
+    _showToast('Gespeichert \u2705', 'success');
+};
+
+window._stdGemMktSave = async function(standortId, firmaName, value) {
+    var boolVal = (value === true || value === 'true');
+    var sb = _sb();
+    var r = await sb.from('standorte').update({ gemeinsames_marketing: boolVal }).eq('firma_name', firmaName);
     if (r.error) { _showToast('Fehler: ' + r.error.message, 'error'); return; }
     _showToast('Gespeichert \u2705', 'success');
 };
