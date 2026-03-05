@@ -777,26 +777,6 @@ try {
     html += '</div>';
     html += '</div>';
 
-
-    html += '<div class="grid grid-cols-2 gap-3 mb-3">';
-    html += '<div><label class="block text-[10px] text-gray-500 mb-1">API-Key</label>';
-    html += '<input type="password" id="stdWawiKey" value="'+(wawiConn && wawiConn.api_key_encrypted ? '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' : '')+'" placeholder="cycle-api-key" class="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5"></div>';
-    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Label (optional)</label>';
-    html += '<input type="text" id="stdWawiLabel" value="'+_escH(wawiConn && wawiConn.system_label ? wawiConn.system_label : '')+'" placeholder="z.B. CYCLE '+_escH(s.name)+'" class="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5"></div>';
-    html += '</div>';
-    html += '<div class="flex gap-2">';
-    html += '<button onclick="hqTestWawiConnection(\''+stdId+'\')" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200" id="hqWawiTestBtn">\ud83d\udd0d Testen</button>';
-    html += '<button onclick="hqSaveWawiConnection(\''+stdId+'\','+JSON.stringify(wawiConn ? wawiConn.id : null)+')" class="px-3 py-1.5 bg-vit-orange text-white rounded-lg text-xs font-semibold hover:bg-orange-600">\ud83d\udcbe Speichern</button>';
-    if(wawiConn && wawiConn.ist_aktiv) {
-        html += '<button onclick="hqTriggerWawiSync(\''+wawiConn.id+'\',\''+stdId+'\')" class="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-semibold hover:bg-blue-100">\u26a1 Sync starten</button>';
-    }
-    html += '</div>';
-    html += '<div id="hqWawiTestResult" class="mt-2"></div>';
-    if(wawiConn && wawiConn.letzter_sync) {
-        html += '<p class="text-[10px] text-gray-400 mt-2">Letzter Sync: '+new Date(wawiConn.letzter_sync).toLocaleString('de')+'</p>';
-    }
-    html += '</div>';
-
     if(services.length > 0) {
         html += '<div class="mb-4"><label class="block text-xs font-semibold text-gray-600 mb-2">Aktive Standort-Services</label><div class="flex flex-wrap gap-1">';
         services.forEach(function(svc) {
