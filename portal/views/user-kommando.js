@@ -267,139 +267,64 @@ var _stdDetailId = null;
 
 export async function openStandortDetail(standortId) {
     _stdDetailId = standortId;
-
-    // Standort-Daten laden
     var sb = _sb();
     var stdResp = await sb.from('standorte').select('*').eq('id', standortId).single();
     if (stdResp.error || !stdResp.data) { _showToast('Standort nicht gefunden', 'error'); return; }
     var s = stdResp.data;
-
-    // Gruppen-Daten laden
-    var grpResp = await sb.from('standort_gruppe_mitglieder')
-        .select('*, standort_gruppen(id, name)')
-        .eq('standort_id', standortId);
+    var grpResp = await sb.from('standort_gruppe_mitglieder').select('*, standort_gruppen(id, name)').eq('standort_id', standortId);
     var grpData = (!grpResp.error && grpResp.data && grpResp.data.length > 0) ? grpResp.data[0] : null;
-
-    // Alle Gruppen für Dropdown
     var allGrpResp = await sb.from('standort_gruppen').select('id, name').order('name');
     var allGruppen = (!allGrpResp.error && allGrpResp.data) ? allGrpResp.data : [];
-
-    // Alle Standorte für Gruppe-Mitglieder-Anzeige
-    var allStdResp = await sb.from('standorte').select('id, name').eq('status', 'aktiv').order('name');
-    var allStandorte = (!allStdResp.error && allStdResp.data) ? allStdResp.data : [];
-
-    // Erweiterter Zugriff: user_standorte für diesen Standort
-    var zugResp = await sb.from('user_standorte')
-        .select('*, users(id, name, email)')
-        .eq('standort_id', standortId);
+    var zugResp = await sb.from('user_standorte').select('*, users(id, name, email)').eq('standort_id', standortId);
     var zugUser = (!zugResp.error && zugResp.data) ? zugResp.data : [];
-
-    // GFs dieses Standorts (für Dropdown)
-    var gfResp = await sb.from('users')
-        .select('id, name, email')
-        .eq('status', 'aktiv')
-        .eq('is_hq', false)
-        .neq('standort_id', standortId);
+    var gfResp = await sb.from('users').select('id, name, email').eq('status', 'aktiv').eq('is_hq', false).neq('standort_id', standortId);
     var andereGfs = (!gfResp.error && gfResp.data) ? gfResp.data : [];
-
-    // Gruppen-Mitglieder anzeigen
     var gruppenMitglieder = [];
     if (grpData) {
-        var mitglResp = await sb.from('standort_gruppe_mitglieder')
-            .select('standort_id, standorte(name)')
-            .eq('gruppe_id', grpData.standort_gruppen.id);
+        var mitglResp = await sb.from('standort_gruppe_mitglieder').select('standort_id, standorte(name)').eq('gruppe_id', grpData.standort_gruppen.id);
         gruppenMitglieder = (!mitglResp.error && mitglResp.data) ? mitglResp.data : [];
     }
-
-    // Modal aufbauen
     var existing = document.getElementById('standortDetailModal');
     if (existing) existing.remove();
-
+    var q = function(v) { return String(v).replace(/'/g, "\\'"); };
     var gruppeSection = '';
     if (grpData) {
-        var mitglNames = gruppenMitglieder
-            .filter(function(m) { return m.standort_id !== standortId; })
-            .map(function(m) { return m.standorte ? m.standorte.name : ''; })
-            .filter(Boolean).join(', ') || '—';
-        gruppeSection = '<div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-3">' +
-            '<div class="flex items-center justify-between mb-3">' +
-            '<div><p class="font-semibold text-green-800">🔗 ' + _escH(grpData.standort_gruppen.name) + '</p>' +
-            '<p class="text-xs text-green-600 mt-0.5">Weitere Mitglieder: ' + _escH(mitglNames) + '</p></div>' +
-            '<button onclick="window.removeStandortFromGruppe('' + grpData.standort_gruppen.id + '','' + standortId + '')" class="text-xs text-red-500 hover:underline">Gruppe verlassen</button>' +
-            '</div>' +
-            '<div class="grid grid-cols-2 gap-2">' +
-            '<label class="flex items-center space-x-2 text-sm cursor-pointer"><input type="checkbox" id="sdGemBwa" ' + (grpData.gemeinsame_bwa ? 'checked' : '') + ' onchange="window.updateGruppeSetting('' + grpData.standort_gruppen.id + '','' + standortId + '','gemeinsame_bwa',this.checked)" class="rounded" style="accent-color:#EF7D00"><span class="text-gray-700">Gemeinsame BWA</span></label>' +
-            '<label class="flex items-center space-x-2 text-sm cursor-pointer"><input type="checkbox" id="sdGemPlan" ' + (grpData.gemeinsame_planung ? 'checked' : '') + ' onchange="window.updateGruppeSetting('' + grpData.standort_gruppen.id + '','' + standortId + '','gemeinsame_planung',this.checked)" class="rounded" style="accent-color:#EF7D00"><span class="text-gray-700">Gemeinsame Planung</span></label>' +
-            '</div></div>';
+        var gId = grpData.standort_gruppen.id;
+        var mitglNames = gruppenMitglieder.filter(function(m) { return m.standort_id !== standortId; }).map(function(m) { return m.standorte ? m.standorte.name : ''; }).filter(Boolean).join(', ') || '\u2014';
+        gruppeSection = '<div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-3">'
+            + '<div class="flex items-center justify-between mb-3">'
+            + '<div><p class="font-semibold text-green-800">\ud83d\udd17 ' + _escH(grpData.standort_gruppen.name) + '</p>'
+            + '<p class="text-xs text-green-600 mt-0.5">Weitere Mitglieder: ' + _escH(mitglNames) + '</p></div>'
+            + '<button onclick="window.removeStandortFromGruppe(\'' + q(gId) + '\',\'' + q(standortId) + '\')" class="text-xs text-red-500 hover:underline">Gruppe verlassen</button>'
+            + '</div><div class="grid grid-cols-2 gap-2">'
+            + '<label class="flex items-center space-x-2 text-sm cursor-pointer"><input type="checkbox" id="sdGemBwa" ' + (grpData.gemeinsame_bwa ? 'checked' : '') + ' onchange="window.updateGruppeSetting(\'' + q(gId) + '\',\'' + q(standortId) + '\',\'gemeinsame_bwa\',this.checked)" class="rounded" style="accent-color:#EF7D00"><span class="text-gray-700">Gemeinsame BWA</span></label>'
+            + '<label class="flex items-center space-x-2 text-sm cursor-pointer"><input type="checkbox" id="sdGemPlan" ' + (grpData.gemeinsame_planung ? 'checked' : '') + ' onchange="window.updateGruppeSetting(\'' + q(gId) + '\',\'' + q(standortId) + '\',\'gemeinsame_planung\',this.checked)" class="rounded" style="accent-color:#EF7D00"><span class="text-gray-700">Gemeinsame Planung</span></label>'
+            + '</div></div>';
     } else {
-        var gruppenOptionen = allGruppen.map(function(g) {
-            return '<option value="' + g.id + '">' + _escH(g.name) + '</option>';
-        }).join('');
-        gruppeSection = '<div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-3">' +
-            '<p class="text-sm text-gray-500 mb-3">Dieser Standort ist keiner Gruppe zugeordnet.</p>' +
-            '<div class="flex gap-2 mb-2">' +
-            '<input id="sdNeueGruppe" type="text" placeholder="Neuer Gruppenname..." class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm">' +
-            '<button onclick="window.createUndJoinGruppe('' + standortId + '')" class="px-3 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Erstellen</button>' +
-            '</div>' +
-            (allGruppen.length > 0 ? '<div class="flex gap-2"><select id="sdExistGruppe" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="">— Bestehende Gruppe wählen —</option>' + gruppenOptionen + '</select><button onclick="window.joinExistingGruppe('' + standortId + '')" class="px-3 py-2 bg-gray-700 text-white rounded-lg text-sm font-semibold hover:opacity-90">Beitreten</button></div>' : '') +
-            '</div>';
+        var gruppenOptionen = allGruppen.map(function(g) { return '<option value="' + g.id + '">' + _escH(g.name) + '</option>'; }).join('');
+        gruppeSection = '<div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-3">'
+            + '<p class="text-sm text-gray-500 mb-3">Dieser Standort ist keiner Gruppe zugeordnet.</p>'
+            + '<div class="flex gap-2 mb-2"><input id="sdNeueGruppe" type="text" placeholder="Neuer Gruppenname..." class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm">'
+            + '<button onclick="window.createUndJoinGruppe(\'' + q(standortId) + '\')" class="px-3 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Erstellen</button></div>'
+            + (allGruppen.length > 0 ? '<div class="flex gap-2"><select id="sdExistGruppe" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="">— Bestehende Gruppe —</option>' + gruppenOptionen + '</select><button onclick="window.joinExistingGruppe(\'' + q(standortId) + '\')" class="px-3 py-2 bg-gray-700 text-white rounded-lg text-sm font-semibold hover:opacity-90">Beitreten</button></div>' : '')
+            + '</div>';
     }
-
-    // Erweiterter Zugriff
     var zugSection = zugUser.length > 0
-        ? zugUser.map(function(z) {
-            var u = z.users;
-            if (!u) return '';
-            return '<div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">' +
-                '<div><p class="text-sm font-semibold text-gray-800">' + _escH(u.name || '') + '</p>' +
-                '<p class="text-xs text-gray-400">' + _escH(u.email || '') + '</p></div>' +
-                '<button onclick="window.removeZugriff('' + z.id + '')" class="text-xs text-red-400 hover:underline">Entfernen</button>' +
-                '</div>';
-          }).join('')
+        ? zugUser.map(function(z) { var u = z.users; if (!u) return ''; return '<div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"><div><p class="text-sm font-semibold text-gray-800">' + _escH(u.name || '') + '</p><p class="text-xs text-gray-400">' + _escH(u.email || '') + '</p></div><button onclick="window.removeZugriff(\'' + q(z.id) + '\')" class="text-xs text-red-400 hover:underline">Entfernen</button></div>'; }).join('')
         : '<p class="text-sm text-gray-400 py-2">Kein erweiterter Zugriff vergeben.</p>';
-
-    var gfOptionen = andereGfs.map(function(u) {
-        return '<option value="' + u.id + '">' + _escH(u.name || u.email) + '</option>';
-    }).join('');
-
+    var gfOptionen = andereGfs.map(function(u) { return '<option value="' + u.id + '">' + _escH(u.name || u.email) + '</option>'; }).join('');
     var modal = document.createElement('div');
     modal.id = 'standortDetailModal';
     modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4';
-    modal.innerHTML =
-        '<div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">' +
-        '<div class="flex items-center justify-between p-5 border-b border-gray-100">' +
-        '<div><h2 class="text-lg font-bold text-gray-800">🏪 ' + _escH(s.name) + '</h2>' +
-        '<p class="text-xs text-gray-400">' + _escH(s.adresse || s.region || '') + '</p></div>' +
-        '<button onclick="document.getElementById('standortDetailModal').remove()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>' +
-        '</div>' +
-        '<div class="p-5 space-y-5">' +
-
-        // Stammdaten
-        '<div>' +
-        '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Stammdaten</p>' +
-        '<div class="grid grid-cols-2 gap-3 text-sm">' +
-        '<div><span class="text-gray-400">Slug</span><p class="font-mono text-gray-700">' + _escH(s.slug || '—') + '</p></div>' +
-        '<div><span class="text-gray-400">Telefon</span><p class="text-gray-700">' + _escH(s.telefon || '—') + '</p></div>' +
-        '<div><span class="text-gray-400">Region</span><p class="text-gray-700">' + _escH(s.region || '—') + '</p></div>' +
-        '<div><span class="text-gray-400">Status</span><p class="text-gray-700">' + _escH(s.status || 'aktiv') + '</p></div>' +
-        '</div></div>' +
-
-        // Standort-Gruppe
-        '<div>' +
-        '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">🔗 Standort-Gruppe</p>' +
-        gruppeSection +
-        '</div>' +
-
-        // Erweiterter Zugriff
-        '<div>' +
-        '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">👥 Erweiterter Zugriff</p>' +
-        '<p class="text-xs text-gray-400 mb-3">GFs die diesen Standort zusätzlich verwalten können (Switcher in der Sidebar).</p>' +
-        '<div id="sdZugangList">' + zugSection + '</div>' +
-        (gfOptionen ? '<div class="flex gap-2 mt-3"><select id="sdZugangUser" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="">— GF auswählen —</option>' + gfOptionen + '</select><button onclick="window.addZugriff('' + standortId + '')" class="px-3 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Hinzufügen</button></div>' : '') +
-        '</div>' +
-
-        '</div></div>';
-
+    modal.innerHTML = '<div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">'
+        + '<div class="flex items-center justify-between p-5 border-b border-gray-100"><div><h2 class="text-lg font-bold text-gray-800">\ud83c\udfea ' + _escH(s.name) + '</h2><p class="text-xs text-gray-400">' + _escH(s.adresse || s.region || '') + '</p></div>'
+        + '<button onclick="document.getElementById(\'standortDetailModal\').remove()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">\u2715</button></div>'
+        + '<div class="p-5 space-y-5">'
+        + '<div><p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Stammdaten</p><div class="grid grid-cols-2 gap-3 text-sm"><div><span class="text-gray-400">Slug</span><p class="font-mono text-gray-700">' + _escH(s.slug || '\u2014') + '</p></div><div><span class="text-gray-400">Telefon</span><p class="text-gray-700">' + _escH(s.telefon || '\u2014') + '</p></div><div><span class="text-gray-400">Region</span><p class="text-gray-700">' + _escH(s.region || '\u2014') + '</p></div><div><span class="text-gray-400">Status</span><p class="text-gray-700">' + _escH(s.status || 'aktiv') + '</p></div></div></div>'
+        + '<div><p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">\ud83d\udd17 Standort-Gruppe</p>' + gruppeSection + '</div>'
+        + '<div><p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">\ud83d\udc65 Erweiterter Zugriff</p><p class="text-xs text-gray-400 mb-3">GFs die diesen Standort zus\u00e4tzlich verwalten k\u00f6nnen.</p><div id="sdZugangList">' + zugSection + '</div>'
+        + (gfOptionen ? '<div class="flex gap-2 mt-3"><select id="sdZugangUser" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="">— GF ausw\u00e4hlen —</option>' + gfOptionen + '</select><button onclick="window.addZugriff(\'' + q(standortId) + '\')" class="px-3 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Hinzuf\u00fcgen</button></div>' : '')
+        + '</div></div></div>';
     document.body.appendChild(modal);
 }
 
