@@ -1010,3 +1010,49 @@ user_standorte (
 ### Wissen-Artikel
 Bereits in wissen_artikel Tabelle eingefügt (gepinnt=true, kategorie=allgemein).
 Titel: "Multi-Standort: Wenn ein GF mehrere Standorte betreibt"
+
+
+## Session 05.03.2026 — Multi-Standort / Standort-Gruppen (Situation 3) ✅
+
+### Umgesetzte Schritte
+
+**1. DB-Migration** (`multi_standort_gruppen`)
+- `standort_gruppen` (id, name)
+- `standort_gruppe_mitglieder` (gruppe_id, standort_id, is_primary, gemeinsame_bwa, gemeinsame_planung)
+- `user_standorte` (user_id, standort_id, is_primary)
+- RLS: HQ schreibt, alle lesen; user_standorte nur eigene
+- RPC `get_user_standort_ids(user_id)` mit Fallback auf users.standort_id
+- RPC `get_standort_gruppe(standort_id)` gibt Gruppen-Info + Mitglieder zurück
+
+**2. Standort-Detail Modal** (`user-kommando.js`)
+- Details-Button öffnet vollständiges Modal statt showToast
+- Abschnitt "Standort-Gruppe": erstellen / beitreten / verlassen
+- Checkboxen: gemeinsame_bwa, gemeinsame_planung (live gespeichert)
+- Abschnitt "Erweiterter Zugriff": GFs hinzufügen/entfernen via user_standorte
+- 7 neue window.* Funktionen: openStandortDetail, createUndJoinGruppe, joinExistingGruppe, removeStandortFromGruppe, updateGruppeSetting, addZugriff, removeZugriff
+
+**3. Auth: user_standorte nach Login laden** (`auth-system.js`)
+- Nach loadUserProfile: user_standorte Tabelle abfragen
+- Wenn >1 Standort: window.sbStandortIds[] befüllen
+- Primären Standort aus is_primary setzen
+
+**4. Sidebar-Switcher** (`auth-system.js`)
+- Dropdown erscheint unter locationDisplay wenn sbStandortIds.length > 1
+- switchStandort(): sbStandort + sbProfile.standort_id + currentLocation updaten
+- View wird neu geladen nach Wechsel
+
+**5. Controlling: Gruppen-BWA** (`controlling-display.js`)
+- loadBwaList: prüft gemeinsame_bwa Flag → .in('standort_id', gruppenIds)
+- loadBwaTrend: gleiche Logik
+- Fallback: nur eigener Standort
+
+**6. Planung: Gruppen-Plan** (`allgemein.js`)
+- Hilfsfunktion _getGruppenStandortIds(): prüft gemeinsame_planung Flag
+- loadJahresziele + loadMonatsplan: .in('standort_id', gruppenIds) wenn Gruppe
+- Fallback: nur eigener Standort
+
+### Wichtige Konventionen
+- users.standort_id bleibt als Primary-Standort (Abwärtskompatibilität)
+- Kein Umbau bestehender Module außer Controlling + Planung
+- Situation 1 (getrennte Standorte) automatisch mit abgedeckt (gemeinsame_bwa=false, gemeinsame_planung=false)
+- Situation 2 (Mitarbeiter übergreifend): Erweiterung via user_standorte für Nicht-GFs möglich
