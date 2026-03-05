@@ -932,9 +932,11 @@
 
         try {
             var now = new Date();
+            var cutoffDate = new Date(); cutoffDate.setDate(cutoffDate.getDate() - SC.zeitraum);
             var { data, error } = await sb.from('ads_performance')
                 .select('*')
-                .gte('year', now.getFullYear() - 1);
+                .gte('datum', cutoffDate.toISOString().split('T')[0])
+                .order('datum', { ascending: false });
 
             if (error) throw error;
 
@@ -946,9 +948,9 @@
 
             var totalImpr = 0, totalClicks = 0, totalCost = 0, totalConv = 0;
             SC.adsData.forEach(function(a) {
-                totalImpr += Number(a.impressions || 0);
-                totalClicks += Number(a.clicks || 0);
-                totalCost += Number(a.cost || a.kosten || 0);
+                totalImpr += Number(a.impressionen || 0);
+                totalClicks += Number(a.klicks || 0);
+                totalCost += Number(a.ausgaben || a.kosten || 0);
                 totalConv += Number(a.conversions || 0);
             });
 
@@ -968,9 +970,9 @@
             SC.adsData.forEach(function(a) {
                 var sid = a.standort_id || 'unknown';
                 if (!byStandort[sid]) byStandort[sid] = { name: a.standort_name || '–', impr: 0, clicks: 0, cost: 0, conv: 0 };
-                byStandort[sid].impr += Number(a.impressions || 0);
-                byStandort[sid].clicks += Number(a.clicks || 0);
-                byStandort[sid].cost += Number(a.cost || a.kosten || 0);
+                byStandort[sid].impr += Number(a.impressionen || 0);
+                byStandort[sid].clicks += Number(a.klicks || 0);
+                byStandort[sid].cost += Number(a.ausgaben || a.kosten || 0);
                 byStandort[sid].conv += Number(a.conversions || 0);
             });
 
