@@ -113,8 +113,12 @@ function useSupabase(currentLoc, SELLERS) {
     if (!sb) return [];
     setLoading(true);
     try {
-      // Load leads
+      // Load leads — filter by standort for non-HQ users (defense in depth, don't rely on RLS alone during impersonation)
       let q = _sb().from("leads").select("*").order("created_at", { ascending: false });
+      const _profile = window.sbProfile;
+      if (_profile && !_profile.is_hq && _profile.standort_id) {
+        q = q.eq("standort_id", _profile.standort_id);
+      }
       const { data: leads, error: e1 } = await q;
       if (e1) throw e1;
       if (!leads || !leads.length) { setLoading(false); return []; }
@@ -1371,9 +1375,9 @@ function PipelineApp(){
 
   const nid=useRef(100);
 
-  // RLS already filters leads by standort for partner users.
-  // For HQ users with location dropdown, filter in frontend. For partner users, show all (RLS-filtered) deals.
-  const locFiltered = (curLoc && curLoc !== "hq" && isHqUser) ? deals.filter(d => String(d.loc).trim() === String(curLoc).trim()) : deals;
+  // Filter deals by location: for HQ users via dropdown, for partner/impersonated users by their standort_id.
+  // During impersonation the real auth.uid() is still HQ (RLS sees all), so we MUST filter client-side too.
+  const locFiltered = (curLoc && curLoc !== "hq") ? deals.filter(d => String(d.loc).trim() === String(curLoc).trim()) : deals;
   const userId = window.sbUser?.id || "";
   const filteredDeals = filter === "mine" ? locFiltered.filter(d => d.seller === userId) : filter === "auto" ? locFiltered.filter(d => d.autoImport) : filter === "manual" ? locFiltered.filter(d => !d.autoImport) : locFiltered;
 
