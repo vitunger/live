@@ -12,7 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1772872400";
+const CACHE_BUST = "?v=1772872401";
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
@@ -32,7 +32,7 @@ const VIEW_MODULES = [
     
     // Business
     'views/verkauf.js',
-    // 'views/einkauf.js', // ersetzt durch einkauf-v2 (DB-gestützt)
+    'views/einkauf.js',
     'views/einkauf-v2.js',
     // Controlling (split into 5 sub-modules)
     'views/controlling.js',
