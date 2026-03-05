@@ -475,19 +475,8 @@ export async function parseBwaWithAI() {
         var rohertragPct = umsatz ? ((rohertrag / umsatz) * 100).toFixed(1) : 0;
         var ergebnis = parsed.ergebnis_vor_steuern || parsed.betriebsergebnis || 0;
 
-        resultEl.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-lg p-3">'
-            + '<p class="text-xs font-semibold text-green-700 mb-2">\u2705 ' + filledCount + ' Werte erkannt \u00b7 Format: <code>' + meta.format + '</code></p>'
-            + '<div class="grid grid-cols-3 gap-2 text-xs">'
-            + '<div><span class="text-gray-500">Umsatz:</span><br><strong>' + umsatz.toLocaleString('de-DE') + ' \u20AC</strong></div>'
-            + '<div><span class="text-gray-500">Rohertrag:</span><br><strong>' + rohertragPct + '%</strong></div>'
-            + '<div><span class="text-gray-500">Ergebnis:</span><br><strong class="' + (ergebnis >= 0 ? 'text-green-600' : 'text-red-600') + '">' + ergebnis.toLocaleString('de-DE') + ' \u20AC</strong></div>'
-            + '</div>'
-            + '<details class="mt-2"><summary class="text-[10px] text-gray-400 cursor-pointer">Erkannte Zuordnungen (' + matchedRows.length + ')</summary>'
-            + '<div class="mt-1 space-y-0.5 max-h-40 overflow-y-auto">' + matchedRows.map(function(m) {
-                return '<div class="text-[10px] text-gray-500"><span class="text-gray-700">"' + m.label + '"</span> \u2192 <strong>' + m.key + '</strong> = ' + (typeof m.value === 'number' ? m.value.toLocaleString('de-DE') : m.value) + '</div>';
-            }).join('') + '</div></details>'
-            + '<p class="text-[10px] text-gray-400 mt-2">\u26a0\ufe0f Bitte pr\u00fcfe die Werte vor dem Speichern.</p>'
-            + '</div>';
+        // Parser result: just a compact status line, KI will add detail below
+        resultEl.innerHTML = '';
         resultEl.classList.remove('hidden');
 
         // Store detail data for saveBwaData()
@@ -563,17 +552,7 @@ export async function parseBwaWithAI() {
                     corrHtml += '</div>';
                     resultEl.innerHTML = resultEl.innerHTML + corrHtml;
 
-                    // Recalculate summary
-                    var umsatzKi = parsed.umsatzerloese || 0;
-                    var rohertragKi = parsed.rohertrag || (umsatzKi + (parsed.wareneinsatz||0));
-                    var rohertragPctKi = umsatzKi ? ((rohertragKi / umsatzKi) * 100).toFixed(1) : 0;
-                    var ergebnisKi = parsed.ergebnis_vor_steuern || parsed.betriebsergebnis || 0;
-                    var summaryDiv = resultEl.querySelector('.grid');
-                    if(summaryDiv) {
-                        summaryDiv.innerHTML = '<div><span class="text-gray-500">Umsatz:</span><br><strong>' + umsatzKi.toLocaleString('de-DE') + ' \u20AC</strong></div>'
-                            + '<div><span class="text-gray-500">Rohertrag:</span><br><strong>' + rohertragPctKi + '%</strong></div>'
-                            + '<div><span class="text-gray-500">Ergebnis:</span><br><strong class="' + (ergebnisKi >= 0 ? 'text-green-600' : 'text-red-600') + '">' + ergebnisKi.toLocaleString('de-DE') + ' \u20AC</strong></div>';
-                    }
+
                 } else {
                     statusText.textContent = '\u2705 ' + matchedRows.length + ' Werte erkannt!' + periodInfo + ' [' + meta.format + '] \u2013 KI best\u00e4tigt \u2705';
                 }
