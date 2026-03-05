@@ -594,6 +594,8 @@ window.loadWawiBelege = async function() {
     container.innerHTML = '<div class="p-6 text-center text-gray-400"><div class="animate-pulse">Lade Belege...</div></div>';
 
     var q = _sb().from('wawi_belege').select('id,beleg_typ,beleg_nr,datum,kunde_name,verkaeufer,endbetrag,ist_leasing,leasing_anbieter,status,kunden_nr').order('datum',{ascending:false}).limit(100);
+    var _prof = window.sbProfile;
+    if (_prof && !_prof.is_hq && _prof.standort_id) { q = q.eq('standort_id', _prof.standort_id); }
 
     var fTyp = document.getElementById('wawiFilterTyp');
     if(fTyp && fTyp.value) q = q.eq('beleg_typ', fTyp.value);
@@ -702,7 +704,10 @@ window.loadWawiDashboard = async function() {
     if(!kpiEl) return;
 
     // Summary query
-    var {data:belege} = await _sb().from('wawi_belege').select('beleg_typ,endbetrag,ist_leasing,datum').eq('status','neu');
+    var _wProf = window.sbProfile;
+    var _wq = _sb().from('wawi_belege').select('beleg_typ,endbetrag,ist_leasing,datum').eq('status','neu');
+    if (_wProf && !_wProf.is_hq && _wProf.standort_id) { _wq = _wq.eq('standort_id', _wProf.standort_id); }
+    var {data:belege} = await _wq;
     belege = belege || [];
 
     var total=0, countA=0, countR=0, countAng=0, leasingSum=0;
