@@ -102,7 +102,7 @@ export async function loadBillingOverview() {
             var strat = st.strategy;
             var acct = st.billing_account;
             h += '<tr class="border-t hover:bg-gray-50 cursor-pointer" onclick="' + (inv ? "showBillingInvoice('" + inv.id + "')" : '') + '">';
-            h += '<td class="p-3"><p class="font-semibold text-sm">' + _escH(st.name) + (st.billing_status === 'danger' ? ' <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500 text-white font-bold animate-pulse">VORKASSE</span>' : '') + '</p><p class="text-xs text-gray-400">' + _escH(st.inhaber_name || '') + '</p></td>';
+            h += '<td class="p-3"><p class="font-semibold text-sm">' + _escH(st.name) + (st.billing_status === 'danger' ? ' <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500 text-white font-bold animate-pulse">VORKASSE</span>' : '') + (st.settlement_interval && st.settlement_interval !== 'semi_annual' ? ' <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-semibold">' + ({monthly:'mtl.',quarterly:'qtl.'}[st.settlement_interval] || '') + '</span>' : '') + '</p><p class="text-xs text-gray-400">' + _escH(st.inhaber_name || '') + '</p></td>';
             h += '<td class="p-3 text-center">' + (strat && strat.locked ? '<span class="text-green-600 text-xs font-semibold">✅ Gesperrt</span>' : strat && strat.approved_at ? '<span class="text-blue-600 text-xs">✓ Genehmigt</span>' : '<span class="text-red-500 text-xs">❌ Fehlt</span>') + '</td>';
             h += '<td class="p-3 text-center">' + (acct && acct.sepa_active ? '<span class="text-green-600 text-xs">✅</span>' : '<span class="text-gray-300 text-xs">—</span>') + '</td>';
             var allInvs = st.invoices || (inv ? [inv] : []);
@@ -135,7 +135,7 @@ export function showQuarterlySettlementDialog() {
     var prevQ = q > 1 ? q - 1 : 4;
     var prevY = q > 1 ? year : year - 1;
     if (!confirm('Quartals-Settlement Q' + prevQ + '/' + prevY + ' generieren?\n\nDies berechnet die Spitzenausgleiche basierend auf den vorliegenden BWA-Daten.\n\nFehlende BWA-Monate werden zu 100% Planbasis abgerechnet.')) return;
-    generateQuarterlySettlement(prevY, prevQ);
+    generateSettlements(prevY, prevQ * 3);
 }
 
 export async function generateQuarterlySettlement(year, quarter) {
@@ -1300,8 +1300,18 @@ window.toggleBillingDanger = async function(stdId, currentStatus) {
 };
 
 
+
+// Generate settlements respecting per-standort interval
+export async function generateSettlements(year, month) {
+    var result = await billingApi('generate-settlements', { year: year, month: month });
+    if (result.error) { _showToast('Fehler: ' + result.error, 'error'); return; }
+    _showToast('\u2705 ' + result.created + ' Settlements erstellt', 'success');
+    loadBillingOverview();
+}
+window.generateSettlements = generateSettlements;
+
 // Strangler Fig
-const _exports = {fmtEur,fmtDate,billingStatusBadge,billingApi,initBillingModule,loadBillingOverview,generateMonthlyDrafts,showQuarterlySettlementDialog,generateQuarterlySettlement,finalizeAllReady,showBillingInvoice,finalizeInvoice,markInvoicePaid,editLineItem,removeLineItem,addManualLineItem,showBillingTab,loadAllInvoices,loadAllStrategies,approveStrategy,lockStrategy,loadBillingProducts,loadBillingTools,toggleApprovalMode,updateApprovalModeUI,approvalBulkAction,loadApprovalQueue,approvalAction,generateAllDrafts,showStBillingTab,initStandortBilling,loadStandortInvoices,showStandortInvoiceDetail,loadStandortStrategy,submitStandortStrategy,loadStandortCosts,downloadInvoicePdf,loadStandortPayments,loadBillingSchedules};
+const _exports = {fmtEur,fmtDate,billingStatusBadge,billingApi,initBillingModule,loadBillingOverview,generateMonthlyDrafts,showQuarterlySettlementDialog,generateQuarterlySettlement,finalizeAllReady,showBillingInvoice,finalizeInvoice,markInvoicePaid,editLineItem,removeLineItem,addManualLineItem,showBillingTab,loadAllInvoices,loadAllStrategies,approveStrategy,lockStrategy,loadBillingProducts,loadBillingTools,toggleApprovalMode,updateApprovalModeUI,approvalBulkAction,loadApprovalQueue,approvalAction,generateAllDrafts,showStBillingTab,initStandortBilling,loadStandortInvoices,showStandortInvoiceDetail,loadStandortStrategy,submitStandortStrategy,loadStandortCosts,downloadInvoicePdf,loadStandortPayments,loadBillingSchedules,generateSettlements};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // [prod] log removed
 
