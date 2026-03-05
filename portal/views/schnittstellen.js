@@ -2224,14 +2224,6 @@ window.loadSocialData = async function(platform) {
         return;
     }
 
-else {
-                    var gmbErr = (ovResp2.data && ovResp2.data.error) ? ovResp2.data.error : (ovResp2.data && ovResp2.data.details_v1) ? ovResp2.data.details_v1 : 'API-Antwort ungueltig';
-                    _showToast('GMB: ' + gmbErr, 'error');
-                }
-            } catch(e) { _showToast('GMB Verbindungsfehler: ' + e.message, 'error'); }
-        }
-        return;
-    }
 
     // ── TikTok: via tiktok-proxy Edge Function ───────────────────────
     if (platform === 'tiktok') {
