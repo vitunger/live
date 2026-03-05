@@ -748,8 +748,15 @@ try {
     } else {
         window.sbStandortIds = [];
     }
-    // Topbar-Name aktualisieren nachdem sbStandort gesetzt wurde
-    if (typeof updateUI === 'function') updateUI();
+    // Topbar-Name direkt patchen (updateUIForRole lief schon vor diesem async Load)
+    if (sbStandort && sbStandort.name) {
+        var _lbl = document.getElementById('locSwitchLabel');
+        var _ld  = document.getElementById('locationDisplay');
+        var _ldm = document.getElementById('locationDisplayMobile');
+        if (_lbl) _lbl.textContent = sbStandort.name;
+        else if (_ld) _ld.textContent = sbStandort.name;
+        if (_ldm) _ldm.textContent = sbStandort.name;
+    }
 } catch(e) { console.warn('[MultiStandort] Konnte user_standorte nicht laden:', e.message); window.sbStandortIds = []; }
 }
 
