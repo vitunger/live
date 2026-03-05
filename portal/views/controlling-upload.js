@@ -75,18 +75,25 @@ export function openBwaUploadModal() {
         {id:'bwaF_wareneinsatz',label:'Wareneinsatz (negativ)',ph:'z.B. -33580'},
         {id:'_sep1',sep:true},
         {id:'bwaF_rohertrag',label:'Rohertrag',ph:'',calc:true},
+        {id:'bwaF_soErloese',label:'So. betr. Erl\u00f6se',ph:''},
+        {id:'bwaF_betrRohertrag',label:'Betr. Rohertrag',ph:'',calc:true},
         {id:'_sep2',sep:true},
-        {id:'bwaF_personal',label:'Personalkosten (negativ)',ph:'z.B. -13485'},
-        {id:'bwaF_raum',label:'Raumkosten (negativ)',ph:'z.B. -4150'},
+        {id:'bwaF_personal',label:'Personalkosten',ph:'z.B. -13485'},
+        {id:'bwaF_raum',label:'Raumkosten',ph:'z.B. -4150'},
+        {id:'bwaF_versicherungen',label:'Versicherungen/Beitr\u00e4ge',ph:''},
+        {id:'bwaF_kfz',label:'Kfz-Kosten',ph:''},
         {id:'bwaF_werbe',label:'Werbe-/Reisekosten',ph:''},
         {id:'bwaF_warenabgabe',label:'Kosten Warenabgabe',ph:''},
         {id:'bwaF_abschreibung',label:'Abschreibungen',ph:''},
+        {id:'bwaF_reparatur',label:'Reparatur/Instandhaltung',ph:''},
         {id:'bwaF_sonstige',label:'Sonstige Kosten',ph:''},
         {id:'_sep3',sep:true},
         {id:'bwaF_gesamtkosten',label:'Gesamtkosten',ph:'',calc:true},
         {id:'bwaF_betriebsergebnis',label:'Betriebsergebnis',ph:'',calc:true},
         {id:'_sep4',sep:true},
         {id:'bwaF_zins',label:'Zinsaufwand',ph:''},
+        {id:'bwaF_neutralAufwand',label:'Neutraler Aufwand',ph:''},
+        {id:'bwaF_neutralErtrag',label:'Neutraler Ertrag',ph:''},
         {id:'_sep5',sep:true},
         {id:'bwaF_ergebnis',label:'Ergebnis vor Steuern',ph:'',calc:true,bold:true}
     ];
@@ -115,19 +122,23 @@ export function openBwaUploadModal() {
     window._bwaRecalc = function() {
         var v = function(id) { return parseFloat((document.getElementById(id)||{}).value) || 0; };
         var u = v('bwaF_umsatz'), we = v('bwaF_wareneinsatz');
-        var pk = v('bwaF_personal'), rk = v('bwaF_raum'), wk = v('bwaF_werbe');
-        var wa = v('bwaF_warenabgabe'), ab = v('bwaF_abschreibung'), so = v('bwaF_sonstige');
-        var zi = v('bwaF_zins');
+        var soE = v('bwaF_soErloese');
+        var pk = v('bwaF_personal'), rk = v('bwaF_raum'), vs = v('bwaF_versicherungen');
+        var kfz = v('bwaF_kfz'), wk = v('bwaF_werbe'), wa = v('bwaF_warenabgabe');
+        var ab = v('bwaF_abschreibung'), rep = v('bwaF_reparatur'), so = v('bwaF_sonstige');
+        var zi = v('bwaF_zins'), na = v('bwaF_neutralAufwand'), ne = v('bwaF_neutralErtrag');
         var roh = u + we;
-        var gk = pk + rk + wk + wa + ab + so;
-        var be = roh + gk;
-        var ev = be + zi;
+        var betrRoh = roh + soE;
+        var gk = pk + rk + vs + kfz + wk + wa + ab + rep + so;
+        var be = betrRoh + gk;
+        var ev = be + zi + na + ne;
         var fmt = function(n) { return n.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}); };
         var set = function(id, n) {
             var e = document.getElementById(id);
             if(e) { e.textContent = fmt(n); e.style.color = n >= 0 ? '#16a34a' : '#ef4444'; }
         };
         set('bwaF_rohertrag', roh);
+        set('bwaF_betrRohertrag', betrRoh);
         set('bwaF_gesamtkosten', gk);
         set('bwaF_betriebsergebnis', be);
         set('bwaF_ergebnis', ev);
@@ -480,13 +491,19 @@ export async function parseBwaWithAI() {
             davon_service: 'bwaF_service',
             davon_skonti: 'bwaF_skonti',
             wareneinsatz: 'bwaF_wareneinsatz',
+            so_betr_erloese: 'bwaF_soErloese',
             personalkosten: 'bwaF_personal',
             raumkosten: 'bwaF_raum',
+            versicherungen: 'bwaF_versicherungen',
+            fahrzeugkosten: 'bwaF_kfz',
             werbekosten: 'bwaF_werbe',
             kosten_warenabgabe: 'bwaF_warenabgabe',
             abschreibungen: 'bwaF_abschreibung',
+            reparaturen_instandhaltung: 'bwaF_reparatur',
             sonstige_kosten: 'bwaF_sonstige',
-            zinsaufwand: 'bwaF_zins'
+            zinsaufwand: 'bwaF_zins',
+            neutraler_aufwand: 'bwaF_neutralAufwand',
+            neutraler_ertrag: 'bwaF_neutralErtrag'
         };
 
         Object.keys(fieldMap).forEach(function(key) {
@@ -528,12 +545,18 @@ export async function parseBwaWithAI() {
             if(kiValResult && kiValResult.werte) {
                 // Compare KI vs Parser and apply corrections
                 var corrections = [];
+                window._bwaKiCorrected = false;
                 var kiFieldMap = {
                     umsatzerloese: 'bwaF_umsatz', wareneinsatz: 'bwaF_wareneinsatz',
+                    so_betr_erloese: 'bwaF_soErloese',
                     personalkosten: 'bwaF_personal', raumkosten: 'bwaF_raum',
+                    versicherungen: 'bwaF_versicherungen', fahrzeugkosten: 'bwaF_kfz',
                     werbekosten: 'bwaF_werbe', kosten_warenabgabe: 'bwaF_warenabgabe',
-                    abschreibungen: 'bwaF_abschreibung', sonstige_kosten: 'bwaF_sonstige',
-                    zinsaufwand: 'bwaF_zins', davon_fahrraeder: 'bwaF_fahrraeder',
+                    abschreibungen: 'bwaF_abschreibung', reparaturen_instandhaltung: 'bwaF_reparatur',
+                    sonstige_kosten: 'bwaF_sonstige',
+                    zinsaufwand: 'bwaF_zins', neutraler_aufwand: 'bwaF_neutralAufwand',
+                    neutraler_ertrag: 'bwaF_neutralErtrag',
+                    davon_fahrraeder: 'bwaF_fahrraeder',
                     davon_teile: 'bwaF_teile', davon_service: 'bwaF_service',
                     davon_skonti: 'bwaF_skonti'
                 };
@@ -562,6 +585,7 @@ export async function parseBwaWithAI() {
                         parsed[key] = kiVal;
                     }
                 });
+                if(corrections.length > 0) window._bwaKiCorrected = true;
 
                 // Update month/year if KI detected them
                 if(kiValResult.monat) { var mS = document.getElementById('bwaMonth'); if(mS) mS.value = kiValResult.monat; }
