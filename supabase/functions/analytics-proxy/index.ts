@@ -20,11 +20,11 @@ async function getAnalyticsConfig() {
   );
   const { data } = await admin
     .from("connector_config")
-    .select("connector_key, config_value")
-    .in("connector_key", ["analytics_property_id", "analytics_api_key"]);
+    .select("config_key, config_value")
+    .eq("connector_id", "analytics");
 
   const map: Record<string, string> = {};
-  (data || []).forEach((r: any) => { map[r.connector_key] = r.config_value; });
+  (data || []).forEach((r: any) => { map[r.config_key] = r.config_value; });
   return map;
 }
 
