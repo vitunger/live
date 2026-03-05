@@ -12,6 +12,23 @@ function _sb()           { return window.sb; }
 function _sbUser()       { return window.sbUser; }
 function _sbProfile()    { return window.sbProfile; }
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
+
+// Gruppen-Standort-IDs laden (gemeinsame_planung)
+async function _getGruppenStandortIds(stdId) {
+    try {
+        var grpResp = await _sb().from('standort_gruppe_mitglieder')
+            .select('gruppe_id, gemeinsame_planung').eq('standort_id', stdId);
+        var grp = (!grpResp.error && grpResp.data && grpResp.data.length > 0) ? grpResp.data[0] : null;
+        if (grp && grp.gemeinsame_planung) {
+            var mitglResp = await _sb().from('standort_gruppe_mitglieder')
+                .select('standort_id').eq('gruppe_id', grp.gruppe_id);
+            if (!mitglResp.error && mitglResp.data && mitglResp.data.length > 0) {
+                return mitglResp.data.map(function(m){ return m.standort_id; });
+            }
+        }
+    } catch(e) { /* Fallback */ }
+    return null; // null = nur eigener Standort
+}
 function _showView(v) { if (window.showView) window.showView(v); }
 
 // === ALLGEMEIN MODULE (Jahresziele, Monatsplan, Journal) ===
