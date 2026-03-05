@@ -809,6 +809,13 @@ try {
         });
         html += '</div></div>';
     }
+    // Danger/Vorkasse toggle
+    var isDanger = s.billing_status === 'danger';
+    html += '<div class="mb-4 border-t border-gray-200 pt-4"><label class="block text-xs font-semibold text-gray-600 mb-2">\ud83d\udea8 Abrechnungsstatus</label>';
+    html += '<div class="flex items-center gap-3">';
+    html += '<button onclick="toggleBillingDanger(\''+s.id+'\',\''+s.billing_status+'\')" class="px-4 py-2 rounded-lg text-sm font-semibold transition ' + (isDanger ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + '">' + (isDanger ? '\u26a0\ufe0f Vorkasse aktiv \u2013 Aufheben?' : 'Auf Vorkasse setzen') + '</button>';
+    if (isDanger) html += '<span class="text-xs text-red-600">Alle Rechnungen werden mit Vorkasse-Konditionen erstellt</span>';
+    html += '</div></div>';
     html += '<div class="flex space-x-3 mt-4"><button onclick="closeStdDetailModal()" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-semibold text-sm hover:bg-gray-200">Schlie\u00dfen</button></div>';
     html += '</div></div>';
     var c = document.createElement('div'); c.id='stdDetailContainer'; c.innerHTML=html; document.body.appendChild(c);
