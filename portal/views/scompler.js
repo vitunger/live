@@ -941,6 +941,11 @@
             if (error) throw error;
 
             SC.adsData = data || [];
+
+            // Load standort names for lookup
+            var { data: standorte } = await sb.from('standorte').select('id, name');
+            var standortMap = {};
+            (standorte || []).forEach(function(s) { standortMap[s.id] = s.name; });
             if (!SC.adsData.length) {
                 el.innerHTML = emptyState('\uD83D\uDD0C', 'Noch keine Google Ads Daten synchronisiert', 'Sync unter Einstellungen \u2192 Schnittstellen starten.', true);
                 return;
@@ -968,8 +973,8 @@
             // Per-standort breakdown
             var byStandort = {};
             SC.adsData.forEach(function(a) {
-                var sid = a.standort_id || 'unknown';
-                if (!byStandort[sid]) byStandort[sid] = { name: a.standort_name || '–', impr: 0, clicks: 0, cost: 0, conv: 0 };
+                var sid = a.standort_id || 'hq';
+                if (!byStandort[sid]) byStandort[sid] = { name: standortMap[a.standort_id] || (a.standort_id ? '–' : 'HQ / Netzwerk'), impr: 0, clicks: 0, cost: 0, conv: 0 };
                 byStandort[sid].impr += Number(a.impressionen || 0);
                 byStandort[sid].clicks += Number(a.klicks || 0);
                 byStandort[sid].cost += Number(a.ausgaben || a.kosten || 0);
