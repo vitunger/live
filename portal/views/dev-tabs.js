@@ -546,5 +546,192 @@ export async function renderEntwNutzung() {
     }
 }
 
-const _exports = { renderEntwIdeen, renderEntwReleases, renderEntwSteuerung, renderEntwFlags, renderEntwSystem, renderEntwNutzung };
+// ═══════════════════════════════════════════════════════════
+// AUDIT LOG TAB
+// ═══════════════════════════════════════════════════════════
+const AUDIT_AKTIONEN = {
+    'login':          { label: 'Login',          icon: '🔑', color: 'blue' },
+    'logout':         { label: 'Logout',         icon: '🚪', color: 'gray' },
+    'bwa_upload':     { label: 'BWA Upload',     icon: '📊', color: 'green' },
+    'todo_erstellt':  { label: 'Todo erstellt',  icon: '✅', color: 'purple' },
+    'lead_erstellt':  { label: 'Lead erstellt',  icon: '🎯', color: 'orange' },
+    'user_erstellt':  { label: 'User erstellt',  icon: '👤', color: 'indigo' },
+    'modul_wechsel':  { label: 'Modul geöffnet', icon: '📂', color: 'gray' },
+};
+
+const AUDIT_COLOR_CLASSES = {
+    blue:   { bg: 'bg-blue-50',   text: 'text-blue-700',   dot: 'bg-blue-400' },
+    gray:   { bg: 'bg-gray-50',   text: 'text-gray-600',   dot: 'bg-gray-400' },
+    green:  { bg: 'bg-green-50',  text: 'text-green-700',  dot: 'bg-green-400' },
+    purple: { bg: 'bg-purple-50', text: 'text-purple-700', dot: 'bg-purple-400' },
+    orange: { bg: 'bg-orange-50', text: 'text-orange-700', dot: 'bg-orange-400' },
+    indigo: { bg: 'bg-indigo-50', text: 'text-indigo-700', dot: 'bg-indigo-400' },
+};
+
+var _auditState = { entries: [], page: 0, PAGE_SIZE: 50, loading: false, filter: { aktion: '', user: '', standort: '', von: '', bis: '' } };
+
+export async function renderEntwAuditLog() {
+    var c = document.getElementById('entwTabAuditlog');
+    if (!c) return;
+
+    c.innerHTML = `
+        <div class="space-y-4">
+            <!-- Filter-Leiste -->
+            <div class="vit-card p-4">
+                <div class="flex flex-wrap gap-3 items-end">
+                    <div class="flex-1 min-w-[140px]">
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Aktion</label>
+                        <select id="auditFilterAktion" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400">
+                            <option value="">Alle Aktionen</option>
+                            ${Object.entries(AUDIT_AKTIONEN).map(([k,v]) => `<option value="${k}">${v.icon} ${v.label}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="flex-1 min-w-[140px]">
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Zeitraum von</label>
+                        <input type="date" id="auditFilterVon" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400">
+                    </div>
+                    <div class="flex-1 min-w-[140px]">
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Zeitraum bis</label>
+                        <input type="date" id="auditFilterBis" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400">
+                    </div>
+                    <button onclick="window._auditLaden(true)" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition-colors">
+                        🔍 Filtern
+                    </button>
+                    <button onclick="window._auditReset()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg transition-colors">
+                        ↺ Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Log-Liste -->
+            <div id="auditLogListe" class="vit-card overflow-hidden">
+                <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                    <h3 class="text-sm font-bold text-gray-800">📋 Aktivitäts-Log</h3>
+                    <span id="auditLogCount" class="text-xs text-gray-400">Wird geladen…</span>
+                </div>
+                <div id="auditLogContent" class="divide-y divide-gray-50">
+                    <div class="flex items-center justify-center py-12">
+                        <div class="animate-spin rounded-full h-6 w-6 border-2 border-orange-500 border-t-transparent mr-3"></div>
+                        <span class="text-sm text-gray-400">Lade Log-Einträge…</span>
+                    </div>
+                </div>
+                <div id="auditLogMore" class="hidden px-4 py-3 border-t border-gray-100 text-center">
+                    <button onclick="window._auditLaden(false)" class="text-sm text-orange-500 font-semibold hover:text-orange-700">
+                        Weitere 50 laden ↓
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Filter-Listener
+    ['auditFilterAktion', 'auditFilterVon', 'auditFilterBis'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener('change', function() {
+            _auditState.filter.aktion   = (document.getElementById('auditFilterAktion') || {}).value || '';
+            _auditState.filter.von      = (document.getElementById('auditFilterVon') || {}).value || '';
+            _auditState.filter.bis      = (document.getElementById('auditFilterBis') || {}).value || '';
+        });
+    });
+
+    window._auditLaden = async function(reset) {
+        if (_auditState.loading) return;
+        _auditState.loading = true;
+        if (reset) { _auditState.page = 0; _auditState.entries = []; }
+
+        var content = document.getElementById('auditLogContent');
+        if (reset && content) {
+            content.innerHTML = '<div class="flex items-center justify-center py-8"><div class="animate-spin rounded-full h-5 w-5 border-2 border-orange-500 border-t-transparent mr-2"></div><span class="text-sm text-gray-400">Lädt…</span></div>';
+        }
+
+        try {
+            var q = _sb().from('audit_log')
+                .select('id, created_at, aktion, modul, details, user_id, standort_id, users!audit_log_user_id_fkey(vorname, nachname), standorte!audit_log_standort_id_fkey(name)')
+                .order('created_at', { ascending: false })
+                .range(_auditState.page * _auditState.PAGE_SIZE, (_auditState.page + 1) * _auditState.PAGE_SIZE - 1);
+
+            var f = _auditState.filter;
+            if (f.aktion)  q = q.eq('aktion', f.aktion);
+            if (f.von)     q = q.gte('created_at', f.von + 'T00:00:00Z');
+            if (f.bis)     q = q.lte('created_at', f.bis + 'T23:59:59Z');
+
+            var { data, error } = await q;
+            if (error) throw error;
+
+            _auditState.entries = reset ? (data || []) : _auditState.entries.concat(data || []);
+            _auditState.page++;
+
+            _auditRenderListe(data && data.length === _auditState.PAGE_SIZE);
+        } catch(err) {
+            var content2 = document.getElementById('auditLogContent');
+            if (content2) content2.innerHTML = '<div class="text-center py-8"><p class="text-red-400 text-sm">Fehler: ' + _escH(err.message) + '</p><p class="text-xs text-gray-400 mt-1">Wurde die audit_log Migration bereits ausgeführt?</p></div>';
+        } finally {
+            _auditState.loading = false;
+        }
+    };
+
+    window._auditReset = function() {
+        _auditState.filter = { aktion: '', von: '', bis: '' };
+        ['auditFilterAktion','auditFilterVon','auditFilterBis'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        window._auditLaden(true);
+    };
+
+    function _auditRenderListe(hasMore) {
+        var content = document.getElementById('auditLogContent');
+        var countEl = document.getElementById('auditLogCount');
+        var moreEl  = document.getElementById('auditLogMore');
+        if (!content) return;
+
+        var entries = _auditState.entries;
+        if (countEl) countEl.textContent = entries.length + ' Einträge' + (hasMore ? '+' : '');
+
+        if (entries.length === 0) {
+            content.innerHTML = '<div class="text-center py-12"><p class="text-4xl mb-2">📋</p><p class="text-sm text-gray-400">Noch keine Log-Einträge vorhanden.</p><p class="text-xs text-gray-300 mt-1">Einträge erscheinen nach Login, BWA-Upload etc.</p></div>';
+            if (moreEl) moreEl.classList.add('hidden');
+            return;
+        }
+
+        var h = '';
+        entries.forEach(function(entry) {
+            var info = AUDIT_AKTIONEN[entry.aktion] || { label: entry.aktion, icon: '📌', color: 'gray' };
+            var cc   = AUDIT_COLOR_CLASSES[info.color] || AUDIT_COLOR_CLASSES.gray;
+            var user = entry.users ? (entry.users.vorname + ' ' + entry.users.nachname) : (entry.user_id ? entry.user_id.slice(0,8) + '…' : '–');
+            var standort = entry.standorte ? entry.standorte.name : (entry.standort_id ? '–' : 'HQ');
+            var dt   = entry.created_at ? new Date(entry.created_at) : null;
+            var zeit = dt ? dt.toLocaleString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '–';
+            var details = entry.details || {};
+            var detailStr = Object.entries(details).map(function(kv) { return _escH(kv[0]) + ': <b>' + _escH(String(kv[1])) + '</b>'; }).join(' · ');
+
+            h += `
+            <div class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full ${cc.bg} flex items-center justify-center text-base mt-0.5">
+                    ${info.icon}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-sm font-semibold text-gray-800">${_escH(user)}</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full font-medium ${cc.bg} ${cc.text}">${info.label}</span>
+                        ${entry.modul ? `<span class="text-xs text-gray-400 font-mono">${_escH(entry.modul)}</span>` : ''}
+                        <span class="text-xs text-gray-300 ml-auto">${_escH(standort)}</span>
+                    </div>
+                    ${detailStr ? `<p class="text-xs text-gray-500 mt-0.5">${detailStr}</p>` : ''}
+                </div>
+                <div class="flex-shrink-0 text-right">
+                    <span class="text-xs text-gray-400 whitespace-nowrap">${zeit}</span>
+                </div>
+            </div>`;
+        });
+
+        content.innerHTML = h;
+        if (moreEl) hasMore ? moreEl.classList.remove('hidden') : moreEl.classList.add('hidden');
+    }
+
+    // Initial laden
+    window._auditLaden(true);
+}
+
+const _exports = { renderEntwIdeen, renderEntwReleases, renderEntwSteuerung, renderEntwFlags, renderEntwSystem, renderEntwNutzung, renderEntwAuditLog };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });

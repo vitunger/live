@@ -4832,6 +4832,7 @@
                         <!-- <button class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="flags" onclick="showEntwicklungTab('flags')" style="display:none;">🚩 Flags</button> -->
                         <button class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="nutzung" onclick="showEntwicklungTab('nutzung')" style="display:none;">📊 Nutzung</button>
                         <button class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="system" onclick="showEntwicklungTab('system')" style="display:none;">🛡️ System</button>
+                        <button class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="auditlog" onclick="showEntwicklungTab('auditlog')" style="display:none;">📋 Log</button>
                     </div>
 
                     <!-- Stats Bar -->
@@ -4911,6 +4912,9 @@
                     <div id="entwTabSystem" class="entw-tab-content" style="display:none;">
                         <div id="entwSystemContent"></div>
                         <div id="entwBackupContent" class="mt-4"></div>
+                    </div>
+                    <!-- Tab: Audit-Log (HQ) -->
+                    <div id="entwTabAuditlog" class="entw-tab-content" style="display:none;">
                     </div>
                     <!-- Submit Form (moved from old Standort view) -->
                     <div id="devSubmitForm" class="hidden fixed inset-0 bg-black/50 z-[9999] items-center justify-center p-4" style="display:none" onclick="if(event.target===this)toggleDevSubmitForm()">

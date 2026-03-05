@@ -68,7 +68,7 @@ var entwCurrentTab = 'ideen';
 
 export async function renderEntwicklung() {
     var _savedTab; try { _savedTab = localStorage.getItem('vit:lastEntwTab'); } catch(e) {}
-    if(_savedTab && ['ideen','module','releases','steuerung','flags','nutzung','system','vision'].indexOf(_savedTab) !== -1) {
+    if(_savedTab && ['ideen','module','releases','steuerung','flags','nutzung','system','vision','auditlog'].indexOf(_savedTab) !== -1) {
         entwCurrentTab = _savedTab;
     }
     var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
@@ -133,6 +133,8 @@ export async function renderEntwTabContent(tab) {
         if(typeof window.renderEntwSystem === 'function') window.renderEntwSystem();
     } else if(tab === 'vision') {
         if(typeof window.renderDevVision === 'function') window.renderDevVision();
+    } else if(tab === 'auditlog') {
+        if(typeof window.renderEntwAuditLog === 'function') window.renderEntwAuditLog();
     }
 }
 

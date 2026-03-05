@@ -655,7 +655,7 @@ try {
     
     // [prod] log removed
     await loadUserProfile(_sbUser().id);
-    // [prod] log removed
+    if (typeof window.logAudit === 'function') window.logAudit('login', 'auth', { email: email });
     await loadModulStatus();
     await loadFeatureFlags();
     // [prod] log removed
@@ -1065,6 +1065,8 @@ export async function handleLogout() {
 window.dispatchEvent(new CustomEvent('vit:logout'));
 // 2) Unsubscribe Push notifications
 if(typeof window.unsubscribePush === 'function') { try { await window.unsubscribePush(); } catch(e) { console.warn('[Logout] Push unsub:', e); } }
+// 2b) Audit
+if (typeof window.logAudit === 'function') window.logAudit('logout', 'auth', {});
 // 3) Supabase sign out
 await _sb().auth.signOut();
 // 4) Core auth state

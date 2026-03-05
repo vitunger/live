@@ -316,6 +316,7 @@ export async function todoSubmitQuickAdd() {
         if (resp.data && resp.data[0]) {
             todoState.todos.unshift(resp.data[0]);
             newId = resp.data[0].id;
+            if (typeof window.logAudit === 'function') window.logAudit('todo_erstellt', 'todo', { titel: title.trim(), prio: prio });
         }
     } catch (e) { console.error('QA add:', e); }
     todoCloseQuickAdd();

@@ -68,4 +68,26 @@ export function scopedQuery(table, opts) {
 }
 window._scopedQuery = scopedQuery;
 
+// ═══ AUDIT LOG HELPER ═══
+// Schreibt eine Nutzer-Aktion in die audit_log Tabelle.
+// Feuert-und-vergisst: Fehler werden nur gewarnt, nie geworfen.
+// Verwendung: window.logAudit('bwa_upload', 'controlling', { datei: 'bwa_jan.pdf' })
+window.logAudit = async function(aktion, modul, details) {
+    try {
+        var sb = window.sb;
+        var user = window.sbUser;
+        var prof = window.sbProfile;
+        if (!sb || !user) return; // Nicht eingeloggt → skip
+        await sb.from('audit_log').insert({
+            user_id:     user.id,
+            standort_id: prof ? prof.standort_id : null,
+            aktion:      aktion,
+            modul:       modul || null,
+            details:     details || {}
+        });
+    } catch(e) {
+        // Nie werfen – Audit darf nie eine Nutzer-Aktion blockieren
+        console.warn('[logAudit] Fehler:', e && e.message);
+    }
+};
 

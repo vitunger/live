@@ -259,6 +259,7 @@ export async function saveBwaData() {
         closeBwaUploadModal();
         await loadBwaList();
         if(bwaId) showBwaFromDb(bwaId);
+        if (typeof window.logAudit === 'function') window.logAudit('bwa_upload', 'controlling', { monat: month, jahr: year });
         _showToast('\u2705 BWA '+monatNamen[month]+' '+year+' gespeichert!', 'success');
     } catch(err) {
         if(errEl){errEl.textContent='Fehler: '+err.message;errEl.style.display='block';}
