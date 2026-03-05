@@ -553,3 +553,9 @@ const _exports = {loadBwaList, downloadBwa, showBwaFromDb, loadBwaTrend, deleteB
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // Extra explicit export for view-router
 window.loadBwaList = loadBwaList;
+// Force override inline functions from index.html (they use local selectedBwaId which is undefined)
+// Must use setTimeout because index.html inline scripts may load after modules
+setTimeout(function() {
+    window.editSelectedBwa = editSelectedBwa;
+    window.deleteBwa = deleteBwa;
+}, 500);
