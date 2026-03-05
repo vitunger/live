@@ -138,17 +138,19 @@ var CONNECTORS = {
         logs: []
     },
     gmb: {
-        id: 'gmb', name: 'Google My Business', icon: '📍', iconBg: '#dcfce7',
+        id: 'gmb', name: 'Google My Business', icon: '\ud83d\udccd', iconBg: '#dcfce7',
         desc: 'Google Business Profile: Bewertungen, Sichtbarkeit, Anrufe & Wegbeschreibungen.',
         category: 'active', status: 'disconnected', statusLabel: 'Nicht verbunden',
-        oauthFields: [
-            { key: 'account_id', label: 'Business Account ID', type: 'text', placeholder: 'accounts/123456789' },
-            { key: 'api_key', label: 'API Key', type: 'password', placeholder: 'Google Cloud API Key' },
+        configFields: [
+            { key: 'account_id', label: 'Account ID', type: 'text', placeholder: 'z.B. accounts/123456789' },
+            { key: 'client_id', label: 'OAuth Client ID', type: 'text', placeholder: 'Google Cloud Console Client ID' },
+            { key: 'client_secret', label: 'OAuth Client Secret', type: 'password', placeholder: 'OAuth Client Secret' },
+            { key: 'refresh_token', label: 'Refresh Token', type: 'password', placeholder: 'Einmalig via OAuth Playground generieren' },
         ],
         readonlyFields: [
-            { key: 'api', label: 'API', value: 'Google Business Profile API v4' },
+            { key: 'api', label: 'API', value: 'Google Business Profile API + My Business Account Management' },
             { key: 'scopes', label: 'OAuth Scope', value: 'https://www.googleapis.com/auth/business.manage' },
-            { key: 'note', label: 'Hinweis', value: 'API muss in Google Cloud Console aktiviert werden (Business Profile API)' },
+            { key: 'setup', label: 'Setup', value: 'Google Cloud Console \u2192 APIs aktivieren \u2192 OAuth Consent Screen \u2192 Credentials' },
         ],
         logs: []
     },
@@ -708,27 +710,41 @@ function renderConnectorCard(id) {
         body += '</div>';
     }
 
+
     // ── Google My Business body ──
     if (id === 'gmb') {
-        body += '<div class="pt-4 space-y-4">';
+        body += '<div class="pt-4 space-y-3">';
         body += renderGfToggle(id);
-        body += '<p class="text-xs text-gray-500">Google Business Profile: Bewertungen, Anrufe, Wegbeschreibungen und Profilaufrufe – pro Standort oder netzwerkweit.</p>';
-        body += _renderOAuthFields(c, 'gmb');
-        body += _renderReadonlyInfo(c);
-        body += '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-            + '<button onclick="window.saveSocialConfig(\'gmb\')" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Speichern</button>'
-            + '<button onclick="window.loadSocialData(\'gmb\')" style="padding:7px 14px;background:#4285f4;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten laden</button>'
+        // Config fields (OAuth2 - HQ level)
+        if (c.configFields) {
+            c.configFields.forEach(function(f) {
+                body += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">' + f.label + '</label>'
+                    + '<input type="' + f.type + '" id="conn_gmb_' + f.key + '" placeholder="' + f.placeholder + '" '
+                    + 'class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 outline-none transition font-mono"></div>';
+            });
+        }
+        // Readonly info
+        if (c.readonlyFields) {
+            body += '<div class="pt-2 border-t border-gray-100 mt-2 space-y-1">';
+            c.readonlyFields.forEach(function(f) {
+                body += '<div class="flex items-center gap-3"><span class="text-xs text-gray-500 w-28">' + f.label + '</span><span class="text-xs font-semibold text-gray-800">' + _escH(f.value) + '</span></div>';
+            });
+            body += '</div>';
+        }
+        // Info box
+        body += '<div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">'
+            + '<p class="text-xs text-blue-700">\u2139\ufe0f <strong>Netzwerk-Integration:</strong> Ein zentraler Google-Account f\u00fcr alle Standorte. '
+            + 'Locations werden automatisch mit Cockpit-Standorten gematcht. Bewertungen werden in die DB synchronisiert.</p></div>';
+        // Buttons
+        body += '<div class="flex gap-2 pt-2 flex-wrap">'
+            + '<button onclick="window.saveGmbConfig()" class="px-4 py-2 bg-blue-500 text-white rounded-lg text-xs font-semibold hover:bg-blue-600 transition">\ud83d\udcbe Speichern</button>'
+            + '<button onclick="window.testGmbConnection()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition">\ud83d\udd0d Verbindung testen</button>'
+            + '<button onclick="window.syncGmbLocations()" class="px-4 py-2 bg-green-500 text-white rounded-lg text-xs font-semibold hover:bg-green-600 transition">\ud83d\udccd Locations synchronisieren</button>'
+            + '<button onclick="window.syncGmbReviews()" class="px-4 py-2 bg-orange-500 text-white rounded-lg text-xs font-semibold hover:bg-orange-600 transition">\u2b50 Bewertungen synchronisieren</button>'
             + '</div>';
-        body += '<div id="socialStats_gmb" style="display:none">';
-        body += '<div id="socialAccountCard_gmb" style="background:#f9fafb;border-radius:10px;padding:12px;margin-top:8px">'
-            + '<p id="socialName_gmb" class="text-sm font-bold text-gray-800">—</p>'
-            + '<div style="display:flex;gap:16px;margin-top:6px;flex-wrap:wrap">'
-            + '<span class="text-[11px] text-gray-500">⭐ <span id="socialFollowers_gmb">—</span> Ø Bewertung</span>'
-            + '<span class="text-[11px] text-gray-500">📋 <span id="socialReach_gmb">—</span> Bewertungen</span>'
-            + '<span class="text-[11px] text-gray-500">👁 <span id="socialPosts_gmb">—</span> Profilaufrufe (30T)</span>'
-            + '</div></div>';
-        body += _renderSocialVideoTable('gmb', ['Rezensent', '⭐ Stars', 'Kommentar', 'Antwort', 'Datum']);
-        body += '</div>';
+        body += '<div id="connTestResult_gmb" class="mt-2"></div>';
+        // Overview area (filled after sync)
+        body += '<div id="gmbOverview" class="mt-4"></div>';
         body += '</div>';
     }
 
@@ -942,8 +958,12 @@ window.toggleConnCard = async function(id) {
         if (id === 'google' || id === 'meta') {
             setTimeout(function() { if (window.loadAdsConfigs) window.loadAdsConfigs(); }, 100);
         }
+        // GMB
+        if (id === 'gmb') {
+            setTimeout(function() { if (window.loadGmbConfig) window.loadGmbConfig(); if (window.loadGmbOverview) window.loadGmbOverview(); }, 100);
+        }
         // Social connectors
-        var socialPlatforms = ['instagram', 'facebook', 'youtube', 'gmb', 'analytics'];
+        var socialPlatforms = ['instagram', 'facebook', 'youtube', 'analytics'];
         if (socialPlatforms.indexOf(id) >= 0) {
             setTimeout(function() {
                 if (window.loadSocialForStandort) {
@@ -1928,10 +1948,188 @@ window.loadSocialStandortOverview = async function(platform) {
 
 // Load all social standort overviews on page load
 window.loadAllSocialOverviews = function() {
-    var platforms = ['instagram', 'facebook', 'youtube', 'gmb', 'analytics'];
+    var platforms = ['instagram', 'facebook', 'youtube', 'analytics'];
     platforms.forEach(function(p) {
         if (window.loadSocialStandortOverview) window.loadSocialStandortOverview(p);
     });
+};
+
+
+// ═══════════════════════════════════════════════════════
+// GOOGLE MY BUSINESS – SAVE, TEST, SYNC, OVERVIEW
+// ═══════════════════════════════════════════════════════
+
+window.saveGmbConfig = async function() {
+    try {
+        var sb = _sb(); if (!sb) return;
+        var fields = ['account_id', 'client_id', 'client_secret', 'refresh_token'];
+        var hasValue = false;
+        for (var i = 0; i < fields.length; i++) {
+            var key = fields[i];
+            var el = document.getElementById('conn_gmb_' + key);
+            if (!el || !el.value.trim()) continue;
+            hasValue = true;
+            var { data: existing } = await sb.from('connector_config')
+                .select('id').eq('connector_id', 'gmb').eq('config_key', key).is('standort_id', null).maybeSingle();
+            if (existing) {
+                await sb.from('connector_config').update({
+                    config_value: el.value.trim(), updated_at: new Date().toISOString(),
+                    updated_by: _sbUser() ? _sbUser().id : null
+                }).eq('id', existing.id);
+            } else {
+                await sb.from('connector_config').insert({
+                    connector_id: 'gmb', config_key: key, config_value: el.value.trim(),
+                    standort_id: null, updated_at: new Date().toISOString(),
+                    updated_by: _sbUser() ? _sbUser().id : null
+                });
+            }
+        }
+        if (!hasValue) { _showToast('Bitte mindestens ein Feld ausfuellen', 'error'); return; }
+        CONNECTORS.gmb.status = 'connected';
+        CONNECTORS.gmb.statusLabel = 'Konfiguriert';
+        _showToast('Google My Business Konfiguration gespeichert \u2713', 'success');
+    } catch(e) {
+        _showToast('Fehler: ' + e.message, 'error');
+    }
+};
+
+window.loadGmbConfig = async function() {
+    try {
+        var sb = _sb(); if (!sb) return;
+        var { data } = await sb.from('connector_config')
+            .select('config_key, config_value').eq('connector_id', 'gmb').is('standort_id', null);
+        var hasCredentials = false;
+        if (data && data.length) {
+            data.forEach(function(r) {
+                var el = document.getElementById('conn_gmb_' + r.config_key);
+                if (el) el.value = r.config_value;
+                if (r.config_value) hasCredentials = true;
+            });
+        }
+        if (hasCredentials) {
+            CONNECTORS.gmb.status = 'connected';
+            CONNECTORS.gmb.statusLabel = 'Konfiguriert';
+        }
+    } catch(e) {}
+};
+
+window.testGmbConnection = async function() {
+    var resultEl = document.getElementById('connTestResult_gmb');
+    if (resultEl) resultEl.innerHTML = '<p class="text-xs text-gray-500">\u23f3 Teste Verbindung...</p>';
+    try {
+        var sb = _sb(); if (!sb) throw new Error('Keine Supabase-Verbindung');
+        var { data, error } = await sb.functions.invoke('gmb-proxy', { body: { action: 'test' } });
+        if (error) throw new Error(error.message || 'Edge Function Fehler');
+        if (data && data.success) {
+            var accs = (data.accounts || []).map(function(a) { return a.accountName || a.name; }).join(', ');
+            if (resultEl) resultEl.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-lg p-3">'
+                + '<p class="text-xs text-green-700">\u2705 <strong>Verbindung erfolgreich!</strong> Accounts: ' + _escH(accs) + '</p></div>';
+            CONNECTORS.gmb.status = 'connected';
+            CONNECTORS.gmb.statusLabel = 'Verbunden';
+        } else {
+            throw new Error(data && data.error || 'Unbekannter Fehler');
+        }
+    } catch(e) {
+        if (resultEl) resultEl.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-lg p-3">'
+            + '<p class="text-xs text-red-700">\u274c ' + _escH(e.message) + '</p></div>';
+    }
+};
+
+window.syncGmbLocations = async function() {
+    _showToast('Locations werden synchronisiert...', 'info');
+    try {
+        var sb = _sb(); if (!sb) return;
+        var { data, error } = await sb.functions.invoke('gmb-proxy', { body: { action: 'sync_locations' } });
+        if (error) throw new Error(error.message || 'Fehler');
+        if (data && data.success) {
+            _showToast(data.locations_synced + ' Locations synchronisiert (' + data.matched + ' gematcht) \u2713', 'success');
+            window.loadGmbOverview();
+        } else {
+            throw new Error(data && data.error || 'Sync fehlgeschlagen');
+        }
+    } catch(e) {
+        _showToast('Location-Sync Fehler: ' + e.message, 'error');
+    }
+};
+
+window.syncGmbReviews = async function() {
+    _showToast('Bewertungen werden synchronisiert...', 'info');
+    try {
+        var sb = _sb(); if (!sb) return;
+        var { data, error } = await sb.functions.invoke('gmb-proxy', { body: { action: 'sync_reviews' } });
+        if (error) throw new Error(error.message || 'Fehler');
+        if (data && data.success) {
+            _showToast(data.reviews_synced + ' Bewertungen synchronisiert \u2713', 'success');
+            window.loadGmbOverview();
+        } else {
+            throw new Error(data && data.error || 'Sync fehlgeschlagen');
+        }
+    } catch(e) {
+        _showToast('Bewertungs-Sync Fehler: ' + e.message, 'error');
+    }
+};
+
+window.loadGmbOverview = async function() {
+    var el = document.getElementById('gmbOverview');
+    if (!el) return;
+    try {
+        var sb = _sb(); if (!sb) return;
+        var { data, error } = await sb.functions.invoke('gmb-proxy', { body: { action: 'get_overview' } });
+        if (error || !data) { el.innerHTML = ''; return; }
+
+        var html = '';
+
+        // KPI Cards
+        html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">';
+        html += '<div style="background:#f9fafb;border-radius:8px;padding:10px;text-align:center"><p style="font-size:20px;font-weight:700;color:#1a1a2e">' + (data.total_locations || 0) + '</p><p style="font-size:10px;color:#9ca3af">Locations</p></div>';
+        html += '<div style="background:#f9fafb;border-radius:8px;padding:10px;text-align:center"><p style="font-size:20px;font-weight:700;color:#16a34a">' + (data.matched_standorte || 0) + '</p><p style="font-size:10px;color:#9ca3af">Gematcht</p></div>';
+        html += '<div style="background:#f9fafb;border-radius:8px;padding:10px;text-align:center"><p style="font-size:20px;font-weight:700;color:#f59e0b">\u2b50 ' + (data.avg_rating || '\u2014') + '</p><p style="font-size:10px;color:#9ca3af">\u00d8 Bewertung</p></div>';
+        html += '<div style="background:#f9fafb;border-radius:8px;padding:10px;text-align:center"><p style="font-size:20px;font-weight:700;color:#3b82f6">' + (data.total_reviews || 0) + '</p><p style="font-size:10px;color:#9ca3af">Bewertungen</p></div>';
+        html += '</div>';
+
+        // Locations table
+        if (data.locations && data.locations.length) {
+            html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Standorte</p>';
+            html += '<div style="max-height:200px;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
+            html += '<thead><tr style="border-bottom:2px solid #e5e7eb"><th style="text-align:left;padding:4px 8px;color:#6b7280">Location</th><th style="text-align:left;padding:4px 8px;color:#6b7280">Standort</th><th style="text-align:center;padding:4px 8px;color:#6b7280">\u2b50</th><th style="text-align:center;padding:4px 8px;color:#6b7280">Reviews</th></tr></thead><tbody>';
+            data.locations.forEach(function(loc) {
+                var stName = (loc.standorte && loc.standorte.name) ? loc.standorte.name : '<span style="color:#dc2626;font-style:italic">nicht zugeordnet</span>';
+                html += '<tr style="border-bottom:1px solid #f3f4f6">'
+                    + '<td style="padding:4px 8px">' + _escH(loc.google_location_name || '') + '</td>'
+                    + '<td style="padding:4px 8px">' + stName + '</td>'
+                    + '<td style="padding:4px 8px;text-align:center;font-weight:600">' + (loc.avg_rating || '\u2014') + '</td>'
+                    + '<td style="padding:4px 8px;text-align:center">' + (loc.total_reviews || 0) + '</td>'
+                    + '</tr>';
+            });
+            html += '</tbody></table></div>';
+        }
+
+        // Recent reviews
+        if (data.recent_reviews && data.recent_reviews.length) {
+            html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-4">Neueste Bewertungen</p>';
+            html += '<div style="max-height:300px;overflow-y:auto;space-y:2">';
+            data.recent_reviews.forEach(function(r) {
+                var stars = '';
+                for (var s = 0; s < (r.sterne || 0); s++) stars += '\u2b50';
+                var locName = (r.gmb_locations && r.gmb_locations.google_location_name) || '';
+                var datum = r.erstellt_am ? new Date(r.erstellt_am).toLocaleDateString('de-DE') : '';
+                html += '<div style="background:#f9fafb;border-radius:8px;padding:10px;margin-bottom:6px">'
+                    + '<div style="display:flex;justify-content:space-between;align-items:center">'
+                    + '<span style="font-size:12px;font-weight:600">' + _escH(r.reviewer_name || 'Anonym') + '</span>'
+                    + '<span style="font-size:10px;color:#9ca3af">' + datum + '</span></div>'
+                    + '<div style="margin:4px 0">' + stars + ' <span style="font-size:10px;color:#9ca3af">' + _escH(locName) + '</span></div>';
+                if (r.kommentar) html += '<p style="font-size:11px;color:#374151;margin:4px 0">' + _escH(r.kommentar) + '</p>';
+                if (r.antwort) html += '<div style="background:#ecfdf5;border-radius:6px;padding:6px;margin-top:4px"><p style="font-size:10px;color:#16a34a">\u2713 Antwort: ' + _escH(r.antwort).substring(0,100) + '</p></div>';
+                else html += '<div style="background:#fef3c7;border-radius:6px;padding:6px;margin-top:4px"><p style="font-size:10px;color:#d97706">\u26a0 Noch nicht beantwortet</p></div>';
+                html += '</div>';
+            });
+            html += '</div>';
+        }
+
+        el.innerHTML = html;
+    } catch(e) {
+        el.innerHTML = '<p class="text-xs text-red-500">' + e.message + '</p>';
+    }
 };
 
 
@@ -2026,43 +2224,7 @@ window.loadSocialData = async function(platform) {
         return;
     }
 
-    // ── Google My Business: via gmb-proxy Edge Function ──────────────
-    if (platform === 'gmb') {
-        var accEl = document.getElementById('gmb_field_account_id');
-        var gmbKeyEl = document.getElementById('gmb_field_api_key');
-        var accountId = accEl && accEl.value.trim();
-        var gmbApiKey = gmbKeyEl && gmbKeyEl.value.trim();
-        if (accountId && gmbApiKey && sb) {
-            try {
-                var ovResp2 = await sb.functions.invoke('gmb-proxy', {
-                    body: { action: 'overview', account_id: accountId, api_key: gmbApiKey }
-                });
-                if (ovResp2.data && !ovResp2.error && !ovResp2.data.error) {
-                    var ov2 = ovResp2.data;
-                    _populateSocialCard('gmb',
-                        ov2.account_name || accountId,
-                        ov2.avg_rating || '—',
-                        ov2.total_reviews || '—',
-                        ov2.locations_count || '—'
-                    );
-                    // Load reviews for first location
-                    if (ov2.locations && ov2.locations.length > 0) {
-                        var revResp = await sb.functions.invoke('gmb-proxy', {
-                            body: { action: 'reviews', account_id: accountId, location_id: ov2.locations[0].id, api_key: gmbApiKey }
-                        });
-                        if (revResp.data && revResp.data.reviews) {
-                            var revRows = revResp.data.reviews.map(function(r) {
-                                return [r.reviewer, '★'.repeat(r.stars), r.comment.substring(0,60)+(r.comment.length>60?'…':''), r.reply, r.date];
-                            });
-                            _populateSocialRows('gmb', revRows);
-                        }
-                    }
-                    document.getElementById('socialStats_gmb').style.display = '';
-                    CONNECTORS.gmb.status = 'connected';
-                    CONNECTORS.gmb.statusLabel = 'Verbunden';
-                    _showToast('Google My Business Daten geladen ✓', 'success');
-                    return;
-                } else {
+else {
                     var gmbErr = (ovResp2.data && ovResp2.data.error) ? ovResp2.data.error : (ovResp2.data && ovResp2.data.details_v1) ? ovResp2.data.details_v1 : 'API-Antwort ungueltig';
                     _showToast('GMB: ' + gmbErr, 'error');
                 }
@@ -2132,7 +2294,7 @@ function _populateSocialRows(platform, rows) {
 window.loadSocialConfigs = async function() {
     try {
         var sb = _sb(); if (!sb) return;
-        var platforms = ['instagram', 'facebook', 'youtube', 'gmb', 'analytics'];
+        var platforms = ['instagram', 'facebook', 'youtube', 'analytics'];
         for (var p = 0; p < platforms.length; p++) {
             var platform = platforms[p];
             var c = CONNECTORS[platform];
