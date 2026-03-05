@@ -593,8 +593,33 @@ const AUDIT_AKTIONEN = {
     'journal_erstellt':     { label: 'Journal erstellt',     icon: '📝', color: 'blue' },
     'journal_bearbeitet':   { label: 'Journal bearbeitet',   icon: '✏️', color: 'blue' },
     'journal_geloescht':    { label: 'Journal gelöscht',     icon: '🗑️', color: 'gray' },
+    // Kommunikation
+    'nachricht_gesendet':       { label: 'Nachricht gesendet',       icon: '💬', color: 'blue' },
+    'ankuendigung_erstellt':    { label: 'Ankündigung erstellt',     icon: '📢', color: 'orange' },
+    'netzwerkdokument_geloescht':{ label: 'Netzwerkdok. gelöscht',  icon: '🗑️', color: 'gray' },
+    'netzwerktermin_erstellt':  { label: 'Netzwerktermin erstellt',  icon: '📅', color: 'indigo' },
+    // Video Pipeline
+    'video_hochgeladen':        { label: 'Video hochgeladen',        icon: '🎬', color: 'purple' },
+    'video_freigegeben':        { label: 'Video freigegeben',        icon: '✅', color: 'green' },
+    'video_abgelehnt':          { label: 'Video abgelehnt',          icon: '❌', color: 'orange' },
+    // Profil
+    'profil_aktualisiert':      { label: 'Profil aktualisiert',      icon: '👤', color: 'blue' },
+    // User-Management
+    'user_freigeschaltet':      { label: 'User freigeschaltet',      icon: '✅', color: 'green' },
+    'user_gesperrt':            { label: 'User gesperrt',            icon: '🚫', color: 'orange' },
+    // Controlling
+    'jahresplan_gespeichert':   { label: 'Jahresplan gespeichert',   icon: '📋', color: 'green' },
+    // Entwicklung
+    'idee_status_geaendert':    { label: 'Idee Status geändert',     icon: '🔄', color: 'purple' },
+    // Spiritus
+    'spiritus_freigegeben':     { label: 'Spiritus freigegeben',     icon: '🧠', color: 'green' },
+    'spiritus_abgelehnt':       { label: 'Spiritus abgelehnt',       icon: '🧠', color: 'gray' },
+    // Einkauf
+    'lieferant_erstellt':       { label: 'Lieferant erstellt',       icon: '🏭', color: 'green' },
+    'lieferant_bearbeitet':     { label: 'Lieferant bearbeitet',     icon: '✏️', color: 'blue' },
+    'lieferant_geloescht':      { label: 'Lieferant gelöscht',       icon: '🗑️', color: 'gray' },
     // Sonstige
-    'modul_wechsel':        { label: 'Modul geöffnet',       icon: '📂', color: 'gray' },
+    'modul_wechsel':            { label: 'Modul geöffnet',           icon: '📂', color: 'gray' },
 };
 
 const AUDIT_COLOR_CLASSES = {

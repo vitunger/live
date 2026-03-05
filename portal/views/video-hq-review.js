@@ -140,6 +140,7 @@ try {
     await _sb().from('videos').update({pipeline_status:'approved',pipeline_status_detail:'Freigegeben von HQ'}).eq('id',videoId);
     await _sb().from('review_tasks').update({completed_at:new Date().toISOString(),decision:'approved',checklist:checks}).eq('video_id',videoId).is('completed_at',null);
     await _sb().from('reels').update({status:'approved',approved_by:_sbUser().id,approved_at:new Date().toISOString()}).eq('video_id',videoId).eq('status','generated');
+    window.logAudit && window.logAudit('video_freigegeben', 'video', { video_id: videoId });
     window.vpRenderHqReview();
     window.vpUpdateHqBadge();
 } catch(e) { _showToast('Fehler: '+e.message, 'error'); }
@@ -218,6 +219,7 @@ try {
     await _sb().from('videos').update({pipeline_status:'rejected',pipeline_status_detail:'HQ: '+fullReason}).eq('id',videoId);
     await _sb().from('review_tasks').update({completed_at:new Date().toISOString(),decision:'rejected',checklist:{tags:tags,reason:reason}}).eq('video_id',videoId).is('completed_at',null);
     await _sb().from('reels').update({status:'rejected',review_notes:fullReason}).eq('video_id',videoId).eq('status','generated');
+    window.logAudit && window.logAudit('video_abgelehnt', 'video', { video_id: videoId, grund: reason });
 
     // 2. KI-Learning erstellen
     if(shouldLearn && (reason || tags.length)) {

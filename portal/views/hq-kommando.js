@@ -53,6 +53,7 @@ export async function saveAnkuendigung() {
             wichtig: wichtig, erstellt_von: _sbUser() ? _sbUser().id : null
         });
         if(resp.error) throw resp.error;
+        window.logAudit && window.logAudit('ankuendigung_erstellt', 'hq-kommando', { titel: titel.trim(), kategorie: kategorie, wichtig: wichtig });
         closeAnkModal();
         _showToast('\u2705 Ankuendigung veroeffentlicht!', 'info');
         renderAnnouncements();
@@ -261,6 +262,7 @@ export async function deleteNetzwerkDok(id) {
             await _sb().storage.from('dokumente').remove([dokResp.data.datei_url]);
         }
         await _sb().from('netzwerk_dokumente').delete().eq('id',id);
+        window.logAudit && window.logAudit('netzwerkdokument_geloescht', 'hq-kommando', { id: id });
         await loadNetzwerkDokumente();
     } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
 }
@@ -349,6 +351,7 @@ export async function addHqKalTermin(){
     try{
         var resp=await _sb().from('termine').insert(payload);
         if(resp.error)throw resp.error;
+        window.logAudit && window.logAudit('netzwerktermin_erstellt', 'hq-kommando', { titel: payload.titel, typ: payload.typ, zielgruppe: payload.zielgruppe });
         document.getElementById('hqKalModal').classList.add('hidden');
         document.getElementById('hqKalTitle').value='';
         await loadHqKalTermine();

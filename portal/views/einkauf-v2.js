@@ -713,6 +713,7 @@ window.einkaufV2Save = async function(id) {
   if (id) { ({ error } = await sb.from('lieferanten').update(payload).eq('id', id)); }
   else    { ({ error } = await sb.from('lieferanten').insert(payload)); }
   if (error) { if (window.showToast) window.showToast('Fehler: '+error.message,'error'); return; }
+  window.logAudit && window.logAudit(id ? 'lieferant_bearbeitet' : 'lieferant_erstellt', 'einkauf', { name: payload.name || payload.firma_name || '' });
   if (window.showToast) window.showToast('Lieferant gespeichert ✓','success');
   window.einkaufV2CloseModal();
   await einkaufV2Load(true);
@@ -724,6 +725,7 @@ window.einkaufV2Delete = async function(id) {
   if (!sb) return;
   const { error } = await sb.from('lieferanten').delete().eq('id', id);
   if (error) { if (window.showToast) window.showToast('Fehler: '+error.message,'error'); return; }
+  window.logAudit && window.logAudit('lieferant_geloescht', 'einkauf', { id: id });
   if (window.showToast) window.showToast('Lieferant gelöscht','success');
   window.einkaufV2CloseModal();
   await einkaufV2Load(true);

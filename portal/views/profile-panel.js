@@ -247,6 +247,7 @@ async function saveProfile() {
             var upd = { name: fullName, vorname: vorname, nachname: nachname };
             var resp = await _sb().from('users').update(upd).eq('id', sbProfile.id);
             if(resp.error) throw resp.error;
+            window.logAudit && window.logAudit('profil_aktualisiert', 'profil', { name: fullName });
             // Update local state
             sbProfile.name = fullName;
             // Update UI

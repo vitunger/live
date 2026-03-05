@@ -709,6 +709,7 @@ export async function spApproveAll(transcriptId) {
     // Update transcript status
     await sb.from('spiritus_transcripts').update({ status: 'verarbeitet' }).eq('id', transcriptId);
     if (t) t.status = 'verarbeitet';
+    window.logAudit && window.logAudit('spiritus_freigegeben', 'spiritus', { transcript_id: transcriptId });
 
     _showToast('✅ Erkenntnisse in Wissensbasis übernommen!', 'success');
     spCloseDetail();
@@ -736,6 +737,7 @@ export async function spRejectTranscript(transcriptId) {
     await sb.from('spiritus_transcripts').update({ status: 'abgelehnt' }).eq('id', transcriptId);
     var t = SP.transcripts.find(function(x) { return x.id === transcriptId; });
     if (t) t.status = 'abgelehnt';
+    window.logAudit && window.logAudit('spiritus_abgelehnt', 'spiritus', { transcript_id: transcriptId });
     _showToast('Call abgelehnt.', 'info');
     spCloseDetail();
     spRenderAll();

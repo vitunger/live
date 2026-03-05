@@ -468,6 +468,7 @@ export async function kommSendMessage() {
                 kanal_id: conv.id, user_id: _sbUser().id, nachricht: replyCtx ? text + '\n' + replyCtx : text
             });
             if(resp.error) throw resp.error;
+            window.logAudit && window.logAudit('nachricht_gesendet', 'kommunikation', { typ: 'kanal', kanal_id: conv.id });
             // Push: notify channel members
             (async function() { try { var { data: members } = await _sb().from('kanal_mitglieder').select('user_id').eq('kanal_id', conv.id); if (members) { var sn = _sbProfile() ? _sbProfile().name : 'Jemand'; var ids = members.map(function(m){return m.user_id;}).filter(function(id){return id !== _sbUser().id;}); _triggerPush(ids, '💬 ' + sn, text.substring(0,100), '/?view=kommunikation', 'push_neue_nachricht'); } } catch(e){} })();
             // Optimistic append
@@ -487,6 +488,7 @@ export async function kommSendMessage() {
                 kategorie: 'direkt'
             });
             if(resp.error) throw resp.error;
+            window.logAudit && window.logAudit('nachricht_gesendet', 'kommunikation', { typ: 'direkt', an: conv.id });
             _triggerPush([conv.id], '✉️ ' + (_sbProfile() ? _sbProfile().name : 'Nachricht'), text.substring(0,100), '/?view=kommunikation', 'push_neue_nachricht');
             await loadInboxConversation(conv.id);
 
@@ -498,6 +500,7 @@ export async function kommSendMessage() {
                     inhalt: text, kategorie: 'news', wichtig: false
                 });
                 if(resp.error) throw resp.error;
+                window.logAudit && window.logAudit('ankuendigung_erstellt', 'kommunikation', { titel: text.split('\n')[0].substring(0,60) });
                 (async function() { try { var { data: au } = await _sb().from('users').select('id'); if(au) { var ids = au.map(function(u){return u.id;}).filter(function(id){return id!==_sbUser().id;}); _triggerPush(ids, '📢 Ankündigung', text.split('\n')[0].substring(0,60), '/?view=kommunikation', 'push_ankuendigung'); } } catch(e){} })();
                 await loadAnnouncements();
             }

@@ -209,6 +209,7 @@ export async function confirmApprove(userId) {
 
         closeApproveModal();
         var rollenLabels = {'hq':'HQ','hq_gf':'GF','hq_sales':'Sales','hq_marketing':'Marketing','hq_einkauf':'Einkauf','hq_support':'Support','hq_akademie':'Akademie','hq_hr':'HR','hq_it':'IT','hq_zahlen':'Zahlen','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
+        window.logAudit && window.logAudit('user_freigeschaltet', 'user-management', { user_id: userId, rollen: selected, is_hq: isHqUser });
         _showToast('User freigeschaltet! Rollen: ' + selected.map(function(r){return rollenLabels[r]||r;}).join(', '), 'success');
         window.renderKzMitarbeiter();
     } catch(err) {
@@ -221,6 +222,7 @@ export async function rejectUser(userId) {
     if(!confirm(_t('confirm_reject_user'))) return;
     try {
         await _sb().from('users').update({status: 'gesperrt'}).eq('id', userId);
+        window.logAudit && window.logAudit('user_gesperrt', 'user-management', { user_id: userId });
         closeApproveModal();
         _showToast('User abgelehnt und gesperrt.', 'info');
         window.renderKzMitarbeiter();

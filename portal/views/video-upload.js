@@ -166,6 +166,7 @@ for(var i=0; i<total; i++) {
 
         var {data:insertedRow, error:dbErr} = await _sb().from('videos').insert(insertData).select('id').single();
         if(dbErr) throw dbErr;
+        window.logAudit && window.logAudit('video_hochgeladen', 'video', { datei: file.name, groesse: file.size });
 
         if(fStatus) fStatus.innerHTML = '<span class="text-green-600">\u2705 Fertig</span>';
         done++;

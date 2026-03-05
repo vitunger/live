@@ -582,6 +582,7 @@ export async function saveParsedPlan() {
         };
         var resp = await _sb().from('jahresplaene').upsert(payload, {onConflict:'standort_id,jahr'}).select();
         if(resp.error) throw resp.error;
+        window.logAudit && window.logAudit('jahresplan_gespeichert', 'controlling', { jahr: planIstYear });
         currentPlan = resp.data[0] || payload;
         _showToast('✅ Jahresplan '+planIstYear+' gespeichert!', 'success');
         renderPlanIst();
