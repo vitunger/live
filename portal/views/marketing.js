@@ -355,12 +355,20 @@ function showMarketingTab(tabName) {
 // ── Render Entry Points ──
 
 async function renderMarketing() {
+    // Warte auf Profil (max 3s)
+    var waited = 0;
+    while (!_sbProfile() && waited < 30) {
+        await new Promise(function(r) { setTimeout(r, 100); });
+        waited++;
+    }
     var p = _sbProfile();
-    if (!p) return;
+    if (!p) { console.warn('[marketing] Profil nicht geladen'); return; }
     if (p.is_hq) {
         if (typeof window.renderHqMarketing === 'function') window.renderHqMarketing();
+        else console.warn('[marketing] renderHqMarketing nicht bereit');
     } else {
         if (typeof window.renderPartnerMarketing === 'function') window.renderPartnerMarketing();
+        else console.warn('[marketing] renderPartnerMarketing nicht bereit');
     }
 }
 
