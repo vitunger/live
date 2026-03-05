@@ -167,7 +167,7 @@ async function loadAlleVereinbarungen() {
     try {
         var { data, error } = await sb
             .from('marketing_vereinbarungen')
-            .select('*, standorte!inner(name, plz, is_demo)')
+            .select('*, standorte!inner(name, slug, is_demo)')
             .eq('standorte.is_demo', false)
             .order('budget_jahr', { ascending: false });
         if (error) { console.warn('[marketing] loadAlleVereinbarungen:', error.message); return []; }
