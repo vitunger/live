@@ -67,26 +67,44 @@ export function openBwaUploadModal() {
     // Data entry
     html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Kennzahlen <span class="text-gray-400 font-normal">(werden automatisch bef\u00fcllt oder manuell eingeben)</span></p>';
     var fields = [
-        {id:'bwaF_umsatz',label:'Umsatzerloese',ph:'z.B. 54938'},
-        {id:'bwaF_fahrraeder',label:'davon Fahrraeder',ph:'',sub:true},
-        {id:'bwaF_teile',label:'davon Teile & Zubehoer',ph:'',sub:true},
+        {id:'bwaF_umsatz',label:'Umsatzerl\u00f6se',ph:'z.B. 54938'},
+        {id:'bwaF_fahrraeder',label:'davon Fahrr\u00e4der',ph:'',sub:true},
+        {id:'bwaF_teile',label:'davon Teile & Zubeh\u00f6r',ph:'',sub:true},
         {id:'bwaF_service',label:'davon Service',ph:'',sub:true},
         {id:'bwaF_skonti',label:'davon Skonti (negativ)',ph:'z.B. -2028',sub:true},
         {id:'bwaF_wareneinsatz',label:'Wareneinsatz (negativ)',ph:'z.B. -33580'},
+        {id:'_sep1',sep:true},
+        {id:'bwaF_rohertrag',label:'Rohertrag',ph:'',calc:true},
+        {id:'_sep2',sep:true},
         {id:'bwaF_personal',label:'Personalkosten (negativ)',ph:'z.B. -13485'},
         {id:'bwaF_raum',label:'Raumkosten (negativ)',ph:'z.B. -4150'},
         {id:'bwaF_werbe',label:'Werbe-/Reisekosten',ph:''},
         {id:'bwaF_warenabgabe',label:'Kosten Warenabgabe',ph:''},
         {id:'bwaF_abschreibung',label:'Abschreibungen',ph:''},
         {id:'bwaF_sonstige',label:'Sonstige Kosten',ph:''},
-        {id:'bwaF_zins',label:'Zinsaufwand',ph:''}
+        {id:'_sep3',sep:true},
+        {id:'bwaF_gesamtkosten',label:'Gesamtkosten',ph:'',calc:true},
+        {id:'bwaF_betriebsergebnis',label:'Betriebsergebnis',ph:'',calc:true},
+        {id:'_sep4',sep:true},
+        {id:'bwaF_zins',label:'Zinsaufwand',ph:''},
+        {id:'_sep5',sep:true},
+        {id:'bwaF_ergebnis',label:'Ergebnis vor Steuern',ph:'',calc:true,bold:true}
     ];
-    html += '<div class="space-y-2 mb-4">';
+    html += '<div class="space-y-1.5 mb-4">';
     fields.forEach(function(f) {
-        html += '<div class="flex items-center space-x-2"><label class="'+(f.sub?'pl-4 ':'')+' text-xs text-gray-600 w-48 flex-shrink-0">'+f.label+'</label>';
-        html += '<input id="'+f.id+'" type="number" step="0.01" class="flex-1 px-2 py-1.5 border border-gray-200 rounded text-sm text-right bwa-field" placeholder="'+f.ph+'"></div>';
+        if(f.sep) { html += '<div style="border-top:1px solid #e5e7eb;margin:4px 0;"></div>'; return; }
+        var lblCls = (f.sub?'pl-4 ':'') + 'text-xs text-gray-600 w-48 flex-shrink-0' + (f.bold?' font-bold':'') + (f.calc?' font-semibold':'');
+        html += '<div class="flex items-center space-x-2"><label class="'+lblCls+'">'+f.label+'</label>';
+        if(f.calc) {
+            html += '<div id="'+f.id+'" class="flex-1 px-2 py-1.5 bg-gray-50 border border-gray-100 rounded text-sm text-right font-semibold text-gray-700'+(f.bold?' text-base':'')+'">\u2014</div>';
+        } else {
+            html += '<input id="'+f.id+'" type="number" step="0.01" class="flex-1 px-2 py-1.5 border border-gray-200 rounded text-sm text-right bwa-field" placeholder="'+f.ph+'">';
+        }
+        html += '</div>';
     });
     html += '</div>';
+    // Recalc function for computed fields
+    html += '<script>window._bwaRecalc=function(){var v=function(id){return parseFloat((document.getElementById(id)||{}).value)||0;};var u=v("bwaF_umsatz"),we=v("bwaF_wareneinsatz"),pk=v("bwaF_personal"),rk=v("bwaF_raum"),wk=v("bwaF_werbe"),wa=v("bwaF_warenabgabe"),ab=v("bwaF_abschreibung"),so=v("bwaF_sonstige"),zi=v("bwaF_zins");var roh=u+we;var gk=pk+rk+wk+wa+ab+so;var be=roh+gk;var ev=be+zi;var fmt=function(n){return n.toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2});};var clr=function(n){return n>=0?"color:#16a34a":"color:#ef4444";};var s=function(id,n){var e=document.getElementById(id);if(e){e.textContent=fmt(n);e.style.cssText+=";"+clr(n);}};s("bwaF_rohertrag",roh);s("bwaF_gesamtkosten",gk);s("bwaF_betriebsergebnis",be);s("bwaF_ergebnis",ev);};document.addEventListener("input",function(e){if(e.target&&e.target.classList.contains("bwa-field"))window._bwaRecalc();});<\/script>';
     html += '<div id="bwaUploadError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mb-3"></div>';
     html += '<button onclick="saveBwaData()" id="bwaSaveBtn" disabled class="w-full py-2.5 bg-gray-300 text-white rounded-lg font-semibold text-sm cursor-not-allowed transition-all" style="display:none;">BWA speichern</button>';
     html += '</div>';  // close bwaFormFields
@@ -462,6 +480,7 @@ export async function parseBwaWithAI() {
         // Store detail data for saveBwaData()
         window._lastParsedDetails = daten && daten.length > 0 ? daten : [];
         window._lastParsedFormat = meta.format;
+        if(typeof window._bwaRecalc === 'function') window._bwaRecalc();
 
         // ═══ KI-VALIDIERUNG: IMMER nach Parser-Durchlauf ═══
         // Parser-Werte koennen falsch sein (z.B. Tausender als Dezimal: 56.206 -> 56,21).
@@ -521,6 +540,7 @@ export async function parseBwaWithAI() {
                 // Update month/year if KI detected them
                 if(kiValResult.monat) { var mS = document.getElementById('bwaMonth'); if(mS) mS.value = kiValResult.monat; }
                 if(kiValResult.jahr) { var yS = document.getElementById('bwaYear'); if(yS) yS.value = kiValResult.jahr; }
+                if(typeof window._bwaRecalc === 'function') window._bwaRecalc();
 
                 // KI done — hide spinner
                 statusEl.classList.add('hidden');
