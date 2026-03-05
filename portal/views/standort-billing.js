@@ -853,74 +853,61 @@ async function _loadGruppenAbschnitt(standortId) {
         var escH = window._escH || function(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
         var q = function(v){ return String(v).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); };
 
-        var grpR = await sb.from('standort_gruppe_mitglieder')
-            .select('*, standort_gruppen(id, name)')
-            .eq('standort_id', standortId);
-        var grp = (!grpR.error && grpR.data && grpR.data.length > 0) ? grpR.data[0] : null;
+        // Standort-Daten laden (firma_name + gemeinsame_bwa)
+        var stdR = await sb.from('standorte').select('id, name, firma_name, gemeinsame_bwa').eq('id', standortId).single();
+        var std = stdR.data || {};
 
-        var allGR = await sb.from('standort_gruppen').select('id, name').order('name');
-        var allG = (!allGR.error && allGR.data) ? allGR.data : [];
+        // Alle Standorte der gleichen Firma
+        var firmaStandorte = [];
+        if (std.firma_name) {
+            var firmaR = await sb.from('standorte')
+                .select('id, name')
+                .eq('firma_name', std.firma_name)
+                .neq('id', standortId);
+            firmaStandorte = (!firmaR.error && firmaR.data) ? firmaR.data : [];
+        }
 
+        // Erweiterter Zugriff (GFs)
         var zugR = await sb.from('user_standorte')
             .select('id, user_id, users(id, name, email)')
             .eq('standort_id', standortId);
         var zugUser = (!zugR.error && zugR.data) ? zugR.data : [];
 
-        var gfR = await sb.from('users').select('id, name, email')
-            .eq('status', 'aktiv').eq('is_hq', false);
+        var gfR = await sb.from('users')
+            .select('id, name, email')
+            .eq('status', 'aktiv')
+            .eq('is_hq', false);
         var bereitsIds = zugUser.map(function(z){ return z.user_id; });
         var andereGfs = (!gfR.error && gfR.data)
             ? gfR.data.filter(function(u){ return !bereitsIds.includes(u.id); })
             : [];
 
-        var mitgl = [];
-        if (grp) {
-            var mR = await sb.from('standort_gruppe_mitglieder')
-                .select('standort_id, standorte(name)')
-                .eq('gruppe_id', grp.standort_gruppen.id);
-            mitgl = (!mR.error && mR.data) ? mR.data : [];
-        }
+        var h = '';
 
-        var h = '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">\uD83D\uDD17 Standort-Gruppe</p>';
+        // === FIRMA ===
+        h += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">\uD83C\uDFE2 Firma</p>';
+        h += '<div class="bg-gray-50 rounded-xl p-3 mb-3">';
+        h += '<div class="flex gap-2 mb-2">';
+        h += '<input id="stdFirmaInput" type="text" value="' + escH(std.firma_name || '') + '" placeholder="Firmenname (z.B. vit:bikes München GmbH)" class="flex-1 px-3 py-1.5 border border-gray-200 rounded-lg text-sm">';
+        h += '<button onclick="window._stdFirmaSave(\'' + q(standortId) + '\')" class="px-3 py-1.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Speichern</button>';
+        h += '</div>';
 
-        if (grp) {
-            var gId = grp.standort_gruppen.id;
-            var names = mitgl
-                .filter(function(m){ return m.standort_id !== standortId; })
-                .map(function(m){ return m.standorte ? m.standorte.name : ''; })
-                .filter(Boolean).join(', ') || '\u2014';
-            h += '<div class="bg-green-50 border border-green-200 rounded-xl p-3 mb-2">';
-            h += '<div class="flex items-center justify-between mb-2">';
-            h += '<div><p class="text-sm font-semibold text-green-800">\uD83D\uDD17 ' + escH(grp.standort_gruppen.name) + '</p>';
-            h += '<p class="text-xs text-green-600">Mitglieder: ' + escH(names) + '</p></div>';
-            h += '<button onclick="window.removeStandortFromGruppe(\'' + q(gId) + '\',\'' + q(standortId) + '\');closeStdDetailModal()" class="text-xs text-red-500 hover:underline">Verlassen</button>';
-            h += '</div><div class="grid grid-cols-2 gap-2">';
-            h += '<label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" '
-                + (grp.gemeinsame_bwa ? 'checked' : '')
-                + ' onchange="window.updateGruppeSetting(\'' + q(gId) + '\',\'' + q(standortId) + '\',\'gemeinsame_bwa\',this.checked)" class="rounded" style="accent-color:#EF7D00"><span>Gemeinsame BWA</span></label>';
-            h += '<label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" '
-                + (grp.gemeinsame_planung ? 'checked' : '')
-                + ' onchange="window.updateGruppeSetting(\'' + q(gId) + '\',\'' + q(standortId) + '\',\'gemeinsame_planung\',this.checked)" class="rounded" style="accent-color:#EF7D00"><span>Gemeinsame Planung</span></label>';
-            h += '</div></div>';
-        } else {
-            var opts = allG.map(function(g){ return '<option value="' + g.id + '">' + escH(g.name) + '</option>'; }).join('');
-            h += '<div class="bg-gray-50 rounded-xl p-3 mb-2">';
-            h += '<p class="text-xs text-gray-400 mb-2">Kein Mitglied einer Gruppe.</p>';
-            h += '<div class="flex gap-2 mb-2">';
-            h += '<input id="stdGrpNeu" type="text" placeholder="Neue Gruppe..." class="flex-1 px-3 py-1.5 border border-gray-200 rounded-lg text-sm">';
-            h += '<button onclick="window._stdGrpCreate(\'' + q(standortId) + '\')" class="px-3 py-1.5 bg-vit-orange text-white rounded-lg text-sm font-semibold">Erstellen</button>';
-            h += '</div>';
-            if (allG.length > 0) {
-                h += '<div class="flex gap-2">';
-                h += '<select id="stdGrpJoinSel" class="flex-1 px-3 py-1.5 border border-gray-200 rounded-lg text-sm">';
-                h += '<option value="">— Bestehende Gruppe —</option>' + opts;
-                h += '</select>';
-                h += '<button onclick="window._stdGrpJoin(\'' + q(standortId) + '\')" class="px-3 py-1.5 bg-gray-700 text-white rounded-lg text-sm font-semibold">Beitreten</button>';
-                h += '</div>';
+        if (std.firma_name) {
+            if (firmaStandorte.length > 0) {
+                h += '<p class="text-xs text-gray-500 mb-2">Weitere Standorte dieser Firma: <span class="font-semibold">'
+                    + firmaStandorte.map(function(s){ return escH(s.name); }).join(', ')
+                    + '</span></p>';
+            } else {
+                h += '<p class="text-xs text-gray-400 mb-2">Noch keine weiteren Standorte mit dieser Firma.</p>';
             }
-            h += '</div>';
+            h += '<label class="flex items-center gap-2 text-sm cursor-pointer">';
+            h += '<input type="checkbox" id="stdGemBwaCheck" ' + (std.gemeinsame_bwa ? 'checked' : '') + ' onchange="window._stdGemBwaSave(\'' + q(standortId) + '\',\'' + q(std.firma_name) + '\',this.checked)" class="rounded" style="accent-color:#EF7D00">';
+            h += '<span class="text-gray-700">Gemeinsame BWA <span class="text-xs text-gray-400">(alle Standorte dieser Firma reichen gemeinsam ein)</span></span>';
+            h += '</label>';
         }
+        h += '</div>';
 
+        // === ERWEITERTER ZUGRIFF ===
         h += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-4 mb-2">\uD83D\uDC65 Erweiterter Zugriff</p>';
         if (zugUser.length > 0) {
             zugUser.forEach(function(z) {
@@ -946,35 +933,27 @@ async function _loadGruppenAbschnitt(standortId) {
 
         el.innerHTML = h;
     } catch(e) {
-        if (el) el.innerHTML = '<p class="text-xs text-red-400">Fehler beim Laden der Gruppen-Daten.</p>';
+        console.error('[Gruppen]', e);
+        if (el) el.innerHTML = '<p class="text-xs text-red-400">Fehler beim Laden.</p>';
     }
 }
 
-window._stdGrpCreate = async function(standortId) {
-    var name = (document.getElementById('stdGrpNeu') || {}).value || '';
-    if (!name.trim()) { _showToast('Bitte Gruppenname eingeben', 'error'); return; }
+window._stdFirmaSave = async function(standortId) {
+    var name = (document.getElementById('stdFirmaInput') || {}).value || '';
     var sb = _sb();
-    var r = await sb.from('standort_gruppen').insert({ name: name.trim() }).select().single();
+    var r = await sb.from('standorte').update({ firma_name: name.trim() || null }).eq('id', standortId);
     if (r.error) { _showToast('Fehler: ' + r.error.message, 'error'); return; }
-    await sb.from('standort_gruppe_mitglieder').insert({
-        gruppe_id: r.data.id, standort_id: standortId,
-        is_primary: true, gemeinsame_bwa: false, gemeinsame_planung: false
-    });
-    _showToast('Gruppe erstellt \u2705', 'success');
+    _showToast('Firma gespeichert \u2705', 'success');
     openStandortDetailModal(standortId);
 };
 
-window._stdGrpJoin = async function(standortId) {
-    var gruppeId = (document.getElementById('stdGrpJoinSel') || {}).value || '';
-    if (!gruppeId) { _showToast('Bitte Gruppe w\u00e4hlen', 'error'); return; }
+window._stdGemBwaSave = async function(standortId, firmaName, value) {
+    var boolVal = (value === true || value === 'true');
     var sb = _sb();
-    var r = await sb.from('standort_gruppe_mitglieder').insert({
-        gruppe_id: gruppeId, standort_id: standortId,
-        is_primary: false, gemeinsame_bwa: false, gemeinsame_planung: false
-    });
+    // Alle Standorte dieser Firma updaten
+    var r = await sb.from('standorte').update({ gemeinsame_bwa: boolVal }).eq('firma_name', firmaName);
     if (r.error) { _showToast('Fehler: ' + r.error.message, 'error'); return; }
-    _showToast('Gruppe beigetreten \u2705', 'success');
-    openStandortDetailModal(standortId);
+    _showToast('Gespeichert \u2705', 'success');
 };
 
 window._stdZugAdd = async function(standortId) {
@@ -993,28 +972,6 @@ window._stdZugRemove = async function(entryId, standortId) {
     _showToast('Zugriff entfernt', 'success');
     openStandortDetailModal(standortId);
 };
-
-// updateGruppeSetting lokal definieren (falls user-kommando.js noch nicht geladen)
-if (!window.updateGruppeSetting) {
-    window.updateGruppeSetting = async function(gruppeId, standortId, field, value) {
-        var sb = _sb();
-        var upd = {};
-        upd[field] = (value === true || value === 'true');
-        var resp = await sb.from('standort_gruppe_mitglieder').update(upd)
-            .eq('gruppe_id', gruppeId); // alle Mitglieder der Gruppe
-        if (resp && resp.error) { _showToast('Fehler: ' + resp.error.message, 'error'); return; }
-        _showToast('Gespeichert ✅', 'success');
-    };
-}
-if (!window.removeStandortFromGruppe) {
-    window.removeStandortFromGruppe = async function(gruppeId, standortId) {
-        var sb = _sb();
-        await sb.from('standort_gruppe_mitglieder').delete()
-            .eq('gruppe_id', gruppeId).eq('standort_id', standortId);
-        _showToast('Gruppe verlassen ✅', 'success');
-        openStandortDetailModal(standortId);
-    };
-}
 
 
 // ═══ HQ WaWi Connection Management (in Standort Detail Modal) ═══
