@@ -270,10 +270,36 @@ export async function saveBwaData() {
             }
         }
 
+        // Save training example (user-confirmed values + raw text)
+        try {
+            if(window._bwaRawText) {
+                var finalValues = {
+                    umsatzerloese: umsatz, wareneinsatz: wareneinsatz,
+                    so_betr_erloese: soErloese, personalkosten: personal,
+                    raumkosten: raum, versicherungen: versicherungen,
+                    fahrzeugkosten: kfzkosten, werbekosten: werbe,
+                    kosten_warenabgabe: warenabgabe, abschreibungen: abschreibung,
+                    reparaturen_instandhaltung: reparatur, sonstige_kosten: sonstige,
+                    zinsaufwand: zins, neutraler_aufwand: neutralAufwand,
+                    neutraler_ertrag: neutralErtrag,
+                    rohertrag: rohertrag, gesamtkosten: gesamtkosten,
+                    betriebsergebnis: betriebsergebnis, ergebnis_vor_steuern: ergebnis
+                };
+                await _sb().from('bwa_training_examples').insert({
+                    standort_id: stdId,
+                    format: window._lastParsedFormat || null,
+                    monat: month, jahr: year,
+                    raw_text: window._bwaRawText,
+                    final_values: finalValues
+                });
+            }
+        } catch(trainErr) { console.warn('[BWA] Training example save:', trainErr); }
+
         // Cleanup temp vars
         window._lastParsedDetails = null;
         window._lastParsedFormat = null;
         window._bwaKiCorrected = null;
+        window._bwaRawText = null;
         window._hqBwaUploadStandortId = null;
         window._hqBwaUploadStandortName = null;
 
