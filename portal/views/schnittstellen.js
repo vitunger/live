@@ -98,12 +98,12 @@ var CONNECTORS = {
         category: 'active', status: 'disconnected', statusLabel: 'Nicht verbunden',
         oauthFields: [
             { key: 'page_id', label: 'Instagram Business Account ID', type: 'text', placeholder: 'z.B. 17841400455970638' },
-            { key: 'access_token', label: 'Long-Lived Access Token', type: 'password', placeholder: 'Via Meta Graph API generieren' },
+            { key: 'access_token', label: 'System User Token', type: 'password', placeholder: 'Aus Meta Business Manager (l\u00e4uft nicht ab)' },
         ],
         readonlyFields: [
-            { key: 'api', label: 'API', value: 'Meta Graph API v19+ – Instagram Basic Display + Business' },
-            { key: 'scopes', label: 'Benötigte Rechte', value: 'instagram_basic, instagram_manage_insights, pages_show_list' },
-            { key: 'docs', label: 'Token generieren', value: 'developers.facebook.com → Tools → Graph API Explorer' },
+            { key: 'api', label: 'API', value: 'Meta Graph API v19+ \u2013 Instagram Business' },
+            { key: 'scopes', label: 'Ben\u00f6tigte Rechte', value: 'instagram_basic, instagram_manage_insights, pages_show_list' },
+            { key: 'hint', label: 'Tipp', value: 'Gleicher System User Token wie bei Meta Ads verwendbar' },
         ],
         logs: []
     },
@@ -113,12 +113,12 @@ var CONNECTORS = {
         category: 'active', status: 'disconnected', statusLabel: 'Nicht verbunden',
         oauthFields: [
             { key: 'page_id', label: 'Facebook Page ID', type: 'text', placeholder: 'z.B. 123456789012345' },
-            { key: 'access_token', label: 'Page Access Token', type: 'password', placeholder: 'Langlebiger Page Access Token' },
+            { key: 'access_token', label: 'System User Token', type: 'password', placeholder: 'Aus Meta Business Manager (l\u00e4uft nicht ab)' },
         ],
         readonlyFields: [
-            { key: 'api', label: 'API', value: 'Meta Graph API v19+ – Facebook Pages API' },
-            { key: 'scopes', label: 'Benötigte Rechte', value: 'pages_show_list, pages_read_engagement, pages_read_user_content' },
-            { key: 'note', label: 'Hinweis', value: 'Gleicher App wie Meta Ads – Token aus Facebook Business Manager' },
+            { key: 'api', label: 'API', value: 'Meta Graph API v19+ \u2013 Facebook Pages API' },
+            { key: 'scopes', label: 'Ben\u00f6tigte Rechte', value: 'pages_show_list, pages_read_engagement, pages_read_user_content' },
+            { key: 'hint', label: 'Tipp', value: 'Gleicher System User Token wie bei Meta Ads & Instagram verwendbar' },
         ],
         logs: []
     },
@@ -656,7 +656,7 @@ function renderConnectorCard(id) {
     if (id === 'instagram') {
         body += '<div class="pt-4 space-y-4">';
         body += renderGfToggle(id);
-        body += '<p class="text-xs text-gray-500">Verbinde das Instagram Business-Konto des Standorts über die Meta Graph API. Organische Posts, Follower-Entwicklung und Story-Reichweite.</p>';
+        body += '<p class="text-xs text-gray-500">Instagram Business via System User Token (Meta Business Manager). Organische Posts, Follower-Entwicklung und Story-Reichweite.</p>';
         body += _renderOAuthFields(c, 'instagram');
         body += _renderReadonlyInfo(c);
         body += '<div style="display:flex;gap:8px;flex-wrap:wrap">'
@@ -680,7 +680,7 @@ function renderConnectorCard(id) {
     if (id === 'facebook') {
         body += '<div class="pt-4 space-y-4">';
         body += renderGfToggle(id);
-        body += '<p class="text-xs text-gray-500">Facebook Seiten-Performance: Fans, organische Reichweite und Engagement-Auswertung über die Meta Graph API.</p>';
+        body += '<p class="text-xs text-gray-500">Facebook Page via System User Token (Meta Business Manager). Fans, Reichweite und Engagement-Auswertung.</p>';
         body += _renderOAuthFields(c, 'facebook');
         body += _renderReadonlyInfo(c);
         body += '<div style="display:flex;gap:8px;flex-wrap:wrap">'
