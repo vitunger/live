@@ -274,3 +274,14 @@ security: RLS/JWT/Auth-Verbesserung
 - **Bug:** `schnittstellen.js` had orphaned `else`/`catch` block (lines 2227-2234) — remnants of incomplete GMB handler
 - **Symptom:** Console error "Unexpected token 'catch'" prevented entire module from loading → empty Schnittstellen tab
 - **Fix:** Removed orphaned lines. Module now loads and renders all connector cards + planned integrations correctly.
+
+### BWA Save Bug + Excel Preview (2026-03-05)
+- **Bug:** `saveBwaData()` used only `sbProfile.standort_id` — for HQ users this is null/HQ.
+  `_hqBwaUploadStandortId` (set by hq-finanzen.js) was never read → BWA saved with `standort_id=null`.
+  **Fix:** `controlling-save.js` now checks `window._hqBwaUploadStandortId` first, falls back to profile.
+  Also: early return with error message if no standort_id at all.
+  Cleanup: `_hqBwaUploadStandortId` + `_hqBwaUploadStandortName` cleared after save.
+- **Excel Preview:** After file parse, original Excel data is rendered as HTML table via `XLSX.utils.sheet_to_html()`.
+  Shown in collapsible `<details open>` block above the form fields so user can compare KI-values vs original.
+  Max-height 12rem with scroll for large files.
+
