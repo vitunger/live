@@ -22,7 +22,6 @@ async function _getFreshToken() {
     var session = await _sb().auth.getSession();
     var token = session?.data?.session?.access_token;
     if (!token) {
-        // Try refresh
         var refresh = await _sb().auth.refreshSession();
         token = refresh?.data?.session?.access_token;
     }
@@ -30,52 +29,127 @@ async function _getFreshToken() {
     return token;
 }
 
-export async function devKIReleaseVorschlag() {
-    var btn = document.getElementById('btnKIRelease');
-    if(btn) { btn.disabled = true; btn.innerHTML = '<span class="animate-spin">🧠</span><span>KI denkt nach...</span>'; }
+// ============================================================
+// GIT COMMITS LADEN (letzte 14 Tage, gefiltert)
+// ============================================================
+
+async function _loadGitCommits(daysSince) {
+    daysSince = daysSince || 14;
+    var since = new Date();
+    since.setDate(since.getDate() - daysSince);
+    var sinceStr = since.toISOString();
 
     try {
-        // Submissions laden falls noch nicht geladen
-        if(!_devSubs() || _devSubs().length === 0) {
-            await loadDevSubmissions();
-        }
+        var resp = await fetch(
+            'https://api.github.com/repos/vitunger/live/commits?per_page=100&since=' + sinceStr,
+            { headers: { 'Accept': 'application/vnd.github.v3+json' } }
+        );
+        if (!resp.ok) throw new Error('GitHub API ' + resp.status);
+        var commits = await resp.json();
 
-        // 1) Umgesetzte Submissions sammeln
+        // Filter: nur feat/fix/perf – keine chore/docs/refactor/cache-bust
+        var relevant = commits.filter(function(c) {
+            var msg = (c.commit.message || '').toLowerCase();
+            var firstLine = msg.split('\n')[0];
+            // Skip internal/technical commits
+            if (/^chore:|^docs:|^refactor:|cache-bust|bump cache|claude\.md/i.test(firstLine)) return false;
+            // Keep feat, fix, perf, improvement
+            if (/^feat:|^fix:|^perf:|^improvement:|verbesserung/i.test(firstLine)) return true;
+            // Keep anything with meaningful German content (fallback)
+            return false;
+        });
+
+        // Format for KI context
+        var lines = relevant.map(function(c) {
+            var date = c.commit.author.date.split('T')[0];
+            var msg = c.commit.message.split('\n')[0]; // First line only
+            return date + ' | ' + msg;
+        });
+
+        return {
+            text: lines.join('\n'),
+            count: lines.length,
+            total: commits.length
+        };
+    } catch(e) {
+        console.warn('Git commits laden fehlgeschlagen:', e);
+        return { text: '', count: 0, total: 0 };
+    }
+}
+
+// ============================================================
+// CLAUDE.MD LADEN (vollständig, nicht nur letzte Session)
+// ============================================================
+
+async function _loadClaudeMd() {
+    try {
+        var resp = await fetch('https://raw.githubusercontent.com/vitunger/live/main/CLAUDE.md');
+        if (!resp.ok) return '';
+        var text = await resp.text();
+
+        // Relevante Sektionen extrahieren (erste 3000 Zeichen der Intro-Notizen)
+        // Die Kopfzeile enthält oft die wichtigsten Session-Infos
+        var headerEnd = text.indexOf('\n## ');
+        var header = headerEnd > -1 ? text.substring(0, Math.min(headerEnd, 3000)) : text.substring(0, 3000);
+        return header.trim();
+    } catch(e) {
+        console.warn('CLAUDE.md laden fehlgeschlagen:', e);
+        return '';
+    }
+}
+
+// ============================================================
+// KI RELEASE-VORSCHLAG (Haupt-Funktion)
+// ============================================================
+
+export async function devKIReleaseVorschlag() {
+    var btn = document.getElementById('btnKIRelease');
+    var statusEl = document.getElementById('kiReleaseStatus');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="animate-spin inline-block">🧠</span><span>KI sammelt Daten...</span>'; }
+    if (statusEl) statusEl.classList.remove('hidden');
+
+    function _setStatus(msg) {
+        if (statusEl) statusEl.textContent = msg;
+    }
+
+    try {
+        // ── 1. Submissions sammeln ──────────────────────────────────────
+        _setStatus('📋 Submissions laden...');
+        if (!_devSubs() || _devSubs().length === 0) {
+            if (typeof loadDevSubmissions === 'function') await loadDevSubmissions();
+        }
+        var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
         var relevant = _devSubs().filter(function(s) {
             return ['ausgerollt','release_geplant','im_review','in_entwicklung','geschlossen'].indexOf(s.status) !== -1;
         });
-        if(relevant.length === 0) {
-            var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
+        if (relevant.length === 0) {
             relevant = _devSubs().filter(function(s) {
                 return s.status !== 'abgelehnt' && s.status !== 'geparkt' && new Date(s.created_at) > cutoff;
             }).slice(0, 20);
         }
-
-        var zusammenfassung = relevant.map(function(s) {
+        var submissionsText = relevant.map(function(s) {
             var typ = s.ki_typ === 'bug' ? 'Bug-Fix' : s.ki_typ === 'feature' ? 'Feature' : 'Verbesserung';
             var titel = s.titel || s.beschreibung || s.kurz_notiz || 'Kein Titel';
             var analyse = s.dev_ki_analysen && s.dev_ki_analysen[0] ? s.dev_ki_analysen[0].zusammenfassung : '';
             return typ + ': ' + titel + (analyse ? ' – ' + analyse : '');
         }).join('\n');
 
-        // 2) CLAUDE.md Session-Notizen laden (letzte Aenderungen die nicht als Submission existieren)
-        var claudeContext = '';
-        try {
-            var claudeResp = await fetch('https://raw.githubusercontent.com/vitunger/live/main/CLAUDE.md');
-            if(claudeResp.ok) {
-                var claudeText = await claudeResp.text();
-                // Letzte Session extrahieren
-                var sessionIdx = claudeText.lastIndexOf('## Letzte Session');
-                if(sessionIdx === -1) sessionIdx = claudeText.lastIndexOf('## Session');
-                if(sessionIdx > -1) {
-                    var sessionEnd = claudeText.indexOf('\n## ', sessionIdx + 10);
-                    var sessionText = sessionEnd > -1 ? claudeText.substring(sessionIdx, sessionEnd) : claudeText.substring(sessionIdx);
-                    claudeContext = sessionText.trim();
-                }
-            }
-        } catch(e) { console.warn('CLAUDE.md fetch:', e); }
+        // ── 2. Git Commits laden ────────────────────────────────────────
+        _setStatus('📦 Git-Commits der letzten 14 Tage laden...');
+        var gitData = await _loadGitCommits(14);
 
-        // 3) Bereits veroeffentlichte Releases laden (um Duplikate zu vermeiden)
+        // ── 3. CLAUDE.md laden ──────────────────────────────────────────
+        _setStatus('📄 CLAUDE.md laden...');
+        var claudeMd = await _loadClaudeMd();
+
+        // ── 4. Manuellen Kontext holen ──────────────────────────────────
+        var manualCtx = '';
+        var manualField = document.getElementById('relManualContext');
+        if (manualField && manualField.value.trim()) {
+            manualCtx = manualField.value.trim();
+        }
+
+        // ── 5. Bereits veröffentlichte Releases laden ───────────────────
         var existingReleases = '';
         try {
             var relResp = await _sb().from('dev_release_docs')
@@ -84,36 +158,43 @@ export async function devKIReleaseVorschlag() {
                 .eq('freigegeben', true)
                 .order('created_at', { ascending: false })
                 .limit(5);
-            if(relResp.data && relResp.data.length > 0) {
+            if (relResp.data && relResp.data.length > 0) {
                 existingReleases = relResp.data.map(function(r) {
                     return (r.version || '') + ' ' + r.titel + ' (' + (r.created_at || '').split('T')[0] + ')';
                 }).join(', ');
             }
         } catch(e) {}
 
-        // 4) Manuellen Kontext aus Textfeld holen (falls vorhanden)
-        var manualCtx = '';
-        var manualField = document.getElementById('relManualContext');
-        if(manualField && manualField.value.trim()) {
-            manualCtx = manualField.value.trim();
+        // ── 6. Kontext zusammenbauen ────────────────────────────────────
+        var contextParts = [];
+        if (gitData.text) {
+            contextParts.push('GIT COMMITS (letzte 14 Tage, ' + gitData.count + ' relevante von ' + gitData.total + ' gesamt):\n' + gitData.text);
+        }
+        if (submissionsText) {
+            contextParts.push('PORTAL-SUBMISSIONS (' + relevant.length + ' Einträge):\n' + submissionsText);
+        }
+        if (claudeMd) {
+            contextParts.push('CLAUDE.MD SESSION-NOTIZEN:\n' + claudeMd);
+        }
+        if (manualCtx) {
+            contextParts.push('MANUELLE ERGÄNZUNGEN:\n' + manualCtx);
+        }
+        if (existingReleases) {
+            contextParts.push('BEREITS VERÖFFENTLICHT (nicht nochmal aufnehmen):\n' + existingReleases);
         }
 
-        // Alles zusammenbauen
-        var fullContext = '';
-        if(zusammenfassung) fullContext += 'SUBMISSIONS:\n' + zusammenfassung;
-        if(claudeContext) fullContext += '\n\nCLAUDE.MD SESSION-NOTIZEN:\n' + claudeContext;
-        if(manualCtx) fullContext += '\n\nMANUELLE ERGAENZUNGEN:\n' + manualCtx;
-        if(existingReleases) fullContext += '\n\nBEREITS VEROEFFENTLICHT (nicht nochmal aufnehmen):\n' + existingReleases;
-
-        if(!fullContext.trim()) {
-            _showToast('Keine Aenderungen gefunden.', 'error');
-            if(btn) { btn.disabled = false; btn.innerHTML = '<span>🧠</span><span>KI-Vorschlag generieren</span>'; }
+        if (contextParts.length === 0) {
+            _showToast('Keine Änderungen gefunden – weder Commits noch Submissions.', 'error');
+            if (btn) { btn.disabled = false; btn.innerHTML = '<span>🧠</span><span>KI-Vorschlag generieren</span>'; }
+            if (statusEl) statusEl.classList.add('hidden');
             return;
         }
 
-        var totalCount = relevant.length + (claudeContext ? 1 : 0) + (manualCtx ? 1 : 0);
+        var fullContext = contextParts.join('\n\n---\n\n');
+        var totalSources = (gitData.count > 0 ? 1 : 0) + (relevant.length > 0 ? 1 : 0) + (claudeMd ? 1 : 0) + (manualCtx ? 1 : 0);
 
-        // Fresh token holen (mit auto-refresh)
+        // ── 7. KI anfragen ──────────────────────────────────────────────
+        _setStatus('🧠 KI generiert Release-Note... (' + gitData.count + ' Commits + ' + relevant.length + ' Submissions)');
         var token = await _getFreshToken();
 
         var resp = await fetch(window.SUPABASE_URL + '/functions/v1/dev-ki-analyse', {
@@ -125,32 +206,39 @@ export async function devKIReleaseVorschlag() {
             body: JSON.stringify({
                 mode: 'release_notes',
                 context: fullContext,
-                count: totalCount
+                count: totalSources
             })
         });
 
         var d = await resp.json();
-        if(!resp.ok || d.error) throw new Error(d.error || 'Edge Function returned a non-2xx status code');
+        if (!resp.ok || d.error) throw new Error(d.error || 'Edge Function Fehler');
 
         var vorschlag = d.release_notes || d.antwort || d.text || '';
-        if(vorschlag) {
-            // Strip intro/greeting lines
-            vorschlag = vorschlag.replace(/^(Liebe\s+Partner[^\n]*\n+|Hallo[^\n]*\n+|Sehr\s+geehrte[^\n]*\n+|Dieses\s+Release\s+bringt[^\n]*\n+|Diese[sr]?\s+(Release|Update|Version)\s+[^\n]*\n+)/gi, '').trim();
-            vorschlag = vorschlag.replace(/\n+(Viele\s+Gr[uü][sß]e[^\n]*|Euer\s+[^\n]*|Beste\s+Gr[uü][sß]e[^\n]*|Mit\s+freundlichen[^\n]*)$/gi, '').trim();
+        if (vorschlag) {
+            // Cleanup: remove greeting/closing lines
+            vorschlag = vorschlag.replace(/^(Liebe\s+Partner[^\n]*\n+|Hallo[^\n]*\n+|Sehr\s+geehrte[^\n]*\n+)/gi, '').trim();
+            vorschlag = vorschlag.replace(/\n+(Viele\s+Gr[uü][sß]e[^\n]*|Euer\s+[^\n]*|Beste\s+Gr[uü][sß]e[^\n]*)$/gi, '').trim();
+
             var titelField = document.getElementById('relTitel');
             var inhaltField = document.getElementById('relInhalt');
-            if(d.titel && titelField && !titelField.value) titelField.value = d.titel;
-            if(inhaltField) inhaltField.value = vorschlag;
-            _showToast('KI-Vorschlag eingefügt – bitte prüfen.', 'success');
+            if (d.titel && titelField && !titelField.value) titelField.value = d.titel;
+            if (inhaltField) inhaltField.value = vorschlag;
+
+            // Show source summary
+            var summary = '✅ KI-Vorschlag aus ' + gitData.count + ' Git-Commits';
+            if (relevant.length > 0) summary += ' + ' + relevant.length + ' Submissions';
+            if (claudeMd) summary += ' + CLAUDE.md';
+            _showToast(summary + ' – bitte prüfen!', 'success');
         } else {
-            _showToast('KI hat keinen Vorschlag generiert.', 'error');
+            _showToast('KI hat keinen Vorschlag generiert – mehr Kontext nötig?', 'error');
         }
     } catch(err) {
         console.error('KI Release error:', err);
         _showToast('KI-Fehler: ' + (err.message || err), 'error');
     }
 
-    if(btn) { btn.disabled = false; btn.innerHTML = '<span>🧠</span><span>KI-Vorschlag generieren</span>'; }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<span>🧠</span><span>KI-Vorschlag generieren</span>'; }
+    if (statusEl) statusEl.classList.add('hidden');
 }
 
 export function devShowCreateRelease() {
@@ -180,17 +268,14 @@ export async function devSaveRelease() {
         });
         if(resp.error) throw resp.error;
         _showToast('📣 Release-Note veröffentlicht!', 'success');
-        // Benachrichtigung für alle User erstellen
         if(typeof window.createReleaseNotification === 'function') {
             window.createReleaseNotification(titel, version);
         }
-        // Formular leeren und schließen
         document.getElementById('relTitel').value = '';
         document.getElementById('relInhalt').value = '';
         document.getElementById('relVersion').value = '';
         var form = document.getElementById('devCreateReleaseForm');
         if(form) form.classList.add('hidden');
-        // Sofort neu rendern
         await renderEntwReleases();
     } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
 }
@@ -248,7 +333,6 @@ export async function devDeleteReleaseDoc(docId) {
 // ============================================================
 
 export async function devShowFeedbackForm(subId) {
-    // Load rollen for targeting
     var rollenResp = await _sb().from('rollen').select('*').order('sortierung');
     var rollen = rollenResp.data || [];
     var usersResp = await _sb().from('users').select('id, name, email, is_hq').eq('status','aktiv').order('name');
@@ -259,11 +343,9 @@ export async function devShowFeedbackForm(subId) {
     html += '<div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold text-gray-800">🗳 Feedback einholen</h3>';
     html += '<button onclick="document.getElementById(\'devFeedbackFormOverlay\').remove()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button></div>';
 
-    // Frage
     html += '<label class="block text-xs font-semibold text-gray-600 mb-1">Frage / Kontext</label>';
     html += '<textarea id="fbFormFrage" placeholder="Was möchtest du wissen? z.B.: Wie bewertet ihr diese Feature-Idee?" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm mb-3" rows="2"></textarea>';
 
-    // Multiple Choice Optionen
     html += '<label class="block text-xs font-semibold text-gray-600 mb-1">Multiple-Choice Optionen <span class="text-gray-400 font-normal">(min. 2)</span></label>';
     html += '<div id="fbFormOptionen" class="space-y-1.5 mb-1">';
     html += '<input type="text" class="fb-option w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Option 1, z.B.: Sehr wichtig">';
@@ -272,7 +354,6 @@ export async function devShowFeedbackForm(subId) {
     html += '</div>';
     html += '<button onclick="var d=document.getElementById(\'fbFormOptionen\');var inp=document.createElement(\'input\');inp.type=\'text\';inp.className=\'fb-option w-full px-3 py-2 border border-gray-200 rounded-lg text-sm\';inp.placeholder=\'Weitere Option...\';d.appendChild(inp)" class="text-xs text-amber-600 hover:text-amber-800 mb-3 block">+ Option hinzufügen</button>';
 
-    // Zielgruppe: Rollen
     html += '<label class="block text-xs font-semibold text-gray-600 mb-1">Zielgruppe: Rollen</label>';
     html += '<div class="flex flex-wrap gap-1.5 mb-3" id="fbFormRollen">';
     rollen.forEach(function(r) {
@@ -283,7 +364,6 @@ export async function devShowFeedbackForm(subId) {
     });
     html += '</div>';
 
-    // Zielgruppe: Einzelne Personen
     html += '<label class="block text-xs font-semibold text-gray-600 mb-1">Einzelne Personen <span class="text-gray-400 font-normal">(optional)</span></label>';
     html += '<select id="fbFormUsers" multiple class="w-full border border-gray-200 rounded-lg text-sm mb-3 p-2" size="4">';
     allUsers.forEach(function(u) {
@@ -293,13 +373,11 @@ export async function devShowFeedbackForm(subId) {
     html += '</select>';
     html += '<p class="text-[10px] text-gray-400 mb-3">Strg/Cmd gedrückt halten für Mehrfachauswahl</p>';
 
-    // Deadline
     html += '<label class="block text-xs font-semibold text-gray-600 mb-1">Deadline</label>';
     var defaultDeadline = new Date(); defaultDeadline.setDate(defaultDeadline.getDate() + 7);
     var dlStr = defaultDeadline.toISOString().split('T')[0];
     html += '<input type="date" id="fbFormDeadline" value="'+dlStr+'" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm mb-4">';
 
-    // Submit
     html += '<button onclick="devCreateFeedbackAnfrage(\''+subId+'\')" class="w-full px-4 py-3 bg-amber-500 text-white rounded-lg font-semibold hover:bg-amber-600 transition">🗳 Feedback-Anfrage senden</button>';
     html += '</div></div>';
 
@@ -311,17 +389,14 @@ export async function devCreateFeedbackAnfrage(subId) {
         var frage = document.getElementById('fbFormFrage').value.trim();
         if(!frage) { _showToast('Bitte Frage eingeben.', 'error'); return; }
 
-        // Optionen sammeln
         var optInputs = document.querySelectorAll('.fb-option');
         var optionen = [];
         optInputs.forEach(function(inp) { if(inp.value.trim()) optionen.push(inp.value.trim()); });
         if(optionen.length < 2) { _showToast('Mindestens 2 Optionen angeben.', 'error'); return; }
 
-        // Rollen sammeln
         var rollenChecked = [];
         document.querySelectorAll('.fb-rolle:checked').forEach(function(cb) { rollenChecked.push(cb.value); });
 
-        // User IDs sammeln
         var userSelect = document.getElementById('fbFormUsers');
         var userIds = [];
         for(var i=0; i<userSelect.selectedOptions.length; i++) {
@@ -346,14 +421,12 @@ export async function devCreateFeedbackAnfrage(subId) {
 
         if(resp.error) throw resp.error;
 
-        // Benachrichtigungen erstellen
         var targetUsers = new Set(userIds);
         if(rollenChecked.length > 0) {
             var urResp = await _sb().from('user_rollen').select('user_id, rollen!inner(name)').in('rollen.name', rollenChecked);
             (urResp.data || []).forEach(function(ur) { targetUsers.add(ur.user_id); });
         }
 
-        // Get submission title for notification
         var sub = _devSubs().find(function(s){ return s.id === subId; });
         var titel = sub ? sub.titel : 'Idee';
 
@@ -371,8 +444,6 @@ export async function devCreateFeedbackAnfrage(subId) {
         _showToast('🗳 Feedback-Anfrage an ' + targetUsers.size + ' Personen gesendet!', 'success');
         var overlay = document.getElementById('devFeedbackFormOverlay');
         if(overlay) overlay.remove();
-
-        // Reload detail
         openDevDetail(subId);
     } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
 }
@@ -397,7 +468,6 @@ export async function devSubmitFeedbackAntwort(anfrageId) {
         if(resp.error) throw resp.error;
         _showToast('📨 Danke für dein Feedback!', 'success');
 
-        // Reload current detail
         var detailId = document.querySelector('#devDetailContent')?.dataset?.subId;
         if(detailId) openDevDetail(detailId);
     } catch(e) {
@@ -429,13 +499,13 @@ export async function renderDevReleaseDocs(subId) {
         var docs = resp.data || [];
         if(docs.length === 0) return '';
         var h = '<div class="border-2 border-green-200 rounded-lg p-4 mb-4 bg-green-50">';
-        h += '<h4 class="text-sm font-bold text-green-700 mb-3">\u{1F4DD} Release-Dokumentation</h4>';
+        h += '<h4 class="text-sm font-bold text-green-700 mb-3">📝 Release-Dokumentation</h4>';
         docs.forEach(function(d) {
-            var icon = d.typ === 'release_note' ? '\u{1F4E3}' : '\u{1F4DA}';
+            var icon = d.typ === 'release_note' ? '📣' : '📚';
             var label = d.typ === 'release_note' ? 'Release-Note' : 'Wissensartikel';
             h += '<div class="bg-white rounded-lg p-3 border border-green-100 mb-2">';
             h += '<div class="flex justify-between items-center mb-1">';
-            h += '<span class="text-xs font-semibold">' + icon + ' ' + label + (d.freigegeben ? ' \u2705' : ' (Entwurf)') + '</span>';
+            h += '<span class="text-xs font-semibold">' + icon + ' ' + label + (d.freigegeben ? ' ✅' : ' (Entwurf)') + '</span>';
             if(!d.freigegeben) h += '<button onclick="devApproveReleaseDoc(\'' + d.id + '\')" class="text-xs px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600">Freigeben</button>';
             h += '</div>';
             h += '<p class="text-sm font-semibold text-gray-800">' + _escH(d.titel) + '</p>';
@@ -452,7 +522,7 @@ export async function devApproveReleaseDoc(docId) {
         await _sb().from('dev_release_docs').update({
             freigegeben: true, freigegeben_von: _sbUser().id, freigegeben_at: new Date().toISOString()
         }).eq('id', docId);
-        _showToast('\u2705 Dokument freigegeben!', 'success');
+        _showToast('✅ Dokument freigegeben!', 'success');
     } catch(e) { _showToast('Fehler: ' + e.message, 'error'); }
 }
 
