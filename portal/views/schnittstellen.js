@@ -267,6 +267,7 @@ async function loadAdsAccountData() {
             var pid = a.plattform === 'google' ? 'google' : (a.plattform === 'meta' || a.plattform === 'facebook') ? 'meta' : null;
             if (!pid || !CONNECTORS[pid]) return;
             var c = CONNECTORS[pid];
+            c._syncStatus = a.sync_status;
             c.status = a.sync_status === 'ok' ? 'connected' : a.sync_status === 'error' ? 'error' : 'connected';
             c.statusLabel = a.sync_status === 'ok' ? 'Verbunden' : a.sync_status === 'error' ? 'Fehler' : 'Verbunden';
             if (c.readonlyFields) {
@@ -2187,18 +2188,27 @@ window.loadAdsConfigs = async function() {
             var c = CONNECTORS[platform];
             if (!c || !c.configFields) continue;
             var { data } = await sb.from('connector_config').select('config_key, config_value').eq('connector_id', platform);
-            if (!data || !data.length) continue;
-            var hasToken = false;
-            data.forEach(function(r) {
-                var el = document.getElementById('conn_' + platform + '_' + r.config_key);
-                if (el) el.value = r.config_value;
-                if (r.config_value) hasToken = true;
-            });
-            if (hasToken) {
-                CONNECTORS[platform].status = 'connected';
-                CONNECTORS[platform].statusLabel = 'Konfiguriert';
+            var hasCredentials = false;
+            if (data && data.length) {
+                data.forEach(function(r) {
+                    var el = document.getElementById('conn_' + platform + '_' + r.config_key);
+                    if (el) el.value = r.config_value;
+                    if (r.config_value) hasCredentials = true;
+                });
+            }
+            if (hasCredentials) {
+                // Credentials vorhanden – Status aus ads_accounts beibehalten oder 'Konfiguriert'
+                if (CONNECTORS[platform].status !== 'connected' || CONNECTORS[platform].statusLabel === 'Verbunden') {
+                    CONNECTORS[platform].status = 'connected';
+                    CONNECTORS[platform].statusLabel = 'Verbunden';
+                }
+            } else {
+                // Keine Credentials → immer 'Nicht konfiguriert'
+                CONNECTORS[platform].status = 'disconnected';
+                CONNECTORS[platform].statusLabel = 'Nicht konfiguriert';
             }
         }
+        renderStatusGrid();
     } catch(e) {}
 };
 
