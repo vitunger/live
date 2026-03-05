@@ -155,9 +155,12 @@ export async function renderEntwReleases() {
             h += '<textarea id="relInhalt" placeholder="Was wurde geändert / verbessert / gefixt?\n\nTipp: Nutze Aufzählungen für mehrere Punkte." class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 mb-3" rows="5"></textarea>';
             h += '<details class="mb-3"><summary class="text-xs text-gray-500 cursor-pointer hover:text-gray-700">Zusätzliche Änderungen (nicht in Submissions erfasst)</summary>';
             h += '<textarea id="relManualContext" placeholder="Hier kannst du Änderungen eintragen, die nicht als Submission existieren.\nz.B. Bug-Fixes aus Claude-Sessions, Config-Änderungen, Refactorings..." class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 mt-2" rows="3"></textarea>';
-            h += '<p class="text-[10px] text-gray-400 mt-1">Die KI bezieht auch automatisch CLAUDE.md Session-Notizen und bereits veröffentlichte Releases ein.</p></details>';
+            h += '<p class="text-[10px] text-gray-400 mt-1">Die KI liest automatisch: Git-Commits (14 Tage), CLAUDE.md und bereits veröffentlichte Releases.</p></details>';
             h += '<div class="flex justify-between items-center">';
+            h += '<div class="flex flex-col gap-1">';
             h += '<button onclick="devKIReleaseVorschlag()" id="btnKIRelease" class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg text-xs font-semibold hover:from-purple-600 hover:to-indigo-700 flex items-center gap-1.5"><span>🧠</span><span>KI-Vorschlag generieren</span></button>';
+            h += '<p id="kiReleaseStatus" class="hidden text-[10px] text-purple-600 animate-pulse pl-1"></p>';
+            h += '</div>';
             h += '<div class="flex gap-2">';
             h += '<button onclick="document.getElementById(\'devCreateReleaseForm\').classList.add(\'hidden\')" class="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700">Abbrechen</button>';
             h += '<button onclick="devSaveRelease()" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700">💾 Veröffentlichen</button>';
