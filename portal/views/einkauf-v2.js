@@ -145,8 +145,12 @@ async function renderEinkaufV2() {
 let _einkaufAllData = [];
 
 async function einkaufV2Load(isHQ) {
-  const sb = window.sb || window._sb?.();
-  if (!sb) return;
+  const sb = window.sb;
+  if (!sb) {
+    console.warn('[einkauf-v2] sb nicht verfügbar, retry in 500ms');
+    setTimeout(() => einkaufV2Load(isHQ), 500);
+    return;
+  }
 
   let query = sb.from('lieferanten').select('*').order('art').order('lieferant');
   if (!isHQ) {
@@ -156,12 +160,15 @@ async function einkaufV2Load(isHQ) {
   }
 
   const { data, error } = await query;
+
   if (error) {
-    document.getElementById('einkauf-table-wrap').innerHTML =
-      `<div class="p-8 text-center text-red-500">Fehler beim Laden: ${error.message}</div>`;
+    console.error('[einkauf-v2] Query error:', error);
+    const wrap = document.getElementById('einkauf-table-wrap');
+    if (wrap) wrap.innerHTML = `<div class="p-8 text-center text-red-500">Fehler: ${error.message}</div>`;
     return;
   }
 
+  console.log('[einkauf-v2] Geladen:', data?.length, 'rows, isHQ=', isHQ);
   _einkaufAllData = data || [];
   if (isHQ) einkaufV2RenderStats(_einkaufAllData);
   einkaufV2RenderTable(_einkaufAllData, isHQ);
