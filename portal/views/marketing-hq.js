@@ -95,9 +95,9 @@ function renderHqUebersicht(el) {
     // Ads aggregieren
     var totalSpend = 0, totalImpr = 0, totalClicks = 0, totalLeads = 0;
     ads.forEach(function(a) {
-        totalSpend += Number(a.cost || 0);
-        totalImpr += Number(a.impressions || 0);
-        totalClicks += Number(a.clicks || 0);
+        totalSpend += Number(a.ausgaben || 0);
+        totalImpr += Number(a.impressionen || 0);
+        totalClicks += Number(a.klicks || 0);
         totalLeads += Number(a.conversions || 0);
     });
 
@@ -130,23 +130,23 @@ function renderHqUebersicht(el) {
         var byStandort = {};
         ads.forEach(function(a) {
             var sid = a.standort_id || 'unknown';
-            if (!byStandort[sid]) byStandort[sid] = { spend: 0, clicks: 0, impr: 0, leads: 0, name: a.standort_name || sid };
-            byStandort[sid].spend += Number(a.cost || 0);
-            byStandort[sid].clicks += Number(a.clicks || 0);
-            byStandort[sid].impr += Number(a.impressions || 0);
+            if (!byStandort[sid]) byStandort[sid] = { ausgaben: 0, klicks: 0, impressionen: 0, leads: 0, name: a.standort_name || sid };
+            byStandort[sid].ausgaben += Number(a.ausgaben || 0);
+            byStandort[sid].klicks += Number(a.klicks || 0);
+            byStandort[sid].impressionen += Number(a.impressionen || 0);
             byStandort[sid].leads += Number(a.conversions || 0);
         });
 
         html += '<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">';
         Object.keys(byStandort).forEach(function(sid) {
             var s = byStandort[sid];
-            var ctr = s.impr > 0 ? ((s.clicks / s.impr) * 100).toFixed(1) : '0';
-            var cpc = s.clicks > 0 ? (s.spend / s.clicks).toFixed(2) : '\u2013';
+            var ctr = s.impressionen > 0 ? ((s.klicks / s.impressionen) * 100).toFixed(1) : '0';
+            var cpc = s.klicks > 0 ? (s.ausgaben / s.klicks).toFixed(2) : '\u2013';
             html += '<div class="vit-card p-4 border-t-3 border-gray-300 hover:shadow-md transition-shadow">' +
                 '<div class="font-semibold text-sm text-gray-800 mb-2">' + _escH(s.name) + '</div>' +
                 '<div class="grid grid-cols-3 gap-2 text-center">' +
-                '<div class="bg-gray-50 rounded-lg p-2"><div class="text-xs text-gray-400">Ausgaben</div><div class="text-sm font-bold text-gray-800">' + _fmtEur(s.spend) + '</div></div>' +
-                '<div class="bg-gray-50 rounded-lg p-2"><div class="text-xs text-gray-400">Klicks</div><div class="text-sm font-bold text-gray-800">' + _fmtN(s.clicks) + '</div></div>' +
+                '<div class="bg-gray-50 rounded-lg p-2"><div class="text-xs text-gray-400">Ausgaben</div><div class="text-sm font-bold text-gray-800">' + _fmtEur(s.ausgaben) + '</div></div>' +
+                '<div class="bg-gray-50 rounded-lg p-2"><div class="text-xs text-gray-400">Klicks</div><div class="text-sm font-bold text-gray-800">' + _fmtN(s.klicks) + '</div></div>' +
                 '<div class="bg-gray-50 rounded-lg p-2"><div class="text-xs text-gray-400">Leads</div><div class="text-sm font-bold text-gray-800">' + s.leads + '</div></div>' +
                 '</div><div class="flex gap-4 mt-2 text-xs text-gray-400">' +
                 '<span>CTR: ' + ctr + '%</span><span>CPC: ' + cpc + ' \u20ac</span></div></div>';
@@ -171,8 +171,8 @@ function renderHqUebersicht(el) {
         var metaSpend = 0, googleSpend = 0;
         ads.forEach(function(a) {
             var p = (a.platform || '').toLowerCase();
-            if (p.indexOf('meta') >= 0 || p.indexOf('facebook') >= 0) metaSpend += Number(a.cost || 0);
-            else googleSpend += Number(a.cost || 0);
+            if (p.indexOf('meta') >= 0 || p.indexOf('facebook') >= 0) metaSpend += Number(a.ausgaben || 0);
+            else googleSpend += Number(a.ausgaben || 0);
         });
         window.mktChartDoughnut('hqMktChartChannel', ['Google Ads', 'Meta Ads'], [Math.round(googleSpend), Math.round(metaSpend)], [C.orange, C.blue]);
     }, 50);
@@ -282,9 +282,9 @@ function renderHqAdsTab(el, platform, title, subtitle) {
 
     var totalSpend = 0, totalImpr = 0, totalClicks = 0, totalLeads = 0;
     ads.forEach(function(a) {
-        totalSpend += Number(a.cost || 0);
-        totalImpr += Number(a.impressions || 0);
-        totalClicks += Number(a.clicks || 0);
+        totalSpend += Number(a.ausgaben || 0);
+        totalImpr += Number(a.impressionen || 0);
+        totalClicks += Number(a.klicks || 0);
         totalLeads += Number(a.conversions || 0);
     });
     var avgCpc = totalClicks > 0 ? (totalSpend / totalClicks).toFixed(2) : '\u2013';
@@ -313,22 +313,22 @@ function renderHqAdsTab(el, platform, title, subtitle) {
     var byStandort = {};
     ads.forEach(function(a) {
         var sid = a.standort_id || 'unknown';
-        if (!byStandort[sid]) byStandort[sid] = { name: a.standort_name || '\u2013', spend: 0, impr: 0, clicks: 0, leads: 0 };
-        byStandort[sid].spend += Number(a.cost || 0);
-        byStandort[sid].impr += Number(a.impressions || 0);
-        byStandort[sid].clicks += Number(a.clicks || 0);
+        if (!byStandort[sid]) byStandort[sid] = { name: a.standort_name || '\u2013', ausgaben: 0, impressionen: 0, klicks: 0, leads: 0 };
+        byStandort[sid].ausgaben += Number(a.ausgaben || 0);
+        byStandort[sid].impressionen += Number(a.impressionen || 0);
+        byStandort[sid].klicks += Number(a.klicks || 0);
         byStandort[sid].leads += Number(a.conversions || 0);
     });
 
     var rows = Object.keys(byStandort).map(function(sid) {
         var s = byStandort[sid];
-        var ctr = s.impr > 0 ? ((s.clicks / s.impr) * 100).toFixed(2) + '%' : '\u2013';
-        var cpl = s.leads > 0 ? _fmtEur(Math.round(s.spend / s.leads)) : '\u2013';
+        var ctr = s.impressionen > 0 ? ((s.klicks / s.impressionen) * 100).toFixed(2) + '%' : '\u2013';
+        var cpl = s.leads > 0 ? _fmtEur(Math.round(s.ausgaben / s.leads)) : '\u2013';
         return '<tr class="hover:bg-gray-50 mkt-filter-row" data-filter="' + _escH(s.name.toLowerCase()) + '">' +
             '<td class="px-4 py-3 font-semibold">' + _escH(s.name) + '</td>' +
-            '<td class="px-4 py-3">' + _fmtEur(s.spend) + '</td>' +
-            '<td class="px-4 py-3">' + _fmtN(s.impr) + '</td>' +
-            '<td class="px-4 py-3">' + _fmtN(s.clicks) + '</td>' +
+            '<td class="px-4 py-3">' + _fmtEur(s.ausgaben) + '</td>' +
+            '<td class="px-4 py-3">' + _fmtN(s.impressionen) + '</td>' +
+            '<td class="px-4 py-3">' + _fmtN(s.klicks) + '</td>' +
             '<td class="px-4 py-3">' + ctr + '</td>' +
             '<td class="px-4 py-3">' + s.leads + '</td>' +
             '<td class="px-4 py-3">' + cpl + '</td></tr>';
@@ -447,15 +447,15 @@ function renderHqBudgetPlan(el) {
     var ads = window.mktState.adsData || [];
 
     var totalBudget = vbs.reduce(function(s,v) { return s + Number(v.budget_jahr || 0); }, 0);
-    var totalSpend = ads.reduce(function(s,a) { return s + Number(a.cost || 0); }, 0);
+    var totalSpend = ads.reduce(function(s,a) { return s + Number(a.ausgaben || 0); }, 0);
     var avgMonthly = totalBudget > 0 ? Math.round(totalBudget / 12) : 0;
 
     // Google vs Meta Split aus ads berechnen
     var googleSpend = 0, metaSpend = 0;
     ads.forEach(function(a) {
         var p = (a.platform || '').toLowerCase();
-        if (p.indexOf('meta') >= 0 || p.indexOf('facebook') >= 0) metaSpend += Number(a.cost || 0);
-        else googleSpend += Number(a.cost || 0);
+        if (p.indexOf('meta') >= 0 || p.indexOf('facebook') >= 0) metaSpend += Number(a.ausgaben || 0);
+        else googleSpend += Number(a.ausgaben || 0);
     });
     var splitPct = totalSpend > 0 ? Math.round(googleSpend / totalSpend * 100) : 80;
 
