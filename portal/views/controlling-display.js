@@ -60,7 +60,30 @@ export async function loadBwaList() {
     try {
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
         var query = _sb().from('bwa_daten').select('id,monat,jahr,umsatzerloese,rohertrag,ergebnis_vor_steuern,datei_name,datei_url,created_at').order('jahr', {ascending:false}).order('monat', {ascending:false});
-        if(stdId && !_sbProfile().is_hq) query = query.eq('standort_id', stdId);
+        if(stdId && !_sbProfile().is_hq) {
+            // Gruppen-BWA: prüfen ob Standort in einer Gruppe mit gemeinsamer BWA
+            try {
+                var grpResp = await _sb().from('standort_gruppe_mitglieder')
+                    .select('gruppe_id, gemeinsame_bwa')
+                    .eq('standort_id', stdId);
+                var grpData = (!grpResp.error && grpResp.data && grpResp.data.length > 0) ? grpResp.data[0] : null;
+                if (grpData && grpData.gemeinsame_bwa) {
+                    // Alle Standort-IDs der Gruppe holen
+                    var mitglResp = await _sb().from('standort_gruppe_mitglieder')
+                        .select('standort_id')
+                        .eq('gruppe_id', grpData.gruppe_id);
+                    var gruppenIds = (!mitglResp.error && mitglResp.data)
+                        ? mitglResp.data.map(function(m){ return m.standort_id; })
+                        : [stdId];
+                    query = query.in('standort_id', gruppenIds);
+                } else {
+                    query = query.eq('standort_id', stdId);
+                }
+            } catch(e) {
+                // Fallback: nur eigener Standort
+                query = query.eq('standort_id', stdId);
+            }
+        }
         var resp = await query;
         if(resp.error) throw resp.error;
         window.bwaCache = resp.data || [];
@@ -407,7 +430,23 @@ export async function loadBwaTrend(stdId, jahr) {
     if(!stdId) { sec.style.display = 'none'; return; }
     try {
         var query = _sb().from('bwa_daten').select('monat,umsatzerloese,rohertrag,gesamtkosten,ergebnis_vor_steuern').eq('jahr', jahr).order('monat');
-        if(stdId) query = query.eq('standort_id', stdId);
+        if(stdId) {
+            // Gruppen-BWA für Trend-Chart
+            try {
+                var tGrpResp = await _sb().from('standort_gruppe_mitglieder')
+                    .select('gruppe_id, gemeinsame_bwa').eq('standort_id', stdId);
+                var tGrp = (!tGrpResp.error && tGrpResp.data && tGrpResp.data.length > 0) ? tGrpResp.data[0] : null;
+                if (tGrp && tGrp.gemeinsame_bwa) {
+                    var tMitglResp = await _sb().from('standort_gruppe_mitglieder')
+                        .select('standort_id').eq('gruppe_id', tGrp.gruppe_id);
+                    var tIds = (!tMitglResp.error && tMitglResp.data)
+                        ? tMitglResp.data.map(function(m){ return m.standort_id; }) : [stdId];
+                    query = query.in('standort_id', tIds);
+                } else {
+                    query = query.eq('standort_id', stdId);
+                }
+            } catch(e) { query = query.eq('standort_id', stdId); }
+        }
         var resp = await query;
         if(resp.error || !resp.data || resp.data.length < 2) { sec.style.display = 'none'; return; }
         sec.style.display = '';
