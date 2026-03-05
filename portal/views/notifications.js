@@ -307,24 +307,20 @@ export async function unsubscribePush() {
 
 // === STRANGLER FIG EXPORTS ===
 // === CREATE RELEASE NOTIFICATION FOR ALL ACTIVE USERS ===
+// Nutzt SECURITY DEFINER RPC um RLS zu umgehen (normaler User kann nicht
+// alle user_ids lesen und fremde notifications inserten)
 export async function createReleaseNotification(titel, version) {
     try {
         var sb = _sb(); if (!sb || !_sbUser()) return;
-        var { data: users, error } = await sb.from('users').select('id').eq('status', 'aktiv');
-        if (error || !users || users.length === 0) return;
-        var notifTitle = version ? version + ': ' + titel : titel;
-        var rows = users.map(function(u) {
-            return {
-                user_id: u.id,
-                type: 'hq',
-                icon: '📣',
-                title: notifTitle,
-                description: 'Ein neues Release wurde veröffentlicht.',
-                read: false,
-                action_view: 'entwicklung'
-            };
+        var { data, error } = await sb.rpc('create_release_notification_all', {
+            p_titel: titel,
+            p_version: version || null
         });
-        await sb.from('notifications').insert(rows);
+        if (error) {
+            console.warn('createReleaseNotification RPC error:', error);
+            return;
+        }
+        console.log('createReleaseNotification: ' + data + ' User benachrichtigt');
     } catch(err) { console.warn('createReleaseNotification:', err); }
 }
 
