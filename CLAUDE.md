@@ -261,3 +261,10 @@ security: RLS/JWT/Auth-Verbesserung
 - **UX:** Korrigierte Felder werden lila hervorgehoben, Aenderungen als Liste angezeigt.
   Bei KI-Ausfall bleiben Parser-Werte stehen (graceful degradation).
 
+### BWA Save Button Gating (2026-03-05)
+- Save button starts disabled + hidden. Appears only after KI validation completes.
+- Green button "Werte pruefen & BWA speichern" = KI has validated (with or without corrections)
+- Yellow button "Manuell pruefen & speichern" = KI failed, parser values only
+- Yellow button "Ohne KI-Pruefung speichern" = KI unreachable after parser success
+- 8 bwaSaveBtn references: 1 init (disabled) + 7 enable points covering all code paths
+
