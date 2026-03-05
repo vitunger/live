@@ -100,20 +100,67 @@ window.logAudit = async function(aktion, modul, details) {
 // Globaler Fehler-Handler – loggt JS-Fehler ins Audit-Log (gedrosselt, max 1/5s)
 (function() {
     var _lastErrTs = 0;
-    function _logErr(msg, src, detail) {
+    var _errCount = 0;
+    var _THROTTLE_MS = 3000; // max 1 Eintrag pro 3s pro Typ
+    var _lastWarnTs = 0;
+
+    function _fmtArgs(args) {
+        return Array.from(args).map(function(a) {
+            if (a instanceof Error) return a.message + (a.stack ? '\n' + a.stack.split('\n')[1] : '');
+            if (typeof a === 'object') { try { return JSON.stringify(a).substring(0, 150); } catch(e) { return String(a); } }
+            return String(a);
+        }).join(' ').substring(0, 300);
+    }
+
+    // window.onerror + unhandledrejection (echte JS-Laufzeitfehler)
+    window.addEventListener('error', function(e) {
         var now = Date.now();
-        if (now - _lastErrTs < 5000) return; // max 1 Fehler alle 5s
+        if (now - _lastErrTs < _THROTTLE_MS) return;
         _lastErrTs = now;
         window.logAudit && window.logAudit('js_fehler', 'system', {
-            meldung: (msg || '').substring(0, 200),
-            datei: (src || '').replace(window.location.origin, '').substring(0, 100),
-            detail: detail ? String(detail).substring(0, 200) : null
+            meldung: (e.message || '').substring(0, 200),
+            datei: (e.filename || '').replace(window.location.origin, '').substring(0, 100) + ':' + (e.lineno || ''),
         });
-    }
-    window.addEventListener('error', function(e) {
-        _logErr(e.message, e.filename + ':' + e.lineno, null);
     });
     window.addEventListener('unhandledrejection', function(e) {
-        _logErr('Unhandled Promise rejection', window.location.pathname, e.reason && e.reason.message ? e.reason.message : String(e.reason).substring(0, 100));
+        var now = Date.now();
+        if (now - _lastErrTs < _THROTTLE_MS) return;
+        _lastErrTs = now;
+        var reason = e.reason;
+        window.logAudit && window.logAudit('js_fehler', 'system', {
+            meldung: 'Unhandled Promise rejection',
+            detail: reason && reason.message ? reason.message.substring(0, 200) : String(reason).substring(0, 200)
+        });
     });
+
+    // console.error patchen – fängt alle expliziten Fehleraufrufe
+    var _origError = console.error.bind(console);
+    console.error = function() {
+        _origError.apply(console, arguments); // Original weiterhin ausgeben
+        var now = Date.now();
+        if (now - _lastErrTs < _THROTTLE_MS) return;
+        _lastErrTs = now;
+        _errCount++;
+        window.logAudit && window.logAudit('console_error', 'system', {
+            meldung: _fmtArgs(arguments),
+            nr: _errCount
+        });
+    };
+
+    // console.warn patchen – fängt Warnungen (Supabase-Fehler, RLS etc.)
+    var _origWarn = console.warn.bind(console);
+    console.warn = function() {
+        _origWarn.apply(console, arguments); // Original weiterhin ausgeben
+        var now = Date.now();
+        if (now - _lastWarnTs < _THROTTLE_MS) return;
+        // Harmlose Warns filtern
+        var msg = _fmtArgs(arguments);
+        if (msg.indexOf('[logAudit]') !== -1) return; // Endlosschleife verhindern
+        if (msg.indexOf('ResizeObserver') !== -1) return; // Browser-Rauschen
+        if (msg.indexOf('non-passive') !== -1) return;
+        _lastWarnTs = now;
+        window.logAudit && window.logAudit('console_warn', 'system', {
+            meldung: msg
+        });
+    };
 })();

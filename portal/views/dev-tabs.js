@@ -624,6 +624,8 @@ const AUDIT_AKTIONEN = {
     'theme_gewechselt':         { label: 'Dark Mode',                 icon: '🌙', color: 'gray' },
     'suche':                    { label: 'Suche',                     icon: '🔍', color: 'gray' },
     'js_fehler':                { label: 'JS-Fehler',                 icon: '🔴', color: 'orange' },
+    'console_error':            { label: 'console.error',             icon: '🔴', color: 'orange' },
+    'console_warn':             { label: 'console.warn',              icon: '🟡', color: 'orange' },
 };
 
 const AUDIT_COLOR_CLASSES = {
