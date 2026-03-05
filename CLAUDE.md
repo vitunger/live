@@ -910,14 +910,16 @@ Neue Module werden direkt in TypeScript gebaut, hinter modul_status = deaktivier
 - 2026-03-05: Marketing-Modul v2: react-marketing.jsx durch 3 ES-Module ersetzt (marketing.js, marketing-partner.js, marketing-hq.js). Partner: 7 Tabs (Uebersicht, Vereinbarung 2026, Meta Ads, Google Ads, Brand-Reichweite, Socialmedia, Glossar). HQ: 7 Tabs (Netzwerk-Uebersicht, Vereinbarungen, Meta Ads Gesamt, Google Ads Gesamt, Lead Reporting, Budget Plan, Video-Freigabe). DB: marketing_vereinbarungen + marketing_lead_tracking + marketing-docs Bucket. Seed-Daten: Berlin-Brandenburg + Witten. SQL-Migration: supabase/migrations/20260305_marketing_module.sql (muss noch ausgefuehrt werden).
 
 
-### Billing-Day Feature (März 2026)
-- `billing_products.billing_day` (integer 1-28, default 1): Definiert den Abrechnungstag pro Produkt
-- Grundgebühr + Umsatzbeteiligung + Tools → billing_day = 1 (1. des Monats)
-- Marketing-Budget → billing_day = 15 (15. des Monats)
-- Pro Standort können mehrere Rechnungen pro Monat entstehen (eine pro billing_day)
-- `billing_invoices.billing_day` speichert den Tag der jeweiligen Rechnung
-- Rechnungsnummer-Suffix: Tag 1 = normal, Tag 15 = `-15` (z.B. `VB-202603-1001-15`)
-- Edge Function `billing` v16: `generate-monthly-drafts` iteriert über alle billing_days
-- Neue Actions: `get-billing-days`, `update-product-billing-day`
-- HQ Produkte-Tab zeigt `billing_day` als Spalte an
-- Standort-Kostenrechner zeigt die Aufteilung nach Abrechnungstag (1. + 15.)
+### Billing Schedules + Danger-Status (März 2026)
+- **`billing_schedules` Tabelle**: Definiert Abrechnungsarten (Sofort, Monatsmitte 15., Monatsanfang 1., Vorkasse)
+  - `schedule_type`: `fixed_day` | `before_month_end` | `immediate`
+  - `billing_day`, `days_before_month_end`, `payment_term_days`, `is_prepayment`, `is_immediate`
+- **`billing_products.schedule_id`** (FK → billing_schedules): Jedes Produkt referenziert eine Abrechnungsart
+- **`standorte.billing_status`**: `normal` | `danger` – Bei `danger` wird automatisch Vorkasse erzwungen
+- **`billing_invoices.schedule_id`** + `is_danger_override`: Tracking welcher Schedule + ob Override
+- Pro Standort können mehrere Rechnungen pro Monat entstehen (eine pro Schedule)
+- Edge Function `billing` v17: Schedule-basierte Draft-Generierung mit Danger-Override
+- Neue Actions: `list-schedules`, `create-schedule`, `update-schedule`, `update-product-schedule`, `set-billing-status`
+- HQ: Schedules-Tab zur Verwaltung, Produkte-Tab zeigt Abrechnungsart, Danger-Badge in Übersicht
+- Standort: Kostenrechner zeigt Vorkasse-Warnung, Detail-Modal hat Danger-Toggle
+- `calcDueDate()` berechnet Fälligkeitsdatum basierend auf Schedule-Typ
