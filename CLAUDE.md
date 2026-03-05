@@ -219,3 +219,15 @@ security: RLS/JWT/Auth-Verbesserung
 > - `docs/CLAUDE.md` – Go-Live-Fortschritt, Session-Changelog, neue Konzepte
 >
 > **Datum oben aktualisieren** bei jeder inhaltlichen Aenderung.
+
+### Pipeline Standort-Filter Bug (2026-03-05)
+- **Bug:** `react-deal-pipeline.jsx` `loadDeals()` had no `.eq('standort_id', ...)` filter — relied solely on RLS.
+  During impersonation, real `auth.uid()` is HQ user, so RLS returns ALL leads from all Standorte.
+  Client-side `locFiltered` only applied when `isHqUser === true`, but impersonation sets `sbProfile.is_hq = false`.
+- **Fix (2 layers):**
+  1. Query-level: Added `.eq("standort_id", profile.standort_id)` for non-HQ users in `loadDeals()`
+  2. Client-side: Changed `locFiltered` to apply location filter for ALL users with a `curLoc` (not just HQ),
+     so impersonation + any future RLS bypass is handled.
+- **Lesson:** Never rely solely on RLS during impersonation — the auth.uid() stays the original HQ user.
+  Always add explicit query filters as defense-in-depth.
+
