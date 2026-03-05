@@ -368,7 +368,7 @@ function renderStatusGrid() {
 function renderActiveCards() {
     var el = document.getElementById('connActiveCards');
     if (!el) return;
-    el.innerHTML = ['etermin', 'lexoffice', 'approom', 'dhl', 'google', 'meta', 'wawi'].map(function(id) {
+    el.innerHTML = ['etermin', 'lexoffice', 'approom', 'dhl', 'google', 'meta', 'tiktok', 'instagram', 'facebook', 'youtube', 'gmb', 'analytics', 'wawi'].map(function(id) {
         return renderConnectorCard(id);
     }).join('');
 }
