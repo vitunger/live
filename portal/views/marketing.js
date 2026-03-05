@@ -65,6 +65,8 @@ function setSelectedMonth(year, month) {
 async function reloadAndRender() {
     var isHq = _sbProfile() && _sbProfile().is_hq;
     var standortId = isHq ? null : (_sbProfile() && _sbProfile().standort_id);
+    // Erst verfügbare Monate ermitteln (setzt selectedMonth auf letzten Monat mit Daten)
+    if (!mktState.selectedMonth) await initMonthSelect();
     await Promise.all([
         loadAdsData(standortId),
         loadLeadTracking(standortId)
