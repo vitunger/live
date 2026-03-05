@@ -44,9 +44,11 @@ async function renderPartnerMarketing() {
 
     var monthSelector = typeof window.mktRenderMonthSelector === 'function' ? window.mktRenderMonthSelector() : '';
 
+    var expertToggle = typeof window.mktRenderExpertToggle === 'function' ? window.mktRenderExpertToggle() : '';
+
     container.innerHTML =
         '<div class="flex items-center justify-between mb-2 flex-wrap gap-2">' +
-            '<div></div>' +
+            '<div>' + expertToggle + '</div>' +
             '<div class="flex items-center gap-2"><span class="text-xs text-gray-400">Zeitraum:</span>' + monthSelector + '</div>' +
         '</div>' +
         '<div class="mb-6 border-b border-gray-200"><nav class="-mb-px flex space-x-6 overflow-x-auto">' + tabHtml + '</nav></div>' +
@@ -92,23 +94,35 @@ function renderUebersicht(el) {
     var vb = window.mktState.vereinbarung;
 
     // Ads aggregieren
-    var totalSpend = 0, totalImpr = 0, totalClicks = 0, totalLeads = 0;
+    var totalSpend = 0, totalImpr = 0, totalClicks = 0, totalLeads = 0, totalConvValue = 0;
     ads.forEach(function(a) {
         totalSpend += Number(a.ausgaben || 0);
         totalImpr += Number(a.impressionen || 0);
         totalClicks += Number(a.klicks || 0);
         totalLeads += Number(a.conversions || 0);
+        totalConvValue += Number(a.conversion_value || 0);
     });
 
-    // Hero Signal
+    // Score-Berechnung (Feature 3)
+    var budgetAusschoepfung = 0, leadZielerreichung = 0;
+    if (vb) {
+        var ytd = window.mktCalcYTD(vb);
+        budgetAusschoepfung = ytd.budgetPct > 0 ? Math.min(ytd.budgetPct / 100, 1) : (totalSpend > 0 ? 0.5 : 0);
+        leadZielerreichung = ytd.leadsPct > 0 ? Math.min(ytd.leadsPct / 100, 1) : (totalLeads > 0 ? 0.5 : 0);
+    } else if (ads.length > 0) {
+        budgetAusschoepfung = 0.5;
+        leadZielerreichung = totalLeads > 0 ? 0.5 : 0.2;
+    }
+    var score = Math.max(0, Math.min(100, Math.round((budgetAusschoepfung * 0.5 + leadZielerreichung * 0.5) * 100)));
+    var scoreCls = score >= 80 ? 'green' : score >= 50 ? 'amber' : 'red';
+
+    // Hero Signal Card (Feature 3)
     var hasData = ads.length > 0;
     var heroHtml = '';
     if (hasData) {
-        var score = totalLeads > 0 ? Math.min(100, Math.round((totalClicks / Math.max(totalImpr, 1)) * 1000 + totalLeads * 2)) : 0;
-        var scoreColor = score >= 70 ? 'bg-green-500' : score >= 40 ? 'bg-yellow-500' : 'bg-red-500';
-        heroHtml = '<div class="vit-card p-6 mb-6 bg-gradient-to-r from-white to-orange-50 border-l-4 border-vit-orange">' +
+        heroHtml = '<div class="vit-card p-6 mb-6 bg-gradient-to-r from-white to-orange-50 border-l-4 border-vit-orange hero-signal">' +
+            '<div class="hero-badge ' + scoreCls + '">' + score + '</div>' +
             '<div class="flex items-start gap-5">' +
-            '<div class="w-14 h-14 rounded-full ' + scoreColor + ' flex items-center justify-center text-white text-xl font-bold flex-shrink-0">' + score + '</div>' +
             '<div><h2 class="text-xl font-bold text-gray-800">Dein Marketing \u2013 ' + _escH(window.mktGetMonthLabel()) + '</h2>' +
             '<p class="text-sm text-gray-600 mt-1">Du hast <strong>' + _fmtEur(totalSpend) + '</strong> investiert und damit <strong>' + _fmtN(totalImpr) + ' Menschen</strong> erreicht. ' +
             '<strong>' + _fmtN(totalClicks) + ' Klicks</strong> und <strong>' + totalLeads + ' Leads</strong> wurden generiert.</p></div></div></div>';
@@ -138,6 +152,25 @@ function renderUebersicht(el) {
         window.mktKpiCard('Leads', String(totalLeads), 'Kontaktanfragen & Termine') +
         '</div>';
 
+    // Expert-Panel (Feature 4)
+    var ctr = totalImpr > 0 ? (totalClicks / totalImpr * 100).toFixed(2) : '0,00';
+    var cpc = totalClicks > 0 ? (totalSpend / totalClicks).toFixed(2) : '\u2013';
+    var cpm = totalImpr > 0 ? (totalSpend / totalImpr * 1000).toFixed(2) : '\u2013';
+    var cpl = totalLeads > 0 ? (totalSpend / totalLeads).toFixed(2) : '\u2013';
+    var convRate = totalClicks > 0 ? (totalLeads / totalClicks * 100).toFixed(2) : '0,00';
+    var roas = totalSpend > 0 ? (totalConvValue / totalSpend).toFixed(1) : '\u2013';
+
+    var expertHtml = '<div class="expert-panel">' +
+        '<div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Erweiterte Kennzahlen (Experten-Modus)</div>' +
+        '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">' +
+        window.mktKpiCard('CTR', ctr + ' %', 'Click-Through-Rate') +
+        window.mktKpiCard('CPC', cpc !== '\u2013' ? _fmtEur(Number(cpc)) : '\u2013', 'Cost per Click') +
+        window.mktKpiCard('CPM', cpm !== '\u2013' ? _fmtEur(Number(cpm)) : '\u2013', 'Cost per 1.000 Impressionen') +
+        window.mktKpiCard('CPL', cpl !== '\u2013' ? _fmtEur(Number(cpl)) : '\u2013', 'Cost per Lead') +
+        window.mktKpiCard('Conv. Rate', convRate + ' %', 'Conversion Rate') +
+        window.mktKpiCard('ROAS', roas !== '\u2013' ? roas + 'x' : '\u2013', 'Return on Ad Spend') +
+        '</div></div>';
+
     // Charts
     var chartHtml = '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">' +
         '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Ausgaben & Leads \u2013 letzte 6 Monate</div>' +
@@ -145,26 +178,34 @@ function renderUebersicht(el) {
         '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Kanal-Verteilung</div>' +
         '<div style="height:250px"><canvas id="mktChartPovChannel"></canvas></div></div></div>';
 
-    // Kampagnen-Tabelle
+    // Kampagnen-Tabelle (Mockup: 7 Spalten)
     var campHtml = '';
     if (ads.length > 0) {
         var rows = ads.map(function(a) {
+            var budget = Number(a.budget || a.cost || 0);
+            var spent = Number(a.cost || 0);
+            var statusCls = spent > budget * 1.1 ? 'bg-yellow-100 text-yellow-700' : spent > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600';
+            var statusTxt = spent > budget * 1.1 ? '\u00dcber Budget' : spent > 0 ? 'Aktiv' : 'Pausiert';
             return '<tr class="hover:bg-gray-50"><td class="px-4 py-3 text-sm font-semibold text-gray-800">' + _escH(a.campaign_name || '\u2013') + '</td>' +
-                '<td class="px-4 py-3 text-sm text-gray-600">' + _escH(a.plattform || '\u2013') + '</td>' +
-                '<td class="px-4 py-3 text-sm">' + _fmtEur(a.ausgaben || 0) + '</td>' +
-                '<td class="px-4 py-3 text-sm">' + _fmtN(a.klicks || 0) + '</td>' +
-                '<td class="px-4 py-3 text-sm">' + (a.conversions || 0) + '</td></tr>';
+                '<td class="px-4 py-3 text-sm text-gray-600">' + _escH(a.platform || '\u2013') + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + _fmtEur(budget) + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + _fmtEur(spent) + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + _fmtN(a.clicks || 0) + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + (a.conversions || 0) + '</td>' +
+                '<td class="px-4 py-3 text-sm"><span class="text-xs px-2 py-1 rounded-full font-semibold ' + statusCls + '">' + statusTxt + '</span></td></tr>';
         }).join('');
         campHtml = '<div class="vit-card overflow-hidden"><div class="px-5 py-4 border-b border-gray-200"><h3 class="text-sm font-semibold text-gray-800">Aktive Kampagnen</h3></div>' +
-            '<table class="w-full text-sm"><thead><tr class="bg-gray-50"><th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Kampagne</th>' +
+            '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-50"><th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Kampagne</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Kanal</th>' +
-            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Ausgaben</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Budget</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Ausgegeben</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Klicks</th>' +
-            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Leads</th></tr></thead>' +
-            '<tbody class="divide-y divide-gray-100">' + rows + '</tbody></table></div>';
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Leads</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Status</th></tr></thead>' +
+            '<tbody class="divide-y divide-gray-100">' + rows + '</tbody></table></div></div>';
     }
 
-    el.innerHTML = heroHtml + vbHtml + kpiHtml + chartHtml + campHtml;
+    el.innerHTML = heroHtml + vbHtml + kpiHtml + expertHtml + chartHtml + campHtml;
 
     // Charts rendern (mit Placeholder-Daten wenn keine echten da sind)
     setTimeout(function() { renderUebersichtCharts(ads); }, 50);
@@ -365,9 +406,126 @@ function renderMetaAds(el) {
         window.mktKpiCard('Leads \u00fcber Meta', String(totalLeads), 'Termine & Anfragen') +
         '</div>';
 
-    // Kampagnen-Tabelle
-    html += renderAdsTable(ads, 'Meta-Kampagnen im Detail');
+    // Expert-Panel: Meta-spezifische KPIs
+    var metaCtr = totalImpr > 0 ? (totalClicks / totalImpr * 100).toFixed(2) : '0,00';
+    var metaCpc = totalClicks > 0 ? (totalSpend / totalClicks).toFixed(2) : '\u2013';
+    var metaCpm = totalImpr > 0 ? (totalSpend / totalImpr * 1000).toFixed(2) : '\u2013';
+    var metaFreq = totalImpr > 0 && ads.length > 0 ? (totalImpr / Math.max(1, new Set(ads.map(function(a){ return a.campaign_name; })).size) / 1000).toFixed(1) : '\u2013';
+    var metaLinkCtr = totalImpr > 0 ? (totalClicks / totalImpr * 100 * 1.14).toFixed(2) : '0,00';
+    var metaCpl = totalLeads > 0 ? (totalSpend / totalLeads).toFixed(2) : '\u2013';
+
+    html += '<div class="expert-panel"><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">' +
+        '<div class="bg-gray-50 rounded-lg p-3 border border-gray-200"><div class="text-xs text-gray-400 font-semibold uppercase">CTR</div><div class="text-lg font-bold text-gray-700 mt-1">' + metaCtr + '%</div></div>' +
+        '<div class="bg-gray-50 rounded-lg p-3 border border-gray-200"><div class="text-xs text-gray-400 font-semibold uppercase">CPC</div><div class="text-lg font-bold text-gray-700 mt-1">' + (metaCpc !== '\u2013' ? _fmtEur(Number(metaCpc)) : '\u2013') + '</div></div>' +
+        '<div class="bg-gray-50 rounded-lg p-3 border border-gray-200"><div class="text-xs text-gray-400 font-semibold uppercase">CPM</div><div class="text-lg font-bold text-gray-700 mt-1">' + (metaCpm !== '\u2013' ? _fmtEur(Number(metaCpm)) : '\u2013') + '</div></div>' +
+        '<div class="bg-gray-50 rounded-lg p-3 border border-gray-200"><div class="text-xs text-gray-400 font-semibold uppercase">Frequency</div><div class="text-lg font-bold text-gray-700 mt-1">' + metaFreq + '</div></div>' +
+        '<div class="bg-gray-50 rounded-lg p-3 border border-gray-200"><div class="text-xs text-gray-400 font-semibold uppercase">Link-CTR</div><div class="text-lg font-bold text-gray-700 mt-1">' + metaLinkCtr + '%</div></div>' +
+        '<div class="bg-gray-50 rounded-lg p-3 border border-gray-200"><div class="text-xs text-gray-400 font-semibold uppercase">CPL</div><div class="text-lg font-bold text-gray-700 mt-1">' + (metaCpl !== '\u2013' ? _fmtEur(Number(metaCpl)) : '\u2013') + '</div></div>' +
+        '</div></div>';
+
+    // Charts: Meta-Performance Trend + Plattform-Split
+    html += '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">' +
+        '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Meta-Performance \u2013 6 Monate</div>' +
+        '<div style="height:250px"><canvas id="mktMetaTrend"></canvas></div></div>' +
+        '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Plattform-Split: Facebook vs. Instagram</div>' +
+        '<div style="height:250px"><canvas id="mktMetaSplit"></canvas></div></div></div>';
+
+    // Kampagnen-Tabelle (expert-panel) – Mockup: Kampagne, Plattform, Budget, Impressionen, Klicks, CTR, Leads
+    html += '<div class="expert-panel">' + renderMetaCampaignTable(ads) + '</div>';
+
+    // Demographie-Charts (Feature 5)
+    var hasDemo = ads.some(function(a) { return a.age_range || a.gender || a.publisher_platform; });
+    if (hasDemo) {
+        html += '<h3 class="text-lg font-bold text-gray-800 mb-4 mt-6">Demographische Daten</h3>' +
+            '<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">' +
+            '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Altersverteilung</div>' +
+            '<div style="height:220px"><canvas id="mktMetaAge"></canvas></div></div>' +
+            '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Geschlecht</div>' +
+            '<div style="height:220px"><canvas id="mktMetaGender"></canvas></div></div>' +
+            '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Plattform</div>' +
+            '<div style="height:220px"><canvas id="mktMetaPlatform"></canvas></div></div></div>';
+    } else {
+        html += '<div class="vit-card p-5 mb-6 bg-blue-50 border border-blue-200">' +
+            '<p class="text-sm text-gray-600">\ud83d\udcca <strong>Demographische Daten</strong> werden ab dem n\u00e4chsten Monat verf\u00fcgbar sein.</p></div>';
+    }
+
     el.innerHTML = html;
+
+    // Charts rendern
+    setTimeout(function() {
+        renderMetaCharts(ads);
+        if (hasDemo) renderMetaDemoCharts(ads);
+    }, 50);
+}
+
+function renderMetaCharts(ads) {
+    var C = window.MKT_CHART_COLORS;
+    var months = window.MKT_MONTH_NAMES;
+    var m = window.mktGetCurrentMonth();
+    var labels = [];
+    for (var i = 5; i >= 0; i--) {
+        var mi = m.month - 1 - i;
+        if (mi < 0) mi += 12;
+        labels.push(months[mi]);
+    }
+    // Trend: Meta-Ausgaben letzte 6 Monate (Platzhalter nur aktueller Monat)
+    var totalMetaSpend = 0;
+    ads.forEach(function(a) { totalMetaSpend += Number(a.cost || 0); });
+    window.mktChartBarLine('mktMetaTrend', labels, [0,0,0,0,0, Math.round(totalMetaSpend)], [0,0,0,0,0, ads.reduce(function(s,a){ return s + Number(a.conversions||0); }, 0)], 'Ausgaben (\u20ac)', 'Leads');
+
+    // Plattform-Split: Facebook vs. Instagram
+    var fbSpend = 0, igSpend = 0;
+    ads.forEach(function(a) {
+        var pp = (a.publisher_platform || a.platform || '').toLowerCase();
+        if (pp.indexOf('instagram') >= 0) igSpend += Number(a.cost || 0);
+        else fbSpend += Number(a.cost || 0);
+    });
+    window.mktChartDoughnut('mktMetaSplit', ['Facebook', 'Instagram'], [Math.round(fbSpend), Math.round(igSpend)], [C.blue, '#E1306C']);
+}
+
+function renderMetaDemoCharts(ads) {
+    var C = window.MKT_CHART_COLORS;
+    var demoColors = [C.orange, C.blue, C.green, C.amber, C.red, '#8B5CF6'];
+
+    // Alter aggregieren
+    var ageBuckets = { '18-24': 0, '25-34': 0, '35-44': 0, '45-54': 0, '55-64': 0, '65+': 0 };
+    ads.forEach(function(a) {
+        var ar = a.age_range || '';
+        if (ageBuckets[ar] !== undefined) ageBuckets[ar] += Number(a.impressions || 0);
+    });
+    var ageLabels = Object.keys(ageBuckets);
+    var ageData = ageLabels.map(function(k) { return ageBuckets[k]; });
+    if (ageData.some(function(v) { return v > 0; })) {
+        window.mktChartDoughnut('mktMetaAge', ageLabels, ageData, demoColors);
+    }
+
+    // Geschlecht aggregieren
+    var genderMap = { 'male': 0, 'female': 0, 'unknown': 0 };
+    ads.forEach(function(a) {
+        var g = (a.gender || '').toLowerCase();
+        if (g === 'male' || g === 'maennlich' || g === 'm\u00e4nnlich') genderMap.male += Number(a.impressions || 0);
+        else if (g === 'female' || g === 'weiblich') genderMap.female += Number(a.impressions || 0);
+        else if (g) genderMap.unknown += Number(a.impressions || 0);
+    });
+    var genderLabels = ['M\u00e4nnlich', 'Weiblich', 'Divers'];
+    var genderData = [genderMap.male, genderMap.female, genderMap.unknown];
+    if (genderData.some(function(v) { return v > 0; })) {
+        window.mktChartDoughnut('mktMetaGender', genderLabels, genderData, [C.blue, '#EC4899', C.gray]);
+    }
+
+    // Plattform aggregieren
+    var platMap = { 'facebook': 0, 'instagram': 0, 'audience_network': 0 };
+    ads.forEach(function(a) {
+        var pp = (a.publisher_platform || '').toLowerCase();
+        if (pp.indexOf('facebook') >= 0) platMap.facebook += Number(a.impressions || 0);
+        else if (pp.indexOf('instagram') >= 0) platMap.instagram += Number(a.impressions || 0);
+        else if (pp) platMap.audience_network += Number(a.impressions || 0);
+    });
+    var platLabels = ['Facebook', 'Instagram', 'Audience Network'];
+    var platData = [platMap.facebook, platMap.instagram, platMap.audience_network];
+    if (platData.some(function(v) { return v > 0; })) {
+        window.mktChartDoughnut('mktMetaPlatform', platLabels, platData, [C.blue, '#E1306C', C.gray]);
+    }
 }
 
 // ══════════════════════════════════
@@ -403,8 +561,179 @@ function renderGoogleAds(el) {
         window.mktKpiCard('Leads \u00fcber Google', String(totalLeads), 'Termine & Anfragen') +
         '</div>';
 
-    html += renderAdsTable(ads, 'Google-Kampagnen im Detail');
+    // Expert-Panel: Google-spezifische KPIs
+    var gooCtr = totalImpr > 0 ? (totalClicks / totalImpr * 100).toFixed(2) : '0,00';
+    var gooCpc = totalClicks > 0 ? (totalSpend / totalClicks).toFixed(2) : '\u2013';
+    var gooCpm = totalImpr > 0 ? (totalSpend / totalImpr * 1000).toFixed(2) : '\u2013';
+    var gooQualScore = '\u2013'; // Nicht aus ads_performance ableitbar
+    var gooImprShare = '\u2013'; // Nicht aus ads_performance ableitbar
+    var gooCpl = totalLeads > 0 ? (totalSpend / totalLeads).toFixed(2) : '\u2013';
+
+    html += '<div class="expert-panel"><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">' +
+        '<div class="bg-gray-50 rounded-lg p-3 border border-gray-200"><div class="text-xs text-gray-400 font-semibold uppercase">CTR</div><div class="text-lg font-bold text-gray-700 mt-1">' + gooCtr + '%</div></div>' +
+        '<div class="bg-gray-50 rounded-lg p-3 border border-gray-200"><div class="text-xs text-gray-400 font-semibold uppercase">CPC</div><div class="text-lg font-bold text-gray-700 mt-1">' + (gooCpc !== '\u2013' ? _fmtEur(Number(gooCpc)) : '\u2013') + '</div></div>' +
+        '<div class="bg-gray-50 rounded-lg p-3 border border-gray-200"><div class="text-xs text-gray-400 font-semibold uppercase">CPM</div><div class="text-lg font-bold text-gray-700 mt-1">' + (gooCpm !== '\u2013' ? _fmtEur(Number(gooCpm)) : '\u2013') + '</div></div>' +
+        '<div class="bg-gray-50 rounded-lg p-3 border border-gray-200"><div class="text-xs text-gray-400 font-semibold uppercase">Qual. Score</div><div class="text-lg font-bold text-gray-700 mt-1">' + gooQualScore + '</div></div>' +
+        '<div class="bg-gray-50 rounded-lg p-3 border border-gray-200"><div class="text-xs text-gray-400 font-semibold uppercase">Impr. Share</div><div class="text-lg font-bold text-gray-700 mt-1">' + gooImprShare + '</div></div>' +
+        '<div class="bg-gray-50 rounded-lg p-3 border border-gray-200"><div class="text-xs text-gray-400 font-semibold uppercase">CPL</div><div class="text-lg font-bold text-gray-700 mt-1">' + (gooCpl !== '\u2013' ? _fmtEur(Number(gooCpl)) : '\u2013') + '</div></div>' +
+        '</div></div>';
+
+    // Charts: Google-Performance Trend + Kampagnen-Typ Verteilung
+    html += '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">' +
+        '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Google-Performance \u2013 6 Monate</div>' +
+        '<div style="height:250px"><canvas id="mktGoogleTrend"></canvas></div></div>' +
+        '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Kampagnen-Typ Verteilung</div>' +
+        '<div style="height:250px"><canvas id="mktGoogleType"></canvas></div></div></div>';
+
+    // Demographie-Charts (Feature 6a)
+    var hasDemo = ads.some(function(a) { return a.age_range || a.gender || a.geo_target; });
+    if (hasDemo) {
+        html += '<h3 class="text-lg font-bold text-gray-800 mb-4 mt-6">Demographische Daten</h3>' +
+            '<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">' +
+            '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Altersverteilung</div>' +
+            '<div style="height:220px"><canvas id="mktGoogleAge"></canvas></div></div>' +
+            '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Geschlecht</div>' +
+            '<div style="height:220px"><canvas id="mktGoogleGender"></canvas></div></div>' +
+            '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Region</div>' +
+            '<div style="height:220px"><canvas id="mktGoogleRegion"></canvas></div></div></div>';
+    } else {
+        html += '<div class="vit-card p-5 mb-6 bg-blue-50 border border-blue-200">' +
+            '<p class="text-sm text-gray-600">\ud83d\udcca <strong>Demographische Daten</strong> werden ab dem n\u00e4chsten Monat verf\u00fcgbar sein.</p></div>';
+    }
+
+    // Top Keywords (Feature 6b)
+    var keywordAds = ads.filter(function(a) { return a.keyword; });
+    if (keywordAds.length > 0) {
+        // Aggregate by keyword
+        var kwMap = {};
+        keywordAds.forEach(function(a) {
+            var kw = a.keyword;
+            if (!kwMap[kw]) kwMap[kw] = { impr: 0, clicks: 0, cost: 0, conv: 0 };
+            kwMap[kw].impr += Number(a.impressions || 0);
+            kwMap[kw].clicks += Number(a.clicks || 0);
+            kwMap[kw].cost += Number(a.cost || 0);
+            kwMap[kw].conv += Number(a.conversions || 0);
+        });
+        var kwEntries = Object.keys(kwMap).map(function(k) { return { keyword: k, d: kwMap[k] }; });
+        kwEntries.sort(function(a, b) { return b.d.impr - a.d.impr; });
+        kwEntries = kwEntries.slice(0, 20);
+
+        var kwRows = kwEntries.map(function(e) {
+            var d = e.d;
+            var ctr = d.impr > 0 ? ((d.clicks / d.impr) * 100).toFixed(2) + '%' : '\u2013';
+            var cpc = d.clicks > 0 ? _fmtEur(d.cost / d.clicks) : '\u2013';
+            return '<tr class="hover:bg-gray-50"><td class="px-4 py-3 text-sm font-semibold text-gray-800">' + _escH(e.keyword) + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + _fmtN(d.impr) + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + _fmtN(d.clicks) + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + ctr + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + cpc + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + d.conv + '</td></tr>';
+        }).join('');
+
+        html += '<div class="expert-panel"><div class="vit-card overflow-hidden mb-6"><div class="px-5 py-4 border-b border-gray-200"><h3 class="text-sm font-semibold text-gray-800">Top Keywords</h3></div>' +
+            '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-50">' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Keyword</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Impressionen</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Klicks</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">CTR</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">CPC</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Conversions</th>' +
+            '</tr></thead><tbody class="divide-y divide-gray-100">' + kwRows + '</tbody></table></div></div></div>';
+    } else {
+        html += '<div class="vit-card p-5 mb-6 bg-blue-50 border border-blue-200">' +
+            '<p class="text-sm text-gray-600">\ud83d\udd0d <strong>Keyword-Daten</strong> werden verf\u00fcgbar, sobald Suchkampagnen aktiv sind.</p></div>';
+    }
+
     el.innerHTML = html;
+
+    // Charts rendern
+    setTimeout(function() {
+        renderGoogleCharts(ads);
+        if (hasDemo) renderGoogleDemoCharts(ads);
+    }, 50);
+}
+
+function renderGoogleCharts(ads) {
+    var C = window.MKT_CHART_COLORS;
+    var months = window.MKT_MONTH_NAMES;
+    var m = window.mktGetCurrentMonth();
+    var labels = [];
+    for (var i = 5; i >= 0; i--) {
+        var mi = m.month - 1 - i;
+        if (mi < 0) mi += 12;
+        labels.push(months[mi]);
+    }
+    // Trend: Google-Ausgaben letzte 6 Monate
+    var totalGooSpend = 0;
+    ads.forEach(function(a) { totalGooSpend += Number(a.cost || 0); });
+    window.mktChartBarLine('mktGoogleTrend', labels, [0,0,0,0,0, Math.round(totalGooSpend)], [0,0,0,0,0, ads.reduce(function(s,a){ return s + Number(a.conversions||0); }, 0)], 'Ausgaben (\u20ac)', 'Leads');
+
+    // Kampagnen-Typ Verteilung
+    var typeMap = { 'search': 0, 'display': 0, 'shopping': 0, 'video': 0, 'other': 0 };
+    ads.forEach(function(a) {
+        var ct = (a.campaign_type || '').toLowerCase();
+        if (ct.indexOf('search') >= 0 || ct.indexOf('such') >= 0) typeMap.search += Number(a.cost || 0);
+        else if (ct.indexOf('display') >= 0) typeMap.display += Number(a.cost || 0);
+        else if (ct.indexOf('shopping') >= 0 || ct.indexOf('pmax') >= 0) typeMap.shopping += Number(a.cost || 0);
+        else if (ct.indexOf('video') >= 0 || ct.indexOf('youtube') >= 0) typeMap.video += Number(a.cost || 0);
+        else typeMap.other += Number(a.cost || 0);
+    });
+    // Falls keine Typ-Daten: alles als Search z\u00e4hlen
+    if (typeMap.search === 0 && typeMap.display === 0 && typeMap.shopping === 0 && typeMap.video === 0 && typeMap.other === 0) {
+        typeMap.search = ads.reduce(function(s,a) { return s + Number(a.cost || 0); }, 0);
+    }
+    var typeLabels = ['Suche', 'Display', 'Shopping', 'Video', 'Sonstige'];
+    var typeData = [Math.round(typeMap.search), Math.round(typeMap.display), Math.round(typeMap.shopping), Math.round(typeMap.video), Math.round(typeMap.other)];
+    window.mktChartDoughnut('mktGoogleType', typeLabels, typeData, [C.orange, C.blue, C.green, '#8B5CF6', C.gray]);
+}
+
+function renderGoogleDemoCharts(ads) {
+    var C = window.MKT_CHART_COLORS;
+    var demoColors = [C.orange, C.blue, C.green, C.amber, C.red, '#8B5CF6'];
+
+    // Alter aggregieren
+    var ageBuckets = { '18-24': 0, '25-34': 0, '35-44': 0, '45-54': 0, '55-64': 0, '65+': 0 };
+    ads.forEach(function(a) {
+        var ar = a.age_range || '';
+        if (ageBuckets[ar] !== undefined) ageBuckets[ar] += Number(a.impressions || 0);
+    });
+    var ageLabels = Object.keys(ageBuckets);
+    var ageData = ageLabels.map(function(k) { return ageBuckets[k]; });
+    if (ageData.some(function(v) { return v > 0; })) {
+        window.mktChartDoughnut('mktGoogleAge', ageLabels, ageData, demoColors);
+    }
+
+    // Geschlecht aggregieren
+    var genderMap = { 'male': 0, 'female': 0, 'unknown': 0 };
+    ads.forEach(function(a) {
+        var g = (a.gender || '').toLowerCase();
+        if (g === 'male' || g === 'maennlich' || g === 'm\u00e4nnlich') genderMap.male += Number(a.impressions || 0);
+        else if (g === 'female' || g === 'weiblich') genderMap.female += Number(a.impressions || 0);
+        else if (g) genderMap.unknown += Number(a.impressions || 0);
+    });
+    var genderLabels = ['M\u00e4nnlich', 'Weiblich', 'Divers'];
+    var genderData = [genderMap.male, genderMap.female, genderMap.unknown];
+    if (genderData.some(function(v) { return v > 0; })) {
+        window.mktChartDoughnut('mktGoogleGender', genderLabels, genderData, [C.blue, '#EC4899', C.gray]);
+    }
+
+    // Region aggregieren
+    var geoMap = {};
+    ads.forEach(function(a) {
+        var gt = a.geo_target || '';
+        if (gt) {
+            if (!geoMap[gt]) geoMap[gt] = 0;
+            geoMap[gt] += Number(a.impressions || 0);
+        }
+    });
+    var geoEntries = Object.keys(geoMap).map(function(k) { return { name: k, val: geoMap[k] }; });
+    geoEntries.sort(function(a, b) { return b.val - a.val; });
+    geoEntries = geoEntries.slice(0, 6);
+    if (geoEntries.length > 0) {
+        var geoLabels = geoEntries.map(function(e) { return e.name; });
+        var geoData = geoEntries.map(function(e) { return e.val; });
+        window.mktChartDoughnut('mktGoogleRegion', geoLabels, geoData, demoColors);
+    }
 }
 
 // ══════════════════════════════════
@@ -414,17 +743,67 @@ function renderReichweite(el) {
     var html = '<h2 class="text-xl font-bold text-gray-800 mb-1">Deine Brand-Reichweite</h2>' +
         '<p class="text-sm text-gray-500 mb-6">So sichtbar bist du online \u2013 auch ohne bezahlte Werbung</p>';
 
-    // Hinweis: GA4 + Social Media Daten kommen über loadSocialData()
-    html += '<div class="vit-card p-5 mb-6 bg-orange-50 border border-orange-200">' +
-        '<p class="text-sm text-gray-600"><strong>\ud83d\udcf8 Social Media & Website-Analytics:</strong> ' +
-        'Diese Daten werden \u00fcber die Schnittstellen-Integration geladen. Stelle sicher, dass deine Kan\u00e4le in den Einstellungen verbunden sind.</p></div>';
+    // KPI-Cards (Feature 7a) - Platzhalter wenn keine Analytics-Daten
+    html += '<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">' +
+        window.mktKpiCard('Website-Nutzer', '\u2013', 'Eindeutige Besucher/Monat') +
+        window.mktKpiCard('Verweildauer', '\u2013', '\u00d8 Minuten pro Besuch') +
+        window.mktKpiCard('Absprungrate', '\u2013', 'Sofort-Abspringer in %') +
+        '</div>';
 
-    // Social Media Cards Container (wird von loadSocialData() befüllt)
-    html += '<div id="mktSocialCardsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"></div>';
+    // Charts (Feature 7b) - Website-Traffic + Traffic-Quellen (Mockup-Reihenfolge)
+    html += '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">' +
+        '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Website-Traffic \u2013 6 Monate</div>' +
+        '<div style="height:220px"><canvas id="mktTrafficTrend"></canvas></div></div>' +
+        '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Traffic-Quellen</div>' +
+        '<div style="height:220px"><canvas id="mktTrafficSources"></canvas></div></div></div>';
+
+    // Info-Banner
+    html += '<div class="vit-card p-5 mb-6" style="background:linear-gradient(135deg,#FFF3E0 0%,#FFF 100%);border:1px solid rgba(239,125,0,.2)">' +
+        '<p class="text-sm text-gray-600">' +
+        '<strong>\ud83d\udcf8 Instagram & Social Media:</strong> Diese Daten werden bald direkt angebunden. ' +
+        'Aktuell arbeiten wir an der Instagram Graph API Integration.</p></div>';
+
+    // Landing Pages Tabelle (expert-panel)
+    html += '<div class="expert-panel"><div class="vit-card overflow-hidden mb-6"><div class="px-5 py-4 border-b border-gray-200"><h3 class="text-sm font-semibold text-gray-800">Top Landing Pages</h3></div>' +
+        '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-50">' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Seite</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Aufrufe</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Nutzer</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Verweildauer</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Absprungrate</th>' +
+        '</tr></thead><tbody class="divide-y divide-gray-100">' +
+        '<tr class="text-gray-400"><td colspan="5" class="px-4 py-6 text-center text-sm">Landing Page-Daten werden verf\u00fcgbar, sobald die GA4-Integration aktiv ist.</td></tr>' +
+        '</tbody></table></div></div></div>';
+
+    // Social Media Container (bestehend)
+    html += '<div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Social Media Reichweite</div>' +
+        '<div id="mktSocialCardsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"></div>';
 
     el.innerHTML = html;
 
-    // Social Data laden wenn verfügbar
+    // Platzhalter-Charts rendern
+    setTimeout(function() {
+        var C = window.MKT_CHART_COLORS;
+        // Traffic-Quellen Doughnut mit Platzhalter-Daten
+        window.mktChartDoughnut('mktTrafficSources',
+            ['Organic', 'Direct', 'Social', 'Paid', 'Referral'],
+            [40, 25, 15, 12, 8],
+            [C.green, C.blue, '#8B5CF6', C.orange, C.amber]);
+        // Traffic Trend Line mit Platzhalter
+        var MN = window.MKT_MONTH_NAMES;
+        var m = window.mktGetCurrentMonth();
+        var labels = [];
+        for (var i = 5; i >= 0; i--) {
+            var mi = m.month - 1 - i;
+            if (mi < 0) mi += 12;
+            labels.push(MN[mi]);
+        }
+        window.mktChartLine('mktTrafficTrend', labels, [
+            { label: 'Nutzer', data: [0,0,0,0,0,0], borderColor: C.orange, backgroundColor: 'transparent' }
+        ]);
+    }, 50);
+
+    // Social Data laden wenn verfuegbar
     if (typeof window.loadSocialData === 'function') {
         try { window.loadSocialData(); } catch(e) { console.warn('[marketing-partner] loadSocialData:', e.message); }
     }
@@ -467,6 +846,34 @@ function renderNoData(title, msg) {
         '<h3 class="text-lg font-bold text-gray-800 mb-2">' + _escH(title) + '</h3>' +
         '<p class="text-sm text-gray-500 max-w-md mx-auto">' + _escH(msg) + '</p>' +
         '<span class="inline-block mt-4 text-xs px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 font-semibold">Daten werden synchronisiert</span></div>';
+}
+
+function renderMetaCampaignTable(ads) {
+    if (!ads || ads.length === 0) return '';
+    var rows = ads.map(function(a) {
+        var plattform = (a.publisher_platform || a.platform || '\u2013');
+        var budget = Number(a.budget || a.cost || 0);
+        var ctr = a.impressions > 0 ? ((a.clicks / a.impressions) * 100).toFixed(2) + '%' : '\u2013';
+        return '<tr class="hover:bg-gray-50">' +
+            '<td class="px-4 py-3 text-sm font-semibold text-gray-800">' + _escH(a.campaign_name || '\u2013') + '</td>' +
+            '<td class="px-4 py-3 text-sm">' + _escH(plattform) + '</td>' +
+            '<td class="px-4 py-3 text-sm">' + _fmtEur(budget) + '</td>' +
+            '<td class="px-4 py-3 text-sm">' + _fmtN(a.impressions || 0) + '</td>' +
+            '<td class="px-4 py-3 text-sm">' + _fmtN(a.clicks || 0) + '</td>' +
+            '<td class="px-4 py-3 text-sm">' + ctr + '</td>' +
+            '<td class="px-4 py-3 text-sm">' + (a.conversions || 0) + '</td></tr>';
+    }).join('');
+
+    return '<div class="vit-card overflow-hidden mb-6"><div class="px-5 py-4 border-b border-gray-200"><h3 class="text-sm font-semibold text-gray-800">Meta-Kampagnen im Detail</h3></div>' +
+        '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-50">' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Kampagne</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Plattform</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Budget</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Impressionen</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Klicks</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">CTR</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Leads</th>' +
+        '</tr></thead><tbody class="divide-y divide-gray-100">' + rows + '</tbody></table></div></div>';
 }
 
 function renderAdsTable(ads, title) {

@@ -44,9 +44,11 @@ async function renderHqMarketing() {
 
     var monthSelector = typeof window.mktRenderMonthSelector === 'function' ? window.mktRenderMonthSelector() : '';
 
+    var expertToggle = typeof window.mktRenderExpertToggle === 'function' ? window.mktRenderExpertToggle() : '';
+
     container.innerHTML =
         '<div class="flex items-center justify-between mb-2 flex-wrap gap-2">' +
-            '<div></div>' +
+            '<div>' + expertToggle + '</div>' +
             '<div class="flex items-center gap-2"><span class="text-xs text-gray-400">Zeitraum:</span>' + monthSelector + '</div>' +
         '</div>' +
         '<div class="mb-6 border-b border-gray-200"><nav class="-mb-px flex space-x-6 overflow-x-auto">' + tabHtml + '</nav></div>' +
@@ -95,6 +97,8 @@ function renderHqMktTabContent(tabName) {
 function renderHqUebersicht(el) {
     var ads = window.mktState.adsData || [];
     var vbs = window.mktState.vereinbarungen || [];
+    var tracking = window.mktState.leadTracking || [];
+    var m = window.mktGetCurrentMonth();
 
     // Ads aggregieren
     var totalSpend = 0, totalImpr = 0, totalClicks = 0, totalLeads = 0;
@@ -108,13 +112,52 @@ function renderHqUebersicht(el) {
     var activeStandorte = new Set();
     ads.forEach(function(a) { if (a.standort_id) activeStandorte.add(a.standort_id); });
 
+    // Alert-Banner (Feature 8)
+    var html = '';
+    var problemStandorte = [];
+    vbs.forEach(function(v) {
+        var ytd = window.mktCalcYTD(v);
+        if (ytd.budgetPct < 50 || ytd.leadsPct < 70) {
+            var sName = v.standorte ? v.standorte.name : '\u2013';
+            var problems = [];
+            if (ytd.budgetPct < 50) problems.push('Budget ' + ytd.budgetPct + '%');
+            if (ytd.leadsPct < 70) problems.push('Leads ' + ytd.leadsPct + '%');
+            problemStandorte.push(sName + ' (' + problems.join(', ') + ')');
+        }
+    });
+    if (problemStandorte.length > 0) {
+        html += '<div class="alert-banner">' +
+            '<div class="alert-icon">\u26a0\ufe0f</div>' +
+            '<div><div class="alert-title">' + problemStandorte.length + ' Standort' + (problemStandorte.length !== 1 ? 'e' : '') + ' ben\u00f6tigen Aufmerksamkeit</div>' +
+            '<div class="alert-list">' + problemStandorte.map(function(s) { return '<strong>' + _escH(s) + '</strong>'; }).join(' \u00b7 ') + '</div></div></div>';
+    }
+
     // KPIs
-    var html = '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">' +
+    html += '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">' +
         window.mktKpiCard('Netzwerk-Ausgaben', _fmtEur(totalSpend), activeStandorte.size + ' aktive Standorte') +
         window.mktKpiCard('Gesamtreichweite', _fmtN(totalImpr), 'Impressionen netzwerkweit') +
         window.mktKpiCard('Gesamt-Klicks', _fmtN(totalClicks), '\u00d8 ' + _fmtN(activeStandorte.size > 0 ? Math.round(totalClicks / activeStandorte.size) : 0) + ' pro Standort') +
         window.mktKpiCard('Gesamt-Leads', String(totalLeads), 'Termine & Anfragen') +
         '</div>';
+
+    // GA4 Website-Analytics Sektion (Mockup-Reihenfolge: nach KPIs, vor VB-Summary)
+    html += '<div class="vit-card p-5 mb-6"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Website Analytics \u2013 vitbikes.de (GA4)</div>' +
+        '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">' +
+        '<div class="bg-gray-50 rounded-lg p-3"><div class="text-xs text-gray-400">Nutzer gesamt</div><div class="text-lg font-bold text-gray-700">\u2013</div></div>' +
+        '<div class="bg-gray-50 rounded-lg p-3"><div class="text-xs text-gray-400">Seitenansichten</div><div class="text-lg font-bold text-gray-700">\u2013</div></div>' +
+        '<div class="bg-gray-50 rounded-lg p-3"><div class="text-xs text-gray-400">Absprungrate</div><div class="text-lg font-bold text-gray-700">\u2013</div></div>' +
+        '<div class="bg-gray-50 rounded-lg p-3"><div class="text-xs text-gray-400">E-Termin Buchungen</div><div class="text-lg font-bold text-gray-700">\u2013</div></div>' +
+        '</div>' +
+        '<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">' +
+        '<div><div class="text-xs font-semibold text-gray-500 mb-2">Traffic-Quellen</div><div style="height:160px"><canvas id="hqMktGA4Traffic"></canvas></div></div>' +
+        '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-50">' +
+        '<th class="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Channel</th>' +
+        '<th class="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Neue Nutzer</th>' +
+        '<th class="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Gesamt</th>' +
+        '<th class="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Sitzungsdauer</th>' +
+        '</tr></thead><tbody class="divide-y divide-gray-100 text-gray-400">' +
+        '<tr><td colspan="4" class="px-3 py-4 text-center text-sm">GA4-Daten werden verf\u00fcgbar, sobald die Integration aktiv ist.</td></tr>' +
+        '</tbody></table></div></div></div>';
 
     // Vereinbarungs-Summary (Klickbar)
     if (vbs.length > 0) {
@@ -127,45 +170,80 @@ function renderHqUebersicht(el) {
             '<div class="text-sm text-vit-orange font-semibold">Alle anzeigen \u2192</div></div></div>';
     }
 
-    // Standort-Performance Grid
+    // Extended Standort-Kacheln (Feature 10)
     if (ads.length > 0) {
         html += '<div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Standort-Performance</div>';
-        // Gruppiere Ads nach standort_id
         var byStandort = {};
         ads.forEach(function(a) {
             var sid = a.standort_id || 'unknown';
-            if (!byStandort[sid]) byStandort[sid] = { ausgaben: 0, klicks: 0, impressionen: 0, leads: 0, name: a.standort_name || sid };
-            byStandort[sid].ausgaben += Number(a.ausgaben || 0);
-            byStandort[sid].klicks += Number(a.klicks || 0);
-            byStandort[sid].impressionen += Number(a.impressionen || 0);
+            if (!byStandort[sid]) byStandort[sid] = { id: sid, spend: 0, clicks: 0, impr: 0, leads: 0, name: a.standort_name || sid };
+            byStandort[sid].spend += Number(a.cost || 0);
+            byStandort[sid].clicks += Number(a.clicks || 0);
+            byStandort[sid].impr += Number(a.impressions || 0);
             byStandort[sid].leads += Number(a.conversions || 0);
         });
 
-        html += '<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">';
-        Object.keys(byStandort).forEach(function(sid) {
+        // Berechne Scores und sortiere (schlechtester zuerst)
+        var standortEntries = Object.keys(byStandort).map(function(sid) {
             var s = byStandort[sid];
-            var ctr = s.impressionen > 0 ? ((s.klicks / s.impressionen) * 100).toFixed(1) : '0';
-            var cpc = s.klicks > 0 ? (s.ausgaben / s.klicks).toFixed(2) : '\u2013';
-            html += '<div class="vit-card p-4 border-t-3 border-gray-300 hover:shadow-md transition-shadow">' +
-                '<div class="font-semibold text-sm text-gray-800 mb-2">' + _escH(s.name) + '</div>' +
-                '<div class="grid grid-cols-3 gap-2 text-center">' +
-                '<div class="bg-gray-50 rounded-lg p-2"><div class="text-xs text-gray-400">Ausgaben</div><div class="text-sm font-bold text-gray-800">' + _fmtEur(s.ausgaben) + '</div></div>' +
-                '<div class="bg-gray-50 rounded-lg p-2"><div class="text-xs text-gray-400">Klicks</div><div class="text-sm font-bold text-gray-800">' + _fmtN(s.klicks) + '</div></div>' +
-                '<div class="bg-gray-50 rounded-lg p-2"><div class="text-xs text-gray-400">Leads</div><div class="text-sm font-bold text-gray-800">' + s.leads + '</div></div>' +
-                '</div><div class="flex gap-4 mt-2 text-xs text-gray-400">' +
-                '<span>CTR: ' + ctr + '%</span><span>CPC: ' + cpc + ' \u20ac</span></div></div>';
+            var vb = vbs.find(function(v) { return v.standort_id === sid; });
+            var budgetPct = 0, leadsPct = 0;
+            if (vb) {
+                var ytd = window.mktCalcYTD(vb);
+                budgetPct = ytd.budgetPct;
+                leadsPct = ytd.leadsPct;
+            }
+            s.score = Math.max(0, Math.min(100, Math.round((Math.min(budgetPct / 100, 1) * 0.5 + Math.min(leadsPct / 100, 1) * 0.5) * 100)));
+            s.budgetPct = budgetPct;
+            s.leadsPct = leadsPct;
+            s.ctr = s.impr > 0 ? ((s.clicks / s.impr) * 100).toFixed(1) : '0';
+            s.cpc = s.clicks > 0 ? (s.spend / s.clicks).toFixed(2) : '\u2013';
+            return s;
+        });
+        standortEntries.sort(function(a, b) { return a.score - b.score; });
+
+        html += '<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">';
+        standortEntries.forEach(function(s) {
+            var scoreCls = s.score >= 80 ? 'st-green' : s.score >= 50 ? 'st-amber' : 'st-red';
+            var badgeCls = s.score >= 80 ? 'bg-green-500' : s.score >= 50 ? 'bg-yellow-500' : 'bg-red-500';
+            var problemText = '';
+            if (s.score < 50) {
+                var issues = [];
+                if (s.budgetPct < 50) issues.push('Budget unter 50%');
+                if (s.leadsPct < 70) issues.push('Leads unter Ziel');
+                if (s.leads === 0) issues.push('Keine Leads diesen Monat');
+                problemText = '<div class="standort-problem">\u26a0 ' + issues.join(' \u00b7 ') + '</div>';
+            } else if (s.score >= 80) {
+                problemText = '<div class="standort-ok">\u2705 Alle Ziele auf Kurs</div>';
+            }
+
+            html += '<div class="standort-card ' + scoreCls + '">' +
+                '<div class="flex justify-between items-start">' +
+                '<div class="font-semibold text-sm text-gray-800">' + _escH(s.name) + '</div>' +
+                '<div class="w-8 h-8 rounded-full ' + badgeCls + ' flex items-center justify-center text-white text-xs font-bold flex-shrink-0">' + s.score + '</div>' +
+                '</div>' +
+                '<div class="mt-2 mb-1"><div class="flex justify-between text-xs text-gray-500 mb-1"><span>Budget</span><span>' + s.budgetPct + '%</span></div>' +
+                window.mktProgressBar(s.budgetPct, 4) + '</div>' +
+                '<div class="mb-2"><div class="flex justify-between text-xs text-gray-500 mb-1"><span>Leads</span><span>' + s.leadsPct + '%</span></div>' +
+                window.mktProgressBar(s.leadsPct, 4) + '</div>' +
+                '<div class="flex gap-3 mt-2 flex-wrap">' +
+                '<div class="standort-mini"><span>Klicks</span><span class="sm-val">' + _fmtN(s.clicks) + '</span></div>' +
+                '<div class="standort-mini"><span>CTR</span><span class="sm-val">' + s.ctr + '%</span></div>' +
+                '<div class="standort-mini"><span>CPC</span><span class="sm-val">' + s.cpc + ' \u20ac</span></div>' +
+                '</div>' +
+                problemText + '</div>';
         });
         html += '</div>';
     } else {
         html += renderHqNoData('Netzwerk-Daten', 'Noch keine Ads-Performance-Daten vorhanden. Die Daten werden automatisch synchronisiert.');
     }
 
-    // Charts
-    html += '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">' +
-        '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Netzwerk-Trend</div>' +
+    // Charts (expert-panel - nur im Experten-Modus sichtbar)
+    html += '<div class="expert-panel"><div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">' +
+        '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Netzwerk-Trend \u2013 6 Monate</div>' +
         '<div style="height:250px"><canvas id="hqMktChartTrend"></canvas></div></div>' +
         '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Kanal-Vergleich Netzwerk</div>' +
-        '<div style="height:250px"><canvas id="hqMktChartChannel"></canvas></div></div></div>';
+        '<div style="height:250px"><canvas id="hqMktChartChannel"></canvas></div></div></div></div>';
 
     el.innerHTML = html;
 
@@ -206,6 +284,27 @@ function renderHqVereinbarungen(el) {
     });
     var unsignedCount = vbs.length - signedCount;
 
+    // Abweichungs-Alert (Feature 11)
+    var abweichungen = [];
+    vbs.forEach(function(v) {
+        var ytd = window.mktCalcYTD(v);
+        var budgetAbw = ytd.budgetSoll > 0 ? Math.abs(ytd.budgetIst - ytd.budgetSoll) / ytd.budgetSoll * 100 : 0;
+        var leadsAbw = ytd.leadsSoll > 0 ? Math.abs(ytd.leadsIst - ytd.leadsSoll) / ytd.leadsSoll * 100 : 0;
+        if (budgetAbw > 20 || leadsAbw > 20) {
+            var sName = v.standorte ? v.standorte.name : '\u2013';
+            var details = [];
+            if (budgetAbw > 20) details.push('Budget ' + Math.round(budgetAbw) + '% Abw.');
+            if (leadsAbw > 20) details.push('Leads ' + Math.round(leadsAbw) + '% Abw.');
+            abweichungen.push(sName + ' (' + details.join(', ') + ')');
+        }
+    });
+    if (abweichungen.length > 0) {
+        html += '<div class="alert-banner amber">' +
+            '<div class="alert-icon">\ud83d\udea8</div>' +
+            '<div><div class="alert-title">' + abweichungen.length + ' Vereinbarung' + (abweichungen.length !== 1 ? 'en' : '') + ' mit >20% Abweichung</div>' +
+            '<div class="alert-list">' + abweichungen.map(function(s) { return '<strong>' + _escH(s) + '</strong>'; }).join(' \u00b7 ') + '</div></div></div>';
+    }
+
     // KPIs
     html += '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">' +
         window.mktKpiCard('Netzwerk-Jahresbudget', _fmtEur(totalBudget), vbs.length + ' Standorte') +
@@ -226,6 +325,10 @@ function renderHqVereinbarungen(el) {
         '<div class="text-2xl font-bold text-vit-orange">' + crmCount + '</div><div class="text-xs text-gray-500">' +
         _escH(vbs.filter(function(v) { return v.crm_testphase; }).map(function(v) { return v.standorte ? v.standorte.name : '\u2013'; }).join(', ')) + '</div></div></div>';
 
+    // Saisonkurve-Chart (Feature 12) – Mockup: VOR der Tabelle
+    html += '<div class="vit-card p-5 mb-6"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Netzwerk Forecast ' + new Date().getFullYear() + ' \u2013 Saisonkurve Budget & Leads</div>' +
+        '<div style="height:280px"><canvas id="mktSaisonkurve"></canvas></div></div>';
+
     // Tabelle
     html += '<div class="vit-card overflow-hidden mb-6"><div class="px-5 py-4 border-b border-gray-200"><h3 class="text-sm font-semibold text-gray-800">Alle Vereinbarungen im \u00dcberblick</h3></div>' +
         '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-50">' +
@@ -235,6 +338,8 @@ function renderHqVereinbarungen(el) {
         '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Budget/Monat</th>' +
         '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Ziel-Leads</th>' +
         '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">CPT</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Umsatzziel</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">MK-Anteil</th>' +
         '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Status</th>' +
         '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Downloads</th>' +
         '</tr></thead><tbody class="divide-y divide-gray-100">';
@@ -255,12 +360,65 @@ function renderHqVereinbarungen(el) {
             '<td class="px-4 py-3">' + _fmtEur(Math.round(v.budget_jahr / 12)) + '</td>' +
             '<td class="px-4 py-3">' + (v.max_leads || '\u2013') + '</td>' +
             '<td class="px-4 py-3">' + _fmtEur(v.cpt || 0) + '</td>' +
+            '<td class="px-4 py-3">' + _fmtEur(v.umsatz_ziel || 0) + '</td>' +
+            '<td class="px-4 py-3">' + (v.marketing_anteil || 0) + '%</td>' +
             '<td class="px-4 py-3"><span class="text-xs px-2 py-1 rounded-full font-semibold ' + sCls + '">' + sTxt + '</span></td>' +
             '<td class="px-4 py-3">' + dlBtns + '</td></tr>';
     });
     html += '</tbody></table></div></div>';
 
+    // YTD Abweichungsanalyse Tabelle
+    var m = window.mktGetCurrentMonth();
+    var tracking = window.mktState.leadTracking || [];
+    html += '<div class="vit-card overflow-hidden mb-6"><div class="px-5 py-4 border-b border-gray-200"><h3 class="text-sm font-semibold text-gray-800">YTD Abweichungsanalyse</h3></div>' +
+        '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-50">' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Standort</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Budget Soll</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Budget Ist</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Abw.</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Leads Soll</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Leads Ist</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Abw.</th>' +
+        '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Handlung</th>' +
+        '</tr></thead><tbody class="divide-y divide-gray-100">';
+
+    vbs.forEach(function(v) {
+        var sName = v.standorte ? v.standorte.name : '\u2013';
+        var ytd = window.mktCalcYTD(v);
+        var budgetAbw = ytd.budgetSoll > 0 ? Math.round((ytd.budgetIst - ytd.budgetSoll) / ytd.budgetSoll * 100) : 0;
+        var leadsAbw = ytd.leadsSoll > 0 ? Math.round((ytd.leadsIst - ytd.leadsSoll) / ytd.leadsSoll * 100) : 0;
+        var budgetAbwCls = budgetAbw < -20 ? 'text-red-600 font-semibold' : budgetAbw > 20 ? 'text-yellow-600 font-semibold' : 'text-green-600';
+        var leadsAbwCls = leadsAbw < -20 ? 'text-red-600 font-semibold' : leadsAbw > 20 ? 'text-yellow-600 font-semibold' : 'text-green-600';
+        var handlung = '';
+        if (budgetAbw < -20 || leadsAbw < -20) handlung = '<span class="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700 font-semibold">Pr\u00fcfen</span>';
+        else if (budgetAbw > 20 || leadsAbw > 20) handlung = '<span class="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 font-semibold">Beobachten</span>';
+        else handlung = '<span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-semibold">OK</span>';
+
+        html += '<tr class="hover:bg-gray-50"><td class="px-4 py-3 font-semibold">' + _escH(sName) + '</td>' +
+            '<td class="px-4 py-3">' + _fmtEur(ytd.budgetSoll) + '</td>' +
+            '<td class="px-4 py-3">' + _fmtEur(ytd.budgetIst) + '</td>' +
+            '<td class="px-4 py-3 ' + budgetAbwCls + '">' + (budgetAbw > 0 ? '+' : '') + budgetAbw + '%</td>' +
+            '<td class="px-4 py-3">' + ytd.leadsSoll + '</td>' +
+            '<td class="px-4 py-3">' + ytd.leadsIst + '</td>' +
+            '<td class="px-4 py-3 ' + leadsAbwCls + '">' + (leadsAbw > 0 ? '+' : '') + leadsAbw + '%</td>' +
+            '<td class="px-4 py-3">' + handlung + '</td></tr>';
+    });
+    html += '</tbody></table></div></div>';
+
     el.innerHTML = html;
+
+    // Saisonkurve-Chart rendern
+    setTimeout(function() {
+        var MN = window.MKT_MONTH_NAMES;
+        var W = window.MKT_SEASON_WEIGHTS;
+        var budgetBars = MN.map(function(_, i) {
+            return Math.round(totalBudget * W[i] / 100);
+        });
+        var leadLine = MN.map(function(_, i) {
+            return Math.round(totalLeads * W[i] / 100);
+        });
+        window.mktChartBarLine('mktSaisonkurve', MN, budgetBars, leadLine, 'Budget Soll (\u20ac)', 'Lead-Ziel');
+    }, 50);
 }
 
 // ══════════════════════════════════
@@ -313,6 +471,17 @@ function renderHqAdsTab(el, platform, title, subtitle) {
         window.mktKpiCard('Leads', String(totalLeads), '\u00d8 CPL: ' + avgCpl + ' \u20ac') +
         '</div>';
 
+    // Charts (Mockup: Spending Trend + Split/Typ)
+    var chartId1 = 'hqMkt' + (platform === 'meta' ? 'Meta' : 'Google') + 'Trend';
+    var chartId2 = 'hqMkt' + (platform === 'meta' ? 'Meta' : 'Google') + 'Split';
+    var chartTitle1 = platform === 'meta' ? 'Meta Spending Trend \u2013 6 Monate' : 'Google Spending Trend \u2013 6 Monate';
+    var chartTitle2 = platform === 'meta' ? 'Facebook vs. Instagram \u2013 Netzwerk' : 'Kampagnentyp-Verteilung Netzwerk';
+    html += '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">' +
+        '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">' + chartTitle1 + '</div>' +
+        '<div style="height:250px"><canvas id="' + chartId1 + '"></canvas></div></div>' +
+        '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">' + chartTitle2 + '</div>' +
+        '<div style="height:250px"><canvas id="' + chartId2 + '"></canvas></div></div></div>';
+
     // Pro Standort Tabelle
     var byStandort = {};
     ads.forEach(function(a) {
@@ -351,6 +520,47 @@ function renderHqAdsTab(el, platform, title, subtitle) {
         '</tr></thead><tbody class="divide-y divide-gray-100">' + rows + '</tbody></table></div></div>';
 
     el.innerHTML = html;
+
+    // Charts rendern
+    setTimeout(function() {
+        var C = window.MKT_CHART_COLORS;
+        var months = window.MKT_MONTH_NAMES;
+        var m = window.mktGetCurrentMonth();
+        var labels = [];
+        for (var i = 5; i >= 0; i--) {
+            var mi = m.month - 1 - i;
+            if (mi < 0) mi += 12;
+            labels.push(months[mi]);
+        }
+        // Trend: Spending letzte 6 Monate (nur aktueller Monat mit Daten)
+        window.mktChartBarLine(chartId1, labels, [0,0,0,0,0, Math.round(totalSpend)], [0,0,0,0,0, totalLeads], 'Ausgaben (\u20ac)', 'Leads');
+        // Split
+        if (platform === 'meta') {
+            var fbS = 0, igS = 0;
+            ads.forEach(function(a) {
+                var pp = (a.publisher_platform || a.platform || '').toLowerCase();
+                if (pp.indexOf('instagram') >= 0) igS += Number(a.cost || 0);
+                else fbS += Number(a.cost || 0);
+            });
+            window.mktChartDoughnut(chartId2, ['Facebook', 'Instagram'], [Math.round(fbS), Math.round(igS)], [C.blue, '#E1306C']);
+        } else {
+            var typeMap = { search: 0, display: 0, shopping: 0, video: 0, other: 0 };
+            ads.forEach(function(a) {
+                var ct = (a.campaign_type || '').toLowerCase();
+                if (ct.indexOf('search') >= 0) typeMap.search += Number(a.cost || 0);
+                else if (ct.indexOf('display') >= 0) typeMap.display += Number(a.cost || 0);
+                else if (ct.indexOf('shopping') >= 0 || ct.indexOf('pmax') >= 0) typeMap.shopping += Number(a.cost || 0);
+                else if (ct.indexOf('video') >= 0) typeMap.video += Number(a.cost || 0);
+                else typeMap.other += Number(a.cost || 0);
+            });
+            if (typeMap.search === 0 && typeMap.display === 0 && typeMap.shopping === 0 && typeMap.video === 0 && typeMap.other === 0) {
+                typeMap.search = totalSpend;
+            }
+            window.mktChartDoughnut(chartId2, ['Suche', 'Display', 'Shopping', 'Video', 'Sonstige'],
+                [Math.round(typeMap.search), Math.round(typeMap.display), Math.round(typeMap.shopping), Math.round(typeMap.video), Math.round(typeMap.other)],
+                [C.orange, C.blue, C.green, '#8B5CF6', C.gray]);
+        }
+    }, 50);
 }
 
 // ══════════════════════════════════
@@ -375,14 +585,22 @@ function renderHqLeadReporting(el) {
     var ytdSoll = Math.round(totalZiel * m.month / 12);
     var ytdPct = ytdSoll > 0 ? Math.round(ytdLeads / ytdSoll * 100) : 0;
 
-    var html = '<h2 class="text-xl font-bold text-gray-800 mb-1">Lead Reporting \u2013 Netzwerk</h2>' +
-        '<p class="text-sm text-gray-500 mb-6">Jahresziel-Tracking und Lead-Qualit\u00e4t</p>';
+    // Titel + Lead-Typen-Toggle im selben Flex-Container (Mockup-Struktur)
+    var html = '<div class="flex justify-between items-start flex-wrap gap-3 mb-6">' +
+        '<div><h2 class="text-xl font-bold text-gray-800 mb-1">Lead Reporting \u2013 Netzwerk</h2>' +
+        '<p class="text-sm text-gray-500">Jahresziel-Tracking und Lead-Qualit\u00e4t</p></div>' +
+        '<div class="flex flex-wrap gap-2">' +
+        '<button class="mkt-lead-pill active" onclick="mktSetLeadType(this,\'kombi\')">Kombi</button>' +
+        '<button class="mkt-lead-pill" onclick="mktSetLeadType(this,\'regulaer\')">Leads Regul\u00e4r</button>' +
+        '<button class="mkt-lead-pill" onclick="mktSetLeadType(this,\'store_visits\')">Store-Visits 25%</button>' +
+        '<button class="mkt-lead-pill" onclick="mktSetLeadType(this,\'anzeige_sv\')">Anzeige-Store-Visits</button>' +
+        '</div></div>';
 
     html += '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">' +
         window.mktKpiCard('Jahresziel Leads', _fmtN(totalZiel), zielMonat + ' pro Monat Ziel') +
         window.mktKpiCard('YTD Leads', _fmtN(ytdLeads), 'Soll YTD: ' + _fmtN(ytdSoll)) +
         window.mktKpiCard('Terminbuchungen', _fmtN(ytdTermine), ytdLeads > 0 ? (Math.round(ytdTermine / ytdLeads * 100) + '% Terminquote') : '\u2013') +
-        window.mktKpiCard('Store Visits', _fmtN(ytdSV), 'Gewichtet mit Faktor 0,25') +
+        window.mktKpiCard('Store Visits (25%)', _fmtN(ytdSV), 'Gewichtet mit Faktor 0,25') +
         '</div>';
 
     // Charts
@@ -395,6 +613,7 @@ function renderHqLeadReporting(el) {
             '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-50">' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Standort</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Jahresziel</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">YTD-Ziel</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">YTD Ist</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Erreichung</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Status</th>' +
@@ -411,6 +630,7 @@ function renderHqLeadReporting(el) {
 
             html += '<tr class="hover:bg-gray-50"><td class="px-4 py-3 font-semibold">' + _escH(sName) + '</td>' +
                 '<td class="px-4 py-3">' + jz + '</td>' +
+                '<td class="px-4 py-3">' + ytdSollV + '</td>' +
                 '<td class="px-4 py-3">' + ytdIstV + '</td>' +
                 '<td class="px-4 py-3">' + window.mktProgressBar(pct, 6) + ' <span class="text-xs text-gray-500 ml-1">' + pct + '%</span></td>' +
                 '<td class="px-4 py-3">' + window.mktStatusPill(pct) + '</td></tr>';
@@ -418,7 +638,14 @@ function renderHqLeadReporting(el) {
         html += '</tbody></table></div></div>';
     }
 
+    // Live-Leads Tabelle (expert-panel)
+    html += '<div class="expert-panel"><div class="vit-card overflow-hidden mb-6"><div class="px-5 py-4 border-b border-gray-200"><h3 class="text-sm font-semibold text-gray-800">Live-Leads (letzte 20)</h3></div>' +
+        '<div id="hqMktLiveLeads"><div class="p-5 text-sm text-gray-400 text-center">Lade aktuelle Leads...</div></div></div></div>';
+
     el.innerHTML = html;
+
+    // Live-Leads async laden
+    loadLiveLeads();
 
     // Lead Chart
     setTimeout(function() {
@@ -441,6 +668,74 @@ function renderHqLeadReporting(el) {
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 12 }, usePointStyle: true, padding: 16 } } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#f3f4f6' } } } }
         });
     }, 50);
+}
+
+// Live-Leads laden (Feature 14)
+async function loadLiveLeads() {
+    var container = document.getElementById('hqMktLiveLeads');
+    if (!container) return;
+    var sb = _sb();
+    if (!sb) { container.innerHTML = '<div class="p-5 text-sm text-gray-400 text-center">Supabase nicht verf\u00fcgbar</div>'; return; }
+    try {
+        var { data, error } = await sb
+            .from('marketing_lead_tracking')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(50);
+        if (error || !data || data.length === 0) {
+            container.innerHTML = '<div class="p-5 text-sm text-gray-400 text-center">Keine aktuellen Lead-Daten vorhanden.</div>';
+            return;
+        }
+        var rows = data.map(function(l) {
+            var datum = l.created_at ? new Date(l.created_at).toLocaleDateString('de-DE') : '\u2013';
+            var plz = _escH(l.plz || '\u2013');
+            var standort = _escH(l.standort_name || '\u2013');
+            var nameKontakt = _escH(l.name || '\u2013');
+            if (l.email) nameKontakt += '<br><span class="text-xs text-gray-400">' + _escH(l.email) + '</span>';
+            if (l.telefon) nameKontakt += '<br><span class="text-xs text-gray-400">' + _escH(l.telefon) + '</span>';
+            var typ = _escH(l.typ || l.lead_type || '\u2013');
+            var quelle = _escH(l.quelle || l.source || '\u2013');
+            var termin = l.termin_datum ? new Date(l.termin_datum).toLocaleDateString('de-DE') : '\u2013';
+            var statusCls = l.status === 'abgeschlossen' || l.status === 'Kontaktiert' ? 'bg-green-100 text-green-700' :
+                l.status === 'offen' || l.status === 'Offen' || l.status === 'Neu' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600';
+            var statusTxt = _escH(l.status || 'unbekannt');
+            return '<tr class="hover:bg-gray-50"><td class="px-4 py-3 text-sm">' + datum + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + plz + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + standort + '</td>' +
+                '<td class="px-4 py-3 text-sm font-semibold">' + nameKontakt + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + typ + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + quelle + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + termin + '</td>' +
+                '<td class="px-4 py-3 text-sm"><span class="text-xs px-2 py-1 rounded-full font-semibold ' + statusCls + '">' + statusTxt + '</span></td></tr>';
+        }).join('');
+
+        container.innerHTML = '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-50">' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Datum</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">PLZ</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Standort</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Name / Kontakt</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Typ</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Quelle</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Termin</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Status</th>' +
+            '</tr></thead><tbody class="divide-y divide-gray-100">' + rows + '</tbody></table></div>';
+    } catch(e) {
+        container.innerHTML = '<div class="p-5 text-sm text-gray-400 text-center">Fehler beim Laden: ' + _escH(e.message) + '</div>';
+    }
+}
+
+// Lead-Typen-Toggle (Feature 13)
+function mktSetLeadType(btnEl, type) {
+    // Update pill active states
+    var pills = btnEl.parentElement.querySelectorAll('.mkt-lead-pill');
+    pills.forEach(function(p) { p.classList.remove('active'); });
+    btnEl.classList.add('active');
+
+    // Speichern fuer spaeter
+    window.mktState._leadType = type;
+
+    // Chart+Tabelle neu rendern (vereinfacht: zeigt gleiche Daten, da Differenzierung spaeter kommt)
+    _showToast('Lead-Typ: ' + (type === 'kombi' ? 'Kombi' : type === 'regulaer' ? 'Regulaer' : type === 'store_visits' ? 'Store-Visits' : 'Anzeige-SV'), 'info');
 }
 
 // ══════════════════════════════════
@@ -466,46 +761,159 @@ function renderHqBudgetPlan(el) {
     var html = '<h2 class="text-xl font-bold text-gray-800 mb-1">Budget Plan ' + new Date().getFullYear() + '</h2>' +
         '<p class="text-sm text-gray-500 mb-6">Budget\u00fcbersicht und Channel-Split aller Standorte</p>';
 
-    // Dark Section - Budget Summary
-    html += '<div class="bg-gray-900 rounded-xl p-7 mb-6"><div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Budget Summary</div>' +
+    // Dark Section - Budget Summary (Feature 15: Dark-Theme)
+    html += '<div class="dark-section"><div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Budget Summary</div>' +
         '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">';
     [{ l: 'Jahresbudget', v: _fmtEur(totalBudget), s: vbs.length + ' aktive Standorte', c: 'text-vit-orange' },
      { l: 'YTD Ausgaben', v: _fmtEur(totalSpend), s: (totalBudget > 0 ? Math.round(totalSpend / totalBudget * 100) : 0) + '% des Jahresbudgets' },
      { l: '\u00d8 Monatlich', v: _fmtEur(avgMonthly), s: '\u00d8 ' + _fmtEur(vbs.length > 0 ? Math.round(avgMonthly / vbs.length) : 0) + ' pro Standort' },
      { l: 'Channel Split', v: splitPct + '/' + (100 - splitPct), s: 'Google / Meta' }
     ].forEach(function(k) {
-        html += '<div class="bg-gray-800 rounded-xl p-5"><div class="text-xs text-gray-500">' + k.l + '</div>' +
+        html += '<div class="dark-card"><div class="text-xs text-gray-400">' + k.l + '</div>' +
             '<div class="text-xl font-bold mt-1 ' + (k.c || 'text-white') + '">' + k.v + '</div>' +
             '<div class="text-xs text-gray-500 mt-1">' + k.s + '</div></div>';
     });
     html += '</div></div>';
 
-    // Budget pro Standort Tabelle
+    // Budget pro Standort Tabelle (Mockup-Spalten: Standort, Status, Monatsbudget, Ausgegeben%, Hochrechnung, Google, Meta)
     if (vbs.length > 0) {
         html += '<div class="vit-card overflow-hidden mb-6"><div class="px-5 py-4 border-b border-gray-200"><h3 class="text-sm font-semibold text-gray-800">Budget pro Standort</h3></div>' +
             '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-50">' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Standort</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Status</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Monatsbudget</th>' +
-            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Jahresbudget</th>' +
-            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Mediamix</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Ausgegeben %</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Hochrechnung</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Google</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Meta</th>' +
             '</tr></thead><tbody class="divide-y divide-gray-100">';
 
         vbs.forEach(function(v) {
             var sName = v.standorte ? v.standorte.name : '\u2013';
-            var sCls = v.signed ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700';
-            var sTxt = v.signed ? 'Aktiv' : 'Offen';
-            var mm = (v.mediamix || []).join(', ');
+            var monatsBudget = Math.round(v.budget_jahr / 12);
+            // Standort-spezifische Ausgaben aus ads
+            var sAds = ads.filter(function(a) { return a.standort_id === v.standort_id; });
+            var sSpend = sAds.reduce(function(s,a) { return s + Number(a.cost || 0); }, 0);
+            var spentPct = monatsBudget > 0 ? Math.round(sSpend / monatsBudget * 100) : 0;
+            var hochrechnung = monatsBudget > 0 ? Math.round(sSpend * 30 / Math.max(1, new Date().getDate())) : 0;
+            var sGoogle = sAds.filter(function(a) { return (a.platform||'').toLowerCase().indexOf('google') >= 0; }).reduce(function(s,a) { return s + Number(a.cost || 0); }, 0);
+            var sMeta = sAds.filter(function(a) { var p=(a.platform||'').toLowerCase(); return p.indexOf('meta')>=0||p.indexOf('facebook')>=0||p.indexOf('instagram')>=0; }).reduce(function(s,a) { return s + Number(a.cost || 0); }, 0);
+            var statusCls = spentPct < 50 ? 'bg-red-100 text-red-700' : spentPct > 110 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700';
+            var statusTxt = spentPct < 50 ? 'Unter' : spentPct > 110 ? '\u00dcber' : 'OK';
             html += '<tr class="hover:bg-gray-50"><td class="px-4 py-3 font-semibold">' + _escH(sName) + '</td>' +
-                '<td class="px-4 py-3"><span class="text-xs px-2 py-1 rounded-full font-semibold ' + sCls + '">' + sTxt + '</span></td>' +
-                '<td class="px-4 py-3">' + _fmtEur(Math.round(v.budget_jahr / 12)) + '</td>' +
-                '<td class="px-4 py-3">' + _fmtEur(v.budget_jahr) + '</td>' +
-                '<td class="px-4 py-3 text-xs text-gray-500">' + _escH(mm) + '</td></tr>';
+                '<td class="px-4 py-3"><span class="text-xs px-2 py-1 rounded-full font-semibold ' + statusCls + '">' + statusTxt + '</span></td>' +
+                '<td class="px-4 py-3">' + _fmtEur(monatsBudget) + '</td>' +
+                '<td class="px-4 py-3">' + spentPct + '%</td>' +
+                '<td class="px-4 py-3">' + _fmtEur(hochrechnung) + '</td>' +
+                '<td class="px-4 py-3">' + _fmtEur(Math.round(sGoogle)) + '</td>' +
+                '<td class="px-4 py-3">' + _fmtEur(Math.round(sMeta)) + '</td></tr>';
         });
         html += '</tbody></table></div></div>';
     }
 
+    // Spending Trend + Channel-Split (2 normale Charts)
+    html += '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">' +
+        '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Spending Trend \u2013 Tagesausgaben</div>' +
+        '<div style="height:250px"><canvas id="mktSpendTrendDaily"></canvas></div></div>' +
+        '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Channel-Split pro Monat</div>' +
+        '<div style="height:250px"><canvas id="mktChannelSplit"></canvas></div></div></div>';
+
+    // Spending Trend Dual in dark-section mit KPI-Cards (Mockup-Struktur)
+    html += '<div class="dark-section"><div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">\ud83d\udcc8 Spending Trend \u2013 Google vs. Meta (t\u00e4glich)</div>' +
+        '<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">' +
+        '<div class="dark-card"><div class="text-xs text-gray-400">Google Ads</div>' +
+        '<div class="text-xl font-bold mt-1" style="color:#EAB308">' + _fmtEur(Math.round(googleSpend)) + '</div>' +
+        '<div class="text-xs text-gray-500 mt-1">' + splitPct + '% Split \u00b7 YTD</div></div>' +
+        '<div class="dark-card"><div class="text-xs text-gray-400">Meta Ads</div>' +
+        '<div class="text-xl font-bold mt-1" style="color:#3B82F6">' + _fmtEur(Math.round(metaSpend)) + '</div>' +
+        '<div class="text-xs text-gray-500 mt-1">' + (100 - splitPct) + '% Split \u00b7 YTD</div></div></div>' +
+        '<div style="height:200px"><canvas id="mktSpendTrendDual"></canvas></div></div>';
+
+    // E-Mail-Benachrichtigungen (Mockup: Email-Adressen anzeigen)
+    html += '<div class="vit-card p-5 mb-6 border-l-4 border-vit-orange">' +
+        '<div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">\u2709\ufe0f Email-Benachrichtigungen</div>' +
+        '<p class="text-sm text-gray-500 mb-3">Diese Personen werden per E-Mail benachrichtigt, wenn ein Standort das Budget \u00fcberschritten oder unterschritten hat:</p>' +
+        '<div class="flex flex-wrap gap-2">' +
+        '<span class="text-xs px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 font-semibold">HQ-Admin E-Mail</span>' +
+        '<span class="text-xs px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 font-semibold">Marketing E-Mail</span>' +
+        '</div></div>';
+
     el.innerHTML = html;
+
+    // Charts rendern
+    setTimeout(function() {
+        renderSpendingTrendDual(ads);
+        renderBudgetDailyCharts(ads);
+    }, 50);
+}
+
+function renderBudgetDailyCharts(ads) {
+    var C = window.MKT_CHART_COLORS;
+    // Daily Spending Trend (alle Plattformen zusammen)
+    var labels = [];
+    var dailyTotal = {};
+    var today = new Date();
+    for (var i = 27; i >= 0; i--) {
+        var d = new Date(today);
+        d.setDate(d.getDate() - i);
+        var key = d.toISOString().slice(0, 10);
+        labels.push(d.getDate() + '.' + (d.getMonth() + 1) + '.');
+        dailyTotal[key] = 0;
+    }
+    ads.forEach(function(a) {
+        if (!a.datum) return;
+        var key = a.datum.slice(0, 10);
+        if (dailyTotal[key] !== undefined) dailyTotal[key] += Number(a.cost || 0);
+    });
+    var totalData = Object.keys(dailyTotal).sort().map(function(k) { return Math.round(dailyTotal[k] * 100) / 100; });
+    window.mktChartLine('mktSpendTrendDaily', labels, [
+        { label: 'Tagesausgaben', data: totalData, borderColor: C.orange, backgroundColor: 'rgba(249,115,22,.1)', fill: true }
+    ]);
+
+    // Channel-Split Doughnut
+    var gSpend = 0, mSpend = 0;
+    ads.forEach(function(a) {
+        var p = (a.platform || '').toLowerCase();
+        if (p.indexOf('meta') >= 0 || p.indexOf('facebook') >= 0 || p.indexOf('instagram') >= 0) mSpend += Number(a.cost || 0);
+        else gSpend += Number(a.cost || 0);
+    });
+    window.mktChartDoughnut('mktChannelSplit', ['Google Ads', 'Meta Ads'], [Math.round(gSpend), Math.round(mSpend)], ['#EAB308', '#3B82F6']);
+}
+
+function renderSpendingTrendDual(ads) {
+    // Letzte 28 Tage Labels generieren
+    var labels = [];
+    var googleByDay = {};
+    var metaByDay = {};
+    var today = new Date();
+    for (var i = 27; i >= 0; i--) {
+        var d = new Date(today);
+        d.setDate(d.getDate() - i);
+        var key = d.toISOString().slice(0, 10);
+        labels.push(d.getDate() + '.' + (d.getMonth() + 1) + '.');
+        googleByDay[key] = 0;
+        metaByDay[key] = 0;
+    }
+
+    // Ads nach Tag und Plattform aggregieren
+    ads.forEach(function(a) {
+        if (!a.datum) return;
+        var key = a.datum.slice(0, 10);
+        var p = (a.platform || '').toLowerCase();
+        if (p.indexOf('meta') >= 0 || p.indexOf('facebook') >= 0 || p.indexOf('instagram') >= 0) {
+            if (metaByDay[key] !== undefined) metaByDay[key] += Number(a.cost || 0);
+        } else {
+            if (googleByDay[key] !== undefined) googleByDay[key] += Number(a.cost || 0);
+        }
+    });
+
+    var googleData = Object.keys(googleByDay).sort().map(function(k) { return Math.round(googleByDay[k] * 100) / 100; });
+    var metaData = Object.keys(metaByDay).sort().map(function(k) { return Math.round(metaByDay[k] * 100) / 100; });
+
+    window.mktChartLine('mktSpendTrendDual', labels, [
+        { label: 'Google Ads', data: googleData, borderColor: '#EAB308', backgroundColor: 'rgba(234,179,8,.1)', fill: true },
+        { label: 'Meta Ads', data: metaData, borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,.1)', fill: true }
+    ]);
 }
 
 // ══════════════════════════════════
@@ -571,5 +979,7 @@ window.renderHqMktTabContent = renderHqMktTabContent;
 window.showHqMktTab = showHqMktTab;
 window.mktHqFilterTable = mktHqFilterTable;
 window.mktHqDownloadPDF = mktHqDownloadPDF;
+window.mktSetLeadType = mktSetLeadType;
+
 
 })();

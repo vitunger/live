@@ -379,6 +379,72 @@ var GLOSSAR = [
     { term: 'Frequency', def: 'Wie oft eine Person deine Anzeige im Durchschnitt gesehen hat. Zu hohe Frequency (>5) kann nerven.' }
 ];
 
+// ── CSS Injection ──
+
+function injectMarketingCSS() {
+    if (document.getElementById('mktInjectedCSS')) return;
+    var style = document.createElement('style');
+    style.id = 'mktInjectedCSS';
+    style.textContent =
+        '.hero-signal{position:relative;overflow:hidden;}' +
+        '.hero-badge{position:absolute;top:1rem;right:1rem;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.15rem;color:#fff;flex-shrink:0;}' +
+        '.hero-badge.green{background:#22c55e;}.hero-badge.amber{background:#f59e0b;}.hero-badge.red{background:#ef4444;}' +
+        '.expert-panel{display:none;margin-bottom:1.5rem;}' +
+        'body.expert-on .expert-panel{display:block;}' +
+        '.expert-toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:#6b7280;}' +
+        '.toggle-track{width:36px;height:20px;border-radius:10px;background:#d1d5db;position:relative;cursor:pointer;transition:background .2s;}' +
+        '.toggle-track::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 2px rgba(0,0,0,.15);}' +
+        '.toggle-track.active{background:#EF7D00;}' +
+        '.toggle-track.active::after{transform:translateX(16px);}' +
+        '.alert-banner{background:#fef2f2;border:1px solid rgba(239,68,68,.2);border-radius:.75rem;padding:1rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:flex-start;gap:.875rem;}' +
+        '.alert-banner.amber{background:#fffbeb;border-color:rgba(245,158,11,.2);}' +
+        '.alert-banner .alert-icon{font-size:1.25rem;flex-shrink:0;margin-top:1px;}' +
+        '.alert-banner .alert-title{font-weight:700;font-size:.875rem;color:#ef4444;margin-bottom:4px;}' +
+        '.alert-banner.amber .alert-title{color:#f59e0b;}' +
+        '.alert-banner .alert-list{font-size:.8125rem;color:#4b5563;line-height:1.7;}' +
+        '.dark-section{background:#1E1E2E;border-radius:1rem;padding:1.75rem;margin-bottom:1.5rem;}' +
+        '.dark-section .card-title{color:rgba(255,255,255,.45);}' +
+        '.dark-card{background:#2A2A3C;border-radius:.75rem;padding:1.25rem;transition:background .2s;}' +
+        '.dark-card:hover{background:#32324A;}' +
+        '.dark-card .text-gray-400,.dark-card .text-gray-500{color:rgba(255,255,255,.4)!important;}' +
+        '.dark-card .text-gray-800,.dark-card .font-bold{color:rgba(255,255,255,.95)!important;}' +
+        '.standort-card{border-radius:.75rem;padding:1.25rem;border:1px solid #e5e7eb;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:all .2s;min-height:180px;}' +
+        '.standort-card:hover{box-shadow:0 4px 6px -1px rgba(0,0,0,.07);transform:translateY(-2px);}' +
+        '.standort-card.st-green{border-top:3px solid #22c55e;}.standort-card.st-amber{border-top:3px solid #f59e0b;}.standort-card.st-red{border-top:3px solid #ef4444;}' +
+        '.standort-problem{font-size:.6875rem;color:#ef4444;background:#fef2f2;border-radius:6px;padding:5px 8px;margin-top:8px;line-height:1.4;}' +
+        '.standort-ok{font-size:.6875rem;color:#22c55e;background:#f0fdf4;border-radius:6px;padding:5px 8px;margin-top:8px;}' +
+        '.standort-mini{font-size:11px;color:#9ca3af;display:flex;flex-direction:column;background:#f9fafb;border-radius:6px;padding:4px 8px;flex:1;min-width:60px;}' +
+        '.standort-mini .sm-val{font-size:14px;font-weight:700;color:#374151;}' +
+        '.mkt-lead-pill{display:inline-block;padding:6px 16px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;transition:all .2s;}' +
+        '.mkt-lead-pill.active{background:#EF7D00;color:#fff;}.mkt-lead-pill:not(.active){background:#f3f4f6;color:#6b7280;}' +
+        '@media(max-width:1100px){.expert-panel .grid{grid-template-columns:repeat(3,1fr)!important;}}' +
+        '@media(max-width:768px){.expert-panel .grid{grid-template-columns:repeat(2,1fr)!important;}}';
+    document.head.appendChild(style);
+}
+
+// ── Expert-Toggle ──
+
+function mktToggleExpert(on) {
+    document.body.classList.toggle('expert-on', on);
+    sessionStorage.setItem('mkt_expert', on ? '1' : '0');
+    // Update toggle-track active class
+    var tracks = document.querySelectorAll('.mkt-expert-track');
+    tracks.forEach(function(t) { t.classList.toggle('active', on); });
+}
+
+function renderExpertToggle() {
+    var isOn = sessionStorage.getItem('mkt_expert') === '1';
+    if (isOn) document.body.classList.add('expert-on');
+    return '<div class="expert-toggle flex items-center gap-2">' +
+        '<span class="text-sm text-gray-500">Newbie</span>' +
+        '<div class="toggle-track mkt-expert-track' + (isOn ? ' active' : '') + '" onclick="mktToggleExpert(!document.body.classList.contains(\'expert-on\'))"></div>' +
+        '<span class="text-sm text-gray-500">Experte</span>' +
+        '</div>';
+}
+
+// Inject CSS on module load
+injectMarketingCSS();
+
 // ── Window Exports ──
 window.mktState = mktState;
 window.MKT_SEASON_WEIGHTS = SEASON_WEIGHTS;
@@ -410,5 +476,7 @@ window.renderMarketing = renderMarketing;
 window.mktEscH = _escH;
 window.mktFmtN = _fmtN;
 window.mktFmtEur = _fmtEur;
+window.mktToggleExpert = mktToggleExpert;
+window.mktRenderExpertToggle = renderExpertToggle;
 
 })();
