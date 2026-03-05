@@ -268,3 +268,9 @@ security: RLS/JWT/Auth-Verbesserung
 - Yellow button "Ohne KI-Pruefung speichern" = KI unreachable after parser success
 - 8 bwaSaveBtn references: 1 init (disabled) + 7 enable points covering all code paths
 
+
+
+### 2026-03-05: Schnittstellen-Tab Syntax Error Fix
+- **Bug:** `schnittstellen.js` had orphaned `else`/`catch` block (lines 2227-2234) — remnants of incomplete GMB handler
+- **Symptom:** Console error "Unexpected token 'catch'" prevented entire module from loading → empty Schnittstellen tab
+- **Fix:** Removed orphaned lines. Module now loads and renders all connector cards + planned integrations correctly.
