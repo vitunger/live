@@ -60,10 +60,10 @@ async function loadHqFinData() {
         var standorte = sResp.data || [];
         // [prod] log removed
 
-        // 2. BWA data (all months current year) – THIS IS PRIORITY
+        // 2. BWA data (current + previous year) – THIS IS PRIORITY
         var bwaResp = await _sb().from('bwa_daten')
             .select('standort_id, monat, jahr, umsatzerloese, rohertrag, wareneinsatz, gesamtkosten, ergebnis_vor_steuern, personalkosten, raumkosten, created_at, datei_name, datei_url, format')
-            .eq('jahr', currentYear);
+            .in('jahr', [currentYear, currentYear - 1]);
         if(bwaResp.error) { console.warn('[hq-finanzen] BWA query error:', bwaResp.error); }
         var bwaData = bwaResp.data || [];
         // [prod] log removed
@@ -159,7 +159,7 @@ async function loadHqFinData() {
                 datenquelle: datenquelle,
                 rohertrag: parseFloat(rohertragPct.toFixed(1)),
                 bwaMonate: bwaMonate,
-                bwaMonateDetail: sBwa.map(function(b) { return { monat: b.monat, umsatz: parseFloat(b.umsatzerloese) || 0, rohertrag: parseFloat(b.rohertrag) || 0, rohertragAbs: parseFloat(b.rohertrag) || 0, wareneinsatz: parseFloat(b.wareneinsatz) || 0, personalkosten: parseFloat(b.personalkosten) || 0, ergebnis: parseFloat(b.ergebnis_vor_steuern) || 0, datum: b.created_at, datei_url: b.datei_url || null, datei_name: b.datei_name || null }; }),
+                bwaMonateDetail: sBwa.map(function(b) { return { monat: b.monat, jahr: b.jahr, umsatz: parseFloat(b.umsatzerloese) || 0, rohertrag: parseFloat(b.rohertrag) || 0, rohertragAbs: parseFloat(b.rohertrag) || 0, wareneinsatz: parseFloat(b.wareneinsatz) || 0, personalkosten: parseFloat(b.personalkosten) || 0, ergebnis: parseFloat(b.ergebnis_vor_steuern) || 0, datum: b.created_at, datei_url: b.datei_url || null, datei_name: b.datei_name || null }; }),
                 bwaEingereicht: bwaEingereicht,
                 bwaDate: bwaDate,
                 planVorhanden: !!plan,
@@ -200,17 +200,32 @@ function renderHqFinKpis() {
     for (var mm = 1; mm <= currentMonth1; mm++) {
         selHtml += '<option value="' + mm + '"' + (sel == mm ? ' selected' : '') + '>' + _hqFinMonatLabels[mm-1] + ' ' + new Date().getFullYear() + '</option>';
     }
+    // Previous year
+    selHtml += '<option disabled>──────────</option>';
+    for (var pm = 12; pm >= 1; pm--) {
+        var pvKey = 'p' + pm;
+        selHtml += '<option value="' + pvKey + '"' + (sel === pvKey ? ' selected' : '') + '>' + _hqFinMonatLabels[pm-1] + ' ' + (new Date().getFullYear() - 1) + '</option>';
+    }
     selHtml += '</select></div>';
 
     // Calculate values based on selection
+    var isPrevYear = typeof sel === 'string' && sel.charAt(0) === 'p';
+    var prevYearMonth = isPrevYear ? parseInt(sel.substring(1)) : 0;
+    var prevYear = new Date().getFullYear() - 1;
     var getIst = function(s) {
         if (sel === 'ytd') return s.umsatzIst;
-        var monatBwa = s.bwaMonateDetail.find(function(b) { return b.monat == sel; });
+        if (isPrevYear) {
+            var pvBwa = s.bwaMonateDetail.find(function(b) { return b.monat == prevYearMonth && b.jahr == prevYear; });
+            return pvBwa ? pvBwa.umsatz : 0;
+        }
+        var monatBwa = s.bwaMonateDetail.find(function(b) { return b.monat == sel && (!b.jahr || b.jahr == new Date().getFullYear()); });
         return monatBwa ? monatBwa.umsatz : 0;
     };
     var getRoh = function(s) {
         if (sel === 'ytd') return s.rohertrag;
-        var monatBwa = s.bwaMonateDetail.find(function(b) { return b.monat == sel; });
+        var targetMonth = isPrevYear ? prevYearMonth : sel;
+        var targetYear = isPrevYear ? prevYear : new Date().getFullYear();
+        var monatBwa = s.bwaMonateDetail.find(function(b) { return b.monat == targetMonth && (!b.jahr || b.jahr == targetYear); });
         if (!monatBwa || !monatBwa.umsatz) return 0;
         return monatBwa.rohertrag / monatBwa.umsatz * 100;
     };
