@@ -512,7 +512,7 @@ function renderHqVideoFreigabe(el) {
 
     setTimeout(function() {
         if (typeof window.vpInit === 'function') window.vpInit();
-        if (typeof window.renderVideoHqReview === 'function') window.renderVideoHqReview();
+        if (typeof window.vpRenderHqReview === 'function') window.vpRenderHqReview();
     }, 50);
 }
 
