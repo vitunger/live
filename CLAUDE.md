@@ -687,3 +687,19 @@ security: RLS/JWT/Auth-Verbesserung
 - **Fix:** `todo.js` – todos: OR-Filter `erstellt_von=myId OR zugewiesen_an=myId`
 - **Fix:** todo_sections: nur globale Sections (`standort_id IS NULL`)
 - **Fix:** todo_labels + users: kein Standort-Filter für HQ
+
+
+## KI-Liquiditätsplanung – Konzept (05.03.2026)
+- **Geplant:** Phase LIVE-4, ab Woche 14, ~15h Aufwand
+- **Ansatz:** Kombination Regelbasiert (Option A) + Claude API (Option C)
+  - Option A: Transaktionsmuster aus finAPI-Historie erkennen (wiederkehrende Zahlungen, Saisonalität, BWA-Durchschnitte) → rollierende 13-Wochen-Cashflow-Kurve
+  - Option C: Cashflow-Kurve + BWA-Kennzahlen → Edge Function `liqui-forecast` → Claude API → natürlichsprachlicher Kommentar + Risiko-Flags + Empfehlungen (JSON)
+- **Neue DB-Tabellen (geplant):**
+  - `banking_kategorien` – Transaktions-Klassifizierung (fix_ausgang | fix_eingang | variabel | einmalig), Regex-Matching, lernend über Zeit
+  - `liqui_forecasts` – Täglicher Prognose-Snapshot: prognose_14d/30d/90d, engpass_datum, konfidenz (0–100), ki_kommentar, ki_risiken (jsonb), ki_empfehlungen (jsonb). UNIQUE(standort_id, erstellt_am). Lern-Feedback via tatsaechlicher_kontostand_14d/_30d
+- **Edge Function geplant:** `liqui-forecast` (täglicher Cron-Job, Regelwerk + Claude API)
+- **UI:** Neuer Tab "Liquidität" im Controlling – Cashflow-Chart, KI-Einschätzung, Risiken, Empfehlungen
+- **Lern-Mechanismus:** Täglicher Abgleich Prognose vs. Ist → Konfidenz-Score verbessert sich automatisch
+- **Blocker:** finAPI-Vertrag ausstehend (Access für Eigenanwender oder PSD2-Lizenz-als-Service, ~50 Standorte anfragen). DB-Schema + Edge Function können bereits ohne finAPI mit Mock-Daten vorbereitet werden.
+- **Bestehende Basis:** banking_connections, banking_balances, banking_transactions, banking_manual_entries bereits vorhanden. UI-Tab mit manuellem Eintrag + finAPI-Placeholder live.
+- **Masterplan:** v3.0 erstellt (05.03.2026), Go-Live Gesamtaufwand ~183h / ~61 Sessions
