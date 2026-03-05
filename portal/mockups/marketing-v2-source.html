@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>vit:bikes Marketing Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display&family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --orange: #EF7D00;
+  --orange-light: #FFF3E0;
+  --orange-10: rgba(239,125,0,.1);
+  --orange-20: rgba(239,125,0,.2);
+  --gray-dark: #626062;
+  --gray-700: #374151;
+  --gray-600: #4B5563;
+  --gray-500: #6B7280;
+  --gray-400: #9CA3AF;
+  --gray-300: #D1D5DB;
+  --gray-200: #E5E7EB;
+  --gray-100: #F3F4F6;
+  --gray-50: #F9FAFB;
+  --green: #22C55E;
+  --green-bg: #F0FDF4;
+  --red: #EF4444;
+  --red-bg: #FEF2F2;
+  --amber: #F59E0B;
+  --amber-bg: #FFFBEB;
+  --white: #FFFFFF;
+  --dark-bg: #1E1E2E;
+  --dark-card: #2A2A3C;
+  --dark-card-hover: #32324A;
+  --sidebar-w: 240px;
+  --radius: 14px;
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -2px rgba(0,0,0,.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.08), 0 4px 6px -4px rgba(0,0,0,.05);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'DM Sans', 'Open Sans', sans-serif;
+  background: var(--gray-50);
+  color: var(--gray-700);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* ─── TOPBAR ─── */
+.topbar {
+  position: fixed; top:0; left:0; right:0; height:56px; z-index:100;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  display: flex; align-items: center; padding: 0 24px;
+  gap: 16px;
+}
+.topbar-logo { height: 28px; }
+.topbar-sep { width:1px; height:28px; background:var(--gray-200); }
+.topbar-title { font-weight:600; font-size:15px; color:var(--gray-dark); }
+
+.mode-toggle {
+  display: flex; background: var(--gray-100); border-radius:8px; padding:3px;
+  margin-left: auto; gap:2px;
+}
+.mode-btn {
+  padding: 6px 16px; border-radius:6px; border:none; cursor:pointer;
+  font-family: inherit; font-size:13px; font-weight:500;
+  background: transparent; color: var(--gray-500); transition: all .2s;
+}
+.mode-btn.active {
+  background: var(--white); color: var(--gray-700);
+  box-shadow: 0 1px 2px rgba(0,0,0,.08);
+}
+
+.expert-toggle {
+  display: flex; align-items: center; gap:8px; font-size:13px; color:var(--gray-500);
+}
+.expert-toggle input[type="checkbox"] { display:none; }
+.toggle-track {
+  width:36px; height:20px; border-radius:10px; background:var(--gray-300);
+  position:relative; cursor:pointer; transition: background .2s;
+}
+.toggle-track::after {
+  content:''; position:absolute; top:2px; left:2px;
+  width:16px; height:16px; border-radius:50%; background:white;
+  transition: transform .2s; box-shadow: 0 1px 2px rgba(0,0,0,.15);
+}
+.expert-toggle input:checked + .toggle-track {
+  background: var(--orange);
+}
+.expert-toggle input:checked + .toggle-track::after {
+  transform: translateX(16px);
+}
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  position: fixed; top:56px; left:0; bottom:0;
+  width: var(--sidebar-w); background: var(--white);
+  border-right: 1px solid var(--gray-200);
+  padding: 16px 0; z-index:90;
+  overflow-y: auto;
+}
+.sidebar-section {
+  padding: 0 16px; margin-bottom: 8px;
+}
+.sidebar-label {
+  font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.5px; color:var(--gray-400); padding:8px 0 4px;
+}
+.sidebar-item {
+  display: flex; align-items: center; gap:10px;
+  padding: 9px 12px; border-radius:8px; cursor:pointer;
+  font-size:14px; color:var(--gray-600); transition: all .15s;
+  text-decoration: none; margin-bottom:2px;
+}
+.sidebar-item:hover { background:var(--gray-100); color:var(--gray-700); }
+.sidebar-item.active {
+  background: var(--orange-10); color: var(--orange); font-weight:600;
+}
+.sidebar-item .icon { font-size:16px; width:20px; text-align:center; }
+
+/* HQ sidebar dark */
+body.hq-mode .sidebar {
+  background: var(--dark-bg); border-right-color: rgba(255,255,255,.06);
+}
+body.hq-mode .sidebar-label { color: rgba(255,255,255,.35); }
+body.hq-mode .sidebar-item { color: rgba(255,255,255,.65); }
+body.hq-mode .sidebar-item:hover { background: rgba(255,255,255,.06); color:rgba(255,255,255,.85); }
+body.hq-mode .sidebar-item.active {
+  background: rgba(239,125,0,.15); color: var(--orange);
+}
+
+/* ─── MAIN ─── */
+.main {
+  margin-left: var(--sidebar-w); margin-top:56px;
+  padding:28px 32px 40px; min-height:calc(100vh - 56px);
+}
+
+/* ─── PAGE TRANSITIONS ─── */
+.page { display:none; animation: fadeIn .35s ease; }
+.page.active { display:block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+
+/* ─── CARDS ─── */
+.card {
+  background: var(--white); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding:24px;
+  transition: box-shadow .2s, transform .2s;
+}
+.card:hover { box-shadow: var(--shadow-md); }
+.card-title {
+  font-size:13px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.3px; color:var(--gray-400); margin-bottom:16px;
+}
+
+/* ─── SIGNAL HERO ─── */
+.hero-signal {
+  background: linear-gradient(135deg, var(--white) 0%, var(--orange-light) 100%);
+  border-radius: var(--radius); padding:28px 32px;
+  box-shadow: var(--shadow); margin-bottom:24px;
+  display: flex; align-items: flex-start; gap:20px;
+  border-left: 4px solid var(--orange);
+}
+.hero-badge {
+  width:56px; height:56px; border-radius:50%; display:flex;
+  align-items:center; justify-content:center;
+  font-family:'DM Serif Display',serif; font-size:20px; color:white;
+  flex-shrink:0;
+}
+.hero-badge.green { background:var(--green); }
+.hero-badge.amber { background:var(--amber); }
+.hero-badge.red { background:var(--red); }
+.hero-text h2 {
+  font-family:'DM Serif Display',serif; font-size:22px;
+  color:var(--gray-700); margin-bottom:6px;
+}
+.hero-text p { font-size:15px; color:var(--gray-600); line-height:1.65; }
+
+/* ─── KPI GRID ─── */
+.kpi-grid { display:grid; gap:16px; margin-bottom:24px; }
+.kpi-grid.cols-4 { grid-template-columns:repeat(4,1fr); }
+.kpi-grid.cols-3 { grid-template-columns:repeat(3,1fr); }
+.kpi-grid.cols-2 { grid-template-columns:repeat(2,1fr); }
+
+.kpi-card {
+  background: var(--white); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding:20px 24px;
+  transition: box-shadow .2s, transform .15s;
+}
+.kpi-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
+.kpi-label {
+  font-size:12px; font-weight:500; color:var(--gray-400);
+  text-transform:uppercase; letter-spacing:.3px; margin-bottom:8px;
+}
+.kpi-value {
+  font-family:'DM Serif Display',serif; font-size:28px;
+  color:var(--gray-700); line-height:1.1;
+}
+.kpi-sub {
+  font-size:13px; color:var(--gray-500); margin-top:6px; line-height:1.4;
+}
+.kpi-change { font-size:12px; font-weight:600; margin-top:4px; }
+.kpi-change.up { color:var(--green); }
+.kpi-change.down { color:var(--red); }
+
+/* ─── EXPERT PANEL ─── */
+.expert-panel { display:none; margin-bottom:24px; }
+body.expert-on .expert-panel { display:block; }
+
+.expert-row {
+  display:grid; grid-template-columns:repeat(6,1fr); gap:12px;
+  margin-bottom:16px;
+}
+.expert-kpi {
+  background:var(--gray-50); border-radius:10px; padding:14px 16px;
+  border:1px solid var(--gray-200);
+}
+.expert-kpi .ek-label { font-size:11px; color:var(--gray-400); font-weight:500; text-transform:uppercase; }
+.expert-kpi .ek-val { font-size:18px; font-weight:700; color:var(--gray-700); margin-top:2px; }
+
+/* ─── CHART CONTAINER ─── */
+.chart-wrap {
+  background:var(--white); border-radius:var(--radius);
+  box-shadow:var(--shadow); padding:24px; margin-bottom:24px;
+}
+.chart-wrap canvas { width:100%!important; max-height:300px; }
+
+/* ─── TABLES ─── */
+.tbl-wrap {
+  background:var(--white); border-radius:var(--radius);
+  box-shadow:var(--shadow); overflow:hidden; margin-bottom:24px;
+}
+.tbl-header { padding:16px 24px; border-bottom:1px solid var(--gray-200); }
+.tbl-header h3 { font-size:15px; font-weight:600; color:var(--gray-700); }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+thead th {
+  padding:10px 16px; text-align:left; font-weight:600;
+  color:var(--gray-400); font-size:11px; text-transform:uppercase;
+  letter-spacing:.3px; border-bottom:1px solid var(--gray-200);
+  background:var(--gray-50);
+}
+tbody td { padding:12px 16px; border-bottom:1px solid var(--gray-100); }
+tbody tr:hover { background:var(--gray-50); }
+
+/* ─── STATUS PILLS ─── */
+.pill {
+  display:inline-block; padding:3px 10px; border-radius:20px;
+  font-size:11px; font-weight:600;
+}
+.pill-green { background:var(--green-bg); color:var(--green); }
+.pill-red { background:var(--red-bg); color:var(--red); }
+.pill-amber { background:var(--amber-bg); color:var(--amber); }
+
+/* ─── PROGRESS BAR ─── */
+.prog-bar { height:6px; background:var(--gray-200); border-radius:3px; overflow:hidden; }
+.prog-fill { height:100%; border-radius:3px; transition:width .5s ease; }
+.prog-fill.green { background:var(--green); }
+.prog-fill.amber { background:var(--amber); }
+.prog-fill.red { background:var(--red); }
+
+/* ─── HQ DARK CARDS ─── */
+.dark-section {
+  background:var(--dark-bg); border-radius:var(--radius);
+  padding:28px; margin-bottom:24px;
+}
+.dark-section .card-title { color:rgba(255,255,255,.45); }
+.dark-card {
+  background:var(--dark-card); border-radius:12px; padding:20px;
+  transition: background .2s;
+}
+.dark-card:hover { background:var(--dark-card-hover); }
+.dark-card .kpi-label { color:rgba(255,255,255,.4); }
+.dark-card .kpi-value { color:rgba(255,255,255,.95); }
+.dark-card .kpi-sub { color:rgba(255,255,255,.5); }
+
+/* ─── STANDORT GRID ─── */
+.standort-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; margin-bottom:24px; }
+.standort-card {
+  background:var(--white); border-radius:var(--radius);
+  box-shadow:var(--shadow); padding:18px 20px;
+  border-top:3px solid var(--gray-300);
+  transition: all .2s;
+}
+.standort-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
+.standort-card.st-green { border-top-color:var(--green); }
+.standort-card.st-amber { border-top-color:var(--amber); }
+.standort-card.st-red { border-top-color:var(--red); }
+.standort-name { font-weight:600; font-size:14px; color:var(--gray-700); margin-bottom:2px; }
+.standort-plz { font-size:12px; color:var(--gray-400); margin-bottom:12px; }
+.standort-row { display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px; }
+.standort-row .label { color:var(--gray-500); }
+.standort-row .val { font-weight:600; color:var(--gray-700); }
+
+/* ─── GLOSSAR ─── */
+.glossar-item {
+  background:var(--white); border-radius:12px; box-shadow:var(--shadow);
+  padding:20px 24px; margin-bottom:12px;
+}
+.glossar-term { font-weight:700; font-size:15px; color:var(--orange); margin-bottom:4px; }
+.glossar-def { font-size:14px; color:var(--gray-600); line-height:1.6; }
+
+/* ─── SECTION TITLES ─── */
+.section-title {
+  font-family:'DM Serif Display',serif;
+  font-size:20px; color:var(--gray-700); margin-bottom:20px;
+}
+.section-sub {
+  font-size:14px; color:var(--gray-500); margin-top:-14px; margin-bottom:20px;
+}
+
+/* ─── GRID HELPERS ─── */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; }
+.mb-24 { margin-bottom:24px; }
+.mb-16 { margin-bottom:16px; }
+
+/* ─── HQ MODE BODY ─── */
+body.hq-mode .main { background:var(--gray-100); }
+body.hq-mode .topbar { background:var(--dark-bg); border-bottom-color:rgba(255,255,255,.06); }
+body.hq-mode .topbar-title { color:rgba(255,255,255,.85); }
+body.hq-mode .topbar-sep { background:rgba(255,255,255,.1); }
+body.hq-mode .mode-toggle { background:rgba(255,255,255,.08); }
+body.hq-mode .mode-btn { color:rgba(255,255,255,.5); }
+body.hq-mode .mode-btn.active { background:rgba(255,255,255,.12); color:white; }
+body.hq-mode .expert-toggle { color:rgba(255,255,255,.5); }
+
+/* ─── MONTH DROPDOWN ─── */
+.month-select {
+  padding:6px 12px 6px 10px; border-radius:8px; border:1px solid var(--gray-200);
+  font-family:inherit; font-size:13px; font-weight:500; color:var(--gray-600);
+  background:var(--white); cursor:pointer; appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 8px center;
+  padding-right:28px;
+}
+.month-select:focus { outline:none; border-color:var(--orange); box-shadow:0 0 0 2px var(--orange-10); }
+body.hq-mode .month-select {
+  background-color:rgba(255,255,255,.08); border-color:rgba(255,255,255,.1);
+  color:rgba(255,255,255,.8);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+
+/* ─── ALERT BANNER ─── */
+.alert-banner {
+  background:var(--red-bg); border:1px solid rgba(239,68,68,.2);
+  border-radius:var(--radius); padding:16px 24px; margin-bottom:24px;
+  display:flex; align-items:flex-start; gap:14px;
+  animation: fadeIn .35s ease;
+}
+.alert-banner.hidden { display:none; }
+.alert-icon { font-size:20px; flex-shrink:0; margin-top:1px; }
+.alert-content { flex:1; }
+.alert-title { font-weight:700; font-size:14px; color:var(--red); margin-bottom:4px; }
+.alert-list { font-size:13px; color:var(--gray-600); line-height:1.7; }
+.alert-list strong { color:var(--gray-700); }
+
+/* ─── ENHANCED STANDORT CARDS ─── */
+.standort-card { min-height:180px; }
+.standort-meta { display:flex; gap:12px; margin:10px 0 8px; flex-wrap:wrap; }
+.standort-mini {
+  font-size:11px; color:var(--gray-400); display:flex; flex-direction:column;
+  background:var(--gray-50); border-radius:6px; padding:4px 8px; flex:1; min-width:60px;
+}
+.standort-mini .sm-val { font-size:14px; font-weight:700; color:var(--gray-700); }
+.standort-problem {
+  font-size:11px; color:var(--red); background:var(--red-bg);
+  border-radius:6px; padding:5px 8px; margin-top:8px; line-height:1.4;
+}
+.standort-ok {
+  font-size:11px; color:var(--green); background:var(--green-bg);
+  border-radius:6px; padding:5px 8px; margin-top:8px;
+}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:1100px) {
+  .kpi-grid.cols-4 { grid-template-columns:repeat(2,1fr); }
+  .expert-row { grid-template-columns:repeat(3,1fr); }
+  .grid-2, .grid-3 { grid-template-columns:1fr; }
+}
+@media(max-width:768px) {
+  .sidebar { display:none; }
+  .main { margin-left:0; }
+  .kpi-grid.cols-4, .kpi-grid.cols-3 { grid-template-columns:1fr 1fr; }
+  .standort-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ TOPBAR ═══ -->
+<div class="topbar">
+  <img src="https://cockpit.vitbikes.de/portal/logo/vitbikes_horizontal.png" alt="vit:bikes" class="topbar-logo" onerror="this.style.display='none'">
+  <div class="topbar-sep"></div>
+  <div class="topbar-title">Marketing Dashboard</div>
+
+  <div class="mode-toggle">
+    <button class="mode-btn active" onclick="setMode('partner')">🏪 Partner</button>
+    <button class="mode-btn" onclick="setMode('hq')">🏢 HQ</button>
+  </div>
+
+  <select class="month-select" id="monthSelect" onchange="setMonth(this.value)">
+    <option value="2026-02" selected>Februar 2026</option>
+    <option value="2026-01">Januar 2026</option>
+    <option value="2025-12">Dezember 2025</option>
+    <option value="2025-11">November 2025</option>
+    <option value="2025-10">Oktober 2025</option>
+    <option value="2025-09">September 2025</option>
+  </select>
+
+  <label class="expert-toggle" id="expertWrap">
+    <input type="checkbox" id="expertCb" onchange="toggleExpert(this.checked)">
+    <div class="toggle-track"></div>
+    <span>Expertenansicht</span>
+  </label>
+</div>
+
+<!-- ═══ SIDEBAR ═══ -->
+<div class="sidebar" id="sidebar"></div>
+
+<!-- ═══ MAIN CONTENT ═══ -->
+<div class="main" id="mainContent">
+
+<!-- ════════════════════════════════════════════ -->
+<!-- PARTNER PAGES                                -->
+<!-- ════════════════════════════════════════════ -->
+
+<!-- ─── P-OV: Mein Marketing Übersicht ─── -->
+<div class="page" id="p-ov">
+  <div class="hero-signal">
+    <div class="hero-badge green">85</div>
+    <div class="hero-text">
+      <h2>Dein Marketing läuft sehr gut 🟢</h2>
+      <p>Du hast im Februar <strong>3.742 €</strong> investiert und damit <strong>272.940 Menschen</strong> dein Geschäft gezeigt. <strong>4.218 Personen</strong> haben auf deine Anzeigen geklickt und <strong>47 echte Leads</strong> wurden generiert – davon <strong>12 Terminbuchungen</strong>. Das ist <strong>15% besser</strong> als der Netzwerk-Durchschnitt.</p>
+    </div>
+  </div>
+
+  <!-- Vereinbarung Summary -->
+  <div class="card mb-24" style="background:linear-gradient(135deg,#FFFBEB 0%,#FFF 100%);border:1px solid var(--orange-20);cursor:pointer" onclick="goPage('p-vb')">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--orange);text-transform:uppercase;letter-spacing:.3px">📋 Vereinbarung 2026</div>
+        <div style="font-size:14px;color:var(--gray-600);margin-top:4px" id="povVbSummary">Jahresbudget: 44.000 € · Lead-Ziel: 220 · CPT: 200 €</div>
+      </div>
+      <div style="font-size:13px;color:var(--orange);font-weight:600">Details →</div>
+    </div>
+  </div>
+
+  <div class="kpi-grid cols-4">
+    <div class="kpi-card">
+      <div class="kpi-label">Werbeausgaben</div>
+      <div class="kpi-value">3.742 €</div>
+      <div class="kpi-sub">Dein Budget diesen Monat</div>
+      <div class="kpi-change up">↑ 8% vs. Vormonat</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Reichweite</div>
+      <div class="kpi-value">272.940</div>
+      <div class="kpi-sub">Menschen haben dich gesehen</div>
+      <div class="kpi-change up">↑ 12% vs. Vormonat</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Klicks</div>
+      <div class="kpi-value">4.218</div>
+      <div class="kpi-sub">Besucher auf deiner Seite</div>
+      <div class="kpi-change up">↑ 5% vs. Vormonat</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Leads</div>
+      <div class="kpi-value">47</div>
+      <div class="kpi-sub">12 Termine · 35 Anfragen</div>
+      <div class="kpi-change up">↑ 22% vs. Vormonat</div>
+    </div>
+  </div>
+
+  <!-- Expert Panel -->
+  <div class="expert-panel">
+    <div class="expert-row">
+      <div class="expert-kpi"><div class="ek-label">CTR</div><div class="ek-val">1,55%</div></div>
+      <div class="expert-kpi"><div class="ek-label">CPC</div><div class="ek-val">0,89 €</div></div>
+      <div class="expert-kpi"><div class="ek-label">CPM</div><div class="ek-val">13,71 €</div></div>
+      <div class="expert-kpi"><div class="ek-label">CPL</div><div class="ek-val">79,62 €</div></div>
+      <div class="expert-kpi"><div class="ek-label">Conv. Rate</div><div class="ek-val">1,11%</div></div>
+      <div class="expert-kpi"><div class="ek-label">ROAS</div><div class="ek-val">4,2x</div></div>
+    </div>
+  </div>
+
+  <div class="grid-2 mb-24">
+    <div class="chart-wrap">
+      <div class="card-title">Ausgaben & Leads – letzte 6 Monate</div>
+      <canvas id="chartPovSpend"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="card-title">Kanal-Verteilung</div>
+      <canvas id="chartPovChannel"></canvas>
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <div class="tbl-header"><h3>Aktive Kampagnen</h3></div>
+    <table>
+      <thead><tr><th>Kampagne</th><th>Kanal</th><th>Budget</th><th>Ausgegeben</th><th>Klicks</th><th>Leads</th><th>Status</th></tr></thead>
+      <tbody id="tblPovCampaigns"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ─── P-META: Meta Ads ─── -->
+<div class="page" id="p-meta">
+  <div class="section-title">Meta Ads – Deine Facebook & Instagram Werbung</div>
+  <div class="section-sub">So performen deine Anzeigen auf den Meta-Plattformen</div>
+
+  <div class="kpi-grid cols-4">
+    <div class="kpi-card">
+      <div class="kpi-label">Meta-Ausgaben</div>
+      <div class="kpi-value">1.122 €</div>
+      <div class="kpi-sub">30% deines Gesamtbudgets</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Impressionen</div>
+      <div class="kpi-value">189.420</div>
+      <div class="kpi-sub">Menschen erreicht auf FB & IG</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Klicks</div>
+      <div class="kpi-value">1.847</div>
+      <div class="kpi-sub">Auf deine Anzeigen geklickt</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Leads über Meta</div>
+      <div class="kpi-value">18</div>
+      <div class="kpi-sub">6 Termine · 12 Anfragen</div>
+    </div>
+  </div>
+
+  <div class="expert-panel">
+    <div class="expert-row">
+      <div class="expert-kpi"><div class="ek-label">CTR</div><div class="ek-val">0,98%</div></div>
+      <div class="expert-kpi"><div class="ek-label">CPC</div><div class="ek-val">0,61 €</div></div>
+      <div class="expert-kpi"><div class="ek-label">CPM</div><div class="ek-val">5,92 €</div></div>
+      <div class="expert-kpi"><div class="ek-label">Frequency</div><div class="ek-val">2,4</div></div>
+      <div class="expert-kpi"><div class="ek-label">Link-CTR</div><div class="ek-val">1,12%</div></div>
+      <div class="expert-kpi"><div class="ek-label">CPL</div><div class="ek-val">62,33 €</div></div>
+    </div>
+  </div>
+
+  <div class="grid-2 mb-24">
+    <div class="chart-wrap">
+      <div class="card-title">Meta-Performance – 6 Monate</div>
+      <canvas id="chartMetaTrend"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="card-title">Plattform-Split: Facebook vs. Instagram</div>
+      <canvas id="chartMetaSplit"></canvas>
+    </div>
+  </div>
+
+  <div class="expert-panel">
+    <div class="tbl-wrap">
+      <div class="tbl-header"><h3>Meta-Kampagnen im Detail</h3></div>
+      <table>
+        <thead><tr><th>Kampagne</th><th>Plattform</th><th>Budget</th><th>Impressionen</th><th>Klicks</th><th>CTR</th><th>Leads</th></tr></thead>
+        <tbody id="tblMetaCamp"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Demographics -->
+  <div class="card mb-24">
+    <div class="card-title">Demographische Informationen nach Klicks</div>
+    <div class="grid-3">
+      <div><div style="font-size:12px;font-weight:600;text-align:center;color:var(--gray-500);margin-bottom:8px">Alter</div><div style="height:140px"><canvas id="chartMetaAge"></canvas></div></div>
+      <div><div style="font-size:12px;font-weight:600;text-align:center;color:var(--gray-500);margin-bottom:8px">Geschlecht</div><div style="height:140px"><canvas id="chartMetaGender"></canvas></div></div>
+      <div><div style="font-size:12px;font-weight:600;text-align:center;color:var(--gray-500);margin-bottom:8px">Plattform</div><div style="height:140px"><canvas id="chartMetaPlatform"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── P-GOO: Google Ads ─── -->
+<div class="page" id="p-goo">
+  <div class="section-title">Google Ads – Deine Suchmaschinen-Werbung</div>
+  <div class="section-sub">So finden dich Kunden über Google</div>
+
+  <div class="kpi-grid cols-4">
+    <div class="kpi-card">
+      <div class="kpi-label">Google-Ausgaben</div>
+      <div class="kpi-value">2.620 €</div>
+      <div class="kpi-sub">70% deines Gesamtbudgets</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Impressionen</div>
+      <div class="kpi-value">83.520</div>
+      <div class="kpi-sub">Einblendungen in der Suche</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Klicks</div>
+      <div class="kpi-value">2.371</div>
+      <div class="kpi-sub">Besucher über Google-Suche</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Leads über Google</div>
+      <div class="kpi-value">29</div>
+      <div class="kpi-sub">6 Termine · 23 Anfragen</div>
+    </div>
+  </div>
+
+  <div class="expert-panel">
+    <div class="expert-row">
+      <div class="expert-kpi"><div class="ek-label">CTR</div><div class="ek-val">2,84%</div></div>
+      <div class="expert-kpi"><div class="ek-label">CPC</div><div class="ek-val">1,10 €</div></div>
+      <div class="expert-kpi"><div class="ek-label">CPM</div><div class="ek-val">31,37 €</div></div>
+      <div class="expert-kpi"><div class="ek-label">Qual. Score</div><div class="ek-val">7,2</div></div>
+      <div class="expert-kpi"><div class="ek-label">Impr. Share</div><div class="ek-val">68%</div></div>
+      <div class="expert-kpi"><div class="ek-label">CPL</div><div class="ek-val">90,34 €</div></div>
+    </div>
+  </div>
+
+  <div class="grid-2 mb-24">
+    <div class="chart-wrap">
+      <div class="card-title">Google-Performance – 6 Monate</div>
+      <canvas id="chartGooTrend"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="card-title">Kampagnen-Typ Verteilung</div>
+      <canvas id="chartGooType"></canvas>
+    </div>
+  </div>
+
+  <div class="expert-panel">
+    <div class="tbl-wrap">
+      <div class="tbl-header"><h3>Top Keywords</h3></div>
+      <table>
+        <thead><tr><th>Keyword</th><th>Impressionen</th><th>Klicks</th><th>CTR</th><th>CPC</th><th>Conv.</th></tr></thead>
+        <tbody id="tblGooKw"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Demographics -->
+  <div class="card mb-24">
+    <div class="card-title">Demographische Informationen nach Klicks</div>
+    <div class="grid-3">
+      <div><div style="font-size:12px;font-weight:600;text-align:center;color:var(--gray-500);margin-bottom:8px">Alter</div><div style="height:140px"><canvas id="chartGooAge"></canvas></div></div>
+      <div><div style="font-size:12px;font-weight:600;text-align:center;color:var(--gray-500);margin-bottom:8px">Geschlecht</div><div style="height:140px"><canvas id="chartGooGender"></canvas></div></div>
+      <div><div style="font-size:12px;font-weight:600;text-align:center;color:var(--gray-500);margin-bottom:8px">Region</div><div style="height:140px"><canvas id="chartGooRegion"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── P-RW: Brand-Reichweite ─── -->
+<div class="page" id="p-rw">
+  <div class="section-title">Deine Brand-Reichweite</div>
+  <div class="section-sub">So sichtbar bist du online – auch ohne bezahlte Werbung</div>
+
+  <div class="kpi-grid cols-3">
+    <div class="kpi-card">
+      <div class="kpi-label">Website-Nutzer</div>
+      <div class="kpi-value">6.842</div>
+      <div class="kpi-sub">Besucher auf deiner Website</div>
+      <div class="kpi-change up">↑ 18% vs. Vormonat</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Verweildauer</div>
+      <div class="kpi-value">2:34 min</div>
+      <div class="kpi-sub">Durchschnitt pro Besuch</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Absprungrate</div>
+      <div class="kpi-value">38,2%</div>
+      <div class="kpi-sub">Niedrig = gut!</div>
+      <div class="kpi-change up">↓ 4% (verbessert)</div>
+    </div>
+  </div>
+
+  <div class="grid-2 mb-24">
+    <div class="chart-wrap">
+      <div class="card-title">Website-Traffic – 6 Monate</div>
+      <canvas id="chartRwTraffic"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="card-title">Traffic-Quellen</div>
+      <canvas id="chartRwSources"></canvas>
+    </div>
+  </div>
+
+  <div class="card mb-24" style="padding:20px 24px; background:var(--orange-light); border:1px solid var(--orange-20);">
+    <p style="font-size:14px; color:var(--gray-600);">
+      <strong>📸 Instagram & Social Media:</strong> Diese Daten werden bald direkt angebunden. Aktuell arbeiten wir an der Instagram Graph API Integration.
+    </p>
+  </div>
+
+  <div class="expert-panel">
+    <div class="tbl-wrap">
+      <div class="tbl-header"><h3>Top Landing Pages</h3></div>
+      <table>
+        <thead><tr><th>Seite</th><th>Aufrufe</th><th>Nutzer</th><th>Verweildauer</th><th>Absprungrate</th></tr></thead>
+        <tbody id="tblRwPages"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ─── P-GL: Glossar ─── -->
+<div class="page" id="p-gl">
+  <div class="section-title">Marketing-Glossar</div>
+  <div class="section-sub">Alle Fachbegriffe einfach erklärt</div>
+  <div id="glossarList"></div>
+</div>
+
+
+<!-- ════════════════════════════════════════════ -->
+<!-- HQ PAGES                                     -->
+<!-- ════════════════════════════════════════════ -->
+
+<!-- ─── H-OV: Netzwerk-Übersicht ─── -->
+<div class="page" id="h-ov">
+  <div class="section-title">Netzwerk-Übersicht</div>
+  <div class="section-sub" id="hovSubtitle">Alle Standorte auf einen Blick – Februar 2026</div>
+
+  <!-- Alert Banner -->
+  <div class="alert-banner" id="alertBanner">
+    <div class="alert-icon">🚨</div>
+    <div class="alert-content">
+      <div class="alert-title" id="alertTitle">3 Standorte brauchen Aufmerksamkeit</div>
+      <div class="alert-list" id="alertList"></div>
+    </div>
+  </div>
+
+  <div class="kpi-grid cols-4 mb-24">
+    <div class="kpi-card">
+      <div class="kpi-label">Netzwerk-Ausgaben</div>
+      <div class="kpi-value" id="hqKpiSpend">42.186 €</div>
+      <div class="kpi-sub">14 aktive Standorte</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Gesamtreichweite</div>
+      <div class="kpi-value">3,82 Mio.</div>
+      <div class="kpi-sub">Impressionen netzwerkweit</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Gesamt-Klicks</div>
+      <div class="kpi-value">58.940</div>
+      <div class="kpi-sub">Ø 4.210 pro Standort</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Gesamt-Leads</div>
+      <div class="kpi-value">612</div>
+      <div class="kpi-sub">168 Termine · 444 Anfragen</div>
+    </div>
+  </div>
+
+  <!-- GA4 Website Analytics -->
+  <div class="card mb-24">
+    <div class="card-title">Website Analytics – vitbikes.de (GA4)</div>
+    <div class="kpi-grid cols-4" style="margin-bottom:16px">
+      <div style="background:var(--gray-50);border-radius:10px;padding:12px 14px">
+        <div style="font-size:11px;color:var(--gray-400)">Nutzer gesamt</div>
+        <div style="font-size:18px;font-weight:700">15.716</div>
+        <div class="kpi-change up" style="font-size:11px">↑ 61,0%</div>
+      </div>
+      <div style="background:var(--gray-50);border-radius:10px;padding:12px 14px">
+        <div style="font-size:11px;color:var(--gray-400)">Seitenansichten</div>
+        <div style="font-size:18px;font-weight:700">59.905</div>
+        <div class="kpi-change up" style="font-size:11px">↑ 53,4%</div>
+      </div>
+      <div style="background:var(--gray-50);border-radius:10px;padding:12px 14px">
+        <div style="font-size:11px;color:var(--gray-400)">Absprungrate</div>
+        <div style="font-size:18px;font-weight:700">37,36%</div>
+        <div class="kpi-change up" style="font-size:11px">↓ 26,0% (besser)</div>
+      </div>
+      <div style="background:var(--gray-50);border-radius:10px;padding:12px 14px">
+        <div style="font-size:11px;color:var(--gray-400)">E-Termin Buchungen</div>
+        <div style="font-size:18px;font-weight:700">95</div>
+        <div class="kpi-change up" style="font-size:11px">↑ 50,8%</div>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-bottom:0">
+      <div>
+        <div style="font-size:12px;font-weight:600;color:var(--gray-500);margin-bottom:8px">Traffic-Quellen</div>
+        <div style="height:160px"><canvas id="chartHqTrafficPie"></canvas></div>
+      </div>
+      <div class="tbl-wrap" style="margin:0;box-shadow:none">
+        <table>
+          <thead><tr><th>Channel</th><th>Neue Nutzer</th><th>Gesamt</th><th>Sitzungsdauer</th></tr></thead>
+          <tbody>
+            <tr><td>Paid Search</td><td>1.061</td><td>1.283</td><td>00:03:52</td></tr>
+            <tr><td>Cross-network</td><td>1.159</td><td>1.322</td><td>00:02:37</td></tr>
+            <tr><td>Organic Video</td><td>553</td><td>600</td><td>00:02:13</td></tr>
+            <tr><td>Paid Social</td><td>538</td><td>586</td><td>00:01:00</td></tr>
+            <tr><td>Referral</td><td>460</td><td>558</td><td>00:03:09</td></tr>
+            <tr><td>Organic Social</td><td>442</td><td>478</td><td>00:00:59</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vereinbarungs-Status Summary -->
+  <div class="card mb-24" style="cursor:pointer;border-left:4px solid var(--orange)" onclick="goPage('h-vb')">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--orange);text-transform:uppercase;letter-spacing:.3px">📋 Vereinbarungen 2026</div>
+        <div style="font-size:14px;color:var(--gray-600);margin-top:4px" id="hovVbSummary"></div>
+      </div>
+      <div style="font-size:13px;color:var(--orange);font-weight:600">Alle anzeigen →</div>
+    </div>
+  </div>
+
+  <div class="card-title" style="padding-left:4px;">Standort-Performance</div>
+  <div class="standort-grid" id="skgrid"></div>
+
+  <div class="expert-panel">
+    <div class="grid-2">
+      <div class="chart-wrap">
+        <div class="card-title">Netzwerk-Trend – 6 Monate</div>
+        <canvas id="chartHqTrend"></canvas>
+      </div>
+      <div class="chart-wrap">
+        <div class="card-title">Kanal-Vergleich Netzwerk</div>
+        <canvas id="chartHqChannel"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── H-META: Meta Ads Gesamt ─── -->
+<div class="page" id="h-meta">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+    <div>
+      <div class="section-title" style="margin-bottom:4px">Meta Ads – Netzwerk gesamt</div>
+      <div class="section-sub" style="margin:0">Facebook & Instagram Performance aller Standorte</div>
+    </div>
+    <input type="text" placeholder="🔍 Kampagne oder Standort filtern..." style="border:1px solid var(--gray-200);border-radius:8px;padding:8px 14px;font-size:13px;width:260px;font-family:inherit" id="hqMetaFilter">
+  </div>
+
+  <div class="kpi-grid cols-4 mb-24">
+    <div class="kpi-card">
+      <div class="kpi-label">Meta-Ausgaben Gesamt</div>
+      <div class="kpi-value">12.656 €</div>
+      <div class="kpi-sub">30% des Netzwerk-Budgets</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Meta-Impressionen</div>
+      <div class="kpi-value">2,14 Mio.</div>
+      <div class="kpi-sub">Reichweite auf FB & IG</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Meta-Klicks</div>
+      <div class="kpi-value">18.420</div>
+      <div class="kpi-sub">Ø CPC: 0,69 €</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Meta-Leads</div>
+      <div class="kpi-value">214</div>
+      <div class="kpi-sub">Ø CPL: 59,14 €</div>
+    </div>
+  </div>
+
+  <div class="grid-2 mb-24">
+    <div class="chart-wrap">
+      <div class="card-title">Meta Spending Trend – 6 Monate</div>
+      <canvas id="chartHqMetaTrend"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="card-title">Facebook vs. Instagram – Netzwerk</div>
+      <canvas id="chartHqMetaSplit"></canvas>
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <div class="tbl-header"><h3>Meta Performance pro Standort</h3></div>
+    <table>
+      <thead><tr><th>Standort</th><th>Ausgaben</th><th>Impressionen</th><th>Klicks</th><th>CTR</th><th>Leads</th><th>CPL</th></tr></thead>
+      <tbody id="tblHqMeta"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ─── H-GOO: Google Ads Gesamt ─── -->
+<div class="page" id="h-goo">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+    <div>
+      <div class="section-title" style="margin-bottom:4px">Google Ads – Netzwerk gesamt</div>
+      <div class="section-sub" style="margin:0">Suchmaschinen-Performance aller Standorte</div>
+    </div>
+    <input type="text" placeholder="🔍 Kampagne oder Standort filtern..." style="border:1px solid var(--gray-200);border-radius:8px;padding:8px 14px;font-size:13px;width:260px;font-family:inherit" id="hqGooFilter">
+  </div>
+
+  <div class="kpi-grid cols-4 mb-24">
+    <div class="kpi-card">
+      <div class="kpi-label">Google-Ausgaben Gesamt</div>
+      <div class="kpi-value">29.530 €</div>
+      <div class="kpi-sub">70% des Netzwerk-Budgets</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Google-Impressionen</div>
+      <div class="kpi-value">1,68 Mio.</div>
+      <div class="kpi-sub">Einblendungen in der Google-Suche</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Google-Klicks</div>
+      <div class="kpi-value">40.520</div>
+      <div class="kpi-sub">Ø CPC: 0,73 €</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Google-Leads</div>
+      <div class="kpi-value">398</div>
+      <div class="kpi-sub">Ø CPL: 74,20 €</div>
+    </div>
+  </div>
+
+  <div class="grid-2 mb-24">
+    <div class="chart-wrap">
+      <div class="card-title">Google Spending Trend – 6 Monate</div>
+      <canvas id="chartHqGooTrend"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="card-title">Kampagnentyp-Verteilung Netzwerk</div>
+      <canvas id="chartHqGooType"></canvas>
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <div class="tbl-header"><h3>Google Performance pro Standort</h3></div>
+    <table>
+      <thead><tr><th>Standort</th><th>Ausgaben</th><th>Impressionen</th><th>Klicks</th><th>CTR</th><th>Leads</th><th>CPL</th></tr></thead>
+      <tbody id="tblHqGoo"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ─── H-LEADS: Lead Reporting ─── -->
+<div class="page" id="h-leads">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+    <div>
+      <div class="section-title" style="margin-bottom:4px">Lead Reporting – Netzwerk</div>
+      <div class="section-sub" style="margin:0">Jahresziel-Tracking und Lead-Qualität</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap" id="leadTypeTags">
+      <span class="pill pill-green" style="cursor:pointer;padding:6px 14px;font-size:12px" onclick="setLeadTag(this,'kombi')">Kombi</span>
+      <span class="pill" style="cursor:pointer;padding:6px 14px;font-size:12px;background:var(--gray-100);color:var(--gray-500)" onclick="setLeadTag(this,'regulaer')">Leads Regulär</span>
+      <span class="pill" style="cursor:pointer;padding:6px 14px;font-size:12px;background:var(--gray-100);color:var(--gray-500)" onclick="setLeadTag(this,'sv25')">Store-Visits 25%</span>
+      <span class="pill" style="cursor:pointer;padding:6px 14px;font-size:12px;background:var(--gray-100);color:var(--gray-500)" onclick="setLeadTag(this,'sv100')">Anzeige-Store-Visits</span>
+    </div>
+  </div>
+
+  <div class="kpi-grid cols-4 mb-24">
+    <div class="kpi-card">
+      <div class="kpi-label">Jahresziel Leads</div>
+      <div class="kpi-value">8.400</div>
+      <div class="kpi-sub">700 pro Monat Ziel</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">YTD Leads</div>
+      <div class="kpi-value">1.248</div>
+      <div class="kpi-sub">Soll YTD: 1.400</div>
+      <div class="kpi-change down">↓ 11% unter Plan</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Terminbuchungen</div>
+      <div class="kpi-value">342</div>
+      <div class="kpi-sub">27,4% Terminquote</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Store Visits (25%)</div>
+      <div class="kpi-value">186</div>
+      <div class="kpi-sub">Gewichtet mit Faktor 0,25</div>
+    </div>
+  </div>
+
+  <div class="chart-wrap mb-24">
+    <div class="card-title">Monatliche Lead-Entwicklung vs. Ziel</div>
+    <canvas id="chartHqLeadsTrend"></canvas>
+  </div>
+
+  <div class="tbl-wrap mb-24">
+    <div class="tbl-header"><h3>Ampel-Tabelle – Zielerreichung pro Standort</h3></div>
+    <table>
+      <thead><tr><th>Standort</th><th>Jahresziel</th><th>YTD-Ziel</th><th>YTD Ist</th><th>Erreichung</th><th>Status</th></tr></thead>
+      <tbody id="ampelTbl"></tbody>
+    </table>
+  </div>
+
+  <div class="expert-panel">
+    <div class="tbl-wrap">
+      <div class="tbl-header"><h3>Live-Leads (letzte 20)</h3></div>
+      <table>
+        <thead><tr><th>Datum</th><th>PLZ</th><th>Standort</th><th>Name / Kontakt</th><th>Typ</th><th>Quelle</th><th>Termin</th><th>Status</th></tr></thead>
+        <tbody id="tblHqLiveLeads"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ─── H-BUDGET: Budget Plan 2026 ─── -->
+<div class="page" id="h-budget">
+  <div class="section-title">Budget Plan 2026</div>
+  <div class="section-sub">Budgetübersicht und Channel-Split aller Standorte</div>
+
+  <div class="dark-section mb-24">
+    <div class="card-title">Budget Summary</div>
+    <div class="kpi-grid cols-4">
+      <div class="dark-card">
+        <div class="kpi-label">Jahresbudget</div>
+        <div class="kpi-value" style="color:var(--orange);">504.000 €</div>
+        <div class="kpi-sub">14 aktive Standorte</div>
+      </div>
+      <div class="dark-card">
+        <div class="kpi-label">YTD Ausgaben</div>
+        <div class="kpi-value" style="color:rgba(255,255,255,.9);">86.372 €</div>
+        <div class="kpi-sub">17,1% des Jahresbudgets</div>
+      </div>
+      <div class="dark-card">
+        <div class="kpi-label">Ø Monatlich</div>
+        <div class="kpi-value" style="color:rgba(255,255,255,.9);">43.186 €</div>
+        <div class="kpi-sub">Ø 3.085 € pro Standort</div>
+      </div>
+      <div class="dark-card">
+        <div class="kpi-label">Channel Split</div>
+        <div class="kpi-value" style="color:rgba(255,255,255,.9);">80/20</div>
+        <div class="kpi-sub">Google / Meta</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tbl-wrap mb-24">
+    <div class="tbl-header"><h3>Budget pro Standort</h3></div>
+    <table>
+      <thead><tr><th>Standort</th><th>Status</th><th>Monatsbudget</th><th>Ausgegeben %</th><th>Hochrechnung</th><th>Google</th><th>Meta</th></tr></thead>
+      <tbody id="budgetTbl"></tbody>
+    </table>
+  </div>
+
+  <div class="grid-2">
+    <div class="chart-wrap">
+      <div class="card-title">Spending Trend – Tagesausgaben</div>
+      <canvas id="chartBudgetTrend"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-title">Channel-Split pro Monat</div>
+      <div id="spgrid"></div>
+    </div>
+  </div>
+
+  <!-- Spending Trend Google vs Meta -->
+  <div class="dark-section mb-24">
+    <div class="card-title">📈 Spending Trend – Google vs. Meta (täglich)</div>
+    <div class="grid-2" style="margin-bottom:16px">
+      <div class="dark-card">
+        <div class="kpi-label">Google Ads</div>
+        <div class="kpi-value" style="color:#F59E0B">48.238 €</div>
+        <div class="kpi-sub">80% Split · YTD</div>
+      </div>
+      <div class="dark-card">
+        <div class="kpi-label">Meta Ads</div>
+        <div class="kpi-value" style="color:#3B82F6">12.484 €</div>
+        <div class="kpi-sub">20% Split · YTD</div>
+      </div>
+    </div>
+    <div style="height:200px"><canvas id="chartSpendTrendDual"></canvas></div>
+  </div>
+
+  <!-- Email Notifications -->
+  <div class="card mb-24" style="border-left:3px solid var(--orange)">
+    <div class="card-title">✉️ Email-Benachrichtigungen</div>
+    <p style="font-size:13px;color:var(--gray-500);margin-bottom:10px">Diese Personen werden per E-Mail benachrichtigt, wenn ein Standort das Budget überschritten oder unterschritten hat:</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <span class="pill" style="background:var(--gray-100);color:var(--gray-600);padding:5px 12px;font-size:12px"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="ea878389828b8f86aa9a8f988c8598878b84898fc7878b92c4878b98818f9e83848d">[email&#160;protected]</a></span>
+      <span class="pill" style="background:var(--gray-100);color:var(--gray-600);padding:5px 12px;font-size:12px"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="dab0b5b2bbb4b4bfa9f4b8bba9ae9aacb3aeb8b3b1bfa9f4bebf">[email&#160;protected]</a></span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- PARTNER: Vereinbarung 2026                   -->
+<!-- ════════════════════════════════════════════ -->
+<div class="page" id="p-vb">
+  <div class="section-title">Deine Vereinbarung 2026</div>
+  <div class="section-sub">Marketing-Jahresgespräch – Deine vereinbarten Ziele und Budget</div>
+
+  <!-- Vereinbarung Summary Card -->
+  <div class="card mb-24" style="border-left:4px solid var(--orange);">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
+      <div>
+        <div style="font-family:'DM Serif Display',serif;font-size:20px;color:var(--gray-700)" id="pvbTitle">Berlin-Brandenburg</div>
+        <div style="font-size:13px;color:var(--gray-500);margin-top:2px" id="pvbMeta">Inhaber: Patrick Henkel · AP: Michael Stenzel · Unterschrieben: 17.10.2025</div>
+      </div>
+      <span class="pill pill-green" id="pvbStatus" style="font-size:12px;padding:5px 14px">✅ Unterschrieben</span>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid cols-4 mb-24" id="pvbKpis"></div>
+
+  <!-- YTD Tracking -->
+  <div class="section-title" style="font-size:17px;">YTD Tracking – Soll vs. Ist</div>
+  <div class="kpi-grid cols-2 mb-24" id="pvbYtd"></div>
+
+  <!-- Forecast Table -->
+  <div class="tbl-wrap mb-24">
+    <div class="tbl-header"><h3>Monats-Forecast 2026 – Gewichtetes Budget & Lead-Ziele</h3></div>
+    <table>
+      <thead><tr><th>Monat</th><th>Gewicht</th><th>Budget Soll</th><th>Budget Ist</th><th>Lead-Ziel</th><th>Leads Ist</th><th>Status</th></tr></thead>
+      <tbody id="pvbForecast"></tbody>
+    </table>
+  </div>
+
+  <!-- Mediamix -->
+  <div class="grid-2 mb-24">
+    <div class="card">
+      <div class="card-title">Mediamix 2026</div>
+      <div id="pvbMediamix"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Kennzahlen & Ziele</div>
+      <div id="pvbMetrics"></div>
+    </div>
+  </div>
+
+  <!-- Vorjahresvergleich -->
+  <div class="chart-wrap mb-24" id="pvbYoyWrap" style="display:none">
+    <div class="card-title">Vorjahresvergleich – 2025 vs. 2026</div>
+    <canvas id="chartPvbYoy"></canvas>
+  </div>
+
+  <div class="tbl-wrap" id="pvbYoyTable" style="display:none">
+    <div class="tbl-header"><h3>Performance 2025 – Dein Vorjahr</h3></div>
+    <table>
+      <thead><tr><th>KPI</th><th>2025 Gesamt</th><th>Ø pro Monat</th><th>Netzwerk-Ø 2025</th></tr></thead>
+      <tbody id="pvbYoyBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Downloads -->
+  <div class="card mb-24" style="border:1px dashed var(--orange-20)">
+    <div class="card-title">📥 Dokumente herunterladen</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap" id="pvbDownloads">
+      <button onclick="downloadPDF('original')" style="display:flex;align-items:center;gap:8px;padding:12px 20px;background:var(--white);border:1px solid var(--gray-200);border-radius:10px;cursor:pointer;font-family:inherit;font-size:13px;transition:all .15s" onmouseover="this.style.borderColor='var(--orange)';this.style.background='var(--orange-light)'" onmouseout="this.style.borderColor='var(--gray-200)';this.style.background='var(--white)'">
+        <span style="font-size:20px">📄</span>
+        <div style="text-align:left">
+          <div style="font-weight:600;color:var(--gray-700)">Marketing Jahresgespräch (Original)</div>
+          <div style="font-size:11px;color:var(--gray-400)">PDF · Unterschriebene Vereinbarung</div>
+        </div>
+      </button>
+      <button onclick="downloadPDF('summary')" style="display:flex;align-items:center;gap:8px;padding:12px 20px;background:var(--white);border:1px solid var(--gray-200);border-radius:10px;cursor:pointer;font-family:inherit;font-size:13px;transition:all .15s" onmouseover="this.style.borderColor='var(--orange)';this.style.background='var(--orange-light)'" onmouseout="this.style.borderColor='var(--gray-200)';this.style.background='var(--white)'">
+        <span style="font-size:20px">📊</span>
+        <div style="text-align:left">
+          <div style="font-weight:600;color:var(--gray-700)">Strategie-Zusammenfassung 2026</div>
+          <div style="font-size:11px;color:var(--gray-400)">PDF · Budget, Ziele, Forecast, Mediamix</div>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- HQ: Vereinbarungen                           -->
+<!-- ════════════════════════════════════════════ -->
+<div class="page" id="h-vb">
+  <div class="section-title">Vereinbarungen 2026 – Netzwerk</div>
+  <div class="section-sub">Alle Marketing-Jahresgespräche und deren Status</div>
+
+  <!-- Abweichungs-Alert -->
+  <div class="alert-banner" id="hvbAlert">
+    <div class="alert-icon">⚠️</div>
+    <div class="alert-content">
+      <div class="alert-title" id="hvbAlertTitle"></div>
+      <div class="alert-list" id="hvbAlertList"></div>
+    </div>
+  </div>
+
+  <!-- Aggregierte KPIs -->
+  <div class="kpi-grid cols-4 mb-24" id="hvbKpis"></div>
+
+  <!-- Status Overview -->
+  <div class="kpi-grid cols-3 mb-24" id="hvbStatusCards"></div>
+
+  <!-- Saisonkurve Chart -->
+  <div class="chart-wrap mb-24">
+    <div class="card-title">Netzwerk Forecast 2026 – Saisonkurve Budget & Leads</div>
+    <canvas id="chartHvbForecast"></canvas>
+  </div>
+
+  <!-- Vereinbarungen Tabelle -->
+  <div class="tbl-wrap mb-24">
+    <div class="tbl-header"><h3>Alle Vereinbarungen im Überblick</h3></div>
+    <table>
+      <thead><tr><th>Standort</th><th>Inhaber</th><th>Budget/Jahr</th><th>Budget/Monat</th><th>Ziel-Leads</th><th>CPT</th><th>Umsatzziel</th><th>MK-Anteil</th><th>Status</th><th>Downloads</th></tr></thead>
+      <tbody id="hvbTable"></tbody>
+    </table>
+  </div>
+
+  <!-- Abweichungs-Tabelle -->
+  <div class="tbl-wrap">
+    <div class="tbl-header"><h3>YTD Abweichungsanalyse</h3></div>
+    <table>
+      <thead><tr><th>Standort</th><th>Budget Soll</th><th>Budget Ist</th><th>Abw.</th><th>Leads Soll</th><th>Leads Ist</th><th>Abw.</th><th>Handlung</th></tr></thead>
+      <tbody id="hvbAbwTable"></tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ═══════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════
+const MONTHS = ['Sep','Okt','Nov','Dez','Jan','Feb'];
+
+const standorte = [
+  {name:'Berlin-Brandenburg',plz:'14513',budget:4000,spent:65,perf:110,status:'gr',clicks:1820,ctr:2.1,cpc:0.84,leads:22,leadTarget:20},
+  {name:'Hamburg',plz:'22761',budget:3840,spent:45,perf:85,status:'rd',clicks:980,ctr:1.2,cpc:1.32,leads:12,leadTarget:18,problem:'Budget nur 45% ausgegeben, CPC 56% über Netzwerk-Ø'},
+  {name:'Witten',plz:'58455',budget:2880,spent:84,perf:95,status:'or',clicks:1340,ctr:1.8,cpc:0.91,leads:14,leadTarget:15},
+  {name:'München TK',plz:'81379',budget:2400,spent:72,perf:102,status:'gr',clicks:1180,ctr:2.0,cpc:0.88,leads:13,leadTarget:13},
+  {name:'Münster',plz:'48159',budget:1920,spent:88,perf:111,status:'gr',clicks:1020,ctr:2.3,cpc:0.78,leads:13,leadTarget:12},
+  {name:'Weilheim',plz:'82362',budget:2016,spent:55,perf:88,status:'or',clicks:720,ctr:1.4,cpc:1.12,leads:8,leadTarget:12,problem:'Budget nur 55% ausgegeben, Leads 33% unter Ziel'},
+  {name:'Pfaffenhofen',plz:'85276',budget:1440,spent:78,perf:93,status:'or',clicks:640,ctr:1.7,cpc:0.95,leads:9,leadTarget:10},
+  {name:'Rottweil',plz:'78658',budget:1440,spent:82,perf:104,status:'gr',clicks:680,ctr:2.1,cpc:0.82,leads:10,leadTarget:10},
+  {name:'Limburg',plz:'65552',budget:1728,spent:42,perf:78,status:'rd',clicks:520,ctr:1.1,cpc:1.41,leads:6,leadTarget:10,problem:'Budget nur 42% ausgegeben, Performance 78% – CPC zu hoch'},
+  {name:'Lohmar',plz:'53797',budget:1322,spent:76,perf:97,status:'or',clicks:580,ctr:1.9,cpc:0.89,leads:8,leadTarget:8},
+  {name:'Grafrath',plz:'82284',budget:1440,spent:58,perf:86,status:'or',clicks:490,ctr:1.3,cpc:1.15,leads:6,leadTarget:8},
+  {name:'Holzkirchen',plz:'83607',budget:1920,spent:71,perf:91,status:'or',clicks:780,ctr:1.6,cpc:0.98,leads:9,leadTarget:10},
+  {name:'München BAL',plz:'81673',budget:1152,spent:80,perf:105,status:'gr',clicks:560,ctr:2.2,cpc:0.81,leads:7,leadTarget:7},
+  {name:'Garching a.d.Alz',plz:'84518',budget:1152,spent:38,perf:72,status:'rd',clicks:310,ctr:0.9,cpc:1.52,leads:4,leadTarget:7,problem:'Budget nur 38% ausgegeben, nur 4 von 7 Leads – CPC höchster im Netzwerk'},
+];
+
+const budgetData = [
+  {name:'Berlin-Brandenburg',status:'ok',budget:4000,spent:65,hoch:3987,google:3200,meta:800},
+  {name:'Hamburg',status:'under',budget:3840,spent:45,hoch:2016,google:3072,meta:768},
+  {name:'Witten',status:'ok',budget:2880,spent:84,hoch:2603,google:2304,meta:576},
+  {name:'München TK',status:'ok',budget:2400,spent:72,hoch:2419,google:1920,meta:480},
+  {name:'Münster',status:'ok',budget:1920,spent:88,hoch:1914,google:1536,meta:384},
+  {name:'Weilheim',status:'warn',budget:2016,spent:55,hoch:1680,google:1613,meta:403},
+  {name:'Pfaffenhofen',status:'ok',budget:1440,spent:78,hoch:1411,google:1152,meta:288},
+  {name:'Rottweil',status:'ok',budget:1440,spent:82,hoch:1440,google:1152,meta:288},
+  {name:'Limburg',status:'under',budget:1728,spent:42,hoch:1210,google:1382,meta:346},
+  {name:'Lohmar',status:'ok',budget:1322,spent:76,hoch:1305,google:1058,meta:264},
+  {name:'Grafrath',status:'warn',budget:1440,spent:58,hoch:1238,google:1152,meta:288},
+  {name:'Holzkirchen',status:'ok',budget:1920,spent:71,hoch:1882,google:1536,meta:384},
+  {name:'München BAL',status:'ok',budget:1152,spent:80,hoch:1148,google:922,meta:230},
+  {name:'Garching a.d.Alz',status:'under',budget:1152,spent:38,hoch:830,google:922,meta:230},
+];
+
+const ampelData = [
+  {name:'Berlin-Brandenburg',jz:720,ytdZ:120,ytdI:132,perf:110},
+  {name:'Hamburg',jz:660,ytdZ:110,ytdI:94,perf:85},
+  {name:'Witten',jz:540,ytdZ:90,ytdI:86,perf:95},
+  {name:'München TK',jz:480,ytdZ:80,ytdI:82,perf:102},
+  {name:'Münster',jz:420,ytdZ:70,ytdI:78,perf:111},
+  {name:'Weilheim',jz:420,ytdZ:70,ytdI:62,perf:88},
+  {name:'Pfaffenhofen',jz:360,ytdZ:60,ytdI:56,perf:93},
+  {name:'Rottweil',jz:360,ytdZ:60,ytdI:62,perf:104},
+  {name:'Limburg',jz:360,ytdZ:60,ytdI:47,perf:78},
+  {name:'Lohmar',jz:300,ytdZ:50,ytdI:49,perf:97},
+  {name:'Grafrath',jz:300,ytdZ:50,ytdI:43,perf:86},
+  {name:'Holzkirchen',jz:360,ytdZ:60,ytdI:55,perf:91},
+  {name:'München BAL',jz:240,ytdZ:40,ytdI:42,perf:105},
+  {name:'Garching a.d.Alz',jz:240,ytdZ:40,ytdI:29,perf:72},
+];
+
+const campaigns = [
+  {name:'E-Bike Frühling 2026',ch:'Google',budget:'1.200 €',spent:'840 €',clicks:1420,leads:18,status:'Aktiv'},
+  {name:'Brand Awareness Region',ch:'Meta',budget:'600 €',spent:'485 €',clicks:920,leads:8,status:'Aktiv'},
+  {name:'Werkstatt-Termine',ch:'Google',budget:'800 €',spent:'612 €',clicks:580,leads:12,status:'Aktiv'},
+  {name:'Leasing-Angebote',ch:'Meta',budget:'522 €',spent:'410 €',clicks:710,leads:6,status:'Aktiv'},
+  {name:'Gebrauchträder Sale',ch:'Google',budget:'620 €',spent:'395 €',clicks:588,leads:3,status:'Pausiert'},
+];
+
+const metaCampaigns = [
+  {name:'Brand Awareness Region',plat:'FB + IG',budget:'600 €',impr:82400,clicks:920,ctr:'1,12%',leads:8},
+  {name:'Leasing-Angebote',plat:'Facebook',budget:'522 €',impr:68200,clicks:710,ctr:'1,04%',leads:6},
+  {name:'Retargeting Besucher',plat:'Instagram',budget:'280 €',impr:38820,clicks:217,ctr:'0,56%',leads:4},
+];
+
+const gooKeywords = [
+  {kw:'e-bike kaufen [stadt]',impr:18400,clicks:842,ctr:'4,58%',cpc:'0,92 €',conv:12},
+  {kw:'fahrrad werkstatt',impr:12600,clicks:480,ctr:'3,81%',cpc:'0,78 €',conv:8},
+  {kw:'e-bike leasing',impr:9200,clicks:312,ctr:'3,39%',cpc:'1,24 €',conv:4},
+  {kw:'fahrradladen in der nähe',impr:15800,clicks:410,ctr:'2,59%',cpc:'0,95 €',conv:3},
+  {kw:'e-bike testfahrt',impr:6400,clicks:188,ctr:'2,94%',cpc:'1,08 €',conv:2},
+];
+
+const landingPages = [
+  {page:'/e-bikes',views:2840,users:2120,dur:'3:12',bounce:'32%'},
+  {page:'/werkstatt',views:1680,users:1340,dur:'2:48',bounce:'28%'},
+  {page:'/angebote',views:1240,users:980,dur:'2:15',bounce:'42%'},
+  {page:'/leasing',views:620,users:510,dur:'3:45',bounce:'25%'},
+  {page:'/kontakt',views:462,users:392,dur:'1:52',bounce:'18%'},
+];
+
+const liveLeads = [
+  {date:'04.03.2026',loc:'Berlin-Brandenburg',plz:'14513',type:'Termin',src:'Google',status:'Neu',name:'Max Mustermann',email:'max@email.de',phone:'+49 170 1234567',termin:'05.03.2026 09:00'},
+  {date:'04.03.2026',loc:'München TK',plz:'81379',type:'Anfrage',src:'Meta',status:'Neu',name:'Anna Beispiel',email:'anna@mail.de',phone:'+49 151 9876543',termin:'06.03.2026 11:30'},
+  {date:'03.03.2026',loc:'Münster',plz:'48159',type:'Termin',src:'Google',status:'Kontaktiert',name:'Klaus Müller',email:'k.mueller@web.de',phone:'+49 171 5554433',termin:'04.03.2026 14:00'},
+  {date:'03.03.2026',loc:'Witten',plz:'58455',type:'Store Visit',src:'Google Maps',status:'Neu',name:'—',email:'—',phone:'—',termin:'—'},
+  {date:'03.03.2026',loc:'Hamburg',plz:'22761',type:'Anfrage',src:'Meta',status:'Offen',name:'Maria Schmidt',email:'m.schmidt@gmx.de',phone:'+49 162 3344556',termin:'05.03.2026 10:00'},
+  {date:'02.03.2026',loc:'Rottweil',plz:'78658',type:'Termin',src:'Google',status:'Kontaktiert',name:'Thomas Weber',email:'t.weber@t-online.de',phone:'+49 179 7788990',termin:'04.03.2026 09:30'},
+  {date:'02.03.2026',loc:'Lohmar',plz:'53797',type:'Anfrage',src:'Meta',status:'Qualifiziert',name:'Sarah Braun',email:'s.braun@gmail.com',phone:'+49 157 2233445',termin:'03.03.2026 15:00'},
+  {date:'02.03.2026',loc:'Weilheim',plz:'82362',type:'Anfrage',src:'Google',status:'Offen',name:'Peter Fischer',email:'p.fischer@yahoo.de',phone:'+49 176 6677889',termin:'—'},
+  {date:'01.03.2026',loc:'München BAL',plz:'81673',type:'Termin',src:'Google',status:'Kontaktiert',name:'Sabine Hoffmann',email:'s.hoffmann@outlook.de',phone:'+49 160 1122334',termin:'03.03.2026 16:00'},
+  {date:'01.03.2026',loc:'Holzkirchen',plz:'83607',type:'Anfrage',src:'Meta',status:'Neu',name:'Jan Richter',email:'j.richter@web.de',phone:'+49 173 4455667',termin:'—'},
+];
+
+const glossar = [
+  {term:'Impressionen',def:'So oft wurde deine Anzeige auf einem Bildschirm angezeigt. Eine Person kann deine Anzeige mehrfach sehen.'},
+  {term:'Reichweite',def:'Wie viele einzelne Personen deine Anzeige mindestens einmal gesehen haben. Jede Person wird nur einmal gezählt.'},
+  {term:'Klicks',def:'Wie oft jemand auf deine Anzeige geklickt hat – z.B. um auf deine Website zu kommen.'},
+  {term:'CTR (Click-Through-Rate)',def:'Der Prozentsatz der Leute, die deine Anzeige gesehen und darauf geklickt haben. Formel: Klicks ÷ Impressionen × 100.'},
+  {term:'CPC (Cost per Click)',def:'Was dich ein einzelner Klick auf deine Anzeige kostet. Formel: Ausgaben ÷ Klicks.'},
+  {term:'CPM (Cost per Mille)',def:'Was es kostet, deine Anzeige 1.000 Mal anzuzeigen. Typischer Vergleichswert für die Effizienz.'},
+  {term:'CPL (Cost per Lead)',def:'Was dich ein Lead (Kontaktanfrage oder Termin) kostet. Formel: Ausgaben ÷ Leads.'},
+  {term:'Leads',def:'Potenzielle Kunden, die durch deine Werbung Kontakt aufgenommen haben – z.B. Terminbuchung, Kontaktformular oder Anruf.'},
+  {term:'Store Visits (25%)',def:'Google schätzt, wie viele Leute nach dem Klick auf die Anzeige deinen Laden besucht haben. Wir gewichten diese mit 25%, weil es eine Schätzung ist.'},
+  {term:'Conversion Rate',def:'Der Prozentsatz der Website-Besucher, die eine gewünschte Aktion ausführen (z.B. Termin buchen). Formel: Conversions ÷ Klicks × 100.'},
+  {term:'ROAS (Return on Ad Spend)',def:'Wie viel Umsatz du für jeden investierten Werbe-Euro zurückbekommst. ROAS 4x = 4 € Umsatz pro 1 € Werbeausgaben.'},
+  {term:'Quality Score',def:'Google bewertet deine Anzeigen von 1–10 nach Relevanz. Höherer Score = niedrigere Klickpreise und bessere Platzierung.'},
+  {term:'Absprungrate',def:'Wie viel Prozent der Besucher deine Website sofort wieder verlassen, ohne sich umzuschauen. Niedrig = gut.'},
+  {term:'Frequency',def:'Wie oft eine Person deine Anzeige im Durchschnitt gesehen hat. Zu hohe Frequency (>5) kann nerven.'},
+];
+
+// HQ per-standort data for Meta/Google tables
+const hqMetaStandorte = standorte.map(s => ({
+  name:s.name, spend:Math.round(s.budget*.3)+'€', impr:(Math.round(s.budget*.3/5.92*1000)).toLocaleString('de'),
+  clicks:Math.round(s.budget*.3/0.69), ctr:(Math.random()*1.2+0.6).toFixed(2)+'%',
+  leads:Math.round(s.budget*.3/59.14), cpl:Math.round(s.budget*.3/Math.max(1,Math.round(s.budget*.3/59.14)))+'€'
+}));
+const hqGooStandorte = standorte.map(s => ({
+  name:s.name, spend:Math.round(s.budget*.7)+'€', impr:(Math.round(s.budget*.7/31.37*1000)).toLocaleString('de'),
+  clicks:Math.round(s.budget*.7/0.73), ctr:(Math.random()*1.5+2).toFixed(2)+'%',
+  leads:Math.round(s.budget*.7/74.2), cpl:Math.round(s.budget*.7/Math.max(1,Math.round(s.budget*.7/74.2)))+'€'
+}));
+
+// ═══════════════════════════════════════
+// VEREINBARUNG / JAHRESGESPRÄCH DATA
+// ═══════════════════════════════════════
+const SEASON_WEIGHTS = {Jan:4,Feb:8,Mrz:10,Apr:11,Mai:12,Jun:11,Jul:11,Aug:10,Sep:9,Okt:6,Nov:5,Dez:3};
+const MONTH_NAMES_SHORT = ['Jan','Feb','Mrz','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+
+const vereinbarungen = [
+  {name:'Berlin-Brandenburg',inhaber:'Patrick Henkel',ap:'Michael Stenzel',signed:true,signDate:'17.10.2025',
+   budgetJahr:44000,budgetMonat:3667,umsatzZiel:1800000,avgVerkauf:4800,verkaufsquote:85,
+   marketingAnteil:2.44,cpt:200,maxLeads:220,leadAnteil:50,
+   mediamix:['Meta','Google','Framen','Audio','Events'],crm:true,
+   perf2025:{kosten:31508,termine:113,storeVisits:455,impressionen:3248824,klicks:32266,
+     terminziel:57,svZiel:125,budgetMonat:3816,cpc:140,cpt:303}},
+  {name:'Witten',inhaber:'Thorsten Guhr',ap:'Michael Stenzel',signed:true,signDate:'25.11.2025',
+   budgetJahr:36000,flexBudget:4000,budgetMonat:3000,umsatzZiel:1400000,avgVerkauf:4200,verkaufsquote:75,
+   marketingAnteil:2.6,cpt:125,maxLeads:288,leadAnteil:65,
+   mediamix:['Meta','Google','Framen','Audio','Events'],crm:false,
+   perf2025:{kosten:19104,termine:201,storeVisits:156,impressionen:2431454,klicks:34470,
+     terminziel:114,svZiel:180,budgetMonat:2120,cpc:61,cpt:97}},
+  {name:'Hamburg',inhaber:'Jan Meier',ap:'Michael Stenzel',signed:false,signDate:null,
+   budgetJahr:46080,budgetMonat:3840,umsatzZiel:1600000,avgVerkauf:4500,verkaufsquote:80,
+   marketingAnteil:2.88,cpt:180,maxLeads:256,leadAnteil:55,
+   mediamix:['Meta','Google'],crm:false,perf2025:null},
+  {name:'München TK',inhaber:'Thomas Klein',ap:'Michael Stenzel',signed:true,signDate:'05.11.2025',
+   budgetJahr:28800,budgetMonat:2400,umsatzZiel:1200000,avgVerkauf:5200,verkaufsquote:82,
+   marketingAnteil:2.4,cpt:160,maxLeads:180,leadAnteil:48,
+   mediamix:['Meta','Google','Events'],crm:true,perf2025:null},
+  {name:'Münster',inhaber:'Lisa Braun',ap:'Michael Stenzel',signed:true,signDate:'12.11.2025',
+   budgetJahr:23040,budgetMonat:1920,umsatzZiel:900000,avgVerkauf:4000,verkaufsquote:78,
+   marketingAnteil:2.56,cpt:150,maxLeads:154,leadAnteil:52,
+   mediamix:['Meta','Google'],crm:false,perf2025:null},
+  {name:'Weilheim',inhaber:'Marco Stein',ap:'Michael Stenzel',signed:false,signDate:null,
+   budgetJahr:24192,budgetMonat:2016,umsatzZiel:1000000,avgVerkauf:4400,verkaufsquote:76,
+   marketingAnteil:2.42,cpt:170,maxLeads:142,leadAnteil:50,
+   mediamix:['Meta','Google'],crm:false,perf2025:null},
+  {name:'Pfaffenhofen',inhaber:'Felix Huber',ap:'Michael Stenzel',signed:true,signDate:'20.11.2025',
+   budgetJahr:17280,budgetMonat:1440,umsatzZiel:700000,avgVerkauf:3800,verkaufsquote:74,
+   marketingAnteil:2.47,cpt:145,maxLeads:119,leadAnteil:50,
+   mediamix:['Meta','Google'],crm:false,perf2025:null},
+  {name:'Rottweil',inhaber:'Anna Weber',ap:'Michael Stenzel',signed:true,signDate:'18.11.2025',
+   budgetJahr:17280,budgetMonat:1440,umsatzZiel:720000,avgVerkauf:3900,verkaufsquote:77,
+   marketingAnteil:2.4,cpt:140,maxLeads:123,leadAnteil:48,
+   mediamix:['Meta','Google','Events'],crm:false,perf2025:null},
+  {name:'Limburg',inhaber:'Dirk Schäfer',ap:'Michael Stenzel',signed:false,signDate:null,
+   budgetJahr:20736,budgetMonat:1728,umsatzZiel:850000,avgVerkauf:4100,verkaufsquote:75,
+   marketingAnteil:2.44,cpt:175,maxLeads:118,leadAnteil:50,
+   mediamix:['Meta','Google'],crm:false,perf2025:null},
+  {name:'Lohmar',inhaber:'Sven Koch',ap:'Michael Stenzel',signed:true,signDate:'22.11.2025',
+   budgetJahr:15864,budgetMonat:1322,umsatzZiel:650000,avgVerkauf:3700,verkaufsquote:73,
+   marketingAnteil:2.44,cpt:155,maxLeads:102,leadAnteil:50,
+   mediamix:['Meta','Google'],crm:false,perf2025:null},
+  {name:'Grafrath',inhaber:'Klaus Lang',ap:'Michael Stenzel',signed:true,signDate:'28.11.2025',
+   budgetJahr:17280,budgetMonat:1440,umsatzZiel:700000,avgVerkauf:3800,verkaufsquote:74,
+   marketingAnteil:2.47,cpt:165,maxLeads:105,leadAnteil:48,
+   mediamix:['Meta','Google'],crm:false,perf2025:null},
+  {name:'Holzkirchen',inhaber:'Petra Maier',ap:'Michael Stenzel',signed:true,signDate:'15.11.2025',
+   budgetJahr:23040,budgetMonat:1920,umsatzZiel:950000,avgVerkauf:4300,verkaufsquote:79,
+   marketingAnteil:2.43,cpt:155,maxLeads:149,leadAnteil:52,
+   mediamix:['Meta','Google','Events'],crm:false,perf2025:null},
+  {name:'München BAL',inhaber:'Tim Berger',ap:'Michael Stenzel',signed:true,signDate:'10.11.2025',
+   budgetJahr:13824,budgetMonat:1152,umsatzZiel:580000,avgVerkauf:4600,verkaufsquote:80,
+   marketingAnteil:2.38,cpt:150,maxLeads:92,leadAnteil:48,
+   mediamix:['Meta','Google'],crm:false,perf2025:null},
+  {name:'Garching a.d.Alz',inhaber:'Ralf Schneider',ap:'Michael Stenzel',signed:false,signDate:null,
+   budgetJahr:13824,budgetMonat:1152,umsatzZiel:550000,avgVerkauf:3600,verkaufsquote:72,
+   marketingAnteil:2.51,cpt:180,maxLeads:77,leadAnteil:45,
+   mediamix:['Meta','Google'],crm:false,perf2025:null},
+];
+
+// Current partner = Berlin-Brandenburg for demo
+const currentPartnerVB = vereinbarungen[0];
+
+// YTD tracking (Jan+Feb simulated)
+function getYTDTracking(vb) {
+  const w = [SEASON_WEIGHTS.Jan, SEASON_WEIGHTS.Feb];
+  const totalW = w.reduce((a,b)=>a+b,0);
+  const budgetSoll = Math.round(vb.budgetJahr * totalW / 100);
+  const leadsSoll = Math.round(vb.maxLeads * totalW / 100);
+  // Find matching standort for actual data
+  const st = standorte.find(s => s.name === vb.name);
+  const budgetIst = st ? Math.round(st.budget * (st.spent/100) * 2) : Math.round(budgetSoll * 0.85);
+  const leadsIst = st ? st.leads * 2 : Math.round(leadsSoll * 0.9);
+  return {budgetSoll, budgetIst, leadsSoll, leadsIst,
+    budgetPct: Math.round(budgetIst/budgetSoll*100),
+    leadsPct: Math.round(leadsIst/leadsSoll*100)};
+}
+const partnerNav = [
+  {id:'p-ov',icon:'📊',label:'Übersicht'},
+  {id:'p-vb',icon:'📋',label:'Vereinbarung 2026'},
+  {id:'p-meta',icon:'📘',label:'Meta Ads'},
+  {id:'p-goo',icon:'🔍',label:'Google Ads'},
+  {id:'p-rw',icon:'📡',label:'Brand-Reichweite'},
+  {id:'p-gl',icon:'📖',label:'Glossar'},
+];
+const hqNav = [
+  {id:'h-ov',icon:'🌐',label:'Netzwerk-Übersicht'},
+  {id:'h-vb',icon:'📋',label:'Vereinbarungen'},
+  {id:'h-meta',icon:'📘',label:'Meta Ads Gesamt'},
+  {id:'h-goo',icon:'🔍',label:'Google Ads Gesamt'},
+  {id:'h-leads',icon:'🎯',label:'Lead Reporting'},
+  {id:'h-budget',icon:'💰',label:'Budget Plan 2026'},
+];
+
+let currentMode = 'partner';
+let currentPage = 'p-ov';
+let charts = {};
+
+function buildSidebar() {
+  const sb = document.getElementById('sidebar');
+  const nav = currentMode === 'partner' ? partnerNav : hqNav;
+  const modeLabel = currentMode === 'partner' ? '🏪 Partner-Ansicht' : '🏢 HQ-Ansicht';
+  sb.innerHTML = `<div class="sidebar-section"><div class="sidebar-label">${modeLabel}</div>` +
+    nav.map(n => `<a class="sidebar-item${n.id===currentPage?' active':''}" onclick="goPage('${n.id}')"><span class="icon">${n.icon}</span>${n.label}</a>`).join('') +
+    `</div>`;
+}
+
+function goPage(id) {
+  currentPage = id;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById(id);
+  if(el) el.classList.add('active');
+  buildSidebar();
+  // Re-render charts for this page
+  setTimeout(() => renderChartsForPage(id), 50);
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&mode==='partner')||(i===1&&mode==='hq')));
+  document.body.classList.toggle('hq-mode', mode==='hq');
+  document.getElementById('expertWrap').style.display = mode==='partner'?'flex':'none';
+  goPage(mode==='partner'?'p-ov':'h-ov');
+}
+
+function toggleExpert(on) {
+  document.body.classList.toggle('expert-on', on);
+}
+
+const MONTH_LABELS = {
+  '2026-02':'Februar 2026','2026-01':'Januar 2026','2025-12':'Dezember 2025',
+  '2025-11':'November 2025','2025-10':'Oktober 2025','2025-09':'September 2025'
+};
+let selectedMonth = '2026-02';
+
+function setMonth(val) {
+  selectedMonth = val;
+  const label = MONTH_LABELS[val] || val;
+  // Update subtitles
+  const sub = document.getElementById('hovSubtitle');
+  if(sub) sub.textContent = 'Alle Standorte auf einen Blick – ' + label;
+  // Update partner hero
+  const heroText = document.querySelector('#p-ov .hero-text p');
+  // Re-render current page data
+  populateTables();
+  renderChartsForPage(currentPage);
+}
+
+function setLeadTag(el, type) {
+  document.querySelectorAll('#leadTypeTags .pill').forEach(p => {
+    p.style.background='var(--gray-100)'; p.style.color='var(--gray-500)'; p.className='pill';
+  });
+  el.className='pill pill-green'; el.style.background=''; el.style.color='';
+}
+
+function downloadPDF(type, standortName) {
+  const name = standortName || currentPartnerVB?.name || 'Standort';
+  if(type === 'original') {
+    // In production: fetch from Supabase Storage
+    // supabase.storage.from('marketing-docs').download(`jahresgespraech/${slug}.pdf`)
+    alert(`📄 Download: "${name} – Marketing Jahresgespräch 2026.pdf"\n\nIn der Produktion wird das Original-PDF aus Supabase Storage geladen.`);
+  } else {
+    // In production: generate PDF via Edge Function with jsPDF
+    // fetch(`/functions/v1/generate-marketing-summary?standort=${slug}`)
+    const vb = vereinbarungen.find(v=>v.name===name) || currentPartnerVB;
+    if(!vb) return;
+    alert(`📊 Download: "${name} – Strategie-Zusammenfassung 2026.pdf"\n\n` +
+      `Inhalt:\n` +
+      `• Jahresbudget: ${num(vb.budgetJahr)} €\n` +
+      `• Umsatzziel: ${num(vb.umsatzZiel)} €\n` +
+      `• Lead-Ziel: ${vb.maxLeads}\n` +
+      `• CPT: ${vb.cpt} €\n` +
+      `• Mediamix: ${vb.mediamix.join(', ')}\n\n` +
+      `In der Produktion wird ein PDF generiert.`);
+  }
+}
+
+// ═══════════════════════════════════════
+// CHART HELPERS
+// ═══════════════════════════════════════
+const ORA = '#EF7D00';
+const ORA20 = 'rgba(239,125,0,.2)';
+const GRY = '#626062';
+const GRN = '#22C55E';
+const BLU = '#3B82F6';
+
+function destroyChart(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
+
+function makeChart(id, cfg) {
+  const canvas = document.getElementById(id);
+  if(!canvas) return;
+  destroyChart(id);
+  charts[id] = new Chart(canvas.getContext('2d'), cfg);
+}
+
+function barLine(id, labels, barData, lineData, barLabel, lineLabel) {
+  makeChart(id, {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {type:'bar',label:barLabel,data:barData,backgroundColor:ORA20,borderColor:ORA,borderWidth:1.5,borderRadius:6,order:2},
+        {type:'line',label:lineLabel,data:lineData,borderColor:GRN,backgroundColor:'transparent',borderWidth:2,pointRadius:4,pointBackgroundColor:GRN,tension:.3,order:1}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:12},usePointStyle:true,padding:16}}},scales:{x:{grid:{display:false},ticks:{font:{family:'DM Sans'}}},y:{grid:{color:'#f3f4f6'},ticks:{font:{family:'DM Sans'}}}}}
+  });
+}
+
+function doughnut(id, labels, data, colors) {
+  makeChart(id, {
+    type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:12},usePointStyle:true,padding:16}}}}
+  });
+}
+
+function lineChart(id, labels, datasets) {
+  makeChart(id, {
+    type:'line',
+    data:{labels,datasets:datasets.map(ds=>({...ds,tension:.35,pointRadius:4,borderWidth:2,fill:ds.fill||false}))},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:12},usePointStyle:true,padding:16}}},scales:{x:{grid:{display:false},ticks:{font:{family:'DM Sans'}}},y:{grid:{color:'#f3f4f6'},ticks:{font:{family:'DM Sans'}}}}}
+  });
+}
+
+function hBar(id, labels, datasets) {
+  makeChart(id, {
+    type:'bar',
+    data:{labels,datasets},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:12},usePointStyle:true,padding:16}}},scales:{x:{stacked:true,grid:{color:'#f3f4f6'},ticks:{font:{family:'DM Sans'}}},y:{stacked:true,grid:{display:false},ticks:{font:{family:'DM Sans'}}}}}
+  });
+}
+
+// ═══════════════════════════════════════
+// RENDER CHARTS PER PAGE
+// ═══════════════════════════════════════
+function renderChartsForPage(page) {
+  switch(page) {
+    case 'p-ov':
+      barLine('chartPovSpend',MONTHS,[2980,3120,3450,3280,3460,3742],[28,32,35,38,38,47],'Ausgaben (€)','Leads');
+      doughnut('chartPovChannel',['Google Ads','Meta Ads','Organisch'],[2620,1122,0],[ORA,BLU,'#D1D5DB']);
+      break;
+    case 'p-meta':
+      lineChart('chartMetaTrend',MONTHS,[
+        {label:'Ausgaben (€)',data:[880,920,1010,980,1060,1122],borderColor:BLU,pointBackgroundColor:BLU},
+        {label:'Leads',data:[10,12,14,13,15,18],borderColor:GRN,pointBackgroundColor:GRN}
+      ]);
+      doughnut('chartMetaSplit',['Facebook','Instagram'],[62,38],[BLU,'#E879F9']);
+      // Demographics
+      doughnut('chartMetaAge',['35-44','45-54','25-34','55-64','sonstige'],[36,23.9,23.9,11.8,4.4],[ORA,'#F59E0B','#FCD34D','#C56400','#D1D5DB']);
+      doughnut('chartMetaGender',['male','female','unknown'],[84.3,14.6,1.1],[ORA,'#F59E0B','#D1D5DB']);
+      doughnut('chartMetaPlatform',['mobile_app','sonstige'],[97,3],[ORA,'#D1D5DB']);
+      break;
+    case 'p-goo':
+      lineChart('chartGooTrend',MONTHS,[
+        {label:'Ausgaben (€)',data:[2100,2200,2440,2300,2380,2620],borderColor:ORA,pointBackgroundColor:ORA},
+        {label:'Leads',data:[18,20,21,25,22,29],borderColor:GRN,pointBackgroundColor:GRN}
+      ]);
+      doughnut('chartGooType',['Search','Display','Shopping'],[65,20,15],[ORA,BLU,'#D1D5DB']);
+      // Demographics
+      doughnut('chartGooAge',['45-54','55-64','35-44','Undetermined','25-34','65+'],[38.8,21.2,14.7,9.8,9.9,5.6],[ORA,'#F59E0B','#FCD34D','#9CA3AF','#D1D5DB','#374151']);
+      doughnut('chartGooGender',['Male','Undetermined','Female'],[38.8,40.1,21.1],[ORA,'#374151','#F59E0B']);
+      doughnut('chartGooRegion',['Hamburg','sonstige'],[93.6,6.4],[ORA,'#D1D5DB']);
+      break;
+    case 'p-rw':
+      lineChart('chartRwTraffic',MONTHS,[
+        {label:'Website-Nutzer',data:[4800,5200,5680,5920,6340,6842],borderColor:ORA,pointBackgroundColor:ORA,fill:true,backgroundColor:ORA20}
+      ]);
+      doughnut('chartRwSources',['Google Ads','Organisch','Meta','Direkt','Sonstige'],[38,28,18,12,4],[ORA,GRN,BLU,'#9CA3AF','#D1D5DB']);
+      break;
+    case 'h-ov':
+      barLine('chartHqTrend',MONTHS,[34200,36800,39400,38200,40800,42186],[480,520,560,590,580,612],'Netzwerk-Ausgaben (€)','Leads');
+      hBar('chartHqChannel',standorte.slice(0,8).map(s=>s.name),[
+        {label:'Google',data:standorte.slice(0,8).map(s=>Math.round(s.budget*.7)),backgroundColor:ORA,borderRadius:4},
+        {label:'Meta',data:standorte.slice(0,8).map(s=>Math.round(s.budget*.3)),backgroundColor:BLU,borderRadius:4}
+      ]);
+      doughnut('chartHqTrafficPie',['Paid Search','Cross-network','Organic Video','Paid Social','Referral','Organic Social','Sonstige'],[23.6,15,10.6,8.9,7.3,7.3,27.3],['#F59E0B',ORA,BLU,'#10B981','#8B5CF6','#EC4899','#D1D5DB']);
+      break;
+    case 'h-meta':
+      lineChart('chartHqMetaTrend',MONTHS,[
+        {label:'Meta Spend (€)',data:[10200,10800,11400,11800,12200,12656],borderColor:BLU,pointBackgroundColor:BLU,fill:true,backgroundColor:'rgba(59,130,246,.1)'}
+      ]);
+      doughnut('chartHqMetaSplit',['Facebook','Instagram'],[58,42],[BLU,'#E879F9']);
+      break;
+    case 'h-goo':
+      lineChart('chartHqGooTrend',MONTHS,[
+        {label:'Google Spend (€)',data:[24000,26000,28000,26400,28600,29530],borderColor:ORA,pointBackgroundColor:ORA,fill:true,backgroundColor:ORA20}
+      ]);
+      doughnut('chartHqGooType',['Search','Display','Shopping'],[62,22,16],[ORA,BLU,'#D1D5DB']);
+      break;
+    case 'h-leads':
+      makeChart('chartHqLeadsTrend',{
+        type:'bar',
+        data:{
+          labels:MONTHS,
+          datasets:[
+            {label:'Ziel',data:[700,700,700,700,700,700],backgroundColor:'rgba(209,213,219,.4)',borderRadius:6,order:2},
+            {label:'Ist',data:[480,520,560,590,580,612],backgroundColor:ORA,borderRadius:6,order:1}
+          ]
+        },
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:12},usePointStyle:true,padding:16}}},scales:{x:{grid:{display:false}},y:{grid:{color:'#f3f4f6'}}}}
+      });
+      break;
+    case 'h-budget':
+      // Daily spending trend (last 28 days)
+      const days = Array.from({length:28},(_,i)=>(i+1).toString().padStart(2,'0')+'.02');
+      const daily = days.map(()=>Math.round(1200+Math.random()*600));
+      lineChart('chartBudgetTrend',days,[
+        {label:'Tagesausgaben (€)',data:daily,borderColor:ORA,pointBackgroundColor:ORA,pointRadius:2,fill:true,backgroundColor:ORA20}
+      ]);
+      // Spending Trend Dual (Google vs Meta)
+      const gDaily = days.map(()=>Math.round(1000+Math.random()*500));
+      const mDaily = days.map(()=>Math.round(250+Math.random()*200));
+      lineChart('chartSpendTrendDual',days,[
+        {label:'Google Ads',data:gDaily,borderColor:'#F59E0B',pointBackgroundColor:'#F59E0B',pointRadius:2},
+        {label:'Meta Ads',data:mDaily,borderColor:'#3B82F6',pointBackgroundColor:'#3B82F6',pointRadius:2}
+      ]);
+      break;
+    case 'p-vb':
+    case 'h-vb':
+      renderVBCharts(page);
+      break;
+  }
+}
+
+// ═══════════════════════════════════════
+// POPULATE TABLES & GRIDS
+// ═══════════════════════════════════════
+function num(n){return n.toLocaleString('de-DE');}
+function statusColor(s){return s==='gr'?'green':s==='rd'?'red':'amber';}
+
+function populateTables() {
+  // Partner campaigns
+  const tb1 = document.getElementById('tblPovCampaigns');
+  if(tb1) tb1.innerHTML = campaigns.map(c =>
+    `<tr><td><strong>${c.name}</strong></td><td>${c.ch}</td><td>${c.budget}</td><td>${c.spent}</td><td>${num(c.clicks)}</td><td>${c.leads}</td><td><span class="pill ${c.status==='Aktiv'?'pill-green':'pill-amber'}">${c.status}</span></td></tr>`
+  ).join('');
+
+  // Meta campaigns
+  const tb2 = document.getElementById('tblMetaCamp');
+  if(tb2) tb2.innerHTML = metaCampaigns.map(c =>
+    `<tr><td><strong>${c.name}</strong></td><td>${c.plat}</td><td>${c.budget}</td><td>${num(c.impr)}</td><td>${num(c.clicks)}</td><td>${c.ctr}</td><td>${c.leads}</td></tr>`
+  ).join('');
+
+  // Google keywords
+  const tb3 = document.getElementById('tblGooKw');
+  if(tb3) tb3.innerHTML = gooKeywords.map(k =>
+    `<tr><td><strong>${k.kw}</strong></td><td>${num(k.impr)}</td><td>${num(k.clicks)}</td><td>${k.ctr}</td><td>${k.cpc}</td><td>${k.conv}</td></tr>`
+  ).join('');
+
+  // Landing pages
+  const tb4 = document.getElementById('tblRwPages');
+  if(tb4) tb4.innerHTML = landingPages.map(p =>
+    `<tr><td><strong>${p.page}</strong></td><td>${num(p.views)}</td><td>${num(p.users)}</td><td>${p.dur}</td><td>${p.bounce}</td></tr>`
+  ).join('');
+
+  // Glossar
+  const gl = document.getElementById('glossarList');
+  if(gl) gl.innerHTML = glossar.map(g =>
+    `<div class="glossar-item"><div class="glossar-term">${g.term}</div><div class="glossar-def">${g.def}</div></div>`
+  ).join('');
+
+  // ── HQ: Alert Banner ──
+  const problems = standorte.filter(s => s.problem);
+  const ab = document.getElementById('alertBanner');
+  const at_title = document.getElementById('alertTitle');
+  const al = document.getElementById('alertList');
+  if(ab && problems.length > 0) {
+    ab.classList.remove('hidden');
+    at_title.textContent = problems.length + ' Standort' + (problems.length>1?'e brauchen':' braucht') + ' Aufmerksamkeit';
+    al.innerHTML = problems.map(s => `<div>· <strong>${s.name}</strong> – ${s.problem}</div>`).join('');
+  } else if(ab) {
+    ab.classList.add('hidden');
+  }
+
+  // ── HQ: Standort Grid (enhanced) ──
+  const sk = document.getElementById('skgrid');
+  if(sk) sk.innerHTML = standorte.sort((a,b) => a.perf - b.perf).map(s => {
+    const col = statusColor(s.status);
+    const perfW = Math.min(s.perf, 120);
+    const budgetSpent = Math.round(s.budget * (s.spent||0) / 100);
+    const leadPct = s.leadTarget ? Math.round(s.leads/s.leadTarget*100) : 0;
+    const leadCol = leadPct>=100?'green':leadPct>=80?'amber':'red';
+    return `<div class="standort-card st-${col}">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div class="standort-name">${s.name}</div>
+          <div class="standort-plz">${s.plz}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'DM Serif Display',serif;font-size:22px;color:${col==='green'?'var(--green)':col==='red'?'var(--red)':'var(--amber)'}">${s.perf}%</div>
+          <div style="font-size:10px;color:var(--gray-400);text-transform:uppercase">Performance</div>
+        </div>
+      </div>
+      <div class="standort-row" style="margin-top:10px"><span class="label">Budget</span><span class="val">${num(budgetSpent)} € / ${num(s.budget)} € <span style="color:var(--gray-400);font-weight:400">(${s.spent}%)</span></span></div>
+      <div class="prog-bar" style="margin-bottom:10px"><div class="prog-fill ${s.spent>=70?'green':s.spent>=50?'amber':'red'}" style="width:${s.spent}%"></div></div>
+      <div class="standort-row"><span class="label">Leads</span><span class="val">${s.leads} / ${s.leadTarget} Ziel <span class="pill pill-${leadCol}" style="margin-left:6px">${leadPct}%</span></span></div>
+      <div class="standort-meta">
+        <div class="standort-mini"><span class="sm-val">${num(s.clicks)}</span>Klicks</div>
+        <div class="standort-mini"><span class="sm-val">${s.ctr.toFixed(1)}%</span>CTR</div>
+        <div class="standort-mini"><span class="sm-val">${s.cpc.toFixed(2)} €</span>CPC</div>
+      </div>
+      ${s.problem ? `<div class="standort-problem">⚠️ ${s.problem}</div>` : (s.perf>=100 ? `<div class="standort-ok">✅ Läuft gut – alle KPIs im grünen Bereich</div>` : '')}
+    </div>`;
+  }).join('');
+
+  // ── HQ: Ampel-Tabelle ──
+  const at = document.getElementById('ampelTbl');
+  if(at) at.innerHTML = ampelData.map(a => {
+    const col = a.perf>=100?'green':a.perf>=90?'amber':'red';
+    return `<tr><td><strong>${a.name}</strong></td><td>${num(a.jz)}</td><td>${num(a.ytdZ)}</td><td>${num(a.ytdI)}</td>
+      <td><div class="prog-bar" style="width:120px;display:inline-block;vertical-align:middle;margin-right:8px"><div class="prog-fill ${col}" style="width:${Math.min(a.perf,120)/1.2}%"></div></div>${a.perf}%</td>
+      <td><span class="pill pill-${col}">${a.perf>=100?'On Track':a.perf>=90?'Knapp':'Unter Ziel'}</span></td></tr>`;
+  }).join('');
+
+  // ── HQ: Budget-Tabelle ──
+  const bt = document.getElementById('budgetTbl');
+  if(bt) bt.innerHTML = budgetData.map(b => {
+    const pillCls = b.status==='ok'?'pill-green':b.status==='warn'?'pill-amber':'pill-red';
+    const pillTxt = b.status==='ok'?'Im Plan':b.status==='warn'?'Achtung':'Unter Plan';
+    return `<tr><td><strong>${b.name}</strong></td><td><span class="pill ${pillCls}">${pillTxt}</span></td>
+      <td>${num(b.budget)} €</td><td>${b.spent}%</td><td>${num(b.hoch)} €</td>
+      <td>${num(b.google)} €</td><td>${num(b.meta)} €</td></tr>`;
+  }).join('');
+
+  // ── HQ: Channel Split Grid ──
+  const sp = document.getElementById('spgrid');
+  if(sp) {
+    const months = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+    sp.innerHTML = months.map(m => {
+      const g = 75 + Math.round(Math.random()*10);
+      const me = 100 - g;
+      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <span style="width:32px;font-size:12px;color:var(--gray-500);font-weight:500">${m}</span>
+        <div style="flex:1;display:flex;height:18px;border-radius:9px;overflow:hidden">
+          <div style="width:${g}%;background:${ORA};"></div>
+          <div style="width:${me}%;background:${BLU};"></div>
+        </div>
+        <span style="font-size:11px;color:var(--gray-400);width:56px">${g}% / ${me}%</span>
+      </div>`;
+    }).join('');
+  }
+
+  // ── HQ Meta table ──
+  const hm = document.getElementById('tblHqMeta');
+  if(hm) hm.innerHTML = hqMetaStandorte.map(s =>
+    `<tr><td><strong>${s.name}</strong></td><td>${s.spend}</td><td>${s.impr}</td><td>${num(s.clicks)}</td><td>${s.ctr}</td><td>${s.leads}</td><td>${s.cpl}</td></tr>`
+  ).join('');
+
+  // ── HQ Google table ──
+  const hg = document.getElementById('tblHqGoo');
+  if(hg) hg.innerHTML = hqGooStandorte.map(s =>
+    `<tr><td><strong>${s.name}</strong></td><td>${s.spend}</td><td>${s.impr}</td><td>${num(s.clicks)}</td><td>${s.ctr}</td><td>${s.leads}</td><td>${s.cpl}</td></tr>`
+  ).join('');
+
+  // ── HQ Live Leads ──
+  const ll = document.getElementById('tblHqLiveLeads');
+  if(ll) ll.innerHTML = liveLeads.map(l => {
+    const cls = l.status==='Neu'?'pill-green':l.status==='Kontaktiert'?'pill-amber':l.status==='Qualifiziert'?'pill-green':'pill-amber';
+    const contact = l.name!=='—' ? `<strong>${l.name}</strong><br><span style="font-size:11px;color:var(--gray-400)">${l.email} · ${l.phone}</span>` : '<span style="color:var(--gray-400)">—</span>';
+    return `<tr><td>${l.date}</td><td>${l.plz}</td><td>${l.loc}</td><td>${contact}</td><td>${l.type}</td><td>${l.src}</td><td style="font-size:11px">${l.termin}</td><td><span class="pill ${cls}">${l.status}</span></td></tr>`;
+  }).join('');
+
+  // ══════════════════════════════════════
+  // PARTNER: Vereinbarung 2026
+  // ══════════════════════════════════════
+  const vb = currentPartnerVB;
+  if(vb) {
+    const el = (id) => document.getElementById(id);
+    if(el('pvbTitle')) el('pvbTitle').textContent = vb.name;
+    if(el('pvbMeta')) el('pvbMeta').textContent = `Inhaber: ${vb.inhaber} · AP: ${vb.ap}${vb.signed?' · Unterschrieben: '+vb.signDate:' · Noch nicht unterschrieben'}`;
+    if(el('pvbStatus')) {
+      el('pvbStatus').className = 'pill '+(vb.signed?'pill-green':'pill-red');
+      el('pvbStatus').innerHTML = vb.signed?'✅ Unterschrieben':'⏳ Ausstehend';
+    }
+
+    // KPI cards
+    if(el('pvbKpis')) el('pvbKpis').innerHTML = [
+      {l:'Jahresbudget',v:num(vb.budgetJahr)+' €',s:num(vb.budgetMonat)+' €/Monat'},
+      {l:'Umsatzziel',v:num(vb.umsatzZiel)+' €',s:'Ø-Verkauf: '+num(vb.avgVerkauf)+' €'},
+      {l:'Ziel-Leads',v:vb.maxLeads,s:vb.leadAnteil+'% Leadanteil am Umsatz'},
+      {l:'Kosten pro Termin',v:vb.cpt+' €',s:'Verkaufsquote: '+vb.verkaufsquote+'%'},
+    ].map(k=>`<div class="kpi-card"><div class="kpi-label">${k.l}</div><div class="kpi-value">${k.v}</div><div class="kpi-sub">${k.s}</div></div>`).join('');
+
+    // YTD Tracking
+    const ytd = getYTDTracking(vb);
+    if(el('pvbYtd')) el('pvbYtd').innerHTML = [
+      {l:'Budget YTD',soll:num(ytd.budgetSoll)+' €',ist:num(ytd.budgetIst)+' €',pct:ytd.budgetPct},
+      {l:'Leads YTD',soll:ytd.leadsSoll,ist:ytd.leadsIst,pct:ytd.leadsPct},
+    ].map(k=>{
+      const col = k.pct>=90?'green':k.pct>=70?'amber':'red';
+      return `<div class="kpi-card">
+        <div class="kpi-label">${k.l}</div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin:8px 0">
+          <span style="font-size:13px;color:var(--gray-500)">Soll: <strong style="color:var(--gray-700)">${k.soll}</strong></span>
+          <span style="font-size:13px;color:var(--gray-500)">Ist: <strong style="color:var(--gray-700)">${k.ist}</strong></span>
+          <span class="pill pill-${col}">${k.pct}%</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill ${col}" style="width:${Math.min(k.pct,100)}%"></div></div>
+      </div>`;
+    }).join('');
+
+    // Forecast Table
+    if(el('pvbForecast')) {
+      const monthIst = [
+        {b:1760,l:5},{b:3520,l:14},{b:null,l:null},{b:null,l:null},{b:null,l:null},{b:null,l:null},
+        {b:null,l:null},{b:null,l:null},{b:null,l:null},{b:null,l:null},{b:null,l:null},{b:null,l:null}
+      ];
+      el('pvbForecast').innerHTML = MONTH_NAMES_SHORT.map((m,i)=>{
+        const w = Object.values(SEASON_WEIGHTS)[i];
+        const bSoll = Math.round(vb.budgetJahr*w/100);
+        const lSoll = Math.round(vb.maxLeads*w/100);
+        const ist = monthIst[i];
+        const bIst = ist.b !== null ? num(ist.b)+' €' : '<span style="color:var(--gray-300)">—</span>';
+        const lIst = ist.l !== null ? ist.l : '<span style="color:var(--gray-300)">—</span>';
+        let statusPill = '<span style="color:var(--gray-300)">—</span>';
+        if(ist.b !== null) {
+          const pct = Math.round(ist.b/bSoll*100);
+          const col = pct>=85?'green':pct>=65?'amber':'red';
+          statusPill = `<span class="pill pill-${col}">${pct}%</span>`;
+        }
+        return `<tr><td><strong>${m}</strong></td><td>${w}%</td><td>${num(bSoll)} €</td><td>${bIst}</td><td>${lSoll}</td><td>${lIst}</td><td>${statusPill}</td></tr>`;
+      }).join('');
+    }
+
+    // Mediamix
+    if(el('pvbMediamix')) el('pvbMediamix').innerHTML = vb.mediamix.map(m=>`<span class="pill pill-green" style="margin:3px 4px 3px 0">${m}</span>`).join('')
+      + (vb.crm?'<div style="margin-top:12px;font-size:13px;color:var(--gray-600)">🧪 <strong>CRM-Testphase</strong> vereinbart</div>':'');
+
+    // Metrics
+    if(el('pvbMetrics')) el('pvbMetrics').innerHTML = [
+      ['Marketingbudget-Anteil',vb.marketingAnteil+'% vom Umsatz'],
+      ['Kosten pro Termin (CPT)',vb.cpt+' €'],
+      ['Verkaufsquote',vb.verkaufsquote+'%'],
+      ['Ø-Verkaufswert',num(vb.avgVerkauf)+' €'],
+      ['Leadanteil am Umsatzplan',vb.leadAnteil+'%'],
+    ].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:13px"><span style="color:var(--gray-500)">${l}</span><strong>${v}</strong></div>`).join('');
+
+    // Vorjahresvergleich
+    if(vb.perf2025) {
+      if(el('pvbYoyWrap')) el('pvbYoyWrap').style.display='block';
+      if(el('pvbYoyTable')) el('pvbYoyTable').style.display='block';
+      if(el('pvbYoyBody')) el('pvbYoyBody').innerHTML = [
+        ['Gesamtkosten',num(vb.perf2025.kosten)+' €',num(Math.round(vb.perf2025.kosten/9))+' €',num(1436)+' €'],
+        ['Termine',vb.perf2025.termine,Math.round(vb.perf2025.termine/9),'9'],
+        ['Store Visits',vb.perf2025.storeVisits,Math.round(vb.perf2025.storeVisits/9),'22'],
+        ['Impressionen',num(vb.perf2025.impressionen),num(Math.round(vb.perf2025.impressionen/9)),num(Math.round(2800000/9))],
+        ['Klicks',num(vb.perf2025.klicks),num(Math.round(vb.perf2025.klicks/9)),num(Math.round(28000/9))],
+        ['Terminziel-Erreichung',vb.perf2025.terminziel+'%','—','—'],
+        ['Storevisit-Ziel-Erreichung',vb.perf2025.svZiel+'%','—','—'],
+      ].map(([l,g,m,n])=>`<tr><td><strong>${l}</strong></td><td>${g}</td><td>${m}</td><td>${n}</td></tr>`).join('');
+    }
+  }
+
+  // ══════════════════════════════════════
+  // HQ: Vereinbarungen
+  // ══════════════════════════════════════
+  const totalBudget = vereinbarungen.reduce((a,v)=>a+v.budgetJahr,0);
+  const totalLeads = vereinbarungen.reduce((a,v)=>a+v.maxLeads,0);
+  const totalUmsatz = vereinbarungen.reduce((a,v)=>a+v.umsatzZiel,0);
+  const signedCount = vereinbarungen.filter(v=>v.signed).length;
+  const unsignedCount = vereinbarungen.filter(v=>!v.signed).length;
+
+  // KPIs
+  if(el('hvbKpis')) el('hvbKpis').innerHTML = [
+    {l:'Netzwerk-Jahresbudget',v:num(totalBudget)+' €',s:num(vereinbarungen.length)+' Standorte'},
+    {l:'Gesamt Lead-Ziel',v:num(totalLeads),s:'Ø '+Math.round(totalLeads/12)+' pro Monat'},
+    {l:'Netzwerk-Umsatzziel',v:num(totalUmsatz)+' €',s:'Ø '+num(Math.round(totalUmsatz/vereinbarungen.length))+' € pro Standort'},
+    {l:'Ø Marketinganteil',v:(vereinbarungen.reduce((a,v)=>a+v.marketingAnteil,0)/vereinbarungen.length).toFixed(1)+'%',s:'Vom Gesamtumsatz'},
+  ].map(k=>`<div class="kpi-card"><div class="kpi-label">${k.l}</div><div class="kpi-value">${k.v}</div><div class="kpi-sub">${k.s}</div></div>`).join('');
+
+  function el(id){return document.getElementById(id);}
+
+  // Status Cards
+  if(el('hvbStatusCards')) el('hvbStatusCards').innerHTML = `
+    <div class="kpi-card" style="border-left:3px solid var(--green)"><div class="kpi-label">Unterschrieben</div><div class="kpi-value" style="color:var(--green)">${signedCount}</div><div class="kpi-sub">von ${vereinbarungen.length} Standorten</div></div>
+    <div class="kpi-card" style="border-left:3px solid var(--red)"><div class="kpi-label">Ausstehend</div><div class="kpi-value" style="color:var(--red)">${unsignedCount}</div><div class="kpi-sub">${vereinbarungen.filter(v=>!v.signed).map(v=>v.name).join(', ')}</div></div>
+    <div class="kpi-card" style="border-left:3px solid var(--orange)"><div class="kpi-label">CRM-Testphase</div><div class="kpi-value" style="color:var(--orange)">${vereinbarungen.filter(v=>v.crm).length}</div><div class="kpi-sub">${vereinbarungen.filter(v=>v.crm).map(v=>v.name).join(', ')}</div></div>
+  `;
+
+  // Vereinbarungen Tabelle
+  if(el('hvbTable')) el('hvbTable').innerHTML = vereinbarungen.map(v=>{
+    const sCls = v.signed?'pill-green':'pill-red';
+    const sTxt = v.signed?'✅ '+v.signDate:'⏳ Offen';
+    const hasOriginal = v.perf2025 !== null; // has original PDF
+    const dlBtns = `<div style="display:flex;gap:4px">`
+      + (hasOriginal ? `<span title="Original-PDF" style="cursor:pointer;font-size:16px" onclick="downloadPDF('original','${v.name}')">📄</span>` : `<span style="font-size:16px;opacity:.25" title="Kein Original vorhanden">📄</span>`)
+      + `<span title="Zusammenfassung generieren" style="cursor:pointer;font-size:16px" onclick="downloadPDF('summary','${v.name}')">📊</span></div>`;
+    return `<tr><td><strong>${v.name}</strong></td><td>${v.inhaber}</td><td>${num(v.budgetJahr)} €</td><td>${num(v.budgetMonat)} €</td><td>${v.maxLeads}</td><td>${v.cpt} €</td><td>${num(v.umsatzZiel)} €</td><td>${v.marketingAnteil}%</td><td><span class="pill ${sCls}">${sTxt}</span></td><td>${dlBtns}</td></tr>`;
+  }).join('');
+
+  // Abweichungs-Tabelle + Alert
+  const abweichungen = [];
+  if(el('hvbAbwTable')) el('hvbAbwTable').innerHTML = vereinbarungen.map(v=>{
+    const ytd = getYTDTracking(v);
+    const bAbw = ytd.budgetPct - 100;
+    const lAbw = ytd.leadsPct - 100;
+    const bCol = Math.abs(bAbw)<=20?'green':Math.abs(bAbw)<=35?'amber':'red';
+    const lCol = Math.abs(lAbw)<=20?'green':Math.abs(lAbw)<=35?'amber':'red';
+    const needsAction = Math.abs(bAbw)>20 || Math.abs(lAbw)>20;
+    if(needsAction) abweichungen.push({name:v.name,bAbw,lAbw});
+    return `<tr><td><strong>${v.name}</strong></td><td>${num(ytd.budgetSoll)} €</td><td>${num(ytd.budgetIst)} €</td><td><span class="pill pill-${bCol}">${bAbw>0?'+':''}${bAbw}%</span></td><td>${ytd.leadsSoll}</td><td>${ytd.leadsIst}</td><td><span class="pill pill-${lCol}">${lAbw>0?'+':''}${lAbw}%</span></td><td>${needsAction?'<span style="color:var(--red);font-weight:600">⚠️ Prüfen</span>':'<span style="color:var(--green)">✓ OK</span>'}</td></tr>`;
+  }).join('');
+
+  // Alert Banner
+  if(el('hvbAlert')) {
+    if(abweichungen.length > 0) {
+      el('hvbAlert').classList.remove('hidden');
+      el('hvbAlertTitle').textContent = abweichungen.length+' Standort'+(abweichungen.length>1?'e weichen':'  weicht')+' >20% vom Plan ab';
+      el('hvbAlertList').innerHTML = abweichungen.map(a=>`<div>· <strong>${a.name}</strong> – Budget ${a.bAbw>0?'+':''}${a.bAbw}%, Leads ${a.lAbw>0?'+':''}${a.lAbw}%</div>`).join('');
+    } else {
+      el('hvbAlert').classList.add('hidden');
+    }
+  }
+  // Summary cards on overview pages
+  if(el('povVbSummary') && vb) {
+    el('povVbSummary').textContent = `Jahresbudget: ${num(vb.budgetJahr)} € · Lead-Ziel: ${vb.maxLeads} · CPT: ${vb.cpt} €`;
+  }
+  if(el('hovVbSummary')) {
+    el('hovVbSummary').textContent = `${signedCount}/${vereinbarungen.length} unterschrieben · Netzwerk-Budget: ${num(totalBudget)} € · ${unsignedCount>0?unsignedCount+' ausstehend':'Alle abgeschlossen'}`;
+  }
+}
+
+// ═══════════════════════════════════════
+// RENDER VEREINBARUNG CHARTS
+// ═══════════════════════════════════════
+function renderVBCharts(page) {
+  if(page === 'p-vb' && currentPartnerVB && currentPartnerVB.perf2025) {
+    const p = currentPartnerVB.perf2025;
+    barLine('chartPvbYoy',
+      ['Kosten','Termine','Store Visits'],
+      [p.kosten, p.termine*100, p.storeVisits*100],
+      [currentPartnerVB.budgetJahr/12*2, 20*100, 40*100],
+      '2025 (Ø/Monat)','2026 Ziel (Ø/Monat)'
+    );
+  }
+  if(page === 'h-vb') {
+    // Saisonkurve
+    const monthBudgets = MONTH_NAMES_SHORT.map((_,i) => {
+      const w = Object.values(SEASON_WEIGHTS)[i];
+      return vereinbarungen.reduce((a,v)=>a+Math.round(v.budgetJahr*w/100),0);
+    });
+    const monthLeads = MONTH_NAMES_SHORT.map((_,i) => {
+      const w = Object.values(SEASON_WEIGHTS)[i];
+      return vereinbarungen.reduce((a,v)=>a+Math.round(v.maxLeads*w/100),0);
+    });
+    makeChart('chartHvbForecast',{
+      type:'bar',
+      data:{
+        labels:MONTH_NAMES_SHORT,
+        datasets:[
+          {type:'bar',label:'Budget (€)',data:monthBudgets,backgroundColor:'rgba(239,125,0,.2)',borderColor:ORA,borderWidth:1.5,borderRadius:6,yAxisID:'y',order:2},
+          {type:'line',label:'Lead-Ziel',data:monthLeads,borderColor:GRN,backgroundColor:'transparent',borderWidth:2,pointRadius:4,pointBackgroundColor:GRN,tension:.3,yAxisID:'y1',order:1}
+        ]
+      },
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:12},usePointStyle:true,padding:16}}},
+        scales:{y:{position:'left',grid:{color:'#f3f4f6'},ticks:{font:{family:'DM Sans'},callback:v=>num(v)+' €'}},
+          y1:{position:'right',grid:{display:false},ticks:{font:{family:'DM Sans'}}}}}
+    });
+  }
+}
+
+// ═════
