@@ -175,6 +175,7 @@ function useSupabase(currentLoc, SELLERS) {
     try {
       const { error: err } = await _sb().from("leads").update(updates).eq("id", dealId);
       if (err) console.error("[Pipeline] Save error:", err);
+      else window.logAudit && window.logAudit("lead_bearbeitet", "verkauf", { lead_id: dealId, felder: Object.keys(updates) });
     } catch (e) { console.error("[Pipeline] Save exception:", e); }
   }, [sb]);
 
@@ -184,6 +185,7 @@ function useSupabase(currentLoc, SELLERS) {
     try {
       const { error: err } = await _sb().from("leads").delete().eq("id", dealId);
       if (err) { console.error("[Pipeline] Delete error:", err); return false; }
+      window.logAudit && window.logAudit("lead_geloescht", "verkauf", { lead_id: dealId });
       return true;
     } catch (e) { console.error("[Pipeline] Delete exception:", e); return false; }
   }, [sb]);
@@ -216,6 +218,7 @@ function useSupabase(currentLoc, SELLERS) {
         sales: deal.sales || {}
       }).select().single();
       if (err) throw err;
+      window.logAudit && window.logAudit("lead_erstellt", "verkauf", { name: (nameParts[0] || "") + " " + (nameParts.slice(1).join(" ") || ""), wert: deal.value || 0 });
       return data;
     } catch (e) { console.error("[Pipeline] Create error:", e); return null; }
   }, [sb, profile]);

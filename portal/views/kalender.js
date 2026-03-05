@@ -570,6 +570,7 @@ export async function saveKalTermin(){
         if(kalEditId) {
             var resp = await _sb().from('termine').update(payload).eq('id', kalEditId);
             if(resp.error) throw resp.error;
+            window.logAudit && window.logAudit('termin_bearbeitet', 'kalender', { titel: payload.titel || '', datum: date });
         } else {
             // Generate serie_id for repeating events
             if(repeat && repeatEnd) {
@@ -585,9 +586,11 @@ export async function saveKalTermin(){
                 if(inserts.length > 100) { _showToast(_t('misc_max_repeat'), 'info'); return; }
                 var resp = await _sb().from('termine').insert(inserts);
                 if(resp.error) throw resp.error;
+                window.logAudit && window.logAudit('termin_erstellt', 'kalender', { titel: payload.titel || '', serie: true, anzahl: inserts.length });
             } else {
                 var resp = await _sb().from('termine').insert(payload);
                 if(resp.error) throw resp.error;
+                window.logAudit && window.logAudit('termin_erstellt', 'kalender', { titel: payload.titel || '', datum: date });
             }
         }
         document.getElementById('kalNewModal').classList.add('hidden');
@@ -711,10 +714,12 @@ export async function deleteKalTermin() {
                 var resp = await _sb().from('termine').delete().eq('serie_id', t.serie_id).select();
                 if(resp.error) throw resp.error;
                 if(!resp.data || resp.data.length === 0) throw new Error('Löschen fehlgeschlagen – evtl. fehlende Berechtigung. Bitte Admin kontaktieren.');
+                window.logAudit && window.logAudit('termin_geloescht', 'kalender', { serie: true, anzahl: resp.data.length });
             } else {
                 var resp = await _sb().from('termine').delete().eq('id', kalEditId).select();
                 if(resp.error) throw resp.error;
                 if(!resp.data || resp.data.length === 0) throw new Error('Löschen fehlgeschlagen – evtl. fehlende Berechtigung. Bitte Admin kontaktieren.');
+                window.logAudit && window.logAudit('termin_geloescht', 'kalender', { serie: false });
             }
             document.getElementById('kalNewModal').classList.add('hidden');
             kalEditId = null;
@@ -726,6 +731,7 @@ export async function deleteKalTermin() {
             var resp = await _sb().from('termine').delete().eq('id', kalEditId).select();
             if(resp.error) throw resp.error;
             if(!resp.data || resp.data.length === 0) throw new Error('Löschen fehlgeschlagen – evtl. fehlende Berechtigung. Bitte Admin kontaktieren.');
+            window.logAudit && window.logAudit('termin_geloescht', 'kalender', { serie: false });
             document.getElementById('kalNewModal').classList.add('hidden');
             kalEditId = null;
             await loadKalTermine();

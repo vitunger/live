@@ -278,6 +278,7 @@ export async function saveNeuerMa() {
         var result = await response.json();
         if(!response.ok) throw { message: result.error || 'User-Erstellung fehlgeschlagen' };
 
+        window.logAudit && window.logAudit('user_erstellt', 'user-management', { email: email.trim().toLowerCase(), vorname: vorname.trim(), nachname: nachname.trim(), is_hq: isHqUser });
         closeNeuerMaModal();
         var rollenLabels = {'hq':'HQ','hq_gf':'GF','hq_sales':'Sales','hq_marketing':'Marketing','hq_einkauf':'Einkauf','hq_support':'Support','hq_akademie':'Akademie','hq_hr':'HR','hq_it':'IT','hq_zahlen':'Zahlen','inhaber':'Geschäftsleitung','verkauf':'Verkauf','werkstatt':'Werkstatt','buchhaltung':'Buchhaltung'};
 
@@ -528,6 +529,7 @@ export async function saveEditMa(userId) {
 
         closeEditMaModal();
         _showToast('Mitarbeiter aktualisiert!', 'success');
+        window.logAudit && window.logAudit('user_bearbeitet', 'user-management', { user_id: userId, status: status, is_hq: isHQ });
         window.renderKzMitarbeiter();
         // If this user's status changed, re-check demo mode
         if(_sbProfile() && userId === _sbProfile().id) {
@@ -563,6 +565,7 @@ export async function deleteMa(userId, userName) {
         await _sb().from('users').delete().eq('id', userId);
         // 3. Auth-User löschen (via DB-Funktion)
         await _sb().rpc('delete_auth_user', { target_user_id: userId });
+        window.logAudit && window.logAudit('user_geloescht', 'user-management', { user_id: userId, name: userName });
         _showToast(userName+' wurde gelöscht.', 'success');
         window.renderKzMitarbeiter();
     } catch(err) {

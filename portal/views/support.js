@@ -150,6 +150,7 @@ export async function changeTicketStatus(ticketId, newStatus) {
     try {
         var resp = await _sb().from('support_tickets').update({status:newStatus, updated_at:new Date().toISOString()}).eq('id',ticketId);
         if(resp.error) throw resp.error;
+        window.logAudit && window.logAudit('ticket_status', 'support', { ticket_id: ticketId, status: newStatus });
         closeTicketDetail();
         await openTicketDetail(ticketId);
         renderTickets('all');
@@ -204,6 +205,7 @@ export async function submitTicketForm() {
             kategorie: kategorie, prioritaet: prioritaet, status: 'offen'
         });
         if(resp.error) throw resp.error;
+        window.logAudit && window.logAudit('ticket_erstellt', 'support', { titel: titel.trim(), kategorie: kategorie, prioritaet: prioritaet });
         triggerPushHQ('🆘 Neues Ticket', titel.trim() + (sbStandort ? ' – ' + sbStandort.name : ''), '/?view=hqSupport', 'push_support_update');
         var el;
         el = document.getElementById('ticketCreate'); if(el) el.classList.add('hidden');
