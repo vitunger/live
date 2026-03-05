@@ -30,7 +30,8 @@
         adsData: [],
         zeitraum: 30,
         kalView: 'liste',
-        editMode: false
+        editMode: false,
+        benchmarkMetrik: 'views'
     };
 
     var SC_TABS = [
@@ -47,7 +48,8 @@
         { id: 'youtube',    label: 'YouTube' },
         { id: 'tiktok',     label: 'TikTok' },
         { id: 'instagram',  label: 'Instagram / Facebook' },
-        { id: 'googleads',  label: 'Google Ads' }
+        { id: 'googleads',  label: 'Google Ads' },
+        { id: 'wachstum',   label: 'Wachstum' }
     ];
 
     var FORMAT_LABELS = {
@@ -85,7 +87,7 @@
             '</div>';
     }
 
-    function svgBar(data, maxVal, width, barH) {
+    function svgBar(data, maxVal, width, barH, highlightLabel) {
         if (!data || !data.length) return '';
         var w = width || 500, h = barH || 28, gap = 4;
         var totalH = data.length * (h + gap);
@@ -95,8 +97,13 @@
         data.forEach(function(d, i) {
             var y = i * (h + gap);
             var bw = Math.max(2, (d.value / mx) * barW);
-            svg += '<text x="0" y="' + (y + h/2 + 4) + '" font-size="11" fill="#6b7280" class="truncate">' + _escH((d.label || '').substring(0, 28)) + '</text>';
-            svg += '<rect x="' + labelW + '" y="' + y + '" width="' + bw + '" height="' + h + '" rx="4" fill="#EF7D00" opacity="0.85"/>';
+            var isHL = highlightLabel && d.label === highlightLabel;
+            var fill = isHL ? '#EF7D00' : '#9CA3AF';
+            var opacity = isHL ? '1' : '0.6';
+            var labelFill = isHL ? '#EF7D00' : '#6b7280';
+            var labelWeight = isHL ? '700' : '400';
+            svg += '<text x="0" y="' + (y + h/2 + 4) + '" font-size="11" fill="' + labelFill + '" font-weight="' + labelWeight + '">' + _escH((d.label || '').substring(0, 28)) + '</text>';
+            svg += '<rect x="' + labelW + '" y="' + y + '" width="' + bw + '" height="' + h + '" rx="4" fill="' + fill + '" opacity="' + opacity + '"/>';
             svg += '<text x="' + (labelW + bw + 6) + '" y="' + (y + h/2 + 4) + '" font-size="11" fill="#374151" font-weight="600">' + fmtK(d.value) + '</text>';
         });
         svg += '</svg>';
@@ -172,11 +179,12 @@
             return;
         }
 
-        var viewBtns = ['liste', 'monat'].map(function(v) {
+        var viewLabels = { liste: 'Liste', woche: 'Woche', monat: 'Monat' };
+        var viewBtns = ['liste', 'woche', 'monat'].map(function(v) {
             var active = SC.kalView === v;
             return '<button onclick="scSetKalView(\'' + v + '\')" class="px-3 py-1.5 text-xs font-semibold rounded-lg ' +
                 (active ? 'bg-vit-orange text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + '">' +
-                (v === 'liste' ? 'Liste' : 'Monat') + '</button>';
+                viewLabels[v] + '</button>';
         }).join('');
 
         var filterChips = ['alle', 'geplant', 'freigegeben', 'ausgespielt', 'extern'].map(function(f) {
@@ -190,6 +198,7 @@
                 '<div class="flex items-center gap-2">' + filterChips + '</div>' +
                 '<div class="flex items-center gap-2">' +
                     viewBtns +
+                    '<button onclick="scOpenImport()" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200">Extern importieren</button>' +
                     '<button onclick="scOpenPostAdd()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600">+ Neuer Post</button>' +
                 '</div>' +
             '</div>' +
@@ -221,6 +230,8 @@
 
         if (SC.kalView === 'monat') {
             renderKalMonat(el, filtered);
+        } else if (SC.kalView === 'woche') {
+            renderKalWoche(el, filtered);
         } else {
             renderKalListe(el, filtered);
         }
@@ -294,6 +305,45 @@
             if (dayPosts.length > 2) html += '<div class="text-[10px] text-gray-400">+' + (dayPosts.length - 2) + '</div>';
             html += '</div>';
         }
+        html += '</div>';
+        el.innerHTML = html;
+    }
+
+    function renderKalWoche(el, posts) {
+        var now = new Date();
+        var dayOfWeek = (now.getDay() + 6) % 7; // 0=Mo
+        var monday = new Date(now); monday.setDate(now.getDate() - dayOfWeek);
+        monday.setHours(0,0,0,0);
+
+        var days = [];
+        for (var i = 0; i < 7; i++) {
+            var d = new Date(monday); d.setDate(monday.getDate() + i);
+            days.push(d);
+        }
+
+        var dayNames = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+        var html = '<div class="grid grid-cols-7 gap-2">';
+        days.forEach(function(day, idx) {
+            var isToday = day.toDateString() === now.toDateString();
+            var dayPosts = posts.filter(function(p) {
+                if (!p.geplant_am) return false;
+                return new Date(p.geplant_am).toDateString() === day.toDateString();
+            });
+            html += '<div class="border rounded-xl p-3 min-h-[120px] ' + (isToday ? 'border-vit-orange bg-orange-50' : 'border-gray-200 bg-white') + '">' +
+                '<div class="text-xs font-semibold ' + (isToday ? 'text-vit-orange' : 'text-gray-500') + ' mb-2">' + dayNames[idx] + ' ' + day.getDate() + '.' + (day.getMonth()+1) + '.</div>';
+            if (dayPosts.length === 0) {
+                html += '<div class="text-[10px] text-gray-300 text-center mt-4">–</div>';
+            } else {
+                dayPosts.forEach(function(p) {
+                    var s = STATUS_LABELS[p.status] || {};
+                    html += '<div class="mb-1 rounded-lg p-1.5 text-[11px] ' + (s.cls || 'bg-gray-100 text-gray-600') + '">' +
+                        '<div class="font-semibold truncate">' + _escH(p.title) + '</div>' +
+                        '<div class="text-[10px] opacity-75">' + _escH(FORMAT_LABELS[p.format] || p.format) + '</div>' +
+                    '</div>';
+                });
+            }
+            html += '</div>';
+        });
         html += '</div>';
         el.innerHTML = html;
     }
@@ -393,6 +443,83 @@
         }
     }
 
+    // ── Import Modal ──
+
+    function scOpenImport() {
+        var stOptions = '<option value="">– Standort –</option>';
+        SC.standorte.forEach(function(s) {
+            stOptions += '<option value="' + s.id + '">' + _escH(s.name) + '</option>';
+        });
+
+        var modal = document.getElementById('scPostModal');
+        if (!modal) return;
+        modal.style.display = 'block';
+        modal.innerHTML =
+            '<div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">' +
+            '<div class="bg-white rounded-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">' +
+                '<div class="flex items-center justify-between mb-4"><h3 class="font-bold text-lg">Extern importieren</h3>' +
+                '<button onclick="scCloseImport()" class="text-gray-400 hover:text-gray-600 text-xl">\u2716</button></div>' +
+                '<p class="text-xs text-gray-500 mb-4">Importiere bereits veroeffentlichte Posts von externen Plattformen. Diese werden als "ausgespielt" mit Quelle "extern" erfasst.</p>' +
+                '<div class="space-y-3">' +
+                    '<input id="scImpTitle" placeholder="Titel / Hook" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
+                    '<textarea id="scImpCaption" placeholder="Caption (optional)" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"></textarea>' +
+                    '<div class="grid grid-cols-2 gap-3">' +
+                        '<select id="scImpFormat" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
+                            Object.keys(FORMAT_LABELS).map(function(k) { return '<option value="' + k + '">' + _escH(FORMAT_LABELS[k]) + '</option>'; }).join('') +
+                        '</select>' +
+                        '<select id="scImpStandort" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">' + stOptions + '</select>' +
+                    '</div>' +
+                    '<input id="scImpDatum" type="datetime-local" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
+                    '<div class="grid grid-cols-2 md:grid-cols-4 gap-3">' +
+                        '<input id="scImpViews" type="number" placeholder="Views" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
+                        '<input id="scImpLikes" type="number" placeholder="Likes" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
+                        '<input id="scImpComments" type="number" placeholder="Kommentare" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
+                        '<input id="scImpShares" type="number" placeholder="Shares" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
+                    '</div>' +
+                    '<input id="scImpPostId" placeholder="Plattform-Post-ID (optional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
+                    '<button onclick="scSaveImport()" class="w-full py-2 bg-vit-orange text-white rounded-lg font-semibold hover:bg-orange-600">Importieren</button>' +
+                '</div>' +
+            '</div></div>';
+    }
+
+    function scCloseImport() {
+        var modal = document.getElementById('scPostModal');
+        if (modal) { modal.style.display = 'none'; modal.innerHTML = ''; }
+    }
+
+    async function scSaveImport() {
+        var sb = _sb(); if (!sb) return;
+        var title = (document.getElementById('scImpTitle')?.value || '').trim();
+        if (!title) { _showToast('Titel ist erforderlich', 'error'); return; }
+
+        var row = {
+            title: title,
+            caption: document.getElementById('scImpCaption')?.value || null,
+            format: document.getElementById('scImpFormat')?.value || 'feed',
+            standort_id: document.getElementById('scImpStandort')?.value || null,
+            geplant_am: document.getElementById('scImpDatum')?.value || null,
+            status: 'ausgespielt',
+            source: 'extern',
+            views: parseInt(document.getElementById('scImpViews')?.value) || 0,
+            likes: parseInt(document.getElementById('scImpLikes')?.value) || 0,
+            comments: parseInt(document.getElementById('scImpComments')?.value) || 0,
+            shares: parseInt(document.getElementById('scImpShares')?.value) || 0,
+            platform_post_id: document.getElementById('scImpPostId')?.value || null,
+            erstellt_von: window.sbUser?.id || null
+        };
+
+        try {
+            var { error } = await sb.from('scompler_posts').insert(row);
+            if (error) throw error;
+            _showToast('Post importiert', 'success');
+            scCloseImport();
+            var c = document.getElementById('scTabContent');
+            if (c) renderKalender(c);
+        } catch(e) {
+            _showToast('Fehler: ' + e.message, 'error');
+        }
+    }
+
     // ══════════════════════════════════════════════
     // TAB 2: REPORTS
     // ══════════════════════════════════════════════
@@ -452,6 +579,7 @@
         else if (sub === 'tiktok') await renderReportTikTok(el);
         else if (sub === 'instagram') await renderReportInstagram(el);
         else if (sub === 'googleads') await renderReportGoogleAds(el);
+        else if (sub === 'wachstum') await renderReportWachstum(el);
     }
 
     // ── Report: Uebersicht ──
@@ -857,6 +985,106 @@
         }
     }
 
+    // ── Report: Wachstum ──
+
+    async function renderReportWachstum(el) {
+        var sb = _sb(); if (!sb) return;
+
+        try {
+            var wett = SC.wettbewerber;
+            if (!wett.length) {
+                var { data } = await sb.from('scompler_wettbewerber').select('*').order('name');
+                wett = data || [];
+                SC.wettbewerber = wett;
+            }
+
+            var vitBikes = wett.find(function(w) { return w.name === 'vit:bikes'; });
+            var others = wett.filter(function(w) { return w.name !== 'vit:bikes'; });
+
+            function avg(arr, key) {
+                var vals = arr.map(function(w) { return w[key]; }).filter(function(v) { return v != null; });
+                return vals.length ? vals.reduce(function(a,b) { return a + Number(b); }, 0) / vals.length : 0;
+            }
+
+            // Snapshot KPIs
+            var html = '<h2 class="text-lg font-bold text-gray-800 mb-4">Follower-Wachstum & Potenzial</h2>' +
+                '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">' +
+                    kpiCard('IG Follower', fmtK(vitBikes?.ig_follower || 0), 'Aktuell') +
+                    kpiCard('TT Follower', fmtK(vitBikes?.tt_follower || 0), 'Aktuell') +
+                    kpiCard('FB Follower', fmtK(vitBikes?.fb_follower || 0), 'Aktuell') +
+                    kpiCard('YT Abonnenten', fmtK(vitBikes?.yt_follower || 0), 'Aktuell') +
+                '</div>';
+
+            // Growth potential table
+            var platforms = [
+                { label: 'Instagram', prefix: 'ig', key: 'ig_follower' },
+                { label: 'TikTok', prefix: 'tt', key: 'tt_follower' },
+                { label: 'Facebook', prefix: 'fb', key: 'fb_follower' },
+            ];
+
+            html += '<div class="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">' +
+                '<div class="px-5 py-4 border-b border-gray-200"><h3 class="text-sm font-semibold text-gray-800">Wachstumspotenzial vs. Branche</h3></div>' +
+                '<div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr>' +
+                '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400">Plattform</th>' +
+                '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">vit:bikes</th>' +
+                '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">Branche \u00D8</th>' +
+                '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">Top Wettbewerber</th>' +
+                '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">Gap zu Top</th>' +
+                '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">Potenzial</th>' +
+                '</tr></thead><tbody class="divide-y divide-gray-100">';
+
+            platforms.forEach(function(plat) {
+                var vitVal = vitBikes ? (vitBikes[plat.key] || 0) : 0;
+                var avgVal = Math.round(avg(others, plat.key));
+                var topVal = 0;
+                var topName = '–';
+                others.forEach(function(w) {
+                    if ((w[plat.key] || 0) > topVal) { topVal = w[plat.key]; topName = w.name; }
+                });
+                var gap = topVal - vitVal;
+                var potenzial = vitVal > 0 ? ((topVal / vitVal - 1) * 100).toFixed(0) : '–';
+
+                html += '<tr class="hover:bg-gray-50">' +
+                    '<td class="px-4 py-3 font-semibold">' + plat.label + '</td>' +
+                    '<td class="px-4 py-3 text-right font-mono text-vit-orange font-bold">' + fmtK(vitVal) + '</td>' +
+                    '<td class="px-4 py-3 text-right font-mono">' + fmtK(avgVal) + '</td>' +
+                    '<td class="px-4 py-3 text-right font-mono">' + fmtK(topVal) + ' <span class="text-[10px] text-gray-400">(' + _escH(topName) + ')</span></td>' +
+                    '<td class="px-4 py-3 text-right font-mono ' + (gap > 0 ? 'text-red-500' : 'text-green-600') + '">' + (gap > 0 ? '+' : '') + fmtK(gap) + '</td>' +
+                    '<td class="px-4 py-3 text-right font-semibold ' + (Number(potenzial) > 100 ? 'text-red-500' : 'text-yellow-600') + '">' + (potenzial !== '–' ? potenzial + '%' : '–') + '</td>' +
+                    '</tr>';
+            });
+            html += '</tbody></table></div></div>';
+
+            // Engagement comparison
+            html += '<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">' +
+                '<div class="px-5 py-4 border-b border-gray-200"><h3 class="text-sm font-semibold text-gray-800">Engagement-Rate Vergleich</h3></div>' +
+                '<div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr>' +
+                '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400">Plattform</th>' +
+                '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">vit:bikes</th>' +
+                '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">Branche \u00D8</th>' +
+                '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">Bewertung</th>' +
+                '</tr></thead><tbody class="divide-y divide-gray-100">';
+
+            [{ label: 'Instagram', key: 'ig_eng' }, { label: 'TikTok', key: 'tt_eng' }, { label: 'Facebook', key: 'fb_eng' }].forEach(function(plat) {
+                var vitEng = vitBikes ? vitBikes[plat.key] : 0;
+                var avgEng = avg(others, plat.key);
+                var bewertung = vitEng > avgEng * 1.5 ? 'Stark' : vitEng > avgEng ? 'Gut' : vitEng > avgEng * 0.5 ? 'Ausbaufaehig' : 'Kritisch';
+                var bewCls = vitEng > avgEng ? 'text-green-600' : 'text-red-500';
+                html += '<tr class="hover:bg-gray-50">' +
+                    '<td class="px-4 py-3 font-semibold">' + plat.label + '</td>' +
+                    '<td class="px-4 py-3 text-right font-mono text-vit-orange font-bold">' + fmtPct(vitEng) + '</td>' +
+                    '<td class="px-4 py-3 text-right font-mono">' + fmtPct(avgEng) + '</td>' +
+                    '<td class="px-4 py-3 text-right font-semibold ' + bewCls + '">' + bewertung + '</td>' +
+                    '</tr>';
+            });
+            html += '</tbody></table></div></div>';
+
+            el.innerHTML = html;
+        } catch(e) {
+            el.innerHTML = '<div class="text-red-500 text-center py-8">Fehler: ' + _escH(e.message) + '</div>';
+        }
+    }
+
     // ══════════════════════════════════════════════
     // TAB 3: BENCHMARK
     // ══════════════════════════════════════════════
@@ -882,7 +1110,18 @@
                 return vals.length ? vals.reduce(function(a,b) { return a + Number(b); }, 0) / vals.length : 0;
             }
 
-            var html = '<h2 class="text-lg font-bold text-gray-800 mb-4">KPI-Vergleich: vit:bikes vs. Branche</h2>';
+            var metrikLabels = { views: 'Views', likes: 'Likes', posts: 'Posts' };
+            var metrikBtns = ['views', 'likes', 'posts'].map(function(m) {
+                var active = SC.benchmarkMetrik === m;
+                return '<button onclick="scSetBenchmarkMetrik(\'' + m + '\')" class="sc-bm-btn px-3 py-1 text-xs rounded-full border ' +
+                    (active ? 'bg-vit-orange text-white border-vit-orange' : 'bg-white text-gray-600 border-gray-300 hover:border-vit-orange') +
+                    '" data-bm="' + m + '">' + metrikLabels[m] + '</button>';
+            }).join(' ');
+
+            var html = '<div class="flex items-center justify-between mb-4 flex-wrap gap-3">' +
+                '<h2 class="text-lg font-bold text-gray-800">KPI-Vergleich: vit:bikes vs. Branche</h2>' +
+                '<div class="flex items-center gap-2"><span class="text-xs text-gray-400 mr-1">Standort-Metrik:</span>' + metrikBtns + '</div>' +
+                '</div>';
 
             // Comparison cards
             var comparisons = [
@@ -933,23 +1172,61 @@
             posts.forEach(function(p) {
                 var sid = p.standort_id || 'unknown';
                 var sName = p.standorte?.name || '–';
-                if (!byStandort[sid]) byStandort[sid] = { name: sName, views: 0, count: 0 };
+                if (!byStandort[sid]) byStandort[sid] = { name: sName, views: 0, likes: 0, posts: 0 };
                 byStandort[sid].views += p.views || 0;
-                byStandort[sid].count++;
+                byStandort[sid].likes += p.likes || 0;
+                byStandort[sid].posts++;
             });
 
-            var stRanking = Object.values(byStandort).sort(function(a,b) { return b.views - a.views; });
+            var metrik = SC.benchmarkMetrik || 'views';
+            var stRanking = Object.values(byStandort).sort(function(a,b) { return b[metrik] - a[metrik]; });
             if (stRanking.length) {
-                html += '<h3 class="text-sm font-semibold text-gray-800 mb-3">Standort-Ranking nach Views</h3>' +
-                    '<div class="bg-white rounded-xl border border-gray-200 p-5">' +
-                    svgBar(stRanking.slice(0, 15).map(function(s) { return { label: s.name, value: s.views }; }), null, 600, 24) +
+                html += '<h3 class="text-sm font-semibold text-gray-800 mb-3">Standort-Ranking nach ' + _escH(metrikLabels[metrik]) + '</h3>' +
+                    '<div class="bg-white rounded-xl border border-gray-200 p-5 mb-6">' +
+                    svgBar(stRanking.slice(0, 15).map(function(s) { return { label: s.name, value: s[metrik] }; }), null, 600, 24) +
                     '</div>';
             }
+
+            // Follower-Matrix
+            html += '<h3 class="text-sm font-semibold text-gray-800 mb-3">Follower-Matrix: Alle Wettbewerber</h3>' +
+                '<div class="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">' +
+                '<div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr>' +
+                '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400">Name</th>' +
+                '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">IG Follower</th>' +
+                '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">TT Follower</th>' +
+                '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">FB Follower</th>' +
+                '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">YT Abo</th>' +
+                '<th class="px-4 py-2 text-right text-xs font-semibold text-gray-400">Gesamt</th>' +
+                '</tr></thead><tbody class="divide-y divide-gray-100">';
+
+            var matrixData = SC.wettbewerber.slice().map(function(w) {
+                w._totalFollower = (w.ig_follower || 0) + (w.tt_follower || 0) + (w.fb_follower || 0) + (w.yt_follower || 0);
+                return w;
+            }).sort(function(a,b) { return b._totalFollower - a._totalFollower; });
+
+            matrixData.forEach(function(w) {
+                var isVit = w.name === 'vit:bikes';
+                html += '<tr class="' + (isVit ? 'bg-orange-50' : 'hover:bg-gray-50') + '">' +
+                    '<td class="px-4 py-2 font-semibold ' + (isVit ? 'text-vit-orange' : '') + '">' + _escH(w.name) + '</td>' +
+                    '<td class="px-4 py-2 text-right font-mono">' + fmtK(w.ig_follower) + '</td>' +
+                    '<td class="px-4 py-2 text-right font-mono">' + fmtK(w.tt_follower) + '</td>' +
+                    '<td class="px-4 py-2 text-right font-mono">' + fmtK(w.fb_follower) + '</td>' +
+                    '<td class="px-4 py-2 text-right font-mono">' + fmtK(w.yt_follower) + '</td>' +
+                    '<td class="px-4 py-2 text-right font-mono font-bold">' + fmtK(w._totalFollower) + '</td>' +
+                    '</tr>';
+            });
+            html += '</tbody></table></div></div>';
 
             c.innerHTML = html || emptyState('\uD83C\uDFC6', 'Noch keine Benchmark-Daten', 'Erstelle Posts und trage Wettbewerber-Daten ein.', false);
         } catch(e) {
             c.innerHTML = '<div class="text-red-500 text-center py-8">Fehler: ' + _escH(e.message) + '</div>';
         }
+    }
+
+    function scSetBenchmarkMetrik(m) {
+        SC.benchmarkMetrik = m;
+        var c = document.getElementById('scTabContent');
+        if (c) renderBenchmark(c);
     }
 
     // ══════════════════════════════════════════════
@@ -1127,7 +1404,17 @@
             return { label: w.name, value: w[prefix + '_follower'] };
         });
         if (chartData.length) {
-            html += '<div class="bg-white rounded-xl border border-gray-200 p-5 mb-6"><h3 class="text-sm font-semibold text-gray-800 mb-4">Follower-Vergleich</h3>' + svgBar(chartData, null, 600, 24) + '</div>';
+            html += '<div class="bg-white rounded-xl border border-gray-200 p-5 mb-6"><h3 class="text-sm font-semibold text-gray-800 mb-4">Follower-Vergleich</h3>' + svgBar(chartData, null, 600, 24, 'vit:bikes') + '</div>';
+        }
+
+        // SVG Engagement-Rate chart
+        var engData = all.filter(function(w) { return w[prefix + '_eng'] != null; }).sort(function(a,b) {
+            return (b[prefix + '_eng'] || 0) - (a[prefix + '_eng'] || 0);
+        }).map(function(w) {
+            return { label: w.name, value: Number(((w[prefix + '_eng'] || 0) * 100).toFixed(2)) };
+        });
+        if (engData.length) {
+            html += '<div class="bg-white rounded-xl border border-gray-200 p-5 mb-6"><h3 class="text-sm font-semibold text-gray-800 mb-4">Engagement-Rate Vergleich (%)</h3>' + svgBar(engData, null, 600, 24, 'vit:bikes') + '</div>';
         }
 
         el.innerHTML = html;
@@ -1486,4 +1773,8 @@
     window.scSetReportSub  = scSetReportSub;
     window.scAddTag        = scAddTag;
     window.scRemoveTag     = scRemoveTag;
+    window.scOpenImport    = scOpenImport;
+    window.scCloseImport   = scCloseImport;
+    window.scSaveImport    = scSaveImport;
+    window.scSetBenchmarkMetrik = scSetBenchmarkMetrik;
 })();
