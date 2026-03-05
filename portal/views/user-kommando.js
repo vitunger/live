@@ -78,7 +78,7 @@ export async function renderKzStandorte() {
             h+='<td class="px-4 py-3 text-center font-semibold">'+(userCounts[s.id]||0)+'</td>';
             h+='<td class="px-4 py-3 text-center text-gray-500 text-xs">'+beitritt+'</td>';
             h+='<td class="px-4 py-3 text-center text-xs text-gray-500">'+(s.telefon||'\u2014')+'</td>';
-            h+='<td class="px-4 py-3 text-center"><button class="text-xs text-vit-orange hover:underline font-semibold" onclick="window.showToast(\''+s.name+'\\nAdresse: '+(s.adresse||'\u2014')+'\\nTelefon: '+(s.telefon||'\u2014')+'\\nSlug: '+s.slug+'\')">Details \u2192</button></td>';
+            h+='<td class="px-4 py-3 text-center"><button class="text-xs text-vit-orange hover:underline font-semibold" onclick="window.openStandortDetail(\''+s.id+'\')">' + 'Details →</button></td>';
             h+='</tr>';
         });
         if(standorte.length===0) h='<tr><td colspan="8" class="text-center py-8 text-gray-400">Keine Standorte.</td></tr>';
@@ -259,5 +259,222 @@ export async function removeBetaUser(betaId, modulKey, modulName) {
 }
 
 // Strangler Fig
-const _exports = { showKommandoTab, filterKzStandorte, filterKzMa, renderKzStandorte, renderKzMitarbeiter, openBetaUsersModal, filterBetaUserList, addBetaUser, removeBetaUser };
+
+// =====================================================
+// STANDORT-DETAIL MODAL
+// =====================================================
+var _stdDetailId = null;
+
+export async function openStandortDetail(standortId) {
+    _stdDetailId = standortId;
+
+    // Standort-Daten laden
+    var sb = _sb();
+    var stdResp = await sb.from('standorte').select('*').eq('id', standortId).single();
+    if (stdResp.error || !stdResp.data) { _showToast('Standort nicht gefunden', 'error'); return; }
+    var s = stdResp.data;
+
+    // Gruppen-Daten laden
+    var grpResp = await sb.from('standort_gruppe_mitglieder')
+        .select('*, standort_gruppen(id, name)')
+        .eq('standort_id', standortId);
+    var grpData = (!grpResp.error && grpResp.data && grpResp.data.length > 0) ? grpResp.data[0] : null;
+
+    // Alle Gruppen für Dropdown
+    var allGrpResp = await sb.from('standort_gruppen').select('id, name').order('name');
+    var allGruppen = (!allGrpResp.error && allGrpResp.data) ? allGrpResp.data : [];
+
+    // Alle Standorte für Gruppe-Mitglieder-Anzeige
+    var allStdResp = await sb.from('standorte').select('id, name').eq('status', 'aktiv').order('name');
+    var allStandorte = (!allStdResp.error && allStdResp.data) ? allStdResp.data : [];
+
+    // Erweiterter Zugriff: user_standorte für diesen Standort
+    var zugResp = await sb.from('user_standorte')
+        .select('*, users(id, name, email)')
+        .eq('standort_id', standortId);
+    var zugUser = (!zugResp.error && zugResp.data) ? zugResp.data : [];
+
+    // GFs dieses Standorts (für Dropdown)
+    var gfResp = await sb.from('users')
+        .select('id, name, email')
+        .eq('status', 'aktiv')
+        .eq('is_hq', false)
+        .neq('standort_id', standortId);
+    var andereGfs = (!gfResp.error && gfResp.data) ? gfResp.data : [];
+
+    // Gruppen-Mitglieder anzeigen
+    var gruppenMitglieder = [];
+    if (grpData) {
+        var mitglResp = await sb.from('standort_gruppe_mitglieder')
+            .select('standort_id, standorte(name)')
+            .eq('gruppe_id', grpData.standort_gruppen.id);
+        gruppenMitglieder = (!mitglResp.error && mitglResp.data) ? mitglResp.data : [];
+    }
+
+    // Modal aufbauen
+    var existing = document.getElementById('standortDetailModal');
+    if (existing) existing.remove();
+
+    var gruppeSection = '';
+    if (grpData) {
+        var mitglNames = gruppenMitglieder
+            .filter(function(m) { return m.standort_id !== standortId; })
+            .map(function(m) { return m.standorte ? m.standorte.name : ''; })
+            .filter(Boolean).join(', ') || '—';
+        gruppeSection = '<div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-3">' +
+            '<div class="flex items-center justify-between mb-3">' +
+            '<div><p class="font-semibold text-green-800">🔗 ' + _escH(grpData.standort_gruppen.name) + '</p>' +
+            '<p class="text-xs text-green-600 mt-0.5">Weitere Mitglieder: ' + _escH(mitglNames) + '</p></div>' +
+            '<button onclick="window.removeStandortFromGruppe('' + grpData.standort_gruppen.id + '','' + standortId + '')" class="text-xs text-red-500 hover:underline">Gruppe verlassen</button>' +
+            '</div>' +
+            '<div class="grid grid-cols-2 gap-2">' +
+            '<label class="flex items-center space-x-2 text-sm cursor-pointer"><input type="checkbox" id="sdGemBwa" ' + (grpData.gemeinsame_bwa ? 'checked' : '') + ' onchange="window.updateGruppeSetting('' + grpData.standort_gruppen.id + '','' + standortId + '','gemeinsame_bwa',this.checked)" class="rounded" style="accent-color:#EF7D00"><span class="text-gray-700">Gemeinsame BWA</span></label>' +
+            '<label class="flex items-center space-x-2 text-sm cursor-pointer"><input type="checkbox" id="sdGemPlan" ' + (grpData.gemeinsame_planung ? 'checked' : '') + ' onchange="window.updateGruppeSetting('' + grpData.standort_gruppen.id + '','' + standortId + '','gemeinsame_planung',this.checked)" class="rounded" style="accent-color:#EF7D00"><span class="text-gray-700">Gemeinsame Planung</span></label>' +
+            '</div></div>';
+    } else {
+        var gruppenOptionen = allGruppen.map(function(g) {
+            return '<option value="' + g.id + '">' + _escH(g.name) + '</option>';
+        }).join('');
+        gruppeSection = '<div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-3">' +
+            '<p class="text-sm text-gray-500 mb-3">Dieser Standort ist keiner Gruppe zugeordnet.</p>' +
+            '<div class="flex gap-2 mb-2">' +
+            '<input id="sdNeueGruppe" type="text" placeholder="Neuer Gruppenname..." class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm">' +
+            '<button onclick="window.createUndJoinGruppe('' + standortId + '')" class="px-3 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Erstellen</button>' +
+            '</div>' +
+            (allGruppen.length > 0 ? '<div class="flex gap-2"><select id="sdExistGruppe" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="">— Bestehende Gruppe wählen —</option>' + gruppenOptionen + '</select><button onclick="window.joinExistingGruppe('' + standortId + '')" class="px-3 py-2 bg-gray-700 text-white rounded-lg text-sm font-semibold hover:opacity-90">Beitreten</button></div>' : '') +
+            '</div>';
+    }
+
+    // Erweiterter Zugriff
+    var zugSection = zugUser.length > 0
+        ? zugUser.map(function(z) {
+            var u = z.users;
+            if (!u) return '';
+            return '<div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">' +
+                '<div><p class="text-sm font-semibold text-gray-800">' + _escH(u.name || '') + '</p>' +
+                '<p class="text-xs text-gray-400">' + _escH(u.email || '') + '</p></div>' +
+                '<button onclick="window.removeZugriff('' + z.id + '')" class="text-xs text-red-400 hover:underline">Entfernen</button>' +
+                '</div>';
+          }).join('')
+        : '<p class="text-sm text-gray-400 py-2">Kein erweiterter Zugriff vergeben.</p>';
+
+    var gfOptionen = andereGfs.map(function(u) {
+        return '<option value="' + u.id + '">' + _escH(u.name || u.email) + '</option>';
+    }).join('');
+
+    var modal = document.createElement('div');
+    modal.id = 'standortDetailModal';
+    modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4';
+    modal.innerHTML =
+        '<div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">' +
+        '<div class="flex items-center justify-between p-5 border-b border-gray-100">' +
+        '<div><h2 class="text-lg font-bold text-gray-800">🏪 ' + _escH(s.name) + '</h2>' +
+        '<p class="text-xs text-gray-400">' + _escH(s.adresse || s.region || '') + '</p></div>' +
+        '<button onclick="document.getElementById('standortDetailModal').remove()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>' +
+        '</div>' +
+        '<div class="p-5 space-y-5">' +
+
+        // Stammdaten
+        '<div>' +
+        '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Stammdaten</p>' +
+        '<div class="grid grid-cols-2 gap-3 text-sm">' +
+        '<div><span class="text-gray-400">Slug</span><p class="font-mono text-gray-700">' + _escH(s.slug || '—') + '</p></div>' +
+        '<div><span class="text-gray-400">Telefon</span><p class="text-gray-700">' + _escH(s.telefon || '—') + '</p></div>' +
+        '<div><span class="text-gray-400">Region</span><p class="text-gray-700">' + _escH(s.region || '—') + '</p></div>' +
+        '<div><span class="text-gray-400">Status</span><p class="text-gray-700">' + _escH(s.status || 'aktiv') + '</p></div>' +
+        '</div></div>' +
+
+        // Standort-Gruppe
+        '<div>' +
+        '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">🔗 Standort-Gruppe</p>' +
+        gruppeSection +
+        '</div>' +
+
+        // Erweiterter Zugriff
+        '<div>' +
+        '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">👥 Erweiterter Zugriff</p>' +
+        '<p class="text-xs text-gray-400 mb-3">GFs die diesen Standort zusätzlich verwalten können (Switcher in der Sidebar).</p>' +
+        '<div id="sdZugangList">' + zugSection + '</div>' +
+        (gfOptionen ? '<div class="flex gap-2 mt-3"><select id="sdZugangUser" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="">— GF auswählen —</option>' + gfOptionen + '</select><button onclick="window.addZugriff('' + standortId + '')" class="px-3 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Hinzufügen</button></div>' : '') +
+        '</div>' +
+
+        '</div></div>';
+
+    document.body.appendChild(modal);
+}
+
+export async function createUndJoinGruppe(standortId) {
+    var name = (document.getElementById('sdNeueGruppe') || {}).value || '';
+    if (!name.trim()) { _showToast('Bitte Gruppenname eingeben', 'error'); return; }
+    var sb = _sb();
+    var grpResp = await sb.from('standort_gruppen').insert({ name: name.trim() }).select().single();
+    if (grpResp.error) { _showToast('Fehler: ' + grpResp.error.message, 'error'); return; }
+    var insResp = await sb.from('standort_gruppe_mitglieder').insert({
+        gruppe_id: grpResp.data.id, standort_id: standortId, is_primary: true,
+        gemeinsame_bwa: false, gemeinsame_planung: false
+    });
+    if (insResp.error) { _showToast('Fehler: ' + insResp.error.message, 'error'); return; }
+    _showToast('Gruppe "' + name.trim() + '" erstellt ✅', 'success');
+    openStandortDetail(standortId);
+}
+
+export async function joinExistingGruppe(standortId) {
+    var gruppeId = (document.getElementById('sdExistGruppe') || {}).value || '';
+    if (!gruppeId) { _showToast('Bitte eine Gruppe wählen', 'error'); return; }
+    var sb = _sb();
+    var insResp = await sb.from('standort_gruppe_mitglieder').insert({
+        gruppe_id: gruppeId, standort_id: standortId, is_primary: false,
+        gemeinsame_bwa: false, gemeinsame_planung: false
+    });
+    if (insResp.error) { _showToast('Fehler: ' + insResp.error.message, 'error'); return; }
+    _showToast('Gruppe beigetreten ✅', 'success');
+    openStandortDetail(standortId);
+}
+
+export async function removeStandortFromGruppe(gruppeId, standortId) {
+    if (!confirm('Diesen Standort aus der Gruppe entfernen?')) return;
+    var sb = _sb();
+    await sb.from('standort_gruppe_mitglieder').delete()
+        .eq('gruppe_id', gruppeId).eq('standort_id', standortId);
+    _showToast('Aus Gruppe entfernt', 'success');
+    openStandortDetail(standortId);
+}
+
+export async function updateGruppeSetting(gruppeId, standortId, field, value) {
+    var sb = _sb();
+    var upd = {};
+    upd[field] = value;
+    await sb.from('standort_gruppe_mitglieder').update(upd)
+        .eq('gruppe_id', gruppeId).eq('standort_id', standortId);
+    _showToast('Gespeichert ✅', 'success');
+}
+
+export async function addZugriff(standortId) {
+    var userId = (document.getElementById('sdZugangUser') || {}).value || '';
+    if (!userId) { _showToast('Bitte einen GF wählen', 'error'); return; }
+    var sb = _sb();
+    var insResp = await sb.from('user_standorte').insert({
+        user_id: userId, standort_id: standortId, is_primary: false
+    });
+    if (insResp.error) { _showToast('Fehler: ' + insResp.error.message, 'error'); return; }
+    _showToast('Zugriff vergeben ✅', 'success');
+    openStandortDetail(standortId);
+}
+
+export async function removeZugriff(entryId) {
+    if (!confirm('Zugriff entfernen?')) return;
+    var sb = _sb();
+    await sb.from('user_standorte').delete().eq('id', entryId);
+    _showToast('Zugriff entfernt', 'success');
+    document.getElementById('standortDetailModal') && openStandortDetail(_stdDetailId);
+}
+
+const _exports = { showKommandoTab, filterKzStandorte, filterKzMa, renderKzStandorte, renderKzMitarbeiter, openBetaUsers, openStandortDetail, createUndJoinGruppe, joinExistingGruppe, removeStandortFromGruppe, updateGruppeSetting, addZugriff, removeZugriffModal, filterBetaUserList, addBetaUser, removeBetaUser };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
+window.openStandortDetail = openStandortDetail;
+window.createUndJoinGruppe = createUndJoinGruppe;
+window.joinExistingGruppe = joinExistingGruppe;
+window.removeStandortFromGruppe = removeStandortFromGruppe;
+window.updateGruppeSetting = updateGruppeSetting;
+window.addZugriff = addZugriff;
+window.removeZugriff = removeZugriff;
