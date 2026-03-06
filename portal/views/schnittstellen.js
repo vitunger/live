@@ -2645,3 +2645,112 @@ window.importSocialPosts = async function(platform) {
         _showToast(platform + ' Import-Fehler: ' + e.message, 'error');
     }
 };
+
+
+// ═══════════════════════════════════════════════════════
+// YOUTUBE OAUTH + TOKEN REFRESH
+// ═══════════════════════════════════════════════════════
+
+window.startYouTubeOAuth = async function() {
+    var sb = _sb(); if (!sb) return;
+    // Get client_id from connector_config
+    var { data: rows } = await sb.from('connector_config')
+        .select('config_key,config_value')
+        .eq('connector_id', 'youtube');
+    var cfg = {};
+    (rows || []).forEach(function(r) { cfg[r.config_key] = r.config_value; });
+    var clientId = cfg.client_id;
+    if (!clientId) {
+        _showToast('Bitte zuerst YouTube Client ID speichern', 'error');
+        return;
+    }
+    var state = Math.random().toString(36).substring(2, 15);
+    sessionStorage.setItem('youtube_oauth_state', state);
+    var redirectUri = encodeURIComponent('https://cockpit.vitbikes.de/api/youtube-callback');
+    var scopes = encodeURIComponent('https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly');
+    var url = 'https://accounts.google.com/o/oauth2/v2/auth'
+        + '?client_id=' + encodeURIComponent(clientId)
+        + '&redirect_uri=' + redirectUri
+        + '&response_type=code'
+        + '&scope=' + scopes
+        + '&access_type=offline'
+        + '&prompt=consent'
+        + '&state=' + state;
+    window.open(url, '_blank', 'width=600,height=700');
+    _showToast('YouTube OAuth geöffnet – bitte im neuen Fenster autorisieren', 'info');
+};
+
+window.refreshYouTubeToken = async function() {
+    var sb = _sb(); if (!sb) return;
+    var { data: rows } = await sb.from('connector_config')
+        .select('config_key,config_value')
+        .eq('connector_id', 'youtube');
+    var cfg = {};
+    (rows || []).forEach(function(r) { cfg[r.config_key] = r.config_value; });
+    if (!cfg.refresh_token) {
+        _showToast('Kein Refresh Token vorhanden – bitte neu verbinden', 'error');
+        return;
+    }
+    try {
+        var resp = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                client_id: cfg.client_id,
+                client_secret: cfg.client_secret,
+                refresh_token: cfg.refresh_token,
+                grant_type: 'refresh_token'
+            }).toString()
+        });
+        var result = await resp.json();
+        if (result.error) throw new Error(result.error_description || result.error);
+        var expiresAt = new Date(Date.now() + (result.expires_in || 3600) * 1000).toISOString();
+        await sb.from('connector_config').upsert([
+            { connector_id: 'youtube', config_key: 'access_token', config_value: result.access_token },
+            { connector_id: 'youtube', config_key: 'token_expires_at', config_value: expiresAt }
+        ], { onConflict: 'connector_id,config_key' });
+        _showToast('YouTube Token erfolgreich erneuert ✅', 'success');
+    } catch(e) {
+        _showToast('Token-Refresh Fehler: ' + e.message, 'error');
+    }
+};
+
+window.refreshMetaToken = async function() {
+    var sb = _sb(); if (!sb) return;
+    var { data: rows } = await sb.from('connector_config')
+        .select('config_key,config_value')
+        .eq('connector_id', 'instagram');
+    var cfg = {};
+    (rows || []).forEach(function(r) { cfg[r.config_key] = r.config_value; });
+    if (!cfg.access_token || !cfg.app_id || !cfg.app_secret) {
+        _showToast('App ID, App Secret und aktueller Token müssen eingetragen sein', 'error');
+        return;
+    }
+    try {
+        var url = 'https://graph.facebook.com/v19.0/oauth/access_token'
+            + '?grant_type=fb_exchange_token'
+            + '&client_id=' + encodeURIComponent(cfg.app_id)
+            + '&client_secret=' + encodeURIComponent(cfg.app_secret)
+            + '&fb_exchange_token=' + encodeURIComponent(cfg.access_token);
+        var resp = await fetch(url);
+        var result = await resp.json();
+        if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+        // Get page token
+        var pageResp = await fetch('https://graph.facebook.com/v19.0/me/accounts?access_token=' + result.access_token);
+        var pageData = await pageResp.json();
+        var pages = pageData.data || [];
+        var targetPage = pages.find(function(p) { return p.id === cfg.page_id; }) || pages[0];
+        var pageToken = (targetPage && targetPage.access_token) ? targetPage.access_token : result.access_token;
+        var expiresAt = result.expires_in
+            ? new Date(Date.now() + result.expires_in * 1000).toISOString()
+            : new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString();
+        await sb.from('connector_config').upsert([
+            { connector_id: 'instagram', config_key: 'access_token', config_value: pageToken },
+            { connector_id: 'instagram', config_key: 'token_expires_at', config_value: expiresAt },
+            { connector_id: 'facebook', config_key: 'access_token', config_value: pageToken },
+        ], { onConflict: 'connector_id,config_key' });
+        _showToast('Meta Token erfolgreich erneuert ✅ (gültig bis ' + expiresAt.substring(0,10) + ')', 'success');
+    } catch(e) {
+        _showToast('Token-Refresh Fehler: ' + e.message, 'error');
+    }
+};
