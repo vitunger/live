@@ -179,27 +179,62 @@ function renderUebersicht(el) {
         '<div class="vit-card p-5"><div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Kanal-Verteilung</div>' +
         '<div style="height:250px"><canvas id="mktChartPovChannel"></canvas></div></div></div>';
 
-    // Kampagnen-Tabelle (Mockup: 7 Spalten)
+    // Kampagnen-Tabelle mit Zeitauswahl
     var campHtml = '';
     if (ads.length > 0) {
-        var rows = ads.map(function(a) {
-            var spent = Number(a.ausgaben || 0);
-            var statusCls = spent > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600';
-            var statusTxt = spent > 0 ? 'Aktiv' : 'Pausiert';
-            return '<tr class="hover:bg-gray-50"><td class="px-4 py-3 text-sm font-semibold text-gray-800">' + _escH(a.kampagne_name || '\u2013') + '</td>' +
-                '<td class="px-4 py-3 text-sm text-gray-600">' + _escH(a.plattform || '\u2013') + '</td>' +
-                '<td class="px-4 py-3 text-sm">' + _fmtEur(spent) + '</td>' +
-                '<td class="px-4 py-3 text-sm">' + _fmtEur(spent) + '</td>' +
-                '<td class="px-4 py-3 text-sm">' + _fmtN(a.klicks || 0) + '</td>' +
-                '<td class="px-4 py-3 text-sm">' + (a.conversions || 0) + '</td>' +
+        // Zeitfilter: Ads nach gewaehltem Zeitraum filtern
+        var timeRange = window.mktState._partnerTimeRange || 'month';
+        var now = new Date();
+        var filteredAds = ads;
+        if (timeRange === '7d') {
+            var d7 = new Date(now); d7.setDate(d7.getDate() - 7);
+            filteredAds = ads.filter(function(a) { return a.datum && new Date(a.datum) >= d7; });
+        } else if (timeRange === '30d') {
+            var d30 = new Date(now); d30.setDate(d30.getDate() - 30);
+            filteredAds = ads.filter(function(a) { return a.datum && new Date(a.datum) >= d30; });
+        }
+        // else 'month' = default, ads already filtered by mktLoadAdsData
+
+        // Aggregieren nach Kampagne (nicht pro Tag)
+        var campMap = {};
+        filteredAds.forEach(function(a) {
+            var key = (a.kampagne_name || 'Unbekannt') + '|' + (a.plattform || '');
+            if (!campMap[key]) campMap[key] = { name: a.kampagne_name, plattform: a.plattform, spend: 0, impr: 0, clicks: 0, leads: 0 };
+            campMap[key].spend += Number(a.ausgaben || 0);
+            campMap[key].impr += Number(a.impressionen || 0);
+            campMap[key].clicks += Number(a.klicks || 0);
+            campMap[key].leads += Number(a.conversions || 0);
+        });
+        var campList = Object.values(campMap).sort(function(a, b) { return b.spend - a.spend; });
+
+        var rows = campList.map(function(c) {
+            var statusCls = c.spend > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600';
+            var statusTxt = c.spend > 0 ? 'Aktiv' : 'Pausiert';
+            var ctrVal = c.impr > 0 ? (c.clicks / c.impr * 100).toFixed(1) + '%' : '\u2013';
+            return '<tr class="hover:bg-gray-50"><td class="px-4 py-3 text-sm font-semibold text-gray-800">' + _escH(c.name || '\u2013') + '</td>' +
+                '<td class="px-4 py-3 text-sm text-gray-600">' + _escH(c.plattform || '\u2013') + '</td>' +
+                '<td class="px-4 py-3 text-sm font-semibold">' + _fmtEur(c.spend) + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + _fmtN(c.impr) + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + _fmtN(c.clicks) + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + ctrVal + '</td>' +
+                '<td class="px-4 py-3 text-sm">' + c.leads + '</td>' +
                 '<td class="px-4 py-3 text-sm"><span class="text-xs px-2 py-1 rounded-full font-semibold ' + statusCls + '">' + statusTxt + '</span></td></tr>';
         }).join('');
-        campHtml = '<div class="vit-card overflow-hidden"><div class="px-5 py-4 border-b border-gray-200"><h3 class="text-sm font-semibold text-gray-800">Aktive Kampagnen</h3></div>' +
+
+        var timeLabels = { month: 'Aktueller Monat', '7d': 'Letzte 7 Tage', '30d': 'Letzte 30 Tage' };
+        campHtml = '<div class="vit-card overflow-hidden"><div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center">' +
+            '<h3 class="text-sm font-semibold text-gray-800">Aktive Kampagnen</h3>' +
+            '<div class="flex gap-1">' +
+            '<button class="text-xs px-3 py-1 rounded-full ' + (timeRange === 'month' ? 'bg-vit-orange text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + '" onclick="mktSetPartnerTimeRange(&quot;month&quot;)">Aktueller Monat</button>' +
+            '<button class="text-xs px-3 py-1 rounded-full ' + (timeRange === '7d' ? 'bg-vit-orange text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + '" onclick="mktSetPartnerTimeRange(&quot;7d&quot;)">Letzte 7 Tage</button>' +
+            '<button class="text-xs px-3 py-1 rounded-full ' + (timeRange === '30d' ? 'bg-vit-orange text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + '" onclick="mktSetPartnerTimeRange(&quot;30d&quot;)">Letzte 30 Tage</button>' +
+            '</div></div>' +
             '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-50"><th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Kampagne</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Kanal</th>' +
-            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Budget</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Ausgegeben</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Impressionen</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Klicks</th>' +
+            '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">CTR</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Leads</th>' +
             '<th class="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase">Status</th></tr></thead>' +
             '<tbody class="divide-y divide-gray-100">' + rows + '</tbody></table></div></div>';
@@ -928,6 +963,55 @@ function mktDownloadPDF(type) {
 }
 
 // ── Window Exports ──
+
+// Zeitauswahl fuer Partner-Kampagnentabelle
+function mktSetPartnerTimeRange(range) {
+    window.mktState._partnerTimeRange = range;
+    // Fuer 7d und 30d muessen wir ALLE Daten laden, nicht nur den aktuellen Monat
+    if (range === '7d' || range === '30d') {
+        // Lade ads_performance ohne Monatsfilter
+        loadPartnerAdsAllDates(range);
+    } else {
+        // Zurueck zum Monatsfilter - Daten neu rendern
+        window.mktState._partnerDataLoaded = false;
+        window.renderPartnerMarketing();
+    }
+}
+
+async function loadPartnerAdsAllDates(range) {
+    var sb = window._sb ? window._sb() : null;
+    if (!sb) return;
+    try {
+        var now = new Date();
+        var from = new Date(now);
+        if (range === '7d') from.setDate(from.getDate() - 7);
+        else from.setDate(from.getDate() - 30);
+        var fromStr = from.toISOString().split('T')[0];
+        var toStr = now.toISOString().split('T')[0];
+
+        var session = await sb.auth.getSession();
+        var userId = session && session.data && session.data.session ? session.data.session.user.id : null;
+        if (!userId) return;
+        var { data: userData } = await sb.from('users').select('standort_id').eq('id', userId).maybeSingle();
+        if (!userData || !userData.standort_id) return;
+
+        var { data } = await sb.from('ads_performance')
+            .select('*')
+            .eq('standort_id', userData.standort_id)
+            .gte('datum', fromStr)
+            .lte('datum', toStr)
+            .order('datum', { ascending: false });
+
+        window.mktState.adsData = data || [];
+        window.mktState._partnerDataLoaded = true;
+        // Re-render current tab
+        var el = document.getElementById('partnerMktContent');
+        if (el) renderUebersicht(el);
+    } catch(e) { console.warn('[marketing-partner] loadPartnerAdsAllDates:', e); }
+}
+
+window.mktSetPartnerTimeRange = mktSetPartnerTimeRange;
+
 window.renderPartnerMarketing = renderPartnerMarketing;
 window.renderPartnerMktTabContent = renderPartnerMktTabContent;
 window.mktDownloadPDF = mktDownloadPDF;
