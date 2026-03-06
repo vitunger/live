@@ -9,6 +9,8 @@
  * Prioritize Mode:
  *   - Bekommt: (laden aus DB)
  *   - Gibt zurück: { success, zusammenfassung, empfehlung[], quick_wins[] }
+ *
+ * API Usage Logging: Jeder Claude-API-Call wird in api_usage_log protokolliert.
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -28,6 +30,46 @@ function json(data: unknown, status = 200) {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
+}
+
+// ─── API USAGE LOGGING ────────────────────────────────────────────────────
+
+async function logApiUsage(admin: any, params: {
+  edge_function: string;
+  modul: string;
+  provider: string;
+  model: string;
+  input_tokens: number;
+  output_tokens: number;
+  duration_ms: number;
+  success: boolean;
+  user_id?: string;
+  standort_id?: string;
+  error_message?: string;
+}) {
+  try {
+    const inputCostPer1M = 3.0;  // Sonnet: $3/1M input
+    const outputCostPer1M = 15.0; // Sonnet: $15/1M output
+    const estimated_cost_usd = (params.input_tokens / 1_000_000) * inputCostPer1M
+                             + (params.output_tokens / 1_000_000) * outputCostPer1M;
+
+    await admin.from('api_usage_log').insert({
+      edge_function: params.edge_function,
+      modul: params.modul,
+      provider: params.provider,
+      model: params.model,
+      input_tokens: params.input_tokens,
+      output_tokens: params.output_tokens,
+      estimated_cost_usd,
+      duration_ms: params.duration_ms,
+      success: params.success,
+      user_id: params.user_id || null,
+      standort_id: params.standort_id || null,
+      error_message: params.error_message || null,
+    });
+  } catch (e) {
+    console.error('api_usage_log insert failed:', e);
+  }
 }
 
 // ─── RELEASE NOTES PROMPT ──────────────────────────────────────────────────
@@ -120,6 +162,8 @@ export default async function handler(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
+  const admin = createClient(SUPABASE_URL, SUPABASE_KEY);
+
   try {
     const body = await req.json();
     const { mode, context, count, git_commits, submissions, claude_md } = body;
@@ -143,6 +187,7 @@ export default async function handler(req: Request): Promise<Response> {
       }
 
       const prompt = buildReleasePrompt(fullContext, count ?? 0);
+      const t0 = Date.now();
 
       const claudeResp = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -158,13 +203,29 @@ export default async function handler(req: Request): Promise<Response> {
         }),
       });
 
+      const duration_ms = Date.now() - t0;
+
       if (!claudeResp.ok) {
         const err = await claudeResp.text();
+        await logApiUsage(admin, {
+          edge_function: 'dev-ki-analyse', modul: 'release_notes', provider: 'anthropic',
+          model: 'claude-sonnet-4-20250514', input_tokens: 0, output_tokens: 0,
+          duration_ms, success: false, error_message: err.slice(0, 500),
+        });
         throw new Error('Claude API Fehler: ' + err);
       }
 
       const claudeData: any = await claudeResp.json();
       const rawText: string = claudeData.content?.[0]?.text ?? '';
+
+      // Log usage
+      await logApiUsage(admin, {
+        edge_function: 'dev-ki-analyse', modul: 'release_notes', provider: 'anthropic',
+        model: 'claude-sonnet-4-20250514',
+        input_tokens: claudeData.usage?.input_tokens || 0,
+        output_tokens: claudeData.usage?.output_tokens || 0,
+        duration_ms, success: true,
+      });
 
       // Extract titel from first line
       let titel = '';
@@ -180,7 +241,6 @@ export default async function handler(req: Request): Promise<Response> {
 
     // ── Prioritize Mode ─────────────────────────────────────────────────
     if (mode === 'prioritize') {
-      const admin = createClient(SUPABASE_URL, SUPABASE_KEY);
       const { data: subs, error } = await admin
         .from('dev_submissions')
         .select('id, titel, beschreibung, status, ki_typ, modul_key, dev_ki_analysen(aufwand_schaetzung, machbarkeit, vision_fit_score)')
@@ -194,6 +254,7 @@ export default async function handler(req: Request): Promise<Response> {
       }
 
       const prompt = buildPrioritizePrompt(subs);
+      const t0 = Date.now();
 
       const claudeResp = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -209,9 +270,28 @@ export default async function handler(req: Request): Promise<Response> {
         }),
       });
 
-      if (!claudeResp.ok) throw new Error('Claude API Fehler');
+      const duration_ms = Date.now() - t0;
+
+      if (!claudeResp.ok) {
+        await logApiUsage(admin, {
+          edge_function: 'dev-ki-analyse', modul: 'prioritize', provider: 'anthropic',
+          model: 'claude-sonnet-4-20250514', input_tokens: 0, output_tokens: 0,
+          duration_ms, success: false, error_message: 'Claude API Fehler',
+        });
+        throw new Error('Claude API Fehler');
+      }
+
       const claudeData: any = await claudeResp.json();
       const raw: string = claudeData.content?.[0]?.text ?? '';
+
+      // Log usage
+      await logApiUsage(admin, {
+        edge_function: 'dev-ki-analyse', modul: 'prioritize', provider: 'anthropic',
+        model: 'claude-sonnet-4-20250514',
+        input_tokens: claudeData.usage?.input_tokens || 0,
+        output_tokens: claudeData.usage?.output_tokens || 0,
+        duration_ms, success: true,
+      });
 
       // Strip markdown fences
       const clean = raw.replace(/```json|```/g, '').trim();
