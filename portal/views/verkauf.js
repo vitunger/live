@@ -144,7 +144,7 @@ export function renderWeekViewFromDb() {
     data.forEach(function(entry) {
         var name = entry.verkaeufer_name;
         if(!sellerMap[name]) sellerMap[name] = { name: name, days: {} };
-        weekDays.forEach(function(d) { if(!sellerMap[name].days[d]) sellerMap[name].days[d] = {day:d,plan:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0}; });
+        weekDays.forEach(function(d) { if(!sellerMap[name].days[d]) sellerMap[name].days[d] = {day:d,plan:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0,notizen:''}; });
         var d = new Date(entry.datum);
         var dayName = dayNames[d.getDay()];
         if(sellerMap[name].days[dayName]) {
@@ -157,6 +157,7 @@ export function renderWeekViewFromDb() {
             dd.verkauft += (entry.verkauft || 0);
             dd.uebergabe += (entry.uebergabe || 0);
             dd.umsatz += parseFloat(entry.umsatz) || 0;
+            if(entry.notizen) dd.notizen = (dd.notizen ? dd.notizen + ' | ' : '') + entry.notizen;
         }
         // plan_termine removed – Wochenansicht no longer shows Plan column
     });
@@ -215,11 +216,16 @@ export function renderWeekViewFromDb() {
         html += '<thead><tr class="bg-gray-50 text-xs"><th class="py-2 px-3 text-left text-gray-500">Tag</th><th class="py-2 px-3 text-center text-blue-600">Geplant</th><th class="py-2 px-3 text-center text-purple-600">Spontan</th><th class="py-2 px-3 text-center text-cyan-600">Online</th><th class="py-2 px-3 text-center text-pink-600">Ergo</th><th class="py-2 px-3 text-center font-bold text-gray-700">Beratungen</th><th class="py-2 px-3 text-center text-green-600">Zusage</th><th class="py-2 px-3 text-center text-emerald-600">Übergabe</th><th class="py-2 px-3 text-right text-vit-orange">Umsatz</th></tr></thead>';
         html += '<tbody>';
         weekDays.forEach(function(dn) {
-            var dd = s.days[dn] || {plan:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0};
+            var dd = s.days[dn] || {plan:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0,notizen:''};
             var total = dd.geplant+dd.spontan+dd.online;
             var hasData = dd.plan>0 || total>0 || dd.umsatz>0;
+            var hasNote = dd.notizen && dd.notizen.trim();
+            var noteId = 'note_'+_escH(s.name).replace(/\s/g,'_')+'_'+dn;
             html += '<tr class="border-b '+(hasData?'':'text-gray-300')+'">';
-            html += '<td class="py-2 px-3 font-semibold">'+dn+'</td>';
+            html += '<td class="py-2 px-3 font-semibold">';
+            if(hasNote) html += '<span onclick="var r=document.getElementById(\''+noteId+'\');r.style.display=r.style.display===\'none\'?\'table-row\':\'none\'" class="cursor-pointer select-none" title="Notiz anzeigen">'+dn+' <span class="text-gray-400 text-[10px]">\uD83D\uDCDD</span></span>';
+            else html += dn;
+            html += '</td>';
             html += '<td class="py-2 px-3 text-center text-blue-600">'+(dd.geplant||'-')+'</td>';
             html += '<td class="py-2 px-3 text-center text-purple-600">'+(dd.spontan||'-')+'</td>';
             html += '<td class="py-2 px-3 text-center text-cyan-600">'+(dd.online||'-')+'</td>';
@@ -229,6 +235,9 @@ export function renderWeekViewFromDb() {
             html += '<td class="py-2 px-3 text-center">'+(dd.uebergabe||'-')+'</td>';
             html += '<td class="py-2 px-3 text-right font-semibold '+(dd.umsatz>0?'text-vit-orange':'')+'">'+(dd.umsatz>0?dd.umsatz.toLocaleString('de-DE')+' \u20AC':'-')+'</td>';
             html += '</tr>';
+            if(hasNote) {
+                html += '<tr id="'+noteId+'" style="display:none" class="bg-amber-50"><td colspan="9" class="py-2 px-4 text-xs text-gray-600 italic">\uD83D\uDCDD '+_escH(dd.notizen)+'</td></tr>';
+            }
         });
         html += '</tbody></table></div></div>';
     });
