@@ -255,10 +255,16 @@ export async function openAktenReview(dokId){
         html+='<textarea id="aktenReviewNotizen" rows="3" maxlength="500" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-vit-orange focus:border-transparent resize-none" placeholder="Beschreibung oder Notizen...">'+(dok.notizen||kiV.zusammenfassung||'')+'</textarea></div>';
 
         // Ordnerzuweisung
+        var kiSuggestedOrdnerId = null;
+        if(!dok.ordner_id && kiV.ordner_key) {
+            var sugO = _akten.ordner.find(function(o){return o.key===kiV.ordner_key;});
+            if(sugO) kiSuggestedOrdnerId = sugO.id;
+        }
+        var effectiveOrdnerId = dok.ordner_id || kiSuggestedOrdnerId || '';
         html+='<div class="mb-6"><label class="block text-xs font-semibold text-gray-600 mb-1">Ordnerzuweisung *</label>';
         html+='<div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="aktenOrdnerGrid">';
         _akten.ordner.forEach(function(o){
-            var isSelected=dok.ordner_id===o.id;
+            var isSelected=effectiveOrdnerId===o.id;
             var isKiSuggested=kiV.ordner_key&&o.key===kiV.ordner_key;
             var ring=isSelected?'ring-2 ring-vit-orange bg-orange-50':'hover:bg-gray-50';
             var kiBadge=isKiSuggested&&!isSelected?' <span class="text-[9px] bg-blue-100 text-blue-600 px-1 rounded">KI</span>':'';
@@ -267,7 +273,7 @@ export async function openAktenReview(dokId){
             html+='<span class="text-xs font-medium text-gray-700 truncate">'+esc(o.name)+kiBadge+'</span></button>';
         });
         html+='</div>';
-        html+='<input type="hidden" id="aktenReviewOrdnerId" value="'+(dok.ordner_id||'')+'">';
+        html+='<input type="hidden" id="aktenReviewOrdnerId" value="'+effectiveOrdnerId+'">';
         html+='</div>';
     } else {
         // Read-only metadata for already processed docs
