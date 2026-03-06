@@ -338,6 +338,8 @@ export function renderDevPlanung() {
                     h += '<option value="'+st+'"'+(s.status===st?' selected':'')+'>'+_devStatusLabels()[st]+'</option>';
                 });
                 h += '</select>';
+                // Umgesetzt button
+                h += '<button onclick="event.stopPropagation();updateDevPlanStatus(\''+s.id+'\',\'ausgerollt\')" class="px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-semibold flex items-center gap-1 whitespace-nowrap" title="Als umgesetzt markieren">\u2705 Umgesetzt</button>';
                 // Deadline
                 h += '<input type="text" placeholder="Q1/26" value="'+(s.ziel_release||'')+'" onchange="updateDevPlanField(\''+s.id+'\',\'ziel_release\',this.value)" class="text-xs border border-gray-200 rounded px-1.5 py-1 w-16 text-center" title="Ziel-Release">';
                 h += '</div>';
@@ -370,3 +372,4 @@ export async function updateDevPlanField(subId, field, value) {
 
 const _exports = { showIdeenTab, renderDevPipeline, renderDevTab, devCardHTML, renderDevMeine, renderDevAlle, renderDevBoard, devBoardCardHTML, renderDevPlanung, updateDevPlanStatus, updateDevPlanField };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
+
