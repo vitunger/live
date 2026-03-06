@@ -1526,8 +1526,8 @@ function PipelineApp(){
     saveDeal(id, "stage", ns);
     // Trigger automations
     setTimeout(()=>applyRules(id,oldStage,ns),100);
-    if(ns==="schwebend"){msg(`✅ ${deal.name} → Zusage!`);syncStageChangeToTracking(deal,"schwebend",SELLERS)}
-    if(ns==="verkauft"){setStreak(s=>s+1);msg(`🏆 ${deal.name} verkauft! ${fmt(deal.value)}`);pop(innerWidth/2,innerHeight/2);syncStageChangeToTracking(deal,"verkauft",SELLERS)}
+    if(ns==="schwebend"){msg(`✅ ${deal.name} → Zusage!`)}
+    if(ns==="verkauft"){setStreak(s=>s+1);msg(`🏆 ${deal.name} verkauft! ${fmt(deal.value)}`);pop(innerWidth/2,innerHeight/2)}
     else if(ns==="lost"){setStreak(0);msg(`💀 ${deal.name} verloren...`)}
     else if(ns==="gold"){msg(`💎 ${deal.name} → Schrank der Hoffnung`)}
     setDragId(null);
@@ -1541,7 +1541,7 @@ function PipelineApp(){
       setDeals(p=>[newDeal,...p]);
       setNewId(dbRow.id);
       msg(`🎯 ${d.name} hinzugefügt!`);
-      syncLeadCreatedToTracking(newDeal, SELLERS);
+      // verkauf_tracking sync now handled by DB trigger trg_leads_verkauf_tracking
       setTimeout(()=>{setNewId(null);setSel(newDeal);},600);
     } else {
       const id=nid.current++;
@@ -1573,7 +1573,7 @@ function PipelineApp(){
       setDeals(p=>[newDeal,...p]);
       setNewId(dbRow.id);
       msg("🎯 Lead angelegt – Details ausfüllen");
-      syncLeadCreatedToTracking(newDeal, SELLERS);
+      // verkauf_tracking sync now handled by DB trigger trg_leads_verkauf_tracking
       setTimeout(()=>{setNewId(null);setSel(newDeal);},400);
     } else {
       const id=nid.current++;
@@ -1630,8 +1630,8 @@ function PipelineApp(){
     // Persist to DB
     saveDeal(did, "stage", toStage);
     setTimeout(()=>applyRules(did,fromStage,toStage),100);
-    if(toStage==="schwebend"&&deal){msg(`✅ ${deal.name} → Zusage!`);syncStageChangeToTracking(deal,"schwebend",SELLERS)}
-    if(toStage==="verkauft"){setStreak(s=>s+1);msg(`🏆 ${deal?.name} verkauft! ${fmt(deal?.value||0)}`);pop(innerWidth/2,innerHeight/2);if(deal)syncStageChangeToTracking(deal,"verkauft",SELLERS)}
+    if(toStage==="schwebend"&&deal){msg(`✅ ${deal.name} → Zusage!`)}
+    if(toStage==="verkauft"){setStreak(s=>s+1);msg(`🏆 ${deal?.name} verkauft! ${fmt(deal?.value||0)}`);pop(innerWidth/2,innerHeight/2)}
     else if(toStage==="lost"){setStreak(0);msg(`💀 ${deal?.name} verloren...`)}
     else if(toStage==="gold"){msg(`🗄️ ${deal?.name} → Schrank der Hoffnung`)}
   },[deals,applyRules,msg,pop,saveDeal]);
