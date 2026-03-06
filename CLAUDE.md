@@ -353,3 +353,23 @@ security: RLS/JWT/Auth-Verbesserung
 - **Einkauf:** War bereits komplett mit hardcodierten Arrays (`allLief`, `standorte`, etc.) — kein Fix nötig.
 - **Pattern für neue Module:** Am Anfang der Render-Funktion `if(window.isModuleDemo('key')) { renderXxxDemo(); return; }`.
 
+
+
+## Session 06.03.2026 – eTermin Witten vollständig repariert
+
+### Bugs behoben
+1. **Impersonation React-Pipeline** (`auth-system.js`): React Pipeline-Container werden nach Impersonation geleert → erzwingt Remount mit korrektem sbProfile
+2. **eTermin Webhook camelCase** (`api/webhooks/etermin.js`): Witten sendet camelCase (`appointmentUID`, `firstName`, `lastName`, `selectedAnswers`, ISO-Datumsformat) – alle Feldname-Varianten ergänzt
+3. **parseDT ISO 8601** (`api/webhooks/etermin.js`): `parseAnyDT()` Wrapper erkennt ISO 8601 (`2026-05-10T10:00:00`) neben kompaktem Format automatisch
+4. **RLS INSERT Policy `termine`**: `service_role` darf jetzt inserten (`WITH CHECK` um service_role-Check erweitert)
+5. **RLS SELECT Policy `termine`**: `service_role` darf selektieren → `return=representation` nach Insert funktioniert → `tId` wird korrekt zurückgegeben
+6. **Trigger `trigger_leads_verkauf_tracking`**: `v_seller_id = NULL` → früher Fallback auf `00000000-0000-0000-0000-000000000000` (FK-Fehler). Fix: wenn kein Seller, kein `verkauf_tracking`-Eintrag
+
+### Ergebnis
+eTermin Witten: Webhooks kommen an → Termine werden gespeichert → Leads werden automatisch erstellt ✅
+Getestet mit End-to-End-Simulation, `lead_created: true`, keine DB-Fehler.
+
+### Offene Punkte
+- `typ` bleibt `sonstig` wenn `selectedAnswers` keinen LEAD_TRIGGER enthält (korrekt)
+- `etermin_kalender_name` kommt nicht an wenn `calendarName` leer (eTermin-Konfiguration prüfen)
+- Alle echten Buchungen aus heutigen Tests wurden bereinigt
