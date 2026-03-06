@@ -547,7 +547,11 @@ export function todoRenderDetail() {
     if (sec) h += '<span class="font-medium">' + _escH(sec.name) + '</span>';
     if (task.typ !== 'manual' && TODO_SRC[task.typ]) h += '<span class="px-1 py-0 rounded font-bold text-[9px] ' + TODO_SRC[task.typ].cls + '">' + TODO_SRC[task.typ].icon + ' ' + TODO_SRC[task.typ].label + '</span>';
     h += '</div>';
-    h += '<button onclick="todoCloseDetail()" class="p-1 hover:bg-gray-200 rounded-lg text-gray-400 hover:text-gray-600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>';
+    h += '<button onclick="todoCloseDetail()" class="flex items-center gap-1.5 px-2 py-1.5 hover:bg-gray-200 rounded-lg text-gray-500 hover:text-gray-700 text-sm">';
+    h += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>';
+    h += '<span class="md:hidden font-medium">Zur\u00fcck</span>';
+    h += '<svg class="hidden md:block" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+    h += '</button>';
     h += '</div>';
 
     // Scrollable content
