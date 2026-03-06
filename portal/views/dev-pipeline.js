@@ -128,7 +128,7 @@ export async function renderEntwTabContent(tab) {
     } else if(tab === 'flags') {
         if(typeof window.renderEntwFlags === 'function') window.renderEntwFlags();
     } else if(tab === 'nutzung') {
-        if(typeof window.renderEntwNutzung === 'function') window.renderEntwNutzung();
+        if(typeof window.renderApiNutzung === 'function') window.renderApiNutzung('entwNutzungContent');
     } else if(tab === 'system') {
         if(typeof window.renderEntwSystem === 'function') window.renderEntwSystem();
     } else if(tab === 'vision') {
