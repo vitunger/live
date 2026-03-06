@@ -38,7 +38,7 @@ var usagePeriod = 'month'; // 'today', 'week', 'month', 'year'
 
 // === MAIN RENDER ===
 window.renderApiNutzung = async function renderApiNutzung(containerId) {
-    var container = document.getElementById(containerId || 'entwNutzungContent') || document.getElementById('apiNutzungContent');
+    var container = document.getElementById(containerId || 'entwKiKostenContent');
     if (!container) return;
 
     container.innerHTML = '<div class="flex items-center justify-center py-12"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-vit-orange"></div><span class="ml-3 text-gray-500">Lade API-Nutzungsdaten...</span></div>';
