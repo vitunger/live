@@ -143,7 +143,7 @@ export function renderWeekViewFromDb() {
     var sellerMap = {};
     data.forEach(function(entry) {
         var name = entry.verkaeufer_name;
-        if(!sellerMap[name]) sellerMap[name] = { name: name, plan_soll: 0, days: {} };
+        if(!sellerMap[name]) sellerMap[name] = { name: name, days: {} };
         weekDays.forEach(function(d) { if(!sellerMap[name].days[d]) sellerMap[name].days[d] = {day:d,plan:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0}; });
         var d = new Date(entry.datum);
         var dayName = dayNames[d.getDay()];
@@ -158,7 +158,7 @@ export function renderWeekViewFromDb() {
             dd.uebergabe += (entry.uebergabe || 0);
             dd.umsatz += parseFloat(entry.umsatz) || 0;
         }
-        sellerMap[name].plan_soll += (entry.plan_termine || 0);
+        // plan_termine removed – Wochenansicht no longer shows Plan column
     });
     var sellers = Object.values(sellerMap);
 
@@ -173,43 +173,46 @@ export function renderWeekViewFromDb() {
     var filter = filterEl ? filterEl.value : 'all';
     var filtered = filter === 'all' ? sellers : sellers.filter(function(s){return s.name === filter;});
 
-    var totalPlan=0, totalGesamt=0, totalVerkauft=0, totalUmsatz=0;
+    var totalGesamt=0, totalVerkauft=0, totalUmsatz=0, totalUebergabe=0;
     filtered.forEach(function(s) {
-        totalPlan += s.plan_soll;
         weekDays.forEach(function(dn) {
             var dd = s.days[dn];
-            if(dd) { totalGesamt += dd.geplant+dd.spontan+dd.online; totalVerkauft += dd.verkauft; totalUmsatz += dd.umsatz; }
+            if(dd) { totalGesamt += dd.geplant+dd.spontan+dd.online; totalVerkauft += dd.verkauft; totalUebergabe += dd.uebergabe; totalUmsatz += dd.umsatz; }
         });
     });
     var el;
-    el = document.getElementById('wkPlan'); if(el) el.textContent = totalPlan;
+    el = document.getElementById('wkUebergabe'); if(el) el.textContent = totalUebergabe;
     el = document.getElementById('wkGesamt'); if(el) el.textContent = totalGesamt;
     el = document.getElementById('wkVerkauft'); if(el) el.textContent = totalVerkauft;
     el = document.getElementById('wkUmsatz'); if(el) el.textContent = totalUmsatz.toLocaleString('de-DE') + ' \u20AC';
     var quoteVal = totalGesamt > 0 ? Math.round((totalVerkauft/totalGesamt)*100) : 0;
     el = document.getElementById('wkQuote');
     if(el) { el.textContent = quoteVal + '%'; el.className = 'text-2xl font-bold ' + (quoteVal >= 70 ? 'text-green-600' : quoteVal >= 40 ? 'text-orange-600' : 'text-red-600'); }
+    var avgPreis = totalUebergabe > 0 ? Math.round(totalUmsatz / totalUebergabe) : 0;
+    el = document.getElementById('wkAvgPreis');
+    if(el) el.textContent = avgPreis > 0 ? avgPreis.toLocaleString('de-DE') + ' \u20AC' : '0 \u20AC';
 
     var container = document.getElementById('weekSellerTables');
     if(!container) return;
     if(filtered.length === 0) { container.innerHTML = '<div class="vit-card p-8 text-center text-gray-400"><p class="text-lg mb-2">'+_t('sales_no_data')+'</p><p class="text-sm">'+_t('sales_add_entry')+'</p></div>'; return; }
     var html = '';
     filtered.forEach(function(s) {
-        var sUmsatz=0, sGesamt=0, sVerkauft=0;
-        weekDays.forEach(function(dn) { var dd=s.days[dn]; if(dd) { sUmsatz+=dd.umsatz; sGesamt+=dd.geplant+dd.spontan+dd.online; sVerkauft+=dd.verkauft; } });
+        var sUmsatz=0, sGesamt=0, sVerkauft=0, sUebergabe=0;
+        weekDays.forEach(function(dn) { var dd=s.days[dn]; if(dd) { sUmsatz+=dd.umsatz; sGesamt+=dd.geplant+dd.spontan+dd.online; sVerkauft+=dd.verkauft; sUebergabe+=dd.uebergabe; } });
         var sQuote = sGesamt > 0 ? Math.round((sVerkauft/sGesamt)*100) : 0;
         html += '<div class="vit-card overflow-hidden">';
         html += '<div class="flex items-center justify-between p-4 bg-gray-50 border-b">';
         html += '<div class="flex items-center space-x-3"><div class="w-8 h-8 bg-vit-orange rounded-full flex items-center justify-center text-white font-bold text-sm">'+_escH(s.name.charAt(0))+'</div>';
-        html += '<div><p class="font-semibold text-gray-800">'+_escH(s.name)+'</p><p class="text-xs text-gray-500">Plan: '+s.plan_soll+' Termine</p></div></div>';
+        html += '<div><p class="font-semibold text-gray-800">'+_escH(s.name)+'</p></div></div>';
         html += '<div class="flex space-x-4 text-center">';
         html += '<div><p class="text-xs text-gray-500">Beratungen</p><p class="font-bold text-blue-600">'+sGesamt+'</p></div>';
-        html += '<div><p class="text-xs text-gray-500">Verkauft</p><p class="font-bold text-green-600">'+sVerkauft+'</p></div>';
+        html += '<div><p class="text-xs text-gray-500">Zusagen</p><p class="font-bold text-green-600">'+sVerkauft+'</p></div>';
+        html += '<div><p class="text-xs text-gray-500">Rechnungen</p><p class="font-bold text-emerald-600">'+sUebergabe+'</p></div>';
         html += '<div><p class="text-xs text-gray-500">Umsatz</p><p class="font-bold text-vit-orange">'+sUmsatz.toLocaleString('de-DE')+' \u20AC</p></div>';
         html += '<div><p class="text-xs text-gray-500">Quote</p><p class="font-bold '+(sQuote>=70?'text-green-600':sQuote>=40?'text-orange-600':'text-red-600')+'">'+sQuote+'%</p></div>';
         html += '</div></div>';
         html += '<div class="overflow-x-auto"><table class="w-full text-sm">';
-        html += '<thead><tr class="bg-gray-50 text-xs"><th class="py-2 px-3 text-left text-gray-500">Tag</th><th class="py-2 px-3 text-center text-gray-500">Plan</th><th class="py-2 px-3 text-center text-blue-600">Geplant</th><th class="py-2 px-3 text-center text-purple-600">Spontan</th><th class="py-2 px-3 text-center text-cyan-600">Online</th><th class="py-2 px-3 text-center text-pink-600">Ergo</th><th class="py-2 px-3 text-center font-bold text-gray-700">Gesamt</th><th class="py-2 px-3 text-center text-green-600">Verkauft</th><th class="py-2 px-3 text-center text-gray-500">Uebergabe</th><th class="py-2 px-3 text-right text-vit-orange">Umsatz</th></tr></thead>';
+        html += '<thead><tr class="bg-gray-50 text-xs"><th class="py-2 px-3 text-left text-gray-500">Tag</th><th class="py-2 px-3 text-center text-blue-600">Geplant</th><th class="py-2 px-3 text-center text-purple-600">Spontan</th><th class="py-2 px-3 text-center text-cyan-600">Online</th><th class="py-2 px-3 text-center text-pink-600">Ergo</th><th class="py-2 px-3 text-center font-bold text-gray-700">Beratungen</th><th class="py-2 px-3 text-center text-green-600">Zusage</th><th class="py-2 px-3 text-center text-emerald-600">Rechnung</th><th class="py-2 px-3 text-right text-vit-orange">Umsatz</th></tr></thead>';
         html += '<tbody>';
         weekDays.forEach(function(dn) {
             var dd = s.days[dn] || {plan:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0};
@@ -217,7 +220,6 @@ export function renderWeekViewFromDb() {
             var hasData = dd.plan>0 || total>0 || dd.umsatz>0;
             html += '<tr class="border-b '+(hasData?'':'text-gray-300')+'">';
             html += '<td class="py-2 px-3 font-semibold">'+dn+'</td>';
-            html += '<td class="py-2 px-3 text-center">'+(dd.plan||'-')+'</td>';
             html += '<td class="py-2 px-3 text-center text-blue-600">'+(dd.geplant||'-')+'</td>';
             html += '<td class="py-2 px-3 text-center text-purple-600">'+(dd.spontan||'-')+'</td>';
             html += '<td class="py-2 px-3 text-center text-cyan-600">'+(dd.online||'-')+'</td>';
