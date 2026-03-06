@@ -75,10 +75,10 @@ export async function renderHqVerkauf() {
         });
     } catch(e) {}
 
-    // Load leads count per standort
+    // Load leads count per standort (nur etermin + manuell angelegte Leads)
     var leadsByStd = {};
     try {
-        var lr = await _sb().from('leads').select('standort_id, id').in('status', ['neu','kontaktiert','angebot','schwebend']);
+        var lr = await _sb().from('leads').select('standort_id, id').in('status', ['neu','kontaktiert','angebot','schwebend']).in('quelle', ['etermin','walk_in','empfehlung','sonstige','telefon','website','messe','flyer']);
         if(lr.data) lr.data.forEach(function(d) {
             leadsByStd[d.standort_id] = (leadsByStd[d.standort_id]||0) + 1;
         });
