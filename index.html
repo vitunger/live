@@ -1665,7 +1665,7 @@
                             <button onclick="showControllingTab('bwa')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="bwa">BWAs</button>
                             <button onclick="showControllingTab('benchmark')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="benchmark">Benchmarks</button>
                             <button onclick="showControllingTab('planist')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="planist">Plan / Ist</button>
-                            <button onclick="showControllingTab('liquiditaet')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="liquiditaet">Liquiditaet</button>
+                            <button class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-300 cursor-default" disabled>Liquidit\u00e4t <span style="background:#EF7D00;color:white;font-size:9px;padding:1px 6px;border-radius:8px;margin-left:4px;font-weight:700;">KOMMT BALD</span></button>
                             <button onclick="showControllingTab('ctrlWissen')" class="ctrl-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="ctrlWissen">📚 Wissen</button>
                         </nav>
                     </div>
@@ -1733,8 +1733,8 @@
                                         <div class="flex items-center justify-between mb-4">
                                             <h3 id="bwaTitle" class="text-lg font-bold text-gray-800">BWA Details</h3>
                                             <div class="flex items-center space-x-2">
-                                                <button id="bwaEditBtn" onclick="if(typeof window.editSelectedBwa==='function')window.editSelectedBwa()" style="display:none;" class="text-xs text-gray-400 hover:text-vit-orange cursor-pointer">Bearbeiten</button>
-                                                <button id="bwaDeleteBtn" onclick="if(typeof window.deleteBwa==='function')window.deleteBwa()" style="display:none;" class="text-xs text-gray-400 hover:text-red-500 cursor-pointer">Loeschen</button>
+                                                <button id="bwaEditBtn" style="display:none;" class="text-xs text-gray-400 hover:text-vit-orange">Bearbeiten</button>
+                                                <button id="bwaDeleteBtn" style="display:none;" class="text-xs text-gray-400 hover:text-red-500">Loeschen</button>
                                             </div>
                                         </div>
                                         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
@@ -1781,9 +1781,14 @@
                         </div>
                     </div>
 
-                    <!-- ===== TAB 4: Liquiditaet ===== -->
+                    <!-- ===== TAB 4: Liquiditaet (KOMMT BALD) ===== -->
                     <div id="ctrlTabLiquiditaet" class="ctrl-tab-content" style="display:none;">
-                        <!-- Inhalt wird durch controlling-liquiditaet.js via initLiquiditaet() befüllt -->
+                        <div class="flex flex-col items-center justify-center py-16 text-center">
+                            <div class="text-5xl mb-4">\u{1F4B0}</div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">Liquidit\u00e4tsplanung</h3>
+                            <p class="text-sm text-gray-500 mb-4 max-w-md">Monatliche Einnahmen, Ausgaben und Cashflow-Prognose \u2013 automatisch aus deinen BWA-Daten und Bankkonten.</p>
+                            <span style="background:#EF7D00;color:white;font-size:13px;padding:4px 16px;border-radius:12px;font-weight:700;">KOMMT BALD</span>
+                        </div>
                     </div>
 
                     <!-- Wissen Tab -->
