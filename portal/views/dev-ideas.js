@@ -80,10 +80,9 @@ export async function submitDevIdea() {
             body: { submission_id: submissionId }
         }).then(function(kiResp) {
             if(kiResp.error) console.warn('KI-Analyse Fehler:', kiResp.error);
-            else console.debug('KI-Analyse fertig für:', submissionId);
             // Nach Analyse nochmal neu laden um Ergebnis zu zeigen
-            loadDevSubmissions(true).then(function(){ refreshEntwicklungViews(); });
-        });
+            return loadDevSubmissions(true).then(function(){ refreshEntwicklungViews(); });
+        }).catch(function(err) { console.warn('KI-Analyse fehlgeschlagen:', err); });
     } catch(err) {
         _showToast('Fehler beim Einreichen: ' + (err.message||err), 'error');
     } finally {
@@ -178,15 +177,15 @@ export async function devHQDecision(subId, ergebnis) {
         // Trigger KI-Konzepterstellung bei Freigabe (fire-and-forget)
         if(ergebnis === 'freigabe') {
             _showToast('✅ Freigegeben! Entwicklungskonzept wird erstellt...', 'success');
-            try { _sb().functions.invoke('dev-ki-analyse', {
+            _sb().functions.invoke('dev-ki-analyse', {
                 body: { submission_id: subId, mode: 'konzept' }
             }).then(function() {
         // Update local cache
         var _ls = _devSubs().find(function(s){ return s.id === subId; });
         if(_ls) { var _sm2 = {freigabe:'konzept_wird_erstellt',freigabe_mit_aenderungen:'ki_pruefung',rueckfragen:'hq_rueckfragen',ablehnung:'abgelehnt',spaeter:'geparkt',geschlossen:'geschlossen'}; _ls.status = _sm2[ergebnis] || _ls.status; }
                 if(typeof window.refreshEntwicklungViews === 'function') window.refreshEntwicklungViews();
-        setTimeout(function(){ loadDevSubmissions().then(function(){ if(typeof window.refreshEntwicklungViews === 'function') window.refreshEntwicklungViews(); }); }, 1500);
-            }); } catch(_e) {}
+        return loadDevSubmissions().then(function(){ if(typeof window.refreshEntwicklungViews === 'function') window.refreshEntwicklungViews(); });
+            }).catch(function(err) { console.warn('KI-Konzept fehlgeschlagen:', err); });
 
             // Auto-create roadmap entry
             var sub2 = _devSubs().find(function(s){ return s.id === subId; });

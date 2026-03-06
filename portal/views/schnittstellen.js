@@ -1005,8 +1005,8 @@ window.copyConnWebhook = function(id) {
     if (url) {
         navigator.clipboard.writeText(url).then(function() {
             var btn = document.getElementById('connCopyBtn_' + id);
-            if (btn) { btn.textContent = '✅ Kopiert!'; setTimeout(function() { btn.textContent = '📋 Kopieren'; }, 2000); }
-        });
+            if (btn) { btn.textContent = 'Kopiert!'; setTimeout(function() { btn.textContent = 'Kopieren'; }, 2000); }
+        }).catch(function() { _showToast('Kopieren fehlgeschlagen', 'warning'); });
     }
 };
 
