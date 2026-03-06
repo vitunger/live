@@ -504,7 +504,7 @@ function SalesForm({deal,sales,seller,onClose,onUpdateDeal,mode}){
 
       <div style={{padding:"0 28px 8px"}}>
         <div style={{fontWeight:700,fontSize:14,color:"#1a202c",marginBottom:6}}>Notizen</div>
-        <textarea value={form.notizen||""} onChange={e=>u("notizen",e.target.value)} placeholder="Freitext-Notizen zur Beratung..." style={{width:"100%",minHeight:80,padding:12,borderRadius:12,border:"1.5px solid #E8E8E8",fontSize:13,fontFamily:"inherit",resize:"vertical",outline:"none",boxSizing:"border-box"}}/>
+        <textarea value={form.notizen||""} onChange={e=>u("notizen",e.target.value)} placeholder="Freitext-Notizen zur Beratung..." style={{width:"100%",minHeight:240,padding:12,borderRadius:12,border:"1.5px solid #E8E8E8",fontSize:13,fontFamily:"inherit",resize:"vertical",outline:"none",boxSizing:"border-box"}}/>
       </div>
 
       <div style={{padding:"14px 28px",borderTop:"1px solid #EFEFEF",flexShrink:0}}>
@@ -854,9 +854,11 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
         <div onClick={()=>uS("terminDone",!sales.terminDone)} style={{flex:1,display:"flex",alignItems:"center",gap:8,padding:"8px 12px",borderRadius:8,border:sales.terminDone?"2px solid #16a34a":"2px solid #dc2626",background:sales.terminDone?"#f0fdf4":"#fff5f5",cursor:"pointer"}}>
           <span style={{fontSize:16}}>📅</span>
           <div>
-            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase"}}>Beratungstermin</div>
-            {termin&&termin.start_zeit?<span style={{fontSize:11,fontWeight:700,color:sales.terminDone?"#16a34a":"#dc2626"}}>{new Date(termin.start_zeit).toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit"})}{" "}{new Date(termin.start_zeit).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})} Uhr</span>
-            :<span style={{fontSize:11,fontWeight:700,color:sales.terminDone?"#16a34a":"#dc2626"}}>{sales.terminDone?"✓ Vereinbart":"✗ Kein Termin"}</span>}
+            {termin&&termin.start_zeit?<>
+              <div style={{fontSize:12,fontWeight:700,color:sales.terminDone?"#16a34a":"#dc2626"}}>{new Date(termin.start_zeit).toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"short"})}</div>
+              <div style={{fontSize:11,fontWeight:700,color:sales.terminDone?"#16a34a":"#dc2626"}}>{new Date(termin.start_zeit).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})} Uhr</div>
+            </>
+            :<div style={{fontSize:11,fontWeight:700,color:sales.terminDone?"#16a34a":"#dc2626"}}>{sales.terminDone?"✓ Termin vereinbart":"✗ Kein Termin"}</div>}
           </div>
         </div>
       </div>
@@ -907,7 +909,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
           {/* Freie Notiz */}
           <div style={{marginBottom:14}}>
             <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:4}}>Freie Notiz</div>
-            <textarea value={deal.note||""} onChange={e=>onUpdateDeal(deal.id,"note",e.target.value)} rows={4} placeholder="Freie Notizen zum Kunden..." style={{...dpInp,resize:"none",width:"100%"}}/>
+            <textarea value={deal.note||""} onChange={e=>onUpdateDeal(deal.id,"note",e.target.value)} rows={12} placeholder="Freie Notizen zum Kunden..." style={{...dpInp,resize:"none",width:"100%"}}/>
           </div>
 
           {/* Heat + Bezahlart side by side */}
@@ -921,8 +923,11 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
             <div style={{flex:1}}>
               <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:4}}>Bezahlart</div>
               <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                {[{k:"bar",l:"💶 Bar/EC"},{k:"finanz",l:"🏦 Finanzierung"},{k:"leasing",l:"📋 Leasing"}].map(b=>
-                  <div key={b.k} onClick={()=>uS("bezahlart",b.k)} style={chipS(sales.bezahlart===b.k)}>{b.l}</div>)}
+                {sales.bezahlart
+                  ? [{k:"bar",l:"💶 Bar/EC"},{k:"finanz",l:"🏦 Finanzierung"},{k:"leasing",l:"📋 Leasing"}].filter(b=>b.k===sales.bezahlart).map(b=>
+                    <div key={b.k} style={{...chipS(true),cursor:"pointer"}} onClick={()=>uS("bezahlart",null)}>{b.l} <span style={{marginLeft:4,fontSize:9,opacity:.5}}>✕</span></div>)
+                  : [{k:"bar",l:"💶 Bar/EC"},{k:"finanz",l:"🏦 Finanzierung"},{k:"leasing",l:"📋 Leasing"}].map(b=>
+                    <div key={b.k} onClick={()=>uS("bezahlart",b.k)} style={chipS(false)}>{b.l}</div>)}
               </div>
               {sales.bezahlart==="leasing"&&<div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:4}}>
                 {sales.leasingAnbieter
@@ -933,13 +938,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
             </div>
           </div>
 
-          {/* Quelle */}
-          <div style={{marginBottom:14}}>
-            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:4}}>Quelle</div>
-            <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-              {SOURCES.map(s=><div key={s} onClick={()=>onUpdateDeal(deal.id,"source",s)} style={chipS(deal.source===s)}>{s}</div>)}
-            </div>
-          </div>
+          {/* Quelle removed – set via lead creation */}
         </div>}
 
         {tab==="todos"&&<div>
@@ -1045,7 +1044,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
 
       {/* eTermin Link */}
       {(deal.eterminUid||termin)&&<div style={{padding:"6px 16px",borderTop:"1px solid #f0f0f0",flexShrink:0}}>
-        <a href={"https://www.etermin.net/admin#!/booking"} target="_blank" rel="noopener noreferrer" style={{display:"flex",alignItems:"center",gap:6,fontSize:11,fontWeight:600,color:"#3182CE",textDecoration:"none",padding:"5px 0"}}>
+        <a href={"https://www.etermin.net/admin#!/booking"+(deal.eterminUid ? "/"+deal.eterminUid : "")} target="_blank" rel="noopener noreferrer" style={{display:"flex",alignItems:"center",gap:6,fontSize:11,fontWeight:600,color:"#3182CE",textDecoration:"none",padding:"5px 0"}}>
           <span>📅</span> Termin in eTermin bearbeiten <span style={{fontSize:9}}>↗</span>
         </a>
       </div>}
