@@ -373,3 +373,34 @@ Getestet mit End-to-End-Simulation, `lead_created: true`, keine DB-Fehler.
 - `typ` bleibt `sonstig` wenn `selectedAnswers` keinen LEAD_TRIGGER enthält (korrekt)
 - `etermin_kalender_name` kommt nicht an wenn `calendarName` leer (eTermin-Konfiguration prüfen)
 - Alle echten Buchungen aus heutigen Tests wurden bereinigt
+
+## Scompler – Feature-Erweiterung (März 2026)
+
+### Neue Features in portal/views/scompler.js
+1. **Drag & Drop Kalender** – Posts per Drag auf anderen Tag verschieben (scDragStart, scDrop, scDragOver)
+2. **Plattform-Vorschau** – Live-Mockup Instagram/TikTok/YouTube im Post-Modal (scUpdatePreview)
+3. **Kanal-spezifische Captions** – JSONB Feld `kanal_captions` pro Kanal eigener Text/Titel
+4. **TikTok Privacy-Settings** – JSONB Feld `tiktok_settings` (Duett, Stitch, Sichtbarkeit, Branded Content)
+5. **Direkt-Veröffentlichung** – scPublishPost() → social-publish Edge Function → Instagram/TikTok/YouTube
+6. **Auto-Import** – scAutoImport(platform) → social-import Edge Function + manueller Import via scOpenImport()
+
+### Neue Edge Functions
+- `supabase/functions/social-publish/index.ts` – Veröffentlichung auf Instagram/TikTok/YouTube via API
+- `supabase/functions/social-import/index.ts` – Auto-Import von Posts von Plattformen (Deduplizierung via platform_post_id)
+- Beide mit `config.toml`: `verify_jwt = false`
+
+### SQL-Migration erforderlich (manuell in Supabase SQL Editor)
+```sql
+ALTER TABLE scompler_posts 
+  ADD COLUMN IF NOT EXISTS kanal_captions JSONB DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS tiktok_settings JSONB DEFAULT '{"privacy":"public","allow_duet":true,"allow_stitch":true,"allow_comment":true}',
+  ADD COLUMN IF NOT EXISTS published_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS publish_error TEXT;
+CREATE INDEX IF NOT EXISTS idx_scompler_posts_platform_post_id ON scompler_posts(platform_post_id) WHERE platform_post_id IS NOT NULL;
+```
+
+### Deployment
+```bash
+npx supabase functions deploy social-publish --project-ref lwwagbkxeofahhwebkab --no-verify-jwt
+npx supabase functions deploy social-import --project-ref lwwagbkxeofahhwebkab --no-verify-jwt
+```
