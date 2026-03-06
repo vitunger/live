@@ -1224,6 +1224,58 @@ function DropZone({sid,label,sub,bc,tc,cc,deals,onDrop,onDrag}){
 }
 
 /* ── MAIN APP ────────────────────────────────────── */
+
+// ── Pipeline → verkauf_tracking Sync ──
+// When a deal is moved to "verkauft", auto-create an entry in verkauf_tracking
+async function syncSaleToTracking(deal, SELLERS) {
+  try {
+    const sb = _sb();
+    const profile = window.sbProfile;
+    if (!sb || !profile) return;
+    const stdId = deal.loc && deal.loc !== "hq" ? deal.loc : profile.standort_id;
+    if (!stdId) return;
+    const today = new Date().toISOString().slice(0, 10);
+    // Resolve seller name
+    let sellerName = "Team";
+    if (deal.seller) {
+      const s = SELLERS.find(x => x.id === deal.seller);
+      sellerName = s ? s.label.replace(/^[^\w]*/, "").trim() : deal.seller;
+    } else if (profile.name) {
+      sellerName = profile.name;
+    }
+    // Check if an entry already exists for this seller+date+standort
+    const { data: existing } = await sb.from("verkauf_tracking")
+      .select("id, verkauft, umsatz")
+      .eq("standort_id", stdId)
+      .eq("datum", today)
+      .eq("verkaeufer_name", sellerName)
+      .maybeSingle();
+    if (existing) {
+      // Increment existing entry
+      await sb.from("verkauf_tracking").update({
+        verkauft: (existing.verkauft || 0) + 1,
+        umsatz: (parseFloat(existing.umsatz) || 0) + (deal.value || 0),
+        updated_at: new Date().toISOString()
+      }).eq("id", existing.id);
+    } else {
+      // Create new entry
+      await sb.from("verkauf_tracking").insert({
+        standort_id: stdId,
+        datum: today,
+        verkaeufer_name: sellerName,
+        verkaeufer_id: profile.id || null,
+        verkauft: 1,
+        umsatz: deal.value || 0,
+        geplant: 0, spontan: 0, online: 0, ergo: 0, plan_termine: 0, uebergabe: 0,
+        updated_at: new Date().toISOString()
+      });
+    }
+    console.log("[Pipeline] Sale synced to verkauf_tracking:", sellerName, deal.value);
+  } catch (e) {
+    console.warn("[Pipeline] verkauf_tracking sync error:", e);
+  }
+}
+
 function PipelineApp(){
   const[deals,setDeals]=useState([]);
   const[dragId,setDragId]=useState(null);
@@ -1420,7 +1472,7 @@ function PipelineApp(){
     saveDeal(id, "stage", ns);
     // Trigger automations
     setTimeout(()=>applyRules(id,oldStage,ns),100);
-    if(ns==="verkauft"){setStreak(s=>s+1);msg(`🏆 ${deal.name} verkauft! ${fmt(deal.value)}`);pop(innerWidth/2,innerHeight/2)}
+    if(ns==="verkauft"){setStreak(s=>s+1);msg(`🏆 ${deal.name} verkauft! ${fmt(deal.value)}`);pop(innerWidth/2,innerHeight/2);syncSaleToTracking(deal,SELLERS)}
     else if(ns==="lost"){setStreak(0);msg(`💀 ${deal.name} verloren...`)}
     else if(ns==="gold"){msg(`💎 ${deal.name} → Schrank der Hoffnung`)}
     setDragId(null);
@@ -1521,7 +1573,7 @@ function PipelineApp(){
     // Persist to DB
     saveDeal(did, "stage", toStage);
     setTimeout(()=>applyRules(did,fromStage,toStage),100);
-    if(toStage==="verkauft"){setStreak(s=>s+1);msg(`🏆 ${deal?.name} verkauft! ${fmt(deal?.value||0)}`);pop(innerWidth/2,innerHeight/2)}
+    if(toStage==="verkauft"){setStreak(s=>s+1);msg(`🏆 ${deal?.name} verkauft! ${fmt(deal?.value||0)}`);pop(innerWidth/2,innerHeight/2);if(deal)syncSaleToTracking(deal,SELLERS)}
     else if(toStage==="lost"){setStreak(0);msg(`💀 ${deal?.name} verloren...`)}
     else if(toStage==="gold"){msg(`🗄️ ${deal?.name} → Schrank der Hoffnung`)}
   },[deals,applyRules,msg,pop,saveDeal]);
