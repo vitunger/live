@@ -137,6 +137,33 @@ module.exports = async function(req, res) {
     const email = (b.EMAIL || b.email || b.Email || "").trim();
     const phone = (b.PHONE || b.phone || b.Phone || b.MOBILE || b.mobile || "").trim();
     const notes = (b.NOTES || b.notes || b.Notes || b.NOTE || b.note || "").trim();
+    // Zusatzfelder: eTermin sendet Custom-Felder als FIELD_1, FIELD_2, ... oder fieldLabel/fieldValue Paare
+    const extraFields = [];
+    // Format 1: FIELD_1_LABEL + FIELD_1_VALUE (oder nur FIELD_1_VALUE)
+    for (let i = 1; i <= 20; i++) {
+      const lbl = (b["FIELD_"+i+"_LABEL"] || b["field_"+i+"_label"] || b["Field_"+i+"_Label"] || "").trim();
+      const val = (b["FIELD_"+i+"_VALUE"] || b["field_"+i+"_value"] || b["Field_"+i+"_Value"] || "").trim();
+      if (val) extraFields.push((lbl ? lbl + ": " : "Feld " + i + ": ") + val);
+    }
+    // Format 2: CUSTOMFIELD_x oder ADDITIONALFIELD_x
+    Object.keys(b).forEach(k => {
+      const ku = k.toUpperCase();
+      if ((ku.startsWith("CUSTOMFIELD") || ku.startsWith("ADDITIONALFIELD") || ku.startsWith("ZUSATZFELD")) && b[k] && b[k].toString().trim()) {
+        const label = k.replace(/[_-]/g, " ").replace(/^(CUSTOM|ADDITIONAL|ZUSATZ)FIELD/i, "Feld").trim();
+        extraFields.push(label + ": " + b[k].toString().trim());
+      }
+    });
+    // Format 3: answers/fields als Array (manche eTermin-Versionen)
+    if (Array.isArray(b.fields || b.FIELDS || b.customFields)) {
+      const arr = b.fields || b.FIELDS || b.customFields;
+      arr.forEach(f => {
+        if (f && f.value && f.value.toString().trim()) {
+          extraFields.push((f.label || f.name || "Feld") + ": " + f.value.toString().trim());
+        }
+      });
+    }
+    // Notizen zusammenbauen: notes + Zusatzfelder
+    const notesAll = [notes && "Notizen: " + notes, ...extraFields].filter(Boolean).join("\n");
     const answers = (b.SELECTEDANSWERS || b.selectedAnswers || b.selectedanswers || b.SelectedAnswers || b.SERVICENAME || b.servicename || b.ServiceName || "").trim();
     const town = (b.TOWN || b.town || b.Town || b.CITY || b.city || "").trim();
     const cal = b.CALENDARNAME || b.calendarname || b.CalendarName || b.CALENDAR || b.calendar || "";
@@ -216,6 +243,24 @@ module.exports = async function(req, res) {
 
     // Lead (only CREATED + Beratungstermin → auto-pipeline via DB function)
     let lc = false;
+    // Bei MODIFIED: Notizen im bestehenden Lead aktualisieren
+    if (cmd === "MODIFIED" && tId && (notesAll || "").trim()) {
+      try {
+        const existLead = await sbGet("leads", "etermin_uid=eq." + uid + "&limit=1");
+        if (existLead && existLead.length > 0) {
+          const existingNote = existLead[0].notizen || "";
+          const newNote = "[eTermin] " + notesAll;
+          if (!existingNote.includes(notesAll)) {
+            await sbUpdate("leads", {
+              notizen: existingNote ? existingNote + "\n\n" + newNote : newNote,
+              updated_at: new Date().toISOString()
+            }, "id=eq." + existLead[0].id);
+            console.log("[etermin-wh] Updated notizen for lead", existLead[0].id);
+          }
+        }
+      } catch(mnErr) { console.warn("[etermin-wh] notizen update error:", mnErr.message); }
+    }
+
     if (cmd === "CREATED" && (mappedTyp === "beratung" || isLeadTrigger(answers, notes))) {
       try {
         const rpcRes = await sbRPC("process_etermin_lead", {
@@ -226,7 +271,8 @@ module.exports = async function(req, res) {
           p_telefon: phone || null,
           p_etermin_uid: uid,
           p_termin_typ: "beratung",
-          p_zugewiesen_an: zugewiesenAn || null
+          p_zugewiesen_an: zugewiesenAn || null,
+          p_notizen: notesAll || null
         });
         lc = !!rpcRes;
         console.log("[etermin-wh] process_etermin_lead result:", rpcRes);
