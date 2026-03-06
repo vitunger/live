@@ -92,6 +92,9 @@ function useSupabase(currentLoc, SELLERS) {
     autoImport: row.auto_import || false,
     lastEvent: row.letztes_event || null,
     wawiKundenNr: row.wawi_kunden_nr || null,
+    beleg_angebot_id: row.beleg_angebot_id || null,
+    beleg_auftrag_id: row.beleg_auftrag_id || null,
+    beleg_rechnung_id: row.beleg_rechnung_id || null,
     eterminUid: row.etermin_uid || null,
     terminId: row.termin_id || null,
     created: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
@@ -673,7 +676,17 @@ function ScanUploadModal({deal,sales,onClose,onUpdateDeal}){
             </div>
             <div style={{fontSize:11,color:"#A0AEC0",marginBottom:12}}>📁 {file?.name} ({(file?.size/1024).toFixed(0)} KB)</div>
 
-            {error&&<div style={{padding:"10px 14px",borderRadius:10,background:"#FFF5F5",border:"1px solid #FED7D7",color:"#C53030",fontSize:12,fontWeight:600,marginBottom:12}}>⚠️ {error}</div>}
+            {error&&<div style={{marginBottom:12}}>
+              <div style={{padding:"10px 14px",borderRadius:10,background:"#FFF5F5",border:"1px solid #FED7D7",color:"#C53030",fontSize:12,fontWeight:600,marginBottom:8}}>{"⚠️ "+error}</div>
+              <button onClick={()=>{
+                const currentSales=deal.sales||{};
+                onUpdateDeal(deal.id,"sales",{...currentSales,scanUrl:preview,scanDate:new Date().toISOString(),scanError:error});
+                onClose();
+                window.showToast&&window.showToast("Scan gespeichert (ohne KI-Analyse)","success");
+              }} style={{width:"100%",padding:"10px",borderRadius:10,border:"1.5px solid #E2E8F0",background:"#fff",color:"#4A5568",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+                {"💾 Trotzdem speichern (ohne KI-Analyse)"}
+              </button>
+            </div>}
 
             <button onClick={analyze} disabled={loading} style={{width:"100%",padding:"14px",borderRadius:12,border:"none",background:loading?"#A0AEC0":"linear-gradient(135deg,#FF6B35,#E55D2B)",color:"#fff",fontSize:14,fontWeight:700,cursor:loading?"wait":"pointer",fontFamily:"'Outfit',sans-serif",opacity:loading?.7:1,boxShadow:"0 4px 15px rgba(255,107,53,.3)"}}>
               {loading?<span>⏳ KI analysiert Formular...</span>:<span>🤖 Mit KI analysieren</span>}
@@ -743,6 +756,43 @@ function ScanUploadModal({deal,sales,onClose,onUpdateDeal}){
       </div>
     </div>
   </div>
+}
+
+/* WaWi-Belege Anzeige in Pipeline */
+function WawiBelege({deal}){
+  const[belege,setBelege]=useState([]);
+  const[loaded,setLoaded]=useState(false);
+  useEffect(()=>{
+    if(loaded)return;
+    const ids=[deal.beleg_angebot_id,deal.beleg_auftrag_id,deal.beleg_rechnung_id].filter(Boolean);
+    if(ids.length===0&&!deal.wawiKundenNr){setLoaded(true);return;}
+    (async()=>{
+      try{
+        let q=window.sb.from("wawi_belege").select("id,beleg_typ,beleg_nr,datum,endbetrag,kunde_name,verkaeufer");
+        if(ids.length>0) q=q.in("id",ids);
+        else if(deal.wawiKundenNr) q=q.eq("kunden_nr",deal.wawiKundenNr).eq("standort_id",deal.loc).order("datum",{ascending:false}).limit(5);
+        const{data}=await q;
+        setBelege(data||[]);
+      }catch(e){console.error("WaWi load:",e);}
+      setLoaded(true);
+    })();
+  },[deal,loaded]);
+  const typIcons={angebot:"\ud83d\udccb",auftrag:"\ud83d\udce6",rechnung:"\ud83e\uddfe",lieferschein:"\ud83d\ude9a",gutschrift:"\ud83d\udcb0"};
+  const typLabels={angebot:"Angebot",auftrag:"Auftrag",rechnung:"Rechnung",lieferschein:"Lieferschein",gutschrift:"Gutschrift"};
+  if(!loaded)return <div style={{fontSize:11,color:"#aaa"}}>Lade Belege...</div>;
+  if(belege.length===0)return null;
+  return <div style={{display:"flex",flexDirection:"column",gap:6}}>
+    {belege.map(b=><div key={b.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 10px",background:"#f8fafc",borderRadius:8,border:"1px solid #edf2f7"}}>
+      <div style={{display:"flex",alignItems:"center",gap:6}}>
+        <span style={{fontSize:14}}>{typIcons[b.beleg_typ]||"\ud83d\udcc4"}</span>
+        <div>
+          <div style={{fontSize:11,fontWeight:700,color:"#2d3748"}}>{typLabels[b.beleg_typ]||b.beleg_typ} {b.beleg_nr}</div>
+          <div style={{fontSize:10,color:"#a0aec0"}}>{b.datum?new Date(b.datum).toLocaleDateString("de-DE"):""} {b.verkaeufer?"| "+b.verkaeufer:""}</div>
+        </div>
+      </div>
+      {b.endbetrag&&<div style={{fontSize:12,fontWeight:700,color:"#2d3748"}}>{parseFloat(b.endbetrag).toLocaleString("de-DE",{minimumFractionDigits:2})}&nbsp;&euro;</div>}
+    </div>)}
+  </div>;
 }
 
 function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateDeal,onChangeStage,onDelete,SELLERS}){
@@ -934,6 +984,12 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
           </div>
 
           {/* Must Haves moved into Beratung auf einen Blick */}
+
+          {/* WaWi-Belege */}
+          {(deal.beleg_angebot_id||deal.beleg_auftrag_id||deal.beleg_rechnung_id||deal.wawiKundenNr)&&<div style={{marginBottom:14}}>
+            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:6}}>WaWi-Belege</div>
+            <WawiBelege deal={deal}/>
+          </div>}
 
           {/* Freie Notiz */}
           <div style={{marginBottom:14}}>
