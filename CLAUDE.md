@@ -1,7 +1,8 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung fuer KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 05.03.2026 (KI Release-Vorschlag Session)
+> Letzte Aktualisierung: 06.03.2026 (Verkaufsmodul Finalisierung)
+> Verkaufsmodul 9 Fixes deployed: (1) Verkaeufer-Ranking dynamisch aus DB in Auswertung, (2) Monatsziel dynamisch aus jahresplaene statt hardcoded, (3) Verkaeufer-Dropdown dynamisch statt hardcoded Sandra/Thomas/Dirk/Max, (4) Plan-Spalte + Diff% + Plan-Linie im Auswertungs-Chart, (5) openVerkaufEntryModal korrekt in plan-ist.js (verifiziert), (6) Tab-Reihenfolge: Pipeline=default (JS an HTML angeglichen), (7) _escH Helper sauber definiert als Fallback, (8) online-Feld konsistent behandelt, (9) Error-States bei DB-Fehlern
 > KI Release-Vorschlag verbessert: liest jetzt Git-Commits (14 Tage via GitHub API), vollständige CLAUDE.md und Submissions als Kontext. Neue Edge Function `dev-ki-analyse` im Repo (supabase/functions/dev-ki-analyse/index.ts) mit modes: release_notes + prioritize.
 > Performance-Abfrage Feature hinzugefuegt: `einkauf_performance_abfragen` + `einkauf_performance_daten` Tabellen (Migration: docs/migration_einkauf_performance.sql)
 > Marketing-Modul 4 Bugs gefixt: (1) Cache-Bug (Tab-Wechsel verlor Daten) via _dataLoaded Flags, (2) Inkonsistente Feld-Referenzen (.cost/.clicks/.platform -> .ausgaben/.klicks/.plattform) in marketing-hq.js + marketing-partner.js, (3) Live-Leads liest jetzt aus `leads`-Tabelle statt `marketing_lead_tracking`, (4) Lead-Typen-Toggle filtert jetzt tatsaechlich (kombi/regulaer/store_visits/anzeige_sv)
