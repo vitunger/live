@@ -5339,7 +5339,7 @@
         }
 
         // === REGISTRATION ===
-        function showRegistration() {
+        async function showRegistration() {
             var loginForm = document.querySelector('#loginScreen form');
             var regLink = loginForm.parentElement.querySelector('.border-t');
             
@@ -7230,7 +7230,7 @@
             await renderChannelMessages();
         }
 
-        function subscribeToChannel() {
+        async function subscribeToChannel() {
             if(realtimeSubscription) {
                 sb.removeChannel(realtimeSubscription);
             }
@@ -8529,7 +8529,7 @@
             renderPlanIst();
         }
 
-        function editSelectedBwa() {
+        async function editSelectedBwa() {
             if(!selectedBwaId) return;
             // Find in cache and open modal pre-filled
             var b = bwaCache.find(function(x){return x.id===selectedBwaId;});
@@ -12531,7 +12531,7 @@
         // Neuer Mitarbeiter Modal
         var newMaEbene = 'standort'; // tracks current ebene selection in create modal
         
-        function openNeuerMaModal() {
+        async function openNeuerMaModal() {
             var isHQ = currentRoles.indexOf('hq') >= 0 || (sbProfile && sbProfile.is_hq);
             newMaEbene = 'standort';
 
