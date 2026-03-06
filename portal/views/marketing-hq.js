@@ -619,10 +619,10 @@ function renderHqLeadReporting(el) {
         '<div><h2 class="text-xl font-bold text-gray-800 mb-1">Lead Reporting \u2013 Netzwerk</h2>' +
         '<p class="text-sm text-gray-500">Jahresziel-Tracking und Lead-Qualit\u00e4t</p></div>' +
         '<div class="flex flex-wrap gap-2">' +
-        '<button class="mkt-lead-pill' + (leadType === 'kombi' ? ' active' : '') + '" onclick="mktSetLeadType(this,'kombi')">Kombi</button>' +
-        '<button class="mkt-lead-pill' + (leadType === 'regulaer' ? ' active' : '') + '" onclick="mktSetLeadType(this,'regulaer')">Leads Regul\u00e4r</button>' +
-        '<button class="mkt-lead-pill' + (leadType === 'store_visits' ? ' active' : '') + '" onclick="mktSetLeadType(this,'store_visits')">Store-Visits 25%</button>' +
-        '<button class="mkt-lead-pill' + (leadType === 'anzeige_sv' ? ' active' : '') + '" onclick="mktSetLeadType(this,'anzeige_sv')">Anzeige-Store-Visits</button>' +
+        '<button class="mkt-lead-pill' + (leadType === 'kombi' ? ' active' : '') + '" onclick="mktSetLeadType(this,\'kombi\')">Kombi</button>' +
+        '<button class="mkt-lead-pill' + (leadType === 'regulaer' ? ' active' : '') + '" onclick="mktSetLeadType(this,\'regulaer\')">Leads Regul\u00e4r</button>' +
+        '<button class="mkt-lead-pill' + (leadType === 'store_visits' ? ' active' : '') + '" onclick="mktSetLeadType(this,\'store_visits\')">Store-Visits 25%</button>' +
+        '<button class="mkt-lead-pill' + (leadType === 'anzeige_sv' ? ' active' : '') + '" onclick="mktSetLeadType(this,\'anzeige_sv\')">Anzeige-Store-Visits</button>' +
         '</div></div>';
 
     // KPI Cards
@@ -987,10 +987,10 @@ function renderHqBudgetPlan(el) {
     html += '<div class="flex justify-end mb-4"><button onclick="mktOpenBudgetEditModal()" class="text-sm px-4 py-2 bg-vit-orange text-white rounded-lg hover:bg-orange-600 transition font-semibold">\u270f\ufe0f Budgets bearbeiten</button></div>';
 
     // Budget Edit Modal (hidden)
-    html += '<div id="mktBudgetEditModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="if(event.target===this)this.classList.add('hidden')">' +
+    html += '<div id="mktBudgetEditModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="if(event.target===this)this.classList.add(&quot;hidden&quot;)">' +
         '<div class="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">' +
         '<div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold text-gray-800">Jahresbudgets bearbeiten</h3>' +
-        '<button onclick="document.getElementById('mktBudgetEditModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>' +
+        '<button onclick="document.getElementById(&quot;mktBudgetEditModal&quot;).classList.add(&quot;hidden&quot;)" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>' +
         '<select id="mktBudgetEditStandort" onchange="mktLoadBudgetForStandort(this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-4">' +
         '<option value="">Standort ausw\u00e4hlen...</option></select>' +
         '<div id="mktBudgetEditFields"></div>' +
