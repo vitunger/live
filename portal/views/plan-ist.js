@@ -887,38 +887,77 @@ export function openVerkaufEntryModal() {
     var currentUser = _sbProfile() ? _sbProfile().name : '';
     var html = '<div id="vtEntryOverlay" onclick="closeVtModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
     html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
-    html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">💰 Verkaufserfolg eintragen</h3><button onclick="closeVtModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div>';
+    html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">\uD83D\uDCB0 Verkaufserfolg eintragen</h3><button onclick="closeVtModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
     html += '<div class="grid grid-cols-2 gap-3 mb-4">';
     html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Datum</label><input id="vtDate" type="date" value="'+today+'" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"></div>';
+    // GF gets a dropdown for all active users at this standort
+    html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Verkaeufer</label>';
     if(isGF) {
-        html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Verkaeufer</label><select id="vtSeller" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="'+currentUser+'">'+currentUser+'</option></select></div>';
+        html += '<select id="vtSeller" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="'+currentUser+'">'+currentUser+'</option></select>';
     } else {
-        html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Verkaeufer</label><input id="vtSeller" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50" value="'+currentUser+'" readonly></div>';
+        html += '<input id="vtSeller" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50" value="'+currentUser+'" readonly>';
     }
-    html += '</div>';
+    html += '</div></div>';
+    // Prefill info banner
+    html += '<div id="vtPrefillBanner" class="hidden mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700 text-center">\u2139\uFE0F Werte aus Pipeline vorausgefuellt. Du kannst sie anpassen.</div>';
     html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Beratungen</p>';
     html += '<div class="grid grid-cols-2 gap-3 mb-4">';
     var vtFields = [
-        {id:'vtGeplant',label:'Geplant',ph:'0'},
-        {id:'vtSpontan',label:'Spontan',ph:'0'},
-        {id:'vtErgo',label:'Ergo-Beratung',ph:'0'},
-        {id:'vtVerkauft',label:'Zusagen ✅',ph:'0'}
+        {id:'vtGeplant',label:'Geplant (eTermin)'},
+        {id:'vtSpontan',label:'Spontan (Walk-In)'},
+        {id:'vtErgo',label:'Ergo-Beratung'},
+        {id:'vtVerkauft',label:'Zusagen \u2705'}
     ];
     vtFields.forEach(function(f) {
         html += '<div><label class="block text-xs text-gray-600 mb-1">'+f.label+'</label>';
-        html += '<input id="'+f.id+'" type="number" min="0" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-center" placeholder="'+f.ph+'" value="0"></div>';
+        html += '<input id="'+f.id+'" type="number" min="0" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-center" placeholder="0" value="0"></div>';
     });
     html += '</div>';
     html += '<div class="grid grid-cols-2 gap-3 mb-4">';
-    html += '<div><label class="block text-xs text-gray-600 mb-1">Rechnungen (Übergabe)</label><input id="vtUebergabe" type="number" min="0" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-center" value="0"></div>';
-    html += '<div><label class="block text-xs text-gray-600 mb-1">Umsatz (€) <span class="text-gray-400 font-normal">aus WaWi</span></label><input id="vtUmsatz" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-right" placeholder="0"></div>';
+    html += '<div><label class="block text-xs text-gray-600 mb-1">Rechnungen (\u00dcbergabe)</label><input id="vtUebergabe" type="number" min="0" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-center" value="0"></div>';
+    html += '<div><label class="block text-xs text-gray-600 mb-1">Umsatz (\u20AC)</label><input id="vtUmsatz" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-right" placeholder="0"></div>';
     html += '</div>';
     html += '<div class="mb-3"><label class="block text-xs text-gray-600 mb-1">Notizen</label><textarea id="vtNotizen" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" rows="2" placeholder="z.B. Kunde kommt naechste Woche wieder..."></textarea></div>';
     html += '<div id="vtError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mb-3"></div>';
     html += '<button onclick="saveVtEntry()" id="vtSaveBtn" class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Speichern</button>';
     html += '</div></div>';
     var c = document.createElement('div'); c.id = 'vtEntryContainer'; c.innerHTML = html; document.body.appendChild(c);
-    // Auto-prefill Umsatz from WaWi data for selected seller + date
+
+    // ── Prefill from verkauf_tracking (Pipeline-synced data) ──
+    async function prefillFromTracking() {
+        try {
+            var seller = (document.getElementById('vtSeller')||{}).value;
+            var datum = (document.getElementById('vtDate')||{}).value;
+            if(!seller || !datum) return;
+            var stdId = _sbProfile() ? _sbProfile().standort_id : null;
+            if(!stdId) return;
+            var resp = await _sb().from('verkauf_tracking')
+                .select('geplant, spontan, online, ergo, verkauft, uebergabe, umsatz, notizen')
+                .eq('standort_id', stdId)
+                .eq('datum', datum)
+                .eq('verkaeufer_name', seller)
+                .maybeSingle();
+            if(resp.data) {
+                var d = resp.data;
+                var setVal = function(id, val) { var el = document.getElementById(id); if(el) el.value = val || 0; };
+                setVal('vtGeplant', d.geplant);
+                setVal('vtSpontan', d.spontan);
+                setVal('vtErgo', d.ergo);
+                setVal('vtVerkauft', d.verkauft);
+                setVal('vtUebergabe', d.uebergabe);
+                if(d.umsatz > 0) { var u = document.getElementById('vtUmsatz'); if(u) u.value = parseFloat(d.umsatz).toFixed(2); }
+                if(d.notizen) { var n = document.getElementById('vtNotizen'); if(n && !n.value) n.value = d.notizen; }
+                // Show prefill banner if any value > 0
+                if((d.geplant||0) + (d.spontan||0) + (d.verkauft||0) + (d.uebergabe||0) + (d.ergo||0) > 0) {
+                    var banner = document.getElementById('vtPrefillBanner');
+                    if(banner) banner.classList.remove('hidden');
+                }
+            }
+            // Also try WaWi prefill for Umsatz
+            prefillWawiUmsatz();
+        } catch(e) { console.warn('Prefill error:', e); }
+    }
+
     async function prefillWawiUmsatz() {
         try {
             var seller = (document.getElementById('vtSeller')||{}).value;
@@ -931,19 +970,23 @@ export function openVerkaufEntryModal() {
             if(resp.data && resp.data.length) {
                 var total = resp.data.reduce(function(s,b){ return s + (parseFloat(b.endbetrag)||0); }, 0);
                 var el = document.getElementById('vtUmsatz');
-                if(el && !el._userEdited) { el.value = total.toFixed(2); }
+                if(el && !el._userEdited && (!el.value || el.value === '0')) { el.value = total.toFixed(2); }
             }
         } catch(e) { console.warn('WaWi prefill:', e); }
     }
+
+    // On change of date or seller → re-prefill
     setTimeout(function(){
-        prefillWawiUmsatz();
+        prefillFromTracking();
         var dateEl = document.getElementById('vtDate');
         var sellerEl = document.getElementById('vtSeller');
-        if(dateEl) dateEl.addEventListener('change', function(){ prefillWawiUmsatz(); });
-        if(sellerEl) sellerEl.addEventListener('change', function(){ prefillWawiUmsatz(); });
+        if(dateEl) dateEl.addEventListener('change', function(){ prefillFromTracking(); });
+        if(sellerEl) sellerEl.addEventListener('change', function(){ prefillFromTracking(); });
         var umsatzEl = document.getElementById('vtUmsatz');
         if(umsatzEl) umsatzEl.addEventListener('input', function(){ umsatzEl._userEdited = true; });
     }, 300);
+
+    // GF: Load all active users for the standort
     if(isGF) {
         (async function(){
             try {
@@ -953,7 +996,19 @@ export function openVerkaufEntryModal() {
                 var r = await q.order('name');
                 if(r.data && r.data.length) {
                     var sel = document.getElementById('vtSeller');
-                    if(sel) { sel.innerHTML = ''; r.data.forEach(function(p){ var nm = (p.vorname && p.nachname) ? (p.vorname+' '+p.nachname) : (p.name||'?'); var o=document.createElement('option'); o.value=nm; o.textContent=nm; if(p.id) o.dataset.uid=p.id; if(nm===currentUser) o.selected=true; sel.appendChild(o); }); }
+                    if(sel) {
+                        sel.innerHTML = '';
+                        r.data.forEach(function(p){
+                            var nm = (p.vorname && p.nachname) ? (p.vorname+' '+p.nachname) : (p.name||'?');
+                            var o = document.createElement('option');
+                            o.value = nm; o.textContent = nm;
+                            if(p.id) o.dataset.uid = p.id;
+                            if(nm === currentUser) o.selected = true;
+                            sel.appendChild(o);
+                        });
+                        // Re-prefill after seller list is loaded
+                        prefillFromTracking();
+                    }
                 }
             } catch(e) { console.warn('Could not load sellers:', e); }
         })();
