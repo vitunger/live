@@ -150,7 +150,7 @@ function _showToast(m,t){ if(window.showToast) window.showToast(m,t||'info'); }
 
         try {
             var reg = await navigator.serviceWorker.ready;
-            var VAPID_PUBLIC_KEY = 'BFjv8qdfhEPXyWvz8Ite8laCH0XMaLtzTXvRBRq7XIa4FELmOz2RA3fUh7me1LIAh0JsKQVd-Pl8Dlxg_8mFc3c';
+            var VAPID_PUBLIC_KEY = (window.VIT_CONFIG || {}).VAPID_PUBLIC_KEY || 'BFjv8qdfhEPXyWvz8Ite8laCH0XMaLtzTXvRBRq7XIa4FELmOz2RA3fUh7me1LIAh0JsKQVd-Pl8Dlxg_8mFc3c';
             
             // Convert VAPID key to Uint8Array
             var padding = '='.repeat((4 - VAPID_PUBLIC_KEY.length % 4) % 4);

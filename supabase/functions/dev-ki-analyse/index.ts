@@ -19,16 +19,38 @@ const SUPABASE_URL  = Deno.env.get('SUPABASE_URL')  ?? '';
 const SUPABASE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const ANTHROPIC_KEY = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
+const ALLOWED_ORIGINS = ["https://cockpit.vitbikes.de", "http://localhost:3000"];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+}
+
+async function verifyJwt(req: Request): Promise<{ user_id: string } | null> {
+  const authHeader = req.headers.get("authorization") || "";
+  const token = authHeader.replace("Bearer ", "");
+  if (!token) return null;
+  const sb = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: `Bearer ${token}` } } }
+  );
+  const { data: { user }, error } = await sb.auth.getUser(token);
+  if (error || !user) return null;
+  return { user_id: user.id };
+}
+
+let _cors: Record<string, string> = {};
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ..._cors, 'Content-Type': 'application/json' },
   });
 }
 
@@ -159,8 +181,17 @@ Antworte NUR als JSON (kein Markdown):
 // ─── MAIN HANDLER ──────────────────────────────────────────────────────────
 
 export default async function handler(req: Request): Promise<Response> {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  const cors = getCorsHeaders(req);
+  _cors = cors;
+  if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+
+  const auth = await verifyJwt(req);
+  if (!auth) {
+    return new Response(JSON.stringify({ error: "Nicht authentifiziert" }), {
+      status: 401, headers: { ...cors, "Content-Type": "application/json" },
+    });
+  }
 
   const admin = createClient(SUPABASE_URL, SUPABASE_KEY);
 

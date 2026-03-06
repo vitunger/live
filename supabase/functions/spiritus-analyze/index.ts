@@ -14,6 +14,34 @@ const SUPABASE_URL  = Deno.env.get('SUPABASE_URL')  ?? '';
 const SUPABASE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const ANTHROPIC_KEY = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
 
+const ALLOWED_ORIGINS = ["https://cockpit.vitbikes.de", "http://localhost:3000"];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+}
+
+async function verifyJwt(req: Request): Promise<{ user_id: string } | null> {
+  const authHeader = req.headers.get("authorization") || "";
+  const token = authHeader.replace("Bearer ", "");
+  if (!token) return null;
+  const sb = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: `Bearer ${token}` } } }
+  );
+  const { data: { user }, error } = await sb.auth.getUser(token);
+  if (error || !user) return null;
+  return { user_id: user.id };
+}
+
+let _cors: Record<string, string> = {};
+
 const SYSTEM_PROMPT = `Du analysierst Gesprächsprotokolle/-transkripte von Gesprächen zwischen dem Franchise-HQ vit:bikes und Franchise-Standorten (Fahrradläden).
 
 Extrahiere aus dem Transkript exakt diese Kategorien:
@@ -85,8 +113,17 @@ async function logApiUsage(sb: any, params: {
 }
 
 export default async function handler(req: Request): Promise<Response> {
+  const cors = getCorsHeaders(req);
+  _cors = cors;
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, content-type' } });
+    return new Response(null, { headers: cors });
+  }
+
+  const auth = await verifyJwt(req);
+  if (!auth) {
+    return new Response(JSON.stringify({ error: "Nicht authentifiziert" }), {
+      status: 401, headers: { ...cors, "Content-Type": "application/json" },
+    });
   }
 
   try {
@@ -233,6 +270,6 @@ export default async function handler(req: Request): Promise<Response> {
 function json(data: any, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    headers: { ..._cors, 'Content-Type': 'application/json' },
   });
 }

@@ -257,7 +257,7 @@ export async function setupPushNotifications() {
         var permission = await Notification.requestPermission();
         if (permission !== 'granted') { _showToast('Berechtigung nicht erteilt.', 'info'); return; }
         var registration = await navigator.serviceWorker.ready;
-        var vapidPublicKey = 'BJ6NR_3YEPqpZR5MSmMBG9W6F51n0UAFGxQCAVXTxjqmSnePSs_N6D45PsmXKFClVHuWGssfDdGHb_pG4aYnkV8';
+        var vapidPublicKey = (window.VIT_CONFIG || {}).VAPID_PUBLIC_KEY || 'BFjv8qdfhEPXyWvz8Ite8laCH0XMaLtzTXvRBRq7XIa4FELmOz2RA3fUh7me1LIAh0JsKQVd-Pl8Dlxg_8mFc3c';
         var applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
         var subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: applicationServerKey });
         var sb = _sb();

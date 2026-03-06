@@ -1,8 +1,9 @@
 // Einmalige DB-Migration für einkauf_performance Tabellen
 // Diese API Route wird nach dem Deploy einmalig aufgerufen
 
-const SUPABASE_URL = 'https://lwwagbkxeofahhwebkab.supabase.co';
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3d2FnYmt4ZW9mYWhod2Via2FiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTAxMzc0MCwiZXhwIjoyMDg2NTg5NzQwfQ.b4eRrsbfZKLydLPI_gVPQYwG0A7aEofJ6WQpYpNILwk';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://lwwagbkxeofahhwebkab.supabase.co';
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!SERVICE_KEY) { return new Response(JSON.stringify({ error: 'SUPABASE_SERVICE_ROLE_KEY nicht konfiguriert' }), { status: 500 }); }
 
 const STATEMENTS = [
 `CREATE TABLE IF NOT EXISTS einkauf_performance_abfragen (

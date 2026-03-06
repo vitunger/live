@@ -4,11 +4,31 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+const ALLOWED_ORIGINS = ["https://cockpit.vitbikes.de", "http://localhost:3000"];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+}
+
+async function verifyJwt(req: Request): Promise<{ user_id: string } | null> {
+  const authHeader = req.headers.get("authorization") || "";
+  const token = authHeader.replace("Bearer ", "");
+  if (!token) return null;
+  const sb = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: `Bearer ${token}` } } }
+  );
+  const { data: { user }, error } = await sb.auth.getUser(token);
+  if (error || !user) return null;
+  return { user_id: user.id };
+}
 
 async function getConfig() {
   const admin = createClient(
@@ -68,7 +88,15 @@ async function getServiceAccountToken(clientEmail: string, privateKeyPem: string
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const cors = getCorsHeaders(req);
+  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+
+  const auth = await verifyJwt(req);
+  if (!auth) {
+    return new Response(JSON.stringify({ error: "Nicht authentifiziert" }), {
+      status: 401, headers: { ...cors, "Content-Type": "application/json" },
+    });
+  }
 
   try {
     const { action = "locations", location_name } = await req.json().catch(() => ({}));
@@ -76,7 +104,7 @@ Deno.serve(async (req) => {
 
     if (!sa.service_account_email || !sa.service_account_key) {
       return new Response(JSON.stringify({ error: "Service Account nicht konfiguriert" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        status: 400, headers: { ...cors, "Content-Type": "application/json" }
       });
     }
 
@@ -94,7 +122,7 @@ Deno.serve(async (req) => {
       }
       const data = await resp.json();
       return new Response(JSON.stringify(data), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+        headers: { ...cors, "Content-Type": "application/json" }
       });
     }
 
@@ -111,17 +139,17 @@ Deno.serve(async (req) => {
       }
       const data = await resp.json();
       return new Response(JSON.stringify(data), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+        headers: { ...cors, "Content-Type": "application/json" }
       });
     }
 
     return new Response(JSON.stringify({ error: "Unbekannte Action" }), {
-      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      status: 400, headers: { ...cors, "Content-Type": "application/json" }
     });
 
   } catch (e) {
     return new Response(JSON.stringify({ error: e.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      status: 500, headers: { ...cors, "Content-Type": "application/json" }
     });
   }
 });

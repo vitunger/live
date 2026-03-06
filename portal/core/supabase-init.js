@@ -6,8 +6,8 @@
 // ============================================
 // SUPABASE CLIENT
 // ============================================
-var SUPABASE_URL = 'https://lwwagbkxeofahhwebkab.supabase.co';
-var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3d2FnYmt4ZW9mYWhod2Via2FiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwMTM3NDAsImV4cCI6MjA4NjU4OTc0MH0.YBKO7grysp8RHzGWA6xSGpTVi0wG2PmeEWJHI25f7ks';
+var SUPABASE_URL = window.VIT_CONFIG.SUPABASE_URL;
+var SUPABASE_ANON_KEY = window.VIT_CONFIG.SUPABASE_ANON_KEY;
 // Robust session storage: localStorage + IndexedDB + Cookie backup (iOS Safari fix)
 var idbSessionStore = {
     _dbPromise: null,
@@ -204,6 +204,4 @@ var sbFeatureFlags = {}; // {flag_key: {enabled, rollout_percent, target_roles, 
 
 // [prod] log removed
 
-// Expose for cross-module access (ES module scope isolation)
-window.SUPABASE_URL = SUPABASE_URL;
-window.SUPABASE_ANON_KEY = SUPABASE_ANON_KEY;
+// Expose bereits in config.js gesetzt (window.SUPABASE_URL, window.SUPABASE_ANON_KEY)

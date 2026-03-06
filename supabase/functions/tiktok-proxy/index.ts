@@ -8,11 +8,31 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+const ALLOWED_ORIGINS = ["https://cockpit.vitbikes.de", "http://localhost:3000"];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+}
+
+async function verifyJwt(req: Request): Promise<{ user_id: string } | null> {
+  const authHeader = req.headers.get("authorization") || "";
+  const token = authHeader.replace("Bearer ", "");
+  if (!token) return null;
+  const sb = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: `Bearer ${token}` } } }
+  );
+  const { data: { user }, error } = await sb.auth.getUser(token);
+  if (error || !user) return null;
+  return { user_id: user.id };
+}
 
 const TIKTOK_API = "https://open.tiktokapis.com/v2";
 
@@ -53,7 +73,15 @@ async function saveTokens(access_token: string, refresh_token: string, expires_i
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const cors = getCorsHeaders(req);
+  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+
+  const auth = await verifyJwt(req);
+  if (!auth) {
+    return new Response(JSON.stringify({ error: "Nicht authentifiziert" }), {
+      status: 401, headers: { ...cors, "Content-Type": "application/json" },
+    });
+  }
 
   try {
     const body = await req.json();
@@ -66,7 +94,7 @@ Deno.serve(async (req) => {
     // ── Action: exchange_token (OAuth code → access token) ──────────
     if (action === "exchange_token") {
       const { code, redirect_uri } = body;
-      if (!code) return Response.json({ error: "code fehlt" }, { status: 400, headers: corsHeaders });
+      if (!code) return Response.json({ error: "code fehlt" }, { status: 400, headers: cors });
 
       const params = new URLSearchParams({
         client_key: clientKey,
@@ -85,15 +113,15 @@ Deno.serve(async (req) => {
 
       if (data.access_token) {
         await saveTokens(data.access_token, data.refresh_token || "", data.expires_in || 86400);
-        return Response.json({ success: true, expires_in: data.expires_in }, { headers: corsHeaders });
+        return Response.json({ success: true, expires_in: data.expires_in }, { headers: cors });
       }
-      return Response.json({ error: data.error_description || "Token-Exchange fehlgeschlagen", raw: data }, { status: 400, headers: corsHeaders });
+      return Response.json({ error: data.error_description || "Token-Exchange fehlgeschlagen", raw: data }, { status: 400, headers: cors });
     }
 
     // ── Action: refresh_token ────────────────────────────────────────
     if (action === "refresh_token") {
       const refreshToken = body.refresh_token || config.tiktok_refresh_token;
-      if (!refreshToken) return Response.json({ error: "Kein Refresh Token" }, { status: 400, headers: corsHeaders });
+      if (!refreshToken) return Response.json({ error: "Kein Refresh Token" }, { status: 400, headers: cors });
 
       const params = new URLSearchParams({
         client_key: clientKey,
@@ -109,30 +137,30 @@ Deno.serve(async (req) => {
       const data = await resp.json();
       if (data.access_token) {
         await saveTokens(data.access_token, data.refresh_token || refreshToken, data.expires_in || 86400);
-        return Response.json({ success: true }, { headers: corsHeaders });
+        return Response.json({ success: true }, { headers: cors });
       }
-      return Response.json({ error: "Refresh fehlgeschlagen", raw: data }, { status: 400, headers: corsHeaders });
+      return Response.json({ error: "Refresh fehlgeschlagen", raw: data }, { status: 400, headers: cors });
     }
 
     // ── Action: user_info ────────────────────────────────────────────
     if (action === "user_info") {
       const accessToken = body.access_token || config.tiktok_access_token;
-      if (!accessToken) return Response.json({ error: "Kein Access Token – bitte OAuth durchführen" }, { status: 401, headers: corsHeaders });
+      if (!accessToken) return Response.json({ error: "Kein Access Token – bitte OAuth durchführen" }, { status: 401, headers: cors });
 
       const resp = await fetch(`${TIKTOK_API}/user/info/?fields=display_name,avatar_url,follower_count,following_count,likes_count,video_count`, {
         headers: { "Authorization": `Bearer ${accessToken}` },
       });
       const data = await resp.json();
       if (data.data?.user) {
-        return Response.json({ user: data.data.user }, { headers: corsHeaders });
+        return Response.json({ user: data.data.user }, { headers: cors });
       }
-      return Response.json({ error: "user_info fehlgeschlagen", raw: data }, { status: 400, headers: corsHeaders });
+      return Response.json({ error: "user_info fehlgeschlagen", raw: data }, { status: 400, headers: cors });
     }
 
     // ── Action: video_list ───────────────────────────────────────────
     if (action === "video_list") {
       const accessToken = body.access_token || config.tiktok_access_token;
-      if (!accessToken) return Response.json({ error: "Kein Access Token" }, { status: 401, headers: corsHeaders });
+      if (!accessToken) return Response.json({ error: "Kein Access Token" }, { status: 401, headers: cors });
 
       const resp = await fetch(`${TIKTOK_API}/video/list/?fields=id,title,create_time,cover_image_url,view_count,like_count,comment_count,share_count`, {
         method: "POST",
@@ -141,12 +169,12 @@ Deno.serve(async (req) => {
       });
       const data = await resp.json();
       const videos = data.data?.videos || [];
-      return Response.json({ videos }, { headers: corsHeaders });
+      return Response.json({ videos }, { headers: cors });
     }
 
-    return Response.json({ error: `Unbekannte Action: ${action}` }, { status: 400, headers: corsHeaders });
+    return Response.json({ error: `Unbekannte Action: ${action}` }, { status: 400, headers: cors });
 
   } catch (e: any) {
-    return Response.json({ error: e.message }, { status: 500, headers: corsHeaders });
+    return Response.json({ error: e.message }, { status: 500, headers: cors });
   }
 });

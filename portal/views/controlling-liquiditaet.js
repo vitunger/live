@@ -677,7 +677,7 @@ export async function liqConnectBank() {
         var callbackUrl = window.location.origin + '/portal/banking-callback.html?standort=' + profile.standort_id;
 
         var resp = await fetch(
-            (typeof window.SUPABASE_URL !== 'undefined' ? window.SUPABASE_URL : 'https://lwwagbkxeofahhwebkab.supabase.co')
+            (window.SUPABASE_URL || window.VIT_CONFIG.SUPABASE_URL)
             + '/functions/v1/finapi-proxy',
             {
                 method:  'POST',
@@ -725,7 +725,7 @@ export async function liqSyncBank() {
         var accessToken = session?.data?.session?.access_token;
 
         var resp = await fetch(
-            (typeof window.SUPABASE_URL !== 'undefined' ? window.SUPABASE_URL : 'https://lwwagbkxeofahhwebkab.supabase.co')
+            (window.SUPABASE_URL || window.VIT_CONFIG.SUPABASE_URL)
             + '/functions/v1/finapi-proxy',
             {
                 method:  'POST',

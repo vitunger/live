@@ -12,10 +12,11 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1772811862";
+const CACHE_BUST = "?v=1772812000";
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
+    'core/config.js',
     'core/globals.js',
     'core/supabase-init.js',
     'core/router.js',

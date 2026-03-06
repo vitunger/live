@@ -2146,7 +2146,8 @@ window.loadSocialData = async function(platform) {
     if (platform === 'youtube') {
         var keyEl = document.getElementById('youtube_field_api_key');
         var chEl = document.getElementById('youtube_field_channel_id');
-        var apiKey = (keyEl && keyEl.value.trim()) ? keyEl.value.trim() : 'AIzaSyBLlbkT79izWdYCFnuqHmwlC5-hfA5CUFc';
+        var apiKey = (keyEl && keyEl.value.trim()) ? keyEl.value.trim() : '';
+        if (!apiKey) { _showToast('YouTube API Key fehlt – bitte in Connector-Einstellungen hinterlegen.', 'warning'); return; }
         var channelId = chEl && chEl.value.trim();
         if (channelId) {
             try {

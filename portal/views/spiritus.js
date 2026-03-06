@@ -557,7 +557,7 @@ export async function spSubmit() {
         var sess = await sb2.auth.getSession();
         var token = (sess.data.session || {}).access_token;
 
-        var analyzeResp = await fetch('https://rlzkiuxmnouyqxinxchw.supabase.co/functions/v1/spiritus-analyze', {
+        var analyzeResp = await fetch((window.VIT_CONFIG || {}).SPIRITUS_URL || 'https://rlzkiuxmnouyqxinxchw.supabase.co/functions/v1/spiritus-analyze', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
             body: JSON.stringify({

@@ -5,11 +5,31 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+const ALLOWED_ORIGINS = ["https://cockpit.vitbikes.de", "http://localhost:3000"];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+}
+
+async function verifyJwt(req: Request): Promise<{ user_id: string } | null> {
+  const authHeader = req.headers.get("authorization") || "";
+  const token = authHeader.replace("Bearer ", "");
+  if (!token) return null;
+  const sb = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: `Bearer ${token}` } } }
+  );
+  const { data: { user }, error } = await sb.auth.getUser(token);
+  if (error || !user) return null;
+  return { user_id: user.id };
+}
 
 function getAdmin() {
   return createClient(
@@ -186,12 +206,27 @@ async function importYouTube(): Promise<number> {
 
 // ── Main Handler ──
 Deno.serve(async (req) => {
+  const cors = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: cors });
+  }
+
+  // JWT-Verifizierung
+  const auth = await verifyJwt(req);
+  if (!auth) {
+    return new Response(JSON.stringify({ error: "Nicht authentifiziert" }), {
+      status: 401, headers: { ...cors, "Content-Type": "application/json" },
+    });
   }
 
   try {
     const { action } = await req.json();
+    const validActions = ["instagram", "tiktok", "youtube", "cron"];
+    if (!action || !validActions.includes(action)) {
+      return new Response(JSON.stringify({ error: "Ungueltige Action" }), {
+        status: 400, headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
     const results: Record<string, { imported: number; error?: string }> = {};
 
     const actions = action === "cron" ? ["instagram", "tiktok", "youtube"] : [action];
@@ -214,11 +249,11 @@ Deno.serve(async (req) => {
     const totalImported = Object.values(results).reduce((s, r) => s + r.imported, 0);
 
     return new Response(JSON.stringify({ success: true, total_imported: totalImported, details: results }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (err) {
     return new Response(JSON.stringify({ error: String(err.message || err) }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 });

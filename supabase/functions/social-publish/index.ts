@@ -4,11 +4,32 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+const ALLOWED_ORIGINS = ["https://cockpit.vitbikes.de", "http://localhost:3000"];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+}
+
+// JWT-Verifizierung
+async function verifyJwt(req: Request): Promise<{ user_id: string } | null> {
+  const authHeader = req.headers.get("authorization") || "";
+  const token = authHeader.replace("Bearer ", "");
+  if (!token) return null;
+  const sb = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: `Bearer ${token}` } } }
+  );
+  const { data: { user }, error } = await sb.auth.getUser(token);
+  if (error || !user) return null;
+  return { user_id: user.id };
+}
 
 // Helper: Admin-Client fuer DB-Zugriff
 function getAdmin() {
@@ -167,15 +188,31 @@ async function publishYouTube(post: Record<string, unknown>): Promise<string> {
 
 // ── Main Handler ──
 Deno.serve(async (req) => {
+  const cors = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: cors });
+  }
+
+  // JWT-Verifizierung
+  const auth = await verifyJwt(req);
+  if (!auth) {
+    return new Response(JSON.stringify({ error: "Nicht authentifiziert" }), {
+      status: 401, headers: { ...cors, "Content-Type": "application/json" },
+    });
   }
 
   try {
     const { action, post_id } = await req.json();
     if (!action || !post_id) {
       return new Response(JSON.stringify({ error: "action und post_id erforderlich" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
+    const validActions = ["instagram", "tiktok", "youtube"];
+    if (!validActions.includes(action)) {
+      return new Response(JSON.stringify({ error: "Unbekannte Action: " + action }), {
+        status: 400, headers: { ...cors, "Content-Type": "application/json" },
       });
     }
 
@@ -193,9 +230,7 @@ Deno.serve(async (req) => {
         platformPostId = await publishYouTube(post);
         break;
       default:
-        return new Response(JSON.stringify({ error: "Unbekannte Action: " + action }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        throw new Error("Unbekannte Action");
     }
 
     // Post als ausgespielt markieren
@@ -208,7 +243,7 @@ Deno.serve(async (req) => {
     }).eq("id", post_id);
 
     return new Response(JSON.stringify({ success: true, platform_post_id: platformPostId }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (err) {
     // Fehler im Post speichern
@@ -223,7 +258,7 @@ Deno.serve(async (req) => {
     } catch (_) { /* ignore */ }
 
     return new Response(JSON.stringify({ error: String(err.message || err) }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 });
