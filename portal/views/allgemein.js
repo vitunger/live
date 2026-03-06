@@ -13,17 +13,17 @@ function _sbUser()       { return window.sbUser; }
 function _sbProfile()    { return window.sbProfile; }
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
 
-// Gruppen-Standort-IDs laden (gemeinsame_planung)
+// Gruppen-Standort-IDs laden (gemeinsame BWA via firma_name)
 async function _getGruppenStandortIds(stdId) {
     try {
-        var grpResp = await _sb().from('standort_gruppe_mitglieder')
-            .select('gruppe_id, gemeinsame_planung').eq('standort_id', stdId);
-        var grp = (!grpResp.error && grpResp.data && grpResp.data.length > 0) ? grpResp.data[0] : null;
-        if (grp && grp.gemeinsame_planung) {
-            var mitglResp = await _sb().from('standort_gruppe_mitglieder')
-                .select('standort_id').eq('gruppe_id', grp.gruppe_id);
-            if (!mitglResp.error && mitglResp.data && mitglResp.data.length > 0) {
-                return mitglResp.data.map(function(m){ return m.standort_id; });
+        var stdResp = await _sb().from('standorte')
+            .select('firma_name, gemeinsame_bwa').eq('id', stdId).single();
+        var std = (!stdResp.error && stdResp.data) ? stdResp.data : null;
+        if (std && std.gemeinsame_bwa && std.firma_name) {
+            var firmaResp = await _sb().from('standorte')
+                .select('id').eq('firma_name', std.firma_name);
+            if (!firmaResp.error && firmaResp.data && firmaResp.data.length > 1) {
+                return firmaResp.data.map(function(s){ return s.id; });
             }
         }
     } catch(e) { /* Fallback */ }
