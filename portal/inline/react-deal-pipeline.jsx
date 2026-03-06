@@ -335,7 +335,7 @@ function Col({stage,deals,onDrop,onDrag,onClick,newId,SELLERS}){
       <span style={{fontSize:12,fontWeight:700,color:"#374151"}}>{stage.label}</span>
       <span style={{fontSize:11,fontWeight:600,color:"#9ca3af"}}>{deals.length}</span>
     </div>
-    <div onDragOver={e=>{e.preventDefault();setDg(true)}} onDragLeave={()=>setDg(false)} onDrop={e=>{e.preventDefault();setDg(false);onDrop(+e.dataTransfer.getData("id"),stage.id)}} style={{flex:1,overflowY:"auto",padding:"0 6px",transition:"background .15s",display:"flex",flexDirection:"column",background:dg?"#dde8f8":"transparent",minHeight:80}}>
+    <div onDragOver={e=>{e.preventDefault();setDg(true)}} onDragLeave={()=>setDg(false)} onDrop={e=>{e.preventDefault();setDg(false);onDrop(e.dataTransfer.getData("id"),stage.id)}} style={{flex:1,overflowY:"auto",padding:"0 6px",transition:"background .15s",display:"flex",flexDirection:"column",background:dg?"#dde8f8":"transparent",minHeight:80}}>
       {deals.map(d=><Card key={d.id} deal={d} onDrag={onDrag} onClick={onClick} isNew={d.id===newId} SELLERS={SELLERS||[]}/>)}
       {!deals.length&&<div style={{textAlign:"center",color:"#d1d5db",fontSize:11,padding:"20px 0"}}>—</div>}
     </div>
@@ -1421,7 +1421,7 @@ function Badges({deals,streak,unlocked}){
 /* ── Drop Zone (Clean) ────────────────────────────── */
 function DropZone({sid,label,sub,bc,tc,cc,deals,onDrop,onDrag}){
   const[dg,setDg]=useState(false);
-  return <div onDragOver={e=>{e.preventDefault();setDg(true)}} onDragLeave={()=>setDg(false)} onDrop={e=>{e.preventDefault();setDg(false);onDrop(+e.dataTransfer.getData("id"),sid)}} style={{flex:1,borderRadius:8,border:"1px dashed "+(dg?bc:"#d1d5db"),padding:"7px 12px",background:dg?"#EBF4FF":"#fff",minHeight:36,transition:"background .15s"}}>
+  return <div onDragOver={e=>{e.preventDefault();setDg(true)}} onDragLeave={()=>setDg(false)} onDrop={e=>{e.preventDefault();setDg(false);onDrop(e.dataTransfer.getData("id"),sid)}} style={{flex:1,borderRadius:8,border:"1px dashed "+(dg?bc:"#d1d5db"),padding:"7px 12px",background:dg?"#EBF4FF":"#fff",minHeight:36,transition:"background .15s"}}>
     <span style={{fontSize:11,fontWeight:600,color:tc}}>{label}</span>
     <span style={{fontSize:10,color:"#d1d5db"}}> · {sub}</span>
     {deals.length>0&&<div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:5}}>
@@ -1804,8 +1804,13 @@ function PipelineApp(){
     }
   },[saveTodo]);
   const updateDeal=useCallback((did,field,val)=>{
-    setDeals(p=>p.map(d=>d.id===did?{...d,[field]:val}:d));
-    setSel(p=>p&&p.id===did?{...p,[field]:val}:p);
+    const upd=(d)=>{
+      const u={...d,[field]:val};
+      if(field==="vorname"||field==="nachname") u.name=((field==="vorname"?val:d.vorname)||"")+" "+((field==="nachname"?val:d.nachname)||"").trim()||"Unbekannt";
+      return u;
+    };
+    setDeals(p=>p.map(d=>d.id===did?upd(d):d));
+    setSel(p=>p&&p.id===did?upd(p):p);
     // Persist to DB (debounced for text fields would be nice, but for now direct)
     saveDeal(did, field, val);
   },[saveDeal]);
