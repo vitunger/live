@@ -1382,14 +1382,10 @@
                                 <button onclick="openVerkaufEntryModal()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">+ Eintragen</button>
                                 <div class="text-right">
                                     <p class="text-xs text-gray-500">Monatsziel</p>
-                                    <p class="font-bold text-gray-800">77.734 €</p>
+                                    <p class="font-bold text-gray-800" id="wkMonatsziel">—</p>
                                 </div>
                                 <select id="weekSellerFilter" onchange="renderWeekViewFromDb()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
                                     <option value="all">Alle Verkaeufer</option>
-                                    <option value="Sandra">Sandra</option>
-                                    <option value="Thomas">Thomas</option>
-                                    <option value="Dirk">Dirk</option>
-                                    <option value="Max">Max</option>
                                 </select>
                             </div>
                         </div>
@@ -1441,10 +1437,11 @@
                                         <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Beratungen</th>
                                         <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Verkauft</th>
                                         <th class="text-right py-2.5 px-3 font-semibold text-gray-600">VK-Quote</th>
-                                        <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Umsatz</th>
-                                        <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Ø Preis</th>
+                                        <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Umsatz IST</th>
+                                        <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Plan</th>
+                                        <th class="text-right py-2.5 px-3 font-semibold text-gray-600">Diff</th>
                                     </tr></thead>
-                                    <tbody id="jahresTabelle"><tr><td colspan="6" class="text-center py-6 text-gray-400">Lade Daten...</td></tr></tbody>
+                                    <tbody id="jahresTabelle"><tr><td colspan="7" class="text-center py-6 text-gray-400">Lade Daten...</td></tr></tbody>
                                 </table>
                             </div>
                         </div>
