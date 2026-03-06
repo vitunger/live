@@ -153,7 +153,21 @@ export async function handleNotifClick(notifId) {
         renderNotifications(notifCurrentFilter);
         try { await _sb().from('notifications').update({ read: true }).eq('id', notifId); } catch(err) { console.warn('Mark read:', err); }
     }
-    if (n.action_view) _showView(n.action_view);
+    if (n.action_view) {
+        _showView(n.action_view);
+        // action_params kann einen Tab-Sprung enthalten: { "tab": "releases" }
+        if (n.action_params) {
+            var params = typeof n.action_params === 'string' ? JSON.parse(n.action_params) : n.action_params;
+            if (params && params.tab) {
+                // Kurz warten bis View gerendert ist, dann Tab aktivieren
+                setTimeout(function() {
+                    if (typeof window.showEntwicklungTab === 'function') {
+                        window.showEntwicklungTab(params.tab);
+                    }
+                }, 300);
+            }
+        }
+    }
 }
 
 // === MARK ALL READ ===
@@ -334,3 +348,4 @@ const _exports = {
     createReleaseNotification
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
+
