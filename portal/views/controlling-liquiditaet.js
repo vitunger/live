@@ -30,7 +30,8 @@
  *     USING (standort_id = (SELECT standort_id FROM users WHERE id = auth.uid()));
  *
  * @module views/controlling-liquiditaet
- * MODUL_DATEN Version: 1
+ * MODUL_DATEN Version: 2
+ * Banking: finapi-proxy Edge Function (bank_accounts Tabelle)
  */
 
 function _sb()         { return window.sb; }
@@ -49,6 +50,8 @@ var _liqJahr       = new Date().getFullYear();
 var _liqDaten      = {};   // { "2025-3": { einnahmen_ist, ausgaben_ist, einnahmen_plan, ausgaben_plan, notiz } }
 var _liqEditMonat  = null;
 var _liqLoaded     = false;
+var _bankAccounts  = [];   // live bank account data from finapi-proxy
+var _bankSyncing   = false;
 
 // ───────────────────────────────────────────────────────────────
 // EINSTIEG: Tab wird sichtbar → initialisieren
@@ -60,6 +63,7 @@ export async function initLiquiditaet() {
     _liqJahr = new Date().getFullYear();
     container.innerHTML = _buildShell();
     await _loadDaten();
+    await _loadBankAccounts();
     _renderChart();
     _renderTabelle();
     _bindJahrButtons();
@@ -125,6 +129,31 @@ function _buildShell() {
           </thead>
           <tbody id="liqTabelleBody"></tbody>
         </table>
+      </div>
+
+
+      <!-- Banking Connect Panel -->
+      <div id="liqBankingPanel" class="vit-card p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 class="font-bold text-gray-800">🏦 Bankkonten</h3>
+            <p class="text-xs text-gray-500 mt-0.5" id="liqBankStatusText">Noch kein Konto verbunden</p>
+          </div>
+          <div class="flex gap-2">
+            <button id="liqBankSyncBtn" onclick="window.liqSyncBank()" class="hidden px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50">
+              🔄 Aktualisieren
+            </button>
+            <button id="liqBankConnectBtn" onclick="window.liqConnectBank()" class="px-4 py-1.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90 flex items-center gap-1">
+              + Konto verbinden
+            </button>
+          </div>
+        </div>
+        <div id="liqBankAccountsList" class="space-y-2"></div>
+        <div id="liqBankConnectHint" class="text-center py-6 text-sm text-gray-400">
+          <div class="text-3xl mb-2">🔗</div>
+          Verbinde dein Geschäftskonto für automatische Kontostände und Transaktionen.<br>
+          <span class="text-xs mt-1 block">Sicher über PSD2 / finAPI – deine Bank-Zugangsdaten bleiben bei deiner Bank.</span>
+        </div>
       </div>
 
       <!-- KI-Analyse Box (hidden by default) -->
@@ -557,6 +586,185 @@ function _eur(n) {
 function _getVal(id) { var e=_el(id); return e ? e.value : ''; }
 function _setVal(id, v) { var e=_el(id); if(e) e.value=v; }
 
+
+// ───────────────────────────────────────────────────────────────
+// BANKING: finAPI Integration
+// ───────────────────────────────────────────────────────────────
+
+async function _loadBankAccounts() {
+    var panel = _el('liqBankingPanel');
+    if (!panel) return;
+    var profile = _sbProfile();
+    if (!profile || !profile.standort_id) return;
+
+    // Load from bank_accounts table (synced by Edge Function)
+    try {
+        var { data, error } = await _sb().from('bank_accounts')
+            .select('*')
+            .eq('standort_id', profile.standort_id)
+            .order('account_type');
+        if (!error && data) {
+            _bankAccounts = data;
+            _renderBankAccounts();
+        }
+    } catch(e) { /* Tabelle existiert noch nicht */ }
+}
+
+function _renderBankAccounts() {
+    var list    = _el('liqBankAccountsList');
+    var hint    = _el('liqBankConnectHint');
+    var syncBtn = _el('liqBankSyncBtn');
+    var connBtn = _el('liqBankConnectBtn');
+    var status  = _el('liqBankStatusText');
+
+    if (!list) return;
+
+    if (!_bankAccounts || _bankAccounts.length === 0) {
+        list.innerHTML = '';
+        if (hint)    hint.style.display = 'block';
+        if (syncBtn) syncBtn.classList.add('hidden');
+        if (connBtn) connBtn.textContent = '+ Konto verbinden';
+        if (status)  status.textContent = 'Noch kein Konto verbunden';
+        return;
+    }
+
+    if (hint)    hint.style.display = 'none';
+    if (syncBtn) syncBtn.classList.remove('hidden');
+    if (connBtn) connBtn.textContent = '+ Weiteres Konto';
+
+    var totalBalance = _bankAccounts.reduce(function(s, a) { return s + (parseFloat(a.balance) || 0); }, 0);
+    if (status) {
+        var lastSync = _bankAccounts[0]?.last_sync;
+        var syncStr  = lastSync ? ('Zuletzt synchronisiert: ' + _timeAgo(lastSync)) : '';
+        status.textContent = _bankAccounts.length + ' Konto' + (_bankAccounts.length > 1 ? 'en' : '') + ' verbunden · Gesamt: ' + _eur(totalBalance) + ' € · ' + syncStr;
+    }
+
+    list.innerHTML = _bankAccounts.map(function(acc) {
+        var bal      = parseFloat(acc.balance) || 0;
+        var balColor = bal >= 0 ? 'text-green-600' : 'text-red-600';
+        var icon     = acc.account_type === 'Checking' ? '🏦' :
+                       acc.account_type === 'CreditCard' ? '💳' :
+                       acc.account_type === 'Savings' ? '🐷' : '🏦';
+        var ibanShort = acc.iban ? (acc.iban.slice(0,4) + ' •••• •••• ' + acc.iban.slice(-4)) : '—';
+        return '<div class="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">' +
+            '<div class="flex items-center gap-3">' +
+                '<span class="text-2xl">' + icon + '</span>' +
+                '<div>' +
+                    '<div class="font-semibold text-gray-800 text-sm">' + _escH(acc.account_name || acc.account_type || 'Konto') + '</div>' +
+                    '<div class="text-xs text-gray-400">' + _escH(acc.bank_name || '') + ' · ' + ibanShort + '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="text-right">' +
+                '<div class="font-bold ' + balColor + '">' + (bal >= 0 ? '+' : '') + _eur(bal) + ' €</div>' +
+                (acc.overdraft ? '<div class="text-xs text-gray-400">Dispo: ' + _eur(acc.overdraft) + ' €</div>' : '') +
+            '</div>' +
+        '</div>';
+    }).join('');
+}
+
+export async function liqConnectBank() {
+    var profile = _sbProfile();
+    if (!profile || !profile.standort_id) { _showToast('Nicht eingeloggt', 'error'); return; }
+
+    // Get current session token for Edge Function auth
+    var session = await _sb().auth.getSession();
+    var accessToken = session?.data?.session?.access_token;
+    if (!accessToken) { _showToast('Session abgelaufen – bitte neu einloggen', 'error'); return; }
+
+    _showToast('Verbindung wird vorbereitet…', 'info');
+
+    try {
+        var callbackUrl = window.location.origin + '/portal/banking-callback.html?standort=' + profile.standort_id;
+
+        var resp = await fetch(
+            (typeof window.SUPABASE_URL !== 'undefined' ? window.SUPABASE_URL : 'https://lwwagbkxeofahhwebkab.supabase.co')
+            + '/functions/v1/finapi-proxy',
+            {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken },
+                body:    JSON.stringify({ action: 'getWebFormUrl', standortId: profile.standort_id, callbackUrl })
+            }
+        );
+
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        var data = await resp.json();
+
+        if (data.webFormUrl) {
+            // Open finAPI WebForm in popup
+            var popup = window.open(data.webFormUrl, 'finapi_connect',
+                'width=520,height=680,scrollbars=yes,resizable=yes');
+
+            // Poll for popup close → sync accounts
+            var poll = setInterval(async function() {
+                if (!popup || popup.closed) {
+                    clearInterval(poll);
+                    _showToast('Konto wird synchronisiert…', 'info');
+                    await liqSyncBank();
+                }
+            }, 1000);
+        } else {
+            throw new Error('Keine WebForm-URL erhalten: ' + JSON.stringify(data));
+        }
+    } catch(e) {
+        console.error('liqConnectBank error:', e);
+        _showToast('Verbindung fehlgeschlagen: ' + (e.message || e), 'error');
+    }
+}
+
+export async function liqSyncBank() {
+    if (_bankSyncing) return;
+    var profile = _sbProfile();
+    if (!profile || !profile.standort_id) return;
+
+    _bankSyncing = true;
+    var syncBtn = _el('liqBankSyncBtn');
+    if (syncBtn) syncBtn.textContent = '⏳ Lädt…';
+
+    try {
+        var session = await _sb().auth.getSession();
+        var accessToken = session?.data?.session?.access_token;
+
+        var resp = await fetch(
+            (typeof window.SUPABASE_URL !== 'undefined' ? window.SUPABASE_URL : 'https://lwwagbkxeofahhwebkab.supabase.co')
+            + '/functions/v1/finapi-proxy',
+            {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken },
+                body:    JSON.stringify({ action: 'syncAccounts', standortId: profile.standort_id })
+            }
+        );
+
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        var data = await resp.json();
+
+        if (data.connected && data.accounts) {
+            // Reload from DB
+            await _loadBankAccounts();
+            _showToast(data.synced + ' Konto' + (data.synced > 1 ? 'en' : '') + ' aktualisiert ✓', 'success');
+            // Update KPIs if we now have real balance data
+            _renderKpis();
+        } else {
+            _showToast('Keine verbundenen Konten gefunden', 'warning');
+        }
+    } catch(e) {
+        console.error('liqSyncBank error:', e);
+        _showToast('Synchronisation fehlgeschlagen: ' + (e.message || e), 'error');
+    } finally {
+        _bankSyncing = false;
+        var btn = _el('liqBankSyncBtn');
+        if (btn) btn.textContent = '🔄 Aktualisieren';
+    }
+}
+
+function _timeAgo(isoString) {
+    if (!isoString) return '';
+    var diff = Math.floor((Date.now() - new Date(isoString).getTime()) / 60000);
+    if (diff < 1)   return 'gerade eben';
+    if (diff < 60)  return 'vor ' + diff + ' Min.';
+    if (diff < 1440) return 'vor ' + Math.floor(diff/60) + ' Std.';
+    return 'vor ' + Math.floor(diff/1440) + ' Tag(en)';
+}
+
 // ───────────────────────────────────────────────────────────────
 // WINDOW EXPORTS (für onclick-Handler in HTML)
 // ───────────────────────────────────────────────────────────────
@@ -566,3 +774,5 @@ window.closeLiqEdit          = closeLiqEdit;
 window.saveLiqEdit           = saveLiqEdit;
 window.liqKiAnalyse          = liqKiAnalyse;
 window.exportLiquiditaetCsv  = exportLiquiditaetCsv;
+window.liqConnectBank        = liqConnectBank;
+window.liqSyncBank           = liqSyncBank;
