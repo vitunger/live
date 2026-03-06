@@ -521,6 +521,70 @@ function SalesForm({deal,sales,seller,onClose,onUpdateDeal,mode}){
   </div>
 }
 
+
+/* ── Lead Attachments ─────────────────────────────── */
+function LeadAttachments({deal,sales,onUpdateDeal}){
+  const [uploading,setUploading]=useState(false);
+  const fileRef=React.useRef();
+  const atts=sales.attachments||[];
+
+  const fmtSize=b=>b>1048576?(b/1048576).toFixed(1)+" MB":b>1024?(b/1024).toFixed(0)+" KB":b+" B";
+  const fileIcon=t=>t&&t.startsWith("image/")?"🖼️":t==="application/pdf"?"📄":t&&t.includes("sheet")?"📊":t&&t.includes("word")?"📝":"📎";
+
+  const upload=async(file)=>{
+    if(!file) return;
+    setUploading(true);
+    try {
+      const ext=file.name.split(".").pop().toLowerCase();
+      const fileName="att_"+deal.id+"_"+Date.now()+"."+ext;
+      const{error:upErr}=await _sb().storage.from("lead-attachments").upload(fileName,file,{contentType:file.type});
+      if(upErr) throw upErr;
+      const{data:sd}=await _sb().storage.from("lead-attachments").createSignedUrl(fileName,365*24*3600);
+      const url=sd?.signedUrl||"";
+      onUpdateDeal(deal.id,"sales",{...sales,attachments:[...atts,{fileName,name:file.name,url,size:file.size,type:file.type,uploadedAt:new Date().toISOString()}]});
+      window.showToast&&window.showToast("Datei hochgeladen","success");
+    } catch(e){ window.showToast&&window.showToast("Upload-Fehler: "+e.message,"error"); }
+    setUploading(false);
+  };
+
+  const del=async(att)=>{
+    if(!confirm('"'+att.name+'" löschen?')) return;
+    try {
+      await _sb().storage.from("lead-attachments").remove([att.fileName]);
+      onUpdateDeal(deal.id,"sales",{...sales,attachments:atts.filter(a=>a.fileName!==att.fileName)});
+      window.showToast&&window.showToast("Gelöscht","success");
+    } catch(e){ window.showToast&&window.showToast("Fehler: "+e.message,"error"); }
+  };
+
+  return <div style={{marginBottom:14}}>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+      <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em"}}>
+        Anhänge {atts.length>0&&<span style={{background:"#e5e7eb",borderRadius:10,padding:"1px 5px",marginLeft:4,fontWeight:700}}>{atts.length}</span>}
+      </div>
+      <button onClick={()=>fileRef.current&&fileRef.current.click()} disabled={uploading}
+        style={{padding:"3px 10px",borderRadius:6,border:"1px solid #d1d5db",background:"#f9fafb",color:"#374151",fontSize:10,fontWeight:600,cursor:"pointer",opacity:uploading?.6:1}}>
+        {uploading?"⏳ Lädt...":"📎 Anhängen"}
+      </button>
+      <input ref={fileRef} type="file" style={{display:"none"}} accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+        onChange={e=>{upload(e.target.files[0]);e.target.value="";}}/>
+    </div>
+    {atts.length===0
+      ?<div style={{fontSize:11,color:"#d1d5db",textAlign:"center",padding:"10px 0",border:"1px dashed #e5e7eb",borderRadius:8}}>Noch keine Anhänge</div>
+      :atts.map((att,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 8px",borderRadius:7,border:"1px solid #e5e7eb",marginBottom:4,background:"#fafafa"}}>
+        <span style={{fontSize:16,flexShrink:0}}>{fileIcon(att.type)}</span>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:11,fontWeight:600,color:"#374151",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}} title={att.name}>{att.name}</div>
+          <div style={{fontSize:9,color:"#9ca3af"}}>{fmtSize(att.size||0)} · {att.uploadedAt?new Date(att.uploadedAt).toLocaleDateString("de-DE"):""}</div>
+        </div>
+        <a href={att.url} target="_blank" rel="noopener"
+          style={{padding:"3px 8px",borderRadius:5,background:"#EBF4FF",color:"#3182CE",fontSize:10,fontWeight:600,textDecoration:"none",flexShrink:0}}>↗</a>
+        <button onClick={()=>del(att)}
+          style={{padding:"3px 8px",borderRadius:5,border:"1px solid #fca5a5",background:"#fff5f5",color:"#dc2626",fontSize:10,fontWeight:600,cursor:"pointer",flexShrink:0}}>🗑</button>
+      </div>)
+    }
+  </div>;
+}
+
 /* ── Detail Modal (Clean) ─────────────────────────── */
 const SOURCES=["Empfehlung","Google","Instagram","Facebook","Messe","Walk-In","Website","Flyer","TikTok","eTermin","Andere"];
 const LEASING_PROVIDERS=["JobRad","BLS (Bikeleasing-Service)","BusinessBike","Linexo","Leasing/Divers"];
@@ -1016,7 +1080,18 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
 
           {/* Gespeicherter Scan */}
           {sales.scanUrl&&<div style={{marginBottom:14}}>
-            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:6}}>Beratungs-Scan</div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+              <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em"}}>Beratungs-Scan</div>
+              <button onClick={async()=>{
+                if(!confirm("Scan löschen?")) return;
+                try {
+                  if(sales.scanFileName) await _sb().storage.from("lead-scans").remove([sales.scanFileName]);
+                  const ns={...sales}; delete ns.scanUrl; delete ns.scanDate; delete ns.scanFileName; delete ns.scanError;
+                  onUpdateDeal(deal.id,"sales",ns);
+                  window.showToast&&window.showToast("Scan gelöscht","success");
+                } catch(e){ window.showToast&&window.showToast("Fehler: "+e.message,"error"); }
+              }} style={{padding:"3px 8px",borderRadius:6,border:"1px solid #fca5a5",background:"#fff5f5",color:"#dc2626",fontSize:10,fontWeight:600,cursor:"pointer"}}>🗑 Löschen</button>
+            </div>
             <div style={{borderRadius:10,overflow:"hidden",border:"1px solid #e2e8f0",position:"relative"}}>
               <img src={sales.scanUrl} alt="Beratungsprotokoll" style={{width:"100%",maxHeight:200,objectFit:"contain",background:"#f9fafb",cursor:"pointer"}} onClick={()=>window.open(sales.scanUrl,"_blank")}/>
               <div style={{position:"absolute",bottom:6,right:6,display:"flex",gap:4}}>
@@ -1025,6 +1100,9 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
             </div>
             <div style={{fontSize:10,color:"#a0aec0",marginTop:4}}>{sales.scanDate?new Date(sales.scanDate).toLocaleDateString("de-DE")+" aufgenommen":""} {sales.scanError?" (KI konnte Handschrift nicht lesen)":""}</div>
           </div>}
+
+          {/* Anhänge */}
+          <LeadAttachments deal={deal} sales={sales} onUpdateDeal={onUpdateDeal}/>
 
           {/* WaWi-Belege */}
           {(deal.beleg_angebot_id||deal.beleg_auftrag_id||deal.beleg_rechnung_id||deal.wawiKundenNr)&&<div style={{marginBottom:14}}>
