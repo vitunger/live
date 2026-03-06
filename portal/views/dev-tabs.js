@@ -242,16 +242,35 @@ export async function renderEntwSteuerung() {
     }
 
     // Kanban board for HQ (6 Spalten lt. Plan)
+    // Map: column key → target status when dropping
     var columns = [
-        {key:'neu', label:'📥 Eingang', statuses:['neu','ki_pruefung','ki_rueckfragen'], color:'blue'},
-        {key:'board', label:'🎯 Ideenboard', statuses:['im_ideenboard','hq_rueckfragen'], color:'purple'},
-        {key:'plan', label:'📅 Planung', statuses:['konzept_wird_erstellt','konzept_erstellt','freigegeben','in_planung'], color:'teal'},
-        {key:'dev', label:'🔨 Entwicklung', statuses:['in_entwicklung','beta_test','im_review','release_geplant'], color:'yellow'},
-        {key:'done', label:'✅ Umgesetzt', statuses:['ausgerollt'], color:'green'},
-        {key:'parked', label:'⏸ Geparkt', statuses:['geparkt'], color:'gray'},
-        {key:'rejected', label:'❌ Abgelehnt', statuses:['abgelehnt'], color:'red'},
-        {key:'closed', label:'🔒 Geschlossen', statuses:['geschlossen'], color:'slate'}
+        {key:'neu', label:'📥 Eingang', statuses:['neu','ki_pruefung','ki_rueckfragen'], color:'blue', dropStatus:'neu'},
+        {key:'board', label:'🎯 Ideenboard', statuses:['im_ideenboard','hq_rueckfragen'], color:'purple', dropStatus:'im_ideenboard'},
+        {key:'plan', label:'📅 Planung', statuses:['konzept_wird_erstellt','konzept_erstellt','freigegeben','in_planung'], color:'teal', dropStatus:'freigegeben'},
+        {key:'dev', label:'🔨 Entwicklung', statuses:['in_entwicklung','beta_test','im_review','release_geplant'], color:'yellow', dropStatus:'in_entwicklung'},
+        {key:'done', label:'✅ Umgesetzt', statuses:['ausgerollt'], color:'green', dropStatus:'ausgerollt'},
+        {key:'parked', label:'⏸ Geparkt', statuses:['geparkt'], color:'gray', dropStatus:'geparkt'},
+        {key:'rejected', label:'❌ Abgelehnt', statuses:['abgelehnt'], color:'red', dropStatus:'abgelehnt'},
+        {key:'closed', label:'🔒 Geschlossen', statuses:['geschlossen'], color:'slate', dropStatus:'geschlossen'}
     ];
+    // Global drag handler for dev kanban
+    if(!window._devKanbanDrop) {
+        window._devKanbanDrop = function(e, targetStatus) {
+            e.preventDefault();
+            e.currentTarget.style.background = '';
+            var subId = e.dataTransfer.getData('devSubId');
+            if(!subId) return;
+            var sub = _devSubs().find(function(s){return s.id===subId;});
+            if(!sub || sub.status === targetStatus) return;
+            // Optimistic local update
+            sub.status = targetStatus;
+            if(typeof renderEntwIdeen === 'function') renderEntwIdeen();
+            // Persist
+            updateDevPlanStatus(subId, targetStatus);
+        };
+        window._devKanbanDragOver = function(e) { e.preventDefault(); e.currentTarget.style.background = '#dde8f8'; };
+        window._devKanbanDragLeave = function(e) { e.currentTarget.style.background = ''; };
+    }
     h += '<div class="flex gap-3 overflow-x-auto pb-2">';
     columns.forEach(function(col) {
         var items = _devSubs().filter(function(s) { return col.statuses.indexOf(s.status) !== -1; });
@@ -271,12 +290,12 @@ export async function renderEntwSteuerung() {
             var bV = (b.dev_votes||[]).length;
             return bV - aV;
         });
-        h += '<div class="bg-gray-50 rounded-xl p-3 flex-shrink-0" style="min-width:200px;width:calc((100% - 7*0.75rem)/8)">';
+        h += '<div class="bg-gray-50 rounded-xl p-3 flex-shrink-0" style="min-width:200px;width:calc((100% - 7*0.75rem)/8)" ondragover="window._devKanbanDragOver(event)" ondragleave="window._devKanbanDragLeave(event)" ondrop="window._devKanbanDrop(event,\''+col.dropStatus+'\')">';
         h += '<div class="flex items-center justify-between mb-3"><h3 class="text-sm font-bold text-gray-700">'+col.label+'</h3><span class="text-xs bg-'+col.color+'-100 text-'+col.color+'-700 rounded-full px-2 py-0.5 font-semibold">'+items.length+'</span></div>';
         h += '<div class="space-y-2 max-h-[600px] overflow-y-auto">';
         items.forEach(function(s) {
             var statusLabel = _devStatusLabels()[s.status] || s.status;
-            h += '<div class="bg-white rounded-lg p-3 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition" onclick="openDevDetail(\''+s.id+'\')">';
+            h += '<div draggable="true" ondragstart="event.dataTransfer.setData(\'devSubId\',\''+s.id+'\');event.dataTransfer.effectAllowed=\'move\'" class="bg-white rounded-lg p-3 shadow-sm border border-gray-100 cursor-grab hover:shadow-md transition" onclick="openDevDetail(\''+s.id+'\')">';
             var _typ = s.ki_typ || (s.kategorie === 'feature' ? 'feature' : s.kategorie === 'bug' ? 'bug' : 'idee');
             var _typColor = _typ==='bug'?'bg-red-100 text-red-700':_typ==='feature'?'bg-purple-100 text-purple-700':'bg-blue-100 text-blue-700';
             var _typLabel = _typ==='bug'?'\uD83D\uDC1B Bug':_typ==='feature'?'\\u2728 Feature':'\\uD83D\\uDCA1 Idee';
