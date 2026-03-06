@@ -84,6 +84,9 @@ export async function openDevDetail(subId) {
             };
             var acts = wfActions[s.status] || [];
             h += '<div class="flex gap-1 flex-shrink-0">';
+            if(isOwner && s.status !== 'release_geplant') {
+                h += '<button onclick="updateDevStatus(\''+s.id+'\',\'ausgerollt\')" class="px-2 py-1 rounded text-[10px] font-semibold text-white hover:opacity-90 whitespace-nowrap" style="background:#16a34a">\u2705 Umgesetzt</button>';
+            }
             acts.forEach(function(a) {
                 if(a.fn) {
                     h += '<button onclick="'+a.fn+'(\''+s.id+'\')" class="px-2 py-1 bg-'+a.color+'-500 text-white rounded text-[10px] font-semibold hover:bg-'+a.color+'-600 whitespace-nowrap">'+a.icon+' '+a.label+'</button>';

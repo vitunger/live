@@ -410,21 +410,44 @@ function renderQueue(){
 export function removeFromAktenQueue(idx){_akten.uploadQueue.splice(idx,1);renderQueue();}
 
 export async function startAktenUpload(){
-    if(_akten.uploadQueue.length===0)return;
+    if(_akten.uploadQueue.length===0){_showToast('Keine Dateien ausgewählt','error');return;}
     var btn=document.getElementById('aktenUploadBtn'),prog=document.getElementById('aktenUploadProgress'),stat=document.getElementById('aktenUploadStatus'),bar=document.getElementById('aktenUploadBar');
     btn.disabled=true;btn.classList.add('opacity-50');prog.classList.remove('hidden');
     var total=_akten.uploadQueue.length,p=_sbProfile(),sid=p?p.standort_id:null,u=_sbUser(),s=_sb();
     var _firmaN=window.sbStandort&&window.sbStandort.firma_name||null;
-    for(var i=0;i<total;i++){var file=_akten.uploadQueue[i];bar.style.width=Math.round((i/total)*100)+'%';stat.textContent=file.name+' ('+(i+1)+'/'+total+')';
-        try{if(!sid){aktenToast('Kein Standort zugewiesen – Upload nicht moeglich');break;}var path=sid+'/inbox/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');var upR=await s.storage.from('dokumente').upload(path,file,{upsert:false});var fileUrl=path;if(!upR.error){var urlR=s.storage.from('dokumente').getPublicUrl(path);fileUrl=(urlR.data&&urlR.data.publicUrl)?urlR.data.publicUrl:path;}var titel=file.name.replace(/\.[^.]+$/,'').replace(/[_-]/g,' ');
-        var insR=await s.from('dokumente').insert({standort_id:sid,firma_name:_firmaN,titel:titel,datei_url:fileUrl,datei_name:file.name,datei_groesse:file.size,datei_typ:file.type,status:'eingegangen',quelle:'upload',hochgeladen_von:u?u.id:null}).select().single();
-        if(!insR.error&&insR.data){await s.from('dokument_audit').insert({dokument_id:insR.data.id,aktion:'hochgeladen',details:{datei_name:file.name,datei_groesse:file.size},user_id:u?u.id:null});_akten.dokumente.unshift(insR.data);
-        window.logAudit && window.logAudit('dokument_hochgeladen', 'aktenschrank', { datei: file.name, groesse: file.size, typ: file.type, titel: titel });
-        // KI-Klassifikation asynchron starten
-        triggerKiClassification(insR.data.id);
-        }}catch(err){console.error('Upload err:',file.name,err);aktenToast('\u274C Fehler: '+file.name);}}
-    bar.style.width='100%';stat.textContent='\u2705 Hochgeladen! \uD83E\uDD16 KI analysiert...';
-    setTimeout(function(){closeAktenUpload();_akten.uploadQueue=[];renderFolders();updateStats();updateInboxBadge();aktenToast('\u2705 '+total+' Dokument'+(total>1?'e':'')+' hochgeladen');},800);
+    var successCount=0;
+    if(!s){_showToast('Verbindung nicht bereit – bitte Seite neu laden','error');btn.disabled=false;btn.classList.remove('opacity-50');prog.classList.add('hidden');return;}
+    if(!sid){_showToast('Kein Standort zugewiesen – Upload nicht möglich','error');btn.disabled=false;btn.classList.remove('opacity-50');prog.classList.add('hidden');return;}
+    for(var i=0;i<total;i++){
+        var file=_akten.uploadQueue[i];
+        bar.style.width=Math.round((i/total)*100)+'%';
+        stat.textContent=file.name+' ('+(i+1)+'/'+total+')';
+        try{
+            var path=sid+'/inbox/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+            var upR=await s.storage.from('dokumente').upload(path,file,{upsert:false});
+            if(upR.error){console.error('[aktenschrank] Storage upload error:',upR.error);_showToast('Upload fehlgeschlagen: '+(upR.error.message||upR.error),'error');continue;}
+            var fileUrl=path;
+            var urlR=s.storage.from('dokumente').getPublicUrl(path);
+            fileUrl=(urlR.data&&urlR.data.publicUrl)?urlR.data.publicUrl:path;
+            var titel=file.name.replace(/\.[^.]+$/,'').replace(/[_-]/g,' ');
+            var insR=await s.from('dokumente').insert({standort_id:sid,firma_name:_firmaN,titel:titel,datei_url:fileUrl,datei_name:file.name,datei_groesse:file.size,datei_typ:file.type,status:'eingegangen',quelle:'upload',hochgeladen_von:u?u.id:null}).select().single();
+            if(insR.error){console.error('[aktenschrank] DB insert error:',insR.error);_showToast('Dokument-Eintrag fehlgeschlagen: '+(insR.error.message||insR.error),'error');continue;}
+            await s.from('dokument_audit').insert({dokument_id:insR.data.id,aktion:'hochgeladen',details:{datei_name:file.name,datei_groesse:file.size},user_id:u?u.id:null});
+            _akten.dokumente.unshift(insR.data);
+            window.logAudit && window.logAudit('dokument_hochgeladen', 'aktenschrank', { datei: file.name, groesse: file.size, typ: file.type, titel: titel });
+            triggerKiClassification(insR.data.id);
+            successCount++;
+        }catch(err){console.error('[aktenschrank] Upload error:',file.name,err);_showToast('Fehler bei '+file.name+': '+(err.message||err),'error');}
+    }
+    bar.style.width='100%';
+    if(successCount>0){
+        stat.textContent='\u2705 Hochgeladen! \uD83E\uDD16 KI analysiert...';
+        setTimeout(function(){closeAktenUpload();_akten.uploadQueue=[];renderFolders();updateStats();updateInboxBadge();_showToast('\u2705 '+successCount+' Dokument'+(successCount>1?'e':'')+' hochgeladen','success');},800);
+    }else{
+        stat.textContent='\u274C Upload fehlgeschlagen';
+        btn.disabled=false;btn.classList.remove('opacity-50');
+        setTimeout(function(){prog.classList.add('hidden');},2000);
+    }
 }
 
 // KI CLASSIFICATION

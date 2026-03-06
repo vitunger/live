@@ -440,8 +440,8 @@ export async function loadKalTermine() {
                 if(isNaN(d.getTime())) return null;
                 var endTime = t.end_zeit ? new Date(t.end_zeit) : null;
                 return {
-                    id: t.id, title: t.titel, 
-                    date: String(d.getFullYear())+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'),
+                    id: t.id, title: t.titel,
+                    date: kalFmtDate(d),
                     time: t.ganztaegig ? '00:00' : String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'),
                     endTime: endTime ? String(endTime.getHours()).padStart(2,'0')+':'+String(endTime.getMinutes()).padStart(2,'0') : null,
                     type: t.typ || 'sonstig',
