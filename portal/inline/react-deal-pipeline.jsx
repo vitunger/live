@@ -762,13 +762,15 @@ function ScanUploadModal({deal,sales,onClose,onUpdateDeal}){
 function WawiBelege({deal}){
   const[belege,setBelege]=useState([]);
   const[loaded,setLoaded]=useState(false);
+  const[expanded,setExpanded]=useState(null);
+  const[positionen,setPositionen]=useState({});
   useEffect(()=>{
     if(loaded)return;
     const ids=[deal.beleg_angebot_id,deal.beleg_auftrag_id,deal.beleg_rechnung_id].filter(Boolean);
     if(ids.length===0&&!deal.wawiKundenNr){setLoaded(true);return;}
     (async()=>{
       try{
-        let q=window.sb.from("wawi_belege").select("id,beleg_typ,beleg_nr,datum,endbetrag,kunde_name,verkaeufer");
+        let q=window.sb.from("wawi_belege").select("id,beleg_typ,beleg_nr,datum,endbetrag,kunde_name,verkaeufer,quell_datei_url,netto,mwst_betrag,belegrabatt");
         if(ids.length>0) q=q.in("id",ids);
         else if(deal.wawiKundenNr) q=q.eq("kunden_nr",deal.wawiKundenNr).eq("standort_id",deal.loc).order("datum",{ascending:false}).limit(5);
         const{data}=await q;
@@ -777,20 +779,70 @@ function WawiBelege({deal}){
       setLoaded(true);
     })();
   },[deal,loaded]);
+  const loadPositionen=async(belegId)=>{
+    if(positionen[belegId])return;
+    try{
+      const{data}=await window.sb.from("wawi_beleg_positionen").select("*").eq("beleg_id",belegId).order("sortierung");
+      setPositionen(p=>({...p,[belegId]:data||[]}));
+    }catch(e){console.error("Positionen load:",e);}
+  };
+  const toggleExpand=(id)=>{
+    if(expanded===id){setExpanded(null);return;}
+    setExpanded(id);
+    loadPositionen(id);
+  };
   const typIcons={angebot:"\ud83d\udccb",auftrag:"\ud83d\udce6",rechnung:"\ud83e\uddfe",lieferschein:"\ud83d\ude9a",gutschrift:"\ud83d\udcb0"};
   const typLabels={angebot:"Angebot",auftrag:"Auftrag",rechnung:"Rechnung",lieferschein:"Lieferschein",gutschrift:"Gutschrift"};
+  const fmtEur=(v)=>v?parseFloat(v).toLocaleString("de-DE",{minimumFractionDigits:2})+"  \u20ac":"";
   if(!loaded)return <div style={{fontSize:11,color:"#aaa"}}>Lade Belege...</div>;
   if(belege.length===0)return null;
   return <div style={{display:"flex",flexDirection:"column",gap:6}}>
-    {belege.map(b=><div key={b.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 10px",background:"#f8fafc",borderRadius:8,border:"1px solid #edf2f7"}}>
-      <div style={{display:"flex",alignItems:"center",gap:6}}>
-        <span style={{fontSize:14}}>{typIcons[b.beleg_typ]||"\ud83d\udcc4"}</span>
-        <div>
-          <div style={{fontSize:11,fontWeight:700,color:"#2d3748"}}>{typLabels[b.beleg_typ]||b.beleg_typ} {b.beleg_nr}</div>
-          <div style={{fontSize:10,color:"#a0aec0"}}>{b.datum?new Date(b.datum).toLocaleDateString("de-DE"):""} {b.verkaeufer?"| "+b.verkaeufer:""}</div>
+    {belege.map(b=><div key={b.id}>
+      <div onClick={()=>toggleExpand(b.id)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:expanded===b.id?"#edf2f7":"#f8fafc",borderRadius:expanded===b.id?"8px 8px 0 0":8,border:"1px solid #edf2f7",cursor:"pointer",transition:"all .15s"}}>
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          <span style={{fontSize:14}}>{typIcons[b.beleg_typ]||"\ud83d\udcc4"}</span>
+          <div>
+            <div style={{fontSize:11,fontWeight:700,color:"#2d3748"}}>{typLabels[b.beleg_typ]||b.beleg_typ} {b.beleg_nr}</div>
+            <div style={{fontSize:10,color:"#a0aec0"}}>{b.datum?new Date(b.datum).toLocaleDateString("de-DE"):""} {b.verkaeufer?"| "+b.verkaeufer:""}</div>
+          </div>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          {b.endbetrag&&<div style={{fontSize:12,fontWeight:700,color:"#2d3748"}}>{fmtEur(b.endbetrag)}</div>}
+          <span style={{fontSize:10,color:"#a0aec0",transition:"transform .2s",transform:expanded===b.id?"rotate(180deg)":"none"}}>{"\u25bc"}</span>
         </div>
       </div>
-      {b.endbetrag&&<div style={{fontSize:12,fontWeight:700,color:"#2d3748"}}>{parseFloat(b.endbetrag).toLocaleString("de-DE",{minimumFractionDigits:2})}&nbsp;&euro;</div>}
+      {expanded===b.id&&<div style={{border:"1px solid #edf2f7",borderTop:"none",borderRadius:"0 0 8px 8px",padding:"10px",background:"#fff"}}>
+        {/* Positionen */}
+        {positionen[b.id]?positionen[b.id].length>0?<div>
+          <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",marginBottom:4}}>Positionen</div>
+          {positionen[b.id].filter(p=>!p.ist_hinweis).map((p,i)=><div key={p.id||i} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",borderBottom:"1px solid #f7fafc",fontSize:11}}>
+            <div style={{flex:1,color:"#4a5568"}}>
+              {p.ist_hauptprodukt&&<span style={{color:"#EF7D00",fontWeight:700,marginRight:4}}>{"\u2605"}</span>}
+              {p.bezeichnung}{p.art_nr?" ("+p.art_nr+")":""}
+              {p.seriennummer&&<span style={{fontSize:9,color:"#a0aec0",marginLeft:4}}>SN: {p.seriennummer}</span>}
+            </div>
+            <div style={{textAlign:"right",whiteSpace:"nowrap",fontWeight:600,color:"#2d3748"}}>
+              {p.menge>1&&<span style={{color:"#a0aec0",fontWeight:400,marginRight:4}}>{p.menge}x</span>}
+              {fmtEur(p.gesamtpreis)}
+              {p.rabatt>0&&<span style={{fontSize:9,color:"#e53e3e",marginLeft:4}}>-{p.rabatt}%</span>}
+            </div>
+          </div>)}
+          {/* Summen */}
+          <div style={{borderTop:"1.5px solid #edf2f7",marginTop:6,paddingTop:6,display:"flex",flexDirection:"column",gap:2}}>
+            {b.netto&&<div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#718096"}}><span>Netto</span><span>{fmtEur(b.netto)}</span></div>}
+            {b.mwst_betrag&&<div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#718096"}}><span>MwSt</span><span>{fmtEur(b.mwst_betrag)}</span></div>}
+            {b.belegrabatt>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#e53e3e"}}><span>Rabatt</span><span>-{fmtEur(b.belegrabatt)}</span></div>}
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:12,fontWeight:700,color:"#1a202c"}}><span>Gesamt</span><span>{fmtEur(b.endbetrag)}</span></div>
+          </div>
+        </div>:<div style={{fontSize:11,color:"#ccc",textAlign:"center",padding:8}}>Keine Positionen vorhanden</div>
+        :<div style={{fontSize:11,color:"#aaa",textAlign:"center",padding:8}}>Lade Positionen...</div>}
+        {/* PDF Download */}
+        {b.quell_datei_url&&<div style={{marginTop:8,borderTop:"1px solid #f0f0f0",paddingTop:8}}>
+          <a href={b.quell_datei_url} target="_blank" rel="noopener" style={{display:"inline-flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:8,background:"#EFF6FF",border:"1px solid #BFDBFE",color:"#1D4ED8",fontSize:11,fontWeight:600,textDecoration:"none",cursor:"pointer"}}>
+            {"\ud83d\udcc3"} PDF anzeigen / herunterladen
+          </a>
+        </div>}
+      </div>}
     </div>)}
   </div>;
 }
@@ -984,6 +1036,18 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
           </div>
 
           {/* Must Haves moved into Beratung auf einen Blick */}
+
+          {/* Gespeicherter Scan */}
+          {sales.scanUrl&&<div style={{marginBottom:14}}>
+            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:6}}>Beratungs-Scan</div>
+            <div style={{borderRadius:10,overflow:"hidden",border:"1px solid #e2e8f0",position:"relative"}}>
+              <img src={sales.scanUrl} alt="Beratungsprotokoll" style={{width:"100%",maxHeight:200,objectFit:"contain",background:"#f9fafb",cursor:"pointer"}} onClick={()=>window.open(sales.scanUrl,"_blank")}/>
+              <div style={{position:"absolute",bottom:6,right:6,display:"flex",gap:4}}>
+                <a href={sales.scanUrl} target="_blank" rel="noopener" style={{padding:"4px 8px",borderRadius:6,background:"rgba(0,0,0,.7)",color:"#fff",fontSize:10,fontWeight:600,textDecoration:"none"}}>Vollbild</a>
+              </div>
+            </div>
+            <div style={{fontSize:10,color:"#a0aec0",marginTop:4}}>{sales.scanDate?new Date(sales.scanDate).toLocaleDateString("de-DE")+" aufgenommen":""} {sales.scanError?" (KI konnte Handschrift nicht lesen)":""}</div>
+          </div>}
 
           {/* WaWi-Belege */}
           {(deal.beleg_angebot_id||deal.beleg_auftrag_id||deal.beleg_rechnung_id||deal.wawiKundenNr)&&<div style={{marginBottom:14}}>
