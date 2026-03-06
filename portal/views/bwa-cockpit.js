@@ -142,7 +142,7 @@ async function updateBwaDeadlineWidget() {
     var badgeEl = document.getElementById('bwaRatingBadge');
     var eskBanner = document.getElementById('bwaEskalationBanner');
 
-    if(!titleEl || !subEl || !ctaEl || !badgeEl || !daysEl || !ringEl || !eskBanner) return;
+    if(!titleEl) return;  // Only title is required, other elements are optional
 
     if(submitted && rating !== 'missing') {
         // Already submitted
@@ -150,20 +150,20 @@ async function updateBwaDeadlineWidget() {
         subEl.textContent = 'Eingereicht am ' + submitted.split('-').reverse().join('.');
         badgeEl.innerHTML = ratingBadge(rating, true);
         badgeEl.style.display = '';
-        ctaEl.style.display = 'none';
-        daysEl.textContent = '✓';
-        daysEl.style.color = '#16a34a';
-        daysEl.style.fontSize = '20px';
-        ringEl.style.stroke = '#16a34a';
-        ringEl.setAttribute('stroke-dashoffset', '0');
-        eskBanner.style.display = 'none';
+        if(ctaEl) ctaEl.style.display = 'none';
+        if(daysEl) daysEl.textContent = '✓';
+        if(daysEl) daysEl.style.color = '#16a34a';
+        if(daysEl) daysEl.style.fontSize = '20px';
+        if(ringEl) ringEl.style.stroke = '#16a34a';
+        if(ringEl) ringEl.setAttribute('stroke-dashoffset', '0');
+        if(eskBanner) eskBanner.style.display = 'none';
         // Show KPI report
         showKpiReport(bwaMo, rating);
         // Unlock benchmark
         setBenchmarkLock(false);
     } else {
         // Not submitted
-        ctaEl.style.display = '';
+        if(ctaEl) ctaEl.style.display = '';
         badgeEl.style.display = 'none';
         setBenchmarkLock(true);
         var kpiReport = document.getElementById('bwaKpiReport');
@@ -172,11 +172,11 @@ async function updateBwaDeadlineWidget() {
         if(days > 0) {
             titleEl.textContent = 'Noch ' + days + ' Tage bis zur BWA-Deadline';
             subEl.textContent = 'BWA für ' + moName + ' · Frist: 15. ' + MO_NAMES[bwaMo.m+1 > 11 ? 0 : bwaMo.m+1];
-            daysEl.textContent = days;
-            daysEl.style.color = days <= 3 ? '#dc2626' : days <= 7 ? '#ca8a04' : '#EF7D00';
-            ringEl.style.stroke = days <= 3 ? '#dc2626' : days <= 7 ? '#ca8a04' : '#EF7D00';
+            if(daysEl) daysEl.textContent = days;
+            if(daysEl) daysEl.style.color = days <= 3 ? '#dc2626' : days <= 7 ? '#ca8a04' : '#EF7D00';
+            if(ringEl) ringEl.style.stroke = days <= 3 ? '#dc2626' : days <= 7 ? '#ca8a04' : '#EF7D00';
             var pct = Math.max(0, 1 - days/15);
-            ringEl.setAttribute('stroke-dashoffset', (175.9 * (1-pct)).toFixed(1));
+            if(ringEl) ringEl.setAttribute('stroke-dashoffset', (175.9 * (1-pct)).toFixed(1));
 
             // CTA subtext
             if(days > 7) {
@@ -188,18 +188,18 @@ async function updateBwaDeadlineWidget() {
             var overdueDays = Math.abs(days);
             titleEl.textContent = 'BWA ist seit ' + overdueDays + ' Tag' + (overdueDays>1?'en':'') + ' überfällig';
             subEl.textContent = 'BWA für ' + moName + ' · Deadline war der 15.';
-            daysEl.textContent = '!';
-            daysEl.style.color = '#dc2626';
-            daysEl.style.fontSize = '24px';
-            ringEl.style.stroke = '#dc2626';
-            ringEl.setAttribute('stroke-dashoffset', '0');
+            if(daysEl) daysEl.textContent = '!';
+            if(daysEl) daysEl.style.color = '#dc2626';
+            if(daysEl) daysEl.style.fontSize = '24px';
+            if(ringEl) ringEl.style.stroke = '#dc2626';
+            if(ringEl) ringEl.setAttribute('stroke-dashoffset', '0');
             ctaEl.textContent = '🚨 BWA sofort einreichen';
-            ctaEl.style.background = '#dc2626';
+            if(ctaEl) ctaEl.style.background = '#dc2626';
         }
 
         // Eskalation Banner
         if(stufe >= 2) {
-            eskBanner.style.display = '';
+            if(eskBanner) eskBanner.style.display = '';
             var eskText = document.getElementById('bwaEskText');
             var eskSub = document.getElementById('bwaEskSub');
             if(!eskText || !eskSub) { /* elements missing for this role */ }
@@ -209,11 +209,11 @@ async function updateBwaDeadlineWidget() {
             } else {
                 eskText.textContent = 'Eskalationsstufe 3 – BWA überfällig!';
                 eskSub.textContent = 'Ohne aktuelle Zahlen können wir dich nicht gezielt bei Einkauf, Marketing und Controlling unterstützen.';
-                eskBanner.style.background = '#fef2f2';
-                eskBanner.style.borderColor = '#fca5a5';
+                if(eskBanner) eskBanner.style.background = '#fef2f2';
+                if(eskBanner) eskBanner.style.borderColor = '#fca5a5';
             }
         } else {
-            eskBanner.style.display = 'none';
+            if(eskBanner) eskBanner.style.display = 'none';
         }
     }
 
