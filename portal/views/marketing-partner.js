@@ -32,6 +32,12 @@ async function renderPartnerMarketing() {
     var container = document.getElementById('marketingContent');
     if (!container) return;
 
+    // === DEMO-MODUS: Modul hat status='demo' in DB → Fake-Daten anzeigen ===
+    if (typeof window.isModuleDemo === 'function' && window.isModuleDemo('marketing')) {
+        _renderMarketingDemo(container);
+        return;
+    }
+
     // Monatsdaten ermitteln (auto-select letzter Monat mit Daten)
     await window.mktInitMonthSelect();
 
@@ -1012,8 +1018,95 @@ async function loadPartnerAdsAllDates(range) {
 
 window.mktSetPartnerTimeRange = mktSetPartnerTimeRange;
 
+
+// ── DEMO-RENDERER für Marketing (status='demo' in modul_status) ──
+function _renderMarketingDemo(container) {
+    if (!container) return;
+    var demoMonth = 'Februar 2026';
+    var html = '';
+    html += '<div class="mb-4 flex items-center gap-2">';
+    html += '<span class="text-xs bg-orange-100 text-orange-700 rounded px-2 py-1 font-semibold">🎭 Demo-Daten – So sieht Marketing aus wenn du live gehst</span>';
+    html += '</div>';
+
+    // KPI-Karten
+    html += '<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">';
+    var kpis = [
+        {label:'Impressionen',val:'42.800',sub:'+12% vs. Vormonat',color:'blue'},
+        {label:'Klicks',val:'1.247',sub:'CTR 2,9%',color:'green'},
+        {label:'Werbeausgaben',val:'890 €',sub:'Budget ' + demoMonth,color:'orange'},
+        {label:'Leads',val:'23',sub:'CPL 38,70 €',color:'purple'},
+    ];
+    kpis.forEach(function(k) {
+        html += '<div class="vc p-4">';
+        html += '<p class="text-[11px] text-gray-400 uppercase font-semibold mb-1">' + k.label + '</p>';
+        html += '<p class="text-2xl font-bold text-' + k.color + '-600">' + k.val + '</p>';
+        html += '<p class="text-[11px] text-gray-400 mt-1">' + k.sub + '</p>';
+        html += '</div>';
+    });
+    html += '</div>';
+
+    // Kanal-Vergleich
+    html += '<div class="grid md:grid-cols-2 gap-4 mb-6">';
+
+    // Google Ads
+    html += '<div class="vc p-4">';
+    html += '<div class="flex items-center gap-2 mb-3"><span class="text-sm font-bold">🔍 Google Ads</span><span class="text-xs bg-blue-100 text-blue-700 rounded px-1.5 py-0.5">Demo</span></div>';
+    html += '<table class="w-full text-xs"><thead><tr class="text-gray-400"><th class="text-left pb-2">Kampagne</th><th class="text-right pb-2">Klicks</th><th class="text-right pb-2">Ausgaben</th><th class="text-right pb-2">Leads</th></tr></thead><tbody>';
+    var gCampaigns = [
+        ['E-Bike Beratung', '634', '412 €', '14'],
+        ['Marken Brand', '298', '178 €', '6'],
+        ['Werkstatt', '315', '143 €', '3'],
+    ];
+    gCampaigns.forEach(function(r) {
+        html += '<tr class="border-t border-gray-100"><td class="py-1.5">' + r[0] + '</td><td class="text-right">' + r[1] + '</td><td class="text-right">' + r[2] + '</td><td class="text-right text-green-600 font-semibold">' + r[3] + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+
+    // Meta Ads
+    html += '<div class="vc p-4">';
+    html += '<div class="flex items-center gap-2 mb-3"><span class="text-sm font-bold">📘 Meta Ads</span><span class="text-xs bg-blue-100 text-blue-700 rounded px-1.5 py-0.5">Demo</span></div>';
+    html += '<table class="w-full text-xs"><thead><tr class="text-gray-400"><th class="text-left pb-2">Anzeige</th><th class="text-right pb-2">Reichweite</th><th class="text-right pb-2">Ausgaben</th><th class="text-right pb-2">Leads</th></tr></thead><tbody>';
+    var mCampaigns = [
+        ['Spring E-Bike Offer', '8.240', '156 €', '7'],
+        ['Werkstatt-Check', '6.110', '89 €', '3'],
+        ['Testfahrt buchen', '12.700', '113 €', '2'],
+    ];
+    mCampaigns.forEach(function(r) {
+        html += '<tr class="border-t border-gray-100"><td class="py-1.5">' + r[0] + '</td><td class="text-right">' + r[1] + '</td><td class="text-right">' + r[2] + '</td><td class="text-right text-green-600 font-semibold">' + r[3] + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    html += '</div>';
+
+    // Monatstrend-Hinweis
+    html += '<div class="vc p-4 mb-4">';
+    html += '<p class="text-sm font-bold mb-3">📈 Entwicklung (letzte 6 Monate)</p>';
+    html += '<div class="flex items-end gap-2 h-20">';
+    var bars = [
+        {m:'Sep',h:40,v:'620 €'},{m:'Okt',h:55,v:'745 €'},{m:'Nov',h:48,v:'680 €'},
+        {m:'Dez',h:62,v:'810 €'},{m:'Jan',h:70,v:'870 €'},{m:'Feb',h:80,v:'890 €'}
+    ];
+    bars.forEach(function(b) {
+        html += '<div class="flex flex-col items-center flex-1">';
+        html += '<span class="text-[9px] text-gray-400 mb-1">' + b.v + '</span>';
+        html += '<div class="w-full rounded-t" style="height:' + b.h + '%;background:#EF7D00;opacity:0.85"></div>';
+        html += '<span class="text-[9px] text-gray-500 mt-1">' + b.m + '</span>';
+        html += '</div>';
+    });
+    html += '</div></div>';
+
+    // CTA
+    html += '<div class="vc p-4 border-2 border-orange-200 bg-orange-50">';
+    html += '<p class="text-sm font-bold text-orange-700 mb-1">🚀 Werbung für deinen Standort aktivieren</p>';
+    html += '<p class="text-xs text-gray-600 mb-3">HQ richtet Google Ads & Meta Ads ein – du siehst hier live deine Performance.</p>';
+    html += '<button onclick="showToast('Bitte wende dich an dein HQ-Team.', 'info')" class="btn-primary text-sm py-2 px-4">Jetzt anfragen</button>';
+    html += '</div>';
+
+    container.innerHTML = html;
+}
+
 window.renderPartnerMarketing = renderPartnerMarketing;
 window.renderPartnerMktTabContent = renderPartnerMktTabContent;
 window.mktDownloadPDF = mktDownloadPDF;
 
 })();
+
