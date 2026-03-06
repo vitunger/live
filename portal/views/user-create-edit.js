@@ -133,6 +133,16 @@ export async function openNeuerMaModal() {
                 }
             } catch(e){ console.error(e); }
         }, 100);
+    } else {
+        // Standort-User: eigenen Standort automatisch setzen
+        var sel = document.getElementById('newMaStandort');
+        if(sel && window.sbStandort) {
+            sel.innerHTML = '<option value="'+window.sbStandort.id+'" selected>'+_escH(window.sbStandort.name)+'</option>';
+            sel.disabled = true;
+        } else if(sel && _sbProfile() && _sbProfile().standort_id) {
+            sel.innerHTML = '<option value="'+_sbProfile().standort_id+'" selected>'+_escH((_sbProfile().standorte && _sbProfile().standorte.name) || 'Mein Standort')+'</option>';
+            sel.disabled = true;
+        }
     }
 }
 
