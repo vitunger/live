@@ -70,8 +70,15 @@ async function mapTerminTyp(standortId, answers, notes) {
 }
 
 function parseDT(s) {
-  if (!s || s.length < 15) return null;
+  if (!s) return null;
   const d = s.replace(/\s+/g,"");
+  // ISO 8601 format: 2026-05-10T10:00:00 or 2026-05-10T10:00:00Z
+  if (d.includes('-') && d.includes('T')) {
+    // Already ISO format - normalize to proper ISO string
+    return d.endsWith('Z') ? d : d + '+00:00';
+  }
+  // Legacy compact format: YYYYMMDDHHmmss
+  if (d.length < 15) return null;
   return d.slice(0,4)+"-"+d.slice(4,6)+"-"+d.slice(6,8)+"T"+d.slice(8,10)+":"+d.slice(10,12)+":"+d.slice(12,14);
 }
 
