@@ -1380,9 +1380,15 @@
                             </div>
                             <div class="flex items-center space-x-3">
                                 <button onclick="openVerkaufEntryModal()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">+ Eintragen</button>
-                                <div class="text-right">
+                                <div class="text-right min-w-[160px]">
                                     <p class="text-xs text-gray-500">Monatsziel</p>
                                     <p class="font-bold text-gray-800" id="wkMonatsziel">—</p>
+                                    <div id="wkMonatsBar" style="display:none" class="mt-1">
+                                        <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                                            <div id="wkMonatsBarFill" class="h-full rounded-full transition-all duration-500" style="width:0%;background:#EF7D00"></div>
+                                        </div>
+                                        <p id="wkMonatsBarLabel" class="text-[10px] text-gray-500 mt-0.5 text-right"></p>
+                                    </div>
                                 </div>
                                 <select id="weekSellerFilter" onchange="renderWeekViewFromDb()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
                                     <option value="all">Alle Verkaeufer</option>
