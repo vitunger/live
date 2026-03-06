@@ -24,16 +24,48 @@ export async function renderHqVerkauf() {
         if(r.data) standorte = r.data;
     } catch(e) {}
 
-    // Load verkauf_tracking this week
+    // Load verkauf_tracking with dynamic period filter
     var now = new Date();
-    var dayOfWeek = now.getDay() || 7;
-    var monday = new Date(now); monday.setDate(now.getDate() - dayOfWeek + 1); monday.setHours(0,0,0,0);
-    var mondayStr = monday.toISOString().split('T')[0];
-    var sundayStr = new Date(monday.getTime() + 6*86400000).toISOString().split('T')[0];
+    var period = 'month';
+    var periodEl = document.getElementById('hqVkPeriod');
+    if(periodEl) period = periodEl.value;
+    var startDate, endDate;
+    var yr = now.getFullYear(), mo = now.getMonth(), dow = now.getDay() || 7;
+    if(period === 'week') {
+        var mon = new Date(now); mon.setDate(now.getDate() - dow + 1); mon.setHours(0,0,0,0);
+        startDate = mon.toISOString().split('T')[0];
+        endDate = new Date(mon.getTime() + 6*86400000).toISOString().split('T')[0];
+    } else if(period === 'lastweek') {
+        var mon = new Date(now); mon.setDate(now.getDate() - dow - 6); mon.setHours(0,0,0,0);
+        startDate = mon.toISOString().split('T')[0];
+        endDate = new Date(mon.getTime() + 6*86400000).toISOString().split('T')[0];
+    } else if(period === 'month') {
+        startDate = yr + '-' + String(mo+1).padStart(2,'0') + '-01';
+        var endMo = mo < 11 ? yr + '-' + String(mo+2).padStart(2,'0') + '-01' : (yr+1) + '-01-01';
+        endDate = new Date(new Date(endMo).getTime() - 86400000).toISOString().split('T')[0];
+    } else if(period === 'lastmonth') {
+        var lm = mo === 0 ? 11 : mo - 1;
+        var ly = mo === 0 ? yr - 1 : yr;
+        startDate = ly + '-' + String(lm+1).padStart(2,'0') + '-01';
+        endDate = yr + '-' + String(mo+1).padStart(2,'0') + '-01';
+        endDate = new Date(new Date(endDate).getTime() - 86400000).toISOString().split('T')[0];
+    } else if(period === 'quarter') {
+        var qStart = Math.floor(mo / 3) * 3;
+        startDate = yr + '-' + String(qStart+1).padStart(2,'0') + '-01';
+        var qEnd = qStart + 3;
+        endDate = qEnd < 12 ? yr + '-' + String(qEnd+1).padStart(2,'0') + '-01' : (yr+1) + '-01-01';
+        endDate = new Date(new Date(endDate).getTime() - 86400000).toISOString().split('T')[0];
+    } else if(period === 'year') {
+        startDate = yr + '-01-01';
+        endDate = yr + '-12-31';
+    } else { // all
+        startDate = '2020-01-01';
+        endDate = '2099-12-31';
+    }
 
     var trackByStd = {};
     try {
-        var tr = await _sb().from('verkauf_tracking').select('standort_id, geplant, spontan, ergo, verkauft, umsatz').gte('datum', mondayStr).lte('datum', sundayStr);
+        var tr = await _sb().from('verkauf_tracking').select('standort_id, geplant, spontan, ergo, verkauft, uebergabe, umsatz').gte('datum', startDate).lte('datum', endDate);
         if(tr.data) tr.data.forEach(function(d) {
             var sid = d.standort_id;
             if(!trackByStd[sid]) trackByStd[sid] = {beratungen:0,verkauft:0,umsatz:0};
