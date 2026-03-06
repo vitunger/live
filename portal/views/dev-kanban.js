@@ -134,6 +134,13 @@ export function devCardHTML(s) {
         if(_lastK.inhalt && _lastK.inhalt.length > 60) _kText += '...';
         h += '<div class="flex items-center gap-1 mt-1 bg-gray-50 rounded px-2 py-1"><span class="text-[10px] text-gray-500 truncate">💬 <b>'+_kName+':</b> '+_kText+'</span></div>';
     }
+    // HQ: Umgesetzt-Button (nicht wenn bereits ausgerollt)
+    var _isHQCard2 = (currentRoles||[]).indexOf('hq') !== -1;
+    if(_isHQCard2 && s.status !== 'ausgerollt') {
+        h += '<div class="flex justify-end mt-2 pt-2 border-t border-gray-100">';
+        h += '<button onclick="event.stopPropagation();updateDevPlanStatus(\''+s.id+'\',\'ausgerollt\')" class="px-2.5 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-semibold" title="Als umgesetzt markieren">✅ Umgesetzt</button>';
+        h += '</div>';
+    }
     h += '</div></div></div>';
     return h;
 }
@@ -234,6 +241,13 @@ export function devBoardCardHTML(s, showActions) {
         h += '<button onclick="event.stopPropagation();devHQDecision(\''+s.id+'\',\'spaeter\')" class="px-3 py-1.5 bg-gray-300 text-gray-700 rounded text-xs font-semibold hover:bg-gray-400">⏸ Später</button>';
         h += '<button onclick="event.stopPropagation();devHQDecision(\''+s.id+'\',\'geschlossen\')" class="px-3 py-1.5 bg-slate-200 text-slate-600 rounded text-xs font-semibold hover:bg-slate-300">🔒</button>';
         if(_isOwner) h += '<button onclick="event.stopPropagation();devHQDecision(\''+s.id+'\',\'ablehnung\')" class="px-3 py-1.5 bg-red-100 text-red-600 rounded text-xs font-semibold hover:bg-red-200">❌ Ablehnen</button>';
+        h += '</div>';
+    }
+    // HQ: Umgesetzt-Button
+    var _isHQBoard = (currentRoles||[]).indexOf('hq') !== -1;
+    if(_isHQBoard && s.status !== 'ausgerollt') {
+        h += '<div class="flex justify-end mt-2 pt-2 border-t border-gray-100">';
+        h += '<button onclick="event.stopPropagation();updateDevPlanStatus(\''+s.id+'\',\'ausgerollt\')" class="px-2.5 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-semibold" title="Als umgesetzt markieren">✅ Umgesetzt</button>';
         h += '</div>';
     }
     h += '</div></div>';
@@ -372,4 +386,5 @@ export async function updateDevPlanField(subId, field, value) {
 
 const _exports = { showIdeenTab, renderDevPipeline, renderDevTab, devCardHTML, renderDevMeine, renderDevAlle, renderDevBoard, devBoardCardHTML, renderDevPlanung, updateDevPlanStatus, updateDevPlanField };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
+
 
