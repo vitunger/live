@@ -132,12 +132,12 @@ module.exports = async function(req, res) {
     // Support multiple field name variants (eTermin uses different formats per account type)
     const cmd = (b.COMMAND || b.command || b.Command || "").toUpperCase();
     const uid = b.APPOINTMENTUID || b.appointmentUID || b.appointmentuid || b.AppointmentUID || b.appointmentId || b.APPOINTMENTID || b.id || "";
-    const fn = (b.FIRSTNAME || b.firstname || b.FirstName || b.first_name || "").trim();
-    const ln = (b.LASTNAME || b.lastname || b.LastName || b.last_name || "").trim();
+    const fn = (b.FIRSTNAME || b.firstName || b.firstname || b.FirstName || b.first_name || "").trim();
+    const ln = (b.LASTNAME || b.lastName || b.lastname || b.LastName || b.last_name || "").trim();
     const email = (b.EMAIL || b.email || b.Email || "").trim();
     const phone = (b.PHONE || b.phone || b.Phone || b.MOBILE || b.mobile || "").trim();
     const notes = (b.NOTES || b.notes || b.Notes || b.NOTE || b.note || "").trim();
-    const answers = (b.SELECTEDANSWERS || b.selectedanswers || b.SelectedAnswers || b.SERVICENAME || b.servicename || b.ServiceName || "").trim();
+    const answers = (b.SELECTEDANSWERS || b.selectedAnswers || b.selectedanswers || b.SelectedAnswers || b.SERVICENAME || b.servicename || b.ServiceName || "").trim();
     const town = (b.TOWN || b.town || b.Town || b.CITY || b.city || "").trim();
     const cal = b.CALENDARNAME || b.calendarname || b.CalendarName || b.CALENDAR || b.calendar || "";
     const calId = (b.CALENDARID || b.calendarid || b.CalendarID || b.calendarId) ? String(b.CALENDARID || b.calendarid || b.CalendarID || b.calendarId) : null;
