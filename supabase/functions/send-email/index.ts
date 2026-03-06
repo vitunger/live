@@ -5,11 +5,17 @@ const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? '';
 const FROM_EMAIL = 'office@vitbikes.de';
 const FROM_NAME = 'vit:bikes HQ';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
+const ALLOWED_ORIGINS = ['https://cockpit.vitbikes.de', 'http://localhost:3000'];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get('origin') || '';
+  const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
+}
 
 // ─── AUTH GUARD ───
 async function verifyAuth(req: Request): Promise<{ ok: boolean; error?: string }> {
@@ -19,18 +25,13 @@ async function verifyAuth(req: Request): Promise<{ ok: boolean; error?: string }
   if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.replace('Bearer ', '');
     
-    // Check if it's the service role key (other edge functions calling this)
-    if (token === Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) {
-      return { ok: true };
-    }
-    
-    // Verify as user JWT
+    // Verify as user JWT via getUser (validates token server-side)
     const userClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
       { global: { headers: { Authorization: `Bearer ${token}` } } }
     );
-    const { data: { user }, error } = await userClient.auth.getUser();
+    const { data: { user }, error } = await userClient.auth.getUser(token);
     if (error || !user) return { ok: false, error: 'Invalid token' };
     return { ok: true };
   }
@@ -142,8 +143,9 @@ function buildGuestInvitationHtml(data: any): string {
 }
 
 serve(async (req) => {
+  const cors = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: cors });
   }
 
   // ─── AUTH CHECK ───
@@ -151,7 +153,7 @@ serve(async (req) => {
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: 'Unauthorized: ' + auth.error }), {
       status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     });
   }
 
@@ -161,7 +163,7 @@ serve(async (req) => {
     if (!to) {
       return new Response(JSON.stringify({ error: 'Missing: to' }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...cors, 'Content-Type': 'application/json' },
       });
     }
 
@@ -177,7 +179,7 @@ serve(async (req) => {
     if (!RESEND_API_KEY) {
       return new Response(JSON.stringify({ error: 'Mail service not configured' }), {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...cors, 'Content-Type': 'application/json' },
       });
     }
 
@@ -199,17 +201,17 @@ serve(async (req) => {
     if (!res.ok) {
       return new Response(JSON.stringify({ error: result }), {
         status: res.status,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...cors, 'Content-Type': 'application/json' },
       });
     }
 
     return new Response(JSON.stringify({ ok: true, id: result.id }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     });
   } catch (err) {
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     });
   }
 });

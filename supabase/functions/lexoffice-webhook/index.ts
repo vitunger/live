@@ -1,10 +1,30 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Origin": "https://app.lexoffice.de",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-lxo-signature",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+// HMAC-SHA256 Signatur-Verifizierung fuer LexOffice Webhooks
+async function verifyLexofficeSignature(req: Request, body: string): Promise<boolean> {
+  const secret = Deno.env.get("LEXOFFICE_WEBHOOK_SECRET");
+  if (!secret) {
+    // Kein Secret konfiguriert – Warnung loggen, aber durchlassen (Abwaertskompatibilitaet)
+    console.warn("LEXOFFICE_WEBHOOK_SECRET nicht gesetzt – Signatur-Pruefung uebersprungen");
+    return true;
+  }
+  const signature = req.headers.get("x-lxo-signature") || req.headers.get("x-lexoffice-signature") || "";
+  if (!signature) {
+    console.warn("LexOffice Webhook ohne Signatur empfangen");
+    return false;
+  }
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const mac = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+  const expected = Array.from(new Uint8Array(mac)).map(b => b.toString(16).padStart(2, "0")).join("");
+  return signature === expected;
+}
 
 // ─── Helper: Get LexOffice API Key from connector_config ───
 async function getLexofficeApiKey(supabaseAdmin: any): Promise<string> {
@@ -28,9 +48,17 @@ Deno.serve(async (req: Request) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  // Webhook from LexOffice – no JWT required (external callback)
+  // Webhook from LexOffice – kein JWT, aber HMAC-Signatur wenn konfiguriert
   try {
-    const body = await req.json();
+    const rawBody = await req.text();
+    const validSig = await verifyLexofficeSignature(req, rawBody);
+    if (!validSig) {
+      console.error("LexOffice Webhook: Ungueltige Signatur");
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const body = JSON.parse(rawBody);
     console.log("LexOffice webhook received:", JSON.stringify(body));
 
     const supabaseAdmin = createClient(
