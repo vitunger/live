@@ -46,6 +46,7 @@ loadStandortInvoices();
 export async function loadStandortInvoices() {
 var container = document.getElementById('stBillingInvoicesList');
 if (!container) return;
+if (!_sbProfile() || !_sbProfile().standort_id) return;
 container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
 
 var { data: invoices } = await _sb().from('billing_invoices').select('*').eq('standort_id', _sbProfile().standort_id).order('period_start', { ascending: false });
