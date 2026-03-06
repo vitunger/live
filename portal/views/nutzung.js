@@ -53,11 +53,10 @@ function getDateRange(period) {
         label = '\u00D8 pro Monat (letzte 3 Mon.)';
         months = 3;
     } else {
-        from = new Date(2025, 0, 1);
+        from = new Date(now.getFullYear(), now.getMonth() - 6, 1);
         to = now;
-        var diffMs = to.getTime() - from.getTime();
-        months = Math.max(1, Math.round(diffMs / (30.44 * 86400000)));
-        label = 'Seit Jan. 2025 (' + months + ' Mon.)';
+        months = 6;
+        label = 'Letzte 6 Monate';
     }
     return { from: from, to: to, label: label, months: months, period: period };
 }
