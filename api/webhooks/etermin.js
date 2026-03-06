@@ -117,24 +117,34 @@ module.exports = async function(req, res) {
 
   try {
     const b = req.body || {};
-    const cmd = (b.COMMAND || "").toUpperCase();
-    const uid = b.APPOINTMENTUID || "";
-    const fn = (b.FIRSTNAME || "").trim();
-    const ln = (b.LASTNAME || "").trim();
-    const email = (b.EMAIL || "").trim();
-    const phone = (b.PHONE || "").trim();
-    const notes = (b.NOTES || "").trim();
-    const answers = (b.SELECTEDANSWERS || "").trim();
-    const town = (b.TOWN || "").trim();
-    const cal = b.CALENDARNAME || "";
-    const calId = b.CALENDARID ? String(b.CALENDARID) : null;
-    const startL = parseDT(b.STARTDATETIME);
-    const endL = parseDT(b.ENDDATETIME);
-    const startU = parseDT(b.STARTDATETIMEUTC);
-    const endU = parseDT(b.ENDDATETIMEUTC);
+    
+    // Log full payload for debugging (helps diagnose format differences between accounts)
+    console.log("[etermin-wh] payload keys:", Object.keys(b).join(","));
+    console.log("[etermin-wh] raw payload:", JSON.stringify(b).slice(0, 500));
+
+    // Support multiple field name variants (eTermin uses different formats per account type)
+    const cmd = (b.COMMAND || b.command || b.Command || "").toUpperCase();
+    const uid = b.APPOINTMENTUID || b.appointmentuid || b.AppointmentUID || b.appointmentId || b.APPOINTMENTID || b.id || "";
+    const fn = (b.FIRSTNAME || b.firstname || b.FirstName || b.first_name || "").trim();
+    const ln = (b.LASTNAME || b.lastname || b.LastName || b.last_name || "").trim();
+    const email = (b.EMAIL || b.email || b.Email || "").trim();
+    const phone = (b.PHONE || b.phone || b.Phone || b.MOBILE || b.mobile || "").trim();
+    const notes = (b.NOTES || b.notes || b.Notes || b.NOTE || b.note || "").trim();
+    const answers = (b.SELECTEDANSWERS || b.selectedanswers || b.SelectedAnswers || b.SERVICENAME || b.servicename || b.ServiceName || "").trim();
+    const town = (b.TOWN || b.town || b.Town || b.CITY || b.city || "").trim();
+    const cal = b.CALENDARNAME || b.calendarname || b.CalendarName || b.CALENDAR || b.calendar || "";
+    const calId = (b.CALENDARID || b.calendarid || b.CalendarID || b.calendarId) ? String(b.CALENDARID || b.calendarid || b.CalendarID || b.calendarId) : null;
+    const startL = parseDT(b.STARTDATETIME || b.startdatetime || b.StartDateTime);
+    const endL = parseDT(b.ENDDATETIME || b.enddatetime || b.EndDateTime);
+    const startU = parseDT(b.STARTDATETIMEUTC || b.startdatetimeutc || b.StartDateTimeUTC);
+    const endU = parseDT(b.ENDDATETIMEUTC || b.enddatetimeutc || b.EndDateTimeUTC);
 
     console.log("[etermin-wh]", cmd, uid);
-    if (!uid) return res.status(400).json({ error: "Missing APPOINTMENTUID" });
+    if (!uid) {
+      // Log the full body so we can see what field names eTermin actually sends
+      console.error("[etermin-wh] Missing UID. Full body:", JSON.stringify(b));
+      return res.status(400).json({ error: "Missing APPOINTMENTUID", received_keys: Object.keys(b) });
+    }
 
     // Resolve standort from URL param
     const stdId = req.query.sid || req.query.standort_id || null;
@@ -270,4 +280,5 @@ module.exports = async function(req, res) {
     return res.status(500).json({ error: e.message });
   }
 };
+
 
