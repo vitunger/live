@@ -252,7 +252,7 @@ export async function renderEntwSteuerung() {
         {key:'rejected', label:'❌ Abgelehnt', statuses:['abgelehnt'], color:'red'},
         {key:'closed', label:'🔒 Geschlossen', statuses:['geschlossen'], color:'slate'}
     ];
-    h += '<div class="flex gap-3 overflow-x-auto pb-2" style="min-height:400px">';
+    h += '<div class="flex gap-3 overflow-x-auto pb-2">';
     columns.forEach(function(col) {
         var items = _devSubs().filter(function(s) { return col.statuses.indexOf(s.status) !== -1; });
         // Smart sort: critical bugs first, then by effort (quick wins up), then votes
