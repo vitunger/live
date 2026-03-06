@@ -214,6 +214,42 @@ security: RLS/JWT/Auth-Verbesserung
 
 ---
 
+## Offene Arbeitspunkte (Backlog)
+
+> Bekannte Lücken und geplante Features – priorisiert nach Go-Live-Relevanz.
+> KI-Agenten: Vor neuer Session diese Liste lesen und als Kontext nutzen.
+
+### 🔴 Kritisch (vor Go-Live)
+
+| # | Thema | Details | Status |
+|---|-------|---------|--------|
+| 1 | **JWT-Audit Edge Functions** | 5 kritische ohne JWT: `create-user`, `db-backup`, `billing-automation`, `send-emails`, `send-email` → `verify_jwt=true` setzen + Frontend-Calls anpassen | offen |
+| 2 | **Session-Handling** | JWT-Ablauf: Auto-Refresh. Logout: State-Cleanup (BWA-Banner, globale Variablen). "Database error" bei abgelaufener Session → Redirect Login | offen |
+| 3 | **Meta Ads Token-Refresh** | Tokens laufen nach 60 Tagen ab → Sync bricht still ab. Token + Ablaufdatum in `ads_accounts` speichern, Edge Function die 10 Tage vorher refresht, Cron + HQ-Alert | offen |
+| 4 | **Stammdaten Pilot-Standorte** | `inhaber_name`, `umsatz_plan_ytd`, `region` für mind. 5 Pilot-Standorte eintragen. SQL-Script vorbereiten | offen |
+
+### 🟡 Wichtig (bald nach Go-Live)
+
+| # | Thema | Details | Status |
+|---|-------|---------|--------|
+| 5 | **Push/E-Mail bei neuem Release** | `createReleaseNotification()` schreibt nur in DB-Tabelle `notifications`. Wer das Portal geschlossen hat, bekommt nichts. Lösung: Nach DB-Insert → `triggerPush()` für alle aktiven User aufrufen. Gleiches Muster für andere systemweite Events (neue HQ-Ankündigung, Billing-Fälligkeit, BWA-Deadline). Kein E-Mail gewünscht. | offen |
+| 6 | **eTermin Rollout** | API-Keys + Webhook-URLs für Grafrath, München City, Augsburg, Starnberg in `connector_config` eintragen (~30 Min/Standort) | offen |
+| 7 | **RPC `create_release_notification_all`** | Muss in Supabase SQL Editor deployed sein (SECURITY DEFINER). Prüfen ob vorhanden, sonst anlegen | prüfen |
+| 8 | **RLS Smoke-Tests** | Manuell mit 2 Test-Accounts prüfen: Kann User A Daten von User B sehen? Tabellen: `leads`, `todos`, `termine`, `bwa_daten`, `support_tickets` | offen |
+| 9 | **Mobile Responsive** | Alle 8 Partner-Module auf iPhone/Android testen. Sidebar-Toggle, Modals, Tabellen-Overflow, Touch-Targets | offen |
+
+### 🟢 Nice to have / Später
+
+| # | Thema | Details | Status |
+|---|-------|---------|--------|
+| 10 | **Google Ads Cron-Job** | Täglicher Auto-Sync via Supabase pg_cron | offen |
+| 11 | **Creditreform Bonitätscheck** | API-Zugang klären, Edge Function + Integration in Onboarding/BikeBoost | geplant |
+| 12 | **WaWi Email-Ingestion** | Resend Inbound → Edge Function → `wawi_belege` (designed, nicht gebaut) | geplant |
+| 13 | **GetMyInvoices** | v3 REST API für automatische Rechnungserfassung | geplant |
+| 14 | **TypeScript-Migration** | Modul für Modul, Feature-Flag pro Modul, Build-System Vite 6 + TS 5 | geplant |
+
+---
+
 ## Pflege dieser Dateien
 
 > **An alle KI-Agenten:** Wenn du Code-Aenderungen am Repo machst, pruefe ob Dokumentation aktualisiert werden muss:
@@ -313,3 +349,4 @@ security: RLS/JWT/Auth-Verbesserung
   Bei Demo: `_renderKommDemo()` zeigt einen fake Teams-Chat mit HQ-Kanal, DMs und Beispielnachrichten.
 - **Einkauf:** War bereits komplett mit hardcodierten Arrays (`allLief`, `standorte`, etc.) — kein Fix nötig.
 - **Pattern für neue Module:** Am Anfang der Render-Funktion `if(window.isModuleDemo('key')) { renderXxxDemo(); return; }`.
+
