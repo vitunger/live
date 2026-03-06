@@ -124,7 +124,7 @@ module.exports = async function(req, res) {
 
     // Support multiple field name variants (eTermin uses different formats per account type)
     const cmd = (b.COMMAND || b.command || b.Command || "").toUpperCase();
-    const uid = b.APPOINTMENTUID || b.appointmentuid || b.AppointmentUID || b.appointmentId || b.APPOINTMENTID || b.id || "";
+    const uid = b.APPOINTMENTUID || b.appointmentUID || b.appointmentuid || b.AppointmentUID || b.appointmentId || b.APPOINTMENTID || b.id || "";
     const fn = (b.FIRSTNAME || b.firstname || b.FirstName || b.first_name || "").trim();
     const ln = (b.LASTNAME || b.lastname || b.LastName || b.last_name || "").trim();
     const email = (b.EMAIL || b.email || b.Email || "").trim();
@@ -280,6 +280,7 @@ module.exports = async function(req, res) {
     return res.status(500).json({ error: e.message });
   }
 };
+
 
 
 
