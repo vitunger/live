@@ -648,6 +648,7 @@ function renderConnectorCard(id) {
         body += '<div style="display:flex;gap:8px;flex-wrap:wrap">'
             + '<button onclick="window.saveSocialConfig(\'instagram\')" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Speichern</button>'
             + '<button onclick="window.loadSocialData(\'instagram\')" style="padding:7px 14px;background:linear-gradient(135deg,#e1306c,#f77737,#fcaf45);color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten laden</button>'
+            + '<button onclick="window.importSocialPosts(\'instagram\')" style="padding:7px 14px;background:#6366f1;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">📥 Posts importieren</button>'
             + '</div>';
         body += '<div id="socialStats_instagram" style="display:none">';
         body += '<div id="socialAccountCard_instagram" style="background:#f9fafb;border-radius:10px;padding:12px;margin-top:8px">'
@@ -696,6 +697,7 @@ function renderConnectorCard(id) {
         body += '<div style="display:flex;gap:8px;flex-wrap:wrap">'
             + '<button onclick="window.saveSocialConfig(\'youtube\')" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Speichern</button>'
             + '<button onclick="window.loadSocialData(\'youtube\')" style="padding:7px 14px;background:#ff0000;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten laden</button>'
+            + '<button onclick="window.importSocialPosts(\'youtube\')" style="padding:7px 14px;background:#6366f1;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">📥 Posts importieren</button>'
             + '</div>';
         body += '<div id="socialStats_youtube" style="display:none">';
         body += '<div id="socialAccountCard_youtube" style="background:#f9fafb;border-radius:10px;padding:12px;margin-top:8px">'
@@ -810,6 +812,7 @@ function renderConnectorCard(id) {
             + '<button onclick="window.saveTikTokConfig()" style="padding:7px 14px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Konfiguration speichern</button>'
             + '<button onclick="window.startTikTokOAuth()" style="padding:7px 14px;background:linear-gradient(135deg,#ff0050,#00f2ea);color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔗 Mit TikTok verbinden</button>'
             + '<button onclick="window.loadTikTokData()" style="padding:7px 14px;background:#374151;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">🔄 Daten abrufen</button>'
+            + '<button onclick="window.importSocialPosts(\'tiktok\')" style="padding:7px 14px;background:#6366f1;color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">📥 Posts importieren</button>'
             + '</div>';
 
         // Stats area (filled after loadTikTokData)
@@ -2617,3 +2620,27 @@ window.loadTikTokConfig = async function() {
     } catch(e) {}
 };
 
+// ── Social Posts Import (Feature 6) ──
+window.importSocialPosts = async function(platform) {
+    try {
+        var sb = _sb(); if (!sb) return;
+        _showToast(platform + ': Import wird gestartet...', 'info');
+        var { data: session } = await sb.auth.getSession();
+        var token = session?.session?.access_token || '';
+        var resp = await fetch(window.sbUrl() + '/functions/v1/social-import', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ action: platform })
+        });
+        var result = await resp.json();
+        if (!resp.ok) throw new Error(result.error || 'Import fehlgeschlagen');
+        var details = result.details?.[platform] || {};
+        if (details.error) {
+            _showToast(platform + ': ' + details.error, 'error');
+        } else {
+            _showToast(platform + ': ' + (details.imported || 0) + ' neue Posts importiert', 'success');
+        }
+    } catch(e) {
+        _showToast(platform + ' Import-Fehler: ' + e.message, 'error');
+    }
+};

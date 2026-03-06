@@ -303,17 +303,58 @@
         for (let d = 1; d <= daysInMonth; d++) {
             const dayPosts = postsByDay[d] || [];
             const isToday = isCurrentMonth && d === now.getDate();
-            html += '<div class="border border-gray-100 rounded-lg p-1 min-h-[60px] ' + (isToday ? 'bg-orange-50 border-vit-orange' : 'bg-white') + '">' +
+            const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+            html += '<div class="border border-gray-100 rounded-lg p-1 min-h-[60px] transition-colors ' + (isToday ? 'bg-orange-50 border-vit-orange' : 'bg-white') + '"' +
+                ' ondragover="scDragOver(event)" ondrop="scDrop(event,\'' + dateStr + '\')" ondragleave="this.classList.remove(\'border-blue-400\',\'border-dashed\',\'bg-blue-50\')">' +
                 '<div class="text-xs font-semibold text-gray-500 mb-1">' + d + '</div>';
             dayPosts.slice(0, 2).forEach(function(p) {
                 const s = STATUS_LABELS[p.status] || {};
-                html += '<div class="text-[10px] truncate px-1 rounded ' + (s.cls || '') + '">' + _escH(p.title) + '</div>';
+                var importBadge = (p.source === 'import' || p.source === 'extern') ? ' opacity-60' : '';
+                html += '<div draggable="true" ondragstart="scDragStart(event,' + p.id + ')" class="text-[10px] truncate px-1 rounded cursor-grab active:cursor-grabbing ' + (s.cls || '') + importBadge + '">' + _escH(p.title) + '</div>';
             });
             if (dayPosts.length > 2) html += '<div class="text-[10px] text-gray-400">+' + (dayPosts.length - 2) + '</div>';
             html += '</div>';
         }
         html += '</div>';
         el.innerHTML = html;
+    }
+
+    // ── Drag & Drop Helpers ──
+
+    function scDragStart(event, postId) {
+        event.dataTransfer.setData('text/plain', String(postId));
+        event.dataTransfer.effectAllowed = 'move';
+        event.target.style.opacity = '0.5';
+        setTimeout(function() { if (event.target) event.target.style.opacity = '1'; }, 300);
+    }
+
+    function scDragOver(event) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        var cell = event.currentTarget;
+        if (!cell.classList.contains('border-dashed')) {
+            cell.classList.add('border-blue-400', 'border-dashed', 'bg-blue-50');
+        }
+    }
+
+    async function scDrop(event, dateStr) {
+        event.preventDefault();
+        var cell = event.currentTarget;
+        cell.classList.remove('border-blue-400', 'border-dashed', 'bg-blue-50');
+        var postId = event.dataTransfer.getData('text/plain');
+        if (!postId) return;
+        var sb = _sb(); if (!sb) return;
+        try {
+            var newDate = dateStr + 'T12:00:00';
+            var { error } = await sb.from('scompler_posts').update({ geplant_am: newDate }).eq('id', parseInt(postId));
+            if (error) throw error;
+            var fmtDate = new Date(dateStr).toLocaleDateString('de-DE');
+            _showToast('Post auf ' + fmtDate + ' verschoben', 'success');
+            var c = document.getElementById('scTabContent');
+            if (c) renderKalender(c);
+        } catch(e) {
+            _showToast('Fehler beim Verschieben: ' + e.message, 'error');
+        }
     }
 
     function renderKalWoche(el, posts) {
@@ -368,7 +409,9 @@
         scFilterKal('alle');
     }
 
-    function scOpenPostAdd() {
+    var KANAL_OPTIONS = ['Instagram','TikTok','YouTube','Facebook','LinkedIn'];
+
+    function scOpenPostAdd(editPost) {
         var stOptions = '<option value="">– Standort –</option>';
         SC.standorte.forEach(function(s) {
             stOptions += '<option value="' + s.id + '">' + _escH(s.name) + '</option>';
@@ -378,63 +421,417 @@
             return '<option value="' + k + '">' + _escH(FORMAT_LABELS[k]) + '</option>';
         }).join('');
 
+        var kanalCheckboxes = KANAL_OPTIONS.map(function(k) {
+            var checked = editPost && editPost.kanaele && editPost.kanaele.indexOf(k) !== -1 ? ' checked' : '';
+            return '<label class="flex items-center gap-1 text-xs"><input type="checkbox" class="scKanalCb" value="' + k + '"' + checked + ' onchange="scUpdateKanalUI()"> ' + k + '</label>';
+        }).join('');
+
+        var isEdit = !!editPost;
+        var ep = editPost || {};
+
         var modal = document.getElementById('scPostModal');
         if (!modal) return;
         modal.style.display = 'block';
         modal.innerHTML =
             '<div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">' +
-            '<div class="bg-white rounded-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">' +
-                '<div class="flex items-center justify-between mb-4"><h3 class="font-bold text-lg">Neuer Post</h3>' +
+            '<div class="bg-white rounded-2xl max-w-5xl w-full p-6 max-h-[90vh] overflow-y-auto">' +
+                '<div class="flex items-center justify-between mb-4"><h3 class="font-bold text-lg">' + (isEdit ? 'Post bearbeiten' : 'Neuer Post') + '</h3>' +
                 '<button onclick="scClosePostAdd()" class="text-gray-400 hover:text-gray-600 text-xl">\u2716</button></div>' +
-                '<div class="space-y-3">' +
-                    '<input id="scPostTitle" placeholder="Titel" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
-                    '<textarea id="scPostCaption" placeholder="Caption" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"></textarea>' +
+
+                '<div class="grid grid-cols-1 lg:grid-cols-5 gap-6">' +
+
+                // ── Linke Spalte: Formular (3/5) ──
+                '<div class="lg:col-span-3 space-y-3">' +
+                    '<input id="scPostTitle" placeholder="Titel" value="' + _escH(ep.title || '') + '" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
+                    '<textarea id="scPostCaption" placeholder="Caption" rows="3" oninput="scUpdatePreview()" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">' + _escH(ep.caption || '') + '</textarea>' +
+
+                    // Kanaele
+                    '<div><label class="text-xs font-semibold text-gray-500 mb-1 block">Kanaele</label>' +
+                    '<div class="flex flex-wrap gap-3">' + kanalCheckboxes + '</div></div>' +
+
                     '<div class="grid grid-cols-2 gap-3">' +
                         '<select id="scPostFormat" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">' + formatOptions + '</select>' +
                         '<select id="scPostStandort" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">' + stOptions + '</select>' +
                     '</div>' +
                     '<div class="grid grid-cols-2 gap-3">' +
-                        '<input id="scPostThema" placeholder="Thema" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
-                        '<input id="scPostMarke" placeholder="Marke" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
+                        '<input id="scPostThema" placeholder="Thema" value="' + _escH(ep.thema || '') + '" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
+                        '<input id="scPostMarke" placeholder="Marke" value="' + _escH(ep.marke || '') + '" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
                     '</div>' +
-                    '<input id="scPostCollab" placeholder="Collab-Partner (optional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
-                    '<input id="scPostDatum" type="datetime-local" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
+                    '<input id="scPostCollab" placeholder="Collab-Partner (optional)" value="' + _escH(ep.collab_partner || '') + '" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
+                    '<input id="scPostDatum" type="datetime-local" value="' + (ep.geplant_am ? ep.geplant_am.substring(0, 16) : '') + '" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
                     '<select id="scPostStatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
-                        '<option value="entwurf">Entwurf</option><option value="geplant">Geplant</option>' +
-                        '<option value="freigegeben">Freigegeben</option><option value="ausgespielt">Ausgespielt</option>' +
+                        '<option value="entwurf"' + (ep.status === 'entwurf' ? ' selected' : '') + '>Entwurf</option>' +
+                        '<option value="geplant"' + (ep.status === 'geplant' ? ' selected' : '') + '>Geplant</option>' +
+                        '<option value="freigegeben"' + (ep.status === 'freigegeben' ? ' selected' : '') + '>Freigegeben</option>' +
+                        '<option value="ausgespielt"' + (ep.status === 'ausgespielt' ? ' selected' : '') + '>Ausgespielt</option>' +
                     '</select>' +
-                    '<button onclick="scSavePost()" class="w-full py-2 bg-vit-orange text-white rounded-lg font-semibold hover:bg-orange-600">Speichern</button>' +
+
+                    // ── Kanal-spezifische Captions (Feature 3) ──
+                    '<div id="scKanalCaptions" class="hidden">' +
+                        '<label class="text-xs font-semibold text-gray-500 mb-2 block">Caption pro Kanal</label>' +
+                        '<div id="scKanalCaptionTabs" class="flex gap-1 mb-2"></div>' +
+                        '<div id="scKanalCaptionBody"></div>' +
+                    '</div>' +
+
+                    // ── TikTok Privacy (Feature 4) ──
+                    '<div id="scTikTokSettings" class="hidden border border-gray-200 rounded-lg p-3">' +
+                        '<label class="text-xs font-semibold text-gray-500 mb-2 block">TikTok Einstellungen</label>' +
+                        '<div class="grid grid-cols-2 gap-2 text-xs">' +
+                            '<div><span class="text-gray-500">Sichtbarkeit</span>' +
+                                '<div class="flex gap-2 mt-1">' +
+                                    '<label class="flex items-center gap-1"><input type="radio" name="ttPrivacy" value="public" checked> Oeffentlich</label>' +
+                                    '<label class="flex items-center gap-1"><input type="radio" name="ttPrivacy" value="friends"> Freunde</label>' +
+                                    '<label class="flex items-center gap-1"><input type="radio" name="ttPrivacy" value="private"> Privat</label>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="space-y-1">' +
+                                '<label class="flex items-center gap-1"><input type="checkbox" id="ttDuet" checked> Duett erlauben</label>' +
+                                '<label class="flex items-center gap-1"><input type="checkbox" id="ttStitch" checked> Stitch erlauben</label>' +
+                                '<label class="flex items-center gap-1"><input type="checkbox" id="ttComment" checked> Kommentare erlauben</label>' +
+                                '<label class="flex items-center gap-1"><input type="checkbox" id="ttBranded"> Branded Content</label>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+
+                    // ── Publish-Button (Feature 5) ──
+                    '<div id="scPublishSection" class="hidden">' +
+                        '<button onclick="scPublishPost(' + (ep.id || 0) + ')" class="w-full py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 text-sm">Jetzt veroeffentlichen</button>' +
+                    '</div>' +
+
+                    '<div class="flex gap-2">' +
+                        '<button onclick="scSavePost(' + (ep.id || 0) + ')" class="flex-1 py-2 bg-vit-orange text-white rounded-lg font-semibold hover:bg-orange-600">Speichern</button>' +
+                        (isEdit ? '<button onclick="scDeletePost(' + ep.id + ')" class="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm hover:bg-red-100">Loeschen</button>' : '') +
+                    '</div>' +
+                '</div>' +
+
+                // ── Rechte Spalte: Plattform-Vorschau (2/5) (Feature 2) ──
+                '<div class="lg:col-span-2">' +
+                    '<div class="sticky top-0">' +
+                        '<label class="text-xs font-semibold text-gray-500 mb-2 block">Vorschau</label>' +
+                        '<div id="scPreviewTabs" class="flex gap-1 mb-2"></div>' +
+                        '<div id="scPreviewBody" class="border border-gray-200 rounded-xl overflow-hidden bg-gray-50 min-h-[300px]"></div>' +
+                    '</div>' +
+                '</div>' +
+
                 '</div>' +
             '</div></div>';
+
+        // Format/Standort vorbelegen bei Edit
+        if (ep.format) { var sel = document.getElementById('scPostFormat'); if (sel) sel.value = ep.format; }
+        if (ep.standort_id) { var sel2 = document.getElementById('scPostStandort'); if (sel2) sel2.value = ep.standort_id; }
+
+        // TikTok Settings vorbelegen
+        if (ep.tiktok_settings) {
+            var ts = ep.tiktok_settings;
+            var radios = document.querySelectorAll('input[name="ttPrivacy"]');
+            radios.forEach(function(r) { r.checked = r.value === (ts.privacy || 'public'); });
+            if (document.getElementById('ttDuet')) document.getElementById('ttDuet').checked = ts.allow_duet !== false;
+            if (document.getElementById('ttStitch')) document.getElementById('ttStitch').checked = ts.allow_stitch !== false;
+            if (document.getElementById('ttComment')) document.getElementById('ttComment').checked = ts.allow_comment !== false;
+            if (document.getElementById('ttBranded')) document.getElementById('ttBranded').checked = !!ts.branded_content;
+        }
+
+        // Store edit post ID
+        modal.dataset.editId = ep.id || '';
+
+        scUpdateKanalUI();
+        scUpdatePreview();
+    }
+
+    // ── Kanal-UI Update (zeigt/versteckt Kanal-Captions, TikTok Settings, Vorschau-Tabs) ──
+
+    function scUpdateKanalUI() {
+        var selected = [];
+        document.querySelectorAll('.scKanalCb:checked').forEach(function(cb) { selected.push(cb.value); });
+
+        // TikTok Settings ein/ausblenden
+        var ttSec = document.getElementById('scTikTokSettings');
+        if (ttSec) ttSec.classList.toggle('hidden', selected.indexOf('TikTok') === -1);
+
+        // Publish Section zeigen wenn freigegeben
+        var statusSel = document.getElementById('scPostStatus');
+        var pubSec = document.getElementById('scPublishSection');
+        if (pubSec && statusSel) {
+            var modal = document.getElementById('scPostModal');
+            pubSec.classList.toggle('hidden', statusSel.value !== 'freigegeben' || !modal?.dataset.editId);
+        }
+
+        // Kanal-spezifische Captions (nur bei 2+ Kanaelen)
+        var captionSec = document.getElementById('scKanalCaptions');
+        if (captionSec) {
+            captionSec.classList.toggle('hidden', selected.length < 2);
+            if (selected.length >= 2) {
+                var tabsHtml = '';
+                selected.forEach(function(k, i) {
+                    var active = i === 0 ? 'bg-vit-orange text-white' : 'bg-gray-100 text-gray-600';
+                    tabsHtml += '<button onclick="scShowKanalCaption(\'' + k + '\')" class="scKCTab px-3 py-1 rounded-full text-xs font-semibold ' + active + '" data-kanal="' + k + '">' + k + '</button>';
+                });
+                document.getElementById('scKanalCaptionTabs').innerHTML = tabsHtml;
+                scShowKanalCaption(selected[0]);
+            }
+        }
+
+        // Vorschau-Tabs updaten
+        scUpdatePreviewTabs(selected);
+    }
+
+    var _activeKanalCaption = '';
+    var _kanalCaptionCache = {};
+
+    function scShowKanalCaption(kanal) {
+        // Cache aktuellen Text
+        var body = document.getElementById('scKanalCaptionBody');
+        if (_activeKanalCaption && body) {
+            var ta = body.querySelector('textarea');
+            if (ta) _kanalCaptionCache[_activeKanalCaption] = ta.value;
+        }
+        _activeKanalCaption = kanal;
+
+        // Tabs stylen
+        document.querySelectorAll('.scKCTab').forEach(function(btn) {
+            if (btn.dataset.kanal === kanal) {
+                btn.className = btn.className.replace('bg-gray-100 text-gray-600', 'bg-vit-orange text-white');
+            } else {
+                btn.className = btn.className.replace('bg-vit-orange text-white', 'bg-gray-100 text-gray-600');
+            }
+        });
+
+        if (!body) return;
+        var cached = _kanalCaptionCache[kanal] || '';
+        var extra = '';
+        if (kanal === 'YouTube') {
+            extra = '<input id="scKCYtTitle" placeholder="YouTube Titel (max 100)" maxlength="100" class="w-full px-2 py-1 border border-gray-200 rounded text-xs mb-1" value="' + _escH(_kanalCaptionCache['youtube_title'] || '') + '">';
+        }
+        var maxLen = (kanal === 'TikTok' || kanal === 'Instagram') ? 2200 : 5000;
+        body.innerHTML = extra +
+            '<textarea id="scKCText" rows="3" maxlength="' + maxLen + '" oninput="scUpdatePreview()" placeholder="Caption fuer ' + kanal + '" class="w-full px-2 py-1 border border-gray-200 rounded text-xs">' + _escH(cached) + '</textarea>' +
+            '<div class="text-[10px] text-gray-400 text-right"><span id="scKCCount">' + cached.length + '</span>/' + maxLen + '</div>';
+        var countEl = document.getElementById('scKCCount');
+        var textEl = document.getElementById('scKCText');
+        if (textEl && countEl) {
+            textEl.addEventListener('input', function() { countEl.textContent = textEl.value.length; });
+        }
+    }
+
+    // ── Plattform-Vorschau (Feature 2) ──
+
+    var _activePreviewPlatform = 'Instagram';
+
+    function scUpdatePreviewTabs(platforms) {
+        var tabs = document.getElementById('scPreviewTabs');
+        if (!tabs) return;
+        if (!platforms || platforms.length === 0) platforms = ['Instagram'];
+        var html = '';
+        platforms.forEach(function(p, i) {
+            var active = (p === _activePreviewPlatform || (i === 0 && platforms.indexOf(_activePreviewPlatform) === -1));
+            if (active) _activePreviewPlatform = p;
+            var cls = active ? 'bg-vit-orange text-white' : 'bg-gray-100 text-gray-600';
+            html += '<button onclick="scSetPreviewPlatform(\'' + p + '\')" class="px-3 py-1 rounded-full text-xs font-semibold ' + cls + '">' + p + '</button>';
+        });
+        tabs.innerHTML = html;
+        scUpdatePreview();
+    }
+
+    function scSetPreviewPlatform(p) {
+        _activePreviewPlatform = p;
+        var btns = document.getElementById('scPreviewTabs');
+        if (btns) {
+            btns.querySelectorAll('button').forEach(function(btn) {
+                if (btn.textContent === p) btn.className = btn.className.replace('bg-gray-100 text-gray-600', 'bg-vit-orange text-white');
+                else btn.className = btn.className.replace('bg-vit-orange text-white', 'bg-gray-100 text-gray-600');
+            });
+        }
+        scUpdatePreview();
+    }
+
+    function scUpdatePreview() {
+        var body = document.getElementById('scPreviewBody');
+        if (!body) return;
+        var caption = document.getElementById('scPostCaption')?.value || '';
+        var title = document.getElementById('scPostTitle')?.value || '';
+        // Kanal-spezifische Caption bevorzugen
+        if (_kanalCaptionCache[_activePreviewPlatform]) caption = _kanalCaptionCache[_activePreviewPlatform];
+        var kcText = document.getElementById('scKCText');
+        if (kcText && _activeKanalCaption === _activePreviewPlatform) caption = kcText.value;
+
+        var p = _activePreviewPlatform;
+        if (p === 'Instagram') body.innerHTML = _previewInstagram(caption);
+        else if (p === 'TikTok') body.innerHTML = _previewTikTok(caption);
+        else if (p === 'YouTube') body.innerHTML = _previewYouTube(title, caption);
+        else body.innerHTML = _previewGeneric(p, caption);
+    }
+
+    function _previewInstagram(caption) {
+        var short = caption.length > 125 ? _escH(caption.substring(0, 125)) + '<span class="text-blue-500"> ...mehr</span>' : _escH(caption);
+        return '<div class="bg-white">' +
+            '<div class="flex items-center gap-2 p-3 border-b border-gray-100">' +
+                '<div class="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-bold">vb</div>' +
+                '<span class="text-xs font-semibold">vitbikes</span>' +
+            '</div>' +
+            '<div class="bg-gray-200 aspect-square flex items-center justify-center text-gray-400 text-3xl">\uD83D\uDDBC\uFE0F</div>' +
+            '<div class="p-3">' +
+                '<div class="flex gap-4 mb-2 text-lg">\u2661 \uD83D\uDCAC \u2933</div>' +
+                '<div class="text-xs"><span class="font-semibold">vitbikes</span> ' + (short || '<span class="text-gray-300">Caption hier eingeben...</span>') + '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function _previewTikTok(caption) {
+        var short = caption.length > 80 ? _escH(caption.substring(0, 80)) + '...' : _escH(caption);
+        return '<div class="bg-black text-white relative" style="aspect-ratio:9/16;max-height:400px">' +
+            '<div class="absolute inset-0 flex items-center justify-center text-gray-600 text-3xl">\u25B6\uFE0F</div>' +
+            '<div class="absolute bottom-0 left-0 right-12 p-3">' +
+                '<div class="text-xs font-semibold mb-1">@vitbikes</div>' +
+                '<div class="text-[10px] opacity-90">' + (short || 'Caption...') + '</div>' +
+            '</div>' +
+            '<div class="absolute bottom-0 right-0 p-3 flex flex-col gap-3 items-center text-xl">' +
+                '<div>\u2661</div><div>\uD83D\uDCAC</div><div>\u2933</div>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function _previewYouTube(title, caption) {
+        return '<div class="bg-white">' +
+            '<div class="bg-gray-200 aspect-video flex items-center justify-center text-gray-400 text-4xl">\u25B6\uFE0F</div>' +
+            '<div class="p-3">' +
+                '<div class="text-sm font-semibold mb-1 line-clamp-2">' + _escH(title || 'Video-Titel') + '</div>' +
+                '<div class="flex items-center gap-2 text-xs text-gray-500">' +
+                    '<div class="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] font-bold">vb</div>' +
+                    '<span>vit:bikes</span>' +
+                '</div>' +
+                '<div class="text-xs text-gray-500 mt-2 line-clamp-2">' + _escH(caption || 'Beschreibung...').substring(0, 200) + '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function _previewGeneric(platform, caption) {
+        return '<div class="p-6 text-center text-gray-400">' +
+            '<div class="text-2xl mb-2">\uD83D\uDCF1</div>' +
+            '<div class="text-xs font-semibold mb-2">' + _escH(platform) + ' Vorschau</div>' +
+            '<div class="text-xs">' + _escH(caption || 'Caption hier eingeben...').substring(0, 200) + '</div>' +
+        '</div>';
     }
 
     function scClosePostAdd() {
         var modal = document.getElementById('scPostModal');
-        if (modal) { modal.style.display = 'none'; modal.innerHTML = ''; }
+        if (modal) { modal.style.display = 'none'; modal.innerHTML = ''; modal.dataset.editId = ''; }
+        _kanalCaptionCache = {};
+        _activeKanalCaption = '';
     }
 
-    async function scSavePost() {
+    // ── Direkt-Veroeffentlichung (Feature 5) ──
+
+    async function scPublishPost(postId, platform) {
+        if (!postId) { _showToast('Kein Post ausgewaehlt', 'error'); return; }
+        var sb = _sb(); if (!sb) return;
+
+        // Post laden
+        var { data: post, error: loadErr } = await sb.from('scompler_posts').select('*').eq('id', postId).single();
+        if (loadErr || !post) { _showToast('Post nicht gefunden', 'error'); return; }
+
+        var platforms = platform ? [platform] : (post.kanaele || []);
+        if (platforms.length === 0) { _showToast('Keine Kanaele ausgewaehlt', 'error'); return; }
+
+        var results = [];
+        for (var i = 0; i < platforms.length; i++) {
+            var plat = platforms[i].toLowerCase();
+            try {
+                _showToast(platforms[i] + ': Wird veroeffentlicht...', 'info');
+                var { data: session } = await sb.auth.getSession();
+                var token = session?.session?.access_token || '';
+                var resp = await fetch(window.sbUrl() + '/functions/v1/social-publish', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ action: plat, post_id: postId })
+                });
+                var result = await resp.json();
+                if (!resp.ok) throw new Error(result.error || result.msg || 'Unbekannter Fehler');
+                results.push({ platform: platforms[i], success: true, platform_post_id: result.platform_post_id });
+                _showToast(platforms[i] + ': Erfolgreich veroeffentlicht!', 'success');
+            } catch(e) {
+                results.push({ platform: platforms[i], success: false, error: e.message });
+                _showToast(platforms[i] + ': ' + e.message, 'error');
+            }
+        }
+
+        // Status aktualisieren wenn mindestens ein Kanal erfolgreich
+        var anySuccess = results.some(function(r) { return r.success; });
+        if (anySuccess) {
+            var firstPlatformId = results.find(function(r) { return r.success && r.platform_post_id; });
+            await sb.from('scompler_posts').update({
+                status: 'ausgespielt',
+                published_at: new Date().toISOString(),
+                platform_post_id: firstPlatformId ? firstPlatformId.platform_post_id : post.platform_post_id
+            }).eq('id', postId);
+            scClosePostAdd();
+            var c = document.getElementById('scTabContent');
+            if (c) renderKalender(c);
+        }
+    }
+
+    async function scSavePost(editId) {
         var sb = _sb(); if (!sb) return;
         var title = (document.getElementById('scPostTitle')?.value || '').trim();
         if (!title) { _showToast('Titel ist erforderlich', 'error'); return; }
+
+        // Kanaele sammeln
+        var kanaele = [];
+        document.querySelectorAll('.scKanalCb:checked').forEach(function(cb) { kanaele.push(cb.value); });
+
+        // Kanal-Captions sammeln
+        var kcText = document.getElementById('scKCText');
+        if (kcText && _activeKanalCaption) _kanalCaptionCache[_activeKanalCaption] = kcText.value;
+        var ytTitle = document.getElementById('scKCYtTitle');
+        if (ytTitle) _kanalCaptionCache['youtube_title'] = ytTitle.value;
+        var kanal_captions = {};
+        KANAL_OPTIONS.forEach(function(k) {
+            if (_kanalCaptionCache[k]) kanal_captions[k.toLowerCase()] = _kanalCaptionCache[k];
+        });
+        if (_kanalCaptionCache['youtube_title']) kanal_captions['youtube_title'] = _kanalCaptionCache['youtube_title'];
+
+        // TikTok Settings
+        var tiktok_settings = null;
+        if (kanaele.indexOf('TikTok') !== -1) {
+            var privRadio = document.querySelector('input[name="ttPrivacy"]:checked');
+            tiktok_settings = {
+                privacy: privRadio ? privRadio.value : 'public',
+                allow_duet: document.getElementById('ttDuet')?.checked !== false,
+                allow_stitch: document.getElementById('ttStitch')?.checked !== false,
+                allow_comment: document.getElementById('ttComment')?.checked !== false,
+                branded_content: !!document.getElementById('ttBranded')?.checked
+            };
+        }
 
         var row = {
             title: title,
             caption: document.getElementById('scPostCaption')?.value || null,
             format: document.getElementById('scPostFormat')?.value || 'feed',
+            kanaele: kanaele.length > 0 ? kanaele : null,
             standort_id: document.getElementById('scPostStandort')?.value || null,
             thema: document.getElementById('scPostThema')?.value || null,
             marke: document.getElementById('scPostMarke')?.value || null,
             collab_partner: document.getElementById('scPostCollab')?.value || null,
             geplant_am: document.getElementById('scPostDatum')?.value || null,
             status: document.getElementById('scPostStatus')?.value || 'entwurf',
+            kanal_captions: kanal_captions,
+            tiktok_settings: tiktok_settings,
             erstellt_von: window.sbUser?.id || null
         };
 
+        var modal = document.getElementById('scPostModal');
+        var actualEditId = editId || (modal?.dataset.editId ? parseInt(modal.dataset.editId) : 0);
+
         try {
-            var { error } = await sb.from('scompler_posts').insert(row);
-            if (error) throw error;
-            _showToast('Post erstellt', 'success');
+            if (actualEditId) {
+                var { error } = await sb.from('scompler_posts').update(row).eq('id', actualEditId);
+                if (error) throw error;
+                _showToast('Post aktualisiert', 'success');
+            } else {
+                var { error } = await sb.from('scompler_posts').insert(row);
+                if (error) throw error;
+                _showToast('Post erstellt', 'success');
+            }
+            _kanalCaptionCache = {};
             scClosePostAdd();
             var c = document.getElementById('scTabContent');
             if (c) renderKalender(c);
@@ -1852,4 +2249,13 @@
     window.scSaveImport    = scSaveImport;
     window.scSetBenchmarkMetrik = scSetBenchmarkMetrik;
     window.scKalNav        = scKalNav;
+    // Neue Features
+    window.scDragStart     = scDragStart;
+    window.scDragOver      = scDragOver;
+    window.scDrop          = scDrop;
+    window.scUpdatePreview = scUpdatePreview;
+    window.scSetPreviewPlatform = scSetPreviewPlatform;
+    window.scUpdateKanalUI = scUpdateKanalUI;
+    window.scShowKanalCaption = scShowKanalCaption;
+    window.scPublishPost   = scPublishPost;
 })();
