@@ -1098,7 +1098,7 @@ function _renderMarketingDemo(container) {
     html += '<div class="vc p-4 border-2 border-orange-200 bg-orange-50">';
     html += '<p class="text-sm font-bold text-orange-700 mb-1">🚀 Werbung für deinen Standort aktivieren</p>';
     html += '<p class="text-xs text-gray-600 mb-3">HQ richtet Google Ads & Meta Ads ein – du siehst hier live deine Performance.</p>';
-    html += '<button onclick="showToast('Bitte wende dich an dein HQ-Team.', 'info')" class="btn-primary text-sm py-2 px-4">Jetzt anfragen</button>';
+    html += '<button onclick="showToast(&quot;Bitte wende dich an dein HQ-Team.&quot;, &quot;info&quot;)" class="btn-primary text-sm py-2 px-4">Jetzt anfragen</button>';
     html += '</div>';
 
     container.innerHTML = html;
