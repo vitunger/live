@@ -1353,7 +1353,9 @@
         try {
             var now = new Date();
             var cutoffDate = new Date(); cutoffDate.setDate(cutoffDate.getDate() - SC.zeitraum);
-            var { data, error } = await sb.from('ads_performance')
+            var q = _scopedQuery('ads_performance');
+            if (!q) { el.innerHTML = '<p class="text-gray-400 text-sm">Nicht verfuegbar</p>'; return; }
+            var { data, error } = await q
                 .select('*')
                 .gte('datum', cutoffDate.toISOString().split('T')[0])
                 .order('datum', { ascending: false });

@@ -23,7 +23,9 @@ var notifRealtimeChannel = null;
 export async function loadNotifications() {
     try {
         var sb = _sb(); if (!sb || !_sbUser()) return;
-        var { data, error } = await sb.from('notifications')
+        var q = _scopedQuery('notifications');
+        if (!q) return;
+        var { data, error } = await q
             .select('*')
             .order('created_at', { ascending: false })
             .limit(50);

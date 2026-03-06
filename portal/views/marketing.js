@@ -96,7 +96,9 @@ async function initMonthSelect() {
     var sb = _sb();
     if (!sb) return;
     try {
-        var { data } = await sb.from('ads_performance').select('datum').order('datum', { ascending: false });
+        var q = _scopedQuery('ads_performance');
+        if (!q) return;
+        var { data } = await q.select('datum').order('datum', { ascending: false });
         if (!data || !data.length) return;
 
         // Distinct year-month Paare extrahieren
