@@ -545,8 +545,9 @@ export async function saveKalTermin(){
         var mm = String(Math.abs(off)%60).padStart(2,'0');
         return dateStr + 'T' + timeStr + ':00' + sign + hh + ':' + mm;
     }
-    var startZeit = toLocalISO(date, time);
-    var endZeit = endTime ? toLocalISO(date, endTime) : null;
+    var startZeit = ganztaegig ? toLocalISO(date, '00:00') : toLocalISO(date, time);
+    var endZeit = ganztaegig ? toLocalISO(date, '23:59') : (endTime ? toLocalISO(date, endTime) : null);
+    if(!startZeit) { _showToast('Bitte Uhrzeit eingeben', 'error'); return; }
     var teilnehmerData = kalSelectedTeilnehmer.map(function(tn){ return {id:tn.id, name:tn.name}; });
 
     var payload = {
