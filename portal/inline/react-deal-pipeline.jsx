@@ -778,15 +778,13 @@ function ScanUploadModal({deal,sales,onClose,onUpdateDeal}){
 function WawiBelege({deal}){
   const[belege,setBelege]=useState([]);
   const[loaded,setLoaded]=useState(false);
-  const[expanded,setExpanded]=useState(null);
-  const[positionen,setPositionen]=useState({});
   useEffect(()=>{
     if(loaded)return;
     const ids=[deal.beleg_angebot_id,deal.beleg_auftrag_id,deal.beleg_rechnung_id].filter(Boolean);
     if(ids.length===0&&!deal.wawiKundenNr){setLoaded(true);return;}
     (async()=>{
       try{
-        let q=window.sb.from("wawi_belege").select("id,beleg_typ,beleg_nr,datum,endbetrag,kunde_name,verkaeufer,quell_datei_url,netto,mwst_betrag,belegrabatt");
+        let q=window.sb.from("wawi_belege").select("id,beleg_typ,beleg_nr,datum,endbetrag,kunde_name,verkaeufer,quell_datei_url");
         if(ids.length>0) q=q.in("id",ids);
         else if(deal.wawiKundenNr) q=q.eq("kunden_nr",deal.wawiKundenNr).eq("standort_id",deal.loc).order("datum",{ascending:false}).limit(5);
         const{data}=await q;
@@ -795,79 +793,32 @@ function WawiBelege({deal}){
       setLoaded(true);
     })();
   },[deal,loaded]);
-  const loadPositionen=async(belegId)=>{
-    if(positionen[belegId])return;
-    try{
-      const{data}=await window.sb.from("wawi_beleg_positionen").select("*").eq("beleg_id",belegId).order("sortierung");
-      setPositionen(p=>({...p,[belegId]:data||[]}));
-    }catch(e){console.error("Positionen load:",e);}
-  };
-  const toggleExpand=(id)=>{
-    if(expanded===id){setExpanded(null);return;}
-    setExpanded(id);
-    loadPositionen(id);
-  };
   const typIcons={angebot:"\ud83d\udccb",auftrag:"\ud83d\udce6",rechnung:"\ud83e\uddfe",lieferschein:"\ud83d\ude9a",gutschrift:"\ud83d\udcb0"};
   const typLabels={angebot:"Angebot",auftrag:"Auftrag",rechnung:"Rechnung",lieferschein:"Lieferschein",gutschrift:"Gutschrift"};
-  const fmtEur=(v)=>v?parseFloat(v).toLocaleString("de-DE",{minimumFractionDigits:2})+"  \u20ac":"";
+  const openPdf=async(url)=>{
+    try{
+      const path=url.split("/storage/v1/object/public/wawi-belege/")[1]||url.split("/storage/v1/object/wawi-belege/")[1];
+      if(!path){window.open(url,"_blank");return;}
+      const{data,error}=await window.sb.storage.from("wawi-belege").createSignedUrl(path,300);
+      if(error||!data?.signedUrl){window.showToast&&window.showToast("PDF konnte nicht geladen werden","error");return;}
+      window.open(data.signedUrl,"_blank");
+    }catch(e){console.error("PDF open:",e);window.open(url,"_blank");}
+  };
   if(!loaded)return <div style={{fontSize:11,color:"#aaa"}}>Lade Belege...</div>;
   if(belege.length===0)return null;
   return <div style={{display:"flex",flexDirection:"column",gap:6}}>
-    {belege.map(b=><div key={b.id}>
-      <div onClick={()=>toggleExpand(b.id)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:expanded===b.id?"#edf2f7":"#f8fafc",borderRadius:expanded===b.id?"8px 8px 0 0":8,border:"1px solid #edf2f7",cursor:"pointer",transition:"all .15s"}}>
-        <div style={{display:"flex",alignItems:"center",gap:6}}>
-          <span style={{fontSize:14}}>{typIcons[b.beleg_typ]||"\ud83d\udcc4"}</span>
-          <div>
-            <div style={{fontSize:11,fontWeight:700,color:"#2d3748"}}>{typLabels[b.beleg_typ]||b.beleg_typ} {b.beleg_nr}</div>
-            <div style={{fontSize:10,color:"#a0aec0"}}>{b.datum?new Date(b.datum).toLocaleDateString("de-DE"):""} {b.verkaeufer?"| "+b.verkaeufer:""}</div>
-          </div>
-        </div>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          {b.endbetrag&&<div style={{fontSize:12,fontWeight:700,color:"#2d3748"}}>{fmtEur(b.endbetrag)}</div>}
-          <span style={{fontSize:10,color:"#a0aec0",transition:"transform .2s",transform:expanded===b.id?"rotate(180deg)":"none"}}>{"\u25bc"}</span>
+    {belege.map(b=><div key={b.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:"#f8fafc",borderRadius:8,border:"1px solid #edf2f7"}}>
+      <div style={{display:"flex",alignItems:"center",gap:6,flex:1,minWidth:0}}>
+        <span style={{fontSize:14}}>{typIcons[b.beleg_typ]||"\ud83d\udcc4"}</span>
+        <div style={{minWidth:0}}>
+          <div style={{fontSize:11,fontWeight:700,color:"#2d3748"}}>{typLabels[b.beleg_typ]||b.beleg_typ} {b.beleg_nr}</div>
+          <div style={{fontSize:10,color:"#a0aec0"}}>{b.datum?new Date(b.datum).toLocaleDateString("de-DE"):""} {b.verkaeufer?"| "+b.verkaeufer:""}</div>
         </div>
       </div>
-      {expanded===b.id&&<div style={{border:"1px solid #edf2f7",borderTop:"none",borderRadius:"0 0 8px 8px",padding:"10px",background:"#fff"}}>
-        {/* Positionen */}
-        {positionen[b.id]?positionen[b.id].length>0?<div>
-          <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",marginBottom:4}}>Positionen</div>
-          {positionen[b.id].filter(p=>!p.ist_hinweis).map((p,i)=><div key={p.id||i} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",borderBottom:"1px solid #f7fafc",fontSize:11}}>
-            <div style={{flex:1,color:"#4a5568"}}>
-              {p.ist_hauptprodukt&&<span style={{color:"#EF7D00",fontWeight:700,marginRight:4}}>{"\u2605"}</span>}
-              {p.bezeichnung}{p.art_nr?" ("+p.art_nr+")":""}
-              {p.seriennummer&&<span style={{fontSize:9,color:"#a0aec0",marginLeft:4}}>SN: {p.seriennummer}</span>}
-            </div>
-            <div style={{textAlign:"right",whiteSpace:"nowrap",fontWeight:600,color:"#2d3748"}}>
-              {p.menge>1&&<span style={{color:"#a0aec0",fontWeight:400,marginRight:4}}>{p.menge}x</span>}
-              {fmtEur(p.gesamtpreis)}
-              {p.rabatt>0&&<span style={{fontSize:9,color:"#e53e3e",marginLeft:4}}>-{p.rabatt}%</span>}
-            </div>
-          </div>)}
-          {/* Summen */}
-          <div style={{borderTop:"1.5px solid #edf2f7",marginTop:6,paddingTop:6,display:"flex",flexDirection:"column",gap:2}}>
-            {b.netto&&<div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#718096"}}><span>Netto</span><span>{fmtEur(b.netto)}</span></div>}
-            {b.mwst_betrag&&<div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#718096"}}><span>MwSt</span><span>{fmtEur(b.mwst_betrag)}</span></div>}
-            {b.belegrabatt>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#e53e3e"}}><span>Rabatt</span><span>-{fmtEur(b.belegrabatt)}</span></div>}
-            <div style={{display:"flex",justifyContent:"space-between",fontSize:12,fontWeight:700,color:"#1a202c"}}><span>Gesamt</span><span>{fmtEur(b.endbetrag)}</span></div>
-          </div>
-        </div>:<div style={{fontSize:11,color:"#ccc",textAlign:"center",padding:8}}>Keine Positionen vorhanden</div>
-        :<div style={{fontSize:11,color:"#aaa",textAlign:"center",padding:8}}>Lade Positionen...</div>}
-        {/* PDF Download */}
-        {b.quell_datei_url&&<div style={{marginTop:8,borderTop:"1px solid #f0f0f0",paddingTop:8}}>
-          <button onClick={async()=>{
-            try{
-              // Extract storage path from URL
-              const path=b.quell_datei_url.split("/storage/v1/object/public/wawi-belege/")[1]||b.quell_datei_url.split("/storage/v1/object/wawi-belege/")[1];
-              if(!path){window.open(b.quell_datei_url,"_blank");return;}
-              const{data,error}=await window.sb.storage.from("wawi-belege").createSignedUrl(path,300);
-              if(error||!data?.signedUrl){window.showToast&&window.showToast("PDF konnte nicht geladen werden","error");return;}
-              window.open(data.signedUrl,"_blank");
-            }catch(e){console.error("PDF open:",e);window.open(b.quell_datei_url,"_blank");}
-          }} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:8,background:"#EFF6FF",border:"1px solid #BFDBFE",color:"#1D4ED8",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-            {"\ud83d\udcc3"} PDF anzeigen / herunterladen
-          </button>
-        </div>}
-      </div>}
+      <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+        {b.endbetrag&&<div style={{fontSize:12,fontWeight:700,color:"#2d3748"}}>{parseFloat(b.endbetrag).toLocaleString("de-DE",{minimumFractionDigits:2})}&nbsp;&euro;</div>}
+        {b.quell_datei_url&&<button onClick={()=>openPdf(b.quell_datei_url)} style={{padding:"4px 8px",borderRadius:6,background:"#EFF6FF",border:"1px solid #BFDBFE",color:"#1D4ED8",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>PDF</button>}
+      </div>
     </div>)}
   </div>;
 }
@@ -947,7 +898,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
 
   return <>
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.15)",zIndex:499,animation:"fadeIn .15s"}}/>
-    <div style={{position:"fixed",top:0,right:0,width:380,maxWidth:"96vw",height:"100dvh",background:"#fff",borderLeft:"1px solid #e5e7eb",zIndex:500,display:"flex",flexDirection:"column",overflow:"hidden",boxShadow:"-8px 0 30px rgba(0,0,0,.08)",animation:"slideIn .25s ease"}} onClick={e=>e.stopPropagation()}>
+    <div style={{position:"fixed",top:0,right:0,width:380,maxWidth:"96vw",height:"100vh",background:"#fff",borderLeft:"1px solid #e5e7eb",zIndex:500,display:"flex",flexDirection:"column",overflow:"hidden",boxShadow:"-8px 0 30px rgba(0,0,0,.08)",animation:"slideIn .25s ease"}} onClick={e=>e.stopPropagation()}>
 
       {/* Header */}
       <div style={{padding:"14px 16px 10px",borderBottom:"1px solid #f0f0f0",flexShrink:0}}>
@@ -1003,7 +954,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
       </div>
 
       {/* Content */}
-      <div style={{flex:1,overflowY:"auto",padding:"14px 16px",WebkitOverflowScrolling:"touch"}}>
+      <div style={{flex:1,overflowY:"auto",padding:"14px 16px"}}>
 
         {tab==="uebersicht"&&<div>
           {/* Beratung auf einen Blick */}
@@ -1224,7 +1175,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
       </div>}
 
       {/* Footer: Actions */}
-      <div style={{padding:"10px 16px",paddingBottom:"calc(10px + env(safe-area-inset-bottom))",borderTop:"1px solid #f0f0f0",display:"flex",gap:6,flexShrink:0,flexWrap:"nowrap"}}>
+      <div style={{padding:"10px 16px",borderTop:"1px solid #f0f0f0",display:"flex",gap:6,flexShrink:0}}>
         <button onClick={()=>setShowForm("interactive")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #e5e7eb",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#374151"}}>📱 Beratung</button>
         <button onClick={()=>setShowForm("print")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #e5e7eb",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#374151"}}>🖨️ Drucken</button>
         <button onClick={()=>setShowForm("scan")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #EF7D00",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#EF7D00"}}>📷 Scan</button>
