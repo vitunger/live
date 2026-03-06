@@ -1,5 +1,5 @@
 /**
- * /api/webhooks/etermin.js – eTermin Webhook Receiver
+ * /api/webhooks/etermin.js – v1772805829 – eTermin Webhook Receiver
  * Creates termine + leads from eTermin bookings
  * Uses direct Supabase REST API
  */
@@ -280,5 +280,6 @@ module.exports = async function(req, res) {
     return res.status(500).json({ error: e.message });
   }
 };
+
 
 
