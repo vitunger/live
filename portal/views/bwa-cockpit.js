@@ -121,7 +121,7 @@ async function updateBwaDeadlineWidget() {
 
     var submitted = null;
     var rating = 'missing';
-    if(typeof sb !== 'undefined' && typeof sbProfile !== 'undefined' && sbProfile && sbProfile.standort_id) {
+    if(_sb() && _sbProfile() && _sbProfile().standort_id) {
         try {
             var bwaResp = await _sb().from('bwa_daten').select('created_at').eq('standort_id', sbProfile.standort_id).eq('monat', bwaMo.m + 1).eq('jahr', bwaMo.y).limit(1);
             if(bwaResp.data && bwaResp.data.length > 0) {
@@ -224,7 +224,7 @@ async function updateBwaDeadlineWidget() {
 // ──── NETZWERK WIDGET (Standort-Sicht) ────
 async function updateNetzwerkWidget() {
     var gold = 0, ok = 0, missing = 0, late = 0, total = 30;
-    if(typeof sb !== 'undefined') {
+    if(_sb()) {
         try {
             var bwaMo = getBwaMonth(new Date());
             var stdResp = await _sb().from('standorte').select('id,name');
@@ -264,7 +264,7 @@ async function showKpiReport(bwaMo, rating) {
     grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--c-muted);font-size:12px;padding:8px">⏳ Lade echte Zahlen…</div>';
 
     try {
-        var standortId = (typeof sbProfile !== 'undefined' && sbProfile) ? sbProfile.standort_id : null;
+        var standortId = _sbProfile() ? _sbProfile().standort_id : null;
         if(!standortId) throw new Error('Kein Standort');
 
         // Echte BWA-Daten für diesen Monat
