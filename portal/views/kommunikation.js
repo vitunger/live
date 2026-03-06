@@ -825,6 +825,20 @@ export function closeForumDetail() {
 }
 
 export function showKommTab(tabName) {
+    // === DEMO-MODUS ===
+    if (typeof window.isModuleDemo === 'function' && window.isModuleDemo('kommunikation')) {
+        var container = document.querySelector('.komm-tab-content') || document.getElementById('kommunikationContent');
+        // Show demo in the first visible container
+        var allContainers = document.querySelectorAll('.komm-tab-content');
+        allContainers.forEach(function(t){t.style.display='none';});
+        var chatEl = document.getElementById('kommTabChat');
+        if (chatEl) {
+            chatEl.style.display = 'block';
+            chatEl.innerHTML = _renderKommDemo();
+        }
+        return;
+    }
+
     document.querySelectorAll('.komm-tab-content').forEach(function(t){t.style.display='none';});
     document.querySelectorAll('.komm-tab-btn').forEach(function(b){
         b.className = b.className.replace(/bg-white text-gray-800 shadow-sm/g, 'text-gray-500 hover:text-gray-700').replace(/ shadow-sm/g, '');
@@ -842,6 +856,86 @@ export function showKommTab(tabName) {
 // Init on first load
 
 // Strangler Fig: window.* registration
+
+// ── DEMO-RENDERER für Kommunikation (status='demo' in modul_status) ──
+function _renderKommDemo() {
+    var now = new Date();
+    var pad = function(n){return String(n).padStart(2,'0');};
+    var timeStr = pad(now.getHours()) + ':' + pad(now.getMinutes());
+    var html = '';
+
+    html += '<div class="flex h-full" style="min-height:420px">';
+
+    // Sidebar
+    html += '<div class="w-64 border-r border-gray-200 flex flex-col bg-gray-50">';
+    html += '<div class="p-3 border-b border-gray-200">';
+    html += '<p class="text-xs font-bold text-gray-500 uppercase mb-2">Kanäle</p>';
+    var channels = [
+        {icon:'#️⃣', name:'allgemein', unread:3, active:true},
+        {icon:'🛒', name:'verkauf', unread:0, active:false},
+        {icon:'🔧', name:'werkstatt', unread:1, active:false},
+    ];
+    channels.forEach(function(ch) {
+        html += '<div class="flex items-center gap-2 px-2 py-1.5 rounded-lg mb-0.5 cursor-default ' + (ch.active ? 'bg-orange-50 border border-orange-200' : 'hover:bg-gray-100') + '">';
+        html += '<span class="text-sm">' + ch.icon + '</span>';
+        html += '<span class="text-sm flex-1 ' + (ch.active ? 'font-semibold text-orange-700' : 'text-gray-700') + '">' + ch.name + '</span>';
+        if (ch.unread > 0) html += '<span class="text-[10px] bg-orange-500 text-white rounded-full px-1.5 py-0.5 font-bold">' + ch.unread + '</span>';
+        html += '</div>';
+    });
+    html += '</div>';
+    html += '<div class="p-3">';
+    html += '<p class="text-xs font-bold text-gray-500 uppercase mb-2">Direktnachrichten</p>';
+    var dms = [{name:'HQ Team', status:'online'},{name:'Matthias F.', status:'offline'}];
+    dms.forEach(function(dm) {
+        html += '<div class="flex items-center gap-2 px-2 py-1.5 rounded-lg mb-0.5 hover:bg-gray-100 cursor-default">';
+        html += '<div class="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-[10px] font-bold">' + dm.name[0] + '</div>';
+        html += '<span class="text-sm text-gray-700 flex-1">' + dm.name + '</span>';
+        html += '<div class="w-2 h-2 rounded-full ' + (dm.status==='online' ? 'bg-green-400' : 'bg-gray-300') + '"></div>';
+        html += '</div>';
+    });
+    html += '</div></div>';
+
+    // Chat area
+    html += '<div class="flex-1 flex flex-col">';
+    html += '<div class="p-3 border-b border-gray-200 bg-white flex items-center gap-2">';
+    html += '<span class="text-sm font-bold"># allgemein</span>';
+    html += '<span class="text-xs bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">🎭 Demo</span>';
+    html += '</div>';
+
+    // Messages
+    html += '<div class="flex-1 overflow-y-auto p-4 space-y-4">';
+    var msgs = [
+        {author:'HQ Team', avatar:'H', time:'09:15', text:'Guten Morgen! Denkt an das BWA-Upload bis Ende des Monats.', isHq:true},
+        {author:'Du', avatar:'T', time:'09:22', text:'Erledigt! Habe heute früh bereits hochgeladen ✓', isHq:false},
+        {author:'HQ Team', avatar:'H', time:'09:24', text:'Super, danke! Habt ihr Fragen zur neuen Orbea-Kampagne?', isHq:true},
+        {author:'Du', avatar:'T', time:'09:31', text:'Wann kommen die neuen POS-Materialien an?', isHq:false},
+        {author:'HQ Team', avatar:'H', time:'09:45', text:'Diese Woche noch – ich schicke euch eine Sendungsverfolgung.', isHq:true},
+    ];
+    msgs.forEach(function(m) {
+        html += '<div class="flex gap-3 ' + (!m.isHq ? 'flex-row-reverse' : '') + '">';
+        html += '<div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs font-bold ' + (m.isHq ? 'bg-orange-500' : 'bg-gray-500') + '">' + m.avatar + '</div>';
+        html += '<div class="max-w-xs">';
+        html += '<div class="flex items-center gap-1 mb-0.5 ' + (!m.isHq ? 'justify-end' : '') + '">';
+        html += '<span class="text-xs font-semibold">' + m.author + '</span>';
+        html += '<span class="text-[10px] text-gray-400">' + m.time + '</span>';
+        html += '</div>';
+        html += '<div class="rounded-xl px-3 py-2 text-sm ' + (m.isHq ? 'bg-gray-100 text-gray-800' : 'bg-orange-500 text-white') + '">' + m.text + '</div>';
+        html += '</div></div>';
+    });
+    html += '</div>';
+
+    // Input (disabled in demo)
+    html += '<div class="p-3 border-t border-gray-200 bg-white">';
+    html += '<div class="flex gap-2 items-center">';
+    html += '<input disabled placeholder="Kommunikation wird bald freigeschaltet..." class="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-400 cursor-not-allowed" />';
+    html += '<button disabled class="btn-primary text-sm py-2 px-3 opacity-40 cursor-not-allowed">Senden</button>';
+    html += '</div></div>';
+
+    html += '</div></div>'; // close chat + flex
+
+    return html;
+}
+
 const _exports = {loadKommSidebar,filterKommSidebar,openKommConv,loadChannelMessages,subscribeToChannel,loadInboxConversation,renderInboxBubbles,loadAnnouncements,markAnkGelesen,renderChatBubbles,renderSingleBubble,setReply,cancelReply,kommSendMessage,kommInputKeydown,kommAutoResize,kommStartNewChat,kommSelectNewRecipient,kommCreateKanal,updateKommBadges,renderCommunityPosts,createCommunityPost,deactivateBrettPost,deleteForumPost,filterCommunity,openForumDetail,postForumComment,closeForumDetail,showKommTab};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // [prod] log removed
@@ -857,3 +951,4 @@ window.kommSendMessage = kommSendMessage;
 window.kommStartNewChat = kommStartNewChat;
 window.postForumComment = postForumComment;
 window.showKommTab = showKommTab;
+
