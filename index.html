@@ -4051,6 +4051,15 @@
                         <div class="vit-card p-6">
                             <div class="flex items-center justify-between mb-4">
                                 <h2 class="text-lg font-semibold text-gray-800">Verkaufsleistung pro Standort</h2>
+                                <select id="hqVkPeriod" onchange="loadHqVerkaufStandorte()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm font-semibold">
+                                    <option value="week">Diese Woche</option>
+                                    <option value="lastweek">Letzte Woche</option>
+                                    <option value="month" selected>Dieser Monat</option>
+                                    <option value="lastmonth">Letzter Monat</option>
+                                    <option value="quarter">Dieses Quartal</option>
+                                    <option value="year">Dieses Jahr</option>
+                                    <option value="all">Gesamt</option>
+                                </select>
                             </div>
                             <div class="overflow-x-auto"><table class="w-full text-sm" id="hqVkTable">
                                 <thead><tr class="bg-gray-50">
