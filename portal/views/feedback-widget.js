@@ -105,13 +105,56 @@ window.fbToggleScreen = async function(){
 if(fbState.recordingType === 'screen') { fbStopRec(); return; }
 fbStopRecIfActive();
 try {
+    // Stream zuerst holen (Browser-Prompt erscheint)
     var stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+
+    // Overlay ausblenden + Countdown
+    var overlay = document.getElementById('fbOverlay');
+    var widget = document.getElementById('fbWidget');
+    if(overlay) overlay.style.display = 'none';
+    if(widget) widget.style.display = 'none';
+
+    // Countdown-Anzeige erstellen
+    var countdown = document.createElement('div');
+    countdown.id = 'fbScreenCountdown';
+    countdown.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:99999;background:rgba(0,0,0,0.8);color:white;font-size:64px;font-weight:900;width:120px;height:120px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:Outfit,sans-serif;';
+    document.body.appendChild(countdown);
+
+    // 3-Sekunden-Countdown
+    for(var c = 3; c > 0; c--) {
+        countdown.textContent = c;
+        await new Promise(function(r){ setTimeout(r, 1000); });
+    }
+    countdown.remove();
+
+    // Aufnahme starten
     startRecording(stream, 'screen');
-    document.getElementById('fbBtnScreen').classList.add('recording');
-    document.getElementById('fbScreenLabel').textContent = '⏹ Aufnahme stoppen';
+
+    // Dezenter Aufnahme-Indikator am oberen Rand
+    var indicator = document.createElement('div');
+    indicator.id = 'fbRecIndicator';
+    indicator.style.cssText = 'position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:99999;background:#ef4444;color:white;padding:6px 16px;border-radius:20px;font-size:13px;font-weight:600;font-family:Outfit,sans-serif;display:flex;align-items:center;gap:8px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3);';
+    indicator.innerHTML = '<span style="width:10px;height:10px;background:white;border-radius:50%;animation:fbRecPulse 1s infinite"></span> Aufnahme... Klick zum Stoppen';
+    indicator.onclick = function(){ window.fbStopRec(); };
+    // Pulse-Animation
+    var style = document.createElement('style');
+    style.id = 'fbRecPulseStyle';
+    style.textContent = '@keyframes fbRecPulse{0%,100%{opacity:1}50%{opacity:0.3}}';
+    document.head.appendChild(style);
+    document.body.appendChild(indicator);
+
     // Handle user stopping share via browser UI
-    stream.getVideoTracks()[0].onended = function(){ fbStopRec(); };
-} catch(e) { if(e.name !== 'AbortError') _showToast('Bildschirmaufnahme nicht möglich: ' + e.message, 'error'); }
+    stream.getVideoTracks()[0].onended = function(){ window.fbStopRec(); };
+} catch(e) {
+    // Bei Abbruch: Overlay wieder anzeigen
+    var ov = document.getElementById('fbOverlay');
+    var wg = document.getElementById('fbWidget');
+    if(ov) { ov.style.display = ''; ov.classList.add('fb-open'); }
+    if(wg) wg.style.display = 'block';
+    var cd = document.getElementById('fbScreenCountdown');
+    if(cd) cd.remove();
+    if(e.name !== 'AbortError') _showToast('Bildschirmaufnahme nicht moeglich: ' + e.message, 'error');
+}
 };
 
 export function startRecording(stream, type) {
@@ -173,6 +216,7 @@ if(fbState.recordingType) fbStopRec();
 
 export function resetRecUI() {
 clearInterval(fbState.recTimer);
+var wasScreen = fbState.recordingType === 'screen';
 fbState.recordingType = null;
 fbState.recordingStart = null;
 fbState.mediaRecorder = null;
@@ -181,6 +225,18 @@ document.getElementById('fbBtnAudio').classList.remove('recording');
 document.getElementById('fbBtnScreen').classList.remove('recording');
 document.getElementById('fbAudioLabel').textContent = 'Sprachaufnahme';
 document.getElementById('fbScreenLabel').textContent = 'Bildschirm aufnehmen';
+
+// Screen Recording: Overlay + Widget wieder einblenden, Indikator entfernen
+if(wasScreen) {
+    var overlay = document.getElementById('fbOverlay');
+    var widget = document.getElementById('fbWidget');
+    if(overlay) { overlay.style.display = ''; overlay.classList.add('fb-open'); }
+    if(widget) widget.style.display = 'block';
+    var indicator = document.getElementById('fbRecIndicator');
+    if(indicator) indicator.remove();
+    var pulseStyle = document.getElementById('fbRecPulseStyle');
+    if(pulseStyle) pulseStyle.remove();
+}
 }
 
 // ── Screenshot ──
