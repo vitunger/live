@@ -947,7 +947,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
 
   return <>
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.15)",zIndex:499,animation:"fadeIn .15s"}}/>
-    <div style={{position:"fixed",top:0,right:0,width:380,maxWidth:"96vw",height:"100vh",background:"#fff",borderLeft:"1px solid #e5e7eb",zIndex:500,display:"flex",flexDirection:"column",overflow:"hidden",boxShadow:"-8px 0 30px rgba(0,0,0,.08)",animation:"slideIn .25s ease"}} onClick={e=>e.stopPropagation()}>
+    <div style={{position:"fixed",top:0,right:0,width:380,maxWidth:"96vw",height:"100dvh",background:"#fff",borderLeft:"1px solid #e5e7eb",zIndex:500,display:"flex",flexDirection:"column",overflow:"hidden",boxShadow:"-8px 0 30px rgba(0,0,0,.08)",animation:"slideIn .25s ease"}} onClick={e=>e.stopPropagation()}>
 
       {/* Header */}
       <div style={{padding:"14px 16px 10px",borderBottom:"1px solid #f0f0f0",flexShrink:0}}>
@@ -1003,7 +1003,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
       </div>
 
       {/* Content */}
-      <div style={{flex:1,overflowY:"auto",padding:"14px 16px"}}>
+      <div style={{flex:1,overflowY:"auto",padding:"14px 16px",WebkitOverflowScrolling:"touch"}}>
 
         {tab==="uebersicht"&&<div>
           {/* Beratung auf einen Blick */}
@@ -1224,7 +1224,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
       </div>}
 
       {/* Footer: Actions */}
-      <div style={{padding:"10px 16px",borderTop:"1px solid #f0f0f0",display:"flex",gap:6,flexShrink:0}}>
+      <div style={{padding:"10px 16px",paddingBottom:"calc(10px + env(safe-area-inset-bottom))",borderTop:"1px solid #f0f0f0",display:"flex",gap:6,flexShrink:0,flexWrap:"nowrap"}}>
         <button onClick={()=>setShowForm("interactive")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #e5e7eb",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#374151"}}>📱 Beratung</button>
         <button onClick={()=>setShowForm("print")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #e5e7eb",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#374151"}}>🖨️ Drucken</button>
         <button onClick={()=>setShowForm("scan")} style={{flex:1,padding:"7px 8px",borderRadius:7,border:"1.5px solid #EF7D00",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#EF7D00"}}>📷 Scan</button>
