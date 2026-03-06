@@ -1226,53 +1226,84 @@ function DropZone({sid,label,sub,bc,tc,cc,deals,onDrop,onDrag}){
 /* ── MAIN APP ────────────────────────────────────── */
 
 // ── Pipeline → verkauf_tracking Sync ──
-// When a deal is moved to "verkauft", auto-create an entry in verkauf_tracking
-async function syncSaleToTracking(deal, SELLERS) {
+// Syncs pipeline events to verkauf_tracking for the Wochenansicht.
+// Events: lead created (geplant/spontan), deal→schwebend (verkauft), deal→verkauft (uebergabe+umsatz)
+function resolveSellerName(deal, SELLERS, profile) {
+  if (deal.seller) {
+    const s = SELLERS.find(x => x.id === deal.seller);
+    if (s) return s.label.replace(/^[^\w]*/, "").trim();
+    return deal.seller;
+  }
+  return profile?.name || "Team";
+}
+
+async function syncTrackingIncrement(stdId, sellerName, sellerId, field, amount) {
   try {
     const sb = _sb();
-    const profile = window.sbProfile;
-    if (!sb || !profile) return;
-    const stdId = deal.loc && deal.loc !== "hq" ? deal.loc : profile.standort_id;
-    if (!stdId) return;
+    if (!sb || !stdId) return;
     const today = new Date().toISOString().slice(0, 10);
-    // Resolve seller name
-    let sellerName = "Team";
-    if (deal.seller) {
-      const s = SELLERS.find(x => x.id === deal.seller);
-      sellerName = s ? s.label.replace(/^[^\w]*/, "").trim() : deal.seller;
-    } else if (profile.name) {
-      sellerName = profile.name;
-    }
-    // Check if an entry already exists for this seller+date+standort
     const { data: existing } = await sb.from("verkauf_tracking")
-      .select("id, verkauft, umsatz")
+      .select("id, geplant, spontan, online, ergo, verkauft, uebergabe, umsatz")
       .eq("standort_id", stdId)
       .eq("datum", today)
       .eq("verkaeufer_name", sellerName)
       .maybeSingle();
     if (existing) {
-      // Increment existing entry
-      await sb.from("verkauf_tracking").update({
-        verkauft: (existing.verkauft || 0) + 1,
-        umsatz: (parseFloat(existing.umsatz) || 0) + (deal.value || 0),
-        updated_at: new Date().toISOString()
-      }).eq("id", existing.id);
+      const updates = { updated_at: new Date().toISOString() };
+      if (field === "umsatz") {
+        updates.umsatz = (parseFloat(existing.umsatz) || 0) + amount;
+      } else {
+        updates[field] = (existing[field] || 0) + amount;
+      }
+      await sb.from("verkauf_tracking").update(updates).eq("id", existing.id);
     } else {
-      // Create new entry
-      await sb.from("verkauf_tracking").insert({
-        standort_id: stdId,
-        datum: today,
-        verkaeufer_name: sellerName,
-        verkaeufer_id: profile.id || null,
-        verkauft: 1,
-        umsatz: deal.value || 0,
-        geplant: 0, spontan: 0, online: 0, ergo: 0, plan_termine: 0, uebergabe: 0,
+      const row = {
+        standort_id: stdId, datum: today,
+        verkaeufer_name: sellerName, verkaeufer_id: sellerId,
+        geplant: 0, spontan: 0, online: 0, ergo: 0,
+        verkauft: 0, uebergabe: 0, umsatz: 0, plan_termine: 0,
         updated_at: new Date().toISOString()
-      });
+      };
+      if (field === "umsatz") { row.umsatz = amount; }
+      else { row[field] = amount; }
+      await sb.from("verkauf_tracking").insert(row);
     }
-    console.log("[Pipeline] Sale synced to verkauf_tracking:", sellerName, deal.value);
+    console.log("[Pipeline] Tracking sync:", field, "+"+amount, sellerName);
   } catch (e) {
     console.warn("[Pipeline] verkauf_tracking sync error:", e);
+  }
+}
+
+// Called when a NEW lead is created in the pipeline
+async function syncLeadCreatedToTracking(deal, SELLERS) {
+  const profile = window.sbProfile;
+  if (!profile) return;
+  const stdId = deal.loc && deal.loc !== "hq" ? deal.loc : profile.standort_id;
+  const sellerName = resolveSellerName(deal, SELLERS, profile);
+  const sellerId = profile.id || null;
+  // eTermin leads = "geplant", all others = "spontan"
+  const isEtermin = deal.source === "eTermin" || deal.source === "etermin"
+    || deal.eterminUid || deal._db?.etermin_uid || deal._db?.quelle === "etermin";
+  const field = isEtermin ? "geplant" : "spontan";
+  await syncTrackingIncrement(stdId, sellerName, sellerId, field, 1);
+}
+
+// Called when a deal stage changes to relevant stages
+async function syncStageChangeToTracking(deal, toStage, SELLERS) {
+  const profile = window.sbProfile;
+  if (!profile) return;
+  const stdId = deal.loc && deal.loc !== "hq" ? deal.loc : profile.standort_id;
+  const sellerName = resolveSellerName(deal, SELLERS, profile);
+  const sellerId = profile.id || null;
+  if (toStage === "schwebend") {
+    // Zusage (Auftrag) = verkauft in Wochenansicht
+    await syncTrackingIncrement(stdId, sellerName, sellerId, "verkauft", 1);
+  } else if (toStage === "verkauft") {
+    // Verkauft (Rechnung) = uebergabe + umsatz in Wochenansicht
+    await syncTrackingIncrement(stdId, sellerName, sellerId, "uebergabe", 1);
+    if (deal.value > 0) {
+      await syncTrackingIncrement(stdId, sellerName, sellerId, "umsatz", deal.value);
+    }
   }
 }
 
@@ -1472,7 +1503,8 @@ function PipelineApp(){
     saveDeal(id, "stage", ns);
     // Trigger automations
     setTimeout(()=>applyRules(id,oldStage,ns),100);
-    if(ns==="verkauft"){setStreak(s=>s+1);msg(`🏆 ${deal.name} verkauft! ${fmt(deal.value)}`);pop(innerWidth/2,innerHeight/2);syncSaleToTracking(deal,SELLERS)}
+    if(ns==="schwebend"){msg(`✅ ${deal.name} → Zusage!`);syncStageChangeToTracking(deal,"schwebend",SELLERS)}
+    if(ns==="verkauft"){setStreak(s=>s+1);msg(`🏆 ${deal.name} verkauft! ${fmt(deal.value)}`);pop(innerWidth/2,innerHeight/2);syncStageChangeToTracking(deal,"verkauft",SELLERS)}
     else if(ns==="lost"){setStreak(0);msg(`💀 ${deal.name} verloren...`)}
     else if(ns==="gold"){msg(`💎 ${deal.name} → Schrank der Hoffnung`)}
     setDragId(null);
@@ -1486,6 +1518,7 @@ function PipelineApp(){
       setDeals(p=>[newDeal,...p]);
       setNewId(dbRow.id);
       msg(`🎯 ${d.name} hinzugefügt!`);
+      syncLeadCreatedToTracking(newDeal, SELLERS);
       setTimeout(()=>{setNewId(null);setSel(newDeal);},600);
     } else {
       const id=nid.current++;
@@ -1517,6 +1550,7 @@ function PipelineApp(){
       setDeals(p=>[newDeal,...p]);
       setNewId(dbRow.id);
       msg("🎯 Lead angelegt – Details ausfüllen");
+      syncLeadCreatedToTracking(newDeal, SELLERS);
       setTimeout(()=>{setNewId(null);setSel(newDeal);},400);
     } else {
       const id=nid.current++;
@@ -1573,7 +1607,8 @@ function PipelineApp(){
     // Persist to DB
     saveDeal(did, "stage", toStage);
     setTimeout(()=>applyRules(did,fromStage,toStage),100);
-    if(toStage==="verkauft"){setStreak(s=>s+1);msg(`🏆 ${deal?.name} verkauft! ${fmt(deal?.value||0)}`);pop(innerWidth/2,innerHeight/2);if(deal)syncSaleToTracking(deal,SELLERS)}
+    if(toStage==="schwebend"&&deal){msg(`✅ ${deal.name} → Zusage!`);syncStageChangeToTracking(deal,"schwebend",SELLERS)}
+    if(toStage==="verkauft"){setStreak(s=>s+1);msg(`🏆 ${deal?.name} verkauft! ${fmt(deal?.value||0)}`);pop(innerWidth/2,innerHeight/2);if(deal)syncStageChangeToTracking(deal,"verkauft",SELLERS)}
     else if(toStage==="lost"){setStreak(0);msg(`💀 ${deal?.name} verloren...`)}
     else if(toStage==="gold"){msg(`🗄️ ${deal?.name} → Schrank der Hoffnung`)}
   },[deals,applyRules,msg,pop,saveDeal]);
