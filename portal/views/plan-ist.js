@@ -902,7 +902,7 @@ export function openVerkaufEntryModal() {
         {id:'vtGeplant',label:'Geplant',ph:'0'},
         {id:'vtSpontan',label:'Spontan',ph:'0'},
         {id:'vtErgo',label:'Ergo-Beratung',ph:'0'},
-        {id:'vtVerkauft',label:'Verkauft ✅',ph:'0'}
+        {id:'vtVerkauft',label:'Zusagen ✅',ph:'0'}
     ];
     vtFields.forEach(function(f) {
         html += '<div><label class="block text-xs text-gray-600 mb-1">'+f.label+'</label>';
@@ -910,7 +910,7 @@ export function openVerkaufEntryModal() {
     });
     html += '</div>';
     html += '<div class="grid grid-cols-2 gap-3 mb-4">';
-    html += '<div><label class="block text-xs text-gray-600 mb-1">Uebergaben</label><input id="vtUebergabe" type="number" min="0" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-center" value="0"></div>';
+    html += '<div><label class="block text-xs text-gray-600 mb-1">Rechnungen (Übergabe)</label><input id="vtUebergabe" type="number" min="0" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-center" value="0"></div>';
     html += '<div><label class="block text-xs text-gray-600 mb-1">Umsatz (€) <span class="text-gray-400 font-normal">aus WaWi</span></label><input id="vtUmsatz" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-right" placeholder="0"></div>';
     html += '</div>';
     html += '<div class="mb-3"><label class="block text-xs text-gray-600 mb-1">Notizen</label><textarea id="vtNotizen" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" rows="2" placeholder="z.B. Kunde kommt naechste Woche wieder..."></textarea></div>';
