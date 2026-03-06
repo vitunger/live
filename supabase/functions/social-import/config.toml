@@ -1,0 +1,2 @@
+[functions.social-import]
+verify_jwt = false
