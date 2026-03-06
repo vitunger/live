@@ -400,6 +400,11 @@ if(typeof updateUIForRole === 'function') updateUIForRole();
 // Reload module status & feature flags for impersonated user
 if(typeof loadModulStatus === 'function') loadModulStatus();
 if(typeof loadFeatureFlags === 'function') loadFeatureFlags();
+// Force React pipeline remount so it re-reads window.sbProfile with updated is_hq/standort_id
+var pipelineRoot = document.getElementById('react-pipeline-root');
+if(pipelineRoot) pipelineRoot.innerHTML = '';
+var weekRoot = document.getElementById('react-week-root');
+if(weekRoot) weekRoot.innerHTML = '';
 _showView('home');
 }
 
@@ -430,6 +435,11 @@ if(typeof updateUIForRole === 'function') updateUIForRole();
 // Reload module status & feature flags for original user
 if(typeof loadModulStatus === 'function') loadModulStatus();
 if(typeof loadFeatureFlags === 'function') loadFeatureFlags();
+// Force React pipeline remount so it re-reads window.sbProfile after exit
+var pipelineRoot2 = document.getElementById('react-pipeline-root');
+if(pipelineRoot2) pipelineRoot2.innerHTML = '';
+var weekRoot2 = document.getElementById('react-week-root');
+if(weekRoot2) weekRoot2.innerHTML = '';
 if(currentRole === 'hq') { if(typeof window.switchViewMode === 'function') window.switchViewMode('hq'); }
 else _showView('home');
 }
@@ -1630,3 +1640,4 @@ window.showPasswordReset = showPasswordReset;
 window.showRegistration = showRegistration;
 window.switchCommunicationTab = switchCommunicationTab;
 window.toggleDashboardEdit = toggleDashboardEdit;
+
