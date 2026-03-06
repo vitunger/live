@@ -41,7 +41,7 @@ function _renderImagePreview(containerId, currentUrl) {
     var el = document.getElementById(containerId);
     if(!el) return;
     if(currentUrl) {
-        el.innerHTML = '<div class="flex items-center space-x-3"><img src="'+currentUrl+'" class="w-16 h-16 rounded-lg object-contain bg-gray-50 border" onerror="this.src=\'\'"><span class="text-xs text-gray-400 truncate max-w-[200px]">'+currentUrl.split('/').pop()+'</span></div>';
+        el.innerHTML = '<div class="flex items-center space-x-3"><img src="'+_escH(currentUrl)+'" class="w-16 h-16 rounded-lg object-contain bg-gray-50 border" onerror="this.src=\'\'"><span class="text-xs text-gray-400 truncate max-w-[200px]">'+_escH(currentUrl.split('/').pop())+'</span></div>';
     } else {
         el.innerHTML = '<span class="text-xs text-gray-400">Kein Bild</span>';
     }

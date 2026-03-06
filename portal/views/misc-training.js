@@ -483,7 +483,9 @@ export function showTrainingEvaluation(ev) {
     var svg = document.getElementById('tScoreRing');
     var r=42, circ=2*Math.PI*r, offset=circ-(score/100)*circ;
     var col = score>=80?'#059669':score>=60?'#D97706':'#DC2626';
-    svg.innerHTML = '<circle cx="50" cy="50" r="'+r+'" fill="none" stroke="#e5e7eb" stroke-width="5"/><circle cx="50" cy="50" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="5" stroke-dasharray="'+circ+'" stroke-dashoffset="'+offset+'" stroke-linecap="round" style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset 1s"/><text x="50" y="50" text-anchor="middle" dominant-baseline="central" style="font-size:24px;font-weight:800;fill:'+col+'">'+score+'</text>';
+    var safeScore = parseInt(score) || 0;
+    var safeCol = /^#[0-9A-Fa-f]{6}$/.test(col) ? col : '#666';
+    svg.innerHTML = '<circle cx="50" cy="50" r="'+r+'" fill="none" stroke="#e5e7eb" stroke-width="5"/><circle cx="50" cy="50" r="'+r+'" fill="none" stroke="'+safeCol+'" stroke-width="5" stroke-dasharray="'+circ+'" stroke-dashoffset="'+offset+'" stroke-linecap="round" style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset 1s"/><text x="50" y="50" text-anchor="middle" dominant-baseline="central" style="font-size:24px;font-weight:800;fill:'+safeCol+'">'+safeScore+'</text>';
     document.getElementById('tScoreLabel').textContent = score>=80?'Hervorragend! 🌟':score>=60?'Gut gemacht! 👍':'Ausbaufähig 💪';
     document.getElementById('tScoreSummary').textContent = ev.zusammenfassung || '';
     var rings = document.getElementById('tCriteriaRings');
