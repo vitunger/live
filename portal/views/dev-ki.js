@@ -31,7 +31,11 @@ export async function runDevKIPrioritize() {
     try {
         var session = await _sb().auth.getSession();
         var token = session?.data?.session?.access_token;
-        if(!token) throw new Error('Nicht angemeldet');
+        if(!token) {
+            var refresh = await _sb().auth.refreshSession();
+            token = refresh?.data?.session?.access_token;
+        }
+        if(!token) throw new Error('Nicht angemeldet – bitte neu einloggen');
 
         var resp = await fetch(window.SUPABASE_URL + '/functions/v1/dev-ki-analyse', {
             method: 'POST',
