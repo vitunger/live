@@ -1803,95 +1803,7 @@
                 <div id="aktenschrankView" class="view" style="display: none;"></div>
 
 
-                <div id="supportView" class="view" style="display: none;">
-                    <h1 class="h1-headline text-gray-800 mb-6" data-i18n="h_support">SUPPORT</h1>
-
-                    <!-- Tab Navigation -->
-                    <div class="mb-6 border-b border-gray-200">
-                        <nav class="-mb-px flex space-x-8">
-                            <button onclick="showSupportTab('tickets')" class="sup-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-tab="tickets">🎫 Tickets <span id="supTicketBadge" class="ml-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">4</span></button>
-                            <button onclick="showSupportTab('kontakte')" class="sup-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="kontakte">👥 Kontakte Zentrale</button>
-                        </nav>
-                    </div>
-
-                    <!-- ===== TAB 1: Tickets ===== -->
-                    <div id="supTabTickets" class="sup-tab-content">
-                        <!-- Header -->
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex space-x-2">
-                                <button onclick="filterTickets('all')" class="ticket-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white" data-tf="all">Alle (7)</button>
-                                <button onclick="filterTickets('offen')" class="ticket-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-tf="offen">Offen (2)</button>
-                                <button onclick="filterTickets('bearbeitung')" class="ticket-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-tf="bearbeitung">In Bearbeitung (2)</button>
-                                <button onclick="filterTickets('geloest')" class="ticket-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" data-tf="geloest">Geloest (3)</button>
-                            </div>
-                            <button onclick="document.getElementById('ticketCreate').classList.toggle('hidden')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">+ Neues Ticket</button>
-                        </div>
-
-                        <!-- Create Ticket Form -->
-                        <div id="ticketCreate" class="hidden vit-card p-5 mb-4">
-                                                        <!-- Auto-Support Interceptor -->
-                            <div id="ticketInterceptor" style="display:none" class="mb-4 p-4 rounded-xl border-2 border-orange-200 bg-orange-50">
-                                <div class="flex items-center gap-3 mb-3">
-                                    <span class="text-2xl">🤖</span>
-                                    <div><p class="text-sm font-bold text-gray-800">Bevor du ein Ticket erstellst...</p><p class="text-xs text-gray-500">Wir haben möglicherweise eine sofortige Lösung!</p></div>
-                                </div>
-                                <div class="flex gap-2">
-                                    <button onclick="acceptInterceptor()" class="flex-1 px-3 py-2 bg-green-500 text-white text-xs font-bold rounded-lg hover:bg-green-600">✅ Lösung ausprobieren</button>
-                                    <button onclick="skipInterceptor()" class="flex-1 px-3 py-2 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg hover:bg-gray-200">Trotzdem Ticket erstellen →</button>
-                                </div>
-                            </div>
-
-                            <h3 class="font-semibold text-gray-800 mb-3">Neues Support-Ticket erstellen</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                                <select id="ticketCatInput" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                    <option value="allgemein">Kategorie waehlen...</option>
-                                    <option value="it">IT / Systeme</option>
-                                    <option value="einkauf">Einkauf / Lieferanten</option>
-                                    <option value="marketing">Marketing / Ads</option>
-                                    <option value="buchhaltung">Buchhaltung / BWA</option>
-                                    <option value="werkstatt">Werkstatt / Technik</option>
-                                    <option value="sonstiges">Sonstiges</option>
-                                </select>
-                                <select id="ticketPrioInput" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                    <option value="mittel">Prioritaet...</option>
-                                    <option value="dringend">🔴 Hoch – Betrieb eingeschraenkt</option>
-                                    <option value="mittel">🟡 Mittel – Wichtig, aber kein Stillstand</option>
-                                    <option value="niedrig">🟢 Niedrig – Frage / Wunsch</option>
-                                </select>
-                            </div>
-                            <input id="ticketTitelInput" type="text" placeholder="Betreff..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3">
-                            <textarea id="ticketBeschreibungInput" placeholder="Beschreibe dein Problem oder deine Frage moeglichst genau..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3" rows="4"></textarea>
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs text-gray-400">Wird im Portal gespeichert</span>
-                                <div class="flex space-x-2">
-                                    <button onclick="document.getElementById('ticketCreate').classList.add('hidden')" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Abbrechen</button>
-                                    <button onclick="submitTicketForm()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Ticket erstellen</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Ticket List -->
-                        <div id="ticketList" class="space-y-3"></div>
-
-                        <!-- Zoho Desk Hinweis -->
-                        <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center space-x-3">
-                            <span class="text-2xl">🔗</span>
-                            <div>
-                                <p class="text-sm font-semibold text-blue-800">Alle Tickets werden ueber Zoho Desk verwaltet</p>
-                                <p class="text-xs text-blue-600">Fuer erweiterte Funktionen (Anhaenge, Chat, Historie) direkt in Zoho Desk oeffnen.</p>
-                            </div>
-                            <button class="ml-auto px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 whitespace-nowrap">Zoho Desk oeffnen →</button>
-                        </div>
-                    </div>
-
-                    <!-- ===== TAB 2: Kontakte Zentrale ===== -->
-                    <div id="supTabKontakte" class="sup-tab-content" style="display:none;">
-                        <div class="mb-4">
-                            <p class="text-sm text-gray-500">Alle Ansprechpartner der vit:bikes Zentrale auf einen Blick. Bei dringenden Problemen bitte direkt anrufen.</p>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="kontakteGrid"></div>
-                    </div>
-                </div>
+                <div id="supportView" class="view" style="display: none;"></div>
 
 
                 <div id="kommunikationView" class="view" style="display: none;">
@@ -4716,24 +4628,7 @@
 </div>
 </div>
 
-<div id="hqSupportView" class="view" style="display: none;">
-                    <h1 class="h1-headline text-gray-800 mb-2">🎫 SUPPORT – UEBERSICHT</h1>
-                    <p class="text-sm text-gray-500 mb-6">Alle Support-Anfragen der Partner im Blick.</p>
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-red-500">7</div><div class="text-xs text-gray-500">Offene Tickets</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-yellow-500">3</div><div class="text-xs text-gray-500">In Bearbeitung</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600">48</div><div class="text-xs text-gray-500">Geloest (Monat)</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-blue-600">4.2h</div><div class="text-xs text-gray-500">⌀ Reaktionszeit</div></div>
-                    </div>
-                    <div class="vit-card p-6 mb-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">🔴 Offene Support-Tickets</h2>
-                        <div id="hqSupportTickets" class="space-y-3"></div>
-                    </div>
-                    <div class="vit-card p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">📊 Tickets nach Standort</h2>
-                        <div id="hqSupportStats" class="space-y-2"></div>
-                    </div>
-                </div>
+<div id="hqSupportView" class="view" style="display: none;"></div>
 
                 <!-- ===== HQ IDEENBOARD → Redirect zum neuen Ideenboard ===== -->
                 <div id="hqIdeenView" class="view" style="display: none;">
