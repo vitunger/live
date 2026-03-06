@@ -12,7 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1772803262";
+const CACHE_BUST = "?v=1741275600";
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
@@ -56,6 +56,7 @@ const VIEW_MODULES = [
     'views/hq-shop.js',
     'views/hq-billing.js',
     'views/hq-feedback.js',
+    'views/nutzung.js',
     
     // Systems
     'views/auth-system.js',
