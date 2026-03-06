@@ -1,7 +1,8 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung fuer KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 06.03.2026 (Verkaufsmodul Finalisierung)
+> Letzte Aktualisierung: 06.03.2026 (API-Nutzung Dashboard + Usage Logging)
+> **API-Nutzung Dashboard (HQ-only):** Neues Modul `views/nutzung.js` zeigt KI-API-Kosten im HQ unter "KI-Kosten". Neue Tabelle `api_usage_log` protokolliert jeden externen KI-API-Call. Edge Functions `dev-ki-analyse` + `spiritus-analyze` loggen Anthropic-Calls automatisch. **WICHTIG: Jede neue Edge Function, die eine KI-API (Anthropic, OpenAI, etc.) aufruft, MUSS nach jedem Call in `api_usage_log` loggen (provider, model, input_tokens, output_tokens, duration_ms, success).** Sidebar: "KI-Kosten" im HQ-Menue. View: hqApiNutzung → renderApiNutzung(). Migration: docs/migration_api_usage_log.sql
 > Verkaufsmodul 9 Fixes deployed: (1) Verkaeufer-Ranking dynamisch aus DB in Auswertung, (2) Monatsziel dynamisch aus jahresplaene statt hardcoded, (3) Verkaeufer-Dropdown dynamisch statt hardcoded Sandra/Thomas/Dirk/Max, (4) Plan-Spalte + Diff% + Plan-Linie im Auswertungs-Chart, (5) openVerkaufEntryModal korrekt in plan-ist.js (verifiziert), (6) Tab-Reihenfolge: Pipeline=default (JS an HTML angeglichen), (7) _escH Helper sauber definiert als Fallback, (8) online-Feld konsistent behandelt, (9) Error-States bei DB-Fehlern
 > KI Release-Vorschlag verbessert: liest jetzt Git-Commits (14 Tage via GitHub API), vollständige CLAUDE.md und Submissions als Kontext. Neue Edge Function `dev-ki-analyse` im Repo (supabase/functions/dev-ki-analyse/index.ts) mit modes: release_notes + prioritize.
 > Performance-Abfrage Feature hinzugefuegt: `einkauf_performance_abfragen` + `einkauf_performance_daten` Tabellen (Migration: docs/migration_einkauf_performance.sql)
@@ -99,7 +100,8 @@ sbUrl()       → window.sbUrl()    // Supabase Project URL (zentralisiert)
 1. **Deutsch im UI** – alle Labels, Texte, Toast-Messages auf Deutsch
 2. **Mobile-responsive** – Tailwind-Klassen, immer testen
 3. **KI nur via Edge Functions** – nie Client-seitige API-Keys
-4. **Keine externen Dependencies** (ausser Tailwind CDN, Supabase, pdf.js, SheetJS)
+4. **API-Usage-Logging Pflicht** – Jede Edge Function die Anthropic/OpenAI/andere KI-APIs aufruft, MUSS nach jedem Call in `api_usage_log` loggen: provider, model, input_tokens, output_tokens, estimated_cost_usd, duration_ms, success, edge_function, modul. Template siehe `dev-ki-analyse` logApiUsage().
+5. **Keine externen Dependencies** (ausser Tailwind CDN, Supabase, pdf.js, SheetJS)
 5. **Encoding: UTF-8** – nach jeder Aenderung auf ae/oe/ue pruefen
 6. **Braces + Funktions-Check** nach jedem Edit
 
