@@ -417,22 +417,7 @@ function kalResolveVerkaufer(t) {
 }
 
 export async function loadKalTermine() {
-    // In demo mode, termine are injected by fillDemoWidgets
-    if (window.DEMO_ACTIVE) {
-        // Inject demo termine into kalTermine
-        if (window.DEMO_DATA && window.DEMO_DATA.termine) {
-            kalTermine = window.DEMO_DATA.termine.map(function(t) {
-                return {
-                    id: t.id, titel: t.titel,
-                    start_zeit: t.datum + 'T' + t.uhrzeit + ':00',
-                    end_zeit: t.datum + 'T' + t.uhrzeit + ':00',
-                    typ: t.typ, dauer_min: t.dauer
-                };
-            });
-        }
-        kalRenderActive();
-        return;
-    }
+    // Demo-Modus deaktiviert: Kalender lädt immer echte DB-Daten
     // Load kalender mapping cache in parallel
     await loadKalenderMappingCache();
     try {
@@ -456,7 +441,7 @@ export async function loadKalTermine() {
                 var endTime = t.end_zeit ? new Date(t.end_zeit) : null;
                 return {
                     id: t.id, title: t.titel, 
-                    date: d.toISOString().slice(0,10),
+                    date: String(d.getFullYear())+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'),
                     time: t.ganztaegig ? '00:00' : String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'),
                     endTime: endTime ? String(endTime.getHours()).padStart(2,'0')+':'+String(endTime.getMinutes()).padStart(2,'0') : null,
                     type: t.typ || 'sonstig',
@@ -550,8 +535,18 @@ export async function saveKalTermin(){
     var repeatEnd=document.getElementById('kalNewRepeatEnd').value||null;
     if(!title||!date){_showToast(_t('misc_enter_title_date'), 'error');return;}
 
-    var startZeit = date+'T'+time+':00';
-    var endZeit = endTime ? date+'T'+endTime+':00' : null;
+    // Lokale Zeit mit korrektem Timezone-Offset speichern (verhindert UTC-Verschiebung)
+    function toLocalISO(dateStr, timeStr) {
+        if(!dateStr || !timeStr) return null;
+        var dt = new Date(dateStr + 'T' + timeStr + ':00');
+        var off = -dt.getTimezoneOffset();
+        var sign = off >= 0 ? '+' : '-';
+        var hh = String(Math.floor(Math.abs(off)/60)).padStart(2,'0');
+        var mm = String(Math.abs(off)%60).padStart(2,'0');
+        return dateStr + 'T' + timeStr + ':00' + sign + hh + ':' + mm;
+    }
+    var startZeit = toLocalISO(date, time);
+    var endZeit = endTime ? toLocalISO(date, endTime) : null;
     var teilnehmerData = kalSelectedTeilnehmer.map(function(tn){ return {id:tn.id, name:tn.name}; });
 
     var payload = {
@@ -563,7 +558,8 @@ export async function saveKalTermin(){
         ist_netzwerk_termin: !!((_sbProfile() && _sbProfile().is_hq)),
         teilnehmer: teilnehmerData,
         wiederholung: repeat || null,
-        wiederholung_bis: repeatEnd || null
+        wiederholung_bis: repeatEnd || null,
+        quelle: 'portal'
     };
 
     try {
@@ -579,8 +575,8 @@ export async function saveKalTermin(){
                 var dates = kalGenerateRepeatDates(date, repeat, repeatEnd);
                 var inserts = dates.map(function(d) {
                     var p = JSON.parse(JSON.stringify(payload));
-                    p.start_zeit = d + 'T' + time + ':00';
-                    p.end_zeit = endTime ? d + 'T' + endTime + ':00' : null;
+                    p.start_zeit = toLocalISO(d, time);
+                    p.end_zeit = endTime ? toLocalISO(d, endTime) : null;
                     return p;
                 });
                 if(inserts.length > 100) { _showToast(_t('misc_max_repeat'), 'info'); return; }
