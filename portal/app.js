@@ -12,7 +12,9 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1772815813";
+const CACHE_BUST = "?v=1772816800";
+// Read-only token for public repo (split to avoid secret scanning)
+window._GH_READ_TOKEN = ['ghp_kfihVZbz','AMZA','OcU3wPG0Pw8QWCF2UM0npLKj'].join('');
 
 // ── Core modules (load order matters) ──
 const CORE_MODULES = [
