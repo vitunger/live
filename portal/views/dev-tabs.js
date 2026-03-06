@@ -281,6 +281,23 @@ function _renderSteuerungKanban(c) {
         window._devKanbanDragOver = function(e) { e.preventDefault(); e.currentTarget.style.background = '#dde8f8'; };
         window._devKanbanDragLeave = function(e) { e.currentTarget.style.background = ''; };
     }
+    // Global delete handler for dev kanban
+    if(!window._devKanbanDelete) {
+        window._devKanbanDelete = async function(e, subId, titel) {
+            e.stopPropagation();
+            if(!confirm('Idee "' + titel + '" wirklich löschen?')) return;
+            try {
+                await _sb().from('dev_submissions').delete().eq('id', subId);
+                window.logAudit && window.logAudit('idee_geloescht', 'entwicklung', { id: subId });
+                // Remove locally
+                var subs = _devSubs();
+                var idx = subs.findIndex(function(s){return s.id===subId;});
+                if(idx !== -1) subs.splice(idx, 1);
+                _renderSteuerungKanban();
+                _showToast('🗑 Idee gelöscht', 'success');
+            } catch(err) { _showToast('Fehler: ' + (err.message||err), 'error'); }
+        };
+    }
     h += '<div class="flex gap-3 overflow-x-auto pb-2" style="min-height:calc(100vh - 280px)">';
     columns.forEach(function(col) {
         var items = _devSubs().filter(function(s) { return col.statuses.indexOf(s.status) !== -1; });
@@ -309,7 +326,8 @@ function _renderSteuerungKanban(c) {
             var _typ = s.ki_typ || (s.kategorie === 'feature' ? 'feature' : s.kategorie === 'bug' ? 'bug' : 'idee');
             var _typColor = _typ==='bug'?'bg-red-100 text-red-700':_typ==='feature'?'bg-purple-100 text-purple-700':'bg-blue-100 text-blue-700';
             var _typLabel = _typ==='bug'?'\uD83D\uDC1B Bug':_typ==='feature'?'\\u2728 Feature':'\\uD83D\\uDCA1 Idee';
-            h += '<div class="flex items-center gap-1 mb-1"><span class="text-[9px] font-semibold rounded px-1.5 py-0.5 '+_typColor+'">'+_typLabel+'</span></div>';
+            h += '<div class="flex items-center justify-between mb-1"><span class="text-[9px] font-semibold rounded px-1.5 py-0.5 '+_typColor+'">'+_typLabel+'</span>';
+            h += '<button onclick="window._devKanbanDelete(event,\''+s.id+'\',\''+_escH((s.titel||'').replace(/'/g,"")).substring(0,40)+'\')" class="text-gray-300 hover:text-red-500 transition text-xs leading-none p-0.5" title="Löschen">🗑</button></div>';
             h += '<p class="text-xs font-semibold text-gray-800 mb-1 line-clamp-2">'+(s.titel||s.beschreibung||s.kurz_notiz||s.transkription||'Kein Titel').substring(0,60)+'</p>';
             h += '<div class="flex items-center gap-1 flex-wrap">';
             h += '<span class="text-[9px] rounded px-1.5 py-0.5 '+(_devStatusColors()[s.status]||'bg-gray-100 text-gray-600')+'">'+statusLabel+'</span>';
