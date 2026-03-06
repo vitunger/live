@@ -33,6 +33,7 @@ const VIEW_RENDER_MAP = {
     'hqMarketing':   { fn: 'renderHqMarketing' },
     'hqVerkauf':     { fn: 'renderHqVerkauf' },
     'hqAuswertung':  { fn: 'renderHqAuswertung' },
+    'hqApiNutzung':  { fn: 'renderApiNutzung' },
     'hqWissen':      { fn: 'renderHqWissen' },
     'hqSupport':     { fn: 'renderHqSupport' },
     'spiritus':      { fn: 'initSpiritus' },
