@@ -2,6 +2,8 @@
  * Supabase Edge Function: spiritus-analyze
  * Analysiert Call-Transkripte mit Claude, extrahiert Probleme/Maßnahmen/Sentiment,
  * speichert alles in spiritus_transcripts + spiritus_extractions.
+ *
+ * API Usage Logging: Jeder Claude-API-Call wird in api_usage_log protokolliert.
  * 
  * Deploy: supabase functions deploy spiritus-analyze
  */
@@ -44,6 +46,44 @@ Antworte NUR als gültiges JSON, ohne Markdown-Backticks:
 
 const CONFIDENCE_AUTO_APPROVE = 0.85;
 
+// ─── API USAGE LOGGING ────────────────────────────────────────────────────
+
+async function logApiUsage(sb: any, params: {
+  edge_function: string;
+  modul: string;
+  provider: string;
+  model: string;
+  input_tokens: number;
+  output_tokens: number;
+  duration_ms: number;
+  success: boolean;
+  standort_id?: string;
+  error_message?: string;
+}) {
+  try {
+    const inputCostPer1M = 3.0;
+    const outputCostPer1M = 15.0;
+    const estimated_cost_usd = (params.input_tokens / 1_000_000) * inputCostPer1M
+                             + (params.output_tokens / 1_000_000) * outputCostPer1M;
+
+    await sb.from('api_usage_log').insert({
+      edge_function: params.edge_function,
+      modul: params.modul,
+      provider: params.provider,
+      model: params.model,
+      input_tokens: params.input_tokens,
+      output_tokens: params.output_tokens,
+      estimated_cost_usd,
+      duration_ms: params.duration_ms,
+      success: params.success,
+      standort_id: params.standort_id || null,
+      error_message: params.error_message || null,
+    });
+  } catch (e) {
+    console.error('api_usage_log insert failed:', e);
+  }
+}
+
 export default async function handler(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, content-type' } });
@@ -56,6 +96,9 @@ export default async function handler(req: Request): Promise<Response> {
     if (!transcript || transcript.length < 20) {
       return json({ error: 'Transkript zu kurz oder leer' }, 400);
     }
+
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+    const t0 = Date.now();
 
     // Claude analyze
     const claudeResp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -73,13 +116,30 @@ export default async function handler(req: Request): Promise<Response> {
       })
     });
 
+    const duration_ms = Date.now() - t0;
+
     if (!claudeResp.ok) {
       const err = await claudeResp.text();
+      await logApiUsage(sb, {
+        edge_function: 'spiritus-analyze', modul: 'spiritus', provider: 'anthropic',
+        model: 'claude-sonnet-4-20250514', input_tokens: 0, output_tokens: 0,
+        duration_ms, success: false, standort_id: standortId,
+        error_message: err.slice(0, 500),
+      });
       throw new Error('Claude API Fehler: ' + err);
     }
 
     const claudeData = await claudeResp.json();
     const rawText = claudeData.content?.[0]?.text || '';
+
+    // Log successful usage
+    await logApiUsage(sb, {
+      edge_function: 'spiritus-analyze', modul: 'spiritus', provider: 'anthropic',
+      model: 'claude-sonnet-4-20250514',
+      input_tokens: claudeData.usage?.input_tokens || 0,
+      output_tokens: claudeData.usage?.output_tokens || 0,
+      duration_ms, success: true, standort_id: standortId,
+    });
 
     // Parse JSON from Claude
     let extracted: any = {};
@@ -89,8 +149,6 @@ export default async function handler(req: Request): Promise<Response> {
     } catch (e) {
       throw new Error('KI-Antwort konnte nicht geparst werden: ' + rawText.slice(0, 200));
     }
-
-    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // Save transcript
     const { data: transcript_row, error: tErr } = await sb
