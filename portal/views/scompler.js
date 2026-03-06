@@ -445,6 +445,16 @@
                     '<input id="scPostTitle" placeholder="Titel" value="' + _escH(ep.title || '') + '" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
                     '<textarea id="scPostCaption" placeholder="Caption" rows="3" oninput="scUpdatePreview()" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">' + _escH(ep.caption || '') + '</textarea>' +
 
+                    // Media Upload
+                    '<div class="border-2 border-dashed border-gray-200 rounded-xl p-3 hover:border-vit-orange transition-colors cursor-pointer" onclick="document.getElementById(\'scMediaInput\').click()">' +
+                        '<input type="file" id="scMediaInput" accept="image/*,video/*" class="hidden" onchange="scHandleMediaUpload(this)">' +
+                        '<div id="scMediaPreview">' +
+                            (ep.media_url ? '<div class="relative"><img src="' + _escH(ep.media_url) + '" class="w-full max-h-32 object-cover rounded-lg"><button type="button" onclick="event.stopPropagation();scRemoveMedia()" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs font-bold">x</button></div>' :
+                            '<div class="text-center py-3"><span class="text-2xl">&#128247;</span><p class="text-xs text-gray-400 mt-1">Bild / Video hochladen</p><p class="text-xs text-gray-300">JPG, PNG, MP4 bis 100MB</p></div>') +
+                        '</div>' +
+                    '</div>' +
+                    '<input type="hidden" id="scMediaUrl" value="' + _escH(ep.media_url || '') + '">' +
+
                     // Kanaele
                     '<div><label class="text-xs font-semibold text-gray-500 mb-1 block">Kanaele</label>' +
                     '<div class="flex flex-wrap gap-3">' + kanalCheckboxes + '</div></div>' +
@@ -804,6 +814,7 @@
 
         var row = {
             title: title,
+            media_url: document.getElementById('scMediaUrl')?.value || null,
             caption: document.getElementById('scPostCaption')?.value || null,
             format: document.getElementById('scPostFormat')?.value || 'feed',
             kanaele: kanaele.length > 0 ? kanaele : null,
