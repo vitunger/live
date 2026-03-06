@@ -281,7 +281,7 @@ function _renderSteuerungKanban(c) {
         window._devKanbanDragOver = function(e) { e.preventDefault(); e.currentTarget.style.background = '#dde8f8'; };
         window._devKanbanDragLeave = function(e) { e.currentTarget.style.background = ''; };
     }
-    h += '<div class="flex gap-3 overflow-x-auto pb-2">';
+    h += '<div class="flex gap-3 overflow-x-auto pb-2" style="min-height:calc(100vh - 280px)">';
     columns.forEach(function(col) {
         var items = _devSubs().filter(function(s) { return col.statuses.indexOf(s.status) !== -1; });
         // Smart sort: critical bugs first, then by effort (quick wins up), then votes
@@ -300,9 +300,9 @@ function _renderSteuerungKanban(c) {
             var bV = (b.dev_votes||[]).length;
             return bV - aV;
         });
-        h += '<div class="bg-gray-50 rounded-xl p-3 flex-shrink-0" style="min-width:200px;width:calc((100% - 7*0.75rem)/8)" ondragover="window._devKanbanDragOver(event)" ondragleave="window._devKanbanDragLeave(event)" ondrop="window._devKanbanDrop(event,\''+col.dropStatus+'\')">';
+        h += '<div class="bg-gray-50 rounded-xl p-3 flex-shrink-0 flex flex-col" style="min-width:200px;width:calc((100% - 7*0.75rem)/8)" ondragover="window._devKanbanDragOver(event)" ondragleave="window._devKanbanDragLeave(event)" ondrop="window._devKanbanDrop(event,\''+col.dropStatus+'\')">';
         h += '<div class="flex items-center justify-between mb-3"><h3 class="text-sm font-bold text-gray-700">'+col.label+'</h3><span class="text-xs bg-'+col.color+'-100 text-'+col.color+'-700 rounded-full px-2 py-0.5 font-semibold">'+items.length+'</span></div>';
-        h += '<div class="space-y-2 max-h-[600px] overflow-y-auto">';
+        h += '<div class="space-y-2 flex-1 overflow-y-auto">';
         items.forEach(function(s) {
             var statusLabel = _devStatusLabels()[s.status] || s.status;
             h += '<div draggable="true" ondragstart="event.dataTransfer.setData(\'devSubId\',\''+s.id+'\');event.dataTransfer.effectAllowed=\'move\'" class="bg-white rounded-lg p-3 shadow-sm border border-gray-100 cursor-grab hover:shadow-md transition" onclick="openDevDetail(\''+s.id+'\')">';
