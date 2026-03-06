@@ -270,7 +270,6 @@
                 transition: transform 0.3s ease;
                 width: 280px !important;
                 flex: none !important;
-                padding-top: env(safe-area-inset-top, 0px);
             }
             .sidebar.mobile-open {
                 transform: translateX(0);
@@ -633,7 +632,7 @@
     <!-- Main Application -->
     <div id="mainApp" style="display: none;">
         <!-- Top Navigation -->
-        <nav class="bg-white shadow-md" style="padding-top: env(safe-area-inset-top, 0px);">
+        <nav class="bg-white shadow-md">
             <div class="flex justify-between items-center px-3 md:px-6 py-2 md:py-4">
                 <!-- Left: Hamburger (mobile) + Logo + Location -->
                 <div class="flex items-center space-x-2 md:space-x-3 min-w-0">
@@ -694,7 +693,7 @@
             </div>
         </nav>
 
-        <div class="flex h-[calc(100dvh-3.5rem-env(safe-area-inset-top,0px))] overflow-hidden">
+        <div class="flex h-[calc(100dvh-3.5rem)] overflow-hidden">
             <!-- Sidebar Overlay (mobile) -->
             <div id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
             <!-- Sidebar -->
@@ -3642,7 +3641,7 @@
                                     <div id="todoListArea"></div>
                                 </div>
                                 <!-- Detail Panel (hidden by default) -->
-                                <div id="todoDetailPanel" class="hidden flex-shrink-0 border-l border-gray-200 bg-white flex flex-col overflow-hidden w-[360px] h-full"></div>
+                                <div id="todoDetailPanel" class="hidden flex-shrink-0 border-l border-gray-200 bg-white flex flex-col overflow-hidden w-[360px] max-md:fixed max-md:inset-0 max-md:z-40 max-md:w-full max-md:border-l-0 h-full"></div>
                             </div>
                         </div>
                     </div>
