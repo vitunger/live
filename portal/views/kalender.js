@@ -789,4 +789,30 @@ window.saveKalTermin = saveKalTermin;
 window.switchKalView = switchKalView;
 window.loadKalTermine = loadKalTermine;
 
-
+// === Auto-Endzeit: Startzeit + 1 Stunde ===
+(function initAutoEndTime() {
+    // Wait for DOM, then attach
+    function attach() {
+        var startEl = document.getElementById('kalNewTime');
+        if (!startEl) { setTimeout(attach, 500); return; }
+        if (startEl._autoEndBound) return;
+        startEl._autoEndBound = true;
+        startEl.addEventListener('change', function() {
+            var endEl = document.getElementById('kalNewEndTime');
+            if (!endEl) return;
+            var val = startEl.value; // "HH:MM"
+            if (!val) return;
+            var parts = val.split(':');
+            var h = parseInt(parts[0], 10);
+            var m = parseInt(parts[1] || '0', 10);
+            h += 1;
+            if (h >= 24) h -= 24; // Tageswechsel
+            endEl.value = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+            // Kurzes visuelles Feedback
+            endEl.style.transition = 'background-color 0.3s';
+            endEl.style.backgroundColor = '#fff7ed';
+            setTimeout(function() { endEl.style.backgroundColor = ''; }, 800);
+        });
+    }
+    attach();
+})();
