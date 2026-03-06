@@ -13,7 +13,7 @@
  * API Usage Logging: Jeder Claude-API-Call wird in api_usage_log protokolliert.
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const SUPABASE_URL  = Deno.env.get('SUPABASE_URL')  ?? '';
 const SUPABASE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -180,7 +180,7 @@ Antworte NUR als JSON (kein Markdown):
 
 // ─── MAIN HANDLER ──────────────────────────────────────────────────────────
 
-export default async function handler(req: Request): Promise<Response> {
+Deno.serve(async (req: Request): Promise<Response> => {
   const cors = getCorsHeaders(req);
   _cors = cors;
   if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
@@ -228,8 +228,8 @@ export default async function handler(req: Request): Promise<Response> {
           'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 1200,
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 2000,
           messages: [{ role: 'user', content: prompt }],
         }),
       });
@@ -337,4 +337,4 @@ export default async function handler(req: Request): Promise<Response> {
     console.error('dev-ki-analyse error:', err);
     return json({ error: err.message || 'Unbekannter Fehler' }, 500);
   }
-}
+});
