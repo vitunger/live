@@ -123,7 +123,7 @@ async function updateBwaDeadlineWidget() {
     var rating = 'missing';
     if(_sb() && _sbProfile() && _sbProfile().standort_id) {
         try {
-            var bwaResp = await _sb().from('bwa_daten').select('created_at').eq('standort_id', sbProfile.standort_id).eq('monat', bwaMo.m + 1).eq('jahr', bwaMo.y).limit(1);
+            var bwaResp = await _sb().from('bwa_daten').select('created_at').eq('standort_id', _sbProfile().standort_id).eq('monat', bwaMo.m + 1).eq('jahr', bwaMo.y).limit(1);
             if(bwaResp.data && bwaResp.data.length > 0) {
                 submitted = bwaResp.data[0].created_at.slice(0,10);
                 var subDay = new Date(bwaResp.data[0].created_at).getDate();
