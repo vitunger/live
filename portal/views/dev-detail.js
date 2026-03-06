@@ -47,7 +47,7 @@ export async function openDevDetail(subId) {
         var logResp = await _sb().from('dev_status_log').select('*, users:geaendert_von(name)').eq('submission_id', subId).order('created_at', {ascending: false});
         var statusLog = logResp.data || [];
         var isHQ = (currentRoles||[]).indexOf('hq') !== -1;
-        var isOwner = (currentRoles||[]).indexOf('owner') !== -1;
+        var isOwner = (currentRoles||[]).some(function(r){ return r === 'owner' || r === 'hq_gf'; });
         var isSubmitter = sbUser && s.user_id === _sbUser().id;
         var canAttach = isSubmitter || isHQ;
         var hasKonzept = isHQ && konzept;
@@ -695,7 +695,7 @@ export async function devHQDecisionFromDetail(subId, ergebnis) {
     // Alle Decision-Buttons sofort disablen
     document.querySelectorAll('[onclick*="devHQDecisionFromDetail"]').forEach(function(b){ b.disabled = true; b.style.opacity = '0.5'; });
     // Owner-Check: Nur Owner darf freigeben oder ablehnen
-    var isOwner = (currentRoles||[]).indexOf('owner') !== -1;
+    var isOwner = (currentRoles||[]).some(function(r){ return r === 'owner' || r === 'hq_gf'; });
     if(!isOwner && ['freigabe','freigabe_mit_aenderungen','ablehnung'].indexOf(ergebnis) !== -1) {
         _showToast('Nur der Owner kann Ideen freigeben oder ablehnen.', 'error');
         return;
