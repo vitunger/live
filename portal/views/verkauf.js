@@ -207,12 +207,12 @@ export function renderWeekViewFromDb() {
         html += '<div class="flex space-x-4 text-center">';
         html += '<div><p class="text-xs text-gray-500">Beratungen</p><p class="font-bold text-blue-600">'+sGesamt+'</p></div>';
         html += '<div><p class="text-xs text-gray-500">Zusagen</p><p class="font-bold text-green-600">'+sVerkauft+'</p></div>';
-        html += '<div><p class="text-xs text-gray-500">Rechnungen</p><p class="font-bold text-emerald-600">'+sUebergabe+'</p></div>';
+        html += '<div><p class="text-xs text-gray-500">Übergaben</p><p class="font-bold text-emerald-600">'+sUebergabe+'</p></div>';
         html += '<div><p class="text-xs text-gray-500">Umsatz</p><p class="font-bold text-vit-orange">'+sUmsatz.toLocaleString('de-DE')+' \u20AC</p></div>';
         html += '<div><p class="text-xs text-gray-500">Quote</p><p class="font-bold '+(sQuote>=70?'text-green-600':sQuote>=40?'text-orange-600':'text-red-600')+'">'+sQuote+'%</p></div>';
         html += '</div></div>';
         html += '<div class="overflow-x-auto"><table class="w-full text-sm">';
-        html += '<thead><tr class="bg-gray-50 text-xs"><th class="py-2 px-3 text-left text-gray-500">Tag</th><th class="py-2 px-3 text-center text-blue-600">Geplant</th><th class="py-2 px-3 text-center text-purple-600">Spontan</th><th class="py-2 px-3 text-center text-cyan-600">Online</th><th class="py-2 px-3 text-center text-pink-600">Ergo</th><th class="py-2 px-3 text-center font-bold text-gray-700">Beratungen</th><th class="py-2 px-3 text-center text-green-600">Zusage</th><th class="py-2 px-3 text-center text-emerald-600">Rechnung</th><th class="py-2 px-3 text-right text-vit-orange">Umsatz</th></tr></thead>';
+        html += '<thead><tr class="bg-gray-50 text-xs"><th class="py-2 px-3 text-left text-gray-500">Tag</th><th class="py-2 px-3 text-center text-blue-600">Geplant</th><th class="py-2 px-3 text-center text-purple-600">Spontan</th><th class="py-2 px-3 text-center text-cyan-600">Online</th><th class="py-2 px-3 text-center text-pink-600">Ergo</th><th class="py-2 px-3 text-center font-bold text-gray-700">Beratungen</th><th class="py-2 px-3 text-center text-green-600">Zusage</th><th class="py-2 px-3 text-center text-emerald-600">Übergabe</th><th class="py-2 px-3 text-right text-vit-orange">Umsatz</th></tr></thead>';
         html += '<tbody>';
         weekDays.forEach(function(dn) {
             var dd = s.days[dn] || {plan:0,geplant:0,spontan:0,online:0,ergo:0,verkauft:0,uebergabe:0,umsatz:0};
