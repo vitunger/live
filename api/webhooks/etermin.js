@@ -7,10 +7,16 @@
 const fetch = require("node-fetch");
 
 const LEAD_TRIGGERS = ["beratung","beratungstermin","beratungsgespraech","beratungsgespräch","consultation","kaufberatung","e-bike beratung","e-bike-beratung"];
+const FOLLOWUP_TRIGGERS = ["folgetermin","folge-termin","follow-up","followup","nachtermin","zweittermin","2. termin"];
 
 function isLeadTrigger(a, n) {
   const c = ((a||"")+" "+(n||"")).toLowerCase();
   return LEAD_TRIGGERS.some(t => c.includes(t));
+}
+
+function isFollowupTrigger(a, n) {
+  const c = ((a||"")+" "+(n||"")).toLowerCase();
+  return FOLLOWUP_TRIGGERS.some(t => c.includes(t));
 }
 
 // Map eTermin calendar ID/name to portal user via etermin_kalender_mapping
@@ -194,7 +200,71 @@ module.exports = async function(req, res) {
       }
     }
 
-    return res.json({ ok: true, action: cmd.toLowerCase(), termin_id: tId, termin_error: tErr, lead_created: lc });
+    // Folgetermin: match existing lead + create todo + link termin
+    let ftLinked = false;
+    if (cmd === "CREATED" && !lc && (mappedTyp === "folgetermin" || isFollowupTrigger(answers, notes))) {
+      try {
+        // Try to find existing lead by email, phone, or name
+        let leadId = null;
+        if (email) {
+          const byEmail = await sbGet("leads", "standort_id=eq." + stdId + "&email=eq." + encodeURIComponent(email.toLowerCase()) + "&status=not.in.(gewonnen,verloren)&order=created_at.desc&limit=1");
+          if (byEmail && byEmail.length > 0) leadId = byEmail[0].id;
+        }
+        if (!leadId && phone) {
+          const byPhone = await sbGet("leads", "standort_id=eq." + stdId + "&telefon=neq.&order=created_at.desc&limit=10");
+          if (byPhone) {
+            const norm = (phone || "").replace(/[^0-9+]/g, "");
+            const match = byPhone.find(l => l.telefon && l.telefon.replace(/[^0-9+]/g, "") === norm);
+            if (match) leadId = match.id;
+          }
+        }
+        if (!leadId && name && name !== "Unbekannt") {
+          const parts = name.toLowerCase().split(" ");
+          if (parts.length >= 2) {
+            const byName = await sbGet("leads", "standort_id=eq." + stdId + "&vorname=ilike." + encodeURIComponent(parts[0]) + "&nachname=ilike." + encodeURIComponent(parts.slice(1).join(" ")) + "&status=not.in.(gewonnen,verloren)&order=created_at.desc&limit=1");
+            if (byName && byName.length > 0) leadId = byName[0].id;
+          }
+        }
+
+        if (leadId) {
+          // Link termin to lead
+          await sbUpdate("leads", { termin_id: tId, letztes_event: "folgetermin", updated_at: new Date().toISOString() }, "id=eq." + leadId);
+
+          // Create todo on the lead
+          const terminDatum = startL || startU;
+          const formattedDate = terminDatum ? new Date(terminDatum).toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit" }) : "bald";
+          const formattedTime = terminDatum ? new Date(terminDatum).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "";
+          await sbInsert("lead_todos", {
+            lead_id: leadId,
+            standort_id: stdId,
+            text: "Folgetermin am " + formattedDate + (formattedTime ? " um " + formattedTime + " Uhr" : ""),
+            due: terminDatum || new Date().toISOString(),
+            done: false
+          });
+
+          // Log event
+          await sbInsert("lead_events", {
+            lead_id: leadId,
+            standort_id: stdId,
+            event_typ: "folgetermin",
+            event_source: "etermin_webhook",
+            aktion: "folgetermin_verknuepft",
+            termin_id: tId,
+            match_typ: email ? "email" : phone ? "telefon" : "name_standort",
+            details: JSON.stringify({ name, email, termin_datum: terminDatum })
+          });
+
+          ftLinked = true;
+          console.log("[etermin-wh] Folgetermin linked to lead:", leadId, "termin:", tId);
+        } else {
+          console.log("[etermin-wh] Folgetermin: no matching lead found for", name, email, phone);
+        }
+      } catch (ftErr) {
+        console.error("[etermin-wh] Folgetermin error:", ftErr.message);
+      }
+    }
+
+    return res.json({ ok: true, action: cmd.toLowerCase(), termin_id: tId, termin_error: tErr, lead_created: lc, followup_linked: ftLinked });
   } catch (e) {
     console.error("[etermin-wh]", e);
     return res.status(500).json({ error: e.message });
