@@ -871,6 +871,18 @@
                 '<div class="flex items-center justify-between mb-4"><h3 class="font-bold text-lg">Extern importieren</h3>' +
                 '<button onclick="scCloseImport()" class="text-gray-400 hover:text-gray-600 text-xl">\u2716</button></div>' +
                 '<p class="text-xs text-gray-500 mb-4">Importiere bereits veroeffentlichte Posts von externen Plattformen. Diese werden als "ausgespielt" mit Quelle "extern" erfasst.</p>' +
+                '<div class=\"mb-4 p-3 bg-blue-50 rounded-lg\">' +
+                    '<p class=\"text-xs font-semibold text-blue-700 mb-2\">&#8681; Auto-Import von Plattform</p>' +
+                    '<div class=\"flex gap-2 flex-wrap\">' +
+                        '<button onclick=\"scAutoImport(\'instagram\')\" class=\"px-3 py-1.5 text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg\">Instagram</button>' +
+                        '<button onclick=\"scAutoImport(\'tiktok\')\" class=\"px-3 py-1.5 text-xs bg-black text-white rounded-lg\">TikTok</button>' +
+                        '<button onclick=\"scAutoImport(\'youtube\')\" class=\"px-3 py-1.5 text-xs bg-red-600 text-white rounded-lg\">YouTube</button>' +
+                        '<button onclick=\"scAutoImport(\'facebook\')\" class=\"px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg\">Facebook</button>' +
+                    '</div>' +
+                    '<p class=\"text-xs text-blue-500 mt-1\">Importiert die letzten Posts automatisch via API</p>' +
+                '</div>' +
+                '<p class=\"text-xs text-gray-400 mb-2 font-semibold\">Oder manuell erfassen:</p>' +
+
                 '<div class="space-y-3">' +
                     '<input id="scImpTitle" placeholder="Titel / Hook" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">' +
                     '<textarea id="scImpCaption" placeholder="Caption (optional)" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"></textarea>' +
@@ -2257,5 +2269,30 @@
     window.scSetPreviewPlatform = scSetPreviewPlatform;
     window.scUpdateKanalUI = scUpdateKanalUI;
     window.scShowKanalCaption = scShowKanalCaption;
+    async function scAutoImport(platform) {
+        _showToast('Importiere ' + platform + ' Posts…', 'info');
+        try {
+            var sb = _sb();
+            var sessRes = await sb.auth.getSession();
+            var token = (sessRes.data && sessRes.data.session) ? sessRes.data.session.access_token : '';
+            var resp = await fetch(
+                'https://lwwagbkxeofahhwebkab.supabase.co/functions/v1/social-import',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ action: platform })
+                }
+            );
+            var result = await resp.json();
+            if (!resp.ok) throw new Error(result.error || 'Import fehlgeschlagen');
+            var count = result.imported || 0;
+            _showToast(count + ' neue Posts von ' + platform + ' importiert', count > 0 ? 'success' : 'info');
+            if (count > 0) { scCloseImport(); renderScompler(); }
+        } catch(e) {
+            _showToast('Import Fehler: ' + e.message, 'error');
+        }
+    }
+    window.scAutoImport = scAutoImport;
+
     window.scPublishPost   = scPublishPost;
 })();
