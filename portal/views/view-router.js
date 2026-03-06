@@ -54,7 +54,7 @@ const VIEW_RENDER_MAP = {
     'aktenschrank':  { fn: 'loadAktenschrank' },
     'kalender':      { fn: 'loadKalTermine' },
     'todo':          { fn: 'loadTodos' },
-    'notifications': { fn: 'renderNotifications', args: ['all'] },
+    'notifications': { fn: 'loadNotifications', async: true, chain: [{ fn: 'renderNotifications', args: ['all'] }] },
     'mitarbeiter':   { fn: 'renderPartnerMitarbeiter' },
     'standortBilling': { fn: 'initStandortBilling', chain: [{ fn: 'loadStandortInvoices' }, { fn: 'showStBillingTab', args: ['invoices'] }] },
     
@@ -215,3 +215,4 @@ window.addEventListener('vit:view-changed', function() {
 const _exports = { VIEW_RENDER_MAP, VIEW_REDIRECTS };
 Object.entries(_exports).forEach(([k, v]) => { window[k] = v; });
 // [prod] log removed
+
