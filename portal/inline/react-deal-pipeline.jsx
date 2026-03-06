@@ -882,11 +882,11 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
               <span style={{fontSize:10,color:"#9ca3af"}}>{beratungOpen?"▲":"▼"}</span>
             </div>
             {beratungOpen&&<div>
-              {[{k:"nutzung",i:"🚲",l:"Nutzung",ph:"Was macht der Kunde mit dem Rad?"},{k:"ziel",i:"🎯",l:"Ziel",ph:"Welches Ziel?"},{k:"budget",i:"💶",l:"Budget",ph:"Was kann investiert werden?"},{k:"next",i:"👣",l:"Nächster Schritt",ph:"Was wurde vereinbart?"},{k:"einwaende",i:"⚠️",l:"Einwände",ph:"Bedenken?"}].map(f=>
+              {[{k:"nutzung",i:"🚲",l:"Nutzung",ph:"Was macht der Kunde mit dem Rad?"},{k:"ziel",i:"🎯",l:"Ziel",ph:"Welches Ziel?"},{k:"budget",i:"💶",l:"Budget",ph:"z.B. 3500"},{k:"next",i:"👣",l:"Nächster Schritt",ph:"Was wurde vereinbart?"},{k:"einwaende",i:"⚠️",l:"Einwände",ph:"Bedenken?"}].map(f=>
                 <div key={f.k} style={{display:"flex",alignItems:"center",gap:6,padding:"5px 0",borderBottom:"1px solid #eef0f8"}}>
                   <span style={{fontSize:12,width:16,textAlign:"center",flexShrink:0}}>{f.i}</span>
                   <span style={{fontSize:11,fontWeight:700,color:"#374151",width:95,flexShrink:0}}>{f.l}</span>
-                  <input value={sales[f.k]||""} onChange={e=>uS(f.k,e.target.value)} placeholder={f.ph} style={{flex:1,border:"none",background:"transparent",fontSize:12,color:"#374151",fontFamily:"inherit",outline:"none",padding:0}}/>
+                  <input value={f.k==="budget"?(sales.budget||String(deal.value||"")):sales[f.k]||""} onChange={e=>{uS(f.k,e.target.value);if(f.k==="budget"){const n=parseFloat(e.target.value.replace(/[^0-9.,]/g,"").replace(",","."));if(n>0)onUpdateDeal(deal.id,"value",n)}}} placeholder={f.ph} style={{flex:1,border:"none",background:"transparent",fontSize:12,color:"#374151",fontFamily:"inherit",outline:"none",padding:0}}/>
                 </div>)}
               {/* Extended fields */}
               <div style={{borderTop:"1px solid #e8eef8",marginTop:8,paddingTop:8}}>
@@ -917,6 +917,17 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Must Haves */}
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:6}}>Must Haves</div>
+            {[0,1,2].map(i=>
+              <div key={i} style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+                <span style={{fontSize:11,fontWeight:700,color:"#EF7D00",width:16,textAlign:"center",flexShrink:0}}>{i+1}.</span>
+                <input value={(sales.mustHaves||[])[i]||""} onChange={e=>{const arr=[...(sales.mustHaves||["","",""])];arr[i]=e.target.value;uS("mustHaves",arr)}} placeholder={"Must Have "+(i+1)+"..."} style={{...dpInp,width:"100%",padding:"6px 10px",fontSize:12}}/>
+              </div>
+            )}
           </div>
 
           {/* Freie Notiz */}
