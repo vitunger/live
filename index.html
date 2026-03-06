@@ -990,12 +990,6 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
                                 <span class="sidebar-label">Entwicklung</span>
                             </button>
-
-                            <button onclick="showView('hqApiNutzung')" data-hq-module="hqEntwicklung" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                <span class="sidebar-label">KI-Kosten</span>
-                            </button>
-
                             <button onclick="showView('hqShop')" data-hq-module="shop" data-tooltip="Shop" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                                 <span class="sidebar-label" data-i18n="nav_shop">Shop</span>
@@ -4715,11 +4709,6 @@
                     </div>
                 </div>
 
-                <!-- ===== HQ KI-NUTZUNG / API-KOSTEN ===== -->
-                <div id="hqApiNutzungView" class="view" style="display: none;">
-                    <h1 class="h1-headline text-gray-800 mb-2">⚡ KI-NUTZUNG & API-KOSTEN</h1>
-                    <p class="text-sm text-gray-500 mb-6">Kosten-Monitoring aller KI-API-Aufrufe (Anthropic Claude, OpenAI, etc.)</p>
-                    <div id="apiNutzungContent"></div>
                 </div>
 
                 <!-- ===== HQ WISSEN-VERWALTUNG ===== -->
@@ -4860,7 +4849,7 @@
                         <button class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="steuerung" onclick="showEntwicklungTab('steuerung')" style="display:none;">⚙️ Steuerung</button>
                         <!-- Flags tab removed - integrated into dev pipeline logic -->
                         <!-- <button class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="flags" onclick="showEntwicklungTab('flags')" style="display:none;">🚩 Flags</button> -->
-                        <button class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="nutzung" onclick="showEntwicklungTab('nutzung')" style="display:none;">📊 Nutzung</button>
+                        <button class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="nutzung" onclick="showEntwicklungTab('nutzung')" style="display:none;">⚡ KI-Kosten</button>
                         <button class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="system" onclick="showEntwicklungTab('system')" style="display:none;">🛡️ System</button>
                         <button class="entw-tab-btn entw-hq-tab px-4 py-2 rounded-md text-sm font-semibold text-gray-500 whitespace-nowrap" data-etab="auditlog" onclick="showEntwicklungTab('auditlog')" style="display:none;">📋 Log</button>
                     </div>
