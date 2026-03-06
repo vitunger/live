@@ -227,6 +227,12 @@ export async function renderEntwSteuerung() {
     var c = document.getElementById('entwSteuerungContent');
     if(!c) return;
     await loadDevSubmissions();
+    _renderSteuerungKanban(c);
+}
+
+function _renderSteuerungKanban(c) {
+    if(!c) c = document.getElementById('entwSteuerungContent');
+    if(!c) return;
 
     var h = '';
 
@@ -264,7 +270,7 @@ export async function renderEntwSteuerung() {
             if(!sub || sub.status === targetStatus) return;
             // Optimistic local update + re-render
             sub.status = targetStatus;
-            if(typeof renderEntwIdeen === 'function') renderEntwIdeen();
+            _renderSteuerungKanban();
             _showToast('📋 Status → ' + (_devStatusLabels()[targetStatus]||targetStatus), 'success');
             // Persist to DB (without full reload)
             try {
