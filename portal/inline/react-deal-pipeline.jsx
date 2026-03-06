@@ -678,11 +678,27 @@ function ScanUploadModal({deal,sales,onClose,onUpdateDeal}){
 
             {error&&<div style={{marginBottom:12}}>
               <div style={{padding:"10px 14px",borderRadius:10,background:"#FFF5F5",border:"1px solid #FED7D7",color:"#C53030",fontSize:12,fontWeight:600,marginBottom:8}}>{"⚠️ "+error}</div>
-              <button onClick={()=>{
-                const currentSales=deal.sales||{};
-                onUpdateDeal(deal.id,"sales",{...currentSales,scanUrl:preview,scanDate:new Date().toISOString(),scanError:error});
-                onClose();
-                window.showToast&&window.showToast("Scan gespeichert (ohne KI-Analyse)","success");
+              <button onClick={async()=>{
+                try{
+                  const base64=preview.split(",")[1];
+                  const ext=((file?.type||"").split("/")[1]||"jpg");
+                  const fileName="scan_"+deal.id+"_"+Date.now()+"."+ext;
+                  const bytes=Uint8Array.from(atob(base64),c=>c.charCodeAt(0));
+                  const{error:upErr}=await window.sb.storage.from("lead-scans").upload(fileName,bytes,{contentType:file?.type||"image/jpeg"});
+                  if(upErr)throw upErr;
+                  const{data:signedData}=await window.sb.storage.from("lead-scans").createSignedUrl(fileName,365*24*3600);
+                  const url=signedData?.signedUrl||preview;
+                  const currentSales=deal.sales||{};
+                  onUpdateDeal(deal.id,"sales",{...currentSales,scanUrl:url,scanDate:new Date().toISOString(),scanFileName:fileName,scanError:error});
+                  onClose();
+                  window.showToast&&window.showToast("Scan gespeichert (ohne KI-Analyse)","success");
+                }catch(e){
+                  // Fallback: save base64 preview directly
+                  const currentSales=deal.sales||{};
+                  onUpdateDeal(deal.id,"sales",{...currentSales,scanUrl:preview,scanDate:new Date().toISOString(),scanError:error});
+                  onClose();
+                  window.showToast&&window.showToast("Scan lokal gespeichert","success");
+                }
               }} style={{width:"100%",padding:"10px",borderRadius:10,border:"1.5px solid #E2E8F0",background:"#fff",color:"#4A5568",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                 {"💾 Trotzdem speichern (ohne KI-Analyse)"}
               </button>
@@ -838,9 +854,18 @@ function WawiBelege({deal}){
         :<div style={{fontSize:11,color:"#aaa",textAlign:"center",padding:8}}>Lade Positionen...</div>}
         {/* PDF Download */}
         {b.quell_datei_url&&<div style={{marginTop:8,borderTop:"1px solid #f0f0f0",paddingTop:8}}>
-          <a href={b.quell_datei_url} target="_blank" rel="noopener" style={{display:"inline-flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:8,background:"#EFF6FF",border:"1px solid #BFDBFE",color:"#1D4ED8",fontSize:11,fontWeight:600,textDecoration:"none",cursor:"pointer"}}>
+          <button onClick={async()=>{
+            try{
+              // Extract storage path from URL
+              const path=b.quell_datei_url.split("/storage/v1/object/public/wawi-belege/")[1]||b.quell_datei_url.split("/storage/v1/object/wawi-belege/")[1];
+              if(!path){window.open(b.quell_datei_url,"_blank");return;}
+              const{data,error}=await window.sb.storage.from("wawi-belege").createSignedUrl(path,300);
+              if(error||!data?.signedUrl){window.showToast&&window.showToast("PDF konnte nicht geladen werden","error");return;}
+              window.open(data.signedUrl,"_blank");
+            }catch(e){console.error("PDF open:",e);window.open(b.quell_datei_url,"_blank");}
+          }} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:8,background:"#EFF6FF",border:"1px solid #BFDBFE",color:"#1D4ED8",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
             {"\ud83d\udcc3"} PDF anzeigen / herunterladen
-          </a>
+          </button>
         </div>}
       </div>}
     </div>)}
