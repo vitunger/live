@@ -50,24 +50,45 @@ export function showNewLeadModal() {
 // ── FIX #2: Dynamic Month Goal from jahresplaene ──
 export async function loadMonthGoal() {
     var goalEl = document.getElementById('wkMonatsziel');
+    var barEl = document.getElementById('wkMonatsBar');
+    var barFill = document.getElementById('wkMonatsBarFill');
+    var barLabel = document.getElementById('wkMonatsBarLabel');
     if(!goalEl) return;
     try {
         var profile = _sbProfile();
-        if(!profile || !profile.standort_id) { goalEl.textContent = '\u2014'; return; }
+        if(!profile || !profile.standort_id) { goalEl.textContent = '\u2014'; if(barEl) barEl.style.display='none'; return; }
         var yr = new Date().getFullYear();
         var month = new Date().getMonth() + 1; // 1-12
+        var ziel = 0;
+        // Load Plan
         var resp = await _sb().from('jahresplaene').select('plan_daten').eq('standort_id', profile.standort_id).eq('jahr', yr).maybeSingle();
-        if(resp.error) throw resp.error;
-        if(resp.data && resp.data.plan_daten) {
+        if(!resp.error && resp.data && resp.data.plan_daten) {
             var mp = resp.data.plan_daten[String(month)] || resp.data.plan_daten[month] || {};
-            var ziel = mp.umsatz || 0;
-            goalEl.textContent = ziel > 0 ? ziel.toLocaleString('de-DE') + ' \u20AC' : '\u2014';
-        } else {
-            goalEl.textContent = '\u2014';
+            ziel = mp.umsatz || 0;
+        }
+        goalEl.textContent = ziel > 0 ? ziel.toLocaleString('de-DE') + ' \u20AC' : '\u2014';
+        // Load IST for current month
+        var monStart = yr + '-' + String(month).padStart(2,'0') + '-01';
+        var monEnd = month < 12 ? yr + '-' + String(month+1).padStart(2,'0') + '-01' : (yr+1) + '-01-01';
+        var istResp = await _sb().from('verkauf_tracking').select('umsatz').eq('standort_id', profile.standort_id).gte('datum', monStart).lt('datum', monEnd);
+        var istUmsatz = 0;
+        if(!istResp.error && istResp.data) {
+            istResp.data.forEach(function(r) { istUmsatz += parseFloat(r.umsatz) || 0; });
+        }
+        // Render progress bar
+        if(barEl && ziel > 0) {
+            barEl.style.display = 'block';
+            var pct = Math.min(Math.round((istUmsatz / ziel) * 100), 100);
+            var color = pct >= 90 ? '#16a34a' : pct >= 60 ? '#EF7D00' : pct >= 30 ? '#f59e0b' : '#ef4444';
+            if(barFill) { barFill.style.width = pct + '%'; barFill.style.background = color; }
+            if(barLabel) barLabel.textContent = istUmsatz.toLocaleString('de-DE') + ' \u20AC (' + pct + '%)';
+        } else if(barEl) {
+            barEl.style.display = 'none';
         }
     } catch(e) {
         console.warn('[Verkauf] Monatsziel load error:', e);
         goalEl.textContent = '\u2014';
+        if(barEl) barEl.style.display = 'none';
     }
 }
 
