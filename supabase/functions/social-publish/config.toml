@@ -1,0 +1,2 @@
+[functions.social-publish]
+verify_jwt = false
