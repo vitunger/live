@@ -98,7 +98,7 @@ setTimeout(function(){
                 name: _sbProfile().name || 'Partner',
                 portalUrl: window.location.href,
                 standort: (typeof sbStandort !== 'undefined' && sbStandort) ? sbStandort.name : '',
-                location_id: _sbProfile().standort_id,
+                location_id: (_sbProfile() && _sbProfile().standort_id) || null,
                 user_id: _sbProfile().id
             });
             try { localStorage.setItem('vit-welcomed-' + _sbProfile().id, '1'); } catch(e){}
@@ -605,7 +605,7 @@ if(event.target) { event.target.textContent = '📥 PDF herunterladen'; event.ta
 
 // ── Standort: Load My Invoices ──
 window.loadStandortInvoices = async function() {
-var stId = _sbProfile().standort_id;
+var stId = _sbProfile() ? _sbProfile().standort_id : null; if(!stId) return;
 if (!stId) return;
 var { data: invoices } = await _sb().from('billing_invoices')
 .select('*').eq('standort_id', stId).order('period_start', { ascending: false });
@@ -640,7 +640,7 @@ el.innerHTML = h;
 
 // ── Standort: Strategy ──
 window.loadStandortStrategy = async function() {
-var stId = _sbProfile().standort_id;
+var stId = _sbProfile() ? _sbProfile().standort_id : null; if(!stId) return;
 if (!stId) return;
 var year = new Date().getFullYear();
 var { data: strategies } = await _sb().from('billing_annual_strategy')
@@ -672,7 +672,7 @@ el.innerHTML = h;
 };
 
 window.submitStrategy = async function() {
-var stId = _sbProfile().standort_id;
+var stId = _sbProfile() ? _sbProfile().standort_id : null; if(!stId) return;
 var rev = parseFloat(document.getElementById('stStratRevenue')?.value);
 var mkt = parseFloat(document.getElementById('stStratMarketing')?.value);
 if (!rev || isNaN(rev)) { _showToast(_t('misc_enter_revenue'), 'error'); return; }
@@ -693,7 +693,7 @@ loadStandortStrategy();
 
 // ── Standort: Cost Breakdown ──
 window.loadStandortCosts = async function() {
-var stId = _sbProfile().standort_id;
+var stId = _sbProfile() ? _sbProfile().standort_id : null; if(!stId) return;
 if (!stId) return;
 var el = document.getElementById('stBillingCostsContent');
 if (!el) return;
