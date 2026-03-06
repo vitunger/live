@@ -1,14 +1,24 @@
 /**
- * views/verkauf.js - Verkauf Module (Wochenansicht + Auswertung)
+ * views/verkauf.js - Verkauf Module (Pipeline + Wochenansicht + Auswertung)
  *
  * Pipeline/CRM lives entirely in /portal/inline/react-deal-pipeline.jsx
- * This module handles: Tab switching, Wochenansicht, Jahrestabelle/Auswertung
+ * This module handles: Tab switching, Wochenansicht, Jahrestabelle/Auswertung, Ranking
+ *
+ * Fixes applied (2026-03-06):
+ *  1. Verkäufer-Ranking dynamisch aus DB
+ *  2. Monatsziel dynamisch aus jahresplaene
+ *  4. Plan-Spalte + Plan-Linie im Auswertungs-Chart
+ *  6. Tab-Reihenfolge: Pipeline = default (matching index.html)
+ *  7. _escH Helper sauber definiert
+ *  8. online-Feld konsistent behandeln
+ *  9. Error-States bei DB-Fehlern
  *
  * @module views/verkauf
  */
 function _sb()        { return window.sb; }
 function _sbProfile() { return window.sbProfile; }
 function _t(k)        { return typeof window.t === 'function' ? window.t(k) : k; }
+function _escH(s)     { return window.escH ? window.escH(String(s)) : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ── Tab Switching ──────────────────────────────────
 export function showVerkaufTab(tabName) {
@@ -21,8 +31,9 @@ export function showVerkaufTab(tabName) {
     if(el) el.style.display='block';
     var btn=document.querySelector('.vk-tab-btn[data-tab="'+tabName+'"]');
     if(btn) btn.className='vk-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
-    if(tabName==='woche') loadWeekFromDb();
+    // FIX #6: Pipeline is the default tab (matches index.html tab order)
     if(tabName==='pipeline') mountReactPipeline();
+    if(tabName==='woche') { loadMonthGoal(); loadWeekFromDb(); }
     if(tabName==='auswertung') renderJahresTabelle();
 }
 
@@ -33,6 +44,30 @@ export function showNewLeadModal() {
     } else {
         showVerkaufTab('pipeline');
         setTimeout(function(){ if(typeof window.openReactNewLead === 'function') window.openReactNewLead(); }, 500);
+    }
+}
+
+// ── FIX #2: Dynamic Month Goal from jahresplaene ──
+export async function loadMonthGoal() {
+    var goalEl = document.getElementById('wkMonatsziel');
+    if(!goalEl) return;
+    try {
+        var profile = _sbProfile();
+        if(!profile || !profile.standort_id) { goalEl.textContent = '\u2014'; return; }
+        var yr = new Date().getFullYear();
+        var month = new Date().getMonth() + 1; // 1-12
+        var resp = await _sb().from('jahresplaene').select('plan_daten').eq('standort_id', profile.standort_id).eq('jahr', yr).maybeSingle();
+        if(resp.error) throw resp.error;
+        if(resp.data && resp.data.plan_daten) {
+            var mp = resp.data.plan_daten[String(month)] || resp.data.plan_daten[month] || {};
+            var ziel = mp.umsatz || 0;
+            goalEl.textContent = ziel > 0 ? ziel.toLocaleString('de-DE') + ' \u20AC' : '\u2014';
+        } else {
+            goalEl.textContent = '\u2014';
+        }
+    } catch(e) {
+        console.warn('[Verkauf] Monatsziel load error:', e);
+        goalEl.textContent = '\u2014';
     }
 }
 
@@ -69,7 +104,14 @@ export async function loadWeekFromDb() {
         var resp = await query;
         if(resp.error) throw resp.error;
         weekDbData = resp.data || [];
-    } catch(e) { weekDbData = []; console.warn('Week load error:', e); }
+    } catch(e) {
+        weekDbData = [];
+        console.warn('Week load error:', e);
+        // FIX #9: Show error state
+        var container = document.getElementById('weekSellerTables');
+        if(container) container.innerHTML = '<div class="vit-card p-8 text-center text-red-400"><p class="text-lg mb-2">\u26A0\uFE0F</p><p class="text-sm">Daten konnten nicht geladen werden. Bitte versuche es erneut.</p></div>';
+        return;
+    }
     renderWeekViewFromDb();
 }
 
@@ -89,7 +131,7 @@ export function renderWeekViewFromDb() {
             dd.plan += (entry.plan_termine || 0);
             dd.geplant += (entry.geplant || 0);
             dd.spontan += (entry.spontan || 0);
-            dd.online += (entry.online || 0);
+            dd.online += (entry.online || 0);  // FIX #8: field exists in DB, keep reading it
             dd.ergo += (entry.ergo || 0);
             dd.verkauft += (entry.verkauft || 0);
             dd.uebergabe += (entry.uebergabe || 0);
@@ -99,11 +141,12 @@ export function renderWeekViewFromDb() {
     });
     var sellers = Object.values(sellerMap);
 
+    // FIX #3: Dropdown is populated dynamically only — hardcoded options removed from HTML
     var filterEl = document.getElementById('weekSellerFilter');
     if(filterEl) {
         var curVal = filterEl.value;
         var opts = '<option value="all">Alle Verkaeufer</option>';
-        sellers.forEach(function(s) { opts += '<option value="'+s.name+'"'+(s.name===curVal?' selected':'')+'>'+s.name+'</option>'; });
+        sellers.forEach(function(s) { opts += '<option value="'+_escH(s.name)+'"'+(s.name===curVal?' selected':'')+'>'+_escH(s.name)+'</option>'; });
         filterEl.innerHTML = opts;
     }
     var filter = filterEl ? filterEl.value : 'all';
@@ -173,11 +216,11 @@ export function renderWeekViewFromDb() {
 export async function renderJahresTabelle() {
     var tbody = document.getElementById('jahresTabelle');
     if(!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-400">Lade Daten...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-gray-400">Lade Daten...</td></tr>';
 
     var sb = window.sb || window.supabase;
     var profile = window.sbProfile;
-    if(!sb || !profile) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-400">Keine Verbindung</td></tr>'; return; }
+    if(!sb || !profile) { tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-gray-400">Keine Verbindung</td></tr>'; return; }
 
     var stdId = profile.standort_id;
     var yr = new Date().getFullYear();
@@ -185,26 +228,41 @@ export async function renderJahresTabelle() {
     var monatsNamen = ['Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 
     var trackingData = {};
+    var sellerTrackingData = {}; // FIX #1: For ranking
     try {
-        var q = _sb().from('verkauf_tracking').select('datum, geplant, spontan, ergo, verkauft, umsatz')
+        var q = _sb().from('verkauf_tracking').select('datum, verkaeufer_name, geplant, spontan, online, ergo, verkauft, umsatz')
             .gte('datum', yr + '-01-01').lte('datum', yr + '-12-31');
         if(stdId && !profile.is_hq) q = q.eq('standort_id', stdId);
         var resp = await q;
+        if(resp.error) throw resp.error;
         if(resp.data) {
             resp.data.forEach(function(r) {
                 var m = new Date(r.datum).getMonth();
                 if(!trackingData[m]) trackingData[m] = {beratungen:0, verkauft:0, umsatz:0};
-                trackingData[m].beratungen += (r.geplant||0) + (r.spontan||0);
+                var beratungen = (r.geplant||0) + (r.spontan||0) + (r.online||0);
+                trackingData[m].beratungen += beratungen;
                 trackingData[m].verkauft += (r.verkauft||0);
                 trackingData[m].umsatz += parseFloat(r.umsatz||0);
+
+                // FIX #1: Collect per-seller data for ranking
+                var name = r.verkaeufer_name || 'Unbekannt';
+                if(!sellerTrackingData[name]) sellerTrackingData[name] = {name:name, beratungen:0, verkauft:0, umsatz:0};
+                sellerTrackingData[name].beratungen += beratungen;
+                sellerTrackingData[name].verkauft += (r.verkauft||0);
+                sellerTrackingData[name].umsatz += parseFloat(r.umsatz||0);
             });
         }
-    } catch(e) { console.warn('[Auswertung] Tracking error:', e); }
+    } catch(e) {
+        console.warn('[Auswertung] Tracking error:', e);
+        // FIX #9: Show error
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-red-400">\u26A0\uFE0F Daten konnten nicht geladen werden.</td></tr>';
+        return;
+    }
 
     var planData = {};
     try {
         if(stdId) {
-            var jpResp = await _sb().from('jahresplaene').select('plan_daten').eq('standort_id', stdId).eq('jahr', yr).single();
+            var jpResp = await _sb().from('jahresplaene').select('plan_daten').eq('standort_id', stdId).eq('jahr', yr).maybeSingle();
             if(jpResp.data && jpResp.data.plan_daten) {
                 for(var i = 1; i <= 12; i++) {
                     var mp = jpResp.data.plan_daten[String(i)] || jpResp.data.plan_daten[i] || {};
@@ -214,6 +272,7 @@ export async function renderJahresTabelle() {
         }
     } catch(e) { console.warn('[Auswertung] Jahresplan error:', e); }
 
+    // FIX #4: Add Plan column to table
     var html = '';
     var totals = {beratungen:0, verkauft:0, umsatz:0, plan:0};
 
@@ -224,6 +283,7 @@ export async function renderJahresTabelle() {
         var isFuture = i > curMonth && td.beratungen === 0 && td.verkauft === 0;
         var quote = td.beratungen > 0 ? Math.round((td.verkauft / td.beratungen) * 100) : 0;
         var avg = td.verkauft > 0 ? Math.round(td.umsatz / td.verkauft) : 0;
+        var planDiff = plan > 0 && td.umsatz > 0 ? Math.round(((td.umsatz / plan) - 1) * 100) : null;
         totals.beratungen += td.beratungen; totals.verkauft += td.verkauft; totals.umsatz += td.umsatz; totals.plan += plan;
 
         html += '<tr class="border-b ' + (isCurrent ? 'bg-blue-50 border-l-4 border-blue-400' : '') + ' ' + (isFuture ? 'text-gray-400' : '') + '">';
@@ -232,18 +292,25 @@ export async function renderJahresTabelle() {
         html += '<td class="text-right py-2.5 px-3 font-bold text-green-600">' + (td.verkauft > 0 ? td.verkauft : '\u2014') + '</td>';
         html += '<td class="text-right py-2.5 px-3 ' + (quote >= 70 ? 'text-green-600' : quote > 0 ? 'text-orange-600' : '') + '">' + (quote > 0 ? quote + '%' : '\u2014') + '</td>';
         html += '<td class="text-right py-2.5 px-3">' + (td.umsatz > 0 ? Math.round(td.umsatz).toLocaleString('de-DE') + ' \u20AC' : '\u2014') + '</td>';
-        html += '<td class="text-right py-2.5 px-3">' + (avg > 0 ? avg.toLocaleString('de-DE') + ' \u20AC' : '\u2014') + '</td>';
+        // FIX #4: Plan column
+        html += '<td class="text-right py-2.5 px-3 text-gray-400">' + (plan > 0 ? Math.round(plan).toLocaleString('de-DE') + ' \u20AC' : '\u2014') + '</td>';
+        // Plan diff column
+        html += '<td class="text-right py-2.5 px-3 text-xs font-semibold ' + (planDiff !== null ? (planDiff >= 0 ? 'text-green-600' : 'text-red-500') : '') + '">';
+        html += planDiff !== null ? (planDiff >= 0 ? '+' : '') + planDiff + '%' : '\u2014';
+        html += '</td>';
         html += '</tr>';
     }
 
     var totalQuote = totals.beratungen > 0 ? Math.round((totals.verkauft / totals.beratungen) * 100) : 0;
     var totalAvg = totals.verkauft > 0 ? Math.round(totals.umsatz / totals.verkauft) : 0;
+    var totalPlanDiff = totals.plan > 0 && totals.umsatz > 0 ? Math.round(((totals.umsatz / totals.plan) - 1) * 100) : null;
     html += '<tr class="bg-gray-100 border-t-2"><td class="py-3 px-3 font-bold">GESAMT</td>';
     html += '<td class="text-right py-3 px-3 font-bold">' + (totals.beratungen > 0 ? totals.beratungen : '\u2014') + '</td>';
     html += '<td class="text-right py-3 px-3 font-bold text-green-600">' + (totals.verkauft > 0 ? totals.verkauft : '\u2014') + '</td>';
     html += '<td class="text-right py-3 px-3 font-bold">' + (totalQuote > 0 ? totalQuote + '%' : '\u2014') + '</td>';
     html += '<td class="text-right py-3 px-3 font-bold">' + (totals.umsatz > 0 ? Math.round(totals.umsatz).toLocaleString('de-DE') + ' \u20AC' : '\u2014') + '</td>';
-    html += '<td class="text-right py-3 px-3 font-bold">' + (totalAvg > 0 ? totalAvg.toLocaleString('de-DE') + ' \u20AC' : '\u2014') + '</td>';
+    html += '<td class="text-right py-3 px-3 font-bold text-gray-400">' + (totals.plan > 0 ? Math.round(totals.plan).toLocaleString('de-DE') + ' \u20AC' : '\u2014') + '</td>';
+    html += '<td class="text-right py-3 px-3 font-bold text-xs ' + (totalPlanDiff !== null ? (totalPlanDiff >= 0 ? 'text-green-600' : 'text-red-500') : '') + '">' + (totalPlanDiff !== null ? (totalPlanDiff >= 0 ? '+' : '') + totalPlanDiff + '%' : '\u2014') + '</td>';
     html += '</tr>';
     tbody.innerHTML = html;
 
@@ -259,8 +326,12 @@ export async function renderJahresTabelle() {
     if(elAvg) elAvg.textContent = totalAvg > 0 ? totalAvg.toLocaleString('de-DE') + ' \u20AC' : '0 \u20AC';
 
     renderAuswertungChart(trackingData, planData);
+
+    // FIX #1: Render Verkäufer-Ranking
+    renderSellerRanking(sellerTrackingData);
 }
 
+// ── FIX #4: Auswertung Chart with Plan line ────────
 function renderAuswertungChart(trackingData, planData) {
     var container = document.getElementById('ausChartContainer');
     if(!container) return;
@@ -277,11 +348,30 @@ function renderAuswertungChart(trackingData, planData) {
     var barW = Math.floor((w - 40) / 12) - 4;
 
     var svg = '<svg viewBox="0 0 '+w+' '+(h+30)+'" style="width:100%;height:100%">';
+    // Grid lines
     for(var g = 0; g <= 4; g++) {
         var gy = h - (g/4)*h;
         svg += '<line x1="40" y1="'+gy+'" x2="'+w+'" y2="'+gy+'" stroke="#f0f0f0" stroke-width="1"/>';
-        svg += '<text x="36" y="'+(gy+4)+'" text-anchor="end" fill="#9ca3af" font-size="10">' + Math.round(maxVal*g/4/1000) + '</text>';
+        svg += '<text x="36" y="'+(gy+4)+'" text-anchor="end" fill="#9ca3af" font-size="10">' + Math.round(maxVal*g/4/1000) + 'k</text>';
     }
+    // FIX #4: Plan line (dashed)
+    var planPoints = [];
+    for(var i = 0; i < 12; i++) {
+        var pd = planData[i] || {};
+        var x = 44 + i * (barW + 4) + barW/2;
+        var val = pd.umsatz || 0;
+        var barH = maxVal > 0 ? (val / maxVal) * h : 0;
+        if(val > 0) planPoints.push(x + ',' + (h - barH));
+    }
+    if(planPoints.length > 1) {
+        svg += '<polyline points="' + planPoints.join(' ') + '" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,3" opacity="0.7"/>';
+        // Plan dots
+        planPoints.forEach(function(pt) {
+            var coords = pt.split(',');
+            svg += '<circle cx="'+coords[0]+'" cy="'+coords[1]+'" r="3" fill="#94a3b8" opacity="0.7"/>';
+        });
+    }
+    // IST bars
     for(var i = 0; i < 12; i++) {
         var td = trackingData[i] || {};
         var x = 44 + i * (barW + 4);
@@ -290,10 +380,51 @@ function renderAuswertungChart(trackingData, planData) {
         svg += '<rect x="'+x+'" y="'+(h-barH)+'" width="'+barW+'" height="'+barH+'" rx="3" fill="'+(val > 0 ? '#EF7D00' : '#f0f0f0')+'"/>';
         svg += '<text x="'+(x+barW/2)+'" y="'+(h+18)+'" text-anchor="middle" fill="#9ca3af" font-size="10">'+months[i]+'</text>';
     }
+    // Legend
+    svg += '<rect x="'+(w-180)+'" y="-2" width="12" height="12" rx="2" fill="#EF7D00"/>';
+    svg += '<text x="'+(w-164)+'" y="8" fill="#6b7280" font-size="10">IST</text>';
+    svg += '<line x1="'+(w-110)+'" y1="4" x2="'+(w-85)+'" y2="4" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,3"/>';
+    svg += '<text x="'+(w-80)+'" y="8" fill="#6b7280" font-size="10">Plan</text>';
     svg += '</svg>';
     container.innerHTML = svg;
 }
 
+// ── FIX #1: Verkäufer-Ranking ──────────────────────
+function renderSellerRanking(sellerData) {
+    var container = document.getElementById('ausRanking');
+    if(!container) return;
+    var sellers = Object.values(sellerData);
+    if(sellers.length === 0) {
+        container.innerHTML = '<p class="text-sm text-gray-400 col-span-4 text-center py-4">Noch keine Daten erfasst.</p>';
+        return;
+    }
+    // Sort by Umsatz descending
+    sellers.sort(function(a,b) { return b.umsatz - a.umsatz; });
+    var medals = ['\uD83E\uDD47','\uD83E\uDD48','\uD83E\uDD49']; // 🥇🥈🥉
+    var colors = ['bg-yellow-50 border-yellow-300', 'bg-gray-50 border-gray-300', 'bg-orange-50 border-orange-300'];
+    var html = '';
+    sellers.forEach(function(s, idx) {
+        var quote = s.beratungen > 0 ? Math.round((s.verkauft / s.beratungen) * 100) : 0;
+        var avg = s.verkauft > 0 ? Math.round(s.umsatz / s.verkauft) : 0;
+        var medal = idx < 3 ? medals[idx] : (idx + 1) + '.';
+        var borderClass = idx < 3 ? colors[idx] : 'bg-white border-gray-200';
+        html += '<div class="vit-card p-4 border-2 ' + borderClass + '">';
+        html += '<div class="flex items-center space-x-3 mb-3">';
+        html += '<span class="text-xl">' + medal + '</span>';
+        html += '<div class="w-8 h-8 bg-vit-orange rounded-full flex items-center justify-center text-white font-bold text-sm">' + _escH(s.name.charAt(0)) + '</div>';
+        html += '<p class="font-semibold text-gray-800">' + _escH(s.name) + '</p>';
+        html += '</div>';
+        html += '<div class="grid grid-cols-2 gap-2 text-center">';
+        html += '<div><p class="text-[10px] text-gray-500">Umsatz</p><p class="text-sm font-bold text-vit-orange">' + Math.round(s.umsatz).toLocaleString('de-DE') + ' \u20AC</p></div>';
+        html += '<div><p class="text-[10px] text-gray-500">Verkauft</p><p class="text-sm font-bold text-green-600">' + s.verkauft + '</p></div>';
+        html += '<div><p class="text-[10px] text-gray-500">Quote</p><p class="text-sm font-bold ' + (quote >= 70 ? 'text-green-600' : quote >= 40 ? 'text-orange-600' : 'text-red-600') + '">' + quote + '%</p></div>';
+        html += '<div><p class="text-[10px] text-gray-500">\u00D8 Preis</p><p class="text-sm font-bold text-purple-600">' + (avg > 0 ? avg.toLocaleString('de-DE') + ' \u20AC' : '\u2014') + '</p></div>';
+        html += '</div>';
+        html += '</div>';
+    });
+    container.innerHTML = html;
+}
+
 // ── Strangler Fig: Window Exports ──────────────────
-const _exports = {showNewLeadModal,renderJahresTabelle,showVerkaufTab,changeWeek,getMonday,getKW,loadWeekFromDb,renderWeekViewFromDb};
+const _exports = {showNewLeadModal,renderJahresTabelle,showVerkaufTab,changeWeek,getMonday,getKW,loadWeekFromDb,renderWeekViewFromDb,loadMonthGoal};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
