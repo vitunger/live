@@ -301,8 +301,21 @@
             /* Dashboard header */
             .h1-headline { font-size: 1.1rem !important; line-height: 1.3 !important; }
 
-            /* Fix modals on mobile */
-            .fixed.inset-0 > div { max-width: 95vw !important; max-height: 90vh !important; overflow-y: auto !important; margin: 5vh auto !important; }
+            /* Fix modals on mobile (iOS Safari – scrollbarer Overlay statt fixed max-height) */
+            .fixed.inset-0.z-50,
+            .fixed.inset-0.z-\[9999\] {
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                align-items: flex-start !important;
+                padding: env(safe-area-inset-top, 8px) 0 env(safe-area-inset-bottom, 8px) !important;
+            }
+            .fixed.inset-0.z-50 > div,
+            .fixed.inset-0.z-\[9999\] > div {
+                max-width: 95vw !important;
+                max-height: none !important;
+                margin: 16px auto !important;
+                flex-shrink: 0 !important;
+            }
             /* Profile slider */
             #profileSlider { width: 100% !important; }
             /* Feedback button mobile */
