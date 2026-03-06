@@ -141,10 +141,25 @@ module.exports = async function(req, res) {
     const town = (b.TOWN || b.town || b.Town || b.CITY || b.city || "").trim();
     const cal = b.CALENDARNAME || b.calendarname || b.CalendarName || b.CALENDAR || b.calendar || "";
     const calId = (b.CALENDARID || b.calendarid || b.CalendarID || b.calendarId) ? String(b.CALENDARID || b.calendarid || b.CalendarID || b.calendarId) : null;
-    const startL = parseDT(b.STARTDATETIME || b.startdatetime || b.StartDateTime);
-    const endL = parseDT(b.ENDDATETIME || b.enddatetime || b.EndDateTime);
-    const startU = parseDT(b.STARTDATETIMEUTC || b.startdatetimeutc || b.StartDateTimeUTC);
-    const endU = parseDT(b.ENDDATETIMEUTC || b.enddatetimeutc || b.EndDateTimeUTC);
+    // Support both compact format (YYYYMMDDHHmmss) and ISO 8601 (2026-05-10T10:00:00)
+    const rawStartL = b.STARTDATETIME || b.startdatetime || b.StartDateTime || b.startDateTime || "";
+    const rawEndL = b.ENDDATETIME || b.enddatetime || b.EndDateTime || b.endDateTime || "";
+    const rawStartU = b.STARTDATETIMEUTC || b.startdatetimeutc || b.StartDateTimeUTC || b.startDateTimeUTC || "";
+    const rawEndU = b.ENDDATETIMEUTC || b.enddatetimeutc || b.EndDateTimeUTC || b.endDateTimeUTC || "";
+    // Auto-detect ISO vs compact format
+    function parseAnyDT(s) {
+      if (!s) return null;
+      const d = s.trim();
+      if (d.includes('T') || d.includes('-')) {
+        // ISO 8601 - return as-is (PostgreSQL accepts this)
+        return d.endsWith('Z') ? d.replace('Z', '+00:00') : d;
+      }
+      return parseDT(d);
+    }
+    const startL = parseAnyDT(rawStartL);
+    const endL = parseAnyDT(rawEndL);
+    const startU = parseAnyDT(rawStartU);
+    const endU = parseAnyDT(rawEndU);
 
     console.log("[etermin-wh]", cmd, uid);
     if (!uid) {
@@ -287,6 +302,7 @@ module.exports = async function(req, res) {
     return res.status(500).json({ error: e.message });
   }
 };
+
 
 
 
