@@ -842,7 +842,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
     if(!sb)return;
     const eid=deal.eterminUid, tid=deal.terminId;
     if(!eid&&!tid)return;
-    let q=_sb().from("termine").select("start_zeit,end_zeit,titel,etermin_uid");
+    let q=_sb().from("termine").select("start_zeit,end_zeit,titel,etermin_uid,beschreibung,zugewiesen_an");
     if(tid) q=q.eq("id",tid);
     else q=q.eq("etermin_uid",eid);
     q.maybeSingle().then(({data})=>{if(data)setTermin(data)});
@@ -937,8 +937,9 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
           <span style={{fontSize:16}}>📅</span>
           <div>
             {termin&&termin.start_zeit?<>
-              <div style={{fontSize:12,fontWeight:700,color:sales.terminDone?"#16a34a":"#dc2626"}}>{new Date(termin.start_zeit).toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"short"})}</div>
+              <div style={{fontSize:11,fontWeight:700,color:sales.terminDone?"#16a34a":"#dc2626"}}>{new Date(termin.start_zeit).toLocaleDateString("de-DE",{weekday:"long",day:"2-digit",month:"2-digit",year:"2-digit"})}</div>
               <div style={{fontSize:11,fontWeight:700,color:sales.terminDone?"#16a34a":"#dc2626"}}>{new Date(termin.start_zeit).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})} Uhr</div>
+              {termin.titel&&<div style={{fontSize:9,color:"#6b7280",marginTop:1,maxWidth:130,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}} title={termin.titel}>{termin.titel.replace(/^.*?–\s*/,"")}</div>}
             </>
             :<div style={{fontSize:11,fontWeight:700,color:sales.terminDone?"#16a34a":"#dc2626"}}>{sales.terminDone?"✓ Termin vereinbart":"✗ Kein Termin"}</div>}
           </div>
@@ -1029,6 +1030,12 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
           {(deal.beleg_angebot_id||deal.beleg_auftrag_id||deal.beleg_rechnung_id||deal.wawiKundenNr)&&<div style={{marginBottom:14}}>
             <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:6}}>WaWi-Belege</div>
             <WawiBelege deal={deal}/>
+          </div>}
+
+          {/* eTermin Kundennachricht */}
+          {termin&&termin.beschreibung&&termin.beschreibung!=="Manuell nachgetragen - eTermin Webhook hatte Termin nicht erstellt"&&<div style={{marginBottom:14,background:"#fffbeb",borderRadius:8,padding:"10px 12px",border:"1px solid #fde68a"}}>
+            <div style={{fontSize:9,fontWeight:700,color:"#92400e",textTransform:"uppercase",letterSpacing:".08em",marginBottom:6}}>📋 Kundennachricht (eTermin)</div>
+            <div style={{fontSize:12,color:"#374151",whiteSpace:"pre-wrap",lineHeight:1.6}}>{termin.beschreibung}</div>
           </div>}
 
           {/* Freie Notiz */}
