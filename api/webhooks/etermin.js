@@ -184,7 +184,8 @@ module.exports = async function(req, res) {
           p_email: email || null,
           p_telefon: phone || null,
           p_etermin_uid: uid,
-          p_termin_typ: "beratung"
+          p_termin_typ: "beratung",
+          p_zugewiesen_an: zugewiesenAn || null
         });
         lc = !!rpcRes;
         console.log("[etermin-wh] process_etermin_lead result:", rpcRes);
