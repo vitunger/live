@@ -260,7 +260,10 @@
                 '<td class="px-4 py-3 text-xs text-gray-500">' + _escH(kanaele) + '</td>' +
                 '<td class="px-4 py-3">' + statusPill(p.status) + '</td>' +
                 '<td class="px-4 py-3 text-right font-mono">' + (p.views ? fmtK(p.views) : '–') + '</td>' +
-                '<td class="px-4 py-3 text-right"><button onclick="scDeletePost(\'' + p.id + '\')" class="text-red-400 hover:text-red-600 text-xs" title="Loeschen">\u2716</button></td>' +
+                '<td class="px-4 py-3 text-right"><div class="flex items-center justify-end gap-2">' +
+                (p.status !== \'ausgespielt\' ? '<button onclick="scOpenPostAdd(' + JSON.stringify(p).replace(/"/g, \'&quot;\') + ')" class="text-blue-400 hover:text-blue-600 text-xs px-2 py-1 rounded hover:bg-blue-50" title="Bearbeiten">\u270f\ufe0f</button>' : '') +
+                '<button onclick="scDeletePost(\'' + p.id + '\')" class="text-red-400 hover:text-red-600 text-xs px-2 py-1 rounded hover:bg-red-50" title="L\u00f6schen">\u2716</button>' +
+                '</div></td>' +
                 '</tr>';
         });
 
@@ -310,7 +313,7 @@
             dayPosts.slice(0, 2).forEach(function(p) {
                 const s = STATUS_LABELS[p.status] || {};
                 var importBadge = (p.source === 'import' || p.source === 'extern') ? ' opacity-60' : '';
-                html += '<div draggable="true" ondragstart="scDragStart(event,' + p.id + ')" class="text-[10px] truncate px-1 rounded cursor-grab active:cursor-grabbing ' + (s.cls || '') + importBadge + '">' + _escH(p.title) + '</div>';
+                html += '<div draggable="true" ondragstart="scDragStart(event,' + p.id + ')" onclick="scOpenPostAdd(' + JSON.stringify(p).replace(/"/g, \'&quot;\') + ')" class="text-[10px] truncate px-1 rounded cursor-pointer hover:opacity-75 ' + (s.cls || '') + importBadge + '" title="Klicken zum Bearbeiten">' + _escH(p.title) + '</div>';
             });
             if (dayPosts.length > 2) html += '<div class="text-[10px] text-gray-400">+' + (dayPosts.length - 2) + '</div>';
             html += '</div>';
@@ -384,7 +387,7 @@
             } else {
                 dayPosts.forEach(function(p) {
                     var s = STATUS_LABELS[p.status] || {};
-                    html += '<div class="mb-1 rounded-lg p-1.5 text-[11px] ' + (s.cls || 'bg-gray-100 text-gray-600') + '">' +
+                    html += '<div onclick="scOpenPostAdd(' + JSON.stringify(p).replace(/"/g, \'&quot;\') + ')" class="mb-1 rounded-lg p-1.5 text-[11px] cursor-pointer hover:opacity-80 transition-opacity ' + (s.cls || 'bg-gray-100 text-gray-600') + '">' +
                         '<div class="font-semibold truncate">' + _escH(p.title) + '</div>' +
                         '<div class="text-[10px] opacity-75">' + _escH(FORMAT_LABELS[p.format] || p.format) + '</div>' +
                     '</div>';
