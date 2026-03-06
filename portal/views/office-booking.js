@@ -475,24 +475,34 @@ function _buchRenderParking() {
         var ini=u?((u.vorname||'')[0]+(u.nachname||'')[0]).toUpperCase():'?';
         var wrapBase='display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;border-radius:12px;border:2px solid;min-width:70px;transition:.12s;';
         if(isMe) {
+            var myTf=myParkBk.time_from?myParkBk.time_from.substring(0,5):null;
+            var myTt=myParkBk.time_to?myParkBk.time_to.substring(0,5):null;
+            var timeLabel=myTf&&myTt?myTf+'\u2013'+myTt:'Ganzer Tag';
             return '<div data-parkid="'+myParkBk.id+'" onclick="_buchCancelParking(this.dataset.parkid)" title="Klick zum Stornieren" style="'+wrapBase+'border-color:#FB923C;background:#FFF7ED;cursor:pointer;box-shadow:0 0 0 3px rgba(251,146,60,.25)">'+
                 '<span style="font-size:20px">'+icon+'</span>'+
                 '<span style="font-size:10px;font-weight:700;color:#EA580C;margin-top:3px">P'+nr+'</span>'+
-                '<span style="font-size:10px;color:#F97316;font-weight:600">Du \u2713</span>'+
+                '<span style="font-size:9px;color:#F97316;font-weight:600;text-align:center">'+timeLabel+'</span>'+
                 '<span style="font-size:8px;color:#9CA3AF;margin-top:1px">stornieren</span>'+
             '</div>';
         } else if(isTaken) {
-            return '<div title="Belegt:'+(u?u.vorname+' '+u.nachname:'jemand')+'" style="'+wrapBase+'border-color:#E5E7EB;background:#F9FAFB;opacity:.55">'+
+            var tkTf=bk.time_from?bk.time_from.substring(0,5):null;
+            var tkTt=bk.time_to?bk.time_to.substring(0,5):null;
+            var tkTime=tkTf&&tkTt?tkTf+'\u2013'+tkTt:'';
+            return '<div title="Belegt:'+(u?u.vorname+' '+u.nachname:'jemand')+(tkTime?' '+tkTime:'')+'" style="'+wrapBase+'border-color:#E5E7EB;background:#F9FAFB;opacity:.55">'+
                 '<span style="font-size:20px">'+icon+'</span>'+
                 '<span style="font-size:10px;font-weight:700;color:#6B7280;margin-top:3px">P'+nr+'</span>'+
+                (tkTime?'<span style="font-size:8px;color:#6B7280;font-weight:600;text-align:center">'+tkTime+'</span>':'')+
                 '<span style="width:22px;height:22px;border-radius:50%;background:#9CA3AF;display:flex;align-items:center;justify-content:center;color:white;font-size:8px;font-weight:700;margin-top:2px">'+ini+'</span>'+
             '</div>';
         } else {
             var canBook=!myParkNr;
-            return '<div '+(canBook?'onclick="_buchBookParking('+nr+')" title="P'+nr+' '+shortLabel+' buchen"':'title="P'+nr+' '+shortLabel+'"')+' style="'+wrapBase+'border-color:'+(icon==='\u26a1'?'#FDE68A':'#BFDBFE')+';background:'+(icon==='\u26a1'?'#FFFBEB':'#EFF6FF')+';cursor:'+(canBook?'pointer':'default')+'">'+
+            var isElektro=(icon==='\u26a1');
+            var clickFn=canBook?(isElektro?'openLadeplatzModal('+nr+')':'_buchBookParking('+nr+')'):'';
+            var titleStr=canBook?(isElektro?'Ladezeit w\u00e4hlen f\u00fcr P'+nr:'P'+nr+' '+shortLabel+' buchen'):'P'+nr+' '+shortLabel;
+            return '<div '+(clickFn?'onclick="'+clickFn+'" title="'+titleStr+'"':'title="'+titleStr+'"')+' style="'+wrapBase+'border-color:'+(isElektro?'#FDE68A':'#BFDBFE')+';background:'+(isElektro?'#FFFBEB':'#EFF6FF')+';cursor:'+(canBook?'pointer':'default')+'">'+
                 '<span style="font-size:20px">'+icon+'</span>'+
                 '<span style="font-size:10px;font-weight:700;color:#374151;margin-top:3px">P'+nr+'</span>'+
-                '<span style="font-size:9px;color:#16A34A;font-weight:600">frei</span>'+
+                '<span style="font-size:9px;color:#16A34A;font-weight:600">'+( isElektro ? '\u26a1 Zeit w\u00e4hlen' : 'frei' )+'</span>'+
             '</div>';
         }
     }
@@ -542,7 +552,165 @@ function _buchRenderParking() {
         (total>=12?'<p style="font-size:11px;color:#EF4444;text-align:center;margin-top:8px">Alle Parkpl\u00e4tze belegt</p>':'');
 }
 
+// ═══ Elektro-Ladeplatz Modal (Zeitauswahl + Timeline + Konfliktprüfung) ═══════════
+
+window.openLadeplatzModal = function(nr) {
+    var S = _off();
+    window._ladeModalNr = nr;
+    var elektroBookings = _buchParkBookings.filter(function(b){ return b.parking_nr === 1 || b.parking_nr === 2; });
+    var existing = document.getElementById('ladeplatzModal');
+    if (existing) existing.remove();
+    var userMap = {}; (S.hqUsers||[]).forEach(function(u){ userMap[u.id] = u; });
+
+    var START_H = 8, END_H = 17, TOTAL_H = END_H - START_H;
+    function toMin(t){ var p=(t||'08:00').substring(0,5).split(':'); return parseInt(p[0])*60+parseInt(p[1]); }
+    function minToPct(min){ return Math.max(0,Math.min(100,(min-START_H*60)/(TOTAL_H*60)*100)); }
+
+    var hourMarkers = '';
+    for(var h=START_H;h<=END_H;h++){
+        var pct=(h-START_H)/TOTAL_H*100;
+        hourMarkers+='<div style="position:absolute;left:'+pct+'%;top:0;bottom:0;border-left:1px solid #E5E7EB;pointer-events:none"></div>';
+        hourMarkers+='<span style="position:absolute;left:'+pct+'%;top:0;font-size:9px;color:#9CA3AF;transform:translateX(-50%)">'+String(h).padStart(2,'0')+'</span>';
+    }
+
+    function timelineRow(slotNr){
+        var slotBks=elektroBookings.filter(function(b){return b.parking_nr===slotNr;});
+        var bars=slotBks.map(function(b){
+            var fMin=toMin(b.time_from||'08:00'), tMin=toMin(b.time_to||'17:00');
+            var left=minToPct(fMin), w=Math.max(minToPct(tMin)-left,1.5);
+            var isMe=b.user_id===sbUser.id;
+            var u=userMap[b.user_id];
+            var name=u?(u.vorname||'?'):'?';
+            var tf=(b.time_from||'08:00').substring(0,5), tt=(b.time_to||'17:00').substring(0,5);
+            return '<div title="'+name+' '+tf+'\u2013'+tt+'" style="position:absolute;left:'+left+'%;width:'+w+'%;top:3px;bottom:3px;border-radius:4px;background:'+(isMe?'#F97316':'#3B82F6')+';display:flex;align-items:center;justify-content:center;overflow:hidden">'+
+                '<span style="font-size:8px;color:white;font-weight:700;white-space:nowrap;padding:0 3px">'+name+' '+tf+'</span></div>';
+        }).join('');
+        return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'+
+            '<span style="font-size:11px;font-weight:700;color:#374151;width:48px;flex-shrink:0">\u26a1 P'+slotNr+'</span>'+
+            '<div style="position:relative;flex:1;height:26px;background:#F3F4F6;border-radius:6px;overflow:hidden">'+bars+'</div>'+
+        '</div>';
+    }
+
+    var dateLabel=_buchDate===S.todayISO()?'Heute':new Date(_buchDate+'T12:00:00').toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
+
+    var modal=document.createElement('div');
+    modal.id='ladeplatzModal';
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+    modal.innerHTML=
+        '<div style="background:white;border-radius:20px;padding:28px;max-width:460px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.25);max-height:92vh;overflow-y:auto">'+
+            '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">'+
+                '<div><h2 style="font-size:18px;font-weight:800;color:#1F2937;margin:0">\u26a1 E-Auto laden</h2>'+
+                '<p style="font-size:12px;color:#9CA3AF;margin:3px 0 0">Platz P'+nr+' \u2013 '+dateLabel+'</p></div>'+
+                '<button onclick="document.getElementById(\'ladeplatzModal\').remove()" style="width:30px;height:30px;border-radius:50%;border:none;background:#F3F4F6;cursor:pointer;font-size:16px;line-height:1;flex-shrink:0">\u00d7</button>'+
+            '</div>'+
+            '<div style="margin-bottom:20px">'+
+                '<p style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Belegte Zeiten</p>'+
+                '<div style="position:relative;margin-left:48px;height:16px;margin-bottom:6px">'+hourMarkers+'</div>'+
+                timelineRow(1)+
+                timelineRow(2)+
+                '<div style="display:flex;gap:14px;margin-top:8px">'+
+                    '<span style="font-size:10px;color:#6B7280;display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#F97316;display:inline-block"></span>Meine Buchung</span>'+
+                    '<span style="font-size:10px;color:#6B7280;display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#3B82F6;display:inline-block"></span>Anderer Nutzer</span>'+
+                '</div>'+
+            '</div>'+
+            '<div style="background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:12px;padding:16px;margin-bottom:16px">'+
+                '<p style="font-size:12px;font-weight:700;color:#92400E;margin:0 0 12px">\u23F1 Meine Ladezeit w\u00e4hlen (08:00\u201317:00)</p>'+
+                '<div style="display:flex;align-items:center;gap:10px">'+
+                    '<div style="flex:1"><label style="font-size:11px;color:#6B7280;display:block;margin-bottom:4px">Von</label>'+
+                    '<input type="time" id="ladeFrom" value="08:00" min="08:00" max="17:00" oninput="ladeplatzValidateTime()" style="width:100%;border:2px solid #FED7AA;border-radius:8px;padding:8px 10px;font-size:15px;font-weight:700;color:#1F2937;box-sizing:border-box"></div>'+
+                    '<span style="font-size:18px;color:#9CA3AF;margin-top:18px">\u2013</span>'+
+                    '<div style="flex:1"><label style="font-size:11px;color:#6B7280;display:block;margin-bottom:4px">Bis</label>'+
+                    '<input type="time" id="ladeTo" value="10:00" min="08:00" max="17:00" oninput="ladeplatzValidateTime()" style="width:100%;border:2px solid #FED7AA;border-radius:8px;padding:8px 10px;font-size:15px;font-weight:700;color:#1F2937;box-sizing:border-box"></div>'+
+                '</div>'+
+                '<p id="ladeTimeHint" style="font-size:11px;margin:8px 0 0;color:#059669">\u2713 Zeitraum verf\u00fcgbar</p>'+
+            '</div>'+
+            '<div id="ladeConflictWarn" style="display:none;background:#FEE2E2;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#DC2626;font-weight:600"></div>'+
+            '<div style="display:flex;gap:10px">'+
+                '<button onclick="document.getElementById(\'ladeplatzModal\').remove()" style="flex:1;padding:12px;border:2px solid #E5E7EB;border-radius:10px;background:white;color:#374151;font-size:14px;font-weight:600;cursor:pointer">Abbrechen</button>'+
+                '<button id="ladeBuchBtn" onclick="confirmLadeplatzBuchung('+nr+')" style="flex:2;padding:12px;border:none;border-radius:10px;background:#F97316;color:white;font-size:14px;font-weight:700;cursor:pointer">\u26a1 Ladezeit buchen</button>'+
+            '</div>'+
+        '</div>';
+
+    document.body.appendChild(modal);
+    modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
+    setTimeout(function(){if(typeof window.ladeplatzValidateTime==='function')window.ladeplatzValidateTime();},50);
+};
+
+window.ladeplatzValidateTime = function() {
+    var fromVal=(document.getElementById('ladeFrom')||{}).value||'08:00';
+    var toVal  =(document.getElementById('ladeTo')||{}).value||'10:00';
+    var hint=document.getElementById('ladeTimeHint');
+    var warn=document.getElementById('ladeConflictWarn');
+    var btn =document.getElementById('ladeBuchBtn');
+    if(!hint||!warn||!btn) return;
+    function toMin(t){var p=t.split(':');return parseInt(p[0])*60+parseInt(p[1]);}
+    var fMin=toMin(fromVal), tMin=toMin(toVal);
+    if(fMin>=tMin){hint.style.color='#DC2626';hint.textContent='\u26a0 Endzeit muss nach Startzeit liegen';btn.disabled=true;btn.style.opacity='0.5';return;}
+    if(fMin<480||tMin>1020){hint.style.color='#DC2626';hint.textContent='\u26a0 Nur zwischen 08:00 und 17:00 buchbar';btn.disabled=true;btn.style.opacity='0.5';return;}
+    if(tMin-fMin<30){hint.style.color='#DC2626';hint.textContent='\u26a0 Mindestdauer 30 Minuten';btn.disabled=true;btn.style.opacity='0.5';return;}
+    var modalNr=window._ladeModalNr||0;
+    var conflicts=_buchParkBookings.filter(function(b){
+        if(b.parking_nr!==modalNr||b.user_id===sbUser.id) return false;
+        var bF=toMin((b.time_from||'08:00').substring(0,5));
+        var bT=toMin((b.time_to  ||'17:00').substring(0,5));
+        return fMin<bT&&tMin>bF;
+    });
+    if(conflicts.length){
+        var S=_off();var uMap={};(S.hqUsers||[]).forEach(function(u){uMap[u.id]=u;});
+        var names=conflicts.map(function(b){var u=uMap[b.user_id];var tf=(b.time_from||'08:00').substring(0,5);var tt=(b.time_to||'17:00').substring(0,5);return(u?u.vorname:'?')+' ('+tf+'\u2013'+tt+')';}).join(', ');
+        warn.style.display='block';warn.textContent='\u26a0 Zeitkonflikt mit: '+names;
+        hint.style.color='#DC2626';hint.textContent='Zeitraum nicht verf\u00fcgbar';
+        btn.disabled=true;btn.style.opacity='0.5';
+    } else {
+        warn.style.display='none';
+        var dur=tMin-fMin;var h=Math.floor(dur/60);var m=dur%60;
+        hint.style.color='#059669';
+        hint.textContent='\u2713 Verf\u00fcgbar \u2013 '+(h>0?h+'h'+(m?' '+m+'min':''):m+'min');
+        btn.disabled=false;btn.style.opacity='1';
+    }
+};
+
+window.confirmLadeplatzBuchung = async function(nr) {
+    var S=_off();
+    var fromVal=(document.getElementById('ladeFrom')||{}).value||'08:00';
+    var toVal  =(document.getElementById('ladeTo')||{}).value||'10:00';
+    function toMin(t){var p=t.split(':');return parseInt(p[0])*60+parseInt(p[1]);}
+    var fMin=toMin(fromVal),tMin=toMin(toVal);
+    if(fMin>=tMin){S.notify('Ung\u00fcltige Zeitangabe','error');return;}
+    var btn=document.getElementById('ladeBuchBtn');
+    if(btn){btn.disabled=true;btn.textContent='Buche...';}
+    try {
+        var freshRes=await _sb().from('office_bookings').select('id,user_id,parking_nr,time_from,time_to').eq('booking_date',_buchDate).eq('parking_nr',nr);
+        var fresh=freshRes.data||[];
+        var conflict=fresh.find(function(b){
+            if(b.user_id===sbUser.id) return false;
+            var bF=toMin((b.time_from||'08:00').substring(0,5));
+            var bT=toMin((b.time_to  ||'17:00').substring(0,5));
+            return fMin<bT&&tMin>bF;
+        });
+        if(conflict){S.notify('\u26a0 Zeitkonflikt \u2013 bitte andere Zeit w\u00e4hlen','error');if(btn){btn.disabled=false;btn.textContent='\u26a1 Ladezeit buchen';}return;}
+        var deskBk=_buchBookings.find(function(b){return b.user_id===sbUser.id;});
+        var payload={parking_nr:nr,time_from:fromVal+':00',time_to:toVal+':00',updated_at:new Date().toISOString()};
+        var res;
+        if(deskBk){
+            res=await _sb().from('office_bookings').update(payload).eq('id',deskBk.id);
+        } else {
+            res=await _sb().from('office_bookings').insert(Object.assign({user_id:sbUser.id,booking_date:_buchDate,status:'parking'},payload));
+        }
+        if(res.error) throw res.error;
+        var m=document.getElementById('ladeplatzModal');if(m)m.remove();
+        S.notify('\u26a1 P'+nr+' gebucht: '+fromVal+' \u2013 '+toVal,'success');
+        await _buchLoadData();
+        _buchRenderParking();
+    } catch(e){
+        console.error('[Office] LadeplatzBuchung:',e);
+        S.notify('Fehler: '+e.message,'error');
+        if(btn){btn.disabled=false;btn.textContent='\u26a1 Ladezeit buchen';}
+    }
+};
+
 window._buchBookParking = function(nr) {
+
     var S=_off();
     (async function(){
         try {
