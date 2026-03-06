@@ -516,7 +516,7 @@ function SalesForm({deal,sales,seller,onClose,onUpdateDeal,mode}){
 
 /* ── Detail Modal (Clean) ─────────────────────────── */
 const SOURCES=["Empfehlung","Google","Instagram","Facebook","Messe","Walk-In","Website","Flyer","TikTok","eTermin","Andere"];
-const LEASING_PROVIDERS=["JobRad","BLS (Bikeleasing-Service)","BusinessBike","Leasing/Divers"];
+const LEASING_PROVIDERS=["JobRad","BLS (Bikeleasing-Service)","BusinessBike","Linexo","Leasing/Divers"];
 const PAY_METHODS=[{id:"Bar/EC",icon:"💶"},{id:"Finanzierung",icon:"🏦"},{id:"Leasing",icon:"📋"}];
 
 /* ── Scan Upload Modal ────────────────────────────── */
@@ -956,7 +956,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
               {sales.bezahlart==="leasing"&&<div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:4}}>
                 {sales.leasingAnbieter
                   ? <><div style={{...chipS(true),fontSize:9}}>{sales.leasingAnbieter}</div><div onClick={()=>uS("leasingAnbieter",null)} style={{...chipS(false),fontSize:9,cursor:"pointer"}}>✕</div></>
-                  : ["JobRad","BusinessBike","Lease a Bike","Bikeleasing","Deutsche Leasing"].map(p=>
+                  : ["JobRad","BusinessBike","Lease a Bike","Bikeleasing","Deutsche Leasing","Linexo"].map(p=>
                   <div key={p} onClick={()=>uS("leasingAnbieter",p)} style={{...chipS(false),fontSize:9}}>{p}</div>)}
               </div>}
             </div>
