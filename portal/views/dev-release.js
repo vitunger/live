@@ -40,14 +40,9 @@ async function _loadGitCommits(daysSince) {
     var sinceStr = since.toISOString();
 
     try {
-        var ghHeaders = { 'Accept': 'application/vnd.github.v3+json' };
-        try {
-            var ghToken = await _getFreshToken();
-            // GitHub Commits über Supabase-Proxy laden (kein direktes Rate-Limit Problem)
-        } catch(e) {}
         var resp = await fetch(
-            'https://api.github.com/repos/vitunger/live/commits?per_page=50&since=' + sinceStr,
-            { headers: { ...ghHeaders, 'Authorization': 'token ' + (window._GH_READ_TOKEN || '') } }
+            'https://api.github.com/repos/vitunger/live/commits?per_page=100&since=' + sinceStr,
+            { headers: { 'Accept': 'application/vnd.github.v3+json' } }
         );
         if (!resp.ok) throw new Error('GitHub API ' + resp.status);
         var commits = await resp.json();
@@ -64,8 +59,9 @@ async function _loadGitCommits(daysSince) {
             return false;
         });
 
-        // Format for KI context
-        var lines = relevant.map(function(c) {
+        // Format for KI context (max 20 to avoid Edge Function timeout)
+        var limited = relevant.slice(0, 20);
+        var lines = limited.map(function(c) {
             var date = c.commit.author.date.split('T')[0];
             var msg = c.commit.message.split('\n')[0]; // First line only
             return date + ' | ' + msg;
@@ -92,8 +88,10 @@ async function _loadClaudeMd() {
         if (!resp.ok) return '';
         var text = await resp.text();
 
-        // Nur die ersten 1000 Zeichen für Kontext – genug für Release-Bezug
-        return text.substring(0, 1000).trim();
+        // Relevante Sektionen extrahieren (max 1500 Zeichen um Edge Function Timeout zu vermeiden)
+        var headerEnd = text.indexOf('\n## ');
+        var header = headerEnd > -1 ? text.substring(0, Math.min(headerEnd, 1500)) : text.substring(0, 1500);
+        return header.trim();
     } catch(e) {
         console.warn('CLAUDE.md laden fehlgeschlagen:', e);
         return '';
@@ -199,9 +197,6 @@ export async function devKIReleaseVorschlag() {
         _setStatus('🧠 KI generiert Release-Note... (' + gitData.count + ' Commits + ' + relevant.length + ' Submissions)');
         var token = await _getFreshToken();
 
-        // AbortController für 90s Timeout
-        var controller = new AbortController();
-        var timeoutId = setTimeout(function() { controller.abort(); }, 90000);
         var resp = await fetch(window.SUPABASE_URL + '/functions/v1/dev-ki-analyse', {
             method: 'POST',
             headers: {
@@ -212,13 +207,16 @@ export async function devKIReleaseVorschlag() {
                 mode: 'release_notes',
                 context: fullContext,
                 count: totalSources
-            }),
-            signal: controller.signal
+            })
         });
-        clearTimeout(timeoutId);
+
+        if (!resp.ok) {
+            var errText = '';
+            try { var errJson = await resp.json(); errText = errJson.error || ''; } catch(_) { errText = 'Server-Timeout (Status ' + resp.status + ')'; }
+            throw new Error(errText || 'Edge Function Fehler (Status ' + resp.status + ')');
+        }
 
         var d = await resp.json();
-        if (!resp.ok || d.error) throw new Error(d.error || 'Edge Function Fehler (HTTP ' + resp.status + ')');
 
         var vorschlag = d.release_notes || d.antwort || d.text || '';
         if (vorschlag) {
@@ -241,11 +239,7 @@ export async function devKIReleaseVorschlag() {
         }
     } catch(err) {
         console.error('KI Release error:', err);
-        if (err.name === 'AbortError') {
-            _showToast('KI-Analyse hat zu lange gedauert (Timeout). Bitte weniger Kontext oder erneut versuchen.', 'error');
-        } else {
-            _showToast('KI-Fehler: ' + (err.message || err), 'error');
-        }
+        _showToast('KI-Fehler: ' + (err.message || err), 'error');
     }
 
     if (btn) { btn.disabled = false; btn.innerHTML = '<span>🧠</span><span>KI-Vorschlag generieren</span>'; }
