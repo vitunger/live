@@ -55,6 +55,7 @@ if(S.myCheckin) {
                         '</div>'+
                         '<div class="text-center">'+
                             '<button onclick="window._offCheckIn()" class="px-6 py-3 bg-green-500 text-white rounded-xl font-bold text-lg hover:bg-green-600 shadow-lg transition">\ud83c\udfe2 Einchecken</button>'+
+                            '<button onclick="window._offRemoteCheckIn()" style="display:block;margin-top:8px;padding:8px 20px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:#1D4ED8">\ud83c\udfe0 Remote</button>'+
                             (myBooking?'<p class="text-[10px] text-gray-400 mt-1">Platz '+myBooking.desk_nr+'</p>':'')+
                         '</div>'+
                     '</div>'+
@@ -213,7 +214,7 @@ window._offShowDeskModal = function(freeDesks) {
             '<p style="font-size:12px;color:#9CA3AF;margin-bottom:12px">Du hast heute keinen Platz gebucht. Wähle einen freien Platz zum Einchecken:</p>'+
             '<div style="display:flex;flex-direction:column;gap:8px">'+opts+'</div>'+
             (freeDesks.length===0?'<p style="color:#EF4444;text-align:center;padding:16px;font-size:13px">Keine freien Plätze verfügbar</p>':'')+
-            '<button onclick="window._offDoCheckIn(null);var _m=document.getElementById(\'offDeskModal\');if(_m)_m.remove()" style="margin-top:16px;width:100%;padding:10px;background:#F3F4F6;border:none;border-radius:10px;cursor:pointer;font-size:13px;color:#6B7280">Ohne Platz einchecken</button>'+
+            '<button onclick="window._offRemoteCheckIn();var _m=document.getElementById(\'offDeskModal\');if(_m)_m.remove()" style="margin-top:16px;width:100%;padding:12px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:#1D4ED8">🏠 Remote einchecken</button>'+
         '</div>';
     modal.addEventListener('click',function(e){if(e.target===modal) modal.remove();});
     document.body.appendChild(modal);
@@ -250,6 +251,13 @@ S.notify(finalStatus==='remote'?'\ud83c\udfe0 Remote eingecheckt':'\u2705 Eingec
         console.error('[Office] CheckIn:',err);
         S.notify('Fehler: '+err.message,'error');
     }
+};
+
+
+window._offRemoteCheckIn = async function() {
+    var S=_off();
+    if(S.myCheckin){S.notify('\u2705 Du bist bereits eingecheckt','info');return;}
+    await window._offDoCheckIn(null, 'remote');
 };
 
 window._offCheckOut = async function() {
