@@ -887,7 +887,7 @@ export function openVerkaufEntryModal() {
     var currentUser = _sbProfile() ? _sbProfile().name : '';
     var html = '<div id="vtEntryOverlay" onclick="closeVtModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">';
     html += '<div onclick="event.stopPropagation()" style="background:var(--c-bg);border-radius:16px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.25);">';
-    html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">\uD83D\uDCB0 Verkaufserfolg eintragen</h3><button onclick="closeVtModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
+    html += '<div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-gray-800">\uD83D\uDCCA Tagesabschluss</h3><button onclick="closeVtModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
     html += '<div class="grid grid-cols-2 gap-3 mb-4">';
     html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Datum</label><input id="vtDate" type="date" value="'+today+'" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"></div>';
     // GF gets a dropdown for all active users at this standort
@@ -917,6 +917,14 @@ export function openVerkaufEntryModal() {
     html += '<div><label class="block text-xs text-gray-600 mb-1">Rechnungen (\u00dcbergabe)</label><input id="vtUebergabe" type="number" min="0" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-center" value="0"></div>';
     html += '<div><label class="block text-xs text-gray-600 mb-1">Umsatz (\u20AC)</label><input id="vtUmsatz" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-right" placeholder="0"></div>';
     html += '</div>';
+    // GF-only: Tagesumsatz Gesamt Netto
+    if(isGF) {
+        html += '<div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">';
+        html += '<label class="block text-xs font-semibold text-blue-700 mb-1">Tagesumsatz Gesamt Netto (\u20AC)</label>';
+        html += '<input id="vtTagesumsatzNetto" type="number" step="0.01" class="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm text-right bg-white" placeholder="Gesamter Tagesumsatz netto...">';
+        html += '<p class="text-[10px] text-blue-500 mt-1">Gesamtumsatz des Tages (alle Verk\u00e4ufer). Wird mit WaWi-Daten abgeglichen.</p>';
+        html += '</div>';
+    }
     html += '<div class="mb-3"><label class="block text-xs text-gray-600 mb-1">Notizen</label><textarea id="vtNotizen" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" rows="2" placeholder="z.B. Kunde kommt naechste Woche wieder..."></textarea></div>';
     html += '<div id="vtError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mb-3"></div>';
     html += '<button onclick="saveVtEntry()" id="vtSaveBtn" class="w-full py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Speichern</button>';
@@ -932,7 +940,7 @@ export function openVerkaufEntryModal() {
             var stdId = _sbProfile() ? _sbProfile().standort_id : null;
             if(!stdId) return;
             var resp = await _sb().from('verkauf_tracking')
-                .select('geplant, spontan, online, ergo, verkauft, uebergabe, umsatz, notizen')
+                .select('geplant, spontan, online, ergo, verkauft, uebergabe, umsatz, notizen, tagesumsatz_netto')
                 .eq('standort_id', stdId)
                 .eq('datum', datum)
                 .eq('verkaeufer_name', seller)
@@ -947,6 +955,8 @@ export function openVerkaufEntryModal() {
                 setVal('vtUebergabe', d.uebergabe);
                 if(d.umsatz > 0) { var u = document.getElementById('vtUmsatz'); if(u) u.value = parseFloat(d.umsatz).toFixed(2); }
                 if(d.notizen) { var n = document.getElementById('vtNotizen'); if(n && !n.value) n.value = d.notizen; }
+                // Prefill tagesumsatz_netto
+                if(d.tagesumsatz_netto > 0) { var tn = document.getElementById('vtTagesumsatzNetto'); if(tn) tn.value = parseFloat(d.tagesumsatz_netto).toFixed(2); }
                 // Show prefill banner if any value > 0
                 if((d.geplant||0) + (d.spontan||0) + (d.verkauft||0) + (d.uebergabe||0) + (d.ergo||0) > 0) {
                     var banner = document.getElementById('vtPrefillBanner');
@@ -1171,6 +1181,15 @@ export async function saveVtEntry() {
     if(btn) { btn.disabled=true; btn.textContent='Wird gespeichert...'; }
     try {
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
+        var tagesumsatzNetto = vf('vtTagesumsatzNetto');
+        var umsatzVal = vf('vtUmsatz');
+        // Validation: manual tagesumsatz < auto umsatz → warning
+        if(tagesumsatzNetto > 0 && umsatzVal > 0 && umsatzVal > tagesumsatzNetto) {
+            if(errEl){errEl.innerHTML='\u26A0\uFE0F <strong>Achtung:</strong> Der Umsatz aus Verk\u00e4ufen ('+umsatzVal.toLocaleString('de-DE')+' \u20AC) ist h\u00f6her als der eingetragene Tagesumsatz Netto ('+tagesumsatzNetto.toLocaleString('de-DE')+' \u20AC). Bitte kontrollieren.';errEl.style.display='block';}
+            if(btn) { btn.disabled=false; btn.textContent='Trotzdem speichern'; }
+            // Allow save on second click
+            if(!btn._warned) { btn._warned = true; return; }
+        }
         var data = {
             standort_id: stdId,
             datum: datum,
@@ -1183,7 +1202,8 @@ export async function saveVtEntry() {
             ergo: vi('vtErgo'),
             verkauft: vi('vtVerkauft'),
             uebergabe: vi('vtUebergabe'),
-            umsatz: vf('vtUmsatz'),
+            umsatz: umsatzVal,
+            tagesumsatz_netto: tagesumsatzNetto > 0 ? tagesumsatzNetto : null,
             notizen: (document.getElementById('vtNotizen')||{}).value || null,
             updated_at: new Date().toISOString()
         };
