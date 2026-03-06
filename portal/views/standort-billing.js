@@ -35,7 +35,6 @@ if (tab === 'invoices') loadStandortInvoices();
 if (tab === 'payments') loadStandortPayments();
 if (tab === 'strategy') loadStandortStrategy();
 if (tab === 'costs') loadStandortCosts();
-if (tab === 'liquidity') loadStandortLiquidity();
 if (tab === 'wawi') initWawiTab();
 }
 

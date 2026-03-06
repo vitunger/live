@@ -32,7 +32,6 @@ window.showWawiSubTab = function(tab) {
     if(tab==='belege') loadWawiBelege();
     if(tab==='dashboard') loadWawiDashboard();
     if(tab==='leasing') loadWawiLeasing();
-    if(tab==='api') loadWawiApiTab();
 };
 
 // ── Init (called when Controlling WaWi tab opens) ──
