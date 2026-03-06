@@ -298,3 +298,18 @@ security: RLS/JWT/Auth-Verbesserung
   Das System lernt aus deinen Korrekturen und wird beim nächsten Upload genauer."
 - **Flow:** Upload → Parser → KI (with training examples) → User corrects → Save → Training example stored → Next upload is smarter
 
+
+
+### Demo-Modus Fix (2026-03-06)
+- **Bug:** Module mit `modul_status.status = 'demo'` zeigten leere Inhalte statt Fake-Daten.
+  Ursache: Der globale Demo-Modus (`DEMO_ACTIVE`) hängt am User-Profil-Status, nicht am Modul-Status.
+  Module selbst hatten keine eigene Demo-Logik.
+- **Fix:** Neue globale Hilfsfunktion `isModuleDemo(key)` in `feature-flags-full.js`:
+  Prüft `sbModulStatus[key] === 'demo'` (Partner) bzw. `sbHqModulStatus[key] === 'demo'` (HQ).
+  Exportiert auf `window.isModuleDemo`.
+- **Marketing:** `renderPartnerMarketing()` prüft `isModuleDemo('marketing')` als erstes.
+  Bei Demo: `_renderMarketingDemo()` zeigt hardcodete KPI-Karten, Google/Meta-Tabellen, Monatstrend-Balken, CTA.
+- **Kommunikation:** `showKommTab()` prüft `isModuleDemo('kommunikation')` als erstes.
+  Bei Demo: `_renderKommDemo()` zeigt einen fake Teams-Chat mit HQ-Kanal, DMs und Beispielnachrichten.
+- **Einkauf:** War bereits komplett mit hardcodierten Arrays (`allLief`, `standorte`, etc.) — kein Fix nötig.
+- **Pattern für neue Module:** Am Anfang der Render-Funktion `if(window.isModuleDemo('key')) { renderXxxDemo(); return; }`.
