@@ -574,6 +574,21 @@ export async function loadModulStatus() {
     } catch(err) { console.error('ModulStatus:', err); }
 }
 
+
+// === isModuleDemo: globale Hilfsfunktion für alle Module ===
+// Gibt true zurück wenn ein Modul im Demo-Modus ist (status === 'demo' in der DB)
+// Partner: prüft sbModulStatus, HQ: prüft sbHqModulStatus
+export function isModuleDemo(key) {
+    var isHqUser = (window.sbProfile && window.sbProfile.is_hq);
+    var status;
+    if (isHqUser) {
+        status = (window.sbHqModulStatus || {})[key] || (window.sbModulStatus || {})[key] || 'aktiv';
+    } else {
+        status = (window.sbModulStatus || {})[key] || 'aktiv';
+    }
+    return status === 'demo';
+}
+
 export function applyModulStatus() {
     var isHqUser = (window.sbProfile && window.sbProfile.is_hq) || (window.currentRoles && window.currentRoles.indexOf('hq') !== -1);
     
@@ -747,14 +762,16 @@ window.sbModulConfig = sbModulConfig;
 window.sbHqModulConfig = sbHqModulConfig;
 window.sbModulEbene = sbModulEbene;
 
-const _exports = {loadFeatureFlags,isFeatureEnabled,getFeatureMeta,applyFeatureFlags,loadFFView,ffUpdateStats,ffHasTargeting,ffGetStatus,ffFilter,ffRenderList,ffToggle,ffDelete,ffShowCreate,ffShowEdit,ffPopulateSelectors,ffCloseModal,ffSave,logFeatureFlagCheck,ffFlushLog,loadBkView,bkRenderStats,bkRenderHealth,bkRenderTable,bkTriggerBackup,loadModulStatus,applyModulStatus};
+const _exports = {loadFeatureFlags,isFeatureEnabled,getFeatureMeta,applyFeatureFlags,loadFFView,ffUpdateStats,ffHasTargeting,ffGetStatus,ffFilter,ffRenderList,ffToggle,ffDelete,ffShowCreate,ffShowEdit,ffPopulateSelectors,ffCloseModal,ffSave,logFeatureFlagCheck,ffFlushLog,loadBkView,bkRenderStats,bkRenderHealth,bkRenderTable,bkTriggerBackup,loadModulStatus,applyModulStatus,isModuleDemo};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // [prod] log removed
 
 // === Window Exports (onclick handlers) ===
 window.bkTriggerBackup = bkTriggerBackup;
+window.isModuleDemo = isModuleDemo;
 window.ffCloseModal = ffCloseModal;
 window.ffFilter = ffFilter;
 window.ffSave = ffSave;
 window.ffShowCreate = ffShowCreate;
 window.loadBkView = loadBkView;
+
