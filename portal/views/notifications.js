@@ -23,10 +23,12 @@ var notifRealtimeChannel = null;
 export async function loadNotifications() {
     try {
         var sb = _sb(); if (!sb || !_sbUser()) return;
-        var q = _scopedQuery('notifications');
-        if (!q) return;
+        // Notifications: user's standort OR global (standort_id IS NULL)
+        // Can't use _scopedQuery because it excludes NULL standort_id
+        var userId = _sbUser().id;
+        var prof = _sbProfile();
+        var q = _sb().from('notifications').select('*').eq('user_id', userId);
         var { data, error } = await q
-            .select('*')
             .order('created_at', { ascending: false })
             .limit(50);
         if (error) throw error;
