@@ -1128,7 +1128,8 @@ async function loadEterminMapping() {
         console.debug('[eTermin] mapping configs:', cfgResp.data, 'error:', cfgResp.error);
         var configs = (cfgResp.data || []);
 
-        var h = '<details class="border border-gray-200 rounded-lg" id="eterminMappingDetails">'
+        var wasOpen = (document.getElementById('eterminMappingDetails') || {}).open;
+    var h = '<details class="border border-gray-200 rounded-lg" id="eterminMappingDetails"' + (wasOpen ? ' open' : '') + '>'
             + '<summary class="px-3 py-2 text-xs font-semibold text-gray-700 cursor-pointer hover:bg-gray-50 transition flex items-center gap-2">'
             + '🔀 Terminarten-Mapping <span class="text-[10px] font-normal text-gray-400">(eTermin-Services → Portal-Typen)</span>'
             + '<span class="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">' + mappings.length + ' Regeln</span>'
@@ -1231,7 +1232,8 @@ async function loadKalenderVerkauferMapping() {
         var usersResp = await _sb().from('users').select('id, vorname, nachname, standort_id').eq('status', 'aktiv').order('vorname');
         var allUsers = (usersResp.data || []);
 
-        var h = '<details class="border border-orange-200 rounded-lg" id="eterminKalenderMappingDetails" open>';
+        var wasKalOpen = (document.getElementById('eterminKalenderMappingDetails') || {open: true}).open;
+        var h = '<details class="border border-orange-200 rounded-lg" id="eterminKalenderMappingDetails"' + (wasKalOpen ? ' open' : '') + '>';
         h += '<summary class="px-3 py-2 text-xs font-semibold text-gray-700 cursor-pointer hover:bg-orange-50 transition flex items-center gap-2">';
         h += '👤 Kalender → Verkäufer-Zuordnung <span class="text-[10px] font-normal text-gray-400">(eTermin-Kalender einem Mitarbeiter zuordnen)</span>';
         h += '<span class="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 font-bold">' + mappings.length + ' Zuordnungen</span>';
@@ -2614,3 +2616,4 @@ window.loadTikTokConfig = async function() {
         }
     } catch(e) {}
 };
+
