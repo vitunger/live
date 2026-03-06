@@ -47,20 +47,20 @@ async function _loadGitCommits(daysSince) {
         if (!resp.ok) throw new Error('GitHub API ' + resp.status);
         var commits = await resp.json();
 
-        // Filter: nur feat/fix/perf – keine chore/docs/refactor/cache-bust
+        // Filter: nur feat/fix/perf/security – keine chore/docs/refactor/cache-bust
         var relevant = commits.filter(function(c) {
             var msg = (c.commit.message || '').toLowerCase();
             var firstLine = msg.split('\n')[0];
             // Skip internal/technical commits
             if (/^chore:|^docs:|^refactor:|cache-bust|bump cache|claude\.md/i.test(firstLine)) return false;
-            // Keep feat, fix, perf, improvement
-            if (/^feat:|^fix:|^perf:|^improvement:|verbesserung/i.test(firstLine)) return true;
+            // Keep feat, fix, perf, security, improvement
+            if (/^feat:|^fix:|^perf:|^security:|^improvement:|verbesserung/i.test(firstLine)) return true;
             // Keep anything with meaningful German content (fallback)
             return false;
         });
 
-        // Format for KI context (max 20 to avoid Edge Function timeout)
-        var limited = relevant.slice(0, 20);
+        // Format for KI context (max 40 commits)
+        var limited = relevant.slice(0, 40);
         var lines = limited.map(function(c) {
             var date = c.commit.author.date.split('T')[0];
             var msg = c.commit.message.split('\n')[0]; // First line only
