@@ -1029,11 +1029,12 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
               <span style={{fontSize:10,color:"#9ca3af"}}>{beratungOpen?"▲":"▼"}</span>
             </div>
             {beratungOpen&&<div>
-              {[{k:"nutzung",i:"🚲",l:"Nutzung",ph:"Was macht der Kunde mit dem Rad?"},{k:"ziel",i:"🎯",l:"Ziel",ph:"Welches Ziel?"},{k:"budget",i:"💶",l:"Budget",ph:"z.B. 3500"},{k:"next",i:"👣",l:"Nächster Schritt",ph:"Was wurde vereinbart?"},{k:"einwaende",i:"⚠️",l:"Einwände",ph:"Bedenken?"}].map(f=>
+              {[{k:"nutzung",i:"🚲",l:"Nutzung",ph:"Was macht der Kunde mit dem Rad?"},{k:"koerpergroesse",i:"📏",l:"Körpergröße",ph:"z.B. 178",num:true,suffix:"cm"},{k:"ziel",i:"🎯",l:"Ziel",ph:"Welches Ziel?"},{k:"budget",i:"💶",l:"Budget",ph:"z.B. 3500"},{k:"next",i:"👣",l:"Nächster Schritt",ph:"Was wurde vereinbart?"},{k:"einwaende",i:"⚠️",l:"Einwände",ph:"Bedenken?"}].map(f=>
                 <div key={f.k} style={{display:"flex",alignItems:"center",gap:6,padding:"5px 0",borderBottom:"1px solid #eef0f8"}}>
                   <span style={{fontSize:12,width:16,textAlign:"center",flexShrink:0}}>{f.i}</span>
                   <span style={{fontSize:11,fontWeight:700,color:"#374151",width:95,flexShrink:0}}>{f.l}</span>
-                  <input value={f.k==="budget"?(sales.budget||String(deal.value||"")):sales[f.k]||""} onChange={e=>{uS(f.k,e.target.value);if(f.k==="budget"){const n=parseFloat(e.target.value.replace(/[^0-9.,]/g,"").replace(",","."));if(n>0)onUpdateDeal(deal.id,"value",n)}}} placeholder={f.ph} style={{flex:1,border:"none",background:"transparent",fontSize:12,color:"#374151",fontFamily:"inherit",outline:"none",padding:0}}/>
+                  {f.num?<div style={{flex:1,display:"flex",alignItems:"center",gap:4}}><input type="number" value={sales[f.k]||""} onChange={e=>uS(f.k,e.target.value)} placeholder={f.ph} style={{flex:1,border:"none",background:"transparent",fontSize:12,color:"#374151",fontFamily:"inherit",outline:"none",padding:0,MozAppearance:"textfield",WebkitAppearance:"none"}} min="100" max="220"/><span style={{fontSize:11,color:"#9ca3af",flexShrink:0}}>{f.suffix}</span></div>
+                  :<input value={f.k==="budget"?(sales.budget||String(deal.value||"")):sales[f.k]||""} onChange={e=>{uS(f.k,e.target.value);if(f.k==="budget"){const n=parseFloat(e.target.value.replace(/[^0-9.,]/g,"").replace(",","."));if(n>0)onUpdateDeal(deal.id,"value",n)}}} placeholder={f.ph} style={{flex:1,border:"none",background:"transparent",fontSize:12,color:"#374151",fontFamily:"inherit",outline:"none",padding:0}}/>}
                 </div>)}
               {/* Extended fields */}
               <div style={{borderTop:"1px solid #e8eef8",marginTop:8,paddingTop:8}}>
