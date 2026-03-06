@@ -2294,5 +2294,55 @@
     }
     window.scAutoImport = scAutoImport;
 
+    async function scHandleMediaUpload(input) {
+        var file = input.files && input.files[0];
+        if (!file) return;
+        var sb = _sb(); if (!sb) return;
+
+        var maxBytes = 100 * 1024 * 1024;
+        if (file.size > maxBytes) { _showToast('Datei zu gross (max. 100MB)', 'error'); return; }
+
+        _showToast('Upload laeuft...', 'info');
+        var preview = document.getElementById('scMediaPreview');
+        if (preview) preview.innerHTML = '<div class=\"text-center py-3 text-xs text-gray-400\"><div class=\"inline-block w-5 h-5 border-2 border-vit-orange border-t-transparent rounded-full animate-spin mb-1\"></div><br>Hochladen...</div>';
+
+        try {
+            var ext = file.name.split('.').pop().toLowerCase();
+            var path = 'posts/' + Date.now() + '_' + Math.random().toString(36).slice(2) + '.' + ext;
+            var { data, error } = await sb.storage.from('scompler-media').upload(path, file, { cacheControl: '3600', upsert: false });
+            if (error) throw error;
+
+            var { data: urlData } = sb.storage.from('scompler-media').getPublicUrl(path);
+            var publicUrl = urlData.publicUrl;
+
+            var urlField = document.getElementById('scMediaUrl');
+            if (urlField) urlField.value = publicUrl;
+
+            if (preview) {
+                if (file.type.startsWith('image/')) {
+                    preview.innerHTML = '<div class=\"relative\"><img src=\"' + publicUrl + '\" class=\"w-full max-h-32 object-cover rounded-lg\"><button type=\"button\" onclick=\"event.stopPropagation();scRemoveMedia()\" class=\"absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs font-bold\">x</button></div>';
+                } else {
+                    preview.innerHTML = '<div class=\"relative flex items-center gap-2 bg-gray-50 rounded-lg p-2\"><span class=\"text-2xl\">&#127916;</span><span class=\"text-xs text-gray-600 truncate\">' + file.name + '</span><button type=\"button\" onclick=\"event.stopPropagation();scRemoveMedia()\" class=\"ml-auto bg-red-500 text-white rounded-full w-5 h-5 text-xs font-bold\">x</button></div>';
+                }
+            }
+            _showToast('Datei hochgeladen', 'success');
+        } catch(e) {
+            _showToast('Upload Fehler: ' + e.message, 'error');
+            var preview2 = document.getElementById('scMediaPreview');
+            if (preview2) preview2.innerHTML = '<div class=\"text-center py-3\"><span class=\"text-2xl\">&#128247;</span><p class=\"text-xs text-gray-400 mt-1\">Bild / Video hochladen</p></div>';
+        }
+    }
+    window.scHandleMediaUpload = scHandleMediaUpload;
+
+    function scRemoveMedia() {
+        var urlField = document.getElementById('scMediaUrl');
+        if (urlField) urlField.value = '';
+        var thumbField = document.getElementById('scMediaThumbUrl');
+        if (thumbField) thumbField.value = '';
+        var preview = document.getElementById('scMediaPreview');
+        if (preview) preview.innerHTML = '<div class=\"text-center py-3\"><span class=\"text-2xl\">&#128247;</span><p class=\"text-xs text-gray-400 mt-1\">Bild / Video hochladen</p><p class=\"text-xs text-gray-300\">JPG, PNG, MP4 bis 100MB</p></div>';
+    }
+    window.scRemoveMedia = scRemoveMedia;
+
     window.scPublishPost   = scPublishPost;
 })();
