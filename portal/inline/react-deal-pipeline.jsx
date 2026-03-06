@@ -906,6 +906,19 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
             </div>}
           </div>
 
+          {/* Vermessung */}
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:6}}>Vermessung</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              {[{k:"sattelhoehe",l:"Sattelhöhe"},{k:"sattelversatz",l:"Sattelversatz"},{k:"abstandLenker",l:"Abstand Sattel-Lenker"},{k:"lenkerhoehe",l:"Lenkerhöhe"}].map(f=>
+                <div key={f.k}>
+                  <div style={{fontSize:9,color:"#9ca3af",marginBottom:2}}>{f.l}</div>
+                  <input value={sales[f.k]||""} onChange={e=>uS(f.k,e.target.value)} placeholder="—" style={{...dpInp,width:"100%",padding:"6px 10px",fontSize:12}}/>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Freie Notiz */}
           <div style={{marginBottom:14}}>
             <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:4}}>Freie Notiz</div>
