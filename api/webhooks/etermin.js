@@ -142,10 +142,10 @@ module.exports = async function(req, res) {
     const cal = b.CALENDARNAME || b.calendarname || b.CalendarName || b.CALENDAR || b.calendar || "";
     const calId = (b.CALENDARID || b.calendarid || b.CalendarID || b.calendarId) ? String(b.CALENDARID || b.calendarid || b.CalendarID || b.calendarId) : null;
     // Support both compact format (YYYYMMDDHHmmss) and ISO 8601 (2026-05-10T10:00:00)
-    const rawStartL = b.STARTDATETIME || b.startdatetime || b.StartDateTime || b.startDateTime || "";
-    const rawEndL = b.ENDDATETIME || b.enddatetime || b.EndDateTime || b.endDateTime || "";
-    const rawStartU = b.STARTDATETIMEUTC || b.startdatetimeutc || b.StartDateTimeUTC || b.startDateTimeUTC || "";
-    const rawEndU = b.ENDDATETIMEUTC || b.enddatetimeutc || b.EndDateTimeUTC || b.endDateTimeUTC || "";
+    const rawStartL = b.STARTDATETIME || b.STARTDATELOCAL || b.STARTDATESTART || b.startdatetime || b.startdatelocal || b.StartDateTime || b.startDateTime || b.StartDateLocal || "";
+    const rawEndL = b.ENDDATETIME || b.ENDDATELOCAL || b.ENDDATEEND || b.enddatetime || b.enddatelocal || b.EndDateTime || b.endDateTime || b.EndDateLocal || "";
+    const rawStartU = b.STARTDATETIMEUTC || b.STARTDATEUTC || b.startdatetimeutc || b.startdateutc || b.StartDateTimeUTC || b.startDateTimeUTC || b.StartDateUTC || "";
+    const rawEndU = b.ENDDATETIMEUTC || b.ENDDATEUTC || b.enddatetimeutc || b.enddateutc || b.EndDateTimeUTC || b.endDateTimeUTC || b.EndDateUTC || "";
     // Auto-detect ISO vs compact format
     function parseAnyDT(s) {
       if (!s) return null;
@@ -161,7 +161,10 @@ module.exports = async function(req, res) {
     const startU = parseAnyDT(rawStartU);
     const endU = parseAnyDT(rawEndU);
 
-    console.log("[etermin-wh]", cmd, uid);
+    console.log("[etermin-wh]", cmd, uid, "dates:", {rawStartL, rawEndL, rawStartU, rawEndU, startL, endL, startU, endU});
+    if (!startL && !startU) {
+      console.error("[etermin-wh] WARNING: No start date parsed! Raw fields:", JSON.stringify({STARTDATETIME: b.STARTDATETIME, STARTDATELOCAL: b.STARTDATELOCAL, STARTDATEUTC: b.STARTDATETIMEUTC}).slice(0,200), "All keys:", Object.keys(b).join(","));
+    }
     if (!uid) {
       // Log the full body so we can see what field names eTermin actually sends
       console.error("[etermin-wh] Missing UID. Full body:", JSON.stringify(b));
@@ -184,7 +187,7 @@ module.exports = async function(req, res) {
     const payload = {
       etermin_uid: uid,
       titel: (name || "eTermin Buchung") + (answers ? " – " + answers : ""),
-      start_zeit: startL || startU, end_zeit: endL || endU,
+      start_zeit: startL || startU || null, end_zeit: endL || endU || null,
       typ: mappedTyp, ganztaegig: false, quelle: "etermin",
       beschreibung: [answers&&"Terminart: "+answers, notes&&"Notizen: "+notes, email&&"E-Mail: "+email, phone&&"Tel: "+phone, town&&"Ort: "+town].filter(Boolean).join("\n"),
       ort: cal || null, standort_id: stdId,
