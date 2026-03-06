@@ -255,18 +255,22 @@ export async function renderEntwSteuerung() {
     ];
     // Global drag handler for dev kanban
     if(!window._devKanbanDrop) {
-        window._devKanbanDrop = function(e, targetStatus) {
+        window._devKanbanDrop = async function(e, targetStatus) {
             e.preventDefault();
             e.currentTarget.style.background = '';
             var subId = e.dataTransfer.getData('devSubId');
             if(!subId) return;
             var sub = _devSubs().find(function(s){return s.id===subId;});
             if(!sub || sub.status === targetStatus) return;
-            // Optimistic local update
+            // Optimistic local update + re-render
             sub.status = targetStatus;
             if(typeof renderEntwIdeen === 'function') renderEntwIdeen();
-            // Persist
-            updateDevPlanStatus(subId, targetStatus);
+            _showToast('📋 Status → ' + (_devStatusLabels()[targetStatus]||targetStatus), 'success');
+            // Persist to DB (without full reload)
+            try {
+                await _sb().from('dev_submissions').update({ status: targetStatus, updated_at: new Date().toISOString() }).eq('id', subId);
+                window.logAudit && window.logAudit('idee_status_geaendert', 'entwicklung', { id: subId, neuer_status: targetStatus });
+            } catch(err) { _showToast('Fehler: ' + (err.message||err), 'error'); }
         };
         window._devKanbanDragOver = function(e) { e.preventDefault(); e.currentTarget.style.background = '#dde8f8'; };
         window._devKanbanDragLeave = function(e) { e.currentTarget.style.background = ''; };
