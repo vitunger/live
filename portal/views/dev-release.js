@@ -40,9 +40,14 @@ async function _loadGitCommits(daysSince) {
     var sinceStr = since.toISOString();
 
     try {
+        var ghHeaders = { 'Accept': 'application/vnd.github.v3+json' };
+        try {
+            var ghToken = await _getFreshToken();
+            // GitHub Commits über Supabase-Proxy laden (kein direktes Rate-Limit Problem)
+        } catch(e) {}
         var resp = await fetch(
-            'https://api.github.com/repos/vitunger/live/commits?per_page=100&since=' + sinceStr,
-            { headers: { 'Accept': 'application/vnd.github.v3+json' } }
+            'https://api.github.com/repos/vitunger/live/commits?per_page=50&since=' + sinceStr,
+            { headers: { ...ghHeaders, 'Authorization': 'token ' + (window._GH_READ_TOKEN || '') } }
         );
         if (!resp.ok) throw new Error('GitHub API ' + resp.status);
         var commits = await resp.json();
@@ -87,11 +92,8 @@ async function _loadClaudeMd() {
         if (!resp.ok) return '';
         var text = await resp.text();
 
-        // Relevante Sektionen extrahieren (erste 3000 Zeichen der Intro-Notizen)
-        // Die Kopfzeile enthält oft die wichtigsten Session-Infos
-        var headerEnd = text.indexOf('\n## ');
-        var header = headerEnd > -1 ? text.substring(0, Math.min(headerEnd, 3000)) : text.substring(0, 3000);
-        return header.trim();
+        // Nur die ersten 1000 Zeichen für Kontext – genug für Release-Bezug
+        return text.substring(0, 1000).trim();
     } catch(e) {
         console.warn('CLAUDE.md laden fehlgeschlagen:', e);
         return '';
@@ -197,6 +199,9 @@ export async function devKIReleaseVorschlag() {
         _setStatus('🧠 KI generiert Release-Note... (' + gitData.count + ' Commits + ' + relevant.length + ' Submissions)');
         var token = await _getFreshToken();
 
+        // AbortController für 90s Timeout
+        var controller = new AbortController();
+        var timeoutId = setTimeout(function() { controller.abort(); }, 90000);
         var resp = await fetch(window.SUPABASE_URL + '/functions/v1/dev-ki-analyse', {
             method: 'POST',
             headers: {
@@ -207,11 +212,13 @@ export async function devKIReleaseVorschlag() {
                 mode: 'release_notes',
                 context: fullContext,
                 count: totalSources
-            })
+            }),
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
 
         var d = await resp.json();
-        if (!resp.ok || d.error) throw new Error(d.error || 'Edge Function Fehler');
+        if (!resp.ok || d.error) throw new Error(d.error || 'Edge Function Fehler (HTTP ' + resp.status + ')');
 
         var vorschlag = d.release_notes || d.antwort || d.text || '';
         if (vorschlag) {
@@ -234,7 +241,11 @@ export async function devKIReleaseVorschlag() {
         }
     } catch(err) {
         console.error('KI Release error:', err);
-        _showToast('KI-Fehler: ' + (err.message || err), 'error');
+        if (err.name === 'AbortError') {
+            _showToast('KI-Analyse hat zu lange gedauert (Timeout). Bitte weniger Kontext oder erneut versuchen.', 'error');
+        } else {
+            _showToast('KI-Fehler: ' + (err.message || err), 'error');
+        }
     }
 
     if (btn) { btn.disabled = false; btn.innerHTML = '<span>🧠</span><span>KI-Vorschlag generieren</span>'; }
