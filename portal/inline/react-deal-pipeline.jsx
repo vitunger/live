@@ -76,6 +76,8 @@ function useSupabase(currentLoc, SELLERS) {
   const dbToDeal = useCallback((row, todos, acts) => ({
     id: row.id,  // uuid from DB
     name: ((row.vorname || "") + " " + (row.nachname || "")).trim() || "Unbekannt",
+    vorname: row.vorname || "",
+    nachname: row.nachname || "",
     value: parseFloat(row.geschaetzter_wert) || 0,
     stage: DB_TO_STAGE[row.status] || "lead",
     avatar: row.avatar || "👤",
@@ -160,6 +162,8 @@ function useSupabase(currentLoc, SELLERS) {
         updates.nachname = parts.slice(1).join(" ") || "";
         break;
       }
+      case "vorname": updates.vorname = value; break;
+      case "nachname": updates.nachname = value; break;
       case "value": updates.geschaetzter_wert = value; break;
       case "stage": updates.status = STAGE_TO_DB[value] || "neu"; break;
       case "heat": updates.heat = value; break;
@@ -823,7 +827,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div style={{width:36,height:36,borderRadius:10,background:st.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{deal.avatar}</div>
           <div style={{flex:1,minWidth:0}}>
-            <div style={{fontSize:15,fontWeight:800,color:"#1a1a2e"}}><Edt f="name" v={deal.name} ph="Name"/></div>
+            <div style={{display:"flex",gap:6,alignItems:"baseline"}}><Edt f="vorname" v={deal.vorname||deal.name?.split(" ")[0]||""} ph="Vorname" sx={{fontSize:15,fontWeight:800,color:"#1a1a2e",width:90}}/><Edt f="nachname" v={deal.nachname||deal.name?.split(" ").slice(1).join(" ")||""} ph="Nachname" sx={{fontSize:15,fontWeight:800,color:"#1a1a2e",flex:1}}/></div>
             <div style={{fontSize:11,color:"#9ca3af",marginTop:1}}>{tAgo(deal.changed)}</div>
           </div>
           <div style={{textAlign:"right",flexShrink:0}}>
@@ -902,6 +906,16 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
                   <div onClick={()=>toggleSales("bikeSehen")} style={chipS(sales.bikeSehen)}>👀 Bike gesehen</div>
                   <div onClick={()=>toggleSales("angebotGesendet")} style={chipS(sales.angebotGesendet)}>📄 Angebot gesendet</div>
                 </div>
+                {/* Must Haves (integriert in Beratung auf einen Blick) */}
+                <div style={{borderTop:"1px solid #e8eef8",marginTop:8,paddingTop:8}}>
+                  <div style={{fontSize:9,fontWeight:700,color:"#EF7D00",textTransform:"uppercase",letterSpacing:".08em",marginBottom:4}}>Must Haves</div>
+                  {[0,1,2].map(i=>
+                    <div key={i} style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
+                      <span style={{fontSize:11,fontWeight:700,color:"#EF7D00",width:16,textAlign:"center",flexShrink:0}}>{i+1}.</span>
+                      <input value={(sales.mustHaves||[])[i]||""} onChange={e=>{const arr=[...(sales.mustHaves||["","",""])];arr[i]=e.target.value;uS("mustHaves",arr)}} placeholder={"Must Have "+(i+1)+"..."} style={{flex:1,border:"none",background:"transparent",fontSize:12,color:"#374151",fontFamily:"inherit",outline:"none",padding:0}}/>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>}
           </div>
@@ -919,16 +933,7 @@ function DetailModal({deal,onClose,onAct,onHeat,onToggleTodo,onAddTodo,onUpdateD
             </div>
           </div>
 
-          {/* Must Haves */}
-          <div style={{marginBottom:14}}>
-            <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".08em",marginBottom:6}}>Must Haves</div>
-            {[0,1,2].map(i=>
-              <div key={i} style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-                <span style={{fontSize:11,fontWeight:700,color:"#EF7D00",width:16,textAlign:"center",flexShrink:0}}>{i+1}.</span>
-                <input value={(sales.mustHaves||[])[i]||""} onChange={e=>{const arr=[...(sales.mustHaves||["","",""])];arr[i]=e.target.value;uS("mustHaves",arr)}} placeholder={"Must Have "+(i+1)+"..."} style={{...dpInp,width:"100%",padding:"6px 10px",fontSize:12}}/>
-              </div>
-            )}
-          </div>
+          {/* Must Haves moved into Beratung auf einen Blick */}
 
           {/* Freie Notiz */}
           <div style={{marginBottom:14}}>
