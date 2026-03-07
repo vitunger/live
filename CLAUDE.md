@@ -561,4 +561,13 @@ Default: `wissen`. Werden als Sub-Tabs in Cross-Modul-Ansichten angezeigt.
   - `cost_override` für individuelle Preise, sonst `default_amount` aus billing_products
   - View `v_standort_tool_costs` für einfache Abfrage
 - Edge Function `billing` v25: Draft-Generierung liest aus `billing_user_product_assignments`, gruppiert nach Produkt
+
+- **Produkte direkt editierbar im HQ** (März 2026): Name, Preis, Abrechnungsart, Zahlungsfrist, Abrechnungstag, Aktiv-Status
+  - HQ Produkte-Tab: Inline-Edit-Form mit Speichern + neues Produkt anlegen
+  - `billing_products.payment_term_days`: Individuelle Zahlungsfrist (überschreibt Schedule)
+- **Produkt-Zuweisungen an User ODER Standort**: `billing_user_product_assignments.assignment_type` = `user` | `standort`
+  - `user_id` ist nullable (bei Standort-Zuweisungen)
+  - HQ Tools-Tab komplett umgebaut: Schnellzuweisung + gruppierte Übersicht nach Standort
+- **Strategien-Tab entfernt** aus HQ-Billing (redundant mit Jahresplan in Finanzen)
+- Edge Function `billing` v25: `assign-product-to-user` unterstützt `assignment_type`
 - Neue Actions: `assign-product-to-user`, `remove-product-assignment`, `list-product-assignments`
