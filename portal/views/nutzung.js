@@ -42,7 +42,6 @@ function renderDashboard(container, cache, savings, userCount, logData) {
     var currentMonth = getMonthStr(now);
     var lastMonth = getMonthStr(new Date(now.getFullYear(), now.getMonth() - 1, 1));
 
-    // Build monthly totals from cache
     var monthlyData = {};
     cache.forEach(function(row) {
         if (!monthlyData[row.monat]) monthlyData[row.monat] = { providers: {}, total: 0 };
@@ -54,7 +53,6 @@ function renderDashboard(container, cache, savings, userCount, logData) {
     var totalSavingsMonthly = 0;
     savings.forEach(function(s) { totalSavingsMonthly += parseFloat(s.kosten_pro_monat || 0); });
 
-    // Determine display data based on period
     var displayData, periodLabel, perPeriod;
     if (usagePeriod === 'current') {
         displayData = monthlyData[currentMonth] || { providers: {}, total: 0 };
@@ -111,7 +109,7 @@ function renderDashboard(container, cache, savings, userCount, logData) {
     html += '<button onclick="triggerCostsSync()" class="text-xs text-gray-400 hover:text-vit-orange ml-1" title="Kosten jetzt aktualisieren">&#x21bb;</button>';
     html += '</div></div>';
 
-    // === BILANZ ===
+    // BILANZ
     var bilanzBg = bilanz >= 0 ? 'border-green-400 bg-green-50' : 'border-red-400 bg-red-50';
     var bilanzTxt = bilanz >= 0 ? 'text-green-700' : 'text-red-700';
     html += '<div class="vit-card p-5 mb-5 border-l-4 ' + bilanzBg + '">';
@@ -137,7 +135,7 @@ function renderDashboard(container, cache, savings, userCount, logData) {
     // Two columns: Costs | Savings
     html += '<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">';
 
-    // Costs
+    // Costs column
     html += '<div class="vit-card p-5"><h3 class="text-sm font-bold text-gray-800 mb-3">\uD83D\uDCB0 Laufende Kosten</h3>';
     var provOrder = ['vercel','supabase','anthropic','resend'];
     var icons = { vercel:'\u25B2', supabase:'\u26A1', anthropic:'\uD83E\uDD16', resend:'\u2709' };
@@ -155,8 +153,6 @@ function renderDashboard(container, cache, savings, userCount, logData) {
     });
     html += '<div class="border-t pt-3 mt-2 flex justify-between"><span class="text-sm font-bold">Gesamt</span>';
     html += '<span class="text-sm font-bold text-vit-orange">$' + costUsd.toFixed(2) + ' <span class="text-xs text-gray-400">(\u20AC' + costEur.toFixed(0) + ')</span></span></div>';
-
-    // Cache info
     var lastSync = cache.length > 0 ? cache[0].updated_at : null;
     if (lastSync) {
         var syncDt = new Date(lastSync);
@@ -164,36 +160,63 @@ function renderDashboard(container, cache, savings, userCount, logData) {
     }
     html += '</div>';
 
-    // Savings
-    html += '<div class="vit-card p-5"><h3 class="text-sm font-bold text-gray-800 mb-3">\u2705 Eingesparte Software-Kosten</h3>';
-    if (savings.length > 0) {
-        var maxS = Math.max.apply(null, savings.map(function(s){return parseFloat(s.kosten_pro_monat)}).concat([1]));
-        savings.forEach(function(s) {
-            var c = parseFloat(s.kosten_pro_monat || 0);
-            html += '<div class="mb-3"><div class="flex justify-between items-center mb-1">';
-            html += '<div><span class="text-sm font-semibold text-gray-700">' + _escH(s.name) + '</span>';
-            if (s.notizen) html += ' <span class="text-[10px] text-gray-400">' + _escH(s.notizen) + '</span>';
-            html += '</div><div class="flex items-center gap-2"><span class="text-sm font-bold text-green-600">\u20AC' + c.toFixed(0) + '/Mo</span>';
-            html += '<button onclick="deleteSaving(\'' + s.id + '\')" class="text-gray-300 hover:text-red-500 text-xs">\u2715</button></div></div>';
-            html += '<div class="w-full bg-gray-100 rounded-full h-2"><div class="bg-green-400 h-2 rounded-full" style="width:' + (c/maxS*100) + '%"></div></div></div>';
-        });
+    // Savings column
+    var hqSavings = savings.filter(function(s){ return !s.nutzer_typ || s.nutzer_typ === 'hq' || s.nutzer_typ === 'beide'; });
+    var partnerSavings = savings.filter(function(s){ return s.nutzer_typ === 'partner' || s.nutzer_typ === 'beide'; });
+    var hqTotal = hqSavings.reduce(function(a,s){return a+parseFloat(s.kosten_pro_monat||0);},0);
+    var partnerTotal = partnerSavings.reduce(function(a,s){return a+parseFloat(s.kosten_pro_monat||0);},0);
+
+    html += '<div class="vit-card p-5">';
+    html += '<div class="flex items-center justify-between mb-3">';
+    html += '<h3 class="text-sm font-bold text-gray-800">\u2705 Eingesparte Software-Kosten</h3>';
+    html += '<button onclick="openSavingModal()" class="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 text-white text-xs font-semibold rounded-lg hover:bg-green-600 transition">+ Tool eintragen</button>';
+    html += '</div>';
+
+    if (savings.length === 0) {
+        html += '<p class="text-sm text-gray-400 text-center py-6">Noch keine Tools eingetragen</p>';
+    } else {
+        // HQ Tools section
+        if (hqSavings.length > 0) {
+            html += '<p class="text-[10px] text-gray-400 uppercase font-semibold mb-2 mt-1">🏢 HQ-Tools</p>';
+            var maxHQ = Math.max.apply(null, hqSavings.map(function(s){return parseFloat(s.kosten_pro_monat||0)}).concat([1]));
+            hqSavings.forEach(function(s) {
+                html += renderSavingRow(s, maxHQ);
+            });
+            html += '<div class="flex justify-between text-xs font-semibold text-gray-500 mb-3 mt-1"><span>HQ gesamt</span><span class="text-green-600">\u20AC' + hqTotal.toFixed(0) + '/Mo</span></div>';
+        }
+        // Partner Tools section
+        if (partnerSavings.length > 0) {
+            html += '<p class="text-[10px] text-gray-400 uppercase font-semibold mb-2 mt-2">🏪 Partner-Tools</p>';
+            var maxP2 = Math.max.apply(null, partnerSavings.map(function(s){return parseFloat(s.kosten_pro_monat||0)}).concat([1]));
+            partnerSavings.forEach(function(s) {
+                html += renderSavingRow(s, maxP2);
+            });
+            html += '<div class="flex justify-between text-xs font-semibold text-gray-500 mb-2 mt-1"><span>Partner gesamt</span><span class="text-green-600">\u20AC' + partnerTotal.toFixed(0) + '/Mo</span></div>';
+        }
         html += '<div class="border-t pt-3 mt-2 flex justify-between"><span class="text-sm font-bold">Gesamt</span>';
         html += '<span class="text-sm font-bold text-green-600">\u20AC' + totalSavingsMonthly.toFixed(0) + '/Mo (\u20AC' + (totalSavingsMonthly*12).toFixed(0) + '/Jahr)</span></div>';
-    } else {
-        html += '<p class="text-sm text-gray-400 text-center py-4">Noch keine Eintraege</p>';
     }
-    html += '<div class="border-t mt-4 pt-3"><p class="text-[10px] text-gray-500 mb-2 font-semibold uppercase">Tool hinzufuegen</p>';
-    html += '<div class="flex gap-2"><input id="savingName" type="text" placeholder="Tool-Name" class="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-1.5">';
-    html += '<input id="savingCost" type="number" placeholder="\u20AC/Mo" class="w-20 text-sm border border-gray-200 rounded-lg px-3 py-1.5">';
-    html += '<button onclick="addSaving()" class="px-3 py-1.5 bg-green-500 text-white rounded-lg text-sm font-semibold hover:bg-green-600">+</button></div>';
-    html += '<input id="savingNotes" type="text" placeholder="Notiz (z.B. ersetzt durch Modul XY)" class="w-full mt-2 text-xs border border-gray-200 rounded-lg px-3 py-1.5 text-gray-500">';
-    html += '</div></div>';
+    html += '</div>';
 
     html += '</div>';
 
-    // Log section
+    // Log
     html += renderLogSection(logData);
     container.innerHTML = html;
+}
+
+function renderSavingRow(s, maxVal) {
+    var c = parseFloat(s.kosten_pro_monat || 0);
+    var pct = maxVal > 0 ? (c / maxVal * 100) : 0;
+    var typeBadge = '';
+    if (s.nutzer_typ === 'beide') typeBadge = '<span class="text-[9px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full ml-1">HQ+Partner</span>';
+    var html = '<div class="mb-3"><div class="flex justify-between items-start mb-1">';
+    html += '<div class="flex-1 min-w-0"><span class="text-sm font-semibold text-gray-700">' + _escH(s.name) + '</span>' + typeBadge;
+    if (s.notizen) html += '<br><span class="text-[10px] text-gray-400">' + _escH(s.notizen) + '</span>';
+    html += '</div><div class="flex items-center gap-2 ml-2 shrink-0"><span class="text-sm font-bold text-green-600">\u20AC' + c.toFixed(0) + '/Mo</span>';
+    html += '<button onclick="deleteSaving(\'' + s.id + '\')" class="text-gray-300 hover:text-red-500 text-xs">\u2715</button></div></div>';
+    html += '<div class="w-full bg-gray-100 rounded-full h-1.5"><div class="bg-green-400 h-1.5 rounded-full" style="width:' + Math.max(pct,2) + '%"></div></div></div>';
+    return html;
 }
 
 function renderLogSection(logData) {
@@ -216,18 +239,166 @@ function renderLogSection(logData) {
     return html;
 }
 
-// CRUD
-window.addSaving = async function() {
-    var n=document.getElementById('savingName'),c=document.getElementById('savingCost'),t=document.getElementById('savingNotes');
-    if(!n||!n.value.trim()){_showToast('Name eingeben','error');return;}
-    if(!c||!parseFloat(c.value)){_showToast('Kosten eingeben','error');return;}
-    var r=await _sb().from('cockpit_savings').insert({name:n.value.trim(),kosten_pro_monat:parseFloat(c.value),notizen:t?t.value.trim():''});
-    if(r.error){_showToast('Fehler: '+r.error.message,'error');return;}
-    _showToast(n.value.trim()+' hinzugefuegt!','success');
+// ── Modal ──
+window.openSavingModal = function() {
+    // Remove existing modal if any
+    var existing = document.getElementById('savingModal');
+    if (existing) existing.remove();
+
+    var modal = document.createElement('div');
+    modal.id = 'savingModal';
+    modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
+    modal.innerHTML = `
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeSavingModal()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 z-10">
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-base font-bold text-gray-800">Tool eintragen</h2>
+                <button onclick="closeSavingModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+            </div>
+
+            <div class="space-y-4">
+                <!-- Tool-Name -->
+                <div>
+                    <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block">Tool-Name *</label>
+                    <input id="sm_name" type="text" placeholder="z.B. Slack, HubSpot, Deskly..." 
+                        class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-vit-orange">
+                </div>
+
+                <!-- Nutzer -->
+                <div>
+                    <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block">Wer nutzt das Tool?</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="setSavingTyp('hq')" id="sm_typ_hq"
+                            class="sm-typ-btn px-3 py-2 rounded-xl border-2 border-gray-200 text-xs font-semibold text-gray-600 hover:border-vit-orange transition text-center">
+                            🏢<br>Nur HQ
+                        </button>
+                        <button onclick="setSavingTyp('partner')" id="sm_typ_partner"
+                            class="sm-typ-btn px-3 py-2 rounded-xl border-2 border-gray-200 text-xs font-semibold text-gray-600 hover:border-vit-orange transition text-center">
+                            🏪<br>Partner
+                        </button>
+                        <button onclick="setSavingTyp('beide')" id="sm_typ_beide"
+                            class="sm-typ-btn px-3 py-2 rounded-xl border-2 border-orange-400 bg-orange-50 text-xs font-semibold text-vit-orange text-center">
+                            🌐<br>Beide
+                        </button>
+                    </div>
+                    <input type="hidden" id="sm_nutzer_typ" value="beide">
+                </div>
+
+                <!-- Betrag + Rhythmus -->
+                <div>
+                    <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block">Kosten</label>
+                    <div class="flex gap-2">
+                        <div class="relative flex-1">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">€</span>
+                            <input id="sm_betrag" type="number" min="0" step="0.01" placeholder="0,00"
+                                oninput="updateSavingCalc()"
+                                class="w-full border border-gray-200 rounded-xl pl-7 pr-3 py-2.5 text-sm focus:outline-none focus:border-vit-orange">
+                        </div>
+                        <select id="sm_rhythmus" onchange="updateSavingCalc()"
+                            class="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-vit-orange bg-white">
+                            <option value="monatlich">/ Monat</option>
+                            <option value="jaehrlich">/ Jahr</option>
+                        </select>
+                    </div>
+                    <!-- Umrechnung -->
+                    <div id="sm_calc" class="mt-2 text-xs text-gray-400 text-right hidden">
+                        = <span id="sm_calc_val" class="font-semibold text-green-600"></span> / Monat
+                    </div>
+                </div>
+
+                <!-- Notiz -->
+                <div>
+                    <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block">Notiz <span class="font-normal text-gray-400">(optional)</span></label>
+                    <input id="sm_notiz" type="text" placeholder="z.B. ersetzt durch vit:space Office-Modul"
+                        class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-vit-orange">
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeSavingModal()" class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50">Abbrechen</button>
+                <button onclick="saveSavingModal()" class="flex-1 px-4 py-2.5 bg-green-500 text-white rounded-xl text-sm font-bold hover:bg-green-600 transition">✓ Speichern</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+};
+
+window.closeSavingModal = function() {
+    var m = document.getElementById('savingModal');
+    if (m) m.remove();
+};
+
+window.setSavingTyp = function(typ) {
+    document.getElementById('sm_nutzer_typ').value = typ;
+    ['hq','partner','beide'].forEach(function(t) {
+        var btn = document.getElementById('sm_typ_' + t);
+        if (!btn) return;
+        if (t === typ) {
+            btn.className = 'sm-typ-btn px-3 py-2 rounded-xl border-2 border-orange-400 bg-orange-50 text-xs font-semibold text-vit-orange text-center';
+        } else {
+            btn.className = 'sm-typ-btn px-3 py-2 rounded-xl border-2 border-gray-200 text-xs font-semibold text-gray-600 hover:border-vit-orange transition text-center';
+        }
+    });
+};
+
+window.updateSavingCalc = function() {
+    var betrag = parseFloat(document.getElementById('sm_betrag').value) || 0;
+    var rhythmus = document.getElementById('sm_rhythmus').value;
+    var calcEl = document.getElementById('sm_calc');
+    var calcVal = document.getElementById('sm_calc_val');
+    if (rhythmus === 'jaehrlich' && betrag > 0) {
+        var monthly = betrag / 12;
+        calcVal.textContent = '\u20AC' + monthly.toFixed(2);
+        calcEl.classList.remove('hidden');
+    } else {
+        calcEl.classList.add('hidden');
+    }
+};
+
+window.saveSavingModal = async function() {
+    var name = document.getElementById('sm_name').value.trim();
+    var betrag = parseFloat(document.getElementById('sm_betrag').value) || 0;
+    var rhythmus = document.getElementById('sm_rhythmus').value;
+    var nutzer_typ = document.getElementById('sm_nutzer_typ').value;
+    var notiz = document.getElementById('sm_notiz').value.trim();
+
+    if (!name) { _showToast('Tool-Name eingeben', 'error'); return; }
+    if (!betrag) { _showToast('Betrag eingeben', 'error'); return; }
+
+    var kosten_pro_monat = rhythmus === 'jaehrlich' ? betrag / 12 : betrag;
+
+    var payload = {
+        name: name,
+        kosten_pro_monat: parseFloat(kosten_pro_monat.toFixed(2)),
+        notizen: notiz || null,
+        kategorie: 'software'
+    };
+
+    // Add new fields if columns exist (graceful)
+    payload.nutzer_typ = nutzer_typ;
+    payload.abrechnungsrhythmus = rhythmus;
+    payload.original_betrag = betrag;
+
+    var r = await _sb().from('cockpit_savings').insert(payload);
+    if (r.error) {
+        // If new columns don't exist yet, retry without them
+        if (r.error.code === '42703') {
+            delete payload.nutzer_typ;
+            delete payload.abrechnungsrhythmus;
+            delete payload.original_betrag;
+            r = await _sb().from('cockpit_savings').insert(payload);
+        }
+        if (r.error) { _showToast('Fehler: ' + r.error.message, 'error'); return; }
+    }
+
+    _showToast(name + ' hinzugefügt!', 'success');
+    closeSavingModal();
     window.renderApiNutzung();
 };
+
+// CRUD
 window.deleteSaving = async function(id) {
-    if(!confirm('Eintrag loeschen?'))return;
+    if(!confirm('Eintrag löschen?'))return;
     await _sb().from('cockpit_savings').delete().eq('id',id);
     _showToast('Entfernt','success');
     window.renderApiNutzung();
