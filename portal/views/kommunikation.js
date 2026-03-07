@@ -90,15 +90,22 @@ async function kommLoadData() {
     var standortId = _sbProfile() ? _sbProfile().standort_id : null;
 
     try {
-        var [chResp, usersResp, extraResp] = await Promise.all([
+        var [chResp, usersResp, extraResp, mitgliedResp] = await Promise.all([
             _sb().from('chat_kanaele').select('*').order('name'),
             _sb().from('users').select('id, name, vorname, nachname, position, standort_id, is_hq, status, standorte:standort_id(name)').eq('status', 'aktiv'),
-            _sb().from('kanal_extra_zugang').select('kanal_id').eq('user_id', uid || '')
+            _sb().from('kanal_extra_zugang').select('kanal_id').eq('user_id', uid || ''),
+            _sb().from('kanal_mitglieder').select('kanal_id, zuletzt_gelesen').eq('user_id', uid || '')
         ]);
 
         var allKanaele = chResp.data || [];
         KOMM.allUsers = usersResp.data || [];
         KOMM._extraZugang = (extraResp.data || []).map(function(e) { return e.kanal_id; });
+
+        // Ungelesen-Map bauen: kanal_id → zuletzt_gelesen
+        KOMM._gelesenMap = {};
+        (mitgliedResp.data || []).forEach(function(m) {
+            KOMM._gelesenMap[m.kanal_id] = m.zuletzt_gelesen;
+        });
 
         // Sichtbarkeitsfilter anwenden
         var sichtbar = allKanaele.filter(function(k) { return kommKanalSichtbar(k); });
@@ -276,22 +283,36 @@ function kommSidebarItem(view, icon, label, badge) {
 
 function kommSidebarSection(title, key, channels) {
     var open = KOMM.sidebarSections[key];
+    // Count unread channels in this section
+    var unreadCount = channels.filter(function(ch) { return kommIsUnread(ch); }).length;
+
     var h = '<div class="mb-1">';
-    h += '<div onclick="kommToggleSection(\'' + key + '\')" class="px-4 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider cursor-pointer flex justify-between select-none hover:text-gray-600">';
-    h += title;
-    h += '<span class="text-[9px] transition-transform ' + (open ? '' : '-rotate-90') + '">▼</span>';
+    h += '<div onclick="kommToggleSection(\'' + key + '\')" class="px-4 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider cursor-pointer flex justify-between items-center select-none hover:text-gray-600">';
+    h += '<span>' + title + '</span>';
+    h += '<span class="flex items-center gap-1.5">';
+    if (unreadCount > 0) h += '<span class="w-5 h-5 rounded-full bg-[#EF7D00] text-white text-[9px] font-bold flex items-center justify-center">' + unreadCount + '</span>';
+    h += '<span class="text-[9px] transition-transform ' + (open ? '' : '-rotate-90') + '">▼</span></span>';
     h += '</div>';
     if (open) {
         channels.forEach(function(ch) {
             var active = (KOMM.view === 'channel' || KOMM.view === 'group') && KOMM.activeId === ch.id;
+            var unread = kommIsUnread(ch);
             h += '<div onclick="kommGoView(\'channel\',\'' + ch.id + '\',\'' + _escH(ch.name) + '\')" class="mx-2 px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-2 ' + (active ? 'bg-orange-50 border-l-[3px] border-l-[#EF7D00]' : 'border-l-[3px] border-transparent hover:bg-gray-50') + '">';
             h += '<span class="text-sm">' + (ch.icon || '💬') + '</span>';
-            h += '<span class="flex-1 text-[12.5px] ' + (active ? 'font-bold text-[#EF7D00]' : 'text-gray-600') + ' truncate">' + _escH(ch.name) + '</span>';
+            h += '<span class="flex-1 text-[12.5px] ' + (active ? 'font-bold text-[#EF7D00]' : (unread ? 'font-bold text-gray-800' : 'text-gray-600')) + ' truncate">' + _escH(ch.name) + '</span>';
+            if (unread) h += '<span class="w-2.5 h-2.5 rounded-full bg-[#EF7D00] flex-shrink-0"></span>';
             h += '</div>';
         });
     }
     h += '</div>';
     return h;
+}
+
+function kommIsUnread(ch) {
+    if (!ch.letzte_nachricht_at) return false;
+    var gelesen = KOMM._gelesenMap ? KOMM._gelesenMap[ch.id] : null;
+    if (!gelesen) return true; // Nie gelesen + hat Nachrichten = unread
+    return new Date(ch.letzte_nachricht_at) > new Date(gelesen);
 }
 
 function kommSidebarDMs() {
@@ -849,6 +870,19 @@ export function kommGoView(view, id, name) {
     KOMM.view = view;
     KOMM.activeId = id;
     KOMM.activeName = name;
+
+    // Channel als gelesen markieren
+    if ((view === 'channel' || view === 'dm' || view === 'group') && id) {
+        var uid = _sbUser() ? _sbUser().id : null;
+        if (uid) {
+            _sb().from('kanal_mitglieder')
+                .update({ zuletzt_gelesen: new Date().toISOString() })
+                .eq('kanal_id', id)
+                .eq('user_id', uid)
+                .then(function() {});
+        }
+    }
+
     renderKomm();
 }
 
