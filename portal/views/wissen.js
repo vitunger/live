@@ -317,82 +317,149 @@ window.currentWissenBereich = currentWissenBereich;
 var currentWissenTyp = 'portal';
 window.currentWissenTyp = currentWissenTyp;
 
+// Cache für DB-Artikel
+var _wissenArtikelCache = null;
+var _wissenArtikelLoading = false;
+
+var _katLabels = {allgemein:'Allgemein',verkauf:'Verkauf',einkauf:'Einkauf',marketing:'Marketing',controlling:'Controlling',werkstatt:'Werkstatt',mitarbeiter:'Mitarbeiter',onboarding:'Onboarding',kommunikation:'Kommunikation',system:'System & WaWi'};
+var _katIcons  = {allgemein:'🏢',verkauf:'💰',einkauf:'🛒',marketing:'📣',controlling:'📊',werkstatt:'🔧',mitarbeiter:'👥',onboarding:'🚀',kommunikation:'✉️',system:'🖥️'};
+var _katColors = {allgemein:'bg-gray-100 text-gray-700',verkauf:'bg-blue-100 text-blue-700',einkauf:'bg-cyan-100 text-cyan-700',marketing:'bg-orange-100 text-orange-700',controlling:'bg-green-100 text-green-700',werkstatt:'bg-yellow-100 text-yellow-700',mitarbeiter:'bg-purple-100 text-purple-700',onboarding:'bg-pink-100 text-pink-700',kommunikation:'bg-indigo-100 text-indigo-700',system:'bg-slate-100 text-slate-700'};
+
+async function _ladeWissenArtikel() {
+    if (_wissenArtikelCache) return _wissenArtikelCache;
+    if (_wissenArtikelLoading) return [];
+    _wissenArtikelLoading = true;
+    try {
+        var sb = _sb(); if (!sb) return [];
+        var { data, error } = await sb.from('wissen_artikel').select('*').order('gepinnt', {ascending: false}).order('views', {ascending: false});
+        if (error) throw error;
+        _wissenArtikelCache = data || [];
+    } catch(e) {
+        console.warn('wissen_artikel Ladefehler:', e);
+        _wissenArtikelCache = [];
+    }
+    _wissenArtikelLoading = false;
+    return _wissenArtikelCache;
+}
+
+async function _artikelViewCount(id) {
+    try {
+        var sb = _sb(); if (!sb) return;
+        await sb.from('wissen_artikel').update({ views: (_wissenArtikelCache.find(function(a){return a.id===id;})||{views:0}).views + 1 }).eq('id', id);
+    } catch(e) {}
+}
+
+window.openWissenArtikel = function(id) {
+    var artikel = (_wissenArtikelCache||[]).find(function(a){ return a.id === id; });
+    if (!artikel) return;
+    _artikelViewCount(id);
+    var modal = document.getElementById('wissenArtikelModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'wissenArtikelModal';
+        modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
+        modal.style.background = 'rgba(0,0,0,0.5)';
+        modal.onclick = function(e){ if(e.target===modal) modal.style.display='none'; };
+        document.body.appendChild(modal);
+    }
+    var kat = artikel.kategorie || 'allgemein';
+    var katColor = _katColors[kat] || 'bg-gray-100 text-gray-700';
+    var tags = (artikel.tags||[]).map(function(t){ return '<span class="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">'+_escH(t)+'</span>'; }).join(' ');
+    modal.innerHTML =
+        '<div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">' +
+            '<div class="flex items-start justify-between p-6 border-b border-gray-100">' +
+                '<div>' +
+                    '<div class="flex items-center space-x-2 mb-2">' +
+                        '<span class="text-sm">'+(_katIcons[kat]||'📄')+'</span>' +
+                        '<span class="text-xs px-2 py-0.5 rounded-full font-semibold '+katColor+'">'+(_katLabels[kat]||kat)+'</span>' +
+                        (artikel.gepinnt?'<span class="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full font-semibold">📌 Gepinnt</span>':'') +
+                    '</div>' +
+                    '<h2 class="text-lg font-bold text-gray-900">'+_escH(artikel.titel)+'</h2>' +
+                    '<div class="flex items-center space-x-3 mt-1">'+tags+'</div>' +
+                '</div>' +
+                '<button onclick="document.getElementById(\'wissenArtikelModal\').style.display=\'none\'" class="text-gray-400 hover:text-gray-600 text-xl font-bold ml-4">✕</button>' +
+            '</div>' +
+            '<div class="p-6 overflow-y-auto flex-1 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">'+_escH(artikel.inhalt||'')+'</div>' +
+            '<div class="px-6 py-3 border-t border-gray-100 flex items-center justify-between">' +
+                '<span class="text-xs text-gray-400">👁️ '+artikel.views+' Aufrufe</span>' +
+                '<button onclick="document.getElementById(\'wissenArtikelModal\').style.display=\'none\'" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200">Schließen</button>' +
+            '</div>' +
+        '</div>';
+    modal.style.display = 'flex';
+};
+
 window.renderWissenGlobal = renderWissenGlobal;
-export function renderWissenGlobal() {
-    var bereiche = ['allgemein','verkauf','einkauf','marketing','controlling','werkstatt'];
-    var bereichLabels = {allgemein:'Allgemein',verkauf:'Verkauf',einkauf:'Einkauf',marketing:'Marketing',controlling:'Controlling',werkstatt:'Werkstatt',portal:'Portal'};
-    var bereichIcons = {allgemein:'🏢',verkauf:'💰',einkauf:'🛒',marketing:'📣',controlling:'📊',werkstatt:'🔧',portal:'📱'};
+export async function renderWissenGlobal() {
+    var el = document.getElementById('wissenGlobalContent');
+    if (!el) return;
 
-    // Aggregate all items
-    var allAkademie=[],allHandbuecher=[],allBp=[],allFaq=[];
-    bereiche.forEach(function(b){
-        var d=wissenData[b]; if(!d)return;
-        (d.akademie||[]).forEach(function(i){i._bereich=b;allAkademie.push(i);});
-        (d.handbuecher||[]).forEach(function(i){i._bereich=b;allHandbuecher.push(i);});
-        (d.bestPractices||[]).forEach(function(i){i._bereich=b;allBp.push(i);});
-        (d.faq||[]).forEach(function(i){i._bereich=b;allFaq.push(i);});
+    // Delegate Portal/Kurse/Onboarding-Typen
+    if (currentWissenTyp === 'portal' && typeof window.renderPortalGuide === 'function') { window.renderPortalGuide(); return; }
+    if (currentWissenTyp === 'kurse'  && typeof window.renderKurse === 'function')       { window.renderKurse(); return; }
+    if (currentWissenTyp === 'onboarding' && typeof window.renderOnboarding === 'function') { window.renderOnboarding(); return; }
+
+    // Ladeindikator
+    el.innerHTML = '<div class="text-center py-12 text-gray-400"><div class="animate-spin text-3xl mb-3">⚙️</div><p class="text-sm">Artikel werden geladen…</p></div>';
+
+    var alleArtikel = await _ladeWissenArtikel();
+
+    // Filter nach Kategorie
+    var items = alleArtikel;
+    if (currentWissenBereich !== 'all') {
+        items = items.filter(function(a){ return a.kategorie === currentWissenBereich; });
+    }
+
+    // Suche
+    var search = (document.getElementById('wissenSearch') || {}).value || '';
+    if (search) {
+        var s = search.toLowerCase();
+        items = items.filter(function(a){
+            return (a.titel||'').toLowerCase().indexOf(s) > -1 ||
+                   (a.inhalt||'').toLowerCase().indexOf(s) > -1 ||
+                   (a.tags||[]).join(' ').toLowerCase().indexOf(s) > -1;
+        });
+    }
+
+    // KPI-Leiste
+    var kpi = document.getElementById('wissenKpis');
+    if (kpi) {
+        var katCounts = {};
+        alleArtikel.forEach(function(a){ var k=a.kategorie||'allgemein'; katCounts[k]=(katCounts[k]||0)+1; });
+        kpi.innerHTML =
+            '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-gray-800">'+alleArtikel.length+'</p><p class="text-xs text-gray-500">Artikel gesamt</p></div>' +
+            '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-slate-600">'+(katCounts['system']||0)+'</p><p class="text-xs text-gray-500">System & WaWi</p></div>' +
+            '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-blue-600">'+(katCounts['verkauf']||0)+'</p><p class="text-xs text-gray-500">Verkauf</p></div>' +
+            '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-purple-600">'+(katCounts['mitarbeiter']||0)+'</p><p class="text-xs text-gray-500">Mitarbeiter</p></div>' +
+            '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-pink-600">'+(katCounts['onboarding']||0)+'</p><p class="text-xs text-gray-500">Onboarding</p></div>';
+    }
+
+    // Artikel-Karten rendern
+    if (!items.length) {
+        el.innerHTML = '<div class="text-center text-gray-400 py-12"><p class="text-2xl mb-2">🔍</p><p class="text-sm">Keine Artikel gefunden' + (search ? ' für "'+_escH(search)+'"' : '') + '.</p></div>';
+        return;
+    }
+
+    var h = '<div class="grid grid-cols-1 gap-3">';
+    items.forEach(function(a) {
+        var kat = a.kategorie || 'allgemein';
+        var katColor = _katColors[kat] || 'bg-gray-100 text-gray-700';
+        var tags = (a.tags||[]).slice(0,4).map(function(t){ return '<span class="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">'+_escH(t)+'</span>'; }).join(' ');
+        var preview = (a.inhalt||'').replace(/\s+/g,' ').trim().slice(0,160);
+        h += '<div class="vit-card p-4 hover:shadow-md transition cursor-pointer" onclick="window.openWissenArtikel(\''+a.id+'\')">' +
+            '<div class="flex items-start justify-between mb-2">' +
+                '<div class="flex items-center space-x-2 flex-wrap gap-1">' +
+                    '<span class="text-xs px-2 py-0.5 rounded-full font-semibold '+katColor+'">'+(_katIcons[kat]||'📄')+' '+(_katLabels[kat]||kat)+'</span>' +
+                    (a.gepinnt?'<span class="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full font-semibold">📌</span>':'') +
+                    tags +
+                '</div>' +
+                '<span class="text-xs text-gray-400 ml-2 whitespace-nowrap">👁️ '+a.views+'</span>' +
+            '</div>' +
+            '<h4 class="font-semibold text-gray-800 text-sm mb-1">'+_escH(a.titel)+'</h4>' +
+            '<p class="text-xs text-gray-500 leading-relaxed">'+_escH(preview)+(preview.length>=160?'…':'')+'</p>' +
+        '</div>';
     });
-
-    // KPIs
-    var totalKurse=allAkademie.length;
-    var doneKurse=allAkademie.filter(function(k){return k.progress===100;}).length;
-    var pflichtOffen=allAkademie.filter(function(k){return k.typ==='pflicht'&&k.progress<100;}).length;
-    var kpi=document.getElementById('wissenKpis');
-    if(kpi) kpi.innerHTML=
-        '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-gray-800">'+totalKurse+'</p><p class="text-xs text-gray-500">Schulungen</p></div>'
-        +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-green-600">'+doneKurse+'</p><p class="text-xs text-gray-500">Abgeschlossen</p></div>'
-        +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold '+(pflichtOffen>0?'text-red-500':'text-green-600')+'">'+pflichtOffen+'</p><p class="text-xs text-gray-500">Pflicht offen</p></div>'
-        +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-blue-600">'+allHandbuecher.length+'</p><p class="text-xs text-gray-500">Handbuecher</p></div>'
-        +'<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-vit-orange">'+allFaq.length+'</p><p class="text-xs text-gray-500">FAQs</p></div>';
-
-    // Determine which list to show
-    var items=[];
-    if(currentWissenTyp==='akademie') items=allAkademie;
-    else if(currentWissenTyp==='handbuecher') items=allHandbuecher;
-    else if(currentWissenTyp==='bestpractices') items=allBp;
-    else if(currentWissenTyp==='faq') items=allFaq;
-
-    // Filter by bereich
-    if(currentWissenBereich!=='all') items=items.filter(function(i){return i._bereich===currentWissenBereich;});
-
-    // Search
-    var search=(document.getElementById('wissenSearch')||{}).value||'';
-    if(search) {
-        var s=search.toLowerCase();
-        items=items.filter(function(i){return (i.title||i.frage||'').toLowerCase().indexOf(s)>-1 || (i.desc||i.antwort||'').toLowerCase().indexOf(s)>-1;});
-    }
-
-    var el=document.getElementById('wissenGlobalContent');
-    if(!el) return;
-    var h='';
-
-    if(currentWissenTyp==='akademie'){
-        items.forEach(function(k){
-            var pColor=k.progress===100?'bg-green-500':k.progress>0?'bg-vit-orange':'bg-gray-300';
-            var badge=k.typ==='pflicht'?'<span class="text-[10px] px-2 py-0.5 bg-red-100 text-red-600 rounded-full font-bold">Pflicht</span>':'<span class="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full font-bold">Wahl</span>';
-            h+='<div class="vit-card p-4 hover:shadow-md transition"><div class="flex items-center justify-between mb-2"><div class="flex items-center space-x-2"><span class="text-xs px-2 py-0.5 bg-gray-100 rounded-full">'+bereichIcons[k._bereich]+' '+bereichLabels[k._bereich]+'</span><span class="font-semibold text-sm">'+k.title+'</span>'+badge+'</div><span class="text-xs text-gray-400">'+k.dauer+'</span></div><p class="text-xs text-gray-500 mb-2">'+k.desc+'</p><div class="flex items-center space-x-3"><div class="flex-1 bg-gray-200 rounded-full h-2"><div class="'+pColor+' h-2 rounded-full" style="width:'+k.progress+'%"></div></div><span class="text-xs font-bold '+(k.progress===100?'text-green-600':'text-gray-500')+'">'+k.progress+'%</span></div></div>';
-        });
-    } else if(currentWissenTyp==='handbuecher'){
-        items.forEach(function(b){
-            h+='<div class="vit-card p-4 hover:shadow-md transition flex items-center space-x-4"><div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-xs">PDF</div><div class="flex-1"><div class="flex items-center space-x-2"><span class="text-xs px-2 py-0.5 bg-gray-100 rounded-full">'+bereichIcons[b._bereich]+' '+bereichLabels[b._bereich]+'</span><span class="font-semibold text-sm">'+b.title+'</span></div><p class="text-xs text-gray-400 mt-1">'+(b.pages||'—')+' · '+(b.updated||'')+'</p></div><button class="text-vit-orange hover:text-orange-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></button></div>';
-        });
-    } else if(currentWissenTyp==='bestpractices'){
-        items.forEach(function(bp){
-            h+='<div class="vit-card p-4 hover:shadow-md transition"><div class="flex items-center space-x-2 mb-2"><span class="text-xs px-2 py-0.5 bg-gray-100 rounded-full">'+bereichIcons[bp._bereich]+' '+bereichLabels[bp._bereich]+'</span><span class="font-semibold text-sm">'+bp.title+'</span></div><p class="text-xs text-gray-500">'+(bp.desc||bp.content||'')+'</p></div>';
-        });
-    } else if(currentWissenTyp==='faq'){
-        items.forEach(function(fq,i){
-            h+='<div class="vit-card p-4 hover:shadow-md transition cursor-pointer" onclick="var fa=this.querySelector(\'.faq-a\');fa.style.display=fa.style.display===\'none\'?\'block\':\'none\'"><div class="flex items-center space-x-2 mb-1"><span class="text-xs px-2 py-0.5 bg-gray-100 rounded-full">'+bereichIcons[fq._bereich]+'</span><span class="font-semibold text-sm">'+fq.frage+'</span></div><div class="faq-a text-xs text-gray-500 mt-2" style="display:none;">'+fq.antwort+'</div></div>';
-        });
-    } else if(currentWissenTyp==='portal' || currentWissenTyp==='kurse' || currentWissenTyp==='onboarding'){
-        // Delegate to portal-guide.js renderers
-        if(currentWissenTyp==='portal' && typeof window.renderPortalGuide==='function') { window.renderPortalGuide(); return; }
-        if(currentWissenTyp==='kurse' && typeof window.renderKurse==='function') { window.renderKurse(); return; }
-        if(currentWissenTyp==='onboarding' && typeof window.renderOnboarding==='function') { window.renderOnboarding(); return; }
-    }
-
-    if(!h) h='<div class="text-center text-gray-400 py-8"><p class="text-lg mb-2">🔍</p><p class="text-sm">Keine Eintraege gefunden.</p></div>';
-    el.innerHTML=h;
+    h += '</div>';
+    el.innerHTML = h;
 }
 
 window.filterWissenBereich = filterWissenBereich;
@@ -413,8 +480,30 @@ export function switchWissenTyp(t){
 }
 export function filterWissenGlobal(){ renderWissenGlobal(); }
 
+// Kategorie-Filter-Buttons dynamisch aus DB-Daten aufbauen
+window.renderWissenBereichFilter = async function() {
+    var container = document.getElementById('wissenBereichFilter');
+    if (!container) return;
+    var alleArtikel = await _ladeWissenArtikel();
+    var katCounts = {};
+    alleArtikel.forEach(function(a){ var k=a.kategorie||'allgemein'; katCounts[k]=(katCounts[k]||0)+1; });
+    var kats = Object.keys(katCounts).sort(function(a,b){ return katCounts[b]-katCounts[a]; });
+    var h = '<button onclick="filterWissenBereich(\'all\')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white" data-wbf="all">Alle ('+alleArtikel.length+')</button>';
+    kats.forEach(function(k){
+        h += '<button onclick="filterWissenBereich(\''+k+'\')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-wbf="'+k+'">'+(_katIcons[k]||'📄')+' '+(_katLabels[k]||k)+' ('+katCounts[k]+')</button>';
+    });
+    container.innerHTML = h;
+};
+
 // Hook wissen rendering into tab switches (deferred until target functions exist)
 window.addEventListener('vit:modules-ready', function() {
+    // Wissen-View: Beim ersten Öffnen Filter + Artikel laden
+    document.addEventListener('vit:view-changed', function(e) {
+        if (e && e.detail && e.detail.view === 'wissen') {
+            if (typeof window.renderWissenBereichFilter === 'function') window.renderWissenBereichFilter();
+            renderWissenGlobal();
+        }
+    });
     // Wrap showAllgemeinTab
     if (typeof window.showAllgemeinTab === 'function') {
         var origShowAllgemeinTab = window.showAllgemeinTab;
@@ -448,3 +537,5 @@ Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 
 // === Window Exports (onclick handlers) ===
 window.filterWissenGlobal = filterWissenGlobal;
+window.openWissenArtikel = window.openWissenArtikel; // bereits oben registriert
+window.renderWissenBereichFilter = window.renderWissenBereichFilter; // bereits oben registriert
