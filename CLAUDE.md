@@ -243,6 +243,7 @@ security: RLS/JWT/Auth-Verbesserung
 | 8 | **RPC `create_release_notification_all`** | Muss in Supabase SQL Editor deployed sein (SECURITY DEFINER). Prüfen ob vorhanden, sonst anlegen | prüfen |
 | 9 | **RLS Smoke-Tests** | Manuell mit 2 Test-Accounts prüfen: Kann User A Daten von User B sehen? Tabellen: `leads`, `todos`, `termine`, `bwa_daten`, `support_tickets` | offen |
 | 10 | **Mobile Responsive** | Alle 8 Partner-Module auf iPhone/Android testen. Sidebar-Toggle, Modals, Tabellen-Overflow, Touch-Targets | offen |
+| 11 | **Zoho Ticket-Antworten importieren** | Zoho API (OAuth) nutzen um Kommentare/Antworten pro Ticket nachzuladen und in `support_ticket_kommentare` einzufügen (verknüpft über `zoho_id` aus `support_tickets_import`). Benötigt: Zoho OAuth Client ID + Secret + Refresh Token. Markus kümmert sich um API-Zugang in den nächsten Tagen. | wartet auf Zoho-Credentials |
 
 ### 🟢 Nice to have / Später
 
