@@ -520,6 +520,7 @@ window.editProduct = async function(productId) {
     html += '</div>';
     html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">';
     html += '<div><label class="block text-[10px] text-gray-500 mb-1">Abrechnungstag</label><input type="number" id="editProdBillingDay" min="1" max="28" value="' + (p.billing_day || '') + '" placeholder="aus Schedule" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Zuweisungstyp</label><select id="editProdScope" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"><option value="system"' + (!p.is_per_employee && !p.is_per_standort ? ' selected' : '') + '>System (automatisch)</option><option value="per_user"' + (p.is_per_employee ? ' selected' : '') + '>Je Nutzer</option><option value="per_standort"' + (p.is_per_standort ? ' selected' : '') + '>Je Standort</option></select></div>';
     html += '<div><label class="flex items-center gap-2 text-sm mt-4"><input type="checkbox" id="editProdActive" ' + (p.active ? 'checked' : '') + '> Aktiv</label></div>';
     html += '</div>';
     html += '<div class="flex gap-2"><button onclick="saveProduct(\'' + productId + '\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-xs font-semibold">Speichern</button>';
@@ -531,13 +532,17 @@ window.editProduct = async function(productId) {
 };
 
 window.saveProduct = async function(productId) {
+    var scope = document.getElementById('editProdScope').value;
     var updates = {
         name: document.getElementById('editProdName').value.trim(),
         default_amount: parseFloat(document.getElementById('editProdPrice').value) || null,
         schedule_id: document.getElementById('editProdSchedule').value || null,
         payment_term_days: parseInt(document.getElementById('editProdTermDays').value) || null,
         billing_day: parseInt(document.getElementById('editProdBillingDay').value) || null,
-        active: document.getElementById('editProdActive').checked
+        active: document.getElementById('editProdActive').checked,
+        is_per_employee: scope === 'per_user',
+        is_per_standort: scope === 'per_standort',
+        product_type: scope === 'per_user' ? 'per_user' : (document.getElementById('editProdPrice').value ? 'fixed' : 'fixed')
     };
     var { error } = await _sb().from('billing_products').update(updates).eq('id', productId);
     if (error) { _showToast('Fehler: ' + error.message, 'error'); return; }
@@ -559,6 +564,7 @@ window.showNewProductForm = function() {
     html += '</div>';
     html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">';
     html += '<div><label class="block text-[10px] text-gray-500 mb-1">Frequenz</label><select id="newProdFreq" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"><option value="monthly">Monatlich</option><option value="quarterly">Quartalsweise</option><option value="immediate">Sofort</option><option value="ad_hoc">Ad-hoc</option></select></div>';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Zuweisungstyp</label><select id="newProdScope" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"><option value="system">System (automatisch)</option><option value="per_user">Je Nutzer</option><option value="per_standort">Je Standort</option></select></div>';
     html += '<div><label class="block text-[10px] text-gray-500 mb-1">Abrechnungsart</label><select id="newProdSchedule" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"><option value="">\u2014</option>' + schedOpts + '</select></div>';
     html += '<div><label class="block text-[10px] text-gray-500 mb-1">Zahlungsfrist</label><input type="number" id="newProdTermDays" placeholder="30" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
     html += '<div><label class="block text-[10px] text-gray-500 mb-1">Abrechnungstag</label><input type="number" id="newProdBillingDay" min="1" max="28" placeholder="1" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
@@ -573,10 +579,13 @@ window.createProduct = async function() {
     var key = document.getElementById('newProdKey').value.trim().toUpperCase().replace(/[^A-Z0-9_]/g, '');
     var name = document.getElementById('newProdName').value.trim();
     if (!key || !name) { _showToast('Key und Name erforderlich', 'error'); return; }
+    var newScope = document.getElementById('newProdScope').value;
     var { error } = await _sb().from('billing_products').insert({
         key: key, name: name,
-        product_type: document.getElementById('newProdType').value,
+        product_type: newScope === 'per_user' ? 'per_user' : document.getElementById('newProdType').value,
         billing_frequency: document.getElementById('newProdFreq').value,
+        is_per_employee: newScope === 'per_user',
+        is_per_standort: newScope === 'per_standort',
         default_amount: parseFloat(document.getElementById('newProdPrice').value) || null,
         schedule_id: document.getElementById('newProdSchedule').value || null,
         payment_term_days: parseInt(document.getElementById('newProdTermDays').value) || null,
