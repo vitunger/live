@@ -571,50 +571,49 @@ async function kommLoadChat(el) {
                 // Add reaction button
                 h += '<button onclick="kommShowEmojiPicker(\'' + m.id + '\')" class="w-6 h-6 rounded-full border border-gray-200 flex items-center justify-center text-[12px] text-gray-400 cursor-pointer hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity">+</button>';
 
-                // Thread-Bereich (inline, wie MS Teams)
+                // Thread-Bereich (MS Teams Style)
                 if (KOMM.view === 'channel' || KOMM.view === 'group') {
                     var rc = m.reply_count || 0;
                     var threadOpen = KOMM.threadId === m.id;
                     var threadReplies = threadOpen ? (KOMM.threadMessages || []) : [];
+                    var lastReply = rc > 0 && !threadOpen ? KOMM.messages.find(function(r) { return r.reply_to === m.id; }) : null;
 
-                    if (rc > 0 || threadOpen) {
-                        h += '<div class="mt-1.5 ml-0">';
-                        // Thread-Toggle
-                        h += '<button onclick="' + (threadOpen ? 'kommCloseThread()' : 'kommOpenThread(\'' + m.id + '\')') + '" class="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-medium cursor-pointer ' + (threadOpen ? 'bg-orange-50 text-[#EF7D00] border border-[#EF7D00]/30' : 'text-blue-500 hover:bg-blue-50') + '">';
-                        h += '<span>' + (threadOpen ? '▼' : '▶') + '</span>';
-                        h += rc + ' Antwort' + (rc > 1 ? 'en' : '');
-                        h += '</button>';
+                    if (rc > 0) {
+                        // Kompakte Thread-Vorschau (wie Teams: letzte Antwort + Count)
+                        h += '<div class="mt-1">';
+                        h += '<div onclick="' + (threadOpen ? 'kommCloseThread()' : 'kommOpenThread(\'' + m.id + '\')') + '" class="inline-flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-gray-100 transition-colors">';
+                        h += '<span class="text-[11px] text-blue-600 font-medium">' + rc + ' Antwort' + (rc > 1 ? 'en' : '') + '</span>';
+                        h += '<span class="text-[10px] text-gray-400">' + (threadOpen ? '▾ Einklappen' : '▸ Anzeigen') + '</span>';
+                        h += '</div>';
 
-                        // Inline Thread-Antworten (aufgeklappt)
-                        if (threadOpen && threadReplies.length > 0) {
-                            h += '<div class="mt-2 ml-2 pl-3 border-l-2 border-[#EF7D00]/30 space-y-2">';
+                        // Aufgeklappte Thread-Antworten
+                        if (threadOpen) {
+                            h += '<div class="mt-1.5 ml-1 border-l-2 border-gray-200">';
                             threadReplies.forEach(function(tr) {
                                 var trName = tr.users ? kommUserName(tr.users) : 'Unbekannt';
                                 var trInit = kommInitials(trName);
                                 var trHq = tr.users && tr.users.is_hq;
-                                h += '<div class="flex gap-2 py-1">';
-                                h += '<div class="w-6 h-6 rounded-md flex-shrink-0 flex items-center justify-center text-white text-[9px] font-bold" style="background:' + kommAvatarColor(trInit) + '">' + trInit + '</div>';
+                                h += '<div class="flex gap-2 py-1 px-3">';
+                                h += '<div class="w-5 h-5 rounded flex-shrink-0 flex items-center justify-center text-white text-[8px] font-bold mt-0.5" style="background:' + kommAvatarColor(trInit) + '">' + trInit + '</div>';
                                 h += '<div class="flex-1 min-w-0">';
-                                h += '<span class="text-[11px] font-bold ' + (trHq ? 'text-[#EF7D00]' : 'text-gray-700') + '">' + _escH(trName) + '</span> ';
-                                h += '<span class="text-[10px] text-gray-400">' + kommTimeShort(tr.created_at) + '</span>';
-                                h += '<p class="text-[12px] text-gray-700 mt-0.5 leading-relaxed whitespace-pre-wrap">' + _escH(tr.nachricht || '') + '</p>';
+                                h += '<span class="text-[11px] font-semibold ' + (trHq ? 'text-[#EF7D00]' : 'text-gray-700') + '">' + _escH(trName) + '</span>';
+                                h += ' <span class="text-[10px] text-gray-400">' + kommTimeShort(tr.created_at) + '</span>';
+                                h += '<div class="text-[12px] text-gray-700 leading-snug whitespace-pre-wrap">' + _escH(tr.nachricht || '') + '</div>';
                                 h += '</div></div>';
                             });
+                            // Reply-Input (wie Teams: flach, in der Linie)
+                            h += '<div class="flex items-center gap-2 px-3 py-1.5">';
+                            h += '<div class="w-5 h-5 rounded flex-shrink-0 flex items-center justify-center text-white text-[8px] font-bold bg-gray-300">' + kommInitials((_sbUser() || {}).email || 'Du') + '</div>';
+                            h += '<input id="kommThreadInput" class="flex-1 px-2.5 py-1 rounded border border-gray-200 text-[12px] outline-none focus:border-[#EF7D00] bg-white" placeholder="Antwort schreiben..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();kommSendThreadReply()}">';
+                            h += '</div>';
                             h += '</div>';
                         }
-
-                        // Inline Reply-Input (aufgeklappt)
-                        if (threadOpen) {
-                            h += '<div class="mt-2 ml-2 pl-3 border-l-2 border-[#EF7D00]/30 flex gap-2">';
-                            h += '<input id="kommThreadInput" class="flex-1 px-3 py-1.5 rounded-lg border border-gray-200 text-[12px] outline-none focus:border-[#EF7D00]" placeholder="Antworten..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();kommSendThreadReply()}">';
-                            h += '<button onclick="kommSendThreadReply()" class="px-3 py-1.5 rounded-lg bg-[#EF7D00] text-white text-[11px] font-bold cursor-pointer hover:opacity-90 flex-shrink-0">Antworten</button>';
-                            h += '</div>';
-                        }
-
                         h += '</div>';
-                    } else {
-                        // Kein Thread → Hover-Button "Antworten"
-                        h += '<button onclick="kommOpenThread(\'' + m.id + '\')" class="mt-1 px-2 py-0.5 rounded-full text-[11px] font-medium cursor-pointer border border-gray-200 text-gray-400 hover:text-[#EF7D00] hover:border-[#EF7D00] opacity-0 group-hover:opacity-100 transition-opacity">💬 Antworten</button>';
+                    }
+
+                    // Hover-Button "Antworten" (nur wenn noch keine Antworten)
+                    if (rc === 0) {
+                        h += '<button onclick="kommOpenThread(\'' + m.id + '\')" class="mt-0.5 text-[11px] text-gray-400 hover:text-blue-600 cursor-pointer bg-transparent border-none opacity-0 group-hover:opacity-100 transition-opacity">↩ Antworten</button>';
                     }
                 }
 
