@@ -5145,6 +5145,7 @@
                         <button onclick="showSettingsTab('rechte')" class="settings-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="rechte">🔐 Rollen & Rechte</button>
                         <button onclick="showSettingsTab('office');setTimeout(function(){if(typeof officeRenderAdminDots==='function')officeRenderAdminDots()},200)" class="settings-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="office">🏢 Office-Räume</button>
                         <button onclick="showSettingsTab('schnittstellen')" class="settings-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="schnittstellen">🔌 Schnittstellen</button>
+                        <button onclick="showSettingsTab('kommunikation');setTimeout(function(){if(typeof renderKommSettings==='function')renderKommSettings()},100)" class="settings-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="kommunikation">💬 Kommunikation</button>
                     </div>
 
                     <!-- TAB 1: Modul-Status -->
@@ -5423,7 +5424,14 @@
 
                     </div>
 
-                </div>
+                    <!-- TAB: Kommunikation -->
+                    <div id="settingsTabKommunikation" class="settings-tab-content" style="display:none;">
+                        <div id="kommSettingsContainer">
+                            <div class="p-8 text-center text-gray-400"><div class="animate-pulse">Lade Kommunikation...</div></div>
+                        </div>
+                    </div>
+
+                </div> 
 
                 <div id="hqAllgemeinView" class="view" style="display:none">
                     <div class="p-6 md:p-8 max-w-7xl mx-auto">
