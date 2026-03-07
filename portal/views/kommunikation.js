@@ -77,6 +77,12 @@ function kommTimeShort(dateStr) {
     return new Date(dateStr).toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
 }
 
+function kommTimeFull(dateStr) {
+    if (!dateStr) return '';
+    var d = new Date(dateStr);
+    return d.toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'2-digit'}) + ' ' + d.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
+}
+
 function kommIsHQ() {
     var p = _sbProfile();
     var rollen = window.sbRollen || [];
@@ -438,8 +444,10 @@ function kommRenderHeader() {
 
 // ========== Input Bar ==========
 function kommRenderInputBar() {
-    if (KOMM.view !== 'channel' && KOMM.view !== 'dm' && KOMM.view !== 'group') return '';
-    var isDm = KOMM.view === 'dm' || KOMM.view === 'group';
+    // Channels nutzen den "In Kanal posten" Button statt Input-Bar
+    if (KOMM.view === 'channel' || KOMM.view === 'group') return '';
+    if (KOMM.view !== 'dm') return '';
+    var isDm = true;
 
     var h = '<div class="px-4 py-3 border-t border-gray-200 bg-white flex items-end gap-2 flex-shrink-0">';
 
@@ -519,115 +527,143 @@ async function kommLoadChat(el) {
 
         var uid = _sbUser() ? _sbUser().id : null;
         var isDm = KOMM.view === 'dm';
-        var h = '<div class="px-5 py-4">';
+        var isChannel = KOMM.view === 'channel' || KOMM.view === 'group';
 
-        // KI-Zusammenfassung Button (nur Channels)
-        if (KOMM.view === 'channel' && KOMM.messages.length > 5) {
-            h += '<div class="flex justify-center mb-3">';
-            h += '<button onclick="kommSummarize()" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-semibold text-white cursor-pointer" style="background:linear-gradient(135deg,#8b5cf6,#6366f1)">🧠 Was hab ich verpasst?</button>';
+        // ── DM: klassischer Chat-Stil ──
+        if (isDm) {
+            var h = '<div class="px-5 py-4">';
+            h += '<div class="text-center py-2 text-[11px] text-gray-400">— Heute —</div>';
+            KOMM.messages.forEach(function(m) {
+                if (m.reply_to) return;
+                var isOwn = m.user_id === uid;
+                var userName = m.users ? kommUserName(m.users) : 'Unbekannt';
+                var initials = kommInitials(userName);
+                h += '<div class="flex gap-2.5 py-1.5">';
+                h += '<div class="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-[11px] font-bold" style="background:' + kommAvatarColor(initials) + '">' + initials + '</div>';
+                h += '<div class="flex-1 min-w-0">';
+                h += '<div class="flex items-baseline gap-2 mb-0.5">';
+                h += '<span class="text-[13px] font-bold text-gray-800">' + _escH(userName) + '</span>';
+                h += '<span class="text-[11px] text-gray-400">' + kommTimeShort(m.created_at) + '</span>';
+                if (isOwn) {
+                    var read = m.gelesen_von && m.gelesen_von.length > 0;
+                    h += '<span class="text-[11px] ml-auto ' + (read ? 'text-blue-500' : 'text-gray-300') + '">' + (read ? '✓✓' : '✓') + '</span>';
+                }
+                h += '</div>';
+                h += '<p class="text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-wrap">' + _escH(m.nachricht || '') + '</p>';
+                h += '</div></div>';
+            });
             h += '</div>';
+            el.innerHTML = h;
+            el.scrollTop = el.scrollHeight;
         }
 
-        // Datum-Trenner
-        h += '<div class="text-center py-2 text-[11px] text-gray-400">— Heute —</div>';
+        // ── Channel/Group: Teams-Style Posts ──
+        if (isChannel) {
+            // Posts = Nachrichten ohne reply_to, neueste zuerst
+            var posts = KOMM.messages.filter(function(m) { return !m.reply_to; }).reverse();
+            // Replies map: parent_id → [replies]
+            var repliesMap = {};
+            KOMM.messages.forEach(function(m) {
+                if (m.reply_to) {
+                    if (!repliesMap[m.reply_to]) repliesMap[m.reply_to] = [];
+                    repliesMap[m.reply_to].push(m);
+                }
+            });
 
-        KOMM.messages.forEach(function(m) {
-            // Thread-Antworten nicht im Haupt-Chat zeigen
-            if (m.reply_to) return;
+            var h = '<div class="px-5 py-4 space-y-4">';
 
-            var isOwn = m.user_id === uid;
-            var userName = m.users ? kommUserName(m.users) : 'Unbekannt';
-            var isHq = m.users && (m.users.is_hq || m.users.rolle === 'hq');
-            var initials = kommInitials(userName);
-            var msgReactions = reactions[m.id] || [];
+            // "In Kanal posten" Button
+            h += '<button onclick="kommNewPost()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#EF7D00] text-white text-[13px] font-bold hover:opacity-90 cursor-pointer border-none shadow-sm">';
+            h += '✏️ In Kanal posten</button>';
 
-            h += '<div class="flex gap-2.5 py-1.5 group">';
-            h += '<div class="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-[11px] font-bold" style="background:' + kommAvatarColor(initials) + '">' + initials + '</div>';
-            h += '<div class="flex-1 min-w-0">';
-            h += '<div class="flex items-baseline gap-2 mb-0.5">';
-            h += '<span class="text-[13px] font-bold ' + (isHq ? 'text-[#EF7D00]' : 'text-gray-800') + '">' + _escH(userName) + '</span>';
-            if (isHq) h += '<span class="text-[9px] font-bold bg-orange-50 text-[#EF7D00] px-1.5 py-0.5 rounded">HQ</span>';
-            h += '<span class="text-[11px] text-gray-400">' + kommTimeShort(m.created_at) + '</span>';
-            // Gelesen-Status in DMs
-            if (isDm && isOwn) {
-                var read = m.gelesen_von && m.gelesen_von.length > 0;
-                h += '<span class="text-[11px] ml-auto ' + (read ? 'text-blue-500' : 'text-gray-300') + '">' + (read ? '✓✓' : '✓') + '</span>';
+            if (posts.length === 0) {
+                h += '<div class="text-center py-12 text-gray-400"><div class="text-3xl mb-2">📝</div><p class="text-sm">Noch keine Beiträge in diesem Channel.</p><p class="text-xs mt-1">Erstelle den ersten Post!</p></div>';
             }
-            h += '</div>';
-            h += '<p class="text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-wrap">' + _escH(m.nachricht || '') + '</p>';
 
-            // Reaktionen
-            if (msgReactions.length > 0 || true) {
-                h += '<div class="flex gap-1 mt-1 flex-wrap items-center">';
-                // Gruppiere Reaktionen nach Emoji
-                var emojiCounts = {};
-                msgReactions.forEach(function(r) {
-                    if (!emojiCounts[r.emoji]) emojiCounts[r.emoji] = { count: 0, myReaction: false };
-                    emojiCounts[r.emoji].count++;
-                    if (r.user_id === uid) emojiCounts[r.emoji].myReaction = true;
-                });
-                Object.keys(emojiCounts).forEach(function(emoji) {
-                    var ec = emojiCounts[emoji];
-                    h += '<button onclick="kommToggleReaction(\'' + m.id + '\',\'' + emoji + '\')" class="px-2 py-0.5 rounded-full text-[12px] font-semibold cursor-pointer ' + (ec.myReaction ? 'border-[1.5px] border-[#EF7D00] bg-orange-50 text-[#EF7D00]' : 'border border-gray-200 bg-white text-gray-500 hover:bg-gray-50') + '">' + emoji + ' ' + ec.count + '</button>';
-                });
-                // Add reaction button
-                h += '<button onclick="kommShowEmojiPicker(\'' + m.id + '\')" class="w-6 h-6 rounded-full border border-gray-200 flex items-center justify-center text-[12px] text-gray-400 cursor-pointer hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity">+</button>';
+            posts.forEach(function(m) {
+                var userName = m.users ? kommUserName(m.users) : 'Unbekannt';
+                var isHq = m.users && (m.users.is_hq || m.users.rolle === 'hq');
+                var initials = kommInitials(userName);
+                var replies = repliesMap[m.id] || [];
+                var threadOpen = KOMM.threadId === m.id;
+                var threadReplies = threadOpen ? (KOMM.threadMessages || []) : replies;
 
-                // Thread-Bereich (MS Teams Style)
-                if (KOMM.view === 'channel' || KOMM.view === 'group') {
-                    var rc = m.reply_count || 0;
-                    var threadOpen = KOMM.threadId === m.id;
-                    var threadReplies = threadOpen ? (KOMM.threadMessages || []) : [];
-                    var lastReply = rc > 0 && !threadOpen ? KOMM.messages.find(function(r) { return r.reply_to === m.id; }) : null;
+                // Post Card
+                h += '<div class="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-sm transition-shadow">';
 
-                    if (rc > 0) {
-                        // Kompakte Thread-Vorschau (wie Teams: letzte Antwort + Count)
-                        h += '<div class="mt-1">';
-                        h += '<div onclick="' + (threadOpen ? 'kommCloseThread()' : 'kommOpenThread(\'' + m.id + '\')') + '" class="inline-flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-gray-100 transition-colors">';
-                        h += '<span class="text-[11px] text-blue-600 font-medium">' + rc + ' Antwort' + (rc > 1 ? 'en' : '') + '</span>';
-                        h += '<span class="text-[10px] text-gray-400">' + (threadOpen ? '▾ Einklappen' : '▸ Anzeigen') + '</span>';
-                        h += '</div>';
+                // Post Header
+                h += '<div class="px-4 pt-4 pb-2 flex items-center gap-3">';
+                h += '<div class="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-[11px] font-bold" style="background:' + kommAvatarColor(initials) + '">' + initials + '</div>';
+                h += '<div class="flex-1"><span class="text-[13px] font-bold ' + (isHq ? 'text-[#EF7D00]' : 'text-gray-800') + '">' + _escH(userName) + '</span>';
+                if (isHq) h += ' <span class="text-[9px] font-bold bg-orange-50 text-[#EF7D00] px-1.5 py-0.5 rounded">HQ</span>';
+                h += '<div class="text-[11px] text-gray-400">' + kommTimeFull(m.created_at) + '</div></div>';
+                // Reaktionen
+                var msgRx = reactions[m.id] || [];
+                if (msgRx.length > 0) {
+                    h += '<div class="flex gap-1">';
+                    var emojiCounts = {};
+                    msgRx.forEach(function(r) {
+                        if (!emojiCounts[r.emoji]) emojiCounts[r.emoji] = { count: 0, my: false };
+                        emojiCounts[r.emoji].count++;
+                        if (r.user_id === uid) emojiCounts[r.emoji].my = true;
+                    });
+                    Object.keys(emojiCounts).forEach(function(emoji) {
+                        var ec = emojiCounts[emoji];
+                        h += '<button onclick="kommToggleReaction(\'' + m.id + '\',\'' + emoji + '\')" class="px-1.5 py-0.5 rounded text-[11px] font-semibold cursor-pointer ' + (ec.my ? 'bg-orange-50 text-[#EF7D00]' : 'bg-gray-50 text-gray-500') + '">' + emoji + ec.count + '</button>';
+                    });
+                    h += '</div>';
+                }
+                h += '</div>';
 
-                        // Aufgeklappte Thread-Antworten
-                        if (threadOpen) {
-                            h += '<div class="mt-1.5 ml-1 border-l-2 border-gray-200">';
-                            threadReplies.forEach(function(tr) {
-                                var trName = tr.users ? kommUserName(tr.users) : 'Unbekannt';
-                                var trInit = kommInitials(trName);
-                                var trHq = tr.users && tr.users.is_hq;
-                                h += '<div class="flex gap-2 py-1 px-3">';
-                                h += '<div class="w-5 h-5 rounded flex-shrink-0 flex items-center justify-center text-white text-[8px] font-bold mt-0.5" style="background:' + kommAvatarColor(trInit) + '">' + trInit + '</div>';
-                                h += '<div class="flex-1 min-w-0">';
-                                h += '<span class="text-[11px] font-semibold ' + (trHq ? 'text-[#EF7D00]' : 'text-gray-700') + '">' + _escH(trName) + '</span>';
-                                h += ' <span class="text-[10px] text-gray-400">' + kommTimeShort(tr.created_at) + '</span>';
-                                h += '<div class="text-[12px] text-gray-700 leading-snug whitespace-pre-wrap">' + _escH(tr.nachricht || '') + '</div>';
-                                h += '</div></div>';
-                            });
-                            // Reply-Input (wie Teams: flach, in der Linie)
-                            h += '<div class="flex items-center gap-2 px-3 py-1.5">';
-                            h += '<div class="w-5 h-5 rounded flex-shrink-0 flex items-center justify-center text-white text-[8px] font-bold bg-gray-300">' + kommInitials((_sbUser() || {}).email || 'Du') + '</div>';
-                            h += '<input id="kommThreadInput" class="flex-1 px-2.5 py-1 rounded border border-gray-200 text-[12px] outline-none focus:border-[#EF7D00] bg-white" placeholder="Antwort schreiben..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();kommSendThreadReply()}">';
-                            h += '</div>';
-                            h += '</div>';
-                        }
-                        h += '</div>';
-                    }
-
-                    // Hover-Button "Antworten" (nur wenn noch keine Antworten)
-                    if (rc === 0) {
-                        h += '<button onclick="kommOpenThread(\'' + m.id + '\')" class="mt-0.5 text-[11px] text-gray-400 hover:text-blue-600 cursor-pointer bg-transparent border-none opacity-0 group-hover:opacity-100 transition-opacity">↩ Antworten</button>';
-                    }
+                // Post Titel (wenn vorhanden)
+                if (m.titel) {
+                    h += '<div class="px-4 pb-1"><h3 class="text-[15px] font-bold text-gray-900">' + _escH(m.titel) + '</h3></div>';
                 }
 
+                // Post Body
+                h += '<div class="px-4 pb-3"><p class="text-[13.5px] text-gray-700 leading-relaxed whitespace-pre-wrap">' + _escH(m.nachricht || '') + '</p></div>';
+
+                // Trennlinie + Antworten
+                h += '<div class="border-t border-gray-100">';
+
+                // Antworten
+                if (replies.length > 0 || threadOpen) {
+                    var visibleReplies = threadOpen ? threadReplies : replies.slice(-2); // Letzte 2 zeigen wenn zugeklappt
+                    var hiddenCount = replies.length - visibleReplies.length;
+
+                    if (hiddenCount > 0 && !threadOpen) {
+                        h += '<div onclick="kommOpenThread(\'' + m.id + '\')" class="px-4 py-2 text-[11px] text-blue-600 font-medium cursor-pointer hover:bg-gray-50">';
+                        h += hiddenCount + ' weitere Antwort' + (hiddenCount > 1 ? 'en' : '') + ' anzeigen</div>';
+                    }
+
+                    visibleReplies.forEach(function(tr) {
+                        var trName = tr.users ? kommUserName(tr.users) : 'Unbekannt';
+                        var trInit = kommInitials(trName);
+                        var trHq = tr.users && tr.users.is_hq;
+                        h += '<div class="px-4 py-2 flex gap-2.5 border-t border-gray-50">';
+                        h += '<div class="w-7 h-7 rounded-md flex-shrink-0 flex items-center justify-center text-white text-[9px] font-bold" style="background:' + kommAvatarColor(trInit) + '">' + trInit + '</div>';
+                        h += '<div class="flex-1 min-w-0">';
+                        h += '<span class="text-[12px] font-bold ' + (trHq ? 'text-[#EF7D00]' : 'text-gray-700') + '">' + _escH(trName) + '</span>';
+                        h += ' <span class="text-[10px] text-gray-400">' + kommTimeShort(tr.created_at) + '</span>';
+                        h += '<div class="text-[12.5px] text-gray-700 leading-relaxed whitespace-pre-wrap mt-0.5">' + _escH(tr.nachricht || '') + '</div>';
+                        h += '</div></div>';
+                    });
+                }
+
+                // Reply-Input (immer sichtbar bei Posts)
+                h += '<div class="px-4 py-2.5 flex items-center gap-2 bg-gray-50">';
+                var myInit = kommInitials((_sbProfile() || {}).name || 'Du');
+                h += '<div class="w-6 h-6 rounded flex-shrink-0 flex items-center justify-center text-white text-[8px] font-bold" style="background:' + kommAvatarColor(myInit) + '">' + myInit + '</div>';
+                h += '<input class="kommReplyInput flex-1 px-3 py-1.5 rounded-lg border border-gray-200 text-[12px] outline-none focus:border-[#EF7D00] bg-white" data-post-id="' + m.id + '" placeholder="Antwort schreiben..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();kommReplyToPost(this)}">';
                 h += '</div>';
-            }
 
-            h += '</div></div>';
-        });
+                h += '</div>'; // border-t wrapper
+                h += '</div>'; // card
+            });
 
-        h += '</div>';
-        el.innerHTML = h;
-        el.scrollTop = el.scrollHeight;
+            h += '</div>';
+            el.innerHTML = h;
+        }
 
         // Realtime subscription
         kommSubscribeRealtime();
@@ -1623,6 +1659,84 @@ window.kommSaveStandortChannel = async function() {
     } catch (e) {
         console.error('Create channel error:', e);
         _showToast('❌ Fehler: ' + (e.message || 'Unbekannt'), 'error');
+    }
+};
+
+// ========== Posts (Teams-Style) ==========
+window.kommNewPost = function() {
+    var html = '<div id="kommPostModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onclick="if(event.target===this)this.remove()">';
+    html += '<div class="bg-white rounded-xl p-6 w-full max-w-lg shadow-2xl" onclick="event.stopPropagation()">';
+    html += '<h3 class="text-base font-bold mb-4">✏️ In Kanal posten</h3>';
+    html += '<div class="space-y-3">';
+    html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Titel (optional)</label>';
+    html += '<input id="kommPostTitle" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-bold focus:ring-2 focus:ring-vit-orange outline-none" placeholder="z.B. HQ NEWS, Wichtige Info..."></div>';
+    html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Nachricht *</label>';
+    html += '<textarea id="kommPostBody" rows="5" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none outline-none focus:border-[#EF7D00]" placeholder="Was möchtest du dem Channel mitteilen?"></textarea></div>';
+    html += '</div>';
+    html += '<div class="flex justify-end gap-2 mt-5">';
+    html += '<button onclick="document.getElementById(\'kommPostModal\').remove()" class="px-4 py-2 text-sm text-gray-500">Abbrechen</button>';
+    html += '<button onclick="kommSubmitPost()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-bold hover:opacity-90">Posten</button>';
+    html += '</div></div></div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.getElementById('kommPostBody').focus();
+};
+
+window.kommSubmitPost = async function() {
+    var title = (document.getElementById('kommPostTitle').value || '').trim();
+    var body = (document.getElementById('kommPostBody').value || '').trim();
+    if (!body) { _showToast('Bitte Nachricht eingeben', 'error'); return; }
+
+    try {
+        var resp = await _sb().from('chat_nachrichten').insert({
+            kanal_id: KOMM.activeId,
+            user_id: _sbUser() ? _sbUser().id : null,
+            nachricht: body,
+            titel: title || null,
+            ist_post: true
+        }).select('*, users:user_id(id, name, vorname, nachname, is_hq)').single();
+        if (resp.error) throw resp.error;
+
+        var modal = document.getElementById('kommPostModal');
+        if (modal) modal.remove();
+        _showToast('✅ Post erstellt');
+
+        KOMM.messages.push(resp.data);
+        var el = document.getElementById('kommContent');
+        if (el) await kommLoadChat(el);
+
+        _sb().from('chat_kanaele').update({
+            letzte_nachricht_at: new Date().toISOString(),
+            letzte_nachricht_vorschau: (title ? title + ': ' : '') + body.substring(0, 60)
+        }).eq('id', KOMM.activeId).then(function(){});
+    } catch(e) {
+        _showToast('Fehler: ' + (e.message || ''), 'error');
+    }
+};
+
+window.kommReplyToPost = async function(input) {
+    var postId = input.dataset.postId;
+    var text = (input.value || '').trim();
+    if (!text || !postId) return;
+    input.value = '';
+
+    try {
+        var resp = await _sb().from('chat_nachrichten').insert({
+            kanal_id: KOMM.activeId,
+            user_id: _sbUser() ? _sbUser().id : null,
+            nachricht: text,
+            reply_to: postId
+        }).select('*, users:user_id(id, name, vorname, nachname, is_hq)').single();
+        if (resp.error) throw resp.error;
+
+        KOMM.messages.push(resp.data);
+        // Update reply_count lokal
+        var parent = KOMM.messages.find(function(m) { return m.id === postId; });
+        if (parent) parent.reply_count = (parent.reply_count || 0) + 1;
+
+        var el = document.getElementById('kommContent');
+        if (el) await kommLoadChat(el);
+    } catch(e) {
+        _showToast('Fehler: ' + (e.message || ''), 'error');
     }
 };
 
