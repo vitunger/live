@@ -476,3 +476,26 @@ npx supabase functions deploy social-import --project-ref lwwagbkxeofahhwebkab -
 ### Dateien
 - `index.html`: CSS-Regeln (`.sidebar`, `.sidebar.collapsed`, `@media max-width:768px`), HTML-Struktur (`#sidebarNav`)
 - `portal/views/misc-views.js`: `toggleMobileSidebar()`, `toggleSidebarCollapse()`, `closeMobileSidebar()`, IIFE + resize-Listener
+
+
+## Wissen-Modul (Maerz 2026)
+
+### Architektur
+- **Partner-View** (): DB-basierte Artikelliste aus `wissen_artikel` (148+ Artikel). Dynamische Kategorie-Filter aus DB, Suche, Gelesen-Tracking via `wissen_gelesen`.
+- **HQ-View** (`hqWissenView`): CMS mit Quill WYSIWYG-Editor (v2.0.3, Snow-Theme, CDN lazy-loaded). CRUD fuer Artikel: erstellen, bearbeiten, loeschen, pinnen.
+- **Modul-Datei**: `portal/views/wissen.js` — keine Demo-Arrays, komplett DB-basiert.
+
+### DB-Tabellen
+- `wissen_artikel`: id, erstellt_von, titel, inhalt (HTML), kategorie, tags (text[]), nur_premium, gepinnt, views, created_at, updated_at
+- `wissen_gelesen`: id, user_id, artikel_id, gelesen_am — RLS: user sieht nur eigene. UNIQUE(user_id, artikel_id).
+- Kategorien: system, onboarding, kommunikation, mitarbeiter, verkauf, werkstatt, allgemein, marketing, einkauf, controlling
+
+### RLS Policies
+- `wissen_artikel`: SELECT=true, INSERT=is_hq_user(), UPDATE=is_hq_user(), DELETE=is_hq_user()
+- `wissen_gelesen`: SELECT/INSERT/DELETE = auth.uid()=user_id
+
+### Wichtig
+- HQ Wissen-Verwaltung (renderHqWissen, addHqWissen) liegt jetzt in `wissen.js`, NICHT mehr in `hq-kommando.js`
+- Quill-Editor wird lazy via CDN geladen (jsdelivr.net/npm/quill@2.0.3)
+- Artikel-Inhalt wird als HTML gespeichert (Quill-Output)
+- Partner-View zeigt HTML-Inhalt direkt im Modal; Plaintext-Fallback mit Zeilenumbruechen
