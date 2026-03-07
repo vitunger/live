@@ -92,8 +92,20 @@ export async function renderWissenGlobal() {
     } catch(e) { console.error('[wissen] Artikel laden fehlgeschlagen:', e); var alleArtikel = []; }
     try { await _ladeGelesenStatus(); } catch(e) { console.warn('[wissen] Gelesen-Status Fehler:', e); }
 
-    // Bereich-Filter aktualisieren (dynamisch aus DB)
-    try { if (typeof window.renderWissenBereichFilter === 'function') await window.renderWissenBereichFilter(); } catch(e) { console.warn('[wissen] Filter-Fehler:', e); }
+    // Bereich-Filter direkt rendern (inline, nicht async)
+    var filterContainer = document.getElementById('wissenBereichFilter');
+    if (filterContainer) {
+        var katCounts = {};
+        alleArtikel.forEach(function(a){ var k=a.kategorie||'allgemein'; katCounts[k]=(katCounts[k]||0)+1; });
+        var fh = '<button onclick="filterWissenBereich(\'all\')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold '+(currentWissenBereich==='all'?'bg-vit-orange text-white':'bg-gray-100 text-gray-600')+'" data-wbf="all">📚 Alle ('+alleArtikel.length+')</button>';
+        KAT_ORDER.forEach(function(k){
+            var count = katCounts[k] || 0;
+            if (count > 0) {
+                fh += '<button onclick="filterWissenBereich(\''+k+'\')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold '+(currentWissenBereich===k?'bg-vit-orange text-white':'bg-gray-100 text-gray-600')+'" data-wbf="'+k+'">'+(KAT_ICONS[k]||'📄')+' '+(KAT_LABELS[k]||k)+' ('+count+')</button>';
+            }
+        });
+        filterContainer.innerHTML = fh;
+    }
 
     // Filter: Kategorie
     var items = alleArtikel;
