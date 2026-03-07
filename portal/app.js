@@ -12,7 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1772882476";
+const CACHE_BUST = "?v=1772889639";
 // Read-only token for public repo (split to avoid secret scanning)
 window._GH_READ_TOKEN = ['ghp_kfihVZbz','AMZA','OcU3wPG0Pw8QWCF2UM0npLKj'].join('');
 
@@ -63,6 +63,8 @@ const VIEW_MODULES = [
     'views/hq-buchungen.js',
     'views/hq-feedback.js',
     'views/nutzung.js',
+    'views/hq-vertrieb.js',
+    'views/hq-partnermanagement.js',
     
     // Systems
     'views/auth-system.js',

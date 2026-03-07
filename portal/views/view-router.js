@@ -43,6 +43,8 @@ const VIEW_RENDER_MAP = {
     'hqKommando':    { fn: 'renderKommandozentrale' },
     'hqEinstellungen': { fn: 'renderHqEinstellungen' },
     'hqBilling':     { fn: 'initBillingModule', chain: [{ fn: 'initBillingMonthSelect' }, { fn: 'loadBillingOverview' }, { fn: 'showBillingTab', args: ['overview'] }] },
+    'hqVertrieb':    { fn: 'renderHqVertrieb' },
+    'hqPartnermanagement': { fn: 'renderHqPartnermanagement' },
     
     // === Standort Views ===
     'allgemein':     { fn: 'loadAllgemeinData', async: true, chain: [{ fn: 'showAllgemeinTab', args: ['uebersicht'] }] },
