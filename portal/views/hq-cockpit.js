@@ -33,7 +33,7 @@ export async function loadHqStandorte() {
         var tickets = ticketResp.data || [];
 
         // Load leads
-        var leadResp = await _sb().from('leads').select('standort_id, status, wert');
+        var leadResp = await _sb().from('leads').select('standort_id, status, geschaetzter_wert');
         var leads = leadResp.data || [];
 
         // Load verkauf tracking
