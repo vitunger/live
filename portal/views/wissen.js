@@ -102,16 +102,8 @@ export async function renderWissenGlobal() {
     if (currentWissenArt !== 'all') {
         items = items.filter(function(a){ return a.inhaltsart === currentWissenArt; });
     }
-    // Suche
-    var search = (document.getElementById('wissenSearch') || {}).value || '';
-    if (search) {
-        var s = search.toLowerCase();
-        items = items.filter(function(a){
-            return (a.titel||'').toLowerCase().indexOf(s) > -1 ||
-                   (a.inhalt||'').toLowerCase().indexOf(s) > -1 ||
-                   (a.tags||[]).join(' ').toLowerCase().indexOf(s) > -1;
-        });
-    }
+    // Suche (nur über globale Suche Ctrl+K)
+    var search = '';
 
     // KPI-Leiste
     var kpi = document.getElementById('wissenKpis');
