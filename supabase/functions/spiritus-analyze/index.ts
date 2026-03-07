@@ -1,10 +1,13 @@
 /**
  * Supabase Edge Function: spiritus-analyze
- * Analysiert Call-Transkripte mit Claude, extrahiert Probleme/Maßnahmen/Sentiment,
- * speichert alles in spiritus_transcripts + spiritus_extractions.
+ * Analysiert Call-Transkripte mit Claude, erstellt 8-Feld-Protokoll,
+ * speichert in spiritus_transcripts + spiritus_extractions.
+ *
+ * Unterstuetzt 3 Gespraechskontexte: partner, lieferant, akquise.
+ * Laedt KI-Feedback aus spiritus_ki_feedback als Lernhinweise.
  *
  * API Usage Logging: Jeder Claude-API-Call wird in api_usage_log protokolliert.
- * 
+ *
  * Deploy: supabase functions deploy spiritus-analyze
  */
 
@@ -42,39 +45,84 @@ async function verifyJwt(req: Request): Promise<{ user_id: string } | null> {
 
 let _cors: Record<string, string> = {};
 
-const SYSTEM_PROMPT = `Du analysierst Gesprächsprotokolle/-transkripte von Gesprächen zwischen dem Franchise-HQ vit:bikes und Franchise-Standorten (Fahrradläden).
+// --- Kontext-spezifische Prompt-Zusaetze ---
 
-Extrahiere aus dem Transkript exakt diese Kategorien:
+const KONTEXT_PARTNER = `Dies ist ein Gespraech mit einem bestehenden Franchise-Partner (Fahrrad-Fachhandel).
+"extern" wird dem Partner gezeigt - professionell, sachlich, keine internen Bewertungen.
+"intern" ist nur fuer HQ - ehrliche Einschaetzung: Umsetzungskraft, Risiken, Potenzial.
+"einschaetzung": "stabil" wenn Partner auf Kurs, "entwicklungsfaehig" bei Potenzial mit Luecken, "kritisch" bei akuten Problemen.`;
 
-1. PROBLEME: Herausforderungen, Hürden, Beschwerden oder Schwierigkeiten des Standorts
-2. MASSNAHMEN: Konkrete Empfehlungen, Maßnahmen oder Lösungsansätze die besprochen wurden  
-3. SENTIMENT: Gesamtstimmung des Standorts im Call (positiv/neutral/angespannt) + Begründung
+const KONTEXT_LIEFERANT = `Dies ist ein Gespraech mit einem Lieferanten/Hersteller (z.B. Shimano, Bosch, Cube).
+Fokus: Konditionen, Lieferzeiten, Produktverfuegbarkeit, Verhandlungsposition.
+"extern" ist hier auch intern - wird NICHT an den Lieferanten gesendet.
+"einschaetzung": "stabil" bei guter Partnerschaft, "entwicklungsfaehig" bei Optimierungspotenzial, "kritisch" bei Lieferproblemen/schlechten Konditionen.
+"massnahmen.seite": Nutze "hq" oder "lieferant".`;
 
-Für jede Erkenntnis bewerte confidence 0.0–1.0:
-- ≥ 0.85 = eindeutig und explizit genannt
-- 0.60–0.84 = sinngemäß oder implizit
-- < 0.60 = Interpretation
+const KONTEXT_AKQUISE = `Dies ist ein Gespraech mit einem potentiellen neuen Franchise-Standort.
+Fokus: Interesse des Kandidaten, Standort-Potenzial, naechste Schritte, Zeitrahmen.
+"extern" ist hier auch intern - wird NICHT an den Kandidaten gesendet.
+"einschaetzung": "stabil" wenn Kandidat vielversprechend, "entwicklungsfaehig" wenn noch Fragen offen, "kritisch" wenn Bedenken bestehen.
+"beobachtung": Potenzial-Einschaetzung, Empfehlung (ja/nein/abwarten), Risiken.
+"ziel_messgroesse": z.B. "Entscheidung bis DD.MM.YYYY" oder "LOI bis Ende Monat".`;
 
-Antworte NUR als gültiges JSON, ohne Markdown-Backticks:
+function getKontextZusatz(kontext: string): string {
+  switch (kontext) {
+    case 'lieferant': return KONTEXT_LIEFERANT;
+    case 'akquise':   return KONTEXT_AKQUISE;
+    default:          return KONTEXT_PARTNER;
+  }
+}
+
+function buildSystemPrompt(kontext: string): string {
+  const kontextLabel = kontext === 'lieferant' ? 'Lieferantengespraech'
+    : kontext === 'akquise' ? 'Akquisegespraech'
+    : 'Partnergespraech';
+
+  return `Du bist der KI-Protokollassistent des vit:bikes Partnernetzwerks.
+Du erhaeltst das Transkript eines Gespraechs. Der Gespraechskontext ist: ${kontextLabel}
+
+${getKontextZusatz(kontext)}
+
+Befolge die Logik: Status \u2192 Fokus \u2192 Massnahme \u2192 Kontrolle
+
+Antworte AUSSCHLIESSLICH mit einem validen JSON-Objekt:
+
 {
-  "probleme": [
-    {"content": "Beschreibung des Problems", "confidence": 0.9, "keywords": ["keyword1", "keyword2"]}
-  ],
-  "massnahmen": [
-    {"content": "Beschreibung der Maßnahme", "confidence": 0.85, "keywords": ["keyword1"]}
-  ],
-  "sentiment": {
-    "level": "positiv|neutral|angespannt",
-    "confidence": 0.9,
-    "begruendung": "Kurze Begründung"
+  "extern": {
+    "anlass": "Warum fand das Gespraech statt? 1-2 Saetze.",
+    "aktuelle_situation": ["Fakten zum aktuellen Status. Max 3 Stichpunkte. Fakten vor Meinungen."],
+    "fokus_thema": ["Welches Thema soll geloest werden? Max 1-2 Punkte."],
+    "massnahmen": [
+      {"massnahme": "Konkrete Aktion", "verantwortlich": "Name/Rolle", "deadline": "YYYY-MM-DD oder null", "seite": "hq|partner|lieferant"}
+    ],
+    "ziel_messgroesse": "Woran erkennen wir Fortschritt? Konkrete Zahl/KPI.",
+    "review_termin": "Wann pruefen wir das Ergebnis?"
   },
-  "summary": "1-2 Sätze Zusammenfassung des Calls",
-  "call_themen": ["Thema1", "Thema2"]
-}`;
+  "intern": {
+    "einschaetzung": "stabil|entwicklungsfaehig|kritisch",
+    "beobachtung": "2-3 Saetze. Ehrliche interne Einschaetzung."
+  },
+  "kategorien": ["verkauf_conversion", "marketing_sichtbarkeit"],
+  "summary": "1-2 Saetze Zusammenfassung",
+  "sentiment": {"level": "positiv|neutral|angespannt", "confidence": 0.9, "begruendung": "Kurze Begruendung"},
+  "tags": ["marketing", "zahlen"]
+}
+
+REGELN:
+- "extern" wird dem Partner gezeigt (bei Kontext "partner") - professionell, sachlich.
+- "intern" ist NUR fuer HQ - ehrlich, direkt, Risiken benennen.
+- Massnahmen: IMMER mit Verantwortlich und Deadline. Ohne Massnahme ist das Gespraech nicht abgeschlossen.
+- Fokus-Thema: Maximal 1-2. Verhindert "wir reden ueber alles und loesen nichts."
+- Aktuelle Situation: Fakten VOR Meinungen. Zahlen wenn moeglich.
+- Ziel/Messgroesse: Konkrete Zahlen. "Conversion von 28% auf 35%" statt "Conversion verbessern".
+- Review: Konkretes Datum oder "im naechsten Partnergespraech".
+- Kategorien: Waehle 1-3 aus: marketing_sichtbarkeit, verkauf_conversion, werkstatt_service, mitarbeiter, einkauf_sortiment, finanzen_controlling, digitalisierung
+- Antworte NUR mit dem JSON, kein Markdown, keine Erklaerung.`;
+}
 
 const CONFIDENCE_AUTO_APPROVE = 0.85;
 
-// ─── API USAGE LOGGING ────────────────────────────────────────────────────
+// --- API USAGE LOGGING ---
 
 async function logApiUsage(sb: any, params: {
   edge_function: string;
@@ -112,6 +160,27 @@ async function logApiUsage(sb: any, params: {
   }
 }
 
+// --- Lernhinweise aus KI-Feedback laden ---
+
+async function loadFeedbackHints(sb: any, kontext: string): Promise<string> {
+  try {
+    const { data, error } = await sb
+      .from('spiritus_ki_feedback')
+      .select('feedback_text, created_at')
+      .eq('gespraechs_kontext', kontext)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (error || !data || data.length === 0) return '';
+
+    const hints = data.map((f: any, i: number) => `${i + 1}. ${f.feedback_text}`).join('\n');
+    return `\n\nLERNHINWEISE (aus frueherem Feedback zu ${kontext}-Gespraechen - beruecksichtige diese bei deiner Analyse):\n${hints}`;
+  } catch (e) {
+    console.error('Feedback-Hints laden fehlgeschlagen:', e);
+    return '';
+  }
+}
+
 export default async function handler(req: Request): Promise<Response> {
   const cors = getCorsHeaders(req);
   _cors = cors;
@@ -128,13 +197,53 @@ export default async function handler(req: Request): Promise<Response> {
 
   try {
     const body = await req.json();
-    const { transcript, standortId, standortName, callDate, callType, durationMin } = body;
+    const {
+      transcript,
+      standortId,
+      standortName,
+      callDate,
+      callType,
+      durationMin,
+      // Neue Felder
+      gespraechsKontext: rawKontext,
+      lieferantName,
+      akquiseKontaktName,
+      akquiseKontaktFirma,
+      akquiseKontaktOrt,
+      thema,
+    } = body;
+
+    // Kontext validieren, Default: partner
+    const validKontexte = ['partner', 'lieferant', 'akquise'];
+    const gespraechsKontext = validKontexte.includes(rawKontext) ? rawKontext : 'partner';
 
     if (!transcript || transcript.length < 20) {
       return json({ error: 'Transkript zu kurz oder leer' }, 400);
     }
 
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Lernhinweise aus KI-Feedback laden
+    const feedbackHints = await loadFeedbackHints(sb, gespraechsKontext);
+
+    // Kontext-Info fuer den User-Prompt zusammenbauen
+    let kontextInfo = '';
+    if (gespraechsKontext === 'lieferant' && lieferantName) {
+      kontextInfo = `\nLieferant: ${lieferantName}`;
+    } else if (gespraechsKontext === 'akquise') {
+      const parts: string[] = [];
+      if (akquiseKontaktName) parts.push(`Kontakt: ${akquiseKontaktName}`);
+      if (akquiseKontaktFirma) parts.push(`Firma: ${akquiseKontaktFirma}`);
+      if (akquiseKontaktOrt) parts.push(`Ort: ${akquiseKontaktOrt}`);
+      if (parts.length) kontextInfo = '\n' + parts.join(', ');
+    }
+    if (thema) {
+      kontextInfo += `\nThema: ${thema}`;
+    }
+
+    const userPrompt = `Analysiere dieses Transkript:${kontextInfo}\n\n${transcript.slice(0, 8000)}${feedbackHints}`;
+
+    const systemPrompt = buildSystemPrompt(gespraechsKontext);
     const t0 = Date.now();
 
     // Claude analyze
@@ -147,9 +256,9 @@ export default async function handler(req: Request): Promise<Response> {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: `Analysiere dieses Transkript:\n\n${transcript.slice(0, 8000)}` }]
+        max_tokens: 3000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
       })
     });
 
@@ -183,24 +292,56 @@ export default async function handler(req: Request): Promise<Response> {
     try {
       const clean = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       extracted = JSON.parse(clean);
-    } catch (e) {
+    } catch (_e) {
       throw new Error('KI-Antwort konnte nicht geparst werden: ' + rawText.slice(0, 200));
     }
 
-    // Save transcript
+    // Protokoll-Felder sicher extrahieren
+    const ext = extracted.extern || {};
+    const intern = extracted.intern || {};
+
+    const protokollAnlass = ext.anlass || '';
+    const protokollSituation = ext.aktuelle_situation || [];
+    const protokollFokus = ext.fokus_thema || [];
+    const protokollMassnahmen = ext.massnahmen || [];
+    const protokollZiel = ext.ziel_messgroesse || '';
+    const protokollReview = ext.review_termin || '';
+    const protokollEinschaetzung = intern.einschaetzung || 'stabil';
+    const protokollBeobachtung = intern.beobachtung || '';
+    const kategorien = extracted.kategorien || [];
+
+    // Save transcript mit neuem Protokoll-Format + Kontext-Feldern
     const { data: transcript_row, error: tErr } = await sb
       .from('spiritus_transcripts')
       .insert({
-        standort_id:    standortId,
-        standort_name:  standortName,
-        call_date:      callDate,
-        call_type:      callType || 'Sonstiges',
-        duration_min:   durationMin || null,
-        transcript_text: transcript.slice(0, 50000),
-        summary:        extracted.summary || '',
-        sentiment_level: extracted.sentiment?.level || 'neutral',
-        call_themen:    extracted.call_themen || [],
-        status:         'review'  // always start as review
+        standort_id:              standortId,
+        standort_name:            standortName,
+        call_date:                callDate,
+        call_type:                callType || 'Sonstiges',
+        duration_min:             durationMin || null,
+        transcript_text:          transcript.slice(0, 50000),
+        summary:                  extracted.summary || '',
+        sentiment_level:          extracted.sentiment?.level || 'neutral',
+        call_themen:              extracted.tags || [],
+        status:                   'review',
+        // 8-Feld-Protokoll
+        protokoll_anlass:         protokollAnlass,
+        protokoll_situation:      protokollSituation,
+        protokoll_fokus:          protokollFokus,
+        protokoll_massnahmen:     protokollMassnahmen,
+        protokoll_ziel:           protokollZiel,
+        protokoll_review:         protokollReview,
+        protokoll_einschaetzung:  protokollEinschaetzung,
+        protokoll_beobachtung:    protokollBeobachtung,
+        // Kategorien
+        kategorien:               kategorien,
+        // Kontext-Felder
+        gespraechs_kontext:       gespraechsKontext,
+        lieferant_name:           lieferantName || null,
+        akquise_kontakt_name:     akquiseKontaktName || null,
+        akquise_kontakt_firma:    akquiseKontaktFirma || null,
+        akquise_kontakt_ort:      akquiseKontaktOrt || null,
+        thema:                    thema || null,
       })
       .select('id')
       .single();
@@ -208,32 +349,33 @@ export default async function handler(req: Request): Promise<Response> {
     if (tErr) throw new Error('DB-Fehler (transcript): ' + tErr.message);
     const transcriptId = transcript_row.id;
 
-    // Save extractions
+    // --- Backward compatibility: spiritus_extractions ---
     const extractions: any[] = [];
 
-    // Problems
-    (extracted.probleme || []).forEach((p: any) => {
+    // Problems aus aktuelle_situation extrahieren
+    (protokollSituation || []).forEach((s: string) => {
       extractions.push({
         transcript_id: transcriptId,
         standort_id:   standortId,
         kategorie:     'problem',
-        content:       p.content,
-        confidence:    p.confidence || 0.7,
-        keywords:      p.keywords || [],
-        approved:      (p.confidence || 0) >= CONFIDENCE_AUTO_APPROVE
+        content:       s,
+        confidence:    0.85,
+        keywords:      [],
+        approved:      true,
       });
     });
 
-    // Maßnahmen
-    (extracted.massnahmen || []).forEach((m: any) => {
+    // Massnahmen aus protokoll_massnahmen extrahieren
+    (protokollMassnahmen || []).forEach((m: any) => {
+      const content = typeof m === 'string' ? m : (m.massnahme || JSON.stringify(m));
       extractions.push({
         transcript_id: transcriptId,
         standort_id:   standortId,
         kategorie:     'massnahme',
-        content:       m.content,
-        confidence:    m.confidence || 0.7,
-        keywords:      m.keywords || [],
-        approved:      (m.confidence || 0) >= CONFIDENCE_AUTO_APPROVE
+        content:       content,
+        confidence:    0.85,
+        keywords:      [],
+        approved:      true,
       });
     });
 
@@ -245,7 +387,7 @@ export default async function handler(req: Request): Promise<Response> {
         kategorie:     'sentiment',
         content:       extracted.sentiment.begruendung || '',
         confidence:    extracted.sentiment.confidence || 0.8,
-        approved:      true
+        approved:      true,
       });
     }
 
@@ -253,13 +395,26 @@ export default async function handler(req: Request): Promise<Response> {
       await sb.from('spiritus_extractions').insert(extractions);
     }
 
-    // Check if all high-confidence → auto-approve transcript
+    // Check if all high-confidence -> auto-approve transcript
     const allAutoApproved = extractions.every(e => e.approved);
     if (allAutoApproved) {
       await sb.from('spiritus_transcripts').update({ status: 'verarbeitet' }).eq('id', transcriptId);
     }
 
-    return json({ success: true, transcriptId, extractionCount: extractions.length, autoApproved: allAutoApproved });
+    return json({
+      success: true,
+      transcriptId,
+      extractionCount: extractions.length,
+      autoApproved: allAutoApproved,
+      protokoll: {
+        extern: ext,
+        intern: intern,
+        kategorien: kategorien,
+        sentiment: extracted.sentiment || null,
+        summary: extracted.summary || '',
+        tags: extracted.tags || [],
+      },
+    });
 
   } catch (e: any) {
     console.error('spiritus-analyze:', e);

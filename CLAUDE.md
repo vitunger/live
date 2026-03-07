@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung fuer KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 07.03.2026 (Spiritus-Konzept v3.0 + Kommunikation v4.0 – Quiply-Ersatz)
+> Letzte Aktualisierung: 07.03.2026 (Spiritus v3.0 – 8-Felder-Protokoll, 3 Kontexte, Lernfaktor)
 > **KI-Kosten Dashboard (HQ-only):** Modul `views/nutzung.js` zeigt KI-API-Kosten als eigener Tab "⚡ KI-Kosten" im Entwicklung-Modul (neben dem bestehenden "📊 Nutzung"-Tab fuer Portal-Nutzung). Container: `entwKiKostenContent`. Tabelle `api_usage_log` protokolliert jeden externen KI-API-Call (Anthropic + OpenAI). Edge Functions `dev-ki-analyse` + `spiritus-analyze` loggen automatisch. Edge Function `anthropic-usage` (JWT-secured) holt Live-Daten von der Anthropic Admin API. Edge Function `cockpit-costs` (JWT-secured) sammelt Betriebskosten aller Provider: Vercel Billing API (Secret: VERCEL_TOKEN + VERCEL_TEAM_ID), Supabase (Fixkosten $25/Mo Pro Plan), Anthropic Admin API, Resend. Liefert Gesamtkosten, pro-Nutzer-Kosten, Provider-Breakdown. Neue Tabelle `cockpit_savings` (RLS: HQ-only) fuer manuell eingetragene eingesparte Tool-Kosten (Name + EUR/Monat). Dashboard zeigt Kosten vs. Einsparungen Gegenuberstellung (Usage + Cost Report). Erfordert Supabase Secret `ANTHROPIC_ADMIN_KEY` (Admin API Key aus console.anthropic.com). **WICHTIG: Jede neue Edge Function, die eine KI-API (Anthropic, OpenAI, etc.) aufruft, MUSS nach jedem Call in `api_usage_log` loggen (provider, model, input_tokens, output_tokens, duration_ms, success).** Aufruf: `showEntwicklungTab('ki_kosten')` → `renderApiNutzung('entwKiKostenContent')`. Tab `nutzung` bleibt fuer Portal-Nutzung (`renderEntwNutzung`).
 > Verkaufsmodul 9 Fixes deployed: (1) Verkaeufer-Ranking dynamisch aus DB in Auswertung, (2) Monatsziel dynamisch aus jahresplaene statt hardcoded, (3) Verkaeufer-Dropdown dynamisch statt hardcoded Sandra/Thomas/Dirk/Max, (4) Plan-Spalte + Diff% + Plan-Linie im Auswertungs-Chart, (5) openVerkaufEntryModal korrekt in plan-ist.js (verifiziert), (6) Tab-Reihenfolge: Pipeline=default (JS an HTML angeglichen), (7) _escH Helper sauber definiert als Fallback, (8) online-Feld konsistent behandelt, (9) Error-States bei DB-Fehlern
 > KI Release-Vorschlag verbessert: liest jetzt Git-Commits (14 Tage via GitHub API), vollständige CLAUDE.md und Submissions als Kontext. Neue Edge Function `dev-ki-analyse` im Repo (supabase/functions/dev-ki-analyse/index.ts) mit modes: release_notes + prioritize.
@@ -515,25 +515,42 @@ Default: `wissen`. Werden als Sub-Tabs in Cross-Modul-Ansichten angezeigt.
 - Artikel-Inhalt als HTML gespeichert (Quill-Output)
 - Alte Kategorie-Migration: system/onboarding/kommunikation→allgemein→hiw, mitarbeiter→team, controlling→zahlen
 
+## Spiritus v3.0 – Call Intelligence (Maerz 2026)
 
+### Architektur
+- **Modul:** `portal/views/spiritus.js` (komplett dynamisch gerendert)
+- **Edge Function:** `spiritus-analyze` – KI-Analyse mit 8-Felder-Protokoll + Kategorie-Tags
+- **DB:** `spiritus_transcripts` (erweitert), `spiritus_extractions`, `spiritus_ki_feedback` (NEU)
+- **Tabellen fuer spaeter:** `spiritus_3cx_mapping`, `spiritus_teams_config`, `spiritus_live_calls`
 
-## Spiritus - KI-Gespraechsprotokoll (Konzept v3.0)
+### 3 Gespraechs-Kontexte
+| Kontext | Beschreibung | standort_id |
+|---------|-------------|-------------|
+| `partner` | Franchise-Partner (Default) | Pflicht |
+| `lieferant` | Shimano, Bosch etc. | null |
+| `akquise` | Potenzielle neue Standorte | null |
 
-**Status:** Konzept finalisiert, noch nicht implementiert. Vollstaendiges Konzept: `/SPIRITUS-KONZEPT.md`
+### 8-Felder-Protokoll
+- **Extern (1-6):** Anlass, Aktuelle Situation, Fokus-Thema, Massnahmen, Ziel/Messgroesse, Review-Termin
+- **Intern (7-8):** Einschaetzung (stabil/entwicklungsfaehig/kritisch), Beobachtung
+- **Kategorie-Tags:** marketing_sichtbarkeit, verkauf_conversion, werkstatt_service, mitarbeiter, einkauf_sortiment, finanzen_controlling, digitalisierung
 
-**Was es ist:** Automatische Gespraechsprotokollierung fuer HQ-Partner-Calls. 6-Felder-Protokoll (Anlass, Erkenntnisse, Entscheidungen, Massnahmen + interne Stimmung/Notiz). Trennung extern (partnersichtbar) vs. intern (nur HQ).
+### KI-Lernfaktor
+- `spiritus_ki_feedback` speichert KI-Original vs. User-Final pro Feld
+- Edge Function laedt letzte 10 Korrekturen als Few-Shot-Examples im Prompt
+- Kontext-spezifisch: Partner-Feedback beeinflusst nur Partner-Prompts
 
-**Wo es lebt:** Eigenes Sidebar-Modul im Cockpit. Zusaetzlich: Call-Trigger Pop-up bei 3CX/Teams Calls.
+### Todo-Flow
+- KI-Massnahmen werden als Todo-Vorschlaege angezeigt (Checkboxen im Review)
+- Bei Freigabe: checked Massnahmen → `todos`-Tabelle mit `spiritus_transcript_id` + `referenz_typ='spiritus'`
+- Rueckverlinkung: Detail-View zeigt verknuepfte Todos mit Erledigungs-Status
 
-**Bestehende Infrastruktur:**
-- 8 DB-Tabellen: `gespraeche`, `gespraech_teilnehmer`, `spiritus_media_assets`, `spiritus_transkripte`, `protokoll_partner`, `protokoll_intern`, `spiritus_todos`, `spiritus_audit_log`
-- 2 Edge Functions deployed: `spiritus-transcribe` (v16, Whisper wird AssemblyAI), `spiritus-structure` (v16, Claude Sonnet)
-- Feature Flag: `spiritus_auto_summary` (modul_key: spiritus)
-- Storage Bucket: `spiritus-media`
-- Enums: gespraechs_art, gespraechs_kanal, gespraechs_status, spiritus_media_source (inkl. 3cx, teams)
+### Eigene Notizen
+- Freitextfeld `eigene_notizen` auf `spiritus_transcripts`
+- Nicht von KI verarbeitet, nur fuer persoenliche Protokolle
 
-**4 Modi:** Call-Triggered (3CX/Teams Webhook Pop-up), Upload (Offline-Meetings), Live-Recording (Browser), Manuell (ohne Aufnahme)
-
-**Entschiedene Punkte:** Manuelle Freigabe durch HQ, Partner sieht Felder 1-4 im Cockpit nach Freigabe, AssemblyAI statt Whisper (Speaker Diarization), nur HQ-GF Gespraeche, CRM-unabhaengig (spaeter Vertriebstool-Anbindung via Foreign Keys)
-
-**Geschaetzter Aufwand:** 30-40h (S1: DB+Prompt 4-6h, S2: UI 10-12h, S3: 3CX 4-6h, S4: Teams 6-8h, S5: Feinschliff 2-3h, S6: CRM-Bridge 3-5h)
+### Neue DB-Felder auf spiritus_transcripts
+- `gespraechs_kontext`, `lieferant_name`, `akquise_kontakt_name/firma/ort`
+- `protokoll_anlass`, `protokoll_situation`, `protokoll_fokus`, `protokoll_massnahmen`
+- `protokoll_ziel`, `protokoll_review`, `protokoll_einschaetzung`, `protokoll_beobachtung`
+- `kategorien`, `eigene_notizen`, `thema`, `crm_kontakt_id`, `crm_deal_id`

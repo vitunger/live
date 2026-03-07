@@ -988,11 +988,6 @@
                                 <span class="sidebar-label" data-i18n="nav_support">Support</span>
                             </button>
 
-                            <button onclick="showView('spiritus')" data-hq-module="spiritus" data-tooltip="Spiritus – Call Intelligence" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
-                                <span class="sidebar-label">Spiritus</span>
-                            </button>
-
                             <button onclick="showView('entwicklung')" data-hq-module="hqEntwicklung" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
                                 <span class="sidebar-label">Entwicklung</span>
@@ -4686,19 +4681,16 @@
                 </div>
 
                 <!-- ===== SPIRITUS – CALL INTELLIGENCE ===== -->
-                <div id="spiritusView" class="view" style="display: none;"></div>
-
-                <!-- ===== HQ SUPPORT-ÜBERSICHT ===== -->
                 <div id="spiritusView" class="view" style="display: none;">
 <div class="p-4 max-w-5xl mx-auto">
 
   <!-- Header -->
   <div class="flex items-center justify-between mb-5">
     <div class="flex items-center gap-3">
-      <span class="text-3xl">🎙️</span>
+      <span class="text-3xl">\uD83C\uDFA4</span>
       <div>
         <h1 class="text-xl font-bold text-gray-900">Spiritus</h1>
-        <p class="text-sm text-gray-500">Call Intelligence · Standort-Gespräche transkribieren & analysieren</p>
+        <p class="text-sm text-gray-500">Call Intelligence &middot; Gespr\u00e4che transkribieren &amp; analysieren</p>
       </div>
     </div>
     <button onclick="spTab('upload')" class="bg-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-orange-600 transition flex items-center gap-2">
@@ -4708,13 +4700,21 @@
   </div>
 
   <!-- Tabs -->
-  <div class="border-b border-gray-200 mb-5">
+  <div class="border-b border-gray-200 mb-1">
     <nav class="flex gap-1 -mb-px overflow-x-auto">
-      <button class="sp-tab-btn whitespace-nowrap py-3 px-4 border-b-2 border-orange-500 font-semibold text-sm text-orange-600" data-sptab="uebersicht" onclick="spTab('uebersicht')">📊 Übersicht</button>
-      <button class="sp-tab-btn whitespace-nowrap py-3 px-4 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700" data-sptab="timeline" onclick="spTab('timeline')">🕐 Timeline</button>
-      <button class="sp-tab-btn whitespace-nowrap py-3 px-4 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700" data-sptab="intelligenz" onclick="spTab('intelligenz')">🧠 Intelligenz</button>
-      <button class="sp-tab-btn whitespace-nowrap py-3 px-4 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700" data-sptab="upload" onclick="spTab('upload')">⬆️ Upload</button>
+      <button class="sp-tab-btn whitespace-nowrap py-3 px-4 border-b-2 border-orange-500 font-semibold text-sm text-orange-600" data-sptab="uebersicht" onclick="spTab('uebersicht')">\uD83D\uDCCA &Uuml;bersicht</button>
+      <button class="sp-tab-btn whitespace-nowrap py-3 px-4 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700" data-sptab="timeline" onclick="spTab('timeline')">\uD83D\uDD50 Timeline</button>
+      <button class="sp-tab-btn whitespace-nowrap py-3 px-4 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700" data-sptab="intelligenz" onclick="spTab('intelligenz')">\uD83E\uDDE0 Intelligenz</button>
+      <button class="sp-tab-btn whitespace-nowrap py-3 px-4 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700" data-sptab="upload" onclick="spTab('upload')">\u2B06\uFE0F Upload</button>
     </nav>
+  </div>
+
+  <!-- Kontext-Filter -->
+  <div class="flex gap-2 mb-4 mt-3">
+    <button class="sp-kontext-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 cursor-pointer" data-kontext="alle" onclick="spFilterKontext('alle')">Alle</button>
+    <button class="sp-kontext-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 cursor-pointer" data-kontext="partner" onclick="spFilterKontext('partner')">\uD83E\uDD1D Partner</button>
+    <button class="sp-kontext-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 cursor-pointer" data-kontext="lieferant" onclick="spFilterKontext('lieferant')">\uD83D\uDCE6 Lieferant</button>
+    <button class="sp-kontext-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 cursor-pointer" data-kontext="akquise" onclick="spFilterKontext('akquise')">\uD83C\uDFAF Akquise</button>
   </div>
 
   <!-- Tab Content -->
