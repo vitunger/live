@@ -749,40 +749,6 @@ export function addHqWissen(){
     t.value='';document.getElementById('hqWissenInhalt').value='';
     renderHqWissen();
 }
-
-// === HQ SUPPORT-ÜBERSICHT ===
-var hqSupportData = [
-    {id:'T-2401',standort:'Grafrath',betreff:'Kassensystem Fehler beim Tagesabschluss',prio:'hoch',status:'offen',datum:'13.02.2026'},
-    {id:'T-2402',standort:'Hamburg',betreff:'Schaufenster-Folie loest sich',prio:'mittel',status:'offen',datum:'13.02.2026'},
-    {id:'T-2403',standort:'Weilheim',betreff:'Zugang Buchhaltungs-Tool gesperrt',prio:'hoch',status:'in Bearbeitung',datum:'12.02.2026'},
-    {id:'T-2404',standort:'Karlsdorf',betreff:'Lieferverzoegerung Shimano Steps',prio:'mittel',status:'offen',datum:'12.02.2026'},
-    {id:'T-2405',standort:'Grafrath',betreff:'Portal: BWA-Upload Fehlermeldung',prio:'niedrig',status:'in Bearbeitung',datum:'11.02.2026'},
-    {id:'T-2406',standort:'Hamburg',betreff:'Marketing-Material fuer Fruehjahrsaktion',prio:'niedrig',status:'offen',datum:'11.02.2026'},
-    {id:'T-2407',standort:'Weilheim',betreff:'Werkstatt-Terminplaner synchronisiert nicht',prio:'hoch',status:'in Bearbeitung',datum:'10.02.2026'}
-];
-export function renderHqSupport(){
-    var el=document.getElementById('hqSupportTickets');
-    if(!el) return;
-    var prioColors={hoch:'bg-red-100 text-red-700',mittel:'bg-yellow-100 text-yellow-700',niedrig:'bg-gray-100 text-gray-600'};
-    var statusColors={'offen':'bg-red-50 text-red-600','in Bearbeitung':'bg-blue-50 text-blue-600'};
-    var h='';
-    hqSupportData.forEach(function(t){
-        h+='<div class="p-4 bg-gray-50 rounded-lg"><div class="flex items-center justify-between mb-2"><div class="flex items-center space-x-2"><span class="text-xs font-mono text-gray-400">'+t.id+'</span><span class="text-xs px-2 py-0.5 rounded-full font-semibold '+(prioColors[t.prio]||'')+'">'+t.prio+'</span><span class="text-xs px-2 py-0.5 rounded-full font-semibold '+(statusColors[t.status]||'')+'">'+t.status+'</span></div><span class="text-xs text-gray-400">'+t.datum+'</span></div><p class="text-sm font-semibold text-gray-800">'+t.betreff+'</p><p class="text-xs text-gray-500 mt-1">📍 '+t.standort+'</p></div>';
-    });
-    el.innerHTML=h;
-    // Stats per location
-    var stats={};
-    hqSupportData.forEach(function(t){stats[t.standort]=(stats[t.standort]||0)+1;});
-    var sEl=document.getElementById('hqSupportStats');
-    if(sEl){
-        var sh='';
-        Object.keys(stats).sort(function(a,b){return stats[b]-stats[a];}).forEach(function(s){
-            sh+='<div class="flex items-center justify-between p-2 bg-gray-50 rounded"><span class="text-sm font-semibold">📍 '+s+'</span><span class="text-sm font-bold text-gray-800">'+stats[s]+' Tickets</span></div>';
-        });
-        sEl.innerHTML=sh;
-    }
-}
-
 // === HQ IDEENBOARD (Supabase) ===
 export async function renderHqIdeen(filter){
     var el=document.getElementById('hqIdeenList');
