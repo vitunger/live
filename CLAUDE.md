@@ -554,3 +554,11 @@ Default: `wissen`. Werden als Sub-Tabs in Cross-Modul-Ansichten angezeigt.
 - `protokoll_anlass`, `protokoll_situation`, `protokoll_fokus`, `protokoll_massnahmen`
 - `protokoll_ziel`, `protokoll_review`, `protokoll_einschaetzung`, `protokoll_beobachtung`
 - `kategorien`, `eigene_notizen`, `thema`, `crm_kontakt_id`, `crm_deal_id`
+
+- **Tool-Pakete abgeschafft (März 2026):** `billing_tool_packages` deprecated, `TOOL_PACKAGE` Produkt deaktiviert
+- **`billing_user_product_assignments`** ersetzt `billing_user_tool_assignments`: Direkte Zuweisung von per_user-Produkten (MS365, Heylogin etc.) an Nutzer
+  - Unique constraint: Ein Nutzer kann pro Produkt nur eine aktive Zuweisung haben
+  - `cost_override` für individuelle Preise, sonst `default_amount` aus billing_products
+  - View `v_standort_tool_costs` für einfache Abfrage
+- Edge Function `billing` v25: Draft-Generierung liest aus `billing_user_product_assignments`, gruppiert nach Produkt
+- Neue Actions: `assign-product-to-user`, `remove-product-assignment`, `list-product-assignments`
