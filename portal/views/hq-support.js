@@ -20,6 +20,7 @@ var _hqSup = {
     filterKat: '',
     filterStatus: '',
     filterAssignee: '',
+    filterOlderThan48h: false,
     filterSearch: '',
     sortBy: 'created_at',
     sortDir: 'desc',
@@ -98,6 +99,10 @@ function getFilteredTickets() {
         if (_hqSup.filterAssignee) {
             if (_hqSup.filterAssignee === 'unassigned' && t.assignee_id) return false;
             if (_hqSup.filterAssignee !== 'unassigned' && t.assignee_id !== _hqSup.filterAssignee) return false;
+        }
+        if (_hqSup.filterOlderThan48h) {
+            var age = (new Date() - new Date(t.created_at)) / 3600000;
+            if (t.status === 'geloest' || age <= 48) return false;
         }
         if (_hqSup.filterSearch) {
             var q = _hqSup.filterSearch.toLowerCase();
@@ -439,13 +444,13 @@ function renderDashboardTab() {
             h += '</div>';
         }
         if (ohneAssignee.length > 0) {
-            h += '<div class="mb-2 p-2 bg-orange-50 border border-orange-200 rounded-lg">';
-            h += '<p class="text-xs font-bold text-orange-700">🟠 ' + ohneAssignee.length + ' Ticket(s) ohne Zuweisung</p>';
+            h += '<div class="mb-2 p-2 bg-orange-50 border border-orange-200 rounded-lg cursor-pointer hover:bg-orange-100 transition-colors" onclick="hqSupDashboardFilter(\'unassigned\')">'
+            h += '<p class="text-xs font-bold text-orange-700">🟠 ' + ohneAssignee.length + ' Ticket(s) ohne Zuweisung <span class="font-normal opacity-70">→ anzeigen</span></p>';
             h += '</div>';
         }
         if (altOffen.length > 0) {
-            h += '<div class="p-2 bg-yellow-50 border border-yellow-200 rounded-lg">';
-            h += '<p class="text-xs font-bold text-yellow-700">🟡 ' + altOffen.length + ' Ticket(s) älter als 48h ohne Lösung</p>';
+            h += '<div class="p-2 bg-yellow-50 border border-yellow-200 rounded-lg cursor-pointer hover:bg-yellow-100 transition-colors" onclick="hqSupDashboardFilter(\'older48h\')">'
+            h += '<p class="text-xs font-bold text-yellow-700">🟡 ' + altOffen.length + ' Ticket(s) älter als 48h ohne Lösung <span class="font-normal opacity-70">→ anzeigen</span></p>';
             h += '</div>';
         }
     }
@@ -533,8 +538,24 @@ function renderWissenTab() {
 }
 
 // ========== Tab-Switch ==========
+
+export function hqSupDashboardFilter(type) {
+    _hqSup.filterOlderThan48h = false;
+    _hqSup.filterAssignee = '';
+    _hqSup.filterStatus = '';
+    _hqSup.filterSearch = '';
+    _hqSup.filterKat = '';
+    if (type === 'unassigned') {
+        _hqSup.filterAssignee = 'unassigned';
+    } else if (type === 'older48h') {
+        _hqSup.filterOlderThan48h = true;
+    }
+    _hqSup.currentTab = 'tickets';
+    renderHqSupport();
+}
 export function hqSupShowTab(tab) {
     _hqSup.currentTab = tab;
+    _hqSup.filterOlderThan48h = false;
     renderHqSupport();
 }
 
@@ -544,6 +565,7 @@ export function hqSupFilterChanged() {
     _hqSup.filterKat = (document.getElementById('hqSupFilterKat') || {}).value || '';
     _hqSup.filterStatus = (document.getElementById('hqSupFilterStatus') || {}).value || '';
     _hqSup.filterAssignee = (document.getElementById('hqSupFilterAssignee') || {}).value || '';
+    _hqSup.filterOlderThan48h = false;
     renderHqSupport();
 }
 
@@ -1524,7 +1546,7 @@ const _exports = {
     hqSupInsertCanned, hqSupKiAntwort, hqSupDownload,
     hqSupAbsenderFilter, hqSupAbsenderPick, hqSupAbsenderKeydown,
     hqSupUpdateAbteilung, hqSupUpdateAbsender,
-    hqSupComposeTab, hqSupToggleSendMenu, hqSupToggleMoreMenu,
+    hqSupComposeTab, hqSupDashboardFilter, hqSupToggleSendMenu, hqSupToggleMoreMenu,
     hqSupSendAndClose, hqSupReopenTicket, hqSupDeleteTicket,
     hqSupToggleUnread, hqSupToggleWatch, hqSupDuplicate,
     hqSupCreateTicket, hqSupSubmitNewTicket,
