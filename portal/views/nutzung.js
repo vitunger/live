@@ -214,6 +214,9 @@ function renderSavingRow(s, maxVal) {
     html += '<div class="flex-1 min-w-0"><span class="text-sm font-semibold text-gray-700">' + _escH(s.name) + '</span>' + typeBadge;
     var nutzerInfo = s.anzahl_nutzer && s.anzahl_nutzer > 1 ? s.anzahl_nutzer + ' Nutzer' : '';
     if (nutzerInfo) html += ' <span class="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full ml-1">' + nutzerInfo + '</span>';
+    if (s.anzahl_nutzer && s.anzahl_nutzer > 1) {
+        html += '<br><span class="text-[10px] text-blue-400">' + s.anzahl_nutzer + ' Nutzer × €' + parseFloat(s.kosten_pro_nutzer||0).toFixed(0) + '/Mo</span>';
+    }
     if (s.notizen) html += '<br><span class="text-[10px] text-gray-400">' + _escH(s.notizen) + '</span>';
     html += '</div><div class="flex items-center gap-2 ml-2 shrink-0"><span class="text-sm font-bold text-green-600">\u20AC' + c.toFixed(0) + '/Mo</span>';
     html += '<button onclick="deleteSaving(\'' + s.id + '\')" class="text-gray-300 hover:text-red-500 text-xs">\u2715</button></div></div>';
