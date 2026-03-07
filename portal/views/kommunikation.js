@@ -977,13 +977,8 @@ export function kommGoView(view, id, name) {
         var uid = _sbUser() ? _sbUser().id : null;
         if (uid) {
             var now = new Date().toISOString();
-            // Lokalen Cache sofort updaten
             if (KOMM._gelesenMap) KOMM._gelesenMap[id] = now;
-            _sb().from('kanal_mitglieder')
-                .update({ zuletzt_gelesen: now })
-                .eq('kanal_id', id)
-                .eq('user_id', uid)
-                .then(function() {});
+            _sb().rpc('mark_channel_read', { p_kanal_id: id }).then(function(){});
         }
     }
 
@@ -1114,14 +1109,12 @@ async function kommMarkAsRead() {
     var uid = _sbUser() ? _sbUser().id : null;
     if (!uid || !KOMM.activeId) return;
 
-    // zuletzt_gelesen auf kanal_mitglieder aktualisieren (für alle Channel-Typen)
+    // zuletzt_gelesen via RPC aktualisieren (umgeht RLS-Probleme)
     var now = new Date().toISOString();
     if (KOMM._gelesenMap) KOMM._gelesenMap[KOMM.activeId] = now;
-    _sb().from('kanal_mitglieder')
-        .update({ zuletzt_gelesen: now })
-        .eq('kanal_id', KOMM.activeId)
-        .eq('user_id', uid)
-        .then(function(){});
+    _sb().rpc('mark_channel_read', { p_kanal_id: KOMM.activeId }).then(function(res) {
+        if (res.error) console.warn('mark_channel_read error:', res.error);
+    });
 
     // Fuer DMs: gelesen_von aktualisieren
     if (KOMM.view === 'dm') {
