@@ -154,6 +154,9 @@ export async function renderKomm() {
     h += '<div class="text-[10px] text-gray-400">vit:bikes Netzwerk</div></div>';
     h += '</div>';
 
+    // ── Scrollable sidebar content ──
+    h += '<div class="flex-1 overflow-y-auto pb-4">';
+
     // Top Nav Items
     h += kommSidebarItem('news', '📢', 'News & Ankuendigungen', 0);
     h += kommSidebarItem('pinnwand', '📌', 'Pinnwand', 0);
@@ -161,19 +164,24 @@ export async function renderKomm() {
 
     h += '<div class="h-px bg-gray-100 mx-3 my-1"></div>';
 
-    // Standort Channels
-    // Standort Channels (ohne HQ-Channels)
-    var standortKanaele = KOMM.kanaele.filter(function(k) { return !k.ist_netzwerk && !k.ist_hq_channel && k.standort_id; });
-    var hqKanaele = KOMM.kanaele.filter(function(k) { return k.ist_hq_channel; });
-    var netzwerkKanaele = KOMM.kanaele.filter(function(k) { return k.ist_netzwerk; });
-
-    // Für Partner: nur den eigenen HQ-Channel zeigen
-    // Für HQ: alle HQ-Channels zeigen
+    // Channel-Aufspaltung
     var myStandortId = _sbProfile() ? _sbProfile().standort_id : null;
-    var visibleHqKanaele = hqKanaele;
-    if (!kommIsHQ()) {
-        visibleHqKanaele = hqKanaele.filter(function(k) { return k.standort_id === myStandortId; });
-    }
+    var isHQ = kommIsHQ();
+
+    // Standort-Channels: nur eigener Standort (Partner) oder alle (HQ)
+    var standortKanaele = KOMM.kanaele.filter(function(k) {
+        if (k.ist_netzwerk || k.ist_hq_channel) return false;
+        if (!k.standort_id) return false;
+        if (isHQ) return true; // HQ sieht alle Standort-Channels
+        return k.standort_id === myStandortId; // Partner nur eigenen
+    });
+
+    // HQ-Channels: HQ sieht alle, Partner nur eigenen
+    var hqKanaele = KOMM.kanaele.filter(function(k) { return k.ist_hq_channel; });
+    var visibleHqKanaele = isHQ ? hqKanaele : hqKanaele.filter(function(k) { return k.standort_id === myStandortId; });
+
+    // Netzwerk-Channels: alle sehen alle
+    var netzwerkKanaele = KOMM.kanaele.filter(function(k) { return k.ist_netzwerk; });
 
     h += kommSidebarSection('🏪 ' + _escH(standortName), 'standort', standortKanaele);
     // GF/Inhaber kann Standort-Channels/Gruppen erstellen
@@ -199,6 +207,7 @@ export async function renderKomm() {
 
     // Einstellungen → Kommunikation jetzt unter HQ-Einstellungen Tab
 
+    h += '</div>'; // end scrollable sidebar content
     h += '</div>'; // end sidebar
 
     // ── CONTENT ──
