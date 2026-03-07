@@ -411,6 +411,23 @@ export async function openEditMaModal(userId) {
         html += '</div>';
 
         html += '<div id="editMaError" style="display:none" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 mt-3"></div>';
+        // User product assignments
+        var { data: userProds } = await _sb().from('billing_products').select('id, key, name, default_amount').eq('active', true).eq('is_per_employee', true).is('deleted_at', null).order('name');
+        var { data: userAssigns } = await _sb().from('billing_user_product_assignments').select('id, product_id, product:billing_products(name, default_amount)').eq('user_id', userId).eq('assignment_type', 'user').eq('is_active', true);
+        var uAssignedIds = (userAssigns || []).map(function(a) { return a.product_id; });
+        
+        html += '<div class="border-t border-gray-200 pt-3 mt-3"><label class="block text-xs font-semibold text-gray-600 mb-2">\ud83d\udce6 Nutzer-Produkte</label>';
+        html += '<div class="space-y-1 mb-2">';
+        (userProds || []).forEach(function(p) {
+            var isAssigned = uAssignedIds.indexOf(p.id) >= 0;
+            var assignId = isAssigned ? (userAssigns.find(function(a){return a.product_id===p.id;})||{}).id : null;
+            html += '<label class="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer">';
+            html += '<div class="flex items-center gap-2"><input type="checkbox" class="userProdCheck" data-product-id="'+p.id+'" data-assign-id="'+(assignId||'')+'" '+(isAssigned?'checked':'')+' onchange="toggleUserProduct(\''+userId+'\',\''+p.id+'\',this.checked,\''+(assignId||'')+'\')"><span class="text-sm">'+_escH(p.name)+'</span></div>';
+            html += '<span class="text-xs text-gray-400">'+Number(p.default_amount||0).toLocaleString('de-DE')+' \u20ac/Mt.</span>';
+            html += '</label>';
+        });
+        html += '</div></div>';
+
         html += '<div class="flex space-x-3 mt-4">';
         html += '<button id="editMaSaveBtn" onclick="saveEditMa(\''+userId+'\')" class="flex-1 py-2.5 bg-vit-orange text-white rounded-lg font-semibold text-sm hover:opacity-90">Speichern</button>';
         html += '<button onclick="closeEditMaModal()" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-semibold text-sm hover:bg-gray-200">Abbrechen</button>';
@@ -661,6 +678,21 @@ export async function saveNeuerStandort() {
         if(btn) { btn.disabled=false; btn.textContent='Anlegen'; }
     }
 }
+
+
+window.toggleUserProduct = async function(userId, productId, checked, assignId) {
+    if (checked) {
+        // Get standort_id from the user
+        var { data: usr } = await _sb().from('users').select('standort_id').eq('id', userId).single();
+        var r = await billingApi('assign-product-to-user', { user_id: userId, standort_id: usr?.standort_id, product_id: productId, assignment_type: 'user' });
+        if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
+        _showToast('Produkt zugewiesen', 'success');
+    } else if (assignId) {
+        var r = await billingApi('remove-product-assignment', { assignment_id: assignId });
+        if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
+        _showToast('Produkt entfernt', 'success');
+    }
+};
 
 // Strangler Fig
 const _exports = { openNeuerMaModal, switchNewMaEbene, closeNeuerMaModal, switchNewMaEmailType, updateNewMaEmail, saveNeuerMa, openEditMaModal, switchEditEbene, closeEditMaModal, saveEditMa, loginAs, deleteMa, openNeuerStandortModal, closeNeuerStdModal, saveNeuerStandort };
