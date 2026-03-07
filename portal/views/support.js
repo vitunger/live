@@ -1262,9 +1262,7 @@ export async function supHqMentionInput(textarea) {
     dropdown.innerHTML = matches.map(function(u) {
         var name = ((u.vorname||'') + ' ' + (u.nachname||'')).trim();
         var tag = name.replace(/\s+/g, '');
-        return '<div class="px-3 py-2 hover:bg-orange-50 cursor-pointer text-sm flex items-center gap-2" onclick="supHqInsertMention('' + tag + '','' + u.id + '')">'
-            + '<span class="w-6 h-6 rounded-full bg-blue-500 text-white text-[10px] flex items-center justify-center">' + (u.vorname||'?')[0] + '</span>'
-            + name + (u.is_hq ? ' <span class="text-[10px] text-blue-400">HQ</span>' : '') + '</div>';
+        return '<div class="px-3 py-2 hover:bg-orange-50 cursor-pointer text-sm flex items-center gap-2" onclick="supHqInsertMention(\\'' + tag + '\\',\\'' + u.id + '\\')">' + '<span class="w-6 h-6 rounded-full bg-blue-500 text-white text-[10px] flex items-center justify-center">' + (u.vorname||'?')[0] + '</span>' + name + (u.is_hq ? ' <span class="text-[10px] text-blue-400">HQ</span>' : '') + '</div>';
     }).join('');
     dropdown.classList.remove('hidden');
 }
