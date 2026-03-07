@@ -46,7 +46,7 @@ export async function renderKommSettings() {
     netzParents.forEach(function(c) {
         var subs = netzSubs[c.id] || [];
         h += '<tr class="border-b border-gray-100 hover:bg-gray-50">';
-        h += '<td class="p-3 font-semibold text-gray-800">' + (c.icon || '💬') + ' ' + _escH(c.name) + (subs.length > 0 ? ' <span class="text-[10px] text-gray-400 font-normal">(' + subs.length + ' Sub)</span>' : '') + '</td>';
+        h += '<td class="p-3 font-semibold text-gray-800">' + (c.logo_url ? '<img src="' + _escH(c.logo_url) + '" class="w-5 h-5 rounded object-cover inline-block mr-1.5 align-middle">' : (c.icon || '💬') + ' ') + _escH(c.name) + (subs.length > 0 ? ' <span class="text-[10px] text-gray-400 font-normal">(' + subs.length + ' Sub)</span>' : '') + '</td>';
         h += '<td class="p-3 text-xs text-gray-500">' + _escH(c.beschreibung || '—') + '</td>';
         h += '<td class="p-3"><span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ' + (c.sichtbar_fuer_rollen && c.sichtbar_fuer_rollen.length > 0 ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600') + '">' + (c.sichtbar_fuer_rollen && c.sichtbar_fuer_rollen.length > 0 ? c.sichtbar_fuer_rollen.join(', ') : 'Alle') + '</span></td>';
         h += '<td class="p-3 text-right">';
@@ -139,6 +139,13 @@ window.kommNewChannelDialog = function(isNetzwerk) {
     html += '<div class="space-y-3">';
     html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Name *</label><input id="kommChName" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-vit-orange focus:border-transparent outline-none" placeholder="z.B. Marketing Netzwerk"></div>';
     html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Icon (Emoji)</label><input id="kommChIcon" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none" value="💬" maxlength="4"></div>';
+    html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Logo (optional — überschreibt Emoji)</label>';
+    html += '<div class="flex gap-2 items-center">';
+    html += '<div id="kommChLogoPreview" class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-xs flex-shrink-0 overflow-hidden">—</div>';
+    html += '<input id="kommChLogoFile" type="file" accept="image/*" class="hidden" onchange="kommPreviewLogo(this)">';
+    html += '<button onclick="document.getElementById(\'kommChLogoFile\').click()" class="px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-600 hover:bg-gray-50 cursor-pointer bg-white">📷 Bild wählen</button>';
+    html += '<button onclick="document.getElementById(\'kommChLogoPreview\').innerHTML=\'—\';document.getElementById(\'kommChLogoFile\').value=\'\'" class="text-xs text-gray-400 hover:text-red-500 cursor-pointer bg-transparent border-none">✕</button>';
+    html += '</div></div>';
     html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Beschreibung</label><textarea id="kommChDesc" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none outline-none" placeholder="Wofür ist dieser Channel?"></textarea></div>';
 
     // Parent-Channel Auswahl (Sub-Channel)
@@ -201,6 +208,14 @@ window.kommSaveNewChannel = async function(isNetzwerk) {
             } catch(e) { console.warn('Auto-join sub-channel failed:', e); }
         }
 
+        // Logo hochladen wenn ausgewählt
+        if (resp.data) {
+            var logoUrl = await _uploadChannelLogo(resp.data.id);
+            if (logoUrl) {
+                await _sb().from('chat_kanaele').update({ logo_url: logoUrl }).eq('id', resp.data.id);
+            }
+        }
+
         var modal = document.getElementById('kommChannelModal');
         if (modal) modal.remove();
         _showToast('✅ Channel "' + name + '" erstellt');
@@ -226,6 +241,14 @@ window.kommEditChannelDialog = async function(channelId) {
     html += '<div class="space-y-3">';
     html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Name *</label><input id="kommChName" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-vit-orange focus:border-transparent outline-none" value="' + _escH(ch.name) + '"></div>';
     html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Icon (Emoji)</label><input id="kommChIcon" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none" value="' + _escH(ch.icon || '💬') + '" maxlength="4"></div>';
+    html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Logo (optional — überschreibt Emoji)</label>';
+    html += '<div class="flex gap-2 items-center">';
+    var logoPreview = ch.logo_url ? '<img src="' + _escH(ch.logo_url) + '" class="w-full h-full object-cover">' : '—';
+    html += '<div id="kommChLogoPreview" class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-xs flex-shrink-0 overflow-hidden">' + logoPreview + '</div>';
+    html += '<input id="kommChLogoFile" type="file" accept="image/*" class="hidden" onchange="kommPreviewLogo(this)">';
+    html += '<button onclick="document.getElementById(\'kommChLogoFile\').click()" class="px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-600 hover:bg-gray-50 cursor-pointer bg-white">📷 Bild wählen</button>';
+    html += '<button onclick="document.getElementById(\'kommChLogoPreview\').innerHTML=\'—\';document.getElementById(\'kommChLogoFile\').value=\'\';window._kommLogoRemoved=true" class="text-xs text-gray-400 hover:text-red-500 cursor-pointer bg-transparent border-none">✕ Entfernen</button>';
+    html += '</div></div>';
     html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Beschreibung</label><textarea id="kommChDesc" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none outline-none">' + _escH(ch.beschreibung || '') + '</textarea></div>';
 
     // Rollen-Checkboxen
@@ -277,13 +300,24 @@ window.kommSaveEditChannel = async function(channelId) {
     var parentId = parentEl ? parentEl.value || null : null;
 
     try {
-        var resp = await _sb().from('chat_kanaele').update({
+        var updateData = {
             name: name,
             icon: icon,
             beschreibung: desc,
             sichtbar_fuer_rollen: rollen.length > 0 ? rollen : null,
             parent_id: parentId
-        }).eq('id', channelId);
+        };
+
+        // Logo Upload oder Entfernung
+        var logoUrl = await _uploadChannelLogo(channelId);
+        if (logoUrl) {
+            updateData.logo_url = logoUrl;
+        } else if (window._kommLogoRemoved) {
+            updateData.logo_url = null;
+            window._kommLogoRemoved = false;
+        }
+
+        var resp = await _sb().from('chat_kanaele').update(updateData).eq('id', channelId);
         if (resp.error) throw resp.error;
         var modal = document.getElementById('kommChannelModal');
         if (modal) modal.remove();
@@ -315,6 +349,37 @@ async function kommDeleteChannel(channelId) {
     } catch (e) {
         console.error('Channel delete error:', e);
         _showToast('❌ Fehler beim Löschen', 'error');
+    }
+}
+
+// Logo-Preview
+window.kommPreviewLogo = function(input) {
+    var file = input.files && input.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var preview = document.getElementById('kommChLogoPreview');
+        if (preview) preview.innerHTML = '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
+    };
+    reader.readAsDataURL(file);
+};
+
+// Logo zu Supabase Storage hochladen
+async function _uploadChannelLogo(channelId) {
+    var fileInput = document.getElementById('kommChLogoFile');
+    if (!fileInput || !fileInput.files || !fileInput.files[0]) return null;
+    var file = fileInput.files[0];
+    var ext = file.name.split('.').pop() || 'png';
+    var path = 'channel-logos/' + channelId + '.' + ext;
+
+    try {
+        var resp = await _sb().storage.from('komm-attachments').upload(path, file, { upsert: true });
+        if (resp.error) throw resp.error;
+        var urlResp = _sb().storage.from('komm-attachments').getPublicUrl(path);
+        return urlResp.data ? urlResp.data.publicUrl : null;
+    } catch(e) {
+        console.warn('Logo upload failed:', e);
+        return null;
     }
 }
 
