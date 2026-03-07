@@ -261,7 +261,7 @@
                 '<td class="px-4 py-3">' + statusPill(p.status) + '</td>' +
                 '<td class="px-4 py-3 text-right font-mono">' + (p.views ? fmtK(p.views) : '–') + '</td>' +
                 '<td class="px-4 py-3 text-right"><div class="flex items-center justify-end gap-2">' +
-                (p.status !== \'ausgespielt\' ? '<button onclick="scOpenPostAdd(' + JSON.stringify(p).replace(/"/g, \'&quot;\') + ')" class="text-blue-400 hover:text-blue-600 text-xs px-2 py-1 rounded hover:bg-blue-50" title="Bearbeiten">\u270f\ufe0f</button>' : '') +
+                (p.status !== 'ausgespielt' ? '<button onclick="scOpenPostAdd(' + JSON.stringify(p).replace(/"/g, '&quot;') + ')" class="text-blue-400 hover:text-blue-600 text-xs px-2 py-1 rounded hover:bg-blue-50" title="Bearbeiten">\u270f\ufe0f</button>' : '') +
                 '<button onclick="scDeletePost(\'' + p.id + '\')" class="text-red-400 hover:text-red-600 text-xs px-2 py-1 rounded hover:bg-red-50" title="L\u00f6schen">\u2716</button>' +
                 '</div></td>' +
                 '</tr>';
@@ -313,7 +313,7 @@
             dayPosts.slice(0, 2).forEach(function(p) {
                 const s = STATUS_LABELS[p.status] || {};
                 var importBadge = (p.source === 'import' || p.source === 'extern') ? ' opacity-60' : '';
-                html += '<div draggable="true" ondragstart="scDragStart(event,' + p.id + ')" onclick="scOpenPostAdd(' + JSON.stringify(p).replace(/"/g, \'&quot;\') + ')" class="text-[10px] truncate px-1 rounded cursor-pointer hover:opacity-75 ' + (s.cls || '') + importBadge + '" title="Klicken zum Bearbeiten">' + _escH(p.title) + '</div>';
+                html += '<div draggable="true" ondragstart="scDragStart(event,' + p.id + ')" onclick="scOpenPostAdd(' + JSON.stringify(p).replace(/"/g, '&quot;') + ')" class="text-[10px] truncate px-1 rounded cursor-pointer hover:opacity-75 ' + (s.cls || '') + importBadge + '" title="Klicken zum Bearbeiten">' + _escH(p.title) + '</div>';
             });
             if (dayPosts.length > 2) html += '<div class="text-[10px] text-gray-400">+' + (dayPosts.length - 2) + '</div>';
             html += '</div>';
@@ -387,7 +387,7 @@
             } else {
                 dayPosts.forEach(function(p) {
                     var s = STATUS_LABELS[p.status] || {};
-                    html += '<div onclick="scOpenPostAdd(' + JSON.stringify(p).replace(/"/g, \'&quot;\') + ')" class="mb-1 rounded-lg p-1.5 text-[11px] cursor-pointer hover:opacity-80 transition-opacity ' + (s.cls || 'bg-gray-100 text-gray-600') + '">' +
+                    html += '<div onclick="scOpenPostAdd(' + JSON.stringify(p).replace(/"/g, '&quot;') + ')" class="mb-1 rounded-lg p-1.5 text-[11px] cursor-pointer hover:opacity-80 transition-opacity ' + (s.cls || 'bg-gray-100 text-gray-600') + '">' +
                         '<div class="font-semibold truncate">' + _escH(p.title) + '</div>' +
                         '<div class="text-[10px] opacity-75">' + _escH(FORMAT_LABELS[p.format] || p.format) + '</div>' +
                     '</div>';
@@ -888,10 +888,10 @@
                 '<div class=\"mb-4 p-3 bg-blue-50 rounded-lg\">' +
                     '<p class=\"text-xs font-semibold text-blue-700 mb-2\">&#8681; Auto-Import von Plattform</p>' +
                     '<div class=\"flex gap-2 flex-wrap\">' +
-                        '<button onclick=\"scAutoImport(\'instagram\')\" class=\"px-3 py-1.5 text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg\">Instagram</button>' +
-                        '<button onclick=\"scAutoImport(\'tiktok\')\" class=\"px-3 py-1.5 text-xs bg-black text-white rounded-lg\">TikTok</button>' +
-                        '<button onclick=\"scAutoImport(\'youtube\')\" class=\"px-3 py-1.5 text-xs bg-red-600 text-white rounded-lg\">YouTube</button>' +
-                        '<button onclick=\"scAutoImport(\'facebook\')\" class=\"px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg\">Facebook</button>' +
+                        '<button onclick="scAutoImport(\'instagram\')" class=\"px-3 py-1.5 text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg\">Instagram</button>' +
+                        '<button onclick="scAutoImport(\'tiktok\')" class=\"px-3 py-1.5 text-xs bg-black text-white rounded-lg\">TikTok</button>' +
+                        '<button onclick="scAutoImport(\'youtube\')" class=\"px-3 py-1.5 text-xs bg-red-600 text-white rounded-lg\">YouTube</button>' +
+                        '<button onclick="scAutoImport(\'facebook\')" class=\"px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg\">Facebook</button>' +
                     '</div>' +
                     '<p class=\"text-xs text-blue-500 mt-1\">Importiert die letzten Posts automatisch via API</p>' +
                 '</div>' +
@@ -2336,9 +2336,9 @@
 
             if (preview) {
                 if (file.type.startsWith('image/')) {
-                    preview.innerHTML = '<div class=\"relative\"><img src=\"' + publicUrl + '\" class=\"w-full max-h-32 object-cover rounded-lg\"><button type=\"button\" onclick=\"event.stopPropagation();scRemoveMedia()\" class=\"absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs font-bold\">x</button></div>';
+                    preview.innerHTML = '<div class=\"relative\"><img src=\"' + publicUrl + '\" class=\"w-full max-h-32 object-cover rounded-lg\"><button type=\"button\" onclick=\"event.stopPropagation();scRemoveMedia()" class=\"absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs font-bold\">x</button></div>';
                 } else {
-                    preview.innerHTML = '<div class=\"relative flex items-center gap-2 bg-gray-50 rounded-lg p-2\"><span class=\"text-2xl\">&#127916;</span><span class=\"text-xs text-gray-600 truncate\">' + file.name + '</span><button type=\"button\" onclick=\"event.stopPropagation();scRemoveMedia()\" class=\"ml-auto bg-red-500 text-white rounded-full w-5 h-5 text-xs font-bold\">x</button></div>';
+                    preview.innerHTML = '<div class=\"relative flex items-center gap-2 bg-gray-50 rounded-lg p-2\"><span class=\"text-2xl\">&#127916;</span><span class=\"text-xs text-gray-600 truncate\">' + file.name + '</span><button type=\"button\" onclick=\"event.stopPropagation();scRemoveMedia()" class=\"ml-auto bg-red-500 text-white rounded-full w-5 h-5 text-xs font-bold\">x</button></div>';
                 }
             }
             _showToast('Datei hochgeladen', 'success');
