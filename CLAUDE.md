@@ -460,7 +460,7 @@ npx supabase functions deploy social-import --project-ref lwwagbkxeofahhwebkab -
 
 ### Desktop (>768px)
 - **Default: collapsed** (64px, nur Icons mit Tooltip-on-hover)
-- Hamburger-Icon oben in der Sidebar (immer sichtbar, auch collapsed)
+- Hamburger-Icon in der **Top-Nav-Leiste** (links neben dem Logo, immer sichtbar)
 - Klick auf Hamburger → `toggleSidebarCollapse()` → toggle collapsed/expanded
 - Klick auf Sidebar-Icon im collapsed-Zustand → oeffnet nur den View, Sidebar bleibt collapsed
 - Zustand in `localStorage` als `vit-sidebar-collapsed` (`'0'`=expanded, alles andere=collapsed)

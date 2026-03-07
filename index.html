@@ -147,9 +147,6 @@
         .sidebar.collapsed .space-x-3 > :not(svg) { display: none; }
         .sidebar.collapsed .space-x-3 { gap: 0 !important; justify-content: center; }
         .sidebar.collapsed #externMenu .mb-3 { display: none; }
-        /* Collapsed: center the hamburger, hide MENU label */
-        .sidebar.collapsed .sidebar-toggle-btn { margin: 0 auto; }
-        .sidebar.collapsed > div:first-child { justify-content: center; }
         /* Tooltip on hover when collapsed */
         .sidebar.collapsed .sidebar-item { position: relative; }
         .sidebar.collapsed .sidebar-item:hover::after {
@@ -159,16 +156,7 @@
             font-size: 12px; white-space: nowrap; z-index: 100;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
-        /* Hamburger toggle button (always visible in sidebar) */
-        .sidebar-toggle-btn {
-            display: flex; align-items: center; justify-content: center;
-            width: 36px; height: 36px; border-radius: 8px;
-            background: transparent; border: none;
-            color: #ccc; cursor: pointer; transition: all 0.2s; padding: 0;
-            flex-shrink: 0;
-        }
-        .sidebar-toggle-btn:hover { background: rgba(239,125,0,0.2); color: #fff; }
-        /* Old collapse btn - hidden, replaced by toggle */
+        /* Old collapse btn - hidden, toggle is now in top-nav */
         .sidebar-collapse-btn { display: none !important; }
         
         .sidebar-item {
@@ -637,10 +625,10 @@
         <!-- Top Navigation -->
         <nav class="bg-white shadow-md">
             <div class="flex justify-between items-center px-3 md:px-6 py-2 md:py-4">
-                <!-- Left: Hamburger (mobile) + Logo + Location -->
+                <!-- Left: Hamburger + Logo + Location -->
                 <div class="flex items-center space-x-2 md:space-x-3 min-w-0">
-                    <!-- Hamburger Menu Button (mobile only) -->
-                    <button onclick="toggleMobileSidebar()" class="topnav-mobile p-1.5 rounded-lg hover:bg-gray-100 flex-shrink-0" style="display:none;">
+                    <!-- Hamburger Menu Button (always visible, toggles sidebar) -->
+                    <button onclick="window.innerWidth<=768?toggleMobileSidebar():toggleSidebarCollapse()" class="p-1.5 rounded-lg hover:bg-gray-100 flex-shrink-0" title="Menu">
                         <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
@@ -701,13 +689,6 @@
             <div id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
             <!-- Sidebar -->
             <aside id="sidebarNav" class="sidebar w-64 text-white overflow-y-auto flex-shrink-0 relative">
-                <!-- Sidebar header with hamburger toggle -->
-                <div class="flex items-center justify-between p-3 pb-0">
-                    <button class="sidebar-toggle-btn" onclick="toggleSidebarCollapse()" title="Sidebar ein-/ausklappen">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-                    </button>
-                    <span class="sidebar-label text-xs text-gray-500 font-semibold tracking-wider">MENU</span>
-                </div>
                 <div class="p-4 pt-3">
 
                         <!-- Partner-level quick access (hidden in HQ mode) -->
