@@ -226,7 +226,9 @@ export async function renderTickets() {
     // Initial load
     if (!_supState.loaded) {
         container.innerHTML = '<div class="flex items-center justify-center py-12"><div class="animate-spin w-6 h-6 border-2 border-vit-orange border-t-transparent rounded-full mr-3"></div><span class="text-gray-500">Tickets werden geladen...</span></div>';
-        await Promise.all([loadKategorieRollen(), loadTickets()]);
+        var loads = [loadKategorieRollen(), loadTickets()];
+        if (isHq) loads.push(loadHqTickets());
+        await Promise.all(loads);
     }
 
     var h = '';
