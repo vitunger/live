@@ -368,6 +368,7 @@ export function showBillingTab(tab) {
     if (tab === 'overview') loadBillingOverview();
     if (tab === 'invoices') loadAllInvoices();
     if (tab === 'products') loadBillingProducts();
+    if (tab === 'standorte') loadBillingStandorte();
     if (tab === 'tools') loadBillingTools();
     if (tab === 'schedules') loadBillingSchedules();
     if (tab === 'approval') loadApprovalQueue();
@@ -1599,11 +1600,213 @@ window.deleteDraftInvoice = async function(invoiceId, invoiceNumber) {
 };
 
 
+
+export async function loadBillingStandorte() {
+    var container = document.getElementById('billingStandorteList');
+    if (!container) return;
+    container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
+
+    // Load all data in parallel
+    var [stRes, prodRes, assignRes, stratRes] = await Promise.all([
+        _sb().from('standorte').select('id, name, billing_status, settlement_interval, lexoffice_contact_id, lexoffice_contact_name').eq('status', 'aktiv').or('is_demo.eq.false,is_demo.is.null').order('name'),
+        _sb().from('billing_products').select('id, key, name, default_amount, product_type, is_per_employee, is_per_standort, billing_day, payment_term_days').eq('active', true).is('deleted_at', null),
+        _sb().from('billing_user_product_assignments').select('id, standort_id, user_id, product_id, assignment_type, cost_override, product:billing_products(name, default_amount), user:users(name)').eq('is_active', true),
+        _sb().from('billing_annual_strategy').select('standort_id, planned_revenue_year, planned_marketing_year, year').eq('year', new Date().getFullYear()).eq('locked', true)
+    ]);
+
+    var standorte = stRes.data || [];
+    var products = prodRes.data || [];
+    var assignments = assignRes.data || [];
+    var strategies = stratRes.data || [];
+
+    // Summary KPIs
+    var totalMonthly = 0;
+
+    var h = '<div class="mb-4 flex items-center justify-between">';
+    h += '<p class="text-xs text-gray-500">' + standorte.length + ' aktive Standorte</p>';
+    h += '<div id="standorteTotalKpi" class="text-sm font-bold text-vit-orange"></div>';
+    h += '</div>';
+
+    h += '<div class="vit-card overflow-hidden">';
+    h += '<table class="w-full text-sm">';
+    h += '<thead class="bg-gray-50 text-xs text-gray-500 uppercase">';
+    h += '<tr><th class="text-left p-3">Standort</th><th class="text-right p-3">Grundgeb.</th><th class="text-right p-3">Umsatzbet.</th><th class="text-right p-3">Marketing</th><th class="text-right p-3">Tools/Produkte</th><th class="text-right p-3 font-bold">Gesamt/Mt.</th><th class="text-center p-3">LexOffice</th></tr>';
+    h += '</thead><tbody>';
+
+    standorte.forEach(function(st) {
+        var strat = strategies.find(function(s) { return s.standort_id === st.id; });
+        var stAssignments = assignments.filter(function(a) { return a.standort_id === st.id; });
+
+        // Grundgebühr: immer 800
+        var grundgebuehr = 800;
+
+        // Umsatzbeteiligung: 80% * 2% * Planumsatz / 12
+        var umsatzbet = 0;
+        if (strat) umsatzbet = 0.80 * 0.02 * strat.planned_revenue_year / 12;
+
+        // Marketing: Jahresbudget / 12
+        var marketing = 0;
+        if (strat) marketing = strat.planned_marketing_year / 12;
+
+        // Tools/Produkte: Summe aller Zuweisungen
+        var toolsCost = stAssignments.reduce(function(s, a) {
+            return s + Number(a.cost_override || (a.product ? a.product.default_amount : 0) || 0);
+        }, 0);
+
+        var gesamt = grundgebuehr + umsatzbet + marketing + toolsCost;
+        totalMonthly += gesamt;
+
+        var isDanger = st.billing_status === 'danger';
+        var hasLex = !!st.lexoffice_contact_id;
+
+        h += '<tr class="border-t hover:bg-gray-50">';
+        h += '<td class="p-3"><span class="font-semibold">' + _escH(st.name) + '</span>';
+        if (isDanger) h += ' <span class="text-[10px] px-1 py-0.5 rounded-full bg-red-500 text-white font-bold">VK</span>';
+        if (!strat) h += ' <span class="text-[10px] px-1 py-0.5 rounded-full bg-yellow-100 text-yellow-700">keine Strategie</span>';
+        h += '</td>';
+        h += '<td class="p-3 text-right">' + _fmtEur(grundgebuehr) + '</td>';
+        h += '<td class="p-3 text-right">' + (umsatzbet > 0 ? _fmtEur(umsatzbet) : '<span class="text-gray-300">\u2014</span>') + '</td>';
+        h += '<td class="p-3 text-right">' + (marketing > 0 ? _fmtEur(marketing) : '<span class="text-gray-300">\u2014</span>') + '</td>';
+
+        // Tools detail with hover
+        h += '<td class="p-3 text-right">';
+        if (stAssignments.length > 0) {
+            h += '<span class="cursor-help" title="' + stAssignments.map(function(a) { return (a.product ? a.product.name : '?') + ': ' + Number(a.cost_override || (a.product ? a.product.default_amount : 0)).toLocaleString('de-DE') + ' \u20ac'; }).join('\n') + '">';
+            h += _fmtEur(toolsCost) + ' <span class="text-[10px] text-gray-400">(' + stAssignments.length + ')</span>';
+            h += '</span>';
+        } else {
+            h += '<span class="text-gray-300">\u2014</span>';
+        }
+        h += '</td>';
+
+        h += '<td class="p-3 text-right font-bold text-vit-orange">' + _fmtEur(gesamt) + '</td>';
+        h += '<td class="p-3 text-center">' + (hasLex ? '<span class="text-green-600">\u2705</span>' : '<span class="text-gray-300">\u2014</span>') + '</td>';
+        h += '</tr>';
+    });
+
+    h += '</tbody>';
+    h += '<tfoot class="bg-gray-50 border-t-2 border-gray-300"><tr>';
+    h += '<td class="p-3 font-bold">Gesamt (' + standorte.length + ' Standorte)</td>';
+    h += '<td class="p-3 text-right font-bold">' + _fmtEur(standorte.length * 800) + '</td>';
+    h += '<td colspan="3"></td>';
+    h += '<td class="p-3 text-right font-bold text-lg text-vit-orange">' + _fmtEur(totalMonthly) + '</td>';
+    h += '<td></td>';
+    h += '</tr></tfoot>';
+    h += '</table></div>';
+
+    container.innerHTML = h;
+
+    // Update total KPI
+    var kpi = document.getElementById('standorteTotalKpi');
+    if (kpi) kpi.textContent = 'Gesamtvolumen: ' + _fmtEur(totalMonthly) + ' / Monat \u2248 ' + _fmtEur(totalMonthly * 12) + ' / Jahr';
+}
+
 // Strangler Fig
-const _exports = {fmtEur,fmtDate,billingStatusBadge,billingApi,initBillingModule,loadBillingOverview,generateMonthlyDrafts,showQuarterlySettlementDialog,generateQuarterlySettlement,finalizeAllReady,showBillingInvoice,finalizeInvoice,markInvoicePaid,editLineItem,removeLineItem,addManualLineItem,showBillingTab,loadAllInvoices,loadAllStrategies,approveStrategy,lockStrategy,loadBillingProducts,loadBillingTools,toggleApprovalMode,updateApprovalModeUI,approvalBulkAction,loadApprovalQueue,approvalAction,generateAllDrafts,showStBillingTab,initStandortBilling,loadStandortInvoices,showStandortInvoiceDetail,loadStandortStrategy,submitStandortStrategy,loadStandortCosts,downloadInvoicePdf,loadStandortPayments,loadBillingSchedules,generateSettlements};
+const _exports = {fmtEur,fmtDate,billingStatusBadge,billingApi,initBillingModule,loadBillingOverview,generateMonthlyDrafts,showQuarterlySettlementDialog,generateQuarterlySettlement,finalizeAllReady,showBillingInvoice,finalizeInvoice,markInvoicePaid,editLineItem,removeLineItem,addManualLineItem,showBillingTab,loadAllInvoices,loadAllStrategies,approveStrategy,lockStrategy,loadBillingProducts,loadBillingTools,toggleApprovalMode,updateApprovalModeUI,approvalBulkAction,loadApprovalQueue,approvalAction,generateAllDrafts,showStBillingTab,initStandortBilling,loadStandortInvoices,showStandortInvoiceDetail,loadStandortStrategy,submitStandortStrategy,loadStandortCosts,downloadInvoicePdf,loadStandortPayments,loadBillingSchedules,generateSettlements,loadBillingStandorte};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // [prod] log removed
 
 // === Window Exports (onclick handlers) ===
+
+export async function loadBillingStandorte() {
+    var container = document.getElementById('billingStandorteList');
+    if (!container) return;
+    container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
+
+    // Load all data in parallel
+    var [stRes, prodRes, assignRes, stratRes] = await Promise.all([
+        _sb().from('standorte').select('id, name, billing_status, settlement_interval, lexoffice_contact_id, lexoffice_contact_name').eq('status', 'aktiv').or('is_demo.eq.false,is_demo.is.null').order('name'),
+        _sb().from('billing_products').select('id, key, name, default_amount, product_type, is_per_employee, is_per_standort, billing_day, payment_term_days').eq('active', true).is('deleted_at', null),
+        _sb().from('billing_user_product_assignments').select('id, standort_id, user_id, product_id, assignment_type, cost_override, product:billing_products(name, default_amount), user:users(name)').eq('is_active', true),
+        _sb().from('billing_annual_strategy').select('standort_id, planned_revenue_year, planned_marketing_year, year').eq('year', new Date().getFullYear()).eq('locked', true)
+    ]);
+
+    var standorte = stRes.data || [];
+    var products = prodRes.data || [];
+    var assignments = assignRes.data || [];
+    var strategies = stratRes.data || [];
+
+    // Summary KPIs
+    var totalMonthly = 0;
+
+    var h = '<div class="mb-4 flex items-center justify-between">';
+    h += '<p class="text-xs text-gray-500">' + standorte.length + ' aktive Standorte</p>';
+    h += '<div id="standorteTotalKpi" class="text-sm font-bold text-vit-orange"></div>';
+    h += '</div>';
+
+    h += '<div class="vit-card overflow-hidden">';
+    h += '<table class="w-full text-sm">';
+    h += '<thead class="bg-gray-50 text-xs text-gray-500 uppercase">';
+    h += '<tr><th class="text-left p-3">Standort</th><th class="text-right p-3">Grundgeb.</th><th class="text-right p-3">Umsatzbet.</th><th class="text-right p-3">Marketing</th><th class="text-right p-3">Tools/Produkte</th><th class="text-right p-3 font-bold">Gesamt/Mt.</th><th class="text-center p-3">LexOffice</th></tr>';
+    h += '</thead><tbody>';
+
+    standorte.forEach(function(st) {
+        var strat = strategies.find(function(s) { return s.standort_id === st.id; });
+        var stAssignments = assignments.filter(function(a) { return a.standort_id === st.id; });
+
+        // Grundgebühr: immer 800
+        var grundgebuehr = 800;
+
+        // Umsatzbeteiligung: 80% * 2% * Planumsatz / 12
+        var umsatzbet = 0;
+        if (strat) umsatzbet = 0.80 * 0.02 * strat.planned_revenue_year / 12;
+
+        // Marketing: Jahresbudget / 12
+        var marketing = 0;
+        if (strat) marketing = strat.planned_marketing_year / 12;
+
+        // Tools/Produkte: Summe aller Zuweisungen
+        var toolsCost = stAssignments.reduce(function(s, a) {
+            return s + Number(a.cost_override || (a.product ? a.product.default_amount : 0) || 0);
+        }, 0);
+
+        var gesamt = grundgebuehr + umsatzbet + marketing + toolsCost;
+        totalMonthly += gesamt;
+
+        var isDanger = st.billing_status === 'danger';
+        var hasLex = !!st.lexoffice_contact_id;
+
+        h += '<tr class="border-t hover:bg-gray-50">';
+        h += '<td class="p-3"><span class="font-semibold">' + _escH(st.name) + '</span>';
+        if (isDanger) h += ' <span class="text-[10px] px-1 py-0.5 rounded-full bg-red-500 text-white font-bold">VK</span>';
+        if (!strat) h += ' <span class="text-[10px] px-1 py-0.5 rounded-full bg-yellow-100 text-yellow-700">keine Strategie</span>';
+        h += '</td>';
+        h += '<td class="p-3 text-right">' + _fmtEur(grundgebuehr) + '</td>';
+        h += '<td class="p-3 text-right">' + (umsatzbet > 0 ? _fmtEur(umsatzbet) : '<span class="text-gray-300">\u2014</span>') + '</td>';
+        h += '<td class="p-3 text-right">' + (marketing > 0 ? _fmtEur(marketing) : '<span class="text-gray-300">\u2014</span>') + '</td>';
+
+        // Tools detail with hover
+        h += '<td class="p-3 text-right">';
+        if (stAssignments.length > 0) {
+            h += '<span class="cursor-help" title="' + stAssignments.map(function(a) { return (a.product ? a.product.name : '?') + ': ' + Number(a.cost_override || (a.product ? a.product.default_amount : 0)).toLocaleString('de-DE') + ' \u20ac'; }).join('\n') + '">';
+            h += _fmtEur(toolsCost) + ' <span class="text-[10px] text-gray-400">(' + stAssignments.length + ')</span>';
+            h += '</span>';
+        } else {
+            h += '<span class="text-gray-300">\u2014</span>';
+        }
+        h += '</td>';
+
+        h += '<td class="p-3 text-right font-bold text-vit-orange">' + _fmtEur(gesamt) + '</td>';
+        h += '<td class="p-3 text-center">' + (hasLex ? '<span class="text-green-600">\u2705</span>' : '<span class="text-gray-300">\u2014</span>') + '</td>';
+        h += '</tr>';
+    });
+
+    h += '</tbody>';
+    h += '<tfoot class="bg-gray-50 border-t-2 border-gray-300"><tr>';
+    h += '<td class="p-3 font-bold">Gesamt (' + standorte.length + ' Standorte)</td>';
+    h += '<td class="p-3 text-right font-bold">' + _fmtEur(standorte.length * 800) + '</td>';
+    h += '<td colspan="3"></td>';
+    h += '<td class="p-3 text-right font-bold text-lg text-vit-orange">' + _fmtEur(totalMonthly) + '</td>';
+    h += '<td></td>';
+    h += '</tr></tfoot>';
+    h += '</table></div>';
+
+    container.innerHTML = h;
+
+    // Update total KPI
+    var kpi = document.getElementById('standorteTotalKpi');
+    if (kpi) kpi.textContent = 'Gesamtvolumen: ' + _fmtEur(totalMonthly) + ' / Monat \u2248 ' + _fmtEur(totalMonthly * 12) + ' / Jahr';
+}
+
 // Strangler Fig: expose ALL functions to window for onclick handlers
 Object.keys(_exports).forEach(function(k) { window[k] = _exports[k]; });
