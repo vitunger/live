@@ -626,8 +626,12 @@ async function kommLoadChat(el) {
                     h += '<div class="px-4 pb-1"><h3 class="text-base font-bold text-gray-900">' + _escH(m.titel) + '</h3></div>';
                 }
 
-                // Post Body
-                h += '<div class="px-4 pb-4"><p class="text-[13.5px] text-gray-700 leading-relaxed whitespace-pre-wrap">' + _escH(m.nachricht || '') + '</p></div>';
+                // Post Body (HTML wenn ist_post, sonst escaped)
+                if (m.ist_post) {
+                    h += '<div class="px-4 pb-4 komm-post-body text-[13.5px] text-gray-700 leading-relaxed">' + (m.nachricht || '') + '</div>';
+                } else {
+                    h += '<div class="px-4 pb-4"><p class="text-[13.5px] text-gray-700 leading-relaxed whitespace-pre-wrap">' + _escH(m.nachricht || '') + '</p></div>';
+                }
 
                 h += '</div>'; // end border-l accent
 
@@ -1672,33 +1676,104 @@ window.kommSaveStandortChannel = async function() {
 
 // ========== Posts (Teams-Style) ==========
 window.kommNewPost = function() {
+    var profile = _sbProfile() || {};
+    var userName = profile.name || ((profile.vorname || '') + ' ' + (profile.nachname || '')).trim() || 'Du';
+    var initials = kommInitials(userName);
+
     var html = '<div id="kommPostModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onclick="if(event.target===this)this.remove()">';
-    html += '<div class="bg-white rounded-xl p-6 w-full max-w-lg shadow-2xl" onclick="event.stopPropagation()">';
-    html += '<h3 class="text-base font-bold mb-4">✏️ In Kanal posten</h3>';
-    html += '<div class="space-y-3">';
-    html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Titel (optional)</label>';
-    html += '<input id="kommPostTitle" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-bold focus:ring-2 focus:ring-vit-orange outline-none" placeholder="z.B. HQ NEWS, Wichtige Info..."></div>';
-    html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Nachricht *</label>';
-    html += '<textarea id="kommPostBody" rows="5" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none outline-none focus:border-[#EF7D00]" placeholder="Was möchtest du dem Channel mitteilen?"></textarea></div>';
+    html += '<div class="bg-white rounded-2xl w-full max-w-2xl shadow-2xl mx-4" onclick="event.stopPropagation()">';
+
+    // Header mit User-Info + Close
+    html += '<div class="px-5 pt-5 pb-3 flex items-center justify-between">';
+    html += '<div class="flex items-center gap-3">';
+    html += '<div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-[12px] font-bold" style="background:' + kommAvatarColor(initials) + '">' + initials + '</div>';
+    html += '<span class="text-[15px] font-bold text-gray-900">' + _escH(userName) + '</span></div>';
+    html += '<button onclick="document.getElementById(\'kommPostModal\').remove()" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 text-xl cursor-pointer bg-transparent border-none">✕</button>';
     html += '</div>';
-    html += '<div class="flex justify-end gap-2 mt-5">';
-    html += '<button onclick="document.getElementById(\'kommPostModal\').remove()" class="px-4 py-2 text-sm text-gray-500">Abbrechen</button>';
-    html += '<button onclick="kommSubmitPost()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-bold hover:opacity-90">Posten</button>';
-    html += '</div></div></div>';
+
+    // Betreff/Titel
+    html += '<div class="px-5"><input id="kommPostTitle" class="w-full text-[15px] text-gray-800 placeholder-gray-400 border-none outline-none pb-2 border-b border-gray-200 font-medium" placeholder="Betreff hinzufügen"></div>';
+    html += '<div class="mx-5 h-px bg-purple-500 mb-1"></div>';
+
+    // Toolbar
+    html += '<div class="px-5 py-1.5 flex items-center gap-0.5 border-b border-gray-100">';
+    var tools = [
+        { cmd: 'bold', icon: '<b>B</b>', title: 'Fett' },
+        { cmd: 'italic', icon: '<i>I</i>', title: 'Kursiv' },
+        { cmd: 'underline', icon: '<u>U</u>', title: 'Unterstrichen' },
+        { cmd: 'strikeThrough', icon: '<s>S</s>', title: 'Durchgestrichen' },
+        { sep: true },
+        { cmd: 'insertUnorderedList', icon: '☰', title: 'Aufzählung' },
+        { cmd: 'insertOrderedList', icon: '1.', title: 'Nummerierte Liste' },
+        { sep: true },
+        { cmd: 'formatBlock:H2', icon: 'A<span class="text-[8px]">A</span>', title: 'Überschrift' },
+        { cmd: 'formatBlock:BLOCKQUOTE', icon: '❝', title: 'Zitat' },
+        { cmd: 'createLink', icon: '🔗', title: 'Link einfügen' },
+    ];
+    tools.forEach(function(t) {
+        if (t.sep) { html += '<div class="w-px h-5 bg-gray-200 mx-1"></div>'; return; }
+        var onclick = '';
+        if (t.cmd === 'createLink') {
+            onclick = 'var url=prompt(\"URL:\");if(url){document.execCommand(\"createLink\",false,url)}';
+        } else if (t.cmd.indexOf(':') > 0) {
+            var parts = t.cmd.split(':');
+            onclick = 'document.execCommand(\"' + parts[0] + '\",false,\"' + parts[1] + '\")';
+        } else {
+            onclick = 'document.execCommand(\"' + t.cmd + '\",false,null)';
+        }
+        html += '<button onclick="' + onclick + ';document.getElementById(\'kommPostEditor\').focus()" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 text-gray-600 text-[14px] cursor-pointer bg-transparent border-none" title="' + t.title + '">' + t.icon + '</button>';
+    });
+    html += '</div>';
+
+    // Content-Editable Editor
+    html += '<div id="kommPostEditor" contenteditable="true" class="px-5 py-3 min-h-[180px] max-h-[400px] overflow-y-auto text-[14px] text-gray-700 leading-relaxed outline-none" style="font-family:inherit" data-placeholder="Nachricht eingeben"></div>';
+
+    // Footer mit Emoji, Anhang, Posten
+    html += '<div class="px-5 py-3 border-t border-gray-100 flex items-center justify-between">';
+    html += '<div class="flex items-center gap-2">';
+    html += '<button onclick="kommPostInsertEmoji()" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 text-[16px] cursor-pointer bg-transparent border-none" title="Emoji">😊</button>';
+    html += '<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 text-[16px] cursor-pointer bg-transparent border-none" title="Anhang">📎</button>';
+    html += '</div>';
+    html += '<button onclick="kommSubmitPost()" class="px-5 py-2 rounded-lg text-white text-[13px] font-bold cursor-pointer border-none hover:opacity-90" style="background:#5B5FC7">Veröffentlichen</button>';
+    html += '</div>';
+
+    html += '</div></div>';
     document.body.insertAdjacentHTML('beforeend', html);
-    document.getElementById('kommPostBody').focus();
+
+    // Placeholder-Logik
+    var editor = document.getElementById('kommPostEditor');
+    editor.addEventListener('focus', function() { if (this.textContent.trim() === '') this.innerHTML = ''; });
+    editor.addEventListener('blur', function() { if (this.textContent.trim() === '') this.innerHTML = ''; });
+    editor.focus();
+};
+
+window.kommPostInsertEmoji = function() {
+    var emojis = ['😊','😂','❤️','👍','🎉','🔥','👀','🙏','💪','✅','⚠️','📌','📢','💡','🚀'];
+    var editor = document.getElementById('kommPostEditor');
+    var picker = document.getElementById('kommPostEmojiPicker');
+    if (picker) { picker.remove(); return; }
+    var p = document.createElement('div');
+    p.id = 'kommPostEmojiPicker';
+    p.className = 'absolute bottom-full left-0 mb-1 bg-white rounded-lg shadow-xl border border-gray-200 p-2 flex flex-wrap gap-1 w-52 z-50';
+    emojis.forEach(function(e) {
+        p.innerHTML += '<span onclick="document.execCommand(\'insertText\',false,\'' + e + '\');document.getElementById(\'kommPostEmojiPicker\').remove();document.getElementById(\'kommPostEditor\').focus()" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 cursor-pointer text-lg">' + e + '</span>';
+    });
+    editor.parentElement.style.position = 'relative';
+    editor.parentElement.appendChild(p);
 };
 
 window.kommSubmitPost = async function() {
     var title = (document.getElementById('kommPostTitle').value || '').trim();
-    var body = (document.getElementById('kommPostBody').value || '').trim();
-    if (!body) { _showToast('Bitte Nachricht eingeben', 'error'); return; }
+    var editor = document.getElementById('kommPostEditor');
+    var htmlContent = editor ? editor.innerHTML.trim() : '';
+    var plainText = editor ? editor.textContent.trim() : '';
+    if (!plainText) { _showToast('Bitte Nachricht eingeben', 'error'); return; }
 
     try {
         var resp = await _sb().from('chat_nachrichten').insert({
             kanal_id: KOMM.activeId,
             user_id: _sbUser() ? _sbUser().id : null,
-            nachricht: body,
+            nachricht: htmlContent,
             titel: title || null,
             ist_post: true
         }).select('*, users:user_id(id, name, vorname, nachname, is_hq)').single();
@@ -1706,7 +1781,7 @@ window.kommSubmitPost = async function() {
 
         var modal = document.getElementById('kommPostModal');
         if (modal) modal.remove();
-        _showToast('✅ Post erstellt');
+        _showToast('✅ Post veröffentlicht');
 
         KOMM.messages.push(resp.data);
         var el = document.getElementById('kommContent');
@@ -1714,7 +1789,7 @@ window.kommSubmitPost = async function() {
 
         _sb().from('chat_kanaele').update({
             letzte_nachricht_at: new Date().toISOString(),
-            letzte_nachricht_vorschau: (title ? title + ': ' : '') + body.substring(0, 60)
+            letzte_nachricht_vorschau: (title ? title + ': ' : '') + plainText.substring(0, 60)
         }).eq('id', KOMM.activeId).then(function(){});
     } catch(e) {
         _showToast('Fehler: ' + (e.message || ''), 'error');
