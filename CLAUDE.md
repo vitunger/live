@@ -232,26 +232,27 @@ security: RLS/JWT/Auth-Verbesserung
 | 2 | **Session-Handling** | JWT-Ablauf: Auto-Refresh. Logout: State-Cleanup (BWA-Banner, globale Variablen). "Database error" bei abgelaufener Session → Redirect Login | offen |
 | 3 | **Meta Ads Token-Refresh** | Tokens laufen nach 60 Tagen ab → Sync bricht still ab. Token + Ablaufdatum in `ads_accounts` speichern, Edge Function die 10 Tage vorher refresht, Cron + HQ-Alert | offen |
 | 4 | **Stammdaten Pilot-Standorte** | `inhaber_name`, `umsatz_plan_ytd`, `region` für mind. 5 Pilot-Standorte eintragen. SQL-Script vorbereiten | offen |
+| 5 | **Azure App Registration + MS365 Setup** | Azure AD App erstellen (Redirect URI: `https://cockpit.vitbikes.de/api/ms365-callback`, Scopes: Calendars.ReadWrite, Mail.Send, OnlineMeetings.ReadWrite, Sites.ReadWrite.All, offline_access). Dann: Client ID/Secret/Tenant ID als Vercel Env Vars setzen + Supabase Cron `ms365-token-refresh` (alle 6h) einrichten. Ohne das funktioniert Buchungssystem nicht. | offen |
 
 ### 🟡 Wichtig (bald nach Go-Live)
 
 | # | Thema | Details | Status |
 |---|-------|---------|--------|
-| 5 | **Push/E-Mail bei neuem Release** | `createReleaseNotification()` schreibt nur in DB-Tabelle `notifications`. Wer das Portal geschlossen hat, bekommt nichts. Lösung: Nach DB-Insert → `triggerPush()` für alle aktiven User aufrufen. Gleiches Muster für andere systemweite Events (neue HQ-Ankündigung, Billing-Fälligkeit, BWA-Deadline). Kein E-Mail gewünscht. | offen |
-| 6 | **eTermin Rollout** | API-Keys + Webhook-URLs für Grafrath, München City, Augsburg, Starnberg in `connector_config` eintragen (~30 Min/Standort) | offen |
-| 7 | **RPC `create_release_notification_all`** | Muss in Supabase SQL Editor deployed sein (SECURITY DEFINER). Prüfen ob vorhanden, sonst anlegen | prüfen |
-| 8 | **RLS Smoke-Tests** | Manuell mit 2 Test-Accounts prüfen: Kann User A Daten von User B sehen? Tabellen: `leads`, `todos`, `termine`, `bwa_daten`, `support_tickets` | offen |
-| 9 | **Mobile Responsive** | Alle 8 Partner-Module auf iPhone/Android testen. Sidebar-Toggle, Modals, Tabellen-Overflow, Touch-Targets | offen |
+| 6 | **Push/E-Mail bei neuem Release** | `createReleaseNotification()` schreibt nur in DB-Tabelle `notifications`. Wer das Portal geschlossen hat, bekommt nichts. Lösung: Nach DB-Insert → `triggerPush()` für alle aktiven User aufrufen. Gleiches Muster für andere systemweite Events (neue HQ-Ankündigung, Billing-Fälligkeit, BWA-Deadline). Kein E-Mail gewünscht. | offen |
+| 7 | **eTermin Rollout** | API-Keys + Webhook-URLs für Grafrath, München City, Augsburg, Starnberg in `connector_config` eintragen (~30 Min/Standort) | offen |
+| 8 | **RPC `create_release_notification_all`** | Muss in Supabase SQL Editor deployed sein (SECURITY DEFINER). Prüfen ob vorhanden, sonst anlegen | prüfen |
+| 9 | **RLS Smoke-Tests** | Manuell mit 2 Test-Accounts prüfen: Kann User A Daten von User B sehen? Tabellen: `leads`, `todos`, `termine`, `bwa_daten`, `support_tickets` | offen |
+| 10 | **Mobile Responsive** | Alle 8 Partner-Module auf iPhone/Android testen. Sidebar-Toggle, Modals, Tabellen-Overflow, Touch-Targets | offen |
 
 ### 🟢 Nice to have / Später
 
 | # | Thema | Details | Status |
 |---|-------|---------|--------|
-| 10 | **Google Ads Cron-Job** | Täglicher Auto-Sync via Supabase pg_cron | offen |
-| 11 | **Creditreform Bonitätscheck** | API-Zugang klären, Edge Function + Integration in Onboarding/BikeBoost | geplant |
-| 12 | **WaWi Email-Ingestion** | Resend Inbound → Edge Function → `wawi_belege` (designed, nicht gebaut) | geplant |
-| 13 | **GetMyInvoices** | v3 REST API für automatische Rechnungserfassung | geplant |
-| 14 | **TypeScript-Migration** | Modul für Modul, Feature-Flag pro Modul, Build-System Vite 6 + TS 5 | geplant |
+| 11 | **Google Ads Cron-Job** | Täglicher Auto-Sync via Supabase pg_cron | offen |
+| 12 | **Creditreform Bonitätscheck** | API-Zugang klären, Edge Function + Integration in Onboarding/BikeBoost | geplant |
+| 13 | **WaWi Email-Ingestion** | Resend Inbound → Edge Function → `wawi_belege` (designed, nicht gebaut) | geplant |
+| 14 | **GetMyInvoices** | v3 REST API für automatische Rechnungserfassung | geplant |
+| 15 | **TypeScript-Migration** | Modul für Modul, Feature-Flag pro Modul, Build-System Vite 6 + TS 5 | geplant |
 
 ---
 
