@@ -45,14 +45,15 @@ async function renderHqMarketing() {
 
     var monthSelector = typeof window.mktRenderMonthSelector === 'function' ? window.mktRenderMonthSelector() : '';
 
-    var expertToggle = typeof window.mktRenderExpertToggle === 'function' ? window.mktRenderExpertToggle() : '';
+    // HQ sieht immer die volle Experten-Ansicht — Toggle nur für Partner sinnvoll
+    var expertToggle = '';
 
     var standortFilter = typeof window.mktRenderStandortFilter === 'function' ? window.mktRenderStandortFilter() : '';
     var yearSelector = typeof window.mktRenderYearSelector === 'function' ? window.mktRenderYearSelector() : '';
 
     container.innerHTML =
         '<div class="flex items-center justify-between mb-2 flex-wrap gap-2">' +
-            '<div class="flex items-center gap-3">' + expertToggle + '</div>' +
+            (expertToggle ? '<div class="flex items-center gap-3">' + expertToggle + '</div>' : '') +
             '<div class="flex items-center gap-2 flex-wrap">' +
                 '<span class="text-xs text-gray-400">Standort:</span>' + standortFilter +
                 '<span class="text-xs text-gray-400 ml-2">Zeitraum:</span>' + monthSelector +
