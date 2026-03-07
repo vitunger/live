@@ -12,7 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1772913128";
+const CACHE_BUST = "?v=1772970101";
 // Read-only token for public repo (split to avoid secret scanning)
 window._GH_READ_TOKEN = ['ghp_kfihVZbz','AMZA','OcU3wPG0Pw8QWCF2UM0npLKj'].join('');
 
@@ -201,9 +201,24 @@ async function loadModules() {
     
     // Signal that all modules are ready
     window._vitModulesReady = true;
-    window.dispatchEvent(new CustomEvent('vit:modules-ready', { 
-        detail: { loaded, failed, time: dt } 
+    window._vitModulesFailed = failed;
+    window.dispatchEvent(new CustomEvent('vit:modules-ready', {
+        detail: { loaded, failed, time: dt }
     }));
+
+    // Show user feedback if modules failed to load
+    if (failed > 0) {
+        // Wait for showToast to be available
+        var _toastRetry = 0;
+        var _showLoadError = function() {
+            if (typeof window.showToast === 'function') {
+                window.showToast(failed + ' Modul' + (failed > 1 ? 'e' : '') + ' konnte' + (failed > 1 ? 'n' : '') + ' nicht geladen werden. Einige Funktionen sind evtl. nicht verf\u00fcgbar.', 'warning');
+            } else if (++_toastRetry < 10) {
+                setTimeout(_showLoadError, 500);
+            }
+        };
+        setTimeout(_showLoadError, 1000);
+    }
 }
 
 // ── Boot ──

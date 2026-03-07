@@ -180,14 +180,27 @@ window.handleSupabaseError = function(error, context) {
 };
 
 // ═══ GLOBAL FETCH INTERCEPTOR ═══
-// Catches 401/403 from Supabase API automatically — no per-view patching needed.
+// Catches 401/403 + timeouts from Supabase API automatically.
 var _sessionExpiredHandled = false;
+var _FETCH_TIMEOUT_MS = 30000; // 30s timeout for Supabase calls
 (function() {
     var _origFetch = window.fetch;
     window.fetch = function(url, opts) {
-        return _origFetch.apply(this, arguments).then(function(resp) {
-            if ((resp.status === 401 || resp.status === 403) &&
-                typeof url === 'string' && url.indexOf('.supabase.co') !== -1 &&
+        var isSupabase = typeof url === 'string' && url.indexOf('.supabase.co') !== -1;
+
+        // Add timeout for Supabase calls (skip if AbortSignal already provided)
+        var promise;
+        if (isSupabase && !(opts && opts.signal)) {
+            var controller = new AbortController();
+            var timeoutId = setTimeout(function() { controller.abort(); }, _FETCH_TIMEOUT_MS);
+            var mergedOpts = Object.assign({}, opts || {}, { signal: controller.signal });
+            promise = _origFetch.call(this, url, mergedOpts).finally(function() { clearTimeout(timeoutId); });
+        } else {
+            promise = _origFetch.apply(this, arguments);
+        }
+
+        return promise.then(function(resp) {
+            if ((resp.status === 401 || resp.status === 403) && isSupabase &&
                 !window.DEMO_ACTIVE && !window._impActive && !_sessionExpiredHandled) {
                 _sessionExpiredHandled = true;
                 console.warn('[Session] Auth-Fehler bei', url.split('/').pop());
@@ -203,9 +216,43 @@ var _sessionExpiredHandled = false;
                 });
             }
             return resp;
+        }).catch(function(err) {
+            // Timeout or network error for Supabase calls
+            if (isSupabase && err && err.name === 'AbortError') {
+                console.error('[Fetch] Timeout nach ' + (_FETCH_TIMEOUT_MS / 1000) + 's:', url.split('/').pop());
+                if (typeof window.showToast === 'function') window.showToast('Verbindung zum Server zu langsam. Bitte erneut versuchen.', 'error');
+            }
+            throw err;
         });
     };
 })();
+
+// ═══ REALTIME HEALTH CHECK ═══
+// Periodically checks Supabase realtime connection and reconnects if stale.
+var _realtimeCheckInterval = null;
+function _startRealtimeHealthCheck() {
+    if (_realtimeCheckInterval) return;
+    _realtimeCheckInterval = setInterval(function() {
+        if (!window.sbUser || window.DEMO_ACTIVE) return;
+        var channels = sb.getChannels();
+        if (channels.length === 0) return;
+        // Check if any channel is in errored state
+        channels.forEach(function(ch) {
+            if (ch.state === 'errored' || ch.state === 'closed') {
+                console.warn('[Realtime] Kanal', ch.topic, 'ist', ch.state, '- reconnecting');
+                try { ch.subscribe(); } catch(e) { console.error('[Realtime] Reconnect fehlgeschlagen:', e); }
+            }
+        });
+    }, 60000); // Check every 60s
+}
+// Start after modules are ready and user is logged in
+window.addEventListener('vit:modules-ready', function() {
+    setTimeout(_startRealtimeHealthCheck, 5000);
+});
+// Stop on logout
+window.addEventListener('vit:logout', function() {
+    if (_realtimeCheckInterval) { clearInterval(_realtimeCheckInterval); _realtimeCheckInterval = null; }
+});
 
 // Auto-login: wait for all modules to be ready, then check session
 window.addEventListener('vit:modules-ready', function() {
