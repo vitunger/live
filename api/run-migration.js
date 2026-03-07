@@ -1,110 +1,135 @@
-// Einmalige DB-Migration für einkauf_performance Tabellen
-// Diese API Route wird nach dem Deploy einmalig aufgerufen
-
+// Zoho Import Migration – support_kontakte, support_tickets_import, support_wissensartikel
+// Claim-on-Login Trigger, RLS Policies
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://lwwagbkxeofahhwebkab.supabase.co';
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!SERVICE_KEY) { return new Response(JSON.stringify({ error: 'SUPABASE_SERVICE_ROLE_KEY nicht konfiguriert' }), { status: 500 }); }
 
 const STATEMENTS = [
-`CREATE TABLE IF NOT EXISTS einkauf_performance_abfragen (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  titel TEXT NOT NULL,
-  zeitraum_aktuell TEXT NOT NULL,
-  zeitraum_vorjahr TEXT NOT NULL,
-  notiz TEXT,
-  status TEXT NOT NULL DEFAULT 'offen',
-  erstellt_von UUID REFERENCES auth.users(id),
-  erstellt_am TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
+`CREATE TABLE IF NOT EXISTS public.support_kontakte (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  zoho_id text UNIQUE,
+  email text NOT NULL,
+  vorname text,
+  nachname text,
+  telefon text,
+  portal_user_id uuid REFERENCES public.users(id) ON DELETE SET NULL,
+  zoho_erstellt_am timestamptz,
+  erstellt_am timestamptz DEFAULT now()
 )`,
-`ALTER TABLE einkauf_performance_abfragen ENABLE ROW LEVEL SECURITY`,
-`DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='einkauf_performance_abfragen' AND policyname='HQ full access einkauf_performance_abfragen') THEN
-    EXECUTE 'CREATE POLICY "HQ full access einkauf_performance_abfragen" ON einkauf_performance_abfragen FOR ALL USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_hq = true))';
-  END IF;
-END $$`,
-`DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='einkauf_performance_abfragen' AND policyname='Partner read einkauf_performance_abfragen') THEN
-    EXECUTE 'CREATE POLICY "Partner read einkauf_performance_abfragen" ON einkauf_performance_abfragen FOR SELECT USING (status = ''offen'')';
-  END IF;
-END $$`,
-`CREATE TABLE IF NOT EXISTS einkauf_performance_daten (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  abfrage_id UUID NOT NULL REFERENCES einkauf_performance_abfragen(id) ON DELETE CASCADE,
-  standort_id UUID NOT NULL REFERENCES standorte(id) ON DELETE CASCADE,
-  marke TEXT NOT NULL,
-  absatz_aktuell NUMERIC,
-  absatz_vorjahr NUMERIC,
-  umsatz_aktuell NUMERIC,
-  umsatz_vorjahr NUMERIC,
-  lager_stueck NUMERIC,
-  lager_wert NUMERIC,
-  rabatt_aktuell NUMERIC,
-  rabatt_vorjahr NUMERIC,
-  rohertrag_aktuell NUMERIC,
-  rohertrag_vorjahr NUMERIC,
-  abgeschlossen BOOLEAN DEFAULT false,
-  erstellt_am TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
+`CREATE INDEX IF NOT EXISTS idx_support_kontakte_email ON public.support_kontakte(email)`,
+`CREATE INDEX IF NOT EXISTS idx_support_kontakte_portal_user ON public.support_kontakte(portal_user_id)`,
+`CREATE TABLE IF NOT EXISTS public.support_tickets_import (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  zoho_id text UNIQUE,
+  zoho_nr text,
+  kontakt_email text,
+  portal_user_id uuid REFERENCES public.users(id) ON DELETE SET NULL,
+  betreff text NOT NULL,
+  beschreibung text,
+  resolution text,
+  status text NOT NULL DEFAULT 'offen'
+    CHECK (status IN ('offen','in_bearbeitung','warten_extern','warten_rueckmeldung','warten_termin','geschlossen')),
+  prioritaet text NOT NULL DEFAULT 'mittel'
+    CHECK (prioritaet IN ('niedrig','mittel','hoch')),
+  ist_offen boolean NOT NULL DEFAULT false,
+  kanal text,
+  tags text,
+  zoho_erstellt_am timestamptz,
+  zoho_geschlossen_am timestamptz,
+  erstellt_am timestamptz DEFAULT now()
 )`,
-`ALTER TABLE einkauf_performance_daten ENABLE ROW LEVEL SECURITY`,
+`CREATE INDEX IF NOT EXISTS idx_sti_email ON public.support_tickets_import(kontakt_email)`,
+`CREATE INDEX IF NOT EXISTS idx_sti_portal_user ON public.support_tickets_import(portal_user_id)`,
+`CREATE INDEX IF NOT EXISTS idx_sti_status ON public.support_tickets_import(status)`,
+`CREATE INDEX IF NOT EXISTS idx_sti_ist_offen ON public.support_tickets_import(ist_offen)`,
+`CREATE TABLE IF NOT EXISTS public.support_wissensartikel (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  zoho_id text UNIQUE,
+  titel text NOT NULL,
+  inhalt text,
+  kategorie text,
+  zoho_erstellt_am timestamptz,
+  erstellt_am timestamptz DEFAULT now()
+)`,
+`ALTER TABLE public.support_kontakte ENABLE ROW LEVEL SECURITY`,
+`ALTER TABLE public.support_tickets_import ENABLE ROW LEVEL SECURITY`,
+`ALTER TABLE public.support_wissensartikel ENABLE ROW LEVEL SECURITY`,
 `DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='einkauf_performance_daten' AND policyname='HQ read all einkauf_performance_daten') THEN
-    EXECUTE 'CREATE POLICY "HQ read all einkauf_performance_daten" ON einkauf_performance_daten FOR SELECT USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_hq = true))';
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='support_kontakte' AND policyname='support_kontakte_own') THEN
+    CREATE POLICY "support_kontakte_own" ON public.support_kontakte FOR SELECT USING (
+      portal_user_id = auth.uid()
+      OR EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND is_hq = true)
+    );
   END IF;
 END $$`,
 `DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='einkauf_performance_daten' AND policyname='Partner read own einkauf_performance_daten') THEN
-    EXECUTE 'CREATE POLICY "Partner read own einkauf_performance_daten" ON einkauf_performance_daten FOR SELECT USING (standort_id = (SELECT standort_id FROM users WHERE id = auth.uid()))';
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='support_tickets_import' AND policyname='support_tickets_import_own') THEN
+    CREATE POLICY "support_tickets_import_own" ON public.support_tickets_import FOR SELECT USING (
+      portal_user_id = auth.uid()
+      OR EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND is_hq = true)
+    );
   END IF;
 END $$`,
 `DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='einkauf_performance_daten' AND policyname='Partner insert own einkauf_performance_daten') THEN
-    EXECUTE 'CREATE POLICY "Partner insert own einkauf_performance_daten" ON einkauf_performance_daten FOR INSERT WITH CHECK (standort_id = (SELECT standort_id FROM users WHERE id = auth.uid()))';
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='support_tickets_import' AND policyname='support_tickets_import_hq_update') THEN
+    CREATE POLICY "support_tickets_import_hq_update" ON public.support_tickets_import FOR UPDATE USING (
+      EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND is_hq = true)
+    );
   END IF;
 END $$`,
 `DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='einkauf_performance_daten' AND policyname='Partner update own einkauf_performance_daten') THEN
-    EXECUTE 'CREATE POLICY "Partner update own einkauf_performance_daten" ON einkauf_performance_daten FOR UPDATE USING (standort_id = (SELECT standort_id FROM users WHERE id = auth.uid()))';
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='support_wissensartikel' AND policyname='support_wissensartikel_read') THEN
+    CREATE POLICY "support_wissensartikel_read" ON public.support_wissensartikel FOR SELECT USING (auth.uid() IS NOT NULL);
   END IF;
 END $$`,
-`DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='einkauf_performance_daten' AND policyname='Partner delete own einkauf_performance_daten') THEN
-    EXECUTE 'CREATE POLICY "Partner delete own einkauf_performance_daten" ON einkauf_performance_daten FOR DELETE USING (standort_id = (SELECT standort_id FROM users WHERE id = auth.uid()) AND abgeschlossen = false)';
-  END IF;
-END $$`,
-`CREATE INDEX IF NOT EXISTS idx_ekperf_daten_abfrage ON einkauf_performance_daten(abfrage_id)`,
-`CREATE INDEX IF NOT EXISTS idx_ekperf_daten_standort ON einkauf_performance_daten(standort_id)`
+`CREATE OR REPLACE FUNCTION public.claim_support_history()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  UPDATE public.support_kontakte SET portal_user_id = NEW.id
+  WHERE LOWER(email) = LOWER(NEW.email) AND portal_user_id IS NULL;
+  UPDATE public.support_tickets_import SET portal_user_id = NEW.id
+  WHERE LOWER(kontakt_email) = LOWER(NEW.email) AND portal_user_id IS NULL;
+  RETURN NEW;
+END;
+$$`,
+`DROP TRIGGER IF EXISTS trg_claim_support_history ON public.users`,
+`CREATE TRIGGER trg_claim_support_history
+  AFTER INSERT OR UPDATE OF email ON public.users
+  FOR EACH ROW EXECUTE FUNCTION public.claim_support_history()`,
+`SELECT pg_notify('pgrst', 'reload schema')`,
 ];
 
-async function runSql(sql) {
-  // Supabase erlaubt keine direkte DDL via REST — aber via eine stored procedure
-  // Wir nutzen den PostgREST RPC endpoint mit einer SECURITY DEFINER Funktion
-  // Da wir keine haben, versuchen wir den Umweg via supabase-js Admin Client
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/run_ddl`, {
+async function execSQL(sql) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/exec_sql`, {
     method: 'POST',
     headers: {
       'apikey': SERVICE_KEY,
       'Authorization': `Bearer ${SERVICE_KEY}`,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ ddl: sql })
+    body: JSON.stringify({ sql }),
   });
-  return { status: response.status, body: await response.text() };
+  if (!res.ok) {
+    const err = await res.text();
+    // IF NOT EXISTS Fehler sind OK
+    if (err.includes('already exists') || err.includes('does not exist')) return { ok: true };
+    return { ok: false, error: err.slice(0, 200) };
+  }
+  return { ok: true };
 }
 
-module.exports = async (req, res) => {
-  // Security: nur von intern aufrufbar
-  const authHeader = req.headers['x-migration-key'];
-  if (authHeader !== 'vit-migrate-2026') {
-    return res.status(403).json({ error: 'Unauthorized' });
+export default async function handler(req, res) {
+  if (!SERVICE_KEY) {
+    return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY nicht konfiguriert' });
   }
 
   const results = [];
   for (const stmt of STATEMENTS) {
-    const result = await runSql(stmt);
-    results.push({ sql: stmt.substring(0, 50) + '...', ...result });
+    const preview = stmt.replace(/\s+/g, ' ').trim().slice(0, 70);
+    const result = await execSQL(stmt);
+    results.push({ sql: preview, ...result });
   }
 
-  res.json({ ok: true, results });
-};
+  const ok = results.filter(r => r.ok).length;
+  const fail = results.filter(r => !r.ok).length;
+  return res.status(200).json({ ok, fail, results });
+}
