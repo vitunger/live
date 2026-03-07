@@ -776,15 +776,29 @@ try {
     html += '</div>';
     html += '</div>';
 
-    if(services.length > 0) {
-        html += '<div class="mb-4"><label class="block text-xs font-semibold text-gray-600 mb-2">Aktive Standort-Services</label><div class="flex flex-wrap gap-1">';
-        services.forEach(function(svc) {
-            var name = svc.product ? svc.product.name : svc.product_key;
-            var price = svc.custom_price || (svc.product ? svc.product.default_amount : 0);
-            html += '<span class="text-[10px] px-2 py-1 rounded bg-blue-50 text-blue-700">'+name+' ('+Number(price).toLocaleString('de-DE')+' \u20ac)</span>';
-        });
-        html += '</div></div>';
+    // Load per_standort products for assignment
+    var { data: stdProducts } = await _sb().from('billing_products').select('id, key, name, default_amount').eq('active', true).eq('is_per_standort', true).is('deleted_at', null).order('name');
+    var { data: stdAssignments } = await _sb().from('billing_user_product_assignments').select('id, product_id, cost_override, product:billing_products(name, default_amount)').eq('standort_id', stdId).eq('assignment_type', 'standort').eq('is_active', true);
+    var assignedProdIds = (stdAssignments || []).map(function(a) { return a.product_id; });
+    
+    html += '<div class="mb-4 border-t border-gray-200 pt-4"><label class="block text-xs font-semibold text-gray-600 mb-2">\ud83d\udce6 Standort-Produkte</label>';
+    html += '<div class="flex flex-wrap gap-2 mb-2">';
+    (stdAssignments || []).forEach(function(a) {
+        var name = a.product ? a.product.name : '\u2014';
+        var price = a.cost_override || (a.product ? a.product.default_amount : 0);
+        html += '<span class="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-green-50 text-green-700 border border-green-200">' + _escH(name) + ' (' + Number(price).toLocaleString('de-DE') + ' \u20ac) <button onclick="removeStdProduct(\''+a.id+'\',\''+stdId+'\')" class="text-red-400 hover:text-red-600 ml-1">\u2715</button></span>';
+    });
+    if (!stdAssignments || stdAssignments.length === 0) html += '<span class="text-xs text-gray-400">Keine Standort-Produkte zugewiesen</span>';
+    html += '</div>';
+    // Add product dropdown
+    var availableProds = (stdProducts || []).filter(function(p) { return assignedProdIds.indexOf(p.id) === -1; });
+    if (availableProds.length > 0) {
+        html += '<div class="flex gap-2"><select id="addStdProductSelect" class="flex-1 text-xs border rounded-lg px-2 py-1.5">';
+        availableProds.forEach(function(p) { html += '<option value="'+p.id+'">'+_escH(p.name)+' ('+Number(p.default_amount||0).toLocaleString('de-DE')+' \u20ac)</option>'; });
+        html += '</select>';
+        html += '<button onclick="addStdProduct(\''+stdId+'\',document.getElementById(\'addStdProductSelect\').value)" class="px-3 py-1.5 bg-vit-orange text-white rounded-lg text-[10px] font-semibold hover:bg-orange-600">+ Zuweisen</button></div>';
     }
+    html += '</div>';
     // Settlement interval selector
     var intervalLabels = {monthly:'Monatlich', quarterly:'Vierteljährlich', semi_annual:'Halbjährlich'};
     var currentInterval = s.settlement_interval || 'semi_annual';
@@ -1227,6 +1241,25 @@ async function loadSettlementPreview(standortId) {
     }
 }
 window.loadSettlementPreview = loadSettlementPreview;
+
+
+window.addStdProduct = async function(stdId, productId) {
+    if (!productId) return;
+    var r = await billingApi('assign-product-to-user', { standort_id: stdId, product_id: productId, assignment_type: 'standort' });
+    if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
+    _showToast('Produkt zugewiesen', 'success');
+    closeStdDetailModal();
+    openStandortDetailModal(stdId);
+};
+
+window.removeStdProduct = async function(assignmentId, stdId) {
+    if (!confirm('Produkt-Zuweisung entfernen?')) return;
+    var r = await billingApi('remove-product-assignment', { assignment_id: assignmentId });
+    if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
+    _showToast('Entfernt', 'success');
+    closeStdDetailModal();
+    openStandortDetailModal(stdId);
+};
 
 // Strangler Fig
 const _exports = {initStandortBilling,loadStandortInvoices,loadStandortStrategy,loadStandortCosts,loadStandortLiquidity,downloadInvoicePdf,loadStandortPayments,applyKommandoPermissions,filterKzStandorte,filterKzMa,statusBadge,rolleBadge,rollenBadges,renderKzStandorte,openStandortDetailModal,closeStdDetailModal,selectWawi,renderKzMitarbeiter};
