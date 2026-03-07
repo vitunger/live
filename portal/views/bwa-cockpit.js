@@ -261,6 +261,7 @@ async function showKpiReport(bwaMo, rating) {
 
     var grid = document.getElementById('bwaKpiReportGrid');
     var recList = document.getElementById('bwaKpiRecList');
+    if(!grid || !recList) return;
     grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--c-muted);font-size:12px;padding:8px">⏳ Lade echte Zahlen…</div>';
 
     try {
@@ -538,3 +539,4 @@ if(_origShowCtrl) {
 // [Hook 1 moved to unified dispatcher]
 
 // [Init moved to unified dispatcher]
+
