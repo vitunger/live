@@ -164,7 +164,16 @@ async function loadHqTickets() {
                 .limit(500),
             _sb().from('users').select('id, name, vorname, nachname').eq('is_hq', true).eq('status', 'aktiv')
         ]);
-        _supState.hqTickets = tResp.data || [];
+        var FLORIAN_FALLBACK_ID = 'cf7ecbf3-e123-4c22-834e-cfa23c692ff3';
+        _supState.hqTickets = (tResp.data || []).filter(function(t) {
+            // Zoho-Fallback-Tickets ausblenden: erstellt_von = Florian-Fallback
+            // UND Beschreibung startet mit [Absender: = echter Absender unbekannt im System
+            if (t.erstellt_von === FLORIAN_FALLBACK_ID &&
+                t.beschreibung && t.beschreibung.startsWith('[Absender:')) {
+                return false;
+            }
+            return true;
+        });
         _supState.hqUsers = uResp.data || [];
         _supState.hqLoaded = true;
     } catch(e) {
