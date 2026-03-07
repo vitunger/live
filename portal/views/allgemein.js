@@ -681,3 +681,5 @@ window.setJournalStimmung = setJournalStimmung;
 window.setStimmung = setStimmung;
 window.toggleJahreszielFelder = toggleJahreszielFelder;
 window.renderHqAllgemein = renderHqAllgemein;
+window.loadAllgemeinData = loadAllgemeinData;
+window.showAllgemeinTab = showAllgemeinTab;
