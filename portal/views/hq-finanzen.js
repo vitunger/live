@@ -112,11 +112,13 @@ async function loadHqFinData() {
         // Build enriched array
         hqFinStandorte = standorte.map(function(s) {
             var sBwa = bwaData.filter(function(b) { return b.standort_id === s.id; });
-            var bwaUmsatz = sBwa.reduce(function(a, b) { return a + (parseFloat(b.umsatzerloese) || 0); }, 0);
+            // YTD: only current year BWAs
+            var sBwaCurrentYear = sBwa.filter(function(b) { return b.jahr === currentYear; });
+            var bwaUmsatz = sBwaCurrentYear.reduce(function(a, b) { return a + (parseFloat(b.umsatzerloese) || 0); }, 0);
             // Rohertrag: absolute value in DB, need to calculate percentage
-            var totalRohertragAbs = sBwa.reduce(function(a, b) { return a + (parseFloat(b.rohertrag) || 0); }, 0);
+            var totalRohertragAbs = sBwaCurrentYear.reduce(function(a, b) { return a + (parseFloat(b.rohertrag) || 0); }, 0);
             var rohertragPct = bwaUmsatz > 0 ? (totalRohertragAbs / bwaUmsatz * 100) : 0;
-            var bwaMonate = sBwa.length;
+            var bwaMonate = sBwaCurrentYear.length;
 
             // WaWi as fallback
             var sWawi = wawiData.filter(function(b) { return b.standort_id === s.id; });
@@ -218,7 +220,7 @@ function renderHqFinKpis() {
             var pvBwa = s.bwaMonateDetail.find(function(b) { return b.monat == prevYearMonth && b.jahr == prevYear; });
             return pvBwa ? pvBwa.umsatz : 0;
         }
-        var monatBwa = s.bwaMonateDetail.find(function(b) { return b.monat == sel && (!b.jahr || b.jahr == new Date().getFullYear()); });
+        var monatBwa = s.bwaMonateDetail.find(function(b) { return b.monat == sel && b.jahr == new Date().getFullYear(); });
         return monatBwa ? monatBwa.umsatz : 0;
     };
     var getRoh = function(s) {
@@ -325,12 +327,12 @@ function renderHqFinUebersicht() {
     var sel = hqFinSelectedMonth;
     var getIst = function(s) {
         if (sel === 'ytd') return s.umsatzIst;
-        var monatBwa = s.bwaMonateDetail.find(function(b) { return b.monat == sel; });
+        var monatBwa = s.bwaMonateDetail.find(function(b) { return b.monat == sel && b.jahr == new Date().getFullYear(); });
         return monatBwa ? monatBwa.umsatz : 0;
     };
     var getRoh = function(s) {
         if (sel === 'ytd') return s.rohertrag;
-        var monatBwa = s.bwaMonateDetail.find(function(b) { return b.monat == sel; });
+        var monatBwa = s.bwaMonateDetail.find(function(b) { return b.monat == sel && b.jahr == new Date().getFullYear(); });
         if (!monatBwa || !monatBwa.umsatz) return 0;
         return parseFloat((monatBwa.rohertrag / monatBwa.umsatz * 100).toFixed(1));
     };
@@ -395,7 +397,7 @@ function renderHqFinUebersicht() {
         var bwaIcon;
         if (sel !== 'ytd') {
             // Single month: check if BWA exists for this specific month
-            var hasBwaForMonth = s.bwaMonateDetail.some(function(b) { return b.monat == sel; });
+            var hasBwaForMonth = s.bwaMonateDetail.some(function(b) { return b.monat == sel && b.jahr == new Date().getFullYear(); });
             bwaIcon = hasBwaForMonth ? '<span class="text-green-500 text-xs">✓</span>' : '<span class="text-gray-300 text-xs">—</span>';
         } else if (s.bwaEingereicht) {
             bwaIcon = '<span class="text-green-500 text-xs">✓</span>';
@@ -863,7 +865,7 @@ export function hqFinShowBwaPopup(standortId) {
 export function hqFinShowBwaDetail(standortId, monat) {
     var s = hqFinStandorte.find(function(x) { return x.id === standortId; });
     if (!s) return;
-    var bwa = (s.bwaMonateDetail || []).find(function(b) { return b.monat === monat; });
+    var bwa = (s.bwaMonateDetail || []).find(function(b) { return b.monat === monat && b.jahr === new Date().getFullYear(); });
     if (!bwa) return;
     
     var el = document.getElementById('hqFinBwaDetailArea');
