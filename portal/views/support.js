@@ -273,7 +273,7 @@ export async function renderTickets() {
     } else {
         if (tab === 'tickets') h += renderPartnerTicketsTab();
         else if (tab === 'zoho_history') h += await renderZohoHistoryTab();
-        else if (tab === 'kontakte') h += renderKontakteTab();
+        else if (tab === 'kontakte') h += await renderKontakteTab();
     }
 
     container.innerHTML = h;
@@ -501,31 +501,86 @@ export function supOpenZohoDetail(zohoId) {
     document.body.appendChild(el);
 }
 
-// -- Tab: Kontakte --
-var zentraleKontakte = [
-    {name:'Sascha Matthies',rolle:'Geschaeftsfuehrung',bereich:'GF',tel:'+49 170 1234567',email:'sascha@vitbikes.de',verfuegbar:true,zeiten:'Mo-Fr 9-18 Uhr',schwerpunkt:'Strategie, Partnerschaften, Finanzen'},
-    {name:'Florian Meier',rolle:'Einkauf & Sortiment',bereich:'Einkauf',tel:'+49 170 2345678',email:'florian@vitbikes.de',verfuegbar:true,zeiten:'Mo-Fr 8-17 Uhr',schwerpunkt:'Vororder, Konditionen, Lieferanten, Sortiment'},
-    {name:'Michael Stenzel',rolle:'Marketing & Performance',bereich:'Marketing',tel:'+49 170 3456789',email:'michael@vitbikes.de',verfuegbar:true,zeiten:'Mo-Fr 9-18 Uhr',schwerpunkt:'Ads, Content, Events, Jahresgespraeche'},
-    {name:'Tim Schaefer',rolle:'IT & Systeme',bereich:'IT',tel:'+49 170 4567890',email:'tim@vitbikes.de',verfuegbar:false,zeiten:'Mo-Fr 8-16 Uhr',schwerpunkt:'Kassensystem, B2B-Portale, Etermin, Netzwerk'},
-    {name:'Laura Hofmann',rolle:'Buchhaltung & Controlling',bereich:'Buchhaltung',tel:'+49 170 5678901',email:'laura@vitbikes.de',verfuegbar:true,zeiten:'Mo-Do 8-16, Fr 8-14 Uhr',schwerpunkt:'BWA, Monatsabschluss, Rechnungen, DATEV'},
-    {name:'Jonas Becker',rolle:'Werkstatt-Support & Schulung',bereich:'Werkstatt',tel:'+49 170 6789012',email:'jonas@vitbikes.de',verfuegbar:true,zeiten:'Mo-Fr 7-16 Uhr',schwerpunkt:'Shimano, Bosch, Diagnose, Technik-Schulungen'}
-];
+// -- Tab: Kontakte (HQ-Team) --
+// Abteilungs-Zuordnung anhand E-Mail / bekannter User-IDs
+var HQ_ABTEILUNG_MAP = {
+    '96122da8-7c0a-44d5-ae4a-05420c3d24d0': { abt: 'Geschäftsführung', color: 'bg-purple-600' },
+    '06dd6d7a-e372-4768-9828-e7f402050d65': { abt: 'Geschäftsführung', color: 'bg-purple-600' },
+    '22eb9f8a-ea2d-4ec0-a509-35e5f49ac9ee': { abt: 'Geschäftsführung', color: 'bg-purple-600' },
+    'cf7ecbf3-e123-4c22-834e-cfa23c692ff3': { abt: 'Einkauf', color: 'bg-blue-500' },
+    'f8a79907-96c0-4388-bf88-625fce754b4a': { abt: 'Einkauf', color: 'bg-blue-500' },
+    'f22dfaa1-c92e-47f1-bef6-9a43f08c0243': { abt: 'Marketing', color: 'bg-orange-500' },
+    'be2076ba-41b5-4840-aaf0-a5d75721e510': { abt: 'Marketing', color: 'bg-orange-500' },
+    '749828e6-c7a7-476f-b8b2-53353495ce96': { abt: 'IT & Systeme', color: 'bg-gray-600' },
+    'ec2279a3-b00c-4e12-93a3-5dfccddab5bf': { abt: 'IT & Systeme', color: 'bg-gray-600' },
+    '5dfdc987-04e1-485b-99d5-c9a2b7e4dab6': { abt: 'Akademie', color: 'bg-green-600' },
+    '66120dfc-dfc2-487e-93fb-abc86796da51': { abt: 'Support', color: 'bg-teal-500' },
+    '41a5e115-f0ff-4422-bb04-bf6fe9f249a8': { abt: 'Support', color: 'bg-teal-500' },
+    '498fdde8-7563-47d5-9250-5e33a4f4d7f8': { abt: 'HR', color: 'bg-pink-500' },
+    '5521d4fd-b9a3-4501-8fb9-175a50192633': { abt: 'Vertrieb', color: 'bg-indigo-500' },
+    '86fd0b4d-67e9-433f-84fe-52012b5531b2': { abt: 'Vertrieb', color: 'bg-indigo-500' },
+    '8e061cf0-c797-402b-b166-19db86d49b83': { abt: 'Vertrieb', color: 'bg-indigo-500' },
+    '7339bb04-3a43-48f0-b295-c223a40dceb5': { abt: 'Vertrieb', color: 'bg-indigo-500' },
+    'f75e2d25-4275-4059-a3d6-c76795c8c6cd': { abt: 'HR', color: 'bg-pink-500' }
+};
+var HQ_ABT_ORDER = ['Geschäftsführung','Einkauf','Marketing','IT & Systeme','Akademie','Support','Vertrieb','HR'];
 
-function renderKontakteTab() {
-    var bereichColors = {'GF':'bg-purple-500','Einkauf':'bg-blue-500','Marketing':'bg-orange-500','IT':'bg-gray-600','Buchhaltung':'bg-green-600','Werkstatt':'bg-red-500'};
-    var h = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">';
-    zentraleKontakte.forEach(function(k) {
-        var col = bereichColors[k.bereich] || 'bg-gray-500';
-        var initials = k.name.split(' ').map(function(w) { return w[0]; }).join('');
-        h += '<div class="vit-card p-4">';
-        h += '<div class="flex items-center space-x-3 mb-3">';
-        h += '<div class="w-10 h-10 ' + col + ' rounded-full flex items-center justify-center text-white font-bold text-sm">' + initials + '</div>';
-        h += '<div><p class="font-semibold text-gray-800 text-sm">' + k.name + '</p>';
-        h += '<p class="text-xs text-gray-500">' + k.rolle + '</p></div></div>';
-        h += '<div class="space-y-1 text-xs text-gray-600">';
-        h += '<p>Tel: <a href="tel:' + k.tel + '" class="hover:text-vit-orange">' + k.tel + '</a></p>';
-        h += '<p>Mail: <a href="mailto:' + k.email + '" class="hover:text-vit-orange">' + k.email + '</a></p>';
-        h += '<p>Zeiten: ' + k.zeiten + '</p>';
+async function renderKontakteTab() {
+    var h = '';
+    var users = [];
+    try {
+        var resp = await _sb().from('users').select('id,vorname,nachname,email').eq('is_hq', true).eq('status', 'aktiv').order('vorname');
+        users = resp.data || [];
+    } catch(e) { /* ignore */ }
+
+    if (!users.length) {
+        return '<div class="text-center py-12 text-gray-400">Team-Daten nicht verfügbar</div>';
+    }
+
+    // Gruppieren nach Abteilung
+    var byAbt = {};
+    users.forEach(function(u) {
+        var info = HQ_ABTEILUNG_MAP[u.id] || { abt: 'HQ', color: 'bg-gray-500' };
+        if (!byAbt[info.abt]) byAbt[info.abt] = { color: info.color, members: [] };
+        byAbt[info.abt].members.push({ u: u, info: info });
+    });
+
+    h += '<div class="space-y-6">';
+    HQ_ABT_ORDER.forEach(function(abtName) {
+        if (!byAbt[abtName]) return;
+        var grp = byAbt[abtName];
+        h += '<div>';
+        h += '<div class="flex items-center gap-2 mb-3">';
+        h += '<div class="w-2 h-5 rounded-sm ' + grp.color + '"></div>';
+        h += '<h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">' + abtName + '</h3>';
+        h += '</div>';
+        h += '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">';
+        grp.members.forEach(function(m) {
+            var u = m.u;
+            var name = ((u.vorname || '') + ' ' + (u.nachname || '')).trim() || u.email;
+            var initials = name.split(' ').filter(Boolean).map(function(w){ return w[0].toUpperCase(); }).slice(0,2).join('');
+            h += '<div class="vit-card p-3 flex items-center gap-3">';
+            h += '<div class="w-9 h-9 ' + grp.color + ' rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">' + initials + '</div>';
+            h += '<div class="min-w-0">';
+            h += '<p class="font-semibold text-gray-800 text-sm truncate">' + _escH(name) + '</p>';
+            h += '<p class="text-xs text-gray-400 truncate">' + abtName + '</p>';
+            h += '</div>';
+            h += '</div>';
+        });
+        h += '</div></div>';
+    });
+    // Unbekannte Abteilungen
+    Object.keys(byAbt).forEach(function(abtName) {
+        if (HQ_ABT_ORDER.indexOf(abtName) !== -1) return;
+        var grp = byAbt[abtName];
+        h += '<div>';
+        h += '<div class="flex items-center gap-2 mb-3"><div class="w-2 h-5 rounded-sm ' + grp.color + '"></div><h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">' + abtName + '</h3></div>';
+        h += '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">';
+        grp.members.forEach(function(m) {
+            var u = m.u; var name = ((u.vorname||'') + ' ' + (u.nachname||'')).trim() || u.email;
+            var initials = name.split(' ').filter(Boolean).map(function(w){ return w[0].toUpperCase(); }).slice(0,2).join('');
+            h += '<div class="vit-card p-3 flex items-center gap-3"><div class="w-9 h-9 ' + grp.color + ' rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">' + initials + '</div><div class="min-w-0"><p class="font-semibold text-gray-800 text-sm truncate">' + _escH(name) + '</p><p class="text-xs text-gray-400">' + abtName + '</p></div></div>';
+        });
         h += '</div></div>';
     });
     h += '</div>';
@@ -533,11 +588,10 @@ function renderKontakteTab() {
 }
 
 export function renderKontakte() {
-    // Legacy compat - renders kontakte into kontakteGrid if present
     var grid = document.getElementById('kontakteGrid');
     if (!grid || grid.dataset.rendered) return;
     grid.dataset.rendered = 'true';
-    grid.innerHTML = renderKontakteTab();
+    renderKontakteTab().then(function(html) { grid.innerHTML = html; });
 }
 
 // ======================================================================
