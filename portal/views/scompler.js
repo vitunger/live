@@ -153,7 +153,7 @@
         }).join('');
 
         container.innerHTML =
-            '<h1 class="h1-headline text-gray-800 mb-4">SCOMPLER</h1>' +
+            '<h1 class="h1-headline text-gray-800 mb-4">Social Media</h1>' +
             '<div class="mb-6 border-b border-gray-200"><nav class="-mb-px flex space-x-6 overflow-x-auto">' + tabHtml + '</nav></div>' +
             '<div id="scTabContent"></div>';
 
