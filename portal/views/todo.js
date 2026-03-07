@@ -241,7 +241,7 @@ export function todoRender() {
     var bd = document.getElementById('tfBadgeDone');   if (bd) { bd.textContent = c.done;     bd.classList.toggle('hidden', !c.done); }
     // Sidebar badge in nav
     var navBadge = document.getElementById('todoSidebarBadge');
-    if (navBadge) navBadge.textContent = c.open;
+    if (navBadge) { navBadge.textContent = c.open; navBadge.classList.toggle('hidden', !c.open); }
 
     // Quick Add
     var qa = document.getElementById('todoQuickAddArea');
@@ -1512,4 +1512,5 @@ window.todoSearchChanged = todoSearchChanged;
 window.todoSetFilter = todoSetFilter;
 window.todoSetView = todoSetView;
 window.loadTodos = loadTodos;
+
 
