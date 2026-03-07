@@ -1222,6 +1222,7 @@ window.mktSortLeads = mktSortLeads;
 window.mktOpenBudgetEditModal = mktOpenBudgetEditModal;
 window.mktLoadBudgetForStandort = mktLoadBudgetForStandort;
 window.mktSaveBudgetEdit = mktSaveBudgetEdit;
+window.loadLiveLeads = loadLiveLeads;
 
 
 })();
