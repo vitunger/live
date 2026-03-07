@@ -540,10 +540,11 @@ function _hookShowView() {
     if (typeof showView === 'undefined' || !window.showView) return;
     var origShowView2 = window.showView;
     window.showView = function(v) {
-    // Rechteprüfung
-    if(typeof hasAccess === 'function' && !hasAccess(v)) {
+    // Rechteprüfung (skip wenn Profil noch nicht geladen oder HQ-User)
+    var _prof = window.sbProfile;
+    if(_prof && !_prof.is_hq && typeof hasAccess === 'function' && !hasAccess(v)) {
         console.warn('[hq-verkauf] Kein Zugriff auf', v, 'mit Rolle', window.currentRole);
-        if(window.currentRole === 'hq') { v = 'hqCockpit'; } else { v = 'home'; }
+        v = 'home';
     }
     // Redirect 'home' to HQ Cockpit when in HQ mode
     if(v==='home' && currentRole==='hq') { v='hqCockpit'; }

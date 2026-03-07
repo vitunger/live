@@ -641,5 +641,10 @@ window.openDokUploadModal = function() {
     if(window.showToast) window.showToast('Dokument-Upload wird vorbereitet...', 'info');
     console.warn('openDokUploadModal: noch nicht implementiert');
 };
+// Stub: renderHqAuswertung (in _exports referenziert, aber nie definiert)
+function renderHqAuswertung() {
+    var el = document.getElementById('hqAuswertungView') || document.getElementById('view-hq-auswertung');
+    if (el) el.innerHTML = '<div class="p-8 text-center text-gray-400">Auswertung wird vorbereitet\u2026</div>';
+}
 window.renderHqAuswertung = renderHqAuswertung;
 window.renderHqSupport = renderHqSupport;

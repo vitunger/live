@@ -351,7 +351,7 @@ export async function loadWidgetSupport() {
     try {
         var sb = _sb();
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
-        var q = _sb().from('support_tickets').select('id, titel, status, created_at').eq('status', 'offen').order('created_at', { ascending: false }).limit(3);
+        var q = _sb().from('support_tickets').select('id, betreff, status, created_at').eq('status', 'offen').order('created_at', { ascending: false }).limit(3);
         if (stdId) q = q.eq('standort_id', stdId);
         var res = await q;
         var tickets = res.data || [];
@@ -360,7 +360,7 @@ export async function loadWidgetSupport() {
         if (!tickets.length) { el.innerHTML = '<div class="text-center py-3"><p class="text-2xl">✅</p><p class="text-sm text-green-600 font-semibold mt-1">Keine offenen Tickets</p></div>'; return; }
         el.innerHTML = '<div class="space-y-2">' + tickets.map(function(t) {
             var age = Math.floor((Date.now() - new Date(t.created_at).getTime()) / 864e5);
-            return '<div class="text-xs p-2 ' + (age > 7 ? 'bg-red-50' : 'bg-yellow-50') + ' rounded"><p class="font-semibold">' + _escH(t.titel || 'Ticket') + '</p><p class="text-gray-600">Offen seit ' + age + ' Tag' + (age !== 1 ? 'en' : '') + '</p></div>';
+            return '<div class="text-xs p-2 ' + (age > 7 ? 'bg-red-50' : 'bg-yellow-50') + ' rounded"><p class="font-semibold">' + _escH(t.betreff || 'Ticket') + '</p><p class="text-gray-600">Offen seit ' + age + ' Tag' + (age !== 1 ? 'en' : '') + '</p></div>';
         }).join('') + '</div>';
     } catch (e) { el.innerHTML = '<p class="text-sm text-gray-400">Fehler beim Laden</p>'; }
 }
