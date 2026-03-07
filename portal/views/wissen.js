@@ -83,15 +83,17 @@ var currentWissenArt = 'all';
 window.renderWissenGlobal = renderWissenGlobal;
 export async function renderWissenGlobal() {
     var el = document.getElementById('wissenGlobalContent');
-    if (!el) return;
+    if (!el) { console.warn('[wissen] wissenGlobalContent nicht gefunden'); return; }
 
     el.innerHTML = '<div class="text-center py-12 text-gray-400"><div class="animate-spin text-3xl mb-3">⚙️</div><p class="text-sm">Artikel werden geladen…</p></div>';
 
+    try {
     var alleArtikel = await _ladeWissenArtikel();
-    await _ladeGelesenStatus();
+    } catch(e) { console.error('[wissen] Artikel laden fehlgeschlagen:', e); var alleArtikel = []; }
+    try { await _ladeGelesenStatus(); } catch(e) { console.warn('[wissen] Gelesen-Status Fehler:', e); }
 
     // Bereich-Filter aktualisieren (dynamisch aus DB)
-    if (typeof window.renderWissenBereichFilter === 'function') window.renderWissenBereichFilter();
+    try { if (typeof window.renderWissenBereichFilter === 'function') await window.renderWissenBereichFilter(); } catch(e) { console.warn('[wissen] Filter-Fehler:', e); }
 
     // Filter: Kategorie
     var items = alleArtikel;
@@ -107,6 +109,7 @@ export async function renderWissenGlobal() {
 
     // KPI-Leiste
     var kpi = document.getElementById('wissenKpis');
+    console.log('[wissen] KPIs:', kpi ? 'gefunden' : 'NICHT GEFUNDEN', 'Artikel:', alleArtikel.length, 'Gelesen:', _wissenGelesenSet.size);
     if (kpi) {
         var gelesenCount = _wissenGelesenSet.size;
         kpi.innerHTML =
