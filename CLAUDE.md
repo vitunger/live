@@ -2,8 +2,8 @@
 
 > Technische Arbeitsanweisung fuer KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
 > Letzte Aktualisierung: 07.03.2026 (Spiritus v3.0 – 8-Felder-Protokoll, 3 Kontexte, Lernfaktor)
-> **Standort-Stammdaten erweitert (07.03.2026):** DB-Migration: 3 neue Spalten `email` (text), `stadt` (text), `oeffnungszeiten` (jsonb) in `standorte`-Tabelle. Standort-Detail-Modal (`standort-billing.js` / `openStandortDetailModal`) erweitert: Stammdaten-Editbereich (Stadt, Inhaber/GF, Telefon, E-Mail, Adresse) + strukturierte Oeffnungszeiten Mo-So mit Time-Inputs. Neue window-Funktionen: `_stdStammdatenSave`, `_stdOeffnungszeitenSave`. Oeffnungszeiten-Format: `{mo: {von: "09:00", bis: "18:00"}, di: ..., so: null}`.
 > **KI-Kosten Dashboard (HQ-only):** Modul `views/nutzung.js` zeigt KI-API-Kosten als eigener Tab "⚡ KI-Kosten" im Entwicklung-Modul (neben dem bestehenden "📊 Nutzung"-Tab fuer Portal-Nutzung). Container: `entwKiKostenContent`. Tabelle `api_usage_log` protokolliert jeden externen KI-API-Call (Anthropic + OpenAI). Edge Functions `dev-ki-analyse` + `spiritus-analyze` loggen automatisch. Edge Function `anthropic-usage` (JWT-secured) holt Live-Daten von der Anthropic Admin API. Edge Function `cockpit-costs` (JWT-secured) sammelt Betriebskosten aller Provider: Vercel Billing API (Secret: VERCEL_TOKEN + VERCEL_TEAM_ID), Supabase (Fixkosten $25/Mo Pro Plan), Anthropic Admin API, Resend. Liefert Gesamtkosten, pro-Nutzer-Kosten, Provider-Breakdown. Neue Tabelle `cockpit_savings` (RLS: HQ-only) fuer manuell eingetragene eingesparte Tool-Kosten (Name + EUR/Monat). Dashboard zeigt Kosten vs. Einsparungen Gegenuberstellung (Usage + Cost Report). Erfordert Supabase Secret `ANTHROPIC_ADMIN_KEY` (Admin API Key aus console.anthropic.com). **WICHTIG: Jede neue Edge Function, die eine KI-API (Anthropic, OpenAI, etc.) aufruft, MUSS nach jedem Call in `api_usage_log` loggen (provider, model, input_tokens, output_tokens, duration_ms, success).** Aufruf: `showEntwicklungTab('ki_kosten')` → `renderApiNutzung('entwKiKostenContent')`. Tab `nutzung` bleibt fuer Portal-Nutzung (`renderEntwNutzung`).
+> **PII-Stripping (DSGVO Datenminimierung):** Alle Edge Functions die personenbezogene Daten an die Anthropic API senden, verwenden `stripPii()` zum Entfernen/Ersetzen von E-Mails, Telefonnummern, IBANs, Steuernummern, PLZ+Ort und Strassenadressen VOR dem API-Call. Betrifft: `spiritus-analyze`, `support-ki-antwort`, `support-ki-analyse`, `summarize-channel`. Die Funktion ist inline in jeder Edge Function definiert (identischer Code-Block). Mapping wird zurueckgegeben fuer optionales Re-Mapping der Ergebnisse. **WICHTIG: Jede NEUE Edge Function die PII an Anthropic sendet, MUSS ebenfalls `stripPii()` verwenden.**
 > Verkaufsmodul 9 Fixes deployed: (1) Verkaeufer-Ranking dynamisch aus DB in Auswertung, (2) Monatsziel dynamisch aus jahresplaene statt hardcoded, (3) Verkaeufer-Dropdown dynamisch statt hardcoded Sandra/Thomas/Dirk/Max, (4) Plan-Spalte + Diff% + Plan-Linie im Auswertungs-Chart, (5) openVerkaufEntryModal korrekt in plan-ist.js (verifiziert), (6) Tab-Reihenfolge: Pipeline=default (JS an HTML angeglichen), (7) _escH Helper sauber definiert als Fallback, (8) online-Feld konsistent behandelt, (9) Error-States bei DB-Fehlern
 > KI Release-Vorschlag verbessert: liest jetzt Git-Commits (14 Tage via GitHub API), vollständige CLAUDE.md und Submissions als Kontext. Neue Edge Function `dev-ki-analyse` im Repo (supabase/functions/dev-ki-analyse/index.ts) mit modes: release_notes + prioritize.
 > Performance-Abfrage Feature hinzugefuegt: `einkauf_performance_abfragen` + `einkauf_performance_daten` Tabellen (Migration: docs/migration_einkauf_performance.sql)
@@ -255,7 +255,6 @@ security: RLS/JWT/Auth-Verbesserung
 | 13 | **WaWi Email-Ingestion** | Resend Inbound → Edge Function → `wawi_belege` (designed, nicht gebaut) | geplant |
 | 14 | **GetMyInvoices** | v3 REST API für automatische Rechnungserfassung | geplant |
 | 15 | **TypeScript-Migration** | Modul für Modul, Feature-Flag pro Modul, Build-System Vite 6 + TS 5 | geplant |
-| 16 | **KI-Voice Agent (Vapi.ai)** | Inbound + Outbound Calls via Vapi.ai: KI nimmt Kundenanrufe an, qualifiziert Leads, bucht Termine (eTermin), ruft Leads proaktiv zurück. Ergebnisse (Transkript, Zusammenfassung) per Webhook → Portal. Button "KI-Anruf starten" im Lead-Detail. Deutsche Nummer (~$2/Mo), ~$0.05–0.10/Min. AssemblyAI für Transkription, Claude als Brain, ElevenLabs für Stimme. | geplant |
 
 ---
 
@@ -547,13 +546,6 @@ Default: `wissen`. Werden als Sub-Tabs in Cross-Modul-Ansichten angezeigt.
 - Bei Freigabe: checked Massnahmen → `todos`-Tabelle mit `spiritus_transcript_id` + `referenz_typ='spiritus'`
 - Rueckverlinkung: Detail-View zeigt verknuepfte Todos mit Erledigungs-Status
 
-### Audio-Transkription (AssemblyAI)
-- **Edge Function:** `audio-transcribe` – Audio aus Storage → AssemblyAI (Speaker Diarization) → spiritus-analyze Chain
-- **Provider:** AssemblyAI (`best` Modell, ~$0.015/Min, deutsch, Sprechererkennung)
-- **Flow:** Frontend laedt Audio in Supabase Storage → audio-transcribe holt Datei → AssemblyAI transkribiert → Ergebnis an spiritus-analyze → 8-Felder-Protokoll
-- **Supabase Secret:** `ASSEMBLYAI_API_KEY` (AssemblyAI Account noetig)
-- **Veraltete Functions:** `spiritus-transcribe` (v16, Whisper) und `spiritus-structure` (v16) sind durch `audio-transcribe` + `spiritus-analyze` ersetzt
-
 ### Eigene Notizen
 - Freitextfeld `eigene_notizen` auf `spiritus_transcripts`
 - Nicht von KI verarbeitet, nur fuer persoenliche Protokolle
@@ -587,41 +579,3 @@ Default: `wissen`. Werden als Sub-Tabs in Cross-Modul-Ansichten angezeigt.
   - Scope-Badges in Produkte-Tab: "je Nutzer" (lila), "je Standort" (grün), "System" (grau)
 - **Soft-Delete für Produkte:** `billing_products.deleted_at` – Produkt wird deaktiviert aber für historische Rechnungen erhalten
 - **Tools-Tab entfernt** aus HQ-Billing (ersetzt durch Zuweisungen in Kommandozentrale)
-- **Billing Übersicht umgebaut (März 2026):** Kein Monats-Dropdown mehr. Stattdessen:
-  - "Abrechnungslauf starten"-Button (nimmt automatisch aktuellen Monat)
-  - KPIs: Offenes Volumen, Überfällig, Bezahlt (Monat)
-  - Tabelle: Offene Rechnungen (gelb) + kürzlich abgeschlossene (grün)
-  - Direkt-Query auf billing_invoices statt billing-overview Edge Function Action
-
-### Billing Automatisierung (März 2026)
-- **Edge Function `billing-cron` (verify_jwt: false, eigener Auth-Guard):**
-  - Wird täglich aufgerufen (Supabase Cron / externer Trigger)
-  - Prüft für jeden Standort + Schedule: Ist heute Abrechnungstag? → Erstellt Draft automatisch
-  - Prüft Settlement-Intervall pro Standort: Ist heute Settlement-Tag? → Erstellt Settlement-Draft
-  - Protokolliert in `billing_cron_log` (run_date, drafts_created, settlements_created, errors)
-  - Demo-Standorte werden ausgeschlossen
-- **LexOffice-Kontakt-Matching im Standort-Detail-Modal:**
-  - "Vorschlag suchen": Sucht in LexOffice nach dem Standort-Namen, zeigt Treffer zum Verknüpfen
-  - "Neu erstellen": Erstellt einen neuen Kontakt in LexOffice aus Standort-Daten
-  - "Manuell eingeben": Kontakt-ID direkt eintragen
-  - `standorte.lexoffice_contact_id` + `lexoffice_contact_name` direkt auf der Tabelle
-- **Auto-Push nach Freigabe:** Wenn eine Rechnung approved wird, wird sie automatisch an LexOffice gesendet
-- **Billing Übersicht:** "Manueller Lauf"-Button + Cron-Status-Anzeige (letzter Lauf, Ergebnis)
-
-### Kostenbestätigungs-System (März 2026)
-- **`billing_cost_confirmations` Tabelle:** Token-basierte Bestätigung durch GF per Email-Link
-  - change_type: product_assigned, product_removed, employee_added, employee_removed, bulk_change
-  - Status: pending → confirmed (oder expired nach 14 Tagen)
-  - Speichert: confirmed_at, confirmed_by_name, confirmed_ip
-- **Edge Function `billing-confirm` (verify_jwt: false, Token-Auth):**
-  - GET ?token=xxx → Zeigt Bestätigungsseite mit Kostendetails
-  - POST {action:'confirm', token:xxx} → Bestätigt
-  - POST {action:'create-confirmation', ...} → Erstellt neue Bestätigung + sendet Email
-- **Automatische Email bei Produktänderung:** 
-  - Mitarbeiter-Edit-Modal: toggleUserProduct → sendCostConfirmation()
-  - Standort-Detail-Modal: addStdProduct/removeStdProduct → sendCostConfirmation()
-  - Email enthält: Änderungsbeschreibung, neue Monatskosten, Bestätigungs-Button
-- **Standorte-Tab:** Klick auf Zeile zeigt aufklappbare Detailansicht:
-  - Mitarbeiter-Tabelle mit deren Produkten und Kosten
-  - Standort-Produkte
-  - Letzte Kostenbestätigungen (Status + Datum)
