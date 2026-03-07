@@ -90,17 +90,22 @@ async function kommLoadData() {
     var standortId = _sbProfile() ? _sbProfile().standort_id : null;
 
     try {
-        var [chResp, usersResp] = await Promise.all([
+        var [chResp, usersResp, extraResp] = await Promise.all([
             _sb().from('chat_kanaele').select('*').order('name'),
-            _sb().from('users').select('id, name, vorname, nachname, position, standort_id, is_hq, status, standorte:standort_id(name)').eq('status', 'aktiv')
+            _sb().from('users').select('id, name, vorname, nachname, position, standort_id, is_hq, status, standorte:standort_id(name)').eq('status', 'aktiv'),
+            _sb().from('kanal_extra_zugang').select('kanal_id').eq('user_id', uid || '')
         ]);
 
         var allKanaele = chResp.data || [];
         KOMM.allUsers = usersResp.data || [];
+        KOMM._extraZugang = (extraResp.data || []).map(function(e) { return e.kanal_id; });
+
+        // Sichtbarkeitsfilter anwenden
+        var sichtbar = allKanaele.filter(function(k) { return kommKanalSichtbar(k); });
 
         // Kanaele aufteilen
-        KOMM.kanaele = allKanaele.filter(function(k) { return k.typ === 'channel' || !k.typ; });
-        KOMM.gruppen = allKanaele.filter(function(k) { return k.typ === 'group'; });
+        KOMM.kanaele = sichtbar.filter(function(k) { return k.typ === 'channel' || !k.typ; });
+        KOMM.gruppen = sichtbar.filter(function(k) { return k.typ === 'group'; });
 
         // DMs laden
         var dmResp = await _sb().from('chat_kanaele').select('*, kanal_mitglieder!inner(user_id)')
@@ -114,6 +119,39 @@ async function kommLoadData() {
     } catch(err) {
         console.error('[kommunikation] loadData:', err);
     }
+}
+
+/**
+ * Prüft ob der aktuelle User einen Channel sehen darf.
+ * Logik:
+ * 1. sichtbar_fuer_rollen ist NULL oder leer → alle sehen den Channel
+ * 2. sichtbar_fuer_rollen hat Werte → nur diese Rollen sehen ihn
+ * 3. kanal_extra_zugang → einzelne User sehen den Channel zusätzlich
+ */
+function kommKanalSichtbar(kanal) {
+    // Kein Rollen-Filter → alle sehen ihn
+    if (!kanal.sichtbar_fuer_rollen || kanal.sichtbar_fuer_rollen.length === 0) return true;
+
+    // Prüfe ob User eine der erlaubten Rollen hat
+    var p = _sbProfile();
+    if (p) {
+        var userRolle = p.rolle || '';
+        var isHQ = p.is_hq || userRolle === 'hq' || userRolle === 'hq_zahlen';
+
+        // HQ-Rollen prüfen (hq, hq_gf, hq_sales, etc.)
+        if (isHQ && kanal.sichtbar_fuer_rollen.indexOf('hq') >= 0) return true;
+
+        // Spezifische Rolle prüfen
+        if (kanal.sichtbar_fuer_rollen.indexOf(userRolle) >= 0) return true;
+
+        // "inhaber" Rolle prüfen
+        if (userRolle === 'inhaber' && kanal.sichtbar_fuer_rollen.indexOf('inhaber') >= 0) return true;
+    }
+
+    // Prüfe Extra-Zugang
+    if (KOMM._extraZugang && KOMM._extraZugang.indexOf(kanal.id) >= 0) return true;
+
+    return false;
 }
 
 // ========== HAUPT-RENDER ==========
