@@ -315,7 +315,6 @@ export function showBillingTab(tab) {
 
     if (tab === 'overview') loadBillingOverview();
     if (tab === 'invoices') loadAllInvoices();
-    if (tab === 'strategies') loadAllStrategies();
     if (tab === 'products') loadBillingProducts();
     if (tab === 'tools') loadBillingTools();
     if (tab === 'schedules') loadBillingSchedules();
@@ -407,59 +406,249 @@ export async function lockStrategy(stratId) {
 export async function loadBillingProducts() {
     var container = document.getElementById('billingProductsList');
     if (!container) return;
-    var { data: products } = await _sb().from('billing_products').select('*, schedule:billing_schedules(id, name, is_prepayment, is_immediate, billing_day, payment_term_days)').order('key');
-    var h = '<div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr>';
-    h += '<th class="text-left p-3">Key</th><th class="text-left p-3">Name</th><th class="text-left p-3">Typ</th><th class="text-left p-3">Frequenz</th><th class="text-center p-3">Abrechnungsart</th><th class="text-right p-3">Betrag/Prozent</th><th class="text-center p-3">Aktiv</th>';
-    h += '</tr></thead><tbody>';
+    container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
+    
+    var { data: products } = await _sb().from('billing_products').select('*, schedule:billing_schedules(id, name, is_prepayment, is_immediate, billing_day, payment_term_days)').order('product_type, key');
+    var { data: schedules } = await _sb().from('billing_schedules').select('id, name').eq('active', true).order('sort_order');
+    
+    var h = '<div class="mb-4 flex items-center justify-between">';
+    h += '<p class="text-xs text-gray-500">' + (products || []).length + ' Produkte</p>';
+    h += '<button onclick="showNewProductForm()" class="px-3 py-1.5 bg-vit-orange text-white rounded-lg text-xs font-semibold hover:bg-orange-600">+ Neues Produkt</button>';
+    h += '</div>';
+    h += '<div id="newProductFormArea"></div>';
+    
+    h += '<div class="space-y-2">';
     (products || []).forEach(function(p) {
-        h += '<tr class="border-t">';
-        h += '<td class="p-3 font-mono text-xs">' + p.key + '</td>';
-        h += '<td class="p-3 font-semibold">' + p.name + '</td>';
-        h += '<td class="p-3 text-xs">' + p.product_type + '</td>';
-        h += '<td class="p-3 text-xs">' + p.billing_frequency + '</td>';
-        h += '<td class="p-3 text-center">' + (p.schedule ? '<span class="text-xs px-2 py-0.5 rounded font-semibold ' + (p.schedule.is_prepayment ? 'bg-red-100 text-red-700' : p.schedule.is_immediate ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-50 text-blue-700') + '">' + p.schedule.name + '</span>' : '<span class="text-xs text-gray-300">—</span>') + '</td>';
-        h += '<td class="p-3 text-right">' + (p.default_amount ? _fmtEur(p.default_amount) : p.default_percent ? (p.default_percent * 100).toFixed(2) + '%' : '—') + '</td>';
-        h += '<td class="p-3 text-center">' + (p.active ? '✅' : '❌') + '</td>';
-        h += '</tr>';
+        var typeColors = {fixed:'bg-blue-100 text-blue-700', per_user:'bg-purple-100 text-purple-700', percentage:'bg-orange-100 text-orange-700', one_time:'bg-yellow-100 text-yellow-700', settlement:'bg-red-100 text-red-700', manual:'bg-gray-100 text-gray-600'};
+        var typeLabels = {fixed:'Fixbetrag', per_user:'Pro Nutzer', percentage:'Prozentual', one_time:'Einmalig', settlement:'Settlement', manual:'Manuell'};
+        var bgClass = p.active ? '' : 'opacity-50';
+        
+        h += '<div class="vit-card p-4 ' + bgClass + '" id="product-' + p.id + '">';
+        h += '<div class="flex items-center justify-between mb-2">';
+        h += '<div class="flex items-center gap-2">';
+        h += '<span class="font-mono text-[10px] text-gray-400">' + p.key + '</span>';
+        h += '<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ' + (typeColors[p.product_type] || 'bg-gray-100 text-gray-600') + '">' + (typeLabels[p.product_type] || p.product_type) + '</span>';
+        if (p.schedule) h += '<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ' + (p.schedule.is_prepayment ? 'bg-red-100 text-red-700' : 'bg-blue-50 text-blue-700') + '">' + p.schedule.name + '</span>';
+        if (!p.active) h += '<span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 text-gray-500">Inaktiv</span>';
+        h += '</div>';
+        h += '<div class="flex items-center gap-2">';
+        h += '<span class="font-bold text-sm">' + (p.default_amount ? _fmtEur(p.default_amount) : p.default_percent ? (p.default_percent * 100).toFixed(1) + '%' : '\u2014') + '</span>';
+        h += '<button onclick="editProduct(\'' + p.id + '\')" class="text-xs text-vit-orange hover:underline font-semibold">\u270f\ufe0f</button>';
+        h += '</div></div>';
+        h += '<div class="flex items-center gap-4 text-xs text-gray-500">';
+        h += '<span>' + _escH(p.name) + '</span>';
+        if (p.billing_day) h += '<span>Tag: ' + p.billing_day + '.</span>';
+        if (p.payment_term_days) h += '<span>Frist: ' + p.payment_term_days + ' Tage</span>';
+        h += '<span>' + p.billing_frequency + '</span>';
+        h += '</div></div>';
     });
-    h += '</tbody></table></div>';
+    h += '</div>';
+    
     container.innerHTML = h;
+    window._billingProducts = products;
+    window._billingSchedules = schedules;
 }
+
+window.editProduct = async function(productId) {
+    var p = (window._billingProducts || []).find(function(x) { return x.id === productId; });
+    if (!p) return;
+    var schedOpts = (window._billingSchedules || []).map(function(s) { return '<option value="' + s.id + '"' + (p.schedule_id === s.id ? ' selected' : '') + '>' + s.name + '</option>'; }).join('');
+    
+    var html = '<div class="vit-card p-5 mb-4 border-2 border-vit-orange" id="editProductForm">';
+    html += '<h4 class="font-bold text-sm mb-3">\u270f\ufe0f ' + _escH(p.name) + ' bearbeiten</h4>';
+    html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Name</label><input type="text" id="editProdName" value="' + _escH(p.name) + '" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Preis (\u20ac)</label><input type="number" id="editProdPrice" step="0.01" value="' + (p.default_amount || '') + '" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Abrechnungsart</label><select id="editProdSchedule" class="w-full border rounded-lg px-2.5 py-1.5 text-sm">' + schedOpts + '</select></div>';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Zahlungsfrist (Tage)</label><input type="number" id="editProdTermDays" value="' + (p.payment_term_days || '') + '" placeholder="\u2014 (aus Schedule)" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
+    html += '</div>';
+    html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Abrechnungstag</label><input type="number" id="editProdBillingDay" min="1" max="28" value="' + (p.billing_day || '') + '" placeholder="aus Schedule" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
+    html += '<div><label class="flex items-center gap-2 text-sm mt-4"><input type="checkbox" id="editProdActive" ' + (p.active ? 'checked' : '') + '> Aktiv</label></div>';
+    html += '</div>';
+    html += '<div class="flex gap-2"><button onclick="saveProduct(\'' + productId + '\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-xs font-semibold">Speichern</button>';
+    html += '<button onclick="loadBillingProducts()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs">Abbrechen</button></div>';
+    html += '</div>';
+    
+    var el = document.getElementById('product-' + productId);
+    if (el) el.insertAdjacentHTML('afterend', html);
+};
+
+window.saveProduct = async function(productId) {
+    var updates = {
+        name: document.getElementById('editProdName').value.trim(),
+        default_amount: parseFloat(document.getElementById('editProdPrice').value) || null,
+        schedule_id: document.getElementById('editProdSchedule').value || null,
+        payment_term_days: parseInt(document.getElementById('editProdTermDays').value) || null,
+        billing_day: parseInt(document.getElementById('editProdBillingDay').value) || null,
+        active: document.getElementById('editProdActive').checked
+    };
+    var { error } = await _sb().from('billing_products').update(updates).eq('id', productId);
+    if (error) { _showToast('Fehler: ' + error.message, 'error'); return; }
+    _showToast('Produkt aktualisiert', 'success');
+    loadBillingProducts();
+};
+
+window.showNewProductForm = function() {
+    var area = document.getElementById('newProductFormArea');
+    if (!area) return;
+    var schedOpts = (window._billingSchedules || []).map(function(s) { return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('');
+    var html = '<div class="vit-card p-5 mb-4 border-2 border-green-400">';
+    html += '<h4 class="font-bold text-sm mb-3">+ Neues Produkt anlegen</h4>';
+    html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Key (eindeutig)</label><input type="text" id="newProdKey" placeholder="MY_PRODUCT" class="w-full border rounded-lg px-2.5 py-1.5 text-sm font-mono"></div>';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Name</label><input type="text" id="newProdName" placeholder="Mein Produkt" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Typ</label><select id="newProdType" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"><option value="fixed">Fixbetrag</option><option value="per_user">Pro Nutzer</option><option value="one_time">Einmalig</option></select></div>';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Preis (\u20ac)</label><input type="number" id="newProdPrice" step="0.01" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
+    html += '</div>';
+    html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Frequenz</label><select id="newProdFreq" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"><option value="monthly">Monatlich</option><option value="quarterly">Quartalsweise</option><option value="immediate">Sofort</option><option value="ad_hoc">Ad-hoc</option></select></div>';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Abrechnungsart</label><select id="newProdSchedule" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"><option value="">\u2014</option>' + schedOpts + '</select></div>';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Zahlungsfrist</label><input type="number" id="newProdTermDays" placeholder="30" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Abrechnungstag</label><input type="number" id="newProdBillingDay" min="1" max="28" placeholder="1" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
+    html += '</div>';
+    html += '<div class="flex gap-2"><button onclick="createProduct()" class="px-4 py-2 bg-green-600 text-white rounded-lg text-xs font-semibold">Anlegen</button>';
+    html += '<button onclick="document.getElementById(\'newProductFormArea\').innerHTML=\'\'" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs">Abbrechen</button></div>';
+    html += '</div>';
+    area.innerHTML = html;
+};
+
+window.createProduct = async function() {
+    var key = document.getElementById('newProdKey').value.trim().toUpperCase().replace(/[^A-Z0-9_]/g, '');
+    var name = document.getElementById('newProdName').value.trim();
+    if (!key || !name) { _showToast('Key und Name erforderlich', 'error'); return; }
+    var { error } = await _sb().from('billing_products').insert({
+        key: key, name: name,
+        product_type: document.getElementById('newProdType').value,
+        billing_frequency: document.getElementById('newProdFreq').value,
+        default_amount: parseFloat(document.getElementById('newProdPrice').value) || null,
+        schedule_id: document.getElementById('newProdSchedule').value || null,
+        payment_term_days: parseInt(document.getElementById('newProdTermDays').value) || null,
+        billing_day: parseInt(document.getElementById('newProdBillingDay').value) || null,
+        active: true
+    });
+    if (error) { _showToast('Fehler: ' + error.message, 'error'); return; }
+    _showToast('Produkt angelegt', 'success');
+    loadBillingProducts();
+};
+
 
 export async function loadBillingTools() {
     var container = document.getElementById('billingToolsList');
     if (!container) return;
+    container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
 
-    var { data: packages } = await _sb().from('billing_tool_packages').select('*').order('monthly_cost');
-    var { data: assignments } = await _sb().from('billing_user_tool_assignments').select('*, tool:billing_tool_packages(name), user:users(name), standort:standorte(name)').eq('is_active', true);
+    // Load all active assignments
+    var { data: assignments } = await _sb().from('billing_user_product_assignments')
+        .select('*, product:billing_products(key, name, default_amount, product_type), user:users(name), standort:standorte(name)')
+        .eq('is_active', true).order('created_at', { ascending: false });
+    
+    // Load per_user products for the assign dropdown
+    var { data: perUserProducts } = await _sb().from('billing_products').select('id, key, name, default_amount, product_type')
+        .eq('active', true).in('product_type', ['per_user', 'fixed']).eq('billing_frequency', 'monthly').order('name');
+    
+    var { data: standorte } = await _sb().from('standorte').select('id, name').eq('status', 'aktiv').order('name');
+    var { data: users } = await _sb().from('users').select('id, name, standort_id').order('name');
 
-    var h = '<div class="vit-card p-4 mb-4"><h3 class="font-semibold text-sm mb-3">📦 Tool-Pakete</h3>';
-    h += '<div class="grid grid-cols-1 md:grid-cols-3 gap-3">';
-    (packages || []).forEach(function(p) {
-        h += '<div class="p-4 border rounded-lg ' + (p.active ? 'border-gray-200' : 'border-red-200 opacity-60') + '">';
-        h += '<p class="font-semibold">' + p.name + '</p>';
-        h += '<p class="text-xl font-bold text-vit-orange mt-1">' + _fmtEur(p.monthly_cost) + '<span class="text-xs text-gray-400 font-normal">/Monat</span></p>';
-        h += '<p class="text-xs text-gray-500 mt-1">' + (p.description || '') + '</p>';
-        h += '</div>';
-    });
+    var h = '';
+    
+    // Quick-assign form
+    h += '<div class="vit-card p-5 mb-4"><h3 class="font-semibold text-sm mb-3">+ Produkt zuweisen</h3>';
+    h += '<div class="grid grid-cols-1 md:grid-cols-5 gap-3">';
+    h += '<div><label class="block text-[10px] text-gray-500 mb-1">Typ</label><select id="assignType" class="w-full border rounded-lg px-2.5 py-1.5 text-sm" onchange="toggleAssignUser()"><option value="user">Pro Nutzer</option><option value="standort">Pro Standort</option></select></div>';
+    h += '<div><label class="block text-[10px] text-gray-500 mb-1">Standort</label><select id="assignStandort" class="w-full border rounded-lg px-2.5 py-1.5 text-sm" onchange="filterAssignUsers()">';
+    (standorte || []).forEach(function(s) { h += '<option value="' + s.id + '">' + _escH(s.name) + '</option>'; });
+    h += '</select></div>';
+    h += '<div id="assignUserWrap"><label class="block text-[10px] text-gray-500 mb-1">Nutzer</label><select id="assignUser" class="w-full border rounded-lg px-2.5 py-1.5 text-sm">';
+    (users || []).forEach(function(u) { h += '<option value="' + u.id + '">' + _escH(u.name) + '</option>'; });
+    h += '</select></div>';
+    h += '<div><label class="block text-[10px] text-gray-500 mb-1">Produkt</label><select id="assignProduct" class="w-full border rounded-lg px-2.5 py-1.5 text-sm">';
+    (perUserProducts || []).forEach(function(p) { h += '<option value="' + p.id + '">' + _escH(p.name) + ' (' + _fmtEur(p.default_amount) + ')</option>'; });
+    h += '</select></div>';
+    h += '<div class="flex items-end"><button onclick="assignProductToEntity()" class="w-full px-3 py-1.5 bg-vit-orange text-white rounded-lg text-xs font-semibold hover:bg-orange-600">Zuweisen</button></div>';
     h += '</div></div>';
 
-    h += '<div class="vit-card overflow-hidden"><div class="p-4 border-b bg-gray-50"><h3 class="font-semibold text-sm">👥 Aktive Zuweisungen (' + (assignments || []).length + ')</h3></div>';
-    h += '<table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr>';
-    h += '<th class="text-left p-3">Mitarbeiter</th><th class="text-left p-3">Standort</th><th class="text-left p-3">Paket</th><th class="text-right p-3">Kosten</th><th class="text-left p-3">Seit</th>';
-    h += '</tr></thead><tbody>';
+    // Summary
+    var totalMonthly = (assignments || []).reduce(function(s, a) { return s + Number(a.cost_override || (a.product ? a.product.default_amount : 0) || 0); }, 0);
+    h += '<div class="flex items-center justify-between mb-4">';
+    h += '<span class="text-xs text-gray-500">' + (assignments || []).length + ' aktive Zuweisungen</span>';
+    h += '<span class="text-sm font-bold text-vit-orange">' + _fmtEur(totalMonthly) + ' / Monat</span>';
+    h += '</div>';
+
+    // Assignments grouped by standort
+    var byStandort = {};
     (assignments || []).forEach(function(a) {
-        h += '<tr class="border-t">';
-        h += '<td class="p-3">' + (a.user ? a.user.name : '—') + '</td>';
-        h += '<td class="p-3">' + (a.standort ? a.standort.name : '—') + '</td>';
-        h += '<td class="p-3">' + (a.tool ? a.tool.name : '—') + '</td>';
-        h += '<td class="p-3 text-right font-semibold">' + _fmtEur(a.cost_override || (a.tool ? a.tool.monthly_cost : 0)) + '</td>';
-        h += '<td class="p-3 text-xs text-gray-400">' + (a.active_from || '—') + '</td>';
-        h += '</tr>';
+        var sName = a.standort ? a.standort.name : 'Unbekannt';
+        if (!byStandort[sName]) byStandort[sName] = [];
+        byStandort[sName].push(a);
     });
-    h += '</tbody></table></div>';
+
+    h += '<div class="space-y-4">';
+    Object.keys(byStandort).sort().forEach(function(sName) {
+        var items = byStandort[sName];
+        var stTotal = items.reduce(function(s, a) { return s + Number(a.cost_override || (a.product ? a.product.default_amount : 0) || 0); }, 0);
+        h += '<div class="vit-card overflow-hidden">';
+        h += '<div class="p-3 bg-gray-50 border-b flex items-center justify-between"><span class="font-semibold text-sm">' + _escH(sName) + '</span><span class="text-xs font-bold text-vit-orange">' + _fmtEur(stTotal) + '/Mt.</span></div>';
+        h += '<table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr><th class="text-left p-2">Produkt</th><th class="text-left p-2">Typ</th><th class="text-left p-2">Nutzer</th><th class="text-right p-2">Preis</th><th class="text-center p-2">Seit</th><th class="text-center p-2">Aktion</th></tr></thead><tbody>';
+        items.forEach(function(a) {
+            var isStandort = a.assignment_type === 'standort';
+            h += '<tr class="border-t border-gray-100">';
+            h += '<td class="p-2 font-medium">' + (a.product ? a.product.name : '\u2014') + '</td>';
+            h += '<td class="p-2"><span class="text-[10px] px-1.5 py-0.5 rounded-full ' + (isStandort ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700') + '">' + (isStandort ? 'Standort' : 'Nutzer') + '</span></td>';
+            h += '<td class="p-2">' + (a.user ? a.user.name : '\u2014 (pauschal)') + '</td>';
+            h += '<td class="p-2 text-right font-semibold">' + _fmtEur(a.cost_override || (a.product ? a.product.default_amount : 0)) + '</td>';
+            h += '<td class="p-2 text-center text-xs text-gray-400">' + (a.active_from || '\u2014') + '</td>';
+            h += '<td class="p-2 text-center"><button onclick="removeAssignment(\'' + a.id + '\')" class="text-xs text-red-500 hover:underline">\u2715</button></td>';
+            h += '</tr>';
+        });
+        h += '</tbody></table></div>';
+    });
+    if (Object.keys(byStandort).length === 0) {
+        h += '<div class="vit-card p-8 text-center"><p class="text-gray-400">Noch keine Produkt-Zuweisungen vorhanden</p></div>';
+    }
+    h += '</div>';
+
     container.innerHTML = h;
+    window._assignUsers = users;
+    window._assignStandorte = standorte;
 }
+
+window.toggleAssignUser = function() {
+    var wrap = document.getElementById('assignUserWrap');
+    if (wrap) wrap.style.display = document.getElementById('assignType').value === 'user' ? '' : 'none';
+};
+
+window.filterAssignUsers = function() {
+    var stdId = document.getElementById('assignStandort').value;
+    var sel = document.getElementById('assignUser');
+    if (!sel) return;
+    sel.innerHTML = '';
+    (window._assignUsers || []).filter(function(u) { return u.standort_id === stdId || !u.standort_id; }).forEach(function(u) {
+        sel.innerHTML += '<option value="' + u.id + '">' + _escH(u.name) + '</option>';
+    });
+};
+
+window.assignProductToEntity = async function() {
+    var type = document.getElementById('assignType').value;
+    var stdId = document.getElementById('assignStandort').value;
+    var userId = type === 'user' ? document.getElementById('assignUser').value : null;
+    var productId = document.getElementById('assignProduct').value;
+    if (!stdId || !productId) { _showToast('Bitte alle Felder ausfuellen', 'error'); return; }
+    if (type === 'user' && !userId) { _showToast('Bitte Nutzer waehlen', 'error'); return; }
+    var r = await billingApi('assign-product-to-user', { user_id: userId, standort_id: stdId, product_id: productId, assignment_type: type });
+    if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
+    _showToast('Zugewiesen', 'success');
+    loadBillingTools();
+};
+
+window.removeAssignment = async function(id) {
+    if (!confirm('Zuweisung wirklich entfernen?')) return;
+    var r = await billingApi('remove-product-assignment', { assignment_id: id });
+    if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
+    _showToast('Entfernt', 'success');
+    loadBillingTools();
+};
+
 
 // ============================================================
 // === INVOICE APPROVAL WORKFLOW ===
