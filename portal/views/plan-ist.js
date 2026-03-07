@@ -485,7 +485,7 @@ export async function callFinanceKi(type, fileBase64, mediaType, rawText, meta) 
     var _SURL = (typeof SUPABASE_URL !== 'undefined') ? SUPABASE_URL : window.SUPABASE_URL;
     var _SKEY = (typeof SUPABASE_ANON_KEY !== 'undefined') ? SUPABASE_ANON_KEY : window.SUPABASE_ANON_KEY;
     
-    // Get user token, fallback to anon key
+    // Get user token with auto-refresh fallback
     var token = _SKEY; // default to anon key
     try {
         var session = await _sb2.auth.getSession();
@@ -499,21 +499,33 @@ export async function callFinanceKi(type, fileBase64, mediaType, rawText, meta) 
     if(rawText) { payload.raw_text = rawText; }
     if(meta) { payload.meta = meta; }
     
-    // [prod] log removed
     var resp = await fetch(_SURL + '/functions/v1/analyze-finance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': _SKEY },
         body: JSON.stringify(payload)
     });
     
-    // If 401 with user token, retry with anon key
-    if(resp.status === 401 && token !== _SKEY) {
-        console.warn('[callFinanceKi] User token 401, retrying with anon key');
-        resp = await fetch(_SURL + '/functions/v1/analyze-finance', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _SKEY, 'apikey': _SKEY },
-            body: JSON.stringify(payload)
-        });
+    // If 401: try to refresh session and retry once with fresh token
+    if(resp.status === 401) {
+        console.warn('[callFinanceKi] Token 401, attempting session refresh...');
+        try {
+            var refreshed = await _sb2.auth.refreshSession();
+            var freshToken = refreshed && refreshed.data && refreshed.data.session && refreshed.data.session.access_token;
+            if(freshToken) {
+                token = freshToken;
+                resp = await fetch(_SURL + '/functions/v1/analyze-finance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': _SKEY },
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                throw new Error('Session abgelaufen. Bitte neu einloggen.');
+            }
+        } catch(refreshErr) {
+            if(refreshErr.message && refreshErr.message.includes('einloggen')) throw refreshErr;
+            console.warn('[callFinanceKi] Refresh failed:', refreshErr);
+            throw new Error('Session abgelaufen. Bitte Seite neu laden und erneut einloggen.');
+        }
     }
     
     if(!resp.ok) { var errB=''; try { var eD=await resp.json(); errB=eD.error||eD.details||''; } catch(e2) {} throw new Error('KI-API Fehler ' + resp.status + (errB ? ': '+errB.substring(0,150) : '')); }
