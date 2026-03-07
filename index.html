@@ -147,6 +147,9 @@
         .sidebar.collapsed .space-x-3 > :not(svg) { display: none; }
         .sidebar.collapsed .space-x-3 { gap: 0 !important; justify-content: center; }
         .sidebar.collapsed #externMenu .mb-3 { display: none; }
+        /* Collapsed: center the hamburger, hide MENU label */
+        .sidebar.collapsed .sidebar-toggle-btn { margin: 0 auto; }
+        .sidebar.collapsed > div:first-child { justify-content: center; }
         /* Tooltip on hover when collapsed */
         .sidebar.collapsed .sidebar-item { position: relative; }
         .sidebar.collapsed .sidebar-item:hover::after {
@@ -156,18 +159,17 @@
             font-size: 12px; white-space: nowrap; z-index: 100;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
-        /* Collapse toggle button */
-        .sidebar-collapse-btn {
-            position: absolute; bottom: 16px; right: -14px; z-index: 50;
-            width: 28px; height: 28px; border-radius: 50%;
-            background: #2a2a2a; border: 2px solid #3a3a3a;
-            color: #999; display: none; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.2s; padding: 0;
+        /* Hamburger toggle button (always visible in sidebar) */
+        .sidebar-toggle-btn {
+            display: flex; align-items: center; justify-content: center;
+            width: 36px; height: 36px; border-radius: 8px;
+            background: transparent; border: none;
+            color: #ccc; cursor: pointer; transition: all 0.2s; padding: 0;
+            flex-shrink: 0;
         }
-        .sidebar-collapse-btn:hover { background: #EF7D00; color: #fff; border-color: #EF7D00; }
-        .sidebar:hover .sidebar-collapse-btn { display: flex; }
-        .sidebar.collapsed .sidebar-collapse-btn { display: flex; right: -14px; top: 12px; bottom: auto; width: 32px; height: 32px; }
-        .sidebar.collapsed .sidebar-collapse-btn svg { transform: rotate(180deg); }
+        .sidebar-toggle-btn:hover { background: rgba(239,125,0,0.2); color: #fff; }
+        /* Old collapse btn - hidden, replaced by toggle */
+        .sidebar-collapse-btn { display: none !important; }
         
         .sidebar-item {
             transition: all 0.2s;
@@ -699,14 +701,14 @@
             <div id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
             <!-- Sidebar -->
             <aside id="sidebarNav" class="sidebar w-64 text-white overflow-y-auto flex-shrink-0 relative">
-                <div id="sidebarExpandBtn" onclick="toggleSidebarCollapse()" class="hidden cursor-pointer p-3 mb-1 text-center hover:bg-gray-700 rounded-lg mx-1 mt-1" title="Sidebar aufklappen">
-                    <svg class="w-6 h-6 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                <!-- Sidebar header with hamburger toggle -->
+                <div class="flex items-center justify-between p-3 pb-0">
+                    <button class="sidebar-toggle-btn" onclick="toggleSidebarCollapse()" title="Sidebar ein-/ausklappen">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                    <span class="sidebar-label text-xs text-gray-500 font-semibold tracking-wider">MENU</span>
                 </div>
-                <!-- Collapse toggle -->
-                <button id="sidebarCollapseBtn" class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Sidebar einklappen">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                </button>
-                <div class="p-4 pt-5">
+                <div class="p-4 pt-3">
 
                         <!-- Partner-level quick access (hidden in HQ mode) -->
                         <div id="partnerQuickNav">

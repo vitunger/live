@@ -72,19 +72,29 @@ export function toggleMobileSidebar() {
         overlay.classList.add('active');
     }
 }
-// Desktop sidebar collapse
+// Desktop sidebar collapse (default: collapsed)
 export function toggleSidebarCollapse() {
-    if(window.innerWidth <= 768) return; // No collapse on mobile
+    if(window.innerWidth <= 768) {
+        // On mobile: toggle mobile sidebar instead
+        toggleMobileSidebar();
+        return;
+    }
     var sidebar = document.getElementById('sidebarNav');
+    if(!sidebar) return;
     var isCollapsed = sidebar.classList.toggle('collapsed');
     try { localStorage.setItem('vit-sidebar-collapsed', isCollapsed ? '1' : '0'); } catch(e){}
 }
-// Restore sidebar state on load (desktop only)
+// Restore sidebar state on load — DEFAULT is collapsed
 (function(){
     try {
-        if(window.innerWidth > 768 && localStorage.getItem('vit-sidebar-collapsed') === '1') {
-            var sb = document.getElementById('sidebarNav');
-            if(sb) sb.classList.add('collapsed');
+        var sb = document.getElementById('sidebarNav');
+        if(!sb) return;
+        if(window.innerWidth > 768) {
+            var stored = localStorage.getItem('vit-sidebar-collapsed');
+            // Default collapsed if no value stored or value is '1'
+            if(stored !== '0') {
+                sb.classList.add('collapsed');
+            }
         }
     } catch(e){}
 })();
@@ -95,25 +105,14 @@ window.addEventListener('resize', function() {
     if(window.innerWidth <= 768) {
         sb.classList.remove('collapsed');
     } else {
-        try { if(localStorage.getItem('vit-sidebar-collapsed') === '1') sb.classList.add('collapsed'); } catch(e){}
+        try {
+            var stored = localStorage.getItem('vit-sidebar-collapsed');
+            if(stored !== '0') sb.classList.add('collapsed');
+            else sb.classList.remove('collapsed');
+        } catch(e){}
     }
 });
 
-// Collapsed sidebar: clicking any sidebar-item also expands the sidebar
-// Navigation still happens (no preventDefault), sidebar just opens alongside
-(function() {
-    var sb = document.getElementById('sidebarNav');
-    if(!sb) return;
-    sb.addEventListener('click', function(e) {
-        if(!sb.classList.contains('collapsed')) return;
-        var item = e.target.closest('.sidebar-item');
-        if(item && window.innerWidth > 768) {
-            sb.classList.remove('collapsed');
-            try { localStorage.setItem('vit-sidebar-collapsed', '0'); } catch(ex){}
-            // Don't block the click — let the onclick navigate normally
-        }
-    });
-})();
 export function closeMobileSidebar() {
     var sidebar = document.getElementById('sidebarNav');
     var overlay = document.getElementById('sidebarOverlay');

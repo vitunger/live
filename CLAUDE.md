@@ -102,8 +102,10 @@ sbUrl()       → window.sbUrl()    // Supabase Project URL (zentralisiert)
 3. **KI nur via Edge Functions** – nie Client-seitige API-Keys
 4. **API-Usage-Logging Pflicht** – Jede Edge Function die Anthropic/OpenAI/andere KI-APIs aufruft, MUSS nach jedem Call in `api_usage_log` loggen: provider, model, input_tokens, output_tokens, estimated_cost_usd, duration_ms, success, edge_function, modul. Template siehe `dev-ki-analyse` logApiUsage().
 5. **Keine externen Dependencies** (ausser Tailwind CDN, Supabase, pdf.js, SheetJS)
-5. **Encoding: UTF-8** – nach jeder Aenderung auf ae/oe/ue pruefen
-6. **Braces + Funktions-Check** nach jedem Edit
+6. **Encoding: UTF-8** – nach jeder Aenderung auf ae/oe/ue pruefen
+7. **Braces + Funktions-Check** nach jedem Edit
+8. **Alle JS-Dateien muessen `node --check` bestehen vor Commit** – keine doppelt-escaped Quotes (`\\'` statt `'`), kein `await` in nicht-async Funktionen
+9. **Keine Unicode-Zeichen in JS-Dateien** – nur ASCII in Code und Kommentaren. Fuer Emojis/Sonderzeichen `\uXXXX` Escapes verwenden
 
 ### Deployment
 
@@ -453,3 +455,22 @@ npx supabase functions deploy social-import --project-ref lwwagbkxeofahhwebkab -
 - Pflicht-Lesebestaetigung fuer HQ-Ankuendigungen
 - KI-Zusammenfassung pro Kanal
 - Legacy-Compat Exports: `showKommTab, loadKommSidebar, openKommConv, kommSendMessage, filterKommSidebar, filterCommunity, showForumDetail, submitForumPost, submitForumComment, showBrettDetail, submitBrettPost`
+
+## Sidebar-Verhalten (Maerz 2026)
+
+### Desktop (>768px)
+- **Default: collapsed** (64px, nur Icons mit Tooltip-on-hover)
+- Hamburger-Icon oben in der Sidebar (immer sichtbar, auch collapsed)
+- Klick auf Hamburger → `toggleSidebarCollapse()` → toggle collapsed/expanded
+- Klick auf Sidebar-Icon im collapsed-Zustand → oeffnet nur den View, Sidebar bleibt collapsed
+- Zustand in `localStorage` als `vit-sidebar-collapsed` (`'0'`=expanded, alles andere=collapsed)
+
+### Mobile (<768px)
+- Sidebar komplett versteckt (off-screen, `transform: translateX(-100%)`)
+- Hamburger in Top-Nav (`.topnav-mobile`) → `toggleMobileSidebar()`
+- Sidebar faehrt als Overlay rein (280px, z-index 50)
+- Overlay-Klick oder Navigation → schliesst Sidebar automatisch
+
+### Dateien
+- `index.html`: CSS-Regeln (`.sidebar`, `.sidebar.collapsed`, `@media max-width:768px`), HTML-Struktur (`#sidebarNav`)
+- `portal/views/misc-views.js`: `toggleMobileSidebar()`, `toggleSidebarCollapse()`, `closeMobileSidebar()`, IIFE + resize-Listener
