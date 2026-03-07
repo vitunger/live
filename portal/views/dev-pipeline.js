@@ -160,7 +160,13 @@ export async function loadDevSubmissions(force) {
         devSubmissions = [];
     }
     var bar = document.getElementById('entwStatsBar');
+    // KPIs nur bei Ideen- und Steuerung-Tab relevant
+    var _activeTab = typeof entwCurrentTab !== 'undefined' ? entwCurrentTab : 'ideen';
     if(bar) {
+        if(['ideen','steuerung'].indexOf(_activeTab) === -1) {
+            bar.innerHTML = '';
+            return;
+        }
         var eingang = devSubmissions.filter(function(s){ return ['neu','ki_pruefung'].indexOf(s.status) !== -1; }).length;
         var warten = devSubmissions.filter(function(s){ return ['ki_rueckfragen','hq_rueckfragen'].indexOf(s.status) !== -1; }).length;
         var aktiv = devSubmissions.filter(function(s){ return ['in_entwicklung','beta_test','im_review'].indexOf(s.status) !== -1; }).length;
