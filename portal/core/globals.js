@@ -3,11 +3,11 @@
  * @module core/globals
  */
 
-// ═══ GLOBAL TOAST NOTIFICATION ═══
+// === GLOBAL TOAST NOTIFICATION ===
 window.showToast = function(message, type) {
 type = type || 'info';
 var colors = {success:'#16a34a',error:'#ef4444',warning:'#f59e0b',info:'#3b82f6'};
-var icons = {success:'✅',error:'❌',warning:'⚠️',info:'ℹ️'};
+var icons = {success:'[OK]',error:'[ERR]',warning:'[WARN]',info:'[INFO]'};
 var bg = colors[type] || colors.info;
 var icon = icons[type] || '';
 var t = document.createElement('div');
@@ -25,11 +25,11 @@ export function fmtN(n) { return (!n && n !== 0) ? '0' : Number(n).toLocaleStrin
 window.escH = escH;
 window.fmtN = fmtN;
 
-// ═══ SHARED FORMATTING UTILS ═══
+// === SHARED FORMATTING UTILS ===
 export function fmtEur(n) { return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n || 0); }
-export function fmtDate(d) { if (!d) return '–'; try { return new Date(d).toLocaleDateString('de-DE'); } catch(e) { return '–'; } }
+export function fmtDate(d) { if (!d) return '-'; try { return new Date(d).toLocaleDateString('de-DE'); } catch(e) { return '-'; } }
 export function timeAgo(d) {
-    if (!d) return '—';
+    if (!d) return '-';
     var dt = (d instanceof Date) ? d : new Date(d);
     var s = Math.floor((Date.now() - dt.getTime()) / 1000);
     if (s < 60) return 'gerade eben';
@@ -43,10 +43,10 @@ window.fmtDate = fmtDate;
 window.timeAgo = timeAgo;
 // [prod] log removed
 
-// ═══ SCOPED QUERY HELPER ═══
+// === SCOPED QUERY HELPER ===
 // Defense-in-depth: auto-applies .eq('standort_id', ...) for non-HQ users.
 // Use instead of _sb().from(table).select(...) for any standort-scoped table.
-// During impersonation auth.uid() is still HQ → RLS alone is NOT enough.
+// During impersonation auth.uid() is still HQ -> RLS alone is NOT enough.
 //
 // Usage:  const q = _scopedQuery('leads').select('*').order('created_at', {ascending:false});
 //         const q = _scopedQuery('todos', { forceStandort: someId }).select('*');
@@ -68,7 +68,7 @@ export function scopedQuery(table, opts) {
 }
 window._scopedQuery = scopedQuery;
 
-// ═══ AUDIT LOG HELPER ═══
+// === AUDIT LOG HELPER ===
 // Schreibt eine Nutzer-Aktion in die audit_log Tabelle.
 // Feuert-und-vergisst: Fehler werden nur gewarnt, nie geworfen.
 // Verwendung: window.logAudit('bwa_upload', 'controlling', { datei: 'bwa_jan.pdf' })
@@ -77,7 +77,7 @@ window.logAudit = async function(aktion, modul, details) {
         var sb = window.sb;
         var user = window.sbUser;
         var prof = window.sbProfile;
-        if (!sb || !user) return; // Nicht eingeloggt → skip
+        if (!sb || !user) return; // Nicht eingeloggt -> skip
         // Anreichern mit Browser-Kontext
         var enriched = Object.assign({
             _ua: (navigator.userAgent || '').substring(0, 80),
@@ -92,12 +92,12 @@ window.logAudit = async function(aktion, modul, details) {
             ip_hint:     (document.cookie.match(/cf_ip=([^;]+)/) || [])[1] || null
         });
     } catch(e) {
-        // Nie werfen – Audit darf nie eine Nutzer-Aktion blockieren
+        // Nie werfen - Audit darf nie eine Nutzer-Aktion blockieren
         console.warn('[logAudit] Fehler:', e && e.message);
     }
 };
 
-// Globaler Fehler-Handler – loggt JS-Fehler ins Audit-Log (gedrosselt, max 1/5s)
+// Globaler Fehler-Handler - loggt JS-Fehler ins Audit-Log (gedrosselt, max 1/5s)
 (function() {
     var _lastErrTs = 0;
     var _errCount = 0;
@@ -133,7 +133,7 @@ window.logAudit = async function(aktion, modul, details) {
         });
     });
 
-    // console.error patchen – fängt alle expliziten Fehleraufrufe
+    // console.error patchen - faengt alle expliziten Fehleraufrufe
     var _origError = console.error.bind(console);
     console.error = function() {
         _origError.apply(console, arguments); // Original weiterhin ausgeben
@@ -147,7 +147,7 @@ window.logAudit = async function(aktion, modul, details) {
         });
     };
 
-    // console.warn patchen – fängt Warnungen (Supabase-Fehler, RLS etc.)
+    // console.warn patchen - faengt Warnungen (Supabase-Fehler, RLS etc.)
     var _origWarn = console.warn.bind(console);
     console.warn = function() {
         _origWarn.apply(console, arguments); // Original weiterhin ausgeben
