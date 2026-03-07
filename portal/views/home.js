@@ -177,7 +177,7 @@ export async function loadWidgetPipeline() {
         var leads = res.data || [];
         var offen = leads.filter(function(l) { return l.status !== 'gewonnen' && l.status !== 'verloren'; });
         var angebote = leads.filter(function(l) { return l.status === 'angebot'; });
-        var pipeWert = offen.reduce(function(s, l) { return s + (l.wert || 0); }, 0);
+        var pipeWert = offen.reduce(function(s, l) { return s + (l.geschaetzter_wert || 0); }, 0);
         var badge = document.getElementById('wPipelineBadge');
         if (badge) badge.textContent = offen.length + ' aktiv';
         el.innerHTML = '<div class="space-y-3">'
