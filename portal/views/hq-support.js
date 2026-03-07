@@ -358,184 +358,212 @@ export async function hqSupOpenDetail(ticketId) {
         el.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto py-4';
         el.onclick = function(e) { if (e.target === el) hqSupCloseDetail(); };
 
-        var html = '<div class="bg-white rounded-xl w-full max-w-3xl mx-4 shadow-2xl flex flex-col max-h-[92vh]" onclick="event.stopPropagation()">';
+        // Absender-User aus allen geladenen Usern
+        var absenderUser = _hqSup.hqUsers.find(function(u) { return u.id === t.erstellt_von; });
+        var absenderName = absenderUser ? ((absenderUser.vorname||'') + ' ' + (absenderUser.nachname||'')).trim() : (t.absender_email || 'Unbekannt');
+        var userInitials = absenderName.split(' ').filter(Boolean).map(function(w){return w[0]||'';}).join('').toUpperCase().substring(0,2) || '?';
 
-        // ── Header ──
-        html += '<div class="p-5 border-b border-gray-100 flex-shrink-0">';
-        html += '<div class="flex items-center justify-between mb-2">';
-        html += '<div class="flex items-center gap-2 flex-wrap">';
-        html += '<span class="text-xs font-mono text-gray-400">' + _escH(t.ticket_nr || '') + '</span>';
+        var html = '<div class="bg-white rounded-xl w-full max-w-4xl mx-4 shadow-2xl flex flex-col max-h-[94vh]" onclick="event.stopPropagation()">';
+
+        // ── HEADER: Titel + Ticket-Nr + Meta + Aktionen ──
+        html += '<div class="px-5 py-4 border-b border-gray-200 flex-shrink-0 bg-white">';
+        html += '<div class="flex items-start justify-between gap-4">';
+        html += '<div class="flex-1 min-w-0">';
+        html += '<div class="flex items-center gap-2 mb-1 flex-wrap">';
+        html += '<span class="text-xs font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">' + _escH(t.ticket_nr || '') + '</span>';
         html += '<span class="text-xs font-semibold rounded px-2 py-0.5 ' + (STATUS_COLORS[t.status] || '') + '">' + (STATUS_LABELS[t.status] || t.status) + '</span>';
         html += '<span class="text-xs font-semibold rounded px-2 py-0.5 ' + (PRIO_COLORS[t.prioritaet] || '') + '">' + (PRIO_LABELS[t.prioritaet] || t.prioritaet) + '</span>';
         html += '<span class="text-xs rounded px-1.5 py-0.5 bg-gray-100 text-gray-600">' + (KAT_ICONS[t.kategorie] || '') + ' ' + _escH(t.kategorie || '') + '</span>';
-        if (sla.icon) html += '<span class="text-xs" title="SLA: ' + sla.pct + '%">' + sla.icon + ' ' + sla.pct + '%</span>';
+        if (sla.icon) html += '<span class="text-xs" title="SLA: ' + sla.pct + '%">' + sla.icon + '</span>';
         html += '</div>';
-        html += '<button onclick="hqSupCloseDetail()" class="text-gray-400 hover:text-gray-600 text-xl ml-2">✕</button>';
+        html += '<h3 class="font-bold text-gray-900 text-lg leading-tight truncate">' + _escH(t.betreff) + '</h3>';
+        html += '<p class="text-xs text-gray-400 mt-0.5">Von <strong class="text-gray-600">' + _escH(absenderName) + '</strong> · ' + _escH(standortName) + ' · ' + d.toLocaleDateString('de-DE') + ' ' + d.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</p>';
         html += '</div>';
-        html += '<h3 class="font-bold text-gray-800 text-lg">' + _escH(t.betreff) + '</h3>';
-        html += '<p class="text-xs text-gray-400 mt-1">Von ' + _escH(erstellerName) + ' · ' + _escH(standortName) + ' · ' + d.toLocaleDateString('de-DE') + ' ' + d.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</p>';
+        // Aktionen-Icons rechts oben
+        html += '<div class="flex items-center gap-1 flex-shrink-0">';
+        html += '<button onclick="hqSupToggleUnread(\'' + ticketId + '\')" title="Als ungelesen markieren" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 text-sm">◎</button>';
+        html += '<button onclick="hqSupToggleWatch(\'' + ticketId + '\')" title="Verfolgen" id="hqSupWatchBtn" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 text-sm">🔔</button>';
+        html += '<button onclick="hqSupDuplicate(\'' + ticketId + '\')" title="Duplizieren" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 text-sm">⧉</button>';
+        html += '<div class="relative" id="hqSupMoreWrap">';
+        html += '<button onclick="hqSupToggleMoreMenu()" title="Mehr" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 text-sm font-bold">···</button>';
+        html += '<div id="hqSupMoreMenu" class="hidden absolute right-0 top-9 bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-44 py-1">';
+        html += '<button onclick="hqSupDeleteTicket(\'' + ticketId + '\')" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-50">🗑 Ticket löschen</button>';
+        html += '</div></div>';
+        html += '<button onclick="hqSupCloseDetail()" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 text-lg ml-1">✕</button>';
+        html += '</div></div>';
         html += '</div>';
 
-        // ── Steuerungsleiste ──
-        html += '<div class="p-4 border-b border-gray-100 flex-shrink-0 flex flex-wrap items-center gap-3 bg-gray-50">';
-
-        // Status-Aenderung
-        html += '<div class="flex items-center gap-1">';
-        html += '<label class="text-xs text-gray-500">Status:</label>';
-        html += '<select id="hqSupDetailStatus" class="text-xs border border-gray-300 rounded px-2 py-1">';
-        Object.keys(STATUS_LABELS).forEach(function(s) {
-            html += '<option value="' + s + '"' + (t.status === s ? ' selected' : '') + '>' + STATUS_LABELS[s] + '</option>';
-        });
+        // ── STEUERLEISTE: kompakt, 2 Reihen ──
+        html += '<div class="px-4 py-2.5 border-b border-gray-200 flex-shrink-0 bg-gray-50 flex flex-wrap items-center gap-2">';
+        // Status
+        html += '<select id="hqSupDetailStatus" onchange="hqSupUpdateStatus(\'' + ticketId + '\')" class="text-xs border border-gray-200 rounded px-2 py-1 bg-white">';
+        Object.keys(STATUS_LABELS).forEach(function(s) { html += '<option value="' + s + '"' + (t.status === s ? ' selected' : '') + '>' + STATUS_LABELS[s] + '</option>'; });
         html += '</select>';
-        html += '<button onclick="hqSupUpdateStatus(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Setzen</button>';
-        html += '</div>';
-
         // Assignee
-        html += '<div class="flex items-center gap-1">';
-        html += '<label class="text-xs text-gray-500">Assignee:</label>';
-        html += '<select id="hqSupDetailAssignee" class="text-xs border border-gray-300 rounded px-2 py-1">';
-        html += '<option value="">Nicht zugewiesen</option>';
-        _hqSup.hqUsers.forEach(function(u) {
-            var name = ((u.vorname || '') + ' ' + (u.nachname || '')).trim() || u.name || u.id.slice(0,8);
+        html += '<select id="hqSupDetailAssignee" onchange="hqSupUpdateAssignee(\'' + ticketId + '\')" class="text-xs border border-gray-200 rounded px-2 py-1 bg-white">';
+        html += '<option value="">↳ Nicht zugewiesen</option>';
+        _hqSup.hqUsers.filter(function(u){return u.is_hq;}).forEach(function(u) {
+            var name = ((u.vorname||'') + ' ' + (u.nachname||'')).trim() || u.name || '';
             html += '<option value="' + u.id + '"' + (t.assignee_id === u.id ? ' selected' : '') + '>' + _escH(name) + '</option>';
         });
         html += '</select>';
-        html += '<button onclick="hqSupUpdateAssignee(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Zuweisen</button>';
-        html += '</div>';
-
-        // Prioritaet
-        html += '<div class="flex items-center gap-1">';
-        html += '<label class="text-xs text-gray-500">Prio:</label>';
-        html += '<select id="hqSupDetailPrio" class="text-xs border border-gray-300 rounded px-2 py-1">';
-        ['niedrig','mittel','kritisch'].forEach(function(p) {
-            html += '<option value="' + p + '"' + (t.prioritaet === p ? ' selected' : '') + '>' + PRIO_LABELS[p] + '</option>';
+        // Prio
+        html += '<select id="hqSupDetailPrio" onchange="hqSupUpdatePrio(\'' + ticketId + '\')" class="text-xs border border-gray-200 rounded px-2 py-1 bg-white">';
+        ['niedrig','mittel','kritisch'].forEach(function(p) { html += '<option value="' + p + '"' + (t.prioritaet === p ? ' selected' : '') + '>' + PRIO_LABELS[p] + '</option>'; });
+        html += '</select>';
+        // Abteilung
+        html += '<select id="hqSupDetailAbteilung" onchange="hqSupUpdateAbteilung(\'' + ticketId + '\')" class="text-xs border border-gray-200 rounded px-2 py-1 bg-white">';
+        [['gf','GF'],['sales','Sales'],['marketing','Marketing'],['einkauf','Einkauf'],['support','Support'],['akademie','Akademie'],['hr','HR'],['it','IT']].forEach(function(a) {
+            html += '<option value="' + a[0] + '"' + (t.abteilung === a[0] ? ' selected' : '') + '>' + a[1] + '</option>';
         });
         html += '</select>';
-        html += '<button onclick="hqSupUpdatePrio(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Setzen</button>';
-        html += '</div>';
-
-        // Abteilung
-        html += '<div class="flex items-center gap-1">';
-        html += '<label class="text-xs text-gray-500">Abt.:</label>';
-        html += '<select id="hqSupDetailAbteilung" class="text-xs border border-gray-300 rounded px-2 py-1">';
-        html += '<option value="gf"' + (t.abteilung === "gf" ? ' selected' : '') + '>Geschäftsführung</option>';html += '<option value="sales"' + (t.abteilung === "sales" ? ' selected' : '') + '>Sales</option>';html += '<option value="marketing"' + (t.abteilung === "marketing" ? ' selected' : '') + '>Marketing</option>';html += '<option value="einkauf"' + (t.abteilung === "einkauf" ? ' selected' : '') + '>Einkauf</option>';html += '<option value="support"' + (t.abteilung === "support" ? ' selected' : '') + '>Support</option>';html += '<option value="akademie"' + (t.abteilung === "akademie" ? ' selected' : '') + '>Akademie</option>';html += '<option value="hr"' + (t.abteilung === "hr" ? ' selected' : '') + '>HR</option>';html += '<option value="it"' + (t.abteilung === "it" ? ' selected' : '') + '>IT</option>';
-        html += '</select>';
-        html += '<button onclick="hqSupUpdateAbteilung(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Setzen</button>';
-        html += '</div>';
-
-        // Absender (Suchfeld mit Autocomplete)
-        var absenderUser = _hqSup.hqUsers.find(function(u) { return u.id === t.erstellt_von; });
-        var absenderName = absenderUser ? ((absenderUser.vorname||'') + ' ' + (absenderUser.nachname||'')).trim() : (t.absender_email || '');
-        html += '<div class="flex items-center gap-1 relative">';
-        html += '<label class="text-xs text-gray-500">Absender:</label>';
-        html += '<div class="relative">';
-        html += '<input id="hqSupAbsenderSearch" type="text" value="' + _escH(absenderName) + '" placeholder="Name suchen..." autocomplete="off" oninput="hqSupAbsenderFilter()" class="text-xs border border-gray-300 rounded px-2 py-1 w-40">';
+        // Absender (Suchfeld)
+        html += '<div class="relative flex items-center gap-1">';
+        html += '<span class="text-xs text-gray-400">Absender:</span>';
+        html += '<input id="hqSupAbsenderSearch" type="text" value="' + _escH(absenderName) + '" placeholder="Suchen..." autocomplete="off" oninput="hqSupAbsenderFilter()" class="text-xs border border-gray-200 rounded px-2 py-1 bg-white w-32">';
         html += '<input type="hidden" id="hqSupAbsenderVal" value="' + _escH(t.erstellt_von || '') + '">';
-        html += '<div id="hqSupAbsenderDrop" class="hidden absolute top-6 left-0 bg-white border border-gray-200 rounded shadow-lg z-50 max-h-48 overflow-y-auto w-52">';
+        html += '<button onclick="hqSupUpdateAbsender(\'' + ticketId + '\')" class="text-xs px-1.5 py-1 bg-gray-200 text-gray-600 rounded hover:bg-gray-300">✓</button>';
+        html += '<div id="hqSupAbsenderDrop" class="hidden absolute top-7 left-16 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto w-52">';
         _hqSup.hqUsers.forEach(function(u) {
             var name = ((u.vorname||'') + ' ' + (u.nachname||'')).trim() || u.email || '';
-            var badge = u.is_hq ? ' <span class=\"text-[9px] text-orange-500\">(HQ)</span>' : '';
-            html += '<div onclick="hqSupAbsenderPick(\'' + u.id + '\',\'' + name.replace(/'/g,'\'') + '\')" class="px-3 py-1.5 text-xs hover:bg-gray-50 cursor-pointer">' + _escH(name) + badge + '</div>';
+            var badge = u.is_hq ? ' <span style="color:#f97316;font-size:9px">(HQ)</span>' : '';
+            html += '<div onclick="hqSupAbsenderPick(\'' + u.id + '\',\'' + name.replace(/'/g,'') + '\')" class="px-3 py-1.5 text-xs hover:bg-gray-50 cursor-pointer">' + _escH(name) + badge + '</div>';
         });
         html += '</div></div>';
-        html += '<button onclick="hqSupUpdateAbsender(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">OK</button>';
+        html += '</div>'; // steuerleiste
+
+        // ── BODY: Kommentar-Compose oben (Zoho-Style) + Verlauf darunter ──
+        html += '<div class="flex-1 overflow-y-auto flex flex-col">';
+
+        // Compose-Box OBEN (wie Zoho Desk)
+        html += '<div class="border-b border-gray-200 bg-white flex-shrink-0">';
+        // Tab-Leiste: Antwort / Interne Notiz
+        html += '<div class="flex border-b border-gray-100 px-4">';
+        html += '<button id="hqSupTabReply" onclick="hqSupComposeTab(\'' + ticketId + '\',false)" class="text-xs font-semibold px-4 py-2.5 border-b-2 border-orange-500 text-orange-600 -mb-px">Antwort</button>';
+        html += '<button id="hqSupTabInternal" onclick="hqSupComposeTab(\'' + ticketId + '\',true)" class="text-xs font-semibold px-4 py-2.5 border-b-2 border-transparent text-gray-400 hover:text-gray-600 -mb-px ml-1">🔒 Interne Notiz</button>';
         html += '</div>';
-
-        // KI-Antwort
-        html += '<button onclick="hqSupKiAntwort(\'' + ticketId + '\')" class="text-xs px-3 py-1.5 bg-purple-500 text-white rounded hover:bg-purple-600 ml-auto">🤖 KI-Antwort</button>';
-        html += '</div>';
-
-        // ── Body (scrollbar) ──
-        html += '<div class="flex-1 overflow-y-auto p-5">';
-
-        // Beschreibung
-        html += '<div class="bg-gray-50 rounded-lg p-4 mb-4">';
-        html += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + _escH(t.beschreibung || '') + '</p>';
-        html += '</div>';
-
-        // Anhaenge
-        if (anhaenge.length > 0) {
-            html += '<div class="mb-4"><p class="text-xs font-semibold text-gray-500 mb-1">Anhaenge</p>';
-            anhaenge.forEach(function(a) {
-                html += '<a href="#" onclick="hqSupDownload(\'' + _escH(a.storage_path) + '\', \'' + _escH(a.dateiname) + '\'); return false;" class="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mr-3">📎 ' + _escH(a.dateiname) + '</a>';
-            });
+        // Composer
+        html += '<div class="p-4">';
+        html += '<div class="flex items-start gap-3">';
+        html += '<div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">' + userInitials + '</div>';
+        html += '<div class="flex-1">';
+        // Canned Responses
+        if (_hqSup.cannedResponses.length > 0) {
+            html += '<div class="mb-2">';
+            html += '<select id="hqSupCanned" class="text-xs border border-gray-200 rounded px-2 py-1 bg-white w-full">';
+            html += '<option value="">Textbaustein einfügen...</option>';
+            _hqSup.cannedResponses.forEach(function(c) { html += '<option value="' + _escH(c.inhalt) + '">' + _escH(c.titel) + '</option>'; });
+            html += '</select>';
             html += '</div>';
         }
+        html += '<textarea id="hqSupKommentarInput" rows="4" id="hqSupKommentarInput" class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm resize-none focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-200 transition-colors" placeholder="Antwort schreiben... @Name für Erwähnung"></textarea>';
+        html += '<input type="hidden" id="hqSupInternalCheck" value="false">';
+        html += '<div class="flex items-center justify-between mt-2.5">';
+        html += '<div class="flex items-center gap-3">';
+        html += '<label class="flex items-center gap-1.5 text-xs text-gray-400 cursor-pointer hover:text-gray-600"><input type="file" id="hqSupKommentarFile" class="hidden" onchange="this.parentElement.querySelector('span').textContent=this.files[0]?.name||''"><span class="text-lg">📎</span><span></span></label>';
+        html += '<button onclick="hqSupKiAntwort(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-purple-50 text-purple-600 border border-purple-200 rounded hover:bg-purple-100">🤖 KI</button>';
+        if (_hqSup.cannedResponses.length > 0) html += '<button onclick="hqSupInsertCanned()" class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded hover:bg-gray-200">Baustein</button>';
+        html += '</div>';
+        // Senden-Button-Gruppe (Zoho-Style: Senden + Dropdown für "Senden & Schließen")
+        html += '<div class="flex items-center">';
+        html += '<button onclick="hqSupSendKommentar(\'' + ticketId + '\')" class="px-4 py-2 bg-orange-500 text-white rounded-l-lg text-sm font-semibold hover:bg-orange-600 transition-colors">Senden</button>';
+        html += '<div class="relative">';
+        html += '<button onclick="hqSupToggleSendMenu()" class="px-2 py-2 bg-orange-500 border-l border-orange-400 text-white rounded-r-lg hover:bg-orange-600 transition-colors text-xs">▾</button>';
+        html += '<div id="hqSupSendMenu" class="hidden absolute bottom-10 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-52 py-1">';
+        html += '<button onclick="hqSupSendAndClose(\'' + ticketId + '\')" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2"><span class="text-green-500">✓</span> Senden & Schließen</button>';
+        html += '<button onclick="hqSupSendKommentar(\'' + ticketId + '\')" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2"><span class="text-blue-500">→</span> Nur senden</button>';
+        html += '</div></div>';
+        html += '</div>'; // senden-gruppe
+        html += '</div>'; // flex justify-between
+        html += '</div>'; // flex-1
+        html += '</div>'; // flex items-start
+        html += '</div>'; // p-4 composer
+        html += '</div>'; // compose-box
 
-        // CSAT (wenn vorhanden)
+        // Konversations-Verlauf (scrollbar)
+        html += '<div class="flex-1 overflow-y-auto p-5 bg-gray-50">';
+
+        // Beschreibung als erste Nachricht (Ersteller)
+        html += '<div class="mb-4 flex gap-3">';
+        html += '<div class="w-8 h-8 rounded-full bg-orange-400 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">' + userInitials + '</div>';
+        html += '<div class="flex-1">';
+        html += '<div class="flex items-center gap-2 mb-1">';
+        html += '<span class="text-xs font-bold text-gray-700">' + _escH(absenderName) + '</span>';
+        html += '<span class="text-[10px] text-gray-400">' + d.toLocaleDateString('de-DE') + ' ' + d.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
+        html += '</div>';
+        html += '<div class="bg-white border border-gray-200 rounded-lg p-3">';
+        html += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + _escH(t.beschreibung || '') + '</p>';
+        if (anhaenge.length > 0) {
+            html += '<div class="mt-2 pt-2 border-t border-gray-100">';
+            anhaenge.forEach(function(a) { html += '<a href="#" onclick="hqSupDownload(\'' + _escH(a.storage_path) + '\',\'' + _escH(a.dateiname) + '\');return false;" class="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mr-3">📎 ' + _escH(a.dateiname) + '</a>'; });
+            html += '</div>';
+        }
+        html += '</div></div></div>';
+
+        // CSAT
         if (t.csat_bewertung) {
-            html += '<div class="mb-4 p-3 bg-green-50 border border-green-100 rounded-lg">';
-            html += '<p class="text-xs font-semibold text-green-700">Partner-Bewertung: ';
+            html += '<div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">';
+            html += '<span class="text-green-600 font-semibold text-xs">Partner-Bewertung:</span>';
             for (var s = 1; s <= 5; s++) html += '<span class="' + (s <= t.csat_bewertung ? 'text-yellow-400' : 'text-gray-300') + '">★</span>';
-            html += ' (' + t.csat_bewertung + '/5)</p>';
-            if (t.csat_kommentar) html += '<p class="text-xs text-green-600 mt-1">"' + _escH(t.csat_kommentar) + '"</p>';
+            if (t.csat_kommentar) html += '<span class="text-xs text-green-600 ml-2">"' + _escH(t.csat_kommentar) + '"</span>';
             html += '</div>';
         }
 
         // Kommentar-Thread
-        html += '<h4 class="text-xs font-bold text-gray-500 uppercase mb-3">Verlauf (' + kommentare.length + ')</h4>';
-        if (kommentare.length === 0) {
-            html += '<p class="text-sm text-gray-400 mb-4">Noch keine Kommentare.</p>';
-        }
-        kommentare.forEach(function(k) {
-            var kd = new Date(k.created_at);
-            var isHq = k.users && k.users.is_hq;
-            var kName = k.users ? ((k.users.vorname || '') + ' ' + (k.users.nachname || '')).trim() || k.users.name || 'Unbekannt' : 'Unbekannt';
-            var initials = kName.split(' ').map(function(w) { return w[0] || ''; }).join('').toUpperCase().substring(0, 2);
-            html += '<div class="mb-3 flex gap-3">';
-            html += '<div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white ' + (k.is_internal ? 'bg-gray-500' : isHq ? 'bg-blue-500' : 'bg-orange-500') + '">' + initials + '</div>';
-            html += '<div class="flex-1 p-3 rounded-lg ' + (k.is_internal ? 'bg-yellow-50 border border-yellow-200' : isHq ? 'bg-blue-50 border border-blue-100' : 'bg-white border border-gray-100') + '">';
-            html += '<div class="flex items-center justify-between mb-1">';
-            html += '<span class="text-xs font-bold text-gray-700">' + _escH(kName) + (isHq ? ' <span class="text-blue-500">HQ</span>' : '') + (k.is_internal ? ' <span class="text-yellow-600 text-[10px]">INTERN</span>' : '') + '</span>';
-            html += '<span class="text-[10px] text-gray-400">' + kd.toLocaleDateString('de-DE') + ' ' + kd.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
-            html += '</div>';
-            // Render @mentions in bold
-            var inhalt = _escH(k.inhalt).replace(/@(\w+)/g, '<strong class="text-blue-600">@$1</strong>');
-            html += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + inhalt + '</p>';
-            html += '</div></div>';
-        });
-
-        // Antwort-Box
-        html += '<div class="mt-4 border-t border-gray-100 pt-4">';
-        // Canned Responses Dropdown
-        if (_hqSup.cannedResponses.length > 0) {
-            html += '<div class="mb-2 flex items-center gap-2">';
-            html += '<select id="hqSupCanned" class="text-xs border border-gray-300 rounded px-2 py-1 flex-1">';
-            html += '<option value="">Textbaustein einfuegen...</option>';
-            _hqSup.cannedResponses.forEach(function(c) {
-                html += '<option value="' + _escH(c.inhalt) + '">' + _escH(c.titel) + (c.kategorie ? ' (' + c.kategorie + ')' : '') + '</option>';
+        if (kommentare.length > 0) {
+            html += '<div class="mb-2">';
+            html += '<p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">' + kommentare.length + ' Konversation' + (kommentare.length !== 1 ? 'en' : '') + '</p>';
+            kommentare.forEach(function(k) {
+                var kd = new Date(k.created_at);
+                var isHq = k.users && k.users.is_hq;
+                var kName = k.users ? ((k.users.vorname || '') + ' ' + (k.users.nachname || '')).trim() || k.users.name || 'Unbekannt' : 'Unbekannt';
+                var kInit = kName.split(' ').filter(Boolean).map(function(w){return w[0]||'';}).join('').toUpperCase().substring(0, 2);
+                var bgColor = k.is_internal ? 'bg-gray-500' : isHq ? 'bg-blue-500' : 'bg-orange-400';
+                var boxColor = k.is_internal ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-200';
+                html += '<div class="mb-3 flex gap-3">';
+                html += '<div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white ' + bgColor + '">' + kInit + '</div>';
+                html += '<div class="flex-1">';
+                html += '<div class="flex items-center gap-2 mb-1">';
+                html += '<span class="text-xs font-bold text-gray-700">' + _escH(kName) + '</span>';
+                if (isHq) html += '<span class="text-[9px] font-semibold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded">HQ</span>';
+                if (k.is_internal) html += '<span class="text-[9px] font-semibold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">INTERN</span>';
+                html += '<span class="text-[10px] text-gray-400">' + kd.toLocaleDateString('de-DE') + ' ' + kd.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
+                html += '</div>';
+                html += '<div class="border rounded-lg p-3 ' + boxColor + '">';
+                var inhalt = _escH(k.inhalt).replace(/@(\w+)/g, '<strong class="text-blue-600">@$1</strong>');
+                html += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + inhalt + '</p>';
+                html += '</div></div></div>';
             });
-            html += '</select>';
-            html += '<button onclick="hqSupInsertCanned()" class="text-xs px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Einfuegen</button>';
             html += '</div>';
         }
-        html += '<textarea id="hqSupKommentarInput" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none focus:border-vit-orange focus:outline-none" placeholder="Antwort schreiben... @Name fuer Erwaehnung"></textarea>';
-        html += '<div class="flex items-center justify-between mt-2">';
-        html += '<div class="flex items-center gap-3">';
-        html += '<input type="file" id="hqSupKommentarFile" class="text-xs text-gray-500">';
-        html += '<label class="flex items-center gap-1 text-xs text-gray-500 cursor-pointer">';
-        html += '<input type="checkbox" id="hqSupInternalCheck"> Interne Notiz</label>';
-        html += '</div>';
-        html += '<button onclick="hqSupSendKommentar(\'' + ticketId + '\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">Senden</button>';
-        html += '</div></div>';
+
+        // Ticket schließen / Wiedereröffnen Button für Partner (wenn geloest)
+        if (t.status === 'geloest') {
+            html += '<div class="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">';
+            html += '<span class="text-sm text-green-700">Dieses Ticket ist geschlossen.</span>';
+            html += '<button onclick="hqSupReopenTicket(\'' + ticketId + '\')" class="text-xs px-3 py-1.5 bg-white border border-green-300 text-green-700 rounded-lg hover:bg-green-50">↩ Wieder öffnen</button>';
+            html += '</div>';
+        }
 
         // Audit-Log
         if (logs.length > 0) {
-            html += '<div class="mt-6 border-t border-gray-100 pt-4">';
-            html += '<h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Audit-Log</h4>';
+            html += '<div class="mt-4 border-t border-gray-200 pt-3">';
+            html += '<p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Aktivität</p>';
             logs.forEach(function(l) {
                 var ld = new Date(l.created_at);
-                var lName = l.users ? ((l.users.vorname || '') + ' ' + (l.users.nachname || '')).trim() || l.users.name || '' : 'System';
-                html += '<div class="text-[10px] text-gray-400 mb-1">';
-                html += ld.toLocaleDateString('de-DE') + ' ' + ld.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
-                html += ' · ' + _escH(lName) + ' · ' + _escH(l.aktion);
-                if (l.alt_wert || l.neu_wert) html += ': ' + _escH(l.alt_wert || '') + ' → ' + _escH(l.neu_wert || '');
-                html += '</div>';
+                var lName = l.users ? ((l.users.vorname||'') + ' ' + (l.users.nachname||'')).trim() || l.users.name || '' : 'System';
+                html += '<div class="text-[10px] text-gray-400 mb-0.5 flex gap-1">';
+                html += '<span class="text-gray-300">' + ld.toLocaleDateString('de-DE') + ' ' + ld.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
+                html += '<span>·</span><span class="text-gray-500">' + _escH(lName) + '</span>';
+                html += '<span>·</span><span>' + _escH(l.aktion);
+                if (l.alt_wert || l.neu_wert) html += ': ' + _escH(l.alt_wert||'') + ' → ' + _escH(l.neu_wert||'');
+                html += '</span></div>';
             });
             html += '</div>';
         }
 
-        html += '</div>'; // body
+        html += '</div>'; // verlauf scroll
+        html += '</div>'; // body flex
         html += '</div>'; // modal
 
         el.innerHTML = html;
@@ -654,7 +682,7 @@ export async function hqSupSendKommentar(ticketId) {
     var input = document.getElementById('hqSupKommentarInput');
     if (!input || !input.value.trim()) { _showToast('Bitte Text eingeben', 'error'); return; }
 
-    var isInternal = (document.getElementById('hqSupInternalCheck') || {}).checked || false;
+    var hiddenCheck = document.getElementById('hqSupInternalCheck'); var isInternal = hiddenCheck ? hiddenCheck.value === 'true' : false;
 
     try {
         var user = _sbUser();
@@ -763,6 +791,144 @@ export function hqSupInsertCanned() {
         textarea.value = (textarea.value ? textarea.value + '\n\n' : '') + select.value;
         select.value = '';
     }
+}
+
+// ========== Compose Tab (Antwort / Interne Notiz) ==========
+export function hqSupComposeTab(ticketId, isInternal) {
+    var tabReply = document.getElementById('hqSupTabReply');
+    var tabInt = document.getElementById('hqSupTabInternal');
+    var hidden = document.getElementById('hqSupInternalCheck');
+    var textarea = document.getElementById('hqSupKommentarInput');
+    if (!tabReply || !tabInt) return;
+    if (isInternal) {
+        tabReply.className = 'text-xs font-semibold px-4 py-2.5 border-b-2 border-transparent text-gray-400 hover:text-gray-600 -mb-px';
+        tabInt.className = 'text-xs font-semibold px-4 py-2.5 border-b-2 border-amber-400 text-amber-600 -mb-px ml-1';
+        if (hidden) hidden.value = 'true';
+        if (textarea) { textarea.className = textarea.className.replace('focus:border-orange-400 focus:ring-orange-200','focus:border-amber-400 focus:ring-amber-200'); textarea.placeholder = 'Interne Notiz... (nur für HQ sichtbar)'; }
+    } else {
+        tabReply.className = 'text-xs font-semibold px-4 py-2.5 border-b-2 border-orange-500 text-orange-600 -mb-px';
+        tabInt.className = 'text-xs font-semibold px-4 py-2.5 border-b-2 border-transparent text-gray-400 hover:text-gray-600 -mb-px ml-1';
+        if (hidden) hidden.value = 'false';
+        if (textarea) textarea.placeholder = 'Antwort schreiben... @Name für Erwähnung';
+    }
+}
+
+// ========== Senden-Menü Toggle ==========
+export function hqSupToggleSendMenu() {
+    var m = document.getElementById('hqSupSendMenu');
+    if (m) m.classList.toggle('hidden');
+    // Schließen bei Klick außerhalb
+    setTimeout(function() {
+        document.addEventListener('click', function close(e) {
+            var m2 = document.getElementById('hqSupSendMenu');
+            if (m2 && !m2.contains(e.target)) { m2.classList.add('hidden'); document.removeEventListener('click', close); }
+        });
+    }, 10);
+}
+
+// ========== Mehr-Menü Toggle ==========
+export function hqSupToggleMoreMenu() {
+    var m = document.getElementById('hqSupMoreMenu');
+    if (m) m.classList.toggle('hidden');
+    setTimeout(function() {
+        document.addEventListener('click', function close(e) {
+            var m2 = document.getElementById('hqSupMoreMenu');
+            if (m2 && !m2.contains(e.target)) { m2.classList.add('hidden'); document.removeEventListener('click', close); }
+        });
+    }, 10);
+}
+
+// ========== Senden & Schließen ==========
+export async function hqSupSendAndClose(ticketId) {
+    var m = document.getElementById('hqSupSendMenu');
+    if (m) m.classList.add('hidden');
+    await hqSupSendKommentar(ticketId);
+    try {
+        var user = _sbUser();
+        await _sb().from('support_tickets').update({ status: 'geloest', geloest_at: new Date().toISOString() }).eq('id', ticketId);
+        await _sb().from('support_ticket_log').insert({ ticket_id: ticketId, user_id: user ? user.id : null, aktion: 'status_geaendert', alt_wert: 'offen', neu_wert: 'geloest' });
+        _showToast('Gesendet & Ticket geschlossen', 'success');
+        var ov = document.getElementById('hqSupDetailOverlay');
+        if (ov) ov.remove();
+        _hqSup.loaded = false;
+        await loadHqData();
+        renderHqSupport();
+    } catch(err) { _showToast('Fehler beim Schließen: ' + (err.message||err), 'error'); }
+}
+
+// ========== Ticket wieder öffnen ==========
+export async function hqSupReopenTicket(ticketId) {
+    try {
+        var user = _sbUser();
+        await _sb().from('support_tickets').update({ status: 'offen', wiedereroeffnet_at: new Date().toISOString() }).eq('id', ticketId);
+        await _sb().from('support_ticket_log').insert({ ticket_id: ticketId, user_id: user ? user.id : null, aktion: 'wiedergeoeffnet', neu_wert: 'offen' });
+        _showToast('Ticket wieder geöffnet', 'success');
+        var ov = document.getElementById('hqSupDetailOverlay');
+        if (ov) ov.remove();
+        _hqSup.loaded = false;
+        await loadHqData();
+        renderHqSupport();
+    } catch(err) { _showToast('Fehler: ' + (err.message||err), 'error'); }
+}
+
+// ========== Ticket löschen ==========
+export async function hqSupDeleteTicket(ticketId) {
+    if (!confirm('Ticket wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
+    try {
+        await _sb().from('support_ticket_kommentare').delete().eq('ticket_id', ticketId);
+        await _sb().from('support_ticket_log').delete().eq('ticket_id', ticketId);
+        await _sb().from('support_tickets').delete().eq('id', ticketId);
+        _showToast('Ticket gelöscht', 'success');
+        var ov = document.getElementById('hqSupDetailOverlay');
+        if (ov) ov.remove();
+        _hqSup.loaded = false;
+        await loadHqData();
+        renderHqSupport();
+    } catch(err) { _showToast('Fehler beim Löschen: ' + (err.message||err), 'error'); }
+}
+
+// ========== Als ungelesen markieren ==========
+export async function hqSupToggleUnread(ticketId) {
+    try {
+        var user = _sbUser();
+        await _sb().from('support_ticket_log').insert({ ticket_id: ticketId, user_id: user ? user.id : null, aktion: 'als_ungelesen_markiert' });
+        _showToast('Als ungelesen markiert', 'success');
+    } catch(err) { _showToast('Fehler: ' + (err.message||err), 'error'); }
+}
+
+// ========== Verfolgen ==========
+export async function hqSupToggleWatch(ticketId) {
+    try {
+        var user = _sbUser();
+        var btn = document.getElementById('hqSupWatchBtn');
+        var isWatching = btn && btn.dataset.watching === '1';
+        await _sb().from('support_ticket_log').insert({ ticket_id: ticketId, user_id: user ? user.id : null, aktion: isWatching ? 'entfolgt' : 'folgt' });
+        if (btn) { btn.dataset.watching = isWatching ? '0' : '1'; btn.style.color = isWatching ? '' : '#f97316'; }
+        _showToast(isWatching ? 'Nicht mehr verfolgt' : 'Ticket wird verfolgt', 'success');
+    } catch(err) { _showToast('Fehler: ' + (err.message||err), 'error'); }
+}
+
+// ========== Duplizieren ==========
+export async function hqSupDuplicate(ticketId) {
+    try {
+        var t = _hqSup.tickets.find(function(x){return x.id===ticketId;});
+        if (!t) return;
+        var user = _sbUser();
+        var newNr = 'D-' + Date.now().toString().slice(-6);
+        var resp = await _sb().from('support_tickets').insert({
+            ticket_nr: newNr, betreff: '[Kopie] ' + t.betreff,
+            beschreibung: t.beschreibung, kategorie: t.kategorie,
+            prioritaet: t.prioritaet, status: 'offen',
+            abteilung: t.abteilung, erstellt_von: user ? user.id : t.erstellt_von,
+            standort_id: t.standort_id, richtung: t.richtung
+        }).select().single();
+        if (resp.error) throw resp.error;
+        _showToast('Ticket dupliziert: ' + newNr, 'success');
+        _hqSup.loaded = false;
+        await loadHqData();
+        renderHqSupport();
+        await hqSupOpenDetail(resp.data.id);
+    } catch(err) { _showToast('Fehler: ' + (err.message||err), 'error'); }
 }
 
 // ========== Absender Autocomplete ==========
@@ -1109,6 +1275,9 @@ const _exports = {
     hqSupInsertCanned, hqSupKiAntwort, hqSupDownload,
     hqSupAbsenderFilter, hqSupAbsenderPick,
     hqSupUpdateAbteilung, hqSupUpdateAbsender,
+    hqSupComposeTab, hqSupToggleSendMenu, hqSupToggleMoreMenu,
+    hqSupSendAndClose, hqSupReopenTicket, hqSupDeleteTicket,
+    hqSupToggleUnread, hqSupToggleWatch, hqSupDuplicate,
     hqSupCreateTicket, hqSupSubmitNewTicket,
     hqSupArtikelStatus, hqSupNewArtikel, hqSupSaveArtikel, hqSupEditArtikel, hqSupUpdateArtikel
 };
