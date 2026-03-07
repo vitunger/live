@@ -17,7 +17,7 @@ function _triggerPush()  { if (typeof window.triggerPush === 'function') window.
 // === HQ BILLING / ABRECHNUNG MODULE ===
 // ============================================================
 var BILLING_FN = window.SUPABASE_URL + '/functions/v1/billing';
-var billingData = { invoices: [], products: [], strategies: [], tools: [], overview: [] };
+var billingData = { invoices: [], products: [], overview: [] };
 var currentBillingMonth = '';
 
 
@@ -51,14 +51,6 @@ export async function billingApi(action, params) {
 }
 
 export function initBillingModule() {
-    // Hide deprecated tabs
-    ['strategies', 'tools'].forEach(function(t) {
-        var tab = document.querySelector('.billing-tab[data-tab="' + t + '"]');
-        if (tab) tab.style.display = 'none';
-    });
-    // Hide month selector (replaced by auto-detect)
-    var monthSel = document.getElementById('billingMonthSelect');
-    if (monthSel) monthSel.parentElement.style.display = 'none';
     // Auto-detect current month
     var now = new Date();
     currentBillingMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-01';
@@ -71,14 +63,14 @@ export function initBillingModule() {
 export async function loadBillingOverview() {
     var container = document.getElementById('billingOverviewTable');
     var kpis = document.getElementById('billingKpis');
-    if (container) container.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-400"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></td></tr>';
+    if (container) container.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-gray-400"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></td></tr>';
 
     // Load ALL recent invoices (not just one month)
     var { data: allInvoices, error: invErr } = await _sb().from('billing_invoices')
         .select('id, standort_id, invoice_type, status, total, subtotal, period_start, period_end, invoice_number, billing_day, is_danger_override, due_date, created_at, finalized_at, paid_at, standort:standorte(name, billing_status)')
         .order('created_at', { ascending: false }).limit(100);
     
-    if (invErr) { if (container) container.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">Fehler: ' + _escH(invErr.message) + '</td></tr>'; return; }
+    if (invErr) { if (container) container.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-red-500">Fehler: ' + _escH(invErr.message) + '</td></tr>'; return; }
 
     var invoices = allInvoices || [];
     var openInvoices = invoices.filter(function(i) { return ['draft','review','approved','finalized','sent'].indexOf(i.status) >= 0; });
@@ -104,13 +96,14 @@ export async function loadBillingOverview() {
     if (container) {
         var h = '';
         if (openInvoices.length > 0) {
-            h += '<tr><td colspan="6" class="p-3 bg-amber-50 text-xs font-bold text-amber-700 uppercase">Offene Rechnungen (' + openInvoices.length + ')</td></tr>';
+            h += '<tr><td colspan="7" class="p-3 bg-amber-50 text-xs font-bold text-amber-700 uppercase">Offene Rechnungen (' + openInvoices.length + ')</td></tr>';
             openInvoices.forEach(function(inv) {
                 var stdName = inv.standort ? inv.standort.name : '\u2014';
                 var isDanger = inv.standort && inv.standort.billing_status === 'danger';
                 var isOverdue = inv.due_date && new Date(inv.due_date) < now && inv.status !== 'draft';
                 h += '<tr class="border-t hover:bg-gray-50 cursor-pointer ' + (isOverdue ? 'bg-red-50' : '') + '" onclick="showBillingInvoice(\'' + inv.id + '\')">';
-                h += '<td class="p-3"><p class="font-semibold text-sm">' + _escH(stdName) + (isDanger ? ' <span class="text-[10px] px-1 py-0.5 rounded-full bg-red-500 text-white font-bold">VK</span>' : '') + '</p><p class="text-xs text-gray-400">' + (inv.invoice_number || '') + '</p></td>';
+                h += '<td class="p-3"><p class="font-semibold text-sm">' + _escH(stdName) + (isDanger ? ' <span class="text-[10px] px-1 py-0.5 rounded-full bg-red-500 text-white font-bold">VK</span>' : '') + '</p></td>';
+                h += '<td class="p-3 text-xs text-gray-400 font-mono">' + (inv.invoice_number || '') + '</td>';
                 h += '<td class="p-3 text-xs text-gray-500">' + (inv.period_start || '') + '</td>';
                 h += '<td class="p-3 text-center">' + billingStatusBadge(inv.status) + '</td>';
                 h += '<td class="p-3 text-right font-semibold">' + _fmtEur(inv.total) + '</td>';
@@ -121,11 +114,12 @@ export async function loadBillingOverview() {
         }
         
         if (recentClosed.length > 0) {
-            h += '<tr><td colspan="6" class="p-3 bg-green-50 text-xs font-bold text-green-700 uppercase mt-4">K\u00fcrzlich abgeschlossen (' + recentClosed.length + ')</td></tr>';
+            h += '<tr><td colspan="7" class="p-3 bg-green-50 text-xs font-bold text-green-700 uppercase mt-4">K\u00fcrzlich abgeschlossen (' + recentClosed.length + ')</td></tr>';
             recentClosed.forEach(function(inv) {
                 var stdName = inv.standort ? inv.standort.name : '\u2014';
                 h += '<tr class="border-t hover:bg-gray-50 cursor-pointer opacity-70" onclick="showBillingInvoice(\'' + inv.id + '\')">';
-                h += '<td class="p-3"><p class="text-sm">' + _escH(stdName) + '</p><p class="text-xs text-gray-400">' + (inv.invoice_number || '') + '</p></td>';
+                h += '<td class="p-3"><p class="text-sm">' + _escH(stdName) + '</p></td>';
+                h += '<td class="p-3 text-xs text-gray-400 font-mono">' + (inv.invoice_number || '') + '</td>';
                 h += '<td class="p-3 text-xs text-gray-500">' + (inv.period_start || '') + '</td>';
                 h += '<td class="p-3 text-center">' + billingStatusBadge(inv.status) + '</td>';
                 h += '<td class="p-3 text-right font-semibold text-gray-500">' + _fmtEur(inv.total) + '</td>';
@@ -136,7 +130,7 @@ export async function loadBillingOverview() {
         }
 
         if (invoices.length === 0) {
-            h = '<tr><td colspan="6" class="p-12 text-center"><p class="text-gray-400 text-lg mb-2">Noch keine Rechnungen</p><p class="text-sm text-gray-400">Starte den ersten Abrechnungslauf mit dem Button oben.</p></td></tr>';
+            h = '<tr><td colspan="7" class="p-12 text-center"><p class="text-gray-400 text-lg mb-2">Noch keine Rechnungen</p><p class="text-sm text-gray-400">Starte den ersten Abrechnungslauf mit dem Button oben.</p></td></tr>';
         }
 
         container.innerHTML = h;
@@ -169,45 +163,6 @@ window.startBillingRun = async function() {
     _showToast('\u2705 ' + (result.created || 0) + ' Rechnungen erstellt, ' + (result.skipped || 0) + ' \u00fcbersprungen', 'success');
     loadBillingOverview();
 };
-
-export async function generateMonthlyDrafts() {
-    if (!confirm('Monats-Drafts für ' + currentBillingMonth + ' generieren?\n\nDies erstellt Rechnungsentwürfe für alle Standorte mit gesperrter Jahresstrategie.')) return;
-    var btn = event.target;
-    btn.disabled = true; btn.textContent = '⏳ Generiere...';
-    var result = await billingApi('generate-monthly-drafts', { month: currentBillingMonth });
-    btn.disabled = false; btn.textContent = _t('bill_generate_drafts');
-    if (result.error) { _showToast('Fehler: ' + result.error, 'error'); return; }
-    _showToast('✅ ' + result.created + ' Drafts erstellt, ' + result.skipped + ' übersprungen', 'success');
-    loadBillingOverview();
-}
-
-export function showQuarterlySettlementDialog() {
-    var year = new Date().getFullYear();
-    var q = Math.ceil((new Date().getMonth() + 1) / 3);
-    var prevQ = q > 1 ? q - 1 : 4;
-    var prevY = q > 1 ? year : year - 1;
-    if (!confirm('Quartals-Settlement Q' + prevQ + '/' + prevY + ' generieren?\n\nDies berechnet die Spitzenausgleiche basierend auf den vorliegenden BWA-Daten.\n\nFehlende BWA-Monate werden zu 100% Planbasis abgerechnet.')) return;
-    generateSettlements(prevY, prevQ * 3);
-}
-
-export async function generateQuarterlySettlement(year, quarter) {
-    var result = await billingApi('generate-quarterly-settlement', { year: year, quarter: quarter });
-    if (result.error) { _showToast('Fehler: ' + result.error, 'error'); return; }
-    _showToast('✅ ' + result.created + ' Settlements erstellt', 'success');
-    loadBillingOverview();
-}
-
-export async function finalizeAllReady() {
-    if (!confirm('Alle Drafts für ' + currentBillingMonth + ' finalisieren?')) return;
-    var drafts = billingData.overview.filter(function(x) { return x.invoice && x.invoice.status === 'draft'; });
-    var count = 0;
-    for (var i = 0; i < drafts.length; i++) {
-        var r = await billingApi('finalize-invoice', { invoice_id: drafts[i].invoice.id, user_id: SESSION.user_id });
-        if (!r.error) count++;
-    }
-    _showToast('✅ ' + count + ' Rechnungen finalisiert', 'success');
-    loadBillingOverview();
-}
 
 export async function showBillingInvoice(invId) {
     _showView('hqBillingDetail');
@@ -369,7 +324,6 @@ export function showBillingTab(tab) {
     if (tab === 'invoices') loadAllInvoices();
     if (tab === 'products') loadBillingProducts();
     if (tab === 'standorte') loadBillingStandorte();
-    if (tab === 'tools') loadBillingTools();
     if (tab === 'schedules') loadBillingSchedules();
     if (tab === 'approval') loadApprovalQueue();
 }
@@ -404,56 +358,6 @@ export async function loadAllInvoices() {
         h += '</div></div>';
     });
     container.innerHTML = h || '<p class="text-center text-gray-400 py-8">Keine Rechnungen gefunden</p>';
-}
-
-export async function loadAllStrategies() {
-    var container = document.getElementById('billingStrategiesList');
-    if (!container) return;
-    container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
-
-    var year = new Date().getFullYear();
-    var { data: strategies } = await _sb().from('billing_annual_strategy').select('*, standort:standorte(name)').eq('year', year).order('standort_id');
-
-    var h = '<div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr>';
-    h += '<th class="text-left p-3">Standort</th><th class="text-right p-3">Plan-Umsatz</th><th class="text-right p-3">Marketing</th><th class="text-center p-3">Genehmigt</th><th class="text-center p-3">Gesperrt</th><th class="text-center p-3">Aktion</th>';
-    h += '</tr></thead><tbody>';
-    (strategies || []).forEach(function(s) {
-        h += '<tr class="border-t">';
-        h += '<td class="p-3 font-semibold">' + (s.standort ? s.standort.name : '—') + ' <span class="text-xs text-gray-400">v' + s.version + '</span></td>';
-        h += '<td class="p-3 text-right">' + _fmtEur(s.planned_revenue_year) + '</td>';
-        h += '<td class="p-3 text-right">' + _fmtEur(s.planned_marketing_year) + '</td>';
-        h += '<td class="p-3 text-center">' + (s.approved_at ? '<span class="text-green-600">✅ ' + new Date(s.approved_at).toLocaleDateString('de-DE') + '</span>' : '<button onclick="approveStrategy(\'' + s.id + '\')" class="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">Genehmigen</button>') + '</td>';
-        h += '<td class="p-3 text-center">' + (s.locked ? '<span class="text-green-600 font-semibold">🔒</span>' : s.approved_at ? '<button onclick="lockStrategy(\'' + s.id + '\')" class="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">Sperren</button>' : '<span class="text-gray-300">—</span>') + '</td>';
-        h += '<td class="p-3 text-center"><span class="text-xs text-gray-400">' + _fmtEur(s.planned_revenue_year / 12) + '/Mo</span></td>';
-        h += '</tr>';
-    });
-    h += '</tbody></table></div>';
-
-    // All standorte without strategy
-    var { data: standorte } = await _sb().from('standorte').select('id, name').eq('status', 'aktiv');
-    var stratIds = (strategies || []).map(function(s) { return s.standort_id; });
-    var missing = (standorte || []).filter(function(st) { return stratIds.indexOf(st.id) === -1; });
-    if (missing.length) {
-        h += '<div class="vit-card p-4 mt-4 border-l-4 border-red-400"><h3 class="font-semibold text-sm text-red-700 mb-2">⚠️ Standorte ohne Jahresstrategie ' + year + '</h3>';
-        h += '<div class="flex flex-wrap gap-2">';
-        missing.forEach(function(m) { h += '<span class="text-xs bg-red-50 text-red-600 px-2 py-1 rounded">' + _escH(m.name) + '</span>'; });
-        h += '</div></div>';
-    }
-
-    container.innerHTML = h;
-}
-
-export async function approveStrategy(stratId) {
-    var r = await billingApi('approve-strategy', { strategy_id: stratId, user_id: SESSION.user_id });
-    if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
-    loadAllStrategies();
-}
-
-export async function lockStrategy(stratId) {
-    if (!confirm(_t('bill_strategy_lock'))) return;
-    var r = await billingApi('lock-strategy', { strategy_id: stratId, user_id: SESSION.user_id });
-    if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
-    loadAllStrategies();
 }
 
 export async function loadBillingProducts() {
@@ -586,121 +490,6 @@ window.createProduct = async function() {
 };
 
 
-export async function loadBillingTools() {
-    var container = document.getElementById('billingToolsList');
-    if (!container) return;
-    container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
-
-    // Load all active assignments
-    var { data: assignments } = await _sb().from('billing_user_product_assignments')
-        .select('*, product:billing_products(key, name, default_amount, product_type), user:users(name), standort:standorte(name)')
-        .eq('is_active', true).order('created_at', { ascending: false });
-    
-    // Load per_user products for the assign dropdown
-    var { data: perUserProducts } = await _sb().from('billing_products').select('id, key, name, default_amount, product_type')
-        .eq('active', true).in('product_type', ['per_user', 'fixed']).eq('billing_frequency', 'monthly').order('name');
-    
-    var { data: standorte } = await _sb().from('standorte').select('id, name').eq('status', 'aktiv').order('name');
-    var { data: users } = await _sb().from('users').select('id, name, standort_id').order('name');
-
-    var h = '';
-    
-    // Quick-assign form
-    h += '<div class="vit-card p-5 mb-4"><h3 class="font-semibold text-sm mb-3">+ Produkt zuweisen</h3>';
-    h += '<div class="grid grid-cols-1 md:grid-cols-5 gap-3">';
-    h += '<div><label class="block text-[10px] text-gray-500 mb-1">Typ</label><select id="assignType" class="w-full border rounded-lg px-2.5 py-1.5 text-sm" onchange="toggleAssignUser()"><option value="user">Pro Nutzer</option><option value="standort">Pro Standort</option></select></div>';
-    h += '<div><label class="block text-[10px] text-gray-500 mb-1">Standort</label><select id="assignStandort" class="w-full border rounded-lg px-2.5 py-1.5 text-sm" onchange="filterAssignUsers()">';
-    (standorte || []).forEach(function(s) { h += '<option value="' + s.id + '">' + _escH(s.name) + '</option>'; });
-    h += '</select></div>';
-    h += '<div id="assignUserWrap"><label class="block text-[10px] text-gray-500 mb-1">Nutzer</label><select id="assignUser" class="w-full border rounded-lg px-2.5 py-1.5 text-sm">';
-    (users || []).forEach(function(u) { h += '<option value="' + u.id + '">' + _escH(u.name) + '</option>'; });
-    h += '</select></div>';
-    h += '<div><label class="block text-[10px] text-gray-500 mb-1">Produkt</label><select id="assignProduct" class="w-full border rounded-lg px-2.5 py-1.5 text-sm">';
-    (perUserProducts || []).forEach(function(p) { h += '<option value="' + p.id + '">' + _escH(p.name) + ' (' + _fmtEur(p.default_amount) + ')</option>'; });
-    h += '</select></div>';
-    h += '<div class="flex items-end"><button onclick="assignProductToEntity()" class="w-full px-3 py-1.5 bg-vit-orange text-white rounded-lg text-xs font-semibold hover:bg-orange-600">Zuweisen</button></div>';
-    h += '</div></div>';
-
-    // Summary
-    var totalMonthly = (assignments || []).reduce(function(s, a) { return s + Number(a.cost_override || (a.product ? a.product.default_amount : 0) || 0); }, 0);
-    h += '<div class="flex items-center justify-between mb-4">';
-    h += '<span class="text-xs text-gray-500">' + (assignments || []).length + ' aktive Zuweisungen</span>';
-    h += '<span class="text-sm font-bold text-vit-orange">' + _fmtEur(totalMonthly) + ' / Monat</span>';
-    h += '</div>';
-
-    // Assignments grouped by standort
-    var byStandort = {};
-    (assignments || []).forEach(function(a) {
-        var sName = a.standort ? a.standort.name : 'Unbekannt';
-        if (!byStandort[sName]) byStandort[sName] = [];
-        byStandort[sName].push(a);
-    });
-
-    h += '<div class="space-y-4">';
-    Object.keys(byStandort).sort().forEach(function(sName) {
-        var items = byStandort[sName];
-        var stTotal = items.reduce(function(s, a) { return s + Number(a.cost_override || (a.product ? a.product.default_amount : 0) || 0); }, 0);
-        h += '<div class="vit-card overflow-hidden">';
-        h += '<div class="p-3 bg-gray-50 border-b flex items-center justify-between"><span class="font-semibold text-sm">' + _escH(sName) + '</span><span class="text-xs font-bold text-vit-orange">' + _fmtEur(stTotal) + '/Mt.</span></div>';
-        h += '<table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr><th class="text-left p-2">Produkt</th><th class="text-left p-2">Typ</th><th class="text-left p-2">Nutzer</th><th class="text-right p-2">Preis</th><th class="text-center p-2">Seit</th><th class="text-center p-2">Aktion</th></tr></thead><tbody>';
-        items.forEach(function(a) {
-            var isStandort = a.assignment_type === 'standort';
-            h += '<tr class="border-t border-gray-100">';
-            h += '<td class="p-2 font-medium">' + (a.product ? a.product.name : '\u2014') + '</td>';
-            h += '<td class="p-2"><span class="text-[10px] px-1.5 py-0.5 rounded-full ' + (isStandort ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700') + '">' + (isStandort ? 'Standort' : 'Nutzer') + '</span></td>';
-            h += '<td class="p-2">' + (a.user ? a.user.name : '\u2014 (pauschal)') + '</td>';
-            h += '<td class="p-2 text-right font-semibold">' + _fmtEur(a.cost_override || (a.product ? a.product.default_amount : 0)) + '</td>';
-            h += '<td class="p-2 text-center text-xs text-gray-400">' + (a.active_from || '\u2014') + '</td>';
-            h += '<td class="p-2 text-center"><button onclick="removeAssignment(\'' + a.id + '\')" class="text-xs text-red-500 hover:underline">\u2715</button></td>';
-            h += '</tr>';
-        });
-        h += '</tbody></table></div>';
-    });
-    if (Object.keys(byStandort).length === 0) {
-        h += '<div class="vit-card p-8 text-center"><p class="text-gray-400">Noch keine Produkt-Zuweisungen vorhanden</p></div>';
-    }
-    h += '</div>';
-
-    container.innerHTML = h;
-    window._assignUsers = users;
-    window._assignStandorte = standorte;
-}
-
-window.toggleAssignUser = function() {
-    var wrap = document.getElementById('assignUserWrap');
-    if (wrap) wrap.style.display = document.getElementById('assignType').value === 'user' ? '' : 'none';
-};
-
-window.filterAssignUsers = function() {
-    var stdId = document.getElementById('assignStandort').value;
-    var sel = document.getElementById('assignUser');
-    if (!sel) return;
-    sel.innerHTML = '';
-    (window._assignUsers || []).filter(function(u) { return u.standort_id === stdId || !u.standort_id; }).forEach(function(u) {
-        sel.innerHTML += '<option value="' + u.id + '">' + _escH(u.name) + '</option>';
-    });
-};
-
-window.assignProductToEntity = async function() {
-    var type = document.getElementById('assignType').value;
-    var stdId = document.getElementById('assignStandort').value;
-    var userId = type === 'user' ? document.getElementById('assignUser').value : null;
-    var productId = document.getElementById('assignProduct').value;
-    if (!stdId || !productId) { _showToast('Bitte alle Felder ausfuellen', 'error'); return; }
-    if (type === 'user' && !userId) { _showToast('Bitte Nutzer waehlen', 'error'); return; }
-    var r = await billingApi('assign-product-to-user', { user_id: userId, standort_id: stdId, product_id: productId, assignment_type: type });
-    if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
-    _showToast('Zugewiesen', 'success');
-    loadBillingTools();
-};
-
-window.removeAssignment = async function(id) {
-    if (!confirm('Zuweisung wirklich entfernen?')) return;
-    var r = await billingApi('remove-product-assignment', { assignment_id: id });
-    if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
-    _showToast('Entfernt', 'success');
-    loadBillingTools();
-};
 
 
 // ============================================================
@@ -1806,215 +1595,7 @@ window.sendCostConfirmation = async function(stdId, changeType, changeDescriptio
 };
 
 // Strangler Fig
-const _exports = {fmtEur,fmtDate,billingStatusBadge,billingApi,initBillingModule,loadBillingOverview,generateMonthlyDrafts,showQuarterlySettlementDialog,generateQuarterlySettlement,finalizeAllReady,showBillingInvoice,finalizeInvoice,markInvoicePaid,editLineItem,removeLineItem,addManualLineItem,showBillingTab,loadAllInvoices,loadAllStrategies,approveStrategy,lockStrategy,loadBillingProducts,loadBillingTools,toggleApprovalMode,updateApprovalModeUI,approvalBulkAction,loadApprovalQueue,approvalAction,generateAllDrafts,showStBillingTab,initStandortBilling,loadStandortInvoices,showStandortInvoiceDetail,loadStandortStrategy,submitStandortStrategy,loadStandortCosts,downloadInvoicePdf,loadStandortPayments,loadBillingSchedules,generateSettlements,loadBillingStandorte};
+const _exports = {fmtEur,fmtDate,billingStatusBadge,billingApi,initBillingModule,loadBillingOverview,showBillingInvoice,finalizeInvoice,markInvoicePaid,editLineItem,removeLineItem,addManualLineItem,showBillingTab,loadAllInvoices,loadBillingProducts,toggleApprovalMode,updateApprovalModeUI,approvalBulkAction,loadApprovalQueue,approvalAction,generateAllDrafts,showStBillingTab,initStandortBilling,loadStandortInvoices,showStandortInvoiceDetail,loadStandortStrategy,submitStandortStrategy,loadStandortCosts,downloadInvoicePdf,loadStandortPayments,loadBillingSchedules,generateSettlements,loadBillingStandorte};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // [prod] log removed
 
-// === Window Exports (onclick handlers) ===
-
-export async function loadBillingStandorte() {
-    var container = document.getElementById('billingStandorteList');
-    if (!container) return;
-    container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
-
-    // Load all data in parallel
-    var [stRes, prodRes, assignRes, stratRes] = await Promise.all([
-        _sb().from('standorte').select('id, name, billing_status, settlement_interval, lexoffice_contact_id, lexoffice_contact_name').eq('status', 'aktiv').or('is_demo.eq.false,is_demo.is.null').order('name'),
-        _sb().from('billing_products').select('id, key, name, default_amount, product_type, is_per_employee, is_per_standort, billing_day, payment_term_days').eq('active', true).is('deleted_at', null),
-        _sb().from('billing_user_product_assignments').select('id, standort_id, user_id, product_id, assignment_type, cost_override, product:billing_products(name, default_amount), user:users(name)').eq('is_active', true),
-        _sb().from('billing_annual_strategy').select('standort_id, planned_revenue_year, planned_marketing_year, year').eq('year', new Date().getFullYear()).eq('locked', true)
-    ]);
-
-    var standorte = stRes.data || [];
-    var products = prodRes.data || [];
-    var assignments = assignRes.data || [];
-    var strategies = stratRes.data || [];
-
-    // Summary KPIs
-    var totalMonthly = 0;
-
-    var h = '<div class="mb-4 flex items-center justify-between">';
-    h += '<p class="text-xs text-gray-500">' + standorte.length + ' aktive Standorte</p>';
-    h += '<div id="standorteTotalKpi" class="text-sm font-bold text-vit-orange"></div>';
-    h += '</div>';
-
-    h += '<div class="vit-card overflow-hidden">';
-    h += '<table class="w-full text-sm">';
-    h += '<thead class="bg-gray-50 text-xs text-gray-500 uppercase">';
-    h += '<tr><th class="text-left p-3">Standort</th><th class="text-right p-3">Grundgeb.</th><th class="text-right p-3">Umsatzbet.</th><th class="text-right p-3">Marketing</th><th class="text-right p-3">Tools/Produkte</th><th class="text-right p-3 font-bold">Gesamt/Mt.</th><th class="text-center p-3">LexOffice</th></tr>';
-    h += '</thead><tbody>';
-
-    standorte.forEach(function(st) {
-        var strat = strategies.find(function(s) { return s.standort_id === st.id; });
-        var stAssignments = assignments.filter(function(a) { return a.standort_id === st.id; });
-
-        // Grundgebühr: immer 800
-        var grundgebuehr = 800;
-
-        // Umsatzbeteiligung: 80% * 2% * Planumsatz / 12
-        var umsatzbet = 0;
-        if (strat) umsatzbet = 0.80 * 0.02 * strat.planned_revenue_year / 12;
-
-        // Marketing: Jahresbudget / 12
-        var marketing = 0;
-        if (strat) marketing = strat.planned_marketing_year / 12;
-
-        // Tools/Produkte: Summe aller Zuweisungen
-        var toolsCost = stAssignments.reduce(function(s, a) {
-            return s + Number(a.cost_override || (a.product ? a.product.default_amount : 0) || 0);
-        }, 0);
-
-        var gesamt = grundgebuehr + umsatzbet + marketing + toolsCost;
-        totalMonthly += gesamt;
-
-        var isDanger = st.billing_status === 'danger';
-        var hasLex = !!st.lexoffice_contact_id;
-
-        h += '<tr class="border-t hover:bg-gray-50 cursor-pointer" onclick="toggleStandortDetail(\'' + st.id + '\',this)">';
-        h += '<td class="p-3"><span class="font-semibold">' + _escH(st.name) + '</span>';
-        if (isDanger) h += ' <span class="text-[10px] px-1 py-0.5 rounded-full bg-red-500 text-white font-bold">VK</span>';
-        if (!strat) h += ' <span class="text-[10px] px-1 py-0.5 rounded-full bg-yellow-100 text-yellow-700">keine Strategie</span>';
-        h += '</td>';
-        h += '<td class="p-3 text-right">' + _fmtEur(grundgebuehr) + '</td>';
-        h += '<td class="p-3 text-right">' + (umsatzbet > 0 ? _fmtEur(umsatzbet) : '<span class="text-gray-300">\u2014</span>') + '</td>';
-        h += '<td class="p-3 text-right">' + (marketing > 0 ? _fmtEur(marketing) : '<span class="text-gray-300">\u2014</span>') + '</td>';
-
-        // Tools detail with hover
-        h += '<td class="p-3 text-right">';
-        if (stAssignments.length > 0) {
-            h += '<span class="cursor-help" title="' + stAssignments.map(function(a) { return (a.product ? a.product.name : '?') + ': ' + Number(a.cost_override || (a.product ? a.product.default_amount : 0)).toLocaleString('de-DE') + ' \u20ac'; }).join('\n') + '">';
-            h += _fmtEur(toolsCost) + ' <span class="text-[10px] text-gray-400">(' + stAssignments.length + ')</span>';
-            h += '</span>';
-        } else {
-            h += '<span class="text-gray-300">\u2014</span>';
-        }
-        h += '</td>';
-
-        h += '<td class="p-3 text-right font-bold text-vit-orange">' + _fmtEur(gesamt) + '</td>';
-        h += '<td class="p-3 text-center">' + (hasLex ? '<span class="text-green-600">\u2705</span>' : '<span class="text-gray-300">\u2014</span>') + '</td>';
-        h += '</tr>';
-    });
-
-    h += '</tbody>';
-    h += '<tfoot class="bg-gray-50 border-t-2 border-gray-300"><tr>';
-    h += '<td class="p-3 font-bold">Gesamt (' + standorte.length + ' Standorte)</td>';
-    h += '<td class="p-3 text-right font-bold">' + _fmtEur(standorte.length * 800) + '</td>';
-    h += '<td colspan="3"></td>';
-    h += '<td class="p-3 text-right font-bold text-lg text-vit-orange">' + _fmtEur(totalMonthly) + '</td>';
-    h += '<td></td>';
-    h += '</tr></tfoot>';
-    h += '</table></div>';
-
-    container.innerHTML = h;
-
-    // Update total KPI
-    var kpi = document.getElementById('standorteTotalKpi');
-    if (kpi) kpi.textContent = 'Gesamtvolumen: ' + _fmtEur(totalMonthly) + ' / Monat \u2248 ' + _fmtEur(totalMonthly * 12) + ' / Jahr';
-}
-
-
-// Show/hide Mitarbeiter detail row
-window.toggleStandortDetail = async function(stdId, row) {
-    var existingDetail = document.getElementById('stdDetail-' + stdId);
-    if (existingDetail) { existingDetail.remove(); return; }
-    
-    // Load users + their product assignments
-    var { data: users } = await _sb().from('users').select('id, name, email, is_active').eq('standort_id', stdId).eq('is_active', true).order('name');
-    var { data: assigns } = await _sb().from('billing_user_product_assignments').select('id, user_id, standort_id, assignment_type, cost_override, product:billing_products(name, default_amount)').eq('standort_id', stdId).eq('is_active', true);
-    var { data: confirmations } = await _sb().from('billing_cost_confirmations').select('id, status, change_description, confirmed_at, created_at').eq('standort_id', stdId).order('created_at', { ascending: false }).limit(5);
-    
-    var h = '<tr id="stdDetail-' + stdId + '"><td colspan="7" class="p-0">';
-    h += '<div class="bg-gray-50 border-t-2 border-vit-orange p-4">';
-    
-    // Mitarbeiter + deren Produkte
-    h += '<h4 class="text-xs font-bold text-gray-600 uppercase mb-2">Mitarbeiter & Produkte</h4>';
-    if ((users || []).length > 0) {
-        h += '<table class="w-full text-xs mb-4"><thead class="text-gray-400"><tr><th class="text-left p-1.5">Mitarbeiter</th><th class="text-left p-1.5">Produkte</th><th class="text-right p-1.5">Kosten/Mt.</th></tr></thead><tbody>';
-        (users || []).forEach(function(u) {
-            var userAssigns = (assigns || []).filter(function(a) { return a.user_id === u.id && a.assignment_type === 'user'; });
-            var userCost = userAssigns.reduce(function(s, a) { return s + Number(a.cost_override || (a.product ? a.product.default_amount : 0) || 0); }, 0);
-            h += '<tr class="border-t border-gray-200">';
-            h += '<td class="p-1.5 font-semibold">' + _escH(u.name) + '</td>';
-            h += '<td class="p-1.5">';
-            if (userAssigns.length > 0) {
-                userAssigns.forEach(function(a) {
-                    h += '<span class="inline-block text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 mr-1 mb-0.5">' + (a.product ? a.product.name : '?') + ' ' + Number(a.cost_override || (a.product ? a.product.default_amount : 0)).toLocaleString('de-DE') + ' \u20ac</span>';
-                });
-            } else {
-                h += '<span class="text-gray-300">\u2014</span>';
-            }
-            h += '</td>';
-            h += '<td class="p-1.5 text-right font-semibold">' + (userCost > 0 ? _fmtEur(userCost) : '\u2014') + '</td>';
-            h += '</tr>';
-        });
-        h += '</tbody></table>';
-    } else {
-        h += '<p class="text-xs text-gray-400 mb-4">Keine Mitarbeiter zugeordnet</p>';
-    }
-    
-    // Standort-Produkte (nicht user-bezogen)
-    var stdAssigns = (assigns || []).filter(function(a) { return a.assignment_type === 'standort'; });
-    if (stdAssigns.length > 0) {
-        h += '<h4 class="text-xs font-bold text-gray-600 uppercase mb-2">Standort-Produkte</h4>';
-        h += '<div class="flex flex-wrap gap-1 mb-4">';
-        stdAssigns.forEach(function(a) {
-            h += '<span class="text-[10px] px-2 py-1 rounded bg-green-50 text-green-700 border border-green-200">' + (a.product ? a.product.name : '?') + ' ' + Number(a.cost_override || (a.product ? a.product.default_amount : 0)).toLocaleString('de-DE') + ' \u20ac</span>';
-        });
-        h += '</div>';
-    }
-    
-    // Kostenbestätigungen
-    if ((confirmations || []).length > 0) {
-        h += '<h4 class="text-xs font-bold text-gray-600 uppercase mb-2">Kostenbest\u00e4tigungen</h4>';
-        h += '<div class="space-y-1">';
-        (confirmations || []).forEach(function(c) {
-            var statusIcon = c.status === 'confirmed' ? '\u2705' : c.status === 'pending' ? '\u23f3' : c.status === 'expired' ? '\u274c' : '\u2014';
-            h += '<div class="flex items-center justify-between text-[10px] p-1.5 rounded bg-white">';
-            h += '<span>' + statusIcon + ' ' + _escH(c.change_description) + '</span>';
-            h += '<span class="text-gray-400">' + (c.confirmed_at ? new Date(c.confirmed_at).toLocaleDateString('de-DE') : new Date(c.created_at).toLocaleDateString('de-DE') + ' (offen)') + '</span>';
-            h += '</div>';
-        });
-        h += '</div>';
-    }
-    
-    h += '</div></td></tr>';
-    row.insertAdjacentHTML('afterend', h);
-};
-
-// Send cost confirmation email after product changes
-window.sendCostConfirmation = async function(stdId, changeType, changeDescription, changeDetails) {
-    // Get standort GF email
-    var { data: std } = await _sb().from('standorte').select('id, name, inhaber_name').eq('id', stdId).single();
-    var { data: gfUsers } = await _sb().from('users').select('email').eq('standort_id', stdId).eq('is_active', true);
-    // Find GF email (first user or inhaber)
-    var gfEmail = (gfUsers && gfUsers[0]) ? gfUsers[0].email : null;
-    if (!gfEmail) { console.warn('No GF email for standort', stdId); return; }
-    
-    // Calculate new monthly total
-    var { data: assigns } = await _sb().from('billing_user_product_assignments').select('cost_override, product:billing_products(default_amount)').eq('standort_id', stdId).eq('is_active', true);
-    var toolsCost = (assigns || []).reduce(function(s, a) { return s + Number(a.cost_override || (a.product ? a.product.default_amount : 0) || 0); }, 0);
-    var newTotal = 800 + toolsCost; // Grundgebühr + Tools
-    
-    var session = await _sb().auth.getSession();
-    var token = session?.data?.session?.access_token;
-    if (!token) return;
-    
-    await fetch(SUPABASE_URL + '/functions/v1/billing-confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({
-            action: 'create-confirmation',
-            standort_id: stdId,
-            change_type: changeType,
-            change_description: changeDescription,
-            change_details: changeDetails,
-            email_to: gfEmail,
-            new_monthly_total: newTotal,
-            triggered_by: _sbProfile() ? _sbProfile().id : null
-        })
-    });
-    _showToast('Kostenbest\u00e4tigung an ' + gfEmail + ' gesendet', 'success');
-};
-
-// Strangler Fig: expose ALL functions to window for onclick handlers
-Object.keys(_exports).forEach(function(k) { window[k] = _exports[k]; });

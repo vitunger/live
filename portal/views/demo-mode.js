@@ -523,19 +523,12 @@ function showDemoInvoiceDetail(nr) {
 
 var _origLoadBillingOverview = window.loadBillingOverview;
 var _origLoadAllInvoices = window.loadAllInvoices;
-var _origLoadStrategies = window.loadStrategies;
-var _origLoadProducts = window.loadProducts;
-var _origLoadToolPackages = window.loadToolPackages;
 
 window.loadBillingOverview = function() {
     if(!DEMO_ACTIVE) { if(_origLoadBillingOverview) return _origLoadBillingOverview(); return; }
-    if(typeof initBillingMonthSelect === 'function') initBillingMonthSelect();
     setTimeout(fillDemoHQBillingOverview, 150);
 };
 window.loadAllInvoices = function() { if(!DEMO_ACTIVE) { if(_origLoadAllInvoices) return _origLoadAllInvoices(); return; } fillDemoHQInvoices(); };
-window.loadStrategies = function() { if(!DEMO_ACTIVE) { if(_origLoadStrategies) return _origLoadStrategies(); return; } fillDemoHQStrategies(); };
-window.loadProducts = function() { if(!DEMO_ACTIVE) { if(_origLoadProducts) return _origLoadProducts(); return; } fillDemoHQProducts(); };
-window.loadToolPackages = function() { if(!DEMO_ACTIVE) { if(_origLoadToolPackages) return _origLoadToolPackages(); return; } fillDemoHQTools(); };
 
 function fillDemoHQBillingOverview() {
     var kpis = document.getElementById('billingKpis');
@@ -588,50 +581,6 @@ function fillDemoHQInvoices() {
     }).join('')+'</div>';
 }
 
-function fillDemoHQStrategies() {
-    var el = document.getElementById('billingStrategiesList'); if(!el) return;
-    var strats = [
-        {name:'Grafrath',revenue:'2.400.000',marketing:'24.000',status:'locked'},
-        {name:'Berlin-Brandenburg',revenue:'3.800.000',marketing:'36.000',status:'locked'},
-        {name:'Hamburg',revenue:'3.200.000',marketing:'30.000',status:'locked'},
-        {name:'Holzkirchen',revenue:'—',marketing:'—',status:'missing'}
-    ];
-    el.innerHTML = strats.map(function(s){
-        var badge = s.status==='locked'?'🔒 Gesperrt':'<span class="text-amber-600">⏳ Ausstehend</span>';
-        return '<div class="vit-card p-4"><div class="flex items-center justify-between">'
-            + '<div><p class="font-semibold">vit:bikes '+s.name+'</p></div>'
-            + '<p class="text-sm">'+badge+'</p></div>'
-            + (s.revenue!=='—'?'<div class="grid grid-cols-2 gap-4 mt-3">'
-            + '<div class="p-2 bg-orange-50 rounded"><p class="text-[10px] text-gray-400">Plan-Umsatz</p><p class="text-sm font-bold text-vit-orange">'+s.revenue+' €</p></div>'
-            + '<div class="p-2 bg-blue-50 rounded"><p class="text-[10px] text-gray-400">Marketing</p><p class="text-sm font-bold text-blue-600">'+s.marketing+' €</p></div></div>':'')
-            + '</div>';
-    }).join('');
-}
-
-function fillDemoHQProducts() {
-    var el = document.getElementById('billingProductsList'); if(!el) return;
-    var products = [
-        {name:'Grundgebühr',key:'grundgebuehr',price:'800,00',type:'fix'},
-        {name:'Umsatzbeteiligung',key:'umsatzbeteiligung',price:'2%',type:'variabel'},
-        {name:'Online-Werbebudget',key:'marketing_umlage',price:'variabel',type:'Durchlaufposten'},
-        {name:'Portal Premium',key:'portal_premium',price:'49,00',type:'pro Nutzer'}
-    ];
-    el.innerHTML = '<div class="vit-card overflow-hidden"><table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-500 uppercase"><tr><th class="text-left p-3">Produkt</th><th class="p-3">Key</th><th class="text-right p-3">Preis</th><th class="p-3">Typ</th></tr></thead><tbody>'
-        + products.map(function(p){
-            return '<tr class="border-t"><td class="p-3 font-semibold">'+p.name+'</td><td class="p-3 font-mono text-xs text-gray-400">'+p.key+'</td>'
-                + '<td class="p-3 text-right font-mono font-semibold">'+p.price+' €</td><td class="p-3 text-center"><span class="text-xs px-2 py-0.5 rounded-full bg-gray-100">'+p.type+'</span></td></tr>';
-        }).join('')+'</tbody></table></div>';
-}
-
-function fillDemoHQTools() {
-    var el = document.getElementById('billingToolsList'); if(!el) return;
-    el.innerHTML = '<div class="vit-card p-4"><h3 class="font-semibold mb-3">📦 Tool-Pakete</h3>'
-        + '<div class="grid grid-cols-1 md:grid-cols-3 gap-4">'
-        + '<div class="p-4 border rounded-lg"><p class="font-bold">Portal Premium</p><p class="text-2xl font-bold text-vit-orange mt-1">49 €<span class="text-xs text-gray-400">/Monat</span></p></div>'
-        + '<div class="p-4 border rounded-lg"><p class="font-bold">Portal Standard</p><p class="text-2xl font-bold text-blue-600 mt-1">49 €<span class="text-xs text-gray-400">/Monat</span></p></div>'
-        + '<div class="p-4 border rounded-lg"><p class="font-bold">Werkstatt-Software</p><p class="text-2xl font-bold text-green-600 mt-1">29 €<span class="text-xs text-gray-400">/Monat</span></p></div>'
-        + '</div></div>';
-}
 
 // ─── Utility Helpers ──────────────────────────────────────────────────────
 
