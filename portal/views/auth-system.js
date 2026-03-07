@@ -886,7 +886,9 @@ if(SESSION.account_level === 'extern') {
         if(typeof window.switchViewMode==='function') window.switchViewMode('hq');
         window._vitRestoringView = false;
         // After HQ mode switch, restore saved view if it exists
-        if(_savedView && _savedView !== 'home' && _savedView !== 'hqCockpit') {
+        if(!_savedView || _savedView === 'home') {
+            setTimeout(function() { if(typeof window.showView==='function') window.showView('hqCockpit'); }, 500);
+        } else if(_savedView !== 'hqCockpit') {
             var _restoreAttempt = 0;
             var _tryRestore = function() {
                 _restoreAttempt++;
