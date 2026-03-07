@@ -36,7 +36,10 @@ var _supState = {
     zohoArchiv: [],
     zohoArchivLoaded: false,
     // Statistiken
-    statsData: null
+    statsData: null,
+    // Realtime
+    realtimeSub: null,
+    activeTicketId: null
 };
 
 var STATUS_LABELS = {offen:'Offen',in_bearbeitung:'In Bearbeitung',wartend_auf_partner:'Wartend',geloest:'Geloest',geschlossen:'Geschlossen'};
@@ -836,6 +839,7 @@ export async function openTicketDetail(ticketId) {
         }
 
         // Kommentar-Thread
+        html += '<div id="supVerlaufContainer">';
         html += '<h4 class="text-xs font-bold text-gray-500 uppercase mb-3">Verlauf (' + kommentare.length + ')</h4>';
         if (kommentare.length === 0) {
             html += '<p class="text-sm text-gray-400 mb-4">Noch keine Kommentare.</p>';
@@ -852,9 +856,11 @@ export async function openTicketDetail(ticketId) {
             html += '<span class="text-xs font-bold text-gray-700">' + _escH(kName) + (isHq ? ' <span class="text-blue-500">HQ</span>' : '') + '</span>';
             html += '<span class="text-[10px] text-gray-400">' + kd.toLocaleDateString('de-DE') + ' ' + kd.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
             html += '</div>';
-            html += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + _escH(k.inhalt) + '</p>';
+            var inhalt = _escH(k.inhalt).replace(/@(\w+)/g, '<strong class="text-blue-600">@$1</strong>');
+            html += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + inhalt + '</p>';
             html += '</div></div>';
         });
+        html += '</div>';
 
         // Antwort-Box
         html += '<div class="mt-4 border-t border-gray-100 pt-4">';
@@ -906,7 +912,7 @@ export async function supHqOpenTicket(ticketId) {
         var el = document.createElement('div');
         el.id = 'supHqDetailOverlay';
         el.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto py-4';
-        el.onclick = function(e) { if (e.target === el) { var ov = document.getElementById('supHqDetailOverlay'); if (ov) ov.remove(); } };
+        el.onclick = function(e) { if (e.target === el) { var ov = document.getElementById('supHqDetailOverlay'); if (ov) ov.remove(); if (_supState.realtimeSub) { try { _sb().removeChannel(_supState.realtimeSub); } catch(ex) {} _supState.realtimeSub = null; } } };
 
         var html = '<div class="bg-white rounded-xl w-full max-w-3xl mx-4 shadow-2xl flex flex-col max-h-[92vh]" onclick="event.stopPropagation()">';
 
@@ -995,32 +1001,74 @@ export async function supHqOpenTicket(ticketId) {
             html += '</div>';
         }
 
-        // Kommentar-Thread (inkl. interne Notizen)
+        // Kommentar-Thread (inkl. interne Notizen + threaded replies)
+        _supState.activeTicketId = ticketId;
+
+        // Top-Level Kommentare (kein parent)
+        var topLevel = kommentare.filter(function(k) { return !k.parent_id; });
+        var replies = {};
+        kommentare.forEach(function(k) {
+            if (k.parent_id) {
+                if (!replies[k.parent_id]) replies[k.parent_id] = [];
+                replies[k.parent_id].push(k);
+            }
+        });
+
+        html += '<div id="supHqVerlaufContainer">';
         html += '<h4 class="text-xs font-bold text-gray-500 uppercase mb-3">Verlauf (' + kommentare.length + ')</h4>';
-        if (kommentare.length === 0) {
+        if (topLevel.length === 0) {
             html += '<p class="text-sm text-gray-400 mb-4">Noch keine Kommentare.</p>';
         }
-        kommentare.forEach(function(k) {
+
+        function renderKommentarBlock(k, isReply) {
             var kd = new Date(k.created_at);
             var isHq = k.users && k.users.is_hq;
             var kName = k.users ? ((k.users.vorname || '') + ' ' + (k.users.nachname || '')).trim() || k.users.name || 'Unbekannt' : 'Unbekannt';
             var initials = kName.split(' ').map(function(w) { return w[0] || ''; }).join('').toUpperCase().substring(0, 2);
-            html += '<div class="mb-3 flex gap-3">';
-            html += '<div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white ' + (k.is_internal ? 'bg-gray-500' : isHq ? 'bg-blue-500' : 'bg-orange-500') + '">' + initials + '</div>';
-            html += '<div class="flex-1 p-3 rounded-lg ' + (k.is_internal ? 'bg-yellow-50 border border-yellow-200' : isHq ? 'bg-blue-50 border border-blue-100' : 'bg-white border border-gray-100') + '">';
-            html += '<div class="flex items-center justify-between mb-1">';
-            html += '<span class="text-xs font-bold text-gray-700">' + _escH(kName) + (isHq ? ' <span class="text-blue-500">HQ</span>' : '') + (k.is_internal ? ' <span class="text-yellow-600 text-[10px]">INTERN</span>' : '') + '</span>';
-            html += '<span class="text-[10px] text-gray-400">' + kd.toLocaleDateString('de-DE') + ' ' + kd.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
-            html += '</div>';
+            var bgAvatar = k.is_internal ? 'bg-gray-500' : isHq ? 'bg-blue-500' : 'bg-orange-500';
+            var bgCard = k.is_internal ? 'bg-yellow-50 border border-yellow-200' : isHq ? 'bg-blue-50 border border-blue-100' : 'bg-white border border-gray-100';
+            var out = '<div class="' + (isReply ? 'ml-11 mt-2' : 'mb-3') + ' flex gap-3">';
+            out += '<div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white ' + bgAvatar + '">' + initials + '</div>';
+            out += '<div class="flex-1 p-3 rounded-lg ' + bgCard + '">';
+            out += '<div class="flex items-center justify-between mb-1">';
+            out += '<span class="text-xs font-bold text-gray-700">' + _escH(kName);
+            if (isHq) out += ' <span class="text-blue-500">HQ</span>';
+            if (k.is_internal) out += ' <span class="text-yellow-600 text-[10px] bg-yellow-100 px-1 rounded">INTERN</span>';
+            out += '</span>';
+            out += '<span class="text-[10px] text-gray-400">' + kd.toLocaleDateString('de-DE') + ' ' + kd.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
+            out += '</div>';
             var inhalt = _escH(k.inhalt).replace(/@(\w+)/g, '<strong class="text-blue-600">@$1</strong>');
-            html += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + inhalt + '</p>';
-            html += '</div></div>';
-        });
+            out += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + inhalt + '</p>';
+            // Reply-Button nur für HQ-Agents
+            out += '<button onclick="supHqStartReply(\'' + k.id + '\',\'' + _escH(kName) + '\')" class="mt-1 text-[10px] text-gray-400 hover:text-blue-500 transition-colors">↩ Antworten</button>';
+            out += '</div></div>';
+            return out;
+        }
 
-        // Antwort-Box mit Intern-Checkbox
+        topLevel.forEach(function(k) {
+            html += renderKommentarBlock(k, false);
+            // Replies dieses Kommentars
+            var kReplies = replies[k.id] || [];
+            kReplies.forEach(function(r) {
+                html += renderKommentarBlock(r, true);
+            });
+        });
+        html += '</div>';
+
+        // Reply-Preview-Box (erscheint wenn Reply aktiv)
+        html += '<div id="supHqReplyPreview" class="hidden mx-4 mb-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700 flex items-center justify-between">';
+        html += '<span id="supHqReplyLabel"></span>';
+        html += '<button onclick="supHqCancelReply()" class="ml-2 text-blue-400 hover:text-blue-600 font-bold">✕</button>';
+        html += '</div>';
+
+        // Antwort-Box mit Intern-Checkbox + @Mention + Reply
         html += '<div class="mt-4 border-t border-gray-100 pt-4">';
         html += '<div id="supHqKiAntwortBox"></div>';
-        html += '<textarea id="supHqKommentarInput" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none focus:border-vit-orange focus:outline-none" placeholder="Antwort schreiben..."></textarea>';
+        html += '<input type="hidden" id="supHqParentId" value="">';
+        html += '<div class="relative">';
+        html += '<textarea id="supHqKommentarInput" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none focus:border-vit-orange focus:outline-none" placeholder="Antwort schreiben... @Name für Erwähnung" oninput="supHqMentionInput(this)"></textarea>';
+        html += '<div id="supHqMentionDropdown" class="hidden absolute z-50 bottom-full mb-1 left-0 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto w-64"></div>';
+        html += '</div>';
         html += '<div class="flex items-center justify-between mt-2">';
         html += '<div class="flex items-center gap-3">';
         html += '<input type="file" id="supHqKommentarFile" class="text-xs text-gray-500">';
@@ -1051,6 +1099,9 @@ export async function supHqOpenTicket(ticketId) {
 
         el.innerHTML = html;
         document.body.appendChild(el);
+
+        // Realtime-Subscription starten
+        _supStartRealtime(ticketId);
 
     } catch(err) {
         console.error('[support] supHqOpenTicket:', err);
@@ -1164,20 +1215,173 @@ export function supHqKiInAntwort() {
     }
 }
 
+// ========== HQ: Reply starten ==========
+export function supHqStartReply(parentId, parentAutor) {
+    var parentInput = document.getElementById('supHqParentId');
+    if (parentInput) parentInput.value = parentId;
+    var preview = document.getElementById('supHqReplyPreview');
+    var label = document.getElementById('supHqReplyLabel');
+    if (preview && label) {
+        label.textContent = '↩ Antwort auf ' + parentAutor;
+        preview.classList.remove('hidden');
+    }
+    var ta = document.getElementById('supHqKommentarInput');
+    if (ta) { ta.focus(); ta.placeholder = 'Antwort auf ' + parentAutor + '...'; }
+}
+
+export function supHqCancelReply() {
+    var parentInput = document.getElementById('supHqParentId');
+    if (parentInput) parentInput.value = '';
+    var preview = document.getElementById('supHqReplyPreview');
+    if (preview) preview.classList.add('hidden');
+    var ta = document.getElementById('supHqKommentarInput');
+    if (ta) ta.placeholder = 'Antwort schreiben... @Name für Erwähnung';
+}
+
+// ========== @Mention Autocomplete ==========
+var _supHqAllUsers = null;
+export async function supHqMentionInput(textarea) {
+    var val = textarea.value;
+    var lastAt = val.lastIndexOf('@');
+    var dropdown = document.getElementById('supHqMentionDropdown');
+    if (!dropdown) return;
+    if (lastAt === -1 || (val.length - lastAt) > 20) {
+        dropdown.classList.add('hidden');
+        return;
+    }
+    var query = val.substring(lastAt + 1).toLowerCase();
+    if (!_supHqAllUsers) {
+        var resp = await _sb().from('users').select('id,vorname,nachname,is_hq').eq('status','aktiv').not('vorname','is',null);
+        _supHqAllUsers = resp.data || [];
+    }
+    var matches = _supHqAllUsers.filter(function(u) {
+        var full = ((u.vorname||'') + ' ' + (u.nachname||'')).toLowerCase();
+        return full.indexOf(query) !== -1 && query.length > 0;
+    }).slice(0, 8);
+    if (matches.length === 0) { dropdown.classList.add('hidden'); return; }
+    dropdown.innerHTML = matches.map(function(u) {
+        var name = ((u.vorname||'') + ' ' + (u.nachname||'')).trim();
+        var tag = name.replace(/\s+/g, '');
+        return '<div class="px-3 py-2 hover:bg-orange-50 cursor-pointer text-sm flex items-center gap-2" onclick="supHqInsertMention('' + tag + '','' + u.id + '')">'
+            + '<span class="w-6 h-6 rounded-full bg-blue-500 text-white text-[10px] flex items-center justify-center">' + (u.vorname||'?')[0] + '</span>'
+            + name + (u.is_hq ? ' <span class="text-[10px] text-blue-400">HQ</span>' : '') + '</div>';
+    }).join('');
+    dropdown.classList.remove('hidden');
+}
+
+export function supHqInsertMention(tag, userId) {
+    var ta = document.getElementById('supHqKommentarInput');
+    if (!ta) return;
+    var val = ta.value;
+    var lastAt = val.lastIndexOf('@');
+    ta.value = val.substring(0, lastAt) + '@' + tag + ' ';
+    var dd = document.getElementById('supHqMentionDropdown');
+    if (dd) dd.classList.add('hidden');
+    ta.focus();
+    // Mention-UUID merken für DB
+    if (!ta._mentions) ta._mentions = [];
+    ta._mentions.push(userId);
+}
+
+// ========== Realtime: Verlauf live aktualisieren ==========
+function _supStartRealtime(ticketId) {
+    if (_supState.realtimeSub) {
+        try { _sb().removeChannel(_supState.realtimeSub); } catch(e) {}
+        _supState.realtimeSub = null;
+    }
+    var channel = _sb().channel('support-kommentare-' + ticketId)
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'support_ticket_kommentare',
+            filter: 'ticket_id=eq.' + ticketId
+        }, function(payload) {
+            // Neuen Kommentar live nachladen und Verlauf aktualisieren
+            _supReloadVerlauf(ticketId);
+        })
+        .subscribe();
+    _supState.realtimeSub = channel;
+}
+
+async function _supReloadVerlauf(ticketId) {
+    try {
+        var isHqUser = window.sbProfile && window.sbProfile.is_hq;
+        var q = _sb().from('support_ticket_kommentare')
+            .select('*, users:autor_id(name, vorname, nachname, is_hq)')
+            .eq('ticket_id', ticketId)
+            .order('created_at', {ascending: true});
+        if (!isHqUser) q = q.eq('is_internal', false);
+        var resp = await q;
+        var kommentare = resp.data || [];
+
+        // DOM direkt aktualisieren ohne Modal-Reload
+        var container = document.getElementById('supHqVerlaufContainer');
+        if (!container) return;
+
+        var topLevel = kommentare.filter(function(k) { return !k.parent_id; });
+        var replies = {};
+        kommentare.forEach(function(k) {
+            if (k.parent_id) {
+                if (!replies[k.parent_id]) replies[k.parent_id] = [];
+                replies[k.parent_id].push(k);
+            }
+        });
+
+        var html = '<h4 class="text-xs font-bold text-gray-500 uppercase mb-3">Verlauf (' + kommentare.length + ')</h4>';
+        if (topLevel.length === 0) html += '<p class="text-sm text-gray-400 mb-4">Noch keine Kommentare.</p>';
+
+        topLevel.forEach(function(k) {
+            html += _supRenderKommentarHtml(k, false);
+            var kReplies = replies[k.id] || [];
+            kReplies.forEach(function(r) { html += _supRenderKommentarHtml(r, true); });
+        });
+        container.innerHTML = html;
+    } catch(e) { console.warn('[sup realtime reload]', e); }
+}
+
+function _supRenderKommentarHtml(k, isReply) {
+    var kd = new Date(k.created_at);
+    var isHq = k.users && k.users.is_hq;
+    var kName = k.users ? ((k.users.vorname || '') + ' ' + (k.users.nachname || '')).trim() || k.users.name || 'Unbekannt' : 'Unbekannt';
+    var initials = kName.split(' ').map(function(w) { return w[0] || ''; }).join('').toUpperCase().substring(0, 2);
+    var bgAvatar = k.is_internal ? 'bg-gray-500' : isHq ? 'bg-blue-500' : 'bg-orange-500';
+    var bgCard = k.is_internal ? 'bg-yellow-50 border border-yellow-200' : isHq ? 'bg-blue-50 border border-blue-100' : 'bg-white border border-gray-100';
+    var out = '<div class="' + (isReply ? 'ml-11 mt-2' : 'mb-3') + ' flex gap-3">';
+    out += '<div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white ' + bgAvatar + '">' + initials + '</div>';
+    out += '<div class="flex-1 p-3 rounded-lg ' + bgCard + '">';
+    out += '<div class="flex items-center justify-between mb-1">';
+    out += '<span class="text-xs font-bold text-gray-700">' + _escH(kName);
+    if (isHq) out += ' <span class="text-blue-500">HQ</span>';
+    if (k.is_internal) out += ' <span class="text-yellow-600 text-[10px] bg-yellow-100 px-1 rounded">INTERN</span>';
+    out += '</span>';
+    out += '<span class="text-[10px] text-gray-400">' + kd.toLocaleDateString('de-DE') + ' ' + kd.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
+    out += '</div>';
+    var inhalt = _escH(k.inhalt).replace(/@(\w+)/g, '<strong class="text-blue-600">@$1</strong>');
+    out += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + inhalt + '</p>';
+    out += '<button onclick="supHqStartReply(\'' + k.id + '\',\'' + _escH(kName) + '\')" class="mt-1 text-[10px] text-gray-400 hover:text-blue-500 transition-colors">↩ Antworten</button>';
+    out += '</div></div>';
+    return out;
+}
+
 // ========== HQ: Kommentar senden ==========
 export async function supHqSendKommentar(ticketId) {
     var input = document.getElementById('supHqKommentarInput');
     if (!input || !input.value.trim()) { _showToast('Bitte Text eingeben', 'error'); return; }
     var isInternal = (document.getElementById('supHqInternalCheck') || {}).checked || false;
+    var parentId = (document.getElementById('supHqParentId') || {}).value || null;
+    var mentions = (input._mentions || []);
 
     try {
         var user = _sbUser();
-        var komResp = await _sb().from('support_ticket_kommentare').insert({
+        var insertData = {
             ticket_id: ticketId,
             autor_id: user ? user.id : null,
             inhalt: input.value.trim(),
-            is_internal: isInternal
-        }).select().single();
+            is_internal: isInternal,
+            mentions: mentions
+        };
+        if (parentId) insertData.parent_id = parentId;
+        var komResp = await _sb().from('support_ticket_kommentare').insert(insertData).select().single();
         if (komResp.error) throw komResp.error;
 
         // Datei-Upload
@@ -1221,6 +1425,11 @@ export async function supHqSendKommentar(ticketId) {
                 }).catch(function(){});
             } catch(e) {}
         }
+
+        // Input + Reply zurücksetzen
+        input.value = '';
+        if (input._mentions) input._mentions = [];
+        supHqCancelReply();
 
         // Reload
         var ov = document.getElementById('supHqDetailOverlay');
@@ -1630,6 +1839,10 @@ var _exports = {
     supHqKiAntwort: supHqKiAntwort,
     supHqKiInAntwort: supHqKiInAntwort,
     supHqSendKommentar: supHqSendKommentar,
+    supHqStartReply: supHqStartReply,
+    supHqCancelReply: supHqCancelReply,
+    supHqMentionInput: supHqMentionInput,
+    supHqInsertMention: supHqInsertMention,
     supHqFilterStatusChanged: supHqFilterStatusChanged,
     supHqZohoSearchFn: supHqZohoSearchFn
 };
