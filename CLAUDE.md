@@ -606,3 +606,21 @@ Default: `wissen`. Werden als Sub-Tabs in Cross-Modul-Ansichten angezeigt.
   - `standorte.lexoffice_contact_id` + `lexoffice_contact_name` direkt auf der Tabelle
 - **Auto-Push nach Freigabe:** Wenn eine Rechnung approved wird, wird sie automatisch an LexOffice gesendet
 - **Billing Übersicht:** "Manueller Lauf"-Button + Cron-Status-Anzeige (letzter Lauf, Ergebnis)
+
+### Kostenbestätigungs-System (März 2026)
+- **`billing_cost_confirmations` Tabelle:** Token-basierte Bestätigung durch GF per Email-Link
+  - change_type: product_assigned, product_removed, employee_added, employee_removed, bulk_change
+  - Status: pending → confirmed (oder expired nach 14 Tagen)
+  - Speichert: confirmed_at, confirmed_by_name, confirmed_ip
+- **Edge Function `billing-confirm` (verify_jwt: false, Token-Auth):**
+  - GET ?token=xxx → Zeigt Bestätigungsseite mit Kostendetails
+  - POST {action:'confirm', token:xxx} → Bestätigt
+  - POST {action:'create-confirmation', ...} → Erstellt neue Bestätigung + sendet Email
+- **Automatische Email bei Produktänderung:** 
+  - Mitarbeiter-Edit-Modal: toggleUserProduct → sendCostConfirmation()
+  - Standort-Detail-Modal: addStdProduct/removeStdProduct → sendCostConfirmation()
+  - Email enthält: Änderungsbeschreibung, neue Monatskosten, Bestätigungs-Button
+- **Standorte-Tab:** Klick auf Zeile zeigt aufklappbare Detailansicht:
+  - Mitarbeiter-Tabelle mit deren Produkten und Kosten
+  - Standort-Produkte
+  - Letzte Kostenbestätigungen (Status + Datum)
