@@ -250,9 +250,14 @@ export async function renderKomm() {
     // Gruppen
     h += kommSidebarGruppen();
 
-    // Einstellungen → Kommunikation jetzt unter HQ-Einstellungen Tab
-
     h += '</div>'; // end scrollable sidebar content
+
+    // Benachrichtigungs-Einstellungen unten fixiert
+    h += '<div class="border-t border-gray-100 p-2">';
+    h += '<div onclick="kommShowNotifSettings()" class="px-3 py-2 rounded-lg cursor-pointer flex items-center gap-2 hover:bg-gray-50 text-gray-400 text-xs">';
+    h += '<span>🔔</span><span>Benachrichtigungen einstellen</span></div>';
+    h += '</div>';
+
     h += '</div>'; // end sidebar
 
     // ── CONTENT ──
@@ -1369,14 +1374,31 @@ export async function kommStartDMWith(userId, userName) {
     if (overlay) overlay.remove();
 
     var uid = _sbUser() ? _sbUser().id : null;
-    // Check ob DM schon existiert
-    var existing = KOMM.dmList.find(function(dm) {
-        return dm.kanal_mitglieder && dm.kanal_mitglieder.some(function(m) { return m.user_id === userId; });
-    });
-    if (existing) {
-        kommGoView('dm', existing.id, userName);
-        return;
-    }
+    if (!uid) return;
+
+    // Robuster Check: DB-seitig nach bestehendem DM suchen
+    try {
+        var checkResp = await _sb().from('kanal_mitglieder')
+            .select('kanal_id')
+            .eq('user_id', uid);
+        var myKanalIds = (checkResp.data || []).map(function(m) { return m.kanal_id; });
+
+        if (myKanalIds.length > 0) {
+            var partnerResp = await _sb().from('kanal_mitglieder')
+                .select('kanal_id, chat_kanaele!inner(typ)')
+                .eq('user_id', userId)
+                .in('kanal_id', myKanalIds);
+
+            var existingDm = (partnerResp.data || []).find(function(m) {
+                return m.chat_kanaele && m.chat_kanaele.typ === 'dm';
+            });
+
+            if (existingDm) {
+                kommGoView('dm', existingDm.kanal_id, userName);
+                return;
+            }
+        }
+    } catch(e) { console.warn('DM check failed:', e); }
 
     // Neuen DM-Kanal erstellen
     try {
@@ -1492,6 +1514,101 @@ window.kommSaveStandortChannel = async function() {
     } catch (e) {
         console.error('Create channel error:', e);
         _showToast('❌ Fehler: ' + (e.message || 'Unbekannt'), 'error');
+    }
+};
+
+// ========== Benachrichtigungs-Einstellungen ==========
+window.kommShowNotifSettings = async function() {
+    if (document.getElementById('kommNotifModal')) return;
+
+    var uid = _sbUser() ? _sbUser().id : null;
+    if (!uid) return;
+
+    // Aktuelle Einstellungen laden
+    var resp = await _sb().from('komm_benachrichtigungen').select('*').eq('user_id', uid).single();
+    var s = resp.data || {};
+
+    var categories = [
+        { key: 'dm', label: '💬 Direktnachrichten', desc: 'Wenn jemand dir eine DM schreibt' },
+        { key: 'mention', label: '🔔 @Erwähnungen', desc: 'Wenn dich jemand in einem Channel erwähnt' },
+        { key: 'ankuendigung', label: '📢 Ankündigungen', desc: 'Neue News & Pflicht-Bestätigungen' },
+        { key: 'channel', label: '# Channel-Nachrichten', desc: 'Jede neue Nachricht in Channels' }
+    ];
+
+    var h = '<div id="kommNotifModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onclick="if(event.target===this)this.remove()">';
+    h += '<div class="bg-white rounded-xl w-full max-w-md shadow-2xl max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">';
+    h += '<div class="p-5 border-b border-gray-100 flex items-center justify-between">';
+    h += '<div><h3 class="text-base font-bold">🔔 Benachrichtigungen</h3><p class="text-xs text-gray-400">Wähle wie du informiert werden möchtest</p></div>';
+    h += '<button onclick="document.getElementById(\'kommNotifModal\').remove()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div>';
+
+    h += '<div class="p-5 space-y-5">';
+
+    categories.forEach(function(cat) {
+        h += '<div class="bg-gray-50 rounded-xl p-4">';
+        h += '<div class="mb-3"><div class="text-sm font-bold text-gray-800">' + cat.label + '</div>';
+        h += '<div class="text-[11px] text-gray-400">' + cat.desc + '</div></div>';
+        h += '<div class="space-y-2">';
+
+        var channels = [
+            { suffix: '_glocke', label: '🔔 Cockpit-Glocke', icon: '🔔' },
+            { suffix: '_push', label: '📱 Push-Benachrichtigung', icon: '📱' },
+            { suffix: '_email', label: '📧 E-Mail', icon: '📧' }
+        ];
+
+        channels.forEach(function(ch) {
+            var field = cat.key + ch.suffix;
+            var checked = s[field] !== false && s[field] !== undefined ? s[field] : false;
+            h += '<label class="flex items-center justify-between px-3 py-2 rounded-lg bg-white border border-gray-100 cursor-pointer hover:border-orange-200">';
+            h += '<span class="text-xs font-medium text-gray-700">' + ch.label + '</span>';
+            h += '<div class="relative">';
+            h += '<input type="checkbox" class="kommNotifCheck sr-only" data-field="' + field + '"' + (checked ? ' checked' : '') + '>';
+            h += '<div class="w-9 h-5 rounded-full transition-colors ' + (checked ? 'bg-[#EF7D00]' : 'bg-gray-200') + '" onclick="kommToggleNotifSwitch(this)">';
+            h += '<div class="w-4 h-4 rounded-full bg-white shadow absolute top-0.5 transition-transform ' + (checked ? 'translate-x-4' : 'translate-x-0.5') + '"></div>';
+            h += '</div></div></label>';
+        });
+
+        h += '</div></div>';
+    });
+
+    h += '</div>';
+    h += '<div class="p-4 border-t border-gray-100 flex justify-end">';
+    h += '<button onclick="kommSaveNotifSettings()" class="px-5 py-2 bg-vit-orange text-white rounded-lg text-sm font-bold hover:opacity-90">Speichern</button>';
+    h += '</div></div></div>';
+
+    document.body.insertAdjacentHTML('beforeend', h);
+};
+
+window.kommToggleNotifSwitch = function(toggle) {
+    var label = toggle.closest('label');
+    var checkbox = label.querySelector('.kommNotifCheck');
+    checkbox.checked = !checkbox.checked;
+    var dot = toggle.querySelector('div');
+    if (checkbox.checked) {
+        toggle.className = 'w-9 h-5 rounded-full transition-colors bg-[#EF7D00]';
+        dot.className = 'w-4 h-4 rounded-full bg-white shadow absolute top-0.5 transition-transform translate-x-4';
+    } else {
+        toggle.className = 'w-9 h-5 rounded-full transition-colors bg-gray-200';
+        dot.className = 'w-4 h-4 rounded-full bg-white shadow absolute top-0.5 transition-transform translate-x-0.5';
+    }
+};
+
+window.kommSaveNotifSettings = async function() {
+    var uid = _sbUser() ? _sbUser().id : null;
+    if (!uid) return;
+
+    var data = { user_id: uid, updated_at: new Date().toISOString() };
+    document.querySelectorAll('.kommNotifCheck').forEach(function(cb) {
+        data[cb.dataset.field] = cb.checked;
+    });
+
+    try {
+        var resp = await _sb().from('komm_benachrichtigungen').upsert(data);
+        if (resp.error) throw resp.error;
+        _showToast('✅ Benachrichtigungen gespeichert');
+        var modal = document.getElementById('kommNotifModal');
+        if (modal) modal.remove();
+    } catch(e) {
+        _showToast('❌ Fehler: ' + (e.message || ''), 'error');
     }
 };
 
