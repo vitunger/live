@@ -87,80 +87,75 @@ export async function renderWissenGlobal() {
 
     el.innerHTML = '<div class="text-center py-12 text-gray-400"><div class="animate-spin text-3xl mb-3">⚙️</div><p class="text-sm">Artikel werden geladen…</p></div>';
 
-    try {
-    var alleArtikel = await _ladeWissenArtikel();
-    } catch(e) { console.error('[wissen] Artikel laden fehlgeschlagen:', e); var alleArtikel = []; }
-    try { await _ladeGelesenStatus(); } catch(e) { console.warn('[wissen] Gelesen-Status Fehler:', e); }
+    var alleArtikel = [];
+    try { alleArtikel = await _ladeWissenArtikel(); } catch(e) { console.error('[wissen] Laden fehlgeschlagen:', e); }
+    try { await _ladeGelesenStatus(); } catch(e) {}
 
-    // Bereich-Filter direkt rendern (inline, nicht async)
-    var filterContainer = document.getElementById('wissenBereichFilter');
-    if (filterContainer) {
-        var katCounts = {};
-        alleArtikel.forEach(function(a){ var k=a.kategorie||'allgemein'; katCounts[k]=(katCounts[k]||0)+1; });
-        var fh = '<button onclick="filterWissenBereich(\'all\')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold '+(currentWissenBereich==='all'?'bg-vit-orange text-white':'bg-gray-100 text-gray-600')+'" data-wbf="all">📚 Alle ('+alleArtikel.length+')</button>';
-        KAT_ORDER.forEach(function(k){
-            var count = katCounts[k] || 0;
-            if (count > 0) {
-                fh += '<button onclick="filterWissenBereich(\''+k+'\')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold '+(currentWissenBereich===k?'bg-vit-orange text-white':'bg-gray-100 text-gray-600')+'" data-wbf="'+k+'">'+(KAT_ICONS[k]||'📄')+' '+(KAT_LABELS[k]||k)+' ('+count+')</button>';
-            }
-        });
-        filterContainer.innerHTML = fh;
-    }
+    // === Alles in einem HTML-Block rendern (KPIs + Filter + Content) ===
+    var gelesenCount = _wissenGelesenSet.size;
+    var katCounts = {};
+    alleArtikel.forEach(function(a){ var k=a.kategorie||'allgemein'; katCounts[k]=(katCounts[k]||0)+1; });
 
-    // Filter: Kategorie
+    var h = '';
+
+    // KPIs
+    h += '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">';
+    h += '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-gray-800">'+alleArtikel.length+'</p><p class="text-xs text-gray-500">Artikel gesamt</p></div>';
+    h += '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-green-600">'+gelesenCount+'</p><p class="text-xs text-gray-500">Gelesen</p></div>';
+    h += '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-vit-orange">'+(alleArtikel.length - gelesenCount)+'</p><p class="text-xs text-gray-500">Ungelesen</p></div>';
+    h += '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-blue-600">'+alleArtikel.filter(function(a){return a.gepinnt;}).length+'</p><p class="text-xs text-gray-500">Gepinnt</p></div>';
+    h += '</div>';
+
+    // Bereich-Filter
+    h += '<div class="flex flex-wrap gap-2 mb-6">';
+    h += '<button onclick="filterWissenBereich(\'all\')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold '+(currentWissenBereich==='all'?'bg-vit-orange text-white':'bg-gray-100 text-gray-600')+'" data-wbf="all">📚 Alle ('+alleArtikel.length+')</button>';
+    KAT_ORDER.forEach(function(k){
+        var count = katCounts[k] || 0;
+        if (count > 0) {
+            h += '<button onclick="filterWissenBereich(\''+k+'\')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold '+(currentWissenBereich===k?'bg-vit-orange text-white':'bg-gray-100 text-gray-600')+'" data-wbf="'+k+'">'+(KAT_ICONS[k]||'📄')+' '+(KAT_LABELS[k]||k)+' ('+count+')</button>';
+        }
+    });
+    h += '</div>';
+
+    // Filter anwenden
     var items = alleArtikel;
     if (currentWissenBereich !== 'all') {
         items = items.filter(function(a){ return a.kategorie === currentWissenBereich; });
     }
-    // Filter: Inhaltsart
     if (currentWissenArt !== 'all') {
         items = items.filter(function(a){ return a.inhaltsart === currentWissenArt; });
     }
-    // Suche (nur über globale Suche Ctrl+K)
-    var search = '';
 
-    // KPI-Leiste
-    var kpi = document.getElementById('wissenKpis');
-    console.log('[wissen] KPIs:', kpi ? 'gefunden' : 'NICHT GEFUNDEN', 'Artikel:', alleArtikel.length, 'Gelesen:', _wissenGelesenSet.size);
-    if (kpi) {
-        var gelesenCount = _wissenGelesenSet.size;
-        kpi.innerHTML =
-            '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-gray-800">'+alleArtikel.length+'</p><p class="text-xs text-gray-500">Artikel gesamt</p></div>' +
-            '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-green-600">'+gelesenCount+'</p><p class="text-xs text-gray-500">Gelesen</p></div>' +
-            '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-vit-orange">'+(alleArtikel.length - gelesenCount)+'</p><p class="text-xs text-gray-500">Ungelesen</p></div>' +
-            '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-blue-600">'+alleArtikel.filter(function(a){return a.gepinnt;}).length+'</p><p class="text-xs text-gray-500">Gepinnt</p></div>';
-    }
-
-    // Artikel-Karten rendern
+    // Artikel-Karten
     if (!items.length) {
-        el.innerHTML = '<div class="text-center text-gray-400 py-12"><p class="text-2xl mb-2">🔍</p><p class="text-sm">Keine Artikel gefunden' + (search ? ' für "'+_escH(search)+'"' : '') + '.</p></div>';
-        return;
+        h += '<div class="text-center text-gray-400 py-12"><p class="text-2xl mb-2">🔍</p><p class="text-sm">Keine Artikel gefunden.</p></div>';
+    } else {
+        h += '<div class="grid grid-cols-1 gap-3">';
+        items.forEach(function(a) {
+            var kat = a.kategorie || 'allgemein';
+            var art = a.inhaltsart || 'wissen';
+            var katColor = KAT_COLORS[kat] || 'bg-gray-100 text-gray-700';
+            var tags = (a.tags||[]).slice(0,4).map(function(t){ return '<span class="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">'+_escH(t)+'</span>'; }).join(' ');
+            var preview = (a.inhalt||'').replace(/<[^>]*>/g, '').replace(/\s+/g,' ').trim().slice(0,160);
+            var isGelesen = _wissenGelesenSet.has(a.id);
+            h += '<div class="vit-card p-4 hover:shadow-md transition cursor-pointer '+(isGelesen?'border-l-4 border-l-green-400':'border-l-4 border-l-transparent')+'" onclick="window.openWissenArtikel(\''+a.id+'\')">'+
+                '<div class="flex items-start justify-between mb-2">'+
+                    '<div class="flex items-center space-x-2 flex-wrap gap-1">'+
+                        '<span class="text-xs px-2 py-0.5 rounded-full font-semibold '+katColor+'">'+(KAT_ICONS[kat]||'📄')+' '+(KAT_LABELS[kat]||kat)+'</span>'+
+                        '<span class="text-xs px-2 py-0.5 rounded-full font-semibold bg-white border border-gray-200 text-gray-600">'+(ART_ICONS[art]||'📄')+' '+(ART_LABELS[art]||art)+'</span>'+
+                        (a.gepinnt?'<span class="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full font-semibold">📌</span>':'')+
+                        (isGelesen?'<span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-semibold">✓ Gelesen</span>':'')+
+                        tags+
+                    '</div>'+
+                    '<span class="text-xs text-gray-400 ml-2 whitespace-nowrap">👁️ '+a.views+'</span>'+
+                '</div>'+
+                '<h4 class="font-semibold text-gray-800 text-sm mb-1">'+_escH(a.titel)+'</h4>'+
+                '<p class="text-xs text-gray-500 leading-relaxed">'+_escH(preview)+(preview.length>=160?'…':'')+'</p>'+
+            '</div>';
+        });
+        h += '</div>';
     }
 
-    var h = '<div class="grid grid-cols-1 gap-3">';
-    items.forEach(function(a) {
-        var kat = a.kategorie || 'allgemein';
-        var art = a.inhaltsart || 'wissen';
-        var katColor = KAT_COLORS[kat] || 'bg-gray-100 text-gray-700';
-        var tags = (a.tags||[]).slice(0,4).map(function(t){ return '<span class="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">'+_escH(t)+'</span>'; }).join(' ');
-        var preview = (a.inhalt||'').replace(/<[^>]*>/g, '').replace(/\s+/g,' ').trim().slice(0,160);
-        var isGelesen = _wissenGelesenSet.has(a.id);
-        h += '<div class="vit-card p-4 hover:shadow-md transition cursor-pointer '+(isGelesen?'border-l-4 border-l-green-400':'border-l-4 border-l-transparent')+'" onclick="window.openWissenArtikel(\''+a.id+'\')">' +
-            '<div class="flex items-start justify-between mb-2">' +
-                '<div class="flex items-center space-x-2 flex-wrap gap-1">' +
-                    '<span class="text-xs px-2 py-0.5 rounded-full font-semibold '+katColor+'">'+(KAT_ICONS[kat]||'📄')+' '+(KAT_LABELS[kat]||kat)+'</span>' +
-                    '<span class="text-xs px-2 py-0.5 rounded-full font-semibold bg-white border border-gray-200 text-gray-600">'+(ART_ICONS[art]||'📄')+' '+(ART_LABELS[art]||art)+'</span>' +
-                    (a.gepinnt?'<span class="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full font-semibold">📌</span>':'') +
-                    (isGelesen?'<span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-semibold">✓ Gelesen</span>':'') +
-                    tags +
-                '</div>' +
-                '<span class="text-xs text-gray-400 ml-2 whitespace-nowrap">👁️ '+a.views+'</span>' +
-            '</div>' +
-            '<h4 class="font-semibold text-gray-800 text-sm mb-1">'+_escH(a.titel)+'</h4>' +
-            '<p class="text-xs text-gray-500 leading-relaxed">'+_escH(preview)+(preview.length>=160?'…':'')+'</p>' +
-        '</div>';
-    });
-    h += '</div>';
     el.innerHTML = h;
 }
 
