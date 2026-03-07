@@ -37,15 +37,33 @@ export async function renderKommSettings() {
     h += '<th class="text-left p-3 text-xs font-semibold text-gray-500">Beschreibung</th>';
     h += '<th class="text-left p-3 text-xs font-semibold text-gray-500">Sichtbar</th>';
     h += '<th class="p-3"></th></tr></thead><tbody>';
-    netz.forEach(function(c) {
+
+    // Parent-Channels zuerst, dann Sub-Channels darunter
+    var netzParents = netz.filter(function(c) { return !c.parent_id; });
+    var netzSubs = {};
+    netz.forEach(function(c) { if (c.parent_id) { if (!netzSubs[c.parent_id]) netzSubs[c.parent_id] = []; netzSubs[c.parent_id].push(c); } });
+
+    netzParents.forEach(function(c) {
+        var subs = netzSubs[c.id] || [];
         h += '<tr class="border-b border-gray-100 hover:bg-gray-50">';
-        h += '<td class="p-3 font-semibold text-gray-800">' + (c.icon || '💬') + ' ' + _escH(c.name) + '</td>';
+        h += '<td class="p-3 font-semibold text-gray-800">' + (c.icon || '💬') + ' ' + _escH(c.name) + (subs.length > 0 ? ' <span class="text-[10px] text-gray-400 font-normal">(' + subs.length + ' Sub)</span>' : '') + '</td>';
         h += '<td class="p-3 text-xs text-gray-500">' + _escH(c.beschreibung || '—') + '</td>';
         h += '<td class="p-3"><span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ' + (c.sichtbar_fuer_rollen && c.sichtbar_fuer_rollen.length > 0 ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600') + '">' + (c.sichtbar_fuer_rollen && c.sichtbar_fuer_rollen.length > 0 ? c.sichtbar_fuer_rollen.join(', ') : 'Alle') + '</span></td>';
         h += '<td class="p-3 text-right">';
         h += '<button onclick="kommEditChannelDialog(\'' + c.id + '\')" class="text-xs text-gray-400 hover:text-vit-orange bg-transparent border-none cursor-pointer mr-2" title="Bearbeiten">✏️</button>';
         h += '<button onclick="kommDeleteChannelConfirm(\'' + c.id + '\',\'' + _escH(c.name).replace(/'/g, "\\'") + '\')" class="text-xs text-gray-400 hover:text-red-500 bg-transparent border-none cursor-pointer" title="Löschen">🗑</button>';
         h += '</td></tr>';
+        // Sub-Channels eingerückt
+        subs.forEach(function(s) {
+            h += '<tr class="border-b border-gray-50 hover:bg-gray-50 bg-gray-50/50">';
+            h += '<td class="p-3 pl-8 text-gray-600"><span class="text-gray-300 mr-1">└</span> ' + (s.icon || '💬') + ' ' + _escH(s.name) + '</td>';
+            h += '<td class="p-3 text-xs text-gray-400">' + _escH(s.beschreibung || '—') + '</td>';
+            h += '<td class="p-3"><span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-gray-100 text-gray-500">erbt</span></td>';
+            h += '<td class="p-3 text-right">';
+            h += '<button onclick="kommEditChannelDialog(\'' + s.id + '\')" class="text-xs text-gray-400 hover:text-vit-orange bg-transparent border-none cursor-pointer mr-2">✏️</button>';
+            h += '<button onclick="kommDeleteChannelConfirm(\'' + s.id + '\',\'' + _escH(s.name).replace(/'/g, "\\'") + '\')" class="text-xs text-gray-400 hover:text-red-500 bg-transparent border-none cursor-pointer">🗑</button>';
+            h += '</td></tr>';
+        });
     });
     if (netz.length === 0) h += '<tr><td colspan="4" class="p-4 text-center text-gray-400 text-xs">Keine Netzwerk-Channels</td></tr>';
     h += '</tbody></table></div></div>';
@@ -112,13 +130,29 @@ export async function renderKommSettings() {
 
 // === Channel erstellen Dialog ===
 window.kommNewChannelDialog = function(isNetzwerk) {
+    // Lade Parent-Channel-Optionen (nur Netzwerk-Channels ohne parent_id)
+    var parentOptions = _kommChannels.filter(function(c) { return c.ist_netzwerk && !c.parent_id && !c.ist_hq_channel; });
+
     var html = '<div id="kommChannelModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onclick="if(event.target===this)this.remove()">';
-    html += '<div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl" onclick="event.stopPropagation()">';
+    html += '<div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">';
     html += '<h3 class="text-base font-bold mb-4">' + (isNetzwerk ? '🌐 Neuer Netzwerk-Channel' : '🏪 Neuer Standort-Channel') + '</h3>';
     html += '<div class="space-y-3">';
     html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Name *</label><input id="kommChName" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-vit-orange focus:border-transparent outline-none" placeholder="z.B. Marketing Netzwerk"></div>';
     html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Icon (Emoji)</label><input id="kommChIcon" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none" value="💬" maxlength="4"></div>';
     html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Beschreibung</label><textarea id="kommChDesc" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none outline-none" placeholder="Wofür ist dieser Channel?"></textarea></div>';
+
+    // Parent-Channel Auswahl (Sub-Channel)
+    if (isNetzwerk && parentOptions.length > 0) {
+        html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Übergeordneter Channel (optional)</label>';
+        html += '<select id="kommChParent" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none">';
+        html += '<option value="">— Eigenständiger Channel —</option>';
+        parentOptions.forEach(function(p) {
+            html += '<option value="' + p.id + '">' + (p.icon || '💬') + ' ' + _escH(p.name) + '</option>';
+        });
+        html += '</select>';
+        html += '<p class="text-[10px] text-gray-400 mt-1">Wähle einen Channel um diesen als Unterchannel zu erstellen</p></div>';
+    }
+
     html += _kommRollenCheckboxes([]);
     html += '</div>';
     html += '<div class="flex justify-end gap-2 mt-5">';
@@ -136,6 +170,8 @@ window.kommSaveNewChannel = async function(isNetzwerk) {
     if (!name) { _showToast('Bitte Channel-Name eingeben', 'error'); return; }
 
     var rollen = _getSelectedRollen();
+    var parentEl = document.getElementById('kommChParent');
+    var parentId = parentEl ? parentEl.value || null : null;
 
     try {
         var data = {
@@ -146,7 +182,8 @@ window.kommSaveNewChannel = async function(isNetzwerk) {
             typ: 'channel',
             ist_privat: false,
             erstellt_von: _sbUser() ? _sbUser().id : null,
-            sichtbar_fuer_rollen: rollen.length > 0 ? rollen : null
+            sichtbar_fuer_rollen: rollen.length > 0 ? rollen : null,
+            parent_id: parentId
         };
         var resp = await _sb().from('chat_kanaele').insert(data).select().single();
         if (resp.error) throw resp.error;
