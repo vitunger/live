@@ -34,7 +34,7 @@ var KOMM = {
     recInterval: null,
     mediaRecorder: null,
     audioChunks: [],
-    sidebarSections: { standort: true, netzwerk: true, dms: true, gruppen: false }
+    sidebarSections: { standort: true, hq: true, netzwerk: true, dms: true, gruppen: false }
 };
 
 var KOMM_EMOJIS = ['👍','❤️','🔥','😂','🎉','✅','👀','🙏'];
@@ -162,8 +162,18 @@ export async function renderKomm() {
     h += '<div class="h-px bg-gray-100 mx-3 my-1"></div>';
 
     // Standort Channels
-    var standortKanaele = KOMM.kanaele.filter(function(k) { return !k.ist_netzwerk && k.standort_id; });
+    // Standort Channels (ohne HQ-Channels)
+    var standortKanaele = KOMM.kanaele.filter(function(k) { return !k.ist_netzwerk && !k.ist_hq_channel && k.standort_id; });
+    var hqKanaele = KOMM.kanaele.filter(function(k) { return k.ist_hq_channel; });
     var netzwerkKanaele = KOMM.kanaele.filter(function(k) { return k.ist_netzwerk; });
+
+    // Für Partner: nur den eigenen HQ-Channel zeigen
+    // Für HQ: alle HQ-Channels zeigen
+    var myStandortId = _sbProfile() ? _sbProfile().standort_id : null;
+    var visibleHqKanaele = hqKanaele;
+    if (!kommIsHQ()) {
+        visibleHqKanaele = hqKanaele.filter(function(k) { return k.standort_id === myStandortId; });
+    }
 
     h += kommSidebarSection('🏪 ' + _escH(standortName), 'standort', standortKanaele);
     // GF/Inhaber kann Standort-Channels/Gruppen erstellen
@@ -171,6 +181,12 @@ export async function renderKomm() {
         h += '<div onclick="kommNewStandortChannelDialog()" class="mx-2 px-2.5 py-1 rounded-lg cursor-pointer flex items-center gap-2 text-gray-400 text-xs hover:text-vit-orange hover:bg-gray-50">';
         h += '<span>＋</span> Channel / Gruppe erstellen</div>';
     }
+
+    // HQ ↔ Standort Channels
+    if (visibleHqKanaele.length > 0) {
+        h += kommSidebarSection('🏢 Headquarter', 'hq', visibleHqKanaele);
+    }
+
     h += kommSidebarSection('🌐 Netzwerk', 'netzwerk', netzwerkKanaele);
 
     h += '<div class="h-px bg-gray-100 mx-3 my-1"></div>';
@@ -1223,6 +1239,12 @@ export async function kommNewDM() {
         } catch(e) { KOMM.allUsers = []; }
     }
 
+    // DM-Berechtigung: HQ sieht nur HQ, Partner sieht nur Partner
+    var currentIsHQ = kommIsHQ();
+    var filteredUsers = KOMM.allUsers.filter(function(u) {
+        return currentIsHQ ? u.is_hq : !u.is_hq;
+    });
+
     var el = document.createElement('div');
     el.id = 'kommNewDMOverlay';
     el.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto py-8';
@@ -1233,7 +1255,7 @@ export async function kommNewDM() {
     html += '<h3 class="text-base font-bold">Neuer Chat</h3>';
     html += '<button onclick="document.getElementById(\'kommNewDMOverlay\').remove()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div>';
     html += '<div class="p-4 max-h-80 overflow-y-auto">';
-    KOMM.allUsers.forEach(function(u) {
+    filteredUsers.forEach(function(u) {
         var uid = _sbUser() ? _sbUser().id : null;
         if (u.id === uid) return;
         var name = kommUserName(u);
