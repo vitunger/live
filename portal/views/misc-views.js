@@ -99,22 +99,20 @@ window.addEventListener('resize', function() {
     }
 });
 
-// Touch device: tap on collapsed sidebar header area expands it
+// Collapsed sidebar: clicking any sidebar-item also expands the sidebar
+// Navigation still happens (no preventDefault), sidebar just opens alongside
 (function() {
     var sb = document.getElementById('sidebarNav');
     if(!sb) return;
     sb.addEventListener('click', function(e) {
         if(!sb.classList.contains('collapsed')) return;
-        // If clicked on a sidebar-item icon (not the collapse button), expand
         var item = e.target.closest('.sidebar-item');
-        var colBtn = e.target.closest('.sidebar-collapse-btn');
-        if(item && !colBtn && window.innerWidth > 768) {
-            e.preventDefault();
-            e.stopPropagation();
+        if(item && window.innerWidth > 768) {
             sb.classList.remove('collapsed');
             try { localStorage.setItem('vit-sidebar-collapsed', '0'); } catch(ex){}
+            // Don't block the click — let the onclick navigate normally
         }
-    }, true);
+    });
 })();
 export function closeMobileSidebar() {
     var sidebar = document.getElementById('sidebarNav');
