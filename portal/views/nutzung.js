@@ -212,6 +212,8 @@ function renderSavingRow(s, maxVal) {
     if (s.nutzer_typ === 'beide') typeBadge = '<span class="text-[9px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full ml-1">HQ+Partner</span>';
     var html = '<div class="mb-3"><div class="flex justify-between items-start mb-1">';
     html += '<div class="flex-1 min-w-0"><span class="text-sm font-semibold text-gray-700">' + _escH(s.name) + '</span>' + typeBadge;
+    var nutzerInfo = s.anzahl_nutzer && s.anzahl_nutzer > 1 ? s.anzahl_nutzer + ' Nutzer' : '';
+    if (nutzerInfo) html += ' <span class="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full ml-1">' + nutzerInfo + '</span>';
     if (s.notizen) html += '<br><span class="text-[10px] text-gray-400">' + _escH(s.notizen) + '</span>';
     html += '</div><div class="flex items-center gap-2 ml-2 shrink-0"><span class="text-sm font-bold text-green-600">\u20AC' + c.toFixed(0) + '/Mo</span>';
     html += '<button onclick="deleteSaving(\'' + s.id + '\')" class="text-gray-300 hover:text-red-500 text-xs">\u2715</button></div></div>';
@@ -306,6 +308,17 @@ window.openSavingModal = function() {
                     </div>
                 </div>
 
+                <!-- Nutzer-Anzahl -->
+                <div>
+                    <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block">Anzahl Nutzer <span class="font-normal text-gray-400">(optional)</span></label>
+                    <div class="flex gap-2 items-center">
+                        <input id="sm_nutzer_anzahl" type="number" min="1" step="1" placeholder="z.B. 5"
+                            oninput="updateSavingCalc()"
+                            class="w-28 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-vit-orange">
+                        <span class="text-xs text-gray-400">Nutzer × Betrag = Gesamtkosten</span>
+                    </div>
+                </div>
+
                 <!-- Notiz -->
                 <div>
                     <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block">Notiz <span class="font-normal text-gray-400">(optional)</span></label>
@@ -344,11 +357,17 @@ window.setSavingTyp = function(typ) {
 window.updateSavingCalc = function() {
     var betrag = parseFloat(document.getElementById('sm_betrag').value) || 0;
     var rhythmus = document.getElementById('sm_rhythmus').value;
+    var nutzer = parseInt(document.getElementById('sm_nutzer_anzahl').value) || 1;
     var calcEl = document.getElementById('sm_calc');
     var calcVal = document.getElementById('sm_calc_val');
-    if (rhythmus === 'jaehrlich' && betrag > 0) {
-        var monthly = betrag / 12;
-        calcVal.textContent = '\u20AC' + monthly.toFixed(2);
+    var monthly = rhythmus === 'jaehrlich' ? betrag / 12 : betrag;
+    var total = monthly * nutzer;
+    if (betrag > 0 && (rhythmus === 'jaehrlich' || nutzer > 1)) {
+        var parts = [];
+        if (rhythmus === 'jaehrlich') parts.push('\u20AC' + (betrag/12).toFixed(2) + '/Mo');
+        if (nutzer > 1) parts.push('\u00D7 ' + nutzer + ' Nutzer');
+        parts.push('= \u20AC' + total.toFixed(2) + '/Mo gesamt');
+        calcVal.textContent = parts.join('  ');
         calcEl.classList.remove('hidden');
     } else {
         calcEl.classList.add('hidden');
@@ -365,7 +384,8 @@ window.saveSavingModal = async function() {
     if (!name) { _showToast('Tool-Name eingeben', 'error'); return; }
     if (!betrag) { _showToast('Betrag eingeben', 'error'); return; }
 
-    var kosten_pro_monat = rhythmus === 'jaehrlich' ? betrag / 12 : betrag;
+    var nutzer_anzahl = parseInt(document.getElementById('sm_nutzer_anzahl').value) || 1;
+    var kosten_pro_monat = (rhythmus === 'jaehrlich' ? betrag / 12 : betrag) * nutzer_anzahl;
 
     var payload = {
         name: name,
@@ -378,6 +398,7 @@ window.saveSavingModal = async function() {
     payload.nutzer_typ = nutzer_typ;
     payload.abrechnungsrhythmus = rhythmus;
     payload.original_betrag = betrag;
+    payload.anzahl_nutzer = nutzer_anzahl;
 
     var r = await _sb().from('cockpit_savings').insert(payload);
     if (r.error) {
