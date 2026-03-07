@@ -1603,12 +1603,14 @@ export function kommNewGroup() {
     html += '<button onclick="kommSaveGroup()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-bold hover:opacity-90">Erstellen</button>';
     html += '</div></div></div>';
     document.body.insertAdjacentHTML('beforeend', html);
-    document.getElementById('kommGroupName').focus();
+    var _gn = document.getElementById('kommGroupName'); if (_gn) _gn.focus();
 }
 
 window.kommSaveGroup = async function() {
-    var name = (document.getElementById('kommGroupName').value || '').trim();
-    var icon = (document.getElementById('kommGroupIcon').value || '👥').trim();
+    var _gn2 = document.getElementById('kommGroupName');
+    var _gi2 = document.getElementById('kommGroupIcon');
+    var name = (_gn2 ? _gn2.value : '').trim();
+    var icon = (_gi2 ? _gi2.value : '\ud83d\udc65').trim();
     if (!name) { _showToast('Bitte Gruppenname eingeben', 'error'); return; }
 
     var uid = _sbUser() ? _sbUser().id : null;
@@ -1690,14 +1692,18 @@ window.kommNewStandortChannelDialog = function() {
     html += '<button onclick="kommSaveStandortChannel()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-bold hover:opacity-90">Erstellen</button>';
     html += '</div></div></div>';
     document.body.insertAdjacentHTML('beforeend', html);
-    document.getElementById('kommChName').focus();
+    var _cn = document.getElementById('kommChName'); if (_cn) _cn.focus();
 };
 
 window.kommSaveStandortChannel = async function() {
-    var name = (document.getElementById('kommChName').value || '').trim();
-    var icon = (document.getElementById('kommChIcon').value || '💬').trim();
-    var desc = (document.getElementById('kommChDesc').value || '').trim();
-    var typ = (document.getElementById('kommChTyp').value || 'channel');
+    var _cn2 = document.getElementById('kommChName');
+    var _ci2 = document.getElementById('kommChIcon');
+    var _cd2 = document.getElementById('kommChDesc');
+    var _ct2 = document.getElementById('kommChTyp');
+    var name = (_cn2 ? _cn2.value : '').trim();
+    var icon = (_ci2 ? _ci2.value : '\ud83d\udcac').trim();
+    var desc = (_cd2 ? _cd2.value : '').trim();
+    var typ = (_ct2 ? _ct2.value : 'channel');
     if (!name) { _showToast('Bitte Namen eingeben', 'error'); return; }
 
     var standortId = _sbProfile() ? _sbProfile().standort_id : null;

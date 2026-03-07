@@ -195,8 +195,9 @@ h+='<div><label class="form-label">Notizen</label><textarea class="form-input" i
 
 h+='<div class="flex gap-3 mt-5 pt-4 border-t border-gray-100"><button onclick="saveLief('+(idx!=null?idx:'null')+')" class="vbtn">💾 Speichern</button><button onclick="closeModal()" class="rbtn">Abbrechen</button></div>';
 h+='</div></div>';
-document.getElementById('modalWrap').innerHTML=h;
-document.getElementById('modalWrap').style.display='block';
+var mw=document.getElementById('modalWrap');
+if(!mw){mw=document.createElement('div');mw.id='modalWrap';document.body.appendChild(mw);}
+mw.innerHTML=h;mw.style.display='block';
 }
 
 export function saveLief(idx){
@@ -227,7 +228,7 @@ closeModal();
 reRenderEkTab();
 }
 
-export function closeModal(){document.getElementById('modalWrap').style.display='none';document.getElementById('modalWrap').innerHTML='';}
+export function closeModal(){var mw=document.getElementById('modalWrap');if(mw){mw.style.display='none';mw.innerHTML='';}}
 
 // ==================== HQ STRATEGIEN ====================
 export function renderHQStrat(){

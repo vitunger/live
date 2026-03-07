@@ -337,8 +337,9 @@ export function openMonatsDetail(monat) {
 }
 
 export function addMonatsMassnahme() {
-    document.getElementById('monatsDetailMassnahmen').insertAdjacentHTML('beforeend',
-        '<div class="flex items-center space-x-2"><input type="checkbox" class="monats-massnahme-cb w-4 h-4 rounded border-gray-300 text-vit-orange focus:ring-orange-400"><input type="text" class="monats-massnahme-text flex-1 border rounded px-2 py-1 text-sm" placeholder="Neue Maßnahme..."><button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 text-xs">✕</button></div>');
+    var el = document.getElementById('monatsDetailMassnahmen');
+    if (el) el.insertAdjacentHTML('beforeend',
+        '<div class="flex items-center space-x-2"><input type="checkbox" class="monats-massnahme-cb w-4 h-4 rounded border-gray-300 text-vit-orange focus:ring-orange-400"><input type="text" class="monats-massnahme-text flex-1 border rounded px-2 py-1 text-sm" placeholder="Neue Ma\u00dfnahme..."><button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 text-xs">\u2715</button></div>');
 }
 export function closeMonatsDetail() { var el=document.getElementById('monatsDetailPanel'); if(el) el.style.display = 'none'; monatsDetailEditMonat = null; }
 
@@ -458,7 +459,7 @@ export function closeJournalModal() { var el=document.getElementById('journalMod
 
 export function setJournalStimmung(val) {
     journalStimmungValue = val;
-    document.getElementById('journalStimmung').value = val;
+    var _js = document.getElementById('journalStimmung'); if (_js) _js.value = val;
     document.querySelectorAll('.journal-stimmung-btn').forEach(function(b){
         var match = b.getAttribute('data-val') === val;
         b.style.opacity = match ? '1' : '0.4';
@@ -475,13 +476,15 @@ export function updateThemaStyle(cb) {
 document.addEventListener('change', function(e) { if (e.target.classList.contains('journal-thema-cb')) updateThemaStyle(e.target); });
 
 export function addJournalWunsch(text) {
-    document.getElementById('journalWuensche').insertAdjacentHTML('beforeend',
+    var el = document.getElementById('journalWuensche'); if (!el) return;
+    el.insertAdjacentHTML('beforeend',
         '<div class="flex items-center space-x-2"><span class="text-red-500 text-xs">🔴</span>'
         +'<input type="text" value="'+escH(text||'')+'" class="journal-wunsch-text flex-1 border rounded px-2 py-1 text-sm" placeholder="Wunsch an HQ...">'
         +'<button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 text-xs">✕</button></div>');
 }
 export function addJournalMassnahme(text, verantw, frist) {
-    document.getElementById('journalMassnahmen').insertAdjacentHTML('beforeend',
+    var el = document.getElementById('journalMassnahmen'); if (!el) return;
+    el.insertAdjacentHTML('beforeend',
         '<div class="flex items-center space-x-2 flex-wrap gap-y-1"><span class="text-xs">☐</span>'
         +'<input type="text" value="'+escH(text||'')+'" class="journal-massnahme-text flex-1 min-w-[150px] border rounded px-2 py-1 text-sm" placeholder="Maßnahme...">'
         +'<input type="text" value="'+escH(verantw||'')+'" class="journal-massnahme-verantw w-24 border rounded px-2 py-1 text-sm" placeholder="Wer?">'

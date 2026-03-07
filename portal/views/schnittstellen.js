@@ -53,16 +53,17 @@ var CONNECTORS = {
         logs: []
     },
     meta: {
-        id: 'meta', name: 'Meta Ads', icon: '📘', iconBg: '#dbeafe',
+        id: 'meta', name: 'Meta Ads', icon: '\ud83d\udcd8', iconBg: '#dbeafe',
         desc: 'Facebook & Instagram Ads. Kampagnen, Reichweite und Conversions.',
         category: 'active', status: 'connected', statusLabel: 'Verbunden',
         configFields: [
             { key: 'ad_account_id', label: 'Ad Account ID', type: 'text', placeholder: 'z.B. act_1234567890' },
-            { key: 'access_token', label: 'System User Access Token', type: 'password', placeholder: 'Token aus Business Manager (läuft nicht ab)' },
+            { key: 'access_token', label: 'System User Access Token', type: 'password', placeholder: 'Token aus Business Manager' },
         ],
         readonlyFields: [
-            { key: 'last_sync', label: 'Letzter Sync', value: '—' },
-            { key: 'sync_status', label: 'Sync-Status', value: '—' },
+            { key: 'last_sync', label: 'Letzter Sync', value: '\u2014' },
+            { key: 'sync_status', label: 'Sync-Status', value: '\u2014' },
+            { key: 'token_expires', label: 'Token l\u00e4uft ab', value: '\u2014' },
         ],
         logs: []
     },
@@ -262,7 +263,7 @@ export async function renderSchnittstellen() {
 async function loadAdsAccountData() {
     try {
         var sb = _sb(); if (!sb) return;
-        var res = await _sb().from('ads_accounts').select('plattform, letzter_sync, sync_status, sync_fehler, account_id');
+        var res = await _sb().from('ads_accounts').select('plattform, letzter_sync, sync_status, sync_fehler, account_id, token_expires_at');
         if (res.error) throw res.error;
         var accounts = res.data || [];
         accounts.forEach(function(a) {
@@ -274,9 +275,16 @@ async function loadAdsAccountData() {
             c.statusLabel = a.sync_status === 'ok' ? 'Verbunden' : a.sync_status === 'error' ? 'Fehler' : 'Verbunden';
             if (c.readonlyFields) {
                 c.readonlyFields.forEach(function(f) {
-                    if (f.key === 'customer_id' || f.key === 'ad_account_id') f.value = a.account_id || '—';
-                    if (f.key === 'last_sync') f.value = a.letzter_sync ? _timeAgo(a.letzter_sync) : '—';
-                    if (f.key === 'sync_status') f.value = a.sync_status === 'ok' ? '✅ OK' : a.sync_fehler || a.sync_status || '—';
+                    if (f.key === 'customer_id' || f.key === 'ad_account_id') f.value = a.account_id || '\u2014';
+                    if (f.key === 'last_sync') f.value = a.letzter_sync ? _timeAgo(a.letzter_sync) : '\u2014';
+                    if (f.key === 'sync_status') f.value = a.sync_status === 'ok' ? '\u2705 OK' : a.sync_fehler || a.sync_status || '\u2014';
+                    if (f.key === 'token_expires' && a.token_expires_at) {
+                        var exp = new Date(a.token_expires_at);
+                        var daysLeft = Math.ceil((exp.getTime() - Date.now()) / 86400000);
+                        if (daysLeft < 0) f.value = '\ud83d\udd34 Abgelaufen!';
+                        else if (daysLeft <= 10) f.value = '\ud83d\udfe1 ' + daysLeft + ' Tage (bald erneuern!)';
+                        else f.value = '\ud83d\udfe2 ' + exp.toLocaleDateString('de-DE') + ' (' + daysLeft + ' Tage)';
+                    }
                 });
             }
             // Build log from available data
@@ -484,13 +492,14 @@ function renderConnectorCard(id) {
             body += '<div class="bg-blue-50 border border-blue-200 rounded-lg p-3">'
                 + '<p class="text-xs text-blue-700">\u2139\ufe0f <strong>Setup:</strong> System User Token im Meta Business Manager erstellen '
                 + '(Einstellungen \u2192 Systembenutzer \u2192 Token generieren). Berechtigung: <em>ads_read</em> auf das Ad Account. '
-                + 'System User Tokens laufen nicht ab!</p></div>';
+                + 'Long-lived Tokens laufen nach 60 Tagen ab \u2013 Auto-Refresh ist eingerichtet.</p></div>';
         }
         // Buttons
-        body += '<div class="flex gap-2 pt-1">'
+        body += '<div class="flex flex-wrap gap-2 pt-1">'
             + '<button onclick="window.saveAdsConfig(\'' + id + '\')" class="px-4 py-2 bg-blue-500 text-white rounded-lg text-xs font-semibold hover:bg-blue-600 transition">\ud83d\udcbe Speichern</button>'
             + '<button onclick="window.testAdsConnection(\'' + id + '\')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition">\ud83d\udd0d Verbindung testen</button>'
             + '<button onclick="window.manualSync(\'' + id + '\')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition">\ud83d\udd04 Manuell synchronisieren</button>'
+            + (id === 'meta' ? '<button onclick="window.refreshMetaAdsToken()" class="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg text-xs font-semibold hover:bg-orange-200 transition">\ud83d\udd11 Token erneuern</button>' : '')
             + '</div>';
         body += '<div id="connTestResult_' + id + '" class="mt-2"></div>';
         body += '</div>';
@@ -2749,7 +2758,33 @@ window.refreshMetaToken = async function() {
             { connector_id: 'instagram', config_key: 'token_expires_at', config_value: expiresAt },
             { connector_id: 'facebook', config_key: 'access_token', config_value: pageToken },
         ], { onConflict: 'connector_id,config_key' });
-        _showToast('Meta Token erfolgreich erneuert ✅ (gültig bis ' + expiresAt.substring(0,10) + ')', 'success');
+        _showToast('Meta Token erfolgreich erneuert \u2705 (g\u00fcltig bis ' + expiresAt.substring(0,10) + ')', 'success');
+    } catch(e) {
+        _showToast('Token-Refresh Fehler: ' + e.message, 'error');
+    }
+};
+
+window.refreshMetaAdsToken = async function() {
+    _showToast('Meta Ads Token wird erneuert...', 'info');
+    try {
+        var session = await _sb().auth.getSession();
+        var token = session && session.data && session.data.session ? session.data.session.access_token : null;
+        if (!token) { _showToast('Nicht eingeloggt', 'error'); return; }
+        var resp = await fetch(window.sbUrl() + '/functions/v1/refresh-meta-token', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: '{}'
+        });
+        var result = await resp.json();
+        if (!resp.ok) throw new Error(result.error || 'Unbekannter Fehler');
+        if (result.refreshed > 0) {
+            _showToast('Meta Token erneuert (' + result.refreshed + ' Account' + (result.refreshed > 1 ? 's' : '') + ')', 'success');
+        } else if (result.failed > 0) {
+            _showToast('Token-Refresh fehlgeschlagen: ' + (result.alerts ? result.alerts[0] : 'Unbekannt'), 'error');
+        } else {
+            _showToast('Kein Token-Refresh n\u00f6tig (Token noch g\u00fcltig)', 'info');
+        }
+        loadAdsAccountData();
     } catch(e) {
         _showToast('Token-Refresh Fehler: ' + e.message, 'error');
     }
