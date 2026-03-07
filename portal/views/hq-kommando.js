@@ -624,7 +624,7 @@ var kzStandorte = []; // loaded from Supabase
 
 
 // Strangler Fig (Shop-Code ausgelagert in hq-shop.js)
-const _exports = {showHqKommTab,openAnkuendigungModal,closeAnkModal,saveAnkuendigung,renderHqKomm,renderHqKampagnen,addHqKampagne,filterHqDok,loadNetzwerkDokumente,renderHqDokumente,formatFileSize,downloadDokument,deleteNetzwerkDok,loadHqKalTermine,filterHqKal,renderHqKalender,addHqKalTermin,filterHqTasks,renderHqAufgaben,addHqTask,countFeaturesUsed,calculateActivityScore,loadPortalNutzungData,renderHqAuswertung,renderHqSupport,renderHqIdeen,filterHqIdeen,renderKiAnalyseHtml,toggleKiPanel,analysiereIdee,analysierAlleNeuen,updateIdeeStatus};
+const _exports = {showHqKommTab,openAnkuendigungModal,closeAnkModal,saveAnkuendigung,renderHqKomm,renderHqKampagnen,addHqKampagne,filterHqDok,loadNetzwerkDokumente,renderHqDokumente,formatFileSize,downloadDokument,deleteNetzwerkDok,loadHqKalTermine,filterHqKal,renderHqKalender,addHqKalTermin,filterHqTasks,renderHqAufgaben,addHqTask,renderHqAuswertung,renderHqSupport,renderHqIdeen,filterHqIdeen,renderKiAnalyseHtml,toggleKiPanel,analysiereIdee,analysierAlleNeuen,updateIdeeStatus};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 
 // === Window Exports (onclick handlers) ===

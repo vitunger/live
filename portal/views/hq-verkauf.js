@@ -242,6 +242,7 @@ window.deleteHqAuto = async function(id) {
 // === HQ HANDLUNGSBEDARF (konsolidiert) ===
 export function renderHqAktionen() {
     var aktionen = [];
+    var hqStandorte = window.hqStandorte || [];
     hqStandorte.forEach(function(s) {
         if(s.leadPerf===0) aktionen.push({prio:1,bereich:'Standort',standort:s.name,text:'Standort inaktiv – Nachfolger/Reaktivierung noetig',color:'bg-gray-800 text-white'});
         if(s.strategieStatus==='missing' && s.umsatzIst>0) aktionen.push({prio:1,bereich:'Strategie',standort:s.name,text:'Marketing- & Einkaufsstrategie fehlt – Termin vereinbaren',color:'bg-red-600 text-white'});
@@ -559,7 +560,7 @@ function _hookShowView() {
     if(v==='allgemein') { loadAllgemeinData().then(function(){ showAllgemeinTab('uebersicht'); }); }
     if(v==='home') { loadDashboardWidgets(); loadAllgemeinData(); }
     if(v==='einkauf') { showEinkaufTab('sortiment'); }
-    if(v==='hqAllgemein') { renderHqAllgemein(hqStandorte, [], [], []); }
+    if(v==='hqAllgemein') { renderHqAllgemein(window.hqStandorte || [], [], [], []); }
     if(v==='hqEinkauf') { if(window.showHqEkTab) { showHqEkTab('dash'); } else { setTimeout(function(){ window.showHqEkTab && window.showHqEkTab('dash'); }, 300); } }
     if(v==='hqVerkauf') renderHqVerkauf();
     if(v==='hqAktionen') renderHqAktionen();

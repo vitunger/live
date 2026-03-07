@@ -123,7 +123,7 @@ h += '<div class="p-3 rounded-lg" style="background:rgba(255,255,255,0.05);"><p 
 h += '<div class="p-3 rounded-lg" style="background:rgba(255,255,255,0.05);"><p class="text-xs text-gray-400">Verpflichtung</p><p class="text-sm font-bold text-white">Keine</p></div>';
 h += '</div></div></div></div>';
 
-var hasApplied = onboardingActionsLog.some(function(a){ return a.action_type === 'apply_part1'; });
+var hasApplied = (window.onboardingActionsLog||[]).some(function(a){ return a.action_type === 'apply_part1'; });
 h += '<div class="vit-card p-6 mb-6 border-2 border-dashed border-vit-orange">';
 h += '<h3 class="font-bold text-gray-800 mb-3">\u{1F3AF} Naechster Schritt: Trainingsphase Part 1</h3>';
 h += '<p class="text-sm text-gray-600 mb-4">Bewirb dich fuer die Trainingsphase Part 1 (Strategie & Qualifizierung). 3 Monate, 7.000\u20AC netto (BAFA moeglich).</p>';
@@ -319,10 +319,10 @@ bewEl.innerHTML = bh;
 var logEl = document.getElementById('hqOnbLogContent');
 if(logEl) {
 var lh = '<div class="vit-card overflow-hidden">';
-if(onboardingActionsLog.length === 0) { lh += '<div class="p-8 text-center text-gray-400 text-sm">Noch keine Aktionen</div>'; }
+if((window.onboardingActionsLog||[]).length === 0) { lh += '<div class="p-8 text-center text-gray-400 text-sm">Noch keine Aktionen</div>'; }
 else {
     lh += '<table class="w-full text-sm"><thead><tr class="bg-gray-50 border-b"><th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">Zeit</th><th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">Aktion</th><th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">Akteur</th><th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">Details</th></tr></thead><tbody>';
-    onboardingActionsLog.slice().reverse().forEach(function(a) {
+    (window.onboardingActionsLog||[]).slice().reverse().forEach(function(a) {
         lh += '<tr class="border-b"><td class="px-4 py-3 text-xs text-gray-500">'+new Date(a.created_at).toLocaleString('de-DE')+'</td><td class="px-4 py-3 font-semibold">'+a.action_type+'</td><td class="px-4 py-3 text-gray-600">'+a.actor+'</td><td class="px-4 py-3 text-xs text-gray-500">'+JSON.stringify(a.payload)+'</td></tr>';
     });
     lh += '</tbody></table>';

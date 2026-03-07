@@ -110,10 +110,12 @@ export async function loadHqStandorte() {
                 wawiTageOhne: wawiTageOhne
             };
         });
+        window.hqStandorte = hqStandorte;
     } catch(err) {
         console.warn('HQ Standorte load error:', err);
         // Fallback: empty
         hqStandorte = [];
+        window.hqStandorte = hqStandorte;
     }
 }
 

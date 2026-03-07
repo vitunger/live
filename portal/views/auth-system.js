@@ -60,6 +60,7 @@ var accountMilestoneStates = {};
 
 // Onboarding actions log
 var onboardingActionsLog = [];
+window.onboardingActionsLog = onboardingActionsLog;
 
 // Initialize milestones for an account
 export function initMilestonesForStage(stage) {
