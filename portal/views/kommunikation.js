@@ -331,10 +331,6 @@ function kommSidebarSection(title, key, channels) {
             h += '<span onclick="kommGoView(\'channel\',\'' + ch.id + '\',\'' + _escH(ch.name) + '\')" class="text-sm flex-shrink-0">' + (ch.logo_url ? '<img src="' + _escH(ch.logo_url) + '" class="w-5 h-5 rounded object-cover">' : (ch.icon || '💬')) + '</span>';
             h += '<span onclick="kommGoView(\'channel\',\'' + ch.id + '\',\'' + _escH(ch.name) + '\')" class="flex-1 text-[12.5px] ' + (active ? 'font-bold text-[#EF7D00]' : (unread ? 'font-bold text-gray-800' : 'text-gray-600')) + ' truncate">' + _escH(ch.name) + '</span>';
             if (unread) h += '<span class="w-2.5 h-2.5 rounded-full bg-[#EF7D00] flex-shrink-0"></span>';
-            // + Button für HQ um Sub-Channel zu erstellen
-            if (kommIsHQ() && ch.ist_netzwerk) {
-                h += '<span onclick="event.stopPropagation();kommNewSubChannel(\'' + ch.id + '\',\'' + _escH(ch.name).replace(/'/g, "\\'") + '\')" class="text-gray-400 hover:text-[#EF7D00] text-sm cursor-pointer flex-shrink-0" title="Unterchannel erstellen">＋</span>';
-            }
             h += '</div>';
 
             // Sub-Channels (eingerückt)
@@ -1583,8 +1579,46 @@ export async function kommStartDMWith(userId, userName) {
 }
 
 export function kommNewGroup() {
-    _showToast('Gruppen-Erstellung wird spaeter implementiert', 'info');
+    var html = '<div id="kommGroupModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onclick="if(event.target===this)this.remove()">';
+    html += '<div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-2xl" onclick="event.stopPropagation()">';
+    html += '<h3 class="text-base font-bold mb-4">👥 Neue Gruppe</h3>';
+    html += '<div class="space-y-3">';
+    html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Name *</label><input id="kommGroupName" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-vit-orange outline-none" placeholder="z.B. Projektteam Onlineshop"></div>';
+    html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Icon</label><input id="kommGroupIcon" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none" value="👥" maxlength="4"></div>';
+    html += '</div>';
+    html += '<div class="flex justify-end gap-2 mt-5">';
+    html += '<button onclick="document.getElementById(\'kommGroupModal\').remove()" class="px-4 py-2 text-sm text-gray-500">Abbrechen</button>';
+    html += '<button onclick="kommSaveGroup()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-bold hover:opacity-90">Erstellen</button>';
+    html += '</div></div></div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.getElementById('kommGroupName').focus();
 }
+
+window.kommSaveGroup = async function() {
+    var name = (document.getElementById('kommGroupName').value || '').trim();
+    var icon = (document.getElementById('kommGroupIcon').value || '👥').trim();
+    if (!name) { _showToast('Bitte Gruppenname eingeben', 'error'); return; }
+
+    var uid = _sbUser() ? _sbUser().id : null;
+    try {
+        var resp = await _sb().from('chat_kanaele').insert({
+            name: name, icon: icon, typ: 'group', ist_privat: false, erstellt_von: uid
+        }).select().single();
+        if (resp.error) throw resp.error;
+
+        // Ersteller als Mitglied hinzufügen
+        await _sb().from('kanal_mitglieder').insert({ kanal_id: resp.data.id, user_id: uid, rolle: 'admin' });
+
+        var modal = document.getElementById('kommGroupModal');
+        if (modal) modal.remove();
+        _showToast('✅ Gruppe "' + name + '" erstellt');
+        KOMM.loaded = false;
+        await kommLoadData();
+        kommGoView('group', resp.data.id, name);
+    } catch(e) {
+        _showToast('❌ Fehler: ' + (e.message || ''), 'error');
+    }
+};
 
 export function kommNewChannel(isNetzwerk) {
     _showToast('Channel-Erstellung wird spaeter implementiert', 'info');
