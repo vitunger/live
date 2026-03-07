@@ -171,7 +171,7 @@ export async function loadWidgetPipeline() {
     try {
         var sb = _sb();
         var stdId = _sbProfile() ? _sbProfile().standort_id : null;
-        var q = _sb().from('leads').select('id, status, geschaetzter_wert').eq('archiviert', false);
+        var q = _sb().from('leads').select('id, status, geschaetzter_wert');
         if (stdId) q = q.eq('standort_id', stdId);
         var res = await q;
         var leads = res.data || [];
