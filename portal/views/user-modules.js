@@ -118,7 +118,7 @@ export async function renderHqModulStatusList() {
 export function _renderModulRow(m, currentStatus, ebene) {
     var MODULE_TABS = window._umState ? window._umState.MODULE_TABS : {};
     var MODULE_WIDGETS = window._umState ? window._umState.MODULE_WIDGETS : {};
-    var icons = {startseite:'🏠',kalender:'📅',aufgaben:'📋',kommunikation:'💬',dashboards:'📊',allgemein:'🏢',verkauf:'📈',einkauf:'🛒',marketing:'📣',controlling:'📊',wissen:'📚',support:'🎫',ideenboard:'💡',shop:'🛍️',onboarding:'🎯',mitarbeiter:'👥',aktenschrank:'📁',entwicklung:'</>',spiritus:'📝',abrechnung:'💰',office:'🏢',standortBilling:'💳',hqCockpit:'🌐',hqKommandozentrale:'⚙️',hqHandlungsbedarf:'🚨',hqStandorte:'🏪',hqFinanzen:'💶',hqMarketing:'📣',hqEinkauf:'🛒',hqSupport:'🎫',hqAkademie:'📚',hqEinstellungen:'⚙️',hqEntwicklung:'</>'};
+    var icons = {startseite:'🏠',kalender:'📅',aufgaben:'📋',kommunikation:'💬',dashboards:'📊',allgemein:'🏢',verkauf:'📈',einkauf:'🛒',marketing:'📣',controlling:'📊',wissen:'📚',support:'🎫',ideenboard:'💡',shop:'🛍️',onboarding:'🎯',mitarbeiter:'👥',aktenschrank:'📁',entwicklung:'</>',spiritus:'📝',abrechnung:'💰',office:'🏢',standortBilling:'💳',hqCockpit:'🌐',hqKommandozentrale:'⚙️',hqHandlungsbedarf:'🚨',hqStandorte:'🏪',hqFinanzen:'💶',hqMarketing:'📣',hqEinkauf:'🛒',hqSupport:'🎫',hqAkademie:'📚',hqEinstellungen:'⚙️',hqEntwicklung:'</>',hqBuchungen:'📅'};
     var isHq = ebene === 'hq';
     var expandKey = (isHq ? 'hq_' : '') + m.modul_key;
     var cfg = isHq ? (m.hq_config || {}) : (m.config || {});
@@ -625,3 +625,4 @@ export async function toggleHqPermission(modKey, rolle) {
 // Strangler Fig
 const _exports = { showSettingsTab, renderModulStatusList, renderHqModulStatusList, _renderModulRow, toggleModuleExpand, renderOfficeRoomsAdmin, renderDemoModulList, setDemoModulStatus, setDemoTabStatus, setDemoWidgetStatus, setAllDemoStatus, setTabStatus, setWidgetStatus, setModulStatus, setHqModulStatus, setHqTabStatus, setHqWidgetStatus, renderHqEinstellungen, togglePermission, renderHqRechteMatrixBody, loadHqRechteMatrix, toggleHqPermission };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
+
