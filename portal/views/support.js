@@ -481,7 +481,7 @@ export function supOpenZohoDetail(zohoId) {
         html += '<div class="flex flex-wrap gap-1">';
         item.tags.split(',').forEach(function(tag) {
             tag = tag.trim();
-            if (tag) html += '<span class="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">' + _escH(tag) + '</span>';
+            if (tag) html += '<span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">' + _escH(tag) + '</span>';
         });
         html += '</div>';
     }
@@ -875,7 +875,7 @@ export async function openTicketDetail(ticketId) {
             html += '<div class="flex-1 p-3 rounded-lg ' + (isHq ? 'bg-blue-50 border border-blue-100' : 'bg-white border border-gray-100') + '">';
             html += '<div class="flex items-center justify-between mb-1">';
             html += '<span class="text-xs font-bold text-gray-700">' + _escH(kName) + (isHq ? ' <span class="text-blue-500">HQ</span>' : '') + '</span>';
-            html += '<span class="text-[10px] text-gray-400">' + kd.toLocaleDateString('de-DE') + ' ' + kd.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
+            html += '<span class="text-xs text-gray-400">' + kd.toLocaleDateString('de-DE') + ' ' + kd.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
             html += '</div>';
             var inhalt = _escH(k.inhalt).replace(/@(\w+)/g, '<strong class="text-blue-600">@$1</strong>');
             html += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + inhalt + '</p>';
@@ -1073,14 +1073,14 @@ export async function supHqOpenTicket(ticketId) {
             out += '<div class="flex items-center justify-between mb-1">';
             out += '<span class="text-xs font-bold text-gray-700">' + _escH(kName);
             if (isHq) out += ' <span class="text-blue-500">HQ</span>';
-            if (k.is_internal) out += ' <span class="text-yellow-600 text-[10px] bg-yellow-100 px-1 rounded">INTERN</span>';
+            if (k.is_internal) out += ' <span class="text-yellow-600 text-xs bg-yellow-100 px-1 rounded">INTERN</span>';
             out += '</span>';
-            out += '<span class="text-[10px] text-gray-400">' + kd.toLocaleDateString('de-DE') + ' ' + kd.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
+            out += '<span class="text-xs text-gray-400">' + kd.toLocaleDateString('de-DE') + ' ' + kd.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
             out += '</div>';
             var inhalt = _escH(k.inhalt).replace(/@(\w+)/g, '<strong class="text-blue-600">@$1</strong>');
             out += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + inhalt + '</p>';
             // Reply-Button nur für HQ-Agents
-            var safeKName = kName.replace(/'/g, '').replace(/"/g, ''); out += '<button onclick="supHqStartReply(\'' + k.id + '\',\'' + safeKName + '\')" class="mt-1 text-[10px] text-gray-400 hover:text-blue-500 transition-colors">↩ Antworten</button>';
+            var safeKName = kName.replace(/'/g, '').replace(/"/g, ''); out += '<button onclick="supHqStartReply(\'' + k.id + '\',\'' + safeKName + '\')" class="mt-1 text-xs text-gray-400 hover:text-blue-500 transition-colors">↩ Antworten</button>';
             out += '</div></div>';
             return out;
         }
@@ -1125,7 +1125,7 @@ export async function supHqOpenTicket(ticketId) {
             logs.forEach(function(l) {
                 var ld = new Date(l.created_at);
                 var lName = l.users ? ((l.users.vorname || '') + ' ' + (l.users.nachname || '')).trim() || l.users.name || '' : 'System';
-                html += '<div class="text-[10px] text-gray-400 mb-1">';
+                html += '<div class="text-xs text-gray-400 mb-1">';
                 html += ld.toLocaleDateString('de-DE') + ' ' + ld.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
                 html += ' - ' + _escH(lName) + ' - ' + _escH(l.aktion);
                 if (l.alt_wert || l.neu_wert) html += ': ' + _escH(l.alt_wert || '') + ' -> ' + _escH(l.neu_wert || '');
@@ -1329,7 +1329,10 @@ export async function supHqMentionInput(textarea) {
     dropdown.innerHTML = matches.map(function(u) {
         var name = ((u.vorname||'') + ' ' + (u.nachname||'')).trim();
         var tag = name.replace(/\s+/g, '');
-        return '<div class="px-3 py-2 hover:bg-orange-50 cursor-pointer text-sm flex items-center gap-2" onclick="supHqInsertMention(\\'' + tag + '\\',\\'' + u.id + '\\')">' + '<span class="w-6 h-6 rounded-full bg-blue-500 text-white text-[10px] flex items-center justify-center">' + (u.vorname||'?')[0] + '</span>' + name + (u.is_hq ? ' <span class="text-[10px] text-blue-400">HQ</span>' : '') + '</div>';
+        var mentionBtn = '<div class="px-3 py-2 hover:bg-orange-50 cursor-pointer text-sm flex items-center gap-2" onclick="supHqInsertMention(\"' + tag + '\",\"' + u.id + '\")">'
+            + '<span class="w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center">' + (u.vorname||'?')[0] + '</span>'
+            + name + (u.is_hq ? ' <span class="text-xs text-blue-400">HQ</span>' : '') + '</div>';
+        return mentionBtn;
     }).join('');
     dropdown.classList.remove('hidden');
 }
@@ -1417,13 +1420,13 @@ function _supRenderKommentarHtml(k, isReply) {
     out += '<div class="flex items-center justify-between mb-1">';
     out += '<span class="text-xs font-bold text-gray-700">' + _escH(kName);
     if (isHq) out += ' <span class="text-blue-500">HQ</span>';
-    if (k.is_internal) out += ' <span class="text-yellow-600 text-[10px] bg-yellow-100 px-1 rounded">INTERN</span>';
+    if (k.is_internal) out += ' <span class="text-yellow-600 text-xs bg-yellow-100 px-1 rounded">INTERN</span>';
     out += '</span>';
-    out += '<span class="text-[10px] text-gray-400">' + kd.toLocaleDateString('de-DE') + ' ' + kd.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
+    out += '<span class="text-xs text-gray-400">' + kd.toLocaleDateString('de-DE') + ' ' + kd.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
     out += '</div>';
     var inhalt = _escH(k.inhalt).replace(/@(\w+)/g, '<strong class="text-blue-600">@$1</strong>');
     out += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + inhalt + '</p>';
-    var safeKName2 = kName.replace(/'/g, '').replace(/"/g, ''); out += '<button onclick="supHqStartReply(\'' + k.id + '\',\'' + safeKName2 + '\')" class="mt-1 text-[10px] text-gray-400 hover:text-blue-500 transition-colors">↩ Antworten</button>';
+    var safeKName2 = kName.replace(/'/g, '').replace(/"/g, ''); out += '<button onclick="supHqStartReply(\'' + k.id + '\',\'' + safeKName2 + '\')" class="mt-1 text-xs text-gray-400 hover:text-blue-500 transition-colors">↩ Antworten</button>';
     out += '</div></div>';
     return out;
 }
