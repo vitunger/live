@@ -219,7 +219,7 @@ function renderSavingRow(s, maxVal) {
     }
     if (s.notizen) html += '<br><span class="text-[10px] text-gray-400">' + _escH(s.notizen) + '</span>';
     html += '</div><div class="flex items-center gap-2 ml-2 shrink-0"><span class="text-sm font-bold text-green-600">\u20AC' + c.toFixed(0) + '/Mo</span>';
-    html += '<button onclick="deleteSaving(\'' + s.id + '\')" class="text-gray-300 hover:text-red-500 text-xs">\u2715</button></div></div>';
+    html += '<button onclick="deleteSaving(\'' + s.id + '\')" title="Tool entfernen" class="w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-red-500 transition text-xs font-bold">\u2715</button></div></div>';
     html += '<div class="w-full bg-gray-100 rounded-full h-1.5"><div class="bg-green-400 h-1.5 rounded-full" style="width:' + Math.max(pct,2) + '%"></div></div></div>';
     return html;
 }
