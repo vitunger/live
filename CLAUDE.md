@@ -487,7 +487,7 @@ npx supabase functions deploy social-import --project-ref lwwagbkxeofahhwebkab -
 - **Modul-Datei**: `portal/views/wissen.js` — keine Demo-Arrays, komplett DB-basiert.
 
 ### Kategorien (Fachbereich)
-`allgemein`, `verkauf`, `einkauf`, `marketing`, `zahlen`, `team`, `it`, `werkstatt`
+`allgemein`, `verkauf`, `einkauf`, `marketing`, `zahlen`, `team`, `it`, `werkstatt`, `hiw`
 Reihenfolge in KAT_ORDER Array. Bestimmt in welchem Fachmodul-Tab der Artikel erscheint.
 
 ### Inhaltsarten
@@ -513,5 +513,5 @@ Default: `wissen`. Werden als Sub-Tabs in Cross-Modul-Ansichten angezeigt.
 - `loadVerkaufWissen()` aus `verkauf.js` entfernt — wird jetzt von `wissen.js` bereitgestellt
 - Quill-Editor wird lazy via CDN geladen (jsdelivr.net/npm/quill@2.0.3)
 - Artikel-Inhalt als HTML gespeichert (Quill-Output)
-- Alte Kategorie-Migration: system/onboarding/kommunikation→allgemein, mitarbeiter→team, controlling→zahlen
+- Alte Kategorie-Migration: system/onboarding/kommunikation→allgemein→hiw, mitarbeiter→team, controlling→zahlen
 
