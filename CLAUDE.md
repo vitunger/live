@@ -571,3 +571,10 @@ Default: `wissen`. Werden als Sub-Tabs in Cross-Modul-Ansichten angezeigt.
 - **Strategien-Tab entfernt** aus HQ-Billing (redundant mit Jahresplan in Finanzen)
 - Edge Function `billing` v25: `assign-product-to-user` unterstützt `assignment_type`
 - Neue Actions: `assign-product-to-user`, `remove-product-assignment`, `list-product-assignments`
+- **Produkt-Zuweisung in Kommandozentrale (März 2026):**
+  - Standort-Detail-Modal: Dropdown für `is_per_standort`-Produkte (3CX, eTermin, HIW, WaWi etc.)
+  - Mitarbeiter-Edit-Modal: Checkbox-Liste für `is_per_employee`-Produkte (MS365, Heylogin, Personio etc.)
+  - Zuweisungen werden sofort in `billing_user_product_assignments` geschrieben
+  - Scope-Badges in Produkte-Tab: "je Nutzer" (lila), "je Standort" (grün), "System" (grau)
+- **Soft-Delete für Produkte:** `billing_products.deleted_at` – Produkt wird deaktiviert aber für historische Rechnungen erhalten
+- **Tools-Tab entfernt** aus HQ-Billing (ersetzt durch Zuweisungen in Kommandozentrale)
