@@ -1050,26 +1050,35 @@ export function hqSupComposeTab(ticketId, isInternal) {
 // ========== Senden-Menü Toggle ==========
 export function hqSupToggleSendMenu() {
     var m = document.getElementById('hqSupSendMenu');
-    if (m) m.classList.toggle('hidden');
-    // Schließen bei Klick außerhalb
-    setTimeout(function() {
-        document.addEventListener('click', function close(e) {
-            var m2 = document.getElementById('hqSupSendMenu');
-            if (m2 && !m2.contains(e.target)) { m2.classList.add('hidden'); document.removeEventListener('click', close); }
-        });
-    }, 10);
+    if (!m) return;
+    var opening = m.classList.contains('hidden');
+    m.classList.toggle('hidden');
+    if (opening) {
+        setTimeout(function() {
+            function closeClick(e) { var m2 = document.getElementById('hqSupSendMenu'); if (m2 && !m2.contains(e.target)) { m2.classList.add('hidden'); cleanup(); } }
+            function closeEsc(e) { if (e.key === 'Escape') { var m2 = document.getElementById('hqSupSendMenu'); if (m2) m2.classList.add('hidden'); cleanup(); } }
+            function cleanup() { document.removeEventListener('click', closeClick); document.removeEventListener('keydown', closeEsc); }
+            document.addEventListener('click', closeClick);
+            document.addEventListener('keydown', closeEsc);
+        }, 10);
+    }
 }
 
 // ========== Mehr-Menü Toggle ==========
 export function hqSupToggleMoreMenu() {
     var m = document.getElementById('hqSupMoreMenu');
-    if (m) m.classList.toggle('hidden');
-    setTimeout(function() {
-        document.addEventListener('click', function close(e) {
-            var m2 = document.getElementById('hqSupMoreMenu');
-            if (m2 && !m2.contains(e.target)) { m2.classList.add('hidden'); document.removeEventListener('click', close); }
-        });
-    }, 10);
+    if (!m) return;
+    var opening = m.classList.contains('hidden');
+    m.classList.toggle('hidden');
+    if (opening) {
+        setTimeout(function() {
+            function closeClick(e) { var m2 = document.getElementById('hqSupMoreMenu'); if (m2 && !m2.contains(e.target)) { m2.classList.add('hidden'); cleanup(); } }
+            function closeEsc(e) { if (e.key === 'Escape') { var m2 = document.getElementById('hqSupMoreMenu'); if (m2) m2.classList.add('hidden'); cleanup(); } }
+            function cleanup() { document.removeEventListener('click', closeClick); document.removeEventListener('keydown', closeEsc); }
+            document.addEventListener('click', closeClick);
+            document.addEventListener('keydown', closeEsc);
+        }, 10);
+    }
 }
 
 // ========== Senden & Schließen ==========
