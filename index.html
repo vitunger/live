@@ -3057,23 +3057,16 @@
 
                 <!-- ===== WISSEN (Zentrale Wissensdatenbank) ===== -->
                 <div id="wissenView" class="view" style="display: none;">
-                    <div class="flex items-center justify-between mb-6">
-                        <div>
-                            <h1 class="h1-headline text-gray-800">📚 WISSENSDATENBANK</h1>
-                            <p class="text-sm text-gray-500">Alle Wissensartikel, Anleitungen und FAQs an einem Ort.</p>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <input type="text" id="wissenSearch" placeholder="Suchen..." oninput="filterWissenGlobal()" class="px-3 py-2 border border-gray-200 rounded-lg text-sm w-48">
-                        </div>
+                    <div class="mb-6">
+                        <h1 class="h1-headline text-gray-800">📚 WISSENSDATENBANK</h1>
+                        <p class="text-sm text-gray-500">Alle Wissensartikel, Anleitungen und FAQs an einem Ort.</p>
                     </div>
 
                     <!-- KPIs -->
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="wissenKpis"></div>
 
                     <!-- Bereich-Filter (dynamisch aus DB) -->
-                    <div class="flex flex-wrap gap-2 mb-6" id="wissenBereichFilter">
-                        <button onclick="filterWissenBereich('all')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white" data-wbf="all">📚 Alle Bereiche</button>
-                    </div>
+                    <div class="flex flex-wrap gap-2 mb-6" id="wissenBereichFilter"></div>
 
                     <!-- Inhaltsart-Tabs -->
                     <div class="mb-6 border-b border-gray-200">
