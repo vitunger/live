@@ -93,6 +93,20 @@ function _showToast(m,t){ if(window.showToast) window.showToast(m,t||'info'); }
       showView('dashboard');
     }
   }
+},
+{ table: 'wissen_artikel', fields: ['titel','inhalt','tags'], icon: '📚', label: 'Wissen',
+  format: r => r.titel || 'Artikel',
+  sub: r => {
+    var katMap = {allgemein:'Allgemein',verkauf:'Verkauf',einkauf:'Einkauf',marketing:'Marketing',zahlen:'Zahlen',team:'Team',it:'IT',werkstatt:'Werkstatt',hiw:'HIW'};
+    var artMap = {anleitung_cockpit:'Anleitung Cockpit',wissen:'Wissen',faq:'FAQ',training:'Training'};
+    return (katMap[r.kategorie]||r.kategorie||'') + ' · ' + (artMap[r.inhaltsart]||r.inhaltsart||'');
+  },
+  action: r => {
+    showView('wissen');
+    setTimeout(function() {
+      if (window.openWissenArtikel) window.openWissenArtikel(r.id);
+    }, 600);
+  }
 }
   ];
 
