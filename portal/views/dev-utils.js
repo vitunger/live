@@ -276,5 +276,5 @@ export async function uploadDevAttachment(subId) {
     }
 }
 
-const _exports = { exportDevCSV, sendDevKonzeptChat, updateDevMA, updateDevDeadline, reanalyseDevSubmission, uploadDevAttachment };
+const _exports = { exportDevCSV, sendDevKonzeptChat, updateDevMA, updateDevDeadline, reanalyseDevSubmission, uploadDevAttachment, _loadDevHQUsers };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
