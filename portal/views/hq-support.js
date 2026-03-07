@@ -31,8 +31,15 @@ var STATUS_LABELS = {offen:'Offen',in_bearbeitung:'In Bearbeitung',wartend_auf_p
 var STATUS_COLORS = {offen:'bg-yellow-100 text-yellow-700',in_bearbeitung:'bg-blue-100 text-blue-700',wartend_auf_partner:'bg-purple-100 text-purple-700',geloest:'bg-green-100 text-green-700',geschlossen:'bg-gray-100 text-gray-600'};
 var PRIO_LABELS = {niedrig:'Niedrig',mittel:'Mittel',kritisch:'Kritisch'};
 var PRIO_COLORS = {niedrig:'bg-gray-100 text-gray-600',mittel:'bg-yellow-100 text-yellow-700',kritisch:'bg-red-100 text-red-700'};
-var KAT_ICONS = {IT:'🖥️',Abrechnung:'💰',Marketing:'📢',Allgemein:'📋',Sonstiges:'📎'};
-var ALLE_KATEGORIEN = ['IT','Abrechnung','Marketing','Allgemein','Sonstiges'];
+var KAT_ICONS = { 'it': '💻', 'sales': '📈', 'marketing': '📣', 'einkauf': '🛒', 'support': '🎧', 'akademie': '🎓', 'hr': '👥', 'gf': '🏢', 'allgemein': '📋',
+    // legacy:
+    IT:'🖥️',Abrechnung:'💰',Marketing:'📢',Allgemein:'📋',Sonstiges:'📎'};
+var ALLE_KATEGORIEN = ['it','sales','marketing','einkauf','support','akademie','hr','gf','allgemein'];
+var KATEGORIE_LABELS = {
+    'it': 'IT & Systeme', 'sales': 'Vertrieb', 'marketing': 'Marketing',
+    'einkauf': 'Einkauf', 'support': 'Support', 'akademie': 'Akademie',
+    'hr': 'Personal (HR)', 'gf': 'Geschäftsführung', 'allgemein': 'Allgemein'
+};
 
 // ========== SLA Berechnung ==========
 function slaInfo(ticket) {
@@ -1051,7 +1058,7 @@ export function hqSupCreateTicket() {
     html += '<option value="hq_intern">HQ Intern</option></select></div>';
     html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Kategorie</label>';
     html += '<select id="hqSupNewKat" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">';
-    ALLE_KATEGORIEN.forEach(function(k) { html += '<option value="' + k + '">' + (KAT_ICONS[k]||'') + ' ' + k + '</option>'; });
+    ALLE_KATEGORIEN.forEach(function(k) { html += '<option value="' + k + '">' + (KAT_ICONS[k]||'') + ' ' + (KATEGORIE_LABELS[k]||k) + '</option>'; });
     html += '</select></div></div>';
 
     html += '<div class="grid grid-cols-2 gap-3 mb-4">';
@@ -1160,7 +1167,7 @@ export function hqSupNewArtikel() {
     html += '<input type="text" id="hqSupArtikelTitel" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"></div>';
     html += '<div class="mb-4"><label class="block text-xs font-semibold text-gray-600 mb-1">Kategorie</label>';
     html += '<select id="hqSupArtikelKat" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">';
-    ALLE_KATEGORIEN.forEach(function(k) { html += '<option value="' + k + '">' + k + '</option>'; });
+    ALLE_KATEGORIEN.forEach(function(k) { html += '<option value="' + k + '">' + (KATEGORIE_LABELS[k]||k) + '</option>'; });
     html += '</select></div>';
     html += '<div class="mb-4"><label class="block text-xs font-semibold text-gray-600 mb-1">Inhalt *</label>';
     html += '<textarea id="hqSupArtikelInhalt" rows="8" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-y"></textarea></div>';
@@ -1222,7 +1229,7 @@ export async function hqSupEditArtikel(artikelId) {
     html += '<input type="text" id="hqSupArtikelTitel" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" value="' + _escH(artikel.titel) + '"></div>';
     html += '<div class="mb-4"><label class="block text-xs font-semibold text-gray-600 mb-1">Kategorie</label>';
     html += '<select id="hqSupArtikelKat" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">';
-    ALLE_KATEGORIEN.forEach(function(k) { html += '<option value="' + k + '"' + (artikel.kategorie === k ? ' selected' : '') + '>' + k + '</option>'; });
+    ALLE_KATEGORIEN.forEach(function(k) { html += '<option value="' + k + '"' + (artikel.kategorie === k ? ' selected' : '') + '>' + (KATEGORIE_LABELS[k]||k) + '</option>'; });
     html += '</select></div>';
     html += '<div class="mb-4"><label class="block text-xs font-semibold text-gray-600 mb-1">Inhalt</label>';
     html += '<textarea id="hqSupArtikelInhalt" rows="8" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-y">' + _escH(artikel.inhalt) + '</textarea></div>';
