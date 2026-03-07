@@ -24,7 +24,7 @@ var _hqSup = {
     sortBy: 'created_at',
     sortDir: 'desc',
     loaded: false,
-    currentTab: 'tickets'
+    currentTab: 'dashboard'
 };
 
 var STATUS_LABELS = {offen:'Offen',in_bearbeitung:'In Bearbeitung',wartend_auf_partner:'Wartend',geloest:'Geloest',geschlossen:'Geschlossen'};
@@ -170,8 +170,9 @@ export async function renderHqSupport() {
     h += '<div><h1 class="h1-headline text-gray-800">SUPPORT – HQ</h1>';
     h += '<p class="text-sm text-gray-500">Alle Tickets, SLA, Zuweisungen & Wissensartikel</p></div>';
     h += '<div class="flex gap-2">';
-    h += '<button onclick="hqSupShowTab(\'wissen\')" class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 ' + (_hqSup.currentTab === 'wissen' ? 'bg-gray-100 font-semibold' : '') + '">📚 Wissensartikel</button>';
+    h += '<button onclick="hqSupShowTab(\'dashboard\')" class="px-3 py-2 border rounded-lg text-sm hover:bg-gray-50 ' + (_hqSup.currentTab === 'dashboard' ? 'bg-vit-orange text-white border-vit-orange font-semibold' : 'border-gray-300') + '">📊 Dashboard</button>';
     h += '<button onclick="hqSupShowTab(\'tickets\')" class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 ' + (_hqSup.currentTab === 'tickets' ? 'bg-gray-100 font-semibold' : '') + '">🎫 Tickets</button>';
+    h += '<button onclick="hqSupShowTab(\'wissen\')" class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 ' + (_hqSup.currentTab === 'wissen' ? 'bg-gray-100 font-semibold' : '') + '">📚 Wissensartikel</button>';
     h += '<button onclick="hqSupCreateTicket()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:opacity-90">+ Ticket erstellen</button>';
     h += '</div></div>';
 
@@ -195,7 +196,9 @@ export async function renderHqSupport() {
         h += '</div>';
     }
 
-    if (_hqSup.currentTab === 'wissen') {
+    if (_hqSup.currentTab === 'dashboard') {
+        h += renderDashboardTab();
+    } else if (_hqSup.currentTab === 'wissen') {
         h += renderWissenTab();
     } else {
         h += renderTicketsTab();
@@ -275,6 +278,210 @@ function renderTicketsTab() {
         });
         h += '</tbody></table></div>';
     }
+    return h;
+}
+
+
+// ========== Tab: Dashboard ==========
+function renderDashboardTab() {
+    var tickets = _hqSup.tickets;
+    var now = new Date();
+    var h = '';
+
+    // ── Zeile 1: Status + Abteilung + Priorität ──
+    h += '<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">';
+
+    // Status-Verteilung (Donut-Style mit Balken)
+    var statusDaten = [
+        { label: 'Offen', val: tickets.filter(function(t){return t.status==='offen';}).length, color: '#f59e0b' },
+        { label: 'In Bearbeitung', val: tickets.filter(function(t){return t.status==='in_bearbeitung';}).length, color: '#3b82f6' },
+        { label: 'Wartend', val: tickets.filter(function(t){return t.status==='warten';}).length, color: '#8b5cf6' },
+        { label: 'Gelöst', val: tickets.filter(function(t){return t.status==='geloest';}).length, color: '#10b981' }
+    ];
+    var statusTotal = statusDaten.reduce(function(s,x){return s+x.val;},0) || 1;
+    h += '<div class="vit-card p-4">';
+    h += '<p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Status-Verteilung</p>';
+    statusDaten.forEach(function(d) {
+        var pct = Math.round(d.val / statusTotal * 100);
+        h += '<div class="mb-2">';
+        h += '<div class="flex justify-between text-xs mb-0.5"><span class="text-gray-600">' + d.label + '</span><span class="font-semibold" style="color:' + d.color + '">' + d.val + ' (' + pct + '%)</span></div>';
+        h += '<div class="h-2 bg-gray-100 rounded-full overflow-hidden">';
+        h += '<div class="h-full rounded-full transition-all" style="width:' + pct + '%;background:' + d.color + '"></div>';
+        h += '</div></div>';
+    });
+    h += '</div>';
+
+    // Abteilung-Verteilung
+    var abtMap = {};
+    var ABT_LABELS = { 'it':'IT','sales':'Vertrieb','marketing':'Marketing','einkauf':'Einkauf','support':'Support','akademie':'Akademie','hr':'HR','gf':'GF','allgemein':'Allgemein' };
+    tickets.forEach(function(t) { var a = t.abteilung||'allgemein'; abtMap[a] = (abtMap[a]||0)+1; });
+    var abtDaten = Object.keys(abtMap).sort(function(a,b){return abtMap[b]-abtMap[a];});
+    var abtMax = Math.max.apply(null, abtDaten.map(function(k){return abtMap[k];})) || 1;
+    h += '<div class="vit-card p-4">';
+    h += '<p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Nach Abteilung</p>';
+    abtDaten.forEach(function(k) {
+        var pct = Math.round(abtMap[k] / abtMax * 100);
+        h += '<div class="mb-2">';
+        h += '<div class="flex justify-between text-xs mb-0.5"><span class="text-gray-600">' + (ABT_LABELS[k]||k) + '</span><span class="font-semibold text-gray-800">' + abtMap[k] + '</span></div>';
+        h += '<div class="h-2 bg-gray-100 rounded-full overflow-hidden">';
+        h += '<div class="h-full rounded-full bg-vit-orange transition-all" style="width:' + pct + '%"></div>';
+        h += '</div></div>';
+    });
+    h += '</div>';
+
+    // Priorität-Verteilung
+    var prioData = [
+        { label: 'Kritisch', key: 'kritisch', color: '#ef4444' },
+        { label: 'Hoch', key: 'hoch', color: '#f97316' },
+        { label: 'Mittel', key: 'mittel', color: '#f59e0b' },
+        { label: 'Niedrig', key: 'niedrig', color: '#6b7280' }
+    ];
+    var prioTotal = tickets.length || 1;
+    h += '<div class="vit-card p-4">';
+    h += '<p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Nach Priorität</p>';
+    prioData.forEach(function(p) {
+        var n = tickets.filter(function(t){return t.prioritaet===p.key;}).length;
+        var pct = Math.round(n / prioTotal * 100);
+        h += '<div class="mb-2">';
+        h += '<div class="flex justify-between text-xs mb-0.5"><span class="text-gray-600">' + p.label + '</span><span class="font-semibold" style="color:' + p.color + '">' + n + '</span></div>';
+        h += '<div class="h-2 bg-gray-100 rounded-full overflow-hidden">';
+        h += '<div class="h-full rounded-full transition-all" style="width:' + pct + '%;background:' + p.color + '"></div>';
+        h += '</div></div>';
+    });
+    h += '</div>';
+    h += '</div>'; // grid row 1
+
+    // ── Zeile 2: Volumen-Chart (letzte 8 Wochen) + Assignee-Übersicht + Sofort-Handlungsbedarf ──
+    h += '<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">';
+
+    // Ticket-Volumen (letzte 8 Wochen als Mini-Balkendiagramm)
+    var weekBuckets = {};
+    for (var w = 7; w >= 0; w--) {
+        var d = new Date(now); d.setDate(d.getDate() - w * 7);
+        var key = d.toISOString().slice(0, 10);
+        weekBuckets[key] = 0;
+    }
+    tickets.forEach(function(t) {
+        if (!t.created_at) return;
+        var td = new Date(t.created_at);
+        var daysAgo = Math.floor((now - td) / 86400000);
+        if (daysAgo > 56) return;
+        var weekStart = new Date(td); weekStart.setDate(td.getDate() - td.getDay() + 1);
+        var wk = weekStart.toISOString().slice(0, 10);
+        weekBuckets[wk] = (weekBuckets[wk] || 0) + 1;
+    });
+    var weekKeys = Object.keys(weekBuckets).sort();
+    var weekMax = Math.max.apply(null, weekKeys.map(function(k){return weekBuckets[k];})) || 1;
+    h += '<div class="vit-card p-4">';
+    h += '<p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Ticket-Volumen (8 Wochen)</p>';
+    h += '<div class="flex items-end gap-1 h-24">';
+    weekKeys.forEach(function(wk) {
+        var n = weekBuckets[wk] || 0;
+        var pct = Math.round(n / weekMax * 100);
+        var label = wk.slice(5); // MM-DD
+        h += '<div class="flex-1 flex flex-col items-center gap-1">';
+        h += '<span class="text-xs text-gray-500 font-semibold">' + (n || '') + '</span>';
+        h += '<div class="w-full rounded-t" style="height:' + Math.max(pct * 0.7, n > 0 ? 4 : 0) + 'px;background:#ef7d00"></div>';
+        h += '<span class="text-xs text-gray-400" style="font-size:9px">' + label + '</span>';
+        h += '</div>';
+    });
+    h += '</div></div>';
+
+    // Assignee-Übersicht (offene Tickets pro Mitarbeiter)
+    var assigneeMap = {};
+    tickets.filter(function(t){return t.status!=='geloest';}).forEach(function(t) {
+        var key = t.assignee_id || '__none__';
+        if (!assigneeMap[key]) {
+            var u = _hqSup.hqUsers.find(function(u){return u.id===t.assignee_id;});
+            assigneeMap[key] = { name: t.assignee_id ? (u ? ((u.vorname||'') + ' ' + (u.nachname||'')).trim() : 'Unbekannt') : '— Nicht zugewiesen', count: 0 };
+        }
+        assigneeMap[key].count++;
+    });
+    var assigneeList = Object.values(assigneeMap).sort(function(a,b){return b.count-a.count;});
+    var assigneeMax = assigneeList.length ? assigneeList[0].count : 1;
+    h += '<div class="vit-card p-4">';
+    h += '<p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Offene Tickets pro Mitarbeiter</p>';
+    if (assigneeList.length === 0) {
+        h += '<p class="text-sm text-gray-400">Keine offenen Tickets</p>';
+    } else {
+        assigneeList.slice(0, 6).forEach(function(a) {
+            var pct = Math.round(a.count / assigneeMax * 100);
+            var isNone = a.name === '— Nicht zugewiesen';
+            h += '<div class="mb-2">';
+            h += '<div class="flex justify-between text-xs mb-0.5"><span class="' + (isNone ? 'text-red-500 font-semibold' : 'text-gray-600') + '">' + a.name + '</span><span class="font-bold ' + (isNone ? 'text-red-500' : 'text-gray-800') + '">' + a.count + '</span></div>';
+            h += '<div class="h-2 bg-gray-100 rounded-full overflow-hidden">';
+            h += '<div class="h-full rounded-full transition-all" style="width:' + pct + '%;background:' + (isNone ? '#ef4444' : '#3b82f6') + '"></div>';
+            h += '</div></div>';
+        });
+    }
+    h += '</div>';
+
+    // Sofort-Handlungsbedarf
+    var altOffen = tickets.filter(function(t) {
+        if (t.status === 'geloest') return false;
+        var age = (now - new Date(t.created_at)) / 3600000;
+        return age > 48;
+    });
+    var ohneAssignee = tickets.filter(function(t){ return !t.assignee_id && t.status !== 'geloest'; });
+    var kritischT = tickets.filter(function(t){ return t.prioritaet === 'kritisch' && t.status !== 'geloest'; });
+    h += '<div class="vit-card p-4">';
+    h += '<p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">⚠️ Handlungsbedarf</p>';
+
+    if (kritischT.length === 0 && ohneAssignee.length === 0 && altOffen.length === 0) {
+        h += '<div class="flex items-center gap-2 py-4"><span class="text-2xl">✅</span><p class="text-sm text-green-600 font-semibold">Alles im grünen Bereich</p></div>';
+    } else {
+        if (kritischT.length > 0) {
+            h += '<div class="mb-2 p-2 bg-red-50 border border-red-200 rounded-lg">';
+            h += '<p class="text-xs font-bold text-red-700">🔴 ' + kritischT.length + ' kritische Ticket(s)</p>';
+            kritischT.slice(0, 2).forEach(function(t) {
+                h += '<p class="text-xs text-red-600 mt-0.5 cursor-pointer hover:underline" onclick="hqSupOpenDetail(\'' + t.id + '\')">' + (t.ticket_nr||'') + ': ' + (t.betreff||'').substring(0,35) + '...</p>';
+            });
+            h += '</div>';
+        }
+        if (ohneAssignee.length > 0) {
+            h += '<div class="mb-2 p-2 bg-orange-50 border border-orange-200 rounded-lg">';
+            h += '<p class="text-xs font-bold text-orange-700">🟠 ' + ohneAssignee.length + ' Ticket(s) ohne Zuweisung</p>';
+            h += '</div>';
+        }
+        if (altOffen.length > 0) {
+            h += '<div class="p-2 bg-yellow-50 border border-yellow-200 rounded-lg">';
+            h += '<p class="text-xs font-bold text-yellow-700">🟡 ' + altOffen.length + ' Ticket(s) älter als 48h ohne Lösung</p>';
+            h += '</div>';
+        }
+    }
+    h += '</div>';
+    h += '</div>'; // grid row 2
+
+    // ── Zeile 3: Letzte Aktivitäten ──
+    var recent = tickets.slice().sort(function(a,b){ return new Date(b.updated_at||b.created_at) - new Date(a.updated_at||a.created_at); }).slice(0, 5);
+    h += '<div class="vit-card p-4">';
+    h += '<p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Zuletzt aktualisierte Tickets</p>';
+    h += '<table class="w-full text-sm">';
+    h += '<thead><tr class="border-b border-gray-100">';
+    h += '<th class="text-left text-xs text-gray-400 font-semibold pb-2">Nr.</th>';
+    h += '<th class="text-left text-xs text-gray-400 font-semibold pb-2">Betreff</th>';
+    h += '<th class="text-left text-xs text-gray-400 font-semibold pb-2">Status</th>';
+    h += '<th class="text-left text-xs text-gray-400 font-semibold pb-2">Prio</th>';
+    h += '<th class="text-left text-xs text-gray-400 font-semibold pb-2">Zuletzt</th>';
+    h += '</tr></thead><tbody>';
+    var STATUS_COLORS = { 'offen':'bg-yellow-100 text-yellow-700', 'in_bearbeitung':'bg-blue-100 text-blue-700', 'warten':'bg-purple-100 text-purple-700', 'geloest':'bg-green-100 text-green-700' };
+    var STATUS_L = { 'offen':'Offen', 'in_bearbeitung':'In Bearb.', 'warten':'Wartend', 'geloest':'Gelöst' };
+    var PRIO_COLORS = { 'kritisch':'text-red-600', 'hoch':'text-orange-500', 'mittel':'text-yellow-600', 'niedrig':'text-gray-400' };
+    recent.forEach(function(t) {
+        var upd = new Date(t.updated_at||t.created_at);
+        var ago = Math.floor((now - upd) / 60000);
+        var agoStr = ago < 60 ? ago + 'min' : ago < 1440 ? Math.floor(ago/60) + 'h' : Math.floor(ago/1440) + 'd';
+        h += '<tr class="border-b border-gray-50 hover:bg-gray-50 cursor-pointer" onclick="hqSupOpenDetail(\'' + t.id + '\')">';
+        h += '<td class="py-2 text-xs text-gray-400">' + (t.ticket_nr||'-') + '</td>';
+        h += '<td class="py-2 text-xs text-gray-700 max-w-xs truncate">' + _escH((t.betreff||'').substring(0,45)) + '</td>';
+        h += '<td class="py-2"><span class="text-xs px-1.5 py-0.5 rounded ' + (STATUS_COLORS[t.status]||'bg-gray-100 text-gray-600') + '">' + (STATUS_L[t.status]||t.status) + '</span></td>';
+        h += '<td class="py-2 text-xs font-semibold ' + (PRIO_COLORS[t.prioritaet]||'text-gray-500') + '">' + (t.prioritaet||'-') + '</td>';
+        h += '<td class="py-2 text-xs text-gray-400">' + agoStr + '</td>';
+        h += '</tr>';
+    });
+    h += '</tbody></table>';
+    h += '</div>';
+
     return h;
 }
 
