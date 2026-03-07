@@ -69,7 +69,7 @@ const VIEW_RENDER_MAP = {
     'hqOffice':      { fn: '_mountVitSpaceOffice', delay: 150 },
     
     // From allgemein.js wrapper
-    'support':       { fn: 'renderTickets', args: ['all'], chain: [{ fn: 'renderKontakte' }] },
+    'support':       { fn: 'renderTickets' },
     'entwicklung':   { fn: 'renderEntwicklung' },
     'wissen':        { fn: 'renderWissenGlobal' },
     'shop':          { fn: 'renderShop', before: function() { window.shopAllProducts = []; window.shopVariants = {}; } },
