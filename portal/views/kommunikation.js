@@ -326,7 +326,7 @@ function kommSidebarSection(title, key, channels) {
             if (unread) h += '<span class="w-2.5 h-2.5 rounded-full bg-[#EF7D00] flex-shrink-0"></span>';
             // + Button für HQ um Sub-Channel zu erstellen
             if (kommIsHQ() && ch.ist_netzwerk) {
-                h += '<span onclick="event.stopPropagation();kommNewSubChannel(\'' + ch.id + '\',\'' + _escH(ch.name).replace(/'/g, "\\'") + '\')" class="text-gray-300 hover:text-[#EF7D00] text-xs cursor-pointer opacity-0 group-hover:opacity-100" title="Unterchannel erstellen">＋</span>';
+                h += '<span onclick="event.stopPropagation();kommNewSubChannel(\'' + ch.id + '\',\'' + _escH(ch.name).replace(/'/g, "\\'") + '\')" class="text-gray-400 hover:text-[#EF7D00] text-sm cursor-pointer flex-shrink-0" title="Unterchannel erstellen">＋</span>';
             }
             h += '</div>';
 
