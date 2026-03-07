@@ -750,9 +750,47 @@ try {
     html += '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-gray-800">'+_escH(s.name)+'</h3><button onclick="closeStdDetailModal()" class="text-gray-400 hover:text-gray-600 text-xl">\u2715</button></div>';
     html += '<div class="grid grid-cols-2 gap-3 mb-5 text-sm">';
     html += '<div><span class="text-gray-500">Adresse:</span><br><span class="font-semibold">'+_escH(s.adresse||'\u2014')+'</span></div>';
-    html += '<div><span class="text-gray-500">Inhaber:</span><br><span class="font-semibold">'+_escH(s.inhaber_name||'\u2014')+'</span></div>';
+    html += '<div><span class="text-gray-500">Stadt:</span><br><span class="font-semibold">'+_escH(s.stadt||'\u2014')+'</span></div>';
+    html += '<div><span class="text-gray-500">Inhaber / GF:</span><br><span class="font-semibold">'+_escH(s.inhaber_name||'\u2014')+'</span></div>';
     html += '<div><span class="text-gray-500">Telefon:</span><br><span class="font-semibold">'+_escH(s.telefon||'\u2014')+'</span></div>';
+    html += '<div><span class="text-gray-500">E-Mail:</span><br><span class="font-semibold">'+_escH(s.email||'\u2014')+'</span></div>';
     html += '<div><span class="text-gray-500">Mitarbeiter (aktiv):</span><br><span class="font-semibold">'+(empCount.count||0)+'</span></div>';
+    html += '</div>';
+
+    // --- Stammdaten bearbeiten ---
+    html += '<div class="mb-4 border-t border-gray-200 pt-4">';
+    html += '<label class="block text-xs font-semibold text-gray-600 mb-2">\u270f\ufe0f Stammdaten bearbeiten</label>';
+    html += '<div class="grid grid-cols-2 gap-2 mb-2">';
+    html += '<div><label class="text-[10px] text-gray-400">Stadt</label><input id="stdStadtInput" type="text" value="'+_escH(s.stadt||'')+'" placeholder="z.B. M\u00fcnchen" class="w-full text-xs border rounded-lg px-2 py-1.5 focus:border-orange-400 focus:ring-1 focus:ring-orange-200"></div>';
+    html += '<div><label class="text-[10px] text-gray-400">Inhaber / GF</label><input id="stdInhaberInput" type="text" value="'+_escH(s.inhaber_name||'')+'" placeholder="Vor- und Nachname" class="w-full text-xs border rounded-lg px-2 py-1.5 focus:border-orange-400 focus:ring-1 focus:ring-orange-200"></div>';
+    html += '<div><label class="text-[10px] text-gray-400">Telefon</label><input id="stdTelefonInput" type="text" value="'+_escH(s.telefon||'')+'" placeholder="z.B. 089 1234567" class="w-full text-xs border rounded-lg px-2 py-1.5 focus:border-orange-400 focus:ring-1 focus:ring-orange-200"></div>';
+    html += '<div><label class="text-[10px] text-gray-400">E-Mail</label><input id="stdEmailInput" type="email" value="'+_escH(s.email||'')+'" placeholder="standort@vitbikes.de" class="w-full text-xs border rounded-lg px-2 py-1.5 focus:border-orange-400 focus:ring-1 focus:ring-orange-200"></div>';
+    html += '<div class="col-span-2"><label class="text-[10px] text-gray-400">Adresse</label><input id="stdAdresseInput" type="text" value="'+_escH(s.adresse||'')+'" placeholder="Stra\u00dfe + Hausnummer" class="w-full text-xs border rounded-lg px-2 py-1.5 focus:border-orange-400 focus:ring-1 focus:ring-orange-200"></div>';
+    html += '</div>';
+    html += '<button onclick="window._stdStammdatenSave(\''+s.id+'\')" class="px-4 py-1.5 bg-vit-orange text-white rounded-lg text-xs font-semibold hover:opacity-90 transition">Stammdaten speichern</button>';
+    html += '</div>';
+
+    // --- Öffnungszeiten ---
+    var oz = s.oeffnungszeiten || {};
+    var tage = [{k:'mo',l:'Mo'},{k:'di',l:'Di'},{k:'mi',l:'Mi'},{k:'do',l:'Do'},{k:'fr',l:'Fr'},{k:'sa',l:'Sa'},{k:'so',l:'So'}];
+    html += '<div class="mb-4 border-t border-gray-200 pt-4">';
+    html += '<label class="block text-xs font-semibold text-gray-600 mb-2">\ud83d\udd53 \u00d6ffnungszeiten</label>';
+    html += '<div class="space-y-1">';
+    tage.forEach(function(t) {
+        var tag = oz[t.k];
+        var von = (tag && tag.von) ? tag.von : '';
+        var bis = (tag && tag.bis) ? tag.bis : '';
+        var geschlossen = !tag || (!tag.von && !tag.bis);
+        html += '<div class="flex items-center gap-2">';
+        html += '<span class="w-6 text-xs font-semibold text-gray-600">'+t.l+'</span>';
+        html += '<input id="oz_'+t.k+'_von" type="time" value="'+_escH(von)+'" class="text-xs border rounded px-1.5 py-1 w-24 focus:border-orange-400'+(geschlossen?' text-gray-300':'')+'">';
+        html += '<span class="text-xs text-gray-400">\u2013</span>';
+        html += '<input id="oz_'+t.k+'_bis" type="time" value="'+_escH(bis)+'" class="text-xs border rounded px-1.5 py-1 w-24 focus:border-orange-400'+(geschlossen?' text-gray-300':'')+'">';
+        if (geschlossen && !von && !bis) html += '<span class="text-[10px] text-gray-400 ml-1">geschlossen</span>';
+        html += '</div>';
+    });
+    html += '</div>';
+    html += '<button onclick="window._stdOeffnungszeitenSave(\''+s.id+'\')" class="mt-2 px-4 py-1.5 bg-vit-orange text-white rounded-lg text-xs font-semibold hover:opacity-90 transition">\u00d6ffnungszeiten speichern</button>';
     html += '</div>';
     html += '<div class="mb-4">';
     html += '<label class="block text-xs font-semibold text-gray-600 mb-2">\ud83d\udcbb Warenwirtschaft</label>';
@@ -954,6 +992,43 @@ window._stdFirmaSave = async function(standortId) {
     var r = await sb.from('standorte').update({ firma_name: name.trim() || null }).eq('id', standortId);
     if (r.error) { _showToast('Fehler: ' + r.error.message, 'error'); return; }
     _showToast('Firma gespeichert \u2705', 'success');
+    openStandortDetailModal(standortId);
+};
+
+window._stdStammdatenSave = async function(standortId) {
+    var stadt = (document.getElementById('stdStadtInput') || {}).value || '';
+    var inhaber = (document.getElementById('stdInhaberInput') || {}).value || '';
+    var telefon = (document.getElementById('stdTelefonInput') || {}).value || '';
+    var email = (document.getElementById('stdEmailInput') || {}).value || '';
+    var adresse = (document.getElementById('stdAdresseInput') || {}).value || '';
+    var update = {
+        stadt: stadt.trim() || null,
+        inhaber_name: inhaber.trim() || null,
+        telefon: telefon.trim() || null,
+        email: email.trim() || null,
+        adresse: adresse.trim() || null
+    };
+    var r = await _sb().from('standorte').update(update).eq('id', standortId);
+    if (r.error) { _showToast('Fehler: ' + r.error.message, 'error'); return; }
+    _showToast('Stammdaten gespeichert \u2705', 'success');
+    openStandortDetailModal(standortId);
+};
+
+window._stdOeffnungszeitenSave = async function(standortId) {
+    var tageKeys = ['mo','di','mi','do','fr','sa','so'];
+    var oz = {};
+    tageKeys.forEach(function(k) {
+        var von = (document.getElementById('oz_'+k+'_von') || {}).value || '';
+        var bis = (document.getElementById('oz_'+k+'_bis') || {}).value || '';
+        if (von && bis) {
+            oz[k] = { von: von, bis: bis };
+        } else {
+            oz[k] = null;
+        }
+    });
+    var r = await _sb().from('standorte').update({ oeffnungszeiten: oz }).eq('id', standortId);
+    if (r.error) { _showToast('Fehler: ' + r.error.message, 'error'); return; }
+    _showToast('\u00d6ffnungszeiten gespeichert \u2705', 'success');
     openStandortDetailModal(standortId);
 };
 
