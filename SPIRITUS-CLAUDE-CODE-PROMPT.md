@@ -1,5 +1,23 @@
 # CLAUDE CODE PROMPT: Spiritus v3.0 – Vollständige Implementierung
 
+## ⚠️ WICHTIG: DB-Schema Klarstellung
+
+**Es existieren zwei DB-Schemas parallel — das NEUE ist das richtige:**
+
+Das **neue Schema** (von Claude Code erstellt, wird aktiv genutzt):
+- `spiritus_transcripts` — Haupttabelle mit ALLEM (Transkript + 8-Felder-Protokoll + Kontext + Kategorien + eigene Notizen)
+- `spiritus_extractions` — Extrahierte Erkenntnisse/Maßnahmen/Sentiment
+- `spiritus_ki_feedback` — Lernfaktor
+
+Das **alte Schema** (aus dem Konzept-Dokument, NICHT verwenden):
+- `gespraeche`, `protokoll_partner`, `protokoll_intern`, `spiritus_transkripte`, `spiritus_media_assets`, `spiritus_audit_log`, `spiritus_todos`, `gespraech_teilnehmer`
+
+→ **Arbeite NUR mit dem neuen Schema (`spiritus_transcripts` + `spiritus_extractions` + `spiritus_ki_feedback`).** Die alten Tabellen sind leer und werden nicht genutzt.
+
+→ Die Edge Function `spiritus-analyze` schreibt bereits in `spiritus_transcripts`. Das ist korrekt.
+
+→ Ignoriere alle Verweise auf `gespraeche`, `protokoll_partner`, `protokoll_intern` im Rest dieses Dokuments — die wurden durch `spiritus_transcripts` ersetzt.
+
 ## Kontext
 
 Du arbeitest am vit:bikes Partner Cockpit (cockpit.vitbikes.de). Das vollständige Konzept liegt in `/SPIRITUS-KONZEPT.md` im Repo. Lies es zuerst.
