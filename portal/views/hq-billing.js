@@ -40,7 +40,7 @@ export async function billingApi(action, params) {
     try {
         var session = await _sb().auth.getSession();
         var token = session && session.data && session.data.session ? session.data.session.access_token : null;
-        if (!token) { _showToast('Bitte erneut einloggen.', 'error'); return { error: 'Nicht angemeldet' }; }
+        if (!token) { console.warn('[billing] No session token - skipping API call:', action); return { error: 'Nicht angemeldet' }; }
         var resp = await fetch(BILLING_FN, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
@@ -71,7 +71,10 @@ export function initBillingModule() {
         sel.appendChild(opt);
     }
     currentBillingMonth = sel.value;
-    loadBillingOverview();
+    // Only load if we have a valid session (prevent 401 spam in demo mode)
+    _sb().auth.getSession().then(function(s) {
+        if (s && s.data && s.data.session) loadBillingOverview();
+    });
 }
 
 export async function loadBillingOverview() {
