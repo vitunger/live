@@ -187,6 +187,20 @@ window.kommSaveNewChannel = async function(isNetzwerk) {
         };
         var resp = await _sb().from('chat_kanaele').insert(data).select().single();
         if (resp.error) throw resp.error;
+
+        // Sub-Channel: Mitglieder vom Parent-Channel übernehmen
+        if (parentId && resp.data) {
+            try {
+                var membersResp = await _sb().from('kanal_mitglieder').select('user_id').eq('kanal_id', parentId);
+                if (membersResp.data && membersResp.data.length > 0) {
+                    var newMembers = membersResp.data.map(function(m) {
+                        return { kanal_id: resp.data.id, user_id: m.user_id, rolle: 'mitglied' };
+                    });
+                    await _sb().from('kanal_mitglieder').insert(newMembers);
+                }
+            } catch(e) { console.warn('Auto-join sub-channel failed:', e); }
+        }
+
         var modal = document.getElementById('kommChannelModal');
         if (modal) modal.remove();
         _showToast('✅ Channel "' + name + '" erstellt');
@@ -216,6 +230,18 @@ window.kommEditChannelDialog = async function(channelId) {
 
     // Rollen-Checkboxen
     html += _kommRollenCheckboxes(ch.sichtbar_fuer_rollen || []);
+
+    // Übergeordneter Channel (Sub-Channel-Zuordnung)
+    var parentOptions = _kommChannels.filter(function(c) { return c.ist_netzwerk && !c.parent_id && !c.ist_hq_channel && c.id !== channelId; });
+    if (parentOptions.length > 0) {
+        html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Übergeordneter Channel</label>';
+        html += '<select id="kommChParent" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none">';
+        html += '<option value="">— Eigenständiger Channel —</option>';
+        parentOptions.forEach(function(p) {
+            html += '<option value="' + p.id + '"' + (ch.parent_id === p.id ? ' selected' : '') + '>' + (p.icon || '💬') + ' ' + _escH(p.name) + '</option>';
+        });
+        html += '</select></div>';
+    }
 
     // Extra-Zugang: Einzelne User
     html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">➕ Zusätzlicher Zugang (einzelne User)</label>';
@@ -247,13 +273,16 @@ window.kommSaveEditChannel = async function(channelId) {
     if (!name) { _showToast('Bitte Channel-Name eingeben', 'error'); return; }
 
     var rollen = _getSelectedRollen();
+    var parentEl = document.getElementById('kommChParent');
+    var parentId = parentEl ? parentEl.value || null : null;
 
     try {
         var resp = await _sb().from('chat_kanaele').update({
             name: name,
             icon: icon,
             beschreibung: desc,
-            sichtbar_fuer_rollen: rollen.length > 0 ? rollen : null
+            sichtbar_fuer_rollen: rollen.length > 0 ? rollen : null,
+            parent_id: parentId
         }).eq('id', channelId);
         if (resp.error) throw resp.error;
         var modal = document.getElementById('kommChannelModal');
