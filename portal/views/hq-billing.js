@@ -509,41 +509,34 @@ export async function loadBillingProducts() {
 window.editProduct = async function(productId) {
     var p = (window._billingProducts || []).find(function(x) { return x.id === productId; });
     if (!p) return;
-    var schedOpts = (window._billingSchedules || []).map(function(s) { return '<option value="' + s.id + '"' + (p.schedule_id === s.id ? ' selected' : '') + '>' + s.name + '</option>'; }).join('');
-    
+    var old = document.getElementById('editProductForm'); if (old) old.remove();
+    var termOpts = '<option value="0"' + (p.payment_term_days === 0 ? ' selected' : '') + '>Sofort</option>';
+    termOpts += '<option value="14"' + (p.payment_term_days === 14 ? ' selected' : '') + '>14 Tage</option>';
+    termOpts += '<option value="30"' + ((!p.payment_term_days || p.payment_term_days === 30) ? ' selected' : '') + '>30 Tage</option>';
+    var dayOpts = ''; for (var d = 1; d <= 31; d++) { dayOpts += '<option value="' + d + '"' + (p.billing_day === d ? ' selected' : '') + '>' + d + '.</option>'; }
     var html = '<div class="vit-card p-5 mb-4 border-2 border-vit-orange" id="editProductForm">';
     html += '<h4 class="font-bold text-sm mb-3">\u270f\ufe0f ' + _escH(p.name) + ' bearbeiten</h4>';
     html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">';
     html += '<div><label class="block text-[10px] text-gray-500 mb-1">Name</label><input type="text" id="editProdName" value="' + _escH(p.name) + '" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
     html += '<div><label class="block text-[10px] text-gray-500 mb-1">Preis (\u20ac)</label><input type="number" id="editProdPrice" step="0.01" value="' + (p.default_amount || '') + '" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
-    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Abrechnungsart</label><select id="editProdSchedule" class="w-full border rounded-lg px-2.5 py-1.5 text-sm">' + schedOpts + '</select></div>';
-    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Zahlungsfrist (Tage)</label><input type="number" id="editProdTermDays" value="' + (p.payment_term_days || '') + '" placeholder="\u2014 (aus Schedule)" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Abrechnungstag im Monat</label><select id="editProdBillingDay" class="w-full border rounded-lg px-2.5 py-1.5 text-sm">' + dayOpts + '</select></div>';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Zahlungsfrist</label><select id="editProdTermDays" class="w-full border rounded-lg px-2.5 py-1.5 text-sm">' + termOpts + '</select></div>';
     html += '</div>';
-    html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">';
-    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Abrechnungstag</label><input type="number" id="editProdBillingDay" min="1" max="28" value="' + (p.billing_day || '') + '" placeholder="aus Schedule" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
-    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Zuweisungstyp</label><select id="editProdScope" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"><option value="system"' + (!p.is_per_employee && !p.is_per_standort ? ' selected' : '') + '>System (automatisch)</option><option value="per_user"' + (p.is_per_employee ? ' selected' : '') + '>Je Nutzer</option><option value="per_standort"' + (p.is_per_standort ? ' selected' : '') + '>Je Standort</option></select></div>';
-    html += '<div><label class="flex items-center gap-2 text-sm mt-4"><input type="checkbox" id="editProdActive" ' + (p.active ? 'checked' : '') + '> Aktiv</label></div>';
-    html += '</div>';
+    html += '<div class="flex items-center gap-4 mb-3"><label class="flex items-center gap-2 text-sm"><input type="checkbox" id="editProdActive" ' + (p.active ? 'checked' : '') + '> Aktiv</label></div>';
     html += '<div class="flex gap-2"><button onclick="saveProduct(\'' + productId + '\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-xs font-semibold">Speichern</button>';
     html += '<button onclick="loadBillingProducts()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs">Abbrechen</button></div>';
     html += '</div>';
-    
     var el = document.getElementById('product-' + productId);
     if (el) el.insertAdjacentHTML('afterend', html);
 };
 
 window.saveProduct = async function(productId) {
-    var scope = document.getElementById('editProdScope').value;
     var updates = {
         name: document.getElementById('editProdName').value.trim(),
         default_amount: parseFloat(document.getElementById('editProdPrice').value) || null,
-        schedule_id: document.getElementById('editProdSchedule').value || null,
-        payment_term_days: parseInt(document.getElementById('editProdTermDays').value) || null,
-        billing_day: parseInt(document.getElementById('editProdBillingDay').value) || null,
-        active: document.getElementById('editProdActive').checked,
-        is_per_employee: scope === 'per_user',
-        is_per_standort: scope === 'per_standort',
-        product_type: scope === 'per_user' ? 'per_user' : (document.getElementById('editProdPrice').value ? 'fixed' : 'fixed')
+        billing_day: parseInt(document.getElementById('editProdBillingDay').value) || 1,
+        payment_term_days: parseInt(document.getElementById('editProdTermDays').value),
+        active: document.getElementById('editProdActive').checked
     };
     var { error } = await _sb().from('billing_products').update(updates).eq('id', productId);
     if (error) { _showToast('Fehler: ' + error.message, 'error'); return; }
@@ -552,23 +545,18 @@ window.saveProduct = async function(productId) {
 };
 
 window.showNewProductForm = function() {
-    var area = document.getElementById('newProductFormArea');
-    if (!area) return;
-    var schedOpts = (window._billingSchedules || []).map(function(s) { return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('');
+    var area = document.getElementById('newProductFormArea'); if (!area) return;
+    var dayOpts = ''; for (var d = 1; d <= 31; d++) { dayOpts += '<option value="' + d + '"' + (d === 1 ? ' selected' : '') + '>' + d + '.</option>'; }
     var html = '<div class="vit-card p-5 mb-4 border-2 border-green-400">';
     html += '<h4 class="font-bold text-sm mb-3">+ Neues Produkt anlegen</h4>';
-    html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">';
-    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Key (eindeutig)</label><input type="text" id="newProdKey" placeholder="MY_PRODUCT" class="w-full border rounded-lg px-2.5 py-1.5 text-sm font-mono"></div>';
-    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Name</label><input type="text" id="newProdName" placeholder="Mein Produkt" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
-    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Typ</label><select id="newProdType" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"><option value="fixed">Fixbetrag</option><option value="per_user">Pro Nutzer</option><option value="one_time">Einmalig</option></select></div>';
+    html += '<div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Name</label><input type="text" id="newProdName" placeholder="z.B. Microsoft Teams" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Typ</label><select id="newProdType" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"><option value="per_user">Pro Nutzer</option><option value="fixed">Pro Standort</option><option value="one_time">Einmalig</option></select></div>';
     html += '<div><label class="block text-[10px] text-gray-500 mb-1">Preis (\u20ac)</label><input type="number" id="newProdPrice" step="0.01" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
     html += '</div>';
-    html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">';
-    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Frequenz</label><select id="newProdFreq" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"><option value="monthly">Monatlich</option><option value="quarterly">Quartalsweise</option><option value="immediate">Sofort</option><option value="ad_hoc">Ad-hoc</option></select></div>';
-    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Zuweisungstyp</label><select id="newProdScope" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"><option value="system">System (automatisch)</option><option value="per_user">Je Nutzer</option><option value="per_standort">Je Standort</option></select></div>';
-    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Abrechnungsart</label><select id="newProdSchedule" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"><option value="">\u2014</option>' + schedOpts + '</select></div>';
-    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Zahlungsfrist</label><input type="number" id="newProdTermDays" placeholder="30" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
-    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Abrechnungstag</label><input type="number" id="newProdBillingDay" min="1" max="28" placeholder="1" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"></div>';
+    html += '<div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Abrechnungstag im Monat</label><select id="newProdBillingDay" class="w-full border rounded-lg px-2.5 py-1.5 text-sm">' + dayOpts + '</select></div>';
+    html += '<div><label class="block text-[10px] text-gray-500 mb-1">Zahlungsfrist</label><select id="newProdTermDays" class="w-full border rounded-lg px-2.5 py-1.5 text-sm"><option value="30" selected>30 Tage</option><option value="14">14 Tage</option><option value="0">Sofort</option></select></div>';
     html += '</div>';
     html += '<div class="flex gap-2"><button onclick="createProduct()" class="px-4 py-2 bg-green-600 text-white rounded-lg text-xs font-semibold">Anlegen</button>';
     html += '<button onclick="document.getElementById(\'newProductFormArea\').innerHTML=\'\'" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs">Abbrechen</button></div>';
@@ -577,20 +565,18 @@ window.showNewProductForm = function() {
 };
 
 window.createProduct = async function() {
-    var key = document.getElementById('newProdKey').value.trim().toUpperCase().replace(/[^A-Z0-9_]/g, '');
     var name = document.getElementById('newProdName').value.trim();
-    if (!key || !name) { _showToast('Key und Name erforderlich', 'error'); return; }
-    var newScope = document.getElementById('newProdScope').value;
+    if (!name) { _showToast('Name erforderlich', 'error'); return; }
+    var prodType = document.getElementById('newProdType').value;
+    var key = name.toUpperCase().replace(/[^A-Z0-9]/g, '_').replace(/__+/g, '_').substring(0, 30);
     var { error } = await _sb().from('billing_products').insert({
-        key: key, name: name,
-        product_type: newScope === 'per_user' ? 'per_user' : document.getElementById('newProdType').value,
-        billing_frequency: document.getElementById('newProdFreq').value,
-        is_per_employee: newScope === 'per_user',
-        is_per_standort: newScope === 'per_standort',
+        key: key, name: name, product_type: prodType,
+        billing_frequency: prodType === 'one_time' ? 'immediate' : 'monthly',
+        is_per_employee: prodType === 'per_user',
+        is_per_standort: prodType === 'fixed',
         default_amount: parseFloat(document.getElementById('newProdPrice').value) || null,
-        schedule_id: document.getElementById('newProdSchedule').value || null,
-        payment_term_days: parseInt(document.getElementById('newProdTermDays').value) || null,
-        billing_day: parseInt(document.getElementById('newProdBillingDay').value) || null,
+        billing_day: parseInt(document.getElementById('newProdBillingDay').value) || 1,
+        payment_term_days: parseInt(document.getElementById('newProdTermDays').value),
         active: true
     });
     if (error) { _showToast('Fehler: ' + error.message, 'error'); return; }
