@@ -328,7 +328,7 @@ function kommSidebarSection(title, key, channels) {
             if (hasSubs) {
                 h += '<span onclick="event.stopPropagation();kommToggleSection(\'sub_' + ch.id + '\')" class="text-[9px] text-gray-400 cursor-pointer w-3 flex-shrink-0 ' + (subOpen ? '' : '-rotate-90') + ' transition-transform">▼</span>';
             }
-            h += '<span onclick="kommGoView(\'channel\',\'' + ch.id + '\',\'' + _escH(ch.name) + '\')" class="text-sm">' + (ch.icon || '💬') + '</span>';
+            h += '<span onclick="kommGoView(\'channel\',\'' + ch.id + '\',\'' + _escH(ch.name) + '\')" class="text-sm flex-shrink-0">' + (ch.logo_url ? '<img src="' + _escH(ch.logo_url) + '" class="w-5 h-5 rounded object-cover">' : (ch.icon || '💬')) + '</span>';
             h += '<span onclick="kommGoView(\'channel\',\'' + ch.id + '\',\'' + _escH(ch.name) + '\')" class="flex-1 text-[12.5px] ' + (active ? 'font-bold text-[#EF7D00]' : (unread ? 'font-bold text-gray-800' : 'text-gray-600')) + ' truncate">' + _escH(ch.name) + '</span>';
             if (unread) h += '<span class="w-2.5 h-2.5 rounded-full bg-[#EF7D00] flex-shrink-0"></span>';
             // + Button für HQ um Sub-Channel zu erstellen
@@ -344,7 +344,7 @@ function kommSidebarSection(title, key, channels) {
                     var subUnread = kommIsUnread(sub);
                     h += '<div onclick="kommGoView(\'channel\',\'' + sub.id + '\',\'' + _escH(sub.name) + '\')" class="mx-2 ml-8 px-2.5 py-1 rounded-lg cursor-pointer flex items-center gap-2 ' + (subActive ? 'bg-orange-50 border-l-[3px] border-l-[#EF7D00]' : 'border-l-[3px] border-transparent hover:bg-gray-50') + '">';
                     h += '<span class="text-xs text-gray-400">└</span>';
-                    h += '<span class="text-xs">' + (sub.icon || '💬') + '</span>';
+                    h += '<span class="text-xs flex-shrink-0">' + (sub.logo_url ? '<img src="' + _escH(sub.logo_url) + '" class="w-4 h-4 rounded object-cover">' : (sub.icon || '💬')) + '</span>';
                     h += '<span class="flex-1 text-[11.5px] ' + (subActive ? 'font-bold text-[#EF7D00]' : (subUnread ? 'font-bold text-gray-700' : 'text-gray-500')) + ' truncate">' + _escH(sub.name) + '</span>';
                     if (subUnread) h += '<span class="w-2 h-2 rounded-full bg-[#EF7D00] flex-shrink-0"></span>';
                     h += '</div>';
