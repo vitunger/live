@@ -165,6 +165,11 @@ export async function renderKomm() {
     var netzwerkKanaele = KOMM.kanaele.filter(function(k) { return k.ist_netzwerk; });
 
     h += kommSidebarSection('🏪 ' + _escH(standortName), 'standort', standortKanaele);
+    // GF/Inhaber kann Standort-Channels/Gruppen erstellen
+    if (kommIsGF() && KOMM.sidebarSections.standort) {
+        h += '<div onclick="kommNewStandortChannelDialog()" class="mx-2 px-2.5 py-1 rounded-lg cursor-pointer flex items-center gap-2 text-gray-400 text-xs hover:text-vit-orange hover:bg-gray-50">';
+        h += '<span>＋</span> Channel / Gruppe erstellen</div>';
+    }
     h += kommSidebarSection('🌐 Netzwerk', 'netzwerk', netzwerkKanaele);
 
     h += '<div class="h-px bg-gray-100 mx-3 my-1"></div>';
@@ -1281,6 +1286,63 @@ export function submitForumPost() {}
 export function submitForumComment() {}
 export function showBrettDetail() {}
 export function submitBrettPost() {}
+
+// ========== GF: Standort-Channel/Gruppe erstellen ==========
+window.kommNewStandortChannelDialog = function() {
+    var standortId = _sbProfile() ? _sbProfile().standort_id : null;
+    var standortName = _sbStandort() ? _sbStandort().name : 'Mein Standort';
+    if (!standortId) { _showToast('Kein Standort zugewiesen', 'error'); return; }
+
+    var html = '<div id="kommChModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onclick="if(event.target===this)this.remove()">';
+    html += '<div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl" onclick="event.stopPropagation()">';
+    html += '<h3 class="text-base font-bold mb-4">🏪 Neuer Channel für ' + _escH(standortName) + '</h3>';
+    html += '<div class="space-y-3">';
+    html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Typ</label>';
+    html += '<select id="kommChTyp" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none">';
+    html += '<option value="channel">📢 Channel (alle am Standort)</option>';
+    html += '<option value="group">👥 Gruppe (ausgewählte Mitglieder)</option>';
+    html += '</select></div>';
+    html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Name *</label>';
+    html += '<input id="kommChName" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-vit-orange outline-none" placeholder="z.B. Werkstatt ' + _escH(standortName) + '"></div>';
+    html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Icon (Emoji)</label>';
+    html += '<input id="kommChIcon" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none" value="💬" maxlength="4"></div>';
+    html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Beschreibung</label>';
+    html += '<textarea id="kommChDesc" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none outline-none" placeholder="Wofür ist dieser Channel?"></textarea></div>';
+    html += '</div>';
+    html += '<div class="flex justify-end gap-2 mt-5">';
+    html += '<button onclick="document.getElementById(\'kommChModal\').remove()" class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">Abbrechen</button>';
+    html += '<button onclick="kommSaveStandortChannel()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-bold hover:opacity-90">Erstellen</button>';
+    html += '</div></div></div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.getElementById('kommChName').focus();
+};
+
+window.kommSaveStandortChannel = async function() {
+    var name = (document.getElementById('kommChName').value || '').trim();
+    var icon = (document.getElementById('kommChIcon').value || '💬').trim();
+    var desc = (document.getElementById('kommChDesc').value || '').trim();
+    var typ = (document.getElementById('kommChTyp').value || 'channel');
+    if (!name) { _showToast('Bitte Namen eingeben', 'error'); return; }
+
+    var standortId = _sbProfile() ? _sbProfile().standort_id : null;
+    try {
+        var resp = await _sb().from('chat_kanaele').insert({
+            name: name, icon: icon, beschreibung: desc, typ: typ,
+            standort_id: standortId, ist_netzwerk: false, ist_privat: typ === 'group',
+            erstellt_von: _sbUser() ? _sbUser().id : null
+        }).select().single();
+        if (resp.error) throw resp.error;
+        var modal = document.getElementById('kommChModal');
+        if (modal) modal.remove();
+        _showToast('✅ ' + (typ === 'group' ? 'Gruppe' : 'Channel') + ' "' + name + '" erstellt');
+        // Reload sidebar
+        await kommLoadData();
+        renderKomm();
+    } catch (e) {
+        console.error('Create channel error:', e);
+        _showToast('❌ Fehler: ' + (e.message || 'Unbekannt'), 'error');
+    }
+};
 
 // ========== Strangler Fig: window.* registration ==========
 const _exports = {
