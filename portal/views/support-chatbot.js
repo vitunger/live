@@ -38,12 +38,12 @@ function mountChatWidget() {
 function renderWidget() {
     var h = '';
     // Floating Button
-    h += '<button id="supChatToggle" onclick="supChatToggle()" class="fixed bottom-6 right-6 w-14 h-14 bg-vit-orange text-white rounded-full shadow-lg hover:opacity-90 flex items-center justify-center z-40 transition-transform" title="Support-Chat">';
+    h += '<button id="supChatToggle" onclick="supChatToggle()" class="fixed bottom-20 right-6 w-14 h-14 bg-vit-orange text-white rounded-full shadow-lg hover:opacity-90 flex items-center justify-center z-40 transition-transform" title="Support-Chat">';
     h += '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>';
     h += '</button>';
 
     // Chat Panel
-    h += '<div id="supChatPanel" class="fixed bottom-24 right-6 w-80 max-h-[500px] bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col z-40 overflow-hidden" style="display:none;">';
+    h += '<div id="supChatPanel" class="fixed bottom-36 right-6 w-80 max-h-[500px] bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col z-40 overflow-hidden" style="display:none;">';
 
     // Header
     h += '<div class="bg-vit-orange text-white p-3 flex items-center justify-between flex-shrink-0">';
