@@ -957,45 +957,41 @@ export async function supHqOpenTicket(ticketId) {
         // Status
         html += '<div class="flex items-center gap-1">';
         html += '<label class="text-xs text-gray-500">Status:</label>';
-        html += '<select id="supHqDetailStatus" class="text-xs border border-gray-300 rounded px-2 py-1">';
+        html += '<select id="supHqDetailStatus" onchange="supHqSaveStatus(\'' + ticketId + '\')" class="text-xs border border-gray-300 rounded px-2 py-1">';
         Object.keys(STATUS_LABELS).forEach(function(s) {
             html += '<option value="' + s + '"' + (t.status === s ? ' selected' : '') + '>' + STATUS_LABELS[s] + '</option>';
         });
         html += '</select>';
-        html += '<button onclick="supHqSaveStatus(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Setzen</button>';
         html += '</div>';
 
         // Prioritaet
         html += '<div class="flex items-center gap-1">';
         html += '<label class="text-xs text-gray-500">Prio:</label>';
-        html += '<select id="supHqDetailPrio" class="text-xs border border-gray-300 rounded px-2 py-1">';
+        html += '<select id="supHqDetailPrio" onchange="supHqSavePrio(\'' + ticketId + '\')" class="text-xs border border-gray-300 rounded px-2 py-1">';
         ['niedrig','mittel','kritisch'].forEach(function(p) {
             html += '<option value="' + p + '"' + (t.prioritaet === p ? ' selected' : '') + '>' + PRIO_LABELS[p] + '</option>';
         });
         html += '</select>';
-        html += '<button onclick="supHqSavePrio(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Setzen</button>';
         html += '</div>';
 
         // Assignee
         html += '<div class="flex items-center gap-1">';
         html += '<label class="text-xs text-gray-500">Assignee:</label>';
-        html += '<select id="supHqDetailAssignee" class="text-xs border border-gray-300 rounded px-2 py-1">';
+        html += '<select id="supHqDetailAssignee" onchange="supHqSaveAssignee(\'' + ticketId + '\')" class="text-xs border border-gray-300 rounded px-2 py-1">';
         html += '<option value="">Nicht zugewiesen</option>';
         _supState.hqUsers.forEach(function(u) {
             var name = ((u.vorname || '') + ' ' + (u.nachname || '')).trim() || u.name || u.id.slice(0,8);
             html += '<option value="' + u.id + '"' + (t.assignee_id === u.id ? ' selected' : '') + '>' + _escH(name) + '</option>';
         });
         html += '</select>';
-        html += '<button onclick="supHqSaveAssignee(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Zuweisen</button>';
         html += '</div>';
 
         // Abteilung
         html += '<div class="flex items-center gap-1">';
         html += '<label class="text-xs text-gray-500">Abt.:</label>';
-        html += '<select id="supHqDetailAbteilung" class="text-xs border border-gray-300 rounded px-2 py-1">';
+        html += '<select id="supHqDetailAbteilung" onchange="supHqSaveAbteilung(\'' + ticketId + '\')" class="text-xs border border-gray-300 rounded px-2 py-1">';
         html += '<option value="gf"' + (t.abteilung === "gf" ? ' selected' : '') + '>Geschäftsführung</option>';html += '<option value="sales"' + (t.abteilung === "sales" ? ' selected' : '') + '>Sales</option>';html += '<option value="marketing"' + (t.abteilung === "marketing" ? ' selected' : '') + '>Marketing</option>';html += '<option value="einkauf"' + (t.abteilung === "einkauf" ? ' selected' : '') + '>Einkauf</option>';html += '<option value="support"' + (t.abteilung === "support" ? ' selected' : '') + '>Support</option>';html += '<option value="akademie"' + (t.abteilung === "akademie" ? ' selected' : '') + '>Akademie</option>';html += '<option value="hr"' + (t.abteilung === "hr" ? ' selected' : '') + '>HR</option>';html += '<option value="it"' + (t.abteilung === "it" ? ' selected' : '') + '>IT</option>';
         html += '</select>';
-        html += '<button onclick="supHqSaveAbteilung(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Setzen</button>';
         html += '</div>';
 
         // Absender ändern
@@ -1179,11 +1175,9 @@ export async function supHqSaveStatus(ticketId) {
         }
 
         _showToast('Status geaendert: ' + STATUS_LABELS[val], 'success');
-        var ov = document.getElementById('supHqDetailOverlay');
-        if (ov) ov.remove();
+        // Hintergrund-Update (Modal bleibt offen)
         _supState.hqLoaded = false;
-        await loadHqTickets();
-        renderTickets();
+        loadHqTickets().then(function() { renderTickets(); });
     } catch(err) {
         _showToast('Fehler: ' + (err.message || err), 'error');
     }
@@ -1198,11 +1192,9 @@ export async function supHqSavePrio(ticketId) {
         await _sb().from('support_tickets').update({ prioritaet: val }).eq('id', ticketId);
         await _sb().from('support_ticket_log').insert({ ticket_id: ticketId, user_id: user ? user.id : null, aktion: 'prioritaet_geaendert', alt_wert: ticket ? ticket.prioritaet : '', neu_wert: val });
         _showToast('Prioritaet: ' + PRIO_LABELS[val], 'success');
-        var ov = document.getElementById('supHqDetailOverlay');
-        if (ov) ov.remove();
+        // Hintergrund-Update (Modal bleibt offen)
         _supState.hqLoaded = false;
-        await loadHqTickets();
-        renderTickets();
+        loadHqTickets().then(function() { renderTickets(); });
     } catch(err) {
         _showToast('Fehler: ' + (err.message || err), 'error');
     }
@@ -1216,11 +1208,9 @@ export async function supHqSaveAssignee(ticketId) {
         var assigneeName = val ? (_supState.hqUsers.find(function(u) { return u.id === val; }) || {}).vorname || 'HQ-User' : 'niemand';
         await _sb().from('support_ticket_log').insert({ ticket_id: ticketId, user_id: user ? user.id : null, aktion: 'assignee_geaendert', neu_wert: assigneeName });
         _showToast('Zugewiesen an: ' + assigneeName, 'success');
-        var ov = document.getElementById('supHqDetailOverlay');
-        if (ov) ov.remove();
+        // Hintergrund-Update (Modal bleibt offen)
         _supState.hqLoaded = false;
-        await loadHqTickets();
-        renderTickets();
+        loadHqTickets().then(function() { renderTickets(); });
     } catch(err) {
         _showToast('Fehler: ' + (err.message || err), 'error');
     }
@@ -1236,11 +1226,9 @@ export async function supHqSaveAbteilung(ticketId) {
         await _sb().from('support_tickets').update({ abteilung: val }).eq('id', ticketId);
         await _sb().from('support_ticket_log').insert({ ticket_id: ticketId, user_id: user ? user.id : null, aktion: 'abteilung_geaendert', alt_wert: ticket ? ticket.abteilung : '', neu_wert: val });
         _showToast('Abteilung: ' + val, 'success');
-        var ov = document.getElementById('supHqDetailOverlay');
-        if (ov) ov.remove();
+        // Hintergrund-Update (Modal bleibt offen)
         _supState.hqLoaded = false;
-        await loadHqTickets();
-        renderTickets();
+        loadHqTickets().then(function() { renderTickets(); });
     } catch(err) { _showToast('Fehler: ' + (err.message || err), 'error'); }
 }
 
@@ -1255,11 +1243,9 @@ export async function supHqSaveAbsender(ticketId) {
         var name = u ? ((u.vorname||'') + ' ' + (u.nachname||'')).trim() : val;
         await _sb().from('support_ticket_log').insert({ ticket_id: ticketId, user_id: user ? user.id : null, aktion: 'absender_geaendert', neu_wert: name });
         _showToast('Absender: ' + name, 'success');
-        var ov = document.getElementById('supHqDetailOverlay');
-        if (ov) ov.remove();
+        // Hintergrund-Update (Modal bleibt offen)
         _supState.hqLoaded = false;
-        await loadHqTickets();
-        renderTickets();
+        loadHqTickets().then(function() { renderTickets(); });
     } catch(err) { _showToast('Fehler: ' + (err.message || err), 'error'); }
 }
 
